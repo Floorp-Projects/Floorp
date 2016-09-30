@@ -162,7 +162,7 @@ js::ValueToStringBufferSlow(JSContext* cx, const Value& arg, StringBuffer& sb)
     if (v.isNull())
         return sb.append(cx->names().null);
     if (v.isSymbol()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SYMBOL_TO_STRING);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SYMBOL_TO_STRING);
         return false;
     }
     MOZ_ASSERT(v.isUndefined());

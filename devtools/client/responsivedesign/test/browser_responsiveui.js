@@ -111,7 +111,7 @@ function* testManualMouseResize(rdm, manager, pressedKey) {
   EventUtils.synthesizeMouse(rdm.resizer, x, y, mouseMoveParams, window);
   EventUtils.synthesizeMouse(rdm.resizer, x, y, {type: "mouseup"}, window);
 
-  yield once(manager, "contentResize");
+  yield once(manager, "content-resize");
 
   let expectedWidth = initialWidth + 20;
   let expectedHeight = initialHeight + 10;
@@ -138,7 +138,7 @@ function* testResizeUsingCustomInput(rdm, manager) {
   // Only the `change` event must change the size
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  yield once(manager, "contentResize");
+  yield once(manager, "content-resize");
 
   yield verifyResize(rdm, expectedWidth, expectedHeight);
 }
@@ -172,7 +172,7 @@ function* testRotate(rdm, manager) {
   let {width: initialWidth, height: initialHeight} = yield getSizing();
   rdm.rotate();
 
-  yield once(manager, "contentResize");
+  yield once(manager, "content-resize");
 
   let newSize = yield getSizing();
   is(newSize.width, initialHeight, "The width should now be the height.");

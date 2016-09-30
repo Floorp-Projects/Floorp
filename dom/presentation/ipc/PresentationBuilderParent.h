@@ -43,6 +43,7 @@ private:
   bool mNeedDestroyActor = false;
   RefPtr<PresentationParent> mParent;
   nsCOMPtr<nsIPresentationSessionTransportBuilderListener> mBuilderListener;
+  nsCOMPtr<nsIPresentationSessionTransport> mIPCSessionTransport;
 };
 
 } // namespace dom

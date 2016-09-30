@@ -818,10 +818,10 @@ WebGLContext::ValidateBufferFetching(const char* info)
     for (const auto& vd : mBoundVertexArray->mAttribs) {
         // If the attrib array isn't enabled, there's nothing to check;
         // it's a static value.
-        if (!vd.enabled)
+        if (!vd.mEnabled)
             continue;
 
-        if (vd.buf == nullptr) {
+        if (!vd.mBuf) {
             ErrorInvalidOperation("%s: no VBO bound to enabled vertex attrib index %du!",
                                   info, i);
             return false;
@@ -843,52 +843,39 @@ WebGLContext::ValidateBufferFetching(const char* info)
         }
 
         const auto& vd = mBoundVertexArray->mAttribs[attribLoc];
-        if (!vd.enabled)
+        if (!vd.mEnabled)
             continue;
 
-        // the base offset
-        CheckedUint32 checked_byteLength = CheckedUint32(vd.buf->ByteLength()) - vd.byteOffset;
-        CheckedUint32 checked_sizeOfLastElement = CheckedUint32(vd.componentSize()) * vd.size;
-
-        if (!checked_byteLength.isValid() ||
-            !checked_sizeOfLastElement.isValid())
-        {
-            ErrorInvalidOperation("%s: Integer overflow occured while checking vertex"
-                                  " attrib %u.",
-                                  info, attribLoc);
-            return false;
-        }
-
-        if (checked_byteLength.value() < checked_sizeOfLastElement.value()) {
+        const auto& bufByteLen = vd.mBuf->ByteLength();
+        if (vd.ByteOffset() > bufByteLen) {
             maxVertices = 0;
             maxInstances = 0;
             break;
         }
 
-        CheckedUint32 checked_maxAllowedCount = ((checked_byteLength - checked_sizeOfLastElement) / vd.actualStride()) + 1;
-
-        if (!checked_maxAllowedCount.isValid()) {
-            ErrorInvalidOperation("%s: Integer overflow occured while checking vertex"
-                                  " attrib %u.",
-                                  info, attribLoc);
-            return false;
+        size_t availBytes = bufByteLen - vd.ByteOffset();
+        if (vd.BytesPerVertex() > availBytes) {
+            maxVertices = 0;
+            maxInstances = 0;
+            break;
         }
+        availBytes -= vd.BytesPerVertex();
+        const size_t vertCapacity = 1 + availBytes / vd.ExplicitStride();
 
-        if (vd.divisor == 0) {
-            maxVertices = std::min(maxVertices, checked_maxAllowedCount.value());
+        if (vd.mDivisor == 0) {
+            if (vertCapacity < maxVertices) {
+                maxVertices = vertCapacity;
+            }
             hasPerVertex = true;
         } else {
-            CheckedUint32 checked_curMaxInstances = checked_maxAllowedCount * vd.divisor;
-
-            uint32_t curMaxInstances = UINT32_MAX;
-            // If this isn't valid, it's because we overflowed our
-            // uint32 above. Just leave this as UINT32_MAX, since
-            // sizeof(uint32) becomes our limiting factor.
-            if (checked_curMaxInstances.isValid()) {
-                curMaxInstances = checked_curMaxInstances.value();
+            const auto curMaxInstances = CheckedInt<size_t>(vertCapacity) * vd.mDivisor;
+            // If this isn't valid, it's because we overflowed, which means we can support
+            // *too much*. Don't update maxInstances in this case.
+            if (curMaxInstances.isValid() &&
+                curMaxInstances.value() < maxInstances)
+            {
+                maxInstances = curMaxInstances.value();
             }
-
-            maxInstances = std::min(maxInstances, curMaxInstances);
         }
     }
 
@@ -1025,23 +1012,10 @@ WebGLContext::UndoFakeVertexAttrib0()
     if (MOZ_LIKELY(whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default))
         return;
 
-    if (mBoundVertexArray->HasAttrib(0) && mBoundVertexArray->mAttribs[0].buf) {
+    if (mBoundVertexArray->HasAttrib(0) && mBoundVertexArray->mAttribs[0].mBuf) {
         const WebGLVertexAttribData& attrib0 = mBoundVertexArray->mAttribs[0];
-        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.buf->mGLName);
-        if (attrib0.integer) {
-            gl->fVertexAttribIPointer(0,
-                                      attrib0.size,
-                                      attrib0.type,
-                                      attrib0.stride,
-                                      reinterpret_cast<const GLvoid*>(attrib0.byteOffset));
-        } else {
-            gl->fVertexAttribPointer(0,
-                                     attrib0.size,
-                                     attrib0.type,
-                                     attrib0.normalized,
-                                     attrib0.stride,
-                                     reinterpret_cast<const GLvoid*>(attrib0.byteOffset));
-        }
+        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.mBuf->mGLName);
+        attrib0.DoVertexAttribPointer(gl, 0);
     } else {
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     }

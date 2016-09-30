@@ -4,9 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
+import copy
+import glob
+import json
 import os
 import sys
-import copy
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
@@ -14,7 +16,7 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
-from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
+from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options, TOOLTOOL_PLATFORM_DIR
 
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.base.log import INFO
@@ -57,6 +59,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
                 'clobber',
                 'read-buildbot-config',
                 'download-and-extract',
+                'fetch-geckodriver',
                 'create-virtualenv',
                 'pull',
                 'install',
@@ -73,6 +76,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
         self.installer_path = c.get('installer_path')
         self.binary_path = c.get('binary_path')
         self.abs_app_dir = None
+        self.geckodriver_path = None
 
     def query_abs_app_dir(self):
         """We can't set this in advance, because OSX install directories
@@ -150,6 +154,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             if val:
                 cmd.append("--%s=%s" % (opt.replace("_", "-"), val))
 
+        if "wdspec" in c.get("test_type", []):
+            assert self.geckodriver_path is not None
+            cmd.append("--webdriver-binary=%s" % self.geckodriver_path)
+
         options = list(c.get("options", []))
 
         str_format_values = {
@@ -179,6 +187,43 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
                           "tools/wptserve/*",
                           "web-platform/*"],
             suite_categories=["web-platform"])
+
+    def fetch_geckodriver(self):
+        c = self.config
+        dirs = self.query_abs_dirs()
+
+        platform_name = self.platform_name()
+
+        if "wdspec" not in c.get("test_type", []):
+            return
+
+        if platform_name != "linux64":
+            self.fatal("Don't have a geckodriver for %s" % platform_name)
+
+        tooltool_path = os.path.join(dirs["abs_test_install_dir"],
+                                     "config",
+                                     "tooltool-manifests",
+                                     TOOLTOOL_PLATFORM_DIR[platform_name],
+                                     "geckodriver.manifest")
+
+        with open(tooltool_path) as f:
+            manifest = json.load(f)
+
+        assert len(manifest) == 1
+        geckodriver_filename = manifest[0]["filename"]
+        assert geckodriver_filename.endswith(".tar.gz")
+
+        self.tooltool_fetch(
+            manifest=tooltool_path,
+            output_dir=dirs['abs_work_dir'],
+            cache=c.get('tooltool_cache')
+        )
+
+        compressed_path = os.path.join(dirs['abs_work_dir'], geckodriver_filename)
+        tar = self.query_exe('tar', return_type="list")
+        self.run_command(tar + ["xf", compressed_path], cwd=dirs['abs_work_dir'],
+                         halt_on_failure=True, fatal_exit_code=3)
+        self.geckodriver_path = os.path.join(dirs['abs_work_dir'], "geckodriver")
 
     def run_tests(self):
         dirs = self.query_abs_dirs()

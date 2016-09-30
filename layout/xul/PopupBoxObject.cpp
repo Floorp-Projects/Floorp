@@ -232,6 +232,7 @@ PopupBoxObject::GetPopupState(nsString& aState)
         aState.AssignLiteral("open");
         break;
       case ePopupShowing:
+      case ePopupPositioning:
       case ePopupOpening:
       case ePopupVisible:
         aState.AssignLiteral("showing");

@@ -676,9 +676,6 @@ protected:
   // while seeking.
   bool mPinnedForSeek;
 
-  // True if the playback is paused because the playback rate member is 0.0.
-  bool mPausedForPlaybackRateNull;
-
   // Be assigned from media element during the initialization and pass to
   // AudioStream Class.
   dom::AudioChannel mAudioChannel;

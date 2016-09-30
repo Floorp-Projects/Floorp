@@ -121,7 +121,8 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow,
   nsresult rv;
   nsCOMPtr<nsIURI> currentURI;
   rv = GetURIFromWindow(aWindow, getter_AddRefs(currentURI));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCString bottomDomain;
   rv = GetBaseDomain(currentURI, bottomDomain);

@@ -39,7 +39,7 @@ XDRBuffer::grow(size_t n)
     MOZ_ASSERT(offset <= MAX_CAPACITY);
     if (n > MAX_CAPACITY - offset) {
         js::gc::AutoSuppressGC suppressGC(cx());
-        JS_ReportErrorNumber(cx(), GetErrorMessage, nullptr, JSMSG_TOO_BIG_TO_ENCODE);
+        JS_ReportErrorNumberASCII(cx(), GetErrorMessage, nullptr, JSMSG_TOO_BIG_TO_ENCODE);
         return false;
     }
     size_t newCapacity = mozilla::RoundUpPow2(offset + n);
@@ -97,7 +97,8 @@ VersionCheck(XDRState<mode>* xdr)
 {
     JS::BuildIdCharVector buildId;
     if (!xdr->cx()->buildIdOp() || !xdr->cx()->buildIdOp()(&buildId)) {
-        JS_ReportErrorNumber(xdr->cx(), GetErrorMessage, nullptr, JSMSG_BUILD_ID_NOT_AVAILABLE);
+        JS_ReportErrorNumberASCII(xdr->cx(), GetErrorMessage, nullptr,
+                                  JSMSG_BUILD_ID_NOT_AVAILABLE);
         return false;
     }
     MOZ_ASSERT(!buildId.empty());
@@ -110,7 +111,7 @@ VersionCheck(XDRState<mode>* xdr)
         return false;
 
     if (mode == XDR_DECODE && buildIdLength != buildId.length()) {
-        JS_ReportErrorNumber(xdr->cx(), GetErrorMessage, nullptr, JSMSG_BAD_BUILD_ID);
+        JS_ReportErrorNumberASCII(xdr->cx(), GetErrorMessage, nullptr, JSMSG_BAD_BUILD_ID);
         return false;
     }
 
@@ -132,7 +133,7 @@ VersionCheck(XDRState<mode>* xdr)
 
         if (!PodEqual(decodedBuildId.begin(), buildId.begin(), buildIdLength)) {
             // We do not provide binary compatibility with older scripts.
-            JS_ReportErrorNumber(xdr->cx(), GetErrorMessage, nullptr, JSMSG_BAD_BUILD_ID);
+            JS_ReportErrorNumberASCII(xdr->cx(), GetErrorMessage, nullptr, JSMSG_BAD_BUILD_ID);
             return false;
         }
     }

@@ -499,7 +499,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mVideoFrameContainer(aOwner->GetVideoFrameContainer())
   , mPlaybackStatistics(new MediaChannelStatistics())
   , mPinnedForSeek(false)
-  , mPausedForPlaybackRateNull(false)
   , mMinimizePreroll(false)
   , mMediaTracksConstructed(false)
   , mFiredMetadataLoaded(false)
@@ -794,7 +793,7 @@ MediaDecoder::Play()
   UpdateDormantState(false /* aDormantTimeout */, true /* aActivity */);
 
   NS_ASSERTION(mDecoderStateMachine != nullptr, "Should have state machine.");
-  if (mPausedForPlaybackRateNull) {
+  if (mPlaybackRate == 0) {
     return NS_OK;
   }
 
@@ -1522,21 +1521,19 @@ void
 MediaDecoder::SetPlaybackRate(double aPlaybackRate)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  double oldRate = mPlaybackRate;
   mPlaybackRate = aPlaybackRate;
-  if (mPlaybackRate == 0.0) {
-    mPausedForPlaybackRateNull = true;
+  if (aPlaybackRate == 0) {
     Pause();
     return;
   }
 
-  if (mPausedForPlaybackRateNull) {
-    // Play() uses mPausedForPlaybackRateNull value, so must reset it first
-    mPausedForPlaybackRateNull = false;
-    // If the playbackRate is no longer null, restart the playback, iff the
-    // media was playing.
-    if (!mOwner->GetPaused()) {
-      Play();
-    }
+
+  if (oldRate == 0 && !mOwner->GetPaused()) {
+    // PlaybackRate is no longer null.
+    // Restart the playback if the media was playing.
+    Play();
   }
 
   if (mDecoderStateMachine) {

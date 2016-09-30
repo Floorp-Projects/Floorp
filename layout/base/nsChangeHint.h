@@ -211,6 +211,12 @@ enum nsChangeHint {
    */
   nsChangeHint_UpdateBackgroundPosition = 1 << 26,
 
+  /**
+   * Indicates that a frame has changed to or from having the CSS
+   * transform property set.
+   */
+  nsChangeHint_AddOrRemoveTransform = 1 << 27,
+
   // IMPORTANT NOTE: When adding new hints, consider whether you need
   // to add them to NS_HintsNotHandledForDescendantsIn() below. Please
   // also add them to RestyleManager::ChangeHintToString and modify
@@ -219,7 +225,7 @@ enum nsChangeHint {
   /**
    * Dummy hint value for all hints. It exists for compile time check.
    */
-  nsChangeHint_AllHints = (1 << 27) - 1,
+  nsChangeHint_AllHints = (1 << 28) - 1,
 };
 
 // Redefine these operators to return nothing. This will catch any use
@@ -302,6 +308,7 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
           nsChangeHint_ChildrenOnlyTransform | \
           nsChangeHint_RecomputePosition | \
           nsChangeHint_UpdateContainingBlock | \
+          nsChangeHint_AddOrRemoveTransform | \
           nsChangeHint_BorderStyleNoneChange | \
           nsChangeHint_NeedReflow | \
           nsChangeHint_ReflowChangesSizeOrPosition | \
@@ -322,6 +329,7 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     nsChangeHint_ChildrenOnlyTransform |
     nsChangeHint_RecomputePosition |
     nsChangeHint_UpdateContainingBlock |
+    nsChangeHint_AddOrRemoveTransform |
     nsChangeHint_BorderStyleNoneChange |
     nsChangeHint_UpdateComputedBSize |
     nsChangeHint_UpdateUsesOpacity | \

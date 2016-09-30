@@ -1514,16 +1514,16 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
 
   nsCSSValue* borderLeftColor = aData->ValueForBorderLeftColor();
   if (borderLeftColor->GetUnit() == eCSSUnit_Null)
-    borderLeftColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+    borderLeftColor->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
   nsCSSValue* borderTopColor = aData->ValueForBorderTopColor();
   if (borderTopColor->GetUnit() == eCSSUnit_Null)
-    borderTopColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+    borderTopColor->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
   nsCSSValue* borderRightColor = aData->ValueForBorderRightColor();
   if (borderRightColor->GetUnit() == eCSSUnit_Null)
-    borderRightColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+    borderRightColor->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
   nsCSSValue* borderBottomColor = aData->ValueForBorderBottomColor();
   if (borderBottomColor->GetUnit() == eCSSUnit_Null)
-    borderBottomColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+    borderBottomColor->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
 }
 
 void

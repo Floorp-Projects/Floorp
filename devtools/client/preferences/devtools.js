@@ -350,6 +350,10 @@ pref("devtools.jsonview.enabled", false);
 pref("devtools.jsonview.enabled", true);
 #endif
 
-// Disable the HTML responsive design tool by default.  Currently disabled until
-// ready to replace the legacy XUL version.
+// Enable the HTML responsive design tool in Nightly only.  Disabled by default for all
+// other channels.
+#ifdef NIGHTLY_BUILD
+pref("devtools.responsive.html.enabled", true);
+#else
 pref("devtools.responsive.html.enabled", false);
+#endif

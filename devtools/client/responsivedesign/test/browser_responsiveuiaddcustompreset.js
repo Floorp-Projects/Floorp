@@ -46,10 +46,13 @@ add_task(function* () {
   Services.prompt.value = "Testing preset";
   Services.prompt.returnBool = true;
 
-  let resized = once(manager, "contentResize");
+  let resized = once(manager, "content-resize");
   let customHeight = 123, customWidth = 456;
   rdm.startResizing({});
-  rdm.setSize(customWidth, customHeight);
+  rdm.setViewportSize({
+    width: customWidth,
+    height: customHeight,
+  });
   rdm.stopResizing({});
 
   rdm.addbutton.doCommand();

@@ -132,9 +132,23 @@ ContentClientBasic::CreateBuffer(ContentType aType,
     gfxDevCrash(LogReason::AlphaWithBasicClient) << "Asking basic content client for component alpha";
   }
 
+  IntSize size(aRect.width, aRect.height);
+#ifdef XP_WIN
+  if (mBackend == BackendType::CAIRO && 
+      (aType == gfxContentType::COLOR || aType == gfxContentType::COLOR_ALPHA)) {
+    RefPtr<gfxASurface> surf =
+      new gfxWindowsSurface(size, aType == gfxContentType::COLOR ? gfxImageFormat::X8R8G8B8_UINT32 :
+                                                                   gfxImageFormat::A8R8G8B8_UINT32);
+    *aBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, size);
+
+    if (*aBlackDT) {
+      return;
+    }
+  }
+#endif
+
   *aBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForBackend(
-    mBackend,
-    IntSize(aRect.width, aRect.height),
+    mBackend, size,
     gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aType));
 }
 

@@ -611,12 +611,20 @@ SpecialPowersObserverAPI.prototype = {
         // they're run on a bare archive rather than a running instance,
         // as the add-on manager runs them.
         let extensionData = new ExtensionData(extension.rootURI);
-        extensionData.readManifest().then(() => {
-          return extensionData.initAllLocales();
-        }).then(() => {
-          if (extensionData.errors.length) {
-            return Promise.reject("Extension contains packaging errors");
+        extensionData.readManifest().then(
+          () => {
+            return extensionData.initAllLocales().then(() => {
+              if (extensionData.errors.length) {
+                return Promise.reject("Extension contains packaging errors");
+              }
+            });
+          },
+          () => {
+            // readManifest() will throw if we're loading an embedded
+            // extension, so don't worry about locale errors in that
+            // case.
           }
+        ).then(() => {
           return extension.startup();
         }).then(() => {
           this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionStarted", args: []});

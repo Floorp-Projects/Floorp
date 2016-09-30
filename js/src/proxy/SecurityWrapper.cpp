@@ -14,7 +14,7 @@ using namespace js;
 static void
 ReportUnwrapDenied(JSContext *cx)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
 }
 
 template <class Base>

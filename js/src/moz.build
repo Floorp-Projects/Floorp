@@ -194,6 +194,7 @@ UNIFIED_SOURCES += [
     'builtin/WeakSetObject.cpp',
     'devtools/sharkctl.cpp',
     'ds/LifoAlloc.cpp',
+    'ds/MemoryProtectionExceptionHandler.cpp',
     'frontend/BytecodeCompiler.cpp',
     'frontend/BytecodeEmitter.cpp',
     'frontend/FoldConstants.cpp',

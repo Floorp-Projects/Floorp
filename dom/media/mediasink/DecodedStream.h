@@ -72,6 +72,7 @@ private:
   void SendAudio(double aVolume, bool aIsSameOrigin, const PrincipalHandle& aPrincipalHandle);
   void SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHandle);
   void SendData();
+  void NotifyOutput(int64_t aTime);
 
   void AssertOwnerThread() const {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
@@ -101,6 +102,7 @@ private:
   PlaybackParams mParams;
 
   Maybe<int64_t> mStartTime;
+  int64_t mLastOutputTime = 0; // microseconds
   MediaInfo mInfo;
 
   MediaQueue<MediaData>& mAudioQueue;
@@ -110,6 +112,7 @@ private:
   MediaEventListener mVideoPushListener;
   MediaEventListener mAudioFinishListener;
   MediaEventListener mVideoFinishListener;
+  MediaEventListener mOutputListener;
 };
 
 } // namespace mozilla

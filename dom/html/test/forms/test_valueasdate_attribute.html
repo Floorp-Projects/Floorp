@@ -46,8 +46,7 @@ var validTypes =
   ["time", true],
   ["color", false],
   ["month", true],
-  // TODO: temporary set to false until bug 888316 is fixed.
-  ["week", false],
+  ["week", true],
 ];
 
 var todoTypes =
@@ -59,7 +58,7 @@ var todoTypes =
 function checkAvailability()
 {
 
-  for (data of validTypes) {
+  for (let data of validTypes) {
     var exceptionCatched = false;
     element.type = data[0];
     try {
@@ -80,7 +79,7 @@ function checkAvailability()
                                    " availability is not correct");
   }
 
-  for (data of todoTypes) {
+  for (let data of todoTypes) {
     var exceptionCatched = false;
     element.type = data[0];
     try {
@@ -104,7 +103,7 @@ function checkAvailability()
 
 function checkGarbageValues()
 {
-  for (type of validTypes) {
+  for (let type of validTypes) {
     if (!type[1]) {
       continue;
     }
@@ -129,7 +128,7 @@ function checkGarbageValues()
       "foobar", 42, {}, function() { return 42; }, function() { return Date(); }
     ];
 
-    for (value of illegalValues) {
+    for (let value of illegalValues) {
       try {
         var caught = false;
         element.valueAsDate = value;
@@ -177,14 +176,14 @@ function checkDateGet()
   ];
 
   element.type = "date";
-  for (data of validData) {
+  for (let data of validData) {
     element.value = data[0];
     is(element.valueAsDate.valueOf(), data[1],
        "valueAsDate should return the " +
        "valid date object representing this date");
   }
 
-  for (data of invalidData) {
+  for (let data of invalidData) {
     element.value = data[0];
     if (data[1]) {
       is(String(element.valueAsDate), "Invalid Date",
@@ -225,7 +224,7 @@ function checkDateSet()
   ];
 
   element.type = "date";
-  for (data of testData) {
+  for (let data of testData) {
     element.valueAsDate = new Date(data[0]);
     is(element.value, data[1], "valueAsDate should set the value to "
                                 + data[1]);
@@ -276,7 +275,7 @@ function checkTimeGet()
   var element = document.createElement('input');
   element.type = 'time';
 
-  for (test of tests) {
+  for (let test of tests) {
     element.value = test.value;  
     if (test.result === null) {
       is(element.valueAsDate, null, "element.valueAsDate should return null");
@@ -319,7 +318,7 @@ function checkTimeSet()
   var element = document.createElement('input');
   element.type = 'time';
 
-  for (test of tests) {
+  for (let test of tests) {
     element.valueAsDate = new Date(test.value);
     is(element.value, test.result,
        "element.value should have been changed by setting valueAsDate");
@@ -328,7 +327,7 @@ function checkTimeSet()
 
 function checkWithBustedPrototype()
 {
-  for (type of validTypes) {
+  for (let type of validTypes) {
     if (!type[1]) {
       continue;
     }
@@ -443,14 +442,14 @@ function checkMonthGet()
   ];
 
   element.type = "month";
-  for (data of validData) {
+  for (let data of validData) {
     element.value = data[0];
     is(element.valueAsDate.valueOf(), data[1],
        "valueAsDate should return the " +
        "valid date object representing this month");
   }
 
-  for (data of invalidData) {
+  for (let data of invalidData) {
     element.value = data[0];
     if (data[1]) {
       is(String(element.valueAsDate), "Invalid Date",
@@ -490,7 +489,156 @@ function checkMonthSet()
   ];
 
   element.type = "month";
-  for (data of testData) {
+  for (let data of testData) {
+    element.valueAsDate = new Date(data[0]);
+    is(element.value, data[1], "valueAsDate should set the value to "
+                                + data[1]);
+    element.valueAsDate = new testFrame.Date(data[0]);
+    is(element.value, data[1], "valueAsDate with other-global date should " +
+                               "set the value to " + data[1]);
+  }
+}
+
+function checkWeekGet()
+{
+  var validData =
+  [
+    // Common years starting on different days of week.
+    [ "2007-W01", Date.UTC(2007, 0, 1)   ], // Mon
+    [ "2013-W01", Date.UTC(2012, 11, 31) ], // Tue
+    [ "2014-W01", Date.UTC(2013, 11, 30) ], // Wed
+    [ "2015-W01", Date.UTC(2014, 11, 29) ], // Thu
+    [ "2010-W01", Date.UTC(2010, 0, 4)   ], // Fri
+    [ "2011-W01", Date.UTC(2011, 0, 3)   ], // Sat
+    [ "2017-W01", Date.UTC(2017, 0, 2)   ], // Sun
+    // Common years ending on different days of week.
+    [ "2007-W52", Date.UTC(2007, 11, 24) ], // Mon
+    [ "2013-W52", Date.UTC(2013, 11, 23) ], // Tue
+    [ "2014-W52", Date.UTC(2014, 11, 22) ], // Wed
+    [ "2015-W53", Date.UTC(2015, 11, 28) ], // Thu
+    [ "2010-W52", Date.UTC(2010, 11, 27) ], // Fri
+    [ "2011-W52", Date.UTC(2011, 11, 26) ], // Sat
+    [ "2017-W52", Date.UTC(2017, 11, 25) ], // Sun
+    // Leap years starting on different days of week.
+    [ "1996-W01", Date.UTC(1996, 0, 1)   ], // Mon
+    [ "2008-W01", Date.UTC(2007, 11, 31) ], // Tue
+    [ "2020-W01", Date.UTC(2019, 11, 30) ], // Wed
+    [ "2004-W01", Date.UTC(2003, 11, 29) ], // Thu
+    [ "2016-W01", Date.UTC(2016, 0, 4)   ], // Fri
+    [ "2000-W01", Date.UTC(2000, 0, 3)   ], // Sat
+    [ "2012-W01", Date.UTC(2012, 0, 2)   ], // Sun
+    // Leap years ending on different days of week.
+    [ "2012-W52", Date.UTC(2012, 11, 24) ], // Mon
+    [ "2024-W52", Date.UTC(2024, 11, 23) ], // Tue
+    [ "1980-W52", Date.UTC(1980, 11, 22) ], // Wed
+    [ "1992-W53", Date.UTC(1992, 11, 28) ], // Thu
+    [ "2004-W53", Date.UTC(2004, 11, 27) ], // Fri
+    [ "1988-W52", Date.UTC(1988, 11, 26) ], // Sat
+    [ "2000-W52", Date.UTC(2000, 11, 25) ], // Sun
+    // Other normal cases.
+    [ "2016-W36",   1473033600000    ],
+    [ "1969-W52",   -864000000       ],
+    [ "1970-W01",   -259200000       ],
+    [ "275760-W37", 8639999568000000 ],
+  ];
+
+  var invalidData =
+  [
+    [ "invalidweek" ],
+    [ "0000-W01"     ],
+    [ "2016-W00"     ],
+    [ "123-W01"      ],
+    [ "2016-W53"     ],
+    [ ""             ],
+    // This week is valid for the input element, but is out of
+    // the date object range. In this case, on getting valueAsDate,
+    // a Date object will be created, but it will have a NaN internal value,
+    // and will return the string "Invalid Date".
+    [ "275760-W38", true ],
+  ];
+
+  element.type = "week";
+  for (let data of validData) {
+    element.value = data[0];
+    is(element.valueAsDate.valueOf(), data[1],
+       "valueAsDate should return the " +
+       "valid date object representing this week");
+  }
+
+  for (let data of invalidData) {
+    element.value = data[0];
+    if (data[1]) {
+      is(String(element.valueAsDate), "Invalid Date",
+         "valueAsDate should return an invalid Date object "  +
+         "when the element value is not a valid week");
+    } else {
+      is(element.valueAsDate, null,
+         "valueAsDate should return null "  +
+         "when the element value is not a valid week");
+    }
+  }
+}
+
+function checkWeekSet()
+{
+  var testData =
+  [
+    // Common years starting on different days of week.
+    [ Date.UTC(2007, 0, 1), "2007-W01"   ], // Mon
+    [ Date.UTC(2013, 0, 1), "2013-W01"   ], // Tue
+    [ Date.UTC(2014, 0, 1), "2014-W01"   ], // Wed
+    [ Date.UTC(2015, 0, 1), "2015-W01"   ], // Thu
+    [ Date.UTC(2010, 0, 1), "2009-W53"   ], // Fri
+    [ Date.UTC(2011, 0, 1), "2010-W52"   ], // Sat
+    [ Date.UTC(2017, 0, 1), "2016-W52"   ], // Sun
+    // Common years ending on different days of week.
+    [ Date.UTC(2007, 11, 31), "2008-W01" ], // Mon
+    [ Date.UTC(2013, 11, 31), "2014-W01" ], // Tue
+    [ Date.UTC(2014, 11, 31), "2015-W01" ], // Wed
+    [ Date.UTC(2015, 11, 31), "2015-W53" ], // Thu
+    [ Date.UTC(2010, 11, 31), "2010-W52" ], // Fri
+    [ Date.UTC(2011, 11, 31), "2011-W52" ], // Sat
+    [ Date.UTC(2017, 11, 31), "2017-W52" ], // Sun
+    // Leap years starting on different days of week.
+    [ Date.UTC(1996, 0, 1), "1996-W01"   ], // Mon
+    [ Date.UTC(2008, 0, 1), "2008-W01"   ], // Tue
+    [ Date.UTC(2020, 0, 1), "2020-W01"   ], // Wed
+    [ Date.UTC(2004, 0, 1), "2004-W01"   ], // Thu
+    [ Date.UTC(2016, 0, 1), "2015-W53"   ], // Fri
+    [ Date.UTC(2000, 0, 1), "1999-W52"   ], // Sat
+    [ Date.UTC(2012, 0, 1), "2011-W52"   ], // Sun
+    // Leap years ending on different days of week.
+    [ Date.UTC(2012, 11, 31), "2013-W01" ], // Mon
+    [ Date.UTC(2024, 11, 31), "2025-W01" ], // Tue
+    [ Date.UTC(1980, 11, 31), "1981-W01" ], // Wed
+    [ Date.UTC(1992, 11, 31), "1992-W53" ], // Thu
+    [ Date.UTC(2004, 11, 31), "2004-W53" ], // Fri
+    [ Date.UTC(1988, 11, 31), "1988-W52" ], // Sat
+    [ Date.UTC(2000, 11, 31), "2000-W52" ], // Sun
+    // Other normal cases.
+    [ Date.UTC(2016, 8, 9),  "2016-W36" ],
+    [ Date.UTC(2010, 0, 3),  "2009-W53" ],
+    [ Date.UTC(2010, 0, 4),  "2010-W01" ],
+    [ Date.UTC(2010, 0, 10), "2010-W01" ],
+    [ Date.UTC(2010, 0, 11), "2010-W02" ],
+    [ 0,                     "1970-W01" ],
+    // Maximum valid month (limited by the ecma date object range).
+    [ 8640000000000000,      "275760-W37" ],
+    // Minimum valid month (limited by the input element minimum valid value).
+    [ -62135596800000 ,      "0001-W01" ],
+    // "Values must be truncated to valid week"
+    [ 42.1234,               "1970-W01" ],
+    [ 123.123456789123,      "1970-W01" ],
+    [ 1e-1,                  "1970-W01" ],
+    [ -1.1,                  "1970-W01" ],
+    [ -345600000,            "1969-W52" ],
+    // Negative years, this is out of range for the input element,
+    // the corresponding week string is the empty string
+    [ -62135596800001,       "" ],
+  ];
+
+  element.type = "week";
+  for (let data of testData) {
     element.valueAsDate = new Date(data[0]);
     is(element.value, data[1], "valueAsDate should set the value to "
                                 + data[1]);
@@ -516,7 +664,12 @@ checkTimeSet();
 checkMonthGet();
 checkMonthSet();
 
+// Test <input type='week'>.
+checkWeekGet();
+checkWeekSet();
+
 </script>
 </pre>
 </body>
 </html>
+

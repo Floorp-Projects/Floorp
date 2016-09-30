@@ -727,6 +727,36 @@ class Assembler : public AssemblerX86Shared
         }
         return CodeOffset(masm.currentOffset());
     }
+    CodeOffset movlWithPatchLow(Register regLow, const Operand& dest) {
+        switch (dest.kind()) {
+          case Operand::MEM_REG_DISP: {
+            Address addr = dest.toAddress();
+            Operand low(addr.base, addr.offset + INT64LOW_OFFSET);
+            return movlWithPatch(regLow, low);
+          }
+          case Operand::MEM_ADDRESS32: {
+            Operand low(PatchedAbsoluteAddress(uint32_t(dest.address()) + INT64LOW_OFFSET));
+            return movlWithPatch(regLow, low);
+          }
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+    CodeOffset movlWithPatchHigh(Register regHigh, const Operand& dest) {
+        switch (dest.kind()) {
+          case Operand::MEM_REG_DISP: {
+            Address addr = dest.toAddress();
+            Operand high(addr.base, addr.offset + INT64HIGH_OFFSET);
+            return movlWithPatch(regHigh, high);
+          }
+          case Operand::MEM_ADDRESS32: {
+            Operand high(PatchedAbsoluteAddress(uint32_t(dest.address()) + INT64HIGH_OFFSET));
+            return movlWithPatch(regHigh, high);
+          }
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     CodeOffset vmovdWithPatch(FloatRegister src, const Operand& dest) {
         MOZ_ASSERT(HasSSE2());
         switch (dest.kind()) {

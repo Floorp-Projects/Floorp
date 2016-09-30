@@ -323,6 +323,13 @@ UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 extern Latin1CharsZ
 LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
+/*
+ * Returns true if all characters in the given null-terminated string are
+ * ASCII, i.e. < 0x80, false otherwise.
+ */
+extern bool
+StringIsASCII(const char* s);
+
 } // namespace JS
 
 inline void JS_free(JS::Latin1CharsZ& ptr) { js_free((void*)ptr.get()); }

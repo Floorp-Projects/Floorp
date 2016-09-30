@@ -64,8 +64,10 @@ JOB_NAME_WHITELIST = set([
     'sm-tsan-opt',
     'win32-debug',
     'win32-opt',
+    'win32-pgo',
     'win64-debug',
     'win64-opt',
+    'win64-pgo',
 ])
 
 JOB_NAME_WHITELIST_ERROR = """\

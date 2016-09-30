@@ -22,7 +22,7 @@ div {
   }
 }
 
-@media (min-height: 200px) and (max-height: 250px) {
+@media (min-height: 300px) and (max-height: 320px) {
   div {
     color: orange;
   }
