@@ -5250,7 +5250,7 @@ Selection::CollapseToEnd(ErrorResult& aRv)
  * IsCollapsed -- is the whole selection just one point, or unset?
  */
 bool
-Selection::IsCollapsed()
+Selection::IsCollapsed() const
 {
   uint32_t cnt = mRanges.Length();
   if (cnt == 0) {
@@ -5310,7 +5310,7 @@ Selection::GetRangeAt(uint32_t aIndex, ErrorResult& aRv)
 }
 
 nsRange*
-Selection::GetRangeAt(int32_t aIndex)
+Selection::GetRangeAt(int32_t aIndex) const
 {
   RangeData empty(nullptr);
   return mRanges.SafeElementAt(aIndex, empty).mRange;
@@ -5815,6 +5815,48 @@ Selection::ContainsNode(nsINode& aNode, bool aAllowPartial, ErrorResult& aRv)
   return false;
 }
 
+class PointInRectChecker : public nsLayoutUtils::RectCallback {
+public:
+  explicit PointInRectChecker(const nsPoint& aPoint)
+    : mPoint(aPoint)
+    , mMatchFound(false)
+  {
+  }
+
+  void AddRect(const nsRect& aRect) override
+  {
+    mMatchFound = mMatchFound || aRect.Contains(mPoint);
+  }
+
+  bool MatchFound()
+  {
+    return mMatchFound;
+  }
+
+private:
+  nsPoint mPoint;
+  bool mMatchFound;
+};
+
+bool
+Selection::ContainsPoint(const nsPoint& aPoint)
+{
+  if (IsCollapsed()) {
+    return false;
+  }
+  PointInRectChecker checker(aPoint);
+  for (uint32_t i = 0; i < RangeCount(); i++) {
+    nsRange* range = GetRangeAt(i);
+    nsRange::CollectClientRects(&checker, range,
+                                range->GetStartParent(), range->StartOffset(),
+                                range->GetEndParent(), range->EndOffset(),
+                                true, false);
+    if (checker.MatchFound()) {
+      return true;
+    }
+  }
+  return false;
+}
 
 nsPresContext*
 Selection::GetPresContext() const
