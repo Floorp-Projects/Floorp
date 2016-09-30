@@ -518,3 +518,14 @@ JS::ConstUTF8CharsZ::validate(size_t aLength)
         /* smallestEncoding = */ nullptr);
 }
 #endif
+
+bool
+JS::StringIsASCII(const char* s)
+{
+    while (*s) {
+        if (*s & 0x80)
+            return false;
+        s++;
+    }
+    return true;
+}
