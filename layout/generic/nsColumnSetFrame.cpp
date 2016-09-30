@@ -95,13 +95,13 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
   if (isVertical) {
     border.SetBorderWidth(NS_SIDE_TOP, ruleWidth);
     border.SetBorderStyle(NS_SIDE_TOP, ruleStyle);
-    border.SetBorderColor(NS_SIDE_TOP, ruleColor);
+    border.mBorderTopColor = StyleComplexColor::FromColor(ruleColor);
     skipSides |= mozilla::eSideBitsLeftRight;
     skipSides |= mozilla::eSideBitsBottom;
   } else {
     border.SetBorderWidth(NS_SIDE_LEFT, ruleWidth);
     border.SetBorderStyle(NS_SIDE_LEFT, ruleStyle);
-    border.SetBorderColor(NS_SIDE_LEFT, ruleColor);
+    border.mBorderLeftColor = StyleComplexColor::FromColor(ruleColor);
     skipSides |= mozilla::eSideBitsTopBottom;
     skipSides |= mozilla::eSideBitsRight;
   }

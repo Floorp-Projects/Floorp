@@ -84,8 +84,8 @@ const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.propert
  *         An iframe in which the caller has kindly loaded markup.xhtml.
  */
 function MarkupView(inspector, frame, controllerWindow) {
-  this._inspector = inspector;
-  this.walker = this._inspector.walker;
+  this.inspector = inspector;
+  this.walker = this.inspector.walker;
   this._frame = frame;
   this.win = this._frame.contentWindow;
   this.doc = this._frame.contentDocument;
@@ -109,7 +109,7 @@ function MarkupView(inspector, frame, controllerWindow) {
     theme: "auto",
   };
 
-  this.popup = new AutocompletePopup(inspector._toolbox, options);
+  this.popup = new AutocompletePopup(inspector.toolbox, options);
 
   this.undo = new UndoStack();
   this.undo.installController(controllerWindow);
@@ -145,8 +145,8 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._frame.addEventListener("focus", this._onFocus, false);
   this.walker.on("mutations", this._mutationObserver);
   this.walker.on("display-change", this._onDisplayChange);
-  this._inspector.selection.on("new-node-front", this._onNewSelection);
-  this._inspector.toolbox.on("picker-node-hovered", this._onToolboxPickerHover);
+  this.inspector.selection.on("new-node-front", this._onNewSelection);
+  this.toolbox.on("picker-node-hovered", this._onToolboxPickerHover);
 
   this._onNewSelection();
   this._initTooltips();
@@ -168,6 +168,10 @@ MarkupView.prototype = {
 
   _selectedContainer: null,
 
+  get toolbox() {
+    return this.inspector.toolbox;
+  },
+
   /**
    * Handle promise rejections for various asynchronous actions, and only log errors if
    * the markup view still exists.
@@ -181,9 +185,9 @@ MarkupView.prototype = {
   },
 
   _initTooltips: function () {
-    this.eventDetailsTooltip = new HTMLTooltip(this._inspector.toolbox,
+    this.eventDetailsTooltip = new HTMLTooltip(this.toolbox,
       {type: "arrow"});
-    this.imagePreviewTooltip = new HTMLTooltip(this._inspector.toolbox,
+    this.imagePreviewTooltip = new HTMLTooltip(this.toolbox,
       {type: "arrow", useXulWrapper: "true"});
     this._enableImagePreviewTooltip();
   },
@@ -423,8 +427,7 @@ MarkupView.prototype = {
    *         requests queued up
    */
   _showBoxModel: function (nodeFront) {
-    return this._inspector.toolbox.highlighterUtils
-      .highlightNodeFront(nodeFront);
+    return this.toolbox.highlighterUtils.highlightNodeFront(nodeFront);
   },
 
   /**
@@ -437,7 +440,7 @@ MarkupView.prototype = {
    *         requests queued up
    */
   _hideBoxModel: function (forceHide) {
-    return this._inspector.toolbox.highlighterUtils.unhighlight(forceHide);
+    return this.toolbox.highlighterUtils.unhighlight(forceHide);
   },
 
   _briefBoxModelTimer: null,
@@ -551,14 +554,14 @@ MarkupView.prototype = {
    * highlighted.
    */
   _shouldNewSelectionBeHighlighted: function () {
-    let reason = this._inspector.selection.reason;
+    let reason = this.inspector.selection.reason;
     let unwantedReasons = [
       "inspector-open",
       "navigateaway",
       "nodeselected",
       "test"
     ];
-    let isHighlight = this._hoveredNode === this._inspector.selection.nodeFront;
+    let isHighlight = this._hoveredNode === this.inspector.selection.nodeFront;
     return !isHighlight && reason && unwantedReasons.indexOf(reason) === -1;
   },
 
@@ -568,7 +571,7 @@ MarkupView.prototype = {
    * the view.
    */
   _onNewSelection: function () {
-    let selection = this._inspector.selection;
+    let selection = this.inspector.selection;
 
     this.htmlEditor.hide();
     if (this._hoveredNode && this._hoveredNode !== selection.nodeFront) {
@@ -581,7 +584,7 @@ MarkupView.prototype = {
       return;
     }
 
-    let done = this._inspector.updating("markup-view");
+    let done = this.inspector.updating("markup-view");
     let onShowBoxModel, onShow;
 
     // Highlight the element briefly if needed.
@@ -611,7 +614,7 @@ MarkupView.prototype = {
    * on why the current node got selected.
    */
   maybeNavigateToNewSelection: function () {
-    let {reason, nodeFront} = this._inspector.selection;
+    let {reason, nodeFront} = this.inspector.selection;
 
     // The list of reasons that should lead to navigating to the node.
     let reasonsToNavigate = [
@@ -656,9 +659,9 @@ MarkupView.prototype = {
       return;
     }
 
-    let selection = this._inspector.selection;
+    let selection = this.inspector.selection;
     if (selection.isNode()) {
-      this._inspector.copyOuterHTML();
+      this.inspector.copyOuterHTML();
     }
     evt.stopPropagation();
     evt.preventDefault();
@@ -713,7 +716,7 @@ MarkupView.prototype = {
       }
       case "markupView.scrollInto.key": {
         let selection = this._selectedContainer.node;
-        this._inspector.scrollNodeIntoView(selection);
+        this.inspector.scrollNodeIntoView(selection);
         break;
       }
       // Generic keys
@@ -965,12 +968,12 @@ MarkupView.prototype = {
       this._elt.appendChild(container.elt);
       this._rootNode = node;
     } else if (nodeType == nodeConstants.ELEMENT_NODE && !isPseudoElement) {
-      container = new MarkupElementContainer(this, node, this._inspector);
+      container = new MarkupElementContainer(this, node, this.inspector);
     } else if (nodeType == nodeConstants.COMMENT_NODE ||
                nodeType == nodeConstants.TEXT_NODE) {
-      container = new MarkupTextContainer(this, node, this._inspector);
+      container = new MarkupTextContainer(this, node, this.inspector);
     } else {
-      container = new MarkupReadOnlyContainer(this, node, this._inspector);
+      container = new MarkupReadOnlyContainer(this, node, this.inspector);
     }
 
     if (flashNode) {
@@ -982,7 +985,7 @@ MarkupView.prototype = {
 
     this._updateChildren(container);
 
-    this._inspector.emit("container-created", container);
+    this.inspector.emit("container-created", container);
 
     return container;
   },
@@ -1039,7 +1042,7 @@ MarkupView.prototype = {
         return;
       }
       this._flashMutatedNodes(mutations);
-      this._inspector.emit("markupmutation", mutations);
+      this.inspector.emit("markupmutation", mutations);
 
       // Since the htmlEditor is absolutely positioned, a mutation may change
       // the location in which it should be shown.
@@ -1277,13 +1280,13 @@ MarkupView.prototype = {
         return;
       }
 
-      this._inspector.off("markupmutation", onMutations);
+      this.inspector.off("markupmutation", onMutations);
       this._removedNodeObserver = null;
 
       // Don't select the new node if the user has already changed the current
       // selection.
-      if (this._inspector.selection.nodeFront === parentContainer.node ||
-          (this._inspector.selection.nodeFront === removedNode && isHTMLTag)) {
+      if (this.inspector.selection.nodeFront === parentContainer.node ||
+          (this.inspector.selection.nodeFront === removedNode && isHTMLTag)) {
         let childContainers = parentContainer.getChildContainers();
         if (childContainers && childContainers[childIndex]) {
           this.markNodeAsSelected(childContainers[childIndex].node, reason);
@@ -1297,7 +1300,7 @@ MarkupView.prototype = {
 
     // Start listening for mutations until we find a childList change that has
     // removedNode removed.
-    this._inspector.on("markupmutation", onMutations);
+    this.inspector.on("markupmutation", onMutations);
   },
 
   /**
@@ -1307,7 +1310,7 @@ MarkupView.prototype = {
    */
   cancelReselectOnRemoved: function () {
     if (this._removedNodeObserver) {
-      this._inspector.off("markupmutation", this._removedNodeObserver);
+      this.inspector.off("markupmutation", this._removedNodeObserver);
       this._removedNodeObserver = null;
       this.emit("canceledreselectonremoved");
     }
@@ -1479,8 +1482,8 @@ MarkupView.prototype = {
     }
 
     // Change the current selection if needed.
-    if (this._inspector.selection.nodeFront !== node) {
-      this._inspector.selection.setNodeFront(node, reason || "nodeselected");
+    if (this.inspector.selection.nodeFront !== node) {
+      this.inspector.selection.setNodeFront(node, reason || "nodeselected");
     }
 
     return true;
@@ -1526,7 +1529,7 @@ MarkupView.prototype = {
    */
   _checkSelectionVisible: function (container) {
     let centered = null;
-    let node = this._inspector.selection.nodeFront;
+    let node = this.inspector.selection.nodeFront;
     while (node) {
       if (node.parentNode() === container.node) {
         centered = node;
@@ -1741,8 +1744,8 @@ MarkupView.prototype = {
     this._frame.removeEventListener("focus", this._onFocus, false);
     this.walker.off("mutations", this._mutationObserver);
     this.walker.off("display-change", this._onDisplayChange);
-    this._inspector.selection.off("new-node-front", this._onNewSelection);
-    this._inspector.toolbox.off("picker-node-hovered",
+    this.inspector.selection.off("new-node-front", this._onNewSelection);
+    this.toolbox.off("picker-node-hovered",
                                 this._onToolboxPickerHover);
 
     this._prefObserver.off(ATTR_COLLAPSE_ENABLED_PREF,
@@ -2338,7 +2341,7 @@ MarkupContainer.prototype = {
       let type = target.dataset.type;
       // Make container tabbable descendants not tabbable (by default).
       this.canFocus = false;
-      this.markup._inspector.followAttributeLink(type, link);
+      this.markup.inspector.followAttributeLink(type, link);
       return;
     }
 
@@ -2646,7 +2649,7 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
 
       let listenerInfo = yield this.node.getEventListenerInfo();
 
-      let toolbox = this.markup._inspector.toolbox;
+      let toolbox = this.markup.toolbox;
       setEventTooltip(tooltip, listenerInfo, toolbox);
       // Disable the image preview tooltip while we display the event details
       this.markup._disableImagePreviewTooltip();
@@ -2912,7 +2915,8 @@ function TextEditor(container, node, templateId) {
         });
       });
     },
-    cssProperties: getCssProperties(this.markup._inspector.toolbox)
+    cssProperties: getCssProperties(this.markup.toolbox),
+    contextMenu: this.markup.inspector.onTextBoxContextMenu
   });
 
   this.update();
@@ -2966,7 +2970,7 @@ function ElementEditor(container, node) {
   this.markup = this.container.markup;
   this.template = this.markup.template.bind(this.markup);
   this.doc = this.markup.doc;
-  this._cssProperties = getCssProperties(this.markup._inspector.toolbox);
+  this._cssProperties = getCssProperties(this.markup.toolbox);
 
   this.attrElements = new Map();
   this.animationTimers = {};
@@ -2994,6 +2998,7 @@ function ElementEditor(container, node) {
       trigger: "dblclick",
       stopOnReturn: true,
       done: this.onTagEdit.bind(this),
+      contextMenu: this.markup.inspector.onTextBoxContextMenu,
       cssProperties: this._cssProperties
     });
   }
@@ -3021,6 +3026,7 @@ function ElementEditor(container, node) {
         undoMods.apply();
       });
     },
+    contextMenu: this.markup.inspector.onTextBoxContextMenu,
     cssProperties: this._cssProperties
   });
 
@@ -3262,6 +3268,7 @@ ElementEditor.prototype = {
           undoMods.apply();
         });
       },
+      contextMenu: this.markup.inspector.onTextBoxContextMenu,
       cssProperties: this._cssProperties
     });
 
@@ -3362,8 +3369,7 @@ ElementEditor.prototype = {
     // Only allow one refocus on attribute change at a time, so when there's
     // more than 1 request in parallel, the last one wins.
     if (this._editedAttributeObserver) {
-      this.markup._inspector.off("markupmutation",
-        this._editedAttributeObserver);
+      this.markup.inspector.off("markupmutation", this._editedAttributeObserver);
       this._editedAttributeObserver = null;
     }
 
@@ -3448,7 +3454,7 @@ ElementEditor.prototype = {
 
     // Start listening for mutations until we find an attributes change
     // that modifies this attribute.
-    this.markup._inspector.once("markupmutation", onMutations);
+    this.markup.inspector.once("markupmutation", onMutations);
   },
 
   /**

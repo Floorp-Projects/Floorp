@@ -32,9 +32,10 @@ FontInspector.prototype = {
     this.showAllLink = this.chromeDoc.getElementById("font-showall");
     this.showAllLink.addEventListener("click", this.showAll);
     this.previewTextChanged = this.previewTextChanged.bind(this);
-    this.previewInput =
-      this.chromeDoc.getElementById("font-preview-text-input");
+    this.previewInput = this.chromeDoc.getElementById("font-preview-text-input");
     this.previewInput.addEventListener("input", this.previewTextChanged);
+    this.previewInput.addEventListener("contextmenu",
+      this.inspector.onTextBoxContextMenu);
 
     // Listen for theme changes as the color of the previews depend on the theme
     gDevTools.on("theme-switched", this.onThemeChanged);
@@ -59,6 +60,8 @@ FontInspector.prototype = {
     this.inspector.selection.off("new-node-front", this.onNewNode);
     this.showAllLink.removeEventListener("click", this.showAll);
     this.previewInput.removeEventListener("input", this.previewTextChanged);
+    this.previewInput.removeEventListener("contextmenu",
+      this.inspector.onTextBoxContextMenu);
 
     gDevTools.off("theme-switched", this.onThemeChanged);
 

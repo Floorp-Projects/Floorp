@@ -25,14 +25,8 @@ struct StyleComplexColor
   nscolor mColor;
   uint8_t mForegroundRatio;
 
-  StyleComplexColor() {}
-  StyleComplexColor(nscolor aColor, uint_fast8_t aForegroundRatio)
-    : mColor(aColor), mForegroundRatio(aForegroundRatio) {}
-
-  static StyleComplexColor FromColor(nscolor aColor)
-    { return StyleComplexColor(aColor, 0); }
-  static StyleComplexColor CurrentColor()
-    { return StyleComplexColor(NS_RGBA(0, 0, 0, 0), 255); }
+  static StyleComplexColor FromColor(nscolor aColor) { return {aColor, 0}; }
+  static StyleComplexColor CurrentColor() { return {NS_RGBA(0, 0, 0, 0), 255}; }
 
   bool IsNumericColor() const { return mForegroundRatio == 0; }
   bool IsCurrentColor() const { return mForegroundRatio == 255; }

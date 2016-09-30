@@ -716,13 +716,9 @@ TextAttrsMgr::TextDecorValue::
   TextDecorValue(nsIFrame* aFrame)
 {
   const nsStyleTextReset* textReset = aFrame->StyleTextReset();
-  mStyle = textReset->GetDecorationStyle();
-
-  bool isForegroundColor = false;
-  textReset->GetDecorationColor(mColor, isForegroundColor);
-  if (isForegroundColor)
-    mColor = aFrame->StyleColor()->mColor;
-
+  mStyle = textReset->mTextDecorationStyle;
+  mColor = aFrame->StyleColor()->
+    CalcComplexColor(textReset->mTextDecorationColor);
   mLine = textReset->mTextDecorationLine &
     (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |
      NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH);

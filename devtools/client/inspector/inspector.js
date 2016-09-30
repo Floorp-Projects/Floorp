@@ -4,8 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global window */
+
 "use strict";
 
+var Cu = Components.utils;
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
@@ -81,11 +85,11 @@ const PORTRAIT_MODE_WIDTH = 700;
  *      Fired when the stylesheet source links have been updated (when switching
  *      to source-mapped files)
  */
-function InspectorPanel(iframeWindow, toolbox) {
+function Inspector(toolbox) {
   this._toolbox = toolbox;
   this._target = toolbox.target;
-  this.panelDoc = iframeWindow.document;
-  this.panelWin = iframeWindow;
+  this.panelDoc = window.document;
+  this.panelWin = window;
   this.panelWin.inspector = this;
 
   this.telemetry = new Telemetry();
@@ -96,6 +100,7 @@ function InspectorPanel(iframeWindow, toolbox) {
   this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
   this.onNewRoot = this.onNewRoot.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
+  this.onTextBoxContextMenu = this.onTextBoxContextMenu.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
@@ -112,13 +117,11 @@ function InspectorPanel(iframeWindow, toolbox) {
   EventEmitter.decorate(this);
 }
 
-exports.InspectorPanel = InspectorPanel;
-
-InspectorPanel.prototype = {
+Inspector.prototype = {
   /**
    * open is effectively an asynchronous constructor
    */
-  open: Task.async(function* () {
+  init: Task.async(function* () {
     // Localize all the nodes containing a data-localization attribute.
     localizeMarkup(this.panelDoc);
 
@@ -144,6 +147,10 @@ InspectorPanel.prototype = {
 
   get selection() {
     return this._toolbox.selection;
+  },
+
+  get highlighter() {
+    return this._toolbox.highlighter;
   },
 
   get isOuterHTMLEditable() {
@@ -275,7 +282,7 @@ InspectorPanel.prototype = {
   },
 
   _getPageStyle: function () {
-    return this._toolbox.inspector.getPageStyle().then(pageStyle => {
+    return this.inspector.getPageStyle().then(pageStyle => {
       this.pageStyle = pageStyle;
     }, this._handleRejectionIfNotDestroyed);
   },
@@ -441,8 +448,6 @@ InspectorPanel.prototype = {
     let SplitBox = this.React.createFactory(this.browserRequire(
       "devtools/client/shared/components/splitter/split-box"));
 
-    this.panelWin.addEventListener("resize", this.onPanelWindowResize, true);
-
     let splitter = SplitBox({
       className: "inspector-sidebar-splitter",
       initialWidth: INITIAL_SIDEBAR_SIZE,
@@ -461,6 +466,8 @@ InspectorPanel.prototype = {
 
     this._splitter = this.ReactDOM.render(splitter,
       this.panelDoc.getElementById("inspector-splitter-box"));
+
+    this.panelWin.addEventListener("resize", this.onPanelWindowResize, true);
 
     // Persist splitter state in preferences.
     this.sidebar.on("show", this.onSidebarShown);
@@ -602,7 +609,7 @@ InspectorPanel.prototype = {
 
     // Setup the eye-dropper icon if we're in an HTML document and we have actor support.
     if (this.selection.nodeFront && this.selection.nodeFront.isInHTMLDocument) {
-      this.toolbox.target.actorHasMethod("inspector", "pickColorFromPage").then(value => {
+      this.target.actorHasMethod("inspector", "pickColorFromPage").then(value => {
         if (!value) {
           return;
         }
@@ -924,6 +931,17 @@ InspectorPanel.prototype = {
       screenY: e.screenY,
       target: e.target,
     });
+  },
+
+  /**
+   * This is meant to be called by all the search, filter, inplace text boxes in the
+   * inspector, and just calls through to the toolbox openTextBoxContextMenu helper.
+   * @param {DOMEvent} e
+   */
+  onTextBoxContextMenu: function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    this.toolbox.openTextBoxContextMenu(e.screenX, e.screenY);
   },
 
   _openMenu: function ({ target, screenX = 0, screenY = 0 } = { }) {
@@ -1273,7 +1291,7 @@ InspectorPanel.prototype = {
     this._markupFrame = doc.createElement("iframe");
     this._markupFrame.setAttribute("flex", "1");
     this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
-    this._markupFrame.addEventListener("contextmenu", this._onContextMenu, true);
+    this._markupFrame.addEventListener("contextmenu", this._onContextMenu);
 
     // This is needed to enable tooltips inside the iframe document.
     this._markupFrame.addEventListener("load", this._onMarkupFrameLoad, true);
@@ -1302,7 +1320,7 @@ InspectorPanel.prototype = {
 
     if (this._markupFrame) {
       this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
-      this._markupFrame.removeEventListener("contextmenu", this._onContextMenu, true);
+      this._markupFrame.removeEventListener("contextmenu", this._onContextMenu);
     }
 
     if (this.markup) {
@@ -1816,3 +1834,90 @@ InspectorPanel.prototype = {
     }, console.error);
   }
 };
+
+// URL constructor doesn't support chrome: scheme
+let href = window.location.href.replace(/chrome:/, "http://");
+let url = new window.URL(href);
+
+// Only use this method to attach the toolbox if some query parameters are given
+if (url.search.length > 1) {
+  const { targetFromURL } = require("devtools/client/framework/target-from-url");
+  const { attachThread } = require("devtools/client/framework/attach-thread");
+  const { BrowserLoader } =
+    Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+
+  const { Selection } = require("devtools/client/framework/selection");
+  const { InspectorFront } = require("devtools/shared/fronts/inspector");
+  const { getHighlighterUtils } = require("devtools/client/framework/toolbox-highlighter-utils");
+
+  Task.spawn(function* () {
+    let target = yield targetFromURL(url);
+
+    let notImplemented = function () {
+      throw new Error("Not implemented in a tab");
+    };
+    let fakeToolbox = {
+      target,
+      hostType: "bottom",
+      doc: window.document,
+      win: window,
+      on() {}, emit() {}, off() {},
+      initInspector() {},
+      browserRequire: BrowserLoader({
+        window: window,
+        useOnlyShared: true
+      }).require,
+      get React() {
+        return this.browserRequire("devtools/client/shared/vendor/react");
+      },
+      get ReactDOM() {
+        return this.browserRequire("devtools/client/shared/vendor/react-dom");
+      },
+      isToolRegistered() {
+        return false;
+      },
+      currentToolId: "inspector",
+      getCurrentPanel() {
+        return "inspector";
+      },
+      get textboxContextMenuPopup() {
+        notImplemented();
+      },
+      getPanel: notImplemented,
+      openSplitConsole: notImplemented,
+      viewCssSourceInStyleEditor: notImplemented,
+      viewJsSourceInDebugger: notImplemented,
+      viewSource: notImplemented,
+      viewSourceInDebugger: notImplemented,
+      viewSourceInStyleEditor: notImplemented,
+
+      // For attachThread:
+      highlightTool() {},
+      unhighlightTool() {},
+      selectTool() {},
+      raise() {},
+      getNotificationBox() {}
+    };
+
+    // attachThread also expect a toolbox as argument
+    fakeToolbox.threadClient = yield attachThread(fakeToolbox);
+
+    let inspector = InspectorFront(target.client, target.form);
+    let showAllAnonymousContent =
+      Services.prefs.getBoolPref("devtools.inspector.showAllAnonymousContent");
+    let walker = yield inspector.getWalker({ showAllAnonymousContent });
+    let selection = new Selection(walker);
+    let highlighter = yield inspector.getHighlighter(false);
+
+    fakeToolbox.inspector = inspector;
+    fakeToolbox.walker = walker;
+    fakeToolbox.selection = selection;
+    fakeToolbox.highlighter = highlighter;
+    fakeToolbox.highlighterUtils = getHighlighterUtils(fakeToolbox);
+
+    let inspectorUI = new Inspector(fakeToolbox);
+    inspectorUI.init();
+  }).then(null, e => {
+    window.alert("Unable to start the inspector:" + e.message + "\n" + e.stack);
+  });
+}

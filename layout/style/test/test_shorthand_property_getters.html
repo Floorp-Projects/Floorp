@@ -43,7 +43,7 @@ is(e.style.border, "", "should not be able to serialize border");
 e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid dashed; border-color: green" + borderExtras);
 is(e.style.border, "", "should not be able to serialize border");
 
-// Test suppression of -moz-use-text-color in border shorthands.
+// Test suppression of currentcolor in border shorthands.
 e.setAttribute("style", "border: medium solid");
 ok(e.style.border == "medium solid" ||
    e.style.border == "solid medium",

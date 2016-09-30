@@ -15,6 +15,7 @@ import java.util.Map;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract.ActivityStreamBlocklist;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
@@ -55,8 +56,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
-import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
-
 public class BrowserProvider extends SharedBrowserDatabaseProvider {
     public static final String ACTION_SHRINK_MEMORY = "org.mozilla.gecko.db.intent.action.SHRINK_MEMORY";
 
@@ -72,6 +71,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final int DEFAULT_EXPIRY_RETAIN_COUNT = 2000;
     static final int AGGRESSIVE_EXPIRY_RETAIN_COUNT = 500;
 
+    // Factor used to determine the minimum number of records to keep when expiring the activity stream blocklist
+    static final int ACTIVITYSTREAM_BLOCKLIST_EXPIRY_FACTOR = 5;
+
     // Minimum duration to keep when expiring.
     static final long DEFAULT_EXPIRY_PRESERVE_WINDOW = 1000L * 60L * 60L * 24L * 28L;     // Four weeks.
     // Minimum number of thumbnails to keep around.
@@ -84,6 +86,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final String TABLE_THUMBNAILS = Thumbnails.TABLE_NAME;
     static final String TABLE_TABS = Tabs.TABLE_NAME;
     static final String TABLE_URL_ANNOTATIONS = UrlAnnotations.TABLE_NAME;
+    static final String TABLE_ACTIVITY_STREAM_BLOCKLIST = ActivityStreamBlocklist.TABLE_NAME;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -132,6 +135,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final int METADATA = 1200;
 
     static final int HIGHLIGHTS = 1300;
+
+    static final int ACTIVITY_STREAM_BLOCKLIST = 1400;
 
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
@@ -297,6 +302,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "topsites", TOPSITES);
 
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "highlights", HIGHLIGHTS);
+
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, ActivityStreamBlocklist.TABLE_NAME, ACTIVITY_STREAM_BLOCKLIST);
     }
 
     private static class ShrinkMemoryReceiver extends BroadcastReceiver {
@@ -377,6 +384,30 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         if (logDebug) {
             Log.d(LOGTAG, message);
         }
+    }
+
+    /**
+     * Remove enough activity stream blocklist items to bring the database count below <code>retain</code>.
+     *
+     * Items will be removed according to their creation date, oldest being removed first.
+     */
+    private void expireActivityStreamBlocklist(final SQLiteDatabase db, final int retain) {
+        Log.d(LOGTAG, "Expiring highlights blocklist.");
+        final long rows = DatabaseUtils.queryNumEntries(db, TABLE_ACTIVITY_STREAM_BLOCKLIST);
+
+        if (retain >= rows) {
+            debug("Not expiring highlights blocklist: only have " + rows + " rows.");
+            return;
+        }
+
+        final long toRemove = rows - retain;
+
+        final String statement = "DELETE FROM " + TABLE_ACTIVITY_STREAM_BLOCKLIST + " WHERE " + ActivityStreamBlocklist._ID + " IN " +
+                " ( SELECT " + ActivityStreamBlocklist._ID + " FROM " + TABLE_ACTIVITY_STREAM_BLOCKLIST + " " +
+                "ORDER BY " + ActivityStreamBlocklist.CREATED + " ASC LIMIT " + toRemove + ")";
+
+        beginWrite(db);
+        db.execSQL(statement);
     }
 
     /**
@@ -551,6 +582,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                     retainCount = AGGRESSIVE_EXPIRY_RETAIN_COUNT;
                 }
                 expireHistory(db, retainCount, keepAfter);
+                expireActivityStreamBlocklist(db, retainCount / ACTIVITYSTREAM_BLOCKLIST_EXPIRY_FACTOR);
                 expireThumbnails(db);
                 deleteUnusedImages(uri);
                 break;
@@ -646,6 +678,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case URL_ANNOTATIONS: {
                 trace("Insert on URL_ANNOTATIONS: " + uri);
                 id = insertUrlAnnotation(uri, values);
+                break;
+            }
+
+            case ACTIVITY_STREAM_BLOCKLIST: {
+                trace("Insert on ACTIVITY_STREAM_BLOCKLIST: " + uri);
+                id = insertActivityStreamBlocklistSite(uri, values);
                 break;
             }
 
@@ -1175,7 +1213,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                   "OR " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " IS NULL) " +
                 "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.IS_DELETED)  + " = 0 " +
                 "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TYPE) + " = " + Bookmarks.TYPE_BOOKMARK + " " +
-                // TODO: Implement block list (bug 1298783)
+                "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
                 "ORDER BY " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " DESC " +
                 "LIMIT " + bookmarkLimit + ")";
 
@@ -1194,7 +1232,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 "AND " + History.VISITS + " <= 3 " +
                 "AND " + History.TITLE + " NOT NULL AND " + History.TITLE + " != '' " +
                 "AND " + History.IS_DELETED + " = 0 " +
-                // TODO: Implement block list (bug 1298783)
+                "AND " + History.URL + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
                 // TODO: Implement domain black list (bug 1298786)
                 // TODO: Group by host (bug 1298785)
                 "ORDER BY " + History.DATE_LAST_VISITED + " DESC " +
@@ -1205,7 +1243,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 "UNION ALL " + historyQuery + ") " +
                 "GROUP BY " + Combined.URL + ";";
 
-        return db.rawQuery(query, null);
+        final Cursor cursor = db.rawQuery(query, null);
+
+        cursor.setNotificationUri(getContext().getContentResolver(),
+                BrowserContract.AUTHORITY_URI);
+
+        return cursor;
     }
 
     @Override
@@ -1876,6 +1919,17 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
         beginWrite(db);
         return db.insertOrThrow(TABLE_THUMBNAILS, null, values);
+    }
+
+    private long insertActivityStreamBlocklistSite(final Uri uri, final ContentValues values) {
+        final String url = values.getAsString(ActivityStreamBlocklist.URL);
+        trace("Inserting url into highlights blocklist, URL: " + url);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        values.put(ActivityStreamBlocklist.CREATED, System.currentTimeMillis());
+
+        beginWrite(db);
+        return db.insertOrThrow(TABLE_ACTIVITY_STREAM_BLOCKLIST, null, values);
     }
 
     private long insertUrlAnnotation(final Uri uri, final ContentValues values) {
