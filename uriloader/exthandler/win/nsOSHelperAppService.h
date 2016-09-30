@@ -46,6 +46,9 @@ public:
    */
   static bool GetValueString(HKEY hKey, const char16_t* pValueName, nsAString& result);
 
+  // Removes registry command handler parameters, quotes, and expands environment strings.
+  static bool CleanupCmdHandlerPath(nsAString& aCommandHandler);
+
 protected:
   nsresult GetDefaultAppInfo(const nsAString& aTypeName, nsAString& aDefaultDescription, nsIFile** aDefaultApplication);
   // Lookup a mime info by extension, using an optional type hint
