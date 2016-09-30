@@ -526,7 +526,7 @@ public final class IntentHelper implements GeckoEventListener,
         }  else {
             // We return the error page here, but it will only be shown if we think the load did
             // not come from clicking a link. Chrome does not show error pages in that case, and
-            // many websites have catered to this behavior. For example, the site might set a timeout and load a play 
+            // many websites have catered to this behavior. For example, the site might set a timeout and load a play
             // store url for their app if the intent link fails to load, i.e. the app is not installed.
             // These work-arounds would often end with our users seeing about:neterror instead of the intended experience.
             // While I feel showing about:neterror is a better solution for users (when not hacked around),
