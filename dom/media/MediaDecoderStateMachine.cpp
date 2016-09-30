@@ -212,6 +212,8 @@ public:
 
   virtual bool HandleCDMProxyReady() { return false; }
 
+  virtual bool HandleAudioDecoded(MediaData* aAudio) { return false; }
+
 protected:
   using Master = MediaDecoderStateMachine;
   explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
@@ -415,6 +417,13 @@ public:
   {
     return DECODER_STATE_DECODING_FIRSTFRAME;
   }
+
+  bool HandleAudioDecoded(MediaData* aAudio) override
+  {
+    mMaster->Push(aAudio, MediaData::AUDIO_DATA);
+    mMaster->MaybeFinishDecodeFirstFrame();
+    return true;
+  }
 };
 
 class MediaDecoderStateMachine::DecodingState
@@ -481,6 +490,13 @@ public:
     return DECODER_STATE_DECODING;
   }
 
+  bool HandleAudioDecoded(MediaData* aAudio) override
+  {
+    mMaster->Push(aAudio, MediaData::AUDIO_DATA);
+    mMaster->MaybeStopPrerolling();
+    return true;
+  }
+
 private:
   // Time at which we started decoding.
   TimeStamp mDecodeStartTime;
@@ -514,6 +530,12 @@ public:
     }
     mMaster->mQueuedSeek = Move(mMaster->mCurrentSeek);
     SetState(DECODER_STATE_DORMANT);
+    return true;
+  }
+
+  bool HandleAudioDecoded(MediaData* aAudio) override
+  {
+    MOZ_ASSERT(false);
     return true;
   }
 };
@@ -586,6 +608,15 @@ public:
   State GetState() const override
   {
     return DECODER_STATE_BUFFERING;
+  }
+
+  bool HandleAudioDecoded(MediaData* aAudio) override
+  {
+    // This might be the sample we need to exit buffering.
+    // Schedule Step() to check it.
+    mMaster->Push(aAudio, MediaData::AUDIO_DATA);
+    mMaster->ScheduleStateMachine();
+    return true;
   }
 
 private:
@@ -1018,7 +1049,6 @@ void
 MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudio)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
   MOZ_ASSERT(aAudio);
 
   // audio->GetEndTime() is not always mono-increasing in chained ogg.
@@ -1026,32 +1056,7 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudio)
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld]", aAudio->mTime, aAudio->GetEndTime());
 
-  switch (mState) {
-    case DECODER_STATE_BUFFERING: {
-      // If we're buffering, this may be the sample we need to stop buffering.
-      // Save it and schedule the state machine.
-      Push(aAudio, MediaData::AUDIO_DATA);
-      ScheduleStateMachine();
-      return;
-    }
-
-    case DECODER_STATE_DECODING_FIRSTFRAME: {
-      Push(aAudio, MediaData::AUDIO_DATA);
-      MaybeFinishDecodeFirstFrame();
-      return;
-    }
-
-    case DECODER_STATE_DECODING: {
-      Push(aAudio, MediaData::AUDIO_DATA);
-      MaybeStopPrerolling();
-      return;
-    }
-
-    default: {
-      // Ignore other cases.
-      return;
-    }
-  }
+  mStateObj->HandleAudioDecoded(aAudio);
 }
 
 void
