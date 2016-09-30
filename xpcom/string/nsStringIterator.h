@@ -45,13 +45,6 @@ public:
   // nsReadingIterator( const nsReadingIterator<CharT>& );                    // auto-generated copy-constructor OK
   // nsReadingIterator<CharT>& operator=( const nsReadingIterator<CharT>& );  // auto-generated copy-assignment operator OK
 
-  inline void normalize_forward()
-  {
-  }
-  inline void normalize_backward()
-  {
-  }
-
   pointer start() const
   {
     return mStart;
@@ -171,13 +164,6 @@ public:
   }
   // nsWritingIterator( const nsWritingIterator<CharT>& );                    // auto-generated copy-constructor OK
   // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& );  // auto-generated copy-assignment operator OK
-
-  inline void normalize_forward()
-  {
-  }
-  inline void normalize_backward()
-  {
-  }
 
   pointer start() const
   {
