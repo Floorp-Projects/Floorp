@@ -404,8 +404,12 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
     }
 
     if (JS_TypeOfValue(cx, NSGetFactory_val) != JSTYPE_FUNCTION) {
-        JS_ReportError(cx, "%s has NSGetFactory property that is not a function",
-                       spec.get());
+        /*
+         * spec's encoding is ASCII unless it's zip file, otherwise it's
+         * random encoding.  Latin1 variant is safe for random encoding.
+         */
+        JS_ReportErrorLatin1(cx, "%s has NSGetFactory property that is not a function",
+                             spec.get());
         return nullptr;
     }
 
