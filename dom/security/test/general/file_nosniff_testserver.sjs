@@ -48,7 +48,7 @@ function handleRequest(request, response) {
     return;
   }
 
-  if (query.has("imgWrongType")) {
+  if (query.has("imgtWrongType")) {
     response.setHeader("Content-Type", "text/html", false);
     response.write(IMG);
     return;
