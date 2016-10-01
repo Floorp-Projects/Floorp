@@ -14,7 +14,6 @@ const svg = {
   "globe": require("./globe.svg"),
   "magnifying-glass": require("./magnifying-glass.svg"),
   "pause": require("./pause.svg"),
-  "pause-circle": require("./pause-circle.svg"),
   "pause-exceptions": require("./pause-exceptions.svg"),
   "prettyPrint": require("./prettyPrint.svg"),
   "resume": require("./resume.svg"),

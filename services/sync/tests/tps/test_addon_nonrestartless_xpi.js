@@ -33,7 +33,8 @@ Phase("phase01", [
   [Sync]
 ]);
 Phase("phase02", [
-  [Addons.verify, [id], STATE_ENABLED]
+  [Addons.verify, [id], STATE_ENABLED],
+  [Sync]
 ]);
 Phase("phase03", [
   [Addons.verifyNot, [id]],
@@ -41,6 +42,7 @@ Phase("phase03", [
 ]);
 Phase("phase04", [
   [Addons.verify, [id], STATE_ENABLED],
+  [Sync]
 ]);
 
 // Now we disable the add-on
@@ -51,13 +53,15 @@ Phase("phase05", [
 ]);
 Phase("phase06", [
   [Addons.verify, [id], STATE_DISABLED],
+  [Sync]
 ]);
 Phase("phase07", [
   [Addons.verify, [id], STATE_ENABLED],
   [Sync]
 ]);
 Phase("phase08", [
-  [Addons.verify, [id], STATE_DISABLED]
+  [Addons.verify, [id], STATE_DISABLED],
+  [Sync]
 ]);
 
 // Now we re-enable it again.
@@ -68,13 +72,15 @@ Phase("phase09", [
 ]);
 Phase("phase10", [
   [Addons.verify, [id], STATE_ENABLED],
+  [Sync]
 ]);
 Phase("phase11", [
   [Addons.verify, [id], STATE_DISABLED],
   [Sync]
 ]);
 Phase("phase12", [
-  [Addons.verify, [id], STATE_ENABLED]
+  [Addons.verify, [id], STATE_ENABLED],
+  [Sync]
 ]);
 
 // And we uninstall it
@@ -86,12 +92,14 @@ Phase("phase13", [
   [Sync]
 ]);
 Phase("phase14", [
-  [Addons.verifyNot, [id]]
+  [Addons.verifyNot, [id]],
+  [Sync]
 ]);
 Phase("phase15", [
   [Addons.verify, [id], STATE_ENABLED],
   [Sync]
 ]);
 Phase("phase16", [
-  [Addons.verifyNot, [id]]
+  [Addons.verifyNot, [id]],
+  [Sync]
 ]);

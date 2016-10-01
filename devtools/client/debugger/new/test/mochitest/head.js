@@ -5,6 +5,35 @@
 
 "use strict";
 
+/**
+ * The Mochitest API documentation
+ * @module mochitest
+ */
+
+/**
+ * The mochitest API to wait for certain events.
+ * @module mochitest/waits
+ * @parent mochitest
+ */
+
+/**
+ * The mochitest API predefined asserts.
+ * @module mochitest/asserts
+ * @parent mochitest
+ */
+
+/**
+ * The mochitest API for interacting with the debugger.
+ * @module mochitest/actions
+ * @parent mochitest
+ */
+
+/**
+ * Helper methods for the mochitest API.
+ * @module mochitest/helpers
+ * @parent mochitest
+ */
+
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
 var { Toolbox } = require("devtools/client/framework/toolbox");
@@ -58,6 +87,17 @@ function _afterDispatchDone(store, type) {
   });
 }
 
+/**
+ * Wait for a specific action type to be dispatch.
+ * If an async action, will wait for it to be done.
+ *
+ * @memberof mochitest/waits
+ * @param {Object} dbg
+ * @param {String} type
+ * @param {Number} eventRepeat
+ * @return {Promise}
+ * @static
+ */
 function waitForDispatch(dbg, type, eventRepeat = 1) {
   let count = 0;
 
@@ -71,6 +111,15 @@ function waitForDispatch(dbg, type, eventRepeat = 1) {
   });
 }
 
+/**
+ * Waits for specific thread events.
+ *
+ * @memberof mochitest/waits
+ * @param {Object} dbg
+ * @param {String} eventName
+ * @return {Promise}
+ * @static
+ */
 function waitForThreadEvents(dbg, eventName) {
   info("Waiting for thread event '" + eventName + "' to fire.");
   const thread = dbg.toolbox.threadClient;
@@ -84,6 +133,15 @@ function waitForThreadEvents(dbg, eventName) {
   });
 }
 
+/**
+ * Waits for `predicate(state)` to be true. `state` is the redux app state.
+ *
+ * @memberof mochitest/waits
+ * @param {Object} dbg
+ * @param {Function} predicate
+ * @return {Promise}
+ * @static
+ */
 function waitForState(dbg, predicate) {
   return new Promise(resolve => {
     const unsubscribe = dbg.store.subscribe(() => {
@@ -95,6 +153,15 @@ function waitForState(dbg, predicate) {
   });
 }
 
+/**
+ * Waits for sources to be loaded.
+ *
+ * @memberof mochitest/waits
+ * @param {Object} dbg
+ * @param {Array} sources
+ * @return {Promise}
+ * @static
+ */
 function waitForSources(dbg, ...sources) {
   if(sources.length === 0) {
     return Promise.resolve();
@@ -104,7 +171,9 @@ function waitForSources(dbg, ...sources) {
   const {selectors: {getSources}, store} = dbg;
   return Promise.all(sources.map(url => {
     function sourceExists(state) {
-      return getSources(state).some(s => s.get("url").includes(url));
+      return getSources(state).some(s => {
+        return s.get("url").includes(url)
+      });
     }
 
     if(!sourceExists(store.getState())) {
@@ -113,6 +182,15 @@ function waitForSources(dbg, ...sources) {
   }));
 }
 
+/**
+ * Assert that the debugger is paused at the correct location.
+ *
+ * @memberof mochitest/asserts
+ * @param {Object} dbg
+ * @param {String} source
+ * @param {Number} line
+ * @static
+ */
 function assertPausedLocation(dbg, source, line) {
   const { selectors: { getSelectedSource, getPause }, getState } = dbg;
   source = findSource(dbg, source);
@@ -130,6 +208,15 @@ function assertPausedLocation(dbg, source, line) {
      "Line is highlighted as paused");
 }
 
+/**
+ * Assert that the debugger is highlighting the correct location.
+ *
+ * @memberof mochitest/asserts
+ * @param {Object} dbg
+ * @param {String} source
+ * @param {Number} line
+ * @static
+ */
 function assertHighlightLocation(dbg, source, line) {
   const { selectors: { getSelectedSource, getPause }, getState } = dbg;
   source = findSource(dbg, source);
@@ -146,11 +233,25 @@ function assertHighlightLocation(dbg, source, line) {
      "Line is highlighted");
 }
 
+/**
+ * Returns boolean for whether the debugger is paused.
+ *
+ * @memberof mochitest/asserts
+ * @param {Object} dbg
+ * @static
+ */
 function isPaused(dbg) {
   const { selectors: { getPause }, getState } = dbg;
   return !!getPause(getState());
 }
 
+/**
+ * Waits for the debugger to be fully paused.
+ *
+ * @memberof mochitest/waits
+ * @param {Object} dbg
+ * @static
+ */
 function waitForPaused(dbg) {
   return Task.spawn(function* () {
     // We want to make sure that we get both a real paused event and
@@ -187,6 +288,15 @@ function createDebuggerContext(toolbox) {
   };
 }
 
+/**
+ * Intilializes the debugger.
+ *
+ * @memberof mochitest
+ * @param {String} url
+ * @param {Array} sources
+ * @return {Promise} dbg
+ * @static
+ */
 function initDebugger(url, ...sources) {
   return Task.spawn(function* () {
     const toolbox = yield openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
@@ -197,13 +307,28 @@ function initDebugger(url, ...sources) {
 };
 
 window.resumeTest = undefined;
+/**
+ * Pause the test and let you interact with the debugger.
+ * The test can be resumed by invoking `resumeTest` in the console.
+ *
+ * @memberof mochitest
+ * @static
+ */
 function pauseTest() {
   info("Test paused. Invoke resumeTest to continue.");
   return new Promise(resolve => resumeTest = resolve);
 }
 
 // Actions
-
+/**
+ * Returns a source that matches the URL.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @param {String} url
+ * @return {Object} source
+ * @static
+ */
 function findSource(dbg, url) {
   if(typeof url !== "string") {
     // Support passing in a source object itelf all APIs that use this
@@ -222,6 +347,16 @@ function findSource(dbg, url) {
   return source.toJS();
 }
 
+/**
+ * Selects the source.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @param {String} url
+ * @param {Number} line
+ * @return {Promise}
+ * @static
+ */
 function selectSource(dbg, url, line) {
   info("Selecting source: " + url);
   const source = findSource(dbg, url);
@@ -233,49 +368,132 @@ function selectSource(dbg, url, line) {
   }
 }
 
+/**
+ * Steps over.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @return {Promise}
+ * @static
+ */
 function stepOver(dbg) {
   info("Stepping over");
   dbg.actions.stepOver();
   return waitForPaused(dbg);
 }
 
+/**
+ * Steps in.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @return {Promise}
+ * @static
+ */
 function stepIn(dbg) {
   info("Stepping in");
   dbg.actions.stepIn();
   return waitForPaused(dbg);
 }
 
+/**
+ * Steps out.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @return {Promise}
+ * @static
+ */
 function stepOut(dbg) {
   info("Stepping out");
   dbg.actions.stepOut();
   return waitForPaused(dbg);
 }
 
+/**
+ * Resumes.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @return {Promise}
+ * @static
+ */
 function resume(dbg) {
   info("Resuming");
   dbg.actions.resume();
   return waitForThreadEvents(dbg, "resumed");
 }
 
+/**
+ * Reloads the debuggee.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @param {Array} sources
+ * @return {Promise}
+ * @static
+ */
 function reload(dbg, ...sources) {
   return dbg.client.reload().then(() => waitForSources(...sources));
 }
 
+/**
+ * Navigates the debuggee to another url.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @param {String} url
+ * @param {Array} sources
+ * @return {Promise}
+ * @static
+ */
 function navigate(dbg, url, ...sources) {
   dbg.client.navigate(url);
   return waitForSources(dbg, ...sources)
 }
 
+/**
+ * Adds a breakpoint to a source at line/col.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @param {String} source
+ * @param {Number} line
+ * @param {Number} col
+ * @return {Promise}
+ * @static
+ */
 function addBreakpoint(dbg, source, line, col) {
   source = findSource(dbg, source);
   const sourceId = source.id;
   return dbg.actions.addBreakpoint({ sourceId, line, col });
 }
 
+/**
+ * Removes a breakpoint from a source at line/col.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @param {String} source
+ * @param {Number} line
+ * @param {Number} col
+ * @return {Promise}
+ * @static
+ */
 function removeBreakpoint(dbg, sourceId, line, col) {
   return dbg.actions.removeBreakpoint({ sourceId, line, col });
 }
 
+/**
+ * Toggles the Pause on exceptions feature in the debugger.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @param {Boolean} pauseOnExceptions
+ * @param {Boolean} ignoreCaughtExceptions
+ * @return {Promise}
+ * @static
+ */
 function togglePauseOnExceptions(dbg,
   pauseOnExceptions, ignoreCaughtExceptions) {
 
@@ -292,7 +510,15 @@ function togglePauseOnExceptions(dbg,
 }
 
 // Helpers
-// invoke a global function in the debugged tab
+
+/**
+ * Invokes a global function in the debuggee tab.
+ *
+ * @memberof mochitest/helpers
+ * @param {String} fnc
+ * @return {Promise}
+ * @static
+ */
 function invokeInTab(fnc) {
   info(`Invoking function ${fnc} in tab`);
   return ContentTask.spawn(gBrowser.selectedBrowser, fnc, function* (fnc) {
@@ -309,6 +535,15 @@ const keyMappings = {
   stepOutKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux, shiftKey: true } }
 };
 
+/**
+ * Simulates a key press in the debugger window.
+ *
+ * @memberof mochitest/helpers
+ * @param {Object} dbg
+ * @param {String} keyName
+ * @return {Promise}
+ * @static
+ */
 function pressKey(dbg, keyName) {
   let keyEvent = keyMappings[keyName];
   const { code, modifiers } = keyEvent;
@@ -363,7 +598,16 @@ function findAllElements(dbg, elementName, ...args) {
   return dbg.win.document.querySelectorAll(selector);
 }
 
-// click an element in the debugger
+/**
+ * Simulates a mouse click in the debugger DOM.
+ *
+ * @memberof mochitest/helpers
+ * @param {Object} dbg
+ * @param {String} elementName
+ * @param {Array} args
+ * @return {Promise}
+ * @static
+ */
 function clickElement(dbg, elementName, ...args) {
   const selector = getSelector(elementName, ...args);
   const doc = dbg.win.document;
@@ -374,6 +618,14 @@ function clickElement(dbg, elementName, ...args) {
   );
 }
 
+/**
+ * Toggles the debugger call stack accordian.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @return {Promise}
+ * @static
+ */
 function toggleCallStack(dbg) {
   return findElement(dbg, "callStackHeader").click()
 }
