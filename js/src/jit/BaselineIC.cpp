@@ -5533,8 +5533,10 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
         if (args[0].isInt32() && args[0].toInt32() >= 0)
             len = args[0].toInt32();
 
-        if (TypedArrayObject::GetTemplateObjectForNative(cx, native, len, res))
-            return !!res;
+        if (!TypedArrayObject::GetTemplateObjectForNative(cx, native, len, res))
+            return false;
+        if (res)
+            return true;
     }
 
     if (native == js::array_slice) {
@@ -5611,7 +5613,7 @@ GetTemplateObjectForClassHook(JSContext* cx, JSNative hook, CallArgs& args,
 }
 
 static bool
-IsOptimizableCallStringSplit(Value callee, int argc, Value* args)
+IsOptimizableCallStringSplit(const Value& callee, int argc, Value* args)
 {
     if (argc != 2 || !args[0].isString() || !args[1].isString())
         return false;

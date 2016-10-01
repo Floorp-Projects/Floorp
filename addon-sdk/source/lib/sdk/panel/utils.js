@@ -106,8 +106,10 @@ exports.close = close
 function resize(panel, width, height) {
   // Resize the iframe instead of using panel.sizeTo
   // because sizeTo doesn't work with arrow panels
-  panel.firstChild.style.width = width + "px";
-  panel.firstChild.style.height = height + "px";
+  if (panel.firstChild) {
+    panel.firstChild.style.width = width + "px";
+    panel.firstChild.style.height = height + "px";
+  }
 }
 exports.resize = resize
 
@@ -187,12 +189,14 @@ function display(panel, options, anchor) {
     panel.setAttribute("flip", "both");
   }
 
-  panel.viewFrame = document.importNode(panel.backgroundFrame, false);
-  panel.appendChild(panel.viewFrame);
+  if (!panel.viewFrame) {
+    panel.viewFrame = document.importNode(panel.backgroundFrame, false);
+    panel.appendChild(panel.viewFrame);
 
-  let {privateBrowsingId} = getDocShell(panel.viewFrame).getOriginAttributes();
-  let principal = Services.scriptSecurityManager.createNullPrincipal({privateBrowsingId});
-  getDocShell(panel.viewFrame).createAboutBlankContentViewer(principal);
+    let {privateBrowsingId} = getDocShell(panel.viewFrame).getOriginAttributes();
+    let principal = Services.scriptSecurityManager.createNullPrincipal({privateBrowsingId});
+    getDocShell(panel.viewFrame).createAboutBlankContentViewer(principal);
+  }
 
   // Resize the iframe instead of using panel.sizeTo
   // because sizeTo doesn't work with arrow panels

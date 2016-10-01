@@ -44,6 +44,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/collection_validator.js");
 Cu.import("resource://services-common/async.js");
 
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -53,7 +54,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/addons/AddonRepository.jsm");
 
-this.EXPORTED_SYMBOLS = ["AddonsEngine"];
+this.EXPORTED_SYMBOLS = ["AddonsEngine", "AddonValidator"];
 
 // 7 days in milliseconds.
 const PRUNE_ADDON_CHANGES_THRESHOLD = 60 * 60 * 24 * 7 * 1000;
@@ -176,7 +177,7 @@ AddonsEngine.prototype = {
           continue;
       }
 
-      if (!this._store.isAddonSyncable(addons[id])) {
+      if (!this.isAddonSyncable(addons[id])) {
         continue;
       }
 
@@ -234,6 +235,10 @@ AddonsEngine.prototype = {
     let cb = Async.makeSpinningCallback();
     this._reconciler.refreshGlobalState(cb);
     cb.wait();
+  },
+
+  isAddonSyncable(addon, ignoreRepoCheck) {
+    return this._store.isAddonSyncable(addon, ignoreRepoCheck);
   }
 };
 
@@ -533,9 +538,12 @@ AddonsStore.prototype = {
    *
    * @param  addon
    *         Addon instance
+   * @param ignoreRepoCheck
+   *         Should we skip checking the Addons repository (primarially useful
+   *         for testing and validation).
    * @return Boolean indicating whether it is appropriate for Sync
    */
-  isAddonSyncable: function isAddonSyncable(addon) {
+  isAddonSyncable: function isAddonSyncable(addon, ignoreRepoCheck = false) {
     // Currently, we limit syncable add-ons to those that are:
     //   1) In a well-defined set of types
     //   2) Installed in the current profile
@@ -592,8 +600,9 @@ AddonsStore.prototype = {
 
     // If the AddonRepository's cache isn't enabled (which it typically isn't
     // in tests), getCachedAddonByID always returns null - so skip the check
-    // in that case.
-    if (!AddonRepository.cacheEnabled) {
+    // in that case. We also provide a way to specifically opt-out of the check
+    // even if the cache is enabled, which is used by the validators.
+    if (ignoreRepoCheck || !AddonRepository.cacheEnabled) {
       return true;
     }
 
@@ -736,3 +745,69 @@ AddonsTracker.prototype = {
     this.reconciler.stopListening();
   },
 };
+
+class AddonValidator extends CollectionValidator {
+  constructor(engine = null) {
+    super("addons", "id", [
+      "addonID",
+      "enabled",
+      "applicationID",
+      "source"
+    ]);
+    this.engine = engine;
+  }
+
+  getClientItems() {
+    return Promise.all([
+      new Promise(resolve =>
+        AddonManager.getAllAddons(resolve)),
+      new Promise(resolve =>
+        AddonManager.getAddonsWithOperationsByTypes(["extension", "theme"], resolve)),
+    ]).then(([installed, addonsWithPendingOperation]) => {
+      // Addons pending install won't be in the first list, but addons pending
+      // uninstall/enable/disable will be in both lists.
+      let all = new Map(installed.map(addon => [addon.id, addon]));
+      for (let addon of addonsWithPendingOperation) {
+        all.set(addon.id, addon);
+      }
+      // Convert to an array since Map.prototype.values returns an iterable
+      return [...all.values()];
+    });
+  }
+
+  normalizeClientItem(item) {
+    let enabled = !item.userDisabled;
+    if (item.pendingOperations & AddonManager.PENDING_ENABLE) {
+      enabled = true;
+    } else if (item.pendingOperations & AddonManager.PENDING_DISABLE) {
+      enabled = false;
+    }
+    return {
+      enabled,
+      id: item.syncGUID,
+      addonID: item.id,
+      applicationID: Services.appinfo.ID,
+      source: "amo", // check item.foreignInstall?
+      original: item
+    };
+  }
+
+  normalizeServerItem(item) {
+    let guid = this.engine._findDupe(item);
+    if (guid) {
+      item.id = guid;
+    }
+    return item;
+  }
+
+  clientUnderstands(item) {
+    return item.applicationID === Services.appinfo.ID;
+  }
+
+  syncedByClient(item) {
+    return !item.original.hidden &&
+           !item.original.isSystem &&
+           !(item.original.pendingOperations & AddonManager.PENDING_UNINSTALL) &&
+           this.engine.isAddonSyncable(item.original, true);
+  }
+}

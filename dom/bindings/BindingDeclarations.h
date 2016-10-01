@@ -26,6 +26,7 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 
+class nsIPrincipal;
 class nsWrapperCache;
 
 namespace mozilla {
@@ -107,6 +108,10 @@ public:
   {
     return !Get();
   }
+
+  // It returns the subjectPrincipal if called on the main-thread, otherwise
+  // a nullptr is returned.
+  nsIPrincipal* GetSubjectPrincipal() const;
 
 protected:
   JS::Rooted<JSObject*> mGlobalJSObject;
@@ -274,7 +279,7 @@ class Optional<JS::Value>
 private:
   Optional() = delete;
 
-  explicit Optional(JS::Value aValue) = delete;
+  explicit Optional(const JS::Value& aValue) = delete;
 };
 
 // A specialization of Optional for NonNull that lets us get a T& from Value()

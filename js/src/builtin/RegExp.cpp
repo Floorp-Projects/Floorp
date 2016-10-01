@@ -1179,7 +1179,7 @@ js::regexp_test_no_statics(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static void
-GetParen(JSLinearString* matched, JS::Value capture, JSSubString* out)
+GetParen(JSLinearString* matched, const JS::Value& capture, JSSubString* out)
 {
     if (capture.isUndefined()) {
         out->initEmpty(matched);

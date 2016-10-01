@@ -501,7 +501,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPartialDecode,
 
   if (!aDoPartialDecode) {
     return SurfaceWithFormat(new gfxSurfaceDrawable(aSurface, mImageSize),
-                                                    mFormat);
+                             mFormat);
   }
 
   gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.width,

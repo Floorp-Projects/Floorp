@@ -34,7 +34,8 @@ namespace camera {
 CamerasSingleton::CamerasSingleton()
   : mCamerasMutex("CamerasSingleton::mCamerasMutex"),
     mCameras(nullptr),
-    mCamerasChildThread(nullptr) {
+    mCamerasChildThread(nullptr),
+    mFakeDeviceChangeEventThread(nullptr) {
   LOG(("CamerasSingleton: %p", this));
 }
 
@@ -58,7 +59,7 @@ public:
 
       if (mCounter++ < FAKE_ONDEVICECHANGE_EVENT_REPEAT_COUNT) {
         RefPtr<FakeOnDeviceChangeEventRunnable> evt = new FakeOnDeviceChangeEventRunnable(mCounter);
-        CamerasSingleton::Thread()->DelayedDispatch(evt.forget(),
+        CamerasSingleton::FakeDeviceChangeEventThread()->DelayedDispatch(evt.forget(),
           FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS);
       }
     }
@@ -590,6 +591,14 @@ CamerasChild::ShutdownChild()
   LOG(("Erasing sCameras & thread refs (original thread)"));
   CamerasSingleton::Child() = nullptr;
   CamerasSingleton::Thread() = nullptr;
+
+  if (CamerasSingleton::FakeDeviceChangeEventThread()) {
+    RefPtr<ShutdownRunnable> runnable =
+      new ShutdownRunnable(NewRunnableMethod(CamerasSingleton::FakeDeviceChangeEventThread(),
+                                             &nsIThread::Shutdown));
+    CamerasSingleton::FakeDeviceChangeEventThread()->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+  }
+  CamerasSingleton::FakeDeviceChangeEventThread() = nullptr;
 }
 
 bool
@@ -627,10 +636,19 @@ CamerasChild::SetFakeDeviceChangeEvents()
 {
   CamerasSingleton::Mutex().AssertCurrentThreadOwns();
 
+  if(!CamerasSingleton::FakeDeviceChangeEventThread()) {
+    nsresult rv = NS_NewNamedThread("Fake DC Event",
+                                    getter_AddRefs(CamerasSingleton::FakeDeviceChangeEventThread()));
+    if (NS_FAILED(rv)) {
+      LOG(("Error launching Fake OnDeviceChange Event Thread"));
+      return -1;
+    }
+  }
+
   // To simulate the devicechange event in mochitest,
   // we fire a fake devicechange event in Camera IPC thread periodically
   RefPtr<FakeOnDeviceChangeEventRunnable> evt = new FakeOnDeviceChangeEventRunnable(0);
-  CamerasSingleton::Thread()->Dispatch(evt.forget(), NS_DISPATCH_NORMAL);
+  CamerasSingleton::FakeDeviceChangeEventThread()->Dispatch(evt.forget(), NS_DISPATCH_NORMAL);
 
   return 0;
 }

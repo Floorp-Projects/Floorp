@@ -244,7 +244,7 @@ FillPropertyDescriptor(JS::MutableHandle<JS::PropertyDescriptor> desc,
 
 inline void
 FillPropertyDescriptor(JS::MutableHandle<JS::PropertyDescriptor> desc,
-                       JSObject* obj, JS::Value v,
+                       JSObject* obj, const JS::Value& v,
                        bool readonly, bool enumerable = true)
 {
   desc.value().set(v);
@@ -253,7 +253,7 @@ FillPropertyDescriptor(JS::MutableHandle<JS::PropertyDescriptor> desc,
 
 inline void
 FillPropertyDescriptor(JS::MutableHandle<JS::PropertyDescriptor> desc,
-                       JSObject* obj, unsigned attributes, JS::Value v)
+                       JSObject* obj, unsigned attributes, const JS::Value& v)
 {
   desc.object().set(obj);
   desc.value().set(v);

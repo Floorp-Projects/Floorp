@@ -393,7 +393,7 @@ BUILD_JSVAL(JSValueTag tag, uint32_t payload)
 }
 
 static inline bool
-JSVAL_IS_DOUBLE_IMPL(jsval_layout l)
+JSVAL_IS_DOUBLE_IMPL(const jsval_layout& l)
 {
     return (uint32_t)l.s.tag <= (uint32_t)JSVAL_TAG_CLEAR;
 }
@@ -408,13 +408,13 @@ DOUBLE_TO_JSVAL_IMPL(double d)
 }
 
 static inline bool
-JSVAL_IS_INT32_IMPL(jsval_layout l)
+JSVAL_IS_INT32_IMPL(const jsval_layout& l)
 {
     return l.s.tag == JSVAL_TAG_INT32;
 }
 
 static inline int32_t
-JSVAL_TO_INT32_IMPL(jsval_layout l)
+JSVAL_TO_INT32_IMPL(const jsval_layout& l)
 {
     return l.s.payload.i32;
 }
@@ -433,7 +433,7 @@ INT32_TO_JSVAL_IMPL(int32_t i)
 }
 
 static inline bool
-JSVAL_IS_NUMBER_IMPL(jsval_layout l)
+JSVAL_IS_NUMBER_IMPL(const jsval_layout& l)
 {
     JSValueTag tag = l.s.tag;
     MOZ_ASSERT(tag != JSVAL_TAG_CLEAR);
@@ -441,13 +441,13 @@ JSVAL_IS_NUMBER_IMPL(jsval_layout l)
 }
 
 static inline bool
-JSVAL_IS_UNDEFINED_IMPL(jsval_layout l)
+JSVAL_IS_UNDEFINED_IMPL(const jsval_layout& l)
 {
     return l.s.tag == JSVAL_TAG_UNDEFINED;
 }
 
 static inline bool
-JSVAL_IS_STRING_IMPL(jsval_layout l)
+JSVAL_IS_STRING_IMPL(const jsval_layout& l)
 {
     return l.s.tag == JSVAL_TAG_STRING;
 }
@@ -463,13 +463,13 @@ STRING_TO_JSVAL_IMPL(JSString* str)
 }
 
 static inline JSString*
-JSVAL_TO_STRING_IMPL(jsval_layout l)
+JSVAL_TO_STRING_IMPL(const jsval_layout& l)
 {
     return l.s.payload.str;
 }
 
 static inline bool
-JSVAL_IS_SYMBOL_IMPL(jsval_layout l)
+JSVAL_IS_SYMBOL_IMPL(const jsval_layout& l)
 {
     return l.s.tag == JSVAL_TAG_SYMBOL;
 }
@@ -485,19 +485,19 @@ SYMBOL_TO_JSVAL_IMPL(JS::Symbol* sym)
 }
 
 static inline JS::Symbol*
-JSVAL_TO_SYMBOL_IMPL(jsval_layout l)
+JSVAL_TO_SYMBOL_IMPL(const jsval_layout& l)
 {
     return l.s.payload.sym;
 }
 
 static inline bool
-JSVAL_IS_BOOLEAN_IMPL(jsval_layout l)
+JSVAL_IS_BOOLEAN_IMPL(const jsval_layout& l)
 {
     return l.s.tag == JSVAL_TAG_BOOLEAN;
 }
 
 static inline bool
-JSVAL_TO_BOOLEAN_IMPL(jsval_layout l)
+JSVAL_TO_BOOLEAN_IMPL(const jsval_layout& l)
 {
     return bool(l.s.payload.boo);
 }
@@ -512,32 +512,32 @@ BOOLEAN_TO_JSVAL_IMPL(bool b)
 }
 
 static inline bool
-JSVAL_IS_MAGIC_IMPL(jsval_layout l)
+JSVAL_IS_MAGIC_IMPL(const jsval_layout& l)
 {
     return l.s.tag == JSVAL_TAG_MAGIC;
 }
 
 static inline bool
-JSVAL_IS_OBJECT_IMPL(jsval_layout l)
+JSVAL_IS_OBJECT_IMPL(const jsval_layout& l)
 {
     return l.s.tag == JSVAL_TAG_OBJECT;
 }
 
 static inline bool
-JSVAL_IS_PRIMITIVE_IMPL(jsval_layout l)
+JSVAL_IS_PRIMITIVE_IMPL(const jsval_layout& l)
 {
     return (uint32_t)l.s.tag < (uint32_t)JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET;
 }
 
 static inline bool
-JSVAL_IS_OBJECT_OR_NULL_IMPL(jsval_layout l)
+JSVAL_IS_OBJECT_OR_NULL_IMPL(const jsval_layout& l)
 {
     MOZ_ASSERT((uint32_t)l.s.tag <= (uint32_t)JSVAL_TAG_OBJECT);
     return (uint32_t)l.s.tag >= (uint32_t)JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET;
 }
 
 static inline JSObject*
-JSVAL_TO_OBJECT_IMPL(jsval_layout l)
+JSVAL_TO_OBJECT_IMPL(const jsval_layout& l)
 {
     return l.s.payload.obj;
 }
@@ -553,7 +553,7 @@ OBJECT_TO_JSVAL_IMPL(JSObject* obj)
 }
 
 static inline bool
-JSVAL_IS_NULL_IMPL(jsval_layout l)
+JSVAL_IS_NULL_IMPL(const jsval_layout& l)
 {
     return l.s.tag == JSVAL_TAG_NULL;
 }
@@ -570,7 +570,7 @@ PRIVATE_PTR_TO_JSVAL_IMPL(void* ptr)
 }
 
 static inline void*
-JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
+JSVAL_TO_PRIVATE_PTR_IMPL(const jsval_layout& l)
 {
     return l.s.payload.ptr;
 }
@@ -593,26 +593,26 @@ PRIVATE_GCTHING_TO_JSVAL_IMPL(js::gc::Cell* cell)
 }
 
 static inline bool
-JSVAL_IS_PRIVATE_GCTHING_IMPL(jsval_layout l)
+JSVAL_IS_PRIVATE_GCTHING_IMPL(const jsval_layout& l)
 {
     return l.s.tag == JSVAL_TAG_PRIVATE_GCTHING;
 }
 
 static inline bool
-JSVAL_IS_GCTHING_IMPL(jsval_layout l)
+JSVAL_IS_GCTHING_IMPL(const jsval_layout& l)
 {
     /* gcc sometimes generates signed < without explicit casts. */
     return (uint32_t)l.s.tag >= (uint32_t)JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET;
 }
 
 static inline js::gc::Cell*
-JSVAL_TO_GCTHING_IMPL(jsval_layout l)
+JSVAL_TO_GCTHING_IMPL(const jsval_layout& l)
 {
     return l.s.payload.cell;
 }
 
 static inline uint32_t
-JSVAL_TRACE_KIND_IMPL(jsval_layout l)
+JSVAL_TRACE_KIND_IMPL(const jsval_layout& l)
 {
     static_assert((JSVAL_TAG_STRING & 0x03) == size_t(JS::TraceKind::String),
                   "Value type tags must correspond with JS::TraceKinds.");
@@ -626,13 +626,13 @@ JSVAL_TRACE_KIND_IMPL(jsval_layout l)
 }
 
 static inline bool
-JSVAL_IS_SPECIFIC_INT32_IMPL(jsval_layout l, int32_t i32)
+JSVAL_IS_SPECIFIC_INT32_IMPL(const jsval_layout& l, int32_t i32)
 {
     return l.s.tag == JSVAL_TAG_INT32 && l.s.payload.i32 == i32;
 }
 
 static inline bool
-JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(jsval_layout l, bool b)
+JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(const jsval_layout& l, bool b)
 {
     return (l.s.tag == JSVAL_TAG_BOOLEAN) && (l.s.payload.boo == uint32_t(b));
 }
@@ -656,14 +656,14 @@ MAGIC_UINT32_TO_JSVAL_IMPL(uint32_t payload)
 }
 
 static inline bool
-JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
+JSVAL_SAME_TYPE_IMPL(const jsval_layout& lhs, const jsval_layout& rhs)
 {
     JSValueTag ltag = lhs.s.tag, rtag = rhs.s.tag;
     return ltag == rtag || (ltag < JSVAL_TAG_CLEAR && rtag < JSVAL_TAG_CLEAR);
 }
 
 static inline JSValueType
-JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
+JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
 {
     uint32_t type = l.s.tag & 0xF;
     MOZ_ASSERT(type > JSVAL_TYPE_DOUBLE);
@@ -679,7 +679,7 @@ BUILD_JSVAL(JSValueTag tag, uint64_t payload)
 }
 
 static inline bool
-JSVAL_IS_DOUBLE_IMPL(jsval_layout l)
+JSVAL_IS_DOUBLE_IMPL(const jsval_layout& l)
 {
     return (l.asBits | mozilla::DoubleTypeTraits::kSignBit) <= JSVAL_SHIFTED_TAG_MAX_DOUBLE;
 }
@@ -694,13 +694,13 @@ DOUBLE_TO_JSVAL_IMPL(double d)
 }
 
 static inline bool
-JSVAL_IS_INT32_IMPL(jsval_layout l)
+JSVAL_IS_INT32_IMPL(const jsval_layout& l)
 {
     return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_INT32;
 }
 
 static inline int32_t
-JSVAL_TO_INT32_IMPL(jsval_layout l)
+JSVAL_TO_INT32_IMPL(const jsval_layout& l)
 {
     return (int32_t)l.asBits;
 }
@@ -712,19 +712,19 @@ INT32_TO_JSVAL_IMPL(int32_t i32)
 }
 
 static inline bool
-JSVAL_IS_NUMBER_IMPL(jsval_layout l)
+JSVAL_IS_NUMBER_IMPL(const jsval_layout& l)
 {
     return l.asBits < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET;
 }
 
 static inline bool
-JSVAL_IS_UNDEFINED_IMPL(jsval_layout l)
+JSVAL_IS_UNDEFINED_IMPL(const jsval_layout& l)
 {
     return l.asBits == JSVAL_SHIFTED_TAG_UNDEFINED;
 }
 
 static inline bool
-JSVAL_IS_STRING_IMPL(jsval_layout l)
+JSVAL_IS_STRING_IMPL(const jsval_layout& l)
 {
     return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_STRING;
 }
@@ -741,13 +741,13 @@ STRING_TO_JSVAL_IMPL(JSString* str)
 }
 
 static inline JSString*
-JSVAL_TO_STRING_IMPL(jsval_layout l)
+JSVAL_TO_STRING_IMPL(const jsval_layout& l)
 {
     return (JSString*)(l.asBits & JSVAL_PAYLOAD_MASK);
 }
 
 static inline bool
-JSVAL_IS_SYMBOL_IMPL(jsval_layout l)
+JSVAL_IS_SYMBOL_IMPL(const jsval_layout& l)
 {
     return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_SYMBOL;
 }
@@ -764,19 +764,19 @@ SYMBOL_TO_JSVAL_IMPL(JS::Symbol* sym)
 }
 
 static inline JS::Symbol*
-JSVAL_TO_SYMBOL_IMPL(jsval_layout l)
+JSVAL_TO_SYMBOL_IMPL(const jsval_layout& l)
 {
     return (JS::Symbol*)(l.asBits & JSVAL_PAYLOAD_MASK);
 }
 
 static inline bool
-JSVAL_IS_BOOLEAN_IMPL(jsval_layout l)
+JSVAL_IS_BOOLEAN_IMPL(const jsval_layout& l)
 {
     return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_BOOLEAN;
 }
 
 static inline bool
-JSVAL_TO_BOOLEAN_IMPL(jsval_layout l)
+JSVAL_TO_BOOLEAN_IMPL(const jsval_layout& l)
 {
     return (bool)(l.asBits & JSVAL_PAYLOAD_MASK);
 }
@@ -790,33 +790,33 @@ BOOLEAN_TO_JSVAL_IMPL(bool b)
 }
 
 static inline bool
-JSVAL_IS_MAGIC_IMPL(jsval_layout l)
+JSVAL_IS_MAGIC_IMPL(const jsval_layout& l)
 {
     return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_MAGIC;
 }
 
 static inline bool
-JSVAL_IS_PRIMITIVE_IMPL(jsval_layout l)
+JSVAL_IS_PRIMITIVE_IMPL(const jsval_layout& l)
 {
     return l.asBits < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET;
 }
 
 static inline bool
-JSVAL_IS_OBJECT_IMPL(jsval_layout l)
+JSVAL_IS_OBJECT_IMPL(const jsval_layout& l)
 {
     MOZ_ASSERT((l.asBits >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT);
     return l.asBits >= JSVAL_SHIFTED_TAG_OBJECT;
 }
 
 static inline bool
-JSVAL_IS_OBJECT_OR_NULL_IMPL(jsval_layout l)
+JSVAL_IS_OBJECT_OR_NULL_IMPL(const jsval_layout& l)
 {
     MOZ_ASSERT((l.asBits >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT);
     return l.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET;
 }
 
 static inline JSObject*
-JSVAL_TO_OBJECT_IMPL(jsval_layout l)
+JSVAL_TO_OBJECT_IMPL(const jsval_layout& l)
 {
     uint64_t ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
     MOZ_ASSERT((ptrBits & 0x7) == 0);
@@ -835,25 +835,25 @@ OBJECT_TO_JSVAL_IMPL(JSObject* obj)
 }
 
 static inline bool
-JSVAL_IS_NULL_IMPL(jsval_layout l)
+JSVAL_IS_NULL_IMPL(const jsval_layout& l)
 {
     return l.asBits == JSVAL_SHIFTED_TAG_NULL;
 }
 
 static inline bool
-JSVAL_IS_PRIVATE_GCTHING_IMPL(jsval_layout l)
+JSVAL_IS_PRIVATE_GCTHING_IMPL(const jsval_layout& l)
 {
     return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_PRIVATE_GCTHING;
 }
 
 static inline bool
-JSVAL_IS_GCTHING_IMPL(jsval_layout l)
+JSVAL_IS_GCTHING_IMPL(const jsval_layout& l)
 {
     return l.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET;
 }
 
 static inline js::gc::Cell*
-JSVAL_TO_GCTHING_IMPL(jsval_layout l)
+JSVAL_TO_GCTHING_IMPL(const jsval_layout& l)
 {
     uint64_t ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
     MOZ_ASSERT((ptrBits & 0x7) == 0);
@@ -861,7 +861,7 @@ JSVAL_TO_GCTHING_IMPL(jsval_layout l)
 }
 
 static inline uint32_t
-JSVAL_TRACE_KIND_IMPL(jsval_layout l)
+JSVAL_TRACE_KIND_IMPL(const jsval_layout& l)
 {
     static_assert((JSVAL_TAG_STRING & 0x03) == size_t(JS::TraceKind::String),
                   "Value type tags must correspond with JS::TraceKinds.");
@@ -886,7 +886,7 @@ PRIVATE_PTR_TO_JSVAL_IMPL(void* ptr)
 }
 
 static inline void*
-JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
+JSVAL_TO_PRIVATE_PTR_IMPL(const jsval_layout& l)
 {
     MOZ_ASSERT((l.asBits & 0x8000000000000000LL) == 0);
     return (void*)(l.asBits << 1);
@@ -911,13 +911,13 @@ PRIVATE_GCTHING_TO_JSVAL_IMPL(js::gc::Cell* cell)
 }
 
 static inline bool
-JSVAL_IS_SPECIFIC_INT32_IMPL(jsval_layout l, int32_t i32)
+JSVAL_IS_SPECIFIC_INT32_IMPL(const jsval_layout& l, int32_t i32)
 {
     return l.asBits == (((uint64_t)(uint32_t)i32) | JSVAL_SHIFTED_TAG_INT32);
 }
 
 static inline bool
-JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(jsval_layout l, bool b)
+JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(const jsval_layout& l, bool b)
 {
     return l.asBits == (((uint64_t)(uint32_t)b) | JSVAL_SHIFTED_TAG_BOOLEAN);
 }
@@ -939,14 +939,14 @@ MAGIC_UINT32_TO_JSVAL_IMPL(uint32_t payload)
 }
 
 static inline bool
-JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
+JSVAL_SAME_TYPE_IMPL(const jsval_layout& lhs, const jsval_layout& rhs)
 {
     return (JSVAL_IS_DOUBLE_IMPL(lhs) && JSVAL_IS_DOUBLE_IMPL(rhs)) ||
            (((lhs.asBits ^ rhs.asBits) & 0xFFFF800000000000LL) == 0);
 }
 
 static inline JSValueType
-JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
+JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
 {
    uint64_t type = (l.asBits >> JSVAL_TAG_SHIFT) & 0xF;
    MOZ_ASSERT(type > JSVAL_TYPE_DOUBLE);
@@ -956,13 +956,13 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
 #endif  /* JS_PUNBOX64 */
 
 static inline bool
-JSVAL_IS_TRACEABLE_IMPL(jsval_layout l)
+JSVAL_IS_TRACEABLE_IMPL(const jsval_layout& l)
 {
     return JSVAL_IS_GCTHING_IMPL(l) && !JSVAL_IS_NULL_IMPL(l);
 }
 
-static inline jsval_layout JSVAL_TO_IMPL(JS::Value v);
-static inline JS_VALUE_CONSTEXPR JS::Value IMPL_TO_JSVAL(jsval_layout l);
+static inline jsval_layout JSVAL_TO_IMPL(const JS::Value& v);
+static inline JS_VALUE_CONSTEXPR JS::Value IMPL_TO_JSVAL(const jsval_layout& l);
 
 namespace JS {
 
@@ -1392,7 +1392,7 @@ class Value
 
   private:
 #if defined(JS_VALUE_IS_CONSTEXPR)
-    MOZ_IMPLICIT JS_VALUE_CONSTEXPR Value(jsval_layout layout) : data(layout) {}
+    MOZ_IMPLICIT JS_VALUE_CONSTEXPR Value(const jsval_layout& layout) : data(layout) {}
 #endif
 
     void staticAssertions() {
@@ -1402,8 +1402,8 @@ class Value
         JS_STATIC_ASSERT(sizeof(Value) == 8);
     }
 
-    friend jsval_layout (::JSVAL_TO_IMPL)(Value);
-    friend Value JS_VALUE_CONSTEXPR (::IMPL_TO_JSVAL)(jsval_layout l);
+    friend jsval_layout (::JSVAL_TO_IMPL)(const Value&);
+    friend Value JS_VALUE_CONSTEXPR (::IMPL_TO_JSVAL)(const jsval_layout& l);
     friend Value JS_VALUE_CONSTEXPR (JS::UndefinedValue)();
 } JS_HAZ_GC_POINTER;
 
@@ -1739,6 +1739,9 @@ struct BarrierMethods<JS::Value>
     static void postBarrier(JS::Value* v, const JS::Value& prev, const JS::Value& next) {
         JS::HeapValuePostBarrier(v, prev, next);
     }
+    static void exposeToJS(JS::Value v) {
+        JS::ExposeValueToActiveJS(v);
+    }
 };
 
 template <class Outer> class MutableValueOperations;
@@ -1922,20 +1925,20 @@ DispatchTyped(F f, const JS::Value& val, Args&&... args)
     return F::defaultValue(val);
 }
 
-template <class S> struct VoidDefaultAdaptor { static void defaultValue(S) {} };
+template <class S> struct VoidDefaultAdaptor { static void defaultValue(const S&) {} };
 template <class S> struct IdentityDefaultAdaptor { static S defaultValue(const S& v) {return v;} };
-template <class S, bool v> struct BoolDefaultAdaptor { static bool defaultValue(S) { return v; } };
+template <class S, bool v> struct BoolDefaultAdaptor { static bool defaultValue(const S&) { return v; } };
 
 } // namespace js
 
 inline jsval_layout
-JSVAL_TO_IMPL(JS::Value v)
+JSVAL_TO_IMPL(const JS::Value& v)
 {
     return v.data;
 }
 
 inline JS_VALUE_CONSTEXPR JS::Value
-IMPL_TO_JSVAL(jsval_layout l)
+IMPL_TO_JSVAL(const jsval_layout& l)
 {
 #if defined(JS_VALUE_IS_CONSTEXPR)
     return JS::Value(l);
