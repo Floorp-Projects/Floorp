@@ -15,6 +15,14 @@
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 
+// https://drafts.csswg.org/css-align-3/#baseline-sharing-group
+enum BaselineSharingGroup
+{
+  // NOTE Used as an array index so must be 0 and 1.
+  eFirst = 0,
+  eLast = 1,
+};
+
 /**
  * Factory function.
  * @return a newly allocated nsGridContainerFrame (infallible)
@@ -100,6 +108,13 @@ public:
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         const nsRect&           aDirtyRect,
                         const nsDisplayListSet& aLists) override;
+
+  nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const override
+  {
+    nscoord b;
+    GetBBaseline(BaselineSharingGroup::eFirst, &b);
+    return b;
+  }
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
@@ -226,7 +241,12 @@ protected:
     : nsContainerFrame(aContext)
     , mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN)
-  {}
+  {
+    mBaseline[0][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mBaseline[0][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mBaseline[1][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mBaseline[1][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  }
 
   /**
    * XXX temporary - move the ImplicitNamedAreas stuff to the style system.
@@ -261,6 +281,54 @@ protected:
   // Helper to move child frames into the kExcessOverflowContainersList:.
   void MergeSortedExcessOverflowContainers(nsFrameList& aList);
 
+  bool GetBBaseline(BaselineSharingGroup aBaselineGroup, nscoord* aResult) const
+  {
+    *aResult = mBaseline[mozilla::eLogicalAxisBlock][aBaselineGroup];
+    return true;
+  }
+  bool GetIBaseline(BaselineSharingGroup aBaselineGroup, nscoord* aResult) const
+  {
+    *aResult = mBaseline[mozilla::eLogicalAxisInline][aBaselineGroup];
+    return true;
+  }
+
+  /**
+   * Calculate this grid container's baselines.
+   * @param aBaselineSet which baseline(s) to derive from a baseline-group or
+   * items; a baseline not included is synthesized from the border-box instead.
+   * @param aFragmentStartTrack is the first track in this fragment in the same
+   * axis as aMajor.  Pass zero if that's not the axis we're fragmenting in.
+   * @param aFirstExcludedTrack should be the first track in the next fragment
+   * or one beyond the final track in the last fragment, in aMajor's axis.
+   * Pass the number of tracks if that's not the axis we're fragmenting in.
+   */
+  enum BaselineSet : uint32_t {
+    eNone =  0x0,
+    eFirst = 0x1,
+    eLast  = 0x2,
+    eBoth  = eFirst | eLast,
+  };
+  void CalculateBaselines(BaselineSet                   aBaselineSet,
+                          GridItemCSSOrderIterator*     aIter,
+                          const nsTArray<GridItemInfo>* aGridItems,
+                          const Tracks&    aTracks,
+                          uint32_t         aFragmentStartTrack,
+                          uint32_t         aFirstExcludedTrack,
+                          WritingMode      aWM,
+                          const nsSize&    aCBPhysicalSize,
+                          nscoord          aCBBorderPaddingStart,
+                          nscoord          aCBBorderPaddingStartEnd,
+                          nscoord          aCBSize);
+
+  /**
+   * Synthesize a Grid container baseline for aGroup.
+   */
+  nscoord SynthesizeBaseline(const FindItemInGridOrderResult& aItem,
+                             mozilla::LogicalAxis aAxis,
+                             BaselineSharingGroup aGroup,
+                             const nsSize&        aCBPhysicalSize,
+                             nscoord              aCBSize,
+                             WritingMode          aCBWM);
   /**
    * Find the first item in Grid Order in this fragment.
    * https://drafts.csswg.org/css-grid/#grid-order
@@ -360,6 +428,9 @@ private:
    */
   nscoord mCachedMinISize;
   nscoord mCachedPrefISize;
+
+  // Our baselines, one per BaselineSharingGroup per axis.
+  nscoord mBaseline[2/*LogicalAxis*/][2/*BaselineSharingGroup*/];
 
 #ifdef DEBUG
   // If true, NS_STATE_GRID_DID_PUSH_ITEMS may be set even though all pushed
