@@ -14,11 +14,6 @@ namespace mozilla { namespace psm {
 SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd,
                               PRBool checkSig, PRBool isServer);
 
-// EnsureServerVerificationInitialized() posts an event to a cert
-// verification thread to run nsINSSComponent::EnsureIdentityInfoLoaded()
-// exactly once. It must be called from socket thread.
-void EnsureServerVerificationInitialized();
-
 } } // namespace mozilla::psm
 
 #endif
