@@ -805,11 +805,11 @@ public:
   int8_t DeprecatedAttribute();
   int8_t SetDeprecatedAttribute(int8_t);
   int8_t DeprecatedMethod();
-  int8_t DeprecatedMethodWithContext(JSContext*, JS::Value);
+  int8_t DeprecatedMethodWithContext(JSContext*, const JS::Value&);
 
   // Static methods and attributes
   static void StaticMethod(const GlobalObject&, bool);
-  static void StaticMethodWithContext(const GlobalObject&, JS::Value);
+  static void StaticMethodWithContext(const GlobalObject&, const JS::Value&);
   static bool StaticAttribute(const GlobalObject&);
   static void SetStaticAttribute(const GlobalObject&, bool);
   static void Assert(const GlobalObject&, bool);
@@ -818,7 +818,7 @@ public:
   static int8_t StaticDeprecatedAttribute(const GlobalObject&);
   static int8_t SetStaticDeprecatedAttribute(const GlobalObject&, int8_t);
   static int8_t StaticDeprecatedMethod(const GlobalObject&);
-  static int8_t StaticDeprecatedMethodWithContext(const GlobalObject&, JS::Value);
+  static int8_t StaticDeprecatedMethodWithContext(const GlobalObject&, const JS::Value&);
 
   // Overload resolution tests
   bool Overload1(TestInterface&);
@@ -933,7 +933,7 @@ public:
   void SetThrowingGetterAttr(bool arg);
   bool ThrowingSetterAttr() const;
   void SetThrowingSetterAttr(bool arg, ErrorResult& aRv);
-  int16_t LegacyCall(JS::Value, uint32_t, TestInterface&);
+  int16_t LegacyCall(const JS::Value&, uint32_t, TestInterface&);
   void PassArgsWithDefaults(JSContext*, const Optional<int32_t>&,
                             TestInterface*, const Dict&, double,
                             const Optional<float>&);

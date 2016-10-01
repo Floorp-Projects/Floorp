@@ -175,7 +175,7 @@ XPCCallContext::GetRetVal() const
 }
 
 inline void
-XPCCallContext::SetRetVal(JS::Value val)
+XPCCallContext::SetRetVal(const JS::Value& val)
 {
     CHECK_STATE(HAVE_ARGS);
     if (mRetVal)

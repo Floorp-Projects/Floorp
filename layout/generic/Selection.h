@@ -120,7 +120,7 @@ public:
   nsresult      Clear(nsPresContext* aPresContext);
   nsresult      Collapse(nsINode* aParentNode, int32_t aOffset);
   nsresult      Extend(nsINode* aParentNode, int32_t aOffset);
-  nsRange*      GetRangeAt(int32_t aIndex);
+  nsRange*      GetRangeAt(int32_t aIndex) const;
 
   // Get the anchor-to-focus range if we don't care which end is
   // anchor and which end is focus.
@@ -160,7 +160,7 @@ public:
   nsINode*     GetFocusNode();
   uint32_t     FocusOffset();
 
-  bool IsCollapsed();
+  bool IsCollapsed() const;
   void Collapse(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
   void CollapseToStart(mozilla::ErrorResult& aRv);
   void CollapseToEnd(mozilla::ErrorResult& aRv);
@@ -182,6 +182,15 @@ public:
   void Stringify(nsAString& aResult);
 
   bool ContainsNode(nsINode& aNode, bool aPartlyContained, mozilla::ErrorResult& aRv);
+
+  /**
+   * Check to see if the given point is contained within the selection area. In
+   * particular, this iterates through all the rects that make up the selection,
+   * not just the bounding box, and checks to see if the given point is contained
+   * in any one of them.
+   * @param aPoint The point to check, relative to the root frame.
+   */
+  bool ContainsPoint(const nsPoint& aPoint);
 
   void Modify(const nsAString& aAlter, const nsAString& aDirection,
               const nsAString& aGranularity, mozilla::ErrorResult& aRv);

@@ -117,7 +117,7 @@ checkAndLogStatementPerformance(sqlite3_stmt *aStatement)
 nsIVariant *
 convertJSValToVariant(
   JSContext *aCtx,
-  JS::Value aValue)
+  const JS::Value& aValue)
 {
   if (aValue.isInt32())
     return new IntegerVariant(aValue.toInt32());

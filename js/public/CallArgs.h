@@ -92,7 +92,7 @@ ComputeThis(JSContext* cx, JS::Value* vp);
 
 #ifdef JS_DEBUG
 extern JS_PUBLIC_API(void)
-CheckIsValidConstructible(Value v);
+CheckIsValidConstructible(const Value& v);
 #endif
 
 class MOZ_STACK_CLASS IncludeUsedRval
@@ -241,12 +241,12 @@ class MOZ_STACK_CLASS CallArgsBase : public WantUsedRval
     // implementing a JSNative method and encapsulating access to |vp| within
     // it.  You probably don't want to use these!
 
-    void setCallee(Value aCalleev) const {
+    void setCallee(const Value& aCalleev) const {
         this->clearUsedRval();
         argv_[-2] = aCalleev;
     }
 
-    void setThis(Value aThisv) const {
+    void setThis(const Value& aThisv) const {
         argv_[-1] = aThisv;
     }
 

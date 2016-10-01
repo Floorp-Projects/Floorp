@@ -5546,17 +5546,21 @@ Parser<ParseHandler>::continueStatement(YieldHandling yieldHandling)
     };
 
     if (label) {
-        bool foundTarget = false;
         ParseContext::Statement* stmt = pc->innermostStatement();
+        bool foundLoop = false;
 
         for (;;) {
             stmt = ParseContext::Statement::findNearest(stmt, isLoop);
             if (!stmt) {
-                report(ParseError, false, null(), JSMSG_BAD_CONTINUE);
+                report(ParseError, false, null(),
+                       foundLoop ? JSMSG_LABEL_NOT_FOUND : JSMSG_BAD_CONTINUE);
                 return null();
             }
 
+            foundLoop = true;
+
             // Is it labeled by our label?
+            bool foundTarget = false;
             stmt = stmt->enclosing();
             while (stmt && stmt->is<ParseContext::LabelStatement>()) {
                 if (stmt->as<ParseContext::LabelStatement>().label() == label) {
@@ -5567,11 +5571,6 @@ Parser<ParseHandler>::continueStatement(YieldHandling yieldHandling)
             }
             if (foundTarget)
                 break;
-        }
-
-        if (!foundTarget) {
-            report(ParseError, false, null(), JSMSG_LABEL_NOT_FOUND);
-            return null();
         }
     } else if (!pc->findInnermostStatement(isLoop)) {
         report(ParseError, false, null(), JSMSG_BAD_CONTINUE);

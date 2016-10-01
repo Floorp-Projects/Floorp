@@ -21,7 +21,7 @@
 using namespace js;
 
 bool
-Wrapper::finalizeInBackground(Value priv) const
+Wrapper::finalizeInBackground(const Value& priv) const
 {
     if (!priv.isObject())
         return true;

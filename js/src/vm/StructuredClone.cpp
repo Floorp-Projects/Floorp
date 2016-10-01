@@ -337,7 +337,7 @@ struct JSStructuredCloneWriter {
                                      JS::StructuredCloneScope scope,
                                      const JSStructuredCloneCallbacks* cb,
                                      void* cbClosure,
-                                     Value tVal)
+                                     const Value& tVal)
         : out(cx), scope(scope), objs(out.context()),
           counts(out.context()), entries(out.context()),
           memory(out.context()), callbacks(cb),
@@ -487,7 +487,7 @@ bool
 WriteStructuredClone(JSContext* cx, HandleValue v, JSStructuredCloneData* bufp,
                      JS::StructuredCloneScope scope,
                      const JSStructuredCloneCallbacks* cb, void* cbClosure,
-                     Value transferable)
+                     const Value& transferable)
 {
     JSStructuredCloneWriter w(cx, scope, cb, cbClosure, transferable);
     return w.init() && w.write(v) && w.extractBuffer(bufp);

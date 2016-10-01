@@ -783,7 +783,7 @@ CacheFile::OpenAlternativeInputStream(nsICacheEntry *aEntryHandle,
 
   nsresult rv;
 
-  if (!mReady) {
+  if (NS_WARN_IF(!mReady)) {
     LOG(("CacheFile::OpenAlternativeInputStream() - CacheFile is not ready "
          "[this=%p]", this));
     return NS_ERROR_NOT_AVAILABLE;
@@ -810,7 +810,7 @@ CacheFile::OpenAlternativeInputStream(nsICacheEntry *aEntryHandle,
 
   const char *altData = mMetadata->GetElement(CacheFileUtils::kAltDataKey);
   MOZ_ASSERT(altData, "alt-metadata should exist but was not found!");
-  if (!altData) {
+  if (NS_WARN_IF(!altData)) {
     LOG(("CacheFile::OpenAlternativeInputStream() - alt-metadata not found but "
          "alt-data exists according to mAltDataOffset! [this=%p, ]", this));
     return NS_ERROR_NOT_AVAILABLE;
@@ -820,7 +820,7 @@ CacheFile::OpenAlternativeInputStream(nsICacheEntry *aEntryHandle,
   nsCString availableAltData;
   rv = CacheFileUtils::ParseAlternativeDataInfo(altData, &offset,
                                                 &availableAltData);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_ASSERT(false, "alt-metadata unexpectedly failed to parse");
     LOG(("CacheFile::OpenAlternativeInputStream() - Cannot parse alternative "
          "metadata! [this=%p]", this));

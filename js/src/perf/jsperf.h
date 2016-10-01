@@ -126,7 +126,7 @@ extern JS_FRIEND_API(JSObject*)
  * Value is not an instance of the wrapper.
  */
 extern JS_FRIEND_API(PerfMeasurement*)
-    ExtractPerfMeasurement(Value wrapper);
+    ExtractPerfMeasurement(const Value& wrapper);
 
 } // namespace JS
 

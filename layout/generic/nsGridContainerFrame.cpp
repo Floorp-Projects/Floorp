@@ -13,6 +13,7 @@
 #include "mozilla/Function.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h" // for PodZero
+#include "mozilla/Poison.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAlgorithm.h" // for clamped()
 #include "nsCSSAnonBoxes.h"
@@ -28,6 +29,10 @@
 #include "nsStyleContext.h"
 #include "mozilla/dom/GridBinding.h"
 
+#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__  == 6
+#define CLANG_CRASH_BUG 1
+#endif
+
 using namespace mozilla;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 typedef nsGridContainerFrame::TrackSize TrackSize;
@@ -35,14 +40,6 @@ const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
   uint32_t(nsStyleGridLine::kMaxLine - nsStyleGridLine::kMinLine);
 const uint32_t nsGridContainerFrame::kAutoLine = kTranslatedMaxLine + 3457U;
 typedef nsTHashtable< nsPtrHashKey<nsIFrame> > FrameHashtable;
-
-// https://drafts.csswg.org/css-align-3/#baseline-sharing-group
-enum BaselineSharingGroup
-{
-  // NOTE Used as an array index so must be 0 and 1.
-  eFirst = 0,
-  eLast = 1,
-};
 
 // https://drafts.csswg.org/css-sizing/#constraints
 enum class SizingConstraint
@@ -123,6 +120,26 @@ ResolveToDefiniteSize(const nsStyleCoord& aCoord, nscoord aPercentBasis)
   }
   return std::max(nscoord(0),
                   nsRuleNode::ComputeCoordPercentCalc(aCoord, aPercentBasis));
+}
+
+// Synthesize a baseline from a border box.  For an alphabetical baseline
+// this is the end edge of the border box.  For a central baseline it's
+// the center of the border box.
+// https://drafts.csswg.org/css-align-3/#synthesize-baselines
+// For a first-baseline the measure is from the border-box start edge and
+// for a last-baseline the measure is from the border-box end edge.
+static nscoord
+SynthesizeBaselineFromBorderBox(BaselineSharingGroup aGroup,
+                                WritingMode aWM,
+                                nscoord aBorderBoxSize)
+{
+  if (aGroup == BaselineSharingGroup::eFirst) {
+    return aWM.IsAlphabeticalBaseline() ? aBorderBoxSize : aBorderBoxSize / 2;
+  }
+  MOZ_ASSERT(aGroup == BaselineSharingGroup::eLast);
+  // Round up for central baseline offset, to be consistent with eFirst.
+  return aWM.IsAlphabeticalBaseline() ? 0 :
+    (aBorderBoxSize / 2) + (aBorderBoxSize % 2);
 }
 
 enum class GridLineSide
@@ -319,15 +336,16 @@ MergeSortedFrameListsFor(nsFrameList& aDest, nsFrameList& aSrc,
   MergeSortedFrameLists(aDest, aSrc, aParent->GetContent());
 }
 
-class nsGridContainerFrame::GridItemCSSOrderIterator
+template<typename Iterator>
+class nsGridContainerFrame::GridItemCSSOrderIteratorT
 {
 public:
   enum OrderState { eUnknownOrder, eKnownOrdered, eKnownUnordered };
   enum ChildFilter { eSkipPlaceholders, eIncludeAll };
-  GridItemCSSOrderIterator(nsIFrame* aGridContainer,
-                           nsIFrame::ChildListID aListID,
-                           ChildFilter aFilter = eSkipPlaceholders,
-                           OrderState aState = eUnknownOrder)
+  GridItemCSSOrderIteratorT(nsIFrame* aGridContainer,
+                            nsIFrame::ChildListID aListID,
+                            ChildFilter aFilter = eSkipPlaceholders,
+                            OrderState aState = eUnknownOrder)
     : mChildren(aGridContainer->GetChildList(aListID))
     , mArrayIndex(0)
     , mGridItemIndex(0)
@@ -341,9 +359,9 @@ public:
     bool isOrdered = aState != eKnownUnordered;
     if (aState == eUnknownOrder) {
       auto maxOrder = std::numeric_limits<int32_t>::min();
-      for (nsFrameList::Enumerator e(mChildren); !e.AtEnd(); e.Next()) {
+      for (auto child : mChildren) {
         ++count;
-        int32_t order = e.get()->StylePosition()->mOrder;
+        int32_t order = child->StylePosition()->mOrder;
         if (order < maxOrder) {
           isOrdered = false;
           break;
@@ -352,27 +370,36 @@ public:
       }
     }
     if (isOrdered) {
-      mEnumerator.emplace(mChildren);
+      mIter.emplace(begin(mChildren));
+      mIterEnd.emplace(end(mChildren));
     } else {
       count *= 2; // XXX somewhat arbitrary estimate for now...
       mArray.emplace(count);
-      for (nsFrameList::Enumerator e(mChildren); !e.AtEnd(); e.Next()) {
-        mArray->AppendElement(e.get());
+      for (Iterator i(begin(mChildren)), iEnd(end(mChildren)); i != iEnd; ++i) {
+        mArray->AppendElement(*i);
       }
       // XXX replace this with nsTArray::StableSort when bug 1147091 is fixed.
-      std::stable_sort(mArray->begin(), mArray->end(), IsCSSOrderLessThan);
+      std::stable_sort(mArray->begin(), mArray->end(), CSSOrderComparator);
     }
 
     if (mSkipPlaceholders) {
       SkipPlaceholders();
     }
   }
+  ~GridItemCSSOrderIteratorT()
+  {
+    MOZ_ASSERT(IsForward() == mGridItemCount.isNothing());
+  }
+
+  bool IsForward() const;
+  Iterator begin(const nsFrameList& aList);
+  Iterator end(const nsFrameList& aList);
 
   nsIFrame* operator*() const
   {
     MOZ_ASSERT(!AtEnd());
-    if (mEnumerator) {
-      return mEnumerator->get();
+    if (mIter.isSome()) {
+      return **mIter;
     }
     return (*mArray)[mArrayIndex];
   }
@@ -386,7 +413,19 @@ public:
     MOZ_ASSERT(!AtEnd());
     MOZ_ASSERT((**this)->GetType() != nsGkAtoms::placeholderFrame,
                "MUST not call this when at a placeholder");
+    MOZ_ASSERT(IsForward() || mGridItemIndex < *mGridItemCount,
+               "Returning an out-of-range mGridItemIndex...");
     return mGridItemIndex;
+  }
+
+  void SetGridItemCount(size_t aGridItemCount)
+  {
+    MOZ_ASSERT(mIter.isSome() || mArray->Length() == aGridItemCount,
+               "grid item count mismatch");
+    mGridItemCount.emplace(aGridItemCount);
+    // Note: it's OK if mGridItemIndex underflows -- GridItemIndex()
+    // will not be called unless there is at least one item.
+    mGridItemIndex = IsForward() ? 0 : *mGridItemCount - 1;
   }
 
   /**
@@ -394,9 +433,9 @@ public:
    */
   void SkipPlaceholders()
   {
-    if (mEnumerator) {
-      for (; !mEnumerator->AtEnd(); mEnumerator->Next()) {
-        nsIFrame* child = mEnumerator->get();
+    if (mIter.isSome()) {
+      for (; *mIter != *mIterEnd; ++*mIter) {
+        nsIFrame* child = **mIter;
         if (child->GetType() != nsGkAtoms::placeholderFrame) {
           return;
         }
@@ -413,8 +452,11 @@ public:
 
   bool AtEnd() const
   {
-    MOZ_ASSERT(mEnumerator || mArrayIndex <= mArray->Length());
-    return mEnumerator ? mEnumerator->AtEnd() : mArrayIndex >= mArray->Length();
+#ifndef CLANG_CRASH_BUG
+    // Clang 3.6.2 crashes when compiling this assertion:
+    MOZ_ASSERT(mIter.isSome() || mArrayIndex <= mArray->Length());
+#endif
+    return mIter ? (*mIter == *mIterEnd) : mArrayIndex >= mArray->Length();
   }
 
   void Next()
@@ -428,10 +470,10 @@ public:
 #endif
     if (mSkipPlaceholders ||
         (**this)->GetType() != nsGkAtoms::placeholderFrame) {
-      ++mGridItemIndex;
+      IsForward() ? ++mGridItemIndex : --mGridItemIndex;
     }
-    if (mEnumerator) {
-      mEnumerator->Next();
+    if (mIter.isSome()) {
+      ++*mIter;
     } else {
       ++mArrayIndex;
     }
@@ -442,33 +484,47 @@ public:
 
   void Reset(ChildFilter aFilter = eSkipPlaceholders)
   {
-    if (mEnumerator) {
-      mEnumerator.reset();
-      mEnumerator.emplace(mChildren);
+    if (mIter.isSome()) {
+      mIter.reset();
+      mIter.emplace(begin(mChildren));
+      mIterEnd.reset();
+      mIterEnd.emplace(end(mChildren));
     } else {
       mArrayIndex = 0;
     }
-    mGridItemIndex = 0;
+    mGridItemIndex = IsForward() ? 0 : *mGridItemCount - 1;
     mSkipPlaceholders = aFilter == eSkipPlaceholders;
     if (mSkipPlaceholders) {
       SkipPlaceholders();
     }
   }
 
-  bool ItemsAreAlreadyInOrder() const { return mEnumerator.isSome(); }
+  bool IsValid() const { return mIter.isSome() || mArray.isSome(); }
 
+  void Invalidate()
+  {
+    mIter.reset();
+    mArray.reset();
+    mozWritePoison(&mChildren, sizeof(mChildren));
+  }
+
+  bool ItemsAreAlreadyInOrder() const { return mIter.isSome(); }
+
+  static bool CSSOrderComparator(nsIFrame* const& a, nsIFrame* const& b);
 private:
-  static bool IsCSSOrderLessThan(nsIFrame* const& a, nsIFrame* const& b)
-    { return a->StylePosition()->mOrder < b->StylePosition()->mOrder; }
-
   nsFrameList mChildren;
   // Used if child list is already in ascending 'order'.
-  Maybe<nsFrameList::Enumerator> mEnumerator;
+  Maybe<Iterator> mIter;
+  Maybe<Iterator> mIterEnd;
   // Used if child list is *not* in ascending 'order'.
+  // This array is pre-sorted in reverse order for a reverse iterator.
   Maybe<nsTArray<nsIFrame*>> mArray;
   size_t mArrayIndex;
   // The index of the current grid item (placeholders excluded).
   size_t mGridItemIndex;
+  // The number of grid items (placeholders excluded).
+  // It's only initialized and used in a reverse iterator.
+  Maybe<size_t> mGridItemCount;
   // Skip placeholder children in the iteration?
   bool mSkipPlaceholders;
 #ifdef DEBUG
@@ -477,6 +533,48 @@ private:
 #endif
 };
 
+using GridItemCSSOrderIterator = nsGridContainerFrame::GridItemCSSOrderIterator;
+using ReverseGridItemCSSOrderIterator = nsGridContainerFrame::ReverseGridItemCSSOrderIterator;
+
+template<>
+bool
+GridItemCSSOrderIterator::CSSOrderComparator(nsIFrame* const& a,
+                                             nsIFrame* const& b)
+{ return a->StylePosition()->mOrder < b->StylePosition()->mOrder; }
+
+template<>
+bool
+GridItemCSSOrderIterator::IsForward() const { return true; }
+
+template<>
+nsFrameList::iterator
+GridItemCSSOrderIterator::begin(const nsFrameList& aList)
+{ return aList.begin(); }
+
+template<>
+nsFrameList::iterator GridItemCSSOrderIterator::end(const nsFrameList& aList)
+{ return aList.end(); }
+
+template<>
+bool
+ReverseGridItemCSSOrderIterator::CSSOrderComparator(nsIFrame* const& a,
+                                                    nsIFrame* const& b)
+{ return a->StylePosition()->mOrder > b->StylePosition()->mOrder; }
+
+template<>
+bool
+ReverseGridItemCSSOrderIterator::IsForward() const
+{ return false; }
+
+template<>
+nsFrameList::reverse_iterator
+ReverseGridItemCSSOrderIterator::begin(const nsFrameList& aList)
+{ return aList.rbegin(); }
+
+template<>
+nsFrameList::reverse_iterator
+ReverseGridItemCSSOrderIterator::end(const nsFrameList& aList)
+{ return aList.rend(); }
 
 /**
  * A LineRange can be definite or auto - when it's definite it represents
@@ -1124,6 +1222,8 @@ struct nsGridContainerFrame::Tracks
   {
     mBaselineSubtreeAlign[BaselineSharingGroup::eFirst] = NS_STYLE_ALIGN_AUTO;
     mBaselineSubtreeAlign[BaselineSharingGroup::eLast] = NS_STYLE_ALIGN_AUTO;
+    mBaseline[BaselineSharingGroup::eFirst] = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mBaseline[BaselineSharingGroup::eLast] = NS_INTRINSIC_WIDTH_UNKNOWN;
   }
 
   void Initialize(const TrackSizingFunctions& aFunctions,
@@ -1702,6 +1802,8 @@ struct nsGridContainerFrame::Tracks
   AutoTArray<TrackSize, 32> mSizes;
   nscoord mContentBoxSize;
   nscoord mGridGap;
+  // The first(last)-baseline for the first(last) track in this axis.
+  nscoord mBaseline[2]; // index by BaselineSharingGroup
   LogicalAxis mAxis;
   // Used for aligning a baseline-aligned subtree of items.  The only possible
   // values are NS_STYLE_ALIGN_{START,END,CENTER,AUTO}.  AUTO means there are
@@ -1922,9 +2024,16 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput
   nscoord mFragBStart;
   /** The start row for this fragment. */
   uint32_t mStartRow;
+  /**
+   * The start row for the next fragment, if any.  If mNextFragmentStartRow ==
+   * mStartRow then there are no rows in this fragment.
+   */
+  uint32_t mNextFragmentStartRow;
   /** Our tentative ApplySkipSides bits. */
   LogicalSides mSkipSides;
   const WritingMode mWM;
+  /** Initialized lazily, when we find the fragmentainer. */
+  bool mInFragmentainer;
 
 private:
   GridReflowInput(nsGridContainerFrame*    aFrame,
@@ -1949,7 +2058,9 @@ private:
     , mBorderPadding(aWM)
     , mFragBStart(0)
     , mStartRow(0)
+    , mNextFragmentStartRow(0)
     , mWM(aWM)
+    , mInFragmentainer(false)
   {
     MOZ_ASSERT(!aReflowInput || aReflowInput->mFrame == mFrame);
     if (aReflowInput) {
@@ -3867,6 +3978,8 @@ nsGridContainerFrame::Tracks::CalculateItemBaselines(
   std::sort(aBaselineItems.begin(), aBaselineItems.end(),
             ItemBaselineData::IsBaselineTrackLessThan);
 
+  MOZ_ASSERT(mSizes.Length() > 0, "having an item implies at least one track");
+  const uint32_t lastTrack = mSizes.Length() - 1;
   nscoord maxBaseline = 0;
   nscoord maxDescent = 0;
   uint32_t currentTrack = kAutoLine; // guaranteed to not match any item
@@ -3888,10 +4001,18 @@ nsGridContainerFrame::Tracks::CalculateItemBaselines(
       item.mGridItem->mBaselineOffset[mAxis] = maxBaseline - item.mBaseline;
       MOZ_ASSERT(item.mGridItem->mBaselineOffset[mAxis] >= 0);
     }
-    // Store the size of this baseline-aligned subtree.
     if (i != 0) {
+      // Store the size of this baseline-aligned subtree.
       mSizes[currentTrack].mBaselineSubtreeSize[aBaselineGroup] =
         maxBaseline + maxDescent;
+      // Record the first(last) baseline for the first(last) track.
+      if (currentTrack == 0 && aBaselineGroup == BaselineSharingGroup::eFirst) {
+        mBaseline[aBaselineGroup] = maxBaseline;
+      }
+      if (currentTrack == lastTrack &&
+          aBaselineGroup == BaselineSharingGroup::eLast) {
+        mBaseline[aBaselineGroup] = maxBaseline;
+      }
     }
     if (i == len) {
       break;
@@ -3932,8 +4053,8 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
     if (itemHasBaselineParallelToTrack) {
       // [align|justify]-self:[last-]baseline.
       auto selfAlignment = isOrthogonal ?
-        child->StylePosition()->ComputedJustifySelf(containerSC) :
-        child->StylePosition()->ComputedAlignSelf(containerSC);
+        child->StylePosition()->UsedJustifySelf(containerSC) :
+        child->StylePosition()->UsedAlignSelf(containerSC);
       selfAlignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
       if (selfAlignment == NS_STYLE_ALIGN_BASELINE) {
         state |= ItemState::eFirstBaseline | ItemState::eSelfBaseline;
@@ -4017,8 +4138,19 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
       // XXX (after bug 1174569 is sorted out)
       ::MeasuringReflow(child, aState.mReflowInput, rc, avail);
       nscoord baseline;
+      nsGridContainerFrame* grid = do_QueryFrame(child);
       if (state & ItemState::eFirstBaseline) {
-        if (nsLayoutUtils::GetFirstLineBaseline(wm, child, &baseline)) {
+        if (grid) {
+          if (isOrthogonal == isInlineAxis) {
+            grid->GetBBaseline(BaselineSharingGroup::eFirst, &baseline);
+          } else {
+            grid->GetIBaseline(BaselineSharingGroup::eFirst, &baseline);
+          }
+        }
+        if (grid ||
+            nsLayoutUtils::GetFirstLineBaseline(wm, child, &baseline)) {
+          NS_ASSERTION(baseline != NS_INTRINSIC_WIDTH_UNKNOWN,
+                       "about to use an unknown baseline");
           auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
           auto m = child->GetLogicalUsedMargin(wm);
           baseline += isInlineAxis ? m.IStart(wm) : m.BStart(wm);
@@ -4030,11 +4162,24 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
           state &= ~ItemState::eAllBaselineBits;
         }
       } else {
-        if (nsLayoutUtils::GetLastLineBaseline(wm, child, &baseline)) {
+        if (grid) {
+          if (isOrthogonal == isInlineAxis) {
+            grid->GetBBaseline(BaselineSharingGroup::eLast, &baseline);
+          } else {
+            grid->GetIBaseline(BaselineSharingGroup::eLast, &baseline);
+          }
+        }
+        if (grid ||
+            nsLayoutUtils::GetLastLineBaseline(wm, child, &baseline)) {
+          NS_ASSERTION(baseline != NS_INTRINSIC_WIDTH_UNKNOWN,
+                       "about to use an unknown baseline");
           auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
           auto m = child->GetLogicalUsedMargin(wm);
-          auto descent = frameSize - baseline + (isInlineAxis ? m.IEnd(wm)
-                                                              : m.BEnd(wm));
+          if (!grid) {
+            // Convert to distance from border-box end.
+            baseline = frameSize - baseline;
+          }
+          auto descent = baseline + (isInlineAxis ? m.IEnd(wm) : m.BEnd(wm));
           auto alignSize = frameSize + (isInlineAxis ? m.IStartEnd(wm)
                                                      : m.BStartEnd(wm));
           lastBaselineItems.AppendElement(ItemBaselineData(
@@ -4897,7 +5042,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     if (!childRI.mStyleMargin->HasBlockAxisAuto(childWM) &&
         childRI.mStylePosition->BSize(childWM).GetUnit() == eStyleUnit_Auto) {
       auto blockAxisAlignment =
-        childRI.mStylePosition->ComputedAlignSelf(StyleContext());
+        childRI.mStylePosition->UsedAlignSelf(StyleContext());
       if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
           blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
         stretch = true;
@@ -4924,7 +5069,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   if (MOZ_LIKELY(isGridItem)) {
     LogicalSize size = childSize.Size(childWM); // from the ReflowChild()
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
-      auto align = childRI.mStylePosition->ComputedAlignSelf(containerSC);
+      auto align = childRI.mStylePosition->UsedAlignSelf(containerSC);
       auto state = aGridItemInfo->mState[eLogicalAxisBlock];
       if (state & ItemState::eContentBaseline) {
         align = (state & ItemState::eFirstBaseline) ? NS_STYLE_ALIGN_SELF_START
@@ -4933,7 +5078,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
       nscoord cbsz = cb.BSize(wm) - consumedGridAreaBSize;
       AlignSelf(*aGridItemInfo, align, cbsz, wm, childRI, size, &childPos);
     }
-    auto justify = childRI.mStylePosition->ComputedJustifySelf(containerSC);
+    auto justify = childRI.mStylePosition->UsedJustifySelf(containerSC);
     auto state = aGridItemInfo->mState[eLogicalAxisInline];
     if (state & ItemState::eContentBaseline) {
       justify = (state & ItemState::eFirstBaseline) ? NS_STYLE_JUSTIFY_SELF_START
@@ -5329,6 +5474,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
   }
 
   // Record a break before |aEndRow|.
+  aState.mNextFragmentStartRow = aEndRow;
   if (aEndRow < aState.mRows.mSizes.Length()) {
     aState.mRows.BreakBeforeRow(aEndRow);
     if (aState.mSharedGridData) {
@@ -5436,9 +5582,15 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
     if (!pushedList.IsEmpty()) {
       MergeSortedOverflow(pushedList);
       AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
+      // NOTE since we messed with our child list here, we intentionally
+      // make aState.mIter invalid to avoid any use of it after this point.
+      aState.mIter.Invalidate();
     }
     if (!incompleteList.IsEmpty()) {
       MergeSortedOverflow(incompleteList);
+      // NOTE since we messed with our child list here, we intentionally
+      // make aState.mIter invalid to avoid any use of it after this point.
+      aState.mIter.Invalidate();
     }
     if (!overflowIncompleteList.IsEmpty()) {
       MergeSortedExcessOverflowContainers(overflowIncompleteList);
@@ -5471,6 +5623,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowInput&     aState,
   nscoord bSize = aContentArea.BSize(wm);
   Maybe<Fragmentainer> fragmentainer = GetNearestFragmentainer(aState);
   if (MOZ_UNLIKELY(fragmentainer.isSome())) {
+    aState.mInFragmentainer = true;
     bSize = ReflowInFragmentainer(aState, aContentArea, aDesiredSize, aStatus,
                                   *fragmentainer, containerSize);
   } else {
@@ -5722,6 +5875,11 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   SanityCheckGridItemsBeforeReflow();
 #endif // DEBUG
 
+  mBaseline[0][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[0][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[1][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[1][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
+
   const nsStylePosition* stylePos = aReflowInput.mStylePosition;
   if (!prevInFlow) {
     InitImplicitNamedAreas(stylePos);
@@ -5795,9 +5953,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   LogicalSize desiredSize(wm, computedISize + bp.IStartEnd(wm),
                               bSize         + bp.BStartEnd(wm));
   aDesiredSize.SetSize(wm, desiredSize);
-  aDesiredSize.mOverflowAreas.UnionAllWith(nsRect(0, 0,
-                                                  aDesiredSize.Width(),
-                                                  aDesiredSize.Height()));
+  nsRect frameRect(0, 0, aDesiredSize.Width(), aDesiredSize.Height());
+  aDesiredSize.mOverflowAreas.UnionAllWith(frameRect);
 
   // Convert INCOMPLETE -> OVERFLOW_INCOMPLETE and zero bsize if we're an OC.
   if (HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
@@ -5808,6 +5965,71 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     bSize = 0;
     desiredSize.BSize(wm) = bSize + bp.BStartEnd(wm);
     aDesiredSize.SetSize(wm, desiredSize);
+  }
+
+  if (!gridReflowInput.mInFragmentainer) {
+    MOZ_ASSERT(gridReflowInput.mIter.IsValid());
+    auto sz = frameRect.Size();
+    CalculateBaselines(BaselineSet::eBoth, &gridReflowInput.mIter,
+                       &gridReflowInput.mGridItems, gridReflowInput.mCols,
+                       0, gridReflowInput.mCols.mSizes.Length(),
+                       wm, sz, bp.IStart(wm),
+                       bp.IEnd(wm), desiredSize.ISize(wm));
+    CalculateBaselines(BaselineSet::eBoth, &gridReflowInput.mIter,
+                       &gridReflowInput.mGridItems, gridReflowInput.mRows,
+                       0, gridReflowInput.mRows.mSizes.Length(),
+                       wm, sz, bp.BStart(wm),
+                       bp.BEnd(wm), desiredSize.BSize(wm));
+  } else {
+    // Only compute first-baseline if this fragment contains the first track.
+    // XXXmats maybe remove this condition? bug 1306499
+    BaselineSet baselines = BaselineSet::eNone;
+    if (gridReflowInput.mStartRow == 0 &&
+        gridReflowInput.mStartRow != gridReflowInput.mNextFragmentStartRow) {
+      baselines = BaselineSet::eFirst;
+    }
+    // Only compute last-baseline if this fragment contains the last track.
+    // XXXmats maybe remove this condition? bug 1306499
+    uint32_t len = gridReflowInput.mRows.mSizes.Length();
+    if (gridReflowInput.mStartRow != len &&
+        gridReflowInput.mNextFragmentStartRow == len) {
+      baselines = BaselineSet(baselines | BaselineSet::eLast);
+    }
+    Maybe<GridItemCSSOrderIterator> iter;
+    Maybe<nsTArray<GridItemInfo>> gridItems;
+    if (baselines != BaselineSet::eNone) {
+      // We need to create a new iterator and GridItemInfo array because we
+      // might have pushed some children at this point.
+      // Even if the gridReflowInput iterator is invalid we can reuse its
+      // state about order to optimize initialization of the new iterator.
+      // An ordered child list can't become unordered by pushing frames.
+      // An unordered list can become ordered in a number of cases, but we
+      // ignore that here and guess that the child list is still unordered.
+      // XXX this is O(n^2) in the number of items in this fragment: bug 1306705
+      using Filter = GridItemCSSOrderIterator::ChildFilter;
+      using Order = GridItemCSSOrderIterator::OrderState;
+      bool ordered = gridReflowInput.mIter.ItemsAreAlreadyInOrder();
+      auto orderState = ordered ? Order::eKnownOrdered : Order::eKnownUnordered;
+      iter.emplace(this, kPrincipalList, Filter::eSkipPlaceholders, orderState);
+      gridItems.emplace();
+      for (; !iter->AtEnd(); iter->Next()) {
+        auto child = **iter;
+        for (const auto& info : gridReflowInput.mGridItems) {
+          if (info.mFrame == child) {
+            gridItems->AppendElement(info);
+          }
+        }
+      }
+    }
+    auto sz = frameRect.Size();
+    CalculateBaselines(baselines, iter.ptrOr(nullptr), gridItems.ptrOr(nullptr),
+                       gridReflowInput.mCols, 0,
+                       gridReflowInput.mCols.mSizes.Length(), wm, sz,
+                       bp.IStart(wm), bp.IEnd(wm), desiredSize.ISize(wm));
+    CalculateBaselines(baselines, iter.ptrOr(nullptr), gridItems.ptrOr(nullptr),
+                       gridReflowInput.mRows, gridReflowInput.mStartRow,
+                       gridReflowInput.mNextFragmentStartRow, wm, sz,
+                       bp.BStart(wm), bp.BEnd(wm), desiredSize.BSize(wm));
   }
 
   if (HasAnyStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES)) {
@@ -6122,6 +6344,10 @@ nsGridContainerFrame::MarkIntrinsicISizesDirty()
 {
   mCachedMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
   mCachedPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[0][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[0][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[1][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[1][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
   nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
@@ -6212,6 +6438,141 @@ nsGridContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame)
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }
 
+nscoord
+nsGridContainerFrame::SynthesizeBaseline(
+  const FindItemInGridOrderResult& aGridOrderItem,
+  LogicalAxis          aAxis,
+  BaselineSharingGroup aGroup,
+  const nsSize&        aCBPhysicalSize,
+  nscoord              aCBSize,
+  WritingMode          aCBWM)
+{
+  if (MOZ_UNLIKELY(!aGridOrderItem.mItem)) {
+    // No item in this fragment - synthesize a baseline from our border-box.
+    return ::SynthesizeBaselineFromBorderBox(aGroup, aCBWM, aCBSize);
+  }
+  nsIFrame* child = aGridOrderItem.mItem->mFrame;
+  nsGridContainerFrame* grid = do_QueryFrame(child);
+  auto childWM = child->GetWritingMode();
+  bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
+  nscoord baseline;
+  nscoord start;
+  nscoord size;
+  if (aAxis == eLogicalAxisBlock) {
+    start = child->GetLogicalNormalPosition(aCBWM, aCBPhysicalSize).B(aCBWM);
+    size = child->BSize(aCBWM);
+    if (grid && aGridOrderItem.mIsInEdgeTrack) {
+      isOrthogonal ? grid->GetIBaseline(aGroup, &baseline) :
+                     grid->GetBBaseline(aGroup, &baseline);
+    } else if (!isOrthogonal && aGridOrderItem.mIsInEdgeTrack &&
+               nsLayoutUtils::GetLastLineBaseline(childWM, child, &baseline)) {
+      if (aGroup == BaselineSharingGroup::eLast) {
+        baseline = size - baseline; // convert to distance from border-box end
+      }
+    } else {
+      baseline = ::SynthesizeBaselineFromBorderBox(aGroup, childWM, size);
+    }
+  } else {
+    start = child->GetLogicalNormalPosition(aCBWM, aCBPhysicalSize).I(aCBWM);
+    size = child->ISize(aCBWM);
+    if (grid && aGridOrderItem.mIsInEdgeTrack) {
+      isOrthogonal ? grid->GetBBaseline(aGroup, &baseline) :
+                     grid->GetIBaseline(aGroup, &baseline);
+    } else if (isOrthogonal && aGridOrderItem.mIsInEdgeTrack &&
+               nsLayoutUtils::GetLastLineBaseline(childWM, child, &baseline)) {
+      if (aGroup == BaselineSharingGroup::eLast) {
+        baseline = size - baseline; // convert to distance from border-box end
+      }
+    } else {
+      baseline = ::SynthesizeBaselineFromBorderBox(aGroup, childWM, size);
+    }
+  }
+  return aGroup == BaselineSharingGroup::eFirst ? start + baseline :
+    aCBSize - start - size + baseline;
+}
+
+void
+nsGridContainerFrame::CalculateBaselines(
+  BaselineSet                   aBaselineSet,
+  GridItemCSSOrderIterator*     aIter,
+  const nsTArray<GridItemInfo>* aGridItems,
+  const Tracks&    aTracks,
+  uint32_t         aFragmentStartTrack,
+  uint32_t         aFirstExcludedTrack,
+  WritingMode      aWM,
+  const nsSize&    aCBPhysicalSize,
+  nscoord          aCBBorderPaddingStart,
+  nscoord          aCBBorderPaddingEnd,
+  nscoord          aCBSize)
+{
+  const auto axis = aTracks.mAxis;
+  auto firstBaseline = aTracks.mBaseline[BaselineSharingGroup::eFirst];
+  if (!(aBaselineSet & BaselineSet::eFirst)) {
+    mBaseline[axis][BaselineSharingGroup::eFirst] =
+      ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::eFirst, aWM,
+                                        aCBSize);
+  } else if (firstBaseline == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    FindItemInGridOrderResult gridOrderFirstItem =
+      FindFirstItemInGridOrder(*aIter, *aGridItems,
+        axis == eLogicalAxisBlock ? &GridArea::mRows : &GridArea::mCols,
+        axis == eLogicalAxisBlock ? &GridArea::mCols : &GridArea::mRows,
+        aFragmentStartTrack);
+    mBaseline[axis][BaselineSharingGroup::eFirst] =
+      SynthesizeBaseline(gridOrderFirstItem,
+                         axis,
+                         BaselineSharingGroup::eFirst,
+                         aCBPhysicalSize,
+                         aCBSize,
+                         aWM);
+  } else {
+    // We have a first-baseline group in the start track in this fragment.
+    // Convert it from track to grid container border-box coordinates.
+    MOZ_ASSERT(!aGridItems->IsEmpty());
+    nscoord gapBeforeStartTrack = aFragmentStartTrack == 0 ?
+      aTracks.GridLineEdge(aFragmentStartTrack, GridLineSide::eAfterGridGap) :
+      nscoord(0); // no content gap at start of fragment
+    mBaseline[axis][BaselineSharingGroup::eFirst] =
+      aCBBorderPaddingStart + gapBeforeStartTrack + firstBaseline;
+  }
+
+  auto lastBaseline = aTracks.mBaseline[BaselineSharingGroup::eLast];
+  if (!(aBaselineSet & BaselineSet::eLast)) {
+    mBaseline[axis][BaselineSharingGroup::eLast] =
+      ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::eLast, aWM,
+                                        aCBSize);
+  } else if (lastBaseline == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    // For finding items for the last-baseline we need to create a reverse
+    // iterator ('aIter' is the forward iterator from the GridReflowInput).
+    using Iter = ReverseGridItemCSSOrderIterator;
+    auto orderState = aIter->ItemsAreAlreadyInOrder() ?
+      Iter::OrderState::eKnownOrdered : Iter::OrderState::eKnownUnordered;
+    Iter iter(this, kPrincipalList, Iter::ChildFilter::eSkipPlaceholders,
+              orderState);
+    iter.SetGridItemCount(aGridItems->Length());
+    FindItemInGridOrderResult gridOrderLastItem =
+      FindLastItemInGridOrder(iter, *aGridItems,
+        axis == eLogicalAxisBlock ? &GridArea::mRows : &GridArea::mCols,
+        axis == eLogicalAxisBlock ? &GridArea::mCols : &GridArea::mRows,
+        aFragmentStartTrack, aFirstExcludedTrack);
+    mBaseline[axis][BaselineSharingGroup::eLast] =
+      SynthesizeBaseline(gridOrderLastItem,
+                         axis,
+                         BaselineSharingGroup::eLast,
+                         aCBPhysicalSize,
+                         aCBSize,
+                         aWM);
+  } else {
+    // We have a last-baseline group in the end track in this fragment.
+    // Convert it from track to grid container border-box coordinates.
+    MOZ_ASSERT(!aGridItems->IsEmpty());
+    auto borderBoxStartToEndOfEndTrack = aCBBorderPaddingStart +
+      aTracks.GridLineEdge(aFirstExcludedTrack, GridLineSide::eBeforeGridGap) -
+      aTracks.GridLineEdge(aFragmentStartTrack, GridLineSide::eBeforeGridGap);
+    mBaseline[axis][BaselineSharingGroup::eLast] =
+      (aCBSize - borderBoxStartToEndOfEndTrack) + lastBaseline;
+  }
+}
+
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsGridContainerFrame::GetFrameName(nsAString& aResult) const
@@ -6272,6 +6633,73 @@ nsGridContainerFrame::MergeSortedExcessOverflowContainers(nsFrameList& aList)
     SetPropTableFrames(new (PresContext()->PresShell()) nsFrameList(aList),
                        ExcessOverflowContainersProperty());
   }
+}
+
+/* static */ nsGridContainerFrame::FindItemInGridOrderResult
+nsGridContainerFrame::FindFirstItemInGridOrder(
+  GridItemCSSOrderIterator& aIter,
+  const nsTArray<GridItemInfo>& aGridItems,
+  LineRange GridArea::* aMajor,
+  LineRange GridArea::* aMinor,
+  uint32_t aFragmentStartTrack)
+{
+  FindItemInGridOrderResult result = { nullptr, false };
+  uint32_t minMajor = kTranslatedMaxLine + 1;
+  uint32_t minMinor = kTranslatedMaxLine + 1;
+  aIter.Reset();
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    const GridItemInfo& item = aGridItems[aIter.GridItemIndex()];
+    if ((item.mArea.*aMajor).mEnd <= aFragmentStartTrack) {
+      continue; // item doesn't span any track in this fragment
+    }
+    uint32_t major = (item.mArea.*aMajor).mStart;
+    uint32_t minor = (item.mArea.*aMinor).mStart;
+    if (major < minMajor || (major == minMajor && minor < minMinor)) {
+      minMajor = major;
+      minMinor = minor;
+      result.mItem = &item;
+      result.mIsInEdgeTrack = major == 0U;
+    }
+  }
+  return result;
+}
+
+/* static */ nsGridContainerFrame::FindItemInGridOrderResult
+nsGridContainerFrame::FindLastItemInGridOrder(
+  ReverseGridItemCSSOrderIterator& aIter,
+  const nsTArray<GridItemInfo>& aGridItems,
+  LineRange GridArea::* aMajor,
+  LineRange GridArea::* aMinor,
+  uint32_t aFragmentStartTrack,
+  uint32_t aFirstExcludedTrack)
+{
+  FindItemInGridOrderResult result = { nullptr, false };
+  int32_t maxMajor = -1;
+  int32_t maxMinor = -1;
+  aIter.Reset();
+  int32_t lastMajorTrack = int32_t(aFirstExcludedTrack) - 1;
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    const GridItemInfo& item = aGridItems[aIter.GridItemIndex()];
+    // Subtract 1 from the end line to get the item's last track index.
+    int32_t major = (item.mArea.*aMajor).mEnd - 1;
+    // Currently, this method is only called with aFirstExcludedTrack ==
+    // the first track in the next fragment, so we take the opportunity
+    // to assert this item really belongs to this fragment.
+    MOZ_ASSERT((item.mArea.*aMajor).mStart < aFirstExcludedTrack,
+               "found an item that belongs to some later fragment");
+    if (major < int32_t(aFragmentStartTrack)) {
+      continue; // item doesn't span any track in this fragment
+    }
+    int32_t minor = (item.mArea.*aMinor).mEnd - 1;
+    MOZ_ASSERT(minor >= 0 && major >= 0, "grid item must have span >= 1");
+    if (major > maxMajor || (major == maxMajor && minor > maxMinor)) {
+      maxMajor = major;
+      maxMinor = minor;
+      result.mItem = &item;
+      result.mIsInEdgeTrack = major == lastMajorTrack;
+    }
+  }
+  return result;
 }
 
 #ifdef DEBUG

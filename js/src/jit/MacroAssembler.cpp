@@ -576,7 +576,7 @@ StoreUnboxedFailure(MacroAssembler& masm, Label* failure)
 template <typename T>
 void
 MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
-                                     ConstantOrRegister value, Label* failure)
+                                     const ConstantOrRegister& value, Label* failure)
 {
     switch (type) {
       case JSVAL_TYPE_BOOLEAN:
@@ -695,11 +695,11 @@ MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
 
 template void
 MacroAssembler::storeUnboxedProperty(Address address, JSValueType type,
-                                     ConstantOrRegister value, Label* failure);
+                                     const ConstantOrRegister& value, Label* failure);
 
 template void
 MacroAssembler::storeUnboxedProperty(BaseIndex address, JSValueType type,
-                                     ConstantOrRegister value, Label* failure);
+                                     const ConstantOrRegister& value, Label* failure);
 
 void
 MacroAssembler::checkUnboxedArrayCapacity(Register obj, const RegisterOrInt32Constant& index,
@@ -1879,7 +1879,8 @@ MacroAssembler::convertValueToFloatingPoint(JSContext* cx, const Value& v, Float
 }
 
 bool
-MacroAssembler::convertConstantOrRegisterToFloatingPoint(JSContext* cx, ConstantOrRegister src,
+MacroAssembler::convertConstantOrRegisterToFloatingPoint(JSContext* cx,
+                                                         const ConstantOrRegister& src,
                                                          FloatRegister output, Label* fail,
                                                          MIRType outputType)
 {
@@ -2148,7 +2149,8 @@ MacroAssembler::convertValueToInt(JSContext* cx, const Value& v, Register output
 }
 
 bool
-MacroAssembler::convertConstantOrRegisterToInt(JSContext* cx, ConstantOrRegister src,
+MacroAssembler::convertConstantOrRegisterToInt(JSContext* cx,
+                                               const ConstantOrRegister& src,
                                                FloatRegister temp, Register output,
                                                Label* fail, IntConversionBehavior behavior)
 {
@@ -2452,7 +2454,7 @@ MacroAssembler::Push(TypedOrValueRegister v)
 }
 
 void
-MacroAssembler::Push(ConstantOrRegister v)
+MacroAssembler::Push(const ConstantOrRegister& v)
 {
     if (v.constant())
         Push(v.value());

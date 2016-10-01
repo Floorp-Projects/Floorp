@@ -173,7 +173,7 @@ ToNumber(JSContext* cx, JS::MutableHandleValue vp)
     if (vp.isNumber())
         return true;
     double d;
-    extern JS_PUBLIC_API(bool) ToNumberSlow(JSContext* cx, Value v, double* dp);
+    extern JS_PUBLIC_API(bool) ToNumberSlow(JSContext* cx, const Value& v, double* dp);
     if (!ToNumberSlow(cx, vp, &d))
         return false;
 
@@ -258,7 +258,7 @@ ToInteger(JSContext* cx, HandleValue v, double* dp)
     if (v.isDouble()) {
         *dp = v.toDouble();
     } else {
-        extern JS_PUBLIC_API(bool) ToNumberSlow(JSContext* cx, Value v, double* dp);
+        extern JS_PUBLIC_API(bool) ToNumberSlow(JSContext* cx, const Value& v, double* dp);
         if (!ToNumberSlow(cx, v, dp))
             return false;
     }
@@ -335,7 +335,7 @@ SafeMul(int32_t one, int32_t two, int32_t* res)
 }
 
 extern MOZ_MUST_USE bool
-ToNumberSlow(ExclusiveContext* cx, Value v, double* dp);
+ToNumberSlow(ExclusiveContext* cx, const Value& v, double* dp);
 
 // Variant of ToNumber which takes an ExclusiveContext instead of a JSContext.
 // ToNumber is part of the API and can't use ExclusiveContext directly.

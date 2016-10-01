@@ -8620,7 +8620,7 @@ static const VMFunction ArrayPushDenseInfo =
 
 void
 CodeGenerator::emitArrayPush(LInstruction* lir, const MArrayPush* mir, Register obj,
-                             ConstantOrRegister value, Register elementsTemp, Register length)
+                             const ConstantOrRegister& value, Register elementsTemp, Register length)
 {
     OutOfLineCode* ool = oolCallVM(ArrayPushDenseInfo, lir, ArgList(obj, value), StoreRegisterTo(length));
 
@@ -9912,7 +9912,7 @@ CodeGenerator::visitNameIC(OutOfLineUpdateCache* ool, DataPtr<NameIC>& ic)
 
 void
 CodeGenerator::addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
-                                   ConstantOrRegister id, TypedOrValueRegister output,
+                                   const ConstantOrRegister& id, TypedOrValueRegister output,
                                    bool monitoredResult, bool allowDoubleResult,
                                    jsbytecode* profilerLeavePc)
 {
@@ -9924,7 +9924,8 @@ CodeGenerator::addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, 
 void
 CodeGenerator::addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
                                    Register temp, Register tempUnbox, FloatRegister tempDouble,
-                                   FloatRegister tempF32, ConstantOrRegister id, ConstantOrRegister value,
+                                   FloatRegister tempF32, const ConstantOrRegister& id,
+                                   const ConstantOrRegister& value,
                                    bool strict, bool needsTypeBarrier, bool guardHoles,
                                    jsbytecode* profilerLeavePc)
 {

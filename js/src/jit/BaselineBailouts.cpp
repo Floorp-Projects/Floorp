@@ -232,7 +232,7 @@ struct BaselineStackBuilder
         return true;
     }
 
-    bool writeValue(Value val, const char* info) {
+    bool writeValue(const Value& val, const char* info) {
         if (!write<Value>(val))
             return false;
         if (info) {

@@ -191,13 +191,17 @@ template <>
 struct BarrierMethods<jsid>
 {
     static void postBarrier(jsid* idp, jsid prev, jsid next) {}
+    static void exposeToJS(jsid id) {
+        if (JSID_IS_GCTHING(id))
+            js::gc::ExposeGCThingToActiveJS(JSID_TO_GCTHING(id));
+    }
 };
 
 // If the jsid is a GC pointer type, convert to that type and call |f| with
 // the pointer. If the jsid is not a GC type, calls F::defaultValue.
 template <typename F, typename... Args>
 auto
-DispatchTyped(F f, jsid& id, Args&&... args)
+DispatchTyped(F f, const jsid& id, Args&&... args)
   -> decltype(f(static_cast<JSString*>(nullptr), mozilla::Forward<Args>(args)...))
 {
     if (JSID_IS_STRING(id))

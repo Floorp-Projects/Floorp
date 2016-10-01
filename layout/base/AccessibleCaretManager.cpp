@@ -536,6 +536,16 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
     ProvideHapticFeedback();
   };
 
+  // If the long-tap is landing on a pre-existing selection, don't replace
+  // it with a new one. Instead just return and let the context menu pop up
+  // on the pre-existing selection.
+  if (GetCaretMode() == CaretMode::Selection &&
+      GetSelection()->ContainsPoint(aPoint)) {
+    AC_LOG("%s: UpdateCarets() for current selection", __FUNCTION__);
+    UpdateCaretsWithHapticFeedback();
+    return NS_OK;
+  }
+
   if (!mPresShell) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -611,16 +621,6 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
   if (!ptFrame.IsAlive()) {
     // Cannot continue because ptFrame died.
     return NS_ERROR_FAILURE;
-  }
-
-  if (GetCaretMode() == CaretMode::Selection &&
-      !mFirstCaret->IsLogicallyVisible() && !mSecondCaret->IsLogicallyVisible()) {
-    // We have a selection while both carets have Appearance::None because of
-    // previous operations like blur event. Just update carets on the selection
-    // without selecting a new word.
-    AC_LOG("%s: UpdateCarets() for current selection", __FUNCTION__);
-    UpdateCaretsWithHapticFeedback();
-    return NS_OK;
   }
 
   // Then try select a word under point.

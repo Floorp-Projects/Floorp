@@ -444,11 +444,12 @@ enum Int64FunctionSlot {
 
 namespace CType {
   JSObject* Create(JSContext* cx, HandleObject typeProto, HandleObject dataProto,
-    TypeCode type, JSString* name, Value size, Value align, ffi_type* ffiType);
+    TypeCode type, JSString* name, HandleValue size, HandleValue align,
+                   ffi_type* ffiType);
 
   JSObject* DefineBuiltin(JSContext* cx, HandleObject ctypesObj, const char* propName,
     JSObject* typeProto, JSObject* dataProto, const char* name, TypeCode type,
-    Value size, Value align, ffi_type* ffiType);
+    HandleValue size, HandleValue align, ffi_type* ffiType);
 
   bool IsCType(JSObject* obj);
   bool IsCTypeProto(JSObject* obj);
@@ -506,7 +507,7 @@ namespace FunctionType {
 
 namespace CClosure {
   JSObject* Create(JSContext* cx, HandleObject typeObj, HandleObject fnObj,
-    HandleObject thisObj, Value errVal, PRFuncPtr* fnptr);
+    HandleObject thisObj, HandleValue errVal, PRFuncPtr* fnptr);
 } // namespace CClosure
 
 namespace CData {

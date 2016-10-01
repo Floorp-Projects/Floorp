@@ -32,7 +32,7 @@ struct WatchKey {
 };
 
 typedef bool
-(* JSWatchPointHandler)(JSContext* cx, JSObject* obj, jsid id, JS::Value old,
+(* JSWatchPointHandler)(JSContext* cx, JSObject* obj, jsid id, const JS::Value& old,
                         JS::Value* newp, void* closure);
 
 struct Watchpoint {

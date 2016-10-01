@@ -2254,6 +2254,19 @@ GlobalObject::GetAsSupports() const
   return nullptr;
 }
 
+nsIPrincipal*
+GlobalObject::GetSubjectPrincipal() const
+{
+  if (!NS_IsMainThread()) {
+    return nullptr;
+  }
+
+  JSCompartment* compartment = js::GetContextCompartment(mCx);
+  MOZ_ASSERT(compartment);
+  JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
+  return nsJSPrincipals::get(principals);
+}
+
 static bool
 CallOrdinaryHasInstance(JSContext* cx, JS::CallArgs& args)
 {

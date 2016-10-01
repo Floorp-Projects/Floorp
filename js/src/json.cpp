@@ -593,7 +593,7 @@ Str(JSContext* cx, const Value& v, StringifyContext* scx)
 
 /* ES6 24.3.2. */
 bool
-js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value space_,
+js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, const Value& space_,
               StringBuffer& sb, StringifyBehavior stringifyBehavior)
 {
     RootedObject replacer(cx, replacer_);

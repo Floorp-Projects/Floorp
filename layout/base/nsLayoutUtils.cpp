@@ -5531,8 +5531,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
         !aFrame->StyleMargin()->HasBlockAxisAuto(aWM)) {
       auto blockAxisAlignment =
         !aWM.IsOrthogonalTo(aFrame->GetParent()->GetWritingMode()) ?
-          stylePos->ComputedAlignSelf(aFrame->StyleContext()->GetParent()) :
-          stylePos->ComputedJustifySelf(aFrame->StyleContext()->GetParent());
+          stylePos->UsedAlignSelf(aFrame->StyleContext()->GetParent()) :
+          stylePos->UsedJustifySelf(aFrame->StyleContext()->GetParent());
       if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
           blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
         bSize = std::max(nscoord(0), cbSize -

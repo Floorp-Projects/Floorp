@@ -524,7 +524,7 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSContext* cx,
 
         if (cur->mDOMExpandoSet) {
             for (DOMExpandoSet::Range r = cur->mDOMExpandoSet->all(); !r.empty(); r.popFront())
-                SuspectDOMExpandos(r.front(), cb);
+                SuspectDOMExpandos(r.front().unbarrieredGet(), cb);
         }
     }
 }

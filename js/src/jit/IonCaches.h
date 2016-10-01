@@ -411,7 +411,7 @@ class GetPropertyIC : public IonCache
 
   public:
     GetPropertyIC(LiveRegisterSet liveRegs,
-                  Register object, ConstantOrRegister id,
+                  Register object, const ConstantOrRegister& id,
                   TypedOrValueRegister output,
                   bool monitoredResult, bool allowDoubleResult)
       : liveRegs_(liveRegs),
@@ -602,8 +602,9 @@ class SetPropertyIC : public IonCache
 
   public:
     SetPropertyIC(LiveRegisterSet liveRegs, Register object, Register temp, Register tempToUnboxIndex,
-                  FloatRegister tempDouble, FloatRegister tempFloat32, ConstantOrRegister id,
-                  ConstantOrRegister value, bool strict, bool needsTypeBarrier, bool guardHoles)
+                  FloatRegister tempDouble, FloatRegister tempFloat32,
+                  const ConstantOrRegister& id, const ConstantOrRegister& value,
+                  bool strict, bool needsTypeBarrier, bool guardHoles)
       : liveRegs_(liveRegs),
         object_(object),
         temp_(temp),

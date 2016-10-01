@@ -153,10 +153,8 @@ CustomizeMode.prototype = {
    let lwthemeButton = aDocument.getElementById("customization-lwtheme-button");
    let lwthemeIcon = aDocument.getAnonymousElementByAttribute(lwthemeButton,
           "class", "button-icon");
-   let imageURL = LightweightThemeManager.currentTheme === null ?
-          "chrome://browser/skin/theme-switcher-icon.png" :
-          LightweightThemeManager.currentTheme.iconURL;
-    lwthemeIcon.style.backgroundImage = "url(" + imageURL + ")";
+   lwthemeIcon.style.backgroundImage = LightweightThemeManager.currentTheme ?
+     "url(" + LightweightThemeManager.currentTheme.iconURL + ")" : "";
   },
 
   setTab: function(aTab) {

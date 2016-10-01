@@ -79,7 +79,7 @@ ObjectToSource(JSContext* cx, JS::HandleObject obj);
 #endif // JS_HAS_TOSOURCE
 
 extern MOZ_MUST_USE bool
-WatchHandler(JSContext* cx, JSObject* obj, jsid id, JS::Value old,
+WatchHandler(JSContext* cx, JSObject* obj, jsid id, const JS::Value& old,
              JS::Value* nvp, void* closure);
 
 } /* namespace js */

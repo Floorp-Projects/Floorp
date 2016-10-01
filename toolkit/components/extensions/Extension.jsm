@@ -900,20 +900,14 @@ this.ExtensionData = class {
         return results;
       }
 
-      if (!(this.rootURI instanceof Ci.nsIJARURI &&
-            this.rootURI.JARFile instanceof Ci.nsIFileURL)) {
-        // This currently happens for app:// URLs passed to us by
-        // UserCustomizations.jsm
-        return [];
-      }
-
       // FIXME: We need a way to do this without main thread IO.
 
-      let file = this.rootURI.JARFile.file;
-      let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
-      try {
-        zipReader.open(file);
+      this.rootURI.QueryInterface(Ci.nsIJARURI);
 
+      let file = this.rootURI.JARFile.QueryInterface(Ci.nsIFileURL).file;
+      let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+      zipReader.open(file);
+      try {
         let results = [];
 
         // Normalize the directory path.
@@ -1654,11 +1648,7 @@ this.Extension = class extends ExtensionData {
       }
     }).then(() => {
       if (this.errors.length) {
-        // b2g add-ons generate manifest errors that we've silently
-        // ignoring prior to adding this check.
-        if (!this.rootURI.schemeIs("app")) {
-          return Promise.reject({errors: this.errors});
-        }
+        return Promise.reject({errors: this.errors});
       }
 
       if (this.hasShutdown) {

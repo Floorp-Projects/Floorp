@@ -477,7 +477,7 @@ obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
 #if JS_HAS_OBJ_WATCHPOINT
 
 bool
-js::WatchHandler(JSContext* cx, JSObject* obj_, jsid id_, JS::Value old,
+js::WatchHandler(JSContext* cx, JSObject* obj_, jsid id_, const JS::Value& old,
                  JS::Value* nvp, void* closure)
 {
     RootedObject obj(cx, obj_);

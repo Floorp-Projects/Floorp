@@ -230,13 +230,21 @@ class ConstantOrRegister
         TypedOrValueRegister reg;
     } data;
 
-    Value& dataValue() {
+    const Value& dataValue() const {
         MOZ_ASSERT(constant());
         return data.constant;
     }
-    TypedOrValueRegister& dataReg() {
+    void setDataValue(const Value& value) {
+        MOZ_ASSERT(constant());
+        data.constant = value;
+    }
+    const TypedOrValueRegister& dataReg() const {
         MOZ_ASSERT(!constant());
         return data.reg;
+    }
+    void setDataReg(const TypedOrValueRegister& reg) {
+        MOZ_ASSERT(!constant());
+        data.reg = reg;
     }
 
   public:
@@ -244,27 +252,27 @@ class ConstantOrRegister
     ConstantOrRegister()
     {}
 
-    MOZ_IMPLICIT ConstantOrRegister(Value value)
+    MOZ_IMPLICIT ConstantOrRegister(const Value& value)
       : constant_(true)
     {
-        dataValue() = value;
+        setDataValue(value);
     }
 
     MOZ_IMPLICIT ConstantOrRegister(TypedOrValueRegister reg)
       : constant_(false)
     {
-        dataReg() = reg;
+        setDataReg(reg);
     }
 
-    bool constant() {
+    bool constant() const {
         return constant_;
     }
 
-    Value value() {
+    const Value& value() const {
         return dataValue();
     }
 
-    TypedOrValueRegister reg() {
+    const TypedOrValueRegister& reg() const {
         return dataReg();
     }
 };

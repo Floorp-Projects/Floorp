@@ -667,7 +667,7 @@ class nsOuterWindowProxy : public js::Wrapper
 public:
   constexpr nsOuterWindowProxy() : js::Wrapper(0) { }
 
-  virtual bool finalizeInBackground(JS::Value priv) const override {
+  virtual bool finalizeInBackground(const JS::Value& priv) const override {
     return false;
   }
 

@@ -1444,7 +1444,7 @@ Debugger::resultToCompletion(JSContext* cx, bool ok, const Value& rv,
 }
 
 bool
-Debugger::newCompletionValue(JSContext* cx, JSTrapStatus status, Value value_,
+Debugger::newCompletionValue(JSContext* cx, JSTrapStatus status, const Value& value_,
                              MutableHandleValue result)
 {
     /*

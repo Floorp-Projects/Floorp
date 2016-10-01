@@ -111,7 +111,7 @@ class BarrieredBaseMixins<TaggedProto> : public TaggedProtoOperations<GCPtr<Tagg
 // with the pointer. If the TaggedProto is lazy, calls F::defaultValue.
 template <typename F, typename... Args>
 auto
-DispatchTyped(F f, TaggedProto& proto, Args&&... args)
+DispatchTyped(F f, const TaggedProto& proto, Args&&... args)
   -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
 {
     if (proto.isObject())

@@ -238,7 +238,7 @@ class Heap : public js::HeapBase<T>
                       "Heap<T> must be binary compatible with T.");
         init(GCPolicy<T>::initial());
     }
-    explicit Heap(T p) { init(p); }
+    explicit Heap(const T& p) { init(p); }
 
     /*
      * For Heap, move semantics are equivalent to copy semantics. In C++, a
@@ -254,9 +254,24 @@ class Heap : public js::HeapBase<T>
 
     DECLARE_POINTER_CONSTREF_OPS(T);
     DECLARE_POINTER_ASSIGN_OPS(Heap, T);
-    DECLARE_NONPOINTER_ACCESSOR_METHODS(ptr);
+
+    const T* address() const { return &ptr; }
+    const T& get() const {
+        js::BarrierMethods<T>::exposeToJS(ptr);
+        return ptr;
+    }
+    const T& unbarrieredGet() const {
+        return ptr;
+    }
 
     T* unsafeGet() { return &ptr; }
+
+    explicit operator bool() const {
+        return bool(js::BarrierMethods<T>::asGCThingOrNull(ptr));
+    }
+    explicit operator bool() {
+        return bool(js::BarrierMethods<T>::asGCThingOrNull(ptr));
+    }
 
     /*
      * Set the pointer to a value which will cause a crash if it is
@@ -271,12 +286,12 @@ class Heap : public js::HeapBase<T>
     }
 
   private:
-    void init(T newPtr) {
+    void init(const T& newPtr) {
         ptr = newPtr;
         post(GCPolicy<T>::initial(), ptr);
     }
 
-    void set(T newPtr) {
+    void set(const T& newPtr) {
         T tmp = ptr;
         ptr = newPtr;
         post(tmp, ptr);
@@ -292,6 +307,49 @@ class Heap : public js::HeapBase<T>
 
     T ptr;
 };
+
+static MOZ_ALWAYS_INLINE bool
+ObjectIsTenured(JSObject* obj)
+{
+    return !js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(obj));
+}
+
+static MOZ_ALWAYS_INLINE bool
+ObjectIsTenured(const Heap<JSObject*>& obj)
+{
+    return ObjectIsTenured(obj.unbarrieredGet());
+}
+
+static MOZ_ALWAYS_INLINE bool
+ObjectIsMarkedGray(JSObject* obj)
+{
+    /*
+     * GC things residing in the nursery cannot be gray: they have no mark bits.
+     * All live objects in the nursery are moved to tenured at the beginning of
+     * each GC slice, so the gray marker never sees nursery things.
+     */
+    if (js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(obj)))
+        return false;
+    return js::gc::detail::CellIsMarkedGray(reinterpret_cast<js::gc::Cell*>(obj));
+}
+
+static MOZ_ALWAYS_INLINE bool
+ObjectIsMarkedGray(const JS::Heap<JSObject*>& obj)
+{
+    return ObjectIsMarkedGray(obj.unbarrieredGet());
+}
+
+static MOZ_ALWAYS_INLINE bool
+ScriptIsMarkedGray(JSScript* script)
+{
+    return js::gc::detail::CellIsMarkedGray(reinterpret_cast<js::gc::Cell*>(script));
+}
+
+static MOZ_ALWAYS_INLINE bool
+ScriptIsMarkedGray(const Heap<JSScript*>& script)
+{
+    return ScriptIsMarkedGray(script.unbarrieredGet());
+}
 
 /**
  * The TenuredHeap<T> class is similar to the Heap<T> class above in that it
@@ -492,7 +550,7 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
     MutableHandle(decltype(nullptr)) = delete;
 
   public:
-    void set(T v) {
+    void set(const T& v) {
         *ptr = v;
     }
 
@@ -528,11 +586,20 @@ template <typename T>
 struct BarrierMethods<T*>
 {
     static T* initial() { return nullptr; }
+    static gc::Cell* asGCThingOrNull(T* v) {
+        if (!v)
+            return nullptr;
+        MOZ_ASSERT(uintptr_t(v) > 32);
+        return reinterpret_cast<gc::Cell*>(v);
+    }
     static void postBarrier(T** vp, T* prev, T* next) {
         if (next)
             JS::AssertGCThingIsNotAnObjectSubclass(reinterpret_cast<js::gc::Cell*>(next));
     }
-    static void relocate(T** vp) {}
+    static void exposeToJS(T* t) {
+        if (t)
+            js::gc::ExposeGCThingToActiveJS(JS::GCCellPtr(t));
+    }
 };
 
 template <>
@@ -548,16 +615,30 @@ struct BarrierMethods<JSObject*>
     static void postBarrier(JSObject** vp, JSObject* prev, JSObject* next) {
         JS::HeapObjectPostBarrier(vp, prev, next);
     }
+    static void exposeToJS(JSObject* obj) {
+        if (obj)
+            JS::ExposeObjectToActiveJS(obj);
+    }
 };
 
 template <>
 struct BarrierMethods<JSFunction*>
 {
     static JSFunction* initial() { return nullptr; }
+    static gc::Cell* asGCThingOrNull(JSFunction* v) {
+        if (!v)
+            return nullptr;
+        MOZ_ASSERT(uintptr_t(v) > 32);
+        return reinterpret_cast<gc::Cell*>(v);
+    }
     static void postBarrier(JSFunction** vp, JSFunction* prev, JSFunction* next) {
         JS::HeapObjectPostBarrier(reinterpret_cast<JSObject**>(vp),
                                   reinterpret_cast<JSObject*>(prev),
                                   reinterpret_cast<JSObject*>(next));
+    }
+    static void exposeToJS(JSFunction* fun) {
+        if (fun)
+            JS::ExposeObjectToActiveJS(reinterpret_cast<JSObject*>(fun));
     }
 };
 
@@ -594,7 +675,9 @@ struct JS_PUBLIC_API(MovableCellHasher<JS::Heap<T>>)
     static bool hasHash(const Lookup& l) { return MovableCellHasher<T>::hasHash(l); }
     static bool ensureHash(const Lookup& l) { return MovableCellHasher<T>::ensureHash(l); }
     static HashNumber hash(const Lookup& l) { return MovableCellHasher<T>::hash(l); }
-    static bool match(const Key& k, const Lookup& l) { return MovableCellHasher<T>::match(k, l); }
+    static bool match(const Key& k, const Lookup& l) {
+        return MovableCellHasher<T>::match(k.unbarrieredGet(), l);
+    }
     static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
 };
 
@@ -713,7 +796,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
      * This method is public for Rooted so that Codegen.py can use a Rooted
      * interchangeably with a MutableHandleValue.
      */
-    void set(T value) {
+    void set(const T& value) {
         ptr = value;
     }
 
@@ -829,7 +912,7 @@ class FakeMutableHandle : public js::MutableHandleBase<T>
         ptr = root->address();
     }
 
-    void set(T v) {
+    void set(const T& v) {
         *ptr = v;
     }
 
@@ -886,7 +969,7 @@ template <typename T> class MaybeRooted<T, CanGC>
 template <typename T> class MaybeRooted<T, NoGC>
 {
   public:
-    typedef T HandleType;
+    typedef const T& HandleType;
     typedef FakeRooted<T> RootType;
     typedef FakeMutableHandle<T> MutableHandleType;
 
@@ -1114,6 +1197,7 @@ class JS_PUBLIC_API(ObjectPtr)
     void init(JSObject* obj) { value = obj; }
 
     JSObject* get() const { return value; }
+    JSObject* unbarrieredGet() const { return value.unbarrieredGet(); }
 
     void writeBarrierPre(JSContext* cx) {
         IncrementalObjectBarrier(value);
@@ -1132,6 +1216,9 @@ class JS_PUBLIC_API(ObjectPtr)
     JSObject& operator*() const { return *value; }
     JSObject* operator->() const { return value; }
     operator JSObject*() const { return value; }
+
+    explicit operator bool() const { return value.unbarrieredGet(); }
+    explicit operator bool() { return value.unbarrieredGet(); }
 };
 
 } /* namespace JS */

@@ -1716,7 +1716,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
      * code, but that's fine: createMissingThis will do the right thing in that
      * case.
      */
-    static bool isMaybeUninitializedThisValue(JSContext* cx, jsid id, Value v)
+    static bool isMaybeUninitializedThisValue(JSContext* cx, jsid id, const Value& v)
     {
         return isThis(cx, id) && v.isUndefined();
     }

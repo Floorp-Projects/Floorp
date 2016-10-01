@@ -114,6 +114,11 @@ struct BarrierMethods<nsXBLMaybeCompiled<UncompiledT>>
                         nullptr);
     }
   }
+  static void exposeToJS(nsXBLMaybeCompiled<UncompiledT> fun) {
+    if (fun.IsCompiled()) {
+      JS::ExposeObjectToActiveJS(fun.UnsafeGetJSFunction());
+    }
+  }
 };
 
 template <class T>

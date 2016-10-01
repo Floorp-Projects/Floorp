@@ -3447,6 +3447,25 @@ extern JS_PUBLIC_API(void*)
 JS_StealArrayBufferContents(JSContext* cx, JS::HandleObject obj);
 
 /**
+ * Returns a pointer to the ArrayBuffer |obj|'s data.  |obj| and its views will store and expose
+ * the data in the returned pointer: assigning into the returned pointer will affect values exposed
+ * by views of |obj| and vice versa.
+ *
+ * The caller must ultimately deallocate the returned pointer to avoid leaking.  The memory is
+ * *not* garbage-collected with |obj|.  These steps must be followed to deallocate:
+ *
+ * 1. The ArrayBuffer |obj| must be detached using JS_DetachArrayBuffer.
+ * 2. The returned pointer must be freed using JS_free.
+ *
+ * To perform step 1, callers *must* hold a reference to |obj| until they finish using the returned
+ * pointer.  They *must not* attempt to let |obj| be GC'd, then JS_free the pointer.
+ *
+ * If |obj| isn't an ArrayBuffer, this function returns null and reports an error.
+ */
+extern JS_PUBLIC_API(void*)
+JS_ExternalizeArrayBufferContents(JSContext* cx, JS::HandleObject obj);
+
+/**
  * Create a new mapped array buffer with the given memory mapped contents. It
  * must be legal to free the contents pointer by unmapping it. On success,
  * ownership is transferred to the new mapped array buffer.
@@ -3475,7 +3494,7 @@ extern JS_PUBLIC_API(JS::Value)
 JS_GetReservedSlot(JSObject* obj, uint32_t index);
 
 extern JS_PUBLIC_API(void)
-JS_SetReservedSlot(JSObject* obj, uint32_t index, JS::Value v);
+JS_SetReservedSlot(JSObject* obj, uint32_t index, const JS::Value& v);
 
 
 /************************************************************************/
@@ -4262,7 +4281,7 @@ CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
  * value.
  */
 extern JS_PUBLIC_API(void)
-SetModuleHostDefinedField(JSObject* module, JS::Value value);
+SetModuleHostDefinedField(JSObject* module, const JS::Value& value);
 
 /**
  * Get the [[HostDefined]] field of a source text module record.
@@ -5626,7 +5645,7 @@ extern JS_PUBLIC_API(bool)
 JS_ThrowStopIteration(JSContext* cx);
 
 extern JS_PUBLIC_API(bool)
-JS_IsStopIteration(JS::Value v);
+JS_IsStopIteration(const JS::Value& v);
 
 /**
  * A JS context always has an "owner thread". The owner thread is set when the

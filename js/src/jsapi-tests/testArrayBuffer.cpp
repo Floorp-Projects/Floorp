@@ -158,3 +158,70 @@ bool hasDetachedBuffer(JS::HandleObject obj) {
 }
 
 END_TEST(testArrayBuffer_bug720949_viewList)
+
+BEGIN_TEST(testArrayBuffer_externalize)
+{
+    if (!testWithSize(cx, 2))    // ArrayBuffer data stored inline in the object.
+        return false;
+    if (!testWithSize(cx, 2000)) // ArrayBuffer data stored out-of-line in a separate heap allocation.
+        return false;
+
+    return true;
+}
+
+bool testWithSize(JSContext* cx, size_t n)
+{
+    JS::RootedObject buffer(cx, JS_NewArrayBuffer(cx, n));
+    CHECK(buffer != nullptr);
+
+    JS::RootedObject view(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
+    CHECK(view != nullptr);
+
+    void* contents = JS_ExternalizeArrayBufferContents(cx, buffer);
+    CHECK(contents != nullptr);
+    uint32_t actualLength;
+    CHECK(hasExpectedLength(cx, view, &actualLength));
+    CHECK(actualLength == n);
+    CHECK(!JS_IsDetachedArrayBufferObject(buffer));
+    CHECK(JS_GetArrayBufferByteLength(buffer) == uint32_t(n));
+
+    uint8_t* uint8Contents = static_cast<uint8_t*>(contents);
+    CHECK(*uint8Contents == 0);
+    uint8_t randomByte(rand() % UINT8_MAX);
+    *uint8Contents = randomByte;
+
+    JS::RootedValue v(cx);
+    CHECK(JS_GetElement(cx, view, 0, &v));
+    CHECK(v.toInt32() == randomByte);
+
+    view = nullptr;
+    GC(cx);
+
+    CHECK(JS_DetachArrayBuffer(cx, buffer));
+    GC(cx);
+    CHECK(*uint8Contents == randomByte);
+    JS_free(cx, contents);
+    GC(cx);
+    buffer = nullptr;
+    GC(cx);
+
+    return true;
+}
+
+static void GC(JSContext* cx)
+{
+    JS_GC(cx);
+    JS_GC(cx); // Trigger another to wait for background finalization to end
+}
+
+static bool
+hasExpectedLength(JSContext* cx, JS::HandleObject obj, uint32_t* len)
+{
+    JS::RootedValue v(cx);
+    if (!JS_GetProperty(cx, obj, "byteLength", &v))
+        return false;
+    *len = v.toInt32();
+    return true;
+}
+
+END_TEST(testArrayBuffer_externalize)

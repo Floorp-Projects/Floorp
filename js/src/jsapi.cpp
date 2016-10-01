@@ -3211,7 +3211,7 @@ JS_GetReservedSlot(JSObject* obj, uint32_t index)
 }
 
 JS_PUBLIC_API(void)
-JS_SetReservedSlot(JSObject* obj, uint32_t index, Value value)
+JS_SetReservedSlot(JSObject* obj, uint32_t index, const Value& value)
 {
     obj->as<NativeObject>().setReservedSlot(index, value);
 }
@@ -4544,7 +4544,7 @@ JS::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(void)
-JS::SetModuleHostDefinedField(JSObject* module, JS::Value value)
+JS::SetModuleHostDefinedField(JSObject* module, const JS::Value& value)
 {
     module->as<ModuleObject>().setHostDefinedField(value);
 }
@@ -6159,7 +6159,7 @@ JS_ThrowStopIteration(JSContext* cx)
 }
 
 JS_PUBLIC_API(bool)
-JS_IsStopIteration(Value v)
+JS_IsStopIteration(const Value& v)
 {
     return v.isObject() && v.toObject().is<StopIterationObject>();
 }

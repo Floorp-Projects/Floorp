@@ -87,7 +87,7 @@ public:
   void AddParameter(const nsAString& aName);
 
   void SetLineNumber(uint32_t aLineNumber);
-  
+
   virtual nsresult InstallMember(JSContext* aCx,
                                  JS::Handle<JSObject*> aTargetClassObject) override;
   virtual nsresult CompileMember(mozilla::dom::AutoJSAPI& jsapi, const nsString& aClassStr,
@@ -137,7 +137,7 @@ public:
   explicit nsXBLProtoImplAnonymousMethod(const char16_t* aName) :
     nsXBLProtoImplMethod(aName)
   {}
-  
+
   nsresult Execute(nsIContent* aBoundElement, JSAddonId* aAddonId);
 
   // Override InstallMember; these methods never get installed as members on
