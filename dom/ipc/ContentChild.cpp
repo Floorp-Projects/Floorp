@@ -2808,16 +2808,6 @@ ContentChild::DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* actor)
 }
 
 bool
-ContentChild::RecvOnAppThemeChanged()
-{
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(nullptr, "app-theme-changed", nullptr);
-  }
-  return true;
-}
-
-bool
 ContentChild::RecvStartProfiler(const ProfilerInitParams& params)
 {
   nsTArray<const char*> featureArray;
