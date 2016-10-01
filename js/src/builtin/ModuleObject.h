@@ -265,7 +265,7 @@ class ModuleObject : public NativeObject
     static bool DeclarationInstantiation(JSContext* cx, HandleModuleObject self);
     static bool Evaluation(JSContext* cx, HandleModuleObject self);
 
-    void setHostDefinedField(JS::Value value);
+    void setHostDefinedField(const JS::Value& value);
 
     // For intrinsic_CreateModuleEnvironment.
     void createEnvironment();

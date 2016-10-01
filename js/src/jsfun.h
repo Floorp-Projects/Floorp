@@ -815,7 +815,7 @@ namespace JS {
 namespace detail {
 
 JS_PUBLIC_API(void)
-CheckIsValidConstructible(Value calleev);
+CheckIsValidConstructible(const Value& calleev);
 
 } // namespace detail
 } // namespace JS

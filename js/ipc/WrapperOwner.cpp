@@ -83,7 +83,7 @@ ObjectId
 WrapperOwner::idOf(JSObject* obj)
 {
     ObjectId objId = idOfUnchecked(obj);
-    MOZ_ASSERT(findCPOWById(objId) == obj);
+    MOZ_ASSERT(hasCPOW(objId, obj));
     return objId;
 }
 
@@ -93,7 +93,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     constexpr CPOWProxyHandler()
       : BaseProxyHandler(&family) {}
 
-    virtual bool finalizeInBackground(Value priv) const override {
+    virtual bool finalizeInBackground(const Value& priv) const override {
         return false;
     }
 
@@ -930,7 +930,7 @@ void
 WrapperOwner::updatePointer(JSObject* obj, const JSObject* old)
 {
     ObjectId objId = idOfUnchecked(obj);
-    MOZ_ASSERT(findCPOWById(objId) == old);
+    MOZ_ASSERT(hasCPOW(objId, old));
     cpows_.add(objId, obj);
 }
 

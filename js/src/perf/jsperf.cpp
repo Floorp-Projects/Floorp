@@ -276,7 +276,7 @@ RegisterPerfMeasurement(JSContext* cx, HandleObject globalArg)
 }
 
 PerfMeasurement*
-ExtractPerfMeasurement(Value wrapper)
+ExtractPerfMeasurement(const Value& wrapper)
 {
     if (wrapper.isPrimitive())
         return 0;

@@ -284,9 +284,11 @@ DataTransfer::GetMozUserCancelled(bool* aUserCancelled)
 }
 
 already_AddRefed<FileList>
-DataTransfer::GetFiles(ErrorResult& aRv)
+DataTransfer::GetFiles(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                       ErrorResult& aRv)
 {
-  return mItems->Files(nsContentUtils::SubjectPrincipal());
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+  return mItems->Files(aSubjectPrincipal.value());
 }
 
 NS_IMETHODIMP
@@ -374,14 +376,17 @@ DataTransfer::GetTypes(nsISupports** aTypes)
 
 void
 DataTransfer::GetData(const nsAString& aFormat, nsAString& aData,
+                      const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                       ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   // return an empty string if data for the format was not found
   aData.Truncate();
 
   nsCOMPtr<nsIVariant> data;
   nsresult rv =
-    GetDataAtInternal(aFormat, 0, nsContentUtils::SubjectPrincipal(),
+    GetDataAtInternal(aFormat, 0, aSubjectPrincipal.value(),
                       getter_AddRefs(data));
   if (NS_FAILED(rv)) {
     if (rv != NS_ERROR_DOM_INDEX_SIZE_ERR) {
@@ -433,19 +438,21 @@ NS_IMETHODIMP
 DataTransfer::GetData(const nsAString& aFormat, nsAString& aData)
 {
   ErrorResult rv;
-  GetData(aFormat, aData, rv);
+  GetData(aFormat, aData, Some(nsContentUtils::SubjectPrincipal()), rv);
   return rv.StealNSResult();
 }
 
 void
 DataTransfer::SetData(const nsAString& aFormat, const nsAString& aData,
+                      const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                       ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   RefPtr<nsVariantCC> variant = new nsVariantCC();
   variant->SetAsAString(aData);
 
-  aRv = SetDataAtInternal(aFormat, variant, 0,
-                          nsContentUtils::SubjectPrincipal());
+  aRv = SetDataAtInternal(aFormat, variant, 0, aSubjectPrincipal.value());
 }
 
 void
@@ -641,10 +648,13 @@ void
 DataTransfer::MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
                            uint32_t aIndex,
                            JS::MutableHandle<JS::Value> aRetval,
+                           const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                            mozilla::ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   nsCOMPtr<nsIVariant> data;
-  aRv = GetDataAtInternal(aFormat, aIndex, nsContentUtils::SubjectPrincipal(),
+  aRv = GetDataAtInternal(aFormat, aIndex, aSubjectPrincipal.value(),
                           getter_AddRefs(data));
   if (aRv.Failed()) {
     return;
@@ -723,15 +733,17 @@ DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
 
 void
 DataTransfer::MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
-                           JS::Handle<JS::Value> aData,
-                           uint32_t aIndex, ErrorResult& aRv)
+                           JS::Handle<JS::Value> aData, uint32_t aIndex,
+                           const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                           ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   nsCOMPtr<nsIVariant> data;
   aRv = nsContentUtils::XPConnect()->JSValToVariant(aCx, aData,
                                                     getter_AddRefs(data));
   if (!aRv.Failed()) {
-    aRv = SetDataAtInternal(aFormat, data, aIndex,
-                            nsContentUtils::SubjectPrincipal());
+    aRv = SetDataAtInternal(aFormat, data, aIndex, aSubjectPrincipal.value());
   }
 }
 
@@ -818,8 +830,11 @@ DataTransfer::SetDragImage(nsIDOMElement* aImage, int32_t aX, int32_t aY)
 }
 
 already_AddRefed<Promise>
-DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
+DataTransfer::GetFilesAndDirectories(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                     ErrorResult& aRv)
 {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
   nsCOMPtr<nsINode> parentNode = do_QueryInterface(mParent);
   if (!parentNode) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -838,7 +853,7 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<FileList> files = mItems->Files(nsContentUtils::SubjectPrincipal());
+  RefPtr<FileList> files = mItems->Files(aSubjectPrincipal.value());
   if (NS_WARN_IF(!files)) {
     return nullptr;
   }
@@ -855,10 +870,12 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
 }
 
 already_AddRefed<Promise>
-DataTransfer::GetFiles(bool aRecursiveFlag, ErrorResult& aRv)
+DataTransfer::GetFiles(bool aRecursiveFlag,
+                       const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                       ErrorResult& aRv)
 {
   // Currently we don't support directories.
-  return GetFilesAndDirectories(aRv);
+  return GetFilesAndDirectories(aSubjectPrincipal, aRv);
 }
 
 void

@@ -960,9 +960,6 @@ ReplaceLane(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() < 2 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    Elem* vec = TypedObjectMemory<Elem*>(args[0]);
-    Elem result[V::lanes];
-
     unsigned lane;
     if (!ArgumentToLaneIndex(cx, args[1], V::lanes, &lane))
         return false;
@@ -971,8 +968,11 @@ ReplaceLane(JSContext* cx, unsigned argc, Value* vp)
     if (!V::Cast(cx, args.get(2), &value))
         return false;
 
+    Elem* vec = TypedObjectMemory<Elem*>(args[0]);
+    Elem result[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++)
         result[i] = i == lane ? value : vec[i];
+
     return StoreResult<V>(cx, args, result);
 }
 
@@ -1039,17 +1039,18 @@ BinaryScalar(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() != 2)
         return ErrorBadArgs(cx);
 
-    Elem result[V::lanes];
     if (!IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    Elem* val = TypedObjectMemory<Elem*>(args[0]);
     int32_t bits;
     if (!ToInt32(cx, args[1], &bits))
         return false;
 
+    Elem result[V::lanes];
+    Elem* val = TypedObjectMemory<Elem*>(args[0]);
     for (unsigned i = 0; i < V::lanes; i++)
         result[i] = Op<Elem>::apply(val[i], bits);
+
     return StoreResult<V>(cx, args, result);
 }
 

@@ -101,6 +101,10 @@ class IdToObjectMap
     void clear();
     bool empty() const;
 
+#ifdef DEBUG
+    bool has(const ObjectId& id, const JSObject* obj) const;
+#endif
+
   private:
     Table table_;
 };
@@ -172,6 +176,12 @@ class JavaScriptShared : public CPOWManager
         return cpows_.find(objId);
     }
     JSObject* findObjectById(JSContext* cx, const ObjectId& objId);
+
+#ifdef DEBUG
+    bool hasCPOW(const ObjectId& objId, const JSObject* obj) {
+        return cpows_.has(objId, obj);
+    }
+#endif
 
     static bool LoggingEnabled() { return sLoggingEnabled; }
     static bool StackLoggingEnabled() { return sStackLoggingEnabled; }

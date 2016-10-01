@@ -843,6 +843,15 @@ CompositorBridgeChild::SendNotifyApproximatelyVisibleRegion(const ScrollableLaye
   return PCompositorBridgeChild::SendNotifyApproximatelyVisibleRegion(aGuid, aRegion);
 }
 
+bool
+CompositorBridgeChild::SendAllPluginsCaptured()
+{
+  if (!mCanSend) {
+    return false;
+  }
+  return PCompositorBridgeChild::SendAllPluginsCaptured();
+}
+
 PTextureChild*
 CompositorBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
                                           const LayersBackend&,

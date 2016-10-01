@@ -543,10 +543,10 @@ bool
 nsXPCWrappedJS::IsMultiCompartment() const
 {
     MOZ_ASSERT(IsRootWrapper());
-    JSCompartment* compartment = js::GetObjectCompartment(mJSObj);
+    JSCompartment* compartment = Compartment();
     nsXPCWrappedJS* next = mNext;
     while (next) {
-        if (js::GetObjectCompartment(next->mJSObj) != compartment)
+        if (next->Compartment() != compartment)
             return true;
         next = next->mNext;
     }

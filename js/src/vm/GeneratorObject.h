@@ -116,7 +116,7 @@ class GeneratorObject : public NativeObject
     const Value& newTarget() const {
         return getFixedSlot(NEWTARGET_SLOT);
     }
-    void setNewTarget(Value newTarget) {
+    void setNewTarget(const Value& newTarget) {
         setFixedSlot(NEWTARGET_SLOT, newTarget);
     }
 
