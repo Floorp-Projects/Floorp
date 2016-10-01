@@ -3978,6 +3978,8 @@ nsGridContainerFrame::Tracks::CalculateItemBaselines(
   std::sort(aBaselineItems.begin(), aBaselineItems.end(),
             ItemBaselineData::IsBaselineTrackLessThan);
 
+  MOZ_ASSERT(mSizes.Length() > 0, "having an item implies at least one track");
+  const uint32_t lastTrack = mSizes.Length() - 1;
   nscoord maxBaseline = 0;
   nscoord maxDescent = 0;
   uint32_t currentTrack = kAutoLine; // guaranteed to not match any item
@@ -4007,7 +4009,7 @@ nsGridContainerFrame::Tracks::CalculateItemBaselines(
       if (currentTrack == 0 && aBaselineGroup == BaselineSharingGroup::eFirst) {
         mBaseline[aBaselineGroup] = maxBaseline;
       }
-      if (currentTrack + 1 == len &&
+      if (currentTrack == lastTrack &&
           aBaselineGroup == BaselineSharingGroup::eLast) {
         mBaseline[aBaselineGroup] = maxBaseline;
       }
