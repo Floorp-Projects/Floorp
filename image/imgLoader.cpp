@@ -1246,7 +1246,6 @@ imgLoader::InitCache()
   }
 
   os->AddObserver(this, "memory-pressure", false);
-  os->AddObserver(this, "app-theme-changed", false);
   os->AddObserver(this, "chrome-flush-skin-caches", false);
   os->AddObserver(this, "chrome-flush-caches", false);
   os->AddObserver(this, "last-pb-context-exited", false);
@@ -1288,9 +1287,6 @@ imgLoader::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
   } else if (strcmp(aTopic, "memory-pressure") == 0) {
-    MinimizeCaches();
-  } else if (strcmp(aTopic, "app-theme-changed") == 0) {
-    ClearImageCache();
     MinimizeCaches();
   } else if (strcmp(aTopic, "chrome-flush-skin-caches") == 0 ||
              strcmp(aTopic, "chrome-flush-caches") == 0) {

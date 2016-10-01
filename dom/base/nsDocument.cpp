@@ -1397,12 +1397,6 @@ nsDocument::~nsDocument()
 
   NS_ASSERTION(!mIsShowing, "Destroying a currently-showing document");
 
-  // Note: This assert is only non-fatal because mochitest-bc triggers
-  // it... as well as the preceding assert about !mIsShowing.
-  NS_ASSERTION(!mObservingAppThemeChanged,
-               "Document leaked to shutdown, then the observer service dropped "
-               "its ref to us so we were able to go away.");
-
   if (IsTopLevelContentDocument()) {
     //don't report for about: pages
     if (!IsAboutPage()) {
@@ -8733,10 +8727,6 @@ nsDocument::OnPageShow(bool aPersisted,
                           "chrome-page-shown" :
                           "content-page-shown",
                         nullptr);
-    if (!mObservingAppThemeChanged) {
-      os->AddObserver(this, "app-theme-changed", /* ownsWeak */ false);
-      mObservingAppThemeChanged = true;
-    }
   }
 
   DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted);
@@ -8829,9 +8819,6 @@ nsDocument::OnPageHide(bool aPersisted,
                           "chrome-page-hidden" :
                           "content-page-hidden",
                         nullptr);
-
-    os->RemoveObserver(this, "app-theme-changed");
-    mObservingAppThemeChanged = false;
   }
 
   DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
@@ -11846,13 +11833,7 @@ nsDocument::Observe(nsISupports *aSubject,
                     const char *aTopic,
                     const char16_t *aData)
 {
-  if (strcmp("app-theme-changed", aTopic) == 0) {
-    if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
-        !IsUnstyledDocument()) {
-      // We don't want to style the chrome window, only app ones.
-      OnAppThemeChanged();
-    }
-  } else if (strcmp("service-worker-get-client", aTopic) == 0) {
+  if (strcmp("service-worker-get-client", aTopic) == 0) {
     // No need to generate the ID if it doesn't exist here.  The ID being
     // requested must already be generated in order to passed in as
     // aSubject.
@@ -11871,47 +11852,6 @@ nsDocument::Observe(nsISupports *aSubject,
     }
   }
   return NS_OK;
-}
-
-void
-nsDocument::OnAppThemeChanged()
-{
-  // Bail out if there is no theme support set up properly.
-  auto themeOrigin = Preferences::GetString("b2g.theme.origin");
-  if (!themeOrigin || !Preferences::GetBool("dom.mozApps.themable")) {
-    return;
-  }
-
-  for (int32_t i = 0; i < GetNumberOfStyleSheets(); i++) {
-    RefPtr<StyleSheet> sheet = GetStyleSheetAt(i);
-    if (!sheet) {
-      continue;
-    }
-
-    nsINode* owningNode = sheet->GetOwnerNode();
-    if (!owningNode) {
-      continue;
-    }
-    // Get a DOM stylesheet link to check the href against the theme origin.
-    nsIURI* sheetURI = sheet->GetOriginalURI();
-    if (!sheetURI) {
-      continue;
-    }
-    nsAutoString sheetOrigin;
-    nsContentUtils::GetUTFOrigin(sheetURI, sheetOrigin);
-    if (!sheetOrigin.Equals(themeOrigin)) {
-      continue;
-    }
-
-    // Finally getting a Stylesheet link.
-    nsCOMPtr<nsIStyleSheetLinkingElement> link = do_QueryInterface(owningNode);
-    if (!link) {
-      continue;
-    }
-    bool willNotify;
-    bool isAlternate;
-    link->UpdateStyleSheet(nullptr, &willNotify, &isAlternate, true);
-  }
 }
 
 void
