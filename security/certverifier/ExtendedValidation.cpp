@@ -11,6 +11,7 @@
 #include "certdb.h"
 #include "hasht.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/PodOperations.h"
 #include "pk11pub.h"
@@ -1249,8 +1250,8 @@ CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
   return false;
 }
 
-static PRStatus
-IdentityInfoInit()
+nsresult
+LoadExtendedValidationInfo()
 {
   static const char* sCABForumOIDString = "2.23.140.1.1";
   static const char* sCABForumOIDDescription = "CA/Browser Forum EV OID";
@@ -1258,28 +1259,35 @@ IdentityInfoInit()
   mozilla::ScopedAutoSECItem cabforumOIDItem;
   if (SEC_StringToOID(nullptr, &cabforumOIDItem, sCABForumOIDString, 0)
         != SECSuccess) {
-    return PR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
   sCABForumEVOIDTag = RegisterOID(cabforumOIDItem, sCABForumOIDDescription);
   if (sCABForumEVOIDTag == SEC_OID_UNKNOWN) {
-    return PR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
   for (size_t iEV = 0; iEV < mozilla::ArrayLength(myTrustedEVInfos); ++iEV) {
     nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
 
+    SECStatus srv;
+#ifdef DEBUG
+    // This section of code double-checks that we calculated the correct
+    // certificate hash given the issuer and serial number and that it is
+    // actually present in our loaded root certificates module. It is
+    // unnecessary to check this in non-debug builds since we will safely fall
+    // back to DV if the EV information is incorrect.
     mozilla::ScopedAutoSECItem derIssuer;
-    SECStatus rv = ATOB_ConvertAsciiToItem(&derIssuer, entry.issuer_base64);
-    PR_ASSERT(rv == SECSuccess);
-    if (rv != SECSuccess) {
-      return PR_FAILURE;
+    srv = ATOB_ConvertAsciiToItem(&derIssuer, entry.issuer_base64);
+    MOZ_ASSERT(srv == SECSuccess, "Could not base64-decode built-in EV issuer");
+    if (srv != SECSuccess) {
+      return NS_ERROR_FAILURE;
     }
 
     mozilla::ScopedAutoSECItem serialNumber;
-    rv = ATOB_ConvertAsciiToItem(&serialNumber, entry.serial_base64);
-    PR_ASSERT(rv == SECSuccess);
-    if (rv != SECSuccess) {
-      return PR_FAILURE;
+    srv = ATOB_ConvertAsciiToItem(&serialNumber, entry.serial_base64);
+    MOZ_ASSERT(srv == SECSuccess, "Could not base64-decode built-in EV serial");
+    if (srv != SECSuccess) {
+      return NS_ERROR_FAILURE;
     }
 
     CERTIssuerAndSN ias;
@@ -1293,66 +1301,41 @@ IdentityInfoInit()
 
     // If an entry is missing in the NSS root database, it may be because the
     // root database is out of sync with what we expect (e.g. a different
-    // version of system NSS is installed). We assert on debug builds, but
-    // silently continue on release builds. In both cases, the root cert does
-    // not get EV treatment.
+    // version of system NSS is installed).
     if (!cert) {
-#ifdef DEBUG
-      // The debug CA structs are at positions 0 to NUM_TEST_EV_ROOTS - 1, and
-      // are NOT in the NSS root DB.
-      if (iEV < NUM_TEST_EV_ROOTS) {
-        continue;
+      // The entries for the debug EV roots are at indices 0 through
+      // NUM_TEST_EV_ROOTS - 1. Since they're not built-in, they probably
+      // haven't been loaded yet.
+      MOZ_ASSERT(iEV < NUM_TEST_EV_ROOTS, "Could not find built-in EV root");
+    } else {
+      unsigned char certFingerprint[SHA256_LENGTH];
+      srv = PK11_HashBuf(SEC_OID_SHA256, certFingerprint, cert->derCert.data,
+                         AssertedCast<int32_t>(cert->derCert.len));
+      MOZ_ASSERT(srv == SECSuccess, "Could not hash EV root");
+      if (srv != SECSuccess) {
+        return NS_ERROR_FAILURE;
       }
+      bool same = PodEqual(certFingerprint, entry.ev_root_sha256_fingerprint);
+      MOZ_ASSERT(same, "EV root fingerprint mismatch");
+      if (!same) {
+        return NS_ERROR_FAILURE;
+      }
+    }
 #endif
-      PR_NOT_REACHED("Could not find EV root in NSS storage");
-      continue;
+    // This is the code that actually enables these roots for EV.
+    mozilla::ScopedAutoSECItem evOIDItem;
+    srv = SEC_StringToOID(nullptr, &evOIDItem, entry.dotted_oid, 0);
+    MOZ_ASSERT(srv == SECSuccess, "SEC_StringToOID failed");
+    if (srv != SECSuccess) {
+      return NS_ERROR_FAILURE;
     }
-
-    unsigned char certFingerprint[SHA256_LENGTH];
-    rv = PK11_HashBuf(SEC_OID_SHA256, certFingerprint, cert->derCert.data,
-                      AssertedCast<int32_t>(cert->derCert.len));
-    PR_ASSERT(rv == SECSuccess);
-    if (rv == SECSuccess) {
-      bool same = !memcmp(certFingerprint, entry.ev_root_sha256_fingerprint,
-                          sizeof(certFingerprint));
-      PR_ASSERT(same);
-      if (same) {
-        mozilla::ScopedAutoSECItem evOIDItem;
-        rv = SEC_StringToOID(nullptr, &evOIDItem, entry.dotted_oid, 0);
-        PR_ASSERT(rv == SECSuccess);
-        if (rv == SECSuccess) {
-          entry.oid_tag = RegisterOID(evOIDItem, entry.oid_name);
-          if (entry.oid_tag == SEC_OID_UNKNOWN) {
-            rv = SECFailure;
-          }
-        }
-      } else {
-        PR_SetError(SEC_ERROR_BAD_DATA, 0);
-        rv = SECFailure;
-      }
-    }
-
-    if (rv != SECSuccess) {
-      entry.oid_tag = SEC_OID_UNKNOWN;
-      return PR_FAILURE;
+    entry.oid_tag = RegisterOID(evOIDItem, entry.oid_name);
+    if (entry.oid_tag == SEC_OID_UNKNOWN) {
+      return NS_ERROR_FAILURE;
     }
   }
 
-  return PR_SUCCESS;
-}
-
-static PRCallOnceType sIdentityInfoCallOnce;
-
-void
-EnsureIdentityInfoLoaded()
-{
-  (void) PR_CallOnce(&sIdentityInfoCallOnce, IdentityInfoInit);
-}
-
-void
-CleanupIdentityInfo()
-{
-  memset(&sIdentityInfoCallOnce, 0, sizeof(PRCallOnceType));
+  return NS_OK;
 }
 
 // Find the first policy OID that is known to be an EV policy OID.
