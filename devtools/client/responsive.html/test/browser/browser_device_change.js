@@ -13,8 +13,6 @@ const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
 
 const Types = require("devtools/client/responsive.html/types");
 
-const { addDevice, removeDevice } = require("devtools/client/shared/devices");
-
 const testDevice = {
   "name": "Fake Phone RDM Test",
   "width": 320,
@@ -28,7 +26,7 @@ const testDevice = {
 };
 
 // Add the new device to the list
-addDevice(testDevice);
+addDeviceForTest(testDevice);
 
 addRDMTask(TEST_URL, function* ({ ui, manager }) {
   let { store } = ui.toolWindow;
@@ -65,9 +63,6 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   yield testUserAgent(ui, DEFAULT_UA);
   yield testDevicePixelRatio(ui, 1);
   yield testTouchEventsOverride(ui, false);
-
-  ok(removeDevice(testDevice),
-    "Test Device properly removed.");
 });
 
 function testViewportDimensions(ui, w, h) {
