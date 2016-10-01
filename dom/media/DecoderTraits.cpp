@@ -254,11 +254,17 @@ IsDirectShowSupportedType(const nsACString& aType)
 
 #ifdef MOZ_FMP4
 static bool
-IsMP4SupportedType(const nsACString& aType,
-                   DecoderDoctorDiagnostics* aDiagnostics,
-                   const nsAString& aCodecs = EmptyString())
+IsMP4SupportedType(const MediaContentType& aParsedType,
+                   DecoderDoctorDiagnostics* aDiagnostics)
 {
-  return MP4Decoder::CanHandleMediaType(aType, aCodecs, aDiagnostics);
+  return MP4Decoder::CanHandleMediaType(aParsedType, aDiagnostics);
+}
+static bool
+IsMP4SupportedType(const nsACString& aType,
+                   DecoderDoctorDiagnostics* aDiagnostics)
+{
+  MediaContentType contentType{aType};
+  return IsMP4SupportedType(contentType, aDiagnostics);
 }
 #endif
 
@@ -340,7 +346,7 @@ CanHandleCodecsType(const MediaContentType& aType,
 #endif
 #ifdef MOZ_FMP4
   if (DecoderTraits::IsMP4TypeAndEnabled(aType.GetMIMEType(), aDiagnostics)) {
-    if (IsMP4SupportedType(aType.GetMIMEType(), aDiagnostics, aType.GetCodecs())) {
+    if (IsMP4SupportedType(aType, aDiagnostics)) {
       return CANPLAY_YES;
     } else {
       // We can only reach this position if a particular codec was requested,

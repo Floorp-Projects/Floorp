@@ -13,6 +13,8 @@
 
 namespace mozilla {
 
+class MediaContentType;
+
 // Decoder that uses a bundled MP4 demuxer and platform decoders to play MP4.
 class MP4Decoder : public MediaDecoder
 {
@@ -28,15 +30,9 @@ public:
 
   MediaDecoderStateMachine* CreateStateMachine() override;
 
-  // Returns true if aMIMEType is a type that we think we can render with the
-  // a MP4 platform decoder backend. If aCodecs is non emtpy, it is filled
-  // with a comma-delimited list of codecs to check support for. Notes in
-  // out params wether the codecs string contains AAC or H.264.
-  static bool CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
-                                 const nsAString& aCodecs,
-                                 DecoderDoctorDiagnostics* aDiagnostics);
-
-  static bool CanHandleMediaType(const nsAString& aMIMEType,
+  // Returns true if aType is a type that we think we can render with the
+  // a MP4 platform decoder backend.
+  static bool CanHandleMediaType(const MediaContentType& aType,
                                  DecoderDoctorDiagnostics* aDiagnostics);
 
   // Return true if aMimeType is a one of the strings used by our demuxers to

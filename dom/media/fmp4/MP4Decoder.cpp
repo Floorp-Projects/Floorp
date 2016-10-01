@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MP4Decoder.h"
+#include "MediaContentType.h"
 #include "MediaDecoderStateMachine.h"
 #include "MP4Demuxer.h"
 #include "mozilla/Preferences.h"
@@ -13,7 +14,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/SharedThreadPool.h"
 #include "nsMimeTypes.h"
-#include "nsContentTypeParser.h"
 #include "VideoUtils.h"
 
 #ifdef XP_WIN
@@ -79,8 +79,7 @@ IsWhitelistedH264Codec(const nsAString& aCodec)
 
 /* static */
 bool
-MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
-                               const nsAString& aCodecs,
+MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
                                DecoderDoctorDiagnostics* aDiagnostics)
 {
   if (!IsEnabled()) {
@@ -90,23 +89,23 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   // Whitelist MP4 types, so they explicitly match what we encounter on
   // the web, as opposed to what we use internally (i.e. what our demuxers
   // etc output).
-  const bool isMP4Audio = aMIMETypeExcludingCodecs.EqualsASCII("audio/mp4") ||
-                          aMIMETypeExcludingCodecs.EqualsASCII("audio/x-m4a") ||
-                          aMIMETypeExcludingCodecs.EqualsASCII("audio/opus");
+  const bool isMP4Audio = aType.GetMIMEType().EqualsASCII("audio/mp4") ||
+                          aType.GetMIMEType().EqualsASCII("audio/x-m4a") ||
+                          aType.GetMIMEType().EqualsASCII("audio/opus");
   const bool isMP4Video =
   // On B2G, treat 3GPP as MP4 when Gonk PDM is available.
 #ifdef MOZ_GONK_MEDIACODEC
-    aMIMETypeExcludingCodecs.EqualsASCII(VIDEO_3GPP) ||
+      aType.GetMIMEType().EqualsASCII(VIDEO_3GPP) ||
 #endif
-    aMIMETypeExcludingCodecs.EqualsASCII("video/mp4") ||
-    aMIMETypeExcludingCodecs.EqualsASCII("video/quicktime") ||
-    aMIMETypeExcludingCodecs.EqualsASCII("video/x-m4v");
+      aType.GetMIMEType().EqualsASCII("video/mp4") ||
+      aType.GetMIMEType().EqualsASCII("video/quicktime") ||
+      aType.GetMIMEType().EqualsASCII("video/x-m4v");
   if (!isMP4Audio && !isMP4Video) {
     return false;
   }
 
   nsTArray<nsCString> codecMimes;
-  if (aCodecs.IsEmpty()) {
+  if (aType.GetCodecs().IsEmpty()) {
     // No codecs specified. Assume AAC/H.264
     if (isMP4Audio) {
       codecMimes.AppendElement(NS_LITERAL_CSTRING("audio/mp4a-latm"));
@@ -118,7 +117,7 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
     // Verify that all the codecs specified are ones that we expect that
     // we can play.
     nsTArray<nsString> codecs;
-    if (!ParseCodecsString(aCodecs, codecs)) {
+    if (!ParseCodecsString(aType.GetCodecs(), codecs)) {
       return false;
     }
     for (const nsString& codec : codecs) {
@@ -150,24 +149,6 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   }
 
   return true;
-}
-
-/* static */ bool
-MP4Decoder::CanHandleMediaType(const nsAString& aContentType,
-                               DecoderDoctorDiagnostics* aDiagnostics)
-{
-  nsContentTypeParser parser(aContentType);
-  nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  nsString codecs;
-  parser.GetParameter("codecs", codecs);
-
-  return CanHandleMediaType(NS_ConvertUTF16toUTF8(mimeType),
-                            codecs,
-                            aDiagnostics);
 }
 
 /* static */
