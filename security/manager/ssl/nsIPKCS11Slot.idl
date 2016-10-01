@@ -10,12 +10,20 @@ interface nsIPK11Token;
 
 [scriptable, uuid(c2d4f296-ee60-11d4-998b-00b0d02354a0)]
 interface nsIPKCS11Slot : nsISupports {
-
-  readonly attribute wstring name;
-  readonly attribute wstring desc;
-  readonly attribute wstring manID;
-  readonly attribute wstring HWVersion;
-  readonly attribute wstring FWVersion;
+  readonly attribute AUTF8String name;
+  readonly attribute AUTF8String desc;
+  /**
+   * Manufacturer ID of the slot.
+   */
+  readonly attribute AUTF8String manID;
+  /**
+   * Hardware version of the slot.
+   */
+  readonly attribute AUTF8String HWVersion;
+  /**
+   * Firmware version of the slot.
+   */
+  readonly attribute AUTF8String FWVersion;
 
   const unsigned long SLOT_DISABLED      = 0;
   const unsigned long SLOT_NOT_PRESENT   = 1;
@@ -32,7 +40,5 @@ interface nsIPKCS11Slot : nsISupports {
   nsIPK11Token getToken();
 
   /* more fun with workarounds - we're referring to everything by token name */
-  readonly attribute wstring tokenName;
-
+  readonly attribute AUTF8String tokenName;
 };
-

@@ -90,6 +90,9 @@ Cu.importGlobalProperties(["URL"]);
 const NOTIFICATION_CHUNK_SIZE = 300;
 const ONRESULT_CHUNK_SIZE = 300;
 
+// Timers resolution is not always good, it can have a 16ms precision on Win.
+const TIMERS_RESOLUTION_SKEW_MS = 16;
+
 /**
  * Sends a bookmarks notification through the given observers.
  *
@@ -500,7 +503,7 @@ function validatePageInfo(pageInfo) {
 
     if (inVisit.date) {
       ensureDate(inVisit.date);
-      if (inVisit.date > Date.now()) {
+      if (inVisit.date > (Date.now() + TIMERS_RESOLUTION_SKEW_MS)) {
         throw new TypeError(`date: ${inVisit.date} cannot be a future date`);
       }
       visit.date = inVisit.date;
