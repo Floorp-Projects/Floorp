@@ -462,7 +462,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 
       rv = Result::ERROR_UNKNOWN_ERROR;
 
-#ifndef MOZ_NO_EV_CERTS
       // Try to validate for EV first.
       NSSCertDBTrustDomain::OCSPFetching evOCSPFetching
         = (mOCSPDownloadConfig == ocspOff) ||
@@ -537,7 +536,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       if (rv == Success) {
         break;
       }
-#endif
 
       if (flags & FLAG_MUST_BE_EV) {
         rv = Result::ERROR_POLICY_VALIDATION_FAILED;
