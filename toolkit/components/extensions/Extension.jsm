@@ -902,15 +902,16 @@ this.ExtensionData = class {
 
       // FIXME: We need a way to do this without main thread IO.
 
-      this.rootURI.QueryInterface(Ci.nsIJARURI);
+      let uri = this.rootURI.QueryInterface(Ci.nsIJARURI);
 
-      let file = this.rootURI.JARFile.QueryInterface(Ci.nsIFileURL).file;
+      let file = uri.JARFile.QueryInterface(Ci.nsIFileURL).file;
       let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
       zipReader.open(file);
       try {
         let results = [];
 
         // Normalize the directory path.
+        path = `${uri.JAREntry}/${path}`;
         path = path.replace(/\/\/+/g, "/").replace(/^\/|\/$/g, "") + "/";
 
         // Escape pattern metacharacters.
