@@ -116,11 +116,11 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
 nsresult
 nsPlatformCharset::InitGetCharset(nsACString &oString)
 {
+#if HAVE_LANGINFO_CODESET
   char* nl_langinfo_codeset = nullptr;
   nsCString aCharset;
   nsresult res;
 
-#if HAVE_LANGINFO_CODESET
   nl_langinfo_codeset = nl_langinfo(CODESET);
   NS_ASSERTION(nl_langinfo_codeset, "cannot get nl_langinfo(CODESET)");
 

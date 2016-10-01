@@ -23,6 +23,9 @@ function run_test() {
   let moduleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
                    .getService(Ci.nsIPKCS11ModuleDB);
   let testModule = moduleDB.findModuleByName("PKCS11 Test Module");
+  // TODO(Bug 1306632): Add a slot to the PSM PKCS 11 test module with a name
+  //                    with high codepoints, then add a test to ensure
+  //                    findSlotByName() is able to find the slot.
   let testSlot = testModule.findSlotByName("Test PKCS11 Slot");
 
   equal(testSlot.name, "Test PKCS11 Slot",
