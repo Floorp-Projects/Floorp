@@ -426,10 +426,13 @@ public:
   SetInitialChildList(ChildListID     aListID,
                       nsFrameList&    aChildList) override
   {
-    NS_ASSERTION(aListID == kPrincipalList, "unexpected frame list");
+    MOZ_ASSERT(aListID == kPrincipalList || aListID == kBackdropList,
+               "unexpected frame list");
     nsBlockFrame::SetInitialChildList(aListID, aChildList);
-    // re-resolve our subtree to set any mathml-expected data
-    nsMathMLContainerFrame::RebuildAutomaticDataForChildren(this);
+    if (aListID == kPrincipalList) {
+      // re-resolve our subtree to set any mathml-expected data
+      nsMathMLContainerFrame::RebuildAutomaticDataForChildren(this);
+    }
   }
 
   virtual void
