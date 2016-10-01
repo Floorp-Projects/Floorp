@@ -89,6 +89,9 @@ skip-if(!gtkWidget) == grid-item-mixed-baseline-004.html grid-item-mixed-baselin
 == grid-justify-content-001.html grid-justify-content-001-ref.html
 skip-if(Android&&isDebugBuild) == grid-justify-content-002.html grid-justify-content-002-ref.html # Bug 1245884 - slow
 skip-if(Android&&isDebugBuild) == grid-justify-content-003.html grid-justify-content-003-ref.html # Bug 1245884 - slow
+skip-if(!gtkWidget) == grid-container-baselines-001.html grid-container-baselines-001-ref.html
+skip-if(!gtkWidget) == grid-container-baselines-002.html grid-container-baselines-002-ref.html
+skip-if(!gtkWidget) == grid-container-baselines-003.html grid-container-baselines-003-ref.html
 skip-if(Android&&isDebugBuild) == grid-column-gap-001.html grid-column-gap-001-ref.html # Bug 1245884 - slow
 == grid-column-gap-002.html grid-column-gap-002-ref.html
 == grid-column-gap-003.html grid-column-gap-003-ref.html
