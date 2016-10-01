@@ -143,7 +143,7 @@ nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
   SECItem unicodePw;
 
   UniquePK11SlotInfo slot;
-  nsXPIDLString tokenName;
+  nsAutoCString tokenName;
   unicodePw.data = nullptr;
 
   aWantRetry = rr_do_not_retry;
@@ -163,11 +163,11 @@ nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
     }
   }
 
-  mToken->GetTokenName(getter_Copies(tokenName));
-  {
-    NS_ConvertUTF16toUTF8 tokenNameCString(tokenName);
-    slot = UniquePK11SlotInfo(PK11_FindSlotByName(tokenNameCString.get()));
+  rv = mToken->GetTokenName(tokenName);
+  if (NS_FAILED(rv)) {
+    goto finish;
   }
+  slot = UniquePK11SlotInfo(PK11_FindSlotByName(tokenName.get()));
   if (!slot) {
     srv = SECFailure;
     goto finish;

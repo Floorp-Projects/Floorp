@@ -152,10 +152,21 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
         self.info("Updating self.config with the following from {}:".format(variant_cfg_path))
         self.info(pprint.pformat(variant_cfg_dict))
         c.update(variant_cfg_dict)
+        c['forced_artifact_build'] = True
         # Bug 1231320 adds MOZHARNESS_ACTIONS in TaskCluster tasks to override default_actions
         # We don't want that when forcing an artifact build.
-        self.info("Clearing actions from volatile_config to use default_actions.")
-        rw_config.volatile_config['actions'] = None
+        if rw_config.volatile_config['actions']:
+            self.info("Updating volatile_config to include default_actions "
+                      "from {}.".format(variant_cfg_path))
+            # add default actions in correct order
+            combined_actions = []
+            for a in rw_config.all_actions:
+                if a in c['default_actions'] or a in rw_config.volatile_config['actions']:
+                    combined_actions.append(a)
+            rw_config.volatile_config['actions'] = combined_actions
+            self.info("Actions in volatile_config are now: {}".format(
+                rw_config.volatile_config['actions'])
+            )
         # replace rw_config as well to set actions as in BaseScript
         rw_config.set_config(c, overwrite=True)
         rw_config.update_actions()

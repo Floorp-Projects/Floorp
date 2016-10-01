@@ -5,6 +5,7 @@
     "AllWindowEvents": true,
     "currentWindow": true,
     "EventEmitter": true,
+    "getCookieStoreIdForTab": true,
     "IconDetails": true,
     "makeWidgetId": true,
     "pageActionFor": true,
