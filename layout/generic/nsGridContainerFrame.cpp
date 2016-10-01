@@ -13,6 +13,7 @@
 #include "mozilla/Function.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h" // for PodZero
+#include "mozilla/Poison.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAlgorithm.h" // for clamped()
 #include "nsCSSAnonBoxes.h"
@@ -27,6 +28,10 @@
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
 #include "mozilla/dom/GridBinding.h"
+
+#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__  == 6
+#define CLANG_CRASH_BUG 1
+#endif
 
 using namespace mozilla;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
@@ -319,15 +324,16 @@ MergeSortedFrameListsFor(nsFrameList& aDest, nsFrameList& aSrc,
   MergeSortedFrameLists(aDest, aSrc, aParent->GetContent());
 }
 
-class nsGridContainerFrame::GridItemCSSOrderIterator
+template<typename Iterator>
+class nsGridContainerFrame::GridItemCSSOrderIteratorT
 {
 public:
   enum OrderState { eUnknownOrder, eKnownOrdered, eKnownUnordered };
   enum ChildFilter { eSkipPlaceholders, eIncludeAll };
-  GridItemCSSOrderIterator(nsIFrame* aGridContainer,
-                           nsIFrame::ChildListID aListID,
-                           ChildFilter aFilter = eSkipPlaceholders,
-                           OrderState aState = eUnknownOrder)
+  GridItemCSSOrderIteratorT(nsIFrame* aGridContainer,
+                            nsIFrame::ChildListID aListID,
+                            ChildFilter aFilter = eSkipPlaceholders,
+                            OrderState aState = eUnknownOrder)
     : mChildren(aGridContainer->GetChildList(aListID))
     , mArrayIndex(0)
     , mGridItemIndex(0)
@@ -341,9 +347,9 @@ public:
     bool isOrdered = aState != eKnownUnordered;
     if (aState == eUnknownOrder) {
       auto maxOrder = std::numeric_limits<int32_t>::min();
-      for (nsFrameList::Enumerator e(mChildren); !e.AtEnd(); e.Next()) {
+      for (auto child : mChildren) {
         ++count;
-        int32_t order = e.get()->StylePosition()->mOrder;
+        int32_t order = child->StylePosition()->mOrder;
         if (order < maxOrder) {
           isOrdered = false;
           break;
@@ -352,27 +358,36 @@ public:
       }
     }
     if (isOrdered) {
-      mEnumerator.emplace(mChildren);
+      mIter.emplace(begin(mChildren));
+      mIterEnd.emplace(end(mChildren));
     } else {
       count *= 2; // XXX somewhat arbitrary estimate for now...
       mArray.emplace(count);
-      for (nsFrameList::Enumerator e(mChildren); !e.AtEnd(); e.Next()) {
-        mArray->AppendElement(e.get());
+      for (Iterator i(begin(mChildren)), iEnd(end(mChildren)); i != iEnd; ++i) {
+        mArray->AppendElement(*i);
       }
       // XXX replace this with nsTArray::StableSort when bug 1147091 is fixed.
-      std::stable_sort(mArray->begin(), mArray->end(), IsCSSOrderLessThan);
+      std::stable_sort(mArray->begin(), mArray->end(), CSSOrderComparator);
     }
 
     if (mSkipPlaceholders) {
       SkipPlaceholders();
     }
   }
+  ~GridItemCSSOrderIteratorT()
+  {
+    MOZ_ASSERT(IsForward() == mGridItemCount.isNothing());
+  }
+
+  bool IsForward() const;
+  Iterator begin(const nsFrameList& aList);
+  Iterator end(const nsFrameList& aList);
 
   nsIFrame* operator*() const
   {
     MOZ_ASSERT(!AtEnd());
-    if (mEnumerator) {
-      return mEnumerator->get();
+    if (mIter.isSome()) {
+      return **mIter;
     }
     return (*mArray)[mArrayIndex];
   }
@@ -386,7 +401,19 @@ public:
     MOZ_ASSERT(!AtEnd());
     MOZ_ASSERT((**this)->GetType() != nsGkAtoms::placeholderFrame,
                "MUST not call this when at a placeholder");
+    MOZ_ASSERT(IsForward() || mGridItemIndex < *mGridItemCount,
+               "Returning an out-of-range mGridItemIndex...");
     return mGridItemIndex;
+  }
+
+  void SetGridItemCount(size_t aGridItemCount)
+  {
+    MOZ_ASSERT(mIter.isSome() || mArray->Length() == aGridItemCount,
+               "grid item count mismatch");
+    mGridItemCount.emplace(aGridItemCount);
+    // Note: it's OK if mGridItemIndex underflows -- GridItemIndex()
+    // will not be called unless there is at least one item.
+    mGridItemIndex = IsForward() ? 0 : *mGridItemCount - 1;
   }
 
   /**
@@ -394,9 +421,9 @@ public:
    */
   void SkipPlaceholders()
   {
-    if (mEnumerator) {
-      for (; !mEnumerator->AtEnd(); mEnumerator->Next()) {
-        nsIFrame* child = mEnumerator->get();
+    if (mIter.isSome()) {
+      for (; *mIter != *mIterEnd; ++*mIter) {
+        nsIFrame* child = **mIter;
         if (child->GetType() != nsGkAtoms::placeholderFrame) {
           return;
         }
@@ -413,8 +440,11 @@ public:
 
   bool AtEnd() const
   {
-    MOZ_ASSERT(mEnumerator || mArrayIndex <= mArray->Length());
-    return mEnumerator ? mEnumerator->AtEnd() : mArrayIndex >= mArray->Length();
+#ifndef CLANG_CRASH_BUG
+    // Clang 3.6.2 crashes when compiling this assertion:
+    MOZ_ASSERT(mIter.isSome() || mArrayIndex <= mArray->Length());
+#endif
+    return mIter ? (*mIter == *mIterEnd) : mArrayIndex >= mArray->Length();
   }
 
   void Next()
@@ -428,10 +458,10 @@ public:
 #endif
     if (mSkipPlaceholders ||
         (**this)->GetType() != nsGkAtoms::placeholderFrame) {
-      ++mGridItemIndex;
+      IsForward() ? ++mGridItemIndex : --mGridItemIndex;
     }
-    if (mEnumerator) {
-      mEnumerator->Next();
+    if (mIter.isSome()) {
+      ++*mIter;
     } else {
       ++mArrayIndex;
     }
@@ -442,33 +472,47 @@ public:
 
   void Reset(ChildFilter aFilter = eSkipPlaceholders)
   {
-    if (mEnumerator) {
-      mEnumerator.reset();
-      mEnumerator.emplace(mChildren);
+    if (mIter.isSome()) {
+      mIter.reset();
+      mIter.emplace(begin(mChildren));
+      mIterEnd.reset();
+      mIterEnd.emplace(end(mChildren));
     } else {
       mArrayIndex = 0;
     }
-    mGridItemIndex = 0;
+    mGridItemIndex = IsForward() ? 0 : *mGridItemCount - 1;
     mSkipPlaceholders = aFilter == eSkipPlaceholders;
     if (mSkipPlaceholders) {
       SkipPlaceholders();
     }
   }
 
-  bool ItemsAreAlreadyInOrder() const { return mEnumerator.isSome(); }
+  bool IsValid() const { return mIter.isSome() || mArray.isSome(); }
 
+  void Invalidate()
+  {
+    mIter.reset();
+    mArray.reset();
+    mozWritePoison(&mChildren, sizeof(mChildren));
+  }
+
+  bool ItemsAreAlreadyInOrder() const { return mIter.isSome(); }
+
+  static bool CSSOrderComparator(nsIFrame* const& a, nsIFrame* const& b);
 private:
-  static bool IsCSSOrderLessThan(nsIFrame* const& a, nsIFrame* const& b)
-    { return a->StylePosition()->mOrder < b->StylePosition()->mOrder; }
-
   nsFrameList mChildren;
   // Used if child list is already in ascending 'order'.
-  Maybe<nsFrameList::Enumerator> mEnumerator;
+  Maybe<Iterator> mIter;
+  Maybe<Iterator> mIterEnd;
   // Used if child list is *not* in ascending 'order'.
+  // This array is pre-sorted in reverse order for a reverse iterator.
   Maybe<nsTArray<nsIFrame*>> mArray;
   size_t mArrayIndex;
   // The index of the current grid item (placeholders excluded).
   size_t mGridItemIndex;
+  // The number of grid items (placeholders excluded).
+  // It's only initialized and used in a reverse iterator.
+  Maybe<size_t> mGridItemCount;
   // Skip placeholder children in the iteration?
   bool mSkipPlaceholders;
 #ifdef DEBUG
@@ -477,6 +521,48 @@ private:
 #endif
 };
 
+using GridItemCSSOrderIterator = nsGridContainerFrame::GridItemCSSOrderIterator;
+using ReverseGridItemCSSOrderIterator = nsGridContainerFrame::ReverseGridItemCSSOrderIterator;
+
+template<>
+bool
+GridItemCSSOrderIterator::CSSOrderComparator(nsIFrame* const& a,
+                                             nsIFrame* const& b)
+{ return a->StylePosition()->mOrder < b->StylePosition()->mOrder; }
+
+template<>
+bool
+GridItemCSSOrderIterator::IsForward() const { return true; }
+
+template<>
+nsFrameList::iterator
+GridItemCSSOrderIterator::begin(const nsFrameList& aList)
+{ return aList.begin(); }
+
+template<>
+nsFrameList::iterator GridItemCSSOrderIterator::end(const nsFrameList& aList)
+{ return aList.end(); }
+
+template<>
+bool
+ReverseGridItemCSSOrderIterator::CSSOrderComparator(nsIFrame* const& a,
+                                                    nsIFrame* const& b)
+{ return a->StylePosition()->mOrder > b->StylePosition()->mOrder; }
+
+template<>
+bool
+ReverseGridItemCSSOrderIterator::IsForward() const
+{ return false; }
+
+template<>
+nsFrameList::reverse_iterator
+ReverseGridItemCSSOrderIterator::begin(const nsFrameList& aList)
+{ return aList.rbegin(); }
+
+template<>
+nsFrameList::reverse_iterator
+ReverseGridItemCSSOrderIterator::end(const nsFrameList& aList)
+{ return aList.rend(); }
 
 /**
  * A LineRange can be definite or auto - when it's definite it represents
@@ -5436,9 +5522,15 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
     if (!pushedList.IsEmpty()) {
       MergeSortedOverflow(pushedList);
       AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
+      // NOTE since we messed with our child list here, we intentionally
+      // make aState.mIter invalid to avoid any use of it after this point.
+      aState.mIter.Invalidate();
     }
     if (!incompleteList.IsEmpty()) {
       MergeSortedOverflow(incompleteList);
+      // NOTE since we messed with our child list here, we intentionally
+      // make aState.mIter invalid to avoid any use of it after this point.
+      aState.mIter.Invalidate();
     }
     if (!overflowIncompleteList.IsEmpty()) {
       MergeSortedExcessOverflowContainers(overflowIncompleteList);

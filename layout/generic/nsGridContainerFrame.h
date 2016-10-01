@@ -189,6 +189,11 @@ public:
   struct TrackSize;
   struct GridItemInfo;
   struct GridReflowInput;
+  template<typename Iterator> class GridItemCSSOrderIteratorT;
+  typedef GridItemCSSOrderIteratorT<nsFrameList::iterator>
+    GridItemCSSOrderIterator;
+  typedef GridItemCSSOrderIteratorT<nsFrameList::reverse_iterator>
+    ReverseGridItemCSSOrderIterator;
 protected:
   static const uint32_t kAutoLine;
   // The maximum line number, in the zero-based translated grid.
@@ -202,7 +207,6 @@ protected:
   typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
   struct Grid;
   struct GridArea;
-  class GridItemCSSOrderIterator;
   class LineNameMap;
   struct LineRange;
   struct SharedGridData;
