@@ -41,14 +41,6 @@ const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
 const uint32_t nsGridContainerFrame::kAutoLine = kTranslatedMaxLine + 3457U;
 typedef nsTHashtable< nsPtrHashKey<nsIFrame> > FrameHashtable;
 
-// https://drafts.csswg.org/css-align-3/#baseline-sharing-group
-enum BaselineSharingGroup
-{
-  // NOTE Used as an array index so must be 0 and 1.
-  eFirst = 0,
-  eLast = 1,
-};
-
 // https://drafts.csswg.org/css-sizing/#constraints
 enum class SizingConstraint
 {
@@ -128,6 +120,26 @@ ResolveToDefiniteSize(const nsStyleCoord& aCoord, nscoord aPercentBasis)
   }
   return std::max(nscoord(0),
                   nsRuleNode::ComputeCoordPercentCalc(aCoord, aPercentBasis));
+}
+
+// Synthesize a baseline from a border box.  For an alphabetical baseline
+// this is the end edge of the border box.  For a central baseline it's
+// the center of the border box.
+// https://drafts.csswg.org/css-align-3/#synthesize-baselines
+// For a first-baseline the measure is from the border-box start edge and
+// for a last-baseline the measure is from the border-box end edge.
+static nscoord
+SynthesizeBaselineFromBorderBox(BaselineSharingGroup aGroup,
+                                WritingMode aWM,
+                                nscoord aBorderBoxSize)
+{
+  if (aGroup == BaselineSharingGroup::eFirst) {
+    return aWM.IsAlphabeticalBaseline() ? aBorderBoxSize : aBorderBoxSize / 2;
+  }
+  MOZ_ASSERT(aGroup == BaselineSharingGroup::eLast);
+  // Round up for central baseline offset, to be consistent with eFirst.
+  return aWM.IsAlphabeticalBaseline() ? 0 :
+    (aBorderBoxSize / 2) + (aBorderBoxSize % 2);
 }
 
 enum class GridLineSide
@@ -1210,6 +1222,8 @@ struct nsGridContainerFrame::Tracks
   {
     mBaselineSubtreeAlign[BaselineSharingGroup::eFirst] = NS_STYLE_ALIGN_AUTO;
     mBaselineSubtreeAlign[BaselineSharingGroup::eLast] = NS_STYLE_ALIGN_AUTO;
+    mBaseline[BaselineSharingGroup::eFirst] = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mBaseline[BaselineSharingGroup::eLast] = NS_INTRINSIC_WIDTH_UNKNOWN;
   }
 
   void Initialize(const TrackSizingFunctions& aFunctions,
@@ -1788,6 +1802,8 @@ struct nsGridContainerFrame::Tracks
   AutoTArray<TrackSize, 32> mSizes;
   nscoord mContentBoxSize;
   nscoord mGridGap;
+  // The first(last)-baseline for the first(last) track in this axis.
+  nscoord mBaseline[2]; // index by BaselineSharingGroup
   LogicalAxis mAxis;
   // Used for aligning a baseline-aligned subtree of items.  The only possible
   // values are NS_STYLE_ALIGN_{START,END,CENTER,AUTO}.  AUTO means there are
@@ -3983,10 +3999,18 @@ nsGridContainerFrame::Tracks::CalculateItemBaselines(
       item.mGridItem->mBaselineOffset[mAxis] = maxBaseline - item.mBaseline;
       MOZ_ASSERT(item.mGridItem->mBaselineOffset[mAxis] >= 0);
     }
-    // Store the size of this baseline-aligned subtree.
     if (i != 0) {
+      // Store the size of this baseline-aligned subtree.
       mSizes[currentTrack].mBaselineSubtreeSize[aBaselineGroup] =
         maxBaseline + maxDescent;
+      // Record the first(last) baseline for the first(last) track.
+      if (currentTrack == 0 && aBaselineGroup == BaselineSharingGroup::eFirst) {
+        mBaseline[aBaselineGroup] = maxBaseline;
+      }
+      if (currentTrack + 1 == len &&
+          aBaselineGroup == BaselineSharingGroup::eLast) {
+        mBaseline[aBaselineGroup] = maxBaseline;
+      }
     }
     if (i == len) {
       break;
@@ -4112,8 +4136,19 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
       // XXX (after bug 1174569 is sorted out)
       ::MeasuringReflow(child, aState.mReflowInput, rc, avail);
       nscoord baseline;
+      nsGridContainerFrame* grid = do_QueryFrame(child);
       if (state & ItemState::eFirstBaseline) {
-        if (nsLayoutUtils::GetFirstLineBaseline(wm, child, &baseline)) {
+        if (grid) {
+          if (isOrthogonal == isInlineAxis) {
+            grid->GetBBaseline(BaselineSharingGroup::eFirst, &baseline);
+          } else {
+            grid->GetIBaseline(BaselineSharingGroup::eFirst, &baseline);
+          }
+        }
+        if (grid ||
+            nsLayoutUtils::GetFirstLineBaseline(wm, child, &baseline)) {
+          NS_ASSERTION(baseline != NS_INTRINSIC_WIDTH_UNKNOWN,
+                       "about to use an unknown baseline");
           auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
           auto m = child->GetLogicalUsedMargin(wm);
           baseline += isInlineAxis ? m.IStart(wm) : m.BStart(wm);
@@ -4125,11 +4160,24 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
           state &= ~ItemState::eAllBaselineBits;
         }
       } else {
-        if (nsLayoutUtils::GetLastLineBaseline(wm, child, &baseline)) {
+        if (grid) {
+          if (isOrthogonal == isInlineAxis) {
+            grid->GetBBaseline(BaselineSharingGroup::eLast, &baseline);
+          } else {
+            grid->GetIBaseline(BaselineSharingGroup::eLast, &baseline);
+          }
+        }
+        if (grid ||
+            nsLayoutUtils::GetLastLineBaseline(wm, child, &baseline)) {
+          NS_ASSERTION(baseline != NS_INTRINSIC_WIDTH_UNKNOWN,
+                       "about to use an unknown baseline");
           auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
           auto m = child->GetLogicalUsedMargin(wm);
-          auto descent = frameSize - baseline + (isInlineAxis ? m.IEnd(wm)
-                                                              : m.BEnd(wm));
+          if (!grid) {
+            // Convert to distance from border-box end.
+            baseline = frameSize - baseline;
+          }
+          auto descent = baseline + (isInlineAxis ? m.IEnd(wm) : m.BEnd(wm));
           auto alignSize = frameSize + (isInlineAxis ? m.IStartEnd(wm)
                                                      : m.BStartEnd(wm));
           lastBaselineItems.AppendElement(ItemBaselineData(
@@ -5825,6 +5873,11 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   SanityCheckGridItemsBeforeReflow();
 #endif // DEBUG
 
+  mBaseline[0][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[0][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[1][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[1][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
+
   const nsStylePosition* stylePos = aReflowInput.mStylePosition;
   if (!prevInFlow) {
     InitImplicitNamedAreas(stylePos);
@@ -5898,9 +5951,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   LogicalSize desiredSize(wm, computedISize + bp.IStartEnd(wm),
                               bSize         + bp.BStartEnd(wm));
   aDesiredSize.SetSize(wm, desiredSize);
-  aDesiredSize.mOverflowAreas.UnionAllWith(nsRect(0, 0,
-                                                  aDesiredSize.Width(),
-                                                  aDesiredSize.Height()));
+  nsRect frameRect(0, 0, aDesiredSize.Width(), aDesiredSize.Height());
+  aDesiredSize.mOverflowAreas.UnionAllWith(frameRect);
 
   // Convert INCOMPLETE -> OVERFLOW_INCOMPLETE and zero bsize if we're an OC.
   if (HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
@@ -5911,6 +5963,71 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     bSize = 0;
     desiredSize.BSize(wm) = bSize + bp.BStartEnd(wm);
     aDesiredSize.SetSize(wm, desiredSize);
+  }
+
+  if (!gridReflowInput.mInFragmentainer) {
+    MOZ_ASSERT(gridReflowInput.mIter.IsValid());
+    auto sz = frameRect.Size();
+    CalculateBaselines(BaselineSet::eBoth, &gridReflowInput.mIter,
+                       &gridReflowInput.mGridItems, gridReflowInput.mCols,
+                       0, gridReflowInput.mCols.mSizes.Length(),
+                       wm, sz, bp.IStart(wm),
+                       bp.IEnd(wm), desiredSize.ISize(wm));
+    CalculateBaselines(BaselineSet::eBoth, &gridReflowInput.mIter,
+                       &gridReflowInput.mGridItems, gridReflowInput.mRows,
+                       0, gridReflowInput.mRows.mSizes.Length(),
+                       wm, sz, bp.BStart(wm),
+                       bp.BEnd(wm), desiredSize.BSize(wm));
+  } else {
+    // Only compute first-baseline if this fragment contains the first track.
+    // XXXmats maybe remove this condition? bug 1306499
+    BaselineSet baselines = BaselineSet::eNone;
+    if (gridReflowInput.mStartRow == 0 &&
+        gridReflowInput.mStartRow != gridReflowInput.mNextFragmentStartRow) {
+      baselines = BaselineSet::eFirst;
+    }
+    // Only compute last-baseline if this fragment contains the last track.
+    // XXXmats maybe remove this condition? bug 1306499
+    uint32_t len = gridReflowInput.mRows.mSizes.Length();
+    if (gridReflowInput.mStartRow != len &&
+        gridReflowInput.mNextFragmentStartRow == len) {
+      baselines = BaselineSet(baselines | BaselineSet::eLast);
+    }
+    Maybe<GridItemCSSOrderIterator> iter;
+    Maybe<nsTArray<GridItemInfo>> gridItems;
+    if (baselines != BaselineSet::eNone) {
+      // We need to create a new iterator and GridItemInfo array because we
+      // might have pushed some children at this point.
+      // Even if the gridReflowInput iterator is invalid we can reuse its
+      // state about order to optimize initialization of the new iterator.
+      // An ordered child list can't become unordered by pushing frames.
+      // An unordered list can become ordered in a number of cases, but we
+      // ignore that here and guess that the child list is still unordered.
+      // XXX this is O(n^2) in the number of items in this fragment: bug 1306705
+      using Filter = GridItemCSSOrderIterator::ChildFilter;
+      using Order = GridItemCSSOrderIterator::OrderState;
+      bool ordered = gridReflowInput.mIter.ItemsAreAlreadyInOrder();
+      auto orderState = ordered ? Order::eKnownOrdered : Order::eKnownUnordered;
+      iter.emplace(this, kPrincipalList, Filter::eSkipPlaceholders, orderState);
+      gridItems.emplace();
+      for (; !iter->AtEnd(); iter->Next()) {
+        auto child = **iter;
+        for (const auto& info : gridReflowInput.mGridItems) {
+          if (info.mFrame == child) {
+            gridItems->AppendElement(info);
+          }
+        }
+      }
+    }
+    auto sz = frameRect.Size();
+    CalculateBaselines(baselines, iter.ptrOr(nullptr), gridItems.ptrOr(nullptr),
+                       gridReflowInput.mCols, 0,
+                       gridReflowInput.mCols.mSizes.Length(), wm, sz,
+                       bp.IStart(wm), bp.IEnd(wm), desiredSize.ISize(wm));
+    CalculateBaselines(baselines, iter.ptrOr(nullptr), gridItems.ptrOr(nullptr),
+                       gridReflowInput.mRows, gridReflowInput.mStartRow,
+                       gridReflowInput.mNextFragmentStartRow, wm, sz,
+                       bp.BStart(wm), bp.BEnd(wm), desiredSize.BSize(wm));
   }
 
   if (HasAnyStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES)) {
@@ -6225,6 +6342,10 @@ nsGridContainerFrame::MarkIntrinsicISizesDirty()
 {
   mCachedMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
   mCachedPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[0][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[0][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[1][0] = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mBaseline[1][1] = NS_INTRINSIC_WIDTH_UNKNOWN;
   nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
@@ -6313,6 +6434,141 @@ nsGridContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame)
 #endif
 
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+}
+
+nscoord
+nsGridContainerFrame::SynthesizeBaseline(
+  const FindItemInGridOrderResult& aGridOrderItem,
+  LogicalAxis          aAxis,
+  BaselineSharingGroup aGroup,
+  const nsSize&        aCBPhysicalSize,
+  nscoord              aCBSize,
+  WritingMode          aCBWM)
+{
+  if (MOZ_UNLIKELY(!aGridOrderItem.mItem)) {
+    // No item in this fragment - synthesize a baseline from our border-box.
+    return ::SynthesizeBaselineFromBorderBox(aGroup, aCBWM, aCBSize);
+  }
+  nsIFrame* child = aGridOrderItem.mItem->mFrame;
+  nsGridContainerFrame* grid = do_QueryFrame(child);
+  auto childWM = child->GetWritingMode();
+  bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
+  nscoord baseline;
+  nscoord start;
+  nscoord size;
+  if (aAxis == eLogicalAxisBlock) {
+    start = child->GetLogicalNormalPosition(aCBWM, aCBPhysicalSize).B(aCBWM);
+    size = child->BSize(aCBWM);
+    if (grid && aGridOrderItem.mIsInEdgeTrack) {
+      isOrthogonal ? grid->GetIBaseline(aGroup, &baseline) :
+                     grid->GetBBaseline(aGroup, &baseline);
+    } else if (!isOrthogonal && aGridOrderItem.mIsInEdgeTrack &&
+               nsLayoutUtils::GetLastLineBaseline(childWM, child, &baseline)) {
+      if (aGroup == BaselineSharingGroup::eLast) {
+        baseline = size - baseline; // convert to distance from border-box end
+      }
+    } else {
+      baseline = ::SynthesizeBaselineFromBorderBox(aGroup, childWM, size);
+    }
+  } else {
+    start = child->GetLogicalNormalPosition(aCBWM, aCBPhysicalSize).I(aCBWM);
+    size = child->ISize(aCBWM);
+    if (grid && aGridOrderItem.mIsInEdgeTrack) {
+      isOrthogonal ? grid->GetBBaseline(aGroup, &baseline) :
+                     grid->GetIBaseline(aGroup, &baseline);
+    } else if (isOrthogonal && aGridOrderItem.mIsInEdgeTrack &&
+               nsLayoutUtils::GetLastLineBaseline(childWM, child, &baseline)) {
+      if (aGroup == BaselineSharingGroup::eLast) {
+        baseline = size - baseline; // convert to distance from border-box end
+      }
+    } else {
+      baseline = ::SynthesizeBaselineFromBorderBox(aGroup, childWM, size);
+    }
+  }
+  return aGroup == BaselineSharingGroup::eFirst ? start + baseline :
+    aCBSize - start - size + baseline;
+}
+
+void
+nsGridContainerFrame::CalculateBaselines(
+  BaselineSet                   aBaselineSet,
+  GridItemCSSOrderIterator*     aIter,
+  const nsTArray<GridItemInfo>* aGridItems,
+  const Tracks&    aTracks,
+  uint32_t         aFragmentStartTrack,
+  uint32_t         aFirstExcludedTrack,
+  WritingMode      aWM,
+  const nsSize&    aCBPhysicalSize,
+  nscoord          aCBBorderPaddingStart,
+  nscoord          aCBBorderPaddingEnd,
+  nscoord          aCBSize)
+{
+  const auto axis = aTracks.mAxis;
+  auto firstBaseline = aTracks.mBaseline[BaselineSharingGroup::eFirst];
+  if (!(aBaselineSet & BaselineSet::eFirst)) {
+    mBaseline[axis][BaselineSharingGroup::eFirst] =
+      ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::eFirst, aWM,
+                                        aCBSize);
+  } else if (firstBaseline == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    FindItemInGridOrderResult gridOrderFirstItem =
+      FindFirstItemInGridOrder(*aIter, *aGridItems,
+        axis == eLogicalAxisBlock ? &GridArea::mRows : &GridArea::mCols,
+        axis == eLogicalAxisBlock ? &GridArea::mCols : &GridArea::mRows,
+        aFragmentStartTrack);
+    mBaseline[axis][BaselineSharingGroup::eFirst] =
+      SynthesizeBaseline(gridOrderFirstItem,
+                         axis,
+                         BaselineSharingGroup::eFirst,
+                         aCBPhysicalSize,
+                         aCBSize,
+                         aWM);
+  } else {
+    // We have a first-baseline group in the start track in this fragment.
+    // Convert it from track to grid container border-box coordinates.
+    MOZ_ASSERT(!aGridItems->IsEmpty());
+    nscoord gapBeforeStartTrack = aFragmentStartTrack == 0 ?
+      aTracks.GridLineEdge(aFragmentStartTrack, GridLineSide::eAfterGridGap) :
+      nscoord(0); // no content gap at start of fragment
+    mBaseline[axis][BaselineSharingGroup::eFirst] =
+      aCBBorderPaddingStart + gapBeforeStartTrack + firstBaseline;
+  }
+
+  auto lastBaseline = aTracks.mBaseline[BaselineSharingGroup::eLast];
+  if (!(aBaselineSet & BaselineSet::eLast)) {
+    mBaseline[axis][BaselineSharingGroup::eLast] =
+      ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::eLast, aWM,
+                                        aCBSize);
+  } else if (lastBaseline == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    // For finding items for the last-baseline we need to create a reverse
+    // iterator ('aIter' is the forward iterator from the GridReflowInput).
+    using Iter = ReverseGridItemCSSOrderIterator;
+    auto orderState = aIter->ItemsAreAlreadyInOrder() ?
+      Iter::OrderState::eKnownOrdered : Iter::OrderState::eKnownUnordered;
+    Iter iter(this, kPrincipalList, Iter::ChildFilter::eSkipPlaceholders,
+              orderState);
+    iter.SetGridItemCount(aGridItems->Length());
+    FindItemInGridOrderResult gridOrderLastItem =
+      FindLastItemInGridOrder(iter, *aGridItems,
+        axis == eLogicalAxisBlock ? &GridArea::mRows : &GridArea::mCols,
+        axis == eLogicalAxisBlock ? &GridArea::mCols : &GridArea::mRows,
+        aFragmentStartTrack, aFirstExcludedTrack);
+    mBaseline[axis][BaselineSharingGroup::eLast] =
+      SynthesizeBaseline(gridOrderLastItem,
+                         axis,
+                         BaselineSharingGroup::eLast,
+                         aCBPhysicalSize,
+                         aCBSize,
+                         aWM);
+  } else {
+    // We have a last-baseline group in the end track in this fragment.
+    // Convert it from track to grid container border-box coordinates.
+    MOZ_ASSERT(!aGridItems->IsEmpty());
+    auto borderBoxStartToEndOfEndTrack = aCBBorderPaddingStart +
+      aTracks.GridLineEdge(aFirstExcludedTrack, GridLineSide::eBeforeGridGap) -
+      aTracks.GridLineEdge(aFragmentStartTrack, GridLineSide::eBeforeGridGap);
+    mBaseline[axis][BaselineSharingGroup::eLast] =
+      (aCBSize - borderBoxStartToEndOfEndTrack) + lastBaseline;
+  }
 }
 
 #ifdef DEBUG_FRAME_DUMP
