@@ -34,14 +34,24 @@ function run_test() {
   // Test valid inputs for encryptString() and decryptString().
   let inputs = [
     "",
+    " ", // First printable latin1 character (code point 32).
     "foo",
-    "1234567890`~!#$%^&*()-_=+{[}]|\\:;'\",<.>/?",
+    "1234567890`~!@#$%^&*()-_=+{[}]|\\:;'\",<.>/?",
+    "¡äöüÿ", // Misc + last printable latin1 character (code point 255).
+    "aaa 一二三", // Includes Unicode with code points outside [0, 255].
   ];
   for (let input of inputs) {
-    let encrypted = sdr.encryptString(input);
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
 
-    notEqual(input, encrypted,
-             "Encypted input should not just be the input itself");
+    let convertedInput = converter.ConvertFromUnicode(input);
+    convertedInput += converter.Finish();
+
+    let encrypted = sdr.encryptString(convertedInput);
+
+    notEqual(convertedInput, encrypted,
+             "Encrypted input should not just be the input itself");
 
     try {
       atob(encrypted);
@@ -49,7 +59,7 @@ function run_test() {
       ok(false, `encryptString() should have returned Base64: ${e}`);
     }
 
-    equal(input, sdr.decryptString(encrypted),
+    equal(convertedInput, sdr.decryptString(encrypted),
           "decryptString(encryptString(input)) should return input");
   }
 
