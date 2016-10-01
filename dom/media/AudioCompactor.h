@@ -61,6 +61,7 @@ public:
       uint32_t framesCopied = aCopyFunc(buffer.get(), samples);
 
       NS_ASSERTION(framesCopied <= aFrames, "functor copied too many frames");
+      buffer.SetLength(size_t(framesCopied) * aChannels);
 
       CheckedInt64 duration = FramesToUsecs(framesCopied, aSampleRate);
       if (!duration.isValid()) {
