@@ -484,6 +484,59 @@ EventTree::Mutated(AccMutationEvent* aEv)
     Accessible* cntr = (*node)->mContainer;
     while (cntr != mContainer) {
       if (cntr == aEv->mAccessible) {
+#ifdef A11Y_LOG
+        if (logging::IsEnabled(logging::eEventTree)) {
+          logging::MsgBegin("EVENTS_TREE", "Trim subtree");
+          logging::AccessibleInfo("Show/hide container", aEv->mAccessible);
+          logging::AccessibleInfo("Trimmed subtree root", (*node)->mContainer);
+          logging::MsgEnd();
+        }
+#endif
+
+        // If the new hide is part of a move and it contains existing child
+        // shows, then move preceding events from the child shows to the buffer,
+        // so the ongoing show event will pick them up.
+        if (aEv->IsHide()) {
+          AccHideEvent* hideEv = downcast_accEvent(aEv);
+          if (!hideEv->mNeedsShutdown) {
+            for (uint32_t i = 0; i < (*node)->mDependentEvents.Length(); i++) {
+              AccMutationEvent* childEv = (*node)->mDependentEvents[i];
+              if (childEv->IsShow()) {
+                AccShowEvent* childShowEv = downcast_accEvent(childEv);
+                if (childShowEv->mPrecedingEvents.Length() > 0) {
+                  Controller(mContainer)->StorePrecedingEvents(
+                    mozilla::Move(childShowEv->mPrecedingEvents));
+                }
+              }
+            }
+          }
+        }
+        // If the new show contains existing child shows, then move preceding
+        // events from the child shows to the new show.
+        else if (aEv->IsShow()) {
+          AccShowEvent* showEv = downcast_accEvent(aEv);
+          for (uint32_t i = 0; (*node)->mDependentEvents.Length(); i++) {
+            AccMutationEvent* childEv = (*node)->mDependentEvents[i];
+            if (childEv->IsShow()) {
+              AccShowEvent* showChildEv = downcast_accEvent(childEv);
+              if (showChildEv->mPrecedingEvents.Length() > 0) {
+#ifdef A11Y_LOG
+                if (logging::IsEnabled(logging::eEventTree)) {
+                  logging::MsgBegin("EVENTS_TREE", "Adopt preceding events");
+                  logging::AccessibleInfo("Parent", aEv->mAccessible);
+                  for (uint32_t j = 0; j < showChildEv->mPrecedingEvents.Length(); j++) {
+                    logging::AccessibleInfo("Adoptee",
+                      showChildEv->mPrecedingEvents[i]->mAccessible);
+                  }
+                  logging::MsgEnd();
+                }
+#endif
+                showEv->mPrecedingEvents.AppendElements(showChildEv->mPrecedingEvents);
+              }
+            }
+          }
+        }
+
         *node = Move((*node)->mNext);
         break;
       }

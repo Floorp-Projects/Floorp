@@ -211,7 +211,7 @@ class JS_FRIEND_API(BaseProxyHandler)
         return offsetof(BaseProxyHandler, mFamily);
     }
 
-    virtual bool finalizeInBackground(Value priv) const {
+    virtual bool finalizeInBackground(const Value& priv) const {
         /*
          * Called on creation of a proxy to determine whether its finalize
          * method can be finalized on the background thread.
@@ -534,7 +534,7 @@ NewProxyObject(JSContext* cx, const BaseProxyHandler* handler, HandleValue priv,
                JSObject* proto, const ProxyOptions& options = ProxyOptions());
 
 JSObject*
-RenewProxyObject(JSContext* cx, JSObject* obj, BaseProxyHandler* handler, Value priv);
+RenewProxyObject(JSContext* cx, JSObject* obj, BaseProxyHandler* handler, const Value& priv);
 
 class JS_FRIEND_API(AutoEnterPolicy)
 {

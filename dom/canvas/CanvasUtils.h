@@ -49,7 +49,7 @@ void DoDrawImageSecurityCheck(dom::HTMLCanvasElement *aCanvasElement,
 // Make a double out of |v|, treating undefined values as 0.0 (for
 // the sake of sparse arrays).  Return true iff coercion
 // succeeded.
-bool CoerceDouble(JS::Value v, double* d);
+bool CoerceDouble(const JS::Value& v, double* d);
 
     /* Float validation stuff */
 #define VALIDATE(_f)  if (!IsFinite(_f)) return false

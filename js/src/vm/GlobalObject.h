@@ -705,7 +705,7 @@ class GlobalObject : public NativeObject
                                 MutableHandleObject eval);
 
     // Infallibly test whether the given value is the eval function for this global.
-    bool valueIsEval(Value val);
+    bool valueIsEval(const Value& val);
 
     // Implemented in jsiter.cpp.
     static bool initIteratorProto(JSContext* cx, Handle<GlobalObject*> global);

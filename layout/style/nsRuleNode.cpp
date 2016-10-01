@@ -8461,25 +8461,11 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
            NS_STYLE_ALIGN_NORMAL);
 
   // align-self: enum, inherit, initial
-  const auto& alignSelfValue = *aRuleData->ValueForAlignSelf();
-  if (MOZ_UNLIKELY(alignSelfValue.GetUnit() == eCSSUnit_Inherit)) {
-    if (MOZ_LIKELY(parentContext)) {
-      nsStyleContext* grandparentContext = parentContext->GetParent();
-      if (MOZ_LIKELY(grandparentContext)) {
-        parentContext->AddStyleBit(NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE);
-      }
-      pos->mAlignSelf = parentPos->ComputedAlignSelf(grandparentContext);
-    } else {
-      pos->mAlignSelf = NS_STYLE_ALIGN_NORMAL;
-    }
-    conditions.SetUncacheable();
-  } else {
-    SetValue(alignSelfValue,
-             pos->mAlignSelf, conditions,
-             SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
-             parentPos->mAlignSelf, // unused, we handle 'inherit' above
-             NS_STYLE_ALIGN_AUTO);
-  }
+  SetValue(*aRuleData->ValueForAlignSelf(),
+           pos->mAlignSelf, conditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
+           parentPos->mAlignSelf,
+           NS_STYLE_ALIGN_AUTO);
 
   // justify-content: enum, inherit, initial
   SetValue(*aRuleData->ValueForJustifyContent(),
@@ -8507,25 +8493,11 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
   }
 
   // justify-self: enum, inherit, initial
-  const auto& justifySelfValue = *aRuleData->ValueForJustifySelf();
-  if (MOZ_UNLIKELY(justifySelfValue.GetUnit() == eCSSUnit_Inherit)) {
-    if (MOZ_LIKELY(parentContext)) {
-      nsStyleContext* grandparentContext = parentContext->GetParent();
-      if (MOZ_LIKELY(grandparentContext)) {
-        parentContext->AddStyleBit(NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE);
-      }
-      pos->mJustifySelf = parentPos->ComputedJustifySelf(grandparentContext);
-    } else {
-      pos->mJustifySelf = NS_STYLE_JUSTIFY_NORMAL;
-    }
-    conditions.SetUncacheable();
-  } else {
-    SetValue(justifySelfValue,
-             pos->mJustifySelf, conditions,
-             SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
-             parentPos->mJustifySelf, // not used, we handle 'inherit' above
-             NS_STYLE_JUSTIFY_AUTO);
-  }
+  SetValue(*aRuleData->ValueForJustifySelf(),
+           pos->mJustifySelf, conditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
+           parentPos->mJustifySelf,
+           NS_STYLE_JUSTIFY_AUTO);
 
   // flex-basis: auto, length, percent, enum, calc, inherit, initial
   // (Note: The flags here should match those used for 'width' property above.)
