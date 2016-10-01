@@ -297,7 +297,7 @@ def check_args(kwargs):
 
     if kwargs["chunk_type"] is None:
         if kwargs["total_chunks"] > 1:
-            kwargs["chunk_type"] = "equal_time"
+            kwargs["chunk_type"] = "dir_hash"
         else:
             kwargs["chunk_type"] = "none"
 
