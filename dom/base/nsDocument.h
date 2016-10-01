@@ -775,12 +775,6 @@ public:
 
   virtual nsViewportInfo GetViewportInfo(const mozilla::ScreenIntSize& aDisplaySize) override;
 
-  /**
-   * Called when an app-theme-changed observer notification is
-   * received by this document.
-   */
-  void OnAppThemeChanged();
-
   void ReportUseCounters();
 
 private:
@@ -1428,12 +1422,6 @@ public:
 
   uint16_t mCurrentOrientationAngle;
   mozilla::dom::OrientationType mCurrentOrientationType;
-
-  // Whether we're observing the "app-theme-changed" observer service
-  // notification.  We need to keep track of this because we might get multiple
-  // OnPageShow notifications in a row without an OnPageHide in between, if
-  // we're getting document.open()/close() called on us.
-  bool mObservingAppThemeChanged:1;
 
   // Keeps track of whether we have a pending
   // 'style-sheet-applicable-state-changed' notification.
