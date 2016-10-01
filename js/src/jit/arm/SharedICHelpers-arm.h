@@ -87,14 +87,11 @@ EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
 
     // Compute frame size.
     masm.movePtr(BaselineFrameReg, r0);
-    masm.as_add(r0, r0, Imm8(BaselineFrame::FramePointerOffset));
+    masm.ma_add(Imm32(BaselineFrame::FramePointerOffset), r0);
     masm.ma_sub(BaselineStackReg, r0);
 
     // Store frame size without VMFunction arguments for GC marking.
-    {
-        ScratchRegisterScope scratch(masm);
-        masm.ma_sub(r0, Imm32(argSize), r1, scratch);
-    }
+    masm.ma_sub(r0, Imm32(argSize), r1);
     masm.store32(r1, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
     // Push frame descriptor and perform the tail call.
@@ -136,7 +133,7 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32
     // Compute stub frame size. We have to add two pointers: the stub reg and
     // previous frame pointer pushed by EmitEnterStubFrame.
     masm.mov(BaselineFrameReg, reg);
-    masm.as_add(reg, reg, Imm8(sizeof(void*) * 2));
+    masm.ma_add(Imm32(sizeof(void*) * 2), reg);
     masm.ma_sub(BaselineStackReg, reg);
 
     masm.makeFrameDescriptor(reg, JitFrame_BaselineStub, headerSize);
@@ -177,7 +174,7 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
 
     // Compute frame size.
     masm.mov(BaselineFrameReg, scratch);
-    masm.as_add(scratch, scratch, Imm8(BaselineFrame::FramePointerOffset));
+    masm.ma_add(Imm32(BaselineFrame::FramePointerOffset), scratch);
     masm.ma_sub(BaselineStackReg, scratch);
 
     masm.store32(scratch, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
