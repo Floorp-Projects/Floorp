@@ -194,6 +194,13 @@ public:
     GridItemCSSOrderIterator;
   typedef GridItemCSSOrderIteratorT<nsFrameList::reverse_iterator>
     ReverseGridItemCSSOrderIterator;
+  struct FindItemInGridOrderResult
+  {
+    // The first(last) item in (reverse) grid order.
+    const GridItemInfo* mItem;
+    // Does the above item span the first(last) track?
+    bool mIsInEdgeTrack;
+  };
 protected:
   static const uint32_t kAutoLine;
   // The maximum line number, in the zero-based translated grid.
@@ -253,6 +260,34 @@ protected:
   void MergeSortedOverflow(nsFrameList& aList);
   // Helper to move child frames into the kExcessOverflowContainersList:.
   void MergeSortedExcessOverflowContainers(nsFrameList& aList);
+
+  /**
+   * Find the first item in Grid Order in this fragment.
+   * https://drafts.csswg.org/css-grid/#grid-order
+   * @param aFragmentStartTrack is the first track in this fragment in the same
+   * axis as aMajor.  Pass zero if that's not the axis we're fragmenting in.
+   */
+  static FindItemInGridOrderResult
+  FindFirstItemInGridOrder(GridItemCSSOrderIterator& aIter,
+                           const nsTArray<GridItemInfo>& aGridItems,
+                           LineRange GridArea::* aMajor,
+                           LineRange GridArea::* aMinor,
+                           uint32_t aFragmentStartTrack);
+  /**
+   * Find the last item in Grid Order in this fragment.
+   * @param aFragmentStartTrack is the first track in this fragment in the same
+   * axis as aMajor.  Pass zero if that's not the axis we're fragmenting in.
+   * @param aFirstExcludedTrack should be the first track in the next fragment
+   * or one beyond the final track in the last fragment, in aMajor's axis.
+   * Pass the number of tracks if that's not the axis we're fragmenting in.
+   */
+  static FindItemInGridOrderResult
+  FindLastItemInGridOrder(ReverseGridItemCSSOrderIterator& aIter,
+                          const nsTArray<GridItemInfo>& aGridItems,
+                          LineRange GridArea::* aMajor,
+                          LineRange GridArea::* aMinor,
+                          uint32_t aFragmentStartTrack,
+                          uint32_t aFirstExcludedTrack);
 
 #ifdef DEBUG
   void SanityCheckGridItemsBeforeReflow() const;

@@ -6366,6 +6366,73 @@ nsGridContainerFrame::MergeSortedExcessOverflowContainers(nsFrameList& aList)
   }
 }
 
+/* static */ nsGridContainerFrame::FindItemInGridOrderResult
+nsGridContainerFrame::FindFirstItemInGridOrder(
+  GridItemCSSOrderIterator& aIter,
+  const nsTArray<GridItemInfo>& aGridItems,
+  LineRange GridArea::* aMajor,
+  LineRange GridArea::* aMinor,
+  uint32_t aFragmentStartTrack)
+{
+  FindItemInGridOrderResult result = { nullptr, false };
+  uint32_t minMajor = kTranslatedMaxLine + 1;
+  uint32_t minMinor = kTranslatedMaxLine + 1;
+  aIter.Reset();
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    const GridItemInfo& item = aGridItems[aIter.GridItemIndex()];
+    if ((item.mArea.*aMajor).mEnd <= aFragmentStartTrack) {
+      continue; // item doesn't span any track in this fragment
+    }
+    uint32_t major = (item.mArea.*aMajor).mStart;
+    uint32_t minor = (item.mArea.*aMinor).mStart;
+    if (major < minMajor || (major == minMajor && minor < minMinor)) {
+      minMajor = major;
+      minMinor = minor;
+      result.mItem = &item;
+      result.mIsInEdgeTrack = major == 0U;
+    }
+  }
+  return result;
+}
+
+/* static */ nsGridContainerFrame::FindItemInGridOrderResult
+nsGridContainerFrame::FindLastItemInGridOrder(
+  ReverseGridItemCSSOrderIterator& aIter,
+  const nsTArray<GridItemInfo>& aGridItems,
+  LineRange GridArea::* aMajor,
+  LineRange GridArea::* aMinor,
+  uint32_t aFragmentStartTrack,
+  uint32_t aFirstExcludedTrack)
+{
+  FindItemInGridOrderResult result = { nullptr, false };
+  int32_t maxMajor = -1;
+  int32_t maxMinor = -1;
+  aIter.Reset();
+  int32_t lastMajorTrack = int32_t(aFirstExcludedTrack) - 1;
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    const GridItemInfo& item = aGridItems[aIter.GridItemIndex()];
+    // Subtract 1 from the end line to get the item's last track index.
+    int32_t major = (item.mArea.*aMajor).mEnd - 1;
+    // Currently, this method is only called with aFirstExcludedTrack ==
+    // the first track in the next fragment, so we take the opportunity
+    // to assert this item really belongs to this fragment.
+    MOZ_ASSERT((item.mArea.*aMajor).mStart < aFirstExcludedTrack,
+               "found an item that belongs to some later fragment");
+    if (major < int32_t(aFragmentStartTrack)) {
+      continue; // item doesn't span any track in this fragment
+    }
+    int32_t minor = (item.mArea.*aMinor).mEnd - 1;
+    MOZ_ASSERT(minor >= 0 && major >= 0, "grid item must have span >= 1");
+    if (major > maxMajor || (major == maxMajor && minor > maxMinor)) {
+      maxMajor = major;
+      maxMinor = minor;
+      result.mItem = &item;
+      result.mIsInEdgeTrack = major == lastMajorTrack;
+    }
+  }
+  return result;
+}
+
 #ifdef DEBUG
 void
 nsGridContainerFrame::SetInitialChildList(ChildListID  aListID,
