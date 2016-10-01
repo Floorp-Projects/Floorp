@@ -59,8 +59,8 @@ function checkPasswordFeaturesAndResetPassword(token, initialPW) {
 
   ok(token.checkPassword(initialPW),
      "checkPassword() should succeed if the correct initial password is given");
-  token.changePassword(initialPW, "newPW");
-  ok(token.checkPassword("newPW"),
+  token.changePassword(initialPW, "newPW ÿ 一二三");
+  ok(token.checkPassword("newPW ÿ 一二三"),
      "checkPassword() should succeed if the correct new password is given");
 
   ok(!token.checkPassword("wrongPW"),
