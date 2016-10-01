@@ -770,6 +770,10 @@ MessageChannel::Send(Message* aMsg)
                               nsDependentCString(aMsg->name()), aMsg->size());
     }
 
+    MOZ_RELEASE_ASSERT(!aMsg->is_sync());
+    // We never send an async high priority message.
+    MOZ_RELEASE_ASSERT(aMsg->priority() != IPC::Message::PRIORITY_HIGH);
+
     CxxStackFrame frame(*this, OUT_MESSAGE, aMsg);
 
     nsAutoPtr<Message> msg(aMsg);
@@ -841,6 +845,7 @@ MessageChannel::ShouldDeferMessage(const Message& aMsg)
         return false;
 
     // Unless they're urgent, we always defer async messages.
+    // Note that we never send an async high priority message.
     if (!aMsg.is_sync()) {
         MOZ_RELEASE_ASSERT(aMsg.priority() == IPC::Message::PRIORITY_NORMAL);
         return true;
