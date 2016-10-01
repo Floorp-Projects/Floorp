@@ -461,38 +461,34 @@ js::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
 
 class MOZ_RAII AutoMessageArgs
 {
-    const char16_t** args_;
     size_t totalLength_;
     /* only {0} thru {9} supported */
+    mozilla::Array<const char*, JS::MaxNumErrorArguments> args_;
     mozilla::Array<size_t, JS::MaxNumErrorArguments> lengths_;
     uint16_t count_;
-    bool passed_ : 1;
     bool allocatedElements_ : 1;
 
   public:
     AutoMessageArgs()
-      : args_(nullptr), totalLength_(0), count_(0),
-        passed_(false), allocatedElements_(false)
-    {}
+      : totalLength_(0), count_(0), allocatedElements_(false)
+    {
+        PodArrayZero(args_);
+    }
 
     ~AutoMessageArgs()
     {
-        if (passed_)
-            return;
-
-        if (!args_)
-            return;
-
         /* free the arguments only if we allocated them */
         if (allocatedElements_) {
             uint16_t i = 0;
-            while (args_[i])
-                js_free((void*)args_[i++]);
+            while (i < count_) {
+                if (args_[i])
+                    js_free((void*)args_[i]);
+                i++;
+            }
         }
-        js_free(args_);
     }
 
-    const char16_t* args(size_t i) const {
+    const char* args(size_t i) const {
         MOZ_ASSERT(i < count_);
         return args_[i];
     }
@@ -510,56 +506,50 @@ class MOZ_RAII AutoMessageArgs
         return count_;
     }
 
-    bool passed() const {
-        return passed_;
-    }
-
-    /*
-     * Gather the arguments into an array, and accumulate their sizes. We
-     * allocate 1 more than necessary and null it out to act as the sentinel
-     * value when we free the pointers later.
-     */
+    /* Gather the arguments into an array, and accumulate their sizes. */
     bool init(ExclusiveContext* cx, const char16_t** argsArg, uint16_t countArg,
               ErrorArgumentsType typeArg, va_list ap) {
-        MOZ_ASSERT(!args_);
         MOZ_ASSERT(countArg > 0);
 
-        args_ = argsArg;
         count_ = countArg;
-        passed_ = !!args_;
-        if (passed_) {
-            MOZ_ASSERT(!args_[count_]);
-        } else {
-            args_ = cx->pod_malloc<const char16_t*>(count_ + 1);
-            if (!args_)
-                return false;
-            args_[count_] = nullptr;
-        }
+
         for (uint16_t i = 0; i < count_; i++) {
-            if (passed_) {
-                lengths_[i] = js_strlen(args_[i]);
-            } else if (typeArg == ArgumentsAreASCII || typeArg == ArgumentsAreLatin1) {
-                const char* charArg = va_arg(ap, char*);
-                size_t charArgLength = strlen(charArg);
-
-                MOZ_ASSERT_IF(typeArg == ArgumentsAreASCII, JS::StringIsASCII(charArg));
-
-                args_[i] = InflateString(cx, charArg, &charArgLength);
-                if (!args_[i])
+            switch (typeArg) {
+              case ArgumentsAreASCII:
+              case ArgumentsAreUTF8: {
+                MOZ_ASSERT(!argsArg);
+                args_[i] = va_arg(ap, char*);
+                MOZ_ASSERT_IF(typeArg == ArgumentsAreASCII, JS::StringIsASCII(args_[i]));
+                lengths_[i] = strlen(args_[i]);
+                break;
+              }
+              case ArgumentsAreLatin1: {
+                MOZ_ASSERT(!argsArg);
+                const Latin1Char* latin1 = va_arg(ap, Latin1Char*);
+                size_t len = strlen(reinterpret_cast<const char*>(latin1));
+                mozilla::Range<const Latin1Char> range(latin1, len);
+                char* utf8 = JS::CharsToNewUTF8CharsZ(cx, range).c_str();
+                if (!utf8)
                     return false;
+
+                args_[i] = utf8;
+                lengths_[i] = strlen(utf8);
                 allocatedElements_ = true;
-                MOZ_ASSERT(charArgLength == js_strlen(args_[i]));
-                lengths_[i] = charArgLength;
-            } else if (typeArg == ArgumentsAreUTF8) {
-                const char* charArg = va_arg(ap, char*);
-                JS::UTF8Chars utf8(charArg, strlen(charArg));
-                args_[i] = LossyUTF8CharsToNewTwoByteCharsZ(cx, utf8, &lengths_[i]).get();
-                if (!args_[i])
+                break;
+              }
+              case ArgumentsAreUnicode: {
+                const char16_t* uc = argsArg ? argsArg[i] : va_arg(ap, char16_t*);
+                size_t len = js_strlen(uc);
+                mozilla::Range<const char16_t> range(uc, len);
+                char* utf8 = JS::CharsToNewUTF8CharsZ(cx, range).c_str();
+                if (!utf8)
                     return false;
+
+                args_[i] = utf8;
+                lengths_[i] = strlen(utf8);
                 allocatedElements_ = true;
-            } else {
-                args_[i] = va_arg(ap, char16_t*);
-                lengths_[i] = js_strlen(args_[i]);
+                break;
+              }
             }
             totalLength_ += lengths_[i];
         }
@@ -608,10 +598,8 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
              * for {X} in the format.
              */
             if (efs->format) {
-                char16_t* buffer;
-                char16_t* fmt;
-                char16_t* out;
-                const char16_t* ucmessage;
+                const char* fmt;
+                char* out;
 #ifdef DEBUG
                 int expandedArgs = 0;
 #endif
@@ -622,9 +610,6 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 if (!args.init(cx, messageArgs, argCount, argumentsType, ap))
                     return false;
 
-                buffer = fmt = InflateString(cx, efs->format, &len);
-                if (!buffer)
-                    return false;
                 expandedLength = len
                                  - (3 * args.count()) /* exclude the {n} */
                                  + args.totalLength();
@@ -633,17 +618,17 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 * Note - the above calculation assumes that each argument
                 * is used once and only once in the expansion !!!
                 */
-                ucmessage = out = cx->pod_malloc<char16_t>(expandedLength + 1);
-                if (!out) {
-                    js_free(buffer);
+                char* utf8 = out = cx->pod_malloc<char>(expandedLength + 1);
+                if (!out)
                     return false;
-                }
+
+                fmt = efs->format;
                 while (*fmt) {
                     if (*fmt == '{') {
                         if (isdigit(fmt[1])) {
                             int d = JS7_UNDEC(fmt[1]);
                             MOZ_RELEASE_ASSERT(d < args.count());
-                            js_strncpy(out, args.args(d), args.lengths(d));
+                            strncpy(out, args.args(d), args.lengths(d));
                             out += args.lengths(d);
                             fmt += 3;
 #ifdef DEBUG
@@ -656,12 +641,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 }
                 MOZ_ASSERT(expandedArgs == args.count());
                 *out = 0;
-                js_free(buffer);
-                size_t msgLen = PointerRangeSize(ucmessage, static_cast<const char16_t*>(out));
-                mozilla::Range<const char16_t> ucmsg(ucmessage, msgLen);
-                char* utf8 = JS::CharsToNewUTF8CharsZ(cx, ucmsg).c_str();
-                if (!utf8)
-                    return false;
+
                 reportp->initOwnedMessage(utf8);
             }
         } else {
