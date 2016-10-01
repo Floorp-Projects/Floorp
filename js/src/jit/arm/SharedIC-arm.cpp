@@ -59,12 +59,11 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
         masm.mov(scratchReg, R0.payloadReg());
         break;
       case JSOP_MUL: {
-        ScratchRegisterScope scratch(masm);
         Assembler::Condition cond = masm.ma_check_mul(R0.payloadReg(), R1.payloadReg(), scratchReg,
-                                                      scratch, Assembler::Overflow);
+                                                      Assembler::Overflow);
         masm.j(cond, &failure);
 
-        masm.as_cmp(scratchReg, Imm8(0));
+        masm.ma_cmp(scratchReg, Imm32(0));
         masm.j(Assembler::Equal, &maybeNegZero);
 
         masm.mov(scratchReg, R0.payloadReg());
@@ -73,16 +72,13 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
       case JSOP_DIV:
       case JSOP_MOD: {
         // Check for INT_MIN / -1, it results in a double.
-        {
-            ScratchRegisterScope scratch(masm);
-            masm.ma_cmp(R0.payloadReg(), Imm32(INT_MIN), scratch);
-            masm.ma_cmp(R1.payloadReg(), Imm32(-1), scratch, Assembler::Equal);
-            masm.j(Assembler::Equal, &failure);
-        }
+        masm.ma_cmp(R0.payloadReg(), Imm32(INT_MIN));
+        masm.ma_cmp(R1.payloadReg(), Imm32(-1), Assembler::Equal);
+        masm.j(Assembler::Equal, &failure);
 
         // Check for both division by zero and 0 / X with X < 0 (results in -0).
-        masm.as_cmp(R1.payloadReg(), Imm8(0));
-        masm.as_cmp(R0.payloadReg(), Imm8(0), Assembler::LessThan);
+        masm.ma_cmp(R1.payloadReg(), Imm32(0));
+        masm.ma_cmp(R0.payloadReg(), Imm32(0), Assembler::LessThan);
         masm.j(Assembler::Equal, &failure);
 
         // The call will preserve registers r4-r11. Save R0 and the link
@@ -122,17 +118,17 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
         break;
       case JSOP_LSH:
         // ARM will happily try to shift by more than 0x1f.
-        masm.as_and(R1.payloadReg(), R1.payloadReg(), Imm8(0x1F));
+        masm.ma_and(Imm32(0x1F), R1.payloadReg(), R1.payloadReg());
         masm.ma_lsl(R1.payloadReg(), R0.payloadReg(), R0.payloadReg());
         break;
       case JSOP_RSH:
-        masm.as_and(R1.payloadReg(), R1.payloadReg(), Imm8(0x1F));
+        masm.ma_and(Imm32(0x1F), R1.payloadReg(), R1.payloadReg());
         masm.ma_asr(R1.payloadReg(), R0.payloadReg(), R0.payloadReg());
         break;
       case JSOP_URSH:
-        masm.as_and(scratchReg, R1.payloadReg(), Imm8(0x1F));
+        masm.ma_and(Imm32(0x1F), R1.payloadReg(), scratchReg);
         masm.ma_lsr(scratchReg, R0.payloadReg(), scratchReg);
-        masm.as_cmp(scratchReg, Imm8(0));
+        masm.ma_cmp(scratchReg, Imm32(0));
         if (allowDouble_) {
             Label toUint;
             masm.j(Assembler::LessThan, &toUint);
@@ -200,7 +196,7 @@ ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
         masm.branchTest32(Assembler::Zero, R0.payloadReg(), Imm32(0x7fffffff), &failure);
 
         // Compile -x as 0 - x.
-        masm.as_rsb(R0.payloadReg(), R0.payloadReg(), Imm8(0));
+        masm.ma_rsb(R0.payloadReg(), Imm32(0), R0.payloadReg());
         break;
       default:
         MOZ_CRASH("Unexpected op");
