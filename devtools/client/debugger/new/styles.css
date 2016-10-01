@@ -63,13 +63,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root.theme-light,
+:root .theme-light {
+  --theme-search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
+}
+
 * {
   box-sizing: border-box;
 }
 
 html,
 body {
-  font-family: "SF UI Text", sans-serif;
   height: 100%;
   margin: 0;
   padding: 0;
@@ -102,30 +106,6 @@ body {
   cursor: pointer;
 }
 
-.source-footer {
-  background: var(--theme-body-background);
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  z-index: 100;
-  width: 100px;
-  opacity: 0.9;
-}
-
-.source-footer .command-bar {
-  float: right;
-}
-
-.command-bar > span {
-  cursor: pointer;
-  margin-right: 0.7em;
-  width: 1em;
-  height: 1.1em;
-  display: inline-block;
-  text-align: center;
-  transition: opacity 200ms;
-}
-
 .search-container {
   position: absolute;
   top: 0;
@@ -145,6 +125,94 @@ body {
   width: 16px;
   margin-top: 25px;
   margin-right: 20px;
+}
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.split-box {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.split-box.vert {
+  flex-direction: row;
+}
+
+.split-box.horz {
+  flex-direction: column;
+}
+
+.split-box > .uncontrolled {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.split-box > .controlled {
+  display: flex;
+  overflow: auto;
+}
+
+.split-box > .splitter {
+  background-image: none;
+  border: 0;
+  border-style: solid;
+  border-color: transparent;
+  background-color: var(--theme-splitter-color);
+  background-clip: content-box;
+  position: relative;
+
+  box-sizing: border-box;
+
+  /* Positive z-index positions the splitter on top of its siblings and makes
+     it clickable on both sides. */
+  z-index: 1;
+}
+
+.split-box.vert > .splitter {
+  min-width: calc(var(--devtools-splitter-inline-start-width) +
+    var(--devtools-splitter-inline-end-width) + 1px);
+
+  border-left-width: var(--devtools-splitter-inline-start-width);
+  border-right-width: var(--devtools-splitter-inline-end-width);
+
+  margin-left: calc(-1 * var(--devtools-splitter-inline-start-width) - 1px);
+  margin-right: calc(-1 * var(--devtools-splitter-inline-end-width));
+
+  cursor: ew-resize;
+}
+
+.split-box.horz > .splitter {
+  min-height: calc(var(--devtools-splitter-top-width) +
+    var(--devtools-splitter-bottom-width) + 1px);
+
+  border-top-width: var(--devtools-splitter-top-width);
+  border-bottom-width: var(--devtools-splitter-bottom-width);
+
+  margin-top: calc(-1 * var(--devtools-splitter-top-width) - 1px);
+  margin-bottom: calc(-1 * var(--devtools-splitter-bottom-width));
+
+  cursor: ns-resize;
+}
+
+.split-box.disabled {
+  pointer-events: none;
+}
+
+/**
+ * Make sure splitter panels are not processing any mouse
+ * events. This is good for performance during splitter
+ * bar dragging.
+ */
+.split-box.dragging > .controlled,
+.split-box.dragging > .uncontrolled {
+  pointer-events: none;
 }
 .tree {
   -webkit-user-select: none;
@@ -193,9 +261,19 @@ body {
 .sources-header {
   height: 30px;
   border-bottom: 1px solid var(--theme-splitter-color);
-  padding-left: 10px;
+  padding: 0 10px;
   line-height: 30px;
   font-size: 1.2em;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.sources-header-info {
+  font-size: 0.7em;
+  color: var(--theme-comment-alt);
+  font-weight: lighter;
+  white-space: nowrap;
 }
 
 .sources-list {
@@ -313,6 +391,49 @@ ul.sources-list {
 .sources-list .tree-node button {
   position: fixed;
 }
+
+.source-footer {
+  background: var(--theme-body-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 1;
+  z-index: 100;
+}
+
+.source-footer .command-bar {
+  float: right;
+}
+
+.command-bar > span {
+  cursor: pointer;
+  margin-right: 0.7em;
+  width: 1em;
+  height: 1.1em;
+  display: inline-block;
+  text-align: center;
+  transition: opacity 200ms;
+}
+
+.source-footer .prettyPrint.pretty {
+  stroke: var(--theme-highlight-blue);
+}
+
+.source-footer input:focus {
+  border-color: var(--theme-highlight-blue);
+  outline: none;
+}
+
+.source-footer input {
+  line-height: 16px;
+  margin: 7px;
+  border-radius: 2px;
+  border: 1px solid var(--theme-splitter-color);
+  padding-left: 4px;
+  font-size: 10px;
+}
 /* vim:set ts=2 sw=2 sts=2 et: */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -325,7 +446,7 @@ ul.sources-list {
  */
 .editor-wrapper {
   position: absolute;
-  height: calc(100% - 30px);
+  height: calc(100% - 31px);
   width: 100%;
   top: 30px;
   left: 0px;
@@ -391,7 +512,7 @@ ul.sources-list {
 }
 
 .welcomebox {
-  width: 100%;
+  width: calc(100% - 1px);
 
   /* Offsetting it by 30px for the sources-header area */
   height: calc(100% - 30px);
@@ -404,45 +525,33 @@ ul.sources-list {
   color: var(--theme-comment-alt);
   background-color: var(--theme-tab-toolbar-background);
   font-weight: lighter;
-  text-align: center;
   z-index: 100;
 }
-.split-box {
-  display: flex;
-  flex: 1;
-  min-width: 0;
+.close-btn path {
+  fill: var(--theme-body-color);
 }
 
-.split-box .uncontrolled {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  overflow: auto;
+.close-btn .close {
+  width: 12px;
+  height: 12px;
+  padding: 2px;
+  text-align: center;
+  margin-top: 2px;
+  line-height: 5px;
+  transition: all 0.25s easeinout;
 }
 
-.split-box .controlled {
-  display: flex;
-  overflow: auto;
+.close-btn .close svg {
+  width: 6px;
 }
 
-.split-box .splitter {
-  background-color: var(--theme-splitter-color);
-  flex: 0 0 1px;
-  position: relative;
+.close-btn .close:hover {
+  background: var(--theme-selection-background);
+  border-radius: 2px;
 }
 
-/* The actual handle that users drag is a transparent element that's slightly wider than
-   the splitter element itself, so it's easier to grab it. */
-.split-box .splitter .splitter-handle {
-  cursor: ew-resize;
-  position: absolute;
-  top: 0;
-  left: -4px;
-  width: 8px;
-  height: 100%;
-
-  /* Stack above the code-mirror editor so it's actually possible to grab the handle. */
-  z-index: 5;
+.close-btn .close:hover path {
+  fill: white;
 }
 
 .breakpoints-list .breakpoint {
@@ -451,6 +560,7 @@ ul.sources-list {
   margin: 0.25em 0;
   padding: 0.25em 0;
   line-height: 1em;
+  position: relative;
 }
 
 .breakpoints-list .breakpoint.paused {
@@ -479,6 +589,20 @@ ul.sources-list {
 .breakpoint-snippet {
   color: var(--theme-comment);
   padding-left: 20px;
+}
+
+.breakpoint .close-btn {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+}
+
+.breakpoint .close {
+  display: none;
+}
+
+.breakpoint:hover .close {
+  display: block;
 }
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -812,10 +936,14 @@ ul.sources-list {
 
 .right-sidebar .accordion {
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.right-sidebar .command-bar {
+  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .command-bar {
-  border-bottom: 1px solid var(--theme-splitter-color);
   height: 30px;
   padding: 8px 5px 10px 10px;
 }
@@ -856,6 +984,14 @@ ul.sources-list {
 .disableBreakpoints.breakpoints-disabled path {
   stroke: var(--theme-highlight-blue);
 }
+
+span.pause-exceptions.uncaught {
+  stroke: var(--theme-highlight-purple);
+}
+
+span.pause-exceptions.all {
+  stroke: var(--theme-highlight-blue);
+}
 .source-header {
   border-bottom: 1px solid var(--theme-splitter-color);
   height: 30px;
@@ -891,6 +1027,7 @@ ul.sources-list {
 .source-tab.active {
   color: var(--theme-body-color);
   background-color: var(--theme-body-background);
+  height: 24px;
 }
 
 .source-tab path {
@@ -903,10 +1040,16 @@ ul.sources-list {
 
 .source-tab .close-btn {
   position: absolute;
-  right: 7px;
-  top: 1px;
-  width: 6px;
-  height: 6px;
+  right: 4px;
+  top: 3px;
+}
+
+.source-tab .close {
+  display: none;
+}
+
+.source-tab:hover .close {
+  display: block;
 }
 
 .source-header .subsettings {
@@ -943,16 +1086,6 @@ ul.sources-list {
   font-size: 0.8em;
   margin: 0;
   padding: 0;
-}
-.source-footer {
-  border-top: 1px solid var(--theme-splitter-color);
-  left: 0;
-  opacity: 1;
-  width: 100%;
-}
-
-.source-footer .prettyPrint.pretty {
-  stroke: var(--theme-highlight-blue);
 }
 
 .autocomplete {

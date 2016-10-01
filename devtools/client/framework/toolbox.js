@@ -1263,20 +1263,14 @@ Toolbox.prototype = {
       // Prevent flicker while loading by waiting to make visible until now.
       iframe.style.visibility = "visible";
 
+      // Try to set the dir attribute as early as possible.
+      this.setIframeDocumentDir(iframe);
+
       // The build method should return a panel instance, so events can
       // be fired with the panel as an argument. However, in order to keep
       // backward compatibility with existing extensions do a check
       // for a promise return value.
       let built = definition.build(iframe.contentWindow, this);
-
-      // Set the dir attribute on the documents of panels using HTML.
-      let docEl = iframe.contentWindow && iframe.contentWindow.document.documentElement;
-      if (docEl && docEl.namespaceURI === HTML_NS) {
-        let top = this.win.top;
-        let topDocEl = top.document.documentElement;
-        let isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
-        docEl.setAttribute("dir", isRtl ? "rtl" : "ltr");
-      }
 
       if (!(typeof built.then == "function")) {
         let panel = built;
@@ -1348,6 +1342,28 @@ Toolbox.prototype = {
     }
 
     return deferred.promise;
+  },
+
+  /**
+   * Set the dir attribute on the content document element of the provided iframe.
+   *
+   * @param {IFrameElement} iframe
+   */
+  setIframeDocumentDir: function (iframe) {
+    let docEl = iframe.contentWindow && iframe.contentWindow.document.documentElement;
+    if (!docEl || docEl.namespaceURI !== HTML_NS) {
+      // Bail out if the content window or document is not ready or if the document is not
+      // HTML.
+      return;
+    }
+
+    if (docEl.hasAttribute("dir")) {
+      // Set the dir attribute value only if dir is already present on the document.
+      let top = this.win.top;
+      let topDocEl = top.document.documentElement;
+      let isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
+      docEl.setAttribute("dir", isRtl ? "rtl" : "ltr");
+    }
   },
 
   /**

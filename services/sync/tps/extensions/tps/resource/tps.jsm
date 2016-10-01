@@ -26,6 +26,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/bookmark_validator.js");
 Cu.import("resource://services-sync/engines/passwords.js");
 Cu.import("resource://services-sync/engines/forms.js");
+Cu.import("resource://services-sync/engines/addons.js");
 // TPS modules
 Cu.import("resource://tps/logger.jsm");
 
@@ -113,6 +114,7 @@ var TPS = {
   _triggeredSync: false,
   _usSinceEpoch: 0,
   _requestedQuit: false,
+  shouldValidateAddons: false,
   shouldValidateBookmarks: false,
   shouldValidatePasswords: false,
   shouldValidateForms: false,
@@ -464,6 +466,7 @@ var TPS = {
   },
 
   HandleAddons: function (addons, action, state) {
+    this.shouldValidateAddons = true;
     for (let entry of addons) {
       Logger.logInfo("executing action " + action.toUpperCase() +
                      " on addon " + JSON.stringify(entry));
@@ -661,66 +664,64 @@ var TPS = {
     Logger.logInfo("Bookmark validation finished");
   },
 
-  ValidatePasswords() {
-    let serverRecordDumpStr;
-    try {
-      Logger.logInfo("About to perform password validation");
-      let pwEngine = Weave.Service.engineManager.get("passwords");
-      let validator = new PasswordValidator();
-      let serverRecords = validator.getServerItems(pwEngine);
-      let clientRecords = Async.promiseSpinningly(validator.getClientItems());
-      serverRecordDumpStr = JSON.stringify(serverRecords);
-
-      let { problemData } = validator.compareClientWithServer(clientRecords, serverRecords);
-
-      for (let { name, count } of problemData.getSummary()) {
-        if (count) {
-          Logger.logInfo(`Validation problem: "${name}": ${JSON.stringify(problemData[name])}`);
-        }
-        Logger.AssertEqual(count, 0, `Password validation error of type ${name}`);
-      }
-    } catch (e) {
-      // Dump the client records (should always be doable)
-      DumpPasswords();
-      // Dump the server records if gotten them already.
-      if (serverRecordDumpStr) {
-        Logger.logInfo("Server password records:\n" + serverRecordDumpStr + "\n");
-      }
-      this.DumpError("Password validation failed", e);
-    }
-    Logger.logInfo("Password validation finished");
-  },
-
-  ValidateForms() {
+  ValidateCollection(engineName, ValidatorType) {
     let serverRecordDumpStr;
     let clientRecordDumpStr;
     try {
-      Logger.logInfo("About to perform form validation");
-      let engine = Weave.Service.engineManager.get("forms");
-      let validator = new FormValidator();
+      Logger.logInfo(`About to perform validation for "${engineName}"`);
+      let engine = Weave.Service.engineManager.get(engineName);
+      let validator = new ValidatorType(engine);
       let serverRecords = validator.getServerItems(engine);
       let clientRecords = Async.promiseSpinningly(validator.getClientItems());
-      clientRecordDumpStr = JSON.stringify(clientRecords, undefined, 2);
-      serverRecordDumpStr = JSON.stringify(serverRecords, undefined, 2);
+      try {
+        // This substantially improves the logs for addons while not making a
+        // substantial difference for the other two
+        clientRecordDumpStr = JSON.stringify(clientRecords.map(r => {
+          let res = validator.normalizeClientItem(r);
+          delete res.original; // Try and prevent cyclic references
+          return res;
+        }));
+      } catch (e) {
+        // ignore the error, the dump string is just here to make debugging easier.
+        clientRecordDumpStr = "<Cyclic value>";
+      }
+      try {
+        serverRecordDumpStr = JSON.stringify(serverRecords);
+      } catch (e) {
+        // as above
+        serverRecordDumpStr = "<Cyclic value>";
+      }
       let { problemData } = validator.compareClientWithServer(clientRecords, serverRecords);
       for (let { name, count } of problemData.getSummary()) {
         if (count) {
           Logger.logInfo(`Validation problem: "${name}": ${JSON.stringify(problemData[name])}`);
         }
-        Logger.AssertEqual(count, 0, `Form validation error of type ${name}`);
+        Logger.AssertEqual(count, 0, `Validation error for "${engineName}" of type "${name}"`);
       }
     } catch (e) {
       // Dump the client records if possible
       if (clientRecordDumpStr) {
-        Logger.logInfo("Client forms records:\n" + clientRecordDumpStr + "\n");
+        Logger.logInfo(`Client state for ${engineName}:\n${clientRecordDumpStr}\n`);
       }
       // Dump the server records if gotten them already.
       if (serverRecordDumpStr) {
-        Logger.logInfo("Server forms records:\n" + serverRecordDumpStr + "\n");
+        Logger.logInfo(`Server state for ${engineName}:\n${serverRecordDumpStr}\n`);
       }
-      this.DumpError("Form validation failed", e);
+      this.DumpError(`Validation failed for ${engineName}`, e);
     }
-    Logger.logInfo("Form validation finished");
+    Logger.logInfo(`Validation finished for ${engineName}`);
+  },
+
+  ValidatePasswords() {
+    return this.ValidateCollection("passwords", PasswordValidator);
+  },
+
+  ValidateForms() {
+    return this.ValidateCollection("forms", FormValidator);
+  },
+
+  ValidateAddons() {
+    return this.ValidateCollection("addons", AddonValidator);
   },
 
   RunNextTestAction: function() {
@@ -736,6 +737,9 @@ var TPS = {
         }
         if (this.shouldValidateForms) {
           this.ValidateForms();
+        }
+        if (this.shouldValidateAddons) {
+          this.ValidateAddons();
         }
         // we're all done
         Logger.logInfo("test phase " + this._currentPhase + ": " +
@@ -1137,6 +1141,9 @@ var Addons = {
   verifyNot: function Addons__verifyNot(addons) {
     TPS.HandleAddons(addons, ACTION_VERIFY_NOT);
   },
+  skipValidation() {
+    TPS.shouldValidateAddons = false;
+  }
 };
 
 var Bookmarks = {
