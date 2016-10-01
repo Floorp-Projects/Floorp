@@ -467,8 +467,13 @@ DecodedAudioDataSink::NotifyAudioNeeded()
     mFramesParsed += data->mFrames;
 
     if (mConverter->InputConfig() != mConverter->OutputConfig()) {
+      // We must ensure that the size in the buffer contains exactly the number
+      // of frames, in case one of the audio producer over allocated the buffer.
+      AlignedAudioBuffer buffer(Move(data->mAudioData));
+      buffer.SetLength(size_t(data->mFrames) * data->mChannels);
+
       AlignedAudioBuffer convertedData =
-        mConverter->Process(AudioSampleBuffer(Move(data->mAudioData))).Forget();
+        mConverter->Process(AudioSampleBuffer(Move(buffer))).Forget();
       data = CreateAudioFromBuffer(Move(convertedData), data);
     }
     if (PushProcessedAudio(data)) {
