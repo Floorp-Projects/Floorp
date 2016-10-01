@@ -84,7 +84,7 @@ public:
     static_assert(Format == AudioConfig::FORMAT_S16,
                   "Conversion not implemented yet");
   }
-  explicit AudioDataBuffer(const AlignedFloatBuffer&& aBuffer)
+  explicit AudioDataBuffer(AlignedFloatBuffer&& aBuffer)
     : mBuffer(Move(aBuffer))
   {
     static_assert(Format == AudioConfig::FORMAT_FLT,

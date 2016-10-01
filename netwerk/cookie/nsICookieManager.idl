@@ -15,6 +15,12 @@ class NeckoOriginAttributes;
 
 interface nsISimpleEnumerator;
 
+[scriptable, function, uuid(20709db8-8dad-4e45-b33e-6e7c761dfc5d)]
+interface nsIPrivateModeCallback : nsISupports
+{
+  void callback();
+};
+
 /** 
  * An optional interface for accessing or removing the cookies
  * that are in the cookie list
@@ -67,4 +73,16 @@ interface nsICookieManager : nsISupports
                         in AUTF8String   aPath,
                         in boolean       aBlocked,
                         in NeckoOriginAttributesPtr aOriginAttributes);
+
+  /**
+   * Set the cookie manager to work on private or non-private cookies for the
+   * duration of the callback.
+   *
+   * @param aIsPrivate True to work on private cookies, false to work on
+   *                   non-private cookies.
+   * @param aCallback Methods on the cookie manager interface will work on
+   *                  private or non-private cookies for the duration of this
+   *                  callback.
+   */
+  void usePrivateMode(in boolean aIsPrivate, in nsIPrivateModeCallback aCallback);
 };
