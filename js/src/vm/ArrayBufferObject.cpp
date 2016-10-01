@@ -1690,18 +1690,18 @@ JS_ExternalizeArrayBufferContents(JSContext* cx, HandleObject obj)
     assertSameCompartment(cx, obj);
 
     if (!obj->is<ArrayBufferObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return nullptr;
     }
 
     Handle<ArrayBufferObject*> buffer = obj.as<ArrayBufferObject>();
     if (!buffer->isPlain()) {
         // This operation isn't supported on mapped or wsm ArrayBufferObjects.
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return nullptr;
     }
     if (buffer->isDetached()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return nullptr;
     }
 
