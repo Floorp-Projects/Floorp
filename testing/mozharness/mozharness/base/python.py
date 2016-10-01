@@ -199,7 +199,7 @@ class VirtualenvMixin(object):
         packages = self.package_versions(error_level=error_level).keys()
         return package_name.lower() in [package.lower() for package in packages]
 
-    def install_module(self, module=None, module_url=None,
+    def install_module(self, module=None, module_url=None, install_method=None,
                        requirements=(), optional=False, global_options=[],
                        no_deps=False, editable=False):
         """
@@ -221,25 +221,45 @@ class VirtualenvMixin(object):
         self.info("Installing %s into virtualenv %s" % (module, venv_path))
         if not module_url:
             module_url = module
-
-        if not module_url and not requirements:
-            self.fatal("Must specify module and/or requirements")
-        pip = self.query_python_path("pip")
-        if c.get("verbose_pip"):
-            command = [pip, "-v", "install"]
+        if install_method in (None, 'pip'):
+            if not module_url and not requirements:
+                self.fatal("Must specify module and/or requirements")
+            pip = self.query_python_path("pip")
+            if c.get("verbose_pip"):
+                command = [pip, "-v", "install"]
+            else:
+                command = [pip, "install"]
+            if no_deps:
+                command += ["--no-deps"]
+            # To avoid timeouts with our pypi server, increase default timeout:
+            # https://bugzilla.mozilla.org/show_bug.cgi?id=1007230#c802
+            command += ['--timeout', str(c.get('pip_timeout', 120))]
+            for requirement in requirements:
+                command += ["-r", requirement]
+            if c.get('find_links') and not c["pip_index"]:
+                command += ['--no-index']
+            for opt in global_options:
+                command += ["--global-option", opt]
+        elif install_method == 'easy_install':
+            if not module:
+                self.fatal("module parameter required with install_method='easy_install'")
+            if requirements:
+                # Install pip requirements files separately, since they're
+                # not understood by easy_install.
+                self.install_module(requirements=requirements,
+                                    install_method='pip')
+            # Allow easy_install to be overridden by
+            # self.config['exes']['easy_install']
+            default = 'easy_install'
+            if self._is_windows():
+                # Don't invoke `easy_install` directly on windows since
+                # the 'install' in the executable name hits UAC
+                # - http://answers.microsoft.com/en-us/windows/forum/windows_7-security/uac-message-do-you-want-to-allow-the-following/bea30ad8-9ef8-4897-aab4-841a65f7af71
+                # - https://bugzilla.mozilla.org/show_bug.cgi?id=791840
+                default = [self.query_python_path(), self.query_python_path('easy_install-script.py')]
+            command = self.query_exe('easy_install', default=default, return_type="list")
         else:
-            command = [pip, "install"]
-        if no_deps:
-            command += ["--no-deps"]
-        # To avoid timeouts with our pypi server, increase default timeout:
-        # https://bugzilla.mozilla.org/show_bug.cgi?id=1007230#c802
-        command += ['--timeout', str(c.get('pip_timeout', 120))]
-        for requirement in requirements:
-            command += ["-r", requirement]
-        if c.get('find_links') and not c["pip_index"]:
-            command += ['--no-index']
-        for opt in global_options:
-            command += ["--global-option", opt]
+            self.fatal("install_module() doesn't understand an install_method of %s!" % install_method)
 
         # Add --find-links pages to look at. Add --trusted-host automatically if
         # the host isn't secure. This allows modern versions of pip to connect
@@ -267,7 +287,10 @@ class VirtualenvMixin(object):
         # module_url can be None if only specifying requirements files
         if module_url:
             if editable:
-                command += ['-e']
+                if install_method in (None, 'pip'):
+                    command += ['-e']
+                else:
+                    self.fatal("editable installs not supported for install_method %s" % install_method)
             command += [module_url]
 
         # If we're only installing a single requirements file, use
@@ -421,7 +444,8 @@ class VirtualenvMixin(object):
         if not requirements:
             requirements = c.get('virtualenv_requirements', [])
         if not modules and requirements:
-            self.install_module(requirements=requirements)
+            self.install_module(requirements=requirements,
+                                install_method='pip')
         for module in modules:
             module_url = module
             global_options = []
@@ -436,8 +460,12 @@ class VirtualenvMixin(object):
             else:
                 module_url = self.config.get('%s_url' % module, module_url)
                 module_name = module
+            install_method = 'pip'
+            if module_name in ('pywin32',):
+                install_method = 'easy_install'
             self.install_module(module=module_name,
                                 module_url=module_url,
+                                install_method=install_method,
                                 requirements=requirements,
                                 global_options=global_options)
 
@@ -446,12 +474,12 @@ class VirtualenvMixin(object):
             if two_pass:
                 self.install_module(
                     module=module, module_url=url,
-                    requirements=requirements or (),
+                    install_method=method, requirements=requirements or (),
                     optional=optional, no_deps=True, editable=editable
                 )
             self.install_module(
                 module=module, module_url=url,
-                requirements=requirements or (),
+                install_method=method, requirements=requirements or (),
                 optional=optional, editable=editable
             )
 
