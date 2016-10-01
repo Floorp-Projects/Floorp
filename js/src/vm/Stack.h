@@ -929,8 +929,8 @@ class AnyConstructArgs : public JS::CallArgs
 {
     // Only js::Construct (or internal methods that call the qualified CallArgs
     // versions) should do these things!
-    void setCallee(Value v) = delete;
-    void setThis(Value v) = delete;
+    void setCallee(const Value& v) = delete;
+    void setThis(const Value& v) = delete;
     MutableHandleValue newTarget() const = delete;
     MutableHandleValue rval() const = delete;
 };

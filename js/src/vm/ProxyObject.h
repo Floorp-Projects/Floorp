@@ -104,7 +104,7 @@ class ProxyObject : public ShapedObject
   public:
     static unsigned grayLinkExtraSlot(JSObject* obj);
 
-    void renew(JSContext* cx, const BaseProxyHandler* handler, Value priv);
+    void renew(JSContext* cx, const BaseProxyHandler* handler, const Value& priv);
 
     static void trace(JSTracer* trc, JSObject* obj);
 

@@ -132,10 +132,10 @@ bool
 SymbolDescriptiveString(JSContext* cx, JS::Symbol* sym, JS::MutableHandleValue result);
 
 bool
-IsSymbolOrSymbolWrapper(JS::Value v);
+IsSymbolOrSymbolWrapper(const JS::Value& v);
 
 JS::Symbol*
-ToSymbolPrimitive(JS::Value v);
+ToSymbolPrimitive(const JS::Value& v);
 
 } /* namespace js */
 

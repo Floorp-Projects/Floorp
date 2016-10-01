@@ -1950,8 +1950,11 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void handleGeckoMessage(final NativeJSContainer message) {
-        final boolean success = EventDispatcher.getInstance().dispatchEvent(message) |
-                                getGeckoInterface().getAppEventDispatcher().dispatchEvent(message);
+        boolean success = EventDispatcher.getInstance().dispatchEvent(message);
+        if (getGeckoInterface() != null && getGeckoInterface().getAppEventDispatcher() != null) {
+            success |= getGeckoInterface().getAppEventDispatcher().dispatchEvent(message);
+        }
+
         if (!success) {
             final String type = message.optString("type", null);
             final String guid = message.optString(EventDispatcher.GUID, null);
