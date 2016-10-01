@@ -539,7 +539,7 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
 }
 
 bool
-JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
+JSValToNPVariant(NPP npp, JSContext *cx, const JS::Value& val, NPVariant *variant)
 {
   NS_ASSERTION(npp, "Must have an NPP to wrap a jsval!");
 

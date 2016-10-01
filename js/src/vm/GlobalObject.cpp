@@ -409,7 +409,7 @@ GlobalObject::getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,
 }
 
 bool
-GlobalObject::valueIsEval(Value val)
+GlobalObject::valueIsEval(const Value& val)
 {
     Value eval = getSlot(EVAL);
     return eval.isObject() && eval == val;

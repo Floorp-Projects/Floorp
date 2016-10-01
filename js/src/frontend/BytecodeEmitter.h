@@ -33,7 +33,7 @@ class CGConstList {
     Vector<Value> list;
   public:
     explicit CGConstList(ExclusiveContext* cx) : list(cx) {}
-    MOZ_MUST_USE bool append(Value v) {
+    MOZ_MUST_USE bool append(const Value& v) {
         MOZ_ASSERT_IF(v.isString(), v.toString()->isAtom());
         return list.append(v);
     }

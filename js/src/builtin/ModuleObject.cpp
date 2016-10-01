@@ -830,7 +830,7 @@ ModuleObject::hostDefinedField() const
 }
 
 void
-ModuleObject::setHostDefinedField(JS::Value value)
+ModuleObject::setHostDefinedField(const JS::Value& value)
 {
     setReservedSlot(HostDefinedSlot, value);
 }

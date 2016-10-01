@@ -4403,9 +4403,8 @@ var gCSSProperties = {
     domProp: "alignSelf",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    // (Assuming defaults on the parent, 'auto' will compute to 'normal'.)
-    initial_values: [ "auto", "normal" ],
-    other_values: [ "start", "flex-start", "flex-end", "center", "stretch",
+    initial_values: [ "auto" ],
+    other_values: [ "normal", "start", "flex-start", "flex-end", "center", "stretch",
                     "baseline", "last-baseline", "right safe", "unsafe center",
                     "self-start", "self-end safe" ],
     invalid_values: [ "space-between", "abc", "30px", "stretch safe", "safe" ]
@@ -4444,8 +4443,8 @@ var gCSSProperties = {
     domProp: "justifySelf",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto", "normal" ],
-    other_values: [ "start", "end", "flex-start", "flex-end", "self-start",
+    initial_values: [ "auto" ],
+    other_values: [ "normal", "start", "end", "flex-start", "flex-end", "self-start",
                     "self-end", "center", "left", "right", "baseline",
                     "last-baseline", "stretch", "left unsafe", "unsafe right",
                     "safe right", "center safe" ],

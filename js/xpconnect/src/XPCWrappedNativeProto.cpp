@@ -130,7 +130,7 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(js::FreeOp* fop, JSObject* obj)
 void
 XPCWrappedNativeProto::JSProtoObjectMoved(JSObject* obj, const JSObject* old)
 {
-    MOZ_ASSERT(mJSProtoObject == old);
+    MOZ_ASSERT(mJSProtoObject.unbarrieredGet() == old);
     mJSProtoObject.init(obj); // Update without triggering barriers.
 }
 

@@ -165,6 +165,7 @@ public:
   bool SendClearApproximatelyVisibleRegions(uint64_t aLayersId, uint32_t aPresShellId);
   bool SendNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
                                             const mozilla::CSSIntRegion& aRegion);
+  bool SendAllPluginsCaptured();
   bool IsSameProcess() const override;
 
   virtual bool IPCOpen() const override { return mCanSend; }

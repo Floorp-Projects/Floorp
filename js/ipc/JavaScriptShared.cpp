@@ -83,6 +83,17 @@ IdToObjectMap::empty() const
     return table_.empty();
 }
 
+#ifdef DEBUG
+bool
+IdToObjectMap::has(const ObjectId& id, const JSObject* obj) const
+{
+    auto p = table_.lookup(id);
+    if (!p)
+        return false;
+    return p->value().unbarrieredGet() == obj;
+}
+#endif
+
 bool
 ObjectToIdMap::init()
 {

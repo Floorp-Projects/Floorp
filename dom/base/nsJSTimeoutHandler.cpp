@@ -102,8 +102,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     nsAutoCString name("nsJSScriptTimeoutHandler");
     if (tmp->mFunction) {
-      JSFunction* fun =
-        JS_GetObjectFunction(js::UncheckedUnwrap(tmp->mFunction->Callable()));
+      JSObject* obj = tmp->mFunction->CallablePreserveColor();
+      JSFunction* fun = JS_GetObjectFunction(js::UncheckedUnwrap(obj));
       if (fun && JS_GetFunctionId(fun)) {
         JSFlatString *funId = JS_ASSERT_STRING_IS_FLAT(JS_GetFunctionId(fun));
         size_t size = 1 + JS_PutEscapedFlatString(nullptr, 0, funId, 0);

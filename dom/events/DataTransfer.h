@@ -138,20 +138,30 @@ public:
 
   already_AddRefed<DOMStringList> GetTypes(ErrorResult& rv) const;
 
-  void GetData(const nsAString& aFormat, nsAString& aData, ErrorResult& aRv);
+  void GetData(const nsAString& aFormat, nsAString& aData,
+               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               ErrorResult& aRv);
 
   void SetData(const nsAString& aFormat, const nsAString& aData,
+               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                ErrorResult& aRv);
 
   void ClearData(const mozilla::dom::Optional<nsAString>& aFormat,
                  const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                  mozilla::ErrorResult& aRv);
 
-  already_AddRefed<FileList> GetFiles(mozilla::ErrorResult& aRv);
+  already_AddRefed<FileList>
+  GetFiles(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+           mozilla::ErrorResult& aRv);
 
-  already_AddRefed<Promise> GetFilesAndDirectories(ErrorResult& aRv);
+  already_AddRefed<Promise>
+  GetFilesAndDirectories(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                         mozilla::ErrorResult& aRv);
 
-  already_AddRefed<Promise> GetFiles(bool aRecursiveFlag, ErrorResult& aRv);
+  already_AddRefed<Promise>
+  GetFiles(bool aRecursiveFlag,
+           const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+           ErrorResult& aRv);
 
 
   void AddElement(Element& aElement, mozilla::ErrorResult& aRv);
@@ -176,10 +186,12 @@ public:
 
   void MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
                     JS::Handle<JS::Value> aData, uint32_t aIndex,
+                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                     mozilla::ErrorResult& aRv);
 
   void MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
                     uint32_t aIndex, JS::MutableHandle<JS::Value> aRetval,
+                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                     mozilla::ErrorResult& aRv);
 
   bool MozUserCancelled() const
@@ -363,4 +375,3 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DataTransfer, NS_DATATRANSFER_IID)
 } // namespace mozilla
 
 #endif /* mozilla_dom_DataTransfer_h */
-

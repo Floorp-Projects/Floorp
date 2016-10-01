@@ -558,6 +558,52 @@
       };
     }
 
+    /**
+     * Move 't9_c2_moved' node by aria-owns, and then move 't9_c3_moved' node
+     * under 't9_c2_moved' (same as test9 but has different aria-owns
+     * ordering), the eventing looks same way as in test9:
+     * reorder for 't9_c1'
+     *   hide for 't9_c1_child'
+     *   show for 't9_c2_moved'
+     * reorder for 't9_c2'
+     *   hide for 't9_c2_moved'
+     * reorder for 't9_c3'
+     *   hide for 't9_c3_moved'
+     *
+     * The hide events for 't9_c2_moved' and 't9_c3_moved' should be delivered
+     * before the show event for 't9_c2_moved'.
+     */
+    function test9()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode('t9_c1_child')),
+        new invokerChecker(EVENT_HIDE, 't9_c3_moved'),
+        new invokerChecker(EVENT_HIDE, 't9_c2_moved'),
+        new invokerChecker(EVENT_SHOW, 't9_c2_moved'),
+        new invokerChecker(EVENT_REORDER, 't9_c1'),
+        new invokerChecker(EVENT_HIDE, getNode('t9_c2_child')),
+        new invokerChecker(EVENT_REORDER, 't9_c2'),
+        new invokerChecker(EVENT_REORDER, 't9_c3'),
+        new unexpectedInvokerChecker(EVENT_SHOW, 't9_c3_moved')
+      ];
+
+      this.invoke = function test9_invoke()
+      {
+        // Remove child nodes from 't9_c1' and 't9_c2' containers to give
+        // the event tree a needed structure ('t9_c1' and 't9_c2' nodes go
+        // first in the event tree),
+        getNode('t9_c1_child').remove();
+        getNode('t9_c2_child').remove();
+        // then do aria-owns magic.
+        getNode('t9_c2_moved').setAttribute('aria-owns', 't9_c3_moved');
+        getNode('t9_c1').setAttribute('aria-owns', 't9_c2_moved');
+      };
+
+      this.getID = function test9_getID() {
+        return "Move node #1 by aria-owns and then move node #2 into node #1";
+      };
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests.
 
@@ -592,6 +638,7 @@
       gQueue.push(new test6());
       gQueue.push(new test7());
       gQueue.push(new test8());
+      gQueue.push(new test9());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -697,6 +744,17 @@
     <div id="t8_c1"><div id="t8_c1_child"></div></div>
     <div id="t8_c2">
       <div id="t8_c2_moved"></div>
+    </div>
+  </div>
+
+  <div id="t9">
+    <div id="t9_c1"><div id="t9_c1_child"></div></div>
+    <div id="t9_c2">
+      <div id="t9_c2_child"></div>
+      <div id="t9_c2_moved"></div>
+    </div>
+    <div id="t9_c3">
+      <div id="t9_c3_moved"></div>
     </div>
   </div>
 </body>

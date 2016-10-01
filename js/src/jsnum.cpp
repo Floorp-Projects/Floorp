@@ -1574,8 +1574,9 @@ js::StringToNumber(ExclusiveContext* cx, JSString* str, double* result)
 }
 
 bool
-js::ToNumberSlow(ExclusiveContext* cx, Value v, double* out)
+js::ToNumberSlow(ExclusiveContext* cx, const Value& v_, double* out)
 {
+    RootedValue v(cx, v_);
     MOZ_ASSERT(!v.isNumber());
     goto skip_int_double;
     for (;;) {
@@ -1612,10 +1613,8 @@ js::ToNumberSlow(ExclusiveContext* cx, Value v, double* out)
         if (!cx->isJSContext())
             return false;
 
-        RootedValue v2(cx, v);
-        if (!ToPrimitive(cx->asJSContext(), JSTYPE_NUMBER, &v2))
+        if (!ToPrimitive(cx->asJSContext(), JSTYPE_NUMBER, &v))
             return false;
-        v = v2;
         if (v.isObject())
             break;
     }
@@ -1625,7 +1624,7 @@ js::ToNumberSlow(ExclusiveContext* cx, Value v, double* out)
 }
 
 JS_PUBLIC_API(bool)
-js::ToNumberSlow(JSContext* cx, Value v, double* out)
+js::ToNumberSlow(JSContext* cx, const Value& v, double* out)
 {
     return ToNumberSlow(static_cast<ExclusiveContext*>(cx), v, out);
 }

@@ -42,9 +42,6 @@ jobs:
         run:
             using: spidermonkey-package
             spidermonkey-variant: plain
-        run-on-projects:
-            - integration
-            - release
         when:
             files-changed:
                 - build/**
@@ -82,9 +79,6 @@ jobs:
             symbol: SM-tc(p)
         run:
             spidermonkey-variant: plaindebug
-        run-on-projects:
-            - integration
-            - release
 
     sm-plain/opt:
         description: "Spidermonkey Plain"
@@ -94,9 +88,6 @@ jobs:
             symbol: SM-tc(p)
         run:
             spidermonkey-variant: plain
-        run-on-projects:
-            - integration
-            - release
 
     sm-arm-sim/debug:
         description: "Spidermonkey ARM sim"
@@ -108,9 +99,6 @@ jobs:
             symbol: SM-tc(arm)
         run:
             spidermonkey-variant: arm-sim
-        run-on-projects:
-            - integration
-            - release
 
     sm-arm64-sim/debug:
         description: "Spidermonkey ARM64 sim"
@@ -122,9 +110,6 @@ jobs:
             symbol: SM-tc(arm64)
         run:
             spidermonkey-variant: arm64-sim
-        run-on-projects:
-            - integration
-            - release
 
     sm-asan/opt:
         description: "Spidermonkey Address Sanitizer"
@@ -137,9 +122,6 @@ jobs:
         run:
             spidermonkey-variant: asan
             tooltool-manifest: browser/config/tooltool-manifests/linux64/asan.manifest
-        run-on-projects:
-            - integration
-            - release
 
     sm-compacting/debug:
         description: "Spidermonkey Compacting"
@@ -151,9 +133,6 @@ jobs:
             symbol: SM-tc(cgc)
         run:
             spidermonkey-variant: compacting
-        run-on-projects:
-            - integration
-            - release
 
     sm-msan/opt:
         description: "Spidermonkey Memory Sanitizer"
@@ -166,9 +145,6 @@ jobs:
         run:
             spidermonkey-variant: msan
             tooltool-manifest: browser/config/tooltool-manifests/linux64/msan.manifest
-        run-on-projects:
-            - integration
-            - release
 
     sm-tsan/opt:
         description: "Spidermonkey Thread Sanitizer"
@@ -194,9 +170,6 @@ jobs:
             symbol: SM-tc(r)
         run:
             spidermonkey-variant: rootanalysis
-        run-on-projects:
-            - integration
-            - release
 
     sm-nonunified/debug:
         description: "Spidermonkey Non-Unified Debug"
@@ -209,6 +182,3 @@ jobs:
             symbol: SM-tc(nu)
         run:
             spidermonkey-variant: nonunified
-        run-on-projects:
-            - integration
-            - release

@@ -102,6 +102,7 @@ mgjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in 
 ]]
 mgjar.generated_sources = [] # Keep it this way.
 mgjar.extra_jars += [
+    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
     'constants.jar',
 ]
 mgjar.javac_flags += ['-Xlint:all']

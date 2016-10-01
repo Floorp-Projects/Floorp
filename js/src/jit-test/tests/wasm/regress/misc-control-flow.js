@@ -195,3 +195,33 @@ wasmEvalText(`
  )
 )
 `);
+
+wasmFailValidateText(`
+(module
+    (func (result i32)
+      (loop
+        (i32.const 0)
+        (br_table 1 0 (i32.const 15))
+      )
+    )
+)`, mismatchError("i32", "void"));
+
+wasmFailValidateText(`
+(module
+  (func (result i32)
+    (loop i32
+      (i32.const 0)
+      (br_table 1 0 (i32.const 15))
+    )
+  )
+)`, mismatchError("i32", "void"));
+
+wasmValidateText(`
+(module
+    (func
+        (loop
+          (i32.const 0)
+          (br_table 1 0 (i32.const 15))
+        )
+    )
+)`);

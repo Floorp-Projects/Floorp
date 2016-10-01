@@ -172,17 +172,21 @@ public:
 
 class WrappableJSErrorResult {
 public:
-  WrappableJSErrorResult() : isCopy(false) {}
-  WrappableJSErrorResult(const WrappableJSErrorResult &other) : mRv(), isCopy(true) {}
+  WrappableJSErrorResult()
+    : mRv(MakeUnique<JSErrorResult>()),
+      isCopy(false) {}
+  WrappableJSErrorResult(const WrappableJSErrorResult &other)
+    : mRv(MakeUnique<JSErrorResult>()),
+      isCopy(true) {}
   ~WrappableJSErrorResult() {
     if (isCopy) {
       MOZ_ASSERT(NS_IsMainThread());
     }
   }
-  operator JSErrorResult &() { return mRv; }
-  operator ErrorResult &() { return mRv; }
+  operator JSErrorResult &() { return *mRv; }
+  operator ErrorResult &() { return *mRv; }
 private:
-  JSErrorResult mRv;
+  mozilla::UniquePtr<JSErrorResult> mRv;
   bool isCopy;
 };
 }

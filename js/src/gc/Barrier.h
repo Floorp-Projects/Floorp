@@ -279,10 +279,10 @@ template <typename S> struct ReadBarrierFunctor : public VoidDefaultAdaptor<S> {
 template <>
 struct InternalBarrierMethods<Value>
 {
-    static bool isMarkable(Value v) { return v.isMarkable(); }
-    static bool isMarkableTaggedPointer(Value v) { return isMarkable(v); }
+    static bool isMarkable(const Value& v) { return v.isMarkable(); }
+    static bool isMarkableTaggedPointer(const Value& v) { return isMarkable(v); }
 
-    static void preBarrier(Value v) {
+    static void preBarrier(const Value& v) {
         DispatchTyped(PreBarrierFunctor<Value>(), v);
     }
 
@@ -334,7 +334,7 @@ class BarrieredBase : public BarrieredBaseMixins<T>
 {
   protected:
     // BarrieredBase is not directly instantiable.
-    explicit BarrieredBase(T v) : value(v) {}
+    explicit BarrieredBase(const T& v) : value(v) {}
 
     // Storage for all barrier classes. |value| must be a GC thing reference
     // type: either a direct pointer to a GC thing or a supported tagged
@@ -355,7 +355,7 @@ class WriteBarrieredBase : public BarrieredBase<T>
 {
   protected:
     // WriteBarrieredBase is not directly instantiable.
-    explicit WriteBarrieredBase(T v) : BarrieredBase<T>(v) {}
+    explicit WriteBarrieredBase(const T& v) : BarrieredBase<T>(v) {}
 
   public:
     DECLARE_POINTER_COMPARISON_OPS(T);
@@ -366,14 +366,16 @@ class WriteBarrieredBase : public BarrieredBase<T>
 
     // Use this if you want to change the value without invoking barriers.
     // Obviously this is dangerous unless you know the barrier is not needed.
-    void unsafeSet(T v) { this->value = v; }
+    void unsafeSet(const T& v) { this->value = v; }
 
     // For users who need to manually barrier the raw types.
     static void writeBarrierPre(const T& v) { InternalBarrierMethods<T>::preBarrier(v); }
 
   protected:
     void pre() { InternalBarrierMethods<T>::preBarrier(this->value); }
-    void post(T prev, T next) { InternalBarrierMethods<T>::postBarrier(&this->value, prev, next); }
+    void post(const T& prev, const T& next) {
+        InternalBarrierMethods<T>::postBarrier(&this->value, prev, next);
+    }
 };
 
 /*
@@ -391,11 +393,11 @@ class PreBarriered : public WriteBarrieredBase<T>
      * Allow implicit construction for use in generic contexts, such as
      * DebuggerWeakMap::markKeys.
      */
-    MOZ_IMPLICIT PreBarriered(T v) : WriteBarrieredBase<T>(v) {}
+    MOZ_IMPLICIT PreBarriered(const T& v) : WriteBarrieredBase<T>(v) {}
     explicit PreBarriered(const PreBarriered<T>& v) : WriteBarrieredBase<T>(v.value) {}
     ~PreBarriered() { this->pre(); }
 
-    void init(T v) {
+    void init(const T& v) {
         this->value = v;
     }
 
@@ -430,7 +432,7 @@ class GCPtr : public WriteBarrieredBase<T>
 {
   public:
     GCPtr() : WriteBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
-    explicit GCPtr(T v) : WriteBarrieredBase<T>(v) {
+    explicit GCPtr(const T& v) : WriteBarrieredBase<T>(v) {
         this->post(JS::GCPolicy<T>::initial(), v);
     }
     explicit GCPtr(const GCPtr<T>& v) : WriteBarrieredBase<T>(v) {
@@ -446,7 +448,7 @@ class GCPtr : public WriteBarrieredBase<T>
     }
 #endif
 
-    void init(T v) {
+    void init(const T& v) {
         this->value = v;
         this->post(JS::GCPolicy<T>::initial(), v);
     }
@@ -523,7 +525,7 @@ class HeapPtr : public WriteBarrieredBase<T>
         this->post(this->value, JS::GCPolicy<T>::initial());
     }
 
-    void init(T v) {
+    void init(const T& v) {
         this->value = v;
         this->post(JS::GCPolicy<T>::initial(), this->value);
     }
@@ -556,11 +558,13 @@ class ReadBarrieredBase : public BarrieredBase<T>
 {
   protected:
     // ReadBarrieredBase is not directly instantiable.
-    explicit ReadBarrieredBase(T v) : BarrieredBase<T>(v) {}
+    explicit ReadBarrieredBase(const T& v) : BarrieredBase<T>(v) {}
 
   protected:
     void read() const { InternalBarrierMethods<T>::readBarrier(this->value); }
-    void post(T prev, T next) { InternalBarrierMethods<T>::postBarrier(&this->value, prev, next); }
+    void post(const T& prev, const T& next) {
+        InternalBarrierMethods<T>::postBarrier(&this->value, prev, next);
+    }
 };
 
 // Incremental GC requires that weak pointers have read barriers. See the block

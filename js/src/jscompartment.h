@@ -84,7 +84,7 @@ class CrossCompartmentKey
 
     explicit CrossCompartmentKey(JSObject* obj) : wrapped(obj) { MOZ_RELEASE_ASSERT(obj); }
     explicit CrossCompartmentKey(JSString* str) : wrapped(str) { MOZ_RELEASE_ASSERT(str); }
-    explicit CrossCompartmentKey(JS::Value v)
+    explicit CrossCompartmentKey(const JS::Value& v)
       : wrapped(v.isString() ? WrappedType(v.toString()) : WrappedType(&v.toObject()))
     {}
     explicit CrossCompartmentKey(NativeObject* debugger, JSObject* obj, DebuggerObjectKind kind)
@@ -1041,7 +1041,7 @@ class MOZ_RAII AutoWrapperVector : public JS::AutoVectorRooterBase<WrapperValue>
 
 class MOZ_RAII AutoWrapperRooter : private JS::AutoGCRooter {
   public:
-    AutoWrapperRooter(JSContext* cx, WrapperValue v
+    AutoWrapperRooter(JSContext* cx, const WrapperValue& v
                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : JS::AutoGCRooter(cx, WRAPPER), value(v)
     {

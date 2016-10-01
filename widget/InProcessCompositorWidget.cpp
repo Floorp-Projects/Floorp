@@ -127,8 +127,9 @@ InProcessCompositorWidget::RealWidget()
 void
 InProcessCompositorWidget::ObserveVsync(VsyncObserver* aObserver)
 {
-  RefPtr<CompositorVsyncDispatcher> cvd = mWidget->GetCompositorVsyncDispatcher();
-  cvd->SetCompositorVsyncObserver(aObserver);
+  if (RefPtr<CompositorVsyncDispatcher> cvd = mWidget->GetCompositorVsyncDispatcher()) {
+    cvd->SetCompositorVsyncObserver(aObserver);
+  }
 }
 
 } // namespace widget

@@ -378,7 +378,7 @@ struct MaybeReadFallback
         return UndefinedValue();
     }
 
-    NoGCValue noGCPlaceholder(Value v) const {
+    NoGCValue noGCPlaceholder(const Value& v) const {
         if (v.isMagic(JS_OPTIMIZED_OUT))
             return NoGC_MagicOptimizedOut;
         return NoGC_UndefinedValue;
@@ -445,7 +445,7 @@ class SnapshotIterator
 
     Value allocationValue(const RValueAllocation& a, ReadMethod rm = RM_Normal);
     MOZ_MUST_USE bool allocationReadable(const RValueAllocation& a, ReadMethod rm = RM_Normal);
-    void writeAllocationValuePayload(const RValueAllocation& a, Value v);
+    void writeAllocationValuePayload(const RValueAllocation& a, const Value& v);
     void warnUnreadableAllocation();
 
   private:
@@ -477,7 +477,7 @@ class SnapshotIterator
 
     // Used by recover instruction to store the value back into the instruction
     // results array.
-    void storeInstructionResult(Value v);
+    void storeInstructionResult(const Value& v);
 
   public:
     // Exhibits frame properties contained in the snapshot.
@@ -651,7 +651,7 @@ class InlineFrameIterator
 
   private:
     void findNextFrame();
-    JSObject* computeEnvironmentChain(Value envChainValue, MaybeReadFallback& fallback,
+    JSObject* computeEnvironmentChain(const Value& envChainValue, MaybeReadFallback& fallback,
                                       bool* hasInitialEnv = nullptr) const;
 
   public:

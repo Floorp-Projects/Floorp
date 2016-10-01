@@ -738,7 +738,7 @@ public:
     inline XPCWrappedNative* GetResolvingWrapper() const;
     inline XPCWrappedNative* SetResolvingWrapper(XPCWrappedNative* w);
 
-    inline void SetRetVal(JS::Value val);
+    inline void SetRetVal(const JS::Value& val);
 
     void SetName(jsid name);
     void SetArgsAndResultPtr(unsigned argc, JS::Value* argv, JS::Value* rval);
@@ -887,12 +887,11 @@ public:
 
     JSObject*
     GetGlobalJSObject() const {
-        JS::ExposeObjectToActiveJS(mGlobalJSObject);
         return mGlobalJSObject;
     }
 
     JSObject*
-    GetGlobalJSObjectPreserveColor() const {return mGlobalJSObject;}
+    GetGlobalJSObjectPreserveColor() const {return mGlobalJSObject.unbarrieredGet();}
 
     nsIPrincipal*
     GetPrincipal() const {
@@ -2159,7 +2158,7 @@ public:
      * be passed into a JS API function and that it won't be stored without
      * being rooted (or otherwise signaling the stored value to the CC).
      */
-    JSObject* GetJSObjectPreserveColor() const {return mJSObj;}
+    JSObject* GetJSObjectPreserveColor() const { return mJSObj.unbarrieredGet(); }
 
     // Returns true if the wrapper chain contains references to multiple
     // compartments. If the wrapper chain contains references to multiple
@@ -2183,8 +2182,8 @@ public:
         return FindInherited(aIID);
     }
 
-    bool IsRootWrapper() const {return mRoot == this;}
-    bool IsValid() const {return mJSObj != nullptr;}
+    bool IsRootWrapper() const { return mRoot == this; }
+    bool IsValid() const { return bool(mJSObj); }
     void SystemIsBeingShutDown();
 
     // These two methods are used by JSObject2WrappedJSMap::FindDyingJSObjects
@@ -2223,6 +2222,10 @@ protected:
     void Unlink();
 
 private:
+    JSCompartment* Compartment() const {
+        return js::GetObjectCompartment(mJSObj.unbarrieredGet());
+    }
+
     JS::Heap<JSObject*> mJSObj;
     RefPtr<nsXPCWrappedJSClass> mClass;
     nsXPCWrappedJS* mRoot;    // If mRoot != this, it is an owning pointer.
@@ -2873,7 +2876,7 @@ public:
     // if a given nsIVariant is in fact an XPCVariant.
     NS_DECLARE_STATIC_IID_ACCESSOR(XPCVARIANT_IID)
 
-    static already_AddRefed<XPCVariant> newVariant(JSContext* cx, JS::Value aJSVal);
+    static already_AddRefed<XPCVariant> newVariant(JSContext* cx, const JS::Value& aJSVal);
 
     /**
      * This getter clears the gray bit before handing out the Value if the Value
@@ -2881,8 +2884,6 @@ public:
      * kept alive past the next CC.
      */
     JS::Value GetJSVal() const {
-        if (!mJSVal.isPrimitive())
-            JS::ExposeObjectToActiveJS(&mJSVal.toObject());
         return mJSVal;
     }
 
@@ -2895,9 +2896,9 @@ public:
      * be passed into a JS API function and that it won't be stored without
      * being rooted (or otherwise signaling the stored value to the CC).
      */
-    JS::Value GetJSValPreserveColor() const {return mJSVal;}
+    JS::Value GetJSValPreserveColor() const { return mJSVal.unbarrieredGet(); }
 
-    XPCVariant(JSContext* cx, JS::Value aJSVal);
+    XPCVariant(JSContext* cx, const JS::Value& aJSVal);
 
     /**
      * Convert a variant into a JS::Value.
@@ -2945,7 +2946,7 @@ class XPCTraceableVariant: public XPCVariant,
                            public XPCRootSetElem
 {
 public:
-    XPCTraceableVariant(JSContext* cx, JS::Value aJSVal)
+    XPCTraceableVariant(JSContext* cx, const JS::Value& aJSVal)
         : XPCVariant(cx, aJSVal)
     {
          nsXPConnect::GetContextInstance()->AddVariantRoot(this);

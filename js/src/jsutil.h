@@ -306,7 +306,7 @@ namespace mozilla {
  */
 template<typename T>
 static MOZ_ALWAYS_INLINE void
-PodSet(T* aDst, T aSrc, size_t aNElem)
+PodSet(T* aDst, const T& aSrc, size_t aNElem)
 {
     for (const T* dstend = aDst + aNElem; aDst < dstend; ++aDst)
         *aDst = aSrc;

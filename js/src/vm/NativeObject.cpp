@@ -1009,7 +1009,7 @@ js::NativeLookupOwnProperty<CanGC>(ExclusiveContext* cx, HandleNativeObject obj,
                                    MutableHandleShape propp);
 
 template bool
-js::NativeLookupOwnProperty<NoGC>(ExclusiveContext* cx, NativeObject* obj, jsid id,
+js::NativeLookupOwnProperty<NoGC>(ExclusiveContext* cx, NativeObject* const& obj, const jsid& id,
                                   FakeMutableHandle<Shape*> propp);
 
 /*** [[DefineOwnProperty]] ***********************************************************************/
@@ -1961,7 +1961,7 @@ GetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 
 /* The NoGC version of GetNonexistentProperty, present only to make types line up. */
 bool
-GetNonexistentProperty(JSContext* cx, NativeObject* obj, jsid id, Value& receiver,
+GetNonexistentProperty(JSContext* cx, NativeObject* const& obj, const jsid& id, const Value& receiver,
                        IsNameLookup nameLookup, FakeMutableHandle<Value> vp)
 {
     return false;
