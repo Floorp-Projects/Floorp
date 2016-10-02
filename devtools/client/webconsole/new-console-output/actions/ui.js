@@ -6,13 +6,21 @@
 
 "use strict";
 
+const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
+const Services = require("Services");
+
 const {
   FILTER_BAR_TOGGLE,
-} = require("../constants");
+  PREFS,
+} = require("devtools/client/webconsole/new-console-output/constants");
 
 function filterBarToggle(show) {
-  return {
-    type: FILTER_BAR_TOGGLE
+  return (dispatch, getState) => {
+    dispatch({
+      type: FILTER_BAR_TOGGLE
+    });
+    const uiState = getAllUi(getState());
+    Services.prefs.setBoolPref(PREFS.UI.FILTER_BAR, uiState.get("filterBarVisible"));
   };
 }
 
