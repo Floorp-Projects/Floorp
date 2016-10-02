@@ -26,6 +26,7 @@ function EvaluationResult(props) {
     source,
     type,
     level,
+    emitNewMessage,
   } = message;
 
   let messageBody;
@@ -44,6 +45,7 @@ function EvaluationResult(props) {
     topLevelClasses,
     messageBody,
     scrollToMessage: props.autoscroll,
+    emitNewMessage,
   };
   return Message(childProps);
 }
