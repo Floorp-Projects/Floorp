@@ -591,6 +591,7 @@ WebConsoleFrame.prototype = {
       this.outputNode.parentNode.appendChild(this.experimentalOutputNode);
       // @TODO Once the toolbox has been converted to React, see if passing
       // in JSTerm is still necessary.
+
       this.newConsoleOutput = new this.window.NewConsoleOutput(
         this.experimentalOutputNode, this.jsterm, toolbox, this.owner);
       console.log("Created newConsoleOutput", this.newConsoleOutput);
@@ -3266,10 +3267,6 @@ WebConsoleConnectionProxy.prototype = {
    */
   dispatchMessageAdd: function(packet) {
     this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
-    this.webConsoleFrame.emit("new-messages", new Set([{
-      response: packet,
-      node: this.webConsoleFrame.newConsoleOutput.getLastMessage(),
-    }]));
   },
 
   /**

@@ -23,7 +23,7 @@ NetworkEventMessage.propTypes = {
 };
 
 function NetworkEventMessage(props) {
-  const { message, openNetworkPanel } = props;
+  const { message, openNetworkPanel, emitNewMessage } = props;
   const { actor, source, type, level, request, isXHR } = message;
 
   const topLevelClasses = [ "cm-s-mozilla" ];
@@ -47,6 +47,7 @@ function NetworkEventMessage(props) {
     level,
     topLevelClasses,
     messageBody,
+    emitNewMessage,
   };
   return Message(childProps);
 }
