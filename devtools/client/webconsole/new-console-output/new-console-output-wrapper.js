@@ -15,6 +15,8 @@ const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/ne
 const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
 
 const store = configureStore();
+let queuedActions = [];
+let throttledDispatchTimeout = false;
 
 function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
   this.parentNode = parentNode;
@@ -64,7 +66,7 @@ NewConsoleOutputWrapper.prototype = {
     this.body = ReactDOM.render(provider, this.parentNode);
   },
   dispatchMessageAdd: (message) => {
-    store.dispatch(actions.messageAdd(message));
+    batchedMessageAdd(actions.messageAdd(message));
   },
   dispatchMessagesAdd: (messages) => {
     const batchedActions = messages.map(message => actions.messageAdd(message));
@@ -74,6 +76,17 @@ NewConsoleOutputWrapper.prototype = {
     store.dispatch(actions.messagesClear());
   },
 };
+
+function batchedMessageAdd(action) {
+  queuedActions.push(action);
+  if (!throttledDispatchTimeout) {
+    throttledDispatchTimeout = setTimeout(() => {
+      store.dispatch(actions.batchActions(queuedActions));
+      queuedActions = [];
+      throttledDispatchTimeout = null;
+    }, 50);
+  }
+}
 
 // Exports from this module
 module.exports = NewConsoleOutputWrapper;
