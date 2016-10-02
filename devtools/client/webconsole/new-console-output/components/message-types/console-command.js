@@ -35,6 +35,7 @@ function ConsoleCommand(props) {
     source,
     type,
     level,
+    topLevelClasses: [],
     messageBody,
     scrollToMessage: props.autoscroll,
   };

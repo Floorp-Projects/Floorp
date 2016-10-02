@@ -33,7 +33,8 @@ function PageError(props) {
   } = props;
   const {
     id: messageId,
-    source, type,
+    source,
+    type,
     level,
     messageText: messageBody,
     repeat,
@@ -47,6 +48,7 @@ function PageError(props) {
     source,
     type,
     level,
+    topLevelClasses: [],
     messageBody,
     repeat,
     frame,
