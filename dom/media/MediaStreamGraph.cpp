@@ -1447,35 +1447,56 @@ MediaStreamGraphImpl::ForceShutDown(ShutdownTicket* aShutdownTicket)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
   STREAM_LOG(LogLevel::Debug, ("MediaStreamGraph %p ForceShutdown", this));
-  {
-    MonitorAutoLock lock(mMonitor);
-    mForceShutDown = true;
-    mForceShutdownTicket = aShutdownTicket;
-    if (mLifecycleState == LIFECYCLE_THREAD_NOT_STARTED) {
-      // We *could* have just sent this a message to start up, so don't
-      // yank the rug out from under it.  Tell it to startup and let it
-      // shut down.
-      RefPtr<GraphDriver> driver = CurrentDriver();
-      MonitorAutoUnlock unlock(mMonitor);
-      driver->Start();
+
+  MonitorAutoLock lock(mMonitor);
+  if (aShutdownTicket) {
+    MOZ_ASSERT(!mForceShutdownTicket);
+    // Avoid waiting forever for a graph to shut down
+    // synchronously.  Reports are that some 3rd-party audio drivers
+    // occasionally hang in shutdown (both for us and Chrome).
+    mShutdownTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    if (!mShutdownTimer) {
+      return;
     }
-    EnsureNextIterationLocked();
+    mShutdownTimer->InitWithCallback(this,
+                                     MediaStreamGraph::AUDIO_CALLBACK_DRIVER_SHUTDOWN_TIMEOUT,
+                                     nsITimer::TYPE_ONE_SHOT);
   }
+  mForceShutDown = true;
+  mForceShutdownTicket = aShutdownTicket;
+  if (mLifecycleState == LIFECYCLE_THREAD_NOT_STARTED) {
+    // We *could* have just sent this a message to start up, so don't
+    // yank the rug out from under it.  Tell it to startup and let it
+    // shut down.
+    RefPtr<GraphDriver> driver = CurrentDriver();
+    MonitorAutoUnlock unlock(mMonitor);
+    driver->Start();
+  }
+  EnsureNextIterationLocked();
 }
+
+NS_IMETHODIMP
+MediaStreamGraphImpl::Notify(nsITimer* aTimer)
+{
+  MonitorAutoLock lock(mMonitor);
+  NS_ASSERTION(!mForceShutdownTicket, "MediaStreamGraph took too long to shut down!");
+  // Sigh, graph took too long to shut down.  Stop blocking system
+  // shutdown and hope all is well.
+  mForceShutdownTicket = nullptr;
+  return NS_OK;
+}
+
 
 /* static */ StaticRefPtr<nsIAsyncShutdownBlocker> gMediaStreamGraphShutdownBlocker;
 
 namespace {
 
-class MediaStreamGraphShutDownRunnable : public Runnable
-                                       , public nsITimerCallback {
+class MediaStreamGraphShutDownRunnable : public Runnable {
 public:
   explicit MediaStreamGraphShutDownRunnable(MediaStreamGraphImpl* aGraph)
     : mGraph(aGraph)
   {}
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_IMETHOD Run() override
+  NS_IMETHOD Run()
   {
     NS_ASSERTION(mGraph->mDetectedNotRunning,
                  "We should know the graph thread control loop isn't running!");
@@ -1493,24 +1514,12 @@ public:
     }
 #endif
 
-    if (mGraph->mForceShutdownTicket) {
-      // Avoid waiting forever for a callback driver to shut down
-      // synchronously.  Reports are that some 3rd-party audio drivers
-      // occasionally hang in shutdown (both for us and Chrome).
-      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-      if (!mTimer) {
-        return NS_ERROR_FAILURE;
-      }
-      mTimer->InitWithCallback(this,
-                               MediaStreamGraph::AUDIO_CALLBACK_DRIVER_SHUTDOWN_TIMEOUT,
-                               nsITimer::TYPE_ONE_SHOT);
-    }
-
     mGraph->mDriver->Shutdown(); // This will wait until it's shutdown since
                                  // we'll start tearing down the graph after this
 
+    // Safe to access these without the monitor since the graph isn't running.
     // We may be one of several graphs. Drop ticket to eventually unblock shutdown.
-    if (mTimer && !mGraph->mForceShutdownTicket) {
+    if (mGraph->mShutdownTimer && !mGraph->mForceShutdownTicket) {
       MOZ_ASSERT(false,
         "AudioCallbackDriver took too long to shut down and we let shutdown"
         " continue - freezing and leaking");
@@ -1519,7 +1528,6 @@ public:
       // teardown and just leak, for safety.
       return NS_OK;
     }
-    mTimer = nullptr;
     mGraph->mForceShutdownTicket = nullptr;
 
     // We can't block past the final LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION
@@ -1552,29 +1560,9 @@ public:
     }
     return NS_OK;
   }
-
-  NS_IMETHOD Notify(nsITimer* aTimer) override
-  {
-    // Sigh, driver took too long to shut down.  Stop blocking system
-    // shutdown and hope all is well.  Shutdown of this graph will proceed
-    // if the driver eventually comes back.
-    NS_ASSERTION(!(mGraph->mForceShutdownTicket),
-                 "AudioCallbackDriver took too long to shut down - probably hung");
-
-    mGraph->mForceShutdownTicket = nullptr;
-    return NS_OK;
-  }
-
 private:
-  ~MediaStreamGraphShutDownRunnable() {}
-
-  nsCOMPtr<nsITimer> mTimer;
   RefPtr<MediaStreamGraphImpl> mGraph;
 };
-
-NS_IMPL_ISUPPORTS_INHERITED(MediaStreamGraphShutDownRunnable, Runnable, nsITimerCallback)
-
-
 
 class MediaStreamGraphStableStateRunnable : public Runnable {
 public:
@@ -3444,8 +3432,6 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
   MOZ_ASSERT(aGraph->IsNonRealtime(), "Should not destroy the global graph here");
 
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(aGraph);
-  if (graph->mForceShutDown)
-    return; // already done
 
   if (!graph->mNonRealtimeProcessing) {
     // Start the graph, but don't produce anything
@@ -3454,7 +3440,7 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
   graph->ForceShutDown(nullptr);
 }
 
-NS_IMPL_ISUPPORTS(MediaStreamGraphImpl, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(MediaStreamGraphImpl, nsIMemoryReporter, nsITimerCallback)
 
 NS_IMETHODIMP
 MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
