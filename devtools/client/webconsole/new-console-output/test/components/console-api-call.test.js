@@ -41,6 +41,7 @@ describe("ConsoleAPICall component:", () => {
       const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
 
       expect(wrapper.find(".message-repeats").text()).toBe("107");
+      expect(wrapper.find(".message-repeats").prop("title")).toBe("107 repeats");
 
       expect(wrapper.find("span > span.message-flex-body > span.message-body.devtools-monospace + span.message-repeats").length).toBe(1);
     });
