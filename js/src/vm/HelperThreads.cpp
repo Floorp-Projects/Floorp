@@ -1673,6 +1673,21 @@ GlobalHelperThreadState::trace(JSTracer* trc)
         builder->trace(trc);
     for (auto builder : ionFinishedList())
         builder->trace(trc);
+
+    if (HelperThreadState().threads) {
+        for (size_t i = 0; i < HelperThreadState().threadCount; i++) {
+            HelperThread& helper = HelperThreadState().threads[i];
+            if (auto builder = helper.ionBuilder())
+                builder->trace(trc);
+        }
+    }
+
+    jit::IonBuilder* builder = trc->runtime()->ionLazyLinkList().getFirst();
+    while (builder) {
+        builder->trace(trc);
+        builder = builder->getNext();
+    }
+
     for (auto parseTask : parseWorklist_)
         parseTask->trace(trc);
     for (auto parseTask : parseFinishedList_)
