@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource:///modules/AttributionCode.jsm");
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
@@ -11,6 +10,10 @@ Cu.import("resource://testing-common/AddonManagerTesting.jsm");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/MockRegistrar.jsm", this);
 Cu.import("resource://gre/modules/FileUtils.jsm");
+
+// AttributionCode is only needed for Firefox
+XPCOMUtils.defineLazyModuleGetter(this, "AttributionCode",
+                                  "resource:///modules/AttributionCode.jsm");
 
 // Lazy load |LightweightThemeManager|, we won't be using it on Gonk.
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
@@ -802,8 +805,11 @@ function run_test() {
   Preferences.set("extensions.hotfix.lastVersion", APP_HOTFIX_VERSION);
 
   // Create the attribution data file, so that settings.attribution will exist.
-  spoofAttributionData();
-  do_register_cleanup(cleanupAttributionData);
+  // The attribution functionality only exists in Firefox.
+  if (AppConstants.MOZ_BUILD_APP == "browser") {
+    spoofAttributionData();
+    do_register_cleanup(cleanupAttributionData);
+  }
 
   run_next_test();
 }
