@@ -43,4 +43,4 @@ const FilterButton = createClass({
   }
 });
 
-exports.FilterButton = FilterButton;
+module.exports = FilterButton;

@@ -12,7 +12,7 @@ const {
 const { ObjectClient } = require("devtools/shared/client/main");
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const {l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
-const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body").GripMessageBody);
+const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body"));
 
 const TABLE_ROW_MAX_ITEMS = 1000;
 const TABLE_COLUMN_MAX_ITEMS = 10;
@@ -197,4 +197,4 @@ function getTableItems(data = {}, type, headers = null) {
   };
 }
 
-exports.ConsoleTable = ConsoleTable;
+module.exports = ConsoleTable;

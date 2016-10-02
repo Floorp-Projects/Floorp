@@ -9,16 +9,9 @@
 // React & Redux
 const {
   createFactory,
-  DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const FrameView = createFactory(require("devtools/client/shared/components/frame"));
-const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
-const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
-const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
-const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
-
-const actions = require("devtools/client/webconsole/new-console-output/actions/index");
+const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
 
 PageError.displayName = "PageError";
 
@@ -32,69 +25,36 @@ PageError.defaultProps = {
 };
 
 function PageError(props) {
-  const { dispatch, message, open, sourceMapService, onViewSourceInDebugger } = props;
-  const { source, type, level, stacktrace, frame } = message;
+  const {
+    message,
+    open,
+    sourceMapService,
+    onViewSourceInDebugger
+  } = props;
+  const {
+    id: messageId,
+    source, type,
+    level,
+    messageText: messageBody,
+    repeat,
+    stacktrace,
+    frame
+  } = message;
 
-  const repeat = MessageRepeat({repeat: message.repeat});
-  const icon = MessageIcon({level});
-  const shouldRenderFrame = frame && frame.source !== "debugger eval code";
-  const location = dom.span({ className: "message-location devtools-monospace" },
-    shouldRenderFrame ? FrameView({
-      frame,
-      onClick: onViewSourceInDebugger,
-      showEmptyPathAsHost: true,
-      sourceMapService
-    }) : null
-  );
-
-  let collapse = "";
-  let attachment = "";
-  if (stacktrace) {
-    if (open) {
-      attachment = dom.div({ className: "stacktrace devtools-monospace" },
-        StackTrace({
-          stacktrace: stacktrace,
-          onViewSourceInDebugger: onViewSourceInDebugger
-        })
-      );
-    }
-
-    collapse = CollapseButton({
-      open,
-      onClick: function () {
-        if (open) {
-          dispatch(actions.messageClose(message.id));
-        } else {
-          dispatch(actions.messageOpen(message.id));
-        }
-      },
-    });
-  }
-
-  const classes = ["message"];
-  classes.push(source);
-  classes.push(type);
-  classes.push(level);
-  if (open === true) {
-    classes.push("open");
-  }
-
-  return dom.div({
-    className: classes.join(" ")
-  },
-    icon,
-    collapse,
-    dom.span({ className: "message-body-wrapper" },
-      dom.span({ className: "message-flex-body" },
-        dom.span({ className: "message-body devtools-monospace" },
-          message.messageText
-        ),
-        repeat,
-        location
-      ),
-      attachment
-    )
-  );
+  const childProps = {
+    messageId,
+    open,
+    source,
+    type,
+    level,
+    messageBody,
+    repeat,
+    frame,
+    stacktrace,
+    onViewSourceInDebugger,
+    sourceMapService,
+  };
+  return Message(childProps);
 }
 
-module.exports.PageError = PageError;
+module.exports = PageError;

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { MessageRepeat } = require("devtools/client/webconsole/new-console-output/components/message-repeat");
+const MessageRepeat = require("devtools/client/webconsole/new-console-output/components/message-repeat");
 
 const expect = require("expect");
 

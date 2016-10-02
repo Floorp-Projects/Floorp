@@ -17,6 +17,8 @@ const MessageContainer = createFactory(require("devtools/client/webconsole/new-c
 
 const ConsoleOutput = createClass({
 
+  displayName: "ConsoleOutput",
+
   propTypes: {
     hudProxyClient: PropTypes.object.isRequired,
     messages: PropTypes.object.isRequired,
@@ -26,8 +28,6 @@ const ConsoleOutput = createClass({
     openNetworkPanel: PropTypes.func.isRequired,
     openLink: PropTypes.func.isRequired,
   },
-
-  displayName: "ConsoleOutput",
 
   componentWillUpdate() {
     let node = ReactDOM.findDOMNode(this);

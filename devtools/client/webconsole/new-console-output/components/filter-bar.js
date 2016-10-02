@@ -18,7 +18,7 @@ const uiActions = require("devtools/client/webconsole/new-console-output/actions
 const {
   MESSAGE_LEVEL
 } = require("../constants");
-const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button").FilterButton);
+const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button"));
 
 const FilterBar = createClass({
 
