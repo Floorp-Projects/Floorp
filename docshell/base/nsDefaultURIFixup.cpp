@@ -193,11 +193,20 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
     uint32_t newFixupFlags = aFixupFlags & ~FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
                                          & ~FIXUP_FLAGS_MAKE_ALTERNATE_URI;
 
-    rv = GetFixupURIInfo(Substring(uriString,
-                                   sizeof("view-source:") - 1,
-                                   uriString.Length() -
-                                   (sizeof("view-source:") - 1)),
-                         newFixupFlags, aPostData, getter_AddRefs(uriInfo));
+    const uint32_t viewSourceLen = sizeof("view-source:") - 1;
+    nsAutoCString innerURIString(Substring(uriString, viewSourceLen,
+                                           uriString.Length() -
+                                           viewSourceLen));
+    // Prevent recursion:
+    innerURIString.Trim(" ");
+    nsAutoCString innerScheme;
+    ioService->ExtractScheme(innerURIString, innerScheme);
+    if (innerScheme.LowerCaseEqualsLiteral("view-source")) {
+      return NS_ERROR_FAILURE;
+    }
+
+    rv = GetFixupURIInfo(innerURIString, newFixupFlags, aPostData,
+                         getter_AddRefs(uriInfo));
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
