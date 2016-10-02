@@ -3,23 +3,18 @@
 "use strict";
 
 const expect = require("expect");
-const sinon = require("sinon");
-const { render, shallow } = require("enzyme");
+const { render } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
 const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button").FilterButton);
-const {
-  FILTER_TOGGLE,
-  MESSAGE_LEVEL
-} = require("devtools/client/webconsole/new-console-output/constants");
+const { MESSAGE_LEVEL } = require("devtools/client/webconsole/new-console-output/constants");
 
 describe("FilterButton component:", () => {
   const props = {
     active: true,
     label: "Error",
     filterKey: MESSAGE_LEVEL.ERROR,
-    dispatch: sinon.spy()
   };
 
   it("displays as active when turned on", () => {
@@ -35,15 +30,5 @@ describe("FilterButton component:", () => {
     expect(wrapper.html()).toBe(
       "<button class=\"menu-filter-button\">Error</button>"
     );
-  });
-
-  it("fires FILTER_TOGGLE action when clicked", () => {
-    const wrapper = shallow(FilterButton(props));
-    wrapper.find("button").simulate("click");
-    const call = props.dispatch.getCall(0);
-    expect(call.args[0]).toEqual({
-      type: FILTER_TOGGLE,
-      filter: MESSAGE_LEVEL.ERROR
-    });
   });
 });
