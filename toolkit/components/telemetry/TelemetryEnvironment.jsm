@@ -769,7 +769,9 @@ function EnvironmentCache() {
 
   this._currentEnvironment.profile = {};
   p.push(this._updateProfile());
-  p.push(this._updateAttribution());
+  if (AppConstants.MOZ_BUILD_APP == "browser") {
+    p.push(this._updateAttribution());
+  }
 
   let setup = () => {
     this._initTask = null;
