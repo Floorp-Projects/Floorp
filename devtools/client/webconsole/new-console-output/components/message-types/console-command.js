@@ -9,10 +9,9 @@
 // React & Redux
 const {
   createFactory,
-  DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
+const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
 
 ConsoleCommand.displayName = "ConsoleCommand";
 
@@ -24,32 +23,20 @@ ConsoleCommand.propTypes = {
  * Displays input from the console.
  */
 function ConsoleCommand(props) {
-  const { message } = props;
-  const {source, type, level} = message;
+  const {
+    source,
+    type,
+    level,
+    messageText: messageBody
+  } = props.message;
 
-  const icon = MessageIcon({level});
-
-  const classes = ["message"];
-
-  classes.push(source);
-  classes.push(type);
-  classes.push(level);
-
-  return dom.div({
-    className: classes.join(" "),
-    ariaLive: "off",
-  },
-    // @TODO add timestamp
-    // @TODO add indent if necessary
-    icon,
-    dom.span({ className: "message-body-wrapper" },
-      dom.span({ className: "message-flex-body" },
-        dom.span({ className: "message-body devtools-monospace" },
-          message.messageText
-        )
-      )
-    )
-  );
+  const childProps = {
+    source,
+    type,
+    level,
+    messageBody
+  };
+  return Message(childProps);
 }
 
-module.exports.ConsoleCommand = ConsoleCommand;
+module.exports = ConsoleCommand;
