@@ -69,14 +69,11 @@ function Message(props) {
   if (props.attachment) {
     attachment = props.attachment;
   } else if (stacktrace) {
-    if (open) {
-      attachment = dom.div({ className: "stacktrace devtools-monospace" },
-        StackTrace({
-          stacktrace: stacktrace,
-          onViewSourceInDebugger: onViewSourceInDebugger
-        })
-      );
-    }
+    const child = open ? StackTrace({
+      stacktrace: stacktrace,
+      onViewSourceInDebugger: onViewSourceInDebugger
+    }) : null;
+    attachment = dom.div({ className: "stacktrace devtools-monospace" }, child);
   }
 
   // If there is an expandable part, make it collapsible.
