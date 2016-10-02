@@ -9,11 +9,10 @@
 // React & Redux
 const {
   createFactory,
-  DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body").GripMessageBody);
-const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
+const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
+const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body"));
 
 EvaluationResult.displayName = "EvaluationResult";
 
@@ -23,8 +22,11 @@ EvaluationResult.propTypes = {
 
 function EvaluationResult(props) {
   const { message } = props;
-  const {source, type, level} = message;
-  const icon = MessageIcon({level});
+  const {
+    source,
+    type,
+    level,
+  } = message;
 
   let messageBody;
   if (message.messageText) {
@@ -33,27 +35,16 @@ function EvaluationResult(props) {
     messageBody = GripMessageBody({grip: message.parameters});
   }
 
+  const topLevelClasses = ["cm-s-mozilla"];
 
-  const classes = ["message", "cm-s-mozilla"];
-
-  classes.push(source);
-  classes.push(type);
-  classes.push(level);
-
-  return dom.div({
-    className: classes.join(" ")
-  },
-    // @TODO add timestamp
-    // @TODO add indent if needed with console.group
-    icon,
-    dom.span({ className: "message-body-wrapper" },
-      dom.span({ className: "message-flex-body" },
-        dom.span({ className: "message-body devtools-monospace" },
-          messageBody
-        )
-      )
-    )
-  );
+  const childProps = {
+    source,
+    type,
+    level,
+    topLevelClasses,
+    messageBody,
+  };
+  return Message(childProps);
 }
 
-module.exports.EvaluationResult = EvaluationResult;
+module.exports = EvaluationResult;

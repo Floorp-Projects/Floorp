@@ -25,4 +25,4 @@ function MessageRepeat(props) {
   return dom.span({className: "message-repeats", style: {visibility}}, repeat);
 }
 
-exports.MessageRepeat = MessageRepeat;
+module.exports = MessageRepeat;

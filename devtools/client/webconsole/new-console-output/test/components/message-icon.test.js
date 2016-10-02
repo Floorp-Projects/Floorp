@@ -5,7 +5,7 @@
 const {
   MESSAGE_LEVEL,
 } = require("devtools/client/webconsole/new-console-output/constants");
-const { MessageIcon } = require("devtools/client/webconsole/new-console-output/components/message-icon");
+const MessageIcon = require("devtools/client/webconsole/new-console-output/components/message-icon");
 
 const expect = require("expect");
 

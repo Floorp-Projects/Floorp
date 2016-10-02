@@ -7,7 +7,7 @@ const expect = require("expect");
 const { render } = require("enzyme");
 
 // Components under test.
-const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
+const PageError = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
