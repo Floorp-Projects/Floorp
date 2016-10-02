@@ -38,6 +38,7 @@ const MessageContainer = createClass({
     openLink: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
     hudProxyClient: PropTypes.object.isRequired,
+    autoscroll: PropTypes.bool.isRequired,
   },
 
   getDefaultProps: function () {
@@ -54,30 +55,10 @@ const MessageContainer = createClass({
   },
 
   render() {
-    const {
-      dispatch,
-      message,
-      sourceMapService,
-      onViewSourceInDebugger,
-      openNetworkPanel,
-      openLink,
-      open,
-      tableData,
-      hudProxyClient,
-    } = this.props;
+    const { message } = this.props;
 
     let MessageComponent = createFactory(getMessageComponent(message));
-    return MessageComponent({
-      dispatch,
-      message,
-      sourceMapService,
-      onViewSourceInDebugger,
-      openNetworkPanel,
-      openLink,
-      open,
-      tableData,
-      hudProxyClient,
-    });
+    return MessageComponent(this.props);
   }
 });
 

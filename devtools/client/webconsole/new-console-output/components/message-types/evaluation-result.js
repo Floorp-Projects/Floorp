@@ -43,6 +43,7 @@ function EvaluationResult(props) {
     level,
     topLevelClasses,
     messageBody,
+    scrollToMessage: props.autoscroll,
   };
   return Message(childProps);
 }
