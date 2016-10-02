@@ -28,6 +28,7 @@ const ConsoleOutput = createClass({
     onViewSourceInDebugger: PropTypes.func.isRequired,
     openNetworkPanel: PropTypes.func.isRequired,
     openLink: PropTypes.func.isRequired,
+    emitNewMessage: PropTypes.func.isRequired,
     autoscroll: PropTypes.bool.isRequired,
   },
 
@@ -67,6 +68,7 @@ const ConsoleOutput = createClass({
       onViewSourceInDebugger,
       openNetworkPanel,
       openLink,
+      emitNewMessage,
     } = this.props;
 
     let messageNodes = messages.map((message) => {
@@ -80,6 +82,7 @@ const ConsoleOutput = createClass({
           onViewSourceInDebugger,
           openNetworkPanel,
           openLink,
+          emitNewMessage,
           open: messagesUi.includes(message.id),
           tableData: messagesTableData.get(message.id),
           autoscroll,

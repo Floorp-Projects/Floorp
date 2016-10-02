@@ -39,7 +39,8 @@ function ConsoleApiCall(props) {
     onViewSourceInDebugger,
     open,
     hudProxyClient,
-    tableData
+    tableData,
+    emitNewMessage,
   } = props;
   const {
     id: messageId,
@@ -93,6 +94,7 @@ function ConsoleApiCall(props) {
     attachment,
     onViewSourceInDebugger,
     sourceMapService,
+    emitNewMessage,
     dispatch,
   });
 }

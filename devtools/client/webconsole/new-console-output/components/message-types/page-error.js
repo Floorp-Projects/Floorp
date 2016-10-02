@@ -29,7 +29,8 @@ function PageError(props) {
     message,
     open,
     sourceMapService,
-    onViewSourceInDebugger
+    onViewSourceInDebugger,
+    emitNewMessage,
   } = props;
   const {
     id: messageId,
@@ -55,6 +56,7 @@ function PageError(props) {
     stacktrace,
     onViewSourceInDebugger,
     sourceMapService,
+    emitNewMessage,
   };
   return Message(childProps);
 }
