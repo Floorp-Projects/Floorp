@@ -8,6 +8,7 @@
 
 // React & Redux
 const {
+  createClass,
   createFactory,
   DOM: dom,
   PropTypes
@@ -19,107 +20,123 @@ const MessageRepeat = createFactory(require("devtools/client/webconsole/new-cons
 const FrameView = createFactory(require("devtools/client/shared/components/frame"));
 const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
 
-Message.displayName = "Message";
+const Message = createClass({
+  displayName: "Message",
 
-Message.propTypes = {
-  open: PropTypes.bool,
-  source: PropTypes.string.isRequired,
-  type: PropTypes.string.isRequired,
-  level: PropTypes.string.isRequired,
-  topLevelClasses: PropTypes.array,
-  messageBody: PropTypes.any.isRequired,
-  repeat: PropTypes.any,
-  frame: PropTypes.any,
-  attachment: PropTypes.any,
-  stacktrace: PropTypes.any,
-  messageId: PropTypes.string,
-  onViewSourceInDebugger: PropTypes.func,
-  sourceMapService: PropTypes.any,
-};
+  propTypes: {
+    open: PropTypes.bool,
+    source: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+    level: PropTypes.string.isRequired,
+    topLevelClasses: PropTypes.array,
+    messageBody: PropTypes.any.isRequired,
+    repeat: PropTypes.any,
+    frame: PropTypes.any,
+    attachment: PropTypes.any,
+    stacktrace: PropTypes.any,
+    messageId: PropTypes.string,
+    scrollToMessage: PropTypes.bool,
+    onViewSourceInDebugger: PropTypes.func,
+    sourceMapService: PropTypes.any,
+  },
 
-Message.defaultProps = {
-  topLevelClasses: [],
-};
+  getDefaultProps() {
+    return {
+      topLevelClasses: [],
+    };
+  },
 
-function Message(props) {
-  const {
-    messageId,
-    open,
-    source,
-    type,
-    level,
-    topLevelClasses,
-    messageBody,
-    frame,
-    stacktrace,
-    onViewSourceInDebugger,
-    sourceMapService,
-    dispatch,
-  } = props;
+  componentDidMount() {
+    if (this.props.scrollToMessage && this.messageNode) {
+      this.messageNode.scrollIntoView();
+    }
+  },
 
-  topLevelClasses.push("message", source, type, level);
-  if (open) {
-    topLevelClasses.push("open");
-  }
-
-  const icon = MessageIcon({level});
-
-  // Figure out if there is an expandable part to the message.
-  let attachment = null;
-  if (props.attachment) {
-    attachment = props.attachment;
-  } else if (stacktrace) {
-    const child = open ? StackTrace({
-      stacktrace: stacktrace,
-      onViewSourceInDebugger: onViewSourceInDebugger
-    }) : null;
-    attachment = dom.div({ className: "stacktrace devtools-monospace" }, child);
-  }
-
-  // If there is an expandable part, make it collapsible.
-  let collapse = null;
-  if (attachment) {
-    collapse = CollapseButton({
+  render() {
+    const {
+      messageId,
       open,
-      onClick: function () {
-        if (open) {
-          dispatch(actions.messageClose(messageId));
-        } else {
-          dispatch(actions.messageOpen(messageId));
-        }
-      },
-    });
-  }
-
-  const repeat = props.repeat ? MessageRepeat({repeat: props.repeat}) : null;
-
-  // Configure the location.
-  const shouldRenderFrame = frame && frame.source !== "debugger eval code";
-  const location = dom.span({ className: "message-location devtools-monospace" },
-    shouldRenderFrame ? FrameView({
+      source,
+      type,
+      level,
+      topLevelClasses,
+      messageBody,
       frame,
-      onClick: onViewSourceInDebugger,
-      showEmptyPathAsHost: true,
-      sourceMapService
-    }) : null
-  );
+      stacktrace,
+      onViewSourceInDebugger,
+      sourceMapService,
+      dispatch,
+    } = this.props;
 
-  return dom.div({ className: topLevelClasses.join(" ") },
-    // @TODO add timestamp
-    // @TODO add indent if necessary
-    icon,
-    collapse,
-    dom.span({ className: "message-body-wrapper" },
-      dom.span({ className: "message-flex-body" },
-        dom.span({ className: "message-body devtools-monospace" },
-          messageBody
+    topLevelClasses.push("message", source, type, level);
+    if (open) {
+      topLevelClasses.push("open");
+    }
+
+    const icon = MessageIcon({level});
+
+    // Figure out if there is an expandable part to the message.
+    let attachment = null;
+    if (this.props.attachment) {
+      attachment = this.props.attachment;
+    } else if (stacktrace) {
+      const child = open ? StackTrace({
+        stacktrace: stacktrace,
+        onViewSourceInDebugger: onViewSourceInDebugger
+      }) : null;
+      attachment = dom.div({ className: "stacktrace devtools-monospace" }, child);
+    }
+
+    // If there is an expandable part, make it collapsible.
+    let collapse = null;
+    if (attachment) {
+      collapse = CollapseButton({
+        open,
+        onClick: function () {
+          if (open) {
+            dispatch(actions.messageClose(messageId));
+          } else {
+            dispatch(actions.messageOpen(messageId));
+          }
+        },
+      });
+    }
+
+    const repeat = this.props.repeat ? MessageRepeat({repeat: this.props.repeat}) : null;
+
+    // Configure the location.
+    const shouldRenderFrame = frame && frame.source !== "debugger eval code";
+    const location = dom.span({ className: "message-location devtools-monospace" },
+      shouldRenderFrame ? FrameView({
+        frame,
+        onClick: onViewSourceInDebugger,
+        showEmptyPathAsHost: true,
+        sourceMapService
+      }) : null
+    );
+
+    return dom.div({
+      className: topLevelClasses.join(" "),
+      ref: node => {
+        this.messageNode = node;
+      }
+    },
+      // @TODO add timestamp
+      // @TODO add indent if necessary
+      icon,
+      collapse,
+      dom.span({ className: "message-body-wrapper" },
+        dom.span({ className: "message-flex-body" },
+          dom.span({ className: "message-body devtools-monospace" },
+            messageBody
+          ),
+          repeat,
+          location
         ),
-        repeat,
-        location
-      ),
-      attachment
-    )
-  );
-}
+        attachment
+      )
+    );
+  }
+});
 
 module.exports = Message;
