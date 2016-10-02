@@ -714,6 +714,19 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   }
   // Note: only for overriding parameters from GetCodec()!
   CodecConfigToWebRTCCodec(codecConfig, video_codec);
+  if (mSendingWidth != 0) {
+    // We're already in a call and are reconfiguring (perhaps due to
+    // ReplaceTrack).  Set to match the last frame we sent.
+
+    // We could also set mLastWidth to 0, to force immediate reconfig -
+    // more expensive, but perhaps less risk of missing something.  Really
+    // on ReplaceTrack we should just call ConfigureCodecMode(), and if the
+    // mode changed, we re-configure.
+    // Do this after CodecConfigToWebRTCCodec() to avoid messing up simulcast
+    video_codec.width = mSendingWidth;
+    video_codec.height = mSendingHeight;
+    video_codec.maxFramerate = mSendingFramerate;
+  }
   video_codec.mode = mCodecMode;
 
   if(mPtrViECodec->SetSendCodec(mChannel, video_codec) == -1)
@@ -1568,7 +1581,7 @@ WebrtcVideoConduit::SendVideoFrame(webrtc::I420VideoFrame& frame)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
   // See if we need to recalculate what we're sending.
-  // Don't compate mSendingWidth/Height, since those may not be the same as the input.
+  // Don't compare mSendingWidth/Height, since those may not be the same as the input.
   {
     MutexAutoLock lock(mCodecMutex);
     if (mInReconfig) {
