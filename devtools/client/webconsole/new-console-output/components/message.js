@@ -28,7 +28,7 @@ const Message = createClass({
     source: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
     level: PropTypes.string.isRequired,
-    topLevelClasses: PropTypes.array,
+    topLevelClasses: PropTypes.array.isRequired,
     messageBody: PropTypes.any.isRequired,
     repeat: PropTypes.any,
     frame: PropTypes.any,
@@ -38,12 +38,6 @@ const Message = createClass({
     scrollToMessage: PropTypes.bool,
     onViewSourceInDebugger: PropTypes.func,
     sourceMapService: PropTypes.any,
-  },
-
-  getDefaultProps() {
-    return {
-      topLevelClasses: [],
-    };
   },
 
   componentDidMount() {
