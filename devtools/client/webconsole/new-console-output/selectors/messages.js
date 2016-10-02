@@ -49,7 +49,7 @@ function filterNetwork(messages, filters) {
   return messages.filter((message) => {
     return (
       message.source !== MESSAGE_SOURCE.NETWORK
-      || (filters.get("network") === true && message.isXHR === false)
+      || (filters.get("net") === true && message.isXHR === false)
       || (filters.get("netxhr") === true && message.isXHR === true)
       || [MESSAGE_TYPE.COMMAND, MESSAGE_TYPE.RESULT].includes(message.type)
     );
