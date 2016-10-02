@@ -27,6 +27,11 @@ describe("ConsoleAPICall component:", () => {
       expect(wrapper.find(".message-body").text()).toBe("foobar test");
       expect(wrapper.find(".objectBox-string").length).toBe(2);
       expect(wrapper.find("div.message.cm-s-mozilla span span.message-flex-body span.message-body.devtools-monospace").length).toBe(1);
+
+      // There should be the location
+      const locationLink = wrapper.find(`.message-location`);
+      expect(locationLink.length).toBe(1);
+      expect(locationLink.text()).toBe("test-tempfile.js:1:27");
     });
 
     it("renders repeat node", () => {
