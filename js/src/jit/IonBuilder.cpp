@@ -125,6 +125,7 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileCompartment* comp,
     actionableAbortScript_(nullptr),
     actionableAbortPc_(nullptr),
     actionableAbortMessage_(nullptr),
+    rootList_(nullptr),
     analysisContext(analysisContext),
     baselineFrame_(baselineFrame),
     constraints_(constraints),
@@ -14635,7 +14636,6 @@ IonBuilder::trace(JSTracer* trc)
     if (!compartment->runtime()->runtimeMatches(trc->runtime()))
         return;
 
-    TraceManuallyBarrieredEdge(trc, &script_, "IonBuiler::script_");
-    if (actionableAbortScript_)
-        TraceManuallyBarrieredEdge(trc, &actionableAbortScript_, "IonBuiler::actionableAbortScript_");
+    MOZ_ASSERT(rootList_);
+    rootList_->trace(trc);
 }
