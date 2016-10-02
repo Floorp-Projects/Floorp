@@ -20,7 +20,7 @@ describe("FilterButton component:", () => {
   it("displays as active when turned on", () => {
     const wrapper = render(FilterButton(props));
     expect(wrapper.html()).toBe(
-      "<button class=\"menu-filter-button checked\">Error</button>"
+      "<button class=\"menu-filter-button error checked\">Error</button>"
     );
   });
 
@@ -28,7 +28,7 @@ describe("FilterButton component:", () => {
     const inactiveProps = Object.assign({}, props, { active: false });
     const wrapper = render(FilterButton(inactiveProps));
     expect(wrapper.html()).toBe(
-      "<button class=\"menu-filter-button\">Error</button>"
+      "<button class=\"menu-filter-button error\">Error</button>"
     );
   });
 });
