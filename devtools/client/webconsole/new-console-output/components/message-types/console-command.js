@@ -17,6 +17,7 @@ ConsoleCommand.displayName = "ConsoleCommand";
 
 ConsoleCommand.propTypes = {
   message: PropTypes.object.isRequired,
+  autoscroll: PropTypes.bool.isRequired,
 };
 
 /**
@@ -27,14 +28,15 @@ function ConsoleCommand(props) {
     source,
     type,
     level,
-    messageText: messageBody
+    messageText: messageBody,
   } = props.message;
 
   const childProps = {
     source,
     type,
     level,
-    messageBody
+    messageBody,
+    scrollToMessage: props.autoscroll,
   };
   return Message(childProps);
 }
