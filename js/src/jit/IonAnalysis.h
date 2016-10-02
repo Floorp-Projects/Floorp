@@ -66,6 +66,9 @@ AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAnalysi
 MOZ_MUST_USE bool
 RemoveUnmarkedBlocks(MIRGenerator* mir, MIRGraph& graph, uint32_t numMarkedBlocks);
 
+MOZ_MUST_USE bool
+CreateMIRRootList(IonBuilder& builder);
+
 void
 ClearDominatorTree(MIRGraph& graph);
 
