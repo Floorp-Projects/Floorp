@@ -10,6 +10,7 @@
 
 #include "nsDataHashtable.h"
 
+#include "nsITimer.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIMemoryReporter.h"
@@ -97,11 +98,13 @@ public:
  * object too.
  */
 class MediaStreamGraphImpl : public MediaStreamGraph,
-                             public nsIMemoryReporter
+                             public nsIMemoryReporter,
+                             public nsITimerCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
+  NS_DECL_NSITIMERCALLBACK
 
   /**
    * Use aGraphDriverRequested with SYSTEM_THREAD_DRIVER or AUDIO_THREAD_DRIVER
@@ -807,6 +810,9 @@ public:
 #endif
 
   dom::AudioChannel AudioChannel() const { return mAudioChannel; }
+
+  // used to limit graph shutdown time
+  nsCOMPtr<nsITimer> mShutdownTimer;
 
 private:
   virtual ~MediaStreamGraphImpl();
