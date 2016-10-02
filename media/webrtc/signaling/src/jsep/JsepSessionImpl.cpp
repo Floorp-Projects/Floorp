@@ -283,6 +283,25 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
     JSEP_SET_ERROR("Track " << streamId << "/" << trackId << " was never added.");
     return NS_ERROR_INVALID_ARG;
   }
+
+  // Add RtpStreamId Extmap
+  // SdpDirectionAttribute::Direction is a bitmask
+  SdpDirectionAttribute::Direction addVideoExt = SdpDirectionAttribute::kInactive;
+  for (auto constraintEntry: constraints) {
+    if (constraintEntry.rid != "") {
+      switch (it->mTrack->GetMediaType()) {
+        case SdpMediaSection::kVideo: {
+           addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
+                                                                       | it->mTrack->GetDirection());
+          break;
+        }
+      }
+    }
+  }
+  if (addVideoExt != SdpDirectionAttribute::kInactive) {
+    AddVideoRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id", addVideoExt);
+  }
+
   it->mTrack->SetJsConstraints(constraints);
   return NS_OK;
 }
@@ -2205,8 +2224,6 @@ void
 JsepSessionImpl::SetupDefaultRtpExtensions()
 {
   AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level",
-                       SdpDirectionAttribute::Direction::kSendonly);
-  AddVideoRtpExtension(webrtc::RtpExtension::kRtpStreamId,
                        SdpDirectionAttribute::Direction::kSendonly);
 }
 
