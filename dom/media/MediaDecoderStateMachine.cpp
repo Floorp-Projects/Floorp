@@ -989,11 +989,12 @@ MediaDecoderStateMachine::NeedToSkipToNextKeyframe()
   // readers that are async, as since their audio decode runs on a different
   // task queue it should never run low and skipping won't help their decode.
   bool isLowOnDecodedAudio = !mReader->IsAsync() &&
-                             IsAudioDecoding() &&
+                             !mIsAudioPrerolling && IsAudioDecoding() &&
                              (GetDecodedAudioDuration() <
                               mLowAudioThresholdUsecs * mPlaybackRate);
-  bool isLowOnDecodedVideo = (GetClock() - mDecodedVideoEndTime) * mPlaybackRate >
-                             LOW_VIDEO_THRESHOLD_USECS;
+  bool isLowOnDecodedVideo = !mIsVideoPrerolling &&
+                             ((GetClock() - mDecodedVideoEndTime) * mPlaybackRate >
+                              LOW_VIDEO_THRESHOLD_USECS);
   bool lowBuffered = HasLowBufferedData();
 
   if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !lowBuffered) {
