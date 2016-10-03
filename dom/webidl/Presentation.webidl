@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.presentation.enabled"]
-interface Presentation : EventTarget {
+interface Presentation {
  /*
   * This should be used by the UA as the default presentation request for the
   * controller. When the UA wishes to initiate a PresentationConnection on the

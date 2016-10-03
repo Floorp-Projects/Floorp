@@ -17,21 +17,25 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
+#include "nsPIDOMWindow.h"
 #include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
 #include "PresentationReceiver.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(Presentation, DOMEventTargetHelper,
-                                   mDefaultRequest, mReceiver)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Presentation,
+                                      mWindow,
+                                      mDefaultRequest, mReceiver)
 
-NS_IMPL_ADDREF_INHERITED(Presentation, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(Presentation, DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(Presentation)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(Presentation)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Presentation)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Presentation)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 /* static */ already_AddRefed<Presentation>
 Presentation::Create(nsPIDOMWindowInner* aWindow)
@@ -88,7 +92,7 @@ Presentation::HasReceiverSupport(JSContext* aCx, JSObject* aGlobal)
 }
 
 Presentation::Presentation(nsPIDOMWindowInner* aWindow)
-  : DOMEventTargetHelper(aWindow)
+  : mWindow(aWindow)
 {
 }
 
@@ -110,7 +114,7 @@ Presentation::SetDefaultRequest(PresentationRequest* aRequest)
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
+  nsCOMPtr<nsIDocument> doc = mWindow ? mWindow->GetExtantDoc() : nullptr;
   if (NS_WARN_IF(!doc)) {
     return;
   }
@@ -146,7 +150,7 @@ Presentation::GetReceiver()
     return nullptr;
   }
 
-  mReceiver = PresentationReceiver::Create(GetOwner());
+  mReceiver = PresentationReceiver::Create(mWindow);
   if (NS_WARN_IF(!mReceiver)) {
     MOZ_ASSERT(mReceiver);
     return nullptr;
@@ -159,7 +163,11 @@ Presentation::GetReceiver()
 bool
 Presentation::IsInPresentedContent() const
 {
-  nsCOMPtr<nsIDocShell> docShell = GetOwner()->GetDocShell();
+  if (!mWindow) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = mWindow->GetDocShell();
   MOZ_ASSERT(docShell);
 
   nsAutoString presentationURL;
@@ -167,3 +175,6 @@ Presentation::IsInPresentedContent() const
 
   return !presentationURL.IsEmpty();
 }
+
+} // namespace dom
+} // namespace mozilla

@@ -10,6 +10,7 @@
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
 #include "nsIPresentationService.h"
+#include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "PresentationConnection.h"
