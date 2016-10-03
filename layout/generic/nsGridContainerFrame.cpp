@@ -29,7 +29,7 @@
 #include "nsStyleContext.h"
 #include "mozilla/dom/GridBinding.h"
 
-#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__  == 6
+#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__ <= 8
 #define CLANG_CRASH_BUG 1
 #endif
 
@@ -420,8 +420,10 @@ public:
 
   void SetGridItemCount(size_t aGridItemCount)
   {
+#ifndef CLANG_CRASH_BUG
     MOZ_ASSERT(mIter.isSome() || mArray->Length() == aGridItemCount,
                "grid item count mismatch");
+#endif
     mGridItemCount.emplace(aGridItemCount);
     // Note: it's OK if mGridItemIndex underflows -- GridItemIndex()
     // will not be called unless there is at least one item.
