@@ -6706,15 +6706,3 @@ JS::GCThingTraceKind(void* thing)
     MOZ_ASSERT(thing);
     return static_cast<js::gc::Cell*>(thing)->getTraceKind();
 }
-
-JS_PUBLIC_API(void)
-js::SetStackFormat(JSContext* cx, js::StackFormat format)
-{
-    cx->setStackFormat(format);
-}
-
-JS_PUBLIC_API(js::StackFormat)
-js::GetStackFormat(JSContext* cx)
-{
-    return cx->stackFormat();
-}
