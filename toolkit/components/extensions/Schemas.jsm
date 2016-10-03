@@ -32,7 +32,9 @@ function readJSON(url) {
   return new Promise((resolve, reject) => {
     NetUtil.asyncFetch({uri: url, loadUsingSystemPrincipal: true}, (inputStream, status) => {
       if (!Components.isSuccessCode(status)) {
-        reject(new Error(status));
+        // Convert status code to a string
+        let e = Components.Exception("", status);
+        reject(new Error(`Error while loading '${url}' (${e.name})`));
         return;
       }
       try {
