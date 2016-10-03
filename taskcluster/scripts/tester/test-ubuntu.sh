@@ -75,7 +75,9 @@ if [ ${MOZHARNESS_URL} ]; then
         fail "failed to download mozharness zip"
     fi
     rm -rf mozharness
-    unzip -q mozharness.zip
+    if !  unzip -q mozharness.zip; then
+        fail "error unzipping mozharness.zip"
+    fi
     rm mozharness.zip
 
     if ! [ -d mozharness ]; then
