@@ -922,10 +922,37 @@ ComputeTransformDistance(nsCSSValue::Array* aArray1,
       }
       break;
     }
-    case eCSSKeyword_perspective:
-      // TODO: This will be fixed in the later patch.
-      distance = 0.0;
+    case eCSSKeyword_perspective: {
+      MOZ_ASSERT(a1->Count() == 2, "unexpected count");
+      MOZ_ASSERT(a2->Count() == 2, "unexpected count");
+
+      // We convert a perspective function into an equivalent matrix3d, and
+      // then do matrix decomposition to get the distance.
+      // Why don't we just subtract one perspective depth from the other?
+      // I think it's better to follow the logic of our interpolation,
+      // which does linear interpolation between two decomposed perspective
+      // vectors.
+      // e.g.
+      // Do interpolation between perspective(100px) and perspective(1000px).
+      //   1) Convert them into matrix3d, and then do matrix decomposition:
+      //      perspective vector 1: perspective(0, 0, -1/100, 1);
+      //      perspective vector 2: perspective(0, 0, -1/1000, 1);
+      //   2) Do linear interpolation between these two vectors.
+      // Therefore, we use the same rule to get the distance as what we do for
+      // matrix3d.
+
+      auto clampPerspectiveDepth = [](float aDepth) {
+        // Perspective depth should be positive non-zero value.
+        return std::max(aDepth, std::numeric_limits<float>::epsilon());
+      };
+      Matrix4x4 m1;
+      m1.Perspective(clampPerspectiveDepth(a1->Item(1).GetFloatValue()));
+      Matrix4x4 m2;
+      m2.Perspective(clampPerspectiveDepth(a2->Item(1).GetFloatValue()));
+
+      distance = ComputeTransform3DMatrixDistance(m1, m2);
       break;
+    }
     case eCSSKeyword_matrix: {
       MOZ_ASSERT(a1->Count() == 7, "unexpected count");
       MOZ_ASSERT(a2->Count() == 7, "unexpected count");
