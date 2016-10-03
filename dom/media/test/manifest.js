@@ -1545,9 +1545,6 @@ var PARALLEL_TESTS = 2;
 // conditions that might not otherwise be encountered on the test data.
 var gTestPrefs = [
   ['media.recorder.max_memory', 1024],
-  ["media.preload.default", 2], // default preload = metadata
-  ["media.preload.auto", 3], // auto preload = enough
-  ["media.test.dumpDebugInfo", true],
 ];
 
 // When true, we'll loop forever on whatever test we run. Use this to debug
@@ -1700,14 +1697,6 @@ function mediaTestCleanup(callback) {
       A[i] = null;
     }
     SpecialPowers.exactGC(callback);
-}
-
-function setMediaTestsPrefs(callback, extraPrefs) {
-  var prefs = gTestPrefs;
-  if (extraPrefs) {
-    prefs = prefs.concat(extraPrefs);
-  }
-  SpecialPowers.pushPrefEnv({"set": prefs}, callback);
 }
 
 // B2G emulator and Android 2.3 are condidered slow platforms
