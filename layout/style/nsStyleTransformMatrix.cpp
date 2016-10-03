@@ -685,6 +685,32 @@ TransformFunctionOf(const nsCSSValue::Array* aData)
   return aData->Item(0).GetKeywordValue();
 }
 
+void
+SetIdentityMatrix(nsCSSValue::Array* aMatrix)
+{
+  MOZ_ASSERT(aMatrix, "aMatrix should be non-null");
+
+  nsCSSKeyword tfunc = TransformFunctionOf(aMatrix);
+  MOZ_ASSERT(tfunc == eCSSKeyword_matrix ||
+             tfunc == eCSSKeyword_matrix3d,
+             "Only accept matrix and matrix3d");
+
+  if (tfunc == eCSSKeyword_matrix) {
+    MOZ_ASSERT(aMatrix->Count() == 7, "Invalid matrix");
+    Matrix m;
+    for (size_t i = 0; i < 6; ++i) {
+      aMatrix->Item(i + 1).SetFloatValue(m.components[i], eCSSUnit_Number);
+    }
+    return;
+  }
+
+  MOZ_ASSERT(aMatrix->Count() == 17, "Invalid matrix3d");
+  Matrix4x4 m;
+  for (size_t i = 0; i < 16; ++i) {
+    aMatrix->Item(i + 1).SetFloatValue(m.components[i], eCSSUnit_Number);
+  }
+}
+
 Matrix4x4
 ReadTransforms(const nsCSSValueList* aList,
                nsStyleContext* aContext,

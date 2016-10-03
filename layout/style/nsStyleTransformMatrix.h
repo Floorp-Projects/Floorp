@@ -127,6 +127,8 @@ namespace nsStyleTransformMatrix {
    */
   nsCSSKeyword TransformFunctionOf(const nsCSSValue::Array* aData);
 
+  void SetIdentityMatrix(nsCSSValue::Array* aMatrix);
+
   float ProcessTranslatePart(const nsCSSValue& aValue,
                              nsStyleContext* aContext,
                              nsPresContext* aPresContext,
