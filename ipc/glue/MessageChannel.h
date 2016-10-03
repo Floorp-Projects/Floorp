@@ -507,7 +507,12 @@ class MessageChannel : HasResultCodes
             topCount = curCount;
           }
 
-          CrashReporter::AnnotatePendingIPC(q.size(), topCount, topName, topType);
+          CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("NumberOfPendingIPC"),
+                                             nsPrintfCString("%zu", q.size()));
+          CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("TopPendingIPCCount"),
+                                             nsPrintfCString("%u", topCount));
+          CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("TopPendingIPCName"),
+                                             nsPrintfCString("%s(0x%x)", topName, topType));
 
           mozalloc_handle_oom(n * sizeof(T));
         }
