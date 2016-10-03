@@ -24,6 +24,11 @@ double Fake_MediaStream::StreamTimeToSeconds(mozilla::StreamTime aTime) {
   return static_cast<double>(aTime)/GRAPH_RATE;
 }
 
+mozilla::TrackTicks Fake_MediaStream::TimeToTicksRoundUp(mozilla::TrackRate aRate,
+                                                         mozilla::StreamTime aTime) {
+  return (aTime * aRate) / GRAPH_RATE;
+}
+
 mozilla::StreamTime
 Fake_MediaStream::TicksToTimeRoundDown(mozilla::TrackRate aRate,
                                        mozilla::TrackTicks aTicks) {
