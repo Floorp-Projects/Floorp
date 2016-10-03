@@ -182,7 +182,10 @@ gl::Error Framebuffer11::invalidateBase(size_t count, const GLenum *attachments,
                 size_t colorIndex =
                     (attachments[i] == GL_COLOR ? 0u : (attachments[i] - GL_COLOR_ATTACHMENT0));
                 auto colorAttachment = mState.getColorAttachment(colorIndex);
-                ANGLE_TRY(invalidateAttachment(colorAttachment));
+		if (colorAttachment)
+		{
+		    ANGLE_TRY(invalidateAttachment(colorAttachment));
+		}
                 break;
             }
         }
