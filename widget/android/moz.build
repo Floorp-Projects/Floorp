@@ -24,9 +24,14 @@ EXPORTS += [
     'GeneratedJNIWrappers.h',
 ]
 
+EXPORTS.mozilla.widget += [
+    'AndroidCompositorWidget.h',
+]
+
 UNIFIED_SOURCES += [
     'AndroidAlerts.cpp',
     'AndroidBridge.cpp',
+    'AndroidCompositorWidget.cpp',
     'AndroidContentController.cpp',
     'AndroidJavaWrappers.cpp',
     'AndroidJNI.cpp',
