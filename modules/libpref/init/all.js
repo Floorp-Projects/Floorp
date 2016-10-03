@@ -5258,6 +5258,9 @@ pref("layout.accessiblecaret.hapticfeedback", false);
 // Smart phone-number selection on long-press is not enabled by default.
 pref("layout.accessiblecaret.extend_selection_for_phone_number", false);
 
+// Keep the accessible carets hidden when the user is using mouse input.
+pref("layout.accessiblecaret.hide_carets_for_mouse_input", true);
+
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
 

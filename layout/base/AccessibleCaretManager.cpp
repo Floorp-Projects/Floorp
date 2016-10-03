@@ -83,6 +83,8 @@ AccessibleCaretManager::sCaretsAllowDraggingAcrossOtherCaret = true;
 AccessibleCaretManager::sHapticFeedback = false;
 /*static*/ bool
 AccessibleCaretManager::sExtendSelectionForPhoneNumber = false;
+/*static*/ bool
+AccessibleCaretManager::sHideCaretsForMouseInput = true;
 
 AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   : mPresShell(aPresShell)
@@ -114,6 +116,8 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
                                  "layout.accessiblecaret.hapticfeedback");
     Preferences::AddBoolVarCache(&sExtendSelectionForPhoneNumber,
       "layout.accessiblecaret.extend_selection_for_phone_number");
+    Preferences::AddBoolVarCache(&sHideCaretsForMouseInput,
+      "layout.accessiblecaret.hide_carets_for_mouse_input");
     addedPrefs = true;
   }
 }
@@ -181,6 +185,13 @@ AccessibleCaretManager::OnSelectionChanged(nsIDOMDocument* aDoc,
   // Range will collapse after cutting or copying text.
   if (aReason & (nsISelectionListener::COLLAPSETOSTART_REASON |
                  nsISelectionListener::COLLAPSETOEND_REASON)) {
+    HideCarets();
+    return NS_OK;
+  }
+
+  // For mouse input we don't want to show the carets.
+  if (sHideCaretsForMouseInput &&
+      mLastInputSource == nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {
     HideCarets();
     return NS_OK;
   }
@@ -672,6 +683,14 @@ AccessibleCaretManager::OnScrollEnd()
     }
   }
 
+  // For mouse input we don't want to show the carets.
+  if (sHideCaretsForMouseInput &&
+      mLastInputSource == nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {
+    AC_LOG("%s: HideCarets()", __FUNCTION__);
+    HideCarets();
+    return;
+  }
+
   AC_LOG("%s: UpdateCarets()", __FUNCTION__);
   UpdateCarets();
 }
@@ -723,6 +742,12 @@ AccessibleCaretManager::OnFrameReconstruction()
 {
   mFirstCaret->EnsureApzAware();
   mSecondCaret->EnsureApzAware();
+}
+
+void
+AccessibleCaretManager::SetLastInputSource(uint16_t aInputSource)
+{
+  mLastInputSource = aInputSource;
 }
 
 Selection*
