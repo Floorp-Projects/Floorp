@@ -5294,6 +5294,16 @@ InlinePropertyTable::buildTypeSetForFunction(JSFunction* func) const
     return types;
 }
 
+bool
+InlinePropertyTable::appendRoots(MRootList& roots) const
+{
+    for (const Entry* entry : entries_) {
+        if (!entry->appendRoots(roots))
+            return false;
+    }
+    return true;
+}
+
 SharedMem<void*>
 MLoadTypedArrayElementStatic::base() const
 {
@@ -5377,6 +5387,95 @@ MGetPropertyPolymorphic::mightAlias(const MDefinition* store) const
     }
 
     return AliasType::NoAlias;
+}
+
+bool
+MGetPropertyPolymorphic::appendRoots(MRootList& roots) const
+{
+    if (!roots.append(name_))
+        return false;
+
+    for (const PolymorphicEntry& entry : receivers_) {
+        if (!entry.appendRoots(roots))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+MSetPropertyPolymorphic::appendRoots(MRootList& roots) const
+{
+    if (!roots.append(name_))
+        return false;
+
+    for (const PolymorphicEntry& entry : receivers_) {
+        if (!entry.appendRoots(roots))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+MGuardReceiverPolymorphic::appendRoots(MRootList& roots) const
+{
+    for (const ReceiverGuard& guard : receivers_) {
+        if (!roots.append(guard))
+            return false;
+    }
+    return true;
+}
+
+bool
+MDispatchInstruction::appendRoots(MRootList& roots) const
+{
+    for (const Entry& entry : map_) {
+        if (!entry.appendRoots(roots))
+            return false;
+    }
+    return true;
+}
+
+bool
+MObjectGroupDispatch::appendRoots(MRootList& roots) const
+{
+    if (inlinePropertyTable_ && !inlinePropertyTable_->appendRoots(roots))
+        return false;
+    return MDispatchInstruction::appendRoots(roots);
+}
+
+bool
+MFunctionDispatch::appendRoots(MRootList& roots) const
+{
+    return MDispatchInstruction::appendRoots(roots);
+}
+
+bool
+MConstant::appendRoots(MRootList& roots) const
+{
+    switch (type()) {
+      case MIRType::String:
+        return roots.append(toString());
+      case MIRType::Symbol:
+        return roots.append(toSymbol());
+      case MIRType::Object:
+        return roots.append(&toObject());
+      case MIRType::Undefined:
+      case MIRType::Null:
+      case MIRType::Boolean:
+      case MIRType::Int32:
+      case MIRType::Double:
+      case MIRType::Float32:
+      case MIRType::MagicOptimizedArguments:
+      case MIRType::MagicOptimizedOut:
+      case MIRType::MagicHole:
+      case MIRType::MagicIsConstructing:
+      case MIRType::MagicUninitializedLexical:
+        return true;
+      default:
+        MOZ_CRASH("Unexpected type");
+    }
 }
 
 void
