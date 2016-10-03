@@ -2492,14 +2492,14 @@ bool
 NativeKey::HandleCharMessage(const MSG& aCharMsg,
                              bool* aEventDispatched) const
 {
-  MOZ_ASSERT(IsKeyDownMessage() || IsPrintableCharMessage(mMsg));
-  MOZ_ASSERT(IsPrintableCharMessage(aCharMsg.message));
+  MOZ_ASSERT(IsKeyDownMessage() || IsCharOrSysCharMessage(mMsg));
+  MOZ_ASSERT(IsCharOrSysCharMessage(aCharMsg.message));
 
   if (aEventDispatched) {
     *aEventDispatched = false;
   }
 
-  if (IsPrintableCharMessage(mMsg) && IsAnotherInstanceRemovingCharMessage()) {
+  if (IsCharOrSysCharMessage(mMsg) && IsAnotherInstanceRemovingCharMessage()) {
     MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
       ("%p   NativeKey::HandleCharMessage(), WARNING, does nothing because "
        "the message should be handled in another instance removing this "
