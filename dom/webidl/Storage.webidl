@@ -12,22 +12,22 @@
 */
 
 interface Storage {
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   readonly attribute unsigned long length;
 
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   DOMString? key(unsigned long index);
 
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   getter DOMString? getItem(DOMString key);
 
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   setter creator void setItem(DOMString key, DOMString value);
 
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   deleter void removeItem(DOMString key);
 
-  [Throws]
+  [Throws, NeedsSubjectPrincipal]
   void clear();
 
   [ChromeOnly]
