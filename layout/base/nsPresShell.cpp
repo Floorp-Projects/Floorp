@@ -7799,11 +7799,12 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       MOZ_ASSERT(!frame->GetContent() || shell->GetDocument() == frame->GetContent()->OwnerDoc());
     }
 
+    // Prevent deletion until we're done with event handling (bug 336582) and
+    // swap mPointerEventTarget to *aTargetContent
+    nsCOMPtr<nsIPresShell> kungFuDeathGrip(shell);
     nsresult rv;
     if (shell != this) {
       // Handle the event in the correct shell.
-      // Prevent deletion until we're done with event handling (bug 336582).
-      nsCOMPtr<nsIPresShell> kungFuDeathGrip(shell);
       // We pass the subshell's root frame as the frame to start from. This is
       // the only correct alternative; if the event was captured then it
       // must have been captured by us or some ancestor shell and we
