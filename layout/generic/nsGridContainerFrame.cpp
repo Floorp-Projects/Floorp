@@ -4073,7 +4073,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
       // For this purpose, the 'start', 'end', 'flex-start', and 'flex-end'
       // values of 'align-self' are treated as either 'self-start' or
       // 'self-end', whichever they end up equivalent to.
-      auto alignContent = child->StylePosition()->ComputedAlignContent();
+      auto alignContent = child->StylePosition()->mAlignContent;
       alignContent &= ~NS_STYLE_ALIGN_FLAG_BITS;
       if (alignContent == NS_STYLE_ALIGN_BASELINE ||
           alignContent == NS_STYLE_ALIGN_LAST_BASELINE) {
@@ -4675,8 +4675,8 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
   }
 
   const bool isAlign = mAxis == eLogicalAxisBlock;
-  auto valueAndFallback = isAlign ? aStyle->ComputedAlignContent() :
-                                    aStyle->ComputedJustifyContent();
+  auto valueAndFallback = isAlign ? aStyle->mAlignContent :
+                                    aStyle->mJustifyContent;
   bool overflowSafe;
   auto alignment = ::GetAlignJustifyValue(valueAndFallback, aWM, isAlign,
                                           &overflowSafe);

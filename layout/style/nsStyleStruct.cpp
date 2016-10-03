@@ -1692,7 +1692,7 @@ nsStylePosition::UsedAlignSelf(nsStyleContext* aParent) const
     return mAlignSelf;
   }
   if (MOZ_LIKELY(aParent)) {
-    auto parentAlignItems = aParent->StylePosition()->ComputedAlignItems();
+    auto parentAlignItems = aParent->StylePosition()->mAlignItems;
     MOZ_ASSERT(!(parentAlignItems & NS_STYLE_ALIGN_LEGACY),
                "align-items can't have 'legacy'");
     return parentAlignItems;
