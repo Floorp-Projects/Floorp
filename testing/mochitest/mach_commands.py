@@ -196,7 +196,7 @@ class MochitestRunner(MozbuildObject):
         options = Namespace(**kwargs)
 
         from manifestparser import TestManifest
-        if tests:
+        if tests and not options.manifestFile:
             manifest = TestManifest()
             manifest.tests.extend(tests)
             options.manifestFile = manifest
@@ -232,7 +232,7 @@ class MochitestRunner(MozbuildObject):
         options = Namespace(**kwargs)
 
         from manifestparser import TestManifest
-        if tests:
+        if tests and not options.manifestFile:
             manifest = TestManifest()
             manifest.tests.extend(tests)
             options.manifestFile = manifest
@@ -265,7 +265,7 @@ class MochitestRunner(MozbuildObject):
         options = Namespace(**kwargs)
 
         from manifestparser import TestManifest
-        if tests:
+        if tests and not options.manifestFile:
             manifest = TestManifest()
             manifest.tests.extend(tests)
             options.manifestFile = manifest
@@ -287,7 +287,7 @@ class MochitestRunner(MozbuildObject):
         options = Namespace(**kwargs)
 
         from manifestparser import TestManifest
-        if tests:
+        if tests and not options.manifestFile:
             manifest = TestManifest()
             manifest.tests.extend(tests)
             options.manifestFile = manifest
