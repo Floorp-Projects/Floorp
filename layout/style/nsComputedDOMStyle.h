@@ -150,8 +150,7 @@ private:
 #undef STYLE_STRUCT
 
   already_AddRefed<CSSValue> GetEllipseRadii(const nsStyleCorners& aRadius,
-                                             uint8_t aFullCorner,
-                                             bool aIsBorder); // else outline
+                                             uint8_t aFullCorner);
 
   already_AddRefed<CSSValue> GetOffsetWidthFor(mozilla::css::Side aSide);
 
