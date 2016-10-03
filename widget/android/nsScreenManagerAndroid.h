@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: ts=4 sw=4 expandtab:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -10,12 +11,13 @@
 
 #include "nsBaseScreen.h"
 #include "nsIScreenManager.h"
-#include "WidgetUtils.h"
+#include "nsRect.h"
+#include "mozilla/WidgetUtils.h"
 
 class nsScreenAndroid final : public nsBaseScreen
 {
 public:
-    nsScreenAndroid(void *nativeScreen);
+    nsScreenAndroid(DisplayType aDisplayType, nsIntRect aRect);
     ~nsScreenAndroid();
 
     NS_IMETHOD GetId(uint32_t* aId) override;
@@ -24,8 +26,20 @@ public:
     NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) override;
     NS_IMETHOD GetColorDepth(int32_t* aColorDepth) override;
 
+    uint32_t GetId() const { return mId; };
+    DisplayType GetDisplayType() const { return mDisplayType; }
+
+    void SetDensity(double aDensity) { mDensity = aDensity; }
+    float GetDensity() const { return mDensity; }
+
 protected:
     virtual void ApplyMinimumBrightness(uint32_t aBrightness) override;
+
+private:
+    uint32_t mId;
+    DisplayType mDisplayType;
+    nsIntRect mRect;
+    float mDensity;
 };
 
 class nsScreenManagerAndroid final : public nsIScreenManager
@@ -39,8 +53,12 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCREENMANAGER
 
+    already_AddRefed<nsScreenAndroid> AddScreen(DisplayType aDisplayType,
+                                                nsIntRect aRect = nsIntRect());
+    void RemoveScreen(uint32_t aScreenId);
+
 protected:
-    nsCOMPtr<nsIScreen> mOneScreen;
+    nsTArray<RefPtr<nsScreenAndroid>> mScreens;
 };
 
 #endif /* nsScreenManagerAndroid_h___ */
