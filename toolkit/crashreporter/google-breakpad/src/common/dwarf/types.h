@@ -45,11 +45,7 @@ typedef unsigned short     uint16;
 typedef unsigned int       uint32;
 typedef unsigned long long uint64;
 
-#ifdef __PTRDIFF_TYPE__
-typedef          __PTRDIFF_TYPE__ intptr;
-typedef unsigned __PTRDIFF_TYPE__ uintptr;
-#else
-#error "Can't find pointer-sized integral types."
-#endif
+typedef intptr_t           intptr;
+typedef uintptr_t          uintptr;
 
 #endif // _COMMON_DWARF_TYPES_H__

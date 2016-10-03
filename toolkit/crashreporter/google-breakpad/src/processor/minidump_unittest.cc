@@ -63,6 +63,7 @@ using google_breakpad::SynthMinidump::Dump;
 using google_breakpad::SynthMinidump::Exception;
 using google_breakpad::SynthMinidump::Memory;
 using google_breakpad::SynthMinidump::Module;
+using google_breakpad::SynthMinidump::Section;
 using google_breakpad::SynthMinidump::Stream;
 using google_breakpad::SynthMinidump::String;
 using google_breakpad::SynthMinidump::SystemInfo;
@@ -90,7 +91,15 @@ TEST_F(MinidumpTest, TestMinidumpFromFile) {
   const MDRawHeader* header = minidump.header();
   ASSERT_NE(header, (MDRawHeader*)NULL);
   ASSERT_EQ(header->signature, uint32_t(MD_HEADER_SIGNATURE));
-  //TODO: add more checks here
+
+  MinidumpModuleList *md_module_list = minidump.GetModuleList();
+  ASSERT_TRUE(md_module_list != NULL);
+  const MinidumpModule *md_module = md_module_list->GetModuleAtIndex(0);
+  ASSERT_TRUE(md_module != NULL);
+  ASSERT_EQ("c:\\test_app.exe", md_module->code_file());
+  ASSERT_EQ("c:\\test_app.pdb", md_module->debug_file());
+  ASSERT_EQ("45D35F6C2d000", md_module->code_identifier());
+  ASSERT_EQ("5A9832E5287241C1838ED98914E9B7FF1", md_module->debug_identifier());
 }
 
 TEST_F(MinidumpTest, TestMinidumpFromStream) {
@@ -385,44 +394,61 @@ TEST(Dump, ThreadMissingContext) {
   ASSERT_EQ(reinterpret_cast<MinidumpContext*>(NULL), md_context);
 }
 
-TEST(Dump, OneModule) {
-  static const MDVSFixedFileInfo fixed_file_info = {
-    0xb2fba33a,                           // signature
-    0x33d7a728,                           // struct_version
-    0x31afcb20,                           // file_version_hi
-    0xe51cdab1,                           // file_version_lo
-    0xd1ea6907,                           // product_version_hi
-    0x03032857,                           // product_version_lo
-    0x11bf71d7,                           // file_flags_mask
-    0x5fb8cdbf,                           // file_flags
-    0xe45d0d5d,                           // file_os
-    0x107d9562,                           // file_type
-    0x5a8844d4,                           // file_subtype
-    0xa8d30b20,                           // file_date_hi
-    0x651c3e4e                            // file_date_lo
-  };
+static const MDVSFixedFileInfo fixed_file_info = {
+  0xb2fba33a,                           // signature
+  0x33d7a728,                           // struct_version
+  0x31afcb20,                           // file_version_hi
+  0xe51cdab1,                           // file_version_lo
+  0xd1ea6907,                           // product_version_hi
+  0x03032857,                           // product_version_lo
+  0x11bf71d7,                           // file_flags_mask
+  0x5fb8cdbf,                           // file_flags
+  0xe45d0d5d,                           // file_os
+  0x107d9562,                           // file_type
+  0x5a8844d4,                           // file_subtype
+  0xa8d30b20,                           // file_date_hi
+  0x651c3e4e                            // file_date_lo
+};
 
+TEST(Dump, OneModule) {
   Dump dump(0, kBigEndian);
   String module_name(dump, "single module");
+  Section cv_info(dump);
+  cv_info
+    .D32(MD_CVINFOPDB70_SIGNATURE)  // signature
+    // signature, a MDGUID
+    .D32(0xabcd1234)
+    .D16(0xf00d)
+    .D16(0xbeef)
+    .Append("\x01\x02\x03\x04\x05\x06\x07\x08")
+    .D32(1) // age
+    .AppendCString("c:\\foo\\file.pdb");  // pdb_file_name
+
+  String csd_version(dump, "Windows 9000");
+  SystemInfo system_info(dump, SystemInfo::windows_x86, csd_version);
+
   Module module(dump, 0xa90206ca83eb2852ULL, 0xada542bd,
                 module_name,
                 0xb1054d2a,
                 0x34571371,
                 fixed_file_info, // from synth_minidump_unittest_data.h
-                NULL, NULL);
+                &cv_info, nullptr);
 
   dump.Add(&module);
   dump.Add(&module_name);
+  dump.Add(&cv_info);
+  dump.Add(&system_info);
+  dump.Add(&csd_version);
   dump.Finish();
-  
+
   string contents;
   ASSERT_TRUE(dump.GetContents(&contents));
   istringstream minidump_stream(contents);
   Minidump minidump(minidump_stream);
   ASSERT_TRUE(minidump.Read());
-  ASSERT_EQ(1U, minidump.GetDirectoryEntryCount());
+  ASSERT_EQ(2U, minidump.GetDirectoryEntryCount());
 
-  const MDRawDirectory *dir = minidump.GetDirectoryEntryAtIndex(0);
+  const MDRawDirectory *dir = minidump.GetDirectoryEntryAtIndex(1);
   ASSERT_TRUE(dir != NULL);
   EXPECT_EQ((uint32_t) MD_MODULE_LIST_STREAM, dir->stream_type);
 
@@ -435,6 +461,10 @@ TEST(Dump, OneModule) {
   ASSERT_EQ(0xa90206ca83eb2852ULL, md_module->base_address());
   ASSERT_EQ(0xada542bd, md_module->size());
   ASSERT_EQ("single module", md_module->code_file());
+  ASSERT_EQ("c:\\foo\\file.pdb", md_module->debug_file());
+  // time_date_stamp and size_of_image concatenated
+  ASSERT_EQ("B1054D2Aada542bd", md_module->code_identifier());
+  ASSERT_EQ("ABCD1234F00DBEEF01020304050607081", md_module->debug_identifier());
 
   const MDRawModule *md_raw_module = md_module->module();
   ASSERT_TRUE(md_raw_module != NULL);
@@ -442,6 +472,231 @@ TEST(Dump, OneModule) {
   ASSERT_EQ(0x34571371U, md_raw_module->checksum);
   ASSERT_TRUE(memcmp(&md_raw_module->version_info, &fixed_file_info,
                      sizeof(fixed_file_info)) == 0);
+}
+
+// Test that a module with a MDCVInfoELF CV record is handled properly.
+TEST(Dump, OneModuleCVELF) {
+  Dump dump(0, kLittleEndian);
+  String module_name(dump, "elf module");
+  Section cv_info(dump);
+  cv_info
+    .D32(MD_CVINFOELF_SIGNATURE)  // signature
+    // build_id
+    .Append("\x5f\xa9\xcd\xb4\x10\x53\xdf\x1b\x86\xfa\xb7\x33\xb4\xdf"
+            "\x37\x38\xce\xa3\x4a\x87");
+
+  const MDRawSystemInfo linux_x86 = {
+    MD_CPU_ARCHITECTURE_X86,              // processor_architecture
+    6,                                    // processor_level
+    0xd08,                                // processor_revision
+    1,                                    // number_of_processors
+    0,                                    // product_type
+    0,                                    // major_version
+    0,                                    // minor_version
+    0,                                    // build_number
+    MD_OS_LINUX,                          // platform_id
+    0xdeadbeef,                           // csd_version_rva
+    0x100,                                // suite_mask
+    0,                                    // reserved2
+    {                                     // cpu
+      { // x86_cpu_info
+        { 0x756e6547, 0x49656e69, 0x6c65746e }, // vendor_id
+        0x6d8,                                  // version_information
+        0xafe9fbff,                             // feature_information
+        0xffffffff                              // amd_extended_cpu_features
+      }
+    }
+  };
+  String csd_version(dump, "Literally Linux");
+  SystemInfo system_info(dump, linux_x86, csd_version);
+
+  Module module(dump, 0xa90206ca83eb2852ULL, 0xada542bd,
+                module_name,
+                0xb1054d2a,
+                0x34571371,
+                fixed_file_info, // from synth_minidump_unittest_data.h
+                &cv_info, nullptr);
+
+  dump.Add(&module);
+  dump.Add(&module_name);
+  dump.Add(&cv_info);
+  dump.Add(&system_info);
+  dump.Add(&csd_version);
+  dump.Finish();
+
+  string contents;
+  ASSERT_TRUE(dump.GetContents(&contents));
+  istringstream minidump_stream(contents);
+  Minidump minidump(minidump_stream);
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpModuleList *md_module_list = minidump.GetModuleList();
+  ASSERT_TRUE(md_module_list != NULL);
+  ASSERT_EQ(1U, md_module_list->module_count());
+
+  const MinidumpModule *md_module = md_module_list->GetModuleAtIndex(0);
+  ASSERT_TRUE(md_module != NULL);
+  ASSERT_EQ(0xa90206ca83eb2852ULL, md_module->base_address());
+  ASSERT_EQ(0xada542bd, md_module->size());
+  ASSERT_EQ("elf module", md_module->code_file());
+  // debug_file == code_file
+  ASSERT_EQ("elf module", md_module->debug_file());
+  // just the build_id, directly
+  ASSERT_EQ("5fa9cdb41053df1b86fab733b4df3738cea34a87",
+            md_module->code_identifier());
+  // build_id truncted to GUID length and treated as such, with zero
+  // age appended
+  ASSERT_EQ("B4CDA95F53101BDF86FAB733B4DF37380", md_module->debug_identifier());
+
+  const MDRawModule *md_raw_module = md_module->module();
+  ASSERT_TRUE(md_raw_module != NULL);
+  ASSERT_EQ(0xb1054d2aU, md_raw_module->time_date_stamp);
+  ASSERT_EQ(0x34571371U, md_raw_module->checksum);
+  ASSERT_TRUE(memcmp(&md_raw_module->version_info, &fixed_file_info,
+                     sizeof(fixed_file_info)) == 0);
+}
+
+// Test that a build_id that's shorter than a GUID is handled properly.
+TEST(Dump, CVELFShort) {
+  Dump dump(0, kLittleEndian);
+  String module_name(dump, "elf module");
+  Section cv_info(dump);
+  cv_info
+    .D32(MD_CVINFOELF_SIGNATURE)  // signature
+    // build_id, shorter than a GUID
+    .Append("\x5f\xa9\xcd\xb4");
+
+  const MDRawSystemInfo linux_x86 = {
+    MD_CPU_ARCHITECTURE_X86,              // processor_architecture
+    6,                                    // processor_level
+    0xd08,                                // processor_revision
+    1,                                    // number_of_processors
+    0,                                    // product_type
+    0,                                    // major_version
+    0,                                    // minor_version
+    0,                                    // build_number
+    MD_OS_LINUX,                          // platform_id
+    0xdeadbeef,                           // csd_version_rva
+    0x100,                                // suite_mask
+    0,                                    // reserved2
+    {                                     // cpu
+      { // x86_cpu_info
+        { 0x756e6547, 0x49656e69, 0x6c65746e }, // vendor_id
+        0x6d8,                                  // version_information
+        0xafe9fbff,                             // feature_information
+        0xffffffff                              // amd_extended_cpu_features
+      }
+    }
+  };
+  String csd_version(dump, "Literally Linux");
+  SystemInfo system_info(dump, linux_x86, csd_version);
+
+  Module module(dump, 0xa90206ca83eb2852ULL, 0xada542bd,
+                module_name,
+                0xb1054d2a,
+                0x34571371,
+                fixed_file_info, // from synth_minidump_unittest_data.h
+                &cv_info, nullptr);
+
+  dump.Add(&module);
+  dump.Add(&module_name);
+  dump.Add(&cv_info);
+  dump.Add(&system_info);
+  dump.Add(&csd_version);
+  dump.Finish();
+
+  string contents;
+  ASSERT_TRUE(dump.GetContents(&contents));
+  istringstream minidump_stream(contents);
+  Minidump minidump(minidump_stream);
+  ASSERT_TRUE(minidump.Read());
+  ASSERT_EQ(2U, minidump.GetDirectoryEntryCount());
+
+  MinidumpModuleList *md_module_list = minidump.GetModuleList();
+  ASSERT_TRUE(md_module_list != NULL);
+  ASSERT_EQ(1U, md_module_list->module_count());
+
+  const MinidumpModule *md_module = md_module_list->GetModuleAtIndex(0);
+  ASSERT_TRUE(md_module != NULL);
+  // just the build_id, directly
+  ASSERT_EQ("5fa9cdb4", md_module->code_identifier());
+  // build_id expanded to GUID length and treated as such, with zero
+  // age appended
+  ASSERT_EQ("B4CDA95F0000000000000000000000000", md_module->debug_identifier());
+}
+
+// Test that a build_id that's very long is handled properly.
+TEST(Dump, CVELFLong) {
+  Dump dump(0, kLittleEndian);
+  String module_name(dump, "elf module");
+  Section cv_info(dump);
+  cv_info
+    .D32(MD_CVINFOELF_SIGNATURE)  // signature
+    // build_id, lots of bytes
+    .Append("\x5f\xa9\xcd\xb4\x10\x53\xdf\x1b\x86\xfa\xb7\x33\xb4\xdf"
+            "\x37\x38\xce\xa3\x4a\x87\x01\x02\x03\x04\x05\x06\x07\x08"
+            "\x09\x0a\x0b\x0c\x0d\x0e\x0f");
+
+
+  const MDRawSystemInfo linux_x86 = {
+    MD_CPU_ARCHITECTURE_X86,              // processor_architecture
+    6,                                    // processor_level
+    0xd08,                                // processor_revision
+    1,                                    // number_of_processors
+    0,                                    // product_type
+    0,                                    // major_version
+    0,                                    // minor_version
+    0,                                    // build_number
+    MD_OS_LINUX,                          // platform_id
+    0xdeadbeef,                           // csd_version_rva
+    0x100,                                // suite_mask
+    0,                                    // reserved2
+    {                                     // cpu
+      { // x86_cpu_info
+        { 0x756e6547, 0x49656e69, 0x6c65746e }, // vendor_id
+        0x6d8,                                  // version_information
+        0xafe9fbff,                             // feature_information
+        0xffffffff                              // amd_extended_cpu_features
+      }
+    }
+  };
+  String csd_version(dump, "Literally Linux");
+  SystemInfo system_info(dump, linux_x86, csd_version);
+
+  Module module(dump, 0xa90206ca83eb2852ULL, 0xada542bd,
+                module_name,
+                0xb1054d2a,
+                0x34571371,
+                fixed_file_info, // from synth_minidump_unittest_data.h
+                &cv_info, nullptr);
+
+  dump.Add(&module);
+  dump.Add(&module_name);
+  dump.Add(&cv_info);
+  dump.Add(&system_info);
+  dump.Add(&csd_version);
+  dump.Finish();
+
+  string contents;
+  ASSERT_TRUE(dump.GetContents(&contents));
+  istringstream minidump_stream(contents);
+  Minidump minidump(minidump_stream);
+  ASSERT_TRUE(minidump.Read());
+  ASSERT_EQ(2U, minidump.GetDirectoryEntryCount());
+
+  MinidumpModuleList *md_module_list = minidump.GetModuleList();
+  ASSERT_TRUE(md_module_list != NULL);
+  ASSERT_EQ(1U, md_module_list->module_count());
+
+  const MinidumpModule *md_module = md_module_list->GetModuleAtIndex(0);
+  ASSERT_TRUE(md_module != NULL);
+  // just the build_id, directly
+  ASSERT_EQ(
+      "5fa9cdb41053df1b86fab733b4df3738cea34a870102030405060708090a0b0c0d0e0f",
+      md_module->code_identifier());
+  // build_id truncated to GUID length and treated as such, with zero
+  // age appended.
+  ASSERT_EQ("B4CDA95F53101BDF86FAB733B4DF37380", md_module->debug_identifier());
 }
 
 TEST(Dump, OneSystemInfo) {
