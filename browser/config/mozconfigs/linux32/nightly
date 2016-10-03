@@ -3,9 +3,12 @@
 
 ac_add_options --enable-verify-mar
 
-ac_add_options --enable-official-branding
+# This will overwrite the default of stripping everything and keep the symbol table.
+# This is useful for profiling and debugging and only increases the package size
+# by 2 MBs.
+STRIP_FLAGS="--strip-debug"
 
-mk_add_options MOZ_PGO=1
+ac_add_options --with-branding=browser/branding/aurora
 
 . "$topsrcdir/build/mozconfig.rust"
 . "$topsrcdir/build/mozconfig.common.override"
