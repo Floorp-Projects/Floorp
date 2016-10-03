@@ -559,13 +559,14 @@
     }
 
     /**
-     * Move 't9_c2_moved' node by aria-owns, and then move 't9_c3_moved' node
-     * under 't9_c2_moved' (same as test9 but has different aria-owns
-     * ordering), the eventing looks same way as in test9:
+     * Move 't9_c3_moved' node under 't9_c2_moved', and then move 't9_c2_moved'
+     * node by aria-owns (same as test10 but has different aria-owns
+     * ordering), the eventing looks same way as in test10:
      * reorder for 't9_c1'
      *   hide for 't9_c1_child'
      *   show for 't9_c2_moved'
      * reorder for 't9_c2'
+    *    hide for 't9_c2_child'
      *   hide for 't9_c2_moved'
      * reorder for 't9_c3'
      *   hide for 't9_c3_moved'
@@ -604,6 +605,51 @@
       };
     }
 
+    /**
+     * Move a node 't10_c3_moved' by aria-owns under a node 't10_c2_moved',
+     * moved by under 't10_1', so that the eventing looks this way:
+     * reorder for 't10_c1'
+     *   hide for 't10_c1_child'
+     *   show for 't10_c2_moved'
+     * reorder for 't10_c2'
+     *   hide for 't10_c2_child'
+     *   hide for 't10_c2_moved'
+     * reorder for 't10_c3'
+     *   hide for 't10_c3_moved'
+     *
+     * The hide events for 't10_c2_moved' and 't10_c3_moved' should be delivered
+     * before the show event for 't10_c2_moved'.
+     */
+    function test10()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode('t10_c1_child')),
+        new invokerChecker(EVENT_HIDE, getNode('t10_c2_moved')),
+        new invokerChecker(EVENT_HIDE, getNode('t10_c3_moved')),
+        new invokerChecker(EVENT_SHOW, getNode('t10_c2_moved')),
+        new invokerChecker(EVENT_REORDER, 't10_c1'),
+        new invokerChecker(EVENT_HIDE, getNode('t10_c2_child')),
+        new invokerChecker(EVENT_REORDER, 't10_c2'),
+        new invokerChecker(EVENT_REORDER, 't10_c3')
+      ];
+
+      this.invoke = function test10_invoke()
+      {
+        // Remove child nodes from 't10_c1' and 't10_c2' containers to give
+        // the event tree a needed structure ('t10_c1' and 't10_c2' nodes go first
+        // in the event tree),
+        getNode('t10_c1_child').remove();
+        getNode('t10_c2_child').remove();
+        // then do aria-owns stuff.
+        getNode('t10_c1').setAttribute('aria-owns', 't10_c2_moved');
+        getNode('t10_c2_moved').setAttribute('aria-owns', 't10_c3_moved');
+      };
+
+      this.getID = function test10_getID() {
+        return "Move a node by aria-owns into a node moved by aria-owns to left within the tree";
+      };
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests.
 
@@ -639,6 +685,7 @@
       gQueue.push(new test7());
       gQueue.push(new test8());
       gQueue.push(new test9());
+      gQueue.push(new test10());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -755,6 +802,17 @@
     </div>
     <div id="t9_c3">
       <div id="t9_c3_moved"></div>
+    </div>
+  </div>
+
+  <div id="t10">
+    <div id="t10_c1"><div id="t10_c1_child"></div></div>
+    <div id="t10_c2">
+      <div id="t10_c2_child"></div>
+      <div id="t10_c2_moved"></div>
+    </div>
+    <div id="t10_c3">
+      <div id="t10_c3_moved"></div>
     </div>
   </div>
 </body>
