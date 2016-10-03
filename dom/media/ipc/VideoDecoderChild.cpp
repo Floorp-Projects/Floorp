@@ -24,6 +24,7 @@ VideoDecoderChild::VideoDecoderChild()
   , mLayersBackend(layers::LayersBackend::LAYERS_NONE)
   , mCanSend(true)
   , mInitialized(false)
+  , mIsHardwareAccelerated(false)
 {
 }
 
@@ -81,11 +82,13 @@ VideoDecoderChild::RecvError(const nsresult& aError)
 }
 
 bool
-VideoDecoderChild::RecvInitComplete()
+VideoDecoderChild::RecvInitComplete(const bool& aHardware, const nsCString& aHardwareReason)
 {
   AssertOnManagerThread();
   mInitPromise.Resolve(TrackInfo::kVideoTrack, __func__);
   mInitialized = true;
+  mIsHardwareAccelerated = aHardware;
+  mHardwareAcceleratedReason = aHardwareReason;
   return true;
 }
 
@@ -207,6 +210,13 @@ VideoDecoderChild::Shutdown()
     mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
   mInitialized = false;
+}
+
+bool
+VideoDecoderChild::IsHardwareAccelerated(nsACString& aFailureReason) const
+{
+  aFailureReason = mHardwareAcceleratedReason;
+  return mIsHardwareAccelerated;
 }
 
 void
