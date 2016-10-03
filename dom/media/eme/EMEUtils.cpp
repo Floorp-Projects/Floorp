@@ -153,13 +153,13 @@ IsWidevineKeySystem(const nsAString& aKeySystem)
 nsString
 KeySystemToGMPName(const nsAString& aKeySystem)
 {
-  if (!CompareUTF8toUTF16(kEMEKeySystemPrimetime, aKeySystem)) {
+  if (IsPrimetimeKeySystem(aKeySystem)) {
     return NS_LITERAL_STRING("gmp-eme-adobe");
   }
-  if (!CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem)) {
+  if (IsClearkeyKeySystem(aKeySystem)) {
     return NS_LITERAL_STRING("gmp-clearkey");
   }
-  if (!CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem)) {
+  if (IsWidevineKeySystem(aKeySystem)) {
     return NS_LITERAL_STRING("gmp-widevinecdm");
   }
   MOZ_ASSERT(false, "We should only call this for known GMPs");
@@ -169,11 +169,11 @@ KeySystemToGMPName(const nsAString& aKeySystem)
 CDMType
 ToCDMTypeTelemetryEnum(const nsString& aKeySystem)
 {
-  if (!CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem)) {
+  if (IsWidevineKeySystem(aKeySystem)) {
     return CDMType::eWidevine;
-  } else if (!CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem)) {
+  } else if (IsClearkeyKeySystem(aKeySystem)) {
     return CDMType::eClearKey;
-  } else if (!CompareUTF8toUTF16(kEMEKeySystemPrimetime, aKeySystem)) {
+  } else if (IsPrimetimeKeySystem(aKeySystem)) {
     return CDMType::ePrimetime;
   }
   return CDMType::eUnknown;
