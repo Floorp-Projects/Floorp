@@ -1,10 +1,10 @@
 . "$topsrcdir/build/mozconfig.win-common"
 . "$topsrcdir/browser/config/mozconfigs/win32/common-opt"
 
-mk_add_options MOZ_PGO=1
 
-ac_add_options --enable-official-branding
 ac_add_options --enable-verify-mar
+
+ac_add_options --with-branding=browser/branding/aurora
 
 . "$topsrcdir/build/mozconfig.rust"
 
