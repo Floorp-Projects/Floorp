@@ -13,12 +13,6 @@
           console.log(str);
         }
       }
-
-      function testTrace() {
-        console.log("bug 1100562");
-        console.trace();
-      }
-
       console.info("INLINE SCRIPT:");
       test();
       console.warn("I'm warning you, he will eat up all yr bacon.");
@@ -28,7 +22,6 @@
   <body>
     <h1 id="header">Heads Up Display Demo</h1>
     <button onclick="test();">Log stuff about Dolske</button>
-    <button id="testTrace" onclick="testTrace();">Log stuff with stacktrace</button>
     <div id="myDiv"></div>
   </body>
 </html>

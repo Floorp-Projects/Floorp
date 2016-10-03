@@ -42,12 +42,12 @@ const StackTrace = createClass({
     let frames = [];
     stacktrace.forEach(s => {
       if (s.asyncCause) {
-        frames.push("\t", AsyncFrame({
+        frames.push(AsyncFrame({
           asyncCause: s.asyncCause
-        }), "\n");
+        }));
       }
 
-      frames.push("\t", Frame({
+      frames.push(Frame({
         frame: {
           functionDisplayName: s.functionName,
           source: s.filename.split(" -> ").pop(),
@@ -58,7 +58,7 @@ const StackTrace = createClass({
         showAnonymousFunctionName: true,
         showFullSourceUrl: true,
         onClick: onViewSourceInDebugger
-      }), "\n");
+      }));
     });
 
     return dom.div({ className: "stack-trace" }, frames);
