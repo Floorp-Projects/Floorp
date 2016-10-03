@@ -147,9 +147,6 @@ public:
     void ContentDocumentChanged(mozIDOMWindowProxy* aDOMWindow);
     bool IsContentDocumentDisplayed(mozIDOMWindowProxy* aDOMWindow);
 
-    void SetLayerClient(java::GeckoLayerClient::Param jobj);
-    const java::GeckoLayerClient::Ref& GetLayerClient() { return mLayerClient; }
-
     bool GetHandlersForURL(const nsAString& aURL,
                            nsIMutableArray* handlersArray = nullptr,
                            nsIHandlerApp **aDefaultApp = nullptr,
@@ -222,19 +219,6 @@ public:
 
     void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo);
 
-    void SetFirstPaintViewport(const LayerIntPoint& aOffset, const CSSToLayerScale& aZoom, const CSSRect& aCssPageRect);
-    void SetPageRect(const CSSRect& aCssPageRect);
-    void SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                          bool aLayersUpdated, int32_t aPaintSyncId, ParentLayerRect& aScrollRect, CSSToParentLayerScale& aScale,
-                          ScreenMargin& aFixedLayerMargins);
-    void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
-                          const CSSToParentLayerScale& aZoom,
-                          const CSSRect& aCssPageRect,
-                          const CSSRect& aDisplayPort,
-                          const CSSToLayerScale& aPaintedResolution,
-                          bool aLayersUpdated, int32_t aPaintSyncId,
-                          ScreenMargin& aFixedLayerMargins);
-
     // These methods don't use a ScreenOrientation because it's an
     // enum and that would require including the header which requires
     // include IPC headers which requires including basictypes.h which
@@ -282,8 +266,6 @@ protected:
     static AndroidBridge* sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback>> mSmsRequests;
     nsTArray<nsCOMPtr<nsIMobileMessageCursorCallback>> mSmsCursorRequests;
-
-    java::GeckoLayerClient::GlobalRef mLayerClient;
 
     // the android.telephony.SmsMessage class
     jclass mAndroidSmsMessageClass;
