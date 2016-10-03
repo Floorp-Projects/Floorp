@@ -1365,7 +1365,8 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
       if (config.mFeatures & ENABLE_TEXTURE_RECT) {
         // 2DRect case, get the multiplier right for a sampler2DRect
-        program->SetTexCoordMultiplier(aRect.width, aRect.height);
+        program->SetTexCoordMultiplier(surface->GetSize().width,
+                                       surface->GetSize().height);
       }
 
       // Drawing is always flipped, but when copying between surfaces we want to avoid
