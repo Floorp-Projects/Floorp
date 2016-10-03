@@ -560,13 +560,12 @@ CopyUnicodeTo(const nsAString::const_iterator& aSrcStart,
               const nsAString::const_iterator& aSrcEnd,
               nsAString& aDest)
 {
-  nsAString::iterator writer;
   aDest.SetLength(Distance(aSrcStart, aSrcEnd));
 
-  aDest.BeginWriting(writer);
+  nsAString::char_iterator dest = aDest.BeginWriting();
   nsAString::const_iterator fromBegin(aSrcStart);
 
-  copy_string(fromBegin, aSrcEnd, writer);
+  copy_string(fromBegin, aSrcEnd, dest);
 }
 
 void
@@ -574,14 +573,13 @@ AppendUnicodeTo(const nsAString::const_iterator& aSrcStart,
                 const nsAString::const_iterator& aSrcEnd,
                 nsAString& aDest)
 {
-  nsAString::iterator writer;
   uint32_t oldLength = aDest.Length();
   aDest.SetLength(oldLength + Distance(aSrcStart, aSrcEnd));
 
-  aDest.BeginWriting(writer).advance(oldLength);
+  nsAString::char_iterator dest = aDest.BeginWriting() + oldLength;
   nsAString::const_iterator fromBegin(aSrcStart);
 
-  copy_string(fromBegin, aSrcEnd, writer);
+  copy_string(fromBegin, aSrcEnd, dest);
 }
 
 bool
