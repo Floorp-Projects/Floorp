@@ -3259,6 +3259,10 @@ TabChild::ReinitRendering()
   lf->IdentifyTextureHost(mTextureFactoryIdentifier);
 
   mApzcTreeManager = CompositorBridgeChild::Get()->GetAPZCTreeManager(mLayersId);
+  if (mApzcTreeManager) {
+    APZChild* apz = ContentProcessController::Create(mUniqueId);
+    CompositorBridgeChild::Get()->SendPAPZConstructor(apz, mLayersId);
+  }
 }
 
 void
