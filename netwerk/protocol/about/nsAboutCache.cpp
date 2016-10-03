@@ -128,7 +128,10 @@ nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo)
         mBuffer.AppendLiteral("\">Back to overview</a>");
     }
 
-    FlushBuffer();
+    rv = FlushBuffer();
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to flush buffer");
+    }
 
     return NS_OK;
 }
@@ -245,7 +248,10 @@ nsAboutCache::Channel::FireVisitStorage()
             free(escaped);
         }
 
-        FlushBuffer();
+        rv = FlushBuffer();
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Failed to flush buffer");
+        }
 
         // Simulate finish of a visit cycle, this tries the next storage
         // or closes the output stream (i.e. the UI loader will stop spinning)
@@ -371,7 +377,10 @@ nsAboutCache::Channel::OnCacheStorageInfo(uint32_t aEntryCount, uint64_t aConsum
     // The entries header is added on encounter of the first entry
     mEntriesHeaderAdded = false;
 
-    FlushBuffer();
+    nsresult rv = FlushBuffer();
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to flush buffer");
+    }
 
     if (mOverview) {
         // OnCacheEntryVisitCompleted() is not called when we do not iterate
@@ -528,7 +537,10 @@ nsAboutCache::Channel::OnCacheEntryVisitCompleted()
     // We are done!
     mBuffer.AppendLiteral("</body>\n"
                           "</html>\n");
-    FlushBuffer();
+    nsresult rv = FlushBuffer();
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to flush buffer");
+    }
     mStream->Close();
 
     return NS_OK;
