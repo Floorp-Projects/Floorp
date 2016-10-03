@@ -24,6 +24,12 @@ setup_docker() {
     cd /mnt/host
 }
 
+mingw_i686_install() {
+    curl https://static.rust-lang.org/dist/rust-mingw-nightly-i686-pc-windows-gnu.tar.gz \
+        | tar xzvf - -C /tmp
+    /tmp/rust-mingw-nightly-i686-pc-windows-gnu/install.sh --prefix=`rustc --print sysroot`
+}
+
 # Configure rustc target for cross compilation.  Provided with a build
 # target, this will determine which linker to use for cross compilation.
 cargo_config() {
@@ -120,7 +126,7 @@ package_binary() {
         tar zcvf "$filename" geckodriver
         file "$filename"
     fi
-    if [ ! -z "$USE_DOCKER" ]
+    if [ ! -z "$DOCKER_IMAGE" ]
     then
         chown "$USER_ID:$GROUP_ID" "$filename"
     fi
@@ -129,14 +135,21 @@ package_binary() {
 main() {
     TOOLCHAIN=${TOOLCHAIN:=stable}
 
-    if [ ! -z "$USE_DOCKER" ]
+    if [ ! -z "$DOCKER_IMAGE" ]
     then
         setup_docker
-        print_versions
-    else
-        rustup_install $TOOLCHAIN
-        print_versions
-        rustup_target_add $TARGET
+    fi
+
+    rustup_install $TOOLCHAIN
+    print_versions
+    rustup_target_add $TARGET
+
+    # custom mingw component required
+    # when compiling on 32-bit windows
+    # see https://github.com/mozilla/geckodriver/pull/138#issuecomment-232139097
+    if [[ $TARGET == "i686-pc-windows-gnu" ]]
+    then
+        mingw_i686_install
     fi
 
     cargo_config $TARGET
