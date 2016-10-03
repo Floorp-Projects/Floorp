@@ -1708,25 +1708,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   }
 
   /**
-   * Return the computed value for 'align-content'.
-   */
-  uint16_t ComputedAlignContent() const { return mAlignContent; }
-
-  /**
-   * Return the computed value for 'align-items'.
-   */
-  uint8_t ComputedAlignItems() const { return mAlignItems; }
-
-  /**
    * Return the used value for 'align-self' given our parent StyleContext
    * aParent (or null for the root).
    */
   uint8_t UsedAlignSelf(nsStyleContext* aParent) const;
-
-  /**
-   * Return the computed value for 'justify-content'.
-   */
-  uint16_t ComputedJustifyContent() const { return mJustifyContent; }
 
   /**
    * Return the computed value for 'justify-items' given our parent StyleContext
@@ -1755,15 +1740,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   nsStyleCoord  mGridAutoRowsMax;       // [reset] coord, percent, enum, calc, flex
   uint8_t       mGridAutoFlow;          // [reset] enumerated. See nsStyleConsts.h
   mozilla::StyleBoxSizing mBoxSizing;   // [reset] see nsStyleConsts.h
-private:
-  friend class nsRuleNode;
 
   uint16_t      mAlignContent;          // [reset] fallback value in the high byte
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h
-public:
   uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
-private:
   uint16_t      mJustifyContent;        // [reset] fallback value in the high byte
+private:
+  friend class nsRuleNode;
+
+  // mJustifyItems should only be read via ComputedJustifyItems(), which
+  // lazily resolves its "auto" value. nsRuleNode needs direct access so
+  // it can set mJustifyItems' value when populating this struct.
   uint8_t       mJustifyItems;          // [reset] see nsStyleConsts.h
 public:
   uint8_t       mJustifySelf;           // [reset] see nsStyleConsts.h
