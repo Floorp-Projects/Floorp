@@ -5848,25 +5848,6 @@ JS_DecodeScript(JSContext* cx, const void* data, uint32_t length);
 extern JS_PUBLIC_API(JSObject*)
 JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length);
 
-namespace js {
-
-enum class StackFormat { SpiderMonkey, V8, Default };
-
-/*
- * Sets the format used for stringifying Error stacks.
- *
- * The default format is StackFormat::SpiderMonkey.  Use StackFormat::V8
- * in order to emulate V8's stack formatting.  StackFormat::Default can't be
- * used here.
- */
-extern JS_PUBLIC_API(void)
-SetStackFormat(JSContext* cx, StackFormat format);
-
-extern JS_PUBLIC_API(StackFormat)
-GetStackFormat(JSContext* cx);
-
-}
-
 namespace JS {
 
 /*
@@ -6278,8 +6259,7 @@ GetSavedFrameParent(JSContext* cx, HandleObject savedFrame, MutableHandleObject 
  * each line.
  */
 extern JS_PUBLIC_API(bool)
-BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
-                 size_t indent = 0, js::StackFormat stackFormat = js::StackFormat::Default);
+BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp, size_t indent = 0);
 
 /**
  * Return true iff the given object is either a SavedFrame object or wrapper
