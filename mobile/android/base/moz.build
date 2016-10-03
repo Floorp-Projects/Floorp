@@ -618,6 +618,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'preferences/SearchPreferenceCategory.java',
     'preferences/SetHomepagePreference.java',
     'preferences/SyncPreference.java',
+    'PresentationView.java',
     'PrintHelper.java',
     'PrivateTab.java',
     'promotion/AddToHomeScreenPromotion.java',
@@ -845,6 +846,7 @@ moz_native_devices_sources = ['java/org/mozilla/gecko/' + x for x in [
     'GeckoPresentationDisplay.java',
     'MediaPlayerManager.java',
     'PresentationMediaPlayerManager.java',
+    'RemotePresentationService.java',
 ]]
 if CONFIG['MOZ_NATIVE_DEVICES']:
     gbjar.extra_jars += moz_native_devices_jars
