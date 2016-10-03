@@ -336,34 +336,39 @@ input[type=number]::-moz-number-spin-box {
   display: none;
 }
 
+/* Override accessiblecaret css in layout/style/ua.css */
 div:-moz-native-anonymous.moz-accessiblecaret > #text-overlay,
 div:-moz-native-anonymous.moz-accessiblecaret > #image {
   /* border: 0.1px solid red; */ /* Uncomment border to see the touch target. */
-  padding-left: 59%;    /* ((48-22)/2)px / 22px ~= 59% */
-  padding-right: 59%;
+  padding-left: 59%; /* Enlarge the touch area. ((48-22)/2)px / 22px ~= 59% */
+  padding-right: 59%; /* Enlarge the touch area. */
   left: -59%;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret > #image {
-  padding-bottom: 59%;
+  padding-bottom: 59%; /* Enlarge the touch area. */
 }
 
-/* Override accessiblecaret css in layout/style/ua.css */
 div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-normal-hdpi.png");
-  top: 11%; /* space between the blinking cursor and the caret */
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret.left > #text-overlay,
+div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
+  margin-left: -50%;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-left-hdpi.png");
-  margin-left: -50%;
-  top: 1%; /* space between the selection highlight and the caret */
+}
+
+div:-moz-native-anonymous.moz-accessiblecaret.right > #text-overlay,
+div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
+  margin-left: 47%;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-right-hdpi.png");
-  margin-left: 47%;
-  top: 1%; /* space between the selection highlight and the caret */
 }
 
 @media (min-resolution: 1.5dppx) {
