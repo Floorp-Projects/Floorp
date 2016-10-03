@@ -127,7 +127,7 @@ package_binary() {
 }
 
 main() {
-    TOOLCHAIN=${TOOLCHAIN:=beta}
+    TOOLCHAIN=${TOOLCHAIN:=stable}
 
     if [ ! -z "$USE_DOCKER" ]
     then
