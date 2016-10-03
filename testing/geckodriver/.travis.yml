@@ -36,6 +36,7 @@ matrix:
         - NAME=win64
         - EXT=zip
       dist: trusty
+      sudo: required
       addons:
         apt:
           packages:
