@@ -17,9 +17,11 @@ const {
 } = Cu.import("resource://gre/modules/ExtensionStorageSync.jsm");
 Cu.import("resource://services-sync/engines/extension-storage.js");
 Cu.import("resource://services-sync/keys.js");
+Cu.import("resource://services-sync/util.js");
 
 /* globals BulkKeyBundle, CommonUtils, EncryptionRemoteTransformer */
 /* globals KeyRingEncryptionRemoteTransformer */
+/* globals Utils */
 
 function handleCannedResponse(cannedResponse, request, response) {
   response.setStatusLine(null, cannedResponse.status.status,
@@ -494,6 +496,61 @@ add_task(function* ensureKeysFor_handles_conflicts() {
          `decrypted failed post should have a key for ${extensionId}`);
       notEqual(body.keys.collections[extensionId], RANDOM_KEY.keyPairB64,
                `decrypted failed post should have a randomly-generated key for ${extensionId}`);
+    });
+  });
+});
+
+add_task(function* checkSyncKeyRing_reuploads_keys() {
+  // Verify that when keys are present, they are reuploaded with the
+  // new kB when we call touchKeys().
+  const extensionId = uuid();
+  let extensionKey;
+  yield* withContextAndServer(function* (context, server) {
+    yield* withSignedInUser(loggedInUser, function* () {
+      server.installCollection("storage-sync-crypto");
+      server.etag = 765;
+
+      yield cryptoCollection._clear();
+
+      // Do an `ensureKeysFor` to generate some keys.
+      let collectionKeys = yield ExtensionStorageSync.ensureKeysFor([extensionId]);
+      ok(collectionKeys.hasKeysFor([extensionId]),
+         `ensureKeysFor should return a keyring that has a key for ${extensionId}`);
+      extensionKey = collectionKeys.keyForCollection(extensionId).keyPairB64;
+      equal(server.getPosts().length, 1,
+            "generating a key that doesn't exist on the server should post it");
+    });
+
+    // The user changes their password. This is their new kB, with
+    // the last f changed to an e.
+    const NOVEL_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdee";
+    const newUser = Object.assign({}, loggedInUser, {kB: NOVEL_KB});
+    let postedKeys;
+    yield* withSignedInUser(newUser, function* () {
+      yield ExtensionStorageSync.checkSyncKeyRing();
+
+      let posts = server.getPosts();
+      equal(posts.length, 2,
+            "when kB changes, checkSyncKeyRing should post the keyring reencrypted with the new kB");
+      postedKeys = posts[1];
+      assertPostedUpdatedRecord(postedKeys, 765);
+
+      let body = yield assertPostedEncryptedKeys(postedKeys);
+      deepEqual(body.keys.collections[extensionId], extensionKey,
+                `the posted keyring should have the same key for ${extensionId} as the old one`);
+    });
+
+    // Verify that with the old kB, we can't decrypt the record.
+    yield* withSignedInUser(loggedInUser, function* () {
+      let error;
+      try {
+        yield new KeyRingEncryptionRemoteTransformer().decode(postedKeys.body.data);
+      } catch (e) {
+        error = e;
+      }
+      ok(error, "decrypting the keyring with the old kB should fail");
+      ok(Utils.isHMACMismatch(error),
+         "decrypting the keyring with the old kB should throw an HMAC mismatch");
     });
   });
 });
