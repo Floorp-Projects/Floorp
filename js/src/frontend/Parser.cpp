@@ -8121,8 +8121,8 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
 
             if (handler.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
-                    report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "member");
-                    return null();
+                report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "member");
+                return null();
             }
             nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
             if (!nextMember)
@@ -8146,7 +8146,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                 if (!nextMember)
                     return null();
 
-                // Despite the fact that it's impossible to have |super()| is a
+                // Despite the fact that it's impossible to have |super()| in a
                 // generator, we still inherit the yieldHandling of the
                 // memberExpression, per spec. Curious.
                 bool isSpread = false;
@@ -8159,71 +8159,73 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                 Node thisName = newThisName();
                 if (!thisName)
                     return null();
-                return handler.newSetThis(thisName, nextMember);
-            }
 
-            if (options().selfHostingMode && handler.isPropertyAccess(lhs)) {
-                report(ParseError, false, null(), JSMSG_SELFHOSTED_METHOD_CALL);
-                return null();
-            }
-
-            nextMember = tt == TOK_LP ? handler.newCall() : handler.newTaggedTemplate();
-            if (!nextMember)
-                return null();
-
-            JSOp op = JSOP_CALL;
-            if (handler.isNameAnyParentheses(lhs)) {
-                if (tt == TOK_LP && handler.nameIsEvalAnyParentheses(lhs, context)) {
-                    // Select the right EVAL op and flag pc as having a direct eval.
-                    op = pc->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
-                    pc->sc()->setBindingsAccessedDynamically();
-                    pc->sc()->setHasDirectEval();
-
-                    /*
-                     * In non-strict mode code, direct calls to eval can add
-                     * variables to the call object.
-                     */
-                    if (pc->isFunctionBox() && !pc->sc()->strict())
-                        pc->functionBox()->setHasExtensibleScope();
-
-                    // If we're in a method, mark the method as requiring
-                    // support for 'super', since direct eval code can use it.
-                    // (If we're not in a method, that's fine, so ignore the
-                    // return value.)
-                    checkAndMarkSuperScope();
-                }
-            } else if (PropertyName* prop = handler.maybeDottedProperty(lhs)) {
-                // Use the JSOP_FUN{APPLY,CALL} optimizations given the right
-                // syntax.
-                if (prop == context->names().apply) {
-                    op = JSOP_FUNAPPLY;
-                    if (pc->isFunctionBox())
-                        pc->functionBox()->usesApply = true;
-                } else if (prop == context->names().call) {
-                    op = JSOP_FUNCALL;
-                }
-            }
-
-            handler.setBeginPosition(nextMember, lhs);
-            handler.addList(nextMember, lhs);
-
-            if (tt == TOK_LP) {
-                bool isSpread = false;
-                if (!argumentList(yieldHandling, nextMember, &isSpread))
+                nextMember = handler.newSetThis(thisName, nextMember);
+                if (!nextMember)
                     return null();
-                if (isSpread) {
-                    if (op == JSOP_EVAL)
-                        op = JSOP_SPREADEVAL;
-                    else if (op == JSOP_STRICTEVAL)
-                        op = JSOP_STRICTSPREADEVAL;
-                    else
-                        op = JSOP_SPREADCALL;
-                }
             } else {
-                if (!taggedTemplate(yieldHandling, nextMember, tt))
+                if (options().selfHostingMode && handler.isPropertyAccess(lhs)) {
+                    report(ParseError, false, null(), JSMSG_SELFHOSTED_METHOD_CALL);
                     return null();
+                }
+
+                nextMember = tt == TOK_LP ? handler.newCall() : handler.newTaggedTemplate();
+                if (!nextMember)
+                    return null();
+
+                JSOp op = JSOP_CALL;
+                if (handler.isNameAnyParentheses(lhs)) {
+                    if (tt == TOK_LP && handler.nameIsEvalAnyParentheses(lhs, context)) {
+                        // Select the right EVAL op and flag pc as having a
+                        // direct eval.
+                        op = pc->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
+                        pc->sc()->setBindingsAccessedDynamically();
+                        pc->sc()->setHasDirectEval();
+
+                        // In non-strict mode code, direct calls to eval can
+                        // add variables to the call object.
+                        if (pc->isFunctionBox() && !pc->sc()->strict())
+                            pc->functionBox()->setHasExtensibleScope();
+
+                        // If we're in a method, mark the method as requiring
+                        // support for 'super', since direct eval code can use
+                        // it. (If we're not in a method, that's fine, so
+                        // ignore the return value.)
+                        checkAndMarkSuperScope();
+                    }
+                } else if (PropertyName* prop = handler.maybeDottedProperty(lhs)) {
+                    // Use the JSOP_FUN{APPLY,CALL} optimizations given the
+                    // right syntax.
+                    if (prop == context->names().apply) {
+                        op = JSOP_FUNAPPLY;
+                        if (pc->isFunctionBox())
+                            pc->functionBox()->usesApply = true;
+                    } else if (prop == context->names().call) {
+                        op = JSOP_FUNCALL;
+                    }
+                }
+
+                handler.setBeginPosition(nextMember, lhs);
+                handler.addList(nextMember, lhs);
+
+                if (tt == TOK_LP) {
+                    bool isSpread = false;
+                    if (!argumentList(yieldHandling, nextMember, &isSpread))
+                        return null();
+                    if (isSpread) {
+                        if (op == JSOP_EVAL)
+                            op = JSOP_SPREADEVAL;
+                        else if (op == JSOP_STRICTEVAL)
+                            op = JSOP_STRICTSPREADEVAL;
+                        else
+                            op = JSOP_SPREADCALL;
+                    }
+                } else {
+                    if (!taggedTemplate(yieldHandling, nextMember, tt))
+                        return null();
+                }
+                handler.setOp(nextMember, op);
             }
-            handler.setOp(nextMember, op);
         } else {
             tokenStream.ungetToken();
             if (handler.isSuperBase(lhs))
