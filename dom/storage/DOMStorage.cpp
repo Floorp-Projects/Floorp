@@ -67,9 +67,12 @@ DOMStorage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 uint32_t
-DOMStorage::GetLength(ErrorResult& aRv)
+DOMStorage::GetLength(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                      ErrorResult& aRv)
 {
-  if (!CanUseStorage(nullptr, this)) {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
+  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return 0;
   }
@@ -80,9 +83,13 @@ DOMStorage::GetLength(ErrorResult& aRv)
 }
 
 void
-DOMStorage::Key(uint32_t aIndex, nsAString& aResult, ErrorResult& aRv)
+DOMStorage::Key(uint32_t aIndex, nsAString& aResult,
+                const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                ErrorResult& aRv)
 {
-  if (!CanUseStorage(nullptr, this)) {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
+  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -91,9 +98,13 @@ DOMStorage::Key(uint32_t aIndex, nsAString& aResult, ErrorResult& aRv)
 }
 
 void
-DOMStorage::GetItem(const nsAString& aKey, nsAString& aResult, ErrorResult& aRv)
+DOMStorage::GetItem(const nsAString& aKey, nsAString& aResult,
+                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                    ErrorResult& aRv)
 {
-  if (!CanUseStorage(nullptr, this)) {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
+  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -103,9 +114,12 @@ DOMStorage::GetItem(const nsAString& aKey, nsAString& aResult, ErrorResult& aRv)
 
 void
 DOMStorage::SetItem(const nsAString& aKey, const nsAString& aData,
+                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                     ErrorResult& aRv)
 {
-  if (!CanUseStorage(nullptr, this)) {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
+  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -129,9 +143,13 @@ DOMStorage::SetItem(const nsAString& aKey, const nsAString& aData,
 }
 
 void
-DOMStorage::RemoveItem(const nsAString& aKey, ErrorResult& aRv)
+DOMStorage::RemoveItem(const nsAString& aKey,
+                       const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                       ErrorResult& aRv)
 {
-  if (!CanUseStorage(nullptr, this)) {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
+  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -148,9 +166,12 @@ DOMStorage::RemoveItem(const nsAString& aKey, ErrorResult& aRv)
 }
 
 void
-DOMStorage::Clear(ErrorResult& aRv)
+DOMStorage::Clear(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                  ErrorResult& aRv)
 {
-  if (!CanUseStorage(nullptr, this)) {
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
+
+  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -226,7 +247,9 @@ static const char kStorageEnabled[] = "dom.storage.enabled";
 
 // static, public
 bool
-DOMStorage::CanUseStorage(nsPIDOMWindowInner* aWindow, DOMStorage* aStorage)
+DOMStorage::CanUseStorage(nsPIDOMWindowInner* aWindow,
+                          const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                          DOMStorage* aStorage)
 {
   // This method is responsible for correct setting of mIsSessionOnly.
 
@@ -248,9 +271,8 @@ DOMStorage::CanUseStorage(nsPIDOMWindowInner* aWindow, DOMStorage* aStorage)
   if (aStorage) {
     aStorage->mIsSessionOnly = access <= nsContentUtils::StorageAccess::eSessionScoped;
 
-    nsCOMPtr<nsIPrincipal> subjectPrincipal =
-      nsContentUtils::SubjectPrincipal();
-    return aStorage->CanAccess(subjectPrincipal);
+    MOZ_ASSERT(aSubjectPrincipal.isSome());
+    return aStorage->CanAccess(aSubjectPrincipal.value());
   }
 
   return true;
@@ -298,7 +320,8 @@ DOMStorage::CanAccess(nsIPrincipal* aPrincipal)
 void
 DOMStorage::GetSupportedNames(nsTArray<nsString>& aKeys)
 {
-  if (!CanUseStorage(nullptr, this)) {
+  if (!CanUseStorage(nullptr, Some(nsContentUtils::SubjectPrincipal()),
+                     this)) {
     // return just an empty array
     aKeys.Clear();
     return;
