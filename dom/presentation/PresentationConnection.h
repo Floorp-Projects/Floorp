@@ -11,7 +11,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/PresentationConnectionBinding.h"
-#include "mozilla/dom/PresentationConnectionClosedEventBinding.h"
+#include "mozilla/dom/PresentationConnectionCloseEventBinding.h"
 #include "nsIPresentationListener.h"
 #include "nsIRequest.h"
 #include "nsWeakReference.h"
@@ -97,7 +97,7 @@ private:
 
   nsresult ProcessStateChanged(nsresult aReason);
 
-  nsresult DispatchConnectionClosedEvent(PresentationConnectionClosedReason aReason,
+  nsresult DispatchConnectionCloseEvent(PresentationConnectionClosedReason aReason,
                                          const nsAString& aMessage,
                                          bool aDispatchNow = false);
 

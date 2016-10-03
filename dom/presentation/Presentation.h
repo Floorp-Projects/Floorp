@@ -7,7 +7,12 @@
 #ifndef mozilla_dom_Presentation_h
 #define mozilla_dom_Presentation_h
 
-#include "mozilla/DOMEventTargetHelper.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsISupportsImpl.h"
+#include "nsWrapperCache.h"
+
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -16,12 +21,12 @@ class Promise;
 class PresentationReceiver;
 class PresentationRequest;
 
-class Presentation final : public DOMEventTargetHelper
+class Presentation final : public nsISupports
+                         , public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Presentation,
-                                           DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Presentation)
 
   static already_AddRefed<Presentation> Create(nsPIDOMWindowInner* aWindow);
 
@@ -29,6 +34,11 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  nsPIDOMWindowInner* GetParentObject() const
+  {
+    return mWindow;
+  }
 
   // WebIDL (public APIs)
   void SetDefaultRequest(PresentationRequest* aRequest);
@@ -40,12 +50,13 @@ public:
 private:
   explicit Presentation(nsPIDOMWindowInner* aWindow);
 
-  ~Presentation();
+  virtual ~Presentation();
 
   bool IsInPresentedContent() const;
 
   RefPtr<PresentationRequest> mDefaultRequest;
   RefPtr<PresentationReceiver> mReceiver;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
 } // namespace dom

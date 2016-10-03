@@ -796,7 +796,7 @@ PresentationService::CloseSession(const nsAString& aSessionId,
 
   if (aClosedReason == nsIPresentationService::CLOSED_REASON_WENTAWAY) {
     // Remove nsIPresentationSessionListener since we don't want to dispatch
-    // PresentationConnectionClosedEvent if the page is went away.
+    // PresentationConnectionCloseEvent if the page is went away.
     info->SetListener(nullptr);
   }
 
