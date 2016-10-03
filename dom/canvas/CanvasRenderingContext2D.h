@@ -353,13 +353,13 @@ public:
 
   void GetMozCurrentTransform(JSContext* aCx,
                               JS::MutableHandle<JSObject*> aResult,
-                              mozilla::ErrorResult& aError) const;
+                              mozilla::ErrorResult& aError);
   void SetMozCurrentTransform(JSContext* aCx,
                               JS::Handle<JSObject*> aCurrentTransform,
                               mozilla::ErrorResult& aError);
   void GetMozCurrentTransformInverse(JSContext* aCx,
                                      JS::MutableHandle<JSObject*> aResult,
-                                     mozilla::ErrorResult& aError) const;
+                                     mozilla::ErrorResult& aError);
   void SetMozCurrentTransformInverse(JSContext* aCx,
                                      JS::Handle<JSObject*> aCurrentTransform,
                                      mozilla::ErrorResult& aError);
