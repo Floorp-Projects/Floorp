@@ -1520,11 +1520,11 @@ NativeKey::InitWithKeyChar()
       //       WM_KEYDOWN if following WM_CHAR is a part of a Unicode character.
       mCommittedCharsAndModifiers.Clear();
       for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
-        char16_t ch = static_cast<char16_t>(mFollowingCharMsgs[i].wParam);
-        // Skip control characters.
-        if (IsControlChar(ch)) {
+        // Ignore non-printable char messages.
+        if (!IsPrintableCharMessage(mFollowingCharMsgs[i])) {
           continue;
         }
+        char16_t ch = static_cast<char16_t>(mFollowingCharMsgs[i].wParam);
         mCommittedCharsAndModifiers.Append(ch, mModKeyState.GetModifiers());
       }
     }
