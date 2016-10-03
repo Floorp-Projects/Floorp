@@ -65,6 +65,15 @@ pref("devtools.inspector.showAllAnonymousContent", false);
 // Enable the MDN docs tooltip
 pref("devtools.inspector.mdnDocsTooltip.enabled", true);
 
+// Enable the Font Inspector
+pref("devtools.fontinspector.enabled", true);
+
+// Enable the Layout View
+pref("devtools.layoutview.enabled", false);
+
+// By how many times eyedropper will magnify pixels
+pref("devtools.eyedropper.zoom", 6);
+
 // Enable to collapse attributes that are too long.
 pref("devtools.markup.collapseAttributes", true);
 
@@ -322,9 +331,6 @@ pref("devtools.hud.loglimit.cssparser", 1000);
 pref("devtools.hud.loglimit.exception", 1000);
 pref("devtools.hud.loglimit.console", 1000);
 
-// By how many times eyedropper will magnify pixels
-pref("devtools.eyedropper.zoom", 6);
-
 // The developer tools editor configuration:
 // - tabsize: how many spaces to use when a Tab character is displayed.
 // - expandtab: expand Tab characters to spaces.
@@ -339,9 +345,6 @@ pref("devtools.editor.autoclosebrackets", true);
 pref("devtools.editor.detectindentation", true);
 pref("devtools.editor.enableCodeFolding", true);
 pref("devtools.editor.autocomplete", true);
-
-// Enable the Font Inspector
-pref("devtools.fontinspector.enabled", true);
 
 // Pref to store the browser version at the time of a telemetry ping for an
 // opened developer tool. This allows us to ping telemetry just once per browser
