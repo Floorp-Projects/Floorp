@@ -37430,6 +37430,12 @@
             "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping-3.html"
           }
         ],
+        "html/semantics/forms/the-select-element/select-validity.html": [
+          {
+            "path": "html/semantics/forms/the-select-element/select-validity.html",
+            "url": "/html/semantics/forms/the-select-element/select-validity.html"
+          }
+        ],
         "html/semantics/forms/the-textarea-element/cloning-steps.html": [
           {
             "path": "html/semantics/forms/the-textarea-element/cloning-steps.html",
