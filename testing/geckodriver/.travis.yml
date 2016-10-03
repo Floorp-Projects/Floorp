@@ -48,7 +48,8 @@ matrix:
         - TARGET=i686-pc-windows-gnu
         - NAME=win32
         - EXT=zip
-        - USE_DOCKER=1
+        - TOOLCHAIN=nightly
+        - DOCKER_IMAGE=i686-trusty
       dist: trusty
       services:
         - docker
