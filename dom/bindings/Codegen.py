@@ -12557,7 +12557,9 @@ class CGDictionary(CGThing):
         body = dedent("""
             // Passing a null JSContext is OK only if we're initing from null,
             // Since in that case we will not have to do any property gets
-            MOZ_ASSERT_IF(!cx, val.isNull());
+            // Also evaluate isNullOrUndefined in order to avoid false-positive
+            // checkers by static analysis tools
+            MOZ_ASSERT_IF(!cx, val.isNull() && val.isNullOrUndefined());
             """)
 
         if self.needToInitIds:
