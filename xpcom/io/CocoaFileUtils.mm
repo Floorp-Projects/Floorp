@@ -193,7 +193,8 @@ void AddOriginMetadataToFile(const CFStringRef filePath,
 
 void AddQuarantineMetadataToFile(const CFStringRef filePath,
                                  const CFURLRef sourceURL,
-                                 const CFURLRef referrerURL) {
+                                 const CFURLRef referrerURL,
+                                 const bool isFromWeb) {
   CFURLRef fileURL = ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault,
                                                      filePath,
                                                      kCFURLPOSIXPathStyle,
@@ -234,15 +235,7 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
   // Add metadata that the OS couldn't infer.
 
   if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineTypeKey)) {
-    CFStringRef type = kLSQuarantineTypeOtherDownload;
-
-    CFStringRef scheme = ::CFURLCopyScheme(sourceURL);
-    if (::CFStringCompare(scheme, CFSTR("http"), kCFCompareCaseInsensitive) == kCFCompareEqualTo ||
-        ::CFStringCompare(scheme, CFSTR("http"), kCFCompareCaseInsensitive) == kCFCompareEqualTo) {
-      type = kLSQuarantineTypeWebDownload;
-    }
-    ::CFRelease(scheme);
-
+    CFStringRef type = isFromWeb ? kLSQuarantineTypeWebDownload : kLSQuarantineTypeOtherDownload;
     ::CFDictionarySetValue(mutQuarantineProps, kLSQuarantineTypeKey, type);
   }
 
