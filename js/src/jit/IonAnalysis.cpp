@@ -4591,3 +4591,64 @@ jit::MakeLoopsContiguous(MIRGraph& graph)
 
     return true;
 }
+
+MRootList::MRootList(TempAllocator& alloc)
+{
+#define INIT_VECTOR(name, _0, _1) \
+    roots_[JS::RootKind::name].emplace(alloc);
+JS_FOR_EACH_TRACEKIND(INIT_VECTOR)
+#undef INIT_VECTOR
+}
+
+template <typename T>
+static void
+TraceVector(JSTracer* trc, const MRootList::RootVector& vector, const char* name)
+{
+    for (auto ptr : vector) {
+        T ptrT = static_cast<T>(ptr);
+        TraceManuallyBarrieredEdge(trc, &ptrT, name);
+        MOZ_ASSERT(ptr == ptrT, "Shouldn't move without updating MIR pointers");
+    }
+}
+
+void
+MRootList::trace(JSTracer* trc)
+{
+#define TRACE_ROOTS(name, type, _) \
+    TraceVector<type*>(trc, *roots_[JS::RootKind::name], "mir-root-" #name);
+JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
+#undef TRACE_ROOTS
+}
+
+MOZ_MUST_USE bool
+jit::CreateMIRRootList(IonBuilder& builder)
+{
+    MOZ_ASSERT(!builder.info().isAnalysis());
+
+    TempAllocator& alloc = builder.alloc();
+    MIRGraph& graph = builder.graph();
+
+    MRootList* roots = new(alloc.fallible()) MRootList(alloc);
+    if (!roots)
+        return false;
+
+    JSScript* prevScript = nullptr;
+
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+
+        JSScript* script = block->info().script();
+        if (script != prevScript) {
+            if (!roots->append(script))
+                return false;
+            prevScript = script;
+        }
+
+        for (MInstructionIterator iter(block->begin()), end(block->end()); iter != end; iter++) {
+            if (!iter->appendRoots(*roots))
+                return false;
+        }
+    }
+
+    builder.setRootList(*roots);
+    return true;
+}
