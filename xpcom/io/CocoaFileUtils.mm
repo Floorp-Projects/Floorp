@@ -5,10 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CocoaFileUtils.h"
+#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include <Cocoa/Cocoa.h>
 #include "nsObjCExceptions.h"
 #include "nsDebug.h"
+
+// Need to cope with us using old versions of the SDK and needing this on 10.10+
+#if !defined(MAC_OS_X_VERSION_10_10) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10)
+const CFStringRef kCFURLQuarantinePropertiesKey = CFSTR("NSURLQuarantinePropertiesKey");
+#endif
 
 namespace CocoaFileUtils {
 
@@ -193,9 +199,16 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
                                                      kCFURLPOSIXPathStyle,
                                                      false);
 
+  // The properties key changed in 10.10:
+  CFStringRef quarantinePropKey;
+  if (nsCocoaFeatures::OnYosemiteOrLater()) {
+    quarantinePropKey = kCFURLQuarantinePropertiesKey;
+  } else {
+    quarantinePropKey = kLSItemQuarantineProperties;
+  }
   CFDictionaryRef quarantineProps = NULL;
   Boolean success = ::CFURLCopyResourcePropertyForKey(fileURL,
-                                                      kLSItemQuarantineProperties,
+                                                      quarantinePropKey,
                                                       &quarantineProps,
                                                       NULL);
 
@@ -243,7 +256,7 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
 
   // Set quarantine properties on file.
   ::CFURLSetResourcePropertyForKey(fileURL,
-                                   kLSItemQuarantineProperties,
+                                   quarantinePropKey,
                                    mutQuarantineProps,
                                    NULL);
 
