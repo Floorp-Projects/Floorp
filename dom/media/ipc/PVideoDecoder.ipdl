@@ -54,6 +54,8 @@ parent:
   async Drain();
   async Shutdown();
 
+  async SetSeekThreshold(int64_t time);
+
   async __delete__();
 
 child:

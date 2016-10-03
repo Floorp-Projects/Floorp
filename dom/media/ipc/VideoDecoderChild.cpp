@@ -210,6 +210,15 @@ VideoDecoderChild::Shutdown()
 }
 
 void
+VideoDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  AssertOnManagerThread();
+  if (!mCanSend || !SendSetSeekThreshold(aTime.ToMicroseconds())) {
+    mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
+  }
+}
+
+void
 VideoDecoderChild::AssertOnManagerThread()
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mThread);
