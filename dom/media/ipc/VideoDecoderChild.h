@@ -39,6 +39,7 @@ public:
   void Flush();
   void Drain();
   void Shutdown();
+  void SetSeekThreshold(const media::TimeUnit& aTime);
 
   MOZ_IS_CLASS_INIT
   void InitIPDL(MediaDataDecoderCallback* aCallback,

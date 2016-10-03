@@ -135,6 +135,14 @@ VideoDecoderParent::RecvShutdown()
   return true;
 }
 
+bool
+VideoDecoderParent::RecvSetSeekThreshold(const int64_t& aTime)
+{
+  MOZ_ASSERT(!mDestroyed);
+  mDecoder->SetSeekThreshold(media::TimeUnit::FromMicroseconds(aTime));
+  return true;
+}
+
 void
 VideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
 {
