@@ -1051,7 +1051,7 @@ var BrowserApp = {
   // off to the compositor.
   isBrowserContentDocumentDisplayed: function() {
     try {
-      if (!Services.androidBridge.isContentDocumentDisplayed())
+      if (!Services.androidBridge.isContentDocumentDisplayed(window))
         return false;
     } catch (e) {
       return false;
@@ -1065,7 +1065,7 @@ var BrowserApp = {
 
   contentDocumentChanged: function() {
     window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint = true;
-    Services.androidBridge.contentDocumentChanged();
+    Services.androidBridge.contentDocumentChanged(window);
   },
 
   get tabs() {
