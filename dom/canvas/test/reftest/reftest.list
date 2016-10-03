@@ -166,3 +166,7 @@ fuzzy-if(azureSkia,16,2) fuzzy-if(Android,3,40) fuzzy-if(/^Windows\x20NT\x2010\.
 
 # Canvas Filter Reftests
 include filters/reftest.list
+
+# Bug 1305963
+== mozCurrentTransform.html mozCurrentTransform-ref.html
+== mozCurrentTransformInverse.html mozCurrentTransform-ref.html
