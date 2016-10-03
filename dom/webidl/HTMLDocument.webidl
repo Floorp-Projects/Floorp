@@ -43,7 +43,7 @@ interface HTMLDocument : Document {
   [Throws]
   void writeln(DOMString... text);
 
-           [SetterThrows]
+  [SetterThrows, NeedsSubjectPrincipal]
            attribute DOMString designMode;
   [Throws]
   boolean execCommand(DOMString commandId, optional boolean showUI = false,

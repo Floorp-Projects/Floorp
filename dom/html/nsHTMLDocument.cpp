@@ -2390,7 +2390,7 @@ nsHTMLDocument::GenerateParserKey(void)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
+nsHTMLDocument::GetDesignMode(nsAString& aDesignMode)
 {
   if (HasFlag(NODE_IS_EDITABLE)) {
     aDesignMode.AssignLiteral("on");
@@ -2832,17 +2832,22 @@ nsHTMLDocument::EditingStateChanged()
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
+nsHTMLDocument::SetDesignMode(const nsAString& aDesignMode)
 {
   ErrorResult rv;
-  SetDesignMode(aDesignMode, rv);
+  SetDesignMode(aDesignMode, nsContentUtils::GetCurrentJSContext()
+                               ? Some(nsContentUtils::SubjectPrincipal())
+                               : Nothing(), rv);
   return rv.StealNSResult();
 }
 
 void
-nsHTMLDocument::SetDesignMode(const nsAString& aDesignMode, ErrorResult& rv)
+nsHTMLDocument::SetDesignMode(const nsAString& aDesignMode,
+                              const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                              ErrorResult& rv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() && !nsContentUtils::SubjectPrincipal()->Subsumes(NodePrincipal())) {
+  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
+      !aSubjectPrincipal.value()->Subsumes(NodePrincipal())) {
     rv.Throw(NS_ERROR_DOM_PROP_ACCESS_DENIED);
     return;
   }

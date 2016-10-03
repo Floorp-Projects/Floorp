@@ -24,6 +24,7 @@ interface HTMLFrameElement : HTMLElement {
            attribute DOMString longDesc;
            [SetterThrows]
            attribute boolean noResize;
+  [NeedsSubjectPrincipal]
   readonly attribute Document? contentDocument;
   readonly attribute WindowProxy? contentWindow;
 
