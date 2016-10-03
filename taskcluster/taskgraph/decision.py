@@ -120,6 +120,11 @@ def get_decision_parameters(options):
         'target_tasks_method',
     ] if n in options}
 
+    # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which
+    # case, fake it
+    if '@' not in parameters['owner']:
+        parameters['owner'] += '@noreply.mozilla.org'
+
     project = parameters['project']
     try:
         parameters.update(PER_PROJECT_PARAMETERS[project])
