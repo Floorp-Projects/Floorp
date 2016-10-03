@@ -10577,16 +10577,18 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
 }
 
 DOMStorage*
-nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
+nsGlobalWindow::GetLocalStorage(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
+  MOZ_ASSERT(aSubjectPrincipal.isSome());
 
   if (!Preferences::GetBool(kStorageEnabled)) {
     return nullptr;
   }
 
   if (!mLocalStorage) {
-    if (!DOMStorage::CanUseStorage(AsInner())) {
+    if (!DOMStorage::CanUseStorage(AsInner(), aSubjectPrincipal)) {
       aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
@@ -11535,8 +11537,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     // Clone the storage event included in the observer notification. We want
     // to dispatch clones rather than the original event.
     ErrorResult error;
-    RefPtr<StorageEvent> newEvent = CloneStorageEvent(eventType,
-                                                        event, error);
+    RefPtr<StorageEvent> newEvent =
+      CloneStorageEvent(eventType, event, nsContentUtils::SubjectPrincipal(),
+                        error);
     if (error.Failed()) {
       return error.StealNSResult();
     }
@@ -11635,9 +11638,11 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 already_AddRefed<StorageEvent>
 nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
                                   const RefPtr<StorageEvent>& aEvent,
+                                  nsIPrincipal* aSubjectPrincipal,
                                   ErrorResult& aRv)
 {
   MOZ_ASSERT(IsInnerWindow());
+  MOZ_ASSERT(aSubjectPrincipal);
 
   StorageEventInit dict;
 
@@ -11653,7 +11658,7 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
 
   RefPtr<DOMStorage> storage;
   if (storageArea->GetType() == DOMStorage::LocalStorage) {
-    storage = GetLocalStorage(aRv);
+    storage = GetLocalStorage(Some(aSubjectPrincipal), aRv);
   } else {
     MOZ_ASSERT(storageArea->GetType() == DOMStorage::SessionStorage);
     storage = GetSessionStorage(aRv);
