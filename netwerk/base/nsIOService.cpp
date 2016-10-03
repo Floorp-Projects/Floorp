@@ -502,6 +502,24 @@ nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **r
     return NS_ERROR_FAILURE;
 }
  
+static bool
+UsesExternalProtocolHandler(const char* aScheme)
+{
+    if (NS_LITERAL_CSTRING("file").Equals(aScheme) ||
+        NS_LITERAL_CSTRING("chrome").Equals(aScheme) ||
+        NS_LITERAL_CSTRING("resource").Equals(aScheme)) {
+        // Don't allow file:, chrome: or resource: URIs to be handled with
+        // nsExternalProtocolHandler, since internally we rely on being able to
+        // use and read from these URIs.
+        return false;
+    }
+
+    nsAutoCString pref("network.protocol-handler.external.");
+    pref += aScheme;
+
+    return Preferences::GetBool(pref.get(), false);
+}
+
 NS_IMETHODIMP
 nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 {
@@ -516,19 +534,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     if (NS_SUCCEEDED(rv))
         return rv;
 
-    bool externalProtocol = false;
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    GetPrefBranch(getter_AddRefs(prefBranch));
-    if (prefBranch) {
-        nsAutoCString externalProtocolPref("network.protocol-handler.external.");
-        externalProtocolPref += scheme;
-        rv = prefBranch->GetBoolPref(externalProtocolPref.get(), &externalProtocol);
-        if (NS_FAILED(rv)) {
-            externalProtocol = false;
-        }
-    }
-
-    if (!externalProtocol) {
+    if (!UsesExternalProtocolHandler(scheme)) {
         nsAutoCString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
         contractID += scheme;
         ToLowerCase(contractID);
