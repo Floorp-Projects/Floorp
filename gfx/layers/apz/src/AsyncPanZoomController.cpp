@@ -1255,7 +1255,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     SetState(NOTHING);
 
     APZC_LOG("%p starting a fling animation if %f >= %f\n", this,
-        flingVelocity.Length(), gfxPrefs::APZFlingMinVelocityThreshold());
+        flingVelocity.Length().value, gfxPrefs::APZFlingMinVelocityThreshold());
 
     if (flingVelocity.Length() < gfxPrefs::APZFlingMinVelocityThreshold()) {
       return nsEventStatus_eConsumeNoDefault;
