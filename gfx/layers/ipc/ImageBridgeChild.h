@@ -393,25 +393,6 @@ protected:
   static void ShutdownSingleton();
 
 private:
-  class ShutdownObserver final : public nsIObserver
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
-    explicit ShutdownObserver(ImageBridgeChild* aImageBridge);
-    void Unregister();
-
-  private:
-    ~ShutdownObserver() {};
-
-    ImageBridgeChild* mImageBridge;
-  };
-  friend class ShutdownObserver;
-
-  void OnXPCOMShutdown();
-
-private:
   CompositableTransaction* mTxn;
 
   bool mCanSend;
@@ -435,8 +416,6 @@ private:
   Mutex mWaitingFenceHandleMutex;
   nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingFenceHandle;
 #endif
-
-  RefPtr<ShutdownObserver> mShutdownObserver;
 };
 
 } // namespace layers
