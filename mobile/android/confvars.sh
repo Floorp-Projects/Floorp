@@ -50,7 +50,7 @@ MOZ_NATIVE_DEVICES=1
 # is a proxy flag for that support.
 if test "$RELEASE_BUILD"; then
 if test "$MOZ_NATIVE_DEVICES"; then
-  MOZ_INSTALL_TRACKING=1
+  MOZ_INSTALL_TRACKING=
 fi
 fi
 
