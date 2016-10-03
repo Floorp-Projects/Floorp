@@ -25,6 +25,7 @@
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 #include "nsIWidget.h"
 #include <vector>
+#include "nsExpirationTracker.h"
 
 namespace mozilla {
 namespace layers {
@@ -44,6 +45,36 @@ class TextureClient;
 class ThebesBuffer;
 class ThebesBufferData;
 class Transaction;
+
+/**
+ * See ActiveResourceTracker below.
+ */
+class ActiveResource
+{
+public:
+ virtual void NotifyInactive() = 0;
+  nsExpirationState* GetExpirationState() { return &mExpirationState; }
+  bool IsActivityTracked() { return mExpirationState.IsTracked(); }
+private:
+  nsExpirationState mExpirationState;
+};
+
+/**
+ * A convenience class on top of nsExpirationTracker
+ */
+class ActiveResourceTracker : public nsExpirationTracker<ActiveResource, 3>
+{
+public:
+  ActiveResourceTracker(uint32_t aExpirationCycle, const char* aName)
+  : nsExpirationTracker(aExpirationCycle, aName)
+  {}
+
+  virtual void NotifyExpired(ActiveResource* aResource) override
+  {
+    RemoveObject(aResource);
+    aResource->NotifyInactive();
+  }
+};
 
 /**
  * We want to share layer trees across thread contexts and address
@@ -371,6 +402,7 @@ public:
   TextureForwarder* GetTextureForwarder() override { return GetCompositorBridgeChild(); }
   LayersIPCActor* GetLayersIPCActor() override { return this; }
 
+  ActiveResourceTracker& GetActiveResourceTracker() { return *mActiveResourceTracker.get(); }
 protected:
   virtual ~ShadowLayerForwarder();
 
@@ -399,6 +431,7 @@ private:
   bool mWindowOverlayChanged;
   int32_t mPaintSyncId;
   InfallibleTArray<PluginWindowData> mPluginWindowData;
+  UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
 };
 
 class CompositableClient;
