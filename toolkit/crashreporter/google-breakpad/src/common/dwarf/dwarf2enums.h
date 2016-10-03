@@ -149,10 +149,7 @@ enum DwarfForm {
   DW_FORM_sec_offset = 0x17,
   DW_FORM_exprloc = 0x18,
   DW_FORM_flag_present = 0x19,
-  DW_FORM_ref_sig8 = 0x20,
-  // Extensions for Fission.  See http://gcc.gnu.org/wiki/DebugFission.
-  DW_FORM_GNU_addr_index = 0x1f01,
-  DW_FORM_GNU_str_index = 0x1f02
+  DW_FORM_ref_sig8 = 0x20
 };
 
 // Attribute names and codes
@@ -267,13 +264,6 @@ enum DwarfAttribute {
   DW_AT_body_begin = 0x2105,
   DW_AT_body_end   = 0x2106,
   DW_AT_GNU_vector = 0x2107,
-  // Extensions for Fission.  See http://gcc.gnu.org/wiki/DebugFission.
-  DW_AT_GNU_dwo_name = 0x2130,
-  DW_AT_GNU_dwo_id = 0x2131,
-  DW_AT_GNU_ranges_base = 0x2132,
-  DW_AT_GNU_addr_base = 0x2133,
-  DW_AT_GNU_pubnames = 0x2134,
-  DW_AT_GNU_pubtypes = 0x2135,
   // VMS extensions.
   DW_AT_VMS_rtnbeg_pd_address = 0x2201,
   // UPC extension.
@@ -501,22 +491,7 @@ enum DwarfOpcode {
   DW_OP_lo_user                      =0xe0,
   DW_OP_hi_user                      =0xff,  
   // GNU extensions
-  DW_OP_GNU_push_tls_address         =0xe0,
-  // Extensions for Fission.  See http://gcc.gnu.org/wiki/DebugFission.
-  DW_OP_GNU_addr_index               =0xfb,
-  DW_OP_GNU_const_index              =0xfc
-};
-
-// Section identifiers for DWP files
-enum DwarfSectionId {
-  DW_SECT_INFO = 1,
-  DW_SECT_TYPES = 2,
-  DW_SECT_ABBREV = 3,
-  DW_SECT_LINE = 4,
-  DW_SECT_LOC = 5,
-  DW_SECT_STR_OFFSETS = 6,
-  DW_SECT_MACINFO = 7,
-  DW_SECT_MACRO = 8
+  DW_OP_GNU_push_tls_address         =0xe0
 };
 
 // Source languages.  These are values for DW_AT_language.

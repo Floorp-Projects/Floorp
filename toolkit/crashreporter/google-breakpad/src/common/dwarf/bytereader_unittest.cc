@@ -31,8 +31,6 @@
 
 // bytereader_unittest.cc: Unit tests for dwarf2reader::ByteReader
 
-#include <stdint.h>
-
 #include <string>
 
 #include "breakpad_googletest_includes.h"
@@ -73,7 +71,7 @@ TEST_F(Reader, SimpleConstructor) {
     .LEB128(-0x4f337badf4483f83LL)
     .D32(0xfec319c9);
   ASSERT_TRUE(section.GetContents(&contents));
-  const uint8_t *data = reinterpret_cast<const uint8_t *>(contents.data());
+  const char *data = contents.data();
   EXPECT_EQ(0xc0U, reader.ReadOneByte(data));
   EXPECT_EQ(0xcf0dU, reader.ReadTwoBytes(data + 1));
   EXPECT_EQ(0x96fdd219U, reader.ReadFourBytes(data + 3));
@@ -377,7 +375,7 @@ TEST_F(Reader, ValidEncodings) {
 }
 
 TEST_F(ReaderDeathTest, DW_EH_PE_omit) {
-  static const uint8_t data[] = { 42 };
+  static const char data[1] = { 42 };
   ByteReader reader(ENDIANNESS_BIG);
   reader.SetAddressSize(4);
   EXPECT_DEATH(reader.ReadEncodedPointer(data, dwarf2reader::DW_EH_PE_omit,
@@ -386,7 +384,7 @@ TEST_F(ReaderDeathTest, DW_EH_PE_omit) {
 }
 
 TEST_F(Reader, DW_EH_PE_absptr4) {
-  static const uint8_t data[] = { 0x27, 0x57, 0xea, 0x40 };
+  static const char data[] = { 0x27, 0x57, 0xea, 0x40 };
   ByteReader reader(ENDIANNESS_LITTLE);
   reader.SetAddressSize(4);
   EXPECT_EQ(0x40ea5727U,
@@ -396,7 +394,7 @@ TEST_F(Reader, DW_EH_PE_absptr4) {
 }
 
 TEST_F(Reader, DW_EH_PE_absptr8) {
-  static const uint8_t data[] = {
+  static const char data[] = {
     0x60, 0x27, 0x57, 0xea, 0x40, 0xc2, 0x98, 0x05, 0x01, 0x50
   };
   ByteReader reader(ENDIANNESS_LITTLE);
@@ -408,7 +406,7 @@ TEST_F(Reader, DW_EH_PE_absptr8) {
 }
 
 TEST_F(Reader, DW_EH_PE_uleb128) {
-  static const uint8_t data[] = { 0x81, 0x84, 0x4c };
+  static const char data[] = { 0x81, 0x84, 0x4c };
   ByteReader reader(ENDIANNESS_LITTLE);
   reader.SetAddressSize(4);
   EXPECT_EQ(0x130201U,
@@ -418,7 +416,7 @@ TEST_F(Reader, DW_EH_PE_uleb128) {
 }
 
 TEST_F(Reader, DW_EH_PE_udata2) {
-  static const uint8_t data[] = { 0xf4, 0x8d };
+  static const char data[] = { 0xf4, 0x8d };
   ByteReader reader(ENDIANNESS_BIG);
   reader.SetAddressSize(4);
   EXPECT_EQ(0xf48dU,
@@ -428,7 +426,7 @@ TEST_F(Reader, DW_EH_PE_udata2) {
 }
 
 TEST_F(Reader, DW_EH_PE_udata4) {
-  static const uint8_t data[] = { 0xb2, 0x68, 0xa5, 0x62, 0x8f, 0x8b };
+  static const char data[] = { 0xb2, 0x68, 0xa5, 0x62, 0x8f, 0x8b };
   ByteReader reader(ENDIANNESS_BIG);
   reader.SetAddressSize(8);
   EXPECT_EQ(0xa5628f8b,
@@ -438,7 +436,7 @@ TEST_F(Reader, DW_EH_PE_udata4) {
 }
 
 TEST_F(Reader, DW_EH_PE_udata8Addr8) {
-  static const uint8_t data[] = {
+  static const char data[] = {
     0x27, 0x04, 0x73, 0x04, 0x69, 0x9f, 0x19, 0xed, 0x8f, 0xfe
   };
   ByteReader reader(ENDIANNESS_LITTLE);
@@ -450,7 +448,7 @@ TEST_F(Reader, DW_EH_PE_udata8Addr8) {
 }
 
 TEST_F(Reader, DW_EH_PE_udata8Addr4) {
-  static const uint8_t data[] = {
+  static const char data[] = {
     0x27, 0x04, 0x73, 0x04, 0x69, 0x9f, 0x19, 0xed, 0x8f, 0xfe
   };
   ByteReader reader(ENDIANNESS_LITTLE);
@@ -462,7 +460,7 @@ TEST_F(Reader, DW_EH_PE_udata8Addr4) {
 }
 
 TEST_F(Reader, DW_EH_PE_sleb128) {
-  static const uint8_t data[] = { 0x42, 0xff, 0xfb, 0x73 };
+  static const char data[] = { 0x42, 0xff, 0xfb, 0x73 };
   ByteReader reader(ENDIANNESS_BIG);
   reader.SetAddressSize(4);
   EXPECT_EQ(-0x030201U & 0xffffffff,
@@ -472,7 +470,7 @@ TEST_F(Reader, DW_EH_PE_sleb128) {
 }
 
 TEST_F(Reader, DW_EH_PE_sdata2) {
-  static const uint8_t data[] = { 0xb9, 0xbf };
+  static const char data[] = { 0xb9, 0xbf };
   ByteReader reader(ENDIANNESS_LITTLE);
   reader.SetAddressSize(8);
   EXPECT_EQ(0xffffffffffffbfb9ULL,
@@ -482,7 +480,7 @@ TEST_F(Reader, DW_EH_PE_sdata2) {
 }
 
 TEST_F(Reader, DW_EH_PE_sdata4) {
-  static const uint8_t data[] = { 0xa0, 0xca, 0xf2, 0xb8, 0xc2, 0xad };
+  static const char data[] = { 0xa0, 0xca, 0xf2, 0xb8, 0xc2, 0xad };
   ByteReader reader(ENDIANNESS_LITTLE);
   reader.SetAddressSize(8);
   EXPECT_EQ(0xffffffffadc2b8f2ULL,
@@ -492,7 +490,7 @@ TEST_F(Reader, DW_EH_PE_sdata4) {
 }
 
 TEST_F(Reader, DW_EH_PE_sdata8) {
-  static const uint8_t data[] = {
+  static const char data[] = {
     0xf6, 0x66, 0x57, 0x79, 0xe0, 0x0c, 0x9b, 0x26, 0x87
   };
   ByteReader reader(ENDIANNESS_LITTLE);
@@ -504,9 +502,7 @@ TEST_F(Reader, DW_EH_PE_sdata8) {
 }
 
 TEST_F(Reader, DW_EH_PE_pcrel) {
-  static const uint8_t data[] = {
-    0x4a, 0x8b, 0x1b, 0x14, 0xc8, 0xc4, 0x02, 0xce
-  };
+  static const char data[] = { 0x4a, 0x8b, 0x1b, 0x14, 0xc8, 0xc4, 0x02, 0xce };
   ByteReader reader(ENDIANNESS_BIG);
   reader.SetAddressSize(4);
   DwarfPointerEncoding encoding =
@@ -519,9 +515,7 @@ TEST_F(Reader, DW_EH_PE_pcrel) {
 }
 
 TEST_F(Reader, DW_EH_PE_textrel) {
-  static const uint8_t data[] = {
-    0xd9, 0x0d, 0x05, 0x17, 0xc9, 0x7a, 0x42, 0x1e
-  };
+  static const char data[] = { 0xd9, 0x0d, 0x05, 0x17, 0xc9, 0x7a, 0x42, 0x1e };
   ByteReader reader(ENDIANNESS_LITTLE);
   reader.SetAddressSize(4);
   reader.SetTextBase(0xb91beaf0);
@@ -534,9 +528,7 @@ TEST_F(Reader, DW_EH_PE_textrel) {
 }
 
 TEST_F(Reader, DW_EH_PE_datarel) {
-  static const uint8_t data[] = {
-    0x16, 0xf2, 0xbb, 0x82, 0x68, 0xa7, 0xbc, 0x39
-  };
+  static const char data[] = { 0x16, 0xf2, 0xbb, 0x82, 0x68, 0xa7, 0xbc, 0x39 };
   ByteReader reader(ENDIANNESS_BIG);
   reader.SetAddressSize(8);
   reader.SetDataBase(0xbef308bd25ce74f0ULL);
@@ -549,9 +541,7 @@ TEST_F(Reader, DW_EH_PE_datarel) {
 }
 
 TEST_F(Reader, DW_EH_PE_funcrel) {
-  static const uint8_t data[] = {
-    0x84, 0xf8, 0x14, 0x01, 0x61, 0xd1, 0x48, 0xc9
-  };
+  static const char data[] = { 0x84, 0xf8, 0x14, 0x01, 0x61, 0xd1, 0x48, 0xc9 };
   ByteReader reader(ENDIANNESS_BIG);
   reader.SetAddressSize(4);
   reader.SetFunctionBase(0x823c3520);
@@ -564,7 +554,7 @@ TEST_F(Reader, DW_EH_PE_funcrel) {
 }
 
 TEST(UsableBase, CFI) {
-  static const uint8_t data[] = { 0x42 };
+  static const char data[1] = { 0x42 };
   ByteReader reader(ENDIANNESS_BIG);
   reader.SetCFIDataBase(0xb31cbd20, data);
   EXPECT_TRUE(reader.UsableEncoding(dwarf2reader::DW_EH_PE_absptr));
@@ -627,12 +617,12 @@ TEST(UsableBase, ClearFunction) {
 
 struct AlignedFixture {
   AlignedFixture() : reader(ENDIANNESS_BIG) { reader.SetAddressSize(4); }
-  static const uint8_t data[10];
+  static const char data[10];
   ByteReader reader;
   size_t pointer_size;
 };
   
-const uint8_t AlignedFixture::data[10] = {
+const char AlignedFixture::data[10] = {
   0xfe, 0x6e, 0x93, 0xd8, 0x34, 0xd5, 0x1c, 0xd3, 0xac, 0x2b
 };
 

@@ -213,10 +213,8 @@ void ELF::Finish() {
 SymbolTable::SymbolTable(Endianness endianness,
                          size_t addr_size,
                          StringTable& table) : Section(endianness),
+                                               addr_size_(addr_size),
                                                table_(table) {
-#ifndef NDEBUG
-  addr_size_ = addr_size;
-#endif
   assert(addr_size_ == 4 || addr_size_ == 8);
 }
 

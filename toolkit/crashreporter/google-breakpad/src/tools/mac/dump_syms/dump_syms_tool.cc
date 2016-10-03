@@ -51,13 +51,11 @@ using std::vector;
 
 struct Options {
   Options()
-      : srcPath(), dsymPath(), arch(), header_only(false),
-        cfi(true), handle_inter_cu_refs(true) {}
+      : srcPath(), dsymPath(), arch(), cfi(true), handle_inter_cu_refs(true) {}
 
   string srcPath;
   string dsymPath;
   const NXArchInfo *arch;
-  bool header_only;
   bool cfi;
   bool handle_inter_cu_refs;
 };
@@ -153,9 +151,6 @@ static bool Start(const Options &options) {
     }
   }
 
-  if (options.header_only)
-    return dump_symbols.WriteSymbolFileHeader(std::cout);
-
   // Read the primary file into a Breakpad Module.
   Module* module = NULL;
   if (!dump_symbols.ReadSymbolData(&module))
@@ -194,7 +189,6 @@ static void Usage(int argc, const char *argv[]) {
   fprintf(stderr, "Output a Breakpad symbol file from a Mach-o file.\n");
   fprintf(stderr, "Usage: %s [-a ARCHITECTURE] [-c] [-g dSYM path] "
                   "<Mach-o file>\n", argv[0]);
-  fprintf(stderr, "\t-i: Output module header information only.\n");
   fprintf(stderr, "\t-a: Architecture type [default: native, or whatever is\n");
   fprintf(stderr, "\t    in the file, if it contains only one architecture]\n");
   fprintf(stderr, "\t-g: Debug symbol file (dSYM) to dump in addition to the "
@@ -210,11 +204,8 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
   extern int optind;
   signed char ch;
 
-  while ((ch = getopt(argc, (char * const *)argv, "ia:g:chr?")) != -1) {
+  while ((ch = getopt(argc, (char * const *)argv, "a:g:chr?")) != -1) {
     switch (ch) {
-      case 'i':
-        options->header_only = true;
-        break;
       case 'a': {
         const NXArchInfo *arch_info =
             google_breakpad::BreakpadGetArchInfoFromName(optarg);

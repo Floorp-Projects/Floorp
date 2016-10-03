@@ -38,13 +38,9 @@ struct MicrodumpExtraInfo {
   const char* build_fingerprint;
   const char* product_info;
   const char* gpu_fingerprint;
-  const char* process_type;
 
   MicrodumpExtraInfo()
-      : build_fingerprint(NULL),
-        product_info(NULL),
-        gpu_fingerprint(NULL),
-        process_type(NULL) {}
+      : build_fingerprint(NULL), product_info(NULL), gpu_fingerprint(NULL) {}
 };
 
 }

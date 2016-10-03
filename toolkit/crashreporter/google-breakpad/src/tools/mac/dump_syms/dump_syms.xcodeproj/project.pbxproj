@@ -36,8 +36,6 @@
 		162F64FA161C591500CD68D5 /* arch_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = 162F64F8161C591500CD68D5 /* arch_utilities.cc */; };
 		162F6500161C5F2200CD68D5 /* arch_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = 162F64F8161C591500CD68D5 /* arch_utilities.cc */; };
 		4D72CAF513DFBAC2006CABE3 /* md5.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4D72CAF413DFBAC2006CABE3 /* md5.cc */; };
-		8BCAAA4C1CE3A7980046090B /* elf_reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = 8BCAAA4A1CE3A7980046090B /* elf_reader.cc */; };
-		8BCAAA4D1CE3B1260046090B /* elf_reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = 8BCAAA4A1CE3A7980046090B /* elf_reader.cc */; };
 		B84A91F8116CF78F006C210E /* libgtestmockall.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B88FB024116BDFFF00407530 /* libgtestmockall.a */; };
 		B84A91FB116CF7AF006C210E /* module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FAE241166603300407530 /* module.cc */; };
 		B84A91FC116CF7AF006C210E /* stabs_to_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FAE3C11666C8900407530 /* stabs_to_module.cc */; };
@@ -282,8 +280,6 @@
 		8B31023E11F0CF1C00FCF3E4 /* Breakpad.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Breakpad.xcconfig; path = ../../../common/mac/Breakpad.xcconfig; sourceTree = SOURCE_ROOT; };
 		8B3102D411F0D60300FCF3E4 /* BreakpadDebug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = BreakpadDebug.xcconfig; path = ../../../common/mac/BreakpadDebug.xcconfig; sourceTree = SOURCE_ROOT; };
 		8B3102D511F0D60300FCF3E4 /* BreakpadRelease.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = BreakpadRelease.xcconfig; path = ../../../common/mac/BreakpadRelease.xcconfig; sourceTree = SOURCE_ROOT; };
-		8BCAAA4A1CE3A7980046090B /* elf_reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = elf_reader.cc; path = ../../../common/dwarf/elf_reader.cc; sourceTree = "<group>"; };
-		8BCAAA4B1CE3A7980046090B /* elf_reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = elf_reader.h; path = ../../../common/dwarf/elf_reader.h; sourceTree = "<group>"; };
 		9BDF186D0B1BB43700F8391B /* dump_syms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dump_syms.h; path = ../../../common/mac/dump_syms.h; sourceTree = "<group>"; };
 		9BDF186E0B1BB43700F8391B /* dump_syms_tool.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = dump_syms_tool.cc; sourceTree = "<group>"; };
 		9BE650410B52F6D800611104 /* file_id.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = file_id.cc; path = ../../../common/mac/file_id.cc; sourceTree = SOURCE_ROOT; };
@@ -617,8 +613,6 @@
 				B88FAE1711665FE400407530 /* dwarf2diehandler.cc */,
 				B88FAE1811665FE400407530 /* dwarf2diehandler.h */,
 				B88FB0DB116CEC5800407530 /* dwarf2diehandler_unittest.cc */,
-				8BCAAA4A1CE3A7980046090B /* elf_reader.cc */,
-				8BCAAA4B1CE3A7980046090B /* elf_reader.h */,
 			);
 			name = DWARF;
 			sourceTree = "<group>";
@@ -893,8 +887,6 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			attributes = {
-			};
 			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "dump_syms" */;
 			compatibilityVersion = "Xcode 3.1";
 			developmentRegion = English;
@@ -962,7 +954,6 @@
 			files = (
 				B88FAF38116A595400407530 /* dwarf2reader_cfi_unittest.cc in Sources */,
 				B88FAF3F116A5A2E00407530 /* dwarf2reader.cc in Sources */,
-				8BCAAA4D1CE3B1260046090B /* elf_reader.cc in Sources */,
 				B88FAF40116A5A2E00407530 /* bytereader.cc in Sources */,
 				B88FAF37116A595400407530 /* cfi_assembler.cc in Sources */,
 			);
@@ -1080,7 +1071,6 @@
 			files = (
 				162F64FA161C591500CD68D5 /* arch_utilities.cc in Sources */,
 				B88FAE2C1166606200407530 /* macho_reader.cc in Sources */,
-				8BCAAA4C1CE3A7980046090B /* elf_reader.cc in Sources */,
 				B8C5B5171166534700D34F4E /* dwarf2reader.cc in Sources */,
 				B8C5B5181166534700D34F4E /* bytereader.cc in Sources */,
 				B8C5B5191166534700D34F4E /* macho_utilities.cc in Sources */,
@@ -1235,11 +1225,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 8B3102D411F0D60300FCF3E4 /* BreakpadDebug.xcconfig */;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					../../..,
-					../../../common/mac/include/,
-					../../../third_party/musl/include/,
-				);
+				HEADER_SEARCH_PATHS = ../../..;
 			};
 			name = Debug;
 		};
@@ -1247,11 +1233,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 8B3102D511F0D60300FCF3E4 /* BreakpadRelease.xcconfig */;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					../../..,
-					../../../common/mac/include/,
-					../../../third_party/musl/include/,
-				);
+				HEADER_SEARCH_PATHS = ../../..;
 			};
 			name = Release;
 		};
@@ -1635,7 +1617,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_MACH_O_NLIST_H;
-				GCC_VERSION = "";
 				PRODUCT_NAME = dump_syms;
 			};
 			name = Debug;
@@ -1644,7 +1625,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_MACH_O_NLIST_H;
-				GCC_VERSION = "";
 				PRODUCT_NAME = dump_syms;
 			};
 			name = Release;

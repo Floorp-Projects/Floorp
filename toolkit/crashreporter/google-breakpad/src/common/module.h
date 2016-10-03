@@ -186,7 +186,7 @@ class Module {
   // Create a new module with the given name, operating system,
   // architecture, and ID string.
   Module(const string &name, const string &os, const string &architecture,
-         const string &id, const string &code_id = "");
+         const string &id);
   ~Module();
 
   // Set the module's load address to LOAD_ADDRESS; addresses given
@@ -292,7 +292,6 @@ class Module {
   string os() const { return os_; }
   string architecture() const { return architecture_; }
   string identifier() const { return id_; }
-  string code_identifier() const { return code_id_; }
 
  private:
   // Report an error that has occurred writing the symbol file, using
@@ -305,7 +304,7 @@ class Module {
   static bool WriteRuleMap(const RuleMap &rule_map, std::ostream &stream);
 
   // Module header entries.
-  string name_, os_, architecture_, id_, code_id_;
+  string name_, os_, architecture_, id_;
 
   // The module's nominal load address.  Addresses for functions and
   // lines are absolute, assuming the module is loaded at this
