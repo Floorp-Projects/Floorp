@@ -35,9 +35,11 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         super(AccessibleCaretCursorModeTestCase, self).setUp()
         self.caret_tested_pref = 'layout.accessiblecaret.enabled'
         self.caret_timeout_ms_pref = 'layout.accessiblecaret.timeout_ms'
+        self.hide_carets_for_mouse = 'layout.accessiblecaret.hide_carets_for_mouse_input'
         self.prefs = {
             self.caret_tested_pref: True,
             self.caret_timeout_ms_pref: 0,
+            self.hide_carets_for_mouse: False,
         }
         self.marionette.set_prefs(self.prefs)
         self.actions = Actions(self.marionette)
