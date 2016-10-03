@@ -433,11 +433,11 @@ private:
             mMsg.message == WM_SYSKEYUP ||
             mMsg.message == MOZ_WM_KEYUP);
   }
-  bool IsPrintableCharMessage(const MSG& aMSG) const
+  bool IsCharOrSysCharMessage(const MSG& aMSG) const
   {
-    return IsPrintableCharMessage(aMSG.message);
+    return IsCharOrSysCharMessage(aMSG.message);
   }
-  bool IsPrintableCharMessage(UINT aMessage) const
+  bool IsCharOrSysCharMessage(UINT aMessage) const
   {
     return (aMessage == WM_CHAR || aMessage == WM_SYSCHAR);
   }
@@ -447,7 +447,7 @@ private:
   }
   bool IsCharMessage(UINT aMessage) const
   {
-    return (IsPrintableCharMessage(aMessage) || IsDeadCharMessage(aMessage));
+    return (IsCharOrSysCharMessage(aMessage) || IsDeadCharMessage(aMessage));
   }
   bool IsDeadCharMessage(const MSG& aMSG) const
   {
