@@ -3619,3 +3619,12 @@ nsWindow::GetCompositorBridgeParent() const
 {
   return mCompositorSession ? mCompositorSession->GetInProcessBridge() : nullptr;
 }
+
+jni::DependentRef<java::GeckoLayerClient>
+nsWindow::GetLayerClient()
+{
+    if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
+        return lvs->GetLayerClient().Get();
+    }
+    return nullptr;
+}
