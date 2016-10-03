@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<window id="presentation-window"
+        onload="PresentationView.startup();"
+        windowtype="navigator:browser"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <browser id="content" type="content-targetable" src="about:blank" flex="1"/>
+
+  <script type="application/javascript" src="chrome://browser/content/PresentationView.js"/>
+</window>

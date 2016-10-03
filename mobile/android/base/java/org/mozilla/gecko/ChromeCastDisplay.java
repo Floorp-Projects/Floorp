@@ -29,6 +29,7 @@ public class ChromeCastDisplay implements GeckoPresentationDisplay {
     static final String REMOTE_DISPLAY_APP_ID = "4574A331";
 
     private static final String LOGTAG = "GeckoChromeCastDisplay";
+    private final Context context;
     private final RouteInfo route;
     private CastDevice castDevice;
 
@@ -38,6 +39,7 @@ public class ChromeCastDisplay implements GeckoPresentationDisplay {
             throw new IllegalStateException("Play services are required for Chromecast support (got status code " + status + ")");
         }
 
+        this.context = context;
         this.route = route;
         this.castDevice = CastDevice.getFromBundle(route.getExtras());
     }
@@ -59,8 +61,52 @@ public class ChromeCastDisplay implements GeckoPresentationDisplay {
     }
 
     @Override
-    public void start(EventCallback callback) { }
+    public void start(final EventCallback callback) {
+
+        if (CastRemoteDisplayLocalService.getInstance() != null) {
+            Log.d(LOGTAG, "CastRemoteDisplayLocalService already existed.");
+            GeckoAppShell.notifyObservers("presentation-view-ready", route.getId());
+            callback.sendSuccess("Succeed to start presentation.");
+            return;
+        }
+
+        Intent intent = new Intent(context, RemotePresentationService.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent notificationPendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+        CastRemoteDisplayLocalService.NotificationSettings settings =
+            new CastRemoteDisplayLocalService.NotificationSettings.Builder()
+                .setNotificationPendingIntent(notificationPendingIntent).build();
+
+        CastRemoteDisplayLocalService.startService(
+            context,
+            RemotePresentationService.class,
+            REMOTE_DISPLAY_APP_ID,
+            castDevice,
+            settings,
+            new CastRemoteDisplayLocalService.Callbacks() {
+                @Override
+                public void onServiceCreated(CastRemoteDisplayLocalService service) {
+                    ((RemotePresentationService) service).setDeviceId(route.getId());
+                }
+
+                @Override
+                public void onRemoteDisplaySessionStarted(CastRemoteDisplayLocalService service) {
+                    Log.d(LOGTAG, "Remote presentation launched!");
+                    callback.sendSuccess("Succeed to start presentation.");
+                }
+
+                @Override
+                public void onRemoteDisplaySessionError(Status errorReason) {
+                    int code = errorReason.getStatusCode();
+                    callback.sendError("Fail to start presentation. Error code: " + code);
+                }
+        });
+    }
 
     @Override
-    public void stop(EventCallback callback) { }
+    public void stop(EventCallback callback) {
+        CastRemoteDisplayLocalService.stopService();
+        callback.sendSuccess("Succeed to stop presentation.");
+    }
 }

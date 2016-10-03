@@ -45,6 +45,7 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
     }
 
     private static final String LOGTAG = "GeckoMediaPlayerManager";
+    protected boolean isPresentationMode = false; // Used to prevent mirroring when Presentation API is used.
 
     @ReflectionTarget
     public static final String MEDIA_PLAYER_TAG = "MPManagerFragment";
@@ -78,7 +79,9 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
                                                                   "MediaPlayer:Pause",
                                                                   "MediaPlayer:End",
                                                                   "MediaPlayer:Mirror",
-                                                                  "MediaPlayer:Message");
+                                                                  "MediaPlayer:Message",
+                                                                  "AndroidCastDevice:Start",
+                                                                  "AndroidCastDevice:Stop");
     }
 
     @Override
@@ -93,42 +96,61 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
                                                                     "MediaPlayer:Pause",
                                                                     "MediaPlayer:End",
                                                                     "MediaPlayer:Mirror",
-                                                                    "MediaPlayer:Message");
+                                                                    "MediaPlayer:Message",
+                                                                    "AndroidCastDevice:Start",
+                                                                    "AndroidCastDevice:Stop");
     }
 
     // GeckoEventListener implementation
     @Override
     public void handleMessage(String event, final NativeJSObject message, final EventCallback callback) {
         debug(event);
-
-        final GeckoMediaPlayer player = players.get(message.getString("id"));
-        if (player == null) {
-            Log.e(LOGTAG, "Couldn't find a player for this id: " + message.getString("id") + " for message: " + event);
-            if (callback != null) {
-                callback.sendError(null);
+        if (event.startsWith("MediaPlayer:")) {
+            final GeckoMediaPlayer player = players.get(message.getString("id"));
+            if (player == null) {
+                Log.e(LOGTAG, "Couldn't find a player for this id: " + message.getString("id") + " for message: " + event);
+                if (callback != null) {
+                    callback.sendError(null);
+                }
+                return;
             }
-            return;
+
+            if ("MediaPlayer:Play".equals(event)) {
+                player.play(callback);
+            } else if ("MediaPlayer:Start".equals(event)) {
+                player.start(callback);
+            } else if ("MediaPlayer:Stop".equals(event)) {
+                player.stop(callback);
+            } else if ("MediaPlayer:Pause".equals(event)) {
+                player.pause(callback);
+            } else if ("MediaPlayer:End".equals(event)) {
+                player.end(callback);
+            } else if ("MediaPlayer:Mirror".equals(event)) {
+                player.mirror(callback);
+            } else if ("MediaPlayer:Message".equals(event) && message.has("data")) {
+                player.message(message.getString("data"), callback);
+            } else if ("MediaPlayer:Load".equals(event)) {
+                final String url = message.optString("source", "");
+                final String type = message.optString("type", "video/mp4");
+                final String title = message.optString("title", "");
+                player.load(title, url, type, callback);
+            }
         }
 
-        if ("MediaPlayer:Play".equals(event)) {
-            player.play(callback);
-        } else if ("MediaPlayer:Start".equals(event)) {
-            player.start(callback);
-        } else if ("MediaPlayer:Stop".equals(event)) {
-            player.stop(callback);
-        } else if ("MediaPlayer:Pause".equals(event)) {
-            player.pause(callback);
-        } else if ("MediaPlayer:End".equals(event)) {
-            player.end(callback);
-        } else if ("MediaPlayer:Mirror".equals(event)) {
-            player.mirror(callback);
-        } else if ("MediaPlayer:Message".equals(event) && message.has("data")) {
-            player.message(message.getString("data"), callback);
-        } else if ("MediaPlayer:Load".equals(event)) {
-            final String url = message.optString("source", "");
-            final String type = message.optString("type", "video/mp4");
-            final String title = message.optString("title", "");
-            player.load(title, url, type, callback);
+        if (event.startsWith("AndroidCastDevice:")) {
+            final GeckoPresentationDisplay display = displays.get(message.getString("id"));
+            if (display == null) {
+                Log.e(LOGTAG, "Couldn't find a display for this id: " + message.getString("id") + " for message: " + event);
+                return;
+            }
+
+            if ("AndroidCastDevice:Start".equals(event)) {
+                display.start(callback);
+                isPresentationMode = true;
+            } else if ("AndroidCastDevice:Stop".equals(event)) {
+                display.stop(callback);
+                isPresentationMode = false;
+            }
         }
     }
 
