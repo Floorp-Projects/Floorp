@@ -1459,9 +1459,9 @@ NativeKey::InitWithKeyChar()
     keyboardLayout->ConvertNativeKeyCodeToDOMKeyCode(mOriginalVirtualKeyCode);
   // Be aware, keyboard utilities can change non-printable keys to printable
   // keys.  In such case, we should make the key value as a printable key.
-  // FYI: IsFollowedByNonControlCharMessage() returns true only when it's
+  // FYI: IsFollowedByPrintableCharMessage() returns true only when it's
   //      handling a keydown message.
-  mKeyNameIndex = IsFollowedByNonControlCharMessage() ?
+  mKeyNameIndex = IsFollowedByPrintableCharMessage() ?
     KEY_NAME_INDEX_USE_STRING :
     keyboardLayout->ConvertNativeKeyCodeToKeyNameIndex(mOriginalVirtualKeyCode);
   mCodeNameIndex =
@@ -1659,7 +1659,7 @@ NativeKey::IsFollowedByDeadCharMessage() const
 }
 
 bool
-NativeKey::IsFollowedByNonControlCharMessage() const
+NativeKey::IsFollowedByPrintableCharMessage() const
 {
   for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
     if (IsPrintableCharMessage(mFollowingCharMsgs[i])) {
@@ -2797,7 +2797,7 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
   // If keydown message is followed by WM_CHAR whose wParam isn't a control
   // character, we should dispatch keypress event with the char message
   // even with any modifier state.
-  if (IsFollowedByNonControlCharMessage()) {
+  if (IsFollowedByPrintableCharMessage()) {
     return false;
   }
 
