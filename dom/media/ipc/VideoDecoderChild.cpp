@@ -23,6 +23,7 @@ VideoDecoderChild::VideoDecoderChild()
   : mThread(VideoDecoderManagerChild::GetManagerThread())
   , mLayersBackend(layers::LayersBackend::LAYERS_NONE)
   , mCanSend(true)
+  , mInitialized(false)
 {
 }
 
@@ -84,6 +85,7 @@ VideoDecoderChild::RecvInitComplete()
 {
   AssertOnManagerThread();
   mInitPromise.Resolve(TrackInfo::kVideoTrack, __func__);
+  mInitialized = true;
   return true;
 }
 
@@ -98,6 +100,13 @@ VideoDecoderChild::RecvInitFailed(const nsresult& aReason)
 void
 VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
 {
+  if (aWhy == AbnormalShutdown) {
+    if (mInitialized) {
+      mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
+    } else {
+      mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+    }
+  }
   mCanSend = false;
 }
 
@@ -197,6 +206,7 @@ VideoDecoderChild::Shutdown()
   if (!mCanSend || !SendShutdown()) {
     mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
+  mInitialized = false;
 }
 
 void

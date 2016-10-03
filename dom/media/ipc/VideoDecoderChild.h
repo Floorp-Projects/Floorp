@@ -64,6 +64,7 @@ private:
   VideoInfo mVideoInfo;
   layers::LayersBackend mLayersBackend;
   bool mCanSend;
+  bool mInitialized;
 };
 
 } // namespace dom
