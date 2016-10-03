@@ -33,7 +33,7 @@
  * Contributor(s):
  *	Bas Schouten <bschouten@mozilla.com>
  */
-#include <dwrite.h>
+#include <dwrite_1.h>
 #include <d2d1.h>
 
 // DirectWrite is not available on all platforms.
