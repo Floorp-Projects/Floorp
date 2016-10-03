@@ -150,9 +150,12 @@ TextTrack::AddCue(TextTrackCue& aCue)
 void
 TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
 {
-  aCue.SetActive(false);
-
+  // Bug1304948, check the aCue belongs to the TextTrack.
   mCueList->RemoveCue(aCue, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  aCue.SetActive(false);
   aCue.SetTrack(nullptr);
   if (mTextTrackList) {
     HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
