@@ -144,8 +144,8 @@ public:
         return sBridge;
     }
 
-    void ContentDocumentChanged();
-    bool IsContentDocumentDisplayed();
+    void ContentDocumentChanged(mozIDOMWindowProxy* aDOMWindow);
+    bool IsContentDocumentDisplayed(mozIDOMWindowProxy* aDOMWindow);
 
     void SetLayerClient(java::GeckoLayerClient::Param jobj);
     const java::GeckoLayerClient::Ref& GetLayerClient() { return mLayerClient; }

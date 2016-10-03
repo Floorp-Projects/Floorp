@@ -53,6 +53,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "MediaPrefs.h"
+#include "WidgetUtils.h"
 
 #include "FennecJNIWrappers.h"
 
@@ -1140,15 +1141,16 @@ NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(JS::HandleValue val,
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged()
+NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow)
 {
-    AndroidBridge::Bridge()->ContentDocumentChanged();
+    AndroidBridge::Bridge()->ContentDocumentChanged(aWindow);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(bool *aRet)
+NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow,
+                                                          bool *aRet)
 {
-    *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed();
+    *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed(aWindow);
     return NS_OK;
 }
 
@@ -1311,22 +1313,37 @@ __attribute__ ((visibility("default")))
 jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, jlong size);
 
-void
-AndroidBridge::ContentDocumentChanged()
+static jni::DependentRef<java::GeckoLayerClient>
+GetJavaLayerClient(mozIDOMWindowProxy* aWindow)
 {
-    if (!mLayerClient) {
+    MOZ_ASSERT(aWindow);
+
+    nsCOMPtr<nsPIDOMWindowOuter> domWindow = nsPIDOMWindowOuter::From(aWindow);
+    nsCOMPtr<nsIWidget> widget =
+            widget::WidgetUtils::DOMWindowToWidget(domWindow);
+    MOZ_ASSERT(widget);
+
+    return static_cast<nsWindow*>(widget.get())->GetLayerClient();
+}
+
+void
+AndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow)
+{
+    auto layerClient = GetJavaLayerClient(aWindow);
+    if (!layerClient) {
         return;
     }
-    mLayerClient->ContentDocumentChanged();
+    layerClient->ContentDocumentChanged();
 }
 
 bool
-AndroidBridge::IsContentDocumentDisplayed()
+AndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow)
 {
-    if (!mLayerClient)
+    auto layerClient = GetJavaLayerClient(aWindow);
+    if (!layerClient) {
         return false;
-
-    return mLayerClient->IsContentDocumentDisplayed();
+    }
+    return layerClient->IsContentDocumentDisplayed();
 }
 
 class AndroidBridge::DelayedTask
