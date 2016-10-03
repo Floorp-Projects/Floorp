@@ -5,7 +5,7 @@
 include protocol PContent;
 include protocol PBackground;
 
-using mozilla::camera::CaptureEngine from "CamerasTypes.h";
+using mozilla::camera::CaptureEngine from "mozilla/media/CamerasTypes.h";
 
 namespace mozilla {
 namespace camera {
