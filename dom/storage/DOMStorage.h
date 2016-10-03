@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Maybe.h"
 #include "nsIDOMStorage.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
@@ -70,53 +69,40 @@ public:
     return mWindow;
   }
 
-  uint32_t GetLength(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
-                     ErrorResult& aRv);
+  uint32_t GetLength(ErrorResult& aRv);
 
-  void Key(uint32_t aIndex, nsAString& aResult,
-           const Maybe<nsIPrincipal*>& aSubjectPrincipal,
-           ErrorResult& aRv);
+  void Key(uint32_t aIndex, nsAString& aResult, ErrorResult& aRv);
 
-  void GetItem(const nsAString& aKey, nsAString& aResult,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
-               ErrorResult& aRv);
+  void GetItem(const nsAString& aKey, nsAString& aResult, ErrorResult& aRv);
 
   void GetSupportedNames(nsTArray<nsString>& aKeys);
 
   void NamedGetter(const nsAString& aKey, bool& aFound, nsAString& aResult,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                    ErrorResult& aRv)
   {
-    GetItem(aKey, aResult, aSubjectPrincipal, aRv);
+    GetItem(aKey, aResult, aRv);
     aFound = !aResult.IsVoid();
   }
 
   void SetItem(const nsAString& aKey, const nsAString& aValue,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                ErrorResult& aRv);
 
   void NamedSetter(const nsAString& aKey, const nsAString& aValue,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                    ErrorResult& aRv)
   {
-    SetItem(aKey, aValue, aSubjectPrincipal, aRv);
+    SetItem(aKey, aValue, aRv);
   }
 
-  void RemoveItem(const nsAString& aKey,
-                  const Maybe<nsIPrincipal*>& aSubjectPrincipal,
-                  ErrorResult& aRv);
+  void RemoveItem(const nsAString& aKey, ErrorResult& aRv);
 
-  void NamedDeleter(const nsAString& aKey, bool& aFound,
-                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
-                    ErrorResult& aRv)
+  void NamedDeleter(const nsAString& aKey, bool& aFound, ErrorResult& aRv)
   {
-    RemoveItem(aKey, aSubjectPrincipal, aRv);
+    RemoveItem(aKey, aRv);
 
     aFound = !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION);
   }
 
-  void Clear(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
-             ErrorResult& aRv);
+  void Clear(ErrorResult& aRv);
 
   // The method checks whether the caller can use a storage.
   // CanUseStorage is called before any DOM initiated operation
@@ -126,7 +112,6 @@ public:
   // state determination are complex and share the code (comes hand in
   // hand together).
   static bool CanUseStorage(nsPIDOMWindowInner* aWindow,
-                            const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                             DOMStorage* aStorage = nullptr);
 
   bool IsPrivate() const;
