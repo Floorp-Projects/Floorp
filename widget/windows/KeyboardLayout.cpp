@@ -1664,8 +1664,7 @@ NativeKey::IsFollowedByNonControlCharMessage() const
   if (mFollowingCharMsgs.IsEmpty()) {
     return false;
   }
-  return mFollowingCharMsgs[0].message == WM_CHAR &&
-         !IsControlChar(static_cast<char16_t>(mFollowingCharMsgs[0].wParam));
+  return IsPrintableCharMessage(mFollowingCharMsgs[0]);
 }
 
 bool
