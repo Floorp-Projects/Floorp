@@ -892,62 +892,14 @@ GetSavedFrameParent(JSContext* cx, HandleObject savedFrame, MutableHandleObject 
     return SavedFrameResult::Ok;
 }
 
-static bool
-FormatSpiderMonkeyStackFrame(JSContext* cx, js::StringBuffer& sb,
-                             HandleSavedFrame frame, size_t indent,
-                             bool skippedAsync)
-{
-    RootedString asyncCause(cx, frame->getAsyncCause());
-    if (!asyncCause && skippedAsync)
-        asyncCause.set(cx->names().Async);
-
-    js::RootedAtom name(cx, frame->getFunctionDisplayName());
-    return (!indent || sb.appendN(' ', indent))
-        && (!asyncCause || (sb.append(asyncCause) && sb.append('*')))
-        && (!name || sb.append(name))
-        && sb.append('@')
-        && sb.append(frame->getSource())
-        && sb.append(':')
-        && NumberValueToStringBuffer(cx, NumberValue(frame->getLine()), sb)
-        && sb.append(':')
-        && NumberValueToStringBuffer(cx, NumberValue(frame->getColumn()), sb)
-        && sb.append('\n');
-}
-
-static bool
-FormatV8StackFrame(JSContext* cx, js::StringBuffer& sb,
-                   HandleSavedFrame frame, size_t indent, bool lastFrame)
-{
-    js::RootedAtom name(cx, frame->getFunctionDisplayName());
-    return sb.appendN(' ', indent + 4)
-        && sb.append('a')
-        && sb.append('t')
-        && sb.append(' ')
-        && (!name || (sb.append(name) &&
-                      sb.append(' ') &&
-                      sb.append('(')))
-        && sb.append(frame->getSource())
-        && sb.append(':')
-        && NumberValueToStringBuffer(cx, NumberValue(frame->getLine()), sb)
-        && sb.append(':')
-        && NumberValueToStringBuffer(cx, NumberValue(frame->getColumn()), sb)
-        && (!name || sb.append(')'))
-        && (lastFrame || sb.append('\n'));
-}
-
 JS_PUBLIC_API(bool)
-BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
-                 size_t indent, js::StackFormat format)
+BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp, size_t indent)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     MOZ_RELEASE_ASSERT(cx->compartment());
 
     js::StringBuffer sb(cx);
-
-    if (format == js::StackFormat::Default)
-        format = cx->stackFormat();
-    MOZ_ASSERT(format != js::StackFormat::Default);
 
     // Enter a new block to constrain the scope of possibly entering the stack's
     // compartment. This ensures that when we finish the StringBuffer, we are
@@ -968,25 +920,27 @@ BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
             MOZ_ASSERT(SavedFrameSubsumedByCaller(cx, frame));
             MOZ_ASSERT(!frame->isSelfHosted(cx));
 
-            parent = frame->getParent();
-            js::RootedSavedFrame nextFrame(cx, js::GetFirstSubsumedFrame(cx, parent,
-                                                                         SavedFrameSelfHosted::Exclude, skippedAsync));
+            RootedString asyncCause(cx, frame->getAsyncCause());
+            if (!asyncCause && skippedAsync)
+                asyncCause.set(cx->names().Async);
 
-            switch (format) {
-                case js::StackFormat::SpiderMonkey:
-                    if (!FormatSpiderMonkeyStackFrame(cx, sb, frame, indent, skippedAsync))
-                        return false;
-                    break;
-                case js::StackFormat::V8:
-                    if (!FormatV8StackFrame(cx, sb, frame, indent, !nextFrame))
-                        return false;
-                    break;
-                case js::StackFormat::Default:
-                    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected value");
-                    break;
+            js::RootedAtom name(cx, frame->getFunctionDisplayName());
+            if ((indent && !sb.appendN(' ', indent))
+                || (asyncCause && (!sb.append(asyncCause) || !sb.append('*')))
+                || (name && !sb.append(name))
+                || !sb.append('@')
+                || !sb.append(frame->getSource())
+                || !sb.append(':')
+                || !NumberValueToStringBuffer(cx, NumberValue(frame->getLine()), sb)
+                || !sb.append(':')
+                || !NumberValueToStringBuffer(cx, NumberValue(frame->getColumn()), sb)
+                || !sb.append('\n'))
+            {
+                return false;
             }
 
-            frame = nextFrame;
+            parent = frame->getParent();
+            frame = js::GetFirstSubsumedFrame(cx, parent, SavedFrameSelfHosted::Exclude, skippedAsync);
         } while (frame);
     }
 
