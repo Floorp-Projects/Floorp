@@ -25,7 +25,7 @@ class AndroidCaptureProvider final : public nsDeviceCaptureProvider {
 
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    nsresult Init(nsACString& aContentType, nsCaptureParams* aParams, nsIInputStream** aStream) override;
+    MOZ_MUST_USE nsresult Init(nsACString& aContentType, nsCaptureParams* aParams, nsIInputStream** aStream) override;
     static AndroidCaptureProvider* sInstance;
 };
 
