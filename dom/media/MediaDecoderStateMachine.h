@@ -533,10 +533,6 @@ protected:
   // must be held when calling this. Called on the decode thread.
   int64_t GetDecodedAudioDuration();
 
-  // Notify FirstFrameLoaded if having decoded first frames and
-  // transition to SEEKING if there is any pending seek, or DECODING otherwise.
-  void MaybeFinishDecodeFirstFrame();
-
   void FinishDecodeFirstFrame();
 
   // Completes the seek operation, moves onto the next appropriate state.

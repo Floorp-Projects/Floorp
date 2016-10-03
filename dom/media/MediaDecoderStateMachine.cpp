@@ -428,21 +428,42 @@ public:
   bool HandleAudioDecoded(MediaData* aAudio) override
   {
     mMaster->Push(aAudio, MediaData::AUDIO_DATA);
-    mMaster->MaybeFinishDecodeFirstFrame();
+    MaybeFinishDecodeFirstFrame();
     return true;
   }
 
   bool HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
   {
     mMaster->Push(aVideo, MediaData::VIDEO_DATA);
-    mMaster->MaybeFinishDecodeFirstFrame();
+    MaybeFinishDecodeFirstFrame();
     return true;
   }
 
   bool HandleEndOfStream() override
   {
-    mMaster->MaybeFinishDecodeFirstFrame();
+    MaybeFinishDecodeFirstFrame();
     return true;
+  }
+
+private:
+  // Notify FirstFrameLoaded if having decoded first frames and
+  // transition to SEEKING if there is any pending seek, or DECODING otherwise.
+  void MaybeFinishDecodeFirstFrame()
+  {
+    MOZ_ASSERT(!mMaster->mSentFirstFrameLoadedEvent);
+
+    if ((mMaster->IsAudioDecoding() && mMaster->AudioQueue().GetSize() == 0) ||
+        (mMaster->IsVideoDecoding() && mMaster->VideoQueue().GetSize() == 0)) {
+      return;
+    }
+
+    mMaster->FinishDecodeFirstFrame();
+
+    if (mMaster->mQueuedSeek.Exists()) {
+      mMaster->InitiateSeek(Move(mMaster->mQueuedSeek));
+    } else {
+      SetState(DECODER_STATE_DECODING);
+    }
   }
 };
 
@@ -1247,26 +1268,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   MaybeStopPrerolling();
 
   mStateObj->HandleEndOfStream();
-}
-
-void
-MediaDecoderStateMachine::MaybeFinishDecodeFirstFrame()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(!mSentFirstFrameLoadedEvent);
-
-  if ((IsAudioDecoding() && AudioQueue().GetSize() == 0) ||
-      (IsVideoDecoding() && VideoQueue().GetSize() == 0)) {
-    return;
-  }
-
-  FinishDecodeFirstFrame();
-
-  if (mQueuedSeek.Exists()) {
-    InitiateSeek(Move(mQueuedSeek));
-  } else {
-    SetState(DECODER_STATE_DECODING);
-  }
 }
 
 void
