@@ -198,44 +198,40 @@ JsepSessionImpl::AddDtlsFingerprint(const std::string& algorithm,
 }
 
 nsresult
-JsepSessionImpl::AddAudioRtpExtension(const std::string& extensionName)
+JsepSessionImpl::AddRtpExtension(std::vector<SdpExtmapAttributeList::Extmap>& extensions,
+                                 const std::string& extensionName,
+                                 SdpDirectionAttribute::Direction direction)
 {
   mLastError.clear();
 
-  if (mAudioRtpExtensions.size() + 1 > UINT16_MAX) {
-    JSEP_SET_ERROR("Too many audio rtp extensions have been added");
+  if (extensions.size() + 1 > UINT16_MAX) {
+    JSEP_SET_ERROR("Too many rtp extensions have been added");
     return NS_ERROR_FAILURE;
   }
 
   SdpExtmapAttributeList::Extmap extmap =
-      { static_cast<uint16_t>(mAudioRtpExtensions.size() + 1),
-        SdpDirectionAttribute::kSendrecv,
-        false, // don't actually specify direction
+      { static_cast<uint16_t>(extensions.size() + 1),
+        direction,
+        direction != SdpDirectionAttribute::kSendrecv, // do we want to specify direction?
         extensionName,
         "" };
 
-  mAudioRtpExtensions.push_back(extmap);
+  extensions.push_back(extmap);
   return NS_OK;
 }
 
 nsresult
-JsepSessionImpl::AddVideoRtpExtension(const std::string& extensionName)
+JsepSessionImpl::AddAudioRtpExtension(const std::string& extensionName,
+                                      SdpDirectionAttribute::Direction direction)
 {
-  mLastError.clear();
+  return AddRtpExtension(mAudioRtpExtensions, extensionName, direction);
+}
 
-  if (mVideoRtpExtensions.size() + 1 > UINT16_MAX) {
-    JSEP_SET_ERROR("Too many video rtp extensions have been added");
-    return NS_ERROR_FAILURE;
-  }
-
-  SdpExtmapAttributeList::Extmap extmap =
-      { static_cast<uint16_t>(mVideoRtpExtensions.size() + 1),
-        SdpDirectionAttribute::kSendrecv,
-        false, // don't actually specify direction
-        extensionName, "" };
-
-  mVideoRtpExtensions.push_back(extmap);
-  return NS_OK;
+nsresult
+JsepSessionImpl::AddVideoRtpExtension(const std::string& extensionName,
+                                      SdpDirectionAttribute::Direction direction)
+{
+  return AddRtpExtension(mVideoRtpExtensions, extensionName, direction);
 }
 
 template<class T>
@@ -287,6 +283,25 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
     JSEP_SET_ERROR("Track " << streamId << "/" << trackId << " was never added.");
     return NS_ERROR_INVALID_ARG;
   }
+
+  // Add RtpStreamId Extmap
+  // SdpDirectionAttribute::Direction is a bitmask
+  SdpDirectionAttribute::Direction addVideoExt = SdpDirectionAttribute::kInactive;
+  for (auto constraintEntry: constraints) {
+    if (constraintEntry.rid != "") {
+      switch (it->mTrack->GetMediaType()) {
+        case SdpMediaSection::kVideo: {
+           addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
+                                                                       | it->mTrack->GetDirection());
+          break;
+        }
+      }
+    }
+  }
+  if (addVideoExt != SdpDirectionAttribute::kInactive) {
+    AddVideoRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id", addVideoExt);
+  }
+
   it->mTrack->SetJsConstraints(constraints);
   return NS_OK;
 }
@@ -2208,9 +2223,8 @@ JsepSessionImpl::SetupDefaultCodecs()
 void
 JsepSessionImpl::SetupDefaultRtpExtensions()
 {
-  AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level");
-  AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
-  AddVideoRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
+  AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+                       SdpDirectionAttribute::Direction::kSendonly);
 }
 
 void
