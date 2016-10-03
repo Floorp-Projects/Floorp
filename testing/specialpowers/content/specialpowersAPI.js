@@ -1945,7 +1945,23 @@ SpecialPowersAPI.prototype = {
   },
 
   _nextExtensionID: 0,
+  _extensionListeners: null,
+
   loadExtension: function(ext, handler) {
+    if (this._extensionListeners == null) {
+      this._extensionListeners = new Set();
+
+      this._addMessageListener("SPExtensionMessage", msg => {
+        for (let listener of this._extensionListeners) {
+          try {
+            listener(msg);
+          } catch (e) {
+            Cu.reportError(e);
+          }
+        }
+      });
+    }
+
     // Note, this is not the addon is as used by the AddonManager etc,
     // this is just an identifier used for specialpowers messaging
     // between this content process and the chrome process.
@@ -1959,7 +1975,7 @@ SpecialPowersAPI.prototype = {
     let unloadPromise = new Promise(resolve => { resolveUnload = resolve; });
 
     startupPromise.catch(() => {
-      this._removeMessageListener("SPExtensionMessage", listener);
+      this._extensionListeners.delete(listener);
     });
 
     handler = Cu.waiveXrays(handler);
@@ -2000,7 +2016,7 @@ SpecialPowersAPI.prototype = {
           state = "failed";
           rejectStartup("startup failed");
         } else if (msg.data.type == "extensionUnloaded") {
-          this._removeMessageListener("SPExtensionMessage", listener);
+          this._extensionListeners.delete(listener);
           state = "unloaded";
           resolveUnload();
         } else if (msg.data.type in handler) {
@@ -2011,7 +2027,7 @@ SpecialPowersAPI.prototype = {
       }
     };
 
-    this._addMessageListener("SPExtensionMessage", listener);
+    this._extensionListeners.add(listener);
     return extension;
   },
 
