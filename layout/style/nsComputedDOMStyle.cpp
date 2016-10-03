@@ -4884,8 +4884,7 @@ nsComputedDOMStyle::DoGetMaxHeight()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueToCoord(val, StylePosition()->mMaxHeight, true,
-                  &nsComputedDOMStyle::GetCBContentHeight,
-                  nsCSSProps::kWidthKTable);
+                  nullptr, nsCSSProps::kWidthKTable);
   return val.forget();
 }
 
@@ -4894,8 +4893,7 @@ nsComputedDOMStyle::DoGetMaxWidth()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueToCoord(val, StylePosition()->mMaxWidth, true,
-                  &nsComputedDOMStyle::GetCBContentWidth,
-                  nsCSSProps::kWidthKTable);
+                  nullptr, nsCSSProps::kWidthKTable);
   return val.forget();
 }
 
@@ -4913,9 +4911,7 @@ nsComputedDOMStyle::DoGetMinHeight()
     minHeight.SetCoordValue(0);
   }
 
-  SetValueToCoord(val, minHeight, true,
-                  &nsComputedDOMStyle::GetCBContentHeight,
-                  nsCSSProps::kWidthKTable);
+  SetValueToCoord(val, minHeight, true, nullptr, nsCSSProps::kWidthKTable);
   return val.forget();
 }
 
@@ -4941,9 +4937,8 @@ nsComputedDOMStyle::DoGetMinWidth()
       }
     }
   }
-  SetValueToCoord(val, minWidth, true,
-                  &nsComputedDOMStyle::GetCBContentWidth,
-                  nsCSSProps::kWidthKTable);
+
+  SetValueToCoord(val, minWidth, true, nullptr, nsCSSProps::kWidthKTable);
   return val.forget();
 }
 
