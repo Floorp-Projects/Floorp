@@ -31,7 +31,6 @@
 
 // dwarf2reader_die_unittest.cc: Unit tests for dwarf2reader::CompilationUnit
 
-#include <stdint.h>
 #include <stdlib.h>
 
 #include <iostream>
@@ -92,7 +91,7 @@ class MockDwarf2Handler: public Dwarf2Handler {
   MOCK_METHOD5(ProcessAttributeBuffer, void(uint64 offset,
                                             enum DwarfAttribute attr,
                                             enum DwarfForm form,
-                                            const uint8_t *data,
+                                            const char* data,
                                             uint64 len));
   MOCK_METHOD4(ProcessAttributeString, void(uint64 offset,
                                             enum DwarfAttribute attr,
@@ -133,11 +132,9 @@ struct DIEFixture {
     assert(info.GetContents(&info_contents));
     assert(abbrevs.GetContents(&abbrevs_contents));
     section_map.clear();
-    section_map[".debug_info"].first
-      = reinterpret_cast<const uint8_t *>(info_contents.data());
+    section_map[".debug_info"].first  = info_contents.data();
     section_map[".debug_info"].second = info_contents.size();
-    section_map[".debug_abbrev"].first
-      = reinterpret_cast<const uint8_t *>(abbrevs_contents.data());
+    section_map[".debug_abbrev"].first  = abbrevs_contents.data();
     section_map[".debug_abbrev"].second = abbrevs_contents.size();
     return section_map;
   }
@@ -199,7 +196,7 @@ TEST_P(DwarfHeader, Header) {
 
   ByteReader byte_reader(GetParam().endianness == kLittleEndian ?
                          ENDIANNESS_LITTLE : ENDIANNESS_BIG);
-  CompilationUnit parser("", MakeSectionMap(), 0, &byte_reader, &handler);
+  CompilationUnit parser(MakeSectionMap(), 0, &byte_reader, &handler);
   EXPECT_EQ(parser.Start(), info_contents.size());
 }
 
@@ -277,7 +274,7 @@ struct DwarfFormsFixture: public DIEFixture {
   void ParseCompilationUnit(const DwarfHeaderParams &params, uint64 offset=0) {
     ByteReader byte_reader(params.endianness == kLittleEndian ?
                            ENDIANNESS_LITTLE : ENDIANNESS_BIG);
-    CompilationUnit parser("", MakeSectionMap(), offset, &byte_reader, &handler);
+    CompilationUnit parser(MakeSectionMap(), offset, &byte_reader, &handler);
     EXPECT_EQ(offset + parser.Start(), info_contents.size());
   }
 

@@ -118,7 +118,7 @@ namespace {
 // all these signals must be Core (see man 7 signal) because we rethrow the
 // signal after handling it and expect that it'll be fatal.
 const int kExceptionSignals[] = {
-  SIGSEGV, SIGABRT, SIGFPE, SIGILL, SIGBUS, SIGTRAP
+  SIGSEGV, SIGABRT, SIGFPE, SIGILL, SIGBUS
 };
 const int kNumHandledSignals =
     sizeof(kExceptionSignals) / sizeof(kExceptionSignals[0]);

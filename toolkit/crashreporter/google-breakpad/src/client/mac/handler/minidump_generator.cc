@@ -133,47 +133,25 @@ void MinidumpGenerator::GatherSystemInformation() {
                                   vers_path,
                                   kCFURLPOSIXPathStyle,
                                   false);
-  CFReadStreamRef read_stream = CFReadStreamCreateWithFile(NULL, sys_vers);
-  CFRelease(sys_vers);
-  if (!read_stream) {
-    return;
-  }
-  if (!CFReadStreamOpen(read_stream)) {
-    CFRelease(read_stream);
-    return;
-  }
-  CFMutableDataRef data = NULL;
-  while (true) {
-    // Actual data file tests: Mac at 480 bytes and iOS at 413 bytes.
-    const CFIndex kMaxBufferLength = 1024;
-    UInt8 data_bytes[kMaxBufferLength];
-    CFIndex num_bytes_read =
-      CFReadStreamRead(read_stream, data_bytes, kMaxBufferLength);
-    if (num_bytes_read < 0) {
-      if (data) {
-        CFRelease(data);
-        data = NULL;
-      }
-      break;
-    } else if (num_bytes_read == 0) {
-      break;
-    } else if (!data) {
-      data = CFDataCreateMutable(NULL, 0);
-    }
-    CFDataAppendBytes(data, data_bytes, num_bytes_read);
-  }
-  CFReadStreamClose(read_stream);
-  CFRelease(read_stream);
+  CFDataRef data;
+  SInt32 error;
+  CFURLCreateDataAndPropertiesFromResource(NULL, sys_vers, &data, NULL, NULL,
+                                           &error);
+
   if (!data) {
+    CFRelease(sys_vers);
     return;
   }
-  CFDictionaryRef list =
-      static_cast<CFDictionaryRef>(CFPropertyListCreateWithData(
-          NULL, data, kCFPropertyListImmutable, NULL, NULL));
-  CFRelease(data);
+
+  CFDictionaryRef list = static_cast<CFDictionaryRef>
+    (CFPropertyListCreateFromXMLData(NULL, data, kCFPropertyListImmutable,
+                                     NULL));
   if (!list) {
+    CFRelease(sys_vers);
+    CFRelease(data);
     return;
   }
+
   CFStringRef build_version = static_cast<CFStringRef>
     (CFDictionaryGetValue(list, CFSTR("ProductBuildVersion")));
   CFStringRef product_version = static_cast<CFStringRef>
@@ -182,6 +160,8 @@ void MinidumpGenerator::GatherSystemInformation() {
   string product_str = ConvertToString(product_version);
 
   CFRelease(list);
+  CFRelease(sys_vers);
+  CFRelease(data);
 
   strlcpy(build_string_, build_str.c_str(), sizeof(build_string_));
 

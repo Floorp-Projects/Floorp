@@ -73,7 +73,6 @@
 #include "client/linux/minidump_writer/linux_ptrace_dumper.h"
 #include "client/linux/minidump_writer/proc_cpuinfo_reader.h"
 #include "client/minidump_file_writer.h"
-#include "common/linux/file_id.h"
 #include "common/linux/linux_libc_support.h"
 #include "common/minidump_type_helper.h"
 #include "google_breakpad/common/minidump_format.h"
@@ -82,10 +81,8 @@
 namespace {
 
 using google_breakpad::AppMemoryList;
-using google_breakpad::auto_wasteful_vector;
 using google_breakpad::ExceptionHandler;
 using google_breakpad::CpuSet;
-using google_breakpad::kDefaultBuildIdSize;
 using google_breakpad::LineReader;
 using google_breakpad::LinuxDumper;
 using google_breakpad::LinuxPtraceDumper;
@@ -274,14 +271,6 @@ class MinidumpWriter {
       if (max_stack_len >= 0 &&
           stack_len > static_cast<unsigned int>(max_stack_len)) {
         stack_len = max_stack_len;
-        // Skip empty chunks of length max_stack_len.
-        uintptr_t int_stack = reinterpret_cast<uintptr_t>(stack);
-        if (max_stack_len > 0) {
-          while (int_stack + max_stack_len < stack_pointer) {
-            int_stack += max_stack_len;
-          }
-        }
-        stack = reinterpret_cast<const void*>(int_stack);
       }
       if (!memory.Allocate(stack_len))
         return false;
@@ -526,7 +515,7 @@ class MinidumpWriter {
         continue;
 
       MDRawModule mod;
-      if (!FillRawModule(mapping, true, i, &mod, NULL))
+      if (!FillRawModule(mapping, true, i, mod, NULL))
         return false;
       list.CopyIndexAfterObject(j++, &mod, MD_MODULE_SIZE);
     }
@@ -535,7 +524,7 @@ class MinidumpWriter {
          iter != mapping_list_.end();
          ++iter) {
       MDRawModule mod;
-      if (!FillRawModule(iter->first, false, 0, &mod, iter->second))
+      if (!FillRawModule(iter->first, false, 0, mod, iter->second))
         return false;
       list.CopyIndexAfterObject(j++, &mod, MD_MODULE_SIZE);
     }
@@ -549,51 +538,52 @@ class MinidumpWriter {
   bool FillRawModule(const MappingInfo& mapping,
                      bool member,
                      unsigned int mapping_id,
-                     MDRawModule* mod,
+                     MDRawModule& mod,
                      const uint8_t* identifier) {
-    my_memset(mod, 0, MD_MODULE_SIZE);
+    my_memset(&mod, 0, MD_MODULE_SIZE);
 
-    mod->base_of_image = mapping.start_addr;
-    mod->size_of_image = mapping.size;
+    mod.base_of_image = mapping.start_addr;
+    mod.size_of_image = mapping.size;
 
-    auto_wasteful_vector<uint8_t, kDefaultBuildIdSize> identifier_bytes(
-        dumper_->allocator());
+    uint8_t cv_buf[MDCVInfoPDB70_minsize + NAME_MAX];
+    uint8_t* cv_ptr = cv_buf;
 
+    const uint32_t cv_signature = MD_CVINFOPDB70_SIGNATURE;
+    my_memcpy(cv_ptr, &cv_signature, sizeof(cv_signature));
+    cv_ptr += sizeof(cv_signature);
+    uint8_t* signature = cv_ptr;
+    cv_ptr += sizeof(MDGUID);
     if (identifier) {
       // GUID was provided by caller.
-      identifier_bytes.insert(identifier_bytes.end(),
-                              identifier,
-                              identifier + sizeof(MDGUID));
+      my_memcpy(signature, identifier, sizeof(MDGUID));
     } else {
       // Note: ElfFileIdentifierForMapping() can manipulate the |mapping.name|.
-      dumper_->ElfFileIdentifierForMapping(mapping,
-                                           member,
-                                           mapping_id,
-                                           identifier_bytes);
+      dumper_->ElfFileIdentifierForMapping(mapping, member,
+                                           mapping_id, signature);
     }
-
-    if (!identifier_bytes.empty()) {
-      UntypedMDRVA cv(&minidump_writer_);
-      if (!cv.Allocate(MDCVInfoELF_minsize + identifier_bytes.size()))
-        return false;
-
-      const uint32_t cv_signature = MD_CVINFOELF_SIGNATURE;
-      cv.Copy(&cv_signature, sizeof(cv_signature));
-      cv.Copy(cv.position() + sizeof(cv_signature), &identifier_bytes[0],
-              identifier_bytes.size());
-
-      mod->cv_record = cv.location();
-    }
+    my_memset(cv_ptr, 0, sizeof(uint32_t));  // Set age to 0 on Linux.
+    cv_ptr += sizeof(uint32_t);
 
     char file_name[NAME_MAX];
     char file_path[NAME_MAX];
-    dumper_->GetMappingEffectiveNameAndPath(
+    LinuxDumper::GetMappingEffectiveNameAndPath(
         mapping, file_path, sizeof(file_path), file_name, sizeof(file_name));
+
+    const size_t file_name_len = my_strlen(file_name);
+    UntypedMDRVA cv(&minidump_writer_);
+    if (!cv.Allocate(MDCVInfoPDB70_minsize + file_name_len + 1))
+      return false;
+
+    // Write pdb_file_name
+    my_memcpy(cv_ptr, file_name, file_name_len + 1);
+    cv.Copy(cv_buf, MDCVInfoPDB70_minsize + file_name_len + 1);
+
+    mod.cv_record = cv.location();
 
     MDLocationDescriptor ld;
     if (!minidump_writer_.WriteString(file_path, my_strlen(file_path), &ld))
       return false;
-    mod->module_name_rva = ld.rva;
+    mod.module_name_rva = ld.rva;
     return true;
   }
 
@@ -700,14 +690,17 @@ class MinidumpWriter {
       }
 
 #ifdef __mips__
-      const int32_t debug_tag = DT_MIPS_RLD_MAP;
-#else
-      const int32_t debug_tag = DT_DEBUG;
-#endif
-      if (dyn.d_tag == debug_tag) {
+      if (dyn.d_tag == DT_MIPS_RLD_MAP) {
         r_debug = reinterpret_cast<struct r_debug*>(dyn.d_un.d_ptr);
         continue;
-      } else if (dyn.d_tag == DT_NULL) {
+      }
+#else
+      if (dyn.d_tag == DT_DEBUG) {
+        r_debug = reinterpret_cast<struct r_debug*>(dyn.d_un.d_ptr);
+        continue;
+      }
+#endif
+      else if (dyn.d_tag == DT_NULL) {
         break;
       }
     }
@@ -833,13 +826,7 @@ class MinidumpWriter {
     // processor_architecture should always be set, do this first
     sys_info->processor_architecture =
 #if defined(__mips__)
-# if _MIPS_SIM == _ABIO32
         MD_CPU_ARCHITECTURE_MIPS;
-# elif _MIPS_SIM == _ABI64
-        MD_CPU_ARCHITECTURE_MIPS64;
-# else
-#  error "This mips ABI is currently not supported (n32)"
-#endif
 #elif defined(__i386__)
         MD_CPU_ARCHITECTURE_X86;
 #else
@@ -855,14 +842,15 @@ class MinidumpWriter {
       ProcCpuInfoReader* const reader = new(allocator) ProcCpuInfoReader(fd);
       const char* field;
       while (reader->GetNextField(&field)) {
-        bool is_first_entry = true;
-        for (CpuInfoEntry& entry : cpu_info_table) {
-          if (!is_first_entry && entry.found) {
+        for (size_t i = 0;
+             i < sizeof(cpu_info_table) / sizeof(cpu_info_table[0]);
+             i++) {
+          CpuInfoEntry* entry = &cpu_info_table[i];
+          if (i > 0 && entry->found) {
             // except for the 'processor' field, ignore repeated values.
             continue;
           }
-          is_first_entry = false;
-          if (!my_strcmp(field, entry.info_name)) {
+          if (!my_strcmp(field, entry->info_name)) {
             size_t value_len;
             const char* value = reader->GetValueAndLen(&value_len);
             if (value_len == 0)
@@ -872,8 +860,8 @@ class MinidumpWriter {
             if (my_read_decimal_ptr(&val, value) == value)
               continue;
 
-            entry.value = static_cast<int>(val);
-            entry.found = true;
+            entry->value = static_cast<int>(val);
+            entry->found = true;
           }
         }
 
@@ -889,8 +877,10 @@ class MinidumpWriter {
     }
 
     // make sure we got everything we wanted
-    for (const CpuInfoEntry& entry : cpu_info_table) {
-      if (!entry.found) {
+    for (size_t i = 0;
+         i < sizeof(cpu_info_table) / sizeof(cpu_info_table[0]);
+         i++) {
+      if (!cpu_info_table[i].found) {
         return false;
       }
     }
@@ -1026,15 +1016,18 @@ class MinidumpWriter {
           new(allocator) ProcCpuInfoReader(fd);
       const char* field;
       while (reader->GetNextField(&field)) {
-        for (const CpuIdEntry& entry : cpu_id_entries) {
-          if (my_strcmp(entry.field, field) != 0)
+        for (size_t i = 0;
+             i < sizeof(cpu_id_entries)/sizeof(cpu_id_entries[0]);
+             ++i) {
+          const CpuIdEntry* entry = &cpu_id_entries[i];
+          if (my_strcmp(entry->field, field) != 0)
             continue;
           uintptr_t result = 0;
           const char* value = reader->GetValue();
           const char* p = value;
           if (value[0] == '0' && value[1] == 'x') {
             p = my_read_hex_ptr(&result, value+2);
-          } else if (entry.format == 'x') {
+          } else if (entry->format == 'x') {
             p = my_read_hex_ptr(&result, value);
           } else {
             p = my_read_decimal_ptr(&result, value);
@@ -1042,8 +1035,8 @@ class MinidumpWriter {
           if (p == value)
             continue;
 
-          result &= (1U << entry.bit_length)-1;
-          result <<= entry.bit_lshift;
+          result &= (1U << entry->bit_length)-1;
+          result <<= entry->bit_lshift;
           sys_info->cpu.arm_cpu_info.cpuid |=
               static_cast<uint32_t>(result);
         }
@@ -1097,7 +1090,7 @@ class MinidumpWriter {
             const char* tag = value;
             size_t tag_len = value_len;
             const char* p = my_strchr(tag, ' ');
-            if (p) {
+            if (p != NULL) {
               tag_len = static_cast<size_t>(p - tag);
               value += tag_len + 1;
               value_len -= tag_len + 1;
@@ -1105,10 +1098,14 @@ class MinidumpWriter {
               tag_len = strlen(tag);
               value_len = 0;
             }
-            for (const CpuFeaturesEntry& entry : cpu_features_entries) {
-              if (tag_len == strlen(entry.tag) &&
-                  !memcmp(tag, entry.tag, tag_len)) {
-                sys_info->cpu.arm_cpu_info.elf_hwcaps |= entry.hwcaps;
+            for (size_t i = 0;
+                i < sizeof(cpu_features_entries)/
+                    sizeof(cpu_features_entries[0]);
+                ++i) {
+              const CpuFeaturesEntry* entry = &cpu_features_entries[i];
+              if (tag_len == strlen(entry->tag) &&
+                  !memcmp(tag, entry->tag, tag_len)) {
+                sys_info->cpu.arm_cpu_info.elf_hwcaps |= entry->hwcaps;
                 break;
               }
             }
