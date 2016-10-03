@@ -183,6 +183,7 @@ ShadowLayerForwarder::ShadowLayerForwarder(ClientLayerManager* aClientLayerManag
  , mPaintSyncId(0)
 {
   mTxn = new Transaction();
+  mActiveResourceTracker = MakeUnique<ActiveResourceTracker>(1000, "CompositableForwarder");
 }
 
 ShadowLayerForwarder::~ShadowLayerForwarder()
