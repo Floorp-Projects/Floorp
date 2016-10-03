@@ -2525,15 +2525,6 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     return false;
   }
 
-  // Bug 818235: Ignore Ctrl+Enter.
-  if (!mModKeyState.IsAlt() && mModKeyState.IsControl() &&
-      mVirtualKeyCode == VK_RETURN) {
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-      ("%p   NativeKey::HandleCharMessage(), doesn't dispatch keypress "
-       "event due to Ctrl+Enter", this));
-    return false;
-  }
-
   // XXXmnakao I think that if aNativeKeyDown is null, such lonely WM_CHAR
   //           should cause composition events because they are not caused
   //           by actual keyboard operation.
@@ -2789,9 +2780,10 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
     return false;
   }
 
-  // Enter and backspace are always handled here to avoid for example the
-  // confusion between ctrl-enter and ctrl-J.
-  if (mDOMKeyCode == NS_VK_RETURN || mDOMKeyCode == NS_VK_BACK) {
+  // If following char message is for a control character, it should be handled
+  // without WM_CHAR message.  This is typically Ctrl + [a-z].
+  if (mFollowingCharMsgs.Length() == 1 &&
+      IsControlCharMessage(mFollowingCharMsgs[0])) {
     return true;
   }
 
