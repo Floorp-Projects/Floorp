@@ -461,3 +461,35 @@ function SetupEMEPref(callback) {
 
   SpecialPowers.pushPrefEnv({ "set" : prefs }, callback);
 }
+
+function fetchWithXHR(uri, onLoadFunction) {
+  var p = new Promise(function(resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", uri, true);
+    xhr.responseType = "arraybuffer";
+    xhr.addEventListener("load", function () {
+      is(xhr.status, 200, "fetchWithXHR load uri='" + uri + "' status=" + xhr.status);
+      resolve(xhr.response);
+    });
+    xhr.send();
+  });
+
+  if (onLoadFunction) {
+    p.then(onLoadFunction);
+  }
+
+  return p;
+};
+
+function once(target, name, cb) {
+  var p = new Promise(function(resolve, reject) {
+    target.addEventListener(name, function onceEvent(arg) {
+      target.removeEventListener(name, onceEvent);
+      resolve(arg);
+    });
+  });
+  if (cb) {
+    p.then(cb);
+  }
+  return p;
+}
