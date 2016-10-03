@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
+                                  "resource://gre/modules/Sqlite.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
                                   "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
@@ -537,6 +539,69 @@ this.MigrationUtils = Object.freeze({
       type: PlacesUtils.bookmarks.TYPE_FOLDER, parentGuid, title
     })).guid;
   }),
+
+  /**
+   * Get all the rows corresponding to a select query from a database, without
+   * requiring a lock on the database. If fetching data fails (because someone
+   * else tried to write to the DB at the same time, for example), we will
+   * retry the fetch after a 100ms timeout, up to 10 times.
+   *
+   * @param path
+   *        the file path to the database we want to open.
+   * @param description
+   *        a developer-readable string identifying what kind of database we're
+   *        trying to open.
+   * @param selectQuery
+   *        the SELECT query to use to fetch the rows.
+   *
+   * @return a promise that resolves to an array of rows. The promise will be
+   *         rejected if the read/fetch failed even after retrying.
+   */
+  getRowsFromDBWithoutLocks(path, description, selectQuery) {
+    let dbOptions = {
+      readOnly: true,
+      ignoreLockingMode: true,
+      path,
+    };
+
+    const RETRYLIMIT = 10;
+    const RETRYINTERVAL = 100;
+    return Task.spawn(function* innerGetRows() {
+      let rows = null;
+      for (let retryCount = RETRYLIMIT; retryCount && !rows; retryCount--) {
+        // Attempt to get the rows. If this succeeds, we will bail out of the loop,
+        // close the database in a failsafe way, and pass the rows back.
+        // If fetching the rows throws, we will wait RETRYINTERVAL ms
+        // and try again. This will repeat a maximum of RETRYLIMIT times.
+        let db;
+        let didOpen = false;
+        let exceptionSeen;
+        try {
+          db = yield Sqlite.openConnection(dbOptions);
+          didOpen = true;
+          rows = yield db.execute(selectQuery);
+        } catch (ex) {
+          if (!exceptionSeen) {
+            Cu.reportError(ex);
+          }
+          exceptionSeen = ex;
+        } finally {
+          try {
+            if (didOpen) {
+              yield db.close();
+            }
+          } catch (ex) {}
+        }
+        if (exceptionSeen) {
+          yield new Promise(resolve => setTimeout(resolve, RETRYINTERVAL));
+        }
+      }
+      if (!rows) {
+        throw new Error("Couldn't get rows from the " + description + " database.");
+      }
+      return rows;
+    });
+  },
 
   get _migrators() {
     return gMigrators ? gMigrators : gMigrators = new Map();
