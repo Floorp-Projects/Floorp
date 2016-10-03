@@ -205,15 +205,6 @@ public:
     return *this;
   }
 
-  void write(const value_type* aS, uint32_t aN)
-  {
-    NS_ASSERTION(mEnd - mPosition > 0,
-                 "You can't |write| into an |nsWritingIterator| with no space!");
-
-    nsCharTraits<value_type>::move(mPosition, aS, aN);
-    advance(difference_type(aN));
-  }
-
   // We return an unsigned type here (with corresponding assert) rather than
   // the more usual difference_type because we want to make this class go
   // away in favor of mozilla::RangedPtr.  Since RangedPtr has the same
@@ -223,6 +214,17 @@ public:
   {
     MOZ_ASSERT(mPosition >= aOther.mPosition);
     return mPosition - aOther.mPosition;
+  }
+};
+
+template <class CharT>
+struct nsCharSinkTraits<nsWritingIterator<CharT>>
+{
+  static void
+  write(nsWritingIterator<CharT>& aIter, const CharT* aStr, uint32_t aN)
+  {
+    nsCharTraits<CharT>::move(aIter.get(), aStr, aN);
+    aIter.advance(aN);
   }
 };
 
