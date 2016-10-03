@@ -38,19 +38,16 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 #include <time.h>
 
 #ifdef _WIN32
 #include <io.h>
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#endif
 #else  // _WIN32
 #include <unistd.h>
 #endif  // _WIN32
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -60,6 +57,7 @@
 #include "processor/range_map-inl.h"
 
 #include "common/scoped_ptr.h"
+#include "common/stdio_wrapper.h"
 #include "google_breakpad/processor/dump_context.h"
 #include "processor/basic_code_module.h"
 #include "processor/basic_code_modules.h"
@@ -165,18 +163,9 @@ static void Swap(uint128_struct* value) {
 }
 
 // Swapping signed integers
-static inline void Swap(int16_t* value) {
-  Swap(reinterpret_cast<uint16_t*>(value));
-}
-
 static inline void Swap(int32_t* value) {
   Swap(reinterpret_cast<uint32_t*>(value));
 }
-
-static inline void Swap(int64_t* value) {
-  Swap(reinterpret_cast<uint64_t*>(value));
-}
-
 
 static inline void Swap(MDLocationDescriptor* location_descriptor) {
   Swap(&location_descriptor->data_size);
@@ -206,6 +195,21 @@ static inline void Swap(MDSystemTime* system_time) {
   Swap(&system_time->minute);
   Swap(&system_time->second);
   Swap(&system_time->milliseconds);
+}
+
+static inline void Swap(MDXStateFeature* xstate_feature) {
+  Swap(&xstate_feature->offset);
+  Swap(&xstate_feature->size);
+}
+
+static inline void Swap(MDXStateConfigFeatureMscInfo* xstate_feature_info) {
+  Swap(&xstate_feature_info->size_of_info);
+  Swap(&xstate_feature_info->context_size);
+  Swap(&xstate_feature_info->enabled_features);
+
+  for (size_t i = 0; i < MD_MAXIMUM_XSTATE_FEATURES; i++) {
+    Swap(&xstate_feature_info->features[i]);
+  }
 }
 
 static inline void Swap(uint16_t* data, size_t size_in_bytes) {
@@ -1021,7 +1025,8 @@ bool MinidumpContext::Read(uint32_t expected_size) {
         break;
       }
 
-      case MD_CONTEXT_MIPS: {
+      case MD_CONTEXT_MIPS:
+      case MD_CONTEXT_MIPS64: {
         if (expected_size != sizeof(MDRawContextMIPS)) {
           BPLOG(ERROR) << "MinidumpContext MIPS size mismatch, "
                        << expected_size
@@ -1169,6 +1174,11 @@ bool MinidumpContext::CheckAgainstSystemInfo(uint32_t context_cpu_type) {
       if (system_info_cpu_type == MD_CPU_ARCHITECTURE_MIPS)
         return_value = true;
       break;
+
+    case MD_CONTEXT_MIPS64:
+      if (system_info_cpu_type == MD_CPU_ARCHITECTURE_MIPS64)
+        return_value = true;
+      break;
   }
 
   BPLOG_IF(ERROR, !return_value) << "MinidumpContext CPU " <<
@@ -1185,7 +1195,7 @@ bool MinidumpContext::CheckAgainstSystemInfo(uint32_t context_cpu_type) {
 //
 
 
-uint32_t MinidumpMemoryRegion::max_bytes_ = 1024 * 1024;  // 1MB
+uint32_t MinidumpMemoryRegion::max_bytes_ = 2 * 1024 * 1024;  // 2MB
 
 
 MinidumpMemoryRegion::MinidumpMemoryRegion(Minidump* minidump)
@@ -1859,11 +1869,30 @@ string MinidumpModule::code_identifier() const {
       break;
     }
 
+    case MD_OS_ANDROID:
+    case MD_OS_LINUX: {
+      // If ELF CodeView data is present, return the debug id.
+      if (cv_record_ && cv_record_signature_ == MD_CVINFOELF_SIGNATURE) {
+        const MDCVInfoELF* cv_record_elf =
+            reinterpret_cast<const MDCVInfoELF*>(&(*cv_record_)[0]);
+        assert(cv_record_elf->cv_signature == MD_CVINFOELF_SIGNATURE);
+
+        for (unsigned int build_id_index = 0;
+             build_id_index < (cv_record_->size() - MDCVInfoELF_minsize);
+             ++build_id_index) {
+          char hexbyte[3];
+          snprintf(hexbyte, sizeof(hexbyte), "%02x",
+                   cv_record_elf->build_id[build_id_index]);
+          identifier += hexbyte;
+        }
+        break;
+      }
+      // Otherwise fall through to the case below.
+    }
+
     case MD_OS_MAC_OS_X:
     case MD_OS_IOS:
     case MD_OS_SOLARIS:
-    case MD_OS_ANDROID:
-    case MD_OS_LINUX:
     case MD_OS_NACL:
     case MD_OS_PS3: {
       // TODO(mmentovai): support uuid extension if present, otherwise fall
@@ -1914,6 +1943,13 @@ string MinidumpModule::debug_file() const {
 
       // GetCVRecord guarantees pdb_file_name is null-terminated.
       file = reinterpret_cast<const char*>(cv_record_20->pdb_file_name);
+    } else if (cv_record_signature_ == MD_CVINFOELF_SIGNATURE) {
+      // It's actually an MDCVInfoELF structure.
+      assert(reinterpret_cast<const MDCVInfoELF*>(&(*cv_record_)[0])->
+          cv_signature == MD_CVINFOELF_SIGNATURE);
+
+      // For MDCVInfoELF, the debug file is the code file.
+      file = *name_;
     }
 
     // If there's a CodeView record but it doesn't match a known signature,
@@ -1965,6 +2001,25 @@ string MinidumpModule::debug_file() const {
   return file;
 }
 
+static string guid_and_age_to_debug_id(const MDGUID& guid,
+                                       uint32_t age) {
+  char identifier_string[41];
+  snprintf(identifier_string, sizeof(identifier_string),
+           "%08X%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X%x",
+           guid.data1,
+           guid.data2,
+           guid.data3,
+           guid.data4[0],
+           guid.data4[1],
+           guid.data4[2],
+           guid.data4[3],
+           guid.data4[4],
+           guid.data4[5],
+           guid.data4[6],
+           guid.data4[7],
+           age);
+  return identifier_string;
+}
 
 string MinidumpModule::debug_identifier() const {
   if (!valid_) {
@@ -1987,22 +2042,8 @@ string MinidumpModule::debug_identifier() const {
 
       // Use the same format that the MS symbol server uses in filesystem
       // hierarchies.
-      char identifier_string[41];
-      snprintf(identifier_string, sizeof(identifier_string),
-               "%08X%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X%x",
-               cv_record_70->signature.data1,
-               cv_record_70->signature.data2,
-               cv_record_70->signature.data3,
-               cv_record_70->signature.data4[0],
-               cv_record_70->signature.data4[1],
-               cv_record_70->signature.data4[2],
-               cv_record_70->signature.data4[3],
-               cv_record_70->signature.data4[4],
-               cv_record_70->signature.data4[5],
-               cv_record_70->signature.data4[6],
-               cv_record_70->signature.data4[7],
-               cv_record_70->age);
-      identifier = identifier_string;
+      identifier = guid_and_age_to_debug_id(cv_record_70->signature,
+                                            cv_record_70->age);
     } else if (cv_record_signature_ == MD_CVINFOPDB20_SIGNATURE) {
       // It's actually an MDCVInfoPDB20 structure.
       const MDCVInfoPDB20* cv_record_20 =
@@ -2015,6 +2056,22 @@ string MinidumpModule::debug_identifier() const {
       snprintf(identifier_string, sizeof(identifier_string),
                "%08X%x", cv_record_20->signature, cv_record_20->age);
       identifier = identifier_string;
+    } else if (cv_record_signature_ == MD_CVINFOELF_SIGNATURE) {
+      // It's actually an MDCVInfoELF structure.
+      const MDCVInfoELF* cv_record_elf =
+          reinterpret_cast<const MDCVInfoELF*>(&(*cv_record_)[0]);
+      assert(cv_record_elf->cv_signature == MD_CVINFOELF_SIGNATURE);
+
+      // For backwards-compatibility, stuff as many bytes as will fit into
+      // a MDGUID and use the MS symbol server format as MDCVInfoPDB70 does
+      // with age = 0. Historically Breakpad would do this during dump
+      // writing to fit the build id data into a MDCVInfoPDB70 struct.
+      // The full build id is available by calling code_identifier.
+      MDGUID guid = {0};
+      memcpy(&guid, &cv_record_elf->build_id,
+             std::min(cv_record_->size() - MDCVInfoELF_minsize,
+                      sizeof(MDGUID)));
+      identifier = guid_and_age_to_debug_id(guid, 0);
     }
   }
 
@@ -2067,8 +2124,18 @@ string MinidumpModule::version() const {
 }
 
 
-const CodeModule* MinidumpModule::Copy() const {
+CodeModule* MinidumpModule::Copy() const {
   return new BasicCodeModule(this);
+}
+
+
+uint64_t MinidumpModule::shrink_down_delta() const {
+  return 0;
+}
+
+void MinidumpModule::SetShrinkDownDelta(uint64_t shrink_down_delta) {
+  // Not implemented
+  assert(false);
 }
 
 
@@ -2173,6 +2240,15 @@ const uint8_t* MinidumpModule::GetCVRecord(uint32_t* size) {
                         "0-terminated";
         return NULL;
       }
+    } else if (signature == MD_CVINFOELF_SIGNATURE) {
+      // Now that the structure type is known, recheck the size.
+      if (MDCVInfoELF_minsize > module_.cv_record.data_size) {
+        BPLOG(ERROR) << "MinidumpModule CodeViewELF record size mismatch, " <<
+                        MDCVInfoELF_minsize << " > " <<
+                        module_.cv_record.data_size;
+        return NULL;
+      }
+      // There's nothing to swap in CVInfoELF, it's just raw bytes.
     }
 
     // If the signature doesn't match something above, it's not something
@@ -2373,6 +2449,20 @@ void MinidumpModule::Print() {
              cv_record_20->age);
       printf("  (cv_record).pdb_file_name       = \"%s\"\n",
              cv_record_20->pdb_file_name);
+    } else if (cv_record_signature_ == MD_CVINFOELF_SIGNATURE) {
+      const MDCVInfoELF* cv_record_elf =
+          reinterpret_cast<const MDCVInfoELF*>(cv_record);
+      assert(cv_record_elf->cv_signature == MD_CVINFOELF_SIGNATURE);
+
+      printf("  (cv_record).cv_signature        = 0x%x\n",
+             cv_record_elf->cv_signature);
+      printf("  (cv_record).build_id            = ");
+      for (unsigned int build_id_index = 0;
+           build_id_index < (cv_record_size - MDCVInfoELF_minsize);
+           ++build_id_index) {
+        printf("%02x", cv_record_elf->build_id[build_id_index]);
+      }
+      printf("\n");
     } else {
       printf("  (cv_record)                     = ");
       for (unsigned int cv_byte_index = 0;
@@ -2432,6 +2522,7 @@ MinidumpModuleList::MinidumpModuleList(Minidump* minidump)
       range_map_(new RangeMap<uint64_t, unsigned int>()),
       modules_(NULL),
       module_count_(0) {
+  range_map_->SetEnableShrinkDown(minidump_->IsAndroid());
 }
 
 
@@ -2607,7 +2698,8 @@ const MinidumpModule* MinidumpModuleList::GetModuleForAddress(
   }
 
   unsigned int module_index;
-  if (!range_map_->RetrieveRange(address, &module_index, NULL, NULL)) {
+  if (!range_map_->RetrieveRange(address, &module_index, NULL /* base */,
+                                 NULL /* delta */, NULL /* size */)) {
     BPLOG(INFO) << "MinidumpModuleList has no module at " <<
                    HexString(address);
     return NULL;
@@ -2643,7 +2735,9 @@ const MinidumpModule* MinidumpModuleList::GetModuleAtSequence(
   }
 
   unsigned int module_index;
-  if (!range_map_->RetrieveRangeAtIndex(sequence, &module_index, NULL, NULL)) {
+  if (!range_map_->RetrieveRangeAtIndex(sequence, &module_index,
+                                        NULL /* base */, NULL /* delta */,
+                                        NULL /* size */)) {
     BPLOG(ERROR) << "MinidumpModuleList has no module at sequence " << sequence;
     return NULL;
   }
@@ -2673,6 +2767,14 @@ const CodeModules* MinidumpModuleList::Copy() const {
   return new BasicCodeModules(this);
 }
 
+vector<linked_ptr<const CodeModule> >
+MinidumpModuleList::GetShrunkRangeModules() const {
+  return vector<linked_ptr<const CodeModule> >();
+}
+
+bool MinidumpModuleList::IsModuleShrinkEnabled() const {
+  return range_map_->IsShrinkDownEnabled();
+}
 
 void MinidumpModuleList::Print() {
   if (!valid_) {
@@ -2858,7 +2960,8 @@ MinidumpMemoryRegion* MinidumpMemoryList::GetMemoryRegionForAddress(
   }
 
   unsigned int region_index;
-  if (!range_map_->RetrieveRange(address, &region_index, NULL, NULL)) {
+  if (!range_map_->RetrieveRange(address, &region_index, NULL /* base */,
+                                 NULL /* delta */, NULL /* size */)) {
     BPLOG(INFO) << "MinidumpMemoryList has no memory region at " <<
                    HexString(address);
     return NULL;
@@ -3420,20 +3523,44 @@ MinidumpMiscInfo::MinidumpMiscInfo(Minidump* minidump)
 bool MinidumpMiscInfo::Read(uint32_t expected_size) {
   valid_ = false;
 
+  size_t padding = 0;
   if (expected_size != MD_MISCINFO_SIZE &&
       expected_size != MD_MISCINFO2_SIZE &&
       expected_size != MD_MISCINFO3_SIZE &&
-      expected_size != MD_MISCINFO4_SIZE) {
-    BPLOG(ERROR) << "MinidumpMiscInfo size mismatch, " << expected_size
-                 << " != " << MD_MISCINFO_SIZE << ", " << MD_MISCINFO2_SIZE
-                 << ", " << MD_MISCINFO3_SIZE << ", " << MD_MISCINFO4_SIZE
-                 << ")";
-    return false;
+      expected_size != MD_MISCINFO4_SIZE &&
+      expected_size != MD_MISCINFO5_SIZE) {
+    if (expected_size > MD_MISCINFO5_SIZE) {
+      // Only read the part of the misc info structure we know how to handle
+      BPLOG(INFO) << "MinidumpMiscInfo size larger than expected "
+                  << expected_size << ", skipping over the unknown part";
+      padding = expected_size - MD_MISCINFO5_SIZE;
+      expected_size = MD_MISCINFO5_SIZE;
+    } else {
+      BPLOG(ERROR) << "MinidumpMiscInfo size mismatch, " << expected_size
+                  << " != " << MD_MISCINFO_SIZE << ", " << MD_MISCINFO2_SIZE
+                  << ", " << MD_MISCINFO3_SIZE << ", " << MD_MISCINFO4_SIZE
+                  << ", " << MD_MISCINFO5_SIZE << ")";
+      return false;
+    }
   }
 
   if (!minidump_->ReadBytes(&misc_info_, expected_size)) {
     BPLOG(ERROR) << "MinidumpMiscInfo cannot read miscellaneous info";
     return false;
+  }
+
+  if (padding != 0) {
+    off_t saved_position = minidump_->Tell();
+    if (saved_position == -1) {
+      BPLOG(ERROR) << "MinidumpMiscInfo could not tell the current position";
+      return false;
+    }
+
+    if (!minidump_->SeekSet(saved_position + padding)) {
+      BPLOG(ERROR) << "MinidumpMiscInfo could not seek past the miscellaneous "
+                   << "info structure";
+      return false;
+    }
   }
 
   if (minidump_->swap()) {
@@ -3465,9 +3592,14 @@ bool MinidumpMiscInfo::Read(uint32_t expected_size) {
       // Do not swap UTF-16 strings.  The swap is done as part of the
       // conversion to UTF-8 (code follows below).
     }
+    if (misc_info_.size_of_info > MD_MISCINFO4_SIZE) {
+      // Swap version 5 fields
+      Swap(&misc_info_.xstate_data);
+      Swap(&misc_info_.process_cookie);
+    }
   }
 
-  if (expected_size != misc_info_.size_of_info) {
+  if (expected_size + padding != misc_info_.size_of_info) {
     BPLOG(ERROR) << "MinidumpMiscInfo size mismatch, " <<
                     expected_size << " != " << misc_info_.size_of_info;
     return false;
@@ -3615,6 +3747,35 @@ void MinidumpMiscInfo::Print() {
     } else {
       printf("  build_string                 = (invalid)\n");
       printf("  dbg_bld_str                  = (invalid)\n");
+    }
+  }
+  if (misc_info_.size_of_info > MD_MISCINFO4_SIZE) {
+    // Print version 5 fields
+    if (misc_info_.flags1 & MD_MISCINFO_FLAGS1_PROCESS_COOKIE) {
+      printf("  xstate_data.size_of_info     = %d\n",
+             misc_info_.xstate_data.size_of_info);
+      printf("  xstate_data.context_size     = %d\n",
+             misc_info_.xstate_data.context_size);
+      printf("  xstate_data.enabled_features = 0x%" PRIx64 "\n",
+             misc_info_.xstate_data.enabled_features);
+      for (size_t i = 0; i < MD_MAXIMUM_XSTATE_FEATURES; i++) {
+        if (misc_info_.xstate_data.enabled_features & (1 << i)) {
+          printf("  xstate_data.features[%02zu]     = { %d, %d }\n", i,
+                 misc_info_.xstate_data.features[i].offset,
+                 misc_info_.xstate_data.features[i].size);
+        }
+      }
+      if (misc_info_.xstate_data.enabled_features == 0) {
+        printf("  xstate_data.features[]       = (empty)\n");
+      }
+      printf("  process_cookie               = %d\n",
+             misc_info_.process_cookie);
+    } else {
+      printf("  xstate_data.size_of_info     = (invalid)\n");
+      printf("  xstate_data.context_size     = (invalid)\n");
+      printf("  xstate_data.enabled_features = (invalid)\n");
+      printf("  xstate_data.features[]       = (invalid)\n");
+      printf("  process_cookie               = (invalid)\n");
     }
   }
   printf("\n");
@@ -3962,7 +4123,8 @@ const MinidumpMemoryInfo* MinidumpMemoryInfoList::GetMemoryInfoForAddress(
   }
 
   unsigned int info_index;
-  if (!range_map_->RetrieveRange(address, &info_index, NULL, NULL)) {
+  if (!range_map_->RetrieveRange(address, &info_index, NULL /* base */,
+                                 NULL /* delta */, NULL /* size */)) {
     BPLOG(INFO) << "MinidumpMemoryInfoList has no memory info at " <<
                    HexString(address);
     return NULL;
@@ -4221,6 +4383,9 @@ bool Minidump::GetContextCPUFlagsFromSystemInfo(uint32_t *context_cpu_flags) {
       case MD_CPU_ARCHITECTURE_MIPS:
         *context_cpu_flags = MD_CONTEXT_MIPS;
         break;
+      case MD_CPU_ARCHITECTURE_MIPS64:
+        *context_cpu_flags = MD_CONTEXT_MIPS64;
+        break;
       case MD_CPU_ARCHITECTURE_ALPHA:
         *context_cpu_flags = MD_CONTEXT_ALPHA;
         break;
@@ -4459,6 +4624,24 @@ MinidumpLinuxMapsList *Minidump::GetLinuxMapsList() {
   return GetStream(&linux_maps_list);
 }
 
+bool Minidump::IsAndroid() {
+  // Save the current stream position
+  off_t saved_position = Tell();
+  if (saved_position == -1) {
+    return false;
+  }
+  const MDRawSystemInfo* system_info =
+    GetSystemInfo() ? GetSystemInfo()->system_info() : NULL;
+
+  // Restore position and return
+  if (!SeekSet(saved_position)) {
+    BPLOG(ERROR) << "Couldn't seek back to saved position";
+    return false;
+  }
+
+  return system_info && system_info->platform_id == MD_OS_ANDROID;
+}
+
 static const char* get_stream_name(uint32_t stream_type) {
   switch (stream_type) {
   case MD_UNUSED_STREAM:
@@ -4499,6 +4682,14 @@ static const char* get_stream_name(uint32_t stream_type) {
     return "MD_THREAD_INFO_LIST_STREAM";
   case MD_HANDLE_OPERATION_LIST_STREAM:
     return "MD_HANDLE_OPERATION_LIST_STREAM";
+  case MD_TOKEN_STREAM:
+    return "MD_TOKEN_STREAM";
+  case MD_JAVASCRIPT_DATA_STREAM:
+    return "MD_JAVASCRIPT_DATA_STREAM";
+  case MD_SYSTEM_MEMORY_INFO_STREAM:
+    return "MD_SYSTEM_MEMORY_INFO_STREAM";
+  case MD_PROCESS_VM_COUNTERS_STREAM:
+    return "MD_PROCESS_VM_COUNTERS_STREAM";
   case MD_LAST_RESERVED_STREAM:
     return "MD_LAST_RESERVED_STREAM";
   case MD_BREAKPAD_INFO_STREAM:
@@ -4564,7 +4755,7 @@ void Minidump::Print() {
        iterator != stream_map_->end();
        ++iterator) {
     uint32_t stream_type = iterator->first;
-    MinidumpStreamInfo info = iterator->second;
+    const MinidumpStreamInfo& info = iterator->second;
     printf("  stream type 0x%x (%s) at index %d\n", stream_type,
            get_stream_name(stream_type),
            info.stream_index);
@@ -4721,7 +4912,7 @@ bool Minidump::SeekToStreamType(uint32_t  stream_type,
     return false;
   }
 
-  MinidumpStreamInfo info = iterator->second;
+  const MinidumpStreamInfo& info = iterator->second;
   if (info.stream_index >= header_.stream_count) {
     BPLOG(ERROR) << "SeekToStreamType: type " << stream_type <<
                     " out of range: " <<
