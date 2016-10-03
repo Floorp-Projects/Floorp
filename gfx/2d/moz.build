@@ -52,6 +52,7 @@ EXPORTS.mozilla.gfx += [
     'SourceSurfaceRawData.h',
     'StackArray.h',
     'Tools.h',
+    'Triangle.h',
     'Types.h',
     'UserData.h',
 ]
