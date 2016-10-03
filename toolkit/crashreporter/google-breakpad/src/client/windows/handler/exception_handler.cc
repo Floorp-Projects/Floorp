@@ -41,6 +41,12 @@
 
 namespace google_breakpad {
 
+static const int kWaitForHandlerThreadMs = 60000;
+static const int kExceptionHandlerThreadInitialStackSize = 64 * 1024;
+
+// As documented on MSDN, on failure SuspendThread returns (DWORD) -1
+static const DWORD kFailedToSuspendThread = static_cast<DWORD>(-1);
+
 // This is passed as the context to the MinidumpWriteDump callback.
 typedef struct {
   AppMemoryList::const_iterator iter;
@@ -211,7 +217,6 @@ void ExceptionHandler::Initialize(
     // Don't attempt to create the thread if we could not create the semaphores.
     if (handler_finish_semaphore_ != NULL && handler_start_semaphore_ != NULL) {
       DWORD thread_id;
-      const int kExceptionHandlerThreadInitialStackSize = 64 * 1024;
       handler_thread_ = CreateThread(NULL,         // lpThreadAttributes
                                      kExceptionHandlerThreadInitialStackSize,
                                      ExceptionHandlerThreadMain,
@@ -348,7 +353,6 @@ ExceptionHandler::~ExceptionHandler() {
     // inside DllMain.
     is_shutdown_ = true;
     ReleaseSemaphore(handler_start_semaphore_, 1, NULL);
-    const int kWaitForHandlerThreadMs = 60000;
     WaitForSingleObject(handler_thread_, kWaitForHandlerThreadMs);
 #else
     TerminateThread(handler_thread_, 1);
@@ -777,8 +781,6 @@ bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
   EXCEPTION_RECORD ex;
   CONTEXT ctx;
   EXCEPTION_POINTERS exinfo = { NULL, NULL };
-  // As documented on MSDN, on failure SuspendThread returns (DWORD) -1
-  const DWORD kFailedToSuspendThread = static_cast<DWORD>(-1);
   DWORD last_suspend_count = kFailedToSuspendThread;
   HANDLE child_thread_handle = OpenThread(THREAD_GET_CONTEXT |
                                           THREAD_QUERY_INFORMATION |

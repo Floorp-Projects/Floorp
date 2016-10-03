@@ -12,7 +12,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-#include "common/using_std_string.h"
 #include "processor/logging.h"
 
 #if defined(OS_ANDROID) && !defined(__LP64__)
@@ -26,7 +25,7 @@
 
 namespace google_breakpad {
 
-bool ParseProcMaps(const string& input,
+bool ParseProcMaps(const std::string& input,
                    std::vector<MappedMemoryRegion>* regions_out) {
   std::vector<MappedMemoryRegion> regions;
 
@@ -34,8 +33,8 @@ bool ParseProcMaps(const string& input,
   // this point in time.
 
   // Split the string by newlines.
-  std::vector<string> lines;
-  string l = "";
+  std::vector<std::string> lines;
+  std::string l = "";
   for (size_t i = 0; i < input.size(); i++) {
     if (input[i] != '\n' && input[i] != '\r') {
       l.push_back(input[i]);

@@ -156,8 +156,6 @@
 #ifndef COMMON_DWARF_DWARF2DIEHANDLER_H__
 #define COMMON_DWARF_DWARF2DIEHANDLER_H__
 
-#include <stdint.h>
-
 #include <stack>
 #include <string>
 
@@ -208,7 +206,7 @@ class DIEHandler {
                                          uint64 data) { }
   virtual void ProcessAttributeBuffer(enum DwarfAttribute attr,
                                       enum DwarfForm form,
-                                      const uint8_t *data,
+                                      const char* data,
                                       uint64 len) { }
   virtual void ProcessAttributeString(enum DwarfAttribute attr,
                                       enum DwarfForm form,
@@ -311,7 +309,7 @@ class DIEDispatcher: public Dwarf2Handler {
   void ProcessAttributeBuffer(uint64 offset,
                               enum DwarfAttribute attr,
                               enum DwarfForm form,
-                              const uint8_t *data,
+                              const char* data,
                               uint64 len);
   void ProcessAttributeString(uint64 offset,
                               enum DwarfAttribute attr,

@@ -40,45 +40,26 @@
 #include <assert.h>
 
 #include "processor/range_map.h"
-#include "processor/linked_ptr.h"
 #include "processor/logging.h"
 
 
 namespace google_breakpad {
 
-template<typename AddressType, typename EntryType>
-void RangeMap<AddressType, EntryType>::SetEnableShrinkDown(
-    bool enable_shrink_down) {
-  enable_shrink_down_ = enable_shrink_down;
-}
-
-template<typename AddressType, typename EntryType>
-bool RangeMap<AddressType, EntryType>::IsShrinkDownEnabled() const {
-  return enable_shrink_down_;
-}
 
 template<typename AddressType, typename EntryType>
 bool RangeMap<AddressType, EntryType>::StoreRange(const AddressType &base,
                                                   const AddressType &size,
                                                   const EntryType &entry) {
-  return StoreRangeInternal(base, 0 /* delta */, size, entry);
-}
-
-template<typename AddressType, typename EntryType>
-bool RangeMap<AddressType, EntryType>::StoreRangeInternal(
-    const AddressType &base, const AddressType &delta,
-    const AddressType &size, const EntryType &entry) {
-  AddressType high = base + (size - 1);
+  AddressType high = base + size - 1;
 
   // Check for undersize or overflow.
   if (size <= 0 || high < base) {
     // The processor will hit this case too frequently with common symbol
     // files in the size == 0 case, which is more suited to a DEBUG channel.
     // Filter those out since there's no DEBUG channel at the moment.
-    BPLOG_IF(INFO, size != 0) << "StoreRangeInternal failed, "
-                              << HexString(base) << "+" << HexString(size)
-                              << ", " << HexString(high)
-                              << ", delta: " << HexString(delta);
+    BPLOG_IF(INFO, size != 0) << "StoreRange failed, " << HexString(base) <<
+                                 "+" << HexString(size) << ", " <<
+                                 HexString(high);
     return false;
   }
 
@@ -90,80 +71,53 @@ bool RangeMap<AddressType, EntryType>::StoreRangeInternal(
   if (iterator_base != iterator_high) {
     // Some other range begins in the space used by this range.  It may be
     // contained within the space used by this range, or it may extend lower.
-    // If enable_shrink_down_ is true, shrink the current range down, otherwise
-    // this is an error.
-    if (enable_shrink_down_) {
-      AddressType additional_delta = iterator_base->first - base + 1;
-      return StoreRangeInternal(base + additional_delta,
-                                delta + additional_delta,
-                                size - additional_delta, entry);
-    } else {
-      // The processor hits this case too frequently with common symbol files. 
-      // This is most appropriate for a DEBUG channel, but since none exists
-      // now simply comment out this logging.
-      // AddressType other_base = iterator_base->second.base();
-      // AddressType other_size = iterator_base->first - other_base + 1;
-      // BPLOG(INFO) << "StoreRangeInternal failed, an existing range is "
-      //             << "overlapping with the new range: new "
-      //             << HexString(base) << "+" << HexString(size)
-      //             << ", existing " << HexString(other_base) << "+"
-      //             << HexString(other_size);
-      return false;
-    }
+    // Regardless, it is an error.
+    // The processor hits this case too frequently with common symbol files.
+    // This is most appropriate for a DEBUG channel, but since none exists now
+    // simply comment out this logging.
+    //
+    // AddressType other_base = iterator_base->second.base();
+    // AddressType other_size = iterator_base->first - other_base + 1;
+    // BPLOG(INFO) << "StoreRange failed, an existing range is contained by or "
+    //                "extends lower than the new range: new " <<
+    //                 HexString(base) << "+" << HexString(size) <<
+    //                 ", existing " << HexString(other_base) << "+" <<
+    //                 HexString(other_size);
+
+    return false;
   }
 
   if (iterator_high != map_.end()) {
     if (iterator_high->second.base() <= high) {
       // The range above this one overlaps with this one.  It may fully
       // contain this range, or it may begin within this range and extend
-      // higher.  If enable_shrink_down_ is true, shrink the other range down,
-      // otherwise this is an error.
-      if (enable_shrink_down_ && iterator_high->first > high) {
-        // Shrink the other range down.
-        AddressType other_high = iterator_high->first;
-        AddressType additional_delta =
-            high - iterator_high->second.base() + 1;
-        EntryType other_entry;
-        AddressType other_base = AddressType();
-        AddressType other_size = AddressType();
-        AddressType other_delta = AddressType();
-        RetrieveRange(other_high, &other_entry, &other_base, &other_delta,
-                      &other_size);
-        map_.erase(iterator_high);
-        map_.insert(MapValue(other_high,
-                             Range(other_base + additional_delta,
-                                   other_delta + additional_delta,
-                                   other_entry)));
-        // Retry to store this range.
-        return StoreRangeInternal(base, delta, size, entry);
-      } else {
-        // The processor hits this case too frequently with common symbol files.
-        // This is most appropriate for a DEBUG channel, but since none exists
-        // now simply comment out this logging.
-        //
-        // AddressType other_base = iterator_high->second.base();
-        // AddressType other_size = iterator_high->first - other_base + 1;
-        // BPLOG(INFO) << "StoreRangeInternal failed, an existing range "
-        //             << "contains or extends higher than the new range: new "
-        //             << HexString(base) << "+" << HexString(size)
-        //             << ", existing " << HexString(other_base) << "+"
-        //             << HexString(other_size);
-        return false;
-      }
+      // higher.  Regardless, it's an error.
+      // The processor hits this case too frequently with common symbol files.
+      // This is most appropriate for a DEBUG channel, but since none exists now
+      // simply comment out this logging.
+      //
+      // AddressType other_base = iterator_high->second.base();
+      // AddressType other_size = iterator_high->first - other_base + 1;
+      // BPLOG(INFO) << "StoreRange failed, an existing range contains or "
+      //                "extends higher than the new range: new " <<
+      //                HexString(base) << "+" << HexString(size) <<
+      //                ", existing " << HexString(other_base) << "+" <<
+      //                HexString(other_size);
+      return false;
     }
   }
 
   // Store the range in the map by its high address, so that lower_bound can
   // be used to quickly locate a range by address.
-  map_.insert(MapValue(high, Range(base, delta, entry)));
+  map_.insert(MapValue(high, Range(base, entry)));
   return true;
 }
 
 
 template<typename AddressType, typename EntryType>
 bool RangeMap<AddressType, EntryType>::RetrieveRange(
-    const AddressType &address, EntryType *entry, AddressType *entry_base,
-    AddressType *entry_delta, AddressType *entry_size) const {
+    const AddressType &address, EntryType *entry,
+    AddressType *entry_base, AddressType *entry_size) const {
   BPLOG_IF(ERROR, !entry) << "RangeMap::RetrieveRange requires |entry|";
   assert(entry);
 
@@ -182,8 +136,6 @@ bool RangeMap<AddressType, EntryType>::RetrieveRange(
   *entry = iterator->second.entry();
   if (entry_base)
     *entry_base = iterator->second.base();
-  if (entry_delta)
-    *entry_delta = iterator->second.delta();
   if (entry_size)
     *entry_size = iterator->first - iterator->second.base() + 1;
 
@@ -193,13 +145,13 @@ bool RangeMap<AddressType, EntryType>::RetrieveRange(
 
 template<typename AddressType, typename EntryType>
 bool RangeMap<AddressType, EntryType>::RetrieveNearestRange(
-    const AddressType &address, EntryType *entry, AddressType *entry_base,
-    AddressType *entry_delta, AddressType *entry_size) const {
+    const AddressType &address, EntryType *entry,
+    AddressType *entry_base, AddressType *entry_size) const {
   BPLOG_IF(ERROR, !entry) << "RangeMap::RetrieveNearestRange requires |entry|";
   assert(entry);
 
   // If address is within a range, RetrieveRange can handle it.
-  if (RetrieveRange(address, entry, entry_base, entry_delta, entry_size))
+  if (RetrieveRange(address, entry, entry_base, entry_size))
     return true;
 
   // upper_bound gives the first element whose key is greater than address,
@@ -215,8 +167,6 @@ bool RangeMap<AddressType, EntryType>::RetrieveNearestRange(
   *entry = iterator->second.entry();
   if (entry_base)
     *entry_base = iterator->second.base();
-  if (entry_delta)
-    *entry_delta = iterator->second.delta();
   if (entry_size)
     *entry_size = iterator->first - iterator->second.base() + 1;
 
@@ -226,8 +176,8 @@ bool RangeMap<AddressType, EntryType>::RetrieveNearestRange(
 
 template<typename AddressType, typename EntryType>
 bool RangeMap<AddressType, EntryType>::RetrieveRangeAtIndex(
-    int index, EntryType *entry, AddressType *entry_base,
-    AddressType *entry_delta, AddressType *entry_size) const {
+    int index, EntryType *entry,
+    AddressType *entry_base, AddressType *entry_size) const {
   BPLOG_IF(ERROR, !entry) << "RangeMap::RetrieveRangeAtIndex requires |entry|";
   assert(entry);
 
@@ -245,8 +195,6 @@ bool RangeMap<AddressType, EntryType>::RetrieveRangeAtIndex(
   *entry = iterator->second.entry();
   if (entry_base)
     *entry_base = iterator->second.base();
-  if (entry_delta)
-    *entry_delta = iterator->second.delta();
   if (entry_size)
     *entry_size = iterator->first - iterator->second.base() + 1;
 
