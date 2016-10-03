@@ -1,4 +1,5 @@
-var BASE_URL = "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
+var harness = SimpleTest.harnessParameters.testRoot == "chrome" ? "chrome" : "tests";
+var BASE_URL = "http://mochi.test:8888/" + harness + "/dom/tests/mochitest/geolocation/network_geolocation.sjs";
 
 function sleep(delay)
 {
