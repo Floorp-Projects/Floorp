@@ -923,8 +923,8 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
     if (hasFlags) {
         // Allow domains that were whitelisted in the prefs. In 99.9% of cases,
         // this array is empty.
-        for (size_t i = 0; i < mFileURIWhitelist.Length(); ++i) {
-            if (EqualOrSubdomain(aSourceURI, mFileURIWhitelist[i])) {
+        for (nsIURI* uri : EnsureFileURIWhitelist()) {
+            if (EqualOrSubdomain(aSourceURI, uri)) {
                 return NS_OK;
             }
         }
@@ -1459,38 +1459,7 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged()
         Preferences::GetBool(sJSEnabledPrefName, mIsJavaScriptEnabled);
     sStrictFileOriginPolicy =
         Preferences::GetBool(sFileOriginPolicyPrefName, false);
-
-    //
-    // Rebuild the set of principals for which we allow file:// URI loads. This
-    // implements a small subset of an old pref-based CAPS people that people
-    // have come to depend on. See bug 995943.
-    //
-
-    mFileURIWhitelist.Clear();
-    auto policies = mozilla::Preferences::GetCString("capability.policy.policynames");
-    for (uint32_t base = SkipPast<IsWhitespaceOrComma>(policies, 0), bound = 0;
-         base < policies.Length();
-         base = SkipPast<IsWhitespaceOrComma>(policies, bound))
-    {
-        // Grab the current policy name.
-        bound = SkipUntil<IsWhitespaceOrComma>(policies, base);
-        auto policyName = Substring(policies, base, bound - base);
-
-        // Figure out if this policy allows loading file:// URIs. If not, we can skip it.
-        nsCString checkLoadURIPrefName = NS_LITERAL_CSTRING("capability.policy.") +
-                                         policyName +
-                                         NS_LITERAL_CSTRING(".checkloaduri.enabled");
-        if (!Preferences::GetString(checkLoadURIPrefName.get()).LowerCaseEqualsLiteral("allaccess")) {
-            continue;
-        }
-
-        // Grab the list of domains associated with this policy.
-        nsCString domainPrefName = NS_LITERAL_CSTRING("capability.policy.") +
-                                   policyName +
-                                   NS_LITERAL_CSTRING(".sites");
-        auto siteList = Preferences::GetCString(domainPrefName.get());
-        AddSitesToFileURIWhitelist(siteList);
-    }
+    mFileURIWhitelist.reset();
 }
 
 void
@@ -1516,7 +1485,7 @@ nsScriptSecurityManager::AddSitesToFileURIWhitelist(const nsCString& aSiteList)
         nsCOMPtr<nsIURI> uri;
         nsresult rv = NS_NewURI(getter_AddRefs(uri), site, nullptr, nullptr, sIOService);
         if (NS_SUCCEEDED(rv)) {
-            mFileURIWhitelist.AppendElement(uri);
+            mFileURIWhitelist.ref().AppendElement(uri);
         } else {
             nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
             if (console) {
@@ -1675,4 +1644,46 @@ nsScriptSecurityManager::PolicyAllowsScript(nsIURI* aURI, bool *aRv)
     }
 
     return NS_OK;
+}
+
+const nsTArray<nsCOMPtr<nsIURI>>&
+nsScriptSecurityManager::EnsureFileURIWhitelist()
+{
+    if (mFileURIWhitelist.isSome()) {
+        return mFileURIWhitelist.ref();
+    }
+
+    //
+    // Rebuild the set of principals for which we allow file:// URI loads. This
+    // implements a small subset of an old pref-based CAPS people that people
+    // have come to depend on. See bug 995943.
+    //
+
+    mFileURIWhitelist.emplace();
+    auto policies = mozilla::Preferences::GetCString("capability.policy.policynames");
+    for (uint32_t base = SkipPast<IsWhitespaceOrComma>(policies, 0), bound = 0;
+         base < policies.Length();
+         base = SkipPast<IsWhitespaceOrComma>(policies, bound))
+    {
+        // Grab the current policy name.
+        bound = SkipUntil<IsWhitespaceOrComma>(policies, base);
+        auto policyName = Substring(policies, base, bound - base);
+
+        // Figure out if this policy allows loading file:// URIs. If not, we can skip it.
+        nsCString checkLoadURIPrefName = NS_LITERAL_CSTRING("capability.policy.") +
+                                         policyName +
+                                         NS_LITERAL_CSTRING(".checkloaduri.enabled");
+        if (!Preferences::GetString(checkLoadURIPrefName.get()).LowerCaseEqualsLiteral("allaccess")) {
+            continue;
+        }
+
+        // Grab the list of domains associated with this policy.
+        nsCString domainPrefName = NS_LITERAL_CSTRING("capability.policy.") +
+                                   policyName +
+                                   NS_LITERAL_CSTRING(".sites");
+        auto siteList = Preferences::GetCString(domainPrefName.get());
+        AddSitesToFileURIWhitelist(siteList);
+    }
+
+    return mFileURIWhitelist.ref();
 }
