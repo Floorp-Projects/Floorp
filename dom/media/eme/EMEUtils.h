@@ -106,6 +106,12 @@ KeySystemToGMPName(const nsAString& aKeySystem);
 bool
 IsClearkeyKeySystem(const nsAString& aKeySystem);
 
+bool
+IsPrimetimeKeySystem(const nsAString& aKeySystem);
+
+bool
+IsWidevineKeySystem(const nsAString& aKeySystem);
+
 enum CDMType {
   eClearKey = 0,
   ePrimetime = 1,

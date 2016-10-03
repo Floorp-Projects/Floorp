@@ -132,6 +132,24 @@ CopyArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aB
   aOutData.AppendElements(data.mData, data.mLength);
 }
 
+bool
+IsClearkeyKeySystem(const nsAString& aKeySystem)
+{
+  return !CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem);
+}
+
+bool
+IsPrimetimeKeySystem(const nsAString& aKeySystem)
+{
+  return !CompareUTF8toUTF16(kEMEKeySystemPrimetime, aKeySystem);
+}
+
+bool
+IsWidevineKeySystem(const nsAString& aKeySystem)
+{
+  return !CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem);
+}
+
 nsString
 KeySystemToGMPName(const nsAString& aKeySystem)
 {
@@ -146,12 +164,6 @@ KeySystemToGMPName(const nsAString& aKeySystem)
   }
   MOZ_ASSERT(false, "We should only call this for known GMPs");
   return EmptyString();
-}
-
-bool
-IsClearkeyKeySystem(const nsAString& aKeySystem)
-{
-  return !CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem);
 }
 
 CDMType
