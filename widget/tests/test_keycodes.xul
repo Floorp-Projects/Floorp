@@ -2095,17 +2095,24 @@ function* runKeyEventTests()
                   "Delete", "Delete", nsIDOMKeyEvent.DOM_VK_DELETE, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     // Backspace and Enter are handled with special path in mozilla::widget::NativeKey.  So, let's test them with modifiers too.
+    // Note that when both Ctrl and Alt are pressed, they don't cause WM_(SYS)CHAR message.
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_BACK,
                    modifiers:{ctrlKey:1}, chars:"\u007F"},
                   "Backspace", "Backspace", nsIDOMKeyEvent.DOM_VK_BACK_SPACE, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_BACK,
                    modifiers:{altKey:1}, chars:"\u0008"},
                   "Backspace", "Backspace", nsIDOMKeyEvent.DOM_VK_BACK_SPACE, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_BACK,
+                   modifiers:{ctrl:1, altKey:1}, chars:""},
+                  "Backspace", "Backspace", nsIDOMKeyEvent.DOM_VK_BACK_SPACE, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_RETURN,
                    modifiers:{ctrlKey:1}, chars:"\n"},
                   "Enter", "Enter", nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_RETURN,
                    modifiers:{altKey:1}, chars:"\r"},
+                  "Enter", "Enter", nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_RETURN,
+                   modifiers:{ctrl:1, altKey:1}, chars:""},
                   "Enter", "Enter", nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     // US
