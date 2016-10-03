@@ -1063,8 +1063,6 @@ public:
 
         const auto& layerClient = GeckoLayerClient::Ref::From(aClient);
 
-        AndroidBridge::Bridge()->SetLayerClient(layerClient);
-
         // If resetting is true, Android destroyed our GeckoApp activity and we
         // had to recreate it, but all the Gecko-side things were not
         // destroyed.  We therefore need to link up the new java objects to
