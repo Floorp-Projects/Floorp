@@ -226,6 +226,8 @@ public:
 
     CompositorBridgeParent* GetCompositorBridgeParent() const;
 
+    mozilla::jni::DependentRef<mozilla::java::GeckoLayerClient> GetLayerClient();
+
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();
