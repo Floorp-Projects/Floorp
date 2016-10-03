@@ -134,6 +134,11 @@ BroadcastBlobURLRegistration(const nsACString& aURI,
     return;
   }
 
+  // We don't need to broadcast Blob URL if we have just 1 content process.
+  if (Preferences::GetInt("dom.ipc.processCount", 0) <= 1) {
+    return;
+  }
+
   ContentChild* cc = ContentChild::GetSingleton();
   BlobChild* actor = cc->GetOrCreateActorForBlobImpl(aBlobImpl);
   if (NS_WARN_IF(!actor)) {
