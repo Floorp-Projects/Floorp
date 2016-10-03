@@ -10577,7 +10577,8 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
 }
 
 DOMStorage*
-nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
+nsGlobalWindow::GetLocalStorage(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
@@ -10586,7 +10587,7 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
   }
 
   if (!mLocalStorage) {
-    if (!DOMStorage::CanUseStorage(AsInner())) {
+    if (!DOMStorage::CanUseStorage(AsInner(), aSubjectPrincipal)) {
       aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
@@ -11535,8 +11536,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     // Clone the storage event included in the observer notification. We want
     // to dispatch clones rather than the original event.
     ErrorResult error;
-    RefPtr<StorageEvent> newEvent = CloneStorageEvent(eventType,
-                                                        event, error);
+    RefPtr<StorageEvent> newEvent = CloneStorageEvent(eventType, event, error);
     if (error.Failed()) {
       return error.StealNSResult();
     }
@@ -11653,7 +11653,10 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
 
   RefPtr<DOMStorage> storage;
   if (storageArea->GetType() == DOMStorage::LocalStorage) {
-    storage = GetLocalStorage(aRv);
+    storage = GetLocalStorage(nsContentUtils::GetCurrentJSContext()
+                                ? Some(nsContentUtils::SubjectPrincipal())
+                                : Nothing(),
+                              aRv);
   } else {
     MOZ_ASSERT(storageArea->GetType() == DOMStorage::SessionStorage);
     storage = GetSessionStorage(aRv);
