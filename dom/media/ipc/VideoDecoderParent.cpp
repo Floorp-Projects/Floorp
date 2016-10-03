@@ -81,7 +81,9 @@ VideoDecoderParent::RecvInit(const VideoInfo& aInfo, const layers::LayersBackend
   mDecoder->Init()->Then(mManagerTaskQueue, __func__,
     [self] (TrackInfo::TrackType aTrack) {
       if (!self->mDestroyed) {
-        Unused << self->SendInitComplete();
+        nsCString hardwareReason;
+        bool hardwareAccelerated = self->mDecoder->IsHardwareAccelerated(hardwareReason);
+        Unused << self->SendInitComplete(hardwareAccelerated, hardwareReason);
       }
     },
     [self] (MediaResult aReason) {

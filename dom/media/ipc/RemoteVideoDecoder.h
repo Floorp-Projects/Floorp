@@ -32,6 +32,7 @@ public:
   void Flush() override;
   void Drain() override;
   void Shutdown() override;
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
   const char* GetDescriptionName() const override { return "RemoteVideoDecoder"; }

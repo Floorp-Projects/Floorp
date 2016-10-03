@@ -102,6 +102,13 @@ RemoteVideoDecoder::Shutdown()
   }), NS_DISPATCH_NORMAL);
 }
 
+bool
+RemoteVideoDecoder::IsHardwareAccelerated(nsACString& aFailureReason) const
+{
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  return mActor->IsHardwareAccelerated(aFailureReason);
+}
+
 void
 RemoteVideoDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
 {
