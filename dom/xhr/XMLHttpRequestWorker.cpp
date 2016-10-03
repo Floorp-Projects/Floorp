@@ -1237,12 +1237,6 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
       return true;
     }
   }
-  else if (mType.EqualsASCII(sEventStrings[STRING_readystatechange])) {
-    if (mReadyState == 4 && !mUploadEvent && !mProxy->mSeenLoadStart) {
-      // We've already dispatched premature abort events.
-      return true;
-    }
-  }
 
   if (mProgressEvent) {
     // Cache these for premature abort events.
@@ -1307,6 +1301,13 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   XMLHttpRequestWorker* xhr = mProxy->mXMLHttpRequestPrivate;
   xhr->UpdateState(*state.get(), mUseCachedArrayBufferResponse);
+
+  if (mType.EqualsASCII(sEventStrings[STRING_readystatechange])) {
+    if (mReadyState == 4 && !mUploadEvent && !mProxy->mSeenLoadStart) {
+      // We've already dispatched premature abort events.
+      return true;
+    }
+  }
 
   if (mUploadEvent && !xhr->GetUploadObjectNoCreate()) {
     return true;
