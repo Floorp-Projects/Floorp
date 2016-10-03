@@ -18,7 +18,6 @@ include protocol PExternalHelperApp;
 include protocol PHandlerService;
 include protocol PDeviceStorageRequest;
 include protocol PFileDescriptorSet;
-include protocol PFMRadio;
 include protocol PHal;
 include protocol PHeapSnapshotTempFileHelper;
 include protocol PIcc;
@@ -238,40 +237,6 @@ struct DeviceStorageLocationInfo {
   nsString crashes;
 };
 
-struct FMRadioRequestEnableParams
-{
-  double frequency;
-};
-
-struct FMRadioRequestDisableParams
-{
-
-};
-
-struct FMRadioRequestSetFrequencyParams
-{
-  double frequency;
-};
-
-struct FMRadioRequestSeekParams
-{
-  bool upward;
-};
-
-struct FMRadioRequestCancelSeekParams
-{
-
-};
-
-union FMRadioRequestParams
-{
-  FMRadioRequestEnableParams;
-  FMRadioRequestDisableParams;
-  FMRadioRequestSetFrequencyParams;
-  FMRadioRequestSeekParams;
-  FMRadioRequestCancelSeekParams;
-};
-
 union PrefValue {
   nsCString;
   int32_t;
@@ -395,7 +360,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PPSMContentDownloader;
     manages PExternalHelperApp;
     manages PFileDescriptorSet;
-    manages PFMRadio;
     manages PHal;
     manages PHandlerService;
     manages PHeapSnapshotTempFileHelper;
@@ -873,8 +837,6 @@ parent:
     async PMedia();
 
     async PBluetooth();
-
-    async PFMRadio();
 
     async PWebrtcGlobal();
 

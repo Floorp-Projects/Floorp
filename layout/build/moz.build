@@ -85,11 +85,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         '/dom/system/gonk',
     ]
 
-if CONFIG['MOZ_B2G_FM']:
-    LOCAL_INCLUDES += [
-        '/dom/fmradio',
-    ]
-
 if CONFIG['MOZ_B2G_BT']:
     LOCAL_INCLUDES += [
         '/dom/bluetooth/common',
