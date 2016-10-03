@@ -477,6 +477,11 @@ private:
     return aMSG.message == WM_CHAR &&
            !IsControlChar(static_cast<char16_t>(aMSG.wParam));
   }
+  bool IsControlCharMessage(const MSG& aMSG) const
+  {
+    return IsCharMessage(aMSG.message) &&
+           IsControlChar(static_cast<char16_t>(aMSG.wParam));
+  }
 
   /**
    * IsReservedBySystem() returns true if the key combination is reserved by
