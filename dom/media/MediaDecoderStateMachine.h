@@ -730,8 +730,6 @@ private:
             VideoPrerollFrames() * mPlaybackRate + 1;
   }
 
-  void MaybeStopPrerolling();
-
   // When we start decoding (either for the first time, or after a pause)
   // we may be low on decoded data. We don't want our "low data" logic to
   // kick in and decide that we're low on decoded data because the download
