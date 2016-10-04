@@ -4061,11 +4061,11 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
       if (selfAlignment == NS_STYLE_ALIGN_BASELINE) {
         state |= ItemState::eFirstBaseline | ItemState::eSelfBaseline;
         const GridArea& area = gridItem.mArea;
-        baselineTrack = isOrthogonal ? area.mCols.mStart : area.mRows.mStart;
+        baselineTrack = isInlineAxis ? area.mCols.mStart : area.mRows.mStart;
       } else if (selfAlignment == NS_STYLE_ALIGN_LAST_BASELINE) {
         state |= ItemState::eLastBaseline | ItemState::eSelfBaseline;
         const GridArea& area = gridItem.mArea;
-        baselineTrack = (isOrthogonal ? area.mCols.mEnd : area.mRows.mEnd) - 1;
+        baselineTrack = (isInlineAxis ? area.mCols.mEnd : area.mRows.mEnd) - 1;
       }
 
       // [align|justify]-content:[last-]baseline.
@@ -4123,10 +4123,10 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
           const GridArea& area = gridItem.mArea;
           if (alignContent == NS_STYLE_ALIGN_BASELINE) {
             state |= ItemState::eFirstBaseline | ItemState::eContentBaseline;
-            baselineTrack = isOrthogonal ? area.mCols.mStart : area.mRows.mStart;
+            baselineTrack = isInlineAxis ? area.mCols.mStart : area.mRows.mStart;
           } else if (alignContent == NS_STYLE_ALIGN_LAST_BASELINE) {
             state |= ItemState::eLastBaseline | ItemState::eContentBaseline;
-            baselineTrack = (isOrthogonal ? area.mCols.mEnd : area.mRows.mEnd) - 1;
+            baselineTrack = (isInlineAxis ? area.mCols.mEnd : area.mRows.mEnd) - 1;
           }
         }
       }
