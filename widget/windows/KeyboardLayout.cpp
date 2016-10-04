@@ -2602,47 +2602,6 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     return consumed;
   }
 
-  // XXX It seems that following code was implemented for shortcut key
-  //     handling.  However, it's now handled in WM_KEYDOWN message handler.
-  //     So, this actually runs only when WM_CHAR is sent/posted without
-  //     WM_KEYDOWN.  I think that we don't need to keypress event in such
-  //     case especially for shortcut keys.
-  char16_t uniChar = static_cast<char16_t>(aCharMsg.wParam);
-
-  // Bug 50255 and Bug 351310: Keep the characters unshifted for shortcuts and
-  // accesskeys and make sure that numbers are always passed as such.
-  if (uniChar && (mModKeyState.IsControl() || mModKeyState.IsAlt())) {
-    char16_t unshiftedCharCode =
-      (mVirtualKeyCode >= '0' && mVirtualKeyCode <= '9') ?
-        mVirtualKeyCode :  mModKeyState.IsShift() ?
-                             ComputeUnicharFromScanCode() : 0;
-    // Ignore diacritics (top bit set) and key mapping errors (char code 0)
-    if (uniChar != unshiftedCharCode &&
-        static_cast<int32_t>(unshiftedCharCode) > 0) {
-      uniChar = unshiftedCharCode;
-      MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-        ("%p   NativeKey::HandleCharMessage(), adjusting computed charCode "
-         "because unshifted charCode is better, uniChar=%s, mModKeyState=%s",
-         this, GetCharacterCodeName(uniChar).get(),
-         ToString(mModKeyState).get()));
-    }
-  }
-
-  // Bug 285161 and Bug 295095: They were caused by the initial fix for
-  // bug 178110.  When pressing (alt|ctrl)+char, the char must be lowercase
-  // unless shift is pressed too.
-  if (!mModKeyState.IsShift() &&
-      (mModKeyState.IsAlt() || mModKeyState.IsControl()) &&
-      uniChar != towlower(uniChar)) {
-    uniChar = towlower(uniChar);
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-      ("%p   NativeKey::HandleCharMessage(), making computed charCode "
-       "lower case character because Shift isn't pressed but Ctrl or Alt is "
-       "pressed, uniChar=%s, mModKeyState=%s",
-       this, GetCharacterCodeName(uniChar).get(),
-       ToString(mModKeyState).get()));
-  }
-
   nsresult rv = mDispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_LOG(sNativeKeyLogger, LogLevel::Error,
@@ -2655,7 +2614,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     ("%p   NativeKey::HandleCharMessage(), initializing keypress "
      "event after some hacks...", this));
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-  keypressEvent.mCharCode = uniChar;
+  keypressEvent.mCharCode = static_cast<char16_t>(aCharMsg.wParam);
   if (!keypressEvent.mCharCode) {
     keypressEvent.mKeyCode = mDOMKeyCode;
   }
