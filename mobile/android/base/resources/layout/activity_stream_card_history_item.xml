@@ -37,6 +37,7 @@
             android:paddingStart="8dp"
             android:textSize="14sp"
             android:textStyle="bold"
+            android:textColor="#ff000000"
             tools:text="Descriptive title of a page..." />
 
         <TextView
@@ -47,6 +48,7 @@
             android:layout_alignParentRight="true"
             android:layout_below="@id/card_history_label"
             android:textSize="12sp"
+            android:textColor="#ffd2d2d2"
             tools:text="20m" />
     </RelativeLayout>
 </android.support.v7.widget.CardView>
