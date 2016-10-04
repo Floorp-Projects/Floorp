@@ -202,6 +202,15 @@ LoadDLLs()
 HRESULT
 MFStartup()
 {
+  if (!IsVistaOrLater()) {
+    // *Only* use WMF on Vista and later, as if Firefox is run in Windows 95
+    // compatibility mode on Windows 7 (it does happen!) we may crash trying
+    // to startup WMF. So we need to detect the OS version here, as in
+    // compatibility mode IsVistaOrLater() and friends behave as if we're on
+    // the emulated version of Windows. See bug 1279171.
+    return E_FAIL;
+  }
+
   HRESULT hr = LoadDLLs();
   if (FAILED(hr)) {
     return hr;
