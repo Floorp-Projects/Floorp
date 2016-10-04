@@ -709,6 +709,113 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
                   double aCoeff2, const nsCSSValueList* aList2);
 
 static double
+ComputeTransform2DMatrixDistance(const Matrix& aMatrix1,
+                                 const Matrix& aMatrix2)
+{
+  Point3D scale1(1, 1, 1);
+  Point3D translate1;
+  gfxQuaternion rotate1;
+  nsStyleTransformMatrix::ShearArray shear1;
+  for (auto&& s : shear1) {
+    s = 0.0f;
+  }
+  Decompose2DMatrix(aMatrix1, scale1, shear1, rotate1, translate1);
+
+  Point3D scale2(1, 1, 1);
+  Point3D translate2;
+  gfxQuaternion rotate2;
+  nsStyleTransformMatrix::ShearArray shear2;
+  for (auto&& s : shear2) {
+    s = 0.0f;
+  }
+  Decompose2DMatrix(aMatrix2, scale2, shear2, rotate2, translate2);
+
+  // Note:
+  // 1. Shear factor is the tangent value of shear angle, so we need to
+  //    call atan() to get the angle. For 2D transform, we only have XYSHEAR.
+  // 2. The quaternion vector of the decomposed 2d matrix is got by
+  //    "gfxQuaternion(0, 0, sin(rotate/2), cos(rotate/2))"
+  //                         ^^^^^^^^^^^^^  ^^^^^^^^^^^^^
+  //                               z              w
+  //    Therefore, we can get the rotate angle by 2 * atan2f(z, w).
+  //
+  //    However, we can also get the rotate angle by the inner product of
+  //    two quaternion vectors, just as what we do for eCSSKeyword_rotate3d.
+  //    e.g.
+  //      rotate3d(0, 0, 1, 60deg)  =>  rotate3d(0, 0, 1, 120deg);
+  //      quaternion 1: (0, 0, sin(30deg), cos(30deg)) = (0, 0, 1/2, sqrt(3)/2)
+  //      quaternion 2: (0, 0, sin(60deg), cos(60deg)) = (0, 0, sqrt(3)/2, 1/2)
+  //      inner product:  sqrt(3)/4 + sqrt(3)/4 = sqrt(3)/2
+  //      Finally, the rotate angle: 2 * acos(sqrt(3)/2) = 60deg
+  //
+  //    I think doing atan() may be faster than doing inner product together
+  //    with acos(), so let's adopt atan2f().
+  const Point3D diffTranslate = translate2 - translate1;
+  const Point3D diffScale = scale2 - scale1;
+  const double diffShear = atan(shear2[ShearType::XYSHEAR]) -
+                           atan(shear1[ShearType::XYSHEAR]);
+  const double diffRotate = 2.0 * (atan2f(rotate2.z, rotate2.w) -
+                                   atan2f(rotate1.z, rotate1.w));
+  // Returns the sum of squares because we will take a square root in
+  // ComputeTransformListDistance.
+  return diffTranslate.DotProduct(diffTranslate) +
+         diffScale.DotProduct(diffScale) +
+         diffRotate * diffRotate +
+         diffShear * diffShear;
+}
+
+static double
+ComputeTransform3DMatrixDistance(const Matrix4x4& aMatrix1,
+                                 const Matrix4x4& aMatrix2)
+{
+  Point3D scale1(1, 1, 1);
+  Point3D translate1;
+  Point4D perspective1(0, 0, 0, 1);
+  gfxQuaternion rotate1;
+  nsStyleTransformMatrix::ShearArray shear1;
+  for (auto&& s : shear1) {
+    s = 0.0f;
+  }
+  Decompose3DMatrix(aMatrix1, scale1, shear1, rotate1, translate1,
+                    perspective1);
+
+  Point3D scale2(1, 1, 1);
+  Point3D translate2;
+  Point4D perspective2(0, 0, 0, 1);
+  gfxQuaternion rotate2;
+  nsStyleTransformMatrix::ShearArray shear2;
+  for (auto&& s : shear2) {
+    s = 0.0f;
+  }
+  Decompose3DMatrix(aMatrix2, scale2, shear2, rotate2, translate2,
+                    perspective2);
+
+  // Note:
+  // 1. Shear factor is the tangent value of shear angle, so we need to
+  //    call atan() to get the angle.
+  // 2. We use the same way to get the rotate angle of two quaternion vectors as
+  //    what we do for rotate3d.
+  const Point3D diffTranslate = translate2 - translate1;
+  const Point3D diffScale = scale2 - scale1;
+  const Point3D diffShear(atan(shear2[ShearType::XYSHEAR]) -
+                            atan(shear1[ShearType::XYSHEAR]),
+                          atan(shear2[ShearType::XZSHEAR]) -
+                            atan(shear1[ShearType::XZSHEAR]),
+                          atan(shear2[ShearType::YZSHEAR]) -
+                            atan(shear1[ShearType::YZSHEAR]));
+  const Point4D diffPerspective = perspective2 - perspective1;
+  const double dot = clamped(rotate1.DotProduct(rotate2), -1.0, 1.0);
+  const double diffRotate = 2.0 * acos(dot);
+  // Returns the sum of squares because we will take a square root in
+  // ComputeTransformListDistance.
+  return diffTranslate.DotProduct(diffTranslate) +
+         diffScale.DotProduct(diffScale) +
+         diffPerspective.DotProduct(diffPerspective) +
+         diffShear.DotProduct(diffShear) +
+         diffRotate * diffRotate;
+}
+
+static double
 ComputeTransformDistance(nsCSSValue::Array* aArray1,
                          nsCSSValue::Array* aArray2)
 {
@@ -819,12 +926,24 @@ ComputeTransformDistance(nsCSSValue::Array* aArray1,
       // TODO: This will be fixed in the later patch.
       distance = 0.0;
       break;
-    case eCSSKeyword_matrix:
-    case eCSSKeyword_matrix3d:
-      // TODO: decompose matrix and calculate distance. This will be fixed in
-      // the later patch.
-      distance = 0.0;
+    case eCSSKeyword_matrix: {
+      MOZ_ASSERT(a1->Count() == 7, "unexpected count");
+      MOZ_ASSERT(a2->Count() == 7, "unexpected count");
+
+      distance = ComputeTransform2DMatrixDistance(
+        nsStyleTransformMatrix::CSSValueArrayTo2DMatrix(a1),
+        nsStyleTransformMatrix::CSSValueArrayTo2DMatrix(a2));
       break;
+    }
+    case eCSSKeyword_matrix3d: {
+      MOZ_ASSERT(a1->Count() == 17, "unexpected count");
+      MOZ_ASSERT(a2->Count() == 17, "unexpected count");
+
+      distance = ComputeTransform3DMatrixDistance(
+        nsStyleTransformMatrix::CSSValueArrayTo3DMatrix(a1),
+        nsStyleTransformMatrix::CSSValueArrayTo3DMatrix(a2));
+      break;
+    }
     case eCSSKeyword_interpolatematrix:
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported transform function");

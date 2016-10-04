@@ -1033,4 +1033,33 @@ Decompose3DMatrix(const Matrix4x4& aMatrix,
   return true;
 }
 
+Matrix
+CSSValueArrayTo2DMatrix(nsCSSValue::Array* aArray)
+{
+  MOZ_ASSERT(aArray &&
+             TransformFunctionOf(aArray) == eCSSKeyword_matrix &&
+             aArray->Count() == 7);
+  Matrix m(aArray->Item(1).GetFloatValue(),
+           aArray->Item(2).GetFloatValue(),
+           aArray->Item(3).GetFloatValue(),
+           aArray->Item(4).GetFloatValue(),
+           aArray->Item(5).GetFloatValue(),
+           aArray->Item(6).GetFloatValue());
+  return m;
+}
+
+Matrix4x4
+CSSValueArrayTo3DMatrix(nsCSSValue::Array* aArray)
+{
+  MOZ_ASSERT(aArray &&
+             TransformFunctionOf(aArray) == eCSSKeyword_matrix3d &&
+             aArray->Count() == 17);
+  gfx::Float array[16];
+  for (size_t i = 0; i < 16; ++i) {
+    array[i] = aArray->Item(i+1).GetFloatValue();
+  }
+  Matrix4x4 m(array);
+  return m;
+}
+
 } // namespace nsStyleTransformMatrix
