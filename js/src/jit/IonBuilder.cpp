@@ -165,6 +165,7 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileCompartment* comp,
 
     MOZ_ASSERT(script()->hasBaselineScript() == (info->analysisMode() != Analysis_ArgumentsUsage));
     MOZ_ASSERT(!!analysisContext == (info->analysisMode() == Analysis_DefiniteProperties));
+    MOZ_ASSERT(script_->nTypeSets() < UINT16_MAX);
 
     if (!info->isAnalysis())
         script()->baselineScript()->setIonCompiledOrInlined();
