@@ -803,11 +803,6 @@ def js_option(*args, **kwargs):
     add_old_configure_arg(js_option)
 
 
-include('pkg.configure')
-# Make this assignment here rather than in pkg.configure to avoid
-# requiring this file in unit tests.
-add_old_configure_assignment('PKG_CONFIG', pkg_config)
-
 # Bug 1278542: This function is a workaround to resolve
 # |android_ndk_include|'s dependency on 'gonkdir.' The
 # actual implementation is located in b2g/moz.configure.
