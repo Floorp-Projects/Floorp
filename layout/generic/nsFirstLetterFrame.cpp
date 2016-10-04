@@ -101,12 +101,11 @@ nsFirstLetterFrame::GetChildFrameContainingOffset(int32_t inContentOffset,
                                                   nsIFrame **outChildFrame)
 {
   nsIFrame *kid = mFrames.FirstChild();
-  if (kid)
-  {
+  if (kid) {
     return kid->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
-  }
-  else
+  } else {
     return nsFrame::GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
+  }
 }
 
 // Needed for non-floating first-letter frames and for the continuations
@@ -240,8 +239,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     ConsiderChildOverflow(aMetrics.mOverflowAreas, kid);
 
     FinishAndStoreOverflow(&aMetrics);
-  }
-  else {
+  } else {
     // Pretend we are a span and reflow the child frame
     nsLineLayout* ll = aReflowInput.mLineLayout;
     bool          pushedFrame;
@@ -273,8 +271,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
         // Remove all of the childs next-in-flows
         kidNextInFlow->GetParent()->DeleteNextInFlowChild(kidNextInFlow, true);
       }
-    }
-    else {
+    } else {
       // Create a continuation for the child frame if it doesn't already
       // have one.
       if (!IsFloating()) {
