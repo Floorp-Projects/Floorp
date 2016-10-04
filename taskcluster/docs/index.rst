@@ -22,6 +22,7 @@ check out the :doc:`how-to section <how-tos>`.
 .. toctree::
 
     taskgraph
+    loading
     transforms
     yaml-templates
     docker-images
