@@ -1784,7 +1784,7 @@ DataViewObject::getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, doubl
 static inline bool
 needToSwapBytes(bool littleEndian)
 {
-#if MOZ_LITTLE_ENDIAN
+#if IS_LITTLE_ENDIAN
     return !littleEndian;
 #else
     return littleEndian;

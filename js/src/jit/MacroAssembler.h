@@ -179,7 +179,7 @@ using mozilla::FloatingPoint;
 # define PER_SHARED_ARCH DEFINED_ON(ALL_SHARED_ARCH)
 
 
-#ifdef MOZ_LITTLE_ENDIAN
+#ifdef IS_LITTLE_ENDIAN
 #define IMM32_16ADJ(X) X << 16
 #else
 #define IMM32_16ADJ(X) X
