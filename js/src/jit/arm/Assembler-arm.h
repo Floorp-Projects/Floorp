@@ -55,6 +55,11 @@ struct ScratchRegisterScope : public AutoRegisterScope
     { }
 };
 
+struct SecondScratchRegisterScope : public AutoRegisterScope
+{
+    explicit SecondScratchRegisterScope(MacroAssembler& masm);
+};
+
 static constexpr Register OsrFrameReg = r3;
 static constexpr Register ArgumentsRectifierReg = r8;
 static constexpr Register CallTempReg0 = r5;
@@ -409,7 +414,7 @@ enum VFPOp {
 };
 
 // Negate the operation, AND negate the immediate that we were passed in.
-ALUOp ALUNeg(ALUOp op, Register dest, Imm32* imm, Register* negDest);
+ALUOp ALUNeg(ALUOp op, Register dest, Register scratch, Imm32* imm, Register* negDest);
 bool can_dbl(ALUOp op);
 bool condsAreSafe(ALUOp op);
 
