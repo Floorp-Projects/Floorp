@@ -2150,6 +2150,18 @@ JsepSessionImpl::SetupDefaultCodecs()
                                     8 * 8000 * 1 // 8 * frequency * channels
                                     ));
 
+  // note: because telephone-event is effectively a marker codec that indicates
+  // that dtmf rtp packets may be passed, the packetSize and bitRate fields
+  // don't make sense here.  For now, use zero. (mjf)
+  mSupportedCodecs.values.push_back(
+      new JsepAudioCodecDescription("101",
+                                    "telephone-event",
+                                    8000,
+                                    1,
+                                    0, // packetSize doesn't make sense here
+                                    0  // bitRate doesn't make sense here
+                                    ));
+
   // Supported video codecs.
   // Note: order here implies priority for building offers!
   JsepVideoCodecDescription* vp8 = new JsepVideoCodecDescription(

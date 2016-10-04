@@ -3,6 +3,8 @@
 
 "use strict";
 
+const { PREFS } = require("devtools/client/webconsole/new-console-output/constants");
+
 module.exports = {
   prefs: {
     getIntPref: pref => {
@@ -12,10 +14,14 @@ module.exports = {
       }
     },
     getBoolPref: pref => {
-      switch (pref) {
-        default:
-          return true;
-      }
-    }
+      const falsey = [
+        PREFS.FILTER.NET,
+        PREFS.FILTER.NETXHR,
+        PREFS.UI.FILTER_BAR,
+      ];
+      return !falsey.includes(pref);
+    },
+    setBoolPref: () => {},
+    clearUserPref: () => {},
   }
 };

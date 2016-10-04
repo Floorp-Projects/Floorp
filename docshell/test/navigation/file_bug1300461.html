@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Bug 1300461</title>
+  </head>
+  <body onload="test();">
+    <script>
+      /**
+       * Bug 1300461 identifies that if a history entry was not bfcached, and
+       * a http redirection happens when navigating to that entry, the history
+       * index would mess up.
+       *
+       * The test case emulates the circumstance by the following steps
+       * 1) Navigate to file_bug1300461_back.html which is not bf-cachable.
+       * 2) In file_bug1300461_back.html, replace its own history state to
+       *    file_bug1300461_redirect.html.
+       * 3) Back, and then forward. Since the document is not in bfcache, it
+       *    tries to load file_bug1300461_redirect.html directly.
+       * 4) file_bug1300461_redirect.html redirects UA to
+       *    file_bug1300461_back.html through HTTP 301 header.
+       *
+       * We verify the history index, canGoBack, canGoForward, etc. keep correct
+       * in this process.
+       */
+      let Ci = SpecialPowers.Ci;
+      let webNav = SpecialPowers.wrap(window)
+                     .QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation);
+      let shistory = webNav.sessionHistory;
+      let testSteps = [
+        function() {
+          opener.is(shistory.count, 1, 'check history length');
+          opener.is(shistory.index, 0, 'check history index');
+          opener.ok(!webNav.canGoForward, 'check canGoForward');
+          setTimeout(() => window.location = 'file_bug1300461_back.html', 0);
+        },
+        function() {
+          opener.is(shistory.count, 2, 'check history length');
+          opener.is(shistory.index, 0, 'check history index');
+          opener.ok(webNav.canGoForward, 'check canGoForward');
+          window.history.forward();
+          opener.is(shistory.requestedIndex, 1, 'check requestedIndex');
+        },
+        function() {
+          opener.is(shistory.count, 2, 'check history length');
+          opener.is(shistory.index, 0, 'check history index');
+          opener.ok(webNav.canGoForward, 'check canGoForward');
+          opener.info('file_bug1300461.html tests finished');
+          opener.nextTest();
+          window.close();
+        }
+      ];
+
+      function test() {
+        if (opener) {
+          opener.info('file_bug1300461.html test ' + opener.testCount);
+          testSteps[opener.testCount++]();
+        }
+      }
+    </script>
+  </body>
+</html>

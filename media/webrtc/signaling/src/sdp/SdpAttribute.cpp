@@ -1131,6 +1131,7 @@ ShouldSerializeChannels(SdpRtpmapAttributeList::CodecType type)
     case SdpRtpmapAttributeList::kH264:
     case SdpRtpmapAttributeList::kRed:
     case SdpRtpmapAttributeList::kUlpfec:
+    case SdpRtpmapAttributeList::kTelephoneEvent:
       return false;
     case SdpRtpmapAttributeList::kOtherCodec:
       return true;

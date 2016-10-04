@@ -110,14 +110,17 @@ add_task(function* test_multiple_no_id_extensions() {
     version: "1.0"
   };
 
-  const firstAddonDir = yield promiseWriteWebManifestForExtension(manifest, gTmpD,
-                                                     "addon-sub-dir-one");
-  const secondAddonDir = yield promiseWriteWebManifestForExtension(manifest, gTmpD,
-                                                      "addon-sub-dir-two");
-  const [firstAddon, secondAddon] = yield Promise.all([
-    AddonManager.installTemporaryAddon(firstAddonDir),
-    AddonManager.installTemporaryAddon(secondAddonDir)
-  ]);
+  let extension1 = ExtensionTestUtils.loadExtension({
+    manifest: manifest,
+    useAddonManager: "temporary",
+  });
+
+  let extension2 = ExtensionTestUtils.loadExtension({
+    manifest: manifest,
+    useAddonManager: "temporary",
+  });
+
+  yield Promise.all([extension1.startup(), extension2.startup()]);
 
   const allAddons = yield new Promise(resolve => {
     AddonManager.getAllAddons(addons => resolve(addons));
@@ -127,12 +130,8 @@ add_task(function* test_multiple_no_id_extensions() {
   // Make sure we have two add-ons by the same name.
   equal(filtered.length, 2, "Two add-ons are installed with the same name");
 
-  firstAddon.uninstall();
-  Services.obs.notifyObservers(firstAddonDir, "flush-cache-entry", null);
-  firstAddonDir.remove(true);
-  secondAddon.uninstall();
-  Services.obs.notifyObservers(secondAddonDir, "flush-cache-entry", null);
-  secondAddonDir.remove(true);
+  yield extension1.unload();
+  yield extension2.unload();
   AddonTestUtils.useRealCertChecks = false;
 });
 
@@ -156,13 +155,16 @@ add_task(function* test_bss_id() {
   let addon = yield promiseAddonByID(ID);
   equal(addon, null, "Add-on is not installed");
 
-  yield promiseWriteWebManifestForExtension(manifest, profileDir, ID);
-  yield promiseRestartManager();
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: manifest,
+    useAddonManager: "temporary",
+  });
+  yield extension.startup();
 
   addon = yield promiseAddonByID(ID);
   notEqual(addon, null, "Add-on is installed");
 
-  addon.uninstall();
+  yield extension.unload();
 });
 
 // Test that if we have IDs in both browser_specific_settings and applications,
@@ -190,15 +192,18 @@ add_task(function* test_two_ids() {
     }
   }
 
-  yield promiseWriteWebManifestForExtension(manifest, profileDir, GOOD_ID);
-  yield promiseRestartManager();
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: manifest,
+    useAddonManager: "temporary",
+  });
+  yield extension.startup();
 
   let addon = yield promiseAddonByID(BAD_ID);
   equal(addon, null, "Add-on is not found using bad ID");
   addon = yield promiseAddonByID(GOOD_ID);
   notEqual(addon, null, "Add-on is found using good ID");
 
-  addon.uninstall();
+  yield extension.unload();
 });
 
 // Test that strict_min_version and strict_max_version are enforced for
@@ -213,12 +218,6 @@ add_task(function* test_strict_min_max() {
     version: "1.0",
   };
 
-  function flushAndRemove(file) {
-    // flush JAR cache and remove the file
-    Services.obs.notifyObservers(file, "flush-cache-entry", null);
-    file.remove(true);
-  }
-
   // bad max good min
   let apps = {
     applications: {
@@ -231,18 +230,19 @@ add_task(function* test_strict_min_max() {
   }
   let testManifest = Object.assign(apps, MANIFEST);
 
-  let addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                              "the-addon-sub-dir");
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: testManifest,
+    useAddonManager: "temporary",
+  });
 
   let expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
                                "add-on minVersion: 1. add-on maxVersion: 1.");
-  yield Assert.rejects(AddonManager.installTemporaryAddon(addonDir),
+  yield Assert.rejects(extension.startup(),
                        expectedMsg,
                        "Install rejects when specified maxVersion is not valid");
 
   let addon = yield promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
-  flushAndRemove(addonDir);
 
   // bad min good max
   apps = {
@@ -256,18 +256,19 @@ add_task(function* test_strict_min_max() {
   }
   testManifest = Object.assign(apps, MANIFEST);
 
-  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                          "the-addon-sub-dir");
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: testManifest,
+    useAddonManager: "temporary",
+  });
 
   expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
-                               "add-on minVersion: 2. add-on maxVersion: 2.");
-  yield Assert.rejects(AddonManager.installTemporaryAddon(addonDir),
+                           "add-on minVersion: 2. add-on maxVersion: 2.");
+  yield Assert.rejects(extension.startup(),
                        expectedMsg,
                        "Install rejects when specified minVersion is not valid");
 
   addon = yield promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
-  flushAndRemove(addonDir);
 
   // bad both
   apps = {
@@ -281,18 +282,19 @@ add_task(function* test_strict_min_max() {
   }
   testManifest = Object.assign(apps, MANIFEST);
 
-  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                          "the-addon-sub-dir");
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: testManifest,
+    useAddonManager: "temporary",
+  });
 
   expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
-                               "add-on minVersion: 2. add-on maxVersion: 1.");
-  yield Assert.rejects(AddonManager.installTemporaryAddon(addonDir),
+                           "add-on minVersion: 2. add-on maxVersion: 1.");
+  yield Assert.rejects(extension.startup(),
                        expectedMsg,
                        "Install rejects when specified minVersion and maxVersion are not valid");
 
   addon = yield promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
-  flushAndRemove(addonDir);
 
   // bad only min
   apps = {
@@ -305,18 +307,19 @@ add_task(function* test_strict_min_max() {
   }
   testManifest = Object.assign(apps, MANIFEST);
 
-  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                          "the-addon-sub-dir");
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: testManifest,
+    useAddonManager: "temporary",
+  });
 
   expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version\. " +
                            "add-on minVersion: 2\.");
-  yield Assert.rejects(AddonManager.installTemporaryAddon(addonDir),
+  yield Assert.rejects(extension.startup(),
                        expectedMsg,
                        "Install rejects when specified minVersion and maxVersion are not valid");
 
   addon = yield promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
-  flushAndRemove(addonDir);
 
   // bad only max
   apps = {
@@ -329,18 +332,19 @@ add_task(function* test_strict_min_max() {
   }
   testManifest = Object.assign(apps, MANIFEST);
 
-  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                          "the-addon-sub-dir");
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: testManifest,
+    useAddonManager: "temporary",
+  });
 
   expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version\. " +
                            "add-on maxVersion: 1\.");
-  yield Assert.rejects(AddonManager.installTemporaryAddon(addonDir),
+  yield Assert.rejects(extension.startup(),
                        expectedMsg,
                        "Install rejects when specified minVersion and maxVersion are not valid");
 
   addon = yield promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
-  flushAndRemove(addonDir);
 
   // good both
   apps = {
@@ -354,16 +358,17 @@ add_task(function* test_strict_min_max() {
   }
   testManifest = Object.assign(apps, MANIFEST);
 
-  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                          "strict_min_max");
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: testManifest,
+    useAddonManager: "temporary",
+  });
 
-  yield AddonManager.installTemporaryAddon(addonDir);
+  yield extension.startup();
   addon = yield promiseAddonByID(addonId);
 
   notEqual(addon, null, "Add-on is installed");
   equal(addon.id, addonId, "Installed add-on has the expected ID");
-  addon.uninstall();
-  flushAndRemove(addonDir);
+  yield extension.unload();
 
   // good only min
   let newId = "strict_min_only@tests.mozilla.org";
@@ -377,17 +382,18 @@ add_task(function* test_strict_min_max() {
   }
   testManifest = Object.assign(apps, MANIFEST);
 
-  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                          "strict_min_only");
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: testManifest,
+    useAddonManager: "temporary",
+  });
 
-  yield AddonManager.installTemporaryAddon(addonDir);
+  yield extension.startup();
   addon = yield promiseAddonByID(newId);
 
   notEqual(addon, null, "Add-on is installed");
   equal(addon.id, newId, "Installed add-on has the expected ID");
 
-  addon.uninstall();
-  flushAndRemove(addonDir);
+  yield extension.unload();
 
   // good only max
   newId = "strict_max_only@tests.mozilla.org";
@@ -401,17 +407,18 @@ add_task(function* test_strict_min_max() {
   }
   testManifest = Object.assign(apps, MANIFEST);
 
-  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                          "strict_max_only");
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: testManifest,
+    useAddonManager: "temporary",
+  });
 
-  yield AddonManager.installTemporaryAddon(addonDir);
+  yield extension.startup();
   addon = yield promiseAddonByID(newId);
 
   notEqual(addon, null, "Add-on is installed");
   equal(addon.id, newId, "Installed add-on has the expected ID");
 
-  addon.uninstall();
-  flushAndRemove(addonDir);
+  yield extension.unload();
 
   // * in min will throw an error
   for (let version of ["0.*", "0.*.0"]) {
@@ -427,17 +434,18 @@ add_task(function* test_strict_min_max() {
 
     let testManifest = Object.assign(apps, MANIFEST);
 
-    let addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                                             "strict_min_star");
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: testManifest,
+      useAddonManager: "temporary",
+    });
 
     yield Assert.rejects(
-      AddonManager.installTemporaryAddon(addonDir),
+      extension.startup(),
       /The use of '\*' in strict_min_version is invalid/,
       "loading an extension with a * in strict_min_version throws an exception");
 
     let addon = yield promiseAddonByID(newId);
     equal(addon, null, "Add-on is not installed");
-    flushAndRemove(addonDir);
   }
 
   // incompatible extension but with compatibility checking off
@@ -452,18 +460,19 @@ add_task(function* test_strict_min_max() {
   }
   testManifest = Object.assign(apps, MANIFEST);
 
-  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
-                                          "checkCompatibility");
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: testManifest,
+    useAddonManager: "temporary",
+  });
 
   let savedCheckCompatibilityValue = AddonManager.checkCompatibility;
   AddonManager.checkCompatibility = false;
-  yield AddonManager.installTemporaryAddon(addonDir);
+  yield extension.startup();
   addon = yield promiseAddonByID(newId);
 
   notEqual(addon, null, "Add-on is installed");
   equal(addon.id, newId, "Installed add-on has the expected ID");
 
-  addon.uninstall();
-  flushAndRemove(addonDir);
+  yield extension.unload();
   AddonManager.checkCompatibility = savedCheckCompatibilityValue;
 });
