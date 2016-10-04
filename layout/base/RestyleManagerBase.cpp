@@ -678,16 +678,14 @@ FrameHasPositionedPlaceholderDescendants(nsIFrame* aFrame,
         }
       }
       uint32_t positionMask = aPositionMask;
-      // Is it faster to check aPositionMask & (1 << NS_STYLE_POSITION_ABSOLUTE)
-      // before we check IsAbsPosContainingBlock?  Not clear....
-      if (f->IsAbsPosContainingBlock()) {
-        if (f->IsFixedPosContainingBlock()) {
-          continue;
-        }
-        // We don't care about absolutely positioned things inside f, because
-        // they will still use f as their containing block.
-        positionMask = (1 << NS_STYLE_POSITION_FIXED);
-      }
+      // NOTE:  It's tempting to check f->IsAbsPosContainingBlock() or
+      // f->IsFixedPosContainingBlock() here.  However, that would only
+      // be testing the *new* style of the frame, which might exclude
+      // descendants that currently have this frame as an abs-pos
+      // containing block.  Taking the codepath where we don't reframe
+      // could lead to an unsafe call to
+      // cont->MarkAsNotAbsoluteContainingBlock() before we've reframed
+      // the descendant and taken it off the absolute list.
       if (FrameHasPositionedPlaceholderDescendants(f, positionMask)) {
         return true;
       }
@@ -1135,7 +1133,17 @@ RestyleManagerBase::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
             }
           } else {
             if (cont->IsAbsoluteContainer()) {
-              cont->MarkAsNotAbsoluteContainingBlock();
+              if (cont->HasAbsolutelyPositionedChildren()) {
+                // If |cont| still has absolutely positioned children,
+                // we can't call MarkAsNotAbsoluteContainingBlock.  This
+                // will remove a frame list that still has children in
+                // it that we need to keep track of.
+                // The optimization of removing it isn't particularly
+                // important, although it does mean we skip some tests.
+                NS_WARNING("skipping removal of absolute containing block");
+              } else {
+                cont->MarkAsNotAbsoluteContainingBlock();
+              }
             }
           }
         }
