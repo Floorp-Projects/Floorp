@@ -1388,13 +1388,6 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
                     nsresult aException,
                     uint32_t aSystemCode,
                     const nsCString& aMessage) override {}
-  void KeyStatusChanged(const nsCString& aSessionId,
-                        const nsTArray<uint8_t>& aKeyId,
-                        mozilla::dom::MediaKeyStatus aStatus) override { }
-
-  void ForgetKeyStatus(const nsCString& aSessionId,
-                       const nsTArray<uint8_t>& aKeyId) override { }
-
   void Decrypted(uint32_t aId,
                  mozilla::DecryptStatus aResult,
                  const nsTArray<uint8_t>& aDecryptedData) override { }

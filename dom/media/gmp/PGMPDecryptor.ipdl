@@ -78,11 +78,6 @@ parent:
                      uint32_t aSystemCode,
                      nsCString aMessage);
 
-  async KeyStatusChanged(nsCString aSessionId, uint8_t[] aKey,
-                         GMPMediaKeyStatus aStatus);
-
-  async ForgetKeyStatus(nsCString aSessionId, uint8_t[] aKey);
-
   async Decrypted(uint32_t aId, GMPErr aResult, uint8_t[] aBuffer);
 
   async Shutdown();
