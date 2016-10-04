@@ -1842,11 +1842,6 @@ void MediaDecoderStateMachine::VisibilityChanged()
     return;
   }
 
-  // If not playing then there's nothing to do.
-  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
-    return;
-  }
-
   // Start timer to trigger suspended decoding state when going invisible.
   if (!mIsVisible) {
     TimeStamp target = TimeStamp::Now() + SuspendBackgroundVideoDelay();
