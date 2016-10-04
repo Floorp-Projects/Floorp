@@ -8,7 +8,6 @@
 #include "prlink.h"
 
 #include "nsBidiKeyboard.h"
-#include "WidgetUtils.h"
 #include <gtk/gtk.h>
 
 NS_IMPL_ISUPPORTS(nsBidiKeyboard, nsIBidiKeyboard)
@@ -31,7 +30,6 @@ nsBidiKeyboard::Reset()
 
     GdkKeymap *keymap = gdk_keymap_get_for_display(display);
     mHaveBidiKeyboards = keymap && gdk_keymap_have_bidi_layouts(keymap);
-    mozilla::widget::WidgetUtils::SendBidiKeyboardInfoToContent();
     return NS_OK;
 }
 
