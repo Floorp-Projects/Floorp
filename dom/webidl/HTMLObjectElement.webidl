@@ -32,8 +32,10 @@ interface HTMLObjectElement : HTMLElement {
   [Pure, SetterThrows]
            attribute DOMString height;
   // Not pure: can trigger about:blank instantiation
+  [NeedsSubjectPrincipal]
   readonly attribute Document? contentDocument;
   // Not pure: can trigger about:blank instantiation
+  [NeedsSubjectPrincipal]
   readonly attribute WindowProxy? contentWindow;
 
   readonly attribute boolean willValidate;
@@ -74,6 +76,7 @@ partial interface HTMLObjectElement {
 
 partial interface HTMLObjectElement {
   // GetSVGDocument
+  [NeedsSubjectPrincipal]
   Document? getSVGDocument();
 };
 

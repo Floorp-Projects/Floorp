@@ -210,8 +210,14 @@ public:
              mozilla::ErrorResult& rv);
   void Writeln(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
                mozilla::ErrorResult& rv);
-  // The XPCOM GetDesignMode() works OK for us, since it never throws.
-  void SetDesignMode(const nsAString& aDesignMode, mozilla::ErrorResult& rv);
+  void GetDesignMode(nsAString& aDesignMode,
+                     const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal)
+  {
+    GetDesignMode(aDesignMode);
+  }
+  void SetDesignMode(const nsAString& aDesignMode,
+                     const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                     mozilla::ErrorResult& rv);
   bool ExecCommand(const nsAString& aCommandID, bool aDoShowUI,
                    const nsAString& aValue, mozilla::ErrorResult& rv);
   bool QueryCommandEnabled(const nsAString& aCommandID,
