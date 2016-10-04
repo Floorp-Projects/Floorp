@@ -54,6 +54,9 @@ public:
                  DecryptStatus aResult,
                  const nsTArray<uint8_t>& aDecryptedData) override;
 
+  void BatchedKeyStatusChanged(const nsCString& aSessionId,
+                               const nsTArray<CDMKeyInfo>& aKeyInfos) override;
+
   void Terminated() override;
 
   ~GMPCDMCallbackProxy() {}
@@ -65,6 +68,8 @@ private:
                                 const nsTArray<uint8_t>& aKeyId,
                                 const dom::Optional<dom::MediaKeyStatus>& aStatus);
 
+  void BatchedKeyStatusChangedInternal(const nsCString& aSessionId,
+                                       const nsTArray<CDMKeyInfo>& aKeyInfos);
   // Warning: Weak ref.
   CDMProxy* mProxy;
 };

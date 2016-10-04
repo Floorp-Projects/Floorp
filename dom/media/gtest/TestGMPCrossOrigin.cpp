@@ -1398,6 +1398,10 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   void Decrypted(uint32_t aId,
                  mozilla::DecryptStatus aResult,
                  const nsTArray<uint8_t>& aDecryptedData) override { }
+
+  void BatchedKeyStatusChanged(const nsCString& aSessionId,
+                               const nsTArray<CDMKeyInfo>& aKeyInfos) override { }
+
   void Terminated() override {
     if (mDecryptor) {
       mDecryptor->Close();
