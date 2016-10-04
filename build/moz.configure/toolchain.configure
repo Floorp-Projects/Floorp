@@ -345,16 +345,20 @@ def check_compiler(compiler, language, target):
     # Note: MSVC, while supporting C++11, still reports 199711L for __cplusplus.
     # Note: this is a strict version check because we used to always add
     # -std=gnu++11.
-    if info.language == 'C++' and info.language_version != 201103:
-        if info.type in ('clang-cl', 'clang', 'gcc'):
+    if info.language == 'C++':
+        if info.type in ('clang', 'gcc') and info.language_version != 201103:
             append_flag('-std=gnu++11')
+        # MSVC 2015 headers include C++14 features, but don't guard them
+        # with appropriate checks.
+        if info.type == 'clang-cl' and info.language_version != 201402:
+            append_flag('-std=c++14')
 
-    # We force clang-cl to emulate Visual C++ 2013 Update 3 with fallback to
+    # We force clang-cl to emulate Visual C++ 2015 Update 2 with fallback to
     # cl.exe.
-    if info.type == 'clang-cl' and info.version != '18.00.30723':
+    if info.type == 'clang-cl' and info.version != '19.00.23918':
         # Those flags are direct clang-cl flags that don't need -Xclang, add
         # them directly.
-        flags.append('-fms-compatibility-version=18.00.30723')
+        flags.append('-fms-compatibility-version=19.00.23918')
         flags.append('-fallback')
 
     # Check compiler target
