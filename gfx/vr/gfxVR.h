@@ -24,11 +24,11 @@ namespace gfx {
 class VRLayerParent;
 class VRDisplayHost;
 
-enum class VRDisplayType : uint16_t {
+enum class VRDeviceType : uint16_t {
   Oculus,
   OpenVR,
   OSVR,
-  NumVRDisplayTypes
+  NumVRDeviceTypes
 };
 
 enum class VRDisplayCapabilityFlags : uint16_t {
@@ -122,7 +122,7 @@ struct VRFieldOfView {
 
 struct VRDisplayInfo
 {
-  VRDisplayType GetType() const { return mType; }
+  VRDeviceType GetType() const { return mType; }
   uint32_t GetDisplayID() const { return mDisplayID; }
   const nsCString& GetDisplayName() const { return mDisplayName; }
   VRDisplayCapabilityFlags GetCapabilities() const { return mCapabilityFlags; }
@@ -142,7 +142,7 @@ struct VRDisplayInfo
   };
 
   uint32_t mDisplayID;
-  VRDisplayType mType;
+  VRDeviceType mType;
   nsCString mDisplayName;
   VRDisplayCapabilityFlags mCapabilityFlags;
   VRFieldOfView mEyeFOV[VRDisplayInfo::NumEyes];

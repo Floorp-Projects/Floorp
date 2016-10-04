@@ -85,7 +85,7 @@ LoadOpenVRRuntime()
 VRDisplayOpenVR::VRDisplayOpenVR(::vr::IVRSystem *aVRSystem,
                                  ::vr::IVRChaperone *aVRChaperone,
                                  ::vr::IVRCompositor *aVRCompositor)
-  : VRDisplayHost(VRDisplayType::OpenVR)
+  : VRDisplayHost(VRDeviceType::OpenVR)
   , mVRSystem(aVRSystem)
   , mVRChaperone(aVRChaperone)
   , mVRCompositor(aVRCompositor)

@@ -19,7 +19,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-VRDisplayHost::VRDisplayHost(VRDisplayType aType)
+VRDisplayHost::VRDisplayHost(VRDeviceType aType)
   : mInputFrameID(0)
 {
   MOZ_COUNT_CTOR(VRDisplayHost);
