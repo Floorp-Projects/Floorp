@@ -74,7 +74,7 @@ var ParentUtils = {
           expectedCount <= 1 ||
           gAutocompletePopup.tree.view.getCellText(0, gAutocompletePopup.tree.columns[0]) ===
           expectedFirstValue);
-    }).then(() => {
+    }, "Waiting for row count change: " + expectedCount + " First value: " + expectedFirstValue).then(() => {
       let results = this.getMenuEntries();
       sendAsyncMessage("gotMenuChange", { results });
     });
@@ -84,7 +84,7 @@ var ParentUtils = {
     ContentTaskUtils.waitForCondition(() => {
       return gAutocompletePopup.popupOpen &&
              gAutocompletePopup.selectedIndex === expectedIndex;
-    }).then(() => {
+    }, "Checking selected index").then(() => {
       sendAsyncMessage("gotSelectedIndex");
     });
   },

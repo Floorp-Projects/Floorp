@@ -434,6 +434,7 @@ add_task(function* test_form1_delete() {
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 5, "Correct number of logins before deleting one");
 
+  let countChangedPromise = notifyMenuChanged(3);
   var deletionPromise = promiseStorageChanged(["removeLogin"]);
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
@@ -443,7 +444,7 @@ add_task(function* test_form1_delete() {
   checkACForm("", "");
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 4, "Correct number of logins after deleting one");
-  notifyMenuChanged(4);
+  yield countChangedPromise;
   doKey("return");
   yield promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
