@@ -37,12 +37,17 @@
 
     <TextView
         android:id="@+id/title_highlights"
-        android:padding="4dp"
+        android:layout_marginLeft="@dimen/tab_strip_content_start"
+        android:layout_marginStart="@dimen/tab_strip_content_start"
+        android:layout_marginTop="8dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginEnd="4dp"
         android:text="@string/activity_stream_highlights"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textStyle="bold"
-        android:textSize="14sp"
+        android:textSize="16sp"
+        android:textColor="#FF858585"
         android:layout_below="@+id/divider"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
