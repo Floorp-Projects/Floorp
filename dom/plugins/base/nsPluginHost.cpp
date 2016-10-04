@@ -3120,7 +3120,6 @@ nsPluginHost::ReadPluginInfo()
       return rv;
 
     int64_t lastmod = nsCRT::atoll(values[0]);
-    uint32_t tagflag = atoi(values[2]);
     bool fromExtension = atoi(values[3]);
     if (!reader.NextLine())
       return rv;
