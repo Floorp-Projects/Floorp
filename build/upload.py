@@ -44,6 +44,7 @@ from subprocess import (
     STDOUT,
     CalledProcessError,
 )
+import concurrent.futures as futures
 import redo
 
 def OptionalEnvironmentVariable(v):
@@ -249,11 +250,21 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
         for p in sorted(remote_paths):
             DoSSHCommand("mkdir -p " + p, user, host, port=port, ssh_key=ssh_key)
 
-        for file in files:
-            remote_path = get_remote_path(file)
-            DoSCPFile(file, remote_path, user, host, port=port, ssh_key=ssh_key,
-                      log=verbose)
-            remote_files.append(remote_path + '/' + os.path.basename(file))
+        with futures.ThreadPoolExecutor(4) as e:
+            fs = []
+            # Since we're uploading in parallel, the largest file should take
+            # the longest to upload. So start it first.
+            for file in sorted(files, key=os.path.getsize, reverse=True):
+                remote_path = get_remote_path(file)
+                fs.append(e.submit(DoSCPFile, file, remote_path, user, host,
+                                   port=port, ssh_key=ssh_key, log=verbose))
+                remote_files.append(remote_path + '/' + os.path.basename(file))
+
+            # We need to call result() on the future otherwise exceptions could
+            # get swallowed.
+            for f in futures.as_completed(fs):
+                f.result()
+
         if post_upload_command is not None:
             if verbose:
                 print "Running post-upload command: " + post_upload_command
