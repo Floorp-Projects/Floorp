@@ -556,7 +556,7 @@ MapObject::construct(JSContext* cx, unsigned argc, Value* vp)
                 }
                 WriteBarrierPost(cx->runtime(), map, key);
             } else {
-                if (!args2.init(2))
+                if (!args2.init(cx, 2))
                     return false;
 
                 args2[0].set(key);
@@ -1195,7 +1195,7 @@ SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
                 }
                 WriteBarrierPost(cx->runtime(), set, keyVal);
             } else {
-                if (!args2.init(1))
+                if (!args2.init(cx, 1))
                     return false;
 
                 args2[0].set(keyVal);

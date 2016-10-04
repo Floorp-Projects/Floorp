@@ -368,7 +368,7 @@ CrossCompartmentWrapper::nativeCall(JSContext* cx, IsAcceptableThis test, Native
     {
         AutoCompartment call(cx, wrapped);
         InvokeArgs dstArgs(cx);
-        if (!dstArgs.init(srcArgs.length()))
+        if (!dstArgs.init(cx, srcArgs.length()))
             return false;
 
         Value* src = srcArgs.base();
