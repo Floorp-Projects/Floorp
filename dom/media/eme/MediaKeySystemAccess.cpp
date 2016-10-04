@@ -37,7 +37,9 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/dom/MediaSource.h"
-
+#ifdef MOZ_WIDGET_ANDROID
+#include "FennecJNIWrappers.h"
+#endif
 namespace mozilla {
 namespace dom {
 
@@ -297,8 +299,8 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     }
   }
 
-  if (Preferences::GetBool("media.gmp-widevinecdm.visible", false)) {
-    if (IsWidevineKeySystem(aKeySystem)) {
+  if (IsWidevineKeySystem(aKeySystem)) {
+    if (Preferences::GetBool("media.gmp-widevinecdm.visible", false)) {
 #ifdef XP_WIN
       // Win Vista and later only.
       if (!IsVistaOrLater()) {
@@ -311,6 +313,16 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
         return MediaKeySystemStatus::Cdm_disabled;
       }
       return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
+#ifdef MOZ_WIDGET_ANDROID
+    } else if (Preferences::GetBool("media.mediadrm-widevinecdm.visible", false)) {
+        nsCString keySystem = NS_ConvertUTF16toUTF8(aKeySystem);
+        bool supported = mozilla::java::MediaDrmProxy::IsSchemeSupported(keySystem);
+        if (!supported) {
+          aOutMessage = NS_LITERAL_CSTRING("Widevine CDM is not available");
+          return MediaKeySystemStatus::Cdm_not_installed;
+        }
+        return MediaKeySystemStatus::Available;
+#endif
     }
   }
 
@@ -415,16 +427,33 @@ struct KeySystemConfig
   KeySystemContainerSupport mWebM;
 };
 
-StaticAutoPtr<nsTArray<KeySystemConfig>> sKeySystemConfigs;
+bool
+HavePluginForKeySystem(const nsCString& aKeySystem)
+{
+  bool havePlugin = false;
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  if (mps) {
+    havePlugin = HaveGMPFor(mps,
+                            aKeySystem,
+                            NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
+  }
+#ifdef MOZ_WIDGET_ANDROID
+  // Check if we can use MediaDrm for this keysystem.
+  if (!havePlugin) {
+     havePlugin = mozilla::java::MediaDrmProxy::IsSchemeSupported(aKeySystem);
+  }
+#endif
+  return havePlugin;
+}
 
-static const nsTArray<KeySystemConfig>&
+static nsTArray<KeySystemConfig>
 GetSupportedKeySystems()
 {
-  if (!sKeySystemConfigs) {
-    sKeySystemConfigs = new nsTArray<KeySystemConfig>();
-    ClearOnShutdown(&sKeySystemConfigs);
+  nsTArray<KeySystemConfig> keySystemConfigs;
 
-    {
+  {
+    if (HavePluginForKeySystem(kEMEKeySystemClearkey)) {
       KeySystemConfig clearkey;
       clearkey.mKeySystem = NS_ConvertUTF8toUTF16(kEMEKeySystemClearkey);
       clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
@@ -454,9 +483,11 @@ GetSupportedKeySystems()
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_VP8);
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_VP9);
-      sKeySystemConfigs->AppendElement(Move(clearkey));
+      keySystemConfigs.AppendElement(Move(clearkey));
     }
-    {
+  }
+  {
+    if (HavePluginForKeySystem(kEMEKeySystemWidevine)) {
       KeySystemConfig widevine;
       widevine.mKeySystem = NS_ConvertUTF8toUTF16(kEMEKeySystemWidevine);
       widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
@@ -465,6 +496,9 @@ GetSupportedKeySystems()
       widevine.mPersistentState = KeySystemFeatureSupport::Requestable;
       widevine.mDistinctiveIdentifier = KeySystemFeatureSupport::Prohibited;
       widevine.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
+#ifdef MOZ_WIDGET_ANDROID
+      widevine.mSessionTypes.AppendElement(MediaKeySessionType::Persistent_license);
+#endif
       widevine.mAudioRobustness.AppendElement(NS_LITERAL_STRING("SW_SECURE_CRYPTO"));
       widevine.mVideoRobustness.AppendElement(NS_LITERAL_STRING("SW_SECURE_DECODE"));
 #if defined(XP_WIN)
@@ -476,17 +510,54 @@ GetSupportedKeySystems()
       if (WMFDecoderModule::HasAAC()) {
         widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
       }
-#else
+#elif !defined(MOZ_WIDGET_ANDROID)
       widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
 #endif
+
+#if defined(MOZ_WIDGET_ANDROID)
+      using namespace mozilla::java;
+      // MediaDrm.isCryptoSchemeSupported only allows passing
+      // "video/mp4" or "video/webm" for mimetype string.
+      // See https://developer.android.com/reference/android/media/MediaDrm.html#isCryptoSchemeSupported(java.util.UUID, java.lang.String)
+      // for more detail.
+      typedef struct {
+        const nsCString& mMimeType;
+        const nsCString& mEMECodecType;
+        const char16_t* mCodecType;
+        KeySystemContainerSupport* mSupportType;
+      } DataForValidation;
+
+      DataForValidation validationList[] = {
+        { nsCString("video/mp4"), EME_CODEC_H264, MediaDrmProxy::AVC, &widevine.mMP4 },
+        { nsCString("audio/mp4"), EME_CODEC_AAC, MediaDrmProxy::AAC, &widevine.mMP4 },
+        { nsCString("video/webm"), EME_CODEC_VP8, MediaDrmProxy::VP8, &widevine.mWebM },
+        { nsCString("video/webm"), EME_CODEC_VP9, MediaDrmProxy::VP9, &widevine.mWebM},
+        { nsCString("audio/webm"), EME_CODEC_VORBIS, MediaDrmProxy::VORBIS, &widevine.mWebM},
+        { nsCString("audio/webm"), EME_CODEC_OPUS, MediaDrmProxy::OPUS, &widevine.mWebM},
+      };
+
+      for (const auto& data: validationList) {
+        if (MediaDrmProxy::IsCryptoSchemeSupported(kEMEKeySystemWidevine,
+                                                   data.mMimeType)) {
+          if (MediaDrmProxy::CanDecode(data.mCodecType)) {
+            data.mSupportType->SetCanDecryptAndDecode(data.mEMECodecType);
+          } else {
+            data.mSupportType->SetCanDecrypt(data.mEMECodecType);
+          }
+        }
+      }
+#else
       widevine.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
       widevine.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
       widevine.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
       widevine.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP8);
       widevine.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP9);
-      sKeySystemConfigs->AppendElement(Move(widevine));
+#endif
+      keySystemConfigs.AppendElement(Move(widevine));
     }
-    {
+  }
+  {
+    if (HavePluginForKeySystem(kEMEKeySystemPrimetime)) {
       KeySystemConfig primetime;
       primetime.mKeySystem = NS_ConvertUTF8toUTF16(kEMEKeySystemPrimetime);
       primetime.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
@@ -495,21 +566,24 @@ GetSupportedKeySystems()
       primetime.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
       primetime.mMP4.SetCanDecryptAndDecode(EME_CODEC_AAC);
       primetime.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
-      sKeySystemConfigs->AppendElement(Move(primetime));
+      keySystemConfigs.AppendElement(Move(primetime));
     }
   }
-  return *sKeySystemConfigs;
+
+  return keySystemConfigs;
 }
 
-static const KeySystemConfig*
-GetKeySystemConfig(const nsAString& aKeySystem)
+static bool
+GetKeySystemConfig(const nsAString& aKeySystem, KeySystemConfig& aOutKeySystemConfig)
 {
-  for (const KeySystemConfig& config : GetSupportedKeySystems()) {
+  for (auto&& config : GetSupportedKeySystems()) {
     if (config.mKeySystem.Equals(aKeySystem)) {
-      return &config;
+      aOutKeySystemConfig = mozilla::Move(config);
+      return true;
     }
   }
-  return nullptr;
+  // No matching key system found.
+  return false;
 }
 
 /* static */
@@ -517,9 +591,9 @@ bool
 MediaKeySystemAccess::KeySystemSupportsInitDataType(const nsAString& aKeySystem,
                                                     const nsAString& aInitDataType)
 {
-  const KeySystemConfig* implementation = GetKeySystemConfig(aKeySystem);
-  return implementation &&
-         implementation->mInitDataTypes.Contains(aInitDataType);
+  KeySystemConfig implementation;
+  return GetKeySystemConfig(aKeySystem, implementation) &&
+         implementation.mInitDataTypes.Contains(aInitDataType);
 }
 
 enum CodecType
@@ -530,8 +604,7 @@ enum CodecType
 };
 
 static bool
-CanDecryptAndDecode(mozIGeckoMediaPluginService* aGMPService,
-                    const nsString& aKeySystem,
+CanDecryptAndDecode(const nsString& aKeySystem,
                     const nsString& aContentType,
                     CodecType aCodecType,
                     const KeySystemContainerSupport& aContainerSupport,
@@ -539,19 +612,10 @@ CanDecryptAndDecode(mozIGeckoMediaPluginService* aGMPService,
                     DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(aCodecType != Invalid);
-  MOZ_ASSERT(HaveGMPFor(aGMPService,
-                        NS_ConvertUTF16toUTF8(aKeySystem),
-                        NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
   for (const EMECodecString& codec : aCodecs) {
     MOZ_ASSERT(!codec.IsEmpty());
 
-    nsCString api = (aCodecType == Audio) ? NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER)
-                                          : NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER);
-    if (aContainerSupport.DecryptsAndDecodes(codec) &&
-        HaveGMPFor(aGMPService,
-                   NS_ConvertUTF16toUTF8(aKeySystem),
-                   api,
-                   codec)) {
+    if (aContainerSupport.DecryptsAndDecodes(codec)) {
       // GMP can decrypt-and-decode this codec.
       continue;
     }
@@ -685,7 +749,6 @@ IsParameterUnrecognized(const nsAString& aContentType)
 // 3.1.2.3 Get Supported Capabilities for Audio/Video Type
 static Sequence<MediaKeySystemMediaCapability>
 GetSupportedCapabilities(const CodecType aCodecType,
-                         mozIGeckoMediaPluginService* aGMPService,
                          const nsTArray<MediaKeySystemMediaCapability>& aRequestedCapabilities,
                          const MediaKeySystemConfiguration& aPartialConfig,
                          const KeySystemConfig& aKeySystem,
@@ -871,8 +934,7 @@ GetSupportedCapabilities(const CodecType aCodecType,
     // robustness and local accumulated configuration in combination with
     // restrictions...
     const auto& containerSupport = isMP4 ? aKeySystem.mMP4 : aKeySystem.mWebM;
-    if (!CanDecryptAndDecode(aGMPService,
-                             aKeySystem.mKeySystem,
+    if (!CanDecryptAndDecode(aKeySystem.mKeySystem,
                              contentType,
                              majorType,
                              containerSupport,
@@ -974,8 +1036,7 @@ UnboxSessionTypes(const Optional<Sequence<nsString>>& aSessionTypes)
 
 // 3.1.2.2 Get Supported Configuration and Consent
 static bool
-GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
-                   const KeySystemConfig& aKeySystem,
+GetSupportedConfig(const KeySystemConfig& aKeySystem,
                    const MediaKeySystemConfiguration& aCandidate,
                    MediaKeySystemConfiguration& aOutConfig,
                    DecoderDoctorDiagnostics* aDiagnostics)
@@ -1094,7 +1155,6 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
     // and restrictions.
     Sequence<MediaKeySystemMediaCapability> caps =
       GetSupportedCapabilities(Video,
-                               aGMPService,
                                aCandidate.mVideoCapabilities,
                                config,
                                aKeySystem,
@@ -1120,7 +1180,6 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
     // member, accumulated configuration, and restrictions.
     Sequence<MediaKeySystemMediaCapability> caps =
       GetSupportedCapabilities(Audio,
-                               aGMPService,
                                aCandidate.mAudioCapabilities,
                                config,
                                aKeySystem,
@@ -1203,21 +1262,12 @@ MediaKeySystemAccess::GetSupportedConfig(const nsAString& aKeySystem,
                                          MediaKeySystemConfiguration& aOutConfig,
                                          DecoderDoctorDiagnostics* aDiagnostics)
 {
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (NS_WARN_IF(!mps)) {
-    return false;
-  }
-  const KeySystemConfig* implementation = nullptr;
-  if (!HaveGMPFor(mps,
-                  NS_ConvertUTF16toUTF8(aKeySystem),
-                  NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)) ||
-      !(implementation = GetKeySystemConfig(aKeySystem))) {
+  KeySystemConfig implementation;
+  if (!GetKeySystemConfig(aKeySystem, implementation)) {
     return false;
   }
   for (const MediaKeySystemConfiguration& candidate : aConfigs) {
-    if (mozilla::dom::GetSupportedConfig(mps,
-                                         *implementation,
+    if (mozilla::dom::GetSupportedConfig(implementation,
                                          candidate,
                                          aOutConfig,
                                          aDiagnostics)) {
