@@ -201,6 +201,9 @@ namespace nsStyleTransformMatrix {
                          gfxQuaternion& aRotate,
                          mozilla::gfx::Point3D& aTranslate,
                          mozilla::gfx::Point4D& aPerspective);
+
+  mozilla::gfx::Matrix CSSValueArrayTo2DMatrix(nsCSSValue::Array* aArray);
+  mozilla::gfx::Matrix4x4 CSSValueArrayTo3DMatrix(nsCSSValue::Array* aArray);
 } // namespace nsStyleTransformMatrix
 
 #endif
