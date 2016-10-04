@@ -267,7 +267,7 @@ class WebGLContextBoundObject
 public:
     explicit WebGLContextBoundObject(WebGLContext* webgl);
 
-    bool IsCompatibleWithContext(WebGLContext* other);
+    bool IsCompatibleWithContext(const WebGLContext* other) const;
 
     WebGLContext* const mContext;
 protected:

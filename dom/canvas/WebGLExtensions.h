@@ -25,7 +25,6 @@ class FormatUsageAuthority;
 class WebGLContext;
 class WebGLShader;
 class WebGLQuery;
-class WebGLTimerQuery;
 class WebGLVertexArray;
 
 class WebGLExtensionBase
@@ -370,29 +369,20 @@ public:
     explicit WebGLExtensionDisjointTimerQuery(WebGLContext* webgl);
     virtual ~WebGLExtensionDisjointTimerQuery();
 
-    already_AddRefed<WebGLTimerQuery> CreateQueryEXT();
-    void DeleteQueryEXT(WebGLTimerQuery* query);
-    bool IsQueryEXT(WebGLTimerQuery* query);
-    void BeginQueryEXT(GLenum target, WebGLTimerQuery* query);
-    void EndQueryEXT(GLenum target);
-    void QueryCounterEXT(WebGLTimerQuery* query, GLenum target);
-    void GetQueryEXT(JSContext *cx, GLenum target, GLenum pname,
-                     JS::MutableHandle<JS::Value> retval);
-    void GetQueryObjectEXT(JSContext *cx, WebGLTimerQuery* query,
-                           GLenum pname,
-                           JS::MutableHandle<JS::Value> retval);
+    already_AddRefed<WebGLQuery> CreateQueryEXT() const;
+    void DeleteQueryEXT(WebGLQuery* query) const;
+    bool IsQueryEXT(const WebGLQuery* query) const;
+    void BeginQueryEXT(GLenum target, WebGLQuery* query) const;
+    void EndQueryEXT(GLenum target) const;
+    void QueryCounterEXT(WebGLQuery* query, GLenum target) const;
+    void GetQueryEXT(JSContext* cx, GLenum target, GLenum pname,
+                     JS::MutableHandleValue retval) const;
+    void GetQueryObjectEXT(JSContext* cx, const WebGLQuery* query,
+                           GLenum pname, JS::MutableHandleValue retval) const;
 
     static bool IsSupported(const WebGLContext*);
 
     DECL_WEBGL_EXTENSION_GOOP
-
-private:
-    virtual void OnMarkLost() override;
-
-    /**
-     * An active TIME_ELAPSED query participating in a begin/end block.
-     */
-    WebGLRefPtr<WebGLTimerQuery> mActiveQuery;
 };
 
 } // namespace mozilla

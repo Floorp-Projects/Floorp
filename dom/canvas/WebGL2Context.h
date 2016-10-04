@@ -303,18 +303,6 @@ public:
     void ClearBufferfi(GLenum buffer, GLint drawBuffer, GLfloat depth, GLint stencil);
 
     // -------------------------------------------------------------------------
-    // Query Objects - WebGL2ContextQueries.cpp
-
-    already_AddRefed<WebGLQuery> CreateQuery();
-    void DeleteQuery(WebGLQuery* query);
-    bool IsQuery(WebGLQuery* query);
-    void BeginQuery(GLenum target, WebGLQuery* query);
-    void EndQuery(GLenum target);
-    already_AddRefed<WebGLQuery> GetQuery(GLenum target, GLenum pname);
-    void GetQueryParameter(JSContext*, WebGLQuery* query, GLenum pname, JS::MutableHandleValue retval);
-
-
-    // -------------------------------------------------------------------------
     // Sampler Objects - WebGL2ContextSamplers.cpp
 
     already_AddRefed<WebGLSampler> CreateSampler();
@@ -410,7 +398,6 @@ private:
     virtual bool ValidateAttribPointerType(bool integerMode, GLenum type,
                                            uint32_t* alignment,
                                            const char* info) override;
-    virtual bool ValidateQueryTarget(GLenum target, const char* info) override;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) override;
 };
 
