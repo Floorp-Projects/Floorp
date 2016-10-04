@@ -36,9 +36,10 @@ NewConsoleOutputWrapper.prototype = {
     let childComponent = ConsoleOutput({
       serviceContainer: {
         attachRefToHud,
-        emitNewMessage: (node) => {
+        emitNewMessage: (node, messageId) => {
           this.jsterm.hud.emit("new-messages", new Set([{
-            node
+            node,
+            messageId,
           }]));
         },
         hudProxyClient: this.jsterm.hud.proxy.client,
@@ -71,14 +72,34 @@ NewConsoleOutputWrapper.prototype = {
 
     this.body = ReactDOM.render(provider, this.parentNode);
   },
-  dispatchMessageAdd: (message) => {
-    batchedMessageAdd(actions.messageAdd(message));
+  dispatchMessageAdd: function(message, waitForResponse) {
+      let action = actions.messageAdd(message);
+      let messageId = action.message.get("id");
+      batchedMessageAdd(action);
+
+      // Wait for the message to render to resolve with the DOM node.
+      // This is just for backwards compatibility with old tests, and should
+      // be removed once it's not needed anymore.
+      if (waitForResponse) {
+        return new Promise(resolve => {
+          let jsterm = this.jsterm;
+          jsterm.hud.on("new-messages", function onThisMessage(e, messages) {
+            for (let m of messages) {
+              if (m.messageId == messageId) {
+                resolve(m.node);
+                jsterm.hud.off("new-messages", onThisMessage);
+                return;
+              }
+            }
+          });
+        });
+      }
   },
-  dispatchMessagesAdd: (messages) => {
+  dispatchMessagesAdd: function(messages) {
     const batchedActions = messages.map(message => actions.messageAdd(message));
     store.dispatch(actions.batchActions(batchedActions));
   },
-  dispatchMessagesClear: () => {
+  dispatchMessagesClear: function() {
     store.dispatch(actions.messagesClear());
   },
 };
