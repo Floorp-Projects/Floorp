@@ -232,12 +232,22 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
         return GetBaseRelativePath(path, os.path.abspath(p), base_path)
 
     try:
+        # Do a pass to find remote directories so we don't perform excessive
+        # scp calls.
+        remote_paths = set()
         for file in files:
             if not os.path.isfile(file):
                 raise IOError("File not found: %s" % file)
-            # first ensure that path exists remotely
+
+            remote_paths.add(get_remote_path(file))
+
+        # If we wanted to, we could reduce the remote paths if they are a parent
+        # of any entry.
+        for p in sorted(remote_paths):
+            DoSSHCommand("mkdir -p " + p, user, host, port=port, ssh_key=ssh_key)
+
+        for file in files:
             remote_path = get_remote_path(file)
-            DoSSHCommand("mkdir -p " + remote_path, user, host, port=port, ssh_key=ssh_key)
             if verbose:
                 print "Uploading " + file
             DoSCPFile(file, remote_path, user, host, port=port, ssh_key=ssh_key)
