@@ -15,6 +15,7 @@
 #include "nsICryptoHash.h"
 #include "nsNetUtil.h"
 #include "nsIOutputStream.h"
+#include "nsClassHashtable.h"
 
 #if DEBUG
 #include "plbase64.h"
@@ -312,6 +313,8 @@ WriteTArray(nsIOutputStream* aStream, nsTArray_Impl<T, Alloc>& aArray)
                         aArray.Length() * sizeof(T),
                         &written);
 }
+
+typedef nsClassHashtable<nsUint32HashKey, nsCString> PrefixStringMap;
 
 } // namespace safebrowsing
 } // namespace mozilla
