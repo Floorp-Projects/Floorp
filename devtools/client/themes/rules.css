@@ -30,6 +30,9 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
+  /* Override the min-width from .inspector-tabpanel, as the rule panel can support small
+     widths */
+  min-width: 100px;
 }
 
 /* Rule View Toolbar */
