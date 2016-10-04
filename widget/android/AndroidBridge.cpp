@@ -53,6 +53,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "MediaPrefs.h"
+#include "WidgetUtils.h"
 
 #include "FennecJNIWrappers.h"
 
@@ -154,8 +155,7 @@ AndroidBridge::~AndroidBridge()
 }
 
 AndroidBridge::AndroidBridge()
-  : mLayerClient(nullptr)
-  , mUiTaskQueueLock("UiTaskQueue")
+  : mUiTaskQueueLock("UiTaskQueue")
 {
     ALOG_BRIDGE("AndroidBridge::Init");
 
@@ -518,12 +518,6 @@ AndroidBridge::GetIconForExtension(const nsACString& aFileExt, uint32_t aIconSiz
         memcpy(aBuf, elements, bufSize);
 
     env->ReleaseByteArrayElements(arr.Get(), elements, 0);
-}
-
-void
-AndroidBridge::SetLayerClient(GeckoLayerClient::Param jobj)
-{
-    mLayerClient = jobj;
 }
 
 bool
@@ -1016,84 +1010,6 @@ AndroidBridge::GetGlobalContextRef() {
     return sGlobalContext;
 }
 
-void
-AndroidBridge::SetFirstPaintViewport(const LayerIntPoint& aOffset, const CSSToLayerScale& aZoom, const CSSRect& aCssPageRect)
-{
-    if (!mLayerClient) {
-        return;
-    }
-
-    mLayerClient->SetFirstPaintViewport(float(aOffset.x), float(aOffset.y), aZoom.scale,
-            aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost());
-}
-
-void
-AndroidBridge::SetPageRect(const CSSRect& aCssPageRect)
-{
-    if (!mLayerClient) {
-        return;
-    }
-
-    mLayerClient->SetPageRect(aCssPageRect.x, aCssPageRect.y,
-                              aCssPageRect.XMost(), aCssPageRect.YMost());
-}
-
-void
-AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                                bool aLayersUpdated, int32_t aPaintSyncId, ParentLayerRect& aScrollRect, CSSToParentLayerScale& aScale,
-                                ScreenMargin& aFixedLayerMargins)
-{
-    if (!mLayerClient) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    ViewTransform::LocalRef viewTransform = mLayerClient->SyncViewportInfo(
-            aDisplayPort.x, aDisplayPort.y,
-            aDisplayPort.width, aDisplayPort.height,
-            aDisplayResolution.scale, aLayersUpdated, aPaintSyncId);
-
-    MOZ_ASSERT(viewTransform, "No view transform object!");
-
-    aScrollRect = ParentLayerRect(viewTransform->X(), viewTransform->Y(),
-                                  viewTransform->Width(), viewTransform->Height());
-    aScale.scale = viewTransform->Scale();
-    aFixedLayerMargins.top = viewTransform->FixedLayerMarginTop();
-    aFixedLayerMargins.right = viewTransform->FixedLayerMarginRight();
-    aFixedLayerMargins.bottom = viewTransform->FixedLayerMarginBottom();
-    aFixedLayerMargins.left = viewTransform->FixedLayerMarginLeft();
-}
-
-void AndroidBridge::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
-                                     const CSSToParentLayerScale& aZoom,
-                                     const CSSRect& aCssPageRect,
-                                     const CSSRect& aDisplayPort,
-                                     const CSSToLayerScale& aPaintedResolution,
-                                     bool aLayersUpdated, int32_t aPaintSyncId,
-                                     ScreenMargin& aFixedLayerMargins)
-{
-    if (!mLayerClient) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    // convert the displayport rect from document-relative CSS pixels to
-    // document-relative device pixels
-    LayerIntRect dp = gfx::RoundedToInt(aDisplayPort * aPaintedResolution);
-    ViewTransform::LocalRef viewTransform = mLayerClient->SyncFrameMetrics(
-            aScrollOffset.x, aScrollOffset.y, aZoom.scale,
-            aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost(),
-            dp.x, dp.y, dp.width, dp.height, aPaintedResolution.scale,
-            aLayersUpdated, aPaintSyncId);
-
-    MOZ_ASSERT(viewTransform, "No view transform object!");
-
-    aFixedLayerMargins.top = viewTransform->FixedLayerMarginTop();
-    aFixedLayerMargins.right = viewTransform->FixedLayerMarginRight();
-    aFixedLayerMargins.bottom = viewTransform->FixedLayerMarginBottom();
-    aFixedLayerMargins.left = viewTransform->FixedLayerMarginLeft();
-}
-
 /* Implementation file */
 NS_IMPL_ISUPPORTS(nsAndroidBridge, nsIAndroidBridge)
 
@@ -1140,15 +1056,16 @@ NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(JS::HandleValue val,
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged()
+NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow)
 {
-    AndroidBridge::Bridge()->ContentDocumentChanged();
+    AndroidBridge::Bridge()->ContentDocumentChanged(aWindow);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(bool *aRet)
+NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow,
+                                                          bool *aRet)
 {
-    *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed();
+    *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed(aWindow);
     return NS_OK;
 }
 
@@ -1311,22 +1228,37 @@ __attribute__ ((visibility("default")))
 jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, jlong size);
 
-void
-AndroidBridge::ContentDocumentChanged()
+static jni::DependentRef<java::GeckoLayerClient>
+GetJavaLayerClient(mozIDOMWindowProxy* aWindow)
 {
-    if (!mLayerClient) {
+    MOZ_ASSERT(aWindow);
+
+    nsCOMPtr<nsPIDOMWindowOuter> domWindow = nsPIDOMWindowOuter::From(aWindow);
+    nsCOMPtr<nsIWidget> widget =
+            widget::WidgetUtils::DOMWindowToWidget(domWindow);
+    MOZ_ASSERT(widget);
+
+    return static_cast<nsWindow*>(widget.get())->GetLayerClient();
+}
+
+void
+AndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow)
+{
+    auto layerClient = GetJavaLayerClient(aWindow);
+    if (!layerClient) {
         return;
     }
-    mLayerClient->ContentDocumentChanged();
+    layerClient->ContentDocumentChanged();
 }
 
 bool
-AndroidBridge::IsContentDocumentDisplayed()
+AndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow)
 {
-    if (!mLayerClient)
+    auto layerClient = GetJavaLayerClient(aWindow);
+    if (!layerClient) {
         return false;
-
-    return mLayerClient->IsContentDocumentDisplayed();
+    }
+    return layerClient->IsContentDocumentDisplayed();
 }
 
 class AndroidBridge::DelayedTask

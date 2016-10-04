@@ -77,11 +77,17 @@ RemoteContentController::HandleTap(TapType aTapType,
   dom::TabParent* tab = dom::TabParent::GetTabParentFromLayersId(aGuid.mLayersId);
   if (tab) {
     // If we got a TabParent we're definitely in the parent process, and the
-    // message is going to a child process. That means we're in an e10s
-    // environment, so we must be on the main thread.
+    // message is going to a child process.
+    //
+    // On desktop, we're already on the main thread, so we can call TabParent::SendHandleTap directly.
+    // On Android, we're on the UI thread, so proxy the SendHandleTap call to the main thread.
     MOZ_ASSERT(XRE_IsParentProcess());
-    MOZ_ASSERT(NS_IsMainThread());
-    tab->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
+    if (NS_IsMainThread()) {
+      tab->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
+    } else {
+      NS_DispatchToMainThread(NewRunnableMethod<TapType, const LayoutDevicePoint&, Modifiers, const ScrollableLayerGuid&, uint64_t>
+        (tab, &dom::TabParent::SendHandleTap, aTapType, aPoint, aModifiers, aGuid, aInputBlockId));
+    }
   }
 }
 

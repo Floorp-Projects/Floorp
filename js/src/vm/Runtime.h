@@ -1265,6 +1265,27 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     void ionLazyLinkListRemove(js::jit::IonBuilder* builder);
     void ionLazyLinkListAdd(js::jit::IonBuilder* builder);
+
+  private:
+    /* The stack format for the current runtime.  Only valid on non-child
+     * runtimes. */
+    mozilla::Atomic<js::StackFormat, mozilla::ReleaseAcquire> stackFormat_;
+
+  public:
+    js::StackFormat stackFormat() const {
+        const JSRuntime* rt = this;
+        while (rt->parentRuntime) {
+            MOZ_ASSERT(rt->stackFormat_ == js::StackFormat::Default);
+            rt = rt->parentRuntime;
+        }
+        MOZ_ASSERT(rt->stackFormat_ != js::StackFormat::Default);
+        return rt->stackFormat_;
+    }
+    void setStackFormat(js::StackFormat format) {
+        MOZ_ASSERT(!parentRuntime);
+        MOZ_ASSERT(format != js::StackFormat::Default);
+        stackFormat_ = format;
+    }
 };
 
 namespace js {

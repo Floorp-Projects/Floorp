@@ -216,6 +216,26 @@ js::ErrorObject::getStack(JSContext* cx, unsigned argc, Value* vp)
     RootedString stackString(cx);
     if (!BuildStackString(cx, savedFrameObj, &stackString))
         return false;
+
+    if (cx->stackFormat() == js::StackFormat::V8) {
+        // When emulating V8 stack frames, we also need to prepend the
+        // stringified Error to the stack string.
+        HandlePropertyName name = cx->names().ErrorToStringWithTrailingNewline;
+        RootedValue val(cx);
+        if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), name, name, 0, &val))
+            return false;
+
+        RootedValue rval(cx);
+        if (!js::Call(cx, val, args.thisv(), &rval))
+            return false;
+
+        if (!rval.isString())
+            return false;
+
+        RootedString stringified(cx, rval.toString());
+        stackString = ConcatStrings<CanGC>(cx, stringified, stackString);
+    }
+
     args.rval().setString(stackString);
     return true;
 }
