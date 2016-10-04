@@ -126,6 +126,12 @@ public:
   // True if the event is currently being handled by an event listener that
   // was registered as a passive listener.
   bool mInPassiveListener: 1;
+  // If mComposed is true, the event fired by nodes in shadow DOM can cross the
+  // boundary of shadow DOM and light DOM.
+  bool mComposed : 1;
+  // Similar to mComposed. Set it to true to allow events cross the boundary
+  // between native non-anonymous content and native anonymouse content
+  bool mComposedInNativeAnonymousContent : 1;
 
   // If the event is being handled in target phase, returns true.
   inline bool InTargetPhase() const
@@ -339,6 +345,8 @@ protected:
     mFlags.Clear();
     mFlags.mIsTrusted = aIsTrusted;
     SetDefaultCancelableAndBubbles();
+    SetDefaultComposed();
+    SetDefaultComposedInNativeAnonymousContent();
   }
 
   WidgetEvent()
@@ -542,6 +550,154 @@ public:
    * Whether the event should cause a DOM event.
    */
   bool IsAllowedToDispatchDOMEvent() const;
+  /**
+   * Initialize mComposed
+   */
+  void SetDefaultComposed()
+  {
+    switch (mClass) {
+      case eCompositionEventClass:
+        mFlags.mComposed = mMessage == eCompositionStart ||
+                           mMessage == eCompositionUpdate ||
+                           mMessage == eCompositionEnd;
+        break;
+      case eDragEventClass:
+        // All drag & drop events are composed
+        mFlags.mComposed = mMessage == eDrag || mMessage == eDragEnd ||
+                           mMessage == eDragEnter || mMessage == eDragExit ||
+                           mMessage == eDragLeave || mMessage == eDragOver ||
+                           mMessage == eDragStart || mMessage == eDrop;
+        break;
+      case eEditorInputEventClass:
+        mFlags.mComposed = mMessage == eEditorInput;
+        break;
+      case eFocusEventClass:
+        mFlags.mComposed = mMessage == eBlur || mMessage == eFocus;
+        break;
+      case eKeyboardEventClass:
+        mFlags.mComposed = mMessage == eKeyDown || mMessage == eKeyUp ||
+                           mMessage == eKeyPress;
+        break;
+      case eMouseEventClass:
+        mFlags.mComposed = mMessage == eMouseClick ||
+                           mMessage == eMouseDoubleClick ||
+                           mMessage == eMouseDown || mMessage == eMouseUp ||
+                           mMessage == eMouseEnter || mMessage == eMouseLeave ||
+                           mMessage == eMouseOver || mMessage == eMouseOut ||
+                           mMessage == eMouseMove || mMessage == eContextMenu;
+        break;
+      case ePointerEventClass:
+        // All pointer events are composed
+        mFlags.mComposed = mMessage == ePointerDown ||
+                           mMessage == ePointerMove || mMessage == ePointerUp ||
+                           mMessage == ePointerCancel ||
+                           mMessage == ePointerOver ||
+                           mMessage == ePointerOut ||
+                           mMessage == ePointerEnter ||
+                           mMessage == ePointerLeave ||
+                           mMessage == ePointerGotCapture ||
+                           mMessage == ePointerLostCapture;
+        break;
+      case eTouchEventClass:
+        // All touch events are composed
+        mFlags.mComposed = mMessage == eTouchStart || mMessage == eTouchEnd ||
+                           mMessage == eTouchMove || mMessage == eTouchCancel;
+        break;
+      case eUIEventClass:
+        mFlags.mComposed = mMessage == eLegacyDOMFocusIn ||
+                           mMessage == eLegacyDOMFocusOut ||
+                           mMessage == eLegacyDOMActivate;
+        break;
+      case eWheelEventClass:
+        // All wheel events are composed
+        mFlags.mComposed = mMessage == eWheel;
+        break;
+      default:
+        mFlags.mComposed = false;
+        break;
+    }
+  }
+
+  void SetComposed(const nsAString& aEventTypeArg)
+  {
+    mFlags.mComposed = // composition events
+                       aEventTypeArg.EqualsLiteral("compositionstart") ||
+                       aEventTypeArg.EqualsLiteral("compositionupdate") ||
+                       aEventTypeArg.EqualsLiteral("compositionend") ||
+                       // drag and drop events
+                       aEventTypeArg.EqualsLiteral("dragstart") ||
+                       aEventTypeArg.EqualsLiteral("drag") ||
+                       aEventTypeArg.EqualsLiteral("dragenter") ||
+                       aEventTypeArg.EqualsLiteral("dragexit") ||
+                       aEventTypeArg.EqualsLiteral("dragleave") ||
+                       aEventTypeArg.EqualsLiteral("dragover") ||
+                       aEventTypeArg.EqualsLiteral("drop") ||
+                       aEventTypeArg.EqualsLiteral("dropend") ||
+                       // editor input events
+                       aEventTypeArg.EqualsLiteral("input") ||
+                       aEventTypeArg.EqualsLiteral("beforeinput") ||
+                       // focus events
+                       aEventTypeArg.EqualsLiteral("blur") ||
+                       aEventTypeArg.EqualsLiteral("focus") ||
+                       aEventTypeArg.EqualsLiteral("focusin") ||
+                       aEventTypeArg.EqualsLiteral("focusout") ||
+                       // keyboard events
+                       aEventTypeArg.EqualsLiteral("keydown") ||
+                       aEventTypeArg.EqualsLiteral("keyup") ||
+                       aEventTypeArg.EqualsLiteral("keypress") ||
+                       // mouse events
+                       aEventTypeArg.EqualsLiteral("click") ||
+                       aEventTypeArg.EqualsLiteral("dblclick") ||
+                       aEventTypeArg.EqualsLiteral("mousedown") ||
+                       aEventTypeArg.EqualsLiteral("mouseup") ||
+                       aEventTypeArg.EqualsLiteral("mouseenter") ||
+                       aEventTypeArg.EqualsLiteral("mouseleave") ||
+                       aEventTypeArg.EqualsLiteral("mouseover") ||
+                       aEventTypeArg.EqualsLiteral("mouseout") ||
+                       aEventTypeArg.EqualsLiteral("mousemove") ||
+                       aEventTypeArg.EqualsLiteral("contextmenu") ||
+                       // pointer events
+                       aEventTypeArg.EqualsLiteral("pointerdown") ||
+                       aEventTypeArg.EqualsLiteral("pointermove") ||
+                       aEventTypeArg.EqualsLiteral("pointerup") ||
+                       aEventTypeArg.EqualsLiteral("pointercancel") ||
+                       aEventTypeArg.EqualsLiteral("pointerover") ||
+                       aEventTypeArg.EqualsLiteral("pointerout") ||
+                       aEventTypeArg.EqualsLiteral("pointerenter") ||
+                       aEventTypeArg.EqualsLiteral("pointerleave") ||
+                       aEventTypeArg.EqualsLiteral("gotpointercapture") ||
+                       aEventTypeArg.EqualsLiteral("lostpointercapture") ||
+                       // touch events
+                       aEventTypeArg.EqualsLiteral("touchstart") ||
+                       aEventTypeArg.EqualsLiteral("touchend") ||
+                       aEventTypeArg.EqualsLiteral("touchmove") ||
+                       aEventTypeArg.EqualsLiteral("touchcancel") ||
+                       // UI legacy events
+                       aEventTypeArg.EqualsLiteral("DOMFocusIn") ||
+                       aEventTypeArg.EqualsLiteral("DOMFocusOut") ||
+                       aEventTypeArg.EqualsLiteral("DOMActivate") ||
+                       // wheel events
+                       aEventTypeArg.EqualsLiteral("wheel");
+  }
+
+  void SetComposed(bool aComposed)
+  {
+    mFlags.mComposed = aComposed;
+  }
+
+  void SetDefaultComposedInNativeAnonymousContent()
+  {
+    // For compatibility concerns, we set mComposedInNativeAnonymousContent to
+    // false for those events we want to stop propagation.
+    //
+    // nsVideoFrame may create anonymous image element which fires eLoad,
+    // eLoadStart, eLoadEnd, eLoadError. We don't want these events cross
+    // the boundary of NAC
+    mFlags.mComposedInNativeAnonymousContent = mMessage != eLoad &&
+                                               mMessage != eLoadStart &&
+                                               mMessage != eLoadEnd &&
+                                               mMessage != eLoadError;
+  }
 };
 
 /******************************************************************************

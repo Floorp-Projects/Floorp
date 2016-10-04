@@ -313,9 +313,9 @@ typedef enum {
     ssl_tls13_key_share_xtn = 40,
     ssl_tls13_pre_shared_key_xtn = 41,
     ssl_tls13_early_data_xtn = 42,
+    ssl_tls13_supported_versions_xtn = 43,
     ssl_next_proto_nego_xtn = 13172,
-    ssl_renegotiation_info_xtn = 0xff01,
-    ssl_tls13_draft_version_xtn = 0xff02 /* experimental number */
+    ssl_renegotiation_info_xtn = 0xff01
 } SSLExtensionType;
 
 typedef enum {

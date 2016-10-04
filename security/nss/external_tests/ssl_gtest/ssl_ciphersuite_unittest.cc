@@ -303,12 +303,14 @@ static const TlsSignatureScheme kDummySignatureSchemesParamsArr[] = {
 static const auto kDummySignatureSchemesParams =
     ::testing::ValuesIn(kDummySignatureSchemesParamsArr);
 
+#ifndef NSS_DISABLE_TLS_1_3
 static TlsSignatureScheme kSignatureSchemesParamsArr[] = {
     kTlsSignatureRsaPkcs1Sha256,       kTlsSignatureRsaPkcs1Sha384,
     kTlsSignatureRsaPkcs1Sha512,       kTlsSignatureEcdsaSecp256r1Sha256,
     kTlsSignatureEcdsaSecp384r1Sha384, kTlsSignatureRsaPssSha256,
     kTlsSignatureRsaPssSha384,         kTlsSignatureRsaPssSha512,
 };
+#endif
 
 INSTANTIATE_CIPHER_TEST_P(RC4, Stream, V10ToV12, kDummyNamedGroupParams,
                           kDummySignatureSchemesParams,
@@ -363,6 +365,7 @@ INSTANTIATE_CIPHER_TEST_P(
     TLS_ECDH_RSA_WITH_AES_128_CBC_SHA, TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA);
+#ifndef NSS_DISABLE_TLS_1_3
 INSTANTIATE_CIPHER_TEST_P(TLS13, All, V13,
                           ::testing::ValuesIn(kFasterDHEGroups),
                           ::testing::ValuesIn(kSignatureSchemesParamsArr),
@@ -372,6 +375,7 @@ INSTANTIATE_CIPHER_TEST_P(TLS13AllGroups, All, V13,
                           ::testing::ValuesIn(kAllDHEGroups),
                           ::testing::Values(kTlsSignatureEcdsaSecp384r1Sha384),
                           TLS_AES_256_GCM_SHA384);
+#endif
 
 // Fields are: version, cipher suite, bulk cipher name, secretKeySize
 struct SecStatusParams {

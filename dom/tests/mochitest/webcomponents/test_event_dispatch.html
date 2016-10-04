@@ -27,7 +27,7 @@ function isEventChain(actual, expected, msg) {
 
   // Check to make sure the event chain matches what we get back from nsIEventListenerService.getEventTargetChainFor
   if (0 < actual.length) {
-    var chain = els.getEventTargetChainFor(actual[0]); // Events should be dispatched on actual[0].
+    var chain = els.getEventTargetChainFor(actual[0], true); // Events should be dispatched on actual[0].
     for (var i = 0; i < expected.length; i++) {
       ok(SpecialPowers.compare(chain[i], expected[i]), msg + " at " + i + " for nsIEventListenerService");
     }
@@ -64,7 +64,7 @@ shadowOne.appendChild(elemThree);
 elemOne.appendChild(elemTwo);
 
 var eventChain = [];
-var customEvent = new CustomEvent("custom", { "bubbles" : true });
+var customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemTwo.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemTwo, elemFour, elemThree, shadowOne, elemOne], "Event path for test 1 for event dispatched on elemTwo.");
 
@@ -111,7 +111,7 @@ shadowOne.appendChild(elemSix);
 elemSix.appendChild(elemThree);
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemOne.dispatchEvent(customEvent);
 is(elemOne.getDestinationInsertionPoints().length, 2, "yes");
 isEventChain(eventChain, [elemOne, elemThree, elemSix, shadowOne, elemTwo, elemFour, shadowTwo, elemFive], "Event path for test 2 for event dispatched on elemOne.");
@@ -159,7 +159,7 @@ elemFour.appendChild(elemFive);
 shadowTwo.appendChild(elemSix);
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemTwo.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemTwo, elemFive, elemFour, elemSix, shadowTwo, elemThree, shadowOne, elemOne], "Event path for test 3 for event dispatched on elemTwo.");
 
@@ -223,12 +223,12 @@ shadowThree.appendChild(elemThree);
 shadowOne.appendChild(elemFive);
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemOne.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemOne, elemFive, shadowOne, elemThree, shadowThree, elemTwo, elemFour, elemSix, shadowTwo, elemSeven], "Event path for test 4 for event dispatched on elemOne.");
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemEight.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemEight, elemFive, shadowOne, elemSix, shadowTwo, elemSeven], "Event path for test 4 for event dispatched on elemEight.");
 
@@ -281,12 +281,12 @@ elemFour.appendChild(elemFive);
 shadowTwo.appendChild(elemSeven);
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemTwo.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemTwo, elemSeven, shadowTwo, elemSix, elemFour, shadowOne, elemOne], "Event path for test 5 for event dispatched on elemTwo.");
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemThree.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemThree, elemSeven, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 5 for event dispatched on elemThree.");
 
@@ -339,12 +339,12 @@ shadowTwo.appendChild(elemSix);
 shadowTwo.appendChild(elemSeven);
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemTwo.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemTwo, elemSix, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 6 for event dispatched on elemTwo.");
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemThree.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemThree, elemSeven, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 6 for event dispatched on elemThree.");
 
@@ -403,12 +403,12 @@ elemEight.appendChild(elemSix);
 elemEight.appendChild(elemSeven);
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemTwo.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemTwo, elemSix, elemEight, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 7 for event dispatched on elemTwo.");
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemThree.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemThree, elemSeven, elemEight, shadowTwo, elemFive, elemFour, shadowOne, elemOne], "Event path for test 7 for event dispatched on elemThree.");
 
@@ -449,7 +449,7 @@ elemFour.appendChild(elemTwo);
 shadowTwo.appendChild(elemThree);
 
 eventChain = [];
-customEvent = new CustomEvent("custom", { "bubbles" : true });
+customEvent = new CustomEvent("custom", { "bubbles" : true, "composed" : true });
 elemThree.dispatchEvent(customEvent);
 isEventChain(eventChain, [elemThree, shadowTwo, elemTwo, elemFour, shadowOne, elemOne], "Event path for test 8 for event dispatched on elemThree.");
 

@@ -100,6 +100,7 @@ MediaKeyMessageEvent::Constructor(const GlobalObject& aGlobal,
   }
   e->mMessageType = aEventInitDict.mMessageType;
   e->SetTrusted(trusted);
+  e->SetComposed(aEventInitDict.mComposed);
   return e.forget();
 }
 

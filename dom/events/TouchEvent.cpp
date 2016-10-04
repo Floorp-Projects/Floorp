@@ -245,6 +245,7 @@ TouchEvent::Constructor(const GlobalObject& aGlobal,
                     aParam.mShiftKey, aParam.mMetaKey, touches, targetTouches,
                     changedTouches);
   e->SetTrusted(trusted);
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 

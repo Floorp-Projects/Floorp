@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test pointer events are dispatched once for touch tap</title>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript">
+    /** Test for Bug 1299195 **/
+    function runTests() {
+      let target0 = document.getElementById("target0");
+      let mouseup_count = 0;
+      let mousedown_count = 0;
+      let pointerup_count = 0;
+      let pointerdown_count = 0;
+
+      target0.addEventListener("mouseup", () => {
+        ++mouseup_count;
+        if (mouseup_count == 2) {
+          is(mousedown_count, 2, "Double tap with touch should fire 2 mousedown events");
+          is(mouseup_count, 2, "Double tap with touch should fire 2 mouseup events");
+          is(pointerdown_count, 2, "Double tap with touch should fire 2 pointerdown events");
+          is(pointerup_count, 2, "Double tap with touch should fire 2 pointerup events");
+          subtestDone();
+        }
+      });
+      target0.addEventListener("mousedown", () => {
+        ++mousedown_count;
+      });
+      target0.addEventListener("pointerup", () => {
+        ++pointerup_count;
+      });
+      target0.addEventListener("pointerdown", () => {
+        ++pointerdown_count;
+      });
+      synthesizeNativeTap(document.getElementById('target0'), 100, 100);
+      synthesizeNativeTap(document.getElementById('target0'), 100, 100);
+    }
+    waitUntilApzStable().then(runTests);
+    </script>
+</head>
+<body>
+  <div id="target0" style="width: 200px; height: 200px; background: green"></div>
+</body>
+</html>
