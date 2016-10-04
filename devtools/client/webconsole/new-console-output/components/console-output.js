@@ -21,19 +21,17 @@ const ConsoleOutput = createClass({
   displayName: "ConsoleOutput",
 
   propTypes: {
-    hudProxyClient: PropTypes.object.isRequired,
     messages: PropTypes.object.isRequired,
     messagesUi: PropTypes.object.isRequired,
-    sourceMapService: PropTypes.object,
-    onViewSourceInDebugger: PropTypes.func.isRequired,
-    openNetworkPanel: PropTypes.func.isRequired,
-    openLink: PropTypes.func.isRequired,
-    emitNewMessage: PropTypes.func.isRequired,
+    serviceContainer: PropTypes.shape({
+      attachRefToHud: PropTypes.func.isRequired,
+    }),
     autoscroll: PropTypes.bool.isRequired,
   },
 
   componentDidMount() {
     scrollToBottom(this.outputNode);
+    this.props.serviceContainer.attachRefToHud("outputWrapper", this.outputNode);
   },
 
   componentWillUpdate(nextProps, nextState) {
@@ -60,29 +58,19 @@ const ConsoleOutput = createClass({
     let {
       dispatch,
       autoscroll,
-      hudProxyClient,
       messages,
       messagesUi,
       messagesTableData,
-      sourceMapService,
-      onViewSourceInDebugger,
-      openNetworkPanel,
-      openLink,
-      emitNewMessage,
+      serviceContainer,
     } = this.props;
 
     let messageNodes = messages.map((message) => {
       return (
         MessageContainer({
           dispatch,
-          hudProxyClient,
           message,
           key: message.id,
-          sourceMapService,
-          onViewSourceInDebugger,
-          openNetworkPanel,
-          openLink,
-          emitNewMessage,
+          serviceContainer,
           open: messagesUi.includes(message.id),
           tableData: messagesTableData.get(message.id),
           autoscroll,

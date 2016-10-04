@@ -21,10 +21,8 @@ ConsoleApiCall.displayName = "ConsoleApiCall";
 
 ConsoleApiCall.propTypes = {
   message: PropTypes.object.isRequired,
-  sourceMapService: PropTypes.object,
-  onViewSourceInDebugger: PropTypes.func.isRequired,
   open: PropTypes.bool,
-  hudProxyClient: PropTypes.object.isRequired,
+  serviceContainer: PropTypes.object.isRequired,
 };
 
 ConsoleApiCall.defaultProps = {
@@ -35,12 +33,9 @@ function ConsoleApiCall(props) {
   const {
     dispatch,
     message,
-    sourceMapService,
-    onViewSourceInDebugger,
     open,
-    hudProxyClient,
     tableData,
-    emitNewMessage,
+    serviceContainer,
   } = props;
   const {
     id: messageId,
@@ -72,7 +67,7 @@ function ConsoleApiCall(props) {
     attachment = ConsoleTable({
       dispatch,
       id: message.id,
-      hudProxyClient,
+      serviceContainer,
       parameters: message.parameters,
       tableData
     });
@@ -92,9 +87,7 @@ function ConsoleApiCall(props) {
     frame,
     stacktrace,
     attachment,
-    onViewSourceInDebugger,
-    sourceMapService,
-    emitNewMessage,
+    serviceContainer,
     dispatch,
   });
 }

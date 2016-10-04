@@ -29,29 +29,29 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
 
 NewConsoleOutputWrapper.prototype = {
   init: function () {
-    const sourceMapService = this.toolbox ? this.toolbox._sourceMapService : null;
-
     let childComponent = ConsoleOutput({
-      hudProxyClient: this.jsterm.hud.proxy.client,
-      sourceMapService,
-      onViewSourceInDebugger: frame => this.toolbox.viewSourceInDebugger.call(
-        this.toolbox,
-        frame.url,
-        frame.line
-      ),
-      openNetworkPanel: (requestId) => {
-        return this.toolbox.selectTool("netmonitor").then(panel => {
-          return panel.panelWin.NetMonitorController.inspectRequest(requestId);
-        });
-      },
-      openLink: (url) => {
-        this.owner.openLink(url);
-      },
-      emitNewMessage: (node) => {
-        this.jsterm.hud.emit("new-messages", new Set([{
-          node
-        }]));
-      },
+      serviceContainer: {
+        attachRefToHud: (id, node) => {
+          this.jsterm.hud[id] = node;
+        },
+        emitNewMessage: (node) => {
+          this.jsterm.hud.emit("new-messages", new Set([{
+            node
+          }]));
+        },
+        hudProxyClient: this.jsterm.hud.proxy.client,
+        onViewSourceInDebugger: frame => this.toolbox.viewSourceInDebugger.call(
+          this.toolbox,
+          frame.url,
+          frame.line
+        ),
+        openNetworkPanel: (requestId) => {
+          return this.toolbox.selectTool("netmonitor").then(panel => {
+            return panel.panelWin.NetMonitorController.inspectRequest(requestId);
+          });
+        },
+        sourceMapService: this.toolbox ? this.toolbox._sourceMapService : null,
+      }
     });
     let filterBar = FilterBar({});
     let provider = React.createElement(
