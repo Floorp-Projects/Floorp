@@ -11,6 +11,62 @@
 
 namespace mozilla {
 
+bool
+WebGL2Context::ValidateBufferTarget(GLenum target, const char* funcName)
+{
+    switch (target) {
+    case LOCAL_GL_ARRAY_BUFFER:
+    case LOCAL_GL_COPY_READ_BUFFER:
+    case LOCAL_GL_COPY_WRITE_BUFFER:
+    case LOCAL_GL_ELEMENT_ARRAY_BUFFER:
+    case LOCAL_GL_PIXEL_PACK_BUFFER:
+    case LOCAL_GL_PIXEL_UNPACK_BUFFER:
+    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
+    case LOCAL_GL_UNIFORM_BUFFER:
+        return true;
+
+    default:
+        ErrorInvalidEnumInfo(funcName, target);
+        return false;
+    }
+}
+
+bool
+WebGL2Context::ValidateBufferIndexedTarget(GLenum target, const char* info)
+{
+    switch (target) {
+    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
+    case LOCAL_GL_UNIFORM_BUFFER:
+        return true;
+
+    default:
+        ErrorInvalidEnumInfo(info, target);
+        return false;
+    }
+}
+
+bool
+WebGL2Context::ValidateBufferUsageEnum(GLenum usage, const char* info)
+{
+    switch (usage) {
+    case LOCAL_GL_DYNAMIC_COPY:
+    case LOCAL_GL_DYNAMIC_DRAW:
+    case LOCAL_GL_DYNAMIC_READ:
+    case LOCAL_GL_STATIC_COPY:
+    case LOCAL_GL_STATIC_DRAW:
+    case LOCAL_GL_STATIC_READ:
+    case LOCAL_GL_STREAM_COPY:
+    case LOCAL_GL_STREAM_DRAW:
+    case LOCAL_GL_STREAM_READ:
+        return true;
+    default:
+        break;
+    }
+
+    ErrorInvalidEnumInfo(info, usage);
+    return false;
+}
+
 // -------------------------------------------------------------------------
 // Buffer objects
 
@@ -23,58 +79,48 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
     if (IsContextLost())
         return;
 
-    const auto& readBuffer = ValidateBufferSelection(funcName, readTarget);
-    if (!readBuffer)
-        return;
-
-    const auto& writeBuffer = ValidateBufferSelection(funcName, writeTarget);
-    if (!writeBuffer)
-        return;
-
-    if (readBuffer->mNumActiveTFOs ||
-        writeBuffer->mNumActiveTFOs)
-    {
-        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
-                              " object.",
-                              funcName);
-        return;
-    }
-
-    if (!ValidateNonNegative(funcName, "readOffset", readOffset) ||
-        !ValidateNonNegative(funcName, "writeOffset", writeOffset) ||
-        !ValidateNonNegative(funcName, "size", size))
+    if (!ValidateBufferTarget(readTarget, funcName) ||
+        !ValidateBufferTarget(writeTarget, funcName))
     {
         return;
     }
 
-    const auto fnValidateOffsetSize = [&](const char* info, GLintptr offset,
-                                          const WebGLBuffer* buffer)
-    {
-        const auto neededBytes = CheckedInt<size_t>(offset) + size;
-        if (!neededBytes.isValid() || neededBytes.value() > buffer->ByteLength()) {
-            ErrorInvalidValue("%s: Invalid %s range.", funcName, info);
-            return false;
-        }
-        return true;
-    };
+    const WebGLRefPtr<WebGLBuffer>& readBufferSlot = GetBufferSlotByTarget(readTarget);
+    const WebGLRefPtr<WebGLBuffer>& writeBufferSlot = GetBufferSlotByTarget(writeTarget);
+    if (!readBufferSlot || !writeBufferSlot)
+        return;
 
-    if (!fnValidateOffsetSize("read", readOffset, readBuffer) ||
-        !fnValidateOffsetSize("write", writeOffset, writeBuffer))
-    {
+    const WebGLBuffer* readBuffer = readBufferSlot.get();
+    if (!readBuffer) {
+        ErrorInvalidOperation("%s: No buffer bound to readTarget.", funcName);
         return;
     }
 
-    if (readBuffer == writeBuffer &&
+    WebGLBuffer* writeBuffer = writeBufferSlot.get();
+    if (!writeBuffer) {
+        ErrorInvalidOperation("%s: No buffer bound to writeTarget.", funcName);
+        return;
+    }
+
+    if (!ValidateDataOffsetSize(readOffset, size, readBuffer->ByteLength(), funcName))
+        return;
+
+    if (!ValidateDataOffsetSize(writeOffset, size, writeBuffer->ByteLength(), funcName))
+        return;
+
+    if (readTarget == writeTarget &&
         !ValidateDataRanges(readOffset, writeOffset, size, funcName))
     {
         return;
     }
 
-    const auto& readType = readBuffer->Content();
-    const auto& writeType = writeBuffer->Content();
-    MOZ_ASSERT(readType != WebGLBuffer::Kind::Undefined);
-    MOZ_ASSERT(writeType != WebGLBuffer::Kind::Undefined);
-    if (writeType != readType) {
+    WebGLBuffer::Kind readType = readBuffer->Content();
+    WebGLBuffer::Kind writeType = writeBuffer->Content();
+
+    if (readType != WebGLBuffer::Kind::Undefined &&
+        writeType != WebGLBuffer::Kind::Undefined &&
+        writeType != readType)
+    {
         ErrorInvalidOperation("%s: Can't copy %s data to %s data.",
                               funcName,
                               (readType == WebGLBuffer::Kind::OtherData) ? "other"
@@ -84,8 +130,14 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
         return;
     }
 
-    gl->MakeCurrent();
-    gl->fCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
+    WebGLContextUnchecked::CopyBufferSubData(readTarget, writeTarget, readOffset,
+                                             writeOffset, size);
+
+    if (writeType == WebGLBuffer::Kind::Undefined) {
+        writeBuffer->BindTo(
+            (readType == WebGLBuffer::Kind::OtherData) ? LOCAL_GL_ARRAY_BUFFER
+                                                       : LOCAL_GL_ELEMENT_ARRAY_BUFFER);
+    }
 }
 
 void
@@ -96,59 +148,88 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
     if (IsContextLost())
         return;
 
-    if (!ValidateNonNegative(funcName, "offset", offset))
+    // For the WebGLBuffer bound to the passed target, read
+    // returnedData.byteLength bytes from the buffer starting at byte
+    // offset offset and write them to returnedData.
+
+    // If zero is bound to target, an INVALID_OPERATION error is
+    // generated.
+    if (!ValidateBufferTarget(target, funcName))
         return;
 
-    const auto& buffer = ValidateBufferSelection(funcName, target);
-    if (!buffer)
+    // If offset is less than zero, an INVALID_VALUE error is
+    // generated.
+    if (offset < 0) {
+        ErrorInvalidValue("%s: Offset must be non-negative.", funcName);
         return;
+    }
 
-    ////
+    WebGLRefPtr<WebGLBuffer>& bufferSlot = GetBufferSlotByTarget(target);
+    WebGLBuffer* boundBuffer = bufferSlot.get();
+    if (!boundBuffer) {
+        ErrorInvalidOperation("%s: No buffer bound.", funcName);
+        return;
+    }
 
     // If offset + returnedData.byteLength would extend beyond the end
     // of the buffer an INVALID_VALUE error is generated.
     data.ComputeLengthAndData();
 
-    const auto neededByteLength = CheckedInt<size_t>(offset) + data.LengthAllowShared();
+    CheckedInt<WebGLsizeiptr> neededByteLength = CheckedInt<WebGLsizeiptr>(offset) + data.LengthAllowShared();
     if (!neededByteLength.isValid()) {
         ErrorInvalidValue("%s: Integer overflow computing the needed byte length.",
                           funcName);
         return;
     }
 
-    if (neededByteLength.value() > buffer->ByteLength()) {
+    if (neededByteLength.value() > boundBuffer->ByteLength()) {
         ErrorInvalidValue("%s: Not enough data. Operation requires %d bytes, but buffer"
                           " only has %d bytes.",
-                          funcName, neededByteLength.value(), buffer->ByteLength());
+                          funcName, neededByteLength.value(), boundBuffer->ByteLength());
         return;
     }
 
-    ////
+    // If target is TRANSFORM_FEEDBACK_BUFFER, and any transform
+    // feedback object is currently active, an INVALID_OPERATION error
+    // is generated.
+    WebGLTransformFeedback* currentTF = mBoundTransformFeedback;
+    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER && currentTF) {
+        if (currentTF->mIsActive) {
+            ErrorInvalidOperation("%s: Currently bound transform feedback is active.",
+                                  funcName);
+            return;
+        }
 
-    if (buffer->mNumActiveTFOs) {
-        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
-                              " object.",
-                              funcName);
-        return;
+        // https://github.com/NVIDIA/WebGL/commit/63aff5e58c1d79825a596f0f4aa46174b9a5f72c
+        // Performing reads and writes on a buffer that is currently
+        // bound for transform feedback causes undefined results in
+        // GLES3.0 and OpenGL 4.5. In practice results of reads and
+        // writes might be consistent as long as transform feedback
+        // objects are not active, but neither GLES3.0 nor OpenGL 4.5
+        // spec guarantees this - just being bound for transform
+        // feedback is sufficient to cause undefined results.
+
+        BindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, nullptr);
     }
 
-    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER &&
-        mBoundTransformFeedback->mIsActive)
-    {
-        ErrorInvalidOperation("%s: Currently bound transform feedback is active.",
-                              funcName);
-        return;
-    }
+    /* If the buffer is written and read sequentially by other
+     * operations and getBufferSubData, it is the responsibility of
+     * the WebGL API to ensure that data are access
+     * consistently. This applies even if the buffer is currently
+     * bound to a transform feedback binding point.
+     */
 
-    ////
-
-    gl->MakeCurrent();
-
-    const auto ptr = gl->fMapBufferRange(target, offset, data.LengthAllowShared(),
-                                         LOCAL_GL_MAP_READ_BIT);
+    void* ptr = gl->fMapBufferRange(target, offset, data.LengthAllowShared(),
+                                    LOCAL_GL_MAP_READ_BIT);
     // Warning: Possibly shared memory.  See bug 1225033.
     memcpy(data.DataAllowShared(), ptr, data.LengthAllowShared());
     gl->fUnmapBuffer(target);
+
+    ////
+
+    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER && currentTF) {
+        BindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, currentTF);
+    }
 }
 
 } // namespace mozilla
