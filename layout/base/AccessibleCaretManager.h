@@ -10,6 +10,7 @@
 #include "AccessibleCaret.h"
 #include "nsCOMPtr.h"
 #include "nsCoord.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIFrame.h"
 #include "nsISelectionListener.h"
 #include "mozilla/RefPtr.h"
@@ -101,6 +102,10 @@ public:
   // The canvas frame holding the accessible caret anonymous content elements
   // was reconstructed, resulting in the content elements getting cloned.
   virtual void OnFrameReconstruction();
+
+  // Update the manager with the last input source that was observed. This
+  // is used in part to determine if the carets should be shown or hidden.
+  void SetLastInputSource(uint16_t aInputSource);
 
 protected:
   // This enum representing the number of AccessibleCarets on the screen.
@@ -276,6 +281,12 @@ protected:
   AccessibleCaret::Appearance mSecondCaretAppearanceOnScrollStart =
                                  AccessibleCaret::Appearance::None;
 
+  // The last input source that the event hub saw. We use this to decide whether
+  // or not show the carets when the selection is updated, as we want to hide
+  // the carets for mouse-triggered selection changes but show them for other
+  // input types such as touch.
+  uint16_t mLastInputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+
   static const int32_t kAutoScrollTimerDelay = 30;
 
   // Clicking on the boundary of input or textarea will move the caret to the
@@ -319,6 +330,10 @@ protected:
 
   // AccessibleCaret pref for haptic feedback behaviour on longPress.
   static bool sHapticFeedback;
+
+  // Preference to keep carets hidden when the selection is being manipulated
+  // by mouse input (as opposed to touch/pen/etc.).
+  static bool sHideCaretsForMouseInput;
 };
 
 std::ostream& operator<<(std::ostream& aStream,

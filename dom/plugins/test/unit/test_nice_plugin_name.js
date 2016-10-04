@@ -32,6 +32,7 @@ function test_expected_permission_string(aPermString) {
 }
 
 function run_test() {
+  allow_all_plugins();
   do_check_true(gIsWindows || gIsOSX || gIsLinux);
   do_check_true(!(gIsWindows && gIsOSX) && !(gIsWindows && gIsLinux) &&
                 !(gIsOSX && gIsLinux));

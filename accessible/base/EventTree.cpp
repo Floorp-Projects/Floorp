@@ -291,14 +291,20 @@ EventTree::FindOrInsert(Accessible* aContainer)
           AccMutationEvent* ev = node->mDependentEvents[idx];
           if (ev->GetAccessible() == parent) {
 #ifdef A11Y_LOG
-            if (logging::IsEnabledAll(logging::eEventTree |
-                                      logging::eVerbose)) {
+            if (logging::IsEnabled(logging::eEventTree)) {
               logging::MsgBegin("EVENTS_TREE",
-                "Rejecting node since contained by show/hide target");
-              logging::AccessibleInfo("Container", aContainer);
+                "Rejecting node contained by show/hide");
+              logging::AccessibleInfo("Node", aContainer);
               logging::MsgEnd();
             }
 #endif
+            // If the node is rejected, then check if it has related hide event
+            // on stack, and if so, then connect it to the parent show event.
+            if (ev->IsShow()) {
+              AccShowEvent* showEv = downcast_accEvent(ev);
+              Controller(aContainer)->
+                WithdrawPrecedingEvents(&showEv->mPrecedingEvents);
+            }
             return nullptr;
           }
         }

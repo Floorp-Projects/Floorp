@@ -37,6 +37,7 @@ partial interface HTMLEmbedElement {
 
 partial interface HTMLEmbedElement {
   // GetSVGDocument
+  [NeedsSubjectPrincipal]
   Document? getSVGDocument();
 };
 

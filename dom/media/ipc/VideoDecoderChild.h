@@ -29,7 +29,7 @@ public:
   bool RecvInputExhausted() override;
   bool RecvDrainComplete() override;
   bool RecvError(const nsresult& aError) override;
-  bool RecvInitComplete() override;
+  bool RecvInitComplete(const bool& aHardware, const nsCString& aHardwareReason) override;
   bool RecvInitFailed(const nsresult& aReason) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -39,6 +39,8 @@ public:
   void Flush();
   void Drain();
   void Shutdown();
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const;
+  void SetSeekThreshold(const media::TimeUnit& aTime);
 
   MOZ_IS_CLASS_INIT
   void InitIPDL(MediaDataDecoderCallback* aCallback,
@@ -63,7 +65,10 @@ private:
 
   VideoInfo mVideoInfo;
   layers::LayersBackend mLayersBackend;
+  nsCString mHardwareAcceleratedReason;
   bool mCanSend;
+  bool mInitialized;
+  bool mIsHardwareAccelerated;
 };
 
 } // namespace dom

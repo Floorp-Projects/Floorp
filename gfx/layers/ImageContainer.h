@@ -480,7 +480,7 @@ public:
    *
    * Can be called from any thread.
    */
-  uint64_t GetAsyncContainerID() const;
+  uint64_t GetAsyncContainerID();
 
   /**
    * Returns if the container currently has an image.
@@ -595,6 +595,8 @@ private:
   // NOTE: If we have remote data mRemoteDataMutex should be locked when
   // calling this function!
   void EnsureActiveImage();
+
+  void EnsureImageClient(bool aCreate);
 
   void NotifyCompositeInternal(const ImageCompositeNotification& aNotification);
 

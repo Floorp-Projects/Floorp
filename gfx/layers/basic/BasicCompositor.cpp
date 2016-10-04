@@ -646,6 +646,9 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                                         dest, buffer)) {
           // we succeeded in convert and scaling
         } else if (source->mFromYCBCR &&
+                   !source->GetSurface(dest)) {
+          gfxWarning() << "Failed to get YCbCr to rgb surface.";
+        } else if (source->mFromYCBCR &&
             AttemptVideoScale(source, sourceMask, aOpacity, blendMode,
                               texturedEffect,
                               newTransform, aRect, transformedClipRect,

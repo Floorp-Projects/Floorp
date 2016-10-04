@@ -2152,6 +2152,9 @@ pref("security.sri.enable", true);
 // Block scripts with wrong MIME type such as image/ or video/.
 pref("security.block_script_with_wrong_mime", true);
 
+// Block images of wrong MIME for XCTO: nosniff.
+pref("security.xcto_nosniff_block_images", false);
+
 // OCSP must-staple
 pref("security.ssl.enable_ocsp_must_staple", true);
 
@@ -2755,7 +2758,10 @@ pref("hangmonitor.timeout", 0);
 pref("plugins.load_appdir_plugins", false);
 // If true, plugins will be click to play
 pref("plugins.click_to_play", false);
-
+#ifdef NIGHTLY_BUILD
+// This only supports one hidden ctp plugin, edit nsPluginArray.cpp if adding a second
+pref("plugins.navigator.hidden_ctp_plugin", "Shockwave Flash");
+#endif
 // The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
 pref("plugin.default.state", 2);
 
@@ -4733,12 +4739,6 @@ pref("dom.vibrator.max_vibrate_list_len", 128);
 // Battery API
 pref("dom.battery.enabled", true);
 
-// Image srcset
-pref("dom.image.srcset.enabled", true);
-
-// <picture> element and sizes
-pref("dom.image.picture.enabled", true);
-
 // WebSMS
 pref("dom.sms.enabled", false);
 // Enable Latin characters replacement with corresponding ones in GSM SMS
@@ -5260,6 +5260,9 @@ pref("layout.accessiblecaret.hapticfeedback", false);
 
 // Smart phone-number selection on long-press is not enabled by default.
 pref("layout.accessiblecaret.extend_selection_for_phone_number", false);
+
+// Keep the accessible carets hidden when the user is using mouse input.
+pref("layout.accessiblecaret.hide_carets_for_mouse_input", true);
 
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
