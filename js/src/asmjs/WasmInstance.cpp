@@ -210,7 +210,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     const FuncImport& fi = metadata_->funcImports[funcImportIndex];
 
     InvokeArgs args(cx);
-    if (!args.init(argc))
+    if (!args.init(cx, argc))
         return false;
 
     bool hasI64Arg = false;
