@@ -66,7 +66,7 @@ LIRGenerator::visitParameter(MParameter* param)
 
     offset *= sizeof(Value);
 #if defined(JS_NUNBOX32)
-# if defined(IS_BIG_ENDIAN)
+# if defined(MOZ_BIG_ENDIAN)
     ins->getDef(0)->setOutput(LArgument(offset));
     ins->getDef(1)->setOutput(LArgument(offset + 4));
 # else
