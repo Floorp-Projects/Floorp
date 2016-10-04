@@ -96,7 +96,7 @@ struct SystemTimezoneChangeInformation {
 
 namespace hal_sandbox {
 
-nested(upto inside_cpow) sync protocol PHal {
+prio(normal upto urgent) sync protocol PHal {
     manager PContent;
 
 child:
@@ -156,7 +156,7 @@ parent:
 
     async EnableScreenConfigurationNotifications();
     async DisableScreenConfigurationNotifications();
-    nested(inside_cpow) sync GetCurrentScreenConfiguration()
+    prio(urgent) sync GetCurrentScreenConfiguration()
       returns (ScreenConfiguration aScreenConfiguration);
     sync LockScreenOrientation(ScreenOrientationInternal aOrientation)
       returns (bool allowed);

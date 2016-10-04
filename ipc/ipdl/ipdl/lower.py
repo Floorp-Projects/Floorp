@@ -1685,7 +1685,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
             mfDecl, mfDefn = _splitFuncDeclDefn(
                 _generateMessageConstructor(md.msgCtorFunc(), md.msgId(),
-                                            md.decl.type.nested,
+                                            md.decl.type.priority,
                                             md.prettyMsgName(p.name+'::'),
                                             md.decl.type.compress))
             decls.append(mfDecl)
@@ -1695,7 +1695,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 rfDecl, rfDefn = _splitFuncDeclDefn(
                     _generateMessageConstructor(
                         md.replyCtorFunc(), md.replyId(),
-                        md.decl.type.nested,
+                        md.decl.type.priority,
                         md.prettyReplyName(p.name+'::'),
                         md.decl.type.compress))
                 decls.append(rfDecl)
@@ -1926,7 +1926,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageConstructor(clsname, msgid, nested, prettyName, compress):
+def _generateMessageConstructor(clsname, msgid, priority, prettyName, compress):
     routingId = ExprVar('routingId')
 
     func = FunctionDefn(FunctionDecl(
@@ -1941,21 +1941,19 @@ def _generateMessageConstructor(clsname, msgid, nested, prettyName, compress):
         compression = ExprVar('IPC::Message::COMPRESSION_ALL')
     else:
         compression = ExprVar('IPC::Message::COMPRESSION_NONE')
-
-    if nested == ipdl.ast.NOT_NESTED:
-        nestedEnum = 'IPC::Message::NOT_NESTED'
-    elif nested == ipdl.ast.INSIDE_SYNC_NESTED:
-        nestedEnum = 'IPC::Message::NESTED_INSIDE_SYNC'
+    if priority == ipdl.ast.NORMAL_PRIORITY:
+        priorityEnum = 'IPC::Message::PRIORITY_NORMAL'
+    elif priority == ipdl.ast.HIGH_PRIORITY:
+        priorityEnum = 'IPC::Message::PRIORITY_HIGH'
     else:
-        assert nested == ipdl.ast.INSIDE_CPOW_NESTED
-        nestedEnum = 'IPC::Message::NESTED_INSIDE_CPOW'
+        assert priority == ipdl.ast.URGENT_PRIORITY
+        priorityEnum = 'IPC::Message::PRIORITY_URGENT'
 
     func.addstmt(
         StmtReturn(ExprNew(Type('IPC::Message'),
                            args=[ routingId,
                                   ExprVar(msgid),
-                                  ExprVar(nestedEnum),
-                                  ExprVar('IPC::Message::NORMAL_PRIORITY'),
+                                  ExprVar(priorityEnum),
                                   compression,
                                   ExprLiteral.String(prettyName) ])))
 

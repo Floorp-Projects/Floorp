@@ -83,10 +83,10 @@ public:
   ChannelOpened(TransportDescriptor aDescriptor,
                 ProcessId aOtherProcess,
                 ProtocolId aProtocol,
-                NestedLevel aNestedLevel = NOT_NESTED)
+                PriorityValue aPriority = PRIORITY_NORMAL)
     : IPC::Message(MSG_ROUTING_CONTROL, // these only go to top-level actors
                    CHANNEL_OPENED_MESSAGE_TYPE,
-                   aNestedLevel)
+                   aPriority)
   {
     IPC::WriteParam(this, aDescriptor);
     IPC::WriteParam(this, aOtherProcess);
@@ -128,7 +128,7 @@ Bridge(const PrivateIPDLInterface&,
   if (!aParentChannel->Send(new ChannelOpened(parentSide,
                                               aChildPid,
                                               aProtocol,
-                                              IPC::Message::NESTED_INSIDE_CPOW))) {
+                                              IPC::Message::PRIORITY_URGENT))) {
     CloseDescriptor(parentSide);
     CloseDescriptor(childSide);
     return NS_ERROR_BRIDGE_OPEN_PARENT;
@@ -137,7 +137,7 @@ Bridge(const PrivateIPDLInterface&,
   if (!aChildChannel->Send(new ChannelOpened(childSide,
                                             aParentPid,
                                             aChildProtocol,
-                                            IPC::Message::NESTED_INSIDE_CPOW))) {
+                                            IPC::Message::PRIORITY_URGENT))) {
     CloseDescriptor(parentSide);
     CloseDescriptor(childSide);
     return NS_ERROR_BRIDGE_OPEN_CHILD;

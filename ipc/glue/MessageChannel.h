@@ -408,9 +408,9 @@ class MessageChannel : HasResultCodes
         return mDispatchingAsyncMessage;
     }
 
-    int DispatchingAsyncMessageNestedLevel() const {
+    int DispatchingAsyncMessagePriority() const {
         AssertWorkerThread();
-        return mDispatchingAsyncMessageNestedLevel;
+        return mDispatchingAsyncMessagePriority;
     }
 
     bool Connected() const;
@@ -626,7 +626,7 @@ class MessageChannel : HasResultCodes
     };
 
     bool mDispatchingAsyncMessage;
-    int mDispatchingAsyncMessageNestedLevel;
+    int mDispatchingAsyncMessagePriority;
 
     // When we send an urgent request from the parent process, we could race
     // with an RPC message that was issued by the child beforehand. In this
@@ -649,13 +649,13 @@ class MessageChannel : HasResultCodes
     friend class AutoEnterTransaction;
     AutoEnterTransaction *mTransactionStack;
 
-    int32_t CurrentNestedInsideSyncTransaction() const;
+    int32_t CurrentHighPriorityTransaction() const;
 
     bool AwaitingSyncReply() const;
-    int AwaitingSyncReplyNestedLevel() const;
+    int AwaitingSyncReplyPriority() const;
 
     bool DispatchingSyncMessage() const;
-    int DispatchingSyncMessageNestedLevel() const;
+    int DispatchingSyncMessagePriority() const;
 
     // If a sync message times out, we store its sequence number here. Any
     // future sync messages will fail immediately. Once the reply for original
@@ -671,7 +671,7 @@ class MessageChannel : HasResultCodes
     // hitting a lot of corner cases with message nesting that we don't really
     // care about.
     int32_t mTimedOutMessageSeqno;
-    int mTimedOutMessageNestedLevel;
+    int mTimedOutMessagePriority;
 
     // Queue of all incoming messages, except for replies to sync and urgent
     // messages, which are delivered directly to mRecvd, and any pending urgent
