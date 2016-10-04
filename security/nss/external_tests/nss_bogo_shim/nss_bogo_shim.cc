@@ -18,6 +18,8 @@
 
 #include "nsskeys.h"
 
+bool exitCodeUnimplemented = false;
+
 std::string FormatError(PRErrorCode code) {
   return std::string(":") + PORT_ErrorToName(code) + ":" + ":" +
          PORT_ErrorToString(code);
@@ -109,7 +111,11 @@ class TestAgent {
 
     if (cfg_.get<std::string>("key-file") != "") {
       key_ = ReadPrivateKey(cfg_.get<std::string>("key-file"));
-      if (!key_) exit(89);  // Temporary to handle our inability to handle ECDSA
+      if (!key_) {
+        // Temporary to handle our inability to handle ECDSA.
+        exitCodeUnimplemented = true;
+        return false;
+      }
     }
     if (cfg_.get<std::string>("cert-file") != "") {
       cert_ = ReadCertificate(cfg_.get<std::string>("cert-file"));
@@ -120,11 +126,6 @@ class TestAgent {
       rv = SSL_ConfigServerCert(ssl_fd_, cert_, key_, nullptr, 0);
       if (rv != SECSuccess) {
         std::cerr << "Couldn't configure server cert\n";
-        return false;
-      }
-      rv = SSL_ConfigServerSessionIDCache(1024, 0, 0, ".");
-      if (rv != SECSuccess) {
-        std::cerr << "Couldn't configure session cache\n";
         return false;
       }
     } else {
@@ -273,43 +274,67 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
     case Config::kOK:
       break;
     case Config::kUnknownFlag:
-      exit(89);
-      break;
+      exitCodeUnimplemented = true;
     default:
-      exit(1);
+      return nullptr;
   }
 
   // Needed to change to std::unique_ptr<const Config>
   return std::move(cfg);
 }
 
-void RunCycle(std::unique_ptr<const Config>& cfg) {
+
+bool RunCycle(std::unique_ptr<const Config>& cfg) {
   std::unique_ptr<TestAgent> agent(TestAgent::Create(*cfg));
-  if (!agent) {
-    exit(1);
+  return agent && agent->DoExchange() == SECSuccess;
+}
+
+int GetExitCode(bool success) {
+  if (exitCodeUnimplemented) {
+    return 89;
   }
 
-  SECStatus rv = agent->DoExchange();
-  if (rv) {
-    exit(1);
+  if (success) {
+    return 0;
   }
+
+  return 1;
 }
 
 int main(int argc, char** argv) {
   std::unique_ptr<const Config> cfg = ReadConfig(argc, argv);
-
-  SECStatus rv = NSS_NoDB_Init(nullptr);
-  if (rv != SECSuccess) return 1;
-  rv = NSS_SetDomesticPolicy();
-  if (rv != SECSuccess) return 1;
-
-  // Run a single test cycle.
-  RunCycle(cfg);
-
-  if (cfg->get<bool>("resume")) {
-    std::cout << "Resuming" << std::endl;
-    RunCycle(cfg);
+  if (!cfg) {
+    return GetExitCode(false);
   }
 
-  exit(0);
+  if (cfg->get<bool>("server")) {
+    if (SSL_ConfigServerSessionIDCache(1024, 0, 0, ".") != SECSuccess) {
+      std::cerr << "Couldn't configure session cache\n";
+      return 1;
+    }
+  }
+
+  if (NSS_NoDB_Init(nullptr) != SECSuccess) {
+    return 1;
+  }
+
+  // Run a single test cycle.
+  bool success = RunCycle(cfg);
+
+  if (success && cfg->get<bool>("resume")) {
+    std::cout << "Resuming" << std::endl;
+    success = RunCycle(cfg);
+  }
+
+  SSL_ClearSessionCache();
+
+  if (cfg->get<bool>("server")) {
+    SSL_ShutdownServerSessionIDCache();
+  }
+
+  if (NSS_Shutdown() != SECSuccess) {
+    success = false;
+  }
+
+  return GetExitCode(success);
 }
