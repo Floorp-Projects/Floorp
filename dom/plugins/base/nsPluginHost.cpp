@@ -2359,7 +2359,7 @@ WatchRegKey(uint32_t aRoot, nsCOMPtr<nsIWindowsRegKey>& aKey)
   nsresult rv = aKey->Open(aRoot,
                            NS_LITERAL_STRING("Software\\MozillaPlugins"),
                            nsIWindowsRegKey::ACCESS_READ | nsIWindowsRegKey::ACCESS_NOTIFY);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     aKey = nullptr;
     return;
   }
