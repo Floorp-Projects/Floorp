@@ -256,7 +256,13 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.ISize(lineWM) = ll->EndSpan(this) + bp.IStartEnd(wm);
     ll->SetInFirstLetter(false);
 
-    nsLayoutUtils::SetBSizeFromFontMetrics(this, aMetrics, bp, lineWM, wm);
+    if (mStyleContext->StyleTextReset()->mInitialLetterSize != 0.0f) {
+      aMetrics.SetBlockStartAscent(kidMetrics.BlockStartAscent() +
+                                   bp.BStart(wm));
+      aMetrics.BSize(lineWM) = kidMetrics.BSize(lineWM) + bp.BStartEnd(wm);
+    } else {
+      nsLayoutUtils::SetBSizeFromFontMetrics(this, aMetrics, bp, lineWM, wm);
+    }
   }
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
