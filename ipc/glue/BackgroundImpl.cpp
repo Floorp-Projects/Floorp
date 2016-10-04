@@ -2033,6 +2033,13 @@ ChildImpl::OpenProtocolOnMainThread(nsIEventTarget* aEventTarget)
   ContentChild* content = ContentChild::GetSingleton();
   MOZ_ASSERT(content);
 
+  if (content->IsShuttingDown()) {
+    // The transport for ContentChild is shut down and can't be used to open
+    // PBackground.
+    DispatchFailureCallback(aEventTarget);
+    return false;
+  }
+
   if (!PBackground::Open(content)) {
     MOZ_CRASH("Failed to create top level actor!");
     return false;
