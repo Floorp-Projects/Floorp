@@ -35,6 +35,7 @@ skip-if(Android||B2G) == 649134-2.html 649134-2-ref.html
 == bug502168-1_malformed.html bug502168-1_well-formed.html
 
 == responsive-image-load-shortcircuit.html responsive-image-load-shortcircuit-ref.html
+== image-load-shortcircuit.html image-load-shortcircuit-ref.html
 
 # Test that image documents taken into account CSS properties like
 # image-orientation when determining the size of the image.
