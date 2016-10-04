@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <unistd.h>
+#include "mozilla/Sprintf.h"
 #include "progressui.h"
 #include "readstrings.h"
 #include "errors.h"
@@ -71,7 +72,7 @@ ShowProgressUI()
     return 0;
 
   char ini_path[PATH_MAX];
-  snprintf(ini_path, sizeof(ini_path), "%s.ini", sProgramPath);
+  SprintfLiteral(ini_path, "%s.ini", sProgramPath);
 
   StringTable strings;
   if (ReadStrings(ini_path, &strings) != OK)
@@ -83,7 +84,7 @@ ShowProgressUI()
 
   static GdkPixbuf *pixbuf;
   char icon_path[PATH_MAX];
-  snprintf(icon_path, sizeof(icon_path), "%s.png", sProgramPath);
+  SprintfLiteral(icon_path, "%s.png", sProgramPath);
 
   g_signal_connect(G_OBJECT(sWin), "delete_event",
                    G_CALLBACK(OnDeleteEvent), nullptr);
