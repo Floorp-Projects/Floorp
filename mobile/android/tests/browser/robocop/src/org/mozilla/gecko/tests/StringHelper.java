@@ -109,7 +109,7 @@ public class StringHelper {
     public final String MOZILLA_SECTION_LABEL;
 
     // Mozilla
-    public final String BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox Beta|Firefox)";
+    public final String BRAND_NAME = "(Fennec|Nightly|Firefox Aurora|Firefox Beta|Firefox)";
     public final String ABOUT_LABEL = "About " + BRAND_NAME ;
     public final String LOCATION_SERVICES_LABEL = "Mozilla Location Service";
 
