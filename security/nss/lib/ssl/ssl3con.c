@@ -76,7 +76,7 @@ static SECStatus Null_Cipher(void *ctx, unsigned char *output, int *outputLen,
 
 static CK_MECHANISM_TYPE ssl3_GetHashMechanismByHashType(SSLHashType hashType);
 static CK_MECHANISM_TYPE ssl3_GetMgfMechanismByHashType(SSLHashType hash);
-PRBool ssl_IsRsaPssSignatureScheme(SignatureScheme scheme);
+PRBool ssl_IsRsaPssSignatureScheme(SSLSignatureScheme scheme);
 
 #define MAX_SEND_BUF_LENGTH 32000 /* watch for 16-bit integer overflow */
 #define MIN_SEND_BUF_LENGTH 4000
@@ -186,7 +186,7 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
  * order of signature types is based on the same rules for ordering we use for
  * cipher suites just for consistency.
  */
-static const SignatureScheme defaultSignatureSchemes[] = {
+static const SSLSignatureScheme defaultSignatureSchemes[] = {
     ssl_sig_ecdsa_secp256r1_sha256,
     ssl_sig_ecdsa_secp384r1_sha384,
     ssl_sig_ecdsa_secp521r1_sha512,
@@ -1173,7 +1173,7 @@ done:
 
 /* Called from ssl3_HandleServerKeyExchange, ssl3_HandleCertificateVerify */
 SECStatus
-ssl3_VerifySignedHashes(sslSocket *ss, SignatureScheme scheme, SSL3Hashes *hash,
+ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *hash,
                         SECItem *buf)
 {
     SECKEYPublicKey *key;
@@ -4343,7 +4343,7 @@ ssl3_HashTypeToOID(SSLHashType hashType)
 }
 
 SSLHashType
-ssl_SignatureSchemeToHashType(SignatureScheme scheme)
+ssl_SignatureSchemeToHashType(SSLSignatureScheme scheme)
 {
     switch (scheme) {
         case ssl_sig_rsa_pkcs1_sha1:
@@ -4375,7 +4375,7 @@ ssl_SignatureSchemeToHashType(SignatureScheme scheme)
 }
 
 KeyType
-ssl_SignatureSchemeToKeyType(SignatureScheme scheme)
+ssl_SignatureSchemeToKeyType(SSLSignatureScheme scheme)
 {
     switch (scheme) {
         case ssl_sig_rsa_pkcs1_sha256:
@@ -4407,7 +4407,7 @@ ssl_SignatureSchemeToKeyType(SignatureScheme scheme)
 
 static SECStatus
 ssl_ValidateSignatureScheme(PRBool isTLS13, KeyType keyType,
-                            SignatureScheme scheme)
+                            SSLSignatureScheme scheme)
 {
     /* Match key type to the scheme; also, SHA1 is forbidden in TLS 1.3. */
     return ssl_IsSupportedSignatureScheme(scheme) &&
@@ -4416,7 +4416,7 @@ ssl_ValidateSignatureScheme(PRBool isTLS13, KeyType keyType,
 }
 
 static SSLNamedGroup
-ssl_NamedGroupForSignatureScheme(SignatureScheme scheme)
+ssl_NamedGroupForSignatureScheme(SSLSignatureScheme scheme)
 {
     switch (scheme) {
         case ssl_sig_ecdsa_secp256r1_sha256:
@@ -4435,7 +4435,7 @@ ssl_NamedGroupForSignatureScheme(SignatureScheme scheme)
 static PRBool
 ssl_SignatureSchemeValidForKey(PRBool isTLS13, KeyType keyType,
                                const sslNamedGroupDef *ecGroup,
-                               SignatureScheme scheme)
+                               SSLSignatureScheme scheme)
 {
     if (!ssl_ValidateSignatureScheme(isTLS13, keyType, scheme)) {
         return PR_FALSE;
@@ -4459,7 +4459,7 @@ ssl_SignatureSchemeValidForKey(PRBool isTLS13, KeyType keyType,
  * PORT_SetError is called and SECFailure is returned. */
 SECStatus
 ssl_CheckSignatureSchemeConsistency(
-    sslSocket *ss, SignatureScheme scheme, CERTCertificate *cert)
+    sslSocket *ss, SSLSignatureScheme scheme, CERTCertificate *cert)
 {
     unsigned int i;
     const sslNamedGroupDef *group = NULL;
@@ -4504,7 +4504,7 @@ ssl_CheckSignatureSchemeConsistency(
 }
 
 PRBool
-ssl_IsSupportedSignatureScheme(SignatureScheme scheme)
+ssl_IsSupportedSignatureScheme(SSLSignatureScheme scheme)
 {
     switch (scheme) {
         case ssl_sig_rsa_pkcs1_sha1:
@@ -4533,7 +4533,7 @@ ssl_IsSupportedSignatureScheme(SignatureScheme scheme)
 }
 
 PRBool
-ssl_IsRsaPssSignatureScheme(SignatureScheme scheme)
+ssl_IsRsaPssSignatureScheme(SSLSignatureScheme scheme)
 {
     switch (scheme) {
         case ssl_sig_rsa_pss_sha256:
@@ -4547,14 +4547,14 @@ ssl_IsRsaPssSignatureScheme(SignatureScheme scheme)
     return PR_FALSE;
 }
 
-/* ssl_ConsumeSignatureScheme reads a SignatureScheme (formerly
+/* ssl_ConsumeSignatureScheme reads a SSLSignatureScheme (formerly
  * SignatureAndHashAlgorithm) structure from |b| and puts the resulting value
  * into |out|. |b| and |length| are updated accordingly.
  *
  * See https://tools.ietf.org/html/rfc5246#section-7.4.1.4.1 */
 SECStatus
 ssl_ConsumeSignatureScheme(sslSocket *ss, SSL3Opaque **b,
-                           PRUint32 *length, SignatureScheme *out)
+                           PRUint32 *length, SSLSignatureScheme *out)
 {
     PRInt32 tmp;
 
@@ -4562,11 +4562,11 @@ ssl_ConsumeSignatureScheme(sslSocket *ss, SSL3Opaque **b,
     if (tmp < 0) {
         return SECFailure; /* Error code set already. */
     }
-    if (!ssl_IsSupportedSignatureScheme((SignatureScheme)tmp)) {
+    if (!ssl_IsSupportedSignatureScheme((SSLSignatureScheme)tmp)) {
         PORT_SetError(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
         return SECFailure;
     }
-    *out = (SignatureScheme)tmp;
+    *out = (SSLSignatureScheme)tmp;
     return SECSuccess;
 }
 
@@ -5188,7 +5188,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
          * the Windows SChannel bug described above. */
         PORT_Assert(ss->version == ss->clientHelloVersion);
     }
-    ss->clientHelloVersion = ss->version;
+    ss->clientHelloVersion = PR_MIN(ss->version, SSL_LIBRARY_VERSION_TLS_1_2);
     if (IS_DTLS(ss)) {
         PRUint16 version;
 
@@ -6217,7 +6217,7 @@ ssl3_SendClientKeyExchange(sslSocket *ss)
 
 SECStatus
 ssl_PickSignatureScheme(sslSocket *ss, SECKEYPublicKey *key,
-                        const SignatureScheme *peerSchemes,
+                        const SSLSignatureScheme *peerSchemes,
                         unsigned int peerSchemeCount,
                         PRBool requireSha1)
 {
@@ -6241,7 +6241,7 @@ ssl_PickSignatureScheme(sslSocket *ss, SECKEYPublicKey *key,
     for (i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
         SSLHashType hashType;
         SECOidTag hashOID;
-        SignatureScheme preferred = ss->ssl3.signatureSchemes[i];
+        SSLSignatureScheme preferred = ss->ssl3.signatureSchemes[i];
         PRUint32 policy;
 
         if (!ssl_SignatureSchemeValidForKey(isTLS13, keyType, group,
@@ -6310,7 +6310,7 @@ ssl3_PickServerSignatureScheme(sslSocket *ss)
 }
 
 static SECStatus
-ssl_PickClientSignatureScheme(sslSocket *ss, const SignatureScheme *schemes,
+ssl_PickClientSignatureScheme(sslSocket *ss, const SSLSignatureScheme *schemes,
                               unsigned int numSchemes)
 {
     SECKEYPublicKey *key;
@@ -6469,7 +6469,9 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     PRBool isTLS = PR_FALSE;
     SSL3AlertDescription desc = illegal_parameter;
     SSL3ProtocolVersion version;
+#ifndef TLS_1_3_DRAFT_VERSION
     SSL3ProtocolVersion downgradeCheckVersion;
+#endif
 
     SSL_TRC(3, ("%d: SSL3[%d]: handle server_hello handshake",
                 SSL_GETPID(), ss->fd));
@@ -6501,8 +6503,9 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     if (temp < 0) {
         goto loser; /* alert has been sent */
     }
-    version = (SSL3ProtocolVersion)temp;
+    version = tls13_DecodeDraftVersion((PRUint16)temp);
 
+    /* Try to translate DTLS versions. */
     if (IS_DTLS(ss)) {
         /* RFC 4347 required that you verify that the server versions
          * match (Section 4.2.1) in the HelloVerifyRequest and the
@@ -6552,6 +6555,7 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         goto loser; /* alert has been sent */
     }
 
+#ifndef TLS_1_3_DRAFT_VERSION
     /* Check the ServerHello.random per
      * [draft-ietf-tls-tls13-11 Section 6.3.1.1].
      *
@@ -6560,6 +6564,8 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
      * TLS 1.2 clients SHOULD also perform this check if the ServerHello
      * indicates TLS 1.1 or below.  If a match is found the client MUST
      * abort the handshake with a fatal "illegal_parameter" alert.
+     *
+     * Disable this test during the TLS 1.3 draft version period.
      */
     downgradeCheckVersion = ss->ssl3.downgradeCheckVersion ? ss->ssl3.downgradeCheckVersion
                                                            : ss->vrange.max;
@@ -6581,6 +6587,7 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
             goto alert_loser;
         }
     }
+#endif
 
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
         rv = ssl3_ConsumeHandshakeVariable(ss, &sidBytes, 1, &b, &length);
@@ -6935,7 +6942,7 @@ ssl_HandleDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SSL3AlertDescription desc = illegal_parameter;
     SSLHashType hashAlg;
     PRBool isTLS = ss->ssl3.prSpec->version > SSL_LIBRARY_VERSION_3_0;
-    SignatureScheme sigScheme;
+    SSLSignatureScheme sigScheme;
 
     SECItem dh_p = { siBuffer, NULL, 0 };
     SECItem dh_g = { siBuffer, NULL, 0 };
@@ -7213,13 +7220,13 @@ alert_loser:
 
 SECStatus
 ssl_ParseSignatureSchemes(sslSocket *ss, PLArenaPool *arena,
-                          SignatureScheme **schemesOut,
+                          SSLSignatureScheme **schemesOut,
                           unsigned int *numSchemesOut,
                           unsigned char **b, unsigned int *len)
 {
     SECStatus rv;
     SECItem buf;
-    SignatureScheme *schemes;
+    SSLSignatureScheme *schemes;
     unsigned int numSchemes = 0;
     unsigned int max;
 
@@ -7237,9 +7244,9 @@ ssl_ParseSignatureSchemes(sslSocket *ss, PLArenaPool *arena,
     max = PR_MIN(buf.len / 2, MAX_SIGNATURE_SCHEMES);
 
     if (arena) {
-        schemes = PORT_ArenaZNewArray(arena, SignatureScheme, max);
+        schemes = PORT_ArenaZNewArray(arena, SSLSignatureScheme, max);
     } else {
-        schemes = PORT_ZNewArray(SignatureScheme, max);
+        schemes = PORT_ZNewArray(SSLSignatureScheme, max);
     }
     if (!schemes) {
         (void)SSL3_SendAlert(ss, alert_fatal, internal_error);
@@ -7254,8 +7261,8 @@ ssl_ParseSignatureSchemes(sslSocket *ss, PLArenaPool *arena,
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
             return SECFailure;
         }
-        if (ssl_IsSupportedSignatureScheme((SignatureScheme)tmp)) {
-            schemes[numSchemes++] = (SignatureScheme)tmp;
+        if (ssl_IsSupportedSignatureScheme((SSLSignatureScheme)tmp)) {
+            schemes[numSchemes++] = (SSLSignatureScheme)tmp;
         }
     }
 
@@ -7283,7 +7290,7 @@ ssl3_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SECStatus rv;
     SSL3AlertDescription desc = illegal_parameter;
     SECItem cert_types = { siBuffer, NULL, 0 };
-    SignatureScheme *signatureSchemes = NULL;
+    SSLSignatureScheme *signatureSchemes = NULL;
     unsigned int signatureSchemeCount = 0;
     CERTDistNames ca_list;
 
@@ -7362,7 +7369,7 @@ done:
 
 SECStatus
 ssl3_CompleteHandleCertificateRequest(sslSocket *ss,
-                                      const SignatureScheme *signatureSchemes,
+                                      const SSLSignatureScheme *signatureSchemes,
                                       unsigned int signatureSchemeCount,
                                       CERTDistNames *ca_list)
 {
@@ -8118,6 +8125,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SSL3AlertDescription desc = illegal_parameter;
     SSL3AlertLevel level = alert_fatal;
     SSL3ProtocolVersion version;
+    TLSExtension *versionExtension;
     SECItem sidBytes = { siBuffer, NULL, 0 };
     SECItem cookieBytes = { siBuffer, NULL, 0 };
     SECItem suites = { siBuffer, NULL, 0 };
@@ -8175,7 +8183,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     if (tmp < 0)
         goto loser; /* malformed, alert already sent */
 
-    /* Translate the version */
+    /* Translate the version. */
     if (IS_DTLS(ss)) {
         ss->clientHelloVersion = version =
             dtls_DTLSVersionToTLSVersion((SSL3ProtocolVersion)tmp);
@@ -8183,15 +8191,93 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         ss->clientHelloVersion = version = (SSL3ProtocolVersion)tmp;
     }
 
-    rv = ssl3_NegotiateVersion(ss, version, PR_TRUE);
+    /* Grab the client random data. */
+    rv = ssl3_ConsumeHandshake(
+        ss, &ss->ssl3.hs.client_random, SSL3_RANDOM_LENGTH, &b, &length);
     if (rv != SECSuccess) {
-        desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version
-                                                   : handshake_failure;
-        errCode = SSL_ERROR_UNSUPPORTED_VERSION;
-        goto alert_loser;
+        goto loser; /* malformed */
+    }
+
+    /* Grab the client's SID, if present. */
+    rv = ssl3_ConsumeHandshakeVariable(ss, &sidBytes, 1, &b, &length);
+    if (rv != SECSuccess) {
+        goto loser; /* malformed */
+    }
+
+    /* Grab the client's cookie, if present. */
+    if (IS_DTLS(ss)) {
+        rv = ssl3_ConsumeHandshakeVariable(ss, &cookieBytes, 1, &b, &length);
+        if (rv != SECSuccess) {
+            goto loser; /* malformed */
+        }
+    }
+
+    /* Grab the list of cipher suites. */
+    rv = ssl3_ConsumeHandshakeVariable(ss, &suites, 2, &b, &length);
+    if (rv != SECSuccess) {
+        goto loser; /* malformed */
+    }
+
+    /* Grab the list of compression methods. */
+    rv = ssl3_ConsumeHandshakeVariable(ss, &comps, 1, &b, &length);
+    if (rv != SECSuccess) {
+        goto loser; /* malformed */
+    }
+
+    /* Handle TLS hello extensions for SSL3 & TLS. We do not know if
+     * we are restarting a previous session until extensions have been
+     * parsed, since we might have received a SessionTicket extension.
+     * Note: we allow extensions even when negotiating SSL3 for the sake
+     * of interoperability (and backwards compatibility).
+     */
+
+    if (length) {
+        /* Get length of hello extensions */
+        PRInt32 extension_length;
+        extension_length = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
+        if (extension_length < 0) {
+            goto loser; /* alert already sent */
+        }
+        if (extension_length != length) {
+            ssl3_DecodeError(ss); /* send alert */
+            goto loser;
+        }
+
+        rv = ssl3_ParseExtensions(ss, &b, &length);
+        if (rv != SECSuccess) {
+            goto loser; /* malformed */
+        }
+    }
+
+    versionExtension = ssl3_FindExtension(ss, ssl_tls13_supported_versions_xtn);
+    if (versionExtension) {
+        rv = tls13_NegotiateVersion(ss, versionExtension);
+        if (rv != SECSuccess) {
+            desc = protocol_version;
+            errCode = SSL_ERROR_UNSUPPORTED_VERSION;
+            goto alert_loser;
+        }
+    } else {
+        /* The PR_MIN here ensures that we never negotiate 1.3 if the
+         * peer didn't offer "supported_versions". */
+        rv = ssl3_NegotiateVersion(ss,
+                                   PR_MIN(version,
+                                          SSL_LIBRARY_VERSION_TLS_1_2),
+                                   PR_TRUE);
+        if (rv != SECSuccess) {
+            desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version
+                                                       : handshake_failure;
+            errCode = SSL_ERROR_UNSUPPORTED_VERSION;
+            goto alert_loser;
+        }
     }
     isTLS13 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3;
     ss->ssl3.hs.preliminaryInfo |= ssl_preinfo_version;
+
+    /* You can't resume TLS 1.3 like this. */
+    if (isTLS13 && sidBytes.len) {
+        goto alert_loser;
+    }
 
     /* Generate the Server Random now so it is available
      * when we process the ClientKeyShare in TLS 1.3 */
@@ -8201,6 +8287,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         goto loser;
     }
 
+#ifndef TLS_1_3_DRAFT_VERSION
     /*
      * [draft-ietf-tls-tls13-11 Section 6.3.1.1].
      * TLS 1.3 server implementations which respond to a ClientHello with a
@@ -8217,7 +8304,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
      *
      * TODO(ekr@rtfm.com): Note this change was not added in the SSLv2
      * compat processing code since that will most likely be removed before
-     * we ship the final version of TLS 1.3.
+     * we ship the final version of TLS 1.3. Bug 1306672.
      */
     if (ss->vrange.max > ss->version) {
         unsigned char *downgrade_sentinel =
@@ -8240,35 +8327,10 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
                 break;
         }
     }
+#endif
 
-    /* grab the client random data. */
-    rv = ssl3_ConsumeHandshake(
-        ss, &ss->ssl3.hs.client_random, SSL3_RANDOM_LENGTH, &b, &length);
-    if (rv != SECSuccess) {
-        goto loser; /* malformed */
-    }
-
-    /* grab the client's SID, if present. */
-    rv = ssl3_ConsumeHandshakeVariable(ss, &sidBytes, 1, &b, &length);
-    if (rv != SECSuccess) {
-        goto loser; /* malformed */
-    }
-
-    /* You can't resume TLS 1.3 like this, */
-    if (isTLS13 && sidBytes.len) {
-        goto alert_loser;
-    }
-
-    /* grab the client's cookie, if present. */
-    if (IS_DTLS(ss)) {
-        rv = ssl3_ConsumeHandshakeVariable(ss, &cookieBytes, 1, &b, &length);
-        if (rv != SECSuccess) {
-            goto loser; /* malformed */
-        }
-    }
-
-    /* grab the list of cipher suites. */
-    rv = ssl3_ConsumeHandshakeVariable(ss, &suites, 2, &b, &length);
+    /* Now parse the rest of the extensions. */
+    rv = ssl3_HandleParsedExtensions(ss, client_hello);
     if (rv != SECSuccess) {
         goto loser; /* malformed */
     }
@@ -8286,55 +8348,9 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         }
     }
 
-    /* grab the list of compression methods. */
-    rv = ssl3_ConsumeHandshakeVariable(ss, &comps, 1, &b, &length);
-    if (rv != SECSuccess) {
-        goto loser; /* malformed */
-    }
-
-    /* TLS 1.3 requires that compression be empty */
+    /* TLS 1.3 requires that compression only include null. */
     if (isTLS13) {
         if (comps.len != 1 || comps.data[0] != ssl_compression_null) {
-            goto alert_loser;
-        }
-    }
-
-    /* Handle TLS hello extensions for SSL3 & TLS. We do not know if
-     * we are restarting a previous session until extensions have been
-     * parsed, since we might have received a SessionTicket extension.
-     * Note: we allow extensions even when negotiating SSL3 for the sake
-     * of interoperability (and backwards compatibility).
-     */
-
-    if (length) {
-        /* Get length of hello extensions */
-        PRInt32 extension_length;
-        extension_length = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
-        if (extension_length < 0) {
-            goto loser; /* alert already sent */
-        }
-        if (extension_length != length) {
-            ssl3_DecodeError(ss); /* send alert */
-            goto loser;
-        }
-        rv = ssl3_HandleExtensions(ss, &b, &length, client_hello);
-        if (rv != SECSuccess) {
-            goto loser; /* malformed */
-        }
-    }
-
-    /* TODO: For TLS 1.3 final, downgrade when the extension IS present. */
-    if (ss->version == SSL_LIBRARY_VERSION_TLS_1_3 &&
-        !ssl3_ExtensionNegotiated(ss, ssl_tls13_draft_version_xtn)) {
-        SSL_TRC(30, ("%d: SSL3[%d]: Unsupported version of TLS 1.3 "
-                     "advertised, expected %d",
-                     SSL_GETPID(), ss->fd, TLS_1_3_DRAFT_VERSION));
-        ss->version = SSL_LIBRARY_VERSION_TLS_1_2;
-        /* Maybe TLS 1.2 is disabled... */
-        if (ss->version < ss->vrange.min) {
-            desc = protocol_version;
-            level = alert_fatal;
-            errCode = SSL_ERROR_UNSUPPORTED_VERSION;
             goto alert_loser;
         }
     }
@@ -9134,20 +9150,10 @@ ssl3_SendServerHello(sslSocket *ss)
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
-    if (!IS_DTLS(ss)) {
-        PORT_Assert(MSB(ss->version) == MSB(SSL_LIBRARY_VERSION_3_0));
-
-        if (MSB(ss->version) != MSB(SSL_LIBRARY_VERSION_3_0)) {
-            PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
-            return SECFailure;
-        }
-    } else {
-        PORT_Assert(MSB(ss->version) == MSB(SSL_LIBRARY_VERSION_DTLS_1_0));
-
-        if (MSB(ss->version) != MSB(SSL_LIBRARY_VERSION_DTLS_1_0)) {
-            PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
-            return SECFailure;
-        }
+    PORT_Assert(MSB(ss->version) == MSB(SSL_LIBRARY_VERSION_3_0));
+    if (MSB(ss->version) != MSB(SSL_LIBRARY_VERSION_3_0)) {
+        PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
+        return SECFailure;
     }
 
     sid = ss->sec.ci.sid;
@@ -9174,10 +9180,10 @@ ssl3_SendServerHello(sslSocket *ss)
         return rv; /* err set by AppendHandshake. */
     }
 
-    if (IS_DTLS(ss)) {
+    if (IS_DTLS(ss) && ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
         version = dtls_TLSVersionToDTLSVersion(ss->version);
     } else {
-        version = ss->version;
+        version = tls13_EncodeDraftVersion(ss->version);
     }
 
     rv = ssl3_AppendHandshakeNumber(ss, version, 2);
@@ -9584,7 +9590,7 @@ ssl3_HandleCertificateVerify(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
     int errCode = SSL_ERROR_RX_MALFORMED_CERT_VERIFY;
     SSL3AlertDescription desc = handshake_failure;
     PRBool isTLS;
-    SignatureScheme sigScheme = ssl_sig_none;
+    SSLSignatureScheme sigScheme = ssl_sig_none;
     SSLHashType hashAlg;
     SSL3Hashes localHashes;
     SSL3Hashes *hashesForVerify = NULL;
@@ -12701,7 +12707,7 @@ ssl3_InitState(sslSocket *ss)
     ss->ssl3.hs.ws = (ss->sec.isServer) ? wait_client_hello : wait_server_hello;
 
     PORT_Memset(&ss->xtnData, 0, sizeof(TLSExtensionData));
-
+    PR_INIT_CLIST(&ss->ssl3.hs.remoteExtensions);
     if (IS_DTLS(ss)) {
         ss->ssl3.hs.sendMessageSeq = 0;
         ss->ssl3.hs.recvMessageSeq = 0;
@@ -12861,7 +12867,7 @@ SSL_SignaturePrefSet(PRFileDesc *fd, const SSLSignatureAndHashAlg *algorithms,
 
     ss->ssl3.signatureSchemeCount = 0;
     for (i = 0; i < count; ++i) {
-        SignatureScheme scheme =
+        SSLSignatureScheme scheme =
             (algorithms[i].hashAlg << 8) | algorithms[i].sigAlg;
         if (!ssl_IsSupportedSignatureScheme(scheme)) {
             SSL_DBG(("%d: SSL[%d]: invalid signature algorithm set %d/%d",
@@ -13030,6 +13036,9 @@ ssl3_DestroySSL3Info(sslSocket *ss)
             PORT_Free(ss->ssl3.hs.recvdFragments.buf);
         }
     }
+
+    /* Destroy remote extensions */
+    ssl3_DestroyRemoteExtensions(&ss->ssl3.hs.remoteExtensions);
 
     /* Destroy TLS 1.3 handshake shares */
     tls13_DestroyKeyShares(&ss->ssl3.hs.remoteKeyShares);

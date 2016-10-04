@@ -18,7 +18,7 @@ const uiActions = require("devtools/client/webconsole/new-console-output/actions
 const {
   MESSAGE_LEVEL
 } = require("../constants");
-const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button").FilterButton);
+const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button"));
 
 const FilterBar = createClass({
 
@@ -73,7 +73,7 @@ const FilterBar = createClass({
 
     if (filterBarVisible) {
       children.push(
-        dom.div({className: "devtools-toolbar"},
+        dom.div({className: "devtools-toolbar webconsole-filterbar-secondary"},
           FilterButton({
             active: filter.error,
             label: "Errors",
@@ -114,9 +114,9 @@ const FilterBar = createClass({
             dispatch
           }),
           FilterButton({
-            active: filter.network,
+            active: filter.net,
             label: "Requests",
-            filterKey: "network",
+            filterKey: "net",
             dispatch
           })
         )

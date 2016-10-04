@@ -48,6 +48,12 @@ TEST_F(DERIntegerDecodingTest, DecodeLong130) {
   TestGetInteger(130, der, sizeof(der));
 }
 
+TEST_F(DERIntegerDecodingTest, DecodeLong130Padded) {
+  unsigned char der[sizeof(long) * 2] = {0};
+  der[sizeof(der) - 1] = {0x82};
+  TestGetInteger(130, der, sizeof(der));
+}
+
 TEST_F(DERIntegerDecodingTest, DecodeLong0) {
   unsigned char der[] = {0x00};
   TestGetInteger(0, der, sizeof(der));
@@ -60,6 +66,12 @@ TEST_F(DERIntegerDecodingTest, DecodeLong1) {
 
 TEST_F(DERIntegerDecodingTest, DecodeLongMinus1) {
   unsigned char der[] = {0xFF};
+  TestGetInteger(-1, der, sizeof(der));
+}
+
+TEST_F(DERIntegerDecodingTest, DecodeLongMinus1Padded) {
+  unsigned char der[sizeof(long) * 2];
+  memset(der, 0xFF, sizeof(der));
   TestGetInteger(-1, der, sizeof(der));
 }
 

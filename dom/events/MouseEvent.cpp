@@ -187,7 +187,7 @@ MouseEvent::Constructor(const GlobalObject& aGlobal,
                     aParam.mMetaKey, aParam.mButton, aParam.mRelatedTarget);
   e->InitializeExtraMouseEventDictionaryMembers(aParam);
   e->SetTrusted(trusted);
-
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 

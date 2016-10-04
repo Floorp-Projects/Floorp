@@ -177,13 +177,11 @@ DER_SetUInteger(PLArenaPool *arena, SECItem *it, PRUint32 ui)
 long
 DER_GetInteger(const SECItem *it)
 {
-    long ival = 0;
-    PRBool negative = PR_FALSE;
+    unsigned long ival;
+    PRBool negative;
     unsigned int len = it->len;
-    unsigned int originalLength = len;
     unsigned char *cp = it->data;
-    unsigned long overflow = 0x1ffUL << (((sizeof(ival) - 1) * 8) - 1);
-    unsigned long mask = 1;
+    size_t lsize = sizeof(ival);
 
     PORT_Assert(len);
     if (!len) {
@@ -191,28 +189,26 @@ DER_GetInteger(const SECItem *it)
         return 0;
     }
 
-    if (*cp & 0x80) {
-        negative = PR_TRUE;
-        overflow <<= 1;
+    negative = (PRBool)(*cp & 0x80);
+    ival = negative ? ~0 : 0;
+
+    /* Ignore leading zeros/ones. */
+    while (len && *cp == (unsigned char)ival) {
+        len--;
+        cp++;
     }
 
-    while (len) {
-        if ((ival & overflow) != 0) {
-            PORT_SetError(SEC_ERROR_BAD_DER);
-            if (negative) {
-                return LONG_MIN;
-            }
-            return LONG_MAX;
-        }
-        ival = ival << 8;
+    /* Check for overflow/underflow. */
+    if (len > lsize || (len == lsize && (*cp & 0x80) != negative)) {
+        PORT_SetError(SEC_ERROR_BAD_DER);
+        return negative ? LONG_MIN : LONG_MAX;
+    }
+
+    while (len--) {
+        ival <<= 8;
         ival |= *cp++;
-        --len;
     }
-    if (negative && ival && (overflow & ival) == 0) {
-        mask <<= ((originalLength * 8) - 1);
-        ival &= ~mask;
-        ival -= mask;
-    }
+
     return ival;
 }
 

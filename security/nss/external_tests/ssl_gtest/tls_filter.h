@@ -308,6 +308,19 @@ class SelectiveDropFilter : public PacketFilter {
   uint8_t counter_;
 };
 
+// Set the version number in the ClientHello.
+class TlsInspectorClientHelloVersionSetter : public TlsHandshakeFilter {
+ public:
+  TlsInspectorClientHelloVersionSetter(uint16_t version) : version_(version) {}
+
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output);
+
+ private:
+  uint16_t version_;
+};
+
 }  // namespace nss_test
 
 #endif

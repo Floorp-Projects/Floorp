@@ -879,9 +879,15 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
                          offsetToUserSpace, true);
     }
 
-    context.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
-                                  opacityApplied ?  1.0 : opacity,
-                                  maskSurface, maskTransform);
+    if (aParams.layerManager->GetRoot()->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) {
+      context.PushGroupAndCopyBackground(gfxContentType::COLOR_ALPHA,
+                                         opacityApplied ?  1.0 : opacity,
+                                         maskSurface, maskTransform);
+    } else {
+      context.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
+                                    opacityApplied ?  1.0 : opacity,
+                                    maskSurface, maskTransform);
+    }
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so

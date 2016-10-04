@@ -4,7 +4,8 @@ This directory contains the harfbuzz source from the 'master' branch of
 https://github.com/behdad/harfbuzz.
 
 Current version: 1.3.0 + recent fixes from trunk,
-up to 547ddb0721365dca985aef5b759d08718f7c5f82.
+up to 547ddb0721365dca985aef5b759d08718f7c5f82
++ the relevant part of https://github.com/behdad/harfbuzz/pull/334.
 
 
 UPDATING:

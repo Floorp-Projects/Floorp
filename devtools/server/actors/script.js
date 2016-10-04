@@ -1114,7 +1114,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
                 .getService(Ci.nsIEventListenerService);
 
-    let targets = els.getEventTargetChainFor(eventTarget);
+    let targets = els.getEventTargetChainFor(eventTarget, true);
     let listeners = [];
 
     for (let target of targets) {
