@@ -237,7 +237,7 @@ typedef enum JSWhyMagic
     JS_WHY_MAGIC_COUNT
 } JSWhyMagic;
 
-#if defined(MOZ_LITTLE_ENDIAN)
+#if defined(IS_LITTLE_ENDIAN)
 # if defined(JS_NUNBOX32)
 typedef union jsval_layout
 {
@@ -285,7 +285,7 @@ typedef union jsval_layout
     uintptr_t asUIntPtr;
 } JSVAL_ALIGNMENT jsval_layout;
 # endif  /* JS_PUNBOX64 */
-#else   /* defined(MOZ_LITTLE_ENDIAN) */
+#else   /* defined(IS_LITTLE_ENDIAN) */
 # if defined(JS_NUNBOX32)
 typedef union jsval_layout
 {
@@ -331,7 +331,7 @@ typedef union jsval_layout
     uintptr_t asUIntPtr;
 } JSVAL_ALIGNMENT jsval_layout;
 # endif /* JS_PUNBOX64 */
-#endif  /* defined(MOZ_LITTLE_ENDIAN) */
+#endif  /* defined(IS_LITTLE_ENDIAN) */
 
 JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
 
