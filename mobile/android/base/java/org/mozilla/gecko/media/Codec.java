@@ -275,10 +275,19 @@ import java.util.Queue;
     }
 
     @Override
+    public synchronized Sample dequeueInput(int size) {
+        return Sample.create();
+    }
+
+    @Override
     public synchronized void queueInput(Sample sample) throws RemoteException {
         if (!mInputProcessor.onSample(sample)) {
             reportError(Error.FATAL, new Exception("FAIL: input sample queue is full"));
         }
+    }
+
+    @Override
+    public synchronized void releaseOutput(Sample sample) {
     }
 
     @Override
