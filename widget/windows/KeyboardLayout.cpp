@@ -1519,13 +1519,15 @@ NativeKey::InitWithKeyChar()
       //       key message information globally and we should wait following
       //       WM_KEYDOWN if following WM_CHAR is a part of a Unicode character.
       mCommittedCharsAndModifiers.Clear();
+      Modifiers modifiers =
+        mModKeyState.GetModifiers() & ~(MODIFIER_ALT | MODIFIER_CONTROL);
       for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
         // Ignore non-printable char messages.
         if (!IsPrintableCharMessage(mFollowingCharMsgs[i])) {
           continue;
         }
         char16_t ch = static_cast<char16_t>(mFollowingCharMsgs[i].wParam);
-        mCommittedCharsAndModifiers.Append(ch, mModKeyState.GetModifiers());
+        mCommittedCharsAndModifiers.Append(ch, modifiers);
       }
     }
     // Remove odd char messages if there are.
@@ -2554,54 +2556,8 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   //            actual keyboard operation.
 
   // First, handle normal text input or non-printable key case here.
-  if ((!mModKeyState.IsAlt() && !mModKeyState.IsControl()) ||
-      mModKeyState.IsAltGr() ||
-      (mOriginalVirtualKeyCode &&
-       !KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode))) {
-    WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-    keypressEvent.mCharCode = static_cast<uint32_t>(aCharMsg.wParam);
-    nsresult rv = mDispatcher->BeginNativeInputTransaction();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      MOZ_LOG(sNativeKeyLogger, LogLevel::Error,
-        ("%p   NativeKey::HandleCharMessage(), FAILED due to "
-         "BeginNativeInputTransaction() failure", this));
-      return true;
-    }
-
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Debug,
-      ("%p   NativeKey::HandleCharMessage(), initializing keypress "
-       "event...", this));
-
-    // When AltGr (Alt+Ctrl) is pressed, that causes normal text input.
-    // At this time, if either alt or ctrl flag is set, EditorBase ignores the
-    // keypress event.  For avoiding this issue, we should remove ctrl and alt
-    // flags.
-    ModifierKeyState modKeyState(mModKeyState);
-    modKeyState.Unset(MODIFIER_ALT | MODIFIER_CONTROL);
-    nsEventStatus status = InitKeyEvent(keypressEvent, modKeyState, &aCharMsg);
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-      ("%p   NativeKey::HandleCharMessage(), dispatching keypress event...",
-       this));
-    bool dispatched =
-      mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
-                                               const_cast<NativeKey*>(this));
-    if (aEventDispatched) {
-      *aEventDispatched = dispatched;
-    }
-    if (mWidget->Destroyed()) {
-      MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-        ("%p   NativeKey::HandleCharMessage(), keypress event caused "
-         "destroying the widget", this));
-      return true;
-    }
-    bool consumed = status == nsEventStatus_eConsumeNoDefault;
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-      ("%p   NativeKey::HandleCharMessage(), dispatched keypress event, "
-       "dispatched=%s, consumed=%s",
-       this, GetBoolName(dispatched), GetBoolName(consumed)));
-    return consumed;
-  }
-
+  WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
+  keypressEvent.mCharCode = static_cast<uint32_t>(aCharMsg.wParam);
   nsresult rv = mDispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_LOG(sNativeKeyLogger, LogLevel::Error,
@@ -2612,16 +2568,20 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
 
   MOZ_LOG(sNativeKeyLogger, LogLevel::Debug,
     ("%p   NativeKey::HandleCharMessage(), initializing keypress "
-     "event after some hacks...", this));
-  WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-  keypressEvent.mCharCode = static_cast<char16_t>(aCharMsg.wParam);
-  if (!keypressEvent.mCharCode) {
-    keypressEvent.mKeyCode = mDOMKeyCode;
+     "event...", this));
+
+  ModifierKeyState modKeyState(mModKeyState);
+  // When AltGr is pressed, both Alt and Ctrl are active.  However, when they
+  // are active, EditorBase won't treat the keypress event as inputting a
+  // character.  Therefore, when AltGr is pressed and the key tries to input
+  // a character, let's set them to false.
+  if (modKeyState.IsAltGr() && IsPrintableCharMessage(aCharMsg)) {
+    modKeyState.Unset(MODIFIER_ALT | MODIFIER_CONTROL);
   }
-  nsEventStatus status = InitKeyEvent(keypressEvent, mModKeyState, &aCharMsg);
+  nsEventStatus status = InitKeyEvent(keypressEvent, modKeyState, &aCharMsg);
   MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-    ("%p   NativeKey::HandleCharMessage(), dispatching keypress event with "
-     "some hacks...", this));
+    ("%p   NativeKey::HandleCharMessage(), dispatching keypress event...",
+     this));
   bool dispatched =
     mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
                                              const_cast<NativeKey*>(this));
@@ -2636,8 +2596,8 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   }
   bool consumed = status == nsEventStatus_eConsumeNoDefault;
   MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-    ("%p   NativeKey::HandleCharMessage(), dispatched keypress event with "
-     "some hacks, dispatched=%s, consumed=%s",
+    ("%p   NativeKey::HandleCharMessage(), dispatched keypress event, "
+     "dispatched=%s, consumed=%s",
      this, GetBoolName(dispatched), GetBoolName(consumed)));
   return consumed;
 }
@@ -3598,8 +3558,9 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     // character such as 0x0D at pressing Enter key.
     if (!NativeKey::IsControlChar(ch)) {
       aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
-      aNativeKey.mCommittedCharsAndModifiers.
-        Append(ch, aModKeyState.GetModifiers());
+      Modifiers modifiers =
+        aModKeyState.GetModifiers() & ~(MODIFIER_ALT | MODIFIER_CONTROL);
+      aNativeKey.mCommittedCharsAndModifiers.Append(ch, modifiers);
       return;
     }
   }
