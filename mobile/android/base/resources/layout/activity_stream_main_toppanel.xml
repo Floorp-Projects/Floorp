@@ -17,7 +17,7 @@
     <org.mozilla.gecko.home.activitystream.topsites.CirclePageIndicator
         android:id="@+id/topsites_indicator"
         android:padding="10dip"
-        app:fillColor="#444444"
+        app:fillColor="#ff9d9d9d"
         app:pageColor="#FFFFFF"
         app:strokeWidth="1dp"
         app:radius="2dp"
@@ -32,7 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
         android:padding="4dp"
-        android:background="@color/disabled_grey"
+        android:background="#ffe0e0e0"
         android:layout_below="@+id/topsites_indicator" />
 
     <TextView
