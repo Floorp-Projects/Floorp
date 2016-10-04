@@ -21,12 +21,12 @@ EvaluationResult.propTypes = {
 };
 
 function EvaluationResult(props) {
-  const { message } = props;
+  const { message, serviceContainer } = props;
   const {
     source,
     type,
     level,
-    serviceContainer,
+    id: messageId,
   } = message;
 
   let messageBody;
@@ -44,6 +44,7 @@ function EvaluationResult(props) {
     level,
     topLevelClasses,
     messageBody,
+    messageId,
     scrollToMessage: props.autoscroll,
     serviceContainer,
   };
