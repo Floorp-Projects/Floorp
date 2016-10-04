@@ -472,9 +472,6 @@ protected:
   // If we don't, switch to buffering mode.
   void MaybeStartBuffering();
 
-  // The entry action of DECODER_STATE_DECODING_FIRSTFRAME.
-  void DecodeFirstFrame();
-
   // Moves the decoder into the shutdown state, and dispatches an error
   // event to the media element. This begins shutting down the decoder.
   // The decoder monitor must be held. This is only called on the
