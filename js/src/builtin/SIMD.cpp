@@ -174,7 +174,8 @@ js::ToSimdConstant(JSContext* cx, HandleValue v, jit::SimdConstant* out)
     if (!IsVectorObject<V>(v))
         return ErrorWrongTypeArg(cx, 1, typeDescr);
 
-    Elem* mem = reinterpret_cast<Elem*>(v.toObject().as<TypedObject>().typedMem());
+    JS::AutoCheckCannotGC nogc(cx);
+    Elem* mem = reinterpret_cast<Elem*>(v.toObject().as<TypedObject>().typedMem(nogc));
     *out = jit::SimdConstant::CreateSimd128(mem);
     return true;
 }
@@ -189,10 +190,10 @@ template bool js::ToSimdConstant<Bool32x4>(JSContext* cx, HandleValue v, jit::Si
 
 template<typename Elem>
 static Elem
-TypedObjectMemory(HandleValue v, const JS::AutoAssertOnGC&)
+TypedObjectMemory(HandleValue v, const JS::AutoAssertOnGC& nogc)
 {
     TypedObject& obj = v.toObject().as<TypedObject>();
-    return reinterpret_cast<Elem>(obj.typedMem());
+    return reinterpret_cast<Elem>(obj.typedMem(nogc));
 }
 
 static const ClassOps SimdTypeDescrClassOps = {
@@ -423,7 +424,11 @@ FillLanes(JSContext* cx, Handle<TypedObject*> result, const CallArgs& args)
     for (unsigned i = 0; i < T::lanes; i++) {
         if (!T::Cast(cx, args.get(i), &tmp))
             return false;
-        reinterpret_cast<Elem*>(result->typedMem())[i] = tmp;
+        // Reassure typedMem() that we won't GC while holding onto the returned
+        // pointer, even though we could GC on every iteration of this loop
+        // (but it is safe because we re-fetch each time.)
+        JS::AutoCheckCannotGC nogc(cx);
+        reinterpret_cast<Elem*>(result->typedMem(nogc))[i] = tmp;
     }
     args.rval().setObject(*result);
     return true;
@@ -640,7 +645,8 @@ js::CreateSimd(JSContext* cx, const typename V::Elem* data)
     if (!result)
         return nullptr;
 
-    Elem* resultMem = reinterpret_cast<Elem*>(result->typedMem());
+    JS::AutoCheckCannotGC nogc(cx);
+    Elem* resultMem = reinterpret_cast<Elem*>(result->typedMem(nogc));
     memcpy(resultMem, data, sizeof(Elem) * V::lanes);
     return result;
 }
@@ -858,7 +864,7 @@ template <typename Elem>
 class TypedObjectElemArray {
     Elem* elements;
   public:
-    TypedObjectElemArray(HandleValue objVal) {
+    explicit TypedObjectElemArray(HandleValue objVal) {
         JS::AutoCheckCannotGC nogc;
         elements = TypedObjectMemory<Elem*>(objVal, nogc);
     }
@@ -1398,9 +1404,10 @@ Load(JSContext* cx, unsigned argc, Value* vp)
     if (!result)
         return false;
 
+    JS::AutoCheckCannotGC nogc(cx);
     SharedMem<Elem*> src =
         typedArray->as<TypedArrayObject>().viewDataEither().addBytes(byteStart).cast<Elem*>();
-    Elem* dst = reinterpret_cast<Elem*>(result->typedMem());
+    Elem* dst = reinterpret_cast<Elem*>(result->typedMem(nogc));
     jit::AtomicOperations::podCopySafeWhenRacy(SharedMem<Elem*>::unshared(dst), src, NumElem);
 
     args.rval().setObject(*result);
