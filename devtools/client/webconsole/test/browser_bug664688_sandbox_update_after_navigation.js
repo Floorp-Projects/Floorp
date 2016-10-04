@@ -79,14 +79,6 @@ add_task(function* () {
 
   gBrowser.goBack();
 
-  info("Waiting for page to navigate");
-  yield waitForSuccess({
-    name: "go back",
-    validator: function () {
-      return content.location.href == TEST_URI1;
-    },
-  });
-
   info("Waiting for messages to be cleared due to navigation");
   yield cleared;
 
