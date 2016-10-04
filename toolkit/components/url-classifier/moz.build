@@ -24,7 +24,6 @@ UNIFIED_SOURCES += [
     'ChunkSet.cpp',
     'Classifier.cpp',
     'LookupCache.cpp',
-    'LookupCacheV4.cpp',
     'nsCheckSummedOutputStream.cpp',
     'nsUrlClassifierDBService.cpp',
     'nsUrlClassifierProxies.cpp',
@@ -37,7 +36,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'nsUrlClassifierPrefixSet.cpp',
     'nsUrlClassifierStreamUpdater.cpp',
-    'VariableLengthPrefixSet.cpp',
 ]
 
 # contains variables that conflict with LookupCache.cpp
@@ -63,10 +61,8 @@ EXTRA_JS_MODULES += [
 EXPORTS += [
     'Entries.h',
     'LookupCache.h',
-    'LookupCacheV4.h',
     'nsUrlClassifierPrefixSet.h',
     'protobuf/safebrowsing.pb.h',
-    'VariableLengthPrefixSet.h',
 ]
 
 FINAL_LIBRARY = 'xul'
