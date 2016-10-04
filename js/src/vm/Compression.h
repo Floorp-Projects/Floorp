@@ -37,6 +37,7 @@ class Compressor
     size_t inplen;
     size_t outbytes;
     bool initialized;
+    bool finished;
 
     // The number of uncompressed bytes written for the current chunk. When this
     // reaches CHUNK_SIZE, we finish the current chunk and start a new chunk.
@@ -67,7 +68,7 @@ class Compressor
     size_t totalBytesNeeded() const;
 
     // Append the chunk offsets to |dest|.
-    void finish(char* dest, size_t destBytes) const;
+    void finish(char* dest, size_t destBytes);
 
     static void toChunkOffset(size_t uncompressedOffset, size_t* chunk, size_t* chunkOffset) {
         *chunk = uncompressedOffset / CHUNK_SIZE;

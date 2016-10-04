@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+var TEST_PLUGIN_DESCRIPTION = "Flash plug-in for testing purposes.";
+
 // This verifies that plugins exist and can be enabled and disabled.
 var gID = null;
 
@@ -9,7 +11,8 @@ function setTestPluginState(state) {
   let tags = AM_Cc["@mozilla.org/plugin/host;1"].getService(AM_Ci.nsIPluginHost)
     .getPluginTags();
   for (let tag of tags) {
-    if (tag.name == "Test Plug-in") {
+    do_print("Checking tag: " + tag.description);
+    if (tag.description == TEST_PLUGIN_DESCRIPTION) {
       tag.enabledState = state;
       return;
     }
@@ -21,6 +24,7 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   Services.prefs.setBoolPref("plugins.click_to_play", true);
+  Services.prefs.setBoolPref("plugin.load_flash_only", false);
 
   setTestPluginState(AM_Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
@@ -38,21 +42,21 @@ function get_test_plugin() {
     let dir = pluginEnum.getNext().QueryInterface(AM_Ci.nsILocalFile);
     let plugin = dir.clone();
     // OSX plugin
-    plugin.append("Test.plugin");
+    plugin.append("npswftest.plugin");
     if (plugin.exists()) {
       plugin.normalize();
       return plugin;
     }
     plugin = dir.clone();
     // *nix plugin
-    plugin.append("libnptest.so");
+    plugin.append("libnpswftest.so");
     if (plugin.exists()) {
       plugin.normalize();
       return plugin;
     }
     // Windows plugin
     plugin = dir.clone();
-    plugin.append("nptest.dll");
+    plugin.append("npswftest.dll");
     if (plugin.exists()) {
       plugin.normalize();
       return plugin;
@@ -98,7 +102,7 @@ function run_test_1() {
     do_check_true(addons.length > 0);
 
     addons.forEach(function(p) {
-      if (p.name == "Test Plug-in")
+      if (p.description == TEST_PLUGIN_DESCRIPTION)
         gID = p.id;
     });
 
@@ -106,12 +110,8 @@ function run_test_1() {
 
     AddonManager.getAddonByID(gID, function(p) {
       do_check_neq(p, null);
-      do_check_eq(p.name, "Test Plug-in");
-      do_check_eq(p.description,
-                  "Plug-in for testing purposes.\u2122 " +
-                    "(\u0939\u093f\u0928\u094d\u0926\u0940 " +
-                    "\u4e2d\u6587 " +
-                    "\u0627\u0644\u0639\u0631\u0628\u064a\u0629)");
+      do_check_eq(p.name, "Shockwave Flash");
+      do_check_eq(p.description, TEST_PLUGIN_DESCRIPTION);
       do_check_eq(p.creator, null);
       do_check_eq(p.version, "1.0.0.0");
       do_check_eq(p.type, "plugin");
@@ -161,7 +161,7 @@ function run_test_2(p) {
     do_check_true(p.userDisabled);
     do_check_false(p.appDisabled);
     do_check_false(p.isActive);
-    do_check_eq(p.name, "Test Plug-in");
+    do_check_eq(p.name, "Shockwave Flash");
 
     run_test_3(p);
   });
@@ -189,7 +189,7 @@ function run_test_3(p) {
     do_check_false(p.userDisabled);
     do_check_false(p.appDisabled);
     do_check_true(p.isActive);
-    do_check_eq(p.name, "Test Plug-in");
+    do_check_eq(p.name, "Shockwave Flash");
 
     do_execute_soon(run_test_4);
   });
@@ -201,7 +201,7 @@ function run_test_4() {
 
   AddonManager.getAddonByID(gID, function(p) {
     do_check_neq(p, null);
-    do_check_eq(p.name, "Test Plug-in");
+    do_check_eq(p.name, "Shockwave Flash");
 
     Services.prefs.clearUserPref("plugins.click_to_play");
 

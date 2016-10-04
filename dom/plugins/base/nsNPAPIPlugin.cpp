@@ -33,9 +33,9 @@
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
+#include "nsIIDNService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
-#include "nsIUnicodeNormalizer.h"
 #include "nsDOMJSUtils.h"
 #include "nsIPrincipal.h"
 #include "nsWildCard.h"
@@ -1935,18 +1935,25 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       return NPERR_GENERIC_ERROR;
     }
 
-    nsCOMPtr<nsIUnicodeNormalizer> normalizer = do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID);
-    if (!normalizer) {
+    nsCOMPtr<nsIIDNService> idnService = do_GetService(NS_IDNSERVICE_CONTRACTID);
+    if (!idnService) {
       return NPERR_GENERIC_ERROR;
     }
 
-    nsAutoString normalizedUTF16Origin;
-    res = normalizer->NormalizeUnicodeNFKC(utf16Origin, normalizedUTF16Origin);
+    // This is a bit messy: we convert to UTF-8 here, but then
+    // nsIDNService::Normalize will convert back to UTF-16 for processing,
+    // and back to UTF-8 again to return the result.
+    // Alternative: perhaps we should add a NormalizeUTF16 version of the API,
+    // and just convert to UTF-8 for the final return (resulting in one
+    // encoding form conversion instead of three).
+    NS_ConvertUTF16toUTF8 utf8Origin(utf16Origin);
+    nsAutoCString normalizedUTF8Origin;
+    res = idnService->Normalize(utf8Origin, normalizedUTF8Origin);
     if (NS_FAILED(res)) {
       return NPERR_GENERIC_ERROR;
     }
 
-    *(char**)result = ToNewUTF8String(normalizedUTF16Origin);
+    *(char**)result = ToNewCString(normalizedUTF8Origin);
     return *(char**)result ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
   }
 

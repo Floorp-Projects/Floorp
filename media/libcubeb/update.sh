@@ -57,3 +57,5 @@ else
   echo "Remember to update README_MOZILLA with the version details."
 fi
 
+echo "Applying a patch on top of $version"
+patch -p1 < ./wasapi-drift.patch

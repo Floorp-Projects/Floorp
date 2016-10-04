@@ -477,6 +477,20 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
         return NS_ERROR_FAILURE;
       }
     }
+  } else {
+    if (receiving) {
+      auto error = conduit->StopReceiving();
+      if (error) {
+        MOZ_MTLOG(ML_ERROR, "StopReceiving failed: " << error);
+        return NS_ERROR_FAILURE;
+      }
+    } else {
+      auto error = conduit->StopTransmitting();
+      if (error) {
+        MOZ_MTLOG(ML_ERROR, "StopTransmitting failed: " << error);
+        return NS_ERROR_FAILURE;
+      }
+    }
   }
 
   RefPtr<MediaPipeline> pipeline =

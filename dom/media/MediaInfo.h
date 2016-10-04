@@ -464,7 +464,8 @@ public:
 
   bool IsEncrypted() const
   {
-    return mCrypto.IsEncrypted();
+    return (HasAudio() && mAudio.mCrypto.mValid) ||
+           (HasVideo() && mVideo.mCrypto.mValid);
   }
 
   bool HasValidMedia() const

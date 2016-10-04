@@ -30,6 +30,7 @@ namespace widget {
 
 class WinCompositorWidget;
 class X11CompositorWidget;
+class AndroidCompositorWidget;
 class CompositorWidgetInitData;
 
 // Gecko widgets usually need to communicate with the CompositorWidget with
@@ -247,6 +248,9 @@ public:
     return nullptr;
   }
   virtual X11CompositorWidget* AsX11() {
+    return nullptr;
+  }
+  virtual AndroidCompositorWidget* AsAndroid() {
     return nullptr;
   }
 

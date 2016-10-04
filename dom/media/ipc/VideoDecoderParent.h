@@ -35,6 +35,7 @@ public:
   bool RecvFlush() override;
   bool RecvDrain() override;
   bool RecvShutdown() override;
+  bool RecvSetSeekThreshold(const int64_t& aTime) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
