@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for sub workers+bfcache behavior</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+  const WORKER_URL = "worker_suspended.js";
+  const SUB_WORKERS = 3
+
+  var testUrl1 = "window_suspended.html?page1Shown";
+  var testUrl2 = "window_suspended.html?page2Shown";
+
+  var testWin;
+  var counter = 0;
+
+  function cacheData() {
+    return caches.open("test")
+           .then(function(cache) {
+             return cache.match("http://mochi.test:888/foo");
+           })
+           .then(function(response) {
+             return response.text();
+           });
+  }
+
+  function page1Shown(e) {
+    info("Page1Shown: " + testWin.location.href);
+
+    // First time this page is shown.
+    if (counter == 0) {
+      ok(!e.persisted, "test page should have been persisted initially");
+
+      info("Create a worker and subworkers...");
+      let worker = new e.target.defaultView.Worker(WORKER_URL);
+
+      var promise = new Promise((resolve, reject) => {
+        info("Waiting until workers are ready...");
+        worker.addEventListener("message", function onmessage(e) {
+          is(e.data, "ready", "We want to receive: -ready-");
+          worker.removeEventListener("message", onmessage);
+          resolve();
+        });
+        worker.postMessage({ type: "page1", count: SUB_WORKERS });
+      });
+
+      promise.then(function() {
+        info("Retrieving data from cache...");
+        return cacheData();
+      })
+
+      .then(function(content) {
+        is(content.indexOf("page1-"), 0, "We have data from the worker");
+      })
+
+      .then(function() {
+        info("New location: " + testUrl2);
+        testWin.location.href = testUrl2;
+      });
+    } else {
+      is(e.persisted, true, "test page should have been persisted in pageshow");
+
+      var promise = new Promise((resolve, reject) => {
+        info("Waiting 2 seconds...");
+        setTimeout(resolve, 2000);
+      });
+
+      promise.then(function() {
+        info("Retrieving data from cache...");
+        return cacheData();
+      })
+
+      .then(function(content) {
+        is(content.indexOf("page1-"), 0, "We have data from the worker");
+      })
+
+      .then(function() {
+        testWin.close();
+        SimpleTest.finish();
+      });
+    }
+
+    counter++;
+  }
+
+  function page2Shown(e) {
+    info("Page2Shown: " + testWin.location.href);
+
+    info("Create a worker...");
+    let worker = new e.target.defaultView.Worker(WORKER_URL);
+
+    var promise = new Promise((resolve, reject) => {
+      info("Waiting until workers are ready...");
+      worker.addEventListener("message", function onmessage(e) {
+        is(e.data, "ready", "We want to receive: -ready-");
+        worker.removeEventListener("message", onmessage);
+        resolve();
+      });
+      worker.postMessage({ type: "page2" });
+    });
+
+    promise.then(function() {
+      info("Retrieving data from cache...");
+      return cacheData();
+    })
+
+    .then(function(content) {
+      is(content, "page2-0", "We have data from the second worker");
+    })
+
+    .then(function() {
+      info("Going back");
+      testWin.history.back();
+    });
+  }
+
+  SpecialPowers.pushPrefEnv({ set: [
+    ["dom.caches.enabled", true],
+    ["dom.caches.testing.enabled", true],
+  ] },
+  function() {
+    testWin = window.open(testUrl1);
+  });
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
+
+  </script>
+</body>
+</html>
+
