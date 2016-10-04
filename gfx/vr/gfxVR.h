@@ -15,6 +15,7 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/dom/GamepadBinding.h"
 
 namespace mozilla {
 namespace layers {
@@ -207,6 +208,36 @@ public:
 protected:
   VRDisplayManager() { }
   virtual ~VRDisplayManager() { }
+};
+
+struct VRControllerInfo
+{
+  VRDeviceType GetType() const { return mType; }
+  uint32_t GetControllerID() const { return mControllerID; }
+  const nsCString& GetControllerName() const { return mControllerName; }
+  dom::GamepadMappingType GetMappingType() const { return mMappingType; }
+  uint32_t GetNumButtons() const { return mNumButtons; }
+  uint32_t GetNumAxes() const { return mNumAxes; }
+
+  uint32_t mControllerID;
+  VRDeviceType mType;
+  nsCString mControllerName;
+  dom::GamepadMappingType mMappingType;
+  uint32_t mNumButtons;
+  uint32_t mNumAxes;
+
+  bool operator==(const VRControllerInfo& other) const {
+  return mType == other.mType &&
+         mControllerID == other.mControllerID &&
+         mControllerName == other.mControllerName &&
+         mMappingType == other.mMappingType &&
+         mNumButtons == other.mNumButtons &&
+         mNumAxes == other.mNumAxes;
+  }
+
+  bool operator!=(const VRControllerInfo& other) const {
+    return !(*this == other);
+  }
 };
 
 } // namespace gfx

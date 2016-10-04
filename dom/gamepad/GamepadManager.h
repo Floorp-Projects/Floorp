@@ -15,6 +15,9 @@
 class nsGlobalWindow;
 
 namespace mozilla {
+namespace gfx {
+class VRManagerChild;
+} // namespace gfx
 namespace dom {
 
 class EventTarget;
@@ -113,6 +116,7 @@ class GamepadManager final : public nsIObserver,
   // will be destroyed during the IPDL shutdown chain, so we
   // don't need to refcount it here.
   nsTArray<GamepadEventChannelChild *> mChannelChildren;
+  gfx::VRManagerChild* mVRChannelChild;
 
  private:
 
