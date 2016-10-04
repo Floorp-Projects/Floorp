@@ -487,8 +487,9 @@ public:
     SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
     SeekJob seekJob;
     seekJob.mTarget = aTarget;
+    RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
     mMaster->InitiateSeek(Move(seekJob));
-    return mMaster->mCurrentSeek.mPromise.Ensure(__func__);
+    return p.forget();
   }
 
 private:
@@ -598,8 +599,9 @@ public:
     SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
     SeekJob seekJob;
     seekJob.mTarget = aTarget;
+    RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
     mMaster->InitiateSeek(Move(seekJob));
-    return mMaster->mCurrentSeek.mPromise.Ensure(__func__);
+    return p.forget();
   }
 
 private:
@@ -758,8 +760,9 @@ public:
     SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
     SeekJob seekJob;
     seekJob.mTarget = aTarget;
+    RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
     mMaster->InitiateSeek(Move(seekJob));
-    return mMaster->mCurrentSeek.mPromise.Ensure(__func__);
+    return p.forget();
   }
 
 private:
@@ -871,8 +874,9 @@ public:
     SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
     SeekJob seekJob;
     seekJob.mTarget = aTarget;
+    RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
     mMaster->InitiateSeek(Move(seekJob));
-    return mMaster->mCurrentSeek.mPromise.Ensure(__func__);
+    return p.forget();
   }
 
 private:
@@ -949,8 +953,9 @@ public:
     SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
     SeekJob seekJob;
     seekJob.mTarget = aTarget;
+    RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
     mMaster->InitiateSeek(Move(seekJob));
-    return mMaster->mCurrentSeek.mPromise.Ensure(__func__);
+    return p.forget();
   }
 
 private:
@@ -2040,11 +2045,11 @@ void MediaDecoderStateMachine::VisibilityChanged()
                                  MediaDecoderEventVisibility::Suppressed,
                                  true /* aVideoOnly */);
 
-    InitiateSeek(Move(seekJob));
-    RefPtr<MediaDecoder::SeekPromise> p = mCurrentSeek.mPromise.Ensure(__func__);
+    RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
     p->Then(AbstractThread::MainThread(), __func__,
             [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
             [](){});
+    InitiateSeek(Move(seekJob));
   }
 }
 
