@@ -108,7 +108,7 @@ lgdb_EncodeData(DBT *data, char *module)
 {
     lgdbData *encoded = NULL;
     lgdbSlotData *slot;
-    unsigned char *dataPtr;
+    unsigned char *dataPtr, *offsetPtr;
     unsigned short len, len2 = 0, len3 = 0;
     int count = 0;
     unsigned short offset;
@@ -191,23 +191,25 @@ lgdb_EncodeData(DBT *data, char *module)
     LGDB_PUTSHORT(&dataPtr[offset], ((unsigned short)count));
     slot = (lgdbSlotData *)(dataPtr + offset + sizeof(unsigned short));
 
-    offset = 0;
+    offsetPtr = encoded->names;
     LGDB_PUTSHORT(encoded->names, len);
-    offset += sizeof(unsigned short);
-    PORT_Memcpy(&encoded->names[offset], commonName, len);
-    offset += len;
+    offsetPtr += sizeof(unsigned short);
+    PORT_Memcpy(offsetPtr, commonName, len);
+    offsetPtr += len;
 
-    LGDB_PUTSHORT(&encoded->names[offset], len2);
-    offset += sizeof(unsigned short);
-    if (len2)
-        PORT_Memcpy(&encoded->names[offset], dllName, len2);
-    offset += len2;
+    LGDB_PUTSHORT(offsetPtr, len2);
+    offsetPtr += sizeof(unsigned short);
+    if (len2) {
+        PORT_Memcpy(offsetPtr, dllName, len2);
+    }
+    offsetPtr += len2;
 
-    LGDB_PUTSHORT(&encoded->names[offset], len3);
-    offset += sizeof(unsigned short);
-    if (len3)
-        PORT_Memcpy(&encoded->names[offset], param, len3);
-    offset += len3;
+    LGDB_PUTSHORT(offsetPtr, len3);
+    offsetPtr += sizeof(unsigned short);
+    if (len3) {
+        PORT_Memcpy(offsetPtr, param, len3);
+    }
+    offsetPtr += len3;
 
     if (count) {
         for (i = 0; i < count; i++) {

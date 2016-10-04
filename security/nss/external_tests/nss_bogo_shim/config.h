@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
 #include <queue>
 #include <string>
 #include <typeinfo>
@@ -24,6 +25,8 @@ class ConfigEntryBase {
  public:
   ConfigEntryBase(const std::string& name, const std::string& type)
       : name_(name), type_(type) {}
+
+  virtual ~ConfigEntryBase() {}
 
   const std::string& type() const { return type_; }
   virtual bool Parse(std::queue<const char*>* args) = 0;
@@ -62,7 +65,8 @@ class Config {
 
   template <typename T>
   void AddEntry(const std::string& name, T init) {
-    entries_[name] = new ConfigEntry<T>(name, init);
+    entries_[name] = std::unique_ptr<ConfigEntryBase>(
+      new ConfigEntry<T>(name, init));
   }
 
   Status ParseArgs(int argc, char** argv);
@@ -77,12 +81,12 @@ class Config {
  private:
   static std::string XformFlag(const std::string& arg);
 
-  std::map<std::string, ConfigEntryBase*> entries_;
+  std::map<std::string, std::unique_ptr<ConfigEntryBase>> entries_;
 
   const ConfigEntryBase* entry(const std::string& key) const {
     auto e = entries_.find(key);
     if (e == entries_.end()) return nullptr;
-    return e->second;
+    return e->second.get();
   }
 };
 
