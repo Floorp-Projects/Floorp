@@ -25,15 +25,23 @@ module.exports = createClass({
 
   componentDidMount() {
     let { client } = this.props;
-    client.addListener("push-subscription-modified",
-      this.onPushSubscriptionModified);
+    client.addListener("push-subscription-modified", this.onPushSubscriptionModified);
     this.updatePushSubscription();
+  },
+
+  componentDidUpdate(oldProps, oldState) {
+    let wasActive = oldProps.target.active;
+    if (!wasActive && this.isActive()) {
+      // While the service worker isn't active, any calls to `updatePushSubscription`
+      // won't succeed. If we just became active, make sure we didn't miss a push
+      // subscription change by updating it now.
+      this.updatePushSubscription();
+    }
   },
 
   componentWillUnmount() {
     let { client } = this.props;
-    client.removeListener("push-subscription-modified",
-      this.onPushSubscriptionModified);
+    client.removeListener("push-subscription-modified", this.onPushSubscriptionModified);
   },
 
   debug() {
@@ -47,8 +55,10 @@ module.exports = createClass({
   },
 
   push() {
-    if (!this.isRunning()) {
+    if (!this.isActive() || !this.isRunning()) {
       // If the worker is not running, we can't push to it.
+      // If the worker is not active, the registration might be unavailable and the
+      // push will not succeed.
       return;
     }
 
@@ -60,8 +70,8 @@ module.exports = createClass({
   },
 
   start() {
-    if (this.isRunning()) {
-      // If the worker is already running, we can't start it.
+    if (!this.isActive() || this.isRunning()) {
+      // If the worker is not active or if it is already running, we can't start it.
       return;
     }
 
@@ -88,6 +98,11 @@ module.exports = createClass({
   },
 
   updatePushSubscription() {
+    if (!this.props.target.registrationActor) {
+      // A valid registrationActor is needed to retrieve the push subscription.
+      return;
+    }
+
     let { client, target } = this.props;
     client.request({
       to: target.registrationActor,
@@ -102,10 +117,65 @@ module.exports = createClass({
     return !!this.props.target.workerActor;
   },
 
+  isActive() {
+    return this.props.target.active;
+  },
+
+  getServiceWorkerStatus() {
+    if (this.isActive() && this.isRunning()) {
+      return "running";
+    } else if (this.isActive()) {
+      return "stopped";
+    }
+    // We cannot get service worker registrations unless the registration is in
+    // ACTIVE state. Unable to know the actual state ("installing", "waiting"), we
+    // display a custom state "registering" for now. See Bug 1153292.
+    return "registering";
+  },
+
+  renderButtons() {
+    let pushButton = dom.button({
+      className: "push-button",
+      onClick: this.push
+    }, Strings.GetStringFromName("push"));
+
+    let debugButton = dom.button({
+      className: "debug-button",
+      onClick: this.debug,
+      disabled: this.props.debugDisabled
+    }, Strings.GetStringFromName("debug"));
+
+    let startButton = dom.button({
+      className: "start-button",
+      onClick: this.start,
+    }, Strings.GetStringFromName("start"));
+
+    if (this.isRunning()) {
+      if (this.isActive()) {
+        return [pushButton, debugButton];
+      }
+      // Only debug button is available if the service worker is not active.
+      return debugButton;
+    }
+    return startButton;
+  },
+
+  renderUnregisterLink() {
+    if (!this.isActive()) {
+      // If not active, there might be no registrationActor available.
+      return null;
+    }
+
+    return dom.a({
+      onClick: this.unregister,
+      className: "unregister-link"
+    }, Strings.GetStringFromName("unregister"));
+  },
+
   render() {
-    let { target, debugDisabled } = this.props;
+    let { target } = this.props;
     let { pushSubscription } = this.state;
-    let isRunning = this.isRunning();
+    let status = this.getServiceWorkerStatus();
 
     return dom.div({ className: "target-container" },
       dom.img({
@@ -113,43 +183,31 @@ module.exports = createClass({
         role: "presentation",
         src: target.icon
       }),
+      dom.span({ className: `target-status target-status-${status}` },
+        Strings.GetStringFromName(status)),
       dom.div({ className: "target" },
-        dom.div({ className: "target-name" }, target.name),
+        dom.div({ className: "target-name", title: target.name }, target.name),
         dom.ul({ className: "target-details" },
           (pushSubscription ?
             dom.li({ className: "target-detail" },
               dom.strong(null, Strings.GetStringFromName("pushService")),
-              dom.span({ className: "service-worker-push-url" },
-                pushSubscription.endpoint)) :
+              dom.span({
+                className: "service-worker-push-url",
+                title: pushSubscription.endpoint
+              }, pushSubscription.endpoint)) :
             null
           ),
           dom.li({ className: "target-detail" },
             dom.strong(null, Strings.GetStringFromName("scope")),
-            dom.span({ className: "service-worker-scope" }, target.scope),
-            dom.a({
-              onClick: this.unregister,
-              className: "unregister-link"
-            }, Strings.GetStringFromName("unregister"))
+            dom.span({
+              className: "service-worker-scope",
+              title: target.scope
+            }, target.scope),
+            this.renderUnregisterLink()
           )
         )
       ),
-      (isRunning ?
-        [
-          dom.button({
-            className: "push-button",
-            onClick: this.push
-          }, Strings.GetStringFromName("push")),
-          dom.button({
-            className: "debug-button",
-            onClick: this.debug,
-            disabled: debugDisabled
-          }, Strings.GetStringFromName("debug"))
-        ] :
-        dom.button({
-          className: "start-button",
-          onClick: this.start
-        }, Strings.GetStringFromName("start"))
-      )
+      this.renderButtons()
     );
   }
 });

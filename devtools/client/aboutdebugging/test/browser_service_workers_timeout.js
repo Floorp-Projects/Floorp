@@ -77,15 +77,12 @@ add_task(function* () {
 
   // Finally, unregister the service worker itself.
   try {
-    yield unregisterServiceWorker(swTab);
+    yield unregisterServiceWorker(swTab, serviceWorkersElement);
     ok(true, "Service worker registration unregistered");
   } catch (e) {
     ok(false, "SW not unregistered; " + e);
   }
 
-  // Now ensure that the worker registration is correctly removed.
-  // The list should update once the registration is destroyed.
-  yield waitForMutation(serviceWorkersElement, { childList: true });
   assertHasTarget(false, document, "service-workers", SERVICE_WORKER);
 
   yield removeTab(swTab);

@@ -14,6 +14,7 @@ const {
   workerSpec,
   pushSubscriptionSpec,
   serviceWorkerRegistrationSpec,
+  serviceWorkerSpec,
 } = require("devtools/shared/specs/worker");
 
 loader.lazyRequireGetter(this, "ChromeUtils");
@@ -339,6 +340,29 @@ let PushSubscriptionActor = protocol.ActorClassWithSpec(pushSubscriptionSpec, {
   },
 });
 
+let ServiceWorkerActor = protocol.ActorClassWithSpec(serviceWorkerSpec, {
+  initialize(conn, worker) {
+    protocol.Actor.prototype.initialize.call(this, conn);
+    this._worker = worker;
+  },
+
+  form() {
+    if (!this._worker) {
+      return null;
+    }
+
+    return {
+      url: this._worker.scriptSpec,
+      state: this._worker.state,
+    };
+  },
+
+  destroy() {
+    protocol.Actor.prototype.destroy.call(this);
+    this._worker = null;
+  },
+});
+
 // Lazily load the service-worker-child.js process script only once.
 let _serviceWorkerProcessScriptLoaded = false;
 
@@ -356,7 +380,27 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     this._conn = conn;
     this._registration = registration;
     this._pushSubscriptionActor = null;
+    this._registration.addListener(this);
+
+    let {installingWorker, waitingWorker, activeWorker} = registration;
+    this._installingWorker = new ServiceWorkerActor(conn, installingWorker);
+    this._waitingWorker = new ServiceWorkerActor(conn, waitingWorker);
+    this._activeWorker = new ServiceWorkerActor(conn, activeWorker);
+
     Services.obs.addObserver(this, PushService.subscriptionModifiedTopic, false);
+  },
+
+  onChange() {
+    this._installingWorker.destroy();
+    this._waitingWorker.destroy();
+    this._activeWorker.destroy();
+
+    let {installingWorker, waitingWorker, activeWorker} = this._registration;
+    this._installingWorker = new ServiceWorkerActor(this._conn, installingWorker);
+    this._waitingWorker = new ServiceWorkerActor(this._conn, waitingWorker);
+    this._activeWorker = new ServiceWorkerActor(this._conn, activeWorker);
+
+    events.emit(this, "registration-changed");
   },
 
   form(detail) {
@@ -364,21 +408,42 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
       return this.actorID;
     }
     let registration = this._registration;
+    let installingWorker = this._installingWorker.form();
+    let waitingWorker = this._waitingWorker.form();
+    let activeWorker = this._activeWorker.form();
+
+    let isE10s = Services.appinfo.browserTabsRemoteAutostart;
     return {
       actor: this.actorID,
       scope: registration.scope,
-      url: registration.scriptSpec
+      url: registration.scriptSpec,
+      installingWorker,
+      waitingWorker,
+      activeWorker,
+      // - In e10s: only active registrations are available.
+      // - In non-e10s: registrations always have at least one worker, if the worker is
+      // active, the registration is active.
+      active: isE10s ? true : !!activeWorker
     };
   },
 
   destroy() {
     protocol.Actor.prototype.destroy.call(this);
     Services.obs.removeObserver(this, PushService.subscriptionModifiedTopic, false);
+    this._registration.removeListener(this);
     this._registration = null;
     if (this._pushSubscriptionActor) {
       this._pushSubscriptionActor.destroy();
     }
     this._pushSubscriptionActor = null;
+
+    this._installingWorker.destroy();
+    this._waitingWorker.destroy();
+    this._activeWorker.destroy();
+
+    this._installingWorker = null;
+    this._waitingWorker = null;
+    this._activeWorker = null;
   },
 
   disconnect() {

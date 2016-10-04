@@ -124,8 +124,9 @@ UNITTEST_ALIASES = {
 # substrings.  This is intended only for backward-compatibility.  New test
 # platforms should have their `test_platform` spelled out fully in try syntax.
 UNITTEST_PLATFORM_PRETTY_NAMES = {
-    'Ubuntu': ['linux', 'linux64'],
+    'Ubuntu': ['linux', 'linux64', 'linux64-asan'],
     'x64': ['linux64', 'linux64-asan'],
+    'Android 4.3': ['android-4.3-arm7-api-15'],
     # other commonly-used substrings for platforms not yet supported with
     # in-tree taskgraphs:
     # '10.10': [..TODO..],
@@ -133,7 +134,6 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
     # '10.6': [..TODO..],
     # '10.8': [..TODO..],
     # 'Android 2.3 API9': [..TODO..],
-    # 'Android 4.3 API15+': [..TODO..],
     # 'Windows 7':  [..TODO..],
     # 'Windows 7 VM': [..TODO..],
     # 'Windows 8':  [..TODO..],

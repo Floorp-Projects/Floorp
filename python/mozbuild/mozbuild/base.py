@@ -655,8 +655,14 @@ class MachCommandBase(MozbuildObject):
                 # that objdir, not another one. This prevents accidental usage
                 # of the wrong objdir when the current objdir is ambiguous.
                 config_topobjdir = dummy.resolve_mozconfig_topobjdir()
-                if config_topobjdir and not samepath(topobjdir,
-                                                     config_topobjdir):
+
+                try:
+                    universal_bin = dummy.substs.get('UNIVERSAL_BINARY')
+                except:
+                    universal_bin = False
+
+                if config_topobjdir and not (samepath(topobjdir, config_topobjdir) or
+                        universal_bin and topobjdir.startswith(config_topobjdir)):
                     raise ObjdirMismatchException(topobjdir, config_topobjdir)
         except BuildEnvironmentNotFoundException:
             pass

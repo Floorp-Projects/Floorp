@@ -35,21 +35,21 @@ var noframe_container = document.getElementById("content");
   var cs = getComputedStyle(p, "");
 
   frame_container.appendChild(p);
-  is(cs.borderTopLeftRadius, "4px 2px",
+  is(cs.borderTopLeftRadius, "1.5625%",
      "computed value of % border-radius, with frame");
   is(cs.borderTopRightRadius, "5px",
      "computed value of px border-radius, with frame");
   is(cs.borderBottomRightRadius, "5px 3px",
      "computed value of px border-radius, with frame");
-  is(cs.borderBottomLeftRadius, "4px",
+  is(cs.borderBottomLeftRadius, "1.5625% 3.125%",
      "computed value of % border-radius, with frame");
-  is(cs.MozOutlineRadiusTopleft, "4px 2px",
+  is(cs.MozOutlineRadiusTopleft, "1.5625%",
      "computed value of % outline-radius, with frame");
   is(cs.MozOutlineRadiusTopright, "5px",
      "computed value of px outline-radius, with frame");
   is(cs.MozOutlineRadiusBottomright, "5px 3px",
      "computed value of px outline-radius, with frame");
-  is(cs.MozOutlineRadiusBottomleft, "4px",
+  is(cs.MozOutlineRadiusBottomleft, "1.5625% 3.125%",
      "computed value of % outline-radius, with frame");
 
   noframe_container.appendChild(p);
@@ -73,57 +73,59 @@ var noframe_container = document.getElementById("content");
   p.parentNode.removeChild(p);
 })();
 
-(function test_bug_595651() {
-  // Test that clamping of border-radius is reflected in computed style.
+(function test_bug_1292447() {
+  // Was for bug 595651 which tests that clamping of border-radius
+  // is reflected in computed style.
+  // For compatibility issue, resolved value is computed value now.
   var p = document.createElement("p");
   p.setAttribute("style", "width: 190px; height: 90px; border: 5px solid;");
   p.style.borderRadius = "1000px";
   var cs = getComputedStyle(p, "");
 
   frame_container.appendChild(p);
-  is(cs.borderTopLeftRadius, "50px",
+  is(cs.borderTopLeftRadius, "1000px",
      "computed value of clamped border radius (top left)");
-  is(cs.borderTopRightRadius, "50px",
+  is(cs.borderTopRightRadius, "1000px",
      "computed value of clamped border radius (top right)");
-  is(cs.borderBottomRightRadius, "50px",
+  is(cs.borderBottomRightRadius, "1000px",
      "computed value of clamped border radius (bottom right)");
-  is(cs.borderBottomLeftRadius, "50px",
+  is(cs.borderBottomLeftRadius, "1000px",
      "computed value of clamped border radius (bottom left)");
 
   p.style.overflowY = "scroll";
-  is(cs.borderTopLeftRadius, "50px",
+  is(cs.borderTopLeftRadius, "1000px",
      "computed value of clamped border radius (top left, overflow-y)");
   // Fennec doesn't have scrollbars for overflow:scroll content
   if (p.clientWidth == p.offsetWidth - 10) {
-    is(cs.borderTopRightRadius, "50px",
+    is(cs.borderTopRightRadius, "1000px",
        "computed value of border radius (top right, overflow-y)");
-    is(cs.borderBottomRightRadius, "50px",
+    is(cs.borderBottomRightRadius, "1000px",
        "computed value of border radius (bottom right, overflow-y)");
   } else {
-    is(cs.borderTopRightRadius, "5px",
+    is(cs.borderTopRightRadius, "1000px",
        "computed value of clamped border radius (top right, overflow-y)");
-    is(cs.borderBottomRightRadius, "5px",
+    is(cs.borderBottomRightRadius, "1000px",
        "computed value of clamped border radius (bottom right, overflow-y)");
   }
-  is(cs.borderBottomLeftRadius, "50px",
+  is(cs.borderBottomLeftRadius, "1000px",
      "computed value of clamped border radius (bottom left, overflow-y)");
 
   p.style.overflowY = "hidden";
   p.style.overflowX = "scroll";
-  is(cs.borderTopLeftRadius, "50px",
+  is(cs.borderTopLeftRadius, "1000px",
      "computed value of clamped border radius (top left, overflow-x)");
-  is(cs.borderTopRightRadius, "50px",
+  is(cs.borderTopRightRadius, "1000px",
      "computed value of clamped border radius (top right, overflow-x)");
   // Fennec doesn't have scrollbars for overflow:scroll content
   if (p.clientHeight == p.offsetHeight - 10) {
-    is(cs.borderBottomRightRadius, "50px",
+    is(cs.borderBottomRightRadius, "1000px",
        "computed value of border radius (bottom right, overflow-x)");
-    is(cs.borderBottomLeftRadius, "50px",
+    is(cs.borderBottomLeftRadius, "1000px",
        "computed value of  border radius (bottom left, overflow-x)");
   } else {
-    is(cs.borderBottomRightRadius, "5px",
+    is(cs.borderBottomRightRadius, "1000px",
        "computed value of clamped border radius (bottom right, overflow-x)");
-    is(cs.borderBottomLeftRadius, "5px",
+    is(cs.borderBottomLeftRadius, "1000px",
        "computed value of clamped border radius (bottom left, overflow-x)");
   }
 
