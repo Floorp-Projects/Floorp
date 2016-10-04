@@ -104,35 +104,6 @@ include_when('build/moz.configure/warnings.configure',
 
 include(include_project_configure)
 
-@depends(building_js, '--help')
-def ctypes_default(building_js, _):
-    return not building_js
-
-js_option('--enable-ctypes', help='Enable js-ctypes',
-          default=ctypes_default)
-
-build_ctypes = depends_if('--enable-ctypes')(lambda _: True)
-
-set_config('BUILD_CTYPES', build_ctypes)
-set_define('BUILD_CTYPES', build_ctypes)
-add_old_configure_assignment('BUILD_CTYPES', build_ctypes)
-
-@depends(build_ctypes, building_js)
-def js_has_ctypes(ctypes, js):
-    if ctypes and js:
-        return True
-
-set_config('JS_HAS_CTYPES', js_has_ctypes)
-set_define('JS_HAS_CTYPES', js_has_ctypes)
-add_old_configure_assignment('JS_HAS_CTYPES', js_has_ctypes)
-
-@depends('--enable-ctypes', '--enable-compile-environment', '--help')
-def ctypes_and_compile_environment(ctypes, compile_environment, _):
-    return ctypes and compile_environment
-
-include_when('build/moz.configure/ffi.configure',
-             when=ctypes_and_compile_environment)
-
 @dependable
 @imports(_from='mozbuild.backend', _import='backends')
 def build_backends_choices():
