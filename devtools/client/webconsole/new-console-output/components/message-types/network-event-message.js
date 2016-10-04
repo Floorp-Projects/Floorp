@@ -12,64 +12,44 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
-const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
+const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
-const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 
 NetworkEventMessage.displayName = "NetworkEventMessage";
 
 NetworkEventMessage.propTypes = {
   message: PropTypes.object.isRequired,
   openNetworkPanel: PropTypes.func.isRequired,
-  // @TODO: openLink will be used for mixed-content handling
-  openLink: PropTypes.func.isRequired,
-  open: PropTypes.bool.isRequired,
 };
 
 function NetworkEventMessage(props) {
-  const { dispatch, message, openNetworkPanel, open } = props;
-  const { actor, source, type, level, request, response, isXHR, totalTime } = message;
-  let { method, url } = request;
-  let { httpVersion, status, statusText } = response;
+  const { message, openNetworkPanel, emitNewMessage } = props;
+  const { actor, source, type, level, request, isXHR } = message;
 
-  let classes = ["message", "cm-s-mozilla"];
-
-  classes.push(source);
-  classes.push(type);
-  classes.push(level);
-
-  if (open) {
-    classes.push("open");
-  }
-
-  let statusInfo = "[]";
-
-  // @TODO: Status will be enabled after NetworkUpdateEvent packet arrives
-  if (httpVersion && status && statusText && totalTime) {
-    statusInfo = `[${httpVersion} ${status} ${statusText} ${totalTime}ms]`;
-  }
-
-  let xhr = l10n.getStr("webConsoleXhrIndicator");
+  const topLevelClasses = [ "cm-s-mozilla" ];
 
   function onUrlClick() {
     openNetworkPanel(actor);
   }
 
-  return dom.div({ className: classes.join(" ") },
-    // @TODO add timestamp
-    // @TODO add indent if necessary
-    MessageIcon({ level }),
-    dom.span({
-      className: "message-body-wrapper message-body devtools-monospace",
-      "aria-haspopup": "true"
-    },
-      dom.span({ className: "method" }, method),
-      isXHR ? dom.span({ className: "xhr" }, xhr) : null,
-      dom.a({ className: "url", title: url, onClick: onUrlClick },
-        url.replace(/\?.+/, ""))
-    )
-  );
+  const method = dom.span({className: "method" }, request.method);
+  const xhr = isXHR
+    ? dom.span({ className: "xhr" }, l10n.getStr("webConsoleXhrIndicator"))
+    : null;
+  const url = dom.a({ className: "url", title: request.url, onClick: onUrlClick },
+        request.url.replace(/\?.+/, ""));
+
+  const messageBody = dom.span({}, method, xhr, url);
+
+  const childProps = {
+    source,
+    type,
+    level,
+    topLevelClasses,
+    messageBody,
+    emitNewMessage,
+  };
+  return Message(childProps);
 }
 
-module.exports.NetworkEventMessage = NetworkEventMessage;
+module.exports = NetworkEventMessage;

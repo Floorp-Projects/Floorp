@@ -486,6 +486,10 @@ Toolbox.prototype = {
     return this.browserRequire("devtools/client/shared/vendor/react-dom");
   },
 
+  get ReactRedux() {
+    return this.browserRequire("devtools/client/shared/vendor/react-redux");
+  },
+
   // Return HostType id for telemetry
   _getTelemetryHostId: function () {
     switch (this.hostType) {

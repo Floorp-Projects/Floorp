@@ -29,6 +29,7 @@ const {ComputedViewTool} = require("devtools/client/inspector/computed/computed"
 const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
 const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
 const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
+const {LayoutViewTool} = require("devtools/client/inspector/layout/layout");
 const {MarkupView} = require("devtools/client/inspector/markup/markup");
 const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
 const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
@@ -417,6 +418,10 @@ Inspector.prototype = {
     return this._toolbox.ReactDOM;
   },
 
+  get ReactRedux() {
+    return this._toolbox.ReactRedux;
+  },
+
   get browserRequire() {
     return this._toolbox.browserRequire;
   },
@@ -559,6 +564,16 @@ Inspector.prototype = {
     this.ruleview = new RuleViewTool(this, this.panelWin);
     this.computedview = new ComputedViewTool(this, this.panelWin);
 
+    if (Services.prefs.getBoolPref("devtools.layoutview.enabled")) {
+      this.sidebar.addExistingTab(
+        "layoutview",
+        INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle"),
+        defaultTab == "layoutview"
+      );
+
+      this.layoutview = new LayoutViewTool(this, this.panelWin);
+    }
+
     if (this.target.form.animationsActor) {
       this.sidebar.addFrameTab(
         "animationinspector",
@@ -583,6 +598,20 @@ Inspector.prototype = {
     this.setupSplitter();
 
     this.sidebar.show(defaultTab);
+  },
+
+  /**
+   * Register a side-panel tab. This API can be used outside of
+   * DevTools (e.g. from an extension) as well as by DevTools
+   * code base.
+   *
+   * @param {string} tab uniq id
+   * @param {string} title tab title
+   * @param {React.Component} panel component. See `InspectorPanelTab` as an example.
+   * @param {boolean} selected true if the panel should be selected
+   */
+  addSidebarTab: function (id, title, panel, selected) {
+    this.sidebar.addTab(id, title, panel, selected);
   },
 
   setupToolbar: function () {
@@ -864,6 +893,10 @@ Inspector.prototype = {
 
     if (this.computedview) {
       this.computedview.destroy();
+    }
+
+    if (this.layoutview) {
+      this.layoutview.destroy();
     }
 
     if (this.fontInspector) {

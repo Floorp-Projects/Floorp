@@ -15,9 +15,10 @@ const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/ne
 const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
 
 const store = configureStore();
+let queuedActions = [];
+let throttledDispatchTimeout = false;
 
 function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
-  this.parentNode = parentNode;
   this.parentNode = parentNode;
   this.jsterm = jsterm;
   this.toolbox = toolbox;
@@ -46,6 +47,11 @@ NewConsoleOutputWrapper.prototype = {
       openLink: (url) => {
         this.owner.openLink(url);
       },
+      emitNewMessage: (node) => {
+        this.jsterm.hud.emit("new-messages", new Set([{
+          node
+        }]));
+      },
     });
     let filterBar = FilterBar({});
     let provider = React.createElement(
@@ -60,7 +66,7 @@ NewConsoleOutputWrapper.prototype = {
     this.body = ReactDOM.render(provider, this.parentNode);
   },
   dispatchMessageAdd: (message) => {
-    store.dispatch(actions.messageAdd(message));
+    batchedMessageAdd(actions.messageAdd(message));
   },
   dispatchMessagesAdd: (messages) => {
     const batchedActions = messages.map(message => actions.messageAdd(message));
@@ -69,13 +75,18 @@ NewConsoleOutputWrapper.prototype = {
   dispatchMessagesClear: () => {
     store.dispatch(actions.messagesClear());
   },
-  getLastMessage: function() {
-    // Return the last message in the DOM as the message that was just dispatched. This may not
-    // always be correct in the case of filtered messages, but it's close enough for our tests.
-    let messageNodes = this.parentNode.querySelectorAll(".message");
-    return messageNodes[messageNodes.length - 1]
-  },
 };
+
+function batchedMessageAdd(action) {
+  queuedActions.push(action);
+  if (!throttledDispatchTimeout) {
+    throttledDispatchTimeout = setTimeout(() => {
+      store.dispatch(actions.batchActions(queuedActions));
+      queuedActions = [];
+      throttledDispatchTimeout = null;
+    }, 50);
+  }
+}
 
 // Exports from this module
 module.exports = NewConsoleOutputWrapper;
