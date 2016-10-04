@@ -191,7 +191,7 @@ MediaKeySystemAccess::IsGMPPresentOnDisk(const nsAString& aKeySystem,
   bool isPresent = true;
 
 #if XP_WIN
-  if (!CompareUTF8toUTF16(kEMEKeySystemPrimetime, aKeySystem)) {
+  if (IsPrimetimeKeySystem(aKeySystem)) {
     if (!AdobePluginDLLExists(aVersion)) {
       NS_WARNING("Adobe EME plugin disappeared from disk!");
       aOutMessage = NS_LITERAL_CSTRING("Adobe DLL was expected to be on disk but was not");
@@ -276,12 +276,12 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     return MediaKeySystemStatus::Error;
   }
 
-  if (!CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem)) {
+  if (IsClearkeyKeySystem(aKeySystem)) {
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 
   if (Preferences::GetBool("media.gmp-eme-adobe.visible", false)) {
-    if (!CompareUTF8toUTF16(kEMEKeySystemPrimetime, aKeySystem)) {
+    if (IsPrimetimeKeySystem(aKeySystem)) {
       if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
         aOutMessage = NS_LITERAL_CSTRING("Adobe EME disabled");
         return MediaKeySystemStatus::Cdm_disabled;
@@ -298,7 +298,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
   }
 
   if (Preferences::GetBool("media.gmp-widevinecdm.visible", false)) {
-    if (!CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem)) {
+    if (IsWidevineKeySystem(aKeySystem)) {
 #ifdef XP_WIN
       // Win Vista and later only.
       if (!IsVistaOrLater()) {
@@ -563,7 +563,7 @@ CanDecryptAndDecode(mozIGeckoMediaPluginService* aGMPService,
     //  the Adobe GMP's unencrypted AAC decoding path being used to
     // decode content decrypted by the Widevine CDM.
     if (codec == GMP_CODEC_AAC &&
-        !CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem) &&
+        IsWidevineKeySystem(aKeySystem) &&
         !WMFDecoderModule::HasAAC()) {
       if (aDiagnostics) {
         aDiagnostics->SetKeySystemIssue(
@@ -1130,7 +1130,7 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
 #if defined(XP_WIN)
   // Widevine CDM doesn't include an AAC decoder. So if WMF can't decode AAC,
   // and a codec wasn't specified, be conservative and reject the MediaKeys request.
-  if (!CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem.mKeySystem) &&
+  if (IsWidevineKeySystem(aKeySystem.mKeySystem) &&
       (aCandidate.mAudioCapabilities.IsEmpty() ||
        aCandidate.mVideoCapabilities.IsEmpty()) &&
      !WMFDecoderModule::HasAAC()) {

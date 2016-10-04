@@ -40,4 +40,4 @@ const CollapseButton = createClass({
   }
 });
 
-module.exports.CollapseButton = CollapseButton;
+module.exports = CollapseButton;

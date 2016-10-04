@@ -49,7 +49,7 @@ function filterNetwork(messages, filters) {
   return messages.filter((message) => {
     return (
       message.source !== MESSAGE_SOURCE.NETWORK
-      || (filters.get("network") === true && message.isXHR === false)
+      || (filters.get("net") === true && message.isXHR === false)
       || (filters.get("netxhr") === true && message.isXHR === true)
       || [MESSAGE_TYPE.COMMAND, MESSAGE_TYPE.RESULT].includes(message.type)
     );
@@ -99,6 +99,9 @@ function search(messages, text = "") {
 }
 
 function isTextInFrame(text, frame) {
+  if (!frame) {
+    return false;
+  }
   // @TODO Change this to Object.values once it's supported in Node's version of V8
   return Object.keys(frame)
     .map(key => frame[key])

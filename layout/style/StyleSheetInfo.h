@@ -22,21 +22,16 @@ class nsIPrincipal;
 namespace mozilla {
 
 /**
- * Superclass for data common to CSSStyleSheetInner and ServoStyleSheet.
+ * Struct for data common to CSSStyleSheetInner and ServoStyleSheet.
  */
-class StyleSheetInfo
+struct StyleSheetInfo
 {
-public:
-  friend class mozilla::CSSStyleSheet;
-  friend class ::nsCSSRuleProcessor;
   typedef net::ReferrerPolicy ReferrerPolicy;
 
   StyleSheetInfo(CORSMode aCORSMode,
                  ReferrerPolicy aReferrerPolicy,
                  const dom::SRIMetadata& aIntegrity);
-  StyleSheetInfo(const StyleSheetInfo& aCopy);
 
-protected:
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
   nsCOMPtr<nsIURI>       mOriginalSheetURI;  // for GetHref.  Can be null.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
@@ -50,8 +45,6 @@ protected:
 #ifdef DEBUG
   bool                   mPrincipalSet;
 #endif
-
-  friend class StyleSheet;
 };
 
 } // namespace mozilla
