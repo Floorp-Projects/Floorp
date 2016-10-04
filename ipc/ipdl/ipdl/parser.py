@@ -138,7 +138,6 @@ reserved = set((
         'opens',
         'or',
         'parent',
-        'prio',
         'protocol',
         'recv',
         'returns',
@@ -501,8 +500,7 @@ def p_MessageDecl(p):
     """MessageDecl : SendSemanticsQual MessageBody"""
     msg = p[2]
     msg.nested = p[1][0]
-    msg.prio = p[1][1]
-    msg.sendSemantics = p[1][2]
+    msg.sendSemantics = p[1][1]
 
     if Parser.current.direction is None:
         _error(msg.loc, 'missing message direction')
@@ -648,48 +646,27 @@ def p_Nested(p):
     if p[1] not in kinds:
         _error(locFromTok(p, 1), "Expected not, inside_sync, or inside_cpow for nested()")
 
-    p[0] = { 'nested': kinds[p[1]] }
-
-def p_Priority(p):
-    """Priority : ID"""
-    kinds = {'normal': 1,
-             'high': 2}
-    if p[1] not in kinds:
-        _error(locFromTok(p, 1), "Expected normal or high for prio()")
-
-    p[0] = { 'prio': kinds[p[1]] }
-
-def p_SendQualifier(p):
-    """SendQualifier : NESTED '(' Nested ')'
-                     | PRIO '(' Priority ')'"""
-    p[0] = p[3]
-
-def p_SendQualifierList(p):
-    """SendQualifierList : SendQualifier SendQualifierList
-                         | """
-    if len(p) > 1:
-        p[0] = p[1]
-        p[0].update(p[2])
-    else:
-        p[0] = {}
+    p[0] = kinds[p[1]]
 
 def p_SendSemanticsQual(p):
-    """SendSemanticsQual : SendQualifierList ASYNC
-                         | SendQualifierList SYNC
+    """SendSemanticsQual : ASYNC
+                         | SYNC
+                         | NESTED '(' Nested ')' ASYNC
+                         | NESTED '(' Nested ')' SYNC
                          | INTR"""
-    quals = {}
-    if len(p) == 3:
-        quals = p[1]
-        mtype = p[2]
+    if p[1] == 'nested':
+        mtype = p[5]
+        nested = p[3]
     else:
-        mtype = 'intr'
+        mtype = p[1]
+        nested = NOT_NESTED
 
     if mtype == 'async': mtype = ASYNC
     elif mtype == 'sync': mtype = SYNC
     elif mtype == 'intr': mtype = INTR
     else: assert 0
 
-    p[0] = [ quals.get('nested', NOT_NESTED), quals.get('prio', NORMAL_PRIORITY), mtype ]
+    p[0] = [ nested, mtype ]
 
 def p_OptionalProtocolSendSemanticsQual(p):
     """OptionalProtocolSendSemanticsQual : ProtocolSendSemanticsQual

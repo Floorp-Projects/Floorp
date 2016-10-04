@@ -251,14 +251,13 @@ class StateType(IPDLType):
         return self.name()
 
 class MessageType(IPDLType):
-    def __init__(self, nested, prio, sendSemantics, direction,
+    def __init__(self, nested, sendSemantics, direction,
                  ctor=False, dtor=False, cdtype=None, compress=False,
                  verify=False):
         assert not (ctor and dtor)
         assert not (ctor or dtor) or type is not None
 
         self.nested = nested
-        self.prio = prio
         self.nestedRange = (nested, nested)
         self.sendSemantics = sendSemantics
         self.direction = direction
@@ -1126,7 +1125,7 @@ class GatherDecls(TcheckVisitor):
         # enter message scope
         self.symtab.enterScope(md)
 
-        msgtype = MessageType(md.nested, md.prio, md.sendSemantics, md.direction,
+        msgtype = MessageType(md.nested, md.sendSemantics, md.direction,
                               ctor=isctor, dtor=isdtor, cdtype=cdtype,
                               compress=md.compress, verify=md.verify)
 
