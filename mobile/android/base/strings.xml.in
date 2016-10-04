@@ -632,5 +632,4 @@
 
   <string name="activity_stream_topsites">&activity_stream_topsites;</string>
   <string name="activity_stream_highlights">&activity_stream_highlights;</string>
-  <string name="activity_stream_more">&activity_stream_more;</string>
 </resources>
