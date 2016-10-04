@@ -19,5 +19,8 @@ interface ICodec {
     oneway void flush();
     oneway void release();
 
+    Sample dequeueInput(int size);
     oneway void queueInput(in Sample sample);
+
+    oneway void releaseOutput(in Sample sample);
 }
