@@ -487,6 +487,9 @@ public:
 
   virtual bool SetDtmfPayloadType(unsigned char type) = 0;
 
+  virtual bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
+                              int lengthMs, int attenuationDb) = 0;
+
 };
 }
 #endif
