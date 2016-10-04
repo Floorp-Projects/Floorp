@@ -93,6 +93,11 @@ js_option('--enable-debug',
 add_old_configure_assignment('MOZ_DEBUG',
                              depends('--enable-debug')(lambda v: bool(v)))
 
+include('build/moz.configure/pkg.configure')
+# Make this assignment here rather than in pkg.configure to avoid
+# requiring this file in unit tests.
+add_old_configure_assignment('PKG_CONFIG', pkg_config)
+
 include_when('build/moz.configure/toolchain.configure',
              when='--enable-compile-environment')
 include_when('build/moz.configure/memory.configure',

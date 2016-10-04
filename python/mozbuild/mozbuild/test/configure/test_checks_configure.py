@@ -701,13 +701,21 @@ class TestChecksConfigure(unittest.TestCase):
                 return 0, mock_pkg_config_version, ''
             self.fail("Unexpected arguments to mock_pkg_config: %s" % args)
 
+        def get_result(cmd, args=[], extra_paths=None):
+            return self.get_result(textwrap.dedent('''\
+                option('--disable-compile-environment', help='compile env')
+                include('%(topsrcdir)s/build/moz.configure/util.configure')
+                include('%(topsrcdir)s/build/moz.configure/checks.configure')
+                include('%(topsrcdir)s/build/moz.configure/pkg.configure')
+            ''' % {'topsrcdir': topsrcdir}) + cmd, args=args, extra_paths=extra_paths,
+                                                   includes=())
+
         extra_paths = {
             mock_pkg_config_path: mock_pkg_config,
         }
         includes = ('util.configure', 'checks.configure', 'pkg.configure')
 
-        config, output, status = self.get_result("pkg_check_modules('MOZ_VALID', 'valid')",
-                                                 includes=includes)
+        config, output, status = get_result("pkg_check_modules('MOZ_VALID', 'valid')")
         self.assertEqual(status, 1)
         self.assertEqual(output, textwrap.dedent('''\
             checking for pkg_config... not found
@@ -717,9 +725,8 @@ class TestChecksConfigure(unittest.TestCase):
         '''))
 
 
-        config, output, status = self.get_result("pkg_check_modules('MOZ_VALID', 'valid')",
-                                                 extra_paths=extra_paths,
-                                                 includes=includes)
+        config, output, status = get_result("pkg_check_modules('MOZ_VALID', 'valid')",
+                                            extra_paths=extra_paths)
         self.assertEqual(status, 0)
         self.assertEqual(output, textwrap.dedent('''\
             checking for pkg_config... %s
@@ -734,9 +741,8 @@ class TestChecksConfigure(unittest.TestCase):
             'MOZ_VALID_LIBS': ('-lvalid',),
         })
 
-        config, output, status = self.get_result("pkg_check_modules('MOZ_UKNOWN', 'unknown')",
-                                                 extra_paths=extra_paths,
-                                                 includes=includes)
+        config, output, status = get_result("pkg_check_modules('MOZ_UKNOWN', 'unknown')",
+                                            extra_paths=extra_paths)
         self.assertEqual(status, 1)
         self.assertEqual(output, textwrap.dedent('''\
             checking for pkg_config... %s
@@ -751,9 +757,8 @@ class TestChecksConfigure(unittest.TestCase):
             'PKG_CONFIG': mock_pkg_config_path,
         })
 
-        config, output, status = self.get_result("pkg_check_modules('MOZ_NEW', 'new > 1.1')",
-                                                 extra_paths=extra_paths,
-                                                 includes=includes)
+        config, output, status = get_result("pkg_check_modules('MOZ_NEW', 'new > 1.1')",
+                                            extra_paths=extra_paths)
         self.assertEqual(status, 1)
         self.assertEqual(output, textwrap.dedent('''\
             checking for pkg_config... %s
@@ -774,9 +779,7 @@ class TestChecksConfigure(unittest.TestCase):
                 log.info('Module not found.')
         ''')
 
-        config, output, status = self.get_result(cmd,
-                                                 extra_paths=extra_paths,
-                                                 includes=includes)
+        config, output, status = get_result(cmd, extra_paths=extra_paths)
         self.assertEqual(status, 0)
         self.assertEqual(output, textwrap.dedent('''\
             checking for pkg_config... %s
@@ -789,6 +792,13 @@ class TestChecksConfigure(unittest.TestCase):
             'PKG_CONFIG': mock_pkg_config_path,
         })
 
+        config, output, status = get_result(cmd,
+                                            args=['--disable-compile-environment'],
+                                            extra_paths=extra_paths)
+        self.assertEqual(status, 0)
+        self.assertEqual(output, 'Module not found.\n')
+        self.assertEqual(config, {})
+
         def mock_old_pkg_config(_, args):
             if args[0] == '--version':
                 return 0, '0.8.10', ''
@@ -798,9 +808,8 @@ class TestChecksConfigure(unittest.TestCase):
             mock_pkg_config_path: mock_old_pkg_config,
         }
 
-        config, output, status = self.get_result("pkg_check_modules('MOZ_VALID', 'valid')",
-                                                 extra_paths=extra_paths,
-                                                 includes=includes)
+        config, output, status = get_result("pkg_check_modules('MOZ_VALID', 'valid')",
+                                            extra_paths=extra_paths)
         self.assertEqual(status, 1)
         self.assertEqual(output, textwrap.dedent('''\
             checking for pkg_config... %s
