@@ -226,7 +226,7 @@
     "space-infix-ops": [2, {"int32Hint": true}],
 
     // ++ and -- should not need spacing
-    "space-unary-ops": [1, {"nonwords": false}],
+    "space-unary-ops": [1, {"nonwords": false, "words": true, "overrides": {"typeof": false}}],
 
     // No comparisons to NaN
     "use-isnan": 2,
