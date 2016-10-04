@@ -912,7 +912,8 @@ CreateBlobImpl(const ParentBlobConstructorParams& aParams,
 template <class ChildManagerType>
 void
 BlobDataFromBlobImpl(ChildManagerType* aManager, BlobImpl* aBlobImpl,
-                     BlobData& aBlobData)
+                     BlobData& aBlobData,
+                     nsTArray<UniquePtr<AutoIPCStream>>& aIPCStreams)
 {
   MOZ_ASSERT(gProcessType != GeckoProcessType_Default);
   MOZ_ASSERT(aBlobImpl);
@@ -931,7 +932,7 @@ BlobDataFromBlobImpl(ChildManagerType* aManager, BlobImpl* aBlobImpl,
          index < count;
          index++) {
       BlobDataFromBlobImpl(aManager, subBlobs->ElementAt(index),
-                           subBlobDatas[index]);
+                           subBlobDatas[index], aIPCStreams);
     }
 
     return;
@@ -951,9 +952,11 @@ BlobDataFromBlobImpl(ChildManagerType* aManager, BlobImpl* aBlobImpl,
   aBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
   MOZ_ALWAYS_TRUE(!rv.Failed());
 
-  AutoIPCStream autoStream;
-  autoStream.Serialize(inputStream, aManager);
-  aBlobData = autoStream.TakeValue();
+  UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream());
+  autoStream->Serialize(inputStream, aManager);
+  aBlobData = autoStream->TakeValue();
+
+  aIPCStreams.AppendElement(Move(autoStream));
 }
 
 RemoteInputStream::RemoteInputStream(BlobImpl* aBlobImpl,
@@ -3347,6 +3350,7 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
   MOZ_ASSERT(!aBlobImpl->IsDateUnknown());
 
   AnyBlobConstructorParams blobParams;
+  nsTArray<UniquePtr<AutoIPCStream>> autoIPCStreams;
 
   if (gProcessType == GeckoProcessType_Default) {
     RefPtr<BlobImpl> sameProcessImpl = aBlobImpl;
@@ -3358,7 +3362,7 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
     // BlobData is going to be populate here and it _must_ be send via IPC in
     // order to avoid leaks.
     BlobData blobData;
-    BlobDataFromBlobImpl(aManager, aBlobImpl, blobData);
+    BlobDataFromBlobImpl(aManager, aBlobImpl, blobData, autoIPCStreams);
 
     nsString contentType;
     aBlobImpl->GetType(contentType);
@@ -3393,6 +3397,7 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
     return nullptr;
   }
 
+  autoIPCStreams.Clear();
   return actor;
 }
 
