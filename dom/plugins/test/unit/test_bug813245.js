@@ -39,6 +39,7 @@ function write_registry(version, info) {
 }
 
 function run_test() {
+  allow_all_plugins();
   var plugin = get_test_plugintag();
   do_check_true(plugin == null);
 

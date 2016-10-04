@@ -102,7 +102,8 @@ protected:
   // it makes sense.
   void EnsureFrameLoader();
   nsresult LoadSrc();
-  nsIDocument* GetContentDocument();
+  nsIDocument*
+  GetContentDocument(const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal);
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
   already_AddRefed<nsPIDOMWindowOuter> GetContentWindow();
 

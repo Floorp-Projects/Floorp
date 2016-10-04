@@ -289,12 +289,9 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
   SdpDirectionAttribute::Direction addVideoExt = SdpDirectionAttribute::kInactive;
   for (auto constraintEntry: constraints) {
     if (constraintEntry.rid != "") {
-      switch (it->mTrack->GetMediaType()) {
-        case SdpMediaSection::kVideo: {
-           addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
-                                                                       | it->mTrack->GetDirection());
-          break;
-        }
+      if (it->mTrack->GetMediaType() == SdpMediaSection::kVideo) {
+        addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
+                                                                    | it->mTrack->GetDirection());
       }
     }
   }

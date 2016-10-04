@@ -9,9 +9,10 @@
 
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
+#include "nsIURI.h"
 #include "nsIVariant.h"
 #include "nsNetUtil.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsWindowsMigrationUtils.h"
 #include "prtime.h"
 
@@ -22,7 +23,7 @@ NS_IMPL_ISUPPORTS(nsIEHistoryEnumerator, nsISimpleEnumerator)
 
 nsIEHistoryEnumerator::nsIEHistoryEnumerator()
 {
-  ::CoInitialize(nullptr);  
+  ::CoInitialize(nullptr);
 }
 
 nsIEHistoryEnumerator::~nsIEHistoryEnumerator()

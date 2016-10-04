@@ -54,11 +54,13 @@ parent:
   async Drain();
   async Shutdown();
 
+  async SetSeekThreshold(int64_t time);
+
   async __delete__();
 
 child:
 
-  async InitComplete();
+  async InitComplete(bool hardware, nsCString hardwareReason);
   async InitFailed(nsresult reason);
 
   // Each output includes a SurfaceDescriptorGPUVideo that represents the decoded

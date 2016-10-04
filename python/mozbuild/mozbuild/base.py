@@ -15,6 +15,7 @@ import which
 
 from mach.mixin.logging import LoggingMixin
 from mach.mixin.process import ProcessExecutionMixin
+from mozversioncontrol import get_repository_object
 
 from .backend.configenvironment import ConfigEnvironment
 from .controller.clobber import Clobberer
@@ -280,6 +281,12 @@ class MozbuildObject(ProcessExecutionMixin):
                             key, value = e.split('=')
                             env[key] = value
         return env
+
+    @memoized_property
+    def repository(self):
+        '''Get a `mozversioncontrol.Repository` object for the
+        top source directory.'''
+        return get_repository_object(self.topsrcdir)
 
     def is_clobber_needed(self):
         if not os.path.exists(self.topobjdir):
