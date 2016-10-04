@@ -639,7 +639,7 @@ IDBTransaction::AbortInternal(nsresult aAbortCode,
 
   const bool isVersionChange = mMode == VERSION_CHANGE;
   const bool isInvalidated = mDatabase->IsInvalidated();
-  bool needToSendAbort = mReadyState == INITIAL && !isInvalidated;
+  bool needToSendAbort = mReadyState == INITIAL;
 
   mAbortCode = aAbortCode;
   mReadyState = DONE;
