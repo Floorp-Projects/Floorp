@@ -84,6 +84,7 @@ ClipboardEvent::Constructor(const GlobalObject& aGlobal,
   e->InitClipboardEvent(aType, aParam.mBubbles, aParam.mCancelable,
                         clipboardData);
   e->SetTrusted(trusted);
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 

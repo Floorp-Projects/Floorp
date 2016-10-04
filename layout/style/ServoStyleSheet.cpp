@@ -14,7 +14,7 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
                                  net::ReferrerPolicy aReferrerPolicy,
                                  const dom::SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Servo, aParsingMode)
-  , StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
+  , mSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
 {
 }
 
