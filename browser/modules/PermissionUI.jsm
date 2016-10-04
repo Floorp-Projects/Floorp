@@ -133,8 +133,9 @@ this.PermissionPromptPrototype = {
    * PopupNotification when it is shown. See the documentation
    * for PopupNotification for more details.
    *
-   * Note that prompt()  will automatically set displayURI to
-   * be the URI of the requesting pricipal.
+   * Note that prompt() will automatically set displayURI to
+   * be the URI of the requesting pricipal, unless the displayURI is exactly
+   * set to false.
    */
   get popupOptions() {
     return {};
@@ -329,7 +330,10 @@ this.PermissionPromptPrototype = {
     let secondaryActions = popupNotificationActions.splice(1);
 
     let options = this.popupOptions;
-    options.displayURI = this.principal.URI;
+
+    if (!options.hasOwnProperty('displayURI') || options.displayURI) {
+      options.displayURI = this.principal.URI;
+    }
 
     this.onBeforeShow();
     chromeWin.PopupNotifications.show(this.browser,
