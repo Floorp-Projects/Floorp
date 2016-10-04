@@ -29,6 +29,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
 #include "mozilla/NullPtr.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/ipc/FileDescriptor.h"
 
 namespace mozilla {
@@ -354,7 +355,7 @@ void
 SandboxBroker::ThreadMain(void)
 {
   char threadName[16];
-  snprintf(threadName, sizeof(threadName), "FS Broker %d", mChildPid);
+  SprintfLiteral(threadName, "FS Broker %d", mChildPid);
   PlatformThread::SetName(threadName);
 
   // Permissive mode can only be enabled through an environment variable,

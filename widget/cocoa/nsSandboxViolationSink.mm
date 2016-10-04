@@ -12,6 +12,7 @@
 #include <notify.h>
 #include "nsCocoaDebugUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Sprintf.h"
 
 int nsSandboxViolationSink::mNotifyToken = 0;
 uint64_t nsSandboxViolationSink::mLastMsgReceived = 0;
@@ -59,7 +60,7 @@ nsSandboxViolationSink::ViolationHandler()
 
   // Only get reports that were generated very recently.
   char query_time[30] = {0};
-  snprintf(query_time, sizeof(query_time), "%li", time(NULL) - 2);
+  SprintfLiteral(query_time, "%li", time(NULL) - 2);
   asl_set_query(query, ASL_KEY_TIME, query_time,
                 ASL_QUERY_OP_NUMERIC | ASL_QUERY_OP_GREATER_EQUAL);
 
@@ -74,7 +75,7 @@ nsSandboxViolationSink::ViolationHandler()
     // be better to make the chrome process log all the other processes'
     // violations.
     char query_pid[20] = {0};
-    snprintf(query_pid, sizeof(query_pid), "%u", getpid());
+    SprintfLiteral(query_pid, "%u", getpid());
     asl_set_query(query, ASL_KEY_REF_PID, query_pid, ASL_QUERY_OP_EQUAL);
   }
 

@@ -47,6 +47,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ProcessHangMonitor.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
 #include "AccessCheck.h"
@@ -3528,7 +3529,7 @@ XPCJSContext::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
         return false;
     }
 
-    snprintf(name, sizeof(name), "JS Object (%s - %s)", clasp->name, si->GetJSClass()->name);
+    SprintfLiteral(name, "JS Object (%s - %s)", clasp->name, si->GetJSClass()->name);
     return true;
 }
 

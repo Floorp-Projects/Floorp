@@ -20,11 +20,12 @@
 #include "nsString.h"
 #include "mozilla/Logging.h"
 
-#include "mozilla/Services.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/FileUtils.h"
-#include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
+#include "mozilla/FileUtils.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "mozilla/SHA1.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 
 #ifdef MOZ_WIDGET_GONK
@@ -139,11 +140,11 @@ void nsNotifyAddrListener::calculateNetworkId(void)
         if (gw) {
             /* create a string to search for in the arp table */
             char searchfor[16];
-            snprintf(searchfor, sizeof(searchfor), "%d.%d.%d.%d",
-                     gw & 0xff,
-                     (gw >> 8) & 0xff,
-                     (gw >> 16) & 0xff,
-                     gw >> 24);
+            SprintfLiteral(searchfor, "%d.%d.%d.%d",
+                           gw & 0xff,
+                           (gw >> 8) & 0xff,
+                           (gw >> 16) & 0xff,
+                           gw >> 24);
 
             FILE *farp = fopen(kProcArp, "r");
             if (farp) {
