@@ -9,21 +9,7 @@ import android.graphics.Matrix;
 import android.graphics.PointF;
 
 public interface PanZoomTarget {
-    public ImmutableViewportMetrics getViewportMetrics();
-    public FullScreenState getFullScreenState();
-    public PointF getVisibleEndOfLayerView();
-
-    public void setAnimationTarget(ImmutableViewportMetrics viewport);
-    public void setViewportMetrics(ImmutableViewportMetrics viewport);
-    public void scrollBy(float dx, float dy);
     public void panZoomStopped();
-
     public boolean isGeckoReady();
-    public boolean post(Runnable action);
-    public void postRenderTask(RenderTask task);
-    public void removeRenderTask(RenderTask task);
-    public Object getLock();
-    public PointF convertViewPointToLayerPoint(PointF viewPoint);
-    public Matrix getMatrixForLayerRectToViewRect();
     public void setScrollingRootContent(boolean isRootContent);
 }
