@@ -7,8 +7,7 @@
 enum DecoderDoctorNotificationType {
   "cannot-play",
   "platform-decoder-not-found",
-  "can-play-but-some-missing-decoders",
-  "unsupported-libavcodec",
+  "can-play-but-some-missing-decoders"
 };
 
 dictionary DecoderDoctorNotification {

@@ -19,10 +19,6 @@
 #include "nsPluginHost.h"
 #include "VideoUtils.h"
 
-#if defined(MOZ_FFMPEG)
-#include "FFmpegRuntimeLinker.h"
-#endif
-
 #if defined(XP_WIN)
 #include "mozilla/WindowsVersion.h"
 #endif
@@ -271,9 +267,6 @@ static const NotificationAndReportStringId sMediaCannotPlayNoDecoders =
 static const NotificationAndReportStringId sMediaNoDecoders =
   { dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
     "MediaNoDecoders" };
-static const NotificationAndReportStringId sUnsupportedLibavcodec =
-  { dom::DecoderDoctorNotificationType::Unsupported_libavcodec,
-    "MediaUnsupportedLibavcodec" };
 
 static const NotificationAndReportStringId*
 sAllNotificationsAndReportStringIds[] =
@@ -283,8 +276,7 @@ sAllNotificationsAndReportStringIds[] =
   &sMediaUnsupportedBeforeWindowsVista,
   &sMediaPlatformDecoderNotFound,
   &sMediaCannotPlayNoDecoders,
-  &sMediaNoDecoders,
-  &sUnsupportedLibavcodec,
+  &sMediaNoDecoders
 };
 
 static void
@@ -338,23 +330,13 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(
     DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::ReportAnalysis() ReportToConsole - aMsg='%s' params[0]='%s'",
              this, mDocument, aNotification.mReportStringId,
              aParams.IsEmpty() ? "<no params>" : NS_ConvertUTF16toUTF8(params[0]).get());
-    if (&aNotification != &sUnsupportedLibavcodec) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("Media"),
-                                      mDocument,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      aNotification.mReportStringId,
-                                      aParams.IsEmpty() ? nullptr : params,
-                                      aParams.IsEmpty() ? 0 : 1);
-    } else {
-      // Special case for MediaUnsupportedLibavcodec for aurora and beta, as
-      // translation cannot be done in time.
-      nsContentUtils::ReportToConsoleNonLocalized(
-        NS_LITERAL_STRING("The video on this page can't be played. Your system has an unsupported version of libavcodec"),
-        nsIScriptError::warningFlag,
-        NS_LITERAL_CSTRING("Media"),
-        mDocument);
-    }
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Media"),
+                                    mDocument,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    aNotification.mReportStringId,
+                                    aParams.IsEmpty() ? nullptr : params,
+                                    aParams.IsEmpty() ? 0 : 1);
   }
 
   // "media.decoder-doctor.notifications-allowed" controls which notifications
@@ -584,34 +566,11 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
 #endif
 #if defined(MOZ_FFMPEG)
       if (!formatsRequiringFFMpeg.IsEmpty()) {
-        switch (FFmpegRuntimeLinker::LinkStatusCode()) {
-          case FFmpegRuntimeLinker::LinkStatus_INVALID_FFMPEG_CANDIDATE:
-          case FFmpegRuntimeLinker::LinkStatus_UNUSABLE_LIBAV57:
-          case FFmpegRuntimeLinker::LinkStatus_INVALID_LIBAV_CANDIDATE:
-          case FFmpegRuntimeLinker::LinkStatus_OBSOLETE_FFMPEG:
-          case FFmpegRuntimeLinker::LinkStatus_OBSOLETE_LIBAV:
-          case FFmpegRuntimeLinker::LinkStatus_INVALID_CANDIDATE:
-            DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because of unsupported %s (Reason: %s)",
-                    this, mDocument,
-                    NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get(),
-                    FFmpegRuntimeLinker::LinkStatusLibraryName(),
-                    FFmpegRuntimeLinker::LinkStatusString());
-            ReportAnalysis(sUnsupportedLibavcodec,
-                           false, formatsRequiringFFMpeg);
-            return;
-          case FFmpegRuntimeLinker::LinkStatus_INIT:
-            MOZ_FALLTHROUGH_ASSERT("Unexpected LinkStatus_INIT");
-          case FFmpegRuntimeLinker::LinkStatus_SUCCEEDED:
-            MOZ_FALLTHROUGH_ASSERT("Unexpected LinkStatus_SUCCEEDED");
-          case FFmpegRuntimeLinker::LinkStatus_NOT_FOUND:
-            DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found (Reason: %s)",
-                    this, mDocument,
-                    NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get(),
-                    FFmpegRuntimeLinker::LinkStatusString());
-            ReportAnalysis(sMediaPlatformDecoderNotFound,
-                           false, formatsRequiringFFMpeg);
-            return;
-        }
+        DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found",
+                this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get());
+        ReportAnalysis(sMediaPlatformDecoderNotFound,
+                       false, formatsRequiringFFMpeg);
+        return;
       }
 #endif
       DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Cannot play media, unplayable formats: %s",
