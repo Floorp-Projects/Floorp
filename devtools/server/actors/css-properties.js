@@ -10,10 +10,6 @@ loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
 
-loader.lazyGetter(this, "appInfo", () => {
-  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-});
-
 const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
@@ -32,15 +28,7 @@ exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
     Actor.prototype.destroy.call(this);
   },
 
-  getCSSDatabase(clientBrowserVersion) {
-    // If the client and server are both the same version of Firefox, do not return a
-    // database, use the client-side css-properties-db.js.
-    const serverBrowserVersion = appInfo.platformVersion.match(/^\d+/)[0];
-
-    if (clientBrowserVersion !== 0 && clientBrowserVersion === serverBrowserVersion) {
-      return {};
-    }
-
+  getCSSDatabase() {
     const properties = generateCssProperties();
     const pseudoElements = DOMUtils.getCSSPseudoElementNames();
 
