@@ -31,6 +31,7 @@ static const char* logTag = "sdp_access";
 #define SIPSDP_ATTR_ENCNAME_OPUS      "opus"
 #define SIPSDP_ATTR_ENCNAME_RED       "red"
 #define SIPSDP_ATTR_ENCNAME_ULPFEC    "ulpfec"
+#define SIPSDP_ATTR_ENCNAME_TELEPHONE_EVENT "telephone-event"
 
 /* Function:    sdp_find_media_level
  * Description: Find and return a pointer to the specified media level,
@@ -1384,6 +1385,9 @@ rtp_ptype sdp_get_known_payload_type(sdp_t *sdp_p,
         }
         if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_ULPFEC) == 0) {
           return (RTP_ULPFEC);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_TELEPHONE_EVENT) == 0) {
+          return (RTP_TELEPHONE_EVENT);
         }
       }
     }

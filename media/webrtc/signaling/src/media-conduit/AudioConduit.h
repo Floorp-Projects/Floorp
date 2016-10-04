@@ -169,6 +169,7 @@ public:
                       mEngineTransmitting(false),
                       mEngineReceiving(false),
                       mChannel(-1),
+                      mDtmfEnabled(false),
                       mCodecMutex("AudioConduit codec db"),
                       mCaptureDelay(150),
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
@@ -218,6 +219,8 @@ public:
   bool GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                            unsigned int* packetsSent,
                            uint64_t* bytesSent) override;
+
+  bool SetDtmfPayloadType(unsigned char type) override;
 
 private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
@@ -276,6 +279,7 @@ private:
   AutoTArray<Processing,8> mProcessing;
 
   int mChannel;
+  bool mDtmfEnabled;
   RecvCodecList    mRecvCodecList;
 
   Mutex mCodecMutex; // protects mCurSendCodecConfig

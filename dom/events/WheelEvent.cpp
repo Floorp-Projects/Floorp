@@ -125,6 +125,7 @@ WheelEvent::Constructor(const GlobalObject& aGlobal,
                     aParam.mDeltaY, aParam.mDeltaZ, aParam.mDeltaMode);
   e->InitializeExtraMouseEventDictionaryMembers(aParam);
   e->SetTrusted(trusted);
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 

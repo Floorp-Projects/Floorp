@@ -6,6 +6,7 @@
 
 #include "secerr.h"
 #include "ssl.h"
+#include "ssl3prot.h"
 #include "sslerr.h"
 #include "sslproto.h"
 
@@ -16,26 +17,6 @@
 #include "tls_parser.h"
 
 namespace nss_test {
-
-// Set the version number in the ClientHello.
-class TlsInspectorClientHelloVersionSetter : public TlsHandshakeFilter {
- public:
-  TlsInspectorClientHelloVersionSetter(uint16_t version) : version_(version) {}
-
-  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
-                                               const DataBuffer& input,
-                                               DataBuffer* output) {
-    if (header.handshake_type() == kTlsHandshakeClientHello) {
-      *output = input;
-      output->Write(0, version_, 2);
-      return CHANGE;
-    }
-    return KEEP;
-  }
-
- private:
-  uint16_t version_;
-};
 
 TEST_P(TlsConnectStream, ServerNegotiateTls10) {
   uint16_t minver, maxver;
@@ -67,6 +48,7 @@ TEST_P(TlsConnectGeneric, ServerNegotiateTls12) {
                            SSL_LIBRARY_VERSION_TLS_1_2);
   Connect();
 }
+#ifndef TLS_1_3_DRAFT_VERSION
 
 // Test the ServerRandom version hack from
 // [draft-ietf-tls-tls13-11 Section 6.3.1.1].
@@ -91,6 +73,7 @@ TEST_F(DtlsConnectTest, TestDtlsVersion11) {
   EXPECT_EQ(SSL_ERROR_UNSUPPORTED_VERSION, server_->error_code());
 }
 
+// Disabled as long as we have draft version.
 TEST_F(TlsConnectTest, TestDowngradeDetectionToTls12) {
   EnsureTlsSetup();
   client_->SetPacketFilter(
@@ -138,6 +121,7 @@ TEST_F(TlsConnectTest, TestFallbackFromTls13) {
   ConnectExpectFail();
   ASSERT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
 }
+#endif
 
 // The TLS v1.3 spec section C.4 states that 'Implementations MUST NOT send or
 // accept any records with a version less than { 3, 0 }'. Thus we will not
@@ -178,13 +162,8 @@ TEST_P(TlsConnectStream, ConnectTls10AndServerRenegotiateHigher) {
   server_->ResetPreliminaryInfo();
   server_->StartRenegotiate();
   Handshake();
-  if (test_version < SSL_LIBRARY_VERSION_TLS_1_3) {
-    client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
-    server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
-  } else {
-    client_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
-    server_->CheckErrorCode(SSL_ERROR_RENEGOTIATION_NOT_ALLOWED);
-  }
+  client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
 
 TEST_P(TlsConnectStream, ConnectTls10AndClientRenegotiateHigher) {
@@ -210,13 +189,8 @@ TEST_P(TlsConnectStream, ConnectTls10AndClientRenegotiateHigher) {
   server_->ResetPreliminaryInfo();
   client_->StartRenegotiate();
   Handshake();
-  if (test_version < SSL_LIBRARY_VERSION_TLS_1_3) {
-    client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
-    server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
-  } else {
-    client_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
-    server_->CheckErrorCode(SSL_ERROR_RENEGOTIATION_NOT_ALLOWED);
-  }
+  client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
 
 TEST_F(TlsConnectTest, Tls13RejectsRehandshakeClient) {
@@ -255,6 +229,64 @@ TEST_P(TlsConnectGeneric, AlertBeforeServerHello) {
   client_->adapter()->PacketReceived(alert);
   Handshake();
   CheckConnected();
+}
+
+class Tls13NoSupportedVersions : public TlsConnectStreamTls12 {
+ protected:
+  void Run(uint16_t overwritten_client_version, uint16_t max_server_version) {
+    client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                             SSL_LIBRARY_VERSION_TLS_1_2);
+    server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2, max_server_version);
+    client_->SetPacketFilter(
+        new TlsInspectorClientHelloVersionSetter(overwritten_client_version));
+    auto capture =
+        new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerHello);
+    server_->SetPacketFilter(capture);
+    ConnectExpectFail();
+    client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
+    server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+    const DataBuffer& server_hello = capture->buffer();
+    ASSERT_GT(server_hello.len(), 2U);
+    uint32_t ver;
+    ASSERT_TRUE(server_hello.Read(0, 2, &ver));
+    ASSERT_EQ(static_cast<uint32_t>(SSL_LIBRARY_VERSION_TLS_1_2), ver);
+  }
+};
+
+// If we offer a 1.3 ClientHello w/o supported_versions, the server should
+// negotiate 1.2.
+TEST_F(Tls13NoSupportedVersions,
+       Tls13ClientHelloWithoutSupportedVersionsServer12) {
+  Run(SSL_LIBRARY_VERSION_TLS_1_3, SSL_LIBRARY_VERSION_TLS_1_2);
+}
+
+TEST_F(Tls13NoSupportedVersions,
+       Tls13ClientHelloWithoutSupportedVersionsServer13) {
+  Run(SSL_LIBRARY_VERSION_TLS_1_3, SSL_LIBRARY_VERSION_TLS_1_3);
+}
+
+TEST_F(Tls13NoSupportedVersions,
+       Tls14ClientHelloWithoutSupportedVersionsServer13) {
+  Run(SSL_LIBRARY_VERSION_TLS_1_3 + 1, SSL_LIBRARY_VERSION_TLS_1_3);
+}
+
+// Offer 1.3 but with ClientHello.legacy_version == TLS 1.4. This
+// causes a bad MAC error when we read EncryptedExtensions.
+TEST_F(TlsConnectStreamTls13, Tls14ClientHelloWithSupportedVersions) {
+  client_->SetPacketFilter(new TlsInspectorClientHelloVersionSetter(
+      SSL_LIBRARY_VERSION_TLS_1_3 + 1));
+  auto capture =
+      new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerHello);
+  server_->SetPacketFilter(capture);
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  const DataBuffer& server_hello = capture->buffer();
+  ASSERT_GT(server_hello.len(), 2U);
+  uint32_t ver;
+  ASSERT_TRUE(server_hello.Read(0, 2, &ver));
+  // This way we don't need to change with new draft version.
+  ASSERT_LT(static_cast<uint32_t>(SSL_LIBRARY_VERSION_TLS_1_2), ver);
 }
 
 }  // namespace nss_test

@@ -363,6 +363,8 @@ SipccSdpAttributeList::GetCodecType(rtp_ptype type)
       return SdpRtpmapAttributeList::kRed;
     case RTP_ULPFEC:
       return SdpRtpmapAttributeList::kUlpfec;
+    case RTP_TELEPHONE_EVENT:
+      return SdpRtpmapAttributeList::kTelephoneEvent;
     case RTP_NONE:
     // Happens when sipcc doesn't know how to translate to the enum
     case RTP_CELP:
@@ -377,7 +379,6 @@ SipccSdpAttributeList::GetCodecType(rtp_ptype type)
     case RTP_JPEG:
     case RTP_NV:
     case RTP_H261:
-    case RTP_AVT:
     case RTP_L16:
     case RTP_H263:
     case RTP_ILBC:
@@ -756,6 +757,14 @@ SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level)
         opusParameters->stereo = fmtp->stereo;
         opusParameters->useInBandFec = fmtp->useinbandfec;
         parameters.reset(opusParameters);
+      } break;
+      case RTP_TELEPHONE_EVENT: {
+        SdpFmtpAttributeList::TelephoneEventParameters* teParameters(
+          new SdpFmtpAttributeList::TelephoneEventParameters);
+        if (strlen(fmtp->dtmf_tones) > 0) {
+          teParameters->dtmfTones = fmtp->dtmf_tones;
+        }
+        parameters.reset(teParameters);
       } break;
       default: {
       }

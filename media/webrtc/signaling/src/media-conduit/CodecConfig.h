@@ -30,6 +30,7 @@ struct AudioCodecConfig
   int mRate;
 
   bool mFECEnabled;
+  bool mDtmfEnabled;
 
   // OPUS-specific
   int mMaxPlaybackRate;
@@ -47,6 +48,7 @@ struct AudioCodecConfig
                                                      mChannels(channels),
                                                      mRate(rate),
                                                      mFECEnabled(FECEnabled),
+                                                     mDtmfEnabled(false),
                                                      mMaxPlaybackRate(0)
   {
   }

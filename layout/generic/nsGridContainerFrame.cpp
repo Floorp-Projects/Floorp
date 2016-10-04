@@ -29,7 +29,7 @@
 #include "nsStyleContext.h"
 #include "mozilla/dom/GridBinding.h"
 
-#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__  == 6
+#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__ <= 8
 #define CLANG_CRASH_BUG 1
 #endif
 
@@ -420,8 +420,10 @@ public:
 
   void SetGridItemCount(size_t aGridItemCount)
   {
+#ifndef CLANG_CRASH_BUG
     MOZ_ASSERT(mIter.isSome() || mArray->Length() == aGridItemCount,
                "grid item count mismatch");
+#endif
     mGridItemCount.emplace(aGridItemCount);
     // Note: it's OK if mGridItemIndex underflows -- GridItemIndex()
     // will not be called unless there is at least one item.
@@ -4073,7 +4075,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
       // For this purpose, the 'start', 'end', 'flex-start', and 'flex-end'
       // values of 'align-self' are treated as either 'self-start' or
       // 'self-end', whichever they end up equivalent to.
-      auto alignContent = child->StylePosition()->ComputedAlignContent();
+      auto alignContent = child->StylePosition()->mAlignContent;
       alignContent &= ~NS_STYLE_ALIGN_FLAG_BITS;
       if (alignContent == NS_STYLE_ALIGN_BASELINE ||
           alignContent == NS_STYLE_ALIGN_LAST_BASELINE) {
@@ -4675,8 +4677,8 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
   }
 
   const bool isAlign = mAxis == eLogicalAxisBlock;
-  auto valueAndFallback = isAlign ? aStyle->ComputedAlignContent() :
-                                    aStyle->ComputedJustifyContent();
+  auto valueAndFallback = isAlign ? aStyle->mAlignContent :
+                                    aStyle->mJustifyContent;
   bool overflowSafe;
   auto alignment = ::GetAlignJustifyValue(valueAndFallback, aWM, isAlign,
                                           &overflowSafe);

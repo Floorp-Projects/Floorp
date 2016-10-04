@@ -221,12 +221,6 @@ nsHtml5Tokenizer::emitOrAppendCharRefBuf(int32_t returnState)
   }
 }
 
-void 
-nsHtml5Tokenizer::appendStrBuf(char16_t c)
-{
-  strBuf[strBufLen++] = c;
-}
-
 nsString* 
 nsHtml5Tokenizer::strBufToString()
 {
@@ -250,14 +244,15 @@ nsHtml5Tokenizer::emitStrBuf()
 void 
 nsHtml5Tokenizer::appendStrBuf(char16_t* buffer, int32_t offset, int32_t length)
 {
-  int32_t reqLen = strBufLen + length;
-  if (strBuf.length < reqLen) {
-    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newJArray(reqLen + (reqLen >> 1));
-    nsHtml5ArrayCopy::arraycopy(strBuf, newBuf, strBuf.length);
-    strBuf = newBuf;
+  int32_t newLen = strBufLen + length;
+  MOZ_ASSERT(newLen <= strBuf.length, "Previous buffer length insufficient.");
+  if (MOZ_UNLIKELY(strBuf.length < newLen)) {
+    if (MOZ_UNLIKELY(!EnsureBufferSpace(length))) {
+      MOZ_CRASH("Unable to recover from buffer reallocation failure");
+    }
   }
   nsHtml5ArrayCopy::arraycopy(buffer, offset, strBuf, strBufLen, length);
-  strBufLen = reqLen;
+  strBufLen = newLen;
 }
 
 void 

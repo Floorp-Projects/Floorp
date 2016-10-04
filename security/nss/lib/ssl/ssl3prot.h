@@ -18,7 +18,7 @@ typedef PRUint16 SSL3ProtocolVersion;
 /* The TLS 1.3 draft version. Used to avoid negotiating
  * between incompatible pre-standard TLS 1.3 drafts.
  * TODO(ekr@rtfm.com): Remove when TLS 1.3 is published. */
-#define TLS_1_3_DRAFT_VERSION 15
+#define TLS_1_3_DRAFT_VERSION 16
 
 typedef PRUint16 ssl3CipherSuite;
 /* The cipher suites are defined in sslproto.h */
@@ -351,6 +351,6 @@ typedef enum {
     ssl_sig_dsa_sha384 = 0x0502,
     ssl_sig_dsa_sha512 = 0x0602,
     ssl_sig_ecdsa_sha1 = 0x0203
-} SignatureScheme;
+} SSLSignatureScheme;
 
 #endif /* __ssl3proto_h_ */
