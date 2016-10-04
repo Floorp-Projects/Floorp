@@ -689,6 +689,7 @@ a.learn-more-link.webconsole-learn-more-link {
   display: flex;
   flex-direction: column;
   height: 100%;
+  -moz-user-focus: normal;
 }
 
 .webconsole-filterbar-wrapper {
