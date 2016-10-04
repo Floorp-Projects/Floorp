@@ -46,6 +46,9 @@
 
 #include "DecoderDoctorDiagnostics.h"
 
+#ifdef XP_WIN
+#include "mozilla/WindowsVersion.h"
+#endif
 
 namespace mozilla {
 
@@ -236,7 +239,14 @@ PDMFactory::CreatePDMs()
   }
 #endif
 #ifdef XP_WIN
-  if (MediaPrefs::PDMWMFEnabled()) {
+  if (MediaPrefs::PDMWMFEnabled() && IsVistaOrLater()) {
+    // *Only* use WMF on Vista and later, as if Firefox is run in Windows 95
+    // compatibility mode on Windows 7 (it does happen!) we may crash trying
+    // to startup WMF. So we need to detect the OS version here, as in
+    // compatibility mode IsVistaOrLater() and friends behave as if we're on
+    // the emulated version of Windows. See bug 1279171.
+    // Additionally, we don't want to start the RemoteDecoderModule if we
+    // expect it's not going to work (i.e. on Windows older than Vista).
     m = new WMFDecoderModule();
     mWMFFailedToLoad = !StartupPDM(m);
   } else {
