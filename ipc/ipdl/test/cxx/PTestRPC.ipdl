@@ -1,20 +1,20 @@
 namespace mozilla {
 namespace _ipdltest {
 
-nested(upto inside_sync) sync protocol PTestRPC
+prio(normal upto high) sync protocol PTestRPC
 {
 parent:
-    nested(inside_sync) sync Test1_Start() returns (uint32_t result);
-    nested(inside_sync) sync Test1_InnerEvent() returns (uint32_t result);
+    prio(high) sync Test1_Start() returns (uint32_t result);
+    prio(high) sync Test1_InnerEvent() returns (uint32_t result);
     async Test2_Start();
-    nested(inside_sync) sync Test2_OutOfOrder();
+    prio(high) sync Test2_OutOfOrder();
 
 child:
     async Start();
-    nested(inside_sync) sync Test1_InnerQuery() returns (uint32_t result);
-    nested(inside_sync) sync Test1_NoReenter() returns (uint32_t result);
-    nested(inside_sync) sync Test2_FirstUrgent();
-    nested(inside_sync) sync Test2_SecondUrgent();
+    prio(high) sync Test1_InnerQuery() returns (uint32_t result);
+    prio(high) sync Test1_NoReenter() returns (uint32_t result);
+    prio(high) sync Test2_FirstUrgent();
+    prio(high) sync Test2_SecondUrgent();
 };
 
 } // namespace _ipdltest

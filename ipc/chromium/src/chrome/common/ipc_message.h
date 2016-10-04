@@ -38,15 +38,10 @@ class Message : public Pickle {
  public:
   typedef uint32_t msgid_t;
 
-  enum NestedLevel {
-    NOT_NESTED = 1,
-    NESTED_INSIDE_SYNC = 2,
-    NESTED_INSIDE_CPOW = 3
-  };
-
   enum PriorityValue {
-    NORMAL_PRIORITY,
-    HIGH_PRIORITY,
+    PRIORITY_NORMAL = 1,
+    PRIORITY_HIGH = 2,
+    PRIORITY_URGENT = 3
   };
 
   enum MessageCompression {
@@ -61,10 +56,7 @@ class Message : public Pickle {
 
   // Initialize a message with a user-defined type, priority value, and
   // destination WebView ID.
-  Message(int32_t routing_id,
-          msgid_t type,
-          NestedLevel nestedLevel = NOT_NESTED,
-          PriorityValue priority = NORMAL_PRIORITY,
+  Message(int32_t routing_id, msgid_t type, PriorityValue priority,
           MessageCompression compression = COMPRESSION_NONE,
           const char* const name="???");
 
@@ -75,27 +67,13 @@ class Message : public Pickle {
   Message& operator=(const Message& other) = delete;
   Message& operator=(Message&& other);
 
-  NestedLevel nested_level() const {
-    return static_cast<NestedLevel>(header()->flags & NESTED_MASK);
-  }
-
-  void set_nested_level(NestedLevel nestedLevel) {
-    DCHECK((nestedLevel & ~NESTED_MASK) == 0);
-    header()->flags = (header()->flags & ~NESTED_MASK) | nestedLevel;
-  }
-
   PriorityValue priority() const {
-    if (header()->flags & PRIORITY_BIT) {
-      return HIGH_PRIORITY;
-    }
-    return NORMAL_PRIORITY;
+    return static_cast<PriorityValue>(header()->flags & PRIORITY_MASK);
   }
 
-  void set_priority(PriorityValue prio) {
-    header()->flags &= ~PRIORITY_BIT;
-    if (prio == HIGH_PRIORITY) {
-      header()->flags |= PRIORITY_BIT;
-    }
+  void set_priority(int prio) {
+    DCHECK((prio & ~PRIORITY_MASK) == 0);
+    header()->flags = (header()->flags & ~PRIORITY_MASK) | prio;
   }
 
   // True if this is a synchronous message.
@@ -134,6 +112,27 @@ class Message : public Pickle {
 
   bool is_reply_error() const {
     return (header()->flags & REPLY_ERROR_BIT) != 0;
+  }
+
+  // Normally when a receiver gets a message and they're blocked on a
+  // synchronous message Send, they buffer a message.  Setting this flag causes
+  // the receiver to be unblocked and the message to be dispatched immediately.
+  void set_unblock(bool unblock) {
+    if (unblock) {
+      header()->flags |= UNBLOCK_BIT;
+    } else {
+      header()->flags &= ~UNBLOCK_BIT;
+    }
+  }
+
+  bool should_unblock() const {
+    return (header()->flags & UNBLOCK_BIT) != 0;
+  }
+
+  // Tells the receiver that the caller is pumping messages while waiting
+  // for the result.
+  bool is_caller_pumping_messages() const {
+    return (header()->flags & PUMPING_MSGS_BIT) != 0;
   }
 
   msgid_t type() const {
@@ -270,14 +269,16 @@ class Message : public Pickle {
 
   // flags
   enum {
-    NESTED_MASK     = 0x0003,
-    PRIORITY_BIT    = 0x0004,
-    SYNC_BIT        = 0x0008,
-    REPLY_BIT       = 0x0010,
-    REPLY_ERROR_BIT = 0x0020,
-    INTERRUPT_BIT   = 0x0040,
-    COMPRESS_BIT    = 0x0080,
-    COMPRESSALL_BIT = 0x0100,
+    PRIORITY_MASK   = 0x0003,
+    SYNC_BIT        = 0x0004,
+    REPLY_BIT       = 0x0008,
+    REPLY_ERROR_BIT = 0x0010,
+    UNBLOCK_BIT     = 0x0020,
+    PUMPING_MSGS_BIT= 0x0040,
+    HAS_SENT_TIME_BIT = 0x0080,
+    INTERRUPT_BIT   = 0x0100,
+    COMPRESS_BIT    = 0x0200,
+    COMPRESSALL_BIT = 0x0400,
   };
 
   struct Header : Pickle::Header {

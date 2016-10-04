@@ -45,15 +45,13 @@ Message::Message()
   InitLoggingVariables();
 }
 
-Message::Message(int32_t routing_id, msgid_t type, NestedLevel nestedLevel, PriorityValue priority,
+Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
                  MessageCompression compression, const char* const aName)
     : Pickle(sizeof(Header)) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = routing_id;
   header()->type = type;
-  header()->flags = nestedLevel;
-  if (priority == HIGH_PRIORITY)
-    header()->flags |= PRIORITY_BIT;
+  header()->flags = priority;
   if (compression == COMPRESSION_ENABLED)
     header()->flags |= COMPRESS_BIT;
   else if (compression == COMPRESSION_ALL)
