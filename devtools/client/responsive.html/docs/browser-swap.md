@@ -49,6 +49,7 @@ involved:
       * `browser._remoteWebNavigationImpl.swapBrowser(browser)` (R)
       * `browser._remoteWebProgressManager.swapBrowser(browser)` (R)
       * `browser._remoteFinder.swapBrowser(browser)` (R)
+      * Emit `EndSwapDocShells`
     * `gBrowser.mTabProgressListener`
     * `filter.addProgressListener`
     * `ourBrowser.webProgress.addProgressListener`
