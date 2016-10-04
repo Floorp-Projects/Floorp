@@ -776,8 +776,7 @@ MessageChannel::Send(Message* aMsg)
     }
 
     MOZ_RELEASE_ASSERT(!aMsg->is_sync());
-    // We never send an async high priority message.
-    MOZ_RELEASE_ASSERT(aMsg->priority() != IPC::Message::PRIORITY_HIGH);
+    MOZ_RELEASE_ASSERT(aMsg->nested_level() != IPC::Message::NESTED_INSIDE_SYNC);
 
     CxxStackFrame frame(*this, OUT_MESSAGE, aMsg);
 
