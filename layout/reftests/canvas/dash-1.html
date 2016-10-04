@@ -6,20 +6,20 @@ window.onload = function() {
 
     ctx.lineWidth = 5;
 
-    ctx.mozDash = [ 5, 10 ];  // 5 on, 10 off
+    ctx.setLineDash([ 5, 10 ]);  // 5 on, 10 off
     ctx.moveTo(50, 50);
     ctx.lineTo(250, 50);
     ctx.stroke();
     ctx.beginPath();
 
-    ctx.mozDashOffset = 5;
+    ctx.lineDashOffset = 5;
     ctx.moveTo(50, 100);
     ctx.lineTo(250, 100);
     ctx.stroke();
     ctx.beginPath();
 
-    ctx.mozDashOffset = 5;
-    ctx.mozDash = [ 5 ];  // 5 on, 5 off
+    ctx.lineDashOffset = 5;
+    ctx.setLineDash([ 5 ]);  // 5 on, 5 off
     ctx.moveTo(50, 150);
     ctx.lineTo(250, 150);
     ctx.stroke();
