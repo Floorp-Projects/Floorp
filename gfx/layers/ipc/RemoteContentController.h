@@ -86,6 +86,12 @@ private:
   MessageLoop* mCompositorThread;
   bool mCanSend;
 
+  void HandleTapOnMainThread(TapType aType,
+                             const LayoutDevicePoint& aPoint,
+                             Modifiers aModifiers,
+                             const ScrollableLayerGuid& aGuid,
+                             uint64_t aInputBlockId);
+
   // Mutex protecting members below accessed from multiple threads.
   mozilla::Mutex mMutex;
   nsRegion mTouchSensitiveRegion;
