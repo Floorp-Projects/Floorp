@@ -8,12 +8,14 @@
 #include "VRManagerChild.h"
 #include "VRManagerParent.h"
 #include "VRDisplayClient.h"
+#include "nsGlobalWindow.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorThread.h" // for CompositorThread
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/VREventObserver.h"
 #include "mozilla/dom/WindowBinding.h" // for FrameRequestCallback
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/GamepadManager.h"
 #include "mozilla/layers/TextureClient.h"
 #include "nsContentUtils.h"
 
@@ -475,6 +477,22 @@ VRManagerChild::RecvNotifyVRVSync(const uint32_t& aDisplayID)
   for (auto& display : mDisplays) {
     if (display->GetDisplayInfo().GetDisplayID() == aDisplayID) {
       display->NotifyVRVsync();
+    }
+  }
+
+  return true;
+}
+
+bool
+VRManagerChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
+{
+  // VRManagerChild could be at other processes,
+  // but GamepadManager is only allowed to be run at Content process.
+  if (XRE_IsContentProcess()) {
+    RefPtr<dom::GamepadManager> serivce(dom::GamepadManager::GetService());
+
+    if (serivce) {
+      serivce->Update(aGamepadEvent);
     }
   }
 

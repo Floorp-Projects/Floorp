@@ -114,7 +114,7 @@ protected:
 
   virtual bool RecvNotifyVSync() override;
   virtual bool RecvNotifyVRVSync(const uint32_t& aDisplayID) override;
-
+  virtual bool RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
 
   // ShmemAllocator
 
