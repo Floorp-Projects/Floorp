@@ -83,9 +83,9 @@ private:
   bool mCanSend;
 
   void HandleTapOnMainThread(TapType aType,
-                             const LayoutDevicePoint& aPoint,
+                             LayoutDevicePoint aPoint,
                              Modifiers aModifiers,
-                             const ScrollableLayerGuid& aGuid,
+                             ScrollableLayerGuid aGuid,
                              uint64_t aInputBlockId);
 };
 

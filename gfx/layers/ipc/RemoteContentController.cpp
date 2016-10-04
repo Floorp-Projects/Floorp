@@ -49,9 +49,9 @@ RemoteContentController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
 
 void
 RemoteContentController::HandleTapOnMainThread(TapType aTapType,
-                                               const LayoutDevicePoint& aPoint,
+                                               LayoutDevicePoint aPoint,
                                                Modifiers aModifiers,
-                                               const ScrollableLayerGuid& aGuid,
+                                               ScrollableLayerGuid aGuid,
                                                uint64_t aInputBlockId)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -92,7 +92,7 @@ RemoteContentController::HandleTap(TapType aTapType,
   } else {
     // We don't want to get the TabParent or call TabParent::SendHandleTap() from a non-main thread (this might happen
     // on Android, where this is called from the Java UI thread)
-    NS_DispatchToMainThread(NewRunnableMethod<TapType, const LayoutDevicePoint&, Modifiers, const ScrollableLayerGuid&, uint64_t>
+    NS_DispatchToMainThread(NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers, ScrollableLayerGuid, uint64_t>
         (this, &RemoteContentController::HandleTapOnMainThread, aTapType, aPoint, aModifiers, aGuid, aInputBlockId));
   }
 }
