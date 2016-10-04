@@ -2139,9 +2139,12 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
   dropDownMenuOnUpDown = keyEvent->IsAlt();
   dropDownMenuOnSpace = IsInDropDownMode() && !mComboboxFrame->IsDroppedDown();
 #endif
+  bool withinIncrementalSearchTime =
+    keyEvent->mTime - gLastKeyTime <= INCREMENTAL_SEARCH_KEYPRESS_TIME;
   if ((dropDownMenuOnUpDown &&
        (keyEvent->mKeyCode == NS_VK_UP || keyEvent->mKeyCode == NS_VK_DOWN)) ||
-      (dropDownMenuOnSpace && keyEvent->mKeyCode == NS_VK_SPACE)) {
+      (dropDownMenuOnSpace && keyEvent->mKeyCode == NS_VK_SPACE &&
+       !withinIncrementalSearchTime)) {
     DropDownToggleKey(aKeyEvent);
     if (keyEvent->DefaultPrevented()) {
       return NS_OK;
