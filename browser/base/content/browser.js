@@ -709,7 +709,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   // making it the same as 7f000001, which is 127.0.0.1 aka localhost.
   // While 2130706433 would get normalized by network, 1097347366913
   // does not, and we have to deal with both cases here:
-  if (isIPv4Address(asciiHost) || /^\d+$/.test(asciiHost))
+  if (isIPv4Address(asciiHost) || /^(?:\d+|0x[a-f0-9]+)$/i.test(asciiHost))
     return;
 
   let onLookupComplete = (request, record, status) => {
