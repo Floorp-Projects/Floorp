@@ -439,7 +439,22 @@ public:
 
   void Enter() override
   {
-    mMaster->DecodeFirstFrame();
+    // Handle pending seek.
+    if (mMaster->mQueuedSeek.Exists() &&
+        (mMaster->mSentFirstFrameLoadedEvent ||
+         Reader()->ForceZeroStartTime())) {
+      mMaster->InitiateSeek(Move(mMaster->mQueuedSeek));
+      return;
+    }
+
+    // Transition to DECODING if we've decoded first frames.
+    if (mMaster->mSentFirstFrameLoadedEvent) {
+      SetState(DECODER_STATE_DECODING);
+      return;
+    }
+
+    // Dispatch tasks to decode first frames.
+    mMaster->DispatchDecodeTasksIfNeeded();
   }
 
   State GetState() const override
@@ -1883,29 +1898,6 @@ MediaDecoderStateMachine::Shutdown()
            &MediaDecoderStateMachine::FinishShutdown,
            &MediaDecoderStateMachine::FinishShutdown)
     ->CompletionPromise();
-}
-
-void
-MediaDecoderStateMachine::DecodeFirstFrame()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING_FIRSTFRAME);
-
-  // Handle pending seek.
-  if (mQueuedSeek.Exists() &&
-      (mSentFirstFrameLoadedEvent || mReader->ForceZeroStartTime())) {
-    InitiateSeek(Move(mQueuedSeek));
-    return;
-  }
-
-  // Transition to DECODING if we've decoded first frames.
-  if (mSentFirstFrameLoadedEvent) {
-    SetState(DECODER_STATE_DECODING);
-    return;
-  }
-
-  // Dispatch tasks to decode first frames.
-  DispatchDecodeTasksIfNeeded();
 }
 
 void MediaDecoderStateMachine::PlayStateChanged()
