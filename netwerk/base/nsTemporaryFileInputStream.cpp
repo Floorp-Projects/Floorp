@@ -217,8 +217,7 @@ nsTemporaryFileInputStream::Deserialize(const InputStreamParams& aParams,
   FileDescriptor fd;
   if (fileDescriptorIndex < aFileDescriptors.Length()) {
     fd = aFileDescriptors[fileDescriptorIndex];
-    NS_WARNING_ASSERTION(fd.IsValid(),
-                         "Received an invalid file descriptor!");
+    NS_WARN_IF_FALSE(fd.IsValid(), "Received an invalid file descriptor!");
   } else {
     NS_WARNING("Received a bad file descriptor index!");
   }
