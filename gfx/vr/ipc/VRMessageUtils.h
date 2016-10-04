@@ -16,10 +16,10 @@
 namespace IPC {
 
 template<>
-struct ParamTraits<mozilla::gfx::VRDisplayType> :
-  public ContiguousEnumSerializer<mozilla::gfx::VRDisplayType,
-                                  mozilla::gfx::VRDisplayType(0),
-                                  mozilla::gfx::VRDisplayType(mozilla::gfx::VRDisplayType::NumVRDisplayTypes)> {};
+struct ParamTraits<mozilla::gfx::VRDeviceType> :
+  public ContiguousEnumSerializer<mozilla::gfx::VRDeviceType,
+                                  mozilla::gfx::VRDeviceType(0),
+                                  mozilla::gfx::VRDeviceType(mozilla::gfx::VRDeviceType::NumVRDeviceTypes)> {};
 
 template<>
 struct ParamTraits<mozilla::gfx::VRDisplayCapabilityFlags> :
