@@ -99,7 +99,7 @@ DeviceMotionEvent::Constructor(const GlobalObject& aGlobal,
 
   e->mInterval = aEventInitDict.mInterval;
   e->SetTrusted(trusted);
-
+  e->SetComposed(aEventInitDict.mComposed);
   return e.forget();
 }
 

@@ -1383,7 +1383,8 @@ tls13_SendHelloRetryRequest(sslSocket *ss, const sslNamedGroupDef *selectedGroup
         goto loser;
     }
 
-    rv = ssl3_AppendHandshakeNumber(ss, ss->version, 2);
+    rv = ssl3_AppendHandshakeNumber(
+        ss, tls13_EncodeDraftVersion(ss->version), 2);
     if (rv != SECSuccess) {
         FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
         goto loser;
@@ -1576,6 +1577,7 @@ tls13_HandleHelloRetryRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 {
     SECStatus rv;
     PRInt32 tmp;
+    PRUint32 version;
     const sslNamedGroupDef *group;
 
     SSL_TRC(3, ("%d: TLS13[%d]: handle hello retry request",
@@ -1610,7 +1612,8 @@ tls13_HandleHelloRetryRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     if (tmp < 0) {
         return SECFailure; /* error code already set */
     }
-    if (tmp > ss->vrange.max || tmp < SSL_LIBRARY_VERSION_TLS_1_3) {
+    version = tls13_DecodeDraftVersion((PRUint16)tmp);
+    if (version > ss->vrange.max || version < SSL_LIBRARY_VERSION_TLS_1_3) {
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST,
                     protocol_version);
         return SECFailure;
@@ -1930,14 +1933,6 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
     /* Now create a synthetic kea_def that we can tweak. */
     ss->ssl3.hs.kea_def_mutable = *ss->ssl3.hs.kea_def;
     ss->ssl3.hs.kea_def = &ss->ssl3.hs.kea_def_mutable;
-
-    if (ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted) {
-        rv = SSL3_SendAlert(ss, alert_warning, end_of_early_data);
-        if (rv != SECSuccess) {
-            FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
-            return SECFailure;
-        }
-    }
 
     if (ss->statelessResume) {
         PRBool cacheOK = PR_FALSE;
@@ -2944,7 +2939,7 @@ tls13_HandleCertificateVerify(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
 {
     SECItem signed_hash = { siBuffer, NULL, 0 };
     SECStatus rv;
-    SignatureScheme sigScheme;
+    SSLSignatureScheme sigScheme;
     SSLHashType hashAlg;
     SSL3Hashes tbsHash;
 
@@ -3623,14 +3618,10 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
      * in use. I believe this works, but I can't test it until the
      * server side supports it. Bug 1257047.
      */
-    if (!ss->opt.noCache && ss->ssl3.hs.kea_def->authKeyType != ssl_auth_psk) {
+    if (!ss->opt.noCache) {
+        PORT_Assert(ss->sec.ci.sid);
 
-        /* Uncache so that we replace. */
-        ss->sec.uncache(ss->sec.ci.sid);
-
-        /* We only support DHE resumption so any ticket which doesn't
-         * support it we don't cache, but it can evict previous
-         * cache entries. */
+        /* We only support DHE resumption. */
         if (!(ticket.flags & ticket_allow_psk_dhe_ke)) {
             return SECSuccess;
         }
@@ -3648,6 +3639,18 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
                        ticket.ticket.data,
                        ticket.ticket.len));
 
+        /* Replace a previous session ticket when
+         * we receive a second NewSessionTicket message. */
+        if (ss->sec.ci.sid->cached == in_client_cache) {
+            /* Uncache first. */
+            ss->sec.uncache(ss->sec.ci.sid);
+
+            /* Then destroy and rebuild the SID. */
+            ssl_FreeSID(ss->sec.ci.sid);
+            ss->sec.ci.sid = ssl3_NewSessionID(ss, PR_FALSE);
+            ss->sec.ci.sid->cached = never_cached;
+        }
+
         ssl3_SetSIDSessionTicket(ss->sec.ci.sid, &ticket);
         PORT_Assert(!ticket.ticket.data);
 
@@ -3656,7 +3659,6 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
             return SECFailure;
 
         /* Cache the session. */
-        ss->sec.ci.sid->cached = never_cached;
         ss->sec.cache(ss->sec.ci.sid);
     }
 
@@ -3691,7 +3693,6 @@ static const struct {
     { ssl_renegotiation_info_xtn, ExtensionNotUsed },
     { ssl_signed_cert_timestamp_xtn, ExtensionSendEncrypted },
     { ssl_cert_status_xtn, ExtensionSendEncrypted },
-    { ssl_tls13_draft_version_xtn, ExtensionClientOnly },
     { ssl_tls13_ticket_early_data_info_xtn, ExtensionNewSessionTicket }
 };
 
@@ -4153,4 +4154,61 @@ tls13_HandleEarlyApplicationData(sslSocket *ss, sslBuffer *origBuf)
     origBuf->len = 0; /* So ssl3_GatherAppDataRecord will keep looping. */
 
     return SECSuccess;
+}
+
+PRUint16
+tls13_EncodeDraftVersion(PRUint16 version)
+{
+#ifdef TLS_1_3_DRAFT_VERSION
+    return version == SSL_LIBRARY_VERSION_TLS_1_3 ? (0x7f00 | TLS_1_3_DRAFT_VERSION) : version;
+#else
+    return version;
+#endif
+}
+
+PRUint16
+tls13_DecodeDraftVersion(PRUint16 version)
+{
+#ifdef TLS_1_3_DRAFT_VERSION
+    return version == (0x7f00 | TLS_1_3_DRAFT_VERSION) ? SSL_LIBRARY_VERSION_TLS_1_3 : version;
+#else
+    return version;
+#endif
+}
+
+/* Pick the highest version we support that is also advertised. */
+SECStatus
+tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supported_versions)
+{
+    PRUint16 version;
+    /* Make a copy so we're nondestructive*/
+    SECItem data = supported_versions->data;
+    SECItem versions;
+    SECStatus rv;
+
+    rv = ssl3_ConsumeHandshakeVariable(ss, &versions, 1,
+                                       &data.data, &data.len);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    if (data.len || !versions.len || (versions.len & 1)) {
+        FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CLIENT_HELLO, illegal_parameter);
+        return SECFailure;
+    }
+    for (version = ss->vrange.max; version >= ss->vrange.min; --version) {
+        PRUint16 wire = tls13_EncodeDraftVersion(version);
+        unsigned long offset;
+
+        for (offset = 0; offset < versions.len; offset += 2) {
+            PRUint16 supported =
+                (versions.data[offset] << 8) | versions.data[offset + 1];
+            if (supported == wire) {
+                ss->version = version;
+                return SECSuccess;
+            }
+        }
+    }
+
+    FATAL_ERROR(ss, SSL_ERROR_UNSUPPORTED_VERSION, protocol_version);
+    return SECFailure;
 }

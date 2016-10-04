@@ -2743,7 +2743,7 @@ CrossAxisPositionTracker::
                     aAxisTracker.IsCrossAxisReversed()),
     mPackingSpaceRemaining(0),
     mNumPackingSpacesRemaining(0),
-    mAlignContent(aReflowInput.mStylePosition->ComputedAlignContent())
+    mAlignContent(aReflowInput.mStylePosition->mAlignContent)
 {
   MOZ_ASSERT(aFirstLine, "null first line pointer");
 
@@ -4067,7 +4067,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   const auto justifyContent = IsLegacyBox(aReflowInput.mStyleDisplay,
                                           mStyleContext) ?
     ConvertLegacyStyleToJustifyContent(StyleXUL()) :
-    aReflowInput.mStylePosition->ComputedJustifyContent();
+    aReflowInput.mStylePosition->mJustifyContent;
 
   for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
     // Main-Axis Alignment - Flexbox spec section 9.5

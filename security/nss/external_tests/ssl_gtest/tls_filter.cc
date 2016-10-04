@@ -480,4 +480,15 @@ PacketFilter::Action SelectiveDropFilter::Filter(const DataBuffer& input,
   return ((1 << counter_++) & pattern_) ? DROP : KEEP;
 }
 
+PacketFilter::Action TlsInspectorClientHelloVersionSetter::FilterHandshake(
+    const HandshakeHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
+  if (header.handshake_type() == kTlsHandshakeClientHello) {
+    *output = input;
+    output->Write(0, version_, 2);
+    return CHANGE;
+  }
+  return KEEP;
+}
+
 }  // namespace nss_test

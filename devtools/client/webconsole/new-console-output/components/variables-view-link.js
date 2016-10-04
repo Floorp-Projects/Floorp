@@ -31,4 +31,4 @@ function VariablesViewLink(props) {
   );
 }
 
-module.exports.VariablesViewLink = VariablesViewLink;
+module.exports = VariablesViewLink;

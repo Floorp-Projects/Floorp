@@ -65,6 +65,7 @@ FocusEvent::Constructor(const GlobalObject& aGlobal,
   e->InitFocusEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
                     aParam.mDetail, aParam.mRelatedTarget);
   e->SetTrusted(trusted);
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 

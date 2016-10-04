@@ -3706,6 +3706,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
         ss->namedGroupPreferences[i] = ssl_LookupNamedGroup(preferredGroups[i]);
     }
     ss->additionalShares = 0;
+    PR_INIT_CLIST(&ss->ssl3.hs.remoteExtensions);
     PR_INIT_CLIST(&ss->ssl3.hs.lastMessageFlight);
     PR_INIT_CLIST(&ss->ssl3.hs.remoteKeyShares);
     PR_INIT_CLIST(&ss->ssl3.hs.cipherSpecs);

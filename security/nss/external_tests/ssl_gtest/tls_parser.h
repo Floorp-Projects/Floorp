@@ -111,6 +111,9 @@ inline uint16_t TlsVersionToDtlsVersion(uint16_t version) {
   if (version == 0x0302) {
     return 0xfeff;
   }
+  if (version == 0x0304) {
+    return version;
+  }
   return 0xffff - version + 0x0201;
 }
 

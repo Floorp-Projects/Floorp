@@ -20,7 +20,7 @@ const {
 const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
 const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
 const StringRep = createFactories(require("devtools/client/shared/components/reps/string").StringRep).rep;
-const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link").VariablesViewLink);
+const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link"));
 const { Grip } = require("devtools/client/shared/components/reps/grip");
 
 GripMessageBody.displayName = "GripMessageBody";
@@ -53,4 +53,4 @@ function GripMessageBody(props) {
   );
 }
 
-module.exports.GripMessageBody = GripMessageBody;
+module.exports = GripMessageBody;
