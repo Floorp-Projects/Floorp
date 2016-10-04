@@ -650,7 +650,70 @@ class MediaDecoderStateMachine::SeekingState
   : public MediaDecoderStateMachine::StateObject
 {
 public:
-  explicit SeekingState(Master* aPtr) : StateObject(aPtr) {}
+  explicit SeekingState(Master* aPtr, SeekJob aSeekJob)
+    : StateObject(aPtr), mSeekJob(Move(aSeekJob)) {}
+
+  void Enter() override
+  {
+    // Discard the existing seek task.
+    mMaster->DiscardSeekTaskIfExist();
+
+    mMaster->mSeekTaskRequest.DisconnectIfExists();
+
+    // SeekTask will register its callbacks to MediaDecoderReaderWrapper.
+    mMaster->CancelMediaDecoderReaderWrapperCallback();
+
+    // Create a new SeekTask instance for the incoming seek task.
+    if (mSeekJob.mTarget.IsAccurate() ||
+        mSeekJob.mTarget.IsFast()) {
+      mMaster->mSeekTask = new AccurateSeekTask(
+        mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
+        mMaster->mInfo, mMaster->Duration(), mMaster->GetMediaTime());
+    } else if (mSeekJob.mTarget.IsNextFrame()) {
+      mMaster->mSeekTask = new NextFrameSeekTask(
+        mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
+        mMaster->mInfo, mMaster->Duration(),mMaster->GetMediaTime(),
+        mMaster->AudioQueue(), mMaster->VideoQueue());
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(false, "Cannot handle this seek task.");
+    }
+
+    // Don't stop playback for a video-only seek since audio is playing.
+    if (!mSeekJob.mTarget.IsVideoOnly()) {
+      mMaster->StopPlayback();
+    }
+
+    // mSeekJob.mTarget.mTime might be different from
+    // mSeekTask->GetSeekTarget().mTime because the seek task might clamp the
+    // seek target to [0, duration]. We want to update the playback position to
+    // the clamped value.
+    mMaster->UpdatePlaybackPositionInternal(
+      mMaster->mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
+
+    if (mSeekJob.mTarget.mEventVisibility ==
+        MediaDecoderEventVisibility::Observable) {
+      mMaster->mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
+    }
+
+    // Reset our state machine and decoding pipeline before seeking.
+    if (mMaster->mSeekTask->NeedToResetMDSM()) {
+      if (mSeekJob.mTarget.IsVideoOnly()) {
+        mMaster->Reset(TrackInfo::kVideoTrack);
+      } else {
+        mMaster->Reset();
+      }
+    }
+
+    // Do the seek.
+    mMaster->mSeekTaskRequest.Begin(mMaster->mSeekTask->Seek(mMaster->Duration())
+      ->Then(OwnerThread(), __func__, mMaster,
+             &MediaDecoderStateMachine::OnSeekTaskResolved,
+             &MediaDecoderStateMachine::OnSeekTaskRejected));
+
+    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+    MOZ_ASSERT(!mMaster->mCurrentSeek.Exists());
+    mMaster->mCurrentSeek = Move(mSeekJob);
+  }
 
   State GetState() const override
   {
@@ -698,6 +761,9 @@ public:
     mMaster->InitiateSeek(Move(seekJob));
     return mMaster->mCurrentSeek.mPromise.Ensure(__func__);
   }
+
+private:
+  SeekJob mSeekJob;
 };
 
 class MediaDecoderStateMachine::BufferingState
@@ -2119,64 +2185,8 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   // if we are already in the SEEKING state.
   mStateObj->Exit();
   mState = DECODER_STATE_SEEKING;
-  mStateObj = MakeUnique<SeekingState>(this);
+  mStateObj = MakeUnique<SeekingState>(this, Move(aSeekJob));
   mStateObj->Enter();
-
-  // Discard the existing seek task.
-  DiscardSeekTaskIfExist();
-
-  mSeekTaskRequest.DisconnectIfExists();
-
-  // SeekTask will register its callbacks to MediaDecoderReaderWrapper.
-  CancelMediaDecoderReaderWrapperCallback();
-
-  // Create a new SeekTask instance for the incoming seek task.
-  if (aSeekJob.mTarget.IsAccurate() ||
-      aSeekJob.mTarget.IsFast()) {
-    mSeekTask = new AccurateSeekTask(mDecoderID, OwnerThread(),
-                                     mReader.get(), aSeekJob.mTarget,
-                                     mInfo, Duration(), GetMediaTime());
-  } else if (aSeekJob.mTarget.IsNextFrame()) {
-    mSeekTask = new NextFrameSeekTask(mDecoderID, OwnerThread(), mReader.get(),
-                                      aSeekJob.mTarget, mInfo, Duration(),
-                                      GetMediaTime(), AudioQueue(), VideoQueue());
-  } else {
-    MOZ_DIAGNOSTIC_ASSERT(false, "Cannot handle this seek task.");
-  }
-
-  // Don't stop playback for a video-only seek since audio is playing.
-  if (!aSeekJob.mTarget.IsVideoOnly()) {
-    StopPlayback();
-  }
-
-  // aSeekJob.mTarget.mTime might be different from
-  // mSeekTask->GetSeekTarget().mTime because the seek task might clamp the seek
-  // target to [0, duration]. We want to update the playback position to the
-  // clamped value.
-  UpdatePlaybackPositionInternal(mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
-
-  if (aSeekJob.mTarget.mEventVisibility == MediaDecoderEventVisibility::Observable) {
-    mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
-  }
-
-  // Reset our state machine and decoding pipeline before seeking.
-  if (mSeekTask->NeedToResetMDSM()) {
-    if (aSeekJob.mTarget.IsVideoOnly()) {
-      Reset(TrackInfo::kVideoTrack);
-    } else {
-      Reset();
-    }
-  }
-
-  // Do the seek.
-  mSeekTaskRequest.Begin(mSeekTask->Seek(Duration())
-    ->Then(OwnerThread(), __func__, this,
-           &MediaDecoderStateMachine::OnSeekTaskResolved,
-           &MediaDecoderStateMachine::OnSeekTaskRejected));
-
-  MOZ_ASSERT(!mQueuedSeek.Exists());
-  MOZ_ASSERT(!mCurrentSeek.Exists());
-  mCurrentSeek = Move(aSeekJob);
 }
 
 void
