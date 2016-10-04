@@ -109,6 +109,9 @@ private:
                      const GMPErr& aErr,
                      InfallibleTArray<uint8_t>&& aBuffer) override;
 
+  bool RecvBatchedKeyStatusChanged(const nsCString& aSessionId,
+                                   InfallibleTArray<GMPKeyInformation>&& aKeyInfos) override;
+
   bool RecvShutdown() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;

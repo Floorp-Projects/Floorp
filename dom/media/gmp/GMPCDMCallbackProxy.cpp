@@ -292,6 +292,14 @@ GMPCDMCallbackProxy::KeyStatusChanged(const nsCString& aSessionId,
 }
 
 void
+GMPCDMCallbackProxy::BatchedKeyStatusChanged(const nsCString& aSessionId,
+                                             const nsTArray<CDMKeyInfo>& aKeyInfos)
+{
+  MOZ_ASSERT(mProxy->IsOnOwnerThread());
+  BatchedKeyStatusChangedInternal(aSessionId, aKeyInfos);
+}
+
+void
 GMPCDMCallbackProxy::ForgetKeyStatus(const nsCString& aSessionId,
                                      const nsTArray<uint8_t>& aKeyId)
 {
@@ -313,6 +321,29 @@ GMPCDMCallbackProxy::KeyStatusChangedInternal(const nsCString& aSessionId,
     keyStatusesChange = caps.SetKeyStatus(aKeyId,
                                           NS_ConvertUTF8toUTF16(aSessionId),
                                           aStatus);
+  }
+  if (keyStatusesChange) {
+    nsCOMPtr<nsIRunnable> task;
+    task = NewRunnableMethod<nsString>(mProxy,
+                                       &CDMProxy::OnKeyStatusesChange,
+                                       NS_ConvertUTF8toUTF16(aSessionId));
+    NS_DispatchToMainThread(task);
+  }
+}
+
+void
+GMPCDMCallbackProxy::BatchedKeyStatusChangedInternal(const nsCString& aSessionId,
+                                                     const nsTArray<CDMKeyInfo>& aKeyInfos)
+{
+  bool keyStatusesChange = false;
+  {
+    CDMCaps::AutoLock caps(mProxy->Capabilites());
+    for (size_t i = 0; i < aKeyInfos.Length(); i++) {
+      keyStatusesChange |=
+        caps.SetKeyStatus(aKeyInfos[i].mKeyId,
+                          NS_ConvertUTF8toUTF16(aSessionId),
+                          aKeyInfos[i].mStatus);
+    }
   }
   if (keyStatusesChange) {
     nsCOMPtr<nsIRunnable> task;

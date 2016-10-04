@@ -409,13 +409,15 @@ WidevineDecryptor::OnSessionKeysChange(const char* aSessionId,
     return;
   }
   Log("Decryptor::OnSessionKeysChange()");
+
+  nsTArray<GMPMediaKeyInfo> key_infos;
   for (uint32_t i = 0; i < aKeysInfoCount; i++) {
-    mCallback->KeyStatusChanged(aSessionId,
-                                aSessionIdSize,
-                                aKeysInfo[i].key_id,
-                                aKeysInfo[i].key_id_size,
-                                ToGMPKeyStatus(aKeysInfo[i].status));
+    key_infos.AppendElement(GMPMediaKeyInfo(aKeysInfo[i].key_id,
+                                            aKeysInfo[i].key_id_size,
+                                            ToGMPKeyStatus(aKeysInfo[i].status)));
   }
+  mCallback->BatchedKeyStatusChanged(aSessionId, aSessionIdSize,
+                                     key_infos.Elements(), key_infos.Length());
 }
 
 static GMPTimestamp

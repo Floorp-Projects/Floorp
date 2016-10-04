@@ -174,6 +174,23 @@ GMPDecryptorChild::KeyStatusChanged(const char* aSessionId,
 }
 
 void
+GMPDecryptorChild::BatchedKeyStatusChanged(const char* aSessionId,
+                                           uint32_t aSessionIdLength,
+                                           const GMPMediaKeyInfo* aKeyInfos,
+                                           uint32_t aKeyInfosLength)
+{
+  nsTArray<GMPKeyInformation> keyInfos;
+  for (uint32_t i = 0; i < aKeyInfosLength; i++) {
+    nsTArray<uint8_t> keyId;
+    keyId.AppendElements(aKeyInfos[i].keyid, aKeyInfos[i].keyid_size);
+    keyInfos.AppendElement(GMPKeyInformation(keyId, aKeyInfos[i].status));
+  }
+  CALL_ON_GMP_THREAD(SendBatchedKeyStatusChanged,
+                     nsCString(aSessionId, aSessionIdLength),
+                     keyInfos);
+}
+
+void
 GMPDecryptorChild::Decrypted(GMPBuffer* aBuffer, GMPErr aResult)
 {
   if (!ON_GMP_THREAD()) {
