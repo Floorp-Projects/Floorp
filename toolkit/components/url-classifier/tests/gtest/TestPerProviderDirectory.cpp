@@ -1,4 +1,5 @@
 #include "LookupCache.h"
+#include "LookupCacheV4.h"
 #include "HashStore.h"
 #include "gtest/gtest.h"
 #include "nsIThread.h"
