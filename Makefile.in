@@ -306,8 +306,8 @@ SYMBOL_INDEX_NAME = \
   $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_TARGET)-$(BUILDID)-$(CPU_ARCH)-symbols.txt
 endif
 
-buildsymbols:
-ifdef MOZ_CRASHREPORTER
+.PHONY: generatesymbols
+generatesymbols:
 	echo building symbol store
 	$(RM) -r $(DIST)/crashreporter-symbols
 	$(RM) '$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip'
@@ -323,14 +323,25 @@ ifdef MOZ_CRASHREPORTER
 	  $(DIST)/crashreporter-symbols/$(SYMBOL_INDEX_NAME)
 	echo packing symbols
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
+
+.PHONY: symbolsfullarchive
+symbolsfullarchive: generatesymbols
 	cd $(DIST)/crashreporter-symbols && \
           zip -r5D '../$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' . -x '*test*' -x '*Test*'
+
+.PHONY: symbolsarchive
+symbolsarchive: generatesymbols
 	cd $(DIST)/crashreporter-symbols && \
 	grep 'sym' $(SYMBOL_INDEX_NAME) > $(SYMBOL_INDEX_NAME).tmp && \
 	  mv $(SYMBOL_INDEX_NAME).tmp $(SYMBOL_INDEX_NAME)
 	cd $(DIST)/crashreporter-symbols && \
           zip -r5D '../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' . -i '*.sym' -i '*.txt'
-endif # MOZ_CRASHREPORTER
+
+ifdef MOZ_CRASHREPORTER
+buildsymbols: symbolsfullarchive symbolsarchive
+else
+buildsymbols:
+endif
 
 uploadsymbols:
 ifdef MOZ_CRASHREPORTER
