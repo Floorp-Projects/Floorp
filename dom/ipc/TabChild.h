@@ -684,10 +684,6 @@ protected:
   virtual bool RecvMenuKeyboardListenerInstalled(
                  const bool& aInstalled) override;
 
-#ifdef MOZ_WIDGET_GONK
-  void MaybeRequestPreinitCamera();
-#endif
-
 private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
                        const ScrollableLayerGuid& aGuid);

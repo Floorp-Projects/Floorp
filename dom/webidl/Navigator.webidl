@@ -270,12 +270,6 @@ partial interface Navigator {
   readonly attribute NetworkInformation connection;
 };
 
-// nsIDOMNavigatorCamera
-partial interface Navigator {
-  [Throws, Func="Navigator::HasCameraSupport", UnsafeInPrerendering]
-  readonly attribute CameraManager mozCameras;
-};
-
 #ifdef MOZ_B2G_RIL
 partial interface Navigator {
   [Throws, Pref="dom.mobileconnection.enabled", ChromeOnly, UnsafeInPrerendering]
