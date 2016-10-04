@@ -121,6 +121,35 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
       LLVM_CXXFLAGS="$LLVM_CXXFLAGS -DHAVE_NEW_ASTMATCHER_NAMES"
     fi
 
+    dnl Check if we can compile has(ignoringParenImpCasts()) because
+    dnl before 3.9 that ignoringParenImpCasts was done internally by "has".
+    dnl See https://www.mail-archive.com/cfe-commits@lists.llvm.org/msg25234.html
+    AC_CACHE_CHECK(for has with ignoringParenImpCasts,
+                   ac_cv_has_accepts_ignoringParenImpCasts,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            _SAVE_CXX="$CXX"
+            _SAVE_MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
+            unset MACOSX_DEPLOYMENT_TARGET
+            CXXFLAGS="${LLVM_CXXFLAGS}"
+            CXX="${HOST_CXX}"
+            AC_TRY_COMPILE([#include "clang/ASTMatchers/ASTMatchers.h"],
+                           [using namespace clang::ast_matchers;
+                            expr(has(ignoringParenImpCasts(declRefExpr())));
+                           ],
+                           ac_cv_has_accepts_ignoringParenImpCasts="yes",
+                           ac_cv_has_accepts_ignoringParenImpCasts="no")
+            CXX="$_SAVE_CXX"
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            export MACOSX_DEPLOYMENT_TARGET="$_SAVE_MACOSX_DEPLOYMENT_TARGET"
+            AC_LANG_RESTORE
+        ])
+    if test "$ac_cv_has_accepts_ignoringParenImpCasts" = "yes"; then
+      LLVM_CXXFLAGS="$LLVM_CXXFLAGS -DHAS_ACCEPTS_IGNORINGPARENIMPCASTS"
+    fi
+
     AC_DEFINE(MOZ_CLANG_PLUGIN)
 fi
 
