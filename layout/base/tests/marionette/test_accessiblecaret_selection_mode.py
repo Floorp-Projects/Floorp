@@ -50,7 +50,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.carets_tested_pref = 'layout.accessiblecaret.enabled'
         self.prefs = {
             'layout.word_select.eat_space_to_next_word': False,
-            'layout.accessiblecaret.use_long_tap_injector': False,
             self.carets_tested_pref: True,
         }
         self.marionette.set_prefs(self.prefs)
