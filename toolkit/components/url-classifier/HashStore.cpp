@@ -168,7 +168,7 @@ TableUpdateV4::NewPrefixes(int32_t aSize, std::string& aPrefixes)
   NS_ENSURE_TRUE_VOID(aPrefixes.size() % aSize == 0);
   NS_ENSURE_TRUE_VOID(!mPrefixesMap.Get(aSize));
 
-  PrefixStdString* prefix = new PrefixStdString(aPrefixes);
+  PrefixString* prefix = new PrefixString(aPrefixes);
   mPrefixesMap.Put(aSize, prefix);
 }
 
