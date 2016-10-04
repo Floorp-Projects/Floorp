@@ -119,8 +119,7 @@ VoiceSelect.prototype = {
         break;
 
       case "focus":
-        this._win.console.log(evt);
-        if (!evt.target.closest(".options")) {
+        if (!target.closest(".voiceselect")) {
           this.toggleList(false, false);
         }
         break;
