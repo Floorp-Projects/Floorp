@@ -102,6 +102,26 @@ RemoteVideoDecoder::Shutdown()
   }), NS_DISPATCH_NORMAL);
 }
 
+bool
+RemoteVideoDecoder::IsHardwareAccelerated(nsACString& aFailureReason) const
+{
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  return mActor->IsHardwareAccelerated(aFailureReason);
+}
+
+void
+RemoteVideoDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  RefPtr<RemoteVideoDecoder> self = this;
+  media::TimeUnit time = aTime;
+  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([=]() {
+    MOZ_ASSERT(self->mActor);
+    self->mActor->SetSeekThreshold(time);
+  }), NS_DISPATCH_NORMAL);
+
+}
+
 nsresult
 RemoteDecoderModule::Startup()
 {

@@ -28,6 +28,7 @@ interface HTMLIFrameElement : HTMLElement {
            attribute DOMString height;
   [SetterThrows, Pure, Pref="network.http.enablePerElementReferrer"]
            attribute DOMString referrerPolicy;
+  [NeedsSubjectPrincipal]
   readonly attribute Document? contentDocument;
   readonly attribute WindowProxy? contentWindow;
 };
@@ -49,6 +50,7 @@ partial interface HTMLIFrameElement {
 
 partial interface HTMLIFrameElement {
   // GetSVGDocument
+  [NeedsSubjectPrincipal]
   Document? getSVGDocument();
 };
 
