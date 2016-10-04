@@ -604,108 +604,6 @@ private:
 
 class KeyboardLayout
 {
-  friend class NativeKey;
-
-private:
-  KeyboardLayout();
-  ~KeyboardLayout();
-
-  static KeyboardLayout* sInstance;
-  static nsIIdleServiceInternal* sIdleService;
-
-  struct DeadKeyTableListEntry
-  {
-    DeadKeyTableListEntry* next;
-    uint8_t data[1];
-  };
-
-  HKL mKeyboardLayout;
-
-  VirtualKey mVirtualKeys[NS_NUM_OF_KEYS];
-  DeadKeyTableListEntry* mDeadKeyTableListHead;
-  int32_t mActiveDeadKey;                 // -1 = no active dead-key
-  VirtualKey::ShiftState mDeadKeyShiftState;
-
-  bool mIsOverridden : 1;
-  bool mIsPendingToRestoreKeyboardLayout : 1;
-
-  static inline int32_t GetKeyIndex(uint8_t aVirtualKey);
-  static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
-                                   void* aData);
-  static bool AddDeadKeyEntry(char16_t aBaseChar, char16_t aCompositeChar,
-                                DeadKeyEntry* aDeadKeyArray, uint32_t aEntries);
-  bool EnsureDeadKeyActive(bool aIsActive, uint8_t aDeadKey,
-                             const PBYTE aDeadKeyKbdState);
-  uint32_t GetDeadKeyCombinations(uint8_t aDeadKey,
-                                  const PBYTE aDeadKeyKbdState,
-                                  uint16_t aShiftStatesWithBaseChars,
-                                  DeadKeyEntry* aDeadKeyArray,
-                                  uint32_t aMaxEntries);
-  /**
-   * Activates or deactivates dead key state.
-   */
-  void ActivateDeadKeyState(const NativeKey& aNativeKey,
-                            const ModifierKeyState& aModKeyState);
-  void DeactivateDeadKeyState();
-
-  const DeadKeyTable* AddDeadKeyTable(const DeadKeyEntry* aDeadKeyArray,
-                                      uint32_t aEntries);
-  void ReleaseDeadKeyTables();
-
-  /**
-   * Loads the specified keyboard layout. This method always clear the dead key
-   * state.
-   */
-  void LoadLayout(HKL aLayout);
-
-  /**
-   * InitNativeKey() must be called when actually widget receives WM_KEYDOWN or
-   * WM_KEYUP.  This method is stateful.  This saves current dead key state at
-   * WM_KEYDOWN.  Additionally, computes current inputted character(s) and set
-   * them to the aNativeKey.
-   */
-  void InitNativeKey(NativeKey& aNativeKey,
-                     const ModifierKeyState& aModKeyState);
-
-  /**
-   * MaybeInitNativeKeyAsDeadKey() initializes aNativeKey only when aNativeKey
-   * is a dead key's event.
-   * When it's not in a dead key sequence, this activates the dead key state.
-   * When it's in a dead key sequence, this initializes aNativeKey with a
-   * composite character or a preceding dead char and a dead char which should
-   * be caused by aNativeKey.
-   * Returns true when this initializes aNativeKey.  Otherwise, false.
-   */
-  bool MaybeInitNativeKeyAsDeadKey(NativeKey& aNativeKey,
-                                   const ModifierKeyState& aModKeyState);
-
-  /**
-   * MaybeInitNativeKeyWithCompositeChar() may initialize aNativeKey with
-   * proper composite character when dead key produces a composite character.
-   * Otherwise, just returns false.
-   */
-  bool MaybeInitNativeKeyWithCompositeChar(
-         NativeKey& aNativeKey,
-         const ModifierKeyState& aModKeyState);
-
-  /**
-   * See the comment of GetUniCharsAndModifiers() below.
-   */
-  UniCharsAndModifiers GetUniCharsAndModifiers(
-                         uint8_t aVirtualKey,
-                         VirtualKey::ShiftState aShiftState) const;
-
-  /**
-   * GetCompositeChar() returns a composite character with dead character
-   * caused by aVirtualKeyOfDeadKey and aShiftStateOfDeadKey and a base
-   * character (aBaseChar).
-   * If the combination of the dead character and the base character doesn't
-   * cause a composite character, this returns 0.
-   */
-  char16_t GetCompositeChar(uint8_t aVirtualKeyOfDeadKey,
-                            VirtualKey::ShiftState aShiftStateOfDeadKey,
-                            char16_t aBaseChar) const;
-
 public:
   static KeyboardLayout* GetInstance();
   static void Shutdown();
@@ -824,6 +722,111 @@ public:
                                     uint32_t aModifierFlags,
                                     const nsAString& aCharacters,
                                     const nsAString& aUnmodifiedCharacters);
+
+private:
+  KeyboardLayout();
+  ~KeyboardLayout();
+
+  static KeyboardLayout* sInstance;
+  static nsIIdleServiceInternal* sIdleService;
+
+  struct DeadKeyTableListEntry
+  {
+    DeadKeyTableListEntry* next;
+    uint8_t data[1];
+  };
+
+  HKL mKeyboardLayout;
+
+  VirtualKey mVirtualKeys[NS_NUM_OF_KEYS];
+  DeadKeyTableListEntry* mDeadKeyTableListHead;
+  int32_t mActiveDeadKey;                 // -1 = no active dead-key
+  VirtualKey::ShiftState mDeadKeyShiftState;
+
+  bool mIsOverridden;
+  bool mIsPendingToRestoreKeyboardLayout;
+
+  static inline int32_t GetKeyIndex(uint8_t aVirtualKey);
+  static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
+                                   void* aData);
+  static bool AddDeadKeyEntry(char16_t aBaseChar, char16_t aCompositeChar,
+                                DeadKeyEntry* aDeadKeyArray, uint32_t aEntries);
+  bool EnsureDeadKeyActive(bool aIsActive, uint8_t aDeadKey,
+                             const PBYTE aDeadKeyKbdState);
+  uint32_t GetDeadKeyCombinations(uint8_t aDeadKey,
+                                  const PBYTE aDeadKeyKbdState,
+                                  uint16_t aShiftStatesWithBaseChars,
+                                  DeadKeyEntry* aDeadKeyArray,
+                                  uint32_t aMaxEntries);
+  /**
+   * Activates or deactivates dead key state.
+   */
+  void ActivateDeadKeyState(const NativeKey& aNativeKey,
+                            const ModifierKeyState& aModKeyState);
+  void DeactivateDeadKeyState();
+
+  const DeadKeyTable* AddDeadKeyTable(const DeadKeyEntry* aDeadKeyArray,
+                                      uint32_t aEntries);
+  void ReleaseDeadKeyTables();
+
+  /**
+   * Loads the specified keyboard layout. This method always clear the dead key
+   * state.
+   */
+  void LoadLayout(HKL aLayout);
+
+  /**
+   * InitNativeKey() must be called when actually widget receives WM_KEYDOWN or
+   * WM_KEYUP.  This method is stateful.  This saves current dead key state at
+   * WM_KEYDOWN.  Additionally, computes current inputted character(s) and set
+   * them to the aNativeKey.
+   */
+  void InitNativeKey(NativeKey& aNativeKey,
+                     const ModifierKeyState& aModKeyState);
+
+  /**
+   * MaybeInitNativeKeyAsDeadKey() initializes aNativeKey only when aNativeKey
+   * is a dead key's event.
+   * When it's not in a dead key sequence, this activates the dead key state.
+   * When it's in a dead key sequence, this initializes aNativeKey with a
+   * composite character or a preceding dead char and a dead char which should
+   * be caused by aNativeKey.
+   * Returns true when this initializes aNativeKey.  Otherwise, false.
+   */
+  bool MaybeInitNativeKeyAsDeadKey(NativeKey& aNativeKey,
+                                   const ModifierKeyState& aModKeyState);
+
+  /**
+   * MaybeInitNativeKeyWithCompositeChar() may initialize aNativeKey with
+   * proper composite character when dead key produces a composite character.
+   * Otherwise, just returns false.
+   */
+  bool MaybeInitNativeKeyWithCompositeChar(
+         NativeKey& aNativeKey,
+         const ModifierKeyState& aModKeyState);
+
+  /**
+   * See the comment of GetUniCharsAndModifiers() below.
+   */
+  UniCharsAndModifiers GetUniCharsAndModifiers(
+                         uint8_t aVirtualKey,
+                         VirtualKey::ShiftState aShiftState) const;
+
+  /**
+   * GetCompositeChar() returns a composite character with dead character
+   * caused by aVirtualKeyOfDeadKey and aShiftStateOfDeadKey and a base
+   * character (aBaseChar).
+   * If the combination of the dead character and the base character doesn't
+   * cause a composite character, this returns 0.
+   */
+  char16_t GetCompositeChar(uint8_t aVirtualKeyOfDeadKey,
+                            VirtualKey::ShiftState aShiftStateOfDeadKey,
+                            char16_t aBaseChar) const;
+
+  // NativeKey class should access InitNativeKey() directly, but it shouldn't
+  // be available outside of NativeKey.  So, let's make NativeKey a friend
+  // class of this.
+  friend class NativeKey;
 };
 
 class RedirectedKeyDownMessageManager
