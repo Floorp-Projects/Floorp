@@ -59,6 +59,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "Principal.h"
 #include "WorkerHolder.h"
@@ -1110,6 +1111,25 @@ private:
       aLoadInfo.mURL.Assign(NS_ConvertUTF8toUTF16(filename));
     }
 
+    nsCOMPtr<nsILoadInfo> chanLoadInfo = channel->GetLoadInfo();
+    if (chanLoadInfo && chanLoadInfo->GetEnforceSRI()) {
+      // importScripts() and the Worker constructor do not support integrity metadata
+      //  (or any fetch options). Until then, we can just block.
+      //  If we ever have those data in the future, we'll have to the check to
+      //  by using the SRICheck module
+      MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
+            ("Scriptloader::Load, SRI required but not supported in workers"));
+      nsCOMPtr<nsIContentSecurityPolicy> wcsp;
+      chanLoadInfo->LoadingPrincipal()->GetCsp(getter_AddRefs(wcsp));
+      MOZ_ASSERT(wcsp, "We sould have a CSP for the worker here");
+      if (wcsp) {
+        wcsp->LogViolationDetails(
+            nsIContentSecurityPolicy::VIOLATION_TYPE_REQUIRE_SRI_FOR_SCRIPT,
+            aLoadInfo.mURL, EmptyString(), 0, EmptyString(), EmptyString());
+      }
+      return NS_ERROR_SRI_CORRUPT;
+    }
+
     // Update the principal of the worker and its base URI if we just loaded the
     // worker's primary script.
     if (IsMainWorkerScript()) {
@@ -1215,7 +1235,8 @@ private:
           rv = csp->GetReferrerPolicy(&rp, &hasReferrerPolicy);
           NS_ENSURE_SUCCESS(rv, rv);
 
-          if (hasReferrerPolicy) {
+
+          if (hasReferrerPolicy) { //FIXME bug 1307366: move RP out of CSP code
             mWorkerPrivate->SetReferrerPolicy(static_cast<net::ReferrerPolicy>(rp));
           }
         }
