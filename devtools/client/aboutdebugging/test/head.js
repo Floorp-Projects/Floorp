@@ -6,7 +6,8 @@
    installAddon, uninstallAddon, waitForMutation, assertHasTarget,
    getServiceWorkerList, getTabList, openPanel, waitForInitialAddonList,
    waitForServiceWorkerRegistered, unregisterServiceWorker,
-   waitForDelayedStartupFinished, setupTestAboutDebuggingWebExtension */
+   waitForDelayedStartupFinished, setupTestAboutDebuggingWebExtension,
+   waitForServiceWorkerActivation */
 /* import-globals-from ../../framework/test/shared-head.js */
 
 "use strict";
@@ -259,17 +260,22 @@ function waitForServiceWorkerRegistered(tab) {
 
 /**
  * Asks the service worker within the test page to unregister, and returns a
- * promise that will resolve when it has successfully unregistered itself.
+ * promise that will resolve when it has successfully unregistered itself and the
+ * about:debugging UI has fully processed this update.
+ *
  * @param {Tab} tab
+ * @param {Node} serviceWorkersElement
  * @return {Promise} Resolves when the service worker is unregistered.
  */
-function unregisterServiceWorker(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+function* unregisterServiceWorker(tab, serviceWorkersElement) {
+  let onMutation = waitForMutation(serviceWorkersElement, { childList: true });
+  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
     // Retrieve the `sw` promise created in the html page
     let { sw } = content.wrappedJSObject;
     let registration = yield sw;
     yield registration.unregister();
   });
+  return onMutation;
 }
 
 /**
@@ -325,4 +331,21 @@ function* setupTestAboutDebuggingWebExtension(name, path) {
   ok(debugBtn, "Found its debug button");
 
   return { tab, document, debugBtn };
+}
+
+/**
+ * Wait for aboutdebugging to be notified about the activation of the service worker
+ * corresponding to the provided service worker url.
+ */
+function* waitForServiceWorkerActivation(swUrl, document) {
+  let serviceWorkersElement = getServiceWorkerList(document);
+  let names = serviceWorkersElement.querySelectorAll(".target-name");
+  let name = [...names].filter(element => element.textContent === swUrl)[0];
+
+  let targetElement = name.parentNode.parentNode;
+  let targetStatus = targetElement.querySelector(".target-status");
+  while (targetStatus.textContent === "Registering") {
+    // Wait for the status to leave the "registering" stage.
+    yield waitForMutation(serviceWorkersElement, { childList: true, subtree: true });
+  }
 }

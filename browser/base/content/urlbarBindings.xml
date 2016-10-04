@@ -399,6 +399,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           let mayInheritPrincipal = false;
           let postData = null;
+          let browser = gBrowser.selectedBrowser;
           let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
           let matchLastLocationChange = true;
 
@@ -435,7 +436,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 );
                 break;
             }
-            this._loadURL(url, postData, where, openUILinkParams,
+            this._loadURL(url, browser, postData, where, openUILinkParams,
                           matchLastLocationChange, mayInheritPrincipal);
             return;
           }
@@ -456,7 +457,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               [url, postData] =
                 this._recordSearchEngineLoad(selectedOneOff.engine, value,
                                              event, where, openUILinkParams);
-              this._loadURL(url, postData, where, openUILinkParams,
+              this._loadURL(url, browser, postData, where, openUILinkParams,
                             matchLastLocationChange, mayInheritPrincipal);
               return;
             }
@@ -466,8 +467,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           getShortcutOrURIAndPostData(url).then(({url, postData, mayInheritPrincipal}) => {
             if (url) {
               matchLastLocationChange =
-                lastLocationChange == gBrowser.selectedBrowser.lastLocationChange;
-              this._loadURL(url, postData, where, openUILinkParams,
+                lastLocationChange == browser.lastLocationChange;
+              this._loadURL(url, browser, postData, where, openUILinkParams,
                             matchLastLocationChange, mayInheritPrincipal);
             }
           });
@@ -487,6 +488,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <method name="_loadURL">
         <parameter name="url"/>
+        <parameter name="browser"/>
         <parameter name="postData"/>
         <parameter name="openUILinkWhere"/>
         <parameter name="openUILinkParams"/>
@@ -494,9 +496,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="mayInheritPrincipal"/>
         <body><![CDATA[
           this.value = url;
-          gBrowser.userTypedValue = url;
+          browser.userTypedValue = url;
           if (gInitialPages.includes(url)) {
-            gBrowser.selectedBrowser.initialPageLoadedFromURLBar = url;
+            browser.initialPageLoadedFromURLBar = url;
           }
           try {
             addToUrlbarHistory(url);
@@ -509,6 +511,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let params = {
             postData: postData,
             allowThirdPartyFixup: true,
+            currentBrowser: browser,
           };
           if (openUILinkWhere == "current") {
             params.indicateErrorPageLoad = true;
@@ -528,7 +531,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Focus the content area before triggering loads, since if the load
           // occurs in a new tab, we want focus to be restored to the content
           // area when the current tab is re-selected.
-          gBrowser.selectedBrowser.focus();
+          browser.focus();
 
           if (openUILinkWhere == "current" && !matchLastLocationChange) {
             return;

@@ -268,6 +268,27 @@ XPCOM_API(void) NS_LogInit();
 
 XPCOM_API(void) NS_LogTerm();
 
+#ifdef __cplusplus
+/**
+ * A helper class that calls NS_LogInit in its constructor and
+ * NS_LogTerm in its destructor.
+ */
+
+class ScopedLogging
+{
+public:
+    ScopedLogging()
+    {
+        NS_LogInit();
+    }
+
+    ~ScopedLogging()
+    {
+        NS_LogTerm();
+    }
+};
+#endif
+
 /**
  * Log construction and destruction of objects. Processing tools can use the
  * stacktraces printed by these functions to identify objects that are being

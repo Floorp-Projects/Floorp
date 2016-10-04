@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Service worker test</title>
+</head>
+<body>
+<script type="text/javascript">
+"use strict";
+
+var sw = navigator.serviceWorker.register("delay-sw.js");
+sw.then(
+  function () {
+    dump("SW registered\n");
+  },
+  function (e) {
+    dump("SW not registered: " + e + "\n");
+  }
+);
+</script>
+</body>
+</html>
