@@ -338,7 +338,7 @@ class NodeBuilder
     template <typename... Arguments>
     MOZ_MUST_USE bool callback(HandleValue fun, Arguments&&... args) {
         InvokeArgs iargs(cx);
-        if (!iargs.init(sizeof...(args) - 2 + size_t(saveLoc)))
+        if (!iargs.init(cx, sizeof...(args) - 2 + size_t(saveLoc)))
             return false;
 
         return callbackHelper(fun, iargs, 0, Forward<Arguments>(args)...);

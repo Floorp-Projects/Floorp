@@ -214,7 +214,7 @@ intrinsic_UnsafeCallWrappedFunction(JSContext* cx, unsigned argc, Value* vp)
     MOZ_RELEASE_ASSERT(fun->as<JSFunction>().isSelfHostedOrIntrinsic());
 
     InvokeArgs args2(cx);
-    if (!args2.init(args.length() - 2))
+    if (!args2.init(cx, args.length() - 2))
         return false;
 
     args2.setThis(args[1]);
@@ -1715,7 +1715,7 @@ CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args)
     MOZ_ASSERT(selfHostedFun.toObject().is<JSFunction>());
 
     InvokeArgs args2(cx);
-    if (!args2.init(args.length() - 1))
+    if (!args2.init(cx, args.length() - 1))
         return false;
 
     for (size_t i = 0; i < args.length() - 1; i++)
@@ -1914,7 +1914,7 @@ intrinsic_ConstructFunction(JSContext* cx, unsigned argc, Value* vp)
     RootedArrayObject argsList(cx, &args[2].toObject().as<ArrayObject>());
     uint32_t len = argsList->length();
     ConstructArgs constructArgs(cx);
-    if (!constructArgs.init(len))
+    if (!constructArgs.init(cx, len))
         return false;
     for (uint32_t index = 0; index < len; index++)
         constructArgs[index].set(argsList->getDenseElement(index));
