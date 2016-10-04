@@ -11,6 +11,7 @@ function *task_openDownloadsSubPanel() {
 }
 
 add_task(function* test_openDownloadsFolder() {
+  yield SpecialPowers.pushPrefEnv({"set": [["browser.download.showPanelDropmarker", true]]});
   yield task_openPanel();
 
   yield task_openDownloadsSubPanel();
