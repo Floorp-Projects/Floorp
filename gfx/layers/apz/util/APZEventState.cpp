@@ -230,17 +230,15 @@ APZEventState::FireContextmenuEvents(const nsCOMPtr<nsIPresShell>& aPresShell,
     // If the contextmenu event was handled then we're showing a contextmenu,
     // and so we should remove any activation
     mActiveElementManager->ClearActivation();
+#ifndef XP_WIN
   } else {
-    // If no one handle context menu, fire MOZLONGTAP event
-    LayoutDevicePoint ldPoint = aPoint * aScale;
-    int time = 0;
-    nsEventStatus status =
-        APZCCallbackHelper::DispatchSynthesizedMouseEvent(eMouseLongTap, time,
-                                                          ldPoint, aModifiers,
-                                                          /*clickCount*/ 1,
-                                                          aWidget);
+    // If the contextmenu wasn't consumed, fire the eMouseLongTap event.
+    nsEventStatus status = APZCCallbackHelper::DispatchSynthesizedMouseEvent(
+        eMouseLongTap, /*time*/ 0, aPoint * aScale, aModifiers,
+        /*clickCount*/ 1, aWidget);
     eventHandled = (status == nsEventStatus_eConsumeNoDefault);
-    APZES_LOG("MOZLONGTAP event handled: %d\n", eventHandled);
+    APZES_LOG("eMouseLongTap event handled: %d\n", eventHandled);
+#endif
   }
 
   return eventHandled;
@@ -266,8 +264,14 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
 #ifdef XP_WIN
   // On Windows, we fire the contextmenu events when the user lifts their
   // finger, in keeping with the platform convention. This happens in the
-  // ProcessLongTapUp function.
-  bool eventHandled = false;
+  // ProcessLongTapUp function. However, we still fire the eMouseLongTap event
+  // at this time, because things like text selection or dragging may want
+  // to know about it.
+  nsEventStatus status = APZCCallbackHelper::DispatchSynthesizedMouseEvent(
+      eMouseLongTap, /*time*/ 0, aPoint * aScale, aModifiers, /*clickCount*/ 1,
+      widget);
+
+  bool eventHandled = (status == nsEventStatus_eConsumeNoDefault);
 #else
   bool eventHandled = FireContextmenuEvents(aPresShell, aPoint, aScale,
         aModifiers, widget);
