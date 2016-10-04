@@ -23,23 +23,10 @@ struct FFmpegLibWrapper
   FFmpegLibWrapper();
   ~FFmpegLibWrapper();
 
-  enum class LinkResult
-  {
-    Success,
-    NoProvidedLib,
-    NoAVCodecVersion,
-    CannotUseLibAV57,
-    BlockedOldLibAVVersion,
-    UnknownFutureLibAVVersion,
-    UnknownFutureFFMpegVersion,
-    UnknownOlderFFMpegVersion,
-    MissingFFMpegFunction,
-    MissingLibAVFunction,
-  };
-  // Examine mAVCodecLib and mAVUtilLib, and attempt to resolve all symbols.
+  // Attempt to resolve all symbols. Return true of successful.
   // Upon failure, the entire object will be reset and any attached libraries
   // will be unlinked.
-  LinkResult Link();
+  bool Link();
 
   // Reset the wrapper and unlink all attached libraries.
   void Unlink();
