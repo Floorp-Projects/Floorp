@@ -2736,6 +2736,20 @@ MBinaryBitwiseInstruction::foldsTo(TempAllocator& alloc)
 MDefinition*
 MBinaryBitwiseInstruction::foldUnnecessaryBitop()
 {
+    // Fold unsigned shift right operator when the second operand is zero and
+    // the only use is an unsigned modulo. Thus, the expression
+    // |(x >>> 0) % y| becomes |x % y|.
+    if (isUrsh() && hasOneDefUse() && getOperand(1)->isConstant()) {
+        MConstant* constant = getOperand(1)->toConstant();
+        if (constant->type() == MIRType::Int32 && constant->toInt32() == 0) {
+            for (MUseDefIterator use(this); use; use++) {
+                if (use.def()->isMod() && use.def()->toMod()->isUnsigned())
+                    return getOperand(0);
+                break;
+            }
+        }
+    }
+
     if (specialization_ != MIRType::Int32)
         return this;
 

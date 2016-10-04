@@ -197,6 +197,13 @@ class TlsConnectTls12 : public TlsConnectTestBase,
   TlsConnectTls12();
 };
 
+// A TLS 1.2 only stream test.
+class TlsConnectStreamTls12 : public TlsConnectTestBase {
+ public:
+  TlsConnectStreamTls12()
+      : TlsConnectTestBase(STREAM, SSL_LIBRARY_VERSION_TLS_1_2) {}
+};
+
 // A TLS 1.2+ generic test.
 class TlsConnectTls12Plus
     : public TlsConnectTestBase,
@@ -210,6 +217,13 @@ class TlsConnectTls13 : public TlsConnectTestBase,
                         public ::testing::WithParamInterface<std::string> {
  public:
   TlsConnectTls13();
+};
+
+// A TLS 1.3 only stream test.
+class TlsConnectStreamTls13 : public TlsConnectTestBase {
+ public:
+  TlsConnectStreamTls13()
+      : TlsConnectTestBase(STREAM, SSL_LIBRARY_VERSION_TLS_1_3) {}
 };
 
 class TlsConnectDatagram13 : public TlsConnectTestBase {

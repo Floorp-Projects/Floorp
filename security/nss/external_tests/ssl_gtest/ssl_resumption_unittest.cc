@@ -421,7 +421,6 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   EXPECT_TRUE(client_->cipher_suite(&resumed_suite));
   EXPECT_EQ(original_suite, resumed_suite);
 
-  // TODO(ekr@rtfm.com): This will change when we fix bug 1257047.
-  ASSERT_EQ(initialTicket, c2->extension());
+  ASSERT_NE(initialTicket, c2->extension());
 }
 }  // namespace nss_test

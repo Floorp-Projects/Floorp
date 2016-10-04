@@ -57,7 +57,7 @@ interface nsIUrlClassifierUtils : nsISupports
    * @param aState An array of states (encoded in base64 format) for each list.
    * @param aCount The array length of aList and aState.
    *
-   * @returns A string to store request. Not null-terminated.
+   * @returns A base64url encoded string.
    */
   ACString makeUpdateRequestV4([array, size_is(aCount)] in string aListNames,
                                [array, size_is(aCount)] in string aStatesBase64,
