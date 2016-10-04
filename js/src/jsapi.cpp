@@ -1301,17 +1301,6 @@ JS_strdup(JSContext* cx, const char* s)
     return DuplicateString(cx, s).release();
 }
 
-JS_PUBLIC_API(char*)
-JS_strdup(JSRuntime* rt, const char* s)
-{
-    AssertHeapIsIdle(rt);
-    size_t n = strlen(s) + 1;
-    char* p = rt->pod_malloc<char>(n);
-    if (!p)
-        return nullptr;
-    return static_cast<char*>(js_memcpy(p, s, n));
-}
-
 #undef JS_AddRoot
 
 JS_PUBLIC_API(bool)
@@ -6716,4 +6705,16 @@ JS::GCThingTraceKind(void* thing)
 {
     MOZ_ASSERT(thing);
     return static_cast<js::gc::Cell*>(thing)->getTraceKind();
+}
+
+JS_PUBLIC_API(void)
+js::SetStackFormat(JSContext* cx, js::StackFormat format)
+{
+    cx->setStackFormat(format);
+}
+
+JS_PUBLIC_API(js::StackFormat)
+js::GetStackFormat(JSContext* cx)
+{
+    return cx->stackFormat();
 }

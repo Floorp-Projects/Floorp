@@ -48,8 +48,8 @@ skip == bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
 # Bug 1150490 disabling on Mulet as on B2G
 
 # Test support for SVG-as-image in <picture> elements.
-pref(dom.image.picture.enabled,true) pref(dom.image.srcset.enabled,true) == bug1106522-1.html bug1106522-1.html
-pref(dom.image.picture.enabled,true) pref(dom.image.srcset.enabled,true) == bug1106522-2.html bug1106522-2.html
+== bug1106522-1.html bug1106522-1.html
+== bug1106522-2.html bug1106522-2.html
 
 == href-attr-change-restyles.html href-attr-change-restyles.html
 == figure.html figure.html

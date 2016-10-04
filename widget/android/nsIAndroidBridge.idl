@@ -37,6 +37,6 @@ interface nsIAndroidBridge : nsISupports
 {
   [implicit_jscontext] void handleGeckoMessage(in jsval message);
   attribute nsIAndroidBrowserApp browserApp;
-  void contentDocumentChanged();
-  boolean isContentDocumentDisplayed();
+  void contentDocumentChanged(in mozIDOMWindowProxy window);
+  boolean isContentDocumentDisplayed(in mozIDOMWindowProxy window);
 };

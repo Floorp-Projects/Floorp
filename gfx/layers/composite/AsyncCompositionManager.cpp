@@ -41,7 +41,7 @@
 #include "gfxPrefs.h"
 #if defined(MOZ_WIDGET_ANDROID)
 # include <android/log.h>
-# include "AndroidBridge.h"
+# include "mozilla/widget/AndroidCompositorWidget.h"
 #endif
 #include "GeckoProfiler.h"
 #include "FrameUniformityData.h"
@@ -1618,7 +1618,12 @@ AsyncCompositionManager::SetFirstPaintViewport(const LayerIntPoint& aOffset,
                                                const CSSRect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  AndroidBridge::Bridge()->SetFirstPaintViewport(aOffset, aZoom, aCssPageRect);
+  widget::AndroidCompositorWidget* widget =
+      mLayerManager->GetCompositor()->GetWidget()->AsAndroid();
+  if (!widget) {
+    return;
+  }
+  widget->SetFirstPaintViewport(aOffset, aZoom, aCssPageRect);
 #endif
 }
 
@@ -1626,7 +1631,12 @@ void
 AsyncCompositionManager::SetPageRect(const CSSRect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  AndroidBridge::Bridge()->SetPageRect(aCssPageRect);
+  widget::AndroidCompositorWidget* widget =
+      mLayerManager->GetCompositor()->GetWidget()->AsAndroid();
+  if (!widget) {
+    return;
+  }
+  widget->SetPageRect(aCssPageRect);
 #endif
 }
 
@@ -1640,13 +1650,14 @@ AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
                                           ScreenMargin& aFixedLayerMargins)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort,
-                                            aDisplayResolution,
-                                            aLayersUpdated,
-                                            aPaintSyncId,
-                                            aScrollRect,
-                                            aScale,
-                                            aFixedLayerMargins);
+  widget::AndroidCompositorWidget* widget =
+      mLayerManager->GetCompositor()->GetWidget()->AsAndroid();
+  if (!widget) {
+    return;
+  }
+  widget->SyncViewportInfo(
+      aDisplayPort, aDisplayResolution, aLayersUpdated, aPaintSyncId,
+      aScrollRect, aScale, aFixedLayerMargins);
 #endif
 }
 
@@ -1661,10 +1672,14 @@ AsyncCompositionManager::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                                           ScreenMargin& aFixedLayerMargins)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  AndroidBridge::Bridge()->SyncFrameMetrics(aScrollOffset, aZoom, aCssPageRect,
-                                            aDisplayPort, aPaintedResolution,
-                                            aLayersUpdated, aPaintSyncId,
-                                            aFixedLayerMargins);
+  widget::AndroidCompositorWidget* widget =
+      mLayerManager->GetCompositor()->GetWidget()->AsAndroid();
+  if (!widget) {
+    return;
+  }
+  widget->SyncFrameMetrics(
+      aScrollOffset, aZoom, aCssPageRect, aDisplayPort, aPaintedResolution,
+      aLayersUpdated, aPaintSyncId, aFixedLayerMargins);
 #endif
 }
 
