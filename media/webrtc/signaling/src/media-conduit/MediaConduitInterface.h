@@ -485,6 +485,8 @@ public:
     */
   virtual MediaConduitErrorCode EnableAudioLevelExtension(bool enabled, uint8_t id) = 0;
 
+  virtual bool SetDtmfPayloadType(unsigned char type) = 0;
+
 };
 }
 #endif

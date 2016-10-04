@@ -47,6 +47,26 @@ SdpMediaSection::SetFmtp(const SdpFmtpAttributeList::Fmtp& fmtpToSet)
   GetAttributeList().SetAttribute(fmtps.release());
 }
 
+void
+SdpMediaSection::RemoveFmtp(const std::string& pt)
+{
+  UniquePtr<SdpFmtpAttributeList> fmtps(new SdpFmtpAttributeList);
+
+  SdpAttributeList& attrList = GetAttributeList();
+  if (attrList.HasAttribute(SdpAttribute::kFmtpAttribute)) {
+    *fmtps = attrList.GetFmtp();
+  }
+
+  for (size_t i = 0; i < fmtps->mFmtps.size(); ++i) {
+    if (pt == fmtps->mFmtps[i].format) {
+      fmtps->mFmtps.erase(fmtps->mFmtps.begin() + i);
+      break;
+    }
+  }
+
+  attrList.SetAttribute(fmtps.release());
+}
+
 const SdpRtpmapAttributeList::Rtpmap*
 SdpMediaSection::FindRtpmap(const std::string& pt) const
 {

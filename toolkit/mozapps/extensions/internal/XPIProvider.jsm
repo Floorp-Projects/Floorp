@@ -6273,6 +6273,7 @@ AddonInstall.prototype = {
                   case AddonManager.STATE_POSTPONED:
                     logger.info(`${this.addon.id} has resumed a previously postponed upgrade`);
                     this.state = AddonManager.STATE_DOWNLOADED;
+                    this.installLocation.releaseStagingDir();
                     this.install();
                     break;
                   default:

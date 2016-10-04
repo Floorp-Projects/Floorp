@@ -134,7 +134,8 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         mBitrate(bitRate),
         mMaxPlaybackRate(0),
         mForceMono(false),
-        mFECEnabled(false)
+        mFECEnabled(false),
+        mDtmfEnabled(false)
   {
   }
 
@@ -151,6 +152,23 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
     if (params && params->codec_type == SdpRtpmapAttributeList::kOpus) {
       result =
         static_cast<const SdpFmtpAttributeList::OpusParameters&>(*params);
+    }
+
+    return result;
+  }
+
+  SdpFmtpAttributeList::TelephoneEventParameters
+  GetTelephoneEventParameters(const std::string& pt,
+                              const SdpMediaSection& msection) const
+  {
+    // Will contain defaults if nothing else
+    SdpFmtpAttributeList::TelephoneEventParameters result;
+    auto* params = msection.FindFmtp(pt);
+
+    if (params && params->codec_type == SdpRtpmapAttributeList::kTelephoneEvent) {
+      result =
+        static_cast<const SdpFmtpAttributeList::TelephoneEventParameters&>
+            (*params);
     }
 
     return result;
@@ -175,6 +193,11 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       }
       opusParams.useInBandFec = mFECEnabled ? 1 : 0;
       msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, opusParams));
+    } else if (mName == "telephone-event") {
+      // add the default dtmf tones
+      SdpFmtpAttributeList::TelephoneEventParameters teParams(
+          GetTelephoneEventParameters(mDefaultPt, msection));
+      msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, teParams));
     }
   }
 
@@ -203,6 +226,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   uint32_t mMaxPlaybackRate;
   bool mForceMono;
   bool mFECEnabled;
+  bool mDtmfEnabled;
 };
 
 class JsepVideoCodecDescription : public JsepCodecDescription {

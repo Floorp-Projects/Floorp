@@ -142,8 +142,7 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
 
   if ((status == MediaKeySystemStatus::Cdm_not_installed ||
        status == MediaKeySystemStatus::Cdm_insufficient_version) &&
-      (!CompareUTF8toUTF16(kEMEKeySystemPrimetime, keySystem) ||
-       !CompareUTF8toUTF16(kEMEKeySystemWidevine, keySystem))) {
+      (IsPrimetimeKeySystem(keySystem) || IsWidevineKeySystem(keySystem))) {
     // These are cases which could be resolved by downloading a new(er) CDM.
     // When we send the status to chrome, chrome's GMPProvider will attempt to
     // download or update the CDM. In AwaitInstall() we add listeners to wait
@@ -154,7 +153,7 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     if (aType == RequestType::Initial &&
         AwaitInstall(aPromise, aKeySystem, aConfigs)) {
       // Notify chrome that we're going to wait for the CDM to download/update.
-      // Note: If we're re-trying, we don't re-send the notificaiton,
+      // Note: If we're re-trying, we don't re-send the notification,
       // as chrome is already displaying the "we can't play, updating"
       // notification.
       MediaKeySystemAccess::NotifyObservers(mWindow, keySystem, status);
