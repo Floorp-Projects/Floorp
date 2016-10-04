@@ -402,8 +402,9 @@ CreateShadowFor(ClientLayer* aLayer,
                 CreatedMethod aMethod)
 {
   PLayerChild* shadow = aMgr->AsShadowForwarder()->ConstructShadowFor(aLayer);
-  // XXX error handling
-  MOZ_ASSERT(shadow, "failed to create shadow");
+  if (!shadow) {
+    return;
+  }
 
   aLayer->SetShadow(shadow);
   (aMgr->AsShadowForwarder()->*aMethod)(aLayer);
