@@ -38,12 +38,6 @@ WebGL1Context::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
     return dom::WebGLRenderingContextBinding::Wrap(cx, this, givenProto);
 }
 
-bool
-WebGL1Context::ValidateQueryTarget(GLenum target, const char* info)
-{
-    return false;
-}
-
 } // namespace mozilla
 
 nsresult
