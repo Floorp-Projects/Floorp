@@ -17,8 +17,6 @@ public interface PanZoomTarget {
     public void setViewportMetrics(ImmutableViewportMetrics viewport);
     public void scrollBy(float dx, float dy);
     public void panZoomStopped();
-    /** This triggers an (asynchronous) viewport update/redraw. */
-    public void forceRedraw(DisplayPortMetrics displayPort);
 
     public boolean isGeckoReady();
     public boolean post(Runnable action);
