@@ -29,11 +29,13 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
 
 NewConsoleOutputWrapper.prototype = {
   init: function () {
+    const attachRefToHud = (id, node) => {
+      this.jsterm.hud[id] = node;
+    };
+
     let childComponent = ConsoleOutput({
       serviceContainer: {
-        attachRefToHud: (id, node) => {
-          this.jsterm.hud[id] = node;
-        },
+        attachRefToHud,
         emitNewMessage: (node) => {
           this.jsterm.hud.emit("new-messages", new Set([{
             node
@@ -53,7 +55,11 @@ NewConsoleOutputWrapper.prototype = {
         sourceMapService: this.toolbox ? this.toolbox._sourceMapService : null,
       }
     });
-    let filterBar = FilterBar({});
+    let filterBar = FilterBar({
+      serviceContainer: {
+        attachRefToHud
+      }
+    });
     let provider = React.createElement(
       Provider,
       { store },
