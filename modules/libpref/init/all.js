@@ -4809,8 +4809,6 @@ pref("dom.mozPermissionSettings.enabled", false);
 // Autodetection is currently only supported on Windows and GTK3
 #if defined(XP_MACOSX)
 pref("dom.w3c_touch_events.enabled", 0);
-#elif defined(XP_WIN) && !defined(NIGHTLY_BUILD)
-pref("dom.w3c_touch_events.enabled", 0);
 #else
 pref("dom.w3c_touch_events.enabled", 2);
 #endif
@@ -4835,11 +4833,7 @@ pref("media.ondevicechange.fakeDeviceChangeEvent.enabled", false);
 // events are not supported (e.g. OS X, or Windows with e10s disabled). For
 // those platforms we don't handle touch events anyway so it's conceptually
 // a no-op.
-#ifdef NIGHTLY_BUILD
 pref("layout.css.touch_action.enabled", true);
-#else
-pref("layout.css.touch_action.enabled", false);
-#endif
 
 // Enables some assertions in nsStyleContext that are too expensive
 // for general use, but might be useful to enable for specific tests.
@@ -5210,15 +5204,11 @@ pref("snav.enabled", false);
 // New implementation to unify touch-caret and selection-carets.
 pref("layout.accessiblecaret.enabled", false);
 
-// On Nightly, enable the accessible caret on platforms/devices
+// Enable the accessible caret on platforms/devices
 // that we detect have touch support. Note that this pref is an
 // additional way to enable the accessible carets, rather than
 // overriding the layout.accessiblecaret.enabled pref.
-#ifdef NIGHTLY_BUILD
 pref("layout.accessiblecaret.enabled_on_touch", true);
-#else
-pref("layout.accessiblecaret.enabled_on_touch", false);
-#endif
 
 // CSS attributes of the AccessibleCaret in CSS pixels.
 pref("layout.accessiblecaret.width", "34.0");
