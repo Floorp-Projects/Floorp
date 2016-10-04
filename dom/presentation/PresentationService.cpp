@@ -642,7 +642,7 @@ PresentationService::StartSession(
     nsCOMPtr<nsIPresentationDevicePrompt> prompt =
       do_GetService(PRESENTATION_DEVICE_PROMPT_CONTRACTID);
     if (NS_WARN_IF(!prompt)) {
-      return aCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
+      return aCallback->NotifyError(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     }
 
     nsresult rv = prompt->PromptDeviceSelection(request);
