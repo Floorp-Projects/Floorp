@@ -39,6 +39,7 @@
 
 #include "nsXPCOMPrivate.h" // for MAXPATHLEN and XPCOM_DLL
 
+#include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
@@ -192,7 +193,7 @@ static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
     }
 
     char appEnv[MAXPATHLEN];
-    snprintf(appEnv, MAXPATHLEN, "XUL_APP_FILE=%s", argv[2]);
+    SprintfLiteral(appEnv, "XUL_APP_FILE=%s", argv[2]);
     if (putenv(strdup(appEnv))) {
       Output("Couldn't set %s.\n", appEnv);
       return 255;

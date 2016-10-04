@@ -15,6 +15,8 @@
 
 #include "nsDebug.h"
 
+#include "mozilla/Sprintf.h"
+
 @interface CALayer (ContentsScale)
 - (double)contentsScale;
 - (void)setContentsScale:(double)scale;
@@ -222,12 +224,11 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
     return false;
   }
 
-  NSString *currentName = [[[NSBundle mainBundle] localizedInfoDictionary] 
+  NSString *currentName = [[[NSBundle mainBundle] localizedInfoDictionary]
                               objectForKey:(NSString *)kCFBundleNameKey];
 
   char formattedName[1024];
-  snprintf(formattedName, sizeof(formattedName), 
-      "%s %s", [currentName UTF8String], aProcessName);
+  SprintfLiteral(formattedName, "%s %s", [currentName UTF8String], aProcessName);
 
   aProcessName = formattedName;
 

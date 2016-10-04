@@ -10,9 +10,10 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <stdarg.h>
-#include "mozilla/ThreadLocal.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/Sprintf.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
 #ifndef SPS_STANDALONE
 #include "nscore.h"
@@ -443,8 +444,8 @@ public:
 
       // We have to use seperate printf's because we're using
       // the vargs.
-      ::vsnprintf(buff, SAMPLER_MAX_STRING, aFormat, args);
-      ::snprintf(mDest, SAMPLER_MAX_STRING, "%s %s", aInfo, buff);
+      VsprintfLiteral(buff, aFormat, args);
+      SprintfLiteral(mDest, "%s %s", aInfo, buff);
 
       mHandle = mozilla_sampler_call_enter(mDest, aCategory, this, true, line);
       va_end(args);
