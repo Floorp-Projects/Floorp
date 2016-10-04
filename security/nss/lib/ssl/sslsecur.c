@@ -199,6 +199,8 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
 
+    ssl3_DestroyRemoteExtensions(&ss->ssl3.hs.remoteExtensions);
+
     if (!ss->TCPconnected)
         ss->TCPconnected = (PR_SUCCESS == ssl_DefGetpeername(ss, &addr));
 

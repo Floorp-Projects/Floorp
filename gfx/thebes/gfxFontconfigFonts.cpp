@@ -16,6 +16,7 @@
 #include "gfxFT2FontBase.h"
 #include "gfxFT2Utils.h"
 #include "harfbuzz/hb.h"
+#include "harfbuzz/hb-glib.h"
 #include "harfbuzz/hb-ot.h"
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeScriptCodes.h"
@@ -1623,7 +1624,7 @@ gfxPangoFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     // https://developer.gnome.org/pango/stable/pango-Scripts-and-Languages.html#PangoScript
     const hb_tag_t scriptTag = GetScriptTagForCode(aRunScript);
     const PangoScript script =
-      (const PangoScript)g_unicode_script_from_iso15924(scriptTag);
+      (const PangoScript)hb_glib_script_from_script(hb_script_from_iso15924_tag(scriptTag));
 
     // Might be nice to call pango_language_includes_script only once for the
     // run rather than for each character.

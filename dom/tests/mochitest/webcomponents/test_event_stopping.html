@@ -26,7 +26,7 @@ function isEventChain(actual, expected, msg) {
   }
 
   if (0 < actual.length) {
-    var chain = els.getEventTargetChainFor(actual[0]); // Events should be dispatched on actual[0].
+    var chain = els.getEventTargetChainFor(actual[0], false); // Events should be dispatched on actual[0].
     ok(expected.length < chain.length, "There should be additional chrome event targets.");
   }
 }

@@ -32,6 +32,7 @@ EXPORTS += [
     'nsILanguageAtomService.h',
     'nsIPlatformCharset.h',
     'nsPosixLocale.h',
+    'nsUConvPropertySearch.h',
     'nsWin32Locale.h',
 ]
 

@@ -415,6 +415,7 @@ Event::Constructor(const GlobalObject& aGlobal,
   bool trusted = e->Init(t);
   e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   e->SetTrusted(trusted);
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 
@@ -567,11 +568,14 @@ Event::SetEventType(const nsAString& aEventTypeArg)
     mEvent->mSpecifiedEventType =
       nsContentUtils::GetEventMessageAndAtom(aEventTypeArg, mEvent->mClass,
                                              &(mEvent->mMessage));
+    mEvent->SetDefaultComposed();
   } else {
     mEvent->mSpecifiedEventType = nullptr;
     mEvent->mMessage = eUnidentifiedEvent;
     mEvent->mSpecifiedEventTypeString = aEventTypeArg;
+    mEvent->SetComposed(aEventTypeArg);
   }
+  mEvent->SetDefaultComposedInNativeAnonymousContent();
 }
 
 void
@@ -1167,6 +1171,7 @@ Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
   IPC::WriteParam(aMsg, Bubbles());
   IPC::WriteParam(aMsg, Cancelable());
   IPC::WriteParam(aMsg, IsTrusted());
+  IPC::WriteParam(aMsg, Composed());
 
   // No timestamp serialization for now!
 }
@@ -1186,8 +1191,12 @@ Event::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
   bool trusted = false;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &trusted), false);
 
+  bool composed = false;
+  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &composed), false);
+
   InitEvent(type, bubbles, cancelable);
   SetTrusted(trusted);
+  SetComposed(composed);
 
   return true;
 }

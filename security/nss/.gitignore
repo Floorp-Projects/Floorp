@@ -3,3 +3,13 @@
 *OPT.OBJ/
 *DBG.OBJ/
 *DBG.OBJD/
+*.bak
+*.out
+*.rej
+*.patch
+GPATH
+GRTAGS
+GTAGS
+#*
+.#*
+.ycm_extra_conf.py*
