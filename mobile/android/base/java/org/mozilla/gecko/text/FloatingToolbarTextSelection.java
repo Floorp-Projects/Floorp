@@ -195,9 +195,9 @@ public class FloatingToolbarTextSelection implements TextSelection, GeckoEventLi
 
             contentRect = new Rect(
                     (int) (x * zoomFactor + locationInWindow[0]),
-                    (int) (y * zoomFactor + locationInWindow[1]  + layerView.getSurfaceTranslation()),
+                    (int) (y * zoomFactor + locationInWindow[1]),
                     (int) ((x + width) * zoomFactor + locationInWindow[0]),
-                    (int) ((y + height) * zoomFactor + locationInWindow[1] + layerView.getSurfaceTranslation() + handlesOffset));
+                    (int) ((y + height) * zoomFactor + locationInWindow[1] + handlesOffset));
         } catch (JSONException e) {
             Log.w(LOGTAG, "Could not calculate content rect", e);
         }
