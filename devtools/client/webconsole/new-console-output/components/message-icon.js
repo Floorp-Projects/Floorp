@@ -29,4 +29,4 @@ function MessageIcon(props) {
   });
 }
 
-module.exports.MessageIcon = MessageIcon;
+module.exports = MessageIcon;

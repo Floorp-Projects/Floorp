@@ -149,6 +149,7 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
   bool trusted = e->Init(owner);
   e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
   e->SetTrusted(trusted);
+  e->SetComposed(aOptions.mComposed);
   e->mRequest = aOptions.mRequest;
   e->mClientId = aOptions.mClientId;
   e->mIsReload = aOptions.mIsReload;
@@ -1141,6 +1142,7 @@ PushEvent::Constructor(mozilla::dom::EventTarget* aOwner,
   bool trusted = e->Init(aOwner);
   e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
   e->SetTrusted(trusted);
+  e->SetComposed(aOptions.mComposed);
   if(aOptions.mData.WasPassed()){
     nsTArray<uint8_t> bytes;
     nsresult rv = ExtractBytesFromData(aOptions.mData.Value(), bytes);

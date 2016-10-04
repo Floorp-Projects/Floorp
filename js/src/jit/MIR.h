@@ -7139,11 +7139,22 @@ class MDiv : public MBinaryArithInstruction
 
 class MMod : public MBinaryArithInstruction
 {
+  public:
+    enum class PossiblyUnsigned {
+        NotPossible,
+        LHSPossible,
+        RHSPossible,
+        BothPossible,
+    };
+
+  protected:
     bool unsigned_;
     bool canBeNegativeDividend_;
     bool canBePowerOfTwoDivisor_;
     bool canBeDivideByZero_;
     bool trapOnError_;
+
+    PossiblyUnsigned possiblyUnsigned_;
 
     MMod(MDefinition* left, MDefinition* right, MIRType type)
       : MBinaryArithInstruction(left, right),
@@ -7151,11 +7162,28 @@ class MMod : public MBinaryArithInstruction
         canBeNegativeDividend_(true),
         canBePowerOfTwoDivisor_(true),
         canBeDivideByZero_(true),
-        trapOnError_(false)
+        trapOnError_(false),
+        possiblyUnsigned_(PossiblyUnsigned::NotPossible)
     {
         if (type != MIRType::Value)
             specialization_ = type;
         setResultType(type);
+
+        if (left->isUrsh() && left->getOperand(1)->isConstant()) {
+            MConstant* constant = left->getOperand(1)->toConstant();
+            if (constant->type() == MIRType::Int32 && constant->toInt32() == 0)
+                possiblyUnsigned_ = PossiblyUnsigned::LHSPossible;
+        }
+
+        if (right->isUrsh() && right->getOperand(1)->isConstant()) {
+            MConstant* constant = right->getOperand(1)->toConstant();
+            if (constant->type() == MIRType::Int32 && constant->toInt32() == 0) {
+                if (possiblyUnsigned_ == PossiblyUnsigned::NotPossible)
+                    possiblyUnsigned_ = PossiblyUnsigned::RHSPossible;
+                else
+                    possiblyUnsigned_ = PossiblyUnsigned::BothPossible;
+            }
+        }
     }
 
   public:

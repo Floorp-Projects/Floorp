@@ -8,8 +8,6 @@
 #include "blapi.h"
 #include "secerr.h"
 
-#define SFTK_OFFSETOF(str, memb) ((PRPtrdiff)(&(((str *)0)->memb)))
-
 static void
 sftk_TLSPRFNull(void *data, PRBool freeit)
 {
@@ -174,7 +172,7 @@ sftk_TLSPRFInit(SFTKSessionContext *context,
     prf_cx->cxSize = blockSize;
     prf_cx->cxKeyLen = keySize;
     prf_cx->cxDataLen = 0;
-    prf_cx->cxBufSize = blockSize - SFTK_OFFSETOF(TLSPRFContext, cxBuf);
+    prf_cx->cxBufSize = blockSize - offsetof(TLSPRFContext, cxBuf);
     prf_cx->cxRv = SECSuccess;
     prf_cx->cxIsFIPS = (key->slot->slotID == FIPS_SLOT_ID);
     prf_cx->cxBufPtr = prf_cx->cxBuf;

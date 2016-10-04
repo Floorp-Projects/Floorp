@@ -31,6 +31,7 @@ SpeechRecognitionError::Constructor(const GlobalObject& aGlobal,
   bool trusted = e->Init(t);
   e->InitSpeechRecognitionError(aType, aParam.mBubbles, aParam.mCancelable, aParam.mError, aParam.mMessage);
   e->SetTrusted(trusted);
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 

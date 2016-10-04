@@ -891,11 +891,6 @@ BytecodeEmitter::EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind
 
     updateFrameFixedSlots(bce, bi);
 
-    // Put frame slots in TDZ. Environment slots are poisoned during
-    // environment creation.
-    if (!deadZoneFrameSlotRange(bce, firstFrameSlot, frameSlotEnd()))
-        return false;
-
     // Create and intern the VM scope.
     auto createScope = [kind, bindings, firstFrameSlot](ExclusiveContext* cx,
                                                         HandleScope enclosing)
@@ -913,6 +908,14 @@ BytecodeEmitter::EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind
 
     // Lexical scopes need notes to be mapped from a pc.
     if (!appendScopeNote(bce))
+        return false;
+
+    // Put frame slots in TDZ. Environment slots are poisoned during
+    // environment creation.
+    //
+    // This must be done after appendScopeNote to be considered in the extent
+    // of the scope.
+    if (!deadZoneFrameSlotRange(bce, firstFrameSlot, frameSlotEnd()))
         return false;
 
     return checkEnvironmentChainLength(bce);

@@ -107,6 +107,7 @@ BluetoothLeDeviceEvent::Constructor(
   }
 
   e->SetTrusted(trusted);
+  e->SetComposed(aEventInitDict.mComposed);
   return e.forget();
 }
 

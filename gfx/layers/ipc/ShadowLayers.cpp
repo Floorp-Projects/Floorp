@@ -692,7 +692,9 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 
   AutoTArray<Edit, 10> cset;
   size_t nCsets = mTxn->mCset.size() + mTxn->mPaints.size();
-  MOZ_ASSERT(nCsets > 0 || mTxn->RotationChanged(), "should have bailed by now");
+  if (nCsets == 0 && !mTxn->RotationChanged()) {
+    return true;
+  }
 
   cset.SetCapacity(nCsets);
   if (!mTxn->mCset.empty()) {
