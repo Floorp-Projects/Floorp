@@ -205,9 +205,10 @@ const initCssProperties = Task.async(function* (toolbox) {
   // Get the list dynamically if the cssProperties actor exists.
   if (toolbox.target.hasActor("cssProperties")) {
     front = CssPropertiesFront(client, toolbox.target.form);
-    const serverDB = yield front.getCSSDatabase(getClientBrowserVersion(toolbox));
+    const serverDB = yield front.getCSSDatabase();
 
-    // The serverDB will be blank if the browser versions match, so use the static list.
+    // Ensure the database was returned in a format that is understood.
+    // Older versions of the protocol could return a blank database.
     if (!serverDB.properties && !serverDB.margin) {
       db = CSS_PROPERTIES_DB;
     } else {
@@ -247,16 +248,6 @@ function getCssProperties(toolbox) {
  */
 function getClientCssProperties() {
   return new CssProperties(normalizeCssData(CSS_PROPERTIES_DB));
-}
-
-/**
- * Get the current browser version.
- * @returns {string} The browser version.
- */
-function getClientBrowserVersion(toolbox) {
-  const regexResult = toolbox.win.navigator
-                             .userAgent.match(/Firefox\/(\d+)\.\d/);
-  return Array.isArray(regexResult) ? regexResult[1] : "0";
 }
 
 /**
