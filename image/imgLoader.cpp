@@ -743,14 +743,28 @@ NewImageChannel(nsIChannel** aResult,
                                               nullptr,   // loadGroup
                                               callbacks,
                                               aLoadFlags);
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (aPolicyType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON) {
+      // If this is a favicon loading, we will use the originAttributes from the
+      // loadingPrincipal as the channel's originAttributes. This allows the favicon
+      // loading from XUL will use the correct originAttributes.
+      NeckoOriginAttributes neckoAttrs;
+      neckoAttrs.InheritFromDocToNecko(BasePrincipal::Cast(aLoadingPrincipal)->OriginAttributesRef());
+
+      nsCOMPtr<nsILoadInfo> loadInfo = (*aResult)->GetLoadInfo();
+      rv = loadInfo->SetOriginAttributes(neckoAttrs);
+    }
   } else {
     // either we are loading something inside a document, in which case
     // we should always have a requestingNode, or we are loading something
     // outside a document, in which case the loadingPrincipal and
     // triggeringPrincipal should always be the systemPrincipal.
-    // However, there are two exceptions: one is Notifications and the
-    // other one is Favicons which create a channel in the parent prcoess
-    // in which case we can't get a requestingNode.
+    // However, there are exceptions: one is Notifications which create a
+    // channel in the parent prcoess in which case we can't get a requestingNode.
     rv = NS_NewChannel(aResult,
                        aURI,
                        nsContentUtils::GetSystemPrincipal(),
