@@ -89,7 +89,6 @@ DIRS += [
     'system',
     'ipc',
     'workers',
-    'camera',
     'audiochannel',
     'broadcastchannel',
     'messagechannel',
