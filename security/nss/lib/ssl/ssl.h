@@ -363,7 +363,7 @@ SSL_IMPORT SECStatus SSL_CipherPolicyGet(PRInt32 cipher, PRInt32 *policy);
 ** algorithms with all keys.  NSS preferentially uses the schemes that are
 ** defined in TLS 1.3.
 **
-** To select TLS 1.3 signature schemes, split the SignatureScheme into an most
+** To select TLS 1.3 signature schemes, split the SSLSignatureScheme into an most
 ** significant octet (the hash) and a less significant octet (the signature) and
 ** then use this structure.
 */
