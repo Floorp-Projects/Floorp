@@ -570,6 +570,10 @@ TimerThread::AddTimer(nsTimerImpl* aTimer)
 {
   MonitorAutoLock lock(mMonitor);
 
+  if (!aTimer->mEventTarget) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Add the timer to our list.
   int32_t i = AddTimerInternal(aTimer);
   if (i < 0) {
@@ -586,7 +590,7 @@ TimerThread::AddTimer(nsTimerImpl* aTimer)
 }
 
 nsresult
-TimerThread::RemoveTimer(nsTimerImpl* aTimer)
+TimerThread::RemoveTimer(nsTimerImpl* aTimer, bool aDisable)
 {
   MonitorAutoLock lock(mMonitor);
 
@@ -595,6 +599,10 @@ TimerThread::RemoveTimer(nsTimerImpl* aTimer)
 
   if (!RemoveTimerInternal(aTimer)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (aDisable) {
+    aTimer->mEventTarget = nullptr;
   }
 
   // Awaken the timer thread.
