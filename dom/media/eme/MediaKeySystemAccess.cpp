@@ -317,35 +317,35 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
   return MediaKeySystemStatus::Cdm_not_supported;
 }
 
-typedef nsCString GMPCodecString;
+typedef nsCString EMECodecString;
 
-#define GMP_CODEC_AAC NS_LITERAL_CSTRING("aac")
-#define GMP_CODEC_OPUS NS_LITERAL_CSTRING("opus")
-#define GMP_CODEC_VORBIS NS_LITERAL_CSTRING("vorbis")
-#define GMP_CODEC_H264 NS_LITERAL_CSTRING("h264")
-#define GMP_CODEC_VP8 NS_LITERAL_CSTRING("vp8")
-#define GMP_CODEC_VP9 NS_LITERAL_CSTRING("vp9")
+static NS_NAMED_LITERAL_CSTRING(EME_CODEC_AAC, "aac");
+static NS_NAMED_LITERAL_CSTRING(EME_CODEC_OPUS, "opus");
+static NS_NAMED_LITERAL_CSTRING(EME_CODEC_VORBIS, "vorbis");
+static NS_NAMED_LITERAL_CSTRING(EME_CODEC_H264, "h264");
+static NS_NAMED_LITERAL_CSTRING(EME_CODEC_VP8, "vp8");
+static NS_NAMED_LITERAL_CSTRING(EME_CODEC_VP9, "vp9");
 
-GMPCodecString
-ToGMPAPICodecString(const nsString& aCodec)
+EMECodecString
+ToEMEAPICodecString(const nsString& aCodec)
 {
   if (IsAACCodecString(aCodec)) {
-    return GMP_CODEC_AAC;
+    return EME_CODEC_AAC;
   }
   if (aCodec.EqualsLiteral("opus")) {
-    return GMP_CODEC_OPUS;
+    return EME_CODEC_OPUS;
   }
   if (aCodec.EqualsLiteral("vorbis")) {
-    return GMP_CODEC_VORBIS;
+    return EME_CODEC_VORBIS;
   }
   if (IsH264CodecString(aCodec)) {
-    return GMP_CODEC_H264;
+    return EME_CODEC_H264;
   }
   if (IsVP8CodecString(aCodec)) {
-    return GMP_CODEC_VP8;
+    return EME_CODEC_VP8;
   }
   if (IsVP9CodecString(aCodec)) {
-    return GMP_CODEC_VP9;
+    return EME_CODEC_VP9;
   }
   return EmptyCString();
 }
@@ -361,18 +361,18 @@ struct KeySystemContainerSupport
 
   // CDM decrypts and decodes using a DRM robust decoder, and passes decoded
   // samples back to Gecko for rendering.
-  bool DecryptsAndDecodes(GMPCodecString aCodec) const
+  bool DecryptsAndDecodes(EMECodecString aCodec) const
   {
     return mCodecsDecoded.Contains(aCodec);
   }
 
   // CDM decrypts and passes the decrypted samples back to Gecko for decoding.
-  bool Decrypts(GMPCodecString aCodec) const
+  bool Decrypts(EMECodecString aCodec) const
   {
     return mCodecsDecrypted.Contains(aCodec);
   }
 
-  void SetCanDecryptAndDecode(GMPCodecString aCodec)
+  void SetCanDecryptAndDecode(EMECodecString aCodec)
   {
     // Can't both decrypt and decrypt-and-decode a codec.
     MOZ_ASSERT(!Decrypts(aCodec));
@@ -381,7 +381,7 @@ struct KeySystemContainerSupport
     mCodecsDecoded.AppendElement(aCodec);
   }
 
-  void SetCanDecrypt(GMPCodecString aCodec)
+  void SetCanDecrypt(EMECodecString aCodec)
   {
     // Prevent duplicates.
     MOZ_ASSERT(!Decrypts(aCodec));
@@ -391,8 +391,8 @@ struct KeySystemContainerSupport
   }
 
 private:
-  nsTArray<GMPCodecString> mCodecsDecoded;
-  nsTArray<GMPCodecString> mCodecsDecrypted;
+  nsTArray<EMECodecString> mCodecsDecoded;
+  nsTArray<EMECodecString> mCodecsDecrypted;
 };
 
 enum class KeySystemFeatureSupport
@@ -437,23 +437,23 @@ GetSupportedKeySystems()
 #if defined(XP_WIN)
       // Clearkey CDM uses WMF decoders on Windows.
       if (WMFDecoderModule::HasAAC()) {
-        clearkey.mMP4.SetCanDecryptAndDecode(GMP_CODEC_AAC);
+        clearkey.mMP4.SetCanDecryptAndDecode(EME_CODEC_AAC);
       } else {
-        clearkey.mMP4.SetCanDecrypt(GMP_CODEC_AAC);
+        clearkey.mMP4.SetCanDecrypt(EME_CODEC_AAC);
       }
       if (WMFDecoderModule::HasH264()) {
-        clearkey.mMP4.SetCanDecryptAndDecode(GMP_CODEC_H264);
+        clearkey.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
       } else {
-        clearkey.mMP4.SetCanDecrypt(GMP_CODEC_H264);
+        clearkey.mMP4.SetCanDecrypt(EME_CODEC_H264);
       }
 #else
-      clearkey.mMP4.SetCanDecrypt(GMP_CODEC_AAC);
-      clearkey.mMP4.SetCanDecrypt(GMP_CODEC_H264);
+      clearkey.mMP4.SetCanDecrypt(EME_CODEC_AAC);
+      clearkey.mMP4.SetCanDecrypt(EME_CODEC_H264);
 #endif
-      clearkey.mWebM.SetCanDecrypt(GMP_CODEC_VORBIS);
-      clearkey.mWebM.SetCanDecrypt(GMP_CODEC_OPUS);
-      clearkey.mWebM.SetCanDecrypt(GMP_CODEC_VP8);
-      clearkey.mWebM.SetCanDecrypt(GMP_CODEC_VP9);
+      clearkey.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
+      clearkey.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
+      clearkey.mWebM.SetCanDecrypt(EME_CODEC_VP8);
+      clearkey.mWebM.SetCanDecrypt(EME_CODEC_VP9);
       sKeySystemConfigs->AppendElement(Move(clearkey));
     }
     {
@@ -474,16 +474,16 @@ GetSupportedKeySystems()
       //  the Adobe GMP's unencrypted AAC decoding path being used to
       // decode content decrypted by the Widevine CDM.
       if (WMFDecoderModule::HasAAC()) {
-        widevine.mMP4.SetCanDecrypt(GMP_CODEC_AAC);
+        widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
       }
 #else
-      widevine.mMP4.SetCanDecrypt(GMP_CODEC_AAC);
+      widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
 #endif
-      widevine.mMP4.SetCanDecryptAndDecode(GMP_CODEC_H264);
-      widevine.mWebM.SetCanDecrypt(GMP_CODEC_VORBIS);
-      widevine.mWebM.SetCanDecrypt(GMP_CODEC_OPUS);
-      widevine.mWebM.SetCanDecryptAndDecode(GMP_CODEC_VP8);
-      widevine.mWebM.SetCanDecryptAndDecode(GMP_CODEC_VP9);
+      widevine.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
+      widevine.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
+      widevine.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
+      widevine.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP8);
+      widevine.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP9);
       sKeySystemConfigs->AppendElement(Move(widevine));
     }
     {
@@ -493,8 +493,8 @@ GetSupportedKeySystems()
       primetime.mPersistentState = KeySystemFeatureSupport::Required;
       primetime.mDistinctiveIdentifier = KeySystemFeatureSupport::Required;
       primetime.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
-      primetime.mMP4.SetCanDecryptAndDecode(GMP_CODEC_AAC);
-      primetime.mMP4.SetCanDecryptAndDecode(GMP_CODEC_H264);
+      primetime.mMP4.SetCanDecryptAndDecode(EME_CODEC_AAC);
+      primetime.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
       sKeySystemConfigs->AppendElement(Move(primetime));
     }
   }
@@ -535,14 +535,14 @@ CanDecryptAndDecode(mozIGeckoMediaPluginService* aGMPService,
                     const nsString& aContentType,
                     CodecType aCodecType,
                     const KeySystemContainerSupport& aContainerSupport,
-                    const nsTArray<GMPCodecString>& aCodecs,
+                    const nsTArray<EMECodecString>& aCodecs,
                     DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(aCodecType != Invalid);
   MOZ_ASSERT(HaveGMPFor(aGMPService,
                         NS_ConvertUTF16toUTF8(aKeySystem),
                         NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
-  for (const GMPCodecString& codec : aCodecs) {
+  for (const EMECodecString& codec : aCodecs) {
     MOZ_ASSERT(!codec.IsEmpty());
 
     nsCString api = (aCodecType == Audio) ? NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER)
@@ -572,7 +572,7 @@ CanDecryptAndDecode(mozIGeckoMediaPluginService* aGMPService,
     // and reject the MediaKeys request, since our policy is to prevent
     //  the Adobe GMP's unencrypted AAC decoding path being used to
     // decode content decrypted by the Widevine CDM.
-    if (codec == GMP_CODEC_AAC &&
+    if (codec == EME_CODEC_AAC &&
         IsWidevineKeySystem(aKeySystem) &&
         !WMFDecoderModule::HasAAC()) {
       if (aDiagnostics) {
@@ -625,25 +625,25 @@ GetMajorType(const nsAString& aContentType)
 }
 
 static CodecType
-GetCodecType(const GMPCodecString& aCodec)
+GetCodecType(const EMECodecString& aCodec)
 {
-  if (aCodec.Equals(GMP_CODEC_AAC) ||
-      aCodec.Equals(GMP_CODEC_OPUS) ||
-      aCodec.Equals(GMP_CODEC_VORBIS)) {
+  if (aCodec.Equals(EME_CODEC_AAC) ||
+      aCodec.Equals(EME_CODEC_OPUS) ||
+      aCodec.Equals(EME_CODEC_VORBIS)) {
     return Audio;
   }
-  if (aCodec.Equals(GMP_CODEC_H264) ||
-      aCodec.Equals(GMP_CODEC_VP8) ||
-      aCodec.Equals(GMP_CODEC_VP9)) {
+  if (aCodec.Equals(EME_CODEC_H264) ||
+      aCodec.Equals(EME_CODEC_VP8) ||
+      aCodec.Equals(EME_CODEC_VP9)) {
     return Video;
   }
   return Invalid;
 }
 
 static bool
-AllCodecsOfType(const nsTArray<GMPCodecString>& aCodecs, const CodecType aCodecType)
+AllCodecsOfType(const nsTArray<EMECodecString>& aCodecs, const CodecType aCodecType)
 {
-  for (const GMPCodecString& codec : aCodecs) {
+  for (const EMECodecString& codec : aCodecs) {
     if (GetCodecType(codec) != aCodecType) {
       return false;
     }
@@ -730,10 +730,10 @@ GetSupportedCapabilities(const CodecType aCodecType,
       continue;
     }
     bool invalid = false;
-    nsTArray<GMPCodecString> codecs;
+    nsTArray<EMECodecString> codecs;
     for (const nsString& codecString : codecStrings) {
-      GMPCodecString gmpCodec = ToGMPAPICodecString(codecString);
-      if (gmpCodec.IsEmpty()) {
+      EMECodecString emeCodec = ToEMEAPICodecString(codecString);
+      if (emeCodec.IsEmpty()) {
         invalid = true;
         EME_LOG("MediaKeySystemConfiguration (label='%s') "
                 "MediaKeySystemMediaCapability('%s','%s') unsupported; "
@@ -744,7 +744,7 @@ GetSupportedCapabilities(const CodecType aCodecType,
                 NS_ConvertUTF16toUTF8(codecString).get());
         break;
       }
-      codecs.AppendElement(gmpCodec);
+      codecs.AppendElement(emeCodec);
     }
     if (invalid) {
       continue;
@@ -805,15 +805,15 @@ GetSupportedCapabilities(const CodecType aCodecType,
       // Let parameters be that set.
       if (isMP4) {
         if (aCodecType == Audio) {
-          codecs.AppendElement(GMP_CODEC_AAC);
+          codecs.AppendElement(EME_CODEC_AAC);
         } else if (aCodecType == Video) {
-          codecs.AppendElement(GMP_CODEC_H264);
+          codecs.AppendElement(EME_CODEC_H264);
         }
       } else if (isWebM) {
         if (aCodecType == Audio) {
-          codecs.AppendElement(GMP_CODEC_VORBIS);
+          codecs.AppendElement(EME_CODEC_VORBIS);
         } else if (aCodecType == Video) {
-          codecs.AppendElement(GMP_CODEC_VP8);
+          codecs.AppendElement(EME_CODEC_VP8);
         }
       }
       // Otherwise: Continue to the next iteration.
