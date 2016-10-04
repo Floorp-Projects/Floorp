@@ -1773,15 +1773,6 @@ HTMLSelectElement::IsValueMissing()
 
   for (uint32_t i = 0; i < length; ++i) {
     RefPtr<HTMLOptionElement> option = Item(i);
-    // Check for a placeholder label option, don't count it as a valid value
-    if (i == 0 && !Multiple() && Size() <= 1 && option->GetParent() == this) {
-      nsAutoString value;
-      MOZ_ALWAYS_SUCCEEDS(option->GetValue(value));
-      if (value.IsEmpty()) {
-        continue;
-      }
-    }
-
     if (!option->Selected()) {
       continue;
     }
@@ -1790,7 +1781,11 @@ HTMLSelectElement::IsValueMissing()
       continue;
     }
 
-    return false;
+    nsAutoString value;
+    MOZ_ALWAYS_SUCCEEDS(option->GetValue(value));
+    if (!value.IsEmpty()) {
+      return false;
+    }
   }
 
   return true;
