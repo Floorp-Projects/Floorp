@@ -87,7 +87,11 @@ const AutoMigrate = {
       // (Note that this ignores logins being removed as that doesn't
       //  impair the 'undo' functionality of the import.)
       if (kPasswordManagerTopicTypes.has(data)) {
-        this.removeUndoOption(this.UNDO_REMOVED_REASON_PASSWORD_CHANGE);
+        // Ignore chrome:// things like sync credentials:
+        let loginInfo = subject.QueryInterface(Ci.nsILoginInfo);
+        if (!loginInfo.hostname || !loginInfo.hostname.startsWith("chrome://")) {
+          this.removeUndoOption(this.UNDO_REMOVED_REASON_PASSWORD_CHANGE);
+        }
       }
     } else if (topic == kSyncTopic) {
       this.removeUndoOption(this.UNDO_REMOVED_REASON_SYNC_SIGNIN);
