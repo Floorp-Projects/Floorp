@@ -13,6 +13,7 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/VREventObserver.h"
 #include "mozilla/dom/WindowBinding.h" // for FrameRequestCallback
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/layers/TextureClient.h"
 #include "nsContentUtils.h"
 
@@ -564,6 +565,12 @@ VRManagerChild::RemoveListener(dom::VREventObserver* aObserver)
   if (mListeners.IsEmpty()) {
     Unused << SendSetHaveEventListener(false);
   }
+}
+
+void
+VRManagerChild::FatalError(const char* const aName, const char* const aMsg) const
+{
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }
 
 } // namespace gfx
