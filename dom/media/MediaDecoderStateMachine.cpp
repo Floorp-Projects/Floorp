@@ -221,6 +221,12 @@ public:
 
   virtual bool HandleEndOfStream() { return false; }
 
+  virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget)
+  {
+    MOZ_ASSERT(false, "Can't seek in this state");
+    return nullptr;
+  }
+
 protected:
   using Master = MediaDecoderStateMachine;
   explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
@@ -376,6 +382,14 @@ public:
     SetState(DECODER_STATE_DECODING_FIRSTFRAME);
     return true;
   }
+
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    SLOG("Not Enough Data to seek at this stage, queuing seek");
+    mMaster->mQueuedSeek.RejectIfExists(__func__);
+    mMaster->mQueuedSeek.mTarget = aTarget;
+    return mMaster->mQueuedSeek.mPromise.Ensure(__func__);
+  }
 };
 
 class MediaDecoderStateMachine::DormantState
@@ -406,6 +420,14 @@ public:
       SetState(DECODER_STATE_DECODING_METADATA);
     }
     return true;
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    SLOG("Not Enough Data to seek at this stage, queuing seek");
+    mMaster->mQueuedSeek.RejectIfExists(__func__);
+    mMaster->mQueuedSeek.mTarget = aTarget;
+    return mMaster->mQueuedSeek.mPromise.Ensure(__func__);
   }
 };
 
@@ -443,6 +465,26 @@ public:
   {
     MaybeFinishDecodeFirstFrame();
     return true;
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    // Should've transitioned to DECODING in Enter()
+    // if mSentFirstFrameLoadedEvent is true.
+    MOZ_ASSERT(!mMaster->mSentFirstFrameLoadedEvent);
+
+    if (!Reader()->ForceZeroStartTime()) {
+      SLOG("Not Enough Data to seek at this stage, queuing seek");
+      mMaster->mQueuedSeek.RejectIfExists(__func__);
+      mMaster->mQueuedSeek.mTarget = aTarget;
+      return mMaster->mQueuedSeek.mPromise.Ensure(__func__);
+    }
+
+    mMaster->mQueuedSeek.RejectIfExists(__func__);
+    SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
+    SeekJob seekJob;
+    seekJob.mTarget = aTarget;
+    return mMaster->InitiateSeek(Move(seekJob));
   }
 
 private:
@@ -546,6 +588,15 @@ public:
     return true;
   }
 
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    mMaster->mQueuedSeek.RejectIfExists(__func__);
+    SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
+    SeekJob seekJob;
+    seekJob.mTarget = aTarget;
+    return mMaster->InitiateSeek(Move(seekJob));
+  }
+
 private:
   void CheckSlowDecoding(TimeStamp aDecodeStart)
   {
@@ -631,6 +682,15 @@ public:
   {
     MOZ_ASSERT(false);
     return true;
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    mMaster->mQueuedSeek.RejectIfExists(__func__);
+    SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
+    SeekJob seekJob;
+    seekJob.mTarget = aTarget;
+    return mMaster->InitiateSeek(Move(seekJob));
   }
 };
 
@@ -733,6 +793,15 @@ public:
     return true;
   }
 
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    mMaster->mQueuedSeek.RejectIfExists(__func__);
+    SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
+    SeekJob seekJob;
+    seekJob.mTarget = aTarget;
+    return mMaster->InitiateSeek(Move(seekJob));
+  }
+
 private:
   TimeStamp mBufferingStart;
 };
@@ -799,6 +868,15 @@ public:
   State GetState() const override
   {
     return DECODER_STATE_COMPLETED;
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    mMaster->mQueuedSeek.RejectIfExists(__func__);
+    SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
+    SeekJob seekJob;
+    seekJob.mTarget = aTarget;
+    return mMaster->InitiateSeek(Move(seekJob));
   }
 
 private:
@@ -1945,24 +2023,7 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
 
   MOZ_ASSERT(mDuration.Ref().isSome(), "We should have got duration already");
 
-  // Can't seek until the start time is known.
-  bool hasStartTime = mSentFirstFrameLoadedEvent || mReader->ForceZeroStartTime();
-  // Can't seek when state is WAIT_FOR_CDM or DORMANT.
-  bool stateAllowed = mState >= DECODER_STATE_DECODING_FIRSTFRAME;
-
-  if (!stateAllowed || !hasStartTime) {
-    DECODER_LOG("Seek() Not Enough Data to continue at this stage, queuing seek");
-    mQueuedSeek.RejectIfExists(__func__);
-    mQueuedSeek.mTarget = aTarget;
-    return mQueuedSeek.mPromise.Ensure(__func__);
-  }
-  mQueuedSeek.RejectIfExists(__func__);
-
-  DECODER_LOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
-
-  SeekJob seekJob;
-  seekJob.mTarget = aTarget;
-  return InitiateSeek(Move(seekJob));
+  return mStateObj->HandleSeek(aTarget);
 }
 
 RefPtr<MediaDecoder::SeekPromise>
