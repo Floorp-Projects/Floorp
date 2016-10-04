@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Classifier.h"
+#include "LookupCacheV4.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsISimpleEnumerator.h"
@@ -946,7 +947,14 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
     return NS_ERROR_FAILURE;
   }
 
-  PrefixStringMap prefixes;
+  nsresult rv = NS_OK;
+
+  // prefixes2 is only used in partial update. If there are multiple
+  // updates for the same table, prefixes1 & prefixes2 will act as
+  // input and output in turn to reduce memory copy overhead.
+  PrefixStringMap prefixes1, prefixes2;
+  PrefixStringMap* output = &prefixes1;
+
   for (uint32_t i = 0; i < aUpdates->Length(); i++) {
     TableUpdate *update = aUpdates->ElementAt(i);
     if (!update || !update->TableName().Equals(aTable)) {
@@ -957,23 +965,44 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
     NS_ENSURE_TRUE(updateV4, NS_ERROR_FAILURE);
 
     if (updateV4->IsFullUpdate()) {
-      prefixes.Clear();
-      TableUpdateV4::PrefixesStringMap& map = updateV4->Prefixes();
+      TableUpdateV4::PrefixStdStringMap& map = updateV4->Prefixes();
 
+      output->Clear();
       for (auto iter = map.Iter(); !iter.Done(); iter.Next()) {
         // prefixes is an nsClassHashtable object stores prefix string.
         // It will take the ownership of the put object.
         nsCString* prefix = new nsCString(iter.Data()->GetPrefixString());
-        prefixes.Put(iter.Key(), prefix);
+        output->Put(iter.Key(), prefix);
       }
     } else {
-      // TODO: Bug 1287058, partial update
+      PrefixStringMap* input = nullptr;
+      // If both prefix sets are empty, this means we are doing a partial update
+      // without a prior full/partial update in the loop. In this case we should
+      // get prefixes from the lookup cache first.
+      if (prefixes1.IsEmpty() && prefixes2.IsEmpty()) {
+        lookupCache->GetPrefixes(prefixes1);
+        input = &prefixes1;
+        output = &prefixes2;
+      } else {
+        MOZ_ASSERT(prefixes1.IsEmpty() ^ prefixes2.IsEmpty());
+
+        // When there are multiple partial updates, input should always point
+        // to the non-empty prefix set(filled by previous full/partial update).
+        // output should always point to the empty prefix set.
+        input = prefixes1.IsEmpty() ? &prefixes2 : &prefixes1;
+        output = prefixes1.IsEmpty() ? &prefixes1 : &prefixes2;
+      }
+
+      rv = lookupCache->ApplyPartialUpdate(updateV4, *input, *output);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      input->Clear();
     }
 
     aUpdates->ElementAt(i) = nullptr;
   }
 
-  nsresult rv = lookupCache->Build(prefixes);
+  rv = lookupCache->Build(*output);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = lookupCache->WriteFile();

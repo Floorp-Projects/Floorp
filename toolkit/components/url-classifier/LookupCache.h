@@ -202,33 +202,6 @@ private:
   RefPtr<nsUrlClassifierPrefixSet> mPrefixSet;
 };
 
-class LookupCacheV4 final : public LookupCache
-{
-public:
-  explicit LookupCacheV4(const nsACString& aTableName, nsIFile* aStoreFile)
-    : LookupCache(aTableName, aStoreFile) {}
-  ~LookupCacheV4() {}
-
-  virtual nsresult Init() override;
-  virtual nsresult Has(const Completion& aCompletion,
-                       bool* aHas, bool* aComplete) override;
-
-  nsresult Build(PrefixStringMap& aPrefixMap);
-
-  static const int VER;
-
-protected:
-  virtual nsresult ClearPrefixes() override;
-  virtual nsresult StoreToFile(nsIFile* aFile) override;
-  virtual nsresult LoadFromFile(nsIFile* aFile) override;
-  virtual size_t SizeOfPrefixSet() override;
-
-private:
-  virtual int Ver() const override { return VER; }
-
-  RefPtr<VariableLengthPrefixSet> mVLPrefixSet;
-};
-
 } // namespace safebrowsing
 } // namespace mozilla
 
