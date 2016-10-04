@@ -41,7 +41,6 @@ namespace mozilla {
 namespace safebrowsing {
 
 const int LookupCacheV2::VER = 2;
-const int LookupCacheV4::VER = 4;
 
 LookupCache::LookupCache(const nsACString& aTableName, nsIFile* aRootStoreDir)
   : mPrimed(false)
@@ -587,57 +586,6 @@ LookupCacheV2::DumpCompletions()
   }
 }
 #endif
-
-nsresult
-LookupCacheV4::Init()
-{
-  mVLPrefixSet = new VariableLengthPrefixSet();
-  nsresult rv = mVLPrefixSet->Init(mTableName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-// TODO : Bug 1298257, Implement url matching for variable-length prefix set
-nsresult
-LookupCacheV4::Has(const Completion& aCompletion,
-                   bool* aHas, bool* aComplete)
-{
-  *aHas = false;
-  return NS_OK;
-}
-
-nsresult
-LookupCacheV4::Build(PrefixStringMap& aPrefixMap)
-{
-  return mVLPrefixSet->SetPrefixes(aPrefixMap);
-}
-
-nsresult
-LookupCacheV4::ClearPrefixes()
-{
-  // Clear by seting a empty map
-  PrefixStringMap map;
-  return mVLPrefixSet->SetPrefixes(map);
-}
-
-nsresult
-LookupCacheV4::StoreToFile(nsIFile* aFile)
-{
-  return mVLPrefixSet->StoreToFile(aFile);
-}
-
-nsresult
-LookupCacheV4::LoadFromFile(nsIFile* aFile)
-{
-  return mVLPrefixSet->LoadFromFile(aFile);
-}
-
-size_t
-LookupCacheV4::SizeOfPrefixSet()
-{
-  return mVLPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
-}
 
 } // namespace safebrowsing
 } // namespace mozilla
