@@ -203,7 +203,7 @@ SetFromTanRadians(double left, double right, double bottom, double top)
 VRDisplayOSVR::VRDisplayOSVR(OSVR_ClientContext* context,
                          OSVR_ClientInterface* iface,
                          OSVR_DisplayConfig* display)
-  : VRDisplayHost(VRDisplayType::OSVR)
+  : VRDisplayHost(VRDeviceType::OSVR)
   , m_ctx(context)
   , m_iface(iface)
   , m_display(display)

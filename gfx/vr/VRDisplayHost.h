@@ -52,7 +52,7 @@ public:
   bool CheckClearDisplayInfoDirty();
 
 protected:
-  explicit VRDisplayHost(VRDisplayType aType);
+  explicit VRDisplayHost(VRDeviceType aType);
   virtual ~VRDisplayHost();
 
 #if defined(XP_WIN)
