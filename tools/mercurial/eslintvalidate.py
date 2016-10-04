@@ -8,7 +8,7 @@ import json
 from subprocess import check_output, CalledProcessError
 
 lintable = re.compile(r'.+\.(?:js|jsm|jsx|xml|html)$')
-ignored = "File ignored because of your .eslintignore file. Use --no-ignore to override."
+ignored = 'File ignored because of a matching ignore pattern. Use "--no-ignore" to override.'
 
 def is_lintable(filename):
     return lintable.match(filename)
@@ -21,7 +21,10 @@ def display(ui, output):
             if message["message"] == ignored:
                 continue
 
-            ui.warn("%s:%d:%d %s\n" % (path, message["line"], message["column"], message["message"]))
+            if "line" in message:
+                ui.warn("%s:%d:%d %s\n" % (path, message["line"], message["column"], message["message"]))
+            else:
+                ui.warn("%s: %s\n" % (path, message["message"]))
 
 def eslinthook(ui, repo, node=None, **opts):
     ctx = repo[node]
