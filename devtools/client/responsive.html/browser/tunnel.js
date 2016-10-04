@@ -177,8 +177,8 @@ function tunnelToInnerBrowser(outer, inner) {
 
       // Wants to access the content's `frameLoader`, so we'll redirect it to
       // inner browser.
-      outer.setDocShellIsActiveAndForeground = value => {
-        inner.frameLoader.tabParent.setDocShellIsActiveAndForeground(value);
+      outer.preserveLayers = value => {
+        inner.frameLoader.tabParent.preserveLayers(value);
       };
 
       // Make the PopupNotifications object available on the iframe's owner
@@ -218,7 +218,7 @@ function tunnelToInnerBrowser(outer, inner) {
       delete outer.isRemoteBrowser;
       delete outer.hasContentOpener;
       delete outer.docShellIsActive;
-      delete outer.setDocShellIsActiveAndForeground;
+      delete outer.preserveLayers;
 
       // Delete the PopupNotifications getter added for permission doorhangers
       delete inner.ownerGlobal.PopupNotifications;
