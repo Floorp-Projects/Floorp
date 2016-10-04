@@ -730,23 +730,7 @@ private:
             VideoPrerollFrames() * mPlaybackRate + 1;
   }
 
-  void StopPrerollingAudio()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    if (mIsAudioPrerolling) {
-      mIsAudioPrerolling = false;
-      ScheduleStateMachine();
-    }
-  }
-
-  void StopPrerollingVideo()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    if (mIsVideoPrerolling) {
-      mIsVideoPrerolling = false;
-      ScheduleStateMachine();
-    }
-  }
+  void MaybeStopPrerolling();
 
   // When we start decoding (either for the first time, or after a pause)
   // we may be low on decoded data. We don't want our "low data" logic to
@@ -754,10 +738,8 @@ private:
   // can't keep up with the decode, and cause us to pause playback. So we
   // have a "preroll" stage, where we ignore the results of our "low data"
   // logic during the first few frames of our decode. This occurs during
-  // playback. The flags below are true when the corresponding stream is
-  // being "prerolled".
-  bool mIsAudioPrerolling;
-  bool mIsVideoPrerolling;
+  // playback.
+  bool mIsPrerolling = false;
 
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.

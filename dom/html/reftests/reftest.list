@@ -44,8 +44,8 @@ fuzzy(1,149) == bug917595-iframe-1.html    bug917595-1-ref.html
 skip-if(B2G||Mulet) fuzzy-if((!B2G&&!Mulet),3,640) == bug917595-exif-rotated.jpg bug917595-pixel-rotated.jpg # bug 1060869 # Bug 1150490 disabling on Mulet as on B2G
 
 # Test support for SVG-as-image in <picture> elements.
-pref(dom.image.picture.enabled,true) pref(dom.image.srcset.enabled,true) == bug1106522-1.html bug1106522-ref.html
-pref(dom.image.picture.enabled,true) pref(dom.image.srcset.enabled,true) == bug1106522-2.html bug1106522-ref.html
+== bug1106522-1.html bug1106522-ref.html
+== bug1106522-2.html bug1106522-ref.html
 
 == href-attr-change-restyles.html href-attr-change-restyles-ref.html
 == figure.html figure-ref.html

@@ -167,9 +167,10 @@ public:
   {
     GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
   }
-  nsIDocument* GetSVGDocument()
+  nsIDocument*
+  GetSVGDocument(const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal)
   {
-    return GetContentDocument();
+    return GetContentDocument(aSubjectPrincipal);
   }
   bool Mozbrowser() const
   {

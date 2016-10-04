@@ -20,9 +20,6 @@ exclude = [
 [dependencies]
 "mp4parse" = {version = "0.5.1", path = "../mp4parse"}
 
-[features]
-fuzz = ["mp4parse/fuzz"]
-
 # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
 [profile.release]
 debug-assertions = true

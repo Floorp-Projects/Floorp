@@ -437,11 +437,8 @@ public:
 
     mDecodeStartTime = TimeStamp::Now();
 
-    // Reset other state to pristine values before starting decode.
-    mMaster->mIsAudioPrerolling = !mMaster->DonePrerollingAudio() &&
-                                  !Reader()->IsWaitingAudioData();
-    mMaster->mIsVideoPrerolling = !mMaster->DonePrerollingVideo() &&
-                                  !Reader()->IsWaitingVideoData();
+    mMaster->mIsPrerolling = true;
+    mMaster->MaybeStopPrerolling();
 
     // Ensure that we've got tasks enqueued to decode data if we need to.
     mMaster->DispatchDecodeTasksIfNeeded();
@@ -455,6 +452,7 @@ public:
       TimeDuration decodeDuration = TimeStamp::Now() - mDecodeStartTime;
       SLOG("Exiting DECODING, decoded for %.3lfs", decodeDuration.ToSeconds());
     }
+    mMaster->mIsPrerolling = false;
   }
 
   void Step() override
@@ -718,8 +716,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mPlaybackRate(1.0),
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
-  mIsAudioPrerolling(false),
-  mIsVideoPrerolling(false),
   mAudioCaptured(false),
   INIT_WATCHABLE(mAudioCompleted, false),
   INIT_WATCHABLE(mVideoCompleted, false),
@@ -989,12 +985,11 @@ MediaDecoderStateMachine::NeedToSkipToNextKeyframe()
   // readers that are async, as since their audio decode runs on a different
   // task queue it should never run low and skipping won't help their decode.
   bool isLowOnDecodedAudio = !mReader->IsAsync() &&
-                             !mIsAudioPrerolling && IsAudioDecoding() &&
+                             IsAudioDecoding() &&
                              (GetDecodedAudioDuration() <
                               mLowAudioThresholdUsecs * mPlaybackRate);
-  bool isLowOnDecodedVideo = !mIsVideoPrerolling &&
-                             ((GetClock() - mDecodedVideoEndTime) * mPlaybackRate >
-                              LOW_VIDEO_THRESHOLD_USECS);
+  bool isLowOnDecodedVideo = (GetClock() - mDecodedVideoEndTime) * mPlaybackRate >
+                             LOW_VIDEO_THRESHOLD_USECS;
   bool lowBuffered = HasLowBufferedData();
 
   if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !lowBuffered) {
@@ -1050,9 +1045,7 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
 
     case DECODER_STATE_DECODING: {
       Push(audio, MediaData::AUDIO_DATA);
-      if (mIsAudioPrerolling && DonePrerollingAudio()) {
-        StopPrerollingAudio();
-      }
+      MaybeStopPrerolling();
       return;
     }
 
@@ -1128,15 +1121,7 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     MOZ_ASSERT(mReader->IsWaitForDataSupported(),
                "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     mReader->WaitForData(aType);
-
-    // We are out of data to decode and will enter buffering mode soon.
-    // We want to play the frames we have already decoded, so we stop pre-rolling
-    // and ensure that loadeddata is fired as required.
-    if (isAudio) {
-      StopPrerollingAudio();
-    } else {
-      StopPrerollingVideo();
-    }
+    MaybeStopPrerolling();
     return;
   }
 
@@ -1159,11 +1144,12 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   // state.
   if (isAudio) {
     AudioQueue().Finish();
-    StopPrerollingAudio();
   } else {
     VideoQueue().Finish();
-    StopPrerollingVideo();
   }
+
+  MaybeStopPrerolling();
+
   switch (mState) {
     case DECODER_STATE_DECODING_FIRSTFRAME:
       MaybeFinishDecodeFirstFrame();
@@ -1238,9 +1224,7 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
 
     case DECODER_STATE_DECODING: {
       Push(video, MediaData::VIDEO_DATA);
-      if (mIsVideoPrerolling && DonePrerollingVideo()) {
-        StopPrerollingVideo();
-      }
+      MaybeStopPrerolling();
 
       // For non async readers, if the requested video sample was slow to
       // arrive, increase the amount of audio we buffer to ensure that we
@@ -1400,6 +1384,19 @@ void MediaDecoderStateMachine::StopPlayback()
   DispatchDecodeTasksIfNeeded();
 }
 
+void
+MediaDecoderStateMachine::MaybeStopPrerolling()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  if (mIsPrerolling &&
+      (DonePrerollingAudio() || mReader->IsWaitingAudioData()) &&
+      (DonePrerollingVideo() || mReader->IsWaitingVideoData())) {
+    mIsPrerolling = false;
+    // Check if we can start playback.
+    ScheduleStateMachine();
+  }
+}
+
 void MediaDecoderStateMachine::MaybeStartPlayback()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -1414,13 +1411,10 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   bool playStatePermits = mPlayState == MediaDecoder::PLAY_STATE_PLAYING;
-  if (!playStatePermits || mIsAudioPrerolling ||
-      mIsVideoPrerolling || mAudioOffloading) {
+  if (!playStatePermits || mIsPrerolling || mAudioOffloading) {
     DECODER_LOG("Not starting playback [playStatePermits: %d, "
-                "mIsAudioPrerolling: %d, mIsVideoPrerolling: %d, "
-                "mAudioOffloading: %d]",
-                (int)playStatePermits, (int)mIsAudioPrerolling,
-                (int)mIsVideoPrerolling, (int)mAudioOffloading);
+                "mIsPrerolling: %d, mAudioOffloading: %d]",
+                playStatePermits, mIsPrerolling, mAudioOffloading);
     return;
   }
 
@@ -2110,12 +2104,10 @@ MediaDecoderStateMachine::OnSeekTaskResolved(SeekTaskResolveValue aValue)
 
   if (aValue.mIsAudioQueueFinished) {
     AudioQueue().Finish();
-    StopPrerollingAudio();
   }
 
   if (aValue.mIsVideoQueueFinished) {
     VideoQueue().Finish();
-    StopPrerollingVideo();
   }
 
   SeekCompleted();
@@ -2131,12 +2123,10 @@ MediaDecoderStateMachine::OnSeekTaskRejected(SeekTaskRejectValue aValue)
 
   if (aValue.mIsAudioQueueFinished) {
     AudioQueue().Finish();
-    StopPrerollingAudio();
   }
 
   if (aValue.mIsVideoQueueFinished) {
     VideoQueue().Finish();
-    StopPrerollingVideo();
   }
 
   DecodeError(aValue.mError);
@@ -2765,13 +2755,7 @@ MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
   mPlaybackRate = aPlaybackRate;
   mMediaSink->SetPlaybackRate(mPlaybackRate);
 
-  if (mIsAudioPrerolling && DonePrerollingAudio()) {
-    StopPrerollingAudio();
-  }
-  if (mIsVideoPrerolling && DonePrerollingVideo()) {
-    StopPrerollingVideo();
-  }
-
+  // Schedule next cycle to check if we can stop prerolling.
   ScheduleStateMachine();
 }
 
@@ -2933,9 +2917,8 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
   mAmpleAudioThresholdUsecs = mAudioCaptured ?
                               detail::AMPLE_AUDIO_USECS / 2 :
                               detail::AMPLE_AUDIO_USECS;
-  if (mIsAudioPrerolling && DonePrerollingAudio()) {
-    StopPrerollingAudio();
-  }
+
+  MaybeStopPrerolling();
 }
 
 uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
@@ -2959,12 +2942,11 @@ MediaDecoderStateMachine::DumpDebugInfo()
       "GetMediaTime=%lld GetClock=%lld mMediaSink=%p "
       "mState=%s mPlayState=%d mSentFirstFrameLoadedEvent=%d IsPlaying=%d "
       "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%lld mDecodedVideoEndTime=%lld "
-      "mIsAudioPrerolling=%d mIsVideoPrerolling=%d "
-      "mAudioCompleted=%d mVideoCompleted=%d",
+      "mIsPrerolling=%d mAudioCompleted=%d mVideoCompleted=%d",
       GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1, mMediaSink.get(),
       ToStateStr(), mPlayState.Ref(), mSentFirstFrameLoadedEvent, IsPlaying(),
       AudioRequestStatus(), VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
-      mIsAudioPrerolling, mIsVideoPrerolling, mAudioCompleted.Ref(), mVideoCompleted.Ref());
+      mIsPrerolling, mAudioCompleted.Ref(), mVideoCompleted.Ref());
   });
 
   OwnerThread()->DispatchStateChange(r.forget());

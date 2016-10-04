@@ -367,7 +367,7 @@ XRE_InitChildProcess(int aArgc,
 #endif
 
   // NB: This must be called before profiler_init
-  NS_LogInit();
+  ScopedLogging logger;
 
   // This is needed by Telemetry to initialize histogram collection.
   // NB: This must be called after NS_LogInit().
@@ -380,7 +380,7 @@ XRE_InitChildProcess(int aArgc,
   mozilla::LogModule::Init();
 
   char aLocal;
-  profiler_init(&aLocal);
+  GeckoProfilerInitRAII profiler(&aLocal);
 
   PROFILER_LABEL("Startup", "XRE_InitChildProcess",
     js::ProfileEntry::Category::OTHER);
@@ -559,8 +559,6 @@ XRE_InitChildProcess(int aArgc,
 
   nsresult rv = XRE_InitCommandLine(aArgc, aArgv);
   if (NS_FAILED(rv)) {
-    profiler_shutdown();
-    NS_LogTerm();
     return NS_ERROR_FAILURE;
   }
 
@@ -669,8 +667,6 @@ XRE_InitChildProcess(int aArgc,
       }
 
       if (!process->Init()) {
-        profiler_shutdown();
-        NS_LogTerm();
         return NS_ERROR_FAILURE;
       }
 
@@ -717,8 +713,6 @@ XRE_InitChildProcess(int aArgc,
   }
 
   Telemetry::DestroyStatisticsRecorder();
-  profiler_shutdown();
-  NS_LogTerm();
   return XRE_DeinitCommandLine();
 }
 

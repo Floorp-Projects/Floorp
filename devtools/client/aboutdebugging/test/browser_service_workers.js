@@ -31,18 +31,12 @@ add_task(function* () {
   ok(names.includes(SERVICE_WORKER),
     "The service worker url appears in the list: " + names);
 
-  // Finally, unregister the service worker itself
-  let aboutDebuggingUpdate = waitForMutation(serviceWorkersElement,
-    { childList: true });
-
   try {
-    yield unregisterServiceWorker(swTab);
+    yield unregisterServiceWorker(swTab, serviceWorkersElement);
     ok(true, "Service worker registration unregistered");
   } catch (e) {
     ok(false, "SW not unregistered; " + e);
   }
-
-  yield aboutDebuggingUpdate;
 
   // Check that the service worker disappeared from the UI
   names = [...document.querySelectorAll("#service-workers .target-name")];

@@ -22,7 +22,7 @@ interface HTMLImageElement : HTMLElement {
            attribute DOMString alt;
            [SetterThrows]
            attribute DOMString src;
-           [SetterThrows, Pref="dom.image.srcset.enabled"]
+           [SetterThrows]
            attribute DOMString srcset;
            [SetterThrows]
            attribute DOMString? crossOrigin;
@@ -60,9 +60,8 @@ partial interface HTMLImageElement {
 // [Update me: not in whatwg spec yet]
 // http://picture.responsiveimages.org/#the-img-element
 partial interface HTMLImageElement {
-           [SetterThrows, Pref="dom.image.picture.enabled"]
+           [SetterThrows]
            attribute DOMString sizes;
-           [Pref="dom.image.srcset.enabled"]
   readonly attribute DOMString currentSrc;
 };
 

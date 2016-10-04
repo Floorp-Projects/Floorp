@@ -156,7 +156,10 @@ public:
     SetHTMLAttr(nsGkAtoms::height, aValue, aRv);
   }
   using nsObjectLoadingContent::GetContentDocument;
-  nsPIDOMWindowOuter* GetContentWindow();
+
+  nsPIDOMWindowOuter*
+  GetContentWindow(const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal);
+
   using nsIConstraintValidation::CheckValidity;
   using nsIConstraintValidation::ReportValidity;
   using nsIConstraintValidation::GetValidationMessage;
@@ -234,9 +237,11 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::border, aValue, aRv);
   }
-  nsIDocument* GetSVGDocument()
+
+  nsIDocument*
+  GetSVGDocument(const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal)
   {
-    return GetContentDocument();
+    return GetContentDocument(aSubjectPrincipal);
   }
 
 private:
