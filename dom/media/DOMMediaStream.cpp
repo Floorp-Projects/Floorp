@@ -60,9 +60,7 @@ DOMMediaStream::TrackPort::TrackPort(MediaInputPort* aInputPort,
   , mTrack(aTrack)
   , mOwnership(aOwnership)
 {
-  // XXX Bug 1124630. nsDOMCameraControl requires adding a track without and
-  // input port.
-  // MOZ_ASSERT(mInputPort);
+  MOZ_ASSERT(mInputPort);
   MOZ_ASSERT(mTrack);
 
   MOZ_COUNT_CTOR(TrackPort);
@@ -1277,14 +1275,6 @@ DOMMediaStream::DispatchTrackEvent(const nsAString& aName,
     MediaStreamTrackEvent::Constructor(this, aName, init);
 
   return DispatchTrustedEvent(event);
-}
-
-void
-DOMMediaStream::CreateAndAddPlaybackStreamListener(MediaStream* aStream)
-{
-  MOZ_ASSERT(GetCameraStream(), "I'm a hack. Only DOMCameraControl may use me.");
-  mPlaybackListener = new PlaybackStreamListener(this);
-  aStream->AddListener(mPlaybackListener);
 }
 
 void
