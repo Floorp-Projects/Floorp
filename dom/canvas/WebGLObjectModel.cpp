@@ -16,7 +16,7 @@ WebGLContextBoundObject::WebGLContextBoundObject(WebGLContext* webgl)
 }
 
 bool
-WebGLContextBoundObject::IsCompatibleWithContext(WebGLContext* other)
+WebGLContextBoundObject::IsCompatibleWithContext(const WebGLContext* other) const
 {
     return (mContext == other &&
             mContextGeneration == other->Generation());
