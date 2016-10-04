@@ -9,16 +9,6 @@
 
 #include "mozilla/EndianUtils.h"
 
-#if defined(MOZ_LITTLE_ENDIAN)
-# define IS_LITTLE_ENDIAN 1
-# undef  IS_BIG_ENDIAN
-#elif defined(MOZ_BIG_ENDIAN)
-# undef  IS_LITTLE_ENDIAN
-# define IS_BIG_ENDIAN 1
-#else
-# error "Cannot determine endianness of your platform. Please add support to jscpucfg.h."
-#endif
-
 #ifndef JS_STACK_GROWTH_DIRECTION
 # ifdef __hppa
 #  define JS_STACK_GROWTH_DIRECTION (1)
