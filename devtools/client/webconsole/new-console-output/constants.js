@@ -18,6 +18,23 @@ const actionTypes = {
   FILTER_BAR_TOGGLE: "FILTER_BAR_TOGGLE",
 };
 
+const prefs = {
+  PREFS: {
+    FILTER: {
+      ERROR: "devtools.webconsole.filter.error",
+      WARN: "devtools.webconsole.filter.warn",
+      INFO: "devtools.webconsole.filter.info",
+      LOG: "devtools.webconsole.filter.log",
+      DEBUG: "devtools.webconsole.filter.debug",
+      NET: "devtools.webconsole.filter.net",
+      NETXHR: "devtools.webconsole.filter.netxhr",
+    },
+    UI: {
+      FILTER_BAR: "devtools.webconsole.ui.filterbar"
+    }
+  }
+};
+
 const chromeRDPEnums = {
   MESSAGE_SOURCE: {
     XML: "xml",
@@ -61,4 +78,4 @@ const chromeRDPEnums = {
 };
 
 // Combine into a single constants object
-module.exports = Object.assign({}, actionTypes, chromeRDPEnums);
+module.exports = Object.assign({}, actionTypes, prefs, chromeRDPEnums);

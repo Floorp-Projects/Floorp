@@ -54,7 +54,11 @@ let Tabbar = createClass({
       newState.activeTab = tabs.length - 1;
     }
 
-    this.setState(newState);
+    this.setState(newState, () => {
+      if (this.props.onSelect && selected) {
+        this.props.onSelect(id);
+      }
+    });
   },
 
   toggleTab: function (tabId, isVisible) {

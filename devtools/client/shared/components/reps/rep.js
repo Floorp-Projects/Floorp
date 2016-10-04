@@ -102,7 +102,7 @@ define(function (require, exports, module) {
     let type = typeof object;
     if (type == "object" && object instanceof String) {
       type = "string";
-    } else if (type == "object" && object.type === "symbol") {
+    } else if (object && type == "object" && object.type === "symbol") {
       type = "symbol";
     }
 

@@ -13,6 +13,11 @@ const TEST_HTTPS_URI = "https://example.com/browser/devtools/client/" +
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/Security/" +
                        "Mixed_content";
 
+registerCleanupFunction(function*() {
+  Services.prefs.clearUserPref("security.mixed_content.block_display_content");
+  Services.prefs.clearUserPref("security.mixed_content.block_active_content");
+});
+
 add_task(function* () {
   Services.prefs.setBoolPref("security.mixed_content.block_display_content",
                              false);
@@ -24,9 +29,6 @@ add_task(function* () {
   let hud = yield openConsole();
 
   yield testMixedContent(hud);
-
-  Services.prefs.clearUserPref("security.mixed_content.block_display_content");
-  Services.prefs.clearUserPref("security.mixed_content.block_active_content");
 });
 
 var testMixedContent = Task.async(function* (hud) {

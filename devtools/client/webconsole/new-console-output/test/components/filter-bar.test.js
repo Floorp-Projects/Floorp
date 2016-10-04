@@ -9,7 +9,7 @@ const { render, mount } = require("enzyme");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const Provider = createFactory(require("react-redux").Provider);
 
-const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button").FilterButton);
+const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button"));
 const FilterBar = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
 const {

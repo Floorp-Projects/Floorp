@@ -5,21 +5,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const constants = require("devtools/client/webconsole/new-console-output/constants");
+const {
+  FILTER_BAR_TOGGLE,
+  MESSAGE_ADD,
+} = require("devtools/client/webconsole/new-console-output/constants");
 const Immutable = require("devtools/client/shared/vendor/immutable");
 
-const Ui = Immutable.Record({
+const UiState = Immutable.Record({
   filterBarVisible: false,
   filteredMessageVisible: false,
+  autoscroll: true,
 });
 
-function ui(state = new Ui(), action) {
+function ui(state = new UiState(), action) {
+  // Autoscroll should be set for all action types. If the last action was not message
+  // add, then turn it off. This prevents us from scrolling after someone toggles a
+  // filter, or to the bottom of the attachement when an expandable message at the bottom
+  // of the list is expanded. It does depend on the MESSAGE_ADD action being the last in
+  // its batch, though.
+  state = state.set("autoscroll", action.type == MESSAGE_ADD);
+
   switch (action.type) {
-    case constants.FILTER_BAR_TOGGLE:
+    case FILTER_BAR_TOGGLE:
       return state.set("filterBarVisible", !state.filterBarVisible);
   }
 
   return state;
 }
 
-exports.ui = ui;
+module.exports = {
+  UiState,
+  ui,
+};

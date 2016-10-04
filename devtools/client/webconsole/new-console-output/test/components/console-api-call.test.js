@@ -10,7 +10,7 @@ const { render } = require("enzyme");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
 // Components under test.
-const ConsoleApiCall = createFactory(require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call").ConsoleApiCall);
+const ConsoleApiCall = createFactory(require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call"));
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
@@ -27,6 +27,11 @@ describe("ConsoleAPICall component:", () => {
       expect(wrapper.find(".message-body").text()).toBe("foobar test");
       expect(wrapper.find(".objectBox-string").length).toBe(2);
       expect(wrapper.find("div.message.cm-s-mozilla span span.message-flex-body span.message-body.devtools-monospace").length).toBe(1);
+
+      // There should be the location
+      const locationLink = wrapper.find(`.message-location`);
+      expect(locationLink.length).toBe(1);
+      expect(locationLink.text()).toBe("test-tempfile.js:1:27");
     });
 
     it("renders repeat node", () => {
@@ -36,6 +41,7 @@ describe("ConsoleAPICall component:", () => {
       const wrapper = render(ConsoleApiCall({ message, onViewSourceInDebugger }));
 
       expect(wrapper.find(".message-repeats").text()).toBe("107");
+      expect(wrapper.find(".message-repeats").prop("title")).toBe("107 repeats");
 
       expect(wrapper.find("span > span.message-flex-body > span.message-body.devtools-monospace + span.message-repeats").length).toBe(1);
     });

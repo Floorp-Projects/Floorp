@@ -19,4 +19,4 @@ function DefaultRenderer(props) {
   );
 }
 
-module.exports.DefaultRenderer = DefaultRenderer;
+module.exports = DefaultRenderer;

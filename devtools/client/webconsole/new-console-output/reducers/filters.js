@@ -13,8 +13,8 @@ const FilterState = Immutable.Record({
   error: true,
   info: true,
   log: true,
-  network: true,
-  netxhr: true,
+  net: false,
+  netxhr: false,
   text: "",
   warn: true,
 });
