@@ -126,7 +126,7 @@ ClientCanvasLayer::RenderLayer()
 
   FirePreTransactionCallback();
   if (mBufferProvider && mBufferProvider->GetTextureClient()) {
-    if (!mBufferProvider->SetForwarder(mCanvasClient->GetForwarder())) {
+    if (!mBufferProvider->SetForwarder(ClientManager()->AsShadowForwarder())) {
       gfxCriticalNote << "BufferProvider::SetForwarder failed";
       return;
     }

@@ -8,18 +8,11 @@
 #include "mozilla/dom/HTMLPictureElementBinding.h"
 #include "mozilla/dom/HTMLImageElement.h"
 
-#include "mozilla/Preferences.h"
-static const char *kPrefPictureEnabled = "dom.image.picture.enabled";
-
 // Expand NS_IMPL_NS_NEW_HTML_ELEMENT(Picture) to add pref check.
 nsGenericHTMLElement*
 NS_NewHTMLPictureElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                          mozilla::dom::FromParser aFromParser)
 {
-  if (!mozilla::dom::HTMLPictureElement::IsPictureEnabled()) {
-    return new mozilla::dom::HTMLUnknownElement(aNodeInfo);
-  }
-
   return new mozilla::dom::HTMLPictureElement(aNodeInfo);
 }
 
@@ -93,13 +86,6 @@ HTMLPictureElement::InsertChildAt(nsIContent* aKid, uint32_t aIndex, bool aNotif
   }
 
   return rv;
-}
-
-bool
-HTMLPictureElement::IsPictureEnabled()
-{
-  return HTMLImageElement::IsSrcsetEnabled() &&
-         Preferences::GetBool(kPrefPictureEnabled, false);
 }
 
 JSObject*

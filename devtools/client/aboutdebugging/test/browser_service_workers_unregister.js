@@ -39,6 +39,8 @@ add_task(function* () {
   // Check that the service worker appears in the UI.
   assertHasTarget(true, document, "service-workers", SERVICE_WORKER);
 
+  yield waitForServiceWorkerActivation(SERVICE_WORKER, document);
+
   info("Ensure that the registration resolved before trying to interact with " +
     "the service worker.");
   yield waitForServiceWorkerRegistered(swTab);

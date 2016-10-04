@@ -86,7 +86,7 @@ PersistentBufferProviderBasic::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFo
 already_AddRefed<PersistentBufferProviderShared>
 PersistentBufferProviderShared::Create(gfx::IntSize aSize,
                                        gfx::SurfaceFormat aFormat,
-                                       KnowsCompositor* aFwd)
+                                       ShadowLayerForwarder* aFwd)
 {
   if (!aFwd || !aFwd->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
@@ -110,7 +110,7 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
 
 PersistentBufferProviderShared::PersistentBufferProviderShared(gfx::IntSize aSize,
                                                                gfx::SurfaceFormat aFormat,
-                                                               KnowsCompositor* aFwd,
+                                                               ShadowLayerForwarder* aFwd,
                                                                RefPtr<TextureClient>& aTexture)
 
 : mSize(aSize)
@@ -136,7 +136,7 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared()
 }
 
 bool
-PersistentBufferProviderShared::SetForwarder(KnowsCompositor* aFwd)
+PersistentBufferProviderShared::SetForwarder(ShadowLayerForwarder* aFwd)
 {
   MOZ_ASSERT(aFwd);
   if (!aFwd) {

@@ -15,6 +15,7 @@ import which
 
 from mach.mixin.logging import LoggingMixin
 from mach.mixin.process import ProcessExecutionMixin
+from mozversioncontrol import get_repository_object
 
 from .backend.configenvironment import ConfigEnvironment
 from .controller.clobber import Clobberer
@@ -280,6 +281,12 @@ class MozbuildObject(ProcessExecutionMixin):
                             key, value = e.split('=')
                             env[key] = value
         return env
+
+    @memoized_property
+    def repository(self):
+        '''Get a `mozversioncontrol.Repository` object for the
+        top source directory.'''
+        return get_repository_object(self.topsrcdir)
 
     def is_clobber_needed(self):
         if not os.path.exists(self.topobjdir):
@@ -648,8 +655,14 @@ class MachCommandBase(MozbuildObject):
                 # that objdir, not another one. This prevents accidental usage
                 # of the wrong objdir when the current objdir is ambiguous.
                 config_topobjdir = dummy.resolve_mozconfig_topobjdir()
-                if config_topobjdir and not samepath(topobjdir,
-                                                     config_topobjdir):
+
+                try:
+                    universal_bin = dummy.substs.get('UNIVERSAL_BINARY')
+                except:
+                    universal_bin = False
+
+                if config_topobjdir and not (samepath(topobjdir, config_topobjdir) or
+                        universal_bin and topobjdir.startswith(config_topobjdir)):
                     raise ObjdirMismatchException(topobjdir, config_topobjdir)
         except BuildEnvironmentNotFoundException:
             pass

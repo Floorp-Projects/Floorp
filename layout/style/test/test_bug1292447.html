@@ -1,11 +1,12 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=365932
+  Was for: https://bugzilla.mozilla.org/show_bug.cgi?id=365932
+  Updated for: https://bugzilla.mozilla.org/show_bug.cgi?id=1292447
 -->
 <head>
-  <title>Test for Bug 365932</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <title>Test for Bug 1292447</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style>
     #content {
@@ -35,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365932
   </style>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=365932">Mozilla Bug 365932</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1292447">Mozilla Bug 1292447</a>
 <p id="display"></p>
 <div id="content">
   <div id="indent1" style="text-indent: 400px"></div>
@@ -146,9 +147,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365932
        style="min-height: 75%; max-height: 40%"></div>
 
   <div id="radius1" style="border-radius: 80px"></div>
-  <div id="radius2" style="border-radius: 10% / 20%"></div>
+  <div id="radius2" style="border-radius: 20% / 20%"></div>
   <div id="outlineradius1" style="-moz-outline-radius: 160px"></div>
-  <div id="outlineradius2" style="-moz-outline-radius: 20% / 40%"></div>
+  <div id="outlineradius2" style="-moz-outline-radius: 20% / 20%"></div>
 </div>
 <div id="content2" style="display: none">
   <div id="indent3" style="text-indent: 400px"></div>
@@ -193,23 +194,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365932
   <div id="minmaxheight4-4" style="min-height: 75%; max-height: 40%"></div>
 
   <div id="radius3" style="border-radius: 80px"></div>
-  <div id="radius4" style="border-radius: 10%"></div>
+  <div id="radius4" style="border-radius: 20%"></div>
   <div id="outlineradius3" style="-moz-outline-radius: 160px"></div>
   <div id="outlineradius4" style="-moz-outline-radius: 20%"></div>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for Bug 365932 **/
+/** Test for Bug 1292447 **/
 
 document.body.offsetWidth;
 
 doATest("text-indent", "indent", 400, 50);
-doATest("border-top-left-radius", "radius", 80, 10);
+doATest("border-top-left-radius", "radius", 80, 20);
 doATest("-moz-outline-radius-topleft", "outlineradius", 160, 20);
 
-doATest("width", "widthheight-", 440, 0);
-doATest("height", "widthheight-", 0, 0);
+doATest("width", "widthheight-", 440, 0, true);
+doATest("height", "widthheight-", 0, 0, true);
 
 doATest("min-width", "minwidth1-", 200, 25);
 doATest("min-width", "minwidth2-", 600, 75);
@@ -223,25 +224,25 @@ doATest("max-width", "minmaxwidth3-", 320, 40);
 doATest("max-width", "minmaxwidth4-", 320, 40);
 
 // Test that max and min-width affect computed width correctly
-doATest("width", "minwidth1-", 400, 0);
-doATest("width", "minwidth2-", 600, 0);
-doATest("width", "minwidth3-", 440, 0);
-doATest("width", "minwidth4-", 600, 0);
-doATest("width", "maxwidth1-", 320, 0);
-doATest("width", "maxwidth2-", 400, 0);
-doATest("width", "maxwidth3-", 320, 0);
-doATest("width", "maxwidth4-", 440, 0);
-doATest("width", "minmaxwidth1-", 320, 0);
-doATest("width", "minmaxwidth2-", 320, 0);
-doATest("width", "minmaxwidth3-", 600, 0);
-doATest("width", "minmaxwidth4-", 600, 0);
-doATest("width", "minmaxwidth5-", 320, 0);
-doATest("width", "minmaxwidth6-", 320, 0);
-doATest("width", "minmaxwidth7-", 600, 0);
-doATest("width", "minmaxwidth8-", 320, 0);
-doATest("width", "minmaxwidth9-", 320, 0);
-doATest("width", "minmaxwidth10-", 600, 0);
-doATest("width", "minmaxwidth11-", 600, 0);
+doATest("width", "minwidth1-", 400, 0, true);
+doATest("width", "minwidth2-", 600, 0, true);
+doATest("width", "minwidth3-", 440, 0, true);
+doATest("width", "minwidth4-", 600, 0, true);
+doATest("width", "maxwidth1-", 320, 0, true);
+doATest("width", "maxwidth2-", 400, 0, true);
+doATest("width", "maxwidth3-", 320, 0, true);
+doATest("width", "maxwidth4-", 440, 0, true);
+doATest("width", "minmaxwidth1-", 320, 0, true);
+doATest("width", "minmaxwidth2-", 320, 0, true);
+doATest("width", "minmaxwidth3-", 600, 0, true);
+doATest("width", "minmaxwidth4-", 600, 0, true);
+doATest("width", "minmaxwidth5-", 320, 0, true);
+doATest("width", "minmaxwidth6-", 320, 0, true);
+doATest("width", "minmaxwidth7-", 600, 0, true);
+doATest("width", "minmaxwidth8-", 320, 0, true);
+doATest("width", "minmaxwidth9-", 320, 0, true);
+doATest("width", "minmaxwidth10-", 600, 0, true);
+doATest("width", "minmaxwidth11-", 600, 0, true);
 
 doATest("min-height", "minheight1-", 200, 25);
 doATest("min-height", "minheight2-", 600, 75);
@@ -255,37 +256,66 @@ doATest("max-height", "minmaxheight3-", 320, 40);
 doATest("max-height", "minmaxheight4-", 320, 40);
 
 // Test that max and min-height affect computed height correctly
-doATest("height", "minheight1-", 400, 0);
-doATest("height", "minheight2-", 600, 0);
-doATest("height", "minheight3-", 200, 0);
-doATest("height", "minheight4-", 600, 0);
-doATest("height", "maxheight1-", 320, 0);
-doATest("height", "maxheight2-", 400, 0);
-doATest("height", "maxheight3-", 0, 0);
-doATest("height", "maxheight4-", 0, 0);
-doATest("height", "minmaxheight1-", 320, 0);
-doATest("height", "minmaxheight2-", 320, 0);
-doATest("height", "minmaxheight3-", 600, 0);
-doATest("height", "minmaxheight4-", 600, 0);
-doATest("height", "minmaxheight5-", 320, 0);
-doATest("height", "minmaxheight6-", 320, 0);
-doATest("height", "minmaxheight7-", 600, 0);
-doATest("height", "minmaxheight8-", 200, 0);
-doATest("height", "minmaxheight9-", 200, 0);
-doATest("height", "minmaxheight10-", 600, 0);
-doATest("height", "minmaxheight11-", 600, 0);
+doATest("height", "minheight1-", 400, 0, true);
+doATest("height", "minheight2-", 600, 0, true);
+doATest("height", "minheight3-", 200, 0, true);
+doATest("height", "minheight4-", 600, 0, true);
+doATest("height", "maxheight1-", 320, 0, true);
+doATest("height", "maxheight2-", 400, 0, true);
+doATest("height", "maxheight3-", 0, 0, true);
+doATest("height", "maxheight4-", 0, 0, true);
+doATest("height", "minmaxheight1-", 320, 0, true);
+doATest("height", "minmaxheight2-", 320, 0, true);
+doATest("height", "minmaxheight3-", 600, 0, true);
+doATest("height", "minmaxheight4-", 600, 0, true);
+doATest("height", "minmaxheight5-", 320, 0, true);
+doATest("height", "minmaxheight6-", 320, 0, true);
+doATest("height", "minmaxheight7-", 600, 0, true);
+doATest("height", "minmaxheight8-", 200, 0, true);
+doATest("height", "minmaxheight9-", 200, 0, true);
+doATest("height", "minmaxheight10-", 600, 0, true);
+doATest("height", "minmaxheight11-", 600, 0, true);
 
 function style(id) {
   return document.defaultView.getComputedStyle($(id), "");
 }
 
 function round(num, decimals) {
-  return Math.round(num * Math.pow(10, decimals))/Math.pow(10, decimals);
+  return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
 }
 
-function doATest(propName, idBase, coordVal, percentVal)
-{
-  var cssPropertiesPropName = "";
+function coordValueTest(camelProp, cssProp, decl, coordVal, prettyName) {
+  is(decl[camelProp], coordVal + "px", prettyName);
+  is(decl.getPropertyCSSValue(cssProp).cssValueType,
+     CSSValue.CSS_PRIMITIVE_VALUE, prettyName + " is primitive value");
+  is(decl.getPropertyCSSValue(cssProp).primitiveType,
+     CSSPrimitiveValue.CSS_PX, prettyName + " is px");
+  is(decl.getPropertyCSSValue(cssProp).cssText, coordVal + "px",
+     prettyName + " cssText");
+  /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
+     places here. */
+  is(round(decl.getPropertyCSSValue(cssProp)
+               .getFloatValue(CSSPrimitiveValue.CSS_PX),
+           3), coordVal, prettyName + " as float value");
+}
+
+function percentValueTest(camelProp, cssProp, decl, percentVal, prettyName) {
+  is(decl[camelProp], percentVal + "%", prettyName);
+  is(decl.getPropertyCSSValue(cssProp).cssValueType,
+     CSSValue.CSS_PRIMITIVE_VALUE, prettyName + " is primitive value");
+  is(decl.getPropertyCSSValue(cssProp).primitiveType,
+     CSSPrimitiveValue.CSS_PERCENTAGE, prettyName + " is percent");
+  is(decl.getPropertyCSSValue(cssProp).cssText, percentVal + "%",
+     prettyName + " cssText");
+  /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
+     places here. */
+  is(round(decl.getPropertyCSSValue(cssProp)
+               .getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE),
+           3), percentVal, prettyName + " as float value");
+}
+
+function doATest(propName, idBase, coordVal, percentVal, resolveToUsedVal = false) {
+  var cssCamelPropName = "";
   var parts = propName.split("-");
   ok(parts.length > 0, "prop name", "Empty css prop name");
   var i;
@@ -294,94 +324,54 @@ function doATest(propName, idBase, coordVal, percentVal)
   } else {
     is(parts[1], "moz", "Testing an extension property that's not -moz");
     ok(parts.length > 2, "prop name 2", "Bogus -moz prop name");
-    cssPropertiesPropName = "Moz";
+    cssCamelPropName = "Moz";
     i = 2;
   }
   for (; i < parts.length; ++i) {
     var part = parts[i];
-    isnot(part, "", "Must have a nonempty part");             
-    if (cssPropertiesPropName) {
-      cssPropertiesPropName += part.charAt(0).toUpperCase() +
-                               part.substring(1, part.length);
+    isnot(part, "", "Must have a nonempty part");
+    if (cssCamelPropName) {
+      cssCamelPropName += part.charAt(0).toUpperCase() +
+                          part.substring(1, part.length);
     } else {
-      cssPropertiesPropName += part;
+      cssCamelPropName += part;
     }
   }
 
-  var decl = style(idBase+"1");
-  var prettyName = propName + " of " + idBase+"1";
+  /* Test $(id)-1 */
+  coordValueTest(cssCamelPropName, propName,
+                 style(idBase + "1"), coordVal,
+                 propName + " of " + idBase + "1");
 
-  is(decl[cssPropertiesPropName], coordVal+"px", prettyName);
-  is(decl.getPropertyCSSValue(propName).cssValueType,
-     CSSValue.CSS_PRIMITIVE_VALUE, prettyName + " is primitive value");
-  is(decl.getPropertyCSSValue(propName).primitiveType,
-     CSSPrimitiveValue.CSS_PX, prettyName + " is px");
-  is(decl.getPropertyCSSValue(propName).cssText, coordVal + "px",
-     prettyName + " cssText");
-  /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
-     places here. */
-  is(round(decl.getPropertyCSSValue(propName)
-               .getFloatValue(CSSPrimitiveValue.CSS_PX),
-           3), coordVal, prettyName + " as float value");
-
-  if (!$(idBase+"2")) {
+  if (!$(idBase + "2")) {
     // Nothing else to do here
     return
   }
 
-  decl = style(idBase+"2");
-  prettyName = propName + " of " + idBase+"2";
-
-  is(decl[cssPropertiesPropName], coordVal+"px", prettyName);
-  is(decl.getPropertyCSSValue(propName).cssValueType,
-     CSSValue.CSS_PRIMITIVE_VALUE, prettyName + " is primitive value");
-  is(decl.getPropertyCSSValue(propName).primitiveType,
-     CSSPrimitiveValue.CSS_PX, prettyName + " is px");
-  is(decl.getPropertyCSSValue(propName).cssText, coordVal + "px",
-     prettyName + " cssText");
-  /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
-     places here. */
-  is(round(decl.getPropertyCSSValue(propName)
-               .getFloatValue(CSSPrimitiveValue.CSS_PX),
-           3), coordVal, prettyName + " as float value");
+  /* Test $(id)-2 */
+  if (resolveToUsedVal) {
+    coordValueTest(cssCamelPropName, propName,
+                   style(idBase + "2"), coordVal,
+                   propName + " of " + idBase + "2");
+  } else {
+    percentValueTest(cssCamelPropName, propName,
+                     style(idBase + "2"), percentVal,
+                     propName + " of " + idBase + "2");
+  }
 
   if (percentVal) {
-    decl = style(idBase+"3");
-    prettyName = propName + " of " + idBase+"3";
-    
-    is(decl[cssPropertiesPropName], coordVal+"px", prettyName);
-    is(decl.getPropertyCSSValue(propName).cssValueType,
-       CSSValue.CSS_PRIMITIVE_VALUE, prettyName + " is primitive value");
-    is(decl.getPropertyCSSValue(propName).primitiveType,
-       CSSPrimitiveValue.CSS_PX, prettyName + " is px");
-    is(decl.getPropertyCSSValue(propName).cssText, coordVal + "px",
-       prettyName + " cssText");
-    /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
-       places here. */
-    is(round(decl.getPropertyCSSValue(propName)
-                 .getFloatValue(CSSPrimitiveValue.CSS_PX),
-             3), coordVal, prettyName + " as float value");
+    /* Test $(id)-3 */
+    coordValueTest(cssCamelPropName, propName,
+                   style(idBase + "3"), coordVal,
+                   propName + " of " + idBase + "3");
 
-    decl = style(idBase+"4");
-    prettyName = propName + " of " + idBase+"4";
-    
-    is(decl[cssPropertiesPropName], percentVal+"%", prettyName);
-    is(decl.getPropertyCSSValue(propName).cssValueType,
-       CSSValue.CSS_PRIMITIVE_VALUE, prettyName + " is primitive value");
-    is(decl.getPropertyCSSValue(propName).primitiveType,
-     CSSPrimitiveValue.CSS_PERCENTAGE, prettyName + " is percent");
-    is(decl.getPropertyCSSValue(propName).cssText, percentVal+"%",
-       prettyName + " cssText");
-    /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
-       places here. */
-    is(round(decl.getPropertyCSSValue(propName)
-                 .getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE),
-             3), percentVal, prettyName + " as float value");
-  
+    /* Test $(id)-4 */
+    percentValueTest(cssCamelPropName, propName,
+                     style(idBase + "4"), percentVal,
+                     propName + " of " + idBase + "4");
   }
 }
 </script>
 </pre>
 </body>
 </html>
-
