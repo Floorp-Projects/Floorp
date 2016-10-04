@@ -110,9 +110,12 @@ def DoSSHCommand(command, user, host, port=None, ssh_key=None):
 
     raise Exception("Command %s returned non-zero exit code" % cmdline)
 
-def DoSCPFile(file, remote_path, user, host, port=None, ssh_key=None):
+def DoSCPFile(file, remote_path, user, host, port=None, ssh_key=None,
+              log=False):
     """Upload file to user@host:remote_path using scp. Optionally use
     port and ssh_key, if provided."""
+    if log:
+        print 'Uploading %s' % file
     cmdline = ["scp"]
     AppendOptionalArgsToSSHCommandline(cmdline, port, ssh_key)
     cmdline.extend([WindowsPathToMsysPath(file),
@@ -248,9 +251,8 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
 
         for file in files:
             remote_path = get_remote_path(file)
-            if verbose:
-                print "Uploading " + file
-            DoSCPFile(file, remote_path, user, host, port=port, ssh_key=ssh_key)
+            DoSCPFile(file, remote_path, user, host, port=port, ssh_key=ssh_key,
+                      log=verbose)
             remote_files.append(remote_path + '/' + os.path.basename(file))
         if post_upload_command is not None:
             if verbose:
