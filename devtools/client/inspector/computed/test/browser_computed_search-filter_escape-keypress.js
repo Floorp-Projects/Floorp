@@ -4,6 +4,10 @@
 
 "use strict";
 
+// Avoid test timeouts on Linux debug builds where the test takes just a bit too long to
+// run (see bug 1258081).
+requestLongerTimeout(2);
+
 // Tests that search filter escape keypress will clear the search field.
 
 const TEST_URI = `
