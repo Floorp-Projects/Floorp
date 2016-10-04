@@ -4371,7 +4371,7 @@ nsComputedDOMStyle::DoGetAlignContent()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto align = StylePosition()->ComputedAlignContent();
+  auto align = StylePosition()->mAlignContent;
   nsCSSValue::AppendAlignJustifyValueToString(align & NS_STYLE_ALIGN_ALL_BITS, str);
   auto fallback = align >> NS_STYLE_ALIGN_ALL_SHIFT;
   if (fallback) {
@@ -4387,7 +4387,7 @@ nsComputedDOMStyle::DoGetAlignItems()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto align = StylePosition()->ComputedAlignItems();
+  auto align = StylePosition()->mAlignItems;
   nsCSSValue::AppendAlignJustifyValueToString(align, str);
   val->SetString(str);
   return val.forget();
@@ -4409,7 +4409,7 @@ nsComputedDOMStyle::DoGetJustifyContent()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto justify = StylePosition()->ComputedJustifyContent();
+  auto justify = StylePosition()->mJustifyContent;
   nsCSSValue::AppendAlignJustifyValueToString(justify & NS_STYLE_JUSTIFY_ALL_BITS, str);
   auto fallback = justify >> NS_STYLE_JUSTIFY_ALL_SHIFT;
   if (fallback) {

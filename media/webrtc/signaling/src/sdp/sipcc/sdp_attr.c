@@ -453,6 +453,75 @@ static void sdp_attr_fmtp_invalid_value(sdp_t *sdp, char *param_name,
   sdp->conf_p->num_invalid_param++;
 }
 
+/*
+ * sdp_verify_attr_fmtp_telephone_event
+ * Helper function for verifying the telephone-event fmtp format
+ */
+static sdp_result_e sdp_verify_attr_fmtp_telephone_event(char *fmtpVal)
+{
+  size_t len = PL_strlen(fmtpVal);
+
+  // make sure the basics are good:
+  // - at least 1 character
+  // - no illegal chars
+  // - first char is a number
+  if (len < 1
+      || strspn(fmtpVal, "0123456789,-") != len
+      || PL_strstr(fmtpVal, ",,")
+      || fmtpVal[len-1] == ','
+      || !('0' <= fmtpVal[0] && fmtpVal[0] <= '9')) {
+    return SDP_INVALID_PARAMETER;
+  }
+
+  // Now that we've passed the basic sanity test, copy the string so we
+  // can tokenize and check the format of the tokens without disturbing
+  // the input string.
+  char dtmf_tones[SDP_MAX_STRING_LEN+1];
+  PL_strncpyz(dtmf_tones, fmtpVal, sizeof(dtmf_tones));
+
+  char *strtok_state;
+  char *temp = PL_strtok_r(dtmf_tones, ",", &strtok_state);
+
+  while (temp != NULL) {
+    len = PL_strlen(temp);
+    if (len > 5) {
+      // an example of a max size token is "11-15", so if the
+      // token is longer than 5 it is bad
+      return SDP_INVALID_PARAMETER;
+    }
+
+    // case where we have 1 or 2 characters, example 4 or 23
+    if (len < 3 && strspn(temp, "0123456789") != len) {
+      return SDP_INVALID_PARAMETER;
+    } else if (len >= 3) {
+      // case where we have 3-5 characters, ex 3-5, 2-33, or 10-20
+      sdp_result_e result1 = SDP_SUCCESS;
+      sdp_result_e result2 = SDP_SUCCESS;
+      uint8_t low_val;
+      uint8_t high_val;
+      low_val = (uint8_t)sdp_getnextnumtok(temp, (const char **)&temp,
+                                           "-", &result1);
+      high_val = (uint8_t)sdp_getnextnumtok(temp, (const char **)&temp,
+                                            "-", &result2);
+      if (temp[0] // we don't want to find a second hyphen
+          || result1 != SDP_SUCCESS
+          || result2 != SDP_SUCCESS) {
+        return SDP_INVALID_PARAMETER;
+      }
+
+      if (low_val > 99
+          || high_val > 99
+          || high_val <= low_val) {
+        return SDP_INVALID_PARAMETER;
+      }
+    }
+
+    temp=PL_strtok_r(NULL, ",", &strtok_state);
+  }
+
+  return SDP_SUCCESS;
+}
+
 /* Note:  The fmtp attribute formats currently handled are:
  *        fmtp:<payload type> <event>,<event>...
  *        fmtp:<payload_type> [annexa=yes/no] [annexb=yes/no] [bitrate=<value>]
@@ -1801,10 +1870,12 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                     temp=PL_strtok_r(NULL, "/", &strtok_state);
                 }
             } /* if (temp) */
-        } else {
+        } else if (SDP_SUCCESS == sdp_verify_attr_fmtp_telephone_event(tmp)) {
           // XXX Note that DTMF fmtp will fall into here:
           // a=fmtp:101 0-15 (or 0-15,NN,NN etc)
-
+          sstrncpy(fmtp_p->dtmf_tones , tmp, sizeof(fmtp_p->dtmf_tones));
+          codec_info_found = TRUE;
+        } else {
           // unknown parameter - eat chars until ';'
           CSFLogDebug(logTag, "%s Unknown fmtp type (%s) - ignoring", __FUNCTION__,
                       tmp);

@@ -153,6 +153,7 @@ public:
 
   const SdpFmtpAttributeList::Parameters* FindFmtp(const std::string& pt) const;
   void SetFmtp(const SdpFmtpAttributeList::Fmtp& fmtp);
+  void RemoveFmtp(const std::string& pt);
   const SdpRtpmapAttributeList::Rtpmap* FindRtpmap(const std::string& pt) const;
   const SdpSctpmapAttributeList::Sctpmap* FindSctpmap(
       const std::string& pt) const;

@@ -1087,6 +1087,7 @@ public:
     kH264,
     kRed,
     kUlpfec,
+    kTelephoneEvent,
     kOtherCodec
   };
 
@@ -1171,6 +1172,9 @@ inline std::ostream& operator<<(std::ostream& os,
       break;
     case SdpRtpmapAttributeList::kUlpfec:
       os << "ulpfec";
+      break;
+    case SdpRtpmapAttributeList::kTelephoneEvent:
+      os << "telephone-event";
       break;
     default:
       MOZ_ASSERT(false);
@@ -1365,6 +1369,29 @@ public:
     unsigned int maxplaybackrate;
     unsigned int stereo;
     unsigned int useInBandFec;
+  };
+
+  class TelephoneEventParameters : public Parameters
+  {
+  public:
+    TelephoneEventParameters() :
+      Parameters(SdpRtpmapAttributeList::kTelephoneEvent),
+      dtmfTones("0-15")
+    {}
+
+    virtual Parameters*
+    Clone() const override
+    {
+      return new TelephoneEventParameters(*this);
+    }
+
+    void
+    Serialize(std::ostream& os) const override
+    {
+      os << dtmfTones;
+    }
+
+    std::string dtmfTones;
   };
 
   class Fmtp

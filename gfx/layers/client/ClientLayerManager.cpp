@@ -189,6 +189,12 @@ ClientLayerManager::CreateReadbackLayer()
 void
 ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
+  MOZ_ASSERT(mForwarder, "ClientLayerManager::BeginTransaction without forwarder");
+  if (!mForwarder->IPCOpen()) {
+    gfxCriticalNote << "ClientLayerManager::BeginTransaction with IPC channel down. GPU process may have died.";
+    return;
+  }
+
   mInTransaction = true;
   mTransactionStart = TimeStamp::Now();
 
@@ -273,12 +279,6 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
     js::ProfileEntry::Category::GRAPHICS);
 
   if (!mForwarder || !mForwarder->IPCOpen()) {
-    gfxCriticalError() << "LayerManager::EndTransaction while IPC is dead.";
-    // Pointless to try to render since the content cannot be sent to the
-    // compositor. We should not get here in the first place but I suspect
-    // This is happening during shutdown, tab-switch or some other scenario
-    // where we already started tearing the resources down but something
-    // triggered painting anyway.
     return false;
   }
 

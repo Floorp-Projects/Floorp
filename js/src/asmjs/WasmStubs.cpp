@@ -1047,7 +1047,7 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     // Save the stack pointer in a non-volatile register.
     masm.mov(sp,r6);
     // Align the stack.
-    masm.ma_and(Imm32(~7), sp, sp);
+    masm.as_bic(sp, sp, Imm8(7));
 
     // Store resumePC into the return PC stack slot.
     masm.loadWasmActivationFromSymbolicAddress(IntArgReg0);

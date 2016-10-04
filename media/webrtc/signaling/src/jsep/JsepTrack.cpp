@@ -344,15 +344,21 @@ JsepTrack::NegotiateCodecs(
     }
   }
 
-  // Find the (potential) red codec and ulpfec codec
+  // Find the (potential) red codec and ulpfec codec or telephone-event
   JsepVideoCodecDescription* red = nullptr;
   JsepVideoCodecDescription* ulpfec = nullptr;
+  JsepAudioCodecDescription* dtmf = nullptr;
+  // We can safely cast here since JsepTrack has a MediaType and only codecs
+  // that match that MediaType (kAudio or kVideo) are added.
   for (auto codec : *codecs) {
     if (codec->mName == "red") {
       red = static_cast<JsepVideoCodecDescription*>(codec);
     }
     else if (codec->mName == "ulpfec") {
       ulpfec = static_cast<JsepVideoCodecDescription*>(codec);
+    }
+    else if (codec->mName == "telephone-event") {
+      dtmf = static_cast<JsepAudioCodecDescription*>(codec);
     }
   }
   // if we have a red codec remove redundant encodings that don't exist
@@ -386,6 +392,18 @@ JsepTrack::NegotiateCodecs(
     }
   }
 
+  // Dtmf support is indicated by the existence of the telephone-event
+  // codec, and not an attribute on the particular audio codec (like in a
+  // rtcpfb attr). If we see the telephone-event codec, we enabled dtmf
+  // support on all the other audio codecs.
+  if (dtmf) {
+    for (auto codec : *codecs) {
+      JsepAudioCodecDescription* audioCodec =
+          static_cast<JsepAudioCodecDescription*>(codec);
+      audioCodec->mDtmfEnabled = true;
+    }
+  }
+
   // Make sure strongly preferred codecs are up front, overriding the remote
   // side's preference.
   std::stable_sort(codecs->begin(), codecs->end(), CompareCodec);
@@ -393,12 +411,20 @@ JsepTrack::NegotiateCodecs(
   // TODO(bug 814227): Remove this once we're ready to put multiple codecs in an
   // answer.  For now, remove all but the first codec unless the red codec
   // exists, and then we include the others per RFC 5109, section 14.2.
+  // Note: now allows keeping the telephone-event codec, if it appears, as the
+  // last codec in the list.
   if (!codecs->empty() && !red) {
+    int newSize = dtmf ? 2 : 1;
     for (size_t i = 1; i < codecs->size(); ++i) {
-      delete (*codecs)[i];
-      (*codecs)[i] = nullptr;
+      if (!dtmf || dtmf != (*codecs)[i]) {
+        delete (*codecs)[i];
+        (*codecs)[i] = nullptr;
+      }
     }
-    codecs->resize(1);
+    if (dtmf) {
+      (*codecs)[newSize-1] = dtmf;
+    }
+    codecs->resize(newSize);
   }
 }
 

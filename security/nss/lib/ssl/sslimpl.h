@@ -830,6 +830,12 @@ typedef struct {
     unsigned int len;
 } TLS13CombinedHash;
 
+typedef struct TLSExtensionStr {
+    PRCList link;  /* The linked list link */
+    PRUint16 type; /* Extension type */
+    SECItem data;  /* Pointers into the handshake data. */
+} TLSExtension;
+
 typedef enum {
     handshake_hash_unknown = 0,
     handshake_hash_combo = 1,  /* The MD5/SHA-1 combination */
@@ -841,7 +847,7 @@ typedef enum {
 typedef struct TLS13CertificateRequestStr {
     PLArenaPool *arena;
     SECItem context;
-    SignatureScheme *signatureSchemes;
+    SSLSignatureScheme *signatureSchemes;
     unsigned int signatureSchemeCount;
     CERTDistNames ca_list;
 } TLS13CertificateRequest;
@@ -864,7 +870,7 @@ typedef struct SSL3HandshakeStateStr {
      * TLS 1.2 and later use only |sha|, for SHA-256. */
     PK11Context *md5;
     PK11Context *sha;
-    SignatureScheme signatureScheme;
+    SSLSignatureScheme signatureScheme;
     const ssl3KEADef *kea_def;
     ssl3CipherSuite cipher_suite;
     const ssl3CipherSuiteDef *suite_def;
@@ -912,8 +918,11 @@ typedef struct SSL3HandshakeStateStr {
     /* clientSigAndHash contains the contents of the signature_algorithms
      * extension (if any) from the client. This is only valid for TLS 1.2
      * or later. */
-    SignatureScheme *clientSigSchemes;
+    SSLSignatureScheme *clientSigSchemes;
     unsigned int numClientSigScheme;
+
+    /* Parsed extensions */
+    PRCList remoteExtensions; /* Parsed incoming extensions */
 
     /* This group of values is used for DTLS */
     PRUint16 sendMessageSeq;       /* The sending message sequence
@@ -1024,7 +1033,7 @@ struct ssl3StateStr {
     /* TLS 1.2 introduces separate signature algorithm negotiation.
      * TLS 1.3 combined signature and hash into a single enum.
      * This is our preference order. */
-    SignatureScheme signatureSchemes[MAX_SIGNATURE_SCHEMES];
+    SSLSignatureScheme signatureSchemes[MAX_SIGNATURE_SCHEMES];
     unsigned int signatureSchemeCount;
 
     /* The version to check if we fell back from our highest version
@@ -1754,19 +1763,19 @@ extern SECStatus ssl3_ConsumeHandshakeVariable(sslSocket *ss, SECItem *i,
                                                PRUint32 *length);
 extern PRUint8 *ssl_EncodeUintX(PRUint64 value, unsigned int bytes,
                                 PRUint8 *to);
-extern PRBool ssl_IsSupportedSignatureScheme(SignatureScheme scheme);
+extern PRBool ssl_IsSupportedSignatureScheme(SSLSignatureScheme scheme);
 extern SECStatus ssl_CheckSignatureSchemeConsistency(
-    sslSocket *ss, SignatureScheme scheme, CERTCertificate *cert);
+    sslSocket *ss, SSLSignatureScheme scheme, CERTCertificate *cert);
 extern SECStatus ssl_ParseSignatureSchemes(sslSocket *ss, PLArenaPool *arena,
-                                           SignatureScheme **schemesOut,
+                                           SSLSignatureScheme **schemesOut,
                                            unsigned int *numSchemesOut,
                                            unsigned char **b,
                                            unsigned int *len);
 extern SECStatus ssl_ConsumeSignatureScheme(
-    sslSocket *ss, SSL3Opaque **b, PRUint32 *length, SignatureScheme *out);
+    sslSocket *ss, SSL3Opaque **b, PRUint32 *length, SSLSignatureScheme *out);
 extern SECStatus ssl3_SignHashes(sslSocket *ss, SSL3Hashes *hash,
                                  SECKEYPrivateKey *key, SECItem *buf);
-extern SECStatus ssl3_VerifySignedHashes(sslSocket *ss, SignatureScheme scheme,
+extern SECStatus ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme,
                                          SSL3Hashes *hash, SECItem *buf);
 extern SECStatus ssl3_CacheWrappedMasterSecret(
     sslSocket *ss, sslSessionID *sid,
@@ -1807,6 +1816,13 @@ extern PRInt32 ssl3_SendSupportedPointFormatsXtn(sslSocket *ss,
 extern SECStatus ssl3_HandleExtensions(sslSocket *ss,
                                        SSL3Opaque **b, PRUint32 *length,
                                        SSL3HandshakeType handshakeMessage);
+extern SECStatus ssl3_ParseExtensions(sslSocket *ss,
+                                      SSL3Opaque **b, PRUint32 *length);
+extern SECStatus ssl3_HandleParsedExtensions(sslSocket *ss,
+                                             SSL3HandshakeType handshakeMessage);
+extern TLSExtension *ssl3_FindExtension(sslSocket *ss,
+                                        SSLExtensionType extension_type);
+extern void ssl3_DestroyRemoteExtensions(PRCList *list);
 
 /* Hello Extension related routines. */
 extern PRBool ssl3_ExtensionNegotiated(sslSocket *ss, PRUint16 ex_type);
@@ -1923,7 +1939,7 @@ SECStatus ssl3_ParseCertificateRequestCAs(sslSocket *ss, SSL3Opaque **b,
                                           PRUint32 *length, PLArenaPool *arena,
                                           CERTDistNames *ca_list);
 SECStatus ssl3_CompleteHandleCertificateRequest(
-    sslSocket *ss, const SignatureScheme *signatureSchemes,
+    sslSocket *ss, const SSLSignatureScheme *signatureSchemes,
     unsigned int signatureSchemeCount, CERTDistNames *ca_list);
 SECStatus ssl3_SendServerHello(sslSocket *ss);
 SECStatus ssl3_ComputeHandshakeHashes(sslSocket *ss,
@@ -1958,12 +1974,12 @@ const ssl3BulkCipherDef *
 ssl_GetBulkCipherDef(const ssl3CipherSuiteDef *cipher_def);
 SECStatus ssl3_SelectServerCert(sslSocket *ss);
 SECStatus ssl_PickSignatureScheme(sslSocket *ss, SECKEYPublicKey *key,
-                                  const SignatureScheme *peerSchemes,
+                                  const SSLSignatureScheme *peerSchemes,
                                   unsigned int peerSchemeCount,
                                   PRBool requireSha1);
 SECOidTag ssl3_HashTypeToOID(SSLHashType hashType);
-SSLHashType ssl_SignatureSchemeToHashType(SignatureScheme scheme);
-KeyType ssl_SignatureSchemeToKeyType(SignatureScheme scheme);
+SSLHashType ssl_SignatureSchemeToHashType(SSLSignatureScheme scheme);
+KeyType ssl_SignatureSchemeToKeyType(SSLSignatureScheme scheme);
 
 SECStatus ssl3_SetCipherSuite(sslSocket *ss, ssl3CipherSuite chosenSuite,
                               PRBool initHashes);

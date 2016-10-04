@@ -220,6 +220,7 @@ EventListenerService::GetListenerInfoFor(nsIDOMEventTarget* aEventTarget,
 
 NS_IMETHODIMP
 EventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
+                                             bool aComposed,
                                              uint32_t* aCount,
                                              nsIDOMEventTarget*** aOutArray)
 {
@@ -227,6 +228,7 @@ EventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
   *aOutArray = nullptr;
   NS_ENSURE_ARG(aEventTarget);
   WidgetEvent event(true, eVoidEvent);
+  event.SetComposed(aComposed);
   nsTArray<EventTarget*> targets;
   nsresult rv = EventDispatcher::Dispatch(aEventTarget, nullptr, &event,
                                           nullptr, nullptr, nullptr, &targets);

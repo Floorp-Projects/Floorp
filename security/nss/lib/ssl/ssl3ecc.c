@@ -513,7 +513,7 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SSL3Hashes hashes;
     SECItem signature = { siBuffer, NULL, 0 };
     SSLHashType hashAlg;
-    SignatureScheme sigScheme;
+    SSLSignatureScheme sigScheme;
 
     SECItem ec_params = { siBuffer, NULL, 0 };
     SECItem ec_point = { siBuffer, NULL, 0 };
