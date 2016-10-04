@@ -14,16 +14,15 @@ const NetworkEventMessage = createFactory(require("devtools/client/webconsole/ne
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
-const onViewSourceInDebugger = () => {};
-const openNetworkPanel = () => {};
-const openLink = () => {};
+const serviceContainer = require("devtools/client/webconsole/new-console-output/test/fixtures/serviceContainer");
+
 const EXPECTED_URL = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html";
 
 describe("NetworkEventMessage component:", () => {
   describe("GET request", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("GET request");
-      const wrapper = render(NetworkEventMessage({ message, onViewSourceInDebugger, openNetworkPanel, openLink }));
+      const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
 
       expect(wrapper.find(".message-body .method").text()).toBe("GET");
       expect(wrapper.find(".message-body .xhr").length).toBe(0);
@@ -36,7 +35,7 @@ describe("NetworkEventMessage component:", () => {
   describe("XHR GET request", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("XHR GET request");
-      const wrapper = render(NetworkEventMessage({ message, onViewSourceInDebugger, openNetworkPanel, openLink }));
+      const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
 
       expect(wrapper.find(".message-body .method").text()).toBe("GET");
       expect(wrapper.find(".message-body .xhr").length).toBe(1);
@@ -49,7 +48,7 @@ describe("NetworkEventMessage component:", () => {
   describe("XHR POST request", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("XHR POST request");
-      const wrapper = render(NetworkEventMessage({ message, onViewSourceInDebugger, openNetworkPanel, openLink }));
+      const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
 
       expect(wrapper.find(".message-body .method").text()).toBe("POST");
       expect(wrapper.find(".message-body .xhr").length).toBe(1);
