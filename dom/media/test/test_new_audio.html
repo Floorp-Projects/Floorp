@@ -31,9 +31,11 @@ function startTest(test, token) {
   manager.started(token);
   var a = new Audio(test.name);
   a.autoplay = true;
+  document.body.appendChild(a);
   a.addEventListener("ended",
                      function(e){
                         ok(true, "[" + a.src + "]We should get to the end. Oh look we did.");
+                        a.remove();
                         manager.finished(token);
                      },
                      false);

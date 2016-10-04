@@ -805,6 +805,15 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       break;
   }
 
+  // No duration in track, use fragment_duration.
+  if (e && !e->mDuration) {
+    mp4parse_fragment_info info;
+    auto rv = mp4parse_get_fragment_info(mRustParser.get(), &info);
+    if (rv == MP4PARSE_OK) {
+      e->mDuration = info.fragment_duration;
+    }
+  }
+
   if (e && e->IsValid()) {
     return e;
   }

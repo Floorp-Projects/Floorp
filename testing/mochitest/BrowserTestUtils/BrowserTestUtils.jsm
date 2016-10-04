@@ -273,6 +273,9 @@ this.BrowserTestUtils = {
    *
    * @return {Promise}
    * @resolves With the {xul:tab} when a tab is opened and its location changes to the given URL.
+   *
+   * NB: this method will not work if you open a new tab with e.g. BrowserOpenTab
+   * and the tab does not load a URL, because no onLocationChange will fire.
    */
   waitForNewTab(tabbrowser, url) {
     return new Promise((resolve, reject) => {

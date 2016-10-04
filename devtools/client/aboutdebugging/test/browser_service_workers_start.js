@@ -47,6 +47,8 @@ add_task(function* () {
   yield waitForServiceWorkerRegistered(swTab);
   ok(true, "Service worker registration resolved");
 
+  yield waitForServiceWorkerActivation(SERVICE_WORKER, document);
+
   // Retrieve the Target element corresponding to the service worker.
   let names = [...document.querySelectorAll("#service-workers .target-name")];
   let name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
@@ -82,7 +84,7 @@ add_task(function* () {
 
   // Finally, unregister the service worker itself.
   try {
-    yield unregisterServiceWorker(swTab);
+    yield unregisterServiceWorker(swTab, serviceWorkersElement);
     ok(true, "Service worker registration unregistered");
   } catch (e) {
     ok(false, "SW not unregistered; " + e);

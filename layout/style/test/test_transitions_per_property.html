@@ -191,16 +191,12 @@ var supported_properties = {
     "marker-offset": [ test_length_transition,
                        test_length_unclamped ],
     "max-height": [ test_length_transition, test_percent_transition,
-                    test_length_percent_calc_transition,
                     test_length_clamped, test_percent_clamped ],
     "max-width": [ test_length_transition, test_percent_transition,
-                   test_length_percent_calc_transition,
                    test_length_clamped, test_percent_clamped ],
     "min-height": [ test_length_transition, test_percent_transition,
-                    test_length_percent_calc_transition,
                     test_length_clamped, test_percent_clamped ],
     "min-width": [ test_length_transition, test_percent_transition,
-                   test_length_percent_calc_transition,
                    test_length_clamped, test_percent_clamped ],
     "object-position": [ test_background_position_transition ],
     "opacity" : [ test_float_zeroToOne_transition,
@@ -261,7 +257,6 @@ var supported_properties = {
     "text-emphasis-color": [ test_color_transition,
                              test_true_currentcolor_transition ],
     "text-indent": [ test_length_transition, test_percent_transition,
-                     test_length_percent_calc_transition,
                      test_length_unclamped, test_percent_unclamped ],
     "text-shadow": [ test_shadow_transition ],
     "top": [ test_length_transition, test_percent_transition,
@@ -272,7 +267,6 @@ var supported_properties = {
                           test_length_percent_pair_transition,
                           test_length_percent_pair_unclamped ],
     "vertical-align": [ test_length_transition, test_percent_transition,
-                        test_length_percent_calc_transition,
                         test_length_unclamped, test_percent_unclamped ],
     "visibility": [ test_visibility_transition ],
     "width": [ test_length_transition, test_percent_transition,
@@ -1732,11 +1726,11 @@ function test_radius_transition(prop) {
   check_distance(prop, "3px", "6px", "15px");
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "12.5%", "");
-  is(cs.getPropertyValue(prop), "32px",
+  is(cs.getPropertyValue(prop), "12.5%",
      "radius-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "25%", "");
-  is(cs.getPropertyValue(prop), "40px",
+  is(cs.getPropertyValue(prop), "15.625%",
      "radius-valued property " + prop + ": interpolation of radius");
   check_distance(prop, "12.5%", "15.625%", "25%");
   div.style.setProperty("transition-property", "none", "");
@@ -1750,23 +1744,23 @@ function test_radius_transition(prop) {
   check_distance(prop, "3px 8px", "6px 9px", "15px 12px");
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "12.5% 6.25%", "");
-  is(cs.getPropertyValue(prop), "32px 16px",
+  is(cs.getPropertyValue(prop), "12.5% 6.25%",
      "radius-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "25%", "");
-  is(cs.getPropertyValue(prop), "40px 28px",
+  is(cs.getPropertyValue(prop), "15.625% 10.9375%",
      "radius-valued property " + prop + ": interpolation of radius");
   check_distance(prop, "12.5% 6.25%", "15.625% 10.9375%", "25%");
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "6.25% 12.5%", "");
-  is(cs.getPropertyValue(prop), "16px 32px",
+  is(cs.getPropertyValue(prop), "6.25% 12.5%",
      "radius-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "64px 16px", "");
-  is(cs.getPropertyValue(prop), "28px",
+  is(cs.getPropertyValue(prop), "calc(16px + 4.6875%) calc(4px + 9.375%)",
      "radius-valued property " + prop + ": interpolation of radius with mixed units");
   check_distance(prop, "6.25% 12.5%",
-                 "calc(4.6875% + 16px) calc(9.375% + 4px)",
+                 "calc(16px + 4.6875%) calc(4px + 9.375%)",
                  "64px 16px");
 
   div.style.setProperty("transition-property", "none", "");
@@ -1788,8 +1782,6 @@ function test_radius_transition(prop) {
   is(cs.getPropertyValue(prop), "0px",
      "radius-valued property " + prop + ": clamping of negatives");
   div.style.setProperty("transition-timing-function", "linear", "");
-
-  test_length_percent_calc_transition(prop);
 
   div.style.removeProperty("width");
   div.style.removeProperty("height");

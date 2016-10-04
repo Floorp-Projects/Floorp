@@ -29,6 +29,9 @@ rm -rf mp4parse
 mkdir -p mp4parse/src
 cp _upstream/mp4parse/mp4parse/Cargo.toml mp4parse/
 cp _upstream/mp4parse/mp4parse/src/*.rs mp4parse/src/
+mkdir -p mp4parse/tests
+cp _upstream/mp4parse/mp4parse/tests/*.rs mp4parse/tests/
+cp _upstream/mp4parse/mp4parse/tests/*.mp4 mp4parse/tests/
 rm -rf mp4parse_capi
 mkdir -p mp4parse_capi/src
 cp _upstream/mp4parse/mp4parse_capi/Cargo.toml mp4parse_capi/

@@ -376,10 +376,13 @@ public:
 #endif
     , mStartJSSampling(false)
     , mPrivacyMode(false)
-  { }
+  {
+    MOZ_COUNT_CTOR(PseudoStack);
+  }
 
   // A PseudoStack can only be deleted via deref.
   ~PseudoStack() {
+    MOZ_COUNT_DTOR(PseudoStack);
     if (mStackPointer != 0) {
       // We're releasing the pseudostack while it's still in use.
       // The label macros keep a non ref counted reference to the
