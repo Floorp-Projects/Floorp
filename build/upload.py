@@ -227,13 +227,16 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
         base_path = os.path.abspath(base_path)
     remote_files = []
     properties = {}
+
+    def get_remote_path(p):
+        return GetBaseRelativePath(path, os.path.abspath(p), base_path)
+
     try:
         for file in files:
-            file = os.path.abspath(file)
             if not os.path.isfile(file):
                 raise IOError("File not found: %s" % file)
             # first ensure that path exists remotely
-            remote_path = GetBaseRelativePath(path, file, base_path)
+            remote_path = get_remote_path(file)
             DoSSHCommand("mkdir -p " + remote_path, user, host, port=port, ssh_key=ssh_key)
             if verbose:
                 print "Uploading " + file
