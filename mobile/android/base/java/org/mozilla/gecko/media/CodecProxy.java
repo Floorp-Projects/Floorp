@@ -46,7 +46,7 @@ public final class CodecProxy {
         protected native void disposeNative();
     }
 
-    private static class CallbacksForwarder extends ICodecCallbacks.Stub {
+    private class CallbacksForwarder extends ICodecCallbacks.Stub {
         private final Callbacks mCallbacks;
 
         CallbacksForwarder(Callbacks callbacks) {
@@ -66,6 +66,7 @@ public final class CodecProxy {
         @Override
         public void onOutput(Sample sample) throws RemoteException {
             mCallbacks.onOutput(sample);
+            mRemote.releaseOutput(sample);
         }
 
         @Override
@@ -125,15 +126,18 @@ public final class CodecProxy {
             Log.e(LOGTAG, "cannot send input to an ended codec");
             return false;
         }
-        Sample sample = (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) ?
-                        Sample.EOS : Sample.create(bytes, info, cryptoInfo);
+
         try {
+            Sample sample = (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) ?
+                    Sample.EOS : mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo);
             mRemote.queueInput(sample);
         } catch (DeadObjectException e) {
             return false;
         } catch (RemoteException e) {
             e.printStackTrace();
-            Log.e(LOGTAG, "fail to input sample:" + sample);
+            Log.e(LOGTAG, "fail to input sample: size=" + info.size +
+                    ", pts=" + info.presentationTimeUs +
+                    ", flags=" + Integer.toHexString(info.flags));
             return false;
         }
         return true;

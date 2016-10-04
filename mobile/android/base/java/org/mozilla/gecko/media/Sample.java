@@ -77,6 +77,8 @@ public final class Sample implements Parcelable {
     public BufferInfo info;
     public CryptoInfo cryptoInfo;
 
+    public static Sample create() { return create(null, new BufferInfo(), null); }
+
     public static Sample create(ByteBuffer src, BufferInfo info, CryptoInfo cryptoInfo) {
         ArrayBuffer buffer = new ArrayBuffer(byteArrayFromBuffer(src, info.offset, info.size));
 
@@ -128,6 +130,16 @@ public final class Sample implements Parcelable {
                       key,
                       iv,
                       mode);
+    }
+
+    public Sample set(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
+        if (bytes != null && info.size > 0) {
+            buffer.readFromByteBuffer(bytes, info.offset, info.size);
+        }
+        this.info.set(0, info.size, info.presentationTimeUs, info.flags);
+        this.cryptoInfo = cryptoInfo;
+
+        return this;
     }
 
     public boolean isEOS() {
