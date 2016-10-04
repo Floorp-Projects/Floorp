@@ -357,13 +357,20 @@ public:
            mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Browser;
   }
 
-  void GetSettings(dom::MediaTrackSettings& aOutSettings)
+  void GetSettings(dom::MediaTrackSettings& aOutSettings, TrackID aTrackID)
   {
-    if (mVideoDevice) {
-      mVideoDevice->GetSource()->GetSettings(aOutSettings);
-    }
-    if (mAudioDevice) {
-      mAudioDevice->GetSource()->GetSettings(aOutSettings);
+    switch (aTrackID) {
+      case kVideoTrack:
+        if (mVideoDevice) {
+          mVideoDevice->GetSource()->GetSettings(aOutSettings);
+        }
+        break;
+
+      case kAudioTrack:
+        if (mAudioDevice) {
+          mAudioDevice->GetSource()->GetSettings(aOutSettings);
+        }
+        break;
     }
   }
 
@@ -1168,7 +1175,7 @@ public:
         GetSettings(dom::MediaTrackSettings& aOutSettings) override
         {
           if (mListener) {
-            mListener->GetSettings(aOutSettings);
+            mListener->GetSettings(aOutSettings, mTrackID);
           }
         }
 
