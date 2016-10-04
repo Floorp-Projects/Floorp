@@ -891,7 +891,7 @@ nsDOMMutationObserver::HandleMutationsInternal()
     return;
   }
 
-  AutoSlowOperation aso;
+  mozilla::AutoSlowOperation aso;
 
   nsTArray<RefPtr<nsDOMMutationObserver> >* suppressedObservers = nullptr;
 
