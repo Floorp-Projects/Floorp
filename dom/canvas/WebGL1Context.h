@@ -36,7 +36,6 @@ private:
     virtual bool ValidateAttribPointerType(bool integerMode, GLenum type,
                                            uint32_t* alignment,
                                            const char* info) override;
-    virtual bool ValidateQueryTarget(GLenum target, const char* info) override;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) override;
 };
 
