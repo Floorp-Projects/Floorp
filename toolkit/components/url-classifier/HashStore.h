@@ -132,13 +132,13 @@ private:
 // for addition and indices to removal. See Bug 1283009.
 class TableUpdateV4 : public TableUpdate {
 public:
-  struct PrefixString {
+  struct PrefixStdString {
   private:
     std::string mStorage;
     nsDependentCSubstring mString;
 
   public:
-    explicit PrefixString(std::string& aString)
+    explicit PrefixStdString(std::string& aString)
     {
       aString.swap(mStorage);
       mString.Rebind(mStorage.data(), mStorage.size());
@@ -147,7 +147,7 @@ public:
     const nsACString& GetPrefixString() const { return mString; };
   };
 
-  typedef nsClassHashtable<nsUint32HashKey, PrefixString> PrefixesStringMap;
+  typedef nsClassHashtable<nsUint32HashKey, PrefixStdString> PrefixStdStringMap;
   typedef nsTArray<int32_t> RemovalIndiceArray;
 
 public:
@@ -163,7 +163,7 @@ public:
   }
 
   bool IsFullUpdate() const { return mFullUpdate; }
-  PrefixesStringMap& Prefixes() { return mPrefixesMap; }
+  PrefixStdStringMap& Prefixes() { return mPrefixesMap; }
   RemovalIndiceArray& RemovalIndices() { return mRemovalIndiceArray; }
 
   // For downcasting.
@@ -177,7 +177,7 @@ private:
   virtual int Tag() const override { return TAG; }
 
   bool mFullUpdate;
-  PrefixesStringMap mPrefixesMap;
+  PrefixStdStringMap mPrefixesMap;
   RemovalIndiceArray mRemovalIndiceArray;
 };
 
