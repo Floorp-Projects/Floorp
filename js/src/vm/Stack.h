@@ -23,6 +23,7 @@
 #include "jit/Registers.h" // for RegisterDump
 #endif
 #include "js/RootingAPI.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/SavedFrame.h"
 
 struct JSCompartment;
@@ -35,7 +36,6 @@ class AutoEntryMonitor;
 
 namespace js {
 
-class ArgumentsObject;
 class InterpreterRegs;
 class CallObject;
 class FrameIter;
@@ -957,7 +957,12 @@ class GenericArgsBase
     explicit GenericArgsBase(JSContext* cx) : v_(cx) {}
 
   public:
-    bool init(unsigned argc) {
+    bool init(JSContext* cx, unsigned argc) {
+        if (argc > ARGS_LENGTH_MAX) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TOO_MANY_ARGUMENTS);
+            return false;
+        }
+
         // callee, this, arguments[, new.target iff constructing]
         size_t len = 2 + argc + uint32_t(Construct);
         MOZ_ASSERT(len > argc);  // no overflow
@@ -977,6 +982,8 @@ template <MaybeConstruct Construct, size_t N>
 class FixedArgsBase
   : public mozilla::Conditional<Construct, AnyConstructArgs, AnyInvokeArgs>::Type
 {
+    static_assert(N <= ARGS_LENGTH_MAX, "o/~ too many args o/~");
+
   protected:
     JS::AutoValueArray<2 + N + uint32_t(Construct)> v_;
 
@@ -1033,7 +1040,7 @@ inline bool
 FillArgumentsFromArraylike(JSContext* cx, Args& args, const Arraylike& arraylike)
 {
     uint32_t len = arraylike.length();
-    if (!args.init(len))
+    if (!args.init(cx, len))
         return false;
 
     for (uint32_t i = 0; i < len; i++)
