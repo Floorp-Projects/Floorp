@@ -480,7 +480,10 @@ public:
       return mMaster->mQueuedSeek.mPromise.Ensure(__func__);
     }
 
-    mMaster->mQueuedSeek.RejectIfExists(__func__);
+    // Since ForceZeroStartTime() is true, we should've transitioned to SEEKING
+    // in Enter() if there is any queued seek.
+    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+
     SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
     SeekJob seekJob;
     seekJob.mTarget = aTarget;
