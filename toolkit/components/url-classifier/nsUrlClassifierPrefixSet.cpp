@@ -338,55 +338,10 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile* aFile)
   // Convert to buffered stream
   nsCOMPtr<nsIInputStream> in = NS_BufferInputStream(localInFile, bufferSize);
 
-  rv = LoadPrefixes(in);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsUrlClassifierPrefixSet::StoreToFile(nsIFile* aFile)
-{
-  MutexAutoLock lock(mLock);
-
-  nsCOMPtr<nsIOutputStream> localOutFile;
-  nsresult rv = NS_NewLocalFileOutputStream(getter_AddRefs(localOutFile), aFile,
-                                            PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t fileSize;
-
-  // Preallocate the file storage
-  {
-    nsCOMPtr<nsIFileOutputStream> fos(do_QueryInterface(localOutFile));
-    Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FALLOCATE_TIME> timer;
-
-    fileSize = CalculatePreallocateSize();
-
-    // Ignore failure, the preallocation is a hint and we write out the entire
-    // file later on
-    Unused << fos->Preallocate(fileSize);
-  }
-
-  // Convert to buffered stream
-  nsCOMPtr<nsIOutputStream> out =
-    NS_BufferOutputStream(localOutFile, std::min(fileSize, MAX_BUFFER_SIZE));
-
-  rv = WritePrefixes(out);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  LOG(("Saving PrefixSet successful\n"));
-
-  return NS_OK;
-}
-
-nsresult
-nsUrlClassifierPrefixSet::LoadPrefixes(nsIInputStream* in)
-{
   uint32_t magic;
   uint32_t read;
 
-  nsresult rv = in->Read(reinterpret_cast<char*>(&magic), sizeof(uint32_t), &read);
+  rv = in->Read(reinterpret_cast<char*>(&magic), sizeof(uint32_t), &read);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
 
@@ -456,23 +411,40 @@ nsUrlClassifierPrefixSet::LoadPrefixes(nsIInputStream* in)
   return NS_OK;
 }
 
-uint32_t
-nsUrlClassifierPrefixSet::CalculatePreallocateSize()
+NS_IMETHODIMP
+nsUrlClassifierPrefixSet::StoreToFile(nsIFile* aFile)
 {
-  uint32_t fileSize = 4 * sizeof(uint32_t);
-  uint32_t deltas = mTotalPrefixes - mIndexPrefixes.Length();
-  fileSize += 2 * mIndexPrefixes.Length() * sizeof(uint32_t);
-  fileSize += deltas * sizeof(uint16_t);
-  return fileSize;
-}
+  MutexAutoLock lock(mLock);
 
-nsresult
-nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
-{
+  nsCOMPtr<nsIOutputStream> localOutFile;
+  nsresult rv = NS_NewLocalFileOutputStream(getter_AddRefs(localOutFile), aFile,
+                                            PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t fileSize;
+
+  // Preallocate the file storage
+  {
+    nsCOMPtr<nsIFileOutputStream> fos(do_QueryInterface(localOutFile));
+    Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FALLOCATE_TIME> timer;
+    fileSize = 4 * sizeof(uint32_t);
+    uint32_t deltas = mTotalPrefixes - mIndexPrefixes.Length();
+    fileSize += 2 * mIndexPrefixes.Length() * sizeof(uint32_t);
+    fileSize += deltas * sizeof(uint16_t);
+
+    // Ignore failure, the preallocation is a hint and we write out the entire
+    // file later on
+    Unused << fos->Preallocate(fileSize);
+  }
+
+  // Convert to buffered stream
+  nsCOMPtr<nsIOutputStream> out =
+    NS_BufferOutputStream(localOutFile, std::min(fileSize, MAX_BUFFER_SIZE));
+
   uint32_t written;
   uint32_t writelen = sizeof(uint32_t);
   uint32_t magic = PREFIXSET_VERSION_MAGIC;
-  nsresult rv = out->Write(reinterpret_cast<char*>(&magic), writelen, &written);
+  rv = out->Write(reinterpret_cast<char*>(&magic), writelen, &written);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
