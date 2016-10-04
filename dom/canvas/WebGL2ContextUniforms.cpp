@@ -70,60 +70,57 @@ WebGL2Context::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuin
 
 // -------------------------------------------------------------------------
 // Uniform Buffer Objects and Transform Feedback Buffers
+// TODO(djg): Implemented in WebGLContext
+/*
+    void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer);
+    void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
+                         GLintptr offset, GLsizeiptr size);
+*/
 
+/* This doesn't belong here. It's part of state querying */
 void
 WebGL2Context::GetIndexedParameter(GLenum target, GLuint index,
                                    dom::Nullable<dom::OwningWebGLBufferOrLongLong>& retval)
 {
-    const char funcName[] = "getIndexedParameter";
     retval.SetNull();
     if (IsContextLost())
         return;
 
-    const std::vector<IndexedBufferBinding>* bindings;
-    switch (target) {
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_START:
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
-        bindings = &(mBoundTransformFeedback->mIndexedBindings);
-        break;
+    GLint64 data = 0;
 
-    case LOCAL_GL_UNIFORM_BUFFER_BINDING:
-    case LOCAL_GL_UNIFORM_BUFFER_START:
-    case LOCAL_GL_UNIFORM_BUFFER_SIZE:
-        bindings = &mIndexedUniformBufferBindings;
-        break;
-
-    default:
-        ErrorInvalidEnumInfo("getIndexedParameter: target", target);
-        return;
-    }
-
-    if (index >= bindings->size()) {
-        ErrorInvalidValue("%s: `index` must be < %s.", funcName,
-                          "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
-        return;
-    }
-    const auto& binding = (*bindings)[index];
+    MakeContextCurrent();
 
     switch (target) {
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-    case LOCAL_GL_UNIFORM_BUFFER_BINDING:
-        if (binding.mBufferBinding) {
-            retval.SetValue().SetAsWebGLBuffer() = binding.mBufferBinding;
+        if (index >= mGLMaxTransformFeedbackSeparateAttribs)
+            return ErrorInvalidValue("getIndexedParameter: index should be less than "
+                                     "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
+
+        if (mBoundTransformFeedbackBuffers[index].get()) {
+            retval.SetValue().SetAsWebGLBuffer() =
+                mBoundTransformFeedbackBuffers[index].get();
         }
-        break;
+        return;
+
+    case LOCAL_GL_UNIFORM_BUFFER_BINDING:
+        if (index >= mGLMaxUniformBufferBindings)
+            return ErrorInvalidValue("getIndexedParameter: index should be than "
+                                     "MAX_UNIFORM_BUFFER_BINDINGS");
+
+        if (mBoundUniformBuffers[index].get())
+            retval.SetValue().SetAsWebGLBuffer() = mBoundUniformBuffers[index].get();
+        return;
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_START:
-    case LOCAL_GL_UNIFORM_BUFFER_START:
-        retval.SetValue().SetAsLongLong() = binding.mRangeStart;
-        break;
-
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
+    case LOCAL_GL_UNIFORM_BUFFER_START:
     case LOCAL_GL_UNIFORM_BUFFER_SIZE:
-        retval.SetValue().SetAsLongLong() = binding.mRangeSize;
-        break;
+        gl->fGetInteger64i_v(target, index, &data);
+        retval.SetValue().SetAsLongLong() = data;
+        return;
     }
+
+    ErrorInvalidEnumInfo("getIndexedParameter: target", target);
 }
 
 void

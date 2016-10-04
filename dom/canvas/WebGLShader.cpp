@@ -408,24 +408,40 @@ WebGLShader::EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_Frag
 }
 
 void
-WebGLShader::MapTransformFeedbackVaryings(const std::vector<nsString>& varyings,
-                                          std::vector<std::string>* out_mappedVaryings) const
+WebGLShader::ApplyTransformFeedbackVaryings(GLuint prog,
+                                            const std::vector<nsCString>& varyings,
+                                            GLenum bufferMode,
+                                            std::vector<std::string>* out_mappedVaryings) const
 {
     MOZ_ASSERT(mType == LOCAL_GL_VERTEX_SHADER);
+    MOZ_ASSERT(!varyings.empty());
     MOZ_ASSERT(out_mappedVaryings);
 
-    out_mappedVaryings->clear();
-    out_mappedVaryings->reserve(varyings.size());
+    const size_t varyingsCount = varyings.size();
+    std::vector<std::string> mappedVaryings;
 
-    for (const auto& wideUserName : varyings) {
-        const NS_LossyConvertUTF16toASCII mozUserName(wideUserName); // Don't validate here.
-        const std::string userName(mozUserName.BeginReading(), mozUserName.Length());
-        const std::string* pMappedName = &userName;
-        if (mValidator) {
-            mValidator->FindVaryingMappedNameByUserName(userName, &pMappedName);
-        }
-        out_mappedVaryings->push_back(*pMappedName);
+    for (size_t i = 0; i < varyingsCount; i++) {
+        const nsCString& userName = varyings[i];
+        std::string userNameStr(userName.BeginReading());
+
+        const std::string* mappedNameStr = &userNameStr;
+        if (mValidator)
+            mValidator->FindVaryingMappedNameByUserName(userNameStr, &mappedNameStr);
+
+        mappedVaryings.push_back(*mappedNameStr);
     }
+
+    // Temporary, tight packed array of string pointers into mappedVaryings.
+    std::vector<const GLchar*> strings;
+    strings.resize(varyingsCount);
+    for (size_t i = 0; i < varyingsCount; i++) {
+        strings[i] = mappedVaryings[i].c_str();
+    }
+
+    mContext->MakeContextCurrent();
+    mContext->gl->fTransformFeedbackVaryings(prog, varyingsCount, &strings[0], bufferMode);
+
+    out_mappedVaryings->swap(mappedVaryings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

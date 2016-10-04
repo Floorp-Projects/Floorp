@@ -19,7 +19,6 @@
 #include "mozilla/unused.h"
 #include "ScopedGLHelpers.h"
 #include "TexUnpackBlob.h"
-#include "WebGLBuffer.h"
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
 #include "WebGLFramebuffer.h"
@@ -214,15 +213,6 @@ WebGLContext::ValidateUnpackInfo(const char* funcName, bool usePBOs, GLenum form
         return false;
     }
 
-    if (mBoundPixelUnpackBuffer &&
-        mBoundPixelUnpackBuffer->mNumActiveTFOs)
-    {
-        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
-                              " object.",
-                              funcName);
-        return false;
-    }
-
     if (!mFormatUsage->AreUnpackEnumsValid(format, type)) {
         ErrorInvalidEnum("%s: Invalid unpack format/type: 0x%04x/0x%04x", funcName,
                          format, type);
@@ -325,7 +315,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     const auto bufferByteCount = packBuffer->ByteLength();
 
     uint32_t byteCount = 0;
-    if (bufferByteCount >= uint64_t(offset)) {
+    if (bufferByteCount >= offset) {
         byteCount = bufferByteCount - offset;
     }
 
@@ -1978,18 +1968,20 @@ WebGLTexture::ValidateCopyTexImageForFeedback(const char* funcName, uint32_t lev
 {
     const auto& fb = mContext->mBoundReadFramebuffer;
     if (fb) {
-        const auto& attach = fb->ColorReadBuffer();
-        MOZ_ASSERT(attach);
+        const auto readBuffer = fb->ReadBufferMode();
+        MOZ_ASSERT(readBuffer != LOCAL_GL_NONE);
+        const uint32_t colorAttachment = readBuffer - LOCAL_GL_COLOR_ATTACHMENT0;
+        const auto& attach = fb->ColorAttachment(colorAttachment);
 
-        if (attach->Texture() == this &&
-            uint32_t(attach->MipLevel()) == level)
+        if (attach.Texture() == this &&
+            uint32_t(attach.MipLevel()) == level)
         {
             // Note that the TexImageTargets *don't* have to match for this to be
             // undefined per GLES 3.0.4 p211, thus an INVALID_OP in WebGL.
             mContext->ErrorInvalidOperation("%s: Feedback loop detected, as this texture"
                                             " is already attached to READ_FRAMEBUFFER's"
                                             " READ_BUFFER-selected COLOR_ATTACHMENT%u.",
-                                            funcName, attach->mAttachmentPoint);
+                                            funcName, colorAttachment);
             return false;
         }
     }

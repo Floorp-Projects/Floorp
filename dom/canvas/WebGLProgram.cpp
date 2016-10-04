@@ -14,7 +14,6 @@
 #include "WebGLActiveInfo.h"
 #include "WebGLContext.h"
 #include "WebGLShader.h"
-#include "WebGLTransformFeedback.h"
 #include "WebGLUniformLocation.h"
 #include "WebGLValidateStrings.h"
 
@@ -328,13 +327,6 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
                 }
             }
 
-            ////
-
-            GLuint dataSize = 0;
-            gl->fGetActiveUniformBlockiv(prog->mGLName, i,
-                                         LOCAL_GL_UNIFORM_BLOCK_DATA_SIZE,
-                                         (GLint*)&dataSize);
-
 #ifdef DUMP_SHADERVAR_MAPPINGS
             printf_stderr("[uniform block %i] %s/%i/%s/%s\n", i,
                           mappedName.BeginReading(), (int)isArray,
@@ -343,8 +335,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
             printf_stderr("    isArray: %d\n", (int)isArray);
 #endif
 
-            auto* block = new webgl::UniformBlockInfo(webgl, baseUserName, baseMappedName,
-                                                      dataSize);
+            const auto* block = new webgl::UniformBlockInfo(baseUserName, baseMappedName);
             info->uniformBlocks.push_back(block);
         }
     }
@@ -441,8 +432,7 @@ CreateProgram(gl::GLContext* gl)
 WebGLProgram::WebGLProgram(WebGLContext* webgl)
     : WebGLContextBoundObject(webgl)
     , mGLName(CreateProgram(webgl->GL()))
-    , mNumActiveTFOs(0)
-    , mNextLink_TransformFeedbackBufferMode(LOCAL_GL_SEPARATE_ATTRIBS)
+    , mTransformFeedbackBufferMode(LOCAL_GL_NONE)
 {
     mContext->mPrograms.insertBack(this);
 }
@@ -523,7 +513,7 @@ WebGLProgram::BindAttribLocation(GLuint loc, const nsAString& name)
 
     NS_LossyConvertUTF16toASCII asciiName(name);
 
-    auto res = mNextLink_BoundAttribLocs.insert({asciiName, loc});
+    auto res = mBoundAttribLocs.insert(std::pair<nsCString, GLuint>(asciiName, loc));
 
     const bool wasInserted = res.second;
     if (!wasInserted) {
@@ -681,13 +671,11 @@ WebGLProgram::GetProgramParameter(GLenum pname) const
     if (mContext->IsWebGL2()) {
         switch (pname) {
         case LOCAL_GL_ACTIVE_UNIFORM_BLOCKS:
+        case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
             return JS::Int32Value(GetProgramiv(gl, mGLName, pname));
 
         case LOCAL_GL_TRANSFORM_FEEDBACK_VARYINGS:
-            return JS::Int32Value(mNextLink_TransformFeedbackVaryings.size());
-
-        case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
-            return JS::Int32Value(mNextLink_TransformFeedbackBufferMode);
+            return JS::Int32Value(mTransformFeedbackVaryings.size());
        }
     }
 
@@ -944,58 +932,57 @@ WebGLProgram::GetUniformIndices(const dom::Sequence<nsString>& uniformNames,
 
 
 void
-WebGLProgram::UniformBlockBinding(GLuint uniformBlockIndex,
-                                  GLuint uniformBlockBinding) const
+WebGLProgram::UniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding) const
 {
-    const char funcName[] = "getActiveUniformBlockName";
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("%s: `program` must be linked.", funcName);
+        mContext->ErrorInvalidOperation("getActiveUniformBlockName: `program` must be linked.");
         return;
     }
 
-    const auto& uniformBlocks = LinkInfo()->uniformBlocks;
-    if (uniformBlockIndex >= uniformBlocks.size()) {
-        mContext->ErrorInvalidValue("%s: Index %u invalid.", funcName, uniformBlockIndex);
+    const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
+    if (uniformBlockIndex >= linkInfo->uniformBlocks.size()) {
+        mContext->ErrorInvalidValue("getActiveUniformBlockName: index %u invalid.", uniformBlockIndex);
         return;
     }
-    const auto& uniformBlock = uniformBlocks[uniformBlockIndex];
 
-    const auto& indexedBindings = mContext->mIndexedUniformBufferBindings;
-    if (uniformBlockBinding >= indexedBindings.size()) {
-        mContext->ErrorInvalidValue("%s: Binding %u invalid.", funcName,
-                                    uniformBlockBinding);
+    if (uniformBlockBinding > mContext->mGLMaxUniformBufferBindings) {
+        mContext->ErrorInvalidEnum("getActiveUniformBlockName: binding %u invalid.", uniformBlockBinding);
         return;
     }
-    const auto& indexedBinding = indexedBindings[uniformBlockBinding];
-
-    ////
 
     gl::GLContext* gl = mContext->GL();
     gl->MakeCurrent();
     gl->fUniformBlockBinding(mGLName, uniformBlockIndex, uniformBlockBinding);
-
-    ////
-
-    uniformBlock->mBinding = &indexedBinding;
 }
 
-bool
-WebGLProgram::ValidateForLink()
+void
+WebGLProgram::LinkProgram()
 {
+    mContext->InvalidateBufferFetching(); // we do it early in this function
+    // as some of the validation below changes program state
+
+    mLinkLog.Truncate();
+    mMostRecentLinkInfo = nullptr;
+
     if (!mVertShader || !mVertShader->IsCompiled()) {
         mLinkLog.AssignLiteral("Must have a compiled vertex shader attached.");
-        return false;
+        mContext->GenerateWarning("linkProgram: %s", mLinkLog.BeginReading());
+        return;
     }
 
     if (!mFragShader || !mFragShader->IsCompiled()) {
         mLinkLog.AssignLiteral("Must have an compiled fragment shader attached.");
-        return false;
+        mContext->GenerateWarning("linkProgram: %s", mLinkLog.BeginReading());
+        return;
     }
 
-    if (!mFragShader->CanLinkTo(mVertShader, &mLinkLog))
-        return false;
+    if (!mFragShader->CanLinkTo(mVertShader, &mLinkLog)) {
+        mContext->GenerateWarning("linkProgram: %s", mLinkLog.BeginReading());
+        return;
+    }
 
-    const auto& gl = mContext->gl;
+    gl::GLContext* gl = mContext->gl;
+    gl->MakeCurrent();
 
     if (gl->WorkAroundDriverBugs() &&
         mContext->mIsMesa)
@@ -1007,70 +994,34 @@ WebGLProgram::ValidateForLink()
         if (numSamplerUniforms_upperBound > 16) {
             mLinkLog.AssignLiteral("Programs with more than 16 samplers are disallowed on"
                                    " Mesa drivers to avoid crashing.");
-            return false;
+            mContext->GenerateWarning("linkProgram: %s", mLinkLog.BeginReading());
+            return;
         }
 
         // Bug 1203135: Mesa crashes internally if we exceed the reported maximum attribute count.
         if (mVertShader->NumAttributes() > mContext->MaxVertexAttribs()) {
-            mLinkLog.AssignLiteral("Number of attributes exceeds Mesa's reported max"
-                                   " attribute count.");
-            return false;
+            mLinkLog.AssignLiteral("Number of attributes exceeds Mesa's reported max attribute count.");
+            mContext->GenerateWarning("linkProgram: %s", mLinkLog.BeginReading());
+            return;
         }
-    }
-
-    return true;
-}
-
-void
-WebGLProgram::LinkProgram()
-{
-    const char funcName[] = "linkProgram";
-
-    if (mNumActiveTFOs) {
-        mContext->ErrorInvalidOperation("%s: Program is in-use by one or more active"
-                                        " transform feedback objects.",
-                                        funcName);
-        return;
-    }
-
-    mContext->MakeContextCurrent();
-    mContext->InvalidateBufferFetching(); // we do it early in this function
-    // as some of the validation changes program state
-
-    mLinkLog.Truncate();
-    mMostRecentLinkInfo = nullptr;
-
-    if (!ValidateForLink()) {
-        mContext->GenerateWarning("%s: %s", funcName, mLinkLog.BeginReading());
-        return;
     }
 
     // Bind the attrib locations.
     // This can't be done trivially, because we have to deal with mapped attrib names.
-    for (const auto& pair : mNextLink_BoundAttribLocs) {
-        const auto& name = pair.first;
-        const auto& index = pair.second;
+    for (auto itr = mBoundAttribLocs.begin(); itr != mBoundAttribLocs.end(); ++itr) {
+        const nsCString& name = itr->first;
+        GLuint index = itr->second;
 
         mVertShader->BindAttribLocation(mGLName, name, index);
     }
 
-    // Storage for transform feedback varyings before link.
-    // (Work around for bug seen on nVidia drivers.)
-    std::vector<std::string> scopedMappedTFVaryings;
-
-    if (mContext->IsWebGL2()) {
-        mVertShader->MapTransformFeedbackVaryings(mNextLink_TransformFeedbackVaryings,
-                                                  &scopedMappedTFVaryings);
-
-        std::vector<const char*> driverVaryings;
-        driverVaryings.reserve(scopedMappedTFVaryings.size());
-        for (const auto& cur : scopedMappedTFVaryings) {
-            driverVaryings.push_back(cur.c_str());
-        }
-
-        mContext->gl->fTransformFeedbackVaryings(mGLName, driverVaryings.size(),
-                                                 driverVaryings.data(),
-                                                 mNextLink_TransformFeedbackBufferMode);
+    if (!mTransformFeedbackVaryings.empty()) {
+        // Bind the transform feedback varyings.
+        // This can't be done trivially, because we have to deal with mapped names too.
+        mVertShader->ApplyTransformFeedbackVaryings(mGLName,
+                                                    mTransformFeedbackVaryings,
+                                                    mTransformFeedbackBufferMode,
+                                                    &mTempMappedVaryings);
     }
 
     LinkAndUpdate();
@@ -1125,63 +1076,10 @@ NumUsedLocationsByElemType(GLenum elemType)
     }
 }
 
-static uint8_t
-NumComponents(GLenum elemType)
-{
-    switch (elemType) {
-    case LOCAL_GL_FLOAT:
-    case LOCAL_GL_INT:
-    case LOCAL_GL_UNSIGNED_INT:
-    case LOCAL_GL_BOOL:
-        return 1;
-
-    case LOCAL_GL_FLOAT_VEC2:
-    case LOCAL_GL_INT_VEC2:
-    case LOCAL_GL_UNSIGNED_INT_VEC2:
-    case LOCAL_GL_BOOL_VEC2:
-        return 2;
-
-    case LOCAL_GL_FLOAT_VEC3:
-    case LOCAL_GL_INT_VEC3:
-    case LOCAL_GL_UNSIGNED_INT_VEC3:
-    case LOCAL_GL_BOOL_VEC3:
-        return 3;
-
-    case LOCAL_GL_FLOAT_VEC4:
-    case LOCAL_GL_INT_VEC4:
-    case LOCAL_GL_UNSIGNED_INT_VEC4:
-    case LOCAL_GL_BOOL_VEC4:
-    case LOCAL_GL_FLOAT_MAT2:
-        return 4;
-
-    case LOCAL_GL_FLOAT_MAT2x3:
-    case LOCAL_GL_FLOAT_MAT3x2:
-        return 6;
-
-    case LOCAL_GL_FLOAT_MAT2x4:
-    case LOCAL_GL_FLOAT_MAT4x2:
-        return 8;
-
-    case LOCAL_GL_FLOAT_MAT3:
-        return 9;
-
-    case LOCAL_GL_FLOAT_MAT3x4:
-    case LOCAL_GL_FLOAT_MAT4x3:
-        return 12;
-
-    case LOCAL_GL_FLOAT_MAT4:
-        return 16;
-
-    default:
-        MOZ_CRASH("`elemType`");
-    }
-}
-
 bool
 WebGLProgram::ValidateAfterTentativeLink(nsCString* const out_linkLog) const
 {
     const auto& linkInfo = mMostRecentLinkInfo;
-    const auto& gl = mContext->gl;
 
     // Check if the attrib name conflicting to uniform name
     for (const auto& attrib : linkInfo->attribs) {
@@ -1221,107 +1119,15 @@ WebGLProgram::ValidateAfterTentativeLink(nsCString* const out_linkLog) const
         }
     }
 
-    // Forbid:
-    // * Unrecognized varying name
-    // * Duplicate varying name
-    // * Too many components for specified buffer mode
-    if (mNextLink_TransformFeedbackVaryings.size()) {
-        GLuint maxComponentsPerIndex = 0;
-        switch (mNextLink_TransformFeedbackBufferMode) {
-        case LOCAL_GL_INTERLEAVED_ATTRIBS:
-            gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS,
-                             &maxComponentsPerIndex);
-            break;
-
-        case LOCAL_GL_SEPARATE_ATTRIBS:
-            gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS,
-                             &maxComponentsPerIndex);
-            break;
-
-        default:
-            MOZ_CRASH("`bufferMode`");
-        }
-
-        std::vector<size_t> componentsPerVert;
-        std::set<const WebGLActiveInfo*> alreadyUsed;
-        for (const auto& wideUserName : mNextLink_TransformFeedbackVaryings) {
-            if (!componentsPerVert.size() ||
-                mNextLink_TransformFeedbackBufferMode == LOCAL_GL_SEPARATE_ATTRIBS)
-            {
-                componentsPerVert.push_back(0);
-            }
-
-            ////
-
-            const WebGLActiveInfo* curInfo = nullptr;
-            for (const auto& info : linkInfo->transformFeedbackVaryings) {
-                const NS_ConvertASCIItoUTF16 info_wideUserName(info->mBaseUserName);
-                if (info_wideUserName == wideUserName) {
-                    curInfo = info.get();
-                    break;
-                }
-            }
-
-            if (!curInfo) {
-                const NS_LossyConvertUTF16toASCII asciiUserName(wideUserName);
-                *out_linkLog = nsPrintfCString("Transform feedback varying \"%s\" not"
-                                               " found.",
-                                               asciiUserName.BeginReading());
-                return false;
-            }
-
-            const auto insertResPair = alreadyUsed.insert(curInfo);
-            const auto& didInsert = insertResPair.second;
-            if (!didInsert) {
-                const NS_LossyConvertUTF16toASCII asciiUserName(wideUserName);
-                *out_linkLog = nsPrintfCString("Transform feedback varying \"%s\""
-                                               " specified twice.",
-                                               asciiUserName.BeginReading());
-                return false;
-            }
-
-            ////
-
-            size_t varyingComponents = NumComponents(curInfo->mElemType);
-            varyingComponents *= curInfo->mElemCount;
-
-            auto& totalComponentsForIndex = *(componentsPerVert.rbegin());
-            totalComponentsForIndex += varyingComponents;
-
-            if (totalComponentsForIndex > maxComponentsPerIndex) {
-                const NS_LossyConvertUTF16toASCII asciiUserName(wideUserName);
-                *out_linkLog = nsPrintfCString("Transform feedback varying \"%s\""
-                                               " pushed `componentsForIndex` over the"
-                                               " limit of %u.",
-                                               asciiUserName.BeginReading(),
-                                               maxComponentsPerIndex);
-                return false;
-            }
-        }
-
-        linkInfo->componentsPerTFVert.swap(componentsPerVert);
-    }
-
     return true;
 }
 
 bool
 WebGLProgram::UseProgram() const
 {
-    const char funcName[] = "useProgram";
-
     if (!mMostRecentLinkInfo) {
-        mContext->ErrorInvalidOperation("%s: Program has not been successfully linked.",
-                                        funcName);
-        return false;
-    }
-
-    if (mContext->mBoundTransformFeedback &&
-        mContext->mBoundTransformFeedback->mIsActive &&
-        !mContext->mBoundTransformFeedback->mIsPaused)
-    {
-        mContext->ErrorInvalidOperation("%s: Transform feedback active and not paused.",
-                                        funcName);
+        mContext->ErrorInvalidOperation("useProgram: Program has not been successfully"
+                                        " linked.");
         return false;
     }
 
@@ -1373,6 +1179,11 @@ WebGLProgram::LinkAndUpdate()
         mLinkLog.SetLength(0);
     }
 
+    // Post link, temporary mapped varying names for transform feedback can be discarded.
+    // The memory can only be deleted after log is queried or the link status will fail.
+    std::vector<std::string> empty;
+    empty.swap(mTempMappedVaryings);
+
     GLint ok = 0;
     gl->fGetProgramiv(mGLName, LOCAL_GL_LINK_STATUS, &ok);
     if (!ok)
@@ -1422,43 +1233,42 @@ void
 WebGLProgram::TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
                                         GLenum bufferMode)
 {
-    const char funcName[] = "transformFeedbackVaryings";
-
-    const auto& gl = mContext->gl;
-    gl->MakeCurrent();
-
-    switch (bufferMode) {
-    case LOCAL_GL_INTERLEAVED_ATTRIBS:
-        break;
-
-    case LOCAL_GL_SEPARATE_ATTRIBS:
-        {
-            GLuint maxAttribs = 0;
-            gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
-                             &maxAttribs);
-            if (varyings.Length() >= maxAttribs) {
-                mContext->ErrorInvalidValue("%s: Length of `varyings` exceeds %s.",
-                                            funcName,
-                                            "TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
-                return;
-            }
-        }
-        break;
-
-    default:
-        mContext->ErrorInvalidEnum("%s: Bad `bufferMode`: 0x%04x.", funcName, bufferMode);
+    if (bufferMode != LOCAL_GL_INTERLEAVED_ATTRIBS &&
+        bufferMode != LOCAL_GL_SEPARATE_ATTRIBS)
+    {
+        mContext->ErrorInvalidEnum("transformFeedbackVaryings: `bufferMode` %s is "
+                                   "invalid. Must be one of gl.INTERLEAVED_ATTRIBS or "
+                                   "gl.SEPARATE_ATTRIBS.",
+                                   mContext->EnumName(bufferMode));
         return;
     }
 
-    ////
+    size_t varyingsCount = varyings.Length();
+    if (bufferMode == LOCAL_GL_SEPARATE_ATTRIBS &&
+        varyingsCount >= mContext->mGLMaxTransformFeedbackSeparateAttribs)
+    {
+        mContext->ErrorInvalidValue("transformFeedbackVaryings: Number of `varyings` exc"
+                                    "eeds gl.MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS.");
+        return;
+    }
 
-    mNextLink_TransformFeedbackVaryings.assign(varyings.Elements(),
-                                               varyings.Elements() + varyings.Length());
-    mNextLink_TransformFeedbackBufferMode = bufferMode;
+    std::vector<nsCString> asciiVaryings;
+    for (size_t i = 0; i < varyingsCount; i++) {
+        if (!ValidateGLSLVariableName(varyings[i], mContext, "transformFeedbackVaryings"))
+            return;
+
+        NS_LossyConvertUTF16toASCII asciiName(varyings[i]);
+        asciiVaryings.push_back(asciiName);
+    }
+
+    // All validated. Translate the strings and store them until
+    // program linking.
+    mTransformFeedbackBufferMode = bufferMode;
+    mTransformFeedbackVaryings.swap(asciiVaryings);
 }
 
 already_AddRefed<WebGLActiveInfo>
-WebGLProgram::GetTransformFeedbackVarying(GLuint index) const
+WebGLProgram::GetTransformFeedbackVarying(GLuint index)
 {
     // No docs in the WebGL 2 spec for this function. Taking the language for
     // getActiveAttrib, which states that the function returns null on any error.
