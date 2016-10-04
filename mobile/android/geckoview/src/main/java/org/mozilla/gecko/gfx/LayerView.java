@@ -676,10 +676,6 @@ public class LayerView extends FrameLayout {
         return mFullScreenState != FullScreenState.NONE;
     }
 
-    public FullScreenState getFullScreenState() {
-        return mFullScreenState;
-    }
-
     public void setMaxTranslation(float aMaxTranslation) {
         mToolbarAnimator.setMaxTranslation(aMaxTranslation);
     }
