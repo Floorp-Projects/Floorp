@@ -586,9 +586,15 @@ libs:: classes.dex
 
 # Generate Java binder interfaces from AIDL files.
 aidl_src_path := $(srcdir)/aidl
+aidl_geckoview_src_path := $(srcdir)/../geckoview/src/main/aidl
 aidl_target_path := generated
 media_pkg := org/mozilla/gecko/media
+process_pkg := org/mozilla/gecko/process
 
 $(aidl_target_path)/$(media_pkg)/%.java:$(aidl_src_path)/$(media_pkg)/%.aidl
 	@echo "Processing AIDL: $< => $@"
 	$(AIDL) -p$(ANDROID_SDK)/framework.aidl -I$(aidl_src_path) -o$(aidl_target_path) $<
+
+$(aidl_target_path)/$(process_pkg)/%.java:$(aidl_geckoview_src_path)/$(process_pkg)/%.aidl
+	@echo "Processing AIDL: $< => $@"
+	$(AIDL) -p$(ANDROID_SDK)/framework.aidl -I$(aidl_geckoview_src_path) -o$(aidl_target_path) $<
