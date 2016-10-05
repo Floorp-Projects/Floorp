@@ -661,7 +661,7 @@ SpecialPowersObserverAPI.prototype = {
           attributes.inIsolatedMozBrowser = true;
         }
         this._notifyCategoryAndObservers(null,
-                                         "clear-origin-data",
+                                         "clear-origin-attributes-data",
                                          JSON.stringify(attributes));
 
         let subject = {
