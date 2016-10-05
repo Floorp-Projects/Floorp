@@ -28,6 +28,8 @@ enum MixedContentTypes {
 #include "nsIChannelEventSink.h"
 #include "imgRequest.h"
 
+class nsILoadInfo; // forward declaration
+
 class nsMixedContentBlocker : public nsIContentPolicy,
                               public nsIChannelEventSink
 {
@@ -59,9 +61,41 @@ public:
                              nsISupports* aExtra,
                              nsIPrincipal* aRequestPrincipal,
                              int16_t* aDecision);
-  static void AccumulateMixedContentHSTS(nsIURI* aURI, bool aActive);
+  static void AccumulateMixedContentHSTS(nsIURI* aURI,
+                                         bool aActive,
+                                         bool aHasHSTSPriming);
+  /* If the document associated with aRequestingContext requires priming for
+   * aURI, propagate that to the LoadInfo so the HttpChannel will find out about
+   * it.
+   *
+   * @param aURI The URI associated with the load
+   * @param aRequestingContext the requesting context passed to ShouldLoad
+   * @param aLoadInfo the LoadInfo for the load
+   */
+  static nsresult MarkLoadInfoForPriming(nsIURI* aURI,
+                                         nsISupports* aRequestingContext,
+                                         nsILoadInfo* aLoadInfo);
+
+  /* Given a context, return whether HSTS was marked on the document associated
+   * with the load for the given URI. This is used by MarkLoadInfoForPriming and
+   * directly by the image loader to determine whether to allow a load to occur
+   * from the cache.
+   *
+   * @param aURI The URI associated with the load
+   * @param aRequestingContext the requesting context passed to ShouldLoad
+   * @param aSendPrimingRequest out true if priming is required on the channel
+   * @param aMixedContentWouldBlock out true if mixed content would block
+   */
+  static nsresult GetHSTSPrimingFromRequestingContext(nsIURI* aURI,
+                                                      nsISupports* aRequestingContext,
+                                                      bool* aSendPrimingRequest,
+                                                      bool* aMixedContentWouldBlock);
+
+
   static bool sBlockMixedScript;
   static bool sBlockMixedDisplay;
+  static bool sUseHSTS;
+  static bool sSendHSTSPriming;
 };
 
 #endif /* nsMixedContentBlocker_h___ */
