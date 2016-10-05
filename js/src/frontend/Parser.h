@@ -1259,7 +1259,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     bool checkFunctionDefinition(HandleAtom funAtom, Node pn, FunctionSyntaxKind kind,
                                  GeneratorKind generatorKind, bool* tryAnnexB);
-    bool skipLazyInnerFunction(Node pn, bool tryAnnexB);
+    bool skipLazyInnerFunction(Node pn, FunctionSyntaxKind kind, bool tryAnnexB);
     bool innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun,
                        InHandling inHandling, FunctionSyntaxKind kind,
                        GeneratorKind generatorKind, bool tryAnnexB,
