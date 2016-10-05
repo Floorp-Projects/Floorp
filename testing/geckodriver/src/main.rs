@@ -39,6 +39,7 @@ macro_rules! try_opt {
 
 mod logging;
 mod marionette;
+mod capabilities;
 
 use logging::LogLevel;
 use marionette::{MarionetteHandler, MarionetteSettings, extension_routes};
@@ -176,92 +177,4 @@ fn main() {
 
     std::io::stdout().flush().unwrap();
     std::process::exit(exit_code as i32);
-}
-
-#[cfg(test)]
-mod tests {
-    extern crate mozprofile;
-    extern crate rustc_serialize;
-
-    use std::collections::BTreeMap;
-    use std::default::Default;
-    use std::fs::File;
-    use std::io::Read;
-
-    use self::mozprofile::preferences::Pref;
-    use self::rustc_serialize::base64::{ToBase64, Config, CharacterSet, Newline};
-    use self::rustc_serialize::json::Json;
-
-    use webdriver::command::NewSessionParameters;
-    use marionette::{FirefoxOptions, MarionetteHandler};
-
-    fn example_profile() -> Json {
-        let mut profile_data = Vec::with_capacity(1024);
-        let mut profile = File::open("src/tests/profile.zip").unwrap();
-        profile.read_to_end(&mut profile_data).unwrap();
-        let base64_config = Config {
-            char_set: CharacterSet::Standard,
-            newline: Newline::LF,
-            pad: true,
-            line_length: None
-        };
-        Json::String(profile_data.to_base64(base64_config))
-    }
-
-    fn capabilities() -> NewSessionParameters {
-        let desired: BTreeMap<String, Json> = BTreeMap::new();
-        let required: BTreeMap<String, Json> = BTreeMap::new();
-        NewSessionParameters {
-            desired: desired,
-            required: required
-        }
-    }
-
-    #[test]
-    fn test_profile() {
-        let encoded_profile = example_profile();
-
-        let mut capabilities = capabilities();
-        let mut firefox_options: BTreeMap<String, Json> = BTreeMap::new();
-        firefox_options.insert("profile".into(), encoded_profile);
-        capabilities.required.insert("moz:firefoxOptions".into(), Json::Object(firefox_options));
-
-        let options = FirefoxOptions::from_capabilities(&mut capabilities).unwrap();
-        let mut profile = options.profile.unwrap();
-        let prefs = profile.user_prefs().unwrap();
-
-        println!("{:?}",prefs.prefs);
-
-        assert_eq!(prefs.get("startup.homepage_welcome_url"),
-                   Some(&Pref::new("data:text/html,PASS")));
-    }
-
-    #[test]
-    fn test_prefs() {
-        let encoded_profile = example_profile();
-
-        let mut capabilities = capabilities();
-        let mut firefox_options: BTreeMap<String, Json> = BTreeMap::new();
-        firefox_options.insert("profile".into(), encoded_profile);
-        let mut prefs: BTreeMap<String, Json> = BTreeMap::new();
-        prefs.insert("browser.display.background_color".into(), Json::String("#00ff00".into()));
-        firefox_options.insert("prefs".into(), Json::Object(prefs));
-        capabilities.required.insert("moz:firefoxOptions".into(), Json::Object(firefox_options));
-
-
-        let options = FirefoxOptions::from_capabilities(&mut capabilities).unwrap();
-        let mut profile = options.profile.unwrap();
-
-        let handler = MarionetteHandler::new(Default::default());
-        handler.set_prefs(2828, &mut profile, true, options.prefs).unwrap();
-
-        let prefs_set = profile.user_prefs().unwrap();
-        println!("{:?}",prefs_set.prefs);
-        assert_eq!(prefs_set.get("startup.homepage_welcome_url"),
-                   Some(&Pref::new("data:text/html,PASS")));
-        assert_eq!(prefs_set.get("browser.display.background_color"),
-                   Some(&Pref::new("#00ff00")));
-        assert_eq!(prefs_set.get("marionette.defaultPrefs.port"),
-                   Some(&Pref::new(2828)));
-    }
 }
