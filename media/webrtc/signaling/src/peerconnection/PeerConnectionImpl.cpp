@@ -79,8 +79,6 @@
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/RTCCertificate.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
-#include "mozilla/dom/RTCDTMFSenderBinding.h"
-#include "mozilla/dom/RTCDTMFToneChangeEvent.h"
 #include "mozilla/dom/RTCRtpSenderBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
@@ -139,6 +137,7 @@ using namespace mozilla::dom;
 typedef PCObserverString ObString;
 
 static const char* logTag = "PeerConnectionImpl";
+
 
 // Getting exceptions back down from PCObserver is generally not harmful.
 namespace {
@@ -2499,15 +2498,6 @@ PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   PC_AUTO_ENTER_API_CALL(true);
 
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-
-  for (size_t i = 0; i < mDTMFStates.Length(); ++i) {
-    if (mDTMFStates[i].mTrackId == trackId) {
-      mDTMFStates[i].mSendTimer->Cancel();
-      mDTMFStates.RemoveElementAt(i);
-      break;
-    }
-  }
-
   RefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamByTrackId(trackId);
 
   if (!info) {
@@ -2535,107 +2525,16 @@ PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   return NS_OK;
 }
 
-static int GetDTMFToneCode(uint16_t c)
-{
-  const char* DTMF_TONECODES = "0123456789*#ABCD";
-
-  if (c == ',') {
-    // , is a special character indicating a 2 second delay
-    return -1;
-  }
-
-  const char* i = strchr(DTMF_TONECODES, c);
-  MOZ_ASSERT(i);
-  return i - DTMF_TONECODES;
-}
-
 NS_IMETHODIMP
 PeerConnectionImpl::InsertDTMF(mozilla::dom::RTCRtpSender& sender,
                                const nsAString& tones, uint32_t duration,
                                uint32_t interToneGap) {
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  PC_AUTO_ENTER_API_CALL(false);
-
-  JSErrorResult jrv;
-
-  // Retrieve track
-  RefPtr<MediaStreamTrack> mst = sender.GetTrack(jrv);
-  if (jrv.Failed()) {
-    NS_WARNING("Failed to retrieve track for RTCRtpSender!");
-    return jrv.StealNSResult();
-  }
-
-  std::string senderTrackId = GetTrackId(*mst);
-
-  // Attempt to locate state for the DTMFSender
-  DTMFState* state = nullptr;
-  for (auto& dtmfState : mDTMFStates) {
-    if (dtmfState.mTrackId == senderTrackId) {
-      state = &dtmfState;
-      break;
-    }
-  }
-
-  // No state yet, create a new one
-  if (!state) {
-    state = mDTMFStates.AppendElement();
-    state->mPeerConnectionImpl = this;
-    state->mTrackId = senderTrackId;
-    state->mSendTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    MOZ_ASSERT(state->mSendTimer);
-  }
-  MOZ_ASSERT(state);
-
-  auto trackPairs = mJsepSession->GetNegotiatedTrackPairs();
-  state->mLevel = -1;
-  for (auto& trackPair : trackPairs) {
-    if (trackPair.mSending->GetTrackId() == state->mTrackId) {
-      if (trackPair.mBundleLevel.isSome()) {
-        state->mLevel = *trackPair.mBundleLevel;
-      } else {
-        state->mLevel = trackPair.mLevel;
-      }
-      break;
-    }
-  }
-
-  state->mTones = tones;
-  state->mDuration = duration;
-  state->mInterToneGap = interToneGap;
-  if (!state->mTones.IsEmpty()) {
-    state->mSendTimer->InitWithFuncCallback(DTMFSendTimerCallback_m, state, 0,
-                                            nsITimer::TYPE_ONE_SHOT);
-  }
-#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PeerConnectionImpl::GetDTMFToneBuffer(mozilla::dom::RTCRtpSender& sender,
-                                      nsAString& outToneBuffer) {
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  PC_AUTO_ENTER_API_CALL(false);
-
-  JSErrorResult jrv;
-
-  // Retrieve track
-  RefPtr<MediaStreamTrack> mst = sender.GetTrack(jrv);
-  if (jrv.Failed()) {
-    NS_WARNING("Failed to retrieve track for RTCRtpSender!");
-    return jrv.StealNSResult();
-  }
-
-  std::string senderTrackId = GetTrackId(*mst);
-
-  // Attempt to locate state for the DTMFSender
-  for (auto& dtmfState : mDTMFStates) {
-    if (dtmfState.mTrackId == senderTrackId) {
-      outToneBuffer = dtmfState.mTones;
-      break;
-    }
-  }
-#endif
-
+                                      nsAString& outTones) {
   return NS_OK;
 }
 
@@ -2643,16 +2542,6 @@ NS_IMETHODIMP
 PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
                                  MediaStreamTrack& aWithTrack) {
   PC_AUTO_ENTER_API_CALL(true);
-
-  std::string trackId = PeerConnectionImpl::GetTrackId(aThisTrack);
-
-  for (size_t i = 0; i < mDTMFStates.Length(); ++i) {
-    if (mDTMFStates[i].mTrackId == trackId) {
-      mDTMFStates[i].mSendTimer->Cancel();
-      mDTMFStates.RemoveElementAt(i);
-      break;
-    }
-  }
 
   RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
@@ -3069,10 +2958,6 @@ nsresult
 PeerConnectionImpl::CloseInt()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-
-  for (auto& dtmfState : mDTMFStates) {
-    dtmfState.mSendTimer->Cancel();
-  }
 
   // We do this at the end of the call because we want to make sure we've waited
   // for all trickle ICE candidates to come in; this can happen well after we've
@@ -4113,67 +3998,6 @@ PeerConnectionImpl::GetRemoteStreams(nsTArray<RefPtr<DOMMediaStream > >& result)
   return NS_OK;
 #else
   return NS_ERROR_FAILURE;
-#endif
-}
-
-void
-PeerConnectionImpl::DTMFSendTimerCallback_m(nsITimer* timer, void* closure)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  auto state = static_cast<DTMFState*>(closure);
-
-  nsString eventTone;
-  if (!state->mTones.IsEmpty()) {
-    uint16_t toneChar = state->mTones.CharAt(0);
-    int tone = GetDTMFToneCode(toneChar);
-
-    eventTone.Assign(toneChar);
-
-    state->mTones.Cut(0, 1);
-
-    if (tone == -1) {
-      state->mSendTimer->InitWithFuncCallback(DTMFSendTimerCallback_m, state,
-                                              2000, nsITimer::TYPE_ONE_SHOT);
-    } else {
-      // Reset delay if necessary
-      state->mSendTimer->InitWithFuncCallback(DTMFSendTimerCallback_m, state,
-                                              state->mDuration + state->mInterToneGap,
-                                              nsITimer::TYPE_ONE_SHOT);
-
-      RefPtr<AudioSessionConduit> conduit =
-        state->mPeerConnectionImpl->mMedia->GetAudioConduit(state->mLevel);
-
-      if (conduit) {
-        uint32_t duration = state->mDuration;
-        state->mPeerConnectionImpl->mSTSThread->Dispatch(WrapRunnableNM([conduit, tone, duration] () {
-            //Note: We default to channel 0, not inband, and 6dB attenuation.
-            //      here. We might want to revisit these choices in the future.
-            conduit->InsertDTMFTone(0, tone, true, duration, 6);
-          }), NS_DISPATCH_NORMAL);
-      }
-
-    }
-  } else {
-    state->mSendTimer->Cancel();
-  }
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(state->mPeerConnectionImpl->mPCObserver);
-  if (!pco) {
-    NS_WARNING("Failed to dispatch the RTCDTMFToneChange event!");
-    return;
-  }
-
-  nsString trackId;
-  trackId.AssignASCII(state->mTrackId.c_str());
-  JSErrorResult jrv;
-  pco->OnDTMFToneChange(trackId, eventTone, jrv);
-
-  if (jrv.Failed()) {
-    NS_WARNING("Failed to dispatch the RTCDTMFToneChange event!");
-    return;
-  }
 #endif
 }
 

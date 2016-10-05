@@ -222,9 +222,6 @@ public:
 
   bool SetDtmfPayloadType(unsigned char type) override;
 
-  bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
-                      int lengthMs, int attenuationDb) override;
-
 private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
   void operator=(const WebrtcAudioConduit& other) = delete;
