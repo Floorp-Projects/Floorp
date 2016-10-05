@@ -206,7 +206,7 @@ FinderHighlighter.prototype = {
         linksOnly, word,
         finder: this.finder,
         onRange: range => {
-          this.highlightRange(range, controller, window);
+          this.highlightRange(range);
           found = true;
         },
         useCache: true
@@ -227,16 +227,13 @@ FinderHighlighter.prototype = {
    * Add a range to the find selection, i.e. highlight it, and if it's inside an
    * editable node, track it.
    *
-   * @param {nsIDOMRange}            range      Range object to be highlighted
-   * @param {nsISelectionController} controller Selection controller of the
-   *                                            document that the range belongs
-   *                                            to
-   * @param {nsIDOMWindow}           window     Window object, whose DOM tree
-   *                                            is being traversed
+   * @param {nsIDOMRange} range Range object to be highlighted
    */
-  highlightRange(range, controller, window) {
+  highlightRange(range) {
     let node = range.startContainer;
     let editableNode = this._getEditableNode(node);
+    let window = node.ownerDocument.defaultView;
+    let controller = this.finder._getSelectionController(window);
     if (editableNode) {
       controller = editableNode.editor.selectionController;
     }
