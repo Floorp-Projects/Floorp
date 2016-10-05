@@ -224,7 +224,7 @@ mod tests {
         let mut capabilities = capabilities();
         let mut firefox_options: BTreeMap<String, Json> = BTreeMap::new();
         firefox_options.insert("profile".into(), encoded_profile);
-        capabilities.required.insert("firefoxOptions".into(), Json::Object(firefox_options));
+        capabilities.required.insert("moz:firefoxOptions".into(), Json::Object(firefox_options));
 
         let options = FirefoxOptions::from_capabilities(&mut capabilities).unwrap();
         let mut profile = options.profile.unwrap();
@@ -246,7 +246,7 @@ mod tests {
         let mut prefs: BTreeMap<String, Json> = BTreeMap::new();
         prefs.insert("browser.display.background_color".into(), Json::String("#00ff00".into()));
         firefox_options.insert("prefs".into(), Json::Object(prefs));
-        capabilities.required.insert("firefoxOptions".into(), Json::Object(firefox_options));
+        capabilities.required.insert("moz:firefoxOptions".into(), Json::Object(firefox_options));
 
 
         let options = FirefoxOptions::from_capabilities(&mut capabilities).unwrap();
