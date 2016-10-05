@@ -64,7 +64,7 @@ and may contain any of the following fields:
 
  <tr>
   <td><code>args</code>
-  <td>array of strings
+  <td>array&nbsp;of&nbsp;strings
   <td>Command line arguments to pass to the Firefox binary.
    These must include the leading <code>--</code> where required
    e.g. <code>["--devtools"]</code>.
