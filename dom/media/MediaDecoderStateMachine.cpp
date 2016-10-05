@@ -812,7 +812,7 @@ private:
       mMaster->VideoQueue().Finish();
     }
 
-    mMaster->SeekCompleted();
+    SeekCompleted();
   }
 
   void OnSeekTaskRejected(const SeekTaskRejectValue& aValue)
@@ -830,6 +830,84 @@ private:
     mMaster->DecodeError(aValue.mError);
 
     mMaster->DiscardSeekTaskIfExist();
+  }
+
+  void SeekCompleted()
+  {
+    int64_t seekTime = mMaster->mSeekTask->GetSeekTarget().GetTime().ToMicroseconds();
+    int64_t newCurrentTime = seekTime;
+
+    // Setup timestamp state.
+    RefPtr<MediaData> video = mMaster->VideoQueue().PeekFront();
+    if (seekTime == mMaster->Duration().ToMicroseconds()) {
+      newCurrentTime = seekTime;
+    } else if (mMaster->HasAudio()) {
+      RefPtr<MediaData> audio = mMaster->AudioQueue().PeekFront();
+      // Though we adjust the newCurrentTime in audio-based, and supplemented
+      // by video. For better UX, should NOT bind the slide position to
+      // the first audio data timestamp directly.
+      // While seeking to a position where there's only either audio or video, or
+      // seeking to a position lies before audio or video, we need to check if
+      // seekTime is bounded in suitable duration. See Bug 1112438.
+      int64_t audioStart = audio ? audio->mTime : seekTime;
+      // We only pin the seek time to the video start time if the video frame
+      // contains the seek time.
+      if (video && video->mTime <= seekTime && video->GetEndTime() > seekTime) {
+        newCurrentTime = std::min(audioStart, video->mTime);
+      } else {
+        newCurrentTime = audioStart;
+      }
+    } else {
+      newCurrentTime = video ? video->mTime : seekTime;
+    }
+
+    // Change state to DECODING or COMPLETED now.
+    bool isLiveStream = Resource()->IsLiveStream();
+    State nextState;
+    if (newCurrentTime == mMaster->Duration().ToMicroseconds() && !isLiveStream) {
+      // Seeked to end of media, move to COMPLETED state. Note we don't do
+      // this when playing a live stream, since the end of media will advance
+      // once we download more data!
+      // Explicitly set our state so we don't decode further, and so
+      // we report playback ended to the media element.
+      nextState = DECODER_STATE_COMPLETED;
+    } else {
+      nextState = DECODER_STATE_DECODING;
+    }
+
+    // We want to resolve the seek request prior finishing the first frame
+    // to ensure that the seeked event is fired prior loadeded.
+    mMaster->mCurrentSeek.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
+
+    // Discard and nullify the seek task.
+    // Reset the MediaDecoderReaderWrapper's callbask.
+    mMaster->DiscardSeekTaskIfExist();
+
+    // NOTE: Discarding the mSeekTask must be done before here. The following code
+    // might ask the MediaDecoderReaderWrapper to request media data, however, the
+    // SeekTask::Discard() will ask MediaDecoderReaderWrapper to discard media
+    // data requests.
+
+    // Notify FirstFrameLoaded now if we haven't since we've decoded some data
+    // for readyState to transition to HAVE_CURRENT_DATA and fire 'loadeddata'.
+    if (!mMaster->mSentFirstFrameLoadedEvent) {
+      // Only MSE can start seeking before finishing decoding first frames.
+      MOZ_ASSERT(Reader()->ForceZeroStartTime());
+      mMaster->FinishDecodeFirstFrame();
+    }
+
+    // Ensure timestamps are up to date.
+    mMaster->UpdatePlaybackPositionInternal(newCurrentTime);
+
+    // Try to decode another frame to detect if we're at the end...
+    SLOG("Seek completed, mCurrentPosition=%lld", mMaster->mCurrentPosition.Ref());
+
+    if (video) {
+      mMaster->mMediaSink->Redraw(mMaster->mInfo.mVideo);
+      mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
+    }
+
+    SetState(nextState);
   }
 
   SeekJob mSeekJob;
@@ -2539,91 +2617,6 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   }
 
   EnqueueFirstFrameLoadedEvent();
-}
-
-void
-MediaDecoderStateMachine::SeekCompleted()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
-
-  int64_t seekTime = mSeekTask->GetSeekTarget().GetTime().ToMicroseconds();
-  int64_t newCurrentTime = seekTime;
-
-  // Setup timestamp state.
-  RefPtr<MediaData> video = VideoQueue().PeekFront();
-  if (seekTime == Duration().ToMicroseconds()) {
-    newCurrentTime = seekTime;
-  } else if (HasAudio()) {
-    RefPtr<MediaData> audio = AudioQueue().PeekFront();
-    // Though we adjust the newCurrentTime in audio-based, and supplemented
-    // by video. For better UX, should NOT bind the slide position to
-    // the first audio data timestamp directly.
-    // While seeking to a position where there's only either audio or video, or
-    // seeking to a position lies before audio or video, we need to check if
-    // seekTime is bounded in suitable duration. See Bug 1112438.
-    int64_t audioStart = audio ? audio->mTime : seekTime;
-    // We only pin the seek time to the video start time if the video frame
-    // contains the seek time.
-    if (video && video->mTime <= seekTime && video->GetEndTime() > seekTime) {
-      newCurrentTime = std::min(audioStart, video->mTime);
-    } else {
-      newCurrentTime = audioStart;
-    }
-  } else {
-    newCurrentTime = video ? video->mTime : seekTime;
-  }
-
-  // Change state to DECODING or COMPLETED now.
-  bool isLiveStream = mResource->IsLiveStream();
-  State nextState;
-  if (newCurrentTime == Duration().ToMicroseconds() && !isLiveStream) {
-    // Seeked to end of media, move to COMPLETED state. Note we don't do
-    // this when playing a live stream, since the end of media will advance
-    // once we download more data!
-    DECODER_LOG("Changed state from SEEKING (to %lld) to COMPLETED", seekTime);
-    // Explicitly set our state so we don't decode further, and so
-    // we report playback ended to the media element.
-    nextState = DECODER_STATE_COMPLETED;
-  } else {
-    DECODER_LOG("Changed state from SEEKING (to %lld) to DECODING", seekTime);
-    nextState = DECODER_STATE_DECODING;
-  }
-
-  // We want to resolve the seek request prior finishing the first frame
-  // to ensure that the seeked event is fired prior loadeded.
-  mCurrentSeek.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
-
-  // Discard and nullify the seek task.
-  // Reset the MediaDecoderReaderWrapper's callbask.
-  DiscardSeekTaskIfExist();
-
-  // NOTE: Discarding the mSeekTask must be done before here. The following code
-  // might ask the MediaDecoderReaderWrapper to request media data, however, the
-  // SeekTask::Discard() will ask MediaDecoderReaderWrapper to discard media
-  // data requests.
-
-  // Notify FirstFrameLoaded now if we haven't since we've decoded some data
-  // for readyState to transition to HAVE_CURRENT_DATA and fire 'loadeddata'.
-  if (!mSentFirstFrameLoadedEvent) {
-    // Only MSE can start seeking before finishing decoding first frames.
-    MOZ_ASSERT(mReader->ForceZeroStartTime());
-    FinishDecodeFirstFrame();
-  }
-
-  // Ensure timestamps are up to date.
-  UpdatePlaybackPositionInternal(newCurrentTime);
-
-  // Try to decode another frame to detect if we're at the end...
-  DECODER_LOG("Seek completed, mCurrentPosition=%lld", mCurrentPosition.Ref());
-
-  if (video) {
-    mMediaSink->Redraw(mInfo.mVideo);
-    mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
-  }
-
-  SetState(nextState);
-  MOZ_ASSERT(IsStateMachineScheduled());
 }
 
 RefPtr<ShutdownPromise>
