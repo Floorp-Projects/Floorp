@@ -145,5 +145,11 @@ VideoDecoderManagerChild::DeallocateSurfaceDescriptorGPUVideo(const SurfaceDescr
   }), NS_DISPATCH_NORMAL);
 }
 
+void
+VideoDecoderManagerChild::FatalError(const char* const aName, const char* const aMsg) const
+{
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+}
+
 } // namespace dom
 } // namespace mozilla

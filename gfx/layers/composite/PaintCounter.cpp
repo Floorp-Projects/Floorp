@@ -48,11 +48,10 @@ PaintCounter::~PaintCounter()
 
 void
 PaintCounter::Draw(Compositor* aCompositor, TimeDuration aPaintTime, TimeDuration aCompositeTime) {
-  const int buffer_size = 48;
-  char buffer[buffer_size];
-  snprintf(buffer, buffer_size, "P: %.2f  C: %.2f",
-           aPaintTime.ToMilliseconds(),
-           aCompositeTime.ToMilliseconds());
+  char buffer[48];
+  SprintfLiteral(buffer, "P: %.2f  C: %.2f",
+                 aPaintTime.ToMilliseconds(),
+                 aCompositeTime.ToMilliseconds());
 
   SkPaint paint;
   paint.setTextSize(32);
