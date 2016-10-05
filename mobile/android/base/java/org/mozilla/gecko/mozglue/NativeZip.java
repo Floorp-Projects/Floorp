@@ -38,10 +38,6 @@ public class NativeZip implements NativeReference {
         release();
     }
 
-    public void close() {
-        release();
-    }
-
     @Override
     public void release() {
         if (mObj != 0) {
