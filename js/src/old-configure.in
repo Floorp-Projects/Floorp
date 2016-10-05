@@ -1003,23 +1003,6 @@ AC_LANG_CPLUSPLUS
 
 MOZ_CXX11
 
-dnl Check for .hidden assembler directive and visibility attribute.
-dnl Borrowed from glibc configure.in
-dnl ===============================================================
-if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
-  AC_DEFINE(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE)
-  AC_DEFINE(HAVE_VISIBILITY_ATTRIBUTE)
-  case "$OS_TARGET" in
-  Darwin)
-    VISIBILITY_FLAGS='-fvisibility=hidden -fvisibility-inlines-hidden'
-    ;;
-  *)
-    VISIBILITY_FLAGS="-I${DIST}/system_wrappers -include ${_topsrcdir}/config/gcc_hidden.h"
-    WRAP_SYSTEM_INCLUDES=1
-    ;;
-  esac
-fi         # GNU_CC
-
 case "${OS_TARGET}" in
 WINNT|Darwin|Android)
   ;;
@@ -1028,9 +1011,6 @@ WINNT|Darwin|Android)
   WRAP_STL_INCLUDES=1
   ;;
 esac
-
-AC_SUBST(WRAP_SYSTEM_INCLUDES)
-AC_SUBST_LIST(VISIBILITY_FLAGS)
 
 dnl Checks for header files.
 dnl ========================================================

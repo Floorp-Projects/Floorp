@@ -47,6 +47,23 @@ SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSetBorrowedMut set, RawServoStyleSheetBorrowed sheet,
                    RawServoStyleSheetBorrowed reference)
 
+// Animations API
+SERVO_BINDING_FUNC(Servo_ParseProperty,
+                   ServoDeclarationBlockStrong,
+                   const uint8_t* property_bytes,
+                   uint32_t property_length,
+                   const uint8_t* value_bytes,
+                   uint32_t value_length,
+                   const uint8_t* base_bytes,
+                   uint32_t base_length,
+                   ThreadSafeURIHolder* base,
+                   ThreadSafeURIHolder* referrer,
+                   ThreadSafePrincipalHolder* principal)
+SERVO_BINDING_FUNC(Servo_RestyleWithAddedDeclaration,
+                   ServoComputedValuesStrong,
+                   ServoDeclarationBlockBorrowed declarations,
+                   ServoComputedValuesBorrowed previous_style)
+
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, ServoDeclarationBlockStrong,
                    const uint8_t* bytes, uint32_t length,
@@ -55,12 +72,18 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddRef, void,
                    ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
                    ServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_Equals, bool,
+                   ServoDeclarationBlockBorrowed a,
+                   ServoDeclarationBlockBorrowed b)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetCache, nsHTMLCSSStyleSheet*,
                    ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetImmutable, void,
                    ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_ClearCachePointer, void,
                    ServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SerializeOneValue, void,
+                   ServoDeclarationBlockBorrowed declarations,
+                   nsString* buffer)
 
 // CSS supports()
 SERVO_BINDING_FUNC(Servo_CSSSupports, bool,

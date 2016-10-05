@@ -394,6 +394,7 @@ EventTree::Clear()
 
   uint32_t eventsCount = mDependentEvents.Length();
   for (uint32_t jdx = 0; jdx < eventsCount; jdx++) {
+    mDependentEvents[jdx]->mEventType = AccEvent::eDoNotEmit;
     AccHideEvent* ev = downcast_accEvent(mDependentEvents[jdx]);
     if (ev && ev->NeedsShutdown()) {
       ev->Document()->ShutdownChildrenInSubtree(ev->mAccessible);
