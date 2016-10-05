@@ -622,10 +622,6 @@ private:
   // mSeekTask is responsible for executing the current seek request.
   RefPtr<SeekTask> mSeekTask;
 
-  // This method discards the seek task and then get the ownership of
-  // MedaiDecoderReaderWarpper back via registering MDSM's callback into it.
-  void DiscardSeekTaskIfExist();
-
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
 
