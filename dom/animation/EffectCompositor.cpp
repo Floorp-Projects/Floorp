@@ -9,6 +9,7 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
+#include "mozilla/AnimationComparator.h"
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/AnimationUtils.h"
@@ -150,6 +151,10 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
 
   MOZ_ASSERT(!foundSome || !aMatches || !aMatches->IsEmpty(),
              "If return value is true, matches array should be non-empty");
+
+  if (aMatches && foundSome) {
+    aMatches->Sort(AnimationPtrComparator<RefPtr<dom::Animation>>());
+  }
   return foundSome;
 }
 
