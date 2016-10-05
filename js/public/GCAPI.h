@@ -484,12 +484,23 @@ extern JS_PUBLIC_API(size_t)
 GetGCNumber();
 
 /**
- * Assert if a GC occurs while this class is live. This class does not disable
- * the static rooting hazard analysis.
+ * Pass a subclass of this "abstract" class to callees to require that they
+ * never GC. Subclasses can use assertions or the hazard analysis to ensure no
+ * GC happens.
  */
-class JS_PUBLIC_API(AutoAssertOnGC)
+class JS_PUBLIC_API(AutoRequireNoGC)
 {
-#ifdef DEBUG
+  protected:
+    AutoRequireNoGC() {}
+    ~AutoRequireNoGC() {}
+};
+
+/**
+ * Release assert if a GC occurs while this class is live. This class does
+ * not disable the static rooting hazard analysis.
+ */
+class JS_PUBLIC_API(AutoAssertOnGC) : public AutoRequireNoGC
+{
     js::gc::GCRuntime* gc;
     size_t gcNumber;
 
@@ -497,16 +508,6 @@ class JS_PUBLIC_API(AutoAssertOnGC)
     AutoAssertOnGC();
     explicit AutoAssertOnGC(JSContext* cx);
     ~AutoAssertOnGC();
-
-    static void VerifyIsSafeToGC(JSRuntime* rt);
-#else
-  public:
-    AutoAssertOnGC() {}
-    explicit AutoAssertOnGC(JSContext* cx) {}
-    ~AutoAssertOnGC() {}
-
-    static void VerifyIsSafeToGC(JSRuntime* rt) {}
-#endif
 };
 
 /**
@@ -575,13 +576,24 @@ class JS_PUBLIC_API(AutoAssertGCCallback) : public AutoSuppressGCAnalysis
  * internal pointers to GC things where the GC thing itself may not be present
  * for the static analysis: e.g. acquiring inline chars from a JSString* on the
  * heap.
+ *
+ * We only do the assertion checking in DEBUG builds.
  */
+#ifdef DEBUG
 class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
 {
   public:
     AutoCheckCannotGC() : AutoAssertOnGC() {}
     explicit AutoCheckCannotGC(JSContext* cx) : AutoAssertOnGC(cx) {}
 } JS_HAZ_GC_INVALIDATED;
+#else
+class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoRequireNoGC
+{
+  public:
+    AutoCheckCannotGC() {}
+    explicit AutoCheckCannotGC(JSContext* cx) {}
+} JS_HAZ_GC_INVALIDATED;
+#endif
 
 /**
  * Unsets the gray bit for anything reachable from |thing|. |kind| should not be

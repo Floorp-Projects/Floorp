@@ -203,7 +203,7 @@ GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
 
     // Crash if we perform a GC action when it is not safe.
     if (allowGC && !rt->mainThread.suppressGC)
-        JS::AutoAssertOnGC::VerifyIsSafeToGC(rt);
+        rt->gc.verifyIsSafeToGC();
 
     // For testing out of memory conditions
     if (js::oom::ShouldFailWithOOM()) {
