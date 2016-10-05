@@ -93,16 +93,12 @@ public class GeckoAccessibility {
         event.setItemCount(message.optInt("itemCount", -1));
         event.setCurrentItemIndex(message.optInt("currentItemIndex", -1));
         event.setBeforeText(message.optString("beforeText"));
-        if (Versions.feature14Plus) {
-            event.setToIndex(message.optInt("toIndex", -1));
-            event.setScrollable(message.optBoolean("scrollable"));
-            event.setScrollX(message.optInt("scrollX", -1));
-            event.setScrollY(message.optInt("scrollY", -1));
-        }
-        if (Versions.feature15Plus) {
-            event.setMaxScrollX(message.optInt("maxScrollX", -1));
-            event.setMaxScrollY(message.optInt("maxScrollY", -1));
-        }
+        event.setToIndex(message.optInt("toIndex", -1));
+        event.setScrollable(message.optBoolean("scrollable"));
+        event.setScrollX(message.optInt("scrollX", -1));
+        event.setScrollY(message.optInt("scrollY", -1));
+        event.setMaxScrollX(message.optInt("maxScrollX", -1));
+        event.setMaxScrollY(message.optInt("maxScrollY", -1));
     }
 
     private static void sendDirectAccessibilityEvent(int eventType, JSONObject message) {

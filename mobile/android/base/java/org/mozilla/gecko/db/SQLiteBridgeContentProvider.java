@@ -98,10 +98,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
             }
             mDatabasePerProfile = null;
         }
-
-        if (AppConstants.Versions.feature11Plus) {
-            super.shutdown();
-        }
+        super.shutdown();
     }
 
     @Override

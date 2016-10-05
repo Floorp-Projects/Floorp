@@ -39,20 +39,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private final Context mContext;
     private IntSize mScreenSize;
     private IntSize mWindowSize;
-    private DisplayPortMetrics mDisplayPort;
-
-    private boolean mRecordDrawTimes;
-    private final DrawTimingQueue mDrawTimingQueue;
-
-    /* The Gecko viewport as per the UI thread. Must be touched only on the UI thread.
-     * If any events being sent to Gecko that are relative to the Gecko viewport position,
-     * they must (a) be relative to this viewport, and (b) be sent on the UI thread to
-     * avoid races. As long as these two conditions are satisfied, and the events being
-     * sent to Gecko are processed in FIFO order, the events will properly be relative
-     * to the Gecko viewport position. Note that if Gecko updates its viewport independently,
-     * we get notified synchronously and also update this on the UI thread.
-     */
-    private ImmutableViewportMetrics mGeckoViewport;
 
     /*
      * The viewport metrics being used to draw the current frame. This is only
@@ -64,12 +50,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     /* Used as temporaries by syncViewportInfo */
     private final ViewTransform mCurrentViewTransform;
-
-    /* Used as the return value of progressiveUpdateCallback */
-    private final ProgressiveUpdateData mProgressiveUpdateData;
-    private DisplayPortMetrics mProgressiveUpdateDisplayPort;
-    private boolean mLastProgressiveUpdateWasLowPrecision;
-    private boolean mProgressiveUpdateWasInDanger;
 
     private boolean mForceRedraw;
 
@@ -113,12 +93,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mContext = context;
         mScreenSize = new IntSize(0, 0);
         mWindowSize = new IntSize(0, 0);
-        mDisplayPort = new DisplayPortMetrics();
-        mRecordDrawTimes = true;
-        mDrawTimingQueue = new DrawTimingQueue();
         mCurrentViewTransform = new ViewTransform(0, 0, 1);
-        mProgressiveUpdateData = new ProgressiveUpdateData();
-        mProgressiveUpdateDisplayPort = new DisplayPortMetrics();
 
         mForceRedraw = true;
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
@@ -156,8 +131,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mLayerRenderer = mView.getRenderer();
 
         sendResizeEventIfNecessary(true, null);
-
-        DisplayPortCalculator.initPrefs();
 
         // Gecko being ready is one of the two conditions (along with having an available
         // surface) that cause us to create the compositor. So here, now that we know gecko
@@ -294,7 +267,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // Page size is owned by the layer client, so no need to notify it of
         // this change.
 
-        post(new Runnable() {
+        mView.post(new Runnable() {
             @Override
             public void run() {
                 mView.requestRender();
@@ -342,17 +315,10 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 .setZoomFactor(zoom)
                 .setPageRect(pageRect, cssPageRect);
             // Since we have switched to displaying a different document, we need to update any
-            // viewport-related state we have lying around. This includes mGeckoViewport and
-            // mViewportMetrics. Usually this information is updated via handleViewportMessage
+            // viewport-related state we have lying around (i.e. mViewportMetrics).
+            // Usually this information is updated via handleViewportMessage
             // while we remain on the same document.
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    mGeckoViewport = newMetrics;
-                }
-            });
-
-            setViewportMetrics(newMetrics);
+            setViewportMetrics(newMetrics, true);
 
             // Indicate that the document is about to be composited so the
             // LayerView background can be removed.
@@ -360,8 +326,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 mView.setPaintState(LayerView.PAINT_BEFORE_FIRST);
             }
         }
-        DisplayPortCalculator.resetPageState();
-        mDrawTimingQueue.reset();
 
         mContentDocumentIsDisplayed = true;
     }
@@ -405,19 +369,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             mToolbarAnimator.scrollChangeResizeCompleted();
         }
         mToolbarAnimator.populateViewTransform(mCurrentViewTransform, mFrameMetrics);
-
-        if (layersUpdated && mRecordDrawTimes) {
-            // If we got a layers update, that means a draw finished. Check to see if the area drawn matches
-            // one of our requested displayports; if it does calculate the draw time and notify the
-            // DisplayPortCalculator
-            DisplayPortMetrics drawn = new DisplayPortMetrics(x, y, x + width, y + height, resolution);
-            long time = mDrawTimingQueue.findTimeFor(drawn);
-            if (time >= 0) {
-                long now = SystemClock.uptimeMillis();
-                time = now - time;
-                mRecordDrawTimes = DisplayPortCalculator.drawTimeUpdate(time, width * height);
-            }
-        }
 
         if (layersUpdated) {
             for (DrawListener listener : mDrawListeners) {
@@ -678,7 +629,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
     }
 
-    private void geometryChanged(DisplayPortMetrics displayPort) {
+    private void geometryChanged() {
         /* Let Gecko know if the screensize has changed */
         sendResizeEventIfNecessary(false, null);
     }
@@ -690,42 +641,8 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         setViewportSize(viewportSize.width, viewportSize.height, null);
     }
 
-    /** Implementation of PanZoomTarget */
-    @Override
-    public ImmutableViewportMetrics getViewportMetrics() {
+    ImmutableViewportMetrics getViewportMetrics() {
         return mViewportMetrics;
-    }
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public FullScreenState getFullScreenState() {
-        return mView.getFullScreenState();
-    }
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public PointF getVisibleEndOfLayerView() {
-        return mToolbarAnimator.getVisibleEndOfLayerView();
-    }
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public void setAnimationTarget(ImmutableViewportMetrics metrics) {
-        if (mGeckoIsReady) {
-            // We know what the final viewport of the animation is going to be, so
-            // immediately request a draw of that area by setting the display port
-            // accordingly. This way we should have the content pre-rendered by the
-            // time the animation is done.
-            DisplayPortMetrics displayPort = DisplayPortCalculator.calculate(metrics, null);
-        }
-    }
-
-    /** Implementation of PanZoomTarget
-     * You must hold the monitor while calling this.
-     */
-    @Override
-    public void setViewportMetrics(ImmutableViewportMetrics metrics) {
-        setViewportMetrics(metrics, true);
     }
 
     /*
@@ -751,7 +668,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
         mView.requestRender();
         if (notifyGecko && mGeckoIsReady) {
-            geometryChanged(null);
+            geometryChanged();
         }
     }
 
@@ -768,70 +685,24 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         viewportMetricsChanged(notifyGecko);
     }
 
-    /** Implementation of PanZoomTarget
-     * Scroll the viewport by a certain amount. This will take viewport margins
-     * and margin animation into account. If margins are currently animating,
-     * this will just go ahead and modify the viewport origin, otherwise the
-     * delta will be applied to the margins and the remainder will be applied to
-     * the viewport origin.
-     *
-     * You must hold the monitor while calling this.
-     */
-    @Override
-    public void scrollBy(float dx, float dy) {
-        // Set mViewportMetrics manually so the margin changes take.
-        mViewportMetrics = mViewportMetrics.offsetViewportBy(dx, dy);
-        viewportMetricsChanged(true);
-    }
-
     /** Implementation of PanZoomTarget */
     @Override
     public void panZoomStopped() {
         mToolbarAnimator.onPanZoomStopped();
     }
 
-    /** Implementation of PanZoomTarget */
-    @Override
-    public void forceRedraw(DisplayPortMetrics displayPort) {
-        mForceRedraw = true;
-        if (mGeckoIsReady) {
-            geometryChanged(displayPort);
-        }
-    }
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public boolean post(Runnable action) {
-        return mView.post(action);
-    }
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public void postRenderTask(RenderTask task) {
-        mView.postRenderTask(task);
-    }
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public void removeRenderTask(RenderTask task) {
-        mView.removeRenderTask(task);
-    }
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public Object getLock() {
+    Object getLock() {
         return this;
     }
 
-    /** Implementation of PanZoomTarget
+    /**
      * Converts a point from layer view coordinates to layer coordinates. In other words, given a
      * point measured in pixels from the top left corner of the layer view, returns the point in
      * pixels measured from the last scroll position we sent to Gecko, in CSS pixels. Assuming the
      * events being sent to Gecko are processed in FIFO order, this calculation should always be
      * correct.
      */
-    @Override
-    public PointF convertViewPointToLayerPoint(PointF viewPoint) {
+    PointF convertViewPointToLayerPoint(PointF viewPoint) {
         if (!mGeckoIsReady) {
             return null;
         }
@@ -855,8 +726,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return layerPoint;
     }
 
-    @Override
-    public Matrix getMatrixForLayerRectToViewRect() {
+    Matrix getMatrixForLayerRectToViewRect() {
         if (!mGeckoIsReady) {
             return null;
         }

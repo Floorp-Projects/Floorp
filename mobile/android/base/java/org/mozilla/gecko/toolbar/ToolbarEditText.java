@@ -618,8 +618,7 @@ public class ToolbarEditText extends CustomEditText
             }
 
             if ((keyCode == KeyEvent.KEYCODE_DEL ||
-                (Versions.feature11Plus &&
-                 keyCode == KeyEvent.KEYCODE_FORWARD_DEL)) &&
+                (keyCode == KeyEvent.KEYCODE_FORWARD_DEL)) &&
                 removeAutocomplete(getText())) {
                 // Delete autocomplete text when backspacing or forward deleting.
                 return true;

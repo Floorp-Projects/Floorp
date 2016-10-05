@@ -128,12 +128,15 @@ class ArtifactJob(object):
     # be the same across platforms.
     _test_archive_suffix = '.common.tests.zip'
 
-    def __init__(self, package_re, tests_re, log=None):
+    def __init__(self, package_re, tests_re, log=None, download_symbols=False):
         self._package_re = re.compile(package_re)
         self._tests_re = None
         if tests_re:
             self._tests_re = re.compile(tests_re)
         self._log = log
+        self._symbols_archive_suffix = None
+        if download_symbols:
+            self._symbols_archive_suffix = 'crashreporter-symbols.zip'
 
     def log(self, *args, **kwargs):
         if self._log:
@@ -149,6 +152,8 @@ class ArtifactJob(object):
             elif self._tests_re and self._tests_re.match(name):
                 tests_artifact = name
                 yield name
+            elif self._symbols_archive_suffix and name.endswith(self._symbols_archive_suffix):
+                yield name
             else:
                 self.log(logging.DEBUG, 'artifact',
                          {'name': name},
@@ -160,6 +165,8 @@ class ArtifactJob(object):
     def process_artifact(self, filename, processed_filename):
         if filename.endswith(ArtifactJob._test_archive_suffix) and self._tests_re:
             return self.process_tests_artifact(filename, processed_filename)
+        if self._symbols_archive_suffix and filename.endswith(self._symbols_archive_suffix):
+            return self.process_symbols_archive(filename, processed_filename)
         return self.process_package_artifact(filename, processed_filename)
 
     def process_package_artifact(self, filename, processed_filename):
@@ -188,6 +195,15 @@ class ArtifactJob(object):
                              'matched an archive path.'.format(
                                  patterns=LinuxArtifactJob.test_artifact_patterns))
 
+    def process_symbols_archive(self, filename, processed_filename):
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            reader = JarReader(filename)
+            for filename in reader.entries:
+                destpath = mozpath.join('crashreporter-symbols', filename)
+                self.log(logging.INFO, 'artifact',
+                         {'destpath': destpath},
+                         'Adding {destpath} to processed archive')
+                writer.add(destpath.encode('utf-8'), reader[filename])
 
 class AndroidArtifactJob(ArtifactJob):
 
@@ -430,9 +446,9 @@ JOB_DETAILS = {
 
 
 
-def get_job_details(job, log=None):
+def get_job_details(job, log=None, download_symbols=False):
     cls, (package_re, tests_re) = JOB_DETAILS[job]
-    return cls(package_re, tests_re, log=log)
+    return cls(package_re, tests_re, log=log, download_symbols=download_symbols)
 
 def cachedmethod(cachefunc):
     '''Decorator to wrap a class or instance method with a memoizing callable that
@@ -611,9 +627,9 @@ class TaskCache(CacheManager):
         self._queue = taskcluster.Queue()
 
     @cachedmethod(operator.attrgetter('_cache'))
-    def artifact_urls(self, tree, job, rev):
+    def artifact_urls(self, tree, job, rev, download_symbols):
         try:
-            artifact_job = get_job_details(job, log=self._log)
+            artifact_job = get_job_details(job, log=self._log, download_symbols=download_symbols)
         except KeyError:
             self.log(logging.INFO, 'artifact',
                 {'job': job},
@@ -748,6 +764,7 @@ class Artifacts(object):
             raise ValueError("Must provide path to exactly one of hg and git")
 
         self._substs = substs
+        self._download_symbols = self._substs.get('MOZ_ARTIFACT_BUILD_SYMBOLS', False)
         self._defines = defines
         self._tree = tree
         self._job = job or self._guess_artifact_job()
@@ -759,7 +776,7 @@ class Artifacts(object):
         self._topsrcdir = topsrcdir
 
         try:
-            self._artifact_job = get_job_details(self._job, log=self._log)
+            self._artifact_job = get_job_details(self._job, log=self._log, download_symbols=self._download_symbols)
         except KeyError:
             self.log(logging.INFO, 'artifact',
                 {'job': self._job},
@@ -914,7 +931,7 @@ class Artifacts(object):
 
         for tree in trees:
             try:
-                urls = task_cache.artifact_urls(tree, job, pushhead)
+                urls = task_cache.artifact_urls(tree, job, pushhead, self._download_symbols)
             except ValueError:
                 continue
             if urls:
