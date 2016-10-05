@@ -748,17 +748,15 @@ public:
       aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
       return;
     }
-    nsIPresShell::PointerCaptureInfo* pointerCaptureInfo = nullptr;
-    if (nsIPresShell::gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) &&
-        pointerCaptureInfo && pointerCaptureInfo->mPendingContent == this) {
+    if (HasPointerCapture(aPointerId)) {
       nsIPresShell::ReleasePointerCapturingContent(aPointerId);
     }
   }
   bool HasPointerCapture(long aPointerId)
   {
-    nsIPresShell::PointerCaptureInfo* pointerCaptureInfo = nullptr;
-    if (nsIPresShell::gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) &&
-        pointerCaptureInfo && pointerCaptureInfo->mPendingContent == this) {
+    nsIPresShell::PointerCaptureInfo* pointerCaptureInfo =
+      nsIPresShell::GetPointerCaptureInfo(aPointerId);
+    if (pointerCaptureInfo && pointerCaptureInfo->mPendingContent == this) {
       return true;
     }
     return false;
