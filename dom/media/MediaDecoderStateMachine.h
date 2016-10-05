@@ -532,9 +532,6 @@ protected:
 
   void FinishDecodeFirstFrame();
 
-  // Completes the seek operation, moves onto the next appropriate state.
-  void SeekCompleted();
-
   // Queries our state to see whether the decode has finished for all streams.
   bool CheckIfDecodeComplete();
 
