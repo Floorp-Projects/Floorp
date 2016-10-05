@@ -181,6 +181,7 @@
     macro(locale, locale, "locale") \
     macro(lookupGetter, lookupGetter, "__lookupGetter__") \
     macro(lookupSetter, lookupSetter, "__lookupSetter__") \
+    macro(MapConstructorInit, MapConstructorInit, "MapConstructorInit") \
     macro(MapIterator, MapIterator, "Map Iterator") \
     macro(maximumFractionDigits, maximumFractionDigits, "maximumFractionDigits") \
     macro(maximumSignificantDigits, maximumSignificantDigits, "maximumSignificantDigits") \
@@ -262,6 +263,7 @@
     macro(selfHosted, selfHosted, "self-hosted") \
     macro(sensitivity, sensitivity, "sensitivity") \
     macro(set, set, "set") \
+    macro(SetConstructorInit, SetConstructorInit, "SetConstructorInit") \
     macro(SetIterator, SetIterator, "Set Iterator") \
     macro(setPrefix, setPrefix, "set ") \
     macro(setPrototypeOf, setPrototypeOf, "setPrototypeOf") \
@@ -326,6 +328,8 @@
     macro(void0, void0, "(void 0)") \
     macro(wasm, wasm, "wasm") \
     macro(watch, watch, "watch") \
+    macro(WeakMapConstructorInit, WeakMapConstructorInit, "WeakMapConstructorInit") \
+    macro(WeakSetConstructorInit, WeakSetConstructorInit, "WeakSetConstructorInit") \
     macro(WeakSet_add, WeakSet_add, "WeakSet_add") \
     macro(weekday, weekday, "weekday") \
     macro(weekendEnd, weekendEnd, "weekendEnd") \
