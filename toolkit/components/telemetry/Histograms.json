@@ -3764,6 +3764,24 @@
     "n_buckets": 15,
     "description": "Time spent constructing PrefixSet from DB (ms)"
   },
+  "URLCLASSIFIER_VLPS_FILELOAD_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 10,
+    "bug_numbers": [1283007],
+    "description": "Time spent loading Variable-Length PrefixSet from file (ms)"
+  },
+  "URLCLASSIFIER_VLPS_FALLOCATE_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 10,
+    "bug_numbers": [1283007],
+    "description": "Time spent fallocating Variable-Length PrefixSet (ms)"
+  },
   "URLCLASSIFIER_LC_PREFIXES": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
@@ -3802,6 +3820,14 @@
     "kind": "boolean",
     "bug_numbers": [1172688],
     "description": "This metric is recorded every time a gethash lookup is performed, `true` is recorded if the lookup times out."
+  },
+  "URLCLASSIFIER_UPDATE_ERROR_TYPE": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "enumerated",
+    "n_values": 10,
+    "bug_numbers": [1305801],
+    "description": "An error was encountered while parsing a partial update returned by a Safe Browsing V4 server (0 = addition of an already existing prefix, 1 = parser got into an infinite loop, 2 = removal index out of bounds)"
   },
   "CSP_DOCUMENTS_COUNT": {
     "alert_emails": ["seceng@mozilla.com"],

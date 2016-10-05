@@ -165,7 +165,6 @@ int16_t gBadPortList[] = {
 static const char kProfileChangeNetTeardownTopic[] = "profile-change-net-teardown";
 static const char kProfileChangeNetRestoreTopic[] = "profile-change-net-restore";
 static const char kProfileDoChange[] = "profile-do-change";
-static const char kNetworkActiveChanged[] = "network-active-changed";
 
 // Necko buffer defaults
 uint32_t   nsIOService::gDefaultSegmentSize = 4096;
@@ -249,7 +248,6 @@ nsIOService::Init()
         observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
         observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
         observerService->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
-        observerService->AddObserver(this, kNetworkActiveChanged, true);
     }
     else
         NS_WARNING("failed to get observer service");
@@ -1498,38 +1496,6 @@ nsIOService::Observe(nsISupports *subject,
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1152048#c19
         nsCOMPtr<nsIRunnable> wakeupNotifier = new nsWakeupNotifier(this);
         NS_DispatchToMainThread(wakeupNotifier);
-    } else if (!strcmp(topic, kNetworkActiveChanged)) {
-#ifdef MOZ_WIDGET_GONK
-        if (IsNeckoChild()) {
-          return NS_OK;
-        }
-        nsCOMPtr<nsINetworkInfo> interface = do_QueryInterface(subject);
-        if (!interface) {
-            return NS_ERROR_FAILURE;
-        }
-        int32_t state;
-        if (NS_FAILED(interface->GetState(&state))) {
-            return NS_ERROR_FAILURE;
-        }
-
-        bool wifiActive = IsWifiActive();
-        int32_t newWifiState = wifiActive ?
-            nsINetworkInfo::NETWORK_TYPE_WIFI :
-            nsINetworkInfo::NETWORK_TYPE_MOBILE;
-        if (mPreviousWifiState != newWifiState) {
-            // Notify wifi-only apps of their new status
-            int32_t status = wifiActive ?
-                nsIAppOfflineInfo::ONLINE : nsIAppOfflineInfo::OFFLINE;
-
-            for (auto it = mAppsOfflineStatus.Iter(); !it.Done(); it.Next()) {
-                if (it.UserData() == nsIAppOfflineInfo::WIFI_ONLY) {
-                    NotifyAppOfflineStatus(it.Key(), status);
-                }
-            }
-        }
-
-        mPreviousWifiState = newWifiState;
-#endif
     }
 
     return NS_OK;

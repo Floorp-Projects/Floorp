@@ -32,12 +32,8 @@ const MessageContainer = createClass({
 
   propTypes: {
     message: PropTypes.object.isRequired,
-    sourceMapService: PropTypes.object,
-    onViewSourceInDebugger: PropTypes.func.isRequired,
-    openNetworkPanel: PropTypes.func.isRequired,
-    openLink: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
-    hudProxyClient: PropTypes.object.isRequired,
+    serviceContainer: PropTypes.object.isRequired,
     autoscroll: PropTypes.bool.isRequired,
   },
 

@@ -305,8 +305,7 @@ this.PushService = {
       case "quit-application":
         this.uninit();
         break;
-      case "network-active-changed":         /* On B2G. */
-      case "network:offline-status-changed": /* On desktop. */
+      case "network:offline-status-changed":
         this._stateChangeProcessEnqueue(_ =>
           this._changeStateOfflineEvent(aData === "offline", false)
         );
@@ -382,19 +381,6 @@ this.PushService = {
     }).catch(e => {
       console.error("backgroundUnregister: Error notifying server", e);
     });
-  },
-
-  // utility function used to add/remove observers in startObservers() and
-  // stopObservers()
-  getNetworkStateChangeEventName: function() {
-    try {
-      let networkManager = Cc["@mozilla.org/network/manager;1"];
-      if (networkManager) {
-        networkManager.getService(Ci.nsINetworkManager);
-        return "network-active-changed";
-      }
-    } catch (e) {}
-    return "network:offline-status-changed";
   },
 
   _findService: function(serverURL) {
@@ -533,26 +519,10 @@ this.PushService = {
 
     Services.obs.addObserver(this, "clear-origin-data", false);
 
-    // On B2G the NetworkManager interface fires a network-active-changed
-    // event.
-    //
-    // The "active network" is based on priority - i.e. Wi-Fi has higher
-    // priority than data. The PushService should just use the preferred
-    // network, and not care about all interface changes.
-    // network-active-changed is not fired when the network goes offline, but
-    // socket connections time out. The check for Services.io.offline in
-    // PushServiceWebSocket._beginWSSetup() prevents unnecessary retries.  When
-    // the network comes back online, network-active-changed is fired.
-    //
-    // On non-B2G platforms, the offline-status-changed event is used to know
+    // The offline-status-changed event is used to know
     // when to (dis)connect. It may not fire if the underlying OS changes
     // networks; in such a case we rely on timeout.
-    //
-    // On B2G both events fire, one after the other, when the network goes
-    // online, so we explicitly check for the presence of NetworkManager and
-    // don't add an observer for offline-status-changed on B2G.
-    this._networkStateChangeEventName = this.getNetworkStateChangeEventName();
-    Services.obs.addObserver(this, this._networkStateChangeEventName, false);
+    Services.obs.addObserver(this, "network:offline-status-changed", false);
 
     // Used to monitor if the user wishes to disable Push.
     prefs.observe("connection.enabled", this);
@@ -640,7 +610,7 @@ this.PushService = {
 
     prefs.ignore("connection.enabled", this);
 
-    Services.obs.removeObserver(this, this._networkStateChangeEventName);
+    Services.obs.removeObserver(this, "network:offline-status-changed");
     Services.obs.removeObserver(this, "clear-origin-data");
     Services.obs.removeObserver(this, "idle-daily");
     Services.obs.removeObserver(this, "perm-changed");

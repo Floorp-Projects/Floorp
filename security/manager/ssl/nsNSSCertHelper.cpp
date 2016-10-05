@@ -6,6 +6,7 @@
 
 #include <algorithm>
 
+#include "ScopedNSSTypes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Sprintf.h"
@@ -2064,37 +2065,6 @@ getCertType(CERTCertificate *cert)
   if (cert->emailAddr)
     return nsIX509Cert::EMAIL_CERT;
   return nsIX509Cert::UNKNOWN_CERT;
-}
-
-CERTCertNicknames*
-getNSSCertNicknamesFromCertList(const UniqueCERTCertList& certList)
-{
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
-  nsresult rv;
-
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return nullptr;
-
-  nsAutoString expiredString, notYetValidString;
-  nsAutoString expiredStringLeadingSpace, notYetValidStringLeadingSpace;
-
-  nssComponent->GetPIPNSSBundleString("NicknameExpired", expiredString);
-  nssComponent->GetPIPNSSBundleString("NicknameNotYetValid", notYetValidString);
-
-  expiredStringLeadingSpace.Append(' ');
-  expiredStringLeadingSpace.Append(expiredString);
-
-  notYetValidStringLeadingSpace.Append(' ');
-  notYetValidStringLeadingSpace.Append(notYetValidString);
-
-  NS_ConvertUTF16toUTF8 aUtf8ExpiredString(expiredStringLeadingSpace);
-  NS_ConvertUTF16toUTF8 aUtf8NotYetValidString(notYetValidStringLeadingSpace);
-
-  return CERT_NicknameStringsFromCertList(certList.get(),
-                                          const_cast<char*>(aUtf8ExpiredString.get()),
-                                          const_cast<char*>(aUtf8NotYetValidString.get()));
 }
 
 nsresult

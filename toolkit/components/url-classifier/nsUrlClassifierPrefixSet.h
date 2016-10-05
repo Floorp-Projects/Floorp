@@ -12,12 +12,21 @@
 #include "nsIFile.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMutableArray.h"
+#include "nsIFileStreams.h"
 #include "nsIUrlClassifierPrefixSet.h"
 #include "nsTArray.h"
 #include "nsToolkitCompsCID.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
+
+namespace mozilla {
+namespace safebrowsing {
+
+class VariableLengthPrefixSet;
+
+} // namespace safebrowsing
+} // namespace mozilla
 
 class nsUrlClassifierPrefixSet final
   : public nsIUrlClassifierPrefixSet
@@ -41,6 +50,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
+  friend class mozilla::safebrowsing::VariableLengthPrefixSet;
+
 private:
   virtual ~nsUrlClassifierPrefixSet();
 
@@ -51,6 +62,10 @@ private:
 
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
+
+  uint32_t CalculatePreallocateSize();
+  nsresult WritePrefixes(nsIOutputStream* out);
+  nsresult LoadPrefixes(nsIInputStream* in);
 
   // Lock to prevent races between the url-classifier thread (which does most
   // of the operations) and the main thread (which does memory reporting).

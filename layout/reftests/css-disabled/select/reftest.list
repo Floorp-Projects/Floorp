@@ -1,4 +1,4 @@
-== select-fieldset-1.html select-fieldset-ref.html
+fuzzy-if(Android,12,1) == select-fieldset-1.html select-fieldset-ref.html
 fails-if(Android||B2G||Mulet) fuzzy-if(skiaContent&&!Android,2,17) == select-fieldset-2.html select-fieldset-ref-disabled.html # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android||B2G||Mulet) fuzzy-if(skiaContent&&!Android,2,17) == select-fieldset-3.html select-fieldset-ref-disabled.html # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android) fuzzy-if(skiaContent&&!Android,2,13) == select-fieldset-4.html select-fieldset-ref.html

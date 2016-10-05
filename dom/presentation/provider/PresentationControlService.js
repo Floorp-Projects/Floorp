@@ -118,8 +118,6 @@ PresentationControlService.prototype = {
     DEBUG && log("PresentationControlService - service start on port: " + this._port); // jshint ignore:line
 
     // Monitor network interface change to restart server socket.
-    // Only B2G has nsINetworkManager
-    Services.obs.addObserver(this, "network-active-changed", false);
     Services.obs.addObserver(this, "network:offline-status-changed", false);
 
     this._notifyServerReady();
@@ -324,7 +322,6 @@ PresentationControlService.prototype = {
       this._serverSocket.close();
       this._serverSocket = null;
 
-      Services.obs.removeObserver(this, "network-active-changed");
       Services.obs.removeObserver(this, "network:offline-status-changed");
 
       this._notifyServerStopped(Cr.NS_OK);
@@ -336,21 +333,6 @@ PresentationControlService.prototype = {
   observe: function(aSubject, aTopic, aData) {
     DEBUG && log("PresentationControlService - observe: " + aTopic); // jshint ignore:line
     switch (aTopic) {
-      case "network-active-changed": {
-        if (!aSubject) {
-          DEBUG && log("No active network"); // jshint ignore:line
-          return;
-        }
-
-        /**
-         * Restart service only when original status is online because other
-         * cases will be handled by "network:offline-status-changed".
-         */
-        if (!Services.io.offline) {
-          this._restartServer();
-        }
-        break;
-      }
       case "network:offline-status-changed": {
         if (aData == "offline") {
           DEBUG && log("network offline"); // jshint ignore:line

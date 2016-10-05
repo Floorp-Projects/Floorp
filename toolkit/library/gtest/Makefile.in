@@ -17,6 +17,12 @@ else
 
 include $(topsrcdir)/toolkit/library/libxul.mk
 
+include $(topsrcdir)/config/config.mk
+
+# Wrap linker to print linking status periodically to prevent the linking
+# process from getting killed
+EXPAND_LIBS_EXEC := $(PYTHON) $(topsrcdir)/config/link.py
+
 ifdef COMPILE_ENVIRONMENT
 target:: $(DIST)/bin/dependentlibs.list.gtest
 endif

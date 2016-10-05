@@ -40,6 +40,8 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 namespace mozilla {
 namespace safebrowsing {
 
+const int LookupCacheV2::VER = 2;
+
 LookupCache::LookupCache(const nsACString& aTableName, nsIFile* aRootStoreDir)
   : mPrimed(false)
   , mTableName(aTableName)
@@ -49,28 +51,10 @@ LookupCache::LookupCache(const nsACString& aTableName, nsIFile* aRootStoreDir)
 }
 
 nsresult
-LookupCache::Init()
-{
-  mPrefixSet = new nsUrlClassifierPrefixSet();
-  nsresult rv = mPrefixSet->Init(mTableName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-LookupCache::~LookupCache()
-{
-}
-
-nsresult
 LookupCache::Open()
 {
-  LOG(("Reading Completions"));
-  nsresult rv = ReadCompletions();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   LOG(("Loading PrefixSet"));
-  rv = LoadPrefixSet();
+  nsresult rv = LoadPrefixSet();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -125,32 +109,6 @@ LookupCache::Reset()
   return NS_OK;
 }
 
-
-nsresult
-LookupCache::Build(AddPrefixArray& aAddPrefixes,
-                   AddCompleteArray& aAddCompletes)
-{
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_COMPLETIONS,
-                        static_cast<uint32_t>(aAddCompletes.Length()));
-
-  mUpdateCompletions.Clear();
-  mUpdateCompletions.SetCapacity(aAddCompletes.Length());
-  for (uint32_t i = 0; i < aAddCompletes.Length(); i++) {
-    mUpdateCompletions.AppendElement(aAddCompletes[i].CompleteHash());
-  }
-  aAddCompletes.Clear();
-  mUpdateCompletions.Sort();
-
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_PREFIXES,
-                        static_cast<uint32_t>(aAddPrefixes.Length()));
-
-  nsresult rv = ConstructPrefixSet(aAddPrefixes);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mPrimed = true;
-
-  return NS_OK;
-}
-
 nsresult
 LookupCache::AddCompletionsToCache(AddCompleteArray& aAddCompletes)
 {
@@ -177,49 +135,7 @@ LookupCache::DumpCache()
     LOG(("Caches: %s", str.get()));
   }
 }
-
-void
-LookupCache::Dump()
-{
-  if (!LOG_ENABLED())
-    return;
-
-  for (uint32_t i = 0; i < mUpdateCompletions.Length(); i++) {
-    nsAutoCString str;
-    mUpdateCompletions[i].ToHexString(str);
-    LOG(("Update: %s", str.get()));
-  }
-}
 #endif
-
-nsresult
-LookupCache::Has(const Completion& aCompletion,
-                 bool* aHas, bool* aComplete)
-{
-  *aHas = *aComplete = false;
-
-  uint32_t prefix = aCompletion.ToUint32();
-
-  bool found;
-  nsresult rv = mPrefixSet->Contains(prefix, &found);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  LOG(("Probe in %s: %X, found %d", mTableName.get(), prefix, found));
-
-  if (found) {
-    *aHas = true;
-  }
-
-  // TODO: We may need to distinguish completions found in cache or update in the future
-  if ((mGetHashCache.BinaryIndexOf(aCompletion) != nsTArray<Completion>::NoIndex) ||
-      (mUpdateCompletions.BinaryIndexOf(aCompletion) != nsTArray<Completion>::NoIndex)) {
-    LOG(("Complete in %s", mTableName.get()));
-    *aComplete = true;
-    *aHas = true;
-  }
-
-  return NS_OK;
-}
 
 nsresult
 LookupCache::WriteFile()
@@ -231,7 +147,7 @@ LookupCache::WriteFile()
   rv = psFile->AppendNative(mTableName + NS_LITERAL_CSTRING(PREFIXSET_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mPrefixSet->StoreToFile(psFile);
+  rv = StoreToFile(psFile);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "failed to store the prefixset");
 
   return NS_OK;
@@ -241,39 +157,14 @@ void
 LookupCache::ClearAll()
 {
   ClearCache();
-  ClearUpdatedCompletions();
-  mPrefixSet->SetPrefixes(nullptr, 0);
+  ClearPrefixes();
   mPrimed = false;
-}
-
-void
-LookupCache::ClearUpdatedCompletions()
-{
-  mUpdateCompletions.Clear();
 }
 
 void
 LookupCache::ClearCache()
 {
   mGetHashCache.Clear();
-}
-
-nsresult
-LookupCache::ReadCompletions()
-{
-  HashStore store(mTableName, mRootStoreDirectory);
-
-  nsresult rv = store.Open();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mUpdateCompletions.Clear();
-
-  const AddCompleteArray& addComplete = store.AddCompletes();
-  for (uint32_t i = 0; i < addComplete.Length(); i++) {
-    mUpdateCompletions.AppendElement(addComplete[i].complete);
-  }
-
-  return NS_OK;
 }
 
 /* static */ bool
@@ -452,9 +343,178 @@ LookupCache::GetHostKeys(const nsACString& aSpec,
   return NS_OK;
 }
 
-bool LookupCache::IsPrimed()
+nsresult
+LookupCache::LoadPrefixSet()
 {
-  return mPrimed;
+  nsCOMPtr<nsIFile> psFile;
+  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(psFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = psFile->AppendNative(mTableName + NS_LITERAL_CSTRING(PREFIXSET_SUFFIX));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool exists;
+  rv = psFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (exists) {
+    LOG(("stored PrefixSet exists, loading from disk"));
+    rv = LoadFromFile(psFile);
+    if (NS_FAILED(rv)) {
+      if (rv == NS_ERROR_FILE_CORRUPTED) {
+        Reset();
+      }
+      return rv;
+    }
+    mPrimed = true;
+  } else {
+    LOG(("no (usable) stored PrefixSet found"));
+  }
+
+#ifdef DEBUG
+  if (mPrimed) {
+    uint32_t size = SizeOfPrefixSet();
+    LOG(("SB tree done, size = %d bytes\n", size));
+  }
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+LookupCacheV2::Init()
+{
+  mPrefixSet = new nsUrlClassifierPrefixSet();
+  nsresult rv = mPrefixSet->Init(mTableName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+LookupCacheV2::Open()
+{
+  nsresult rv = LookupCache::Open();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LOG(("Reading Completions"));
+  rv = ReadCompletions();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+void
+LookupCacheV2::ClearAll()
+{
+  LookupCache::ClearAll();
+  mUpdateCompletions.Clear();
+}
+
+nsresult
+LookupCacheV2::Has(const Completion& aCompletion,
+                   bool* aHas, bool* aComplete)
+{
+  *aHas = *aComplete = false;
+
+  uint32_t prefix = aCompletion.ToUint32();
+
+  bool found;
+  nsresult rv = mPrefixSet->Contains(prefix, &found);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LOG(("Probe in %s: %X, found %d", mTableName.get(), prefix, found));
+
+  if (found) {
+    *aHas = true;
+  }
+
+  if ((mGetHashCache.BinaryIndexOf(aCompletion) != nsTArray<Completion>::NoIndex) ||
+      (mUpdateCompletions.BinaryIndexOf(aCompletion) != nsTArray<Completion>::NoIndex)) {
+    LOG(("Complete in %s", mTableName.get()));
+    *aComplete = true;
+    *aHas = true;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LookupCacheV2::Build(AddPrefixArray& aAddPrefixes,
+                     AddCompleteArray& aAddCompletes)
+{
+  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_COMPLETIONS,
+                        static_cast<uint32_t>(aAddCompletes.Length()));
+
+  mUpdateCompletions.Clear();
+  mUpdateCompletions.SetCapacity(aAddCompletes.Length());
+  for (uint32_t i = 0; i < aAddCompletes.Length(); i++) {
+    mUpdateCompletions.AppendElement(aAddCompletes[i].CompleteHash());
+  }
+  aAddCompletes.Clear();
+  mUpdateCompletions.Sort();
+
+  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_PREFIXES,
+                        static_cast<uint32_t>(aAddPrefixes.Length()));
+
+  nsresult rv = ConstructPrefixSet(aAddPrefixes);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mPrimed = true;
+
+  return NS_OK;
+}
+
+nsresult
+LookupCacheV2::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes)
+{
+  if (!mPrimed) {
+    // This can happen if its a new table, so no error.
+    LOG(("GetPrefixes from empty LookupCache"));
+    return NS_OK;
+  }
+  return mPrefixSet->GetPrefixesNative(aAddPrefixes);
+}
+
+nsresult
+LookupCacheV2::ReadCompletions()
+{
+  HashStore store(mTableName, mRootStoreDirectory);
+
+  nsresult rv = store.Open();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mUpdateCompletions.Clear();
+
+  const AddCompleteArray& addComplete = store.AddCompletes();
+  for (uint32_t i = 0; i < addComplete.Length(); i++) {
+    mUpdateCompletions.AppendElement(addComplete[i].complete);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LookupCacheV2::ClearPrefixes()
+{
+  return mPrefixSet->SetPrefixes(nullptr, 0);
+}
+
+nsresult
+LookupCacheV2::StoreToFile(nsIFile* aFile)
+{
+  return mPrefixSet->StoreToFile(aFile);
+}
+
+nsresult
+LookupCacheV2::LoadFromFile(nsIFile* aFile)
+{
+  return mPrefixSet->LoadFromFile(aFile);
+}
+
+size_t
+LookupCacheV2::SizeOfPrefixSet()
+{
+  return mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
 }
 
 #ifdef DEBUG
@@ -478,7 +538,7 @@ static void EnsureSorted(T* aArray)
 #endif
 
 nsresult
-LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
+LookupCacheV2::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_CONSTRUCT_TIME> timer;
 
@@ -512,55 +572,20 @@ LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
   return NS_OK;
 }
 
-nsresult
-LookupCache::LoadPrefixSet()
+#if defined(DEBUG)
+void
+LookupCacheV2::DumpCompletions()
 {
-  nsCOMPtr<nsIFile> psFile;
-  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(psFile));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!LOG_ENABLED())
+    return;
 
-  rv = psFile->AppendNative(mTableName + NS_LITERAL_CSTRING(PREFIXSET_SUFFIX));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool exists;
-  rv = psFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (exists) {
-    LOG(("stored PrefixSet exists, loading from disk"));
-    rv = mPrefixSet->LoadFromFile(psFile);
-    if (NS_FAILED(rv)) {
-      if (rv == NS_ERROR_FILE_CORRUPTED) {
-        Reset();
-      }
-      return rv;
-    }
-    mPrimed = true;
-  } else {
-    LOG(("no (usable) stored PrefixSet found"));
+  for (uint32_t i = 0; i < mUpdateCompletions.Length(); i++) {
+    nsAutoCString str;
+    mUpdateCompletions[i].ToHexString(str);
+    LOG(("Update: %s", str.get()));
   }
-
-#ifdef DEBUG
-  if (mPrimed) {
-    uint32_t size = mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
-    LOG(("SB tree done, size = %d bytes\n", size));
-  }
+}
 #endif
-
-  return NS_OK;
-}
-
-nsresult
-LookupCache::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes)
-{
-  if (!mPrimed) {
-    // This can happen if its a new table, so no error.
-    LOG(("GetPrefixes from empty LookupCache"));
-    return NS_OK;
-  }
-  return mPrefixSet->GetPrefixesNative(aAddPrefixes);
-}
-
 
 } // namespace safebrowsing
 } // namespace mozilla
