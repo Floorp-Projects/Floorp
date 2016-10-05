@@ -6,22 +6,16 @@ use mozprofile::profile::Profile;
 use mozrunner::runner::{Runner, FirefoxRunner};
 use mozrunner::runner::platform::firefox_default_path;
 use regex::Captures;
-use rustc_serialize::base64::FromBase64;
 use rustc_serialize::json;
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::fs;
-use std::io;
-use std::io::BufWriter;
-use std::io::Cursor;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::io::prelude::*;
+use std::path::PathBuf;
 use std::io::Result as IoResult;
 use std::net::{TcpListener, TcpStream};
-use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
@@ -51,11 +45,11 @@ use webdriver::response::{
     WindowPositionResponse, ElementRectResponse, CookieResponse, Cookie};
 use webdriver::common::{
     Date, Nullable, WebElement, FrameId, ELEMENT_KEY};
-use webdriver::error::{
-    WebDriverResult, WebDriverError, ErrorStatus};
+use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use webdriver::server::{WebDriverHandler, Session};
 use webdriver::httpapi::{WebDriverExtensionRoute};
-use zip;
+
+use capabilities::FirefoxOptions;
 
 const DEFAULT_HOST: &'static str = "localhost";
 
@@ -307,132 +301,6 @@ pub struct LogOptions {
 }
 
 #[derive(Default)]
-pub struct FirefoxOptions {
-    pub binary: Option<PathBuf>,
-    pub profile: Option<Profile>,
-    pub args: Option<Vec<String>>,
-    pub log: LogOptions,
-    pub prefs: Vec<(String, Pref)>,
-}
-
-impl FirefoxOptions {
-    pub fn from_capabilities(capabilities: &mut NewSessionParameters) -> WebDriverResult<FirefoxOptions> {
-        if let Some(options) = capabilities.consume("moz:firefoxOptions") {
-            let firefox_options = try!(options
-                                       .as_object()
-                                       .ok_or(WebDriverError::new(
-                                           ErrorStatus::InvalidArgument,
-                                           "'moz:firefoxOptions' capability was not an object")));
-            let binary = try!(FirefoxOptions::load_binary(&firefox_options));
-            let profile = try!(FirefoxOptions::load_profile(&firefox_options));
-            let args = try!(FirefoxOptions::load_args(&firefox_options));
-            let log = try!(FirefoxOptions::load_log(&firefox_options));
-            let prefs = try!(FirefoxOptions::load_prefs(&firefox_options));
-
-            Ok(FirefoxOptions {
-                binary: binary,
-                profile: profile,
-                args: args,
-                log: log,
-                prefs: prefs,
-            })
-        } else {
-            Ok(Default::default())
-        }
-    }
-
-    fn load_binary(options: &BTreeMap<String, Json>) -> WebDriverResult<Option<PathBuf>> {
-        if let Some(path) = options.get("binary") {
-            Ok(Some(PathBuf::from(try!(path
-                                       .as_string()
-                                       .ok_or(WebDriverError::new(
-                                           ErrorStatus::InvalidArgument,
-                                           "'binary' capability was not a string"))))))
-        } else {
-            Ok(None)
-        }
-    }
-
-    fn load_profile(options: &BTreeMap<String, Json>) -> WebDriverResult<Option<Profile>> {
-        if let Some(profile_json) = options.get("profile") {
-            let profile_base64 = try!(profile_json
-                                      .as_string()
-                                      .ok_or(
-                                          WebDriverError::new(ErrorStatus::UnknownError,
-                                                              "Profile was not a string")));
-            let profile_zip = &*try!(profile_base64.from_base64());
-
-            // Create an emtpy profile directory
-            let profile = try!(Profile::new(None));
-            try!(unzip_buffer(profile_zip,
-                              profile.temp_dir
-                              .as_ref()
-                              .expect("Profile doesn't have a path")
-                              .path()));
-
-            Ok(Some(profile))
-        } else {
-            Ok(None)
-        }
-    }
-
-    fn load_args(options: &BTreeMap<String, Json>) -> WebDriverResult<Option<Vec<String>>> {
-        if let Some(args_json) = options.get("args") {
-            let args_array = try!(args_json.as_array()
-                                  .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
-                                                             "Arguments were not an array")));
-            let args = try!(args_array
-                            .iter()
-                            .map(|x| x.as_string().map(|x| x.to_owned()))
-                            .collect::<Option<Vec<String>>>()
-                            .ok_or(WebDriverError::new(
-                                ErrorStatus::UnknownError,
-                                "Arguments entries were not all strings")));
-            Ok(Some(args))
-        } else {
-            Ok(None)
-        }
-    }
-
-    fn load_log(options: &BTreeMap<String, Json>) -> WebDriverResult<LogOptions> {
-        if let Some(json) = options.get("log") {
-            let log = try!(json.as_object()
-                .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument, "Log section is not an object")));
-
-            let level = match log.get("level") {
-                Some(json) => {
-                    let s = try!(json.as_string()
-                        .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument, "Log level is not a string")));
-                    Some(try!(LogLevel::from_str(s).ok()
-                        .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument, "Log level is unknown"))))
-                },
-                None => None,
-            };
-
-            Ok(LogOptions { level: level })
-
-        } else {
-            Ok(Default::default())
-        }
-    }
-
-    pub fn load_prefs(options: &BTreeMap<String, Json>) -> WebDriverResult<Vec<(String, Pref)>> {
-        if let Some(prefs_data) = options.get("prefs") {
-            let prefs = try!(prefs_data
-                             .as_object()
-                             .ok_or(WebDriverError::new(ErrorStatus::UnknownError,"Prefs were not an object")));
-            let mut rv = Vec::with_capacity(prefs.len());
-            for (key, value) in prefs.iter() {
-                rv.push((key.clone(), try!(pref_from_json(value))));
-            };
-            Ok(rv)
-        } else {
-            Ok(vec![])
-        }
-    }
-}
-
-#[derive(Default)]
 pub struct MarionetteSettings {
     pub port: Option<u16>,
     pub binary: Option<PathBuf>,
@@ -542,65 +410,6 @@ impl MarionetteHandler {
         prefs.write().map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
                                                       "Unable to write Firefox profile"))
     }
-}
-
-fn pref_from_json(value: &Json) -> WebDriverResult<Pref> {
-    match value {
-        &Json::String(ref x) => Ok(Pref::new(x.clone())),
-        &Json::I64(x) => Ok(Pref::new(x)),
-        &Json::U64(x) => Ok(Pref::new(x as i64)),
-        &Json::Boolean(x) => Ok(Pref::new(x)),
-        _ => Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                     "Could not convert pref value to string, boolean, or integer"))
-    }
-}
-
-fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
-    let reader = Cursor::new(buf);
-    let mut zip = try!(zip::ZipArchive::new(reader).map_err(|_| {
-        WebDriverError::new(ErrorStatus::UnknownError, "Failed to unzip profile")
-    }));
-
-    for i in 0..zip.len() {
-        let mut file = try!(zip.by_index(i).map_err(|_| {
-            WebDriverError::new(ErrorStatus::UnknownError, "Processing profile zip file failed")
-        }));
-        let unzip_path = {
-            let name = file.name();
-            let is_dir = name.ends_with("/");
-            let rel_path = Path::new(name);
-            let dest_path = dest_dir.join(rel_path);
-
-            {
-                let create_dir = if is_dir {
-                    Some(dest_path.as_path())
-                } else {
-                    dest_path.parent()
-                };
-                if let Some(dir) = create_dir {
-                    if !dir.exists() {
-                        debug!("Creating profile directory tree {}", dir.to_string_lossy());
-                        try!(fs::create_dir_all(dir));
-                    }
-                }
-            }
-
-            if is_dir {
-                None
-            } else {
-                Some(dest_path)
-            }
-        };
-
-        if let Some(unzip_path) = unzip_path {
-            debug!("Extracting profile to {}", unzip_path.to_string_lossy());
-            let dest = try!(fs::File::create(unzip_path));
-            let mut writer = BufWriter::new(dest);
-            try!(io::copy(&mut file, &mut writer));
-        }
-    }
-
-    Ok(())
 }
 
 impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
