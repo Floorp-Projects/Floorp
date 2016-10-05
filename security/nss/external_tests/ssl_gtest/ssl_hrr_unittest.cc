@@ -183,23 +183,42 @@ TEST_F(TlsConnectTest, Select12AfterHelloRetryRequest) {
 
 class HelloRetryRequestAgentTest : public TlsAgentTestClient {
  protected:
-  void MakeHelloRetryRequestRecord(SSLNamedGroup group, DataBuffer* hrr_record,
-                                   uint32_t seq_num = 0) const {
-    const uint8_t canned_hrr[] = {
-        SSL_LIBRARY_VERSION_TLS_1_3 >> 8,
-        SSL_LIBRARY_VERSION_TLS_1_3 & 0xff,
-        0,
-        0,  // The cipher suite is ignored.
-        static_cast<uint8_t>(group >> 8),
-        static_cast<uint8_t>(group),
-        0,
-        0  // no extensions
-    };
+  void SetUp() override {
+    TlsAgentTestClient::SetUp();
+    EnsureInit();
+    agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
+                            SSL_LIBRARY_VERSION_TLS_1_3);
+    agent_->StartConnect();
+  }
+
+  void MakeCannedHrr(const uint8_t* body, size_t len, DataBuffer* hrr_record,
+                     uint32_t seq_num = 0) const {
+    DataBuffer hrr_data;
+    hrr_data.Allocate(len + 4);
+    size_t i = 0;
+    i = hrr_data.Write(i, static_cast<uint32_t>(SSL_LIBRARY_VERSION_TLS_1_3),
+                       2);
+    i = hrr_data.Write(i, static_cast<uint32_t>(len), 2);
+    if (len) {
+      hrr_data.Write(i, body, len);
+    }
     DataBuffer hrr;
-    MakeHandshakeMessage(kTlsHandshakeHelloRetryRequest, canned_hrr,
-                         sizeof(canned_hrr), &hrr, seq_num);
+    MakeHandshakeMessage(kTlsHandshakeHelloRetryRequest, hrr_data.data(),
+                         hrr_data.len(), &hrr, seq_num);
     MakeRecord(kTlsHandshakeType, SSL_LIBRARY_VERSION_TLS_1_3, hrr.data(),
                hrr.len(), hrr_record, seq_num);
+  }
+
+  void MakeGroupHrr(SSLNamedGroup group, DataBuffer* hrr_record,
+                    uint32_t seq_num = 0) const {
+    const uint8_t group_hrr[] = {
+        static_cast<uint8_t>(ssl_tls13_key_share_xtn >> 8),
+        static_cast<uint8_t>(ssl_tls13_key_share_xtn),
+        0,
+        2,  // length of key share extension
+        static_cast<uint8_t>(group >> 8),
+        static_cast<uint8_t>(group)};
+    MakeCannedHrr(group_hrr, sizeof(group_hrr), hrr_record, seq_num);
   }
 };
 
@@ -207,31 +226,50 @@ class HelloRetryRequestAgentTest : public TlsAgentTestClient {
 // constructed to appear legitimate by asking for a new share in each, so that
 // the client has to count to work out that the server is being unreasonable.
 TEST_P(HelloRetryRequestAgentTest, SendSecondHelloRetryRequest) {
-  EnsureInit();
-  agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
-                          SSL_LIBRARY_VERSION_TLS_1_3);
-  agent_->StartConnect();
-
-  DataBuffer hrr_record;
-  MakeHelloRetryRequestRecord(ssl_grp_ec_secp384r1, &hrr_record, 0);
-  ProcessMessage(hrr_record, TlsAgent::STATE_CONNECTING);
-  MakeHelloRetryRequestRecord(ssl_grp_ec_secp521r1, &hrr_record, 1);
-  ProcessMessage(hrr_record, TlsAgent::STATE_ERROR,
+  DataBuffer hrr;
+  MakeGroupHrr(ssl_grp_ec_secp384r1, &hrr, 0);
+  ProcessMessage(hrr, TlsAgent::STATE_CONNECTING);
+  MakeGroupHrr(ssl_grp_ec_secp521r1, &hrr, 1);
+  ProcessMessage(hrr, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_HELLO_RETRY_REQUEST);
 }
 
 // Here the client receives a HelloRetryRequest with a group that they already
 // provided a share for.
 TEST_P(HelloRetryRequestAgentTest, HandleBogusHelloRetryRequest) {
-  EnsureInit();
-  agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
-                          SSL_LIBRARY_VERSION_TLS_1_3);
-  agent_->StartConnect();
-
-  DataBuffer hrr_record;
-  MakeHelloRetryRequestRecord(ssl_grp_ec_secp256r1, &hrr_record);
-  ProcessMessage(hrr_record, TlsAgent::STATE_ERROR,
+  DataBuffer hrr;
+  MakeGroupHrr(ssl_grp_ec_secp256r1, &hrr);
+  ProcessMessage(hrr, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST);
+}
+
+TEST_P(HelloRetryRequestAgentTest, HandleNoopHelloRetryRequest) {
+  DataBuffer hrr;
+  MakeCannedHrr(nullptr, 0U, &hrr);
+  ProcessMessage(hrr, TlsAgent::STATE_ERROR,
+                 SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST);
+}
+
+TEST_P(HelloRetryRequestAgentTest, HandleHelloRetryRequestCookie) {
+  const uint8_t canned_cookie_hrr[] = {
+      static_cast<uint8_t>(ssl_tls13_cookie_xtn >> 8),
+      static_cast<uint8_t>(ssl_tls13_cookie_xtn),
+      0,
+      5,  // length of cookie extension
+      0,
+      3,  // cookie value length
+      0xc0,
+      0x0c,
+      0x13};
+  DataBuffer hrr;
+  MakeCannedHrr(canned_cookie_hrr, sizeof(canned_cookie_hrr), &hrr);
+  TlsExtensionCapture* capture = new TlsExtensionCapture(ssl_tls13_cookie_xtn);
+  agent_->SetPacketFilter(capture);
+  ProcessMessage(hrr, TlsAgent::STATE_CONNECTING);
+  const size_t cookie_pos = 2 + 2;  // cookie_xtn, extension len
+  DataBuffer cookie(canned_cookie_hrr + cookie_pos,
+                    sizeof(canned_cookie_hrr) - cookie_pos);
+  EXPECT_EQ(cookie, capture->extension());
 }
 
 INSTANTIATE_TEST_CASE_P(HelloRetryRequestAgentTests, HelloRetryRequestAgentTest,
