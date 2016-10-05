@@ -23,37 +23,34 @@ FFmpegLibWrapper::~FFmpegLibWrapper()
   Unlink();
 }
 
-FFmpegLibWrapper::LinkResult
+bool
 FFmpegLibWrapper::Link()
 {
   if (!mAVCodecLib || !mAVUtilLib) {
     Unlink();
-    return LinkResult::NoProvidedLib;
+    return false;
   }
 
   avcodec_version =
     (decltype(avcodec_version))PR_FindSymbol(mAVCodecLib, "avcodec_version");
   if (!avcodec_version) {
     Unlink();
-    return LinkResult::NoAVCodecVersion;
+    return false;
   }
   uint32_t version = avcodec_version();
-  uint32_t macro = (version >> 16) & 0xFFu;
-  mVersion = static_cast<int>(macro);
-  uint32_t micro = version & 0xFFu;
-  // A micro version >= 100 indicates that it's FFmpeg (as opposed to LibAV).
-  bool isFFMpeg = micro >= 100;
-  if (!isFFMpeg) {
-    if (macro == 57) {
-      // Due to current AVCodecContext binary incompatibility we can only
-      // support FFmpeg 57 at this stage.
-      Unlink();
-      return LinkResult::CannotUseLibAV57;
-    } else if (version < (54u << 16 | 35u << 8 | 1u)) {
-      // Refuse any LibAV version prior to 54.35.1.
-      Unlink();
-      return LinkResult::BlockedOldLibAVVersion;
-    }
+  mVersion = (version >> 16) & 0xff;
+  uint32_t micro = version & 0xff;
+  if (mVersion == 57 && micro < 100) {
+    // a micro version >= 100 indicates that it's FFmpeg (as opposed to LibAV).
+    // Due to current AVCodecContext binary incompatibility we can only
+    // support FFmpeg 57 at this stage.
+    Unlink();
+    return false;
+  }
+  if (micro < 100 && version < (54u << 16 | 35u << 8 | 1u)) {
+    // Block all LibAV's libavcodec < 54.35.1.
+    Unlink();
+    return false;
   }
 
   enum {
@@ -72,7 +69,7 @@ FFmpegLibWrapper::Link()
     AV_FUNC_AVUTIL_ALL = AV_FUNC_AVCODEC_ALL | AV_FUNC_AVUTIL_MASK
   };
 
-  switch (macro) {
+  switch (mVersion) {
     case 53:
       version = AV_FUNC_53;
       break;
@@ -91,21 +88,15 @@ FFmpegLibWrapper::Link()
     default:
       FFMPEG_LOG("Unknown avcodec version");
       Unlink();
-      return isFFMpeg
-             ? ((macro > 57)
-                ? LinkResult::UnknownFutureFFMpegVersion
-                : LinkResult::UnknownOlderFFMpegVersion)
-             // All LibAV versions<54.35.1 are blocked, therefore we must be
-             // dealing with a later one.
-             : LinkResult::UnknownFutureLibAVVersion;
+      return false;
   }
 
 #define AV_FUNC(func, ver)                                                     \
-  if ((ver) & version) {                                                       \
+  if ((ver) & version) {                                                      \
     if (!(func = (decltype(func))PR_FindSymbol(((ver) & AV_FUNC_AVUTIL_MASK) ? mAVUtilLib : mAVCodecLib, #func))) { \
       FFMPEG_LOG("Couldn't load function " # func);                            \
       Unlink();                                                                \
-      return isFFMpeg ? LinkResult::MissingFFMpegFunction : LinkResult::MissingLibAVFunction; \
+      return false;                                                            \
     }                                                                          \
   } else {                                                                     \
     func = (decltype(func))nullptr;                                            \
@@ -139,7 +130,7 @@ FFmpegLibWrapper::Link()
   av_log_set_level(AV_LOG_DEBUG);
 #endif
 
-  return LinkResult::Success;
+  return true;
 }
 
 void
