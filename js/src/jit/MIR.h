@@ -7327,6 +7327,33 @@ class MFromCharCode
     ALLOW_CLONE(MFromCharCode)
 };
 
+class MFromCodePoint
+  : public MUnaryInstruction,
+    public IntPolicy<0>::Data
+{
+    explicit MFromCodePoint(MDefinition* codePoint)
+      : MUnaryInstruction(codePoint)
+    {
+        setGuard(); // throws on invalid code point
+        setMovable();
+        setResultType(MIRType::String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(FromCodePoint)
+    TRIVIAL_NEW_WRAPPERS
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+    bool possiblyCalls() const override {
+        return true;
+    }
+};
+
 class MSinCos
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>::Data
