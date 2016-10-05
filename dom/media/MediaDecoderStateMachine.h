@@ -624,7 +624,6 @@ private:
 
   // mSeekTask is responsible for executing the current seek request.
   RefPtr<SeekTask> mSeekTask;
-  MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
 
   // This method discards the seek task and then get the ownership of
   // MedaiDecoderReaderWarpper back via registering MDSM's callback into it.
