@@ -197,6 +197,7 @@ class ScreenCapturerMac : public ScreenCapturer {
 
   // Overridden from ScreenCapturer:
   void Start(Callback* callback) override;
+  void Stop() override;
   void Capture(const DesktopRegion& region) override;
   void SetExcludedWindow(WindowId window) override;
   bool GetScreenList(ScreenList* screens) override;
@@ -383,6 +384,19 @@ void ScreenCapturerMac::Start(Callback* callback) {
                               kIOPMAssertionLevelOn,
                               CFSTR("Chrome Remote Desktop connection active"),
                               &power_assertion_id_user_);
+}
+
+void ScreenCapturerMac::Stop() {
+  if (power_assertion_id_display_ != kIOPMNullAssertionID) {
+    IOPMAssertionRelease(power_assertion_id_display_);
+    power_assertion_id_display_ = kIOPMNullAssertionID;
+  }
+  if (power_assertion_id_user_ != kIOPMNullAssertionID) {
+    IOPMAssertionRelease(power_assertion_id_user_);
+    power_assertion_id_user_ = kIOPMNullAssertionID;
+  }
+
+  callback_ = NULL;
 }
 
 void ScreenCapturerMac::Capture(const DesktopRegion& region_to_capture) {

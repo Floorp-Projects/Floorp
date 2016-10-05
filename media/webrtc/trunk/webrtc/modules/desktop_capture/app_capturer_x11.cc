@@ -84,6 +84,7 @@ public:
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) override;
+  virtual void Stop() override;
   virtual void Capture(const DesktopRegion& region) override;
 
 protected:
@@ -155,6 +156,10 @@ void AppCapturerLinux::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
+}
+
+void AppCapturerLinux::Stop() {
+  callback_ = NULL;
 }
 
 void AppCapturerLinux::Capture(const DesktopRegion& region) {
