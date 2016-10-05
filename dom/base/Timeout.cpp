@@ -7,7 +7,7 @@
 #include "Timeout.h"
 
 #include "nsGlobalWindow.h"
-#include "nsIScriptTimeoutHandler.h"
+#include "nsITimeoutHandler.h"
 #include "nsITimer.h"
 #include "nsPIDOMWindow.h"
 
