@@ -59,3 +59,5 @@ fi
 
 echo "Applying a patch on top of $version"
 patch -p1 < ./wasapi-drift.patch
+echo "Applying another patch on top of $version"
+patch -p1 < ./wasapi-stereo-mic.patch
