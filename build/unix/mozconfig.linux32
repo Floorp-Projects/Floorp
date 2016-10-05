@@ -2,10 +2,14 @@
 
 export PKG_CONFIG_LIBDIR=/usr/lib/pkgconfig:/usr/share/pkgconfig
 
+export MOZ_LINUX_32_SSE2_STARTUP_ERROR=1
+
+CFLAGS="$CFLAGS -msse -msse2 -mfpmath=sse"
+CXXFLAGS="$CXXFLAGS -msse -msse2 -mfpmath=sse"
+
 if test `uname -m` = "x86_64"; then
-  # -march=pentiumpro is what our 32-bit native toolchain defaults to
-  CC="$CC -m32 -march=pentiumpro"
-  CXX="$CXX -m32 -march=pentiumpro"
+  CC="$CC -m32 -march=pentium-m"
+  CXX="$CXX -m32 -march=pentium-m"
   ac_add_options --target=i686-pc-linux
   ac_add_options --host=i686-pc-linux
   ac_add_options --x-libraries=/usr/lib
