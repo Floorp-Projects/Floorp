@@ -688,6 +688,10 @@ GlobalManager = {
     let schemaWrapper = {
       isChromeCompat,
 
+      get url() {
+        return context.uri.spec;
+      },
+
       get principal() {
         return context.principal;
       },
