@@ -334,6 +334,13 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
                                                    bool aIgnoreSandboxing)
 {
     NS_PRECONDITION(aChannel, "Must have channel!");
+    // Check whether we have an nsILoadInfo that says what we should do.
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+    if (loadInfo && loadInfo->GetForceInheritPrincipalOverruleOwner()) {
+      NS_ADDREF(*aPrincipal = loadInfo->PrincipalToInherit());
+      return NS_OK;
+    }
+
     nsCOMPtr<nsISupports> owner;
     aChannel->GetOwner(getter_AddRefs(owner));
     if (owner) {
@@ -343,9 +350,6 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
         }
     }
 
-    // Check whether we have an nsILoadInfo that says what we should do.
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
     if (loadInfo) {
         if (!aIgnoreSandboxing && loadInfo->GetLoadingSandboxed()) {
             RefPtr<nsNullPrincipal> prin;
