@@ -484,7 +484,7 @@ nsAttrAndChildArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue)
   return MakeMappedUnique(mapped);
 }
 
-BorrowedAttrInfo
+mozilla::dom::BorrowedAttrInfo
 nsAttrAndChildArray::AttrInfoAt(uint32_t aPos) const
 {
   NS_ASSERTION(aPos < AttrCount(),

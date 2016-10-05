@@ -10,6 +10,7 @@
 #include <sstream>
 #include <iostream>
 
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/sandboxing/loggingTypes.h"
 #include "nsContentUtils.h"
@@ -19,6 +20,11 @@
 #endif
 
 namespace mozilla {
+
+static LazyLogModule sSandboxTargetLog("SandboxTarget");
+
+#define LOG_D(...) MOZ_LOG(sSandboxTargetLog, LogLevel::Debug, (__VA_ARGS__))
+
 namespace sandboxing {
 
 #ifdef MOZ_STACKWALKING
@@ -73,6 +79,9 @@ Log(const char* aMessageType,
   if (nsContentUtils::IsInitialized()) {
     nsContentUtils::LogMessageToConsole(msg.c_str());
   }
+
+  // As we don't always have the facility to log to console use MOZ_LOG as well.
+  LOG_D("%s", msg.c_str());
 }
 
 // Initialize sandbox logging if required.

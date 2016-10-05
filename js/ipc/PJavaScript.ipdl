@@ -15,7 +15,7 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace jsipc {
 
-prio(normal upto high) sync protocol PJavaScript
+nested(upto inside_sync) sync protocol PJavaScript
 {
     manager PContent or PContentBridge;
 
@@ -24,30 +24,30 @@ both:
     async DropObject(uint64_t objId);
 
     // These roughly map to the ProxyHandler hooks that CPOWs need.
-    prio(high) sync PreventExtensions(uint64_t objId) returns (ReturnStatus rs);
-    prio(high) sync GetPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
-    prio(high) sync GetOwnPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
-    prio(high) sync DefineProperty(uint64_t objId, JSIDVariant id, PPropertyDescriptor descriptor) returns (ReturnStatus rs);
-    prio(high) sync Delete(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs);
+    nested(inside_sync) sync PreventExtensions(uint64_t objId) returns (ReturnStatus rs);
+    nested(inside_sync) sync GetPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
+    nested(inside_sync) sync GetOwnPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
+    nested(inside_sync) sync DefineProperty(uint64_t objId, JSIDVariant id, PPropertyDescriptor descriptor) returns (ReturnStatus rs);
+    nested(inside_sync) sync Delete(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs);
 
-    prio(high) sync Has(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
-    prio(high) sync HasOwn(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
-    prio(high) sync Get(uint64_t objId, JSVariant receiver, JSIDVariant id) returns (ReturnStatus rs, JSVariant result);
-    prio(high) sync Set(uint64_t objId, JSIDVariant id, JSVariant value, JSVariant receiver) returns (ReturnStatus rs);
+    nested(inside_sync) sync Has(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
+    nested(inside_sync) sync HasOwn(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
+    nested(inside_sync) sync Get(uint64_t objId, JSVariant receiver, JSIDVariant id) returns (ReturnStatus rs, JSVariant result);
+    nested(inside_sync) sync Set(uint64_t objId, JSIDVariant id, JSVariant value, JSVariant receiver) returns (ReturnStatus rs);
 
-    prio(high) sync IsExtensible(uint64_t objId) returns (ReturnStatus rs, bool result);
-    prio(high) sync CallOrConstruct(uint64_t objId, JSParam[] argv, bool construct) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
-    prio(high) sync HasInstance(uint64_t objId, JSVariant v) returns (ReturnStatus rs, bool has);
-    prio(high) sync GetBuiltinClass(uint64_t objId) returns (ReturnStatus rs, uint32_t classValue);
-    prio(high) sync IsArray(uint64_t objId) returns (ReturnStatus rs, uint32_t ans);
-    prio(high) sync ClassName(uint64_t objId) returns (nsCString name);
-    prio(high) sync GetPrototype(uint64_t objId) returns (ReturnStatus rs, ObjectOrNullVariant result);
-    prio(high) sync GetPrototypeIfOrdinary(uint64_t objId) returns (ReturnStatus rs, bool isOrdinary, ObjectOrNullVariant result);
-    prio(high) sync RegExpToShared(uint64_t objId) returns (ReturnStatus rs, nsString source, uint32_t flags);
+    nested(inside_sync) sync IsExtensible(uint64_t objId) returns (ReturnStatus rs, bool result);
+    nested(inside_sync) sync CallOrConstruct(uint64_t objId, JSParam[] argv, bool construct) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
+    nested(inside_sync) sync HasInstance(uint64_t objId, JSVariant v) returns (ReturnStatus rs, bool has);
+    nested(inside_sync) sync GetBuiltinClass(uint64_t objId) returns (ReturnStatus rs, uint32_t classValue);
+    nested(inside_sync) sync IsArray(uint64_t objId) returns (ReturnStatus rs, uint32_t ans);
+    nested(inside_sync) sync ClassName(uint64_t objId) returns (nsCString name);
+    nested(inside_sync) sync GetPrototype(uint64_t objId) returns (ReturnStatus rs, ObjectOrNullVariant result);
+    nested(inside_sync) sync GetPrototypeIfOrdinary(uint64_t objId) returns (ReturnStatus rs, bool isOrdinary, ObjectOrNullVariant result);
+    nested(inside_sync) sync RegExpToShared(uint64_t objId) returns (ReturnStatus rs, nsString source, uint32_t flags);
 
-    prio(high) sync GetPropertyKeys(uint64_t objId, uint32_t flags) returns (ReturnStatus rs, JSIDVariant[] ids);
-    prio(high) sync InstanceOf(uint64_t objId, JSIID iid) returns (ReturnStatus rs, bool instanceof);
-    prio(high) sync DOMInstanceOf(uint64_t objId, int prototypeID, int depth) returns (ReturnStatus rs, bool instanceof);
+    nested(inside_sync) sync GetPropertyKeys(uint64_t objId, uint32_t flags) returns (ReturnStatus rs, JSIDVariant[] ids);
+    nested(inside_sync) sync InstanceOf(uint64_t objId, JSIID iid) returns (ReturnStatus rs, bool instanceof);
+    nested(inside_sync) sync DOMInstanceOf(uint64_t objId, int prototypeID, int depth) returns (ReturnStatus rs, bool instanceof);
 
 parent:
     async __delete__();

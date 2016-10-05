@@ -148,6 +148,15 @@ ExpandPIDMarker(const char* aFilename, char (&buffer)[2048])
 
 } // detail
 
+namespace {
+  // Helper method that initializes an empty va_list to be empty.
+  void empty_va(va_list *va, ...)
+  {
+    va_start(*va, va);
+    va_end(*va);
+  }
+}
+
 class LogModuleManager
 {
 public:
@@ -275,6 +284,14 @@ public:
     // will be null, so we're not leaking.
     DebugOnly<detail::LogFile*> prevFile = mToReleaseFile.exchange(oldFile);
     MOZ_ASSERT(!prevFile, "Should be null because rotation is not allowed");
+
+    // If we just need to release a file, we must force print, in order to
+    // trigger the closing and release of mToReleaseFile.
+    if (oldFile) {
+      va_list va;
+      empty_va(&va);
+      Print("Logger", LogLevel::Info, "Flushing old log files\n", va);
+    }
   }
 
   uint32_t GetLogFile(char *aBuffer, size_t aLength)
