@@ -1197,8 +1197,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
 
   InitVideoQueuePrefs();
 
-  mLowDataThresholdUsecs = detail::LOW_DATA_THRESHOLD_USECS;
-
 #ifdef XP_WIN
   // Ensure high precision timers are enabled on Windows, otherwise the state
   // machine isn't woken up at reliable intervals to set the next frame,
@@ -2466,7 +2464,7 @@ bool MediaDecoderStateMachine::OutOfDecodedAudio()
 bool MediaDecoderStateMachine::HasLowBufferedData()
 {
   MOZ_ASSERT(OnTaskQueue());
-  return HasLowBufferedData(mLowDataThresholdUsecs);
+  return HasLowBufferedData(detail::LOW_DATA_THRESHOLD_USECS);
 }
 
 bool MediaDecoderStateMachine::HasLowBufferedData(int64_t aUsecs)
