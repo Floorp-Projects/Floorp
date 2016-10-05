@@ -409,21 +409,8 @@ public class DBUtils {
                 statement.execute();
                 return 0;
             }
-
-            if (AppConstants.Versions.feature11Plus) {
-                // This is a separate method so we can annotate it with @TargetApi.
-                return executeStatementReturningChangedRows(statement);
-            } else {
-                statement.execute();
-                final Cursor cursor = db.rawQuery("SELECT changes()", null);
-                try {
-                    cursor.moveToFirst();
-                    return cursor.getInt(0);
-                } finally {
-                    cursor.close();
-                }
-
-            }
+            // This is a separate method so we can annotate it with @TargetApi.
+            return executeStatementReturningChangedRows(statement);
         } finally {
             statement.close();
         }

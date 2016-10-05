@@ -17,7 +17,7 @@ public:
 
     nsAboutBloat() {}
 
-    static nsresult
+    static MOZ_MUST_USE nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:

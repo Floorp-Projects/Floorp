@@ -56,10 +56,6 @@ public class ScreenshotObserver {
      * have been granted by the user. Calling this method will not prompt for permissions.
      */
     public void start() {
-        if (!Versions.feature14Plus) {
-            return;
-        }
-
         Permissions.from(context)
                    .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                    .doNotPrompt()
@@ -83,10 +79,6 @@ public class ScreenshotObserver {
     }
 
     public void stop() {
-        if (!Versions.feature14Plus) {
-            return;
-        }
-
         if (mediaObserver == null) {
             return;
         }

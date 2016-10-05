@@ -27,7 +27,7 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
-    bool Init(const uint32_t& aArgs);
+    MOZ_MUST_USE bool Init(const uint32_t& aArgs);
 
 private:
     ~DataChannelParent();

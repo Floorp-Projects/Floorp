@@ -614,10 +614,8 @@ final class GeckoEditable extends JNIObject
                 float tpUnderlineThickness = 0.0f;
 
                 // These TextPaint fields only exist on Android ICS+ and are not in the SDK.
-                if (Versions.feature14Plus) {
-                    tpUnderlineColor = (Integer)getField(tp, "underlineColor", 0);
-                    tpUnderlineThickness = (Float)getField(tp, "underlineThickness", 0.0f);
-                }
+                tpUnderlineColor = (Integer)getField(tp, "underlineColor", 0);
+                tpUnderlineThickness = (Float)getField(tp, "underlineThickness", 0.0f);
                 if (tpUnderlineColor != 0) {
                     rangeStyles |= IME_RANGE_UNDERLINE | IME_RANGE_LINECOLOR;
                     rangeLineColor = tpUnderlineColor;

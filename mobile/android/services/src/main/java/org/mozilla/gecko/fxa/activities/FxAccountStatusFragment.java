@@ -623,12 +623,6 @@ public class FxAccountStatusFragment
       profilePreference.setTitle(fxAccount.getEmail());
     }
 
-    // Icon update from java is not supported prior to API 11, skip the avatar image fetch and update for older device.
-    if (!AppConstants.Versions.feature11Plus) {
-      Logger.info(LOG_TAG, "Skipping profile image fetch for older pre-API 11 devices.");
-      return;
-    }
-
     // Avatar URI empty, skip profile image fetch.
     final String avatarURI = profileJSON.getString(FxAccountConstants.KEY_PROFILE_JSON_AVATAR);
     if (TextUtils.isEmpty(avatarURI)) {

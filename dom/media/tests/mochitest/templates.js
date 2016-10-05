@@ -476,7 +476,7 @@ var commandsPeerConnectionOfferAnswer = [
     }
   },
   function PC_REMOTE_VERIFY_SDP_AFTER_END_OF_TRICKLE(test) {
-    if (test.pcRemote.endOfTrickelSdp) {
+    if (test.pcRemote.endOfTrickleSdp) {
       /* In case the endOfTrickleSdp promise is resolved already it will win the
        * race because it gets evaluated first. But if endOfTrickleSdp is still
        * pending the rejection will win the race. */

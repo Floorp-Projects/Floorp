@@ -28,9 +28,7 @@ function done() {
   SimpleTest.finish();
 }
 
-addLoadEvent(function() {
-  setMediaTestsPrefs(run);
-});
+addLoadEvent(run);
 SimpleTest.waitForExplicitFinish();
 
 
