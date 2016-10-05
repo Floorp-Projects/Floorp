@@ -45,7 +45,6 @@
 #include "client/linux/handler/exception_handler.h"
 #include "client/linux/minidump_writer/minidump_writer.h"
 #include "common/linux/eintr_wrapper.h"
-#include "common/linux/file_id.h"
 #include "common/linux/ignore_ret.h"
 #include "common/linux/linux_libc_support.h"
 #include "common/tests/auto_tempdir.h"
@@ -93,10 +92,6 @@ void FlushInstructionCache(const char* memory, uint32_t memory_size) {
 # endif
 #endif
 }
-
-// Length of a formatted GUID string =
-// sizeof(MDGUID) * 2 + 4 (for dashes) + 1 (null terminator)
-const int kGUIDStringSize = 37;
 
 void sigchld_handler(int signo) { }
 
@@ -262,8 +257,6 @@ TEST(ExceptionHandlerTest, ChildCrashWithFD) {
   ASSERT_NO_FATAL_FAILURE(ChildCrash(true));
 }
 
-#endif  // !ADDRESS_SANITIZER
-
 static bool DoneCallbackReturnFalse(const MinidumpDescriptor& descriptor,
                                     void* context,
                                     bool succeeded) {
@@ -304,8 +297,6 @@ static bool InstallRaiseSIGKILL() {
   sa.sa_handler = RaiseSIGKILL;
   return sigaction(SIGSEGV, &sa, NULL) != -1;
 }
-
-#ifndef ADDRESS_SANITIZER
 
 static void CrashWithCallbacks(ExceptionHandler::FilterCallback filter,
                                ExceptionHandler::MinidumpCallback done,
@@ -821,19 +812,7 @@ TEST(ExceptionHandlerTest, ModuleInfo) {
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
     0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
   };
-  char module_identifier_buffer[kGUIDStringSize];
-  FileID::ConvertIdentifierToString(kModuleGUID,
-                                    module_identifier_buffer,
-                                    sizeof(module_identifier_buffer));
-  string module_identifier(module_identifier_buffer);
-  // Strip out dashes
-  size_t pos;
-  while ((pos = module_identifier.find('-')) != string::npos) {
-    module_identifier.erase(pos, 1);
-  }
-  // And append a zero, because module IDs include an "age" field
-  // which is always zero on Linux.
-  module_identifier += "0";
+  const string module_identifier = "33221100554477668899AABBCCDDEEFF0";
 
   // Get some memory.
   char* memory =
@@ -877,6 +856,8 @@ TEST(ExceptionHandlerTest, ModuleInfo) {
 
   unlink(minidump_desc.path());
 }
+
+#ifndef ADDRESS_SANITIZER
 
 static const unsigned kControlMsgSize =
     CMSG_SPACE(sizeof(int)) + CMSG_SPACE(sizeof(struct ucred));
@@ -929,8 +910,6 @@ CrashHandler(const void* crash_context, size_t crash_context_size,
 
   return true;
 }
-
-#ifndef ADDRESS_SANITIZER
 
 TEST(ExceptionHandlerTest, ExternalDumper) {
   int fds[2];

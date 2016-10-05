@@ -32,6 +32,8 @@
 
 #include "client/linux/microdump_writer/microdump_writer.h"
 
+#include <limits>
+
 #include <sys/utsname.h>
 
 #include "client/linux/dump_writer_common/thread_info.h"
@@ -40,11 +42,15 @@
 #include "client/linux/handler/microdump_extra_info.h"
 #include "client/linux/log/log.h"
 #include "client/linux/minidump_writer/linux_ptrace_dumper.h"
+#include "common/linux/file_id.h"
 #include "common/linux/linux_libc_support.h"
+#include "common/memory.h"
 
 namespace {
 
+using google_breakpad::auto_wasteful_vector;
 using google_breakpad::ExceptionHandler;
+using google_breakpad::kDefaultBuildIdSize;
 using google_breakpad::LinuxDumper;
 using google_breakpad::LinuxPtraceDumper;
 using google_breakpad::MappingInfo;
@@ -55,6 +61,72 @@ using google_breakpad::ThreadInfo;
 using google_breakpad::UContextReader;
 
 const size_t kLineBufferSize = 2048;
+
+#if !defined(__LP64__)
+// The following are only used by DumpFreeSpace, so need to be compiled
+// in conditionally in the same way.
+
+template <typename Dst, typename Src>
+Dst saturated_cast(Src src) {
+  if (src >= std::numeric_limits<Dst>::max())
+    return std::numeric_limits<Dst>::max();
+  if (src <= std::numeric_limits<Dst>::min())
+    return std::numeric_limits<Dst>::min();
+  return static_cast<Dst>(src);
+}
+
+int Log2Floor(uint64_t n) {
+  // Copied from chromium src/base/bits.h
+  if (n == 0)
+    return -1;
+  int log = 0;
+  uint64_t value = n;
+  for (int i = 5; i >= 0; --i) {
+    int shift = (1 << i);
+    uint64_t x = value >> shift;
+    if (x != 0) {
+      value = x;
+      log += shift;
+    }
+  }
+  assert(value == 1u);
+  return log;
+}
+
+bool MappingsAreAdjacent(const MappingInfo& a, const MappingInfo& b) {
+  // Because of load biasing, we can end up with a situation where two
+  // mappings actually overlap. So we will define adjacency to also include a
+  // b start address that lies within a's address range (including starting
+  // immediately after a).
+  // Because load biasing only ever moves the start address backwards, the end
+  // address should still increase.
+  return a.start_addr <= b.start_addr && a.start_addr + a.size >= b.start_addr;
+}
+
+bool MappingLessThan(const MappingInfo* a, const MappingInfo* b) {
+  // Return true if mapping a is before mapping b.
+  // For the same reason (load biasing) we compare end addresses, which - unlike
+  // start addresses - will not have been modified.
+  return a->start_addr + a->size < b->start_addr + b->size;
+}
+
+size_t NextOrderedMapping(
+    const google_breakpad::wasteful_vector<MappingInfo*>& mappings,
+    size_t curr) {
+  // Find the mapping that directly follows mappings[curr].
+  // If no such mapping exists, return |invalid| to indicate this.
+  const size_t invalid = std::numeric_limits<size_t>::max();
+  size_t best = invalid;
+  for (size_t next = 0; next < mappings.size(); ++next) {
+    if (MappingLessThan(mappings[curr], mappings[next]) &&
+        (best == invalid || MappingLessThan(mappings[next], mappings[best]))) {
+      best = next;
+    }
+  }
+  return best;
+}
+
+#endif  // !__LP64__
 
 class MicrodumpWriter {
  public:
@@ -92,7 +164,11 @@ class MicrodumpWriter {
     LogLine("-----BEGIN BREAKPAD MICRODUMP-----");
     DumpProductInformation();
     DumpOSInformation();
+    DumpProcessType();
     DumpGPUInformation();
+#if !defined(__LP64__)
+    DumpFreeSpace();
+#endif
     success = DumpCrashingThread();
     if (success)
       success = DumpMappings();
@@ -158,6 +234,16 @@ class MicrodumpWriter {
     LogCommitLine();
   }
 
+  void DumpProcessType() {
+    LogAppend("P ");
+    if (microdump_extra_info_.process_type) {
+      LogAppend(microdump_extra_info_.process_type);
+    } else {
+      LogAppend("UNKNOWN");
+    }
+    LogCommitLine();
+  }
+
   void DumpOSInformation() {
     const uint8_t n_cpus = static_cast<uint8_t>(sysconf(_SC_NPROCESSORS_CONF));
 
@@ -179,7 +265,13 @@ class MicrodumpWriter {
 #elif defined(__i386__)
     const char kArch[] = "x86";
 #elif defined(__mips__)
+# if _MIPS_SIM == _ABIO32
     const char kArch[] = "mips";
+# elif _MIPS_SIM == _ABI64
+    const char kArch[] = "mips64";
+# else
+#  error "This mips ABI is currently not supported (n32)"
+#endif
 #else
 #error "This code has not been ported to your platform yet"
 #endif
@@ -330,21 +422,31 @@ class MicrodumpWriter {
                   bool member,
                   unsigned int mapping_id,
                   const uint8_t* identifier) {
-    MDGUID module_identifier;
+
+    auto_wasteful_vector<uint8_t, kDefaultBuildIdSize> identifier_bytes(
+        dumper_->allocator());
+
     if (identifier) {
       // GUID was provided by caller.
-      my_memcpy(&module_identifier, identifier, sizeof(MDGUID));
+      identifier_bytes.insert(identifier_bytes.end(),
+                              identifier,
+                              identifier + sizeof(MDGUID));
     } else {
       dumper_->ElfFileIdentifierForMapping(
           mapping,
           member,
           mapping_id,
-          reinterpret_cast<uint8_t*>(&module_identifier));
+          identifier_bytes);
     }
+
+    // Copy as many bytes of |identifier| as will fit into a MDGUID
+    MDGUID module_identifier = {0};
+    memcpy(&module_identifier, &identifier_bytes[0],
+           std::min(sizeof(MDGUID), identifier_bytes.size()));
 
     char file_name[NAME_MAX];
     char file_path[NAME_MAX];
-    LinuxDumper::GetMappingEffectiveNameAndPath(
+    dumper_->GetMappingEffectiveNameAndPath(
         mapping, file_path, sizeof(file_path), file_name, sizeof(file_name));
 
     LogAppend("M ");
@@ -369,6 +471,80 @@ class MicrodumpWriter {
     LogAppend(file_name);
     LogCommitLine();
   }
+
+#if !defined(__LP64__)
+  void DumpFreeSpace() {
+    const google_breakpad::wasteful_vector<MappingInfo*>& mappings =
+        dumper_->mappings();
+    if (mappings.size() == 0) return;
+
+    // This is complicated by the fact that mappings is not in order. It should
+    // be mostly in order, however the mapping that contains the entry point for
+    // the process is always at the front of the vector.
+
+    static const int HBITS = sizeof(size_t) * 8;
+    size_t hole_histogram[HBITS];
+    my_memset(hole_histogram, 0, sizeof(hole_histogram));
+
+    // Find the lowest address mapping.
+    size_t curr = 0;
+    for (size_t i = 1; i < mappings.size(); ++i) {
+      if (mappings[i]->start_addr < mappings[curr]->start_addr) curr = i;
+    }
+
+    uintptr_t lo_addr = mappings[curr]->start_addr;
+
+    size_t hole_cnt = 0;
+    size_t hole_max = 0;
+    size_t hole_sum = 0;
+
+    while (true) {
+      // Skip to the end of an adjacent run of mappings. This is an optimization
+      // for the fact that mappings is mostly sorted.
+      while (curr != mappings.size() - 1 &&
+             MappingsAreAdjacent(*mappings[curr], *mappings[curr + 1])) {
+        ++curr;
+      }
+
+      size_t next = NextOrderedMapping(mappings, curr);
+      if (next == std::numeric_limits<size_t>::max())
+        break;
+
+      uintptr_t hole_lo = mappings[curr]->start_addr + mappings[curr]->size;
+      uintptr_t hole_hi = mappings[next]->start_addr;
+
+      if (hole_hi > hole_lo) {
+        size_t hole_sz = hole_hi - hole_lo;
+        hole_sum += hole_sz;
+        hole_max = std::max(hole_sz, hole_max);
+        ++hole_cnt;
+        ++hole_histogram[Log2Floor(hole_sz)];
+      }
+      curr = next;
+    }
+
+    uintptr_t hi_addr = mappings[curr]->start_addr + mappings[curr]->size;
+
+    LogAppend("H ");
+    LogAppend(lo_addr);
+    LogAppend(" ");
+    LogAppend(hi_addr);
+    LogAppend(" ");
+    LogAppend(saturated_cast<uint16_t>(hole_cnt));
+    LogAppend(" ");
+    LogAppend(hole_max);
+    LogAppend(" ");
+    LogAppend(hole_sum);
+    for (unsigned int i = 0; i < HBITS; ++i) {
+      if (!hole_histogram[i]) continue;
+      LogAppend(" ");
+      LogAppend(saturated_cast<uint8_t>(i));
+      LogAppend(":");
+      LogAppend(saturated_cast<uint8_t>(hole_histogram[i]));
+    }
+    LogCommitLine();
+  }
+#endif
 
   // Write information about the mappings in effect.
   bool DumpMappings() {
