@@ -36,83 +36,103 @@ the more bug fixes and features.
 
 ## Firefox capabilities
 
-geckodriver supports a capability named `moz:firefoxOptions` which takes
-Firefox-specific preference values. This must be a dictionary and may
-contain any of the following fields:
-
-<table>
-    <thead>
-        <tr>
-            <th>Name
-            <th>Type
-            <th>Default
-            <th>Description
-        </tr>
-    </thead>
-    <tr>
-        <td><code>binary</code>
-        <td><code>string</code>
-        <td>Taken from <code>-b</code> argument
-          or system default location
-        <td>Absolute path of the Firefox binary,
-    e.g. <code>/usr/bin/firefox</code> or <code>/Applications/Firefox.app/Contents/MacOS/firefox</code>,
-    to select which custom browser binary to use.
-    If left undefined geckodriver will attempt
-    to deduce the default location of Firefox
-    on the current system.
-    <tr>
-        <td><code>args</code>
-        <td><code>Array.&ltstring&gt;</code>
-        <td>
-        <td>Command line arguments to pass to the Firefox binary.
-          These must include the leading <code>--</code> where required
-          e.g. <code>["--devtools"]</code>.
-    </tr>
-    <tr>
-        <td><code>profile</code>
-        <td><code>string</code>
-        <td>New, empty profile
-        <td>Base64-encoded zip of a profile directory
-          to use as the profile for the Firefox instance.
-          This may be used to e.g. install extensions or custom certificates.
-    </tr>
-    <tr>
-        <td><code>log</code>
-        <td><a href=#log-options>Log options</a> object
-        <td>
-        <td>Logging options for Gecko.
-    </tr>
-    <tr>
-        <td><code>prefs</code>
-        <td><code>Object&lt;string,&nbsp;(string|boolean|integer)&gt</code>
-        <td>
-        <td>Map of preference name to preference value, which can be a
-            string, a boolean or an integer.
-    </tr>
-</table>
-
-### Log options
+geckodriver supports a capability named `moz:firefoxOptions`
+which takes Firefox-specific options.
+This must be a dictionary
+and may contain any of the following fields:
 
 <table>
  <thead>
   <tr>
    <th>Name
    <th>Type
-   <th>Default
+   <th>Description
+  </tr>
+ </thead>
+
+ <tr>
+  <td><code>binary</code>
+  <td>string
+  <td>Absolute path of the Firefox binary,
+   e.g. <code>/usr/bin/firefox</code>
+   or <code>/Applications/Firefox.app/Contents/MacOS/firefox</code>,
+   to select which custom browser binary to use.
+   If left undefined geckodriver will attempt
+   to deduce the default location of Firefox
+   on the current system.
+ </tr>
+
+ <tr>
+  <td><code>args</code>
+  <td>array of strings
+  <td>Command line arguments to pass to the Firefox binary.
+   These must include the leading <code>--</code> where required
+   e.g. <code>["--devtools"]</code>.
+ </tr>
+
+ <tr>
+  <td><code>profile</code>
+  <td>string
+  <td>Base64-encoded zip of a profile directory
+   to use as the profile for the Firefox instance.
+   This may be used to e.g. install extensions
+   or custom certificates.
+ </tr>
+
+ <tr>
+  <td><code>log</code>
+  <td><a href=#log-object><code>log</code></a> object
+  <td>Logging options for Gecko.
+ </tr>
+
+ <tr>
+  <td><code>prefs</code>
+  <td><a href=#prefs-object><code>prefs</code></a> object
+  <td>Map of preference name to preference value, which can be a
+   string, a boolean or an integer.
+ </tr>
+</table>
+
+### `log` object
+
+<table>
+ <thead>
+  <tr>
+   <th>Name
+   <th>Type
    <th>Description
   </tr>
  </thead>
 
  <tr>
   <td><code>level</code>
-  <td>String
-  <td><code>info</code> with optimised Firefox builds,
-   and <code>debug</code> with non-optimised
+  <td>string
   <td>Set the level of verbosity in Gecko.
    Available levels are <code>trace</code>,
    <code>debug</code>, <code>config</code>,
    <code>info</code>, <code>warn</code>,
    <code>error</code>, and <code>fatal</code>.
+   If left undefined, the default is for optimised Firefox builds
+   to use <code>info</code>
+   and non-optimised builds to use <code>debug</code>.
+ </tr>
+</table>
+
+### `prefs` object
+
+<table>
+ <thead>
+  <tr>
+   <th>Name
+   <th>Type
+   <th>Description
+  </tr>
+ </thead>
+
+ <tr>
+  <td><var>preference name</var>
+  <td>string, number, boolean
+  <td>One entry per preference to override.
  </tr>
 </table>
 
