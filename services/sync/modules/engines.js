@@ -1278,6 +1278,16 @@ SyncEngine.prototype = {
     // By default, assume there's no dupe items for the engine
   },
 
+  // Called when the server has a record marked as deleted, but locally we've
+  // changed it more recently than the deletion. If we return false, the
+  // record will be deleted locally. If we return true, we'll reupload the
+  // record to the server -- any extra work that's needed as part of this
+  // process should be done at this point (such as mark the record's parent
+  // for reuploading in the case of bookmarks).
+  _shouldReviveRemotelyDeletedRecord(remoteItem) {
+    return true;
+  },
+
   _deleteId: function (id) {
     this._tracker.removeChangedID(id);
 
@@ -1353,15 +1363,18 @@ SyncEngine.prototype = {
                         "exists and isn't modified.");
         return true;
       }
+      this._log.trace("Incoming record is deleted but we had local changes.");
 
-      // TODO As part of bug 720592, determine whether we should do more here.
-      // In the case where the local changes are newer, it is quite possible
-      // that the local client will restore data a remote client had tried to
-      // delete. There might be a good reason for that delete and it might be
-      // enexpected for this client to restore that data.
-      this._log.trace("Incoming record is deleted but we had local changes. " +
-                      "Applying the youngest record.");
-      return remoteIsNewer;
+      if (remoteIsNewer) {
+        this._log.trace("Remote record is newer -- deleting local record.");
+        return true;
+      }
+      // If the local record is newer, we defer to individual engines for
+      // how to handle this. By default, we revive the record.
+      let willRevive = this._shouldReviveRemotelyDeletedRecord(item);
+      this._log.trace("Local record is newer -- reviving? " + willRevive);
+
+      return !willRevive;
     }
 
     // At this point the incoming record is not for a deletion and must have

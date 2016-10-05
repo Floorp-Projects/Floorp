@@ -132,18 +132,26 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   }),
 
   /**
-   * Removes an item from the database.
+   * Removes an item from the database. Options are passed through to
+   * PlacesUtils.bookmarks.remove.
    */
-  remove: Task.async(function* (syncId) {
+  remove: Task.async(function* (syncId, options = {}) {
     let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
     if (guid in ROOT_GUID_TO_SYNC_ID) {
       BookmarkSyncLog.warn(`remove: Refusing to remove root ${syncId}`);
       return null;
     }
-    return PlacesUtils.bookmarks.remove(guid, {
+    return PlacesUtils.bookmarks.remove(guid, Object.assign({}, options, {
       source: SOURCE_SYNC,
-    });
+    }));
   }),
+
+  /**
+   * Returns true for sync IDs that are considered roots.
+   */
+  isRootSyncID(syncID) {
+    return ROOT_SYNC_ID_TO_GUID.hasOwnProperty(syncID);
+  },
 
   /**
    * Changes the GUID of an existing item. This method only allows Places GUIDs
@@ -310,6 +318,30 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
 
     return item;
   }),
+
+  /**
+   * Get the sync record kind for the record with provided sync id.
+   *
+   * @param syncId
+   *        Sync ID for the item in question
+   *
+   * @returns {Promise} A promise that resolves with the sync record kind (e.g.
+   *                    something under `PlacesSyncUtils.bookmarks.KIND`), or
+   *                    with `null` if no item with that guid exists.
+   * @throws if `guid` is invalid.
+   */
+  getKindForSyncId(syncId) {
+    PlacesUtils.SYNC_BOOKMARK_VALIDATORS.syncId(syncId);
+    let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
+    return PlacesUtils.bookmarks.fetch(guid)
+    .then(item => {
+      if (!item) {
+        return null;
+      }
+      return getKindForItem(item)
+    });
+  },
+
 });
 
 XPCOMUtils.defineLazyGetter(this, "BookmarkSyncLog", () => {

@@ -472,15 +472,71 @@ BookmarksEngine.prototype = {
     });
 
     this._store._childrenToOrder = {};
+    this._store.clearPendingDeletions();
+  },
+
+  _deletePending() {
+    // Delete pending items -- See the comment above BookmarkStore's deletePending
+    let newlyModified = Async.promiseSpinningly(this._store.deletePending());
+    let now = this._tracker._now();
+    this._log.debug("Deleted pending items", newlyModified);
+    for (let modifiedSyncID of newlyModified) {
+      if (!this._modified.has(modifiedSyncID)) {
+        this._modified.set(modifiedSyncID, { timestamp: now, deleted: false });
+      }
+    }
+  },
+
+  // We avoid reviving folders since reviving them properly would require
+  // reviving their children as well. Unfortunately, this is the wrong choice
+  // in the case of a bookmark restore where wipeServer failed -- if the
+  // server has the folder as deleted, we *would* want to reupload this folder.
+  // This is mitigated by the fact that we move any undeleted children to the
+  // grandparent when deleting the parent.
+  _shouldReviveRemotelyDeletedRecord(item) {
+    let kind = Async.promiseSpinningly(
+      PlacesSyncUtils.bookmarks.getKindForSyncId(item.id));
+    if (kind === PlacesSyncUtils.bookmarks.KINDS.FOLDER) {
+      return false;
+    }
+
+    // In addition to preventing the deletion of this record (handled by the caller),
+    // we need to mark the parent of this record for uploading next sync, in order
+    // to ensure its children array is accurate.
+    let modifiedTimestamp = this._modified.getModifiedTimestamp(item.id);
+    if (!modifiedTimestamp) {
+      // We only expect this to be called with items locally modified, so
+      // something strange is going on - play it safe and don't revive it.
+      this._log.error("_shouldReviveRemotelyDeletedRecord called on unmodified item: " + item.id);
+      return false;
+    }
+
+    let localID = this._store.idForGUID(item.id);
+    let localParentID = PlacesUtils.bookmarks.getFolderIdForItem(localID);
+    let localParentSyncID = this._store.GUIDForId(localParentID);
+
+    this._log.trace(`Reviving item "${item.id}" and marking parent ${localParentSyncID} as modified.`);
+
+    if (!this._modified.has(localParentSyncID)) {
+      this._modified.set(localParentSyncID, {
+        timestamp: modifiedTimestamp,
+        deleted: false
+      });
+    }
+    return true
   },
 
   _processIncoming: function (newitems) {
     try {
       SyncEngine.prototype._processIncoming.call(this, newitems);
     } finally {
-      // Reorder children.
-      this._store._orderChildren();
-      delete this._store._childrenToOrder;
+      try {
+        this._deletePending();
+      } finally {
+        // Reorder children.
+        this._store._orderChildren();
+        delete this._store._childrenToOrder;
+      }
     }
   },
 
@@ -657,7 +713,8 @@ BookmarksEngine.prototype = {
 
 function BookmarksStore(name, engine) {
   Store.call(this, name, engine);
-
+  this._foldersToDelete = new Set();
+  this._atomsToDelete = new Set();
   // Explicitly nullify our references to our cached services so we don't leak
   Svc.Obs.add("places-shutdown", function() {
     for (let query in this._stmts) {
@@ -732,14 +789,18 @@ BookmarksStore.prototype = {
   },
 
   remove: function BStore_remove(record) {
-    try {
-      let info = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.remove(record.id));
-      if (info) {
-        this._log.debug(`Removed item ${record.id} with type ${record.type}`);
-      }
-    } catch (ex) {
-      // Likely already removed.
-      this._log.debug(`Error removing ${record.id}`, ex);
+    if (PlacesSyncUtils.bookmarks.isRootSyncID(record.id)) {
+      this._log.warn("Refusing to remove special folder " + record.id);
+      return;
+    }
+    let recordKind = Async.promiseSpinningly(
+      PlacesSyncUtils.bookmarks.getKindForSyncId(record.id));
+    let isFolder = recordKind === PlacesSyncUtils.bookmarks.KINDS.FOLDER;
+    this._log.trace(`Buffering removal of item "${record.id}" of type "${recordKind}".`);
+    if (isFolder) {
+      this._foldersToDelete.add(record.id);
+    } else {
+      this._atomsToDelete.add(record.id);
     }
   },
 
@@ -761,6 +822,132 @@ BookmarksStore.prototype = {
     });
     Async.promiseSpinningly(Promise.all(promises));
   },
+
+  // There's some complexity here around pending deletions. Our goals:
+  //
+  // - Don't delete any bookmarks a user has created but not explicitly deleted
+  //   (This includes any bookmark that was not a child of the folder at the
+  //   time the deletion was recorded, and also bookmarks restored from a backup).
+  // - Don't undelete any bookmark without ensuring the server structure
+  //   includes it (see `BookmarkEngine.prototype._shouldReviveRemotelyDeletedRecord`)
+  //
+  // This leads the following approach:
+  //
+  // - Additions, moves, and updates are processed before deletions.
+  //     - To do this, all deletion operations are buffered during a sync. Folders
+  //       we plan on deleting have their sync id's stored in `this._foldersToDelete`,
+  //       and non-folders we plan on deleting have their sync id's stored in
+  //       `this._atomsToDelete`.
+  //     - The exception to this is the moves that occur to fix the order of bookmark
+  //       children, which are performed after we process deletions.
+  // - Non-folders are deleted before folder deletions, so that when we process
+  //   folder deletions we know the correct state.
+  // - Remote deletions always win for folders, but do not result in recursive
+  //   deletion of children. This is a hack because we're not able to distinguish
+  //   between value changes and structural changes to folders, and we don't even
+  //   have the old server record to compare to. See `BookmarkEngine`'s
+  //   `_shouldReviveRemotelyDeletedRecord` method.
+  // - When a folder is deleted, its remaining children are moved in order to
+  //   their closest living ancestor.  If this is interrupted (unlikely, but
+  //   possible given that we don't perform this operation in a transaction),
+  //   we revive the folder.
+  // - Remote deletions can lose for non-folders, but only until we handle
+  //   bookmark restores correctly (removing stale state from the server -- this
+  //   is to say, if bug 1230011 is fixed, we should never revive bookmarks).
+
+  deletePending: Task.async(function* deletePending() {
+    yield this._deletePendingAtoms();
+    let guidsToUpdate = yield this._deletePendingFolders();
+    this.clearPendingDeletions();
+    return guidsToUpdate;
+  }),
+
+  clearPendingDeletions() {
+    this._foldersToDelete.clear();
+    this._atomsToDelete.clear();
+  },
+
+  _deleteAtom: Task.async(function* _deleteAtom(syncID) {
+    try {
+      let info = yield PlacesSyncUtils.bookmarks.remove(syncID, {
+        preventRemovalOfNonEmptyFolders: true
+      });
+      this._log.trace(`Removed item ${syncID} with type ${info.type}`);
+    } catch (ex) {
+      // Likely already removed.
+      this._log.trace(`Error removing ${syncID}`, ex);
+    }
+  }),
+
+  _deletePendingAtoms() {
+    return Promise.all(
+      [...this._atomsToDelete.values()]
+        .map(syncID => this._deleteAtom(syncID)));
+  },
+
+  // Returns an array of sync ids that need updates.
+  _deletePendingFolders: Task.async(function* _deletePendingFolders() {
+    // To avoid data loss, we don't want to just delete the folder outright,
+    // so we buffer folder deletions and process them at the end (now).
+    //
+    // At this point, any member in the folder that remains is either a folder
+    // pending deletion (which we'll get to in this function), or an item that
+    // should not be deleted. To avoid deleting these items, we first move them
+    // to the parent of the folder we're about to delete.
+    let needUpdate = new Set();
+    for (let syncId of this._foldersToDelete) {
+      let childSyncIds = yield PlacesSyncUtils.bookmarks.fetchChildSyncIds(syncId);
+      if (!childSyncIds.length) {
+        // No children -- just delete the folder.
+        yield this._deleteAtom(syncId)
+        continue;
+      }
+      // We could avoid some redundant work here by finding the nearest
+      // grandparent who isn't present in `this._toDelete`...
+
+      let grandparentSyncId = this.GUIDForId(
+        PlacesUtils.bookmarks.getFolderIdForItem(
+          this.idForGUID(PlacesSyncUtils.bookmarks.syncIdToGuid(syncId))));
+
+      this._log.trace(`Moving ${childSyncIds.length} children of "${syncId}" to ` +
+                      `grandparent "${grandparentSyncId}" before deletion.`);
+
+      // Move children out of the parent and into the grandparent
+      yield Promise.all(childSyncIds.map(child => PlacesSyncUtils.bookmarks.update({
+        syncId: child,
+        parentSyncId: grandparentSyncId
+      })));
+
+      // Delete the (now empty) parent
+      try {
+        yield PlacesSyncUtils.bookmarks.remove(syncId, {
+          preventRemovalOfNonEmptyFolders: true
+        });
+      } catch (e) {
+        // We failed, probably because someone added something to this folder
+        // between when we got the children and now (or the database is corrupt,
+        // or something else happened...) This is unlikely, but possible. To
+        // avoid corruption in this case, we need to reupload the record to the
+        // server.
+        //
+        // (Ideally this whole operation would be done in a transaction, and this
+        // wouldn't be possible).
+        needUpdate.add(syncId);
+      }
+
+      // Add children (for parentid) and grandparent (for children list) to set
+      // of records needing an update, *unless* they're marked for deletion.
+      if (!this._foldersToDelete.has(grandparentSyncId)) {
+        needUpdate.add(grandparentSyncId);
+      }
+      for (let childSyncId of childSyncIds) {
+        if (!this._foldersToDelete.has(childSyncId)) {
+          needUpdate.add(childSyncId);
+        }
+      }
+    }
+    return [...needUpdate];
+  }),
 
   changeItemID: function BStore_changeItemID(oldID, newID) {
     this._log.debug("Changing GUID " + oldID + " to " + newID);
@@ -874,6 +1061,7 @@ BookmarksStore.prototype = {
   },
 
   wipe: function BStore_wipe() {
+    this.clearPendingDeletions();
     Async.promiseSpinningly(Task.spawn(function* () {
       // Save a backup before clearing out all bookmarks.
       yield PlacesBackups.create(null, true);
