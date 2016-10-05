@@ -60,7 +60,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         }
     }
 
-    public static class CompactItem extends StreamItem implements IconCallback {
+    public static class HighlightItem extends StreamItem implements IconCallback {
         public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
 
         final FaviconView vIconView;
@@ -70,7 +70,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
 
         private Future<IconResponse> ongoingIconLoad;
 
-        public CompactItem(View itemView) {
+        public HighlightItem(View itemView) {
             super(itemView);
             vLabel = (TextView) itemView.findViewById(R.id.card_history_label);
             vTimeSince = (TextView) itemView.findViewById(R.id.card_history_time_since);
