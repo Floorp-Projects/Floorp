@@ -17,7 +17,6 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "nsIGfxInfo.h"
 #include <d3d11.h>
-#include <d3d11_4.h>
 #include <ddraw.h>
 
 namespace mozilla {
@@ -375,19 +374,9 @@ DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
       aFlags,
       mFeatureLevels.Elements(), mFeatureLevels.Length(),
       D3D11_SDK_VERSION, getter_AddRefs(aOutDevice), nullptr, nullptr);
-
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
   }
-
-  RefPtr<ID3D10Multithread> mt;
-  HRESULT hr = aOutDevice->QueryInterface((ID3D10Multithread**)getter_AddRefs(mt));
-  if (SUCCEEDED(hr) && mt) {
-    mt->SetMultithreadProtected(TRUE);
-  } else {
-    gfxCriticalError() << "Failed to set device safe for multithreading.";
-  }
-
   return true;
 }
 
@@ -494,6 +483,11 @@ DeviceManagerDx::CreateContentDevice()
   }
   mContentDevice->SetExceptionMode(0);
 
+  RefPtr<ID3D10Multithread> multi;
+  hr = mContentDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+  if (SUCCEEDED(hr) && multi) {
+    multi->SetMultithreadProtected(TRUE);
+  }
   return FeatureStatus::Available;
 }
 
@@ -502,6 +496,12 @@ DeviceManagerDx::CreateDecoderDevice()
 {
   if (mCompositorDevice && mCompositorDeviceSupportsVideo && !mDecoderDevice) {
     mDecoderDevice = mCompositorDevice;
+
+    RefPtr<ID3D10Multithread> multi;
+    mDecoderDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+    if (multi) {
+      multi->SetMultithreadProtected(TRUE);
+    }
   }
 
   if (mDecoderDevice) {
@@ -530,6 +530,11 @@ DeviceManagerDx::CreateDecoderDevice()
   if (FAILED(hr) || !device || !D3D11Checks::DoesDeviceWork()) {
     return nullptr;
   }
+
+  RefPtr<ID3D10Multithread> multi;
+  device->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+
+  multi->SetMultithreadProtected(TRUE);
 
   mDecoderDevice = device;
   return device;
