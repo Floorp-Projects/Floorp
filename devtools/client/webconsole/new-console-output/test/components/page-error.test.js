@@ -11,11 +11,12 @@ const PageError = require("devtools/client/webconsole/new-console-output/compone
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+const serviceContainer = require("devtools/client/webconsole/new-console-output/test/fixtures/serviceContainer");
 
 describe("PageError component:", () => {
   it("renders", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
-    const wrapper = render(PageError({ message }));
+    const wrapper = render(PageError({ message, serviceContainer }));
 
     expect(wrapper.find(".message-body").text())
       .toBe("ReferenceError: asdf is not defined");
@@ -33,7 +34,7 @@ describe("PageError component:", () => {
 
   it("has a stacktrace which can be openned", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
-    const wrapper = render(PageError({ message, open: true }));
+    const wrapper = render(PageError({ message, serviceContainer, open: true }));
 
     // There should be three stacktrace items.
     const frameLinks = wrapper.find(`.stack-trace span.frame-link`);

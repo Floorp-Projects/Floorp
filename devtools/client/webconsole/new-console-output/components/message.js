@@ -36,15 +36,22 @@ const Message = createClass({
     stacktrace: PropTypes.any,
     messageId: PropTypes.string,
     scrollToMessage: PropTypes.bool,
-    onViewSourceInDebugger: PropTypes.func,
-    sourceMapService: PropTypes.any,
+    serviceContainer: PropTypes.shape({
+      emitNewMessage: PropTypes.func.isRequired,
+      onViewSourceInDebugger: PropTypes.func.isRequired,
+      sourceMapService: PropTypes.any,
+    }),
   },
 
   componentDidMount() {
-    if (this.messageNode && this.props.emitNewMessage) {
-      this.props.emitNewMessage(this.messageNode);
+    if (this.messageNode) {
       if (this.props.scrollToMessage) {
         this.messageNode.scrollIntoView();
+      }
+      // Event used in tests. Some message types don't pass it in because existing tests
+      // did not emit for them.
+      if (this.props.serviceContainer) {
+        this.props.serviceContainer.emitNewMessage(this.messageNode, this.props.messageId);
       }
     }
   },
@@ -60,8 +67,7 @@ const Message = createClass({
       messageBody,
       frame,
       stacktrace,
-      onViewSourceInDebugger,
-      sourceMapService,
+      serviceContainer,
       dispatch,
     } = this.props;
 
@@ -79,7 +85,7 @@ const Message = createClass({
     } else if (stacktrace) {
       const child = open ? StackTrace({
         stacktrace: stacktrace,
-        onViewSourceInDebugger: onViewSourceInDebugger
+        onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger
       }) : null;
       attachment = dom.div({ className: "stacktrace devtools-monospace" }, child);
     }
@@ -106,9 +112,9 @@ const Message = createClass({
     const location = dom.span({ className: "message-location devtools-monospace" },
       shouldRenderFrame ? FrameView({
         frame,
-        onClick: onViewSourceInDebugger,
+        onClick: serviceContainer.onViewSourceInDebugger,
         showEmptyPathAsHost: true,
-        sourceMapService
+        sourceMapService: serviceContainer.sourceMapService
       }) : null
     );
 

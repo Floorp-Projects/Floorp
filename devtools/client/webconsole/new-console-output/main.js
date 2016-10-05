@@ -18,7 +18,7 @@ const NewConsoleOutputWrapper = BrowserLoader({
   baseURI: "resource://devtools/client/webconsole/new-console-output/",
   window}).require("./new-console-output-wrapper");
 
-this.NewConsoleOutput = function (parentNode, jsterm, toolbox, owner, emitNewMessage) {
+this.NewConsoleOutput = function (parentNode, jsterm, toolbox, owner, serviceContainer) {
   console.log("Creating NewConsoleOutput", parentNode, NewConsoleOutputWrapper);
-  return new NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, emitNewMessage);
+  return new NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, serviceContainer);
 };
