@@ -726,14 +726,13 @@ public:
              }));
 
     MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
-    MOZ_ASSERT(!mMaster->mCurrentSeek.Exists());
-    mMaster->mCurrentSeek = Move(mSeekJob);
+    mCurrentSeek = Move(mSeekJob);
   }
 
   void Exit() override
   {
     mSeekTaskRequest.DisconnectIfExists();
-    mMaster->mCurrentSeek.RejectIfExists(__func__);
+    mCurrentSeek.RejectIfExists(__func__);
     mSeekTask->Discard();
 
     // Reset the MediaDecoderReaderWrapper's callbask.
@@ -751,16 +750,16 @@ public:
       return true;
     }
     MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
-    MOZ_ASSERT(mMaster->mCurrentSeek.Exists());
+    MOZ_ASSERT(mCurrentSeek.Exists());
     // Because both audio and video decoders are going to be reset in this
     // method later, we treat a VideoOnly seek task as a normal Accurate
     // seek task so that while it is resumed, both audio and video playback
     // are handled.
-    if (mMaster->mCurrentSeek.mTarget.IsVideoOnly()) {
-      mMaster->mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
-      mMaster->mCurrentSeek.mTarget.SetVideoOnly(false);
+    if (mCurrentSeek.mTarget.IsVideoOnly()) {
+      mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
+      mCurrentSeek.mTarget.SetVideoOnly(false);
     }
-    mMaster->mQueuedSeek = Move(mMaster->mCurrentSeek);
+    mMaster->mQueuedSeek = Move(mCurrentSeek);
     SetState(DECODER_STATE_DORMANT);
     return true;
   }
@@ -876,7 +875,7 @@ private:
 
     // We want to resolve the seek request prior finishing the first frame
     // to ensure that the seeked event is fired prior loadeded.
-    mMaster->mCurrentSeek.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
+    mCurrentSeek.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
 
     // Notify FirstFrameLoaded now if we haven't since we've decoded some data
     // for readyState to transition to HAVE_CURRENT_DATA and fire 'loadeddata'.
@@ -903,6 +902,7 @@ private:
   SeekJob mSeekJob;
   MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
   RefPtr<SeekTask> mSeekTask;
+  SeekJob mCurrentSeek;
 };
 
 class MediaDecoderStateMachine::BufferingState
