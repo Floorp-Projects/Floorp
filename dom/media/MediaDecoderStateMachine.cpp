@@ -635,6 +635,16 @@ public:
     return p.forget();
   }
 
+  bool HandleEndOfStream() override
+  {
+    if (mMaster->CheckIfDecodeComplete()) {
+      SetState(DECODER_STATE_COMPLETED);
+    } else {
+      mMaster->MaybeStopPrerolling();
+    }
+    return true;
+  }
+
   bool HandleAudioCaptured() override
   {
     mMaster->MaybeStopPrerolling();
@@ -673,14 +683,6 @@ private:
            mMaster->mLowAudioThresholdUsecs,
            mMaster->mAmpleAudioThresholdUsecs);
     }
-  }
-
-  bool HandleEndOfStream() override
-  {
-    if (mMaster->CheckIfDecodeComplete()) {
-      SetState(DECODER_STATE_COMPLETED);
-    }
-    return true;
   }
 
   // Time at which we started decoding.
@@ -1593,8 +1595,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   } else {
     VideoQueue().Finish();
   }
-
-  MaybeStopPrerolling();
 
   mStateObj->HandleEndOfStream();
 }
