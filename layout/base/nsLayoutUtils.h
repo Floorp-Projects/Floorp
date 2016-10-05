@@ -2230,11 +2230,11 @@ public:
                                         bool clear);
 
   /**
-   * Returns true if the frame has current (i.e. running or scheduled-to-run)
-   * animations or transitions for the property.
+   * Returns true if the frame has animations or transitions that are running
+   * or filling forwards for the specified property.
    */
-  static bool HasCurrentAnimationOfProperty(const nsIFrame* aFrame,
-                                            nsCSSPropertyID aProperty);
+  static bool HasActiveAnimationOfProperty(const nsIFrame* aFrame,
+                                           nsCSSPropertyID aProperty);
 
   /**
    * Returns true if the frame has any current CSS transitions.
