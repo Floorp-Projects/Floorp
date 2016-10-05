@@ -46,8 +46,6 @@ sync protocol PAPZ
 
 parent:
 
-  async UpdateHitRegion(nsRegion aRegion);
-
   async __delete__();
 
 child:

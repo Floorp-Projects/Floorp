@@ -99,8 +99,6 @@ ContentProcessController::~ContentProcessController()
   if (mObserver) {
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     os->RemoveObserver(mObserver, "tab-child-created");
-  } else if (mBrowser) {
-    mBrowser->SetAPZChild(nullptr);
   }
 }
 
