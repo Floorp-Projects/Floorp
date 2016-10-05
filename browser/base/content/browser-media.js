@@ -234,10 +234,6 @@ let gDecoderDoctorHandler = {
     if (type == "cannot-initialize-pulseaudio") {
       return gNavigatorBundle.getString("decoder.noPulseAudio.message");
     }
-    if (type == "unsupported-libavcodec" &&
-        AppConstants.platform == "linux") {
-      return gNavigatorBundle.getString("decoder.unsupportedLibavcodec.message");
-    }
     return "";
   },
 
