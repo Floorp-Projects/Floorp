@@ -702,11 +702,25 @@ private:
     }
   }
 
+  bool DonePrerollingAudio()
+  {
+    return !mMaster->IsAudioDecoding() ||
+           mMaster->GetDecodedAudioDuration() >=
+             mMaster->AudioPrerollUsecs() * mMaster->mPlaybackRate;
+  }
+
+  bool DonePrerollingVideo()
+  {
+    return !mMaster->IsVideoDecoding() ||
+           static_cast<uint32_t>(mMaster->VideoQueue().GetSize()) >=
+             mMaster->VideoPrerollFrames() * mMaster->mPlaybackRate + 1;
+  }
+
   void MaybeStopPrerolling()
   {
     if (mIsPrerolling &&
-        (mMaster->DonePrerollingAudio() || Reader()->IsWaitingAudioData()) &&
-        (mMaster->DonePrerollingVideo() || Reader()->IsWaitingVideoData())) {
+        (DonePrerollingAudio() || Reader()->IsWaitingAudioData()) &&
+        (DonePrerollingVideo() || Reader()->IsWaitingVideoData())) {
       mIsPrerolling = false;
       // Check if we can start playback.
       mMaster->ScheduleStateMachine();
