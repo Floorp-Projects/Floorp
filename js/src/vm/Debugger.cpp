@@ -7072,7 +7072,7 @@ DebuggerFrame::create(JSContext* cx, HandleObject proto, AbstractFramePtr refere
 {
   JSObject* obj = NewObjectWithGivenProto(cx, &DebuggerFrame::class_, proto);
   if (!obj)
-    return nullptr;
+      return nullptr;
 
   DebuggerFrame& frame = obj->as<DebuggerFrame>();
 
