@@ -54,13 +54,12 @@ DocAccessibleChildBase::SerializeTree(Accessible* aRoot,
                                       nsTArray<AccessibleData>& aTree)
 {
   uint64_t id = reinterpret_cast<uint64_t>(aRoot->UniqueID());
+#if defined(XP_WIN)
+  int32_t msaaId = AccessibleWrap::GetChildIDFor(aRoot);
+#endif
   uint32_t role = aRoot->Role();
   uint32_t childCount = aRoot->ChildCount();
   uint32_t interfaces = InterfacesFor(aRoot);
-
-#if defined(XP_WIN)
-  IAccessibleHolder holder(CreateHolderFromAccessible(aRoot));
-#endif
 
   // OuterDocAccessibles are special because we don't want to serialize the
   // child doc here, we'll call PDocAccessibleConstructor in
@@ -71,8 +70,7 @@ DocAccessibleChildBase::SerializeTree(Accessible* aRoot,
   }
 
 #if defined(XP_WIN)
-  aTree.AppendElement(AccessibleData(id, role, childCount, interfaces,
-                                     holder));
+  aTree.AppendElement(AccessibleData(id, msaaId, role, childCount, interfaces));
 #else
   aTree.AppendElement(AccessibleData(id, role, childCount, interfaces));
 #endif
