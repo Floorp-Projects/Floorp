@@ -22,7 +22,7 @@ const {SideMenuWidget} = require("resource://devtools/client/shared/widgets/Side
 const {VariablesView} = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
 const {VariablesViewController} = require("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 const {ToolSidebar} = require("devtools/client/framework/sidebar");
-const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
+const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {setImageTooltip, getImageDimensions} =
   require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 const { testing: isTesting } = require("devtools/shared/flags");
