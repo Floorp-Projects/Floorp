@@ -221,6 +221,8 @@ public:
 
   virtual bool HandleEndOfStream() { return false; }
 
+  virtual bool HandleWaitingForData() { return false; }
+
   virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) = 0;
 
   virtual bool HandleAudioCaptured() { return false; }
@@ -642,6 +644,12 @@ public:
     } else {
       mMaster->MaybeStopPrerolling();
     }
+    return true;
+  }
+
+  bool HandleWaitingForData() override
+  {
+    mMaster->MaybeStopPrerolling();
     return true;
   }
 
@@ -1569,7 +1577,7 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     MOZ_ASSERT(mReader->IsWaitForDataSupported(),
                "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     mReader->WaitForData(aType);
-    MaybeStopPrerolling();
+    mStateObj->HandleWaitingForData();
     return;
   }
 
