@@ -16,7 +16,7 @@ all-tests:
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     - gtest
-    - jittests
+    - jittest
     - jsreftest
     - marionette
     - mochitest
@@ -42,7 +42,7 @@ asan-tests:
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     - gtest
-    - jittests
+    - jittest
     - jsreftest
     - marionette
     - mochitest
