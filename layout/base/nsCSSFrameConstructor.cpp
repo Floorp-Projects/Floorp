@@ -3561,16 +3561,7 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     return nullptr;
   }
 
-  if (aTag == nsGkAtoms::details || aTag == nsGkAtoms::summary) {
-    if (!HTMLDetailsElement::IsDetailsEnabled()) {
-      return nullptr;
-    }
-  }
-
-  if (aTag == nsGkAtoms::summary &&
-      (!aParentFrame || aParentFrame->GetType() != nsGkAtoms::detailsFrame)) {
-    // <summary> is special only if it is a direct child of <details>. If it
-    // isn't, construct it as a normal block frame instead of a summary frame.
+  if (aTag == nsGkAtoms::details && !HTMLDetailsElement::IsDetailsEnabled()) {
     return nullptr;
   }
 
