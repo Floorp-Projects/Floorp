@@ -1199,8 +1199,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         // Select recent bookmarks that have not been visited much
         final String bookmarksQuery = "SELECT * FROM (SELECT " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
                 "-1 AS " + Combined.HISTORY_ID + ", " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TITLE) + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " AS " + Highlights.DATE + " " +
