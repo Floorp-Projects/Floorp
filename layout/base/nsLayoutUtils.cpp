@@ -554,10 +554,10 @@ GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
       anim->GetEffect() ? anim->GetEffect()->AsKeyframeEffect() : nullptr;
     MOZ_ASSERT(effect, "A playing animation should have a keyframe effect");
     for (size_t propIdx = effect->Properties().Length(); propIdx-- != 0; ) {
-      AnimationProperty& prop = effect->Properties()[propIdx];
+      const AnimationProperty& prop = effect->Properties()[propIdx];
       if (prop.mProperty == eCSSProperty_transform) {
         for (uint32_t segIdx = prop.mSegments.Length(); segIdx-- != 0; ) {
-          AnimationPropertySegment& segment = prop.mSegments[segIdx];
+          const AnimationPropertySegment& segment = prop.mSegments[segIdx];
           gfxSize from = segment.mFromValue.GetScaleValue(aFrame);
           aMaxScale.width = std::max<float>(aMaxScale.width, from.width);
           aMaxScale.height = std::max<float>(aMaxScale.height, from.height);

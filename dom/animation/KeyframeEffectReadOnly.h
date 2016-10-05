@@ -234,10 +234,6 @@ public:
   {
     return mProperties;
   }
-  InfallibleTArray<AnimationProperty>& Properties()
-  {
-    return mProperties;
-  }
 
   // Update |mProperties| by recalculating from |mKeyframes| using
   // |aStyleContext| to resolve specified values.
