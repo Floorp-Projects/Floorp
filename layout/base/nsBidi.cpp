@@ -1639,15 +1639,6 @@ nsresult nsBidi::GetParaLevel(nsBidiLevel* aParaLevel)
   return NS_OK;
 }
 
-nsresult nsBidi::GetCharTypeAt(int32_t aCharIndex, nsCharType* pType)
-{
-  if(aCharIndex<0 || mLength<=aCharIndex) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *pType = (nsCharType)mDirProps[aCharIndex];
-  return NS_OK;
-}
-
 nsresult nsBidi::GetLogicalRun(int32_t aLogicalStart, int32_t *aLogicalLimit, nsBidiLevel *aLevel)
 {
   int32_t length = mLength;
