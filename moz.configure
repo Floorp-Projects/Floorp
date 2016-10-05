@@ -35,6 +35,16 @@ def artifact_builds(value):
 
 set_config('MOZ_ARTIFACT_BUILDS', artifact_builds)
 
+imply_option('--enable-artifact-build-symbols',
+             depends(artifact_builds)(lambda v: False if v is None else None),
+             reason='--disable-artifact-builds')
+
+option('--enable-artifact-build-symbols',
+       help='Download symbols when artifact builds are enabled.')
+
+set_config('MOZ_ARTIFACT_BUILD_SYMBOLS',
+           depends_if('--enable-artifact-build-symbols')(lambda _: True))
+
 @depends('--enable-artifact-builds')
 def imply_disable_compile_environment(value):
     if value:
@@ -93,6 +103,11 @@ js_option('--enable-debug',
 add_old_configure_assignment('MOZ_DEBUG',
                              depends('--enable-debug')(lambda v: bool(v)))
 
+include('build/moz.configure/pkg.configure')
+# Make this assignment here rather than in pkg.configure to avoid
+# requiring this file in unit tests.
+add_old_configure_assignment('PKG_CONFIG', pkg_config)
+
 include_when('build/moz.configure/toolchain.configure',
              when='--enable-compile-environment')
 include_when('build/moz.configure/memory.configure',
@@ -103,35 +118,6 @@ include_when('build/moz.configure/warnings.configure',
              when='--enable-compile-environment')
 
 include(include_project_configure)
-
-@depends(building_js, '--help')
-def ctypes_default(building_js, _):
-    return not building_js
-
-js_option('--enable-ctypes', help='Enable js-ctypes',
-          default=ctypes_default)
-
-build_ctypes = depends_if('--enable-ctypes')(lambda _: True)
-
-set_config('BUILD_CTYPES', build_ctypes)
-set_define('BUILD_CTYPES', build_ctypes)
-add_old_configure_assignment('BUILD_CTYPES', build_ctypes)
-
-@depends(build_ctypes, building_js)
-def js_has_ctypes(ctypes, js):
-    if ctypes and js:
-        return True
-
-set_config('JS_HAS_CTYPES', js_has_ctypes)
-set_define('JS_HAS_CTYPES', js_has_ctypes)
-add_old_configure_assignment('JS_HAS_CTYPES', js_has_ctypes)
-
-@depends('--enable-ctypes', '--enable-compile-environment', '--help')
-def ctypes_and_compile_environment(ctypes, compile_environment, _):
-    return ctypes and compile_environment
-
-include_when('build/moz.configure/ffi.configure',
-             when=ctypes_and_compile_environment)
 
 @dependable
 @imports(_from='mozbuild.backend', _import='backends')

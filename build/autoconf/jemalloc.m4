@@ -76,6 +76,15 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
     for var in AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS EXTRA_CFLAGS LDFLAGS; do
       ac_configure_args="$ac_configure_args $var='`eval echo \\${${var}}`'"
     done
+
+    # jemalloc's configure assumes that if you have CFLAGS set at all, you set
+    # all the flags necessary to configure jemalloc, which is not likely to be
+    # the case on Windows if someone is building Firefox with flags set in
+    # their mozconfig.
+    if test "$_MSC_VER"; then
+       ac_configure_args="$ac_configure_args CFLAGS="
+    fi
+
     # Force disable DSS support in jemalloc.
     ac_configure_args="$ac_configure_args ac_cv_func_sbrk=false"
 

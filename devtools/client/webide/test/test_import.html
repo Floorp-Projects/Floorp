@@ -29,8 +29,11 @@
           info("to call importPackagedApp(" + packagedAppLocation + ")");
           ok(!win.UI._busyPromise, "UI is not busy");
 
+          let onValidated = waitForUpdate(win, "project-validated");
+          let onDetails = waitForUpdate(win, "details");
           yield winProject.projectList.importPackagedApp(packagedAppLocation);
-          yield waitForUpdate(win, "project-validated");
+          yield onValidated;
+          yield onDetails;
 
           let project = win.AppManager.selectedProject;
           is(project.location, packagedAppLocation, "Location is valid");

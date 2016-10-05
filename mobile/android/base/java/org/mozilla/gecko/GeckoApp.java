@@ -385,9 +385,7 @@ public abstract class GeckoApp
 
         onPrepareOptionsMenu(mMenu);
 
-        if (Versions.feature11Plus) {
-            super.invalidateOptionsMenu();
-        }
+        super.invalidateOptionsMenu();
     }
 
     @Override
@@ -852,22 +850,10 @@ public abstract class GeckoApp
                 dialog.getListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                        if (Versions.feature11Plus) {
-                            if (listView.getCheckedItemCount() == 0) {
-                                clearButton.setEnabled(false);
-                            } else {
-                                clearButton.setEnabled(true);
-                            }
-                        } else {
-                            final SparseBooleanArray items = listView.getCheckedItemPositions();
-                            for (int j = 0; j < items.size(); j++) {
-                                if (items.valueAt(j) == true) {
-                                    clearButton.setEnabled(true);
-                                    return;
-                                }
-                            }
-
+                        if (listView.getCheckedItemCount() == 0) {
                             clearButton.setEnabled(false);
+                        } else {
+                            clearButton.setEnabled(true);
                         }
                     }
                 });
@@ -1890,9 +1876,7 @@ public abstract class GeckoApp
 
         // Try to make it fully transparent.
         if (mCameraView instanceof SurfaceView) {
-            if (Versions.feature11Plus) {
-                mCameraView.setAlpha(0.0f);
-            }
+            mCameraView.setAlpha(0.0f);
             ViewGroup mCameraLayout = (ViewGroup) findViewById(R.id.camera_layout);
             // Some phones (eg. nexus S) need at least a 8x16 preview size
             mCameraLayout.addView(mCameraView,
@@ -2127,13 +2111,6 @@ public abstract class GeckoApp
         int newOrientation = getResources().getConfiguration().orientation;
         if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
             refreshChrome();
-        }
-
-        if (!Versions.feature14Plus) {
-            // Update accessibility settings in case it has been changed by the
-            // user. On API14+, this is handled in LayerView by registering an
-            // accessibility state change listener.
-            GeckoAccessibility.updateAccessibilitySettings(this);
         }
 
         if (mAppStateListeners != null) {

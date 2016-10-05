@@ -323,12 +323,7 @@ public class DoorHangerPopup extends AnchoredPopup
             return;
         }
 
-        // Make the popup focusable for accessibility. This gets done here
-        // so the node can be accessibility focused, but on pre-ICS devices this
-        // causes crashes, so it is done after the popup is shown.
-        if (Versions.feature14Plus) {
-            setFocusable(true);
-        }
+        setFocusable(true);
 
         show();
     }

@@ -492,11 +492,6 @@ class PluginModuleChromeParent
 
     void CachedSettingChanged();
 
-    void OnEnteredCall() override;
-    void OnExitedCall() override;
-    void OnEnteredSyncSend() override;
-    void OnExitedSyncSend() override;
-
 #ifdef  MOZ_ENABLE_PROFILER_SPS
     void GatherAsyncProfile();
     void GatheredAsyncProfile(nsIProfileSaveEvent* aSaveEvent);
@@ -592,8 +587,6 @@ private:
         kHangUIDontShow = (1u << 3)
     };
     Atomic<uint32_t> mHangAnnotationFlags;
-    mozilla::Mutex mProtocolCallStackMutex;
-    InfallibleTArray<mozilla::ipc::IProtocol*> mProtocolCallStack;
 #ifdef XP_WIN
     InfallibleTArray<float> mPluginCpuUsageOnHang;
     PluginHangUIParent *mHangUIParent;

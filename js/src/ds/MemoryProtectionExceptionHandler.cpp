@@ -11,7 +11,7 @@
 
 #if defined(XP_WIN)
 # include "jswin.h"
-#elif defined(XP_LINUX)
+#elif defined(XP_UNIX) && !defined(XP_DARWIN)
 # include <signal.h>
 # include <sys/types.h>
 # include <unistd.h>
@@ -210,7 +210,7 @@ MemoryProtectionExceptionHandler::uninstall()
     }
 }
 
-#elif defined(XP_LINUX)
+#elif defined(XP_UNIX) && !defined(XP_DARWIN)
 
 static struct sigaction sPrevSEGVHandler = {};
 

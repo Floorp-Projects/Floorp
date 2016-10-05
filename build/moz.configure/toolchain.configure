@@ -882,5 +882,26 @@ def libcxx_inline_visibility(c_compiler, target):
 set_define('_LIBCPP_INLINE_VISIBILITY', libcxx_inline_visibility)
 set_define('_LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49', libcxx_inline_visibility)
 
+@depends(c_compiler, target, check_build_environment)
+def visibility_flags(c_compiler, target, env):
+    if target.os != 'WINNT':
+        if target.kernel == 'Darwin':
+            return ('-fvisibility=hidden', '-fvisibility-inlines-hidden')
+        return ('-I%s/system_wrappers' % os.path.join(env.dist),
+                '-include',
+                '%s/config/gcc_hidden.h' % env.topsrcdir)
+
+@depends(target, visibility_flags)
+def wrap_system_includes(target, visibility_flags):
+    if visibility_flags and target.kernel != 'Darwin':
+        return True
+
+set_define('HAVE_VISIBILITY_HIDDEN_ATTRIBUTE',
+           depends(visibility_flags)(lambda v: bool(v) or None))
+set_define('HAVE_VISIBILITY_ATTRIBUTE',
+           depends(visibility_flags)(lambda v: bool(v) or None))
+set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
+set_config('VISIBILITY_FLAGS', visibility_flags)
+
 include('windows.configure')
 include('rust.configure')

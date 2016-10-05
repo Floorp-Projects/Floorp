@@ -4,9 +4,12 @@
 
 import sys
 
+NOT_NESTED = 1
+INSIDE_SYNC_NESTED = 2
+INSIDE_CPOW_NESTED = 3
+
 NORMAL_PRIORITY = 1
 HIGH_PRIORITY = 2
-URGENT_PRIORITY = 3
 
 class Visitor:
     def defaultVisit(self, node):
@@ -236,7 +239,7 @@ class Protocol(NamespacedNode):
     def __init__(self, loc):
         NamespacedNode.__init__(self, loc)
         self.sendSemantics = ASYNC
-        self.priority = NORMAL_PRIORITY
+        self.nested = NOT_NESTED
         self.spawnsStmts = [ ]
         self.bridgesStmts = [ ]
         self.opensStmts = [ ]
@@ -296,7 +299,8 @@ class MessageDecl(Node):
         Node.__init__(self, loc)
         self.name = None
         self.sendSemantics = ASYNC
-        self.priority = NORMAL_PRIORITY
+        self.nested = NOT_NESTED
+        self.prio = NORMAL_PRIORITY
         self.direction = None
         self.inParams = [ ]
         self.outParams = [ ]

@@ -1092,33 +1092,6 @@ auto SurfaceTextureListener::New() -> SurfaceTextureListener::LocalRef
 constexpr char SurfaceTextureListener::OnFrameAvailable_t::name[];
 constexpr char SurfaceTextureListener::OnFrameAvailable_t::signature[];
 
-const char DisplayPortMetrics::name[] =
-        "org/mozilla/gecko/gfx/DisplayPortMetrics";
-
-constexpr char DisplayPortMetrics::New_t::name[];
-constexpr char DisplayPortMetrics::New_t::signature[];
-
-auto DisplayPortMetrics::New(float a0, float a1, float a2, float a3, float a4) -> DisplayPortMetrics::LocalRef
-{
-    return mozilla::jni::Constructor<New_t>::Call(DisplayPortMetrics::Context(), nullptr, a0, a1, a2, a3, a4);
-}
-
-constexpr char DisplayPortMetrics::MPosition_t::name[];
-constexpr char DisplayPortMetrics::MPosition_t::signature[];
-
-auto DisplayPortMetrics::MPosition() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Field<MPosition_t>::Get(DisplayPortMetrics::mCtx, nullptr);
-}
-
-constexpr char DisplayPortMetrics::Resolution_t::name[];
-constexpr char DisplayPortMetrics::Resolution_t::signature[];
-
-auto DisplayPortMetrics::Resolution() const -> float
-{
-    return mozilla::jni::Field<Resolution_t>::Get(DisplayPortMetrics::mCtx, nullptr);
-}
-
 const char GeckoLayerClient::name[] =
         "org/mozilla/gecko/gfx/GeckoLayerClient";
 

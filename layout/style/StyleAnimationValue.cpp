@@ -27,6 +27,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
+#include "mozilla/ServoBindings.h" // ServoDeclarationBlock
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
 #include "nsIDocument.h"
@@ -3037,9 +3038,39 @@ BuildStyleRule(nsCSSPropertyID aProperty,
 }
 
 static bool
+ComputeValuesFromStyleContext(
+  nsCSSPropertyID aProperty,
+  CSSEnabledState aEnabledState,
+  nsStyleContext* aStyleContext,
+  nsTArray<PropertyStyleAnimationValuePair>& aValues)
+{
+  // Extract computed value of our property (or all longhand components, if
+  // aProperty is a shorthand) from the temporary style context
+  if (nsCSSProps::IsShorthand(aProperty)) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty, aEnabledState) {
+      if (nsCSSProps::kAnimTypeTable[*p] == eStyleAnimType_None) {
+        // Skip non-animatable component longhands.
+        continue;
+      }
+      PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
+      pair->mProperty = *p;
+      if (!StyleAnimationValue::ExtractComputedValue(*p, aStyleContext,
+                                                     pair->mValue)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
+  pair->mProperty = aProperty;
+  return StyleAnimationValue::ExtractComputedValue(aProperty, aStyleContext,
+                                                   pair->mValue);
+}
+
+static bool
 ComputeValuesFromStyleRule(nsCSSPropertyID aProperty,
                            CSSEnabledState aEnabledState,
-                           dom::Element* aTargetElement,
                            nsStyleContext* aStyleContext,
                            css::StyleRule* aStyleRule,
                            nsTArray<PropertyStyleAnimationValuePair>& aValues,
@@ -3100,28 +3131,8 @@ ComputeValuesFromStyleRule(nsCSSPropertyID aProperty,
     }
   }
 
-  // Extract computed value of our property (or all longhand components, if
-  // aProperty is a shorthand) from the temporary style rule
-  if (nsCSSProps::IsShorthand(aProperty)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty, aEnabledState) {
-      if (nsCSSProps::kAnimTypeTable[*p] == eStyleAnimType_None) {
-        // Skip non-animatable component longhands.
-        continue;
-      }
-      PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
-      pair->mProperty = *p;
-      if (!StyleAnimationValue::ExtractComputedValue(*p, tmpStyleContext,
-                                                     pair->mValue)) {
-        return false;
-      }
-    }
-    return true;
-  } else {
-    PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
-    pair->mProperty = aProperty;
-    return StyleAnimationValue::ExtractComputedValue(aProperty, tmpStyleContext,
-                                                     pair->mValue);
-  }
+  return ComputeValuesFromStyleContext(aProperty, aEnabledState,
+                                       tmpStyleContext, aValues);
 }
 
 /* static */ bool
@@ -3160,7 +3171,7 @@ StyleAnimationValue::ComputeValue(nsCSSPropertyID aProperty,
   AutoTArray<PropertyStyleAnimationValuePair,1> values;
   bool ok = ComputeValuesFromStyleRule(aProperty,
                                        CSSEnabledState::eIgnoreEnabledState,
-                                       aTargetElement, aStyleContext, styleRule,
+                                       aStyleContext, styleRule,
                                        values, aIsContextSensitive);
   if (!ok) {
     return false;
@@ -3197,7 +3208,7 @@ ComputeValuesFromSpecifiedValue(
   }
 
   aResult.Clear();
-  return ComputeValuesFromStyleRule(aProperty, aEnabledState, aTargetElement,
+  return ComputeValuesFromStyleRule(aProperty, aEnabledState,
                                     aStyleContext, styleRule, aResult,
                                     /* aIsContextSensitive */ nullptr);
 }
@@ -3232,6 +3243,45 @@ StyleAnimationValue::ComputeValues(
                                          aTargetElement, aStyleContext,
                                          aSpecifiedValue, aUseSVGMode,
                                          aResult);
+}
+
+/* static */ bool
+StyleAnimationValue::ComputeValues(
+  nsCSSPropertyID aProperty,
+  CSSEnabledState aEnabledState,
+  nsStyleContext* aStyleContext,
+  const ServoDeclarationBlock& aDeclarations,
+  nsTArray<PropertyStyleAnimationValuePair>& aValues)
+{
+  MOZ_ASSERT(aStyleContext->PresContext()->StyleSet()->IsServo(),
+             "Should be using ServoStyleSet if we have a"
+             " ServoDeclarationBlock");
+
+  if (!nsCSSProps::IsEnabled(aProperty, aEnabledState)) {
+    return false;
+  }
+
+  RefPtr<ServoComputedValues> previousStyle =
+    aStyleContext->StyleSource().AsServoComputedValues();
+
+  // FIXME: Servo bindings don't yet represent const-ness so we just
+  // cast it away for now.
+  auto declarations = const_cast<ServoDeclarationBlock*>(&aDeclarations);
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_RestyleWithAddedDeclaration(declarations, previousStyle).Consume();
+  if (!computedValues) {
+    return false;
+  }
+
+  RefPtr<nsStyleContext> tmpStyleContext =
+    NS_NewStyleContext(aStyleContext, aStyleContext->PresContext(),
+                       aStyleContext->GetPseudo(),
+                       aStyleContext->GetPseudoType(),
+                       computedValues.forget(),
+                       false /* skipFixup */);
+
+  return ComputeValuesFromStyleContext(aProperty, aEnabledState,
+                                       tmpStyleContext, aValues);
 }
 
 bool

@@ -116,6 +116,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Sna
 
 XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "WebsiteMetadata", "resource://gre/modules/WebsiteMetadata.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "FontEnumerator",
   "@mozilla.org/gfx/fontenumerator;1",
   "nsIFontEnumerator");
@@ -3930,6 +3932,11 @@ Tab.prototype = {
 
           this.browser.addEventListener("pagehide", listener, true);
         }
+
+        if (AppConstants.NIGHTLY_BUILD || AppConstants.MOZ_ANDROID_ACTIVITY_STREAM) {
+          WebsiteMetadata.parseAsynchronously(this.browser.contentDocument);
+        }
+
         break;
       }
 
