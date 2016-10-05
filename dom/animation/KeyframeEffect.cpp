@@ -89,9 +89,6 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
   if (mTarget) {
     UnregisterTarget();
     ResetIsRunningOnCompositor();
-    // We don't need to reset the mWinsInCascade member since it will be updated
-    // when we later associate with a different target (and until that time this
-    // flag is not used).
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
 
