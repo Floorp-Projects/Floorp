@@ -413,6 +413,18 @@ var FullScreen = {
     // before transition.
     PointerlockFsWarning.close();
 
+    // If it is a remote browser, send a message to ask the content
+    // to enter fullscreen state. We don't need to do so if it is an
+    // in-process browser, since all related document should have
+    // entered fullscreen state at this point.
+    // This should be done before the active tab check below to ensure
+    // that the content document handles the pending request. Doing so
+    // before the check is fine since we also check the activeness of
+    // the requesting document in content-side handling code.
+    if (this._isRemoteBrowser(aBrowser)) {
+      aBrowser.messageManager.sendAsyncMessage("DOMFullscreen:Entered");
+    }
+
     // If we've received a fullscreen notification, we have to ensure that the
     // element that's requesting fullscreen belongs to the browser that's currently
     // active. If not, we exit fullscreen since the "full-screen document" isn't
@@ -425,14 +437,6 @@ var FullScreen = {
       // we have to avoid calling exitFullscreen synchronously here.
       setTimeout(() => document.exitFullscreen(), 0);
       return;
-    }
-
-    // If it is a remote browser, send a message to ask the content
-    // to enter fullscreen state. We don't need to do so if it is an
-    // in-process browser, since all related document should have
-    // entered fullscreen state at this point.
-    if (this._isRemoteBrowser(aBrowser)) {
-      aBrowser.messageManager.sendAsyncMessage("DOMFullscreen:Entered");
     }
 
     document.documentElement.setAttribute("inDOMFullscreen", true);
