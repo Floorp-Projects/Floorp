@@ -261,6 +261,7 @@ private:
   rtc::scoped_ptr<DesktopAndCursorComposer> desktop_capturer_cursor_composer_;
   rtc::scoped_ptr<EventWrapper> time_event_;
   rtc::scoped_ptr<ThreadWrapper> capturer_thread_;
+  bool started_;
 };
 
 }  // namespace webrtc
