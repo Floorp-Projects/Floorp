@@ -619,9 +619,6 @@ private:
   SeekJob mQueuedSeek;
   SeekJob mCurrentSeek;
 
-  // mSeekTask is responsible for executing the current seek request.
-  RefPtr<SeekTask> mSeekTask;
-
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
 
