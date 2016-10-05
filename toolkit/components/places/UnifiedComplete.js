@@ -617,10 +617,11 @@ function makeKeyForURL(actionUrl) {
 /**
  * Returns whether the passed in string looks like a url.
  */
-function looksLikeUrl(str) {
+function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
   // Single word not including special chars.
   return !REGEXP_SPACES.test(str) &&
-         ["/", "@", ":", "."].some(c => str.includes(c));
+         (["/", "@", ":", "["].some(c => str.includes(c)) ||
+          (ignoreAlphanumericHosts ? /(.*\..*){3,}/.test(str) : str.includes(".")));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -996,6 +997,18 @@ Search.prototype = {
       // but isn't in the whitelist.
       let matched = yield this._matchUnknownUrl();
       if (matched) {
+        // Since we can't tell if this is a real URL and
+        // whether the user wants to visit or search for it,
+        // we always provide an alternative searchengine match.
+        try {
+          new URL(this._originalSearchString);
+        } catch (ex) {
+          if (Prefs.keywordEnabled && !looksLikeUrl(this._originalSearchString, true)) {
+            this._addingHeuristicFirstMatch = false;
+            yield this._matchCurrentSearchEngine();
+            this._addingHeuristicFirstMatch = true;
+          }
+        }
         return true;
       }
     }
