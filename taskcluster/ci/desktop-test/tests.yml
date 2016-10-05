@@ -103,7 +103,7 @@ gtest:
         extra-options:
             - --gtest-suite=gtest
 
-jittests:
+jittest:
     description: "JIT Test run"
     suite: jittest/jittest-chunked
     treeherder-symbol: tc(Jit)
