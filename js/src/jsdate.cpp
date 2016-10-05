@@ -2427,49 +2427,6 @@ static const char * const months[] =
    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-
-static void
-print_gmt_string(char* buf, size_t size, double utctime)
-{
-    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).toDouble(), utctime));
-    snprintf(buf, size, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
-             days[int(WeekDay(utctime))],
-             int(DateFromTime(utctime)),
-             months[int(MonthFromTime(utctime))],
-             int(YearFromTime(utctime)),
-             int(HourFromTime(utctime)),
-             int(MinFromTime(utctime)),
-             int(SecFromTime(utctime)));
-}
-
-static void
-print_iso_string(char* buf, size_t size, double utctime)
-{
-    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).toDouble(), utctime));
-    snprintf(buf, size, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
-             int(YearFromTime(utctime)),
-             int(MonthFromTime(utctime)) + 1,
-             int(DateFromTime(utctime)),
-             int(HourFromTime(utctime)),
-             int(MinFromTime(utctime)),
-             int(SecFromTime(utctime)),
-             int(msFromTime(utctime)));
-}
-
-static void
-print_iso_extended_string(char* buf, size_t size, double utctime)
-{
-    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).toDouble(), utctime));
-    snprintf(buf, size, "%+.6d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
-             int(YearFromTime(utctime)),
-             int(MonthFromTime(utctime)) + 1,
-             int(DateFromTime(utctime)),
-             int(HourFromTime(utctime)),
-             int(MinFromTime(utctime)),
-             int(SecFromTime(utctime)),
-             int(msFromTime(utctime)));
-}
-
 /* ES5 B.2.6. */
 MOZ_ALWAYS_INLINE bool
 date_toGMTString_impl(JSContext* cx, const CallArgs& args)
@@ -2477,12 +2434,22 @@ date_toGMTString_impl(JSContext* cx, const CallArgs& args)
     double utctime = args.thisv().toObject().as<DateObject>().UTCTime().toNumber();
 
     char buf[100];
-    if (!IsFinite(utctime))
-        SprintfLiteral(buf, js_NaN_date_str);
-    else
-        print_gmt_string(buf, sizeof buf, utctime);
+    JSString* str;
+    if (!IsFinite(utctime)) {
+        str = NewStringCopyZ<CanGC>(cx, js_NaN_date_str);
+    } else {
+        SprintfLiteral(buf, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
+                       days[int(WeekDay(utctime))],
+                       int(DateFromTime(utctime)),
+                       months[int(MonthFromTime(utctime))],
+                       int(YearFromTime(utctime)),
+                       int(HourFromTime(utctime)),
+                       int(MinFromTime(utctime)),
+                       int(SecFromTime(utctime)));
 
-    JSString* str = JS_NewStringCopyZ(cx, buf);
+        str = NewStringCopyZ<CanGC>(cx, buf);
+    }
+
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2508,12 +2475,27 @@ date_toISOString_impl(JSContext* cx, const CallArgs& args)
 
     char buf[100];
     int year = int(YearFromTime(utctime));
-    if (year < 0 || year > 9999)
-        print_iso_extended_string(buf, sizeof buf, utctime);
-    else
-        print_iso_string(buf, sizeof buf, utctime);
+    if (year < 0 || year > 9999) {
+        SprintfLiteral(buf, "%+.6d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
+                       int(YearFromTime(utctime)),
+                       int(MonthFromTime(utctime)) + 1,
+                       int(DateFromTime(utctime)),
+                       int(HourFromTime(utctime)),
+                       int(MinFromTime(utctime)),
+                       int(SecFromTime(utctime)),
+                       int(msFromTime(utctime)));
+    } else {
+        SprintfLiteral(buf, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
+                       int(YearFromTime(utctime)),
+                       int(MonthFromTime(utctime)) + 1,
+                       int(DateFromTime(utctime)),
+                       int(HourFromTime(utctime)),
+                       int(MinFromTime(utctime)),
+                       int(SecFromTime(utctime)),
+                       int(msFromTime(utctime)));
+    }
 
-    JSString* str = JS_NewStringCopyZ(cx, buf);
+    JSString* str = NewStringCopyZ<CanGC>(cx, buf);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2599,8 +2581,9 @@ FormatDate(JSContext* cx, double utcTime, formatspec format, MutableHandleValue 
     size_t i, tzlen;
     PRMJTime prtm;
 
+    JSString* str;
     if (!IsFinite(utcTime)) {
-        SprintfLiteral(buf, js_NaN_date_str);
+        str = NewStringCopyZ<CanGC>(cx, js_NaN_date_str);
     } else {
         MOZ_ASSERT(NumbersAreIdentical(TimeClip(utcTime).toDouble(), utcTime));
 
@@ -2691,9 +2674,10 @@ FormatDate(JSContext* cx, double utcTime, formatspec format, MutableHandleValue 
                            usetz ? tzbuf : "");
             break;
         }
+
+        str = NewStringCopyZ<CanGC>(cx, buf);
     }
 
-    JSString* str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
     rval.setString(str);
@@ -2707,7 +2691,7 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
 
     char buf[100];
     if (!IsFinite(utcTime)) {
-        SprintfLiteral(buf, js_NaN_date_str);
+        strcpy(buf, js_NaN_date_str);
     } else {
         int result_len;
         double localTime = LocalTime(utcTime);
@@ -2732,8 +2716,7 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
               isdigit(buf[2]) && isdigit(buf[3]))) {
             double localtime = obj->as<DateObject>().cachedLocalTime();
             int year = IsNaN(localtime) ? 0 : (int) YearFromTime(localtime);
-            snprintf(buf + (result_len - 2), (sizeof buf) - (result_len - 2),
-                     "%d", year);
+            snprintf(buf + (result_len - 2), (sizeof buf) - (result_len - 2), "%d", year);
         }
 
     }
@@ -2741,7 +2724,7 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
     if (cx->runtime()->localeCallbacks && cx->runtime()->localeCallbacks->localeToUnicode)
         return cx->runtime()->localeCallbacks->localeToUnicode(cx, buf, rval);
 
-    JSString* str = JS_NewStringCopyZ(cx, buf);
+    JSString* str = NewStringCopyZ<CanGC>(cx, buf);
     if (!str)
         return false;
     rval.setString(str);
