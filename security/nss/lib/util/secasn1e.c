@@ -1420,8 +1420,10 @@ sec_asn1e_encode_item_store(void *arg, const char *buf, unsigned long len,
     dest = (SECItem *)arg;
     PORT_Assert(dest != NULL);
 
-    PORT_Memcpy(dest->data + dest->len, buf, len);
-    dest->len += len;
+    if (len > 0) {
+        PORT_Memcpy(dest->data + dest->len, buf, len);
+        dest->len += len;
+    }
 }
 
 /*

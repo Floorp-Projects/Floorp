@@ -147,8 +147,9 @@ PRBool SSLInt_CheckSecretsDestroyed(PRFileDesc *fd) {
   CHECK_SECRET(currentSecret);
   CHECK_SECRET(resumptionPsk);
   CHECK_SECRET(dheSecret);
-  CHECK_SECRET(earlyTrafficSecret);
-  CHECK_SECRET(hsTrafficSecret);
+  CHECK_SECRET(clientEarlyTrafficSecret);
+  CHECK_SECRET(clientHsTrafficSecret);
+  CHECK_SECRET(serverHsTrafficSecret);
 
   return PR_TRUE;
 }
@@ -180,14 +181,19 @@ PRBool sslint_DamageTrafficSecret(PRFileDesc *fd, size_t offset) {
   return PR_TRUE;
 }
 
-PRBool SSLInt_DamageHsTrafficSecret(PRFileDesc *fd) {
+PRBool SSLInt_DamageClientHsTrafficSecret(PRFileDesc *fd) {
   return sslint_DamageTrafficSecret(
-      fd, offsetof(SSL3HandshakeState, hsTrafficSecret));
+      fd, offsetof(SSL3HandshakeState, clientHsTrafficSecret));
+}
+
+PRBool SSLInt_DamageServerHsTrafficSecret(PRFileDesc *fd) {
+  return sslint_DamageTrafficSecret(
+      fd, offsetof(SSL3HandshakeState, serverHsTrafficSecret));
 }
 
 PRBool SSLInt_DamageEarlyTrafficSecret(PRFileDesc *fd) {
   return sslint_DamageTrafficSecret(
-      fd, offsetof(SSL3HandshakeState, earlyTrafficSecret));
+      fd, offsetof(SSL3HandshakeState, clientEarlyTrafficSecret));
 }
 
 SECStatus SSLInt_Set0RttAlpn(PRFileDesc *fd, PRUint8 *data, unsigned int len) {
