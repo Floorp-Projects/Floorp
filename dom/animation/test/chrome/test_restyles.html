@@ -720,6 +720,29 @@ waitForAllPaints(function() {
     yield ensureElementRemoval(div);
   });
 
+  add_task_if_omta_enabled(
+    function* changing_cascading_result_for_main_thread_animation() {
+      var div = addDiv(null, { style: 'background-color: blue' });
+      var animation = div.animate({ opacity: [0, 1],
+                                    backgroundColor: ['green', 'red'] },
+                                  100 * MS_PER_SEC);
+      yield animation.ready;
+      ok(animation.isRunningOnCompositor,
+         'The opacity animation is running on the compositor');
+      // Make the background-color style as !important to cause an update
+      // to the cascade.
+      // Bug 1300982: The background-color animation should be no longer
+      // running on the main thread.
+      div.style.setProperty('background-color', '1', 'important');
+      var markers = yield observeStyling(5);
+      todo_is(markers.length, 0,
+         'Changing cascading result for the property running on the main ' +
+         'thread does not cause synchronization layer of opacity animation ' +
+         'running on the compositor');
+      yield ensureElementRemoval(div);
+    }
+  );
+
 });
 
 </script>
