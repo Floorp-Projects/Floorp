@@ -26,6 +26,8 @@ public:
 
   void DeallocPVideoDecoderManagerChild() override;
 
+  void FatalError(const char* const aName, const char* const aMsg) const override;
+
   // Main thread only
   static void Initialize();
   static void Shutdown();

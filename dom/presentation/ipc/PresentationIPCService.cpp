@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PPresentation.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
@@ -60,6 +61,7 @@ PresentationIPCService::StartSession(
                const nsAString& aDeviceId,
                uint64_t aWindowId,
                nsIDOMEventTarget* aEventTarget,
+               nsIPrincipal* aPrincipal,
                nsIPresentationServiceCallback* aCallback,
                nsIPresentationTransportBuilderConstructor* aBuilderConstructor)
 {
@@ -78,7 +80,8 @@ PresentationIPCService::StartSession(
                                                     nsString(aOrigin),
                                                     nsString(aDeviceId),
                                                     aWindowId,
-                                                    tabId));
+                                                    tabId,
+                                                    IPC::Principal(aPrincipal)));
 }
 
 NS_IMETHODIMP

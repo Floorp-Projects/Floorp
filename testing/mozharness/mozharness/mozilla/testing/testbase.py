@@ -9,6 +9,7 @@ import copy
 import os
 import platform
 import pprint
+import re
 import urllib2
 import json
 import socket
@@ -19,9 +20,6 @@ from mozharness.base.python import (
     ResourceMonitoringMixin,
     VirtualenvMixin,
     virtualenv_config_options,
-)
-from mozharness.base.vcs.vcsbase import (
-    VCSMixin,
 )
 from mozharness.mozilla.buildbot import BuildbotMixin, TBPL_WARNING
 from mozharness.mozilla.proxxy import Proxxy
@@ -104,8 +102,7 @@ testing_config_options = [
 
 # TestingMixin {{{1
 class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
-                   TaskClusterArtifactFinderMixin, TooltoolMixin, TryToolsMixin,
-                   VCSMixin):
+                   TaskClusterArtifactFinderMixin, TooltoolMixin, TryToolsMixin):
     """
     The steps to identify + download the proper bits for [browser] unit
     tests and Talos.
@@ -122,55 +119,6 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
     minidump_stackwalk_path = None
     default_tools_repo = 'https://hg.mozilla.org/build/tools'
     proxxy = None
-
-    def query_abs_dirs(self):
-        dirs = super(TestingMixin, self).query_abs_dirs()
-
-        if self.topsrcdir:
-            dirs['checkout'] = self.topsrcdir
-        else:
-            dirs['checkout'] = os.path.join(dirs['base_work_dir'], 'checkout')
-
-        if 'HG_SHARE_BASE_DIR' in os.environ:
-            dirs['hg_shared'] = os.environ['HG_SHARE_BASE_DIR']
-        else:
-            dirs['hg_shared'] = os.path.join(dirs['base_work_dir'], 'hg-shared')
-
-        return dirs
-
-    def ensure_firefox_checkout(self):
-        """Action that ensures we have a source checkout available.
-
-        If a source checkout is not available, we create one.
-        """
-        if self.topsrcdir:
-            self.info('already running from a source checkout; nothing to do')
-            return
-
-        self.info('not running from source checkout')
-
-        bb_config = getattr(self, 'buildbot_config', None)
-        if not bb_config:
-            self.fatal('buildbot config not loaded; unable to proceed '
-                       '(a buildbot config must be loaded to obtain VCS info)')
-
-        bb_props = bb_config['properties']
-
-        dirs = self.query_abs_dirs()
-
-        args = {
-            'repo': 'https://hg.mozilla.org/%s' % bb_props['repo_path'],
-            'dest': dirs['checkout'],
-            'vcs_share_base': dirs['hg_shared'],
-            'revision': bb_props['revision'],
-            'clone_with_purge': True,
-            # Always use the unified repo as the upstream because it is
-            # stored more efficiently.
-            'clone_upstream_url': 'https://hg.mozilla.org/mozilla-unified',
-        }
-
-        self.vcs_checkout(vcs='hg', **args)
-        self.topsrcdir = dirs['checkout']
 
     def _query_proxxy(self):
         """manages the proxxy"""

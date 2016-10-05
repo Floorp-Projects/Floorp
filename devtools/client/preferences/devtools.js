@@ -315,7 +315,11 @@ pref("devtools.webconsole.timestampMessages", false);
 pref("devtools.webconsole.autoMultiline", true);
 
 // Enable the experimental webconsole frontend (work in progress)
+#if defined(NIGHTLY_BUILD)
+pref("devtools.webconsole.new-frontend-enabled", true);
+#else
 pref("devtools.webconsole.new-frontend-enabled", false);
+#endif
 
 // Enable the experimental support for source maps in console (work in progress)
 pref("devtools.sourcemap.locations.enabled", false);

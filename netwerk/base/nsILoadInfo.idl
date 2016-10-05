@@ -199,6 +199,18 @@ interface nsILoadInfo : nsISupports
    * principal of the parent document. For top-level loads, the
    * LoadingPrincipal is null. For all loads except top-level loads
    * the LoadingPrincipal is never null.
+   *
+   * If the loadingPrincipal is the system principal, no security checks
+   * will be done at all. There will be no security checks on the initial
+   * load or any subsequent redirects. This means there will be no
+   * nsIContentPolicy checks or any CheckLoadURI checks. Because of
+   * this, never set the loadingPrincipal to the system principal when
+   * the URI to be loaded is controlled by a webpage.
+   * If the loadingPrincipal and triggeringPrincipal are both
+   * codebase-principals, then we will always call into
+   * nsIContentPolicies and CheckLoadURI. The call to nsIContentPolicies
+   * and CheckLoadURI happen even if the URI to be loaded is same-origin
+   * with the loadingPrincipal or triggeringPrincipal.
    */
   readonly attribute nsIPrincipal loadingPrincipal;
 
@@ -215,7 +227,7 @@ interface nsILoadInfo : nsISupports
    * where that's not true.
    *
    * For example for loads into an <iframe>, the LoadingPrincipal is always
-   * the principal of the parent document. However the TriggeringPrincipal
+   * the principal of the parent document. However the triggeringPrincipal
    * is the principal of the document which provided the URL that the
    * <iframe> is navigating to. This could be the previous document inside
    * the <iframe> which set document.location. Or a document elsewhere in
@@ -223,11 +235,23 @@ interface nsILoadInfo : nsISupports
    * <iframe>.
    *
    * If a stylesheet links to a sub-resource, like an @imported stylesheet,
-   * or a background image, then the TriggeringPrincipal is the principal
+   * or a background image, then the triggeringPrincipal is the principal
    * of the stylesheet, while the LoadingPrincipal is the principal of the
    * document being styled.
    *
-   * The TriggeringPrincipal is never null.
+   * The triggeringPrincipal is never null.
+   *
+   * If the triggeringPrincipal is the system principal, no security checks
+   * will be done at all. There will be no security checks on the initial
+   * load or any subsequent redirects. This means there will be no
+   * nsIContentPolicy checks or any CheckLoadURI checks. Because of
+   * this, never set the triggeringPrincipal to the system principal when
+   * the URI to be loaded is controlled by a webpage.
+   * If the loadingPrincipal and triggeringPrincipal are both
+   * codebase-principals, then we will always call into
+   * nsIContentPolicies and CheckLoadURI. The call to nsIContentPolicies
+   * and CheckLoadURI happen even if the URI to be loaded is same-origin
+   * with the loadingPrincipal or triggeringPrincipal.
    */
   readonly attribute nsIPrincipal triggeringPrincipal;
 

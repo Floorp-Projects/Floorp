@@ -479,6 +479,7 @@ ElfLoader::GetMappableFromPath(const char *path)
     char *zip_path = strndup(path, subpath - path);
     while (*(++subpath) == '/') { }
     zip = ZipCollection::GetZip(zip_path);
+    free(zip_path);
     Zip::Stream s;
     if (zip && zip->GetStream(subpath, &s)) {
       /* When the MOZ_LINKER_EXTRACT environment variable is set to "1",

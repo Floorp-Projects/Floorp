@@ -33,6 +33,7 @@
 #include "FrameLayerBuilder.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/DebugOnly.h"
 #if defined(XP_WIN)
@@ -1142,6 +1143,12 @@ void
 CompositorBridgeChild::WillEndTransaction()
 {
   ResetShmemCounter();
+}
+
+void
+CompositorBridgeChild::FatalError(const char* const aName, const char* const aMsg) const
+{
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }
 
 } // namespace layers

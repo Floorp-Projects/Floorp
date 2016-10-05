@@ -3450,5 +3450,26 @@ ContentChild::RecvGetFilesResponse(const nsID& aUUID,
   return true;
 }
 
+/* static */ void
+ContentChild::FatalErrorIfNotUsingGPUProcess(const char* const aProtocolName,
+                                             const char* const aErrorMsg,
+                                             base::ProcessId aOtherPid)
+{
+  // If we're communicating with the same process or the UI process then we
+  // want to crash normally. Otherwise we want to just warn as the other end
+  // must be the GPU process and it crashing shouldn't be fatal for us.
+  if (aOtherPid == base::GetCurrentProcId() ||
+      (GetSingleton() && GetSingleton()->OtherPid() == aOtherPid)) {
+    mozilla::ipc::FatalError(aProtocolName, aErrorMsg, false);
+  } else {
+    nsAutoCString formattedMessage("IPDL error [");
+    formattedMessage.AppendASCII(aProtocolName);
+    formattedMessage.AppendLiteral("]: \"");
+    formattedMessage.AppendASCII(aErrorMsg);
+    formattedMessage.AppendLiteral("\".");
+    NS_WARNING(formattedMessage.get());
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

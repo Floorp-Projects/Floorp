@@ -59,6 +59,7 @@
 #include <vector>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Sprintf.h"
 
 #include "LulPlatformMacros.h"
 #include "LulCommonExt.h"
@@ -359,7 +360,7 @@ bool LoadSymbols(const string& obj_file,
   typedef typename ElfClass::Shdr Shdr;
 
   char buf[500];
-  snprintf(buf, sizeof(buf), "LoadSymbols: BEGIN   %s\n", obj_file.c_str());
+  SprintfLiteral(buf, "LoadSymbols: BEGIN   %s\n", obj_file.c_str());
   buf[sizeof(buf)-1] = 0;
   log(buf);
 
@@ -369,7 +370,7 @@ bool LoadSymbols(const string& obj_file,
       GetOffset<ElfClass, Phdr>(elf_header, elf_header->e_phoff),
       elf_header->e_phnum);
   uintptr_t text_bias = ((uintptr_t)rx_avma) - loading_addr;
-  snprintf(buf, sizeof(buf),
+  SprintfLiteral(buf,
            "LoadSymbols:   rx_avma=%llx, text_bias=%llx",
            (unsigned long long int)(uintptr_t)rx_avma,
            (unsigned long long int)text_bias);
@@ -434,7 +435,7 @@ bool LoadSymbols(const string& obj_file,
       log("LoadSymbols:   read CFI from .eh_frame");
   }
 
-  snprintf(buf, sizeof(buf), "LoadSymbols: END     %s\n", obj_file.c_str());
+  SprintfLiteral(buf, "LoadSymbols: END     %s\n", obj_file.c_str());
   buf[sizeof(buf)-1] = 0;
   log(buf);
 
