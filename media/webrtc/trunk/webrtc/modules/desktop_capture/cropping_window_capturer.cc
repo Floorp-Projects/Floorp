@@ -31,6 +31,11 @@ void CroppingWindowCapturer::Start(DesktopCapturer::Callback* callback) {
   window_capturer_->Start(callback);
 }
 
+void CroppingWindowCapturer::Stop() {
+  window_capturer_->Stop();
+  callback_ = NULL;
+}
+
 void CroppingWindowCapturer::Capture(const DesktopRegion& region) {
   if (ShouldUseScreenCapturer()) {
     if (!screen_capturer_.get()) {
