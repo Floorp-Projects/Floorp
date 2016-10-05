@@ -25,7 +25,7 @@ slog-atomic = "0.4"
 slog-stdlog = "1"
 slog-stream = "1"
 uuid = "0.1.18"
-webdriver = "0.14"
+webdriver = "0.15.0"
 zip = "0.1.16"
 
 [dependencies.clap]
