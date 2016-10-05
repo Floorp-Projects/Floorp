@@ -651,11 +651,6 @@ public:
                   const CSSRect& aRect,
                   const uint32_t& aFlags);
 
-  void SetAPZChild(layers::APZChild* aAPZChild)
-  {
-      mAPZChild = aAPZChild;
-  }
-
   // Request that the docshell be marked as active.
   void ForcePaint(uint64_t aLayerObserverEpoch);
 
