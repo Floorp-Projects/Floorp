@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script type="text/javascript">
+
+var channel = SpecialPowers.wrap(document).docShell.currentDocumentChannel;
+var loadInfo = channel.loadInfo;
+
+// 1) perform some sanity checks
+var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
+var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
+var principalToInherit = channel.loadInfo.principalToInherit.URI.asciiSpec;
+
+ok(triggeringPrincipal.startsWith("http://mochi.test:8888/"),
+   "initial triggeringPrincipal correct");
+ok(loadingPrincipal.startsWith("http://mochi.test:8888/"),
+   "initial loadingPrincipal correct");
+ok(principalToInherit.startsWith("http://mochi.test:8888/"),
+   "initial principalToInherit correct");
+
+// reset principals on the loadinfo
+loadInfo.resetPrincipalsToNullPrincipal();
+
+// 2) verify loadInfo contains the correct principals
+var triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
+var loadingPrincipal = channel.loadInfo.loadingPrincipal;
+var principalToInherit = channel.loadInfo.principalToInherit;
+
+ok(triggeringPrincipal.isNullPrincipal,
+   "triggeringPrincipal after resetting correct");
+ok(loadingPrincipal.isNullPrincipal,
+   "triggeringPrincipal after resetting correct");
+ok(triggeringPrincipal.isNullPrincipal,
+   "principalToInherit after resetting correct");
+
+// 3) verify that getChannelResultPrincipal returns right principal
+var resultPrincipal = SpecialPowers.Services.scriptSecurityManager
+                                   .getChannelResultPrincipal(channel);
+
+ok(resultPrincipal.isNullPrincipal,
+   "resultPrincipal after resetting correct");
+
+</script>
+</pre>
+</body>
+</html>
