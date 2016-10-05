@@ -94,7 +94,7 @@ BEGIN_WORKERS_NAMESPACE
 
 #define PURGE_DOMAIN_DATA "browser:purge-domain-data"
 #define PURGE_SESSION_HISTORY "browser:purge-session-history"
-#define CLEAR_ORIGIN_DATA "clear-origin-data"
+#define CLEAR_ORIGIN_DATA "clear-origin-attributes-data"
 
 static_assert(nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN == static_cast<uint32_t>(RequestMode::Same_origin),
               "RequestMode enumeration value should match Necko CORS mode value.");

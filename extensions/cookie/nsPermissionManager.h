@@ -197,7 +197,7 @@ public:
                        const bool aIgnoreSessionPermissions = false);
 
   /**
-   * Initialize the "clear-origin-data" observing.
+   * Initialize the "clear-origin-attributes-data" observing.
    * Will create a nsPermissionManager instance if needed.
    * That way, we can prevent have nsPermissionManager created at startup just
    * to be able to clear data when an application is uninstalled.

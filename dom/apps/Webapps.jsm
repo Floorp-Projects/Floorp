@@ -663,7 +663,7 @@ this.DOMApplicationRegistry = {
         if (id in data || this.webapps[id].removable)
           continue;
         // Remove the permissions, cookies and private data for this app.
-        // Both permission and cookie managers observe the "clear-origin-data"
+        // Both permission and cookie managers observe the "clear-origin-attributes-data"
         // event.
         let localId = this.webapps[id].localId;
         this._clearPrivateData(localId, false);
@@ -4692,7 +4692,7 @@ this.DOMApplicationRegistry = {
     if (browserOnly) {
       attributes.inIsolatedMozBrowser = true;
     }
-    this._notifyCategoryAndObservers(null, "clear-origin-data", JSON.stringify(attributes));
+    this._notifyCategoryAndObservers(null, "clear-origin-attributes-data", JSON.stringify(attributes));
   }
 };
 
