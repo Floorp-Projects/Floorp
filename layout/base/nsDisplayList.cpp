@@ -2023,10 +2023,6 @@ GetMouseThrough(const nsIFrame* aFrame)
 static bool
 IsFrameReceivingPointerEvents(nsIFrame* aFrame)
 {
-  nsSubDocumentFrame* frame = do_QueryFrame(aFrame);
-  if (frame && frame->PassPointerEventsToChildren()) {
-    return true;
-  }
   return NS_STYLE_POINTER_EVENTS_NONE !=
     aFrame->StyleUserInterface()->GetEffectivePointerEvents(aFrame);
 }
@@ -3676,7 +3672,7 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
                "Reference frame mismatch");
   if (aBuilder->IsInsidePointerEventsNoneDoc()) {
     // Somewhere up the parent document chain is a subdocument with pointer-
-    // events:none set on it (and without a mozpasspointerevents).
+    // events:none set on it.
     return;
   }
   if (!aFrame->GetParent()) {

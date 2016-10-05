@@ -535,7 +535,6 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mNotified(false)
   , mTriedBrowserInit(false)
   , mOrientation(eScreenOrientation_PortraitPrimary)
-  , mUpdateHitRegion(false)
   , mIgnoreKeyPressEvent(false)
   , mHasValidInnerSize(false)
   , mDestroyed(false)
@@ -2641,28 +2640,6 @@ TabChild::RecvDestroy()
 }
 
 bool
-TabChild::RecvSetUpdateHitRegion(const bool& aEnabled)
-{
-    mUpdateHitRegion = aEnabled;
-
-    // We need to trigger a repaint of the child frame to ensure that it
-    // recomputes and sends its region.
-    if (!mUpdateHitRegion) {
-      return true;
-    }
-
-    nsCOMPtr<nsIDocument> document(GetDocument());
-    NS_ENSURE_TRUE(document, true);
-    nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-    NS_ENSURE_TRUE(presShell, true);
-    RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-    NS_ENSURE_TRUE(presContext, true);
-    presContext->InvalidatePaintedLayers();
-
-    return true;
-}
-
-bool
 TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
                                   const bool& aPreserveLayers,
                                   const uint64_t& aLayerObserverEpoch)
@@ -3005,12 +2982,6 @@ TabChild::MakeHidden()
   if (mPuppetWidget) {
     mPuppetWidget->Show(false);
   }
-}
-
-void
-TabChild::UpdateHitRegion(const nsRegion& aRegion)
-{
-  mRemoteFrame->SendUpdateHitRegion(aRegion);
 }
 
 NS_IMETHODIMP
