@@ -595,7 +595,9 @@ public:
     }
 
     // Start playback if necessary so that the clock can be properly queried.
-    mMaster->MaybeStartPlayback();
+    if (!mMaster->mIsPrerolling) {
+      mMaster->MaybeStartPlayback();
+    }
 
     mMaster->UpdatePlaybackPositionPeriodically();
 
@@ -1777,10 +1779,10 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   bool playStatePermits = mPlayState == MediaDecoder::PLAY_STATE_PLAYING;
-  if (!playStatePermits || mIsPrerolling || mAudioOffloading) {
+  if (!playStatePermits || mAudioOffloading) {
     DECODER_LOG("Not starting playback [playStatePermits: %d, "
-                "mIsPrerolling: %d, mAudioOffloading: %d]",
-                playStatePermits, mIsPrerolling, mAudioOffloading);
+                "mAudioOffloading: %d]",
+                playStatePermits, mAudioOffloading);
     return;
   }
 
