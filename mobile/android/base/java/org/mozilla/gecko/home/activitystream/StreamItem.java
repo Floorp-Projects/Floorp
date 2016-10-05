@@ -67,6 +67,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         final FaviconView vIconView;
         final TextView vLabel;
         final TextView vTimeSince;
+        final TextView vSourceView;
 
         private Future<IconResponse> ongoingIconLoad;
 
@@ -75,6 +76,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             vLabel = (TextView) itemView.findViewById(R.id.card_history_label);
             vTimeSince = (TextView) itemView.findViewById(R.id.card_history_time_since);
             vIconView = (FaviconView) itemView.findViewById(R.id.icon);
+            vSourceView = (TextView) itemView.findViewById(R.id.card_history_source);
         }
 
         @Override
@@ -86,6 +88,8 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             vLabel.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE)));
             vTimeSince.setText(ago);
 
+            updateSource(cursor);
+
             if (ongoingIconLoad != null) {
                 ongoingIconLoad.cancel(true);
             }
@@ -95,6 +99,23 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
                     .skipNetwork()
                     .build()
                     .execute(this);
+        }
+
+        private void updateSource(final Cursor cursor) {
+            final boolean isBookmark = -1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
+            final boolean isHistory = -1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
+
+            if (isBookmark) {
+                vSourceView.setText(R.string.activity_stream_highlight_label_bookmarked);
+                vSourceView.setVisibility(View.VISIBLE);
+            } else if (isHistory) {
+                vSourceView.setText(R.string.activity_stream_highlight_label_visited);
+                vSourceView.setVisibility(View.VISIBLE);
+            } else {
+                vSourceView.setVisibility(View.INVISIBLE);
+            }
+
+            vSourceView.setText(vSourceView.getText());
         }
 
         @Override
