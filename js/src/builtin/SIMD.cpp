@@ -190,7 +190,7 @@ template bool js::ToSimdConstant<Bool32x4>(JSContext* cx, HandleValue v, jit::Si
 
 template<typename Elem>
 static Elem
-TypedObjectMemory(HandleValue v, const JS::AutoAssertOnGC& nogc)
+TypedObjectMemory(HandleValue v, const JS::AutoRequireNoGC& nogc)
 {
     TypedObject& obj = v.toObject().as<TypedObject>();
     return reinterpret_cast<Elem>(obj.typedMem(nogc));
