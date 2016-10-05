@@ -5,6 +5,7 @@
 #include "PluginWidgetProxy.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/plugins/PluginWidgetChild.h"
+#include "mozilla/plugins/PluginInstanceParent.h"
 #include "nsDebug.h"
 
 #define PWLOG(...)
@@ -22,6 +23,8 @@ nsIWidget::CreatePluginProxyWidget(TabChild* aTabChild,
 
 namespace mozilla {
 namespace widget {
+
+using mozilla::plugins::PluginInstanceParent;
 
 NS_IMPL_ISUPPORTS_INHERITED(PluginWidgetProxy, PuppetWidget, nsIWidget)
 
@@ -57,7 +60,9 @@ PluginWidgetProxy::Create(nsIWidget* aParent,
   PWLOG("PluginWidgetProxy::Create()\n");
 
   nsresult rv = NS_ERROR_UNEXPECTED;
-  mActor->SendCreate(&rv);
+  uint64_t scrollCaptureId;
+  uintptr_t pluginInstanceId;
+  mActor->SendCreate(&rv, &scrollCaptureId, &pluginInstanceId);
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to create chrome widget, plugins won't paint.");
     return rv;
@@ -69,6 +74,14 @@ PluginWidgetProxy::Create(nsIWidget* aParent,
   mBounds = aRect;
   mEnabled = true;
   mVisible = true;
+
+#if defined(XP_WIN)
+  PluginInstanceParent* instance =
+    PluginInstanceParent::LookupPluginInstanceByID(pluginInstanceId);
+  if (instance) {
+    Unused << NS_WARN_IF(NS_FAILED(instance->SetScrollCaptureId(scrollCaptureId)));
+  }
+#endif
 
   return NS_OK;
 }

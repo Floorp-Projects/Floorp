@@ -19,9 +19,6 @@ public:
   PluginWidgetChild();
   virtual ~PluginWidgetChild();
 
-  bool RecvSetScrollCaptureId(const uint64_t& aScrollCaptureId,
-                              const uintptr_t& aPluginInstanceId) override;
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void SetWidget(mozilla::widget::PluginWidgetProxy* aWidget) {
