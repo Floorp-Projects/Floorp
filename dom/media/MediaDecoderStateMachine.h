@@ -617,7 +617,6 @@ private:
 
   // Queued seek - moves to mCurrentSeek when DecodeFirstFrame completes.
   SeekJob mQueuedSeek;
-  SeekJob mCurrentSeek;
 
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
