@@ -24,6 +24,7 @@
 
 #include "builtin/TypedObject.h"
 #include "jit/InlinableNatives.h"
+#include "js/GCAPI.h"
 #include "js/Value.h"
 
 #include "jsobjinlines.h"
@@ -188,7 +189,7 @@ template bool js::ToSimdConstant<Bool32x4>(JSContext* cx, HandleValue v, jit::Si
 
 template<typename Elem>
 static Elem
-TypedObjectMemory(HandleValue v)
+TypedObjectMemory(HandleValue v, const JS::AutoAssertOnGC&)
 {
     TypedObject& obj = v.toObject().as<TypedObject>();
     return reinterpret_cast<Elem>(obj.typedMem());
@@ -835,6 +836,35 @@ StoreResult(JSContext* cx, CallArgs& args, typename Out::Elem* result)
     return true;
 }
 
+// StoreResult can GC, and it is commonly used after pulling something out of a
+// TypedObject:
+//
+//   Elem result = op(TypedObjectMemory<Elem>(args[0]));
+//   StoreResult<Out>(..., result);
+//
+// The pointer extracted from the typed object in args[0] in the above example
+// could be an interior pointer, and therefore be invalidated by GC.
+// TypedObjectMemory() requires an assertion token to be passed in to prove
+// that we won't GC, but the scope of eg an AutoCheckCannotGC RAII object
+// extends to the end of its containing scope -- which would include the call
+// to StoreResult, resulting in a rooting hazard.
+//
+// TypedObjectElemArray fixes this by wrapping the problematic pointer in a
+// type, and the analysis is able to see that it is dead before calling
+// StoreResult. (But if another GC called is made before the pointer is dead,
+// it will correctly report a hazard.)
+//
+template <typename Elem>
+class TypedObjectElemArray {
+    Elem* elements;
+  public:
+    TypedObjectElemArray(HandleValue objVal) {
+        JS::AutoCheckCannotGC nogc;
+        elements = TypedObjectMemory<Elem*>(objVal, nogc);
+    }
+    Elem& operator[](int i) { return elements[i]; }
+} JS_HAZ_GC_POINTER;
+
 // Coerces the inputs of type In to the type Coercion, apply the operator Op
 // and converts the result to the type Out.
 template<typename In, typename Coercion, template<typename C> class Op, typename Out>
@@ -849,7 +879,7 @@ CoercedUnaryFunc(JSContext* cx, unsigned argc, Value* vp)
         return ErrorBadArgs(cx);
 
     CoercionElem result[Coercion::lanes];
-    CoercionElem* val = TypedObjectMemory<CoercionElem*>(args[0]);
+    TypedObjectElemArray<CoercionElem> val(args[0]);
     for (unsigned i = 0; i < Coercion::lanes; i++)
         result[i] = Op<CoercionElem>::apply(val[i]);
     return StoreResult<Out>(cx, args, (RetElem*) result);
@@ -869,8 +899,8 @@ CoercedBinaryFunc(JSContext* cx, unsigned argc, Value* vp)
         return ErrorBadArgs(cx);
 
     CoercionElem result[Coercion::lanes];
-    CoercionElem* left = TypedObjectMemory<CoercionElem*>(args[0]);
-    CoercionElem* right = TypedObjectMemory<CoercionElem*>(args[1]);
+    TypedObjectElemArray<CoercionElem> left(args[0]);
+    TypedObjectElemArray<CoercionElem> right(args[1]);
     for (unsigned i = 0; i < Coercion::lanes; i++)
         result[i] = Op<CoercionElem>::apply(left[i], right[i]);
     return StoreResult<Out>(cx, args, (RetElem*) result);
@@ -905,7 +935,8 @@ ExtractLane(JSContext* cx, unsigned argc, Value* vp)
     if (!ArgumentToLaneIndex(cx, args[1], V::lanes, &lane))
         return false;
 
-    Elem* vec = TypedObjectMemory<Elem*>(args[0]);
+    JS::AutoCheckCannotGC nogc(cx);
+    Elem* vec = TypedObjectMemory<Elem*>(args[0], nogc);
     Elem val = vec[lane];
     args.rval().set(V::ToValue(val));
     return true;
@@ -921,7 +952,8 @@ AllTrue(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() < 1 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    Elem* vec = TypedObjectMemory<Elem*>(args[0]);
+    JS::AutoCheckCannotGC nogc(cx);
+    Elem* vec = TypedObjectMemory<Elem*>(args[0], nogc);
     bool allTrue = true;
     for (unsigned i = 0; allTrue && i < V::lanes; i++)
         allTrue = vec[i];
@@ -940,7 +972,8 @@ AnyTrue(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() < 1 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    Elem* vec = TypedObjectMemory<Elem*>(args[0]);
+    JS::AutoCheckCannotGC nogc(cx);
+    Elem* vec = TypedObjectMemory<Elem*>(args[0], nogc);
     bool anyTrue = false;
     for (unsigned i = 0; !anyTrue && i < V::lanes; i++)
         anyTrue = vec[i];
@@ -968,7 +1001,7 @@ ReplaceLane(JSContext* cx, unsigned argc, Value* vp)
     if (!V::Cast(cx, args.get(2), &value))
         return false;
 
-    Elem* vec = TypedObjectMemory<Elem*>(args[0]);
+    TypedObjectElemArray<Elem> vec(args[0]);
     Elem result[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++)
         result[i] = i == lane ? value : vec[i];
@@ -992,8 +1025,7 @@ Swizzle(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
-    Elem* val = TypedObjectMemory<Elem*>(args[0]);
-
+    TypedObjectElemArray<Elem> val(args[0]);
     Elem result[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++)
         result[i] = val[lanes[i]];
@@ -1017,13 +1049,16 @@ Shuffle(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
-    Elem* lhs = TypedObjectMemory<Elem*>(args[0]);
-    Elem* rhs = TypedObjectMemory<Elem*>(args[1]);
-
     Elem result[V::lanes];
-    for (unsigned i = 0; i < V::lanes; i++) {
-        Elem* selectedInput = lanes[i] < V::lanes ? lhs : rhs;
-        result[i] = selectedInput[lanes[i] % V::lanes];
+    {
+        JS::AutoCheckCannotGC nogc(cx);
+        Elem* lhs = TypedObjectMemory<Elem*>(args[0], nogc);
+        Elem* rhs = TypedObjectMemory<Elem*>(args[1], nogc);
+
+        for (unsigned i = 0; i < V::lanes; i++) {
+            Elem* selectedInput = lanes[i] < V::lanes ? lhs : rhs;
+            result[i] = selectedInput[lanes[i] % V::lanes];
+        }
     }
 
     return StoreResult<V>(cx, args, result);
@@ -1046,8 +1081,8 @@ BinaryScalar(JSContext* cx, unsigned argc, Value* vp)
     if (!ToInt32(cx, args[1], &bits))
         return false;
 
+    TypedObjectElemArray<Elem> val(args[0]);
     Elem result[V::lanes];
-    Elem* val = TypedObjectMemory<Elem*>(args[0]);
     for (unsigned i = 0; i < V::lanes; i++)
         result[i] = Op<Elem>::apply(val[i], bits);
 
@@ -1066,8 +1101,8 @@ CompareFunc(JSContext* cx, unsigned argc, Value* vp)
         return ErrorBadArgs(cx);
 
     OutElem result[Out::lanes];
-    InElem* left = TypedObjectMemory<InElem*>(args[0]);
-    InElem* right = TypedObjectMemory<InElem*>(args[1]);
+    TypedObjectElemArray<InElem> left(args[0]);
+    TypedObjectElemArray<InElem> right(args[1]);
     for (unsigned i = 0; i < Out::lanes; i++) {
         unsigned j = (i * In::lanes) / Out::lanes;
         result[i] = Op<InElem>::apply(left[j], right[j]) ? -1 : 0;
@@ -1161,8 +1196,7 @@ FuncConvert(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() != 1 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    Elem* val = TypedObjectMemory<Elem*>(args[0]);
-
+    TypedObjectElemArray<Elem> val(args[0]);
     RetElem result[Vret::lanes];
     for (unsigned i = 0; i < V::lanes; i++) {
         if (ThrowOnConvert<Elem, RetElem>::value(val[i])) {
@@ -1195,7 +1229,10 @@ FuncConvertBits(JSContext* cx, unsigned argc, Value* vp)
     // For consistency with other SIMD functions, simply copy the input in a
     // temporary array.
     RetElem copy[Vret::lanes];
-    memcpy(copy, TypedObjectMemory<RetElem*>(args[0]), Vret::lanes * sizeof(RetElem));
+    {
+        JS::AutoCheckCannotGC nogc(cx);
+        memcpy(copy, TypedObjectMemory<RetElem*>(args[0], nogc), Vret::lanes * sizeof(RetElem));
+    }
     return StoreResult<Vret>(cx, args, copy);
 }
 
@@ -1244,9 +1281,9 @@ SelectBits(JSContext* cx, unsigned argc, Value* vp)
         return ErrorBadArgs(cx);
     }
 
-    MaskTypeElem* val = TypedObjectMemory<MaskTypeElem*>(args[0]);
-    MaskTypeElem* tv = TypedObjectMemory<MaskTypeElem*>(args[1]);
-    MaskTypeElem* fv = TypedObjectMemory<MaskTypeElem*>(args[2]);
+    TypedObjectElemArray<MaskTypeElem> val(args[0]);
+    TypedObjectElemArray<MaskTypeElem> tv(args[1]);
+    TypedObjectElemArray<MaskTypeElem> fv(args[2]);
 
     MaskTypeElem tr[MaskType::lanes];
     for (unsigned i = 0; i < MaskType::lanes; i++)
@@ -1278,9 +1315,9 @@ Select(JSContext* cx, unsigned argc, Value* vp)
         return ErrorBadArgs(cx);
     }
 
-    MaskTypeElem* mask = TypedObjectMemory<MaskTypeElem*>(args[0]);
-    Elem* tv = TypedObjectMemory<Elem*>(args[1]);
-    Elem* fv = TypedObjectMemory<Elem*>(args[2]);
+    TypedObjectElemArray<MaskTypeElem> mask(args[0]);
+    TypedObjectElemArray<Elem> tv(args[1]);
+    TypedObjectElemArray<Elem> fv(args[2]);
 
     Elem result[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++)
@@ -1388,7 +1425,8 @@ Store(JSContext* cx, unsigned argc, Value* vp)
     if (!IsVectorObject<V>(args[2]))
         return ErrorBadArgs(cx);
 
-    Elem* src = TypedObjectMemory<Elem*>(args[2]);
+    JS::AutoCheckCannotGC nogc(cx);
+    Elem* src = TypedObjectMemory<Elem*>(args[2], nogc);
     SharedMem<Elem*> dst =
         typedArray->as<TypedArrayObject>().viewDataEither().addBytes(byteStart).cast<Elem*>();
     js::jit::AtomicOperations::podCopySafeWhenRacy(dst, SharedMem<Elem*>::unshared(src), NumElem);
