@@ -1,14 +1,19 @@
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function getTestReferrer(server_uri, referer_uri) {
   var uri = NetUtil.newURI(server_uri, "", null)
+  let referrer = NetUtil.newURI(referer_uri, null, null);
+  let triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(referrer, {});
   var chan = NetUtil.newChannel({
     uri: uri,
-    loadUsingSystemPrincipal: true
+    loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    triggeringPrincipal: triggeringPrincipal,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
   });
 
   chan.QueryInterface(Components.interfaces.nsIHttpChannel);
-  chan.referrer = NetUtil.newURI(referer_uri, null, null);
+  chan.referrer = referrer;
   var header = null;
   try {
     header = chan.getRequestHeader("Referer");
@@ -31,6 +36,7 @@ function run_test() {
   // for https tests
   var server_uri_https = "https://bar.example.com/anotherpath";
   var referer_uri_https = "https://bar.example.com/path3?q=blah";
+  var referer_uri_2_https = "https://bar.examplesite.com/path3?q=blah";
 
   // tests for sendRefererHeader
   prefs.setIntPref("network.http.sendRefererHeader", 0);
@@ -69,6 +75,26 @@ function run_test() {
   // https test
   do_check_eq(getTestReferrer(server_uri_https, referer_uri_https), "https://bar.example.com/");
   prefs.setIntPref("network.http.referer.trimmingPolicy", 0);
+  // test that anchor is lopped off in ordinary case
+  do_check_eq(getTestReferrer(server_uri, referer_uri_2_anchor), referer_uri_2);
+
+  // tests for referer.XOriginTrimmingPolicy
+  prefs.setIntPref("network.http.referer.XOriginTrimmingPolicy", 1);
+  do_check_eq(getTestReferrer(server_uri, referer_uri), "http://foo.example.com/path");
+  do_check_eq(getTestReferrer(server_uri, referer_uri_idn), "http://sub1.xn--lt-uia.example/path");
+  do_check_eq(getTestReferrer(server_uri, referer_uri_2), "http://bar.examplesite.com/path3?q=blah");
+  prefs.setIntPref("network.http.referer.trimmingPolicy", 1);
+  do_check_eq(getTestReferrer(server_uri, referer_uri_2), "http://bar.examplesite.com/path3");
+  prefs.setIntPref("network.http.referer.XOriginTrimmingPolicy", 2);
+  do_check_eq(getTestReferrer(server_uri, referer_uri), "http://foo.example.com/");
+  do_check_eq(getTestReferrer(server_uri, referer_uri_idn), "http://sub1.xn--lt-uia.example/");
+  do_check_eq(getTestReferrer(server_uri, referer_uri_2), "http://bar.examplesite.com/path3");
+  prefs.setIntPref("network.http.referer.trimmingPolicy", 0);
+  do_check_eq(getTestReferrer(server_uri, referer_uri_2), "http://bar.examplesite.com/path3?q=blah");
+  // https tests
+  do_check_eq(getTestReferrer(server_uri_https, referer_uri_https), "https://bar.example.com/path3?q=blah");
+  do_check_eq(getTestReferrer(server_uri_https, referer_uri_2_https), "https://bar.examplesite.com/");
+  prefs.setIntPref("network.http.referer.XOriginTrimmingPolicy", 0);
   // test that anchor is lopped off in ordinary case
   do_check_eq(getTestReferrer(server_uri, referer_uri_2_anchor), referer_uri_2);
 

@@ -82,6 +82,9 @@ public:
     uint8_t        ReferrerLevel()           { return mReferrerLevel; }
     bool           SpoofReferrerSource()     { return mSpoofReferrerSource; }
     uint8_t        ReferrerTrimmingPolicy()  { return mReferrerTrimmingPolicy; }
+    uint8_t        ReferrerXOriginTrimmingPolicy() {
+        return mReferrerXOriginTrimmingPolicy;
+    }
     uint8_t        ReferrerXOriginPolicy()   { return mReferrerXOriginPolicy; }
     bool           PackagedAppsEnabled()     { return mPackagedAppsEnabled; }
     uint8_t        RedirectionLimit()        { return mRedirectionLimit; }
@@ -416,6 +419,7 @@ private:
     uint8_t  mReferrerLevel;
     uint8_t  mSpoofReferrerSource;
     uint8_t  mReferrerTrimmingPolicy;
+    uint8_t  mReferrerXOriginTrimmingPolicy;
     uint8_t  mReferrerXOriginPolicy;
 
     bool mFastFallbackToIPv4;
