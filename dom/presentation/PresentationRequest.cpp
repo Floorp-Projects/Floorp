@@ -206,6 +206,7 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
   // process.
   nsCOMPtr<nsIDOMEventTarget> handler =
     do_QueryInterface(GetOwner()->GetChromeEventHandler());
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
   nsCOMPtr<nsIPresentationServiceCallback> callback =
     new PresentationRequesterCallback(this, id, promise);
   nsCOMPtr<nsIPresentationTransportBuilderConstructor> constructor =
@@ -216,6 +217,7 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
                              aDeviceId,
                              GetOwner()->WindowID(),
                              handler,
+                             principal,
                              callback,
                              constructor);
   if (NS_WARN_IF(NS_FAILED(rv))) {

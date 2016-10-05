@@ -36,6 +36,7 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
+#include "mozilla/Sprintf.h"
 #include "nsProxyRelease.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
@@ -196,7 +197,7 @@ debug_printf(const char *format, ...)
 #ifdef _WIN32
     if (vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, format, ap) > 0) {
 #else
-    if (vsnprintf(buffer, sizeof(buffer), format, ap) > 0) {
+    if (VsprintfLiteral(buffer, format, ap) > 0) {
 #endif
       PR_LogPrint("%s", buffer);
     }

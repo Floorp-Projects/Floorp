@@ -34,7 +34,14 @@
 
 <p id="black-text">black text</p>
 <script>
-  window.onload = function() {
-    parent.postMessage("finish", '*');
+  // this worker should not load,
+  // given that we can not provide integrity metadata through the constructor
+  w = new Worker("rsf_worker.js");
+  w.onerror = function(e) {
+    if (typeof w == "object") {
+      parent.postMessage("finish", '*');
+    } else {
+      parent.postMessage("error", "*")
+    }
   }
 </script>

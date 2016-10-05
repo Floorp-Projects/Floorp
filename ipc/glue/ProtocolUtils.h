@@ -185,6 +185,8 @@ public:
     virtual ProcessId OtherPid() const = 0;
     virtual MessageChannel* GetIPCChannel() = 0;
 
+    virtual void FatalError(const char* const aProtocolName, const char* const aErrorMsg) const = 0;
+
     Maybe<ListenerT*> ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
                                 const char* aActorDescription, int32_t aProtocolTypeId);
 };

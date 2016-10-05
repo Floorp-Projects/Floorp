@@ -2365,7 +2365,7 @@ RuntimeService::SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow)
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
-    workers[index]->Suspend();
+    workers[index]->ParentWindowPaused();
   }
 }
 
@@ -2379,7 +2379,7 @@ RuntimeService::ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
-    workers[index]->Resume();
+    workers[index]->ParentWindowResumed();
   }
 }
 

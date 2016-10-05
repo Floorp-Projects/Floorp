@@ -37,12 +37,20 @@ DEFAULT_CXX_11 = {
     '__cplusplus': '201103L',
 }
 
+DEFAULT_CXX_14 = {
+    '__cplusplus': '201402L',
+}
+
 SUPPORTS_GNU99 = {
     '-std=gnu99': DEFAULT_C99,
 }
 
 SUPPORTS_GNUXX11 = {
     '-std=gnu++11': DEFAULT_CXX_11,
+}
+
+SUPPORTS_CXX14 = {
+    '-std=c++14': DEFAULT_CXX_14,
 }
 
 
@@ -220,12 +228,12 @@ VS_PLATFORM_X86_64 = {
 # Note: In reality, the -std=gnu* options are only supported when preceded by
 # -Xclang.
 CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
-                SUPPORTS_GNU99 + SUPPORTS_GNUXX11) + {
+                SUPPORTS_GNU99 + SUPPORTS_GNUXX11 + SUPPORTS_CXX14) + {
     '*.cpp': {
         '__STDC_VERSION__': False,
         '__cplusplus': '201103L',
     },
-    '-fms-compatibility-version=18.00.30723': VS('18.00.30723')[None],
+    '-fms-compatibility-version=19.00.23918': VS('19.00.23918')[None],
 }
 
 CLANG_CL_PLATFORM_X86 = FakeCompiler(VS_PLATFORM_X86, GCC_PLATFORM_X86[None])
@@ -772,15 +780,16 @@ class WindowsToolchainTest(BaseToolchainTest):
     )
     CLANG_CL_3_9_RESULT = CompilerResult(
         flags=['-Xclang', '-std=gnu99',
-               '-fms-compatibility-version=18.00.30723', '-fallback'],
-        version='18.00.30723',
+               '-fms-compatibility-version=19.00.23918', '-fallback'],
+        version='19.00.23918',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
         language='C',
     )
     CLANGXX_CL_3_9_RESULT = CompilerResult(
-        flags=['-fms-compatibility-version=18.00.30723', '-fallback'],
-        version='18.00.30723',
+        flags=['-Xclang', '-std=c++14',
+               '-fms-compatibility-version=19.00.23918', '-fallback'],
+        version='19.00.23918',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
         language='C++',

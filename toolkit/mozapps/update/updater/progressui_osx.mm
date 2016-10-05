@@ -7,6 +7,7 @@
 #import <Cocoa/Cocoa.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "mozilla/Sprintf.h"
 #include "progressui.h"
 #include "readstrings.h"
 #include "errors.h"
@@ -110,7 +111,7 @@ ShowProgressUI(bool indeterminate)
     return 0;
 
   char path[PATH_MAX];
-  snprintf(path, sizeof(path), "%s/updater.ini", sUpdatePath);
+  SprintfLiteral(path, "%s/updater.ini", sUpdatePath);
   if (ReadStrings(path, &sLabels) != OK)
     return -1;
 

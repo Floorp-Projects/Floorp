@@ -11,6 +11,7 @@
 #include <fcntl.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Sprintf.h"
 
 #include "PlatformMacros.h"
 #include "AutoObjectMapper.h"
@@ -43,8 +44,8 @@ failedToMessage(void(*aLog)(const char*),
                 const char* aHowFailed, std::string aFileName)
 {
   char buf[300];
-  snprintf(buf, sizeof(buf), "AutoObjectMapper::Map: Failed to %s \'%s\'",
-           aHowFailed, aFileName.c_str());
+  SprintfLiteral(buf, "AutoObjectMapper::Map: Failed to %s \'%s\'",
+                 aHowFailed, aFileName.c_str());
   buf[sizeof(buf)-1] = 0;
   aLog(buf);
 }

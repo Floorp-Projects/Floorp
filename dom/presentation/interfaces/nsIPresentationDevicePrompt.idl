@@ -7,6 +7,7 @@
 interface nsIArray;
 interface nsIDOMEventTarget;
 interface nsIPresentationDevice;
+interface nsIPrincipal;
 
 %{C++
 #define PRESENTATION_DEVICE_PROMPT_CONTRACTID "@mozilla.org/presentation-device/prompt;1"
@@ -26,6 +27,9 @@ interface nsIPresentationDeviceRequest : nsISupports
 
   // The XUL browser element that the request was originated in.
   readonly attribute nsIDOMEventTarget chromeEventHandler;
+
+  // The principal of the request.
+  readonly attribute nsIPrincipal principal;
 
   /*
    * Callback after selecting a device
