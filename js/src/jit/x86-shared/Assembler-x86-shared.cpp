@@ -51,29 +51,31 @@ TraceDataRelocations(JSTracer* trc, uint8_t* buffer, CompactBufferReader& reader
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
-        void** ptr = X86Encoding::GetPointerRef(buffer + offset);
+        void* ptr = X86Encoding::GetPointer(buffer + offset);
 
 #ifdef JS_PUNBOX64
         // All pointers on x64 will have the top bits cleared. If those bits
         // are not cleared, this must be a Value.
-        uintptr_t* word = reinterpret_cast<uintptr_t*>(ptr);
-        if (*word >> JSVAL_TAG_SHIFT) {
+        uintptr_t word = reinterpret_cast<uintptr_t>(ptr);
+        if (word >> JSVAL_TAG_SHIFT) {
             jsval_layout layout;
-            layout.asBits = *word;
+            layout.asBits = word;
             Value v = IMPL_TO_JSVAL(layout);
-            TraceManuallyBarrieredEdge(trc, &v, "ion-masm-value");
-            if (*word != JSVAL_TO_IMPL(v).asBits) {
+            TraceManuallyBarrieredEdge(trc, &v, "jit-masm-value");
+            if (word != JSVAL_TO_IMPL(v).asBits) {
                 // Only update the code if the Value changed, because the code
                 // is not writable if we're not moving objects.
-                *word = JSVAL_TO_IMPL(v).asBits;
+                X86Encoding::SetPointer(buffer + offset, (void*)JSVAL_TO_IMPL(v).asBits);
             }
             continue;
         }
 #endif
 
         // No barrier needed since these are constants.
-        TraceManuallyBarrieredGenericPointerEdge(trc, reinterpret_cast<gc::Cell**>(ptr),
-                                                 "ion-masm-ptr");
+        gc::Cell* cellPtr = reinterpret_cast<gc::Cell*>(ptr);
+        TraceManuallyBarrieredGenericPointerEdge(trc, &cellPtr, "jit-masm-ptr");
+        if (cellPtr != ptr)
+            X86Encoding::SetPointer(buffer + offset, cellPtr);
     }
 }
 
