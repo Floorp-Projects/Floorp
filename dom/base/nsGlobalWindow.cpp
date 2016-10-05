@@ -41,6 +41,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptTimeoutHandler.h"
+#include "nsITimeoutHandler.h"
 #include "nsIController.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsISlowScriptDebug.h"
@@ -1999,10 +2000,7 @@ nsGlobalWindow::UnmarkGrayTimers()
        timeout;
        timeout = timeout->getNext()) {
     if (timeout->mScriptHandler) {
-      Function* f = timeout->mScriptHandler->GetCallback();
-      if (f) {
-        f->MarkForCC();
-      }
+      timeout->mScriptHandler->MarkForCC();
     }
   }
 }
@@ -12371,7 +12369,7 @@ nsGlobalWindow::SetInterval(JSContext* aCx, const nsAString& aHandler,
 }
 
 nsresult
-nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler* aHandler,
+nsGlobalWindow::SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
                                      int32_t interval, bool aIsInterval,
                                      int32_t* aReturn)
 {
@@ -12571,40 +12569,46 @@ nsGlobalWindow::RunTimeoutHandler(Timeout* aTimeout,
   }
 
   bool abortIntervalHandler = false;
-  nsCOMPtr<nsIScriptTimeoutHandler> handler(timeout->mScriptHandler);
-  RefPtr<Function> callback = handler->GetCallback();
+  nsCOMPtr<nsITimeoutHandler> basicHandler(timeout->mScriptHandler);
+  nsCOMPtr<nsIScriptTimeoutHandler> handler(do_QueryInterface(basicHandler));
+  if (handler) {
+    RefPtr<Function> callback = handler->GetCallback();
 
-  if (!callback) {
-    // Evaluate the timeout expression.
-    const nsAString& script = handler->GetHandlerText();
+    if (!callback) {
+      // Evaluate the timeout expression.
+      const nsAString& script = handler->GetHandlerText();
 
-    const char* filename = nullptr;
-    uint32_t lineNo = 0, dummyColumn = 0;
-    handler->GetLocation(&filename, &lineNo, &dummyColumn);
+      const char* filename = nullptr;
+      uint32_t lineNo = 0, dummyColumn = 0;
+      handler->GetLocation(&filename, &lineNo, &dummyColumn);
 
-    // New script entry point required, due to the "Create a script" sub-step of
-    // http://www.whatwg.org/specs/web-apps/current-work/#timer-initialisation-steps
-    nsAutoMicroTask mt;
-    AutoEntryScript aes(this, reason, true);
-    JS::CompileOptions options(aes.cx());
-    options.setFileAndLine(filename, lineNo)
-           .setVersion(JSVERSION_DEFAULT);
-    JS::Rooted<JSObject*> global(aes.cx(), FastGetGlobalJSObject());
-    nsresult rv = nsJSUtils::EvaluateString(aes.cx(), script, global, options);
-    if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
-      abortIntervalHandler = true;
+      // New script entry point required, due to the "Create a script" sub-step of
+      // http://www.whatwg.org/specs/web-apps/current-work/#timer-initialisation-steps
+      nsAutoMicroTask mt;
+      AutoEntryScript aes(this, reason, true);
+      JS::CompileOptions options(aes.cx());
+      options.setFileAndLine(filename, lineNo).setVersion(JSVERSION_DEFAULT);
+      JS::Rooted<JSObject*> global(aes.cx(), FastGetGlobalJSObject());
+      nsresult rv =
+        nsJSUtils::EvaluateString(aes.cx(), script, global, options);
+      if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
+        abortIntervalHandler = true;
+      }
+    } else {
+      // Hold strong ref to ourselves while we call the callback.
+      nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow*>(this));
+      ErrorResult rv;
+      JS::Rooted<JS::Value> ignoredVal(RootingCx());
+      callback->Call(me, handler->GetArgs(), &ignoredVal, rv, reason);
+      if (rv.IsUncatchableException()) {
+        abortIntervalHandler = true;
+      }
+
+      rv.SuppressException();
     }
   } else {
-    // Hold strong ref to ourselves while we call the callback.
-    nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
-    ErrorResult rv;
-    JS::Rooted<JS::Value> ignoredVal(RootingCx());
-    callback->Call(me, handler->GetArgs(), &ignoredVal, rv, reason);
-    if (rv.IsUncatchableException()) {
-      abortIntervalHandler = true;
-    }
-
-    rv.SuppressException();
+    nsCOMPtr<nsISupports> kungFuDeathGrip(static_cast<nsIDOMWindow*>(this));
+    basicHandler->Call();
   }
 
   // If we received an uncatchable exception, do not schedule the timeout again.
