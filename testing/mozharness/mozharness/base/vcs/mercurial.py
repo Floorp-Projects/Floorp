@@ -388,9 +388,7 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
 
         parser = RepositoryUpdateRevisionParser(config=self.config,
                                                 log_obj=self.log_obj)
-        env = dict(os.environ)
-        env[b'PYTHONUNBUFFERED'] = b'1'
-        if self.run_command(args, output_parser=parser, env=env):
+        if self.run_command(args, output_parser=parser):
             raise VCSException('repo checkout failed!')
 
         if not parser.revision:

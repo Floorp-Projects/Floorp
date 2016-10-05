@@ -32,6 +32,7 @@
 #include "mozilla/layers/LayersMessages.h"  // for CompositableOperation
 #include "mozilla/layers/PCompositableChild.h"  // for PCompositableChild
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mtransport/runnable_utils.h"
 #include "nsContentUtils.h"
@@ -1475,6 +1476,12 @@ ImageBridgeChild::CanSend() const
 {
   MOZ_ASSERT(InImageBridgeChildThread());
   return mCanSend;
+}
+
+void
+ImageBridgeChild::FatalError(const char* const aName, const char* const aMsg) const
+{
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }
 
 } // namespace layers

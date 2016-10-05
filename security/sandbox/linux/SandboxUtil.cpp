@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
 
@@ -83,7 +84,7 @@ UnshareUserNamespace()
   // current thread.  However, CLONE_NEWUSER can be unshared only in a
   // single-threaded process, so those are equivalent if we reach this
   // point.
-  len = size_t(snprintf(buf, sizeof(buf), "%u %u 1\n", uid, uid));
+  len = size_t(SprintfLiteral(buf, "%u %u 1\n", uid, uid));
   MOZ_ASSERT(len < sizeof(buf));
   if (!WriteStringToFile("/proc/self/uid_map", buf, len)) {
     MOZ_CRASH("Failed to write /proc/self/uid_map");
@@ -91,7 +92,7 @@ UnshareUserNamespace()
 
   Unused << WriteStringToFile("/proc/self/setgroups", "deny", 4);
 
-  len = size_t(snprintf(buf, sizeof(buf), "%u %u 1\n", gid, gid));
+  len = size_t(SprintfLiteral(buf, "%u %u 1\n", gid, gid));
   MOZ_ASSERT(len < sizeof(buf));
   if (!WriteStringToFile("/proc/self/gid_map", buf, len)) {
     MOZ_CRASH("Failed to write /proc/self/gid_map");

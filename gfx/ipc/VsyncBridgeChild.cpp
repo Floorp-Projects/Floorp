@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "VsyncBridgeChild.h"
 #include "VsyncIOThreadHolder.h"
+#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 namespace gfx {
@@ -136,6 +137,12 @@ void
 VsyncBridgeChild::ProcessingError(Result aCode, const char* aReason)
 {
   MOZ_RELEASE_ASSERT(aCode == MsgDropped, "Processing error in VsyncBridgeChild");
+}
+
+void
+VsyncBridgeChild::FatalError(const char* const aName, const char* const aMsg) const
+{
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }
 
 } // namespace gfx

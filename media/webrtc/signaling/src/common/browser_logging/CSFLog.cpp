@@ -15,6 +15,7 @@
 #include "nsThreadUtils.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/Sprintf.h"
 
 static PRLogModuleInfo *gLogModuleInfo = nullptr;
 
@@ -83,7 +84,7 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
     threadName = "";
   }
 
-  vsnprintf(message, MAX_MESSAGE_LENGTH, format, args);
+  VsprintfLiteral(message, format, args);
   MOZ_LOG(gLogModuleInfo, level, ("[%s|%s] %s:%d: %s",
                                   threadName, tag, sourceFile, sourceLine,
                                   message));
