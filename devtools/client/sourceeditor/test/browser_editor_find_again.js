@@ -8,12 +8,15 @@
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/locale/sourceeditor.properties");
 
-const FIND_KEY = L10N.getStr("find.commandkey");
-const FINDAGAIN_KEY = L10N.getStr("findAgain.commandkey");
-
 const { OS } = Services.appinfo;
 
 // On linux, getting immediately the selection's range here fails, returning
+const FIND_KEY = L10N.getStr("find.key");
+const FINDNEXT_KEY = L10N.getStr("findNext.key");
+const FINDPREV_KEY = L10N.getStr("findPrev.key");
+// the replace's key with the appropriate modifiers based on OS
+const REPLACE_KEY = OS == "Darwin" ? L10N.getStr("replaceAllMac.key") : L10N.getStr("replaceAll.key");
+
 // values like it's not selected – even if the selection is visible.
 // For the record, setting the selection's range immediately doesn't have
 // any effect.
@@ -41,13 +44,12 @@ function openSearchBox(ed) {
   // The editor needs the focus to properly receive the `synthesizeKey`
   ed.focus();
 
-  EventUtils.synthesizeKey(FINDAGAIN_KEY, { accelKey: true }, edWin);
-
+  synthesizeKeyShortcut(FINDNEXT_KEY, edWin);
   input = edDoc.querySelector("input[type=search]");
   ok(input, "find again command key opens the search box");
 }
 
-function testFindAgain(ed, inputLine, expectCursor, shiftKey = false) {
+function testFindAgain(ed, inputLine, expectCursor, isFindPrev = false) {
   let edDoc = ed.container.contentDocument;
   let edWin = edDoc.defaultView;
 
@@ -58,7 +60,11 @@ function testFindAgain(ed, inputLine, expectCursor, shiftKey = false) {
   // it seems that during the tests can be lost
   input.focus();
 
-  EventUtils.synthesizeKey(FINDAGAIN_KEY, { accelKey: true, shiftKey }, edWin);
+  if (isFindPrev) {
+    synthesizeKeyShortcut(FINDPREV_KEY, edWin);
+  } else {
+    synthesizeKeyShortcut(FINDNEXT_KEY, edWin);
+  }
 
   ch(ed.getCursor(), expectCursor,
     "find: " + inputLine + " expects cursor: " + expectCursor.toSource());
@@ -82,7 +88,7 @@ const testSearchBoxTextIsSelected = Task.async(function* (ed) {
   ok(!input, "search box is closed");
 
   // Re-open the search box
-  EventUtils.synthesizeKey(FIND_KEY, { accelKey: true }, edWin);
+  synthesizeKeyShortcut(FIND_KEY, edWin);
 
   input = edDoc.querySelector("input[type=search]");
   ok(input, "find command key opens the search box");
@@ -97,7 +103,7 @@ const testSearchBoxTextIsSelected = Task.async(function* (ed) {
   // Removing selection
   input.setSelectionRange(0, 0);
 
-  EventUtils.synthesizeKey(FIND_KEY, { accelKey: true }, edWin);
+  synthesizeKeyShortcut(FIND_KEY, edWin);
 
   ({ selectionStart, selectionEnd } = input);
 
@@ -118,11 +124,7 @@ const testReplaceBoxTextIsSelected = Task.async(function* (ed) {
   // The editor needs the focus to properly receive the `synthesizeKey`
   ed.focus();
 
-  // Send the replace's key with the appropriate modifiers based on OS
-  let [altKey, shiftKey] = OS === "Darwin" ? [true, false] : [false, true];
-
-  EventUtils.synthesizeKey(FIND_KEY,
-    { accelKey: true, altKey, shiftKey }, edWin);
+  synthesizeKeyShortcut(REPLACE_KEY, edWin);
 
   input = edDoc.querySelector(".CodeMirror-dialog > input");
   ok(input, "dialog box with replace is opened");
@@ -140,8 +142,7 @@ const testReplaceBoxTextIsSelected = Task.async(function* (ed) {
   ok(!(selectionStart === 0 && selectionEnd === value.length),
     "Text in dialog box is not selected");
 
-  EventUtils.synthesizeKey(FIND_KEY,
-    { accelKey: true, altKey, shiftKey }, edWin);
+  synthesizeKeyShortcut(REPLACE_KEY, edWin);
 
   ({ selectionStart, selectionEnd } = input);
 

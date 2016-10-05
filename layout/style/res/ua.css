@@ -372,7 +372,7 @@ div:-moz-native-anonymous.moz-accessiblecaret > #image {
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret > #image {
-  background-position: center bottom;
+  background-position: center top;
   background-size: 100%;
   background-repeat: no-repeat;
   background-origin: content-box;

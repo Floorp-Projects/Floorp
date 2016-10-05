@@ -37,8 +37,6 @@ function CssDocsTooltip(toolbox) {
   this.shortcuts.on("Escape", this._onShortcut);
 }
 
-module.exports.CssDocsTooltip = CssDocsTooltip;
-
 CssDocsTooltip.prototype = {
   /**
    * Load CSS docs for the given property,
@@ -91,3 +89,5 @@ CssDocsTooltip.prototype = {
     this.tooltip.destroy();
   }
 };
+
+module.exports = CssDocsTooltip;

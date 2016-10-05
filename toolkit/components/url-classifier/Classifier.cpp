@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Classifier.h"
+#include "LookupCacheV4.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsISimpleEnumerator.h"
@@ -517,17 +518,6 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
   {
     ScopedUpdatesClearer scopedUpdatesClearer(aUpdates);
 
-    // In order to prevent any premature update code from being
-    // run against V4 updates, we bail out as early as possible
-    // if aUpdates is using V4.
-    for (auto update : *aUpdates) {
-      if (update && TableUpdate::Cast<TableUpdateV4>(update)) {
-        LOG(("V4 update is not supported yet."));
-        // TODO: Bug 1283009 - Supports applying table udpate V4.
-        return NS_ERROR_NOT_IMPLEMENTED;
-      }
-    }
-
     LOG(("Backup before update."));
 
     rv = BackupTables();
@@ -540,7 +530,13 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
       if ((*aUpdates)[i]) {
         // Run all updates for one table
         nsCString updateTable(aUpdates->ElementAt(i)->TableName());
-        rv = UpdateHashStore(aUpdates, updateTable);
+
+        if (TableUpdate::Cast<TableUpdateV2>((*aUpdates)[i])) {
+          rv = UpdateHashStore(aUpdates, updateTable);
+        } else {
+          rv = UpdateTableV4(aUpdates, updateTable);
+        }
+
         if (NS_FAILED(rv)) {
           if (rv != NS_ERROR_OUT_OF_MEMORY) {
             Reset();
@@ -857,7 +853,8 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Read the part of the store that is (only) in the cache
-  LookupCache *lookupCache = GetLookupCache(store.TableName());
+  LookupCacheV2* lookupCache =
+    LookupCache::Cast<LookupCacheV2>(GetLookupCache(store.TableName()));
   if (!lookupCache) {
     return NS_ERROR_FAILURE;
   }
@@ -922,7 +919,7 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
   NS_ENSURE_SUCCESS(rv, rv);
 
 #if defined(DEBUG)
-  lookupCache->Dump();
+  lookupCache->DumpCompletions();
 #endif
   rv = lookupCache->WriteFile();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -930,6 +927,90 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
   int64_t now = (PR_Now() / PR_USEC_PER_SEC);
   LOG(("Successfully updated %s", store.TableName().get()));
   mTableFreshness.Put(store.TableName(), now);
+
+  return NS_OK;
+}
+
+nsresult
+Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
+                          const nsACString& aTable)
+{
+  LOG(("Classifier::UpdateTableV4(%s)", PromiseFlatCString(aTable).get()));
+
+  if (!CheckValidUpdate(aUpdates, aTable)) {
+    return NS_OK;
+  }
+
+  LookupCacheV4* lookupCache =
+    LookupCache::Cast<LookupCacheV4>(GetLookupCache(aTable));
+  if (!lookupCache) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = NS_OK;
+
+  // prefixes2 is only used in partial update. If there are multiple
+  // updates for the same table, prefixes1 & prefixes2 will act as
+  // input and output in turn to reduce memory copy overhead.
+  PrefixStringMap prefixes1, prefixes2;
+  PrefixStringMap* output = &prefixes1;
+
+  for (uint32_t i = 0; i < aUpdates->Length(); i++) {
+    TableUpdate *update = aUpdates->ElementAt(i);
+    if (!update || !update->TableName().Equals(aTable)) {
+      continue;
+    }
+
+    auto updateV4 = TableUpdate::Cast<TableUpdateV4>(update);
+    NS_ENSURE_TRUE(updateV4, NS_ERROR_FAILURE);
+
+    if (updateV4->IsFullUpdate()) {
+      TableUpdateV4::PrefixStdStringMap& map = updateV4->Prefixes();
+
+      output->Clear();
+      for (auto iter = map.Iter(); !iter.Done(); iter.Next()) {
+        // prefixes is an nsClassHashtable object stores prefix string.
+        // It will take the ownership of the put object.
+        nsCString* prefix = new nsCString(iter.Data()->GetPrefixString());
+        output->Put(iter.Key(), prefix);
+      }
+    } else {
+      PrefixStringMap* input = nullptr;
+      // If both prefix sets are empty, this means we are doing a partial update
+      // without a prior full/partial update in the loop. In this case we should
+      // get prefixes from the lookup cache first.
+      if (prefixes1.IsEmpty() && prefixes2.IsEmpty()) {
+        lookupCache->GetPrefixes(prefixes1);
+        input = &prefixes1;
+        output = &prefixes2;
+      } else {
+        MOZ_ASSERT(prefixes1.IsEmpty() ^ prefixes2.IsEmpty());
+
+        // When there are multiple partial updates, input should always point
+        // to the non-empty prefix set(filled by previous full/partial update).
+        // output should always point to the empty prefix set.
+        input = prefixes1.IsEmpty() ? &prefixes2 : &prefixes1;
+        output = prefixes1.IsEmpty() ? &prefixes1 : &prefixes2;
+      }
+
+      rv = lookupCache->ApplyPartialUpdate(updateV4, *input, *output);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      input->Clear();
+    }
+
+    aUpdates->ElementAt(i) = nullptr;
+  }
+
+  rv = lookupCache->Build(*output);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = lookupCache->WriteFile();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int64_t now = (PR_Now() / PR_USEC_PER_SEC);
+  LOG(("Successfully updated %s\n", PromiseFlatCString(aTable).get()));
+  mTableFreshness.Put(aTable, now);
 
   return NS_OK;
 }
@@ -945,7 +1026,9 @@ Classifier::UpdateCache(TableUpdate* aUpdate)
   LOG(("Classifier::UpdateCache(%s)", table.get()));
 
   LookupCache *lookupCache = GetLookupCache(table);
-  NS_ENSURE_TRUE(lookupCache, NS_ERROR_FAILURE);
+  if (!lookupCache) {
+    return NS_ERROR_FAILURE;
+  }
 
   auto updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
   lookupCache->AddCompletionsToCache(updateV2->AddCompletes());
@@ -966,7 +1049,16 @@ Classifier::GetLookupCache(const nsACString& aTable)
     }
   }
 
-  UniquePtr<LookupCache> cache(new LookupCache(aTable, mRootStoreDirectory));
+  // TODO : Bug 1302600, It would be better if we have a more general non-main
+  //        thread method to convert table name to protocol version. Currently
+  //        we can only know this by checking if the table name ends with '-proto'.
+  UniquePtr<LookupCache> cache;
+  if (StringEndsWith(aTable, NS_LITERAL_CSTRING("-proto"))) {
+    cache = MakeUnique<LookupCacheV4>(aTable, mRootStoreDirectory);
+  } else {
+    cache = MakeUnique<LookupCacheV2>(aTable, mRootStoreDirectory);
+  }
+
   nsresult rv = cache->Init();
   if (NS_FAILED(rv)) {
     return nullptr;
@@ -988,7 +1080,8 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
                              uint32_t aCount,
                              PrefixArray* aNoiseEntries)
 {
-  LookupCache *cache = GetLookupCache(aTableName);
+  // TODO : Bug 1297962, support adding noise for v4
+  LookupCacheV2 *cache = static_cast<LookupCacheV2*>(GetLookupCache(aTableName));
   if (!cache) {
     return NS_ERROR_FAILURE;
   }

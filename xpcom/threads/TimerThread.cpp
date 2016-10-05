@@ -270,7 +270,10 @@ nsTimerEvent::DeleteAllocatorIfNeeded()
 NS_IMETHODIMP
 nsTimerEvent::Run()
 {
-  MOZ_ASSERT(mTimer);
+  if (!mTimer) {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
 
   if (mGeneration != mTimer->GetGeneration()) {
     return NS_OK;

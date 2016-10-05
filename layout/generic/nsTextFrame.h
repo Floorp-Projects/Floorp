@@ -587,6 +587,8 @@ public:
 
   bool IsFloatingFirstLetterChild() const;
 
+  bool IsInitialLetterChild() const;
+
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
 
   void AssignJustificationGaps(const mozilla::JustificationAssignment& aAssign);
