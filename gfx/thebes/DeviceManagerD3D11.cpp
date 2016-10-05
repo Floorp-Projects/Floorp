@@ -649,7 +649,7 @@ DeviceManagerD3D11::GetDeviceForCurrentThread()
   if (NS_IsMainThread()) {
     return GetContentDevice();
   }
-  return GetCompositorDevice();
+  return GetImageBridgeDevice();
 }
 
 unsigned
