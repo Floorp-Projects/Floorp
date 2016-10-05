@@ -2561,7 +2561,7 @@ jit::CanEnter(JSContext* cx, RunState& state)
 
     // Skip if the script is being compiled off thread (again).
     // MaybeCreateThisForConstructor could have started an ion compilation.
-    if (script->isIonCompilingOffThread())
+    if (rscript->isIonCompilingOffThread())
         return Method_Skipped;
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
