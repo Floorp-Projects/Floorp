@@ -24,18 +24,18 @@ public:
     nsDataHandler();
 
     // Define a Create method to be used with a factory:
-    static nsresult
+    static MOZ_MUST_USE nsresult
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
     // Parse a data: URI and return the individual parts
     // (the given spec will temporarily be modified but will be returned
     //  to the original before returning)
     // contentCharset and dataBuffer can be nullptr if they are not needed.
-    static nsresult ParseURI(nsCString& spec,
-                             nsCString& contentType,
-                             nsCString* contentCharset,
-                             bool& isBase64,
-                             nsCString* dataBuffer);
+    static MOZ_MUST_USE nsresult ParseURI(nsCString& spec,
+                                          nsCString& contentType,
+                                          nsCString* contentCharset,
+                                          bool& isBase64,
+                                          nsCString* dataBuffer);
 };
 
 #endif /* nsDataHandler_h___ */

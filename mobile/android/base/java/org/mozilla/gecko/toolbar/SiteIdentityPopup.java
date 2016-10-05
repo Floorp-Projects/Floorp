@@ -228,11 +228,9 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
                         } else {
                             password = login.getString("password");
                         }
-                        if (AppConstants.Versions.feature11Plus) {
-                            manager.setPrimaryClip(ClipData.newPlainText("password", password));
-                        } else {
-                            manager.setText(password);
-                        }
+
+                        manager.setPrimaryClip(ClipData.newPlainText("password", password));
+
                         SnackbarBuilder.builder(activity)
                                 .message(R.string.doorhanger_login_select_toast_copy)
                                 .duration(Snackbar.LENGTH_SHORT)

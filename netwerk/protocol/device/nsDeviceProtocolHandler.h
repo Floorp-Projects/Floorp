@@ -26,7 +26,7 @@ public:
 
   nsDeviceProtocolHandler() {}
 
-  nsresult Init();
+  MOZ_MUST_USE nsresult Init();
 };
 
 } // namespace net

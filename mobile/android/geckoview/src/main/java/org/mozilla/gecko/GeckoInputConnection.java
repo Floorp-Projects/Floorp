@@ -994,10 +994,10 @@ class GeckoInputConnection
         if (typeHint != null &&
             (typeHint.equalsIgnoreCase("date") ||
              typeHint.equalsIgnoreCase("time") ||
-             (Versions.feature11Plus && (typeHint.equalsIgnoreCase("datetime") ||
-                                         typeHint.equalsIgnoreCase("month") ||
-                                         typeHint.equalsIgnoreCase("week") ||
-                                         typeHint.equalsIgnoreCase("datetime-local"))))) {
+             typeHint.equalsIgnoreCase("datetime") ||
+             typeHint.equalsIgnoreCase("month") ||
+             typeHint.equalsIgnoreCase("week") ||
+             typeHint.equalsIgnoreCase("datetime-local"))) {
             state = IME_STATE_DISABLED;
         }
 

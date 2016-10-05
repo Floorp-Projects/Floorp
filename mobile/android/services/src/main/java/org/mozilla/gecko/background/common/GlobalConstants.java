@@ -54,34 +54,19 @@ public class GlobalConstants {
            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",     // 20+
            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",     // 20+
            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",        // 11+
-           
+
            // For Sync 1.1.
            "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",  // 9+
            "TLS_RSA_WITH_AES_128_CBC_SHA",      // 9+
           };
-    } else if (Versions.feature11Plus) {
+    } else {
       DEFAULT_CIPHER_SUITES = new String[]
           {
            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",        // 11+
            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",      // 11+
            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",        // 11+
-           
-           // For Sync 1.1.
-           "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",  // 9+
-           "TLS_RSA_WITH_AES_128_CBC_SHA",      // 9+
-          };
-    } else {       // 9+
-      // Fall back to the only half-decent cipher suites supported on Gingerbread.
-      // N.B., there appears to be *no overlap* between the ELB 2015-05 default
-      // suites and Gingerbread. A custom configuration is needed if moving beyond
-      // the 2015-03 defaults.
-      DEFAULT_CIPHER_SUITES = new String[]
-          {
-           // This is for Sync 1.5 on ELB 2015-03.
-           "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
-           "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
 
-           // This is for Sync 1.1.
+           // For Sync 1.1.
            "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",  // 9+
            "TLS_RSA_WITH_AES_128_CBC_SHA",      // 9+
           };

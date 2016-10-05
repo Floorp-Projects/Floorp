@@ -37,7 +37,7 @@ public class WindowUtils {
             display.getRealMetrics(realMetrics);
             return Math.max(realMetrics.widthPixels, realMetrics.heightPixels);
 
-        } else if (Versions.feature14Plus) {
+        } else {
             int tempWidth;
             int tempHeight;
             try {
@@ -54,9 +54,6 @@ public class WindowUtils {
 
             return Math.max(tempWidth, tempHeight);
 
-        } else {
-            // This should be close, as lower API devices should not have window navigation bars.
-            return Math.max(display.getWidth(), display.getHeight());
         }
     }
 }
