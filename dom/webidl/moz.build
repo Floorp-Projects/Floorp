@@ -649,7 +649,6 @@ if CONFIG['MOZ_WEBRTC']:
         'PeerConnectionObserverEnums.webidl',
         'RTCCertificate.webidl',
         'RTCConfiguration.webidl',
-        'RTCDTMFSender.webidl',
         'RTCIceCandidate.webidl',
         'RTCIdentityAssertion.webidl',
         'RTCIdentityProvider.webidl',
@@ -846,7 +845,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
 if CONFIG['MOZ_WEBRTC']:
     GENERATED_EVENTS_WEBIDL_FILES += [
         'RTCDataChannelEvent.webidl',
-        'RTCDTMFToneChangeEvent.webidl',
         'RTCPeerConnectionIceEvent.webidl',
         'RTCTrackEvent.webidl',
     ]
