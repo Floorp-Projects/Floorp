@@ -43,9 +43,9 @@ promise_test(function(t) {
   // otherwise we don't have a resolved start time. We test the case
   // where the start time is unresolved in a subsequent test.
   return anim.ready.then(function() {
-    // Seek to 1ms before the target end and wait a frame (> 16ms)
+    // Seek to 1ms before the target end and then wait 1ms
     anim.currentTime = 100 * MS_PER_SEC - 1;
-    return waitForAnimationFrames(1);
+    return waitForAnimationFramesWithDelay(1);
   }).then(function() {
     assert_equals(anim.currentTime, 100 * MS_PER_SEC,
                   'Hold time is set to target end clamping current time');
@@ -96,9 +96,9 @@ promise_test(function(t) {
   anim.playbackRate = -1;
   anim.play(); // Make sure animation is not initially finished
   return anim.ready.then(function() {
-    // Seek to 1ms before 0 end and wait a frame (> 16ms)
+    // Seek to 1ms before 0 and then wait 1ms
     anim.currentTime = 1;
-    return waitForAnimationFrames(1);
+    return waitForAnimationFramesWithDelay(1);
   }).then(function() {
     assert_equals(anim.currentTime, 0 * MS_PER_SEC,
                   'Hold time is set to zero clamping current time');
