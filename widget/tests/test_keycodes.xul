@@ -273,12 +273,9 @@ function* runKeyEventTests()
   const SHOULD_DELIVER_KEYDOWN          = 0x1;
   const SHOULD_DELIVER_KEYPRESS         = 0x2;
   const SHOULD_DELIVER_KEYUP            = 0x4;
-  const SHOULD_NOT_CAUSE_INPUT          = 0x8;
   const SHOULD_DELIVER_ALL              = SHOULD_DELIVER_KEYDOWN |
                                           SHOULD_DELIVER_KEYPRESS |
                                           SHOULD_DELIVER_KEYUP;
-  const SHOULD_DELIVER_ALL_BUT_NOT_CAUSE_INPUT = SHOULD_DELIVER_ALL |
-                                          SHOULD_NOT_CAUSE_INPUT;
   const SHOULD_DELIVER_KEYDOWN_KEYUP    = SHOULD_DELIVER_KEYDOWN |
                                           SHOULD_DELIVER_KEYUP;
   const SHOULD_DELIVER_KEYDOWN_KEYPRESS = SHOULD_DELIVER_KEYDOWN |
@@ -365,9 +362,8 @@ function* runKeyEventTests()
               !!(aEvent.modifiers.ctrlKey || aEvent.modifiers.ctrlRightKey);
             var isAltExpected =
               !!(aEvent.modifiers.altKey || aEvent.modifiers.altRightKey);
-            if (IS_WIN && aEvent.modifiers.altGrKey) {
-              isCtrlExpected = isAltExpected =
-                ((aShouldDelivedEvent & SHOULD_NOT_CAUSE_INPUT) != 0);
+            if (IS_WIN && (aEvent.modifiers.altGrKey || isCtrlExpected && isAltExpected)) {
+              isCtrlExpected = isAltExpected = (aEvent.chars == "");
             }
             is(e.ctrlKey, isCtrlExpected, name + ", Ctrl mismatch");
             is(e.metaKey, !!(aEvent.modifiers.metaKey || aEvent.modifiers.metaRightKey), name + ", Command mismatch");
@@ -1914,33 +1910,6 @@ function* runKeyEventTests()
     // chars string is given by the wParam of the WM_CHAR message. unmodifiedChars
     // is not needed on Windows.
 
-    // Plain text input
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
-                   modifiers:{}, chars:"a"},
-                  "a", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_B,
-                   modifiers:{}, chars:"b"},
-                  "b", "KeyB", nsIDOMKeyEvent.DOM_VK_B, "b", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
-                   modifiers:{shiftKey:1}, chars:"A"},
-                  "A", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-
-    // Ctrl keys
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
-                   modifiers:{ctrlKey:1}, chars:"\u0001"},
-                  "a", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
-                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0001"},
-                  "A", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-
-    // Alt keys
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
-                   modifiers:{altKey:1}, chars:"a"},
-                  "a", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
-                   modifiers:{altKey:1, shiftKey:1}, chars:"A"},
-                  "A", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-
     // Shift-ctrl-alt generates no WM_CHAR, but we still get a keypress
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
                    modifiers:{altKey:1, ctrlKey:1, shiftKey:1}, chars:""},
@@ -2123,11 +2092,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
                    modifiers:{shiftKey:1}, chars:"A"},
                   "A", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
+                   modifiers:{ctrlKey:1}, chars:"\u0001"},
+                  "a", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0001"},
+                  "A", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
+                   modifiers:{altKey:1}, chars:"a"},
+                  "a", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"A"},
+                  "A", "KeyA", nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_B,
                    modifiers:{}, chars:"b"},
                   "b", "KeyB", nsIDOMKeyEvent.DOM_VK_B, "b", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_B,
                    modifiers:{shiftKey:1}, chars:"B"},
+                  "B", "KeyB", nsIDOMKeyEvent.DOM_VK_B, "B", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_B,
+                   modifiers:{ctrlKey:1}, chars:"\u0002"},
+                  "b", "KeyB", nsIDOMKeyEvent.DOM_VK_B, "b", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_B,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0002"},
+                  "B", "KeyB", nsIDOMKeyEvent.DOM_VK_B, "B", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_B,
+                   modifiers:{altKey:1}, chars:"b"},
+                  "b", "KeyB", nsIDOMKeyEvent.DOM_VK_B, "b", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_B,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"B"},
                   "B", "KeyB", nsIDOMKeyEvent.DOM_VK_B, "B", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_C,
                    modifiers:{}, chars:"c"},
@@ -2135,11 +2128,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_C,
                    modifiers:{shiftKey:1}, chars:"C"},
                   "C", "KeyC", nsIDOMKeyEvent.DOM_VK_C, "C", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_C,
+                   modifiers:{ctrlKey:1}, chars:"\u0003"},
+                  "c", "KeyC", nsIDOMKeyEvent.DOM_VK_C, "c", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_C,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0003"},
+                  "C", "KeyC", nsIDOMKeyEvent.DOM_VK_C, "C", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_C,
+                   modifiers:{altKey:1}, chars:"c"},
+                  "c", "KeyC", nsIDOMKeyEvent.DOM_VK_C, "c", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_C,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"C"},
+                  "C", "KeyC", nsIDOMKeyEvent.DOM_VK_C, "C", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_D,
                    modifiers:{}, chars:"d"},
                   "d", "KeyD", nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_D,
                    modifiers:{shiftKey:1}, chars:"D"},
+                  "D", "KeyD", nsIDOMKeyEvent.DOM_VK_D, "D", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_D,
+                   modifiers:{ctrlKey:1}, chars:"\u0004"},
+                  "d", "KeyD", nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_D,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0004"},
+                  "D", "KeyD", nsIDOMKeyEvent.DOM_VK_D, "D", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_D,
+                   modifiers:{altKey:1}, chars:"d"},
+                  "d", "KeyD", nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_D,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"D"},
                   "D", "KeyD", nsIDOMKeyEvent.DOM_VK_D, "D", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_E,
                    modifiers:{}, chars:"e"},
@@ -2147,11 +2164,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_E,
                    modifiers:{shiftKey:1}, chars:"E"},
                   "E", "KeyE", nsIDOMKeyEvent.DOM_VK_E, "E", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_E,
+                   modifiers:{ctrlKey:1}, chars:"\u0005"},
+                  "e", "KeyE", nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_E,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0005"},
+                  "E", "KeyE", nsIDOMKeyEvent.DOM_VK_E, "E", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_E,
+                   modifiers:{altKey:1}, chars:"e"},
+                  "e", "KeyE", nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_E,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"E"},
+                  "E", "KeyE", nsIDOMKeyEvent.DOM_VK_E, "E", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_F,
                    modifiers:{}, chars:"f"},
                   "f", "KeyF", nsIDOMKeyEvent.DOM_VK_F, "f", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_F,
                    modifiers:{shiftKey:1}, chars:"F"},
+                  "F", "KeyF", nsIDOMKeyEvent.DOM_VK_F, "F", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_F,
+                   modifiers:{ctrlKey:1}, chars:"\u0006"},
+                  "f", "KeyF", nsIDOMKeyEvent.DOM_VK_F, "f", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_F,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0006"},
+                  "F", "KeyF", nsIDOMKeyEvent.DOM_VK_F, "F", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_F,
+                   modifiers:{altKey:1}, chars:"f"},
+                  "f", "KeyF", nsIDOMKeyEvent.DOM_VK_F, "f", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_F,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"F"},
                   "F", "KeyF", nsIDOMKeyEvent.DOM_VK_F, "F", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_G,
                    modifiers:{}, chars:"g"},
@@ -2159,11 +2200,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_G,
                    modifiers:{shiftKey:1}, chars:"G"},
                   "G", "KeyG", nsIDOMKeyEvent.DOM_VK_G, "G", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_G,
+                   modifiers:{ctrlKey:1}, chars:"\u0007"},
+                  "g", "KeyG", nsIDOMKeyEvent.DOM_VK_G, "g", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_G,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0007"},
+                  "G", "KeyG", nsIDOMKeyEvent.DOM_VK_G, "G", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_G,
+                   modifiers:{altKey:1}, chars:"g"},
+                  "g", "KeyG", nsIDOMKeyEvent.DOM_VK_G, "g", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_G,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"G"},
+                  "G", "KeyG", nsIDOMKeyEvent.DOM_VK_G, "G", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_H,
                    modifiers:{}, chars:"h"},
                   "h", "KeyH", nsIDOMKeyEvent.DOM_VK_H, "h", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_H,
                    modifiers:{shiftKey:1}, chars:"H"},
+                  "H", "KeyH", nsIDOMKeyEvent.DOM_VK_H, "H", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_H,
+                   modifiers:{ctrlKey:1}, chars:"\u0008"},
+                  "h", "KeyH", nsIDOMKeyEvent.DOM_VK_H, "h", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_H,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0008"},
+                  "H", "KeyH", nsIDOMKeyEvent.DOM_VK_H, "H", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_H,
+                   modifiers:{altKey:1}, chars:"h"},
+                  "h", "KeyH", nsIDOMKeyEvent.DOM_VK_H, "h", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_H,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"H"},
                   "H", "KeyH", nsIDOMKeyEvent.DOM_VK_H, "H", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_I,
                    modifiers:{}, chars:"i"},
@@ -2171,11 +2236,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_I,
                    modifiers:{shiftKey:1}, chars:"I"},
                   "I", "KeyI", nsIDOMKeyEvent.DOM_VK_I, "I", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_I,
+                   modifiers:{ctrlKey:1}, chars:"\u0009"},
+                  "i", "KeyI", nsIDOMKeyEvent.DOM_VK_I, "i", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_I,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0009"},
+                  "I", "KeyI", nsIDOMKeyEvent.DOM_VK_I, "I", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_I,
+                   modifiers:{altKey:1}, chars:"i"},
+                  "i", "KeyI", nsIDOMKeyEvent.DOM_VK_I, "i", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_I,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"I"},
+                  "I", "KeyI", nsIDOMKeyEvent.DOM_VK_I, "I", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_J,
                    modifiers:{}, chars:"j"},
                   "j", "KeyJ", nsIDOMKeyEvent.DOM_VK_J, "j", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_J,
                    modifiers:{shiftKey:1}, chars:"J"},
+                  "J", "KeyJ", nsIDOMKeyEvent.DOM_VK_J, "J", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_J,
+                   modifiers:{ctrlKey:1}, chars:"\u000A"},
+                  "j", "KeyJ", nsIDOMKeyEvent.DOM_VK_J, "j", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_J,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u000A"},
+                  "J", "KeyJ", nsIDOMKeyEvent.DOM_VK_J, "J", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_J,
+                   modifiers:{altKey:1}, chars:"j"},
+                  "j", "KeyJ", nsIDOMKeyEvent.DOM_VK_J, "j", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_J,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"J"},
                   "J", "KeyJ", nsIDOMKeyEvent.DOM_VK_J, "J", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_K,
                    modifiers:{}, chars:"k"},
@@ -2183,11 +2272,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_K,
                    modifiers:{shiftKey:1}, chars:"K"},
                   "K", "KeyK", nsIDOMKeyEvent.DOM_VK_K, "K", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_K,
+                   modifiers:{ctrlKey:1}, chars:"\u000B"},
+                  "k", "KeyK", nsIDOMKeyEvent.DOM_VK_K, "k", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_K,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u000B"},
+                  "K", "KeyK", nsIDOMKeyEvent.DOM_VK_K, "K", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_K,
+                   modifiers:{altKey:1}, chars:"k"},
+                  "k", "KeyK", nsIDOMKeyEvent.DOM_VK_K, "k", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_K,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"K"},
+                  "K", "KeyK", nsIDOMKeyEvent.DOM_VK_K, "K", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_L,
                    modifiers:{}, chars:"l"},
                   "l", "KeyL", nsIDOMKeyEvent.DOM_VK_L, "l", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_L,
                    modifiers:{shiftKey:1}, chars:"L"},
+                  "L", "KeyL", nsIDOMKeyEvent.DOM_VK_L, "L", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_L,
+                   modifiers:{ctrlKey:1}, chars:"\u000C"},
+                  "l", "KeyL", nsIDOMKeyEvent.DOM_VK_L, "l", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_L,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u000C"},
+                  "L", "KeyL", nsIDOMKeyEvent.DOM_VK_L, "L", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_L,
+                   modifiers:{altKey:1}, chars:"l"},
+                  "l", "KeyL", nsIDOMKeyEvent.DOM_VK_L, "l", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_L,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"L"},
                   "L", "KeyL", nsIDOMKeyEvent.DOM_VK_L, "L", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_M,
                    modifiers:{}, chars:"m"},
@@ -2195,11 +2308,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_M,
                    modifiers:{shiftKey:1}, chars:"M"},
                   "M", "KeyM", nsIDOMKeyEvent.DOM_VK_M, "M", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_M,
+                   modifiers:{ctrlKey:1}, chars:"\u000D"},
+                  "m", "KeyM", nsIDOMKeyEvent.DOM_VK_M, "m", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_M,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u000D"},
+                  "M", "KeyM", nsIDOMKeyEvent.DOM_VK_M, "M", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_M,
+                   modifiers:{altKey:1}, chars:"m"},
+                  "m", "KeyM", nsIDOMKeyEvent.DOM_VK_M, "m", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_M,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"M"},
+                  "M", "KeyM", nsIDOMKeyEvent.DOM_VK_M, "M", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_N,
                    modifiers:{}, chars:"n"},
                   "n", "KeyN", nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_N,
                    modifiers:{shiftKey:1}, chars:"N"},
+                  "N", "KeyN", nsIDOMKeyEvent.DOM_VK_N, "N", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_N,
+                   modifiers:{ctrlKey:1}, chars:"\u000E"},
+                  "n", "KeyN", nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_N,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u000E"},
+                  "N", "KeyN", nsIDOMKeyEvent.DOM_VK_N, "N", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_N,
+                   modifiers:{altKey:1}, chars:"n"},
+                  "n", "KeyN", nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_N,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"N"},
                   "N", "KeyN", nsIDOMKeyEvent.DOM_VK_N, "N", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_O,
                    modifiers:{}, chars:"o"},
@@ -2207,11 +2344,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_O,
                    modifiers:{shiftKey:1}, chars:"O"},
                   "O", "KeyO", nsIDOMKeyEvent.DOM_VK_O, "O", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_O,
+                   modifiers:{ctrlKey:1}, chars:"\u000F"},
+                  "o", "KeyO", nsIDOMKeyEvent.DOM_VK_O, "o", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_O,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u000F"},
+                  "O", "KeyO", nsIDOMKeyEvent.DOM_VK_O, "O", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_O,
+                   modifiers:{altKey:1}, chars:"o"},
+                  "o", "KeyO", nsIDOMKeyEvent.DOM_VK_O, "o", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_O,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"O"},
+                  "O", "KeyO", nsIDOMKeyEvent.DOM_VK_O, "O", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_P,
                    modifiers:{}, chars:"p"},
                   "p", "KeyP", nsIDOMKeyEvent.DOM_VK_P, "p", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_P,
                    modifiers:{shiftKey:1}, chars:"P"},
+                  "P", "KeyP", nsIDOMKeyEvent.DOM_VK_P, "P", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_P,
+                   modifiers:{ctrlKey:1}, chars:"\u0010"},
+                  "p", "KeyP", nsIDOMKeyEvent.DOM_VK_P, "p", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_P,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0010"},
+                  "P", "KeyP", nsIDOMKeyEvent.DOM_VK_P, "P", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_P,
+                   modifiers:{altKey:1}, chars:"p"},
+                  "p", "KeyP", nsIDOMKeyEvent.DOM_VK_P, "p", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_P,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"P"},
                   "P", "KeyP", nsIDOMKeyEvent.DOM_VK_P, "P", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Q,
                    modifiers:{}, chars:"q"},
@@ -2219,11 +2380,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Q,
                    modifiers:{shiftKey:1}, chars:"Q"},
                   "Q", "KeyQ", nsIDOMKeyEvent.DOM_VK_Q, "Q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Q,
+                   modifiers:{ctrlKey:1}, chars:"\u0011"},
+                  "q", "KeyQ", nsIDOMKeyEvent.DOM_VK_Q, "q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Q,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0011"},
+                  "Q", "KeyQ", nsIDOMKeyEvent.DOM_VK_Q, "Q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Q,
+                   modifiers:{altKey:1}, chars:"q"},
+                  "q", "KeyQ", nsIDOMKeyEvent.DOM_VK_Q, "q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Q,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"Q"},
+                  "Q", "KeyQ", nsIDOMKeyEvent.DOM_VK_Q, "Q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_R,
                    modifiers:{}, chars:"r"},
                   "r", "KeyR", nsIDOMKeyEvent.DOM_VK_R, "r", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_R,
                    modifiers:{shiftKey:1}, chars:"R"},
+                  "R", "KeyR", nsIDOMKeyEvent.DOM_VK_R, "R", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_R,
+                   modifiers:{ctrlKey:1}, chars:"\u0012"},
+                  "r", "KeyR", nsIDOMKeyEvent.DOM_VK_R, "r", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_R,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0012"},
+                  "R", "KeyR", nsIDOMKeyEvent.DOM_VK_R, "R", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_R,
+                   modifiers:{altKey:1}, chars:"r"},
+                  "r", "KeyR", nsIDOMKeyEvent.DOM_VK_R, "r", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_R,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"R"},
                   "R", "KeyR", nsIDOMKeyEvent.DOM_VK_R, "R", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_S,
                    modifiers:{}, chars:"s"},
@@ -2231,11 +2416,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_S,
                    modifiers:{shiftKey:1}, chars:"S"},
                   "S", "KeyS", nsIDOMKeyEvent.DOM_VK_S, "S", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_S,
+                   modifiers:{ctrlKey:1}, chars:"\u0013"},
+                  "s", "KeyS", nsIDOMKeyEvent.DOM_VK_S, "s", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_S,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0013"},
+                  "S", "KeyS", nsIDOMKeyEvent.DOM_VK_S, "S", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_S,
+                   modifiers:{altKey:1}, chars:"s"},
+                  "s", "KeyS", nsIDOMKeyEvent.DOM_VK_S, "s", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_S,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"S"},
+                  "S", "KeyS", nsIDOMKeyEvent.DOM_VK_S, "S", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_T,
                    modifiers:{}, chars:"t"},
                   "t", "KeyT", nsIDOMKeyEvent.DOM_VK_T, "t", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_T,
                    modifiers:{shiftKey:1}, chars:"T"},
+                  "T", "KeyT", nsIDOMKeyEvent.DOM_VK_T, "T", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_T,
+                   modifiers:{ctrlKey:1}, chars:"\u0014"},
+                  "t", "KeyT", nsIDOMKeyEvent.DOM_VK_T, "t", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_T,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0014"},
+                  "T", "KeyT", nsIDOMKeyEvent.DOM_VK_T, "T", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_T,
+                   modifiers:{altKey:1}, chars:"t"},
+                  "t", "KeyT", nsIDOMKeyEvent.DOM_VK_T, "t", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_T,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"T"},
                   "T", "KeyT", nsIDOMKeyEvent.DOM_VK_T, "T", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_U,
                    modifiers:{}, chars:"u"},
@@ -2243,11 +2452,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_U,
                    modifiers:{shiftKey:1}, chars:"U"},
                   "U", "KeyU", nsIDOMKeyEvent.DOM_VK_U, "U", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_U,
+                   modifiers:{ctrlKey:1}, chars:"\u0015"},
+                  "u", "KeyU", nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_U,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0015"},
+                  "U", "KeyU", nsIDOMKeyEvent.DOM_VK_U, "U", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_U,
+                   modifiers:{altKey:1}, chars:"u"},
+                  "u", "KeyU", nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_U,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"U"},
+                  "U", "KeyU", nsIDOMKeyEvent.DOM_VK_U, "U", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_V,
                    modifiers:{}, chars:"v"},
                   "v", "KeyV", nsIDOMKeyEvent.DOM_VK_V, "v", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_V,
                    modifiers:{shiftKey:1}, chars:"V"},
+                  "V", "KeyV", nsIDOMKeyEvent.DOM_VK_V, "V", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_V,
+                   modifiers:{ctrlKey:1}, chars:"\u0016"},
+                  "v", "KeyV", nsIDOMKeyEvent.DOM_VK_V, "v", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_V,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0016"},
+                  "V", "KeyV", nsIDOMKeyEvent.DOM_VK_V, "V", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_V,
+                   modifiers:{altKey:1}, chars:"v"},
+                  "v", "KeyV", nsIDOMKeyEvent.DOM_VK_V, "v", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_V,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"V"},
                   "V", "KeyV", nsIDOMKeyEvent.DOM_VK_V, "V", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_W,
                    modifiers:{}, chars:"w"},
@@ -2255,11 +2488,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_W,
                    modifiers:{shiftKey:1}, chars:"W"},
                   "W", "KeyW", nsIDOMKeyEvent.DOM_VK_W, "W", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_W,
+                   modifiers:{ctrlKey:1}, chars:"\u0017"},
+                  "w", "KeyW", nsIDOMKeyEvent.DOM_VK_W, "w", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_W,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0017"},
+                  "W", "KeyW", nsIDOMKeyEvent.DOM_VK_W, "W", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_W,
+                   modifiers:{altKey:1}, chars:"w"},
+                  "w", "KeyW", nsIDOMKeyEvent.DOM_VK_W, "w", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_W,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"W"},
+                  "W", "KeyW", nsIDOMKeyEvent.DOM_VK_W, "W", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
                    modifiers:{}, chars:"x"},
                   "x", "KeyX", nsIDOMKeyEvent.DOM_VK_X, "x", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
                    modifiers:{shiftKey:1}, chars:"X"},
+                  "X", "KeyX", nsIDOMKeyEvent.DOM_VK_X, "X", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
+                   modifiers:{ctrlKey:1}, chars:"\u0018"},
+                  "x", "KeyX", nsIDOMKeyEvent.DOM_VK_X, "x", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0018"},
+                  "X", "KeyX", nsIDOMKeyEvent.DOM_VK_X, "X", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
+                   modifiers:{altKey:1}, chars:"x"},
+                  "x", "KeyX", nsIDOMKeyEvent.DOM_VK_X, "x", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_X,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"X"},
                   "X", "KeyX", nsIDOMKeyEvent.DOM_VK_X, "X", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Y,
                    modifiers:{}, chars:"y"},
@@ -2267,11 +2524,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Y,
                    modifiers:{shiftKey:1}, chars:"Y"},
                   "Y", "KeyY", nsIDOMKeyEvent.DOM_VK_Y, "Y", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Y,
+                   modifiers:{ctrlKey:1}, chars:"\u0019"},
+                  "y", "KeyY", nsIDOMKeyEvent.DOM_VK_Y, "y", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Y,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u0019"},
+                  "Y", "KeyY", nsIDOMKeyEvent.DOM_VK_Y, "Y", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Y,
+                   modifiers:{altKey:1}, chars:"y"},
+                  "y", "KeyY", nsIDOMKeyEvent.DOM_VK_Y, "y", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Y,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"Y"},
+                  "Y", "KeyY", nsIDOMKeyEvent.DOM_VK_Y, "Y", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Z,
                    modifiers:{}, chars:"z"},
                   "z", "KeyZ", nsIDOMKeyEvent.DOM_VK_Z, "z", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Z,
                    modifiers:{shiftKey:1}, chars:"Z"},
+                  "Z", "KeyZ", nsIDOMKeyEvent.DOM_VK_Z, "Z", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Z,
+                   modifiers:{ctrlKey:1}, chars:"\u001A"},
+                  "z", "KeyZ", nsIDOMKeyEvent.DOM_VK_Z, "z", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Z,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u001A"},
+                  "Z", "KeyZ", nsIDOMKeyEvent.DOM_VK_Z, "Z", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Z,
+                   modifiers:{altKey:1}, chars:"z"},
+                  "z", "KeyZ", nsIDOMKeyEvent.DOM_VK_Z, "z", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_Z,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"Z"},
                   "Z", "KeyZ", nsIDOMKeyEvent.DOM_VK_Z, "Z", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     // Numeric
@@ -2281,11 +2562,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_0,
                    modifiers:{shiftKey:1}, chars:")"},
                   ")", "Digit0", nsIDOMKeyEvent.DOM_VK_0, ")", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_0,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "0", "Digit0", nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_0,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  ")", "Digit0", nsIDOMKeyEvent.DOM_VK_0, ")", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_0,
+                   modifiers:{altKey:1}, chars:"0"},
+                  "0", "Digit0", nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_0,
+                   modifiers:{altKey:1, shiftKey:1}, chars:")"},
+                  ")", "Digit0", nsIDOMKeyEvent.DOM_VK_0, ")", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_1,
                    modifiers:{}, chars:"1"},
                   "1", "Digit1", nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_1,
                    modifiers:{shiftKey:1}, chars:"!"},
+                  "!", "Digit1", nsIDOMKeyEvent.DOM_VK_1, "!", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_1,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "1", "Digit1", nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_1,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "!", "Digit1", nsIDOMKeyEvent.DOM_VK_1, "!", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_1,
+                   modifiers:{altKey:1}, chars:"1"},
+                  "1", "Digit1", nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_1,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"!"},
                   "!", "Digit1", nsIDOMKeyEvent.DOM_VK_1, "!", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_2,
                    modifiers:{}, chars:"2"},
@@ -2293,11 +2598,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_2,
                    modifiers:{shiftKey:1}, chars:"@"},
                   "@", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "@", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_2,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "2", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_2,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "@", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "@", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_2,
+                   modifiers:{altKey:1}, chars:"2"},
+                  "2", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_2,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"@"},
+                  "@", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "@", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_3,
                    modifiers:{}, chars:"3"},
                   "3", "Digit3", nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_3,
                    modifiers:{shiftKey:1}, chars:"#"},
+                  "#", "Digit3", nsIDOMKeyEvent.DOM_VK_3, "#", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_3,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "3", "Digit3", nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_3,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "#", "Digit3", nsIDOMKeyEvent.DOM_VK_3, "#", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_3,
+                   modifiers:{altKey:1}, chars:"3"},
+                  "3", "Digit3", nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_3,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"#"},
                   "#", "Digit3", nsIDOMKeyEvent.DOM_VK_3, "#", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_4,
                    modifiers:{}, chars:"4"},
@@ -2305,11 +2634,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_4,
                    modifiers:{shiftKey:1}, chars:"$"},
                   "$", "Digit4", nsIDOMKeyEvent.DOM_VK_4, "$", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_4,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "4", "Digit4", nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_4,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "$", "Digit4", nsIDOMKeyEvent.DOM_VK_4, "$", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_4,
+                   modifiers:{altKey:1}, chars:"4"},
+                  "4", "Digit4", nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_4,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"$"},
+                  "$", "Digit4", nsIDOMKeyEvent.DOM_VK_4, "$", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_5,
                    modifiers:{}, chars:"5"},
                   "5", "Digit5", nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_5,
                    modifiers:{shiftKey:1}, chars:"%"},
+                  "%", "Digit5", nsIDOMKeyEvent.DOM_VK_5, "%", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_5,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "5", "Digit5", nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_5,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "%", "Digit5", nsIDOMKeyEvent.DOM_VK_5, "%", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_5,
+                   modifiers:{altKey:1}, chars:"5"},
+                  "5", "Digit5", nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_5,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"%"},
                   "%", "Digit5", nsIDOMKeyEvent.DOM_VK_5, "%", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_6,
                    modifiers:{}, chars:"6"},
@@ -2317,11 +2670,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_6,
                    modifiers:{shiftKey:1}, chars:"^"},
                   "^", "Digit6", nsIDOMKeyEvent.DOM_VK_6, "^", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_6,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "6", "Digit6", nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_6,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u001E"},
+                  "^", "Digit6", nsIDOMKeyEvent.DOM_VK_6, "^", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_6,
+                   modifiers:{altKey:1}, chars:"6"},
+                  "6", "Digit6", nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_6,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"^"},
+                  "^", "Digit6", nsIDOMKeyEvent.DOM_VK_6, "^", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_7,
                    modifiers:{}, chars:"7"},
                   "7", "Digit7", nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_7,
                    modifiers:{shiftKey:1}, chars:"&"},
+                  "&", "Digit7", nsIDOMKeyEvent.DOM_VK_7, "&", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_7,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "7", "Digit7", nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_7,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "&", "Digit7", nsIDOMKeyEvent.DOM_VK_7, "&", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_7,
+                   modifiers:{altKey:1}, chars:"7"},
+                  "7", "Digit7", nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_7,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"&"},
                   "&", "Digit7", nsIDOMKeyEvent.DOM_VK_7, "&", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_8,
                    modifiers:{}, chars:"8"},
@@ -2329,11 +2706,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_8,
                    modifiers:{shiftKey:1}, chars:"*"},
                   "*", "Digit8", nsIDOMKeyEvent.DOM_VK_8, "*", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_8,
+                   modifiers:{ctrlKey:1, }, chars:""},
+                  "8", "Digit8", nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_8,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "*", "Digit8", nsIDOMKeyEvent.DOM_VK_8, "*", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_8,
+                   modifiers:{altKey:1}, chars:"8"},
+                  "8", "Digit8", nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_8,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"*"},
+                  "*", "Digit8", nsIDOMKeyEvent.DOM_VK_8, "*", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_9,
                    modifiers:{}, chars:"9"},
                   "9", "Digit9", nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_9,
                    modifiers:{shiftKey:1}, chars:"("},
+                  "(", "Digit9", nsIDOMKeyEvent.DOM_VK_9, "(", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_9,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "9", "Digit9", nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_9,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "(", "Digit9", nsIDOMKeyEvent.DOM_VK_9, "(", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_9,
+                   modifiers:{altKey:1}, chars:"9"},
+                  "9", "Digit9", nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_9,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"("},
                   "(", "Digit9", nsIDOMKeyEvent.DOM_VK_9, "(", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     // OEM keys
@@ -2343,11 +2744,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_MINUS,
                    modifiers:{shiftKey:1}, chars:"_"},
                   "_", "Minus", nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "_", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_MINUS,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "-", "Minus", nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "-", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_MINUS,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:"\u001F"},
+                  "_", "Minus", nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "_", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_MINUS,
+                   modifiers:{altKey:1}, chars:"-"},
+                  "-", "Minus", nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "-", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_MINUS,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"_"},
+                  "_", "Minus", nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "_", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PLUS,
                    modifiers:{}, chars:"="},
                   "=", "Equal", nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PLUS,
                    modifiers:{shiftKey:1}, chars:"+"},
+                  "+", "Equal", nsIDOMKeyEvent.DOM_VK_EQUALS, "+", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PLUS,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "=", "Equal", nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PLUS,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "+", "Equal", nsIDOMKeyEvent.DOM_VK_EQUALS, "+", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PLUS,
+                   modifiers:{altKey:1}, chars:"="},
+                  "=", "Equal", nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PLUS,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"+"},
                   "+", "Equal", nsIDOMKeyEvent.DOM_VK_EQUALS, "+", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_4,
                    modifiers:{}, chars:"["},
@@ -2355,11 +2780,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_4,
                    modifiers:{shiftKey:1}, chars:"{"},
                   "{", "BracketLeft", nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "{", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_4,
+                   modifiers:{ctrlKey:1}, chars:"\u001B"},
+                  "[", "BracketLeft", nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "[", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_4,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "{", "BracketLeft", nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "{", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_4,
+                   modifiers:{altKey:1}, chars:"["},
+                  "[", "BracketLeft", nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "[", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_4,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"{"},
+                  "{", "BracketLeft", nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "{", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_6,
                    modifiers:{}, chars:"]"},
                   "]", "BracketRight", nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "]", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_6,
                    modifiers:{shiftKey:1}, chars:"}"},
+                  "}", "BracketRight", nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "}", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_6,
+                   modifiers:{ctrlKey:1}, chars:"\u001D"},
+                  "]", "BracketRight", nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "]", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_6,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "}", "BracketRight", nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "}", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_6,
+                   modifiers:{altKey:1}, chars:"]"},
+                  "]", "BracketRight", nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "]", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_6,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"}"},
                   "}", "BracketRight", nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "}", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
                    modifiers:{}, chars:";"},
@@ -2367,11 +2816,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
                    modifiers:{shiftKey:1}, chars:":"},
                   ":", "Semicolon", nsIDOMKeyEvent.DOM_VK_SEMICOLON, ":", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  ";", "Semicolon", nsIDOMKeyEvent.DOM_VK_SEMICOLON, ";", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  ":", "Semicolon", nsIDOMKeyEvent.DOM_VK_SEMICOLON, ":", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1}, chars:";"},
+                  ";", "Semicolon", nsIDOMKeyEvent.DOM_VK_SEMICOLON, ";", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1, shiftKey:1}, chars:":"},
+                  ":", "Semicolon", nsIDOMKeyEvent.DOM_VK_SEMICOLON, ":", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
                    modifiers:{}, chars:"'"},
                   "'", "Quote", nsIDOMKeyEvent.DOM_VK_QUOTE, "'", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
                    modifiers:{shiftKey:1}, chars:"\""},
+                  "\"", "Quote", nsIDOMKeyEvent.DOM_VK_QUOTE, "\"", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "'", "Quote", nsIDOMKeyEvent.DOM_VK_QUOTE, "'", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "\"", "Quote", nsIDOMKeyEvent.DOM_VK_QUOTE, "\"", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
+                   modifiers:{altKey:1}, chars:"'"},
+                  "'", "Quote", nsIDOMKeyEvent.DOM_VK_QUOTE, "'", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"\""},
                   "\"", "Quote", nsIDOMKeyEvent.DOM_VK_QUOTE, "\"", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_5,
                    modifiers:{}, chars:"\\"},
@@ -2379,11 +2852,35 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_5,
                    modifiers:{shiftKey:1}, chars:"|"},
                   "|", "Backslash", nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "|", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_5,
+                   modifiers:{ctrlKey:1}, chars:"\u001C"},
+                  "\\", "Backslash", nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "\\", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_5,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "|", "Backslash", nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "|", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_5,
+                   modifiers:{altKey:1}, chars:"\\"},
+                  "\\", "Backslash", nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "\\", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_5,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"|"},
+                  "|", "Backslash", nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "|", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_COMMA,
                    modifiers:{}, chars:","},
                   ",", "Comma", nsIDOMKeyEvent.DOM_VK_COMMA, ",", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_COMMA,
                    modifiers:{shiftKey:1}, chars:"<"},
+                  "<", "Comma", nsIDOMKeyEvent.DOM_VK_COMMA, "<", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_COMMA,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  ",", "Comma", nsIDOMKeyEvent.DOM_VK_COMMA, ",", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_COMMA,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "<", "Comma", nsIDOMKeyEvent.DOM_VK_COMMA, "<", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_COMMA,
+                   modifiers:{altKey:1}, chars:","},
+                  ",", "Comma", nsIDOMKeyEvent.DOM_VK_COMMA, ",", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_COMMA,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"<"},
                   "<", "Comma", nsIDOMKeyEvent.DOM_VK_COMMA, "<", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PERIOD,
                    modifiers:{}, chars:"."},
@@ -2391,17 +2888,53 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PERIOD,
                    modifiers:{shiftKey:1}, chars:">"},
                   ">", "Period", nsIDOMKeyEvent.DOM_VK_PERIOD, ">", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PERIOD,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  ".", "Period", nsIDOMKeyEvent.DOM_VK_PERIOD, ".", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PERIOD,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  ">", "Period", nsIDOMKeyEvent.DOM_VK_PERIOD, ">", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PERIOD,
+                   modifiers:{altKey:1}, chars:"."},
+                  ".", "Period", nsIDOMKeyEvent.DOM_VK_PERIOD, ".", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_PERIOD,
+                   modifiers:{altKey:1, shiftKey:1}, chars:">"},
+                  ">", "Period", nsIDOMKeyEvent.DOM_VK_PERIOD, ">", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_2,
                    modifiers:{}, chars:"/"},
                   "/", "Slash", nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_2,
                    modifiers:{shiftKey:1}, chars:"?"},
                   "?", "Slash", nsIDOMKeyEvent.DOM_VK_SLASH, "?", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_2,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "/", "Slash", nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_2,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "?", "Slash", nsIDOMKeyEvent.DOM_VK_SLASH, "?", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_2,
+                   modifiers:{altKey:1}, chars:"/"},
+                  "/", "Slash", nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_2,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"?"},
+                  "?", "Slash", nsIDOMKeyEvent.DOM_VK_SLASH, "?", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_3,
                    modifiers:{}, chars:"`"},
                   "`", "Backquote", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_3,
                    modifiers:{shiftKey:1}, chars:"~"},
+                  "~", "Backquote", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "~", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_3,
+                   modifiers:{ctrlKey:1}, chars:""},
+                  "`", "Backquote", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_3,
+                   modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                  "~", "Backquote", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "~", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_3,
+                   modifiers:{altKey:1}, chars:"`"},
+                  "`", "Backquote", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_3,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"~"},
                   "~", "Backquote", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "~", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     // Numpad
@@ -2803,7 +3336,7 @@ function* runKeyEventTests()
                   "@", "Digit0", nsIDOMKeyEvent.DOM_VK_0, "@", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_1,
                    modifiers:{altGrKey:1}, chars:""},
-                  "&", "Digit1", nsIDOMKeyEvent.DOM_VK_1, "&", SHOULD_DELIVER_ALL_BUT_NOT_CAUSE_INPUT, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "&", "Digit1", nsIDOMKeyEvent.DOM_VK_1, "&", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     //yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_2,
     //               modifiers:{altGrKey:1}, chars:""},
     //              "Dead", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // Dead-key

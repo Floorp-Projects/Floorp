@@ -2525,11 +2525,33 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     return false;
   }
 
-  // XXXmnakao I think that if aNativeKeyDown is null, such lonely WM_CHAR
-  //           should cause composition events because they are not caused
-  //           by actual keyboard operation.
+  // When a control key is inputted by a key, it should be handled without
+  // WM_*CHAR messages at receiving WM_*KEYDOWN message.  So, when we receive
+  // WM_*CHAR message directly, we see a control character here.
+  if (IsControlCharMessage(aCharMsg)) {
+    // In this case, we don't need to dispatch eKeyPress event because:
+    // 1. We're the only browser which dispatches "keypress" event for
+    //    non-printable characters (Although, both Chrome and Edge dispatch
+    //    "keypress" event for some keys accidentally.  For example, "IntlRo"
+    //    key with Ctrl of Japanese keyboard layout).
+    // 2. Currently, we may handle shortcut keys with "keydown" event if
+    //    it's reserved or something.  So, we shouldn't dispatch "keypress"
+    //    event without it.
+    // Note that this does NOT mean we stop dispatching eKeyPress event for
+    // key presses causes a control character when Ctrl is pressed.  In such
+    // case, DispatchKeyPressEventsWithoutCharMessage() dispatches eKeyPress
+    // instead of this method.
+    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
+      ("%p   NativeKey::HandleCharMessage(), doesn't dispatch keypress "
+       "event because received a control character input without WM_KEYDOWN",
+       this));
+    return false;
+  }
 
-  static const char16_t U_EQUAL = 0x3D;
+  // XXXmnakano I think that if mMsg is WM_CHAR, i.e., it comes without
+  //            preceding WM_KEYDOWN, we should should dispatch composition
+  //            events instead of eKeyPress because they are not caused by
+  //            actual keyboard operation.
 
   // First, handle normal text input or non-printable key case here.
   if ((!mModKeyState.IsAlt() && !mModKeyState.IsControl()) ||
@@ -2537,11 +2559,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
       (mOriginalVirtualKeyCode &&
        !KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode))) {
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-    if (!IsControlChar(static_cast<char16_t>(aCharMsg.wParam))) {
-      keypressEvent.mCharCode = static_cast<uint32_t>(aCharMsg.wParam);
-    } else {
-      keypressEvent.mKeyCode = mDOMKeyCode;
-    }
+    keypressEvent.mCharCode = static_cast<uint32_t>(aCharMsg.wParam);
     nsresult rv = mDispatcher->BeginNativeInputTransaction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       MOZ_LOG(sNativeKeyLogger, LogLevel::Error,
@@ -2589,43 +2607,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   //     So, this actually runs only when WM_CHAR is sent/posted without
   //     WM_KEYDOWN.  I think that we don't need to keypress event in such
   //     case especially for shortcut keys.
-
-  char16_t uniChar;
-  // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details
-  if (mModKeyState.IsControl() &&
-      IsControlChar(static_cast<char16_t>(aCharMsg.wParam))) {
-    // Bug 16486: Need to account for shift here.
-    uniChar = aCharMsg.wParam - 1 + (mModKeyState.IsShift() ? 'A' : 'a');
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-      ("%p   NativeKey::HandleCharMessage(), computing charCode for ASCII "
-       "control characters which are inputted with Ctrl key, uniChar=%s",
-       this, GetCharacterCodeName(uniChar).get()));
-  } else if (mModKeyState.IsControl() && aCharMsg.wParam <= 0x1F) {
-    // XXX Looks like that this block won't run since the condition is
-    //     included in the first |if|'s condition.
-    // Bug 50255: <ctrl><[> and <ctrl><]> are not being processed.
-    // also fixes ctrl+\ (x1c), ctrl+^ (x1e) and ctrl+_ (x1f)
-    // for some reason the keypress handler need to have the uniChar code set
-    // with the addition of a upper case A not the lower case.
-    uniChar = aCharMsg.wParam - 1 + 'A';
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-      ("%p   NativeKey::HandleCharMessage(), computing charCode for ASCII "
-       "control characters which are inputted with Ctrl key, uniChar=%s",
-       this, GetCharacterCodeName(uniChar).get()));
-  } else if (IsControlChar(static_cast<char16_t>(aCharMsg.wParam)) ||
-             (aCharMsg.wParam == U_EQUAL && mModKeyState.IsControl())) {
-    uniChar = 0;
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-      ("%p   NativeKey::HandleCharMessage(), setting charCode to 0 because "
-       "the character is a control character without Ctrl key or Ctrl+=",
-       this));
-  } else {
-    uniChar = aCharMsg.wParam;
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-      ("%p   NativeKey::HandleCharMessage(), deciding to use given charCode, "
-       "uniChar=%s",
-       this, GetCharacterCodeName(uniChar).get()));
-  }
+  char16_t uniChar = static_cast<char16_t>(aCharMsg.wParam);
 
   // Bug 50255 and Bug 351310: Keep the characters unshifted for shortcuts and
   // accesskeys and make sure that numbers are always passed as such.
