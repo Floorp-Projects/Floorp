@@ -376,8 +376,7 @@ JSTerm.prototype = {
     }
 
     if (this.hud.NEW_CONSOLE_OUTPUT_ENABLED) {
-      this.hud.newConsoleOutput.dispatchMessageAdd(response);
-      callback && callback();
+      this.hud.newConsoleOutput.dispatchMessageAdd(response, true).then(callback);
       return;
     }
     let msg = new Messages.JavaScriptEvalOutput(response,

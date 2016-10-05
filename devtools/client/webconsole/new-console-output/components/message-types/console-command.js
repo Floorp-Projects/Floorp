@@ -31,6 +31,10 @@ function ConsoleCommand(props) {
     messageText: messageBody,
   } = props.message;
 
+  const {
+    serviceContainer,
+  } = props;
+
   const childProps = {
     source,
     type,
@@ -38,6 +42,7 @@ function ConsoleCommand(props) {
     topLevelClasses: [],
     messageBody,
     scrollToMessage: props.autoscroll,
+    serviceContainer,
   };
   return Message(childProps);
 }
