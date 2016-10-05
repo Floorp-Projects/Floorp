@@ -112,7 +112,7 @@ const kTeststr_ik_Latn = "sabvaqjuktuq sabvaba atiqaqpa atiqaqpa ibiq iebiq ixaf
 const kTeststr_is_Latn = " a afköst leitarorða þinna leitarorð neikvæð leitarorð auglýsingahópa byggja upp aðallista yfir ný leitarorð fyrir auglýsingahópana og skoða ítarleg gögn um árangur leitarorða eins og samkeppni auglýsenda og leitarmagn er krafist notkun";
 const kTeststr_it_Latn = " a causa di un intervento di manutenzione del sistema fino alle ore circa ora legale costa del pacifico del novembre le campagne esistenti continueranno a essere pubblicate come di consueto anche durante questo breve periodo di inattività ci scusiamo per";
 const kTeststr_iu_Cans = "ᐃᑯᒪᒻᒪᑦ ᕿᓈᖏᓐᓇᓲᖑᒻᒪᑦ ᑎᑎᖅᑕᓕᒫᖅᓃᕕᑦ ᑎᑦᕆᐊᑐᓐᖏᑦᑕᑎᑦ ᑎᑎᖅᑕᑉᐱᑦ ᓯᕗᓂᖓᓂ ᑎᑎᖅᖃᖅ ᑎᑎᕆᐊᑐᓐᖏᑕᐃᑦ ᕿᓂᓲᖑᔪᒍᑦ ᑎᑎᖅᑕᓕᒫᖅᓃᕕᑦ";
-const kTeststr_iw_Hebr = " או לערוך את העדפות ההפצה אנא עקוב אחרי השלבים הבאים כנס לחשבון האישי שלך ב";
+const kTeststr_he_Hebr = " או לערוך את העדפות ההפצה אנא עקוב אחרי השלבים הבאים כנס לחשבון האישי שלך ב";
 const kTeststr_ja_Hani = " このペ ジでは アカウントに指定された予算の履歴を一覧にしています それぞれの項目には 予算額と特定期間のステ タスが表示されます 現在または今後の予算を設定するには";
 const kTeststr_jw_Latn = " account ten server niki kalian username meniko tanpo judul cacahe account nggonanmu wes pol pesen mu wes diguwak pesenan mu wes di simpen sante wae pesenan mu wes ke kirim mbuh tekan ora pesenan e ke kethok pesenan mu wes ke kirim mbuh tekan ora pesenan";
 const kTeststr_ka_Geor = " ა ბირთვიდან მიღებული ელემენტი მენდელეევის პერიოდულ სიტემაში გადაინაცვლებს ორი უჯრით";
@@ -320,7 +320,7 @@ const kTestPairs = [
   ["lg", "GANDA", kTeststr_lg_Latn],
   ["de", "GERMAN", kTeststr_de_Latn],
   ["ht", "HAITIAN_CREOLE", kTeststr_ht_Latn],
-  ["iw", "HEBREW", kTeststr_iw_Hebr],
+  ["he", "HEBREW", kTeststr_he_Hebr],
   ["hi", "HINDI", kTeststr_hi_Deva],
   ["hmn", "HMONG", kTeststr_blu_Latn],
   ["hu", "HUNGARIAN", kTeststr_hu_Latn],
