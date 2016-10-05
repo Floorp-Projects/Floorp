@@ -5755,6 +5755,11 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
     return true;
   }
 
+  // If we are actually playing...
+  if (IsCurrentlyPlaying()) {
+    return true;
+  }
+
   // If we are seeking, we consider it as playing
   if (mPlayingThroughTheAudioChannelBeforeSeek) {
     return true;
@@ -5765,7 +5770,7 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
     return true;
   }
 
-  return true;
+  return false;
 }
 
 void
