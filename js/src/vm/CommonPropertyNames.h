@@ -23,6 +23,7 @@
     macro(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext") \
     macro(ArraySpecies, ArraySpecies, "ArraySpecies") \
     macro(ArraySpeciesCreate, ArraySpeciesCreate, "ArraySpeciesCreate") \
+    macro(ArrayToLocaleString, ArrayToLocaleString, "ArrayToLocaleString") \
     macro(ArrayType, ArrayType, "ArrayType") \
     macro(ArrayValues, ArrayValues, "ArrayValues") \
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
