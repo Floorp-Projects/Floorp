@@ -161,6 +161,8 @@ public:
 
   bool IsEmpty() const { return mEffects.IsEmpty(); }
 
+  size_t Count() const { return mEffects.Count(); }
+
   RefPtr<AnimValuesStyleRule>& AnimationRule(EffectCompositor::CascadeLevel
                                              aCascadeLevel)
   {
