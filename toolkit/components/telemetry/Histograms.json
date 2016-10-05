@@ -6289,6 +6289,15 @@
      "releaseChannelCollection": "opt-out",
      "description": "A counter incremented every time the simplified mode is unavailable on print preview."
    },
+  "PRINT_DIALOG_OPENED_COUNT": {
+    "alert_emails": ["carnold@mozilla.org"],
+    "bug_numbers": [1306624],
+    "expires_in_version": "56",
+    "kind": "count",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "A counter incremented every time the user opens print dialog."
+  },
   "PRINT_COUNT": {
      "alert_emails": ["carnold@mozilla.org"],
      "bug_numbers": [1287587],
