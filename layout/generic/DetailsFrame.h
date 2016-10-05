@@ -38,6 +38,12 @@ public:
   }
 #endif
 
+#ifdef DEBUG
+  // Check the frame of the main summary element is the first child in the frame
+  // list.
+  void CheckValidMainSummary(const nsFrameList& aFrameList) const;
+#endif
+
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList& aChildList) override;
 

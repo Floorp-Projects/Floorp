@@ -68,26 +68,34 @@ DetailsFrame::SetInitialChildList(ChildListID aListID, nsFrameList& aChildList)
     }
 
 #ifdef DEBUG
-    for (nsIFrame* child : aChildList) {
-      HTMLSummaryElement* summary =
-        HTMLSummaryElement::FromContent(child->GetContent());
-
-      if (child == aChildList.FirstChild()) {
-        if (summary && summary->IsMainSummary()) {
-          break;
-        }
-      } else {
-        MOZ_ASSERT(!summary || !summary->IsMainSummary(),
-                   "Rest of the children are neither summary elements nor"
-                   "the main summary!");
-      }
-    }
+    CheckValidMainSummary(aChildList);
 #endif
 
   }
 
   nsBlockFrame::SetInitialChildList(aListID, aChildList);
 }
+
+#ifdef DEBUG
+void
+DetailsFrame::CheckValidMainSummary(const nsFrameList& aFrameList) const
+{
+  for (nsIFrame* child : aFrameList) {
+    HTMLSummaryElement* summary =
+      HTMLSummaryElement::FromContent(child->GetContent());
+
+    if (child == aFrameList.FirstChild()) {
+      if (summary && summary->IsMainSummary()) {
+        break;
+      }
+    } else {
+      NS_ASSERTION(!summary || !summary->IsMainSummary(),
+                   "Rest of the children are either not summary element "
+                   "or are not the main summary!");
+    }
+  }
+}
+#endif
 
 void
 DetailsFrame::DestroyFrom(nsIFrame* aDestructRoot)
