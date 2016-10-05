@@ -7,14 +7,19 @@ package org.mozilla.gecko.home.activitystream;
 import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.StreamItem.BottomPanel;
 import org.mozilla.gecko.home.activitystream.StreamItem.HighlightItem;
 import org.mozilla.gecko.home.activitystream.StreamItem.TopPanel;
+import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
-public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> {
+import java.util.EnumSet;
+
+public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> implements RecyclerViewClickSupport.OnItemClickListener {
     private Cursor highlightsCursor;
     private Cursor topSitesCursor;
 
@@ -72,6 +77,22 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> {
         } else if (type == TopPanel.LAYOUT_ID) {
             holder.bind(topSitesCursor);
         }
+    }
+
+    @Override
+    public void onItemClicked(RecyclerView recyclerView, int position, View v) {
+        if (position < 1) {
+            // The header contains top sites and has its own click handling.
+            return;
+        }
+
+        highlightsCursor.moveToPosition(
+                translatePositionToCursor(position));
+
+        final String url = highlightsCursor.getString(
+                highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
+
+        onUrlOpenListener.onUrlOpen(url, EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
     }
 
     @Override
