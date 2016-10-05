@@ -34,7 +34,6 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
 {
     int options = SH_VARIABLES |
                   SH_ENFORCE_PACKING_RESTRICTIONS |
-                  SH_INIT_VARYINGS_WITHOUT_STATIC_USE |
                   SH_OBJECT_CODE |
                   SH_LIMIT_CALL_STACK_DEPTH |
                   SH_INIT_GL_POSITION;
@@ -54,10 +53,10 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
                SH_VALIDATE_LOOP_INDEXING |
                SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX |
                SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX |
-               SH_EMULATE_BUILT_IN_FUNCTIONS |
                SH_CLAMP_INDIRECT_ARRAY_BOUNDS |
                SH_UNFOLD_SHORT_CIRCUIT |
                SH_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS |
+               SH_INIT_OUTPUT_VARIABLES |
                SH_REGENERATE_STRUCT_NAMES;
     }
 
@@ -74,18 +73,9 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
         // https://chromium.googlesource.com/angle/angle/+/5e70cf9d0b1bb
         options |= SH_UNFOLD_SHORT_CIRCUIT;
 
-        // Work around bug 665578 and bug 769810
-        if (gl->Vendor() == gl::GLVendor::ATI) {
-            options |= SH_EMULATE_BUILT_IN_FUNCTIONS;
-        }
-
-        // Work around bug 735560
-        if (gl->Vendor() == gl::GLVendor::Intel) {
-            options |= SH_EMULATE_BUILT_IN_FUNCTIONS;
-        }
-
         // Work around that Mac drivers handle struct scopes incorrectly.
         options |= SH_REGENERATE_STRUCT_NAMES;
+        options |= SH_INIT_OUTPUT_VARIABLES;
     }
 #endif
 
