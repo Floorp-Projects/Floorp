@@ -53,21 +53,6 @@ class TestMozinfo(unittest.TestCase):
             f.write('invalid{"json":')
         self.assertRaises(ValueError,mozinfo.update,[j])
 
-    def test_find_and_update_file_env(self):
-        """mozinfo.find_and_update_json finds path from environment variable."""
-        j = os.path.join(self.tempdir, 'explicit_mozinfo.json')
-        with open(j, 'w') as fh:
-            json.dump({'foo': 'environment'}, fh)
-
-        old_env = dict(os.environ)
-        try:
-            os.environ['MOZINFO_PATH'] = j
-            self.assertEqual(mozinfo.find_and_update_from_json(), j)
-            self.assertEqual(mozinfo.info['foo'], 'environment')
-        finally:
-            os.environ.clear()
-            os.environ.update(old_env)
-
     def test_find_and_update_file(self):
         """Test that mozinfo.find_and_update_from_json can
         find mozinfo.json in a directory passed to it."""
