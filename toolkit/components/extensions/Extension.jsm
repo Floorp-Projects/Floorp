@@ -522,6 +522,10 @@ GlobalManager = {
     schemaApi.extensionTypes = {};
 
     let schemaWrapper = {
+      get url() {
+        return context.uri.spec;
+      },
+
       get principal() {
         return context.principal;
       },
