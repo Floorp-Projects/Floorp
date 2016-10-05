@@ -607,6 +607,19 @@ ShouldLoadCachedImage(imgRequest* aImgRequest,
     }
   }
 
+  bool sendPriming = false;
+  bool mixedContentWouldBlock = false;
+  rv = nsMixedContentBlocker::GetHSTSPrimingFromRequestingContext(contentLocation,
+      aLoadingContext, &sendPriming, &mixedContentWouldBlock);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  if (sendPriming && mixedContentWouldBlock) {
+    // if either of the securty checks above would cause a priming request, we
+    // can't load this image from the cache, so go ahead and return false here
+    return false;
+  }
+
   return true;
 }
 

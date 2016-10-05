@@ -1,0 +1,187 @@
+***************
+*** 57,72 ****
+    , mOuterWindowID(0)
+    , mParentOuterWindowID(0)
+    , mFrameOuterWindowID(0)
+    , mEnforceSecurity(false)
+    , mInitialSecurityCheckDone(false)
+    , mIsThirdPartyContext(false)
+    , mForcePreflight(false)
+    , mIsPreflight(false)
+  {
+    MOZ_ASSERT(mLoadingPrincipal);
+    MOZ_ASSERT(mTriggeringPrincipal);
+    MOZ_ASSERT(mPrincipalToInherit);
+  
+  #ifdef DEBUG
+    // TYPE_DOCUMENT loads initiated by javascript tests will go through
+    // nsIOService and use the wrong constructor.  Don't enforce the
+--- 57,74 ----
+    , mOuterWindowID(0)
+    , mParentOuterWindowID(0)
+    , mFrameOuterWindowID(0)
+    , mEnforceSecurity(false)
+    , mInitialSecurityCheckDone(false)
+    , mIsThirdPartyContext(false)
+    , mForcePreflight(false)
+    , mIsPreflight(false)
++   , mForceHSTSPriming(false)
++   , mMixedContentWouldBlock(false)
+  {
+    MOZ_ASSERT(mLoadingPrincipal);
+    MOZ_ASSERT(mTriggeringPrincipal);
+    MOZ_ASSERT(mPrincipalToInherit);
+  
+  #ifdef DEBUG
+    // TYPE_DOCUMENT loads initiated by javascript tests will go through
+    // nsIOService and use the wrong constructor.  Don't enforce the
+***************
+*** 228,243 ****
+    , mOuterWindowID(0)
+    , mParentOuterWindowID(0)
+    , mFrameOuterWindowID(0)
+    , mEnforceSecurity(false)
+    , mInitialSecurityCheckDone(false)
+    , mIsThirdPartyContext(false) // NB: TYPE_DOCUMENT implies not third-party.
+    , mForcePreflight(false)
+    , mIsPreflight(false)
+  {
+    // Top-level loads are never third-party
+    // Grab the information we can out of the window.
+    MOZ_ASSERT(aOuterWindow);
+    MOZ_ASSERT(mTriggeringPrincipal);
+    MOZ_ASSERT(mPrincipalToInherit);
+  
+    // if the load is sandboxed, we can not also inherit the principal
+--- 230,247 ----
+    , mOuterWindowID(0)
+    , mParentOuterWindowID(0)
+    , mFrameOuterWindowID(0)
+    , mEnforceSecurity(false)
+    , mInitialSecurityCheckDone(false)
+    , mIsThirdPartyContext(false) // NB: TYPE_DOCUMENT implies not third-party.
+    , mForcePreflight(false)
+    , mIsPreflight(false)
++   , mForceHSTSPriming(false)
++   , mMixedContentWouldBlock(false)
+  {
+    // Top-level loads are never third-party
+    // Grab the information we can out of the window.
+    MOZ_ASSERT(aOuterWindow);
+    MOZ_ASSERT(mTriggeringPrincipal);
+    MOZ_ASSERT(mPrincipalToInherit);
+  
+    // if the load is sandboxed, we can not also inherit the principal
+***************
+*** 292,307 ****
+    , mIsThirdPartyContext(rhs.mIsThirdPartyContext)
+    , mOriginAttributes(rhs.mOriginAttributes)
+    , mRedirectChainIncludingInternalRedirects(
+        rhs.mRedirectChainIncludingInternalRedirects)
+    , mRedirectChain(rhs.mRedirectChain)
+    , mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders)
+    , mForcePreflight(rhs.mForcePreflight)
+    , mIsPreflight(rhs.mIsPreflight)
+  {
+  }
+  
+  LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
+                     nsIPrincipal* aTriggeringPrincipal,
+                     nsIPrincipal* aPrincipalToInherit,
+                     nsSecurityFlags aSecurityFlags,
+                     nsContentPolicyType aContentPolicyType,
+--- 296,313 ----
+    , mIsThirdPartyContext(rhs.mIsThirdPartyContext)
+    , mOriginAttributes(rhs.mOriginAttributes)
+    , mRedirectChainIncludingInternalRedirects(
+        rhs.mRedirectChainIncludingInternalRedirects)
+    , mRedirectChain(rhs.mRedirectChain)
+    , mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders)
+    , mForcePreflight(rhs.mForcePreflight)
+    , mIsPreflight(rhs.mIsPreflight)
++   , mForceHSTSPriming(rhs.mForceHSTSPriming)
++   , mMixedContentWouldBlock(rhs.mMixedContentWouldBlock)
+  {
+  }
+  
+  LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
+                     nsIPrincipal* aTriggeringPrincipal,
+                     nsIPrincipal* aPrincipalToInherit,
+                     nsSecurityFlags aSecurityFlags,
+                     nsContentPolicyType aContentPolicyType,
+***************
+*** 317,333 ****
+                     bool aEnforceSecurity,
+                     bool aInitialSecurityCheckDone,
+                     bool aIsThirdPartyContext,
+                     const NeckoOriginAttributes& aOriginAttributes,
+                     nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChainIncludingInternalRedirects,
+                     nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain,
+                     const nsTArray<nsCString>& aCorsUnsafeHeaders,
+                     bool aForcePreflight,
+-                    bool aIsPreflight)
+    : mLoadingPrincipal(aLoadingPrincipal)
+    , mTriggeringPrincipal(aTriggeringPrincipal)
+    , mPrincipalToInherit(aPrincipalToInherit)
+    , mSecurityFlags(aSecurityFlags)
+    , mInternalContentPolicyType(aContentPolicyType)
+    , mTainting(aTainting)
+    , mUpgradeInsecureRequests(aUpgradeInsecureRequests)
+    , mVerifySignedContent(aVerifySignedContent)
+--- 323,341 ----
+                     bool aEnforceSecurity,
+                     bool aInitialSecurityCheckDone,
+                     bool aIsThirdPartyContext,
+                     const NeckoOriginAttributes& aOriginAttributes,
+                     nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChainIncludingInternalRedirects,
+                     nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain,
+                     const nsTArray<nsCString>& aCorsUnsafeHeaders,
+                     bool aForcePreflight,
++                    bool aIsPreflight,
++                    bool aForceHSTSPriming,
++                    bool aMixedContentWouldBlock)
+    : mLoadingPrincipal(aLoadingPrincipal)
+    , mTriggeringPrincipal(aTriggeringPrincipal)
+    , mPrincipalToInherit(aPrincipalToInherit)
+    , mSecurityFlags(aSecurityFlags)
+    , mInternalContentPolicyType(aContentPolicyType)
+    , mTainting(aTainting)
+    , mUpgradeInsecureRequests(aUpgradeInsecureRequests)
+    , mVerifySignedContent(aVerifySignedContent)
+***************
+*** 339,354 ****
+    , mFrameOuterWindowID(aFrameOuterWindowID)
+    , mEnforceSecurity(aEnforceSecurity)
+    , mInitialSecurityCheckDone(aInitialSecurityCheckDone)
+    , mIsThirdPartyContext(aIsThirdPartyContext)
+    , mOriginAttributes(aOriginAttributes)
+    , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
+    , mForcePreflight(aForcePreflight)
+    , mIsPreflight(aIsPreflight)
+  {
+    // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
+    MOZ_ASSERT(mLoadingPrincipal || aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
+    MOZ_ASSERT(mTriggeringPrincipal);
+    MOZ_ASSERT(mPrincipalToInherit);
+  
+    mRedirectChainIncludingInternalRedirects.SwapElements(
+      aRedirectChainIncludingInternalRedirects);
+--- 347,364 ----
+    , mFrameOuterWindowID(aFrameOuterWindowID)
+    , mEnforceSecurity(aEnforceSecurity)
+    , mInitialSecurityCheckDone(aInitialSecurityCheckDone)
+    , mIsThirdPartyContext(aIsThirdPartyContext)
+    , mOriginAttributes(aOriginAttributes)
+    , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
+    , mForcePreflight(aForcePreflight)
+    , mIsPreflight(aIsPreflight)
++   , mForceHSTSPriming (aForceHSTSPriming)
++   , mMixedContentWouldBlock(aMixedContentWouldBlock)
+  {
+    // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
+    MOZ_ASSERT(mLoadingPrincipal || aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
+    MOZ_ASSERT(mTriggeringPrincipal);
+    MOZ_ASSERT(mPrincipalToInherit);
+  
+    mRedirectChainIncludingInternalRedirects.SwapElements(
+      aRedirectChainIncludingInternalRedirects);
