@@ -133,22 +133,6 @@ struct AnimationProperty
 {
   nsCSSPropertyID mProperty = eCSSProperty_UNKNOWN;
 
-  // Does this property win in the CSS Cascade?
-  //
-  // For CSS transitions, this is true as long as a CSS animation on the
-  // same property and element is not running, in which case we set this
-  // to false so that the animation (lower in the cascade) can win.  We
-  // then use this to decide whether to apply the style both in the CSS
-  // cascade and for OMTA.
-  //
-  // For CSS Animations, which are overridden by !important rules in the
-  // cascade, we actually determine this from the CSS cascade
-  // computations, and then use it for OMTA.
-  //
-  // **NOTE**: This member is not included when comparing AnimationProperty
-  // objects for equality.
-  bool mWinsInCascade = false;
-
   // If true, the propery is currently being animated on the compositor.
   //
   // Note that when the owning Animation requests a non-throttled restyle, in
@@ -164,14 +148,12 @@ struct AnimationProperty
 
   InfallibleTArray<AnimationPropertySegment> mSegments;
 
-  // NOTE: This operator does *not* compare the mWinsInCascade member *or* the
-  // mIsRunningOnCompositor member.
+  // NOTE: This operator does *not* compare the mIsRunningOnCompositor member.
   // This is because AnimationProperty objects are compared when recreating
   // CSS animations to determine if mutation observer change records need to
   // be created or not. However, at the point when these objects are compared
-  // neither the mWinsInCascade nor the mIsRunningOnCompositor will have been
-  // set on the new objects so we ignore these members to avoid generating
-  // spurious change records.
+  // the mIsRunningOnCompositor will not have been set on the new objects so
+  // we ignore this member to avoid generating spurious change records.
   bool operator==(const AnimationProperty& aOther) const {
     return mProperty == aOther.mProperty &&
            mSegments == aOther.mSegments;

@@ -223,8 +223,9 @@ private:
                     EffectCompositor::kCascadeLevelCount),
                   TimeStamp> mAnimationRuleRefreshTime;
 
-  // Dirty flag to represent when the mWinsInCascade flag on effects in
-  // this set might need to be updated.
+  // Dirty flag to represent when the mPropertiesWithImportantRules and
+  // mPropertiesForAnimationsLevel on effects in this set might need to be
+  // updated.
   //
   // Set to true any time the set of effects is changed or when
   // one the effects goes in or out of the "in effect" state.

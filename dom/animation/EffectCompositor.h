@@ -185,10 +185,8 @@ public:
                             CSSPseudoElementType aPseudoType,
                             nsStyleContext* aStyleContext);
 
-  // Update the mWinsInCascade member for each property and in effects
-  // targetting the specified (pseudo-)element. Also updates the
-  // mPropertiesWithImportantRules and mPropertiesForAnimationsLevel members
-  // of the corresponding EffectSet.
+  // Update the mPropertiesWithImportantRules and
+  // mPropertiesForAnimationsLevel members of the corresponding EffectSet.
   //
   // This can be expensive so we should only call it if styles that apply
   // above the animation level of the cascade might have changed. For all
