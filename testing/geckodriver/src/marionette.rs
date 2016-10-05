@@ -312,17 +312,17 @@ pub struct FirefoxOptions {
     pub profile: Option<Profile>,
     pub args: Option<Vec<String>>,
     pub log: LogOptions,
-    pub prefs: Vec<(String, Pref)>
+    pub prefs: Vec<(String, Pref)>,
 }
 
 impl FirefoxOptions {
     pub fn from_capabilities(capabilities: &mut NewSessionParameters) -> WebDriverResult<FirefoxOptions> {
-        if let Some(options) = capabilities.consume("firefoxOptions") {
+        if let Some(options) = capabilities.consume("moz:firefoxOptions") {
             let firefox_options = try!(options
                                        .as_object()
                                        .ok_or(WebDriverError::new(
                                            ErrorStatus::InvalidArgument,
-                                           "'firefoxOptions' capability was not an object")));
+                                           "'moz:firefoxOptions' capability was not an object")));
             let binary = try!(FirefoxOptions::load_binary(&firefox_options));
             let profile = try!(FirefoxOptions::load_profile(&firefox_options));
             let args = try!(FirefoxOptions::load_args(&firefox_options));
@@ -485,7 +485,7 @@ impl MarionetteHandler {
                           .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
                                                      "Expected browser binary location, \
                                                       but unable to find binary in default location, \
-                                                      no 'firefoxOptions.binary' capability provided, \
+                                                      no 'moz:firefoxOptions.binary' capability provided, \
                                                       and no binary flag set on the command line")));
 
         let custom_profile = options.profile.is_some();

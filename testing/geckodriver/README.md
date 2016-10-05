@@ -36,7 +36,7 @@ the more bug fixes and features.
 
 ## Firefox capabilities
 
-geckodriver supports a capability named `firefoxOptions` which takes
+geckodriver supports a capability named `moz:firefoxOptions` which takes
 Firefox-specific preference values. This must be a dictionary and may
 contain any of the following fields:
 
