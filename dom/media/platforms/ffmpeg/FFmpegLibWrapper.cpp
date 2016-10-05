@@ -4,6 +4,7 @@
 
 #include "FFmpegLibWrapper.h"
 #include "FFmpegLog.h"
+#include "MediaPrefs.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Types.h"
 #include "prlink.h"
@@ -49,11 +50,16 @@ FFmpegLibWrapper::Link()
       // support FFmpeg 57 at this stage.
       Unlink();
       return LinkResult::CannotUseLibAV57;
-    } else if (version < (54u << 16 | 35u << 8 | 1u)) {
-      // Refuse any LibAV version prior to 54.35.1.
+    }
+#ifdef MOZ_FFMPEG
+    if (version < (54u << 16 | 35u << 8 | 1u)
+        && !MediaPrefs::LibavcodecAllowObsolete()) {
+      // Refuse any libavcodec version prior to 54.35.1.
+      // (Unless media.libavcodec.allow-obsolete==true)
       Unlink();
       return LinkResult::BlockedOldLibAVVersion;
     }
+#endif
   }
 
   enum {
