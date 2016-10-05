@@ -2841,7 +2841,8 @@ Parser<ParseHandler>::checkFunctionDefinition(HandleAtom funAtom, Node pn, Funct
 
 template <>
 bool
-Parser<FullParseHandler>::skipLazyInnerFunction(ParseNode* pn, bool tryAnnexB)
+Parser<FullParseHandler>::skipLazyInnerFunction(ParseNode* pn, FunctionSyntaxKind kind,
+                                                bool tryAnnexB)
 {
     // When a lazily-parsed function is called, we only fully parse (and emit)
     // that function, not any of its nested children. The initial syntax-only
@@ -2867,12 +2868,21 @@ Parser<FullParseHandler>::skipLazyInnerFunction(ParseNode* pn, bool tryAnnexB)
     // script source.
     Rooted<LazyScript*> lazyOuter(context, handler.lazyOuterFunction());
     uint32_t userbufBase = lazyOuter->begin() - lazyOuter->column();
-    return tokenStream.advance(fun->lazyScript()->end() - userbufBase);
+    if (!tokenStream.advance(fun->lazyScript()->end() - userbufBase))
+        return false;
+
+    if (kind == Statement && fun->isExprBody()) {
+        if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
+            return false;
+    }
+
+    return true;
 }
 
 template <>
 bool
-Parser<SyntaxParseHandler>::skipLazyInnerFunction(Node pn, bool tryAnnexB)
+Parser<SyntaxParseHandler>::skipLazyInnerFunction(Node pn, FunctionSyntaxKind kind,
+                                                  bool tryAnnexB)
 {
     MOZ_CRASH("Cannot skip lazy inner functions when syntax parsing");
 }
@@ -2970,7 +2980,7 @@ Parser<ParseHandler>::functionDefinition(InHandling inHandling, YieldHandling yi
     // functions, which are also lazy. Instead, their free variables and
     // source extents are recorded and may be skipped.
     if (handler.canSkipLazyInnerFunctions()) {
-        if (!skipLazyInnerFunction(pn, tryAnnexB))
+        if (!skipLazyInnerFunction(pn, kind, tryAnnexB))
             return null();
         return pn;
     }
