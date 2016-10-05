@@ -833,3 +833,11 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!ENTITY activity_stream_topsites "Top Sites">
 <!ENTITY activity_stream_highlights "Highlights">
+
+<!-- LOCALIZATION NOTE (activity_stream_highlight_label_bookmarked): This label is shown in the Activity
+Stream list for highlights sourced from th user's bookmarks. -->
+<!ENTITY activity_stream_highlight_label_bookmarked "Bookmarked">
+<!-- LOCALIZATION NOTE (activity_stream_highlight_label_visited): This label is shown in the Activity
+Stream list for highlights sourced from th user's bookmarks. -->
+<!ENTITY activity_stream_highlight_label_visited "Visited">
+

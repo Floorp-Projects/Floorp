@@ -632,4 +632,6 @@
 
   <string name="activity_stream_topsites">&activity_stream_topsites;</string>
   <string name="activity_stream_highlights">&activity_stream_highlights;</string>
+  <string name="activity_stream_highlight_label_bookmarked">&activity_stream_highlight_label_bookmarked;</string>
+  <string name="activity_stream_highlight_label_visited">&activity_stream_highlight_label_visited;</string>
 </resources>
