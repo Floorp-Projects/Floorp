@@ -13,6 +13,7 @@ EXPORTS.mozilla.a11y += [
     'Compatibility.h',
     'HyperTextAccessibleWrap.h',
     'IDSet.h',
+    'MsaaIdGenerator.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -28,6 +29,7 @@ UNIFIED_SOURCES += [
     'HyperTextAccessibleWrap.cpp',
     'ImageAccessibleWrap.cpp',
     'IUnknownImpl.cpp',
+    'MsaaIdGenerator.cpp',
     'nsWinUtils.cpp',
     'Platform.cpp',
     'RootAccessibleWrap.cpp',
