@@ -13,6 +13,8 @@
 #include "nsUrlClassifierUtils.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Base64.h"
+#include "RiceDeltaDecoder.h"
+#include "mozilla/EndianUtils.h"
 
 // MOZ_LOG=UrlClassifierProtocolParser:5
 mozilla::LazyLogModule gUrlClassifierProtocolParserLog("UrlClassifierProtocolParser");
@@ -908,8 +910,8 @@ ProtocolParserProtobuf::ProcessAdditionOrRemoval(TableUpdateV4& aTableUpdate,
       break;
 
     case RICE:
-      // Not implemented yet (see bug 1285848),
-      NS_WARNING("Encoded table update is not supported yet.");
+      ret = (aIsAddition ? ProcessEncodedAddition(aTableUpdate, update)
+                         : ProcessEncodedRemoval(aTableUpdate, update));
       break;
     }
   }
@@ -977,6 +979,132 @@ ProtocolParserProtobuf::ProcessRawRemoval(TableUpdateV4& aTableUpdate,
   return NS_OK;
 }
 
+static nsresult
+DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
+                  nsTArray<uint32_t>& aDecoded)
+{
+  // Sanity check of the encoding info.
+  if (!aEncoding.has_first_value() ||
+      !aEncoding.has_rice_parameter() ||
+      !aEncoding.has_num_entries() ||
+      !aEncoding.has_encoded_data()) {
+    PARSER_LOG(("The encoding info is incomplete."));
+    return NS_ERROR_FAILURE;
+  }
+
+  PARSER_LOG(("* Encoding info:"));
+  PARSER_LOG(("  - First value: %d", aEncoding.first_value()));
+  PARSER_LOG(("  - Num of entries: %d", aEncoding.num_entries()));
+  PARSER_LOG(("  - Rice parameter: %d", aEncoding.rice_parameter()));
+
+  // Set up the input buffer. Note that the bits should be read
+  // from LSB to MSB so that we in-place reverse the bits before
+  // feeding to the decoder.
+  auto encoded = const_cast<RiceDeltaEncoding&>(aEncoding).mutable_encoded_data();
+  RiceDeltaDecoder decoder((uint8_t*)encoded->c_str(), encoded->size());
+
+  // Setup the output buffer. The "first value" is included in
+  // the output buffer.
+  aDecoded.SetLength(aEncoding.num_entries() + 1);
+  aDecoded[0] = aEncoding.first_value();
+
+  // Decode!
+  bool rv = decoder.Decode(aEncoding.rice_parameter(),
+                           aEncoding.first_value(), // first value.
+                           aEncoding.num_entries(), // # of entries (first value not included).
+                           &aDecoded[1]);
+
+  NS_ENSURE_TRUE(rv, NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
+nsresult
+ProtocolParserProtobuf::ProcessEncodedAddition(TableUpdateV4& aTableUpdate,
+                                               const ThreatEntrySet& aAddition)
+{
+  if (!aAddition.has_rice_hashes()) {
+    PARSER_LOG(("* No rice encoded addition."));
+    return NS_OK;
+  }
+
+  nsTArray<uint32_t> decoded;
+  nsresult rv = DoRiceDeltaDecode(aAddition.rice_hashes(), decoded);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  //  Say we have the following raw prefixes
+  //                              BE            LE
+  //   00 00 00 01                 1      16777216
+  //   00 00 02 00               512        131072
+  //   00 03 00 00            196608           768
+  //   04 00 00 00          67108864             4
+  //
+  // which can be treated as uint32 (big-endian) sorted in increasing order:
+  //
+  // [1, 512, 196608, 67108864]
+  //
+  // According to https://developers.google.com/safe-browsing/v4/compression,
+  // the following should be done prior to compression:
+  //
+  // 1) re-interpret in little-endian ==> [16777216, 131072, 768, 4]
+  // 2) sort in increasing order       ==> [4, 768, 131072, 16777216]
+  //
+  // In order to get the original byte stream from |decoded|
+  // ([4, 768, 131072, 16777216] in this case), we have to:
+  //
+  // 1) sort in big-endian order      ==> [16777216, 131072, 768, 4]
+  // 2) copy each uint32 in little-endian to the result string
+  //
+
+  // The 4-byte prefixes have to be re-sorted in Big-endian increasing order.
+  struct CompareBigEndian
+  {
+    bool Equals(const uint32_t& aA, const uint32_t& aB) const
+    {
+      return aA == aB;
+    }
+
+    bool LessThan(const uint32_t& aA, const uint32_t& aB) const
+    {
+      return NativeEndian::swapToBigEndian(aA) <
+             NativeEndian::swapToBigEndian(aB);
+    }
+  };
+  decoded.Sort(CompareBigEndian());
+
+  // The encoded prefixes are always 4 bytes.
+  std::string prefixes;
+  for (size_t i = 0; i < decoded.Length(); i++) {
+    // Note that the third argument is the number of elements we want
+    // to copy (and swap) but not the number of bytes we want to copy.
+    char p[4];
+    NativeEndian::copyAndSwapToLittleEndian(p, &decoded[i], 1);
+    prefixes.append(p, 4);
+  }
+
+  aTableUpdate.NewPrefixes(4, prefixes);
+
+  return NS_OK;
+}
+
+nsresult
+ProtocolParserProtobuf::ProcessEncodedRemoval(TableUpdateV4& aTableUpdate,
+                                              const ThreatEntrySet& aRemoval)
+{
+  if (!aRemoval.has_rice_indices()) {
+    PARSER_LOG(("* No rice encoded removal."));
+    return NS_OK;
+  }
+
+  nsTArray<uint32_t> decoded;
+  nsresult rv = DoRiceDeltaDecode(aRemoval.rice_indices(), decoded);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The encoded prefixes are always 4 bytes.
+  aTableUpdate.NewRemovalIndices(&decoded[0], decoded.Length());
+
+  return NS_OK;
+}
 
 } // namespace safebrowsing
 } // namespace mozilla
