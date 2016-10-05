@@ -647,17 +647,23 @@ var Printing = {
     try {
       let print = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIWebBrowserPrint);
+
+      if (print.doingPrintPreview) {
+        this.logKeyedTelemetry("PRINT_DIALOG_OPENED_COUNT", "FROM_PREVIEW");
+      } else {
+        this.logKeyedTelemetry("PRINT_DIALOG_OPENED_COUNT", "FROM_PAGE");
+      }
+
       print.print(printSettings, null);
 
-      let histogram = Services.telemetry.getKeyedHistogramById("PRINT_COUNT");
       if (print.doingPrintPreview) {
         if (simplifiedMode) {
-          histogram.add("SIMPLIFIED");
+          this.logKeyedTelemetry("PRINT_COUNT", "SIMPLIFIED");
         } else {
-          histogram.add("WITH_PREVIEW");
+          this.logKeyedTelemetry("PRINT_COUNT", "WITH_PREVIEW");
         }
       } else {
-        histogram.add("WITHOUT_PREVIEW");
+        this.logKeyedTelemetry("PRINT_COUNT", "WITHOUT_PREVIEW");
       }
     } catch (e) {
       // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
@@ -681,6 +687,11 @@ var Printing = {
       PSSVC.savePrintSettingsToPrefs(printSettings, false,
                                      printSettings.kInitSavePrinterName);
     }
+  },
+
+  logKeyedTelemetry(id, key) {
+    let histogram = Services.telemetry.getKeyedHistogramById(id);
+    histogram.add(key);
   },
 
   updatePageCount() {
