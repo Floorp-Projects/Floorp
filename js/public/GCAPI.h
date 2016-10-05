@@ -533,6 +533,20 @@ class JS_PUBLIC_API(AutoAssertNoAlloc)
 };
 
 /**
+ * Assert if a GC barrier is invoked while this class is live. This class does
+ * not disable the static rooting hazard analysis.
+ */
+class JS_PUBLIC_API(AutoAssertOnBarrier)
+{
+    JSContext* context;
+    bool prev;
+
+  public:
+    explicit AutoAssertOnBarrier(JSContext* cx);
+    ~AutoAssertOnBarrier();
+};
+
+/**
  * Disable the static rooting hazard analysis in the live region and assert if
  * any allocation that could potentially trigger a GC occurs while this guard
  * object is live. This is most useful to help the exact rooting hazard analysis
@@ -621,6 +635,7 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
     if (IsInsideNursery(thing.asCell()))
         return;
     JS::shadow::Runtime* rt = detail::GetGCThingRuntime(thing.unsafeAsUIntPtr());
+    MOZ_DIAGNOSTIC_ASSERT(rt->allowGCBarriers());
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
     else if (JS::GCThingIsMarkedGray(thing))
@@ -631,6 +646,7 @@ static MOZ_ALWAYS_INLINE void
 MarkGCThingAsLive(JSRuntime* aRt, JS::GCCellPtr thing)
 {
     JS::shadow::Runtime* rt = JS::shadow::Runtime::asShadowRuntime(aRt);
+    MOZ_DIAGNOSTIC_ASSERT(rt->allowGCBarriers());
     /*
      * Any object in the nursery will not be freed during any GC running at that time.
      */
