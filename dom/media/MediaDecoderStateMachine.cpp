@@ -882,11 +882,6 @@ private:
     // to ensure that the seeked event is fired prior loadeded.
     mMaster->mCurrentSeek.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
 
-    // NOTE: Discarding the mSeekTask must be done before here. The following code
-    // might ask the MediaDecoderReaderWrapper to request media data, however, the
-    // SeekTask::Discard() will ask MediaDecoderReaderWrapper to discard media
-    // data requests.
-
     // Notify FirstFrameLoaded now if we haven't since we've decoded some data
     // for readyState to transition to HAVE_CURRENT_DATA and fire 'loadeddata'.
     if (!mMaster->mSentFirstFrameLoadedEvent) {
