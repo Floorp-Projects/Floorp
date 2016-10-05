@@ -32,6 +32,15 @@ const WINDOW_OPEN_EVENT_COUNT_SCALAR_NAME = "browser.engagement.window_open_even
 const UNIQUE_DOMAINS_COUNT_SCALAR_NAME = "browser.engagement.unique_domains_count";
 const TOTAL_URI_COUNT_SCALAR_NAME = "browser.engagement.total_uri_count";
 
+// A list of known search origins.
+const KNOWN_SEARCH_SOURCES = [
+  "abouthome",
+  "contextmenu",
+  "newtab",
+  "searchbar",
+  "urlbar",
+];
+
 function getOpenTabsAndWinsCounts() {
   let tabCount = 0;
   let winCount = 0;
@@ -44,6 +53,18 @@ function getOpenTabsAndWinsCounts() {
   }
 
   return { tabCount, winCount };
+}
+
+function getSearchEngineId(engine) {
+  // Due to bug 1222070, we can't directly check Services.telemetry.canRecordExtended
+  // here.
+  const extendedTelemetry = Services.prefs.getBoolPref("toolkit.telemetry.enabled");
+  if (!engine ||
+      (!engine.identifier && !engine.name) ||
+      !extendedTelemetry) {
+    return "other";
+  }
+  return engine.identifier || "other-" + engine.name;
 }
 
 let URICountListener = {
@@ -187,6 +208,29 @@ let BrowserUsageTelemetry = {
         URICountListener.addRestoredURI(browser, browser.currentURI);
         break;
     }
+  },
+
+  /**
+   * The main entry point for recording search related Telemetry. This includes
+   * search counts and engagement measurements.
+   *
+   * Telemetry records only search counts per engine and action origin, but
+   * nothing pertaining to the search contents themselves.
+   *
+   * @param engine
+   *        (nsISearchEngine) The engine handling the search.
+   * @param source
+   *        (string) Where the search originated from. See
+   *        KNOWN_SEARCH_SOURCES for allowed values.
+   * @throws if source is not in the known sources list.
+   */
+  recordSearch(engine, source) {
+    if (!KNOWN_SEARCH_SOURCES.includes(source)) {
+      throw new Error("Unknown source for search: " + source);
+    }
+
+    let countId = getSearchEngineId(engine) + "." + source;
+    Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").add(countId);
   },
 
   /**
