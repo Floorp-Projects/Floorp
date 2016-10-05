@@ -733,15 +733,11 @@ public:
   void Exit() override
   {
     mSeekTaskRequest.DisconnectIfExists();
+    mMaster->mCurrentSeek.RejectIfExists(__func__);
+    mSeekTask->Discard();
 
-    if (mSeekTask) {
-      mMaster->mCurrentSeek.RejectIfExists(__func__);
-      mSeekTask->Discard();
-      mSeekTask = nullptr;
-
-      // Reset the MediaDecoderReaderWrapper's callbask.
-      mMaster->SetMediaDecoderReaderWrapperCallback();
-    }
+    // Reset the MediaDecoderReaderWrapper's callbask.
+    mMaster->SetMediaDecoderReaderWrapperCallback();
   }
 
   State GetState() const override
