@@ -14,8 +14,9 @@
 #include "ia2AccessibleComponent.h"
 #include "ia2AccessibleHyperlink.h"
 #include "ia2AccessibleValue.h"
+#include "mozilla/a11y/MsaaIdGenerator.h"
 #include "mozilla/a11y/ProxyAccessible.h"
-#include "mozilla/a11y/IDSet.h"
+#include "mozilla/Attributes.h"
 
 #ifdef __GNUC__
 // Inheriting from both XPCOM and MSCOM interfaces causes a lot of warnings
@@ -173,7 +174,8 @@ public: // construction, destruction
   /**
    * Find an accessible by the given child ID in cached documents.
    */
-  Accessible* GetXPAccessibleFor(const VARIANT& aVarChild);
+  MOZ_MUST_USE already_AddRefed<IAccessible>
+  GetIAccessibleFor(const VARIANT& aVarChild, bool* aIsDefunct);
 
   virtual void GetNativeInterface(void **aOutAccessible) override;
 
@@ -182,7 +184,10 @@ public: // construction, destruction
 #ifdef _WIN64
   uint32_t GetExistingID() const { return mID; }
   static const uint32_t kNoID = 0;
-#endif
+  void SetID(uint32_t aID);
+
+  static uint32_t GetContentProcessIdFor(dom::ContentParentId aIPCContentId);
+  static void ReleaseContentProcessIdFor(dom::ContentParentId aIPCContentId);
 
 protected:
   virtual ~AccessibleWrap();
@@ -190,6 +195,15 @@ protected:
 #ifdef _WIN64
   uint32_t mID;
 #endif
+
+  HRESULT
+  ResolveChild(const VARIANT& aVarChild, IAccessible** aOutInterface);
+
+  /**
+   * Find a remote accessible by the given child ID.
+   */
+  MOZ_MUST_USE already_AddRefed<IAccessible>
+  GetRemoteIAccessibleFor(const VARIANT& aVarChild);
 
   /**
    * Return the wrapper for the document's proxy.
@@ -203,9 +217,7 @@ protected:
 
   static ITypeInfo* gTypeInfo;
 
-#ifdef _WIN64
-  static IDSet sIDGen;
-#endif
+  static MsaaIdGenerator sIDGen;
 
   enum navRelations {
     NAVRELATION_CONTROLLED_BY = 0x1000,
