@@ -23,6 +23,7 @@
 #include "nsContentUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIDocument.h"
+#include "nsIBlocklistService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -360,7 +361,10 @@ nsPluginArray::EnsurePlugins()
       mPlugins.AppendElement(new nsPluginElement(mWindow, pluginTags[i]));
     } else if (pluginTag->IsActive()) {
       uint32_t permission = nsIPermissionManager::ALLOW_ACTION;
-      if (pluginTag->IsClicktoplay()) {
+      uint32_t blocklistState;
+      if (pluginTag->IsClicktoplay() &&
+          NS_SUCCEEDED(pluginTag->GetBlocklistState(&blocklistState)) &&
+          blocklistState == nsIBlocklistService::STATE_NOT_BLOCKED) {
         nsCString name;
         pluginTag->GetName(name);
         if (PluginShouldBeHidden(name)) {
