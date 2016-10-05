@@ -1501,6 +1501,15 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
 
   nsAutoCString spec;
 
+  // Apply the user cross-origin trimming policy if it's more
+  // restrictive than the general one.
+  if (isCrossOrigin) {
+    int userReferrerXOriginTrimmingPolicy =
+      gHttpHandler->ReferrerXOriginTrimmingPolicy();
+    userReferrerTrimmingPolicy =
+      std::max(userReferrerTrimmingPolicy, userReferrerXOriginTrimmingPolicy);
+  }
+
   // site-specified referrer trimming may affect the trim level
   // "unsafe-url" behaves like "origin" (send referrer in the same situations) but
   // "unsafe-url" sends the whole referrer and origin removes the path.
