@@ -723,13 +723,22 @@ public:
 
     // Do the seek.
     mMaster->mSeekTaskRequest.Begin(mMaster->mSeekTask->Seek(mMaster->Duration())
-      ->Then(OwnerThread(), __func__, mMaster,
-             &MediaDecoderStateMachine::OnSeekTaskResolved,
-             &MediaDecoderStateMachine::OnSeekTaskRejected));
+      ->Then(OwnerThread(), __func__,
+             [this] (const SeekTaskResolveValue& aValue) {
+               OnSeekTaskResolved(aValue);
+             },
+             [this] (const SeekTaskRejectValue& aValue) {
+               OnSeekTaskRejected(aValue);
+             }));
 
     MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
     MOZ_ASSERT(!mMaster->mCurrentSeek.Exists());
     mMaster->mCurrentSeek = Move(mSeekJob);
+  }
+
+  void Exit() override
+  {
+    mMaster->mSeekTaskRequest.DisconnectIfExists();
   }
 
   State GetState() const override
@@ -781,6 +790,50 @@ public:
   }
 
 private:
+  void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
+  {
+    mMaster->mSeekTaskRequest.Complete();
+
+    if (aValue.mSeekedAudioData) {
+      mMaster->Push(aValue.mSeekedAudioData, MediaData::AUDIO_DATA);
+      mMaster->mDecodedAudioEndTime = std::max(
+        aValue.mSeekedAudioData->GetEndTime(), mMaster->mDecodedAudioEndTime);
+    }
+
+    if (aValue.mSeekedVideoData) {
+      mMaster->Push(aValue.mSeekedVideoData, MediaData::VIDEO_DATA);
+      mMaster->mDecodedVideoEndTime = std::max(
+        aValue.mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
+    }
+
+    if (aValue.mIsAudioQueueFinished) {
+      mMaster->AudioQueue().Finish();
+    }
+
+    if (aValue.mIsVideoQueueFinished) {
+      mMaster->VideoQueue().Finish();
+    }
+
+    mMaster->SeekCompleted();
+  }
+
+  void OnSeekTaskRejected(const SeekTaskRejectValue& aValue)
+  {
+    mMaster->mSeekTaskRequest.Complete();
+
+    if (aValue.mIsAudioQueueFinished) {
+      mMaster->AudioQueue().Finish();
+    }
+
+    if (aValue.mIsVideoQueueFinished) {
+      mMaster->VideoQueue().Finish();
+    }
+
+    mMaster->DecodeError(aValue.mError);
+
+    mMaster->DiscardSeekTaskIfExist();
+  }
+
   SeekJob mSeekJob;
 };
 
@@ -2184,58 +2237,6 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   mState = DECODER_STATE_SEEKING;
   mStateObj = MakeUnique<SeekingState>(this, Move(aSeekJob));
   mStateObj->Enter();
-}
-
-void
-MediaDecoderStateMachine::OnSeekTaskResolved(SeekTaskResolveValue aValue)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
-
-  mSeekTaskRequest.Complete();
-
-  if (aValue.mSeekedAudioData) {
-    Push(aValue.mSeekedAudioData.get(), MediaData::AUDIO_DATA);
-    mDecodedAudioEndTime =
-      std::max(aValue.mSeekedAudioData->GetEndTime(), mDecodedAudioEndTime);
-  }
-
-  if (aValue.mSeekedVideoData) {
-    Push(aValue.mSeekedVideoData.get(), MediaData::VIDEO_DATA);
-    mDecodedVideoEndTime =
-      std::max(aValue.mSeekedVideoData->GetEndTime(), mDecodedVideoEndTime);
-  }
-
-  if (aValue.mIsAudioQueueFinished) {
-    AudioQueue().Finish();
-  }
-
-  if (aValue.mIsVideoQueueFinished) {
-    VideoQueue().Finish();
-  }
-
-  SeekCompleted();
-}
-
-void
-MediaDecoderStateMachine::OnSeekTaskRejected(SeekTaskRejectValue aValue)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
-
-  mSeekTaskRequest.Complete();
-
-  if (aValue.mIsAudioQueueFinished) {
-    AudioQueue().Finish();
-  }
-
-  if (aValue.mIsVideoQueueFinished) {
-    VideoQueue().Finish();
-  }
-
-  DecodeError(aValue.mError);
-
-  DiscardSeekTaskIfExist();
 }
 
 void
