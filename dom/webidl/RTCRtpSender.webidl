@@ -73,6 +73,5 @@ interface RTCRtpSender {
   Promise<void> setParameters (optional RTCRtpParameters parameters);
   RTCRtpParameters getParameters();
   Promise<void> replaceTrack(MediaStreamTrack track);
-  [Pref="media.peerconnection.dtmf.enabled"]
   readonly attribute RTCDTMFSender? dtmf;
 };

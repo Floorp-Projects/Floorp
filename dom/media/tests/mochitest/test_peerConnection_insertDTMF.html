@@ -58,6 +58,7 @@ function insertdtmftest(pc) {
 }
 
 runNetworkTest(() => {
+
   test = new PeerConnectionTest();
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
   test.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
@@ -71,10 +72,7 @@ runNetworkTest(() => {
     }
   ]);
 
-  var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
-
-  return pushPrefs(['media.peerconnection.dtmf.enabled', true])
-    .then(() => { test.run() })
+  return test.run()
     .catch(e => ok(false, "unexpected failure: " + e));
 });
 
