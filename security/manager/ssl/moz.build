@@ -55,6 +55,7 @@ XPIDL_MODULE = 'pipnss'
 
 EXTRA_JS_MODULES.psm += [
     'DER.jsm',
+    'X509.jsm',
 ]
 
 EXPORTS += [

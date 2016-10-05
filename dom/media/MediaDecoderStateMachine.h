@@ -472,9 +472,6 @@ protected:
   // If we don't, switch to buffering mode.
   void MaybeStartBuffering();
 
-  // The entry action of DECODER_STATE_DECODING_FIRSTFRAME.
-  void DecodeFirstFrame();
-
   // Moves the decoder into the shutdown state, and dispatches an error
   // event to the media element. This begins shutting down the decoder.
   // The decoder monitor must be held. This is only called on the
@@ -489,7 +486,7 @@ protected:
   void EnqueueFirstFrameLoadedEvent();
 
   // Clears any previous seeking state and initiates a new seek on the decoder.
-  RefPtr<MediaDecoder::SeekPromise> InitiateSeek(SeekJob aSeekJob);
+  void InitiateSeek(SeekJob aSeekJob);
 
   void DispatchAudioDecodeTaskIfNeeded();
   void DispatchVideoDecodeTaskIfNeeded();
@@ -532,10 +529,6 @@ protected:
   // hardware, so this can only be used as a upper bound. The decoder monitor
   // must be held when calling this. Called on the decode thread.
   int64_t GetDecodedAudioDuration();
-
-  // Notify FirstFrameLoaded if having decoded first frames and
-  // transition to SEEKING if there is any pending seek, or DECODING otherwise.
-  void MaybeFinishDecodeFirstFrame();
 
   void FinishDecodeFirstFrame();
 

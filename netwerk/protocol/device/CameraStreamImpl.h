@@ -37,7 +37,7 @@ public:
         return mCallback;
     }
 
-    bool Init(const nsCString& contentType, const uint32_t& camera, const uint32_t& width, const uint32_t& height, FrameCallback* callback);
+    MOZ_MUST_USE bool Init(const nsCString& contentType, const uint32_t& camera, const uint32_t& width, const uint32_t& height, FrameCallback* callback);
     void Close();
 
     uint32_t GetWidth() { return mWidth; }

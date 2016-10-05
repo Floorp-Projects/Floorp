@@ -4,7 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-pkg_config = check_prog('PKG_CONFIG', ('pkg-config',), allow_missing=True)
+@depends('--enable-compile-environment')
+def pkg_config(compile_env):
+    if compile_env:
+        return ('pkg-config',)
+
+pkg_config = check_prog('PKG_CONFIG', pkg_config, allow_missing=True)
 
 @depends_if(pkg_config)
 @checking('for pkg-config version')
@@ -31,7 +36,12 @@ def pkg_check_modules(var, package_desc, when=always,
         package_desc = ' '.join(package_desc)
     package_desc = dependable(package_desc)
 
-    @depends_when(pkg_config, pkg_config_version, when=when)
+    @depends(when, '--enable-compile-environment')
+    def when_and_compile_environment(when, compile_environment):
+        return when and compile_environment
+
+    @depends_when(pkg_config, pkg_config_version,
+                  when=when_and_compile_environment)
     def check_pkg_config(pkg_config, version):
         min_version = '0.9.0'
         if pkg_config is None:
@@ -42,7 +52,7 @@ def pkg_check_modules(var, package_desc, when=always,
             die("*** Your version of pkg-config is too old. You need version %s or newer.",
                 min_version)
 
-    @depends_when(pkg_config, package_desc, when=when)
+    @depends_when(pkg_config, package_desc, when=when_and_compile_environment)
     @imports('subprocess')
     @imports('sys')
     @imports(_from='mozbuild.configure.util', _import='LineIO')

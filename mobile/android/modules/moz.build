@@ -29,4 +29,5 @@ EXTRA_JS_MODULES += [
     'Snackbars.jsm',
     'SSLExceptions.jsm',
     'TabMirror.jsm',
+    'WebsiteMetadata.jsm'
 ]

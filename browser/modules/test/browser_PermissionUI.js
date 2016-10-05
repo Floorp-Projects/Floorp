@@ -158,6 +158,55 @@ add_task(function* test_permission_prompt_for_request() {
 });
 
 /**
+ * Tests that if the PermissionPrompt sets displayURI to false in popupOptions,
+ * then there is no URI shown on the popupnotification.
+ */
+add_task(function* test_permission_prompt_for_popupOptions() {
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: "http://example.com/",
+  }, function*(browser) {
+    const kTestNotificationID = "test-notification";
+    const kTestMessage = "Test message";
+    let mainAction = {
+      label: "Main",
+      accessKey: "M",
+    };
+    let secondaryAction = {
+      label: "Secondary",
+      accessKey: "S",
+    };
+
+    let mockRequest = makeMockPermissionRequest(browser);
+    let TestPrompt = {
+      __proto__: PermissionUI.PermissionPromptForRequestPrototype,
+      request: mockRequest,
+      notificationID: kTestNotificationID,
+      message: kTestMessage,
+      promptActions: [mainAction, secondaryAction],
+      popupOptions: {
+        displayURI: false,
+      },
+    };
+
+    let shownPromise =
+      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    TestPrompt.prompt();
+    yield shownPromise;
+    let notification =
+      PopupNotifications.getNotification(kTestNotificationID, browser);
+
+    Assert.ok(!notification.options.displayURI,
+              "Should not show the URI of the requesting page");
+
+    let removePromise =
+      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+    notification.remove();
+    yield removePromise;
+  });
+});
+
+/**
  * Tests that if the PermissionPrompt has the permissionKey
  * set that permissions can be set properly by the user. Also
  * ensures that callbacks for promptActions are properly fired.

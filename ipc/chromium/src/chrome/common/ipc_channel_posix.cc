@@ -263,8 +263,7 @@ void Channel::ChannelImpl::ResetFileDescriptor(int fd) {
 
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
   mozilla::UniquePtr<Message> msg(new Message(MSG_ROUTING_NONE,
-                                              HELLO_MESSAGE_TYPE,
-                                              IPC::Message::PRIORITY_NORMAL));
+                                              HELLO_MESSAGE_TYPE));
   if (!msg->WriteInt(base::GetCurrentProcId())) {
     Close();
     return false;
@@ -500,8 +499,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         // Send a message to the other side, indicating that we are now
         // responsible for closing the descriptor.
         Message *fdAck = new Message(MSG_ROUTING_NONE,
-                                     RECEIVED_FDS_MESSAGE_TYPE,
-                                     IPC::Message::PRIORITY_NORMAL);
+                                     RECEIVED_FDS_MESSAGE_TYPE);
         DCHECK(m.fd_cookie() != 0);
         fdAck->set_fd_cookie(m.fd_cookie());
         OutputQueuePush(fdAck);

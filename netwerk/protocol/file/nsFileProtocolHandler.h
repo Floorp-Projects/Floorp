@@ -21,7 +21,7 @@ public:
 
     nsFileProtocolHandler();
 
-    nsresult Init();
+    MOZ_MUST_USE nsresult Init();
 };
 
 #endif // !nsFileProtocolHandler_h__

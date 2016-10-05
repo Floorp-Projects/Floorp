@@ -222,13 +222,11 @@ OnSharedPreferenceChangeListener
         }
     }
     private void updateActionBarTitle(int title) {
-        if (Versions.feature14Plus) {
-            final String newTitle = getString(title);
-            if (newTitle != null) {
-                Log.v(LOGTAG, "Setting action bar title to " + newTitle);
+        final String newTitle = getString(title);
+        if (newTitle != null) {
+            Log.v(LOGTAG, "Setting action bar title to " + newTitle);
 
-                setTitle(newTitle);
-            }
+            setTitle(newTitle);
         }
     }
 
@@ -341,11 +339,9 @@ OnSharedPreferenceChangeListener
         // the correct Fragment resource.
         // Note: this seems to only be required for non-multipane devices, multipane
         // manages to automatically select the correct fragments.
-        if (Versions.feature11Plus) {
-            if (!getIntent().hasExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT)) {
-                // Set up the default fragment if there is no explicit fragment to show.
-                setupTopLevelFragmentIntent();
-            }
+        if (!getIntent().hasExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT)) {
+            // Set up the default fragment if there is no explicit fragment to show.
+            setupTopLevelFragmentIntent();
         }
 
         // We must call this before setTitle to avoid crashes. Most devices don't seem to care
@@ -354,7 +350,7 @@ OnSharedPreferenceChangeListener
         // likely other strange devices (other Asus devices, some Samsungs) could do the same.
         super.onCreate(savedInstanceState);
 
-        if (Versions.feature11Plus && onIsMultiPane()) {
+        if (onIsMultiPane()) {
             // So that Android doesn't put the fragment title (or nothing at
             // all) in the action bar.
             updateActionBarTitle(R.string.settings_title);
@@ -521,11 +517,9 @@ OnSharedPreferenceChangeListener
     @Override
     public void onPause() {
         // Symmetric with onResume.
-        if (Versions.feature11Plus) {
-            if (isMultiPane()) {
-                SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
-                prefs.unregisterOnSharedPreferenceChangeListener(this);
-            }
+        if (isMultiPane()) {
+            SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
+            prefs.unregisterOnSharedPreferenceChangeListener(this);
         }
 
         super.onPause();
@@ -543,14 +537,12 @@ OnSharedPreferenceChangeListener
             ((GeckoApplication) getApplication()).onActivityResume(this);
         }
 
-        if (Versions.feature11Plus) {
-            // Watch prefs, otherwise we don't reliably get told when they change.
-            // See documentation for onSharedPreferenceChange for more.
-            // Inexplicably only needed on tablet.
-            if (isMultiPane()) {
-                SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
-                prefs.registerOnSharedPreferenceChangeListener(this);
-            }
+        // Watch prefs, otherwise we don't reliably get told when they change.
+        // See documentation for onSharedPreferenceChange for more.
+        // Inexplicably only needed on tablet.
+        if (isMultiPane()) {
+            SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
+            prefs.registerOnSharedPreferenceChangeListener(this);
         }
     }
 

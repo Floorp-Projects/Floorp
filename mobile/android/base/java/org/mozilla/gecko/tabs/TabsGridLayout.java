@@ -294,9 +294,7 @@ class TabsGridLayout extends GridView
                         ((TabsLayoutItemView) tabView).setChecked(checked);
                     }
                     // setItemChecked doesn't exist until API 11, despite what the API docs say!
-                    if (AppConstants.Versions.feature11Plus) {
-                        setItemChecked(i, checked);
-                    }
+                    setItemChecked(i, checked);
                 }
             }
         });

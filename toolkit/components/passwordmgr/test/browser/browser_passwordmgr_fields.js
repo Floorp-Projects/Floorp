@@ -41,8 +41,8 @@ function test() {
 
 
     let timeLastUsedCol = doc.getElementById("timeLastUsedCol");
-    is(timeLastUsedCol.getAttribute("hidden"), "",
-       "Last Used column is displayed");
+    is(timeLastUsedCol.getAttribute("hidden"), "true",
+       "Last Used column is not displayed");
 
     let timePasswordChangedCol = doc.getElementById("timePasswordChangedCol");
     is(timePasswordChangedCol.getAttribute("hidden"), "",

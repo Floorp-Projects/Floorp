@@ -95,7 +95,7 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
      */
     @SuppressWarnings("static-method")
     protected boolean shouldUseTransactions() {
-        return Versions.feature11Plus;
+        return true;
     }
 
     private boolean isInBatch() {
