@@ -81,13 +81,13 @@ and may contain any of the following fields:
 
  <tr>
   <td><code>log</code>
-  <td><a href=#log-object><code>log</code></a> object
+  <td><a href=#log-object><code>log</code></a>&nbsp;object
   <td>Logging options for Gecko.
  </tr>
 
  <tr>
   <td><code>prefs</code>
-  <td><a href=#prefs-object><code>prefs</code></a> object
+  <td><a href=#prefs-object><code>prefs</code></a>&nbsp;object
   <td>Map of preference name to preference value, which can be a
    string, a boolean or an integer.
  </tr>
