@@ -400,7 +400,6 @@ public:
 
   void Enter() override
   {
-    mMaster->DiscardSeekTaskIfExist();
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
     }
@@ -672,9 +671,6 @@ public:
 
   void Enter() override
   {
-    // Discard the existing seek task.
-    mMaster->DiscardSeekTaskIfExist();
-
     // SeekTask will register its callbacks to MediaDecoderReaderWrapper.
     mMaster->CancelMediaDecoderReaderWrapperCallback();
 
@@ -737,6 +733,15 @@ public:
   void Exit() override
   {
     mSeekTaskRequest.DisconnectIfExists();
+
+    if (mMaster->mSeekTask) {
+      mMaster->mCurrentSeek.RejectIfExists(__func__);
+      mMaster->mSeekTask->Discard();
+      mMaster->mSeekTask = nullptr;
+
+      // Reset the MediaDecoderReaderWrapper's callbask.
+      mMaster->SetMediaDecoderReaderWrapperCallback();
+    }
   }
 
   State GetState() const override
@@ -828,8 +833,6 @@ private:
     }
 
     mMaster->DecodeError(aValue.mError);
-
-    mMaster->DiscardSeekTaskIfExist();
   }
 
   void SeekCompleted()
@@ -878,10 +881,6 @@ private:
     // We want to resolve the seek request prior finishing the first frame
     // to ensure that the seeked event is fired prior loadeded.
     mMaster->mCurrentSeek.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
-
-    // Discard and nullify the seek task.
-    // Reset the MediaDecoderReaderWrapper's callbask.
-    mMaster->DiscardSeekTaskIfExist();
 
     // NOTE: Discarding the mSeekTask must be done before here. The following code
     // might ask the MediaDecoderReaderWrapper to request media data, however, the
@@ -1967,8 +1966,6 @@ MediaDecoderStateMachine::Shutdown()
 
   mQueuedSeek.RejectIfExists(__func__);
 
-  DiscardSeekTaskIfExist();
-
   // Shutdown happens will decode timer is active, we need to disconnect and
   // dispose of the timer.
   mVideoDecodeSuspendTimer.Reset();
@@ -2314,19 +2311,6 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   mState = DECODER_STATE_SEEKING;
   mStateObj = MakeUnique<SeekingState>(this, Move(aSeekJob));
   mStateObj->Enter();
-}
-
-void
-MediaDecoderStateMachine::DiscardSeekTaskIfExist()
-{
-  if (mSeekTask) {
-    mCurrentSeek.RejectIfExists(__func__);
-    mSeekTask->Discard();
-    mSeekTask = nullptr;
-
-    // Reset the MediaDecoderReaderWrapper's callbask.
-    SetMediaDecoderReaderWrapperCallback();
-  }
 }
 
 void
