@@ -132,13 +132,13 @@ private:
 // for addition and indices to removal. See Bug 1283009.
 class TableUpdateV4 : public TableUpdate {
 public:
-  struct PrefixString {
+  struct PrefixStdString {
   private:
     std::string mStorage;
     nsDependentCSubstring mString;
 
   public:
-    explicit PrefixString(std::string& aString)
+    explicit PrefixStdString(std::string& aString)
     {
       aString.swap(mStorage);
       mString.Rebind(mStorage.data(), mStorage.size());
@@ -147,12 +147,13 @@ public:
     const nsACString& GetPrefixString() const { return mString; };
   };
 
-  typedef nsClassHashtable<nsUint32HashKey, PrefixString> PrefixesStringMap;
+  typedef nsClassHashtable<nsUint32HashKey, PrefixStdString> PrefixStdStringMap;
   typedef nsTArray<int32_t> RemovalIndiceArray;
 
 public:
   explicit TableUpdateV4(const nsACString& aTable)
     : TableUpdate(aTable)
+    , mFullUpdate(false)
   {
   }
 
@@ -161,19 +162,22 @@ public:
     return mPrefixesMap.IsEmpty() && mRemovalIndiceArray.IsEmpty();
   }
 
-  PrefixesStringMap& Prefixes() { return mPrefixesMap; }
+  bool IsFullUpdate() const { return mFullUpdate; }
+  PrefixStdStringMap& Prefixes() { return mPrefixesMap; }
   RemovalIndiceArray& RemovalIndices() { return mRemovalIndiceArray; }
 
   // For downcasting.
   static const int TAG = 4;
 
+  void SetFullUpdate(bool aIsFullUpdate) { mFullUpdate = aIsFullUpdate; }
   void NewPrefixes(int32_t aSize, std::string& aPrefixes);
   void NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
 
 private:
   virtual int Tag() const override { return TAG; }
 
-  PrefixesStringMap mPrefixesMap;
+  bool mFullUpdate;
+  PrefixStdStringMap mPrefixesMap;
   RemovalIndiceArray mRemovalIndiceArray;
 };
 

@@ -1144,19 +1144,11 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
     cairo_d2d_surface_t::TextRenderingState renderingState =
       scaled_font->rendering_mode;
 
-    if ((renderingState == cairo_d2d_surface_t::TEXT_RENDERING_NORMAL ||
-         renderingState == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC) &&
-        !surface->base.permit_subpixel_antialiasing) {
-      renderingState = cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE;
-    }
-
-    IDWriteRenderingParams *params =
-        DWriteFactory::RenderingParams(renderingState);
-
     rv = gdiInterop->CreateBitmapRenderTarget(surface->dc,
 					      area.right - area.left,
 					      area.bottom - area.top,
 					      &rt);
+
     if (FAILED(rv)) {
 	if (rv == E_OUTOFMEMORY) {
 	    return (cairo_int_status_t)CAIRO_STATUS_NO_MEMORY;
@@ -1164,6 +1156,22 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
     }
+
+    if ((renderingState == cairo_d2d_surface_t::TEXT_RENDERING_NORMAL ||
+         renderingState == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC) &&
+        !surface->base.permit_subpixel_antialiasing) {
+      renderingState = cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE;
+      IDWriteBitmapRenderTarget1* rt1;
+      rv = rt->QueryInterface(&rt1);
+      
+      if (SUCCEEDED(rv) && rt1) {
+        rt1->SetTextAntialiasMode(DWRITE_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+        rt1->Release();
+      }
+    }
+
+    IDWriteRenderingParams *params =
+        DWriteFactory::RenderingParams(renderingState);
 
     /**
      * We set the number of pixels per DIP to 1.0. This is because we always want
@@ -1447,11 +1455,12 @@ _cairo_dwrite_show_glyphs_on_surface(void			*surface,
 							color,
 							dwritesf,
 							fontArea);
+
 #ifdef CAIRO_TRY_D2D_TO_GDI
     }
 #endif
 
-    return CAIRO_INT_STATUS_SUCCESS;
+    return status;
 }
 
 #define ENHANCED_CONTRAST_REGISTRY_KEY \

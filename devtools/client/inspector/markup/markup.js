@@ -3198,6 +3198,7 @@ ElementEditor.prototype = {
     // Create the template editor, which will save some variables here.
     let data = {
       attrName: attribute.name,
+      attrValue: attribute.value,
       tabindex: this.container.canFocus ? "0" : "-1",
     };
     this.template("attribute", data);

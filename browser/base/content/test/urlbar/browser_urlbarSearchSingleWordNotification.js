@@ -103,6 +103,29 @@ add_task(function* test_navigate_large_number() {
   });
   gBrowser.removeTab(tab);
 });
+
+add_task(function* test_navigate_small_hex_number() {
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  yield* runURLBarSearchTest({
+    valueToOpen: "0x1f00ffff",
+    expectSearch: true,
+    expectNotification: false
+  });
+  gBrowser.removeTab(tab);
+});
+
+add_task(function* test_navigate_large_hex_number() {
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  yield* runURLBarSearchTest({
+    valueToOpen: "0x7f0000017f000001",
+    expectSearch: true,
+    expectNotification: false
+  });
+  gBrowser.removeTab(tab);
+});
+
 function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
   return function* test_navigate_single_host() {
     const pref = "browser.fixup.domainwhitelist.localhost";

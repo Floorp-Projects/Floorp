@@ -8772,6 +8772,14 @@ nsTextFrame::IsFloatingFirstLetterChild() const
          frame->GetType() == nsGkAtoms::letterFrame;
 }
 
+bool
+nsTextFrame::IsInitialLetterChild() const
+{
+  nsIFrame* frame = GetParent();
+  return frame && frame->StyleTextReset()->mInitialLetterSize != 0.0f &&
+         frame->GetType() == nsGkAtoms::letterFrame;
+}
+
 struct NewlineProperty {
   int32_t mStartOffset;
   // The offset of the first \n after mStartOffset, or -1 if there is none
@@ -9050,9 +9058,10 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   // The metrics for the text go in here
   gfxTextRun::Metrics textMetrics;
-  gfxFont::BoundingBoxType boundingBoxType = IsFloatingFirstLetterChild() ?
-                                               gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS :
-                                               gfxFont::LOOSE_INK_EXTENTS;
+  gfxFont::BoundingBoxType boundingBoxType =
+    IsFloatingFirstLetterChild() || IsInitialLetterChild()
+    ? gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS
+    : gfxFont::LOOSE_INK_EXTENTS;
   NS_ASSERTION(!(NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags),
                "We shouldn't be passed NS_REFLOW_CALC_BOUNDING_METRICS anymore");
 

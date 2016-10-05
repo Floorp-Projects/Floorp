@@ -145,7 +145,7 @@ scheme host and port.""")
                                 help="Total number of chunks to use")
     chunking_group.add_argument("--this-chunk", action="store", type=int, default=1,
                                 help="Chunk number to run")
-    chunking_group.add_argument("--chunk-type", action="store", choices=["none", "equal_time", "hash"],
+    chunking_group.add_argument("--chunk-type", action="store", choices=["none", "equal_time", "hash", "dir_hash"],
                                 default=None, help="Chunking type to use")
 
     ssl_group = parser.add_argument_group("SSL/TLS")
@@ -297,7 +297,7 @@ def check_args(kwargs):
 
     if kwargs["chunk_type"] is None:
         if kwargs["total_chunks"] > 1:
-            kwargs["chunk_type"] = "equal_time"
+            kwargs["chunk_type"] = "dir_hash"
         else:
             kwargs["chunk_type"] = "none"
 

@@ -34,6 +34,7 @@ gSubtrees = [
     os.path.join("css-namespaces-3"),
     os.path.join("css-conditional-3"),
     os.path.join("css-values-3"),
+    os.path.join("css-multicol-1"),
     os.path.join("selectors-4"),
 ]
 
@@ -165,10 +166,12 @@ def map_file(fn, spec):
 
 def load_flags_for(fn, spec):
     global gTestFlags
-    document = get_document_for(fn)
     destname = os.path.join(spec, os.path.basename(fn))
     gTestFlags[destname] = []
 
+    if not (is_html(fn) or is_xml(fn)):
+        return
+    document = get_document_for(fn)
     for meta in document.getElementsByTagName("meta"):
         name = meta.getAttribute("name")
         if name == "flags":
@@ -176,6 +179,9 @@ def load_flags_for(fn, spec):
 
 def is_html(fn):
     return fn.endswith(".htm") or fn.endswith(".html")
+
+def is_xml(fn):
+    return fn.endswith(".xht") or fn.endswith(".xml") or fn.endswith(".xhtml") or fn.endswith(".svg")
 
 def get_document_for(fn):
     document = None # an xml.dom.minidom document
@@ -191,6 +197,16 @@ def get_document_for(fn):
     return document
 
 def add_test_items(fn, spec):
+    if spec is None:
+        for subtree in gSubtrees:
+            if fn.startswith(subtree):
+                spec = os.path.basename(subtree)
+                break
+        else:
+            raise StandardError("Could not associate test " + fn + " with specification")
+    if not (is_html(fn) or is_xml(fn)):
+        map_file(fn, spec)
+        return None
     document = get_document_for(fn)
     refs = []
     notrefs = []
@@ -202,16 +218,12 @@ def add_test_items(fn, spec):
             arr = notrefs
         else:
             continue
-        arr.append(os.path.join(os.path.dirname(fn), str(link.getAttribute("href"))))
+        if str(link.getAttribute("href")) != "":
+            arr.append(os.path.join(os.path.dirname(fn), str(link.getAttribute("href"))))
+        else:
+            gLog.write("Warning: href attribute found empty in " + fn + "\n")
     if len(refs) > 1:
         raise StandardError("Need to add code to specify which reference we want to match.")
-    if spec is None:
-        for subtree in gSubtrees:
-            if fn.startswith(subtree):
-                spec = os.path.basename(subtree)
-                break
-        else:
-            raise StandardError("Could not associate test " + fn + " with specification")
     for ref in refs:
         tests.append(["==", map_file(fn, spec), map_file(ref, spec)])
     for notref in notrefs:

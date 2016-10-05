@@ -39,9 +39,6 @@ public:
 
   explicit nsNSSCertificate(CERTCertificate* cert, SECOidTag* evOidPolicy = nullptr);
   nsNSSCertificate();
-  nsresult FormatUIStrings(const nsAutoString& nickname,
-                           nsAutoString& nickWithSerial,
-                           nsAutoString& details);
   static nsNSSCertificate* Create(CERTCertificate*cert = nullptr,
                                   SECOidTag* evOidPolicy = nullptr);
   static nsNSSCertificate* ConstructFromDER(char* certDER, int derLen);

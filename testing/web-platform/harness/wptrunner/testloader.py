@@ -1,6 +1,6 @@
+import hashlib
 import json
 import os
-import sys
 import urlparse
 from abc import ABCMeta, abstractmethod
 from Queue import Empty
@@ -43,11 +43,27 @@ class Unchunked(TestChunker):
 
 
 class HashChunker(TestChunker):
-    def __call__(self):
+    def __call__(self, manifest):
         chunk_index = self.chunk_number - 1
         for test_path, tests in manifest:
-            if hash(test_path) % self.total_chunks == chunk_index:
+            h = int(hashlib.md5(test_path).hexdigest(), 16)
+            if h % self.total_chunks == chunk_index:
                 yield test_path, tests
+
+
+class DirectoryHashChunker(TestChunker):
+    """Like HashChunker except the directory is hashed.
+
+    This ensures that all tests in the same directory end up in the same
+    chunk.
+    """
+    def __call__(self, manifest):
+        chunk_index = self.chunk_number - 1
+        for test_path, tests in manifest:
+            h = int(hashlib.md5(os.path.dirname(test_path)).hexdigest(), 16)
+            if h % self.total_chunks == chunk_index:
+                yield test_path, tests
+
 
 class EqualTimeChunker(TestChunker):
     def _group_by_directory(self, manifest_items):
@@ -449,6 +465,7 @@ class TestLoader(object):
 
         self.chunker = {"none": Unchunked,
                         "hash": HashChunker,
+                        "dir_hash": DirectoryHashChunker,
                         "equal_time": EqualTimeChunker}[chunk_type](total_chunks,
                                                                     chunk_number)
 

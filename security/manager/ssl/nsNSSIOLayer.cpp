@@ -21,6 +21,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "nsArray.h"
 #include "nsArrayUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsClientAuthRemember.h"

@@ -29,31 +29,38 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
 
 NewConsoleOutputWrapper.prototype = {
   init: function () {
-    const sourceMapService = this.toolbox ? this.toolbox._sourceMapService : null;
+    const attachRefToHud = (id, node) => {
+      this.jsterm.hud[id] = node;
+    };
 
     let childComponent = ConsoleOutput({
-      hudProxyClient: this.jsterm.hud.proxy.client,
-      sourceMapService,
-      onViewSourceInDebugger: frame => this.toolbox.viewSourceInDebugger.call(
-        this.toolbox,
-        frame.url,
-        frame.line
-      ),
-      openNetworkPanel: (requestId) => {
-        return this.toolbox.selectTool("netmonitor").then(panel => {
-          return panel.panelWin.NetMonitorController.inspectRequest(requestId);
-        });
-      },
-      openLink: (url) => {
-        this.owner.openLink(url);
-      },
-      emitNewMessage: (node) => {
-        this.jsterm.hud.emit("new-messages", new Set([{
-          node
-        }]));
-      },
+      serviceContainer: {
+        attachRefToHud,
+        emitNewMessage: (node, messageId) => {
+          this.jsterm.hud.emit("new-messages", new Set([{
+            node,
+            messageId,
+          }]));
+        },
+        hudProxyClient: this.jsterm.hud.proxy.client,
+        onViewSourceInDebugger: frame => this.toolbox.viewSourceInDebugger.call(
+          this.toolbox,
+          frame.url,
+          frame.line
+        ),
+        openNetworkPanel: (requestId) => {
+          return this.toolbox.selectTool("netmonitor").then(panel => {
+            return panel.panelWin.NetMonitorController.inspectRequest(requestId);
+          });
+        },
+        sourceMapService: this.toolbox ? this.toolbox._sourceMapService : null,
+      }
     });
-    let filterBar = FilterBar({});
+    let filterBar = FilterBar({
+      serviceContainer: {
+        attachRefToHud
+      }
+    });
     let provider = React.createElement(
       Provider,
       { store },
@@ -65,14 +72,34 @@ NewConsoleOutputWrapper.prototype = {
 
     this.body = ReactDOM.render(provider, this.parentNode);
   },
-  dispatchMessageAdd: (message) => {
-    batchedMessageAdd(actions.messageAdd(message));
+  dispatchMessageAdd: function(message, waitForResponse) {
+      let action = actions.messageAdd(message);
+      let messageId = action.message.get("id");
+      batchedMessageAdd(action);
+
+      // Wait for the message to render to resolve with the DOM node.
+      // This is just for backwards compatibility with old tests, and should
+      // be removed once it's not needed anymore.
+      if (waitForResponse) {
+        return new Promise(resolve => {
+          let jsterm = this.jsterm;
+          jsterm.hud.on("new-messages", function onThisMessage(e, messages) {
+            for (let m of messages) {
+              if (m.messageId == messageId) {
+                resolve(m.node);
+                jsterm.hud.off("new-messages", onThisMessage);
+                return;
+              }
+            }
+          });
+        });
+      }
   },
-  dispatchMessagesAdd: (messages) => {
+  dispatchMessagesAdd: function(messages) {
     const batchedActions = messages.map(message => actions.messageAdd(message));
     store.dispatch(actions.batchActions(batchedActions));
   },
-  dispatchMessagesClear: () => {
+  dispatchMessagesClear: function() {
     store.dispatch(actions.messagesClear());
   },
 };

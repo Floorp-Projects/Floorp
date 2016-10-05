@@ -24,18 +24,20 @@ const ConsoleTable = createClass({
   propTypes: {
     dispatch: PropTypes.func.isRequired,
     parameters: PropTypes.array.isRequired,
-    hudProxyClient: PropTypes.object.isRequired,
+    serviceContainer: PropTypes.shape({
+      hudProxyClient: PropTypes.object.isRequired,
+    }),
     id: PropTypes.string.isRequired,
   },
 
   componentWillMount: function () {
-    const {id, dispatch, hudProxyClient, parameters} = this.props;
+    const {id, dispatch, serviceContainer, parameters} = this.props;
 
     if (!Array.isArray(parameters) || parameters.length === 0) {
       return;
     }
 
-    const client = new ObjectClient(hudProxyClient, parameters[0]);
+    const client = new ObjectClient(serviceContainer.hudProxyClient, parameters[0]);
     let dataType = getParametersDataType(parameters);
 
     // Get all the object properties.

@@ -14,6 +14,7 @@
 #include "nsIFileStreams.h"
 #include "mozilla/RefPtr.h"
 #include "nsUrlClassifierPrefixSet.h"
+#include "VariableLengthPrefixSet.h"
 #include "mozilla/Logging.h"
 
 namespace mozilla {
@@ -96,55 +97,109 @@ public:
                               nsTArray<nsCString>* aHostKeys);
 
   LookupCache(const nsACString& aTableName, nsIFile* aStoreFile);
-  ~LookupCache();
+  virtual ~LookupCache() {}
 
   const nsCString &TableName() const { return mTableName; }
 
-  nsresult Init();
-  nsresult Open();
   // The directory handle where we operate will
   // be moved away when a backup is made.
   nsresult UpdateRootDirHandle(nsIFile* aRootStoreDirectory);
+
   // This will Clear() the passed arrays when done.
-  nsresult Build(AddPrefixArray& aAddPrefixes,
-                 AddCompleteArray& aAddCompletes);
   nsresult AddCompletionsToCache(AddCompleteArray& aAddCompletes);
-  nsresult GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes);
-  void ClearUpdatedCompletions();
+
+  // Write data stored in lookup cache to disk.
+  nsresult WriteFile();
+
+  // Clear completions retrieved from gethash request.
   void ClearCache();
+
+  bool IsPrimed() const { return mPrimed; };
 
 #if DEBUG
   void DumpCache();
-  void Dump();
 #endif
-  nsresult WriteFile();
-  nsresult Has(const Completion& aCompletion,
-               bool* aHas, bool* aComplete);
-  bool IsPrimed();
+
+  virtual nsresult Open();
+  virtual nsresult Init() = 0;
+  virtual nsresult ClearPrefixes() = 0;
+  virtual nsresult Has(const Completion& aCompletion,
+                       bool* aHas, bool* aComplete) = 0;
+
+  template<typename T>
+  static T* Cast(LookupCache* aThat) {
+    return (T::VER == aThat->Ver() ? reinterpret_cast<T*>(aThat) : nullptr);
+  }
 
 private:
-  void ClearAll();
   nsresult Reset();
-  nsresult ReadCompletions();
   nsresult LoadPrefixSet();
-  nsresult LoadCompletions();
-  // Construct a Prefix Set with known prefixes.
-  // This will Clear() aAddPrefixes when done.
-  nsresult ConstructPrefixSet(AddPrefixArray& aAddPrefixes);
+
+  virtual nsresult StoreToFile(nsIFile* aFile) = 0;
+  virtual nsresult LoadFromFile(nsIFile* aFile) = 0;
+  virtual size_t SizeOfPrefixSet() = 0;
+
+  virtual int Ver() const = 0;
+
+protected:
+  virtual void ClearAll();
 
   bool mPrimed;
   nsCString mTableName;
   nsCOMPtr<nsIFile> mRootStoreDirectory;
   nsCOMPtr<nsIFile> mStoreDirectory;
-  // Set of prefixes known to be in the database
-  RefPtr<nsUrlClassifierPrefixSet> mPrefixSet;
-  // Full length hashes obtained in update request
-  CompletionArray mUpdateCompletions;
+
   // Full length hashes obtained in gethash request
   CompletionArray mGetHashCache;
 
   // For gtest to inspect private members.
   friend class PerProviderDirectoryTestUtils;
+};
+
+class LookupCacheV2 final : public LookupCache
+{
+public:
+  explicit LookupCacheV2(const nsACString& aTableName, nsIFile* aStoreFile)
+    : LookupCache(aTableName, aStoreFile) {}
+  ~LookupCacheV2() {}
+
+  virtual nsresult Init() override;
+  virtual nsresult Open() override;
+  virtual void ClearAll() override;
+  virtual nsresult Has(const Completion& aCompletion,
+                       bool* aHas, bool* aComplete) override;
+
+  nsresult Build(AddPrefixArray& aAddPrefixes,
+                 AddCompleteArray& aAddCompletes);
+
+  nsresult GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes);
+
+#if DEBUG
+  void DumpCompletions();
+#endif
+
+  static const int VER;
+
+protected:
+  nsresult ReadCompletions();
+
+  virtual nsresult ClearPrefixes() override;
+  virtual nsresult StoreToFile(nsIFile* aFile) override;
+  virtual nsresult LoadFromFile(nsIFile* aFile) override;
+  virtual size_t SizeOfPrefixSet() override;
+
+private:
+  virtual int Ver() const override { return VER; }
+
+  // Construct a Prefix Set with known prefixes.
+  // This will Clear() aAddPrefixes when done.
+  nsresult ConstructPrefixSet(AddPrefixArray& aAddPrefixes);
+
+  // Full length hashes obtained in update request
+  CompletionArray mUpdateCompletions;
+
+  // Set of prefixes known to be in the database
+  RefPtr<nsUrlClassifierPrefixSet> mPrefixSet;
 };
 
 } // namespace safebrowsing

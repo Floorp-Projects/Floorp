@@ -345,8 +345,8 @@ private:
 
   // TODO: Those callback function may receive demuxed-only data.
   // Need to figure out a suitable API name for this case.
-  void OnAudioDecoded(MediaData* aAudioSample);
-  void OnVideoDecoded(MediaData* aVideoSample, TimeStamp aDecodeStartTime);
+  void OnAudioDecoded(MediaData* aAudio);
+  void OnVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStartTime);
   void OnNotDecoded(MediaData::Type aType, const MediaResult& aError);
 
   // Resets all state related to decoding and playback, emptying all buffers
@@ -724,8 +724,7 @@ private:
   bool DonePrerollingVideo()
   {
     MOZ_ASSERT(OnTaskQueue());
-    return !mIsVisible ||
-        !IsVideoDecoding() ||
+    return !IsVideoDecoding() ||
         static_cast<uint32_t>(VideoQueue().GetSize()) >=
             VideoPrerollFrames() * mPlaybackRate + 1;
   }

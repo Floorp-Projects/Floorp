@@ -136,7 +136,8 @@ AudioStreamAnalyser.prototype = {
         // else, we need more time
         requestAnimationFrame(analysisLoop);
       }
-      analysisLoop();
+      // We need to give the Analyser some time to start gathering data.
+      wait(200).then(analysisLoop);
     });
   },
 
