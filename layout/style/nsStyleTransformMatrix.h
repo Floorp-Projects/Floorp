@@ -110,6 +110,10 @@ namespace nsStyleTransformMatrix {
       return mHeight;
     }
 
+    bool IsEmpty() {
+      return !mFrame;
+    }
+
   private:
     // We don't really need to prevent copying, but since none of our consumers
     // currently need to copy, preventing copying may allow us to catch some

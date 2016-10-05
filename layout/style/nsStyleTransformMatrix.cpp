@@ -177,7 +177,7 @@ ProcessTranslatePart(const nsCSSValue& aValue,
                                               nsPresContext::AppUnitsPerCSSPixel());
   // We want to avoid calling aDimensionGetter if there's no percentage to be
   // resolved (for performance reasons - see TransformReferenceBox).
-  if (percent != 0.0f && aRefBox) {
+  if (percent != 0.0f && aRefBox && !aRefBox->IsEmpty()) {
     translation += percent *
                      NSAppUnitsToFloatPixels((aRefBox->*aDimensionGetter)(),
                                              nsPresContext::AppUnitsPerCSSPixel());
