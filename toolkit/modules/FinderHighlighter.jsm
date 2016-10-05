@@ -608,6 +608,14 @@ FinderHighlighter.prototype = {
       if (includeScroll) {
         dwu.getScrollXY(false, scrollX, scrollY);
         parentRect.translate(scrollX.value, scrollY.value);
+        // If the current window is an iframe with scrolling="no" and its parent
+        // is also an iframe the scroll offsets from the parents' documentElement
+        // (inverse scroll position) needs to be subtracted from the parent
+        // window rect.
+        if (el.getAttribute("scrolling") == "no" && currWin != window.top) {
+          let docEl = currWin.document.documentElement;
+          parentRect.translate(-docEl.scrollLeft, -docEl.scrollTop);
+        }
       }
 
       cssPageRect.translate(parentRect.left, parentRect.top);
