@@ -9,6 +9,7 @@
 #include "xpcprivate.h"
 #include "jsprf.h"
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsContentUtils.h"
@@ -103,9 +104,9 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     if (cb.WantDebugInfo()) {
         char name[72];
         if (tmp->GetClass())
-            snprintf(name, sizeof(name), "nsXPCWrappedJS (%s)", tmp->GetClass()->GetInterfaceName());
+            SprintfLiteral(name, "nsXPCWrappedJS (%s)", tmp->GetClass()->GetInterfaceName());
         else
-            snprintf(name, sizeof(name), "nsXPCWrappedJS");
+            SprintfLiteral(name, "nsXPCWrappedJS");
         cb.DescribeRefCountedNode(refcnt, name);
     } else {
         NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsXPCWrappedJS, refcnt)

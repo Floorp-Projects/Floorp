@@ -18,6 +18,7 @@
 #endif
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Sprintf.h"
 #include "PseudoStack.h"
 #include "GeckoSampler.h"
 #ifndef SPS_STANDALONE
@@ -429,7 +430,7 @@ mozilla_sampler_log(const char *fmt, va_list args)
     char buf[2048];
     va_list argsCpy;
     VARARGS_ASSIGN(argsCpy, args);
-    int required = vsnprintf(buf, sizeof(buf), fmt, argsCpy);
+    int required = VsprintfLiteral(buf, fmt, argsCpy);
     va_end(argsCpy);
 
     if (required < 0) {

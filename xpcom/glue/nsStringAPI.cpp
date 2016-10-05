@@ -11,6 +11,8 @@
 #include "nsXPCOMStrings.h"
 #include "nsDebug.h"
 
+#include "mozilla/Sprintf.h"
+
 #include <stdio.h>
 
 // nsAString
@@ -521,9 +523,7 @@ nsAString::AppendInt(int aInt, int32_t aRadix)
   }
 
   char buf[20];
-  int len = snprintf(buf, sizeof(buf), fmt, aInt);
-  buf[sizeof(buf) - 1] = '\0';
-
+  int len = SprintfLiteral(buf, fmt, aInt);
   Append(NS_ConvertASCIItoUTF16(buf, len));
 }
 
@@ -1001,9 +1001,7 @@ nsACString::AppendInt(int aInt, int32_t aRadix)
   }
 
   char buf[20];
-  int len = snprintf(buf, sizeof(buf), fmt, aInt);
-  buf[sizeof(buf) - 1] = '\0';
-
+  int len = SprintfLiteral(buf, fmt, aInt);
   Append(buf, len);
 }
 

@@ -848,9 +848,6 @@ pref("layout.accessiblecaret.margin-left", "-11.5");
 // Android needs to show the caret when long tapping on an empty content.
 pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", true);
 
-// Android generates long tap (mouse) events.
-pref("layout.accessiblecaret.use_long_tap_injector", false);
-
 // Androids carets are always tilt to match the text selection guideline.
 pref("layout.accessiblecaret.always_tilt", true);
 

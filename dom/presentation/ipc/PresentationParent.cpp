@@ -403,7 +403,8 @@ PresentationRequestParent::DoRequest(const StartSessionRequest& aRequest)
     new PresentationTransportBuilderConstructorIPC(parent);
   return mService->StartSession(aRequest.urls(), aRequest.sessionId(),
                                 aRequest.origin(), aRequest.deviceId(),
-                                aRequest.windowId(), eventTarget, this, constructor);
+                                aRequest.windowId(), eventTarget,
+                                aRequest.principal(), this, constructor);
 }
 
 nsresult

@@ -3827,6 +3827,9 @@ GetPropertyIC::tryAttachDenseElement(JSContext* cx, HandleScript outerScript, Io
     if (!obj->isNative() || !idval.isInt32())
         return true;
 
+    if (uint32_t(idval.toInt32()) >= obj->as<NativeObject>().getDenseInitializedLength())
+        return true;
+
     *emitted = true;
 
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);

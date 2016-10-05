@@ -134,6 +134,8 @@ public:
                                        TextureFlags aFlags,
                                        uint64_t aSerial) override;
 
+  virtual void FatalError(const char* const aName, const char* const aMsg) const override;
+
   /**
    * Request that the parent tell us when graphics are ready on GPU.
    * When we get that message, we bounce it to the TabParent via

@@ -581,7 +581,9 @@ WebConsoleFrame.prototype = {
     if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
       // @TODO Remove this once JSTerm is handled with React/Redux.
       this.window.jsterm = this.jsterm;
-      console.log("Entering experimental mode for console frontend");
+
+      // Remove context menu for now (see Bug 1307239).
+      this.outputWrapper.removeAttribute("context");
 
       // XXX: We should actually stop output from happening on old output
       // panel, but for now let's just hide it.

@@ -40,9 +40,9 @@ using mozilla::CheckedUint32;
 namespace mozilla {
 
 // EME Key System String.
-static NS_NAMED_LITERAL_CSTRING(kEMEKeySystemClearkey, "org.w3.clearkey");
-static NS_NAMED_LITERAL_CSTRING(kEMEKeySystemWidevine, "com.widevine.alpha");
-static NS_NAMED_LITERAL_CSTRING(kEMEKeySystemPrimetime, "com.adobe.primetime");
+extern const nsLiteralCString kEMEKeySystemClearkey;
+extern const nsLiteralCString kEMEKeySystemWidevine;
+extern const nsLiteralCString kEMEKeySystemPrimetime;
 
 /**
  * ReentrantMonitorConditionallyEnter

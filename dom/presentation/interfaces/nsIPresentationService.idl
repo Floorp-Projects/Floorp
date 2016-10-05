@@ -11,6 +11,7 @@ interface nsIPresentationAvailabilityListener;
 interface nsIPresentationRespondingListener;
 interface nsIPresentationSessionListener;
 interface nsIPresentationTransportBuilderConstructor;
+interface nsIPrincipal;
 
 %{C++
 #define PRESENTATION_SERVICE_CID \
@@ -70,6 +71,7 @@ interface nsIPresentationService : nsISupports
    * @param eventTarget: The chrome event handler, in particular XUL browser
    *                     element in parent process, that the request was
    *                     originated in.
+   * @param principal: The principal that initiated the session.
    * @param callback: Invoke the callback when the operation is completed.
    *                  NotifySuccess() is called with |id| if a session is
    *                  established successfully with the selected device.
@@ -82,6 +84,7 @@ interface nsIPresentationService : nsISupports
                                in DOMString deviceId,
                                in unsigned long long windowId,
                                in nsIDOMEventTarget eventTarget,
+                               in nsIPrincipal principal,
                                in nsIPresentationServiceCallback callback,
                                in nsIPresentationTransportBuilderConstructor constructor);
 
