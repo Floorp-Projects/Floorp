@@ -675,8 +675,6 @@ public:
     // Discard the existing seek task.
     mMaster->DiscardSeekTaskIfExist();
 
-    mMaster->mSeekTaskRequest.DisconnectIfExists();
-
     // SeekTask will register its callbacks to MediaDecoderReaderWrapper.
     mMaster->CancelMediaDecoderReaderWrapperCallback();
 
@@ -722,7 +720,7 @@ public:
     }
 
     // Do the seek.
-    mMaster->mSeekTaskRequest.Begin(mMaster->mSeekTask->Seek(mMaster->Duration())
+    mSeekTaskRequest.Begin(mMaster->mSeekTask->Seek(mMaster->Duration())
       ->Then(OwnerThread(), __func__,
              [this] (const SeekTaskResolveValue& aValue) {
                OnSeekTaskResolved(aValue);
@@ -738,7 +736,7 @@ public:
 
   void Exit() override
   {
-    mMaster->mSeekTaskRequest.DisconnectIfExists();
+    mSeekTaskRequest.DisconnectIfExists();
   }
 
   State GetState() const override
@@ -792,7 +790,7 @@ public:
 private:
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
   {
-    mMaster->mSeekTaskRequest.Complete();
+    mSeekTaskRequest.Complete();
 
     if (aValue.mSeekedAudioData) {
       mMaster->Push(aValue.mSeekedAudioData, MediaData::AUDIO_DATA);
@@ -819,7 +817,7 @@ private:
 
   void OnSeekTaskRejected(const SeekTaskRejectValue& aValue)
   {
-    mMaster->mSeekTaskRequest.Complete();
+    mSeekTaskRequest.Complete();
 
     if (aValue.mIsAudioQueueFinished) {
       mMaster->AudioQueue().Finish();
@@ -835,6 +833,7 @@ private:
   }
 
   SeekJob mSeekJob;
+  MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
 };
 
 class MediaDecoderStateMachine::BufferingState
@@ -2691,8 +2690,6 @@ MediaDecoderStateMachine::Reset(TrackSet aTracks)
     mAudioCompleted = false;
     AudioQueue().Reset();
   }
-
-  mSeekTaskRequest.DisconnectIfExists();
 
   mPlaybackOffset = 0;
 
