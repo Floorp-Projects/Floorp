@@ -94,6 +94,7 @@ class WindowCapturerWin : public WindowCapturer {
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
+  void Stop() override;
   void Capture(const DesktopRegion& region) override;
 
  private:
@@ -177,6 +178,10 @@ void WindowCapturerWin::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
+}
+
+void WindowCapturerWin::Stop() {
+  callback_ = NULL;
 }
 
 void WindowCapturerWin::Capture(const DesktopRegion& region) {

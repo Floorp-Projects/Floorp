@@ -56,6 +56,7 @@ class WindowCapturerMac : public WindowCapturer {
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
+  void Stop() override;
   void Capture(const DesktopRegion& region) override;
 
  private:
@@ -185,6 +186,10 @@ void WindowCapturerMac::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
+}
+
+void WindowCapturerMac::Stop() {
+  callback_ = NULL;
 }
 
 void WindowCapturerMac::Capture(const DesktopRegion& region) {

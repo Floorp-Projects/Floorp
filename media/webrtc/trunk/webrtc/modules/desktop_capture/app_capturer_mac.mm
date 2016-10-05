@@ -37,6 +37,7 @@ class AppCapturerMac : public AppCapturer {
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) override;
+  virtual void Stop() override;
   virtual void Capture(const DesktopRegion& region) override;
 
  private:
@@ -76,6 +77,10 @@ void AppCapturerMac::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
+}
+
+void AppCapturerMac::Stop() {
+  callback_ = NULL;
 }
 
 void AppCapturerMac::Capture(const DesktopRegion& region) {

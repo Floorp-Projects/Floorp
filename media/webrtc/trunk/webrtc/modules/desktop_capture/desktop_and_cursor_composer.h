@@ -33,6 +33,7 @@ class DesktopAndCursorComposer : public DesktopCapturer,
 
   // DesktopCapturer interface.
   void Start(DesktopCapturer::Callback* callback) override;
+  void Stop() override;
   void Capture(const DesktopRegion& region) override;
   void SetExcludedWindow(WindowId window) override;
 
