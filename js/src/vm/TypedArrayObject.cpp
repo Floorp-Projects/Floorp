@@ -782,7 +782,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             }
 
             if (!IsArrayBuffer(wrapped) && !IsSharedArrayBuffer(wrapped)) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
                 return nullptr; // must be arrayBuffer
             }
 
