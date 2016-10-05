@@ -235,6 +235,12 @@ let gDecoderDoctorHandler = {
         return gNavigatorBundle.getString("decoder.noCodecsLinux.message");
       }
     }
+    if (type == "unsupported-libavcodec" &&
+        AppConstants.platform == "linux") {
+      // Note: Hard-coded string in aurora and beta because translation cannot
+      // be achieved in time.
+      return "libavcodec may be vulnerable or is not supported, and should be updated to play video.";
+    }
     return "";
   },
 
