@@ -514,6 +514,17 @@ public:
   void SetTransformValue(nsCSSValueSharedList* aList);
 
   StyleAnimationValue& operator=(const StyleAnimationValue& aOther);
+  StyleAnimationValue& operator=(StyleAnimationValue&& aOther)
+  {
+    MOZ_ASSERT(this != &aOther, "Do not move itself");
+    if (this != &aOther) {
+      FreeValue();
+      mUnit = aOther.mUnit;
+      mValue = aOther.mValue;
+      aOther.mUnit = eUnit_Null;
+    }
+    return *this;
+  }
 
   bool operator==(const StyleAnimationValue& aOther) const;
   bool operator!=(const StyleAnimationValue& aOther) const
