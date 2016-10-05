@@ -626,9 +626,6 @@ private:
   RefPtr<SeekTask> mSeekTask;
   MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
 
-  void OnSeekTaskResolved(SeekTaskResolveValue aValue);
-  void OnSeekTaskRejected(SeekTaskRejectValue aValue);
-
   // This method discards the seek task and then get the ownership of
   // MedaiDecoderReaderWarpper back via registering MDSM's callback into it.
   void DiscardSeekTaskIfExist();
