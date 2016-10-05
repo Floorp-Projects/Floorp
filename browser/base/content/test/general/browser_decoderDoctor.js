@@ -108,15 +108,3 @@ add_task(function* test_cannot_initialize_pulseaudio() {
                                          message,
                                          {sumo: "fix-common-audio-and-video-issues"});
 });
-
-add_task(function* test_unsupported_libavcodec() {
-  // This is only sent on Linux.
-  if (AppConstants.platform != "linux") {
-    return;
-  }
-
-  let message = gNavigatorBundle.getString("decoder.unsupportedLibavcodec.message");
-  yield test_decoder_doctor_notification("unsupported-libavcodec",
-                                         message,
-                                         {noLearnMoreButton: true});
-});
