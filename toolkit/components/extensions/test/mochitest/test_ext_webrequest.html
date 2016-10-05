@@ -152,6 +152,7 @@ function backgroundScript() {
 
   let frameIDs = new Map();
   let skippedRequests = new Set();
+  let redirectedRequests = new Set();
 
   let recorded = {requested: [],
                   beforeSendHeaders: [],
@@ -368,6 +369,7 @@ function backgroundScript() {
       browser.test.assertEq(id, details.frameId, "frame ID same in onBeforeSendHeaders as onBeforeRequest");
     }
     if (details.url.includes("_redirect.")) {
+      redirectedRequests.add(details.requestId);
       return {redirectUrl: details.url.replace("_redirect.", "_good.")};
     }
     return {requestHeaders: details.requestHeaders};
@@ -449,8 +451,16 @@ function backgroundScript() {
   }
 
   function onErrorOccurred(details) {
-    onRecord("error", details);
-    browser.test.assertTrue(/^NS_ERROR_/.test(details.error), `onErrorOccurred reported for ${details.url} (${details.error})`);
+    if (details.url.endsWith("_good.png") && redirectedRequests.has(details.requestId)) {
+      // Redirected image requests sometimes result in multiple attempts to
+      // load the same image in parallel. In this case, the later request is
+      // canceled, and the same image loading context is shared by both images.
+      redirectedRequests.delete(details.requestId);
+      browser.test.assertEq("NS_BINDING_ABORTED", details.error, `onErrorOccurred reported for ${details.url}`);
+    } else {
+      onRecord("error", details);
+      browser.test.assertTrue(/^NS_ERROR_/.test(details.error), `onErrorOccurred reported for ${details.url} (${details.error})`);
+    }
   }
 
   function onCompleted(details) {
@@ -498,11 +508,12 @@ function* test_once(skipCompleted) {
         "webRequestBlocking",
       ],
     },
-    background: `const BASE = ${JSON.stringify(BASE)}; (${backgroundScript.toString()})()`,
+    background: `const BASE = ${JSON.stringify(BASE)}; (${backgroundScript})()`,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  let [, resourceTypes] = yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  yield extension.startup();
+  let resourceTypes = yield extension.awaitMessage("ready");
   info("webrequest extension loaded");
 
   if (skipCompleted) {

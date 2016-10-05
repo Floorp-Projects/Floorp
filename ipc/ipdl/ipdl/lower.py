@@ -1685,7 +1685,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
             mfDecl, mfDefn = _splitFuncDeclDefn(
                 _generateMessageConstructor(md.msgCtorFunc(), md.msgId(),
-                                            md.decl.type.priority,
+                                            md.decl.type.nested,
+                                            md.decl.type.prio,
                                             md.prettyMsgName(p.name+'::'),
                                             md.decl.type.compress))
             decls.append(mfDecl)
@@ -1695,7 +1696,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 rfDecl, rfDefn = _splitFuncDeclDefn(
                     _generateMessageConstructor(
                         md.replyCtorFunc(), md.replyId(),
-                        md.decl.type.priority,
+                        md.decl.type.nested,
+                        md.decl.type.prio,
                         md.prettyReplyName(p.name+'::'),
                         md.decl.type.compress))
                 decls.append(rfDecl)
@@ -1926,7 +1928,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageConstructor(clsname, msgid, priority, prettyName, compress):
+def _generateMessageConstructor(clsname, msgid, nested, prio, prettyName, compress):
     routingId = ExprVar('routingId')
 
     func = FunctionDefn(FunctionDecl(
@@ -1941,19 +1943,27 @@ def _generateMessageConstructor(clsname, msgid, priority, prettyName, compress):
         compression = ExprVar('IPC::Message::COMPRESSION_ALL')
     else:
         compression = ExprVar('IPC::Message::COMPRESSION_NONE')
-    if priority == ipdl.ast.NORMAL_PRIORITY:
-        priorityEnum = 'IPC::Message::PRIORITY_NORMAL'
-    elif priority == ipdl.ast.HIGH_PRIORITY:
-        priorityEnum = 'IPC::Message::PRIORITY_HIGH'
+
+    if nested == ipdl.ast.NOT_NESTED:
+        nestedEnum = 'IPC::Message::NOT_NESTED'
+    elif nested == ipdl.ast.INSIDE_SYNC_NESTED:
+        nestedEnum = 'IPC::Message::NESTED_INSIDE_SYNC'
     else:
-        assert priority == ipdl.ast.URGENT_PRIORITY
-        priorityEnum = 'IPC::Message::PRIORITY_URGENT'
+        assert nested == ipdl.ast.INSIDE_CPOW_NESTED
+        nestedEnum = 'IPC::Message::NESTED_INSIDE_CPOW'
+
+    if prio == ipdl.ast.NORMAL_PRIORITY:
+        prioEnum = 'IPC::Message::NORMAL_PRIORITY'
+    else:
+        assert prio == ipdl.ast.HIGH_PRIORITY
+        prioEnum = 'IPC::Message::HIGH_PRIORITY'
 
     func.addstmt(
         StmtReturn(ExprNew(Type('IPC::Message'),
                            args=[ routingId,
                                   ExprVar(msgid),
-                                  ExprVar(priorityEnum),
+                                  ExprVar(nestedEnum),
+                                  ExprVar(prioEnum),
                                   compression,
                                   ExprLiteral.String(prettyName) ])))
 
@@ -3922,15 +3932,21 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 manageecxxtype = _cxxBareType(ipdl.type.ActorType(manageeipdltype),
                                               self.side)
                 manageearray = p.managedVar(manageeipdltype, self.side)
+                containervar = ExprVar('container')
 
                 case.addstmts([
                     StmtDecl(Decl(manageecxxtype, actorvar.name),
                              ExprCast(listenervar, manageecxxtype, static=1)),
+                    # Use a temporary variable here so all the assertion expressions
+                    # in the _abortIfFalse call below are textually identical; the
+                    # linker can then merge the strings from the assertion macro(s).
+                    StmtDecl(Decl(Type('auto', ref=1), containervar.name),
+                             manageearray),
                     _abortIfFalse(
-                        _callHasManagedActor(manageearray, actorvar),
+                        _callHasManagedActor(containervar, actorvar),
                         "actor not managed by this!"),
                     Whitespace.NL,
-                    StmtExpr(_callRemoveManagedActor(manageearray, actorvar)),
+                    StmtExpr(_callRemoveManagedActor(containervar, actorvar)),
                     StmtExpr(ExprCall(_deallocMethod(manageeipdltype, self.side),
                                       args=[ actorvar ])),
                     StmtReturn()

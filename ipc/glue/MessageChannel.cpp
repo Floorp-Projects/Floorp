@@ -39,36 +39,41 @@ static mozilla::LazyLogModule sLogModule("ipc");
  * IPC design:
  *
  * There are three kinds of messages: async, sync, and intr. Sync and intr
- * messages are blocking. Only intr and high-priority sync messages can nest.
+ * messages are blocking.
  *
  * Terminology: To dispatch a message Foo is to run the RecvFoo code for
  * it. This is also called "handling" the message.
  *
- * Sync and async messages have priorities while intr messages always have
- * normal priority. The three possible priorities are normal, high, and urgent.
- * The intended uses of these priorities are:
- *   NORMAL - most messages.
- *   HIGH   - CPOW-related messages, which can go in either direction.
- *   URGENT - messages where we don't want to dispatch
- *            incoming CPOWs while waiting for the response.
- * Async messages cannot have HIGH priority.
+ * Sync and async messages can sometimes "nest" inside other sync messages
+ * (i.e., while waiting for the sync reply, we can dispatch the inner
+ * message). Intr messages cannot nest.  The three possible nesting levels are
+ * NOT_NESTED, NESTED_INSIDE_SYNC, and NESTED_INSIDE_CPOW.  The intended uses
+ * are:
+ *   NOT_NESTED - most messages.
+ *   NESTED_INSIDE_SYNC - CPOW-related messages, which are always sync
+ *                        and can go in either direction.
+ *   NESTED_INSIDE_CPOW - messages where we don't want to dispatch
+ *                        incoming CPOWs while waiting for the response.
+ * These nesting levels are ordered: NOT_NESTED, NESTED_INSIDE_SYNC,
+ * NESTED_INSIDE_CPOW.  Async messages cannot be NESTED_INSIDE_SYNC but they can
+ * be NESTED_INSIDE_CPOW.
  *
- * To avoid jank, the parent process is not allowed to send sync messages of
- * normal priority. When a process is waiting for a response to a sync message
+ * To avoid jank, the parent process is not allowed to send NOT_NESTED sync messages.
+ * When a process is waiting for a response to a sync message
  * M0, it will dispatch an incoming message M if:
- *   1. M has a higher priority than M0, or
- *   2. if M has the same priority as M0 and we're in the child, or
- *   3. if M has the same priority as M0 and it was sent by the other side
- *      while dispatching M0 (nesting).
- * The idea is that higher priority messages should take precendence, and we
- * also want to allow nesting. The purpose of rule 2 is to handle a race where
- * both processes send to each other simultaneously. In this case, we resolve
- * the race in favor of the parent (so the child dispatches first).
+ *   1. M has a higher nesting level than M0, or
+ *   2. if M has the same nesting level as M0 and we're in the child, or
+ *   3. if M has the same nesting level as M0 and it was sent by the other side
+ *      while dispatching M0.
+ * The idea is that messages with higher nesting should take precendence. The
+ * purpose of rule 2 is to handle a race where both processes send to each other
+ * simultaneously. In this case, we resolve the race in favor of the parent (so
+ * the child dispatches first).
  *
  * Messages satisfy the following properties:
  *   A. When waiting for a response to a sync message, we won't dispatch any
- *      messages of lower priority.
- *   B. Messages of the same priority will be dispatched roughly in the
+ *      messages of nesting level.
+ *   B. Messages of the same nesting level will be dispatched roughly in the
  *      order they were sent. The exception is when the parent and child send
  *      sync messages to each other simulataneously. In this case, the parent's
  *      message is dispatched first. While it is dispatched, the child may send
@@ -78,13 +83,13 @@ static mozilla::LazyLogModule sLogModule("ipc");
  *      after the parent's message is finished being dispatched.
  *
  * When waiting for a sync message reply, we dispatch an async message only if
- * it has URGENT priority. Normally URGENT async messages are sent only from the
- * child. However, the parent can send URGENT async messages when it is creating
- * a bridged protocol.
+ * it is NESTED_INSIDE_CPOW. Normally NESTED_INSIDE_CPOW async
+ * messages are sent only from the child. However, the parent can send
+ * NESTED_INSIDE_CPOW async messages when it is creating a bridged protocol.
  *
- * Intr messages are blocking but not prioritized. While waiting for an intr
- * response, all incoming messages are dispatched until a response is
- * received. Intr messages also can be nested. When two intr messages race with
+ * Intr messages are blocking and can nest, but they don't participate in the
+ * nesting levels. While waiting for an intr response, all incoming messages are
+ * dispatched until a response is received. When two intr messages race with
  * each other, a similar scheme is used to ensure that one side wins. The
  * winning side is chosen based on the message type.
  *
@@ -287,11 +292,11 @@ public:
     explicit AutoEnterTransaction(MessageChannel *aChan,
                                   int32_t aMsgSeqno,
                                   int32_t aTransactionID,
-                                  int aPriority)
+                                  int aNestedLevel)
       : mChan(aChan),
         mActive(true),
         mOutgoing(true),
-        mPriority(aPriority),
+        mNestedLevel(aNestedLevel),
         mSeqno(aMsgSeqno),
         mTransaction(aTransactionID),
         mNext(mChan->mTransactionStack)
@@ -304,7 +309,7 @@ public:
       : mChan(aChan),
         mActive(true),
         mOutgoing(false),
-        mPriority(aMessage.priority()),
+        mNestedLevel(aMessage.nested_level()),
         mSeqno(aMessage.seqno()),
         mTransaction(aMessage.transaction_id()),
         mNext(mChan->mTransactionStack)
@@ -329,11 +334,11 @@ public:
     void Cancel() {
         AutoEnterTransaction *cur = mChan->mTransactionStack;
         MOZ_RELEASE_ASSERT(cur == this);
-        while (cur && cur->mPriority != IPC::Message::PRIORITY_NORMAL) {
+        while (cur && cur->mNestedLevel != IPC::Message::NOT_NESTED) {
             // Note that, in the following situation, we will cancel multiple
             // transactions:
-            // 1. Parent sends high prio message P1 to child.
-            // 2. Child sends high prio message C1 to child.
+            // 1. Parent sends NESTED_INSIDE_SYNC message P1 to child.
+            // 2. Child sends NESTED_INSIDE_SYNC message C1 to child.
             // 3. Child dispatches P1, parent blocks.
             // 4. Child cancels.
             // In this case, both P1 and C1 are cancelled. The parent will
@@ -356,12 +361,12 @@ public:
         return mNext ? mNext->AwaitingSyncReply() : false;
     }
 
-    int AwaitingSyncReplyPriority() const {
+    int AwaitingSyncReplyNestedLevel() const {
         MOZ_RELEASE_ASSERT(mActive);
         if (mOutgoing) {
-            return mPriority;
+            return mNestedLevel;
         }
-        return mNext ? mNext->AwaitingSyncReplyPriority() : 0;
+        return mNext ? mNext->AwaitingSyncReplyNestedLevel() : 0;
     }
 
     bool DispatchingSyncMessage() const {
@@ -372,17 +377,17 @@ public:
         return mNext ? mNext->DispatchingSyncMessage() : false;
     }
 
-    int DispatchingSyncMessagePriority() const {
+    int DispatchingSyncMessageNestedLevel() const {
         MOZ_RELEASE_ASSERT(mActive);
         if (!mOutgoing) {
-            return mPriority;
+            return mNestedLevel;
         }
-        return mNext ? mNext->DispatchingSyncMessagePriority() : 0;
+        return mNext ? mNext->DispatchingSyncMessageNestedLevel() : 0;
     }
 
-    int Priority() const {
+    int NestedLevel() const {
         MOZ_RELEASE_ASSERT(mActive);
-        return mPriority;
+        return mNestedLevel;
     }
 
     int32_t SequenceNumber() const {
@@ -456,7 +461,7 @@ private:
     bool mOutgoing;
 
     // Properties of the message being sent/received.
-    int mPriority;
+    int mNestedLevel;
     int32_t mSeqno;
     int32_t mTransaction;
 
@@ -480,10 +485,10 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mNextSeqno(0),
     mLastSendError(SyncSendError::SendSuccess),
     mDispatchingAsyncMessage(false),
-    mDispatchingAsyncMessagePriority(0),
+    mDispatchingAsyncMessageNestedLevel(0),
     mTransactionStack(nullptr),
     mTimedOutMessageSeqno(0),
-    mTimedOutMessagePriority(0),
+    mTimedOutMessageNestedLevel(0),
 #if defined(MOZ_CRASHREPORTER) && defined(OS_WIN)
     mPending(AnnotateAllocator<Message>(*this)),
 #endif
@@ -543,16 +548,16 @@ MessageChannel::~MessageChannel()
 // "current transaction" can be hard to define when messages race with each
 // other and one gets canceled and the other doesn't, we require that this
 // function is only called when the current transaction is known to be for a
-// high priority message. In that case, we know for sure what the caller is
+// NESTED_INSIDE_SYNC message. In that case, we know for sure what the caller is
 // looking for.
 int32_t
-MessageChannel::CurrentHighPriorityTransaction() const
+MessageChannel::CurrentNestedInsideSyncTransaction() const
 {
     mMonitor->AssertCurrentThreadOwns();
     if (!mTransactionStack) {
         return 0;
     }
-    MOZ_RELEASE_ASSERT(mTransactionStack->Priority() == IPC::Message::PRIORITY_HIGH);
+    MOZ_RELEASE_ASSERT(mTransactionStack->NestedLevel() == IPC::Message::NESTED_INSIDE_SYNC);
     return mTransactionStack->TransactionID();
 }
 
@@ -564,10 +569,10 @@ MessageChannel::AwaitingSyncReply() const
 }
 
 int
-MessageChannel::AwaitingSyncReplyPriority() const
+MessageChannel::AwaitingSyncReplyNestedLevel() const
 {
     mMonitor->AssertCurrentThreadOwns();
-    return mTransactionStack ? mTransactionStack->AwaitingSyncReplyPriority() : 0;
+    return mTransactionStack ? mTransactionStack->AwaitingSyncReplyNestedLevel() : 0;
 }
 
 bool
@@ -578,10 +583,10 @@ MessageChannel::DispatchingSyncMessage() const
 }
 
 int
-MessageChannel::DispatchingSyncMessagePriority() const
+MessageChannel::DispatchingSyncMessageNestedLevel() const
 {
     mMonitor->AssertCurrentThreadOwns();
-    return mTransactionStack ? mTransactionStack->DispatchingSyncMessagePriority() : 0;
+    return mTransactionStack ? mTransactionStack->DispatchingSyncMessageNestedLevel() : 0;
 }
 
 static void
@@ -771,8 +776,7 @@ MessageChannel::Send(Message* aMsg)
     }
 
     MOZ_RELEASE_ASSERT(!aMsg->is_sync());
-    // We never send an async high priority message.
-    MOZ_RELEASE_ASSERT(aMsg->priority() != IPC::Message::PRIORITY_HIGH);
+    MOZ_RELEASE_ASSERT(aMsg->nested_level() != IPC::Message::NESTED_INSIDE_SYNC);
 
     CxxStackFrame frame(*this, OUT_MESSAGE, aMsg);
 
@@ -797,7 +801,7 @@ class CancelMessage : public IPC::Message
 {
 public:
     explicit CancelMessage(int transaction) :
-        IPC::Message(MSG_ROUTING_NONE, CANCEL_MESSAGE_TYPE, PRIORITY_NORMAL)
+        IPC::Message(MSG_ROUTING_NONE, CANCEL_MESSAGE_TYPE)
     {
         set_transaction_id(transaction);
     }
@@ -838,32 +842,32 @@ MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg)
 bool
 MessageChannel::ShouldDeferMessage(const Message& aMsg)
 {
-    // Never defer messages that have the highest priority, even async
+    // Never defer messages that have the highest nested level, even async
     // ones. This is safe because only the child can send these messages, so
     // they can never nest.
-    if (aMsg.priority() == IPC::Message::PRIORITY_URGENT)
+    if (aMsg.nested_level() == IPC::Message::NESTED_INSIDE_CPOW)
         return false;
 
-    // Unless they're urgent, we always defer async messages.
-    // Note that we never send an async high priority message.
+    // Unless they're NESTED_INSIDE_CPOW, we always defer async messages.
+    // Note that we never send an async NESTED_INSIDE_SYNC message.
     if (!aMsg.is_sync()) {
-        MOZ_RELEASE_ASSERT(aMsg.priority() == IPC::Message::PRIORITY_NORMAL);
+        MOZ_RELEASE_ASSERT(aMsg.nested_level() == IPC::Message::NOT_NESTED);
         return true;
     }
 
-    int msgPrio = aMsg.priority();
-    int waitingPrio = AwaitingSyncReplyPriority();
+    int msgNestedLevel = aMsg.nested_level();
+    int waitingNestedLevel = AwaitingSyncReplyNestedLevel();
 
-    // Always defer if the priority of the incoming message is less than the
-    // priority of the message we're awaiting.
-    if (msgPrio < waitingPrio)
+    // Always defer if the nested level of the incoming message is less than the
+    // nested level of the message we're awaiting.
+    if (msgNestedLevel < waitingNestedLevel)
         return true;
 
-    // Never defer if the message has strictly greater priority.
-    if (msgPrio > waitingPrio)
+    // Never defer if the message has strictly greater nested level.
+    if (msgNestedLevel > waitingNestedLevel)
         return false;
 
-    // When both sides send sync messages of the same priority, we resolve the
+    // When both sides send sync messages of the same nested level, we resolve the
     // race by dispatching in the child and deferring the incoming message in
     // the parent. However, the parent still needs to dispatch nested sync
     // messages.
@@ -872,7 +876,7 @@ MessageChannel::ShouldDeferMessage(const Message& aMsg)
     // child's message comes in, we can pretend the child hasn't quite
     // finished sending it yet. Since the message is sync, we know that the
     // child hasn't moved on yet.
-    return mSide == ParentSide && aMsg.transaction_id() != CurrentHighPriorityTransaction();
+    return mSide == ParentSide && aMsg.transaction_id() != CurrentNestedInsideSyncTransaction();
 }
 
 // Predicate that is true for messages that should be consolidated if 'compress' is set.
@@ -917,9 +921,9 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
         return;
     }
 
-    // Prioritized messages cannot be compressed.
+    // Nested messages cannot be compressed.
     MOZ_RELEASE_ASSERT(aMsg.compress_type() == IPC::Message::COMPRESSION_NONE ||
-                       aMsg.priority() == IPC::Message::PRIORITY_NORMAL);
+                       aMsg.nested_level() == IPC::Message::NOT_NESTED);
 
     bool compress = false;
     if (aMsg.compress_type() == IPC::Message::COMPRESSION_ENABLED) {
@@ -969,7 +973,7 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
     //
     // (1) We are waiting on a sync reply - main thread is blocked on the
     //     IPC monitor.
-    //   - If the message is high priority, we wake up the main thread to
+    //   - If the message is NESTED_INSIDE_SYNC, we wake up the main thread to
     //     deliver the message depending on ShouldDeferMessage. Otherwise, we
     //     leave it in the mPending queue, posting a task to the main event
     //     loop, where it will be processed once the synchronous reply has been
@@ -1021,13 +1025,13 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
     IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d",
             aTransaction.SequenceNumber(), aTransaction.TransactionID());
 
-    // Loop until there aren't any more priority messages to process.
+    // Loop until there aren't any more nested messages to process.
     for (;;) {
         // If we canceled during ProcessPendingRequest, then we need to leave
         // immediately because the results of ShouldDeferMessage will be
         // operating with weird state (as if no Send is in progress). That could
-        // cause even normal priority sync messages to be processed (but not
-        // normal priority async messages), which would break message ordering.
+        // cause even NOT_NESTED sync messages to be processed (but not
+        // NOT_NESTED async messages), which would break message ordering.
         if (aTransaction.IsCanceled()) {
             return;
         }
@@ -1042,7 +1046,7 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
             bool defer = ShouldDeferMessage(msg);
 
             // Only log the interesting messages.
-            if (msg.is_sync() || msg.priority() == IPC::Message::PRIORITY_URGENT) {
+            if (msg.is_sync() || msg.nested_level() == IPC::Message::NESTED_INSIDE_CPOW) {
                 IPC_LOG("ShouldDeferMessage(seqno=%d) = %d", msg.seqno(), defer);
             }
 
@@ -1101,48 +1105,48 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         return false;
     }
 
-    if (DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_NORMAL &&
-        msg->priority() > IPC::Message::PRIORITY_NORMAL)
+    if (DispatchingSyncMessageNestedLevel() == IPC::Message::NOT_NESTED &&
+        msg->nested_level() > IPC::Message::NOT_NESTED)
     {
         // Don't allow sending CPOWs while we're dispatching a sync message.
         // If you want to do that, use sendRpcMessage instead.
-        IPC_LOG("Prio forbids send");
+        IPC_LOG("Nested level forbids send");
         mLastSendError = SyncSendError::SendingCPOWWhileDispatchingSync;
         return false;
     }
 
-    if (DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_URGENT ||
-        DispatchingAsyncMessagePriority() == IPC::Message::PRIORITY_URGENT)
+    if (DispatchingSyncMessageNestedLevel() == IPC::Message::NESTED_INSIDE_CPOW ||
+        DispatchingAsyncMessageNestedLevel() == IPC::Message::NESTED_INSIDE_CPOW)
     {
         // Generally only the parent dispatches urgent messages. And the only
-        // sync messages it can send are high-priority. Mainly we want to ensure
+        // sync messages it can send are NESTED_INSIDE_SYNC. Mainly we want to ensure
         // here that we don't return false for non-CPOW messages.
-        MOZ_RELEASE_ASSERT(msg->priority() == IPC::Message::PRIORITY_HIGH);
+        MOZ_RELEASE_ASSERT(msg->nested_level() == IPC::Message::NESTED_INSIDE_SYNC);
         IPC_LOG("Sending while dispatching urgent message");
         mLastSendError = SyncSendError::SendingCPOWWhileDispatchingUrgent;
         return false;
     }
 
-    if (msg->priority() < DispatchingSyncMessagePriority() ||
-        msg->priority() < AwaitingSyncReplyPriority())
+    if (msg->nested_level() < DispatchingSyncMessageNestedLevel() ||
+        msg->nested_level() < AwaitingSyncReplyNestedLevel())
     {
         MOZ_RELEASE_ASSERT(DispatchingSyncMessage() || DispatchingAsyncMessage());
         IPC_LOG("Cancel from Send");
-        CancelMessage *cancel = new CancelMessage(CurrentHighPriorityTransaction());
-        CancelTransaction(CurrentHighPriorityTransaction());
+        CancelMessage *cancel = new CancelMessage(CurrentNestedInsideSyncTransaction());
+        CancelTransaction(CurrentNestedInsideSyncTransaction());
         mLink->SendMessage(cancel);
     }
 
     IPC_ASSERT(msg->is_sync(), "can only Send() sync messages here");
 
-    IPC_ASSERT(msg->priority() >= DispatchingSyncMessagePriority(),
-               "can't send sync message of a lesser priority than what's being dispatched");
-    IPC_ASSERT(AwaitingSyncReplyPriority() <= msg->priority(),
-               "nested sync message sends must be of increasing priority");
-    IPC_ASSERT(DispatchingSyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
+    IPC_ASSERT(msg->nested_level() >= DispatchingSyncMessageNestedLevel(),
+               "can't send sync message of a lesser nested level than what's being dispatched");
+    IPC_ASSERT(AwaitingSyncReplyNestedLevel() <= msg->nested_level(),
+               "nested sync message sends must be of increasing nested level");
+    IPC_ASSERT(DispatchingSyncMessageNestedLevel() != IPC::Message::NESTED_INSIDE_CPOW,
                "not allowed to send messages while dispatching urgent messages");
 
-    IPC_ASSERT(DispatchingAsyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
+    IPC_ASSERT(DispatchingAsyncMessageNestedLevel() != IPC::Message::NESTED_INSIDE_CPOW,
                "not allowed to send messages while dispatching urgent messages");
 
     if (!Connected()) {
@@ -1154,21 +1158,21 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     msg->set_seqno(NextSeqno());
 
     int32_t seqno = msg->seqno();
-    int prio = msg->priority();
+    int nestedLevel = msg->nested_level();
     msgid_t replyType = msg->type() + 1;
 
     AutoEnterTransaction *stackTop = mTransactionStack;
 
-    // If the most recent message on the stack is high priority, then our
+    // If the most recent message on the stack is NESTED_INSIDE_SYNC, then our
     // message should nest inside that and we use the same transaction
     // ID. Otherwise we need a new transaction ID (so we use the seqno of the
     // message we're sending).
-    bool nest = stackTop && stackTop->Priority() == IPC::Message::PRIORITY_HIGH;
+    bool nest = stackTop && stackTop->NestedLevel() == IPC::Message::NESTED_INSIDE_SYNC;
     int32_t transaction = nest ? stackTop->TransactionID() : seqno;
     msg->set_transaction_id(transaction);
 
     bool handleWindowsMessages = mListener->HandleWindowsMessages(*aMsg);
-    AutoEnterTransaction transact(this, seqno, transaction, prio);
+    AutoEnterTransaction transact(this, seqno, transaction, nestedLevel);
 
     IPC_LOG("Send seqno=%d, xid=%d", seqno, transaction);
 
@@ -1227,7 +1231,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
             IPC_LOG("Timing out Send: xid=%d", transaction);
 
             mTimedOutMessageSeqno = seqno;
-            mTimedOutMessagePriority = prio;
+            mTimedOutMessageNestedLevel = nestedLevel;
             mLastSendError = SyncSendError::TimedOut;
             return false;
         }
@@ -1515,10 +1519,10 @@ MessageChannel::DequeueOne(Message *recvd)
     // If we've timed out a message and we're awaiting the reply to the timed
     // out message, we have to be careful what messages we process. Here's what
     // can go wrong:
-    // 1. child sends a normal priority sync message S
-    // 2. parent sends a high priority sync message H at the same time
+    // 1. child sends a NOT_NESTED sync message S
+    // 2. parent sends a NESTED_INSIDE_SYNC sync message H at the same time
     // 3. parent times out H
-    // 4. child starts processing H and sends a high priority message H' nested
+    // 4. child starts processing H and sends a NESTED_INSIDE_SYNC message H' nested
     //    within the same transaction
     // 5. parent dispatches S and sends reply
     // 6. child asserts because it instead expected a reply to H'.
@@ -1526,13 +1530,13 @@ MessageChannel::DequeueOne(Message *recvd)
     // To solve this, we refuse to process S in the parent until we get a reply
     // to H. More generally, let the timed out message be M. We don't process a
     // message unless the child would need the response to that message in order
-    // to process M. Those messages are the ones that have a higher priority
+    // to process M. Those messages are the ones that have a higher nested level
     // than M or that are part of the same transaction as M.
     if (mTimedOutMessageSeqno) {
         for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); it++) {
             Message &msg = *it;
-            if (msg.priority() > mTimedOutMessagePriority ||
-                (msg.priority() == mTimedOutMessagePriority
+            if (msg.nested_level() > mTimedOutMessageNestedLevel ||
+                (msg.nested_level() == mTimedOutMessageNestedLevel
                  && msg.transaction_id() == mTimedOutMessageSeqno))
             {
                 *recvd = Move(msg);
@@ -1626,9 +1630,9 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
 {
     AssertWorkerThread();
 
-    int prio = aMsg.priority();
+    int nestedLevel = aMsg.nested_level();
 
-    MOZ_RELEASE_ASSERT(prio == IPC::Message::PRIORITY_NORMAL || NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(nestedLevel == IPC::Message::NOT_NESTED || NS_IsMainThread());
 
     MessageChannel* dummy;
     MessageChannel*& blockingVar = mSide == ChildSide && NS_IsMainThread() ? gParentProcessBlocker : dummy;
@@ -1642,7 +1646,7 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
     if (!MaybeHandleError(rv, aMsg, "DispatchSyncMessage")) {
         aReply = new Message();
         aReply->set_sync();
-        aReply->set_priority(aMsg.priority());
+        aReply->set_nested_level(aMsg.nested_level());
         aReply->set_reply();
         aReply->set_reply_error();
     }
@@ -1662,9 +1666,9 @@ MessageChannel::DispatchAsyncMessage(const Message& aMsg)
 
     Result rv;
     {
-        int prio = aMsg.priority();
+        int nestedLevel = aMsg.nested_level();
         AutoSetValue<bool> async(mDispatchingAsyncMessage, true);
-        AutoSetValue<int> prioSet(mDispatchingAsyncMessagePriority, prio);
+        AutoSetValue<int> nestedLevelSet(mDispatchingAsyncMessageNestedLevel, nestedLevel);
         rv = mListener->OnMessageReceived(aMsg);
     }
     MaybeHandleError(rv, aMsg, "DispatchAsyncMessage");
@@ -1775,7 +1779,7 @@ MessageChannel::MaybeUndeferIncall()
     IPC_ASSERT(0 < mRemoteStackDepthGuess, "fatal logic error");
     --mRemoteStackDepthGuess;
 
-    MOZ_RELEASE_ASSERT(call.priority() == IPC::Message::PRIORITY_NORMAL);
+    MOZ_RELEASE_ASSERT(call.nested_level() == IPC::Message::NOT_NESTED);
     mPending.push_back(Move(call));
 }
 
@@ -2149,7 +2153,7 @@ class GoodbyeMessage : public IPC::Message
 {
 public:
     GoodbyeMessage() :
-        IPC::Message(MSG_ROUTING_NONE, GOODBYE_MESSAGE_TYPE, PRIORITY_NORMAL)
+        IPC::Message(MSG_ROUTING_NONE, GOODBYE_MESSAGE_TYPE)
     {
     }
     static bool Read(const Message* msg) {
@@ -2338,7 +2342,7 @@ MessageChannel::EndTimeout()
 
     IPC_LOG("Ending timeout of seqno=%d", mTimedOutMessageSeqno);
     mTimedOutMessageSeqno = 0;
-    mTimedOutMessagePriority = 0;
+    mTimedOutMessageNestedLevel = 0;
 
     for (size_t i = 0; i < mPending.size(); i++) {
         // There may be messages in the queue that we expected to process from
@@ -2375,7 +2379,7 @@ MessageChannel::CancelTransaction(int transaction)
         EndTimeout();
 
         // Normally mCurrentTransaction == 0 here. But it can be non-zero if:
-        // 1. Parent sends hi prio message H.
+        // 1. Parent sends NESTED_INSIDE_SYNC message H.
         // 2. Parent times out H.
         // 3. Child dispatches H and sends nested message H' (same transaction).
         // 4. Parent dispatches H' and cancels.
@@ -2395,8 +2399,8 @@ MessageChannel::CancelTransaction(int transaction)
         // If there was a race between the parent and the child, then we may
         // have a queued sync message. We want to drop this message from the
         // queue since if will get cancelled along with the transaction being
-        // cancelled. This happens if the message in the queue is high priority.
-        if (msg.is_sync() && msg.priority() != IPC::Message::PRIORITY_NORMAL) {
+        // cancelled. This happens if the message in the queue is NESTED_INSIDE_SYNC.
+        if (msg.is_sync() && msg.nested_level() != IPC::Message::NOT_NESTED) {
             MOZ_RELEASE_ASSERT(!foundSync);
             MOZ_RELEASE_ASSERT(msg.transaction_id() != transaction);
             IPC_LOG("Removing msg from queue seqno=%d xid=%d", msg.seqno(), msg.transaction_id());
@@ -2420,17 +2424,17 @@ void
 MessageChannel::CancelCurrentTransaction()
 {
     MonitorAutoLock lock(*mMonitor);
-    if (DispatchingSyncMessagePriority() >= IPC::Message::PRIORITY_HIGH) {
-        if (DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_URGENT ||
-            DispatchingAsyncMessagePriority() == IPC::Message::PRIORITY_URGENT)
+    if (DispatchingSyncMessageNestedLevel() >= IPC::Message::NESTED_INSIDE_SYNC) {
+        if (DispatchingSyncMessageNestedLevel() == IPC::Message::NESTED_INSIDE_CPOW ||
+            DispatchingAsyncMessageNestedLevel() == IPC::Message::NESTED_INSIDE_CPOW)
         {
             mListener->IntentionalCrash();
         }
 
-        IPC_LOG("Cancel requested: current xid=%d", CurrentHighPriorityTransaction());
+        IPC_LOG("Cancel requested: current xid=%d", CurrentNestedInsideSyncTransaction());
         MOZ_RELEASE_ASSERT(DispatchingSyncMessage());
-        CancelMessage *cancel = new CancelMessage(CurrentHighPriorityTransaction());
-        CancelTransaction(CurrentHighPriorityTransaction());
+        CancelMessage *cancel = new CancelMessage(CurrentNestedInsideSyncTransaction());
+        CancelTransaction(CurrentNestedInsideSyncTransaction());
         mLink->SendMessage(cancel);
     }
 }

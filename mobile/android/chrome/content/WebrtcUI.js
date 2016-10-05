@@ -166,7 +166,7 @@ var WebrtcUI = {
           let perms = Services.perms;
           // Although the lifetime is "session" it will be removed upon
           // use so it's more of a one-shot.
-          perms.add(aUri, "camera", perms.ALLOW_ACTION, perms.EXPIRE_SESSION);
+          perms.add(aUri, "MediaManagerVideo", perms.ALLOW_ACTION, perms.EXPIRE_SESSION);
         }
 
         Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);

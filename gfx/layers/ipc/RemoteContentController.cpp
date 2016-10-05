@@ -49,6 +49,21 @@ RemoteContentController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
 }
 
 void
+RemoteContentController::HandleTapOnMainThread(TapType aTapType,
+                                               const LayoutDevicePoint& aPoint,
+                                               Modifiers aModifiers,
+                                               const ScrollableLayerGuid& aGuid,
+                                               uint64_t aInputBlockId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  dom::TabParent* tab = dom::TabParent::GetTabParentFromLayersId(aGuid.mLayersId);
+  if (tab) {
+    tab->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
+  }
+}
+
+void
 RemoteContentController::HandleTap(TapType aTapType,
                                    const LayoutDevicePoint& aPoint,
                                    Modifiers aModifiers,
@@ -66,28 +81,20 @@ RemoteContentController::HandleTap(TapType aTapType,
         CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
     if (apzctmp) {
       Unused << apzctmp->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
-      return;
     }
+
+    return;
   }
 
-  // If we get here we're probably in the parent process, but we might be in
-  // the GPU process in some shutdown phase where the LayerTreeState or
-  // APZCTreeManagerParent structures are torn down. In that case we'll just get
-  // a null TabParent.
-  dom::TabParent* tab = dom::TabParent::GetTabParentFromLayersId(aGuid.mLayersId);
-  if (tab) {
-    // If we got a TabParent we're definitely in the parent process, and the
-    // message is going to a child process.
-    //
-    // On desktop, we're already on the main thread, so we can call TabParent::SendHandleTap directly.
-    // On Android, we're on the UI thread, so proxy the SendHandleTap call to the main thread.
-    MOZ_ASSERT(XRE_IsParentProcess());
-    if (NS_IsMainThread()) {
-      tab->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
-    } else {
-      NS_DispatchToMainThread(NewRunnableMethod<TapType, const LayoutDevicePoint&, Modifiers, const ScrollableLayerGuid&, uint64_t>
-        (tab, &dom::TabParent::SendHandleTap, aTapType, aPoint, aModifiers, aGuid, aInputBlockId));
-    }
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (NS_IsMainThread()) {
+    HandleTapOnMainThread(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
+  } else {
+    // We don't want to get the TabParent or call TabParent::SendHandleTap() from a non-main thread (this might happen
+    // on Android, where this is called from the Java UI thread)
+    NS_DispatchToMainThread(NewRunnableMethod<TapType, const LayoutDevicePoint&, Modifiers, const ScrollableLayerGuid&, uint64_t>
+        (this, &RemoteContentController::HandleTapOnMainThread, aTapType, aPoint, aModifiers, aGuid, aInputBlockId));
   }
 }
 
