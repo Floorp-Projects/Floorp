@@ -937,11 +937,11 @@ public:
       TimeDuration elapsed = now - mBufferingStart;
       bool isLiveStream = Resource()->IsLiveStream();
       if ((isLiveStream || !mMaster->CanPlayThrough()) &&
-          elapsed < TimeDuration::FromSeconds(mMaster->mBufferingWait * mMaster->mPlaybackRate) &&
-          mMaster->HasLowBufferedData(mMaster->mBufferingWait * USECS_PER_S) &&
+          elapsed < TimeDuration::FromSeconds(mBufferingWait * mMaster->mPlaybackRate) &&
+          mMaster->HasLowBufferedData(mBufferingWait * USECS_PER_S) &&
           Resource()->IsExpectingMoreData()) {
         SLOG("Buffering: wait %ds, timeout in %.3lfs",
-             mMaster->mBufferingWait, mMaster->mBufferingWait - elapsed.ToSeconds());
+             mBufferingWait, mBufferingWait - elapsed.ToSeconds());
         mMaster->ScheduleStateMachineIn(USECS_PER_S);
         return;
       }
@@ -1015,6 +1015,10 @@ public:
 
 private:
   TimeStamp mBufferingStart;
+
+  // The maximum number of second we spend buffering when we are short on
+  // unbuffered data.
+  const uint32_t mBufferingWait = 15;
 };
 
 class MediaDecoderStateMachine::CompletedState
@@ -1193,7 +1197,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
 
   InitVideoQueuePrefs();
 
-  mBufferingWait = 15;
   mLowDataThresholdUsecs = detail::LOW_DATA_THRESHOLD_USECS;
 
 #ifdef XP_WIN
