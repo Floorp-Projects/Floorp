@@ -40,8 +40,8 @@ public:
 
 #ifdef DEBUG
   // Check the frame of the main summary element is the first child in the frame
-  // list.
-  void CheckValidMainSummary(const nsFrameList& aFrameList) const;
+  // list. Returns true if we found the main summary frame; false otherwise.
+  bool CheckValidMainSummary(const nsFrameList& aFrameList) const;
 #endif
 
   void SetInitialChildList(ChildListID aListID,

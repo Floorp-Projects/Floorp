@@ -46,38 +46,17 @@ DetailsFrame::GetType() const
 void
 DetailsFrame::SetInitialChildList(ChildListID aListID, nsFrameList& aChildList)
 {
-  if (aListID == kPrincipalList) {
-    HTMLDetailsElement* details = HTMLDetailsElement::FromContent(GetContent());
-    bool isOpen = details->Open();
-
-    if (isOpen) {
-      // If details is open, the first summary needs to be rendered as if it is
-      // the first child.
-      for (nsIFrame* child : aChildList) {
-        HTMLSummaryElement* summary =
-          HTMLSummaryElement::FromContent(child->GetContent());
-
-        if (summary && summary->IsMainSummary()) {
-          // Take out the first summary frame and insert it to the beginning of
-          // the list.
-          aChildList.RemoveFrame(child);
-          aChildList.InsertFrame(nullptr, nullptr, child);
-          break;
-        }
-      }
-    }
-
 #ifdef DEBUG
+  if (aListID == kPrincipalList) {
     CheckValidMainSummary(aChildList);
-#endif
-
   }
+#endif
 
   nsBlockFrame::SetInitialChildList(aListID, aChildList);
 }
 
 #ifdef DEBUG
-void
+bool
 DetailsFrame::CheckValidMainSummary(const nsFrameList& aFrameList) const
 {
   for (nsIFrame* child : aFrameList) {
@@ -86,7 +65,14 @@ DetailsFrame::CheckValidMainSummary(const nsFrameList& aFrameList) const
 
     if (child == aFrameList.FirstChild()) {
       if (summary && summary->IsMainSummary()) {
-        break;
+        return true;
+      } else if (child->GetContent() == GetContent()) {
+        // The child frame's content is the same as our content, which means
+        // it's a kind of wrapper frame. Descend into its child list to find
+        // main summary.
+        if (CheckValidMainSummary(child->PrincipalChildList())) {
+          return true;
+        }
       }
     } else {
       NS_ASSERTION(!summary || !summary->IsMainSummary(),
@@ -94,6 +80,7 @@ DetailsFrame::CheckValidMainSummary(const nsFrameList& aFrameList) const
                    "or are not the main summary!");
     }
   }
+  return false;
 }
 #endif
 
