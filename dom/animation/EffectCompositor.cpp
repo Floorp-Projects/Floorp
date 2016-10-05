@@ -74,6 +74,14 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     return false;
   }
 
+  // If the property will be added to the animations level of the cascade but
+  // there is an !important rule for that property in the cascade then the
+  // animation will not be applied since the !important rule overrides it.
+  if (effects->PropertiesWithImportantRules().HasProperty(aProperty) &&
+      effects->PropertiesForAnimationsLevel().HasProperty(aProperty)) {
+    return false;
+  }
+
   if (aFrame->RefusedAsyncAnimation()) {
     return false;
   }
