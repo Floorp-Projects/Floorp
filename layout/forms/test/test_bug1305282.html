@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=615697
+-->
+<head>
+  <title>Test for Bug 1305282</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1305282">Mozilla Bug 1305282</a>
+<p id="display"></p>
+<div id="content">
+  <select>
+    <option>f o o</option>
+    <option>b a r</option>
+    <option>b o o</option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1305282 **/
+
+var select = document.getElementsByTagName('select')[0];
+
+select.addEventListener("change", function(aEvent) {
+  select.removeEventListener("change", arguments.callee, false);
+  is(select.selectedIndex, 1, "'b a r' option is selected");
+  SimpleTest.finish();
+}, false);
+
+select.addEventListener("focus", function() {
+  select.removeEventListener("focus", arguments.callee, false);
+  SimpleTest.executeSoon(function () {
+    synthesizeKey("VK_DOWN", {});
+    SimpleTest.executeSoon(function () {
+      synthesizeKey('b', {});
+      SimpleTest.executeSoon(function () {
+        synthesizeKey(' ', {});
+        SimpleTest.executeSoon(function () {
+          synthesizeKey("VK_RETURN", {});
+        });
+      });
+    });
+  });
+}, false);
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  select.focus();
+});
+
+</script>
+</pre>
+</body>
+</html>

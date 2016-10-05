@@ -12,14 +12,14 @@ namespace dom {
 /* This protocol bridges async access to the database thread running on the parent process
  * and caches running on the child process.
  */
-prio(normal upto urgent) sync protocol PStorage
+nested(upto inside_cpow) sync protocol PStorage
 {
   manager PContent;
 
 parent:
   async __delete__();
 
-  prio(urgent) sync Preload(nsCString originSuffix, nsCString originNoSuffix, uint32_t alreadyLoadedCount)
+  nested(inside_cpow) sync Preload(nsCString originSuffix, nsCString originNoSuffix, uint32_t alreadyLoadedCount)
     returns (nsString[] keys, nsString[] values, nsresult rv);
 
   async AsyncPreload(nsCString originSuffix, nsCString originNoSuffix, bool priority);

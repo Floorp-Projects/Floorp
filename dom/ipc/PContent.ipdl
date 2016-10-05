@@ -377,7 +377,7 @@ struct BlobURLRegistrationData
     Principal principal;
 };
 
-prio(normal upto urgent) sync protocol PContent
+nested(upto inside_cpow) sync protocol PContent
 {
     parent spawns PPluginModule;
 
@@ -843,7 +843,7 @@ parent:
     sync GetLookAndFeelCache()
         returns (LookAndFeelInt[] lookAndFeelIntCache);
 
-    prio(urgent) async PHal();
+    nested(inside_cpow) async PHal();
 
     async PHeapSnapshotTempFileHelper();
 
@@ -857,7 +857,7 @@ parent:
 
     async PSendStream();
 
-    prio(high) sync PScreenManager()
+    nested(inside_sync) sync PScreenManager()
         returns (uint32_t numberOfScreens,
                  float systemDefaultScale,
                  bool success);
@@ -868,7 +868,7 @@ parent:
 
     async PSpeechSynthesis();
 
-    prio(urgent) async PStorage();
+    nested(inside_cpow) async PStorage();
 
     async PTelephony();
 
@@ -908,8 +908,8 @@ parent:
                      CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
 
-    prio(high) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
-                               CpowEntry[] aCpows, Principal aPrincipal)
+    nested(inside_sync) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
+                                        CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
 
     async ShowAlert(AlertNotificationType alert);
@@ -1057,10 +1057,10 @@ parent:
      * before one is submitted. This is urgent because an extension might use
      * a CPOW to synchronously submit a keygen element.
      */
-    prio(urgent) sync KeygenProcessValue(nsString oldValue,
-                                         nsString challenge,
-                                         nsString keytype,
-                                         nsString keyparams)
+    nested(inside_cpow) sync KeygenProcessValue(nsString oldValue,
+                                                nsString challenge,
+                                                nsString keytype,
+                                                nsString keyparams)
         returns (nsString newValue);
 
     /**

@@ -198,10 +198,24 @@ static ExtraPhaseInfo phaseExtra[PHASE_LIMIT] = { { 0, 0 } };
 // not show up in this list.)
 static mozilla::Vector<Phase, 0, SystemAllocPolicy> dagDescendants[Statistics::NumTimingArrays];
 
+// Preorder iterator over all phases in the expanded tree. Positions are
+// returned as <phase,dagSlot> pairs (dagSlot will be zero aka PHASE_DAG_NONE
+// for the top nodes with a single path from the parent, and 1 or more for
+// nodes in multiparented subtrees).
 struct AllPhaseIterator {
+    // If 'descendants' is empty, the current Phase position.
     int current;
+
+    // The depth of the current multiparented node that we are processing, or
+    // zero if we are pointing to the top portion of the tree.
     int baseLevel;
+
+    // When looking at multiparented descendants, the dag slot (index into
+    // PhaseTimeTables) containing the entries for the current parent.
     size_t activeSlot;
+
+    // When iterating over a multiparented subtree, the list of (remaining)
+    // subtree nodes.
     mozilla::Vector<Phase, 0, SystemAllocPolicy>::Range descendants;
 
     explicit AllPhaseIterator(const Statistics::PhaseTimeTable table)
@@ -224,10 +238,14 @@ struct AllPhaseIterator {
         MOZ_ASSERT(!done());
 
         if (!descendants.empty()) {
+            // Currently iterating over a multiparented subtree.
             descendants.popFront();
             if (!descendants.empty())
                 return;
 
+            // Just before leaving the last child, reset the iterator to look
+            // at "main" phases (in PHASE_DAG_NONE) instead of multiparented
+            // subtree phases.
             ++current;
             activeSlot = PHASE_DAG_NONE;
             baseLevel = 0;
@@ -235,6 +253,8 @@ struct AllPhaseIterator {
         }
 
         if (phaseExtra[current].dagSlot != PHASE_DAG_NONE) {
+            // The current phase has a shared subtree. Load them up into
+            // 'descendants' and advance to the first child.
             activeSlot = phaseExtra[current].dagSlot;
             descendants = dagDescendants[activeSlot].all();
             MOZ_ASSERT(!descendants.empty());
@@ -308,7 +328,8 @@ SumChildTimes(size_t phaseSlot, Phase phase, const Statistics::PhaseTimeTable ph
 {
     // Sum the contributions from single-parented children.
     int64_t total = 0;
-    for (unsigned i = 0; i < PHASE_LIMIT; i++) {
+    size_t depth = phaseExtra[phase].depth;
+    for (unsigned i = phase + 1; i < PHASE_LIMIT && phaseExtra[i].depth > depth; i++) {
         if (phases[i].parent == phase)
             total += phaseTimes[phaseSlot][i];
     }
@@ -316,11 +337,9 @@ SumChildTimes(size_t phaseSlot, Phase phase, const Statistics::PhaseTimeTable ph
     // Sum the contributions from multi-parented children.
     size_t dagSlot = phaseExtra[phase].dagSlot;
     if (dagSlot != PHASE_DAG_NONE) {
-        for (size_t i = 0; i < mozilla::ArrayLength(dagChildEdges); i++) {
-            if (dagChildEdges[i].parent == phase) {
-                Phase child = dagChildEdges[i].child;
-                total += phaseTimes[dagSlot][child];
-            }
+        for (auto edge : dagChildEdges) {
+            if (edge.parent == phase)
+                total += phaseTimes[dagSlot][edge.child];
         }
     }
     return total;
@@ -887,6 +906,8 @@ Statistics::getMaxGCPauseSinceClear()
     return maxPauseInInterval;
 }
 
+// Sum up the time for a phase, including instances of the phase with different
+// parents.
 static int64_t
 SumPhase(Phase phase, const Statistics::PhaseTimeTable times)
 {

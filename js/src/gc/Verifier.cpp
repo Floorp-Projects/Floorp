@@ -431,7 +431,7 @@ class CheckHeapTracer : public JS::CallbackTracer
   public:
     explicit CheckHeapTracer(JSRuntime* rt);
     bool init();
-    bool check(AutoLockForExclusiveAccess& lock);
+    void check(AutoLockForExclusiveAccess& lock);
 
   private:
     void onChild(const JS::GCCellPtr& thing) override;
@@ -512,7 +512,7 @@ CheckHeapTracer::onChild(const JS::GCCellPtr& thing)
         oom = true;
 }
 
-bool
+void
 CheckHeapTracer::check(AutoLockForExclusiveAccess& lock)
 {
     // The analysis thinks that traceRuntime might GC by calling a GC callback.
@@ -532,15 +532,13 @@ CheckHeapTracer::check(AutoLockForExclusiveAccess& lock)
     }
 
     if (oom)
-        return false;
+        return;
 
     if (failures) {
         fprintf(stderr, "Heap check: %zu failure(s) out of %" PRIu32 " pointers checked\n",
                 failures, visited.count());
     }
     MOZ_RELEASE_ASSERT(failures == 0);
-
-    return true;
 }
 
 void
@@ -548,8 +546,8 @@ js::gc::CheckHeapAfterGC(JSRuntime* rt)
 {
     AutoTraceSession session(rt, JS::HeapState::Tracing);
     CheckHeapTracer tracer(rt);
-    if (!tracer.init() || !tracer.check(session.lock))
-        fprintf(stderr, "OOM checking heap\n");
+    if (!tracer.init())
+        tracer.check(session.lock);
 }
 
 #endif /* JSGC_HASH_TABLE_CHECKS */

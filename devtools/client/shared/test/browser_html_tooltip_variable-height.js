@@ -26,7 +26,7 @@ const CONTAINER_HEIGHT = 300;
 const CONTAINER_WIDTH = 200;
 const TOOLTIP_HEIGHT = 50;
 
-const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
+const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
 
 add_task(function* () {
