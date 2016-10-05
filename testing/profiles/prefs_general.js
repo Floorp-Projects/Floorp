@@ -351,3 +351,7 @@ user_pref("dom.audiochannel.mutedByDefault", false);
 user_pref("webextensions.tests", true);
 user_pref("startup.homepage_welcome_url", "about:blank");
 user_pref("startup.homepage_welcome_url.additional", "");
+
+// Don't block old libavcodec libraries when testing, because our test systems
+// cannot easily be upgraded.
+user_pref("media.libavcodec.allow-obsolete", true);
