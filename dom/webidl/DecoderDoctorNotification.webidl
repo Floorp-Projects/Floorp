@@ -9,7 +9,6 @@ enum DecoderDoctorNotificationType {
   "platform-decoder-not-found",
   "can-play-but-some-missing-decoders",
   "cannot-initialize-pulseaudio",
-  "unsupported-libavcodec",
 };
 
 dictionary DecoderDoctorNotification {
