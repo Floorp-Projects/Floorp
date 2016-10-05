@@ -223,6 +223,8 @@ public:
 
   virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) = 0;
 
+  virtual bool HandleAudioCaptured() { return false; }
+
 protected:
   using Master = MediaDecoderStateMachine;
   explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
@@ -631,6 +633,14 @@ public:
     RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
     mMaster->InitiateSeek(Move(seekJob));
     return p.forget();
+  }
+
+  bool HandleAudioCaptured() override
+  {
+    mMaster->MaybeStopPrerolling();
+    // MediaSink is changed. Schedule Step() to check if we can start playback.
+    mMaster->ScheduleStateMachine();
+    return true;
   }
 
 private:
@@ -1109,6 +1119,13 @@ public:
     RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
     mMaster->InitiateSeek(Move(seekJob));
     return p.forget();
+  }
+
+  bool HandleAudioCaptured() override
+  {
+    // MediaSink is changed. Schedule Step() to check if we can start playback.
+    mMaster->ScheduleStateMachine();
+    return true;
   }
 
 private:
@@ -2995,12 +3012,7 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
   // Restore playback parameters.
   mMediaSink->SetPlaybackParams(params);
 
-  // We don't need to call StartMediaSink() here because IsPlaying() is now
-  // always in sync with the playing state of MediaSink. It will be started in
-  // MaybeStartPlayback() in the next cycle if necessary.
-
   mAudioCaptured = aCaptured;
-  ScheduleStateMachine();
 
   // Don't buffer as much when audio is captured because we don't need to worry
   // about high latency audio devices.
@@ -3008,7 +3020,7 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
                               detail::AMPLE_AUDIO_USECS / 2 :
                               detail::AMPLE_AUDIO_USECS;
 
-  MaybeStopPrerolling();
+  mStateObj->HandleAudioCaptured();
 }
 
 uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
