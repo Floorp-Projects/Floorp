@@ -194,11 +194,23 @@ KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
 const AnimationProperty*
 KeyframeEffectReadOnly::GetAnimationOfProperty(nsCSSPropertyID aProperty) const
 {
+  if (!IsInEffect()) {
+    return nullptr;
+  }
+
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx) {
     if (aProperty == mProperties[propIdx].mProperty) {
       const AnimationProperty* result = &mProperties[propIdx];
-      if (!result->mWinsInCascade) {
+      // Skip if there is a property of animation level that is overridden
+      // by !important rules.
+      if (effectSet &&
+          effectSet->PropertiesWithImportantRules()
+            .HasProperty(result->mProperty) &&
+          effectSet->PropertiesForAnimationsLevel()
+            .HasProperty(result->mProperty)) {
         result = nullptr;
       }
       return result;
@@ -304,8 +316,9 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 }
 
 void
-KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                                     nsCSSPropertyIDSet& aSetProperties)
+KeyframeEffectReadOnly::ComposeStyle(
+  RefPtr<AnimValuesStyleRule>& aStyleRule,
+  const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
   ComputedTiming computedTiming = GetComputedTiming();
   mProgressOnLastCompose = computedTiming.mProgress;
@@ -326,25 +339,9 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
     MOZ_ASSERT(prop.mSegments[prop.mSegments.Length() - 1].mToKey == 1.0,
                "incorrect last to key");
 
-    if (aSetProperties.HasProperty(prop.mProperty)) {
-      // Animations are composed by EffectCompositor by iterating
-      // from the last animation to first. For animations targetting the
-      // same property, the later one wins. So if this property is already set,
-      // we should not override it.
+    if (aPropertiesToSkip.HasProperty(prop.mProperty)) {
       continue;
     }
-
-    if (!prop.mWinsInCascade) {
-      // This isn't the winning declaration, so don't add it to style.
-      // For transitions, this is important, because it's how we
-      // implement the rule that CSS transitions don't run when a CSS
-      // animation is running on the same property and element.  For
-      // animations, this is only skipping things that will otherwise be
-      // overridden.
-      continue;
-    }
-
-    aSetProperties.AddProperty(prop.mProperty);
 
     MOZ_ASSERT(prop.mSegments.Length() > 0,
                "property should not be in animations if it has no segments");
@@ -1132,10 +1129,26 @@ KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
   // running on the compositor.
   MOZ_ASSERT(mAnimation && mAnimation->IsPlaying());
 
+  // Should not block other animations if this effect is not in-effect.
+  if (!IsInEffect()) {
+    return false;
+  }
+
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
   for (const AnimationProperty& property : mProperties) {
-    // If a property is overridden in the CSS cascade, it should not block other
-    // animations from running on the compositor.
-    if (!property.mWinsInCascade) {
+    // If there is a property for animations level that is overridden by
+    // !important rules, it should not block other animations from running
+    // on the compositor.
+    // NOTE: We don't currently check for !important rules for properties that
+    // don't run on the compositor. As result such properties (e.g. margin-left)
+    // can still block async animations even if they are overridden by
+    // !important rules.
+    if (effectSet &&
+        effectSet->PropertiesWithImportantRules()
+          .HasProperty(property.mProperty) &&
+        effectSet->PropertiesForAnimationsLevel()
+          .HasProperty(property.mProperty)) {
       continue;
     }
     // Check for geometric properties

@@ -190,6 +190,15 @@ public:
 
   static nsIAtom** GetEffectSetPropertyAtoms();
 
+  nsCSSPropertyIDSet& PropertiesWithImportantRules()
+  {
+    return mPropertiesWithImportantRules;
+  }
+  nsCSSPropertyIDSet& PropertiesForAnimationsLevel()
+  {
+    return mPropertiesForAnimationsLevel;
+  }
+
 private:
   static nsIAtom* GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType);
 
@@ -228,6 +237,14 @@ private:
   // corresponding layer so we can check that the layer is up to date with
   // the animation manager.
   uint64_t mAnimationGeneration;
+
+  // Specifies the compositor-animatable properties that are overridden by
+  // !important rules.
+  nsCSSPropertyIDSet mPropertiesWithImportantRules;
+  // Specifies the properties for which the result will be added to the
+  // animations level of the cascade and hence should be skipped when we are
+  // composing the animation style for the transitions level of the cascede.
+  nsCSSPropertyIDSet mPropertiesForAnimationsLevel;
 
 #ifdef DEBUG
   // Track how many iterators are referencing this effect set when we are

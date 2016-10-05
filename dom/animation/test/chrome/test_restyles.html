@@ -677,10 +677,7 @@ waitForAllPaints(function() {
     animation.effect.setKeyframes({ backgroundColor: ['red', 'blue'] });
     markers = yield observeStyling(5);
 
-    // There are 5 eRestyle_CSSAnimations and 1 eRestyle_CSSTransitions.
-    // 1 eRestyle_CSSTransitions comes from
-    // EffectCompositor::UpdateCascadeResults.
-    ok(markers.length == 6,
+    is(markers.length, 5,
        'Setting valid keyframes should cause regular animation restyles to ' +
        'occur');
 

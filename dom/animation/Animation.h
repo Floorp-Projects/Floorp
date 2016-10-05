@@ -310,11 +310,11 @@ public:
   /**
    * Updates |aStyleRule| with the animation values of this animation's effect,
    * if any.
-   * Any properties already contained in |aSetProperties| are not changed. Any
-   * properties that are changed are added to |aSetProperties|.
+   * Any properties contained in |aPropertiesToSkip| will not be added or
+   * updated in |aStyleRule|.
    */
   void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                    nsCSSPropertyIDSet& aSetProperties);
+                    const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   void NotifyEffectTimingUpdated();
 
