@@ -5733,6 +5733,25 @@ dnl win32 options
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(WIN_UCRT_REDIST_DIR)
 
+dnl ========================================================
+dnl ICU Support
+dnl ========================================================
+
+# Internationalization is not built or exposed on Fennec.
+# See Bug 1215256
+
+if test "$MOZ_BUILD_APP" = "mobile/android"; then
+    _INTL_API=no
+else
+    _INTL_API=yes
+fi
+
+if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+    USE_ICU=1
+fi
+
+MOZ_CONFIG_ICU()
+
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
     $_WARNINGS_CFLAGS \
@@ -5985,25 +6004,6 @@ else
 fi
 
 AC_SUBST(PREPROCESS_OPTION)
-
-dnl ========================================================
-dnl ICU Support
-dnl ========================================================
-
-# Internationalization is not built or exposed on Fennec.
-# See Bug 1215256
-
-if test "$MOZ_BUILD_APP" = "mobile/android"; then
-    _INTL_API=no
-else
-    _INTL_API=yes
-fi
-
-if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
-    USE_ICU=1
-fi
-
-MOZ_CONFIG_ICU()
 
 dnl ========================================================
 dnl mask as shorthand property
