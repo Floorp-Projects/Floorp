@@ -27,7 +27,7 @@ TEST_P(TlsConnectTls13, ZeroRtt) {
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
-  ZeroRttSendReceive(true);
+  ZeroRttSendReceive(true, true);
   Handshake();
   ExpectEarlyDataAccepted(true);
   CheckConnected();
@@ -38,7 +38,27 @@ TEST_P(TlsConnectTls13, ZeroRttServerRejectByOption) {
   SetupForZeroRtt();
   client_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
-  ZeroRttSendReceive(false);
+  ZeroRttSendReceive(true, false);
+  Handshake();
+  CheckConnected();
+  SendReceive();
+}
+
+// Test that we don't try to send 0-RTT data when the server sent
+// us a ticket without the 0-RTT flags.
+TEST_P(TlsConnectTls13, ZeroRttOptionsSetLate) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  Connect();
+  SendReceive();  // Need to read so that we absorb the session ticket.
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  Reset();
+  server_->StartConnect();
+  client_->StartConnect();
+  // Now turn on 0-RTT but too late for the ticket.
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(false, false);
   Handshake();
   CheckConnected();
   SendReceive();
@@ -51,7 +71,7 @@ TEST_P(TlsConnectTls13, ZeroRttServerForgetTicket) {
   ClearServerCache();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ExpectResumption(RESUME_NONE);
-  ZeroRttSendReceive(false);
+  ZeroRttSendReceive(true, false);
   Handshake();
   CheckConnected();
   SendReceive();
@@ -87,7 +107,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttAlpn) {
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
   ExpectEarlyDataAccepted(true);
-  ZeroRttSendReceive(true, [this]() {
+  ZeroRttSendReceive(true, true, [this]() {
     client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "a");
     return true;
   });
@@ -109,7 +129,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttAlpnChangeServer) {
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
-  ZeroRttSendReceive(false, [this]() {
+  ZeroRttSendReceive(true, false, [this]() {
     client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "a");
     return true;
   });
@@ -130,7 +150,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttNoAlpnServer) {
   server_->Set0RttEnabled(true);
   EnableAlpn();
   ExpectResumption(RESUME_TICKET);
-  ZeroRttSendReceive(true, [this]() {
+  ZeroRttSendReceive(true, true, [this]() {
     PRUint8 b[] = {'b'};
     client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "a");
     EXPECT_EQ(SECSuccess, SSLInt_Set0RttAlpn(client_->ssl_fd(), b, sizeof(b)));
@@ -150,7 +170,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttNoAlpnClient) {
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
-  ZeroRttSendReceive(true, [this]() {
+  ZeroRttSendReceive(true, true, [this]() {
     PRUint8 b[] = {'b'};
     EXPECT_EQ(SECSuccess, SSLInt_Set0RttAlpn(client_->ssl_fd(), b, 1));
     client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "b");
@@ -170,7 +190,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttAlpnChangeBoth) {
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
-  ZeroRttSendReceive(false, [this]() {
+  ZeroRttSendReceive(true, false, [this]() {
     client_->CheckAlpn(SSL_NEXT_PROTO_NO_SUPPORT);
     return false;
   });
