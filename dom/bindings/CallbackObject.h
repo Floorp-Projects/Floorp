@@ -126,7 +126,7 @@ public:
    */
   JS::Handle<JSObject*> CallbackKnownNotGray() const
   {
-    MOZ_ASSERT(!JS::ObjectIsMarkedGray(mCallback.get()));
+    MOZ_ASSERT(!JS::ObjectIsMarkedGray(mCallback));
     return CallbackPreserveColor();
   }
 
