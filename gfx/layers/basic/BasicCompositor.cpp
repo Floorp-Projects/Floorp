@@ -553,6 +553,9 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       if (source && texturedEffect->mPremultiplied) {
         // we have a fast path for video here
         if (source->mFromYCBCR &&
+            !source->GetSurface(dest)) {
+          gfxWarning() << "Failed to get YCbCr to rgb surface.";
+        } else if (source->mFromYCBCR &&
             AttemptVideoScale(source, sourceMask, aOpacity, blendMode,
                               texturedEffect,
                               newTransform, aRect, transformedClipRect,
