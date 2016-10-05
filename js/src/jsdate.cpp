@@ -2588,53 +2588,55 @@ FormatDate(JSContext* cx, double utcTime, FormatSpec format, MutableHandleValue 
 
         double localTime = LocalTime(utcTime);
 
-        /*
-         * Offset from GMT in minutes.  The offset includes daylight
-         * savings, if it applies.
-         */
-        int minutes = (int) floor((localTime - utcTime) / msPerMinute);
-
-        /* Map 510 minutes to 0830 hours. */
-        int offset = (minutes / 60) * 100 + minutes % 60;
-
-        /*
-         * Print as "Wed Nov 05 19:38:03 GMT-0800 (PST) 1997".
-         *
-         * The TZA is printed as 'GMT-0800' rather than as 'PST' to avoid
-         * operating-system dependence on strftime (which PRMJ_FormatTime
-         * calls, for %Z only.)  win32 prints PST as
-         * 'Pacific Standard Time.'  This way we always know what we're
-         * getting, and can parse it if we produce it.  The OS time zone
-         * string is included as a comment.
-         */
-
-        /* get a time zone string from the OS to include as a comment. */
-        PRMJTime prtm = ToPRMJTime(utcTime);
+        int offset = 0;
         char tzbuf[100];
-        bool usetz;
-        size_t tzlen = PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &prtm);
-        if (tzlen != 0) {
+        bool usetz = false;
+        if (format == FormatSpec::DateTime || format == FormatSpec::Time) {
             /*
-             * Decide whether to use the resulting time zone string.
-             *
-             * Reject it if it contains any non-ASCII, non-alphanumeric
-             * characters.  It's then likely in some other character
-             * encoding, and we probably won't display it correctly.
+             * Offset from GMT in minutes.  The offset includes daylight
+             * savings, if it applies.
              */
-            usetz = true;
-            for (size_t i = 0; i < tzlen; i++) {
-                char16_t c = tzbuf[i];
-                if (c > 127 || !(isalnum(c) || c == ' ' || c == '(' || c == ')' || c == '.')) {
-                    usetz = false;
-                    break;
-                }
-            }
+            int minutes = (int) floor((localTime - utcTime) / msPerMinute);
 
-            /* Also reject it if it's not parenthesized or if it's '()'. */
-            if (tzbuf[0] != '(' || tzbuf[1] == ')')
-                usetz = false;
-        } else
-            usetz = false;
+            /* Map 510 minutes to 0830 hours. */
+            offset = (minutes / 60) * 100 + minutes % 60;
+
+            /*
+             * Print as "Wed Nov 05 19:38:03 GMT-0800 (PST) 1997".
+             *
+             * The TZA is printed as 'GMT-0800' rather than as 'PST' to avoid
+             * operating-system dependence on strftime (which PRMJ_FormatTime
+             * calls, for %Z only.)  win32 prints PST as
+             * 'Pacific Standard Time.'  This way we always know what we're
+             * getting, and can parse it if we produce it.  The OS time zone
+             * string is included as a comment.
+             */
+
+            /* get a time zone string from the OS to include as a comment. */
+            PRMJTime prtm = ToPRMJTime(utcTime);
+            size_t tzlen = PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &prtm);
+            if (tzlen != 0) {
+                /*
+                 * Decide whether to use the resulting time zone string.
+                 *
+                 * Reject it if it contains any non-ASCII, non-alphanumeric
+                 * characters.  It's then likely in some other character
+                 * encoding, and we probably won't display it correctly.
+                 */
+                usetz = true;
+                for (size_t i = 0; i < tzlen; i++) {
+                    char16_t c = tzbuf[i];
+                    if (c > 127 || !(isalnum(c) || c == ' ' || c == '(' || c == ')' || c == '.')) {
+                        usetz = false;
+                        break;
+                    }
+                }
+
+                /* Also reject it if it's not parenthesized or if it's '()'. */
+                if (tzbuf[0] != '(' || tzbuf[1] == ')')
+                    usetz = false;
+            }
+        }
 
         char buf[100];
         switch (format) {
