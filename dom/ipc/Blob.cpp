@@ -723,27 +723,25 @@ CreateBlobImpl(const IPCStream& aStream,
     return nullptr;
   }
 
-  uint64_t available;
-  MOZ_ALWAYS_SUCCEEDS(inputStream->Available(&available));
-
   RefPtr<BlobImpl> blobImpl;
   if (!aMetadata.mHasRecursed && aMetadata.IsFile()) {
-    if (available) {
+    if (aMetadata.mLength) {
       blobImpl =
         new BlobImplStream(inputStream,
                            aMetadata.mName,
                            aMetadata.mContentType,
                            aMetadata.mLastModifiedDate,
-                           available);
+                           aMetadata.mLength);
     } else {
       blobImpl =
         new EmptyBlobImpl(aMetadata.mName,
                           aMetadata.mContentType,
                           aMetadata.mLastModifiedDate);
     }
-  } else if (available) {
+  } else if (aMetadata.mLength) {
     blobImpl =
-      new BlobImplStream(inputStream, aMetadata.mContentType, available);
+      new BlobImplStream(inputStream, aMetadata.mContentType,
+                         aMetadata.mLength);
   } else {
     blobImpl = new EmptyBlobImpl(aMetadata.mContentType);
   }
