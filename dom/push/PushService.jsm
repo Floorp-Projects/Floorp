@@ -12,12 +12,14 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {PushCrypto} = Cu.import("resource://gre/modules/PushCrypto.jsm");
+const {
+  PushCrypto,
+  getCryptoParams,
+} = Cu.import("resource://gre/modules/PushCrypto.jsm");
 const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
 
 const CONNECTION_PROTOCOLS = (function() {
@@ -752,8 +754,8 @@ this.PushService = {
    * @param {String} messageID The message ID, used to report service worker
    *  delivery failures. For Web Push messages, this is the version. If empty,
    *  failures will not be reported.
+   * @param {Object} headers The encryption headers.
    * @param {ArrayBuffer|Uint8Array} data The encrypted message data.
-   * @param {Object} cryptoParams The message encryption settings.
    * @param {Function} updateFunc A function that receives the existing
    *  registration record as its argument, and returns a new record. If the
    *  function returns `null` or `undefined`, the record will not be updated.
@@ -762,14 +764,11 @@ this.PushService = {
    * @returns {Promise} Resolves with an `nsIPushErrorReporter` ack status
    *  code, indicating whether the message was delivered successfully.
    */
-  receivedPushMessage(keyID, messageID, data, cryptoParams, updateFunc) {
+  receivedPushMessage(keyID, messageID, headers, data, updateFunc) {
     console.debug("receivedPushMessage()");
     Services.telemetry.getHistogramById("PUSH_API_NOTIFICATION_RECEIVED").add();
 
     return this._updateRecordAfterPush(keyID, updateFunc).then(record => {
-      if (!record) {
-        throw new Error("Ignoring update for key ID " + keyID);
-      }
       if (record.quotaApplies()) {
         // Update quota after the delay, at which point
         // we check for visible notifications.
@@ -782,7 +781,7 @@ this.PushService = {
           }, prefs.get("quotaUpdateDelay"));
         this._updateQuotaTimeouts.add(timeoutID);
       }
-      return this._decryptAndNotifyApp(record, messageID, data, cryptoParams);
+      return this._decryptAndNotifyApp(record, messageID, headers, data);
     }).catch(error => {
       console.error("receivedPushMessage: Error notifying app", error);
       return Ci.nsIPushErrorReporter.ACK_NOT_DELIVERED;
@@ -794,7 +793,7 @@ this.PushService = {
    *
    * @param {String} keyID The push registration ID.
    * @param {Function} updateFunc The function passed to `receivedPushMessage`.
-   * @returns {Promise} Resolves with the updated record, or `null` if the
+   * @returns {Promise} Resolves with the updated record, or rejects if the
    *  record was not updated.
    */
   _updateRecordAfterPush(keyID, updateFunc) {
@@ -832,10 +831,11 @@ this.PushService = {
         });
       });
     }).then(record => {
-      if (record) {
-        gPushNotifier.notifySubscriptionModified(record.scope,
-                                                 record.principal);
+      if (!record) {
+        throw new Error("Ignoring update for key ID " + keyID);
       }
+      gPushNotifier.notifySubscriptionModified(record.scope,
+                                               record.principal);
       return record;
     });
   },
@@ -844,24 +844,28 @@ this.PushService = {
    * Decrypts a message. Will resolve with null if cryptoParams is falsy.
    *
    * @param {PushRecord} record The receiving registration.
+   * @param {Object} headers The encryption headers.
    * @param {ArrayBuffer|Uint8Array} data The encrypted message data.
-   * @param {Object} cryptoParams The message encryption settings.
+
    * @returns {Promise} Resolves with the decrypted message.
    */
-  _decryptMessage(data, record, cryptoParams) {
-    if (!cryptoParams) {
-      return Promise.resolve(null);
-    }
-    return PushCrypto.decodeMsg(
-      data,
-      record.p256dhPrivateKey,
-      record.p256dhPublicKey,
-      cryptoParams.dh,
-      cryptoParams.salt,
-      cryptoParams.rs,
-      record.authenticationSecret,
-      cryptoParams.padSize
-    );
+  _decryptMessage(record, headers, data) {
+    return Promise.resolve().then(_ => {
+      let cryptoParams = getCryptoParams(headers);
+      if (!cryptoParams) {
+        return null;
+      }
+      return PushCrypto.decodeMsg(
+        data,
+        record.p256dhPrivateKey,
+        record.p256dhPublicKey,
+        cryptoParams.dh,
+        cryptoParams.salt,
+        cryptoParams.rs,
+        record.authenticationSecret,
+        cryptoParams.padSize
+      );
+    });
   },
 
   /**
@@ -869,12 +873,12 @@ this.PushService = {
    *
    * @param {PushRecord} record The receiving registration.
    * @param {String} messageID The message ID.
+   * @param {Object} headers The encryption headers.
    * @param {ArrayBuffer|Uint8Array} data The encrypted message data.
-   * @param {Object} cryptoParams The message encryption settings.
    * @returns {Promise} Resolves with an ack status code.
    */
-  _decryptAndNotifyApp(record, messageID, data, cryptoParams) {
-    return this._decryptMessage(data, record, cryptoParams)
+  _decryptAndNotifyApp(record, messageID, headers, data) {
+    return this._decryptMessage(record, headers, data)
       .then(
         message => this._notifyApp(record, messageID, message),
         error => {

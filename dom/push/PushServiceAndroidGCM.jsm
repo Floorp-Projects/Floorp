@@ -12,10 +12,7 @@ const Cr = Components.results;
 
 const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
 const {PushRecord} = Cu.import("resource://gre/modules/PushRecord.jsm");
-const {
-  PushCrypto,
-  getCryptoParams,
-} = Cu.import("resource://gre/modules/PushCrypto.jsm");
+const {PushCrypto} = Cu.import("resource://gre/modules/PushCrypto.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm"); /*global: Messaging */
 Cu.import("resource://gre/modules/Services.jsm"); /*global: Services */
 Cu.import("resource://gre/modules/Preferences.jsm"); /*global: Preferences */
@@ -107,36 +104,35 @@ this.PushServiceAndroidGCM = {
     data = JSON.parse(data);
     console.debug("ReceivedPushMessage with data", data);
 
-    let { message, cryptoParams } = this._messageAndCryptoParams(data);
+    let { headers, message } = this._messageAndHeaders(data);
 
-    console.debug("Delivering message to main PushService:", message, cryptoParams);
+    console.debug("Delivering message to main PushService:", message, headers);
     this._mainPushService.receivedPushMessage(
-      data.channelID, "", message, cryptoParams, (record) => {
+      data.channelID, "", headers, message, (record) => {
         // Always update the stored record.
         return record;
       });
   },
 
-  _messageAndCryptoParams(data) {
+  _messageAndHeaders(data) {
     // Default is no data (and no encryption).
     let message = null;
-    let cryptoParams = null;
+    let headers = null;
 
     if (data.message && data.enc && (data.enckey || data.cryptokey)) {
-      let headers = {
+      headers = {
         encryption_key: data.enckey,
         crypto_key: data.cryptokey,
         encryption: data.enc,
         encoding: data.con,
       };
-      cryptoParams = getCryptoParams(headers);
       // Ciphertext is (urlsafe) Base 64 encoded.
       message = ChromeUtils.base64URLDecode(data.message, {
         // The Push server may append padding.
         padding: "ignore",
       });
     }
-    return { message, cryptoParams };
+    return { headers, message };
   },
 
   _configure: function(serverURL, debug) {
