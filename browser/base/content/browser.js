@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
   ["AddonWatcher", "resource://gre/modules/AddonWatcher.jsm"],
   ["AppConstants", "resource://gre/modules/AppConstants.jsm"],
   ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
-  ["BrowserUsageTelemetry", "resource:///modules/BrowserUsageTelemetry.jsm"],
   ["BrowserUtils", "resource://gre/modules/BrowserUtils.jsm"],
   ["CastingApps", "resource:///modules/CastingApps.jsm"],
   ["CharsetMenu", "resource://gre/modules/CharsetMenu.jsm"],
@@ -3774,13 +3773,16 @@ const BrowserSearch = {
     openUILinkIn(this.searchEnginesURL, where);
   },
 
+  get _isExtendedTelemetryEnabled() {
+    return Services.prefs.getBoolPref("toolkit.telemetry.enabled");
+  },
+
   _getSearchEngineId: function (engine) {
     if (engine && engine.identifier) {
       return engine.identifier;
     }
 
-    if (!engine || (engine.name === undefined) ||
-        !Services.prefs.getBoolPref("toolkit.telemetry.enabled"))
+    if (!engine || (engine.name === undefined) || !this._isExtendedTelemetryEnabled)
       return "other";
 
     return "other-" + engine.name;
@@ -3802,12 +3804,25 @@ const BrowserSearch = {
    *        item was in the suggestion list and how the user selected it.
    */
   recordSearchInTelemetry: function (engine, source, selection) {
+    const SOURCES = [
+      "abouthome",
+      "contextmenu",
+      "newtab",
+      "searchbar",
+      "urlbar",
+    ];
+
     BrowserUITelemetry.countSearchEvent(source, null, selection);
-    try {
-      BrowserUsageTelemetry.recordSearch(engine, source);
-    } catch (ex) {
-      Cu.reportError(ex);
+
+    if (SOURCES.indexOf(source) == -1) {
+      Cu.reportError("Unknown source for search: " + source);
+      return;
     }
+
+    let countId = this._getSearchEngineId(engine) + "." + source;
+
+    let count = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+    count.add(countId);
   },
 
   recordOneoffSearchInTelemetry: function (engine, source, type, where) {
