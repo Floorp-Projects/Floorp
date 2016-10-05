@@ -5,7 +5,6 @@
 package org.mozilla.gecko.home.activitystream;
 
 import android.database.Cursor;
-import android.support.v4.app.LoaderManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -13,10 +12,7 @@ import android.view.ViewGroup;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.StreamItem.BottomPanel;
 import org.mozilla.gecko.home.activitystream.StreamItem.CompactItem;
-import org.mozilla.gecko.home.activitystream.StreamItem.HighlightItem;
 import org.mozilla.gecko.home.activitystream.StreamItem.TopPanel;
-
-import java.lang.ref.WeakReference;
 
 public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> {
     private Cursor highlightsCursor;
@@ -49,8 +45,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> {
                 return new BottomPanel(inflater.inflate(type, parent, false));
         } else if (type == CompactItem.LAYOUT_ID) {
             return new CompactItem(inflater.inflate(type, parent, false));
-        } else if (type == HighlightItem.LAYOUT_ID) {
-            return new HighlightItem(inflater.inflate(type, parent, false));
         } else {
             throw new IllegalStateException("Missing inflation for ViewType " + type);
         }
@@ -70,9 +64,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> {
     public void onBindViewHolder(StreamItem holder, int position) {
         int type = getItemViewType(position);
 
-        if (type == CompactItem.LAYOUT_ID ||
-            type == HighlightItem.LAYOUT_ID) {
-
+        if (type == CompactItem.LAYOUT_ID) {
             final int cursorPosition = translatePositionToCursor(position);
 
             highlightsCursor.moveToPosition(cursorPosition);
