@@ -5896,10 +5896,23 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     return;
   }
 
-  FrameConstructionItem* item =
-    aItems.AppendItem(data, aContent, aTag, aNameSpaceID,
-                      pendingBinding, styleContext.forget(),
-                      aSuppressWhiteSpaceOptimizations, aAnonChildren);
+  FrameConstructionItem* item = nullptr;
+  if (details && details->IsDetailsEnabled() && details->Open()) {
+    auto* summary = HTMLSummaryElement::FromContentOrNull(aContent);
+    if (summary && summary->IsMainSummary()) {
+      // If details is open, the main summary needs to be rendered as if it is
+      // the first child, so add the item to the front of the item list.
+      item = aItems.PrependItem(data, aContent, aTag, aNameSpaceID,
+                                pendingBinding, styleContext.forget(),
+                                aSuppressWhiteSpaceOptimizations, aAnonChildren);
+    }
+  }
+
+  if (!item) {
+    item = aItems.AppendItem(data, aContent, aTag, aNameSpaceID,
+                             pendingBinding, styleContext.forget(),
+                             aSuppressWhiteSpaceOptimizations, aAnonChildren);
+  }
   item->mIsText = isText;
   item->mIsGeneratedContent = isGeneratedContent;
   item->mIsAnonymousContentCreatorContent =
