@@ -12,6 +12,7 @@
 #include "prprf.h"
 #include "mozilla/SSE.h"
 #include "mozilla/arm.h"
+#include "mozilla/Sprintf.h"
 
 #ifdef XP_WIN
 #include <time.h>
@@ -703,9 +704,8 @@ nsSystemInfo::Init()
 #endif
 
   if (gtkver_len <= 0) {
-    gtkver_len = snprintf(gtkver, sizeof(gtkver), "GTK %u.%u.%u",
-                          gtk_major_version, gtk_minor_version,
-                          gtk_micro_version);
+    gtkver_len = SprintfLiteral(gtkver, "GTK %u.%u.%u", gtk_major_version,
+                                gtk_minor_version, gtk_micro_version);
   }
 
   nsAutoCString secondaryLibrary;

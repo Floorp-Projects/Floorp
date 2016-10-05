@@ -14,7 +14,6 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoService;
@@ -246,12 +245,12 @@ public class PushService implements BundleEventListener {
 
     protected void registerGeckoEventListener() {
         Log.d(LOG_TAG, "Registered Gecko event listener.");
-        GeckoApp.getEventDispatcher().registerBackgroundThreadListener(this, GECKO_EVENTS);
+        EventDispatcher.getInstance().registerBackgroundThreadListener(this, GECKO_EVENTS);
     }
 
     protected void unregisterGeckoEventListener() {
         Log.d(LOG_TAG, "Unregistered Gecko event listener.");
-        GeckoApp.getEventDispatcher().unregisterBackgroundThreadListener(this, GECKO_EVENTS);
+        EventDispatcher.getInstance().unregisterBackgroundThreadListener(this, GECKO_EVENTS);
     }
 
     @Override

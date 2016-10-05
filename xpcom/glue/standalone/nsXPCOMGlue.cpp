@@ -15,6 +15,7 @@
 #include <stdio.h>
 
 #include "mozilla/FileUtils.h"
+#include "mozilla/Sprintf.h"
 
 using namespace mozilla;
 
@@ -346,7 +347,7 @@ XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad* aSymbols)
   nsresult rv = NS_OK;
   while (aSymbols->functionName) {
     char buffer[512];
-    snprintf(buffer, sizeof(buffer), "%s", aSymbols->functionName);
+    SprintfLiteral(buffer, "%s", aSymbols->functionName);
 
     *aSymbols->function = (NSFuncPtr)GetSymbol(sTop->libHandle, buffer);
     if (!*aSymbols->function) {

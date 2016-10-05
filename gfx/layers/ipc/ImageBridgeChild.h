@@ -370,6 +370,8 @@ public:
     return InImageBridgeChildThread();
   }
 
+  virtual void FatalError(const char* const aName, const char* const aMsg) const override;
+
 protected:
   ImageBridgeChild();
   bool DispatchAllocShmemInternal(size_t aSize,

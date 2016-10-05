@@ -42,6 +42,14 @@ typedef ASTConsumer *ASTConsumerPtr;
 #define cxxRecordDecl recordDecl
 #endif
 
+#ifndef HAS_ACCEPTS_IGNORINGPARENIMPCASTS
+#define hasIgnoringParenImpCasts(x) has(x)
+#else
+// Before clang 3.9 "has" would behave like has(ignoringParenImpCasts(x)),
+// however doing that explicitly would not compile.
+#define hasIgnoringParenImpCasts(x) has(ignoringParenImpCasts(x))
+#endif
+
 // Check if the given expression contains an assignment expression.
 // This can either take the form of a Binary Operator or a
 // Overloaded Operator Call.
@@ -163,6 +171,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class SprintfLiteralChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker Scope;
   ArithmeticArgChecker ArithmeticArg;
   TrivialCtorDtorChecker TrivialCtorDtor;
@@ -180,6 +193,7 @@ private:
   RefCountedCopyConstructorChecker RefCountedCopyConstructor;
   AssertAssignmentChecker AssertAttribution;
   KungFuDeathGripChecker KungFuDeathGrip;
+  SprintfLiteralChecker SprintfLiteral;
   MatchFinder AstMatcher;
 };
 
@@ -279,6 +293,35 @@ bool isIgnoredPathForImplicitConversion(const Decl *Declaration) {
       // Ignore security/sandbox/chromium but not ipc/chromium.
       ++Begin;
       return Begin != End && Begin->compare_lower(StringRef("sandbox")) == 0;
+    }
+  }
+  return false;
+}
+
+bool isIgnoredPathForSprintfLiteral(const CallExpr *Call, const SourceManager &SM) {
+  SourceLocation Loc = Call->getLocStart();
+  SmallString<1024> FileName = SM.getFilename(Loc);
+  llvm::sys::fs::make_absolute(FileName);
+  llvm::sys::path::reverse_iterator Begin = llvm::sys::path::rbegin(FileName),
+                                    End = llvm::sys::path::rend(FileName);
+  for (; Begin != End; ++Begin) {
+    if (Begin->compare_lower(StringRef("angle")) == 0 ||
+        Begin->compare_lower(StringRef("chromium")) == 0 ||
+        Begin->compare_lower(StringRef("crashreporter")) == 0 ||
+        Begin->compare_lower(StringRef("google-breakpad")) == 0 ||
+        Begin->compare_lower(StringRef("harfbuzz")) == 0 ||
+        Begin->compare_lower(StringRef("libstagefright")) == 0 ||
+        Begin->compare_lower(StringRef("mtransport")) == 0 ||
+        Begin->compare_lower(StringRef("protobuf")) == 0 ||
+        Begin->compare_lower(StringRef("skia")) == 0 ||
+        // Gtest uses snprintf as GTEST_SNPRINTF_ with sizeof
+        Begin->compare_lower(StringRef("testing")) == 0) {
+      return true;
+    }
+    if (Begin->compare_lower(StringRef("webrtc")) == 0) {
+      // Ignore trunk/webrtc, but not media/webrtc
+      ++Begin;
+      return Begin != End && Begin->compare_lower(StringRef("trunk")) == 0;
     }
   }
   return false;
@@ -861,6 +904,23 @@ AST_MATCHER(CallExpr, isAssertAssignmentTestFunc) {
       && Method->getName() == AssertName;
 }
 
+AST_MATCHER(CallExpr, isSnprintfLikeFunc) {
+  static const std::string Snprintf = "snprintf";
+  static const std::string Vsnprintf = "vsnprintf";
+  const FunctionDecl *Func = Node.getDirectCallee();
+
+  if (!Func || isa<CXXMethodDecl>(Func)) {
+    return false;
+  }
+
+  StringRef Name = getNameChecked(Func);
+  if (Name != Snprintf && Name != Vsnprintf) {
+    return false;
+  }
+
+  return !isIgnoredPathForSprintfLiteral(&Node, Finder->getASTContext().getSourceManager());
+}
+
 AST_MATCHER(CXXRecordDecl, isLambdaDecl) {
   return Node.isLambda();
 }
@@ -1091,9 +1151,9 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
   AstMatcher.addMatcher(
       binaryOperator(
           allOf(binaryEqualityOperator(),
-                hasLHS(has(
+                hasLHS(hasIgnoringParenImpCasts(
                     declRefExpr(hasType(qualType((isFloat())))).bind("lhs"))),
-                hasRHS(has(
+                hasRHS(hasIgnoringParenImpCasts(
                     declRefExpr(hasType(qualType((isFloat())))).bind("rhs"))),
                 unless(anyOf(isInSystemHeader(), isInSkScalarDotH()))))
           .bind("node"),
@@ -1195,6 +1255,17 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
 
   AstMatcher.addMatcher(varDecl(hasType(isRefPtr())).bind("decl"),
                         &KungFuDeathGrip);
+
+  AstMatcher.addMatcher(
+      callExpr(isSnprintfLikeFunc(),
+        allOf(hasArgument(0, ignoringParenImpCasts(declRefExpr().bind("buffer"))),
+                             anyOf(hasArgument(1, sizeOfExpr(hasIgnoringParenImpCasts(declRefExpr().bind("size")))),
+                                   hasArgument(1, integerLiteral().bind("immediate")),
+                                   hasArgument(1, declRefExpr(to(varDecl(hasType(isConstQualified()),
+                                                                         hasInitializer(integerLiteral().bind("constant")))))))))
+        .bind("funcCall"),
+      &SprintfLiteral
+  );
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -1832,6 +1903,61 @@ void DiagnosticsMatcher::KungFuDeathGripChecker::run(
   // We cannot provide the note if we don't have an initializer
   Diag.Report(D->getLocStart(), ErrorID) << D->getType() << ErrThing;
   Diag.Report(E->getLocStart(), NoteID) << NoteThing << getNameChecked(D);
+}
+
+void DiagnosticsMatcher::SprintfLiteralChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  if (!Result.Context->getLangOpts().CPlusPlus) {
+    // SprintfLiteral is not usable in C, so there is no point in issuing these
+    // warnings.
+    return;
+  }
+
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+    DiagnosticIDs::Error, "Use %1 instead of %0 when writing into a character array.");
+  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+    DiagnosticIDs::Note, "This will prevent passing in the wrong size to %0 accidentally.");
+
+  const CallExpr *D = Result.Nodes.getNodeAs<CallExpr>("funcCall");
+
+  StringRef Name = D->getDirectCallee()->getName();
+  const char *Replacement;
+  if (Name == "snprintf") {
+    Replacement = "SprintfLiteral";
+  } else {
+    assert(Name == "vsnprintf");
+    Replacement = "VsprintfLiteral";
+  }
+
+  const DeclRefExpr *Buffer = Result.Nodes.getNodeAs<DeclRefExpr>("buffer");
+  const DeclRefExpr *Size = Result.Nodes.getNodeAs<DeclRefExpr>("size");
+  if (Size) {
+    // Match calls like snprintf(x, sizeof(x), ...).
+    if (Buffer->getFoundDecl() != Size->getFoundDecl()) {
+      return;
+    }
+
+    Diag.Report(D->getLocStart(), ErrorID) << Name << Replacement;
+    Diag.Report(D->getLocStart(), NoteID) << Name;
+    return;
+  }
+
+  const QualType QType = Buffer->getType();
+  const ConstantArrayType *Type = dyn_cast<ConstantArrayType>(QType.getTypePtrOrNull());
+  if (Type) {
+    // Match calls like snprintf(x, 100, ...), where x is int[100];
+    const IntegerLiteral *Literal = Result.Nodes.getNodeAs<IntegerLiteral>("immediate");
+    if (!Literal) {
+      // Match calls like: const int y = 100; snprintf(x, y, ...);
+      Literal = Result.Nodes.getNodeAs<IntegerLiteral>("constant");
+    }
+
+    if (Type->getSize().ule(Literal->getValue())) {
+      Diag.Report(D->getLocStart(), ErrorID) << Name << Replacement;
+      Diag.Report(D->getLocStart(), NoteID) << Name;
+    }
+  }
 }
 
 class MozCheckAction : public PluginASTAction {
