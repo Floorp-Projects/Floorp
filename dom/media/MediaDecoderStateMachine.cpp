@@ -571,7 +571,6 @@ public:
 
     mDecodeStartTime = TimeStamp::Now();
 
-    mMaster->mIsPrerolling = true;
     MaybeStopPrerolling();
 
     // Ensure that we've got tasks enqueued to decode data if we need to.
@@ -586,7 +585,6 @@ public:
       TimeDuration decodeDuration = TimeStamp::Now() - mDecodeStartTime;
       SLOG("Exiting DECODING, decoded for %.3lfs", decodeDuration.ToSeconds());
     }
-    mMaster->mIsPrerolling = false;
   }
 
   void Step() override
@@ -599,7 +597,7 @@ public:
     }
 
     // Start playback if necessary so that the clock can be properly queried.
-    if (!mMaster->mIsPrerolling) {
+    if (!mIsPrerolling) {
       mMaster->MaybeStartPlayback();
     }
 
@@ -669,7 +667,7 @@ public:
 
   void DumpDebugInfo() override
   {
-    SDUMP("mIsPrerolling=%d", mMaster->mIsPrerolling);
+    SDUMP("mIsPrerolling=%d", mIsPrerolling);
   }
 
 private:
@@ -706,10 +704,10 @@ private:
 
   void MaybeStopPrerolling()
   {
-    if (mMaster->mIsPrerolling &&
+    if (mIsPrerolling &&
         (mMaster->DonePrerollingAudio() || Reader()->IsWaitingAudioData()) &&
         (mMaster->DonePrerollingVideo() || Reader()->IsWaitingVideoData())) {
-      mMaster->mIsPrerolling = false;
+      mIsPrerolling = false;
       // Check if we can start playback.
       mMaster->ScheduleStateMachine();
     }
@@ -717,6 +715,15 @@ private:
 
   // Time at which we started decoding.
   TimeStamp mDecodeStartTime;
+
+  // When we start decoding (either for the first time, or after a pause)
+  // we may be low on decoded data. We don't want our "low data" logic to
+  // kick in and decide that we're low on decoded data because the download
+  // can't keep up with the decode, and cause us to pause playback. So we
+  // have a "preroll" stage, where we ignore the results of our "low data"
+  // logic during the first few frames of our decode. This occurs during
+  // playback.
+  bool mIsPrerolling = true;
 };
 
 class MediaDecoderStateMachine::SeekingState
