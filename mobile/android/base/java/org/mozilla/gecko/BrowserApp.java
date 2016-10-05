@@ -568,7 +568,8 @@ public class BrowserApp extends GeckoApp
         // - For short presses, we cancel the callback in onKeyUp
         // - For long presses, the normal keypress is marked as cancelled, hence won't be handled elsewhere
         //   (but Android still provides the haptic feedback), and the runnable is run.
-        if (!Versions.preN) {
+        if (!Versions.preN &&
+                keyCode == KeyEvent.KEYCODE_BACK) {
             ThreadUtils.getUiHandler().removeCallbacks(mCheckLongPress);
             ThreadUtils.getUiHandler().postDelayed(mCheckLongPress, ViewConfiguration.getLongPressTimeout());
         }
