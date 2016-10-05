@@ -72,6 +72,7 @@ using namespace mozilla::media;
 #undef SFMT
 #undef SLOG
 #undef SWARN
+#undef SDUMP
 
 #define FMT(x, ...) "Decoder=%p " x, mDecoderID, ##__VA_ARGS__
 #define DECODER_LOG(...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(__VA_ARGS__)))
@@ -84,6 +85,7 @@ using namespace mozilla::media;
 #define SFMT(x, ...) "Decoder=%p state=%s " x, mMaster->mDecoderID, ToStateStr(GetState()), ##__VA_ARGS__
 #define SLOG(...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (SFMT(__VA_ARGS__)))
 #define SWARN(...) NS_WARNING(nsPrintfCString(SFMT(__VA_ARGS__)).get())
+#define SDUMP(...) NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString(SFMT(__VA_ARGS__)).get(), nullptr, nullptr, -1)
 
 // Certain constants get stored as member variables and then adjusted by various
 // scale factors on a per-decoder basis. We want to make sure to avoid using these
@@ -226,6 +228,8 @@ public:
   virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) = 0;
 
   virtual bool HandleAudioCaptured() { return false; }
+
+  virtual void DumpDebugInfo() {}
 
 protected:
   using Master = MediaDecoderStateMachine;
@@ -661,6 +665,11 @@ public:
     // MediaSink is changed. Schedule Step() to check if we can start playback.
     mMaster->ScheduleStateMachine();
     return true;
+  }
+
+  void DumpDebugInfo() override
+  {
+    SDUMP("mIsPrerolling=%d", mMaster->mIsPrerolling);
   }
 
 private:
@@ -3048,15 +3057,16 @@ MediaDecoderStateMachine::DumpDebugInfo()
   // this function before shutdown begins.
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
     mMediaSink->DumpDebugInfo();
+    mStateObj->DumpDebugInfo();
     DUMP_LOG(
       "GetMediaTime=%lld GetClock=%lld mMediaSink=%p "
       "mState=%s mPlayState=%d mSentFirstFrameLoadedEvent=%d IsPlaying=%d "
       "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%lld mDecodedVideoEndTime=%lld "
-      "mIsPrerolling=%d mAudioCompleted=%d mVideoCompleted=%d",
+      "mAudioCompleted=%d mVideoCompleted=%d",
       GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1, mMediaSink.get(),
       ToStateStr(), mPlayState.Ref(), mSentFirstFrameLoadedEvent, IsPlaying(),
       AudioRequestStatus(), VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
-      mIsPrerolling, mAudioCompleted.Ref(), mVideoCompleted.Ref());
+      mAudioCompleted.Ref(), mVideoCompleted.Ref());
   });
 
   OwnerThread()->DispatchStateChange(r.forget());
