@@ -1,20 +1,20 @@
 namespace mozilla {
 namespace _ipdltest {
 
-prio(normal upto urgent) sync protocol PTestDemon
+nested(upto inside_cpow) sync protocol PTestDemon
 {
 child:
     async Start();
 
 both:
     async AsyncMessage(int n);
-    prio(high) sync HiPrioSyncMessage();
+    nested(inside_sync) sync HiPrioSyncMessage();
 
 parent:
     sync SyncMessage(int n);
 
-    prio(urgent) async UrgentAsyncMessage(int n);
-    prio(urgent) sync UrgentSyncMessage(int n);
+    nested(inside_cpow) async UrgentAsyncMessage(int n);
+    nested(inside_cpow) sync UrgentSyncMessage(int n);
 };
 
 } // namespace _ipdltest

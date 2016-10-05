@@ -228,8 +228,7 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
 
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
   mozilla::UniquePtr<Message> m = mozilla::MakeUnique<Message>(MSG_ROUTING_NONE,
-                                                               HELLO_MESSAGE_TYPE,
-                                                               IPC::Message::PRIORITY_NORMAL);
+                                                               HELLO_MESSAGE_TYPE);
 
   // If we're waiting for our shared secret from the other end's hello message
   // then don't give the game away by sending it in ours.

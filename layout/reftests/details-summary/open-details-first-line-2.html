@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html>
+  <style>
+  summary {
+    display: inline; /* ::first-line appiles only to inline element. */
+  }
+
+  details::first-line {
+    color: blue;
+  }
+  </style>
+  <body>
+    <details open>
+      <span>This is the details.</span>
+      <summary>Summary
+        <!-- Need ib-split so that the summary has multiple frames. -->
+        <div>Block in summary</div>
+      </summary>
+    </details>
+  </body>
+</html>

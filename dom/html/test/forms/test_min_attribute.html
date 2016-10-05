@@ -30,8 +30,7 @@ var data = [
   { type: 'datetime', apply: true, todo: true },
   { type: 'date', apply: true },
   { type: 'month', apply: true },
-  // TODO: temporary set to false until bug 888316 is fixed.
-  { type: 'week', apply: false },
+  { type: 'week', apply: true },
   { type: 'time', apply: true },
   { type: 'datetime-local', apply: true, todo: true },
   { type: 'number', apply: true },
@@ -72,7 +71,7 @@ function checkValidity(aElement, aValidity, aApply, aRangeApply)
      "element underflow status should be " + !aValidity);
   var underflowMsg =
         (aElement.type == "date" || aElement.type == "time" ||
-         aElement.type == "month") ?
+         aElement.type == "month" || aElement.type == "week") ?
         ("Please select a value that is no earlier than " + aElement.min + ".") :
         ("Please select a value that is no less than " + aElement.min + ".");
   is(aElement.validationMessage,
@@ -147,7 +146,7 @@ for (var test of data) {
       input.min = '2016-06';
       break;
     case 'week':
-      // TODO: this is temporary until bug 888316 is fixed.
+      input.min = "2016-W39";
       break;
     default:
       ok(false, 'please, add a case for this new type (' + input.type + ')');
@@ -381,7 +380,41 @@ for (var test of data) {
       checkValidity(input, true, apply, false);
       break;
     case 'week':
-      // TODO: this is temporary until bug 888316 is fixed.
+      input.value = '2016-W40';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2016-W39';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2016-W38';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '2016-W01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2015-W53';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '1000-W01';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '10000-01';
+      checkValidity(input, true, apply, apply);
+
+      input.min = '0010-W01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '0001-W01';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '';
+      checkValidity(input, true, apply, false);
+
+      input.min = 'foo';
+      checkValidity(input, true, apply, false);
       break;
     default:
       ok(false, 'write tests for ' + input.type);

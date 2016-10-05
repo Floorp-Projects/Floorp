@@ -2482,6 +2482,14 @@ js::TenuringTracer::traceSlots(Value* vp, Value* end)
         traverse(vp);
 }
 
+#ifdef DEBUG
+static inline ptrdiff_t
+OffsetToChunkEnd(void* p)
+{
+    return ChunkLocationOffset - (uintptr_t(p) & gc::ChunkMask);
+}
+#endif
+
 size_t
 js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind dstKind)
 {
@@ -2501,6 +2509,7 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
         tenuredSize = srcSize = sizeof(NativeObject);
 
     // Copy the Cell contents.
+    MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
     js_memcpy(dst, src, srcSize);
 
     // Move any hash code attached to the object.
