@@ -998,10 +998,45 @@ ComputeTransformListDistance(const nsCSSValueList* aList1,
   return sqrt(distance);
 }
 
+static double
+ComputeMismatchedTransfromListDistance(const nsCSSValueList* aList1,
+                                       const nsCSSValueList* aList2,
+                                       nsStyleContext* aStyleContext)
+{
+  // We need nsStyleContext and nsPresContext to compute calc() values while
+  // processing the translate part of transforms.
+  if (!aStyleContext) {
+    return 0.0;
+  }
+
+  RuleNodeCacheConditions dontCare;
+  bool dontCareBool;
+  nsStyleTransformMatrix::TransformReferenceBox emptyRefBox;
+
+  Matrix4x4 m1 = nsStyleTransformMatrix::ReadTransforms(
+                   aList1,
+                   aStyleContext,
+                   aStyleContext->PresContext(),
+                   dontCare,
+                   emptyRefBox,
+                   nsPresContext::AppUnitsPerCSSPixel(),
+                   &dontCareBool);
+  Matrix4x4 m2 = nsStyleTransformMatrix::ReadTransforms(
+                   aList2,
+                   aStyleContext,
+                   aStyleContext->PresContext(),
+                   dontCare,
+                   emptyRefBox,
+                   nsPresContext::AppUnitsPerCSSPixel(),
+                   &dontCareBool);
+  return sqrt(ComputeTransform3DMatrixDistance(m1, m2));
+}
+
 bool
 StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
                                      const StyleAnimationValue& aStartValue,
                                      const StyleAnimationValue& aEndValue,
+                                     nsStyleContext* aStyleContext,
                                      double& aDistance)
 {
   Unit commonUnit =
@@ -1415,13 +1450,11 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
         if (item1 || item2) {
           // Either the transform function types don't match or
           // the lengths don't match.
-
-          // TODO: Implement this for mismatched transform function in the later
-          // patch.
-          aDistance = 0.0;
-          return false;
+          aDistance =
+            ComputeMismatchedTransfromListDistance(list1, list2, aStyleContext);
+        } else {
+          aDistance = ComputeTransformListDistance(list1, list2);
         }
-        aDistance = ComputeTransformListDistance(list1, list2);
       }
       return true;
     }
