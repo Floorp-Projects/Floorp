@@ -37,6 +37,7 @@ const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 const { _loadPreferredDevices } = require("devtools/client/responsive.html/actions/devices");
 const { getOwnerWindow } = require("sdk/tabs/utils");
 const asyncStorage = require("devtools/shared/async-storage");
+const { addDevice, removeDevice } = require("devtools/client/shared/devices");
 
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
@@ -229,9 +230,14 @@ function openDeviceModal(ui) {
     "The device modal is displayed.");
 }
 
-function switchDevice({ toolWindow }, name) {
+function switchDevice({ toolWindow }, value) {
   return new Promise(resolve => {
-    let select = toolWindow.document.querySelector(".viewport-device-selector");
+    let selector = ".viewport-device-selector";
+    let select = toolWindow.document.querySelector(selector);
+    isnot(select, null, `selector "${selector}" should match an existing element.`);
+
+    let option = [...select.options].find(o => o.value === String(value));
+    isnot(option, undefined, `value "${value}" should match an existing option.`);
 
     let event = new toolWindow.UIEvent("change", {
       view: toolWindow,
@@ -239,13 +245,13 @@ function switchDevice({ toolWindow }, name) {
       cancelable: true
     });
 
-    select.addEventListener("change", function onChange() {
-      is(select.value, name, "Device should be selected");
-      select.removeEventListener("change", onChange);
+    select.addEventListener("change", () => {
+      is(select.value, value,
+        `Select's option with value "${value}" should be selected.`);
       resolve();
-    });
+    }, { once: true });
 
-    select.value = name;
+    select.value = value;
     select.dispatchEvent(event);
   });
 }
@@ -311,4 +317,14 @@ function forward(browser) {
   let shown = waitForPageShow(browser);
   browser.goForward();
   return shown;
+}
+
+function addDeviceForTest(device) {
+  info(`Adding Test Device "${device.name}" to the list.`);
+  addDevice(device);
+
+  registerCleanupFunction(() => {
+    // Note that assertions in cleanup functions are not displayed unless they failed.
+    ok(removeDevice(device), `Removed Test Device "${device.name}" from the list.`);
+  });
 }

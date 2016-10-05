@@ -19,17 +19,19 @@ NetworkEventMessage.displayName = "NetworkEventMessage";
 
 NetworkEventMessage.propTypes = {
   message: PropTypes.object.isRequired,
-  openNetworkPanel: PropTypes.func.isRequired,
+  serviceContainer: PropTypes.shape({
+    openNetworkPanel: PropTypes.func.isRequired,
+  }),
 };
 
 function NetworkEventMessage(props) {
-  const { message, openNetworkPanel, emitNewMessage } = props;
+  const { message, serviceContainer } = props;
   const { actor, source, type, level, request, isXHR } = message;
 
   const topLevelClasses = [ "cm-s-mozilla" ];
 
   function onUrlClick() {
-    openNetworkPanel(actor);
+    serviceContainer.openNetworkPanel(actor);
   }
 
   const method = dom.span({className: "method" }, request.method);
@@ -47,7 +49,7 @@ function NetworkEventMessage(props) {
     level,
     topLevelClasses,
     messageBody,
-    emitNewMessage,
+    serviceContainer,
   };
   return Message(childProps);
 }
