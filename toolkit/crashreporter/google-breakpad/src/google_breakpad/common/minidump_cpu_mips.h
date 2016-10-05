@@ -157,4 +157,20 @@ enum MDMIPSRegisterNumbers {
                                            MD_CONTEXT_MIPS_FLOATING_POINT \
                                            MD_CONTEXT_MIPS_DSP)
 
+/**
+ * Breakpad defines for MIPS64
+ */
+#define MD_CONTEXT_MIPS64  0x00080000
+#define MD_CONTEXT_MIPS64_INTEGER           (MD_CONTEXT_MIPS64 | 0x00000002)
+#define MD_CONTEXT_MIPS64_FLOATING_POINT    (MD_CONTEXT_MIPS64 | 0x00000004)
+#define MD_CONTEXT_MIPS64_DSP               (MD_CONTEXT_MIPS64 | 0x00000008)
+
+#define MD_CONTEXT_MIPS64_FULL              (MD_CONTEXT_MIPS64_INTEGER | \
+                                             MD_CONTEXT_MIPS64_FLOATING_POINT | \
+                                             MD_CONTEXT_MIPS64_DSP)
+
+#define MD_CONTEXT_MIPS64_ALL               (MD_CONTEXT_MIPS64_INTEGER | \
+                                             MD_CONTEXT_MIPS64_FLOATING_POINT \
+                                             MD_CONTEXT_MIPS64_DSP)
+
 #endif  // GOOGLE_BREAKPAD_COMMON_MINIDUMP_CPU_MIPS_H__

@@ -101,8 +101,8 @@ struct elf_prpsinfo {
   unsigned int   pr_uid;
   unsigned int   pr_gid;
 #elif defined(__mips__)
-  unsigned long  pr_uid;
-  unsigned long  pr_gid;
+  __kernel_uid_t pr_uid;
+  __kernel_gid_t pr_gid;
 #else
   unsigned short pr_uid;
   unsigned short pr_gid;
