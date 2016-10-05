@@ -677,21 +677,6 @@ private:
     return GetAmpleVideoFrames() / 2;
   }
 
-  bool DonePrerollingAudio()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return !IsAudioDecoding() ||
-        GetDecodedAudioDuration() >= AudioPrerollUsecs() * mPlaybackRate;
-  }
-
-  bool DonePrerollingVideo()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return !IsVideoDecoding() ||
-        static_cast<uint32_t>(VideoQueue().GetSize()) >=
-            VideoPrerollFrames() * mPlaybackRate + 1;
-  }
-
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
 
