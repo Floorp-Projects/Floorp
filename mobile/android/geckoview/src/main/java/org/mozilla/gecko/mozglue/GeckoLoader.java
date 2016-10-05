@@ -16,8 +16,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Environment;
+import java.util.ArrayList;
 import android.util.Log;
 
 import org.mozilla.gecko.annotation.JNITarget;
@@ -35,6 +37,7 @@ public final class GeckoLoader {
     private static boolean sSQLiteLibsLoaded;
     private static boolean sNSSLibsLoaded;
     private static boolean sMozGlueLoaded;
+    private static String[] sEnvList;
 
     private GeckoLoader() {
         // prevent instantiation
@@ -123,17 +126,30 @@ public final class GeckoLoader {
         sIntent = intent;
     }
 
+    public static void addEnvironmentToIntent(Intent intent) {
+        if (sEnvList != null) {
+            for (int ix = 0; ix < sEnvList.length; ix++) {
+                intent.putExtra("env" + ix, sEnvList[ix]);
+            }
+        }
+    }
+
     public static void setupGeckoEnvironment(Context context, String[] pluginDirs, String profilePath) {
         // if we have an intent (we're being launched by an activity)
         // read in any environmental variables from it here
         final SafeIntent intent = sIntent;
         if (intent != null) {
+            final ArrayList<String> envList = new ArrayList<String>();
             String env = intent.getStringExtra("env0");
             Log.d(LOGTAG, "Gecko environment env0: " + env);
             for (int c = 1; env != null; c++) {
+                envList.add(env);
                 putenv(env);
                 env = intent.getStringExtra("env" + c);
                 Log.d(LOGTAG, "env" + c + ": " + env);
+            }
+            if (envList.size() > 0) {
+              sEnvList = envList.toArray(new String[envList.size()]);
             }
         }
 
@@ -548,7 +564,7 @@ public final class GeckoLoader {
     private static native void putenv(String map);
 
     // These methods are implemented in mozglue/android/APKOpen.cpp
-    public static native void nativeRun(String args);
+    public static native void nativeRun(String[] args, int crashFd, int ipcFd);
     private static native void loadGeckoLibsNative(String apkName);
     private static native void loadSQLiteLibsNative(String apkName);
     private static native void loadNSSLibsNative(String apkName);

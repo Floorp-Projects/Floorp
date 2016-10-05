@@ -405,29 +405,85 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclas
   jenv->ReleaseStringUTFChars(jApkName, str);
 }
 
-typedef void (*GeckoStart_t)(JNIEnv*, char*, const nsXREAppData*);
-
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jstring jargs)
+static char**
+CreateArgvFromObjectArray(JNIEnv *jenv, jobjectArray jargs, int* length)
 {
-  GeckoStart_t GeckoStart;
-  xul_dlsym("GeckoStart", &GeckoStart);
-  if (GeckoStart == nullptr)
-    return;
-  // XXX: java doesn't give us true UTF8, we should figure out something
-  // better to do here
-  int len = jenv->GetStringUTFLength(jargs);
-  // GeckoStart needs to write in the args buffer, so we need a copy.
-  char *args = (char *) malloc(len + 1);
-  jenv->GetStringUTFRegion(jargs, 0, len, args);
-  args[len] = '\0';
-  ElfLoader::Singleton.ExpectShutdown(false);
-  GeckoStart(jenv, args, &sAppData);
-  ElfLoader::Singleton.ExpectShutdown(true);
-  free(args);
+  size_t stringCount = jenv->GetArrayLength(jargs);
+
+  if (length) {
+    *length = stringCount;
+  }
+
+  if (!stringCount) {
+    return nullptr;
+  }
+
+  char** argv = new char*[stringCount + 1];
+
+  argv[stringCount] = nullptr;
+
+  for (size_t ix = 0; ix < stringCount; ix++) {
+    jstring string = (jstring) (jenv->GetObjectArrayElement(jargs, ix));
+    const char* rawString = jenv->GetStringUTFChars(string, nullptr);
+    const int strLength = jenv->GetStringUTFLength(string);
+    argv[ix] = strndup(rawString, strLength);
+    jenv->ReleaseStringUTFChars(string, rawString);
+    jenv->DeleteLocalRef(string);
+  }
+
+  return argv;
 }
 
+static void
+FreeArgv(char** argv, int argc)
+{
+  for (int ix=0; ix < argc; ix++) {
+    // String was allocated with strndup, so need to use free to deallocate.
+    free(argv[ix]);
+  }
+  delete[](argv);
+}
+
+typedef void (*GeckoStart_t)(JNIEnv*, char**, int, const nsXREAppData*);
 typedef int GeckoProcessType;
+
+extern "C" NS_EXPORT void MOZ_JNICALL
+Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jobjectArray jargs, int crashFd, int ipcFd)
+{
+  int argc = 0;
+  char** argv = CreateArgvFromObjectArray(jenv, jargs, &argc);
+
+  if (ipcFd < 0) {
+    GeckoStart_t GeckoStart;
+    xul_dlsym("GeckoStart", &GeckoStart);
+
+    if (GeckoStart == nullptr) {
+      FreeArgv(argv, argc);
+      return;
+    }
+
+    ElfLoader::Singleton.ExpectShutdown(false);
+    GeckoStart(jenv, argv, argc, &sAppData);
+    ElfLoader::Singleton.ExpectShutdown(true);
+  } else {
+    void (*fXRE_SetAndroidChildFds)(int, int);
+    xul_dlsym("XRE_SetAndroidChildFds", &fXRE_SetAndroidChildFds);
+
+    void (*fXRE_SetProcessType)(char*);
+    xul_dlsym("XRE_SetProcessType", &fXRE_SetProcessType);
+
+    mozglueresult (*fXRE_InitChildProcess)(int, char**, void*);
+    xul_dlsym("XRE_InitChildProcess", &fXRE_InitChildProcess);
+
+    fXRE_SetAndroidChildFds(crashFd, ipcFd);
+    fXRE_SetProcessType(argv[argc - 1]);
+
+    XREChildData childData;
+    fXRE_InitChildProcess(argc - 1, argv, &childData);
+  }
+
+  FreeArgv(argv, argc);
+}
 
 extern "C" NS_EXPORT mozglueresult
 ChildProcessInit(int argc, char* argv[])
