@@ -757,13 +757,6 @@ nsPluginTag::GetNiceName(nsACString & aResult)
   return NS_OK;
 }
 
-void nsPluginTag::ImportFlagsToPrefs(uint32_t flags)
-{
-  if (!(flags & NS_PLUGIN_FLAG_ENABLED)) {
-    SetPluginState(ePluginState_Disabled);
-  }
-}
-
 NS_IMETHODIMP
 nsPluginTag::GetBlocklistState(uint32_t *aResult)
 {
