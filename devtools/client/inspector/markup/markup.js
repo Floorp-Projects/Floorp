@@ -37,7 +37,7 @@ const {HTMLEditor} = require("devtools/client/inspector/markup/html-editor");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
-const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
+const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {setImageTooltip, setBrokenImageTooltip} =
       require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 const {setEventTooltip} = require("devtools/client/shared/widgets/tooltip/EventTooltipHelper");
