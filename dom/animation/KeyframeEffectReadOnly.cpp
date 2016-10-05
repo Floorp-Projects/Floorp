@@ -286,14 +286,10 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
     return;
   }
 
-  // Preserve the state of mWinsInCascade and mIsRunningOnCompositor flags.
-  nsCSSPropertyIDSet winningInCascadeProperties;
+  // Preserve the state of the mIsRunningOnCompositor flag.
   nsCSSPropertyIDSet runningOnCompositorProperties;
 
   for (const AnimationProperty& property : mProperties) {
-    if (property.mWinsInCascade) {
-      winningInCascadeProperties.AddProperty(property.mProperty);
-    }
     if (property.mIsRunningOnCompositor) {
       runningOnCompositorProperties.AddProperty(property.mProperty);
     }
@@ -302,8 +298,6 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
   mProperties = Move(properties);
 
   for (AnimationProperty& property : mProperties) {
-    property.mWinsInCascade =
-      winningInCascadeProperties.HasProperty(property.mProperty);
     property.mIsRunningOnCompositor =
       runningOnCompositorProperties.HasProperty(property.mProperty);
   }
@@ -1297,8 +1291,6 @@ KeyframeEffectReadOnly::MaybeUpdateFrameForCompositor()
     return;
   }
 
-  // We don't check mWinsInCascade flag here because, at this point,
-  // UpdateCascadeResults has not yet run.
   // FIXME: Bug 1272495: If this effect does not win in the cascade, the
   // NS_FRAME_MAY_BE_TRANSFORMED flag should be removed when the animation
   // will be removed from effect set or the transform keyframes are removed

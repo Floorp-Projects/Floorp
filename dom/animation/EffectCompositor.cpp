@@ -711,20 +711,14 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
   propertiesWithImportantRules.Empty();
   propertiesForAnimationsLevel.Empty();
 
-  nsCSSPropertyIDSet animatedProperties;
   bool hasCompositorPropertiesForTransition = false;
 
-  for (KeyframeEffectReadOnly* effect : sortedEffectList) {
+  for (const KeyframeEffectReadOnly* effect : sortedEffectList) {
     MOZ_ASSERT(effect->GetAnimation(),
                "Effects on a target element should have an Animation");
-    bool inEffect = effect->IsInEffect();
     CascadeLevel cascadeLevel = effect->GetAnimation()->CascadeLevel();
 
-    for (AnimationProperty& prop : effect->Properties()) {
-
-      bool winsInCascade = !animatedProperties.HasProperty(prop.mProperty) &&
-                           inEffect;
-
+    for (const AnimationProperty& prop : effect->Properties()) {
       if (overriddenProperties.HasProperty(prop.mProperty)) {
         propertiesWithImportantRules.AddProperty(prop.mProperty);
       }
@@ -737,29 +731,6 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
           cascadeLevel == EffectCompositor::CascadeLevel::Transitions) {
         hasCompositorPropertiesForTransition = true;
       }
-
-      // If this property wins in the cascade, add it to the set of animated
-      // properties. We need to do this even if the property is overridden
-      // (in which case we set winsInCascade to false below) since we don't
-      // want to fire transitions on these properties.
-      if (winsInCascade) {
-        animatedProperties.AddProperty(prop.mProperty);
-      }
-
-      // For effects that will be applied to the animations level of the
-      // cascade, we need to check that the property isn't being set by
-      // something with higher priority in the cascade.
-      //
-      // We only do this, however, for properties that can be animated on
-      // the compositor. For properties animated on the main thread the usual
-      // cascade ensures these animations will be correctly overridden.
-      if (winsInCascade &&
-          effect->GetAnimation()->CascadeLevel() == CascadeLevel::Animations &&
-          overriddenProperties.HasProperty(prop.mProperty)) {
-        winsInCascade = false;
-      }
-
-      prop.mWinsInCascade = winsInCascade;
     }
   }
 
