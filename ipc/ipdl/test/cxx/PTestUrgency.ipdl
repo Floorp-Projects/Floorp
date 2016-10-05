@@ -1,18 +1,18 @@
 namespace mozilla {
 namespace _ipdltest {
 
-prio(normal upto high) sync protocol PTestUrgency
+nested(upto inside_cpow) sync protocol PTestUrgency
 {
 parent:
-    prio(high) sync Test1() returns (uint32_t result);
+    nested(inside_sync) sync Test1() returns (uint32_t result);
     async Test2();
     sync Test3() returns (uint32_t result);
     sync FinalTest_Begin();
 
 child:
     async Start();
-    prio(high) sync Reply1() returns (uint32_t result);
-    prio(high) sync Reply2() returns (uint32_t result);
+    nested(inside_sync) sync Reply1() returns (uint32_t result);
+    nested(inside_sync) sync Reply2() returns (uint32_t result);
 };
 
 } // namespace _ipdltest

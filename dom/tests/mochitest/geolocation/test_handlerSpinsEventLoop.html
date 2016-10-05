@@ -40,13 +40,20 @@ function successCallback(position) {
   while (!timeoutPassed) {
     SpecialPowers.spinEventLoop(window);
   }
-  ok(successCallbackCalled != errorCallbackCalled, "Ensure only one callback is called");
-  SimpleTest.finish();
+  info("TEST-INFO | successCallback called");
+  check();
 }
 
 var errorCallbackCalled = false;
 function errorCallback(error) {
   errorCallbackCalled = true;
+  info("TEST-INFO | errorCallback called");
+  check();
+}
+
+function check() {
+  ok(successCallbackCalled != errorCallbackCalled, "Ensure only one callback is called");
+  SimpleTest.finish();
 }
 
 var timeoutPassed = false;

@@ -128,13 +128,12 @@ reserved = set((
         'delete',                       # reserve 'delete' to prevent its use
         'from',
         'goto',
-        'high',
         'include',
         'intr',
         'manager',
         'manages',
         'namespace',
-        'normal',
+        'nested',
         'nullable',
         'opens',
         'or',
@@ -151,7 +150,6 @@ reserved = set((
         'sync',
         'union',
         'upto',
-        'urgent',
         'using',
         'verify'))
 tokens = [
@@ -359,7 +357,7 @@ def p_ProtocolDefn(p):
     protocol = p[5]
     protocol.loc = locFromTok(p, 2)
     protocol.name = p[3]
-    protocol.priorityRange = p[1][0]
+    protocol.nestedRange = p[1][0]
     protocol.sendSemantics = p[1][1]
     p[0] = protocol
 
@@ -502,8 +500,9 @@ def p_MessageDirectionLabel(p):
 def p_MessageDecl(p):
     """MessageDecl : SendSemanticsQual MessageBody"""
     msg = p[2]
-    msg.priority = p[1][0]
-    msg.sendSemantics = p[1][1]
+    msg.nested = p[1][0]
+    msg.prio = p[1][1]
+    msg.sendSemantics = p[1][2]
 
     if Parser.current.direction is None:
         _error(msg.loc, 'missing message direction')
@@ -641,61 +640,82 @@ def p_State(p):
 
 ##--------------------
 ## Minor stuff
+def p_Nested(p):
+    """Nested : ID"""
+    kinds = {'not': 1,
+             'inside_sync': 2,
+             'inside_cpow': 3}
+    if p[1] not in kinds:
+        _error(locFromTok(p, 1), "Expected not, inside_sync, or inside_cpow for nested()")
+
+    p[0] = { 'nested': kinds[p[1]] }
+
 def p_Priority(p):
-    """Priority : NORMAL
-                | HIGH
-                | URGENT"""
-    prios = {'normal': 1,
-             'high': 2,
-             'urgent': 3}
-    p[0] = prios[p[1]]
+    """Priority : ID"""
+    kinds = {'normal': 1,
+             'high': 2}
+    if p[1] not in kinds:
+        _error(locFromTok(p, 1), "Expected normal or high for prio()")
+
+    p[0] = { 'prio': kinds[p[1]] }
+
+def p_SendQualifier(p):
+    """SendQualifier : NESTED '(' Nested ')'
+                     | PRIO '(' Priority ')'"""
+    p[0] = p[3]
+
+def p_SendQualifierList(p):
+    """SendQualifierList : SendQualifier SendQualifierList
+                         | """
+    if len(p) > 1:
+        p[0] = p[1]
+        p[0].update(p[2])
+    else:
+        p[0] = {}
 
 def p_SendSemanticsQual(p):
-    """SendSemanticsQual : ASYNC
-                         | SYNC
-                         | PRIO '(' Priority ')' ASYNC
-                         | PRIO '(' Priority ')' SYNC
+    """SendSemanticsQual : SendQualifierList ASYNC
+                         | SendQualifierList SYNC
                          | INTR"""
-    if p[1] == 'prio':
-        mtype = p[5]
-        prio = p[3]
+    quals = {}
+    if len(p) == 3:
+        quals = p[1]
+        mtype = p[2]
     else:
-        mtype = p[1]
-        prio = NORMAL_PRIORITY
+        mtype = 'intr'
 
     if mtype == 'async': mtype = ASYNC
     elif mtype == 'sync': mtype = SYNC
     elif mtype == 'intr': mtype = INTR
     else: assert 0
 
-    p[0] = [ prio, mtype ]
+    p[0] = [ quals.get('nested', NOT_NESTED), quals.get('prio', NORMAL_PRIORITY), mtype ]
 
 def p_OptionalProtocolSendSemanticsQual(p):
     """OptionalProtocolSendSemanticsQual : ProtocolSendSemanticsQual
                                          | """
     if 2 == len(p): p[0] = p[1]
-    else:           p[0] = [ (NORMAL_PRIORITY, NORMAL_PRIORITY), ASYNC ]
+    else:           p[0] = [ (NOT_NESTED, NOT_NESTED), ASYNC ]
 
 def p_ProtocolSendSemanticsQual(p):
     """ProtocolSendSemanticsQual : ASYNC
                                  | SYNC
-                                 | PRIO '(' Priority UPTO Priority ')' ASYNC
-                                 | PRIO '(' Priority UPTO Priority ')' SYNC
-                                 | PRIO '(' Priority UPTO Priority ')' INTR
+                                 | NESTED '(' UPTO Nested ')' ASYNC
+                                 | NESTED '(' UPTO Nested ')' SYNC
                                  | INTR"""
-    if p[1] == 'prio':
-        mtype = p[7]
-        prio = (p[3], p[5])
+    if p[1] == 'nested':
+        mtype = p[6]
+        nested = (NOT_NESTED, p[4])
     else:
         mtype = p[1]
-        prio = (NORMAL_PRIORITY, NORMAL_PRIORITY)
+        nested = (NOT_NESTED, NOT_NESTED)
 
     if mtype == 'async': mtype = ASYNC
     elif mtype == 'sync': mtype = SYNC
     elif mtype == 'intr': mtype = INTR
     else: assert 0
 
-    p[0] = [ prio, mtype ]
+    p[0] = [ nested, mtype ]
 
 def p_ParamList(p):
     """ParamList : ParamList ',' Param

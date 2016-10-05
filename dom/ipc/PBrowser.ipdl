@@ -111,7 +111,7 @@ union OptionalShmem
   Shmem;
 };
 
-prio(normal upto urgent) sync protocol PBrowser
+nested(upto inside_cpow) sync protocol PBrowser
 {
     manager PContent or PContentBridge;
 
@@ -204,8 +204,8 @@ parent:
                      CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
 
-    prio(high) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
-                               CpowEntry[] aCpows, Principal aPrincipal)
+    nested(inside_sync) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
+                                        CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
 
     /**
@@ -216,8 +216,8 @@ parent:
      *  notification Whole data of the notification
      *  preference   Native widget preference for IME updates
      */
-    prio(urgent) sync NotifyIMEFocus(ContentCache contentCache,
-                                     IMENotification notification)
+    nested(inside_cpow) sync NotifyIMEFocus(ContentCache contentCache,
+                                            IMENotification notification)
       returns (nsIMEUpdatePreference preference);
 
     /**
@@ -228,16 +228,16 @@ parent:
      *  contentCache Cache of content
      *  notification Whole data of the notification
      */
-    prio(urgent) async NotifyIMETextChange(ContentCache contentCache,
-                                           IMENotification notification);
+    nested(inside_cpow) async NotifyIMETextChange(ContentCache contentCache,
+                                                  IMENotification notification);
 
     /**
      * Notifies chrome that there is a IME compostion rect updated
      *
      *  contentCache Cache of content
      */
-    prio(urgent) async NotifyIMECompositionUpdate(ContentCache contentCache,
-                                                  IMENotification notification);
+    nested(inside_cpow) async NotifyIMECompositionUpdate(ContentCache contentCache,
+                                                         IMENotification notification);
 
     /**
      * Notifies chrome that there has been a change in selection
@@ -246,8 +246,8 @@ parent:
      *  contentCache Cache of content
      *  notification Whole data of the notification
      */
-    prio(urgent) async NotifyIMESelection(ContentCache contentCache,
-                                          IMENotification notification);
+    nested(inside_cpow) async NotifyIMESelection(ContentCache contentCache,
+                                                 IMENotification notification);
 
     /**
      * Notifies chrome of updating its content cache.
@@ -255,14 +255,14 @@ parent:
      *
      *  contentCache Cache of content
      */
-    prio(urgent) async UpdateContentCache(ContentCache contentCache);
+    nested(inside_cpow) async UpdateContentCache(ContentCache contentCache);
 
     /**
      * Notifies IME of mouse button event on a character in focused editor.
      *
      * Returns true if the mouse button event is consumd by IME.
      */
-    prio(urgent) sync NotifyIMEMouseButtonEvent(IMENotification notification)
+    nested(inside_cpow) sync NotifyIMEMouseButtonEvent(IMENotification notification)
       returns (bool consumedByIME);
 
     /**
@@ -270,8 +270,8 @@ parent:
      *
      *  contentCache Cache of content
      */
-    prio(urgent) async NotifyIMEPositionChange(ContentCache contentCache,
-                                               IMENotification notification);
+    nested(inside_cpow) async NotifyIMEPositionChange(ContentCache contentCache,
+                                                      IMENotification notification);
 
     /**
      * Requests chrome to commit or cancel composition of IME.
@@ -285,7 +285,7 @@ parent:
      *                        try to restore selected string which was
      *                        replaced with the composition.
      */
-    prio(urgent) sync RequestIMEToCommitComposition(bool cancel)
+    nested(inside_cpow) sync RequestIMEToCommitComposition(bool cancel)
                         returns (bool isCommitted, nsString committedString);
 
     /**
@@ -295,7 +295,7 @@ parent:
      *
      * message      The message value of the handled event.
      */
-    prio(urgent) async OnEventNeedingAckHandled(EventMessage message);
+    nested(inside_cpow) async OnEventNeedingAckHandled(EventMessage message);
 
     /**
      * Tells chrome to start plugin IME.  If this results in a string getting
@@ -306,9 +306,9 @@ parent:
      *                    (should be just under the plugin)
      * aCommitted         The string committed during IME -- otherwise empty
      */
-    prio(urgent) sync StartPluginIME(WidgetKeyboardEvent aKeyboardEvent,
-                                     int32_t panelX, int32_t panelY)
-                                     returns (nsString aCommitted);
+    nested(inside_cpow) sync StartPluginIME(WidgetKeyboardEvent aKeyboardEvent,
+                                            int32_t panelX, int32_t panelY)
+        returns (nsString aCommitted);
 
     /**
      * Tells chrome (and specifically the appropriate widget) whether or not
@@ -317,7 +317,7 @@ parent:
      *
      * aFocused  Whether or not a plugin is focused
      */
-    prio(urgent) async SetPluginFocused(bool aFocused);
+    nested(inside_cpow) async SetPluginFocused(bool aFocused);
 
     /**
      * Set IME candidate window by windowless plugin if plugin has focus.
@@ -332,7 +332,7 @@ parent:
      *                  NativeEventData depending on the caller.  Please check
      *                  PluginInstanceChild.
      */
-    prio(urgent) async OnWindowedPluginKeyEvent(NativeEventData aKeyEventData);
+    nested(inside_cpow) async OnWindowedPluginKeyEvent(NativeEventData aKeyEventData);
 
     /**
      *  When plugin event isn't consumed, call this
@@ -353,16 +353,16 @@ parent:
                                 nsCString[] enabledCommands,
                                 nsCString[] disabledCommands);
 
-    prio(urgent) sync GetInputContext() returns (int32_t IMEEnabled,
-                                                 int32_t IMEOpen);
+    nested(inside_cpow) sync GetInputContext() returns (int32_t IMEEnabled,
+                                                        int32_t IMEOpen);
 
-    prio(urgent) async SetInputContext(int32_t IMEEnabled,
-                                       int32_t IMEOpen,
-                                       nsString type,
-                                       nsString inputmode,
-                                       nsString actionHint,
-                                       int32_t cause,
-                                       int32_t focusChange);
+    nested(inside_cpow) async SetInputContext(int32_t IMEEnabled,
+                                              int32_t IMEOpen,
+                                              nsString type,
+                                              nsString inputmode,
+                                              nsString actionHint,
+                                              int32_t cause,
+                                              int32_t focusChange);
 
     sync IsParentWindowMainWidgetVisible() returns (bool visible);
 
@@ -579,9 +579,9 @@ parent:
      */
     async SetDimensions(uint32_t aFlags, int32_t aX, int32_t aY, int32_t aCx, int32_t aCy);
 
-    prio(high) sync DispatchWheelEvent(WidgetWheelEvent event);
-    prio(high) sync DispatchMouseEvent(WidgetMouseEvent event);
-    prio(high) sync DispatchKeyboardEvent(WidgetKeyboardEvent event);
+    nested(inside_sync) sync DispatchWheelEvent(WidgetWheelEvent event);
+    nested(inside_sync) sync DispatchMouseEvent(WidgetMouseEvent event);
+    nested(inside_sync) sync DispatchKeyboardEvent(WidgetKeyboardEvent event);
 
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
                             OptionalShmem visualData,

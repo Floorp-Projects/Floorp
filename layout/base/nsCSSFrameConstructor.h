@@ -862,6 +862,27 @@ private:
       return item;
     }
 
+    // Arguments are the same as AppendItem().
+    FrameConstructionItem* PrependItem(const FrameConstructionData* aFCData,
+                                       nsIContent* aContent,
+                                       nsIAtom* aTag,
+                                       int32_t aNameSpaceID,
+                                       PendingBinding* aPendingBinding,
+                                       already_AddRefed<nsStyleContext>&& aStyleContext,
+                                       bool aSuppressWhiteSpaceOptimizations,
+                                       nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren)
+    {
+      FrameConstructionItem* item =
+        new FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
+                                  aPendingBinding, aStyleContext,
+                                  aSuppressWhiteSpaceOptimizations,
+                                  aAnonChildren);
+      PR_INSERT_LINK(item, &mItems);
+      ++mItemCount;
+      ++mDesiredParentCounts[item->DesiredParentType()];
+      return item;
+    }
+
     void AppendUndisplayedItem(nsIContent* aContent,
                                nsStyleContext* aStyleContext) {
       mUndisplayedItems.AppendElement(UndisplayedItem(aContent, aStyleContext));

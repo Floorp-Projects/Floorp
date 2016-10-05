@@ -8,6 +8,7 @@
 
 #include "DOMMediaStream.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobChild.h"
@@ -129,13 +130,13 @@ BroadcastBlobURLRegistration(const nsACString& aURI,
   MOZ_ASSERT(aBlobImpl);
 
   if (XRE_IsParentProcess()) {
-    ContentParent::BroadcastBlobURLRegistration(aURI, aBlobImpl,
-                                                aPrincipal);
+    dom::ContentParent::BroadcastBlobURLRegistration(aURI, aBlobImpl,
+                                                     aPrincipal);
     return;
   }
 
-  ContentChild* cc = ContentChild::GetSingleton();
-  BlobChild* actor = cc->GetOrCreateActorForBlobImpl(aBlobImpl);
+  dom::ContentChild* cc = dom::ContentChild::GetSingleton();
+  dom::BlobChild* actor = cc->GetOrCreateActorForBlobImpl(aBlobImpl);
   if (NS_WARN_IF(!actor)) {
     return;
   }
@@ -151,11 +152,11 @@ BroadcastBlobURLUnregistration(const nsACString& aURI, DataInfo* aInfo)
   MOZ_ASSERT(NS_IsMainThread());
 
   if (XRE_IsParentProcess()) {
-    ContentParent::BroadcastBlobURLUnregistration(aURI);
+    dom::ContentParent::BroadcastBlobURLUnregistration(aURI);
     return;
   }
 
-  ContentChild* cc = ContentChild::GetSingleton();
+  dom::ContentChild* cc = dom::ContentChild::GetSingleton();
   Unused << NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(
     nsCString(aURI)));
 }
@@ -464,7 +465,7 @@ nsHostObjectProtocolHandler::AddDataEntry(BlobImpl* aBlobImpl,
   rv = AddDataEntryInternal(aUri, aBlobImpl, aPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  BroadcastBlobURLRegistration(aUri, aBlobImpl, aPrincipal);
+  mozilla::BroadcastBlobURLRegistration(aUri, aBlobImpl, aPrincipal);
   return NS_OK;
 }
 
@@ -509,8 +510,9 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aURI,
 }
 
 /* static */ bool
-nsHostObjectProtocolHandler::GetAllBlobURLEntries(nsTArray<BlobURLRegistrationData>& aRegistrations,
-                                                  ContentParent* aCP)
+nsHostObjectProtocolHandler::GetAllBlobURLEntries(
+  nsTArray<mozilla::dom::BlobURLRegistrationData>& aRegistrations,
+  mozilla::dom::ContentParent* aCP)
 {
   MOZ_ASSERT(aCP);
 
@@ -527,14 +529,15 @@ nsHostObjectProtocolHandler::GetAllBlobURLEntries(nsTArray<BlobURLRegistrationDa
     }
 
     MOZ_ASSERT(info->mBlobImpl);
-    PBlobParent* blobParent = aCP->GetOrCreateActorForBlobImpl(info->mBlobImpl);
+    mozilla::dom::PBlobParent* blobParent =
+      aCP->GetOrCreateActorForBlobImpl(info->mBlobImpl);
     if (!blobParent) {
       return false;
     }
 
-    aRegistrations.AppendElement(
-      BlobURLRegistrationData(nsCString(iter.Key()), blobParent, nullptr,
-                              IPC::Principal(info->mPrincipal)));
+    aRegistrations.AppendElement(mozilla::dom::BlobURLRegistrationData(
+      nsCString(iter.Key()), blobParent, nullptr,
+      IPC::Principal(info->mPrincipal)));
   }
 
   return true;
@@ -554,7 +557,7 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
   }
 
   if (aBroadcastToOtherProcesses && info->mObjectType == DataInfo::eBlobImpl) {
-    BroadcastBlobURLUnregistration(aUri, info);
+    mozilla::BroadcastBlobURLUnregistration(aUri, info);
   }
 
   gDataTable->Remove(aUri);
