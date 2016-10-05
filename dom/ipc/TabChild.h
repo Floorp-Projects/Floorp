@@ -518,10 +518,6 @@ public:
 
   nsIContentChild* Manager() const { return mManager; }
 
-  bool GetUpdateHitRegion() const { return mUpdateHitRegion; }
-
-  void UpdateHitRegion(const nsRegion& aRegion);
-
   static inline TabChild*
   GetFrom(nsIDocShell* aDocShell)
   {
@@ -667,8 +663,6 @@ protected:
 
   virtual bool RecvDestroy() override;
 
-  virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) override;
-
   virtual bool RecvSetDocShellIsActive(const bool& aIsActive,
                                        const bool& aIsHidden,
                                        const uint64_t& aLayerObserverEpoch) override;
@@ -760,7 +754,6 @@ private:
   bool mNotified;
   bool mTriedBrowserInit;
   ScreenOrientationInternal mOrientation;
-  bool mUpdateHitRegion;
 
   bool mIgnoreKeyPressEvent;
   RefPtr<APZEventState> mAPZEventState;
