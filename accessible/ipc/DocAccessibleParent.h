@@ -73,6 +73,7 @@ public:
   virtual bool RecvRoleChangedEvent(const uint32_t& aRole) override final;
 
   virtual bool RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID) override;
+
   void Unbind()
   {
     mParent = nullptr;
@@ -143,8 +144,11 @@ public:
     { return mChildDocs[aIdx]; }
 
 #if defined(XP_WIN)
-  virtual bool RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
+  virtual bool RecvCOMProxy(const int32_t& aMsaaID,
+                            const IAccessibleHolder& aCOMProxy,
                             IAccessibleHolder* aParentCOMProxy) override;
+
+  virtual bool RecvMsaaID(const int32_t& aMsaaID) override;
 #endif
 
 private:
