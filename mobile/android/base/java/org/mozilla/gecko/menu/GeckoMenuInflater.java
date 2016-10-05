@@ -152,9 +152,7 @@ public class GeckoMenuInflater extends MenuInflater {
                 .setCheckable(item.checkable)
                 .setIcon(item.iconRes);
 
-        if (Versions.feature11Plus) {
-            menuItem.setShowAsAction(item.showAsAction);
-        }
+        menuItem.setShowAsAction(item.showAsAction);
 
         if (geckoItem != null) {
             // We don't need to allow presenter updates during inflation,

@@ -85,7 +85,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
         // Despite what the docs say, setItemChecked was not moved into the AbsListView class until sometime between
         // Android 2.3.7 and Android 4.0.3. For other versions the item won't be visually highlighted, BUT we really only
         // mSelected will still be set so that we default to its behavior.
-        if (Versions.feature11Plus && mSelected > -1) {
+        if (mSelected > -1) {
             view.setItemChecked(mSelected, true);
         }
 

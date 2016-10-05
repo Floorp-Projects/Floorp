@@ -48,20 +48,8 @@ class CanvasDelegate {
         if (path != null && !path.isEmpty()) {
             // ICS added double-buffering, which made it easier for drawing the Path directly over the DST.
             // In pre-ICS, drawPath() doesn't seem to use ARGB_8888 mode for performance, hence transparency is not preserved.
-            if (Versions.feature14Plus) {
-                mPaint.setXfermode(mMode);
-                canvas.drawPath(path, mPaint);
-            } else {
-                // Allocate a bitmap and draw the masking/clipping path.
-                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                (new Canvas(bitmap)).drawPath(path, mPaint);
-
-                mPaint.setXfermode(mMode);
-                canvas.drawBitmap(bitmap, 0, 0, mPaint);
-                bitmap.recycle();
-
-                mPaint.setXfermode(null);
-            }
+            mPaint.setXfermode(mMode);
+            canvas.drawPath(path, mPaint);
         }
 
         // Restore the canvas.

@@ -61,13 +61,16 @@ public:
 
   void DoNotifyFinished()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     mFinishPromise.ResolveIfExists(true, __func__);
   }
 
   void Forget()
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    mFinishPromise.ResolveIfExists(true, __func__);
+    AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction([this] () {
+      MOZ_ASSERT(NS_IsMainThread());
+      mFinishPromise.ResolveIfExists(true, __func__);
+    }));
     MutexAutoLock lock(mMutex);
     mStream = nullptr;
   }
@@ -123,6 +126,7 @@ public:
   ~DecodedStreamData();
   void SetPlaying(bool aPlaying);
   MediaEventSource<int64_t>& OnOutput();
+  void Forget();
 
   /* The following group of fields are protected by the decoder's monitor
    * and can be read or written on any thread.
@@ -188,7 +192,6 @@ DecodedStreamData::DecodedStreamData(OutputStreamManager* aOutputStreamManager,
 DecodedStreamData::~DecodedStreamData()
 {
   mOutputStreamManager->Disconnect();
-  mListener->Forget();
   mStream->Destroy();
 }
 
@@ -205,6 +208,12 @@ DecodedStreamData::SetPlaying(bool aPlaying)
     mPlaying = aPlaying;
     UpdateStreamSuspended(mStream, !mPlaying);
   }
+}
+
+void
+DecodedStreamData::Forget()
+{
+  mListener->Forget();
 }
 
 DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
@@ -363,6 +372,7 @@ DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
   mOutputListener.Disconnect();
 
   DecodedStreamData* data = aData.release();
+  data->Forget();
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
     delete data;
   });

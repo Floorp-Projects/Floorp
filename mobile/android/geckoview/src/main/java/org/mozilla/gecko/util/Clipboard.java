@@ -63,26 +63,19 @@ public final class Clipboard {
     public static void setText(final CharSequence text) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
-            @SuppressWarnings("deprecation")
             public void run() {
                 // In API Level 11 and above, CLIPBOARD_SERVICE returns android.content.ClipboardManager,
                 // which is a subclass of android.text.ClipboardManager.
-                if (Versions.feature11Plus) {
-                    final android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                    final ClipData clip = ClipData.newPlainText("Text", text);
-                    try {
-                        cm.setPrimaryClip(clip);
-                    } catch (NullPointerException e) {
-                        // Bug 776223: This is a Samsung clipboard bug. setPrimaryClip() can throw
-                        // a NullPointerException if Samsung's /data/clipboard directory is full.
-                        // Fortunately, the text is still successfully copied to the clipboard.
-                    }
-                    return;
+                final android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                final ClipData clip = ClipData.newPlainText("Text", text);
+                try {
+                    cm.setPrimaryClip(clip);
+                } catch (NullPointerException e) {
+                    // Bug 776223: This is a Samsung clipboard bug. setPrimaryClip() can throw
+                    // a NullPointerException if Samsung's /data/clipboard directory is full.
+                    // Fortunately, the text is still successfully copied to the clipboard.
                 }
-
-                // Deprecated.
-                android.text.ClipboardManager cm = (android.text.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                cm.setText(text);
+                return;
             }
         });
     }
@@ -92,14 +85,8 @@ public final class Clipboard {
      */
     @WrapForJNI(calledFrom = "gecko")
     public static boolean hasText() {
-        if (Versions.feature11Plus) {
-            android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-            return cm.hasPrimaryClip();
-        }
-
-        // Deprecated.
-        android.text.ClipboardManager cm = (android.text.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-        return cm.hasText();
+        android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+        return cm.hasPrimaryClip();
     }
 
     /**
@@ -117,19 +104,12 @@ public final class Clipboard {
      */
     @SuppressWarnings("deprecation")
     static String getClipboardTextImpl() {
-        if (Versions.feature11Plus) {
-            android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm.hasPrimaryClip()) {
-                ClipData clip = cm.getPrimaryClip();
-                if (clip != null) {
-                    ClipData.Item item = clip.getItemAt(0);
-                    return item.coerceToText(mContext).toString();
-                }
-            }
-        } else {
-            android.text.ClipboardManager cm = (android.text.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm.hasText()) {
-                return cm.getText().toString();
+        android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm.hasPrimaryClip()) {
+            ClipData clip = cm.getPrimaryClip();
+            if (clip != null) {
+                ClipData.Item item = clip.getItemAt(0);
+                return item.coerceToText(mContext).toString();
             }
         }
         return null;

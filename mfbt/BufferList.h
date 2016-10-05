@@ -397,6 +397,7 @@ BufferList<AllocPolicy>::MoveFallible(bool* aSuccess, OtherAllocPolicy aAP)
 
     if (!toAdvance || !result.mSegments.append(typename BufferList<OtherAllocPolicy>::Segment(iter.mData, toAdvance, toAdvance))) {
       *aSuccess = false;
+      result.mSegments.clear();
       return result;
     }
     iter.Advance(*this, toAdvance);
