@@ -34,6 +34,8 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.permissions.Permissions;
+import org.mozilla.gecko.process.GeckoProcessManager;
+import org.mozilla.gecko.process.GeckoServiceChildProcess;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
@@ -84,6 +86,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Settings;
@@ -2273,5 +2276,10 @@ public class GeckoAppShell
             sScreenSize = new Rect(0, 0, disp.getWidth(), disp.getHeight());
         }
         return sScreenSize;
+    }
+
+    @WrapForJNI
+    private static int startGeckoServiceChildProcess(String type, String[] args, int crashFd, int ipcFd) {
+        return GeckoProcessManager.getInstance().start(type, args, crashFd, ipcFd);
     }
 }
