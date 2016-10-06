@@ -758,10 +758,17 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
     return NS_OK;
   }
 
+  // Pending load/error events need to be canceled in some situations. This
+  // is not documented in the spec, but can cause site compat problems if not
+  // done. See bug 1309461 and https://github.com/whatwg/html/issues/1872.
+  CancelPendingEvent();
+
   if (aNewURI.IsEmpty()) {
     // Cancel image requests and then fire only error event per spec.
     CancelImageRequests(aNotify);
-    FireEvent(NS_LITERAL_STRING("error"));
+    // Mark error event as cancelable only for src="" case, since only this
+    // error causes site compat problem (bug 1308069) for now.
+    FireEvent(NS_LITERAL_STRING("error"), true);
     return NS_OK;
   }
 
@@ -789,6 +796,11 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                  nsIDocument* aDocument,
                                  nsLoadFlags aLoadFlags)
 {
+  // Pending load/error events need to be canceled in some situations. This
+  // is not documented in the spec, but can cause site compat problems if not
+  // done. See bug 1309461 and https://github.com/whatwg/html/issues/1872.
+  CancelPendingEvent();
+
   if (!mLoadingEnabled) {
     // XXX Why fire an error here? seems like the callers to SetLoadingEnabled
     // don't want/need it.
@@ -1146,7 +1158,7 @@ nsImageLoadingContent::StringToURI(const nsAString& aSpec,
 }
 
 nsresult
-nsImageLoadingContent::FireEvent(const nsAString& aEventType)
+nsImageLoadingContent::FireEvent(const nsAString& aEventType, bool aIsCancelable)
 {
   if (nsContentUtils::DocumentInactiveForImageLoads(GetOurOwnerDoc())) {
     // Don't bother to fire any events, especially error events.
@@ -1163,7 +1175,28 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
     new LoadBlockingAsyncEventDispatcher(thisNode, aEventType, false, false);
   loadBlockingAsyncDispatcher->PostDOMEvent();
 
+  if (aIsCancelable) {
+    mPendingEvent = loadBlockingAsyncDispatcher;
+  }
+
   return NS_OK;
+}
+
+void
+nsImageLoadingContent::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  if (mPendingEvent == aEvent) {
+    mPendingEvent = nullptr;
+  }
+}
+
+void
+nsImageLoadingContent::CancelPendingEvent()
+{
+  if (mPendingEvent) {
+    mPendingEvent->Cancel();
+    mPendingEvent = nullptr;
+  }
 }
 
 RefPtr<imgRequestProxy>&

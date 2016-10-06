@@ -41,6 +41,9 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  // EventTarget
+  virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
+
   // nsIContent interface
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify) override;

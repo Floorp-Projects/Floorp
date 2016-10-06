@@ -176,6 +176,12 @@ HTMLImageElement::IsSrcsetEnabled()
   return Preferences::GetBool(kPrefSrcsetEnabled, false);
 }
 
+void
+HTMLImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  nsImageLoadingContent::AsyncEventRunning(aEvent);
+}
+
 nsresult
 HTMLImageElement::GetCurrentSrc(nsAString& aValue)
 {
