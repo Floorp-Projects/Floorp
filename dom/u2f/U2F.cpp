@@ -437,6 +437,77 @@ U2FRunnable::U2FRunnable(const nsAString& aOrigin, const nsAString& aAppId)
 U2FRunnable::~U2FRunnable()
 {}
 
+// EvaluateAppIDAndRunTask determines whether the supplied FIDO AppID is valid for
+// the current FacetID, e.g., the current origin.
+// See https://fidoalliance.org/specs/fido-u2f-v1.0-nfc-bt-amendment-20150514/fido-appid-and-facets.html
+// for a description of the algorithm.
+ErrorCode
+U2FRunnable::EvaluateAppID()
+{
+  nsCOMPtr<nsIURLParser> urlParser =
+      do_GetService(NS_STDURLPARSER_CONTRACTID);
+
+  MOZ_ASSERT(urlParser);
+
+  uint32_t facetSchemePos;
+  int32_t facetSchemeLen;
+  uint32_t facetAuthPos;
+  int32_t facetAuthLen;
+  // Facet is the specification's way of referring to the web origin.
+  nsAutoCString facetUrl = NS_ConvertUTF16toUTF8(mOrigin);
+  nsresult rv = urlParser->ParseURL(facetUrl.get(), mOrigin.Length(),
+                                    &facetSchemePos, &facetSchemeLen,
+                                    &facetAuthPos, &facetAuthLen,
+                                    nullptr, nullptr);      // ignore path
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return ErrorCode::BAD_REQUEST;
+  }
+
+  nsAutoCString facetScheme(Substring(facetUrl, facetSchemePos, facetSchemeLen));
+  nsAutoCString facetAuth(Substring(facetUrl, facetAuthPos, facetAuthLen));
+
+  uint32_t appIdSchemePos;
+  int32_t appIdSchemeLen;
+  uint32_t appIdAuthPos;
+  int32_t appIdAuthLen;
+  // AppID is user-supplied. It's quite possible for this parse to fail.
+  nsAutoCString appIdUrl = NS_ConvertUTF16toUTF8(mAppId);
+  rv = urlParser->ParseURL(appIdUrl.get(), mAppId.Length(),
+                           &appIdSchemePos, &appIdSchemeLen,
+                           &appIdAuthPos, &appIdAuthLen,
+                           nullptr, nullptr);      // ignore path
+  if (NS_FAILED(rv)) {
+    return ErrorCode::BAD_REQUEST;
+  }
+
+  nsAutoCString appIdScheme(Substring(appIdUrl, appIdSchemePos, appIdSchemeLen));
+  nsAutoCString appIdAuth(Substring(appIdUrl, appIdAuthPos, appIdAuthLen));
+
+  // If the facetId (origin) is not HTTPS, reject
+  if (!facetScheme.LowerCaseEqualsLiteral("https")) {
+    return ErrorCode::BAD_REQUEST;
+  }
+
+  // If the appId is empty or null, overwrite it with the facetId and accept
+  if (mAppId.IsEmpty() || mAppId.EqualsLiteral("null")) {
+    mAppId.Assign(mOrigin);
+    return ErrorCode::OK;
+  }
+
+  // if the appId URL is not HTTPS, reject.
+  if (!appIdScheme.LowerCaseEqualsLiteral("https")) {
+    return ErrorCode::BAD_REQUEST;
+  }
+
+  // If the facetId and the appId auths match, accept
+  if (facetAuth == appIdAuth) {
+    return ErrorCode::OK;
+  }
+
+  // TODO(Bug 1244959) Implement the remaining algorithm.
+  return ErrorCode::BAD_REQUEST;
+}
+
 U2FRegisterRunnable::U2FRegisterRunnable(const nsAString& aOrigin,
                                          const nsAString& aAppId,
                                          const Sequence<RegisterRequest>& aRegisterRequests,
@@ -860,77 +931,6 @@ U2FSignRunnable::Run()
   // TODO: Add timeouts, Bug 1301793
   status->WaitGroupWait();
   return NS_OK;
-}
-
-// EvaluateAppIDAndRunTask determines whether the supplied FIDO AppID is valid for
-// the current FacetID, e.g., the current origin.
-// See https://fidoalliance.org/specs/fido-u2f-v1.0-nfc-bt-amendment-20150514/fido-appid-and-facets.html
-// for a description of the algorithm.
-ErrorCode
-U2FRunnable::EvaluateAppID()
-{
-  nsCOMPtr<nsIURLParser> urlParser =
-      do_GetService(NS_STDURLPARSER_CONTRACTID);
-
-  MOZ_ASSERT(urlParser);
-
-  uint32_t facetSchemePos;
-  int32_t facetSchemeLen;
-  uint32_t facetAuthPos;
-  int32_t facetAuthLen;
-  // Facet is the specification's way of referring to the web origin.
-  nsAutoCString facetUrl = NS_ConvertUTF16toUTF8(mOrigin);
-  nsresult rv = urlParser->ParseURL(facetUrl.get(), mOrigin.Length(),
-                                    &facetSchemePos, &facetSchemeLen,
-                                    &facetAuthPos, &facetAuthLen,
-                                    nullptr, nullptr);      // ignore path
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  nsAutoCString facetScheme(Substring(facetUrl, facetSchemePos, facetSchemeLen));
-  nsAutoCString facetAuth(Substring(facetUrl, facetAuthPos, facetAuthLen));
-
-  uint32_t appIdSchemePos;
-  int32_t appIdSchemeLen;
-  uint32_t appIdAuthPos;
-  int32_t appIdAuthLen;
-  // AppID is user-supplied. It's quite possible for this parse to fail.
-  nsAutoCString appIdUrl = NS_ConvertUTF16toUTF8(mAppId);
-  rv = urlParser->ParseURL(appIdUrl.get(), mAppId.Length(),
-                           &appIdSchemePos, &appIdSchemeLen,
-                           &appIdAuthPos, &appIdAuthLen,
-                           nullptr, nullptr);      // ignore path
-  if (NS_FAILED(rv)) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  nsAutoCString appIdScheme(Substring(appIdUrl, appIdSchemePos, appIdSchemeLen));
-  nsAutoCString appIdAuth(Substring(appIdUrl, appIdAuthPos, appIdAuthLen));
-
-  // If the facetId (origin) is not HTTPS, reject
-  if (!facetScheme.LowerCaseEqualsLiteral("https")) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  // If the appId is empty or null, overwrite it with the facetId and accept
-  if (mAppId.IsEmpty() || mAppId.EqualsLiteral("null")) {
-    mAppId.Assign(mOrigin);
-    return ErrorCode::OK;
-  }
-
-  // if the appId URL is not HTTPS, reject.
-  if (!appIdScheme.LowerCaseEqualsLiteral("https")) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  // If the facetId and the appId auths match, accept
-  if (facetAuth == appIdAuth) {
-    return ErrorCode::OK;
-  }
-
-  // TODO(Bug 1244959) Implement the remaining algorithm.
-  return ErrorCode::BAD_REQUEST;
 }
 
 U2F::U2F()
