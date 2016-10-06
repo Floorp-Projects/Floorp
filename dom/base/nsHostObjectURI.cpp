@@ -23,6 +23,7 @@ NS_IMPL_RELEASE_INHERITED(nsHostObjectURI, mozilla::net::nsSimpleURI)
 NS_INTERFACE_MAP_BEGIN(nsHostObjectURI)
   NS_INTERFACE_MAP_ENTRY(nsIURIWithBlobImpl)
   NS_INTERFACE_MAP_ENTRY(nsIURIWithPrincipal)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   if (aIID.Equals(kHOSTOBJECTURICID))
     foundInterface = static_cast<nsIURI*>(this);
   else if (aIID.Equals(kThisSimpleURIImplementationCID)) {
@@ -280,4 +281,11 @@ nsHostObjectURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
   *aClassIDNoAlloc = kHOSTOBJECTURICID;
   return NS_OK;
+}
+
+void
+nsHostObjectURI::ForgetBlobImpl()
+{
+  MOZ_ASSERT(mBlobImpl);
+  mBlobImpl = nullptr;
 }
