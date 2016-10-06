@@ -18,26 +18,26 @@
 #include "nsCSSPseudoElements.h"
 #include "nsFloatManager.h"
 
-enum LineReflowStatus {
+enum class LineReflowStatus {
   // The line was completely reflowed and fit in available width, and we should
   // try to pull up content from the next line if possible.
-  LINE_REFLOW_OK,
+  OK,
   // The line was completely reflowed and fit in available width, but we should
   // not try to pull up content from the next line.
-  LINE_REFLOW_STOP,
+  Stop,
   // We need to reflow the line again at its current vertical position. The
   // new reflow should not try to pull up any frames from the next line.
-  LINE_REFLOW_REDO_NO_PULL,
+  RedoNoPull,
   // We need to reflow the line again using the floats from its height
   // this reflow, since its height made it hit floats that were not
   // adjacent to its top.
-  LINE_REFLOW_REDO_MORE_FLOATS,
+  RedoMoreFloats,
   // We need to reflow the line again at a lower vertical postion where there
   // may be more horizontal space due to different float configuration.
-  LINE_REFLOW_REDO_NEXT_BAND,
+  RedoNextBand,
   // The line did not fit in the available vertical space. Try pushing it to
   // the next page or column if it's not the first line on the current page/column.
-  LINE_REFLOW_TRUNCATED
+  Truncated
 };
 
 class nsBlockInFlowLineIterator;
@@ -146,7 +146,7 @@ public:
 
 #ifdef DEBUG
   virtual nsFrameState GetDebugStateBits() const override;
-  const char* LineReflowStatusToString(uint8_t aLineReflowStatus) const;
+  const char* LineReflowStatusToString(LineReflowStatus aLineReflowStatus) const;
 #endif
 
 #ifdef ACCESSIBILITY
