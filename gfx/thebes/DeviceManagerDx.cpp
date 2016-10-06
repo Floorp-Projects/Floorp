@@ -686,6 +686,18 @@ DeviceManagerDx::AlphaTextureSharingWorks()
 }
 
 bool
+DeviceManagerDx::CanInitializeKeyedMutexTextures()
+{
+  MutexAutoLock lock(mDeviceLock);
+  if (!mDeviceStatus) {
+    return false;
+  }
+  // Disable this on all Intel devices because of crashes.
+  // See bug 1292923.
+  return mDeviceStatus->adapter().VendorId != 0x8086;
+}
+
+bool
 DeviceManagerDx::IsWARP()
 {
   MutexAutoLock lock(mDeviceLock);
