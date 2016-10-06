@@ -7796,7 +7796,7 @@ void nsWindow::PickerClosed()
 }
 
 bool
-nsWindow::WidgetTypeSupportsAcceleration()
+nsWindow::ComputeShouldAccelerate()
 {
   // We don't currently support using an accelerated layer manager with
   // transparent windows so don't even try. I'm also not sure if we even
@@ -7805,8 +7805,12 @@ nsWindow::WidgetTypeSupportsAcceleration()
   // Also see bug 1150376, D3D11 composition can cause issues on some devices
   // on Windows 7 where presentation fails randomly for windows with drop
   // shadows.
-  return mTransparencyMode != eTransparencyTransparent &&
-         !(IsPopup() && DeviceManagerDx::Get()->IsWARP());
+  if (mTransparencyMode == eTransparencyTransparent ||
+      (IsPopup() && DeviceManagerDx::Get()->IsWARP()))
+  {
+    return false;
+  }
+  return nsBaseWidget::ComputeShouldAccelerate();
 }
 
 void
