@@ -3760,17 +3760,17 @@ function* runAccessKeyTests()
 
     // Greek layout can activate a Latin accesskey
     yield testKey({layout:KEYBOARD_LAYOUT_GREEK, keyCode:WIN_VK_A,
-                   modifiers:{shiftKey:1, altKey:1}, chars:"A"},
+                   modifiers:{shiftKey:1, altKey:1}, chars:"\u0391"},
                   "a", true);
     yield testKey({layout:KEYBOARD_LAYOUT_GREEK, keyCode:WIN_VK_A,
-                   modifiers:{shiftKey:1, altKey:1}, chars:"A"},
+                   modifiers:{shiftKey:1, altKey:1}, chars:"\u0391"},
                   "A", true);
     // ... and a Greek accesskey!
     yield testKey({layout:KEYBOARD_LAYOUT_GREEK, keyCode:WIN_VK_A,
-                   modifiers:{shiftKey:1, altKey:1}, chars:"A"},
+                   modifiers:{shiftKey:1, altKey:1}, chars:"\u0391"},
                   "\u03b1", true);
     yield testKey({layout:KEYBOARD_LAYOUT_GREEK, keyCode:WIN_VK_A,
-                   modifiers:{shiftKey:1, altKey:1}, chars:"A"},
+                   modifiers:{shiftKey:1, altKey:1}, chars:"\u0391"},
                   "\u0391", true);
 
     // bug 359638
