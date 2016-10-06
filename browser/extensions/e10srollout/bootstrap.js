@@ -165,5 +165,15 @@ function optedOut() {
  * string must be returned.
  */
 function getTemporaryDisqualification() {
+  let applicationLanguage =
+    Cc["@mozilla.org/chrome/chrome-registry;1"]
+      .getService(Ci.nsIXULChromeRegistry)
+      .getSelectedLocale("global")
+      .split("-")[0];
+
+  if (applicationLanguage == "ru") {
+    return "ru";
+  }
+
   return "";
 }
