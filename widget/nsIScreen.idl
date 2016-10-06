@@ -6,17 +6,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-/**
- * The display type of nsIScreen belongs to.
- */
-enum class DisplayType: int32_t {
-  DISPLAY_PRIMARY,  // primary screen
-  DISPLAY_EXTERNAL, // wired displays, such as HDMI, DisplayPort, etc.
-  DISPLAY_VIRTUAL   // wireless displays, such as Chromecast, WiFi-Display, etc.
-};
-%}
-
 [scriptable, uuid(826e80c8-d70f-42e2-8aa9-82c05f2a370a)]
 interface nsIScreen : nsISupports
 {
