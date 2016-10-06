@@ -22,7 +22,7 @@
 
 #define CLEARKEY_KEY_LEN ((size_t)16)
 
-void
+bool
 ParseCENCInitData(const uint8_t* aInitData,
                   uint32_t aInitDataSize,
                   std::vector<std::vector<uint8_t>>& aOutKeyIds);
