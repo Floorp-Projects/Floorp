@@ -34,11 +34,19 @@
 // glibc) and therefore avoid doing otherwise awkward #ifdefs in the code.
 // The following quirks are currently handled by this file:
 // - i386: Use the Android NDK but alias user_fxsr_struct > user_fpxregs_struct.
-// - aarch64: Add missing user_regs_struct and user_fpsimd_struct structs.
+// - aarch64:
+//   - NDK r10: Add missing user_regs_struct and user_fpsimd_struct structs.
+//   - NDK r11+: Add missing <stdint.h> include
 // - Other platforms: Just use the Android NDK unchanged.
 
 // TODO(primiano): remove these changes after Chromium has stably rolled to
 // an NDK with the appropriate fixes.
+
+#if defined(ANDROID_NDK_MAJOR_VERSION) && ANDROID_NDK_MAJOR_VERSION > 10
+#ifdef __aarch64__
+#include <stdint.h>
+#endif  // __aarch64__
+#endif  // defined(ANDROID_NDK_MAJOR_VERSION) && ANDROID_NDK_MAJOR_VERSION > 10
 
 #include_next <sys/user.h>
 
@@ -52,6 +60,7 @@ typedef struct user_fxsr_struct user_fpxregs_struct;
 #endif  // __cplusplus
 #endif  // __i386__
 
+#if !defined(ANDROID_NDK_MAJOR_VERSION) || ANDROID_NDK_MAJOR_VERSION == 10
 #ifdef __aarch64__
 #ifdef __cplusplus
 extern "C" {
@@ -71,5 +80,6 @@ struct user_fpsimd_struct {
 }  // extern "C"
 #endif  // __cplusplus
 #endif  // __aarch64__
+#endif  // defined(ANDROID_NDK_VERSION) && ANDROID_NDK_MAJOR_VERSION == 10
 
 #endif  // GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_SYS_USER_H

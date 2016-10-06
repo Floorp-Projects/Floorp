@@ -59,16 +59,7 @@ ScreenCapturerWinGdi::ScreenCapturerWinGdi(const DesktopCaptureOptions& options)
 }
 
 ScreenCapturerWinGdi::~ScreenCapturerWinGdi() {
-  if (desktop_dc_)
-    ReleaseDC(NULL, desktop_dc_);
-  if (memory_dc_)
-    DeleteDC(memory_dc_);
-
-  if (disable_composition_) {
-    // Restore Aero.
-    if (composition_func_)
-      (*composition_func_)(DWM_EC_ENABLECOMPOSITION);
-  }
+  Stop();
 
   if (dwmapi_library_)
     FreeLibrary(dwmapi_library_);
@@ -163,6 +154,24 @@ void ScreenCapturerWinGdi::Start(Callback* callback) {
     if (composition_func_)
       (*composition_func_)(DWM_EC_DISABLECOMPOSITION);
   }
+}
+
+void ScreenCapturerWinGdi::Stop() {
+  if (desktop_dc_) {
+    ReleaseDC(NULL, desktop_dc_);
+    desktop_dc_ = NULL;
+  }
+  if (memory_dc_) {
+    DeleteDC(memory_dc_);
+    memory_dc_ = NULL;
+  }
+
+  if (disable_composition_) {
+    // Restore Aero.
+    if (composition_func_)
+      (*composition_func_)(DWM_EC_ENABLECOMPOSITION);
+  }
+  callback_ = NULL;
 }
 
 void ScreenCapturerWinGdi::PrepareCaptureResources() {

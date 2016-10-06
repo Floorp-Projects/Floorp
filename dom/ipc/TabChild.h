@@ -518,10 +518,6 @@ public:
 
   nsIContentChild* Manager() const { return mManager; }
 
-  bool GetUpdateHitRegion() const { return mUpdateHitRegion; }
-
-  void UpdateHitRegion(const nsRegion& aRegion);
-
   static inline TabChild*
   GetFrom(nsIDocShell* aDocShell)
   {
@@ -651,11 +647,6 @@ public:
                   const CSSRect& aRect,
                   const uint32_t& aFlags);
 
-  void SetAPZChild(layers::APZChild* aAPZChild)
-  {
-      mAPZChild = aAPZChild;
-  }
-
   // Request that the docshell be marked as active.
   void ForcePaint(uint64_t aLayerObserverEpoch);
 
@@ -671,8 +662,6 @@ protected:
   virtual bool DeallocPRenderFrameChild(PRenderFrameChild* aFrame) override;
 
   virtual bool RecvDestroy() override;
-
-  virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) override;
 
   virtual bool RecvSetDocShellIsActive(const bool& aIsActive,
                                        const bool& aIsHidden,
@@ -765,7 +754,6 @@ private:
   bool mNotified;
   bool mTriedBrowserInit;
   ScreenOrientationInternal mOrientation;
-  bool mUpdateHitRegion;
 
   bool mIgnoreKeyPressEvent;
   RefPtr<APZEventState> mAPZEventState;

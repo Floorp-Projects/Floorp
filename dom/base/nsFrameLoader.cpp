@@ -1195,20 +1195,6 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  bool ourPassPointerEvents =
-    ourContent->AttrValueIs(kNameSpaceID_None,
-                            nsGkAtoms::mozpasspointerevents,
-                            nsGkAtoms::_true,
-                            eCaseMatters);
-  bool otherPassPointerEvents =
-    otherContent->AttrValueIs(kNameSpaceID_None,
-                              nsGkAtoms::mozpasspointerevents,
-                              nsGkAtoms::_true,
-                              eCaseMatters);
-  if (ourPassPointerEvents != otherPassPointerEvents) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   bool ourFullscreenAllowed =
     ourContent->IsXULElement() ||
     (OwnerIsMozBrowserOrAppFrame() &&
@@ -2662,13 +2648,6 @@ nsFrameLoader::TryRemoteBrowser()
     mRemoteBrowser->SetBrowserDOMWindow(browserDOMWin);
   }
 
-  if (mOwnerContent->AttrValueIs(kNameSpaceID_None,
-                                 nsGkAtoms::mozpasspointerevents,
-                                 nsGkAtoms::_true,
-                                 eCaseMatters)) {
-    Unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
-  }
-
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
 
@@ -2706,20 +2685,6 @@ nsFrameLoader::DeactivateRemoteFrame() {
     return NS_OK;
   }
   return NS_ERROR_UNEXPECTED;
-}
-
-void
-nsFrameLoader::ActivateUpdateHitRegion() {
-  if (mRemoteBrowser) {
-    Unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
-  }
-}
-
-void
-nsFrameLoader::DeactivateUpdateHitRegion() {
-  if (mRemoteBrowser) {
-    Unused << mRemoteBrowser->SendSetUpdateHitRegion(false);
-  }
 }
 
 NS_IMETHODIMP

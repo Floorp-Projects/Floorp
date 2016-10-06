@@ -6229,47 +6229,6 @@ private:
   uint32_t mFlags;
 };
 
-class AutoUpdateHitRegion
-{
-public:
-  AutoUpdateHitRegion(PresShell* aShell, nsIFrame* aFrame)
-    : mShell(aShell), mFrame(aFrame)
-  {
-  }
-  ~AutoUpdateHitRegion()
-  {
-    if (!XRE_IsContentProcess() ||
-        !mFrame || !mShell) {
-      return;
-    }
-    TabChild* tabChild = TabChild::GetFrom(mShell);
-    if (!tabChild || !tabChild->GetUpdateHitRegion()) {
-      return;
-    }
-    nsRegion region;
-    nsDisplayListBuilder builder(mFrame,
-                                 nsDisplayListBuilderMode::EVENT_DELIVERY,
-                                 /* aBuildCert= */ false);
-    nsDisplayList list;
-    AutoTArray<nsIFrame*, 100> outFrames;
-    nsDisplayItem::HitTestState hitTestState;
-    builder.EnterPresShell(mFrame);
-    nsRect bounds = mShell->GetPresContext()->GetVisibleArea();
-    mFrame->BuildDisplayListForStackingContext(&builder, bounds, &list);
-    builder.LeavePresShell(mFrame);
-    list.HitTest(&builder, bounds, &hitTestState, &outFrames);
-    list.DeleteAll();
-    for (int32_t i = outFrames.Length() - 1; i >= 0; --i) {
-      region.Or(region, nsLayoutUtils::TransformFrameRectToAncestor(
-                  outFrames[i], nsRect(nsPoint(0, 0), outFrames[i]->GetSize()), mFrame));
-    }
-    tabChild->UpdateHitRegion(region);
-  }
-private:
-  PresShell* mShell;
-  nsIFrame* mFrame;
-};
-
 void
 PresShell::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
 {
@@ -6304,7 +6263,6 @@ PresShell::Paint(nsView*        aViewToPaint,
   bool shouldInvalidate = layerManager->NeedsWidgetInvalidation();
 
   nsAutoNotifyDidPaint notifyDidPaint(this, aFlags);
-  AutoUpdateHitRegion updateHitRegion(this, frame);
 
   // Whether or not we should set first paint when painting is
   // suppressed is debatable. For now we'll do it because

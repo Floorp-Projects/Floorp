@@ -33,11 +33,10 @@ DocAccessibleChild::~DocAccessibleChild()
 void
 DocAccessibleChild::SendCOMProxy(const IAccessibleHolder& aProxy)
 {
+  int32_t msaaID = AccessibleWrap::GetChildIDFor(mDoc);
   IAccessibleHolder parentProxy;
-  uint32_t msaaID = AccessibleWrap::kNoID;
-  PDocAccessibleChild::SendCOMProxy(aProxy, &parentProxy, &msaaID);
+  PDocAccessibleChild::SendCOMProxy(msaaID, aProxy, &parentProxy);
   mParentProxy.reset(parentProxy.Release());
-  mDoc->SetID(msaaID);
 }
 
 } // namespace a11y

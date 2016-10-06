@@ -96,6 +96,9 @@ static PRInt32 tls13_ClientSendKeyShareXtn(sslSocket *ss, PRBool append,
 static SECStatus tls13_ClientHandleKeyShareXtn(sslSocket *ss,
                                                PRUint16 ex_type,
                                                SECItem *data);
+static SECStatus tls13_ClientHandleKeyShareXtnHrr(sslSocket *ss,
+                                                  PRUint16 ex_type,
+                                                  SECItem *data);
 static SECStatus tls13_ServerHandleKeyShareXtn(sslSocket *ss,
                                                PRUint16 ex_type,
                                                SECItem *data);
@@ -122,6 +125,11 @@ static SECStatus tls13_ClientHandleSigAlgsXtn(sslSocket *ss, PRUint16 ex_type,
 static PRInt32 tls13_ClientSendSupportedVersionsXtn(sslSocket *ss,
                                                     PRBool append,
                                                     PRUint32 maxBytes);
+static SECStatus tls13_ClientHandleHrrCookie(sslSocket *ss, PRUint16 ex_type,
+                                             SECItem *data);
+static PRInt32 tls13_ClientSendHrrCookieXtn(sslSocket *ss,
+                                            PRBool append,
+                                            PRUint32 maxBytes);
 
 /*
  * Write bytes.  Using this function means the SECItem structure
@@ -287,6 +295,12 @@ static const ssl3ExtensionHandler serverHelloHandlersTLS[] = {
     { -1, NULL }
 };
 
+static const ssl3ExtensionHandler helloRetryRequestHandlers[] = {
+    { ssl_tls13_key_share_xtn, tls13_ClientHandleKeyShareXtnHrr },
+    { ssl_tls13_cookie_xtn, tls13_ClientHandleHrrCookie },
+    { -1, NULL }
+};
+
 static const ssl3ExtensionHandler serverHelloHandlersSSL3[] = {
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
     { -1, NULL }
@@ -329,7 +343,8 @@ static const ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] 
        * client hello is empty. They are not intolerant of TLS 1.2, so list
        * signature_algorithms at the end. See bug 1243641. */
       { ssl_tls13_supported_versions_xtn, &tls13_ClientSendSupportedVersionsXtn },
-      { ssl_signature_algorithms_xtn, &ssl3_ClientSendSigAlgsXtn }
+      { ssl_signature_algorithms_xtn, &ssl3_ClientSendSigAlgsXtn },
+      { ssl_tls13_cookie_xtn, &tls13_ClientSendHrrCookieXtn }
       /* any extra entries will appear as { 0, NULL }    */
     };
 
@@ -2165,6 +2180,10 @@ ssl3_HandleParsedExtensions(sslSocket *ss,
             PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
             handlers = newSessionTicketHandlers;
             break;
+        case hello_retry_request:
+            PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
+            handlers = helloRetryRequestHandlers;
+            break;
         case encrypted_extensions:
             PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
         /* fall through */
@@ -2191,7 +2210,8 @@ ssl3_HandleParsedExtensions(sslSocket *ss,
          * in the ClientHello */
         if (!ss->sec.isServer &&
             !ssl3_ClientExtensionAdvertised(ss, extension->type) &&
-            (handshakeMessage != new_session_ticket)) {
+            (handshakeMessage != new_session_ticket) &&
+            (extension->type != ssl_tls13_cookie_xtn)) {
             (void)SSL3_SendAlert(ss, alert_fatal, unsupported_extension);
             PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
             return SECFailure;
@@ -3170,6 +3190,49 @@ tls13_ClientHandleKeyShareXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
     return SECSuccess;
 }
 
+static SECStatus
+tls13_ClientHandleKeyShareXtnHrr(sslSocket *ss, PRUint16 ex_type, SECItem *data)
+{
+    SECStatus rv;
+    PRInt32 tmp;
+    const sslNamedGroupDef *group;
+
+    PORT_Assert(!ss->sec.isServer);
+    PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
+
+    SSL_TRC(3, ("%d: SSL3[%d]: handle key_share extension in HRR",
+                SSL_GETPID(), ss->fd));
+
+    tmp = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
+    if (tmp < 0) {
+        return SECFailure; /* error code already set */
+    }
+    if (data->len) {
+        (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST);
+        return SECFailure;
+    }
+
+    group = ssl_LookupNamedGroup((SSLNamedGroup)tmp);
+    /* If the group is not enabled, or we already have a share for the
+     * requested group, abort. */
+    if (!ssl_NamedGroupEnabled(ss, group) ||
+        ssl_LookupEphemeralKeyPair(ss, group)) {
+        (void)SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST);
+        return SECFailure;
+    }
+
+    rv = tls13_CreateKeyShare(ss, group);
+    if (rv != SECSuccess) {
+        (void)SSL3_SendAlert(ss, alert_fatal, internal_error);
+        PORT_SetError(SEC_ERROR_KEYGEN_FAIL);
+        return SECFailure;
+    }
+
+    return SECSuccess;
+}
+
 /* Handle an incoming KeyShare extension at the server and copy to
  * |ss->ssl3.hs.remoteKeyShares| for future use. The key
  * share is processed in tls13_HandleClientKeyShare(). */
@@ -3760,7 +3823,7 @@ tls13_ClientSendSupportedVersionsXtn(sslSocket *ss, PRBool append,
     extensions_len = 2 + 2 + 1 +
                      2 * (ss->vrange.max - ss->vrange.min + 1);
 
-    if (maxBytes < extensions_len) {
+    if (maxBytes < (PRUint32)extensions_len) {
         PORT_Assert(0);
         return 0;
     }
@@ -3787,6 +3850,74 @@ tls13_ClientSendSupportedVersionsXtn(sslSocket *ss, PRBool append,
     }
 
     return extensions_len;
+}
+
+/*
+ *    struct {
+ *        opaque cookie<1..2^16-1>;
+ *    } Cookie;
+ */
+SECStatus
+tls13_ClientHandleHrrCookie(sslSocket *ss, PRUint16 ex_type, SECItem *data)
+{
+    SECStatus rv;
+
+    SSL_TRC(3, ("%d: TLS13[%d]: handle cookie extension",
+                SSL_GETPID(), ss->fd));
+
+    PORT_Assert(ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3);
+
+    /* IMPORTANT: this is only valid while the HelloRetryRequest is still valid. */
+    rv = ssl3_ConsumeHandshakeVariable(ss, &ss->ssl3.hs.cookie, 2,
+                                       &data->data, &data->len);
+    if (rv != SECSuccess) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST);
+        return SECFailure;
+    }
+    if (!ss->ssl3.hs.cookie.len || data->len) {
+        (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST);
+        return SECFailure;
+    }
+
+    return SECSuccess;
+}
+
+PRInt32
+tls13_ClientSendHrrCookieXtn(sslSocket *ss, PRBool append, PRUint32 maxBytes)
+{
+    PRInt32 extension_len;
+
+    if (ss->vrange.max < SSL_LIBRARY_VERSION_TLS_1_3 ||
+        !ss->ssl3.hs.cookie.len) {
+        return 0;
+    }
+
+    SSL_TRC(3, ("%d: TLS13[%d]: send cookie extension", SSL_GETPID(), ss->fd));
+
+    /* Extension type, length, cookie length, cookie value. */
+    extension_len = 2 + 2 + 2 + ss->ssl3.hs.cookie.len;
+
+    if (maxBytes < (PRUint32)extension_len) {
+        PORT_Assert(0);
+        return 0;
+    }
+
+    if (append) {
+        SECStatus rv = ssl3_AppendHandshakeNumber(ss, ssl_tls13_cookie_xtn, 2);
+        if (rv != SECSuccess)
+            return -1;
+
+        rv = ssl3_AppendHandshakeNumber(ss, extension_len - 4, 2);
+        if (rv != SECSuccess)
+            return -1;
+
+        rv = ssl3_AppendHandshakeVariable(ss, ss->ssl3.hs.cookie.data,
+                                          ss->ssl3.hs.cookie.len, 2);
+        if (rv != SECSuccess)
+            return -1;
+    }
+    return extension_len;
 }
 
 void

@@ -947,9 +947,16 @@ const char *const kUtf8BadCases[] = {
 
 const Utf16BadCase kUtf16BadCases[] = {
     // Leading surrogate not followed by trailing surrogate:
-    {{0xD800, 0, 0}},      {{0xD800, 0x41, 0}},   {{0xD800, 0xfe, 0}},
-    {{0xD800, 0x3bb, 0}},  {{0xD800, 0xD800, 0}}, {{0xD800, 0xFEFF, 0}},
+    {{0xD800, 0, 0}},
+    {{0xD800, 0x41, 0}},
+    {{0xD800, 0xfe, 0}},
+    {{0xD800, 0x3bb, 0}},
+    {{0xD800, 0xD800, 0}},
+    {{0xD800, 0xFEFF, 0}},
     {{0xD800, 0xFFFD, 0}},
+    // Trailing surrogate, not preceded by a leading one.
+    {{0xDC00, 0, 0}},
+    {{0xDE6D, 0xD834, 0}},
 };
 
 // Parameterized test instantiations:

@@ -1000,7 +1000,6 @@ dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     int errCode = SSL_ERROR_RX_MALFORMED_HELLO_VERIFY_REQUEST;
     SECStatus rv;
     PRInt32 temp;
-    SECItem cookie = { siBuffer, NULL, 0 };
     SSL3AlertDescription desc = illegal_parameter;
 
     SSL_TRC(3, ("%d: SSL3[%d]: handle hello_verify_request handshake",
@@ -1025,18 +1024,17 @@ dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         goto alert_loser;
     }
 
-    /* The cookie */
-    rv = ssl3_ConsumeHandshakeVariable(ss, &cookie, 1, &b, &length);
+    /* Read the cookie.
+     * IMPORTANT: The value of ss->ssl3.hs.cookie is only valid while the
+     * HelloVerifyRequest message remains valid. */
+    rv = ssl3_ConsumeHandshakeVariable(ss, &ss->ssl3.hs.cookie, 1, &b, &length);
     if (rv != SECSuccess) {
         goto loser; /* alert has been sent */
     }
-    if (cookie.len > DTLS_COOKIE_BYTES) {
+    if (ss->ssl3.hs.cookie.len > DTLS_COOKIE_BYTES) {
         desc = decode_error;
         goto alert_loser; /* malformed. */
     }
-
-    PORT_Memcpy(ss->ssl3.hs.cookie, cookie.data, cookie.len);
-    ss->ssl3.hs.cookieLen = cookie.len;
 
     ssl_GetXmitBufLock(ss); /*******************************/
 

@@ -25,6 +25,7 @@ import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.mdns.MulticastDNSManager;
 import org.mozilla.gecko.media.AudioFocusAgent;
+import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -165,6 +166,9 @@ public class GeckoApplication extends Application
         DownloadsIntegration.init();
         HomePanelsManager.getInstance().init(context);
 
+        // We need to set the notification client before launching Gecko, since Gecko could start
+        // sending notifications immediately after startup, which we don't want to lose/crash on.
+        GeckoAppShell.setNotificationListener(new NotificationClient(context));
         // This getInstance call will force initialization of the NotificationHelper, but does nothing with the result
         NotificationHelper.getInstance(context).init();
 

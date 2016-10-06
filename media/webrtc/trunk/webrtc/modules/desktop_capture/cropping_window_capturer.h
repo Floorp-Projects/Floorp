@@ -29,6 +29,7 @@ class CroppingWindowCapturer : public WindowCapturer,
 
   // DesktopCapturer implementation.
   void Start(DesktopCapturer::Callback* callback) override;
+  void Stop() override;
   void Capture(const DesktopRegion& region) override;
   void SetExcludedWindow(WindowId window) override;
 

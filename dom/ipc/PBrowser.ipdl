@@ -746,13 +746,6 @@ child:
      */
     async Destroy();
 
-
-    /**
-     * Tell the child side if it has to update it's touchable region
-     * to the parent.
-     */
-    async SetUpdateHitRegion(bool aEnabled);
-
     /**
      * Update the child side docShell active (resource use) state.
      *

@@ -692,6 +692,9 @@ sftk_ChaCha20Poly1305_CreateContext(const unsigned char *key,
 
     PORT_Memcpy(ctx->nonce, params->pNonce, sizeof(ctx->nonce));
 
+    /* AAD data and length must both be null, or both non-null. */
+    PORT_Assert((params->pAAD == NULL) == (params->ulAADLen == 0));
+
     if (params->ulAADLen > sizeof(ctx->ad)) {
         /* Need to allocate an overflow buffer for the additional data. */
         ctx->adOverflow = (unsigned char *)PORT_Alloc(params->ulAADLen);
@@ -702,7 +705,9 @@ sftk_ChaCha20Poly1305_CreateContext(const unsigned char *key,
         PORT_Memcpy(ctx->adOverflow, params->pAAD, params->ulAADLen);
     } else {
         ctx->adOverflow = NULL;
-        PORT_Memcpy(ctx->ad, params->pAAD, params->ulAADLen);
+        if (params->pAAD) {
+            PORT_Memcpy(ctx->ad, params->pAAD, params->ulAADLen);
+        }
     }
     ctx->adLen = params->ulAADLen;
 

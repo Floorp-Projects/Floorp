@@ -19,6 +19,8 @@
 
 #include <comutil.h>
 
+static const VARIANT kChildIdSelf = {VT_I4};
+
 namespace mozilla {
 namespace a11y {
 
@@ -28,6 +30,15 @@ ProxyAccessible::GetCOMInterface(void** aOutAccessible) const
   if (!aOutAccessible) {
     return false;
   }
+
+  if (!mCOMProxy) {
+    // See if we can lazily obtain a COM proxy
+    AccessibleWrap* wrap = WrapperFor(this);
+    bool isDefunct = false;
+    ProxyAccessible* thisPtr = const_cast<ProxyAccessible*>(this);
+    thisPtr->mCOMProxy = wrap->GetIAccessibleFor(kChildIdSelf, &isDefunct);
+  }
+
   RefPtr<IAccessible> addRefed = mCOMProxy;
   addRefed.forget(aOutAccessible);
   return !!mCOMProxy;
@@ -42,11 +53,8 @@ ProxyAccessible::Name(nsString& aName) const
     return;
   }
 
-  VARIANT id;
-  id.vt = VT_I4;
-  id.lVal = CHILDID_SELF;
   BSTR result;
-  HRESULT hr = acc->get_accName(id, &result);
+  HRESULT hr = acc->get_accName(kChildIdSelf, &result);
   _bstr_t resultWrap(result, false);
   if (FAILED(hr)) {
     return;
@@ -63,11 +71,8 @@ ProxyAccessible::Value(nsString& aValue) const
     return;
   }
 
-  VARIANT id;
-  id.vt = VT_I4;
-  id.lVal = CHILDID_SELF;
   BSTR result;
-  HRESULT hr = acc->get_accValue(id, &result);
+  HRESULT hr = acc->get_accValue(kChildIdSelf, &result);
   _bstr_t resultWrap(result, false);
   if (FAILED(hr)) {
     return;
@@ -84,11 +89,8 @@ ProxyAccessible::Description(nsString& aDesc) const
     return;
   }
 
-  VARIANT id;
-  id.vt = VT_I4;
-  id.lVal = CHILDID_SELF;
   BSTR result;
-  HRESULT hr = acc->get_accDescription(id, &result);
+  HRESULT hr = acc->get_accDescription(kChildIdSelf, &result);
   _bstr_t resultWrap(result, false);
   if (FAILED(hr)) {
     return;
@@ -105,11 +107,8 @@ ProxyAccessible::State() const
     return state;
   }
 
-  VARIANT id;
-  id.vt = VT_I4;
-  id.lVal = CHILDID_SELF;
   VARIANT varState;
-  HRESULT hr = acc->get_accState(id, &varState);
+  HRESULT hr = acc->get_accState(kChildIdSelf, &varState);
   if (FAILED(hr)) {
     return state;
   }
@@ -130,10 +129,7 @@ ProxyAccessible::Bounds()
   long top;
   long width;
   long height;
-  VARIANT id;
-  id.vt = VT_I4;
-  id.lVal = CHILDID_SELF;
-  HRESULT hr = acc->accLocation(&left, &top, &width, &height, id);
+  HRESULT hr = acc->accLocation(&left, &top, &width, &height, kChildIdSelf);
   if (FAILED(hr)) {
     return rect;
   }

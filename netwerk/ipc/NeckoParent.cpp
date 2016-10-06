@@ -104,6 +104,18 @@ PBOverrideStatusFromLoadContext(const SerializedLoadContext& aSerialized)
   return kPBOverride_Unset;
 }
 
+// Bug 1289001 - If GetValidatedAppInfo returns an error string, that usually
+// leads to a content crash with very little info about the cause.
+// We prefer to crash on the parent, so we get the reason in the crash report.
+static MOZ_NORETURN MOZ_COLD
+void CrashWithReason(const char * reason)
+{
+#ifndef RELEASE_BUILD
+  MOZ_CRASH_ANNOTATE(reason);
+  MOZ_REALLY_CRASH();
+#endif
+}
+
 const char*
 NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
                                  PContentParent* aContent,
@@ -111,10 +123,12 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
 {
   if (UsingNeckoIPCSecurity()) {
     if (!aSerialized.IsNotNull()) {
+      CrashWithReason("GetValidatedAppInfo | SerializedLoadContext from child is null");
       return "SerializedLoadContext from child is null";
     }
   }
 
+  nsAutoCString debugString;
   nsTArray<TabContext> contextArray =
     static_cast<ContentParent*>(aContent)->GetManagedTabContext();
   for (uint32_t i = 0; i < contextArray.Length(); i++) {
@@ -125,19 +139,27 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
                               tabContext.IsIsolatedMozBrowserElement();
 
     if (appId == NECKO_UNKNOWN_APP_ID) {
+      debugString.Append("u,");
       continue;
     }
     // We may get appID=NO_APP if child frame is neither a browser nor an app
     if (appId == NECKO_NO_APP_ID && tabContext.HasOwnApp()) {
       // NECKO_NO_APP_ID but also is an app?  Weird, skip.
+      debugString.Append("h,");
       continue;
     }
 
     if (!aSerialized.mOriginAttributes.mSignedPkg.IsEmpty() &&
         aSerialized.mOriginAttributes.mSignedPkg != tabContext.OriginAttributesRef().mSignedPkg) {
+      debugString.Append("s,");
       continue;
     }
     if (aSerialized.mOriginAttributes.mUserContextId != tabContext.OriginAttributesRef().mUserContextId) {
+      debugString.Append("(");
+      debugString.AppendInt(aSerialized.mOriginAttributes.mUserContextId);
+      debugString.Append(",");
+      debugString.AppendInt(tabContext.OriginAttributesRef().mUserContextId);
+      debugString.Append(")");
       continue;
     }
     aAttrs = DocShellOriginAttributes();
@@ -152,6 +174,15 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
   }
 
   if (contextArray.Length() != 0) {
+    nsAutoCString errorString;
+    errorString.Append("GetValidatedAppInfo | App does not have permission -");
+    errorString.Append(debugString);
+
+    // Leak the buffer on the heap to make sure that it lives long enough, as
+    // MOZ_CRASH_ANNOTATE expects the pointer passed to it to live to the end of
+    // the program.
+    char * error = strdup(errorString.BeginReading());
+    CrashWithReason(error);
     return "App does not have permission";
   }
 
@@ -165,6 +196,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     return nullptr;
   }
 
+  CrashWithReason("GetValidatedAppInfo | ContentParent does not have any PBrowsers");
   return "ContentParent does not have any PBrowsers";
 }
 

@@ -80,6 +80,7 @@ public:
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) override;
+  virtual void Stop() override;
   virtual void Capture(const DesktopRegion& region) override;
 
   struct WindowItem {
@@ -164,6 +165,9 @@ void AppCapturerWin::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
+}
+void AppCapturerWin::Stop() {
+  callback_ = NULL;
 }
 void AppCapturerWin::Capture(const DesktopRegion& region) {
   assert(IsGUIThread(false));

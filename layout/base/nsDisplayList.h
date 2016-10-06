@@ -519,7 +519,7 @@ public:
    * Notify the display list builder that we're entering a presshell.
    * aReferenceFrame should be a frame in the new presshell.
    * aPointerEventsNoneDoc should be set to true if the frame generating this
-   * document is pointer-events:none without mozpasspointerevents.
+   * document is pointer-events:none.
    */
   void EnterPresShell(nsIFrame* aReferenceFrame,
                       bool aPointerEventsNoneDoc = false);
@@ -1176,7 +1176,7 @@ private:
     bool          mIsBackgroundOnly;
     // This is a per-document flag turning off event handling for all content
     // in the document, and is set when we enter a subdocument for a pointer-
-    // events:none frame that doesn't have mozpasspointerevents set.
+    // events:none frame.
     bool          mInsidePointerEventsNoneDoc;
   };
 
