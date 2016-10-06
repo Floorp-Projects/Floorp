@@ -1926,7 +1926,7 @@ nsBidiPresUtils::CalculateCharType(nsBidi* aBidiEngine,
         ch = SURROGATE_TO_UCS4(ch, aText[offset + 1]);
         charLen = 2;
       }
-      charType = GetBidiCat(ch);
+      charType = unicode::GetBidiCat(ch);
     }
 
     if (!CHARTYPE_IS_WEAK(charType) ) {
