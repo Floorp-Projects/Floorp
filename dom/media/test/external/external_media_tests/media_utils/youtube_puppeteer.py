@@ -484,8 +484,9 @@ class YouTubePuppeteer(VideoPuppeteer):
             return '\n'.join(messages)
         messages += ['.html5-media-player: {']
         for field in self._last_seen_player_state._fields:
-            messages += [('\t{}: {}'
-                          .format(field, getattr(self._last_seen_player_state,
-                                                 field)))]
+            # For compatibility with different test environments we force ascii
+            field_ascii = (str(getattr(self._last_seen_video_state, field))
+                           .encode('ascii', 'replace'))
+            messages += [('\t{}: {}'.format(field, field_ascii))]
         messages += '}'
         return '\n'.join(messages)

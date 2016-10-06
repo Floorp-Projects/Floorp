@@ -85,7 +85,7 @@ let json = [
        name: "foo",
        type: "function",
        parameters: [
-         {name: "arg1", type: "integer", optional: true},
+         {name: "arg1", type: "integer", optional: true, default: 99},
          {name: "arg2", type: "boolean", optional: true},
        ],
      },
@@ -341,6 +341,8 @@ let json = [
        extraParameters: [{
          name: "filter",
          type: "integer",
+         optional: true,
+         default: 1,
        }],
      },
    ],
@@ -476,13 +478,13 @@ add_task(function* () {
   verify("call", "testing", "foo", [11, true]);
 
   root.testing.foo(true);
-  verify("call", "testing", "foo", [null, true]);
+  verify("call", "testing", "foo", [99, true]);
 
   root.testing.foo(null, true);
-  verify("call", "testing", "foo", [null, true]);
+  verify("call", "testing", "foo", [99, true]);
 
   root.testing.foo(undefined, true);
-  verify("call", "testing", "foo", [null, true]);
+  verify("call", "testing", "foo", [99, true]);
 
   root.testing.foo(11);
   verify("call", "testing", "foo", [11, null]);
@@ -732,6 +734,12 @@ add_task(function* () {
   do_check_eq(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["addListener", "testing", "onBar"]));
   do_check_eq(tallied[3][0], f);
   do_check_eq(JSON.stringify(tallied[3][1]), JSON.stringify([10]));
+  tallied = null;
+
+  root.testing.onBar.addListener(f);
+  do_check_eq(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["addListener", "testing", "onBar"]));
+  do_check_eq(tallied[3][0], f);
+  do_check_eq(JSON.stringify(tallied[3][1]), JSON.stringify([1]));
   tallied = null;
 
   Assert.throws(() => root.testing.onBar.addListener(f, "hi"),
@@ -1363,4 +1371,57 @@ add_task(function* testLocalAPIImplementation() {
   root.testing.prop3 = {sub_foo() { return "overwritten again"; }};
   do_check_eq(root.testing.prop3.sub_foo(), "overwritten again");
   do_check_eq(countProp3SubFoo, 2);
+});
+
+
+let defaultsJson = [
+  {namespace: "defaultsJson",
+
+   types: [],
+
+   functions: [
+     {
+       name: "defaultFoo",
+       type: "function",
+       parameters: [
+         {name: "arg", type: "object", optional: true, properties: {
+           prop1: {type: "integer", optional: true},
+         }, default: {prop1: 1}},
+       ],
+       returns: {
+         type: "object",
+       },
+     },
+   ]},
+];
+
+add_task(function* testDefaults() {
+  let url = "data:," + JSON.stringify(defaultsJson);
+  yield Schemas.load(url);
+
+  let testingApiObj = {
+    defaultFoo: function(arg) {
+      if (Object.keys(arg) != "prop1") {
+        throw new Error(`Received the expected default object, default: ${JSON.stringify(arg)}`);
+      }
+      arg.newProp = 1;
+      return arg;
+    },
+  };
+
+  let localWrapper = {
+    shouldInject(ns) {
+      return true;
+    },
+    getImplementation(ns, name) {
+      return new LocalAPIImplementation(testingApiObj, name, null);
+    },
+  };
+
+  let root = {};
+  Schemas.inject(root, localWrapper);
+
+  deepEqual(root.defaultsJson.defaultFoo(), {prop1: 1, newProp: 1});
+  deepEqual(root.defaultsJson.defaultFoo({prop1: 2}), {prop1: 2, newProp: 1});
+  deepEqual(root.defaultsJson.defaultFoo(), {prop1: 1, newProp: 1});
 });

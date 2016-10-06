@@ -63,9 +63,7 @@ import org.mozilla.gecko.media.VideoPlayer;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.SafeIntent;
-import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
-import org.mozilla.gecko.notifications.ServiceNotificationClient;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
@@ -570,7 +568,8 @@ public class BrowserApp extends GeckoApp
         // - For short presses, we cancel the callback in onKeyUp
         // - For long presses, the normal keypress is marked as cancelled, hence won't be handled elsewhere
         //   (but Android still provides the haptic feedback), and the runnable is run.
-        if (!Versions.preN) {
+        if (!Versions.preN &&
+                keyCode == KeyEvent.KEYCODE_BACK) {
             ThreadUtils.getUiHandler().removeCallbacks(mCheckLongPress);
             ThreadUtils.getUiHandler().postDelayed(mCheckLongPress, ViewConfiguration.getLongPressTimeout());
         }
@@ -4040,13 +4039,6 @@ public class BrowserApp extends GeckoApp
                 }
             }
         });
-    }
-
-    @Override
-    protected NotificationClient makeNotificationClient() {
-        // The service is local to Fennec, so we can use it to keep
-        // Fennec alive during downloads.
-        return new ServiceNotificationClient(getApplicationContext());
     }
 
     private void resetFeedbackLaunchCount() {

@@ -474,34 +474,6 @@ private:
                                           HitTestingTreeNode* aNextSibling,
                                           TreeBuildingState& aState);
 
-  /**
-   * Recursive helper function to build the hit-testing tree. See documentation
-   * in HitTestingTreeNode.h for more details on the shape of the tree.
-   * This function walks the layer tree backwards through siblings and
-   * constructs the hit-testing tree also as a last-child-prev-sibling tree
-   * because that simplifies the hit detection code.
-   *
-   * @param aState The current tree building state.
-   * @param aLayer The (layer, metrics) pair which is the current position in
-   *               the recursive walk of the layer tree. This call builds a
-   *               hit-testing subtree corresponding to the layer subtree rooted
-   *               at aLayer.
-   * @param aLayersId The layers id of the layer in aLayer.
-   * @param aAncestorTransform The accumulated CSS transforms of all the
-   *                           layers from aLayer up (via the parent chain)
-   *                           to the next APZC-bearing layer.
-   * @param aParent The parent of any node built at this level.
-   * @param aNextSibling The next sibling of any node built at this level.
-   * @return The HitTestingTreeNode created at this level. This will always
-   *         be non-null.
-   */
-  HitTestingTreeNode* UpdateHitTestingTree(TreeBuildingState& aState,
-                                           const LayerMetricsWrapper& aLayer,
-                                           uint64_t aLayersId,
-                                           const gfx::Matrix4x4& aAncestorTransform,
-                                           HitTestingTreeNode* aParent,
-                                           HitTestingTreeNode* aNextSibling);
-
   void PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
                      const AsyncPanZoomController* apzc);
 

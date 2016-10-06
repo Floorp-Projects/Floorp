@@ -74,6 +74,7 @@ add_task(function* () {
   is(allTabsMenu.getAttribute("hidden"), "true", "The all-tabs menu is hidden");
 
   yield sidebar.destroy();
+  yield toolbox.destroy();
   gDevTools.unregisterTool(testToolDefinition.id);
   gBrowser.removeCurrentTab();
 });

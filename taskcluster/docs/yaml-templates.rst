@@ -1,13 +1,17 @@
 Task Definition YAML Templates
 ==============================
 
-Many kinds of tasks are described using templated YAML files.  These files
+A few kinds of tasks are described using templated YAML files.  These files
 allow some limited forms of inheritance and template substitution as well as
 the usual YAML features, as described below.
 
-Please use these features sparingly.  In many cases, it is better to add a
-feature to the implementation of a task kind rather than add complexity to the
-YAML files.
+Please do not use these features in new kinds.  If you are tempted to use
+variable substitution over a YAML file to define tasks, please instead
+implement a new kind-specific transform to accopmlish your goal.  For example,
+if the current push-id must be included as an argument in
+``task.payload.command``, write a transform function that makes that assignment
+while building a job description, rather than parameterizing that value in the
+input to the transforms.
 
 Inheritance
 -----------

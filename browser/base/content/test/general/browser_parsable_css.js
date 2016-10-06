@@ -47,12 +47,6 @@ let allowedImageReferences = [
   {file: "chrome/devtools/modules/devtools/client/themes/images/filter.svg",
    from: "chrome/devtools/modules/devtools/client/themes/common.css",
    isFromDevTools: true},
-
-  // Bug 1302890
-  {file: "chrome://global/skin/icons/warning-32.png",
-   from: "chrome://devtools/skin/tooltips.css",
-   platforms: ["linux", "win"],
-   isFromDevTools: true},
 ];
 
 var moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");

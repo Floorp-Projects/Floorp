@@ -836,7 +836,7 @@ Animation::HasLowerCompositeOrderThan(const Animation& aOther) const
 
 void
 Animation::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                        nsCSSPropertyIDSet& aSetProperties)
+                        const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
   if (!mEffect) {
     return;
@@ -901,7 +901,7 @@ Animation::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
 
     KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
     if (keyframeEffect) {
-      keyframeEffect->ComposeStyle(aStyleRule, aSetProperties);
+      keyframeEffect->ComposeStyle(aStyleRule, aPropertiesToSkip);
     }
   }
 

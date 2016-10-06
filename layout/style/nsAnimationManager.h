@@ -140,6 +140,7 @@ public:
     if (IsRelevant() &&
         mAnimationIndex != aIndex) {
       nsNodeUtils::AnimationChanged(this);
+      PostUpdate();
     }
     mAnimationIndex = aIndex;
   }
