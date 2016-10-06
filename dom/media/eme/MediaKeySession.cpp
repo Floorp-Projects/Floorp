@@ -11,6 +11,7 @@
 #include "mozilla/dom/MediaEncryptedEvent.h"
 #include "mozilla/dom/MediaKeyStatusMap.h"
 #include "mozilla/dom/MediaKeySystemAccess.h"
+#include "mozilla/dom/KeyIdsInitDataBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -196,7 +197,24 @@ ValidateInitData(const nsTArray<uint8_t>& aInitData, const nsAString& aInitDataT
     if (aInitData.Length() > MAX_KEY_ID_LENGTH) {
       return false;
     }
-    // TODO: Validate keyIds in future patch...
+    // Ensure that init data matches the expected JSON format.
+    mozilla::dom::KeyIdsInitData keyIds;
+    nsString json;
+    nsDependentCSubstring raw(reinterpret_cast<const char*>(aInitData.Elements()), aInitData.Length());
+    if (NS_FAILED(nsContentUtils::ConvertStringFromEncoding(NS_LITERAL_CSTRING("UTF-8"), raw, json))) {
+      return false;
+    }
+    if (!keyIds.Init(json)) {
+      return false;
+    }
+    if (keyIds.mKids.Length() == 0) {
+      return false;
+    }
+    for (const auto& kid : keyIds.mKids) {
+      if (kid.IsEmpty()) {
+        return false;
+      }
+    }
   }
   return true;
 }
