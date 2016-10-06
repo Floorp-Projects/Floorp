@@ -59,6 +59,12 @@ HTMLObjectElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
          nsGenericHTMLFormElement::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
+void
+HTMLObjectElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  nsImageLoadingContent::AsyncEventRunning(aEvent);
+}
+
 bool
 HTMLObjectElement::IsDoneAddingChildren()
 {
