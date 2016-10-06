@@ -24,54 +24,11 @@ add_task(function*() {
   });
 
   for (let [inputValue, expectedURL] of pairs) {
-    let focusEventPromise = BrowserTestUtils.waitForEvent(gURLBar, "focus");
-    let messagePromise = BrowserTestUtils.waitForMessage(gBrowser.selectedBrowser.messageManager,
-                                                         "browser_canonizeURL:start");
-
-    let stoppedLoadPromise = ContentTask.spawn(gBrowser.selectedBrowser, [inputValue, expectedURL],
-      function([inputValue, expectedURL]) {
-        return new Promise(resolve => {
-          let wpl = {
-            onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-              if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
-                  aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-                if (!aRequest || !(aRequest instanceof Ci.nsIChannel)) {
-                  return;
-                }
-                aRequest.QueryInterface(Ci.nsIChannel);
-                is(aRequest.originalURI.spec, expectedURL,
-                   "entering '" + inputValue + "' loads expected URL");
-
-                webProgress.removeProgressListener(filter);
-                filter.removeProgressListener(wpl);
-                docShell.QueryInterface(Ci.nsIWebNavigation);
-                docShell.stop(docShell.STOP_ALL);
-                resolve();
-              }
-            },
-          };
-          let filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
-                           .createInstance(Ci.nsIWebProgress);
-          filter.addProgressListener(wpl, Ci.nsIWebProgress.NOTIFY_ALL);
-
-          let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIWebProgress);
-          webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
-          // We're sending this off to trigger the start of the this test, when all the
-          // listeners are in place:
-          sendAsyncMessage("browser_canonizeURL:start");
-        });
-      }
-    );
-
-    gBrowser.selectedBrowser.focus();
+    let promiseLoad = waitForDocLoadAndStopIt(expectedURL);
     gURLBar.focus();
-
-    yield Promise.all([focusEventPromise, messagePromise]);
-
     gURLBar.inputField.value = inputValue.slice(0, -1);
     EventUtils.synthesizeKey(inputValue.slice(-1), {});
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
-    yield stoppedLoadPromise;
+    yield promiseLoad;
   }
 });

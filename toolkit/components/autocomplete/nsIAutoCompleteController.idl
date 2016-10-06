@@ -159,4 +159,15 @@ interface nsIAutoCompleteController : nsISupports
    * Get / set the current search string.  Note, setting will not start searching
    */
   attribute AString searchString;
+
+  /*
+   * Set the index of the result item that should be initially selected.
+   * This should be used when a search wants to pre-select an element before
+   * the user starts using results.
+   *
+   * @note Setting this is not the same as just setting selectedIndex in
+   * nsIAutocompletePopup, since this will take care of updating any internal
+   * tracking variables of features like completeSelectedIndex.
+   */
+  void setInitiallySelectedIndex(in long index);
 };
