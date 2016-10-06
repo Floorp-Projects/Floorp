@@ -400,11 +400,6 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
         break;
       }
-      case ICStub::GetProp_Primitive: {
-        ICGetProp_Primitive* propStub = toGetProp_Primitive();
-        TraceEdge(trc, &propStub->protoShape(), "baseline-getprop-primitive-stub-shape");
-        break;
-      }
       case ICStub::GetProp_CallDOMProxyNative:
       case ICStub::GetProp_CallDOMProxyWithGenerationNative: {
         ICGetPropCallDOMProxyNativeStub* propStub;
@@ -2544,61 +2539,6 @@ TryAttachNativeGetAccessorPropStub(JSContext* cx, SharedStubInfo* info,
     return true;
 }
 
-static bool
-TryAttachPrimitiveGetPropStub(JSContext* cx, SharedStubInfo* info,
-                              ICGetProp_Fallback* stub, HandlePropertyName name,
-                              HandleValue val, HandleValue res, bool* attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    JSValueType primitiveType;
-    RootedNativeObject proto(cx);
-    Rooted<GlobalObject*> global(cx, &info->script()->global());
-    if (val.isString()) {
-        primitiveType = JSVAL_TYPE_STRING;
-        proto = GlobalObject::getOrCreateStringPrototype(cx, global);
-    } else if (val.isSymbol()) {
-        primitiveType = JSVAL_TYPE_SYMBOL;
-        proto = GlobalObject::getOrCreateSymbolPrototype(cx, global);
-    } else if (val.isNumber()) {
-        primitiveType = JSVAL_TYPE_DOUBLE;
-        proto = GlobalObject::getOrCreateNumberPrototype(cx, global);
-    } else {
-        MOZ_ASSERT(val.isBoolean());
-        primitiveType = JSVAL_TYPE_BOOLEAN;
-        proto = GlobalObject::getOrCreateBooleanPrototype(cx, global);
-    }
-    if (!proto)
-        return false;
-
-    // Instantiate this property, for use during Ion compilation.
-    RootedId id(cx, NameToId(name));
-    if (IsIonEnabled(cx))
-        EnsureTrackPropertyTypes(cx, proto, id);
-
-    // For now, only look for properties directly set on the prototype.
-    RootedShape shape(cx, proto->lookup(cx, id));
-    if (!shape || !shape->hasSlot() || !shape->hasDefaultGetter())
-        return true;
-
-    bool isFixedSlot;
-    uint32_t offset;
-    GetFixedOrDynamicSlotOffset(shape, &isFixedSlot, &offset);
-
-    ICStub* monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-
-    JitSpew(JitSpew_BaselineIC, "  Generating GetProp_Primitive stub");
-    ICGetProp_Primitive::Compiler compiler(cx, info->engine(), monitorStub, primitiveType, proto,
-                                           isFixedSlot, offset);
-    ICStub* newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
-    if (!newStub)
-        return false;
-
-    stub->addNewStub(newStub);
-    *attached = true;
-    return true;
-}
-
 bool
 CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
                        JSObject** lastProto, size_t* protoChainDepthOut)
@@ -2777,13 +2717,6 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
         return true;
 
 
-    if (val.isString() || val.isNumber() || val.isBoolean()) {
-        if (!TryAttachPrimitiveGetPropStub(cx, &info, stub, name, val, res, &attached))
-            return false;
-        if (attached)
-            return true;
-    }
-
     MOZ_ASSERT(!attached);
     if (!isTemporarilyUnoptimizable)
         stub->noteUnoptimizableAccess();
@@ -2861,53 +2794,6 @@ ICGetProp_StringLength::Compiler::generateStubCode(MacroAssembler& masm)
 
     masm.tagValue(JSVAL_TYPE_INT32, string, R0);
     EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-bool
-ICGetProp_Primitive::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-    switch (primitiveType_) {
-      case JSVAL_TYPE_STRING:
-        masm.branchTestString(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_SYMBOL:
-        masm.branchTestSymbol(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_DOUBLE: // Also used for int32.
-        masm.branchTestNumber(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_BOOLEAN:
-        masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
-        break;
-      default:
-        MOZ_CRASH("unexpected type");
-    }
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
-    Register holderReg = regs.takeAny();
-    Register scratchReg = regs.takeAny();
-
-    // Verify the shape of the prototype.
-    masm.movePtr(ImmGCPtr(prototype_.get()), holderReg);
-
-    Address shapeAddr(ICStubReg, ICGetProp_Primitive::offsetOfProtoShape());
-    masm.loadPtr(Address(holderReg, ShapedObject::offsetOfShape()), scratchReg);
-    masm.branchPtr(Assembler::NotEqual, shapeAddr, scratchReg, &failure);
-
-    if (!isFixedSlot_)
-        masm.loadPtr(Address(holderReg, NativeObject::offsetOfSlots()), holderReg);
-
-    masm.load32(Address(ICStubReg, ICGetProp_Primitive::offsetOfOffset()), scratchReg);
-    masm.loadValue(BaseIndex(holderReg, scratchReg, TimesOne), R0);
-
-    // Enter type monitor IC to type-check result.
-    EmitEnterTypeMonitorIC(masm);
 
     // Failure case - jump to next stub
     masm.bind(&failure);
@@ -3702,17 +3588,6 @@ BaselineScript::noteAccessedGetter(uint32_t pcOffset)
 
     if (stub->isGetProp_Fallback())
         stub->toGetProp_Fallback()->noteAccessedGetter();
-}
-
-ICGetProp_Primitive::ICGetProp_Primitive(JitCode* stubCode, ICStub* firstMonitorStub,
-                                         JSValueType primitiveType, Shape* protoShape,
-                                         uint32_t offset)
-  : ICMonitoredStub(GetProp_Primitive, stubCode, firstMonitorStub),
-    protoShape_(protoShape),
-    offset_(offset)
-{
-    extra_ = uint16_t(primitiveType);
-    MOZ_ASSERT(JSValueType(extra_) == primitiveType);
 }
 
 ICGetPropNativeStub::ICGetPropNativeStub(ICStub::Kind kind, JitCode* stubCode,
