@@ -30,10 +30,3 @@ replace: s/HAVE_SYSCTL 1/HAVE_SYSCTL 0
 
 config_win32/64.h/asm:
 add to configure command: --toolchain=msvc
-
-23 Sept 2016: libavcodec/pthread_frame.c has been patched so as to avoid
-generating large numbers of warnings from TSan (Thread Sanitizer) when
-decoding vp9 streams.  This will likely be fixed upstream sometime soon.
-When resyncing with upstream, first un-apply the patch shown at
-https://bugzilla.mozilla.org/show_bug.cgi?id=1274256#c60, then resync,
-then assess whether the patch is still necessary.
