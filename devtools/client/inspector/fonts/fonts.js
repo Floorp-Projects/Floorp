@@ -13,6 +13,7 @@ const DEFAULT_PREVIEW_TEXT = "Abc";
 const PREVIEW_UPDATE_DELAY = 150;
 
 const {Task} = require("devtools/shared/task");
+const {getColor} = require("devtools/client/shared/theme");
 
 function FontInspector(inspector, window) {
   this.inspector = inspector;
@@ -161,14 +162,10 @@ FontInspector.prototype = {
 
     this._lastUpdateShowedAllFonts = showAllFonts;
 
-    // Assume light theme colors as the default (see also bug 1118179).
-    let fillStyle = (Services.prefs.getCharPref("devtools.theme") == "dark") ?
-        "white" : "black";
-
     let options = {
       includePreviews: true,
       previewText: this.getPreviewText(),
-      previewFillStyle: fillStyle
+      previewFillStyle: getColor("body-color")
     };
 
     let fonts = [];
