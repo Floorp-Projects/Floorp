@@ -22,7 +22,6 @@ import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
-import org.mozilla.gecko.notifications.AppNotificationClient;
 import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.util.IntentUtils;
@@ -1137,9 +1136,6 @@ public abstract class GeckoApp
         // `(GeckoApplication) getApplication()` here.
         GeckoAppShell.setContextGetter(this);
         GeckoAppShell.setGeckoInterface(this);
-        // We need to set the notification client before launching Gecko, since Gecko could start
-        // sending notifications immediately after startup, which we don't want to lose/crash on.
-        GeckoAppShell.setNotificationListener(makeNotificationClient());
 
         // Tell Stumbler to register a local broadcast listener to listen for preference intents.
         // We do this via intents since we can't easily access Stumbler directly,
@@ -1653,10 +1649,6 @@ public abstract class GeckoApp
                 geckoConnected();
             }
         }
-
-        if (ACTION_ALERT_CALLBACK.equals(action)) {
-            processAlertCallback(intent);
-        }
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -2001,23 +1993,6 @@ public abstract class GeckoApp
         return bitmap;
     }
 
-    private void processAlertCallback(SafeIntent intent) {
-        String alertName = "";
-        String alertCookie = "";
-        Uri data = intent.getData();
-        if (data != null) {
-            alertName = data.getQueryParameter("name");
-            if (alertName == null)
-                alertName = "";
-            alertCookie = data.getQueryParameter("cookie");
-            if (alertCookie == null)
-                alertCookie = "";
-        }
-
-        ((NotificationClient) GeckoAppShell.getNotificationListener()).onNotificationClick(
-                alertName);
-    }
-
     @Override
     protected void onNewIntent(Intent externalIntent) {
         final SafeIntent intent = new SafeIntent(externalIntent);
@@ -2060,8 +2035,6 @@ public abstract class GeckoApp
             mLayerView.loadUri(uri, GeckoView.LOAD_SWITCH_TAB);
         } else if (Intent.ACTION_SEARCH.equals(action)) {
             mLayerView.loadUri(uri, GeckoView.LOAD_NEW_TAB);
-        } else if (ACTION_ALERT_CALLBACK.equals(action)) {
-            processAlertCallback(intent);
         } else if (NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             NotificationHelper.getInstance(getApplicationContext()).handleNotificationIntent(intent);
         } else if (ACTION_LAUNCH_SETTINGS.equals(action)) {
@@ -2724,12 +2697,6 @@ public abstract class GeckoApp
             mFullScreenPluginView.onTrackballEvent(event);
             return true;
         }
-    }
-
-    protected NotificationClient makeNotificationClient() {
-        // Don't use a notification service; we may be killed in the background
-        // during downloads.
-        return new AppNotificationClient(getApplicationContext());
     }
 
     private int getVersionCode() {

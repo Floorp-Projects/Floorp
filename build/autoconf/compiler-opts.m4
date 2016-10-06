@@ -92,18 +92,20 @@ MOZ_ARG_WITH_STRING(debug-label,
 done])
 
 if test -n "$MOZ_DEBUG"; then
-    AC_MSG_CHECKING([for valid debug flags])
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
-    AC_TRY_COMPILE([#include <stdio.h>],
-        [printf("Hello World\n");],
-        _results=yes,
-        _results=no)
-    AC_MSG_RESULT([$_results])
-    if test "$_results" = "no"; then
-        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
+    if test -n "$COMPILE_ENVIRONMENT"; then
+        AC_MSG_CHECKING([for valid debug flags])
+        _SAVE_CFLAGS=$CFLAGS
+        CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
+        AC_TRY_COMPILE([#include <stdio.h>],
+            [printf("Hello World\n");],
+            _results=yes,
+            _results=no)
+        AC_MSG_RESULT([$_results])
+        if test "$_results" = "no"; then
+            AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
+        fi
+        CFLAGS=$_SAVE_CFLAGS
     fi
-    CFLAGS=$_SAVE_CFLAGS
 
     MOZ_DEBUG_DEFINES="$MOZ_DEBUG_ENABLE_DEFS"
 else
