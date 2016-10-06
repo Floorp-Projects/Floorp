@@ -1253,10 +1253,9 @@ GeckoDriver.prototype.setWindowPosition = function(cmd, resp) {
     throw new UnsupportedOperationError("Unable to set the window position on mobile");
   }
 
-  let x = parseInt(cmd.parameters.x);
-  let y  = parseInt(cmd.parameters.y);
-  if (isNaN(x) || isNaN(y)) {
-    throw new UnknownError("x and y arguments should be integers");
+  let {x, y} = cmd.parameters;
+  if (!Number.isInteger(x) || !Number.isInteger(y)) {
+    throw new InvalidArgumentError();
   }
 
   let win = this.getCurrentWindow();
