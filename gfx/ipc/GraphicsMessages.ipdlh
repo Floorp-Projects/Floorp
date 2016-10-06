@@ -19,7 +19,6 @@ struct D3D11DeviceStatus
 {
   bool isWARP;
   bool textureSharingWorks;
-  bool alphaTextureSharingWorks;
   uint32_t featureLevel;
   DxgiAdapterDesc adapter;
 };
