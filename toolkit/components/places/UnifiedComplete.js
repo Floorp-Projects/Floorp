@@ -1307,16 +1307,6 @@ Search.prototype = {
     if (hostExpected.has(uri.scheme) && !uri.host)
       return false;
 
-    // If the result is something that looks like a single-worded hostname
-    // we need to check the domain whitelist to treat it as such.
-    // We also want to return a "visit" if keyword.enabled is false.
-    if (uri.asciiHost &&
-        Prefs.keywordEnabled &&
-        REGEXP_SINGLEWORD_HOST.test(uri.asciiHost) &&
-        !Services.uriFixup.isDomainWhitelisted(uri.asciiHost, -1)) {
-      return false;
-    }
-
     // getFixupURIInfo() escaped the URI, so it may not be pretty.  Embed the
     // escaped URL in the action URI since that URL should be "canonical".  But
     // pass the pretty, unescaped URL as the match comment, since it's likely

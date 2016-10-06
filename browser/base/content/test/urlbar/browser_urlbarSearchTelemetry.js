@@ -11,6 +11,7 @@ add_task(function* prepare() {
   let engine = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
+
   registerCleanupFunction(function* () {
     Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
     Services.search.currentEngine = oldCurrentEngine;
@@ -23,6 +24,7 @@ add_task(function* prepare() {
     gURLBar.blur();
     Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
   });
+
   // Move the mouse away from the urlbar one-offs so that a one-off engine is
   // not inadvertently selected.
   yield new Promise(resolve => {
@@ -31,32 +33,64 @@ add_task(function* prepare() {
   });
 });
 
-add_task(function* heuristicResult() {
+add_task(function* heuristicResultMouse() {
   yield compareCounts(function* () {
-    gBrowser.selectedTab = gBrowser.addTab();
+    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+    gURLBar.focus();
     yield promiseAutocompleteResultPopup("heuristicResult");
     let action = getActionAtIndex(0);
     Assert.ok(!!action, "there should be an action at index 0");
     Assert.equal(action.type, "searchengine", "type should be searchengine");
-    let item = gURLBar.popup.richlistbox.getItemAtIndex(0);
-    let loadPromise = promiseTabLoaded(gBrowser.selectedTab);
-    item.click();
+    let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    gURLBar.popup.richlistbox.getItemAtIndex(0).click();
     yield loadPromise;
-    gBrowser.removeTab(gBrowser.selectedTab);
+    yield BrowserTestUtils.removeTab(tab);
   });
 });
 
-add_task(function* searchSuggestion() {
+add_task(function* heuristicResultKeyboard() {
   yield compareCounts(function* () {
-    gBrowser.selectedTab = gBrowser.addTab();
+    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+    gURLBar.focus();
+    yield promiseAutocompleteResultPopup("heuristicResult");
+    let action = getActionAtIndex(0);
+    Assert.ok(!!action, "there should be an action at index 0");
+    Assert.equal(action.type, "searchengine", "type should be searchengine");
+    let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    EventUtils.sendKey("return");
+    yield loadPromise;
+    yield BrowserTestUtils.removeTab(tab);
+  });
+});
+
+add_task(function* searchSuggestionMouse() {
+  yield compareCounts(function* () {
+    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+    gURLBar.focus();
     yield promiseAutocompleteResultPopup("searchSuggestion");
     let idx = getFirstSuggestionIndex();
     Assert.ok(idx >= 0, "there should be a first suggestion");
-    let item = gURLBar.popup.richlistbox.getItemAtIndex(idx);
-    let loadPromise = promiseTabLoaded(gBrowser.selectedTab);
-    item.click();
+    let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    gURLBar.popup.richlistbox.getItemAtIndex(idx).click();
     yield loadPromise;
-    gBrowser.removeTab(gBrowser.selectedTab);
+    yield BrowserTestUtils.removeTab(tab);
+  });
+});
+
+add_task(function* searchSuggestionKeyboard() {
+  yield compareCounts(function* () {
+    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+    gURLBar.focus();
+    yield promiseAutocompleteResultPopup("searchSuggestion");
+    let idx = getFirstSuggestionIndex();
+    Assert.ok(idx >= 0, "there should be a first suggestion");
+    let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    while (idx--) {
+      EventUtils.sendKey("down");
+    }
+    EventUtils.sendKey("return");
+    yield loadPromise;
+    yield BrowserTestUtils.removeTab(tab);
   });
 });
 
