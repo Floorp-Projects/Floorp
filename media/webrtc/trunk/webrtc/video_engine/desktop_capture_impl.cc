@@ -472,10 +472,11 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
                          TickTime::MillisecondTimestamp()),
   time_event_(EventWrapper::Create()),
 #if defined(_WIN32)
-  capturer_thread_(ThreadWrapper::CreateUIThread(Run, this, "ScreenCaptureThread")) {
+  capturer_thread_(ThreadWrapper::CreateUIThread(Run, this, "ScreenCaptureThread")),
 #else
-  capturer_thread_(ThreadWrapper::CreateThread(Run, this, "ScreenCaptureThread")) {
+  capturer_thread_(ThreadWrapper::CreateThread(Run, this, "ScreenCaptureThread")),
 #endif
+  started_(false) {
   capturer_thread_->SetPriority(kHighPriority);
   _requestedCapability.width = kDefaultWidth;
   _requestedCapability.height = kDefaultHeight;
@@ -783,16 +784,23 @@ int32_t DesktopCaptureImpl::StartCapture(const VideoCaptureCapability& capabilit
 
   desktop_capturer_cursor_composer_->Start(this);
   capturer_thread_->Start();
+  started_ = true;
 
   return 0;
 }
 
 int32_t DesktopCaptureImpl::StopCapture() {
+  if (started_) {
+    capturer_thread_->Stop(); // thread is guaranteed stopped before this returns
+    desktop_capturer_cursor_composer_->Stop();
+    started_ = false;
+    return 0;
+  }
   return -1;
 }
 
 bool DesktopCaptureImpl::CaptureStarted() {
-  return false;
+  return started_;
 }
 
 int32_t DesktopCaptureImpl::CaptureSettings(VideoCaptureCapability& settings) {

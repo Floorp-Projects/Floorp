@@ -2559,6 +2559,11 @@ jit::CanEnter(JSContext* cx, RunState& state)
             return status;
     }
 
+    // Skip if the script is being compiled off thread (again).
+    // MaybeCreateThisForConstructor could have started an ion compilation.
+    if (rscript->isIonCompilingOffThread())
+        return Method_Skipped;
+
     // Attempt compilation. Returns Method_Compiled if already compiled.
     bool constructing = state.isInvoke() && state.asInvoke()->constructing();
     MethodStatus status = Compile(cx, rscript, nullptr, nullptr, constructing);

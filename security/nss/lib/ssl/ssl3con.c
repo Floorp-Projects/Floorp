@@ -5157,7 +5157,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
              2 + num_suites * sizeof(ssl3CipherSuite) +
              1 + numCompressionMethods + total_exten_len;
     if (IS_DTLS(ss)) {
-        length += 1 + ss->ssl3.hs.cookieLen;
+        length += 1 + ss->ssl3.hs.cookie.len;
     }
 
     /* A padding extension may be included to ensure that the record containing
@@ -5237,7 +5237,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
 
     if (IS_DTLS(ss)) {
         rv = ssl3_AppendHandshakeVariable(
-            ss, ss->ssl3.hs.cookie, ss->ssl3.hs.cookieLen, 1);
+            ss, ss->ssl3.hs.cookie.data, ss->ssl3.hs.cookie.len, 1);
         if (rv != SECSuccess) {
             if (sid->u.ssl3.lock) {
                 PR_RWLock_Unlock(sid->u.ssl3.lock);
@@ -6896,7 +6896,9 @@ ssl3_HandleServerHelloPart2(sslSocket *ss, const SECItem *sidBytes,
 
     sid->version = ss->version;
     sid->u.ssl3.sessionIDLength = sidBytes->len;
-    PORT_Memcpy(sid->u.ssl3.sessionID, sidBytes->data, sidBytes->len);
+    if (sidBytes->len > 0) {
+        PORT_Memcpy(sid->u.ssl3.sessionID, sidBytes->data, sidBytes->len);
+    }
 
     sid->u.ssl3.keys.extendedMasterSecretUsed =
         ssl3_ExtensionNegotiated(ss, ssl_extended_master_secret_xtn);
@@ -8253,8 +8255,8 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     if (versionExtension) {
         rv = tls13_NegotiateVersion(ss, versionExtension);
         if (rv != SECSuccess) {
-            desc = protocol_version;
-            errCode = SSL_ERROR_UNSUPPORTED_VERSION;
+            errCode = PORT_GetError();
+            desc = (errCode == SSL_ERROR_UNSUPPORTED_VERSION) ? protocol_version : illegal_parameter;
             goto alert_loser;
         }
     } else {
@@ -12724,8 +12726,11 @@ ssl3_InitState(sslSocket *ss)
     ss->ssl3.hs.resumptionPsk = NULL;
     ss->ssl3.hs.resumptionContext = nullItem;
     ss->ssl3.hs.dheSecret = NULL;
-    ss->ssl3.hs.trafficSecret = NULL;
-    ss->ssl3.hs.hsTrafficSecret = NULL;
+    ss->ssl3.hs.clientEarlyTrafficSecret = NULL;
+    ss->ssl3.hs.clientHsTrafficSecret = NULL;
+    ss->ssl3.hs.serverHsTrafficSecret = NULL;
+    ss->ssl3.hs.clientTrafficSecret = NULL;
+    ss->ssl3.hs.serverTrafficSecret = NULL;
     ss->ssl3.hs.certificateRequest = NULL;
     PR_INIT_CLIST(&ss->ssl3.hs.cipherSpecs);
 
@@ -13060,12 +13065,16 @@ ssl3_DestroySSL3Info(sslSocket *ss)
         PK11_FreeSymKey(ss->ssl3.hs.dheSecret);
     if (ss->ssl3.hs.resumptionContext.data)
         SECITEM_FreeItem(&ss->ssl3.hs.resumptionContext, PR_FALSE);
-    if (ss->ssl3.hs.earlyTrafficSecret)
-        PK11_FreeSymKey(ss->ssl3.hs.earlyTrafficSecret);
-    if (ss->ssl3.hs.hsTrafficSecret)
-        PK11_FreeSymKey(ss->ssl3.hs.hsTrafficSecret);
-    if (ss->ssl3.hs.trafficSecret)
-        PK11_FreeSymKey(ss->ssl3.hs.trafficSecret);
+    if (ss->ssl3.hs.clientEarlyTrafficSecret)
+        PK11_FreeSymKey(ss->ssl3.hs.clientEarlyTrafficSecret);
+    if (ss->ssl3.hs.clientHsTrafficSecret)
+        PK11_FreeSymKey(ss->ssl3.hs.clientHsTrafficSecret);
+    if (ss->ssl3.hs.serverHsTrafficSecret)
+        PK11_FreeSymKey(ss->ssl3.hs.serverHsTrafficSecret);
+    if (ss->ssl3.hs.clientTrafficSecret)
+        PK11_FreeSymKey(ss->ssl3.hs.clientTrafficSecret);
+    if (ss->ssl3.hs.serverTrafficSecret)
+        PK11_FreeSymKey(ss->ssl3.hs.serverTrafficSecret);
 
     ss->ssl3.hs.zeroRttState = ssl_0rtt_none;
     /* Destroy TLS 1.3 buffered early data. */
