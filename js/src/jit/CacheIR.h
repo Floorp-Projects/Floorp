@@ -250,7 +250,7 @@ class MOZ_RAII CacheIRWriter
     }
     void guardType(ValOperandId val, JSValueType type) {
         writeOpWithOperandId(CacheOp::GuardType, val);
-        MOZ_ASSERT(uint32_t(type) <= UINT8_MAX);
+        static_assert(sizeof(type) == sizeof(uint8_t), "JSValueType should fit in a byte");
         buffer_.writeByte(uint32_t(type));
     }
     void guardShape(ObjOperandId obj, Shape* shape) {
