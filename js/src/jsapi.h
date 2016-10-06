@@ -5713,8 +5713,8 @@ typedef enum JSJitCompilerOption {
 
 extern JS_PUBLIC_API(void)
 JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t value);
-extern JS_PUBLIC_API(int)
-JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt);
+extern JS_PUBLIC_API(bool)
+JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t* valueOut);
 
 /**
  * Convert a uint32_t index into a jsid.
