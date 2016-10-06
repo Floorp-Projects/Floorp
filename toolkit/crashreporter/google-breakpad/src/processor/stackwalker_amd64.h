@@ -78,6 +78,14 @@ class StackwalkerAMD64 : public Stackwalker {
   StackFrameAMD64* GetCallerByCFIFrameInfo(const vector<StackFrame*> &frames,
                                            CFIFrameInfo* cfi_frame_info);
 
+  // Checks whether end-of-stack is reached.  An instruction address of 0 is an
+  // end-of-stack marker.  If the stack pointer of the caller is at a lower
+  // address than the stack pointer of the callee, then that's clearly incorrect
+  // and it is treated as end-of-stack to enforce progress and avoid infinite
+  // loops.
+  bool IsEndOfStack(uint64_t caller_rip, uint64_t caller_rsp,
+                    uint64_t callee_rsp);
+
   // Assumes a traditional frame layout where the frame pointer has not been
   // omitted. The expectation is that caller's %rbp is pushed to the stack
   // after the return address of the callee, and that the callee's %rsp can

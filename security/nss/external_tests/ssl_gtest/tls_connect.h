@@ -99,7 +99,7 @@ class TlsConnectTestBase : public ::testing::Test {
   void SetupForZeroRtt();
   void SetupForResume();
   void ZeroRttSendReceive(
-      bool expect_readable,
+      bool expect_writable, bool expect_readable,
       std::function<bool()> post_clienthello_check = nullptr);
   void Receive(size_t amount);
   void ExpectExtendedMasterSecret(bool expected);

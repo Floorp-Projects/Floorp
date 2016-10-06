@@ -39,6 +39,20 @@ TEST_P(TlsConnectGeneric, ConnectEcdsa) {
   CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
 }
 
+TEST_P(TlsConnectGenericPre13, CipherSuiteMismatch) {
+  EnsureTlsSetup();
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    client_->EnableSingleCipher(TLS_AES_128_GCM_SHA256);
+    server_->EnableSingleCipher(TLS_AES_256_GCM_SHA384);
+  } else {
+    client_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA);
+    server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA);
+  }
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+}
+
 TEST_P(TlsConnectGenericPre13, ConnectFalseStart) {
   client_->EnableFalseStart();
   Connect();

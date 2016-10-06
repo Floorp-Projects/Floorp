@@ -34,6 +34,9 @@
 #include "IHistory.h"
 #include "imgIContainer.h"
 #include "mozIApplication.h"
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+#include "mozilla/a11y/AccessibleWrap.h"
+#endif
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/DataStorage.h"
@@ -1954,6 +1957,10 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
   }
 
   mBlobURLs.Clear();
+
+#if defined(XP_WIN32) && defined(ACCESSIBILITY)
+  a11y::AccessibleWrap::ReleaseContentProcessIdFor(ChildID());
+#endif
 }
 
 void
@@ -5346,6 +5353,18 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aUR
   mBlobURLs.RemoveElement(aURI);
 
   return true;
+}
+
+bool
+ContentParent::RecvGetA11yContentId(uint32_t* aContentId)
+{
+#if defined(XP_WIN32) && defined(ACCESSIBILITY)
+  *aContentId = a11y::AccessibleWrap::GetContentProcessIdFor(ChildID());
+  MOZ_ASSERT(*aContentId);
+  return true;
+#else
+  return false;
+#endif
 }
 
 } // namespace dom

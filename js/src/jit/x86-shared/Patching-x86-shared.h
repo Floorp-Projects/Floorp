@@ -15,31 +15,29 @@ namespace X86Encoding {
 inline void*
 GetPointer(const void* where)
 {
-    return reinterpret_cast<void* const*>(where)[-1];
-}
-
-inline void**
-GetPointerRef(void* where)
-{
-    return &reinterpret_cast<void**>(where)[-1];
+    void* res;
+    memcpy(&res, (const char*)where - sizeof(void*), sizeof(void*));
+    return res;
 }
 
 inline void
 SetPointer(void* where, const void* value)
 {
-    reinterpret_cast<const void**>(where)[-1] = value;
+    memcpy((char*)where - sizeof(void*), &value, sizeof(void*));
 }
 
 inline int32_t
 GetInt32(const void* where)
 {
-    return reinterpret_cast<const int32_t*>(where)[-1];
+    int32_t res;
+    memcpy(&res, (const char*)where - sizeof(int32_t), sizeof(int32_t));
+    return res;
 }
 
 inline void
 SetInt32(void* where, int32_t value)
 {
-    reinterpret_cast<int32_t*>(where)[-1] = value;
+    memcpy((char*)where - sizeof(int32_t), &value, sizeof(int32_t));
 }
 
 inline void

@@ -35,13 +35,13 @@
 #include "processor/stackwalk_common.h"
 
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <string>
 #include <vector>
 
+#include "common/stdio_wrapper.h"
 #include "common/using_std_string.h"
 #include "google_breakpad/processor/call_stack.h"
 #include "google_breakpad/processor/code_module.h"
@@ -112,10 +112,10 @@ static string StripSeparator(const string &original) {
 }
 
 // PrintStackContents prints the stack contents of the current frame to stdout.
-static void PrintStackContents(const std::string &indent,
+static void PrintStackContents(const string &indent,
                                const StackFrame *frame,
                                const StackFrame *prev_frame,
-                               const std::string &cpu,
+                               const string &cpu,
                                const MemoryRegion *memory,
                                const CodeModules* modules,
                                SourceLineResolverInterface *resolver) {
@@ -181,7 +181,7 @@ static void PrintStackContents(const std::string &indent,
 
     // Print data in hex.
     const int kBytesPerRow = 16;
-    std::string data_as_string;
+    string data_as_string;
     for (int i = 0; i < kBytesPerRow; ++i, ++address) {
       uint8_t value = 0;
       if (address < stack_end &&
@@ -546,7 +546,7 @@ static void PrintStack(const CallStack *stack,
         sequence =
             PrintRegister64("pc", frame_arm64->context.iregs[32], sequence);
       }
-    } else if (cpu == "mips") {
+    } else if ((cpu == "mips") || (cpu == "mips64")) {
       const StackFrameMIPS* frame_mips =
         reinterpret_cast<const StackFrameMIPS*>(frame);
 
@@ -607,7 +607,7 @@ static void PrintStack(const CallStack *stack,
 
     // Print stack contents.
     if (output_stack_contents && frame_index + 1 < frame_count) {
-      const std::string indent("    ");
+      const string indent("    ");
       PrintStackContents(indent, frame, stack->frames()->at(frame_index + 1),
                          cpu, memory, modules, resolver);
     }
@@ -803,6 +803,20 @@ void PrintProcessState(const ProcessState& process_state,
          process_state.system_info()->cpu_count != 1 ? "s" : "");
   printf("\n");
 
+  // Print GPU information
+  string gl_version = process_state.system_info()->gl_version;
+  string gl_vendor = process_state.system_info()->gl_vendor;
+  string gl_renderer = process_state.system_info()->gl_renderer;
+  printf("GPU:");
+  if (!gl_version.empty() || !gl_vendor.empty() || !gl_renderer.empty()) {
+    printf(" %s\n", gl_version.c_str());
+    printf("     %s\n", gl_vendor.c_str());
+    printf("     %s\n", gl_renderer.c_str());
+  } else {
+    printf(" UNKNOWN\n");
+  }
+  printf("\n");
+
   // Print crash information.
   if (process_state.crashed()) {
     printf("Crash reason:  %s\n", process_state.crash_reason().c_str());
@@ -865,6 +879,7 @@ void PrintProcessStateMachineReadable(const ProcessState& process_state) {
   // Print OS and CPU information.
   // OS|{OS Name}|{OS Version}
   // CPU|{CPU Name}|{CPU Info}|{Number of CPUs}
+  // GPU|{GPU version}|{GPU vendor}|{GPU renderer}
   printf("OS%c%s%c%s\n", kOutputSeparator,
          StripSeparator(process_state.system_info()->os).c_str(),
          kOutputSeparator,
@@ -876,6 +891,12 @@ void PrintProcessStateMachineReadable(const ProcessState& process_state) {
          StripSeparator(process_state.system_info()->cpu_info).c_str(),
          kOutputSeparator,
          process_state.system_info()->cpu_count);
+  printf("GPU%c%s%c%s%c%s\n", kOutputSeparator,
+         StripSeparator(process_state.system_info()->gl_version).c_str(),
+         kOutputSeparator,
+         StripSeparator(process_state.system_info()->gl_vendor).c_str(),
+         kOutputSeparator,
+         StripSeparator(process_state.system_info()->gl_renderer).c_str());
 
   int requesting_thread = process_state.requesting_thread();
 
