@@ -10,7 +10,6 @@
 #include "jscntxt.h"
 #include "jsiter.h"
 
-#include "builtin/MapObject.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/WeakMapObject.h"
 #include "vm/GlobalObject.h"
@@ -76,13 +75,6 @@ WeakSetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 }
 
 bool
-WeakSetObject::isBuiltinAdd(HandleValue add, JSContext* cx)
-{
-    JSFunction* addFn;
-    return IsFunctionObject(add, &addFn) && IsSelfHostedFunctionWithName(addFn, cx->names().WeakSet_add);
-}
-
-bool
 WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
     // Based on our "Set" implementation instead of the more general ES6 steps.
@@ -101,42 +93,61 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isNullOrUndefined()) {
-        RootedValue iterable(cx, args[0]);
-        bool optimized = false;
-        if (!IsOptimizableInitForSet<GlobalObject::getOrCreateWeakSetPrototype, isBuiltinAdd>(cx, obj, iterable, &optimized))
+        RootedObject map(cx, &obj->getReservedSlot(WEAKSET_MAP_SLOT).toObject());
+
+        RootedValue adderVal(cx);
+        if (!GetProperty(cx, obj, obj, cx->names().add, &adderVal))
             return false;
 
-        if (optimized) {
-            RootedValue keyVal(cx);
-            RootedObject keyObject(cx);
-            RootedValue placeholder(cx, BooleanValue(true));
-            RootedObject map(cx, &obj->getReservedSlot(WEAKSET_MAP_SLOT).toObject());
-            RootedArrayObject array(cx, &iterable.toObject().as<ArrayObject>());
-            for (uint32_t index = 0; index < array->getDenseInitializedLength(); ++index) {
-                keyVal.set(array->getDenseElement(index));
-                MOZ_ASSERT(!keyVal.isMagic(JS_ELEMENTS_HOLE));
+        if (!IsCallable(adderVal))
+            return ReportIsNotFunction(cx, adderVal);
 
+        JSFunction* adder;
+        bool isOriginalAdder = IsFunctionObject(adderVal, &adder) &&
+                               IsSelfHostedFunctionWithName(adder, cx->names().WeakSet_add);
+        RootedValue setVal(cx, ObjectValue(*obj));
+        FastCallGuard fig(cx, adderVal);
+        InvokeArgs& args2 = fig.args();
+
+        JS::ForOfIterator iter(cx);
+        if (!iter.init(args[0]))
+            return false;
+
+        RootedValue keyVal(cx);
+        RootedObject keyObject(cx);
+        RootedValue dummy(cx);
+        RootedValue placeholder(cx, BooleanValue(true));
+        while (true) {
+            bool done;
+            if (!iter.next(&keyVal, &done))
+                return false;
+            if (done)
+                break;
+
+            if (isOriginalAdder) {
                 if (keyVal.isPrimitive()) {
                     UniqueChars bytes =
                         DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, nullptr);
                     if (!bytes)
                         return false;
                     JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                                               JSMSG_NOT_NONNULL_OBJECT, bytes.get());
+                                               JSMSG_NOT_NONNULL_OBJECT,
+                                               bytes.get());
                     return false;
                 }
 
                 keyObject = &keyVal.toObject();
                 if (!SetWeakMapEntry(cx, map, keyObject, placeholder))
                     return false;
-            }
-        } else {
-            FixedInvokeArgs<1> args2(cx);
-            args2[0].set(args[0]);
+            } else {
+                if (!args2.init(1))
+                    return false;
 
-            RootedValue thisv(cx, ObjectValue(*obj));
-            if (!CallSelfHostedFunction(cx, cx->names().WeakSetConstructorInit, thisv, args2, args2.rval()))
-                return false;
+                args2[0].set(keyVal);
+
+                if (!fig.call(cx, adderVal, setVal, &dummy))
+                    return false;
+            }
         }
     }
 
