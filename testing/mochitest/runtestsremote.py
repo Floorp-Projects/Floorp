@@ -190,8 +190,7 @@ class MochiRemote(MochitestDesktop):
     def addChromeToProfile(self, options):
         manifest = MochitestDesktop.addChromeToProfile(self, options)
 
-        # Support Firefox (browser), B2G (shell), SeaMonkey (navigator), and Webapp
-        # Runtime (webapp).
+        # Support Firefox (browser), SeaMonkey (navigator), and Webapp Runtime (webapp).
         if options.flavor == 'chrome':
             # append overlay to chrome.manifest
             chrome = ("overlay chrome://browser/content/browser.xul "

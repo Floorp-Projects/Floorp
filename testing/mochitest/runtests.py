@@ -519,7 +519,7 @@ class WebSocketServer(object):
 
 class MochitestBase(object):
     """
-    Base mochitest class for both desktop and b2g.
+    Base mochitest class for desktop.
     """
 
     oldcwd = os.getcwd()
@@ -1519,7 +1519,7 @@ def parseKeyValue(strings, separator='=', context='key, value: '):
 
 class MochitestDesktop(MochitestBase):
     """
-    Mochitest class for desktop firefox and mulet.
+    Mochitest class for desktop firefox.
     """
     certdbNew = False
     sslTunnel = None
@@ -1584,7 +1584,7 @@ class MochitestDesktop(MochitestBase):
             toolsEnv["TSAN_OPTIONS"] = "report_bugs=0"
 
         if self.certdbNew:
-            # android and b2g use the new DB formats exclusively
+            # android uses the new DB formats exclusively
             certdbPath = "sql:" + options.profilePath
         else:
             # desktop seems to use the old
@@ -1661,12 +1661,6 @@ class MochitestDesktop(MochitestBase):
                 'profile_data',
                 'prefs_general.js')]
 
-        # TODO: Let's include those prefs until bug 1072443 is fixed
-        if mozinfo.info.get('buildapp') == 'mulet':
-            preferences += [os.path.join(SCRIPT_DIR,
-                                         'profile_data',
-                                         'prefs_b2g_unittest.js')]
-
         prefs = {}
         for path in preferences:
             prefs.update(Preferences.read_prefs(path))
@@ -1682,10 +1676,6 @@ class MochitestDesktop(MochitestBase):
         interpolation = {
             "server": "%s:%s" %
             (options.webServer, options.httpPort)}
-
-        # TODO: Remove OOP once bug 1072443 is fixed
-        if mozinfo.info.get('buildapp') == 'mulet':
-            interpolation["OOP"] = "false"
 
         prefs = json.loads(json.dumps(prefs) % interpolation)
         for pref in prefs:
@@ -1998,17 +1988,11 @@ class MochitestDesktop(MochitestBase):
             self.lastTestSeen = self.test_name
             startTime = datetime.now()
 
-            # b2g desktop requires Runner even though appname is b2g
-            if mozinfo.info.get('appname') == 'b2g' and mozinfo.info.get(
-                    'toolkit') != 'gonk':
-                runner_cls = mozrunner.Runner
-            else:
-                runner_cls = mozrunner.runners.get(
-                    mozinfo.info.get(
-                        'appname',
-                        'firefox'),
-                    mozrunner.Runner)
-
+            runner_cls = mozrunner.runners.get(
+                mozinfo.info.get(
+                    'appname',
+                    'firefox'),
+                mozrunner.Runner)
             runner = runner_cls(profile=self.profile,
                                 binary=cmd,
                                 cmdargs=args,
@@ -2325,14 +2309,6 @@ class MochitestDesktop(MochitestBase):
         self.browserEnv = self.buildBrowserEnv(
             options,
             debuggerInfo is not None)
-
-        # If there are any Mulet-specific tests doing remote network access,
-        # we will not be aware since we are explicitely allowing this, as for
-        # B2G
-        if 'MOZ_DISABLE_NONLOCAL_CONNECTIONS' in self.browserEnv:
-            if mozinfo.info.get('buildapp') == 'mulet':
-                del self.browserEnv['MOZ_DISABLE_NONLOCAL_CONNECTIONS']
-                os.environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "0"
 
         if self.browserEnv is None:
             return 1
@@ -2693,9 +2669,6 @@ def run_test_harness(parser, options):
 
     if options.flavor in ('plain', 'browser', 'chrome'):
         options.runByDir = True
-
-    if mozinfo.info.get('buildapp') == 'mulet':
-        options.runByDir = False
 
     result = runner.runTests(options)
 
