@@ -152,7 +152,8 @@ TypeSet::ObjectGroupString(ObjectGroup* group)
 
 #ifdef DEBUG
 
-static bool InferSpewActive(SpewChannel channel)
+bool
+js::InferSpewActive(SpewChannel channel)
 {
     static bool active[SPEW_COUNT];
     static bool checked = false;
@@ -222,12 +223,10 @@ js::InferSpewColor(TypeSet* types)
     return colors[DefaultHasher<TypeSet*>::hash(types) % 7];
 }
 
+#ifdef DEBUG
 void
-js::InferSpew(SpewChannel channel, const char* fmt, ...)
+js::InferSpewImpl(const char* fmt, ...)
 {
-    if (!InferSpewActive(channel))
-        return;
-
     va_list ap;
     va_start(ap, fmt);
     fprintf(stderr, "[infer] ");
@@ -235,6 +234,7 @@ js::InferSpew(SpewChannel channel, const char* fmt, ...)
     fprintf(stderr, "\n");
     va_end(ap);
 }
+#endif
 
 MOZ_NORETURN MOZ_COLD static void
 TypeFailure(JSContext* cx, const char* fmt, ...)

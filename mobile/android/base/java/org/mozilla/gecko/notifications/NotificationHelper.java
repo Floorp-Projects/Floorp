@@ -38,7 +38,7 @@ public final class NotificationHelper implements GeckoEventListener {
     // Attributes mandatory to be used while sending a notification from js.
     private static final String TITLE_ATTR = "title";
     private static final String TEXT_ATTR = "text";
-    private static final String ID_ATTR = "id";
+    /* package */ static final String ID_ATTR = "id";
     private static final String SMALLICON_ATTR = "smallIcon";
 
     // Attributes that can be used while sending a notification from js.
@@ -63,7 +63,6 @@ public final class NotificationHelper implements GeckoEventListener {
 
     private static final String BUTTON_EVENT = "notification-button-clicked";
     private static final String CLICK_EVENT = "notification-clicked";
-    private static final String CLOSED_EVENT = "notification-closed";
     static final String CLEARED_EVENT = "notification-cleared";
 
     static final String ORIGINAL_EXTRA_COMPONENT = "originalComponent";
@@ -333,23 +332,8 @@ public final class NotificationHelper implements GeckoEventListener {
         hideNotification(id, handler, cookie);
     }
 
-    private void sendNotificationWasClosed(String id, String handlerKey, String cookie) {
-        final JSONObject args = new JSONObject();
-        try {
-            args.put(ID_ATTR, id);
-            args.put(HANDLER_ATTR, handlerKey);
-            args.put(COOKIE_ATTR, cookie);
-            args.put(EVENT_TYPE_ATTR, CLOSED_EVENT);
-            Log.i(LOGTAG, "Send " + args.toString());
-            GeckoAppShell.notifyObservers("Notification:Event", args.toString());
-        } catch (JSONException ex) {
-            Log.e(LOGTAG, "sendNotificationWasClosed: error building JSON notification arguments.", ex);
-        }
-    }
-
     private void closeNotification(String id, String handlerKey, String cookie) {
         ((NotificationClient) GeckoAppShell.getNotificationListener()).remove(id);
-        sendNotificationWasClosed(id, handlerKey, cookie);
     }
 
     public void hideNotification(String id, String handlerKey, String cookie) {

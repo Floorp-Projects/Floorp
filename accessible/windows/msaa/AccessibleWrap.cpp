@@ -42,6 +42,7 @@
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsIXULRuntime.h"
 
 #include "oleacc.h"
 
@@ -60,9 +61,9 @@ const uint32_t USE_ROLE_STRING = 0;
 static gAccessibles = 0;
 #endif
 
-#ifdef _WIN64
-IDSet AccessibleWrap::sIDGen;
-#endif
+MsaaIdGenerator AccessibleWrap::sIDGen;
+
+static const VARIANT kVarChildIdSelf = {VT_I4};
 
 static const int32_t kIEnumVariantDisconnected = -1;
 
@@ -77,10 +78,9 @@ AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
 
 AccessibleWrap::~AccessibleWrap()
 {
-#ifdef _WIN64
-  if (mID != kNoID && XRE_IsParentProcess())
-    sIDGen.ReleaseID(mID);
-#endif
+  if (mID != kNoID) {
+    sIDGen.ReleaseID(this);
+  }
 }
 
 ITypeInfo* AccessibleWrap::gTypeInfo = nullptr;
@@ -249,20 +249,80 @@ AccessibleWrap::get_accChild(
 
   // IAccessible::accChild is used to return this accessible or child accessible
   // at the given index or to get an accessible by child ID in the case of
-  // document accessible (it's handled by overriden GetXPAccessibleFor method
-  // on the document accessible). The getting an accessible by child ID is used
-  // by AccessibleObjectFromEvent() called by AT when AT handles our MSAA event.
-  Accessible* child = GetXPAccessibleFor(varChild);
-  if (!child)
+  // document accessible.
+  // The getting an accessible by child ID is used by AccessibleObjectFromEvent()
+  // called by AT when AT handles our MSAA event.
+  bool isDefunct = false;
+  RefPtr<IAccessible> child = GetIAccessibleFor(varChild, &isDefunct);
+  if (!child) {
     return E_INVALIDARG;
+  }
 
-  if (child->IsDefunct())
+  if (isDefunct) {
     return CO_E_OBJNOTCONNECTED;
+  }
 
-  *ppdispChild = NativeAccessible(child);
+  child.forget(ppdispChild);
   return S_OK;
 
   A11Y_TRYBLOCK_END
+}
+
+/**
+ * This function is a helper for implementing IAccessible methods that accept
+ * a Child ID as a parameter. If the child ID is CHILDID_SELF, the function
+ * returns S_OK but a null *aOutInterface. Otherwise, *aOutInterface points
+ * to the resolved IAccessible.
+ *
+ * The CHILDID_SELF case is special because in that case we actually execute
+ * the implementation of the IAccessible method, whereas in the non-self case,
+ * we delegate the method call to that object for execution.
+ *
+ * A sample invocation of this would look like:
+ *
+ *  RefPtr<IAccessible> accessible;
+ *  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+ *  if (FAILED(hr)) {
+ *    return hr;
+ *  }
+ *
+ *  if (accessible) {
+ *    return accessible->get_accFoo(kVarChildIdSelf, pszName);
+ *  }
+ *
+ *  // Implementation for CHILDID_SELF case goes here
+ */
+HRESULT
+AccessibleWrap::ResolveChild(const VARIANT& aVarChild,
+                             IAccessible** aOutInterface)
+{
+  MOZ_ASSERT(aOutInterface);
+  *aOutInterface = nullptr;
+
+  if (aVarChild.vt != VT_I4) {
+    return E_INVALIDARG;
+  }
+
+  if (IsDefunct()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
+  if (aVarChild.lVal == CHILDID_SELF) {
+    return S_OK;
+  }
+
+  bool isDefunct = false;
+  RefPtr<IAccessible> accessible = GetIAccessibleFor(aVarChild, &isDefunct);
+  if (!accessible) {
+    return E_INVALIDARG;
+  }
+
+  if (isDefunct) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
+  accessible.forget(aOutInterface);
+  return S_OK;
 }
 
 STDMETHODIMP
@@ -272,23 +332,23 @@ AccessibleWrap::get_accName(
 {
   A11Y_TRYBLOCK_BEGIN
 
-  if (!pszName)
+  if (!pszName || varChild.vt != VT_I4)
     return E_INVALIDARG;
 
   *pszName = nullptr;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible)
-    return E_INVALIDARG;
-
-  if (xpAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (accessible) {
+    return accessible->get_accName(kVarChildIdSelf, pszName);
+  }
 
   nsAutoString name;
-  xpAccessible->Name(name);
+  Name(name);
 
   // The name was not provided, e.g. no alt attribute for an image. A screen
   // reader may choose to invent its own accessible name, e.g. from an image src
@@ -317,18 +377,18 @@ AccessibleWrap::get_accValue(
 
   *pszValue = nullptr;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible)
-    return E_INVALIDARG;
-
-  if (xpAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (accessible) {
+    return accessible->get_accValue(kVarChildIdSelf, pszValue);
+  }
 
   nsAutoString value;
-  xpAccessible->Value(value);
+  Value(value);
 
   // See bug 438784: need to expose URL on doc's value attribute. For this,
   // reverting part of fix for bug 425693 to make this MSAA method behave
@@ -355,18 +415,18 @@ AccessibleWrap::get_accDescription(VARIANT varChild,
 
   *pszDescription = nullptr;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible)
-    return E_INVALIDARG;
-
-  if (xpAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (accessible) {
+    return accessible->get_accDescription(kVarChildIdSelf, pszDescription);
+  }
 
   nsAutoString description;
-  xpAccessible->Description(description);
+  Description(description);
 
   *pszDescription = ::SysAllocStringLen(description.get(),
                                         description.Length());
@@ -387,23 +447,23 @@ AccessibleWrap::get_accRole(
 
   VariantInit(pvarRole);
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible)
-    return E_INVALIDARG;
-
-  if (xpAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (accessible) {
+    return accessible->get_accRole(kVarChildIdSelf, pvarRole);
+  }
 
   a11y::role geckoRole;
 #ifdef DEBUG
-  NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(xpAccessible),
+  NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(this),
                "Does not support Text when it should");
 #endif
 
-  geckoRole = xpAccessible->Role();
+  geckoRole = Role();
 
   uint32_t msaaRole = 0;
 
@@ -440,7 +500,7 @@ AccessibleWrap::get_accRole(
   // -- Try BSTR role
   // Could not map to known enumerated MSAA role like ROLE_BUTTON
   // Use BSTR role to expose role attribute or tag name + namespace
-  nsIContent *content = xpAccessible->GetContent();
+  nsIContent *content = GetContent();
   if (!content)
     return E_FAIL;
 
@@ -489,15 +549,15 @@ AccessibleWrap::get_accState(
   pvarState->vt = VT_I4;
   pvarState->lVal = 0;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible)
-    return E_INVALIDARG;
-
-  if (xpAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (accessible) {
+    return accessible->get_accState(kVarChildIdSelf, pvarState);
+  }
 
   // MSAA only has 31 states and the lowest 31 bits of our state bit mask
   // are the same states as MSAA.
@@ -563,19 +623,20 @@ AccessibleWrap::get_accKeyboardShortcut(
     return E_INVALIDARG;
   *pszKeyboardShortcut = nullptr;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* acc = GetXPAccessibleFor(varChild);
-  if (!acc)
-    return E_INVALIDARG;
+  if (accessible) {
+    return accessible->get_accKeyboardShortcut(kVarChildIdSelf,
+                                               pszKeyboardShortcut);
+  }
 
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
-
-  KeyBinding keyBinding = acc->AccessKey();
+  KeyBinding keyBinding = AccessKey();
   if (keyBinding.IsEmpty())
-    keyBinding = acc->KeyboardShortcut();
+    keyBinding = KeyboardShortcut();
 
   nsAutoString shortcut;
   keyBinding.ToString(shortcut);
@@ -796,18 +857,18 @@ AccessibleWrap::get_accDefaultAction(
 
   *pszDefaultAction = nullptr;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible)
-    return E_INVALIDARG;
-
-  if (xpAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (accessible) {
+    return accessible->get_accDefaultAction(kVarChildIdSelf, pszDefaultAction);
+  }
 
   nsAutoString defaultAction;
-  xpAccessible->ActionNameAt(0, defaultAction);
+  ActionNameAt(0, defaultAction);
 
   *pszDefaultAction = ::SysAllocStringLen(defaultAction.get(),
                                           defaultAction.Length());
@@ -823,16 +884,15 @@ AccessibleWrap::accSelect(
 {
   A11Y_TRYBLOCK_BEGIN
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  // currently only handle focus and selection
-  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible)
-    return E_INVALIDARG;
-
-  if (xpAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (accessible) {
+    return accessible->accSelect(flagsSelect, kVarChildIdSelf);
+  }
 
   if (flagsSelect & SELFLAG_TAKEFOCUS) {
     if (XRE_IsContentProcess()) {
@@ -841,26 +901,26 @@ AccessibleWrap::accSelect(
       // is happening, so we dispatch TakeFocus from the main thread to
       // guarantee that we are outside any IPC.
       nsCOMPtr<nsIRunnable> runnable =
-        mozilla::NewRunnableMethod(xpAccessible, &Accessible::TakeFocus);
+        mozilla::NewRunnableMethod(this, &Accessible::TakeFocus);
       NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
       return S_OK;
     }
-    xpAccessible->TakeFocus();
+    TakeFocus();
     return S_OK;
   }
 
   if (flagsSelect & SELFLAG_TAKESELECTION) {
-    xpAccessible->TakeSelection();
+    TakeSelection();
     return S_OK;
   }
 
   if (flagsSelect & SELFLAG_ADDSELECTION) {
-    xpAccessible->SetSelected(true);
+    SetSelected(true);
     return S_OK;
   }
 
   if (flagsSelect & SELFLAG_REMOVESELECTION) {
-    xpAccessible->SetSelected(false);
+    SetSelected(false);
     return S_OK;
   }
 
@@ -887,17 +947,18 @@ AccessibleWrap::accLocation(
   *pcxWidth = 0;
   *pcyHeight = 0;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible)
-    return E_INVALIDARG;
+  if (accessible) {
+    return accessible->accLocation(pxLeft, pyTop, pcxWidth, pcyHeight,
+                                   kVarChildIdSelf);
+  }
 
-  if (xpAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
-
-  nsIntRect rect = xpAccessible->Bounds();
+  nsIntRect rect = Bounds();
 
   *pxLeft = rect.x;
   *pyTop = rect.y;
@@ -921,15 +982,15 @@ AccessibleWrap::accNavigate(
 
   VariantInit(pvarEndUpAt);
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varStart, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* accessible = GetXPAccessibleFor(varStart);
-  if (!accessible)
-    return E_INVALIDARG;
-
-  if (accessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (accessible) {
+    return accessible->accNavigate(navDir, kVarChildIdSelf, pvarEndUpAt);
+  }
 
   Accessible* navAccessible = nullptr;
   Maybe<RelationType> xpRelation;
@@ -941,34 +1002,34 @@ AccessibleWrap::accNavigate(
 
   switch(navDir) {
     case NAVDIR_FIRSTCHILD:
-      if (accessible->IsProxy()) {
-        if (!accessible->Proxy()->MustPruneChildren()) {
-          navAccessible = WrapperFor(accessible->Proxy()->FirstChild());
+      if (IsProxy()) {
+        if (!Proxy()->MustPruneChildren()) {
+          navAccessible = WrapperFor(Proxy()->FirstChild());
         }
       } else {
-        if (!nsAccUtils::MustPrune(accessible))
-          navAccessible = accessible->FirstChild();
+        if (!nsAccUtils::MustPrune(this))
+          navAccessible = FirstChild();
       }
       break;
     case NAVDIR_LASTCHILD:
-      if (accessible->IsProxy()) {
-        if (!accessible->Proxy()->MustPruneChildren()) {
-          navAccessible = WrapperFor(accessible->Proxy()->LastChild());
+      if (IsProxy()) {
+        if (!Proxy()->MustPruneChildren()) {
+          navAccessible = WrapperFor(Proxy()->LastChild());
         }
       } else {
-        if (!nsAccUtils::MustPrune(accessible))
-          navAccessible = accessible->LastChild();
+        if (!nsAccUtils::MustPrune(this))
+          navAccessible = LastChild();
       }
       break;
     case NAVDIR_NEXT:
-      navAccessible = accessible->IsProxy()
-        ? WrapperFor(accessible->Proxy()->NextSibling())
-        : accessible->NextSibling();
+      navAccessible = IsProxy()
+        ? WrapperFor(Proxy()->NextSibling())
+        : NextSibling();
       break;
     case NAVDIR_PREVIOUS:
-      navAccessible = accessible->IsProxy()
-        ? WrapperFor(accessible->Proxy()->PrevSibling())
-        : accessible->PrevSibling();
+      navAccessible = IsProxy()
+        ? WrapperFor(Proxy()->PrevSibling())
+        : PrevSibling();
       break;
     case NAVDIR_DOWN:
     case NAVDIR_LEFT:
@@ -1046,17 +1107,17 @@ AccessibleWrap::accDoDefaultAction(
 {
   A11Y_TRYBLOCK_BEGIN
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
 
-  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible)
-    return E_INVALIDARG;
+  if (accessible) {
+    return accessible->accDoDefaultAction(kVarChildIdSelf);
+  }
 
-  if (xpAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
-
-  return xpAccessible->DoAction(0) ? S_OK : E_INVALIDARG;
+  return DoAction(0) ? S_OK : E_INVALIDARG;
 
   A11Y_TRYBLOCK_END
 }
@@ -1148,13 +1209,8 @@ AccessibleWrap::GetNativeInterface(void** aOutAccessible)
 void
 AccessibleWrap::SetID(uint32_t aID)
 {
-  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(XRE_IsParentProcess() && IsProxy());
   mID = aID;
-  DocAccessibleWrap* doc = static_cast<DocAccessibleWrap*>(Document());
-  DebugOnly<AccessibleWrap*> checkAcc = nullptr;
-  MOZ_ASSERT(!(checkAcc = doc->GetAccessibleByID(aID)) ||
-             checkAcc->GetExistingID() == aID);
-  doc->AddID(aID, this);
 }
 
 void
@@ -1257,15 +1313,14 @@ AccessibleWrap::GetChildIDFor(Accessible* aAccessible)
     return 0;
   }
 
-  // Content should use mID which has been generated by the chrome process.
-  if (XRE_IsContentProcess() && !aAccessible->IsApplication()) {
+  // Chrome should use mID which has been generated by the content process.
+  if (aAccessible->IsProxy()) {
     const uint32_t id = static_cast<AccessibleWrap*>(aAccessible)->mID;
     MOZ_ASSERT(id != kNoID);
     return id;
   }
 
-#ifdef _WIN64
-  if (!aAccessible->Document() && !aAccessible->IsProxy())
+  if (!aAccessible->Document())
     return 0;
 
   uint32_t* id = & static_cast<AccessibleWrap*>(aAccessible)->mID;
@@ -1274,27 +1329,12 @@ AccessibleWrap::GetChildIDFor(Accessible* aAccessible)
 
   *id = sIDGen.GetID();
 
-  if (aAccessible->IsProxy()) {
-    DocProxyAccessibleWrap* doc =
-      static_cast<AccessibleWrap*>(aAccessible)->DocProxyWrapper();
-    doc->AddID(*id, static_cast<AccessibleWrap*>(aAccessible));
-  } else {
-    DocAccessibleWrap* doc =
-      static_cast<DocAccessibleWrap*>(aAccessible->Document());
-    doc->AddID(*id, static_cast<AccessibleWrap*>(aAccessible));
-  }
+  MOZ_ASSERT(!aAccessible->IsProxy());
+  DocAccessibleWrap* doc =
+    static_cast<DocAccessibleWrap*>(aAccessible->Document());
+  doc->AddID(*id, static_cast<AccessibleWrap*>(aAccessible));
 
   return *id;
-#else
-  int32_t id = - reinterpret_cast<intptr_t>(aAccessible);
-  if (aAccessible->IsProxy()) {
-    DocProxyAccessibleWrap* doc =
-      static_cast<AccessibleWrap*>(aAccessible)->DocProxyWrapper();
-    doc->AddID(id, static_cast<AccessibleWrap*>(aAccessible));
-  }
-
-  return id;
-#endif
 }
 
 HWND
@@ -1396,83 +1436,116 @@ GetAccessibleInSubtree(DocAccessible* aDoc, uint32_t aID)
     return nullptr;
   }
 
-static AccessibleWrap*
-GetProxiedAccessibleInSubtree(const DocAccessibleParent* aDoc, uint32_t aID)
+static already_AddRefed<IDispatch>
+GetProxiedAccessibleInSubtree(const DocAccessibleParent* aDoc,
+                              const VARIANT& aVarChild)
 {
   auto wrapper = static_cast<DocProxyAccessibleWrap*>(WrapperFor(aDoc));
-  AccessibleWrap* child = wrapper->GetAccessibleByID(aID);
-  if (child) {
-    return child;
+  RefPtr<IAccessible> comProxy;
+  int32_t wrapperChildId = AccessibleWrap::GetChildIDFor(wrapper);
+  if (wrapperChildId == aVarChild.lVal) {
+    wrapper->GetNativeInterface(getter_AddRefs(comProxy));
+    return comProxy.forget();
   }
 
-  size_t childDocs = aDoc->ChildDocCount();
-  for (size_t i = 0; i < childDocs; i++) {
-    const DocAccessibleParent* childDoc = aDoc->ChildDocAt(i);
-    child = GetProxiedAccessibleInSubtree(childDoc, aID);
-    if (child) {
-      return child;
-    }
+  MOZ_ASSERT(aDoc->IsTopLevel());
+  if (!aDoc->IsTopLevel()) {
+    return nullptr;
   }
 
-  return nullptr;
+  wrapper->GetNativeInterface(getter_AddRefs(comProxy));
+
+  RefPtr<IDispatch> disp;
+  if (FAILED(comProxy->get_accChild(aVarChild, getter_AddRefs(disp)))) {
+    return nullptr;
+  }
+
+  return disp.forget();
 }
 
-Accessible*
-AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
+already_AddRefed<IAccessible>
+AccessibleWrap::GetIAccessibleFor(const VARIANT& aVarChild, bool* aIsDefunct)
 {
   if (aVarChild.vt != VT_I4)
     return nullptr;
 
-  // if its us real easy - this seems to always be the case
-  if (aVarChild.lVal == CHILDID_SELF)
-    return this;
+  VARIANT varChild = aVarChild;
+
+  MOZ_ASSERT(aIsDefunct);
+  *aIsDefunct = false;
+
+  RefPtr<IAccessible> result;
+
+  if (varChild.lVal == CHILDID_SELF) {
+    *aIsDefunct = IsDefunct();
+    if (*aIsDefunct) {
+      return nullptr;
+    }
+    GetNativeInterface(getter_AddRefs(result));
+    if (result) {
+      return result.forget();
+    }
+    // If we're not a proxy, there's nothing more we can do to attempt to
+    // resolve the IAccessible, so we just fail.
+    if (!IsProxy()) {
+      return nullptr;
+    }
+    // Otherwise, since we're a proxy and we have a null native interface, this
+    // indicates that we need to obtain a COM proxy. To do this, we'll replace
+    // CHILDID_SELF with our real MSAA ID and continue the search from there.
+    varChild.lVal = GetExistingID();
+  }
 
   if (IsProxy() ? Proxy()->MustPruneChildren() : nsAccUtils::MustPrune(this)) {
     return nullptr;
   }
 
-  if (aVarChild.lVal > 0) {
-    // Gecko child indices are 0-based in contrast to indices used in MSAA.
-    if (IsProxy()) {
-      if (static_cast<uint32_t>(aVarChild.lVal) > Proxy()->ChildrenCount()) {
-        return nullptr;
-      }
+  // If the MSAA ID is not a chrome id then we already know that we won't
+  // find it here and should look remotely instead.
+  if (XRE_IsParentProcess() && !sIDGen.IsChromeID(varChild.lVal)) {
+    return GetRemoteIAccessibleFor(varChild);
+  }
+  MOZ_ASSERT(XRE_IsParentProcess() ||
+             sIDGen.IsIDForThisContentProcess(varChild.lVal));
 
-      return WrapperFor(Proxy()->ChildAt(aVarChild.lVal - 1));
-    } else {
-      return GetChildAt(aVarChild.lVal - 1);
+  if (varChild.lVal > 0) {
+    // Gecko child indices are 0-based in contrast to indices used in MSAA.
+    MOZ_ASSERT(!IsProxy());
+    Accessible* xpAcc = GetChildAt(varChild.lVal - 1);
+    if (!xpAcc) {
+      return nullptr;
     }
+    *aIsDefunct = xpAcc->IsDefunct();
+    static_cast<AccessibleWrap*>(xpAcc)->GetNativeInterface(getter_AddRefs(result));
+    return result.forget();
   }
 
   // If lVal negative then it is treated as child ID and we should look for
   // accessible through whole accessible subtree including subdocuments.
   // Otherwise we treat lVal as index in parent.
-  // Convert child ID to unique ID.
   // First handle the case that both this accessible and the id'd one are in
   // this process.
   if (!IsProxy()) {
-    void* uniqueID = reinterpret_cast<void*>(intptr_t(-aVarChild.lVal));
-
     DocAccessible* document = Document();
     Accessible* child =
-#ifdef _WIN64
-      GetAccessibleInSubtree(document, static_cast<uint32_t>(aVarChild.lVal));
-#else
-      XRE_IsContentProcess() ?
-        GetAccessibleInSubtree(document, static_cast<uint32_t>(aVarChild.lVal)) :
-        document->GetAccessibleByUniqueIDInSubtree(uniqueID);
-#endif
+      GetAccessibleInSubtree(document, static_cast<uint32_t>(varChild.lVal));
 
     // If it is a document then just return an accessible.
-    if (child && IsDoc())
-      return child;
+    if (child && IsDoc()) {
+      *aIsDefunct = child->IsDefunct();
+      static_cast<AccessibleWrap*>(child)->GetNativeInterface(getter_AddRefs(result));
+      return result.forget();
+    }
 
     // Otherwise check whether the accessible is a child (this path works for
     // ARIA documents and popups).
     Accessible* parent = child;
     while (parent && parent != document) {
-      if (parent == this)
-        return child;
+      if (parent == this) {
+        *aIsDefunct = child->IsDefunct();
+        static_cast<AccessibleWrap*>(child)->GetNativeInterface(getter_AddRefs(result));
+        return result.forget();
+      }
 
       parent = parent->Parent();
     }
@@ -1480,34 +1553,26 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 
   // Now see about the case that both this accessible and the target one are
   // proxied.
-  uint32_t id = aVarChild.lVal;
   if (IsProxy()) {
     DocAccessibleParent* proxyDoc = Proxy()->Document();
-    AccessibleWrap* wrapper = GetProxiedAccessibleInSubtree(proxyDoc, id);
-    if (!wrapper)
+    RefPtr<IDispatch> disp = GetProxiedAccessibleInSubtree(proxyDoc, varChild);
+    if (!disp) {
       return nullptr;
-
-    MOZ_ASSERT(wrapper->IsProxy());
-
-    if (proxyDoc == this->Proxy()) {
-      return wrapper;
     }
 
-    ProxyAccessible* parent = wrapper->Proxy();
-    while (parent && parent != proxyDoc) {
-      if (parent == this->Proxy()) {
-        return wrapper;
-      }
-
-      parent = parent->Parent();
-    }
-
-    return nullptr;
+    MOZ_ASSERT(mscom::IsProxy(disp));
+    DebugOnly<HRESULT> hr = disp->QueryInterface(IID_IAccessible,
+                                                 getter_AddRefs(result));
+    MOZ_ASSERT(SUCCEEDED(hr));
+    return result.forget();
   }
 
-  // Finally we need to handle the case that this accessible is in the main
-  // process, but the target is proxied.  This is the case when the target
-  // accessible is in a child document of this one.
+  return nullptr;
+}
+
+already_AddRefed<IAccessible>
+AccessibleWrap::GetRemoteIAccessibleFor(const VARIANT& aVarChild)
+{
   DocAccessibleParent* proxyDoc = nullptr;
   DocAccessible* doc = Document();
   const nsTArray<DocAccessibleParent*>* remoteDocs =
@@ -1516,9 +1581,18 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
     return nullptr;
   }
 
+  RefPtr<IAccessible> result;
+
   size_t docCount = remoteDocs->Length();
   for (size_t i = 0; i < docCount; i++) {
-    Accessible* outerDoc = remoteDocs->ElementAt(i)->OuterDocOfRemoteBrowser();
+    DocAccessibleParent* remoteDoc = remoteDocs->ElementAt(i);
+
+    uint32_t remoteDocMsaaId = WrapperFor(remoteDoc)->GetExistingID();
+    if (!sIDGen.IsSameContentProcessFor(aVarChild.lVal, remoteDocMsaaId)) {
+      continue;
+    }
+
+    Accessible* outerDoc = remoteDoc->OuterDocOfRemoteBrowser();
     if (!outerDoc) {
       continue;
     }
@@ -1527,28 +1601,16 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
       continue;
     }
 
-    if (doc == this) {
-      AccessibleWrap* proxyWrapper =
-        GetProxiedAccessibleInSubtree(remoteDocs->ElementAt(i), id);
-      if (proxyWrapper) {
-        return proxyWrapper;
-      }
-
+    RefPtr<IDispatch> disp =
+      GetProxiedAccessibleInSubtree(remoteDoc, aVarChild);
+    if (!disp) {
       continue;
     }
 
-    Accessible* parent = outerDoc;
-    while (parent && parent != doc) {
-      if (parent == this) {
-        AccessibleWrap* proxyWrapper =
-          GetProxiedAccessibleInSubtree(remoteDocs->ElementAt(i), id);
-        if (proxyWrapper) {
-          return proxyWrapper;
-        }
-      }
-
-      parent = parent->Parent();
-    }
+    DebugOnly<HRESULT> hr = disp->QueryInterface(IID_IAccessible,
+                                                 getter_AddRefs(result));
+    MOZ_ASSERT(SUCCEEDED(hr));
+    return result.forget();
   }
 
   return nullptr;
@@ -1602,4 +1664,18 @@ AccessibleWrap::GetTI(LCID lcid)
     return nullptr;
 
   return gTypeInfo;
+}
+
+/* static */
+uint32_t
+AccessibleWrap::GetContentProcessIdFor(dom::ContentParentId aIPCContentId)
+{
+  return sIDGen.GetContentProcessIDFor(aIPCContentId);
+}
+
+/* static */
+void
+AccessibleWrap::ReleaseContentProcessIdFor(dom::ContentParentId aIPCContentId)
+{
+  sIDGen.ReleaseContentProcessIDFor(aIPCContentId);
 }

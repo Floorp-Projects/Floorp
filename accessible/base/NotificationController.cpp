@@ -425,8 +425,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
         static_cast<TabChild*>(tabChild.get())->
           SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id);
 #if defined(XP_WIN)
-        IAccessibleHolder holder(CreateHolderFromAccessible(childDoc));
-        ipcDoc->SendCOMProxy(holder);
+        MOZ_ASSERT(parentIPCDoc);
+        ipcDoc->SendMsaaID(AccessibleWrap::GetChildIDFor(childDoc));
 #endif
       }
     }

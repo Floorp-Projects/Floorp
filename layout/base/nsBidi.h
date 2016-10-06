@@ -529,15 +529,6 @@ public:
   nsresult GetParaLevel(nsBidiLevel* aParaLevel);
 
   /**
-   * Get the bidirectional type for one character.
-   *
-   * @param aCharIndex the index of a character.
-   *
-   * @param aType receives the bidirectional type of the character at aCharIndex.
-   */
-  nsresult GetCharTypeAt(int32_t aCharIndex,  nsCharType* aType);
-
-  /**
    * Get a logical run.
    * This function returns information about a run and is used
    * to retrieve runs in logical order.<p>

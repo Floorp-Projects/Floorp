@@ -30,8 +30,6 @@ sync protocol PRenderFrame
 parent:
     async NotifyCompositorTransaction();
 
-    async UpdateHitRegion(nsRegion aRegion);
-
     async __delete__();
 };
 
