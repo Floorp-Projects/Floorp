@@ -156,6 +156,7 @@ public:
                                    const int& w, const int& h) override;
 
   virtual bool RecvDeviceChange() override;
+  virtual int AddDeviceChangeCallback(DeviceChangeCallback* aCallback) override;
   int SetFakeDeviceChangeEvents();
 
   // these are response messages to our outgoing requests
@@ -196,6 +197,7 @@ public:
                        char* unique_idUTF8,
                        const unsigned int unique_idUTF8Length);
   void ShutdownAll();
+  int EnsureInitialized(CaptureEngine aCapEngine);
 
   webrtc::ExternalRenderer* Callback(CaptureEngine aCapEngine, int capture_id);
 
