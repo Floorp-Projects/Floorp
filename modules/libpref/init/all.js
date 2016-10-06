@@ -4825,7 +4825,7 @@ pref("dom.w3c_pointer_events.implicit_capture", false);
 pref("dom.imagecapture.enabled", false);
 
 // W3C MediaDevices devicechange event
-pref("media.ondevicechange.enabled", false);
+pref("media.ondevicechange.enabled", true);
 
 // W3C MediaDevices devicechange fake event
 pref("media.ondevicechange.fakeDeviceChangeEvent.enabled", false);
