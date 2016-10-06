@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>setLineDash</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<canvas id="canvas"></canvas>
+<script>
+test(function() {
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+
+  var initial = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+  ctx.setLineDash(initial);
+  assert_array_equals(ctx.getLineDash(), initial, "line dash sanity");
+
+  ctx.setLineDash([Infinity]);
+  assert_array_equals(ctx.getLineDash(), initial, "Inf doesn't reset line dash");
+
+  ctx.setLineDash([NaN]);
+  assert_array_equals(ctx.getLineDash(), initial, "NaN doesn't reset line dash");
+
+  ctx.setLineDash([-1]);
+  assert_array_equals(ctx.getLineDash(), initial, "Negative doesn't reset line dash");
+}, "Invalid arguments to setLineDash()");
+</script>
