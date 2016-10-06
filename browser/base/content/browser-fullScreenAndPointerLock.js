@@ -385,7 +385,7 @@ var FullScreen = {
         break;
       }
       case "DOMFullscreen:NewOrigin": {
-        // Don't show the warning if we've already exit fullscreen.
+        // Don't show the warning if we've already exited fullscreen.
         if (document.fullscreen) {
           PointerlockFsWarning.showFullScreen(aMessage.data.originNoSuffix);
         }
