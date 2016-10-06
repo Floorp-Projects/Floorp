@@ -9,8 +9,6 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 
-#include "vm/SelfHosting.h"
-
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
@@ -302,12 +300,85 @@ WeakMap_construct(JSContext* cx, unsigned argc, Value* vp)
 
     // Steps 5-6, 11.
     if (!args.get(0).isNullOrUndefined()) {
-        FixedInvokeArgs<1> args2(cx);
-        args2[0].set(args[0]);
-
-        RootedValue thisv(cx, ObjectValue(*obj));
-        if (!CallSelfHostedFunction(cx, cx->names().WeakMapConstructorInit, thisv, args2, args2.rval()))
+        // Steps 7a-b.
+        RootedValue adderVal(cx);
+        if (!GetProperty(cx, obj, obj, cx->names().set, &adderVal))
             return false;
+
+        // Step 7c.
+        if (!IsCallable(adderVal))
+            return ReportIsNotFunction(cx, adderVal);
+
+        bool isOriginalAdder = IsNativeFunction(adderVal, WeakMap_set);
+        RootedValue mapVal(cx, ObjectValue(*obj));
+        FastCallGuard fig(cx, adderVal);
+        InvokeArgs& args2 = fig.args();
+
+        // Steps 7d-e.
+        JS::ForOfIterator iter(cx);
+        if (!iter.init(args[0]))
+            return false;
+
+        RootedValue pairVal(cx);
+        RootedObject pairObject(cx);
+        RootedValue keyVal(cx);
+        RootedObject keyObject(cx);
+        RootedValue val(cx);
+        RootedValue dummy(cx);
+        while (true) {
+            // Steps 12a-e.
+            bool done;
+            if (!iter.next(&pairVal, &done))
+                return false;
+            if (done)
+                break;
+
+            // Step 12f.
+            if (!pairVal.isObject()) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_MAP_ITERABLE,
+                                          "WeakMap");
+                return false;
+            }
+
+            pairObject = &pairVal.toObject();
+            if (!pairObject)
+                return false;
+
+            // Steps 12g-h.
+            if (!GetElement(cx, pairObject, pairObject, 0, &keyVal))
+                return false;
+
+            // Steps 12i-j.
+            if (!GetElement(cx, pairObject, pairObject, 1, &val))
+                return false;
+
+            // Steps 12k-l.
+            if (isOriginalAdder) {
+                if (keyVal.isPrimitive()) {
+                    UniqueChars bytes =
+                        DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, nullptr);
+                    if (!bytes)
+                        return false;
+                    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                               JSMSG_NOT_NONNULL_OBJECT,
+                                               bytes.get());
+                    return false;
+                }
+
+                keyObject = &keyVal.toObject();
+                if (!SetWeakMapEntry(cx, obj, keyObject, val))
+                    return false;
+            } else {
+                if (!args2.init(2))
+                    return false;
+
+                args2[0].set(keyVal);
+                args2[1].set(val);
+
+                if (!fig.call(cx, adderVal, mapVal, &dummy))
+                    return false;
+            }
+        }
     }
 
     args.rval().setObject(*obj);
