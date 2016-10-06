@@ -17,6 +17,8 @@
 #include "nsIURIWithPrincipal.h"
 #include "nsSimpleURI.h"
 #include "nsIIPCSerializableURI.h"
+#include "nsWeakReference.h"
+
 
 /**
  * These URIs refer to host objects: Blobs, with scheme "blob",
@@ -26,6 +28,7 @@
 class nsHostObjectURI : public mozilla::net::nsSimpleURI
                       , public nsIURIWithPrincipal
                       , public nsIURIWithBlobImpl
+                      , public nsSupportsWeakReference
 {
 public:
   nsHostObjectURI(nsIPrincipal* aPrincipal,
@@ -63,6 +66,8 @@ public:
     SetRefOnClone(url, refHandlingMode, newRef);
     return url;
   }
+
+  void ForgetBlobImpl();
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   RefPtr<mozilla::dom::BlobImpl> mBlobImpl;
