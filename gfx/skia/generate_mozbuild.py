@@ -125,6 +125,7 @@ if CONFIG['GNU_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-overloaded-virtual',
         '-Wno-shadow',
         '-Wno-sign-compare',
+        '-Wno-unreachable-code',
         '-Wno-unused-function',
     ]
 if CONFIG['GNU_CXX'] and not CONFIG['CLANG_CXX'] and not CONFIG['CLANG_CL']:
