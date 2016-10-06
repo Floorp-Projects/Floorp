@@ -574,7 +574,7 @@ public class GeckoAppShell
         public void showNotification(String name, String cookie, String host,
                                      String title, String text, String imageUrl) {
             // Default is to not show the notification, and immediate send close message.
-            GeckoAppShell.onNotificationClose(name);
+            GeckoAppShell.onNotificationClose(name, cookie);
         }
 
         @Override // NotificationListener
@@ -582,7 +582,7 @@ public class GeckoAppShell
                                                String title, String text, String imageUrl,
                                                String data) {
             // Default is to not show the notification, and immediate send close message.
-            GeckoAppShell.onNotificationClose(name);
+            GeckoAppShell.onNotificationClose(name, cookie);
         }
 
         @Override // NotificationListener
@@ -931,15 +931,15 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(dispatchTo = "gecko")
-    private static native void notifyAlertListener(String name, String topic);
+    private static native void notifyAlertListener(String name, String topic, String cookie);
 
     /**
      * Called by the NotificationListener to notify Gecko that a notification has been
      * shown.
      */
-    public static void onNotificationShow(final String name) {
+    public static void onNotificationShow(final String name, final String cookie) {
         if (GeckoThread.isRunning()) {
-            notifyAlertListener(name, "alertshow");
+            notifyAlertListener(name, "alertshow", cookie);
         }
     }
 
@@ -947,9 +947,9 @@ public class GeckoAppShell
      * Called by the NotificationListener to notify Gecko that a previously shown
      * notification has been closed.
      */
-    public static void onNotificationClose(final String name) {
+    public static void onNotificationClose(final String name, final String cookie) {
         if (GeckoThread.isRunning()) {
-            notifyAlertListener(name, "alertfinished");
+            notifyAlertListener(name, "alertfinished", cookie);
         }
     }
 
@@ -957,9 +957,9 @@ public class GeckoAppShell
      * Called by the NotificationListener to notify Gecko that a previously shown
      * notification has been clicked on.
      */
-    public static void onNotificationClick(final String name) {
+    public static void onNotificationClick(final String name, final String cookie) {
         if (GeckoThread.isRunning()) {
-            notifyAlertListener(name, "alertclickcallback");
+            notifyAlertListener(name, "alertclickcallback", cookie);
         }
     }
 

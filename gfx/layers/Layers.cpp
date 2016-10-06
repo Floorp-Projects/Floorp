@@ -80,24 +80,20 @@ LayerManager::GetRootScrollableLayerId()
     return FrameMetrics::NULL_SCROLL_ID;
   }
 
-  nsTArray<LayerMetricsWrapper> queue = { LayerMetricsWrapper(mRoot) };
-  while (queue.Length()) {
-    LayerMetricsWrapper layer = queue[0];
-    queue.RemoveElementAt(0);
+  LayerMetricsWrapper layerMetricsRoot = LayerMetricsWrapper(mRoot);
 
-    const FrameMetrics& frameMetrics = layer.Metrics();
-    if (frameMetrics.IsScrollable()) {
-      return frameMetrics.GetScrollId();
-    }
+  LayerMetricsWrapper rootScrollableLayerMetrics =
+      BreadthFirstSearch<ForwardIterator>(
+          layerMetricsRoot,
+          [](LayerMetricsWrapper aLayerMetrics)
+          {
+            return aLayerMetrics.Metrics().IsScrollable();
+          }
+      );
 
-    LayerMetricsWrapper child = layer.GetFirstChild();
-    while (child) {
-      queue.AppendElement(child);
-      child = child.GetNextSibling();
-    }
-  }
-
-  return FrameMetrics::NULL_SCROLL_ID;
+  return rootScrollableLayerMetrics.IsValid() ?
+      rootScrollableLayerMetrics.Metrics().GetScrollId() :
+      FrameMetrics::NULL_SCROLL_ID;
 }
 
 void
@@ -159,23 +155,14 @@ LayerManager::GetRootContentLayer()
     return LayerMetricsWrapper();
   }
 
-  nsTArray<Layer*> queue = { mRoot };
-  while (!queue.IsEmpty()) {
-    Layer* layer = queue[0];
-    queue.RemoveElementAt(0);
+  LayerMetricsWrapper root(mRoot);
 
-    for (uint32_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
-      if (layer->GetFrameMetrics(i).IsRootContent()) {
-        return LayerMetricsWrapper(layer, i);
+  return BreadthFirstSearch<ForwardIterator>(root,
+      [](LayerMetricsWrapper aLayerMetrics)
+      {
+        return aLayerMetrics.Metrics().IsRootContent();
       }
-    }
-
-    for (Layer* child = layer->GetFirstChild(); child; child = child->GetNextSibling()) {
-      queue.AppendElement(child);
-    }
-  }
-
-  return LayerMetricsWrapper();
+  );
 }
 
 already_AddRefed<DrawTarget>

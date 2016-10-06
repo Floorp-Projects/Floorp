@@ -9,6 +9,8 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+const global = this;
+
 Cu.importGlobalProperties(["URL"]);
 
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -32,7 +34,9 @@ function readJSON(url) {
   return new Promise((resolve, reject) => {
     NetUtil.asyncFetch({uri: url, loadUsingSystemPrincipal: true}, (inputStream, status) => {
       if (!Components.isSuccessCode(status)) {
-        reject(new Error(status));
+        // Convert status code to a string
+        let e = Components.Exception("", status);
+        reject(new Error(`Error while loading '${url}' (${e.name})`));
         return;
       }
       try {
@@ -1289,9 +1293,10 @@ class FunctionType extends Type {
         let isCallback = isAsync && param.name == schema.async;
 
         parameters.push({
-          type: Schemas.parseSchema(param, path, ["name", "optional"]),
+          type: Schemas.parseSchema(param, path, ["name", "optional", "default"]),
           name: param.name,
           optional: param.optional == null ? isCallback : param.optional,
+          default: param.default == undefined ? null : param.default,
         });
       }
     }
@@ -1459,8 +1464,7 @@ class CallEntry extends Entry {
     let fixedArgs = [];
 
     // First we create a new array, fixedArgs, that is the same as
-    // |args| but with null values in place of omitted optional
-    // parameters.
+    // |args| but with default values in place of omitted optional parameters.
     let check = (parameterIndex, argIndex) => {
       if (parameterIndex == this.parameters.length) {
         if (argIndex == args.length) {
@@ -1472,7 +1476,7 @@ class CallEntry extends Entry {
       let parameter = this.parameters[parameterIndex];
       if (parameter.optional) {
         // Try skipping it.
-        fixedArgs[parameterIndex] = null;
+        fixedArgs[parameterIndex] = parameter.default;
         if (check(parameterIndex + 1, argIndex)) {
           return true;
         }
@@ -1484,8 +1488,10 @@ class CallEntry extends Entry {
 
       let arg = args[argIndex];
       if (!parameter.type.checkBaseType(getValueBaseType(arg))) {
+        // For Chrome compatibility, use the default value if null or undefined
+        // is explicitly passed but is not a valid argument in this position.
         if (parameter.optional && (arg === null || arg === undefined)) {
-          fixedArgs[parameterIndex] = null;
+          fixedArgs[parameterIndex] = Cu.cloneInto(parameter.default, global);
         } else {
           return false;
         }
@@ -1755,9 +1761,10 @@ this.Schemas = {
     let extras = event.extraParameters || [];
     extras = extras.map(param => {
       return {
-        type: this.parseSchema(param, [namespaceName], ["name", "optional"]),
+        type: this.parseSchema(param, [namespaceName], ["name", "optional", "default"]),
         name: param.name,
         optional: param.optional || false,
+        default: param.default == undefined ? null : param.default,
       };
     });
 

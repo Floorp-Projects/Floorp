@@ -15,7 +15,6 @@ import android.util.Log;
 
 import java.io.File;
 
-import org.mozilla.gecko.notifications.ServiceNotificationClient;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.EventCallback;
@@ -87,7 +86,6 @@ public class GeckoService extends Service {
     @Override // Service
     public void onCreate() {
         GeckoAppShell.ensureCrashHandling();
-        GeckoAppShell.setNotificationListener(new ServiceNotificationClient(getApplicationContext()));
         GeckoThread.onResume();
         super.onCreate();
 

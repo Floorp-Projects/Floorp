@@ -114,7 +114,19 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                     mController.getTransportControls().stop();
                 }
                 break;
+            case FAVICON:
+                if (playingTab == tab) {
+                    final String actionForPendingIntent = isMediaPlaying() ?
+                        ACTION_PAUSE : ACTION_RESUME;
+                    notifyControlInterfaceChanged(actionForPendingIntent);
+                }
+                break;
         }
+    }
+
+    private boolean isMediaPlaying() {
+        return mActionState.equals(ACTION_RESUME) ||
+               mActionState.equals(ACTION_RESUME_BY_AUDIO_FOCUS);
     }
 
     private void initialize() {
@@ -322,7 +334,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         final Notification.MediaStyle style = new Notification.MediaStyle();
         style.setShowActionsInCompactView(0);
 
-        final boolean isMediaPlaying = action.equals(ACTION_PAUSE);
+        final boolean isPlaying = isMediaPlaying();
         final int visibility = tab.isPrivate() ?
             Notification.VISIBILITY_PRIVATE : Notification.VISIBILITY_PUBLIC;
 
@@ -335,13 +347,13 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             .setDeleteIntent(createDeleteIntent())
             .setStyle(style)
             .addAction(createNotificationAction(action))
-            .setOngoing(isMediaPlaying)
+            .setOngoing(isPlaying)
             .setShowWhen(false)
             .setWhen(0)
             .setVisibility(visibility)
             .build();
 
-        if (isMediaPlaying) {
+        if (isPlaying) {
             startForeground(MEDIA_CONTROL_ID, notification);
         } else {
             stopForeground(false);

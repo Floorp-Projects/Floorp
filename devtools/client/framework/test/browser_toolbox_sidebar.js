@@ -50,6 +50,7 @@ function test() {
     let target = TargetFactory.forTab(aTab);
     gDevTools.showToolbox(target, toolDefinition.id).then(function (toolbox) {
       let panel = toolbox.getPanel(toolDefinition.id);
+      panel.toolbox = toolbox;
       ok(true, "Tool open");
 
       let tabbox = panel.panelDoc.getElementById("sidebar");
@@ -167,12 +168,14 @@ function test() {
 
   function finishUp(panel) {
     panel.sidebar.destroy();
-    gDevTools.unregisterTool(toolDefinition.id);
+    panel.toolbox.destroy().then(function () {
+      gDevTools.unregisterTool(toolDefinition.id);
 
-    gBrowser.removeCurrentTab();
+      gBrowser.removeCurrentTab();
 
-    executeSoon(function () {
-      finish();
+      executeSoon(function () {
+        finish();
+      });
     });
   }
 }

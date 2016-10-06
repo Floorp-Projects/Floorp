@@ -55,6 +55,7 @@
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectCompositor.h"
+#include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/OperatorNewExtensions.h"
@@ -471,6 +472,9 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
                                       CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
              "inconsistent property flags");
 
+  DebugOnly<EffectSet*> effects = EffectSet::GetEffectSet(aFrame);
+  MOZ_ASSERT(effects);
+
   // Add from first to last (since last overrides)
   for (size_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
     dom::Animation* anim = aAnimations[animIdx];
@@ -488,17 +492,16 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
       continue;
     }
 
-    // Note that if mWinsInCascade on property was  false,
+    // Note that if the property is overridden by !important rules,
     // GetAnimationOfProperty returns null instead.
-    // This is what we want, since if we have an animation or transition
-    // that isn't actually winning in the CSS cascade, we don't want to
-    // send it to the compositor.
-    // I believe that anything that changes mWinsInCascade should
-    // trigger this code again, either because of a restyle that changes
-    // the properties in question, or because of the main-thread style
-    // update that results when an animation stops being in effect.
-    MOZ_ASSERT(property->mWinsInCascade,
-               "GetAnimationOfProperty already tested mWinsInCascade");
+    // This is what we want, since if we have animations overridden by
+    // !important rules, we don't want to send them to the compositor.
+    MOZ_ASSERT(anim->CascadeLevel() !=
+                 EffectCompositor::CascadeLevel::Animations ||
+               !effects->PropertiesWithImportantRules()
+                  .HasProperty(aProperty),
+               "GetAnimationOfProperty already tested the property is not "
+               "overridden by !important rules");
 
     // Don't add animations that are pending if their timeline does not
     // track wallclock time. This is because any pending animations on layers
