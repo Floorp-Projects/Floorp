@@ -76,6 +76,7 @@ function defineCohort() {
   let disqualified = (Services.appinfo.multiprocessBlockPolicy != 0);
   let testGroup = (getUserSample() < TEST_THRESHOLD[updateChannel]);
   let hasNonExemptAddon = Preferences.get(PREF_E10S_HAS_NONEXEMPT_ADDON, false);
+  let temporaryDisqualification = getTemporaryDisqualification();
 
   let cohortPrefix = "";
   if (disqualified) {
@@ -88,6 +89,17 @@ function defineCohort() {
     setCohort("optedOut");
   } else if (userOptedIn) {
     setCohort("optedIn");
+  } else if (temporaryDisqualification != "") {
+    // Users who are disqualified by the backend (from multiprocessBlockPolicy)
+    // can be put into either the test or control groups, because e10s will
+    // still be denied by the backend, which is useful so that the E10S_STATUS
+    // telemetry probe can be correctly set.
+
+    // For these volatile disqualification reasons, however, we must not try
+    // to activate e10s because the backend doesn't know about it. E10S_STATUS
+    // here will be accumulated as "2 - Disabled", which is fine too.
+    setCohort(`temp-disqualified-${temporaryDisqualification}`);
+    Preferences.reset(PREF_TOGGLE_E10S);
   } else if (testGroup) {
     setCohort(`${cohortPrefix}test`);
     Preferences.set(PREF_TOGGLE_E10S, true);
@@ -144,4 +156,14 @@ function optedOut() {
   return Preferences.get(PREF_E10S_FORCE_DISABLED, false) ||
          (Preferences.isSet(PREF_TOGGLE_E10S) &&
           Preferences.get(PREF_TOGGLE_E10S) == false);
+}
+
+/* If this function returns a non-empty string, it
+ * means that this particular user should be temporarily
+ * disqualified due to some particular reason.
+ * If a user shouldn't be disqualified, then an empty
+ * string must be returned.
+ */
+function getTemporaryDisqualification() {
+  return "";
 }
