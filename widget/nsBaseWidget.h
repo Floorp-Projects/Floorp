@@ -183,7 +183,6 @@ public:
                                            uint16_t aDuration,
                                            nsISupports* aData,
                                            nsIRunnable* aCallback) override;
-  virtual already_AddRefed<nsIScreen> GetWidgetScreen() override;
   virtual nsresult        MakeFullScreen(bool aFullScreen,
                                          nsIScreen* aScreen = nullptr) override;
   void                    InfallibleMakeFullScreen(bool aFullScreen,
@@ -338,6 +337,9 @@ public:
   {
     return aClientSize;
   }
+
+  // return the screen the widget is in.
+  already_AddRefed<nsIScreen> GetWidgetScreen();
 
   // return true if this is a popup widget with a native titlebar
   bool IsPopupWithTitleBar() const
