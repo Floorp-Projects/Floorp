@@ -3099,6 +3099,22 @@ SingleLineCrossAxisPositionTracker::
     alignSelf = NS_STYLE_ALIGN_FLEX_START;
   }
 
+  // Map 'left'/'right' to 'start'/'end'
+  if (alignSelf == NS_STYLE_ALIGN_LEFT || alignSelf == NS_STYLE_ALIGN_RIGHT) {
+    if (aAxisTracker.IsRowOriented()) {
+      // Container's alignment axis is not parallel to the inline axis,
+      // so we map both 'left' and 'right' to 'start'.
+      alignSelf = NS_STYLE_ALIGN_START;
+    } else {
+      // Column-oriented, so we map 'left' and 'right' to 'start' or 'end',
+      // depending on left-to-right writing mode.
+      const bool isLTR = aAxisTracker.GetWritingMode().IsBidiLTR();
+      const bool isAlignLeft = (alignSelf == NS_STYLE_ALIGN_LEFT);
+      alignSelf = (isAlignLeft == isLTR) ? NS_STYLE_ALIGN_START
+                                         : NS_STYLE_ALIGN_END;
+    }
+  }
+
   // Map 'start'/'end' to 'flex-start'/'flex-end'.
   if (alignSelf == NS_STYLE_ALIGN_START) {
     alignSelf = NS_STYLE_ALIGN_FLEX_START;
@@ -3117,8 +3133,6 @@ SingleLineCrossAxisPositionTracker::
   }
 
   switch (alignSelf) {
-    case NS_STYLE_JUSTIFY_LEFT:
-    case NS_STYLE_JUSTIFY_RIGHT:
     case NS_STYLE_ALIGN_SELF_START:
     case NS_STYLE_ALIGN_SELF_END:
     case NS_STYLE_ALIGN_LAST_BASELINE:
