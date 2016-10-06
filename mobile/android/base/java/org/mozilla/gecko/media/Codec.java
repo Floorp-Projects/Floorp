@@ -14,6 +14,7 @@ import android.os.TransactionTooLargeException;
 import android.util.Log;
 import android.view.Surface;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -120,9 +121,11 @@ import java.util.Queue;
                 if (!sample.isEOS() && sample.buffer != null) {
                     len = sample.info.size;
                     ByteBuffer buf = mCodec.getInputBuffer(index);
-                    sample.writeToByteBuffer(buf);
                     try {
+                        sample.writeToByteBuffer(buf);
                         mCallbacks.onInputExhausted();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }

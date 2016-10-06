@@ -11,7 +11,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.mozglue.SharedMemBuffer;
+import org.mozilla.gecko.mozglue.SharedMemory;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 // Parcelable carrying input/output sample data and info cross process.
@@ -24,8 +27,10 @@ public final class Sample implements Parcelable {
     }
 
     public interface Buffer extends Parcelable {
-        void readFromByteBuffer(ByteBuffer src, int offset, int size);
-        void writeToByteBuffer(ByteBuffer dest, int offset, int size);
+        int capacity();
+        void readFromByteBuffer(ByteBuffer src, int offset, int size) throws IOException;
+        void writeToByteBuffer(ByteBuffer dest, int offset, int size) throws IOException;
+        void dispose();
     }
 
     private static final class ArrayBuffer implements Buffer {
@@ -58,7 +63,12 @@ public final class Sample implements Parcelable {
         }
 
         @Override
-        public void readFromByteBuffer(ByteBuffer src, int offset, int size) {
+        public int capacity() {
+            return mArray != null ? mArray.length : 0;
+        }
+
+        @Override
+        public void readFromByteBuffer(ByteBuffer src, int offset, int size) throws IOException {
             src.position(offset);
             if (mArray == null || mArray.length != size) {
                 mArray = new byte[size];
@@ -67,8 +77,13 @@ public final class Sample implements Parcelable {
         }
 
         @Override
-        public void writeToByteBuffer(ByteBuffer dest, int offset, int size) {
+        public void writeToByteBuffer(ByteBuffer dest, int offset, int size) throws IOException {
             dest.put(mArray, offset, size);
+        }
+
+        @Override
+        public void dispose() {
+            mArray = null;
         }
     }
 
@@ -86,6 +101,10 @@ public final class Sample implements Parcelable {
         bufferInfo.set(0, info.size, info.presentationTimeUs, info.flags);
 
         return new Sample(buffer, bufferInfo, cryptoInfo);
+    }
+
+    public static Sample create(SharedMemory sharedMem) {
+        return new Sample(new SharedMemBuffer(sharedMem), new BufferInfo(), null);
     }
 
     private Sample(Buffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
@@ -132,7 +151,7 @@ public final class Sample implements Parcelable {
                       mode);
     }
 
-    public Sample set(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
+    public Sample set(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) throws IOException {
         if (bytes != null && info.size > 0) {
             buffer.readFromByteBuffer(bytes, info.offset, info.size);
         }
@@ -140,6 +159,19 @@ public final class Sample implements Parcelable {
         this.cryptoInfo = cryptoInfo;
 
         return this;
+    }
+
+    public void dispose() {
+        if (isEOS()) {
+            return;
+        }
+
+        if (buffer != null) {
+            buffer.dispose();
+            buffer = null;
+        }
+        info = null;
+        cryptoInfo = null;
     }
 
     public boolean isEOS() {
@@ -207,7 +239,7 @@ public final class Sample implements Parcelable {
     }
 
     @WrapForJNI
-    public void writeToByteBuffer(ByteBuffer dest) {
+    public void writeToByteBuffer(ByteBuffer dest) throws IOException {
         if (buffer != null && dest != null && info.size > 0) {
             buffer.writeToByteBuffer(dest, info.offset, info.size);
         }
