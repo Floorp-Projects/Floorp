@@ -936,8 +936,12 @@ bool nsBaseWidget::IsSmallPopup() const
 bool
 nsBaseWidget::ComputeShouldAccelerate()
 {
-  return gfx::gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING) &&
-         WidgetTypeSupportsAcceleration();
+  bool enabled = gfx::gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING);
+#ifdef MOZ_WIDGET_GTK
+  return enabled && !IsSmallPopup();
+#else
+  return enabled;
+#endif
 }
 
 bool
@@ -1355,12 +1359,8 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   lf->SetShadowManager(shadowManager);
   lm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier);
-  // Some popup or transparent widgets may use a different backend than the
-  // compositors used with ImageBridge and VR (and more generally web content).
-  if (WidgetTypeSupportsAcceleration()) {
-    ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
-    gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
-  }
+  ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
+  gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
   WindowUsesOMTC();
 
   mLayerManager = lm.forget();
