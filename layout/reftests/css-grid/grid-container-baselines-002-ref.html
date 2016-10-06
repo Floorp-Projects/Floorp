@@ -15,7 +15,7 @@ html,body {
 
 span {
   background: lime;
-  display: inline-block;
+  display: inline-grid;
   border: 1px solid black;
   font-size: 12px;
 }
@@ -39,15 +39,15 @@ span:nth-child(2) { padding-block-end:20px; }
 .vrl { writing-mode: vertical-rl; direction:ltr; }
 
 .ib {
-  display: inline-block;
+  display: inline-table;
   border: 2px solid;
-  height: 120px;
-  padding: 10px 0;
+  height: 130px;
+  padding-top: 10px;
   margin: 1px;
   font-size: 1px;
 }
-.ib2 { display: inline-block; padding-top:10px; }
-.ib3 { display: inline-block; padding-top:20px; }
+.ib2 { display: inline-table; padding-top:10px; }
+.ib3 { display: inline-table; padding-top:20px; }
 
 </style>
 </head>
@@ -59,7 +59,7 @@ A<div class="ib"><span>B<br>B</span><span style="float:right">C<br>C</span></div
 <!-- TODO: figure out a reference for the corresponding test -->
 <!-- TODO: figure out a reference for the corresponding test -->
 
-<div class="ib"><div style="display:inline-grid; height:120px; align-content:end;"><div><span>B<br>B</span><span>C<br>C</span></div></div></div>
+<div class="ib"><div style="display:inline-grid; height:120px; align-content:end;"><div style="display:grid; align-self:baseline; grid: 120px / auto auto"><span class="slb">B<br>B</span><span class="slb">C<br>C</span></div></div></div>
 
 <div class="ib"><span style="float:right">B<br>B</span><span>C<br>C</span></div>
 <div class="ib"><span style="float:right">B<br>B</span><span style="display:inline-flex">C<br>C</span></div>
