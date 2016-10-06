@@ -963,7 +963,12 @@ private:
     }
 
     // Ensure timestamps are up to date.
-    mMaster->UpdatePlaybackPositionInternal(newCurrentTime);
+    if (!mSeekJob.mTarget.IsVideoOnly()) {
+      // Don't update playback position for video-only seek.
+      // Otherwise we might have |newCurrentTime > mMediaSink->GetPosition()|
+      // and fail the assertion in GetClock() since we didn't stop MediaSink.
+      mMaster->UpdatePlaybackPositionInternal(newCurrentTime);
+    }
 
     // Try to decode another frame to detect if we're at the end...
     SLOG("Seek completed, mCurrentPosition=%lld", mMaster->mCurrentPosition.Ref());
