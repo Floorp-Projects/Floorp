@@ -556,7 +556,7 @@ impl MarionetteSession {
 
         Ok(match msg.command {
             //Everything that doesn't have a response value
-            Get(_) | GoBack | GoForward | Refresh | Close | SetTimeouts(_) |
+            Get(_) | GoBack | GoForward | Refresh | Close | SetTimeouts(_) | SetWindowPosition(_) |
             SetWindowSize(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
             SwitchToParentFrame | AddCookie(_) | DeleteCookies | DeleteCookie(_) |
             DismissAlert | AcceptAlert | SendAlertText(_) | ElementClick(_) |
@@ -566,7 +566,7 @@ impl MarionetteSession {
             //Things that simply return the contents of the marionette "value" property
             GetCurrentUrl | GetTitle | GetPageSource | GetWindowHandle | IsDisplayed(_) |
             IsSelected(_) | GetElementAttribute(_, _) | GetElementProperty(_, _) |
-            GetCSSValue(_, _) | GetElementText(_) | SetWindowPosition(_) |
+            GetCSSValue(_, _) | GetElementText(_) |
             GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
             GetAlertText | TakeScreenshot => {
                 let value = try_opt!(resp.result.find("value"),
