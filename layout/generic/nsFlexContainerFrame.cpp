@@ -106,9 +106,11 @@ IsLegacyBox(const nsStyleDisplay* aStyleDisp,
   if (aStyleDisp->mDisplay == mozilla::StyleDisplay::Block) {
     nsStyleContext* parentStyleContext = aStyleContext->GetParent();
     NS_ASSERTION(parentStyleContext &&
-                 aStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent,
+                 (aStyleContext->GetPseudo() == nsCSSAnonBoxes::buttonContent ||
+                  aStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent),
                  "The only way a nsFlexContainerFrame can have 'display:block' "
-                 "should be if it's the inner part of a scrollable element");
+                 "should be if it's the inner part of a scrollable or button "
+                 "element");
     if (IsDisplayValueLegacyBox(parentStyleContext->StyleDisplay())) {
       return true;
     }
