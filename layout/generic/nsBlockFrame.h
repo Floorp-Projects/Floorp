@@ -146,6 +146,7 @@ public:
 
 #ifdef DEBUG
   virtual nsFrameState GetDebugStateBits() const override;
+  const char* LineReflowStatusToString(uint8_t aLineReflowStatus) const;
 #endif
 
 #ifdef ACCESSIBILITY

@@ -228,6 +228,24 @@ const char* nsBlockFrame::kReflowCommandType[] = {
   "Timeout",
   "UserDefined",
 };
+
+const char*
+nsBlockFrame::LineReflowStatusToString(uint8_t aLineReflowStatus) const
+{
+  switch (aLineReflowStatus) {
+    case LINE_REFLOW_OK: return "LINE_REFLOW_OK";
+    case LINE_REFLOW_STOP: return "LINE_REFLOW_STOP";
+    case LINE_REFLOW_REDO_NO_PULL: return "LINE_REFLOW_REDO_NO_PULL";
+    case LINE_REFLOW_REDO_MORE_FLOATS: return "LINE_REFLOW_REDO_MORE_FLOATS";
+    case LINE_REFLOW_REDO_NEXT_BAND: return "LINE_REFLOW_REDO_NEXT_BAND";
+    case LINE_REFLOW_TRUNCATED: return "LINE_REFLOW_TRUNCATED";
+    default:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("Unknown LineReflowStatus!!");
+  return "unknown";
+}
+
 #endif
 
 #ifdef REFLOW_STATUS_COVERAGE
@@ -3800,14 +3818,6 @@ nsBlockFrame::PushTruncatedLine(BlockReflowInput& aState,
   NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
 }
 
-#ifdef DEBUG
-static const char* LineReflowStatusNames[] = {
-  "LINE_REFLOW_OK", "LINE_REFLOW_STOP", "LINE_REFLOW_REDO_NO_PULL",
-  "LINE_REFLOW_REDO_MORE_FLOATS",
-  "LINE_REFLOW_REDO_NEXT_BAND", "LINE_REFLOW_TRUNCATED"
-};
-#endif
-
 void
 nsBlockFrame::DoReflowInlineFrames(BlockReflowInput& aState,
                                    nsLineLayout& aLineLayout,
@@ -4028,7 +4038,7 @@ nsBlockFrame::DoReflowInlineFrames(BlockReflowInput& aState,
   }
 #ifdef DEBUG
   if (gNoisyReflow) {
-    printf("Line reflow status = %s\n", LineReflowStatusNames[lineReflowStatus]);
+    printf("Line reflow status = %s\n", LineReflowStatusToString(lineReflowStatus));
   }
 #endif
 
