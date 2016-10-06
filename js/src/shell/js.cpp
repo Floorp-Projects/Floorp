@@ -5525,7 +5525,7 @@ SetARMHwCapFlags(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#if not defined(__AFL_HAVE_MANUAL_CONTROL)
+#ifndef __AFL_HAVE_MANUAL_CONTROL
 # define __AFL_LOOP(x) true
 #endif
 
