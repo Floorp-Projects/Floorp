@@ -551,10 +551,23 @@ private:
                              const MSG* aMsgSentToPlugin = nullptr) const;
 
   /**
+   * MaybeInitPluginEventOfKeyEvent() may initialize aKeyEvent::mPluginEvent
+   * with aMsgSentToPlugin if it's necessary.
+   */
+  void MaybeInitPluginEventOfKeyEvent(WidgetKeyboardEvent& aKeyEvent,
+                                      const MSG& aMsgSentToPlugin) const;
+
+  /**
    * Dispatches a command event for aEventCommand.
    * Returns true if the event is consumed.  Otherwise, false.
    */
   bool DispatchCommandEvent(uint32_t aEventCommand) const;
+
+  /**
+   * DispatchKeyPressEventsWithRetrievedCharMessages() dispatches keypress
+   * event(s) with retrieved char messages.
+   */
+  bool DispatchKeyPressEventsWithRetrievedCharMessages() const;
 
   /**
    * DispatchKeyPressEventsWithoutCharMessage() dispatches keypress event(s)
@@ -570,13 +583,6 @@ private:
    * plugin event.
    */
   bool MaybeDispatchPluginEventsForRemovedCharMessages() const;
-
-  /**
-   * DispatchKeyPressEventForFollowingCharMessage() dispatches keypress event
-   * for following WM_*CHAR message which is removed and set to aCharMsg.
-   * Returns true if the event is consumed.  Otherwise, false.
-   */
-  bool DispatchKeyPressEventForFollowingCharMessage(const MSG& aCharMsg) const;
 
   /**
    * Checkes whether the key event down message is handled without following
