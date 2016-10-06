@@ -29,7 +29,8 @@ public:
   {
     return mIntrinsicSize == aFrame.mIntrinsicSize &&
            mForceBlack == aFrame.mForceBlack &&
-           ((mForceBlack && aFrame.mForceBlack) || mImage == aFrame.mImage);
+           ((mForceBlack && aFrame.mForceBlack) || mImage == aFrame.mImage) &&
+           mPrincipalHandle == aFrame.mPrincipalHandle;
   }
   bool operator!=(const VideoFrame& aFrame) const
   {
