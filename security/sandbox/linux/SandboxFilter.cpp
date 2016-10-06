@@ -383,14 +383,14 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
   static intptr_t StatTrap(ArgsRef aArgs, void* aux) {
     auto broker = static_cast<SandboxBrokerClient*>(aux);
     auto path = reinterpret_cast<const char*>(aArgs.args[0]);
-    auto buf = reinterpret_cast<struct stat*>(aArgs.args[1]);
+    auto buf = reinterpret_cast<statstruct*>(aArgs.args[1]);
     return broker->Stat(path, buf);
   }
 
   static intptr_t LStatTrap(ArgsRef aArgs, void* aux) {
     auto broker = static_cast<SandboxBrokerClient*>(aux);
     auto path = reinterpret_cast<const char*>(aArgs.args[0]);
-    auto buf = reinterpret_cast<struct stat*>(aArgs.args[1]);
+    auto buf = reinterpret_cast<statstruct*>(aArgs.args[1]);
     return broker->LStat(path, buf);
   }
 
@@ -398,7 +398,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
     auto broker = static_cast<SandboxBrokerClient*>(aux);
     auto fd = static_cast<int>(aArgs.args[0]);
     auto path = reinterpret_cast<const char*>(aArgs.args[1]);
-    auto buf = reinterpret_cast<struct stat*>(aArgs.args[2]);
+    auto buf = reinterpret_cast<statstruct*>(aArgs.args[2]);
     auto flags = static_cast<int>(aArgs.args[3]);
     if (fd != AT_FDCWD && path[0] != '/') {
       SANDBOX_LOG_ERROR("unsupported fd-relative fstatat(%d, \"%s\", %p, %d)",

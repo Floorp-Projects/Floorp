@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "broker/SandboxBroker.h"
+#include "broker/SandboxBrokerUtils.h"
 #include "SandboxBrokerClient.h"
 
 #include <errno.h>
@@ -54,10 +55,10 @@ protected:
   int Access(const char* aPath, int aMode) {
     return mClient->Access(aPath, aMode);
   }
-  int Stat(const char* aPath, struct stat* aStat) {
+  int Stat(const char* aPath, statstruct* aStat) {
     return mClient->Stat(aPath, aStat);
   }
-  int LStat(const char* aPath, struct stat* aStat) {
+  int LStat(const char* aPath, statstruct* aStat) {
     return mClient->LStat(aPath, aStat);
   }
   int Chmod(const char* aPath, int aMode) {
@@ -209,8 +210,8 @@ TEST_F(SandboxBrokerTest, Access)
 
 TEST_F(SandboxBrokerTest, Stat)
 {
-  struct stat brokeredStat, realStat;
-  ASSERT_EQ(0, stat("/dev/null", &realStat)) << "Shouldn't ever fail!";
+  statstruct realStat, brokeredStat;
+  ASSERT_EQ(0, statsyscall("/dev/null", &realStat)) << "Shouldn't ever fail!";
   EXPECT_EQ(0, Stat("/dev/null", &brokeredStat));
   EXPECT_EQ(realStat.st_ino, brokeredStat.st_ino);
   EXPECT_EQ(realStat.st_rdev, brokeredStat.st_rdev);
@@ -224,8 +225,8 @@ TEST_F(SandboxBrokerTest, Stat)
 
 TEST_F(SandboxBrokerTest, LStat)
 {
-  struct stat brokeredStat, realStat;
-  ASSERT_EQ(0, lstat("/dev/null", &realStat));
+  statstruct realStat, brokeredStat;
+  ASSERT_EQ(0, lstatsyscall("/dev/null", &realStat));
   EXPECT_EQ(0, LStat("/dev/null", &brokeredStat));
   EXPECT_EQ(realStat.st_ino, brokeredStat.st_ino);
   EXPECT_EQ(realStat.st_rdev, brokeredStat.st_rdev);
@@ -260,12 +261,12 @@ TEST_F(SandboxBrokerTest, Chmod)
   // the policy. So it can't see the change in permisions here.
   // This won't work:
   // EXPECT_EQ(-EACCES, Access("/tmp/blublu", W_OK));
-  struct stat realStat;
-  EXPECT_EQ(0, stat("/tmp/blublu", &realStat));
+  statstruct realStat;
+  EXPECT_EQ(0, statsyscall("/tmp/blublu", &realStat));
   EXPECT_EQ((mode_t)S_IRUSR, realStat.st_mode & 0777);
 
   ASSERT_EQ(0, Chmod("/tmp/blublu", S_IRUSR | S_IWUSR));
-  EXPECT_EQ(0, stat("/tmp/blublu", &realStat));
+  EXPECT_EQ(0, statsyscall("/tmp/blublu", &realStat));
   EXPECT_EQ((mode_t)(S_IRUSR | S_IWUSR), realStat.st_mode & 0777);
   EXPECT_EQ(0, unlink("/tmp/blublu"));
 
@@ -298,8 +299,8 @@ TEST_F(SandboxBrokerTest, Symlink)
   close(fd);
   ASSERT_EQ(0, Symlink("/tmp/blublu", "/tmp/blublublu"));
   EXPECT_EQ(0, Access("/tmp/blublublu", F_OK));
-  struct stat aStat;
-  ASSERT_EQ(0, lstat("/tmp/blublublu", &aStat));
+  statstruct aStat;
+  ASSERT_EQ(0, lstatsyscall("/tmp/blublublu", &aStat));
   EXPECT_EQ((mode_t)S_IFLNK, aStat.st_mode & S_IFMT);
   // Not whitelisted target path
   EXPECT_EQ(-EACCES, Symlink("/tmp/blublu", "/tmp/nope"));
@@ -421,13 +422,13 @@ TEST_F(SandboxBrokerTest, MultiThreadStat) {
 }
 void SandboxBrokerTest::MultiThreadStatWorker() {
   static const int kNumLoops = 7500;
-  struct stat nullStat, zeroStat, selfStat;
+  statstruct nullStat, zeroStat, selfStat;
   dev_t realNullDev, realZeroDev;
   ino_t realSelfInode;
 
-  ASSERT_EQ(0, stat("/dev/null", &nullStat)) << "Shouldn't ever fail!";
-  ASSERT_EQ(0, stat("/dev/zero", &zeroStat)) << "Shouldn't ever fail!";
-  ASSERT_EQ(0, lstat("/proc/self", &selfStat)) << "Shouldn't ever fail!";
+  ASSERT_EQ(0, statsyscall("/dev/null", &nullStat)) << "Shouldn't ever fail!";
+  ASSERT_EQ(0, statsyscall("/dev/zero", &zeroStat)) << "Shouldn't ever fail!";
+  ASSERT_EQ(0, lstatsyscall("/proc/self", &selfStat)) << "Shouldn't ever fail!";
   ASSERT_TRUE(S_ISLNK(selfStat.st_mode)) << "Shouldn't ever fail!";
   realNullDev = nullStat.st_rdev;
   realZeroDev = zeroStat.st_rdev;

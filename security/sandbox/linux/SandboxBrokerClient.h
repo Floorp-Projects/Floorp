@@ -8,6 +8,7 @@
 #define mozilla_SandboxBrokerClient_h
 
 #include "broker/SandboxBrokerCommon.h"
+#include "broker/SandboxBrokerUtils.h"
 
 #include "mozilla/Attributes.h"
 
@@ -31,8 +32,8 @@ class SandboxBrokerClient final : private SandboxBrokerCommon {
 
   int Open(const char* aPath, int aFlags);
   int Access(const char* aPath, int aMode);
-  int Stat(const char* aPath, struct stat* aStat);
-  int LStat(const char* aPath, struct stat* aStat);
+  int Stat(const char* aPath, statstruct* aStat);
+  int LStat(const char* aPath, statstruct* aStat);
   int Chmod(const char* aPath, int aMode);
   int Link(const char* aPath, const char* aPath2);
   int Mkdir(const char* aPath, int aMode);
