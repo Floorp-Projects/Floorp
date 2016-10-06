@@ -1255,7 +1255,8 @@ GeckoDriver.prototype.setWindowPosition = function(cmd, resp) {
   }
 
   let {x, y} = cmd.parameters;
-  if (!Number.isInteger(x) || !Number.isInteger(y)) {
+  if (!Number.isInteger(x) || !Number.isInteger(y) ||
+      x < 0 || y < 0) {
     throw new InvalidArgumentError();
   }
 
