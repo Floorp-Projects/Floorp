@@ -754,11 +754,6 @@ private:
   // memory and CPU overhead.
   bool mMinimizePreroll;
 
-  // True if the decode thread has gone filled its buffers and is now
-  // waiting to be awakened before it continues decoding. Synchronized
-  // by the decoder monitor.
-  bool mDecodeThreadWaiting;
-
   // Stores presentation info required for playback.
   Maybe<MediaInfo> mInfo;
 
