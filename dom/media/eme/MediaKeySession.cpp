@@ -20,6 +20,7 @@
 #include "mozilla/EMEUtils.h"
 #include "GMPUtils.h"
 #include "nsPrintfCString.h"
+#include "psshparser/PsshParser.h"
 
 namespace mozilla {
 namespace dom {
@@ -192,7 +193,8 @@ ValidateInitData(const nsTArray<uint8_t>& aInitData, const nsAString& aInitDataT
     if (aInitData.Length() > MAX_CENC_INIT_DATA_LENGTH) {
       return false;
     }
-    // TODO: Validate PSSH in future patch...
+    std::vector<std::vector<uint8_t>> keyIds;
+    return ParseCENCInitData(aInitData.Elements(), aInitData.Length(), keyIds);
   } else if (aInitDataType.LowerCaseEqualsLiteral("keyids")) {
     if (aInitData.Length() > MAX_KEY_ID_LENGTH) {
       return false;
