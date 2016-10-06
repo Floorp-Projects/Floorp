@@ -108,7 +108,7 @@ function pathToFile(path) {
 // punt on dealing with leap-years
 const sixYearsInMilliseconds = 6 * 366 * 24 * 60 * 60 * 1000;
 
-function loadCertificates(certFile) {
+function loadCertificates(certFile, currentWhitelist) {
   let nowInMilliseconds = (new Date()).getTime();
   // months are 0-indexed, so April is month 3 :(
   let april1InMilliseconds = (new Date(2015, 3, 1)).getTime();
@@ -155,9 +155,11 @@ function loadCertificates(certFile) {
     // expired, and have a validity period shorter than 6 years (there is a
     // delegated OCSP responder certificate with a validity period of 6 years
     // that should be on the whitelist).
+    // Also only consider certificates that were already on the whitelist.
     if (notBeforeMilliseconds < april1InMilliseconds &&
         notAfterMilliseconds > nowInMilliseconds &&
-        durationMilliseconds < sixYearsInMilliseconds) {
+        durationMilliseconds < sixYearsInMilliseconds &&
+        currentWhitelist[cert.sha256Fingerprint]) {
       certs.push(cert);
       if (notAfterMilliseconds > latestNotAfter) {
         latestNotAfter = notAfterMilliseconds;
@@ -231,20 +233,34 @@ function loadIntermediates(intermediatesFile) {
   return intermediates;
 }
 
+function readCurrentWhitelist(currentWhitelistFile) {
+  let contents = readFileContents(currentWhitelistFile).replace(/[\r\n ]/g, "");
+  let split = contents.split(/((?:0x[0-9A-F][0-9A-F],){31}0x[0-9A-F][0-9A-F])/);
+  // The hashes will be every odd-indexed element of the array.
+  let currentWhitelist = {};
+  for (let i = 1; i < split.length && i < split.length - 1; i += 2) {
+    let hash = split[i].replace(/0x/g, "").replace(/,/g, ":");
+    currentWhitelist[hash] = true;
+  }
+  return currentWhitelist;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-if (arguments.length != 2) {
+if (arguments.length != 3) {
   throw new Error("Usage: makeCNNICHashes.js <PEM intermediates file> " +
-                  "<path to list of certificates>");
+                  "<path to list of certificates> <path to current whitelist file>");
 }
 
 Services.prefs.setIntPref("security.OCSP.enabled", 0);
 var intermediatesFile = pathToFile(arguments[0]);
 var intermediates = loadIntermediates(intermediatesFile);
 var certFile = pathToFile(arguments[1]);
-var { certs, lastValidTime, invalidCerts } = loadCertificates(certFile);
+var currentWhitelistFile = pathToFile(arguments[2]);
+var currentWhitelist = readCurrentWhitelist(currentWhitelistFile);
+var { certs, lastValidTime, invalidCerts } = loadCertificates(certFile, currentWhitelist);
 
 dump("The following certificates were not included due to overlong validity periods:\n");
 for (let cert of invalidCerts) {
