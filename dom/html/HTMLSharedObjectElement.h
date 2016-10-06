@@ -43,6 +43,9 @@ public:
   // Can't use macro for nsIDOMHTMLEmbedElement because it has conflicts with
   // NS_DECL_NSIDOMHTMLAPPLETELEMENT.
 
+  // EventTarget
+  virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
+
   // nsIDOMHTMLEmbedElement
   NS_IMETHOD GetSrc(nsAString &aSrc) override;
   NS_IMETHOD SetSrc(const nsAString &aSrc) override;

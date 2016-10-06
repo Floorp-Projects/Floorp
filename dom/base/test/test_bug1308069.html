@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1308069
+-->
+<head>
+<title>Bug 1308069</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1308069">Mozilla Bug 1308069</a>
+<script class="testbody" type="text/javascript">
+
+function testClearPendingErrorEvent() {
+  return new Promise(function(aResolve, aReject) {
+    var hasErrorEvent = false;
+    var imgTarget = new Image();
+
+    var imgForChangingTargetSrc = new Image();
+    // Queue an error event for changing imgTarget's src.
+    imgForChangingTargetSrc.src = '';
+    imgForChangingTargetSrc.onerror = function() {
+      // This clears imgTarget's pending error event.
+      imgTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><path d="M10,10L32,90L90,32z" fill="lightgreen"/></svg>';
+
+      // Queue an error event for checking and resolving promise.
+      var imgForCheckingAndResolvingPromise = new Image();
+      imgForCheckingAndResolvingPromise.src = '';
+      imgForCheckingAndResolvingPromise.onerror = function() {
+        ok(!hasErrorEvent,
+           'Should not receive an error event since the pending error event ' +
+           'should be cleared before it fired');
+        aResolve();
+      };
+    };
+
+    // Setting src to empty string queues an error event.
+    imgTarget.src = '';
+    imgTarget.onerror = function() {
+      hasErrorEvent = true;
+    };
+  });
+}
+
+function testReplacePendingErrorEvent() {
+  return new Promise(function(aResolve) {
+    var numOfErrorEvent = 0;
+    var imgTarget = new Image();
+
+    var imgForChangingTargetSrc = new Image();
+    // Queue an error event for changing imgTarget's src.
+    imgForChangingTargetSrc.src = '';
+    imgForChangingTargetSrc.onerror = function() {
+      // This clears pending error event and fires a new one.
+      imgTarget.src = '';
+
+      // Queue an error event for checking and resolving promise.
+      var imgForCheckingAndResolvingPromise = new Image();
+      imgForCheckingAndResolvingPromise.src = '';
+      imgForCheckingAndResolvingPromise.onerror = function() {
+        is(numOfErrorEvent, 1,
+           'Should only receive one error event since the first pending error ' +
+           'event should be cleared before it fired');
+        aResolve();
+      };
+    };
+
+    // Setting src to empty string queues an error event.
+    imgTarget.src = '';
+    imgTarget.onerror = function() {
+      numOfErrorEvent++;
+    };
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+Promise.resolve()
+.then(() => testClearPendingErrorEvent())
+.then(() => testReplacePendingErrorEvent())
+.catch((err) => ok(false, "promise rejected: " + err))
+.then(() => SimpleTest.finish());
+
+</script>
+</body>
+</html>

@@ -3460,6 +3460,12 @@ HTMLInputElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
          nsGenericHTMLFormElementWithState::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
+void
+HTMLInputElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  nsImageLoadingContent::AsyncEventRunning(aEvent);
+}
+
 NS_IMETHODIMP
 HTMLInputElement::Select()
 {
