@@ -202,8 +202,7 @@ nsLineBox::BreakTypeToString(StyleClear aBreakType) const
     case StyleClear::InlineEnd: return "inlineendbr";
     case StyleClear::Both: return "leftbr+rightbr";
     case StyleClear::Line: return "linebr";
-    default:
-      break;
+    case StyleClear::Max: return "leftbr+rightbr+linebr";
   }
   return "unknown";
 }
