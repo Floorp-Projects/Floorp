@@ -149,12 +149,12 @@ CustomizeMode.prototype = {
     }
   },
 
-  swatchForTheme: function(aDocument) {
-   let lwthemeButton = aDocument.getElementById("customization-lwtheme-button");
-   let lwthemeIcon = aDocument.getAnonymousElementByAttribute(lwthemeButton,
-          "class", "button-icon");
-   lwthemeIcon.style.backgroundImage = LightweightThemeManager.currentTheme ?
-     "url(" + LightweightThemeManager.currentTheme.iconURL + ")" : "";
+  _updateLWThemeButtonIcon: function() {
+    let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
+    let lwthemeIcon = this.document.getAnonymousElementByAttribute(lwthemeButton,
+                        "class", "button-icon");
+    lwthemeIcon.style.backgroundImage = LightweightThemeManager.currentTheme ?
+      "url(" + LightweightThemeManager.currentTheme.iconURL + ")" : "";
   },
 
   setTab: function(aTab) {
@@ -356,7 +356,7 @@ CustomizeMode.prototype = {
       }, 0);
       this._updateEmptyPaletteNotice();
 
-      this.swatchForTheme(document);
+      this._updateLWThemeButtonIcon();
       this.maybeShowTip(panelHolder);
 
       this._handler.isEnteringCustomizeMode = false;
@@ -1175,7 +1175,7 @@ CustomizeMode.prototype = {
 
       CustomizableUI.reset();
 
-      this.swatchForTheme(this.document);
+      this._updateLWThemeButtonIcon();
 
       yield this._wrapToolbarItems();
       this.populatePalette();
@@ -1203,7 +1203,7 @@ CustomizeMode.prototype = {
 
       CustomizableUI.undoReset();
 
-      this.swatchForTheme(this.document);
+      this._updateLWThemeButtonIcon();
 
       yield this._wrapToolbarItems();
       this.populatePalette();
@@ -1345,7 +1345,7 @@ CustomizeMode.prototype = {
     const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
     const RECENT_LWT_COUNT = 5;
 
-    this.resetLWThemesMenu(aEvent.target);
+    this._clearLWThemesMenu(aEvent.target);
 
     function previewTheme(aEvent) {
       LightweightThemeManager.previewTheme(aEvent.target.theme.id != DEFAULT_THEME_ID ?
@@ -1355,6 +1355,12 @@ CustomizeMode.prototype = {
     function resetPreview() {
       LightweightThemeManager.resetPreview();
     }
+
+    let onThemeSelected = panel => {
+      this._updateLWThemeButtonIcon();
+      this._onUIChange();
+      panel.hidePopup();
+    };
 
     AddonManager.getAddonByID(DEFAULT_THEME_ID, function(aDefaultTheme) {
       let doc = this.window.document;
@@ -1403,15 +1409,15 @@ CustomizeMode.prototype = {
       let themesInMyThemesSection = 0;
       let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
       for (let theme of themes) {
-        let tbb = buildToolbarButton(theme);
-        tbb.addEventListener("command", function() {
-          if ("userDisabled" in this.theme)
-            this.theme.userDisabled = false;
+        let button = buildToolbarButton(theme);
+        button.addEventListener("command", () => {
+          if ("userDisabled" in button.theme)
+            button.theme.userDisabled = false;
           else
-            LightweightThemeManager.currentTheme = this.theme;
-          this.parentNode.hidePopup();
+            LightweightThemeManager.currentTheme = button.theme;
+          onThemeSelected(panel);
         });
-        panel.insertBefore(tbb, recommendedLabel);
+        panel.insertBefore(button, recommendedLabel);
         themesInMyThemesSection++;
       }
 
@@ -1423,40 +1429,36 @@ CustomizeMode.prototype = {
       for (let theme of recommendedThemes) {
         theme.name = sb.GetStringFromName("lightweightThemes." + theme.id + ".name");
         theme.description = sb.GetStringFromName("lightweightThemes." + theme.id + ".description");
-        let tbb = buildToolbarButton(theme);
-        tbb.addEventListener("command", function() {
-          LightweightThemeManager.setLocalTheme(this.theme);
-          recommendedThemes = recommendedThemes.filter((aTheme) => { return aTheme.id != this.theme.id; });
+        let button = buildToolbarButton(theme);
+        button.addEventListener("command", () => {
+          LightweightThemeManager.setLocalTheme(button.theme);
+          recommendedThemes = recommendedThemes.filter((aTheme) => { return aTheme.id != button.theme.id; });
           let string = Cc["@mozilla.org/supports-string;1"]
                          .createInstance(Ci.nsISupportsString);
           string.data = JSON.stringify(recommendedThemes);
           lwthemePrefs.setComplexValue("recommendedThemes",
                                        Ci.nsISupportsString, string);
-          this.parentNode.hidePopup();
+          onThemeSelected(panel);
         });
-        panel.insertBefore(tbb, footer);
+        panel.insertBefore(button, footer);
       }
       let hideRecommendedLabel = (footer.previousSibling == recommendedLabel);
       recommendedLabel.hidden = hideRecommendedLabel;
     }.bind(this));
   },
 
-  resetLWThemesMenu: function(target) {
-    let doc = target.ownerDocument;
-    let footer = doc.getElementById("customization-lwtheme-menu-footer");
-    let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
-    this.swatchForTheme(doc);
+  _clearLWThemesMenu: function(panel) {
+    let footer = this.document.getElementById("customization-lwtheme-menu-footer");
+    let recommendedLabel = this.document.getElementById("customization-lwtheme-menu-recommended");
     for (let element of [footer, recommendedLabel]) {
       while (element.previousSibling &&
              element.previousSibling.localName == "toolbarbutton") {
         element.previousSibling.remove();
       }
     }
-    target.removeAttribute("height");
 
-    if (LightweightThemeManager.currentTheme) {
-      this._onUIChange();
-    }
+    // Workaround for bug 1059934
+    panel.removeAttribute("height");
   },
 
   _onUIChange: function() {
