@@ -1,5 +1,4 @@
 /* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * vim: set sw=4 ts=4 expandtab:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -46,11 +45,8 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     static void InitNatives();
-    void SetScreenId(uint32_t aScreenId) { mScreenId = aScreenId; }
 
 private:
-    uint32_t mScreenId;
-
     // An Event subclass that guards against stale events.
     template<typename Lambda,
              bool IsStatic = Lambda::isStatic,
@@ -169,7 +165,6 @@ public:
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus) override;
     nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent* aEvent);
-    virtual already_AddRefed<nsIScreen> GetWidgetScreen() override;
     virtual nsresult MakeFullScreen(bool aFullScreen,
                                     nsIScreen* aTargetScreen = nullptr)
                                     override;
