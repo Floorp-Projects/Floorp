@@ -11,10 +11,6 @@ typedef long long GLint64;
 typedef unsigned long long GLuint64;
 
 [Pref="webgl.enable-webgl2"]
-interface WebGLQuery {
-};
-
-[Pref="webgl.enable-webgl2"]
 interface WebGLSampler {
 };
 
@@ -625,7 +621,7 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     [WebGLHandlesContextLoss] GLboolean isQuery(WebGLQuery? query);
     void beginQuery(GLenum target, WebGLQuery? query);
     void endQuery(GLenum target);
-    WebGLQuery? getQuery(GLenum target, GLenum pname);
+    any getQuery(GLenum target, GLenum pname);
     any getQueryParameter(WebGLQuery? query, GLenum pname);
 
     /* Sampler Objects */
