@@ -1250,7 +1250,7 @@ GeckoDriver.prototype.getWindowPosition = function(cmd, resp) {
  */
 GeckoDriver.prototype.setWindowPosition = function(cmd, resp) {
   if (this.appName != "Firefox") {
-    throw new WebDriverError("Unable to set the window position on mobile");
+    throw new UnsupportedOperationError("Unable to set the window position on mobile");
   }
 
   let x = parseInt(cmd.parameters.x);
