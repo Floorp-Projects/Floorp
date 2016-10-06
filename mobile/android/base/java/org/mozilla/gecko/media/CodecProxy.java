@@ -16,6 +16,7 @@ import android.view.Surface;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 // Proxy class of ICodec binder.
@@ -67,6 +68,7 @@ public final class CodecProxy {
         public void onOutput(Sample sample) throws RemoteException {
             mCallbacks.onOutput(sample);
             mRemote.releaseOutput(sample);
+            sample.dispose();
         }
 
         @Override
@@ -131,6 +133,10 @@ public final class CodecProxy {
             Sample sample = (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) ?
                     Sample.EOS : mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo);
             mRemote.queueInput(sample);
+            sample.dispose();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         } catch (DeadObjectException e) {
             return false;
         } catch (RemoteException e) {
