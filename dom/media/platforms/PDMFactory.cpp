@@ -83,12 +83,28 @@ StaticMutex PDMFactory::sMonitor;
 class SupportChecker
 {
 public:
-  enum class Result : uint8_t
+  enum class Reason : uint8_t
   {
     kSupported,
     kVideoFormatNotSupported,
     kAudioFormatNotSupported,
     kUnknown,
+  };
+
+  struct CheckResult
+  {
+    explicit CheckResult(Reason aReason,
+                         MediaResult aResult = MediaResult(NS_OK))
+      : mReason(aReason),
+        mMediaResult(mozilla::Move(aResult))
+    {}
+    CheckResult(const CheckResult& aOther) = default;
+    CheckResult(CheckResult&& aOther) = default;
+    CheckResult& operator=(const CheckResult& aOther) = default;
+    CheckResult& operator=(CheckResult&& aOther) = default;
+
+    Reason mReason;
+    MediaResult mMediaResult;
   };
 
   template<class Func>
@@ -113,30 +129,34 @@ public:
           // For consistency, all decoders should be checked.
           if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) &&
               spsdata.chroma_format_idc == PDMFactory::kYUV444) {
-            return SupportChecker::Result::kVideoFormatNotSupported;
+            return CheckResult(SupportChecker::Reason::kVideoFormatNotSupported,
+                               MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                           RESULT_DETAIL("Decoder may not have the capability to handle"
+                                                         " the requested video format"
+                                                         " with YUV444 chroma subsampling.")));
           }
         }
-        return SupportChecker::Result::kSupported;
+        return CheckResult(SupportChecker::Reason::kSupported);
       });
     }
   }
 
-  SupportChecker::Result
+  SupportChecker::CheckResult
   Check()
   {
     for (auto& checker : mCheckerList) {
       auto result = checker();
-        if (result != SupportChecker::Result::kSupported) {
+        if (result.mReason != SupportChecker::Reason::kSupported) {
           return result;
       }
     }
-    return SupportChecker::Result::kSupported;
+    return CheckResult(SupportChecker::Reason::kSupported);
   }
 
   void Clear() { mCheckerList.Clear(); }
 
 private:
-  nsTArray<mozilla::function<SupportChecker::Result()>> mCheckerList;
+  nsTArray<mozilla::function<CheckResult()>> mCheckerList;
 }; // SupportChecker
 
 PDMFactory::PDMFactory()
@@ -229,19 +249,28 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
 {
   MOZ_ASSERT(aPDM);
   RefPtr<MediaDataDecoder> m;
+  MediaResult* result = aParams.mError;
 
   SupportChecker supportChecker;
   const TrackInfo& config = aParams.mConfig;
   supportChecker.AddMediaFormatChecker(config);
 
-  auto reason = supportChecker.Check();
-  if (reason != SupportChecker::Result::kSupported) {
+  auto checkResult = supportChecker.Check();
+  if (checkResult.mReason != SupportChecker::Reason::kSupported) {
     DecoderDoctorDiagnostics* diagnostics = aParams.mDiagnostics;
-    if (diagnostics) {
-      if (reason == SupportChecker::Result::kVideoFormatNotSupported) {
+    if (checkResult.mReason == SupportChecker::Reason::kVideoFormatNotSupported) {
+      if (diagnostics) {
         diagnostics->SetVideoNotSupported();
-      } else if (reason == SupportChecker::Result::kAudioFormatNotSupported) {
+      }
+      if (result) {
+        *result = checkResult.mMediaResult;
+      }
+    } else if (checkResult.mReason == SupportChecker::Reason::kAudioFormatNotSupported) {
+      if (diagnostics) {
         diagnostics->SetAudioNotSupported();
+      }
+      if (result) {
+        *result = checkResult.mMediaResult;
       }
     }
     return nullptr;
@@ -253,6 +282,8 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
   }
 
   if (!config.IsVideo()) {
+    *result = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                          RESULT_DETAIL("Decoder configuration error, expected audio or video."));
     return nullptr;
   }
 
