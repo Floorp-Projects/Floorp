@@ -145,6 +145,7 @@ class StackwalkerMIPSFixture {
 class SanityCheck: public StackwalkerMIPSFixture, public Test { };
 
 TEST_F(SanityCheck, NoResolver) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   stack_section.start() = 0x80000000;
   stack_section.D32(0).D32(0x0);
   RegionFromSection();
@@ -173,6 +174,7 @@ TEST_F(SanityCheck, NoResolver) {
 class GetContextFrame: public StackwalkerMIPSFixture, public Test { };
 
 TEST_F(GetContextFrame, Simple) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   stack_section.start() = 0x80000000;
   stack_section.D32(0).D32(0x0);
   RegionFromSection();
@@ -199,6 +201,7 @@ TEST_F(GetContextFrame, Simple) {
 // The stackwalker should be able to produce the context frame even
 // without stack memory present.
 TEST_F(GetContextFrame, NoStackMemory) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   raw_context.epc = 0x00400020;
   raw_context.iregs[MD_CONTEXT_MIPS_REG_SP] = 0x80000000;
 
@@ -222,6 +225,7 @@ TEST_F(GetContextFrame, NoStackMemory) {
 class GetCallerFrame: public StackwalkerMIPSFixture, public Test { };
 
 TEST_F(GetCallerFrame, ScanWithoutSymbols) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   // When the stack walker resorts to scanning the stack,
   // only addresses located within loaded modules are
   // considered valid return addresses.
@@ -298,6 +302,7 @@ TEST_F(GetCallerFrame, ScanWithoutSymbols) {
 }
 
 TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   // During stack scanning, if a potential return address
   // is located within a loaded module that has symbols,
   // it is only considered a valid return address if it
@@ -366,6 +371,7 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
 }
 
 TEST_F(GetCallerFrame, CheckStackFrameSizeLimit) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   // If the stackwalker resorts to stack scanning, it will scan only
   // 1024 bytes of stack which correspondes to maximum size of stack frame.
   stack_section.start() = 0x80000000;
@@ -437,6 +443,7 @@ TEST_F(GetCallerFrame, CheckStackFrameSizeLimit) {
 // Test that set_max_frames_scanned prevents using stack scanning
 // to find caller frames.
 TEST_F(GetCallerFrame, ScanningNotAllowed) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   // When the stack walker resorts to scanning the stack,
   // only fixed number of frames are allowed to be scanned out from stack
   stack_section.start() = 0x80000000;
@@ -646,6 +653,7 @@ class CFI: public CFIFixture, public Test { };
 // TODO(gordanac): add CFI tests
 
 TEST_F(CFI, At4004) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   Label frame1_sp = expected.iregs[MD_CONTEXT_MIPS_REG_SP];
   stack_section
     // frame0
@@ -660,6 +668,7 @@ TEST_F(CFI, At4004) {
 // Check that we reject rules that would cause the stack pointer to
 // move in the wrong direction.
 TEST_F(CFI, RejectBackwards) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   raw_context.epc = 0x40005000;
   raw_context.iregs[MD_CONTEXT_MIPS_REG_SP] = 0x80000000;
   raw_context.iregs[MD_CONTEXT_MIPS_REG_RA] = 0x00405510;
@@ -679,6 +688,7 @@ TEST_F(CFI, RejectBackwards) {
 
 // Check that we reject rules whose expressions' evaluation fails.
 TEST_F(CFI, RejectBadExpressions) {
+  raw_context.context_flags = raw_context.context_flags | MD_CONTEXT_MIPS_FULL;
   raw_context.epc = 0x00407000;
   raw_context.iregs[MD_CONTEXT_MIPS_REG_SP] = 0x80000000;
   raw_context.iregs[MD_CONTEXT_MIPS_REG_RA] = 0x00405510;

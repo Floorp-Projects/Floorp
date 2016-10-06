@@ -180,12 +180,65 @@ APZCTreeManager::UpdateHitTestingTree(CompositorBridgeParent* aCompositor,
   mRootNode = nullptr;
 
   if (aRoot) {
+    std::stack<gfx::TreeAutoIndent> indents;
+    std::stack<gfx::Matrix4x4> ancestorTransforms;
+    HitTestingTreeNode* parent = nullptr;
+    HitTestingTreeNode* next = nullptr;
+
+    // aCompositor is null in gtest scenarios
+    uint64_t layersId = aCompositor ? aCompositor->RootLayerTreeId() : 0;
+    ancestorTransforms.push(Matrix4x4());
+
     mApzcTreeLog << "[start]\n";
     LayerMetricsWrapper root(aRoot);
-    UpdateHitTestingTree(state, root,
-                         // aCompositor is null in gtest scenarios
-                         aCompositor ? aCompositor->RootLayerTreeId() : 0,
-                         Matrix4x4(), nullptr, nullptr);
+    mTreeLock.AssertCurrentThreadOwns();
+
+    ForEachNode<ReverseIterator>(root,
+        [&](LayerMetricsWrapper aLayerMetrics)
+        {
+          mApzcTreeLog << aLayerMetrics.Name() << '\t';
+
+          HitTestingTreeNode* node = PrepareNodeForLayer(aLayerMetrics,
+                aLayerMetrics.Metrics(), layersId, ancestorTransforms.top(),
+                parent, next, state);
+          MOZ_ASSERT(node);
+          AsyncPanZoomController* apzc = node->GetApzc();
+          aLayerMetrics.SetApzc(apzc);
+
+          mApzcTreeLog << '\n';
+
+          // Accumulate the CSS transform between layers that have an APZC.
+          // In the terminology of the big comment above APZCTreeManager::GetScreenToApzcTransform, if
+          // we are at layer M, then aAncestorTransform is NC * OC * PC, and we left-multiply MC and
+          // compute ancestorTransform to be MC * NC * OC * PC. This gets passed down as the ancestor
+          // transform to layer L when we recurse into the children below. If we are at a layer
+          // with an APZC, such as P, then we reset the ancestorTransform to just PC, to start
+          // the new accumulation as we go down.
+          // If a transform is a perspective transform, it's ignored for this purpose
+          // (see bug 1168263).
+          Matrix4x4 currentTransform = aLayerMetrics.TransformIsPerspective() ? Matrix4x4() : aLayerMetrics.GetTransform();
+          if (!apzc) {
+            currentTransform = currentTransform * ancestorTransforms.top();
+          }
+          ancestorTransforms.push(currentTransform);
+
+          // Note that |node| at this point will not have any children, otherwise we
+          // we would have to set next to node->GetFirstChild().
+          MOZ_ASSERT(!node->GetFirstChild());
+          parent = node;
+          next = nullptr;
+          layersId = (aLayerMetrics.AsRefLayer() ? aLayerMetrics.AsRefLayer()->GetReferentId() : layersId);
+          indents.push(gfx::TreeAutoIndent(mApzcTreeLog));
+        },
+        [&](LayerMetricsWrapper aLayerMetrics)
+        {
+          next = parent;
+          parent = parent->GetParent();
+          layersId = next->GetLayersId();
+          ancestorTransforms.pop();
+          indents.pop();
+        });
+
     mApzcTreeLog << "[end]\n";
   }
 
@@ -221,30 +274,6 @@ ComputeClipRegion(GeckoContentController* aController,
     // expansions of a multi-metrics layer), fall back to using the comp
     // bounds which should be equivalent.
     clipRegion = RoundedToInt(aLayer.Metrics().GetCompositionBounds());
-  }
-
-  // Optionally, the GeckoContentController can provide a touch-sensitive
-  // region that constrains all frames associated with the controller.
-  // In this case we intersect the composition bounds with that region.
-  CSSRect touchSensitiveRegion;
-  if (aController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
-    // Here we assume 'touchSensitiveRegion' is in the CSS pixels of the
-    // parent frame. To convert it to ParentLayer pixels, we therefore need
-    // the cumulative resolution of the parent frame. We approximate this as
-    // the quotient of our cumulative resolution and our pres shell resolution;
-    // this approximation may not be accurate in the presence of a css-driven
-    // resolution.
-    LayoutDeviceToParentLayerScale2D parentCumulativeResolution =
-          aLayer.Metrics().GetCumulativeResolution()
-        / ParentLayerToLayerScale(aLayer.Metrics().GetPresShellResolution());
-    // Not sure what rounding option is the most correct here, but if we ever
-    // figure it out we can change this. For now I'm rounding in to minimize
-    // the chances of getting a complex region.
-    ParentLayerIntRegion extraClip = RoundedIn(
-        touchSensitiveRegion
-        * aLayer.Metrics().GetDevPixelsPerCSSPixel()
-        * parentCumulativeResolution);
-    clipRegion.AndWith(extraClip);
   }
 
   return clipRegion;
@@ -560,57 +589,6 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
                          aLayer.GetScrollbarSize(),
                          aLayer.IsScrollbarContainer());
   node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
-  return node;
-}
-
-HitTestingTreeNode*
-APZCTreeManager::UpdateHitTestingTree(TreeBuildingState& aState,
-                                      const LayerMetricsWrapper& aLayer,
-                                      uint64_t aLayersId,
-                                      const gfx::Matrix4x4& aAncestorTransform,
-                                      HitTestingTreeNode* aParent,
-                                      HitTestingTreeNode* aNextSibling)
-{
-  mTreeLock.AssertCurrentThreadOwns();
-
-  mApzcTreeLog << aLayer.Name() << '\t';
-
-  HitTestingTreeNode* node = PrepareNodeForLayer(aLayer,
-        aLayer.Metrics(), aLayersId, aAncestorTransform,
-        aParent, aNextSibling, aState);
-  MOZ_ASSERT(node);
-  AsyncPanZoomController* apzc = node->GetApzc();
-  aLayer.SetApzc(apzc);
-
-  mApzcTreeLog << '\n';
-
-  // Accumulate the CSS transform between layers that have an APZC.
-  // In the terminology of the big comment above APZCTreeManager::GetScreenToApzcTransform, if
-  // we are at layer M, then aAncestorTransform is NC * OC * PC, and we left-multiply MC and
-  // compute ancestorTransform to be MC * NC * OC * PC. This gets passed down as the ancestor
-  // transform to layer L when we recurse into the children below. If we are at a layer
-  // with an APZC, such as P, then we reset the ancestorTransform to just PC, to start
-  // the new accumulation as we go down.
-  // If a transform is a perspective transform, it's ignored for this purpose
-  // (see bug 1168263).
-  Matrix4x4 ancestorTransform = aLayer.TransformIsPerspective() ? Matrix4x4() : aLayer.GetTransform();
-  if (!apzc) {
-    ancestorTransform = ancestorTransform * aAncestorTransform;
-  }
-
-  // Note that |node| at this point will not have any children, otherwise we
-  // we would have to set next to node->GetFirstChild().
-  MOZ_ASSERT(!node->GetFirstChild());
-  aParent = node;
-  HitTestingTreeNode* next = nullptr;
-
-  uint64_t childLayersId = (aLayer.AsRefLayer() ? aLayer.AsRefLayer()->GetReferentId() : aLayersId);
-  for (LayerMetricsWrapper child = aLayer.GetLastChild(); child; child = child.GetPrevSibling()) {
-    gfx::TreeAutoIndent indent(mApzcTreeLog);
-    next = UpdateHitTestingTree(aState, child, childLayersId,
-                                ancestorTransform, aParent, next);
-  }
-
   return node;
 }
 

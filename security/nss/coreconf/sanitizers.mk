@@ -2,7 +2,13 @@
 # *after* defining the variables that are appended to here.
 
 ifeq ($(USE_ASAN), 1)
-SANITIZER_FLAGS_COMMON = -fsanitize=address $(EXTRA_SANITIZER_FLAGS)
+SANITIZER_FLAGS_COMMON = -fsanitize=address
+
+ifeq ($(USE_UBSAN), 1)
+SANITIZER_FLAGS_COMMON += -fsanitize=undefined -fno-sanitize-recover=undefined
+endif
+
+SANITIZER_FLAGS_COMMON += $(EXTRA_SANITIZER_FLAGS)
 SANITIZER_CFLAGS = $(SANITIZER_FLAGS_COMMON)
 SANITIZER_LDFLAGS = $(SANITIZER_FLAGS_COMMON)
 OS_CFLAGS += $(SANITIZER_CFLAGS)

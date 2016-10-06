@@ -476,13 +476,14 @@ HasMatchingAnimations(const nsIFrame* aFrame, TestType&& aTest)
 }
 
 bool
-nsLayoutUtils::HasCurrentAnimationOfProperty(const nsIFrame* aFrame,
-                                             nsCSSPropertyID aProperty)
+nsLayoutUtils::HasActiveAnimationOfProperty(const nsIFrame* aFrame,
+                                            nsCSSPropertyID aProperty)
 {
   return HasMatchingAnimations(aFrame,
     [&aProperty](KeyframeEffectReadOnly& aEffect)
     {
-      return aEffect.IsCurrent() && aEffect.HasAnimationOfProperty(aProperty);
+      return aEffect.IsCurrent() && aEffect.IsInEffect() &&
+        aEffect.HasAnimationOfProperty(aProperty);
     }
   );
 }
@@ -553,10 +554,10 @@ GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
       anim->GetEffect() ? anim->GetEffect()->AsKeyframeEffect() : nullptr;
     MOZ_ASSERT(effect, "A playing animation should have a keyframe effect");
     for (size_t propIdx = effect->Properties().Length(); propIdx-- != 0; ) {
-      AnimationProperty& prop = effect->Properties()[propIdx];
+      const AnimationProperty& prop = effect->Properties()[propIdx];
       if (prop.mProperty == eCSSProperty_transform) {
         for (uint32_t segIdx = prop.mSegments.Length(); segIdx-- != 0; ) {
-          AnimationPropertySegment& segment = prop.mSegments[segIdx];
+          const AnimationPropertySegment& segment = prop.mSegments[segIdx];
           gfxSize from = segment.mFromValue.GetScaleValue(aFrame);
           aMaxScale.width = std::max<float>(aMaxScale.width, from.width);
           aMaxScale.height = std::max<float>(aMaxScale.height, from.height);
@@ -8491,11 +8492,6 @@ nsLayoutUtils::CalculateScrollableRectForFrame(nsIScrollableFrame* aScrollableFr
   if (aScrollableFrame) {
     contentBounds = aScrollableFrame->GetScrollRange();
 
-    // We ifndef the below code for Fennec because it requires special behaviour
-    // on the APZC side. Because Fennec has it's own PZC implementation which doesn't
-    // provide the special behaviour, this code will cause it to break. We can remove
-    // the ifndef once Fennec switches over to APZ or if we add the special handling
-    // to Fennec
     nsPoint scrollPosition = aScrollableFrame->GetScrollPosition();
     if (aScrollableFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_HIDDEN) {
       contentBounds.y = scrollPosition.y;

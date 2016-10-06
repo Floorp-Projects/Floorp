@@ -39,8 +39,10 @@
 
 #include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
-#include "google_breakpad/processor/system_info.h"
+#include "google_breakpad/processor/code_modules.h"
 #include "google_breakpad/processor/minidump.h"
+#include "google_breakpad/processor/system_info.h"
+#include "processor/linked_ptr.h"
 
 namespace google_breakpad {
 
@@ -109,6 +111,9 @@ class ProcessState {
   }
   const SystemInfo* system_info() const { return &system_info_; }
   const CodeModules* modules() const { return modules_; }
+  const vector<linked_ptr<const CodeModule> >* shrunk_range_modules() const {
+    return &shrunk_range_modules_;
+  }
   const vector<const CodeModule*>* modules_without_symbols() const {
     return &modules_without_symbols_;
   }
@@ -171,6 +176,10 @@ class ProcessState {
   // The modules that were loaded into the process represented by the
   // ProcessState.
   const CodeModules *modules_;
+
+  // The modules which virtual address ranges were shrunk down due to
+  // virtual address conflicts.
+  vector<linked_ptr<const CodeModule> > shrunk_range_modules_;
 
   // The modules that didn't have symbols when the report was processed.
   vector<const CodeModule*> modules_without_symbols_;

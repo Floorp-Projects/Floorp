@@ -168,7 +168,9 @@ So for instance, if you had already requested a build task in the ``try`` comman
 and you wish to add a test which depends on this build, the original build task
 is re-used.
 
-This feature is only present on ``try`` pushes for now.
+Action Tasks are currently scheduled by
+[pulse_actions](https://github.com/mozilla/pulse_actions). This feature is only
+present on ``try`` pushes for now.
 
 Mach commands
 -------------
@@ -219,12 +221,6 @@ using simple parameterized values, as follows:
     the named dependency substituted for ``<dep-name>`` in the string.
     Multiple labels may be substituted in a single string, and ``<<>`` can be
     used to escape a literal ``<``.
-
-
-The ``mach taskgraph action-task`` subcommand is used by Action Tasks to
-create a task graph of the requested jobs and its non-optimized dependencies.
-Action Tasks are currently scheduled by
-[pulse_actions](https://github.com/mozilla/pulse_actions)
 
 Taskgraph JSON Format
 ---------------------

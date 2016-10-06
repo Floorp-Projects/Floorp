@@ -359,7 +359,8 @@
 }
 
 #command-button-frames {
-  background: url("chrome://devtools/skin/images/dropmarker.svg") no-repeat;
+  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  background-repeat: no-repeat;
 
   /* Override background-size from the command-button.
    The drop down arrow is smaller */

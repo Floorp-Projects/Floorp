@@ -241,13 +241,6 @@ RenderFrameParent::RecvNotifyCompositorTransaction()
   return true;
 }
 
-bool
-RenderFrameParent::RecvUpdateHitRegion(const nsRegion& aRegion)
-{
-  mTouchRegion = aRegion;
-  return true;
-}
-
 void
 RenderFrameParent::TriggerRepaint()
 {
@@ -286,12 +279,6 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   aLists.Content()->AppendToTop(
     new (aBuilder) nsDisplayRemote(aBuilder, aFrame, this));
-}
-
-bool
-RenderFrameParent::HitTest(const nsRect& aRect)
-{
-  return mTouchRegion.Contains(aRect);
 }
 
 void
@@ -354,7 +341,6 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
 {
   if (aBuilder->IsBuildingLayerEventRegions()) {
     bool frameIsPointerEventsNone =
-      !aFrame->PassPointerEventsToChildren() &&
       aFrame->StyleUserInterface()->GetEffectivePointerEvents(aFrame) ==
         NS_STYLE_POINTER_EVENTS_NONE;
     if (aBuilder->IsInsidePointerEventsNoneDoc() || frameIsPointerEventsNone) {
@@ -380,13 +366,3 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
   return layer.forget();
 }
-
-void
-nsDisplayRemote::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                         HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
-{
-  if (mRemoteFrame->HitTest(aRect)) {
-    aOutFrames->AppendElement(mFrame);
-  }
-}
-

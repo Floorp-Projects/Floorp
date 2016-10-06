@@ -80,11 +80,13 @@ function test() {
     is(events, "sidebar-created:show:hide:sidebar-destroyed",
       "Found the right amount of collected events.");
 
-    gDevTools.unregisterTool(toolDefinition.id);
-    gBrowser.removeCurrentTab();
+    panel.toolbox.destroy().then(function () {
+      gDevTools.unregisterTool(toolDefinition.id);
+      gBrowser.removeCurrentTab();
 
-    executeSoon(function () {
-      finish();
+      executeSoon(function () {
+        finish();
+      });
     });
   }
 }

@@ -34,3 +34,7 @@ TEST_HARNESS_FILES.xpcshell.toolkit.crashreporter.test.unit_ipc += ['CrashTestUt
 include('/toolkit/crashreporter/crashreporter.mozbuild')
 
 NO_PGO = True
+
+# Temporary workaround for an issue in upstream breakpad
+if CONFIG['_MSC_VER']:
+    CXXFLAGS += ['-wd4334']

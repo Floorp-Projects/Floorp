@@ -153,12 +153,6 @@ interface CanvasRenderingContext2D {
   [Throws]
   attribute object mozCurrentTransformInverse;
 
-  [Throws]
-  attribute any mozDash; /* default |null| */
-
-  [LenientFloat]
-  attribute double mozDashOffset; /* default 0.0 */
-
   [SetterThrows]
   attribute DOMString mozTextStyle;
 

@@ -1075,7 +1075,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 
   // The default is to use OpenGL mode
-  if (gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
+  if (gfxPlatform::GetPlatform()->AllowOpenGLCanvas()) {
     mDrawObserver = new CanvasDrawObserver(this);
   } else {
     mRenderingMode = RenderingMode::SoftwareBackendMode;
@@ -1332,7 +1332,7 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
 #ifdef USE_SKIA_GPU
   // Do not attempt to switch into GL mode if the platform doesn't allow it.
   if ((aRenderingMode == RenderingMode::OpenGLBackendMode) &&
-      !gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
+      !gfxPlatform::GetPlatform()->AllowOpenGLCanvas()) {
       return false;
   }
 #endif
@@ -1712,7 +1712,7 @@ CanvasRenderingContext2D::TrySkiaGLTarget(RefPtr<gfx::DrawTarget>& aOutDT,
   mIsSkiaGL = false;
 
   IntSize size(mWidth, mHeight);
-  if (!gfxPlatform::GetPlatform()->UseAcceleratedCanvas() ||
+  if (!gfxPlatform::GetPlatform()->AllowOpenGLCanvas() ||
       !CheckSizeForSkiaGL(size)) {
 
     return false;
@@ -4441,39 +4441,6 @@ CanvasRenderingContext2D::GetLineJoin(nsAString& aLinejoinStyle, ErrorResult& aE
 }
 
 void
-CanvasRenderingContext2D::SetMozDash(JSContext* aCx,
-                                     const JS::Value& aMozDash,
-                                     ErrorResult& aError)
-{
-  nsTArray<Float> dash;
-  aError = JSValToDashArray(aCx, aMozDash, dash);
-  if (!aError.Failed()) {
-    ContextState& state = CurrentState();
-    state.dash = Move(dash);
-    if (state.dash.IsEmpty()) {
-      state.dashOffset = 0;
-    }
-  }
-}
-
-void
-CanvasRenderingContext2D::GetMozDash(JSContext* aCx,
-                                     JS::MutableHandle<JS::Value> aRetval,
-                                     ErrorResult& aError)
-{
-  DashArrayToJSVal(CurrentState().dash, aCx, aRetval, aError);
-}
-
-void
-CanvasRenderingContext2D::SetMozDashOffset(double aMozDashOffset)
-{
-  ContextState& state = CurrentState();
-  if (!state.dash.IsEmpty()) {
-    state.dashOffset = aMozDashOffset;
-  }
-}
-
-void
 CanvasRenderingContext2D::SetLineDash(const Sequence<double>& aSegments,
                                       ErrorResult& aRv)
 {
@@ -4785,7 +4752,7 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       mIsSkiaGL &&
       !srcSurf &&
       aImage.IsHTMLVideoElement() &&
-      gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
+      gfxPlatform::GetPlatform()->AllowOpenGLCanvas()) {
     mozilla::gl::GLContext* gl = gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext();
     MOZ_ASSERT(gl);
 

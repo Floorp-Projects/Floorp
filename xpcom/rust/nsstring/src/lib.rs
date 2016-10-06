@@ -159,13 +159,6 @@ const F_LITERAL: u32 = 1 << 5; // mData points to a string literal; F_TERMINATED
 // class flags are in the upper 16-bits
 const F_CLASS_FIXED: u32 = 1 << 16; // indicates that |this| is of type nsTFixedString
 
-/// This type is zero-sized and uninstantiable. It is used in the definition of
-/// nsA[C]String to create an opaque zero-sized type which does not raise an
-/// `improper_ctypes` warning when passed behind a `*const nsA[C]String`.
-///
-/// This type is not exported and does not make up part of the external API.
-enum Impossible {}
-
 ////////////////////////////////////
 // Generic String Bindings Macros //
 ////////////////////////////////////
@@ -236,9 +229,14 @@ macro_rules! define_string_types {
         /// associated with it is not necessarially safe to move. It is not safe
         /// to construct a nsAString yourself, unless it is received by
         /// dereferencing one of these types.
+        ///
+        /// NOTE: The `[u8; 0]` member is zero sized, and only exists to prevent
+        /// the construction by code outside of this module. It is used instead
+        /// of a private `()` member because the `improper_ctypes` lint complains
+        /// about some ZST members in `extern "C"` function declarations.
         #[repr(C)]
         pub struct $AString {
-            _prohibit_constructor: Impossible,
+            _prohibit_constructor: [u8; 0],
         }
 
         impl Deref for $AString {

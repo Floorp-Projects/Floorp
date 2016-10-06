@@ -9,5 +9,4 @@
   <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/mochitest-e10s-utils.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/browser-test.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/cc-analyzer.js"/>
 </overlay>
