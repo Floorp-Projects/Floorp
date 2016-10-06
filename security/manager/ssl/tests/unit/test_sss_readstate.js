@@ -13,6 +13,10 @@ function writeLine(aLine, aOutputStream) {
 var gSSService = null;
 
 function checkStateRead(aSubject, aTopic, aData) {
+  if (aData == PRELOAD_STATE_FILE_NAME) {
+    return;
+  }
+
   equal(aData, SSS_STATE_FILE_NAME);
 
   ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
