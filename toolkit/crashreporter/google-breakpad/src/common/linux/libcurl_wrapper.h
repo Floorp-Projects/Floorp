@@ -43,7 +43,7 @@ namespace google_breakpad {
 class LibcurlWrapper {
  public:
   LibcurlWrapper();
-  ~LibcurlWrapper();
+  virtual ~LibcurlWrapper();
   virtual bool Init();
   virtual bool SetProxy(const string& proxy_host,
                         const string& proxy_userpwd);

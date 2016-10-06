@@ -203,15 +203,16 @@ void BasicSourceLineResolver::Module::LookupAddress(StackFrame *frame) const {
   MemAddr function_base;
   MemAddr function_size;
   MemAddr public_address;
-  if (functions_.RetrieveNearestRange(address, &func,
-                                      &function_base, &function_size) &&
+  if (functions_.RetrieveNearestRange(address, &func, &function_base,
+                                      NULL /* delta */, &function_size) &&
       address >= function_base && address - function_base < function_size) {
     frame->function_name = func->name;
     frame->function_base = frame->module->base_address() + function_base;
 
     linked_ptr<Line> line;
     MemAddr line_base;
-    if (func->lines.RetrieveRange(address, &line, &line_base, NULL)) {
+    if (func->lines.RetrieveRange(address, &line, &line_base, NULL /* delta */,
+                                  NULL /* size */)) {
       FileMap::const_iterator it = files_.find(line->source_file_id);
       if (it != files_.end()) {
         frame->source_file_name = files_.find(line->source_file_id)->second;
@@ -256,8 +257,8 @@ WindowsFrameInfo *BasicSourceLineResolver::Module::FindWindowsFrameInfo(
   // comparison in an overflow-friendly way.
   linked_ptr<Function> function;
   MemAddr function_base, function_size;
-  if (functions_.RetrieveNearestRange(address, &function,
-                                      &function_base, &function_size) &&
+  if (functions_.RetrieveNearestRange(address, &function, &function_base,
+                                      NULL /* delta */, &function_size) &&
       address >= function_base && address - function_base < function_size) {
     result->parameter_size = function->parameter_size;
     result->valid |= WindowsFrameInfo::VALID_PARAMETER_SIZE;
@@ -286,8 +287,8 @@ CFIFrameInfo *BasicSourceLineResolver::Module::FindCFIFrameInfo(
   // provides an initial set of register recovery rules. Then, walk
   // forward from the initial rule's starting address to frame's
   // instruction address, applying delta rules.
-  if (!cfi_initial_rules_.RetrieveRange(address, &initial_rules,
-                                        &initial_base, &initial_size)) {
+  if (!cfi_initial_rules_.RetrieveRange(address, &initial_rules, &initial_base,
+                                        NULL /* delta */, &initial_size)) {
     return NULL;
   }
 
@@ -482,7 +483,7 @@ bool SymbolParseHelper::ParseFile(char *file_line, long *index,
   }
 
   *filename = tokens[1];
-  if (!filename) {
+  if (!*filename) {
     return false;
   }
 
@@ -595,7 +596,7 @@ bool SymbolParseHelper::ParsePublicSymbol(char *public_line,
       *stack_param_size < 0) {
     return false;
   }
-  *name = tokens[2]; 
+  *name = tokens[2];
 
   return true;
 }

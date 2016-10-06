@@ -43,6 +43,7 @@
 #include <cxxabi.h>
 #endif
 #include <inttypes.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include <algorithm>
@@ -140,7 +141,7 @@ DwarfCUToModule::FileContext::~FileContext() {
 }
 
 void DwarfCUToModule::FileContext::AddSectionToSectionMap(
-    const string& name, const char* contents, uint64 length) {
+    const string& name, const uint8_t *contents, uint64 length) {
   section_map_[name] = std::make_pair(contents, length);
 }
 
@@ -416,7 +417,8 @@ string DwarfCUToModule::GenericDIEHandler::ComputeQualifiedName() {
 
   // If this DIE was marked as a declaration, record its names in the
   // specification table.
-  if (declaration_ && qualified_name || (unqualified_name && enclosing_name)) {
+  if ((declaration_ && qualified_name) ||
+      (unqualified_name && enclosing_name)) {
     Specification spec;
     if (qualified_name) {
       spec.qualified_name = *qualified_name;
@@ -814,7 +816,7 @@ void DwarfCUToModule::ReadSourceLines(uint64 offset) {
     cu_context_->reporter->MissingSection(".debug_line");
     return;
   }
-  const char *section_start = map_entry->second.first;
+  const uint8_t *section_start = map_entry->second.first;
   uint64 section_length = map_entry->second.second;
   if (offset >= section_length) {
     cu_context_->reporter->BadLineInfoOffset(offset);

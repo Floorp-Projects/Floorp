@@ -34,7 +34,7 @@ TEST_F(TlsConnectTest, DamageSecretHandleClientFinished) {
   client_->Handshake();
   server_->Handshake();
   std::cerr << "Damaging HS secret\n";
-  SSLInt_DamageHsTrafficSecret(server_->ssl_fd());
+  SSLInt_DamageClientHsTrafficSecret(server_->ssl_fd());
   client_->Handshake();
   server_->Handshake();
   // The client thinks it has connected.
@@ -52,7 +52,7 @@ TEST_F(TlsConnectTest, DamageSecretHandleServerFinished) {
   server_->SetPacketFilter(new AfterRecordN(
       server_, client_,
       0,  // ServerHello.
-      [this]() { SSLInt_DamageHsTrafficSecret(client_->ssl_fd()); }));
+      [this]() { SSLInt_DamageServerHsTrafficSecret(client_->ssl_fd()); }));
   ConnectExpectFail();
   client_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
   server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
