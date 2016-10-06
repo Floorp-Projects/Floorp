@@ -1469,9 +1469,9 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (error) {
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                     JSMSG_WASM_DECODE_FAIL, "?", error.get());
+    if (error && !JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                               JSMSG_WASM_DECODE_FAIL, "?", error.get())) {
+        return false;
     }
 
     callArgs.rval().setBoolean(validated);
