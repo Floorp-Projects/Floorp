@@ -102,6 +102,7 @@ GetDataInfo(const nsACString& aUri)
 
   return res;
 }
+
 static DataInfo*
 GetDataInfoFromURI(nsIURI* aURI)
 {

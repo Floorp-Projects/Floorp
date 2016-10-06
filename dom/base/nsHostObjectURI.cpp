@@ -138,15 +138,20 @@ nsHostObjectURI::Deserialize(const mozilla::ipc::URIParams& aParams)
     return false;
   }
 
-  // XXXbaku: when we will have shared blobURL maps, we can populate mBlobImpl
-  // here asll well.
-
   if (hostParams.principal().type() == OptionalPrincipalInfo::Tvoid_t) {
     return true;
   }
 
   mPrincipal = PrincipalInfoToPrincipal(hostParams.principal().get_PrincipalInfo());
-  return mPrincipal != nullptr;
+  if (!mPrincipal) {
+    return false;
+  }
+
+  // If this fails, we still want to complete the operation. Probably this
+  // blobURL has been revoked in the meantime.
+  NS_GetBlobForBlobURI(this, getter_AddRefs(mBlobImpl));
+
+  return true;
 }
 
 NS_IMETHODIMP
