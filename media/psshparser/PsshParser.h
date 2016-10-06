@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <vector>
 
-#define CLEARKEY_KEY_LEN ((size_t)16)
+#define CENC_KEY_LEN ((size_t)16)
 
 bool
 ParseCENCInitData(const uint8_t* aInitData,

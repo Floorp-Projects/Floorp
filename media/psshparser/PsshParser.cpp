@@ -167,12 +167,12 @@ ParseCENCInitData(const uint8_t* aInitData,
     uint32_t kidCount = reader.ReadU32();
 
     for (uint32_t i = 0; i < kidCount; i++) {
-      if (reader.Remaining() < CLEARKEY_KEY_LEN) {
+      if (reader.Remaining() < CENC_KEY_LEN) {
         // Not enough remaining to read key.
         return false;
       }
-      const uint8_t* kid = reader.Read(CLEARKEY_KEY_LEN);
-      aOutKeyIds.push_back(std::vector<uint8_t>(kid, kid + CLEARKEY_KEY_LEN));
+      const uint8_t* kid = reader.Read(CENC_KEY_LEN);
+      aOutKeyIds.push_back(std::vector<uint8_t>(kid, kid + CENC_KEY_LEN));
     }
 
     // Size of extra data. EME CENC format spec says datasize should

@@ -205,7 +205,7 @@ ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
 
   assert(aMetadata.mIV.size() == 8 || aMetadata.mIV.size() == 16);
   std::vector<uint8_t> iv(aMetadata.mIV);
-  iv.insert(iv.end(), CLEARKEY_KEY_LEN - aMetadata.mIV.size(), 0);
+  iv.insert(iv.end(), CENC_KEY_LEN - aMetadata.mIV.size(), 0);
 
   ClearKeyUtils::DecryptAES(mKey, tmp, iv);
 
