@@ -71,6 +71,8 @@ toolkit.jar:
    content/global/bindings/checkbox.xml        (widgets/checkbox.xml)
    content/global/bindings/colorpicker.xml     (widgets/colorpicker.xml)
    content/global/bindings/datetimepicker.xml  (widgets/datetimepicker.xml)
+   content/global/bindings/datetimebox.xml     (widgets/datetimebox.xml)
+   content/global/bindings/datetimebox.css     (widgets/datetimebox.css)
 *  content/global/bindings/dialog.xml          (widgets/dialog.xml)
    content/global/bindings/editor.xml          (widgets/editor.xml)
    content/global/bindings/expander.xml        (widgets/expander.xml)
