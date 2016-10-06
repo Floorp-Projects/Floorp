@@ -407,6 +407,21 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (action) {
             switch (action.type) {
               case "visiturl":
+                // Unifiedcomplete uses fixupURI to tell if something is a visit
+                // or a search, and passes out the fixedURI as the url param.
+                // By using that uri we would end up passing a different string
+                // to the docshell that may run a different not-found heuristic.
+                // For example, "mozilla/run" would be fixed by unifiedcomplete
+                // to "http://mozilla/run". The docshell, once it can't resolve
+                // mozilla, would note the string has a scheme, and try to load
+                // http://mozilla.com/run instead of searching "mozilla/run".
+                // So, if we have the original input at hand, we pass it through
+                // and let the docshell handle it.
+                if (action.params.input) {
+                  url = action.params.input;
+                  break;
+                }
+                // Fall-through.
               case "keyword":
               case "remotetab":
                 url = action.params.url;
@@ -463,7 +478,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
           }
 
-          url = this._canonizeURL(event, url);
           getShortcutOrURIAndPostData(url).then(({url, postData, mayInheritPrincipal}) => {
             if (url) {
               matchLastLocationChange =
@@ -577,62 +591,59 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <method name="_canonizeURL">
+      <method name="maybeCanonizeURL">
         <parameter name="aTriggeringEvent"/>
         <parameter name="aUrl"/>
         <body><![CDATA[
-          let url = aUrl;
-
           // Only add the suffix when the URL bar value isn't already "URL-like",
           // and only if we get a keyboard event, to match user expectations.
-          if (/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(url) &&
-              (aTriggeringEvent instanceof KeyEvent)) {
-            let accel = this.AppConstants.platform == "macosx" ?
-                        aTriggeringEvent.metaKey :
-                        aTriggeringEvent.ctrlKey;
-            let shift = aTriggeringEvent.shiftKey;
-
-            let suffix = "";
-
-            switch (true) {
-              case (accel && shift):
-                suffix = ".org/";
-                break;
-              case (shift):
-                suffix = ".net/";
-                break;
-              case (accel):
-                try {
-                  suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
-                  if (suffix.charAt(suffix.length - 1) != "/")
-                    suffix += "/";
-                } catch (e) {
-                  suffix = ".com/";
-                }
-                break;
-            }
-
-            if (suffix) {
-              // trim leading/trailing spaces (bug 233205)
-              url = url.trim();
-
-              // Tack www. and suffix on.  If user has appended directories, insert
-              // suffix before them (bug 279035).  Be careful not to get two slashes.
-
-              let firstSlash = url.indexOf("/");
-
-              if (firstSlash >= 0) {
-                url = url.substring(0, firstSlash) + suffix +
-                      url.substring(firstSlash + 1);
-              } else {
-                url = url + suffix;
-              }
-
-              url = "http://www." + url;
-            }
+          if (!/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(aUrl) ||
+              !(aTriggeringEvent instanceof KeyEvent)) {
+            return;
           }
 
-          return url;
+          let url = aUrl;
+          let accel = this.AppConstants.platform == "macosx" ?
+                      aTriggeringEvent.metaKey :
+                      aTriggeringEvent.ctrlKey;
+          let shift = aTriggeringEvent.shiftKey;
+          let suffix = "";
+
+          switch (true) {
+            case (accel && shift):
+              suffix = ".org/";
+              break;
+            case (shift):
+              suffix = ".net/";
+              break;
+            case (accel):
+              try {
+                suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
+                if (suffix.charAt(suffix.length - 1) != "/")
+                  suffix += "/";
+              } catch (e) {
+                suffix = ".com/";
+              }
+              break;
+          }
+
+          if (!suffix)
+            return;
+
+          // trim leading/trailing spaces (bug 233205)
+          url = url.trim();
+
+          // Tack www. and suffix on.  If user has appended directories, insert
+          // suffix before them (bug 279035).  Be careful not to get two slashes.
+          let firstSlash = url.indexOf("/");
+          if (firstSlash >= 0) {
+            url = url.substring(0, firstSlash) + suffix +
+                  url.substring(firstSlash + 1);
+          } else {
+            url = url + suffix;
+          }
+
+          this.popup.overrideValue = "http://www." + url;
         ]]></body>
       </method>
 
@@ -1051,6 +1062,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           };
 
           if (this.popup.selectedIndex != 0 || this.gotResultForCurrentQuery) {
+            this.maybeCanonizeURL(event, this.value);
             let rv = this.mController.handleEnter(false, event);
             this.handleEnterInstance = null;
             return rv;
@@ -1344,6 +1356,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <field name="_oneOffSearchesEnabled">false</field>
 
+      <field name="_overrideValue">null</field>
+      <property name="overrideValue"
+                onget="return this._overrideValue;"
+                onset="this._overrideValue = val; return val;"/>
+
       <method name="enableOneOffSearches">
         <parameter name="enable"/>
         <body><![CDATA[
@@ -1506,7 +1523,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           this.mInput = aInput;
-          this.selectedIndex = this._isFirstResultHeuristic ? 0 : -1;
+          aInput.controller.setInitiallySelectedIndex(this._isFirstResultHeuristic ? 0 : -1);
           this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
           this._invalidate();
 
@@ -1770,7 +1787,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               // Don't fire DOMMenuItemActive so that screen readers still see
               // the input as being focused.
               this.richlistbox.suppressMenuItemEvent = true;
-              this.selectedIndex = 0;
+              this.input.controller.setInitiallySelectedIndex(0);
               this.richlistbox.suppressMenuItemEvent = false;
             }
 
@@ -1784,8 +1801,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               // loop where the controller sets popupOpen and re-enters here.
               setTimeout(() => {
                 // Safety check: handle only if the search string didn't change.
-                if (this.input.mController.searchString == instance.searchString) {
-                  this.input.mController.handleEnter(false, instance.event);
+                let { event, searchString } = instance;
+                if (this.input.mController.searchString == searchString) {
+                  this.input.maybeCanonizeURL(event, searchString);
+                  this.input.mController.handleEnter(false, event);
                 }
               }, 0);
             }
@@ -1806,7 +1825,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           //    disabled), this won't be called, and the selectedIndex will be
           //    the default -1 value. Then handleEnter will know it should not
           //    delay the action, cause a result wont't ever arrive.
-          this.selectedIndex = 0;
+          this.input.controller.setInitiallySelectedIndex(0);
+          this.overrideValue = null;
         ]]></body>
       </method>
 

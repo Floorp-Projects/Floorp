@@ -588,14 +588,14 @@ add_task(function* prohibit_suggestions() {
     search: "user:pass@test",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("user:pass@test", { engineName: ENGINE_NAME, heuristic: true }),
+      makeVisitMatch("user:pass@test", "http://user:pass@test/", { heuristic: true }),
     ],
   });
   yield check_autocomplete({
     search: "test/test",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("test/test", { engineName: ENGINE_NAME, heuristic: true }),
+      makeVisitMatch("test/test", "http://test/test", { heuristic: true }),
     ],
   });
   yield check_autocomplete({
