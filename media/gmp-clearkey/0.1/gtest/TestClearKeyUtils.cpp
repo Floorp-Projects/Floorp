@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../ClearKeyBase64.cpp"
-#include "../ClearKeyCencParser.cpp"
+#include "psshparser/PsshParser.h"
 #include "../ArrayUtils.h"
 
 using namespace std;
