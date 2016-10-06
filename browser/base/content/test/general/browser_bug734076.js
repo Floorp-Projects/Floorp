@@ -38,6 +38,8 @@ add_task(function* ()
         return ContentTask.spawn(gBrowser.selectedBrowser, { writeDomainURL: writeDomainURL }, function* (arg) {
           let doc = content.document;
           let img = doc.createElement("img");
+          img.height = 100;
+          img.width = 100;
           img.setAttribute("src", arg.writeDomainURL);
           doc.body.insertBefore(img, doc.body.firstChild);
 
@@ -94,6 +96,8 @@ add_task(function* ()
     yield BrowserTestUtils.synthesizeMouse(test.element, 3, 3,
           { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
     yield popupShownPromise;
+    info("onImage: " + gContextMenu.onImage);
+    info("target: " + gContextMenu.target.tagName);
 
     let loadedAfterCommandPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     document.getElementById(commandToRun).click();
