@@ -379,6 +379,15 @@ public:
     return DECODER_STATE_WAIT_FOR_CDM;
   }
 
+  bool HandleDormant(bool aDormant) override
+  {
+    if (aDormant) {
+      // No need to store mQueuedSeek because we are at position 0.
+      SetState(DECODER_STATE_DORMANT);
+    }
+    return true;
+  }
+
   bool HandleCDMProxyReady() override
   {
     SetState(DECODER_STATE_DECODING_FIRSTFRAME);
