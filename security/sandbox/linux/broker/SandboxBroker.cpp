@@ -7,6 +7,7 @@
 #include "SandboxBroker.h"
 #include "SandboxInfo.h"
 #include "SandboxLogging.h"
+#include "SandboxBrokerUtils.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -365,17 +366,10 @@ AllowOpen(int aReqFlags, int aPerms)
 static int
 DoStat(const char* aPath, void* aBuff, int aFlags)
 {
-#if defined(__NR_stat64)
  if (aFlags & O_NOFOLLOW) {
-    return lstat64(aPath, (struct stat64*)aBuff);
+    return lstatsyscall(aPath, (statstruct*)aBuff);
   }
-  return stat64(aPath, (struct stat64*)aBuff);
-#else
-  if (aFlags & O_NOFOLLOW) {
-    return lstat(aPath, (struct stat*)aBuff);
-  }
-  return stat(aPath, (struct stat*)aBuff);
-#endif
+  return statsyscall(aPath, (statstruct*)aBuff);
 }
 
 static int

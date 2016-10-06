@@ -13,6 +13,7 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "SpecialSystemDirectory.h"
 
 #ifdef ANDROID
 #include "cutils/properties.h"
@@ -118,7 +119,23 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   SandboxBroker::Policy* policy = new SandboxBroker::Policy;
   policy->AddDir(rdonly, "/");
   policy->AddDir(rdwrcr, "/dev/shm");
-  policy->AddDir(rdwrcr, "/tmp");
+  // Add write permissions on the temporary directory. This can come
+  // from various environment variables (TMPDIR,TMP,TEMP,...) so
+  // make sure to use the full logic.
+  nsCOMPtr<nsIFile> tmpDir;
+  nsresult rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
+                                          getter_AddRefs(tmpDir));
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString tmpPath;
+    rv = tmpDir->GetNativePath(tmpPath);
+    if (NS_SUCCEEDED(rv)) {
+      policy->AddDir(rdwrcr, tmpPath.get());
+    }
+  }
+  // If the above fails at any point, fall back to a very good guess.
+  if (NS_FAILED(rv)) {
+    policy->AddDir(rdwrcr, "/tmp");
+  }
   mCommonContentPolicy.reset(policy);
 #endif
 }

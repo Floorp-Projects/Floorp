@@ -20,7 +20,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/NullPtr.h"
 #include "base/strings/safe_sprintf.h"
-#include "sandbox/linux/system_headers/linux_syscalls.h"
 
 namespace mozilla {
 
@@ -175,32 +174,16 @@ SandboxBrokerClient::Access(const char* aPath, int aMode)
 }
 
 int
-SandboxBrokerClient::Stat(const char* aPath, struct stat* aStat)
+SandboxBrokerClient::Stat(const char* aPath, statstruct* aStat)
 {
-  // This is actually stat64 on 32-bit Linux, so adjust the
-  // struct to have the right expected size.
-#if defined(__NR_stat64)
-  Request req = { SANDBOX_FILE_STAT, 0, sizeof(struct stat64) };
-#elif defined(__NR_stat)
-  Request req = { SANDBOX_FILE_STAT, 0, sizeof(struct stat) };
-#else
-#error Missing include.
-#endif
+  Request req = { SANDBOX_FILE_STAT, 0, sizeof(statstruct) };
   return DoCall(&req, aPath, nullptr, (void*)aStat, false);
 }
 
 int
-SandboxBrokerClient::LStat(const char* aPath, struct stat* aStat)
+SandboxBrokerClient::LStat(const char* aPath, statstruct* aStat)
 {
-  // This is actually stat64 on 32-bit Linux, so adjust the
-  // struct to have the right expected size.
-#if defined(__NR_stat64)
-  Request req = { SANDBOX_FILE_STAT, O_NOFOLLOW, sizeof(struct stat64) };
-#elif defined(__NR_stat)
-  Request req = { SANDBOX_FILE_STAT, O_NOFOLLOW, sizeof(struct stat) };
-#else
-#error Missing include.
-#endif
+  Request req = { SANDBOX_FILE_STAT, O_NOFOLLOW, sizeof(statstruct) };
   return DoCall(&req, aPath, nullptr, (void*)aStat, false);
 }
 
