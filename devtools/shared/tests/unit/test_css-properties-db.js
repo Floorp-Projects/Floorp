@@ -64,7 +64,7 @@ function run_test() {
    */
   const mismatches = getKeyMismatches(platformProperties, CSS_PROPERTIES)
     // Filter out OS-specific properties.
-    .filter(name => name.indexOf("-moz-osx-") === -1);
+    .filter(name => name && name.indexOf("-moz-osx-") === -1);
 
   if (mismatches.length === 0) {
     ok(true, "No client and platform CSS property database mismatches were found.");
@@ -149,7 +149,7 @@ function getKeyMismatches(a, b) {
   const bNames = Object.keys(b);
   const aMismatches = aNames.filter(key => !bNames.includes(key));
   const bMismatches = bNames.filter(key => {
-    return !aNames.includes(key) && !aMismatches.includes(name);
+    return !aNames.includes(key) && !aMismatches.includes(key);
   });
 
   return aMismatches.concat(bMismatches);

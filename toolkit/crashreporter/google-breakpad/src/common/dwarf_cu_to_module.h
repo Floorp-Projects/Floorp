@@ -39,6 +39,8 @@
 #ifndef COMMON_LINUX_DWARF_CU_TO_MODULE_H__
 #define COMMON_LINUX_DWARF_CU_TO_MODULE_H__
 
+#include <stdint.h>
+
 #include <string>
 
 #include "common/language.h"
@@ -84,7 +86,7 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
 
     // Add CONTENTS of size LENGTH to the section map as NAME.
     void AddSectionToSectionMap(const string& name,
-                                const char* contents,
+                                const uint8_t *contents,
                                 uint64 length);
 
     // Clear the section map for testing.
@@ -140,7 +142,7 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
     // mappings, given a pointer to some DWARF line number data
     // PROGRAM, and an overestimate of its size. Add no zero-length
     // lines to LINES.
-    virtual void ReadProgram(const char *program, uint64 length,
+    virtual void ReadProgram(const uint8_t *program, uint64 length,
                              Module *module, vector<Module::Line> *lines) = 0;
   };
 

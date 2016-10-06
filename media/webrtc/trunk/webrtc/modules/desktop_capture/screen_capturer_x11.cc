@@ -51,6 +51,7 @@ class ScreenCapturerLinux : public ScreenCapturer,
 
   // DesktopCapturer interface.
   void Start(Callback* delegate) override;
+  void Stop() override;
   void Capture(const DesktopRegion& region) override;
 
   // ScreenCapturer interface.
@@ -237,6 +238,10 @@ void ScreenCapturerLinux::Start(Callback* callback) {
   DCHECK(callback);
 
   callback_ = callback;
+}
+
+void ScreenCapturerLinux::Stop() {
+  callback_ = NULL;
 }
 
 void ScreenCapturerLinux::Capture(const DesktopRegion& region) {

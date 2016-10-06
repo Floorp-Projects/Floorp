@@ -258,17 +258,23 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                 raise ValueError, "Histogram name '%s' doesn't confirm to '%s'" % (name, pattern)
 
     def check_expiration(self, name, definition):
-        expiration = definition.get('expires_in_version')
+        field = 'expires_in_version'
+        expiration = definition.get(field)
 
         if not expiration:
             return
+
+        # We forbid new probes from using "expires_in_version" : "default" field/value pair.
+        # Old ones that use this are added to the whitelist.
+        if expiration == "default" and name not in whitelists['expiry_default']:
+            raise ValueError, 'New histogram "%s" cannot have "default" %s value.' % (name, field)
 
         if re.match(r'^[1-9][0-9]*$', expiration):
             expiration = expiration + ".0a1"
         elif re.match(r'^[1-9][0-9]*\.0$', expiration):
             expiration = expiration + "a1"
 
-        definition['expires_in_version'] = expiration
+        definition[field] = expiration
 
     def check_label_values(self, name, definition):
         labels = definition.get('labels')

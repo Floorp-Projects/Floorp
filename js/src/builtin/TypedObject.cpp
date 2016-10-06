@@ -1511,7 +1511,8 @@ OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj, int32_t offset)
         attach(cx, owner->as<ArrayBufferObject>(), offset);
     } else {
         MOZ_ASSERT(owner->is<InlineTypedObject>());
-        setOwnerAndData(owner, owner->as<InlineTypedObject>().inlineTypedMem() + offset);
+        JS::AutoCheckCannotGC nogc(cx);
+        setOwnerAndData(owner, owner->as<InlineTypedObject>().inlineTypedMem(nogc) + offset);
     }
 }
 
@@ -1564,7 +1565,8 @@ TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr, int32_t length, 
         InlineTypedObject* obj = InlineTypedObject::create(cx, descr, heap);
         if (!obj)
             return nullptr;
-        descr->initInstances(cx->runtime(), obj->inlineTypedMem(), 1);
+        JS::AutoCheckCannotGC nogc(cx);
+        descr->initInstances(cx->runtime(), obj->inlineTypedMem(nogc), 1);
         return obj;
     }
 
@@ -2455,7 +2457,7 @@ js::SetTypedObjectOffset(JSContext*, unsigned argc, Value* vp)
     int32_t offset = args[1].toInt32();
 
     MOZ_ASSERT(typedObj.isAttached());
-    typedObj.setData(typedObj.typedMemBase() + offset);
+    typedObj.resetOffset(offset);
     args.rval().setUndefined();
     return true;
 }
@@ -2579,7 +2581,7 @@ js::GetSimdTypeDescr(JSContext* cx, unsigned argc, Value* vp)
 
 #define JS_STORE_SCALAR_CLASS_IMPL(_constant, T, _name)                         \
 bool                                                                            \
-js::StoreScalar##T::Func(JSContext*, unsigned argc, Value* vp)         \
+js::StoreScalar##T::Func(JSContext* cx, unsigned argc, Value* vp)               \
 {                                                                               \
     CallArgs args = CallArgsFromVp(argc, vp);                                   \
     MOZ_ASSERT(args.length() == 3);                                             \
@@ -2593,7 +2595,8 @@ js::StoreScalar##T::Func(JSContext*, unsigned argc, Value* vp)         \
     /* Should be guaranteed by the typed objects API: */                        \
     MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                                   \
                                                                                 \
-    T* target = reinterpret_cast<T*>(typedObj.typedMem(offset));                \
+    JS::AutoCheckCannotGC nogc(cx);                                             \
+    T* target = reinterpret_cast<T*>(typedObj.typedMem(offset, nogc));          \
     double d = args[2].toNumber();                                              \
     *target = ConvertScalar<T>(d);                                              \
     args.rval().setUndefined();                                                 \
@@ -2620,7 +2623,8 @@ js::StoreReference##_name::Func(JSContext* cx, unsigned argc, Value* vp)        
     /* Should be guaranteed by the typed objects API: */                        \
     MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                                   \
                                                                                 \
-    T* target = reinterpret_cast<T*>(typedObj.typedMem(offset));                \
+    JS::AutoCheckCannotGC nogc(cx);                                             \
+    T* target = reinterpret_cast<T*>(typedObj.typedMem(offset, nogc));          \
     if (!store(cx, target, args[3], &typedObj, id))                             \
         return false;                                                           \
     args.rval().setUndefined();                                                 \
@@ -2629,7 +2633,7 @@ js::StoreReference##_name::Func(JSContext* cx, unsigned argc, Value* vp)        
 
 #define JS_LOAD_SCALAR_CLASS_IMPL(_constant, T, _name)                                  \
 bool                                                                                    \
-js::LoadScalar##T::Func(JSContext*, unsigned argc, Value* vp)                           \
+js::LoadScalar##T::Func(JSContext* cx, unsigned argc, Value* vp)                        \
 {                                                                                       \
     CallArgs args = CallArgsFromVp(argc, vp);                                           \
     MOZ_ASSERT(args.length() == 2);                                                     \
@@ -2642,14 +2646,15 @@ js::LoadScalar##T::Func(JSContext*, unsigned argc, Value* vp)                   
     /* Should be guaranteed by the typed objects API: */                                \
     MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                                           \
                                                                                         \
-    T* target = reinterpret_cast<T*>(typedObj.typedMem(offset));                        \
+    JS::AutoCheckCannotGC nogc(cx);                                                     \
+    T* target = reinterpret_cast<T*>(typedObj.typedMem(offset, nogc));                  \
     args.rval().setNumber((double) *target);                                            \
     return true;                                                                        \
 }
 
 #define JS_LOAD_REFERENCE_CLASS_IMPL(_constant, T, _name)                       \
 bool                                                                            \
-js::LoadReference##_name::Func(JSContext*, unsigned argc, Value* vp)            \
+js::LoadReference##_name::Func(JSContext* cx, unsigned argc, Value* vp)         \
 {                                                                               \
     CallArgs args = CallArgsFromVp(argc, vp);                                   \
     MOZ_ASSERT(args.length() == 2);                                             \
@@ -2662,7 +2667,8 @@ js::LoadReference##_name::Func(JSContext*, unsigned argc, Value* vp)            
     /* Should be guaranteed by the typed objects API: */                        \
     MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                                   \
                                                                                 \
-    T* target = reinterpret_cast<T*>(typedObj.typedMem(offset));                \
+    JS::AutoCheckCannotGC nogc(cx);                                             \
+    T* target = reinterpret_cast<T*>(typedObj.typedMem(offset, nogc));          \
     load(target, args.rval());                                                  \
     return true;                                                                \
 }

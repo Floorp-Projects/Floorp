@@ -532,9 +532,6 @@ protected:
 
   void FinishDecodeFirstFrame();
 
-  // Completes the seek operation, moves onto the next appropriate state.
-  void SeekCompleted();
-
   // Queries our state to see whether the decode has finished for all streams.
   bool CheckIfDecodeComplete();
 
@@ -620,18 +617,6 @@ private:
 
   // Queued seek - moves to mCurrentSeek when DecodeFirstFrame completes.
   SeekJob mQueuedSeek;
-  SeekJob mCurrentSeek;
-
-  // mSeekTask is responsible for executing the current seek request.
-  RefPtr<SeekTask> mSeekTask;
-  MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
-
-  void OnSeekTaskResolved(SeekTaskResolveValue aValue);
-  void OnSeekTaskRejected(SeekTaskRejectValue aValue);
-
-  // This method discards the seek task and then get the ownership of
-  // MedaiDecoderReaderWarpper back via registering MDSM's callback into it.
-  void DiscardSeekTaskIfExist();
 
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;

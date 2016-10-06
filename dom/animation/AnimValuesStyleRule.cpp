@@ -32,15 +32,14 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
     return;
   }
 
-  for (uint32_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
-    PropertyStyleAnimationValuePair& pair = mPropertyValuePairs[i];
+  for (auto iter = mAnimationValues.ConstIter(); !iter.Done(); iter.Next()) {
+    nsCSSPropertyID property = static_cast<nsCSSPropertyID>(iter.Key());
     if (aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(
-                             nsCSSProps::kSIDTable[pair.mProperty]))
-    {
-      nsCSSValue *prop = aRuleData->ValueFor(pair.mProperty);
+                             nsCSSProps::kSIDTable[property])) {
+      nsCSSValue *prop = aRuleData->ValueFor(property);
       if (prop->GetUnit() == eCSSUnit_Null) {
         DebugOnly<bool> ok =
-          StyleAnimationValue::UncomputeValue(pair.mProperty, pair.mValue,
+          StyleAnimationValue::UncomputeValue(property, iter.Data(),
                                               *prop);
         MOZ_ASSERT(ok, "could not store computed value");
       }
@@ -62,6 +61,28 @@ AnimValuesStyleRule::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
   return false;
 }
 
+void
+AnimValuesStyleRule::AddValue(nsCSSPropertyID aProperty,
+                              const StyleAnimationValue &aValue)
+{
+  MOZ_ASSERT(aProperty != eCSSProperty_UNKNOWN,
+             "Unexpected css property");
+  mAnimationValues.Put(aProperty, Move(aValue));
+  mStyleBits |=
+    nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
+}
+
+void
+AnimValuesStyleRule::AddValue(nsCSSPropertyID aProperty,
+                              StyleAnimationValue&& aValue)
+{
+  MOZ_ASSERT(aProperty != eCSSProperty_UNKNOWN,
+             "Unexpected css property");
+  mAnimationValues.Put(aProperty, Move(aValue));
+  mStyleBits |=
+    nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
+}
+
 #ifdef DEBUG
 void
 AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
@@ -71,13 +92,13 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
     str.AppendLiteral("  ");
   }
   str.AppendLiteral("[anim values] { ");
-  for (uint32_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
-    const PropertyStyleAnimationValuePair& pair = mPropertyValuePairs[i];
-    str.Append(nsCSSProps::GetStringValue(pair.mProperty));
+  for (auto iter = mAnimationValues.ConstIter(); !iter.Done(); iter.Next()) {
+    nsCSSPropertyID property = static_cast<nsCSSPropertyID>(iter.Key());
+    str.Append(nsCSSProps::GetStringValue(property));
     str.AppendLiteral(": ");
     nsAutoString value;
     Unused <<
-      StyleAnimationValue::UncomputeValue(pair.mProperty, pair.mValue, value);
+      StyleAnimationValue::UncomputeValue(property, iter.Data(), value);
     AppendUTF16toUTF8(value, str);
     str.AppendLiteral("; ");
   }

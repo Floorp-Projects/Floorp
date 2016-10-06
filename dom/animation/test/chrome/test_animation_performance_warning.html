@@ -942,7 +942,7 @@ function start() {
     return scriptAnimation.ready.then(function() {
       assert_animation_property_state_equals(
         cssAnimation.effect.getProperties(),
-        [ { property: 'opacity', runningOnCompositor: false } ]);
+        [ { property: 'opacity', runningOnCompositor: true } ]);
       assert_animation_property_state_equals(
         scriptAnimation.effect.getProperties(),
         [ { property: 'opacity', runningOnCompositor: true } ]);

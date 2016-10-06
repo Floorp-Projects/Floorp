@@ -1552,7 +1552,10 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     }
   }
 
-  internal_Accumulate(*h, value);
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    internal_Accumulate(*h, value);
+  }
   return true;
 }
 
@@ -1800,7 +1803,10 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     }
   }
 
-  internal_Accumulate(*keyed, NS_ConvertUTF16toUTF8(key), value);
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    internal_Accumulate(*keyed, NS_ConvertUTF16toUTF8(key), value);
+  }
   return true;
 }
 

@@ -1290,11 +1290,13 @@ enum SpewChannel {
 
 #ifdef DEBUG
 
+bool InferSpewActive(SpewChannel channel);
 const char * InferSpewColorReset();
 const char * InferSpewColor(TypeConstraint* constraint);
 const char * InferSpewColor(TypeSet* types);
 
-void InferSpew(SpewChannel which, const char* fmt, ...);
+#define InferSpew(channel, ...) if (InferSpewActive(channel)) { InferSpewImpl(__VA_ARGS__); } else {}
+void InferSpewImpl(const char* fmt, ...);
 
 /* Check that the type property for id in group contains value. */
 bool ObjectGroupHasProperty(JSContext* cx, ObjectGroup* group, jsid id, const Value& value);
@@ -1304,7 +1306,8 @@ bool ObjectGroupHasProperty(JSContext* cx, ObjectGroup* group, jsid id, const Va
 inline const char * InferSpewColorReset() { return nullptr; }
 inline const char * InferSpewColor(TypeConstraint* constraint) { return nullptr; }
 inline const char * InferSpewColor(TypeSet* types) { return nullptr; }
-inline void InferSpew(SpewChannel which, const char* fmt, ...) {}
+
+#define InferSpew(channel, ...) do {} while (0)
 
 #endif
 
