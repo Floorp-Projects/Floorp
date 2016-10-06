@@ -305,19 +305,9 @@ private:
 
   MediaStatistics GetStatistics();
 
-  // This is called on the state machine thread and audio thread.
-  // The decoder monitor must be obtained before calling this.
-  bool HasAudio() const {
-    MOZ_ASSERT(OnTaskQueue());
-    return mInfo.HasAudio();
-  }
-
-  // This is called on the state machine thread and audio thread.
-  // The decoder monitor must be obtained before calling this.
-  bool HasVideo() const {
-    MOZ_ASSERT(OnTaskQueue());
-    return mInfo.HasVideo();
-  }
+  bool HasAudio() const { return mInfo.ref().HasAudio(); }
+  bool HasVideo() const { return mInfo.ref().HasVideo(); }
+  const MediaInfo& Info() const { return mInfo.ref(); }
 
   // Should be called by main thread.
   bool HaveNextFrameData();
@@ -769,9 +759,8 @@ private:
   // by the decoder monitor.
   bool mDecodeThreadWaiting;
 
-  // Stores presentation info required for playback. The decoder monitor
-  // must be held when accessing this.
-  MediaInfo mInfo;
+  // Stores presentation info required for playback.
+  Maybe<MediaInfo> mInfo;
 
   nsAutoPtr<MetadataTags> mMetadataTags;
 
