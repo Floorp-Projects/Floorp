@@ -194,6 +194,12 @@ IsDeleteKind(ParseNodeKind kind)
     return PNK_DELETENAME <= kind && kind <= PNK_DELETEEXPR;
 }
 
+inline bool
+IsTypeofKind(ParseNodeKind kind)
+{
+    return PNK_TYPEOFNAME <= kind && kind <= PNK_TYPEOFEXPR;
+}
+
 /*
  * Label        Variant     Members
  * -----        -------     -------
@@ -357,7 +363,6 @@ IsDeleteKind(ParseNodeKind kind)
  * PNK_DELETENAME unary     pn_kid: PNK_NAME expr
  * PNK_DELETEPROP unary     pn_kid: PNK_DOT expr
  * PNK_DELETEELEM unary     pn_kid: PNK_ELEM expr
- * PNK_DELETESUPERELEM unary pn_kid: PNK_SUPERELEM expr
  * PNK_DELETEEXPR unary     pn_kid: MEMBER expr that's evaluated, then the
  *                          overall delete evaluates to true; can't be a kind
  *                          for a more-specific PNK_DELETE* unless constant

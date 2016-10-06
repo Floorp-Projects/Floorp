@@ -179,7 +179,7 @@ MSG_DEF(JSMSG_UNKNOWN_FORMAT,          1, JSEXN_INTERNALERR, "unknown bytecode f
 // Frontend
 MSG_DEF(JSMSG_ACCESSOR_WRONG_ARGS,     3, JSEXN_SYNTAXERR, "{0} functions must have {1} argument{2}")
 MSG_DEF(JSMSG_ARRAY_COMP_LEFTSIDE,     0, JSEXN_SYNTAXERR, "invalid array comprehension left-hand side")
-MSG_DEF(JSMSG_ARRAY_INIT_TOO_BIG,      0, JSEXN_INTERNALERR, "array initialiser too large")
+MSG_DEF(JSMSG_ARRAY_INIT_TOO_BIG,      0, JSEXN_INTERNALERR, "array initializer too large")
 MSG_DEF(JSMSG_AS_AFTER_IMPORT_STAR,    0, JSEXN_SYNTAXERR, "missing keyword 'as' after import *")
 MSG_DEF(JSMSG_AS_AFTER_RESERVED_WORD,  1, JSEXN_SYNTAXERR, "missing keyword 'as' after reserved word '{0}'")
 MSG_DEF(JSMSG_BAD_ANON_GENERATOR_RETURN, 0, JSEXN_TYPEERR, "anonymous generator function returns a value")
@@ -202,6 +202,7 @@ MSG_DEF(JSMSG_BAD_INCOP_OPERAND,       0, JSEXN_REFERENCEERR, "invalid increment
 MSG_DEF(JSMSG_BAD_METHOD_DEF,          0, JSEXN_SYNTAXERR, "bad method definition")
 MSG_DEF(JSMSG_BAD_OCTAL,               1, JSEXN_SYNTAXERR, "{0} is not a legal ECMA-262 octal constant")
 MSG_DEF(JSMSG_BAD_OPERAND,             1, JSEXN_SYNTAXERR, "invalid {0} operand")
+MSG_DEF(JSMSG_BAD_POW_LEFTSIDE,        0, JSEXN_SYNTAXERR, "unparenthesized unary expression can't appear on the left-hand side of '**'")
 MSG_DEF(JSMSG_BAD_PROP_ID,             0, JSEXN_SYNTAXERR, "invalid property id")
 MSG_DEF(JSMSG_BAD_RETURN_OR_YIELD,     1, JSEXN_SYNTAXERR, "{0} not in function")
 MSG_DEF(JSMSG_BAD_STRICT_ASSIGN,       1, JSEXN_SYNTAXERR, "'{0}' can't be defined or assigned to in strict mode code")
