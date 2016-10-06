@@ -611,13 +611,13 @@ Collection.prototype = {
   },
 
   // Set information about the batch for this request.
-  get batch() { return _batch; },
+  get batch() { return this._batch; },
   set batch(value) {
     this._batch = value;
     this._rebuildURL();
   },
 
-  get commit() { return _commit; },
+  get commit() { return this._commit; },
   set commit(value) {
     this._commit = value && true;
     this._rebuildURL();
