@@ -25,6 +25,8 @@
 #include "nsIUUIDGenerator.h"
 #include "nsNetUtil.h"
 
+#define RELEASING_TIMER 1000
+
 using mozilla::DOMMediaStream;
 using mozilla::dom::BlobImpl;
 using mozilla::dom::MediaSource;
@@ -67,6 +69,9 @@ struct DataInfo
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCString mStack;
+
+  // WeakReferences of nsHostObjectURI objects.
+  nsTArray<nsWeakPtr> mURIs;
 };
 
 static nsClassHashtable<nsCStringHashKey, DataInfo>* gDataTable;
@@ -416,6 +421,52 @@ class BlobURLsReporter final : public nsIMemoryReporter
 
 NS_IMPL_ISUPPORTS(BlobURLsReporter, nsIMemoryReporter)
 
+class ReleasingTimerHolder final : public nsITimerCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  static void
+  Create(nsTArray<nsWeakPtr>&& aArray)
+  {
+    RefPtr<ReleasingTimerHolder> holder = new ReleasingTimerHolder(Move(aArray));
+    holder->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    if (NS_WARN_IF(!holder->mTimer)) {
+      return;
+    }
+
+    nsresult rv = holder->mTimer->InitWithCallback(holder, RELEASING_TIMER,
+                                                   nsITimer::TYPE_ONE_SHOT);
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
+
+  NS_IMETHOD
+  Notify(nsITimer* aTimer) override
+  {
+    for (uint32_t i = 0; i < mURIs.Length(); ++i) {
+      nsCOMPtr<nsIURI> uri = do_QueryReferent(mURIs[i]);
+      if (uri) {
+        static_cast<nsHostObjectURI*>(uri.get())->ForgetBlobImpl();
+      }
+    }
+
+    return NS_OK;
+  }
+
+private:
+  explicit ReleasingTimerHolder(nsTArray<nsWeakPtr>&& aArray)
+    : mURIs(aArray)
+  {}
+
+  ~ReleasingTimerHolder()
+  {}
+
+  nsTArray<nsWeakPtr> mURIs;
+  nsCOMPtr<nsITimer> mTimer;
+};
+
+NS_IMPL_ISUPPORTS(ReleasingTimerHolder, nsITimerCallback)
+
 } // namespace mozilla
 
 template<typename T>
@@ -540,7 +591,7 @@ nsHostObjectProtocolHandler::GetAllBlobURLEntries(nsTArray<BlobURLRegistrationDa
   return true;
 }
 
-void
+/*static */ void
 nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
                                              bool aBroadcastToOtherProcesses)
 {
@@ -557,6 +608,10 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
     BroadcastBlobURLUnregistration(aUri, info);
   }
 
+  if (!info->mURIs.IsEmpty()) {
+    ReleasingTimerHolder::Create(Move(info->mURIs));
+  }
+
   gDataTable->Remove(aUri);
   if (gDataTable->Count() == 0) {
     delete gDataTable;
@@ -564,7 +619,7 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
   }
 }
 
-void
+/* static */ void
 nsHostObjectProtocolHandler::RemoveDataEntries()
 {
   MOZ_ASSERT(XRE_IsContentProcess());
@@ -584,7 +639,7 @@ nsHostObjectProtocolHandler::HasDataEntry(const nsACString& aUri)
   return !!GetDataInfo(aUri);
 }
 
-nsresult
+/* static */ nsresult
 nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
                                                nsIPrincipal* aPrincipal,
                                                nsACString& aUri)
@@ -620,7 +675,7 @@ nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
   return NS_OK;
 }
 
-nsresult
+/* static */ nsresult
 nsHostObjectProtocolHandler::GenerateURIStringForBlobURL(nsIPrincipal* aPrincipal,
                                                          nsACString& aUri)
 {
@@ -628,7 +683,7 @@ nsHostObjectProtocolHandler::GenerateURIStringForBlobURL(nsIPrincipal* aPrincipa
     GenerateURIString(NS_LITERAL_CSTRING(BLOBURI_SCHEME), aPrincipal, aUri);
 }
 
-nsIPrincipal*
+/* static */ nsIPrincipal*
 nsHostObjectProtocolHandler::GetDataEntryPrincipal(const nsACString& aUri)
 {
   if (!gDataTable) {
@@ -644,7 +699,7 @@ nsHostObjectProtocolHandler::GetDataEntryPrincipal(const nsACString& aUri)
   return res->mPrincipal;
 }
 
-void
+/* static */ void
 nsHostObjectProtocolHandler::Traverse(const nsACString& aUri,
                                       nsCycleCollectionTraversalCallback& aCallback)
 {
@@ -712,6 +767,10 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
 
   NS_TryToSetImmutable(uri);
   uri.forget(aResult);
+
+  if (info && info->mObjectType == DataInfo::eBlobImpl) {
+    info->mURIs.AppendElement(do_GetWeakReference(*aResult));
+  }
 
   return NS_OK;
 }
