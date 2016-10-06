@@ -602,6 +602,9 @@ add_task(function* test_misreconciled_root() {
 
   _("Applying record.");
   engine._processIncoming({
+    getBatched() {
+      return this.get();
+    },
     get: function () {
       this.recordHandler(encrypted);
       return {success: true}
