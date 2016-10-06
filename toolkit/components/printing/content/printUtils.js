@@ -205,8 +205,8 @@ var PrintUtils = {
       // collapse the browser here -- it will be shown in
       // enterPrintPreview; this forces a reflow which fixes display
       // issues in bug 267422.
-      this._sourceBrowser = this._listener.getPrintPreviewBrowser();
-      this._sourceBrowser.collapsed = true;
+      let ppBrowser = this._listener.getPrintPreviewBrowser();
+      ppBrowser.collapsed = true;
     }
 
     this._webProgressPP = {};
@@ -531,15 +531,15 @@ var PrintUtils = {
         // the original page. After we have parsed it, content will tell parent
         // that the document is ready for print previewing.
         spMM.sendAsyncMessage("Printing:Preview:ParseDocument", {
-          URL: this._listener.getSourceBrowser().currentURI.spec,
-          windowID: this._listener.getSourceBrowser().outerWindowID,
+          URL: this._sourceBrowser.currentURI.spec,
+          windowID: this._sourceBrowser.outerWindowID,
         });
 
         // Here we log telemetry data for when the user enters simplify mode.
         this.logTelemetry("PRINT_PREVIEW_SIMPLIFY_PAGE_OPENED_COUNT");
       }
     } else {
-      sendEnterPreviewMessage(this._listener.getSourceBrowser(), false);
+      sendEnterPreviewMessage(this._sourceBrowser, false);
     }
 
     if (this._webProgressPP.value) {
