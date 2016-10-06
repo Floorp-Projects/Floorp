@@ -1004,7 +1004,7 @@ interface EXT_blend_minmax {
 };
 
 [NoInterfaceObject]
-interface WebGLTimerQueryEXT {
+interface WebGLQuery {
 };
 
 [NoInterfaceObject]
@@ -1017,12 +1017,12 @@ interface EXT_disjoint_timer_query {
     const GLenum TIMESTAMP_EXT = 0x8E28;
     const GLenum GPU_DISJOINT_EXT = 0x8FBB;
 
-    WebGLTimerQueryEXT? createQueryEXT();
-    void deleteQueryEXT(WebGLTimerQueryEXT? query);
-    [WebGLHandlesContextLoss] boolean isQueryEXT(WebGLTimerQueryEXT? query);
-    void beginQueryEXT(GLenum target, WebGLTimerQueryEXT? query);
+    WebGLQuery? createQueryEXT();
+    void deleteQueryEXT(WebGLQuery? query);
+    [WebGLHandlesContextLoss] boolean isQueryEXT(WebGLQuery? query);
+    void beginQueryEXT(GLenum target, WebGLQuery? query);
     void endQueryEXT(GLenum target);
-    void queryCounterEXT(WebGLTimerQueryEXT? query, GLenum target);
+    void queryCounterEXT(WebGLQuery? query, GLenum target);
     any getQueryEXT(GLenum target, GLenum pname);
-    any getQueryObjectEXT(WebGLTimerQueryEXT? query, GLenum pname);
+    any getQueryObjectEXT(WebGLQuery? query, GLenum pname);
 };
