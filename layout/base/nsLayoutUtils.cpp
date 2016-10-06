@@ -6169,7 +6169,9 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
     // For the first-line baseline we also have to check for a table, and if
     // so, use the baseline of its first row.
     nsIAtom* fType = aFrame->GetType();
-    if (fType == nsGkAtoms::tableWrapperFrame) {
+    if (fType == nsGkAtoms::tableWrapperFrame  ||
+        fType == nsGkAtoms::flexContainerFrame ||
+        fType == nsGkAtoms::gridContainerFrame) {
       aResult->mBStart = 0;
       aResult->mBaseline = aFrame->GetLogicalBaseline(aWM);
       // This is what we want for the list bullet caller; not sure if
