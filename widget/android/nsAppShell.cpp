@@ -339,14 +339,16 @@ public:
     }
 
     static void NotifyAlertListener(jni::String::Param aName,
-                                    jni::String::Param aTopic)
+                                    jni::String::Param aTopic,
+                                    jni::String::Param aCookie)
     {
-        if (!aName || !aTopic) {
+        if (!aName || !aTopic || !aCookie) {
             return;
         }
 
         AndroidAlerts::NotifyListener(
-                aName->ToString(), aTopic->ToCString().get());
+                aName->ToString(), aTopic->ToCString().get(),
+                aCookie->ToString().get());
     }
 
     static void OnFullScreenPluginHidden(jni::Object::Param aView)
