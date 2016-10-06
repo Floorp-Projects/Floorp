@@ -80,31 +80,37 @@ Object height=100 (stylesheet width:400px height:400px)
 function check_size(id, width, height) {
   var element = document.getElementById(id);
   ok(element, "Plugin element " + id + " did not exist");
+  if (width != "auto") {
+    width = width + "px";
+  }
+  if (height != "auto") {
+    height = height + "px";
+  }
   var style = window.getComputedStyle(element, null);
-  is(style.width, width + "px", "Plugin element " + id + " had an incorrect width");
-  is(style.height, height + "px", "Plugin element " + id + " had an incorrect height");
+  is(style.width, width, "Plugin element " + id + " had an incorrect width");
+  is(style.height, height, "Plugin element " + id + " had an incorrect height");
 }
 
-check_size("embed1", 240, 200);
+check_size("embed1", "auto", "auto");
 check_size("embed2", 0, 0);
 check_size("embed3", 100, 100);
-check_size("embed4", 240, 100);
-check_size("embed5", 100, 200);
+check_size("embed4", "auto", 100);
+check_size("embed5", 100, "auto");
 check_size("embed6", 100, 100);
 check_size("embed7", 100, 100);
-check_size("embed8", 240, 100);
+check_size("embed8", "auto", 100);
 check_size("embed9", 400, 100);
 check_size("embed10", 400, 100);
 check_size("embed11", 400, 400);
 
-check_size("object1", 240, 200);
+check_size("object1", "auto", "auto");
 check_size("object2", 0, 0);
 check_size("object3", 100, 100);
-check_size("object4", 240, 100);
-check_size("object5", 100, 200);
+check_size("object4", "auto", 100);
+check_size("object5", 100, "auto");
 check_size("object6", 100, 100);
 check_size("object7", 100, 100);
-check_size("object8", 240, 100);
+check_size("object8", "auto", 100);
 check_size("object9", 400, 100);
 check_size("object10", 400, 100);
 check_size("object11", 400, 400);
