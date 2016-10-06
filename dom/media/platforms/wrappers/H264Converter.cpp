@@ -100,7 +100,7 @@ H264Converter::Input(MediaRawData* aSample)
   }
 
   if (!mNeedAVCC &&
-      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
+      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
     mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
                                  RESULT_DETAIL("ConvertSampleToAnnexB")));
     return;

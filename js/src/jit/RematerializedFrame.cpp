@@ -147,7 +147,7 @@ RematerializedFrame::trace(JSTracer* trc)
         TraceRoot(trc, &argsObj_, "remat ion frame argsobj");
     TraceRoot(trc, &returnValue_, "remat ion frame return value");
     TraceRoot(trc, &thisArgument_, "remat ion frame this");
-    TraceRootRange(trc, numActualArgs_ + isConstructing_ + script_->nfixed(),
+    TraceRootRange(trc, numArgSlots() + isConstructing_ + script_->nfixed(),
                    slots_, "remat ion frame stack");
 }
 

@@ -63,6 +63,8 @@ JAVA_CLASSPATH += \
     $(ANDROID_SUPPORT_V4_AAR_LIB) \
     $(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
     $(ANDROID_APPCOMPAT_V7_AAR_LIB) \
+    $(ANDROID_SUPPORT_VECTOR_DRAWABLE_AAR_LIB) \
+    $(ANDROID_ANIMATED_VECTOR_DRAWABLE_AAR_LIB) \
     $(ANDROID_CARDVIEW_V7_AAR_LIB) \
     $(ANDROID_DESIGN_AAR_LIB) \
     $(ANDROID_RECYCLERVIEW_V7_AAR_LIB) \
@@ -106,6 +108,8 @@ java_bundled_libs := \
     $(ANDROID_SUPPORT_V4_AAR_LIB) \
     $(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
     $(ANDROID_APPCOMPAT_V7_AAR_LIB) \
+    $(ANDROID_SUPPORT_VECTOR_DRAWABLE_AAR_LIB) \
+    $(ANDROID_ANIMATED_VECTOR_DRAWABLE_AAR_LIB) \
     $(ANDROID_CARDVIEW_V7_AAR_LIB) \
     $(ANDROID_DESIGN_AAR_LIB) \
     $(ANDROID_RECYCLERVIEW_V7_AAR_LIB) \
@@ -414,6 +418,8 @@ generated/org/mozilla/gecko/R.java: .aapt.deps ;
 # If native devices are enabled, add Google Play Services, build their resources
 # (no resources) generated/android/support/v4/R.java: .aapt.deps ;
 generated/android/support/v7/appcompat/R.java: .aapt.deps ;
+# (no resources) generated/android/support/graphics/drawable/animated/R.java: .aapt.deps ;
+# (no resources) generated/android/support/graphics/drawable/R.java: .aapt.deps ;
 generated/android/support/v7/cardview/R.java: .aapt.deps ;
 generated/android/support/design/R.java: .aapt.deps ;
 generated/android/support/v7/mediarouter/R.java: .aapt.deps ;

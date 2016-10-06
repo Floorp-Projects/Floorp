@@ -181,6 +181,18 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_LOAD_ERROR_PAGE = (1<<13);
 
   /**
+   * Force inheriting of the principalToInherit, overruling any owner
+   * that might be set on the channel. (Please note that channel.owner
+   * is deprecated and will be removed within Bug 1286838).
+   * Setting this flag will cause GetChannelResultPrincipal to return the
+   * principalToInherit set in the loadInfo.
+   *
+   * This will happen independently of the scheme of the URI that the
+   * channel is loading.
+   */
+  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL_OVERRULE_OWNER = (1<<14);
+
+  /**
    * This is the principal of the network request's caller/requester where
    * the resulting resource will be used. I.e. it is the principal which
    * will get access to the result of the request. (Where "get access to"
@@ -353,6 +365,14 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean forceInheritPrincipal;
 
   /**
+   * If forceInheritPrincipalOverruleOwner is true, the data coming from the
+   * channel should use principalToInherit for its principal, even when the
+   * data is loaded over http:// or another protocol that would normally use
+   * a URI-based principal.
+   */
+  [infallible] readonly attribute boolean forceInheritPrincipalOverruleOwner;
+
+  /**
    * If loadingSandboxed is true, the data coming from the channel is
    * being loaded sandboxed, so it should have a nonce origin and
    * hence should use a NullPrincipal.
@@ -476,6 +496,22 @@ interface nsILoadInfo : nsISupports
    * Note: For other cases, frameOuterWindowID is 0.
    */
   [infallible] readonly attribute unsigned long long frameOuterWindowID;
+
+  /**
+   * For all loads of none TYPE_DOUCMENT this function resets the 
+   * LoadingPrincipal, the TriggeringPrincipal and the
+   * PrincipalToInherit to a freshly created NullPrincipal which inherits
+   * the current origin attributes from the loadinfo.
+   * For loads of TYPE_DOCUMENT this function resets only the
+   * TriggeringPrincipal as well as the PrincipalToInherit to a freshly
+   * created NullPrincipal which inherits the origin attributes from
+   * the loadInfo. (Please note that the LoadingPrincipal for TYPE_DOCUMENT
+   * loads is always null.)
+   *
+   * WARNING: Please only use that function if you know exactly what
+   * you are doing!!!
+   */
+  void resetPrincipalsToNullPrincipal();
 
   /**
    * Customized NeckoOriginAttributes within LoadInfo to allow overwriting of the

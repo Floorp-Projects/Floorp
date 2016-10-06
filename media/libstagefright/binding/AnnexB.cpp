@@ -18,7 +18,7 @@ namespace mp4_demuxer
 static const uint8_t kAnnexBDelimiter[] = { 0, 0, 0, 1 };
 
 bool
-AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample)
+AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
 {
   MOZ_ASSERT(aSample);
 
@@ -59,7 +59,7 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample)
   }
 
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
-  if (aSample->mKeyframe) {
+  if (aAddSPS && aSample->mKeyframe) {
     RefPtr<MediaByteBuffer> annexB =
       ConvertExtraDataToAnnexB(aSample->mExtraData);
     if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {

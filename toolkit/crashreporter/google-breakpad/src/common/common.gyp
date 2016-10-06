@@ -35,6 +35,11 @@
       ['OS=="linux"', {
         'defines': ['HAVE_A_OUT_H'],
       }],
+      ['OS!="android"', {'sources/': [['exclude', '(^|/)android/']]}],
+      ['OS!="linux"', {'sources/': [['exclude', '(^|/)linux/']]}],
+      ['OS!="mac"', {'sources/': [['exclude', '(^|/)mac/']]}],
+      ['OS!="solaris"', {'sources/': [['exclude', '(^|/)solaris/']]}],
+      ['OS!="win"', {'sources/': [['exclude', '(^|/)windows/']]}],
     ],
   },
   'targets': [
@@ -70,6 +75,8 @@
         'dwarf/dwarf2reader.cc',
         'dwarf/dwarf2reader.h',
         'dwarf/dwarf2reader_test_common.h',
+	'dwarf/elf_reader.cc',
+	'dwarf/elf_reader.h',
         'dwarf/functioninfo.cc',
         'dwarf/functioninfo.h',
         'dwarf/line_state_machine.h',

@@ -6,7 +6,7 @@
 window.onload=function(){
 var c=document.getElementById("myCanvas").getContext("2d");
 c.beginPath();
-c.mozDash = [1,1];
+c.setLineDash([1,1]);
 c.strokeRect(10, 10, 200, 200);
 }
 </script>

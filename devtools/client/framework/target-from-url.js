@@ -14,6 +14,13 @@ const { Task } = require("devtools/shared/task");
 /**
  * Construct a Target for a given URL object having various query parameters:
  *
+ * host:
+ *    {String} The hostname or IP address to connect to.
+ * port:
+ *    {Number} The TCP port to connect to, to use with `host` argument.
+ * ws:
+ *    {Boolean} If true, connect via websocket instread of regular TCP connection.
+ *
  * type: tab, process
  *    {String} The type of target to connect to.  Currently tabs and processes are supported types.
  *
@@ -45,9 +52,7 @@ exports.targetFromURL = Task.async(function* (url) {
   // (handy to debug chrome stuff in a child process)
   let chrome = params.has("chrome");
 
-  // Once about:debugging start supporting remote targets and use this helper,
-  // client will also be defined by url params.
-  let client = createClient();
+  let client = yield createClient(params);
 
   yield client.connect();
 
@@ -95,12 +100,21 @@ exports.targetFromURL = Task.async(function* (url) {
   return TargetFactory.forRemoteTab({ client, form, chrome, isTabActor });
 });
 
-function createClient() {
-  // Setup a server if we don't have one already running
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
+function* createClient(params) {
+  let host = params.get("host");
+  let port = params.get("port");
+  let webSocket = !!params.get("ws");
 
-  return new DebuggerClient(DebuggerServer.connectPipe());
+  let transport;
+  if (port) {
+    transport = yield DebuggerClient.socketConnect({ host, port, webSocket });
+  } else {
+    // Setup a server if we don't have one already running
+    if (!DebuggerServer.initialized) {
+      DebuggerServer.init();
+      DebuggerServer.addBrowserActors();
+    }
+    transport = DebuggerServer.connectPipe()
+  }
+  return new DebuggerClient(transport);
 }

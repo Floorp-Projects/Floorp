@@ -218,9 +218,6 @@ public:
 
   void GetURL(nsString& aURL);
 
-  void ActivateUpdateHitRegion();
-  void DeactivateUpdateHitRegion();
-
   // Properly retrieves documentSize of any subdocument type.
   nsresult GetWindowDimensions(nsIntRect& aRect);
 

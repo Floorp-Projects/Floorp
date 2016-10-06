@@ -237,6 +237,10 @@ IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
     return nullptr;
   }
 
+  if (!gfx::DeviceManagerDx::Get()->AlphaTextureSharingWorks()) {
+    return nullptr;
+  }
+
   if (mData.mYStride < 0 || mData.mCbCrStride < 0) {
     // D3D11 only supports unsigned stride values.
     return nullptr;

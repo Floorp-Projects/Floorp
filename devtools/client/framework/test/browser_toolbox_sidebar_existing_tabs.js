@@ -72,6 +72,7 @@ add_task(function* () {
   ok(!sidebar.getTabPanel("tabpanel2"), "Tabpanel 2 was removed correctly");
 
   sidebar.destroy();
+  yield toolbox.destroy();
   gDevTools.unregisterTool(testToolDefinition.id);
   gBrowser.removeCurrentTab();
 });

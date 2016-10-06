@@ -391,6 +391,15 @@ checkbox:-moz-focusring {
   filter: var(--checked-icon-filter);
 }
 
+/* Checked/opened icon button background */
+.theme-firebug .devtools-button[checked]:empty,
+.theme-firebug .devtools-button[open]:empty,
+.theme-firebug .devtools-button.checked,
+.theme-firebug .devtools-toolbarbutton:not([label])[checked=true],
+.theme-firebug .devtools-toolbarbutton:not([label])[open=true] {
+  background-color: #C8D8E7;
+}
+
 /* Icon-and-text buttons */
 .devtools-toolbarbutton.icon-and-text .toolbarbutton-text {
   margin-inline-start: .5em !important;

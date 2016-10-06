@@ -35,6 +35,7 @@ task:
       HEAD_REF: '{{head_ref}}'
     features:
       dind: true
+      chainOfTrust: true
     image: '{{#docker_image}}image_builder{{/docker_image}}'
     command:
       - /bin/bash

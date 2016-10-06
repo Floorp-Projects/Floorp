@@ -139,19 +139,19 @@
         ]]></getter>
       </property>
 
-      <property name="formValidationAnchor" readonly="true">
+      <property name="popupAnchor" readonly="true">
         <getter><![CDATA[
-        if (this.mCurrentTab._formValidationAnchor) {
-          return this.mCurrentTab._formValidationAnchor;
+        if (this.mCurrentTab._popupAnchor) {
+          return this.mCurrentTab._popupAnchor;
         }
         let stack = this.mCurrentBrowser.parentNode;
-        // Create an anchor for the form validation popup
+        // Create an anchor for the popup
         const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-        let formValidationAnchor = document.createElementNS(NS_XUL, "hbox");
-        formValidationAnchor.className = "form-validation-anchor";
-        formValidationAnchor.hidden = true;
-        stack.appendChild(formValidationAnchor);
-        return this.mCurrentTab._formValidationAnchor = formValidationAnchor;
+        let popupAnchor = document.createElementNS(NS_XUL, "hbox");
+        popupAnchor.className = "popup-anchor";
+        popupAnchor.hidden = true;
+        stack.appendChild(popupAnchor);
+        return this.mCurrentTab._popupAnchor = popupAnchor;
         ]]></getter>
       </property>
 

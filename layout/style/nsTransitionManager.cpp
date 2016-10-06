@@ -107,12 +107,12 @@ ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
       MOZ_ASSERT(mProperties.Length() == 1 &&
                  mProperties[0].mSegments.Length() == 1,
                  "The transition should have one property and one segment");
-      mProperties[0].mSegments[0].mFromValue = Move(startValue);
       nsCSSValue cssValue;
       DebugOnly<bool> uncomputeResult =
         StyleAnimationValue::UncomputeValue(mProperties[0].mProperty,
                                             startValue,
                                             cssValue);
+      mProperties[0].mSegments[0].mFromValue = Move(startValue);
       MOZ_ASSERT(uncomputeResult, "UncomputeValue should not fail");
       MOZ_ASSERT(mKeyframes.Length() == 2,
           "Transitions should have exactly two animation keyframes");

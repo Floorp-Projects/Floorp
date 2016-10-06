@@ -64,10 +64,13 @@ class DataBuffer {
   // Write will do a new allocation and expand the size of the buffer if needed.
   // Returns the offset of the end of the write.
   size_t Write(size_t index, const uint8_t* val, size_t count) {
+    assert(val);
     if (index + count > len_) {
       size_t newlen = index + count;
       uint8_t* tmp = new uint8_t[newlen];  // Always > 0.
-      memcpy(static_cast<void*>(tmp), static_cast<const void*>(data_), len_);
+      if (data_) {
+        memcpy(static_cast<void*>(tmp), static_cast<const void*>(data_), len_);
+      }
       if (index > len_) {
         memset(static_cast<void*>(tmp + len_), 0, index - len_);
       }
@@ -75,8 +78,10 @@ class DataBuffer {
       data_ = tmp;
       len_ = newlen;
     }
-    memcpy(static_cast<void*>(data_ + index), static_cast<const void*>(val),
-           count);
+    if (data_) {
+      memcpy(static_cast<void*>(data_ + index), static_cast<const void*>(val),
+             count);
+    }
     return index + count;
   }
 
@@ -116,6 +121,7 @@ class DataBuffer {
 
   void Splice(const uint8_t* ins, size_t ins_len, size_t index,
               size_t remove = 0) {
+    assert(ins);
     uint8_t* old_value = data_;
     size_t old_len = len_;
 

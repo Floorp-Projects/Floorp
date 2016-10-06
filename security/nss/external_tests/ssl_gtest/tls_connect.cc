@@ -486,7 +486,8 @@ void TlsConnectTestBase::SetupForResume() {
 }
 
 void TlsConnectTestBase::ZeroRttSendReceive(
-    bool expect_readable, std::function<bool()> post_clienthello_check) {
+    bool expect_writable, bool expect_readable,
+    std::function<bool()> post_clienthello_check) {
   const char* k0RttData = "ABCDEF";
   const PRInt32 k0RttDataLen = static_cast<PRInt32>(strlen(k0RttData));
 
@@ -496,7 +497,11 @@ void TlsConnectTestBase::ZeroRttSendReceive(
   }
   PRInt32 rv =
       PR_Write(client_->ssl_fd(), k0RttData, k0RttDataLen);  // 0-RTT write.
-  EXPECT_EQ(k0RttDataLen, rv);
+  if (expect_writable) {
+    EXPECT_EQ(k0RttDataLen, rv);
+  } else {
+    EXPECT_EQ(SECFailure, rv);
+  }
   server_->Handshake();  // Consume ClientHello, EE, Finished.
 
   std::vector<uint8_t> buf(k0RttDataLen);
