@@ -20,7 +20,6 @@ UNIFIED_SOURCES += [
     'AccessibleWrap.cpp',
     'ApplicationAccessibleWrap.cpp',
     'ARIAGridAccessibleWrap.cpp',
-    'ChildIDThunk.cpp',
     'Compatibility.cpp',
     'DocAccessibleWrap.cpp',
     'EnumVariant.cpp',
