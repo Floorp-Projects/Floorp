@@ -26,6 +26,12 @@ class TestWindowPosition(MarionetteTestCase):
             with self.assertRaises(InvalidArgumentException):
                 self.marionette.set_window_position(x, y)
 
+    def test_out_of_bounds_arguments(self):
+        with self.assertRaises(InvalidArgumentException):
+            self.marionette.set_window_position(-1, 0)
+        with self.assertRaises(InvalidArgumentException):
+            self.marionette.set_window_position(0, -1)
+
     def test_move(self):
         old_position = self.marionette.get_window_position()
         new_position = {"x": old_position["x"] + 10, "y": old_position["y"] + 10}
