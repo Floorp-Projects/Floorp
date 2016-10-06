@@ -1132,7 +1132,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
           // For visual movement, pos.mContentOffset depends on the direction-
           // ality of the first/last frame on the line (theFrame), and the caret
           // directionality must correspond.
-          FrameBidiData bidiData = nsBidi::GetBidiData(theFrame);
+          FrameBidiData bidiData = theFrame->GetBidiData();
           SetCaretBidiLevel(visualMovement ? bidiData.embeddingLevel
                                            : bidiData.baseLevel);
           break;
@@ -1143,7 +1143,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
           if ((pos.mContentOffset != frameStart &&
                pos.mContentOffset != frameEnd) ||
               eSelectLine == aAmount) {
-            SetCaretBidiLevel(nsBidi::GetEmbeddingLevel(theFrame));
+            SetCaretBidiLevel(theFrame->GetEmbeddingLevel());
           }
           else {
             BidiLevelFromMove(mShell, pos.mResultContent, pos.mContentOffset,
@@ -1373,7 +1373,7 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent*        aNode,
     direction = eDirNext;
   else {
     // we are neither at the beginning nor at the end of the frame, so we have no worries
-    nsBidiLevel currentLevel = nsBidi::GetEmbeddingLevel(currentFrame);
+    nsBidiLevel currentLevel = currentFrame->GetEmbeddingLevel();
     levels.SetData(currentFrame, currentFrame, currentLevel, currentLevel);
     return levels;
   }
@@ -1388,9 +1388,9 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent*        aNode,
   if (NS_FAILED(rv))
     newFrame = nullptr;
 
-  FrameBidiData currentBidi = nsBidi::GetBidiData(currentFrame);
+  FrameBidiData currentBidi = currentFrame->GetBidiData();
   nsBidiLevel currentLevel = currentBidi.embeddingLevel;
-  nsBidiLevel newLevel = newFrame ? nsBidi::GetEmbeddingLevel(newFrame)
+  nsBidiLevel newLevel = newFrame ? newFrame->GetEmbeddingLevel()
                                   : currentBidi.baseLevel;
   
   // If not jumping lines, disregard br frames, since they might be positioned incorrectly.
@@ -1451,7 +1451,7 @@ nsFrameSelection::GetFrameFromLevel(nsIFrame    *aFrameIn,
     foundFrame = frameTraversal->CurrentItem();
     if (!foundFrame)
       return NS_ERROR_FAILURE;
-    foundLevel = nsBidi::GetEmbeddingLevel(foundFrame);
+    foundLevel = foundFrame->GetEmbeddingLevel();
 
   } while (foundLevel > aBidiLevel);
 
@@ -1551,7 +1551,7 @@ void nsFrameSelection::BidiLevelFromClick(nsIContent *aNode,
   if (!clickInFrame)
     return;
 
-  SetCaretBidiLevel(nsBidi::GetEmbeddingLevel(clickInFrame));
+  SetCaretBidiLevel(clickInFrame->GetEmbeddingLevel());
 }
 
 
@@ -6428,7 +6428,7 @@ Selection::SelectionLanguageChange(bool aLangRTL)
     return NS_ERROR_FAILURE;
   }
 
-  nsBidiLevel level = nsBidi::GetEmbeddingLevel(focusFrame);
+  nsBidiLevel level = focusFrame->GetEmbeddingLevel();
   int32_t focusOffset = static_cast<int32_t>(FocusOffset());
   if ((focusOffset != frameStart) && (focusOffset != frameEnd))
     // the cursor is not at a frame boundary, so the level of both the characters (logically) before and after the cursor
