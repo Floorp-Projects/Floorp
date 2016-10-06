@@ -189,6 +189,15 @@ private:
     bool isRequiredBaseMethod(const CXXMethodDecl *Method);
   };
 
+/*
+ *  This is a companion checker for OverrideBaseCallChecker that rejects
+ *  the usage of MOZ_REQUIRED_BASE_METHOD on non-virtual base methods.
+ */
+  class OverrideBaseCallUsageChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker Scope;
   ArithmeticArgChecker ArithmeticArg;
   TrivialCtorDtorChecker TrivialCtorDtor;
@@ -208,6 +217,7 @@ private:
   KungFuDeathGripChecker KungFuDeathGrip;
   SprintfLiteralChecker SprintfLiteral;
   OverrideBaseCallChecker OverrideBaseCall;
+  OverrideBaseCallUsageChecker OverrideBaseCallUsage;
   MatchFinder AstMatcher;
 };
 
@@ -949,6 +959,17 @@ AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
   // Must have definition and should inherit other classes
   return Decl && Decl->hasDefinition() && Decl->getNumBases();
 }
+
+AST_MATCHER(CXXMethodDecl, isRequiredBaseMethod) {
+  const CXXMethodDecl *Decl = Node.getCanonicalDecl();
+  return Decl
+      && MozChecker::hasCustomAnnotation(Decl, "moz_required_base_method");
+}
+
+AST_MATCHER(CXXMethodDecl, isNonVirtual) {
+  const CXXMethodDecl *Decl = Node.getCanonicalDecl();
+  return Decl && !Decl->isVirtual();
+}
 }
 }
 
@@ -1290,6 +1311,10 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
 
   AstMatcher.addMatcher(cxxRecordDecl(hasBaseClasses()).bind("class"),
       &OverrideBaseCall);
+
+  AstMatcher.addMatcher(
+      cxxMethodDecl(isNonVirtual(), isRequiredBaseMethod()).bind("method"),
+      &OverrideBaseCallUsage);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -2081,6 +2106,17 @@ void DiagnosticsMatcher::OverrideBaseCallChecker::run(
           << Decl->getName();
     }
   }
+}
+
+void DiagnosticsMatcher::OverrideBaseCallUsageChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error,
+      "MOZ_REQUIRED_BASE_METHOD can be used only on virtual methods");
+  const CXXMethodDecl *Method = Result.Nodes.getNodeAs<CXXMethodDecl>("method");
+
+  Diag.Report(Method->getLocation(), ErrorID);
 }
 
 class MozCheckAction : public PluginASTAction {
