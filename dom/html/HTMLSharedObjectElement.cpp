@@ -108,6 +108,12 @@ HTMLSharedObjectElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
 #endif // #ifdef XP_MACOSX
 
+void
+HTMLSharedObjectElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  nsImageLoadingContent::AsyncEventRunning(aEvent);
+}
+
 nsresult
 HTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
                                     nsIContent *aParent,
