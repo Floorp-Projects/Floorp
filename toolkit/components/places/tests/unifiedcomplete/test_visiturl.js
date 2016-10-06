@@ -1,7 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-
 add_task(function*() {
   do_print("visit url, no protocol");
   yield check_autocomplete({
@@ -37,14 +33,48 @@ add_task(function*() {
   });
 
   // And hosts with no dot in them are special, due to requiring whitelisting.
-  do_print("visit url, host matching visited host but not visited url, non-whitelisted host");
-  yield PlacesTestUtils.addVisits([
-    { uri: NetUtil.newURI("http://mozilla/bourbon/"), title: "Mozilla Bourbon", transition: TRANSITION_TYPED },
-  ]);
+  do_print("non-whitelisted host");
+  yield check_autocomplete({
+    search: "firefox",
+    searchParam: "enable-actions",
+    matches: [ makeSearchMatch("firefox", { heuristic: true }) ]
+  });
+
+  do_print("url with non-whitelisted host");
+  yield check_autocomplete({
+    search: "firefox/get",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("firefox/get", "http://firefox/get", { heuristic: true }) ]
+  });
+
+  Services.prefs.setBoolPref("browser.fixup.domainwhitelist.firefox", true);
+  do_register_cleanup(() => {
+    Services.prefs.clearUserPref("browser.fixup.domainwhitelist.firefox");
+  });
+
+  do_print("whitelisted host");
+  yield check_autocomplete({
+    search: "firefox",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("firefox", "http://firefox/", { heuristic: true }) ]
+  });
+
+  do_print("url with whitelisted host");
+  yield check_autocomplete({
+    search: "firefox/get",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("firefox/get", "http://firefox/get", { heuristic: true }) ]
+  });
+
+  do_print("visit url, host matching visited host but not visited url, whitelisted host");
+  Services.prefs.setBoolPref("browser.fixup.domainwhitelist.mozilla", true);
+  do_register_cleanup(() => {
+    Services.prefs.clearUserPref("browser.fixup.domainwhitelist.mozilla");
+  });
   yield check_autocomplete({
     search: "mozilla/rum",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch("mozilla/rum", { heuristic: true }) ]
+    matches: [ makeVisitMatch("mozilla/rum", "http://mozilla/rum", { heuristic: true }) ]
   });
 
   // ipv4 and ipv6 literal addresses should offer to visit.
@@ -63,6 +93,7 @@ add_task(function*() {
   });
 
   // Setting keyword.enabled to false should always try to visit.
+  let keywordEnabled = Services.prefs.getBoolPref("keyword.enabled");
   Services.prefs.setBoolPref("keyword.enabled", false);
   do_register_cleanup(() => {
     Services.prefs.clearUserPref("keyword.enabled");
@@ -72,5 +103,41 @@ add_task(function*() {
     search: "bacon",
     searchParam: "enable-actions",
     matches: [ makeVisitMatch("bacon", "http://bacon/", { heuristic: true }) ]
+  });
+  Services.prefs.setBoolPref("keyword.enabled", keywordEnabled);
+
+  do_print("visit url, scheme+host");
+  yield check_autocomplete({
+    search: "http://example",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("http://example", "http://example/", { heuristic: true }) ]
+  });
+
+  do_print("visit url, scheme+host");
+  yield check_autocomplete({
+    search: "ftp://example",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("ftp://example", "ftp://example/", { heuristic: true }) ]
+  });
+
+  do_print("visit url, host+port");
+  yield check_autocomplete({
+    search: "example:8080",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("example:8080", "http://example:8080/", { heuristic: true }) ]
+  });
+
+  do_print("numerical operations that look like urls should search");
+  yield check_autocomplete({
+    search: "123/12",
+    searchParam: "enable-actions",
+    matches: [ makeSearchMatch("123/12", { heuristic: true }) ]
+  });
+
+  do_print("numerical operations that look like urls should search");
+  yield check_autocomplete({
+    search: "123.12/12.1",
+    searchParam: "enable-actions",
+    matches: [ makeSearchMatch("123.12/12.1", { heuristic: true }) ]
   });
 });
