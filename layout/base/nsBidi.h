@@ -45,60 +45,6 @@
  */
 
 /**
- * nsBidiLevel is the type of the level values in this
- * Bidi implementation.
- * It holds an embedding level and indicates the visual direction
- * by its bit 0 (even/odd value).<p>
- *
- * <li><code>aParaLevel</code> can be set to the
- * pseudo-level values <code>NSBIDI_DEFAULT_LTR</code>
- * and <code>NSBIDI_DEFAULT_RTL</code>.</li></ul>
- *
- * @see nsBidi::SetPara
- *
- * <p>The related constants are not real, valid level values.
- * <code>NSBIDI_DEFAULT_XXX</code> can be used to specify
- * a default for the paragraph level for
- * when the <code>SetPara</code> function
- * shall determine it but there is no
- * strongly typed character in the input.<p>
- *
- * Note that the value for <code>NSBIDI_DEFAULT_LTR</code> is even
- * and the one for <code>NSBIDI_DEFAULT_RTL</code> is odd,
- * just like with normal LTR and RTL level values -
- * these special values are designed that way. Also, the implementation
- * assumes that NSBIDI_MAX_EXPLICIT_LEVEL is odd.
- *
- * @see NSBIDI_DEFAULT_LTR
- * @see NSBIDI_DEFAULT_RTL
- * @see NSBIDI_LEVEL_OVERRIDE
- * @see NSBIDI_MAX_EXPLICIT_LEVEL
- */
-typedef uint8_t nsBidiLevel;
-
-/** Paragraph level setting.
- *  If there is no strong character, then set the paragraph level to 0 (left-to-right).
- */
-#define NSBIDI_DEFAULT_LTR 0xfe
-
-/** Paragraph level setting.
- *  If there is no strong character, then set the paragraph level to 1 (right-to-left).
- */
-#define NSBIDI_DEFAULT_RTL 0xff
-
-/**
- * Maximum explicit embedding level.
- * (The maximum resolved level can be up to <code>NSBIDI_MAX_EXPLICIT_LEVEL+1</code>).
- *
- */
-#define NSBIDI_MAX_EXPLICIT_LEVEL 125
-
-/** Bit flag for level input.
- *  Overrides directional properties.
- */
-#define NSBIDI_LEVEL_OVERRIDE 0x80
-
-/**
  * Special value which can be returned by the mapping functions when a logical
  * index has no corresponding visual index or vice-versa.
  * @see GetVisualIndex
@@ -107,18 +53,6 @@ typedef uint8_t nsBidiLevel;
  * @see GetLogicalMap
  */
 #define NSBIDI_MAP_NOWHERE (-1)
-
-/**
- * <code>nsBidiDirection</code> values indicate the text direction.
- */
-enum nsBidiDirection {
-  /** All left-to-right text This is a 0 value. */
-  NSBIDI_LTR,
-  /** All right-to-left text This is a 1 value. */
-  NSBIDI_RTL,
-  /** Mixed-directional text. */
-  NSBIDI_MIXED
-};
 
 /* miscellaneous definitions ------------------------------------------------ */
 
@@ -412,23 +346,6 @@ struct LevState {
     nsBidiLevel runLevel;               /* run level before implicit solving */
 };
 
-namespace mozilla {
-
-// Pseudo bidi embedding level indicating nonexistence.
-static const nsBidiLevel kBidiLevelNone = 0xff;
-
-struct FrameBidiData
-{
-  nsBidiLevel baseLevel;
-  nsBidiLevel embeddingLevel;
-  // The embedding level of virtual bidi formatting character before
-  // this frame if any. kBidiLevelNone is used to indicate nonexistence
-  // or unnecessity of such virtual character.
-  nsBidiLevel precedingControl;
-};
-
-} // namespace mozilla
-
 /**
  * This class holds information about a paragraph of text
  * with Bidi-algorithm-related details, or about one line of
@@ -668,23 +585,6 @@ public:
    * @param aDestSize will receive the number of characters that were written to <code>aDest</code>.
    */
   nsresult WriteReverse(const char16_t *aSrc, int32_t aSrcLength, char16_t *aDest, uint16_t aOptions, int32_t *aDestSize);
-
-  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BidiDataProperty, mozilla::FrameBidiData)
-
-  static mozilla::FrameBidiData GetBidiData(nsIFrame* aFrame)
-  {
-    return aFrame->Properties().Get(BidiDataProperty());
-  }
-
-  static nsBidiLevel GetBaseLevel(nsIFrame* aFrame)
-  {
-    return GetBidiData(aFrame).baseLevel;
-  }
-
-  static nsBidiLevel GetEmbeddingLevel(nsIFrame* aFrame)
-  {
-    return GetBidiData(aFrame).embeddingLevel;
-  }
 
 protected:
   friend class nsBidiPresUtils;
