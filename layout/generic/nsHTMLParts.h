@@ -171,6 +171,8 @@ nsIFrame*
 NS_NewRangeFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
+NS_NewDateTimeControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsBlockFrame*
 NS_NewDetailsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
