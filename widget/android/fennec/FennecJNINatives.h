@@ -90,25 +90,6 @@ const JNINativeMethod PresentationMediaPlayerManager::Natives<Impl>::methods[] =
 };
 
 template<class Impl>
-class ScreenManagerHelper::Natives : public mozilla::jni::NativeImpl<ScreenManagerHelper, Impl>
-{
-public:
-    static const JNINativeMethod methods[2];
-};
-
-template<class Impl>
-const JNINativeMethod ScreenManagerHelper::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<ScreenManagerHelper::AddDisplay_t>(
-            mozilla::jni::NativeStub<ScreenManagerHelper::AddDisplay_t, Impl>
-            ::template Wrap<&Impl::AddDisplay>),
-
-    mozilla::jni::MakeNativeMethod<ScreenManagerHelper::RemoveDisplay_t>(
-            mozilla::jni::NativeStub<ScreenManagerHelper::RemoveDisplay_t, Impl>
-            ::template Wrap<&Impl::RemoveDisplay>)
-};
-
-template<class Impl>
 class Telemetry::Natives : public mozilla::jni::NativeImpl<Telemetry, Impl>
 {
 public:
