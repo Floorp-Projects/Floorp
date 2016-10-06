@@ -1368,11 +1368,14 @@ NS_IMETHODIMP nsChildView::Invalidate(const LayoutDeviceIntRect& aRect)
 }
 
 bool
-nsChildView::WidgetTypeSupportsAcceleration()
+nsChildView::ComputeShouldAccelerate()
 {
   // Don't use OpenGL for transparent windows or for popup windows.
-  return mView && [[mView window] isOpaque] &&
-         ![[mView window] isKindOfClass:[PopupWindow class]]
+  if (!mView || ![[mView window] isOpaque] ||
+      [[mView window] isKindOfClass:[PopupWindow class]])
+    return false;
+
+  return nsBaseWidget::ComputeShouldAccelerate();
 }
 
 bool

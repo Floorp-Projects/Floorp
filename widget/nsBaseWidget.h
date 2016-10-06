@@ -272,8 +272,7 @@ public:
                             const mozilla::WidgetKeyboardEvent& aEvent,
                             DoCommandCallback aCallback,
                             void* aCallbackData) override { return false; }
-  bool                    ComputeShouldAccelerate();
-  virtual bool            WidgetTypeSupportsAcceleration() { return true; }
+  virtual bool            ComputeShouldAccelerate();
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override { return nsIMEUpdatePreference(); }
   NS_IMETHOD              OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual already_AddRefed<nsIWidget>

@@ -871,12 +871,6 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     return NS_OK;
 }
 
-bool
-nsWindow::WidgetTypeSupportsAcceleration()
-{
-  return !IsSmallPopup();
-}
-
 void
 nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 {

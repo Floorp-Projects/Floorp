@@ -363,7 +363,6 @@ public:
     LayoutDeviceIntPoint GdkEventCoordsToDevicePixels(gdouble x, gdouble y);
     LayoutDeviceIntRect GdkRectToDevicePixels(GdkRectangle rect);
 
-    virtual bool WidgetTypeSupportsAcceleration() override;
 protected:
     virtual ~nsWindow();
 
