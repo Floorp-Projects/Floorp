@@ -114,7 +114,19 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                     mController.getTransportControls().stop();
                 }
                 break;
+            case FAVICON:
+                if (playingTab == tab) {
+                    final String actionForPendingIntent = isMediaPlaying() ?
+                        ACTION_PAUSE : ACTION_RESUME;
+                    notifyControlInterfaceChanged(actionForPendingIntent);
+                }
+                break;
         }
+    }
+
+    private boolean isMediaPlaying() {
+        return mActionState.equals(ACTION_RESUME) ||
+               mActionState.equals(ACTION_RESUME_BY_AUDIO_FOCUS);
     }
 
     private void initialize() {
