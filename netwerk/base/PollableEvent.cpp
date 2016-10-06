@@ -40,12 +40,14 @@ static void LazyInitSocket()
   sPollableEventLayerMethodsPtr = &sPollableEventLayerMethods;
 }
 
-static bool NewTCPSocketPair(PRFileDesc *fd[])
+static bool NewTCPSocketPair(PRFileDesc *fd[], bool aSetRecvBuff)
 {
   // this is a replacement for PR_NewTCPSocketPair that manually
   // sets the recv buffer to 64K. A windows bug (1248358)
   // can result in using an incompatible rwin and window
   // scale option on localhost pipes if not set before connect.
+
+  SOCKET_LOG(("NewTCPSocketPair %s a recv buffer tuning\n", aSetRecvBuff ? "with" : "without"));
 
   PRFileDesc *listener = nullptr;
   PRFileDesc *writer = nullptr;
@@ -66,7 +68,10 @@ static bool NewTCPSocketPair(PRFileDesc *fd[])
   if (!listener) {
     goto failed;
   }
-  PR_SetSocketOption(listener, &recvBufferOpt);
+
+  if (aSetRecvBuff) {
+    PR_SetSocketOption(listener, &recvBufferOpt);
+  }
   PR_SetSocketOption(listener, &nodelayOpt);
 
   PRNetAddr listenAddr;
@@ -82,7 +87,9 @@ static bool NewTCPSocketPair(PRFileDesc *fd[])
   if (!writer) {
     goto failed;
   }
-  PR_SetSocketOption(writer, &recvBufferOpt);
+  if (aSetRecvBuff) {
+    PR_SetSocketOption(writer, &recvBufferOpt);
+  }
   PR_SetSocketOption(writer, &nodelayOpt);
   PR_SetSocketOption(writer, &noblockOpt);
   PRNetAddr writerAddr;
@@ -97,11 +104,13 @@ static bool NewTCPSocketPair(PRFileDesc *fd[])
     }
   }
 
-  reader = PR_Accept(listener, &listenAddr, PR_INTERVAL_NO_TIMEOUT);
+  reader = PR_Accept(listener, &listenAddr, PR_MillisecondsToInterval(200));
   if (!reader) {
     goto failed;
   }
-  PR_SetSocketOption(reader, &recvBufferOpt);
+  if (aSetRecvBuff) {
+    PR_SetSocketOption(reader, &recvBufferOpt);
+  }
   PR_SetSocketOption(reader, &nodelayOpt);
   PR_SetSocketOption(reader, &noblockOpt);
   PR_Close(listener);
@@ -155,10 +164,35 @@ PollableEvent::PollableEvent()
   SOCKET_LOG(("PollableEvent() using socket pair\n"));
   PRFileDesc *fd[2];
   LazyInitSocket();
-  if (NewTCPSocketPair(fd)) {
+
+  // Try with a increased recv buffer first (bug 1248358).
+  if (NewTCPSocketPair(fd, true)) {
+    mReadFD = fd[0];
+    mWriteFD = fd[1];
+  // If the previous fails try without recv buffer increase (bug 1305436).
+  } else if (NewTCPSocketPair(fd, false)) {
+    mReadFD = fd[0];
+    mWriteFD = fd[1];
+  // If both fail, try the old version.
+  } else if (PR_NewTCPSocketPair(fd) == PR_SUCCESS) {
     mReadFD = fd[0];
     mWriteFD = fd[1];
 
+    PRSocketOptionData socket_opt;
+    DebugOnly<PRStatus> status;
+    socket_opt.option = PR_SockOpt_NoDelay;
+    socket_opt.value.no_delay = true;
+    PR_SetSocketOption(mWriteFD, &socket_opt);
+    PR_SetSocketOption(mReadFD, &socket_opt);
+    socket_opt.option = PR_SockOpt_Nonblocking;
+    socket_opt.value.non_blocking = true;
+    status = PR_SetSocketOption(mWriteFD, &socket_opt);
+    MOZ_ASSERT(status == PR_SUCCESS);
+    status = PR_SetSocketOption(mReadFD, &socket_opt);
+    MOZ_ASSERT(status == PR_SUCCESS);
+  }
+
+  if (mReadFD && mWriteFD) {
     // compatibility with LSPs such as McAfee that assume a NSPR
     // layer for read ala the nspr Pollable Event - Bug 698882. This layer is a nop.
     PRFileDesc *topLayer =
