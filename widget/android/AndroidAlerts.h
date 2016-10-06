@@ -6,7 +6,7 @@
 #ifndef mozilla_widget_AndroidAlerts_h__
 #define mozilla_widget_AndroidAlerts_h__
 
-#include "nsClassHashtable.h"
+#include "nsInterfaceHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsIAlertsService.h"
@@ -25,22 +25,17 @@ public:
 
   AndroidAlerts() {}
 
-  static void NotifyListener(const nsAString& aName, const char* aTopic);
+  static void NotifyListener(const nsAString& aName, const char* aTopic,
+                             const char16_t* aCookie);
 
 protected:
   virtual ~AndroidAlerts()
   {
-      sAlertInfoMap = nullptr;
+      sListenerMap = nullptr;
   }
 
-  struct AlertInfo
-  {
-      nsCOMPtr<nsIObserver> listener;
-      nsString cookie;
-  };
-
-  using AlertInfoMap = nsClassHashtable<nsStringHashKey, AlertInfo>;
-  static StaticAutoPtr<AlertInfoMap> sAlertInfoMap;
+  using ListenerMap = nsInterfaceHashtable<nsStringHashKey, nsIObserver>;
+  static StaticAutoPtr<ListenerMap> sListenerMap;
 };
 
 } // namespace widget
