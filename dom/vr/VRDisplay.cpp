@@ -504,20 +504,41 @@ VRDisplay::GetStageParameters()
   return mStageParameters;
 }
 
+void
+VRDisplay::UpdateFrameInfo()
+{
+  /**
+   * The WebVR 1.1 spec Requires that VRDisplay.getPose and VRDisplay.getFrameData
+   * must return the same values until the next VRDisplay.submitFrame.
+   *
+   * mFrameInfo is marked dirty at the end of the frame or start of a new
+   * composition and lazily created here in order to receive mid-frame
+   * pose-prediction updates while still ensuring conformance to the WebVR spec
+   * requirements.
+   *
+   * If we are not presenting WebVR content, the frame will never end and we should
+   * return the latest frame data always.
+   */
+  if (mFrameInfo.IsDirty() || !mPresentation) {
+    gfx::VRHMDSensorState state = mClient->GetSensorState();
+    const gfx::VRDisplayInfo& info = mClient->GetDisplayInfo();
+    mFrameInfo.Update(info, state, mDepthNear, mDepthFar);
+  }
+}
+
 bool
 VRDisplay::GetFrameData(VRFrameData& aFrameData)
 {
-  gfx::VRHMDSensorState state = mClient->GetSensorState();
-  const gfx::VRDisplayInfo& info = mClient->GetDisplayInfo();
-  aFrameData.Update(info, state, mDepthNear, mDepthFar);
+  UpdateFrameInfo();
+  aFrameData.Update(mFrameInfo);
   return true;
 }
 
 already_AddRefed<VRPose>
 VRDisplay::GetPose()
 {
-  gfx::VRHMDSensorState state = mClient->GetSensorState();
-  RefPtr<VRPose> obj = new VRPose(GetParentObject(), state);
+  UpdateFrameInfo();
+  RefPtr<VRPose> obj = new VRPose(GetParentObject(), mFrameInfo.mVRState);
 
   return obj.forget();
 }
@@ -549,6 +570,7 @@ VRDisplay::RequestPresent(const nsTArray<VRLayer>& aLayers, ErrorResult& aRv)
     promise->MaybeRejectWithUndefined();
   } else {
     mPresentation = mClient->BeginPresentation(aLayers);
+    mFrameInfo.Clear();
 
     nsresult rv = obs->AddObserver(this, "inner-window-destroyed", false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -633,6 +655,7 @@ VRDisplay::SubmitFrame()
   if (mPresentation) {
     mPresentation->SubmitFrame();
   }
+  mFrameInfo.Clear();
 }
 
 int32_t
@@ -761,7 +784,8 @@ VRFrameData::LazyCreateMatrix(JS::Heap<JSObject*>& aArray, gfx::Matrix4x4& aMat,
 double
 VRFrameData::Timestamp() const
 {
-  return mVRState.timestamp * 1000.0f; // Converting from seconds to milliseconds
+  // Converting from seconds to milliseconds
+  return mFrameInfo.mVRState.timestamp * 1000.0f;
 }
 
 void
@@ -769,7 +793,8 @@ VRFrameData::GetLeftProjectionMatrix(JSContext* aCx,
                                      JS::MutableHandle<JSObject*> aRetval,
                                      ErrorResult& aRv)
 {
-  LazyCreateMatrix(mLeftProjectionMatrix, mLeftProjection, aCx, aRetval, aRv);
+  LazyCreateMatrix(mLeftProjectionMatrix, mFrameInfo.mLeftProjection, aCx,
+                   aRetval, aRv);
 }
 
 void
@@ -777,7 +802,7 @@ VRFrameData::GetLeftViewMatrix(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aRetval,
                                ErrorResult& aRv)
 {
-  LazyCreateMatrix(mLeftViewMatrix, mLeftView, aCx, aRetval, aRv);
+  LazyCreateMatrix(mLeftViewMatrix, mFrameInfo.mLeftView, aCx, aRetval, aRv);
 }
 
 void
@@ -785,7 +810,8 @@ VRFrameData::GetRightProjectionMatrix(JSContext* aCx,
                                       JS::MutableHandle<JSObject*> aRetval,
                                       ErrorResult& aRv)
 {
-  LazyCreateMatrix(mRightProjectionMatrix, mRightProjection, aCx, aRetval, aRv);
+  LazyCreateMatrix(mRightProjectionMatrix, mFrameInfo.mRightProjection, aCx,
+                   aRetval, aRv);
 }
 
 void
@@ -793,23 +819,29 @@ VRFrameData::GetRightViewMatrix(JSContext* aCx,
                                 JS::MutableHandle<JSObject*> aRetval,
                                 ErrorResult& aRv)
 {
-  LazyCreateMatrix(mRightViewMatrix, mRightView, aCx, aRetval, aRv);
+  LazyCreateMatrix(mRightViewMatrix, mFrameInfo.mRightView, aCx, aRetval, aRv);
 }
 
 void
-VRFrameData::Update(const gfx::VRDisplayInfo& aInfo,
-                    const gfx::VRHMDSensorState& aState,
-                    float aDepthNear,
-                    float aDepthFar)
+VRFrameData::Update(const VRFrameInfo& aFrameInfo)
 {
-  mVRState = aState;
+  mFrameInfo = aFrameInfo;
 
   mLeftProjectionMatrix = nullptr;
   mLeftViewMatrix = nullptr;
   mRightProjectionMatrix = nullptr;
   mRightViewMatrix = nullptr;
 
-  mPose = new VRPose(GetParentObject(), aState);
+  mPose = new VRPose(GetParentObject(), mFrameInfo.mVRState);
+}
+
+void
+VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
+                    const gfx::VRHMDSensorState& aState,
+                    float aDepthNear,
+                    float aDepthFar)
+{
+  mVRState = aState;
 
   gfx::Quaternion qt;
   if (mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation) {
@@ -844,7 +876,23 @@ VRFrameData::Update(const gfx::VRDisplayInfo& aInfo,
   mLeftProjection = leftFOV.ConstructProjectionMatrix(aDepthNear, aDepthFar, true);
   const gfx::VRFieldOfView rightFOV = aInfo.mEyeFOV[gfx::VRDisplayInfo::Eye_Right];
   mRightProjection = rightFOV.ConstructProjectionMatrix(aDepthNear, aDepthFar, true);
+}
 
+VRFrameInfo::VRFrameInfo()
+{
+  mVRState.Clear();
+}
+
+bool
+VRFrameInfo::IsDirty()
+{
+  return mVRState.timestamp == 0;
+}
+
+void
+VRFrameInfo::Clear()
+{
+  mVRState.Clear();
 }
 
 } // namespace dom
