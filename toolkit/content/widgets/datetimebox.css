@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.w3.org/1999/xhtml");
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+.datetime-input-box-wrapper {
+  -moz-appearance: none;
+  display: inline-flex;
+  cursor: default;
+  background-color: inherit;
+  color: inherit;
+}
+
+.datetime-input {
+  -moz-appearance: none;
+  text-align: center;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  ime-mode: disabled;
+}
+
+.datetime-separator {
+  margin: 0 !important;
+}
+
+.datetime-input[readonly],
+.datetime-input[disabled] {
+  color: GrayText;
+  -moz-user-select: none;
+}
+
+.datetime-reset-button {
+  background-image: url(chrome://global/skin/icons/input-clear.svg);
+  background-repeat: no-repeat;
+  background-size: 12px, 12px;
+  border: none;
+  height: 12px;
+  width: 12px;
+  align-self: center;
+  justify-content: flex-end;
+}
