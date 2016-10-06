@@ -852,13 +852,12 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       matSR.SetContext(&context);
 
       SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
-                         offsetToUserSpace, true);
+                         offsetToUserSpace, false);
       Matrix clippedMaskTransform;
       RefPtr<SourceSurface> clipMaskSurface =
         clipPathFrame->GetClipMask(context, frame, cssPxToDevPxMatrix,
                                    &clippedMaskTransform, maskSurface,
                                    maskTransform, &result);
-      context.PopClip();
 
       if (clipMaskSurface) {
         maskSurface = clipMaskSurface;
