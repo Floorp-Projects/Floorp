@@ -34,7 +34,7 @@ class CDMProxy;
 
 static LazyLogModule sPDMLog("PlatformDecoderModule");
 
-struct CreateDecoderParams {
+struct MOZ_STACK_CLASS CreateDecoderParams final {
   explicit CreateDecoderParams(const TrackInfo& aConfig)
     : mConfig(aConfig)
   {}
@@ -63,6 +63,7 @@ struct CreateDecoderParams {
   MediaDataDecoderCallback* mCallback = nullptr;
   DecoderDoctorDiagnostics* mDiagnostics = nullptr;
   layers::ImageContainer* mImageContainer = nullptr;
+  MediaResult* mError = nullptr;
   layers::LayersBackend mLayersBackend = layers::LayersBackend::LAYERS_NONE;
   RefPtr<GMPCrashHelper> mCrashHelper;
   bool mUseBlankDecoder = false;
@@ -72,6 +73,7 @@ private:
   void Set(MediaDataDecoderCallback* aCallback) { mCallback = aCallback; }
   void Set(DecoderDoctorDiagnostics* aDiagnostics) { mDiagnostics = aDiagnostics; }
   void Set(layers::ImageContainer* aImageContainer) { mImageContainer = aImageContainer; }
+  void Set(MediaResult* aError) { mError = aError; }
   void Set(layers::LayersBackend aLayersBackend) { mLayersBackend = aLayersBackend; }
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
   void Set(bool aUseBlankDecoder) { mUseBlankDecoder = aUseBlankDecoder; }
