@@ -84,12 +84,16 @@ static mozilla::LazyLogModule sRefreshDriverLog("nsRefreshDriver");
 
 // The number of seconds spent skipping frames because we are waiting for the compositor
 // before logging.
-#ifdef MOZ_VALGRIND
-#define REFRESH_WAIT_WARNING 10
-#elif defined(DEBUG) || defined(MOZ_ASAN)
-#define REFRESH_WAIT_WARNING 5
+#if defined(MOZ_ASAN)
+# define REFRESH_WAIT_WARNING 5
+#elif defined(DEBUG) && !defined(MOZ_VALGRIND)
+# define REFRESH_WAIT_WARNING 5
+#elif defined(DEBUG) && defined(MOZ_VALGRIND)
+# define REFRESH_WAIT_WARNING (RUNNING_ON_VALGRIND ? 20 : 5)
+#elif defined(MOZ_VALGRIND)
+# define REFRESH_WAIT_WARNING (RUNNING_ON_VALGRIND ? 10 : 1)
 #else
-#define REFRESH_WAIT_WARNING 1
+# define REFRESH_WAIT_WARNING 1
 #endif
 
 namespace {
