@@ -58,7 +58,6 @@ public:
 
   unsigned GetCompositorFeatureLevel() const;
   bool TextureSharingWorks();
-  bool AlphaTextureSharingWorks();
   bool IsWARP();
 
   bool CreateCompositorDevices();
