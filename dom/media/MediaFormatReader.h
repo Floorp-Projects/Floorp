@@ -328,7 +328,9 @@ private:
     Maybe<MediaResult> mError;
     bool HasFatalError() const
     {
-      return mError.isSome() && mError.ref() != NS_ERROR_DOM_MEDIA_DECODE_ERR;
+      return mError.isSome() &&
+             (mError.ref() != NS_ERROR_DOM_MEDIA_DECODE_ERR ||
+              mNumOfConsecutiveError > mMaxConsecutiveError);
     }
 
     // If set, all decoded samples prior mTimeThreshold will be dropped.
