@@ -291,12 +291,6 @@ private:
   {
     mMetadataRequest.Complete();
 
-    if (mPendingDormant) {
-      // No need to store mQueuedSeek because we are at position 0.
-      SetState(DECODER_STATE_DORMANT);
-      return;
-    }
-
     // Set mode to PLAYBACK after reading metadata.
     Resource()->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
 
@@ -341,6 +335,12 @@ private:
 
     if (mMaster->mNotifyMetadataBeforeFirstFrame) {
       mMaster->EnqueueLoadedMetadataEvent();
+    }
+
+    if (mPendingDormant) {
+      // No need to store mQueuedSeek because we are at position 0.
+      SetState(DECODER_STATE_DORMANT);
+      return;
     }
 
     if (waitingForCDM) {
@@ -417,8 +417,10 @@ public:
   bool HandleDormant(bool aDormant) override
   {
     if (!aDormant) {
-      // Exit dormant state.
-      SetState(DECODER_STATE_DECODING_METADATA);
+      // Exit dormant state. Check if we need the CDMProxy to start decoding.
+      SetState(Info().IsEncrypted() && !mMaster->mCDMProxy
+        ? DECODER_STATE_WAIT_FOR_CDM
+        : DECODER_STATE_DECODING_FIRSTFRAME);
     }
     return true;
   }
