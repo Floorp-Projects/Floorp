@@ -10,6 +10,10 @@ var gSSService = null;
 var gProfileDir = null;
 
 function do_state_written(aSubject, aTopic, aData) {
+  if (aData == PRELOAD_STATE_FILE_NAME) {
+    return;
+  }
+
   equal(aData, SSS_STATE_FILE_NAME);
 
   let stateFile = gProfileDir.clone();
@@ -41,6 +45,10 @@ function do_state_written(aSubject, aTopic, aData) {
 }
 
 function do_state_read(aSubject, aTopic, aData) {
+  if (aData == PRELOAD_STATE_FILE_NAME) {
+    return;
+  }
+
   equal(aData, SSS_STATE_FILE_NAME);
 
   ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
