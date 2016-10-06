@@ -1088,8 +1088,7 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
        (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
         DeviceManagerDx::Get()->GetContentDevice())) &&
       aSize.width <= aMaxTextureSize &&
-      aSize.height <= aMaxTextureSize &&
-      !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE))
+      aSize.height <= aMaxTextureSize)
   {
     data = DXGITextureData::Create(aSize, aFormat, aAllocFlags);
   }
@@ -1202,9 +1201,9 @@ TextureClient::CreateFromSurface(KnowsCompositor* aAllocator,
   }
 
   // Fall back to using UpdateFromSurface
-  TextureAllocationFlags allocFlags = TextureAllocationFlags(aAllocFlags | ALLOC_UPDATE_FROM_SURFACE);
+
   RefPtr<TextureClient> client = CreateForDrawing(aAllocator, aSurface->GetFormat(), size,
-                                                  aSelector, aTextureFlags, allocFlags);
+                                                  aSelector, aTextureFlags, aAllocFlags);
   if (!client) {
     return nullptr;
   }
