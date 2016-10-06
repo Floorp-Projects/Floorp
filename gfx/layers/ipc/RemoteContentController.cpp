@@ -30,7 +30,6 @@ using namespace mozilla::gfx;
 RemoteContentController::RemoteContentController()
   : mCompositorThread(MessageLoop::current())
   , mCanSend(true)
-  , mMutex("RemoteContentController")
 {
 }
 
@@ -50,9 +49,9 @@ RemoteContentController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
 
 void
 RemoteContentController::HandleTapOnMainThread(TapType aTapType,
-                                               const LayoutDevicePoint& aPoint,
+                                               LayoutDevicePoint aPoint,
                                                Modifiers aModifiers,
-                                               const ScrollableLayerGuid& aGuid,
+                                               ScrollableLayerGuid aGuid,
                                                uint64_t aInputBlockId)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -93,7 +92,7 @@ RemoteContentController::HandleTap(TapType aTapType,
   } else {
     // We don't want to get the TabParent or call TabParent::SendHandleTap() from a non-main thread (this might happen
     // on Android, where this is called from the Java UI thread)
-    NS_DispatchToMainThread(NewRunnableMethod<TapType, const LayoutDevicePoint&, Modifiers, const ScrollableLayerGuid&, uint64_t>
+    NS_DispatchToMainThread(NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers, ScrollableLayerGuid, uint64_t>
         (this, &RemoteContentController::HandleTapOnMainThread, aTapType, aPoint, aModifiers, aGuid, aInputBlockId));
   }
 }
@@ -158,18 +157,6 @@ void
 RemoteContentController::DispatchToRepaintThread(already_AddRefed<Runnable> aTask)
 {
   mCompositorThread->PostTask(Move(aTask));
-}
-
-bool
-RemoteContentController::GetTouchSensitiveRegion(CSSRect* aOutRegion)
-{
-  MutexAutoLock lock(mMutex);
-  if (mTouchSensitiveRegion.IsEmpty()) {
-    return false;
-  }
-
-  *aOutRegion = CSSRect::FromAppUnits(mTouchSensitiveRegion.GetBounds());
-  return true;
 }
 
 void
@@ -262,14 +249,6 @@ RemoteContentController::NotifyFlushComplete()
   if (mCanSend) {
     Unused << SendNotifyFlushComplete();
   }
-}
-
-bool
-RemoteContentController::RecvUpdateHitRegion(const nsRegion& aRegion)
-{
-  MutexAutoLock lock(mMutex);
-  mTouchSensitiveRegion = aRegion;
-  return true;
 }
 
 void

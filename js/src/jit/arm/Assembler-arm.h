@@ -498,11 +498,11 @@ struct Imm8mData
 
     // Default constructor makes an invalid immediate.
     Imm8mData()
-      : data(0xff), rot(0xf), invalid(1)
+      : data(0xff), rot(0xf), buff(0), invalid(1)
     { }
 
     Imm8mData(uint32_t data_, uint32_t rot_)
-      : data(data_), rot(rot_), invalid(0)
+      : data(data_), rot(rot_), buff(0), invalid(0)
     {
         MOZ_ASSERT(data == data_);
         MOZ_ASSERT(rot == rot_);

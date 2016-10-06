@@ -67,6 +67,12 @@ bool WriteSymbolFile(const string &obj_file,
                      const DumpOptions& options,
                      std::ostream &sym_stream);
 
+// Read the selected object file's debugging information, and write out the
+// header only to |stream|. Return true on success; if an error occurs, report
+// it and return false.
+bool WriteSymbolFileHeader(const string& obj_file,
+                           std::ostream &sym_stream);
+
 // As above, but simply return the debugging information in MODULE
 // instead of writing it to a stream. The caller owns the resulting
 // Module object and must delete it when finished.

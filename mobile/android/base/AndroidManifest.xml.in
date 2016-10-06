@@ -249,6 +249,8 @@
             <!-- Notification API V2 -->
             <intent-filter>
                 <action android:name="@ANDROID_PACKAGE_NAME@.helperBroadcastAction" />
+                <action android:name="@ANDROID_PACKAGE_NAME@.NOTIFICATION_CLICK" />
+                <action android:name="@ANDROID_PACKAGE_NAME@.NOTIFICATION_CLOSE" />
                 <data android:scheme="moz-notification" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>

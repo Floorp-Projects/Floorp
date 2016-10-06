@@ -405,7 +405,9 @@ PacketFilter::Action TlsExtensionFilter::FilterExtensions(
     // Write out extension.
     offset = output->Write(offset, extension_type, 2);
     offset = output->Write(offset, source->len(), 2);
-    offset = output->Write(offset, *source);
+    if (source->len() > 0) {
+      offset = output->Write(offset, *source);
+    }
   }
   output->Truncate(offset);
 

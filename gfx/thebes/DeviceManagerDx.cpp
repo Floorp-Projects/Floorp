@@ -328,6 +328,7 @@ DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11)
   // Only test this when not using WARP since it can fail and cause
   // GetDeviceRemovedReason to return weird values.
   bool textureSharingWorks = D3D11Checks::DoesTextureSharingWork(device);
+  bool alphaTextureSharingWorks = D3D11Checks::DoesAlphaTextureSharingWork(device);
 
   DXGI_ADAPTER_DESC desc;
   PodZero(&desc);
@@ -355,6 +356,7 @@ DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11)
     mDeviceStatus = Some(D3D11DeviceStatus(
       false,
       textureSharingWorks,
+      alphaTextureSharingWorks,
       featureLevel,
       DxgiAdapterDesc::From(desc)));
   }
@@ -409,8 +411,10 @@ DeviceManagerDx::CreateWARPCompositorDevice()
   // Only test for texture sharing on Windows 8 since it puts the device into
   // an unusable state if used on Windows 7
   bool textureSharingWorks = false;
+  bool alphaTextureSharingWorks = false;
   if (IsWin8OrLater()) {
     textureSharingWorks = D3D11Checks::DoesTextureSharingWork(device);
+    alphaTextureSharingWorks = D3D11Checks::DoesAlphaTextureSharingWork(device);
   }
 
   DxgiAdapterDesc nullAdapter;
@@ -423,6 +427,7 @@ DeviceManagerDx::CreateWARPCompositorDevice()
     mDeviceStatus = Some(D3D11DeviceStatus(
       true,
       textureSharingWorks,
+      alphaTextureSharingWorks,
       featureLevel,
       nullAdapter));
   }
@@ -668,6 +673,16 @@ DeviceManagerDx::TextureSharingWorks()
     return false;
   }
   return mDeviceStatus->textureSharingWorks();
+}
+
+bool
+DeviceManagerDx::AlphaTextureSharingWorks()
+{
+  MutexAutoLock lock(mDeviceLock);
+  if (!mDeviceStatus) {
+    return false;
+  }
+  return mDeviceStatus->alphaTextureSharingWorks();
 }
 
 bool

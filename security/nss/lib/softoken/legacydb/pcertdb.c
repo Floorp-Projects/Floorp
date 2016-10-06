@@ -2190,8 +2190,10 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PLArenaPool *arena,
         tmpbuf += certKeys[i].len;
     }
     for (i = 0; i < ncerts; i++) {
-        PORT_Memcpy(tmpbuf, keyIDs[i].data, keyIDs[i].len);
-        tmpbuf += keyIDs[i].len;
+        if (keyIDs[i].len) {
+            PORT_Memcpy(tmpbuf, keyIDs[i].data, keyIDs[i].len);
+            tmpbuf += keyIDs[i].len;
+        }
     }
 
     if (entry->emailAddrs) {

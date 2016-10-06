@@ -687,7 +687,7 @@ refill_callback_duplex(cubeb_stream * stm)
 
   // When WASAPI has not filled the input buffer yet, send silence.
   double output_duration = double(output_frames) / stm->output_mix_params.rate;
-  double input_duration = double(stm->linear_input_buffer.length() / stm->input_mix_params.channels) / stm->input_mix_params.rate;
+  double input_duration = double(stm->linear_input_buffer.length() / stm->input_stream_params.channels) / stm->input_mix_params.rate;
   if (input_duration < output_duration) {
     size_t padding = size_t(round((output_duration - input_duration) * stm->input_mix_params.rate));
     LOG("padding silence: out=%f in=%f pad=%u\n", output_duration, input_duration, padding);
