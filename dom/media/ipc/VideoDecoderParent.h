@@ -8,12 +8,15 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/PVideoDecoderParent.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "VideoDecoderManagerParent.h"
 #include "MediaData.h"
 #include "ImageContainer.h"
 
 namespace mozilla {
 namespace dom {
+
+class KnowsCompositorVideo;
 
 class VideoDecoderParent final : public PVideoDecoderParent,
                                  public MediaDataDecoderCallback
@@ -30,7 +33,7 @@ public:
   void Destroy();
 
   // PVideoDecoderParent
-  bool RecvInit(const VideoInfo& aVideoInfo, const layers::LayersBackend& aBackend) override;
+  bool RecvInit(const VideoInfo& aVideoInfo, const layers::TextureFactoryIdentifier& aIdentifier) override;
   bool RecvInput(const MediaRawDataIPDL& aData) override;
   bool RecvFlush() override;
   bool RecvDrain() override;
@@ -54,6 +57,7 @@ private:
   RefPtr<TaskQueue> mManagerTaskQueue;
   RefPtr<TaskQueue> mDecodeTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
+  RefPtr<KnowsCompositorVideo> mKnowsCompositor;
 
   // Can only be accessed from the manager thread
   bool mDestroyed;

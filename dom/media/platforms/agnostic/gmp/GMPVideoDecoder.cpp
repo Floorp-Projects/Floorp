@@ -115,7 +115,7 @@ GMPVideoDecoderParams::GMPVideoDecoderParams(const CreateDecoderParams& aParams)
   , mCallback(nullptr)
   , mAdapter(nullptr)
   , mImageContainer(aParams.mImageContainer)
-  , mLayersBackend(aParams.mLayersBackend)
+  , mLayersBackend(aParams.GetLayersBackend())
   , mCrashHelper(aParams.mCrashHelper)
 {}
 
