@@ -49,7 +49,7 @@ MediaEngineCameraVideoSource::GetCapability(size_t aIndex,
                                             webrtc::CaptureCapability& aOut) const
 {
   MOZ_ASSERT(aIndex < mHardcodedCapabilities.Length());
-  aOut = mHardcodedCapabilities[aIndex];
+  aOut = mHardcodedCapabilities.SafeElementAt(aIndex, webrtc::CaptureCapability());
 }
 
 uint32_t
