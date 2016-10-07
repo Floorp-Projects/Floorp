@@ -7,7 +7,6 @@ include protocol PGMPContent;
 include GMPTypes;
 
 using GMPSessionMessageType from  "gmp-decryption.h";
-using GMPMediaKeyStatus from  "gmp-decryption.h";
 using GMPSessionType from  "gmp-decryption.h";
 using GMPDOMException from "gmp-decryption.h";
 using GMPErr from "gmp-errors.h";
@@ -79,14 +78,12 @@ parent:
                      uint32_t aSystemCode,
                      nsCString aMessage);
 
-  async KeyStatusChanged(nsCString aSessionId, uint8_t[] aKey,
-                         GMPMediaKeyStatus aStatus);
-
-  async ForgetKeyStatus(nsCString aSessionId, uint8_t[] aKey);
-
   async Decrypted(uint32_t aId, GMPErr aResult, uint8_t[] aBuffer);
 
   async Shutdown();
+
+  async BatchedKeyStatusChanged(nsCString aSessionId,
+                                GMPKeyInformation[] aKeyInfos);
 };
 
 } // namespace gmp

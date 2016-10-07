@@ -43,16 +43,12 @@ public:
                     uint32_t aSystemCode,
                     const nsCString& aMessage) override;
 
-  void KeyStatusChanged(const nsCString& aSessionId,
-                        const nsTArray<uint8_t>& aKeyId,
-                        dom::MediaKeyStatus aStatus) override;
-
-  void ForgetKeyStatus(const nsCString& aSessionId,
-                       const nsTArray<uint8_t>& aKeyId) override;
-
   void Decrypted(uint32_t aId,
                  DecryptStatus aResult,
                  const nsTArray<uint8_t>& aDecryptedData) override;
+
+  void BatchedKeyStatusChanged(const nsCString& aSessionId,
+                               const nsTArray<CDMKeyInfo>& aKeyInfos) override;
 
   void Terminated() override;
 
@@ -61,10 +57,9 @@ public:
 private:
   friend class GMPCDMProxy;
   explicit GMPCDMCallbackProxy(CDMProxy* aProxy);
-  void KeyStatusChangedInternal(const nsCString& aSessionId,
-                                const nsTArray<uint8_t>& aKeyId,
-                                const dom::Optional<dom::MediaKeyStatus>& aStatus);
 
+  void BatchedKeyStatusChangedInternal(const nsCString& aSessionId,
+                                       const nsTArray<CDMKeyInfo>& aKeyInfos);
   // Warning: Weak ref.
   CDMProxy* mProxy;
 };
