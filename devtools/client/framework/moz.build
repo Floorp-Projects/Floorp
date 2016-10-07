@@ -25,7 +25,6 @@ DevToolsModules(
     'target-from-url.js',
     'target.js',
     'toolbox-highlighter-utils.js',
-    'toolbox-host-manager.js',
     'toolbox-hosts.js',
     'toolbox-options.js',
     'toolbox.js',

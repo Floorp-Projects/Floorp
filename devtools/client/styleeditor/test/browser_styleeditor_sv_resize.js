@@ -21,7 +21,7 @@ add_task(function* () {
   let editor = yield ui.editors[0].getSourceEditor();
   let originalSourceEditor = editor.sourceEditor;
 
-  let hostWindow = toolbox.win.parent;
+  let hostWindow = toolbox._host._window;
   let originalWidth = hostWindow.outerWidth;
   let originalHeight = hostWindow.outerHeight;
 

@@ -11,7 +11,7 @@ add_task(function* () {
   let { inspector, toolbox } = yield openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>", "window");
 
-  let hostWindow = toolbox.win.parent;
+  let hostWindow = toolbox._host._window;
   let originalWidth = hostWindow.outerWidth;
   let originalHeight = hostWindow.outerHeight;
 
@@ -46,7 +46,7 @@ add_task(function* () {
   ok(splitter.classList.contains("horz"), "Splitter is in horizontal mode");
 
   info("Restore original window size");
-  toolbox.win.parent.resizeTo(originalWidth, originalHeight);
+  toolbox._host._window.resizeTo(originalWidth, originalHeight);
 });
 
 /**
