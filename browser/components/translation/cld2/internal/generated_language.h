@@ -35,7 +35,7 @@ typedef enum {
   FINNISH                      = 3,  // fi
   FRENCH                       = 4,  // fr
   GERMAN                       = 5,  // de
-  HEBREW                       = 6,  // he
+  HEBREW                       = 6,  // iw
   ITALIAN                      = 7,  // it
   JAPANESE                     = 8,  // ja
   KOREAN                       = 9,  // ko
