@@ -595,6 +595,14 @@ public:
       CASES_FOR_stat:
       CASES_FOR_lstat:
       CASES_FOR_fstatat:
+      CASES_FOR_chmod:
+      case __NR_link:
+      case __NR_mkdir:
+      case __NR_symlink:
+      case __NR_rename:
+      case __NR_rmdir:
+      case __NR_unlink:
+      case __NR_readlink:
         return Allow();
       }
     }
