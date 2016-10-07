@@ -324,7 +324,9 @@ private:
   // mFollowingCharMsgs stores WM_CHAR, WM_SYSCHAR, WM_DEADCHAR or
   // WM_SYSDEADCHAR message which follows WM_KEYDOWN.
   // Note that the stored messaged are already removed from the queue.
-  nsTArray<MSG> mFollowingCharMsgs;
+  // FYI: 5 is enough number for usual keyboard layout handling.  On Windows,
+  // a dead key sequence may cause inputting up to 5 characters per key press.
+  AutoTArray<MSG, 5> mFollowingCharMsgs;
   // mRemovedOddCharMsgs stores WM_CHAR messages which are caused by ATOK or
   // WXG (they are Japanese IME) when the user tries to do "Kakutei-undo"
   // (it means "undo the last commit").
