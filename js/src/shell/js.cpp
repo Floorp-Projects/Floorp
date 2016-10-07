@@ -5525,7 +5525,10 @@ SetARMHwCapFlags(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#ifdef __AFL_HAVE_MANUAL_CONTROL
+#ifndef __AFL_HAVE_MANUAL_CONTROL
+# define __AFL_LOOP(x) true
+#endif
+
 static bool
 WasmLoop(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -5552,16 +5555,12 @@ WasmLoop(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedString givenPath(cx, args[0].toString());
-    RootedString str(cx, ResolvePath(cx, givenPath, RootRelative));
-    if (!str)
-        return false;
-
-    JSAutoByteString filename(cx, str);
+    RootedString filename(cx, ResolvePath(cx, givenPath, RootRelative));
     if (!filename)
         return false;
 
     while (__AFL_LOOP(1000)) {
-        Rooted<JSObject*> ret(cx, FileAsTypedArray(cx, filename.ptr()));
+        Rooted<JSObject*> ret(cx, FileAsTypedArray(cx, filename));
         if (!ret)
             return false;
 
@@ -5575,7 +5574,6 @@ WasmLoop(JSContext* cx, unsigned argc, Value* vp)
 
     return true;
 }
-#endif // __AFL_HAVE_MANUAL_CONTROL
 
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
@@ -6100,12 +6098,10 @@ TestAssertRecoveredOnBailout,
 "  On non-ARM, no-op. On ARM, set the hardware capabilities. The list of \n"
 "  flags is available by calling this function with \"help\" as the flag's name"),
 
-#ifdef __AFL_HAVE_MANUAL_CONTROL
     JS_FN_HELP("wasmLoop", WasmLoop, 2, 0,
 "wasmLoop(filename, imports)",
 "  Performs an AFL-style persistent loop reading data from the given file and passing it\n"
 "  to the 'wasmEval' function together with the specified imports object."),
-#endif
 
     JS_FS_HELP_END
 };

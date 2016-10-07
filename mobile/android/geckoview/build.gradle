@@ -1,0 +1,86 @@
+buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
+
+apply plugin: 'android-sdk-manager' // Must come before 'com.android.*'.
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
+
+    defaultConfig {
+        targetSdkVersion 23
+        minSdkVersion 15
+    }
+
+    buildTypes {
+        withGeckoBinaries {
+            initWith release
+        }
+        withoutGeckoBinaries { // For clarity and consistency throughout the tree.
+            initWith release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    dexOptions {
+        javaMaxHeapSize "2g"
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDir "${topsrcdir}/mobile/android/geckoview/src/thirdparty/java"
+
+                // TODO: support WebRTC.
+                // if (mozconfig.substs.MOZ_WEBRTC) {
+                //     srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src"
+                //     srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/video_capture/android/java/src"
+                //     srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/video_render/android/java/src"
+                // }
+
+                // TODO: don't use AppConstants.
+                srcDir "${project.buildDir}/generated/source/preprocessed_code" // See syncPreprocessedCode.
+            }
+
+            assets {
+            }
+        }
+    }
+}
+
+dependencies {
+    compile "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+}
+
+task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
+    into("${project.buildDir}/generated/source/preprocessed_code")
+    from("${topobjdir}/mobile/android/base/generated/preprocessed") {
+        // AdjustConstants is included in the main app project.
+        exclude '**/AdjustConstants.java'
+    }
+}
+
+apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
+
+android.libraryVariants.all { variant ->
+    variant.preBuild.dependsOn syncPreprocessedCode
+
+    // Like 'debug', 'release', or 'withGeckoBinaries'.
+    def buildType = variant.buildType.name
+
+    // It would be most natural for :geckoview to always include the Gecko
+    // binaries, but that's difficult; see the notes in
+    // mobile/android/gradle/with_gecko_binaries.gradle.  Instead :app uses
+    // :geckoview:release and handles it's own Gecko binary inclusion.
+    if (buildType.equals('withGeckoBinaries')) {
+        configureVariantWithGeckoBinaries(variant)
+    }
+}

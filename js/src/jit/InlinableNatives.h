@@ -75,6 +75,7 @@
     _(String)                       \
     _(StringCharCodeAt)             \
     _(StringFromCharCode)           \
+    _(StringFromCodePoint)          \
     _(StringCharAt)                 \
                                     \
     _(IntrinsicStringReplaceString) \

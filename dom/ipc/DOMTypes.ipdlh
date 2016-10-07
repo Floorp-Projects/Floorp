@@ -39,13 +39,19 @@ struct ClonedMessageData
   MessagePortIdentifier[] identfiers;
 };
 
+struct BlobDataStream
+{
+  IPCStream stream;
+  uint64_t length;
+};
+
 union BlobData
 {
   // For remote blobs.
   nsID;
 
   // For memory-backed blobs.
-  IPCStream;
+  BlobDataStream;
 
   // For multiplex blobs.
   BlobData[];

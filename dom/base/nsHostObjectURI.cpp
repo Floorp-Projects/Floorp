@@ -23,6 +23,7 @@ NS_IMPL_RELEASE_INHERITED(nsHostObjectURI, mozilla::net::nsSimpleURI)
 NS_INTERFACE_MAP_BEGIN(nsHostObjectURI)
   NS_INTERFACE_MAP_ENTRY(nsIURIWithBlobImpl)
   NS_INTERFACE_MAP_ENTRY(nsIURIWithPrincipal)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   if (aIID.Equals(kHOSTOBJECTURICID))
     foundInterface = static_cast<nsIURI*>(this);
   else if (aIID.Equals(kThisSimpleURIImplementationCID)) {
@@ -138,15 +139,20 @@ nsHostObjectURI::Deserialize(const mozilla::ipc::URIParams& aParams)
     return false;
   }
 
-  // XXXbaku: when we will have shared blobURL maps, we can populate mBlobImpl
-  // here asll well.
-
   if (hostParams.principal().type() == OptionalPrincipalInfo::Tvoid_t) {
     return true;
   }
 
   mPrincipal = PrincipalInfoToPrincipal(hostParams.principal().get_PrincipalInfo());
-  return mPrincipal != nullptr;
+  if (!mPrincipal) {
+    return false;
+  }
+
+  // If this fails, we still want to complete the operation. Probably this
+  // blobURL has been revoked in the meantime.
+  NS_GetBlobForBlobURI(this, getter_AddRefs(mBlobImpl));
+
+  return true;
 }
 
 NS_IMETHODIMP
@@ -275,4 +281,11 @@ nsHostObjectURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
   *aClassIDNoAlloc = kHOSTOBJECTURICID;
   return NS_OK;
+}
+
+void
+nsHostObjectURI::ForgetBlobImpl()
+{
+  MOZ_ASSERT(mBlobImpl);
+  mBlobImpl = nullptr;
 }
