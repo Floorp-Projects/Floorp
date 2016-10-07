@@ -19,7 +19,6 @@
 // There are also some functions for requesting information that requires
 // SpecialPowers or other main-thread-only resources:
 //
-//  workerTestGetPermissions() - request an array permissions from the MT
 //  workerTestGetVersion() - request the current version string from the MT
 //  workerTestGetUserAgent() - request the user agent string from the MT
 //  workerTestGetOSCPU() - request the navigator.oscpu string from the MT
@@ -35,17 +34,6 @@ function workerTestExec(script) {
 
     } else if (event.data.type == 'status') {
       ok(event.data.status, event.data.msg);
-
-    } else if (event.data.type == 'getPermissions') {
-      var result = {};
-      event.data.permissions.forEach(function(permission) {
-        result[permission] = SpecialPowers.hasPermission(permission, window.document);
-      });
-      worker.postMessage({
-        type: 'returnPermissions',
-        permissions: event.data.permissions,
-        result: result
-      });
 
     } else if (event.data.type == 'getVersion') {
       var result = SpecialPowers.Cc['@mozilla.org/xre/app-info;1'].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
@@ -63,11 +51,6 @@ function workerTestExec(script) {
       worker.postMessage({
         type: 'returnOSCPU',
         result: navigator.oscpu
-      });
-    } else if (event.data.type == 'getIsB2G') {
-      worker.postMessage({
-        type: 'returnIsB2G',
-        result: SpecialPowers.isB2G
       });
     }
   }
