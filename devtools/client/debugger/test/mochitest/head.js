@@ -751,9 +751,6 @@ AddonDebugger.prototype = {
   }),
 
   _onMessage: function (event) {
-    if (typeof(event.data) !== "string") {
-      return;
-    }
     let json = JSON.parse(event.data);
     switch (json.name) {
       case "toolbox-title":
