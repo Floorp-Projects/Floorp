@@ -1037,7 +1037,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                       Node* forInitialPart,
                       mozilla::Maybe<ParseContext::Scope>& forLetImpliedScope,
                       Node* forInOrOfExpression);
-    bool validateForInOrOfLHSExpression(Node target);
+    bool validateForInOrOfLHSExpression(Node target, PossibleError* possibleError);
     Node expressionAfterForInOrOf(ParseNodeKind forHeadKind, YieldHandling yieldHandling);
 
     Node switchStatement(YieldHandling yieldHandling);
