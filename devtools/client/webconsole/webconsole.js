@@ -542,36 +542,14 @@ WebConsoleFrame.prototype = {
       && !this.owner.target.chrome
       && Services.prefs.getBoolPref(PREF_NEW_FRONTEND_ENABLED);
 
-    this._initDefaultFilterPrefs();
-
-    // Register the controller to handle "select all" properly.
-    this._commandController = new CommandController(this);
-    this.window.controllers.insertControllerAt(0, this._commandController);
-
-    this._contextMenuHandler = new ConsoleContextMenu(this);
-
-    let doc = this.document;
-
-    this.filterBox = doc.querySelector(".hud-filter-box");
-    this.outputNode = doc.getElementById("output-container");
-    this.outputWrapper = doc.getElementById("output-wrapper");
-
-    this.completeNode = doc.querySelector(".jsterm-complete-node");
-    this.inputNode = doc.querySelector(".jsterm-input-node");
-
-    this._setFilterTextBoxEvents();
-    this._initFilterButtons();
+    this.outputNode = this.document.getElementById("output-container");
+    this.outputWrapper = this.document.getElementById("output-wrapper");
+    this.completeNode = this.document.querySelector(".jsterm-complete-node");
+    this.inputNode = this.document.querySelector(".jsterm-input-node");
 
     // Update the character width and height needed for the popup offset
     // calculations.
     this._updateCharSize();
-
-    let clearButton =
-      doc.getElementsByClassName("webconsole-clear-console-button")[0];
-    clearButton.addEventListener("command", () => {
-      this.owner._onClearButton();
-      this.jsterm.clearOutput(true);
-    });
 
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
@@ -596,10 +574,27 @@ WebConsoleFrame.prototype = {
 
       this.newConsoleOutput = new this.window.NewConsoleOutput(
         this.experimentalOutputNode, this.jsterm, toolbox, this.owner);
-      console.log("Created newConsoleOutput", this.newConsoleOutput);
 
-      let filterToolbar = doc.querySelector(".hud-console-filter-toolbar");
+      let filterToolbar = this.document.querySelector(".hud-console-filter-toolbar");
       filterToolbar.hidden = true;
+    } else {
+      // Register the controller to handle "select all" properly.
+      this._commandController = new CommandController(this);
+      this.window.controllers.insertControllerAt(0, this._commandController);
+
+      this._contextMenuHandler = new ConsoleContextMenu(this);
+
+      this._initDefaultFilterPrefs();
+      this.filterBox = this.document.querySelector(".hud-filter-box");
+      this._setFilterTextBoxEvents();
+      this._initFilterButtons();
+      let clearButton =
+        this.document.getElementsByClassName("webconsole-clear-console-button")[0];
+      clearButton.addEventListener("command", () => {
+        this.owner._onClearButton();
+        this.jsterm.clearOutput(true);
+      });
+
     }
 
     this.resize();
