@@ -73,6 +73,8 @@ public:
 
   virtual ImageClientSingle* AsImageClientSingle() { return nullptr; }
 
+  static already_AddRefed<TextureClient> CreateTextureClientForImage(Image* aImage, KnowsCompositor* aForwarder);
+
 protected:
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
               CompositableType aType);
