@@ -51,6 +51,12 @@ ImageBitmapRenderingContext::ClipToIntrinsicSize()
 void
 ImageBitmapRenderingContext::TransferImageBitmap(ImageBitmap& aImageBitmap)
 {
+  TransferFromImageBitmap(aImageBitmap);
+}
+
+void
+ImageBitmapRenderingContext::TransferFromImageBitmap(ImageBitmap& aImageBitmap)
+{
   Reset();
   mImage = aImageBitmap.TransferAsImage();
 

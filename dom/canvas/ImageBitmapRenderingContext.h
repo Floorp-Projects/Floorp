@@ -25,7 +25,7 @@ namespace dom {
 
 /**
  * The purpose of ImageBitmapRenderingContext is to provide a faster and efficient
- * way to display ImageBitmap. Simply call TransferImageBitmap() then we'll transfer
+ * way to display ImageBitmap. Simply call TransferFromImageBitmap() then we'll transfer
  * the surface of ImageBitmap to this context and then to use it to display.
  *
  * See more details in spec: https://wiki.whatwg.org/wiki/OffscreenCanvas
@@ -47,6 +47,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageBitmapRenderingContext)
 
   void TransferImageBitmap(ImageBitmap& aImageBitmap);
+  void TransferFromImageBitmap(ImageBitmap& aImageBitmap);
 
   // nsICanvasRenderingContextInternal
   virtual int32_t GetWidth() const override;
