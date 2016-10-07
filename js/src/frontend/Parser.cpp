@@ -5104,10 +5104,17 @@ Parser<ParseHandler>::matchInOrOf(bool* isForInp, bool* isForOfp)
 
 template <class ParseHandler>
 bool
-Parser<ParseHandler>::validateForInOrOfLHSExpression(Node target)
+Parser<ParseHandler>::validateForInOrOfLHSExpression(Node target, PossibleError* possibleError)
 {
-    if (handler.isUnparenthesizedDestructuringPattern(target))
-        return checkDestructuringPattern(target);
+    if (handler.isUnparenthesizedDestructuringPattern(target)) {
+        bool isDestructuring = checkDestructuringPattern(target);
+        // Here we've successfully distinguished between destructuring and an
+        // object literal. In the case where "CoverInitializedName" syntax was
+        // used there will be a pending error that needs clearing.
+        if (isDestructuring)
+            possibleError->setResolved();
+        return isDestructuring;
+    }
 
     // All other permitted targets are simple.
     if (!reportIfNotValidSimpleAssignmentTarget(target, ForInOrOfTarget))
@@ -5216,7 +5223,8 @@ Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
     // Finally, handle for-loops that start with expressions.  Pass
     // |InProhibited| so that |in| isn't parsed in a RelationalExpression as a
     // binary operator.  |in| makes it a for-in loop, *not* an |in| expression.
-    *forInitialPart = expr(InProhibited, yieldHandling, TripledotProhibited);
+    PossibleError possibleError(*this);
+    *forInitialPart = expr(InProhibited, yieldHandling, TripledotProhibited, &possibleError);
     if (!*forInitialPart)
         return false;
 
@@ -5229,6 +5237,8 @@ Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
     // modifier when regetting: Operand must be used to examine the ';' in
     // |for (;|, and our caller handles this case and that.
     if (!isForIn && !isForOf) {
+        if (!possibleError.checkForExprErrors())
+            return false;
         *forHeadKind = PNK_FORHEAD;
         tokenStream.addModifierException(TokenStream::OperandIsNone);
         return true;
@@ -5253,7 +5263,9 @@ Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
 
     *forHeadKind = isForIn ? PNK_FORIN : PNK_FOROF;
 
-    if (!validateForInOrOfLHSExpression(*forInitialPart))
+    if (!validateForInOrOfLHSExpression(*forInitialPart, &possibleError))
+        return false;
+    if (!possibleError.checkForExprErrors())
         return false;
 
     // Finally, parse the iterated expression, making the for-loop's closing
