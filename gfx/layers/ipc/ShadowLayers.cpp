@@ -174,6 +174,13 @@ KnowsCompositor::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier
   mSyncObject = SyncObject::CreateSyncObject(aIdentifier.mSyncHandle);
 }
 
+KnowsCompositor::KnowsCompositor()
+  : mSerial(++sSerialCounter)
+{}
+
+KnowsCompositor::~KnowsCompositor()
+{}
+
 ShadowLayerForwarder::ShadowLayerForwarder(ClientLayerManager* aClientLayerManager)
  : mClientLayerManager(aClientLayerManager)
  , mMessageLoop(MessageLoop::current())
