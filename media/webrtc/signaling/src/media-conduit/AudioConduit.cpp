@@ -28,6 +28,7 @@
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
 #include "webrtc/voice_engine/include/voe_dtmf.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
+#include "webrtc/voice_engine/voice_engine_impl.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -236,6 +237,20 @@ bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type) {
     CSFLogError(logTag, "%s Failed call to SetSendTelephoneEventPayloadType",
                         __FUNCTION__);
   }
+  return result != -1;
+}
+
+bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
+                                        bool outOfBand, int lengthMs,
+                                        int attenuationDb) {
+  NS_ASSERTION(!NS_IsMainThread(), "Do not call on main thread");
+
+  if (!mVoiceEngine || !mDtmfEnabled) {
+    return false;
+  }
+
+  webrtc::VoiceEngineImpl* s = static_cast<webrtc::VoiceEngineImpl*>(mVoiceEngine);
+  int result = s->SendTelephoneEvent(channel, eventCode, outOfBand, lengthMs, attenuationDb);
   return result != -1;
 }
 

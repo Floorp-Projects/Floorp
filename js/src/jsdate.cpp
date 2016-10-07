@@ -1045,7 +1045,6 @@ ParseDate(const CharT* s, size_t length, ClippedTime* result)
             prevc = c;
         } else {
             size_t st = i - 1;
-            int k;
             while (i < length) {
                 c = s[i];
                 if (!(('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')))
@@ -1056,6 +1055,7 @@ ParseDate(const CharT* s, size_t length, ClippedTime* result)
             if (i <= st + 1)
                 return false;
 
+            int k;
             for (k = ArrayLength(wtb); --k >= 0;) {
                 if (RegionMatches(wtb[k], 0, s, st, i - st)) {
                     int action = ttb[k];
@@ -1269,7 +1269,7 @@ DateObject::fillLocalTimeSlots()
         return;
     }
 
-    /* Remember timezone used to generate the local cache. */
+    /* Remember time zone used to generate the local cache. */
     setReservedSlot(TZA_SLOT, DoubleValue(DateTimeInfo::localTZA()));
 
     double utcTime = UTCTime().toNumber();
@@ -2427,64 +2427,29 @@ static const char * const months[] =
    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-
-// Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
-// requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
-static void
-print_gmt_string(char* buf, size_t size, double utctime)
-{
-    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).toDouble(), utctime));
-    snprintf(buf, size, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
-             days[int(WeekDay(utctime))],
-             int(DateFromTime(utctime)),
-             months[int(MonthFromTime(utctime))],
-             int(YearFromTime(utctime)),
-             int(HourFromTime(utctime)),
-             int(MinFromTime(utctime)),
-             int(SecFromTime(utctime)));
-}
-
-static void
-print_iso_string(char* buf, size_t size, double utctime)
-{
-    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).toDouble(), utctime));
-    snprintf(buf, size, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
-             int(YearFromTime(utctime)),
-             int(MonthFromTime(utctime)) + 1,
-             int(DateFromTime(utctime)),
-             int(HourFromTime(utctime)),
-             int(MinFromTime(utctime)),
-             int(SecFromTime(utctime)),
-             int(msFromTime(utctime)));
-}
-
-static void
-print_iso_extended_string(char* buf, size_t size, double utctime)
-{
-    MOZ_ASSERT(NumbersAreIdentical(TimeClip(utctime).toDouble(), utctime));
-    snprintf(buf, size, "%+.6d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
-             int(YearFromTime(utctime)),
-             int(MonthFromTime(utctime)) + 1,
-             int(DateFromTime(utctime)),
-             int(HourFromTime(utctime)),
-             int(MinFromTime(utctime)),
-             int(SecFromTime(utctime)),
-             int(msFromTime(utctime)));
-}
-
 /* ES5 B.2.6. */
 MOZ_ALWAYS_INLINE bool
 date_toGMTString_impl(JSContext* cx, const CallArgs& args)
 {
     double utctime = args.thisv().toObject().as<DateObject>().UTCTime().toNumber();
 
-    char buf[100];
-    if (!IsFinite(utctime))
-        SprintfLiteral(buf, js_NaN_date_str);
-    else
-        print_gmt_string(buf, sizeof buf, utctime);
+    JSString* str;
+    if (!IsFinite(utctime)) {
+        str = NewStringCopyZ<CanGC>(cx, js_NaN_date_str);
+    } else {
+        char buf[100];
+        SprintfLiteral(buf, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
+                       days[int(WeekDay(utctime))],
+                       int(DateFromTime(utctime)),
+                       months[int(MonthFromTime(utctime))],
+                       int(YearFromTime(utctime)),
+                       int(HourFromTime(utctime)),
+                       int(MinFromTime(utctime)),
+                       int(SecFromTime(utctime)));
 
-    JSString* str = JS_NewStringCopyZ(cx, buf);
+        str = NewStringCopyZ<CanGC>(cx, buf);
+    }
+
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2510,12 +2475,27 @@ date_toISOString_impl(JSContext* cx, const CallArgs& args)
 
     char buf[100];
     int year = int(YearFromTime(utctime));
-    if (year < 0 || year > 9999)
-        print_iso_extended_string(buf, sizeof buf, utctime);
-    else
-        print_iso_string(buf, sizeof buf, utctime);
+    if (year < 0 || year > 9999) {
+        SprintfLiteral(buf, "%+.6d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
+                       int(YearFromTime(utctime)),
+                       int(MonthFromTime(utctime)) + 1,
+                       int(DateFromTime(utctime)),
+                       int(HourFromTime(utctime)),
+                       int(MinFromTime(utctime)),
+                       int(SecFromTime(utctime)),
+                       int(msFromTime(utctime)));
+    } else {
+        SprintfLiteral(buf, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
+                       int(YearFromTime(utctime)),
+                       int(MonthFromTime(utctime)) + 1,
+                       int(DateFromTime(utctime)),
+                       int(HourFromTime(utctime)),
+                       int(MinFromTime(utctime)),
+                       int(SecFromTime(utctime)),
+                       int(msFromTime(utctime)));
+    }
 
-    JSString* str = JS_NewStringCopyZ(cx, buf);
+    JSString* str = NewStringCopyZ<CanGC>(cx, buf);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2568,138 +2548,135 @@ date_toJSON(JSContext* cx, unsigned argc, Value* vp)
     return Call(cx, toISO, obj, args.rval());
 }
 
-/* for Date.toLocaleFormat; interface to PRMJTime date struct.
- */
-static void
-new_explode(double timeval, PRMJTime* split)
+/* Interface to PRMJTime date struct. */
+static PRMJTime
+ToPRMJTime(double localTime)
 {
-    double year = YearFromTime(timeval);
+    double year = YearFromTime(localTime);
 
-    split->tm_usec = int32_t(msFromTime(timeval)) * 1000;
-    split->tm_sec = int8_t(SecFromTime(timeval));
-    split->tm_min = int8_t(MinFromTime(timeval));
-    split->tm_hour = int8_t(HourFromTime(timeval));
-    split->tm_mday = int8_t(DateFromTime(timeval));
-    split->tm_mon = int8_t(MonthFromTime(timeval));
-    split->tm_wday = int8_t(WeekDay(timeval));
-    split->tm_year = year;
-    split->tm_yday = int16_t(DayWithinYear(timeval, year));
+    PRMJTime prtm;
+    prtm.tm_usec = int32_t(msFromTime(localTime)) * 1000;
+    prtm.tm_sec = int8_t(SecFromTime(localTime));
+    prtm.tm_min = int8_t(MinFromTime(localTime));
+    prtm.tm_hour = int8_t(HourFromTime(localTime));
+    prtm.tm_mday = int8_t(DateFromTime(localTime));
+    prtm.tm_mon = int8_t(MonthFromTime(localTime));
+    prtm.tm_wday = int8_t(WeekDay(localTime));
+    prtm.tm_year = year;
+    prtm.tm_yday = int16_t(DayWithinYear(localTime, year));
 
-    /* not sure how this affects things, but it doesn't seem
-       to matter. */
-    split->tm_isdst = (DaylightSavingTA(timeval) != 0);
+    // XXX: DaylightSavingTA expects utc-time argument.
+    prtm.tm_isdst = (DaylightSavingTA(localTime) != 0);
+
+    return prtm;
 }
 
-typedef enum formatspec {
-    FORMATSPEC_FULL, FORMATSPEC_DATE, FORMATSPEC_TIME
-} formatspec;
+enum class FormatSpec {
+    DateTime,
+    Date,
+    Time
+};
 
-/* helper function */
 static bool
-date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rval)
+FormatDate(JSContext* cx, double utcTime, FormatSpec format, MutableHandleValue rval)
 {
-    char buf[100];
-    char tzbuf[100];
-    bool usetz;
-    size_t i, tzlen;
-    PRMJTime split;
-
-    if (!IsFinite(date)) {
-        SprintfLiteral(buf, js_NaN_date_str);
+    JSString* str;
+    if (!IsFinite(utcTime)) {
+        str = NewStringCopyZ<CanGC>(cx, js_NaN_date_str);
     } else {
-        MOZ_ASSERT(NumbersAreIdentical(TimeClip(date).toDouble(), date));
+        MOZ_ASSERT(NumbersAreIdentical(TimeClip(utcTime).toDouble(), utcTime));
 
-        double local = LocalTime(date);
+        double localTime = LocalTime(utcTime);
 
-        /* offset from GMT in minutes.  The offset includes daylight savings,
-           if it applies. */
-        int minutes = (int) floor(AdjustTime(date) / msPerMinute);
-
-        /* map 510 minutes to 0830 hours */
-        int offset = (minutes / 60) * 100 + minutes % 60;
-
-        /* print as "Wed Nov 05 19:38:03 GMT-0800 (PST) 1997" The TZA is
-         * printed as 'GMT-0800' rather than as 'PST' to avoid
-         * operating-system dependence on strftime (which
-         * PRMJ_FormatTimeUSEnglish calls, for %Z only.)  win32 prints
-         * PST as 'Pacific Standard Time.'  This way we always know
-         * what we're getting, and can parse it if we produce it.
-         * The OS TZA string is included as a comment.
-         */
-
-        /* get a timezone string from the OS to include as a
-           comment. */
-        new_explode(date, &split);
-        if (PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split) != 0) {
-
-            /* Decide whether to use the resulting timezone string.
-             *
-             * Reject it if it contains any non-ASCII, non-alphanumeric
-             * characters.  It's then likely in some other character
-             * encoding, and we probably won't display it correctly.
+        int offset = 0;
+        char tzbuf[100];
+        bool usetz = false;
+        if (format == FormatSpec::DateTime || format == FormatSpec::Time) {
+            /*
+             * Offset from GMT in minutes.  The offset includes daylight
+             * savings, if it applies.
              */
-            usetz = true;
-            tzlen = strlen(tzbuf);
-            if (tzlen > 100) {
-                usetz = false;
-            } else {
-                for (i = 0; i < tzlen; i++) {
+            int minutes = (int) floor((localTime - utcTime) / msPerMinute);
+
+            /* Map 510 minutes to 0830 hours. */
+            offset = (minutes / 60) * 100 + minutes % 60;
+
+            /*
+             * Print as "Wed Nov 05 19:38:03 GMT-0800 (PST) 1997".
+             *
+             * The TZA is printed as 'GMT-0800' rather than as 'PST' to avoid
+             * operating-system dependence on strftime (which PRMJ_FormatTime
+             * calls, for %Z only.)  win32 prints PST as
+             * 'Pacific Standard Time.'  This way we always know what we're
+             * getting, and can parse it if we produce it.  The OS time zone
+             * string is included as a comment.
+             */
+
+            /* get a time zone string from the OS to include as a comment. */
+            PRMJTime prtm = ToPRMJTime(utcTime);
+            size_t tzlen = PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &prtm);
+            if (tzlen != 0) {
+                /*
+                 * Decide whether to use the resulting time zone string.
+                 *
+                 * Reject it if it contains any non-ASCII, non-alphanumeric
+                 * characters.  It's then likely in some other character
+                 * encoding, and we probably won't display it correctly.
+                 */
+                usetz = true;
+                for (size_t i = 0; i < tzlen; i++) {
                     char16_t c = tzbuf[i];
-                    if (c > 127 ||
-                        !(isalpha(c) || isdigit(c) ||
-                          c == ' ' || c == '(' || c == ')' || c == '.')) {
+                    if (c > 127 || !(isalnum(c) || c == ' ' || c == '(' || c == ')' || c == '.')) {
                         usetz = false;
+                        break;
                     }
                 }
+
+                /* Also reject it if it's not parenthesized or if it's '()'. */
+                if (tzbuf[0] != '(' || tzbuf[1] == ')')
+                    usetz = false;
             }
+        }
 
-            /* Also reject it if it's not parenthesized or if it's '()'. */
-            if (tzbuf[0] != '(' || tzbuf[1] == ')')
-                usetz = false;
-        } else
-            usetz = false;
-
+        char buf[100];
         switch (format) {
-          case FORMATSPEC_FULL:
-            /*
-             * Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
-             * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
-             */
+          case FormatSpec::DateTime:
             /* Tue Oct 31 2000 09:41:40 GMT-0800 (PST) */
             SprintfLiteral(buf, "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d%s%s",
-                           days[int(WeekDay(local))],
-                           months[int(MonthFromTime(local))],
-                           int(DateFromTime(local)),
-                           int(YearFromTime(local)),
-                           int(HourFromTime(local)),
-                           int(MinFromTime(local)),
-                           int(SecFromTime(local)),
+                           days[int(WeekDay(localTime))],
+                           months[int(MonthFromTime(localTime))],
+                           int(DateFromTime(localTime)),
+                           int(YearFromTime(localTime)),
+                           int(HourFromTime(localTime)),
+                           int(MinFromTime(localTime)),
+                           int(SecFromTime(localTime)),
                            offset,
                            usetz ? " " : "",
                            usetz ? tzbuf : "");
             break;
-          case FORMATSPEC_DATE:
+          case FormatSpec::Date:
             /* Tue Oct 31 2000 */
             SprintfLiteral(buf, "%s %s %.2d %.4d",
-                           days[int(WeekDay(local))],
-                           months[int(MonthFromTime(local))],
-                           int(DateFromTime(local)),
-                           int(YearFromTime(local)));
+                           days[int(WeekDay(localTime))],
+                           months[int(MonthFromTime(localTime))],
+                           int(DateFromTime(localTime)),
+                           int(YearFromTime(localTime)));
             break;
-          case FORMATSPEC_TIME:
+          case FormatSpec::Time:
             /* 09:41:40 GMT-0800 (PST) */
             SprintfLiteral(buf, "%.2d:%.2d:%.2d GMT%+.4d%s%s",
-                           int(HourFromTime(local)),
-                           int(MinFromTime(local)),
-                           int(SecFromTime(local)),
+                           int(HourFromTime(localTime)),
+                           int(MinFromTime(localTime)),
+                           int(SecFromTime(localTime)),
                            offset,
                            usetz ? " " : "",
                            usetz ? tzbuf : "");
             break;
         }
+
+        str = NewStringCopyZ<CanGC>(cx, buf);
     }
 
-    JSString* str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
     rval.setString(str);
@@ -2709,23 +2686,21 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
 static bool
 ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, MutableHandleValue rval)
 {
-    double utctime = obj->as<DateObject>().UTCTime().toNumber();
+    double utcTime = obj->as<DateObject>().UTCTime().toNumber();
 
     char buf[100];
-    if (!IsFinite(utctime)) {
-        SprintfLiteral(buf, js_NaN_date_str);
+    if (!IsFinite(utcTime)) {
+        strcpy(buf, js_NaN_date_str);
     } else {
-        int result_len;
-        double local = LocalTime(utctime);
-        PRMJTime split;
-        new_explode(local, &split);
+        double localTime = LocalTime(utcTime);
+        PRMJTime prtm = ToPRMJTime(localTime);
 
         /* Let PRMJTime format it. */
-        result_len = PRMJ_FormatTime(buf, sizeof buf, format, &split);
+        size_t result_len = PRMJ_FormatTime(buf, sizeof buf, format, &prtm);
 
         /* If it failed, default to toString. */
         if (result_len == 0)
-            return date_format(cx, utctime, FORMATSPEC_FULL, rval);
+            return FormatDate(cx, utcTime, FormatSpec::DateTime, rval);
 
         /* Hacked check against undesired 2-digit year 00/00/00 form. */
         if (strcmp(format, "%x") == 0 && result_len >= 6 &&
@@ -2735,11 +2710,10 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
             isdigit(buf[result_len - 2]) && isdigit(buf[result_len - 1]) &&
             /* ...but not if starts with 4-digit year, like 2022/3/11. */
             !(isdigit(buf[0]) && isdigit(buf[1]) &&
-              isdigit(buf[2]) && isdigit(buf[3]))) {
-            double localtime = obj->as<DateObject>().cachedLocalTime();
-            int year = IsNaN(localtime) ? 0 : (int) YearFromTime(localtime);
-            snprintf(buf + (result_len - 2), (sizeof buf) - (result_len - 2),
-                     "%d", year);
+              isdigit(buf[2]) && isdigit(buf[3])))
+        {
+            int year = int(YearFromTime(localTime));
+            snprintf(buf + (result_len - 2), (sizeof buf) - (result_len - 2), "%d", year);
         }
 
     }
@@ -2747,7 +2721,7 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
     if (cx->runtime()->localeCallbacks && cx->runtime()->localeCallbacks->localeToUnicode)
         return cx->runtime()->localeCallbacks->localeToUnicode(cx, buf, rval);
 
-    JSString* str = JS_NewStringCopyZ(cx, buf);
+    JSString* str = NewStringCopyZ<CanGC>(cx, buf);
     if (!str)
         return false;
     rval.setString(str);
@@ -2755,28 +2729,24 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
 }
 
 #if !EXPOSE_INTL_API
-static bool
-ToLocaleStringHelper(JSContext* cx, Handle<DateObject*> dateObj, MutableHandleValue rval)
+/* ES5 15.9.5.5. */
+MOZ_ALWAYS_INLINE bool
+date_toLocaleString_impl(JSContext* cx, const CallArgs& args)
 {
     /*
      * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
      * with msvc; '%#c' requests that a full year be used in the result string.
      */
-    return ToLocaleFormatHelper(cx, dateObj,
+    static const char format[] =
 #if defined(_WIN32) && !defined(__MWERKS__)
-                          "%#c"
+                                   "%#c"
 #else
-                          "%c"
+                                   "%c"
 #endif
-                         , rval);
-}
+                                   ;
 
-/* ES5 15.9.5.5. */
-MOZ_ALWAYS_INLINE bool
-date_toLocaleString_impl(JSContext* cx, const CallArgs& args)
-{
     Rooted<DateObject*> dateObj(cx, &args.thisv().toObject().as<DateObject>());
-    return ToLocaleStringHelper(cx, dateObj, args.rval());
+    return ToLocaleFormatHelper(cx, dateObj, format, args.rval());
 }
 
 static bool
@@ -2839,13 +2809,15 @@ date_toLocaleFormat_impl(JSContext* cx, const CallArgs& args)
          * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
          * with msvc; '%#c' requests that a full year be used in the result string.
          */
-        return ToLocaleFormatHelper(cx, dateObj,
+        static const char format[] =
 #if defined(_WIN32) && !defined(__MWERKS__)
-                              "%#c"
+                                       "%#c"
 #else
-                              "%c"
+                                       "%c"
 #endif
-                             , args.rval());
+                                       ;
+
+        return ToLocaleFormatHelper(cx, dateObj, format, args.rval());
     }
 
     RootedString fmt(cx, ToString<CanGC>(cx, args[0]));
@@ -2870,8 +2842,8 @@ date_toLocaleFormat(JSContext* cx, unsigned argc, Value* vp)
 MOZ_ALWAYS_INLINE bool
 date_toTimeString_impl(JSContext* cx, const CallArgs& args)
 {
-    return date_format(cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
-                       FORMATSPEC_TIME, args.rval());
+    return FormatDate(cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
+                      FormatSpec::Time, args.rval());
 }
 
 static bool
@@ -2885,8 +2857,8 @@ date_toTimeString(JSContext* cx, unsigned argc, Value* vp)
 MOZ_ALWAYS_INLINE bool
 date_toDateString_impl(JSContext* cx, const CallArgs& args)
 {
-    return date_format(cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
-                       FORMATSPEC_DATE, args.rval());
+    return FormatDate(cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
+                      FormatSpec::Date, args.rval());
 }
 
 static bool
@@ -2955,7 +2927,7 @@ date_toString_impl(JSContext* cx, const CallArgs& args)
     }
 
     // Step 4.
-    return date_format(cx, tv, FORMATSPEC_FULL, args.rval());
+    return FormatDate(cx, tv, FormatSpec::DateTime, args.rval());
 }
 
 bool
@@ -3093,7 +3065,7 @@ NewDateObject(JSContext* cx, const CallArgs& args, ClippedTime t)
 static bool
 ToDateString(JSContext* cx, const CallArgs& args, ClippedTime t)
 {
-    return date_format(cx, t.toDouble(), FORMATSPEC_FULL, args.rval());
+    return FormatDate(cx, t.toDouble(), FormatSpec::DateTime, args.rval());
 }
 
 static bool

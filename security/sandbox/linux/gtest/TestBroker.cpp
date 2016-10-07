@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "broker/SandboxBroker.h"
+#include "broker/SandboxBrokerUtils.h"
 #include "SandboxBrokerClient.h"
 
 #include <errno.h>
@@ -31,7 +32,7 @@ namespace mozilla {
 static const int MAY_ACCESS = SandboxBroker::MAY_ACCESS;
 static const int MAY_READ = SandboxBroker::MAY_READ;
 static const int MAY_WRITE = SandboxBroker::MAY_WRITE;
-//static const int MAY_CREATE = SandboxBroker::MAY_CREATE;
+static const int MAY_CREATE = SandboxBroker::MAY_CREATE;
 static const auto AddAlways = SandboxBroker::Policy::AddAlways;
 
 class SandboxBrokerTest : public ::testing::Test
@@ -54,11 +55,35 @@ protected:
   int Access(const char* aPath, int aMode) {
     return mClient->Access(aPath, aMode);
   }
-  int Stat(const char* aPath, struct stat* aStat) {
+  int Stat(const char* aPath, statstruct* aStat) {
     return mClient->Stat(aPath, aStat);
   }
-  int LStat(const char* aPath, struct stat* aStat) {
+  int LStat(const char* aPath, statstruct* aStat) {
     return mClient->LStat(aPath, aStat);
+  }
+  int Chmod(const char* aPath, int aMode) {
+    return mClient->Chmod(aPath, aMode);
+  }
+  int Link(const char* aPath, const char* bPath) {
+    return mClient->Link(aPath, bPath);
+  }
+  int Mkdir(const char* aPath, int aMode) {
+    return mClient->Mkdir(aPath, aMode);
+  }
+  int Symlink(const char* aPath, const char* bPath) {
+    return mClient->Symlink(aPath, bPath);
+  }
+  int Rename(const char* aPath, const char* bPath) {
+    return mClient->Rename(aPath, bPath);
+  }
+  int Rmdir(const char* aPath) {
+    return mClient->Rmdir(aPath);
+  }
+  int Unlink(const char* aPath) {
+    return mClient->Unlink(aPath);
+  }
+  ssize_t Readlink(const char* aPath, char* aBuff, size_t aSize) {
+    return mClient->Readlink(aPath, aBuff, aSize);
   }
 
   virtual void SetUp() {
@@ -105,6 +130,9 @@ SandboxBrokerTest::GetPolicy() const
   policy->AddPath(MAY_READ, "/dev/zero", AddAlways);
   policy->AddPath(MAY_READ, "/var/empty/qwertyuiop", AddAlways);
   policy->AddPath(MAY_ACCESS, "/proc/self", AddAlways); // Warning: Linux-specific.
+  policy->AddPath(MAY_READ | MAY_WRITE, "/tmp", AddAlways);
+  policy->AddPath(MAY_READ | MAY_WRITE | MAY_CREATE, "/tmp/blublu", AddAlways);
+  policy->AddPath(MAY_READ | MAY_WRITE | MAY_CREATE, "/tmp/blublublu", AddAlways);
 
   return Move(policy);
 }
@@ -182,8 +210,8 @@ TEST_F(SandboxBrokerTest, Access)
 
 TEST_F(SandboxBrokerTest, Stat)
 {
-  struct stat brokeredStat, realStat;
-  ASSERT_EQ(0, stat("/dev/null", &realStat)) << "Shouldn't ever fail!";
+  statstruct realStat, brokeredStat;
+  ASSERT_EQ(0, statsyscall("/dev/null", &realStat)) << "Shouldn't ever fail!";
   EXPECT_EQ(0, Stat("/dev/null", &brokeredStat));
   EXPECT_EQ(realStat.st_ino, brokeredStat.st_ino);
   EXPECT_EQ(realStat.st_rdev, brokeredStat.st_rdev);
@@ -197,8 +225,8 @@ TEST_F(SandboxBrokerTest, Stat)
 
 TEST_F(SandboxBrokerTest, LStat)
 {
-  struct stat brokeredStat, realStat;
-  ASSERT_EQ(0, lstat("/dev/null", &realStat));
+  statstruct realStat, brokeredStat;
+  ASSERT_EQ(0, lstatsyscall("/dev/null", &realStat));
   EXPECT_EQ(0, LStat("/dev/null", &brokeredStat));
   EXPECT_EQ(realStat.st_ino, brokeredStat.st_ino);
   EXPECT_EQ(realStat.st_rdev, brokeredStat.st_rdev);
@@ -208,6 +236,163 @@ TEST_F(SandboxBrokerTest, LStat)
 
   EXPECT_EQ(0, LStat("/proc/self", &brokeredStat));
   EXPECT_TRUE(S_ISLNK(brokeredStat.st_mode));
+}
+
+static void PrePostTestCleanup(void)
+{
+  unlink("/tmp/blublu");
+  rmdir("/tmp/blublu");
+  unlink("/tmp/nope");
+  rmdir("/tmp/nope");
+  unlink("/tmp/blublublu");
+  rmdir("/tmp/blublublu");
+}
+
+TEST_F(SandboxBrokerTest, Chmod)
+{
+  PrePostTestCleanup();
+
+  int fd = Open("/tmp/blublu", O_WRONLY | O_CREAT);
+  ASSERT_GE(fd, 0) << "Opening /tmp/blublu for writing failed.";
+  close(fd);
+  // Set read only. SandboxBroker enforces 0600 mode flags.
+  ASSERT_EQ(0, Chmod("/tmp/blublu", S_IRUSR));
+  // SandboxBroker doesn't use real access(), it just checks against
+  // the policy. So it can't see the change in permisions here.
+  // This won't work:
+  // EXPECT_EQ(-EACCES, Access("/tmp/blublu", W_OK));
+  statstruct realStat;
+  EXPECT_EQ(0, statsyscall("/tmp/blublu", &realStat));
+  EXPECT_EQ((mode_t)S_IRUSR, realStat.st_mode & 0777);
+
+  ASSERT_EQ(0, Chmod("/tmp/blublu", S_IRUSR | S_IWUSR));
+  EXPECT_EQ(0, statsyscall("/tmp/blublu", &realStat));
+  EXPECT_EQ((mode_t)(S_IRUSR | S_IWUSR), realStat.st_mode & 0777);
+  EXPECT_EQ(0, unlink("/tmp/blublu"));
+
+  PrePostTestCleanup();
+}
+
+TEST_F(SandboxBrokerTest, Link)
+{
+  PrePostTestCleanup();
+
+  int fd = Open("/tmp/blublu", O_WRONLY | O_CREAT);
+  ASSERT_GE(fd, 0) << "Opening /tmp/blublu for writing failed.";
+  close(fd);
+  ASSERT_EQ(0, Link("/tmp/blublu", "/tmp/blublublu"));
+  EXPECT_EQ(0, Access("/tmp/blublublu", F_OK));
+  // Not whitelisted target path
+  EXPECT_EQ(-EACCES, Link("/tmp/blublu", "/tmp/nope"));
+  EXPECT_EQ(0, unlink("/tmp/blublublu"));
+  EXPECT_EQ(0, unlink("/tmp/blublu"));
+
+  PrePostTestCleanup();
+}
+
+TEST_F(SandboxBrokerTest, Symlink)
+{
+  PrePostTestCleanup();
+
+  int fd = Open("/tmp/blublu", O_WRONLY | O_CREAT);
+  ASSERT_GE(fd, 0) << "Opening /tmp/blublu for writing failed.";
+  close(fd);
+  ASSERT_EQ(0, Symlink("/tmp/blublu", "/tmp/blublublu"));
+  EXPECT_EQ(0, Access("/tmp/blublublu", F_OK));
+  statstruct aStat;
+  ASSERT_EQ(0, lstatsyscall("/tmp/blublublu", &aStat));
+  EXPECT_EQ((mode_t)S_IFLNK, aStat.st_mode & S_IFMT);
+  // Not whitelisted target path
+  EXPECT_EQ(-EACCES, Symlink("/tmp/blublu", "/tmp/nope"));
+  EXPECT_EQ(0, unlink("/tmp/blublublu"));
+  EXPECT_EQ(0, unlink("/tmp/blublu"));
+
+  PrePostTestCleanup();
+}
+
+TEST_F(SandboxBrokerTest, Mkdir)
+{
+  PrePostTestCleanup();
+
+  ASSERT_EQ(0, mkdir("/tmp/blublu", 0600))
+    << "Creating dir /tmp/blublu failed.";
+  EXPECT_EQ(0, Access("/tmp/blublu", F_OK));
+  // Not whitelisted target path
+  EXPECT_EQ(-EACCES, Mkdir("/tmp/nope", 0600))
+    << "Creating dir without MAY_CREATE succeed.";
+  EXPECT_EQ(0, rmdir("/tmp/blublu"));
+
+  PrePostTestCleanup();
+}
+
+TEST_F(SandboxBrokerTest, Rename)
+{
+  PrePostTestCleanup();
+
+  ASSERT_EQ(0, mkdir("/tmp/blublu", 0600))
+    << "Creating dir /tmp/blublu failed.";
+  EXPECT_EQ(0, Access("/tmp/blublu", F_OK));
+  ASSERT_EQ(0, Rename("/tmp/blublu", "/tmp/blublublu"));
+  EXPECT_EQ(0, Access("/tmp/blublublu", F_OK));
+  EXPECT_EQ(-ENOENT , Access("/tmp/blublu", F_OK));
+  // Not whitelisted target path
+  EXPECT_EQ(-EACCES, Rename("/tmp/blublublu", "/tmp/nope"))
+    << "Renaming dir without write access succeed.";
+  EXPECT_EQ(0, rmdir("/tmp/blublublu"));
+
+  PrePostTestCleanup();
+}
+
+TEST_F(SandboxBrokerTest, Rmdir)
+{
+  PrePostTestCleanup();
+
+  ASSERT_EQ(0, mkdir("/tmp/blublu", 0600))
+    << "Creating dir /tmp/blublu failed.";
+  EXPECT_EQ(0, Access("/tmp/blublu", F_OK));
+  ASSERT_EQ(0, Rmdir("/tmp/blublu"));
+  EXPECT_EQ(-ENOENT, Access("/tmp/blublu", F_OK));
+  // Bypass sandbox to create a non-deletable dir
+  ASSERT_EQ(0, mkdir("/tmp/nope", 0600));
+  EXPECT_EQ(-EACCES, Rmdir("/tmp/nope"));
+
+  PrePostTestCleanup();
+}
+
+TEST_F(SandboxBrokerTest, Unlink)
+{
+  PrePostTestCleanup();
+
+  int fd = Open("/tmp/blublu", O_WRONLY | O_CREAT);
+  ASSERT_GE(fd, 0) << "Opening /tmp/blublu for writing failed.";
+  close(fd);
+  EXPECT_EQ(0, Access("/tmp/blublu", F_OK));
+  EXPECT_EQ(0, Unlink("/tmp/blublu"));
+  EXPECT_EQ(-ENOENT , Access("/tmp/blublu", F_OK));
+  // Bypass sandbox to write a non-deletable file
+  fd = open("/tmp/nope", O_WRONLY | O_CREAT, 0600);
+  ASSERT_GE(fd, 0) << "Opening /tmp/nope for writing failed.";
+  close(fd);
+  EXPECT_EQ(-EACCES, Unlink("/tmp/nope"));
+
+  PrePostTestCleanup();
+}
+
+TEST_F(SandboxBrokerTest, Readlink)
+{
+  PrePostTestCleanup();
+
+  int fd = Open("/tmp/blublu", O_WRONLY | O_CREAT);
+  ASSERT_GE(fd, 0) << "Opening /tmp/blublu for writing failed.";
+  close(fd);
+  ASSERT_EQ(0, Symlink("/tmp/blublu", "/tmp/blublublu"));
+  EXPECT_EQ(0, Access("/tmp/blublublu", F_OK));
+  char linkBuff[256];
+  EXPECT_EQ(11, Readlink("/tmp/blublublu", linkBuff, sizeof(linkBuff)));
+  linkBuff[11] = '\0';
+  EXPECT_EQ(0, strcmp(linkBuff, "/tmp/blublu"));
+
+  PrePostTestCleanup();
 }
 
 TEST_F(SandboxBrokerTest, MultiThreadOpen) {
@@ -237,13 +422,13 @@ TEST_F(SandboxBrokerTest, MultiThreadStat) {
 }
 void SandboxBrokerTest::MultiThreadStatWorker() {
   static const int kNumLoops = 7500;
-  struct stat nullStat, zeroStat, selfStat;
+  statstruct nullStat, zeroStat, selfStat;
   dev_t realNullDev, realZeroDev;
   ino_t realSelfInode;
 
-  ASSERT_EQ(0, stat("/dev/null", &nullStat)) << "Shouldn't ever fail!";
-  ASSERT_EQ(0, stat("/dev/zero", &zeroStat)) << "Shouldn't ever fail!";
-  ASSERT_EQ(0, lstat("/proc/self", &selfStat)) << "Shouldn't ever fail!";
+  ASSERT_EQ(0, statsyscall("/dev/null", &nullStat)) << "Shouldn't ever fail!";
+  ASSERT_EQ(0, statsyscall("/dev/zero", &zeroStat)) << "Shouldn't ever fail!";
+  ASSERT_EQ(0, lstatsyscall("/proc/self", &selfStat)) << "Shouldn't ever fail!";
   ASSERT_TRUE(S_ISLNK(selfStat.st_mode)) << "Shouldn't ever fail!";
   realNullDev = nullStat.st_rdev;
   realZeroDev = zeroStat.st_rdev;

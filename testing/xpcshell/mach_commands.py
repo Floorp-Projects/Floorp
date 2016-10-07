@@ -70,7 +70,7 @@ class XPCShellRunner(MozbuildObject):
         if os.path.isdir(src_build_path):
             sys.path.append(src_build_path)
 
-        self.run_suite(**kwargs)
+        return self.run_suite(**kwargs)
 
 
     def _run_xpcshell_harness(self, **kwargs):

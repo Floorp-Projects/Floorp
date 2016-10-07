@@ -412,6 +412,16 @@ StringFromCharCode(JSContext* cx, int32_t code)
     return NewStringCopyN<CanGC>(cx, &c, 1);
 }
 
+JSString*
+StringFromCodePoint(JSContext* cx, int32_t codePoint)
+{
+    RootedValue rval(cx, Int32Value(codePoint));
+    if (!str_fromCodePoint_one_arg(cx, rval, &rval))
+        return nullptr;
+
+    return rval.toString();
+}
+
 bool
 SetProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, HandleValue value,
             bool strict, jsbytecode* pc)

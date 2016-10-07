@@ -10,34 +10,6 @@ var DELIM = mozinfo.os == "win" ? "|" : ":";
 
 var gProfD = do_get_profile_startup();
 
-// Writes out some plugin registry to the profile
-function write_registry(version, info) {
-  let runtime = Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime);
-
-  let header = "Generated File. Do not edit.\n\n";
-  header += "[HEADER]\n";
-  header += "Version" + DELIM + version + DELIM + "$\n";
-  header += "Arch" + DELIM + runtime.XPCOMABI + DELIM + "$\n";
-  header += "\n";
-  header += "[PLUGINS]\n";
-
-  let registry = gProfD.clone();
-  registry.append("pluginreg.dat");
-  let foStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                           .createInstance(Components.interfaces.nsIFileOutputStream);
-  // write, create, truncate
-  foStream.init(registry, 0x02 | 0x08 | 0x20, 0o666, 0);
-
-  let charset = "UTF-8"; // Can be any character encoding name that Mozilla supports
-  let os = Cc["@mozilla.org/intl/converter-output-stream;1"].
-           createInstance(Ci.nsIConverterOutputStream);
-  os.init(foStream, charset, 0, 0x0000);
-
-  os.writeString(header);
-  os.writeString(info);
-  os.close();
-}
-
 function run_test() {
   allow_all_plugins();
 
@@ -54,23 +26,6 @@ function run_test() {
   const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   const statePref = "plugin.state." + pluginName;
 
-  // write plugin registry data
-  let registry = "";
-
-  registry += file.leafName + DELIM + "$\n";
-  registry += file.path + DELIM + "$\n";
-  registry += "1.0.0.0" + DELIM + "$\n";
-  registry += file.lastModifiedTime + DELIM + "0" + DELIM + "0" + DELIM + "$\n";
-  registry += "Plug-in for testing purposes." + DELIM + "$\n";
-  registry += "Test Plug-in" + DELIM + "$\n";
-  registry += "1\n";
-  registry += "0" + DELIM + "application/x-test" + DELIM + "Test mimetype" + DELIM + "tst" + DELIM + "$\n";
-
-  registry += "\n";
-  registry += "[INVALID]\n";
-  registry += "\n";
-  write_registry("0.15", registry);
-
   // Initialise profile folder
   do_get_profile();
 
@@ -78,11 +33,7 @@ function run_test() {
   if (!plugin)
     do_throw("Plugin tag not found");
 
-  // check that the expected plugin state was loaded correctly from the registry
-  do_check_true(plugin.disabled);
-  do_check_false(plugin.clicktoplay);
-  // ... and imported into prefs, with 0 being the disabled state
-  do_check_eq(0, Services.prefs.getIntPref(statePref));
+  plugin.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
 
   // prepare a copy of the plugin and backup the original
   file.copyTo(null, "nptestcopy" + suffix);

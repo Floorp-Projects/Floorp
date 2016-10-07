@@ -35,6 +35,8 @@
 <!ENTITY aboutNetworking.currentLogModules     "Current Log Modules:">
 <!ENTITY aboutNetworking.setLogFile            "Set Log File">
 <!ENTITY aboutNetworking.setLogModules         "Set Log Modules">
+<!ENTITY aboutNetworking.startLogging          "Start Logging">
+<!ENTITY aboutNetworking.stopLogging           "Stop Logging">
 <!ENTITY aboutNetworking.dnsLookup             "DNS Lookup">
 <!ENTITY aboutNetworking.dnsLookupButton       "Resolve">
 <!ENTITY aboutNetworking.dnsDomain             "Domain">

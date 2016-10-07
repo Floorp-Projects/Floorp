@@ -17,6 +17,8 @@
 #include "webrtc/system_wrappers/interface/trace.h"
 
 #include <Dvdmedia.h>
+#include <dbt.h>
+#include <ks.h>
 
 namespace webrtc
 {
@@ -41,6 +43,19 @@ const DelayValues WindowsCaptureDelays[NoWindowsCaptureDelays] = {
   },
 };
 
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uiMsg == WM_DEVICECHANGE)
+    {
+        DeviceInfoDS* dsInfo = DeviceInfoDSSingleton::GetInfo();
+        if (dsInfo != NULL)
+        {
+            dsInfo->DeviceChange();
+        }
+        return 0;
+    }
+    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
+}
 
 void _FreeMediaType(AM_MEDIA_TYPE& mt)
 {
@@ -61,13 +76,16 @@ void _FreeMediaType(AM_MEDIA_TYPE& mt)
 // static
 DeviceInfoDS* DeviceInfoDS::Create(const int32_t id)
 {
-    DeviceInfoDS* dsInfo = new DeviceInfoDS(id);
-    if (!dsInfo || dsInfo->Init() != 0)
-    {
-        delete dsInfo;
-        dsInfo = NULL;
+    if (!DeviceInfoDSSingleton::GetInfo()) {
+        DeviceInfoDS* dsInfo = new DeviceInfoDS(id);
+        if (!dsInfo || dsInfo->Init() != 0)
+        {
+            delete dsInfo;
+            dsInfo = NULL;
+        }
+        DeviceInfoDSSingleton::GetInfo() = dsInfo;
     }
-    return dsInfo;
+    return DeviceInfoDSSingleton::GetInfo();
 }
 
 DeviceInfoDS::DeviceInfoDS(const int32_t id)
@@ -112,6 +130,18 @@ DeviceInfoDS::DeviceInfoDS(const int32_t id)
                          hr);
         }
     }
+
+    _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
+    _wndClass = {0};
+    _wndClass.lpfnWndProc = &WndProc;
+    _wndClass.lpszClassName = TEXT("DeviceInfoDS");
+    _wndClass.hInstance = _hInstance;
+
+    if (RegisterClass(&_wndClass))
+    {
+        _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, _hInstance, NULL);
+    }
 }
 
 DeviceInfoDS::~DeviceInfoDS()
@@ -121,6 +151,11 @@ DeviceInfoDS::~DeviceInfoDS()
     {
         CoUninitialize();
     }
+    if (_hwnd != NULL)
+    {
+        DestroyWindow(_hwnd);
+    }
+    UnregisterClass(_wndClass.lpszClassName, _hInstance);
 }
 
 int32_t DeviceInfoDS::Init()

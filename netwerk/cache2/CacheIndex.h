@@ -921,10 +921,6 @@ private:
   void AllocBuffer();
   void ReleaseBuffer();
 
-  // Methods used by CacheIndexEntryAutoManage to keep the arrays up to date.
-  void InsertRecordToFrecencyArray(CacheIndexRecord *aRecord);
-  void RemoveRecordFromFrecencyArray(CacheIndexRecord *aRecord);
-
   // Methods used by CacheIndexEntryAutoManage to keep the iterators up to date.
   void AddRecordToIterators(CacheIndexRecord *aRecord);
   void RemoveRecordFromIterators(CacheIndexRecord *aRecord);
@@ -1031,12 +1027,79 @@ private:
   // of the journal fails or the hash does not match.
   nsTHashtable<CacheIndexEntry> mTmpJournal;
 
-  // An array that keeps entry records ordered by eviction preference; we take
-  // the entry with lowest valid frecency. Zero frecency is an initial value
-  // and such entries are stored at the end of the array. Uninitialized entries
-  // and entries marked as deleted are not present in this array.
-  nsTArray<CacheIndexRecord *>  mFrecencyArray;
-  bool                          mFrecencyArraySorted;
+  // FrecencyArray maintains order of entry records for eviction. Ideally, the
+  // records would be ordered by frecency all the time, but since this would be
+  // quite expensive, we allow certain amount of entries to be out of order.
+  // When the frecency is updated the new value is always bigger than the old
+  // one. Instead of keeping updated entries at the same position, we move them
+  // at the end of the array. This protects recently updated entries from
+  // eviction. The array is sorted once we hit the limit of maximum unsorted
+  // entries.
+  class FrecencyArray
+  {
+    class Iterator
+    {
+    public:
+      explicit Iterator(nsTArray<CacheIndexRecord *> *aRecs)
+        : mRecs(aRecs)
+        , mIdx(0)
+      {
+        while (!Done() && !(*mRecs)[mIdx]) {
+          mIdx++;
+        }
+      }
+
+      bool Done() const { return mIdx == mRecs->Length(); }
+
+      CacheIndexRecord* Get() const
+      {
+        MOZ_ASSERT(!Done());
+        return (*mRecs)[mIdx];
+      }
+
+      void Next()
+      {
+        MOZ_ASSERT(!Done());
+        ++mIdx;
+        while (!Done() && !(*mRecs)[mIdx]) {
+          mIdx++;
+        }
+      }
+
+    private:
+      nsTArray<CacheIndexRecord *> *mRecs;
+      uint32_t mIdx;
+    };
+
+  public:
+    Iterator Iter() { return Iterator(&mRecs); }
+
+    FrecencyArray() : mUnsortedElements(0)
+                    , mRemovedElements(0) {}
+
+    // Methods used by CacheIndexEntryAutoManage to keep the array up to date.
+    void AppendRecord(CacheIndexRecord *aRecord);
+    void RemoveRecord(CacheIndexRecord *aRecord);
+    void ReplaceRecord(CacheIndexRecord *aOldRecord,
+                       CacheIndexRecord *aNewRecord);
+    void SortIfNeeded();
+
+    size_t Length() const { return mRecs.Length() - mRemovedElements; }
+    void Clear() { mRecs.Clear(); }
+
+  private:
+    friend class CacheIndex;
+
+    nsTArray<CacheIndexRecord *> mRecs;
+    uint32_t                     mUnsortedElements;
+    // Instead of removing elements from the array immediately, we null them out
+    // and the iterator skips them when accessing the array. The null pointers
+    // are placed at the end during sorting and we strip them out all at once.
+    // This saves moving a lot of memory in nsTArray::RemoveElementsAt.
+    uint32_t                     mRemovedElements;
+  };
+
+  FrecencyArray mFrecencyArray;
 
   nsTArray<CacheIndexIterator *> mIterators;
 

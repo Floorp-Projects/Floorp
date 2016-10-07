@@ -588,19 +588,11 @@ private:
    */
   static NativeKey* sLatestInstance;
 
-  static const MSG EmptyMSG()
-  {
-    static bool sInitialized = false;
-    static MSG sEmptyMSG;
-    if (!sInitialized) {
-      memset(&sEmptyMSG, 0, sizeof(sEmptyMSG));
-      sInitialized = true;
-    }
-    return sEmptyMSG;
-  }
+  static const MSG sEmptyMSG;
+
   static bool IsEmptyMSG(const MSG& aMSG)
   {
-    return !memcmp(&aMSG, &EmptyMSG(), sizeof(MSG));
+    return !memcmp(&aMSG, &sEmptyMSG, sizeof(MSG));
   }
 
   bool IsAnotherInstanceRemovingCharMessage() const
