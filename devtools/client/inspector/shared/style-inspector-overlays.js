@@ -286,8 +286,11 @@ TooltipsOverlay.prototype = {
 
     let { toolbox } = this.view.inspector;
 
-    // Image, fonts, ... preview tooltip
-    this.previewTooltip = new HTMLTooltip(toolbox, {
+    // Initializing the different tooltips that are used in the inspector.
+    // These tooltips are attached to the toolbox document if they require a popup panel.
+    // Otherwise, it is attached to the inspector panel document if it is an inline
+    // editor.
+    this.previewTooltip = new HTMLTooltip(toolbox.doc, {
       type: "arrow",
       useXulWrapper: true
     });
@@ -295,15 +298,15 @@ TooltipsOverlay.prototype = {
       this._onPreviewTooltipTargetHover.bind(this));
 
     // MDN CSS help tooltip
-    this.cssDocs = new CssDocsTooltip(toolbox);
+    this.cssDocs = new CssDocsTooltip(toolbox.doc);
 
     if (this.isRuleView) {
       // Color picker tooltip
-      this.colorPicker = new SwatchColorPickerTooltip(toolbox, this.view.inspector);
+      this.colorPicker = new SwatchColorPickerTooltip(toolbox.doc, this.view.inspector);
       // Cubic bezier tooltip
-      this.cubicBezier = new SwatchCubicBezierTooltip(toolbox);
+      this.cubicBezier = new SwatchCubicBezierTooltip(toolbox.doc);
       // Filter editor tooltip
-      this.filterEditor = new SwatchFilterTooltip(toolbox,
+      this.filterEditor = new SwatchFilterTooltip(toolbox.doc,
         this._cssProperties.getValidityChecker(this.view.inspector.panelDoc));
     }
 
