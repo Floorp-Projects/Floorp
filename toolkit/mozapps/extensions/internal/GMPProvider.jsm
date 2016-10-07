@@ -291,8 +291,8 @@ GMPWrapper.prototype = {
       this._log.trace("findUpdates() - updateTask");
       try {
         let installManager = new GMPInstallManager();
-        let gmpAddons = yield installManager.checkForAddons();
-        let update = gmpAddons.find(addon => addon.id === this._plugin.id);
+        let res = yield installManager.checkForAddons();
+        let update = res.gmpAddons.find(addon => addon.id === this._plugin.id);
         if (update && update.isValid && !update.isInstalled) {
           this._log.trace("findUpdates() - found update for " +
                           this._plugin.id + ", installing");

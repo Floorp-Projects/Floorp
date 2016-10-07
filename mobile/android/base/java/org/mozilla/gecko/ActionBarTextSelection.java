@@ -33,7 +33,7 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
     private static final String LOGTAG = "GeckoTextSelection";
     private static final int SHUTDOWN_DELAY_MS = 250;
 
-    private final TextSelectionHandle anchorHandle;
+    private final Context context;
 
     private boolean mDraggingHandles;
 
@@ -59,15 +59,15 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
     };
     private ActionModeTimerTask mActionModeTimerTask;
 
-    ActionBarTextSelection(TextSelectionHandle anchorHandle) {
-        this.anchorHandle = anchorHandle;
+    ActionBarTextSelection(Context context) {
+        this.context = context;
     }
 
     @Override
     public void create() {
         // Only register listeners if we have valid start/middle/end handles
-        if (anchorHandle == null) {
-            Log.e(LOGTAG, "Failed to initialize text selection because at least one handle is null");
+        if (context == null) {
+            Log.e(LOGTAG, "Failed to initialize text selection because at least one context is null");
         } else {
             GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
                 "TextSelection:ActionbarInit",
@@ -85,8 +85,8 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
 
     @Override
     public void destroy() {
-        if (anchorHandle == null) {
-            Log.e(LOGTAG, "Do not unregister TextSelection:* listeners since anchorHandle is null");
+        if (context == null) {
+            Log.e(LOGTAG, "Do not unregister TextSelection:* listeners since context is null");
         } else {
             GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
                     "TextSelection:ActionbarInit",
@@ -154,7 +154,6 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
             return;
         }
 
-        final Context context = anchorHandle.getContext();
         if (context instanceof ActionModeCompat.Presenter) {
             final ActionModeCompat.Presenter presenter = (ActionModeCompat.Presenter) context;
             mCallback = new TextSelectionActionModeCallback(items);
@@ -164,7 +163,6 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
     }
 
     private void endActionMode() {
-        Context context = anchorHandle.getContext();
         if (context instanceof ActionModeCompat.Presenter) {
             final ActionModeCompat.Presenter presenter = (ActionModeCompat.Presenter) context;
             presenter.endActionModeCompat();
@@ -210,7 +208,7 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
                     menuitem.setShowAsAction(actionEnum, R.attr.menuItemActionModeStyle);
 
                     final String iconString = obj.optString("icon");
-                    BitmapUtils.getDrawable(anchorHandle.getContext(), iconString, new BitmapLoader() {
+                    BitmapUtils.getDrawable(context, iconString, new BitmapLoader() {
                         @Override
                         public void onBitmapFound(Drawable d) {
                             if (d != null) {

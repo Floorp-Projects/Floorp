@@ -76,9 +76,11 @@ class DOMMediaStream;
 namespace dom {
 class RTCCertificate;
 struct RTCConfiguration;
+class RTCDTMFSender;
 struct RTCIceServer;
 struct RTCOfferOptions;
 struct RTCRtpParameters;
+class RTCRtpSender;
 #ifdef USE_FAKE_MEDIA_STREAMS
 typedef Fake_MediaStreamTrack MediaStreamTrack;
 #else
@@ -435,6 +437,19 @@ public:
 
   nsresult
   AddTrack(mozilla::dom::MediaStreamTrack& aTrack, DOMMediaStream& aStream);
+
+  NS_IMETHODIMP_TO_ERRORRESULT(InsertDTMF, ErrorResult &rv,
+                               dom::RTCRtpSender& sender,
+                               const nsAString& tones,
+                               uint32_t duration, uint32_t interToneGap) {
+    rv = InsertDTMF(sender, tones, duration, interToneGap);
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(GetDTMFToneBuffer, ErrorResult &rv,
+                               dom::RTCRtpSender& sender,
+                               nsAString& outToneBuffer) {
+    rv = GetDTMFToneBuffer(sender, outToneBuffer);
+  }
 
   NS_IMETHODIMP_TO_ERRORRESULT(ReplaceTrack, ErrorResult &rv,
                                mozilla::dom::MediaStreamTrack& aThisTrack,
@@ -836,6 +851,22 @@ private:
   // storage for Telemetry data
   uint16_t mMaxReceiving[SdpMediaSection::kMediaTypes];
   uint16_t mMaxSending[SdpMediaSection::kMediaTypes];
+
+  // DTMF
+  struct DTMFState {
+    PeerConnectionImpl* mPeerConnectionImpl;
+    nsCOMPtr<nsITimer> mSendTimer;
+    nsString mTrackId;
+    nsString mTones;
+    size_t mLevel;
+    uint32_t mDuration;
+    uint32_t mInterToneGap;
+  };
+
+  static void
+  DTMFSendTimerCallback_m(nsITimer* timer, void*);
+
+  nsTArray<DTMFState> mDTMFStates;
 
 public:
   //these are temporary until the DataChannel Listen/Connect API is removed
