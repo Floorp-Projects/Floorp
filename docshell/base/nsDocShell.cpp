@@ -3690,33 +3690,6 @@ nsDocShell::FindItemWithName(const char16_t* aName,
     } else if (name.LowerCaseEqualsLiteral("_top")) {
       GetSameTypeRootTreeItem(getter_AddRefs(foundItem));
       NS_ASSERTION(foundItem, "Must have this; worst case it's us!");
-    }
-    // _main is an IE target which should be case-insensitive but isn't
-    // see bug 217886 for details
-    else if (name.LowerCaseEqualsLiteral("_content") ||
-             name.EqualsLiteral("_main")) {
-      // Must pass our same type root as requestor to the
-      // treeowner to make sure things work right.
-      nsCOMPtr<nsIDocShellTreeItem> root;
-      GetSameTypeRootTreeItem(getter_AddRefs(root));
-      if (mTreeOwner) {
-        NS_ASSERTION(root, "Must have this; worst case it's us!");
-        mTreeOwner->FindItemWithName(aName, root, aOriginalRequestor,
-                                     getter_AddRefs(foundItem));
-      }
-#ifdef DEBUG
-      else {
-        NS_ERROR("Someone isn't setting up the tree owner.  "
-                 "You might like to try that.  "
-                 "Things will.....you know, work.");
-        // Note: _content should always exist.  If we don't have one
-        // hanging off the treeowner, just create a named window....
-        // so don't return here, in case we did that and can now find
-        // it.
-        // XXXbz should we be using |root| instead of creating
-        // a new window?
-      }
-#endif
     } else {
       // Do the search for item by an actual name.
       DoFindItemWithName(aName, aRequestor, aOriginalRequestor,
@@ -3790,7 +3763,9 @@ nsDocShell::DoFindItemWithName(const char16_t* aName,
       return NS_OK;
     }
 
-    if (parentAsTreeItem->ItemType() == mItemType) {
+    // If we have a same-type parent, respecting browser and app boundaries.
+    // NOTE: Could use GetSameTypeParent if the issues described in bug 1310344 are fixed.
+    if (!GetIsMozBrowserOrApp() && parentAsTreeItem->ItemType() == mItemType) {
       return parentAsTreeItem->FindItemWithName(
         aName,
         static_cast<nsIDocShellTreeItem*>(this),
@@ -3799,14 +3774,17 @@ nsDocShell::DoFindItemWithName(const char16_t* aName,
     }
   }
 
-  // If the parent is null or not of the same type fall through and ask tree
-  // owner.
-
-  // This may fail, but comparing against null serves the same purpose
-  nsCOMPtr<nsIDocShellTreeOwner> reqAsTreeOwner(do_QueryInterface(aRequestor));
-  if (mTreeOwner && mTreeOwner != reqAsTreeOwner) {
-    return mTreeOwner->FindItemWithName(aName, this, aOriginalRequestor,
-                                        aResult);
+  // If we have a null parent or the parent is not of the same type, we need to
+  // give up on finding it in our tree, and start looking in our TabGroup.
+  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
+  if (window) {
+    RefPtr<mozilla::dom::TabGroup> tabGroup =
+      nsGlobalWindow::Cast(window)->TabGroup();
+    // We don't want to make the request to our TabGroup if they are the ones
+    // which made a request to us.
+    if (tabGroup != aRequestor) {
+      tabGroup->FindItemWithName(aName, this, aOriginalRequestor, aResult);
+    }
   }
 
   return NS_OK;

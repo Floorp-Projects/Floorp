@@ -115,6 +115,48 @@ TabGroup::Leave(nsPIDOMWindowOuter* aWindow)
   mWindows.RemoveElement(aWindow);
 }
 
+nsresult
+TabGroup::FindItemWithName(const char16_t* aName,
+                           nsIDocShellTreeItem* aRequestor,
+                           nsIDocShellTreeItem* aOriginalRequestor,
+                           nsIDocShellTreeItem** aFoundItem)
+{
+  NS_ENSURE_ARG_POINTER(aFoundItem);
+  *aFoundItem = nullptr;
+
+#ifdef DEBUG
+  nsDependentString name(aName);
+  MOZ_ASSERT(!name.LowerCaseEqualsLiteral("_blank") &&
+             !name.LowerCaseEqualsLiteral("_top") &&
+             !name.LowerCaseEqualsLiteral("_parent") &&
+             !name.LowerCaseEqualsLiteral("_self"));
+#endif
+
+  for (nsPIDOMWindowOuter* outerWindow : mWindows) {
+    // Ignore non-toplevel windows
+    if (outerWindow->GetScriptableParentOrNull()) {
+      continue;
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> docshell = outerWindow->GetDocShell();
+    if (!docshell) {
+      continue;
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    docshell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+    MOZ_RELEASE_ASSERT(docshell == root);
+    if (root && aRequestor != root) {
+      root->FindItemWithName(aName, this, aOriginalRequestor, aFoundItem);
+      if (*aFoundItem) {
+        break;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(TabGroup, nsISupports)
 
 TabGroup::HashEntry::HashEntry(const nsACString* aKey)
