@@ -625,7 +625,7 @@ ToString(const UniCharsAndModifiers& aUniCharsAndModifiers)
   }
   nsAutoCString result;
   result.AssignLiteral("{ ");
-  result.Append(GetCharacterCodeName(aUniCharsAndModifiers.mChars[0]));
+  result.Append(GetCharacterCodeName(aUniCharsAndModifiers.CharAt(0)));
   for (uint32_t i = 1; i < aUniCharsAndModifiers.mLength; ++i) {
     if (aUniCharsAndModifiers.mModifiers[i - 1] !=
           aUniCharsAndModifiers.mModifiers[i]) {
@@ -634,7 +634,7 @@ ToString(const UniCharsAndModifiers& aUniCharsAndModifiers)
       result.AppendLiteral("]");
     }
     result.AppendLiteral(", ");
-    result.Append(GetCharacterCodeName(aUniCharsAndModifiers.mChars[i]));
+    result.Append(GetCharacterCodeName(aUniCharsAndModifiers.CharAt(i)));
   }
   result.AppendLiteral(" [");
   uint32_t lastIndex = aUniCharsAndModifiers.mLength - 1;
@@ -3147,8 +3147,8 @@ NativeKey::ComputeInputtingStringWithKeyboardLayout()
     // If the produced characters of the key on current keyboard layout
     // are same as computed Latin characters, we shouldn't append the
     // Latin characters to alternativeCharCode.
-    if (mUnshiftedLatinChar == mUnshiftedString.mChars[0] &&
-        mShiftedLatinChar == mShiftedString.mChars[0]) {
+    if (mUnshiftedLatinChar == mUnshiftedString.CharAt(0) &&
+        mShiftedLatinChar == mShiftedString.CharAt(0)) {
       mShiftedLatinChar = mUnshiftedLatinChar = 0;
     }
   } else if (mUnshiftedLatinChar) {
@@ -3159,8 +3159,8 @@ NativeKey::ComputeInputtingStringWithKeyboardLayout()
     // Shift key but with Shift key, it produces '%'.
     // If the mUnshiftedLatinChar is produced by the key on current
     // keyboard layout, we shouldn't append it to alternativeCharCode.
-    if (mUnshiftedLatinChar == mUnshiftedString.mChars[0] ||
-        mUnshiftedLatinChar == mShiftedString.mChars[0]) {
+    if (mUnshiftedLatinChar == mUnshiftedString.CharAt(0) ||
+        mUnshiftedLatinChar == mShiftedString.CharAt(0)) {
       mUnshiftedLatinChar = 0;
     }
   }
@@ -3378,7 +3378,7 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
          this, aIndex + 1, ToString(modKeyState).get()));
     }
     uint16_t uniChar =
-      mInputtingStringAndModifiers.mChars[aIndex - skipUniChars];
+      mInputtingStringAndModifiers.CharAt(aIndex - skipUniChars);
 
     // The mCharCode was set from mKeyValue. However, for example, when Ctrl key
     // is pressed, its value should indicate an ASCII character for backward
@@ -3414,10 +3414,10 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
   for (size_t i = 0; i < count; ++i) {
     uint16_t shiftedChar = 0, unshiftedChar = 0;
     if (skipShiftedChars <= aIndex + i) {
-      shiftedChar = mShiftedString.mChars[aIndex + i - skipShiftedChars];
+      shiftedChar = mShiftedString.CharAt(aIndex + i - skipShiftedChars);
     }
     if (skipUnshiftedChars <= aIndex + i) {
-      unshiftedChar = mUnshiftedString.mChars[aIndex + i - skipUnshiftedChars];
+      unshiftedChar = mUnshiftedString.CharAt(aIndex + i - skipUnshiftedChars);
     }
 
     if (shiftedChar || unshiftedChar) {
@@ -3448,8 +3448,8 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
       case VK_OEM_PERIOD: charForOEMKeyCode = '.'; break;
     }
     if (charForOEMKeyCode &&
-        charForOEMKeyCode != mUnshiftedString.mChars[0] &&
-        charForOEMKeyCode != mShiftedString.mChars[0] &&
+        charForOEMKeyCode != mUnshiftedString.CharAt(0) &&
+        charForOEMKeyCode != mShiftedString.CharAt(0) &&
         charForOEMKeyCode != mUnshiftedLatinChar &&
         charForOEMKeyCode != mShiftedLatinChar) {
       AlternativeCharCode OEMChars(charForOEMKeyCode, charForOEMKeyCode);
@@ -3785,12 +3785,12 @@ KeyboardLayout::MaybeInitNativeKeyWithCompositeChar(
 
   UniCharsAndModifiers baseChars =
     GetUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode, aModKeyState);
-  if (baseChars.IsEmpty() || !baseChars.mChars[0]) {
+  if (baseChars.IsEmpty() || !baseChars.CharAt(0)) {
     return false;
   }
 
   char16_t compositeChar =
-    GetCompositeChar(mActiveDeadKey, mDeadKeyShiftState, baseChars.mChars[0]);
+    GetCompositeChar(mActiveDeadKey, mDeadKeyShiftState, baseChars.CharAt(0));
   if (!compositeChar) {
     return false;
   }
@@ -4434,15 +4434,15 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
       UniCharsAndModifiers uniChars =
         GetUniCharsAndModifiers(aNativeKeyCode, modKeyState);
       if (uniChars.mLength != 1 ||
-          uniChars.mChars[0] < ' ' || uniChars.mChars[0] > 0x7F) {
+          uniChars.CharAt(0) < ' ' || uniChars.CharAt(0) > 0x7F) {
         modKeyState.Set(MODIFIER_SHIFT);
         uniChars = GetUniCharsAndModifiers(aNativeKeyCode, modKeyState);
         if (uniChars.mLength != 1 ||
-            uniChars.mChars[0] < ' ' || uniChars.mChars[0] > 0x7F) {
+            uniChars.CharAt(0) < ' ' || uniChars.CharAt(0) > 0x7F) {
           return 0;
         }
       }
-      return WidgetUtils::ComputeKeyCodeFromChar(uniChars.mChars[0]);
+      return WidgetUtils::ComputeKeyCodeFromChar(uniChars.CharAt(0));
     }
 
     // IE sets 0xC2 to the DOM keyCode for VK_ABNT_C2.  However, we're already
