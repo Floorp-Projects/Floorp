@@ -1365,9 +1365,4 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 } /* namespace frontend */
 } /* namespace js */
 
-/*
- * Convenience macro to access Parser.tokenStream as a pointer.
- */
-#define TS(p) (&(p)->tokenStream)
-
 #endif /* frontend_Parser_h */
