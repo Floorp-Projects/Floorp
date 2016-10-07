@@ -28,9 +28,6 @@ throws an exception. Note that frames only become inactive at times that
 are predictable for the debugger: when the debuggee runs, or when the
 debugger removes frames from the stack itself.
 
-Stack frames that represent the control state of generator-iterator objects
-behave in a special way, described in [Generator Frames][generator] below.
-
 
 ## Visible Frames
 
@@ -132,9 +129,7 @@ its prototype:
 
 `older`
 :   The next-older visible frame, in which control will resume when this
-    frame completes. If there is no older frame, this is `null`. (On a
-    suspended generator frame, the value of this property is `null`; see
-    [Generator Frames][generator].)
+    frame completes. If there is no older frame, this is `null`.
 
 `depth`
 :   The depth of this frame, counting from oldest to youngest; the oldest
@@ -142,8 +137,7 @@ its prototype:
 
 `live`
 :   True if the frame this `Debugger.Frame` instance refers to is still on
-    the stack (or, in the case of generator-iterator objects, has not yet
-    finished its iteration); false if it has completed execution or been
+    the stack; false if it has completed execution or been
     popped in some other way.
 
 `script`
@@ -254,11 +248,6 @@ the compartment to which the handler method belongs.
     an `undefined` resumption value leaves the frame's throwing and
     termination process undisturbed.
 
-    <i>(Not yet implemented.)</i> When a generator frame yields a value,
-    SpiderMonkey calls its `Debugger.Frame` instance's `onPop` handler
-    method, if present, passing a `yield` resumption value; however, the
-    `Debugger.Frame` instance remains live.
-
     If multiple [`Debugger`][debugger-object] instances each have
     `Debugger.Frame` instances for a given stack frame with `onPop`
     handlers set, their handlers are run in an unspecified order. The
@@ -268,17 +257,6 @@ the compartment to which the handler method belongs.
     This handler is not called on `"debugger"` frames. It is also not called
     when unwinding a frame due to an over-recursion or out-of-memory
     exception.
-
-`onResume`
-:   This property must be either `undefined` or a function. If it is a
-    function, SpiderMonkey calls it if the current frame is a generator
-    frame whose execution has just been resumed. The function should return
-    a [resumption value][rv] indicating how execution should proceed. On
-    newly created frames, this property's value is `undefined`.
-
-    If the program resumed the generator by calling its `send` method and
-    passing a value, then <i>value</i> is that value. Otherwise,
-    <i>value</i> is `undefined`.
 
 
 ## Function Properties of the Debugger.Frame Prototype Object
@@ -348,59 +326,3 @@ methods of other kinds of objects.
 
     The <i>options</i> argument is as for
     [`Debugger.Frame.prototype.eval`][fr eval], described above.
-
-
-## Generator Frames
-
-<i>Not all behavior described in this section has been implemented
-yet.</i>
-
-SpiderMonkey supports generator-iterator objects, which produce a series of
-values by repeatedly suspending the execution of a function or expression.
-For example, calling a function that uses `yield` produces a
-generator-iterator object, as does evaluating a generator expression like
-`(i*i for each (i in [1,2,3]))`.
-
-A generator-iterator object refers to a stack frame with no fixed
-continuation frame. While the generator's code is running, its continuation
-is whatever frame called its `next` method; while the generator is
-suspended, it has no particular continuation frame; and when it resumes
-again, the continuation frame for that resumption could be different from
-that of the previous resumption.
-
-A `Debugger.Frame` instance representing a generator frame differs from an
-ordinary stack frame as follows:
-
-* A generator frame's `generator` property is true.
-
-* A generator frame disappears from the stack each time the generator
-  yields a value and is suspended, and reappears atop the stack when it is
-  resumed to produce the generator's next value. The same `Debugger.Frame`
-  instance refers to the generator frame until it returns, throws an
-  exception, or is terminated.
-
-* A generator frame's `older` property refers to the frame's continuation
-  frame while the generator is running, and is `null` while the generator
-  is suspended.
-
-* A generator frame's `depth` property reflects the frame's position on
-  the stack when the generator is resumed, and is `null` while the
-  generator is suspended.
-
-* A generator frame's `live` property remains true until the frame
-  returns, throws an exception, or is terminated. Thus, generator frames
-  can be live while not present on the stack.
-
-The other `Debugger.Frame` methods and accessor properties work as
-described on generator frames, even when the generator frame is suspended.
-You may examine a suspended generator frame's variables, and use its
-`script` and `offset` members to see which `yield` it is suspended at.
-
-A `Debugger.Frame` instance referring to a generator-iterator frame has a
-strong reference to the generator-iterator object; the frame (and its
-object) will live as long as the `Debugger.Frame` instance does. However,
-when the generator function returns, throws an exception, or is terminated,
-thus ending the iteration, the `Debugger.Frame` instance becomes inactive
-and its `live` property becomes `false`, just as would occur for any other
-sort of frame that is popped. A non-live `Debugger.Frame` instance no
-longer holds a strong reference to the generator-iterator object.
