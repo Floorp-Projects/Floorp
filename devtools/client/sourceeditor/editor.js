@@ -1293,7 +1293,6 @@ Editor.prototype = {
     if (!this._isInputOrTextarea(event.target)) {
       return;
     }
-    let cm = editors.get(this);
     let node = event.originalTarget;
 
     switch (name) {
