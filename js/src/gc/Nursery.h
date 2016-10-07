@@ -174,17 +174,17 @@ class Nursery
     JSObject* allocateObject(JSContext* cx, size_t size, size_t numDynamic, const js::Class* clasp);
 
     /* Allocate a buffer for a given zone, using the nursery if possible. */
-    void* allocateBuffer(JS::Zone* zone, uint32_t nbytes);
+    void* allocateBuffer(JS::Zone* zone, size_t nbytes);
 
     /*
      * Allocate a buffer for a given object, using the nursery if possible and
      * obj is in the nursery.
      */
-    void* allocateBuffer(JSObject* obj, uint32_t nbytes);
+    void* allocateBuffer(JSObject* obj, size_t nbytes);
 
     /* Resize an existing object buffer. */
     void* reallocateBuffer(JSObject* obj, void* oldBuffer,
-                           uint32_t oldBytes, uint32_t newBytes);
+                           size_t oldBytes, size_t newBytes);
 
     /* Free an object buffer. */
     void freeBuffer(void* buffer);
