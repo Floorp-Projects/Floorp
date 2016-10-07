@@ -1957,16 +1957,6 @@ intrinsic_RuntimeDefaultLocale(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-intrinsic_LocalTZA(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 0, "the LocalTZA intrinsic takes no arguments");
-
-    args.rval().setDouble(DateTimeInfo::localTZA());
-    return true;
-}
-
-static bool
 intrinsic_AddContentTelemetry(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2395,7 +2385,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
     JS_FN("_FinishBoundFunctionInit", intrinsic_FinishBoundFunctionInit, 3,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
-    JS_FN("LocalTZA",                intrinsic_LocalTZA,                0,0),
     JS_FN("AddContentTelemetry",     intrinsic_AddContentTelemetry,     2,0),
 
     JS_INLINABLE_FN("_IsConstructing", intrinsic_IsConstructing,        0,0,
@@ -2582,11 +2571,15 @@ static const JSFunctionSpec intrinsic_functions[] = {
     // See builtin/Intl.h for descriptions of the intl_* functions.
     JS_FN("intl_availableCalendars", intl_availableCalendars, 1,0),
     JS_FN("intl_availableCollations", intl_availableCollations, 1,0),
+    JS_FN("intl_availableTimeZones", intl_availableTimeZones, 0,0),
+    JS_FN("intl_canonicalizeTimeZone", intl_canonicalizeTimeZone, 1,0),
     JS_FN("intl_Collator", intl_Collator, 2,0),
     JS_FN("intl_Collator_availableLocales", intl_Collator_availableLocales, 0,0),
     JS_FN("intl_CompareStrings", intl_CompareStrings, 3,0),
     JS_FN("intl_DateTimeFormat", intl_DateTimeFormat, 2,0),
     JS_FN("intl_DateTimeFormat_availableLocales", intl_DateTimeFormat_availableLocales, 0,0),
+    JS_FN("intl_defaultTimeZone", intl_defaultTimeZone, 0,0),
+    JS_FN("intl_defaultTimeZoneOffset", intl_defaultTimeZoneOffset, 0,0),
     JS_FN("intl_FormatDateTime", intl_FormatDateTime, 2,0),
     JS_FN("intl_FormatNumber", intl_FormatNumber, 2,0),
     JS_FN("intl_GetCalendarInfo", intl_GetCalendarInfo, 1,0),
