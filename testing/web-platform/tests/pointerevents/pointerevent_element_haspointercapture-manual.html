@@ -60,6 +60,12 @@
                         assert_equals(target0.hasPointerCapture(e.pointerId), true,
                                       "after target0.setPointerCapture, target0.hasPointerCapture should be true");
                     });
+                    // If the element.hasPointerCapture is false element.releasePointerCapture does nothing
+                    target1.releasePointerCapture(e.pointerId);
+                    test_pointerEvent.step(function () {
+                        assert_equals(target0.hasPointerCapture(e.pointerId), true,
+                                      "while target1.hasPointerCapture is false, target1.releasePointerCapture should not change hasPointerCapture");
+                    });
                 });
 
                 for (var i = 0; i < listening_events.length; i++) {
@@ -72,8 +78,9 @@
                 }
 
                 on_event(target0, "pointerup", function (e) {
-                    // Immediately after firing the pointerup or pointercancel events, a user agent must run the steps
-                    // as if the releasePointerCapture() method has been called
+                    // Immediately after firing the pointerup or pointercancel events, a user agent must clear
+                    // the pending pointer capture target override for the pointerId, and then run
+                    // "Process Pending Pointer Capture" steps to fire lostpointercapture if necessary.
                     test_pointerEvent.step(function () {
                         assert_equals(target0.hasPointerCapture(e.pointerId), true,
                                       "pointerup target0.hasPointerCapture should be true");

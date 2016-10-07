@@ -3,7 +3,7 @@
   <head>
     <meta charset=utf-8>
     <meta name="timeout" content="long">
-    <title>Encrypted Media Extensions: Verify MediaKeySession.keyStatuses with multiple sessions, DRM</title>
+    <title>Encrypted Media Extensions: Successful Playback, Temporary session with DRM, mp4, multiple keys in sequence</title>
     <link rel="help" href="https://w3c.github.io/encrypted-media/">
 
     <!-- Web Platform Test Harness scripts -->
@@ -19,11 +19,11 @@
     <!-- Content metadata -->
     <script src=/encrypted-media/content/content-metadata.js></script>
 
-    <!-- Message handler for DRM keysystem -->
+    <!-- Message handler for Clear Key keysystem -->
     <script src=/encrypted-media/util/drm-messagehandler.js></script>
 
     <!-- The script for this specific test -->
-    <script src=/encrypted-media/scripts/playback-temporary-multikey-multisession.js></script>
+    <script src=/encrypted-media/scripts/playback-temporary-multikey-sequential.js></script>
 
   </head>
   <body>
@@ -35,8 +35,9 @@
 
     <script>
         var keysystem = getSupportedKeySystem(),
-            contentitem = content['mp4-multikey'],
+            contentitem = content['mp4-multikey-sequential'],
             handler = new MessageHandler( keysystem, contentitem ),
+            initdatas = getProprietaryInitDatas(contentitem),
             config = {  video:              document.getElementById('videoelement'),
                         keysystem:          keysystem,
                         messagehandler:     handler.messagehandler,
@@ -45,9 +46,10 @@
                         audioType:          contentitem.audio.type,
                         videoType:          contentitem.video.type,
                         initDataType:       contentitem.initDataType,
-                        initData:           getProprietaryInitDatas(contentitem).initDatas.map( base64DecodeToUnit8Array ),
-                        duration:           5,
-                        testcase:           'sequential' };
+                        initData:           initdatas.initDatas.map(base64DecodeToUnit8Array),
+                        variantIds:         initdatas.variantIds,
+                        duration:           5
+                    };
 
         runTest(config);
     </script>

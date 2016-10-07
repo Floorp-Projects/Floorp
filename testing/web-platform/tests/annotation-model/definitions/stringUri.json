@@ -1,8 +1,0 @@
-{
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id" : "stringUri.json",
-  "title" : "Definition: URI",
-  "description" : "True when the string is a URI",
-  "type": "string",
-  "format": "uri"
-}

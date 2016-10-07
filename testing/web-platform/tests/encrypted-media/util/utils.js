@@ -1,3 +1,7 @@
+function testnamePrefix( qualifier, keysystem ) {
+    return ( qualifier || '' ) + ( keysystem === 'org.w3.clearkey' ? keysystem : 'drm' );
+}
+
 function getInitData(initDataType) {
 
     // FIXME: This is messed up, because here we are hard coding the key ids for the different content
@@ -92,6 +96,12 @@ function waitForEventAndRunStep(eventName, element, func, stepTest)
     element.addEventListener(eventName, stepTest.step_func(eventCallback), true);
 }
 
+function waitForEvent(eventName, element) {
+    return new Promise(function(resolve) {
+        element.addEventListener(eventName, resolve, true);
+    })
+}
+
 var consoleDiv = null;
 
 function consoleWrite(text)
@@ -174,26 +184,34 @@ function arrayBufferAsString(buffer)
 
 function dumpKeyStatuses(keyStatuses)
 {
-    consoleWrite("for (var entry of keyStatuses)");
-    for (var entry of keyStatuses) {
-        consoleWrite(arrayBufferAsString(entry[0]) + ": " + entry[1]);
+    var userAgent = navigator.userAgent.toLowerCase();
+    if (userAgent.indexOf('edge') === -1) {
+        consoleWrite("for (var entry of keyStatuses)");
+        for (var entry of keyStatuses) {
+            consoleWrite(arrayBufferAsString(entry[0]) + ": " + entry[1]);
+        }
+        consoleWrite("for (var keyId of keyStatuses.keys())");
+        for (var keyId of keyStatuses.keys()) {
+            consoleWrite(arrayBufferAsString(keyId));
+        }
+        consoleWrite("for (var status of keyStatuses.values())");
+        for (var status of keyStatuses.values()) {
+            consoleWrite(status);
+        }
+        consoleWrite("for (var entry of keyStatuses.entries())");
+        for (var entry of keyStatuses.entries()) {
+            consoleWrite(arrayBufferAsString(entry[0]) + ": " + entry[1]);
+        }
+        consoleWrite("keyStatuses.forEach()");
+        keyStatuses.forEach(function(status, keyId) {
+            consoleWrite(arrayBufferAsString(keyId) + ": " + status);
+        });
+    } else {
+        consoleWrite("keyStatuses.forEach()");
+        keyStatuses.forEach(function(keyId, status) {
+            consoleWrite(arrayBufferAsString(keyId) + ": " + status);
+        });
     }
-    consoleWrite("for (var keyId of keyStatuses.keys())");
-    for (var keyId of keyStatuses.keys()) {
-        consoleWrite(arrayBufferAsString(keyId));
-    }
-    consoleWrite("for (var status of keyStatuses.values())");
-    for (var status of keyStatuses.values()) {
-        consoleWrite(status);
-    }
-    consoleWrite("for (var entry of keyStatuses.entries())");
-    for (var entry of keyStatuses.entries()) {
-        consoleWrite(arrayBufferAsString(entry[0]) + ": " + entry[1]);
-    }
-    consoleWrite("keyStatuses.forEach()");
-    keyStatuses.forEach(function(status, keyId) {
-        consoleWrite(arrayBufferAsString(keyId) + ": " + status);
-    });
 }
 
 // Verify that |keyStatuses| contains just the keys in |keys.expected|
@@ -206,19 +224,48 @@ function verifyKeyStatuses(keyStatuses, keys)
     var unexpected = keys.unexpected || [];
 
     // |keyStatuses| should have same size as number of |keys.expected|.
-    assert_equals(keyStatuses.size, expected.length);
+    assert_equals(keyStatuses.size, expected.length, "keystatuses should have expected size");
 
     // All |keys.expected| should be found.
     expected.map(function(key) {
-        assert_true(keyStatuses.has(key));
-        assert_equals(keyStatuses.get(key), 'usable');
+        assert_true(keyStatuses.has(key), "keystatuses should have the expected keys");
+        assert_equals(keyStatuses.get(key), 'usable', "keystatus value should be 'usable'");
     });
 
     // All |keys.unexpected| should not be found.
     unexpected.map(function(key) {
-        assert_false(keyStatuses.has(key));
-        assert_equals(keyStatuses.get(key), undefined);
+        assert_false(keyStatuses.has(key), "keystatuses should not have unexpected keys");
+        assert_equals(keyStatuses.get(key), undefined, "keystatus for unexpected key should be undefined");
     });
+}
+
+// This function checks that calling |testCase.func| returns a
+// rejected Promise with the error.name equal to
+// |testCase.exception|.
+function test_exception(testCase /*...*/) {
+    var func = testCase.func;
+    var exception = testCase.exception;
+    var args = Array.prototype.slice.call(arguments, 1);
+
+    // Currently blink throws for TypeErrors rather than returning
+    // a rejected promise (http://crbug.com/359386).
+    // FIXME: Remove try/catch once they become failed promises.
+    try {
+        return func.apply(null, args).then(
+            function (result) {
+                assert_unreached(format_value(func));
+            },
+            function (error) {
+                assert_equals(error.name, exception, format_value(func));
+                assert_not_equals(error.message, "", format_value(func));
+            }
+        );
+    } catch (e) {
+        // Only allow 'TypeError' exceptions to be thrown.
+        // Everything else should be a failed promise.
+        assert_equals('TypeError', exception, format_value(func));
+        assert_equals(e.name, exception, format_value(func));
+    }
 }
 
 

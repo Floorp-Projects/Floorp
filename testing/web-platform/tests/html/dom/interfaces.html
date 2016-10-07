@@ -165,7 +165,7 @@ interface Node : EventTarget {
   const unsigned short ELEMENT_NODE = 1;
   const unsigned short ATTRIBUTE_NODE = 2; // historical
   const unsigned short TEXT_NODE = 3;
-  const unsigned short CDATA_SECTION_NODE = 4; // historical
+  const unsigned short CDATA_SECTION_NODE = 4;
   const unsigned short ENTITY_REFERENCE_NODE = 5; // historical
   const unsigned short ENTITY_NODE = 6; // historical
   const unsigned short PROCESSING_INSTRUCTION_NODE = 7;
@@ -237,6 +237,7 @@ interface Document : Node {
   [NewObject] Element createElementNS(DOMString? namespace, DOMString qualifiedName);
   [NewObject] DocumentFragment createDocumentFragment();
   [NewObject] Text createTextNode(DOMString data);
+  [NewObject] CDATASection createCDATASection(DOMString data);
   [NewObject] Comment createComment(DOMString data);
   [NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
@@ -352,6 +353,10 @@ interface Text : CharacterData {
   readonly attribute DOMString wholeText;
 };
 
+[Exposed=Window]
+interface CDATASection : Text {
+};
+
 interface ProcessingInstruction : CharacterData {
   readonly attribute DOMString target;
 };
@@ -441,7 +446,7 @@ callback interface NodeFilter {
   const unsigned long SHOW_ELEMENT = 0x1;
   const unsigned long SHOW_ATTRIBUTE = 0x2; // historical
   const unsigned long SHOW_TEXT = 0x4;
-  const unsigned long SHOW_CDATA_SECTION = 0x8; // historical
+  const unsigned long SHOW_CDATA_SECTION = 0x8;
   const unsigned long SHOW_ENTITY_REFERENCE = 0x10; // historical
   const unsigned long SHOW_ENTITY = 0x20; // historical
   const unsigned long SHOW_PROCESSING_INSTRUCTION = 0x40;
@@ -458,14 +463,13 @@ interface DOMTokenList {
   readonly attribute unsigned long length;
   getter DOMString? item(unsigned long index);
   boolean contains(DOMString token);
-  void add(DOMString... tokens);
-  void remove(DOMString... tokens);
-  boolean toggle(DOMString token, optional boolean force);
-  void replace(DOMString token, DOMString newToken);
+  [CEReactions] void add(DOMString... tokens);
+  [CEReactions] void remove(DOMString... tokens);
+  [CEReactions] boolean toggle(DOMString token, optional boolean force);
+  [CEReactions] void replace(DOMString token, DOMString newToken);
   boolean supports(DOMString token);
-           attribute DOMString value;
-  stringifier;
-//  iterable<DOMString>;
+  [CEReactions] stringifier attribute DOMString value;
+  //  iterable<DOMString>;
 };</script>
 <!-- UI Events IDLs -->
 <script type=text/plain class=untested>

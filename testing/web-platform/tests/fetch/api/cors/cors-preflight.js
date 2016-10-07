@@ -2,7 +2,7 @@ if (this.document === undefined) {
   importScripts("/resources/testharness.js");
   importScripts("/common/utils.js");
   importScripts("../resources/utils.js");
-  importScripts("../resources/get-host-info.sub.js");
+  importScripts("/common/get-host-info.sub.js");
 }
 
 function headerNames(headers)
@@ -52,7 +52,7 @@ function corsPreflight(desc, corsUrl, method, allowed, headers, safeHeaders) {
               assert_in_array(header[0].toLowerCase(), actualHeaders, "Preflight asked permission for header: " + header);
 
             let accessControlAllowHeaders = headerNames(headers).sort().join(",");
-            assert_equals(resp.headers.get("x-control-request-headers").replace(new RegExp(" ", "g"), ""), accessControlAllowHeaders, "Access-Control-Allow-Headers value");
+            assert_equals(resp.headers.get("x-control-request-headers"), accessControlAllowHeaders, "Access-Control-Allow-Headers value");
             return fetch(RESOURCES_DIR + "clean-stash.py?token=" + uuid_token);
           }
         });
