@@ -19,11 +19,11 @@ const { GlobalManager, Management } = Components.utils.import("resource://gre/mo
 function promiseAddonStartup() {
   return new Promise(resolve => {
     let listener = (evt, extension) => {
-      Management.off("startup", listener);
+      Management.off("ready", listener);
       resolve(extension);
     };
 
-    Management.on("startup", listener);
+    Management.on("ready", listener);
   });
 }
 
@@ -352,4 +352,53 @@ add_task(function* test_experiments_api() {
   equal(addons.pop().id, ID, "Add-on type should be aliased to extension");
 
   addon.uninstall();
+});
+
+add_task(function* developerShouldOverride() {
+  let addon = yield promiseInstallWebExtension({
+    manifest: {
+      default_locale: "en",
+      developer: {
+        name: "__MSG_name__",
+        url: "__MSG_url__"
+      },
+      author: "Will be overridden by developer",
+      homepage_url: "https://will.be.overridden",
+    },
+    files: {
+      "_locales/en/messages.json": `{
+        "name": {
+          "message": "en name"
+        },
+        "url": {
+          "message": "https://example.net/en"
+        }
+      }`
+    }
+  });
+
+  addon = yield promiseAddonByID(addon.id);
+  equal(addon.creator, "en name");
+  equal(addon.homepageURL, "https://example.net/en");
+  addon.uninstall();
+});
+
+add_task(function* developerEmpty() {
+  for (let developer of [{}, null, {name: null, url: null}]) {
+    let addon = yield promiseInstallWebExtension({
+      manifest: {
+        author: "Some author",
+        developer: developer,
+        homepage_url: "https://example.net",
+        manifest_version: 2,
+        name: "Web Extension Name",
+        version: "1.0",
+      }
+    });
+
+    addon = yield promiseAddonByID(addon.id);
+    equal(addon.creator, "Some author");
+    equal(addon.homepageURL, "https://example.net");
+    addon.uninstall();
+  }
 });

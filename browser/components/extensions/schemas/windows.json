@@ -328,6 +328,11 @@
                 "$ref": "WindowState",
                 "optional": true,
                 "description": "The initial state of the window. The 'minimized', 'maximized' and 'fullscreen' states cannot be combined with 'left', 'top', 'width' or 'height'."
+              },
+              "allowScriptsToClose": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Allow scripts to close the window."
               }
             },
             "optional": true

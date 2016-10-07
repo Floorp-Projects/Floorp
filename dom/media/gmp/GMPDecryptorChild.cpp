@@ -161,16 +161,29 @@ GMPDecryptorChild::KeyStatusChanged(const char* aSessionId,
 {
   AutoTArray<uint8_t, 16> kid;
   kid.AppendElements(aKeyId, aKeyIdLength);
-  if (aStatus == kGMPUnknown) {
-    CALL_ON_GMP_THREAD(SendForgetKeyStatus,
-                       nsCString(aSessionId, aSessionIdLength),
-                       kid);
-  } else {
-    CALL_ON_GMP_THREAD(SendKeyStatusChanged,
-                       nsCString(aSessionId, aSessionIdLength),
-                       kid,
-                       aStatus);
+
+  nsTArray<GMPKeyInformation> keyInfos;
+  keyInfos.AppendElement(GMPKeyInformation(kid, aStatus));
+  CALL_ON_GMP_THREAD(SendBatchedKeyStatusChanged,
+                     nsCString(aSessionId, aSessionIdLength),
+                     keyInfos);
+}
+
+void
+GMPDecryptorChild::BatchedKeyStatusChanged(const char* aSessionId,
+                                           uint32_t aSessionIdLength,
+                                           const GMPMediaKeyInfo* aKeyInfos,
+                                           uint32_t aKeyInfosLength)
+{
+  nsTArray<GMPKeyInformation> keyInfos;
+  for (uint32_t i = 0; i < aKeyInfosLength; i++) {
+    nsTArray<uint8_t> keyId;
+    keyId.AppendElements(aKeyInfos[i].keyid, aKeyInfos[i].keyid_size);
+    keyInfos.AppendElement(GMPKeyInformation(keyId, aKeyInfos[i].status));
   }
+  CALL_ON_GMP_THREAD(SendBatchedKeyStatusChanged,
+                     nsCString(aSessionId, aSessionIdLength),
+                     keyInfos);
 }
 
 void

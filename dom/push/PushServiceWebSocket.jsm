@@ -19,10 +19,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
 const {PushRecord} = Cu.import("resource://gre/modules/PushRecord.jsm");
-const {
-  PushCrypto,
-  getCryptoParams,
-} = Cu.import("resource://gre/modules/PushCrypto.jsm");
+const {PushCrypto} = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
 const kPUSHWSDB_DB_NAME = "pushapi";
 const kPUSHWSDB_DB_VERSION = 5; // Change this if the IndexedDB format changes
@@ -689,22 +686,17 @@ this.PushServiceWebSocket = {
         updateRecord
       );
     } else {
-      let params = getCryptoParams(update.headers);
-      if (params) {
-        let message = ChromeUtils.base64URLDecode(update.data, {
-          // The Push server may append padding.
-          padding: "ignore",
-        });
-        promise = this._mainPushService.receivedPushMessage(
-          update.channelID,
-          update.version,
-          message,
-          params,
-          updateRecord
-        );
-      } else {
-        promise = Promise.reject(new Error("Invalid crypto headers"));
-      }
+      let message = ChromeUtils.base64URLDecode(update.data, {
+        // The Push server may append padding.
+        padding: "ignore",
+      });
+      promise = this._mainPushService.receivedPushMessage(
+        update.channelID,
+        update.version,
+        update.headers,
+        message,
+        updateRecord
+      );
     }
     promise.then(status => {
       this._sendAck(update.channelID, update.version, status);

@@ -11,15 +11,22 @@ namespace gfx {
 
 VsyncIOThreadHolder::VsyncIOThreadHolder()
 {
+  MOZ_COUNT_CTOR(VsyncIOThreadHolder);
 }
 
 VsyncIOThreadHolder::~VsyncIOThreadHolder()
 {
+  MOZ_COUNT_DTOR(VsyncIOThreadHolder);
+
   if (!mThread) {
     return;
   }
 
-  NS_DispatchToMainThread(NewRunnableMethod(mThread, &nsIThread::AsyncShutdown));
+  if (NS_IsMainThread()) {
+    mThread->AsyncShutdown();
+  } else {
+    NS_DispatchToMainThread(NewRunnableMethod(mThread, &nsIThread::AsyncShutdown));
+  }
 }
 
 bool
