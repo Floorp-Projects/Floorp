@@ -21,6 +21,34 @@ add_UITour_task(function* test_checkSyncSetup_enabled() {
   is(result.setup, true, "Sync should be setup");
 });
 
+add_UITour_task(function* test_checkSyncCounts() {
+  Services.prefs.setIntPref("services.sync.clients.devices.desktop", 4);
+  Services.prefs.setIntPref("services.sync.clients.devices.mobile", 5);
+  Services.prefs.setIntPref("services.sync.numClients", 9);
+  let result = yield getConfigurationPromise("sync");
+  is(result.mobileDevices, 5, "mobileDevices should be set");
+  is(result.desktopDevices, 4, "desktopDevices should be set");
+  is(result.totalDevices, 9, "totalDevices should be set");
+
+  Services.prefs.clearUserPref("services.sync.clients.devices.desktop");
+  result = yield getConfigurationPromise("sync");
+  is(result.mobileDevices, 5, "mobileDevices should be set");
+  is(result.desktopDevices, 0, "desktopDevices should be 0");
+  is(result.totalDevices, 9, "totalDevices should be set");
+
+  Services.prefs.clearUserPref("services.sync.clients.devices.mobile");
+  result = yield getConfigurationPromise("sync");
+  is(result.mobileDevices, 0, "mobileDevices should be 0");
+  is(result.desktopDevices, 0, "desktopDevices should be 0");
+  is(result.totalDevices, 9, "totalDevices should be set");
+
+  Services.prefs.clearUserPref("services.sync.numClients");
+  result = yield getConfigurationPromise("sync");
+  is(result.mobileDevices, 0, "mobileDevices should be 0");
+  is(result.desktopDevices, 0, "desktopDevices should be 0");
+  is(result.totalDevices, 0, "totalDevices should be 0");
+});
+
 // The showFirefoxAccounts API is sync related, so we test that here too...
 add_UITour_task(function* test_firefoxAccountsNoParams() {
   yield gContentAPI.showFirefoxAccounts();
