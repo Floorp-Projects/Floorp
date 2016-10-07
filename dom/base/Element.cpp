@@ -2813,9 +2813,9 @@ Element::DescribeAttribute(uint32_t index, nsAString& aOutDescription) const
   aOutDescription.AppendLiteral("=\"");
   nsAutoString value;
   mAttrsAndChildren.AttrAt(index)->ToString(value);
-  for (int i = value.Length(); i >= 0; --i) {
-    if (value[i] == char16_t('"'))
-      value.Insert(char16_t('\\'), uint32_t(i));
+  for (uint32_t i = value.Length(); i > 0; --i) {
+    if (value[i - 1] == char16_t('"'))
+      value.Insert(char16_t('\\'), i - 1);
   }
   aOutDescription.Append(value);
   aOutDescription.Append('"');
