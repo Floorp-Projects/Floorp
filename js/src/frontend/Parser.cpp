@@ -2571,7 +2571,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
         TokenKind tt;
         if (!tokenStream.peekToken(&tt, TokenStream::Operand))
             return false;
-        if (tt == TOK_NAME)
+        if (tt == TOK_NAME || tt == TOK_YIELD)
             parenFreeArrow = true;
         else
             modifier = TokenStream::Operand;
@@ -2626,7 +2626,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
             TokenKind tt;
             if (!tokenStream.getToken(&tt, TokenStream::Operand))
                 return false;
-            MOZ_ASSERT_IF(parenFreeArrow, tt == TOK_NAME);
+            MOZ_ASSERT_IF(parenFreeArrow, tt == TOK_NAME || tt == TOK_YIELD);
             switch (tt) {
               case TOK_LB:
               case TOK_LC: {
@@ -3022,8 +3022,8 @@ Parser<ParseHandler>::functionDefinition(InHandling inHandling, YieldHandling yi
     // reparse a function due to failed syntax parsing and encountering new
     // "use foo" directives.
     while (true) {
-        if (trySyntaxParseInnerFunction(pn, fun, inHandling, kind, generatorKind, tryAnnexB,
-                                        directives, &newDirectives))
+        if (trySyntaxParseInnerFunction(pn, fun, inHandling, yieldHandling, kind, generatorKind,
+                                        tryAnnexB, directives, &newDirectives))
         {
             break;
         }
@@ -3051,6 +3051,7 @@ template <>
 bool
 Parser<FullParseHandler>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunction fun,
                                                       InHandling inHandling,
+                                                      YieldHandling yieldHandling,
                                                       FunctionSyntaxKind kind,
                                                       GeneratorKind generatorKind,
                                                       bool tryAnnexB,
@@ -3088,7 +3089,7 @@ Parser<FullParseHandler>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunct
         funbox->initWithEnclosingParseContext(pc, kind);
 
         if (!parser->innerFunction(SyntaxParseHandler::NodeGeneric, pc, funbox, inHandling,
-                                   kind, generatorKind, inheritedDirectives, newDirectives))
+                                   yieldHandling, kind, inheritedDirectives, newDirectives))
         {
             if (parser->hadAbortedSyntaxParse()) {
                 // Try again with a full parse. UsedNameTracker needs to be
@@ -3114,7 +3115,7 @@ Parser<FullParseHandler>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunct
     } while (false);
 
     // We failed to do a syntax parse above, so do the full parse.
-    return innerFunction(pn, pc, fun, inHandling, kind, generatorKind, tryAnnexB,
+    return innerFunction(pn, pc, fun, inHandling, yieldHandling, kind, generatorKind, tryAnnexB,
                          inheritedDirectives, newDirectives);
 }
 
@@ -3122,6 +3123,7 @@ template <>
 bool
 Parser<SyntaxParseHandler>::trySyntaxParseInnerFunction(Node pn, HandleFunction fun,
                                                         InHandling inHandling,
+                                                        YieldHandling yieldHandling,
                                                         FunctionSyntaxKind kind,
                                                         GeneratorKind generatorKind,
                                                         bool tryAnnexB,
@@ -3129,15 +3131,15 @@ Parser<SyntaxParseHandler>::trySyntaxParseInnerFunction(Node pn, HandleFunction 
                                                         Directives* newDirectives)
 {
     // This is already a syntax parser, so just parse the inner function.
-    return innerFunction(pn, pc, fun, inHandling, kind, generatorKind, tryAnnexB,
+    return innerFunction(pn, pc, fun, inHandling, yieldHandling, kind, generatorKind, tryAnnexB,
                          inheritedDirectives, newDirectives);
 }
 
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::innerFunction(Node pn, ParseContext* outerpc, FunctionBox* funbox,
-                                    InHandling inHandling, FunctionSyntaxKind kind,
-                                    GeneratorKind generatorKind, Directives inheritedDirectives,
+                                    InHandling inHandling, YieldHandling yieldHandling,
+                                    FunctionSyntaxKind kind, Directives inheritedDirectives,
                                     Directives* newDirectives)
 {
     // Note that it is possible for outerpc != this->pc, as we may be
@@ -3150,7 +3152,6 @@ Parser<ParseHandler>::innerFunction(Node pn, ParseContext* outerpc, FunctionBox*
     if (!funpc.init())
         return false;
 
-    YieldHandling yieldHandling = generatorKind != NotGenerator ? YieldIsKeyword : YieldIsName;
     if (!functionFormalParametersAndBody(inHandling, yieldHandling, pn, kind))
         return false;
 
@@ -3160,9 +3161,10 @@ Parser<ParseHandler>::innerFunction(Node pn, ParseContext* outerpc, FunctionBox*
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun,
-                                    InHandling inHandling, FunctionSyntaxKind kind,
-                                    GeneratorKind generatorKind, bool tryAnnexB,
-                                    Directives inheritedDirectives, Directives* newDirectives)
+                                    InHandling inHandling, YieldHandling yieldHandling,
+                                    FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                                    bool tryAnnexB, Directives inheritedDirectives,
+                                    Directives* newDirectives)
 {
     // Note that it is possible for outerpc != this->pc, as we may be
     // attempting to syntax parse an inner function from an outer full
@@ -3174,8 +3176,8 @@ Parser<ParseHandler>::innerFunction(Node pn, ParseContext* outerpc, HandleFuncti
         return false;
     funbox->initWithEnclosingParseContext(outerpc, kind);
 
-    return innerFunction(pn, outerpc, funbox, inHandling, kind, generatorKind,
-                         inheritedDirectives, newDirectives);
+    return innerFunction(pn, outerpc, funbox, inHandling, yieldHandling, kind, inheritedDirectives,
+                         newDirectives);
 }
 
 template <typename ParseHandler>
@@ -3320,7 +3322,15 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
 #endif
     }
 
-    Node body = functionBody(inHandling, yieldHandling, kind, bodyType);
+    // Arrow function parameters inherit yieldHandling from the enclosing
+    // context, but the arrow body doesn't. E.g. in |(a = yield) => yield|,
+    // |yield| in the parameters is either a name or keyword, depending on
+    // whether the arrow function is enclosed in a generator function or not.
+    // Whereas the |yield| in the function body is always parsed as a name.
+    YieldHandling bodyYieldHandling = pc->isGenerator() ? YieldIsKeyword : YieldIsName;
+    MOZ_ASSERT_IF(yieldHandling != bodyYieldHandling, kind == Arrow);
+
+    Node body = functionBody(inHandling, bodyYieldHandling, kind, bodyType);
     if (!body)
         return false;
 
@@ -3409,7 +3419,8 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
         return null();
     }
 
-    Node fun = functionDefinition(InAllowed, yieldHandling, name, Statement, generatorKind,
+    YieldHandling newYieldHandling = generatorKind != NotGenerator ? YieldIsKeyword : YieldIsName;
+    Node fun = functionDefinition(InAllowed, newYieldHandling, name, Statement, generatorKind,
                                   PredictUninvoked);
     if (!fun)
         return null();
@@ -6435,7 +6446,7 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
             if (!tokenStream.isCurrentTokenType(TOK_RB))
                 funName = propAtom;
         }
-        Node fn = methodDefinition(yieldHandling, propType, funName);
+        Node fn = methodDefinition(propType, funName);
         if (!fn)
             return null();
 
@@ -8922,7 +8933,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                 }
             }
 
-            Node fn = methodDefinition(yieldHandling, propType, funName);
+            Node fn = methodDefinition(propType, funName);
             if (!fn)
                 return null();
 
@@ -8947,11 +8958,11 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::methodDefinition(YieldHandling yieldHandling, PropertyType propType,
-                                       HandleAtom funName)
+Parser<ParseHandler>::methodDefinition(PropertyType propType, HandleAtom funName)
 {
     FunctionSyntaxKind kind = FunctionSyntaxKindFromPropertyType(propType);
     GeneratorKind generatorKind = GeneratorKindFromPropertyType(propType);
+    YieldHandling yieldHandling = generatorKind != NotGenerator ? YieldIsKeyword : YieldIsName;
     return functionDefinition(InAllowed, yieldHandling, funName, kind, generatorKind);
 }
 
