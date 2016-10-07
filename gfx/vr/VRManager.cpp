@@ -185,12 +185,16 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
     if (mLastRefreshTime.IsNull()) {
       // This is the first vsync, must refresh VR displays
       RefreshVRDisplays();
+      RefreshVRControllers();
+      mLastRefreshTime = TimeStamp::Now();
     } else {
       // We don't have to do this every frame, so check if we
       // have refreshed recently.
       TimeDuration duration = TimeStamp::Now() - mLastRefreshTime;
       if (duration.ToMilliseconds() > kVRDisplayRefreshMaxDuration) {
         RefreshVRDisplays();
+        RefreshVRControllers();
+        mLastRefreshTime = TimeStamp::Now();
       }
     }
   }
@@ -252,8 +256,6 @@ VRManager::RefreshVRDisplays(bool aMustDispatch)
   if (displayInfoChanged || aMustDispatch) {
     DispatchVRDisplayInfoUpdate();
   }
-
-  mLastRefreshTime = TimeStamp::Now();
 }
 
 void
@@ -322,6 +324,44 @@ VRManager::GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo)
   for (auto iter = mVRControllers.Iter(); !iter.Done(); iter.Next()) {
     gfx::VRControllerHost* controller = iter.UserData();
     aControllerInfo.AppendElement(VRControllerInfo(controller->GetControllerInfo()));
+  }
+}
+
+void
+VRManager::RefreshVRControllers()
+{
+  nsTArray<RefPtr<gfx::VRControllerHost>> controllers;
+
+  for (uint32_t i = 0; i < mControllerManagers.Length()
+      && controllers.Length() == 0; ++i) {
+    mControllerManagers[i]->GetControllers(controllers);
+  }
+
+  bool controllerInfoChanged = false;
+
+  if (controllers.Length() != mVRControllers.Count()) {
+    // Catch cases where VR controllers has been removed
+    controllerInfoChanged = true;
+  }
+
+  for (const auto& controller : controllers) {
+    if (!GetController(controller->GetControllerInfo().GetControllerID())) {
+      // This is a new controller
+      controllerInfoChanged = true;
+      break;
+    }
+  }
+
+  if (controllerInfoChanged) {
+    mVRControllers.Clear();
+    for (const auto& controller : controllers) {
+      mVRControllers.Put(controller->GetControllerInfo().GetControllerID(),
+                         controller);
+    }
+  }
+
+  for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
+    mControllerManagers[i]->HandleInput();
   }
 }
 

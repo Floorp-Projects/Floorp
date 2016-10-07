@@ -60,6 +60,7 @@ private:
   void Destroy();
 
   void DispatchVRDisplayInfoUpdate();
+  void RefreshVRControllers();
 
   typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
