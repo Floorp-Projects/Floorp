@@ -6,6 +6,7 @@
 #include <math.h>
 
 #include "gfxVR.h"
+#include "mozilla/dom/Gamepad.h"
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
@@ -15,6 +16,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 Atomic<uint32_t> VRDisplayManager::sDisplayBase(0);
+Atomic<uint32_t> VRControllerManager::sControllerBase(0);
 
 /* static */ uint32_t
 VRDisplayManager::AllocateDisplayID()
@@ -54,4 +56,35 @@ VRFieldOfView::ConstructProjectionMatrix(float zNear, float zFar,
   m[3*4+3] = 0.0f;
 
   return mobj;
+}
+
+/* static */ uint32_t
+VRControllerManager::AllocateControllerID()
+{
+  return ++sControllerBase;
+}
+
+void
+VRControllerManager::AddGamepad(const char* aID,
+                                dom::GamepadMappingType aMapping,
+                                uint32_t aNumButtons, uint32_t aNumAxes)
+{
+  dom::GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), mControllerCount,
+                     aMapping, dom::GamepadServiceType::VR, aNumButtons,
+                     aNumAxes);
+
+  VRManager* vm = VRManager::Get();
+  MOZ_ASSERT(vm);
+  vm->NotifyGamepadChange<dom::GamepadAdded>(a);
+}
+
+void
+VRControllerManager::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
+                                    bool aPressed, double aValue)
+{
+  dom::GamepadButtonInformation a(aIndex, aButton, aPressed, aValue);
+
+  VRManager* vm = VRManager::Get();
+  MOZ_ASSERT(vm);
+  vm->NotifyGamepadChange<dom::GamepadButtonInformation>(a);
 }

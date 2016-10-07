@@ -291,5 +291,29 @@ VRManagerParent::RecvSetHaveEventListener(const bool& aHaveEventListener)
   return true;
 }
 
+bool
+VRManagerParent::RecvControllerListenerAdded()
+{
+  VRManager* vm = VRManager::Get();
+  // Ask the connected gamepads to be added to GamepadManager
+  vm->ScanForDevices();
+
+  return true;
+}
+
+bool
+VRManagerParent::RecvControllerListenerRemoved()
+{
+  return true;
+}
+
+bool
+VRManagerParent::RecvGetControllers(nsTArray<VRControllerInfo> *aControllers)
+{
+  VRManager* vm = VRManager::Get();
+  vm->GetVRControllerInfo(*aControllers);
+  return true;
+}
+
 } // namespace gfx
 } // namespace mozilla

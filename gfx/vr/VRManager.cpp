@@ -10,6 +10,7 @@
 #include "gfxVROpenVR.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/VRDisplay.h"
+#include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/Unused.h"
 
@@ -51,6 +52,7 @@ VRManager::VRManager()
   MOZ_ASSERT(sVRManagerSingleton == nullptr);
 
   RefPtr<VRDisplayManager> mgr;
+  RefPtr<VRControllerManager> controllerMgr;
 
   /**
    * We must add the VRDisplayManager's to mManagers in a careful order to
@@ -81,6 +83,11 @@ VRManager::VRManager()
     mManagers.AppendElement(mgr);
   }
 
+  controllerMgr = VRControllerManagerOpenVR::Create();
+  if (mgr) {
+    mControllerManagers.AppendElement(controllerMgr);
+  }
+
   // OSVR is cross platform compatible
   mgr = VRDisplayManagerOSVR::Create();
   if (mgr) {
@@ -103,6 +110,11 @@ VRManager::Destroy()
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->Destroy();
   }
+
+  mVRControllers.Clear();
+  for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
+    mControllerManagers[i]->Destroy();
+  }
   mInitialized = false;
 }
 
@@ -111,6 +123,10 @@ VRManager::Init()
 {
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->Init();
+  }
+
+  for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
+    mControllerManagers[i]->Init();
   }
   mInitialized = true;
 }
@@ -286,6 +302,45 @@ VRManager::SubmitFrame(VRLayerParent* aLayer, layers::PTextureParent* aTexture,
   RefPtr<VRDisplayHost> display = GetDisplay(aLayer->GetDisplayID());
   if (display) {
     display->SubmitFrame(aLayer, 0, aTexture, aLeftEyeRect, aRightEyeRect);
+  }
+}
+
+RefPtr<gfx::VRControllerHost>
+VRManager::GetController(const uint32_t& aControllerID)
+{
+  RefPtr<gfx::VRControllerHost> controller;
+  if (mVRControllers.Get(aControllerID, getter_AddRefs(controller))) {
+    return controller;
+  }
+  return nullptr;
+}
+
+void
+VRManager::GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo)
+{
+  aControllerInfo.Clear();
+  for (auto iter = mVRControllers.Iter(); !iter.Done(); iter.Next()) {
+    gfx::VRControllerHost* controller = iter.UserData();
+    aControllerInfo.AppendElement(VRControllerInfo(controller->GetControllerInfo()));
+  }
+}
+
+void
+VRManager::ScanForDevices()
+{
+  for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
+    mControllerManagers[i]->ScanForDevices();
+  }
+}
+
+template<class T>
+void
+VRManager::NotifyGamepadChange(const T& aInfo)
+{
+  dom::GamepadChangeEvent e(aInfo);
+
+  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
+    Unused << iter.Get()->GetKey()->SendGamepadUpdate(e);
   }
 }
 
