@@ -149,26 +149,26 @@ assertEq(obj.memory.buffer.byteLength, 65536);
 assertEq(obj.b(), 42);
 assertEq(obj.c(), undefined);
 
-var buf = wasmEvalText('(module (memory 1) (data 0 "") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 0) "") (export "memory" memory))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 0);
 
-var buf = wasmEvalText('(module (memory 1) (data 65536 "") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 65536) "") (export "memory" memory))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 0);
 
-var buf = wasmEvalText('(module (memory 1) (data 0 "a") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 0) "a") (export "memory" memory))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
 
-var buf = wasmEvalText('(module (memory 1) (data 0 "a") (data 2 "b") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 0) "a") (data (i32.const 2) "b") (export "memory" memory))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
 assertEq(new Uint8Array(buf)[1], 0);
 assertEq(new Uint8Array(buf)[2], 'b'.charCodeAt(0));
 
-var buf = wasmEvalText('(module (memory 1) (data 65535 "c") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 65535) "c") (export "memory" memory))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 0);
 assertEq(new Uint8Array(buf)[65535], 'c'.charCodeAt(0));
 
-wasmFailValidateText('(module (memory 1) (data 65536 "a") (export "memory" memory))', /data segment does not fit/);
-wasmFailValidateText('(module (memory 1) (data 65535 "ab") (export "memory" memory))', /data segment does not fit/);
+wasmFailValidateText('(module (memory 1) (data (i32.const 65536) "a") (export "memory" memory))', /data segment does not fit/);
+wasmFailValidateText('(module (memory 1) (data (i32.const 65535) "ab") (export "memory" memory))', /data segment does not fit/);
 
 // ----------------------------------------------------------------------------
 // locals

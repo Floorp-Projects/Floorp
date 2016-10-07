@@ -3,7 +3,7 @@ load(libdir + "wasm.js");
 
 var i = wasmEvalText(
 `(module
-   (memory 1) (data 0 "\\01\\02\\03\\04\\05\\06\\07\\08")
+   (memory 1) (data (i32.const 0) "\\01\\02\\03\\04\\05\\06\\07\\08")
    (func $off1 (param $base i32) (result i32)
      (i32.add
        (i32.load8_u (get_local $base))
