@@ -626,7 +626,7 @@ ToString(const UniCharsAndModifiers& aUniCharsAndModifiers)
   nsAutoCString result;
   result.AssignLiteral("{ ");
   result.Append(GetCharacterCodeName(aUniCharsAndModifiers.CharAt(0)));
-  for (uint32_t i = 1; i < aUniCharsAndModifiers.mLength; ++i) {
+  for (size_t i = 1; i < aUniCharsAndModifiers.Length(); ++i) {
     if (aUniCharsAndModifiers.ModifiersAt(i - 1) !=
           aUniCharsAndModifiers.ModifiersAt(i)) {
       result.AppendLiteral(" [");
@@ -637,7 +637,7 @@ ToString(const UniCharsAndModifiers& aUniCharsAndModifiers)
     result.Append(GetCharacterCodeName(aUniCharsAndModifiers.CharAt(i)));
   }
   result.AppendLiteral(" [");
-  uint32_t lastIndex = aUniCharsAndModifiers.mLength - 1;
+  uint32_t lastIndex = aUniCharsAndModifiers.Length() - 1;
   result.Append(GetModifiersName(aUniCharsAndModifiers.ModifiersAt(lastIndex)));
   result.AppendLiteral("] }");
   return result;
@@ -925,7 +925,7 @@ UniCharsAndModifiers::Append(char16_t aUniChar, Modifiers aModifiers)
 void
 UniCharsAndModifiers::FillModifiers(Modifiers aModifiers)
 {
-  for (uint32_t i = 0; i < mLength; i++) {
+  for (size_t i = 0; i < mLength; i++) {
     mModifiers[i] = aModifiers;
   }
 }
@@ -937,7 +937,7 @@ UniCharsAndModifiers::OverwriteModifiersIfBeginsWith(
   if (!BeginsWith(aOther)) {
     return;
   }
-  for (uint32_t i = 0; i < aOther.mLength; ++i) {
+  for (size_t i = 0; i < aOther.mLength; ++i) {
     mModifiers[i] = aOther.mModifiers[i];
   }
 }
@@ -1109,7 +1109,7 @@ VirtualKey::GetUniChars(ShiftState aShiftState) const
     return result;
   }
 
-  if (!result.mLength) {
+  if (result.IsEmpty()) {
     result = GetNativeUniChars(aShiftState & ~STATE_ALT_CONTROL);
     result.FillModifiers(ShiftStateToModifiers(aShiftState));
     return result;
@@ -3300,7 +3300,7 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
   // we need to set raw message information for plugins.
   if (aKeyboardEvent.mMessage == eKeyPress &&
       IsFollowedByPrintableCharOrSysCharMessage()) {
-    MOZ_RELEASE_ASSERT(aIndex < mCommittedCharsAndModifiers.mLength);
+    MOZ_RELEASE_ASSERT(aIndex < mCommittedCharsAndModifiers.Length());
     uint32_t foundPrintableCharMessages = 0;
     for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
       if (!IsPrintableCharOrSysCharMessage(mFollowingCharMsgs[i])) {
@@ -3336,12 +3336,12 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
        "setting %uth modifier state to %s",
        this, aIndex + 1, ToString(modKeyState).get()));
   }
-  uint32_t longestLength =
-    std::max(mInputtingStringAndModifiers.mLength,
-             std::max(mShiftedString.mLength, mUnshiftedString.mLength));
-  uint32_t skipUniChars = longestLength - mInputtingStringAndModifiers.mLength;
-  uint32_t skipShiftedChars = longestLength - mShiftedString.mLength;
-  uint32_t skipUnshiftedChars = longestLength - mUnshiftedString.mLength;
+  size_t longestLength =
+    std::max(mInputtingStringAndModifiers.Length(),
+             std::max(mShiftedString.Length(), mUnshiftedString.Length()));
+  size_t skipUniChars = longestLength - mInputtingStringAndModifiers.Length();
+  size_t skipShiftedChars = longestLength - mShiftedString.Length();
+  size_t skipUnshiftedChars = longestLength - mUnshiftedString.Length();
   if (aIndex >= longestLength) {
     MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
       ("%p   NativeKey::WillDispatchKeyboardEvent(), does nothing for %uth "
@@ -3357,7 +3357,7 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
   bool isLastIndex =
     aKeyboardEvent.mMessage != eKeyPress ||
     mCommittedCharsAndModifiers.IsEmpty() ||
-    mCommittedCharsAndModifiers.mLength - 1 == aIndex;
+    mCommittedCharsAndModifiers.Length() - 1 == aIndex;
 
   nsTArray<AlternativeCharCode>& altArray =
     aKeyboardEvent.mAlternativeCharCodes;
@@ -3371,7 +3371,7 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
     //     to set different modifier state per keypress event except this
     //     hack.  Note that ideally, dead key should cause composition events
     //     instead of keypress events, though.
-    if (aIndex - skipUniChars  < mInputtingStringAndModifiers.mLength) {
+    if (aIndex - skipUniChars  < mInputtingStringAndModifiers.Length()) {
       ModifierKeyState modKeyState(mModKeyState);
       // If key in combination with Alt and/or Ctrl produces a different
       // character than without them then do not report these flags
@@ -3714,7 +3714,7 @@ KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
     UniCharsAndModifiers deadChars =
       GetNativeUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode,
                                     aModKeyState);
-    MOZ_ASSERT(deadChars.mLength == 1,
+    MOZ_ASSERT(deadChars.Length() == 1,
                "dead key must generate only one character");
 #endif
     // First dead key event doesn't generate characters.  Dead key should
@@ -4179,7 +4179,7 @@ KeyboardLayout::GetDeadKeyCombinations(uint8_t aDeadKey,
       // Dead-key can pair only with such key that produces exactly one base
       // character.
       if (vki >= 0 &&
-          mVirtualKeys[vki].GetNativeUniChars(shiftState).mLength == 1) {
+          mVirtualKeys[vki].GetNativeUniChars(shiftState).Length() == 1) {
         // Ensure dead-key is in active state, when it swallows entered
         // character and waits for the next pressed key.
         if (!deadKeyActive) {
@@ -4441,11 +4441,11 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
       ModifierKeyState modKeyState(0);
       UniCharsAndModifiers uniChars =
         GetUniCharsAndModifiers(aNativeKeyCode, modKeyState);
-      if (uniChars.mLength != 1 ||
+      if (uniChars.Length() != 1 ||
           uniChars.CharAt(0) < ' ' || uniChars.CharAt(0) > 0x7F) {
         modKeyState.Set(MODIFIER_SHIFT);
         uniChars = GetUniCharsAndModifiers(aNativeKeyCode, modKeyState);
-        if (uniChars.mLength != 1 ||
+        if (uniChars.Length() != 1 ||
             uniChars.CharAt(0) < ' ' || uniChars.CharAt(0) > 0x7F) {
           return 0;
         }
