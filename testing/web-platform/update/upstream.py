@@ -27,7 +27,7 @@ def rewrite_patch(patch, strip_dir):
         strip_dir = "/%s"% strip_dir
 
     new_diff = []
-    line_starts = ["diff ", "+++ ", "--- "]
+    line_starts = ["diff ", "+++ ", "--- ", "rename from ", "rename to "]
     for line in patch.diff.split("\n"):
         for start in line_starts:
             if line.startswith(start):
@@ -211,26 +211,34 @@ class MovePatches(Step):
         for commit in state.source_commits[state.commits_loaded:]:
             i = state.commits_loaded + 1
             self.logger.info("Moving commit %i: %s" % (i, commit.message.full_summary))
-            if not state.patch:
+            stripped_patch = None
+            if state.patch:
+                filename, stripped_patch = state.patch
+                if not os.path.exists(filename):
+                    stripped_patch = None
+                else:
+                    with open(filename) as f:
+                        stripped_patch.diff = f.read()
+            state.patch = None
+            if not stripped_patch:
                 patch = commit.export_patch(state.tests_path)
                 stripped_patch = rewrite_patch(patch, strip_path)
-            else:
-                filename, stripped_patch = state.patch
-                with open(filename) as f:
-                    stripped_patch.diff = f.read()
-                state.patch = None
             if not stripped_patch.diff:
+                self.logger.info("Skipping empty patch")
+                state.commits_loaded = i
                 continue
             try:
                 state.sync_tree.import_patch(stripped_patch)
             except:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".diff") as f:
                     f.write(stripped_patch.diff)
-                    print """Patch failed to apply. Diff saved in %s.
+                    print """Patch failed to apply. Diff saved in %s
 Fix this file so it applies and run with --continue""" % f.name
                     state.patch = (f.name, stripped_patch)
-                raise
+                    print state.patch
+                sys.exit(1)
             state.commits_loaded = i
+        raw_input("Check for differences with upstream")
 
 
 class RebaseCommits(Step):
