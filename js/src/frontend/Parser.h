@@ -1210,14 +1210,17 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node classDefinition(YieldHandling yieldHandling, ClassContext classContext,
                          DefaultHandling defaultHandling);
 
-    PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling);
+    PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling,
+                                             bool yieldTokenizedAsName);
 
     PropertyName* labelIdentifier(YieldHandling yieldHandling) {
-        return labelOrIdentifierReference(yieldHandling);
+        return labelOrIdentifierReference(yieldHandling, false);
     }
 
-    PropertyName* identifierReference(YieldHandling yieldHandling) {
-        return labelOrIdentifierReference(yieldHandling);
+    PropertyName* identifierReference(YieldHandling yieldHandling,
+                                      bool yieldTokenizedAsName = false)
+    {
+        return labelOrIdentifierReference(yieldHandling, yieldTokenizedAsName);
     }
 
     PropertyName* importedBinding() {
