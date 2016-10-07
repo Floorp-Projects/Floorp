@@ -924,9 +924,6 @@ PropertyView.prototype = {
     });
     this.shortcuts.on("F1", (name, event) => {
       this.mdnLinkClick(event);
-      // Prevent opening the options panel
-      event.preventDefault();
-      event.stopPropagation();
     });
     this.shortcuts.on("Return", (name, event) => this.onMatchedToggle(event));
     this.shortcuts.on("Space", (name, event) => this.onMatchedToggle(event));
@@ -1158,6 +1155,8 @@ PropertyView.prototype = {
       let browserWin = inspector.target.tab.ownerDocument.defaultView;
       browserWin.openUILinkIn(this.link, "tab");
     }
+    event.preventDefault();
+    event.stopPropagation();
   },
 
   /**

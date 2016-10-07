@@ -73,7 +73,7 @@ function checkHelpLinkKeybinding(view) {
   let def = defer();
 
   let propView = getFirstVisiblePropertyView(view);
-  propView.mdnLinkClick = function (event) {
+  propView.mdnLinkClick = function () {
     ok(true, "Pressing F1 opened the MDN link");
     def.resolve();
   };
