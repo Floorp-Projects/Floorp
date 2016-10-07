@@ -267,6 +267,7 @@ MSG_DEF(JSMSG_GENERATOR_LABEL,         0, JSEXN_SYNTAXERR, "generator functions 
 MSG_DEF(JSMSG_FUNCTION_LABEL,          0, JSEXN_SYNTAXERR, "functions cannot be labelled")
 MSG_DEF(JSMSG_SLOPPY_FUNCTION_LABEL,   0, JSEXN_SYNTAXERR, "functions can only be labelled inside blocks")
 MSG_DEF(JSMSG_LINE_BREAK_AFTER_THROW,  0, JSEXN_SYNTAXERR, "no line break is allowed between 'throw' and its expression")
+MSG_DEF(JSMSG_LINE_BREAK_BEFORE_ARROW, 0, JSEXN_SYNTAXERR, "no line break is allowed before '=>'")
 MSG_DEF(JSMSG_MALFORMED_ESCAPE,        1, JSEXN_SYNTAXERR, "malformed {0} character escape sequence")
 MSG_DEF(JSMSG_MISSING_BINARY_DIGITS,   0, JSEXN_SYNTAXERR, "missing binary digits after '0b'")
 MSG_DEF(JSMSG_MISSING_EXPONENT,        0, JSEXN_SYNTAXERR, "missing exponent")
