@@ -951,6 +951,15 @@ UniCharsAndModifiers::UniCharsCaseInsensitiveEqual(
   return !comp(mChars, aOther.mChars, mLength, aOther.mLength);
 }
 
+bool
+UniCharsAndModifiers::BeginsWith(const UniCharsAndModifiers& aOther) const
+{
+  if (mLength < aOther.mLength) {
+    return false;
+  }
+  return !memcmp(mChars, aOther.mChars, aOther.mLength * sizeof(char16_t));
+}
+
 UniCharsAndModifiers&
 UniCharsAndModifiers::operator+=(const UniCharsAndModifiers& aOther)
 {
@@ -1470,6 +1479,15 @@ NativeKey::InitWithKeyChar()
 
   // If next message of WM_(SYS)KEYDOWN is WM_*CHAR message and the key
   // combination is not reserved by the system, let's consume it now.
+  // TODO: We cannot initialize mCommittedCharsAndModifiers for VK_PACKET
+  //       if the message is WM_KEYUP because we don't have preceding
+  //       WM_CHAR message.
+  // TODO: Like Edge, we shouldn't dispatch two sets of keyboard events
+  //       for a Unicode character in non-BMP because its key value looks
+  //       broken and not good thing for our editor if only one keydown or
+  //       keypress event's default is prevented.  I guess, we should store
+  //       key message information globally and we should wait following
+  //       WM_KEYDOWN if following WM_CHAR is a part of a Unicode character.
   if ((mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN) &&
       !IsReservedBySystem()) {
     MSG charMsg;
@@ -1487,7 +1505,6 @@ NativeKey::InitWithKeyChar()
     }
   }
 
-
   keyboardLayout->InitNativeKey(*this, mModKeyState);
 
   mIsDeadKey =
@@ -1504,34 +1521,33 @@ NativeKey::InitWithKeyChar()
     // method which will be called by TextEventDispatcher.
     if (NeedsToHandleWithoutFollowingCharMessages()) {
       ComputeInputtingStringWithKeyboardLayout();
-    } else {
-      // This message might be sent by SendInput() API to input a Unicode
-      // character, in such case, we can only know what chars will be inputted
-      // with following WM_CHAR messages.
-      // TODO: We cannot initialize mCommittedCharsAndModifiers for VK_PACKET
-      //       if the message is WM_KEYUP because we don't have preceding
-      //       WM_CHAR message.  Therefore, we should dispatch eKeyUp event at
-      //       handling WM_KEYDOWN.
-      // TODO: Like Edge, we shouldn't dispatch two sets of keyboard events
-      //       for a Unicode character in non-BMP because its key value looks
-      //       broken and not good thing for our editor if only one keydown or
-      //       keypress event's default is prevented.  I guess, we should store
-      //       key message information globally and we should wait following
-      //       WM_KEYDOWN if following WM_CHAR is a part of a Unicode character.
-      mCommittedCharsAndModifiers.Clear();
-      Modifiers modifiers =
-        mModKeyState.GetModifiers() & ~(MODIFIER_ALT | MODIFIER_CONTROL);
-      for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
-        // Ignore non-printable char messages.
-        if (!IsPrintableCharMessage(mFollowingCharMsgs[i])) {
-          continue;
-        }
-        char16_t ch = static_cast<char16_t>(mFollowingCharMsgs[i].wParam);
-        mCommittedCharsAndModifiers.Append(ch, modifiers);
-      }
     }
     // Remove odd char messages if there are.
     RemoveFollowingOddCharMessages();
+  }
+}
+
+void
+NativeKey::InitCommittedCharsAndModifiersWithFollowingCharMessages(
+             const ModifierKeyState& aModKeyState)
+{
+  mCommittedCharsAndModifiers.Clear();
+  // This should cause inputting text in focused editor.  However, it
+  // ignores keypress events whose altKey or ctrlKey is true.
+  // Therefore, we need to remove these modifier state here.
+  Modifiers modifiers = aModKeyState.GetModifiers();
+  if (IsFollowedByPrintableCharMessage()) {
+    modifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL);
+  }
+  // NOTE: This method assumes that WM_CHAR and WM_SYSCHAR are never retrieved
+  //       at same time.
+  for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
+    // Ignore non-printable char messages.
+    if (!IsPrintableCharOrSysCharMessage(mFollowingCharMsgs[i])) {
+      continue;
+    }
+    char16_t ch = static_cast<char16_t>(mFollowingCharMsgs[i].wParam);
+    mCommittedCharsAndModifiers.Append(ch, modifiers);
   }
 }
 
@@ -1665,6 +1681,17 @@ NativeKey::IsFollowedByPrintableCharMessage() const
 {
   for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
     if (IsPrintableCharMessage(mFollowingCharMsgs[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+NativeKey::IsFollowedByPrintableCharOrSysCharMessage() const
+{
+  for (size_t i = 0; i < mFollowingCharMsgs.Length(); ++i) {
+    if (IsPrintableCharOrSysCharMessage(mFollowingCharMsgs[i])) {
       return true;
     }
   }
@@ -3566,6 +3593,40 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     }
   }
 
+  // When it's followed by non-dead char message(s) for printable character(s),
+  // aNativeKey should dispatch eKeyPress events for them rather than
+  // information from keyboard layout because respecting WM_(SYS)CHAR messages
+  // guarantees that we can always input characters which is expected by
+  // the user even if the user uses odd keyboard layout.
+  if (aNativeKey.IsFollowedByPrintableCharOrSysCharMessage()) {
+    MOZ_ASSERT(!aNativeKey.IsCharMessage(aNativeKey.mMsg));
+    // Initialize mCommittedCharsAndModifiers with following char messages.
+    aNativeKey.
+      InitCommittedCharsAndModifiersWithFollowingCharMessages(aModKeyState);
+    MOZ_ASSERT(!aNativeKey.mCommittedCharsAndModifiers.IsEmpty());
+    aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
+
+    // If it's not in dead key sequence, we don't need to do anymore here.
+    if (!IsInDeadKeySequence()) {
+      return;
+    }
+
+    // If it's in dead key sequence and dead char is inputted as is, we need to
+    // set the previous modifier state which is stored when preceding dead key
+    // is pressed.
+    UniCharsAndModifiers deadChars =
+      GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
+    if (aNativeKey.mCommittedCharsAndModifiers.BeginsWith(deadChars)) {
+      for (uint32_t i = 0; i < deadChars.mLength; ++i) {
+        aNativeKey.mCommittedCharsAndModifiers.mModifiers[i] =
+          deadChars.mModifiers[i];
+      }
+    }
+    // Finish the dead key sequence.
+    DeactivateDeadKeyState();
+    return;
+  }
+
   // If the key is not a usual printable key, KeyboardLayout class assume that
   // it's not cause dead char nor printable char.  Therefore, there are nothing
   // to do here fore such keys (e.g., function keys).
@@ -3663,6 +3724,11 @@ KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
       GetUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode, aModKeyState);
     return true;
   }
+
+  // FYI: Following code may run when the user doesn't input text actually
+  //      but the key sequence is a dead key sequence.  For example,
+  //      ` -> Ctrl+` with Spanish keyboard layout.  Let's keep using this
+  //      complicated code for now because this runs really rarely.
 
   if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey))) {
 #if defined(DEBUG) || defined(MOZ_CRASHREPORTER)

@@ -3575,6 +3575,64 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_Q,
                    modifiers:{shiftKey:1}, chars:"\u00A8Q"},
                   ["\u00A8Q", "\u00A8", "Q", "Q"], "KeyQ", nsIDOMKeyEvent.DOM_VK_Q, "\u00A8Q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    // When Alt key is pressed, dead key sequence is generated with WM_SYSKEYDOWN, WM_SYSDEADCHAR, WM_SYSCHAR and WM_SYSKEYUP.
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1}, chars:""},
+                  "Dead", "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1}, chars:"``"},
+                  ["``", "`", "`", "`"], "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "``", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1}, chars:""},
+                  "Dead", "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_A,
+                   modifiers:{altKey:1}, chars:"\u00E0"},
+                  ["\u00E0", "\u00E0", "a"], "KeyA", nsIDOMKeyEvent.DOM_VK_A, "\u00E0", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1}, chars:""},
+                  "Dead", "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_A,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"\u00C0"},
+                  ["\u00C0", "\u00C0", "A"], "KeyA", nsIDOMKeyEvent.DOM_VK_A, "\u00C0", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1}, chars:""},
+                  "Dead", "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_Q,
+                   modifiers:{altKey:1}, chars:"`q"},
+                  ["`q", "`", "q", "q"], "KeyQ", nsIDOMKeyEvent.DOM_VK_Q, "`q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1, shiftKey:1}, chars:""},
+                  "Dead", "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"^^"},
+                  ["^^", "^", "^", "^"], "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "^^", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1, shiftKey:1}, chars:""},
+                  "Dead", "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_A,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"\u00C2"},
+                  ["\u00C2", "\u00C2", "A"], "KeyA", nsIDOMKeyEvent.DOM_VK_A, "\u00C2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1, shiftKey:1}, chars:""},
+                  "Dead", "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_A,
+                   modifiers:{altKey:1}, chars:"\u00E2"},
+                  ["\u00E2", "\u00E2", "a"], "KeyA", nsIDOMKeyEvent.DOM_VK_A, "\u00E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
+                   modifiers:{altKey:1, shiftKey:1}, chars:""},
+                  "Dead", "BracketLeft", nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_Q,
+                   modifiers:{altKey:1, shiftKey:1}, chars:"^Q"},
+                  ["^Q", "^", "Q", "Q"], "KeyQ", nsIDOMKeyEvent.DOM_VK_Q, "^Q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
     cleanup();
   }
 
