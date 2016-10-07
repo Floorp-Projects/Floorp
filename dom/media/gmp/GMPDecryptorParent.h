@@ -98,16 +98,12 @@ private:
                         const uint32_t& aSystemCode,
                         const nsCString& aMessage) override;
 
-  bool RecvKeyStatusChanged(const nsCString& aSessionId,
-                            InfallibleTArray<uint8_t>&& aKeyId,
-                            const GMPMediaKeyStatus& aStatus) override;
-
-  bool RecvForgetKeyStatus(const nsCString& aSessionId,
-                           InfallibleTArray<uint8_t>&& aKeyId) override;
-
   bool RecvDecrypted(const uint32_t& aId,
                      const GMPErr& aErr,
                      InfallibleTArray<uint8_t>&& aBuffer) override;
+
+  bool RecvBatchedKeyStatusChanged(const nsCString& aSessionId,
+                                   InfallibleTArray<GMPKeyInformation>&& aKeyInfos) override;
 
   bool RecvShutdown() override;
 

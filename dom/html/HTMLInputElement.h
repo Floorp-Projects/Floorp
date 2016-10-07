@@ -772,7 +772,24 @@ public:
   void MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles);
   void MozSetDirectory(const nsAString& aDirectoryPath, ErrorResult& aRv);
 
+  /*
+   * The following functions are called from datetime picker to let input box
+   * know the current state of the picker or to update the input box on changes.
+   */
+  void GetDateTimeInputBoxValue(DateTimeValue& aValue);
+  void UpdateDateTimeInputBox(const DateTimeValue& aValue);
+  void SetDateTimePickerState(bool aOpen);
+
+  /*
+   * The following functions are called from datetime input box XBL to control
+   * and update the picker.
+   */
+  void OpenDateTimePicker(const DateTimeValue& aInitialValue);
+  void UpdateDateTimePicker(const DateTimeValue& aValue);
+  void CloseDateTimePicker();
+
   HTMLInputElement* GetOwnerNumberControl();
+  HTMLInputElement* GetOwnerDateTimeControl();
 
   void StartNumberControlSpinnerSpin();
   enum SpinnerStopState {
@@ -803,7 +820,8 @@ public:
 
   nsIEditor* GetEditor();
 
-  // XPCOM SetUserInput() is OK
+  void SetUserInput(const nsAString& aInput,
+                    const mozilla::Maybe<nsIPrincipal*>& aPrincipal);
 
   // XPCOM GetPhonetic() is OK
 
@@ -1472,6 +1490,12 @@ protected:
   Decimal mRangeThumbDragStartValue;
 
   /**
+   * Current value in the input box, in DateTimeValue dictionary format, see
+   * HTMLInputElement.webidl for details.
+   */
+  nsAutoPtr<DateTimeValue> mDateTimeInputBoxValue;
+
+  /**
    * The selection properties cache for number controls.  This is needed because
    * the number controls don't recycle their text field, so the normal cache in
    * nsTextEditorState cannot do its job.
@@ -1561,7 +1585,8 @@ private:
   static bool MayFireChangeOnBlur(uint8_t aType) {
     return IsSingleLineTextControl(false, aType) ||
            aType == NS_FORM_INPUT_RANGE ||
-           aType == NS_FORM_INPUT_NUMBER;
+           aType == NS_FORM_INPUT_NUMBER ||
+           aType == NS_FORM_INPUT_TIME;
   }
 
   struct nsFilePickerFilter {

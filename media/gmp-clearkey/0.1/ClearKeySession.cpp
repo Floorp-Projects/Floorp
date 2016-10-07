@@ -41,15 +41,14 @@ ClearKeySession::~ClearKeySession()
 {
   CK_LOGD("ClearKeySession dtor %p", this);
 
-  auto& keyIds = GetKeyIds();
-  for (auto it = keyIds.begin(); it != keyIds.end(); it++) {
-    assert(ClearKeyDecryptionManager::Get()->HasSeenKeyId(*it));
-
-    ClearKeyDecryptionManager::Get()->ReleaseKeyId(*it);
-    mCallback->KeyStatusChanged(&mSessionId[0], mSessionId.size(),
-                                &(*it)[0], it->size(),
-                                kGMPUnknown);
+  std::vector<GMPMediaKeyInfo> key_infos;
+  for (const KeyId& keyId : mKeyIds) {
+    assert(ClearKeyDecryptionManager::Get()->HasSeenKeyId(keyId));
+    ClearKeyDecryptionManager::Get()->ReleaseKeyId(keyId);
+    key_infos.push_back(GMPMediaKeyInfo(&keyId[0], keyId.size(), kGMPUnknown));
   }
+  mCallback->BatchedKeyStatusChanged(&mSessionId[0], mSessionId.size(),
+                                     key_infos.data(), key_infos.size());
 }
 
 void
