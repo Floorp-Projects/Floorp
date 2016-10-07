@@ -2699,15 +2699,26 @@ ParseTypeDef(WasmParseContext& c)
     return new(c.lifo) AstSig(name, Move(sig));
 }
 
+static bool
+MaybeParseOwnerIndex(WasmParseContext& c)
+{
+    if (c.ts.peek().kind() == WasmToken::Index) {
+        WasmToken elemIndex = c.ts.get();
+        if (elemIndex.index()) {
+            c.ts.generateError(elemIndex, "can't handle non-default memory/table yet", c.error);
+            return false;
+        }
+    }
+    return true;
+}
+
 static AstDataSegment*
 ParseDataSegment(WasmParseContext& c)
 {
-    AstExpr* offset;
-    WasmToken dstOffset;
-    if (c.ts.getIf(WasmToken::Index, &dstOffset))
-        offset = new(c.lifo) AstConst(Val(dstOffset.index()));
-    else
-        offset = ParseExpr(c, true);
+    if (!MaybeParseOwnerIndex(c))
+        return nullptr;
+
+    AstExpr* offset = ParseExpr(c, true);
     if (!offset)
         return nullptr;
 
@@ -2961,10 +2972,14 @@ ParseExport(WasmParseContext& c)
             break;
           }
           case WasmToken::Table:
+            if (!MaybeParseOwnerIndex(c))
+                return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
             return new(c.lifo) AstExport(name.text(), DefinitionKind::Table);
           case WasmToken::Memory:
+            if (!MaybeParseOwnerIndex(c))
+                return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
             return new(c.lifo) AstExport(name.text(), DefinitionKind::Memory);
@@ -3077,6 +3092,9 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
 static AstElemSegment*
 ParseElemSegment(WasmParseContext& c)
 {
+    if (!MaybeParseOwnerIndex(c))
+        return nullptr;
+
     AstExpr* offset = ParseExpr(c, true);
     if (!offset)
         return nullptr;
