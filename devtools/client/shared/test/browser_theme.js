@@ -20,6 +20,8 @@ function testGetTheme() {
   is(getTheme(), "light", "getTheme() correctly returns light theme");
   Services.prefs.setCharPref("devtools.theme", "dark");
   is(getTheme(), "dark", "getTheme() correctly returns dark theme");
+  Services.prefs.setCharPref("devtools.theme", "firebug");
+  is(getTheme(), "firebug", "getTheme() correctly returns firebug theme");
   Services.prefs.setCharPref("devtools.theme", "unknown");
   is(getTheme(), "unknown", "getTheme() correctly returns an unknown theme");
   Services.prefs.setCharPref("devtools.theme", originalTheme);
@@ -39,6 +41,8 @@ function testSetTheme() {
   is(Services.prefs.getCharPref("devtools.theme"), "dark", "setTheme() correctly sets dark theme.");
   setTheme("light");
   is(Services.prefs.getCharPref("devtools.theme"), "light", "setTheme() correctly sets light theme.");
+  setTheme("firebug");
+  is(Services.prefs.getCharPref("devtools.theme"), "firebug", "setTheme() correctly sets firebug theme.");
   setTheme("unknown");
   is(Services.prefs.getCharPref("devtools.theme"), "unknown", "setTheme() correctly sets an unknown theme.");
   Services.prefs.setCharPref("devtools.theme", originalTheme);
@@ -47,16 +51,20 @@ function testSetTheme() {
 function testGetColor() {
   let BLUE_DARK = "#46afe3";
   let BLUE_LIGHT = "#0088cc";
+  let BLUE_FIREBUG = "#3455db";
   let originalTheme = getTheme();
 
   setTheme("dark");
   is(getColor("highlight-blue"), BLUE_DARK, "correctly gets color for enabled theme.");
   setTheme("light");
   is(getColor("highlight-blue"), BLUE_LIGHT, "correctly gets color for enabled theme.");
+  setTheme("firebug");
+  is(getColor("highlight-blue"), BLUE_FIREBUG, "correctly gets color for enabled theme.");
   setTheme("metal");
   is(getColor("highlight-blue"), BLUE_LIGHT, "correctly uses light for default theme if enabled theme not found");
 
   is(getColor("highlight-blue", "dark"), BLUE_DARK, "if provided and found, uses the provided theme.");
+  is(getColor("highlight-blue", "firebug"), BLUE_FIREBUG, "if provided and found, uses the provided theme.");
   is(getColor("highlight-blue", "metal"), BLUE_LIGHT, "if provided and not found, defaults to light theme.");
   is(getColor("somecomponents"), null, "if a type cannot be found, should return null.");
 
@@ -75,6 +83,7 @@ function testColorExistence() {
   for (let type of vars) {
     ok(getColor(type, "light"), `${type} is a valid color in light theme`);
     ok(getColor(type, "dark"), `${type} is a valid color in light theme`);
+    ok(getColor(type, "firebug"), `${type} is a valid color in light theme`);
   }
 }
 
