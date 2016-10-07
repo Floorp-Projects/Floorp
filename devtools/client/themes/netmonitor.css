@@ -225,6 +225,10 @@
   margin-inline-end: 4px;
 }
 
+.side-menu-widget-item.selected .requests-security-state-icon {
+  filter: brightness(1.3);
+}
+
 .security-state-insecure {
   list-style-image: url(chrome://devtools/skin/images/security-state-insecure.svg);
 }
@@ -276,6 +280,10 @@
   width: 8vw;
 }
 
+.side-menu-widget-item.selected .requests-menu-transferred.theme-comment {
+  color: var(--theme-selection-color);
+}
+
 /* Network requests table: status codes */
 
 .requests-menu-status-code {
@@ -292,6 +300,10 @@
   margin-inline-end: 5px;
   border-radius: 10px;
   transition: box-shadow 0.5s ease-in-out;
+}
+
+.side-menu-widget-item.selected .requests-menu-status-icon {
+  filter: brightness(1.3);
 }
 
 .requests-menu-status-icon:not([code]) {
@@ -492,8 +504,13 @@
 }
 
 /* Method Column */
+
 .theme-firebug .requests-menu-subitem.requests-menu-method-box {
   color: rgb(128, 128, 128);
+}
+
+.side-menu-widget-item.selected .requests-menu-method {
+  color: var(--theme-selection-color);
 }
 
 /* Size Column */
@@ -532,6 +549,10 @@
   in Firebug theme */
 .theme-firebug .tabpanel-content .variables-view-container .title.devtools-toolbar {
   height: 20px !important;
+}
+
+.theme-firebug .variables-view-scope:focus > .title {
+  color: var(--theme-body-color);
 }
 
 /* Summary tabpanel */
