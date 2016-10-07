@@ -297,6 +297,30 @@ protected:
                             mozilla::dom::EventTarget* aRelatedTarget = nullptr);
 
   /**
+   *  Send a focusin or focusout event
+   *
+   *  aEventMessage should be either eFocusIn or eFocusOut.
+   *
+   *  aTarget is the content the event will fire on (the object that gained
+   *  focus for focusin, the object blurred for focusout).
+   *
+   *  aCurrentFocusedWindow is the window focused before the focus/blur event
+   *  was fired.
+   *
+   *  aCurrentFocusedContent is the content focused before the focus/blur event
+   *  was fired.
+   *
+   *  aRelatedTarget is the content related to the event (the object
+   *  losing focus for focusin, the object getting focus for focusout).
+   */
+  void SendFocusInOrOutEvent(mozilla::EventMessage aEventMessage,
+                             nsIPresShell* aPresShell,
+                             nsISupports* aTarget,
+                             nsPIDOMWindowOuter* aCurrentFocusedWindow,
+                             nsIContent* aCurrentFocusedContent,
+                             mozilla::dom::EventTarget* aRelatedTarget = nullptr);
+
+  /**
    * Scrolls aContent into view unless the FLAG_NOSCROLL flag is set.
    */
   void ScrollIntoView(nsIPresShell* aPresShell,
