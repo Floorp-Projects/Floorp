@@ -9,6 +9,7 @@
 #include "base/thread.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/VideoBridgeChild.h"
+#include "mozilla/layers/ImageClient.h"
 #include "MediaInfo.h"
 #include "VideoDecoderManagerParent.h"
 #ifdef XP_WIN
@@ -175,6 +176,12 @@ VideoDecoderParent::Output(MediaData* aData)
     MOZ_ASSERT(video->mImage, "Decoded video must output a layer::Image to be used with VideoDecoderParent");
 
     RefPtr<TextureClient> texture = video->mImage->GetTextureClient(VideoBridgeChild::GetSingleton());
+
+    if (!texture) {
+      texture =
+        ImageClient::CreateTextureClientForImage(video->mImage,
+                                                 VideoBridgeChild::GetSingleton());
+    }
 
     if (texture && !texture->IsAddedToCompositableClient()) {
       texture->InitIPDLActor(VideoBridgeChild::GetSingleton());
