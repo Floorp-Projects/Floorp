@@ -68,6 +68,7 @@ private:
   nsresult SetupDecoder(MediaRawData* aSample);
   nsresult GetImplicitAACMagicCookie(const MediaRawData* aSample);
   nsresult SetupChannelLayout();
+  uint32_t mParsedFramesForAACMagicCookie;
 };
 
 } // namespace mozilla
