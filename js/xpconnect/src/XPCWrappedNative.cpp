@@ -940,7 +940,7 @@ void
 XPCWrappedNative::FlatJSObjectMoved(JSObject* obj, const JSObject* old)
 {
     JS::AutoAssertGCCallback inCallback(obj);
-    MOZ_ASSERT(mFlatJSObject == old);
+    MOZ_ASSERT(mFlatJSObject.unbarrieredGetPtr() == old);
 
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(mIdentity, &cache);
@@ -2165,7 +2165,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
         else
             XPC_LOG_ALWAYS(("mSet @ %x", mSet.get()));
 
-        XPC_LOG_ALWAYS(("mFlatJSObject of %x", mFlatJSObject.getPtr()));
+        XPC_LOG_ALWAYS(("mFlatJSObject of %x", mFlatJSObject.unbarrieredGetPtr()));
         XPC_LOG_ALWAYS(("mIdentity of %x", mIdentity.get()));
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
 
