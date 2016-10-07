@@ -38693,6 +38693,12 @@
             "url": "/secure-contexts/shared-worker-secure-first.https.html"
           }
         ],
+        "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html": [
+          {
+            "path": "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html",
+            "url": "/uievents/order-of-events/focus-events/focus-automated-blink-webkit.html"
+          }
+        ],
         "webaudio/the-audio-api/the-constantsourcenode-interface/test-constantsourcenode.html": [
           {
             "path": "webaudio/the-audio-api/the-constantsourcenode-interface/test-constantsourcenode.html",
