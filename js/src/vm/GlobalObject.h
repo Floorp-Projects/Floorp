@@ -427,18 +427,6 @@ class GlobalObject : public NativeObject
         return &global->getPrototype(key).toObject();
     }
 
-    static NativeObject* getOrCreateSetPrototype(JSContext* cx, Handle<GlobalObject*> global) {
-        if (!ensureConstructor(cx, global, JSProto_Set))
-            return nullptr;
-        return &global->getPrototype(JSProto_Set).toObject().as<NativeObject>();
-    }
-
-    static NativeObject* getOrCreateWeakSetPrototype(JSContext* cx, Handle<GlobalObject*> global) {
-        if (!ensureConstructor(cx, global, JSProto_WeakSet))
-            return nullptr;
-        return &global->getPrototype(JSProto_WeakSet).toObject().as<NativeObject>();
-    }
-
     JSObject* getOrCreateIntlObject(JSContext* cx) {
         return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_Intl, initIntlObject);
     }
