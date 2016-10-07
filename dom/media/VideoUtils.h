@@ -7,11 +7,13 @@
 #ifndef VideoUtils_h
 #define VideoUtils_h
 
+#include "MediaInfo.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsAutoPtr.h"
 #include "nsIThread.h"
@@ -38,6 +40,8 @@ using mozilla::CheckedUint32;
 // This belongs in xpcom/monitor/Monitor.h, once we've made
 // mozilla::Monitor non-reentrant.
 namespace mozilla {
+
+class MediaContentType;
 
 // EME Key System String.
 extern const nsLiteralCString kEMEKeySystemClearkey;
@@ -346,6 +350,17 @@ IsVP8CodecString(const nsAString& aCodec);
 
 bool
 IsVP9CodecString(const nsAString& aCodec);
+
+// Try and create a TrackInfo with a given codec MIME type.
+UniquePtr<TrackInfo>
+CreateTrackInfoWithMIMEType(const nsACString& aCodecMIMEType);
+
+// Try and create a TrackInfo with a given codec MIME type, and optional extra
+// parameters from a content type (its MIME type and codecs are ignored).
+UniquePtr<TrackInfo>
+CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
+  const nsACString& aCodecMIMEType,
+  const MediaContentType& aContentType);
 
 template <typename String>
 class StringListRange

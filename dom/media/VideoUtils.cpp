@@ -9,6 +9,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Function.h"
 
+#include "MediaContentType.h"
 #include "MediaPrefs.h"
 #include "MediaResource.h"
 #include "TimeUnits.h"
@@ -474,6 +475,52 @@ IsVP9CodecString(const nsAString& aCodec)
 {
   return aCodec.EqualsLiteral("vp9") ||
          aCodec.EqualsLiteral("vp9.0");
+}
+
+template <int N>
+static bool
+StartsWith(const nsACString& string, const char (&prefix)[N])
+{
+    if (N - 1 > string.Length()) {
+      return false;
+    }
+    return memcmp(string.Data(), prefix, N - 1) == 0;
+}
+
+UniquePtr<TrackInfo>
+CreateTrackInfoWithMIMEType(const nsACString& aCodecMIMEType)
+{
+  UniquePtr<TrackInfo> trackInfo;
+  if (StartsWith(aCodecMIMEType, "audio/")) {
+    trackInfo.reset(new AudioInfo());
+    trackInfo->mMimeType = aCodecMIMEType;
+  } else if (StartsWith(aCodecMIMEType, "video/")) {
+    trackInfo.reset(new VideoInfo());
+    trackInfo->mMimeType = aCodecMIMEType;
+  }
+  return trackInfo;
+}
+
+UniquePtr<TrackInfo>
+CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
+  const nsACString& aCodecMIMEType,
+  const MediaContentType& aContentType)
+{
+  UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aCodecMIMEType);
+  if (trackInfo) {
+    VideoInfo* videoInfo = trackInfo->GetAsVideoInfo();
+    if (videoInfo) {
+      Maybe<int32_t> maybeWidth = aContentType.GetWidth();
+      if (maybeWidth && *maybeWidth > 0) {
+        videoInfo->mImage.width = *maybeWidth;
+      }
+      Maybe<int32_t> maybeHeight = aContentType.GetHeight();
+      if (maybeHeight && *maybeHeight > 0) {
+        videoInfo->mImage.height = *maybeHeight;
+      }
+    }
+  }
+  return trackInfo;
 }
 
 } // end namespace mozilla
