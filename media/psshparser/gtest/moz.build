@@ -5,11 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestClearKeyUtils.cpp',
+    'TestPsshParser.cpp',
 ]
+
+USE_LIBS += ['psshparser']
 
 FINAL_LIBRARY = 'xul-gtest'
-
-LOCAL_INCLUDES += [
-    '..',
-]
