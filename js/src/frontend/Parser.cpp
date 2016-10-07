@@ -6318,11 +6318,6 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
         tokenStream.ungetToken();
     }
 
-    if (name == context->names().let) {
-        report(ParseError, false, null(), JSMSG_LET_CLASS_BINDING);
-        return null();
-    }
-
     RootedAtom propAtom(context);
 
     // A named class creates a new lexical scope with a const binding of the
