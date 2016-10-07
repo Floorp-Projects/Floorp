@@ -612,15 +612,15 @@ double nsIWidget::DefaultScaleOverride()
 //-------------------------------------------------------------------------
 void nsBaseWidget::AddChild(nsIWidget* aChild)
 {
-  MOZ_RELEASE_ASSERT(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
-                     "aChild not properly removed from its old child list");
+  MOZ_ASSERT(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
+             "aChild not properly removed from its old child list");
 
   if (!mFirstChild) {
     mFirstChild = mLastChild = aChild;
   } else {
     // append to the list
-    MOZ_RELEASE_ASSERT(mLastChild);
-    MOZ_RELEASE_ASSERT(!mLastChild->GetNextSibling());
+    MOZ_ASSERT(mLastChild);
+    MOZ_ASSERT(!mLastChild->GetNextSibling());
     mLastChild->SetNextSibling(aChild);
     aChild->SetPrevSibling(mLastChild);
     mLastChild = aChild;

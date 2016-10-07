@@ -34,6 +34,33 @@ struct DecryptResult {
   RefPtr<MediaRawData> mSample;
 };
 
+class CDMKeyInfo {
+public:
+  explicit CDMKeyInfo(const nsTArray<uint8_t>& aKeyId)
+    : mKeyId(aKeyId)
+    , mStatus()
+  {}
+
+  CDMKeyInfo(const nsTArray<uint8_t>& aKeyId,
+             const dom::Optional<dom::MediaKeyStatus>& aStatus)
+    : mKeyId(aKeyId)
+    , mStatus(aStatus.Value())
+  {}
+
+  // The copy-ctor and copy-assignment operator for Optional<T> are declared as
+  // delete, so override CDMKeyInfo copy-ctor for nsTArray operations.
+  CDMKeyInfo(const CDMKeyInfo& aKeyInfo)
+  {
+    mKeyId = aKeyInfo.mKeyId;
+    if (aKeyInfo.mStatus.WasPassed()) {
+      mStatus.Construct(aKeyInfo.mStatus.Value());
+    }
+  }
+
+  nsTArray<uint8_t> mKeyId;
+  dom::Optional<dom::MediaKeyStatus> mStatus;
+};
+
 typedef int64_t UnixTime;
 
 // Proxies calls CDM, and proxies calls back.

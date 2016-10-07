@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
+-->
+<head>
+  <title>Test key events for time control</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1288591">Mozilla Bug 1288591</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input" type="time">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+// Turn off Spatial Navigation because it hijacks arrow keydown events:
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, function() {
+    test();
+    SimpleTest.finish();
+  });
+});
+
+var testData = [
+  /**
+   * keys: keys to send to the input element.
+   * initialVal: initial value set to the input element.
+   * expectedVal: expected value of the input element after sending the keys.
+   */
+  {
+    // Type 1030 and select AM.
+    keys: ["1030", "VK_DOWN"],
+    initialVal: "",
+    expectedVal: "10:30"
+  },
+  {
+    // Type 3 in the hour field will automatically advance to the minute field.
+    keys: ["330", "VK_DOWN"],
+    initialVal: "",
+    expectedVal: "03:30"
+  },
+  {
+    // Type 5 in the hour field will automatically advance to the minute field.
+    // Type 7 in the minute field will automatically advance to the AM/PM field.
+    keys: ["57", "VK_DOWN"],
+    initialVal: "",
+    expectedVal: "05:07"
+  },
+  {
+    // Advance to AM/PM field and change to PM.
+    keys: ["VK_TAB", "VK_TAB", "VK_DOWN"],
+    initialVal: "10:30",
+    expectedVal: "22:30"
+  },
+  {
+    // Right key should do the same thing as TAB key.
+    keys: ["VK_RIGHT", "VK_RIGHT", "VK_DOWN"],
+    initialVal: "10:30",
+    expectedVal: "22:30"
+  },
+  {
+    // Advance to minute field then back to hour field and decrement.
+    keys: ["VK_RIGHT", "VK_LEFT", "VK_DOWN"],
+    initialVal: "10:30",
+    expectedVal: "09:30"
+  },
+  {
+    // Focus starts on the first field, hour in this case, and increment.
+    keys: ["VK_UP"],
+    initialVal: "16:00",
+    expectedVal: "17:00"
+  },
+  {
+    // Advance to minute field and decrement.
+    keys: ["VK_TAB", "VK_DOWN"],
+    initialVal: "16:00",
+    expectedVal: "16:59"
+  },
+  {
+    // Advance to minute field and increment.
+    keys: ["VK_TAB", "VK_UP"],
+    initialVal: "16:59",
+    expectedVal: "16:00"
+  },
+  {
+    // PageUp on hour field increments hour by 3.
+    keys: ["VK_PAGE_UP"],
+    initialVal: "05:00",
+    expectedVal: "08:00"
+  },
+  {
+    // PageDown on hour field decrements hour by 3.
+    keys: ["VK_PAGE_DOWN"],
+    initialVal: "05:00",
+    expectedVal: "02:00"
+  },
+  {
+    // PageUp on minute field increments minute by 10.
+    keys: ["VK_TAB", "VK_PAGE_UP"],
+    initialVal: "14:00",
+    expectedVal: "14:10"
+  },
+  {
+    // PageDown on minute field decrements minute by 10.
+    keys: ["VK_TAB", "VK_PAGE_DOWN"],
+    initialVal: "14:00",
+    expectedVal: "14:50"
+  },
+  {
+    // Home key on hour field sets it to the minimum hour, which is 1 in 12-hour
+    // clock.
+    keys: ["VK_HOME"],
+    initialVal: "03:10",
+    expectedVal: "01:10"
+  },
+  {
+    // End key on hour field sets it to the maximum hour, which is 12 in 12-hour
+    // clock.
+    keys: ["VK_END"],
+    initialVal: "03:10",
+    expectedVal: "00:10"
+  },
+  {
+    // Home key on minute field sets it to the minimum minute, which is 0.
+    keys: ["VK_TAB", "VK_HOME"],
+    initialVal: "19:30",
+    expectedVal: "19:00"
+  },
+  {
+    // End key on minute field sets it to the minimum minute, which is 59.
+    keys: ["VK_TAB", "VK_END"],
+    initialVal: "19:30",
+    expectedVal: "19:59"
+  },
+  // Second field will show up when needed.
+  {
+    // PageUp on second field increments second by 10.
+    keys: ["VK_TAB", "VK_TAB", "VK_PAGE_UP"],
+    initialVal: "08:10:10",
+    expectedVal: "08:10:20"
+  },
+  {
+    // PageDown on second field increments second by 10.
+    keys: ["VK_TAB", "VK_TAB", "VK_PAGE_DOWN"],
+    initialVal: "08:10:10",
+    expectedVal: "08:10:00"
+  },
+  {
+    // Home key on second field sets it to the minimum second, which is 0.
+    keys: ["VK_TAB", "VK_TAB", "VK_HOME"],
+    initialVal: "16:00:30",
+    expectedVal: "16:00:00"
+  },
+  {
+    // End key on second field sets it to the minimum second, which is 59.
+    keys: ["VK_TAB", "VK_TAB", "VK_END"],
+    initialVal: "16:00:30",
+    expectedVal: "16:00:59"
+  },
+];
+
+function sendKeys(aKeys) {
+  for (let i = 0; i < aKeys.length; i++) {
+    let key = aKeys[i];
+    if (key.startsWith("VK")) {
+      synthesizeKey(key, {});
+    } else {
+      sendString(key);
+    }
+  }
+}
+
+function test() {
+  var elem = document.getElementById("input");
+
+  for (let { keys, initialVal, expectedVal } of testData) {
+    elem.focus();
+    elem.value = initialVal;
+    sendKeys(keys);
+    elem.blur();
+    is(elem.value, expectedVal,
+       "Test with " + keys + ", result should be " + expectedVal);
+    elem.value = "";
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

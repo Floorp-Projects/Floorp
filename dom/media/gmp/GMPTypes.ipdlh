@@ -5,6 +5,7 @@
 
 using GMPBufferType from "gmp-video-codec.h";
 using GMPAudioCodecType from "gmp-audio-codec.h";
+using GMPMediaKeyStatus from "gmp-decryption.h";
 
 namespace mozilla {
 namespace gmp {
@@ -74,6 +75,11 @@ struct GMPAudioDecodedSampleData
   uint64_t mTimeStamp; // microseconds.
   uint32_t mChannelCount;
   uint32_t mSamplesPerSecond;
+};
+
+struct GMPKeyInformation {
+  uint8_t[] keyId;
+  GMPMediaKeyStatus status;
 };
 
 }

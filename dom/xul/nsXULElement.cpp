@@ -861,7 +861,8 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
       // Note that add-ons may introduce bindings that cause this assertion to
       // fire.
       NS_ASSERTION(IsInVideoControls(this) ||
-                   IsInFeedSubscribeLine(this),
+                   IsInFeedSubscribeLine(this) ||
+                   IsXULElement(nsGkAtoms::datetimebox),
                    "Unexpected XUL element in non-XUL doc");
     }
   }

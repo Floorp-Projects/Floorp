@@ -53,6 +53,7 @@
 #include "nsIIOService.h"
 #include "nsDocument.h"
 #include "nsAttrValueOrString.h"
+#include "nsDateTimeControlFrame.h"
 
 #include "nsPresState.h"
 #include "nsIDOMEvent.h"
@@ -2707,6 +2708,82 @@ HTMLInputElement::MozSetDirectory(const nsAString& aDirectoryPath,
   SetFilesOrDirectories(array, true);
 }
 
+void HTMLInputElement::GetDateTimeInputBoxValue(DateTimeValue& aValue)
+{
+  if (NS_WARN_IF(!IsDateTimeInputType(mType)) || !mDateTimeInputBoxValue) {
+    return;
+  }
+
+  aValue = *mDateTimeInputBoxValue;
+}
+
+void
+HTMLInputElement::UpdateDateTimeInputBox(const DateTimeValue& aValue)
+{
+  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
+    return;
+  }
+
+  nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
+  if (frame) {
+    frame->SetValueFromPicker(aValue);
+  }
+}
+
+void
+HTMLInputElement::SetDateTimePickerState(bool aOpen)
+{
+  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
+    return;
+  }
+
+  nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
+  if (frame) {
+    frame->SetPickerState(aOpen);
+  }
+}
+
+void
+HTMLInputElement::OpenDateTimePicker(const DateTimeValue& aInitialValue)
+{
+  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
+    return;
+  }
+
+  mDateTimeInputBoxValue = new DateTimeValue(aInitialValue);
+  nsContentUtils::DispatchChromeEvent(OwnerDoc(),
+                                      static_cast<nsIDOMHTMLInputElement*>(this),
+                                      NS_LITERAL_STRING("MozOpenDateTimePicker"),
+                                      true, true);
+}
+
+void
+HTMLInputElement::UpdateDateTimePicker(const DateTimeValue& aValue)
+{
+  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
+    return;
+  }
+
+  mDateTimeInputBoxValue = new DateTimeValue(aValue);
+  nsContentUtils::DispatchChromeEvent(OwnerDoc(),
+                                      static_cast<nsIDOMHTMLInputElement*>(this),
+                                      NS_LITERAL_STRING("MozUpdateDateTimePicker"),
+                                      true, true);
+}
+
+void
+HTMLInputElement::CloseDateTimePicker()
+{
+  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
+    return;
+  }
+
+  nsContentUtils::DispatchChromeEvent(OwnerDoc(),
+                                      static_cast<nsIDOMHTMLInputElement*>(this),
+                                      NS_LITERAL_STRING("MozCloseDateTimePicker"),
+                                      true, true);
+}
+
 bool
 HTMLInputElement::MozIsTextField(bool aExcludePassword)
 {
@@ -2733,11 +2810,46 @@ HTMLInputElement::GetOwnerNumberControl()
   return nullptr;
 }
 
+HTMLInputElement*
+HTMLInputElement::GetOwnerDateTimeControl()
+{
+  if (IsInNativeAnonymousSubtree() &&
+      mType == NS_FORM_INPUT_TEXT &&
+      GetParent() &&
+      GetParent()->GetParent() &&
+      GetParent()->GetParent()->GetParent() &&
+      GetParent()->GetParent()->GetParent()->GetParent()) {
+    // Yes, this is very very deep.
+    HTMLInputElement* ownerDateTimeControl =
+      HTMLInputElement::FromContentOrNull(
+        GetParent()->GetParent()->GetParent()->GetParent());
+    if (ownerDateTimeControl &&
+        ownerDateTimeControl->mType == NS_FORM_INPUT_TIME) {
+      return ownerDateTimeControl;
+    }
+  }
+  return nullptr;
+}
+
+
 NS_IMETHODIMP
 HTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
 {
   *aResult = MozIsTextField(aExcludePassword);
   return NS_OK;
+}
+
+void
+HTMLInputElement::SetUserInput(const nsAString& aInput,
+                               const mozilla::Maybe<nsIPrincipal*>& aPrincipal) {
+  MOZ_ASSERT(aPrincipal.isSome());
+
+  if (mType == NS_FORM_INPUT_FILE &&
+      !nsContentUtils::IsSystemPrincipal(aPrincipal.value())) {
+    return;
+  }
+
+  SetUserInput(aInput);
 }
 
 NS_IMETHODIMP
@@ -3164,6 +3276,12 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue, uint32_t aFlags)
           if (frame) {
             frame->UpdateForValueChange();
           }
+        } else if (mType == NS_FORM_INPUT_TIME &&
+                   !IsExperimentalMobileType(mType)) {
+          nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
+          if (frame) {
+            frame->UpdateInputBoxValue();
+          }
         }
         if (!mParserCreating) {
           OnValueChanged(/* aNotify = */ true,
@@ -3466,6 +3584,15 @@ HTMLInputElement::Blur(ErrorResult& aError)
       }
     }
   }
+
+  if (mType == NS_FORM_INPUT_TIME && !IsExperimentalMobileType(mType)) {
+    nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
+    if (frame) {
+      frame->HandleBlurEvent();
+      return;
+    }
+  }
+
   nsGenericHTMLElement::Blur(aError);
 }
 
@@ -3482,6 +3609,14 @@ HTMLInputElement::Focus(ErrorResult& aError)
         textControl->Focus(aError);
         return;
       }
+    }
+  }
+
+  if (mType == NS_FORM_INPUT_TIME && !IsExperimentalMobileType(mType)) {
+    nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
+    if (frame) {
+      frame->HandleFocusEvent();
+      return;
     }
   }
 
@@ -3788,7 +3923,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     // Experimental mobile types rely on the system UI to prevent users to not
     // set invalid values but we have to be extra-careful. Especially if the
     // option has been enabled on desktop.
-    if (IsExperimentalMobileType(mType) || IsDateTimeInputType(mType)) {
+    if (IsExperimentalMobileType(mType)) {
       nsAutoString aValue;
       GetValueInternal(aValue);
       nsresult rv =
@@ -3806,6 +3941,18 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     nsIFrame* frame = GetPrimaryFrame();
     if (frame) {
       frame->InvalidateFrameSubtree();
+    }
+  }
+
+  if (mType == NS_FORM_INPUT_TIME &&
+      !IsExperimentalMobileType(mType) &&
+      aVisitor.mEvent->mMessage == eFocus &&
+      aVisitor.mEvent->mOriginalTarget == this) {
+    // If original target is this and not the anonymous text control, we should
+    // pass the focus to the anonymous text control.
+    nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
+    if (frame) {
+      frame->HandleFocusEvent();
     }
   }
 
@@ -6682,6 +6829,11 @@ HTMLInputElement::AddStates(EventStates aStates)
       HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
       if (ownerNumberControl) {
         ownerNumberControl->AddStates(focusStates);
+      } else {
+        HTMLInputElement* ownerDateTimeControl = GetOwnerDateTimeControl();
+        if (ownerDateTimeControl) {
+          ownerDateTimeControl->AddStates(focusStates);
+        }
       }
     }
   }
@@ -6698,6 +6850,11 @@ HTMLInputElement::RemoveStates(EventStates aStates)
       HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
       if (ownerNumberControl) {
         ownerNumberControl->RemoveStates(focusStates);
+      } else {
+        HTMLInputElement* ownerDateTimeControl = GetOwnerDateTimeControl();
+        if (ownerDateTimeControl) {
+          ownerDateTimeControl->RemoveStates(focusStates);
+        }
       }
     }
   }
@@ -6875,12 +7032,14 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
 #endif
 
   if (mType == NS_FORM_INPUT_FILE ||
-      mType == NS_FORM_INPUT_NUMBER) {
+      mType == NS_FORM_INPUT_NUMBER ||
+      mType == NS_FORM_INPUT_TIME) {
     if (aTabIndex) {
       // We only want our native anonymous child to be tabable to, not ourself.
       *aTabIndex = -1;
     }
-    if (mType == NS_FORM_INPUT_NUMBER) {
+    if (mType == NS_FORM_INPUT_NUMBER ||
+        mType == NS_FORM_INPUT_TIME) {
       *aIsFocusable = true;
     } else {
       *aIsFocusable = defaultFocusable;
