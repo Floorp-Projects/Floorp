@@ -7,6 +7,7 @@
 #include "SandboxBroker.h"
 #include "SandboxInfo.h"
 #include "SandboxLogging.h"
+#include "SandboxBrokerUtils.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -31,6 +32,7 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/ipc/FileDescriptor.h"
+#include "sandbox/linux/system_headers/linux_syscalls.h"
 
 namespace mozilla {
 
@@ -283,6 +285,25 @@ SandboxBroker::Policy::Lookup(const nsACString& aPath) const
 }
 
 static bool
+AllowOperation(int aReqFlags, int aPerms)
+{
+  int needed = 0;
+  if (aReqFlags & R_OK) {
+    needed |= SandboxBroker::MAY_READ;
+  }
+  if (aReqFlags & W_OK) {
+    needed |= SandboxBroker::MAY_WRITE;
+  }
+  // We don't really allow executing anything,
+  // so in true unix tradition we hijack this
+  // for directories.
+  if (aReqFlags & X_OK) {
+    needed |= SandboxBroker::MAY_CREATE;
+  }
+  return (aPerms & needed) == needed;
+}
+
+static bool
 AllowAccess(int aReqFlags, int aPerms)
 {
   if (aReqFlags & ~(R_OK|W_OK|F_OK)) {
@@ -343,12 +364,41 @@ AllowOpen(int aReqFlags, int aPerms)
 }
 
 static int
-DoStat(const char* aPath, struct stat* aStat, int aFlags)
+DoStat(const char* aPath, void* aBuff, int aFlags)
 {
-  if (aFlags & O_NOFOLLOW) {
-    return lstat(aPath, aStat);
+ if (aFlags & O_NOFOLLOW) {
+    return lstatsyscall(aPath, (statstruct*)aBuff);
   }
-  return stat(aPath, aStat);
+  return statsyscall(aPath, (statstruct*)aBuff);
+}
+
+static int
+DoLink(const char* aPath, const char* aPath2,
+       SandboxBrokerCommon::Operation aOper)
+{
+  if (aOper == SandboxBrokerCommon::Operation::SANDBOX_FILE_LINK) {
+    return link(aPath, aPath2);
+  } else if (aOper == SandboxBrokerCommon::Operation::SANDBOX_FILE_SYMLINK) {
+    return symlink(aPath, aPath2);
+  }
+  MOZ_CRASH("SandboxBroker: Unknown link operation");
+}
+
+size_t
+SandboxBroker::ConvertToRealPath(char* aPath, size_t aBufSize, size_t aPathLen)
+{
+  if (strstr(aPath, "..") != NULL) {
+    char* result = realpath(aPath, NULL);
+    if (result != NULL) {
+      strncpy(aPath, result, aBufSize);
+      aPath[aBufSize - 1] = '\0';
+      free(result);
+      // Size changed, but guaranteed to be 0 terminated
+      aPathLen = strlen(aPath);
+    }
+    // ValidatePath will handle failure to translate
+  }
+  return aPathLen;
 }
 
 void
@@ -379,17 +429,27 @@ SandboxBroker::ThreadMain(void)
 
   while (true) {
     struct iovec ios[2];
+    // We will receive the path strings in 1 buffer and split them back up.
+    char recvBuf[2 * (kMaxPathLen + 1)];
     char pathBuf[kMaxPathLen + 1];
+    char pathBuf2[kMaxPathLen + 1];
     size_t pathLen;
-    struct stat statBuf;
+    size_t pathLen2;
+    char respBuf[kMaxPathLen + 1]; // Also serves as struct stat
     Request req;
     Response resp;
     int respfd;
 
+    // Make sure stat responses fit in the response buffer
+    MOZ_ASSERT((kMaxPathLen + 1) > sizeof(struct stat));
+
+    // This makes our string handling below a bit less error prone.
+    memset(recvBuf, 0, sizeof(recvBuf));
+
     ios[0].iov_base = &req;
     ios[0].iov_len = sizeof(req);
-    ios[1].iov_base = pathBuf;
-    ios[1].iov_len = kMaxPathLen;
+    ios[1].iov_base = recvBuf;
+    ios[1].iov_len = sizeof(recvBuf);
 
     const ssize_t recvd = RecvWithFd(mFileDesc, ios, 2, &respfd);
     if (recvd == 0) {
@@ -421,33 +481,68 @@ SandboxBroker::ThreadMain(void)
 
     // Initialize the response with the default failure.
     memset(&resp, 0, sizeof(resp));
-    memset(&statBuf, 0, sizeof(statBuf));
-    resp.mError = EACCES;
+    memset(&respBuf, 0, sizeof(respBuf));
+    resp.mError = -EACCES;
     ios[0].iov_base = &resp;
     ios[0].iov_len = sizeof(resp);
     ios[1].iov_base = nullptr;
     ios[1].iov_len = 0;
     int openedFd = -1;
 
-    // Look up the pathname.
-    pathLen = recvd - sizeof(req);
-    // It shouldn't be possible for recvmsg to violate this assertion,
-    // but one more predictable branch shouldn't have much perf impact:
-    MOZ_RELEASE_ASSERT(pathLen <= kMaxPathLen);
-    pathBuf[pathLen] = '\0';
-    int perms = 0;
-    if (!memchr(pathBuf, '\0', pathLen)) {
+    // Clear permissions
+    int perms;
+
+    // Find end of first string, make sure the buffer is still
+    // 0 terminated.
+    size_t recvBufLen = static_cast<size_t>(recvd) - sizeof(req);
+    if (recvBufLen > 0 && recvBuf[recvBufLen - 1] != 0) {
+      SANDBOX_LOG_ERROR("corrupted path buffer from pid %d", mChildPid);
+      shutdown(mFileDesc, SHUT_RD);
+      break;
+    }
+
+    // First path should fit in maximum path length buffer.
+    size_t first_len = strlen(recvBuf);
+    if (first_len <= kMaxPathLen) {
+      strcpy(pathBuf, recvBuf);
+      // Skip right over the terminating 0, and try to copy in the
+      // second path, if any. If there's no path, this will hit a
+      // 0 immediately (we nulled the buffer before receiving).
+      // We do not assume the second path is 0-terminated, this is
+      // enforced below.
+      strncpy(pathBuf2, recvBuf + first_len + 1, kMaxPathLen + 1);
+
+      // First string is guaranteed to be 0-terminated.
+      pathLen = first_len;
+
+      // Look up the first pathname but first translate relative paths.
+      pathLen = ConvertToRealPath(pathBuf, sizeof(pathBuf), pathLen);
       perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
+
+      // Same for the second path.
+      pathLen2 = strnlen(pathBuf2, kMaxPathLen);
+      if (pathLen2 > 0) {
+        // Force 0 termination.
+        pathBuf[pathLen2] = '\0';
+        pathLen2 = ConvertToRealPath(pathBuf2, sizeof(pathBuf2), pathLen2);
+        int perms2 = mPolicy->Lookup(nsDependentCString(pathBuf2, pathLen2));
+
+        // Take the intersection of the permissions for both paths.
+        perms &= perms2;
+      }
+    } else {
+      // Failed to receive intelligible paths.
+      perms = 0;
     }
 
     // And now perform the operation if allowed.
     if (perms & CRASH_INSTEAD) {
       // This is somewhat nonmodular, but it works.
-      resp.mError = ENOSYS;
+      resp.mError = -ENOSYS;
     } else if (permissive || perms & MAY_ACCESS) {
       // If the operation was only allowed because of permissive mode, log it.
       if (permissive && !(perms & MAY_ACCESS)) {
-        AuditDenial(req.mOp, req.mFlags, pathBuf);
+        AuditPermissive(req.mOp, req.mFlags, perms, pathBuf);
       }
 
       switch(req.mOp) {
@@ -461,8 +556,10 @@ SandboxBroker::ThreadMain(void)
           if (openedFd >= 0) {
             resp.mError = 0;
           } else {
-            resp.mError = errno;
+            resp.mError = -errno;
           }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
         }
         break;
 
@@ -478,26 +575,117 @@ SandboxBroker::ThreadMain(void)
           // Instead, because we've already checked the requested
           // r/w/x bits against the policy, just return success if the
           // file exists and hope that's close enough.
-          if (stat(pathBuf, &statBuf) == 0) {
+          if (stat(pathBuf, (struct stat*)&respBuf) == 0) {
             resp.mError = 0;
           } else {
-            resp.mError = errno;
+            resp.mError = -errno;
           }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
         }
         break;
 
       case SANDBOX_FILE_STAT:
-        if (DoStat(pathBuf, &statBuf, req.mFlags) == 0) {
+        if (DoStat(pathBuf, (struct stat*)&respBuf, req.mFlags) == 0) {
           resp.mError = 0;
-          ios[1].iov_base = &statBuf;
-          ios[1].iov_len = sizeof(statBuf);
+          ios[1].iov_base = &respBuf;
+          ios[1].iov_len = req.mBufSize;
         } else {
-          resp.mError = errno;
+          resp.mError = -errno;
+        }
+        break;
+
+      case SANDBOX_FILE_CHMOD:
+        if (permissive || AllowOperation(W_OK, perms)) {
+          if (chmod(pathBuf, req.mFlags) == 0) {
+            resp.mError = 0;
+          } else {
+            resp.mError = -errno;
+          }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
+        }
+        break;
+
+      case SANDBOX_FILE_LINK:
+      case SANDBOX_FILE_SYMLINK:
+        if (permissive || AllowOperation(W_OK, perms)) {
+          if (DoLink(pathBuf, pathBuf2, req.mOp) == 0) {
+            resp.mError = 0;
+          } else {
+            resp.mError = -errno;
+          }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
+        }
+        break;
+
+      case SANDBOX_FILE_RENAME:
+        if (permissive || AllowOperation(W_OK, perms)) {
+          if (rename(pathBuf, pathBuf2) == 0) {
+            resp.mError = 0;
+          } else {
+            resp.mError = -errno;
+          }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
+        }
+        break;
+
+      case SANDBOX_FILE_MKDIR:
+        if (permissive || AllowOperation(W_OK | X_OK, perms)) {
+          if (mkdir(pathBuf, req.mFlags) == 0) {
+            resp.mError = 0;
+          } else {
+            resp.mError = -errno;
+          }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
+        }
+        break;
+
+      case SANDBOX_FILE_UNLINK:
+        if (permissive || AllowOperation(W_OK, perms)) {
+          if (unlink(pathBuf) == 0) {
+            resp.mError = 0;
+          } else {
+            resp.mError = -errno;
+          }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
+        }
+        break;
+
+      case SANDBOX_FILE_RMDIR:
+        if (permissive || AllowOperation(W_OK | X_OK, perms)) {
+          if (rmdir(pathBuf) == 0) {
+            resp.mError = 0;
+          } else {
+            resp.mError = -errno;
+          }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
+        }
+        break;
+
+      case SANDBOX_FILE_READLINK:
+        if (permissive || AllowOperation(R_OK, perms)) {
+          ssize_t respSize = readlink(pathBuf, (char*)&respBuf, sizeof(respBuf));
+          if (respSize >= 0) {
+            resp.mError = respSize;
+            ios[1].iov_base = &respBuf;
+            ios[1].iov_len = respSize;
+          } else {
+            resp.mError = -errno;
+          }
+        } else {
+          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
         }
         break;
       }
     } else {
       MOZ_ASSERT(perms == 0);
+      AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
     }
 
     const size_t numIO = ios[1].iov_len > 0 ? 2 : 1;
@@ -513,7 +701,7 @@ SandboxBroker::ThreadMain(void)
 }
 
 void
-SandboxBroker::AuditDenial(int aOp, int aFlags, const char* aPath)
+SandboxBroker::AuditPermissive(int aOp, int aFlags, int aPerms, const char* aPath)
 {
   MOZ_RELEASE_ASSERT(SandboxInfo::Get().Test(SandboxInfo::kPermissive));
 
@@ -524,9 +712,20 @@ SandboxBroker::AuditDenial(int aOp, int aFlags, const char* aPath)
     errno = 0;
   }
 
-  SANDBOX_LOG_ERROR("SandboxBroker: denied op=%d rflags=%o path=%s for pid=%d" \
-                    " permissive=1 error=\"%s\"", aOp, aFlags, aPath, mChildPid,
-                    strerror(errno));
+  SANDBOX_LOG_ERROR("SandboxBroker: would have denied op=%d rflags=%o perms=%d path=%s for pid=%d" \
+                    " permissive=1 error=\"%s\"", aOp, aFlags, aPerms,
+                    aPath, mChildPid, strerror(errno));
 }
+
+void
+SandboxBroker::AuditDenial(int aOp, int aFlags, int aPerms, const char* aPath)
+{
+#ifdef DEBUG
+  SANDBOX_LOG_ERROR("SandboxBroker: denied op=%d rflags=%o perms=%d path=%s for pid=%d" \
+                    " error=\"%s\"", aOp, aFlags, aPerms, aPath, mChildPid,
+                    strerror(errno));
+#endif
+}
+
 
 } // namespace mozilla

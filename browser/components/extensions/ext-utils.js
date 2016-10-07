@@ -429,6 +429,7 @@ global.PanelPopup = class PanelPopup extends BasePopup {
     let panel = document.createElement("panel");
     panel.setAttribute("id", makeWidgetId(extension.id) + "-panel");
     panel.setAttribute("class", "browser-extension-panel");
+    panel.setAttribute("tabspecific", "true");
     panel.setAttribute("type", "arrow");
     panel.setAttribute("role", "group");
 

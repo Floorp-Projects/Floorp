@@ -115,6 +115,16 @@ android-api-15-gradle/opt:
         env:
             # Bug 1292762 - Set GRADLE_USER_HOME to avoid sdk-manager-plugin intermittent
             GRADLE_USER_HOME: /home/worker/workspace/build/src/dotgradle
+        artifacts:
+          - name: public/android/geckoview.aar
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/outputs/aar/geckoview-withGeckoBinaries.aar
+            type: file
+          - name: public/android/geckoview_example.apk
+            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview_example/outputs/apk/geckoview_example-withGeckoBinaries.apk
+            type: file
+          - name: public/build
+            path: /home/worker/artifacts/
+            type: directory
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -125,5 +135,3 @@ android-api-15-gradle/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         custom-build-variant-cfg: api-15-gradle
         tooltool-downloads: internal
-
-

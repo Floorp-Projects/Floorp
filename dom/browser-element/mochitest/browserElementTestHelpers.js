@@ -65,8 +65,11 @@ const browserElementTestHelpers = {
     this._setPref('dom.mozBrowserFramesEnabled', value);
   },
 
-  setAccessibleCaretEnabledPref: function(value) {
-    this._setPref('layout.accessiblecaret.enabled', value);
+  setupAccessibleCaretPref: function() {
+    this._setPref('layout.accessiblecaret.enabled', true);
+    // Disable hide carets for mouse input for select-all tests so that we can
+    // get mozbrowsercaretstatechanged events.
+    this._setPref('layout.accessiblecaret.hide_carets_for_mouse_input', false);
   },
 
   getOOPByDefaultPref: function() {
