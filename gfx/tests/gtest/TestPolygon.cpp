@@ -23,7 +23,7 @@ TEST(Polygon3D, TriangulateRectangle)
     Point3D(1.0f, 0.0f, 1.0f)
   };
 
-  const nsTArray<Triangle> triangles = p.Triangulate();
+  const nsTArray<Triangle> triangles = p.ToTriangles();
   const nsTArray<Triangle> expected = {
     Triangle(Point(0.0f, 0.0f), Point(0.0f, 1.0f), Point(1.0f, 1.0f)),
     Triangle(Point(0.0f, 0.0f), Point(1.0f, 1.0f), Point(1.0f, 0.0f))
@@ -42,7 +42,7 @@ TEST(Polygon3D, TriangulatePentagon)
     Point3D(1.0f, 0.0f, 1.0f)
   };
 
-  const nsTArray<Triangle> triangles = p.Triangulate();
+  const nsTArray<Triangle> triangles = p.ToTriangles();
   const nsTArray<Triangle> expected = {
     Triangle(Point(0.0f, 0.0f), Point(0.0f, 1.0f), Point(0.5f, 1.5f)),
     Triangle(Point(0.0f, 0.0f), Point(0.5f, 1.5f), Point(1.0f, 1.0f)),

@@ -22,6 +22,7 @@
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4, Matrix
+#include "mozilla/gfx/Triangle.h"       // for Triangle
 #include "mozilla/gfx/gfxVars.h"        // for gfxVars
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/layers/CompositingRenderTargetOGL.h"
@@ -57,6 +58,9 @@ using namespace gfx;
 namespace layers {
 
 using namespace mozilla::gl;
+
+static const GLuint kCoordinateAttributeIndex = 0;
+static const GLuint kTexCoordinateAttributeIndex = 1;
 
 static void
 BindMaskForProgram(ShaderProgramOGL* aProgram, TextureSourceOGL* aSourceMask,
@@ -188,6 +192,7 @@ CompositorOGL::CleanupResources()
   if (!ctx->MakeCurrent()) {
     // Leak resources!
     mQuadVBO = 0;
+    mTriangleVBO = 0;
     mGLContext = nullptr;
     mPrograms.clear();
     return;
@@ -205,6 +210,11 @@ CompositorOGL::CleanupResources()
   if (mQuadVBO) {
     ctx->fDeleteBuffers(1, &mQuadVBO);
     mQuadVBO = 0;
+  }
+
+  if (mTriangleVBO) {
+    ctx->fDeleteBuffers(1, &mTriangleVBO);
+    mTriangleVBO = 0;
   }
 
   mGLContext->MakeCurrent();
@@ -357,10 +367,11 @@ CompositorOGL::Initialize(nsCString* const out_failureReason)
     }
   }
 
-  /* Create a simple quad VBO */
+  // Create a VBO for triangle vertices.
+  mGLContext->fGenBuffers(1, &mTriangleVBO);
 
+  /* Create a simple quad VBO */
   mGLContext->fGenBuffers(1, &mQuadVBO);
-  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
 
   // 4 quads, with the number of the quad (vertexID) encoded in w.
   GLfloat vertices[] = {
@@ -393,6 +404,8 @@ CompositorOGL::Initialize(nsCString* const out_failureReason)
     1.0f, 1.0f, 0.0f, 3.0f,
   };
   HeapCopyOfStackArray<GLfloat> verticesOnHeap(vertices);
+
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
   mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER,
                           verticesOnHeap.ByteLength(),
                           verticesOnHeap.Data(),
@@ -442,20 +455,9 @@ CalculatePOTSize(const IntSize& aSize, GLContext* gl)
   return IntSize(RoundUpPow2(aSize.width), RoundUpPow2(aSize.height));
 }
 
-// |aRect| is the rectangle we want to draw to. We will draw it with
-// up to 4 draw commands if necessary to avoid wrapping.
-// |aTexCoordRect| is the rectangle from the texture that we want to
-// draw using the given program.
-// |aTexture| is the texture we are drawing. Its actual size can be
-// larger than the rectangle given by |texCoordRect|.
-void
-CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
-                                              const Rect& aRect,
-                                              const Rect& aTexCoordRect,
-                                              TextureSource *aTexture)
+gfx::Rect
+CompositorOGL::GetTextureCoordinates(gfx::Rect textureRect, TextureSource* aTexture)
 {
-  Rect scaledTexCoordRect = aTexCoordRect;
-
   // If the OpenGL setup does not support non-power-of-two textures then the
   // texture's width and height will have been increased to the next
   // power-of-two (unless already a power of two). In that case we must scale
@@ -466,18 +468,11 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
     if (potSize != textureSize) {
       const float xScale = (float)textureSize.width / (float)potSize.width;
       const float yScale = (float)textureSize.height / (float)potSize.height;
-      scaledTexCoordRect.Scale(xScale, yScale);
+      textureRect.Scale(xScale, yScale);
     }
   }
 
-  Rect layerRects[4];
-  Rect textureRects[4];
-  size_t rects = DecomposeIntoNoRepeatRects(aRect,
-                                            scaledTexCoordRect,
-                                            &layerRects,
-                                            &textureRects);
-
-  BindAndDrawQuads(aProg, rects, layerRects, textureRects);
+  return textureRect;
 }
 
 void
@@ -996,6 +991,34 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   PROFILER_LABEL("CompositorOGL", "DrawQuad",
     js::ProfileEntry::Category::GRAPHICS);
 
+  DrawGeometry(aRect, aClipRect, aEffectChain,
+               aOpacity, aTransform, aVisibleRect);
+}
+
+void
+CompositorOGL::DrawTriangle(const gfx::TexturedTriangle& aTriangle,
+                            const gfx::IntRect& aClipRect,
+                            const EffectChain& aEffectChain,
+                            gfx::Float aOpacity,
+                            const gfx::Matrix4x4& aTransform,
+                            const gfx::Rect& aVisibleRect)
+{
+  PROFILER_LABEL("CompositorOGL", "DrawTriangle",
+    js::ProfileEntry::Category::GRAPHICS);
+
+  DrawGeometry(aTriangle, aClipRect, aEffectChain,
+               aOpacity, aTransform, aVisibleRect);
+}
+
+template<typename Geometry>
+void
+CompositorOGL::DrawGeometry(const Geometry& aGeometry,
+                            const IntRect& aClipRect,
+                            const EffectChain &aEffectChain,
+                            Float aOpacity,
+                            const gfx::Matrix4x4& aTransform,
+                            const gfx::Rect& aVisibleRect)
+{
   MOZ_ASSERT(mFrameInProgress, "frame not started");
   MOZ_ASSERT(mCurrentRenderTarget, "No destination");
 
@@ -1008,7 +1031,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   renderBound.IntersectRect(renderBound, Rect(aClipRect));
   renderBound.MoveBy(offset);
 
-  Rect destRect = aTransform.TransformAndClipBounds(aRect, renderBound);
+  Rect destRect = aTransform.TransformAndClipBounds(aGeometry, renderBound);
 
   // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
   //      quads. Fix me.
@@ -1106,12 +1129,16 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   ShaderConfigOGL config = GetShaderConfigFor(aEffectChain.mPrimaryEffect,
                                               maskType, blendMode, colorMatrix,
                                               bEnableAA);
+
   config.SetOpacity(aOpacity != 1.f);
+  ApplyPrimitiveConfig(config, aGeometry);
+
   ShaderProgramOGL *program = GetShaderProgramFor(config);
   ActivateProgram(program);
   program->SetProjectionMatrix(mProjMatrix);
   program->SetLayerTransform(aTransform);
   LayerScope::SetLayerTransform(aTransform);
+
   if (colorMatrix) {
       EffectColorMatrix* effectColorMatrix =
         static_cast<EffectColorMatrix*>(aEffectChain.mSecondaryEffects[EffectTypes::COLOR_MATRIX].get());
@@ -1129,7 +1156,8 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       gl()->fTextureBarrier();
       mixBlendBackdrop = mCurrentRenderTarget->GetTextureHandle();
     } else {
-      gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform, &backdropTransform);
+      gfx::IntRect rect = ComputeBackdropCopyRect(aGeometry, aClipRect,
+                                                  aTransform, &backdropTransform);
       mixBlendBackdrop = CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
       createdMixBlendBackdropTexture = true;
     }
@@ -1141,6 +1169,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
   if (aOpacity != 1.f)
     program->SetLayerOpacity(aOpacity);
+
   if (config.mFeatures & ENABLE_TEXTURE_RECT) {
     TextureSourceOGL* source = nullptr;
     if (aEffectChain.mPrimaryEffect->mType == EffectTypes::COMPONENT_ALPHA) {
@@ -1239,7 +1268,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
       didSetBlendMode = SetBlendMode(gl(), blendMode);
 
-      BindAndDrawQuad(program, aRect);
+      BindAndDrawGeometry(program, aGeometry);
     }
     break;
 
@@ -1266,7 +1295,8 @@ CompositorOGL::DrawQuad(const Rect& aRect,
         BindBackdrop(program, mixBlendBackdrop, LOCAL_GL_TEXTURE2);
       }
 
-      BindAndDrawQuadWithTextureRect(program, aRect, texturedEffect->mTextureCoords, source);
+      BindAndDrawGeometryWithTextureRect(program, aGeometry,
+                                         texturedEffect->mTextureCoords, source);
     }
     break;
   case EffectTypes::YCBCR: {
@@ -1297,10 +1327,10 @@ CompositorOGL::DrawQuad(const Rect& aRect,
         BindBackdrop(program, mixBlendBackdrop, LOCAL_GL_TEXTURE4);
       }
       didSetBlendMode = SetBlendMode(gl(), blendMode);
-      BindAndDrawQuadWithTextureRect(program,
-                                     aRect,
-                                     effectYCbCr->mTextureCoords,
-                                     sourceYCbCr->GetSubSource(Y));
+      BindAndDrawGeometryWithTextureRect(program,
+                                         aGeometry,
+                                         effectYCbCr->mTextureCoords,
+                                         sourceYCbCr->GetSubSource(Y));
     }
     break;
   case EffectTypes::NV12: {
@@ -1334,10 +1364,10 @@ CompositorOGL::DrawQuad(const Rect& aRect,
         BindBackdrop(program, mixBlendBackdrop, LOCAL_GL_TEXTURE3);
       }
       didSetBlendMode = SetBlendMode(gl(), blendMode);
-      BindAndDrawQuadWithTextureRect(program,
-                                     aRect,
-                                     effectNV12->mTextureCoords,
-                                     sourceNV12->GetSubSource(Y));
+      BindAndDrawGeometryWithTextureRect(program,
+                                         aGeometry,
+                                         effectNV12->mTextureCoords,
+                                         sourceNV12->GetSubSource(Y));
     }
     break;
   case EffectTypes::RENDER_TARGET: {
@@ -1373,7 +1403,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       // this. Pass true for the flip parameter to introduce a second flip
       // that cancels the other one out.
       didSetBlendMode = SetBlendMode(gl(), blendMode);
-      BindAndDrawQuad(program, aRect);
+      BindAndDrawGeometry(program, aGeometry);
     }
     break;
   case EffectTypes::COMPONENT_ALPHA: {
@@ -1404,19 +1434,19 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
                                LOCAL_GL_ONE, LOCAL_GL_ONE);
       program->SetTexturePass2(false);
-      BindAndDrawQuadWithTextureRect(program,
-                                     aRect,
-                                     effectComponentAlpha->mTextureCoords,
-                                     effectComponentAlpha->mOnBlack);
+      BindAndDrawGeometryWithTextureRect(program,
+                                         aGeometry,
+                                         effectComponentAlpha->mTextureCoords,
+                                         effectComponentAlpha->mOnBlack);
 
       // Pass 2.
       gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
                                LOCAL_GL_ONE, LOCAL_GL_ONE);
       program->SetTexturePass2(true);
-      BindAndDrawQuadWithTextureRect(program,
-                                     aRect,
-                                     effectComponentAlpha->mTextureCoords,
-                                     effectComponentAlpha->mOnBlack);
+      BindAndDrawGeometryWithTextureRect(program,
+                                         aGeometry,
+                                         effectComponentAlpha->mTextureCoords,
+                                         effectComponentAlpha->mOnBlack);
 
       mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                                      LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
@@ -1437,7 +1467,118 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
   // in case rendering has used some other GL context
   MakeCurrent();
-  LayerScope::DrawEnd(mGLContext, aEffectChain, aRect.width, aRect.height);
+
+  LayerScope::DrawEnd(mGLContext, aEffectChain,
+                      aGeometry.width, aGeometry.height);
+}
+
+void
+CompositorOGL::BindAndDrawGeometry(ShaderProgramOGL* aProgram,
+                                   const gfx::Rect& aRect,
+                                   const gfx::Rect& aTextureRect)
+{
+  BindAndDrawQuad(aProgram, aRect, aTextureRect);
+}
+
+void
+CompositorOGL::BindAndDrawGeometry(ShaderProgramOGL* aProgram,
+                                   const gfx::TexturedTriangle& aTriangle,
+                                   const gfx::Rect& aTextureRect)
+{
+  NS_ASSERTION(aProgram->HasInitialized(), "Shader program not correctly initialized");
+
+  const gfx::TexturedTriangle& t = aTriangle;
+  const gfx::Triangle& tex = t.textureCoords;
+
+  GLfloat vertices[] = {
+    t.p1.x, t.p1.y, 0.0f, 1.0f, tex.p1.x, tex.p1.y,
+    t.p2.x, t.p2.y, 0.0f, 1.0f, tex.p2.x, tex.p2.y,
+    t.p3.x, t.p3.y, 0.0f, 1.0f, tex.p3.x, tex.p3.y
+  };
+
+  HeapCopyOfStackArray<GLfloat> verticesOnHeap(vertices);
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mTriangleVBO);
+  mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER,
+                          verticesOnHeap.ByteLength(),
+                          verticesOnHeap.Data(),
+                          LOCAL_GL_STREAM_DRAW);
+
+  const GLsizei stride = 6 * sizeof(GLfloat);
+  InitializeVAO(kCoordinateAttributeIndex, 4, stride, 0);
+  InitializeVAO(kTexCoordinateAttributeIndex, 2, stride, 4 * sizeof(GLfloat));
+
+  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLES, 0, 3);
+
+  mGLContext->fDisableVertexAttribArray(kCoordinateAttributeIndex);
+  mGLContext->fDisableVertexAttribArray(kTexCoordinateAttributeIndex);
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+}
+
+// |aRect| is the rectangle we want to draw to. We will draw it with
+// up to 4 draw commands if necessary to avoid wrapping.
+// |aTexCoordRect| is the rectangle from the texture that we want to
+// draw using the given program.
+// |aTexture| is the texture we are drawing. Its actual size can be
+// larger than the rectangle given by |texCoordRect|.
+void
+CompositorOGL::BindAndDrawGeometryWithTextureRect(ShaderProgramOGL *aProg,
+                                                  const Rect& aRect,
+                                                  const Rect& aTexCoordRect,
+                                                  TextureSource *aTexture)
+{
+  Rect scaledTexCoordRect = GetTextureCoordinates(aTexCoordRect, aTexture);
+  Rect layerRects[4];
+  Rect textureRects[4];
+  size_t rects = DecomposeIntoNoRepeatRects(aRect,
+                                            scaledTexCoordRect,
+                                            &layerRects,
+                                            &textureRects);
+
+  BindAndDrawQuads(aProg, rects, layerRects, textureRects);
+}
+
+void
+CompositorOGL::BindAndDrawGeometryWithTextureRect(ShaderProgramOGL *aProg,
+                                                  const gfx::TexturedTriangle& aTriangle,
+                                                  const gfx::Rect& aTexCoordRect,
+                                                  TextureSource *aTexture)
+{
+  BindAndDrawGeometry(aProg, aTriangle,
+                      GetTextureCoordinates(aTexCoordRect, aTexture));
+}
+
+void
+CompositorOGL::BindAndDrawQuads(ShaderProgramOGL *aProg,
+                                int aQuads,
+                                const Rect* aLayerRects,
+                                const Rect* aTextureRects)
+{
+  NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
+
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
+  InitializeVAO(kCoordinateAttributeIndex, 4, 0, 0);
+
+  aProg->SetLayerRects(aLayerRects);
+  if (aProg->GetTextureCount() > 0) {
+    aProg->SetTextureRects(aTextureRects);
+  }
+
+  // We are using GL_TRIANGLES here because the Mac Intel drivers fail to properly
+  // process uniform arrays with GL_TRIANGLE_STRIP. Go figure.
+  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLES, 0, 6 * aQuads);
+  mGLContext->fDisableVertexAttribArray(kCoordinateAttributeIndex);
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+  LayerScope::SetDrawRects(aQuads, aLayerRects, aTextureRects);
+}
+
+void
+CompositorOGL::InitializeVAO(const GLuint aAttrib, const GLint aComponents,
+                             const GLsizei aStride, const size_t aOffset)
+{
+  mGLContext->fVertexAttribPointer(aAttrib, aComponents, LOCAL_GL_FLOAT,
+                                   LOCAL_GL_FALSE, aStride,
+                                   reinterpret_cast<GLvoid*>(aOffset));
+  mGLContext->fEnableVertexAttribArray(aAttrib);
 }
 
 void
@@ -1618,33 +1759,6 @@ CompositorOGL::MakeCurrent(MakeCurrentFlags aFlags) {
     return;
   }
   mGLContext->MakeCurrent(aFlags & ForceMakeCurrent);
-}
-
-void
-CompositorOGL::BindAndDrawQuads(ShaderProgramOGL *aProg,
-                                int aQuads,
-                                const Rect* aLayerRects,
-                                const Rect* aTextureRects)
-{
-  NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
-
-  const GLuint coordAttribIndex = 0;
-
-  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
-  mGLContext->fVertexAttribPointer(coordAttribIndex, 4,
-                                   LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
-                                   (GLvoid*) 0);
-  mGLContext->fEnableVertexAttribArray(coordAttribIndex);
-
-  aProg->SetLayerRects(aLayerRects);
-  if (aProg->GetTextureCount() > 0) {
-    aProg->SetTextureRects(aTextureRects);
-  }
-
-  // We are using GL_TRIANGLES here because the Mac Intel drivers fail to properly
-  // process uniform arrays with GL_TRIANGLE_STRIP. Go figure.
-  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLES, 0, 6 * aQuads);
-  LayerScope::SetDrawRects(aQuads, aLayerRects, aTextureRects);
 }
 
 GLBlitTextureImageHelper*
