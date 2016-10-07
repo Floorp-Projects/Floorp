@@ -44,4 +44,7 @@ interface PeerConnectionObserver
   void onRemoveStream(MediaStream stream);
   void onAddTrack(MediaStreamTrack track, sequence<MediaStream> streams);
   void onRemoveTrack(MediaStreamTrack track);
+
+  /* DTMF callback */
+  void onDTMFToneChange(DOMString trackId, DOMString tone);
 };

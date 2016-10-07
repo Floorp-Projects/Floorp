@@ -68,6 +68,7 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
                        const nsTArray<RefPtr<GridArea>>& aAreas,
                        bool aIsRow)
 {
+  MOZ_ASSERT(aLineInfo);
   mLines.Clear();
 
   if (!aTrackInfo) {
@@ -96,9 +97,7 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
                          lastTrackEdge;
 
       nsTArray<nsString> lineNames;
-      if (aLineInfo) {
-        lineNames = aLineInfo->mNames.SafeElementAt(i, nsTArray<nsString>());
-      }
+      lineNames = aLineInfo->mNames.SafeElementAt(i, nsTArray<nsString>());
 
       // Add in names from grid areas where this line is used as a boundary.
       for (auto area : aAreas) {

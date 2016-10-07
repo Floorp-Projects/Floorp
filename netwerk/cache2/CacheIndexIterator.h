@@ -43,7 +43,6 @@ protected:
 
   bool ShouldBeNewAdded() { return mAddNew; }
   virtual void AddRecord(CacheIndexRecord *aRecord);
-  virtual void AddRecords(const nsTArray<CacheIndexRecord *> &aRecords);
   bool RemoveRecord(CacheIndexRecord *aRecord);
   bool ReplaceRecord(CacheIndexRecord *aOldRecord,
                      CacheIndexRecord *aNewRecord);

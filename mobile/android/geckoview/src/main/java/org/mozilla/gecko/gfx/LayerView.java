@@ -350,10 +350,6 @@ public class LayerView extends FrameLayout {
         return mLayerClient.getViewportMetrics();
     }
 
-    public PointF convertViewPointToLayerPoint(PointF viewPoint) {
-        return mLayerClient.convertViewPointToLayerPoint(viewPoint);
-    }
-
     public Matrix getMatrixForLayerRectToViewRect() {
         return mLayerClient.getMatrixForLayerRectToViewRect();
     }

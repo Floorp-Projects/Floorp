@@ -4037,6 +4037,21 @@ class LFromCharCode : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Convert uint32 code point to a string.
+class LFromCodePoint : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(FromCodePoint)
+
+    explicit LFromCodePoint(const LAllocation& codePoint) {
+        setOperand(0, codePoint);
+    }
+
+    const LAllocation* codePoint() {
+        return this->getOperand(0);
+    }
+};
+
 // Calculates sincos(x) and returns two values (sin/cos).
 class LSinCos : public LCallInstructionHelper<2, 1, 2>
 {

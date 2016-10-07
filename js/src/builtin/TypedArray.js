@@ -158,7 +158,7 @@ function TypedArrayEntries() {
 }
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.7 %TypedArray%.prototype.every(callbackfn[, thisArg]).
-function TypedArrayEvery(callbackfn, thisArg = undefined) {
+function TypedArrayEvery(callbackfn/*, thisArg*/) {
     // Steps 1-2.
     var O = this;
 
@@ -183,7 +183,7 @@ function TypedArrayEvery(callbackfn, thisArg = undefined) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 7.
-    var T = thisArg;
+    var T = arguments.length > 1 ? arguments[1] : void 0;
 
     // Steps 8-9.
     // Omit steps 9.a-9.c and the 'if' clause in step 9.d, since there are no holes in typed arrays.
@@ -245,7 +245,7 @@ function TypedArrayFill(value, start = 0, end = undefined) {
 }
 
 // ES6 draft 32 (2015-02-02) 22.2.3.9 %TypedArray%.prototype.filter(callbackfn[, thisArg])
-function TypedArrayFilter(callbackfn, thisArg = undefined) {
+function TypedArrayFilter(callbackfn/*, thisArg*/) {
     // Step 1.
     var O = this;
 
@@ -271,7 +271,7 @@ function TypedArrayFilter(callbackfn, thisArg = undefined) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 6.
-    var T = thisArg;
+    var T = arguments.length > 1 ? arguments[1] : void 0;
 
     // Step 7.
     var defaultConstructor = _ConstructorForTypedArray(O);
@@ -293,10 +293,8 @@ function TypedArrayFilter(callbackfn, thisArg = undefined) {
         var selected = ToBoolean(callContentFunction(callbackfn, T, kValue, k, O));
         // Step 13.f.
         if (selected) {
-            // Step 13.f.i.
-            callFunction(std_Array_push, kept, kValue);
-            // Step 13.f.ii.
-            captured++;
+            // Steps 13.f.i-ii.
+            kept[captured++] = kValue;
         }
     }
 
@@ -314,7 +312,7 @@ function TypedArrayFilter(callbackfn, thisArg = undefined) {
 }
 
 // ES6 draft rev28 (2014/10/14) 22.2.3.10 %TypedArray%.prototype.find(predicate[, thisArg]).
-function TypedArrayFind(predicate, thisArg = undefined) {
+function TypedArrayFind(predicate/*, thisArg*/) {
     // Steps 1-2.
     var O = this;
 
@@ -339,7 +337,7 @@ function TypedArrayFind(predicate, thisArg = undefined) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
 
     // Step 7.
-    var T = thisArg;
+    var T = arguments.length > 1 ? arguments[1] : void 0;
 
     // Steps 8-9.
     // Steps a (implicit), and g.
@@ -356,7 +354,7 @@ function TypedArrayFind(predicate, thisArg = undefined) {
 }
 
 // ES6 draft rev28 (2014/10/14) 22.2.3.11 %TypedArray%.prototype.findIndex(predicate[, thisArg]).
-function TypedArrayFindIndex(predicate, thisArg = undefined) {
+function TypedArrayFindIndex(predicate/*, thisArg*/) {
     // Steps 1-2.
     var O = this;
 
@@ -381,7 +379,7 @@ function TypedArrayFindIndex(predicate, thisArg = undefined) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
 
     // Step 7.
-    var T = thisArg;
+    var T = arguments.length > 1 ? arguments[1] : void 0;
 
     // Steps 8-9.
     // Steps a (implicit), and g.
@@ -396,7 +394,7 @@ function TypedArrayFindIndex(predicate, thisArg = undefined) {
 }
 
 // ES6 draft rev31 (2015-01-15) 22.1.3.10 %TypedArray%.prototype.forEach(callbackfn[,thisArg])
-function TypedArrayForEach(callbackfn, thisArg = undefined) {
+function TypedArrayForEach(callbackfn/*, thisArg*/) {
     // Step 1-2.
     var O = this;
 
@@ -421,7 +419,7 @@ function TypedArrayForEach(callbackfn, thisArg = undefined) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 6.
-    var T = thisArg;
+    var T = arguments.length > 1 ? arguments[1] : void 0;
 
     // Step 7-8.
     // Step 7, 8a (implicit) and 8e.
@@ -588,7 +586,7 @@ function TypedArrayLastIndexOf(searchElement, fromIndex = undefined) {
 }
 
 // ES6 draft rev32 (2015-02-02) 22.2.3.18 %TypedArray%.prototype.map(callbackfn [, thisArg]).
-function TypedArrayMap(callbackfn, thisArg = undefined) {
+function TypedArrayMap(callbackfn/*, thisArg*/) {
     // Step 1.
     var O = this;
 
@@ -614,7 +612,7 @@ function TypedArrayMap(callbackfn, thisArg = undefined) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 6.
-    var T = thisArg;
+    var T = arguments.length > 1 ? arguments[1] : void 0;
 
     // Step 7.
     var defaultConstructor = _ConstructorForTypedArray(O);
@@ -950,7 +948,7 @@ function TypedArraySlice(start, end) {
 }
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.25 %TypedArray%.prototype.some(callbackfn[, thisArg]).
-function TypedArraySome(callbackfn, thisArg = undefined) {
+function TypedArraySome(callbackfn/*, thisArg*/) {
     // Steps 1-2.
     var O = this;
 
@@ -975,7 +973,7 @@ function TypedArraySome(callbackfn, thisArg = undefined) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 7.
-    var T = thisArg;
+    var T = arguments.length > 1 ? arguments[1] : void 0;
 
     // Steps 8-9.
     // Omit steps 9.a-9.c and the 'if' clause in step 9.d, since there are no holes in typed arrays.
@@ -1337,6 +1335,7 @@ function TypedArrayFrom(constructor, target, items, mapfn, thisArg) {
         var values = new List();
 
         // Steps 10.d-e.
+        var i = 0;
         while (true) {
             // Steps 10.e.i-ii.
             var next = callContentFunction(iterator.next, iterator);
@@ -1346,11 +1345,11 @@ function TypedArrayFrom(constructor, target, items, mapfn, thisArg) {
             // Steps 10.e.iii-vi.
             if (next.done)
                 break;
-            callFunction(std_Array_push, values, next.value);
+            values[i++] = next.value;
         }
 
         // Step 10.f.
-        var len = values.length;
+        var len = i;
 
         // Steps 10.g-h.
         // There is no need to implement the 22.2.2.1.2 - TypedArrayAllocOrInit() method,
