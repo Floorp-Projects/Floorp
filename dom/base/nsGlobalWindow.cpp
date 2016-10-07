@@ -81,6 +81,7 @@
 #include "nsAboutProtocolUtils.h"
 #include "nsCharTraits.h" // NS_IS_HIGH/LOW_SURROGATE
 #include "PostMessageEvent.h"
+#include "DocGroup.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -1226,9 +1227,10 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mCleanedUp(false),
     mDialogAbuseCount(0),
     mAreDialogsEnabled(true),
-    mCanSkipCCGeneration(0),
-    mStaticConstellation(0),
-    mConstellation(NullCString())
+#ifdef DEBUG
+    mIsValidatingTabGroup(false),
+#endif
+    mCanSkipCCGeneration(0)
 {
   AssertIsOnMainThread();
 
@@ -1262,11 +1264,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     // |this| is an outer window. Outer windows start out frozen and
     // remain frozen until they get an inner window.
     MOZ_ASSERT(IsFrozen());
-
-    // As an outer window, we may be the root of a constellation. This initial
-    // static constellation may be overridden as this window is given a parent
-    // window or an opener.
-    mStaticConstellation = WindowID();
   }
 
   // We could have failed the first time through trying
@@ -1428,6 +1425,11 @@ nsGlobalWindow::~nsGlobalWindow()
     if (outer) {
       outer->MaybeClearInnerWindow(this);
     }
+  }
+
+  // We don't have to leave the tab group if we are an inner window.
+  if (mTabGroup && IsOuterWindow()) {
+    mTabGroup->Leave(AsOuter());
   }
 
   // Outer windows are always supposed to call CleanUp before letting themselves
@@ -2856,6 +2858,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip(mContext);
 
   aDocument->SetScriptGlobalObject(newInnerWindow);
+  MOZ_ASSERT(newInnerWindow->mTabGroup,
+             "We must have a TabGroup cached at this point");
 
   if (!aState) {
     if (reUseInnerWindow) {
@@ -3032,11 +3036,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
   mDocShell = aDocShell; // Weak Reference
 
-  // Copy over the static constellation from our new parent.
-  nsCOMPtr<nsPIDOMWindowOuter> parentWindow = GetParent();
-  if (parentWindow) {
-    mStaticConstellation = Cast(parentWindow)->mStaticConstellation;
-  }
+  nsCOMPtr<nsPIDOMWindowOuter> parentWindow = GetScriptableParentOrNull();
+  MOZ_RELEASE_ASSERT(!parentWindow || !mTabGroup || mTabGroup == Cast(parentWindow)->mTabGroup);
 
   NS_ASSERTION(!mNavigator, "Non-null mNavigator in outer window!");
 
@@ -3141,19 +3142,24 @@ nsGlobalWindow::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
 {
   FORWARD_TO_OUTER_VOID(SetOpenerWindow, (aOpener, aOriginalOpener));
 
+  nsWeakPtr opener = do_GetWeakReference(aOpener);
+  if (opener == mOpener) {
+    return;
+  }
+
   NS_ASSERTION(!aOriginalOpener || !mSetOpenerWindowCalled,
                "aOriginalOpener is true, but not first call to "
                "SetOpenerWindow!");
   NS_ASSERTION(aOpener || !aOriginalOpener,
                "Shouldn't set mHadOriginalOpener if aOpener is null");
 
-  mOpener = do_GetWeakReference(aOpener);
+  mOpener = opener.forget();
   NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
 
-  // Copy over the static constellation from our new opener
-  if (aOpener) {
-    mStaticConstellation = Cast(aOpener)->mStaticConstellation;
-  }
+  // Check that the js visible opener matches!
+  nsPIDOMWindowOuter* contentOpener = GetSanitizedOpener(aOpener);
+  MOZ_RELEASE_ASSERT(!contentOpener || !mTabGroup ||
+    mTabGroup == Cast(contentOpener)->mTabGroup);
 
   if (aOriginalOpener) {
     MOZ_ASSERT(!mHadOriginalOpener,
@@ -4726,26 +4732,13 @@ nsGlobalWindow::GetControllers(nsIControllers** aResult)
 }
 
 nsPIDOMWindowOuter*
-nsGlobalWindow::GetOpenerWindowOuter()
+nsGlobalWindow::GetSanitizedOpener(nsPIDOMWindowOuter* aOpener)
 {
-  MOZ_RELEASE_ASSERT(IsOuterWindow());
-
-  nsCOMPtr<nsPIDOMWindowOuter> opener = do_QueryReferent(mOpener);
-  if (!opener) {
+  if (!aOpener) {
     return nullptr;
   }
 
-  nsGlobalWindow* win = nsGlobalWindow::Cast(opener);
-
-  // First, check if we were called from a privileged chrome script
-  if (nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-    // Catch the case where we're chrome but the opener is not...
-    if (GetPrincipal() == nsContentUtils::GetSystemPrincipal() &&
-        win->GetPrincipal() != nsContentUtils::GetSystemPrincipal()) {
-      return nullptr;
-    }
-    return opener;
-  }
+  nsGlobalWindow* win = nsGlobalWindow::Cast(aOpener);
 
   // First, ensure that we're not handing back a chrome window to content:
   if (win->IsChromeWindow()) {
@@ -4755,7 +4748,7 @@ nsGlobalWindow::GetOpenerWindowOuter()
   // We don't want to reveal the opener if the opener is a mail window,
   // because opener can be used to spoof the contents of a message (bug 105050).
   // So, we look in the opener's root docshell to see if it's a mail window.
-  nsCOMPtr<nsIDocShell> openerDocShell = opener->GetDocShell();
+  nsCOMPtr<nsIDocShell> openerDocShell = aOpener->GetDocShell();
 
   if (openerDocShell) {
     nsCOMPtr<nsIDocShellTreeItem> openerRootItem;
@@ -4765,12 +4758,36 @@ nsGlobalWindow::GetOpenerWindowOuter()
       uint32_t appType;
       nsresult rv = openerRootDocShell->GetAppType(&appType);
       if (NS_SUCCEEDED(rv) && appType != nsIDocShell::APP_TYPE_MAIL) {
-        return opener;
+        return aOpener;
       }
     }
   }
 
   return nullptr;
+}
+
+nsPIDOMWindowOuter*
+nsGlobalWindow::GetOpenerWindowOuter()
+{
+  MOZ_RELEASE_ASSERT(IsOuterWindow());
+
+  nsCOMPtr<nsPIDOMWindowOuter> opener = do_QueryReferent(mOpener);
+
+  if (!opener) {
+    return nullptr;
+  }
+
+  // First, check if we were called from a privileged chrome script
+  if (nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
+    // Catch the case where we're chrome but the opener is not...
+    if (GetPrincipal() == nsContentUtils::GetSystemPrincipal() &&
+        nsGlobalWindow::Cast(opener)->GetPrincipal() != nsContentUtils::GetSystemPrincipal()) {
+      return nullptr;
+    }
+    return opener;
+  }
+
+  return GetSanitizedOpener(opener);
 }
 
 nsPIDOMWindowOuter*
@@ -4797,11 +4814,9 @@ nsGlobalWindow::GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindow::GetOpener()
 {
-  FORWARD_TO_INNER(GetOpener, (), nullptr);
+  FORWARD_TO_OUTER(GetOpener, (), nullptr);
 
-  ErrorResult dummy;
-  nsCOMPtr<nsPIDOMWindowOuter> opener = GetOpenerWindow(dummy);
-  dummy.SuppressException();
+  nsCOMPtr<nsPIDOMWindowOuter> opener = GetOpenerWindowOuter();
   return opener.forget();
 }
 
@@ -13627,6 +13642,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserDOMWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGroupMessageManagers)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOpenerForInitialContentBrowser)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
@@ -13640,6 +13656,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGlobalChromeWindow,
   }
   tmp->DisconnectAndClearGroupMessageManagers();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGroupMessageManagers)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOpenerForInitialContentBrowser)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 // QueryInterface implementation for nsGlobalChromeWindow
@@ -14108,6 +14125,24 @@ nsGlobalWindow::GetGroupMessageManager(const nsAString& aGroup,
   }
 
   return messageManager;
+}
+
+nsresult
+nsGlobalChromeWindow::SetOpenerForInitialContentBrowser(mozIDOMWindowProxy* aOpenerWindow)
+{
+  MOZ_RELEASE_ASSERT(IsOuterWindow());
+  MOZ_ASSERT(!mOpenerForInitialContentBrowser);
+  mOpenerForInitialContentBrowser = aOpenerWindow;
+  return NS_OK;
+}
+
+nsresult
+nsGlobalChromeWindow::TakeOpenerForInitialContentBrowser(mozIDOMWindowProxy** aOpenerWindow)
+{
+  MOZ_RELEASE_ASSERT(IsOuterWindow());
+  // Intentionally forget our own member
+  mOpenerForInitialContentBrowser.forget(aOpenerWindow);
+  return NS_OK;
 }
 
 // nsGlobalModalWindow implementation
@@ -14593,44 +14628,105 @@ nsGlobalWindow::CheckForDPIChange()
   }
 }
 
-void
-nsGlobalWindow::GetConstellation(nsACString& aConstellation)
+mozilla::dom::TabGroup*
+nsGlobalWindow::TabGroupOuter()
 {
-  FORWARD_TO_INNER_VOID(GetConstellation, (aConstellation));
+  MOZ_RELEASE_ASSERT(IsOuterWindow());
+
+  // This method is valid both on inner and outer windows, which is a
+  // Outer windows lazily join TabGroups when requested. This is usually done
+  // because a document is getting its NodePrincipal, and asking for the
+  // TabGroup to determine its DocGroup.
+  if (!mTabGroup) {
+    // Get mOpener ourselves, instead of relying on GetOpenerWindowOuter,
+    // because that way we dodge the LegacyIsCallerChromeOrNativeCode() call
+    // which we want to return false.
+    nsCOMPtr<nsPIDOMWindowOuter> piOpener = do_QueryReferent(mOpener);
+    nsGlobalWindow* opener = Cast(GetSanitizedOpener(piOpener));
+    nsGlobalWindow* parent = Cast(GetScriptableParentOrNull());
+    MOZ_ASSERT(!parent || !opener, "Only one of parent and opener may be provided");
+
+    mozilla::dom::TabGroup* toJoin = nullptr;
+    if (GetDocShell()->ItemType() == nsIDocShellTreeItem::typeChrome) {
+      toJoin = TabGroup::GetChromeTabGroup();
+    } else if (opener) {
+      toJoin = opener->TabGroup();
+    } else if (parent) {
+      toJoin = parent->TabGroup();
+    }
+    mTabGroup = mozilla::dom::TabGroup::Join(AsOuter(), toJoin);
+  }
+  MOZ_ASSERT(mTabGroup);
 
 #ifdef DEBUG
-  RefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();
-  MOZ_ASSERT(outer, "We should have an outer window");
-  RefPtr<nsGlobalWindow> top = outer->GetTopInternal();
-  RefPtr<nsPIDOMWindowOuter> opener = outer->GetOpener();
-  MOZ_ASSERT(!top || (top->mStaticConstellation ==
-                      outer->mStaticConstellation));
-  MOZ_ASSERT(!opener || (Cast(opener)->mStaticConstellation ==
-                         outer->mStaticConstellation));
+  // Ensure that we don't recurse forever
+  if (!mIsValidatingTabGroup) {
+    mIsValidatingTabGroup = true;
+    // We only need to do this check if we aren't in the chrome tab group
+    if (GetDocShell()->ItemType() == nsIDocShellTreeItem::typeChrome) {
+      MOZ_ASSERT(mTabGroup == TabGroup::GetChromeTabGroup());
+    } else {
+      // Sanity check that our tabgroup matches our opener or parent.
+      RefPtr<nsPIDOMWindowOuter> parent = GetScriptableParentOrNull();
+      MOZ_ASSERT_IF(parent, Cast(parent)->TabGroup() == mTabGroup);
+      nsCOMPtr<nsPIDOMWindowOuter> piOpener = do_QueryReferent(mOpener);
+      nsGlobalWindow* opener = Cast(GetSanitizedOpener(piOpener));
+      MOZ_ASSERT_IF(opener && opener != this, opener->TabGroup() == mTabGroup);
+    }
+    mIsValidatingTabGroup = false;
+  }
 #endif
 
-  if (mConstellation.IsVoid()) {
-    mConstellation.Truncate();
-    // The dynamic constellation part comes from the eTLD+1 for the principal's URI.
-    nsCOMPtr<nsIPrincipal> principal = GetPrincipal();
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = principal->GetURI(getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIEffectiveTLDService> tldService =
-        do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-      if (tldService) {
-        rv = tldService->GetBaseDomain(uri, 0, mConstellation);
-        if (NS_FAILED(rv)) {
-          mConstellation.Truncate();
-        }
-      }
-    }
+  return mTabGroup;
+}
 
-    // Get the static constellation from the outer window object.
-    mConstellation.AppendPrintf("^%llu", GetOuterWindowInternal()->mStaticConstellation);
+mozilla::dom::TabGroup*
+nsGlobalWindow::TabGroupInner()
+{
+  MOZ_RELEASE_ASSERT(IsInnerWindow());
+
+  // If we don't have a TabGroup yet, try to get it from the outer window and
+  // cache it.
+  if (!mTabGroup) {
+    nsGlobalWindow* outer = GetOuterWindowInternal();
+    // This will never be called without either an outer window, or a cached tab group.
+    // This is because of the following:
+    // * This method is only called on inner windows
+    // * This method is called as a document is attached to it's script global
+    //   by the document
+    // * Inner windows are created in nsGlobalWindow::SetNewDocument, which
+    //   immediately sets a document, which will call this method, causing
+    //   the TabGroup to be cached.
+    MOZ_RELEASE_ASSERT(outer, "Inner window without outer window has no cached tab group!");
+    mTabGroup = outer->TabGroup();
   }
+  MOZ_ASSERT(mTabGroup);
 
-  aConstellation.Assign(mConstellation);
+#ifdef DEBUG
+  nsGlobalWindow* outer = GetOuterWindowInternal();
+  MOZ_ASSERT_IF(outer, outer->TabGroup() == mTabGroup);
+#endif
+
+  return mTabGroup;
+}
+
+mozilla::dom::TabGroup*
+nsGlobalWindow::TabGroup()
+{
+  if (IsInnerWindow()) {
+    return TabGroupInner();
+  }
+  return TabGroupOuter();
+}
+
+mozilla::dom::DocGroup*
+nsGlobalWindow::GetDocGroup()
+{
+  nsIDocument* doc = GetExtantDoc();
+  if (doc) {
+    return doc->GetDocGroup();
+  }
+  return nullptr;
 }
 
 nsGlobalWindow::TemporarilyDisableDialogs::TemporarilyDisableDialogs(

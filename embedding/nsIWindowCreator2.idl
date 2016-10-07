@@ -20,6 +20,7 @@
 interface nsITabParent;
 interface nsIURI;
 interface nsIWebBrowserChrome;
+interface mozIDOMWindowProxy;
 
 [scriptable, uuid(b6c44689-f97e-4f32-a723-29eeddfbdc53)]
 
@@ -42,6 +43,8 @@ interface nsIWindowCreator2 : nsIWindowCreator {
       @param contextFlags Flags about the context of the window being created.
       @param aOpeningTab The TabParent that is trying to open this new chrome
                          window. Can be nullptr.
+      @param aOpener The window which is trying to open this new chrome window.
+                     Can be nullptr
       @param cancel Return |true| to reject window creation. If true the
                     implementation has determined the window should not
                     be created at all. The caller should not default
@@ -52,6 +55,7 @@ interface nsIWindowCreator2 : nsIWindowCreator {
                                           in uint32_t chromeFlags,
                                           in uint32_t contextFlags,
                                           in nsITabParent aOpeningTab,
+                                          in mozIDOMWindowProxy aOpener,
                                           out boolean cancel);
 
   /**

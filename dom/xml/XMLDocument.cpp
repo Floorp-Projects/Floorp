@@ -128,12 +128,6 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
     return rv;
   }
 
-  if (nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aEventObject)) {
-    d->SetScriptHandlingObject(sgo);
-  } else if (aEventObject){
-    d->SetScopeObject(aEventObject);
-  }
-
   if (isHTML) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(d);
     NS_ASSERTION(htmlDoc, "HTML Document doesn't implement nsIHTMLDocument?");
@@ -146,6 +140,14 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   // Must set the principal first, since SetBaseURI checks it.
   doc->SetPrincipal(aPrincipal);
   doc->SetBaseURI(aBaseURI);
+
+  // We need to set the script handling object after we set the principal such
+  // that the doc group is assigned correctly.
+  if (nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aEventObject)) {
+    d->SetScriptHandlingObject(sgo);
+  } else if (aEventObject){
+    d->SetScopeObject(aEventObject);
+  }
 
   // XMLDocuments and documents "created in memory" get to be UTF-8 by default,
   // unlike the legacy HTML mess

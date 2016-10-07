@@ -826,6 +826,17 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                         aTabOpener->mDefaultScale);
   }
 
+  // Set the opener window for this window before we start loading the document
+  // inside of it. We have to do this before loading the remote scripts, because
+  // they can poke at the document and cause the nsDocument to be created before
+  // the openerwindow
+  nsCOMPtr<mozIDOMWindowProxy> windowProxy = do_GetInterface(newChild->WebNavigation());
+  if (windowProxy && aParent) {
+    nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::From(windowProxy);
+    nsPIDOMWindowOuter* parent = nsPIDOMWindowOuter::From(aParent);
+    outer->SetOpenerWindow(parent, *aWindowIsNew);
+  }
+
   // Unfortunately we don't get a window unless we've shown the frame.  That's
   // pretty bogus; see bug 763602.
   newChild->DoFakeShow(textureFactoryIdentifier, layersId, renderFrame,

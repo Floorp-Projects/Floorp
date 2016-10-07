@@ -38,6 +38,8 @@ interface nsIAppShellService : nsISupports
    * @param aInitialHeight like aInitialWidth, but subtly different.
    * @param aOpeningTab The TabParent that requested that this window be opened.
    *                    Can be left null.
+   * @param aOpenerWindow The Window Proxy which requested that this window be opened.
+   *                      Can be left null.
    */
   const long SIZE_TO_CONTENT = -1;
   nsIXULWindow createTopLevelWindow(in nsIXULWindow aParent,
@@ -45,7 +47,8 @@ interface nsIAppShellService : nsISupports
                                     in uint32_t aChromeMask,
                                     in long aInitialWidth,
                                     in long aInitialHeight,
-                                    in nsITabParent aOpeningTab);
+                                    in nsITabParent aOpeningTab,
+                                    in mozIDOMWindowProxy aOpenerWindow);
 
   /**
    * This is the constructor for creating an invisible DocShell.
