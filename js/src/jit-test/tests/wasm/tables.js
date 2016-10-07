@@ -36,7 +36,7 @@ assertEq(new Instance(m, {globals:{a:20, table:tbl}}) instanceof Instance, true)
 assertErrorMessage(() => new Instance(m, {globals:{a:50, table:tbl}}), RangeError, /elem segment does not fit/);
 
 var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect $v2i (get_local $i))) (export "call" $call)`
-var callee = i => `(func $f${i} (type $v2i) (result i32) (i32.const ${i}))`;
+var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
 
 var call = wasmEvalText(`(module (table 10 anyfunc) ${callee(0)} ${caller})`).exports.call;
 assertErrorMessage(() => call(0), Error, /indirect call to null/);
@@ -155,9 +155,9 @@ var call = wasmEvalText(`(module
     (type $v2i2 (func (result i32)))
     (type $i2v (func (param i32)))
     (table anyfunc (elem $a $b $c))
-    (func $a (type $v2i1) (result i32) (i32.const 0))
-    (func $b (type $v2i2) (result i32) (i32.const 1))
-    (func $c (type $i2v) (param i32))
+    (func $a (type $v2i1) (i32.const 0))
+    (func $b (type $v2i2) (i32.const 1))
+    (func $c (type $i2v))
     (func $call (param i32) (result i32) (call_indirect $v2i1 (get_local 0)))
     (export "call" $call)
 )`).exports.call;
