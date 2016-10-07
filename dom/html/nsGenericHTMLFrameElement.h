@@ -83,6 +83,9 @@ public:
   void SwapFrameLoaders(RefPtr<nsFrameLoader>& aOtherLoader,
                         mozilla::ErrorResult& rv);
 
+  void PresetOpenerWindow(mozIDOMWindowProxy* aOpenerWindow,
+                          mozilla::ErrorResult& aRv);
+
   static bool BrowserFramesEnabled();
 
   /**
@@ -107,6 +110,7 @@ protected:
   already_AddRefed<nsPIDOMWindowOuter> GetContentWindow();
 
   RefPtr<nsFrameLoader> mFrameLoader;
+  nsCOMPtr<nsPIDOMWindowOuter> mOpenerWindow;
 
   /**
    * True when the element is created by the parser using the

@@ -65,8 +65,10 @@
 #include "mozilla/dom/DOMStorage.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/DocGroup.h"
 #include "nsIXULWindow.h"
 #include "nsIXULBrowserWindow.h"
+#include "nsGlobalWindow.h"
 
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
@@ -483,6 +485,7 @@ nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
                                     uint32_t aChromeFlags,
                                     uint32_t aContextFlags,
                                     nsITabParent* aOpeningTabParent,
+                                    mozIDOMWindowProxy* aOpener,
                                     nsIWebBrowserChrome** aResult)
 {
   nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
@@ -501,7 +504,7 @@ nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
   nsresult rv =
     windowCreator2->CreateChromeWindow2(aParentChrome, aChromeFlags, aContextFlags,
-                                        aOpeningTabParent, &cancel,
+                                        aOpeningTabParent, aOpener, &cancel,
                                         getter_AddRefs(newWindowChrome));
 
   if (NS_SUCCEEDED(rv) && cancel) {
@@ -621,7 +624,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
 
   CreateChromeWindow(aFeatures, parentChrome, chromeFlags, contextFlags,
-                     aOpeningTabParent, getter_AddRefs(newWindowChrome));
+                     aOpeningTabParent, nullptr, getter_AddRefs(newWindowChrome));
 
   if (NS_WARN_IF(!newWindowChrome)) {
     return NS_ERROR_UNEXPECTED;
@@ -996,7 +999,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
         }
 
         rv = CreateChromeWindow(features, parentChrome, chromeFlags, contextFlags,
-                                nullptr, getter_AddRefs(newChrome));
+                                nullptr, aParent, getter_AddRefs(newChrome));
 
       } else {
         rv = mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
@@ -1009,7 +1012,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
           nsCOMPtr<nsIXULBrowserWindow> xulBrowserWin;
           xulWin->GetXULBrowserWindow(getter_AddRefs(xulBrowserWin));
           if (xulBrowserWin) {
-            xulBrowserWin->ForceInitialBrowserNonRemote();
+            nsPIDOMWindowOuter* openerWindow = aForceNoOpener ? nullptr : parentWindow;
+            xulBrowserWin->ForceInitialBrowserNonRemote(openerWindow);
           }
         }
         /* It might be a chrome nsXULWindow, in which case it won't have
@@ -2182,28 +2186,30 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
   *aOpenedWindow = 0;
   nsCOMPtr<nsPIDOMWindowOuter> piOpenedWindow = aOpenedItem->GetWindow();
   if (piOpenedWindow) {
-    if (aParent) {
-      if (!aForceNoOpener) {
-        piOpenedWindow->SetOpenerWindow(aParent, aWindowIsNew); // damnit
-      }
+    if (!aForceNoOpener) {
+      piOpenedWindow->SetOpenerWindow(aParent, aWindowIsNew); // damnit
+    } else if (aParent) {
+      MOZ_ASSERT(nsGlobalWindow::Cast(piOpenedWindow)->TabGroup() !=
+                 nsGlobalWindow::Cast(aParent)->TabGroup(),
+                 "If we're forcing no opener, they should be in different tab groups");
+    }
 
-      if (aWindowIsNew) {
+    if (aWindowIsNew) {
 #ifdef DEBUG
-        // Assert that we're not loading things right now.  If we are, when
-        // that load completes it will clobber whatever principals we set up
-        // on this new window!
-        nsCOMPtr<nsIDocumentLoader> docloader = do_QueryInterface(aOpenedItem);
-        NS_ASSERTION(docloader, "How can we not have a docloader here?");
+      // Assert that we're not loading things right now.  If we are, when
+      // that load completes it will clobber whatever principals we set up
+      // on this new window!
+      nsCOMPtr<nsIDocumentLoader> docloader = do_QueryInterface(aOpenedItem);
+      NS_ASSERTION(docloader, "How can we not have a docloader here?");
 
-        nsCOMPtr<nsIChannel> chan;
-        docloader->GetDocumentChannel(getter_AddRefs(chan));
-        NS_ASSERTION(!chan, "Why is there a document channel?");
+      nsCOMPtr<nsIChannel> chan;
+      docloader->GetDocumentChannel(getter_AddRefs(chan));
+      NS_ASSERTION(!chan, "Why is there a document channel?");
 #endif
 
-        nsCOMPtr<nsIDocument> doc = piOpenedWindow->GetExtantDoc();
-        if (doc) {
-          doc->SetIsInitialDocument(true);
-        }
+      nsCOMPtr<nsIDocument> doc = piOpenedWindow->GetExtantDoc();
+      if (doc) {
+        doc->SetIsInitialDocument(true);
       }
     }
     rv = CallQueryInterface(piOpenedWindow, aOpenedWindow);

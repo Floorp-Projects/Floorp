@@ -1258,6 +1258,12 @@ nsObjectLoadingContent::GetParentApplication(mozIApplication** aApplication)
   return NS_OK;
 }
 
+void
+nsObjectLoadingContent::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, mozilla::ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_FAILURE);
+}
+
 NS_IMETHODIMP
 nsObjectLoadingContent::SetIsPrerendered()
 {

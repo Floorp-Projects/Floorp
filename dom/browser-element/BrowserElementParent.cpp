@@ -283,6 +283,10 @@ BrowserElementParent::OpenWindowInProcess(nsPIDOMWindowOuter* aOpenerWindow,
     aURI->GetSpec(spec);
   }
 
+  ErrorResult res;
+  popupFrameElement->PresetOpenerWindow(aOpenerWindow, res);
+  MOZ_ASSERT(!res.Failed());
+
   OpenWindowResult opened =
     DispatchOpenWindowEvent(openerFrameElement, popupFrameElement,
                             NS_ConvertUTF8toUTF16(spec),

@@ -1920,29 +1920,30 @@ NS_IMETHODIMP nsXULWindow::ExitModalLoop(nsresult aStatus)
 // top-level function to create a new window
 NS_IMETHODIMP nsXULWindow::CreateNewWindow(int32_t aChromeFlags,
                                            nsITabParent *aOpeningTab,
+                                           mozIDOMWindowProxy *aOpener,
                                            nsIXULWindow **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
-    return CreateNewChromeWindow(aChromeFlags, aOpeningTab, _retval);
-  return CreateNewContentWindow(aChromeFlags, aOpeningTab, _retval);
+    return CreateNewChromeWindow(aChromeFlags, aOpeningTab, aOpener, _retval);
+  return CreateNewContentWindow(aChromeFlags, aOpeningTab, aOpener, _retval);
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(int32_t aChromeFlags,
                                                  nsITabParent *aOpeningTab,
+                                                 mozIDOMWindowProxy *aOpener,
                                                  nsIXULWindow **_retval)
 {
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
 
   // Just do a normal create of a window and return.
-
   nsCOMPtr<nsIXULWindow> newWindow;
   appShell->CreateTopLevelWindow(this, nullptr, aChromeFlags,
                                  nsIAppShellService::SIZE_TO_CONTENT,
                                  nsIAppShellService::SIZE_TO_CONTENT,
-                                 aOpeningTab,
+                                 aOpeningTab, aOpener,
                                  getter_AddRefs(newWindow));
 
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
@@ -1955,6 +1956,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(int32_t aChromeFlags,
 
 NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
                                                   nsITabParent *aOpeningTab,
+                                                  mozIDOMWindowProxy *aOpener,
                                                   nsIXULWindow **_retval)
 {
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
@@ -1985,9 +1987,12 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
   nsCOMPtr<nsIXULWindow> newWindow;
   {
     AutoNoJSAPI nojsapi;
+    // We actually want this toplevel window which we are creating to have a
+    // null opener, as we will be creating the content xul:browser window inside
+    // of it, so we pass nullptr as our aOpener.
     appShell->CreateTopLevelWindow(this, uri,
                                    aChromeFlags, 615, 480,
-                                   aOpeningTab,
+                                   aOpeningTab, nullptr,
                                    getter_AddRefs(newWindow));
     NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
   }
@@ -1996,6 +2001,17 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
   nsXULWindow *xulWin = static_cast<nsXULWindow*>
                                    (static_cast<nsIXULWindow*>
                                                (newWindow));
+
+  if (aOpener) {
+    nsCOMPtr<nsIDocShell> docShell;
+    xulWin->GetDocShell(getter_AddRefs(docShell));
+    MOZ_ASSERT(docShell);
+    nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
+      do_QueryInterface(docShell->GetWindow());
+    MOZ_ASSERT(chromeWindow);
+
+    chromeWindow->SetOpenerForInitialContentBrowser(aOpener);
+  }
 
   xulWin->LockUntilChromeLoad();
 
