@@ -51,6 +51,12 @@
 
 const IS_MAC = navigator.platform.indexOf("Mac") == 0;
 const IS_WIN = navigator.platform.indexOf("Win") == 0;
+const OS_VERSION =
+  IS_WIN  ? parseFloat(Components.classes["@mozilla.org/system-info;1"]
+                         .getService(Components.interfaces.nsIPropertyBag2)
+                         .getProperty("version")) : 0;
+const WIN7 = 6.1;
+const WIN8 = 6.2;
 
 function isModifierKeyEvent(aEvent)
 {
@@ -359,9 +365,9 @@ function* runKeyEventTests()
           var e = eventList[i];
           if (e.type == "keypress") {
             var isCtrlExpected =
-              !!(aEvent.modifiers.ctrlKey || aEvent.modifiers.ctrlRightKey);
+              !!(aEvent.modifiers.ctrlKey || aEvent.modifiers.ctrlRightKey) && !aEvent.isInputtingCharacters;
             var isAltExpected =
-              !!(aEvent.modifiers.altKey || aEvent.modifiers.altRightKey);
+              !!(aEvent.modifiers.altKey || aEvent.modifiers.altRightKey) && !aEvent.isInputtingCharacters;
             if (IS_WIN && (aEvent.modifiers.altGrKey || isCtrlExpected && isAltExpected)) {
               isCtrlExpected = isAltExpected = (aEvent.chars == "");
             }
@@ -2084,6 +2090,13 @@ function* runKeyEventTests()
                    modifiers:{ctrl:1, altKey:1}, chars:""},
                   "Enter", "Enter", nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
+    // Even non-printable key could be mapped as a printable key.
+    // Only "keyup" event cannot know if it *did* cause inputting text.
+    // Therefore, only "keydown" and "keypress" event's key value should be the character inputted by the key.
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_F4,
+                   modifiers:{}, chars:"a"},
+                  ["a", "a", "F4"], "F4", nsIDOMKeyEvent.DOM_VK_F4, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
     // US
     // Alphabet
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
@@ -3376,6 +3389,34 @@ function* runKeyEventTests()
                    modifiers:{shiftKey:1}, chars:"'"},
                   "'", "Backslash", nsIDOMKeyEvent.DOM_VK_HASH, "'", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
+    // Khmer
+    if (OS_VERSION >= WIN7) {
+      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                     modifiers:{}, chars:"\u17E2"},
+                    "\u17E2", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "\u17E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                     modifiers:{shiftKey:1}, chars:"\u17D7"},
+                    "\u17D7", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "\u17D7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2, // Ctrl+2 should cause inputting Euro sign.
+                     modifiers:{ctrlKey:1}, chars:"\u20AC", isInputtingCharacters:true},
+                    "\u20AC", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "\u20AC", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2, // Ctrl+Shift+2 shouldn't cause any input.
+                     modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                    "\u17D7", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "\u17D7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                     modifiers:{altKey:1}, chars:"\u17E2"},
+                    "\u17E2", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "\u17E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                     modifiers:{altKey:1, shiftKey:1}, chars:"\u17D7"},
+                    "\u17D7", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "\u17D7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                     modifiers:{altGrKey:1}, chars:"2"},
+                    "2", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_KHMER, keyCode:WIN_VK_2,
+                     modifiers:{altGrKey:1, shiftKey:1}, chars:"\u19E2"},
+                    "\u19E2", "Digit2", nsIDOMKeyEvent.DOM_VK_2, "\u19E2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    }
+
     // Norwegian
     yield testKey({layout:KEYBOARD_LAYOUT_NORWEGIAN, keyCode:WIN_VK_OEM_5,
                    modifiers:{}, chars:"|"},
@@ -3575,6 +3616,30 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_Q,
                    modifiers:{shiftKey:1}, chars:"\u00A8Q"},
                   ["\u00A8Q", "\u00A8", "Q", "Q"], "KeyQ", nsIDOMKeyEvent.DOM_VK_Q, "\u00A8Q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    if (OS_VERSION >= WIN8) {
+      // On Russian Mnemonic layout, both 'KeyS' and 'KeyC' are dead key.  However, the sequence 'KeyS' -> 'KeyC' causes a composite character.
+      yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC, keyCode:WIN_VK_S,
+                     modifiers:{}, chars:""},
+                    "Dead", "KeyS", nsIDOMKeyEvent.DOM_VK_S, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC, keyCode:WIN_VK_S,
+                     modifiers:{}, chars:"\u0441\u0441"},
+                    ["\u0441\u0441", "\u0441", "\u0441", "\u0441"], "KeyS", nsIDOMKeyEvent.DOM_VK_S, "\u0441\u0441", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+      yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC, keyCode:WIN_VK_C,
+                     modifiers:{}, chars:""},
+                    "Dead", "KeyC", nsIDOMKeyEvent.DOM_VK_C, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC, keyCode:WIN_VK_C,
+                     modifiers:{}, chars:"\u0446\u0446"},
+                    ["\u0446\u0446", "\u0446", "\u0446", "\u0446"], "KeyC", nsIDOMKeyEvent.DOM_VK_C, "\u0446\u0446", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+      yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC, keyCode:WIN_VK_S,
+                     modifiers:{}, chars:""},
+                    "Dead", "KeyS", nsIDOMKeyEvent.DOM_VK_S, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+      yield testKey({layout:KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC, keyCode:WIN_VK_C,
+                     modifiers:{}, chars:"\u0449"},
+                    ["\u0449", "\u0449", "\u0446"], "KeyC", nsIDOMKeyEvent.DOM_VK_C, "\u0449", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    }
 
     // When Alt key is pressed, dead key sequence is generated with WM_SYSKEYDOWN, WM_SYSDEADCHAR, WM_SYSCHAR and WM_SYSKEYUP.
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_1,
@@ -4213,6 +4278,10 @@ function runTest()
     return;
   }
 
+  if (IS_WIN && OS_VERSION >= WIN8) {
+    // Switching keyboard layout to Russian - Mnemonic causes 2 assertions in KeyboardLayout::LoadLayout().
+    SimpleTest.expectAssertions(2, 2);
+  }
   SimpleTest.waitForExplicitFinish();
 
   clearInfobars();
