@@ -36,15 +36,6 @@
   --tab-selection-box-shadow: none;
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, transparent 70%);
 
-  /* Toolbar buttons */
-  --toolbarbutton-hover-background: rgba(25,33, 38,.6) linear-gradient(rgba(25,33,38,.6), rgba(25,33,38,.6)) padding-box;
-  --toolbarbutton-hover-boxshadow: none;
-  --toolbarbutton-hover-bordercolor: rgba(25,33,38,.6);
-  --toolbarbutton-active-background: rgba(25,33,38,1) linear-gradient(rgba(25,33,38,1), rgba(25,33,38,1)) border-box;
-  --toolbarbutton-active-boxshadow: none;
-  --toolbarbutton-active-bordercolor: rgba(25,33,38,.8);
-  --toolbarbutton-checkedhover-backgroundcolor: #3C5283;
-
   /* Url and search bars */
   --url-and-searchbar-background-color: #171B1F;
   --urlbar-separator-color: #5F6670;
@@ -56,6 +47,19 @@
   --urlbar-dropmarker-2x-region: rect(0px, 11px, 14px, 0px);
   --urlbar-dropmarker-hover-2x-region: rect(0, 22px, 14px, 11px);
   --urlbar-dropmarker-active-2x-region: rect(0px, 33px, 14px, 22px);
+}
+
+/* Override the lwtheme-specific styling for toolbar buttons */
+:root[devtoolstheme="dark"],
+:root[devtoolstheme="dark"] toolbar:-moz-lwtheme {
+  --toolbarbutton-hover-background: rgba(25,33, 38,.6) linear-gradient(rgba(25,33,38,.6), rgba(25,33,38,.6)) padding-box;
+  --toolbarbutton-hover-boxshadow: none;
+  --toolbarbutton-hover-bordercolor: rgba(25,33,38,.6);
+  --toolbarbutton-active-background: rgba(25,33,38,1) linear-gradient(rgba(25,33,38,1), rgba(25,33,38,1)) border-box;
+  --toolbarbutton-active-boxshadow: none;
+  --toolbarbutton-active-bordercolor: rgba(25,33,38,.8);
+  --toolbarbutton-checkedhover-backgroundcolor: #3C5283;
+
 }
 
 :root[devtoolstheme="light"] {
@@ -78,9 +82,11 @@
   --tab-selection-background-color: #4c9ed9;
   --tab-selection-box-shadow: none;
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, transparent 16%);
+}
 
-
-  /* Toolbar buttons */
+/* Override the lwtheme-specific styling for toolbar buttons */
+:root[devtoolstheme="light"],
+:root[devtoolstheme="light"] toolbar:-moz-lwtheme {
   --toolbarbutton-hover-background: #eaeaea;
   --toolbarbutton-hover-boxshadow: none;
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,0.1);
