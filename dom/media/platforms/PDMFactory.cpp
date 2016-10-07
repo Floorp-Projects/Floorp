@@ -324,10 +324,21 @@ bool
 PDMFactory::SupportsMimeType(const nsACString& aMimeType,
                              DecoderDoctorDiagnostics* aDiagnostics) const
 {
-  if (mEMEPDM) {
-    return mEMEPDM->SupportsMimeType(aMimeType, aDiagnostics);
+  UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
+  if (!trackInfo) {
+    return false;
   }
-  RefPtr<PlatformDecoderModule> current = GetDecoder(aMimeType, aDiagnostics);
+  return Supports(*trackInfo, aDiagnostics);
+}
+
+bool
+PDMFactory::Supports(const TrackInfo& aTrackInfo,
+                     DecoderDoctorDiagnostics* aDiagnostics) const
+{
+  if (mEMEPDM) {
+    return mEMEPDM->Supports(aTrackInfo, aDiagnostics);
+  }
+  RefPtr<PlatformDecoderModule> current = GetDecoder(aTrackInfo, aDiagnostics);
   return !!current;
 }
 
@@ -431,7 +442,7 @@ PDMFactory::StartupPDM(PlatformDecoderModule* aPDM)
 }
 
 already_AddRefed<PlatformDecoderModule>
-PDMFactory::GetDecoder(const nsACString& aMimeType,
+PDMFactory::GetDecoder(const TrackInfo& aTrackInfo,
                        DecoderDoctorDiagnostics* aDiagnostics) const
 {
   if (aDiagnostics) {
@@ -450,7 +461,7 @@ PDMFactory::GetDecoder(const nsACString& aMimeType,
 
   RefPtr<PlatformDecoderModule> pdm;
   for (auto& current : mCurrentPDMs) {
-    if (current->SupportsMimeType(aMimeType, aDiagnostics)) {
+    if (current->Supports(aTrackInfo, aDiagnostics)) {
       pdm = current;
       break;
     }
