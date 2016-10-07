@@ -2939,7 +2939,7 @@ var AddonManagerInternal = {
           this.copyProps(install, result);
           resolve(result);
         };
-        AddonManager.getInstallForURL(options.url, newInstall, "application/x-xpinstall");
+        AddonManager.getInstallForURL(options.url, newInstall, "application/x-xpinstall", options.hash);
       });
     },
 
