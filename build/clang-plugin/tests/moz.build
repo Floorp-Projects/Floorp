@@ -32,6 +32,8 @@ SOURCES += [
     'TestNonMemMovableStd.cpp',
     'TestNonTemporaryClass.cpp',
     'TestNoRefcountedInsideLambdas.cpp',
+    'TestOverrideBaseCall.cpp',
+    'TestOverrideBaseCallAnnotation.cpp',
     'TestRefCountedCopyConstructor.cpp',
     'TestSprintfLiteral.cpp',
     'TestStackClass.cpp',

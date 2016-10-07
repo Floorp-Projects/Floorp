@@ -45,3 +45,4 @@ fails-if(B2G||Mulet) == width-auto-size-rtl.html width-auto-size-rtl-ref.html # 
 == width-erode-part-focuspadding-rtl.html width-erode-part-focuspadding-rtl-ref.html
 == width-erode-all-focuspadding-rtl.html width-erode-all-focuspadding-rtl-ref.html
 == width-erode-overflow-focuspadding-rtl.html width-erode-overflow-focuspadding-rtl-ref.html
+== display-grid-flex-columnset.html display-grid-flex-columnset-ref.html

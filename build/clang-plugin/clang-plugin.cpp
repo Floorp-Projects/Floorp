@@ -176,6 +176,28 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class OverrideBaseCallChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  private:
+    void evaluateExpression(const Stmt *StmtExpr,
+        std::list<const CXXMethodDecl*> &MethodList);
+    void getRequiredBaseMethod(const CXXMethodDecl* Method,
+        std::list<const CXXMethodDecl*>& MethodsList);
+    void findBaseMethodCall(const CXXMethodDecl* Method,
+        std::list<const CXXMethodDecl*>& MethodsList);
+    bool isRequiredBaseMethod(const CXXMethodDecl *Method);
+  };
+
+/*
+ *  This is a companion checker for OverrideBaseCallChecker that rejects
+ *  the usage of MOZ_REQUIRED_BASE_METHOD on non-virtual base methods.
+ */
+  class OverrideBaseCallUsageChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker Scope;
   ArithmeticArgChecker ArithmeticArg;
   TrivialCtorDtorChecker TrivialCtorDtor;
@@ -194,6 +216,8 @@ private:
   AssertAssignmentChecker AssertAttribution;
   KungFuDeathGripChecker KungFuDeathGrip;
   SprintfLiteralChecker SprintfLiteral;
+  OverrideBaseCallChecker OverrideBaseCall;
+  OverrideBaseCallUsageChecker OverrideBaseCallUsage;
   MatchFinder AstMatcher;
 };
 
@@ -928,6 +952,24 @@ AST_MATCHER(CXXRecordDecl, isLambdaDecl) {
 AST_MATCHER(QualType, isRefPtr) {
   return typeIsRefPtr(Node);
 }
+
+AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
+  const CXXRecordDecl *Decl = Node.getCanonicalDecl();
+
+  // Must have definition and should inherit other classes
+  return Decl && Decl->hasDefinition() && Decl->getNumBases();
+}
+
+AST_MATCHER(CXXMethodDecl, isRequiredBaseMethod) {
+  const CXXMethodDecl *Decl = Node.getCanonicalDecl();
+  return Decl
+      && MozChecker::hasCustomAnnotation(Decl, "moz_required_base_method");
+}
+
+AST_MATCHER(CXXMethodDecl, isNonVirtual) {
+  const CXXMethodDecl *Decl = Node.getCanonicalDecl();
+  return Decl && !Decl->isVirtual();
+}
 }
 }
 
@@ -1266,6 +1308,13 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
         .bind("funcCall"),
       &SprintfLiteral
   );
+
+  AstMatcher.addMatcher(cxxRecordDecl(hasBaseClasses()).bind("class"),
+      &OverrideBaseCall);
+
+  AstMatcher.addMatcher(
+      cxxMethodDecl(isNonVirtual(), isRequiredBaseMethod()).bind("method"),
+      &OverrideBaseCallUsage);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -1958,6 +2007,116 @@ void DiagnosticsMatcher::SprintfLiteralChecker::run(
       Diag.Report(D->getLocStart(), NoteID) << Name;
     }
   }
+}
+
+bool DiagnosticsMatcher::OverrideBaseCallChecker::isRequiredBaseMethod(
+    const CXXMethodDecl *Method) {
+  return MozChecker::hasCustomAnnotation(Method, "moz_required_base_method");
+}
+
+void DiagnosticsMatcher::OverrideBaseCallChecker::evaluateExpression(
+    const Stmt *StmtExpr, std::list<const CXXMethodDecl*> &MethodList) {
+  // Continue while we have methods in our list
+  if (!MethodList.size()) {
+    return;
+  }
+
+  if (auto MemberFuncCall = dyn_cast<CXXMemberCallExpr>(StmtExpr)) {
+    if (auto Method = dyn_cast<CXXMethodDecl>(
+        MemberFuncCall->getDirectCallee())) {
+      findBaseMethodCall(Method, MethodList);
+    }
+  }
+
+  for (auto S : StmtExpr->children()) {
+    if (S) {
+      evaluateExpression(S, MethodList);
+    }
+  }
+}
+
+void DiagnosticsMatcher::OverrideBaseCallChecker::getRequiredBaseMethod(
+    const CXXMethodDecl *Method,
+    std::list<const CXXMethodDecl*>& MethodsList) {
+
+  if (isRequiredBaseMethod(Method)) {
+    MethodsList.push_back(Method);
+  } else {
+    // Loop through all it's base methods.
+    for (auto BaseMethod = Method->begin_overridden_methods();
+        BaseMethod != Method->end_overridden_methods(); BaseMethod++) {
+      getRequiredBaseMethod(*BaseMethod, MethodsList);
+    }
+  }
+}
+
+void DiagnosticsMatcher::OverrideBaseCallChecker::findBaseMethodCall(
+    const CXXMethodDecl* Method,
+    std::list<const CXXMethodDecl*>& MethodsList) {
+
+  MethodsList.remove(Method);
+  // Loop also through all it's base methods;
+  for (auto BaseMethod = Method->begin_overridden_methods();
+      BaseMethod != Method->end_overridden_methods(); BaseMethod++) {
+    findBaseMethodCall(*BaseMethod, MethodsList);
+  }
+}
+
+void DiagnosticsMatcher::OverrideBaseCallChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned OverrideBaseCallCheckID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error,
+      "Method %0 must be called in all overrides, but is not called in "
+      "this override defined for class %1");
+  const CXXRecordDecl *Decl = Result.Nodes.getNodeAs<CXXRecordDecl>("class");
+
+  // Loop through the methods and look for the ones that are overridden.
+  for (auto Method : Decl->methods()) {
+    // If this method doesn't override other methods or it doesn't have a body,
+    // continue to the next declaration.
+    if (!Method->size_overridden_methods() || !Method->hasBody()) {
+      continue;
+    }
+
+    // Preferred the usage of list instead of vector in order to avoid
+    // calling erase-remove when deleting items
+    std::list<const CXXMethodDecl*> MethodsList;
+    // For each overridden method push it to a list if it meets our
+    // criteria
+    for (auto BaseMethod = Method->begin_overridden_methods();
+        BaseMethod != Method->end_overridden_methods(); BaseMethod++) {
+      getRequiredBaseMethod(*BaseMethod, MethodsList);
+    }
+
+    // If no method has been found then no annotation was used
+    // so checking is not needed
+    if (!MethodsList.size()) {
+      continue;
+    }
+
+    // Loop through the body of our method and search for calls to
+    // base methods
+    evaluateExpression(Method->getBody(), MethodsList);
+
+    // If list is not empty pop up errors
+    for (auto BaseMethod : MethodsList) {
+      Diag.Report(Method->getLocation(), OverrideBaseCallCheckID)
+          << BaseMethod->getQualifiedNameAsString()
+          << Decl->getName();
+    }
+  }
+}
+
+void DiagnosticsMatcher::OverrideBaseCallUsageChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error,
+      "MOZ_REQUIRED_BASE_METHOD can be used only on virtual methods");
+  const CXXMethodDecl *Method = Result.Nodes.getNodeAs<CXXMethodDecl>("method");
+
+  Diag.Report(Method->getLocation(), ErrorID);
 }
 
 class MozCheckAction : public PluginASTAction {
