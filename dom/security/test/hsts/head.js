@@ -1,5 +1,5 @@
 /*
- * Description of the test:
+ * Description of the tests:
  *   Check that HSTS priming occurs correctly with mixed content
  *
  *   This test uses three hostnames, each of which treats an HSTS priming
@@ -12,7 +12,7 @@
  *   or block active or display content, as well as when we send an hsts priming
  *   request, but do not change the order of mixed-content and HSTS.
  *
- *   This test uses http-on-examine-response, so must be run in browser context.
+ *   Test use http-on-examine-response, so must be run in browser context.
  */
 'use strict';
 
@@ -38,8 +38,6 @@ var test_servers = {
     id: 'prime-hsts'
   },
 };
-// The number of priming responses we expect to see
-var priming_count = 2;
 
 var test_settings = {
   // mixed active content is allowed, priming will upgrade
@@ -275,22 +273,3 @@ function execute_test(test, mimetype) {
 
   yield BrowserTestUtils.removeTab(tab);
 }
-
-//jscs:disable
-add_task(function*() {
-  //jscs:enable
-  Services.obs.addObserver(Observer, "console-api-log-event", false);
-  Services.obs.addObserver(Observer, "http-on-examine-response", false);
-  registerCleanupFunction(do_cleanup);
-  requestLongerTimeout(4);
-
-  for (let which of Object.keys(test_settings)) {
-    SetupPrefTestEnvironment(which);
-
-    for (let server of Object.keys(test_servers)) {
-      yield execute_test(server, test_settings[which].mimetype);
-    }
-
-    SpecialPowers.popPrefEnv();
-  }
-});
