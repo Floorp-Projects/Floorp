@@ -108,6 +108,10 @@ function transformPacket(packet) {
           type = MESSAGE_TYPE.END_GROUP;
           parameters = null;
           break;
+        case "dirxml":
+          // Handle console.dirxml calls as simple console.log
+          type = "log";
+          break;
       }
 
       const frame = message.filename ? {
