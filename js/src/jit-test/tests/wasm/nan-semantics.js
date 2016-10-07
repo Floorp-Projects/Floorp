@@ -81,7 +81,7 @@ assertEqNaN(nan, f32_qnan);
 
 // Globals.
 var m = wasmEvalText(`(module
-    (import "globals" "x" (global f32 immutable))
+    (import "globals" "x" (global f32))
     (func (result f32) (get_global 0))
     (export "global" global 0)
     (export "test" 0))
@@ -91,7 +91,7 @@ assertEqNaN(m.test(), f32_snan);
 assertEqNaN(m.global, f32_snan);
 
 var m = wasmEvalText(`(module
-    (import "globals" "x" (global f64 immutable))
+    (import "globals" "x" (global f64))
     (func (result f64) (get_global 0))
     (export "global" global 0)
     (export "test" 0))
