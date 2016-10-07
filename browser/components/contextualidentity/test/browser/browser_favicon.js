@@ -22,7 +22,7 @@ function getIconFile() {
     NetUtil.asyncFetch({
       uri: "http://www.example.com/browser/browser/components/contextualidentity/test/browser/favicon-normal32.png",
       loadUsingSystemPrincipal: true,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
     }, function(inputStream, status) {
         let size = inputStream.available();
         gFaviconData = NetUtil.readInputStreamToString(inputStream, size);
