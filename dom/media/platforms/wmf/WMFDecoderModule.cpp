@@ -85,7 +85,7 @@ WMFDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
   nsAutoPtr<WMFVideoMFTManager> manager(
     new WMFVideoMFTManager(aParams.VideoConfig(),
-                           aParams.mLayersBackend,
+                           aParams.mKnowsCompositor,
                            aParams.mImageContainer,
                            sDXVAEnabled));
 

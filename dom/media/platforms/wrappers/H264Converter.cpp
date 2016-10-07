@@ -19,7 +19,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
                              const CreateDecoderParams& aParams)
   : mPDM(aPDM)
   , mCurrentConfig(aParams.VideoConfig())
-  , mLayersBackend(aParams.mLayersBackend)
+  , mKnowsCompositor(aParams.mKnowsCompositor)
   , mImageContainer(aParams.mImageContainer)
   , mTaskQueue(aParams.mTaskQueue)
   , mCallback(aParams.mCallback)
@@ -194,7 +194,7 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
     mCallback,
     aDiagnostics,
     mImageContainer,
-    mLayersBackend,
+    mKnowsCompositor,
     mGMPCrashHelper
   });
 
