@@ -103,6 +103,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(CustomElementsRegistry)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CustomElementsRegistry)
   tmp->mCustomDefinitions.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWhenDefinedPromiseMap)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -135,6 +136,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementsRegistry)
       cb.NoteXPCOMChild(callbacks->mDetachedCallback.Value());
     }
   }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWhenDefinedPromiseMap)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -788,7 +790,12 @@ CustomElementsRegistry::Define(const nsAString& aName,
    *     3. Delete the entry with key name from this CustomElementsRegistry's
    *        when-defined promise map.
    */
-  // TODO: Bug 1275839 - Implement CustomElementsRegistry whenDefined function
+  RefPtr<Promise> promise;
+  mWhenDefinedPromiseMap.Remove(nameAtom, getter_AddRefs(promise));
+  if (promise) {
+    promise->MaybeResolveWithUndefined();
+  }
+
 }
 
 void
@@ -808,11 +815,33 @@ CustomElementsRegistry::Get(JSContext* aCx, const nsAString& aName,
 }
 
 already_AddRefed<Promise>
-CustomElementsRegistry::WhenDefined(const nsAString& name, ErrorResult& aRv)
+CustomElementsRegistry::WhenDefined(const nsAString& aName, ErrorResult& aRv)
 {
-  // TODO: This function will be implemented in bug 1275839
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIAtom> nameAtom(NS_Atomize(aName));
+  if (!nsContentUtils::IsCustomElementName(nameAtom)) {
+    promise->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
+    return promise.forget();
+  }
+
+  if (mCustomDefinitions.Get(nameAtom)) {
+    promise->MaybeResolve(JS::UndefinedHandleValue);
+    return promise.forget();
+  }
+
+  if (mWhenDefinedPromiseMap.Contains(nameAtom)) {
+    mWhenDefinedPromiseMap.Get(nameAtom, getter_AddRefs(promise));
+  } else {
+    mWhenDefinedPromiseMap.Put(nameAtom, promise);
+  }
+
+  return promise.forget();
 }
 
 CustomElementDefinition::CustomElementDefinition(nsIAtom* aType,
