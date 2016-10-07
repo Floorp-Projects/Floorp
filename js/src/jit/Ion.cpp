@@ -1029,7 +1029,7 @@ IonScript::trace(JSTracer* trc)
 
     // Mark all IC stub codes hanging off the IC stub entries.
     for (size_t i = 0; i < numSharedStubs(); i++) {
-        ICEntry& ent = sharedStubList()[i];
+        IonICEntry& ent = sharedStubList()[i];
         ent.trace(trc);
     }
 
@@ -1261,7 +1261,7 @@ void
 IonScript::purgeOptimizedStubs(Zone* zone)
 {
     for (size_t i = 0; i < numSharedStubs(); i++) {
-        ICEntry& entry = sharedStubList()[i];
+        IonICEntry& entry = sharedStubList()[i];
         if (!entry.hasStub())
             continue;
 
@@ -1306,7 +1306,7 @@ IonScript::purgeOptimizedStubs(Zone* zone)
 #ifdef DEBUG
     // All remaining stubs must be allocated in the fallback space.
     for (size_t i = 0; i < numSharedStubs(); i++) {
-        ICEntry& entry = sharedStubList()[i];
+        IonICEntry& entry = sharedStubList()[i];
         if (!entry.hasStub())
             continue;
 
