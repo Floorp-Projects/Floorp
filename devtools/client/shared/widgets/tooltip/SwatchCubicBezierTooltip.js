@@ -20,14 +20,12 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  * It just wraps a standard Tooltip and sets its content with an instance of a
  * CubicBezierWidget.
  *
- * @param {Document} document
- *        The document to attach the SwatchCubicBezierTooltip. This is either the toolbox
- *        document if the tooltip is a popup tooltip or the panel's document if it is an
- *        inline editor.
+ * @param {Toolbox} toolbox
+ *        The devtools toolbox, needed to get the devtools main window.
  */
-function SwatchCubicBezierTooltip(document) {
+function SwatchCubicBezierTooltip(toolbox) {
   let stylesheet = "chrome://devtools/content/shared/widgets/cubic-bezier.css";
-  SwatchBasedEditorTooltip.call(this, document, stylesheet);
+  SwatchBasedEditorTooltip.call(this, toolbox, stylesheet);
 
   // Creating a cubic-bezier instance.
   // this.widget will always be a promise that resolves to the widget instance
