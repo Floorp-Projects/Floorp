@@ -3453,16 +3453,17 @@ Parser<ParseHandler>::functionExpr(InvokedPrediction invoked)
             return null();
     }
 
+    YieldHandling yieldHandling = generatorKind != NotGenerator ? YieldIsKeyword : YieldIsName;
+
     RootedPropertyName name(context);
     if (tt == TOK_NAME || tt == TOK_YIELD) {
-        name = bindingIdentifier(YieldIsName);
+        name = bindingIdentifier(yieldHandling);
         if (!name)
             return null();
     } else {
         tokenStream.ungetToken();
     }
 
-    YieldHandling yieldHandling = generatorKind != NotGenerator ? YieldIsKeyword : YieldIsName;
     return functionDefinition(InAllowed, yieldHandling, name, Expression, generatorKind, invoked);
 }
 
@@ -8367,7 +8368,6 @@ Parser<ParseHandler>::labelOrIdentifierReference(YieldHandling yieldHandling,
 
         if (yieldHandling == YieldIsKeyword ||
             pc->sc()->strict() ||
-            pc->isStarGenerator() ||
             versionNumber() >= JSVERSION_1_7)
         {
             report(ParseError, false, null(), JSMSG_RESERVED_ID, "yield");
@@ -8417,7 +8417,6 @@ Parser<ParseHandler>::bindingIdentifier(YieldHandling yieldHandling)
 
         if (yieldHandling == YieldIsKeyword ||
             pc->sc()->strict() ||
-            pc->isStarGenerator() ||
             versionNumber() >= JSVERSION_1_7)
         {
             report(ParseError, false, null(), JSMSG_RESERVED_ID, "yield");
