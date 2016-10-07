@@ -58,7 +58,7 @@ var WebrtcUI = {
 
   notify: function() {
     let windows = MediaManagerService.activeMediaCaptureWindows;
-    let count = windows.Count();
+    let count = windows.length;
     let msg = {};
     if (count == 0) {
       if (this._notificationId) {
@@ -76,7 +76,7 @@ var WebrtcUI = {
       let cameraActive = false;
       let audioActive = false;
       for (let i = 0; i < count; i++) {
-        let win = windows.GetElementAt(i);
+        let win = windows.queryElementAt(i, Ci.nsIDOMWindow);
         let hasAudio = {};
         let hasVideo = {};
         MediaManagerService.mediaCaptureWindowState(win, hasVideo, hasAudio);

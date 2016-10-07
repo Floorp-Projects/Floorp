@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsISupportsArray;
+interface nsIArray;
 interface nsIDOMWindow;
 
 %{C++
@@ -16,7 +16,7 @@ interface nsIDOMWindow;
 interface nsIMediaManagerService : nsISupports
 {
   /* return a array of inner windows that have active captures */
-  readonly attribute nsISupportsArray activeMediaCaptureWindows;
+  readonly attribute nsIArray activeMediaCaptureWindows;
 
   /* Get the capture state for the given window and all descendant windows (iframes, etc) */
   void mediaCaptureWindowState(in nsIDOMWindow aWindow, out boolean aVideo, out boolean aAudio,
