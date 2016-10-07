@@ -11,6 +11,7 @@ const { createFactory } = require("devtools/client/shared/vendor/react");
 
 // Components under test.
 const EvaluationResult = createFactory(require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result"));
+const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/components/message-indent");
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
@@ -33,5 +34,17 @@ describe("EvaluationResult component:", () => {
       .toBe("ReferenceError: asdf is not defined");
 
     expect(wrapper.find(".message.error").length).toBe(1);
+  });
+
+  it("has the expected indent", () => {
+    const message = stubPreparedMessages.get("new Date(0)");
+
+    const indent = 10;
+    let wrapper = render(EvaluationResult({ message, indent}));
+    expect(wrapper.find(".indent").prop("style").width)
+        .toBe(`${indent * INDENT_WIDTH}px`);
+
+    wrapper = render(EvaluationResult({ message}));
+    expect(wrapper.find(".indent").prop("style").width).toBe(`0`);
   });
 });
