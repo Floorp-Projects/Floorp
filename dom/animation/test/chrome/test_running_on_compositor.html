@@ -731,7 +731,7 @@ promise_test(function(t) {
                                'opacity: 0 !important' });
   getComputedStyle(div).opacity;
 
-  div.animate({ opacity: [ 0, 1 ] }, 10 * MS_PER_SEC);
+  div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
   div.style.setProperty('opacity', '1', 'important');
   getComputedStyle(div).opacity;

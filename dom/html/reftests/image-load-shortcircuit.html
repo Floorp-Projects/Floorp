@@ -1,0 +1,8 @@
+<html>
+<div></div>
+<script>
+  var d = (new DOMParser()).parseFromString("<img src=pass.png>", "text/html");
+  var n = d.adoptNode(d.querySelector('img'));
+  document.querySelector('div').appendChild(n);
+</script>
+</html>

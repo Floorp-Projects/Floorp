@@ -184,6 +184,12 @@ private:
 
   nsresult ProcessRawRemoval(TableUpdateV4& aTableUpdate,
                              const ThreatEntrySet& aRemoval);
+
+  nsresult ProcessEncodedAddition(TableUpdateV4& aTableUpdate,
+                                  const ThreatEntrySet& aAddition);
+
+  nsresult ProcessEncodedRemoval(TableUpdateV4& aTableUpdate,
+                                 const ThreatEntrySet& aRemoval);
 };
 
 } // namespace safebrowsing

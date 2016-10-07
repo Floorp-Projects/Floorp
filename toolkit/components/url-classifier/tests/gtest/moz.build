@@ -11,6 +11,7 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += [
     'TestChunkSet.cpp',
     'TestPerProviderDirectory.cpp',
+    'TestRiceDeltaDecoder.cpp',
     'TestSafebrowsingHash.cpp',
     'TestSafeBrowsingProtobuf.cpp',
     'TestTable.cpp',

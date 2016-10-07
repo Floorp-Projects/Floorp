@@ -154,6 +154,12 @@
            flip="none"
            level="parent"/>
 
+    <panel id="DateTimePickerPanel"
+           hidden="true"
+           noautofocus="true"
+           consumeoutsideclicks="false"
+           level="parent"/>
+
     <!-- for select dropdowns. The menupopup is what shows the list of options,
          and the popuponly menulist makes things like the menuactive attributes
          work correctly on the menupopup. ContentSelectDropdown expects the
@@ -1056,7 +1062,8 @@
                     tabcontainer="tabbrowser-tabs"
                     contentcontextmenu="contentAreaContextMenu"
                     autocompletepopup="PopupAutoComplete"
-                    selectmenulist="ContentSelectDropdown"/>
+                    selectmenulist="ContentSelectDropdown"
+                    datetimepicker="DateTimePickerPanel"/>
       </vbox>
       <vbox id="browser-border-end" hidden="true" layer="true"/>
     </hbox>
