@@ -35,11 +35,13 @@ const MessageContainer = createClass({
     open: PropTypes.bool.isRequired,
     serviceContainer: PropTypes.object.isRequired,
     autoscroll: PropTypes.bool.isRequired,
+    indent: PropTypes.number.isRequired,
   },
 
   getDefaultProps: function () {
     return {
-      open: false
+      open: false,
+      indent: 0,
     };
   },
 

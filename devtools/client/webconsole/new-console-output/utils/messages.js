@@ -94,6 +94,20 @@ function transformPacket(packet) {
             type = "log";
           }
           break;
+        case "group":
+          type = MESSAGE_TYPE.START_GROUP;
+          parameters = null;
+          messageText = message.groupName || l10n.getStr("noGroupLabel");
+          break;
+        case "groupCollapsed":
+          type = MESSAGE_TYPE.START_GROUP_COLLAPSED;
+          parameters = null;
+          messageText = message.groupName || l10n.getStr("noGroupLabel");
+          break;
+        case "groupEnd":
+          type = MESSAGE_TYPE.END_GROUP;
+          parameters = null;
+          break;
       }
 
       const frame = message.filename ? {
@@ -244,8 +258,16 @@ function getLevelFromType(type) {
   return levelMap[type] || MESSAGE_TYPE.LOG;
 }
 
+function isGroupType(type) {
+  return [
+    MESSAGE_TYPE.START_GROUP,
+    MESSAGE_TYPE.START_GROUP_COLLAPSED
+  ].includes(type);
+}
+
 exports.prepareMessage = prepareMessage;
 // Export for use in testing.
 exports.getRepeatId = getRepeatId;
 
 exports.l10n = l10n;
+exports.isGroupType = isGroupType;

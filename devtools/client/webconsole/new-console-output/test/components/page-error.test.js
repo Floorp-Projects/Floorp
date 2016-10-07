@@ -8,6 +8,7 @@ const { render } = require("enzyme");
 
 // Components under test.
 const PageError = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
+const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/components/message-indent");
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
@@ -39,5 +40,16 @@ describe("PageError component:", () => {
     // There should be three stacktrace items.
     const frameLinks = wrapper.find(`.stack-trace span.frame-link`);
     expect(frameLinks.length).toBe(3);
+  });
+
+  it("has the expected indent", () => {
+    const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
+    const indent = 10;
+    let wrapper = render(PageError({ message, serviceContainer, indent}));
+    expect(wrapper.find(".indent").prop("style").width)
+        .toBe(`${indent * INDENT_WIDTH}px`);
+
+    wrapper = render(PageError({ message, serviceContainer}));
+    expect(wrapper.find(".indent").prop("style").width).toBe(`0`);
   });
 });
