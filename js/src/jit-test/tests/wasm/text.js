@@ -61,5 +61,36 @@ assertErrorMessage(() => wasmEvalText('(module (table $t (export "mod") anyfunc 
 assertEq(wasmEvalText('(module (table $t (export "tbl") anyfunc (elem)))').exports.tbl instanceof Table, true);
 assertEq(wasmEvalText('(module (func) (table $t (export "tbl") anyfunc (elem 0 0 0)))').exports.tbl instanceof Table, true);
 
+// Functions.
+assertErrorMessage(() => wasmEvalText('(module (func $t import))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (func $t (import)))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (func $t (import "mod")))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (func $t (import "mod" "func" (local i32))))'), SyntaxError, parsingError);
+
+const func = i => 42 + i;
+wasmEvalText('(module (func $t (import "mod" "func")))', { mod: {func} });
+wasmEvalText('(module (func $t (import "mod" "func")(param i32)))', { mod: {func} });
+wasmEvalText('(module (func $t (import "mod" "func")(result i32)))', { mod: {func} });
+wasmEvalText('(module (func $t (import "mod" "func")(param i32) (result i32)))', { mod: {func} });
+wasmEvalText('(module (func $t (import "mod" "func")(result i32) (param i32)))', { mod: {func} });
+
+assertErrorMessage(() => wasmEvalText('(module (func $t (import "mod" "func") (type)))', { mod: {func} }), SyntaxError, parsingError);
+wasmEvalText('(module (type $t (func)) (func $t (import "mod" "func") (type $t)))', { mod: {func} });
+
+assertErrorMessage(() => wasmEvalText('(module (func $t (export))))'), SyntaxError, parsingError);
+wasmEvalText('(module (func (export "f")))');
+wasmEvalText('(module (func $f (export "f")))');
+wasmEvalText('(module (func $f (export "f") (result i32) (param i32) (i32.add (get_local 0) (i32.const 42))))');
+
+assertErrorMessage(() => wasmEvalText(`
+    (module
+        (type $tf (func (param i32) (result i32)))
+        (func (import "mod" "a") (type $tf))
+        (func (export "f1"))
+        (func (import "mod" "b") (type $tf))
+        (func (export "f2"))
+    )
+`), SyntaxError, /import after function definition/);
+
 // Note: the s-expression text format is temporary, this file is mostly just to
 // hold basic error smoke tests.
