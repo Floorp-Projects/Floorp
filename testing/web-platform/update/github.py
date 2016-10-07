@@ -30,13 +30,16 @@ class GitHub(object):
     def post(self, path, data):
         return self._request("POST", path, data=data)
 
-    def put(self, path, data):
-        return self._request("PUT", path, data=data)
+    def put(self, path, data, headers=None):
+        return self._request("PUT", path, data=data, headers=headers)
 
-    def _request(self, method, path, data=None):
+    def _request(self, method, path, data=None, headers=None):
         url = urljoin(self.url_base, path)
 
-        kwargs = {"headers": self.headers,
+        headers_ = self.headers
+        if headers is not None:
+            headers_.update(headers)
+        kwargs = {"headers": headers_,
                   "auth": self.auth}
         if data is not None:
             kwargs["data"] = json.dumps(data)
@@ -132,16 +135,12 @@ class PullRequest(object):
             self._issue = Issue.from_number(self.repo, self.number)
         return self._issue
 
-    def merge(self, commit_message=None):
+    def merge(self):
         """Merge the Pull Request into its base branch.
-
-        :param commit_message: Message to use for the merge commit. If None a default
-                               message is used instead
         """
-        if commit_message is None:
-            commit_message = "Merge pull request #%i from %s" % (self.number, self.base)
         self.repo.gh.put(self.path("merge"),
-                         {"commit_message": commit_message})
+                         {"merge_method": "rebase"},
+                         headers={"Accept": "application/vnd.github.polaris-preview+json"})
 
 
 class Issue(object):
