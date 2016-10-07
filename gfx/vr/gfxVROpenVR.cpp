@@ -511,6 +511,35 @@ VRControllerManagerOpenVR::Destroy()
 }
 
 void
+VRControllerManagerOpenVR::HandleInput()
+{
+  MOZ_ASSERT(mVRSystem);
+
+  // Process OpenVR controller state
+  for (vr::TrackedDeviceIndex_t trackedDevice = 0;
+       trackedDevice < vr::k_unMaxTrackedDeviceCount; trackedDevice++ ) {
+    vr::VRControllerState_t state;
+
+    if (mVRSystem->GetTrackedDeviceClass(trackedDevice)
+        != vr::TrackedDeviceClass_Controller) {
+      continue;
+    }
+
+    if (mVRSystem->GetControllerState(trackedDevice, &state)) {
+      if (state.ulButtonPressed) {
+        // TODO: For Bug 1299929 after landing, convert the button mask to an ID button
+        // NewButtonEvent(1,
+        //                0,
+        //                0,
+        //                true);
+      }
+    }
+  }
+
+  return;
+}
+
+void
 VRControllerManagerOpenVR::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult)
 {
   if (!mOpenVRInstalled) {
