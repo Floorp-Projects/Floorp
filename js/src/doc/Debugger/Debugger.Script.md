@@ -325,8 +325,8 @@ methods of other kinds of objects.
 
 `getChildScripts()`
 :   **If the instance refers to a `JSScript`**, return a new array whose
-    elements are Debugger.Script objects for each function and each generator
-    expression in this script. Only direct children are included; nested
+    elements are Debugger.Script objects for each function
+    in this script. Only direct children are included; nested
     children can be reached by walking the tree.
 
     **If the instance refers to WebAssembly code**, throw a `TypeError`.

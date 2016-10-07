@@ -76,10 +76,6 @@ following forms:
 :   The code completed normally, returning <i>value</i>. <i>Value</i> is a
     debuggee value.
 
-<code>{ yield: <i>value</i> }</code>
-:   <i>(Not yet implemented.)</i> The running code is a generator frame
-    which has yielded <i>value</i>. <i>Value</i> is a debuggee value.
-
 <code>{ throw: <i>value</i> }</code>
 :   The code threw <i>value</i> as an exception. <i>Value</i> is a debuggee
     value.
@@ -114,14 +110,6 @@ resumption value has one of the following forms:
     the `new` expression returns the frame's `this` value. Similarly, if
     the function is the constructor for a subclass, then a non-object
     value may result in a TypeError.
-
-<code>{ yield: <i>value</i> }</code>
-:   <i>(Not yet implemented.)</i> Yield <i>value</i> immediately as the
-    next value of the current frame, which must be a generator frame.
-    <i>Value</i> is a debuggee value. The current frame must be a generator
-    frame that has not yet completed in some other way. You may use `yield`
-    resumption values to substitute a new value or one already yielded by a
-    generator, or to make a generator yield additional values.
 
 <code>{ throw: <i>value</i> }</code>
 :   Throw <i>value</i> as an exception from the current bytecode
