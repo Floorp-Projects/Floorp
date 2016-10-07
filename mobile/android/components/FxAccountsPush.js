@@ -136,7 +136,7 @@ FxAccountsPush.prototype = {
     let headers = null;
 
     if (data.message && data.enc && (data.enckey || data.cryptokey)) {
-      let headers = {
+      headers = {
         encryption_key: data.enckey,
         crypto_key: data.cryptokey,
         encryption: data.enc,
