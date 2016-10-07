@@ -280,39 +280,26 @@ GMPCDMCallbackProxy::SessionError(const nsCString& aSessionId,
 }
 
 void
-GMPCDMCallbackProxy::KeyStatusChanged(const nsCString& aSessionId,
-                                      const nsTArray<uint8_t>& aKeyId,
-                                      dom::MediaKeyStatus aStatus)
+GMPCDMCallbackProxy::BatchedKeyStatusChanged(const nsCString& aSessionId,
+                                             const nsTArray<CDMKeyInfo>& aKeyInfos)
 {
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
-
-  KeyStatusChangedInternal(aSessionId,
-                           aKeyId,
-                           dom::Optional<dom::MediaKeyStatus>(aStatus));
+  BatchedKeyStatusChangedInternal(aSessionId, aKeyInfos);
 }
 
 void
-GMPCDMCallbackProxy::ForgetKeyStatus(const nsCString& aSessionId,
-                                     const nsTArray<uint8_t>& aKeyId)
-{
-  MOZ_ASSERT(mProxy->IsOnOwnerThread());
-
-  KeyStatusChangedInternal(aSessionId,
-                           aKeyId,
-                           dom::Optional<dom::MediaKeyStatus>());
-}
-
-void
-GMPCDMCallbackProxy::KeyStatusChangedInternal(const nsCString& aSessionId,
-                                              const nsTArray<uint8_t>& aKeyId,
-                                              const dom::Optional<dom::MediaKeyStatus>& aStatus)
+GMPCDMCallbackProxy::BatchedKeyStatusChangedInternal(const nsCString& aSessionId,
+                                                     const nsTArray<CDMKeyInfo>& aKeyInfos)
 {
   bool keyStatusesChange = false;
   {
     CDMCaps::AutoLock caps(mProxy->Capabilites());
-    keyStatusesChange = caps.SetKeyStatus(aKeyId,
-                                          NS_ConvertUTF8toUTF16(aSessionId),
-                                          aStatus);
+    for (size_t i = 0; i < aKeyInfos.Length(); i++) {
+      keyStatusesChange |=
+        caps.SetKeyStatus(aKeyInfos[i].mKeyId,
+                          NS_ConvertUTF8toUTF16(aSessionId),
+                          aKeyInfos[i].mStatus);
+    }
   }
   if (keyStatusesChange) {
     nsCOMPtr<nsIRunnable> task;

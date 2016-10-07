@@ -358,28 +358,27 @@ ToMediaKeyStatus(GMPMediaKeyStatus aStatus) {
 }
 
 bool
-GMPDecryptorParent::RecvKeyStatusChanged(const nsCString& aSessionId,
-                                         InfallibleTArray<uint8_t>&& aKeyId,
-                                         const GMPMediaKeyStatus& aStatus)
+GMPDecryptorParent::RecvBatchedKeyStatusChanged(const nsCString& aSessionId,
+                                                InfallibleTArray<GMPKeyInformation>&& aKeyInfos)
 {
-  LOGD(("GMPDecryptorParent[%p]::RecvKeyStatusChanged(sessionId='%s', keyId=%s, status=%d)",
-        this, aSessionId.get(), ToBase64(aKeyId).get(), aStatus));
+  LOGD(("GMPDecryptorParent[%p]::RecvBatchedKeyStatusChanged(sessionId='%s', KeyInfos len='%d')",
+        this, aSessionId.get(), aKeyInfos.Length()));
 
   if (mIsOpen) {
-    mCallback->KeyStatusChanged(aSessionId, aKeyId, ToMediaKeyStatus(aStatus));
-  }
-  return true;
-}
-
-bool
-GMPDecryptorParent::RecvForgetKeyStatus(const nsCString& aSessionId,
-                                        InfallibleTArray<uint8_t>&& aKeyId)
-{
-  LOGD(("GMPDecryptorParent[%p]::RecvForgetKeyStatus(sessionId='%s', keyId=%s)",
-        this, aSessionId.get(), ToBase64(aKeyId).get()));
-
-  if (mIsOpen) {
-    mCallback->ForgetKeyStatus(aSessionId, aKeyId);
+    nsTArray<CDMKeyInfo> cdmKeyInfos(aKeyInfos.Length());
+    for (uint32_t i = 0; i < aKeyInfos.Length(); i++) {
+      LOGD(("GMPDecryptorParent[%p]::RecvBatchedKeyStatusChanged(keyId=%s, gmp-status=%d)",
+            this, ToBase64(aKeyInfos[i].keyId()).get(), aKeyInfos[i].status()));
+      // If the status is kGMPUnknown, we're going to forget(remove) that key info.
+      if (aKeyInfos[i].status() != kGMPUnknown) {
+        auto status = ToMediaKeyStatus(aKeyInfos[i].status());
+        cdmKeyInfos.AppendElement(CDMKeyInfo(aKeyInfos[i].keyId(),
+                                             dom::Optional<dom::MediaKeyStatus>(status)));
+      } else {
+        cdmKeyInfos.AppendElement(CDMKeyInfo(aKeyInfos[i].keyId()));
+      }
+    }
+    mCallback->BatchedKeyStatusChanged(aSessionId, cdmKeyInfos);
   }
   return true;
 }

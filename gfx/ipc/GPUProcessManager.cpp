@@ -63,6 +63,8 @@ GPUProcessManager::GPUProcessManager()
    mProcess(nullptr),
    mGPUChild(nullptr)
 {
+  MOZ_COUNT_CTOR(GPUProcessManager);
+
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
 
@@ -71,6 +73,8 @@ GPUProcessManager::GPUProcessManager()
 
 GPUProcessManager::~GPUProcessManager()
 {
+  MOZ_COUNT_DTOR(GPUProcessManager);
+
   LayerTreeOwnerTracker::Shutdown();
 
   // The GPU process should have already been shut down.
@@ -372,14 +376,8 @@ GPUProcessManager::NotifyRemoteActorDestroyed(const uint64_t& aProcessToken)
 void
 GPUProcessManager::CleanShutdown()
 {
-  if (!mProcess) {
-    return;
-  }
-
-#ifdef NS_FREE_PERMANENT_DATA
-  mVsyncBridge->Close();
-#endif
   DestroyProcess();
+  mVsyncIOThread = nullptr;
 }
 
 void

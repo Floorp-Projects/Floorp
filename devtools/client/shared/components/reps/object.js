@@ -75,7 +75,6 @@ define(function (require, exports, module) {
         let objectLink = this.props.objectLink || span;
 
         props.push(Caption({
-          key: "more",
           object: objectLink({
             object: object
           }, (Object.keys(object).length - max) + " more…")
@@ -116,7 +115,6 @@ define(function (require, exports, module) {
           let t = typeof value;
           if (filter(t, value)) {
             props.push(PropRep({
-              key: name,
               mode: mode,
               name: name,
               object: value,
@@ -152,7 +150,7 @@ define(function (require, exports, module) {
             className: "objectLeftBrace",
             object: object
           }, " { "),
-          props,
+          ...props,
           objectLink({
             className: "objectRightBrace",
             object: object
