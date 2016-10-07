@@ -33,7 +33,6 @@ chrome.jar:
   content/bindings/settings.xml        (content/bindings/settings.xml)
   content/netError.xhtml               (content/netError.xhtml)
   content/SelectHelper.js              (content/SelectHelper.js)
-  content/SelectionHandler.js          (content/SelectionHandler.js)
   content/ActionBarHandler.js          (content/ActionBarHandler.js)
   content/EmbedRT.js                   (content/EmbedRT.js)
   content/InputWidgetHelper.js         (content/InputWidgetHelper.js)
