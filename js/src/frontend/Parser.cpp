@@ -2746,6 +2746,15 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 return false;
             if (!matched)
                 break;
+
+            if (!hasRest) {
+                if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+                    return null();
+                if (tt == TOK_RP) {
+                    tokenStream.addModifierException(TokenStream::NoneIsOperand);
+                    break;
+                }
+            }
         }
 
         if (!parenFreeArrow) {
@@ -6933,6 +6942,32 @@ Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
     if (!seq)
         return null();
     while (true) {
+        // Trailing comma before the closing parenthesis is valid in an arrow
+        // function parameters list: `(a, b, ) => body`. Check if we are
+        // directly under CoverParenthesizedExpressionAndArrowParameterList,
+        // and the next two tokens are closing parenthesis and arrow. If all
+        // are present allow the trailing comma.
+        if (tripledotHandling == TripledotAllowed) {
+            TokenKind tt;
+            if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+                return null();
+
+            if (tt == TOK_RP) {
+                tokenStream.consumeKnownToken(TOK_RP, TokenStream::Operand);
+
+                if (!tokenStream.peekToken(&tt))
+                    return null();
+                if (tt != TOK_ARROW) {
+                    report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+                        "expression", TokenKindToDesc(TOK_RP));
+                    return null();
+                }
+
+                tokenStream.ungetToken();  // put back right paren
+                tokenStream.addModifierException(TokenStream::NoneIsOperand);
+                break;
+            }
+        }
 
         // Additional calls to assignExpr should not reuse the possibleError
         // which had been passed into the function. Otherwise we would lose
@@ -7324,10 +7359,13 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
 
         // A line terminator between ArrowParameters and the => should trigger a SyntaxError.
         tokenStream.ungetToken();
-        TokenKind next = TOK_EOF;
-        if (!tokenStream.peekTokenSameLine(&next) || next != TOK_ARROW) {
-            report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
-                   "expression", TokenKindToDesc(TOK_ARROW));
+        TokenKind next;
+        if (!tokenStream.peekTokenSameLine(&next))
+            return null();
+        MOZ_ASSERT(next == TOK_ARROW || next == TOK_EOL);
+
+        if (next != TOK_ARROW) {
+            report(ParseError, false, null(), JSMSG_LINE_BREAK_BEFORE_ARROW);
             return null();
         }
         tokenStream.consumeKnownToken(TOK_ARROW);
@@ -8009,6 +8047,14 @@ Parser<ParseHandler>::argumentList(YieldHandling yieldHandling, Node listNode, b
             return false;
         if (!matched)
             break;
+
+        TokenKind tt;
+        if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+            return null();
+        if (tt == TOK_RP) {
+            tokenStream.addModifierException(TokenStream::NoneIsOperand);
+            break;
+        }
     }
 
     TokenKind tt;
@@ -9072,9 +9118,11 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
             return null();
         }
 
-        if (!tokenStream.peekTokenSameLine(&next))
+        if (!tokenStream.peekToken(&next))
             return null();
         if (next != TOK_ARROW) {
+            // Advance the scanner for proper error location reporting.
+            tokenStream.consumeKnownToken(next);
             report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
                    "'=>' after argument list", TokenKindToDesc(next));
             return null();
