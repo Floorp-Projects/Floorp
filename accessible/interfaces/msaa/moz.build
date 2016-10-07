@@ -26,6 +26,12 @@ OS_LIBS += [
     'oleaut32',
 ]
 
+GENERATED_FILES += [
+    'ISimpleDOMNode.tlb',
+]
+
+RCINCLUDE = 'AccessibleMarshal.rc'
+
 # The Windows MIDL code generator creates things like:
 #
 #   #endif !_MIDL_USE_GUIDDEF_

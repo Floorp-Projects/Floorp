@@ -202,6 +202,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineStrCharCodeAt(callInfo);
       case InlinableNative::StringFromCharCode:
         return inlineStrFromCharCode(callInfo);
+      case InlinableNative::StringFromCodePoint:
+        return inlineStrFromCodePoint(callInfo);
       case InlinableNative::StringCharAt:
         return inlineStrCharAt(callInfo);
 
@@ -1703,10 +1705,28 @@ IonBuilder::inlineStrFromCharCode(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MToInt32* charCode = MToInt32::New(alloc(), callInfo.getArg(0));
-    current->add(charCode);
+    MFromCharCode* string = MFromCharCode::New(alloc(), callInfo.getArg(0));
+    current->add(string);
+    current->push(string);
+    return InliningStatus_Inlined;
+}
 
-    MFromCharCode* string = MFromCharCode::New(alloc(), charCode);
+IonBuilder::InliningStatus
+IonBuilder::inlineStrFromCodePoint(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    if (getInlineReturnType() != MIRType::String)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType::Int32)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MFromCodePoint* string = MFromCodePoint::New(alloc(), callInfo.getArg(0));
     current->add(string);
     current->push(string);
     return InliningStatus_Inlined;

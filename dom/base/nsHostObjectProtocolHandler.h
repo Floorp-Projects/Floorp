@@ -88,7 +88,7 @@ protected:
   virtual ~nsHostObjectProtocolHandler() {}
 
 private:
-  static void Init(void);
+  static void Init();
 };
 
 class nsBlobProtocolHandler : public nsHostObjectProtocolHandler
