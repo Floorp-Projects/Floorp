@@ -2494,100 +2494,49 @@ ParseLocalOrParam(WasmParseContext& c, AstNameVector* locals, AstValTypeVector* 
            localTypes->append(token.valueType());
 }
 
-static AstFunc*
-ParseFunc(WasmParseContext& c, AstModule* module)
+static bool
+ParseInlineImport(WasmParseContext& c, InlineImport* import)
 {
-    AstValTypeVector vars(c.lifo);
-    AstValTypeVector args(c.lifo);
-    AstNameVector locals(c.lifo);
-
-    AstName exportName = c.ts.getIfText();
-    AstName funcName = c.ts.getIfName();
-
-    AstRef sig;
-
-    WasmToken openParen;
-    if (exportName.empty() && c.ts.getIf(WasmToken::OpenParen, &openParen)) {
-        if (c.ts.getIf(WasmToken::Export)) {
-            WasmToken text;
-            if (!c.ts.match(WasmToken::Text, &text, c.error))
-                return nullptr;
-            if (!c.ts.match(WasmToken::CloseParen, c.error))
-                return nullptr;
-            exportName = text.text();
-        } else {
-            c.ts.unget(openParen);
-        }
-    }
-
-    if (!exportName.empty()) {
-        if (funcName.empty())
-            funcName = exportName;
-        AstExport* exp = new(c.lifo) AstExport(exportName, DefinitionKind::Function,
-                                               AstRef(funcName, AstNoIndex));
-        if (!exp || !module->append(exp))
-            return nullptr;
-    }
-
-    if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
-        if (c.ts.getIf(WasmToken::Type)) {
-            if (!c.ts.matchRef(&sig, c.error))
-                return nullptr;
-            if (!c.ts.match(WasmToken::CloseParen, c.error))
-                return nullptr;
-        } else {
-            c.ts.unget(openParen);
-        }
-    }
-
-    AstExprVector body(c.lifo);
-    ExprType result = ExprType::Void;
-
-    while (c.ts.getIf(WasmToken::OpenParen)) {
-        WasmToken token = c.ts.get();
-        switch (token.kind()) {
-          case WasmToken::Local:
-            if (!ParseLocalOrParam(c, &locals, &vars))
-                return nullptr;
-            break;
-          case WasmToken::Param:
-            if (!vars.empty()) {
-                c.ts.generateError(token, c.error);
-                return nullptr;
-            }
-            if (!ParseLocalOrParam(c, &locals, &args))
-                return nullptr;
-            break;
-          case WasmToken::Result:
-            if (!ParseResult(c, &result))
-                return nullptr;
-            break;
-          default:
-            c.ts.unget(token);
-            AstExpr* expr = ParseExprInsideParens(c);
-            if (!expr || !body.append(expr))
-                return nullptr;
-            break;
-        }
-        if (!c.ts.match(WasmToken::CloseParen, c.error))
-            return nullptr;
-    }
-
-    if (!ParseExprList(c, &body, true))
-        return nullptr;
-
-    if (sig.isInvalid()) {
-        uint32_t sigIndex;
-        if (!module->declare(AstSig(Move(args), result), &sigIndex))
-            return nullptr;
-        sig.setIndex(sigIndex);
-    }
-
-    return new(c.lifo) AstFunc(funcName, sig, Move(vars), Move(locals), Move(body));
+    return c.ts.match(WasmToken::Text, &import->module, c.error) &&
+           c.ts.match(WasmToken::Text, &import->field, c.error);
 }
 
 static bool
-ParseFuncType(WasmParseContext& c, AstSig* sig)
+ParseInlineExport(WasmParseContext& c, DefinitionKind kind, AstModule* module,
+                  AstRef ref = AstRef())
+{
+    WasmToken name;
+    if (!c.ts.match(WasmToken::Text, &name, c.error))
+        return false;
+
+    AstExport* exp = nullptr;
+    if (!ref.isInvalid())
+        exp = new(c.lifo) AstExport(name.text(), kind, ref);
+    else
+        exp = new(c.lifo) AstExport(name.text(), kind);
+
+    return exp && module->append(exp);
+}
+
+static bool
+MaybeParseTypeUse(WasmParseContext& c, AstRef* sig)
+{
+    WasmToken openParen;
+    if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
+        if (c.ts.getIf(WasmToken::Type)) {
+            if (!c.ts.matchRef(sig, c.error))
+                return false;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return false;
+        } else {
+            c.ts.unget(openParen);
+        }
+    }
+    return true;
+}
+
+static bool
+ParseFuncSig(WasmParseContext& c, AstSig* sig)
 {
     AstValTypeVector args(c.lifo);
     ExprType result = ExprType::Void;
@@ -2615,6 +2564,121 @@ ParseFuncType(WasmParseContext& c, AstSig* sig)
     return true;
 }
 
+static bool
+ParseFuncType(WasmParseContext& c, AstRef* ref, AstModule* module)
+{
+    if (!MaybeParseTypeUse(c, ref))
+        return false;
+
+    if (ref->isInvalid()) {
+        AstSig sig(c.lifo);
+        if (!ParseFuncSig(c, &sig))
+            return false;
+        uint32_t sigIndex;
+        if (!module->declare(Move(sig), &sigIndex))
+            return false;
+        ref->setIndex(sigIndex);
+    }
+
+    return true;
+}
+
+static bool
+ParseFunc(WasmParseContext& c, AstModule* module)
+{
+    AstValTypeVector vars(c.lifo);
+    AstValTypeVector args(c.lifo);
+    AstNameVector locals(c.lifo);
+
+    AstName funcName = c.ts.getIfName();
+
+    // Inline imports and exports.
+    WasmToken openParen;
+    if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
+        if (c.ts.getIf(WasmToken::Import)) {
+            if (module->funcs().length()) {
+                c.ts.generateError(openParen, "import after function definition", c.error);
+                return false;
+            }
+
+            InlineImport names;
+            if (!ParseInlineImport(c, &names))
+                return false;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return false;
+
+            AstRef sig;
+            if (!ParseFuncType(c, &sig, module))
+                return false;
+
+            auto* imp = new(c.lifo) AstImport(funcName, names.module.text(), names.field.text(), sig);
+            return imp && module->append(imp);
+        }
+
+        if (c.ts.getIf(WasmToken::Export)) {
+            AstRef ref = funcName.empty()
+                         ? AstRef(AstName(), module->funcImportNames().length() + module->funcs().length())
+                         : AstRef(funcName, AstNoIndex);
+            if (!ParseInlineExport(c, DefinitionKind::Function, module, ref))
+                return false;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return false;
+        } else {
+            c.ts.unget(openParen);
+        }
+    }
+
+    AstRef sigRef;
+    if (!MaybeParseTypeUse(c, &sigRef))
+        return false;
+
+    AstExprVector body(c.lifo);
+
+    ExprType result = ExprType::Void;
+    while (c.ts.getIf(WasmToken::OpenParen)) {
+        WasmToken token = c.ts.get();
+        switch (token.kind()) {
+          case WasmToken::Local:
+            if (!ParseLocalOrParam(c, &locals, &vars))
+                return false;
+            break;
+          case WasmToken::Param:
+            if (!vars.empty()) {
+                c.ts.generateError(token, c.error);
+                return false;
+            }
+            if (!ParseLocalOrParam(c, &locals, &args))
+                return false;
+            break;
+          case WasmToken::Result:
+            if (!ParseResult(c, &result))
+                return false;
+            break;
+          default:
+            c.ts.unget(token);
+            AstExpr* expr = ParseExprInsideParens(c);
+            if (!expr || !body.append(expr))
+                return false;
+            break;
+        }
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return false;
+    }
+
+    if (!ParseExprList(c, &body, true))
+        return false;
+
+    if (sigRef.isInvalid()) {
+        uint32_t sigIndex;
+        if (!module->declare(AstSig(Move(args), result), &sigIndex))
+            return false;
+        sigRef.setIndex(sigIndex);
+    }
+
+    auto* func = new(c.lifo) AstFunc(funcName, sigRef, Move(vars), Move(locals), Move(body));
+    return func && module->append(func);
+}
+
 static AstSig*
 ParseTypeDef(WasmParseContext& c)
 {
@@ -2626,7 +2690,7 @@ ParseTypeDef(WasmParseContext& c)
         return nullptr;
 
     AstSig sig(c.lifo);
-    if (!ParseFuncType(c, &sig))
+    if (!ParseFuncSig(c, &sig))
         return nullptr;
 
     if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2809,26 +2873,13 @@ ParseImport(WasmParseContext& c, AstModule* module)
         if (c.ts.getIf(WasmToken::Func)) {
             AstName name = c.ts.getIfName();
 
-            WasmToken token;
-            if (c.ts.getIf(WasmToken::Type, &token)) {
-                if (!c.ts.matchRef(&sigRef, c.error))
-                    return nullptr;
-            } else {
-                AstSig sig(c.lifo);
-                if (!ParseFuncType(c, &sig))
-                    return nullptr;
-
-                uint32_t sigIndex;
-                if (!module->declare(Move(sig), &sigIndex))
-                    return nullptr;
-
-                sigRef.setIndex(sigIndex);
-            }
+            AstRef sigRef;
+            if (!ParseFuncType(c, &sigRef, module))
+                return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
 
-            return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
-                                         sigRef);
+            return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(), sigRef);
         }
 
         if (c.ts.getIf(WasmToken::Type)) {
@@ -2843,7 +2894,7 @@ ParseImport(WasmParseContext& c, AstModule* module)
 
     if (sigRef.isInvalid()) {
         AstSig sig(c.lifo);
-        if (!ParseFuncType(c, &sig))
+        if (!ParseFuncSig(c, &sig))
             return nullptr;
 
         uint32_t sigIndex;
@@ -2928,25 +2979,6 @@ ParseExport(WasmParseContext& c)
 
     c.ts.generateError(exportee, c.error);
     return nullptr;
-}
-
-static bool
-ParseInlineImport(WasmParseContext& c, InlineImport* import)
-{
-    return c.ts.match(WasmToken::Text, &import->module, c.error) &&
-           c.ts.match(WasmToken::Text, &import->field, c.error);
-}
-
-static bool
-ParseInlineExport(WasmParseContext& c, DefinitionKind kind, AstModule* module)
-{
-    WasmToken name;
-    if (!c.ts.match(WasmToken::Text, &name, c.error))
-        return false;
-    auto* exp = new(c.lifo) AstExport(name.text(), kind);
-    if (!exp || !module->append(exp))
-        return false;
-    return true;
 }
 
 static bool
@@ -3139,8 +3171,7 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
             break;
           }
           case WasmToken::Func: {
-            AstFunc* func = ParseFunc(c, module);
-            if (!func || !module->append(func))
+            if (!ParseFunc(c, module))
                 return nullptr;
             break;
           }
