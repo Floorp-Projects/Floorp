@@ -60,6 +60,8 @@ def android_platform(target, android_version, ndk):
 
     if 'mips' in target.cpu:
         target_dir_name = 'mips'
+    elif 'aarch64' == target.cpu:
+        target_dir_name = 'arm64'
     else:
         target_dir_name = target.cpu
 
@@ -108,6 +110,8 @@ def android_toolchain(target, host, ndk, toolchain, gnu_compiler_version):
             target_base = 'x86'
         elif target.cpu == 'mips32' and target.endianness == 'little':
             target_base = 'mipsel-linux-android'
+        elif target.cpu == 'aarch64' and target.endianness == 'little':
+            target_base = 'aarch64-linux-android'
         else:
             die('Target cpu is not supported.')
 
