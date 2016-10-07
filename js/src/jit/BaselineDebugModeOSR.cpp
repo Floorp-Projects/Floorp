@@ -219,7 +219,7 @@ CollectJitStackScripts(JSContext* cx, const Debugger::ExecutionObservableSet& ob
             } else {
                 // The frame must be settled on a pc with an ICEntry.
                 uint8_t* retAddr = iter.returnAddressToFp();
-                ICEntry& icEntry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
+                BaselineICEntry& icEntry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
                 if (!entries.append(DebugModeOSREntry(script, icEntry)))
                     return false;
             }
@@ -493,7 +493,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const Debugger::ExecutionObservab
                 // callVMs which can trigger debug mode OSR are the *only*
                 // callVMs generated for their respective pc locations in the
                 // baseline JIT code.
-                ICEntry& callVMEntry = bl->callVMEntryFromPCOffset(pcOffset);
+                BaselineICEntry& callVMEntry = bl->callVMEntryFromPCOffset(pcOffset);
                 recompInfo->resumeAddr = bl->returnAddressForIC(callVMEntry);
                 popFrameReg = false;
                 break;
@@ -505,7 +505,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const Debugger::ExecutionObservab
                 // Patching mechanism is identical to a CallVM. This is
                 // handled especially only because the warmup counter VM call is
                 // part of the prologue, and not tied an opcode.
-                ICEntry& warmupCountEntry = bl->warmupCountICEntry();
+                BaselineICEntry& warmupCountEntry = bl->warmupCountICEntry();
                 recompInfo->resumeAddr = bl->returnAddressForIC(warmupCountEntry);
                 popFrameReg = false;
                 break;
@@ -519,7 +519,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const Debugger::ExecutionObservab
                 // handled especially only because the stack check VM call is
                 // part of the prologue, and not tied an opcode.
                 bool earlyCheck = kind == ICEntry::Kind_EarlyStackCheck;
-                ICEntry& stackCheckEntry = bl->stackCheckICEntry(earlyCheck);
+                BaselineICEntry& stackCheckEntry = bl->stackCheckICEntry(earlyCheck);
                 recompInfo->resumeAddr = bl->returnAddressForIC(stackCheckEntry);
                 popFrameReg = false;
                 break;
