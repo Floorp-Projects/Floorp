@@ -3,20 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-/******/
-var message = "Congratulations, you've fixed escape sequences in yield! Please enable the commented out tests in this file.";
-try {
-    eval(String.raw`var yi\u0065ld;`);
-} catch (e) {
-    message = "";
-}
-if (message) throw message;
-/******/
-
 // Destructuring binding patterns with var.
 (function() {
-    // var {a: yi\u0065ld} = {a: "yield-with-name"};
-    // assertEq(yield, "yield-with-name");
+    var {a: yi\u0065ld} = {a: "yield-with-name"};
+    assertEq(yield, "yield-with-name");
 
     var {yi\u0065ld} = {yield: "yield-with-shorthand"};
     assertEq(yield, "yield-with-shorthand");
@@ -49,8 +39,8 @@ assertThrowsInstanceOf(() => eval(String.raw`
 
 // Destructuring binding patterns with let.
 (function(){
-    // let {a: yi\u0065ld} = {a: "yield-with-name"};
-    // assertEq(yield, "yield-with-name");
+    let {a: yi\u0065ld} = {a: "yield-with-name"};
+    assertEq(yield, "yield-with-name");
 })();
 
 (function() {
@@ -87,8 +77,8 @@ assertThrowsInstanceOf(() => eval(String.raw`
 
 // Destructuring binding patterns with const.
 (function() {
-    // const {a: yi\u0065ld} = {a: "yield-with-name"};
-    // assertEq(yield, "yield-with-name");
+    const {a: yi\u0065ld} = {a: "yield-with-name"};
+    assertEq(yield, "yield-with-name");
 })();
 
 (function() {
@@ -124,9 +114,9 @@ assertThrowsInstanceOf(() => eval(String.raw`
 
 
 // Destructuring binding patterns in parameters.
-// (function({a: yi\u0065ld} = {a: "yield-with-name"}) {
-//     assertEq(yield, "yield-with-name");
-// })();
+(function({a: yi\u0065ld} = {a: "yield-with-name"}) {
+    assertEq(yield, "yield-with-name");
+})();
 
 (function({yi\u0065ld} = {yield: "yield-with-shorthand"}) {
     assertEq(yield, "yield-with-shorthand");
@@ -156,8 +146,8 @@ assertThrowsInstanceOf(() => eval(String.raw`
 (function() {
     var a, yield;
 
-    // ({a: yi\u0065ld} = {a: "yield-with-name"});
-    // assertEq(yield, "yield-with-name");
+    ({a: yi\u0065ld} = {a: "yield-with-name"});
+    assertEq(yield, "yield-with-name");
 
     ({yi\u0065ld} = {yield: "yield-with-shorthand"});
     assertEq(yield, "yield-with-shorthand");
