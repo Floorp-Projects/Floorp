@@ -15,11 +15,11 @@ const TOOLTIP_HEIGHT = 308;
 /**
  * Tooltip for displaying docs for CSS properties from MDN.
  *
- * @param {Document} toolboxDoc
- *        The toolbox document to attach the CSS docs tooltip.
+ * @param {Toolbox} toolbox
+ *        Toolbox used to create the tooltip.
  */
-function CssDocsTooltip(toolboxDoc) {
-  this.tooltip = new HTMLTooltip(toolboxDoc, {
+function CssDocsTooltip(toolbox) {
+  this.tooltip = new HTMLTooltip(toolbox, {
     type: "arrow",
     consumeOutsideClicks: true,
     autofocus: true,
@@ -31,7 +31,7 @@ function CssDocsTooltip(toolboxDoc) {
   this.widget.on("visitlink", this._onVisitLink);
 
   // Initialize keyboard shortcuts
-  this.shortcuts = new KeyShortcuts({ window: this.tooltip.topWindow });
+  this.shortcuts = new KeyShortcuts({ window: toolbox.win });
   this._onShortcut = this._onShortcut.bind(this);
 
   this.shortcuts.on("Escape", this._onShortcut);

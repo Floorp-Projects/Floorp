@@ -175,8 +175,7 @@ function SelectorAutocompleter(inspector, inputNode) {
     onClick: this._onSearchPopupClick,
   };
 
-  // The popup will be attached to the toolbox document.
-  this.searchPopup = new AutocompletePopup(inspector._toolbox.doc, options);
+  this.searchPopup = new AutocompletePopup(inspector._toolbox, options);
 
   this.searchBox.addEventListener("input", this.showSuggestions, true);
   this.searchBox.addEventListener("keypress", this._onSearchKeypress, true);

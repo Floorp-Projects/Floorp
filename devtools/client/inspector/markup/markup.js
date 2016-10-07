@@ -104,11 +104,12 @@ function MarkupView(inspector, frame, controllerWindow) {
     Services.prefs.getIntPref(ATTR_COLLAPSE_LENGTH_PREF);
 
   // Creating the popup to be used to show CSS suggestions.
-  // The popup will be attached to the toolbox document.
-  this.popup = new AutocompletePopup(inspector.toolbox.doc, {
+  let options = {
     autoSelect: true,
     theme: "auto",
-  });
+  };
+
+  this.popup = new AutocompletePopup(inspector.toolbox, options);
 
   this.undo = new UndoStack();
   this.undo.installController(controllerWindow);
@@ -184,10 +185,9 @@ MarkupView.prototype = {
   },
 
   _initTooltips: function () {
-    // The tooltips will be attached to the toolbox document.
-    this.eventDetailsTooltip = new HTMLTooltip(this.toolbox.doc,
+    this.eventDetailsTooltip = new HTMLTooltip(this.toolbox,
       {type: "arrow"});
-    this.imagePreviewTooltip = new HTMLTooltip(this.toolbox.doc,
+    this.imagePreviewTooltip = new HTMLTooltip(this.toolbox,
       {type: "arrow", useXulWrapper: "true"});
     this._enableImagePreviewTooltip();
   },

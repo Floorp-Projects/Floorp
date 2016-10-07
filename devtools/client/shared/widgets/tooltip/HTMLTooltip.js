@@ -191,8 +191,8 @@ const getRelativeRect = function (node, relativeTo) {
 /**
  * The HTMLTooltip can display HTML content in a tooltip popup.
  *
- * @param {Document} toolboxDoc
- *        The toolbox document to attach the HTMLTooltip popup.
+ * @param {Toolbox} toolbox
+ *        The devtools toolbox, needed to get the devtools main window.
  * @param {Object}
  *        - {String} type
  *          Display type of the tooltip. Possible values: "normal", "arrow"
@@ -207,7 +207,7 @@ const getRelativeRect = function (node, relativeTo) {
  *        - {String} stylesheet
  *          Style sheet URL to apply to the tooltip content.
  */
-function HTMLTooltip(toolboxDoc, {
+function HTMLTooltip(toolbox, {
     type = "normal",
     autofocus = false,
     consumeOutsideClicks = true,
@@ -216,7 +216,7 @@ function HTMLTooltip(toolboxDoc, {
   } = {}) {
   EventEmitter.decorate(this);
 
-  this.doc = toolboxDoc;
+  this.doc = toolbox.doc;
   this.type = type;
   this.autofocus = autofocus;
   this.consumeOutsideClicks = consumeOutsideClicks;

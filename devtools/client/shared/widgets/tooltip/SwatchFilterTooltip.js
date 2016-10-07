@@ -19,17 +19,15 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  * It just wraps a standard Tooltip and sets its content with an instance of a
  * CSSFilterEditorWidget.
  *
- * @param {Document} document
- *        The document to attach the SwatchFilterTooltip. This is either the toolbox
- *        document if the tooltip is a popup tooltip or the panel's document if it is an
- *        inline editor.
+ * @param {Toolbox} toolbox
+ *        The devtools toolbox, needed to get the devtools main window.
  * @param {function} cssIsValid
  *        A function to check that css declaration's name and values are valid together.
  *        This can be obtained from "shared/fronts/css-properties.js".
  */
-function SwatchFilterTooltip(document, cssIsValid) {
+function SwatchFilterTooltip(toolbox, cssIsValid) {
   let stylesheet = "chrome://devtools/content/shared/widgets/filter-widget.css";
-  SwatchBasedEditorTooltip.call(this, document, stylesheet);
+  SwatchBasedEditorTooltip.call(this, toolbox, stylesheet);
   this._cssIsValid = cssIsValid;
 
   // Creating a filter editor instance.

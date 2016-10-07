@@ -159,11 +159,11 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.enableMdnDocsTooltip =
     Services.prefs.getBoolPref(PREF_ENABLE_MDN_DOCS_TOOLTIP);
 
-  // The popup will be attached to the toolbox document.
-  this.popup = new AutocompletePopup(inspector._toolbox.doc, {
+  let options = {
     autoSelect: true,
     theme: "auto"
-  });
+  };
+  this.popup = new AutocompletePopup(inspector._toolbox, options);
 
   this._showEmpty();
 
