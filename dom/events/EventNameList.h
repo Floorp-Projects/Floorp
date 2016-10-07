@@ -503,6 +503,14 @@ FORWARDED_EVENT(focus,
                 eFocus,
                 EventNameType_HTMLXUL,
                 eFocusEventClass)
+FORWARDED_EVENT(focusin,
+                eFocusIn,
+                EventNameType_HTMLXUL,
+                eFocusEventClass)
+FORWARDED_EVENT(focusout,
+                eFocusOut,
+                EventNameType_HTMLXUL,
+                eFocusEventClass)
 FORWARDED_EVENT(load,
                 eLoad,
                 EventNameType_All,
