@@ -11,6 +11,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -1865,6 +1866,9 @@ this.UITour = {
       case "sync":
         this.sendPageCallback(aMessageManager, aCallbackID, {
           setup: Services.prefs.prefHasUserValue("services.sync.username"),
+          desktopDevices: Preferences.get("services.sync.clients.devices.desktop", 0),
+          mobileDevices: Preferences.get("services.sync.clients.devices.mobile", 0),
+          totalDevices: Preferences.get("services.sync.numClients", 0),
         });
         break;
       case "canReset":
