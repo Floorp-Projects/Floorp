@@ -104,14 +104,18 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
     return false;
   }
 
-  nsTArray<nsCString> codecMimes;
+  nsTArray<UniquePtr<TrackInfo>> trackInfos;
   if (aType.GetCodecs().IsEmpty()) {
     // No codecs specified. Assume AAC/H.264
     if (isMP4Audio) {
-      codecMimes.AppendElement(NS_LITERAL_CSTRING("audio/mp4a-latm"));
+      trackInfos.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
+          NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
     } else {
       MOZ_ASSERT(isMP4Video);
-      codecMimes.AppendElement(NS_LITERAL_CSTRING("video/avc"));
+      trackInfos.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
+          NS_LITERAL_CSTRING("video/avc"), aType));
     }
   } else {
     // Verify that all the codecs specified are ones that we expect that
@@ -122,17 +126,23 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
     }
     for (const nsString& codec : codecs) {
       if (IsAACCodecString(codec)) {
-        codecMimes.AppendElement(NS_LITERAL_CSTRING("audio/mp4a-latm"));
+        trackInfos.AppendElement(
+          CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
+            NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
         continue;
       }
       if (codec.EqualsLiteral("mp3")) {
-        codecMimes.AppendElement(NS_LITERAL_CSTRING("audio/mpeg"));
+        trackInfos.AppendElement(
+          CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
+            NS_LITERAL_CSTRING("audio/mpeg"), aType));
         continue;
       }
       // Note: Only accept H.264 in a video content type, not in an audio
       // content type.
       if (IsWhitelistedH264Codec(codec) && isMP4Video) {
-        codecMimes.AppendElement(NS_LITERAL_CSTRING("video/avc"));
+        trackInfos.AppendElement(
+          CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
+            NS_LITERAL_CSTRING("video/avc"), aType));
         continue;
       }
       // Some unsupported codec.
@@ -142,8 +152,8 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
 
   // Verify that we have a PDM that supports the whitelisted types.
   RefPtr<PDMFactory> platform = new PDMFactory();
-  for (const nsCString& codecMime : codecMimes) {
-    if (!platform->SupportsMimeType(codecMime, aDiagnostics)) {
+  for (const auto& trackInfo : trackInfos) {
+    if (!trackInfo || !platform->Supports(*trackInfo, aDiagnostics)) {
       return false;
     }
   }
