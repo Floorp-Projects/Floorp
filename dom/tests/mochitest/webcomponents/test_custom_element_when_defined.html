@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1275839
+-->
+<head>
+  <title>Test custom elements whenDefined function.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1275839">Bug 1275839</a>
+<iframe id="iframe"></iframe>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+const testWindow = iframe.contentDocument.defaultView;
+const customElements = testWindow.customElements;
+const expectSyntaxError = 'SyntaxError';
+
+function testCustomElementsAvailable() {
+  ok('customElements' in testWindow, '"window.customElements" exists');
+  ok('define' in customElements, '"window.customElements.define" exists');
+  ok('whenDefined' in customElements, '"window.customElements.get" exists');
+}
+
+function testCustomElementsPromiseEqually() {
+  // 4. If map does not contain an entry with key name, create an entry in
+  // map with key name and whose value is a new promise.
+  let promiseElement1 = customElements.whenDefined('x-element1');
+  let promiseElement2 = customElements.whenDefined('x-element2');
+
+  ok(promiseElement1 instanceof testWindow.Promise &&
+     promiseElement2 instanceof testWindow.Promise,
+     "promiseElement1 and promiseElement2 should return promises.");
+
+  // 5. Let promise be the value of the entry in map with key name.
+  // 6. Return promise
+  let sameAsPromiseElement1 = customElements.whenDefined('x-element1');
+
+  ok(sameAsPromiseElement1 instanceof testWindow.Promise,
+     "sameAsPromiseElement1 should return promise.");
+  is(promiseElement1, sameAsPromiseElement1,
+     "Same name should return same promise.");
+  isnot(promiseElement1, promiseElement2,
+        "whenDefined() returns different promises for different names.");
+}
+
+function testCustomElementsNameDefined() {
+  let name = 'x-foo';
+  let beforeDefinedPromise = customElements.whenDefined(name);
+
+  customElements.define(name, class {});
+
+  // 2. If this CustomElementRegistry contains an entry with name name,
+  // then return a new promise resolved with undefined and abort these
+  // steps.
+  return beforeDefinedPromise.then(() => {
+    let afterDefinedPromise = customElements.whenDefined(name);
+    isnot(beforeDefinedPromise, afterDefinedPromise,
+          "When name is defined, we should have a new promise.");
+
+    let newPromise = customElements.whenDefined(name);
+    isnot(afterDefinedPromise, newPromise,
+          "Once name is defined, whenDefined() always returns a new promise.");
+    return Promise.all([newPromise, afterDefinedPromise]);
+  });
+}
+
+function testCustomElementsNameNotDefined() {
+  let isResolved = false;
+  customElements.whenDefined('x-name-not-defined').then(() => {
+    isResolved = true;
+  });
+
+  return new Promise((aResolve, aReject) => {
+    setTimeout(
+      function() {
+        ok(!isResolved, "Promise for not defined name should not be resolved.");
+        aResolve();
+      }, 0);
+  });
+}
+
+function testCustomElementsInvalidName() {
+  let invalidCustomElementNames = [
+    undefined,
+    null,
+    '',
+    '-',
+    'a',
+    'input',
+    'mycustomelement',
+    'A',
+    'A-',
+    '0-',
+    'a-A',
+    'a-Z',
+    'A-a',
+    'a-a\u00D7',
+    'a-a\u3000',
+    'a-a\uDB80\uDC00', // Surrogate pair U+F0000
+    // name must not be any of the hyphen-containing element names.
+    'annotation-xml',
+    'color-profile',
+    'font-face',
+    'font-face-src',
+    'font-face-uri',
+    'font-face-format',
+    'font-face-name',
+    'missing-glyph',
+  ];
+
+  let promises = [];
+  invalidCustomElementNames.forEach(name => {
+    const expectSyntaxErrorPromise = customElements.whenDefined(name);
+
+    promises.push(expectSyntaxErrorPromise.then(() => {
+      ok(false, "CustomElements with invalid name should throw SyntaxError.");
+    }, (ex) => {
+      is(ex.name, expectSyntaxError,
+         "CustomElements with invalid name should throw SyntaxError.");
+    }));
+  });
+
+  return Promise.all(promises);
+}
+
+Promise.resolve()
+ .then(() => testCustomElementsAvailable())
+ .then(() => testCustomElementsPromiseEqually())
+ .then(() => testCustomElementsNameDefined())
+ .then(() => testCustomElementsNameNotDefined())
+ .then(() => testCustomElementsInvalidName())
+ .then(() => SimpleTest.finish());
+
+</script>
+</body>
+</html>
