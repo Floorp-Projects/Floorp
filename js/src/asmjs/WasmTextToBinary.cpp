@@ -93,7 +93,6 @@ class WasmToken
         GetLocal,
         Global,
         If,
-        Immutable,
         Import,
         Index,
         Memory,
@@ -102,6 +101,7 @@ class WasmToken
         Local,
         Loop,
         Module,
+        Mutable,
         Name,
         Nop,
         Offset,
@@ -296,7 +296,7 @@ class WasmToken
           case Float:
           case Func:
           case Global:
-          case Immutable:
+          case Mutable:
           case Import:
           case Index:
           case Memory:
@@ -1377,8 +1377,6 @@ WasmTokenStream::next()
             }
             break;
         }
-        if (consume(u"immutable"))
-            return WasmToken(WasmToken::Immutable, begin, cur_);
         if (consume(u"import"))
             return WasmToken(WasmToken::Import, begin, cur_);
         if (consume(u"infinity"))
@@ -1399,6 +1397,8 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::Module, begin, cur_);
         if (consume(u"memory"))
             return WasmToken(WasmToken::Memory, begin, cur_);
+        if (consume(u"mut"))
+            return WasmToken(WasmToken::Mutable, begin, cur_);
         break;
 
       case 'n':
@@ -2798,15 +2798,18 @@ ParseStartFunc(WasmParseContext& c, WasmToken token, AstModule* module)
 static bool
 ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, uint32_t* flags)
 {
-    if (!c.ts.match(WasmToken::ValueType, typeToken, c.error))
-        return false;
+    // Either (mut i32) or i32.
+    if (c.ts.getIf(WasmToken::OpenParen)) {
+        // Immutable by default.
+        *flags = c.ts.getIf(WasmToken::Mutable) ? 0x1 : 0x0;
+        if (!c.ts.match(WasmToken::ValueType, typeToken, c.error))
+            return false;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return false;
+        return true;
+    }
 
-    // Mutable by default.
-    *flags = 0x1;
-    if (c.ts.getIf(WasmToken::Immutable))
-        *flags = 0x0;
-
-    return true;
+    return c.ts.match(WasmToken::ValueType, typeToken, c.error);
 }
 
 static bool
@@ -2861,17 +2864,22 @@ ParseImport(WasmParseContext& c, AstModule* module)
                                          DefinitionKind::Table, table);
         }
         if (c.ts.getIf(WasmToken::Global)) {
+            if (name.empty())
+                name = c.ts.getIfName();
+
             WasmToken typeToken;
             uint32_t flags = 0;
             if (!ParseGlobalType(c, &typeToken, &flags))
                 return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
+
             return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
                                          AstGlobal(AstName(), typeToken.valueType(), flags));
         }
         if (c.ts.getIf(WasmToken::Func)) {
-            AstName name = c.ts.getIfName();
+            if (name.empty())
+                name = c.ts.getIfName();
 
             AstRef sigRef;
             if (!ParseFuncType(c, &sigRef, module))
@@ -3084,21 +3092,58 @@ ParseElemSegment(WasmParseContext& c)
     return new(c.lifo) AstElemSegment(offset, Move(elems));
 }
 
-static AstGlobal*
-ParseGlobal(WasmParseContext& c)
+static bool
+ParseGlobal(WasmParseContext& c, AstModule* module)
 {
     AstName name = c.ts.getIfName();
 
     WasmToken typeToken;
     uint32_t flags = 0;
+
+    WasmToken openParen;
+    if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
+        if (c.ts.getIf(WasmToken::Import)) {
+            if (module->globals().length()) {
+                c.ts.generateError(openParen, "import after global definition", c.error);
+                return false;
+            }
+
+            InlineImport names;
+            if (!ParseInlineImport(c, &names))
+                return false;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return false;
+
+            if (!ParseGlobalType(c, &typeToken, &flags))
+                return false;
+
+            auto* imp = new(c.lifo) AstImport(name, names.module.text(), names.field.text(),
+                                              AstGlobal(AstName(), typeToken.valueType(), flags));
+            return imp && module->append(imp);
+        }
+
+        if (c.ts.getIf(WasmToken::Export)) {
+            AstRef ref = name.empty()
+                         ? AstRef(AstName(), module->globals().length())
+                         : AstRef(name, AstNoIndex);
+            if (!ParseInlineExport(c, DefinitionKind::Global, module, ref))
+                return false;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return false;
+        } else {
+            c.ts.unget(openParen);
+        }
+    }
+
     if (!ParseGlobalType(c, &typeToken, &flags))
-        return nullptr;
+        return false;
 
     AstExpr* init = ParseExpr(c, true);
     if (!init)
-        return nullptr;
+        return false;
 
-    return new(c.lifo) AstGlobal(name, typeToken.valueType(), flags, Some(init));
+    auto* glob = new(c.lifo) AstGlobal(name, typeToken.valueType(), flags, Some(init));
+    return glob && module->append(glob);
 }
 
 static AstModule*
@@ -3136,8 +3181,7 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
             break;
           }
           case WasmToken::Global: {
-            AstGlobal* global = ParseGlobal(c);
-            if (!global || !module->append(global))
+            if (!ParseGlobal(c, module))
                 return nullptr;
             break;
           }
