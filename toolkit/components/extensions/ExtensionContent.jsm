@@ -127,6 +127,13 @@ Script.prototype = {
 
   matches(window) {
     let uri = window.document.documentURIObject;
+
+    // If mozAddonManager is present on this page, don't allow
+    // content scripts.
+    if (window.navigator.mozAddonManager !== undefined) {
+      return false;
+    }
+
     if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
       return false;
     }
