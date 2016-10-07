@@ -9,8 +9,7 @@ const INIT_URI = "data:text/plain;charset=utf8,hello world";
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-bug-599725-response-headers.sjs";
 
-var loads = 0;
-function performTest(request, console) {
+function performTest(request, hud) {
   let deferred = promise.defer();
 
   let headers = null;
@@ -24,7 +23,7 @@ function performTest(request, console) {
     return null;
   }
 
-  console.webConsoleClient.getResponseHeaders(request.actor,
+  hud.ui.proxy.webConsoleClient.getResponseHeaders(request.actor,
     function (response) {
       headers = response.headers;
       ok(headers, "we have the response headers for reload");
@@ -38,30 +37,23 @@ function performTest(request, console) {
       executeSoon(deferred.resolve);
     });
 
-  HUDService.lastFinishedRequest.callback = null;
-
   return deferred.promise;
 }
 
-function waitForRequest() {
-  let deferred = promise.defer();
-  HUDService.lastFinishedRequest.callback = (req, console) => {
-    loads++;
-    ok(req, "page load was logged");
-    if (loads != 2) {
-      return;
-    }
-    performTest(req, console).then(deferred.resolve);
-  };
-  return deferred.promise;
-}
+let waitForRequest = Task.async(function*(hud) {
+  let request = yield waitForFinishedRequest(req=> {
+    return req.response.status === "304";
+  });
+
+  yield performTest(request, hud);
+});
 
 add_task(function* () {
   let { browser } = yield loadTab(INIT_URI);
 
-  yield openConsole();
+  let hud = yield openConsole();
 
-  let gotLastRequest = waitForRequest();
+  let gotLastRequest = waitForRequest(hud);
 
   let loaded = loadBrowser(browser);
   BrowserTestUtils.loadURI(browser, TEST_URI);
