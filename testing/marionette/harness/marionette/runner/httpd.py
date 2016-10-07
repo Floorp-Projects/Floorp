@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import time
 
 from wptserve import server, handlers, routes as default_routes
 
@@ -21,8 +20,7 @@ class FixtureServer(object):
     def start(self, block=False):
         if self.alive:
             return
-        routes = [("POST", "/file_upload", upload_handler),
-                  ("GET", "/slow", slow_loading_document)]
+        routes = [("POST", "/file_upload", upload_handler)]
         routes.extend(default_routes.routes)
         self._server = server.WebTestHttpd(
             port=self.port,
@@ -57,14 +55,6 @@ class FixtureServer(object):
 @handlers.handler
 def upload_handler(request, response):
     return 200, [], [request.headers.get("Content-Type")] or []
-
-
-@handlers.handler
-def slow_loading_document(request, response):
-    time.sleep(5)
-    return """<!doctype html>
-<title>ok</title>
-<p>ok"""
 
 
 if __name__ == "__main__":
