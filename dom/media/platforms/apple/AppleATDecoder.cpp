@@ -28,6 +28,7 @@ AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig,
   , mConverter(nullptr)
   , mStream(nullptr)
   , mIsFlushing(false)
+  , mParsedFramesForAACMagicCookie(0)
 {
   MOZ_COUNT_CTOR(AppleATDecoder);
   LOG("Creating Apple AudioToolbox decoder");
@@ -534,15 +535,18 @@ nsresult
 AppleATDecoder::SetupDecoder(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  static const uint32_t MAX_FRAMES = 2;
 
   if (mFormatID == kAudioFormatMPEG4AAC &&
-      mConfig.mExtendedProfile == 2) {
+      mConfig.mExtendedProfile == 2 &&
+      mParsedFramesForAACMagicCookie < MAX_FRAMES) {
     // Check for implicit SBR signalling if stream is AAC-LC
     // This will provide us with an updated magic cookie for use with
     // GetInputAudioDescription.
     if (NS_SUCCEEDED(GetImplicitAACMagicCookie(aSample)) &&
         !mMagicCookie.Length()) {
       // nothing found yet, will try again later
+      mParsedFramesForAACMagicCookie++;
       return NS_ERROR_NOT_INITIALIZED;
     }
     // An error occurred, fallback to using default stream description
