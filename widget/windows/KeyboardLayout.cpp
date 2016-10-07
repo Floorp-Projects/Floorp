@@ -627,10 +627,10 @@ ToString(const UniCharsAndModifiers& aUniCharsAndModifiers)
   result.AssignLiteral("{ ");
   result.Append(GetCharacterCodeName(aUniCharsAndModifiers.CharAt(0)));
   for (uint32_t i = 1; i < aUniCharsAndModifiers.mLength; ++i) {
-    if (aUniCharsAndModifiers.mModifiers[i - 1] !=
-          aUniCharsAndModifiers.mModifiers[i]) {
+    if (aUniCharsAndModifiers.ModifiersAt(i - 1) !=
+          aUniCharsAndModifiers.ModifiersAt(i)) {
       result.AppendLiteral(" [");
-      result.Append(GetModifiersName(aUniCharsAndModifiers.mModifiers[0]));
+      result.Append(GetModifiersName(aUniCharsAndModifiers.ModifiersAt(0)));
       result.AppendLiteral("]");
     }
     result.AppendLiteral(", ");
@@ -638,7 +638,7 @@ ToString(const UniCharsAndModifiers& aUniCharsAndModifiers)
   }
   result.AppendLiteral(" [");
   uint32_t lastIndex = aUniCharsAndModifiers.mLength - 1;
-  result.Append(GetModifiersName(aUniCharsAndModifiers.mModifiers[lastIndex]));
+  result.Append(GetModifiersName(aUniCharsAndModifiers.ModifiersAt(lastIndex)));
   result.AppendLiteral("] }");
   return result;
 }
@@ -927,6 +927,18 @@ UniCharsAndModifiers::FillModifiers(Modifiers aModifiers)
 {
   for (uint32_t i = 0; i < mLength; i++) {
     mModifiers[i] = aModifiers;
+  }
+}
+
+void
+UniCharsAndModifiers::OverwriteModifiersIfBeginsWith(
+                        const UniCharsAndModifiers& aOther)
+{
+  if (!BeginsWith(aOther)) {
+    return;
+  }
+  for (uint32_t i = 0; i < aOther.mLength; ++i) {
+    mModifiers[i] = aOther.mModifiers[i];
   }
 }
 
@@ -3317,7 +3329,7 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
     ModifierKeyState modKeyState(mModKeyState);
     modKeyState.Unset(MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT |
                       MODIFIER_ALTGRAPH | MODIFIER_CAPSLOCK);
-    modKeyState.Set(mCommittedCharsAndModifiers.mModifiers[aIndex]);
+    modKeyState.Set(mCommittedCharsAndModifiers.ModifiersAt(aIndex));
     modKeyState.InitInputEvent(aKeyboardEvent);
     MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
       ("%p   NativeKey::WillDispatchKeyboardEvent(), "
@@ -3370,7 +3382,7 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
       modKeyState.Unset(MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT |
                         MODIFIER_ALTGRAPH | MODIFIER_CAPSLOCK);
       modKeyState.Set(
-        mInputtingStringAndModifiers.mModifiers[aIndex - skipUniChars]);
+        mInputtingStringAndModifiers.ModifiersAt(aIndex - skipUniChars));
       modKeyState.InitInputEvent(aKeyboardEvent);
       MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
         ("%p   NativeKey::WillDispatchKeyboardEvent(), "
@@ -3569,7 +3581,7 @@ KeyboardLayout::IsSysKey(uint8_t aVirtualKey,
 
   // If the Alt key state isn't consumed, that means that the key with Alt
   // doesn't cause text input.  So, the combination is a system key.
-  return !!(inputCharsAndModifiers.mModifiers[0] & MODIFIER_ALT);
+  return !!(inputCharsAndModifiers.ModifiersAt(0) & MODIFIER_ALT);
 }
 
 void
@@ -3619,12 +3631,8 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     // is pressed.
     UniCharsAndModifiers deadChars =
       GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
-    if (aNativeKey.mCommittedCharsAndModifiers.BeginsWith(deadChars)) {
-      for (uint32_t i = 0; i < deadChars.mLength; ++i) {
-        aNativeKey.mCommittedCharsAndModifiers.mModifiers[i] =
-          deadChars.mModifiers[i];
-      }
-    }
+    aNativeKey.mCommittedCharsAndModifiers.
+                 OverwriteModifiersIfBeginsWith(deadChars);
     // Finish the dead key sequence.
     DeactivateDeadKeyState();
     return;
@@ -3798,7 +3806,7 @@ KeyboardLayout::MaybeInitNativeKeyWithCompositeChar(
   // Active dead-key and base character does produce exactly one composite
   // character.
   aNativeKey.mCommittedCharsAndModifiers.Append(compositeChar,
-                                                baseChars.mModifiers[0]);
+                                                baseChars.ModifiersAt(0));
   if (aNativeKey.IsKeyDownMessage()) {
     DeactivateDeadKeyState();
   }

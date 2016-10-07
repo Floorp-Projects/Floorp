@@ -60,8 +60,6 @@ class KeyboardLayout;
 class UniCharsAndModifiers final
 {
 public:
-  // Dead-key + up to 4 characters
-  Modifiers mModifiers[5];
   uint32_t  mLength;
 
   UniCharsAndModifiers() : mLength(0) {}
@@ -80,7 +78,17 @@ public:
     MOZ_ASSERT(aIndex < mLength);
     return mChars[aIndex];
   }
+  Modifiers ModifiersAt(size_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex < mLength);
+    return mModifiers[aIndex];
+  }
   void FillModifiers(Modifiers aModifiers);
+  /**
+   * OverwriteModifiersIfBeginsWith() assigns mModifiers with aOther between
+   * [0] and [aOther.mLength - 1] only when mChars begins with aOther.mChars.
+   */
+  void OverwriteModifiersIfBeginsWith(const UniCharsAndModifiers& aOther);
 
   bool UniCharsEqual(const UniCharsAndModifiers& aOther) const;
   bool UniCharsCaseInsensitiveEqual(const UniCharsAndModifiers& aOther) const;
@@ -89,7 +97,9 @@ public:
   nsString ToString() const { return nsString(mChars, mLength); }
 
 private:
+  // Dead-key + up to 4 characters
   char16_t mChars[5];
+  Modifiers mModifiers[5];
 };
 
 struct DeadKeyEntry;
