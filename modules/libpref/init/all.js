@@ -633,7 +633,6 @@ pref("apz.displayport_expiry_ms", 15000);
 pref("apz.enlarge_displayport_when_clipped", false);
 pref("apz.fling_accel_base_mult", "1.0");
 pref("apz.fling_accel_interval_ms", 500);
-pref("apz.fling_accel_min_velocity", "1.5");
 pref("apz.fling_accel_supplemental_mult", "1.0");
 pref("apz.fling_curve_function_x1", "0.0");
 pref("apz.fling_curve_function_y1", "0.0");
