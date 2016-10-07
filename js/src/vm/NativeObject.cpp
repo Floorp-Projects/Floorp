@@ -262,6 +262,24 @@ js::NativeObject::lookupPure(jsid id)
 }
 
 uint32_t
+js::NativeObject::numFixedSlotsForCompilation() const
+{
+    // This is an alternative method for getting the number of fixed slots in an
+    // object. It requires more logic and memory accesses than numFixedSlots()
+    // but is safe to be called from the compilation thread, even if the main
+    // thread is actively mutating the VM.
+
+    // The compiler does not have access to nursery things.
+    MOZ_ASSERT(!IsInsideNursery(this));
+
+    if (this->is<ArrayObject>())
+        return 0;
+
+    gc::AllocKind kind = asTenured().getAllocKind();
+    return gc::GetGCKindSlots(kind, getClass());
+}
+
+uint32_t
 js::NativeObject::dynamicSlotsCount(uint32_t nfixed, uint32_t span, const Class* clasp)
 {
     if (span <= nfixed)

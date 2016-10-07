@@ -196,6 +196,7 @@
     _(Concat)                       \
     _(CharCodeAt)                   \
     _(FromCharCode)                 \
+    _(FromCodePoint)                \
     _(SinCos)                       \
     _(StringSplit)                  \
     _(Int32ToDouble)                \

@@ -1,4 +1,4 @@
-This is an import of Skia from 2014-07-28 (b1ab5fdd11bb358d738c1bfa63737dc65174a281)
+This is an import of Skia. See skia/include/core/SkMilestone.h for the milestone number.
 
 To update to a new version of Skia:
 
