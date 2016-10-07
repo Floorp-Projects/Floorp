@@ -101,7 +101,7 @@ FxAccountsPush.prototype = {
   _decodePushMessage(data) {
     Log.i("FxAccountsPush _decodePushMessage");
     data = JSON.parse(data);
-    let { message, cryptoParams } = this._messageAndCryptoParams(data);
+    let { headers, message } = this._messageAndHeaders(data);
     return new Promise((resolve, reject) => {
       PushService.getSubscription(FXA_PUSH_SCOPE,
         Services.scriptSecurityManager.getSystemPrincipal(),
@@ -112,22 +112,13 @@ FxAccountsPush.prototype = {
           return resolve(subscription);
         });
     }).then(subscription => {
-      if (!cryptoParams) {
-        return new Uint8Array();
-      }
-      return PushCrypto.decodeMsg(
-        message,
-        subscription.p256dhPrivateKey,
-        new Uint8Array(subscription.getKey("p256dh")),
-        cryptoParams.dh,
-        cryptoParams.salt,
-        cryptoParams.rs,
-        new Uint8Array(subscription.getKey("auth")),
-        cryptoParams.padSize
-      );
+      return PushCrypto.decrypt(subscription.p256dhPrivateKey,
+                                new Uint8Array(subscription.getKey("p256dh")),
+                                new Uint8Array(subscription.getKey("auth")),
+                                headers, message);
     })
-    .then(decryptedMessage => {
-      decryptedMessage = _decoder.decode(decryptedMessage);
+    .then(plaintext => {
+      let decryptedMessage = plaintext ? _decoder.decode(plaintext) : "";
       Messaging.sendRequestForResult({
         type: "FxAccountsPush:ReceivedPushMessageToDecode:Response",
         message: decryptedMessage
@@ -139,10 +130,10 @@ FxAccountsPush.prototype = {
   },
 
   // Copied from PushServiceAndroidGCM
-  _messageAndCryptoParams(data) {
+  _messageAndHeaders(data) {
     // Default is no data (and no encryption).
     let message = null;
-    let cryptoParams = null;
+    let headers = null;
 
     if (data.message && data.enc && (data.enckey || data.cryptokey)) {
       let headers = {
@@ -151,14 +142,13 @@ FxAccountsPush.prototype = {
         encryption: data.enc,
         encoding: data.con,
       };
-      cryptoParams = getCryptoParams(headers);
       // Ciphertext is (urlsafe) Base 64 encoded.
       message = ChromeUtils.base64URLDecode(data.message, {
         // The Push server may append padding.
         padding: "ignore",
       });
     }
-    return { message, cryptoParams };
+    return { headers, message };
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),

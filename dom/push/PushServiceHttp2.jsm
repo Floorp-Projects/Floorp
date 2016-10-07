@@ -23,7 +23,6 @@ Cu.import("resource://gre/modules/Promise.jsm");
 const {
   PushCrypto,
   concatArray,
-  getCryptoParams,
 } = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
 this.EXPORTED_SYMBOLS = ["PushServiceHttp2"];
@@ -157,13 +156,12 @@ PushChannelListener.prototype = {
         encryption: getHeaderField(aRequest, "Encryption"),
         encoding: getHeaderField(aRequest, "Content-Encoding"),
       };
-      let cryptoParams = getCryptoParams(headers);
       let msg = concatArray(this._message);
 
       this._mainListener._pushService._pushChannelOnStop(this._mainListener.uri,
                                                          this._ackUri,
-                                                         msg,
-                                                         cryptoParams);
+                                                         headers,
+                                                         msg);
     }
   }
 };
@@ -784,11 +782,11 @@ this.PushServiceHttp2 = {
     }
   },
 
-  _pushChannelOnStop: function(aUri, aAckUri, aMessage, cryptoParams) {
+  _pushChannelOnStop: function(aUri, aAckUri, aHeaders, aMessage) {
     console.debug("pushChannelOnStop()");
 
     this._mainPushService.receivedPushMessage(
-      aUri, "", aMessage, cryptoParams, record => {
+      aUri, "", aHeaders, aMessage, record => {
         // Always update the stored record.
         return record;
       }

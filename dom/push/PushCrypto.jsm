@@ -7,10 +7,15 @@
 
 const Cu = Components.utils;
 
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+
+XPCOMUtils.defineLazyGetter(this, 'gDOMBundle', () =>
+  Services.strings.createBundle('chrome://global/locale/dom/dom.properties'));
+
 Cu.importGlobalProperties(['crypto']);
 
-this.EXPORTED_SYMBOLS = ['PushCrypto', 'concatArray',
-                         'getCryptoParams'];
+this.EXPORTED_SYMBOLS = ['PushCrypto', 'concatArray'];
 
 var UTF8 = new TextEncoder('utf-8');
 
@@ -30,6 +35,59 @@ var ECDSA_KEY =  { name: 'ECDSA', namedCurve: 'P-256' };
 // A default keyid with a name that won't conflict with a real keyid.
 var DEFAULT_KEYID = '';
 
+/** Localized error property names. */
+
+// `Encryption` header missing or malformed.
+const BAD_ENCRYPTION_HEADER = 'PushMessageBadEncryptionHeader';
+// `Crypto-Key` or legacy `Encryption-Key` header missing.
+const BAD_CRYPTO_KEY_HEADER = 'PushMessageBadCryptoKeyHeader';
+const BAD_ENCRYPTION_KEY_HEADER = 'PushMessageBadEncryptionKeyHeader';
+// `Content-Encoding` header missing or contains unsupported encoding.
+const BAD_ENCODING_HEADER = 'PushMessageBadEncodingHeader';
+// `dh` parameter of `Crypto-Key` header missing or not base64url-encoded.
+const BAD_DH_PARAM = 'PushMessageBadSenderKey';
+// `salt` parameter of `Encryption` header missing or not base64url-encoded.
+const BAD_SALT_PARAM = 'PushMessageBadSalt';
+// `rs` parameter of `Encryption` header not a number or less than pad size.
+const BAD_RS_PARAM = 'PushMessageBadRecordSize';
+// Invalid or insufficient padding for encrypted chunk.
+const BAD_PADDING = 'PushMessageBadPaddingError';
+// Generic crypto error.
+const BAD_CRYPTO = 'PushMessageBadCryptoError';
+
+class CryptoError extends Error {
+  /**
+   * Creates an error object indicating an incoming push message could not be
+   * decrypted.
+   *
+   * @param {String} message A human-readable error message. This is only for
+   * internal module logging, and doesn't need to be localized.
+   * @param {String} property The localized property name from `dom.properties`.
+   * @param {String...} params Substitutions to insert into the localized
+   *  string.
+   */
+  constructor(message, property, ...params) {
+    super(message);
+    this.isCryptoError = true;
+    this.property = property;
+    this.params = params;
+  }
+
+  /**
+   * Formats a localized string for reporting decryption errors to the Web
+   * Console.
+   *
+   * @param {String} scope The scope of the service worker receiving the
+   *  message, prepended to any other substitutions in the string.
+   * @returns {String} The localized string.
+   */
+  format(scope) {
+    let params = [scope, ...this.params].map(String);
+    return gDOMBundle.formatStringFromName(this.property, params,
+                                           params.length);
+  }
+}
+
 function getEncryptionKeyParams(encryptKeyField) {
   if (!encryptKeyField) {
     return null;
@@ -48,48 +106,82 @@ function getEncryptionKeyParams(encryptKeyField) {
 }
 
 function getEncryptionParams(encryptField) {
+  if (!encryptField) {
+    throw new CryptoError('Missing encryption header',
+                          BAD_ENCRYPTION_HEADER);
+  }
   var p = encryptField.split(',', 1)[0];
   if (!p) {
-    return null;
+    throw new CryptoError('Encryption header missing params',
+                          BAD_ENCRYPTION_HEADER);
   }
   return p.split(';').reduce(parseHeaderFieldParams, {});
 }
 
-this.getCryptoParams = function(headers) {
+function getCryptoParams(headers) {
   if (!headers) {
     return null;
   }
 
   var keymap;
   var padSize;
+  if (!headers.encoding) {
+    throw new CryptoError('Missing Content-Encoding header',
+                          BAD_ENCODING_HEADER);
+  }
   if (headers.encoding == AESGCM_ENCODING) {
     // aesgcm uses the Crypto-Key header, 2 bytes for the pad length, and an
     // authentication secret.
     // https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-01
     keymap = getEncryptionKeyParams(headers.crypto_key);
+    if (!keymap) {
+      throw new CryptoError('Missing Crypto-Key header',
+                            BAD_CRYPTO_KEY_HEADER);
+    }
     padSize = 2;
   } else if (headers.encoding == AESGCM128_ENCODING) {
     // aesgcm128 uses Encryption-Key, 1 byte for the pad length, and no secret.
     // https://tools.ietf.org/html/draft-thomson-http-encryption-02
     keymap = getEncryptionKeyParams(headers.encryption_key);
+    if (!keymap) {
+      throw new CryptoError('Missing Encryption-Key header',
+                            BAD_ENCRYPTION_KEY_HEADER);
+    }
     padSize = 1;
-  }
-  if (!keymap) {
-    return null;
+  } else {
+    throw new CryptoError('Unsupported Content-Encoding: ' + headers.encoding,
+                          BAD_ENCODING_HEADER);
   }
 
   var enc = getEncryptionParams(headers.encryption);
-  if (!enc) {
-    return null;
-  }
   var dh = keymap[enc.keyid || DEFAULT_KEYID];
+  if (!dh) {
+    throw new CryptoError('Missing dh parameter', BAD_DH_PARAM);
+  }
   var salt = enc.salt;
-  var rs = (enc.rs)? parseInt(enc.rs, 10) : 4096;
-
-  if (!dh || !salt || isNaN(rs) || (rs <= padSize)) {
-    return null;
+  if (!salt) {
+    throw new CryptoError('Missing salt parameter', BAD_SALT_PARAM);
+  }
+  var rs = enc.rs ? parseInt(enc.rs, 10) : 4096;
+  if (isNaN(rs)) {
+    throw new CryptoError('rs parameter must be a number', BAD_RS_PARAM);
+  }
+  if (rs <= padSize) {
+    throw new CryptoError('rs parameter must be at least ' + padSize,
+                          BAD_RS_PARAM, padSize);
   }
   return {dh, salt, rs, padSize};
+}
+
+// Decodes an unpadded, base64url-encoded string.
+function base64URLDecode(string) {
+  try {
+    return ChromeUtils.base64URLDecode(string, {
+      // draft-ietf-httpbis-encryption-encoding-01 prohibits padding.
+      padding: 'reject',
+    });
+  } catch (ex) {}
+  return null;
 }
 
 var parseHeaderFieldParams = (m, v) => {
@@ -150,7 +242,7 @@ hkdf.prototype.extract = function(info, len) {
     .then(prkh => prkh.hash(input))
     .then(h => {
       if (h.byteLength < len) {
-        throw new Error('Length is too long');
+        throw new CryptoError('HKDF length is too long', BAD_CRYPTO);
       }
       return h.slice(0, len);
     });
@@ -159,7 +251,7 @@ hkdf.prototype.extract = function(info, len) {
 /* generate a 96-bit nonce for use in GCM, 48-bits of which are populated */
 function generateNonce(base, index) {
   if (index >= Math.pow(2, 48)) {
-    throw new Error('Error generating nonce - index is too large.');
+    throw new CryptoError('Nonce index is too large', BAD_CRYPTO);
   }
   var nonce = base.slice(0, 12);
   nonce = new Uint8Array(nonce);
@@ -190,24 +282,66 @@ this.PushCrypto = {
          ]));
   },
 
-  decodeMsg(aData, aPrivateKey, aPublicKey, aSenderPublicKey, aSalt, aRs,
-            aAuthenticationSecret, aPadSize) {
+  /**
+   * Decrypts a push message.
+   *
+   * @param {JsonWebKey} privateKey The ECDH private key of the subscription
+   *  receiving the message, in JWK form.
+   * @param {BufferSource} publicKey The ECDH public key of the subscription
+   *  receiving the message, in raw form.
+   * @param {BufferSource} authenticationSecret The 16-byte shared
+   *  authentication secret of the subscription receiving the message.
+   * @param {Object} headers The encryption headers passed to `getCryptoParams`.
+   * @param {BufferSource} ciphertext The encrypted message data.
+   * @returns {Promise} Resolves with a `Uint8Array` containing the decrypted
+   *  message data. Rejects with a `CryptoError` if decryption fails.
+   */
+  decrypt(privateKey, publicKey, authenticationSecret, headers, ciphertext) {
+    return Promise.resolve().then(_ => {
+      let cryptoParams = getCryptoParams(headers);
+      if (!cryptoParams) {
+        return null;
+      }
+      return this._decodeMsg(ciphertext, privateKey, publicKey,
+                             cryptoParams.dh, cryptoParams.salt,
+                             cryptoParams.rs, authenticationSecret,
+                             cryptoParams.padSize);
+    }).catch(error => {
+      if (error.isCryptoError) {
+        throw error;
+      }
+      // Web Crypto returns an unhelpful "operation failed for an
+      // operation-specific reason" error if decryption fails. We don't have
+      // context about what went wrong, so we throw a generic error instead.
+      throw new CryptoError('Bad encryption', BAD_CRYPTO);
+    });
+  },
+
+  _decodeMsg(aData, aPrivateKey, aPublicKey, aSenderPublicKey, aSalt, aRs,
+             aAuthenticationSecret, aPadSize) {
 
     if (aData.byteLength === 0) {
       // Zero length messages will be passed as null.
-      return Promise.resolve(null);
+      return null;
     }
 
     // The last chunk of data must be less than aRs, if it is not return an
     // error.
     if (aData.byteLength % (aRs + 16) === 0) {
-      return Promise.reject(new Error('Data truncated'));
+      throw new CryptoError('Encrypted data truncated', BAD_CRYPTO);
     }
 
-    let senderKey = ChromeUtils.base64URLDecode(aSenderPublicKey, {
-      // draft-ietf-httpbis-encryption-encoding-01 prohibits padding.
-      padding: "reject",
-    });
+    let senderKey = base64URLDecode(aSenderPublicKey);
+    if (!senderKey) {
+      throw new CryptoError('dh parameter is not base64url-encoded',
+                            BAD_DH_PARAM);
+    }
+
+    let salt = base64URLDecode(aSalt);
+    if (!salt) {
+      throw new CryptoError('salt parameter is not base64url-encoded',
+                            BAD_SALT_PARAM);
+    }
 
     return Promise.all([
       crypto.subtle.importKey('raw', senderKey, ECDH_KEY,
@@ -220,8 +354,7 @@ this.PushCrypto = {
                                    subscriptionPrivateKey, 256))
     .then(ikm => this._deriveKeyAndNonce(aPadSize,
                                          new Uint8Array(ikm),
-                                         ChromeUtils.base64URLDecode(aSalt,
-                                                    { padding: "reject" }),
+                                         salt,
                                          aPublicKey,
                                          senderKey,
                                          aAuthenticationSecret))
@@ -298,22 +431,23 @@ this.PushCrypto = {
    */
   _unpadChunk(padSize, decoded) {
     if (padSize < 1 || padSize > 2) {
-      throw new Error('Unsupported pad size');
+      throw new CryptoError('Unsupported pad size', BAD_CRYPTO);
     }
     if (decoded.length < padSize) {
-      throw new Error('Decoded array is too short!');
+      throw new CryptoError('Decoded array is too short!', BAD_PADDING,
+                            padSize);
     }
     var pad = decoded[0];
     if (padSize == 2) {
       pad = (pad << 8) | decoded[1];
     }
     if (pad > decoded.length) {
-      throw new Error ('Padding is wrong!');
+      throw new CryptoError('Padding is wrong!', BAD_PADDING, padSize);
     }
     // All padded bytes must be zero except the first one.
     for (var i = padSize; i <= pad; i++) {
       if (decoded[i] !== 0) {
-        throw new Error('Padding is wrong!');
+        throw new CryptoError('Padding is wrong!', BAD_PADDING, padSize);
       }
     }
     return decoded.slice(pad + padSize);

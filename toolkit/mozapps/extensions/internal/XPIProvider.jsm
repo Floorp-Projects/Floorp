@@ -976,11 +976,24 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
     // localization placeholders still in place.
     let rawManifest = extension.rawManifest;
 
+    let creator = rawManifest.author;
+    let homepageURL = rawManifest.homepage_url;
+
+    // Allow developer to override creator and homepage_url.
+    if (rawManifest.developer) {
+      if (rawManifest.developer.name) {
+        creator = rawManifest.developer.name;
+      }
+      if (rawManifest.developer.url) {
+        homepageURL = rawManifest.developer.url;
+      }
+    }
+
     let result = {
       name: extension.localize(rawManifest.name, aLocale),
       description: extension.localize(rawManifest.description, aLocale),
-      creator: extension.localize(rawManifest.creator, aLocale),
-      homepageURL: extension.localize(rawManifest.homepage_url, aLocale),
+      creator: extension.localize(creator, aLocale),
+      homepageURL: extension.localize(homepageURL, aLocale),
 
       developers: null,
       translators: null,
