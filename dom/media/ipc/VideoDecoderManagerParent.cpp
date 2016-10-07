@@ -15,6 +15,7 @@
 #include "nsThreadUtils.h"
 #include "ImageContainer.h"
 #include "mozilla/layers/VideoBridgeChild.h"
+#include "mozilla/SharedThreadPool.h"
 
 #if XP_WIN
 #include <objbase.h>
@@ -36,7 +37,6 @@ VideoDecoderManagerParent::StoreImage(TextureClient* aTexture)
 }
 
 StaticRefPtr<nsIThread> sVideoDecoderManagerThread;
-StaticRefPtr<nsIThread> sVideoDecoderTaskThread;
 StaticRefPtr<TaskQueue> sManagerTaskQueue;
 
 class ManagerThreadShutdownObserver : public nsIObserver
@@ -90,22 +90,6 @@ VideoDecoderManagerParent::StartupThreads()
 
   sManagerTaskQueue = new TaskQueue(managerThread.forget());
 
-  RefPtr<nsIThread> taskThread;
-  rv = NS_NewNamedThread("VideoTaskQueue", getter_AddRefs(taskThread));
-  if (NS_FAILED(rv)) {
-    sVideoDecoderManagerThread->Shutdown();
-    sVideoDecoderManagerThread = nullptr;
-    return;
-  }
-  sVideoDecoderTaskThread = taskThread;
-
-#ifdef XP_WIN
-  sVideoDecoderTaskThread->Dispatch(NS_NewRunnableFunction([]() {
-    HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-    MOZ_ASSERT(hr == S_OK);
-  }), NS_DISPATCH_NORMAL);
-#endif
-
   ManagerThreadShutdownObserver* obs = new ManagerThreadShutdownObserver();
   observerService->AddObserver(obs, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 }
@@ -115,8 +99,6 @@ VideoDecoderManagerParent::ShutdownThreads()
 {
   sManagerTaskQueue->BeginShutdown();
   sManagerTaskQueue->AwaitShutdownAndIdle();
-  sVideoDecoderTaskThread->Shutdown();
-  sVideoDecoderTaskThread = nullptr;
 
   sVideoDecoderManagerThread->Dispatch(NS_NewRunnableFunction([]() {
     layers::VideoBridgeChild::Shutdown();
@@ -163,8 +145,7 @@ VideoDecoderManagerParent::~VideoDecoderManagerParent()
 PVideoDecoderParent*
 VideoDecoderManagerParent::AllocPVideoDecoderParent()
 {
-  RefPtr<nsIEventTarget> target = sVideoDecoderTaskThread;;
-  return new VideoDecoderParent(this, sManagerTaskQueue, new TaskQueue(target.forget()));
+  return new VideoDecoderParent(this, sManagerTaskQueue, new TaskQueue(SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoDecoderParent"), 4)));
 }
 
 bool
