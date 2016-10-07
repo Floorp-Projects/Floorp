@@ -40,6 +40,10 @@ extern GMPPlatformAPI* GetPlatform();
 typedef std::vector<uint8_t> KeyId;
 typedef std::vector<uint8_t> Key;
 
+// The session response size should be within a reasonable limit.
+// The size 64 KB is referenced from web-platform-test.
+static const uint32_t kMaxSessionResponseLength = 65536;
+
 // Provide limitation for KeyIds length and webm initData size.
 static const uint32_t kMaxWebmInitDataSize = 65536;
 static const uint32_t kMaxKeyIdsLength = 512;
