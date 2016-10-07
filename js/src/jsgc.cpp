@@ -864,8 +864,8 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     mallocBytesUntilGC(0),
     mallocGCTriggered(false),
     alwaysPreserveCode(false),
-    inUnsafeRegion(0),
 #ifdef DEBUG
+    inUnsafeRegion(0),
     noGCOrAllocationCheck(0),
     noNurseryAllocationCheck(0),
     arenasEmptyAtShutdown(true),
@@ -6133,7 +6133,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
     MOZ_ASSERT(!rt->mainThread.suppressGC);
 
     // Assert if this is a GC unsafe region.
-    verifyIsSafeToGC();
+    JS::AutoAssertOnGC::VerifyIsSafeToGC(rt);
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
@@ -6974,6 +6974,7 @@ JS::GetGCNumber()
 }
 #endif
 
+#ifdef DEBUG
 JS::AutoAssertOnGC::AutoAssertOnGC()
   : gc(nullptr), gcNumber(0)
 {
@@ -7011,6 +7012,13 @@ JS::AutoAssertOnGC::~AutoAssertOnGC()
          */
         MOZ_ASSERT(gcNumber == gc->gcNumber(), "GC ran inside an AutoAssertOnGC scope.");
     }
+}
+
+/* static */ void
+JS::AutoAssertOnGC::VerifyIsSafeToGC(JSRuntime* rt)
+{
+    if (rt->gc.isInsideUnsafeRegion())
+        MOZ_CRASH("[AutoAssertOnGC] possible GC in GC-unsafe region");
 }
 
 JS::AutoAssertNoAlloc::AutoAssertNoAlloc(JSContext* cx)
