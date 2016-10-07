@@ -45,8 +45,6 @@ Element.prototype.toString = function() {
     return `(${this.list.map(x => x.toString()).join(" ")})`;
 };
 
-var module;
-
 setJitCompilerOption('wasm.test-mode', 1);
 
 // Creates a tree of s-expressions. Ported from Binaryen's SExpressionParser.
@@ -194,9 +192,10 @@ function parseSExpression(text) {
 
 var imports = {
     spectest: {
-        print: function (x) {
-            print(x);
-        }
+        print,
+        global: 666,
+        table: new WebAssembly.Table({ initial: 10, maximum: 20, element: "anyfunc" }),
+        memory: new WebAssembly.Memory({ initial: 1, maximum: 2 }),
     }
 };
 
@@ -259,6 +258,29 @@ function testNaNEqualityFunction() {
 }
 
 var constantCache = new Map;
+var moduleCache = new Map;
+
+function getModuleAndField(e) {
+    let nextArgIndex = 1;
+    let nameExpr = e.list[nextArgIndex];
+    let name = nameExpr.str;
+
+    let moduleName = '__last_module__';
+    if (nameExpr.dollared && !nameExpr.quoted) {
+        moduleName = name;
+        nextArgIndex += 1;
+    }
+
+    if (!moduleCache.has(moduleName)) {
+        throw new Error('We should have a module here before trying to invoke things!');
+    }
+
+    let module = moduleCache.get(moduleName);
+    let fieldName = e.list[nextArgIndex++].str;
+    let rest = e.list.slice(nextArgIndex).map(exec);
+
+    return [module, fieldName, rest];
+}
 
 // Recursively execute the expression.
 function exec(e) {
@@ -266,25 +288,38 @@ function exec(e) {
 
     if (exprName === "module") {
         let moduleText = e.toString();
-        module = wasmEvalText(moduleText, imports).exports;
+
+        let moduleName = null;
+        if (e.list && e.list.length >= 2 && e.list[1].str && e.list[1].dollared) {
+            moduleName = e.list[1].str;
+            moduleText = moduleText.replace(`$${moduleName}`, '');
+        }
+
+        let module = wasmEvalText(moduleText, imports).exports;
+        moduleCache.set('__last_module__', module);
+        if (moduleName) {
+            moduleCache.set(moduleName, module);
+        }
+
         return;
     }
 
     if (exprName === "invoke") {
-        var name = e.list[1].str;
-        var args = e.list.slice(2).map(exec);
-        var fn = null;
+        let [module, field, args] = getModuleAndField(e);
 
-        if (module === null) {
-            throw new Error('We should have a module here before trying to invoke things!');
-        }
-
-        if (typeof module[name] === "function") {
-            fn = module[name];
+        let fn = null;
+        if (typeof module[field] === "function") {
+            fn = module[field];
         } else {
-            assert(false, "Exported function not found: " + e);
+            throw new Error("Exported function not found: " + e);
         }
+
         return fn.apply(null, args);
+    }
+
+    if (exprName === "get") {
+        let [module, field, args] = getModuleAndField(e);
+        return module[field];
     }
 
     if (exprName.indexOf(".const") > 0) {
@@ -372,6 +407,26 @@ function exec(e) {
                 warn(`expected error message "${errMsg}", got "${err}"`);
         }
         assert(caught, "assert_trap exception not caught");
+        return;
+    }
+
+    if (exprName === 'assert_unlinkable') {
+        let moduleText = e.list[1].toString();
+        let errMsg = e.list[2];
+        if (errMsg) {
+            assert(errMsg.quoted, "assert_invalid second argument must be a string");
+            errMsg.quoted = false;
+        }
+        let module = new WebAssembly.Module(wasmTextToBinary(moduleText));
+        let caught = false;
+        try {
+            new WebAssembly.Instance(module, imports);
+        } catch(err) {
+            caught = true;
+            if (err.toString().indexOf(errMsg) === -1)
+                warn(`expected error message "${errMsg}", got "${err}"`);
+        }
+        assert(caught, "assert_unlinkable exception not caught");
         return;
     }
 
