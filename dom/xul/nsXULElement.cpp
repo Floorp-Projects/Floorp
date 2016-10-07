@@ -95,6 +95,7 @@
 #include "nsIController.h"
 #include "nsQueryObject.h"
 #include <algorithm>
+#include "nsIDOMChromeWindow.h"
 
 // The XUL doc interface
 #include "nsIDOMXULDocument.h"
@@ -191,6 +192,8 @@ nsXULElement::nsXULSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mFrameLoader");
     cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIFrameLoader*, mFrameLoader));
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mOpener");
+    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(mozIDOMWindowProxy*, mOpener));
 }
 
 nsINode::nsSlots*
@@ -1585,6 +1588,30 @@ nsXULElement::LoadSrc()
         slots->mFrameLoader = nsFrameLoader::Create(this, false);
         NS_ENSURE_TRUE(slots->mFrameLoader, NS_OK);
 
+        nsCOMPtr<nsPIDOMWindowOuter> opener;
+        if (slots->mOpener) {
+            opener = nsPIDOMWindowOuter::From(slots->mOpener);
+            slots->mOpener = nullptr;
+        } else {
+            // If we are a content-primary xul-browser, we want to take the opener property!
+            nsCOMPtr<nsIDOMChromeWindow> chromeWindow = do_QueryInterface(OwnerDoc()->GetWindow());
+            if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            NS_LITERAL_STRING("content-primary"), eIgnoreCase) &&
+                chromeWindow) {
+                nsCOMPtr<mozIDOMWindowProxy> wp;
+                chromeWindow->TakeOpenerForInitialContentBrowser(getter_AddRefs(wp));
+                opener = nsPIDOMWindowOuter::From(wp);
+            }
+        }
+
+        if (opener) {
+            nsCOMPtr<nsIDocShell> docShell;
+            nsresult rv = slots->mFrameLoader->GetDocShell(getter_AddRefs(docShell));
+            NS_ENSURE_SUCCESS(rv, rv);
+            nsCOMPtr<nsPIDOMWindowOuter> outerWindow = docShell->GetWindow();
+            outerWindow->SetOpenerWindow(opener, true);
+        }
+
         (new AsyncEventDispatcher(this,
                                   NS_LITERAL_STRING("XULFrameLoaderCreated"),
                                   /* aBubbles */ true))->RunDOMEventWhenSafe();
@@ -1626,6 +1653,15 @@ nsXULElement::GetParentApplication(mozIApplication** aApplication)
 
     *aApplication = nullptr;
     return NS_OK;
+}
+
+void
+nsXULElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv)
+{
+    nsXULSlots* slots = static_cast<nsXULSlots*>(Slots());
+    MOZ_ASSERT(!slots->mFrameLoader, "Cannot SetOpenerWindow when a frame loader is present");
+
+    slots->mOpener = aWindow;
 }
 
 nsresult

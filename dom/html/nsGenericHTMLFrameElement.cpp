@@ -36,6 +36,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFrameElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFrameElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOpenerWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserElementAPI)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserElementAudioChannels)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -47,6 +48,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGenericHTMLFrameElement,
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameLoader)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOpenerWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserElementAPI)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserElementAudioChannels)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -153,6 +155,15 @@ nsGenericHTMLFrameElement::EnsureFrameLoader()
   if (mIsPrerendered) {
     mFrameLoader->SetIsPrerendered();
   }
+  if (mOpenerWindow) {
+    nsCOMPtr<nsIDocShell> docShell;
+    mFrameLoader->GetDocShell(getter_AddRefs(docShell));
+    if (docShell) {
+      nsCOMPtr<nsPIDOMWindowOuter> outerWindow = docShell->GetWindow();
+      outerWindow->SetOpenerWindow(nsPIDOMWindowOuter::From(mOpenerWindow), true);
+      mOpenerWindow = nullptr;
+    }
+  }
 }
 
 nsresult
@@ -210,6 +221,13 @@ nsGenericHTMLFrameElement::GetParentApplication(mozIApplication** aApplication)
   }
 
   return NS_OK;
+}
+
+void
+nsGenericHTMLFrameElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv)
+{
+  MOZ_ASSERT(!mFrameLoader);
+  mOpenerWindow = nsPIDOMWindowOuter::From(aWindow);
 }
 
 void

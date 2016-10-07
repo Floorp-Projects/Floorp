@@ -994,6 +994,9 @@ nsContentTreeOwner::ProvideWindow(mozIDOMWindowProxy* aParent,
 
     // Get a new rendering area from the browserDOMWin.  We don't want
     // to be starting any loads here, so get it with a null URI.
+    //
+    // This method handles setting the opener for us, so we don't need to set it
+    // ourselves.
     return browserDOMWin->OpenURI(nullptr, aParent, openLocation,
                                   nsIBrowserDOMWindow::OPEN_NEW, aReturn);
   }

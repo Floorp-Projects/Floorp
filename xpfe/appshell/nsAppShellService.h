@@ -42,6 +42,7 @@ protected:
                                int32_t aInitialWidth, int32_t aInitialHeight,
                                bool aIsHiddenWindow,
                                nsITabParent *aOpeningTab,
+                               mozIDOMWindowProxy *aOpenerWindow,
                                nsWebShellWindow **aResult);
   uint32_t CalculateWindowZLevel(nsIXULWindow *aParent, uint32_t aChromeMask);
 
