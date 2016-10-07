@@ -13,8 +13,10 @@
 
 #include "webrtc/modules/video_capture/device_info_impl.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
+#include "base/singleton.h"
 
 #include <Dshow.h>
+#include <windows.h>
 
 namespace webrtc
 {
@@ -100,7 +102,25 @@ private:
     ICreateDevEnum* _dsDevEnum;
     bool _CoUninitializeIsRequired;
     std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
+    HWND _hwnd;
+    WNDCLASS _wndClass;
+    HINSTANCE _hInstance;
 };
+
+class DeviceInfoDSSingleton {
+public:
+  DeviceInfoDSSingleton::DeviceInfoDSSingleton()
+    : mDeviceInfoDS(nullptr) {}
+
+  static DeviceInfoDS*& GetInfo() {
+    return gTheInstance.get()->mDeviceInfoDS;
+  }
+
+private:
+  static Singleton<DeviceInfoDSSingleton> gTheInstance;
+  DeviceInfoDS* mDeviceInfoDS;
+};
+
 }  // namespace videocapturemodule
 }  // namespace webrtc
 #endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_

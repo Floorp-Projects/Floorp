@@ -6286,40 +6286,52 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
     }
 }
 
-JS_PUBLIC_API(int)
-JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt)
+JS_PUBLIC_API(bool)
+JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t* valueOut)
 {
+    MOZ_ASSERT(valueOut);
 #ifndef JS_CODEGEN_NONE
     JSRuntime* rt = cx->runtime();
     switch (opt) {
       case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
-        return jit::JitOptions.baselineWarmUpThreshold;
+        *valueOut = jit::JitOptions.baselineWarmUpThreshold;
+        break;
       case JSJITCOMPILER_ION_WARMUP_TRIGGER:
-        return jit::JitOptions.forcedDefaultIonWarmUpThreshold.isSome()
-             ? jit::JitOptions.forcedDefaultIonWarmUpThreshold.ref()
-             : jit::OptimizationInfo::CompilerWarmupThreshold;
+        *valueOut = jit::JitOptions.forcedDefaultIonWarmUpThreshold.isSome()
+                  ? jit::JitOptions.forcedDefaultIonWarmUpThreshold.ref()
+                  : jit::OptimizationInfo::CompilerWarmupThreshold;
+        break;
       case JSJITCOMPILER_ION_FORCE_IC:
-        return jit::JitOptions.forceInlineCaches;
+        *valueOut = jit::JitOptions.forceInlineCaches;
+        break;
       case JSJITCOMPILER_ION_ENABLE:
-        return JS::ContextOptionsRef(cx).ion();
+        *valueOut = JS::ContextOptionsRef(cx).ion();
+        break;
       case JSJITCOMPILER_BASELINE_ENABLE:
-        return JS::ContextOptionsRef(cx).baseline();
+        *valueOut = JS::ContextOptionsRef(cx).baseline();
+        break;
       case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
-        return rt->canUseOffthreadIonCompilation();
+        *valueOut = rt->canUseOffthreadIonCompilation();
+        break;
       case JSJITCOMPILER_ASMJS_ATOMICS_ENABLE:
-        return jit::JitOptions.asmJSAtomicsEnable ? 1 : 0;
+        *valueOut = jit::JitOptions.asmJSAtomicsEnable ? 1 : 0;
         break;
       case JSJITCOMPILER_WASM_TEST_MODE:
-        return jit::JitOptions.wasmTestMode ? 1 : 0;
-      case JSJITCOMPILER_WASM_FOLD_OFFSETS:
-        return jit::JitOptions.wasmFoldOffsets ? 1 : 0;
-      case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
-        return jit::JitOptions.ionInterruptWithoutSignals ? 1 : 0;
-      default:
+        *valueOut = jit::JitOptions.wasmTestMode ? 1 : 0;
         break;
+      case JSJITCOMPILER_WASM_FOLD_OFFSETS:
+        *valueOut = jit::JitOptions.wasmFoldOffsets ? 1 : 0;
+        break;
+      case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
+        *valueOut = jit::JitOptions.ionInterruptWithoutSignals ? 1 : 0;
+        break;
+      default:
+        return false;
     }
+#else
+    *valueOut = 0;
 #endif
-    return 0;
+    return true;
 }
 
 /************************************************************************/

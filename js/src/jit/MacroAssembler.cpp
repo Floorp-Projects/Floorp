@@ -955,7 +955,7 @@ void
 MacroAssembler::copySlotsFromTemplate(Register obj, const NativeObject* templateObj,
                                       uint32_t start, uint32_t end)
 {
-    uint32_t nfixed = Min(templateObj->numFixedSlots(), end);
+    uint32_t nfixed = Min(templateObj->numFixedSlotsForCompilation(), end);
     for (unsigned i = start; i < nfixed; i++)
         storeValue(templateObj->getFixedSlot(i), Address(obj, NativeObject::getFixedSlotOffset(i)));
 }
@@ -1255,7 +1255,7 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
             initGCSlots(obj, temp, ntemplate, initContents);
 
             if (ntemplate->hasPrivate() && !ntemplate->is<TypedArrayObject>()) {
-                uint32_t nfixed = ntemplate->numFixedSlots();
+                uint32_t nfixed = ntemplate->numFixedSlotsForCompilation();
                 storePtr(ImmPtr(ntemplate->getPrivate()),
                          Address(obj, NativeObject::getPrivateDataOffset(nfixed)));
             }

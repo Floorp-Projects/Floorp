@@ -850,6 +850,7 @@ class IonBuilder
     InliningStatus inlineStrCharCodeAt(CallInfo& callInfo);
     InliningStatus inlineConstantCharCodeAt(CallInfo& callInfo);
     InliningStatus inlineStrFromCharCode(CallInfo& callInfo);
+    InliningStatus inlineStrFromCodePoint(CallInfo& callInfo);
     InliningStatus inlineStrCharAt(CallInfo& callInfo);
 
     // String intrinsics.

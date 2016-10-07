@@ -80,6 +80,7 @@ class ObjOperandId : public OperandId
 
 #define CACHE_IR_OPS(_)                   \
     _(GuardIsObject)                      \
+    _(GuardType)                          \
     _(GuardShape)                         \
     _(GuardGroup)                         \
     _(GuardProto)                         \
@@ -246,6 +247,11 @@ class MOZ_RAII CacheIRWriter
     ObjOperandId guardIsObject(ValOperandId val) {
         writeOpWithOperandId(CacheOp::GuardIsObject, val);
         return ObjOperandId(val.id());
+    }
+    void guardType(ValOperandId val, JSValueType type) {
+        writeOpWithOperandId(CacheOp::GuardType, val);
+        static_assert(sizeof(type) == sizeof(uint8_t), "JSValueType should fit in a byte");
+        buffer_.writeByte(uint32_t(type));
     }
     void guardShape(ObjOperandId obj, Shape* shape) {
         writeOpWithOperandId(CacheOp::GuardShape, obj);
@@ -421,6 +427,8 @@ class MOZ_RAII GetPropIRGenerator
                                             ObjOperandId objId);
     MOZ_MUST_USE bool tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj,
                                                ObjOperandId objId);
+
+    MOZ_MUST_USE bool tryAttachPrimitive(CacheIRWriter& writer, ValOperandId valId);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;

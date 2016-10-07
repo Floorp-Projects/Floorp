@@ -90,14 +90,6 @@ CacheIndexIterator::AddRecord(CacheIndexRecord *aRecord)
   mRecords.AppendElement(aRecord);
 }
 
-void
-CacheIndexIterator::AddRecords(const nsTArray<CacheIndexRecord *> &aRecords)
-{
-  LOG(("CacheIndexIterator::AddRecords() [this=%p]", this));
-
-  mRecords.AppendElements(aRecords);
-}
-
 bool
 CacheIndexIterator::RemoveRecord(CacheIndexRecord *aRecord)
 {

@@ -717,7 +717,7 @@ protected:
   bool mIsHtml;
   bool mWarnAboutMultipartHtml;
   bool mWarnAboutSyncHtml;
-  int64_t mLoadTotal; // 0 if not known.
+  int64_t mLoadTotal; // -1 if not known.
   // Amount of script-exposed (i.e. after undoing gzip compresion) data
   // received.
   uint64_t mDataAvailable;

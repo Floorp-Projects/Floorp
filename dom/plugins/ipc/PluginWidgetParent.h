@@ -29,7 +29,8 @@ public:
   virtual ~PluginWidgetParent();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-  virtual bool RecvCreate(nsresult* aResult) override;
+  virtual bool RecvCreate(nsresult* aResult, uint64_t* aScrollCaptureId,
+                          uintptr_t* aPluginInstanceId) override;
   virtual bool RecvSetFocus(const bool& aRaise) override;
   virtual bool RecvGetNativePluginPort(uintptr_t* value) override;
   bool RecvSetNativeChildWindow(const uintptr_t& aChildWindow) override;

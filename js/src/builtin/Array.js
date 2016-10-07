@@ -877,6 +877,61 @@ function ArrayToString() {
     return callContentFunction(func, array);
 }
 
+// ES2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f
+// 22.1.3.27 Array.prototype.toLocaleString ([ reserved1 [ , reserved2 ] ])
+// ES2017 Intl draft rev 78bbe7d1095f5ff3760ac4017ed366026e4cb276
+// 13.4.1 Array.prototype.toLocaleString ([ locales [ , options ]])
+function ArrayToLocaleString(locales, options) {
+    // Step 1 (ToObject already performed in native code).
+    assert(IsObject(this), "|this| should be an object");
+    var array = this;
+
+    // Step 2.
+    var len = ToLength(array.length);
+
+    // Step 4.
+    if (len === 0)
+        return "";
+
+    // Step 5.
+    var firstElement = array[0];
+
+    // Steps 6-7.
+    var R;
+    if (firstElement === undefined || firstElement === null) {
+        R = "";
+    } else {
+#if EXPOSE_INTL_API
+        R = ToString(callContentFunction(firstElement.toLocaleString, firstElement, locales, options));
+#else
+        R = ToString(callContentFunction(firstElement.toLocaleString, firstElement));
+#endif
+    }
+
+    // Step 3 (reordered).
+    // We don't (yet?) implement locale-dependent separators.
+    var separator = ",";
+
+    // Steps 8-9.
+    for (var k = 1; k < len; k++) {
+        // Step 9.b.
+        var nextElement = array[k];
+
+        // Steps 9.a, 9.c-e.
+        R += separator;
+        if (!(nextElement === undefined || nextElement === null)) {
+#if EXPOSE_INTL_API
+            R += ToString(callContentFunction(nextElement.toLocaleString, nextElement, locales, options));
+#else
+            R += ToString(callContentFunction(nextElement.toLocaleString, nextElement));
+#endif
+        }
+    }
+
+    // Step 10.
+    return R;
+}
+
 // ES 2016 draft Mar 25, 2016 22.1.2.5.
 function ArraySpecies() {
     // Step 1.

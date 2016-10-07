@@ -1191,6 +1191,7 @@ VirtualKey::FillKbdState(PBYTE aKbdState,
 
 uint8_t NativeKey::sDispatchedKeyOfAppCommand = 0;
 NativeKey* NativeKey::sLatestInstance = nullptr;
+const MSG NativeKey::sEmptyMSG = {};
 
 LazyLogModule sNativeKeyLogger("NativeKeyWidgets");
 
@@ -1200,8 +1201,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
                      HKL aOverrideKeyboardLayout,
                      nsTArray<FakeCharMsg>* aFakeCharMsgs)
   : mLastInstance(sLatestInstance)
-  , mRemovingMsg(EmptyMSG())
-  , mReceivedMsg(EmptyMSG())
+  , mRemovingMsg(sEmptyMSG)
+  , mReceivedMsg(sEmptyMSG)
   , mWidget(aWidget)
   , mDispatcher(aWidget->GetTextEventDispatcher())
   , mMsg(aMessage)
@@ -2910,7 +2911,7 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
   AutoRestore<MSG> saveLastRemovingMsg(mRemovingMsg);
   mRemovingMsg = nextKeyMsg;
 
-  mReceivedMsg = EmptyMSG();
+  mReceivedMsg = sEmptyMSG;
   AutoRestore<MSG> ensureToClearRecivedMsg(mReceivedMsg);
 
   // On Metrofox, PeekMessage() sometimes returns WM_NULL even if we specify
