@@ -48,6 +48,7 @@ class MediaResource;
 class MediaDecoder;
 class VideoFrameContainer;
 namespace dom {
+class AudioChannelAgent;
 class MediaKeys;
 class TextTrack;
 class TimeRanges;
@@ -1221,9 +1222,8 @@ protected:
   // Notifies the audio channel agent when the element starts or stops playing.
   void NotifyAudioChannelAgent(bool aPlaying);
 
-  // Creates the audio channel agent if needed.  Returns true if the audio
-  // channel agent is ready to be used.
-  bool MaybeCreateAudioChannelAgent();
+  // Creates the audio channel agent.
+  void CreateAudioChannelAgent();
 
   // Determine if the element should be paused because of suspend conditions.
   bool ShouldElementBePaused();
@@ -1618,7 +1618,7 @@ protected:
   bool mDisableVideo;
 
   // An agent used to join audio channel service.
-  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
+  RefPtr<AudioChannelAgent> mAudioChannelAgent;
 
   RefPtr<TextTrackManager> mTextTrackManager;
 

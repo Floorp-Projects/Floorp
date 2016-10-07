@@ -5710,21 +5710,17 @@ ImageContainer* HTMLMediaElement::GetImageContainer()
   return container ? container->GetImageContainer() : nullptr;
 }
 
-bool
-HTMLMediaElement::MaybeCreateAudioChannelAgent()
+void
+HTMLMediaElement::CreateAudioChannelAgent()
 {
-  if (!mAudioChannelAgent) {
-    nsresult rv;
-    mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
-    }
-    MOZ_ASSERT(mAudioChannelAgent);
-    mAudioChannelAgent->InitWithWeakCallback(OwnerDoc()->GetInnerWindow(),
-                                             static_cast<int32_t>(mAudioChannel),
-                                             this);
+  if (mAudioChannelAgent) {
+    return;
   }
-  return true;
+
+  mAudioChannelAgent = new AudioChannelAgent();
+  mAudioChannelAgent->InitWithWeakCallback(OwnerDoc()->GetInnerWindow(),
+                                           static_cast<int32_t>(mAudioChannel),
+                                           this);
 }
 
 bool
@@ -5786,9 +5782,8 @@ HTMLMediaElement::UpdateAudioChannelPlayingState()
        return;
     }
 
-    if (MaybeCreateAudioChannelAgent()) {
-      NotifyAudioChannelAgent(mPlayingThroughTheAudioChannel);
-    }
+    CreateAudioChannelAgent();
+    NotifyAudioChannelAgent(mPlayingThroughTheAudioChannel);
   }
 }
 
