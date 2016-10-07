@@ -1901,6 +1901,19 @@ LIRGenerator::visitFromCharCode(MFromCharCode* ins)
 }
 
 void
+LIRGenerator::visitFromCodePoint(MFromCodePoint* ins)
+{
+    MDefinition* codePoint = ins->getOperand(0);
+
+    MOZ_ASSERT(codePoint->type() == MIRType::Int32);
+
+    LFromCodePoint* lir = new(alloc()) LFromCodePoint(useRegister(codePoint));
+    assignSnapshot(lir, Bailout_BoundsCheck);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitStart(MStart* start)
 {
     LStart* lir = new(alloc()) LStart;

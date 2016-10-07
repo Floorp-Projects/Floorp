@@ -10809,11 +10809,16 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   }
 
   // Getting the right triggeringPrincipal needs to be updated and is only
-  // ready for use once bug 1182569 landed.
-  // Until then, we cannot rely on the triggeringPrincipal for TYPE_DOCUMENT
-  // or TYPE_SUBDOCUMENT loads.  Notice the triggeringPrincipal falls back to
-  // systemPrincipal below.
+  // ready for use once bug 1182569 landed. Until then, we cannot rely on
+  // the triggeringPrincipal for TYPE_DOCUMENT loads. Please note that the
+  // triggeringPrincipal falls back to the systemPrincipal below.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aTriggeringPrincipal;
+
+  // Make sure that we always get a non null triggeringPrincipal for
+  // loads of type TYPE_SUBDOCUMENT.
+  MOZ_ASSERT(aContentPolicyType != nsIContentPolicy::TYPE_SUBDOCUMENT ||
+             triggeringPrincipal, "Need a valid triggeringPrincipal");
+
   if (!triggeringPrincipal) {
     if (aReferrerURI) {
       rv = CreatePrincipalFromReferrer(aReferrerURI,

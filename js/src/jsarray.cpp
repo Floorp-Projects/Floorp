@@ -1128,14 +1128,14 @@ struct ArrayJoinDenseKernelFunctor {
     }
 };
 
-template <bool Locale, typename SeparatorOp>
+template <typename SeparatorOp>
 static bool
 ArrayJoinKernel(JSContext* cx, SeparatorOp sepOp, HandleObject obj, uint32_t length,
                StringBuffer& sb)
 {
     uint32_t i = 0;
 
-    if (!Locale && !ObjectMayHaveExtraIndexedProperties(obj)) {
+    if (!ObjectMayHaveExtraIndexedProperties(obj)) {
         ArrayJoinDenseKernelFunctor<SeparatorOp> functor(cx, sepOp, obj, length, sb, &i);
         DenseElementResult result = CallBoxedOrUnboxedSpecialization(functor, obj);
         if (result == DenseElementResult::Failure)
@@ -1152,14 +1152,6 @@ ArrayJoinKernel(JSContext* cx, SeparatorOp sepOp, HandleObject obj, uint32_t len
             if (!GetElement(cx, obj, i, &hole, &v))
                 return false;
             if (!hole && !v.isNullOrUndefined()) {
-                if (Locale) {
-                    RootedValue fun(cx);
-                    if (!GetProperty(cx, v, cx->names().toLocaleString, &fun))
-                        return false;
-
-                    if (!Call(cx, fun, v, &v))
-                        return false;
-                }
                 if (!ValueToStringBuffer(cx, v, sb))
                     return false;
             }
@@ -1172,13 +1164,14 @@ ArrayJoinKernel(JSContext* cx, SeparatorOp sepOp, HandleObject obj, uint32_t len
     return true;
 }
 
-template <bool Locale>
+/* ES5 15.4.4.5 */
 bool
-ArrayJoin(JSContext* cx, CallArgs& args)
+js::array_join(JSContext* cx, unsigned argc, Value* vp)
 {
-    // This method is shared by Array.prototype.join and
-    // Array.prototype.toLocaleString. The steps in ES5 are nearly the same, so
-    // the annotations in this function apply to both toLocaleString and join.
+    JS_CHECK_RECURSION(cx, return false);
+
+    AutoSPSEntry pseudoFrame(cx->runtime(), "Array.prototype.join");
+    CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1
     RootedObject obj(cx, ToObject(cx, args.thisv()));
@@ -1201,7 +1194,7 @@ ArrayJoin(JSContext* cx, CallArgs& args)
 
     // Steps 4 and 5
     RootedLinearString sepstr(cx);
-    if (!Locale && args.hasDefined(0)) {
+    if (args.hasDefined(0)) {
         JSString *s = ToString<CanGC>(cx, args[0]);
         if (!s)
             return false;
@@ -1217,7 +1210,7 @@ ArrayJoin(JSContext* cx, CallArgs& args)
     // An optimized version of a special case of steps 7-11: when length==1 and
     // the 0th element is a string, ToString() of that element is a no-op and
     // so it can be immediately returned as the result.
-    if (length == 1 && !Locale && GetAnyBoxedOrUnboxedInitializedLength(obj) == 1) {
+    if (length == 1 && GetAnyBoxedOrUnboxedInitializedLength(obj) == 1) {
         Value elem0 = GetAnyBoxedOrUnboxedDenseElement(obj, 0);
         if (elem0.isString()) {
             args.rval().set(elem0);
@@ -1244,22 +1237,22 @@ ArrayJoin(JSContext* cx, CallArgs& args)
     // Various optimized versions of steps 7-10.
     if (seplen == 0) {
         EmptySeparatorOp op;
-        if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+        if (!ArrayJoinKernel(cx, op, obj, length, sb))
             return false;
     } else if (seplen == 1) {
         char16_t c = sepstr->latin1OrTwoByteChar(0);
         if (c <= JSString::MAX_LATIN1_CHAR) {
             CharSeparatorOp<Latin1Char> op(c);
-            if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+            if (!ArrayJoinKernel(cx, op, obj, length, sb))
                 return false;
         } else {
             CharSeparatorOp<char16_t> op(c);
-            if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+            if (!ArrayJoinKernel(cx, op, obj, length, sb))
                 return false;
         }
     } else {
         StringSeparatorOp op(sepstr);
-        if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+        if (!ArrayJoinKernel(cx, op, obj, length, sb))
             return false;
     }
 
@@ -1272,25 +1265,49 @@ ArrayJoin(JSContext* cx, CallArgs& args)
     return true;
 }
 
-/* ES5 15.4.4.3 */
+// ES2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f
+// 22.1.3.27 Array.prototype.toLocaleString ([ reserved1 [ , reserved2 ] ])
+// ES2017 Intl draft rev 78bbe7d1095f5ff3760ac4017ed366026e4cb276
+// 13.4.1 Array.prototype.toLocaleString ([ locales [ , options ]])
 static bool
 array_toLocaleString(JSContext* cx, unsigned argc, Value* vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    return ArrayJoin<true>(cx, args);
-}
 
-/* ES5 15.4.4.5 */
-bool
-js::array_join(JSContext* cx, unsigned argc, Value* vp)
-{
-    JS_CHECK_RECURSION(cx, return false);
+    // Step 1
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
+    if (!obj)
+        return false;
 
-    AutoSPSEntry pseudoFrame(cx->runtime(), "Array.prototype.join");
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return ArrayJoin<false>(cx, args);
+    // Avoid calling into self-hosted code if the array is empty.
+    if (obj->is<ArrayObject>() && obj->as<ArrayObject>().length() == 0) {
+        args.rval().setString(cx->names().empty);
+        return true;
+    }
+    if (obj->is<UnboxedArrayObject>() && obj->as<UnboxedArrayObject>().length() == 0) {
+        args.rval().setString(cx->names().empty);
+        return true;
+    }
+
+    AutoCycleDetector detector(cx, obj);
+    if (!detector.init())
+        return false;
+
+    if (detector.foundCycle()) {
+        args.rval().setString(cx->names().empty);
+        return true;
+    }
+
+    FixedInvokeArgs<2> args2(cx);
+
+    args2[0].set(args.get(0));
+    args2[1].set(args.get(1));
+
+    // Steps 2-10.
+    RootedValue thisv(cx, ObjectValue(*obj));
+    return CallSelfHostedFunction(cx, cx->names().ArrayToLocaleString, thisv, args2, args.rval());
 }
 
 /* vector must point to rooted memory. */

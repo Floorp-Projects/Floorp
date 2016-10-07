@@ -42,7 +42,10 @@ function MockGMPInstallManager() {
 }
 
 MockGMPInstallManager.prototype = {
-  checkForAddons: () => Promise.resolve([...gMockAddons.values()]),
+  checkForAddons: () => Promise.resolve({
+    usedFallback: true,
+    gmpAddons: [...gMockAddons.values()]
+  }),
 
   installAddon: addon => {
     gInstalledAddonId = addon.id;

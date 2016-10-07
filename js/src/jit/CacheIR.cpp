@@ -68,7 +68,11 @@ GetPropIRGenerator::tryAttachStub(Maybe<CacheIRWriter>& writer)
             return false;
         if (!emitted_ && !tryAttachModuleNamespace(*writer, obj, objId))
             return false;
+        return true;
     }
+
+    if (!emitted_ && !tryAttachPrimitive(*writer, valId))
+        return false;
 
     return true;
 }
@@ -413,5 +417,55 @@ GetPropIRGenerator::tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject
 
     ObjOperandId envId = writer.loadObject(env);
     EmitLoadSlotResult(writer, envId, env, shape);
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachPrimitive(CacheIRWriter& writer, ValOperandId valId)
+{
+    MOZ_ASSERT(!emitted_);
+
+    JSValueType primitiveType;
+    RootedNativeObject proto(cx_);
+    if (val_.isString()) {
+        if (name_ == cx_->names().length) {
+            // String length is special-cased, see js::GetProperty.
+            return true;
+        }
+        primitiveType = JSVAL_TYPE_STRING;
+        proto = MaybeNativeObject(GetBuiltinPrototypePure(cx_->global(), JSProto_String));
+    } else if (val_.isNumber()) {
+        primitiveType = JSVAL_TYPE_DOUBLE;
+        proto = MaybeNativeObject(GetBuiltinPrototypePure(cx_->global(), JSProto_Number));
+    } else if (val_.isBoolean()) {
+        primitiveType = JSVAL_TYPE_BOOLEAN;
+        proto = MaybeNativeObject(GetBuiltinPrototypePure(cx_->global(), JSProto_Boolean));
+    } else if (val_.isSymbol()) {
+        primitiveType = JSVAL_TYPE_SYMBOL;
+        proto = MaybeNativeObject(GetBuiltinPrototypePure(cx_->global(), JSProto_Symbol));
+    } else {
+        MOZ_ASSERT(val_.isNullOrUndefined() || val_.isMagic());
+        return true;
+    }
+    if (!proto)
+        return true;
+
+    // Instantiate this property, for use during Ion compilation.
+    RootedId id(cx_, NameToId(name_));
+    if (IsIonEnabled(cx_))
+        EnsureTrackPropertyTypes(cx_, proto, id);
+
+    // For now, only look for properties directly set on the prototype.
+    Shape* shape = proto->lookup(cx_, id);
+    if (!shape || !shape->hasSlot() || !shape->hasDefaultGetter())
+        return true;
+
+    writer.guardType(valId, primitiveType);
+
+    ObjOperandId protoId = writer.loadObject(proto);
+    writer.guardShape(protoId, proto->lastProperty());
+    EmitLoadSlotResult(writer, protoId, proto, shape);
+
+    emitted_ = true;
     return true;
 }
