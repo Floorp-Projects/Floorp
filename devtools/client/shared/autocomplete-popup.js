@@ -16,8 +16,8 @@ let itemIdCounter = 0;
  * Autocomplete popup UI implementation.
  *
  * @constructor
- * @param {Toolbox} toolbox
- *        The devtools toolbox required to instanciate the HTMLTooltip.
+ * @param {Document} toolboxDoc
+ *        The toolbox document to attach the autocomplete popup panel.
  * @param {Object} options
  *        An object consiting any of the following options:
  *        - listId {String} The id for the list <LI> element.
@@ -29,10 +29,10 @@ let itemIdCounter = 0;
  *        - onClick {String} Callback called when the autocomplete popup receives a click
  *          event. The selectedIndex will already be updated if need be.
  */
-function AutocompletePopup(toolbox, options = {}) {
+function AutocompletePopup(toolboxDoc, options = {}) {
   EventEmitter.decorate(this);
 
-  this._document = toolbox.doc;
+  this._document = toolboxDoc;
 
   this.autoSelect = options.autoSelect || false;
   this.position = options.position || "bottom";
@@ -51,7 +51,7 @@ function AutocompletePopup(toolbox, options = {}) {
   }
 
   // Create HTMLTooltip instance
-  this._tooltip = new HTMLTooltip(toolbox);
+  this._tooltip = new HTMLTooltip(this._document);
   this._tooltip.panel.classList.add(
     "devtools-autocomplete-popup",
     "devtools-monospace",
