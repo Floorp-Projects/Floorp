@@ -275,7 +275,7 @@
 
         var i = startingIndex;
         var onAppendDone = function() {
-            if (eventFired)
+            if (eventFired || (i >= (segmentInfo.media.length - 1)))
                 return;
 
             i++;
