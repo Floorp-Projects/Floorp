@@ -475,9 +475,9 @@ const TESTS = {
   // Correct sizes and hashes should work
   checkSizeHash: {
     updateList: [
-      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 4672 },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "2df604b37b13766c0e04f1b7f59800e038f46cd5" },
-      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi", size: 4671, hashFunction: "sha1", hashValue: "f13dcaa8bfacaa222189bcbb0074972c05ceb621" }
+      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 4697 },
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "a4c7198d56deb315511c02937fd96c696de6cb84" },
+      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi", size: 4691, hashFunction: "sha1", hashValue: "6887b916a1a9a5338b0df4181f6187f5396861eb" }
     ],
     finalState: {
       blank: [
@@ -516,6 +516,33 @@ const TESTS = {
     fails: true,
     updateList: [
       { id: "system1@tests.mozilla.org", version: "1.0", path: "system1_1_badcert.xpi" },
+      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+    ],
+  },
+
+  // An unpacked add-on should stop updates.
+  notPacked: {
+    fails: true,
+    updateList: [
+      { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_1_unpack.xpi" },
+      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+    ],
+  },
+
+  // A non-bootstrap add-on should stop updates.
+  notBootstrap: {
+    fails: true,
+    updateList: [
+      { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_2_notBootstrap.xpi" },
+      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+    ],
+  },
+
+  // A non-multiprocess add-on should stop updates.
+  notMultiprocess: {
+    fails: true,
+    updateList: [
+      { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_3_notMultiprocess.xpi" },
       { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
     ],
   }
