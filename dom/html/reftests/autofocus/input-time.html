@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- In this case we're using reftest-wait to make sure the test doesn't
+       get snapshotted before it's been focused. We're not testing
+       invalidation so we don't need to listen for MozReftestInvalidate.
+  -->
+  <head>
+    <script>
+      function focusHandler() {
+        setTimeout(function() {
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      }
+    </script>
+  </head>
+  <body>
+    <input type="time" autofocus onfocus="focusHandler();"
+           style="-moz-appearance: none;">
+  </body>
+</html>
+
+

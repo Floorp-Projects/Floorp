@@ -168,24 +168,33 @@ ClearKeySessionManager::PersistentSessionDataLoaded(GMPErr aStatus,
   mSessions[aSessionId] = session;
 
   uint32_t numKeys = aKeyDataSize / (2 * CLEARKEY_KEY_LEN);
+
+  vector<GMPMediaKeyInfo> key_infos;
+  vector<KeyIdPair> keyPairs;
   for (uint32_t i = 0; i < numKeys; i ++) {
     const uint8_t* base = aKeyData + 2 * CLEARKEY_KEY_LEN * i;
 
-    KeyId keyId(base, base + CLEARKEY_KEY_LEN);
-    assert(keyId.size() == CLEARKEY_KEY_LEN);
+    KeyIdPair keyPair;
 
-    Key key(base + CLEARKEY_KEY_LEN, base + 2 * CLEARKEY_KEY_LEN);
-    assert(key.size() == CLEARKEY_KEY_LEN);
+    keyPair.mKeyId = KeyId(base, base + CLEARKEY_KEY_LEN);
+    assert(keyPair.mKeyId.size() == CLEARKEY_KEY_LEN);
 
-    session->AddKeyId(keyId);
+    keyPair.mKey = Key(base + CLEARKEY_KEY_LEN, base + 2 * CLEARKEY_KEY_LEN);
+    assert(keyPair.mKey.size() == CLEARKEY_KEY_LEN);
 
-    mDecryptionManager->ExpectKeyId(keyId);
-    mDecryptionManager->InitKey(keyId, key);
-    mKeyIds.insert(key);
-    mCallback->KeyStatusChanged(&aSessionId[0], aSessionId.size(),
-                                &keyId[0], keyId.size(),
-                                kGMPUsable);
+    session->AddKeyId(keyPair.mKeyId);
+
+    mDecryptionManager->ExpectKeyId(keyPair.mKeyId);
+    mDecryptionManager->InitKey(keyPair.mKeyId, keyPair.mKey);
+    mKeyIds.insert(keyPair.mKey);
+
+    keyPairs.push_back(keyPair);
+    key_infos.push_back(GMPMediaKeyInfo(&keyPairs[i].mKeyId[0],
+                                        keyPairs[i].mKeyId.size(),
+                                        kGMPUsable));
   }
+  mCallback->BatchedKeyStatusChanged(&aSessionId[0], aSessionId.size(),
+                                     key_infos.data(), key_infos.size());
 
   mCallback->ResolveLoadSessionPromise(aPromiseId, true);
 }
@@ -216,13 +225,17 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
     return;
   }
 
-  for (auto it = keyPairs.begin(); it != keyPairs.end(); it++) {
-    mDecryptionManager->InitKey(it->mKeyId, it->mKey);
-    mKeyIds.insert(it->mKeyId);
-    mCallback->KeyStatusChanged(aSessionId, aSessionIdLength,
-                                &it->mKeyId[0], it->mKeyId.size(),
-                                kGMPUsable);
+  vector<GMPMediaKeyInfo> key_infos;
+  for (size_t i = 0; i < keyPairs.size(); i++) {
+    KeyIdPair& keyPair = keyPairs[i];
+    mDecryptionManager->InitKey(keyPair.mKeyId, keyPair.mKey);
+    mKeyIds.insert(keyPair.mKeyId);
+    key_infos.push_back(GMPMediaKeyInfo(&keyPair.mKeyId[0],
+                                        keyPair.mKeyId.size(),
+                                        kGMPUsable));
   }
+  mCallback->BatchedKeyStatusChanged(aSessionId, aSessionIdLength,
+                                     key_infos.data(), key_infos.size());
 
   if (session->Type() != kGMPPersistentSession) {
     mCallback->ResolvePromise(aPromiseId);
