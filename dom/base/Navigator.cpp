@@ -768,6 +768,12 @@ Navigator::HardwareConcurrency()
   return rts->ClampedHardwareConcurrency();
 }
 
+bool
+Navigator::CpuHasSSE2()
+{
+  return mozilla::supports_sse2();
+}
+
 void
 Navigator::RefreshMIMEArray()
 {
