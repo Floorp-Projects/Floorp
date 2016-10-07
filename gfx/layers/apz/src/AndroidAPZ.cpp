@@ -80,9 +80,8 @@ AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
   , mFlingDuration(0)
 {
   MOZ_ASSERT(mOverscrollHandoffChain);
-  AndroidSpecificState* state = aPlatformSpecificState->AsAndroidSpecificState();
-  MOZ_ASSERT(state);
-  mOverScroller = state->mOverScroller;
+  MOZ_ASSERT(aPlatformSpecificState->AsAndroidSpecificState());
+  mOverScroller = aPlatformSpecificState->AsAndroidSpecificState()->mOverScroller;
   MOZ_ASSERT(mOverScroller);
 
   // Drop any velocity on axes where we don't have room to scroll anyways
@@ -119,20 +118,12 @@ AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
 
   int32_t originX = ClampStart(mStartOffset.x, scrollRangeStartX, scrollRangeEndX);
   int32_t originY = ClampStart(mStartOffset.y, scrollRangeStartY, scrollRangeEndY);
-  if (!state->mLastFling.IsNull()) {
-    // If we had a fling going previously, we should update the timestamp on
-    // it because otherwise it may have a stale velocity
-    TimeDuration flingDuration = TimeStamp::Now() - state->mLastFling;
-    bool unused = false;
-    mOverScroller->ComputeScrollOffset(flingDuration.ToMilliseconds(), &unused);
-  }
   mOverScroller->Fling(originX, originY,
                        // Android needs the velocity in pixels per second and it is in pixels per ms.
                        (int32_t)(velocity.x * 1000.0f), (int32_t)(velocity.y * 1000.0f),
                        (int32_t)floor(scrollRangeStartX), (int32_t)ceil(scrollRangeEndX),
                        (int32_t)floor(scrollRangeStartY), (int32_t)ceil(scrollRangeEndY),
                        0, 0, 0);
-  state->mLastFling = TimeStamp::Now();
 }
 
 /**
