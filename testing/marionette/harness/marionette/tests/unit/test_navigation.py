@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import time
+import unittest
 import urllib
 
 from marionette import MarionetteTestCase
@@ -122,11 +123,19 @@ class TestNavigate(MarionetteTestCase):
         self.assertEqual("complete", state)
         self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
 
-    def test_error_when_exceeding_page_load_timeout(self):
-        with self.assertRaises(TimeoutException):
-            self.marionette.set_page_load_timeout(0)
-            self.marionette.navigate(self.marionette.absolute_url("slow"))
-            self.marionette.find_element(By.TAG_NAME, "p")
+    @unittest.skip("Bug 1302707 - No timeout exception raised.")
+    def test_should_throw_a_timeoutexception_when_loading_page(self):
+        try:
+            self.marionette.timeouts("page load", 0)
+            self.marionette.navigate(self.test_doc)
+            self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
+            self.fail("Should have thrown a MarionetteException")
+        except TimeoutException as e:
+            self.assertTrue("Error loading page, timed out" in str(e))
+        except Exception as e:
+            import traceback
+            print traceback.format_exc()
+            self.fail("Should have thrown a TimeoutException instead of %s" % type(e))
 
     def test_navigate_iframe(self):
         self.marionette.navigate(self.iframe_doc)
