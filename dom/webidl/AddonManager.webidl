@@ -48,6 +48,10 @@ interface AddonInstall : EventTarget {
 
 dictionary addonInstallOptions {
   required DOMString url;
+  // If a non-empty string is passed for "hash", it is used to verify the
+  // checksum of the downloaded XPI before installing.  If is omitted or if
+  // it is null or empty string, no checksum verification is performed.
+  DOMString? hash = null;
 };
 
 [HeaderFile="mozilla/AddonManagerWebAPI.h",
