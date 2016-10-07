@@ -145,93 +145,9 @@ methods of other kinds of objects.
     [`Debugger.DebuggeeWouldRun`][wouldrun]
     exception.
 
-<code>getVariableDescriptor(<i>name</i>)</code>
-:   Return an property descriptor describing the variable bound to
-    <i>name</i> in this environment, of the sort returned by
-    `Debugger.Object.prototype.getOwnPropertyDescriptor`. <i>Name</i> must
-    be a string whose value is a valid ECMAScript identifier name.
-
-    If this is an `"object"` or `"with"` environment record, this simply
-    returns the descriptor for the given property of the environment's
-    object. If this is a declarative environment record, this returns a
-    descriptor reflecting the binding's mutability as the descriptor's
-    `writable` property, and its deletability as the descriptor's
-    `configurable` property. All declarative environment record bindings are
-    marked as `enumerable`. <i>(This isn't great; the semantics of variables
-    in declarative enviroments don't really match those of properties, so
-    writing code that operates properly on descriptors for either kind may
-    be difficult.)</i>
-
-    If this environment binds no variable named <i>name</i>, throw a
-    `ReferenceError`.
-
-<code>defineVariable(<i>name</i>, <i>descriptor</i>)</code>
-:   Create or reconfigure the variable bound to <i>name</i> in this
-    environment according to <i>descriptor</i>. <i>Descriptor</i> is the
-    sort of value returned by `getVariableDescriptor`. On success, return
-    `undefined`; on failure, throw an appropriate exception. <i>Name</i>
-    must be a string whose value is a valid ECMAScript identifier name.
-
-    If implementation restrictions prevent SpiderMonkey from creating or
-    reconfiguring the variable as requested, this call throws an `Error`
-    exception.
-
-<code>deleteVariable(<i>name</i>)</code>
-:   Delete this environment's binding for <i>name</i>.
-
-    If this environment binds no variable named <i>name</i>, throw a
-    `ReferenceError`.
-
-    If implementation restrictions prevent SpiderMonkey from deleting the
-    variable as requested, this call throws an `Error` exception.
-
 <code>find(<i>name</i>)</code>
 :   Return a reference to the innermost environment, starting with this
     environment, that binds <i>name</i>. If <i>name</i> is not in scope in
     this environment, return `null`. <i>Name</i> must be a string whose
     value is a valid ECMAScript identifier name.
-
-<code>eval(<i>code</i>)</code> <i>(future plan)</i>
-:   Evaluate <i>code</i> in this environment, and return a
-    [completion value][cv] describing how it completed. <i>Code</i> is a
-    string. All extant handler methods, breakpoints, watchpoints, and so on
-    remain active during the call. This function follows the
-    [invocation function conventions][inv fr].
-
-    <i>Code</i> is interpreted as strict mode code when it contains a Use
-    Strict Directive.
-
-    If <i>code</i> is not strict mode code, then variable declarations in
-    <i>code</i> affect this environment. (In the terms used by the
-    ECMAScript specification, the `VariableEnvironment` of the execution
-    context for the eval code is the `VariableEnvironment` this
-    `Debugger.Environment` instance represents.) If implementation
-    restrictions prevent SpiderMonkey from extending this environment as
-    requested, this call throws an `Error` exception.
-
-<code>evalWithBindings(<i>code</i>, <i>bindings</i>)</code> <i>(future plan)</i>
-:   Like `eval`, but evaluate <i>code</i> in this environment, extended with
-    bindings from the object <i>bindings</i>. For each own enumerable
-    property of <i>bindings</i> named <i>name</i> whose value is
-    <i>value</i>, include a variable in the environment in which <i>code</i>
-    is evaluated named <i>name</i>, whose value is <i>value</i>. Each
-    <i>value</i> must be a debuggee value. (This is not like a `with`
-    statement: <i>code</i> may access, assign to, and delete the introduced
-    bindings without having any effect on the <i>bindings</i> object.)
-
-    This method allows debugger code to introduce temporary bindings that
-    are visible to the given debuggee code and which refer to debugger-held
-    debuggee values, and do so without mutating any existing debuggee
-    environment.
-
-    Note that, like `eval`, declarations in the <i>code</i> passed to
-    `evalWithBindings` affect this environment, even as <i>code</i> is
-    evaluated with <i>bindings</i> visible. (In the terms used by the
-    ECMAScript specification, the `VariableEnvironment` of the execution
-    context for the eval code is the `VariableEnvironment` this environment
-    represents, and the <i>bindings</i> appear in a new declarative
-    environment, which is the eval code's `LexicalEnvironment`.) If
-    implementation restrictions prevent SpiderMonkey from extending this
-    environment as requested, this call throws an `Error` exception.
-
 
