@@ -198,39 +198,39 @@ TEST(ClearKey, ParseCencInitData) {
   bool rv;
 
   rv = ParseCENCInitData(gGoogleWPTCencInitData, MOZ_ARRAY_LENGTH(gGoogleWPTCencInitData), keyIds);
-  EXPECT_EQ(true, rv);
-  EXPECT_EQ(keyIds.size(), 1u);
-  EXPECT_EQ(keyIds[0].size(), 16u);
-  EXPECT_EQ(memcmp(&keyIds[0].front(), &gGoogleWPTCencInitData[32], 16), 0);
+  EXPECT_TRUE(rv);
+  EXPECT_EQ(1u, keyIds.size());
+  EXPECT_EQ(16u, keyIds[0].size());
+  EXPECT_EQ(0, memcmp(&keyIds[0].front(), &gGoogleWPTCencInitData[32], 16));
 
   rv = ParseCENCInitData(gW3SpecExampleCencInitData, MOZ_ARRAY_LENGTH(gW3SpecExampleCencInitData), keyIds);
-  EXPECT_EQ(true, rv);
-  EXPECT_EQ(keyIds.size(), 2u);
-  EXPECT_EQ(keyIds[0].size(), 16u);
-  EXPECT_EQ(memcmp(&keyIds[0].front(), &gW3SpecExampleCencInitData[32], 16), 0);
-  EXPECT_EQ(memcmp(&keyIds[1].front(), &gW3SpecExampleCencInitData[48], 16), 0);
+  EXPECT_TRUE(rv);
+  EXPECT_EQ(2u, keyIds.size());
+  EXPECT_EQ(16u, keyIds[0].size());
+  EXPECT_EQ(0, memcmp(&keyIds[0].front(), &gW3SpecExampleCencInitData[32], 16));
+  EXPECT_EQ(0, memcmp(&keyIds[1].front(), &gW3SpecExampleCencInitData[48], 16));
 
   rv = ParseCENCInitData(gOverflowBoxSize, MOZ_ARRAY_LENGTH(gOverflowBoxSize), keyIds);
-  EXPECT_EQ(false, rv);
-  EXPECT_EQ(keyIds.size(), 0u);
+  EXPECT_FALSE(rv);
+  EXPECT_EQ(0u, keyIds.size());
 
   rv = ParseCENCInitData(gTooLargeKeyCountInitData, MOZ_ARRAY_LENGTH(gTooLargeKeyCountInitData), keyIds);
-  EXPECT_EQ(false, rv);
+  EXPECT_FALSE(rv);
   EXPECT_EQ(0u, keyIds.size());
 
   rv = ParseCENCInitData(gNonCencInitData, MOZ_ARRAY_LENGTH(gNonCencInitData), keyIds);
-  EXPECT_EQ(true, rv);
+  EXPECT_TRUE(rv);
   EXPECT_EQ(0u, keyIds.size());
 
   rv = ParseCENCInitData(gNonPSSHBoxZeroSize, MOZ_ARRAY_LENGTH(gNonPSSHBoxZeroSize), keyIds);
-  EXPECT_EQ(false, rv);
-  EXPECT_EQ(keyIds.size(), 0u);
+  EXPECT_FALSE(rv);
+  EXPECT_EQ(0u, keyIds.size());
 
   rv = ParseCENCInitData(g2xGoogleWPTCencInitData, MOZ_ARRAY_LENGTH(g2xGoogleWPTCencInitData), keyIds);
-  EXPECT_EQ(true, rv);
-  EXPECT_EQ(keyIds.size(), 2u);
-  EXPECT_EQ(keyIds[0].size(), 16u);
-  EXPECT_EQ(keyIds[1].size(), 16u);
-  EXPECT_EQ(memcmp(&keyIds[0].front(), &g2xGoogleWPTCencInitData[32], 16), 0);
-  EXPECT_EQ(memcmp(&keyIds[1].front(), &g2xGoogleWPTCencInitData[84], 16), 0);
+  EXPECT_TRUE(rv);
+  EXPECT_EQ(2u, keyIds.size());
+  EXPECT_EQ(16u, keyIds[0].size());
+  EXPECT_EQ(16u, keyIds[1].size());
+  EXPECT_EQ(0, memcmp(&keyIds[0].front(), &g2xGoogleWPTCencInitData[32], 16));
+  EXPECT_EQ(0, memcmp(&keyIds[1].front(), &g2xGoogleWPTCencInitData[84], 16));
 }
