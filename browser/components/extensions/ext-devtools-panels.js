@@ -2,6 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -121,6 +122,12 @@ class ParentDevToolsPanel {
       browser.setAttribute("remote", "true");
       browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
       awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
+    } else if (!AppConstants.RELEASE_OR_BETA) {
+      // NOTE: Using a content iframe here breaks the devtools panel
+      // switching between docked and undocked mode,
+      // because of a swapFrameLoader exception (see bug 1075490).
+      browser.setAttribute("type", "chrome");
+      browser.setAttribute("forcemessagemanager", true);
     }
 
     let hasTopLevelContext = false;
