@@ -201,11 +201,6 @@ typedef GenericFlingAnimation FlingAnimation;
  * be disabled.\n
  * Units: milliseconds
  *
- * \li\b apz.fling_accel_min_velocity
- * The minimum velocity of the second fling for it to be considered for fling
- * acceleration.
- * Units: screen pixels per milliseconds
- *
  * \li\b apz.fling_accel_base_mult
  * \li\b apz.fling_accel_supplemental_mult
  * When applying an acceleration on a fling, the new computed velocity is
