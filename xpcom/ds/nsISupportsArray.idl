@@ -58,8 +58,6 @@ interface nsISupportsArray : nsICollection {
   void DeleteLastElement(in nsISupports aElement);
   void DeleteElementAt(in unsigned long aIndex);
   
-  [notxpcom] boolean AppendElements(in nsISupportsArray aElements);
-  
   void Compact();
   
 
@@ -67,9 +65,6 @@ interface nsISupportsArray : nsICollection {
 
   [notxpcom] boolean MoveElement(in long aFrom,
                                  in long aTo);
-
-  [notxpcom] boolean InsertElementsAt(in nsISupportsArray aOther,
-                                      in unsigned long aIndex);
 
   [notxpcom] boolean RemoveElementsAt(in unsigned long aIndex,
                                       in unsigned long aCount);
