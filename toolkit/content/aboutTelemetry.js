@@ -1580,6 +1580,40 @@ var Scalars = {
   }
 };
 
+var KeyedScalars = {
+  /**
+   * Render the keyed scalar data - if present - from the payload in a simple key-value table.
+   * @param aPayload A payload object to render the data from.
+   */
+  render: function(aPayload) {
+    let scalarsSection = document.getElementById("keyed-scalars");
+    removeAllChildNodes(scalarsSection);
+
+    if (!aPayload.processes || !aPayload.processes.parent) {
+      return;
+    }
+
+    let keyedScalars = aPayload.processes.parent.keyedScalars;
+    const hasData = keyedScalars && Object.keys(keyedScalars).length > 0;
+    setHasData("keyed-scalars-section", hasData);
+    if (!hasData) {
+      return;
+    }
+
+    const headingName = bundle.GetStringFromName("namesHeader");
+    const headingValue = bundle.GetStringFromName("valuesHeader");
+    for (let scalar in keyedScalars) {
+      // Add the name of the scalar.
+      let scalarNameSection = document.createElement("h2");
+      scalarNameSection.appendChild(document.createTextNode(scalar));
+      scalarsSection.appendChild(scalarNameSection);
+      // Populate the section with the key-value pairs from the scalar.
+      const table = KeyValueTable.render(keyedScalars[scalar], headingName, headingValue);
+      scalarsSection.appendChild(table);
+    }
+  }
+};
+
 /**
  * Helper function for showing either the toggle element or "No data collected" message for a section
  *
@@ -1956,6 +1990,7 @@ function displayPingData(ping, updatePayloadList = false) {
 
   // Show scalar data.
   Scalars.render(payload);
+  KeyedScalars.render(payload);
 
   // Show histogram data
   let hgramDiv = document.getElementById("histograms");
