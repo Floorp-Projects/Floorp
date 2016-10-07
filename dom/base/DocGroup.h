@@ -119,6 +119,23 @@ public:
     return mDocGroups.Iter();
   }
 
+
+  // Returns the nsIDocShellTreeItem with the given name, searching each of the
+  // docShell trees which are within this TabGroup. It will pass itself as
+  // aRequestor to each docShellTreeItem which it asks to search for the name,
+  // and will not search the docShellTreeItem which is passed as aRequestor.
+  //
+  // This method is used in order to correctly namespace named windows based on
+  // their unit of related browsing contexts.
+  //
+  // It is illegal to pass in the special case-insensitive names "_blank",
+  // "_self", "_parent" or "_top", as those should be handled elsewhere.
+  nsresult
+  FindItemWithName(const char16_t* aName,
+                   nsIDocShellTreeItem* aRequestor,
+                   nsIDocShellTreeItem* aOriginalRequestor,
+                   nsIDocShellTreeItem** aFoundItem);
+
 private:
   ~TabGroup();
   DocGroupMap mDocGroups;
