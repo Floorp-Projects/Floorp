@@ -202,6 +202,17 @@ describe("Message reducer:", () => {
       expect(messages.get(1).parameters[0]).toBe(`message num 3`);
       expect(messages.last().parameters[0]).toBe(`message num ${logLimit + 1}`);
     });
+
+    it("adds console.dirxml call as console.log", () => {
+      const { dispatch, getState } = setupStore([]);
+
+      const packet = stubPackets.get("console.dirxml(window)");
+      dispatch(actions.messageAdd(packet));
+
+      const messages = getAllMessages(getState());
+      const dirxmlMessage = messages.last();
+      expect(dirxmlMessage.level).toEqual(MESSAGE_TYPE.LOG);
+    });
   });
 
   describe("messagesUiById", () => {
