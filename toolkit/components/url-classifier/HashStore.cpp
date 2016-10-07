@@ -168,6 +168,26 @@ TableUpdateV4::NewPrefixes(int32_t aSize, std::string& aPrefixes)
   NS_ENSURE_TRUE_VOID(aPrefixes.size() % aSize == 0);
   NS_ENSURE_TRUE_VOID(!mPrefixesMap.Get(aSize));
 
+  if (LOG_ENABLED() && 4 == aSize) {
+    int numOfPrefixes = aPrefixes.size() / 4;
+    uint32_t* p = (uint32_t*)aPrefixes.c_str();
+
+    // Dump the first/last 10 fixed-length prefixes for debugging.
+    LOG(("* The first 10 (maximum) fixed-length prefixes: "));
+    for (int i = 0; i < std::min(10, numOfPrefixes); i++) {
+      uint8_t* c = (uint8_t*)&p[i];
+      LOG(("%.2X%.2X%.2X%.2X", c[0], c[1], c[2], c[3]));
+    }
+
+    LOG(("* The last 10 (maximum) fixed-length prefixes: "));
+    for (int i = std::max(0, numOfPrefixes - 10); i < numOfPrefixes; i++) {
+      uint8_t* c = (uint8_t*)&p[i];
+      LOG(("%.2X%.2X%.2X%.2X", c[0], c[1], c[2], c[3]));
+    }
+
+    LOG(("---- %d fixed-length prefixes in total.", aPrefixes.size() / aSize));
+  }
+
   PrefixStdString* prefix = new PrefixStdString(aPrefixes);
   mPrefixesMap.Put(aSize, prefix);
 }

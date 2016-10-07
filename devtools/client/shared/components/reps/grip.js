@@ -76,7 +76,6 @@ define(function (require, exports, module) {
         let objectLink = this.props.objectLink || span;
 
         props.push(Caption({
-          key: "more",
           object: objectLink({
             object: object
           }, ((object ? object.ownPropertyLength : 0) - max) + " more…")
@@ -114,7 +113,6 @@ define(function (require, exports, module) {
         let prop = ownProperties[name];
         let value = prop.value !== undefined ? prop.value : prop;
         props.push(PropRep(Object.assign({}, this.props, {
-          key: name,
           mode: "tiny",
           name: name,
           object: value,
@@ -190,7 +188,7 @@ define(function (require, exports, module) {
             className: "objectLeftBrace",
             object: object
           }, " { "),
-          props,
+          ...props,
           objectLink({
             className: "objectRightBrace",
             object: object

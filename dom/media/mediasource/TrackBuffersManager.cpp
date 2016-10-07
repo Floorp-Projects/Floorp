@@ -1758,6 +1758,8 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   //   Remove all coded frames from track buffer that have a presentation timestamp greater than or equal to presentation timestamp and less than frame end timestamp.
   //  If highest end timestamp for track buffer is set and less than or equal to presentation timestamp:
   //   Remove all coded frames from track buffer that have a presentation timestamp greater than or equal to highest end timestamp and less than frame end timestamp"
+  TimeUnit intervalsEnd = aIntervals.GetEnd();
+  bool mayBreakLoop = false;
   for (uint32_t i = aStartIndex; i < data.Length(); i++) {
     const RefPtr<MediaRawData> sample = data[i];
     TimeInterval sampleInterval =
@@ -1768,6 +1770,14 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
         firstRemovedIndex = Some(i);
       }
       lastRemovedIndex = i;
+      mayBreakLoop = false;
+      continue;
+    }
+    if (sample->mKeyframe && mayBreakLoop) {
+      break;
+    }
+    if (sampleInterval.mStart > intervalsEnd) {
+      mayBreakLoop = true;
     }
   }
 

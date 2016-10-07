@@ -13,22 +13,28 @@
 #limitations under the License.
 
 from marionette import MarionetteTestCase
-from marionette_driver.errors import MarionetteException
+from marionette_driver.errors import InvalidArgumentException
 
 class TestWindowPosition(MarionetteTestCase):
-
-    def test_that_we_return_the_window_position(self):
+    def test_get_types(self):
         position = self.marionette.get_window_position()
-        self.assertTrue(isinstance(position['x'], int))
-        self.assertTrue(isinstance(position['y'], int))
+        self.assertTrue(isinstance(position["x"], int))
+        self.assertTrue(isinstance(position["y"], int))
 
-    def test_that_we_can_set_the_window_position(self):
+    def test_set_types(self):
+        for x, y in (["a", "b"], [1.2, 3.4], [True, False], [[], []], [{}, {}]):
+            with self.assertRaises(InvalidArgumentException):
+                self.marionette.set_window_position(x, y)
+
+    def test_out_of_bounds_arguments(self):
+        with self.assertRaises(InvalidArgumentException):
+            self.marionette.set_window_position(-1, 0)
+        with self.assertRaises(InvalidArgumentException):
+            self.marionette.set_window_position(0, -1)
+
+    def test_move(self):
         old_position = self.marionette.get_window_position()
-        new_position = {"x": old_position['x'] + 10, "y": old_position['y'] + 10}
-        self.marionette.set_window_position(new_position['x'], new_position['y'])
-        self.assertNotEqual(old_position['x'], new_position['x'])
-        self.assertNotEqual(old_position['y'], new_position['y'])
-
-    def test_that_we_can_get_an_error_when_passing_something_other_than_integers(self):
-        self.assertRaises(MarionetteException, self.marionette.set_window_position, "a","b")
-
+        new_position = {"x": old_position["x"] + 10, "y": old_position["y"] + 10}
+        self.marionette.set_window_position(new_position["x"], new_position["y"])
+        self.assertNotEqual(old_position['x'], new_position["x"])
+        self.assertNotEqual(old_position['y'], new_position["y"])
