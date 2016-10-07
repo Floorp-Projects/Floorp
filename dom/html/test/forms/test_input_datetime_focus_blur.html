@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
+-->
+<head>
+  <title>Test focus/blur behaviour for &lt;input type='time'&gt;</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1288591">Mozilla Bug 1288591</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input" type="time">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 1288591.
+ * This test checks whether date/time input types' .focus()/.blur() works
+ * correctly. This test also checks when focusing on an date/time input element,
+ * the focus is redirected to the anonymous text control, but the
+ * document.activeElement still returns date/time input element.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function test() {
+  let time = document.getElementById("input");
+  time.focus();
+
+  // The active element returns the input type=time.
+  let activeElement = document.activeElement;
+  is(activeElement, time, "activeElement should be the time element");
+  is(activeElement.localName, "input", "activeElement should be an input element");
+  is(activeElement.type, "time", "activeElement should be of type time");
+
+  // Use FocusManager to check that the actual focus is on the anonymous
+  // text control.
+  let fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"]
+                        .getService(SpecialPowers.Ci.nsIFocusManager);
+  let focusedElement = fm.focusedElement;
+  is(focusedElement.localName, "input", "focusedElement should be an input element");
+  is(focusedElement.type, "text", "focusedElement should be of type text");
+
+  time.blur();
+  isnot(document.activeElement, time, "activeElement should no longer be the time element");
+}
+
+</script>
+</pre>
+</body>
+</html>

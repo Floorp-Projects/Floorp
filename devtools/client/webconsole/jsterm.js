@@ -1186,10 +1186,10 @@ JSTerm.prototype = {
             this._autocompletePopupNavigated = true;
           }
         } else {
-          this.hud.outputWrapper.scrollTop =
+          this.hud.outputScroller.scrollTop =
             Math.max(0,
-              this.hud.outputWrapper.scrollTop -
-              this.hud.outputWrapper.clientHeight
+              this.hud.outputScroller.scrollTop -
+              this.hud.outputScroller.clientHeight
             );
         }
         event.preventDefault();
@@ -1202,10 +1202,10 @@ JSTerm.prototype = {
             this._autocompletePopupNavigated = true;
           }
         } else {
-          this.hud.outputWrapper.scrollTop =
-            Math.min(this.hud.outputWrapper.scrollHeight,
-              this.hud.outputWrapper.scrollTop +
-              this.hud.outputWrapper.clientHeight
+          this.hud.outputScroller.scrollTop =
+            Math.min(this.hud.outputScroller.scrollHeight,
+              this.hud.outputScroller.scrollTop +
+              this.hud.outputScroller.clientHeight
             );
         }
         event.preventDefault();
@@ -1216,7 +1216,7 @@ JSTerm.prototype = {
           this.autocompletePopup.selectedIndex = 0;
           event.preventDefault();
         } else if (inputValue.length <= 0) {
-          this.hud.outputWrapper.scrollTop = 0;
+          this.hud.outputScroller.scrollTop = 0;
           event.preventDefault();
         }
         break;
@@ -1227,8 +1227,8 @@ JSTerm.prototype = {
             this.autocompletePopup.itemCount - 1;
           event.preventDefault();
         } else if (inputValue.length <= 0) {
-          this.hud.outputWrapper.scrollTop =
-            this.hud.outputWrapper.scrollHeight;
+          this.hud.outputScroller.scrollTop =
+            this.hud.outputScroller.scrollHeight;
           event.preventDefault();
         }
         break;

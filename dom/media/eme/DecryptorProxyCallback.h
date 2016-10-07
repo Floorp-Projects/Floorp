@@ -41,16 +41,12 @@ public:
                             uint32_t aSystemCode,
                             const nsCString& aMessage) = 0;
 
-  virtual void KeyStatusChanged(const nsCString& aSessionId,
-                                const nsTArray<uint8_t>& aKeyId,
-                                mozilla::dom::MediaKeyStatus aStatus) = 0;
-
-  virtual void ForgetKeyStatus(const nsCString& aSessionId,
-                               const nsTArray<uint8_t>& aKeyId) = 0;
-
   virtual void Decrypted(uint32_t aId,
                          mozilla::DecryptStatus aResult,
                          const nsTArray<uint8_t>& aDecryptedData) = 0;
+
+  virtual void BatchedKeyStatusChanged(const nsCString& aSessionId,
+                                       const nsTArray<mozilla::CDMKeyInfo>& aKeyInfos) = 0;
 };
 
 #endif
