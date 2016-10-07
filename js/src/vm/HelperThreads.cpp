@@ -1237,11 +1237,11 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void
 
     mergeParseTaskCompartment(cx, parseTask, global, cx->compartment());
 
-    if (!parseTask->finish(cx))
-        return nullptr;
-
     RootedScript script(cx, parseTask->script);
     releaseAssertSameCompartment(cx, script);
+
+    if (!parseTask->finish(cx))
+        return nullptr;
 
     // Report out of memory errors eagerly, or errors could be malformed.
     if (parseTask->outOfMemory) {
