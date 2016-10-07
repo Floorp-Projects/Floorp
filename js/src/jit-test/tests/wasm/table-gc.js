@@ -9,7 +9,7 @@ const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
 
 var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect $v2i (get_local $i))) (export "call" $call)`
-var callee = i => `(func $f${i} (type $v2i) (result i32) (i32.const ${i}))`;
+var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
 
 // A table should not hold exported functions alive and exported functions
 // should not hold their originating table alive. Live exported functions should
