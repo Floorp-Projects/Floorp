@@ -20,33 +20,33 @@ add_task(function* () {
   let hud = yield openNewTabAndConsole(TEST_URI);
   info("Web Console opened");
 
-  const outputWrapper = hud.ui.outputWrapper;
+  const outputScroller = hud.ui.outputScroller;
 
   yield waitFor(() => findMessages(hud, "").length == 100);
 
-  let currentPosition = outputWrapper.scrollTop;
+  let currentPosition = outputScroller.scrollTop;
   const bottom = currentPosition;
 
   EventUtils.sendMouseEvent({type: "click"}, hud.jsterm.inputNode);
 
   // Page up.
   EventUtils.synthesizeKey("VK_PAGE_UP", {});
-  isnot(outputWrapper.scrollTop, currentPosition,
+  isnot(outputScroller.scrollTop, currentPosition,
     "scroll position changed after page up");
 
   // Page down.
-  currentPosition = outputWrapper.scrollTop;
+  currentPosition = outputScroller.scrollTop;
   EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
-  ok(outputWrapper.scrollTop > currentPosition,
+  ok(outputScroller.scrollTop > currentPosition,
      "scroll position now at bottom");
 
   // Home
   EventUtils.synthesizeKey("VK_HOME", {});
-  is(outputWrapper.scrollTop, 0, "scroll position now at top");
+  is(outputScroller.scrollTop, 0, "scroll position now at top");
 
   // End
   EventUtils.synthesizeKey("VK_END", {});
-  let scrollTop = outputWrapper.scrollTop;
+  let scrollTop = outputScroller.scrollTop;
   ok(scrollTop > 0 && Math.abs(scrollTop - bottom) <= 5,
      "scroll position now at bottom");
 
@@ -66,6 +66,6 @@ add_task(function* () {
   info("try ctrl-f to focus filter");
   synthesizeKeyShortcut(WCUL10n.getStr("webconsole.find.key"));
   ok(!hud.jsterm.inputNode.getAttribute("focused"), "jsterm input is not focused");
-  is(hud.ui.filterBox, outputWrapper.ownerDocument.activeElement,
+  is(hud.ui.filterBox, outputScroller.ownerDocument.activeElement,
     "filter input is focused");
 });

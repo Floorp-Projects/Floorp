@@ -547,6 +547,10 @@ WebConsoleFrame.prototype = {
     this.completeNode = this.document.querySelector(".jsterm-complete-node");
     this.inputNode = this.document.querySelector(".jsterm-input-node");
 
+    // In the old frontend, the area that scrolls is outputWrapper, but in the new
+    // frontend this will be reassigned.
+    this.outputScroller = this.outputWrapper;
+
     // Update the character width and height needed for the popup offset
     // calculations.
     this._updateCharSize();
