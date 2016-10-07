@@ -1,0 +1,105 @@
+// We run fairly hard into a fundamental limitation of the Android Gradle
+// plugin.  There are many bugs filed about this, but
+// https://code.google.com/p/android/issues/detail?id=216978#c6 is a reason one.
+// The issue is that we need fine-grained control over when to include Gecko's
+// binary libraries into the GeckoView AAR and the Fennec APK, and that's hard
+// to achieve.  In particular:
+//
+// * :app:automation wants :geckoview to not include Gecko binaries (automation
+// * build, before package)
+//
+// * :geckoview:withLibraries wants :geckoview to include Gecko binaries
+// * (automation build, after package)
+//
+// * non-:app:automation wants :geckoview to include Gecko binaries (local
+// * build, always after package)
+//
+// publishNonDefault (see
+// http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Library-Publication)
+// is intended to address this, but doesn't handle our case.  That option always
+// builds *all* configurations, which fails when the required Gecko binaries
+// don't exist (automation build, before package).  So instead, we make both
+// :app and :geckoview both know how to include the Gecko binaries, and use a
+// non-default, non-published :geckoview:withGeckoBinaries configuration to
+// handle automation's needs.  Simple, right?
+
+// The omnijar inputs are listed as resource directory inputs to a dummy JAR.
+// That arrangement labels them nicely in IntelliJ.  See the comment in the
+// :omnijar project for more context.
+evaluationDependsOn(':omnijar')
+
+task buildOmnijar(type:Exec) {
+    dependsOn rootProject.generateCodeAndResources
+
+    // See comment in :omnijar project regarding interface mismatches here.
+    inputs.source project(':omnijar').sourceSets.main.resources.srcDirs
+
+    // Produce a single output file.
+    outputs.file "${topobjdir}/dist/fennec/assets/omni.ja"
+
+    workingDir "${topobjdir}"
+
+    commandLine mozconfig.substs.GMAKE
+    args '-C'
+    args "${topobjdir}/mobile/android/base"
+    args 'gradle-omnijar'
+
+    // Only show the output if something went wrong.
+    ignoreExitValue = true
+    standardOutput = new ByteArrayOutputStream()
+    errorOutput = standardOutput
+    doLast {
+        if (execResult.exitValue != 0) {
+            throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
+        }
+    }
+}
+
+task syncOmnijarFromDistDir(type: Sync) {
+    into("${project.buildDir}/generated/omnijar")
+    from("${topobjdir}/dist/fennec/assets") {
+        include 'omni.ja'
+    }
+}
+
+task checkLibsExistInDistDir<< {
+    if (syncLibsFromDistDir.source.empty) {
+        throw new GradleException("Required JNI libraries not found in ${topobjdir}/dist/fennec/lib.  Have you built and packaged?")
+    }
+}
+
+task syncLibsFromDistDir(type: Sync, dependsOn: checkLibsExistInDistDir) {
+    into("${project.buildDir}/generated/jniLibs")
+    from("${topobjdir}/dist/fennec/lib")
+}
+
+task checkAssetsExistInDistDir<< {
+    if (syncAssetsFromDistDir.source.empty) {
+        throw new GradleException("Required assets not found in ${topobjdir}/dist/fennec/assets.  Have you built and packaged?")
+    }
+}
+
+task syncAssetsFromDistDir(type: Sync, dependsOn: checkAssetsExistInDistDir) {
+    into("${project.buildDir}/generated/assets")
+    from("${topobjdir}/dist/fennec/assets") {
+        exclude 'omni.ja'
+    }
+}
+
+ext.configureVariantWithGeckoBinaries = { variant ->
+    // Like 'local' or 'localOld'; may be null.
+    def productFlavor = variant.productFlavors ? variant.productFlavors[0].name : ""
+    // Like 'debug' or 'release'.
+    def buildType = variant.buildType.name
+
+    syncOmnijarFromDistDir.dependsOn buildOmnijar
+    def generateAssetsTask = tasks.findByName("generate${productFlavor.capitalize()}${buildType.capitalize()}Assets")
+    generateAssetsTask.dependsOn syncOmnijarFromDistDir
+    generateAssetsTask.dependsOn syncLibsFromDistDir
+    generateAssetsTask.dependsOn syncAssetsFromDistDir
+
+    def sourceSet = productFlavor ? "${productFlavor}${buildType.capitalize()}" : buildType
+    android.sourceSets."${sourceSet}".assets.srcDir syncOmnijarFromDistDir.destinationDir
+    android.sourceSets."${sourceSet}".assets.srcDir syncAssetsFromDistDir.destinationDir
+    android.sourceSets."${sourceSet}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
+}
