@@ -176,12 +176,6 @@ from its prototype:
 
     **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
-`strictMode`
-:   **If the instance refers to a `JSScript`**, this is `true` if this
-    script's code is ECMAScript strict mode code, and `false` otherwise.
-
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
-
 `format`
 :   **If the instance refers to a `JSScript`**, `"js"`.
 
@@ -192,20 +186,6 @@ from its prototype:
 The functions described below may only be called with a `this` value
 referring to a `Debugger.Script` instance; they may not be used as
 methods of other kinds of objects.
-
-<code>decompile([<i>pretty</i>])</code>
-:   **If the instance refers to a `JSScript`**, return a string containing
-    JavaScript source code equivalent to this script in its effect and
-    result. If <i>pretty</i> is present and true, produce indented code with
-    line breaks.
-
-    (Note that [`Debugger.Object`][object] instances referring to functions also have
-    a `decompile` method, whose result includes the function header and
-    parameter names, so it is probably better to write
-    <code><i>f</i>.decompile()</code> than to write
-    <code><i>f</i>.getFunctionScript().decompile()</code>.)
-
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
 `getAllOffsets()`
 :   **If the instance refers to a `JSScript`**, return an array <i>L</i>
