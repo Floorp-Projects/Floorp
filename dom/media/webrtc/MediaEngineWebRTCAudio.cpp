@@ -299,6 +299,10 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
           LOG(("Audio engine is not initalized"));
           return NS_ERROR_FAILURE;
         }
+      } else {
+        // Until we fix (or wallpaper) support for multiple mic input
+        // (Bug 1238038) fail allocation for a second device
+        return NS_ERROR_FAILURE;
       }
       if (!AllocChannel()) {
         if (sChannelsOpen == 0) {
