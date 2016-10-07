@@ -155,7 +155,7 @@ function* openTab(aURL) {
   return {tab, browser};
 }
 
-function* assignCookiesUnderFirstParty(aURL, aFirstParty, aCookieValue){
+function* assignCookiesUnderFirstParty(aURL, aFirstParty, aCookieValue) {
   // Open a tab under the given aFirstParty, and this tab will have an
   // iframe which loads the aURL.
   let tabInfo = yield openTabInFirstParty(aURL, aFirstParty);
