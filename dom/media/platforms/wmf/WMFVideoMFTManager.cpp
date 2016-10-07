@@ -76,18 +76,27 @@ const CLSID CLSID_WebmMfVp9Dec =
 };
 
 namespace mozilla {
+  
+LayersBackend
+GetCompositorBackendType(layers::KnowsCompositor* aKnowsCompositor)
+{
+  if (aKnowsCompositor) {
+    return aKnowsCompositor->GetCompositorBackendType();
+  }
+  return LayersBackend::LAYERS_NONE;
+}
 
 WMFVideoMFTManager::WMFVideoMFTManager(
                             const VideoInfo& aConfig,
-                            mozilla::layers::LayersBackend aLayersBackend,
-                            mozilla::layers::ImageContainer* aImageContainer,
+                            layers::KnowsCompositor* aKnowsCompositor,
+                            layers::ImageContainer* aImageContainer,
                             bool aDXVAEnabled)
   : mVideoInfo(aConfig)
   , mVideoStride(0)
   , mImageSize(aConfig.mImage)
   , mImageContainer(aImageContainer)
   , mDXVAEnabled(aDXVAEnabled)
-  , mLayersBackend(aLayersBackend)
+  , mKnowsCompositor(aKnowsCompositor)
   , mNullOutputCount(0)
   , mGotValidOutputAfterNullOutput(false)
   , mGotExcessiveNullOutput(false)
@@ -303,8 +312,11 @@ FindD3D9BlacklistedDLL() {
 
 class CreateDXVAManagerEvent : public Runnable {
 public:
-  CreateDXVAManagerEvent(LayersBackend aBackend, nsCString& aFailureReason)
+  CreateDXVAManagerEvent(LayersBackend aBackend,
+                         layers::KnowsCompositor* aKnowsCompositor,
+                         nsCString& aFailureReason)
     : mBackend(aBackend)
+    , mKnowsCompositor(aKnowsCompositor)
     , mFailureReason(aFailureReason)
   {}
 
@@ -321,7 +333,7 @@ public:
         failureReason->AppendPrintf("D3D11 blacklisted with DLL %s",
                                     blacklistedDLL.get());
       } else {
-        mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(*failureReason);
+        mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(mKnowsCompositor, *failureReason);
         if (mDXVA2Manager) {
           return NS_OK;
         }
@@ -337,14 +349,15 @@ public:
       mFailureReason.AppendPrintf("D3D9 blacklisted with DLL %s",
                                   blacklistedDLL.get());
     } else {
-      mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA(*failureReason);
+      mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA(mKnowsCompositor, *failureReason);
       // Make sure we include the messages from both attempts (if applicable).
       mFailureReason.Append(secondFailureReason);
     }
     return NS_OK;
   }
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
-  LayersBackend mBackend;
+  layers::LayersBackend mBackend;
+  KnowsCompositor* mKnowsCompositor;
   nsACString& mFailureReason;
 };
 
@@ -359,8 +372,9 @@ WMFVideoMFTManager::InitializeDXVA(bool aForceD3D9)
     return false;
   }
   MOZ_ASSERT(!mDXVA2Manager);
-  if (mLayersBackend != LayersBackend::LAYERS_D3D9 &&
-      mLayersBackend != LayersBackend::LAYERS_D3D11) {
+  LayersBackend backend = GetCompositorBackendType(mKnowsCompositor);
+  if (backend != LayersBackend::LAYERS_D3D9 &&
+      backend != LayersBackend::LAYERS_D3D11) {
     mDXVAFailureReason.AssignLiteral("Unsupported layers backend");
     return false;
   }
@@ -368,7 +382,8 @@ WMFVideoMFTManager::InitializeDXVA(bool aForceD3D9)
   // The DXVA manager must be created on the main thread.
   RefPtr<CreateDXVAManagerEvent> event =
     new CreateDXVAManagerEvent(aForceD3D9 ? LayersBackend::LAYERS_D3D9
-                                          : mLayersBackend,
+                                          : backend,
+                               mKnowsCompositor,
                                mDXVAFailureReason);
 
   if (NS_IsMainThread()) {
@@ -751,8 +766,9 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
   nsIntRect pictureRegion = mVideoInfo.ScaledImageRect(videoWidth, videoHeight);
 
-  if (mLayersBackend != LayersBackend::LAYERS_D3D9 &&
-      mLayersBackend != LayersBackend::LAYERS_D3D11) {
+  LayersBackend backend = GetCompositorBackendType(mKnowsCompositor);
+  if (backend != LayersBackend::LAYERS_D3D9 &&
+      backend != LayersBackend::LAYERS_D3D11) {
     RefPtr<VideoData> v =
       VideoData::CreateAndCopyData(mVideoInfo,
                                    mImageContainer,
