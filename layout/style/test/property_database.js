@@ -1383,25 +1383,18 @@ var gCSSProperties = {
     other_values: [ "exact" ],
     invalid_values: []
   },
-  "columns": {
-    domProp: "columns",
+  "-moz-columns": {
+    domProp: "MozColumns",
     inherited: false,
     type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "column-count", "column-width" ],
+    subproperties: [ "-moz-column-count", "-moz-column-width" ],
     initial_values: [ "auto", "auto auto" ],
     other_values: [ "3", "20px", "2 10px", "10px 2", "2 auto", "auto 2", "auto 50px", "50px auto" ],
     invalid_values: [ "5%", "-1px", "-1", "3 5", "10px 4px", "10 2px 5in", "30px -1",
                       "auto 3 5px", "5 auto 20px", "auto auto auto", "calc(50px + rubbish) 2" ]
   },
-  "-moz-columns": {
-    domProp: "MozColumns",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    alias_for: "columns",
-    subproperties: [ "column-count", "column-width" ]
-  },
-  "column-count": {
-    domProp: "columnCount",
+  "-moz-column-count": {
+    domProp: "MozColumnCount",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
@@ -1409,30 +1402,16 @@ var gCSSProperties = {
     // negative and zero invalid per editor's draft
     invalid_values: [ "-1", "0", "3px" ]
   },
-  "-moz-column-count": {
-    domProp: "MozColumnCount",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "column-count",
-    subproperties: [ "column-count" ]
-  },
-  "column-fill": {
-    domProp: "columnFill",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "balance" ],
-    other_values: [ "auto" ],
-    invalid_values: [ "2px", "dotted", "5em" ]
-  },
-  "-moz-column-fill": {
-    domProp: "MozColumnFill",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "column-fill",
-    subproperties: [ "column-fill" ]
-  },
-  "column-gap": {
-    domProp: "columnGap",
+        "-moz-column-fill": {
+                domProp: "MozColumnFill",
+                inherited: false,
+                type: CSS_TYPE_LONGHAND,
+                initial_values: [ "balance" ],
+                other_values: [ "auto" ],
+                invalid_values: [ "2px", "dotted", "5em" ]
+        },
+  "-moz-column-gap": {
+    domProp: "MozColumnGap",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "normal", "1em", "calc(-2em + 3em)" ],
@@ -1448,32 +1427,18 @@ var gCSSProperties = {
     ],
     invalid_values: [ "3%", "-1px", "4" ]
   },
-  "-moz-column-gap": {
-    domProp: "MozColumnGap",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "column-gap",
-    subproperties: [ "column-gap" ]
-  },
-  "column-rule": {
-    domProp: "columnRule",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    prerequisites: { "color": "green" },
-    subproperties: [ "column-rule-width", "column-rule-style", "column-rule-color" ],
-    initial_values: [ "medium none currentColor", "none", "medium", "currentColor" ],
-    other_values: [ "2px blue solid", "red dotted 1px", "ridge 4px orange", "5px solid" ],
-    invalid_values: [ "2px 3px 4px red", "dotted dashed", "5px dashed green 3px", "5 solid", "5 green solid" ]
-  },
   "-moz-column-rule": {
     domProp: "MozColumnRule",
     inherited: false,
     type: CSS_TYPE_TRUE_SHORTHAND,
-    alias_for: "column-rule",
-    subproperties: [ "column-rule-width", "column-rule-style", "column-rule-color" ]
+    prerequisites: { "color": "green" },
+    subproperties: [ "-moz-column-rule-width", "-moz-column-rule-style", "-moz-column-rule-color" ],
+    initial_values: [ "medium none currentColor", "none", "medium", "currentColor" ],
+    other_values: [ "2px blue solid", "red dotted 1px", "ridge 4px orange", "5px solid" ],
+    invalid_values: [ "2px 3px 4px red", "dotted dashed", "5px dashed green 3px", "5 solid", "5 green solid" ]
   },
-  "column-rule-width": {
-    domProp: "columnRuleWidth",
+  "-moz-column-rule-width": {
+    domProp: "MozColumnRuleWidth",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     prerequisites: { "-moz-column-rule-style": "solid" },
@@ -1742,30 +1707,16 @@ var gCSSProperties = {
       "calc((0 + 2em) * 1)",
     ]
   },
-  "-moz-column-rule-width": {
-    domProp: "MozColumnRuleWidth",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "column-rule-width",
-    subproperties: [ "column-rule-width" ]
-  },
-  "column-rule-style": {
-    domProp: "columnRuleStyle",
+  "-moz-column-rule-style": {
+    domProp: "MozColumnRuleStyle",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
     other_values: [ "solid", "hidden", "ridge", "groove", "inset", "outset", "double", "dotted", "dashed" ],
     invalid_values: [ "20", "foo" ]
   },
-  "-moz-column-rule-style": {
-    domProp: "MozColumnRuleStyle",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "column-rule-style",
-    subproperties: [ "column-rule-style" ]
-  },
-  "column-rule-color": {
-    domProp: "columnRuleColor",
+  "-moz-column-rule-color": {
+    domProp: "MozColumnRuleColor",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     prerequisites: { "color": "green" },
@@ -1773,15 +1724,8 @@ var gCSSProperties = {
     other_values: [ "red", "blue", "#ffff00" ],
     invalid_values: [ "ffff00" ]
   },
-  "-moz-column-rule-color": {
-    domProp: "MozColumnRuleColor",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "column-rule-color",
-    subproperties: [ "column-rule-color" ]
-  },
-  "column-width": {
-    domProp: "columnWidth",
+  "-moz-column-width": {
+    domProp: "MozColumnWidth",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
@@ -1794,13 +1738,6 @@ var gCSSProperties = {
       "calc(0px)"
     ],
     invalid_values: [ "20", "-1px", "50%" ]
-  },
-  "-moz-column-width": {
-    domProp: "MozColumnWidth",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "column-width",
-    subproperties: [ "column-width" ]
   },
   "-moz-float-edge": {
     domProp: "MozFloatEdge",
