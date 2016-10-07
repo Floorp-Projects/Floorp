@@ -8847,6 +8847,29 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 
             tokenStream.consumeKnownToken(TOK_ASSIGN);
 
+            if (!seenCoverInitializedName) {
+                // "shorthand default" or "CoverInitializedName" syntax is only
+                // valid in the case of destructuring.
+                seenCoverInitializedName = true;
+
+                if (!possibleError) {
+                    // Destructuring defaults are definitely not allowed in this object literal,
+                    // because of something the caller knows about the preceding code.
+                    // For example, maybe the preceding token is an operator: `x + {y=z}`.
+                    report(ParseError, false, null(), JSMSG_COLON_AFTER_ID);
+                    return null();
+                }
+
+                // Here we set a pending error so that later in the parse, once we've
+                // determined whether or not we're destructuring, the error can be
+                // reported or ignored appropriately.
+                if (!possibleError->setPending(ParseError, JSMSG_COLON_AFTER_ID, false)) {
+                    // Report any previously pending error.
+                    possibleError->checkForExprErrors();
+                    return null();
+                }
+            }
+
             Node rhs;
             {
                 // Clearing `inDestructuringDecl` allows name use to be noted
@@ -8866,32 +8889,6 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 
             if (!abortIfSyntaxParser())
                 return null();
-
-            if (!seenCoverInitializedName) {
-
-                // "shorthand default" or "CoverInitializedName" syntax is only
-                // valid in the case of destructuring.
-                seenCoverInitializedName = true;
-
-                if (!possibleError) {
-                    // Destructuring defaults are definitely not allowed in this object literal,
-                    // because of something the caller knows about the preceding code.
-                    // For example, maybe the preceding token is an operator: `x + {y=z}`.
-                    report(ParseError, false, null(), JSMSG_COLON_AFTER_ID);
-                    return null();
-                }
-
-                // Here we set a pending error so that later in the parse, once we've
-                // determined whether or not we're destructuring, the error can be
-                // reported or ignored appropriately.
-                if (!possibleError->setPending(ParseError, JSMSG_COLON_AFTER_ID, false)) {
-
-                    // Report any previously pending error.
-                    possibleError->checkForExprErrors();
-                    return null();
-                }
-            }
-
         } else {
             // FIXME: Implement ES6 function "name" property semantics
             // (bug 883377).
