@@ -24,6 +24,7 @@ class PTextureParent;
 namespace gfx {
 class VRLayerParent;
 class VRDisplayHost;
+class VRControllerHost;
 
 enum class VRDeviceType : uint16_t {
   Oculus,
@@ -238,6 +239,30 @@ struct VRControllerInfo
   bool operator!=(const VRControllerInfo& other) const {
     return !(*this == other);
   }
+};
+
+class VRControllerManager {
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRControllerManager)
+
+  static uint32_t AllocateControllerID();
+  virtual bool Init() = 0;
+  virtual void Destroy() = 0;
+  virtual void HandleInput() = 0;
+  virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult) = 0;
+  virtual void ScanForDevices() = 0;
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton,
+                      bool aPressed, double aValue);
+  void AddGamepad(const char* aID, dom::GamepadMappingType aMapping,
+                  uint32_t aNumButtons, uint32_t aNumAxes);
+
+protected:
+  VRControllerManager() : mInstalled(false), mControllerCount(0) {}
+  virtual ~VRControllerManager() {}
+
+  bool mInstalled;
+  uint32_t mControllerCount;
+  static Atomic<uint32_t> sControllerBase;
 };
 
 } // namespace gfx

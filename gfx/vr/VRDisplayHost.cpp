@@ -144,3 +144,15 @@ VRDisplayHost::CheckClearDisplayInfoDirty()
   mLastUpdateDisplayInfo = mDisplayInfo;
   return true;
 }
+
+VRControllerHost::VRControllerHost(VRDeviceType aType)
+{
+  MOZ_COUNT_CTOR(VRControllerHost);
+  mControllerInfo.mType = aType;
+  mControllerInfo.mControllerID = VRDisplayManager::AllocateDisplayID();
+}
+
+VRControllerHost::~VRControllerHost()
+{
+  MOZ_COUNT_DTOR(VRControllerHost);
+}
