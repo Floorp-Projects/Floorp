@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_contentscript() {
+  function background() {
+    browser.test.onMessage.addListener(url => {
+      browser.tabs.create({url}).then(tab => {
+        return browser.tabs.executeScript(tab.id, {code: "true;"})
+                      .then(() => {
+                        browser.test.sendMessage("executed", true);
+                        browser.tabs.remove([tab.id]);
+                      }, err => {
+                        browser.test.sendMessage("executed", false);
+                        browser.tabs.remove([tab.id]);
+                      });
+      });
+    });
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: ["<all_urls>"],
+    },
+    background,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+
+  extension.sendMessage("https://example.com");
+  let result = yield extension.awaitMessage("executed");
+  is(result, true, "Content script can be run in a page without mozAddonManager");
+
+  yield SpecialPowers.pushPrefEnv({
+    set: [["extensions.webapi.testing", true]],
+  });
+
+  extension.sendMessage("https://example.com");
+  result = yield extension.awaitMessage("executed");
+  is(result, false, "Content script cannot be run in a page with mozAddonManager");
+
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>
