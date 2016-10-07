@@ -59,7 +59,7 @@
   }
 }
 
-#nav-bar[brighttext] {
+toolbar[brighttext] {
   --toolbarbutton-hover-background: rgba(255,255,255,.25);
   --toolbarbutton-hover-bordercolor: rgba(255,255,255,.5);
 
@@ -70,7 +70,7 @@
   --toolbarbutton-checkedhover-backgroundcolor: rgba(255,255,255,.3);
 }
 
-#nav-bar:-moz-lwtheme {
+toolbar:-moz-lwtheme {
   --toolbarbutton-hover-background: rgba(255,255,255,.25);
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
 
@@ -476,6 +476,8 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   -moz-appearance: none;
   border: 1px solid transparent;
   border-radius: 1px;
+  background-origin: padding-box !important;
+  background-clip: padding-box !important;
   transition-property: background-color, border-color, box-shadow;
   transition-duration: 150ms;
 }
@@ -490,12 +492,6 @@ toolbarbutton.bookmark-item[open="true"] {
   border-color: var(--toolbarbutton-active-bordercolor);
   box-shadow: var(--toolbarbutton-active-boxshadow);
   background: var(--toolbarbutton-active-background);
-}
-
-toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):-moz-lwtheme {
-  background-color: rgba(255,255,255,.25);
-  background-origin: padding-box;
-  background-clip: padding-box;
 }
 
 .bookmark-item > .toolbarbutton-icon,
