@@ -57,10 +57,10 @@ static const uint32_t sModifierKeyMap[][3] = {
 
 class KeyboardLayout;
 
-struct UniCharsAndModifiers
+class UniCharsAndModifiers final
 {
+public:
   // Dead-key + up to 4 characters
-  char16_t mChars[5];
   Modifiers mModifiers[5];
   uint32_t  mLength;
 
@@ -75,6 +75,11 @@ struct UniCharsAndModifiers
   void Clear() { mLength = 0; }
   bool IsEmpty() const { return !mLength; }
 
+  char16_t CharAt(size_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex < mLength);
+    return mChars[aIndex];
+  }
   void FillModifiers(Modifiers aModifiers);
 
   bool UniCharsEqual(const UniCharsAndModifiers& aOther) const;
@@ -82,6 +87,9 @@ struct UniCharsAndModifiers
   bool BeginsWith(const UniCharsAndModifiers& aOther) const;
 
   nsString ToString() const { return nsString(mChars, mLength); }
+
+private:
+  char16_t mChars[5];
 };
 
 struct DeadKeyEntry;
