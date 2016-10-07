@@ -269,7 +269,7 @@ methods of other kinds of objects.
 :   Evaluate <i>code</i> in the execution context of this frame, and return
     a [completion value][cv] describing how it completed. <i>Code</i> is a
     string. If this frame's `environment` property is `null`, throw a
-    `TypeError`. All extant handler methods, breakpoints, watchpoints, and
+    `TypeError`. All extant handler methods, breakpoints, and
     so on remain active during the call. This function follows the
     [invocation function conventions][inv fr].
 
