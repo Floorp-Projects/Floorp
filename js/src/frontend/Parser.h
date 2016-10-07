@@ -969,8 +969,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     // Parse an inner function given an enclosing ParseContext and a
     // FunctionBox for the inner function.
-    bool innerFunction(Node pn, ParseContext* outerpc, FunctionBox* funbox,
-                       InHandling inHandling, FunctionSyntaxKind kind, GeneratorKind generatorKind,
+    bool innerFunction(Node pn, ParseContext* outerpc, FunctionBox* funbox, InHandling inHandling,
+                       YieldHandling yieldHandling, FunctionSyntaxKind kind,
                        Directives inheritedDirectives, Directives* newDirectives);
 
     // Parse a function's formal parameters and its body assuming its function
@@ -1165,7 +1165,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
 
-    Node methodDefinition(YieldHandling yieldHandling, PropertyType propType, HandleAtom funName);
+    Node methodDefinition(PropertyType propType, HandleAtom funName);
 
     /*
      * Additional JS parsers.
@@ -1264,13 +1264,13 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                                  GeneratorKind generatorKind, bool* tryAnnexB);
     bool skipLazyInnerFunction(Node pn, FunctionSyntaxKind kind, bool tryAnnexB);
     bool innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun,
-                       InHandling inHandling, FunctionSyntaxKind kind,
-                       GeneratorKind generatorKind, bool tryAnnexB,
+                       InHandling inHandling, YieldHandling yieldHandling,
+                       FunctionSyntaxKind kind, GeneratorKind generatorKind, bool tryAnnexB,
                        Directives inheritedDirectives, Directives* newDirectives);
     bool trySyntaxParseInnerFunction(Node pn, HandleFunction fun, InHandling inHandling,
-                                     FunctionSyntaxKind kind, GeneratorKind generatorKind,
-                                     bool tryAnnexB, Directives inheritedDirectives,
-                                     Directives* newDirectives);
+                                     YieldHandling yieldHandling, FunctionSyntaxKind kind,
+                                     GeneratorKind generatorKind, bool tryAnnexB,
+                                     Directives inheritedDirectives, Directives* newDirectives);
     bool finishFunctionScopes();
     bool finishFunction();
     bool leaveInnerFunction(ParseContext* outerpc);
