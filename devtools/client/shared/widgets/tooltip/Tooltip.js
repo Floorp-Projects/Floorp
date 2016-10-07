@@ -34,6 +34,65 @@ const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
  */
 
 /**
+ * Container used for dealing with optional parameters.
+ *
+ * @param {Object} defaults
+ *        An object with all default options {p1: v1, p2: v2, ...}
+ * @param {Object} options
+ *        The actual values.
+ */
+function OptionsStore(defaults, options) {
+  this.defaults = defaults || {};
+  this.options = options || {};
+}
+
+OptionsStore.prototype = {
+  /**
+   * Get the value for a given option name.
+   * @return {Object} Returns the value for that option, coming either for the
+   *         actual values that have been set in the constructor, or from the
+   *         defaults if that options was not specified.
+   */
+  get: function (name) {
+    if (typeof this.options[name] !== "undefined") {
+      return this.options[name];
+    }
+    return this.defaults[name];
+  }
+};
+
+/**
+ * The low level structure of a tooltip is a XUL element (a <panel>).
+ */
+var PanelFactory = {
+  /**
+   * Get a new XUL panel instance.
+   * @param {XULDocument} doc
+   *        The XUL document to put that panel into
+   * @param {OptionsStore} options
+   *        An options store to get some configuration from
+   */
+  get: function (doc, options) {
+    // Create the tooltip
+    let panel = doc.createElement("panel");
+    panel.setAttribute("hidden", true);
+    panel.setAttribute("ignorekeys", true);
+    panel.setAttribute("animate", false);
+
+    panel.setAttribute("consumeoutsideclicks",
+                       options.get("consumeOutsideClick"));
+    panel.setAttribute("noautofocus", options.get("noAutoFocus"));
+    panel.setAttribute("type", "arrow");
+    panel.setAttribute("level", "top");
+
+    panel.setAttribute("class", "devtools-tooltip theme-tooltip-panel");
+    doc.querySelector("window").appendChild(panel);
+
+    return panel;
+  }
+};
+
+/**
  * Tooltip class.
  *
  * Basic usage:
@@ -87,21 +146,17 @@ const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
  * - hidden : when the tooltip gets hidden
  * - keypress : when any key gets pressed, with keyCode
  */
-function Tooltip(doc, {
-  consumeOutsideClick = false,
-  closeOnKeys = [ESCAPE_KEYCODE],
-  noAutoFocus = true,
-  closeOnEvents = [],
-  } = {}) {
+function Tooltip(doc, options) {
   EventEmitter.decorate(this);
 
   this.doc = doc;
-  this.consumeOutsideClick = consumeOutsideClick;
-  this.closeOnKeys = closeOnKeys;
-  this.noAutoFocus = noAutoFocus;
-  this.closeOnEvents = closeOnEvents;
-
-  this.panel = this._createPanel();
+  this.options = new OptionsStore({
+    consumeOutsideClick: false,
+    closeOnKeys: [ESCAPE_KEYCODE],
+    noAutoFocus: true,
+    closeOnEvents: []
+  }, options);
+  this.panel = PanelFactory.get(doc, this.options);
 
   // Create tooltip toggle helper and decorate the Tooltip instance with
   // shortcut methods.
@@ -130,7 +185,7 @@ function Tooltip(doc, {
     }
 
     this.emit("keypress", event.keyCode);
-    if (this.closeOnKeys.indexOf(event.keyCode) !== -1 &&
+    if (this.options.get("closeOnKeys").indexOf(event.keyCode) !== -1 &&
         this.isShown()) {
       event.stopPropagation();
       this.hide();
@@ -140,7 +195,8 @@ function Tooltip(doc, {
 
   // Listen to custom emitters' events to close the tooltip
   this.hide = this.hide.bind(this);
-  for (let {emitter, event, useCapture} of this.closeOnEvents) {
+  let closeOnEvents = this.options.get("closeOnEvents");
+  for (let {emitter, event, useCapture} of closeOnEvents) {
     for (let add of ["addEventListener", "on"]) {
       if (add in emitter) {
         emitter[add](event, this.hide, useCapture);
@@ -235,7 +291,8 @@ Tooltip.prototype = {
     let win = this.doc.querySelector("window");
     win.removeEventListener("keypress", this._onKeyPress, false);
 
-    for (let {emitter, event, useCapture} of this.closeOnEvents) {
+    let closeOnEvents = this.options.get("closeOnEvents");
+    for (let {emitter, event, useCapture} of closeOnEvents) {
       for (let remove of ["removeEventListener", "off"]) {
         if (remove in emitter) {
           emitter[remove](event, this.hide, useCapture);
@@ -383,27 +440,6 @@ Tooltip.prototype = {
     this.content = iframe;
 
     return def.promise;
-  },
-
-  /**
-   * Create the tooltip panel
-   */
-  _createPanel() {
-    let panel = this.doc.createElement("panel");
-    panel.setAttribute("hidden", true);
-    panel.setAttribute("ignorekeys", true);
-    panel.setAttribute("animate", false);
-
-    panel.setAttribute("consumeoutsideclicks",
-                       this.consumeOutsideClick);
-    panel.setAttribute("noautofocus", this.noAutoFocus);
-    panel.setAttribute("type", "arrow");
-    panel.setAttribute("level", "top");
-
-    panel.setAttribute("class", "devtools-tooltip theme-tooltip-panel");
-    this.doc.querySelector("window").appendChild(panel);
-
-    return panel;
   }
 };
 
