@@ -720,11 +720,11 @@ SandboxBroker::AuditPermissive(int aOp, int aFlags, int aPerms, const char* aPat
 void
 SandboxBroker::AuditDenial(int aOp, int aFlags, int aPerms, const char* aPath)
 {
-#ifdef DEBUG
-  SANDBOX_LOG_ERROR("SandboxBroker: denied op=%d rflags=%o perms=%d path=%s for pid=%d" \
-                    " error=\"%s\"", aOp, aFlags, aPerms, aPath, mChildPid,
-                    strerror(errno));
-#endif
+  if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
+    SANDBOX_LOG_ERROR("SandboxBroker: denied op=%d rflags=%o perms=%d path=%s for pid=%d" \
+                      " error=\"%s\"", aOp, aFlags, aPerms, aPath, mChildPid,
+                      strerror(errno));
+  }
 }
 
 
