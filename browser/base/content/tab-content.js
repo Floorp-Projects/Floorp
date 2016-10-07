@@ -930,6 +930,12 @@ addEventListener("unload", () => {
   RefreshBlocker.uninit();
 });
 
+addMessageListener("AllowScriptsToClose", () => {
+  content.QueryInterface(Ci.nsIInterfaceRequestor)
+         .getInterface(Ci.nsIDOMWindowUtils)
+         .allowScriptsToClose();
+});
+
 addEventListener("MozAfterPaint", function onFirstPaint() {
   removeEventListener("MozAfterPaint", onFirstPaint);
   sendAsyncMessage("Browser:FirstPaint");

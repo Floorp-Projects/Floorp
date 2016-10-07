@@ -1,0 +1,36 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(465c0cc3-24cb-48ce-af1a-b18402326b05)]
+interface nsIDateTimeInputArea : nsISupports
+{
+  /**
+   * Called from DOM/Layout when input element value has changed.
+   */
+  void notifyInputElementValueChanged();
+
+  /**
+   * Called when date/time picker value has changed.
+   */
+  void setValueFromPicker(in jsval value);
+
+  /**
+   * Called from DOM/Layout to set focus on inner text box.
+   */
+  void focusInnerTextBox();
+
+  /**
+   * Called from DOM/Layout to blur inner text box.
+   */
+  void blurInnerTextBox();
+
+  /**
+   * Set the current state of the picker, true if it's opened, false otherwise.
+   */
+  void setPickerState(in boolean isOpen);
+};
