@@ -434,20 +434,19 @@ this.PushCrypto = {
       throw new CryptoError('Unsupported pad size', BAD_CRYPTO);
     }
     if (decoded.length < padSize) {
-      throw new CryptoError('Decoded array is too short!', BAD_PADDING,
-                            padSize);
+      throw new CryptoError('Decoded array is too short!', BAD_PADDING);
     }
     var pad = decoded[0];
     if (padSize == 2) {
       pad = (pad << 8) | decoded[1];
     }
     if (pad > decoded.length) {
-      throw new CryptoError('Padding is wrong!', BAD_PADDING, padSize);
+      throw new CryptoError('Padding is wrong!', BAD_PADDING);
     }
     // All padded bytes must be zero except the first one.
     for (var i = padSize; i <= pad; i++) {
       if (decoded[i] !== 0) {
-        throw new CryptoError('Padding is wrong!', BAD_PADDING, padSize);
+        throw new CryptoError('Padding is wrong!', BAD_PADDING);
       }
     }
     return decoded.slice(pad + padSize);
