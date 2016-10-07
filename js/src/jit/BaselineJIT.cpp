@@ -411,7 +411,7 @@ BaselineScript::New(JSScript* jsscript,
 {
     static const unsigned DataAlignment = sizeof(uintptr_t);
 
-    size_t icEntriesSize = icEntries * sizeof(ICEntry);
+    size_t icEntriesSize = icEntries * sizeof(BaselineICEntry);
     size_t pcMappingIndexEntriesSize = pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
     size_t bytecodeTypeMapSize = bytecodeTypeMapEntries * sizeof(uint32_t);
     size_t yieldEntriesSize = yieldEntries * sizeof(uintptr_t);
@@ -475,7 +475,7 @@ BaselineScript::trace(JSTracer* trc)
 
     // Mark all IC stub codes hanging off the IC stub entries.
     for (size_t i = 0; i < numICEntries(); i++) {
-        ICEntry& ent = icEntry(i);
+        BaselineICEntry& ent = icEntry(i);
         ent.trace(trc);
     }
 }
@@ -570,7 +570,7 @@ BaselineScript::removeDependentWasmImport(wasm::Instance& instance, uint32_t idx
     }
 }
 
-ICEntry&
+BaselineICEntry&
 BaselineScript::icEntry(size_t index)
 {
     MOZ_ASSERT(index < numICEntries());
@@ -603,12 +603,12 @@ struct ICEntries
 
     explicit ICEntries(BaselineScript* baseline) : baseline_(baseline) {}
 
-    ICEntry& operator[](size_t index) const {
+    BaselineICEntry& operator[](size_t index) const {
         return baseline_->icEntry(index);
     }
 };
 
-ICEntry&
+BaselineICEntry&
 BaselineScript::icEntryFromReturnOffset(CodeOffset returnOffset)
 {
     size_t loc;
@@ -616,7 +616,7 @@ BaselineScript::icEntryFromReturnOffset(CodeOffset returnOffset)
     bool found =
 #endif
         BinarySearchIf(ICEntries(this), 0, numICEntries(),
-                       [&returnOffset](ICEntry& entry) {
+                       [&returnOffset](BaselineICEntry& entry) {
                            size_t roffset = returnOffset.offset();
                            size_t entryRoffset = entry.returnOffset().offset();
                            if (roffset < entryRoffset)
@@ -638,7 +638,7 @@ ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset)
 {
     size_t loc;
     BinarySearchIf(ICEntries(baseline), 0, baseline->numICEntries(),
-                   [pcOffset](ICEntry& entry) {
+                   [pcOffset](BaselineICEntry& entry) {
                        uint32_t entryOffset = entry.pcOffset();
                        if (pcOffset < entryOffset)
                            return -1;
@@ -651,12 +651,12 @@ ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset)
 }
 
 uint8_t*
-BaselineScript::returnAddressForIC(const ICEntry& ent)
+BaselineScript::returnAddressForIC(const BaselineICEntry& ent)
 {
     return method()->raw() + ent.returnOffset().offset();
 }
 
-ICEntry&
+BaselineICEntry&
 BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
 {
     // Multiple IC entries can have the same PC offset, but this method only looks for
@@ -677,17 +677,17 @@ BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
     MOZ_CRASH("Invalid PC offset for IC entry.");
 }
 
-ICEntry&
-BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry)
+BaselineICEntry&
+BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, BaselineICEntry* prevLookedUpEntry)
 {
     // Do a linear forward search from the last queried PC offset, or fallback to a
     // binary search if the last offset is too far away.
     if (prevLookedUpEntry && pcOffset >= prevLookedUpEntry->pcOffset() &&
         (pcOffset - prevLookedUpEntry->pcOffset()) <= 10)
     {
-        ICEntry* firstEntry = &icEntry(0);
-        ICEntry* lastEntry = &icEntry(numICEntries() - 1);
-        ICEntry* curEntry = prevLookedUpEntry;
+        BaselineICEntry* firstEntry = &icEntry(0);
+        BaselineICEntry* lastEntry = &icEntry(numICEntries() - 1);
+        BaselineICEntry* curEntry = prevLookedUpEntry;
         while (curEntry >= firstEntry && curEntry <= lastEntry) {
             if (curEntry->pcOffset() == pcOffset && curEntry->isForOp())
                 break;
@@ -700,7 +700,7 @@ BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntr
     return icEntryFromPCOffset(pcOffset);
 }
 
-ICEntry&
+BaselineICEntry&
 BaselineScript::callVMEntryFromPCOffset(uint32_t pcOffset)
 {
     // Like icEntryFromPCOffset, but only looks for the fake ICEntries
@@ -718,7 +718,7 @@ BaselineScript::callVMEntryFromPCOffset(uint32_t pcOffset)
     MOZ_CRASH("Invalid PC offset for callVM entry.");
 }
 
-ICEntry&
+BaselineICEntry&
 BaselineScript::stackCheckICEntry(bool earlyCheck)
 {
     // The stack check will always be at offset 0, so just do a linear search
@@ -733,7 +733,7 @@ BaselineScript::stackCheckICEntry(bool earlyCheck)
     MOZ_CRASH("No stack check ICEntry found.");
 }
 
-ICEntry&
+BaselineICEntry&
 BaselineScript::warmupCountICEntry()
 {
     // The stack check will be at a very low offset, so just do a linear search
@@ -745,7 +745,7 @@ BaselineScript::warmupCountICEntry()
     MOZ_CRASH("No warmup count ICEntry found.");
 }
 
-ICEntry&
+BaselineICEntry&
 BaselineScript::icEntryFromReturnAddress(uint8_t* returnAddr)
 {
     MOZ_ASSERT(returnAddr > method_->raw());
@@ -766,12 +766,12 @@ BaselineScript::copyYieldEntries(JSScript* script, Vector<uint32_t>& yieldOffset
 }
 
 void
-BaselineScript::copyICEntries(JSScript* script, const ICEntry* entries, MacroAssembler& masm)
+BaselineScript::copyICEntries(JSScript* script, const BaselineICEntry* entries, MacroAssembler& masm)
 {
     // Fix up the return offset in the IC entries and copy them in.
     // Also write out the IC entry ptrs in any fallback stubs that were added.
     for (uint32_t i = 0; i < numICEntries(); i++) {
-        ICEntry& realEntry = icEntry(i);
+        BaselineICEntry& realEntry = icEntry(i);
         realEntry = entries[i];
 
         if (!realEntry.hasStub()) {
@@ -1076,7 +1076,7 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
     JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
 
     for (size_t i = 0; i < numICEntries(); i++) {
-        ICEntry& entry = icEntry(i);
+        BaselineICEntry& entry = icEntry(i);
         if (!entry.hasStub())
             continue;
 
@@ -1117,7 +1117,7 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
 #ifdef DEBUG
     // All remaining stubs must be allocated in the fallback space.
     for (size_t i = 0; i < numICEntries(); i++) {
-        ICEntry& entry = icEntry(i);
+        BaselineICEntry& entry = icEntry(i);
         if (!entry.hasStub())
             continue;
 
