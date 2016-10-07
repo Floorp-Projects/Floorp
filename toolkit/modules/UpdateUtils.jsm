@@ -187,6 +187,14 @@ XPCOMUtils.defineLazyGetter(this, "gSystemCapabilities", function aus_gSC() {
     return instructionSet;
   }
 
+  if (AppConstants == "linux") {
+    let instructionSet = "unknown";
+    if navigator.cpuHasSSE2 {
+      instructionSet = "SSE2";
+    }
+    return instructionSet;
+  }
+
   return "NA"
 });
 
