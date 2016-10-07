@@ -89,7 +89,6 @@ android {
             }
 
             java {
-                srcDir "${topsrcdir}/mobile/android/geckoview/src/main/java"
                 srcDir "${topsrcdir}/mobile/android/base/java"
                 srcDir "${topsrcdir}/mobile/android/search/java"
                 srcDir "${topsrcdir}/mobile/android/javaaddons/java"
@@ -230,6 +229,7 @@ dependencies {
     automationCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
     testCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
 
+    compile project(':geckoview')
     compile project(':thirdparty')
 
     testCompile 'junit:junit:4.12'
@@ -253,40 +253,12 @@ task checkstyle(type: Checkstyle) {
     classpath = files()
 }
 
-task syncOmnijarFromDistDir(type: Sync) {
-    into("${project.buildDir}/generated/omnijar")
-    from("${topobjdir}/dist/fennec/assets") {
-        include 'omni.ja'
-    }
-}
-
-task checkLibsExistInDistDir<< {
-    if (syncLibsFromDistDir.source.empty) {
-        throw new GradleException("Required JNI libraries not found in ${topobjdir}/dist/fennec/lib.  Have you built and packaged?")
-    }
-}
-
-task syncLibsFromDistDir(type: Sync, dependsOn: checkLibsExistInDistDir) {
-    into("${project.buildDir}/generated/jniLibs")
-    from("${topobjdir}/dist/fennec/lib")
-}
-
-task checkAssetsExistInDistDir<< {
-    if (syncAssetsFromDistDir.source.empty) {
-        throw new GradleException("Required assets not found in ${topobjdir}/dist/fennec/assets.  Have you built and packaged?")
-    }
-}
-
-task syncAssetsFromDistDir(type: Sync, dependsOn: checkAssetsExistInDistDir) {
-    into("${project.buildDir}/generated/assets")
-    from("${topobjdir}/dist/fennec/assets") {
-        exclude 'omni.ja'
-    }
-}
-
 task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
     into("${project.buildDir}/generated/source/preprocessed_code")
-    from("${topobjdir}/mobile/android/base/generated/preprocessed")
+    from("${topobjdir}/mobile/android/base/generated/preprocessed") {
+        // All other preprocessed code is included in the geckoview project.
+        include '**/AdjustConstants.java'
+    }
 }
 
 // The localization system uses the moz.build preprocessor to interpolate a .dtd
@@ -312,38 +284,6 @@ task syncPreprocessedResources(type: Sync, dependsOn: rootProject.generateCodeAn
     }
 }
 
-// The omnijar inputs are listed as resource directory inputs to a dummy JAR.
-// That arrangement labels them nicely in IntelliJ.  See the comment in the
-// :omnijar project for more context.
-evaluationDependsOn(':omnijar')
-
-task buildOmnijar(type:Exec) {
-    dependsOn rootProject.generateCodeAndResources
-
-    // See comment in :omnijar project regarding interface mismatches here.
-    inputs.source project(':omnijar').sourceSets.main.resources.srcDirs
-
-    // Produce a single output file.
-    outputs.file "${topobjdir}/dist/fennec/assets/omni.ja"
-
-    workingDir "${topobjdir}"
-
-    commandLine mozconfig.substs.GMAKE
-    args '-C'
-    args "${topobjdir}/mobile/android/base"
-    args 'gradle-omnijar'
-
-    // Only show the output if something went wrong.
-    ignoreExitValue = true
-    standardOutput = new ByteArrayOutputStream()
-    errorOutput = standardOutput
-    doLast {
-        if (execResult.exitValue != 0) {
-            throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
-        }
-    }
-}
-
 // It's not easy -- see the backout in Bug 1242213 -- to change the <manifest>
 // package for Fennec.  Gradle has grown a mechanism to achieve what we want for
 // Fennec, however, with applicationId.  To use the same manifest as moz.build,
@@ -354,30 +294,28 @@ task rewriteManifestPackage(type: Copy, dependsOn: rootProject.generateCodeAndRe
     filter { it.replaceFirst(/package=".*?"/, 'package="org.mozilla.gecko"') }
 }
 
+apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
+
 android.applicationVariants.all { variant ->
     variant.preBuild.dependsOn rewriteManifestPackage
     variant.preBuild.dependsOn syncPreprocessedCode
     variant.preBuild.dependsOn syncPreprocessedResources
 
+    // Automation builds don't include Gecko binaries, since those binaries are
+    // not produced until after build time (at package time).  Therefore,
+    // automation builds include the Gecko binaries into the APK at package
+    // time.  The "withGeckoBinaries" variant of the :geckoview project also
+    // does this.  (It does what it says on the tin!)  For notes on this
+    // approach, see mobile/android/gradle/with_gecko_binaries.gradle.
+
     // Like 'local' or 'localOld'.
     def productFlavor = variant.productFlavors[0].name
-    // Like 'debug' or 'release'.
-    def buildType = variant.buildType.name
 
-    // We insert omni.ja and the .so libraries into all local builds.
-    if (!productFlavor.startsWith('local')) {
-        return
+    // :app uses :geckoview:release and handles it's own Gecko binary inclusion,
+    // even though this would be most naturally done in the :geckoview project.
+    if (!productFlavor.equals('automation')) {
+        configureVariantWithGeckoBinaries(variant)
     }
-
-    syncOmnijarFromDistDir.dependsOn buildOmnijar
-    def generateAssetsTask = tasks.findByName("generate${productFlavor.capitalize()}${buildType.capitalize()}Assets")
-    generateAssetsTask.dependsOn syncOmnijarFromDistDir
-    generateAssetsTask.dependsOn syncLibsFromDistDir
-    generateAssetsTask.dependsOn syncAssetsFromDistDir
-
-    android.sourceSets."${productFlavor}${buildType.capitalize()}".assets.srcDir syncOmnijarFromDistDir.destinationDir
-    android.sourceSets."${productFlavor}${buildType.capitalize()}".assets.srcDir syncAssetsFromDistDir.destinationDir
-    android.sourceSets."${productFlavor}${buildType.capitalize()}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
 }
 
 apply plugin: 'spoon'
@@ -426,12 +364,12 @@ def makeTaskExecutionListener(artifactRootUrl) {
         void beforeExecute(Task task) {
             // Do nothing.
         }
-    
+
         void afterExecute(Task task, TaskState state) {
             if (!state.failure) {
                 return
             }
-    
+
             // Link to the failing report.  The task path and the report path
             // depend on the android-lint task in
             // taskcluster/ci/android-stuff/kind.yml.  It's not possible to link
@@ -441,12 +379,12 @@ def makeTaskExecutionListener(artifactRootUrl) {
                 def url = "${artifactRootUrl}/public/android/checkstyle/checkstyle.xml"
                 println "TEST-UNEXPECTED-FAIL | android-checkstyle | Checkstyle rule violations were found. See the report at: $url"
                 break
-    
+
             case ':app:lintAutomationDebug':
                 def url = "${artifactRootUrl}/public/android/lint/lint-results-automationDebug.html"
                 println "TEST-UNEXPECTED-FAIL | android-lint | Lint found errors in the project; aborting build. See the report at: $url"
                 break
-    
+
             case ':app:testAutomationDebugUnitTest':
                 def url = "${artifactRootUrl}/public/android/unittest/automationDebug/index.html"
                 println "TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the report at: $url"

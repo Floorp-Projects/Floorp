@@ -7,7 +7,7 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.setAccessibleCaretEnabledPref(true);
+browserElementTestHelpers.setupAccessibleCaretPref();
 browserElementTestHelpers.addPermission();
 const { Services } = SpecialPowers.Cu.import('resource://gre/modules/Services.jsm');
 

@@ -222,15 +222,30 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static void ensureDefaultPanelForV5orV8(Context context, JSONArray jsonPanels) throws JSONException {
         int historyIndex = -1;
 
+        // If all panels are disabled, there is no default panel - this is the only valid state
+        // that has no default. We can use this flag to track whether any visible panels have been
+        // found.
+        boolean enabledPanelsFound = false;
+
         for (int i = 0; i < jsonPanels.length(); i++) {
             final PanelConfig panelConfig = new PanelConfig(jsonPanels.getJSONObject(i));
             if (panelConfig.isDefault()) {
                 return;
             }
 
+            if (!panelConfig.isDisabled()) {
+                enabledPanelsFound = true;
+            }
+
             if (panelConfig.getType() == PanelType.COMBINED_HISTORY) {
                 historyIndex = i;
             }
+        }
+
+        if (!enabledPanelsFound) {
+            // No panels are enabled, hence there can be no default (see noEnabledPanelsFound declaration
+            // for more information).
+            return;
         }
 
         // Make the History panel default. We can't modify existing PanelConfigs, so make a new one.
@@ -255,6 +270,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static JSONArray removePanel(Context context, JSONArray jsonPanels,
                                          PanelType panelToRemove, PanelType replacementPanel, boolean alwaysUnhide) throws JSONException {
         boolean wasDefault = false;
+        boolean wasDisabled = false;
         int replacementPanelIndex = -1;
         boolean replacementWasDefault = false;
 
@@ -269,6 +285,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
             if (panelConfig.getType() == panelToRemove) {
                 // If this panel was the default we'll need to assign a new default:
                 wasDefault = panelConfig.isDefault();
+                wasDisabled = panelConfig.isDisabled();
             } else {
                 if (panelConfig.getType() == replacementPanel) {
                     replacementPanelIndex = newJSONPanels.length();
@@ -284,7 +301,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
         // Unless alwaysUnhide is true, we make the replacement panel visible only if it is going
         // to be the new default panel, since a hidden default panel doesn't make sense.
         // This is to allow preserving the behaviour of the original reading list migration function.
-        if (wasDefault || alwaysUnhide) {
+        if ((wasDefault || alwaysUnhide) && !wasDisabled) {
             final JSONObject replacementPanelConfig;
             if (wasDefault) {
                 // If the removed panel was the default, the replacement has to be made the new default

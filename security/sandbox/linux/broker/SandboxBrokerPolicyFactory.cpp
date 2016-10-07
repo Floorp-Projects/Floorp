@@ -13,6 +13,7 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "SpecialSystemDirectory.h"
 
 #ifdef ANDROID
 #include "cutils/properties.h"
@@ -40,12 +41,15 @@ SandboxBrokerPolicyFactory::IsSystemSupported() {
   return false;
 }
 
-#if defined(MOZ_CONTENT_SANDBOX) && defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_CONTENT_SANDBOX)
 namespace {
 static const int rdonly = SandboxBroker::MAY_READ;
 static const int wronly = SandboxBroker::MAY_WRITE;
 static const int rdwr = rdonly | wronly;
+static const int rdwrcr = rdwr | SandboxBroker::MAY_CREATE;
+#if defined(MOZ_WIDGET_GONK)
 static const int wrlog = wronly | SandboxBroker::MAY_CREATE;
+#endif
 }
 #endif
 
@@ -111,6 +115,28 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
                   SandboxBroker::Policy::AddAlways); // bug 1029337
 
   mCommonContentPolicy.reset(policy);
+#elif defined(MOZ_CONTENT_SANDBOX)
+  SandboxBroker::Policy* policy = new SandboxBroker::Policy;
+  policy->AddDir(rdonly, "/");
+  policy->AddDir(rdwrcr, "/dev/shm");
+  // Add write permissions on the temporary directory. This can come
+  // from various environment variables (TMPDIR,TMP,TEMP,...) so
+  // make sure to use the full logic.
+  nsCOMPtr<nsIFile> tmpDir;
+  nsresult rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
+                                          getter_AddRefs(tmpDir));
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString tmpPath;
+    rv = tmpDir->GetNativePath(tmpPath);
+    if (NS_SUCCEEDED(rv)) {
+      policy->AddDir(rdwrcr, tmpPath.get());
+    }
+  }
+  // If the above fails at any point, fall back to a very good guess.
+  if (NS_FAILED(rv)) {
+    policy->AddDir(rdwrcr, "/tmp");
+  }
+  mCommonContentPolicy.reset(policy);
 #endif
 }
 
@@ -118,17 +144,21 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
 UniquePtr<SandboxBroker::Policy>
 SandboxBrokerPolicyFactory::GetContentPolicy(int aPid)
 {
-  // Allow overriding "unsupported"ness with a pref, for testing.
-  if (!IsSystemSupported() &&
-      Preferences::GetInt("security.sandbox.content.level") <= 1) {
+  // Policy entries that vary per-process (currently the only reason
+  // that can happen is because they contain the pid) are added here.
+
+  MOZ_ASSERT(NS_IsMainThread());
+  // File broker usage is controlled through a pref.
+  if (Preferences::GetInt("security.sandbox.content.level") <= 1) {
     return nullptr;
   }
 
-  // Policy entries that vary per-process (currently the only reason
-  // that can happen is because they contain the pid) are added here.
-#if defined(MOZ_WIDGET_GONK)
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mCommonContentPolicy);
+#if defined(MOZ_WIDGET_GONK)
+  // Allow overriding "unsupported"ness with a pref, for testing.
+  if (!IsSystemSupported()) {
+    return nullptr;
+  }
   UniquePtr<SandboxBroker::Policy>
     policy(new SandboxBroker::Policy(*mCommonContentPolicy));
 
@@ -145,9 +175,11 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid)
   policy->AddPath(rdonly, nsPrintfCString("/proc/%d/smaps", aPid).get());
 
   return policy;
-#else // MOZ_WIDGET_GONK
-  // Not implemented for desktop yet.
-  return nullptr;
+#else
+  UniquePtr<SandboxBroker::Policy>
+    policy(new SandboxBroker::Policy(*mCommonContentPolicy));
+  // Return the common policy.
+  return policy;
 #endif
 }
 
