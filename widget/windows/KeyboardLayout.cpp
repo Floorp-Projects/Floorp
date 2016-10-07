@@ -916,16 +916,14 @@ ModifierKeyState::EnsureAltGr()
 void
 UniCharsAndModifiers::Append(char16_t aUniChar, Modifiers aModifiers)
 {
-  MOZ_ASSERT(mLength < 5);
-  mChars[mLength] = aUniChar;
-  mModifiers[mLength] = aModifiers;
-  mLength++;
+  mChars.Append(aUniChar);
+  mModifiers.AppendElement(aModifiers);
 }
 
 void
 UniCharsAndModifiers::FillModifiers(Modifiers aModifiers)
 {
-  for (size_t i = 0; i < mLength; i++) {
+  for (size_t i = 0; i < Length(); i++) {
     mModifiers[i] = aModifiers;
   }
 }
@@ -937,7 +935,7 @@ UniCharsAndModifiers::OverwriteModifiersIfBeginsWith(
   if (!BeginsWith(aOther)) {
     return;
   }
-  for (size_t i = 0; i < aOther.mLength; ++i) {
+  for (size_t i = 0; i < aOther.Length(); ++i) {
     mModifiers[i] = aOther.mModifiers[i];
   }
 }
@@ -945,42 +943,28 @@ UniCharsAndModifiers::OverwriteModifiersIfBeginsWith(
 bool
 UniCharsAndModifiers::UniCharsEqual(const UniCharsAndModifiers& aOther) const
 {
-  if (mLength != aOther.mLength) {
-    return false;
-  }
-  return !memcmp(mChars, aOther.mChars, mLength * sizeof(char16_t));
+  return mChars.Equals(aOther.mChars);
 }
 
 bool
 UniCharsAndModifiers::UniCharsCaseInsensitiveEqual(
                         const UniCharsAndModifiers& aOther) const
 {
-  if (mLength != aOther.mLength) {
-    return false;
-  }
-
   nsCaseInsensitiveStringComparator comp;
-  return !comp(mChars, aOther.mChars, mLength, aOther.mLength);
+  return mChars.Equals(aOther.mChars, comp);
 }
 
 bool
 UniCharsAndModifiers::BeginsWith(const UniCharsAndModifiers& aOther) const
 {
-  if (mLength < aOther.mLength) {
-    return false;
-  }
-  return !memcmp(mChars, aOther.mChars, aOther.mLength * sizeof(char16_t));
+  return StringBeginsWith(mChars, aOther.mChars);
 }
 
 UniCharsAndModifiers&
 UniCharsAndModifiers::operator+=(const UniCharsAndModifiers& aOther)
 {
-  uint32_t copyCount = std::min(aOther.mLength, 5 - mLength);
-  NS_ENSURE_TRUE(copyCount > 0, *this);
-  memcpy(&mChars[mLength], aOther.mChars, copyCount * sizeof(char16_t));
-  memcpy(&mModifiers[mLength], aOther.mModifiers,
-         copyCount * sizeof(Modifiers));
-  mLength += copyCount;
+  mChars.Append(aOther.mChars);
+  mModifiers.AppendElements(aOther.mModifiers);
   return *this;
 }
 

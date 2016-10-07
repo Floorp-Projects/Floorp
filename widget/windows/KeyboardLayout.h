@@ -57,10 +57,10 @@ static const uint32_t sModifierKeyMap[][3] = {
 
 class KeyboardLayout;
 
-class UniCharsAndModifiers final
+class MOZ_STACK_CLASS UniCharsAndModifiers final
 {
 public:
-  UniCharsAndModifiers() : mLength(0) {}
+  UniCharsAndModifiers() {}
   UniCharsAndModifiers operator+(const UniCharsAndModifiers& aOther) const;
   UniCharsAndModifiers& operator+=(const UniCharsAndModifiers& aOther);
 
@@ -68,20 +68,32 @@ public:
    * Append a pair of unicode character and the final modifier.
    */
   void Append(char16_t aUniChar, Modifiers aModifiers);
-  void Clear() { mLength = 0; }
-  bool IsEmpty() const { return !mLength; }
+  void Clear()
+  {
+    mChars.Truncate();
+    mModifiers.Clear();
+  }
+  bool IsEmpty() const
+  {
+    MOZ_ASSERT(mChars.Length() == mModifiers.Length());
+    return mChars.IsEmpty();
+  }
 
   char16_t CharAt(size_t aIndex) const
   {
-    MOZ_ASSERT(aIndex < mLength);
+    MOZ_ASSERT(aIndex < Length());
     return mChars[aIndex];
   }
   Modifiers ModifiersAt(size_t aIndex) const
   {
-    MOZ_ASSERT(aIndex < mLength);
+    MOZ_ASSERT(aIndex < Length());
     return mModifiers[aIndex];
   }
-  size_t Length() const { return mLength; }
+  size_t Length() const
+  {
+    MOZ_ASSERT(mChars.Length() == mModifiers.Length());
+    return mChars.Length();
+  }
 
   void FillModifiers(Modifiers aModifiers);
   /**
@@ -94,13 +106,13 @@ public:
   bool UniCharsCaseInsensitiveEqual(const UniCharsAndModifiers& aOther) const;
   bool BeginsWith(const UniCharsAndModifiers& aOther) const;
 
-  nsString ToString() const { return nsString(mChars, mLength); }
+  const nsString& ToString() const { return mChars; }
 
 private:
-  // Dead-key + up to 4 characters
-  char16_t mChars[5];
-  Modifiers mModifiers[5];
-  size_t mLength;
+  nsAutoString mChars;
+  // 5 is enough number for normal keyboard layout handling.  On Windows,
+  // a dead key sequence may cause inputting up to 5 characters per key press.
+  AutoTArray<Modifiers, 5> mModifiers;
 };
 
 struct DeadKeyEntry;
