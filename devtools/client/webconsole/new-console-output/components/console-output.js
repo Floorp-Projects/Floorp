@@ -31,7 +31,7 @@ const ConsoleOutput = createClass({
 
   componentDidMount() {
     scrollToBottom(this.outputNode);
-    this.props.serviceContainer.attachRefToHud("outputWrapper", this.outputNode);
+    this.props.serviceContainer.attachRefToHud("outputScroller", this.outputNode);
   },
 
   componentWillUpdate(nextProps, nextState) {
