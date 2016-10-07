@@ -176,6 +176,7 @@ EXPORTS.mozilla.layers += [
     'ipc/ImageContainerChild.h',
     'ipc/ImageContainerParent.h',
     'ipc/ISurfaceAllocator.h',
+    'ipc/KnowsCompositor.h',
     'ipc/LayerAnimationUtils.h',
     'ipc/LayerTransactionChild.h',
     'ipc/LayerTransactionParent.h',
