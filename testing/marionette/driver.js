@@ -1230,12 +1230,10 @@ GeckoDriver.prototype.getChromeWindowHandles = function(cmd, resp) {
  * Get the current window position.
  *
  * @return {Object.<string, number>}
- *     Object with x and y coordinates.
+ *     Object with |x| and |y| coordinates.
  */
 GeckoDriver.prototype.getWindowPosition = function(cmd, resp) {
-  let win = this.getCurrentWindow();
-  resp.body.x = win.screenX;
-  resp.body.y = win.screenY;
+  return this.curBrowser.position;
 };
 
 /**
@@ -1247,20 +1245,25 @@ GeckoDriver.prototype.getWindowPosition = function(cmd, resp) {
  * @param {number} y
  *     Y coordinate of the top/left of the window that it will be
  *     moved to.
+ *
+ * @return {Object.<string, number>}
+ *     Object with |x| and |y| coordinates.
  */
 GeckoDriver.prototype.setWindowPosition = function(cmd, resp) {
   if (this.appName != "Firefox") {
-    throw new WebDriverError("Unable to set the window position on mobile");
+    throw new UnsupportedOperationError("Unable to set the window position on mobile");
   }
 
-  let x = parseInt(cmd.parameters.x);
-  let y  = parseInt(cmd.parameters.y);
-  if (isNaN(x) || isNaN(y)) {
-    throw new UnknownError("x and y arguments should be integers");
+  let {x, y} = cmd.parameters;
+  if (!Number.isInteger(x) || !Number.isInteger(y) ||
+      x < 0 || y < 0) {
+    throw new InvalidArgumentError();
   }
 
   let win = this.getCurrentWindow();
   win.moveTo(x, y);
+
+  return this.curBrowser.position;
 };
 
 /**

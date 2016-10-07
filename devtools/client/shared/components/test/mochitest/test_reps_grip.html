@@ -31,6 +31,9 @@ window.onload = Task.async(function* () {
     // Test that properties are rendered as expected by PropRep
     yield testNestedObject();
     yield testNestedArray();
+
+    // Test that 'more' property doesn't clobber the caption.
+    yield testMoreProp();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -193,6 +196,35 @@ window.onload = Task.async(function* () {
       {
         mode: "long",
         expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testMoreProp() {
+    // Test object: `{a: undefined, b: 1, more: 2, d: 3}`;
+    const testName = "testMoreProp";
+
+    const defaultOutput = `Object { b: 1, more: 2, d: 3, 1 more… }`;
+    const longOutput = `Object { a: undefined, b: 1, more: 2, d: 3 }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Object`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: longOutput,
       }
     ];
 
@@ -403,6 +435,50 @@ window.onload = Task.async(function* () {
             "ownPropertiesLength": 1,
             "safeGetterValues": {}
           },
+        };
+
+      case "testMoreProp":
+        return {
+          "type": "object",
+          "class": "Object",
+          "actor": "server1.conn0.obj342",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {
+              "a": {
+                "configurable": true,
+                "enumerable": true,
+                "writable": true,
+                "value": {
+                  "type": "undefined"
+                }
+              },
+              "b": {
+                "configurable": true,
+                "enumerable": true,
+                "writable": true,
+                "value": 1
+              },
+              "more": {
+                "configurable": true,
+                "enumerable": true,
+                "writable": true,
+                "value": 2
+              },
+              "d": {
+                "configurable": true,
+                "enumerable": true,
+                "writable": true,
+                "value": 3
+              }
+            },
+            "ownPropertiesLength": 4,
+            "safeGetterValues": {}
+          }
         };
 
     }

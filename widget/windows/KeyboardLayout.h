@@ -247,11 +247,10 @@ public:
 
   /**
    * Handles WM_CHAR message or WM_SYSCHAR message.  The instance must be
-   * initialized with WM_KEYDOWN, WM_SYSKEYDOWN or them.
+   * initialized with them.
    * Returns true if dispatched keypress event is consumed.  Otherwise, false.
    */
-  bool HandleCharMessage(const MSG& aCharMsg,
-                         bool* aEventDispatched = nullptr) const;
+  bool HandleCharMessage(bool* aEventDispatched = nullptr) const;
 
   /**
    * Handles keyup message.  Returns true if the event is consumed.
@@ -433,11 +432,11 @@ private:
             mMsg.message == WM_SYSKEYUP ||
             mMsg.message == MOZ_WM_KEYUP);
   }
-  bool IsPrintableCharMessage(const MSG& aMSG) const
+  bool IsCharOrSysCharMessage(const MSG& aMSG) const
   {
-    return IsPrintableCharMessage(aMSG.message);
+    return IsCharOrSysCharMessage(aMSG.message);
   }
-  bool IsPrintableCharMessage(UINT aMessage) const
+  bool IsCharOrSysCharMessage(UINT aMessage) const
   {
     return (aMessage == WM_CHAR || aMessage == WM_SYSCHAR);
   }
@@ -447,7 +446,7 @@ private:
   }
   bool IsCharMessage(UINT aMessage) const
   {
-    return (IsPrintableCharMessage(aMessage) || IsDeadCharMessage(aMessage));
+    return (IsCharOrSysCharMessage(aMessage) || IsDeadCharMessage(aMessage));
   }
   bool IsDeadCharMessage(const MSG& aMSG) const
   {
@@ -466,12 +465,22 @@ private:
     return (aMessage == WM_SYSCHAR || aMessage == WM_SYSDEADCHAR);
   }
   bool MayBeSameCharMessage(const MSG& aCharMsg1, const MSG& aCharMsg2) const;
-  bool IsFollowedByNonControlCharMessage() const;
+  bool IsFollowedByPrintableCharMessage() const;
   bool IsFollowedByDeadCharMessage() const;
   bool IsKeyMessageOnPlugin() const
   {
     return (mMsg.message == MOZ_WM_KEYDOWN ||
             mMsg.message == MOZ_WM_KEYUP);
+  }
+  bool IsPrintableCharMessage(const MSG& aMSG) const
+  {
+    return aMSG.message == WM_CHAR &&
+           !IsControlChar(static_cast<char16_t>(aMSG.wParam));
+  }
+  bool IsControlCharMessage(const MSG& aMSG) const
+  {
+    return IsCharMessage(aMSG.message) &&
+           IsControlChar(static_cast<char16_t>(aMSG.wParam));
   }
 
   /**
@@ -577,6 +586,14 @@ private:
   {
     return mFocusedWndBeforeDispatch != ::GetFocus();
   }
+
+  /**
+   * Handles WM_CHAR message or WM_SYSCHAR message.  The instance must be
+   * initialized with WM_KEYDOWN, WM_SYSKEYDOWN or them.
+   * Returns true if dispatched keypress event is consumed.  Otherwise, false.
+   */
+  bool HandleCharMessage(const MSG& aCharMsg,
+                         bool* aEventDispatched = nullptr) const;
 
   // Calls of PeekMessage() from NativeKey might cause nested message handling
   // due to (perhaps) odd API hook.  NativeKey should do nothing if given
