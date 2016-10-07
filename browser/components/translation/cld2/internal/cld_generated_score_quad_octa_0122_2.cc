@@ -26,7 +26,7 @@ extern const short kAvgDeltaOctaScore[kAvgDeltaOctaScoreSize] = {
   1306,    0,    0,    0,  // 3 FINNISH fi
   1033,    0,    0,    0,  // 4 FRENCH fr
   1306,    0,    0,    0,  // 5 GERMAN de
-     0,    0,    0,  776,  // 6 HEBREW he
+     0,    0,    0,  776,  // 6 HEBREW iw
    960,    0,    0,    0,  // 7 ITALIAN it
      0,    0,    0, 3100,  // 8 Japanese ja
      0,    0,    0, 3669,  // 9 Korean ko
@@ -637,3 +637,4 @@ extern const short kAvgDeltaOctaScore[kAvgDeltaOctaScoreSize] = {
 };
 
 }       // End namespace CLD2
+
