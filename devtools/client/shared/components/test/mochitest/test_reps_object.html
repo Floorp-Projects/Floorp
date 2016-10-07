@@ -30,6 +30,9 @@ window.onload = Task.async(function* () {
 
     // Test that properties are rendered as expected by PropRep
     yield testNested();
+
+    // Test that 'more' property doesn't clobber the caption.
+    yield testMoreProp();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -183,7 +186,37 @@ window.onload = Task.async(function* () {
 
     testRepRenderModes(modeTests, "testNestedObject", componentUnderTest, stub);
   }
-});
+
+  function testMoreProp() {
+    const stub = {
+      a: undefined,
+      b: 1,
+      'more': 2,
+      d: 3
+    };
+    const defaultOutput = `Object { b: 1, more: 2, d: 3, 1 more… }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Object`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testMoreProp", componentUnderTest, stub);
+  }});
 </script>
 </pre>
 </body>
