@@ -97,7 +97,6 @@ function checkStateRead(aSubject, aTopic, aData) {
   } else {
     throw new Error("Observed data should either be the Site Security " +
                     "Service state file name or the preload file name");
-    return;
   }
 
   if (!gSSSStateSeen || !gPreloadStateSeen) {
