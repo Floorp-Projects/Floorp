@@ -731,7 +731,10 @@ BufferTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
   }
 
   // We don't own it, apparently.
-  mFirstSource = nullptr;
+  if (mFirstSource) {
+    mNeedsFullUpdate = true;
+    mFirstSource = nullptr;
+  }
 
   DataTextureSource* texture = aTexture.get() ? aTexture->AsDataTextureSource() : nullptr;
 
