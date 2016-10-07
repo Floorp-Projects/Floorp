@@ -186,21 +186,7 @@ public:
     }
   }
 
-  void TransformToLayerSpace(const Matrix4x4Typed<Units, Units>& aTransform)
-  {
-    TransformPoints(aTransform);
-    mNormal = Point3DTyped<Units>(0.0f, 0.0f, 1.0f);
-  }
-
-  void TransformToScreenSpace(const Matrix4x4Typed<Units, Units>& aTransform)
-  {
-    TransformPoints(aTransform);
-
-    // Normal vectors should be transformed using inverse transpose.
-    mNormal = aTransform.Inverse().Transpose().TransformPoint(mNormal);
-  }
-
-  nsTArray<TriangleTyped<Units>> Triangulate() const
+  nsTArray<TriangleTyped<Units>> ToTriangles() const
   {
     nsTArray<TriangleTyped<Units>> triangles;
 
@@ -216,6 +202,20 @@ public:
     }
 
     return triangles;
+  }
+
+  void TransformToLayerSpace(const Matrix4x4Typed<Units, Units>& aTransform)
+  {
+    TransformPoints(aTransform);
+    mNormal = Point3DTyped<Units>(0.0f, 0.0f, 1.0f);
+  }
+
+  void TransformToScreenSpace(const Matrix4x4Typed<Units, Units>& aTransform)
+  {
+    TransformPoints(aTransform);
+
+    // Normal vectors should be transformed using inverse transpose.
+    mNormal = aTransform.Inverse().Transpose().TransformPoint(mNormal);
   }
 
 private:
