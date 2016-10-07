@@ -1260,7 +1260,9 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
 bool
 TypedArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
-    JS_ReportErrorASCII(cx, "%%TypedArray%% calling/constructing not implemented yet");
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_CALL_OR_CONSTRUCT,
+                              args.isConstructing() ? "construct" : "call");
     return false;
 }
 
