@@ -982,12 +982,8 @@ TokenStream::checkForKeyword(const KeywordInfo* kw, TokenKind* ttp)
         return reportStrictModeError(JSMSG_RESERVED_ID, kw->chars);
 
     // Working keyword.
-    if (ttp) {
-        *ttp = kw->tokentype;
-        return true;
-    }
-
-    return reportError(JSMSG_RESERVED_ID, kw->chars);
+    *ttp = kw->tokentype;
+    return true;
 }
 
 bool
