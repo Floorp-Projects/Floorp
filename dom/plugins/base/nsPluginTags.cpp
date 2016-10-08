@@ -375,7 +375,7 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
         break;
       case nsPluginHost::eSpecialType_None:
       default:
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
         // Allow async init for all plugins on Nightly and Aurora
         mSupportsAsyncInit = true;
 #endif

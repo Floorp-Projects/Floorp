@@ -804,10 +804,10 @@ public class BrowserApp extends GeckoApp
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
 
-        // The update service is enabled for RELEASE_BUILD, which includes the release and beta channels.
+        // The update service is enabled for RELEASE_OR_BETA, which includes the release and beta channels.
         // However, no updates are served.  Therefore, we don't trust the update service directly, and
         // try to avoid prompting unnecessarily. See Bug 1232798.
-        if (!AppConstants.RELEASE_BUILD && UpdateServiceHelper.isUpdaterEnabled(this)) {
+        if (!AppConstants.RELEASE_OR_BETA && UpdateServiceHelper.isUpdaterEnabled(this)) {
             Permissions.from(this)
                        .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                        .doNotPrompt()
@@ -4171,7 +4171,7 @@ public class BrowserApp extends GeckoApp
      * @return true if update UI was launched.
      */
     protected boolean handleUpdaterLaunch() {
-        if (AppConstants.RELEASE_BUILD) {
+        if (AppConstants.RELEASE_OR_BETA) {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("market://details?id=" + getPackageName()));
             startActivity(intent);

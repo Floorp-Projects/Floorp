@@ -343,7 +343,7 @@ private:
 #if defined(ANDROID)
   DECL_GFX_PREF(Once, "gfx.apitrace.enabled",                  UseApitrace, bool, false);
 #endif
-#if defined(RELEASE_BUILD)
+#if defined(RELEASE_OR_BETA)
   // "Skip" means this is locked to the default value in beta and release.
   DECL_GFX_PREF(Skip, "gfx.blocklist.all",                     BlocklistAll, int32_t, 0);
 #else

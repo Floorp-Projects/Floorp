@@ -1701,7 +1701,7 @@ nsWindowSH::NameStructEnabled(JSContext* aCx, nsGlobalWindow *aWin,
          OldBindingConstructorEnabled(nameStruct, aWin, aCx);
 }
 
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 #define USE_CONTROLLERS_SHIM
 #endif
 

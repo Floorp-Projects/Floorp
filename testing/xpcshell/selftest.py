@@ -858,7 +858,7 @@ add_test({
 
         self.assertTestResult(False)
         self.assertInLog(TEST_FAIL_STRING)
-        if not substs.get('RELEASE_BUILD'):
+        if not substs.get('RELEASE_OR_BETA'):
           # async stacks are currently not enabled in release builds.
           self.assertInLog("test_simple_uncaught_rejection.js:3:3")
         self.assertInLog("Test rejection.")

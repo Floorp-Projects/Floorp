@@ -81,7 +81,7 @@ public final class EventDispatcher {
                         listeners = type.newInstance();
                         listenersMap.put(event, listeners);
                     }
-                    if (!AppConstants.RELEASE_BUILD && listeners.contains(listener)) {
+                    if (!AppConstants.RELEASE_OR_BETA && listeners.contains(listener)) {
                         throw new IllegalStateException("Already registered " + event);
                     }
                     listeners.add(listener);
@@ -94,7 +94,7 @@ public final class EventDispatcher {
 
     private void checkNotRegisteredElsewhere(final Map<String, ?> allowedMap,
                                              final String[] events) {
-        if (AppConstants.RELEASE_BUILD) {
+        if (AppConstants.RELEASE_OR_BETA) {
             // for performance reasons, we only check for
             // already-registered listeners in non-release builds.
             return;
@@ -124,7 +124,7 @@ public final class EventDispatcher {
             for (final String event : events) {
                 List<T> listeners = listenersMap.get(event);
                 if ((listeners == null ||
-                     !listeners.remove(listener)) && !AppConstants.RELEASE_BUILD) {
+                     !listeners.remove(listener)) && !AppConstants.RELEASE_OR_BETA) {
                     throw new IllegalArgumentException(event + " was not registered");
                 }
             }
@@ -333,7 +333,7 @@ public final class EventDispatcher {
             Log.w(LOGTAG, "No listeners for " + type + " in dispatchToThreads");
         }
 
-        if (!AppConstants.RELEASE_BUILD && jsMessage == null) {
+        if (!AppConstants.RELEASE_OR_BETA && jsMessage == null) {
             // We're dispatching a Bundle message. Because Gecko thread listeners are not
             // supported for Bundle messages, do a sanity check to make sure we don't have
             // matching Gecko thread listeners.

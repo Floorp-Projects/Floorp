@@ -60,7 +60,7 @@ public class TestGeckoMenu extends InstrumentationTestCase {
             semaphore.wait();
         }
 
-        if (AppConstants.RELEASE_BUILD) {
+        if (AppConstants.RELEASE_OR_BETA) {
             // No exception thrown: release build.
             assertNull(exception);
             return;

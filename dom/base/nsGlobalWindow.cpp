@@ -860,7 +860,7 @@ nsOuterWindowProxy::defineProperty(JSContext* cx,
     return result.failCantDefineWindowElement();
   }
 
-#ifndef RELEASE_BUILD // To be turned on in bug 1178638.
+#ifndef RELEASE_OR_BETA // To be turned on in bug 1178638.
   // For now, allow chrome code to define non-configurable properties
   // on windows, until we sort out what exactly the addon SDK is
   // doing.  In the meantime, this still allows us to test web compat

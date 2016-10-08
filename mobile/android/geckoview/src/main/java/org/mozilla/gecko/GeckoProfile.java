@@ -52,7 +52,7 @@ public final class GeckoProfile {
     private static final String PROFILE_CREATION_DATE_JSON_ATTR = "created";
 
     // Only tests should need to do this.
-    // We can default this to AppConstants.RELEASE_BUILD once we fix Bug 1069687.
+    // We can default this to AppConstants.RELEASE_OR_BETA once we fix Bug 1069687.
     private static volatile boolean sAcceptDirectoryChanges = true;
 
     @RobocopTarget
@@ -268,7 +268,7 @@ public final class GeckoProfile {
                             "Refusing to reuse profile with a different directory.");
                 }
 
-                if (AppConstants.RELEASE_BUILD) {
+                if (AppConstants.RELEASE_OR_BETA) {
                     Log.e(LOGTAG, "Release build trying to switch out profile dir. " +
                                   "This is an error, but let's do what we can.");
                 }

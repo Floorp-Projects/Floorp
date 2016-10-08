@@ -300,7 +300,7 @@ pref("browser.search.noCurrentEngine", true);
 
 // Control media casting & mirroring features
 pref("browser.casting.enabled", true);
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 // Chromecast mirroring is broken (bug 1131084)
 pref("browser.mirroring.enabled", false);
 #else
@@ -863,13 +863,13 @@ pref("layout.accessiblecaret.hapticfeedback", true);
 pref("layout.accessiblecaret.extend_selection_for_phone_number", true);
 
 // Disable sending console to logcat on release builds.
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("consoleservice.logcat", false);
 #else
 pref("consoleservice.logcat", true);
 #endif
 
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
 // Enable VR on mobile, making it enable by default.
 pref("dom.vr.enabled", true);
 #endif

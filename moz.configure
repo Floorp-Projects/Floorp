@@ -18,7 +18,7 @@ include('build/moz.configure/init.configure')
 # To be removed in Bug 1003313
 @depends(milestone)
 def e10s_testing_only(milestone):
-    if not milestone.is_release:
+    if not milestone.is_release_or_beta:
         return True
 
 set_config('E10S_TESTING_ONLY', e10s_testing_only)
