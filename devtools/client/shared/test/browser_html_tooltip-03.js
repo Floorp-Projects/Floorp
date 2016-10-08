@@ -144,7 +144,7 @@ function blurNode(doc, selector) {
  *         tooltip content will be ready.
  */
 function* createTooltip(doc, autofocus) {
-  let tooltip = new HTMLTooltip({doc}, {autofocus, useXulWrapper});
+  let tooltip = new HTMLTooltip(doc, {autofocus, useXulWrapper});
   let div = doc.createElementNS(HTML_NS, "div");
   div.classList.add("tooltip-content");
   div.style.height = "50px";

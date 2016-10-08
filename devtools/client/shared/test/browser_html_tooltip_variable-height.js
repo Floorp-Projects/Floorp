@@ -36,7 +36,7 @@ add_task(function* () {
   yield addTab("about:blank");
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
-  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: false});
+  let tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
   info("Set tooltip content 50px tall, but request a container 200px tall");
   let tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.style.cssText = "height: " + TOOLTIP_HEIGHT + "px; background: red;";
