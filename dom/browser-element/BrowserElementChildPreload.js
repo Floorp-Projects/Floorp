@@ -455,8 +455,6 @@ BrowserElementChild.prototype = {
 
     let returnValue = this._waitForResult(win);
 
-    Services.obs.notifyObservers(null, 'BEC:ShownModalPrompt', null);
-
     if (args.promptType == 'prompt' ||
         args.promptType == 'confirm' ||
         args.promptType == 'custom-prompt') {

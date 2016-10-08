@@ -23,7 +23,7 @@ class BrowserMobProxyArguments(object):
     def verify_usage_handler(self, args):
         if args.browsermob_script is not None:
             if not os.path.exists(args.browsermob_script):
-                raise ValueError('%s not found' % args.browsermob_script)
+                raise ValueError('{} not found'.format(args.browsermob_script))
 
 
 class BrowserMobProxyTestCaseMixin(object):
@@ -51,10 +51,10 @@ class BrowserMobProxyTestCaseMixin(object):
                 Components.utils.import("resource://gre/modules/Preferences.jsm");
                 Preferences.set("network.proxy.type", 1);
                 Preferences.set("network.proxy.http", "localhost");
-                Preferences.set("network.proxy.http_port", %(port)s);
+                Preferences.set("network.proxy.http_port", {port});
                 Preferences.set("network.proxy.ssl", "localhost");
-                Preferences.set("network.proxy.ssl_port", %(port)s);
-            """ % {"port": client.port})
+                Preferences.set("network.proxy.ssl_port", {port});
+            """.format(port=client.port))
         return client
 
     def tearDown(self):

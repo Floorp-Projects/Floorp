@@ -193,14 +193,14 @@ DecoderDoctorDocumentWatcher::DestroyPropertyCallback(void* aObject,
                                                       void*)
 {
   MOZ_ASSERT(NS_IsMainThread());
-#ifdef DEBUG
-  nsIDocument* document = static_cast<nsIDocument*>(aObject);
-#endif
   MOZ_ASSERT(aPropertyName == nsGkAtoms::decoderDoctor);
   DecoderDoctorDocumentWatcher* watcher =
     static_cast<DecoderDoctorDocumentWatcher*>(aPropertyValue);
   MOZ_ASSERT(watcher);
+#ifdef DEBUG
+  nsIDocument* document = static_cast<nsIDocument*>(aObject);
   MOZ_ASSERT(watcher->mDocument == document);
+#endif
   DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::DestroyPropertyCallback()\n",
            watcher, watcher->mDocument);
   // 'false': StopWatching should not try and remove the property.
@@ -478,8 +478,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
         }
         break;
       case DecoderDoctorDiagnostics::eEvent:
-        // Events shouldn't be stored for processing.
-        MOZ_ASSERT(false);
+        MOZ_ASSERT_UNREACHABLE("Events shouldn't be stored for processing.");
         break;
       default:
         MOZ_ASSERT(diag.mDecoderDoctorDiagnostics.Type()

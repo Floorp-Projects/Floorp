@@ -218,7 +218,7 @@ class WaitUntilTest(MarionetteTestCase):
         s = str(exc)
         self.assertIsNotNone(exc)
         self.assertIsInstance(exc, errors.TimeoutException)
-        self.assertIn(", caused by %r" % TypeError, s)
+        self.assertIn(", caused by {0!r}".format(TypeError), s)
         self.assertIn("self.wt.until(lambda x: x.exception(e=TypeError))", s)
 
     def test_ignored_exception_after_timeout_is_not_raised(self):

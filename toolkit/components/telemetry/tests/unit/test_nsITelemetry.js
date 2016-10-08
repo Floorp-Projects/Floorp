@@ -283,7 +283,7 @@ add_task(function* test_getWebrtc() {
   var webrtc = Telemetry.webrtcStats;
   do_check_true("IceCandidatesStats" in webrtc);
   var icestats = webrtc.IceCandidatesStats;
-  do_check_true(("webrtc" in icestats) && ("loop" in icestats));
+  do_check_true("webrtc" in icestats);
 });
 
 // Check that telemetry doesn't record in private mode

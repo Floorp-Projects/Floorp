@@ -63,10 +63,8 @@ TEST_HARNESS_FILES.testing.mochitest += [
     'redirect.html',
     'runrobocop.py',
     'runtests.py',
-    'runtestsb2g.py',
     'runtestsremote.py',
     'server.js',
-    'start_b2g.js',
     'start_desktop.js',
 ]
 

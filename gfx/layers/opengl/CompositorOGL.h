@@ -20,6 +20,7 @@
 #include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
+#include "mozilla/gfx/Triangle.h"       // for Triangle
 #include "mozilla/gfx/Types.h"          // for Float, SurfaceFormat, etc
 #include "mozilla/layers/Compositor.h"  // for SurfaceInitMode, Compositor, etc
 #include "mozilla/layers/CompositorTypes.h"  // for MaskType::MaskType::NumMaskTypes, etc
@@ -211,6 +212,13 @@ public:
                         const gfx::Matrix4x4& aTransform,
                         const gfx::Rect& aVisibleRect) override;
 
+  virtual void DrawTriangle(const gfx::TexturedTriangle& aTriangle,
+                            const gfx::IntRect& aClipRect,
+                            const EffectChain& aEffectChain,
+                            gfx::Float aOpacity,
+                            const gfx::Matrix4x4& aTransform,
+                            const gfx::Rect& aVisibleRect) override;
+
   virtual void EndFrame() override;
   virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) override;
 
@@ -309,6 +317,14 @@ public:
   }
 
 private:
+  template<typename Geometry>
+  void DrawGeometry(const Geometry& aGeometry,
+                    const gfx::IntRect& aClipRect,
+                    const EffectChain &aEffectChain,
+                    gfx::Float aOpacity,
+                    const gfx::Matrix4x4& aTransform,
+                    const gfx::Rect& aVisibleRect);
+
   void PrepareViewport(CompositingRenderTargetOGL *aRenderTarget);
 
   /** Widget associated with this compositor */
@@ -338,6 +354,12 @@ private:
    * coords and texcoords.
    */
   GLuint mQuadVBO;
+
+
+  /**
+  * VBO that stores dynamic triangle geometry.
+  */
+  GLuint mTriangleVBO;
 
   bool mHasBGRA;
 
@@ -373,7 +395,20 @@ private:
                                      gfx::CompositionOp aOp = gfx::CompositionOp::OP_OVER,
                                      bool aColorMatrix = false,
                                      bool aDEAAEnabled = false) const;
+
   ShaderProgramOGL* GetShaderProgramFor(const ShaderConfigOGL &aConfig);
+
+  void ApplyPrimitiveConfig(ShaderConfigOGL& aConfig,
+                            const gfx::Rect&)
+  {
+    aConfig.SetDynamicGeometry(false);
+  }
+
+  void ApplyPrimitiveConfig(ShaderConfigOGL& aConfig,
+                            const gfx::TexturedTriangle&)
+  {
+    aConfig.SetDynamicGeometry(true);
+  }
 
   /**
    * Create a FBO backed by a texture.
@@ -385,29 +420,58 @@ private:
   void CreateFBOWithTexture(const gfx::IntRect& aRect, bool aCopyFromSource,
                             GLuint aSourceFrameBuffer,
                             GLuint *aFBO, GLuint *aTexture);
+
   GLuint CreateTexture(const gfx::IntRect& aRect, bool aCopyFromSource, GLuint aSourceFrameBuffer);
+
+  gfx::Point3D GetLineCoefficients(const gfx::Point& aPoint1,
+                                   const gfx::Point& aPoint2);
+
+  void ActivateProgram(ShaderProgramOGL *aProg);
+
+  void CleanupResources();
 
   void BindAndDrawQuads(ShaderProgramOGL *aProg,
                         int aQuads,
                         const gfx::Rect* aLayerRect,
                         const gfx::Rect* aTextureRect);
+
   void BindAndDrawQuad(ShaderProgramOGL *aProg,
                        const gfx::Rect& aLayerRect,
-                       const gfx::Rect& aTextureRect = gfx::Rect(0.0f, 0.0f, 1.0f, 1.0f)) {
+                       const gfx::Rect& aTextureRect =
+                         gfx::Rect(0.0f, 0.0f, 1.0f, 1.0f))
+  {
     gfx::Rect layerRects[4];
     gfx::Rect textureRects[4];
     layerRects[0] = aLayerRect;
     textureRects[0] = aTextureRect;
     BindAndDrawQuads(aProg, 1, layerRects, textureRects);
   }
-  void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
-                                      const gfx::Rect& aRect,
-                                      const gfx::Rect& aTexCoordRect,
-                                      TextureSource *aTexture);
-  gfx::Point3D GetLineCoefficients(const gfx::Point& aPoint1,
-                                   const gfx::Point& aPoint2);
-  void ActivateProgram(ShaderProgramOGL *aProg);
-  void CleanupResources();
+
+  void BindAndDrawGeometry(ShaderProgramOGL* aProgram,
+                           const gfx::Rect& aRect,
+                           const gfx::Rect& aTextureRect =
+                             gfx::Rect(0.0f, 0.0f, 1.0f, 1.0f));
+
+  void BindAndDrawGeometry(ShaderProgramOGL* aProgram,
+                           const gfx::TexturedTriangle& aTriangle,
+                           const gfx::Rect& aTextureRect =
+                             gfx::Rect(0.0f, 0.0f, 1.0f, 1.0f));
+
+  void BindAndDrawGeometryWithTextureRect(ShaderProgramOGL *aProg,
+                                          const gfx::Rect& aRect,
+                                          const gfx::Rect& aTexCoordRect,
+                                          TextureSource *aTexture);
+
+  void BindAndDrawGeometryWithTextureRect(ShaderProgramOGL *aProg,
+                                         const gfx::TexturedTriangle& aTriangle,
+                                         const gfx::Rect& aTexCoordRect,
+                                         TextureSource *aTexture);
+
+  void InitializeVAO(const GLuint aAttribIndex, const GLint aComponents,
+                     const GLsizei aStride, const size_t aOffset);
+
+  gfx::Rect GetTextureCoordinates(gfx::Rect textureRect,
+                                  TextureSource* aTexture);
 
   /**
    * Bind the texture behind the current render target as the backdrop for a

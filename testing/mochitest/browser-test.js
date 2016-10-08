@@ -30,15 +30,6 @@ if (Services.appinfo.OS == 'Android') {
   setTimeout(testInit, 0);
 }
 
-function b2gStart() {
-  let homescreen = document.getElementById('systemapp');
-  var webNav = homescreen.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIWebNavigation);
-  var url = "chrome://mochikit/content/harness.xul?manifestFile=tests.json";
-
-  webNav.loadURI(url, null, null, null, null);
-}
-
 var TabDestroyObserver = {
   outstanding: new Set(),
   promiseResolver: null,

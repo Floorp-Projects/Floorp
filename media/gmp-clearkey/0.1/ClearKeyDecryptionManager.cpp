@@ -156,7 +156,11 @@ ClearKeyDecryptor::ClearKeyDecryptor()
 
 ClearKeyDecryptor::~ClearKeyDecryptor()
 {
-  CK_LOGD("ClearKeyDecryptor dtor; key = %08x...", *(uint32_t*)&mKey[0]);
+  if (HasKey()) {
+    CK_LOGD("ClearKeyDecryptor dtor; key = %08x...", *(uint32_t*)&mKey[0]);
+  } else {
+    CK_LOGD("ClearKeyDecryptor dtor");
+  }
 }
 
 void

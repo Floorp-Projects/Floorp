@@ -190,4 +190,14 @@ describe("ConsoleAPICall component:", () => {
       expect(wrapper.find(".theme-twisty:not(.open)").length).toBe(1);
     });
   });
+
+  describe("console.dirxml", () => {
+    it("renders", () => {
+      const message = stubPreparedMessages.get("console.dirxml(window)");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      expect(wrapper.find(".message-body").text())
+        .toBe("Window http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html");
+    });
+  });
 });

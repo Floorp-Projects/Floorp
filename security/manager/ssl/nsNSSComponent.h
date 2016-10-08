@@ -188,6 +188,7 @@ private:
   void MaybeEnableFamilySafetyCompatibility();
   void MaybeImportEnterpriseRoots();
 #ifdef XP_WIN
+  void ImportEnterpriseRootsForLocation(DWORD locationFlag);
   nsresult MaybeImportFamilySafetyRoot(PCCERT_CONTEXT certificate,
                                        bool& wasFamilySafetyRoot);
   nsresult LoadFamilySafetyRoot();

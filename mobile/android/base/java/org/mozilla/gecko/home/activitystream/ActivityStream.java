@@ -12,6 +12,8 @@ import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import org.mozilla.gecko.GeckoProfile;
@@ -20,6 +22,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.SimpleCursorLoader;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
+import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 public class ActivityStream extends FrameLayout {
     private final StreamRecyclerAdapter adapter;
@@ -39,6 +42,9 @@ public class ActivityStream extends FrameLayout {
         rv.setAdapter(adapter);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         rv.setHasFixedSize(true);
+
+        RecyclerViewClickSupport.addTo(rv)
+                .setOnItemClickListener(adapter);
     }
 
     void setOnUrlOpenListener(HomePager.OnUrlOpenListener listener) {

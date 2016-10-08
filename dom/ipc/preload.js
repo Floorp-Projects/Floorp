@@ -92,17 +92,6 @@ var DoPreloadPostfork = function(aCallback) {
   } catch (e) {
   }
 
-  if (Services.prefs.getIntPref("dom.w3c_touch_events.enabled") != 0) {
-    try {
-      if (Services.prefs.getBoolPref("layers.async-pan-zoom.enabled") === false) {
-        Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanningAPZDisabled.js", global);
-      }
-    } catch (e) {
-    }
-
-    Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js", global);
-  }
-
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementCopyPaste.js", global);
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementChildPreload.js", global);
 

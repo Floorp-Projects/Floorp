@@ -19,7 +19,7 @@
  */
 
 // Node data
-SERVO_BINDING_FUNC(Servo_Node_ClearNodeData, void, RawGeckoNode* node)
+SERVO_BINDING_FUNC(Servo_Node_ClearNodeData, void, RawGeckoNodeBorrowed node)
 
 // Styleset and Stylesheet management
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
@@ -116,7 +116,7 @@ SERVO_BINDING_FUNC(Servo_Shutdown, void)
 
 // Restyle hints
 SERVO_BINDING_FUNC(Servo_ComputeRestyleHint, nsRestyleHint,
-                   RawGeckoElement* element, ServoElementSnapshot* snapshot,
+                   RawGeckoElementBorrowed element, ServoElementSnapshot* snapshot,
                    RawServoStyleSetBorrowed set)
 
 // Restyle the given subtree.
@@ -127,6 +127,6 @@ SERVO_BINDING_FUNC(Servo_RestyleSubtree, void,
 #define STYLE_STRUCT(name, checkdata_cb)                            \
   struct nsStyle##name;                                             \
   SERVO_BINDING_FUNC(Servo_GetStyle##name, const nsStyle##name*,  \
-                     ServoComputedValuesBorrowed computed_values)
+                     ServoComputedValuesBorrowedOrNull computed_values)
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT

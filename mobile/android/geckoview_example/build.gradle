@@ -36,12 +36,13 @@ android {
 dependencies {
     testCompile 'junit:junit:4.12'
 
-    compile 'com.android.support:support-annotations:23.0.1'
+    compile 'com.android.support:support-annotations:23.4.0'
 
-    // Later versions (2.2.2, 0.5) requires newer support libraries, leading to
-    // "Conflict with dependency 'com.android.support:support-annotations'. Resolved versions for app (23.0.1) and test app (23.1.1) differ."
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
-    androidTestCompile 'com.android.support.test:runner:0.4.1'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    // Not defining this library again results in test-app assuming 23.1.1, and the following errors:
+    // "Conflict with dependency 'com.android.support:support-annotations'. Resolved versions for app (23.4.0) and test app (23.1.1) differ."
+    androidTestCompile 'com.android.support:support-annotations:23.4.0'
 
     compile project(':geckoview')
 }

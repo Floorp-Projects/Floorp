@@ -143,7 +143,8 @@ private:
                             nsISSLStatus* aSSLStatus, uint32_t flags,
                             uint64_t* aMaxAge, bool* aIncludeSubdomains,
                             uint32_t* aFailureResult);
-  nsresult SetHPKPState(const char* aHost, SiteHPKPState& entry, uint32_t flags);
+  nsresult SetHPKPState(const char* aHost, SiteHPKPState& entry, uint32_t flags,
+                        bool aIsPreload);
 
   const nsSTSPreload *GetPreloadListEntry(const char *aHost);
 
@@ -152,6 +153,7 @@ private:
   int64_t mPreloadListTimeOffset;
   bool mProcessPKPHeadersFromNonBuiltInRoots;
   RefPtr<mozilla::DataStorage> mSiteStateStorage;
+  RefPtr<mozilla::DataStorage> mPreloadStateStorage;
 };
 
 #endif // __nsSiteSecurityService_h__

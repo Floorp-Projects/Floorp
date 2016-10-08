@@ -8,7 +8,7 @@ function parseTestManifest(testManifest, params, callback) {
   var links = {};
   var paths = [];
 
-  // Support --test-manifest format for mobile/b2g
+  // Support --test-manifest format for mobile
   if ("runtests" in testManifest || "excludetests" in testManifest) {
     callback(testManifest);
     return;

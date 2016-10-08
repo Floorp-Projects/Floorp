@@ -3,80 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gtest/gtest.h"
+
 #include "BSPTree.h"
 #include "Polygon.h"
-
-#include "gtest/gtest.h"
+#include "PolygonTestUtils.h"
 
 #include <deque>
 
-using mozilla::layers::BSPTree;
-using mozilla::layers::LayerPolygon;
-using mozilla::gfx::Point3D;
-using mozilla::gfx::Polygon3D;
+using namespace mozilla::gfx;
+using namespace mozilla::layers;
 
 namespace {
-
-// Compares two points while allowing some numerical inaccuracy.
-static bool FuzzyEquals(const Point3D& lhs, const Point3D& rhs)
-{
-  const float epsilon = 0.001f;
-  const Point3D d = lhs - rhs;
-
-  // The absolute difference between the points should be less than
-  // epsilon for every component.
-  return std::abs(d.x) < epsilon &&
-         std::abs(d.y) < epsilon &&
-         std::abs(d.z) < epsilon;
-}
-
-// Compares the points of two polygons and ensures
-// that the points are in the same winding order.
-static bool operator==(const Polygon3D& lhs, const Polygon3D& rhs)
-{
-  const nsTArray<Point3D>& left = lhs.GetPoints();
-  const nsTArray<Point3D>& right = rhs.GetPoints();
-
-  // Polygons do not have the same amount of points.
-  if (left.Length() != right.Length()) {
-    return false;
-  }
-
-  const size_t pointCount = left.Length();
-
-  // Find the first vertex of the first polygon from the second polygon.
-  // This assumes that the polygons do not contain duplicate vertices.
-  int start = -1;
-  for (size_t i = 0; i < pointCount; ++i) {
-    if (FuzzyEquals(left[0], right[i])) {
-      start = i;
-      break;
-    }
-  }
-
-  // Found at least one different vertex.
-  if (start == -1) {
-    return false;
-  }
-
-  // Verify that the polygons have the same points.
-  for (size_t i = 0; i < pointCount; ++i) {
-    size_t j = (start + i) % pointCount;
-
-    if (!FuzzyEquals(left[i], right[j])) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 static void RunTest(std::deque<Polygon3D> aPolygons,
                     std::deque<Polygon3D> aExpected)
 {
   std::deque<LayerPolygon> layers;
   for (Polygon3D& polygon : aPolygons) {
-    layers.push_back(LayerPolygon(std::move(polygon), nullptr));
+    layers.push_back(LayerPolygon(nullptr, Move(polygon)));
   }
 
   const BSPTree tree(layers);
@@ -91,72 +36,6 @@ static void RunTest(std::deque<Polygon3D> aPolygons,
 
 } // namespace
 
-TEST(BSPTree, TestSanity)
-{
-  EXPECT_TRUE(FuzzyEquals(Point3D(0.0f, 0.0f, 0.0f),
-                          Point3D(0.0f, 0.0f, 0.0f)));
-
-  EXPECT_TRUE(FuzzyEquals(Point3D(0.0f, 0.0f, 0.0f),
-                          Point3D(0.00001f, 0.00001f, 0.00001f)));
-
-  EXPECT_TRUE(FuzzyEquals(Point3D(0.00001f, 0.00001f, 0.00001f),
-                          Point3D(0.0f, 0.0f, 0.0f)));
-
-  EXPECT_FALSE(FuzzyEquals(Point3D(0.0f, 0.0f, 0.0f),
-                           Point3D(0.01f, 0.01f, 0.01f)));
-
-  EXPECT_FALSE(FuzzyEquals(Point3D(0.01f, 0.01f, 0.01f),
-                           Point3D(0.0f, 0.0f, 0.0f)));
-
-  Polygon3D p1 {
-    Point3D(0.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f),
-    Point3D(0.0f, 1.0f, 1.0f)
-  };
-
-  // Same points as above shifted forward by one position.
-  Polygon3D shifted {
-    Point3D(0.0f, 1.0f, 1.0f),
-    Point3D(0.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f)
-  };
-
-  Polygon3D p2 {
-    Point3D(0.00001f, 0.00001f, 1.00001f),
-    Point3D(1.00001f, 0.00001f, 1.00001f),
-    Point3D(1.00001f, 1.00001f, 1.00001f),
-    Point3D(0.00001f, 1.00001f, 1.00001f)
-  };
-
-  Polygon3D p3 {
-    Point3D(0.01f, 0.01f, 1.01f),
-    Point3D(1.01f, 0.01f, 1.01f),
-    Point3D(1.01f, 1.01f, 1.01f),
-    Point3D(0.01f, 1.01f, 1.01f)
-  };
-
-  // Trivial equals
-  EXPECT_TRUE(p1 == p1);
-  EXPECT_TRUE(p2 == p2);
-  EXPECT_TRUE(p3 == p3);
-  EXPECT_TRUE(shifted == shifted);
-
-  // Polygons with the same point order
-  EXPECT_TRUE(p1 == p2);
-  EXPECT_TRUE(p1 == shifted);
-
-  // Polygons containing different points
-  EXPECT_FALSE(p1 == p3);
-  EXPECT_FALSE(p2 == p3);
-  EXPECT_FALSE(shifted == p3);
-
-  ::RunTest({p1}, {p1});
-  ::RunTest({p2}, {p2});
-  ::RunTest({p1}, {p2});
-  ::RunTest({p1}, {shifted});
-}
 
 TEST(BSPTree, SameNode)
 {
@@ -196,6 +75,84 @@ TEST(BSPTree, OneChild)
 
   ::RunTest({p1, p2}, {p1, p2});
   ::RunTest({p2, p1}, {p1, p2});
+}
+
+TEST(BSPTree, SharedEdge1)
+{
+  Polygon3D p1 {
+    Point3D(1.0f, 0.0f, 1.0f),
+    Point3D(0.0f, 0.0f, 1.0f),
+    Point3D(0.0f, 1.0f, 1.0f),
+    Point3D(1.0f, 1.0f, 1.0f)
+  };
+
+  Polygon3D p2 {
+    Point3D(1.0f, 0.0f, 1.0f),
+    Point3D(1.0f, 1.0f, 1.0f),
+    Point3D(2.0f, 2.0f, 1.0f),
+    Point3D(2.0f, 0.0f, 1.0f)
+  };
+
+  ::RunTest({p1, p2}, {p1, p2});
+}
+
+TEST(BSPTree, SharedEdge2)
+{
+  Polygon3D p1 {
+    Point3D(1.0f, 0.0f, 1.0f),
+    Point3D(0.0f, 0.0f, 1.0f),
+    Point3D(0.0f, 1.0f, 1.0f),
+    Point3D(1.0f, 1.0f, 1.0f)
+  };
+
+  Polygon3D p2 {
+    Point3D(1.0f, 0.0f, 1.0f),
+    Point3D(1.0f, 1.0f, 1.0f),
+    Point3D(2.0f, 2.0f, 0.0f),
+    Point3D(2.0f, 0.0f, 0.0f)
+  };
+
+  ::RunTest({p1, p2}, {p2, p1});
+}
+
+TEST(BSPTree, SplitSharedEdge)
+{
+  Polygon3D p1 {
+    Point3D(1.0f, 0.0f, 1.0f),
+    Point3D(0.0f, 0.0f, 1.0f),
+    Point3D(0.0f, 1.0f, 1.0f),
+    Point3D(1.0f, 1.0f, 1.0f)
+  };
+
+  Polygon3D p2 {
+    Point3D(1.0f, 0.0f, 2.0f),
+    Point3D(1.0f, 1.0f, 2.0f),
+    Point3D(1.0f, 1.0f, 0.0f),
+    Point3D(1.0f, 0.0f, 0.0f)
+  };
+
+  const std::deque<Polygon3D> expected {
+    Polygon3D {
+      Point3D(1.0f, 1.0f, 1.0f),
+      Point3D(1.0f, 1.0f, 0.0f),
+      Point3D(1.0f, 0.0f, 0.0f),
+      Point3D(1.0f, 0.0f, 1.0f)
+    },
+    Polygon3D {
+      Point3D(1.0f, 0.0f, 1.0f),
+      Point3D(0.0f, 0.0f, 1.0f),
+      Point3D(0.0f, 1.0f, 1.0f),
+      Point3D(1.0f, 1.0f, 1.0f)
+    },
+    Polygon3D {
+      Point3D(1.0f, 0.0f, 2.0f),
+      Point3D(1.0f, 1.0f, 2.0f),
+      Point3D(1.0f, 1.0f, 1.0f),
+      Point3D(1.0f, 0.0f, 1.0f)
+    }
+  };
+
+  ::RunTest({p1, p2}, expected);
 }
 
 TEST(BSPTree, SplitSimple1)

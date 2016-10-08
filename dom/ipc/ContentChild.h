@@ -335,12 +335,6 @@ public:
 
   virtual bool DeallocPHandlerServiceChild(PHandlerServiceChild*) override;
 
-  virtual PCellBroadcastChild* AllocPCellBroadcastChild() override;
-
-  PCellBroadcastChild* SendPCellBroadcastConstructor(PCellBroadcastChild* aActor);
-
-  virtual bool DeallocPCellBroadcastChild(PCellBroadcastChild* aActor) override;
-
   virtual PSmsChild* AllocPSmsChild() override;
 
   virtual bool DeallocPSmsChild(PSmsChild*) override;

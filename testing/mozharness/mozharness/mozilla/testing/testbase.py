@@ -506,16 +506,27 @@ You can set this by:
 
     def _download_and_extract_symbols(self):
         dirs = self.query_abs_dirs()
-        self.symbols_url = self.query_symbols_url()
         if self.config.get('download_symbols') == 'ondemand':
+            self.symbols_url = self.query_symbols_url()
             self.symbols_path = self.symbols_url
             return
-        if not self.symbols_path:
-            self.symbols_path = os.path.join(dirs['abs_work_dir'], 'symbols')
 
-        self.set_buildbot_property("symbols_url", self.symbols_url,
-                                   write_to_file=True)
-        self.download_unpack(self.symbols_url, self.symbols_path)
+        else:
+            # In the case for 'ondemand', we're OK to proceed without getting a hold of the
+            # symbols right this moment, however, in other cases we need to at least retry
+            # before being unable to proceed (e.g. debug tests need symbols)
+            self.symbols_url = self.retry(
+                action=self.query_symbols_url,
+                sleeptime=20,
+                error_level=FATAL,
+                error_message="We can't proceed without downloading symbols.",
+            )
+            if not self.symbols_path:
+                self.symbols_path = os.path.join(dirs['abs_work_dir'], 'symbols')
+
+            self.set_buildbot_property("symbols_url", self.symbols_url,
+                                       write_to_file=True)
+            self.download_unpack(self.symbols_url, self.symbols_path)
 
     def download_and_extract(self, extract_dirs=None, suite_categories=None):
         """

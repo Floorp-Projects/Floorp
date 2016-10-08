@@ -579,16 +579,16 @@ class Marionette(object):
 
     def _create_instance(self, app, instance_args):
         if not Marionette.is_port_available(self.port, host=self.host):
-            ex_msg = "%s:%d is unavailable." % (self.host, self.port)
+            ex_msg = "{0}:{1} is unavailable.".format(self.host, self.port)
             raise errors.MarionetteException(message=ex_msg)
         if app:
             # select instance class for the given app
             try:
                 instance_class = geckoinstance.apps[app]
             except KeyError:
-                msg = 'Application "%s" unknown (should be one of %s)'
+                msg = 'Application "{0}" unknown (should be one of {1})'
                 raise NotImplementedError(
-                    msg % (app, geckoinstance.apps.keys()))
+                    msg.format(app, geckoinstance.apps.keys()))
         else:
             try:
                 if not isinstance(self.bin, basestring):
@@ -710,7 +710,7 @@ class Marionette(object):
         if self.protocol == 1:
             if "error" not in obj or not isinstance(obj["error"], dict):
                 raise errors.MarionetteException(
-                    "Malformed packet, expected key 'error' to be a dict: %s" % obj)
+                    "Malformed packet, expected key 'error' to be a dict: {}".format(obj))
             error = obj["error"].get("status")
             message = obj["error"].get("message")
             stacktrace = obj["error"].get("stacktrace")
@@ -748,8 +748,8 @@ class Marionette(object):
                     test_name=self.test_name or os.path.basename(__file__)):
                 crashed = True
         if returncode is not None:
-            print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' %
-                   (name, returncode))
+            print ('PROCESS-CRASH | {0} | abnormal termination with exit code {1}'
+                   .format(name, returncode))
         return crashed
 
     def force_shutdown(self):
@@ -1012,10 +1012,10 @@ class Marionette(object):
             pref_exists = self.execute_script("""
             let prefInterface = Components.classes["@mozilla.org/preferences-service;1"]
                                           .getService(Components.interfaces.nsIPrefBranch);
-            let pref = '%s';
-            let value = '%s';
+            let pref = '{0}';
+            let value = '{1}';
             let type = prefInterface.getPrefType(pref);
-            switch(type) {
+            switch(type) {{
                 case prefInterface.PREF_STRING:
                     return value == prefInterface.getCharPref(pref).toString();
                 case prefInterface.PREF_BOOL:
@@ -1024,8 +1024,8 @@ class Marionette(object):
                     return value == prefInterface.getIntPref(pref).toString();
                 case prefInterface.PREF_INVALID:
                     return false;
-            }
-            """ % (pref, value))
+            }}
+            """.format(pref, value))
             if not pref_exists:
                 break
         self.set_context(self.CONTEXT_CONTENT)
@@ -1152,7 +1152,7 @@ class Marionette(object):
 
         :param relative_url: The url of a static file, relative to Marionette's www directory.
         '''
-        return "%s%s" % (self.baseurl, relative_url)
+        return "{0}{1}".format(self.baseurl, relative_url)
 
     @do_process_check
     def start_session(self, desired_capabilities=None, session_id=None, timeout=60):
@@ -1377,7 +1377,7 @@ class Marionette(object):
             marionette.set_context(marionette.CONTEXT_CHROME)
         """
         if context not in [self.CONTEXT_CHROME, self.CONTEXT_CONTENT]:
-            raise ValueError("Unknown context: %s" % context)
+            raise ValueError("Unknown context: {}".format(context))
         self._send_message("setContext", {"value": context})
 
     @contextmanager

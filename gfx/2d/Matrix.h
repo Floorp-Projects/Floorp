@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_MATRIX_H_
 
 #include "Types.h"
+#include "Triangle.h"
 #include "Rect.h"
 #include "Point.h"
 #include "Quaternion.h"
@@ -701,6 +702,13 @@ public:
     }
 
     return RectTyped<TargetUnits, F>(min_x, min_y, max_x - min_x, max_y - min_y);
+  }
+
+  template<class F>
+  RectTyped<TargetUnits, F> TransformAndClipBounds(const TriangleTyped<SourceUnits, F>& aTriangle,
+                                                   const RectTyped<TargetUnits, F>& aClip) const
+  {
+    return TransformAndClipBounds(aTriangle.BoundingBox(), aClip);
   }
 
   /**

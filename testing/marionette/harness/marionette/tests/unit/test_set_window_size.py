@@ -39,9 +39,9 @@ class TestSetWindowSize(MarionetteTestCase):
         self.wait_for_condition(lambda m: m.execute_script("return window.wrappedJSObject.rcvd_event;"))
         size = self.marionette.window_size
         self.assertEqual(size['width'], width,
-                         "Window width is %s but should be %s" % (size['width'], width))
+                         "Window width is {0} but should be {1}".format(size['width'], width))
         self.assertEqual(size['height'], height,
-                         "Window height is %s but should be %s" % (size['height'], height))
+                         "Window height is {0} but should be {1}".format(size['height'], height))
 
     def test_that_we_can_get_new_size_when_set_window_size(self):
         actual = self.marionette.window_size
@@ -50,9 +50,9 @@ class TestSetWindowSize(MarionetteTestCase):
         size = self.marionette.set_window_size(width, height)
         self.assertIsNotNone(size, "Response is None")
         self.assertEqual(size['width'], width,
-                         "New width is %s but should be %s" % (size['width'], width))
+                         "New width is {0} but should be {1}".format(size['width'], width))
         self.assertEqual(size['height'], height,
-                         "New height is %s but should be %s" % (size['height'], height))
+                         "New height is {0} but should be {1}".format(size['height'], height))
 
     def test_possible_to_request_window_larger_than_screen(self):
         self.marionette.set_window_size(4 * self.max_width, 4 * self.max_height)

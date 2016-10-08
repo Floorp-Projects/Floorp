@@ -400,8 +400,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
                 ("otherThreads" in payload.slowSQL));
 
   Assert.ok(("IceCandidatesStats" in payload.webrtc) &&
-                ("webrtc" in payload.webrtc.IceCandidatesStats) &&
-                ("loop" in payload.webrtc.IceCandidatesStats));
+                ("webrtc" in payload.webrtc.IceCandidatesStats));
 
   // Check keyed histogram payload.
 
