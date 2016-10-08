@@ -438,7 +438,7 @@ Capture.prototype = {
       // Clear the data in the private container for thumbnails.
       let privateIdentity =
         ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
-      Services.obs.notifyObservers(null, "clear-origin-data",
+      Services.obs.notifyObservers(null, "clear-origin-attributes-data",
           JSON.stringify({ userContextId: privateIdentity.userContextId }));
     };
 

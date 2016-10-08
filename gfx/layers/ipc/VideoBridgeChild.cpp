@@ -23,6 +23,7 @@ VideoBridgeChild::Startup()
   sVideoBridgeChildSingleton->Open(parent->GetIPCChannel(),
                                    loop,
                                    ipc::ChildSide);
+  parent->SetOtherProcessId(base::GetCurrentProcId());
 }
 
 /* static */ void

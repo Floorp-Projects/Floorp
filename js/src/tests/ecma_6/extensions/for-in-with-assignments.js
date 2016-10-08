@@ -68,6 +68,14 @@ with (0)
 
 /******************************************************************************/
 
+function* g1() {
+  for (var x = yield in {}) ;
+}
+var it = g1();
+assertEq(it.next().done, true);
+
+/******************************************************************************/
+
 if (typeof reportCompare === "function")
   reportCompare(true, true);
 

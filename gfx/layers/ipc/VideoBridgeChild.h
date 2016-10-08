@@ -15,13 +15,9 @@ namespace layers {
 
 class VideoBridgeChild final : public PVideoBridgeChild
                              , public TextureForwarder
-                             , public KnowsCompositor
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoBridgeChild, override);
-
-  TextureForwarder* GetTextureForwarder() override { return this; }
-  LayersIPCActor* GetLayersIPCActor() override { return this; }
 
   static void Startup();
   static void Shutdown();

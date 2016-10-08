@@ -101,6 +101,18 @@ GPUChild::RecvReportCheckerboard(const uint32_t& aSeverity, const nsCString& aLo
   return true;
 }
 
+bool
+GPUChild::RecvGraphicsError(const nsCString& aError)
+{
+  gfx::LogForwarder* lf = gfx::Factory::GetLogForwarder();
+  if (lf) {
+    std::stringstream message;
+    message << "GP+" << aError.get();
+    lf->UpdateStringsVector(message.str());
+  }
+  return true;
+}
+
 void
 GPUChild::ActorDestroy(ActorDestroyReason aWhy)
 {

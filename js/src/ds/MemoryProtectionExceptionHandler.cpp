@@ -170,7 +170,7 @@ VectoredExceptionHandler(EXCEPTION_POINTERS* ExceptionInfo)
             // want to annotate the crash to make it stand out from the crowd.
             if (sProtectedRegions.isProtected(address)) {
                 ReportCrashIfDebug("Hit MOZ_CRASH(Tried to access a protected region!)\n");
-                MOZ_CRASH_ANNOTATE("Tried to access a protected region!");
+                MOZ_CRASH_ANNOTATE("MOZ_CRASH(Tried to access a protected region!)");
             }
         }
     }
@@ -240,7 +240,7 @@ UnixExceptionHandler(int signum, siginfo_t* info, void* context)
             // want to annotate the crash to make it stand out from the crowd.
             if (sProtectedRegions.isProtected(address)) {
                 ReportCrashIfDebug("Hit MOZ_CRASH(Tried to access a protected region!)\n");
-                MOZ_CRASH_ANNOTATE("Tried to access a protected region!");
+                MOZ_CRASH_ANNOTATE("MOZ_CRASH(Tried to access a protected region!)");
             }
         }
     }
@@ -560,7 +560,7 @@ MachExceptionHandler()
     // want to annotate the crash to make it stand out from the crowd.
     if (sProtectedRegions.isProtected(address)) {
         ReportCrashIfDebug("Hit MOZ_CRASH(Tried to access a protected region!)\n");
-        MOZ_CRASH_ANNOTATE("Tried to access a protected region!");
+        MOZ_CRASH_ANNOTATE("MOZ_CRASH(Tried to access a protected region!)");
     }
 
     // Forward to the previous handler which may be a debugger, the unix
