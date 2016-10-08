@@ -13,4 +13,5 @@ module.exports = {
     subscribe: () => {},
   },
   openLink: () => {},
+  createElement: tagName => document.createElement(tagName)
 };
