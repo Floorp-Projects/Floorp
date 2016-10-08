@@ -35,6 +35,7 @@ public:
   bool RecvInitComplete(const GPUDeviceData& aData) override;
   bool RecvReportCheckerboard(const uint32_t& aSeverity, const nsCString& aLog) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
+  bool RecvGraphicsError(const nsCString& aError) override;
 
   static void Destroy(UniquePtr<GPUChild>&& aChild);
 

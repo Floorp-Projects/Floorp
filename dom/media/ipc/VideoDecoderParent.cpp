@@ -9,6 +9,7 @@
 #include "base/thread.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/VideoBridgeChild.h"
+#include "mozilla/layers/ImageClient.h"
 #include "MediaInfo.h"
 #include "VideoDecoderManagerParent.h"
 #ifdef XP_WIN
@@ -23,12 +24,30 @@ using namespace ipc;
 using namespace layers;
 using namespace gfx;
 
+class KnowsCompositorVideo : public layers::KnowsCompositor
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KnowsCompositorVideo, override)
+
+  layers::TextureForwarder* GetTextureForwarder() override
+  {
+    return VideoBridgeChild::GetSingleton();
+  }
+  layers::LayersIPCActor* GetLayersIPCActor() override
+  {
+    return VideoBridgeChild::GetSingleton();
+  }
+private:
+  virtual ~KnowsCompositorVideo() {}
+};
+
 VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
                                        TaskQueue* aManagerTaskQueue,
                                        TaskQueue* aDecodeTaskQueue)
   : mParent(aParent)
   , mManagerTaskQueue(aManagerTaskQueue)
   , mDecodeTaskQueue(aDecodeTaskQueue)
+  , mKnowsCompositor(new KnowsCompositorVideo)
   , mDestroyed(false)
 {
   MOZ_COUNT_CTOR(VideoDecoderParent);
@@ -53,12 +72,14 @@ VideoDecoderParent::Destroy()
 }
 
 bool
-VideoDecoderParent::RecvInit(const VideoInfo& aInfo, const layers::LayersBackend& aBackend)
+VideoDecoderParent::RecvInit(const VideoInfo& aInfo, const layers::TextureFactoryIdentifier& aIdentifier)
 {
+  mKnowsCompositor->IdentifyTextureHost(aIdentifier);
+
   CreateDecoderParams params(aInfo);
   params.mTaskQueue = mDecodeTaskQueue;
   params.mCallback = this;
-  params.mLayersBackend = aBackend;
+  params.mKnowsCompositor = mKnowsCompositor;
   params.mImageContainer = new layers::ImageContainer();
 
 #ifdef XP_WIN
@@ -163,8 +184,9 @@ VideoDecoderParent::Output(MediaData* aData)
 {
   MOZ_ASSERT(mDecodeTaskQueue->IsCurrentThreadIn());
   RefPtr<VideoDecoderParent> self = this;
+  RefPtr<KnowsCompositor> knowsCompositor = mKnowsCompositor;
   RefPtr<MediaData> data = aData;
-  mManagerTaskQueue->Dispatch(NS_NewRunnableFunction([self, data]() {
+  mManagerTaskQueue->Dispatch(NS_NewRunnableFunction([self, knowsCompositor, data]() {
     if (self->mDestroyed) {
       return;
     }
@@ -174,10 +196,14 @@ VideoDecoderParent::Output(MediaData* aData)
 
     MOZ_ASSERT(video->mImage, "Decoded video must output a layer::Image to be used with VideoDecoderParent");
 
-    RefPtr<TextureClient> texture = video->mImage->GetTextureClient(VideoBridgeChild::GetSingleton());
+    RefPtr<TextureClient> texture = video->mImage->GetTextureClient(knowsCompositor);
+
+    if (!texture) {
+      texture = ImageClient::CreateTextureClientForImage(video->mImage, knowsCompositor);
+    }
 
     if (texture && !texture->IsAddedToCompositableClient()) {
-      texture->InitIPDLActor(VideoBridgeChild::GetSingleton());
+      texture->InitIPDLActor(knowsCompositor);
       texture->SetAddedToCompositableClient();
     }
 

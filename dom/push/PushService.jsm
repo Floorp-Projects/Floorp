@@ -340,7 +340,7 @@ this.PushService = {
         })
         break;
 
-      case "clear-origin-data":
+      case "clear-origin-attributes-data":
         this._clearOriginData(aData).catch(error => {
           console.error("clearOriginData: Error clearing origin data:", error);
         });
@@ -517,7 +517,7 @@ this.PushService = {
       return;
     }
 
-    Services.obs.addObserver(this, "clear-origin-data", false);
+    Services.obs.addObserver(this, "clear-origin-attributes-data", false);
 
     // The offline-status-changed event is used to know
     // when to (dis)connect. It may not fire if the underlying OS changes
@@ -611,7 +611,7 @@ this.PushService = {
     prefs.ignore("connection.enabled", this);
 
     Services.obs.removeObserver(this, "network:offline-status-changed");
-    Services.obs.removeObserver(this, "clear-origin-data");
+    Services.obs.removeObserver(this, "clear-origin-attributes-data");
     Services.obs.removeObserver(this, "idle-daily");
     Services.obs.removeObserver(this, "perm-changed");
   },

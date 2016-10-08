@@ -19,8 +19,8 @@ describe("Filtering", () => {
   let store;
   let numMessages;
   // Number of messages in prepareBaseStore which are not filtered out, i.e. Evaluation
-  // Results and console commands .
-  const numUnfilterableMessages = 2;
+  // Results, console commands and console.groups .
+  const numUnfilterableMessages = 3;
 
   beforeEach(() => {
     store = prepareBaseStore();
@@ -204,7 +204,8 @@ function prepareBaseStore() {
     // Evaluation Result - never filtered
     "new Date(0)",
     // PageError
-    "ReferenceError: asdf is not defined"
+    "ReferenceError: asdf is not defined",
+    "console.group('bar')"
   ]);
 
   // Console Command - never filtered

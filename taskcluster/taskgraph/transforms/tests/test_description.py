@@ -130,6 +130,9 @@ test_description_schema = Schema({
         {'by-test-platform': {basestring: int}},
     ),
 
+    # the exit status code that indicates the task should be retried
+    Optional('retry-exit-status'): int,
+
     # Whether to perform a gecko checkout.
     Required('checkout', default=False): bool,
 

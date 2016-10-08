@@ -339,7 +339,7 @@ js::Nursery::allocate(size_t size)
 }
 
 void*
-js::Nursery::allocateBuffer(Zone* zone, uint32_t nbytes)
+js::Nursery::allocateBuffer(Zone* zone, size_t nbytes)
 {
     MOZ_ASSERT(nbytes > 0);
 
@@ -358,7 +358,7 @@ js::Nursery::allocateBuffer(Zone* zone, uint32_t nbytes)
 }
 
 void*
-js::Nursery::allocateBuffer(JSObject* obj, uint32_t nbytes)
+js::Nursery::allocateBuffer(JSObject* obj, size_t nbytes)
 {
     MOZ_ASSERT(obj);
     MOZ_ASSERT(nbytes > 0);
@@ -370,7 +370,7 @@ js::Nursery::allocateBuffer(JSObject* obj, uint32_t nbytes)
 
 void*
 js::Nursery::reallocateBuffer(JSObject* obj, void* oldBuffer,
-                              uint32_t oldBytes, uint32_t newBytes)
+                              size_t oldBytes, size_t newBytes)
 {
     if (!IsInsideNursery(obj))
         return obj->zone()->pod_realloc<uint8_t>((uint8_t*)oldBuffer, oldBytes, newBytes);

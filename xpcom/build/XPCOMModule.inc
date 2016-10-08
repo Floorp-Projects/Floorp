@@ -52,7 +52,7 @@
     COMPONENT(ENVIRONMENT, nsEnvironment::Create)
 
     COMPONENT(THREADMANAGER, nsThreadManagerGetSingleton)
-    COMPONENT(THREADPOOL, nsThreadPoolConstructor)
+    COMPONENT_M(THREADPOOL, nsThreadPoolConstructor, Module::ALLOW_IN_GPU_PROCESS)
 
     COMPONENT(STRINGINPUTSTREAM, nsStringInputStreamConstructor)
     COMPONENT(MULTIPLEXINPUTSTREAM, nsMultiplexInputStreamConstructor)

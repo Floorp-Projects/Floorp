@@ -37,6 +37,9 @@ struct AutoLockTexture
   AutoLockTexture(ID3D11Texture2D* aTexture)
   {
     aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
+    if (!mMutex) {
+      return;
+    }
     HRESULT hr = mMutex->AcquireSync(0, 10000);
     if (hr == WAIT_TIMEOUT) {
       MOZ_CRASH("GFX: IMFYCbCrImage timeout");
@@ -49,6 +52,9 @@ struct AutoLockTexture
 
   ~AutoLockTexture()
   {
+    if (!mMutex) {
+      return;
+    }
     HRESULT hr = mMutex->ReleaseSync(0);
     if (FAILED(hr)) {
       NS_WARNING("Failed to unlock the texture");
@@ -227,6 +233,10 @@ IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
 
   RefPtr<ID3D11Device> device =
     gfx::DeviceManagerDx::Get()->GetContentDevice();
+  if (!device) {
+    device =
+      gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+  }
 
   LayersBackend backend = aForwarder->GetCompositorBackendType();
   if (!device || backend != LayersBackend::LAYERS_D3D11) {
@@ -245,7 +255,11 @@ IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
   CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_R8_UNORM,
                                 mData.mYSize.width, mData.mYSize.height, 1, 1);
 
-  newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  if (device == gfx::DeviceManagerDx::Get()->GetCompositorDevice()) {
+    newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+  } else {
+    newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  }
 
   RefPtr<ID3D11Texture2D> textureY;
   D3D11_SUBRESOURCE_DATA yData = { mData.mYChannel, (UINT)mData.mYStride, 0 };

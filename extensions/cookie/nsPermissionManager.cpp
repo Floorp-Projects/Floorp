@@ -204,7 +204,7 @@ public:
   NS_IMETHOD
   Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData) override
   {
-    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "clear-origin-data"));
+    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "clear-origin-attributes-data"));
 
     nsCOMPtr<nsIPermissionManager> permManager = do_GetService("@mozilla.org/permissionmanager;1");
     return permManager->RemovePermissionsWithAttributes(nsDependentString(aData));
@@ -725,7 +725,7 @@ nsPermissionManager::ClearOriginDataObserverInit()
 {
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
-  observerService->AddObserver(new ClearOriginDataObserver(), "clear-origin-data", /* ownsWeak= */ false);
+  observerService->AddObserver(new ClearOriginDataObserver(), "clear-origin-attributes-data", /* ownsWeak= */ false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

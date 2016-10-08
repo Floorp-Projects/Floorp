@@ -147,15 +147,19 @@ RemoteDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 already_AddRefed<MediaDataDecoder>
 RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
+  if (!aParams.mKnowsCompositor) {
+    return nullptr;
+  }
+
   MediaDataDecoderCallback* callback = aParams.mCallback;
   MOZ_ASSERT(callback->OnReaderTaskQueue());
   RefPtr<RemoteVideoDecoder> object = new RemoteVideoDecoder(callback);
 
   VideoInfo info = aParams.VideoConfig();
 
-  layers::LayersBackend backend = aParams.mLayersBackend;
-  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([object, callback, info, backend]() {
-    object->mActor->InitIPDL(callback, info, backend);
+  RefPtr<layers::KnowsCompositor> knowsCompositor = aParams.mKnowsCompositor;
+  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([=]() {
+    object->mActor->InitIPDL(callback, info, knowsCompositor);
   }), NS_DISPATCH_NORMAL);
 
   return object.forget();
