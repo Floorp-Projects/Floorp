@@ -547,6 +547,38 @@ CamerasParent::RecvNumberOfCaptureDevices(const CaptureEngine& aCapEngine)
 }
 
 bool
+CamerasParent::RecvEnsureInitialized(const CaptureEngine& aCapEngine)
+{
+  LOG((__PRETTY_FUNCTION__));
+
+  RefPtr<CamerasParent> self(this);
+  RefPtr<Runnable> webrtc_runnable =
+    media::NewRunnableFrom([self, aCapEngine]() -> nsresult {
+      bool result = self->EnsureInitialized(aCapEngine);
+
+      RefPtr<nsIRunnable> ipc_runnable =
+        media::NewRunnableFrom([self, result]() -> nsresult {
+          if (self->IsShuttingDown()) {
+            return NS_ERROR_FAILURE;
+          }
+          if (!result) {
+            LOG(("RecvEnsureInitialized failed"));
+            Unused << self->SendReplyFailure();
+            return NS_ERROR_FAILURE;
+          } else {
+            LOG(("RecvEnsureInitialized succeeded"));
+            Unused << self->SendReplySuccess();
+            return NS_OK;
+          }
+        });
+        self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+      return NS_OK;
+    });
+  DispatchToVideoCaptureThread(webrtc_runnable);
+  return true;
+}
+
+bool
 CamerasParent::RecvNumberOfCapabilities(const CaptureEngine& aCapEngine,
                                         const nsCString& unique_id)
 {

@@ -54,8 +54,6 @@ class nsNodeSupportsWeakRefTearoff;
 class nsNodeWeakReference;
 class nsDOMMutationObserver;
 
-extern "C" void Servo_Node_ClearNodeData(nsINode*);
-
 namespace mozilla {
 class EventListenerManager;
 namespace dom {
@@ -2085,13 +2083,7 @@ public:
 #endif
   }
 
-  void ClearServoData() {
-#ifdef MOZ_STYLO
-    Servo_Node_ClearNodeData(this);
-#else
-    MOZ_CRASH("Accessing servo node data in non-stylo build");
-#endif
-  }
+  void ClearServoData();
 
 protected:
   static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);

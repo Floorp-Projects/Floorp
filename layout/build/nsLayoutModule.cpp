@@ -197,7 +197,6 @@ static void Shutdown();
 #include "mozilla/dom/nsContentSecurityManager.h"
 #include "mozilla/dom/nsCSPService.h"
 #include "mozilla/dom/nsCSPContext.h"
-#include "nsICellBroadcastService.h"
 #include "nsIIccService.h"
 #include "nsISmsService.h"
 #include "nsIMmsService.h"
@@ -347,8 +346,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsICellBroadcastService,
-                                         NS_CreateCellBroadcastService)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsService, NS_CreateSmsService)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIIccService, NS_CreateIccService)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIMmsService, NS_CreateMmsService)
@@ -817,7 +814,6 @@ NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 NS_DEFINE_NAMED_CID(GONK_GPS_GEOLOCATION_PROVIDER_CID);
 #endif
 #endif
-NS_DEFINE_NAMED_CID(CELLBROADCAST_SERVICE_CID);
 NS_DEFINE_NAMED_CID(TELEPHONY_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_VOICEMAIL_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_MOBILE_CONNECTION_SERVICE_CID);
@@ -1121,7 +1117,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
   { &kTHIRDPARTYUTIL_CID, false, nullptr, ThirdPartyUtilConstructor },
   { &kNS_STRUCTUREDCLONECONTAINER_CID, false, nullptr, nsStructuredCloneContainerConstructor },
-  { &kCELLBROADCAST_SERVICE_CID, false, nullptr, nsICellBroadcastServiceConstructor },
   { &kSMS_SERVICE_CID, false, nullptr, nsISmsServiceConstructor },
   { &kICC_SERVICE_CID, false, nullptr, nsIIccServiceConstructor },
   { &kMMS_SERVICE_CID, false, nullptr, nsIMmsServiceConstructor },
@@ -1284,7 +1279,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NS_STRUCTUREDCLONECONTAINER_CONTRACTID, &kNS_STRUCTUREDCLONECONTAINER_CID },
-  { CELLBROADCAST_SERVICE_CONTRACTID, &kCELLBROADCAST_SERVICE_CID },
   { SMS_SERVICE_CONTRACTID, &kSMS_SERVICE_CID },
   { ICC_SERVICE_CONTRACTID, &kICC_SERVICE_CID },
   { MMS_SERVICE_CONTRACTID, &kMMS_SERVICE_CID },

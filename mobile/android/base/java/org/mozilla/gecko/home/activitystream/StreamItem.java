@@ -9,7 +9,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.mozilla.gecko.R;
@@ -61,20 +60,22 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         }
     }
 
-    public static class CompactItem extends StreamItem implements IconCallback {
+    public static class HighlightItem extends StreamItem implements IconCallback {
         public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
 
         final FaviconView vIconView;
         final TextView vLabel;
         final TextView vTimeSince;
+        final TextView vSourceView;
 
         private Future<IconResponse> ongoingIconLoad;
 
-        public CompactItem(View itemView) {
+        public HighlightItem(View itemView) {
             super(itemView);
             vLabel = (TextView) itemView.findViewById(R.id.card_history_label);
             vTimeSince = (TextView) itemView.findViewById(R.id.card_history_time_since);
             vIconView = (FaviconView) itemView.findViewById(R.id.icon);
+            vSourceView = (TextView) itemView.findViewById(R.id.card_history_source);
         }
 
         @Override
@@ -85,6 +86,8 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
 
             vLabel.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE)));
             vTimeSince.setText(ago);
+
+            updateSource(cursor);
 
             if (ongoingIconLoad != null) {
                 ongoingIconLoad.cancel(true);
@@ -97,34 +100,26 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
                     .execute(this);
         }
 
+        private void updateSource(final Cursor cursor) {
+            final boolean isBookmark = -1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
+            final boolean isHistory = -1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
+
+            if (isBookmark) {
+                vSourceView.setText(R.string.activity_stream_highlight_label_bookmarked);
+                vSourceView.setVisibility(View.VISIBLE);
+            } else if (isHistory) {
+                vSourceView.setText(R.string.activity_stream_highlight_label_visited);
+                vSourceView.setVisibility(View.VISIBLE);
+            } else {
+                vSourceView.setVisibility(View.INVISIBLE);
+            }
+
+            vSourceView.setText(vSourceView.getText());
+        }
+
         @Override
         public void onIconResponse(IconResponse response) {
             vIconView.updateImage(response);
         }
     }
-
-    public static class HighlightItem extends StreamItem {
-        public static final int LAYOUT_ID = R.layout.activity_stream_card_highlights_item;
-
-        final TextView vLabel;
-        final TextView vTimeSince;
-        final ImageView vThumbnail;
-
-        public HighlightItem(View itemView) {
-            super(itemView);
-            vLabel = (TextView) itemView.findViewById(R.id.card_highlights_label);
-            vTimeSince = (TextView) itemView.findViewById(R.id.card_highlights_time_since);
-            vThumbnail = (ImageView) itemView.findViewById(R.id.card_highlights_thumbnail);
-        }
-
-        @Override
-        public void bind(Cursor cursor) {
-            vLabel.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE)));
-
-            final long time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
-            final String ago = DateUtils.getRelativeTimeSpanString(time, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
-            vTimeSince.setText(ago);
-        }
-    }
-
 }

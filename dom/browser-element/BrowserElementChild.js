@@ -58,16 +58,6 @@ if (!BrowserElementIsReady) {
       Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementCopyPaste.js");
     }
 
-    if (Services.prefs.getIntPref("dom.w3c_touch_events.enabled") != 0) {
-      if (docShell.asyncPanZoomEnabled === false) {
-        Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanningAPZDisabled.js");
-        ContentPanningAPZDisabled.init();
-      }
-
-      Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js");
-      ContentPanning.init();
-    }
-
     Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementChildPreload.js");
   } else {
     if (Services.prefs.getIntPref("dom.w3c_touch_events.enabled") != 0) {

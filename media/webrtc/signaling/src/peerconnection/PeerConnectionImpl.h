@@ -212,7 +212,6 @@ class RTCStatsQuery {
     std::string error;
     // A timestamp to help with telemetry.
     mozilla::TimeStamp iceStartTime;
-    bool isHello;
     // Just for convenience, maybe integrate into the report later
     bool failed;
 
@@ -524,8 +523,6 @@ public:
   }
 #endif
 
-  bool IsLoop() const { return mIsLoop; }
-
   // this method checks to see if we've made a promise to protect media.
   bool PrivacyRequested() const { return mPrivacyRequested; }
 
@@ -803,7 +800,6 @@ private:
 
   // A name for this PC that we are willing to expose to content.
   std::string mName;
-  bool mIsLoop; // For telemetry; doesn't have to be 100% right
 
   // The target to run stuff on
   nsCOMPtr<nsIEventTarget> mSTSThread;

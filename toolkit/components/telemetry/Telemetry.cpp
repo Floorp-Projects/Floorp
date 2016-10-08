@@ -701,8 +701,7 @@ public:
   typedef nsBaseHashtableET<nsCStringHashKey, StmtStats> SlowSQLEntryType;
 
   static void RecordIceCandidates(const uint32_t iceCandidateBitmask,
-                                  const bool success,
-                                  const bool loop);
+                                  const bool success);
 private:
   TelemetryImpl();
   ~TelemetryImpl();
@@ -2211,12 +2210,12 @@ TelemetryImpl::RecordSlowStatement(const nsACString &sql,
 
 void
 TelemetryImpl::RecordIceCandidates(const uint32_t iceCandidateBitmask,
-                                   const bool success, const bool loop)
+                                   const bool success)
 {
   if (!sTelemetry || !TelemetryHistogram::CanRecordExtended())
     return;
 
-  sTelemetry->mWebrtcTelemetry.RecordIceCandidateMask(iceCandidateBitmask, success, loop);
+  sTelemetry->mWebrtcTelemetry.RecordIceCandidateMask(iceCandidateBitmask, success);
 }
 
 #if defined(MOZ_ENABLE_PROFILER_SPS)
@@ -2869,9 +2868,9 @@ RecordSlowSQLStatement(const nsACString &statement,
 
 void
 RecordWebrtcIceCandidates(const uint32_t iceCandidateBitmask,
-                          const bool success, const bool loop)
+                          const bool success)
 {
-  TelemetryImpl::RecordIceCandidates(iceCandidateBitmask, success, loop);
+  TelemetryImpl::RecordIceCandidates(iceCandidateBitmask, success);
 }
 
 void Init()

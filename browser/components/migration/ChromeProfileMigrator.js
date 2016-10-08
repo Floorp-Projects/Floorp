@@ -33,8 +33,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OSCrypto",
                                   "resource://gre/modules/OSCrypto.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
-                                  "resource://gre/modules/Sqlite.jsm");
 /**
  * Get an nsIFile instance representing the expected location of user data
  * for this copy of Chrome/Chromium/Canary on different OSes.
@@ -107,7 +105,6 @@ function* insertBookmarkItems(parentGuid, items, errorAccumulator) {
     }
   }
 }
-
 
 function ChromeProfileMigrator() {
   let chromeUserDataFolder =
@@ -311,47 +308,6 @@ function GetHistoryResource(aProfileFolder) {
   if (!historyFile.exists())
     return null;
 
-  function getRows(dbOptions) {
-    const RETRYLIMIT = 10;
-    const RETRYINTERVAL = 100;
-    return Task.spawn(function* innerGetRows() {
-      let rows = null;
-      for (let retryCount = RETRYLIMIT; retryCount && !rows; retryCount--) {
-        // Attempt to get the rows. If this succeeds, we will bail out of the loop,
-        // close the database in a failsafe way, and pass the rows back.
-        // If fetching the rows throws, we will wait RETRYINTERVAL ms
-        // and try again. This will repeat a maximum of RETRYLIMIT times.
-        let db;
-        let didOpen = false;
-        let exceptionSeen;
-        try {
-          db = yield Sqlite.openConnection(dbOptions);
-          didOpen = true;
-          rows = yield db.execute(`SELECT url, title, last_visit_time, typed_count
-                                   FROM urls WHERE hidden = 0`);
-        } catch (ex) {
-          if (!exceptionSeen) {
-            Cu.reportError(ex);
-          }
-          exceptionSeen = ex;
-        } finally {
-          try {
-            if (didOpen) {
-              yield db.close();
-            }
-          } catch (ex) {}
-        }
-        if (exceptionSeen) {
-          yield new Promise(resolve => setTimeout(resolve, RETRYINTERVAL));
-        }
-      }
-      if (!rows) {
-        throw new Error("Couldn't get rows from the Chrome history database.");
-      }
-      return rows;
-    });
-  }
-
   return {
     type: MigrationUtils.resourceTypes.HISTORY,
 
@@ -363,7 +319,8 @@ function GetHistoryResource(aProfileFolder) {
           path: historyFile.path
         };
 
-        let rows = yield getRows(dbOptions);
+        let rows = yield MigrationUtils.getRowsFromDBWithoutLocks(historyFile.path, "Chrome history",
+          `SELECT url, title, last_visit_time, typed_count FROM urls WHERE hidden = 0`);
         let places = [];
         for (let row of rows) {
           try {
@@ -424,54 +381,47 @@ function GetCookiesResource(aProfileFolder) {
   return {
     type: MigrationUtils.resourceTypes.COOKIES,
 
-    migrate: function(aCallback) {
-      let dbConn = Services.storage.openUnsharedDatabase(cookiesFile);
+    migrate: Task.async(function* (aCallback) {
       // We don't support decrypting cookies yet so only import plaintext ones.
-      let stmt = dbConn.createAsyncStatement(`
-        SELECT host_key, name, value, path, expires_utc, secure, httponly, encrypted_value
+      let rows = yield MigrationUtils.getRowsFromDBWithoutLocks(cookiesFile.path, "Chrome cookies",
+       `SELECT host_key, name, value, path, expires_utc, secure, httponly, encrypted_value
         FROM cookies
-        WHERE length(encrypted_value) = 0`);
-
-      stmt.executeAsync({
-        handleResult : function(aResults) {
-          for (let row = aResults.getNextRow(); row; row = aResults.getNextRow()) {
-            let host_key = row.getResultByName("host_key");
-            if (host_key.match(/^\./)) {
-              // 1st character of host_key may be ".", so we have to remove it
-              host_key = host_key.substr(1);
-            }
-
-            try {
-              let expiresUtc =
-                chromeTimeToDate(row.getResultByName("expires_utc")) / 1000;
-              Services.cookies.add(host_key,
-                                   row.getResultByName("path"),
-                                   row.getResultByName("name"),
-                                   row.getResultByName("value"),
-                                   row.getResultByName("secure"),
-                                   row.getResultByName("httponly"),
-                                   false,
-                                   parseInt(expiresUtc),
-                                   {});
-            } catch (e) {
-              Cu.reportError(e);
-            }
-          }
-        },
-
-        handleError : function(aError) {
-          Cu.reportError("Async statement execution returned with '" +
-                         aError.result + "', '" + aError.message + "'");
-        },
-
-        handleCompletion : function(aReason) {
-          dbConn.asyncClose();
-          aCallback(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED);
-        },
+        WHERE length(encrypted_value) = 0`).catch(ex => {
+        Cu.reportError(ex);
+        aCallback(false);
       });
-      stmt.finalize();
-    }
-  }
+      // If the promise was rejected we will have already called aCallback,
+      // so we can just return here.
+      if (!rows) {
+        return;
+      }
+
+      for (let row of rows) {
+        let host_key = row.getResultByName("host_key");
+        if (host_key.match(/^\./)) {
+          // 1st character of host_key may be ".", so we have to remove it
+          host_key = host_key.substr(1);
+        }
+
+        try {
+          let expiresUtc =
+            chromeTimeToDate(row.getResultByName("expires_utc")) / 1000;
+          Services.cookies.add(host_key,
+                               row.getResultByName("path"),
+                               row.getResultByName("name"),
+                               row.getResultByName("value"),
+                               row.getResultByName("secure"),
+                               row.getResultByName("httponly"),
+                               false,
+                               parseInt(expiresUtc),
+                               {});
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+      aCallback(true);
+    }),
+  };
 }
 
 function GetWindowsPasswordsResource(aProfileFolder) {
@@ -483,30 +433,37 @@ function GetWindowsPasswordsResource(aProfileFolder) {
   return {
     type: MigrationUtils.resourceTypes.PASSWORDS,
 
-    migrate(aCallback) {
-      let dbConn = Services.storage.openUnsharedDatabase(loginFile);
-      let stmt = dbConn.createAsyncStatement(`
-        SELECT origin_url, action_url, username_element, username_value,
+    migrate: Task.async(function* (aCallback) {
+      let rows = yield MigrationUtils.getRowsFromDBWithoutLocks(loginFile.path, "Chrome passwords",
+       `SELECT origin_url, action_url, username_element, username_value,
         password_element, password_value, signon_realm, scheme, date_created,
-        times_used FROM logins WHERE blacklisted_by_user = 0`);
+        times_used FROM logins WHERE blacklisted_by_user = 0`).catch(ex => {
+        Cu.reportError(ex);
+        aCallback(false);
+      });
+      // If the promise was rejected we will have already called aCallback,
+      // so we can just return here.
+      if (!rows) {
+        return;
+      }
       let crypto = new OSCrypto();
 
-      stmt.executeAsync({
-        _rowToLoginInfo(row) {
-          let loginInfo = {
-            username: row.getResultByName("username_value"),
-            password: crypto.
-                      decryptData(crypto.arrayToString(row.getResultByName("password_value")),
-                                                       null),
-            hostName: NetUtil.newURI(row.getResultByName("origin_url")).prePath,
-            submitURL: null,
-            httpRealm: null,
-            usernameElement: row.getResultByName("username_element"),
-            passwordElement: row.getResultByName("password_element"),
-            timeCreated: chromeTimeToDate(row.getResultByName("date_created") + 0).getTime(),
-            timesUsed: row.getResultByName("times_used") + 0,
-          };
+      for (let row of rows) {
+        let loginInfo = {
+          username: row.getResultByName("username_value"),
+          password: crypto.
+                    decryptData(crypto.arrayToString(row.getResultByName("password_value")),
+                                                     null),
+          hostName: NetUtil.newURI(row.getResultByName("origin_url")).prePath,
+          submitURL: null,
+          httpRealm: null,
+          usernameElement: row.getResultByName("username_element"),
+          passwordElement: row.getResultByName("password_element"),
+          timeCreated: chromeTimeToDate(row.getResultByName("date_created") + 0).getTime(),
+          timesUsed: row.getResultByName("times_used") + 0,
+        };
 
+        try {
           switch (row.getResultByName("scheme")) {
             case AUTH_TYPE.SCHEME_HTML:
               loginInfo.submitURL = NetUtil.newURI(row.getResultByName("action_url")).prePath;
@@ -521,53 +478,33 @@ function GetWindowsPasswordsResource(aProfileFolder) {
               throw new Error("Login data scheme type not supported: " +
                               row.getResultByName("scheme"));
           }
+          let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
 
-          return loginInfo;
-        },
+          login.init(loginInfo.hostName, loginInfo.submitURL, loginInfo.httpRealm,
+                     loginInfo.username, loginInfo.password, loginInfo.usernameElement,
+                     loginInfo.passwordElement);
+          login.QueryInterface(Ci.nsILoginMetaInfo);
+          login.timeCreated = loginInfo.timeCreated;
+          login.timeLastUsed = loginInfo.timeCreated;
+          login.timePasswordChanged = loginInfo.timeCreated;
+          login.timesUsed = loginInfo.timesUsed;
 
-        handleResult(aResults) {
-          for (let row = aResults.getNextRow(); row; row = aResults.getNextRow()) {
-            try {
-              let loginInfo = this._rowToLoginInfo(row);
-              let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+          // Add the login only if there's not an existing entry
+          let logins = Services.logins.findLogins({}, login.hostname,
+                                                  login.formSubmitURL,
+                                                  login.httpRealm);
 
-              login.init(loginInfo.hostName, loginInfo.submitURL, loginInfo.httpRealm,
-                         loginInfo.username, loginInfo.password, loginInfo.usernameElement,
-                         loginInfo.passwordElement);
-              login.QueryInterface(Ci.nsILoginMetaInfo);
-              login.timeCreated = loginInfo.timeCreated;
-              login.timeLastUsed = loginInfo.timeCreated;
-              login.timePasswordChanged = loginInfo.timeCreated;
-              login.timesUsed = loginInfo.timesUsed;
-
-              // Add the login only if there's not an existing entry
-              let logins = Services.logins.findLogins({}, login.hostname,
-                                                      login.formSubmitURL,
-                                                      login.httpRealm);
-
-              // Bug 1187190: Password changes should be propagated depending on timestamps.
-              if (!logins.some(l => login.matches(l, true))) {
-                Services.logins.addLogin(login);
-              }
-            } catch (e) {
-              Cu.reportError(e);
-            }
+          // Bug 1187190: Password changes should be propagated depending on timestamps.
+          if (!logins.some(l => login.matches(l, true))) {
+            Services.logins.addLogin(login);
           }
-        },
-
-        handleError(aError) {
-          Cu.reportError("Async statement execution returned with '" +
-                         aError.result + "', '" + aError.message + "'");
-        },
-
-        handleCompletion(aReason) {
-          dbConn.asyncClose();
-          aCallback(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED);
-          crypto.finalize();
-        },
-      });
-      stmt.finalize();
-    }
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+      crypto.finalize();
+      aCallback(true);
+    }),
   };
 }
 

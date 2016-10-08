@@ -1407,6 +1407,15 @@ nsINode::UnoptimizableCCNode() const
           AsElement()->IsInNamespace(kNameSpaceID_XBL));
 }
 
+void
+nsINode::ClearServoData() {
+#ifdef MOZ_STYLO
+  Servo_Node_ClearNodeData(this);
+#else
+  MOZ_CRASH("Accessing servo node data in non-stylo build");
+#endif
+}
+
 /* static */
 bool
 nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)

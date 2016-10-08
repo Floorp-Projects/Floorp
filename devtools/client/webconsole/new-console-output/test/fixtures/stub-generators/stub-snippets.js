@@ -21,6 +21,7 @@ const consoleApiCommands = [
   "console.assert(false, {message: 'foobar'})",
   "console.log('hello \\nfrom \\rthe \\\"string world!')",
   "console.log('\xFA\u1E47\u0129\xE7\xF6d\xEA \u021B\u0115\u0219\u0165')",
+  "console.dirxml(window)",
 ];
 
 let consoleApi = new Map(consoleApiCommands.map(

@@ -28,6 +28,7 @@ const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
 const gEVExpected = isDebugBuild && !("@mozilla.org/b2g-process-global;1" in Cc);
 
 const SSS_STATE_FILE_NAME = "SiteSecurityServiceState.txt";
+const PRELOAD_STATE_FILE_NAME = "SecurityPreloadState.txt";
 
 const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
 const SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;

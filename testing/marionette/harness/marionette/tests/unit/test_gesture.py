@@ -22,10 +22,10 @@ class testGestures(MarionetteTestCase):
         testAction = self.marionette.absolute_url("testAction.html")
         self.marionette.navigate(testAction)
         button = self.marionette.find_element(By.ID, "button2")
-        self.assertFalse(self.marionette.execute_script("%s; return elementInViewport(document.getElementById('buttonScroll'));" % self.check_in_viewport))
+        self.assertFalse(self.marionette.execute_script("{}; return elementInViewport(document.getElementById('buttonScroll'));" .format(elf.check_in_viewport)))
         smooth_scroll(self.marionette, button, "y",  -1, 800)
         buttonScroll = self.marionette.find_element(By.ID, "buttonScroll")
-        self.wait_for_condition(lambda m: m.execute_script("%s; return elementInViewport(arguments[0]);" % self.check_in_viewport, [buttonScroll]) == True)
+        self.wait_for_condition(lambda m: m.execute_script("{}; return elementInViewport(arguments[0]);".format(self.check_in_viewport, [buttonScroll]) == True))
         self.assertEqual("button2-touchstart", self.marionette.execute_script("return document.getElementById('button2').innerHTML;"))
 
     """

@@ -8,7 +8,6 @@ include protocol PBackground;
 include protocol PBlob;
 include protocol PBluetooth;
 include protocol PBrowser;
-include protocol PCellBroadcast;
 include protocol PCompositorBridge;
 include protocol PContentBridge;
 include protocol PContentPermissionRequest;
@@ -389,7 +388,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PBlob;
     manages PBluetooth;
     manages PBrowser;
-    manages PCellBroadcast;
     manages PContentPermissionRequest;
     manages PCrashReporter;
     manages PCycleCollectWithLogs;
@@ -861,8 +859,6 @@ parent:
         returns (uint32_t numberOfScreens,
                  float systemDefaultScale,
                  bool success);
-
-    async PCellBroadcast();
 
     async PSms();
 

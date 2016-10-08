@@ -57,6 +57,8 @@ parent:
 
   // Ask parent to delete us
   async AllDone();
+  // setup camera engine
+  async EnsureInitialized(CaptureEngine engine);
 };
 
 } // namespace camera

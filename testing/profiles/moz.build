@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 mochitest_profile_files = [
-    'prefs_b2g_unittest.js',
     'prefs_general.js',
     'webapps_mochitest.json',
 ]

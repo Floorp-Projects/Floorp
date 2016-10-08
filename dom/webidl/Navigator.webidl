@@ -283,12 +283,6 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.cellbroadcast.enabled", ChromeOnly,
-   UnsafeInPrerendering]
-  readonly attribute MozCellBroadcast mozCellBroadcast;
-};
-
-partial interface Navigator {
   [Throws, Pref="dom.voicemail.enabled", ChromeOnly,
    UnsafeInPrerendering]
   readonly attribute MozVoicemail mozVoicemail;

@@ -90,6 +90,8 @@
 #include "nsIContentPolicy.h"
 #include "mozilla/Telemetry.h"
 #include "DecoderDoctorDiagnostics.h"
+#include "DecoderTraits.h"
+#include "MediaContentType.h"
 
 #include "ImageContainer.h"
 #include "nsRange.h"
@@ -108,7 +110,6 @@ static mozilla::LazyLogModule gMediaElementEventsLog("nsMediaElementEvents");
 #include "mozilla/FloatingPoint.h"
 
 #include "nsIPermissionManager.h"
-#include "nsContentTypeParser.h"
 #include "nsDocShell.h"
 
 #include "mozilla/EventStateManager.h"
@@ -3663,20 +3664,8 @@ CanPlayStatus
 HTMLMediaElement::GetCanPlay(const nsAString& aType,
                              DecoderDoctorDiagnostics* aDiagnostics)
 {
-  nsContentTypeParser parser(aType);
-  nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
-  if (NS_FAILED(rv))
-    return CANPLAY_NO;
-
-  nsAutoString codecs;
-  rv = parser.GetParameter("codecs", codecs);
-
-  NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
-  return DecoderTraits::CanHandleMediaType(mimeTypeUTF8.get(),
-                                           NS_SUCCEEDED(rv),
-                                           codecs,
-                                           aDiagnostics);
+  MediaContentType contentType{aType};
+  return DecoderTraits::CanHandleContentType(contentType, aDiagnostics);
 }
 
 NS_IMETHODIMP
