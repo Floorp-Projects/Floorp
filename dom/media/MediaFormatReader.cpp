@@ -19,6 +19,7 @@
 #include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
 #include "VideoFrameContainer.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #include <algorithm>
 
@@ -56,8 +57,7 @@ TrackTypeToStr(TrackInfo::TrackType aTrack)
 
 MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
                                      MediaDataDemuxer* aDemuxer,
-                                     VideoFrameContainer* aVideoFrameContainer,
-                                     layers::LayersBackend aLayersBackend)
+                                     VideoFrameContainer* aVideoFrameContainer)
   : MediaDecoderReader(aDecoder)
   , mAudio(this, MediaData::AUDIO_DATA,
            Preferences::GetUint("media.audio-max-decode-error", 3))
@@ -67,7 +67,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mDemuxerInitDone(false)
   , mLastReportedNumDecodedFrames(0)
   , mPreviousDecodedKeyframeTime_us(sNoPreviousDecodedKeyframe)
-  , mLayersBackendType(aLayersBackend)
   , mInitDone(false)
   , mTrackDemuxersMayBlock(false)
   , mDemuxOnly(false)
@@ -160,7 +159,7 @@ MediaFormatReader::InitLayersBackendType()
     nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
   NS_ENSURE_TRUE_VOID(layerManager);
 
-  mLayersBackendType = layerManager->GetCompositorBackendType();
+  mKnowsCompositor = layerManager->AsShadowForwarder();
 }
 
 nsresult
@@ -421,7 +420,7 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
         mVideo.mInfo ? *mVideo.mInfo->GetAsVideoInfo() : mInfo.mVideo,
         decoder.mTaskQueue,
         decoder.mCallback.get(),
-        mLayersBackendType,
+        mKnowsCompositor,
         GetImageContainer(),
         mCrashHelper,
         decoder.mIsBlankDecode,

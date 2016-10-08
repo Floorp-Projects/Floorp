@@ -22,10 +22,15 @@ NetworkEventMessage.propTypes = {
   serviceContainer: PropTypes.shape({
     openNetworkPanel: PropTypes.func.isRequired,
   }),
+  indent: PropTypes.number.isRequired,
+};
+
+NetworkEventMessage.defaultProps = {
+  indent: 0,
 };
 
 function NetworkEventMessage(props) {
-  const { message, serviceContainer } = props;
+  const { message, serviceContainer, indent } = props;
   const { actor, source, type, level, request, isXHR } = message;
 
   const topLevelClasses = [ "cm-s-mozilla" ];
@@ -47,6 +52,7 @@ function NetworkEventMessage(props) {
     source,
     type,
     level,
+    indent,
     topLevelClasses,
     messageBody,
     serviceContainer,

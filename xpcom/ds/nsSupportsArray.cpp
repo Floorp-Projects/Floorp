@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdint.h>
 #include <string.h>
+#include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "nsSupportsArray.h"
 #include "nsSupportsArrayEnumerator.h"
@@ -92,9 +94,6 @@ nsQueryElementAt::operator()(const nsIID& aIID, void** aResult) const
   return status;
 }
 
-static const int32_t kGrowArrayBy = 8;
-static const int32_t kLinearThreshold = 16 * sizeof(nsISupports*);
-
 nsSupportsArray::nsSupportsArray()
 {
   mArray = mAutoArray;
@@ -113,9 +112,12 @@ nsSupportsArray::~nsSupportsArray()
   DeleteArray();
 }
 
-void
-nsSupportsArray::GrowArrayBy(int32_t aGrowBy)
+bool
+nsSupportsArray::GrowArrayBy(uint32_t aGrowBy)
 {
+  const uint32_t kGrowArrayBy = 8;
+  const uint32_t kLinearThreshold = 16 * sizeof(nsISupports*);
+
   // We have to grow the array. Grow by kGrowArrayBy slots if we're smaller
   // than kLinearThreshold bytes, or a power of two if we're larger.
   // This is much more efficient with most memory allocators, especially
@@ -124,15 +126,24 @@ nsSupportsArray::GrowArrayBy(int32_t aGrowBy)
     aGrowBy = kGrowArrayBy;
   }
 
-  uint32_t newCount = mArraySize + aGrowBy;  // Minimum increase
-  uint32_t newSize = sizeof(mArray[0]) * newCount;
+  CheckedUint32 newCount(mArraySize);
+  newCount += aGrowBy;  // Minimum increase
+  CheckedUint32 newSize(sizeof(mArray[0]));
+  newSize *= newCount;
 
-  if (newSize >= (uint32_t)kLinearThreshold) {
+  if (!newSize.isValid()) {
+    return false;
+  }
+
+  if (newSize.value() >= kLinearThreshold) {
     // newCount includes enough space for at least kGrowArrayBy new slots.
     // Select the next power-of-two size in bytes above that if newSize is
     // not a power of two.
-    if (newSize & (newSize - 1)) {
-      newSize = 1u << mozilla::CeilingLog2(newSize);
+    if (newSize.value() & (newSize.value() - 1)) {
+      newSize = UINT64_C(1) << mozilla::CeilingLog2(newSize.value());
+      if (!newSize.isValid()) {
+        return false;
+      }
     }
 
     newCount = newSize / sizeof(mArray[0]);
@@ -141,8 +152,8 @@ nsSupportsArray::GrowArrayBy(int32_t aGrowBy)
   // XXX PR_Realloc(), etc
   nsISupports** oldArray = mArray;
 
-  mArray = new nsISupports*[newCount];
-  mArraySize = newCount;
+  mArray = new nsISupports*[newCount.value()];
+  mArraySize = newCount.value();
 
 #if DEBUG_SUPPORTSARRAY
   if (oldArray == mArray) { // can't happen without use of realloc
@@ -165,6 +176,8 @@ nsSupportsArray::GrowArrayBy(int32_t aGrowBy)
       delete[] oldArray;
     }
   }
+
+  return true;
 }
 
 nsresult
@@ -351,9 +364,17 @@ NS_IMETHODIMP_(bool)
 nsSupportsArray::InsertElementAt(nsISupports* aElement, uint32_t aIndex)
 {
   if (aIndex <= mCount) {
-    if (mArraySize < (mCount + 1)) {
+    CheckedUint32 newCount(mCount);
+    newCount += 1;
+    if (!newCount.isValid()) {
+      return false;
+    }
+
+    if (mArraySize < newCount.value()) {
       // need to grow the array
-      GrowArrayBy(1);
+      if (!GrowArrayBy(1)) {
+        return false;
+      }
     }
 
     // Could be slightly more efficient if GrowArrayBy knew about the
@@ -367,51 +388,6 @@ nsSupportsArray::InsertElementAt(nsISupports* aElement, uint32_t aIndex)
     mArray[aIndex] = aElement;
     NS_IF_ADDREF(aElement);
     mCount++;
-
-#if DEBUG_SUPPORTSARRAY
-    if (mCount > mMaxCount &&
-        mCount < (int32_t)(sizeof(MaxElements) / sizeof(MaxElements[0]))) {
-      MaxElements[mCount]++;
-      MaxElements[mMaxCount]--;
-      mMaxCount = mCount;
-    }
-#endif
-    return true;
-  }
-  return false;
-}
-
-NS_IMETHODIMP_(bool)
-nsSupportsArray::InsertElementsAt(nsISupportsArray* aElements, uint32_t aIndex)
-{
-  if (!aElements) {
-    return false;
-  }
-  uint32_t countElements;
-  if (NS_FAILED(aElements->Count(&countElements))) {
-    return false;
-  }
-
-  if (aIndex <= mCount) {
-    if (mArraySize < (mCount + countElements)) {
-      // need to grow the array
-      GrowArrayBy(countElements);
-    }
-
-    // Could be slightly more efficient if GrowArrayBy knew about the
-    // split, but the difference is trivial.
-    uint32_t slide = (mCount - aIndex);
-    if (0 < slide) {
-      ::memmove(mArray + aIndex + countElements, mArray + aIndex,
-                slide * sizeof(nsISupports*));
-    }
-
-    for (uint32_t i = 0; i < countElements; ++i, ++mCount) {
-      // use GetElementAt to copy and do AddRef for us
-      if (NS_FAILED(aElements->GetElementAt(i, mArray + aIndex + i))) {
-        return false;
-      }
-    }
 
 #if DEBUG_SUPPORTSARRAY
     if (mCount > mMaxCount &&

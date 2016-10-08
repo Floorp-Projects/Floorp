@@ -64,7 +64,7 @@ function run_all_tests() {
   let attrs_inBrowser = JSON.stringify({ appId:1, inIsolatedMozBrowser:true });
   let attrs_notInBrowser = JSON.stringify({ appId:1 });
 
-  Services.obs.notifyObservers(null, "clear-origin-data", attrs_inBrowser);
+  Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_inBrowser);
 
   for (let test of secondTests) {
     handlers_called = 0;
@@ -73,8 +73,8 @@ function run_all_tests() {
     yield undefined;
   }
 
-  Services.obs.notifyObservers(null, "clear-origin-data", attrs_notInBrowser);
-  Services.obs.notifyObservers(null, "clear-origin-data", attrs_inBrowser);
+  Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_notInBrowser);
+  Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_inBrowser);
 
   for (let test of thirdTests) {
     handlers_called = 0;
@@ -84,7 +84,7 @@ function run_all_tests() {
   }
 
   let attrs_userContextId = JSON.stringify({ userContextId: 1 });
-  Services.obs.notifyObservers(null, "clear-origin-data", attrs_userContextId);
+  Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_userContextId);
 
   for (let test of fourthTests) {
     handlers_called = 0;

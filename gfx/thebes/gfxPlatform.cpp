@@ -14,6 +14,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
@@ -279,14 +280,25 @@ CrashStatsLogForwarder::UpdateStringsVector(const std::string& aString)
 void CrashStatsLogForwarder::UpdateCrashReport()
 {
   std::stringstream message;
-  if (XRE_IsParentProcess()) {
-    for(LoggingRecord::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
-      message << "|[" << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ") ";
-    }
-  } else {
-    for(LoggingRecord::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
-      message << "|[C" << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ") ";
-    }
+  std::string logAnnotation;
+
+  switch (XRE_GetProcessType()) {
+  case GeckoProcessType_Default:
+    logAnnotation = "|[";
+    break;
+  case GeckoProcessType_Content:
+    logAnnotation = "|[C";
+    break;
+  case GeckoProcessType_GPU:
+    logAnnotation = "|[G";
+    break;
+  default:
+    logAnnotation = "|[X";
+    break;
+  }
+
+  for (LoggingRecord::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
+    message << logAnnotation << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ") ";
   }
 
 #ifdef MOZ_CRASHREPORTER
@@ -310,9 +322,16 @@ class LogForwarderEvent : public Runnable
   explicit LogForwarderEvent(const nsCString& aMessage) : mMessage(aMessage) {}
 
   NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread() && XRE_IsContentProcess());
-    dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-    cc->SendGraphicsError(mMessage);
+    MOZ_ASSERT(NS_IsMainThread() && (XRE_IsContentProcess() || XRE_IsGPUProcess()));
+
+    if (XRE_IsContentProcess()) {
+      dom::ContentChild* cc = dom::ContentChild::GetSingleton();
+      Unused << cc->SendGraphicsError(mMessage);
+    } else if (XRE_IsGPUProcess()) {
+      GPUParent* gp = GPUParent::GetSingleton();
+      Unused << gp->SendGraphicsError(mMessage);
+    }
+
     return NS_OK;
   }
 
@@ -334,8 +353,13 @@ void CrashStatsLogForwarder::Log(const std::string& aString)
   if (!XRE_IsParentProcess()) {
     nsCString stringToSend(aString.c_str());
     if (NS_IsMainThread()) {
-      dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-      cc->SendGraphicsError(stringToSend);
+      if (XRE_IsContentProcess()) {
+        dom::ContentChild* cc = dom::ContentChild::GetSingleton();
+        Unused << cc->SendGraphicsError(stringToSend);
+      } else if (XRE_IsGPUProcess()) {
+        GPUParent* gp = GPUParent::GetSingleton();
+        Unused << gp->SendGraphicsError(stringToSend);
+      }
     } else {
       nsCOMPtr<nsIRunnable> r1 = new LogForwarderEvent(stringToSend);
       NS_DispatchToMainThread(r1);
@@ -600,9 +624,6 @@ gfxPlatform::Init()
       GPUProcessManager::Initialize();
     }
 
-    auto fwd = new CrashStatsLogForwarder("GraphicsCriticalError");
-    fwd->SetCircularBufferSize(gfxPrefs::GfxLoggingCrashLength());
-
     // Drop a note in the crash report if we end up forcing an option that could
     // destabilize things.  New items should be appended at the end (of an existing
     // or in a new section), so that we don't have to know the version to interpret
@@ -638,12 +659,7 @@ gfxPlatform::Init()
       ScopedGfxFeatureReporter::AppNote(forcedPrefs);
     }
 
-    mozilla::gfx::Config cfg;
-    cfg.mLogForwarder = fwd;
-    cfg.mMaxTextureSize = gfxPrefs::MaxTextureSize();
-    cfg.mMaxAllocSize = gfxPrefs::MaxAllocSize();
-
-    gfx::Factory::Init(cfg);
+    InitMoz2DLogging();
 
     gGfxPlatformPrefsLock = new Mutex("gfxPlatform::gGfxPlatformPrefsLock");
 
@@ -779,6 +795,20 @@ gfxPlatform::Init()
     if (obs) {
       obs->NotifyObservers(nullptr, "gfx-features-ready", nullptr);
     }
+}
+
+/* static */ void
+gfxPlatform::InitMoz2DLogging()
+{
+    auto fwd = new CrashStatsLogForwarder("GraphicsCriticalError");
+    fwd->SetCircularBufferSize(gfxPrefs::GfxLoggingCrashLength());
+
+    mozilla::gfx::Config cfg;
+    cfg.mLogForwarder = fwd;
+    cfg.mMaxTextureSize = gfxPrefs::MaxTextureSize();
+    cfg.mMaxAllocSize = gfxPrefs::MaxAllocSize();
+
+    gfx::Factory::Init(cfg);
 }
 
 static bool sLayersIPCIsUp = false;

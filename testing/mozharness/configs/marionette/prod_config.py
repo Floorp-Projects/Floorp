@@ -118,4 +118,5 @@ config = {
             "testsdir": ""
         }
     },
+    "structured_output": True,
 }

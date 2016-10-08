@@ -240,6 +240,9 @@ CurrentThreadIsIonCompilingSafeForMinorGC();
 
 bool
 CurrentThreadIsGCSweeping();
+
+bool
+IsMarkedBlack(NativeObject* obj);
 #endif
 
 namespace gc {

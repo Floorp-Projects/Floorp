@@ -6,7 +6,6 @@ var offenders = [
     "f(...)",
     "f(...,)",
     "f(... ...[])",
-    "f(...x,)",
     "f(x, ...)",
     "f(...x, x for (x in y))",
     "f(x for (x in y), ...x)"

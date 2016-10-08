@@ -451,17 +451,13 @@ XPCNativeSet::MatchesSetUpToInterface(const XPCNativeSet* other,
 inline
 JSObject* XPCWrappedNativeTearOff::GetJSObjectPreserveColor() const
 {
-    return mJSObject.getPtr();
+    return mJSObject.unbarrieredGetPtr();
 }
 
 inline
 JSObject* XPCWrappedNativeTearOff::GetJSObject()
 {
-    JSObject* obj = GetJSObjectPreserveColor();
-    if (obj) {
-      JS::ExposeObjectToActiveJS(obj);
-    }
-    return obj;
+    return mJSObject;
 }
 
 inline
@@ -475,7 +471,7 @@ inline
 void XPCWrappedNativeTearOff::JSObjectMoved(JSObject* obj, const JSObject* old)
 {
     MOZ_ASSERT(!IsMarked());
-    MOZ_ASSERT(mJSObject == old);
+    MOZ_ASSERT(mJSObject.unbarrieredGetPtr() == old);
     mJSObject = obj;
 }
 
