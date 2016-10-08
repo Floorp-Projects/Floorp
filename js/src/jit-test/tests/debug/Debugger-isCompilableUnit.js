@@ -20,7 +20,7 @@ const compilable_units = [
    "'Get Schwifty!'",
    "1 + 2",
    "function f(x) {}",
-   "function x(f,) {", // statements with bad syntax are always compilable
+   "function x(...f,) {", // statements with bad syntax are always compilable
    "let x = 100",
    ";;;;;;;;",
    "",

@@ -3445,11 +3445,13 @@ XREMain::XRE_mainInit(bool* aExitFlag)
       }
     }
 
+#ifdef MOZ_CRASHREPORTER
     if (cpuUpdateRevision > 0) {
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("CPUMicrocodeVersion"),
                                          nsPrintfCString("0x%x",
                                                          cpuUpdateRevision));
     }
+#endif
   }
 #endif
 

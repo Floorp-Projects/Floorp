@@ -144,14 +144,14 @@ template<typename T>
 struct PersistentRootedMarker;
 } /* namespace gc */
 
-#define DECLARE_POINTER_COMPARISON_OPS(T)                                                \
+#define DECLARE_POINTER_COMPARISON_OPS(T)                                                         \
     bool operator==(const T& other) const { return get() == other; }                              \
     bool operator!=(const T& other) const { return get() != other; }
 
 // Important: Return a reference so passing a Rooted<T>, etc. to
 // something that takes a |const T&| is not a GC hazard.
-#define DECLARE_POINTER_CONSTREF_OPS(T)                                                  \
-    operator const T&() const { return get(); }                                                  \
+#define DECLARE_POINTER_CONSTREF_OPS(T)                                                           \
+    operator const T&() const { return get(); }                                                   \
     const T& operator->() const { return get(); }
 
 // Assignment operators on a base class are hidden by the implicitly defined
@@ -167,7 +167,7 @@ struct PersistentRootedMarker;
         return *this;                                                                             \
     }                                                                                             \
 
-#define DELETE_ASSIGNMENT_OPS(Wrapper, T)                                                 \
+#define DELETE_ASSIGNMENT_OPS(Wrapper, T)                                                         \
     template <typename S> Wrapper<T>& operator=(S) = delete;                                      \
     Wrapper<T>& operator=(const Wrapper<T>&) = delete;
 
@@ -416,11 +416,24 @@ class TenuredHeap : public js::HeapBase<T>
         return (bits & flag) != 0;
     }
 
-    T getPtr() const { return reinterpret_cast<T>(bits & ~flagsMask); }
+    T unbarrieredGetPtr() const { return reinterpret_cast<T>(bits & ~flagsMask); }
     uintptr_t getFlags() const { return bits & flagsMask; }
+
+    T getPtr() const {
+        T ptr = unbarrieredGetPtr();
+        js::BarrierMethods<T>::exposeToJS(ptr);
+        return ptr;
+    }
 
     operator T() const { return getPtr(); }
     T operator->() const { return getPtr(); }
+
+    explicit operator bool() const {
+        return bool(js::BarrierMethods<T>::asGCThingOrNull(unbarrieredGetPtr()));
+    }
+    explicit operator bool() {
+        return bool(js::BarrierMethods<T>::asGCThingOrNull(unbarrieredGetPtr()));
+    }
 
     TenuredHeap<T>& operator=(T p) {
         setPtr(p);

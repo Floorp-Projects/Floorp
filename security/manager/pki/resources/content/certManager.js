@@ -4,6 +4,8 @@
 /* import-globals-from pippki.js */
 "use strict";
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 const nsFilePicker = "@mozilla.org/filepicker;1";
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
@@ -409,8 +411,6 @@ function deleteCerts()
   var selTab = document.getElementById('certMgrTabbox').selectedItem;
   var selTabID = selTab.getAttribute('id');
 
-  params.SetNumberStrings(numcerts + 1);
-
   switch (selTabID) {
     case "mine_tab":
     case "websites_tab":
@@ -423,16 +423,11 @@ function deleteCerts()
       return;
   }
 
-  params.SetInt(0, numcerts);
-  for (let t = 0; t < numcerts; t++) {
-    let treeItem = selected_tree_items[t];
-    let cert = treeItem.cert;
-    if (!cert) {
-      params.SetString(t + 1, treeItem.hostPort);
-    } else {
-      params.SetString(t + 1, cert.commonName);
-    }
+  let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+  for (let treeItem of selected_tree_items) {
+    array.appendElement(treeItem, false);
   }
+  params.objects = array;
 
   window.openDialog('chrome://pippki/content/deletecert.xul', "",
                     'chrome,centerscreen,modal', params);

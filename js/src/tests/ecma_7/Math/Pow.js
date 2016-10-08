@@ -53,6 +53,28 @@ assertEq(a**/**b**/c/**/**/**d**/e, 16);
 // Two stars separated should not parse as exp operator
 assertThrows(function() { return Reflect.parse("2 * * 3"); }, SyntaxError);
 
+// Left-hand side expression must not be a unary expression.
+for (let unaryOp of ["delete", "typeof", "void", "+", "-", "!", "~"]) {
+    assertThrowsInstanceOf(() => eval(unaryOp + " a ** 2"), SyntaxError);
+    assertThrowsInstanceOf(() => eval(unaryOp + " " + unaryOp + " a ** 2"), SyntaxError);
+}
+
+// Test the other |delete| operators (DELETENAME and DELETEEXPR are already tested above).
+assertThrowsInstanceOf(() => eval("delete a.name ** 2"), SyntaxError);
+assertThrowsInstanceOf(() => eval("delete a[0] ** 2"), SyntaxError);
+
+// Unary expression lhs is valid if parenthesized.
+for (let unaryOp of ["delete", "void", "+", "-", "!", "~"]) {
+    let a = 0;
+    eval("(" + unaryOp + " a) ** 2");
+    eval("(" + unaryOp + " " + unaryOp + " a) ** 2");
+}
+{
+    let a = {};
+    (delete a.name) ** 2;
+    (delete a[0]) ** 2;
+}
+
 // Check if error propagation works
 var thrower = {
     get value() {

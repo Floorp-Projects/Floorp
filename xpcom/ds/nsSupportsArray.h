@@ -113,18 +113,9 @@ public:
     return (RemoveElementAt(aIndex) ? NS_OK : NS_ERROR_FAILURE);
   }
 
-  MOZ_MUST_USE NS_IMETHOD_(bool)
-  AppendElements(nsISupportsArray* aElements) override
-  {
-    return InsertElementsAt(aElements, mCount);
-  }
-
   NS_IMETHOD Compact(void) override;
 
   MOZ_MUST_USE NS_IMETHOD Clone(nsISupportsArray** aResult) override;
-
-  MOZ_MUST_USE NS_IMETHOD_(bool)
-  InsertElementsAt(nsISupportsArray* aOther, uint32_t aIndex) override;
 
   MOZ_MUST_USE NS_IMETHOD_(bool)
   RemoveElementsAt(uint32_t aIndex, uint32_t aCount) override;
@@ -134,7 +125,7 @@ public:
 protected:
   void DeleteArray(void);
 
-  void GrowArrayBy(int32_t aGrowBy);
+  bool GrowArrayBy(uint32_t aGrowBy);
 
   nsISupports** mArray;
   uint32_t mArraySize;

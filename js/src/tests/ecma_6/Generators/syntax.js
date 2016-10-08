@@ -117,8 +117,21 @@ assertSyntaxError("function* g() { yield 3 + yield 4; }");
 // Yield is still a future-reserved-word in strict mode
 assertSyntaxError("function f() { 'use strict'; var yield = 13; }");
 
-// The name of the NFE is let-bound in G, so is invalid.
-assertSyntaxError("function* g() { yield (function yield() {}); }");
+// The name of the NFE isn't let-bound in F/G, so this is valid.
+function f() { (function yield() {}); }
+function* g() { (function yield() {}); }
+
+// The name of the NFE is let-bound in the function/generator expression, so this is invalid.
+assertSyntaxError("function f() { (function* yield() {}); }");
+assertSyntaxError("function* g() { (function* yield() {}); }");
+
+// The name of the declaration is let-bound in F, so this is valid.
+function f() { function yield() {} }
+function f() { function* yield() {} }
+
+// The name of the declaration is let-bound in G, so this is invalid.
+assertSyntaxError("function* g() { function yield() {} }");
+assertSyntaxError("function* g() { function* yield() {} }");
 
 // In generators, yield is invalid as a formal argument name.
 assertSyntaxError("function* g(yield) { yield (10); }");
