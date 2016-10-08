@@ -43,13 +43,15 @@ function ConsoleApiCall(props) {
   } = props;
   const {
     id: messageId,
-    source, type,
+    source,
+    type,
     level,
     repeat,
     stacktrace,
     frame,
     parameters,
     messageText,
+    userProvidedStyles,
   } = message;
 
   let messageBody;
@@ -62,7 +64,7 @@ function ConsoleApiCall(props) {
     // TODO: Chrome does not output anything, see if we want to keep this
     messageBody = dom.span({className: "cm-variable"}, "console.table()");
   } else if (parameters) {
-    messageBody = formatReps(parameters);
+    messageBody = formatReps(parameters, userProvidedStyles, serviceContainer);
   } else {
     messageBody = messageText;
   }
@@ -107,11 +109,16 @@ function ConsoleApiCall(props) {
   });
 }
 
-function formatReps(parameters) {
+function formatReps(parameters, userProvidedStyles, serviceContainer) {
   return (
     parameters
       // Get all the grips.
-      .map((grip, key) => GripMessageBody({ grip, key }))
+      .map((grip, key) => GripMessageBody({
+        grip,
+        key,
+        userProvidedStyle: userProvidedStyles ? userProvidedStyles[key] : null,
+        serviceContainer
+      }))
       // Interleave spaces.
       .reduce((arr, v, i) => {
         return i + 1 < parameters.length
