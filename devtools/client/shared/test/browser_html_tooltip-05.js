@@ -36,7 +36,7 @@ add_task(function* () {
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
   info("Create HTML tooltip");
-  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: false});
+  let tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
   let div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "100%";
   tooltip.setContent(div, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});

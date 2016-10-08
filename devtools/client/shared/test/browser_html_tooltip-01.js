@@ -49,7 +49,7 @@ add_task(function* () {
 
 function* runTests(doc) {
   yield addTab("about:blank");
-  let tooltip = new HTMLTooltip({doc}, {useXulWrapper});
+  let tooltip = new HTMLTooltip(doc, {useXulWrapper});
 
   info("Set tooltip content");
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});

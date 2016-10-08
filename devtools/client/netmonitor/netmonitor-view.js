@@ -477,7 +477,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       .createInstance(Ci.nsITimer);
 
     // Create a tooltip for the newly appended network request item.
-    this.tooltip = new HTMLTooltip(NetMonitorController._toolbox, { type: "arrow" });
+    // The popup will be attached to the toolbox document.
+    this.tooltip = new HTMLTooltip(NetMonitorController._toolbox.doc, { type: "arrow" });
     this.tooltip.startTogglingOnHover(widgetParentEl, this._onHover, {
       toggleDelay: REQUESTS_TOOLTIP_TOGGLE_DELAY,
       interactive: true

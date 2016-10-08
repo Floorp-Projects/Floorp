@@ -69,7 +69,7 @@ add_task(function* () {
 
 function* runTests(doc) {
   info("Create HTML tooltip");
-  let tooltip = new HTMLTooltip({doc}, {type: "arrow", useXulWrapper});
+  let tooltip = new HTMLTooltip(doc, {type: "arrow", useXulWrapper});
   let div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "35px";
   tooltip.setContent(div, {width: 200, height: 35});
