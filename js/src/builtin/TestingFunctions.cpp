@@ -122,7 +122,7 @@ GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
 #else
     value = BooleanValue(false);
 #endif
-    if (!JS_SetProperty(cx, info, "release", value))
+    if (!JS_SetProperty(cx, info, "release_or_beta", value))
         return false;
 
 #ifdef JS_HAS_CTYPES
