@@ -14,7 +14,7 @@
 
 /* Description of the test:
  * Let's load a link into a targeted iframe and make sure the content policy
- * type used for content policy checks is of TYPE_SUBDOCUMENT both times.
+ * type used for content policy checks is of TYPE_SUBDOCUMENT.
  */
 
 const Cc = SpecialPowers.Cc;
@@ -25,10 +25,6 @@ const EXPECTED_URL =
   "http://mochi.test:8888/tests/dom/security/test/general/file_contentpolicytype_targeted_link_iframe.sjs?innerframe";
 const TEST_FRAME_URL =
   "file_contentpolicytype_targeted_link_iframe.sjs?testframe";
-
-// we should get two content policy chcks with the same content policy type
-const EXPECTED_RESULTS = 2;
-var testCounter = 0;
 
 // -----  START Content Policy implementation for the test
 var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
@@ -63,12 +59,8 @@ var policy = {
     if (contentLocation.asciiSpec === EXPECTED_URL) {
       is(contentType, EXPECTED_CONTENT_TYPE,
          "content policy type should TYPESUBDOCUMENT");
-      testCounter++;
-      
-      if (testCounter === EXPECTED_RESULTS) {
-        categoryManager.deleteCategoryEntry("content-policy", POLICYNAME, false);
-        SimpleTest.finish();
-      }
+      categoryManager.deleteCategoryEntry("content-policy", POLICYNAME, false);
+      SimpleTest.finish();
     }
     return Ci.nsIContentPolicy.ACCEPT;
   },
