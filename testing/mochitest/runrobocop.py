@@ -27,7 +27,6 @@ import mozinfo
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 
 
-# TODO inherit from MochitestBase instead
 class RobocopTestRunner(MochitestDesktop):
     """
        A test harness for Robocop. Robocop tests are UI tests for Firefox for Android,

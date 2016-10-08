@@ -23,6 +23,27 @@
   }                                                                            \
   PR_END_MACRO;
 
+#define NOTIFY_BOOKMARKS_OBSERVERS(canFire, cache, array, skipIf, method)      \
+  PR_BEGIN_MACRO                                                               \
+  if (canFire) {                                                               \
+    nsCOMArray<nsINavBookmarkObserver> entries;                                \
+    cache.GetEntries(entries);                                                 \
+    for (int32_t idx = 0; idx < entries.Count(); ++idx) {                      \
+      if (skipIf(entries[idx]))                                                \
+        continue;                                                              \
+      entries[idx]->method;                                                    \
+    }                                                                          \
+    for (uint32_t idx = 0; idx < array.Length(); ++idx) {                      \
+      const nsCOMPtr<nsINavBookmarkObserver> &e = array.ElementAt(idx).GetValue(); \
+      if (e) {                                                                 \
+        if (skipIf(e))                                                         \
+            continue;                                                          \
+        e->method;                                                             \
+      }                                                                        \
+    }                                                                          \
+  }                                                                            \
+  PR_END_MACRO;
+
 #define PLACES_FACTORY_SINGLETON_IMPLEMENTATION(_className, _sInstance)        \
   _className * _className::_sInstance = nullptr;                                \
                                                                                \

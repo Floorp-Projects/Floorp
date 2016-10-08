@@ -11,103 +11,10 @@ namespace layers {
 
 LayerPolygon PopFront(std::deque<LayerPolygon>& aLayers)
 {
-  LayerPolygon layer = std::move(aLayers.front());
+  LayerPolygon layer = Move(aLayers.front());
   aLayers.pop_front();
   return layer;
 }
-
-namespace {
-
-nsTArray<float>
-CalculateDotProduct(const gfx::Polygon3D& aFirst,
-                    const gfx::Polygon3D& aSecond,
-                    size_t& aPos, size_t& aNeg)
-{
-  // Point classification might produce incorrect results due to numerical
-  // inaccuracies. Using an epsilon value makes the splitting plane "thicker".
-  const float epsilon = 0.05f;
-
-  const gfx::Point3D& normal = aFirst.GetNormal();
-  const gfx::Point3D& planePoint = aFirst[0];
-
-  nsTArray<float> dotProducts;
-
-  for (const gfx::Point3D& point : aSecond.GetPoints()) {
-    float dot = (point - planePoint).DotProduct(normal);
-
-    if (dot > epsilon) {
-      aPos++;
-    } else if (dot < -epsilon) {
-      aNeg++;
-    } else {
-      // The point is within the thick plane.
-      dot = 0.0f;
-    }
-
-    dotProducts.AppendElement(dot);
-  }
-
-  return dotProducts;
-}
-
-int Sign(float aValue) {
-  if (aValue > 0) return 1;
-  if (aValue < 0) return -1;
-
-  return 0;
-}
-
-void
-SplitPolygon(const gfx::Polygon3D& aSplittingPlane,
-             const gfx::Polygon3D& aPolygon,
-             const nsTArray<float>& dots,
-             gfx::Polygon3D& back,
-             gfx::Polygon3D& front)
-{
-  const gfx::Point3D& normal = aSplittingPlane.GetNormal();
-  const size_t pointCount = aPolygon.GetPoints().Length();
-
-  nsTArray<gfx::Point3D> backPoints, frontPoints;
-
-  for (size_t i = 0; i < pointCount; ++i) {
-    size_t j = (i + 1) % pointCount;
-
-    const gfx::Point3D& a = aPolygon[i];
-    const gfx::Point3D& b = aPolygon[j];
-    const float dotA = dots[i];
-    const float dotB = dots[j];
-
-    // The point is in front of the plane.
-    if (dotA >= 0) {
-      frontPoints.AppendElement(a);
-    }
-
-    // The point is behind the plane.
-    if (dotA <= 0) {
-      backPoints.AppendElement(a);
-    }
-
-    // If the sign of the dot product changes between two consecutive vertices,
-    // the splitting plane intersects the corresponding polygon edge.
-    if (Sign(dotA) != Sign(dotB)) {
-
-      // Calculate the line segment and plane intersection point.
-      const gfx::Point3D ab = b - a;
-      const float dotAB = ab.DotProduct(normal);
-      const float t = -dotA / dotAB;
-      const gfx::Point3D p = a + (ab * t);
-
-      // Add the intersection point to both polygons.
-      backPoints.AppendElement(p);
-      frontPoints.AppendElement(p);
-    }
-  }
-
-  back = gfx::Polygon3D(std::move(backPoints), aPolygon.GetNormal());
-  front = gfx::Polygon3D(std::move(frontPoints), aPolygon.GetNormal());
-}
-
-} // namespace
 
 void
 BSPTree::BuildDrawOrder(const UniquePtr<BSPTreeNode>& aNode,
@@ -131,7 +38,11 @@ BSPTree::BuildDrawOrder(const UniquePtr<BSPTreeNode>& aNode,
   }
 
   for (LayerPolygon& layer : aNode->layers) {
-    aLayers.AppendElement(std::move(layer));
+    MOZ_ASSERT(layer.geometry);
+
+    if (layer.geometry->GetPoints().Length() >= 3) {
+      aLayers.AppendElement(Move(layer));
+    }
   }
 
   if (*back) {
@@ -147,34 +58,37 @@ BSPTree::BuildTree(UniquePtr<BSPTreeNode>& aRoot,
     return;
   }
 
-  const gfx::Polygon3D& splittingPlane = aRoot->First();
+  const gfx::Polygon3D& plane = aRoot->First();
   std::deque<LayerPolygon> backLayers, frontLayers;
 
   for (LayerPolygon& layerPolygon : aLayers) {
-    size_t pos = 0, neg = 0;
+    const Maybe<gfx::Polygon3D>& geometry = layerPolygon.geometry;
 
-    nsTArray<float> dots =
-      CalculateDotProduct(splittingPlane, *layerPolygon.geometry, pos, neg);
+    size_t pos = 0, neg = 0;
+    nsTArray<float> dots = geometry->CalculateDotProducts(plane, pos, neg);
 
     // Back polygon
     if (pos == 0 && neg > 0) {
-      backLayers.push_back(std::move(layerPolygon));
+      backLayers.push_back(Move(layerPolygon));
     }
     // Front polygon
     else if (pos > 0 && neg == 0) {
-      frontLayers.push_back(std::move(layerPolygon));
+      frontLayers.push_back(Move(layerPolygon));
     }
     // Coplanar polygon
     else if (pos == 0 && neg == 0) {
-      aRoot->layers.push_back(std::move(layerPolygon));
+      aRoot->layers.push_back(Move(layerPolygon));
     }
     // Polygon intersects with the splitting plane.
     else if (pos > 0 && neg > 0) {
-      gfx::Polygon3D back, front;
-      SplitPolygon(splittingPlane, *layerPolygon.geometry, dots, back, front);
+      nsTArray<gfx::Point3D> backPoints, frontPoints;
+      geometry->SplitPolygon(plane, dots, backPoints, frontPoints);
 
-      backLayers.push_back(LayerPolygon(std::move(back), layerPolygon.layer));
-      frontLayers.push_back(LayerPolygon(std::move(front), layerPolygon.layer));
+      const gfx::Point3D& normal = geometry->GetNormal();
+      Layer *layer = layerPolygon.layer;
+
+      backLayers.push_back(LayerPolygon(layer, Move(backPoints), normal));
+      frontLayers.push_back(LayerPolygon(layer, Move(frontPoints), normal));
     }
   }
 

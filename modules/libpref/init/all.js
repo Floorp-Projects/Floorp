@@ -4825,7 +4825,7 @@ pref("dom.w3c_pointer_events.implicit_capture", false);
 pref("dom.imagecapture.enabled", false);
 
 // W3C MediaDevices devicechange event
-pref("media.ondevicechange.enabled", false);
+pref("media.ondevicechange.enabled", true);
 
 // W3C MediaDevices devicechange fake event
 pref("media.ondevicechange.fakeDeviceChangeEvent.enabled", false);
@@ -5057,13 +5057,6 @@ pref("dom.telephony.enabled", false);
 // Numeric default service id for WebTelephony API calls with |serviceId|
 // parameter omitted.
 pref("dom.telephony.defaultServiceId", 0);
-
-// Cell Broadcast API
-#ifdef MOZ_B2G_RIL
-pref("dom.cellbroadcast.enabled", true);
-#else
-pref("dom.cellbroadcast.enabled", false);
-#endif
 
 // ICC API
 #ifdef MOZ_B2G_RIL

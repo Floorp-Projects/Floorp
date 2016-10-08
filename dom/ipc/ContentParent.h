@@ -855,12 +855,6 @@ private:
 
   virtual bool DeallocPHandlerServiceParent(PHandlerServiceParent*) override;
 
-  virtual PCellBroadcastParent* AllocPCellBroadcastParent() override;
-
-  virtual bool DeallocPCellBroadcastParent(PCellBroadcastParent*) override;
-
-  virtual bool RecvPCellBroadcastConstructor(PCellBroadcastParent* aActor) override;
-
   virtual PSmsParent* AllocPSmsParent() override;
 
   virtual bool DeallocPSmsParent(PSmsParent*) override;

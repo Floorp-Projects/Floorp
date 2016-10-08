@@ -16,8 +16,8 @@ public:
   explicit nsContentTypeParser(const nsAString& aString);
   ~nsContentTypeParser();
 
-  nsresult GetParameter(const char* aParameterName, nsAString& aResult);
-  nsresult GetType(nsAString& aResult);
+  nsresult GetParameter(const char* aParameterName, nsAString& aResult) const;
+  nsresult GetType(nsAString& aResult) const;
 
 private:
   NS_ConvertUTF16toUTF8 mString;

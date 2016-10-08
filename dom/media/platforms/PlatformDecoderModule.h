@@ -8,6 +8,7 @@
 #define PlatformDecoderModule_h_
 
 #include "MediaDecoderReader.h"
+#include "MediaInfo.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/KnowsCompositor.h"
@@ -35,7 +36,7 @@ class CDMProxy;
 
 static LazyLogModule sPDMLog("PlatformDecoderModule");
 
-struct CreateDecoderParams {
+struct MOZ_STACK_CLASS CreateDecoderParams final {
   explicit CreateDecoderParams(const TrackInfo& aConfig)
     : mConfig(aConfig)
   {}
@@ -72,6 +73,7 @@ struct CreateDecoderParams {
   MediaDataDecoderCallback* mCallback = nullptr;
   DecoderDoctorDiagnostics* mDiagnostics = nullptr;
   layers::ImageContainer* mImageContainer = nullptr;
+  MediaResult* mError = nullptr;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<GMPCrashHelper> mCrashHelper;
   bool mUseBlankDecoder = false;
@@ -81,6 +83,7 @@ private:
   void Set(MediaDataDecoderCallback* aCallback) { mCallback = aCallback; }
   void Set(DecoderDoctorDiagnostics* aDiagnostics) { mDiagnostics = aDiagnostics; }
   void Set(layers::ImageContainer* aImageContainer) { mImageContainer = aImageContainer; }
+  void Set(MediaResult* aError) { mError = aError; }
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
   void Set(bool aUseBlankDecoder) { mUseBlankDecoder = aUseBlankDecoder; }
   void Set(layers::KnowsCompositor* aKnowsCompositor) { mKnowsCompositor = aKnowsCompositor; }
@@ -117,6 +120,13 @@ public:
   // Indicates if the PlatformDecoderModule supports decoding of aMimeType.
   virtual bool SupportsMimeType(const nsACString& aMimeType,
                                 DecoderDoctorDiagnostics* aDiagnostics) const = 0;
+  virtual bool Supports(const TrackInfo& aTrackInfo,
+                        DecoderDoctorDiagnostics* aDiagnostics) const
+  {
+    // By default, fall back to SupportsMimeType with just the MIME string.
+    // (So PDMs do not need to override this method -- yet.)
+    return SupportsMimeType(aTrackInfo.mMimeType, aDiagnostics);
+  }
 
   enum class ConversionRequired : uint8_t {
     kNeedNone,

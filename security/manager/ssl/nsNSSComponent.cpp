@@ -971,7 +971,49 @@ nsNSSComponent::MaybeImportEnterpriseRoots()
   if (!importEnterpriseRoots) {
     return;
   }
-  DWORD flags = CERT_SYSTEM_STORE_LOCAL_MACHINE |
+
+  MOZ_ASSERT(!mEnterpriseRoots);
+  mEnterpriseRoots.reset(CERT_NewCertList());
+  if (!mEnterpriseRoots) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("failed to allocate a new CERTCertList for mEnterpriseRoots"));
+    return;
+  }
+
+  ImportEnterpriseRootsForLocation(CERT_SYSTEM_STORE_LOCAL_MACHINE);
+  ImportEnterpriseRootsForLocation(CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY);
+  ImportEnterpriseRootsForLocation(CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE);
+#endif // XP_WIN
+}
+
+#ifdef XP_WIN
+// Loads the enterprise roots at the registry location corresponding to the
+// given location flag.
+// Supported flags are:
+//   CERT_SYSTEM_STORE_LOCAL_MACHINE
+//     (for HKLM\SOFTWARE\Microsoft\SystemCertificates)
+//   CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY
+//     (for HKLM\SOFTWARE\Policies\Microsoft\SystemCertificates\Root\Certificates)
+//   CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE
+//     (for HKLM\SOFTWARE\Microsoft\EnterpriseCertificates\Root\Certificates)
+void
+nsNSSComponent::ImportEnterpriseRootsForLocation(DWORD locationFlag)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return;
+  }
+  MOZ_ASSERT(locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE ||
+             locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY ||
+             locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE,
+             "unexpected locationFlag for ImportEnterpriseRootsForLocation");
+  if (!(locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE ||
+        locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY ||
+        locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE)) {
+    return;
+  }
+
+  DWORD flags = locationFlag |
                 CERT_STORE_OPEN_EXISTING_FLAG |
                 CERT_STORE_READONLY_FLAG;
   // The certificate store being opened should consist only of certificates
@@ -986,8 +1028,6 @@ nsNSSComponent::MaybeImportEnterpriseRoots()
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("failed to open enterprise root store"));
     return;
   }
-  MOZ_ASSERT(!mEnterpriseRoots);
-  mEnterpriseRoots.reset(CERT_NewCertList());
   CERTCertTrust trust = {
     CERTDB_TRUSTED_CA | CERTDB_VALID_CA | CERTDB_USER,
     0,
@@ -1019,6 +1059,10 @@ nsNSSComponent::MaybeImportEnterpriseRoots()
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("skipping Family Safety Root"));
       continue;
     }
+    MOZ_ASSERT(mEnterpriseRoots, "mEnterpriseRoots unexpectedly NULL?");
+    if (!mEnterpriseRoots) {
+      return;
+    }
     if (CERT_AddCertToListTail(mEnterpriseRoots.get(), nssCertificate.get())
           != SECSuccess) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't add cert to list"));
@@ -1035,8 +1079,8 @@ nsNSSComponent::MaybeImportEnterpriseRoots()
     Unused << nssCertificate.release();
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("imported %u roots", numImported));
-#endif // XP_WIN
 }
+#endif // XP_WIN
 
 void
 nsNSSComponent::LoadLoadableRoots()

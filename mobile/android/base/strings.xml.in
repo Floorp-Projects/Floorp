@@ -237,7 +237,7 @@
   <string name="pref_category_experimental">&pref_category_experimental;</string>
 
   <string name="pref_custom_tabs">&pref_custom_tabs;</string>
-  <string name="pref_custom_tabs_summary">&pref_custom_tabs_summary;</string>
+  <string name="pref_custom_tabs_summary">&pref_custom_tabs_summary2;</string>
 
   <string name="pref_activity_stream">&pref_activity_stream;</string>
   <string name="pref_activity_stream_summary">&pref_activity_stream_summary;</string>
@@ -632,5 +632,6 @@
 
   <string name="activity_stream_topsites">&activity_stream_topsites;</string>
   <string name="activity_stream_highlights">&activity_stream_highlights;</string>
-  <string name="activity_stream_more">&activity_stream_more;</string>
+  <string name="activity_stream_highlight_label_bookmarked">&activity_stream_highlight_label_bookmarked;</string>
+  <string name="activity_stream_highlight_label_visited">&activity_stream_highlight_label_visited;</string>
 </resources>

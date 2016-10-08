@@ -47,7 +47,6 @@ DIRS += [
     'browser-element',
     'cache',
     'canvas',
-    'cellbroadcast',
     'contacts',
     'crypto',
     'phonenumberutils',

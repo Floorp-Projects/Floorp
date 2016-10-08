@@ -115,6 +115,7 @@ public:
   virtual bool RecvReleaseFrame(mozilla::ipc::Shmem&&) override;
   virtual bool RecvAllDone() override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual bool RecvEnsureInitialized(const CaptureEngine&) override;
 
   nsIThread* GetBackgroundThread() { return mPBackgroundThread; };
   bool IsShuttingDown() { return !mChildIsAlive

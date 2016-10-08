@@ -161,6 +161,12 @@ ShaderConfigOGL::SetCompositionOp(gfx::CompositionOp aOp)
   mCompositionOp = aOp;
 }
 
+void
+ShaderConfigOGL::SetDynamicGeometry(bool aEnabled)
+{
+  SetFeature(ENABLE_DYNAMIC_GEOMETRY, aEnabled);
+}
+
 /* static */ ProgramProfileOGL
 ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 {
@@ -187,11 +193,17 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   }
   vs << "uniform vec2 uRenderTargetOffset;" << endl;
   vs << "attribute vec4 aCoord;" << endl;
+  result.mAttributes.AppendElement(Pair<nsCString, GLuint> {"aCoord", 0});
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
     vs << "uniform mat4 uTextureTransform;" << endl;
     vs << "uniform vec4 uTextureRects[4];" << endl;
     vs << "varying vec2 vTexCoord;" << endl;
+
+    if (aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY) {
+      vs << "attribute vec2 aTexCoord;" << endl;
+      result.mAttributes.AppendElement(Pair<nsCString, GLuint> {"aTexCoord", 1});
+    }
   }
 
   if (BlendOpIsMixBlendMode(blendOp)) {
@@ -205,9 +217,15 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   }
 
   vs << "void main() {" << endl;
-  vs << "  int vertexID = int(aCoord.w);" << endl;
-  vs << "  vec4 layerRect = uLayerRects[vertexID];" << endl;
-  vs << "  vec4 finalPosition = vec4(aCoord.xy * layerRect.zw + layerRect.xy, 0.0, 1.0);" << endl;
+
+  if (aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY) {
+    vs << "  vec4 finalPosition = vec4(aCoord.xy, 0.0, 1.0);" << endl;
+  } else {
+    vs << "  int vertexID = int(aCoord.w);" << endl;
+    vs << "  vec4 layerRect = uLayerRects[vertexID];" << endl;
+    vs << "  vec4 finalPosition = vec4(aCoord.xy * layerRect.zw + layerRect.xy, 0.0, 1.0);" << endl;
+  }
+
   vs << "  finalPosition = uLayerTransform * finalPosition;" << endl;
 
   if (aConfig.mFeatures & ENABLE_DEAA) {
@@ -253,22 +271,33 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
       // We must adjust the texture coordinates to compensate for the dilation
       vs << "    coordAdjusted = uLayerTransformInverse * finalPosition;" << endl;
       vs << "    coordAdjusted /= coordAdjusted.w;" << endl;
-      vs << "    coordAdjusted.xy -= layerRect.xy;" << endl;
-      vs << "    coordAdjusted.xy /= layerRect.zw;" << endl;
+
+      if (!(aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY)) {
+        vs << "    coordAdjusted.xy -= layerRect.xy;" << endl;
+        vs << "    coordAdjusted.xy /= layerRect.zw;" << endl;
+      }
     }
     vs << "  }" << endl;
 
     if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
+      if (aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY) {
+        vs << "  vTexCoord = (uTextureTransform * vec4(aTexCoord, 0.0, 1.0)).xy;" << endl;
+      } else {
+        vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
+        vs << "  vec2 texCoord = coordAdjusted.xy * textureRect.zw + textureRect.xy;" << endl;
+        vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
+      }
+    }
+  } else if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
+    if (aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY) {
+      vs << "  vTexCoord = (uTextureTransform * vec4(aTexCoord, 0.0, 1.0)).xy;" << endl;
+    } else {
       vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
-      vs << "  vec2 texCoord = coordAdjusted.xy * textureRect.zw + textureRect.xy;" << endl;
+      vs << "  vec2 texCoord = aCoord.xy * textureRect.zw + textureRect.xy;" << endl;
       vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
     }
-
-  } else if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
-    vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
-    vs << "  vec2 texCoord = aCoord.xy * textureRect.zw + textureRect.xy;" << endl;
-    vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
   }
+
   if (aConfig.mFeatures & ENABLE_MASK) {
     vs << "  vMaskCoord.xy = (uMaskTransform * (finalPosition / finalPosition.w)).xy;" << endl;
     // correct for perspective correct interpolation, see comment in D3D11 shader
@@ -861,6 +890,11 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
   GLint result = mGL->fCreateProgram();
   mGL->fAttachShader(result, vertexShader);
   mGL->fAttachShader(result, fragmentShader);
+
+  for (Pair<nsCString, GLuint>& attribute : mProfile.mAttributes) {
+    mGL->fBindAttribLocation(result, attribute.second(),
+                             attribute.first().get());
+  }
 
   mGL->fLinkProgram(result);
 

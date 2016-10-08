@@ -3,6 +3,7 @@
 
   "globals": {
     "AllWindowEvents": true,
+    "browserActionFor": true,
     "currentWindow": true,
     "EventEmitter": true,
     "getCookieStoreIdForTab": true,
@@ -17,3 +18,5 @@
     "WindowManager": true,
   },
 }
+
+
