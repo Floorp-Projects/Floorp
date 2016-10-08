@@ -80,6 +80,15 @@ console.group();
 console.groupEnd();
 `});
 
+consoleApi.set("console.log(%cfoobar)", {
+  keys: ["console.log(%cfoobar)"],
+  code: `
+console.log(
+  "%cfoo%cbar",
+  "color:blue;font-size:1.3em;background:url('http://example.com/test');position:absolute;top:10px",
+  "color:red;background:\\165rl('http://example.com/test')");
+`});
+
 // Evaluation Result
 const evaluationResultCommands = [
   "new Date(0)",
