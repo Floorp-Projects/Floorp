@@ -128,7 +128,7 @@ public:
 
   template<typename T>
   static T* Cast(LookupCache* aThat) {
-    return (T::VER == aThat->Ver() ? reinterpret_cast<T*>(aThat) : nullptr);
+    return ((aThat && T::VER == aThat->Ver()) ? reinterpret_cast<T*>(aThat) : nullptr);
   }
 
 private:
