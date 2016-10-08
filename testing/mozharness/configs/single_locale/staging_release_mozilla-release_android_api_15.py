@@ -19,10 +19,7 @@ config = {
     "ignore_locales": ["en-US"],
     "balrog_credentials_file": "oauth.txt",
     "tools_repo": "https://hg.mozilla.org/build/tools",
-    "is_release": True,
-    "balrog_credentials_file": "oauth.txt",
-    "tools_repo": "https://hg.mozilla.org/build/tools",
-    "is_release": True,
+    "is_release_or_beta": True,
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,

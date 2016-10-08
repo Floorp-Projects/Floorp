@@ -9218,7 +9218,7 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::warnOnceAboutExprClosure()
 {
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
     JSContext* cx = context->maybeJSContext();
     if (!cx)
         return true;

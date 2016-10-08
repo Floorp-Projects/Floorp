@@ -1016,7 +1016,7 @@ nsXULAppInfo::GetLastRunCrashID(nsAString &aLastRunCrashID)
 NS_IMETHODIMP
 nsXULAppInfo::GetIsReleaseBuild(bool* aResult)
 {
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
   *aResult = true;
 #else
   *aResult = false;
@@ -4870,7 +4870,7 @@ MultiprocessBlockPolicy() {
   // For linux nightly and aurora builds skip accessibility
   // checks.
   bool doAccessibilityCheck = true;
-#if defined(MOZ_WIDGET_GTK) && !defined(RELEASE_BUILD)
+#if defined(MOZ_WIDGET_GTK) && !defined(RELEASE_OR_BETA)
   doAccessibilityCheck = false;
 #endif
 

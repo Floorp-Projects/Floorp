@@ -398,7 +398,7 @@ struct AssertionConditionType
 #  define MOZ_ASSERT(...) do { } while (0)
 #endif /* DEBUG */
 
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 #  define MOZ_DIAGNOSTIC_ASSERT MOZ_ASSERT
 #else
 #  define MOZ_DIAGNOSTIC_ASSERT MOZ_RELEASE_ASSERT

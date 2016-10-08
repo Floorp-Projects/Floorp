@@ -390,7 +390,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(CrashTelemetryEvent, Runnable);
 void
 CrashStatsLogForwarder::CrashAction(LogReason aReason)
 {
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
   // Non-release builds crash by default, but will use telemetry
   // if this environment variable is present.
   static bool useTelemetry = gfxEnv::GfxDevCrashTelemetry();
