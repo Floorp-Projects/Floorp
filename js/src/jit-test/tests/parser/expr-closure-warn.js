@@ -1,10 +1,10 @@
 // Expression closure should be warned once and only once.
 
-var release = getBuildConfiguration().release;
+var release_or_beta = getBuildConfiguration().release_or_beta;
 
 function testWarn(code) {
-  if (release) {
-    // Warning for expression closure is non-release-only.
+  if (release_or_beta) {
+    // Warning for expression closure is non-release-only (not Release/Beta).
     testPass(code);
     return;
   }
