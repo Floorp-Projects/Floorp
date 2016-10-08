@@ -18,10 +18,12 @@ PageError.displayName = "PageError";
 PageError.propTypes = {
   message: PropTypes.object.isRequired,
   open: PropTypes.bool,
+  indent: PropTypes.number.isRequired,
 };
 
 PageError.defaultProps = {
-  open: false
+  open: false,
+  indent: 0,
 };
 
 function PageError(props) {
@@ -29,6 +31,7 @@ function PageError(props) {
     message,
     open,
     serviceContainer,
+    indent,
   } = props;
   const {
     id: messageId,
@@ -44,10 +47,12 @@ function PageError(props) {
   const childProps = {
     messageId,
     open,
+    collapsible: true,
     source,
     type,
     level,
     topLevelClasses: [],
+    indent,
     messageBody,
     repeat,
     frame,

@@ -16,6 +16,7 @@ DevToolsModules(
     'grip-message-body.js',
     'message-container.js',
     'message-icon.js',
+    'message-indent.js',
     'message-repeat.js',
     'message.js',
     'variables-view-link.js'

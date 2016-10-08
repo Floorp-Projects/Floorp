@@ -14,6 +14,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body"));
 const ConsoleTable = createFactory(require("devtools/client/webconsole/new-console-output/components/console-table"));
+const {isGroupType, l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
 
 const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
 
@@ -23,10 +24,12 @@ ConsoleApiCall.propTypes = {
   message: PropTypes.object.isRequired,
   open: PropTypes.bool,
   serviceContainer: PropTypes.object.isRequired,
+  indent: PropTypes.number.isRequired,
 };
 
 ConsoleApiCall.defaultProps = {
-  open: false
+  open: false,
+  indent: 0,
 };
 
 function ConsoleApiCall(props) {
@@ -36,6 +39,7 @@ function ConsoleApiCall(props) {
     open,
     tableData,
     serviceContainer,
+    indent,
   } = props;
   const {
     id: messageId,
@@ -44,7 +48,8 @@ function ConsoleApiCall(props) {
     repeat,
     stacktrace,
     frame,
-    parameters
+    parameters,
+    messageText,
   } = message;
 
   let messageBody;
@@ -59,7 +64,7 @@ function ConsoleApiCall(props) {
   } else if (parameters) {
     messageBody = formatReps(parameters);
   } else {
-    messageBody = message.messageText;
+    messageBody = messageText;
   }
 
   let attachment = null;
@@ -73,11 +78,19 @@ function ConsoleApiCall(props) {
     });
   }
 
+  let collapseTitle = null;
+  if (isGroupType(type)) {
+    collapseTitle = l10n.getStr("groupToggle");
+  }
+
+  const collapsible = attachment !== null || isGroupType(type);
   const topLevelClasses = ["cm-s-mozilla"];
 
   return Message({
     messageId,
     open,
+    collapsible,
+    collapseTitle,
     source,
     type,
     level,
@@ -89,6 +102,7 @@ function ConsoleApiCall(props) {
     attachment,
     serviceContainer,
     dispatch,
+    indent,
   });
 }
 
@@ -107,3 +121,4 @@ function formatReps(parameters) {
 }
 
 module.exports = ConsoleApiCall;
+
