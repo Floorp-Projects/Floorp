@@ -2468,9 +2468,6 @@ pref("layout.css.devPixelsPerPx", "-1.0");
 // Is support for CSS initial-letter property enabled?
 pref("layout.css.initial-letter.enabled", false);
 
-// Is support for CSS Masking features enabled?
-pref("layout.css.masking.enabled", true);
-
 // Is support for mix-blend-mode enabled?
 pref("layout.css.mix-blend-mode.enabled", true);
 
