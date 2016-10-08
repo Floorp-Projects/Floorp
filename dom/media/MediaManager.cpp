@@ -10,7 +10,6 @@
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "GetUserMediaRequest.h"
 #include "MediaStreamListener.h"
-#include "nsArray.h"
 #include "nsContentUtils.h"
 #include "nsHashPropertyBag.h"
 #ifdef MOZ_WIDGET_GONK
@@ -21,6 +20,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPermissionManager.h"
 #include "nsIPopupWindowManager.h"
+#include "nsISupportsArray.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsISupportsPrimitives.h"
@@ -2411,10 +2411,14 @@ if (privileged) {
         return;
       }
 
-      nsCOMPtr<nsIMutableArray> devicesCopy = nsArray::Create(); // before we give up devices below
+      nsCOMPtr<nsISupportsArray> devicesCopy; // before we give up devices below
       if (!askPermission) {
+        nsresult rv = NS_NewISupportsArray(getter_AddRefs(devicesCopy));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
         for (auto& device : **devices) {
-          nsresult rv = devicesCopy->AppendElement(device, /*weak =*/ false);
+          rv = devicesCopy->AppendElement(device);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return;
           }
@@ -3032,15 +3036,15 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     if (aSubject) {
       // A particular device or devices were chosen by the user.
       // NOTE: does not allow setting a device to null; assumes nullptr
-      nsCOMPtr<nsIArray> array(do_QueryInterface(aSubject));
+      nsCOMPtr<nsISupportsArray> array(do_QueryInterface(aSubject));
       MOZ_ASSERT(array);
       uint32_t len = 0;
-      array->GetLength(&len);
+      array->Count(&len);
       bool videoFound = false, audioFound = false;
       for (uint32_t i = 0; i < len; i++) {
-        nsCOMPtr<nsIMediaDevice> device;
-        array->QueryElementAt(i, NS_GET_IID(nsIMediaDevice),
-                              getter_AddRefs(device));
+        nsCOMPtr<nsISupports> supports;
+        array->GetElementAt(i,getter_AddRefs(supports));
+        nsCOMPtr<nsIMediaDevice> device(do_QueryInterface(supports));
         MOZ_ASSERT(device); // shouldn't be returning anything else...
         if (device) {
           nsString type;
@@ -3134,11 +3138,14 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 nsresult
-MediaManager::GetActiveMediaCaptureWindows(nsIArray** aArray)
+MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray** aArray)
 {
   MOZ_ASSERT(aArray);
-
-  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
+  nsISupportsArray* array;
+  nsresult rv = NS_NewISupportsArray(&array); // AddRefs
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   for (auto iter = mActiveWindows.Iter(); !iter.Done(); iter.Next()) {
     const uint64_t& id = iter.Key();
@@ -3169,11 +3176,11 @@ MediaManager::GetActiveMediaCaptureWindows(nsIArray** aArray)
       }
     }
     if (capturing) {
-      array->AppendElement(window, /*weak =*/ false);
+      array->AppendElement(window);
     }
   }
 
-  array.forget(aArray);
+  *aArray = array;
   return NS_OK;
 }
 
@@ -3332,14 +3339,14 @@ MediaManager::IterateWindowListeners(nsPIDOMWindowInner* aWindow,
 void
 MediaManager::StopMediaStreams()
 {
-  nsCOMPtr<nsIArray> array;
+  nsCOMPtr<nsISupportsArray> array;
   GetActiveMediaCaptureWindows(getter_AddRefs(array));
   uint32_t len;
-  array->GetLength(&len);
+  array->Count(&len);
   for (uint32_t i = 0; i < len; i++) {
-    nsCOMPtr<nsPIDOMWindowInner> win;
-    array->QueryElementAt(i, NS_GET_IID(nsPIDOMWindowInner),
-                          getter_AddRefs(win));
+    nsCOMPtr<nsISupports> window;
+    array->GetElementAt(i, getter_AddRefs(window));
+    nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(window));
     if (win) {
       OnNavigation(win->WindowID());
     }
@@ -3351,14 +3358,14 @@ MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId)
 {
   // Does page currently have a gUM stream active?
 
-  nsCOMPtr<nsIArray> array;
+  nsCOMPtr<nsISupportsArray> array;
   GetActiveMediaCaptureWindows(getter_AddRefs(array));
   uint32_t len;
-  array->GetLength(&len);
+  array->Count(&len);
   for (uint32_t i = 0; i < len; i++) {
-    nsCOMPtr<nsPIDOMWindowInner> win;
-    array->QueryElementAt(i, NS_GET_IID(nsPIDOMWindowInner),
-                          getter_AddRefs(win));
+    nsCOMPtr<nsISupports> window;
+    array->GetElementAt(i, getter_AddRefs(window));
+    nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(window));
     if (win && win->WindowID() == aWindowId) {
       return true;
     }
