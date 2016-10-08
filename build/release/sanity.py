@@ -59,7 +59,7 @@ def sendchange(branch, revision, username, master, products):
         'products:%s' % ','.join(products),
         '-p',
         'script_repo_revision:%s' % revision,
-        'release_build'
+        'release_or_beta'
     ]
     logging.info("Executing: %s" % cmd)
     run_cmd(cmd)

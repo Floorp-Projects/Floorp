@@ -59,7 +59,7 @@ chrome.jar:
   content/aboutAccounts.js             (content/aboutAccounts.js)
   content/aboutLogins.xhtml            (content/aboutLogins.xhtml)
   content/aboutLogins.js               (content/aboutLogins.js)
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
   content/WebcompatReporter.js         (content/WebcompatReporter.js)
 #endif
 

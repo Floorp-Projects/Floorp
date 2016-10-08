@@ -22,8 +22,8 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-  RELEASE_BUILD:
-#ifdef RELEASE_BUILD
+  RELEASE_OR_BETA:
+#ifdef RELEASE_OR_BETA
   true,
 #else
   false,

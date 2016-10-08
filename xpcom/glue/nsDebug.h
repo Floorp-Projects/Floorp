@@ -426,14 +426,14 @@ void fprintf_stderr(FILE* aFile, const char* aFmt, ...) MOZ_FORMAT_PRINTF(2, 3);
 // advanced performance debugging and display/layers visualization.
 void set_stderr_callback(StderrCallback aCallback);
 
-#if defined(ANDROID) && !defined(RELEASE_BUILD)
+#if defined(ANDROID) && !defined(RELEASE_OR_BETA)
 // Call this if you want a copy of stderr logging sent to a file. This is
 // useful to get around logcat overflow problems on android devices, which use
 // a circular logcat buffer and can intermittently drop messages if there's too
 // much spew.
 //
 // This is intended for local debugging only, DO NOT USE IN PRODUCTION CODE.
-// (This is ifndef RELEASE_BUILD to catch uses of it that accidentally get
+// (This is ifndef RELEASE_OR_BETA to catch uses of it that accidentally get
 // checked in). Using this will also prevent the profiler from getting a copy of
 // the stderr messages which it uses for various visualization features.
 //

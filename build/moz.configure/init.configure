@@ -663,11 +663,11 @@ set_define('MOZ_BUILD_APP', build_project)
 add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 
 
-# set RELEASE_BUILD and NIGHTLY_BUILD variables depending on the cycle we're in
+# set RELEASE_OR_BETA and NIGHTLY_BUILD variables depending on the cycle we're in
 # The logic works like this:
 # - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
 # - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
-# - otherwise, we're building Release/Beta (define RELEASE_BUILD)
+# - otherwise, we're building Release/Beta (define RELEASE_OR_BETA)
 @depends(check_build_environment, '--help')
 @imports(_from='__builtin__', _import='open')
 def milestone(build_env, _):
@@ -677,26 +677,26 @@ def milestone(build_env, _):
     with open(milestone_path, 'r') as fh:
         milestone = fh.read().splitlines()[-1]
 
-    is_nightly = is_release = None
+    is_nightly = is_release_or_beta = None
 
     if 'a1' in milestone:
         is_nightly = True
     elif 'a' not in milestone:
-        is_release = True
+        is_release_or_beta = True
 
     return namespace(version=milestone,
                      is_nightly=is_nightly,
-                     is_release=is_release)
+                     is_release_or_beta=is_release_or_beta)
 
 set_config('GRE_MILESTONE', delayed_getattr(milestone, 'version'))
 set_config('NIGHTLY_BUILD', delayed_getattr(milestone, 'is_nightly'))
 set_define('NIGHTLY_BUILD', delayed_getattr(milestone, 'is_nightly'))
 add_old_configure_assignment('NIGHTLY_BUILD',
                              delayed_getattr(milestone, 'is_nightly'))
-set_config('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
-set_define('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
-add_old_configure_assignment('RELEASE_BUILD',
-                             delayed_getattr(milestone, 'is_release'))
+set_config('RELEASE_OR_BETA', delayed_getattr(milestone, 'is_release_or_beta'))
+set_define('RELEASE_OR_BETA', delayed_getattr(milestone, 'is_release_or_beta'))
+add_old_configure_assignment('RELEASE_OR_BETA',
+                             delayed_getattr(milestone, 'is_release_or_beta'))
 
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh (and is made available to a project specific

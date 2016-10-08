@@ -72,7 +72,7 @@ SOURCES += [
     'nsNativeThemeCocoa.mm',
 ]
 
-if not CONFIG['RELEASE_BUILD'] or CONFIG['MOZ_DEBUG']:
+if not CONFIG['RELEASE_OR_BETA'] or CONFIG['MOZ_DEBUG']:
     SOURCES += [
         'nsSandboxViolationSink.mm',
     ]

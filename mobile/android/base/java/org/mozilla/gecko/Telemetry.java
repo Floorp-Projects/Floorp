@@ -196,7 +196,7 @@ public class Telemetry {
             throw new IllegalArgumentException("Expected non-null method - use Method.NONE?");
         }
 
-        if (!AppConstants.RELEASE_BUILD) {
+        if (!AppConstants.RELEASE_OR_BETA) {
             final String logString = "SendUIEvent: event = " + eventName + " method = " + method + " timestamp = " +
                     timestamp + " extras = " + extras;
             Log.d(LOGTAG, logString);
