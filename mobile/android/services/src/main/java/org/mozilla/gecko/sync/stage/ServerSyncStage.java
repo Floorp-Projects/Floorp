@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync.stage;
 
 import android.content.Context;
+import android.os.SystemClock;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.EngineSettings;
@@ -475,7 +476,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     final String name = getEngineName();
     Logger.debug(LOG_TAG, "Starting execute for " + name);
 
-    stageStartTimestamp = System.currentTimeMillis();
+    stageStartTimestamp = SystemClock.elapsedRealtime();
 
     try {
       if (!this.isEnabled()) {
@@ -575,7 +576,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
    */
   @Override
   public void onSynchronized(Synchronizer synchronizer) {
-    stageCompleteTimestamp = System.currentTimeMillis();
+    stageCompleteTimestamp = SystemClock.elapsedRealtime();
     Logger.debug(LOG_TAG, "onSynchronized.");
 
     SynchronizerConfiguration newConfig = synchronizer.save();
@@ -605,7 +606,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
   @Override
   public void onSynchronizeFailed(Synchronizer synchronizer,
                                   Exception lastException, String reason) {
-    stageCompleteTimestamp = System.currentTimeMillis();
+    stageCompleteTimestamp = SystemClock.elapsedRealtime();
     Logger.warn(LOG_TAG, "Synchronize failed: " + reason, lastException);
 
     // This failure could be due to a 503 or a 401 and it could have headers.
