@@ -23,6 +23,7 @@ public:
   }
 
   java::StackScroller::GlobalRef mOverScroller;
+  TimeStamp mLastFling;
 };
 
 class AndroidFlingAnimation: public AsyncPanZoomAnimation {
