@@ -15,6 +15,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button"));
+const MessageIndent = createFactory(require("devtools/client/webconsole/new-console-output/components/message-indent").MessageIndent);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon"));
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat"));
 const FrameView = createFactory(require("devtools/client/shared/components/frame"));
@@ -25,9 +26,12 @@ const Message = createClass({
 
   propTypes: {
     open: PropTypes.bool,
+    collapsible: PropTypes.bool,
+    collapseTitle: PropTypes.string,
     source: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
     level: PropTypes.string.isRequired,
+    indent: PropTypes.number.isRequired,
     topLevelClasses: PropTypes.array.isRequired,
     messageBody: PropTypes.any.isRequired,
     repeat: PropTypes.any,
@@ -41,6 +45,12 @@ const Message = createClass({
       onViewSourceInDebugger: PropTypes.func.isRequired,
       sourceMapService: PropTypes.any,
     }),
+  },
+
+  getDefaultProps: function () {
+    return {
+      indent: 0
+    };
   },
 
   componentDidMount() {
@@ -60,9 +70,12 @@ const Message = createClass({
     const {
       messageId,
       open,
+      collapsible,
+      collapseTitle,
       source,
       type,
       level,
+      indent,
       topLevelClasses,
       messageBody,
       frame,
@@ -92,9 +105,10 @@ const Message = createClass({
 
     // If there is an expandable part, make it collapsible.
     let collapse = null;
-    if (attachment) {
+    if (collapsible) {
       collapse = CollapseButton({
         open,
+        title: collapseTitle,
         onClick: function () {
           if (open) {
             dispatch(actions.messageClose(messageId));
@@ -125,7 +139,7 @@ const Message = createClass({
       }
     },
       // @TODO add timestamp
-      // @TODO add indent if necessary
+      MessageIndent({indent}),
       icon,
       collapse,
       dom.span({ className: "message-body-wrapper" },
