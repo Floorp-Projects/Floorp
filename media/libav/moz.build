@@ -69,7 +69,7 @@ ALLOW_COMPILER_WARNINGS = True
 if CONFIG['MOZ_DEBUG']:
     # Enable all assertions in debug builds.
     DEFINES['ASSERT_LEVEL'] = 2
-elif not CONFIG['RELEASE_BUILD']:
+elif not CONFIG['RELEASE_OR_BETA']:
     # Enable fast assertions in opt builds of Nightly and Aurora.
     DEFINES['ASSERT_LEVEL'] = 1
 

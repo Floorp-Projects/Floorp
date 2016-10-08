@@ -42,7 +42,7 @@
 #define RUSAGE_THREAD 1
 #endif
 
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
 /* Official builds have the debuggable flag set to false, which disables
  * the backtrace dumper from bionic. However, as it is useful for native
  * crashes happening before the crash reporter is registered, re-enable

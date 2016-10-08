@@ -230,7 +230,7 @@ const TYPES = {
   experiment: 128,
 };
 
-if (!AppConstants.RELEASE_BUILD)
+if (!AppConstants.RELEASE_OR_BETA)
   TYPES.apiextension = 256;
 
 // Some add-on types that we track internally are presented as other types

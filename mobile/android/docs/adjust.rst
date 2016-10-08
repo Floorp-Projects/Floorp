@@ -127,10 +127,10 @@ Add the following to your mozconfig to compile with the Adjust SDK::
 
  export MOZ_INSTALL_TRACKING=1
  export MOZ_NATIVE_DEVICES=1
- export RELEASE_BUILD=1
+ export RELEASE_OR_BETA=1
  ac_add_options --with-adjust-sdk-keyfile="$topsrcdir/mobile/android/base/adjust-sdk-sandbox.token"
 
-``MOZ_NATIVE_DEVICES`` && ``RELEASE_BUILD`` are required for an unknown
+``MOZ_NATIVE_DEVICES`` && ``RELEASE_OR_BETA`` are required for an unknown
 reason.  If you build without them, the ``StubAdjustHelper`` will be
 returned.
 

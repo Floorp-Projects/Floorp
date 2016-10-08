@@ -21,10 +21,10 @@ const UNMASKED_RENDERER_WEBGL = 0x9246;
 var Cu = parent.Components.utils;
 Cu.import("resource://gre/modules/AppConstants.jsm");
 // This gives us `AppConstants` in the global scope.
-// We need this because we only expose debug_renderer_info #ifndef MOZ_RELEASE_BUILD.
-// This should match AppConstants.RELEASE_BUILD.
+// We need this because we only expose debug_renderer_info #ifndef RELEASE_OR_BETA.
+// This should match AppConstants.RELEASE_OR_BETA.
 
-const canBeUnprivileged = !AppConstants.RELEASE_BUILD;
+const canBeUnprivileged = !AppConstants.RELEASE_OR_BETA;
 
 
 function isNonEmptyString(s)

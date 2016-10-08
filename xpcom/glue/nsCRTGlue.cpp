@@ -321,7 +321,7 @@ set_stderr_callback(StderrCallback aCallback)
   sStderrCallback = aCallback;
 }
 
-#if defined(ANDROID) && !defined(RELEASE_BUILD)
+#if defined(ANDROID) && !defined(RELEASE_OR_BETA)
 static FILE* sStderrCopy = nullptr;
 
 void
