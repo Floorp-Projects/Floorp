@@ -688,7 +688,7 @@ var onBeforeRequest = {
   get allowedOptions() {
     delete this.allowedOptions;
     this.allowedOptions = ["blocking"];
-    if (!AppConstants.RELEASE_BUILD) {
+    if (!AppConstants.RELEASE_OR_BETA) {
       this.allowedOptions.push("requestBody");
     }
     return this.allowedOptions;

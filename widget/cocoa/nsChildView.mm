@@ -5340,7 +5340,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     [viewWindow orderWindow:NSWindowAbove relativeTo:0];
   }
 
-#if !defined(RELEASE_BUILD) || defined(DEBUG)
+#if !defined(RELEASE_OR_BETA) || defined(DEBUG)
   if (!Preferences::GetBool("intl.allow-insecure-text-input", false) &&
       mGeckoChild && mTextInputHandler && mTextInputHandler->IsFocused()) {
 #ifdef MOZ_CRASHREPORTER
@@ -5372,7 +5372,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
       #undef CRASH_MESSAGE
     }
   }
-#endif // #if !defined(RELEASE_BUILD) || defined(DEBUG)
+#endif // #if !defined(RELEASE_OR_BETA) || defined(DEBUG)
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   bool handled = false;

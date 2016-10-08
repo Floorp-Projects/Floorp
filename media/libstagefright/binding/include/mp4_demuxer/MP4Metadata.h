@@ -42,7 +42,7 @@ private:
   mutable bool mPreferRust;
   mutable bool mReportedAudioTrackTelemetry;
   mutable bool mReportedVideoTrackTelemetry;
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
   mutable bool mRustTestMode;
 #endif
   bool ShouldPreferRust() const;

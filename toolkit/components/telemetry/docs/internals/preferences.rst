@@ -25,8 +25,8 @@ Preferences
   If ``unified`` is on, this controls whether to record *extended* data.
   This preference is controlled through the `Preferences` dialog.
 
-  Note that the default value here of this pref depends on the define ``RELEASE_BUILD`` and the channel.
-  If ``RELEASE_BUILD`` is set, ``MOZ_TELEMETRY_ON_BY_DEFAULT`` gets set, which means this pref will default to ``true``.
+  Note that the default value here of this pref depends on the define ``RELEASE_OR_BETA`` and the channel.
+  If ``RELEASE_OR_BETA`` is set, ``MOZ_TELEMETRY_ON_BY_DEFAULT`` gets set, which means this pref will default to ``true``.
   This is overridden by the preferences code on the "beta" channel, the pref also defaults to ``true`` there.
 
 ``datareporting.healthreport.uploadEnabled``

@@ -80,8 +80,9 @@ AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
   , mFlingDuration(0)
 {
   MOZ_ASSERT(mOverscrollHandoffChain);
-  MOZ_ASSERT(aPlatformSpecificState->AsAndroidSpecificState());
-  mOverScroller = aPlatformSpecificState->AsAndroidSpecificState()->mOverScroller;
+  AndroidSpecificState* state = aPlatformSpecificState->AsAndroidSpecificState();
+  MOZ_ASSERT(state);
+  mOverScroller = state->mOverScroller;
   MOZ_ASSERT(mOverScroller);
 
   // Drop any velocity on axes where we don't have room to scroll anyways
@@ -118,12 +119,27 @@ AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
 
   int32_t originX = ClampStart(mStartOffset.x, scrollRangeStartX, scrollRangeEndX);
   int32_t originY = ClampStart(mStartOffset.y, scrollRangeStartY, scrollRangeEndY);
+  if (!state->mLastFling.IsNull()) {
+    // If it's been too long since the previous fling, or if the new fling's
+    // velocity is too low, don't allow flywheel to kick in. If we do allow
+    // flywheel to kick in, then we need to update the timestamp on the
+    // StackScroller because otherwise it might use a stale velocity.
+    TimeDuration flingDuration = TimeStamp::Now() - state->mLastFling;
+    if (flingDuration.ToMilliseconds() < gfxPrefs::APZFlingAccelInterval()
+        && velocity.Length() >= gfxPrefs::APZFlingAccelMinVelocity()) {
+      bool unused = false;
+      mOverScroller->ComputeScrollOffset(flingDuration.ToMilliseconds(), &unused);
+    } else {
+      mOverScroller->ForceFinished(true);
+    }
+  }
   mOverScroller->Fling(originX, originY,
                        // Android needs the velocity in pixels per second and it is in pixels per ms.
                        (int32_t)(velocity.x * 1000.0f), (int32_t)(velocity.y * 1000.0f),
                        (int32_t)floor(scrollRangeStartX), (int32_t)ceil(scrollRangeEndX),
                        (int32_t)floor(scrollRangeStartY), (int32_t)ceil(scrollRangeEndY),
                        0, 0, 0);
+  state->mLastFling = TimeStamp::Now();
 }
 
 /**

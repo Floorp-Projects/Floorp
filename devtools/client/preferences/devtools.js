@@ -357,7 +357,7 @@ pref("devtools.telemetry.tools.opened.version", "{}");
 
 // Enable the JSON View tool (an inspector for application/json documents) on
 // Nightly and Dev. Edition.
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("devtools.jsonview.enabled", false);
 #else
 pref("devtools.jsonview.enabled", true);

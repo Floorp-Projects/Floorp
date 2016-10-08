@@ -25,7 +25,7 @@ const PROTOCOL_VERSION = 1;
 function RokuApp(service) {
   this.service = service;
   this.resourceURL = this.service.location;
-  this.app = AppConstants.RELEASE_BUILD ? "Firefox" : "Firefox Nightly";
+  this.app = AppConstants.RELEASE_OR_BETA ? "Firefox" : "Firefox Nightly";
   this.mediaAppID = -1;
 }
 

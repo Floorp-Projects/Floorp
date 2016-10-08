@@ -22,7 +22,7 @@
 #include "mozilla/ipc/Faulty.h"
 #endif
 
-#if !defined(RELEASE_BUILD) || defined(DEBUG)
+#if !defined(RELEASE_OR_BETA) || defined(DEBUG)
 #define MOZ_PICKLE_SENTINEL_CHECKING
 #endif
 

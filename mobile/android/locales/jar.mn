@@ -31,7 +31,7 @@
   locale/@AB_CD@/browser/handling.properties      (%chrome/handling.properties)
   locale/@AB_CD@/browser/aboutLogins.dtd          (%chrome/aboutLogins.dtd)
   locale/@AB_CD@/browser/aboutLogins.properties  (%chrome/aboutLogins.properties)
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
   locale/@AB_CD@/browser/webcompatReporter.properties (%chrome/webcompatReporter.properties)
 #endif
 % resource search-plugins chrome://browser/locale/searchplugins/

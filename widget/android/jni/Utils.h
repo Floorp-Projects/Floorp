@@ -5,7 +5,7 @@
 
 #include "mozilla/UniquePtr.h"
 
-#if defined(DEBUG) || !defined(RELEASE_BUILD)
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
 #define MOZ_CHECK_JNI
 #endif
 

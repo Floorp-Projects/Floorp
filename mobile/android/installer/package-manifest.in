@@ -317,7 +317,7 @@
 @BINPATH@/components/amWebAPI.js
 @BINPATH@/components/amWebInstallListener.js
 @BINPATH@/components/nsBlocklistService.js
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
 @BINPATH@/components/TabSource.js
 #endif
 @BINPATH@/components/webvtt.xpt
