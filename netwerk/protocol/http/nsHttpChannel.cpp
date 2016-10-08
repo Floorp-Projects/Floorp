@@ -5659,7 +5659,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     NS_CompareLoadInfoAndLoadContext(this);
 
 #ifdef DEBUG
-    AssertPrivateBrowsingId();
+    CheckPrivateBrowsing();
 #endif
 
     NS_ENSURE_ARG_POINTER(listener);
