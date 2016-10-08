@@ -68,7 +68,7 @@ pref("security.pki.sha1_enforcement_level", 4);
 // 2: fall back to the subject common name for certificates valid before 23
 //    August 2015 if necessary
 // 3: only use name information from the subject alternative name extension
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("security.pki.name_matching_mode", 1);
 #else
 pref("security.pki.name_matching_mode", 2);
@@ -80,7 +80,7 @@ pref("security.pki.name_matching_mode", 2);
 // 1: it is considered equivalent when the notBefore is before 23 August 2016
 // 2: similarly, but for 23 August 2015
 // 3: it is never considered equivalent
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("security.pki.netscape_step_up_policy", 1);
 #else
 pref("security.pki.netscape_step_up_policy", 2);
@@ -107,7 +107,7 @@ pref("security.cert_pinning.max_max_age_seconds", 5184000);
 // If a request is mixed-content, send an HSTS priming request to attempt to
 // see if it is available over HTTPS.
 pref("security.mixed_content.send_hsts_priming", true);
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 // Don't change the order of evaluation of mixed-content and HSTS upgrades
 pref("security.mixed_content.use_hsts", false);
 #else

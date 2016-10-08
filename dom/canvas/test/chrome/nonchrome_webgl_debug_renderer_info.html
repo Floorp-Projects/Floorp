@@ -46,12 +46,12 @@ function run(canBeUnprivileged) {
   if (canBeUnprivileged) {
     ok(exts.indexOf("WEBGL_debug_renderer_info") != -1,
        "WEBGL_debug_renderer_info should be listed by getSupportedExtensions in"
-       + " non-chrome contexts on non-RELEASE_BUILDs");
+       + " non-chrome contexts on non-RELEASE_OR_BETAs");
 
     var ext = gl.getExtension("WEBGL_debug_renderer_info");
     ok(!!ext,
        "WEBGL_debug_renderer_info should be available through getExtension in non-chrome"
-       + " contexts on non-RELEASE_BUILDs");
+       + " contexts on non-RELEASE_OR_BETAs");
 
     ok(gl.getParameter(UNMASKED_VENDOR_WEBGL) && gl.getError() == gl.NO_ERROR,
        "Should be able to query UNMASKED_VENDOR_WEBGL if enabling"

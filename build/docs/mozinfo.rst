@@ -129,8 +129,8 @@ processor
 
    Always defined.
 
-release_build
-   Whether this is a release build.
+release_or_beta
+   Whether this is a release or beta build.
 
    Values are ``true`` and ``false``.
 

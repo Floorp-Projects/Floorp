@@ -159,7 +159,7 @@ MP4Metadata::MP4Metadata(Stream* aSource)
  , mPreferRust(false)
  , mReportedAudioTrackTelemetry(false)
  , mReportedVideoTrackTelemetry(false)
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
  , mRustTestMode(MediaPrefs::RustTestMode())
 #endif
 #endif
@@ -280,7 +280,7 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
   mozilla::UniquePtr<mozilla::TrackInfo> infoRust =
       mRust->GetTrackInfo(aType, aTrackNumber);
 
-#ifndef RELEASE_BUILD
+#ifndef RELEASE_OR_BETA
   if (mRustTestMode && info) {
     MOZ_DIAGNOSTIC_ASSERT(infoRust);
     MOZ_DIAGNOSTIC_ASSERT(infoRust->mId == info->mId);

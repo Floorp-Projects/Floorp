@@ -226,7 +226,7 @@ public class UpdateService extends IntentService {
         int interval;
         if (isRetry) {
             interval = INTERVAL_RETRY;
-        } else if (!AppConstants.RELEASE_BUILD) {
+        } else if (!AppConstants.RELEASE_OR_BETA) {
             interval = INTERVAL_SHORT;
         } else {
             interval = INTERVAL_LONG;

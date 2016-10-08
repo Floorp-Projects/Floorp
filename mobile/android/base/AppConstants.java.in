@@ -240,8 +240,8 @@ public class AppConstants {
 
     // See this wiki page for more details about channel specific build defines:
     // https://wiki.mozilla.org/Platform/Channel-specific_build_defines
-    public static final boolean RELEASE_BUILD =
-//#ifdef RELEASE_BUILD
+    public static final boolean RELEASE_OR_BETA =
+//#ifdef RELEASE_OR_BETA
     true;
 //#else
     false;

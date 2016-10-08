@@ -188,7 +188,7 @@ pref("dom.enable_performance_observer", false);
 // Whether the Gamepad API is enabled
 pref("dom.gamepad.enabled", true);
 pref("dom.gamepad.test.enabled", false);
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("dom.gamepad.non_standard_events.enabled", false);
 #else
 pref("dom.gamepad.non_standard_events.enabled", true);
@@ -298,7 +298,7 @@ pref("mathml.disabled",    false);
 pref("mathml.scale_stretchy_operators.enabled", true);
 
 // Disable MediaError.message.
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("dom.MediaError.message.enabled", false);
 #else
 pref("dom.MediaError.message.enabled", true);
@@ -537,7 +537,7 @@ pref("dom.webaudio.enabled", true);
 pref("media.getusermedia.screensharing.enabled", true);
 #endif
 
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("media.getusermedia.screensharing.allowed_domains", "webex.com,*.webex.com,ciscospark.com,*.ciscospark.com,projectsquared.com,*.projectsquared.com,*.room.co,room.co,beta.talky.io,talky.io,*.clearslide.com,appear.in,*.appear.in,tokbox.com,*.tokbox.com,*.sso.francetelecom.fr,*.si.francetelecom.fr,*.sso.infra.ftgroup,*.multimedia-conference.orange-business.com,*.espacecollaboration.orange-business.com,free.gotomeeting.com,g2m.me,*.g2m.me,*.mypurecloud.com,*.mypurecloud.com.au,spreed.me,*.spreed.me,*.spreed.com,air.mozilla.org,*.circuit.com,*.yourcircuit.com,circuit.siemens.com,yourcircuit.siemens.com,circuitsandbox.net,*.unify.com,tandi.circuitsandbox.net,*.ericsson.net,*.cct.ericsson.net,*.opentok.com,*.conf.meetecho.com,meet.jit.si,*.meet.jit.si,web.stage.speakeasyapp.net,web.speakeasyapp.net,*.hipchat.me,*.beta-wspbx.com,*.wspbx.com,*.unifiedcloudit.com,*.smartboxuc.com,*.smartbox-uc.com,*.panterranetworks.com,pexipdemo.com,*.pexipdemo.com,pex.me,*.pex.me,*.rd.pexip.com,1click.io,*.1click.io,*.fuze.com,*.fuzemeeting.com,*.thinkingphones.com,gotomeeting.com,*.gotomeeting.com,gotowebinar.com,*.gotowebinar.com,gototraining.com,*.gototraining.com,citrix.com,*.citrix.com,expertcity.com,*.expertcity.com,citrixonline.com,*.citrixonline.com,g2m.me,*.g2m.me,gotomeet.me,*.gotomeet.me,gotomeet.at,*.gotomeet.at,miriadaxdes.miriadax.net,certificacion.miriadax.net,miriadax.net,*.wire.com,sylaps.com,*.sylaps.com,bluejeans.com,*.bluejeans.com,*.a.bluejeans.com");
 #else
  // includes Mozilla's test domain: mozilla.github.io (not intended for release)
@@ -633,6 +633,7 @@ pref("apz.displayport_expiry_ms", 15000);
 pref("apz.enlarge_displayport_when_clipped", false);
 pref("apz.fling_accel_base_mult", "1.0");
 pref("apz.fling_accel_interval_ms", 500);
+pref("apz.fling_accel_min_velocity", "1.5");
 pref("apz.fling_accel_supplemental_mult", "1.0");
 pref("apz.fling_curve_function_x1", "0.0");
 pref("apz.fling_curve_function_y1", "0.0");
@@ -838,7 +839,7 @@ pref("canvas.path.enabled", true);
 pref("canvas.capturestream.enabled", true);
 
 // Disable the ImageBitmap-extensions in the release build.
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("canvas.imagebitmap_extensions.enabled", false);
 #else
 pref("canvas.imagebitmap_extensions.enabled", true);
@@ -1218,7 +1219,7 @@ pref("privacy.trackingprotection.pbmode.enabled",  true);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
-#if defined(XP_WIN) && !defined(RELEASE_BUILD) || defined(MOZ_WIDGET_GTK) && !defined(RELEASE_BUILD)
+#if defined(XP_WIN) && !defined(RELEASE_OR_BETA) || defined(MOZ_WIDGET_GTK) && !defined(RELEASE_OR_BETA)
 pref("dom.event.highrestimestamp.enabled",  true);
 #else
 pref("dom.event.highrestimestamp.enabled",  false);
@@ -1239,7 +1240,7 @@ pref("javascript.options.wasm",             false);
 pref("javascript.options.wasm_baselinejit", false);
 pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
-#if !defined(RELEASE_BUILD) && !defined(ANDROID) && !defined(MOZ_B2G) && !defined(XP_IOS)
+#if !defined(RELEASE_OR_BETA) && !defined(ANDROID) && !defined(MOZ_B2G) && !defined(XP_IOS)
 pref("javascript.options.asyncstack",       true);
 #else
 pref("javascript.options.asyncstack",       false);
@@ -1538,7 +1539,7 @@ pref("network.http.fast-fallback-to-IPv4", true);
 
 // The maximum amount of time the cache session lock can be held
 // before a new transaction bypasses the cache. In milliseconds.
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("network.http.bypass-cachelock-threshold", 200000);
 #else
 pref("network.http.bypass-cachelock-threshold", 250);
@@ -1668,7 +1669,7 @@ pref("dom.server-events.default-reconnection-time", 5000); // in milliseconds
 // by the jar channel.
 pref("network.jar.open-unsafe-types", false);
 // If true, loading remote JAR files using the jar: protocol will be prevented.
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 // Keep allowing remote JAR files for IBM iNotes (see bug 1255139) for now.
 pref("network.jar.block-remote-files", false);
 #else
@@ -2506,14 +2507,14 @@ pref("layout.css.DOMQuad.enabled", true);
 pref("layout.css.DOMMatrix.enabled", true);
 
 // Is support for GeometryUtils.getBoxQuads enabled?
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("layout.css.getBoxQuads.enabled", false);
 #else
 pref("layout.css.getBoxQuads.enabled", true);
 #endif
 
 // Is support for GeometryUtils.convert*FromNode enabled?
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("layout.css.convertFromNode.enabled", false);
 #else
 pref("layout.css.convertFromNode.enabled", true);
@@ -2524,7 +2525,7 @@ pref("layout.css.text-align-unsafe-value.enabled", false);
 
 // Is support for CSS "float: inline-{start,end}" and
 // "clear: inline-{start,end}" enabled?
-#if defined(MOZ_B2G) || !defined(RELEASE_BUILD)
+#if defined(MOZ_B2G) || !defined(RELEASE_OR_BETA)
 pref("layout.css.float-logical-values.enabled", true);
 #else
 pref("layout.css.float-logical-values.enabled", false);
@@ -2601,7 +2602,7 @@ pref("layout.css.variables.enabled", true);
 pref("layout.css.overflow-clip-box.enabled", false);
 
 // Is support for CSS grid enabled?
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("layout.css.grid.enabled", false);
 #else
 pref("layout.css.grid.enabled", true);
@@ -2654,7 +2655,7 @@ pref("layout.css.shape-outside.enabled", false);
 pref("layout.css.font-loading-api.enabled", true);
 
 // Should stray control characters be rendered visibly?
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("layout.css.control-characters.visible", false);
 #else
 pref("layout.css.control-characters.visible", true);
@@ -2706,7 +2707,7 @@ pref("layout.float-fragments-inside-column.enabled", true);
 // Before enabling this by default, make sure also CSSPseudoElement interface
 // has been spec'ed properly, or we should add a separate pref for
 // CSSPseudoElement interface. See Bug 1174575 for further details.
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("dom.animations-api.core.enabled", false);
 #else
 pref("dom.animations-api.core.enabled", true);
@@ -2854,11 +2855,11 @@ pref("svg.marker-improvements.enabled", true);
 // See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
 pref("svg.new-getBBox.enabled", false);
 
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("svg.transform-box.enabled", false);
 #else
 pref("svg.transform-box.enabled", true);
-#endif // RELEASE_BUILD
+#endif // RELEASE_OR_BETA
 
 // Default font types and sizes by locale
 pref("font.default.ar", "sans-serif");
@@ -4462,7 +4463,7 @@ pref("webgl.webgl2-compat-mode", false);
 
 pref("webgl.enable-webgl2", true);
 
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 // Keep this disabled on Release and Beta for now. (see bug 1171228)
 pref("webgl.enable-debug-renderer-info", false);
 #else
@@ -4697,7 +4698,7 @@ pref("alerts.showFavicons", false);
 
 // DOM full-screen API.
 pref("full-screen-api.enabled", false);
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("full-screen-api.unprefix.enabled", false);
 #else
 pref("full-screen-api.unprefix.enabled", true);
@@ -4950,7 +4951,7 @@ pref("dom.browserElement.maxScreenshotDelayMS", 2000);
 pref("dom.placeholder.show_on_focus", true);
 
 // VR is disabled by default in release and enabled for nightly and aurora
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("dom.vr.enabled", false);
 #else
 pref("dom.vr.enabled", true);
@@ -5037,7 +5038,7 @@ pref("captivedetect.maxWaitingTime", 5000);
 pref("captivedetect.pollingTime", 3000);
 pref("captivedetect.maxRetryCount", 5);
 
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("dom.forms.inputmode", false);
 #else
 pref("dom.forms.inputmode", true);
@@ -5302,7 +5303,7 @@ pref("dom.presentation.discoverable.retry_ms", 5000);
 pref("dom.presentation.session_transport.data_channel.enable", false);
 
 #ifdef XP_MACOSX
-#if !defined(RELEASE_BUILD) || defined(DEBUG)
+#if !defined(RELEASE_OR_BETA) || defined(DEBUG)
 // In non-release builds we crash by default on insecure text input (when a
 // password editor has focus but secure event input isn't enabled).  The
 // following pref, when turned on, disables this behavior.  See bug 1188425.
@@ -5513,7 +5514,7 @@ pref("layout.css.color-adjust.enabled", true);
 pref("dom.audiochannel.audioCompeting", false);
 
 // Disable Node.rootNode in release builds.
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("dom.node.rootNode.enabled", false);
 #else
 pref("dom.node.rootNode.enabled", true);
@@ -5524,7 +5525,7 @@ pref("media.default_volume", "1.0");
 
 // Once bug 1276272 is resolved, we will trun this preference to default ON in
 // non-release channels.
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 pref("media.seekToNextFrame.enabled", false);
 #else
 pref("media.seekToNextFrame.enabled", true);
@@ -5534,7 +5535,7 @@ pref("media.seekToNextFrame.enabled", true);
 pref("dom.maxHardwareConcurrency", 16);
 
 // Shutdown the osfile worker if its no longer needed.
-#if !defined(RELEASE_BUILD)
+#if !defined(RELEASE_OR_BETA)
 pref("osfile.reset_worker_delay", 30000);
 #endif
 
@@ -5553,7 +5554,7 @@ pref("layout.css.servo.enabled", true);
 // If a request is mixed-content, send an HSTS priming request to attempt to
 // see if it is available over HTTPS.
 pref("security.mixed_content.send_hsts_priming", true);
-#ifdef RELEASE_BUILD
+#ifdef RELEASE_OR_BETA
 // Don't change the order of evaluation of mixed-content and HSTS upgrades in
 // order to be most compatible with current standards
 pref("security.mixed_content.use_hsts", false);

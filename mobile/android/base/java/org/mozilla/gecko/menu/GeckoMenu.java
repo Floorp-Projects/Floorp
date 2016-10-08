@@ -44,7 +44,7 @@ public class GeckoMenu extends ListView
      * Controls whether off-UI-thread method calls in this class cause an
      * exception or just logging.
      */
-    private static final AssertBehavior THREAD_ASSERT_BEHAVIOR = AppConstants.RELEASE_BUILD ? AssertBehavior.NONE : AssertBehavior.THROW;
+    private static final AssertBehavior THREAD_ASSERT_BEHAVIOR = AppConstants.RELEASE_OR_BETA ? AssertBehavior.NONE : AssertBehavior.THROW;
 
     /*
      * A callback for a menu item click/long click event.

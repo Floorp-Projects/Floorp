@@ -304,7 +304,7 @@ add_task(function* test_options_ui() {
 
 // Test that experiments permissions add the appropriate dependencies.
 add_task(function* test_experiments_dependencies() {
-  if (AppConstants.RELEASE_BUILD)
+  if (AppConstants.RELEASE_OR_BETA)
     // Experiments are not enabled on release builds.
     return;
 
@@ -329,7 +329,7 @@ add_task(function* test_experiments_dependencies() {
 
 // Test that experiments API extensions install correctly.
 add_task(function* test_experiments_api() {
-  if (AppConstants.RELEASE_BUILD)
+  if (AppConstants.RELEASE_OR_BETA)
     // Experiments are not enabled on release builds.
     return;
 
