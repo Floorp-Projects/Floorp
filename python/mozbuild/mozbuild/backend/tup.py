@@ -16,6 +16,7 @@ from .common import CommonBackend
 from ..frontend.data import (
     ContextDerived,
     Defines,
+    FinalTargetFiles,
     FinalTargetPreprocessedFiles,
     GeneratedFile,
     HostDefines,
@@ -23,6 +24,11 @@ from ..frontend.data import (
 )
 from ..util import (
     FileAvoidWrite,
+)
+from ..frontend.context import (
+    AbsolutePath,
+    RenamedSourcePath,
+    ObjDirPath,
 )
 
 
@@ -177,6 +183,8 @@ class TupOnly(CommonBackend, PartialBackend):
             self._process_defines(backend_file, obj)
         elif isinstance(obj, HostDefines):
             self._process_defines(backend_file, obj, host=True)
+        elif isinstance(obj, FinalTargetFiles):
+            self._process_final_target_files(obj)
         elif isinstance(obj, FinalTargetPreprocessedFiles):
             self._process_final_target_pp_files(obj, backend_file)
         elif isinstance(obj, ObjdirPreprocessedFiles):
@@ -256,6 +264,46 @@ class TupOnly(CommonBackend, PartialBackend):
                 backend_file.host_defines = defines
             else:
                 backend_file.defines = defines
+
+    def _process_final_target_files(self, obj):
+        target = obj.install_target
+        path = mozpath.basedir(target, (
+            'dist/bin',
+            'dist/xpi-stage',
+            '_tests',
+            'dist/include',
+            'dist/branding',
+            'dist/sdk',
+        ))
+        if not path:
+            raise Exception("Cannot install to " + target)
+
+        reltarget = mozpath.relpath(target, path)
+
+        for path, files in obj.files.walk():
+            backend_file = self._get_backend_file(mozpath.join(target, path))
+            for f in files:
+                assert not isinstance(f, RenamedSourcePath)
+                dest = mozpath.join(reltarget, path, f.target_basename)
+                if not isinstance(f, ObjDirPath):
+                    if '*' in f:
+                        if f.startswith('/') or isinstance(f, AbsolutePath):
+                            basepath, wild = os.path.split(f.full_path)
+                            if '*' in basepath:
+                                raise Exception("Wildcards are only supported in the filename part of "
+                                                "srcdir-relative or absolute paths.")
+
+                            # TODO: This is only needed for Windows, so we can
+                            # skip this for now.
+                            pass
+                        else:
+                            # TODO: This is needed for tests
+                            pass
+                    else:
+                        backend_file.symlink_rule(f.full_path, output_group=self._installed_files)
+                else:
+                    # TODO: Support installing generated files
+                    pass
 
     def _process_final_target_pp_files(self, obj, backend_file):
         for i, (path, files) in enumerate(obj.files.walk()):
