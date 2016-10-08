@@ -263,7 +263,7 @@ class OutputParser(LogMixin):
     pre-context-line setting in error_list.)
     """
 
-    def __init__(self, config=None, log_obj=None, error_list=None, log_output=True):
+    def __init__(self, config=None, log_obj=None, error_list=None, log_output=True, **kwargs):
         """Initialization method for the OutputParser class
 
         Args:

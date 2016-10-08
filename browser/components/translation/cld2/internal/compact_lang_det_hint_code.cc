@@ -174,7 +174,7 @@ static const LangTagLookup kCLDLangTagsHintTable1[kCLDTable1Size] = {
   {"haitian_creole", "ht", HAITIAN_CREOLE + W10, 0},
   {"hausa", "ha", HAUSA + W10, 0},
   {"hawaiian", "haw", HAWAIIAN + W10, 0},
-  {"hebrew", "iw", HEBREW + W10, 0},
+  {"hebrew", "he", HEBREW + W10, 0},
   {"hindi", "hi", HINDI + W10, MARATHI - W4},
   {"hn-in", "hi", HINDI + W10, MARATHI - W4},
   {"hungarian", "hu", HUNGARIAN + W10, 0},
@@ -447,9 +447,9 @@ static const LangTagLookup kCLDLangTagsHintTable2[kCLDTable2Size] = {
   {"ha", "ha", HAUSA + W10, 0},
   {"hat", "ht", HAITIAN_CREOLE + W10, 0},   // Haiti
   {"haw", "haw", HAWAIIAN + W10, 0},
-  {"hb", "iw", HEBREW + W10, 0},
-  {"he", "iw", HEBREW + W10, 0},
-  {"heb", "iw", HEBREW + W10, 0},
+  {"hb", "he", HEBREW + W10, 0},
+  {"he", "he", HEBREW + W10, 0},
+  {"heb", "he", HEBREW + W10, 0},
   {"hi", "hi", HINDI + W10, MARATHI - W4},
   {"hk", "zhT", CHINESE_T + W10, 0},          // Hong Kong
   {"hr", "hr", CROATIAN + W10, 0},
@@ -473,7 +473,7 @@ static const LangTagLookup kCLDLangTagsHintTable2[kCLDTable2Size] = {
   {"it", "it", ITALIAN + W10, 0},
   {"ita", "it", ITALIAN + W10, 0},
   {"iu", "iu,ik", INUKTITUT + W10, INUPIAK + W10},        // 1:2
-  {"iw", "iw", HEBREW + W10, 0},
+  {"iw", "he", HEBREW + W10, 0},
 
   {"ja", "ja", JAPANESE + W10, 0},
   {"jp", "ja", JAPANESE + W10, 0},          // Japan
@@ -1647,5 +1647,3 @@ string GetLangTagsFromHtml(const char* utf8_body, int32 utf8_body_len,
 }       // End namespace CLD2
 
 //==============================================================================
-
-

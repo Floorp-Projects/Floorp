@@ -21,7 +21,6 @@ using namespace gfx;
 
 VideoDecoderChild::VideoDecoderChild()
   : mThread(VideoDecoderManagerChild::GetManagerThread())
-  , mLayersBackend(layers::LayersBackend::LAYERS_NONE)
   , mCanSend(true)
   , mInitialized(false)
   , mIsHardwareAccelerated(false)
@@ -116,13 +115,13 @@ VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
 void
 VideoDecoderChild::InitIPDL(MediaDataDecoderCallback* aCallback,
                             const VideoInfo& aVideoInfo,
-                            layers::LayersBackend aLayersBackend)
+                            layers::KnowsCompositor* aKnowsCompositor)
 {
   VideoDecoderManagerChild::GetSingleton()->SendPVideoDecoderConstructor(this);
   mIPDLSelfRef = this;
   mCallback = aCallback;
   mVideoInfo = aVideoInfo;
-  mLayersBackend = aLayersBackend;
+  mKnowsCompositor = aKnowsCompositor;
 }
 
 void
@@ -145,7 +144,7 @@ RefPtr<MediaDataDecoder::InitPromise>
 VideoDecoderChild::Init()
 {
   AssertOnManagerThread();
-  if (!mCanSend || !SendInit(mVideoInfo, mLayersBackend)) {
+  if (!mCanSend || !SendInit(mVideoInfo, mKnowsCompositor->GetTextureFactoryIdentifier())) {
     return MediaDataDecoder::InitPromise::CreateAndReject(
       NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }

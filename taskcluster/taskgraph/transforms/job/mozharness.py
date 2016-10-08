@@ -140,6 +140,9 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         env['TOOLTOOL_REPO'] = 'https://github.com/mozilla/build-tooltool'
         env['TOOLTOOL_REV'] = 'master'
 
+    # Retry if mozharness returns TBPL_RETRY
+    worker['retry-exit-status'] = 4
+
     docker_worker_setup_secrets(config, job, taskdesc)
 
     command = [

@@ -62,7 +62,7 @@ DOMStorageObserver::Init()
   obs->AddObserver(sSelf, "perm-changed", true);
   obs->AddObserver(sSelf, "browser:purge-domain-data", true);
   obs->AddObserver(sSelf, "last-pb-context-exited", true);
-  obs->AddObserver(sSelf, "clear-origin-data", true);
+  obs->AddObserver(sSelf, "clear-origin-attributes-data", true);
 
   // Shutdown
   obs->AddObserver(sSelf, "profile-after-change", true);
@@ -266,7 +266,7 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
   }
 
   // Clear data of the origins whose prefixes will match the suffix.
-  if (!strcmp(aTopic, "clear-origin-data")) {
+  if (!strcmp(aTopic, "clear-origin-attributes-data")) {
     OriginAttributesPattern pattern;
     if (!pattern.Init(nsDependentString(aData))) {
       NS_ERROR("Cannot parse origin attributes pattern");

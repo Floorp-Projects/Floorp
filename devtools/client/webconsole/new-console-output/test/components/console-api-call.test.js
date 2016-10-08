@@ -4,13 +4,21 @@
 
 // Test utils.
 const expect = require("expect");
-const { render } = require("enzyme");
+const { render, mount } = require("enzyme");
+const sinon = require("sinon");
 
 // React
 const { createFactory } = require("devtools/client/shared/vendor/react");
+const Provider = createFactory(require("react-redux").Provider);
+const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 // Components under test.
 const ConsoleApiCall = createFactory(require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call"));
+const {
+  MESSAGE_OPEN,
+  MESSAGE_CLOSE,
+} = require("devtools/client/webconsole/new-console-output/constants");
+const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/components/message-indent");
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
@@ -44,6 +52,18 @@ describe("ConsoleAPICall component:", () => {
       expect(wrapper.find(".message-repeats").prop("title")).toBe("107 repeats");
 
       expect(wrapper.find("span > span.message-flex-body > span.message-body.devtools-monospace + span.message-repeats").length).toBe(1);
+    });
+
+    it("has the expected indent", () => {
+      const message = stubPreparedMessages.get("console.log('foobar', 'test')");
+
+      const indent = 10;
+      let wrapper = render(ConsoleApiCall({ message, serviceContainer, indent }));
+      expect(wrapper.find(".indent").prop("style").width)
+        .toBe(`${indent * INDENT_WIDTH}px`);
+
+      wrapper = render(ConsoleApiCall({ message, serviceContainer}));
+      expect(wrapper.find(".indent").prop("style").width).toBe(`0`);
     });
   });
 
@@ -103,6 +123,71 @@ describe("ConsoleAPICall component:", () => {
 
       expect(frameLinks.eq(2).find(".frame-link-function-display-name").text()).toBe("triggerPacket");
       expect(frameLinks.eq(2).find(".frame-link-filename").text()).toBe(filepath);
+    });
+  });
+
+  describe("console.group", () => {
+    it("renders", () => {
+      const message = stubPreparedMessages.get("console.group('bar')");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer, open: true }));
+
+      expect(wrapper.find(".message-body").text()).toBe(message.messageText);
+      expect(wrapper.find(".theme-twisty.open").length).toBe(1);
+    });
+
+    it("toggle the group when the collapse button is clicked", () => {
+      const store = setupStore([]);
+      store.dispatch = sinon.spy();
+      const message = stubPreparedMessages.get("console.group('bar')");
+
+      let wrapper = mount(Provider({store},
+        ConsoleApiCall({
+          message,
+          open: true,
+          dispatch: store.dispatch,
+          serviceContainer,
+        })
+      ));
+      wrapper.find(".theme-twisty.open").simulate("click");
+      let call = store.dispatch.getCall(0);
+      expect(call.args[0]).toEqual({
+        id: message.id,
+        type: MESSAGE_CLOSE
+      });
+
+      wrapper = mount(Provider({store},
+        ConsoleApiCall({
+          message,
+          open: false,
+          dispatch: store.dispatch,
+          serviceContainer,
+        })
+      ));
+      wrapper.find(".theme-twisty").simulate("click");
+      call = store.dispatch.getCall(1);
+      expect(call.args[0]).toEqual({
+        id: message.id,
+        type: MESSAGE_OPEN
+      });
+    });
+  });
+
+  describe("console.groupEnd", () => {
+    it("does not show anything", () => {
+      const message = stubPreparedMessages.get("console.groupEnd('bar')");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      expect(wrapper.find(".message-body").text()).toBe("");
+    });
+  });
+
+  describe("console.groupCollapsed", () => {
+    it("renders", () => {
+      const message = stubPreparedMessages.get("console.groupCollapsed('foo')");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer, open: false}));
+
+      expect(wrapper.find(".message-body").text()).toBe(message.messageText);
+      expect(wrapper.find(".theme-twisty:not(.open)").length).toBe(1);
     });
   });
 });

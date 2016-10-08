@@ -4,25 +4,52 @@
 /* import-globals-from pippki.js */
 "use strict";
 
-const nsIX509Cert = Components.interfaces.nsIX509Cert;
-const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
-const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var certdb;
+/**
+ * Param block to get passed in args and to set return values to.
+ * @type nsIDialogParamBlock
+ */
 var gParams;
+
+/**
+ * Returns the most appropriate string to represent the given nsICertTreeItem.
+ * @param {nsICertTreeItem} certTreeItem
+ *        The item to represent.
+ * @returns {String}
+ *          A representative string.
+ */
+function certTreeItemToString(certTreeItem) {
+  let cert = certTreeItem.cert;
+  if (!cert) {
+    return certTreeItem.hostPort;
+  }
+
+  const attributes = [
+    cert.commonName,
+    cert.organizationalUnit,
+    cert.organization,
+    cert.subjectName,
+  ];
+  for (let attribute of attributes) {
+    if (attribute) {
+      return attribute;
+    }
+  }
+
+  let bundle = document.getElementById("pippki_bundle");
+  return bundle.getFormattedString("certWithSerial", [cert.serialNumber]);
+}
 
 function setWindowName()
 {
-  gParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+  gParams = window.arguments[0].QueryInterface(Ci.nsIDialogParamBlock);
 
-  var typeFlag = gParams.GetString(0);
-  var numberOfCerts = gParams.GetInt(0);
-
-  var bundle = document.getElementById("pippki_bundle");
-  var title;
-  var confirm;
-  var impact;
+  let typeFlag = gParams.GetString(0);
+  let bundle = document.getElementById("pippki_bundle");
+  let title;
+  let confirm;
+  let impact;
 
   switch (typeFlag) {
     case "mine_tab":
@@ -54,17 +81,16 @@ function setWindowName()
       return;
   }
 
-  var confirReference = document.getElementById('confirm');
-  var impactReference = document.getElementById('impact');
   document.title = title;
 
   setText("confirm", confirm);
 
   let box = document.getElementById("certlist");
-  for (let x = 0; x < numberOfCerts; x++) {
-    var listItem = document.createElement("richlistitem");
-    var label = document.createElement("label");
-    label.setAttribute("value", gParams.GetString(x + 1));
+  for (let x = 0; x < gParams.objects.length; x++) {
+    let listItem = document.createElement("richlistitem");
+    let label = document.createElement("label");
+    let certTreeItem = gParams.objects.queryElementAt(x, Ci.nsICertTreeItem);
+    label.setAttribute("value", certTreeItemToString(certTreeItem));
     listItem.appendChild(label);
     box.appendChild(listItem);
   }

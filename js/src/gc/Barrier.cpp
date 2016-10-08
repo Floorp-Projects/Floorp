@@ -29,7 +29,7 @@ RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone)
 
 #ifdef DEBUG
 
-static bool
+bool
 IsMarkedBlack(NativeObject* obj)
 {
     // Note: we assume conservatively that Nursery things will be live.

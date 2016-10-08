@@ -19,7 +19,6 @@ from mozharness.base.script import PreScriptAction
 from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
-from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WARNING, TBPL_FAILURE
 from mozharness.mozilla.gaia import GaiaMixin
 from mozharness.mozilla.testing.errors import LogcatErrorList
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
@@ -28,6 +27,8 @@ from mozharness.mozilla.structuredlog import StructuredOutputParser
 
 # TODO: we could remove emulator specific code after B2G ICS emulator buildbot
 #       builds is turned off, Bug 1209180.
+
+
 class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMixin, GaiaMixin):
     config_options = [[
         ["--application"],
@@ -115,27 +116,27 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         {"action": "store",
          "dest": "total_chunks",
          "help": "Number of total chunks",
-        }
+         }
      ], [
         ["--this-chunk"],
         {"action": "store",
          "dest": "this_chunk",
          "help": "Number of this chunk",
-        }
+         }
      ], [
         ["--e10s"],
         {"action": "store_true",
          "dest": "e10s",
          "default": False,
          "help": "Run tests with multiple processes. (Desktop builds only)",
-        }
+         }
     ], [
        ["--allow-software-gl-layers"],
        {"action": "store_true",
         "dest": "allow_software_gl_layers",
         "default": False,
         "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."
-       }
+        }
      ]] + copy.deepcopy(testing_config_options) \
         + copy.deepcopy(blobupload_config_options)
 
@@ -329,8 +330,9 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             'xml_output': os.path.join(dirs['abs_work_dir'], 'output.xml'),
             'html_output': os.path.join(dirs['abs_blob_upload_dir'], 'output.html'),
             'logcat_dir': dirs['abs_work_dir'],
-            'emulator': 'x86' if os.path.isdir(os.path.join(dirs['abs_b2g-distro_dir'], 'out',
-                'target', 'product', 'generic_x86')) else 'arm',
+            'emulator': 'x86' if os.path.isdir(
+                os.path.join(dirs['abs_b2g-distro_dir'], 'out',
+                             'target', 'product', 'generic_x86')) else 'arm',
             'symbols_path': self.symbols_path,
             'homedir': os.path.join(dirs['abs_emulator_dir'], 'b2g-distro'),
             'binary': self.binary_path,
@@ -405,7 +407,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
                                                        'gecko.log'))
 
         if self.config.get("structured_output"):
-            config_fmt_args["raw_log_file"]= "-"
+            cmd.append("--log-raw=-")
 
         options_group = self._get_options_group(self.config.get('emulator'),
                                                 self.config.get('gaiatest'))
@@ -444,21 +446,15 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
 
         marionette_parser = self.parser_class(config=self.config,
                                               log_obj=self.log_obj,
-                                              error_list=self.error_list)
-        code = self.run_command(cmd, env=env,
+                                              error_list=self.error_list,
+                                              strict=False)
+        return_code = self.run_command(cmd, env=env,
                                 output_timeout=1000,
                                 output_parser=marionette_parser)
         level = INFO
-        if code == 0 and marionette_parser.passed > 0 and marionette_parser.failed == 0:
-            status = "success"
-            tbpl_status = TBPL_SUCCESS
-        elif code == 10 and marionette_parser.failed > 0:
-            status = "test failures"
-            tbpl_status = TBPL_WARNING
-        else:
-            status = "harness failures"
-            level = ERROR
-            tbpl_status = TBPL_FAILURE
+        tbpl_status, log_level = marionette_parser.evaluate_parser(
+            return_code=return_code)
+        marionette_parser.append_tinderboxprint_line("marionette")
 
         qemu = os.path.join(dirs['abs_work_dir'], 'qemu.log')
         if os.path.isfile(qemu):
@@ -486,7 +482,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
 
         marionette_parser.print_summary('marionette')
 
-        self.log("Marionette exited with return code %s: %s" % (code, status),
+        self.log("Marionette exited with return code %s: %s" % (return_code, tbpl_status),
                  level=level)
         self.buildbot_status(tbpl_status)
 

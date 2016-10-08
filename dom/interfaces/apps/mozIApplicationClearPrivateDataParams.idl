@@ -16,5 +16,5 @@ interface mozIApplicationClearPrivateDataParams : nsISupports
 
 %{C++
 #define TOPIC_WEB_APP_CLEAR_DATA "webapps-clear-data"
-#define TOPIC_CLEAR_ORIGIN_DATA "clear-origin-data"
+#define TOPIC_CLEAR_ORIGIN_DATA "clear-origin-attributes-data"
 %}

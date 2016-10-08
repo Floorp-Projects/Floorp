@@ -741,10 +741,8 @@ class MOZ_STACK_CLASS TokenStream
     // If it is a reserved word in this version and strictness mode, and thus
     // can't be present in correct code, report a SyntaxError and return false.
     //
-    // If it is a keyword, like "if", the behavior depends on ttp. If ttp is
-    // null, report a SyntaxError ("if is a reserved identifier") and return
-    // false. If ttp is non-null, return true with the keyword's TokenKind in
-    // *ttp.
+    // If it is a keyword, like "if", return true with the keyword's TokenKind
+    // in *ttp.
     MOZ_MUST_USE bool checkForKeyword(JSAtom* atom, TokenKind* ttp);
 
     // Same semantics as above, but for the provided keyword.

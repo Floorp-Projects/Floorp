@@ -75,6 +75,8 @@ GPUParent::Init(base::ProcessId aParentPid,
   gfxConfig::Init();
   gfxVars::Initialize();
   gfxPlatform::InitNullMetadata();
+  // Ensure our Factory is initialised, mainly for gfx logging to work.
+  gfxPlatform::InitMoz2DLogging();
 #if defined(XP_WIN)
   DeviceManagerDx::Init();
   DeviceManagerD3D9::Init();

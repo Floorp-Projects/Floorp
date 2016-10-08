@@ -602,6 +602,7 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
   }
 
   if (mWithCredentials || !allowedOriginHeader.EqualsLiteral("*")) {
+    MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(mOriginHeaderPrincipal));
     nsAutoCString origin;
     nsContentUtils::GetASCIIOrigin(mOriginHeaderPrincipal, origin);
 
@@ -949,6 +950,12 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   nsCString userpass;
   uri->GetUserPass(userpass);
   NS_ENSURE_TRUE(userpass.IsEmpty(), NS_ERROR_DOM_BAD_URI);
+
+  // If we have an expanded principal here, we'll reject the CORS request,
+  // because we can't send a useful Origin header which is required for CORS.
+  if (nsContentUtils::IsExpandedPrincipal(mOriginHeaderPrincipal)) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
 
   // Add the Origin header
   nsAutoCString origin;

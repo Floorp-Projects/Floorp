@@ -181,6 +181,8 @@ public:
      */
     static void InitNullMetadata();
 
+    static void InitMoz2DLogging();
+
     /**
      * Create an offscreen surface of the given dimensions
      * and image format.

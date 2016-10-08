@@ -26,6 +26,14 @@ FakeSSLStatus.prototype = {
   },
 };
 
+function whenNewWindowLoaded(aOptions, aCallback) {
+  let win = OpenBrowserWindow(aOptions);
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad, false);
+    aCallback(win);
+  }, false);
+}
+
 // This is a template to help porting global private browsing tests
 // to per-window private browsing tests
 function test() {

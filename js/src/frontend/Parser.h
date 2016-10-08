@@ -969,8 +969,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     // Parse an inner function given an enclosing ParseContext and a
     // FunctionBox for the inner function.
-    bool innerFunction(Node pn, ParseContext* outerpc, FunctionBox* funbox,
-                       InHandling inHandling, FunctionSyntaxKind kind, GeneratorKind generatorKind,
+    bool innerFunction(Node pn, ParseContext* outerpc, FunctionBox* funbox, InHandling inHandling,
+                       YieldHandling yieldHandling, FunctionSyntaxKind kind,
                        Directives inheritedDirectives, Directives* newDirectives);
 
     // Parse a function's formal parameters and its body assuming its function
@@ -1037,7 +1037,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                       Node* forInitialPart,
                       mozilla::Maybe<ParseContext::Scope>& forLetImpliedScope,
                       Node* forInOrOfExpression);
-    bool validateForInOrOfLHSExpression(Node target);
+    bool validateForInOrOfLHSExpression(Node target, PossibleError* possibleError);
     Node expressionAfterForInOrOf(ParseNodeKind forHeadKind, YieldHandling yieldHandling);
 
     Node switchStatement(YieldHandling yieldHandling);
@@ -1165,7 +1165,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
 
-    Node methodDefinition(YieldHandling yieldHandling, PropertyType propType, HandleAtom funName);
+    Node methodDefinition(PropertyType propType, HandleAtom funName);
 
     /*
      * Additional JS parsers.
@@ -1210,14 +1210,17 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node classDefinition(YieldHandling yieldHandling, ClassContext classContext,
                          DefaultHandling defaultHandling);
 
-    PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling);
+    PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling,
+                                             bool yieldTokenizedAsName);
 
     PropertyName* labelIdentifier(YieldHandling yieldHandling) {
-        return labelOrIdentifierReference(yieldHandling);
+        return labelOrIdentifierReference(yieldHandling, false);
     }
 
-    PropertyName* identifierReference(YieldHandling yieldHandling) {
-        return labelOrIdentifierReference(yieldHandling);
+    PropertyName* identifierReference(YieldHandling yieldHandling,
+                                      bool yieldTokenizedAsName = false)
+    {
+        return labelOrIdentifierReference(yieldHandling, yieldTokenizedAsName);
     }
 
     PropertyName* importedBinding() {
@@ -1261,13 +1264,13 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                                  GeneratorKind generatorKind, bool* tryAnnexB);
     bool skipLazyInnerFunction(Node pn, FunctionSyntaxKind kind, bool tryAnnexB);
     bool innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun,
-                       InHandling inHandling, FunctionSyntaxKind kind,
-                       GeneratorKind generatorKind, bool tryAnnexB,
+                       InHandling inHandling, YieldHandling yieldHandling,
+                       FunctionSyntaxKind kind, GeneratorKind generatorKind, bool tryAnnexB,
                        Directives inheritedDirectives, Directives* newDirectives);
     bool trySyntaxParseInnerFunction(Node pn, HandleFunction fun, InHandling inHandling,
-                                     FunctionSyntaxKind kind, GeneratorKind generatorKind,
-                                     bool tryAnnexB, Directives inheritedDirectives,
-                                     Directives* newDirectives);
+                                     YieldHandling yieldHandling, FunctionSyntaxKind kind,
+                                     GeneratorKind generatorKind, bool tryAnnexB,
+                                     Directives inheritedDirectives, Directives* newDirectives);
     bool finishFunctionScopes();
     bool finishFunction();
     bool leaveInnerFunction(ParseContext* outerpc);
@@ -1361,10 +1364,5 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
 } /* namespace frontend */
 } /* namespace js */
-
-/*
- * Convenience macro to access Parser.tokenStream as a pointer.
- */
-#define TS(p) (&(p)->tokenStream)
 
 #endif /* frontend_Parser_h */

@@ -215,7 +215,7 @@ static const uint8_t sTestH264ExtraData[] = {
 };
 
 static already_AddRefed<MediaDataDecoder>
-CreateTestH264Decoder(layers::LayersBackend aBackend,
+CreateTestH264Decoder(layers::KnowsCompositor* aKnowsCompositor,
                       VideoInfo& aConfig,
                       TaskQueue* aTaskQueue)
 {
@@ -229,13 +229,13 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
                                      MOZ_ARRAY_LENGTH(sTestH264ExtraData));
 
   RefPtr<PDMFactory> platform = new PDMFactory();
-  RefPtr<MediaDataDecoder> decoder(platform->CreateDecoder({ aConfig, aTaskQueue, aBackend }));
+  RefPtr<MediaDataDecoder> decoder(platform->CreateDecoder({ aConfig, aTaskQueue, aKnowsCompositor }));
 
   return decoder.forget();
 }
 
 /* static */ already_AddRefed<dom::Promise>
-MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsIGlobalObject* aParent)
+MP4Decoder::IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlobalObject* aParent)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -250,7 +250,7 @@ MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsIGlobalObject* 
   RefPtr<TaskQueue> taskQueue =
     new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
   VideoInfo config;
-  RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config, taskQueue));
+  RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aKnowsCompositor, config, taskQueue));
   if (!decoder) {
     taskQueue->BeginShutdown();
     taskQueue->AwaitShutdownAndIdle();

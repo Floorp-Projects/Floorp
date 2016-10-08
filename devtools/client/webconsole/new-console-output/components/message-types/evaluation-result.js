@@ -18,10 +18,15 @@ EvaluationResult.displayName = "EvaluationResult";
 
 EvaluationResult.propTypes = {
   message: PropTypes.object.isRequired,
+  indent: PropTypes.number.isRequired,
+};
+
+EvaluationResult.defaultProps = {
+  indent: 0,
 };
 
 function EvaluationResult(props) {
-  const { message, serviceContainer } = props;
+  const { message, serviceContainer, indent } = props;
   const {
     source,
     type,
@@ -42,6 +47,7 @@ function EvaluationResult(props) {
     source,
     type,
     level,
+    indent,
     topLevelClasses,
     messageBody,
     messageId,

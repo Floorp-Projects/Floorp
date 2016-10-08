@@ -122,3 +122,12 @@ def split_chunks(config, tests):
             chunked['treeherder-symbol'] = join_symbol(group, symbol)
 
             yield chunked
+
+
+@transforms.add
+def set_retry_exit_status(config, tests):
+    """Set the retry exit status to TBPL_RETRY, the value returned by mozharness
+       scripts to indicate a transient failure that should be retried."""
+    for test in tests:
+        test['retry-exit-status'] = 4
+        yield test

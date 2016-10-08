@@ -52,7 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1168300
     yield undefined;
     let app = request.result;
 
-    let _topic = "clear-origin-data";
+    let _topic = "clear-origin-attributes-data";
     let observer = new Observer(_topic);
     observer.onobserve = function(subject, topic, data, count) {
       ok(topic == _topic, "unknown topic " + topic);
@@ -76,7 +76,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1168300
       continueTest();
     };
 
-    // we now wait for "clear-origin-data" notifications and onuninstall
+    // we now wait for "clear-origin-attributes-data" notifications and onuninstall
     // callback.
     yield undefined;
     yield undefined;

@@ -982,12 +982,8 @@ TokenStream::checkForKeyword(const KeywordInfo* kw, TokenKind* ttp)
         return reportStrictModeError(JSMSG_RESERVED_ID, kw->chars);
 
     // Working keyword.
-    if (ttp) {
-        *ttp = kw->tokentype;
-        return true;
-    }
-
-    return reportError(JSMSG_RESERVED_ID, kw->chars);
+    *ttp = kw->tokentype;
+    return true;
 }
 
 bool
@@ -1206,7 +1202,15 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
                 // That said, keywords can't contain escapes.  (Contexts where
                 // keywords are treated as names, that also sometimes treat
                 // keywords as keywords, must manually check this requirement.)
-                if (hadUnicodeEscape) {
+                // There are two exceptions
+                // 1) StrictReservedWords: These keywords need to be treated as
+                //    names in non-strict mode.
+                // 2) yield is also treated as a name if it contains an escape
+                //    sequence. The parser must handle this case separately.
+                if (hadUnicodeEscape && !(
+                        (kw->tokentype == TOK_STRICT_RESERVED && !strictMode()) ||
+                         kw->tokentype == TOK_YIELD))
+                {
                     reportError(JSMSG_ESCAPED_KEYWORD);
                     goto error;
                 }
@@ -1214,7 +1218,7 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
                 tp->type = TOK_NAME;
                 if (!checkForKeyword(kw, &tp->type))
                     goto error;
-                if (tp->type != TOK_NAME)
+                if (tp->type != TOK_NAME && !hadUnicodeEscape)
                     goto out;
             }
         }

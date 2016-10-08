@@ -46,7 +46,7 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 # localized font family names should always match just as English names do
 == localized-family-names-001.html localized-family-names-001-ref.html
 skip-if(Mulet) == localized-family-names-002.html localized-family-names-002-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&!d2d) == localized-family-names-003.html localized-family-names-003-ref.html # Bug 1258248
+== localized-family-names-003.html localized-family-names-003-ref.html
 == localized-family-names-004.html localized-family-names-004-ref.html
 
 # family names with escaped spaces shouldn't match the names without the spaces

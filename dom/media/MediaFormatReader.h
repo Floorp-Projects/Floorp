@@ -28,8 +28,7 @@ class MediaFormatReader final : public MediaDecoderReader
 public:
   MediaFormatReader(AbstractMediaDecoder* aDecoder,
                     MediaDataDemuxer* aDemuxer,
-                    VideoFrameContainer* aVideoFrameContainer = nullptr,
-                    layers::LayersBackend aLayersBackend = layers::LayersBackend::LAYERS_NONE);
+                    VideoFrameContainer* aVideoFrameContainer = nullptr);
 
   virtual ~MediaFormatReader();
 
@@ -522,7 +521,7 @@ private:
   // Default mLastDecodedKeyframeTime_us value, must be bigger than anything.
   static const int64_t sNoPreviousDecodedKeyframe = INT64_MAX;
 
-  layers::LayersBackend mLayersBackendType;
+  RefPtr<layers::KnowsCompositor> mKnowsCompositor;
 
   // Metadata objects
   // True if we've read the streams' metadata.

@@ -709,6 +709,17 @@ a.learn-more-link.webconsole-learn-more-link {
   flex: 1 1 100%;
 }
 
+.message.startGroup .message-body,
+.message.startGroupCollapsed .message-body {
+  color: var(--theme-body-color);
+  font-weight: bold;
+}
+
+.webconsole-output-wrapper .message > .icon {
+  margin: 3px 0 0 0;
+  padding: 0 0 0 6px;
+}
+
 .message.error > .icon::before {
   background-position: -12px -36px;
 }
@@ -723,6 +734,22 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .message.network .method {
   margin-inline-end: 5px;
+}
+
+.webconsole-output-wrapper .message .indent {
+  display: inline-block;
+  border-inline-end: solid 1px var(--theme-splitter-color);
+}
+
+.message.startGroup .indent,
+.message.startGroupCollapsed .indent {
+  border-inline-end-color: transparent;
+  margin-inline-end: 5px;
+}
+
+.message.startGroup .icon,
+.message.startGroupCollapsed .icon {
+    display: none;
 }
 
 /* console.table() */

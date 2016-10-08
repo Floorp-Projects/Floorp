@@ -146,6 +146,7 @@ def docker_worker_setup(config, test, taskdesc):
     worker['loopback-video'] = test['loopback-video']
     worker['loopback-audio'] = test['loopback-audio']
     worker['max-run-time'] = test['max-run-time']
+    worker['retry-exit-status'] = test['retry-exit-status']
 
     worker['artifacts'] = [{
         'name': prefix,
