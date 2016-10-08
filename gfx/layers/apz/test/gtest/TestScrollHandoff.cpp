@@ -94,6 +94,7 @@ protected:
     // whether acceleration occured.
     const float kAcceleration = 100.0f;
     SCOPED_GFX_PREF(APZFlingAccelBaseMultiplier, float, kAcceleration);
+    SCOPED_GFX_PREF(APZFlingAccelMinVelocity, float, 0.0);
 
     RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 

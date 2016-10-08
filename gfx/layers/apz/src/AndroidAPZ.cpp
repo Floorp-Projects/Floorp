@@ -120,11 +120,18 @@ AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
   int32_t originX = ClampStart(mStartOffset.x, scrollRangeStartX, scrollRangeEndX);
   int32_t originY = ClampStart(mStartOffset.y, scrollRangeStartY, scrollRangeEndY);
   if (!state->mLastFling.IsNull()) {
-    // If we had a fling going previously, we should update the timestamp on
-    // it because otherwise it may have a stale velocity
+    // If it's been too long since the previous fling, or if the new fling's
+    // velocity is too low, don't allow flywheel to kick in. If we do allow
+    // flywheel to kick in, then we need to update the timestamp on the
+    // StackScroller because otherwise it might use a stale velocity.
     TimeDuration flingDuration = TimeStamp::Now() - state->mLastFling;
-    bool unused = false;
-    mOverScroller->ComputeScrollOffset(flingDuration.ToMilliseconds(), &unused);
+    if (flingDuration.ToMilliseconds() < gfxPrefs::APZFlingAccelInterval()
+        && velocity.Length() >= gfxPrefs::APZFlingAccelMinVelocity()) {
+      bool unused = false;
+      mOverScroller->ComputeScrollOffset(flingDuration.ToMilliseconds(), &unused);
+    } else {
+      mOverScroller->ForceFinished(true);
+    }
   }
   mOverScroller->Fling(originX, originY,
                        // Android needs the velocity in pixels per second and it is in pixels per ms.
