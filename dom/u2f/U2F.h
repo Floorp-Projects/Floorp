@@ -158,6 +158,7 @@ private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsString mOrigin;
   Sequence<Authenticator> mAuthenticators;
+  bool mInitialized;
 
   ~U2F();
 };

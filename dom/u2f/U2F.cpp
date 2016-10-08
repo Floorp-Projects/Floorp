@@ -566,6 +566,7 @@ EvaluateAppIDAndRunTask(U2FTask* aTask)
 }
 
 U2F::U2F()
+ : mInitialized(false)
 {}
 
 U2F::~U2F()
@@ -587,6 +588,7 @@ U2F::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 U2F::Init(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
 {
+  MOZ_ASSERT(!mInitialized);
   MOZ_ASSERT(!mParent);
   mParent = do_QueryInterface(aParent);
   MOZ_ASSERT(mParent);
@@ -606,41 +608,32 @@ U2F::Init(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
   }
 
   if (!EnsureNSSInitializedChromeOrContent()) {
-    MOZ_LOG(gWebauthLog, LogLevel::Debug, ("Failed to get NSS context for U2F"));
+    MOZ_LOG(gWebauthLog, LogLevel::Debug,
+            ("Failed to get NSS context for U2F"));
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
+
+  // This only functions in e10s mode
+  if (XRE_IsParentProcess()) {
+    MOZ_LOG(gWebauthLog, LogLevel::Debug,
+      ("Is non-e10s Process, U2F not available"));
+     aRv.Throw(NS_ERROR_FAILURE);
+     return;
+   }
 
   // Monolithically insert compatible nsIU2FToken objects into mAuthenticators.
   // In future functionality expansions, this is where we could add a dynamic
   // add/remove interface.
   if (Preferences::GetBool(PREF_U2F_SOFTTOKEN_ENABLED)) {
-    if (!XRE_IsParentProcess()) {
-      MOZ_LOG(gWebauthLog, LogLevel::Debug,
-        ("Is e10s Process, getting remote U2F soft token"));
-
-      if (!mAuthenticators.AppendElement(new NSSU2FTokenRemote(),
-                                         mozilla::fallible)) {
-        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return;
-      }
-    } else {
-       MOZ_LOG(gWebauthLog, LogLevel::Debug,
-        ("Is non-e10s Process, getting direct U2F soft token"));
-
-      nsCOMPtr<nsINSSU2FToken> softToken =
-        do_GetService(NS_NSSU2FTOKEN_CONTRACTID);
-      if (NS_WARN_IF(!softToken)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-
-      if (!mAuthenticators.AppendElement(softToken, mozilla::fallible)) {
-        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return;
-      }
+    if (!mAuthenticators.AppendElement(new NSSU2FTokenRemote(),
+                                       mozilla::fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
     }
   }
+
+  mInitialized = true;
 }
 
 void
@@ -651,6 +644,13 @@ U2F::Register(const nsAString& aAppId,
               const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
               ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mInitialized) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
   RefPtr<U2FRegisterTask> registerTask = new U2FRegisterTask(mOrigin, aAppId,
                                                              aRegisterRequests,
                                                              aRegisteredKeys,
@@ -668,6 +668,13 @@ U2F::Sign(const nsAString& aAppId,
           const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
           ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mInitialized) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
   RefPtr<U2FSignTask> signTask = new U2FSignTask(mOrigin, aAppId, aChallenge,
                                                  aRegisteredKeys, &aCallback,
                                                  mAuthenticators);
