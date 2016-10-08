@@ -245,10 +245,10 @@ fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) == marker-o
 # fuzzy because of the differences between clipPath and mask clipping
 == mask-and-clipPath.html mask-and-clipPath.html
 == mask-and-clipPath-2.svg mask-and-clipPath-2.svg
-pref(layout.css.masking.enabled,true) fuzzy-if(d2d||skiaContent,1,6400) == mask-type-01.svg mask-type-01.svg
-pref(layout.css.masking.enabled,true) fuzzy-if(d2d||skiaContent,1,6400) == mask-type-02.svg mask-type-02.svg
-pref(layout.css.masking.enabled,true) fuzzy-if(d2d||skiaContent,1,6400) == mask-type-03.svg mask-type-03.svg
-pref(layout.css.masking.enabled,true) fuzzy-if(d2d||skiaContent,1,6400) == mask-type-04.svg mask-type-04.svg
+fuzzy-if(d2d||skiaContent,1,6400) == mask-type-01.svg mask-type-01.svg
+fuzzy-if(d2d||skiaContent,1,6400) == mask-type-02.svg mask-type-02.svg
+fuzzy-if(d2d||skiaContent,1,6400) == mask-type-03.svg mask-type-03.svg
+fuzzy-if(d2d||skiaContent,1,6400) == mask-type-04.svg mask-type-04.svg
 == nested-viewBox-01.svg nested-viewBox-01.svg
 fuzzy-if(skiaContent,3,448000) == nesting-invalid-01.svg nesting-invalid-01.svg
 fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),63,168) fuzzy-if(cocoaWidget,1,122) fuzzy-if(skiaContent,2,1000) == non-scaling-stroke-01.svg non-scaling-stroke-01.svg
