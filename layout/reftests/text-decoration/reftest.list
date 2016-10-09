@@ -1,13 +1,13 @@
-skip-if(B2G||Mulet) == complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == complex-decoration-style-standards.html complex-decoration-style-standards-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
+== complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
 == decoration-color-quirks.html decoration-color-quirks-ref.html
 == decoration-color-standards.html decoration-color-standards-ref.html
 == decoration-style-quirks.html decoration-style-quirks-ref.html
 == decoration-style-standards.html decoration-style-standards-ref.html
-fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-quirks-1.html dynamic-underline-vertical-align-quirks-1-ref.html
-fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-standards-1.html dynamic-underline-vertical-align-standards-1-ref.html
-fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-quirks-2.html dynamic-underline-vertical-align-quirks-2-ref.html
-fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-standards-2.html dynamic-underline-vertical-align-standards-2-ref.html
+== dynamic-underline-vertical-align-quirks-1.html dynamic-underline-vertical-align-quirks-1-ref.html
+== dynamic-underline-vertical-align-standards-1.html dynamic-underline-vertical-align-standards-1-ref.html
+== dynamic-underline-vertical-align-quirks-2.html dynamic-underline-vertical-align-quirks-2-ref.html
+== dynamic-underline-vertical-align-standards-2.html dynamic-underline-vertical-align-standards-2-ref.html
 == line-through-style-block-solid-quirks.html line-through-style-block-quirks-ref.html
 != line-through-style-block-dotted-quirks.html line-through-style-block-quirks-ref.html
 != line-through-style-block-dashed-quirks.html line-through-style-block-quirks-ref.html
@@ -94,7 +94,7 @@ fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-standards-2.html dynamic
 == table-quirk-2.html table-quirk-2-ref.html
 == text-decoration-propagation-1-quirks.html text-decoration-propagation-1-quirks-ref.html
 == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards-ref.html
-skip-if(B2G||Mulet) == 641444-1.html 641444-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== 641444-1.html 641444-1-ref.html
 == decoration-css21.html decoration-css21-ref.html
 fuzzy-if(cocoaWidget,1,5) == decoration-color-override-quirks.html decoration-color-override-quirks-ref.html
 == decoration-color-override-standards.html decoration-color-override-standards-ref.html

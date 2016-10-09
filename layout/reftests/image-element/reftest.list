@@ -2,15 +2,15 @@ random == bug-364968.html bug-364968-ref.html
 == bug-463204.html bug-463204-ref.html
 == canvas-outside-document.html canvas-inside-document.html
 == mozsetimageelement-01.html mozsetimageelement-01-ref.html
-skip-if(B2G||Mulet) == mozsetimageelement-02.html about:blank # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == image-outside-document-invalidate.html about:blank # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == canvas-outside-document-invalidate-01.html about:blank # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fails-if(azureSkia) fails-if(cocoaWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800 # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== mozsetimageelement-02.html about:blank
+== image-outside-document-invalidate.html about:blank
+== canvas-outside-document-invalidate-01.html about:blank
+fails-if(azureSkia) fails-if(cocoaWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800
 #fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
 == element-paint-simple.html element-paint-simple-ref.html
 == element-paint-repeated.html element-paint-repeated-ref.html
 == element-paint-recursion.html element-paint-recursion-ref.html
-skip-if(B2G||Mulet) HTTP(..) == element-paint-continuation.html element-paint-continuation-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+HTTP(..) == element-paint-continuation.html element-paint-continuation-ref.html
 == element-paint-transform-01.html element-paint-transform-01-ref.html
 random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref.html # bug 587133
 fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),16,90) == element-paint-background-size-01.html element-paint-background-size-01-ref.html
@@ -24,12 +24,12 @@ fails-if(usesRepeatResampling) == element-paint-subimage-sampling-restriction.ht
 fuzzy-if(skiaContent,1,326) == element-paint-sharpness-01b.html element-paint-sharpness-01c.html
 == element-paint-sharpness-01c.html element-paint-sharpness-01d.html
 == element-paint-sharpness-02a.html element-paint-sharpness-02b.html
-fuzzy-if(B2G,11,4) == element-paint-sharpness-02b.html element-paint-sharpness-02c.html
+== element-paint-sharpness-02b.html element-paint-sharpness-02c.html
 == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01-ref.html
 fuzzy-if(skiaContent,187,1191) == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02-ref.html # Linux32 from GCC update
 == element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01-ref.html
-skip-if(B2G||Mulet) == element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01-ref.html
+== element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01-ref.html
 == gradient-html-01.html gradient-html-01-ref.svg
 == gradient-html-02.html gradient-html-02-ref.svg
 random-if(!cocoaWidget) == gradient-html-03.html gradient-html-03-ref.svg
@@ -44,5 +44,4 @@ fuzzy(1,16900) == gradient-html-07c.html gradient-html-07d.html
 HTTP == invalidate-1.html invalidate-1-ref.html
 == pattern-html-01.html pattern-html-01-ref.svg
 == pattern-html-02.html pattern-html-02-ref.svg
-# skip XBL test case on B2G
-skip-if(B2G||Mulet) == referenced-from-binding-01.html referenced-from-binding-01-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+== referenced-from-binding-01.html referenced-from-binding-01-ref.html

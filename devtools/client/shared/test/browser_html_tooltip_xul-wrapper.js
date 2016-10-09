@@ -43,7 +43,7 @@ add_task(function* () {
   win.top.resizeBy(0, -100);
 
   info("Create HTML tooltip");
-  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: true});
+  let tooltip = new HTMLTooltip(doc, {useXulWrapper: true});
   let div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "200px";
   div.style.background = "red";
