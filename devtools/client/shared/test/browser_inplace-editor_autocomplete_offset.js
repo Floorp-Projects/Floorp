@@ -69,7 +69,7 @@ add_task(function* () {
   yield addTab("data:text/html;charset=utf-8,inplace editor CSS value autocomplete");
   let [host,, doc] = yield createHost("bottom", TEST_URI);
 
-  let popup = new AutocompletePopup({ doc }, { autoSelect: true });
+  let popup = new AutocompletePopup(doc, { autoSelect: true });
 
   info("Create a CSS_MIXED type autocomplete");
   yield new Promise(resolve => {
