@@ -43,7 +43,7 @@ add_task(function* () {
 
   let width = 100, height = 50;
 
-  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: false});
+  let tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
   tooltip.setContent(getTooltipContent(doc), {width, height});
 
   info("Show the tooltip on each of the 4 hbox, without calling hide in between");
