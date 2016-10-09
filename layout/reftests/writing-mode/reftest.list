@@ -5,7 +5,7 @@ HTTP(..) == 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns-ref
 HTTP(..) == 1083748.html 1083748-ref.html
 HTTP(..) == 1083848-1-inline-border.html 1083848-1-inline-border-ref.html
 HTTP(..) == 1083848-2-inline-background.html 1083848-2-inline-background-ref.html
-fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android||B2G,4,8704) HTTP(..) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
+fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android,4,8704) HTTP(..) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
 == 1083892-1.html 1083892-1-ref.html
 == 1086883-1a.html 1086883-1-ref.html
 == 1086883-1b.html 1086883-1-ref.html
@@ -13,11 +13,10 @@ fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android||B2G,4,8704) HTTP(..) == 1
 == 1089388-1.html 1089388-1-ref.html
 == 1089388-2.html 1089388-2-ref.html
 == 1090159-1.html 1090159-1-ref.html
-# bug 1230357 fuzz on b2g for subpixel text positioning on skia.
-fuzzy-if(B2G&&azureSkia,130,200) == 1090168-1.html 1090168-1-ref.html
+== 1090168-1.html 1090168-1-ref.html
 != 1090168-1.html 1090168-1-notref.html
-fuzzy-if(B2G&&azureSkia,130,200) == 1090168-2.html 1090168-2-ref.html
-fuzzy-if(B2G,244,173) fuzzy-if(Mulet,255,165) fuzzy-if(azureSkia,255,2700) == 1090168-3.html 1090168-3-ref.html # bug 1142928: mark fuzzy on Mulet as on B2G, bug 1230357 for skia.
+== 1090168-2.html 1090168-2-ref.html
+fuzzy-if(azureSkia,255,2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
 == 1091058-1.html 1091058-1-ref.html
 random-if(gtkWidget) == 1094434-1.html 1094434-1-ref.html # bug 1094845
 random-if(gtkWidget) == 1094434-2.html 1094434-2-ref.html # bug 1094845
@@ -63,12 +62,12 @@ fuzzy(116,94) fuzzy-if(skiaContent&&dwrite,119,124) HTTP(..) == 1115916-1-vertic
 == ua-style-sheet-size-2.html ua-style-sheet-size-2-ref.html
 
 == ua-style-sheet-fieldset-1.html ua-style-sheet-fieldset-1-ref.html
-skip-if(Android||B2G||Mulet||(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu))) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(Android||(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu))) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
+skip-if(!(Android)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html
 skip-if(!winWidget||/^Windows\x20NT\x205\.1/.test(http.oscpu)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
 == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
-skip-if(Android||B2G||Mulet) fuzzy-if(skiaContent&&!Android,2,6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(Android) fuzzy-if(skiaContent&&!Android,2,6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
+skip-if(!(Android)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
 == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
 fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
 
@@ -108,10 +107,10 @@ HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-r
 == 1133945-1-vertical-align.html 1133945-1-vertical-align-ref.html
 == 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1-ref.html
 == 1134849-orthogonal-inline.html 1134849-orthogonal-inline-ref.html
-fails-if(B2G||Mulet) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Mulet) fuzzy-if(winWidget,255,163) fuzzy-if(skiaContent,159,111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip-if(Mulet) fuzzy-if(winWidget,255,221) fuzzy-if(skiaContent,159,111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip-if(Mulet) fuzzy-if(winWidget,255,236) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+== 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067
+fuzzy-if(winWidget,255,163) fuzzy-if(skiaContent,159,111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html
+fuzzy-if(winWidget,255,221) fuzzy-if(skiaContent,159,111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html
+fuzzy-if(winWidget,255,236) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html
 == 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment-ref.html
 != 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment-notref.html
 
@@ -157,7 +156,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1193519-sideways-lr-2.html 1193519-sideways-lr-2-ref.html
 fuzzy-if(winWidget,3,84) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
 fuzzy-if(winWidget,3,112) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html
-fuzzy-if(gtkWidget||B2G,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
+fuzzy-if(gtkWidget,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
 
 == 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block-ref.html
 == 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1-ref.html
