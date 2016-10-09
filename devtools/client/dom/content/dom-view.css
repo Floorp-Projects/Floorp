@@ -9,7 +9,18 @@
 body {
   padding: 0;
   margin: 0;
-  height: 100%;
+  overflow: hidden;
+}
+
+.mainFrame {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.mainFrame > .treeTableBox {
+  flex: 1 1 auto;
+  overflow: auto;
 }
 
 /******************************************************************************/
@@ -82,21 +93,6 @@ body {
 .treeTable .treeRow:hover a,
 .treeTable .treeRow:hover span {
   color: var(--theme-selection-color) !important;
-}
-
-/******************************************************************************/
-/* Toolbar */
-
-.toolbar {
-  position: fixed;
-  width: 100%;
-  top: 0;
-  z-index: 2;
-}
-
-.treeTable {
-  z-index: 1;
-  margin-top: 25px;
 }
 
 /******************************************************************************/
