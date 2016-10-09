@@ -55,7 +55,7 @@ public abstract class RepositorySession {
 
   private SessionStatus status = SessionStatus.UNSTARTED;
   protected Repository repository;
-  protected RepositorySessionStoreDelegate delegate;
+  protected RepositorySessionStoreDelegate storeDelegate;
 
   /**
    * A queue of Runnables which call out into delegates.
@@ -127,7 +127,7 @@ public abstract class RepositorySession {
    */
   public void setStoreDelegate(RepositorySessionStoreDelegate delegate) {
     Logger.debug(LOG_TAG, "Setting store delegate to " + delegate);
-    this.delegate = delegate;
+    this.storeDelegate = delegate;
   }
   public abstract void store(Record record) throws NoStoreDelegateException;
 
@@ -145,7 +145,7 @@ public abstract class RepositorySession {
     Runnable command = new Runnable() {
       @Override
       public void run() {
-        delegate.onStoreCompleted(end);
+        storeDelegate.onStoreCompleted(end);
       }
     };
     storeWorkQueue.execute(command);

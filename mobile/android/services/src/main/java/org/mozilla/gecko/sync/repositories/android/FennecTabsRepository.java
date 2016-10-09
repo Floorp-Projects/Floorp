@@ -202,7 +202,7 @@ public class FennecTabsRepository extends Repository {
 
     @Override
     public void store(final Record record) throws NoStoreDelegateException {
-      if (delegate == null) {
+      if (storeDelegate == null) {
         Logger.warn(LOG_TAG, "No store delegate.");
         throw new NoStoreDelegateException();
       }
@@ -221,11 +221,11 @@ public class FennecTabsRepository extends Repository {
         public void run() {
           Logger.debug(LOG_TAG, "Storing tabs for client " + tabsRecord.guid);
           if (!isActive()) {
-            delegate.onRecordStoreFailed(new InactiveSessionException(null), record.guid);
+            storeDelegate.onRecordStoreFailed(new InactiveSessionException(), record.guid);
             return;
           }
           if (tabsRecord.guid == null) {
-            delegate.onRecordStoreFailed(new RuntimeException("Can't store record with null GUID."), record.guid);
+            storeDelegate.onRecordStoreFailed(new RuntimeException("Can't store record with null GUID."), record.guid);
             return;
           }
 
@@ -238,9 +238,9 @@ public class FennecTabsRepository extends Repository {
                 clientsProvider.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI,
                                        CLIENT_GUID_IS,
                                        selectionArgs);
-                delegate.onRecordStoreSucceeded(record.guid);
+                storeDelegate.onRecordStoreSucceeded(record.guid);
               } catch (Exception e) {
-                delegate.onRecordStoreFailed(e, record.guid);
+                storeDelegate.onRecordStoreFailed(e, record.guid);
               }
               return;
             }
@@ -271,10 +271,10 @@ public class FennecTabsRepository extends Repository {
             final int inserted = tabsProvider.bulkInsert(BrowserContractHelpers.TABS_CONTENT_URI, tabsArray);
             Logger.trace(LOG_TAG, "Inserted: " + inserted);
 
-            delegate.onRecordStoreSucceeded(record.guid);
+            storeDelegate.onRecordStoreSucceeded(record.guid);
           } catch (Exception e) {
             Logger.warn(LOG_TAG, "Error storing tabs.", e);
-            delegate.onRecordStoreFailed(e, record.guid);
+            storeDelegate.onRecordStoreFailed(e, record.guid);
           }
         }
       };

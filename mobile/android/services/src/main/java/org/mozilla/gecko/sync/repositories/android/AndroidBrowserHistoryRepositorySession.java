@@ -168,7 +168,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
       // Something failed; most pessimistic action is to declare that all insertions failed.
       // TODO: perform the bulkInsert in a transaction and rollback unless all insertions succeed?
       for (HistoryRecord failed : outgoing) {
-        delegate.onRecordStoreFailed(new RuntimeException("Failed to insert history item with guid " + failed.guid + "."), failed.guid);
+        storeDelegate.onRecordStoreFailed(new RuntimeException("Failed to insert history item with guid " + failed.guid + "."), failed.guid);
       }
       return;
     }
@@ -185,7 +185,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
         throw e;
       }
       trackRecord(succeeded);
-      delegate.onRecordStoreSucceeded(succeeded.guid); // At this point, we are really inserted.
+      storeDelegate.onRecordStoreSucceeded(succeeded.guid); // At this point, we are really inserted.
     }
   }
 
