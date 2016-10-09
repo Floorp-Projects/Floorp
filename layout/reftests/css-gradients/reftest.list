@@ -69,7 +69,7 @@ fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,4,90000) == rad
 == radial-position-1a.html radial-position-1-ref.html
 fuzzy-if(cocoaWidget,1,28) fuzzy-if(winWidget,1,18) fuzzy-if(skiaContent,1,50) == radial-position-1b.html radial-position-1-ref.html
 fuzzy-if(cocoaWidget,4,22317) fuzzy-if(Android,8,771) == radial-shape-closest-corner-1a.html radial-shape-closest-corner-1-ref.html
-fuzzy(1,238) fuzzy-if(cocoaWidget,4,22608) fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\./.test(http.oscpu))&&d2d,1,336) fuzzy-if(Android,8,787) fuzzy-if(B2G,1,242) fuzzy-if(skiaContent,2,300) == radial-shape-closest-corner-1b.html radial-shape-closest-corner-1-ref.html
+fuzzy(1,238) fuzzy-if(cocoaWidget,4,22608) fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\./.test(http.oscpu))&&d2d,1,336) fuzzy-if(Android,8,787) fuzzy-if(skiaContent,2,300) == radial-shape-closest-corner-1b.html radial-shape-closest-corner-1-ref.html
 fuzzy-if(azureQuartz,2,41171) fuzzy-if(Android,8,771) == radial-shape-closest-corner-1c.html radial-shape-closest-corner-1-ref.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,17,3880) == radial-shape-closest-side-1a.html radial-shape-closest-side-1-ref.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,17,3880) == radial-shape-closest-side-1b.html radial-shape-closest-side-1-ref.html
@@ -132,9 +132,9 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL||skiaConte
 fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,2,7878) == aja-linear-5a.html aja-linear-5-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,16500) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz,2,10163) == aja-linear-6a.html aja-linear-6-ref.html # bug 526708 
 fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
-skip-if(B2G||Mulet) fuzzy-if(Android,6,10576) == height-dependence-1.html height-dependence-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,1,40000) fuzzy-if(Android,6,10576) == height-dependence-2.html height-dependence-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fuzzy-if(Android,6,10576) == height-dependence-3.html height-dependence-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,6,10576) == height-dependence-1.html height-dependence-1-ref.html
+fuzzy-if(cocoaWidget,1,40000) fuzzy-if(Android,6,10576) == height-dependence-2.html height-dependence-2-ref.html
+fuzzy-if(Android,6,10576) == height-dependence-3.html height-dependence-3-ref.html
 
 == linear-onestopposition-1.html linear-onestopposition-1-ref.html
 fuzzy-if(d2d,47,400) == linear-onestopposition-1.html linear-onestopposition-1-ref2.html # d2d interpolates the hard stop
