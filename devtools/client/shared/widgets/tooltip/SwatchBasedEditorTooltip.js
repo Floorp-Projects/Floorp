@@ -12,16 +12,18 @@ const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLToolti
  * Base class for all (color, gradient, ...)-swatch based value editors inside
  * tooltips
  *
- * @param {Toolbox} toolbox
- *        The devtools toolbox, needed to get the devtools main window.
+ * @param {Document} document
+ *        The document to attach the SwatchBasedEditorTooltip. This is either the toolbox
+ *        document if the tooltip is a popup tooltip or the panel's document if it is an
+ *        inline editor.
  */
-function SwatchBasedEditorTooltip(toolbox, stylesheet) {
+function SwatchBasedEditorTooltip(document, stylesheet) {
   EventEmitter.decorate(this);
   // Creating a tooltip instance
   // This one will consume outside clicks as it makes more sense to let the user
   // close the tooltip by clicking out
   // It will also close on <escape> and <enter>
-  this.tooltip = new HTMLTooltip(toolbox, {
+  this.tooltip = new HTMLTooltip(document, {
     type: "arrow",
     consumeOutsideClicks: true,
     useXulWrapper: true,

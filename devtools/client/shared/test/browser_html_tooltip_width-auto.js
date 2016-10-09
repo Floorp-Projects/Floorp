@@ -41,7 +41,7 @@ add_task(function* () {
 });
 
 function* runTests(doc) {
-  let tooltip = new HTMLTooltip({doc}, {useXulWrapper});
+  let tooltip = new HTMLTooltip(doc, {useXulWrapper});
   info("Create tooltip content width to 150px");
   let tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.style.cssText = "height: 100%; width: 150px; background: red;";

@@ -20,14 +20,16 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  * It just wraps a standard Tooltip and sets its content with an instance of a
  * color picker.
  *
- * @param {Toolbox} toolbox
- *        The devtools toolbox, needed to get the devtools main window.
+ * @param {Document} document
+ *        The document to attach the SwatchColorPickerTooltip. This is either the toolbox
+ *        document if the tooltip is a popup tooltip or the panel's document if it is an
+ *        inline editor.
  * @param {InspectorPanel} inspector
  *        The inspector panel, needed for the eyedropper.
  */
-function SwatchColorPickerTooltip(toolbox, inspector) {
+function SwatchColorPickerTooltip(document, inspector) {
   let stylesheet = "chrome://devtools/content/shared/widgets/spectrum.css";
-  SwatchBasedEditorTooltip.call(this, toolbox, stylesheet);
+  SwatchBasedEditorTooltip.call(this, document, stylesheet);
 
   this.inspector = inspector;
 
