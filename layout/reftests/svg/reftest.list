@@ -47,7 +47,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == conditions-02.svg pass.svg
 == conditions-03.svg pass.svg
 == conditions-04.svg pass.svg
-random-if(Mulet) == conditions-05.svg about:blank # bug 1178062
+== conditions-05.svg about:blank
 == conditions-07.svg pass.svg
 fuzzy-if(skiaContent,1,320) == conditions-08.svg conditions-08-ref.svg
 == conditions-09.svg conditions-09-ref.svg
@@ -66,18 +66,18 @@ fuzzy-if(Android,4,87) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-clipPath-clip-rule-01.svg pass.svg
 == dynamic-conditions-01.svg pass.svg
-random-if(Mulet) == dynamic-conditions-02.svg about:blank # bug 1178062
+== dynamic-conditions-02.svg about:blank
 == dynamic-conditions-03.svg pass.svg
-random-if(Mulet) == dynamic-conditions-04.svg about:blank # bug 1178062
+== dynamic-conditions-04.svg about:blank
 == dynamic-conditions-05.svg pass.svg
-random-if(Mulet) == dynamic-conditions-06.svg about:blank # bug 1178062
+== dynamic-conditions-06.svg about:blank
 == dynamic-conditions-07.svg pass.svg
 == dynamic-conditions-08.svg pass.svg
-random-if(Mulet) == dynamic-conditions-09.svg about:blank # bug 1178062
-random-if(Mulet) == dynamic-conditions-10.svg about:blank # bug 1178062
+== dynamic-conditions-09.svg about:blank
+== dynamic-conditions-10.svg about:blank
 == dynamic-conditions-11.svg pass.svg
 == dynamic-conditions-12.svg pass.svg
-random-if(Mulet) == dynamic-conditions-13.svg about:blank # bug 1178062
+== dynamic-conditions-13.svg about:blank
 == dynamic-feFlood-01.svg pass.svg
 asserts(0-1) == dynamic-feImage-01.svg pass.svg # intermittent assertions (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg
@@ -158,7 +158,7 @@ fuzzy-if(skiaContent,1,2) == fallback-color-04.svg pass.svg
 # This pref is normally on by default, but we turn it off in reftest runs to
 # disable an unnecessary security-check. This reftest is actually testing that
 # the security check works, though, so it needs the pref to be turned on:
-fails-if(Android||B2G) pref(security.fileuri.strict_origin_policy,true) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
+fails-if(Android) pref(security.fileuri.strict_origin_policy,true) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
 == filter-foreignObject-01.svg pass.svg
 == filter-in-mask-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
@@ -186,10 +186,10 @@ fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic
 == foreignObject-vertical-01.svg foreignObject-vertical-01-ref.svg
 == g-transform-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) fuzzy-if(skiaContent,3,32000) == gradient-live-01a.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) fuzzy-if(skiaContent,3,32000) == gradient-live-01b.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) fuzzy-if(skiaContent,3,32000) == gradient-live-01c.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) fuzzy-if(skiaContent,3,32000) == gradient-live-01d.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01a.svg gradient-live-01-ref.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01b.svg gradient-live-01-ref.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01c.svg gradient-live-01-ref.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01d.svg gradient-live-01-ref.svg
 == gradient-transform-01.svg pass.svg
 fuzzy-if(skiaContent,1,550) == import-svg-01.html pass.svg
 == invalid-text-01.svg pass.svg
@@ -227,7 +227,7 @@ pref(layout.css.masking.enabled,true) fuzzy-if(d2d||skiaContent,1,6400) == mask-
 == nested-viewBox-01.svg pass.svg
 fuzzy-if(skiaContent,3,448000) == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),63,168) fuzzy-if(cocoaWidget,1,122) fuzzy-if(skiaContent,2,1000) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
-fuzzy-if(gtkWidget,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android||B2G,9,586) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
+fuzzy-if(gtkWidget,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android,9,586) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
 == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
@@ -244,7 +244,7 @@ random-if(gtkWidget) == objectBoundingBox-and-fePointLight-02.svg objectBounding
 skip-if(d2d) fuzzy-if(cocoaWidget,1,99974) fuzzy-if(skiaContent,1,200000) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 fuzzy-if(skiaContent,1,10000) == opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
-fuzzy-if(Android,8,200) random-if((B2G&&browserIsRemote)||Mulet) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,8,200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 == outline.html outline-ref.html
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
@@ -330,8 +330,8 @@ HTTP(..) == text-gradient-04.svg text-gradient-04-ref.svg
 == text-in-link-02.svg text-in-link-02-ref.svg
 == text-in-link-03.svg text-in-link-03-ref.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
-skip-if(B2G||Mulet) != text-language-00.xhtml text-language-00-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts. # Initial mulet triage: parity with B2G/B2G Desktop
+!= text-language-00.xhtml text-language-00-ref.xhtml
+random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
 fuzzy-if(OSX==1007,6,2) fuzzy-if(OSX==1008,46,26) == text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
 == text-layout-03.svg text-layout-03-ref.svg
@@ -425,7 +425,7 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mas
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity-ref.svg
-#skip-if(B2G||Mulet||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
+#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply-ref.svg
 pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay-ref.svg
