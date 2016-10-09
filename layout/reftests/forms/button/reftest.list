@@ -9,12 +9,12 @@
 == overflow-areas-1.html overflow-areas-1-ref.html
 
 # The buttons in these tests have some fancy shading applied to their corners
-# on B2G, despite their "-moz-appearance: none; background: gray", so they
+# on Android, despite their "-moz-appearance: none; background: gray", so they
 # don't quite match the reference case's normal <div>. That's why they're fuzzy.
-fuzzy-if(B2G||Mulet||Android,125,20) == percent-height-child-1.html percent-height-child-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Mulet||Android,125,80) == percent-height-child-2.html percent-height-child-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(B2G||Mulet||Android,125,20) == percent-width-child-1.html  percent-width-child-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Mulet||Android,125,80) == percent-width-child-2.html  percent-width-child-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,125,20) == percent-height-child-1.html percent-height-child-1-ref.html
+pref(browser.display.focus_ring_width,1) fuzzy-if(Android,125,80) == percent-height-child-2.html percent-height-child-2-ref.html
+fuzzy-if(Android,125,20) == percent-width-child-1.html  percent-width-child-1-ref.html
+pref(browser.display.focus_ring_width,1) fuzzy-if(Android,125,80) == percent-width-child-2.html  percent-width-child-2-ref.html
 
 == vertical-centering.html vertical-centering-ref.html
 
@@ -23,9 +23,9 @@ pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Mulet||Android,125,80) ==
 != line-height-input-0.5.html line-height-input-1.0.html
 != line-height-input-1.5.html line-height-input-1.0.html
 
-# Looks like Android and B2G change the text color, but to something slightly
+# Looks like Android changes the text color, but to something slightly
 # different from ColorGray
-fails-if(Android||B2G||Mulet) == disabled-1.html disabled-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android) == disabled-1.html disabled-1-ref.html
 == disabled-2.html disabled-2-ref.html
 
 != disabled-3.html disabled-3-notref.html
@@ -33,14 +33,14 @@ fails-if(Android||B2G||Mulet) == disabled-1.html disabled-1-ref.html # Initial m
 != disabled-5.html disabled-5-notref.html
 != disabled-6.html disabled-6-notref.html
 
-fails-if(B2G||Mulet) == width-auto-size-em-ltr.html width-auto-size-em-ltr-ref.html # Bug 1145672 # Bug 1150486
-fails-if(B2G||Mulet) == width-auto-size-ltr.html width-auto-size-ltr-ref.html # Bug 1145672 # Bug 1150486
+== width-auto-size-em-ltr.html width-auto-size-em-ltr-ref.html
+== width-auto-size-ltr.html width-auto-size-ltr-ref.html
 == width-exact-fit-ltr.html width-auto-size-ltr-ref.html
 == width-erode-part-focuspadding-ltr.html width-erode-part-focuspadding-ltr-ref.html
 == width-erode-all-focuspadding-ltr.html width-erode-all-focuspadding-ltr-ref.html
 == width-erode-overflow-focuspadding-ltr.html width-erode-overflow-focuspadding-ltr-ref.html
-fails-if(B2G||Mulet) == width-auto-size-em-rtl.html width-auto-size-em-rtl-ref.html # Bug 1145672 # Bug 1150486
-fails-if(B2G||Mulet) == width-auto-size-rtl.html width-auto-size-rtl-ref.html # Bug 1145672 # Bug 1150486
+== width-auto-size-em-rtl.html width-auto-size-em-rtl-ref.html
+== width-auto-size-rtl.html width-auto-size-rtl-ref.html
 == width-exact-fit-rtl.html width-auto-size-rtl-ref.html
 == width-erode-part-focuspadding-rtl.html width-erode-part-focuspadding-rtl-ref.html
 == width-erode-all-focuspadding-rtl.html width-erode-all-focuspadding-rtl-ref.html
