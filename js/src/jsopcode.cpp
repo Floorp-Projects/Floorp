@@ -1265,6 +1265,16 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
         return write("super.") &&
                quote(prop, '\0');
       }
+      case JSOP_SETELEM:
+      case JSOP_STRICTSETELEM:
+        // NOTE: We don't show the right hand side of the operation because
+        // it's used in error messages like: "a[0] is not readable".
+        //
+        // We could though.
+        return decompilePCForStackOperand(pc, -3) &&
+               write("[") &&
+               decompilePCForStackOperand(pc, -2) &&
+               write("]");
       case JSOP_GETELEM:
       case JSOP_CALLELEM:
         return decompilePCForStackOperand(pc, -2) &&
