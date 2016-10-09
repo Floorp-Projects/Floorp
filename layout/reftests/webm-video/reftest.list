@@ -1,38 +1,38 @@
-# NOTE: bug 1084564 covers "fails"/"skip" annotations for b2g/android below:
-fails-if(Android||B2G||Mulet) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G||Mulet) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G||Mulet) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G||Mulet) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+# NOTE: bug 1084564 covers "fails"/"skip" annotations for android below:
+fails-if(Android) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
+fails-if(Android) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
+fails-if(Android) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
+fails-if(Android) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 HTTP(..) == aspect-ratio-3a.xhtml aspect-ratio-3-ref.xhtml
 HTTP(..) == aspect-ratio-3b.xhtml aspect-ratio-3-ref.xhtml
-fails-if(Android||B2G||Mulet) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html # bug 623460 for WinXP # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G||Mulet) HTTP(..) == basic-1.xhtml basic-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) HTTP(..) == canvas-1a.xhtml basic-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G||Mulet) HTTP(..) == canvas-1b.xhtml basic-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html # bug 623460 for WinXP
+fails-if(Android) HTTP(..) == basic-1.xhtml basic-1-ref.html
+skip-if(Android) HTTP(..) == canvas-1a.xhtml basic-1-ref.html
+fails-if(Android) HTTP(..) == canvas-1b.xhtml basic-1-ref.html
 == clipping-1a.html clipping-1-ref.html
 == empty-1a.html empty-1-ref.html
 == empty-1b.html empty-1-ref.html
 #these is skipped because we hang on the htmlparser tests when this is ran
-random skip-if(Android||B2G||Mulet) HTTP(..) == object-aspect-ratio-1a.xhtml aspect-ratio-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-random skip-if(Android||B2G||Mulet) HTTP(..) == object-aspect-ratio-1b.xhtml aspect-ratio-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) HTTP(..) == offset-1.xhtml offset-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-random skip-if(Android||B2G||Mulet) HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-random skip-if(Android||B2G||Mulet) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-1.html poster-ref-blue250x200.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-2.html poster-ref-black140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-3.html poster-ref-black140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-4.html poster-ref-black140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-5.html poster-ref-black140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-6.html poster-ref-black140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-7.html poster-ref-red140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-8.html poster-ref-black140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-random skip-if(Android||B2G||Mulet) == poster-10.html poster-ref-blue125x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-random skip-if(Android||B2G||Mulet) == poster-11.html poster-ref-blue140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-random skip-if(Android||B2G||Mulet) == poster-12.html poster-ref-blue140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-13.html poster-ref-blue400x300.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) == poster-15.html poster-ref-green70x30.html # Initial mulet triage: parity with B2G/B2G Desktop
-random-if(winWidget) random-if(cocoaWidget) skip-if(Android||B2G||Mulet) == bug686957.html bug686957-ref.html # bug 922951 for OS X # Initial mulet triage: parity with B2G/B2G Desktop
+random skip-if(Android) HTTP(..) == object-aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
+random skip-if(Android) HTTP(..) == object-aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
+skip-if(Android) HTTP(..) == offset-1.xhtml offset-1-ref.html
+random skip-if(Android) HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
+random skip-if(Android) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
+skip-if(Android) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
+skip-if(Android) == poster-1.html poster-ref-blue250x200.html
+skip-if(Android) == poster-2.html poster-ref-black140x100.html
+skip-if(Android) == poster-3.html poster-ref-black140x100.html
+skip-if(Android) == poster-4.html poster-ref-black140x100.html
+skip-if(Android) == poster-5.html poster-ref-black140x100.html
+skip-if(Android) == poster-6.html poster-ref-black140x100.html
+skip-if(Android) == poster-7.html poster-ref-red140x100.html
+skip-if(Android) == poster-8.html poster-ref-black140x100.html
+random skip-if(Android) == poster-10.html poster-ref-blue125x100.html
+random skip-if(Android) == poster-11.html poster-ref-blue140x100.html
+random skip-if(Android) == poster-12.html poster-ref-blue140x100.html
+skip-if(Android) == poster-13.html poster-ref-blue400x300.html
+skip-if(Android) == poster-15.html poster-ref-green70x30.html
+random-if(winWidget) random-if(cocoaWidget) skip-if(Android) == bug686957.html bug686957-ref.html # bug 922951 for OS X
 
 # Tests for <video src> with 'object-fit' & 'object-position':
 # These tests should be very similar to tests in our w3c-css/submitted/images3
@@ -40,15 +40,15 @@ random-if(winWidget) random-if(cocoaWidget) skip-if(Android||B2G||Mulet) == bug6
 # wouldn't be fair of us to make a W3C testsuite implicitly depend on any
 # particular (non-spec-mandated) video codec.
 default-preferences test-pref(layout.css.object-fit-and-position.enabled,true) test-pref(gfx.ycbcr.accurate-conversion,true)
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-contain-webm-001.html object-fit-contain-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-contain-webm-002.html object-fit-contain-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-cover-webm-001.html object-fit-cover-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-cover-webm-002.html object-fit-cover-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-fill-webm-001.html object-fit-fill-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-fill-webm-002.html object-fit-fill-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-none-webm-001.html object-fit-none-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-none-webm-002.html object-fit-none-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-scale-down-webm-001.html object-fit-scale-down-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-scale-down-webm-002.html object-fit-scale-down-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) fails == object-position-webm-001.html object-position-webm-001-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) fails == object-position-webm-002.html object-position-webm-002-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-contain-webm-001.html object-fit-contain-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-contain-webm-002.html object-fit-contain-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-cover-webm-001.html object-fit-cover-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-cover-webm-002.html object-fit-cover-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-fill-webm-001.html object-fit-fill-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-fill-webm-002.html object-fit-fill-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-none-webm-001.html object-fit-none-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-none-webm-002.html object-fit-none-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-scale-down-webm-001.html object-fit-scale-down-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) == object-fit-scale-down-webm-002.html object-fit-scale-down-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) fails == object-position-webm-001.html object-position-webm-001-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
+fails-if(layersGPUAccelerated) skip-if(Android) fails == object-position-webm-002.html object-position-webm-002-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android failures
