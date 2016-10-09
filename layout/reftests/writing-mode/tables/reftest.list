@@ -11,15 +11,15 @@ asserts(1) == vertical-table-specified-width-2.html vertical-table-specified-wid
 fuzzy-if(cocoaWidget,141,24) == vertical-border-collapse-1.html vertical-border-collapse-1-ref.html
 fuzzy-if(cocoaWidget,141,24) == vertical-border-collapse-2.html vertical-border-collapse-2-ref.html
 
-fuzzy-if(B2G,5,1) == fixed-table-layout-002-vlr.html fixed-table-layout-002-ref.html
-fuzzy-if(B2G,5,1) == fixed-table-layout-003-vlr.html fixed-table-layout-002-ref.html
+== fixed-table-layout-002-vlr.html fixed-table-layout-002-ref.html
+== fixed-table-layout-003-vlr.html fixed-table-layout-002-ref.html
 == fixed-table-layout-004-vlr.html fixed-table-layout-004-ref.html
 == fixed-table-layout-005-vlr.html fixed-table-layout-005-ref.html
 == fixed-table-layout-006-vlr.html fixed-table-layout-006-ref.html
-fuzzy-if(B2G,5,1) == fixed-table-layout-007-vlr.html fixed-table-layout-007-ref.html
+== fixed-table-layout-007-vlr.html fixed-table-layout-007-ref.html
 == fixed-table-layout-009-vlr.html fixed-table-layout-009-ref.html
 fuzzy-if(Android,255,400) == fixed-table-layout-010-vlr.html fixed-table-layout-010-ref.html
-fuzzy-if(B2G,5,1) == fixed-table-layout-012-vlr.html fixed-table-layout-012-ref.html
+== fixed-table-layout-012-vlr.html fixed-table-layout-012-ref.html
 == fixed-table-layout-013-vlr.html fixed-table-layout-002-ref.html
 == fixed-table-layout-014-vlr.html fixed-table-layout-002-ref.html
 == fixed-table-layout-015-vlr.html fixed-table-layout-002-ref.html
@@ -37,15 +37,15 @@ fuzzy-if(skiaContent,1,90) == fixed-table-layout-023-vlr.html fixed-table-layout
 == fixed-table-layout-030-vlr.html fixed-table-layout-025-ref.html
 == fixed-table-layout-031-vlr.html fixed-table-layout-025-ref.html
 
-fuzzy-if(B2G,5,1) == fixed-table-layout-002-vrl.html fixed-table-layout-002-ref.html
-fuzzy-if(B2G,5,1) == fixed-table-layout-003-vrl.html fixed-table-layout-002-ref.html
+== fixed-table-layout-002-vrl.html fixed-table-layout-002-ref.html
+== fixed-table-layout-003-vrl.html fixed-table-layout-002-ref.html
 == fixed-table-layout-004-vrl.html fixed-table-layout-004-ref.html
 == fixed-table-layout-005-vrl.html fixed-table-layout-005-ref.html
 == fixed-table-layout-006-vrl.html fixed-table-layout-006-ref.html
-fuzzy-if(B2G,5,1) == fixed-table-layout-007-vrl.html fixed-table-layout-007-ref.html
+== fixed-table-layout-007-vrl.html fixed-table-layout-007-ref.html
 == fixed-table-layout-009-vrl.html fixed-table-layout-009-ref.html
 fuzzy-if(Android,255,400) == fixed-table-layout-010-vrl.html fixed-table-layout-010-ref.html
-fuzzy-if(B2G,5,1) == fixed-table-layout-012-vrl.html fixed-table-layout-012-ref.html
+== fixed-table-layout-012-vrl.html fixed-table-layout-012-ref.html
 == fixed-table-layout-013-vrl.html fixed-table-layout-002-ref.html
 == fixed-table-layout-014-vrl.html fixed-table-layout-002-ref.html
 == fixed-table-layout-015-vrl.html fixed-table-layout-002-ref.html
