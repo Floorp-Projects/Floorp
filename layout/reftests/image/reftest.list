@@ -3,8 +3,8 @@ fails-if(usesRepeatResampling) == background-image-zoom-2.html about:blank
 == image-seam-1a.html image-seam-1-ref.html
 == image-seam-1b.html image-seam-1-ref.html
 fuzzy-if(Android,255,154) == image-seam-2.html  image-seam-2-ref.html  # Bug 1128229
-skip-if((B2G&&browserIsRemote)||Mulet) == image-zoom-1.html image-zoom-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == image-zoom-2.html image-zoom-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+== image-zoom-1.html image-zoom-1-ref.html
+== image-zoom-2.html image-zoom-1-ref.html
 == invalid-url-image-1.html invalid-url-image-1-ref.html
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1a.html sync-image-switch-1-ref.html # bug 855050 for WinXP
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1b.html sync-image-switch-1-ref.html # bug 855050 for WinXP

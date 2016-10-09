@@ -40,7 +40,7 @@ add_task(function* () {
 
   info("Test a tooltip is not closed when clicking inside itself");
 
-  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: false});
+  let tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
   let div = doc.createElementNS(HTML_NS, "div");
   div.textContent = "tooltip";
   div.style.cssText = "box-sizing: border-box; border: 1px solid black";

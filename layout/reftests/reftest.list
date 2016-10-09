@@ -194,7 +194,7 @@ include font-face/reftest.list
 include font-features/reftest.list
 
 # mobile font size inflation
-skip-if((B2G&&browserIsRemote)||Mulet) include font-inflation/reftest.list # Bug 972697 # Initial mulet triage: parity with B2G/B2G Desktop
+include font-inflation/reftest.list
 
 # CSS Font Loading API
 include font-loading-api/reftest.list
@@ -251,8 +251,8 @@ include margin-collapsing/reftest.list
 include marquee/reftest.list
 
 # native-theme/
-# skipping for B2G since something around radio-nonnative.html makes the whole suite hang
-skip-if(B2G||Android||Mulet) include native-theme/reftest.list # Initial mulet triage: parity with B2G/B2G Desktop
+# (no XUL theme on Android)
+skip-if(Android) include native-theme/reftest.list
 
 # netwerk/
 include ../../netwerk/test/reftest/reftest.list
@@ -263,13 +263,13 @@ include outline/reftest.list
 include object/reftest.list
 
 # ogg-video/
-skip-if(!B2G&&browserIsRemote) include ogg-video/reftest.list
+skip-if(browserIsRemote) include ogg-video/reftest.list
 
 # webm-video/
-skip-if(!B2G&&browserIsRemote) include webm-video/reftest.list
+skip-if(browserIsRemote) include webm-video/reftest.list
 
 # mp4-video/
-skip-if(!B2G&&browserIsRemote) include mp4-video/reftest.list
+skip-if(browserIsRemote) include mp4-video/reftest.list
 
 # parser/
 include ../../parser/htmlparser/tests/reftest/reftest.list

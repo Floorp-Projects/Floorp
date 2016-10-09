@@ -32,7 +32,7 @@ add_task(function* () {
   let width = 100, height = 50;
   let tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.textContent = "tooltip";
-  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: false});
+  let tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
   tooltip.setContent(tooltipContent, {width, height});
 
   let container = doc.getElementById("container");

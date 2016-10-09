@@ -23,10 +23,10 @@
 == conflicting-widths-2.html conflicting-widths-ref-100xx.html
 == conflicting-widths-3.html conflicting-widths-ref-100xx.html
 == conflicting-widths-4.html conflicting-widths-ref-100xx.html
-fuzzy-if(B2G,9,1) == conflicting-widths-5.html conflicting-widths-5-ref.html # can't see the difference
+== conflicting-widths-5.html conflicting-widths-5-ref.html
 == conflicting-widths-6.html conflicting-widths-6-ref.html
-fuzzy-if(B2G,9,1) == conflicting-widths-7.html conflicting-widths-7-ref.html # can't see the difference
-fuzzy-if(B2G,9,1) == conflicting-widths-8.html conflicting-widths-8-ref.html # can't see the difference
+== conflicting-widths-7.html conflicting-widths-7-ref.html
+== conflicting-widths-8.html conflicting-widths-8-ref.html
 == conflicting-widths-9.html conflicting-widths-9-ref.html
 == conflicting-widths-10.html conflicting-widths-10-ref.html
 == conflicting-percent-widths-1.html conflicting-percent-widths-1-ref.html
@@ -35,7 +35,7 @@ fuzzy-if(B2G,9,1) == conflicting-widths-8.html conflicting-widths-8-ref.html # c
 == percent-truncation-1.html percent-truncation-1-ref.html
 == percent-truncation-2.html percent-truncation-2-ref.html
 == percent-truncation-3.html percent-truncation-3-ref.html
-skip-if(B2G||Mulet) == balancing-1.html balancing-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== balancing-1.html balancing-1-ref.html
 == balancing-2.html balancing-2-ref.html
 == cellpadding.html cellpadding-ref.html
 == cellspacing.html cellspacing-ref.html

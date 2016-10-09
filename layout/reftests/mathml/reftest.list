@@ -9,15 +9,15 @@
 fails == dir-8.html dir-8-ref.html
 fails == dir-9.html dir-9-ref.html # Bug 787215
 == dir-10.html dir-10-ref.html
-random-if((B2G&&browserIsRemote)||Mulet) == dir-11.html dir-11-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+== dir-11.html dir-11-ref.html
 == css-spacing-1.html css-spacing-1-ref.html
 pref(mathml.disabled,true) == disabled-scriptlevel-1.html disabled-scriptlevel-1-ref.html
 pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1-ref.xhtml
 == displaystyle-1.html displaystyle-1-ref.html
 == displaystyle-2.html displaystyle-2-ref.html
 == displaystyle-3.html displaystyle-3-ref.html
-random-if((B2G&&browserIsRemote)||Mulet) == displaystyle-4.html displaystyle-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) random-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+== displaystyle-4.html displaystyle-4-ref.html
+random-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-ref.html
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
 != mirror-op-4.html mirror-op-4-ref.html
@@ -43,13 +43,13 @@ skip-if((B2G&&browserIsRemote)||Mulet) random-if(smallScreen&&Android) fuzzy(255
 == mfenced-9.html mfenced-9-ref.html
 fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfenced-10.html mfenced-10-ref.html # Windows versions without Cambria Math, see bug 670592
 == mfenced-11.html mfenced-11-ref.html
-skip-if(Mulet) == mfenced-12.html mfenced-12-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+== mfenced-12.html mfenced-12-ref.html
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != mi-mathvariant-3.html mi-mathvariant-3-ref.html
 != non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml
 == overbar-width-1.xhtml overbar-width-1-ref.xhtml
-skip-if(B2G||Mulet) == quotes-1.xhtml quotes-1-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+== quotes-1.xhtml quotes-1-ref.xhtml
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml
 != stretchy-munderover-1a.html stretchy-munderover-1-ref.html
 == stretchy-munderover-1b.html stretchy-munderover-1-ref.html
@@ -144,7 +144,7 @@ fails-if(skiaContent&&OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.
 == mpadded-5.html mpadded-5-ref.html
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
-fails-if(Mulet) == mpadded-7.html mpadded-7-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+== mpadded-7.html mpadded-7-ref.html
 == mpadded-8.html mpadded-8-ref.html
 == mpadded-9.html mpadded-9-ref.html
 == math-display.html math-display-ref.html
@@ -184,7 +184,7 @@ fails-if(Mulet) == mpadded-7.html mpadded-7-ref.html # MULET: Bug 1144079: Re-en
 == mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-ref.html
 == maction-selection.html maction-selection-ref.html
 == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html
-skip-if(B2G||Mulet) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
 == maction-dynamic-2.html maction-dynamic-2-ref.html
 == mo-lspace-rspace.html mo-lspace-rspace-ref.html
 == mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html
@@ -193,7 +193,7 @@ skip-if(B2G||Mulet) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 7
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
 == mo-glyph-size.html mo-glyph-size-ref.html
-skip-if(B2G||Mulet) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
 == whitespace-trim-1.html whitespace-trim-1-ref.html
 == whitespace-trim-2.html whitespace-trim-2-ref.html
 == whitespace-trim-3.html whitespace-trim-3-ref.html
@@ -204,7 +204,7 @@ random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
-random-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,80) fails-if(winWidget&&/^Windows\x20NT\x205\.1/.test(http.oscpu)) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(skiaContent,1,80) fails-if(winWidget&&/^Windows\x20NT\x205\.1/.test(http.oscpu)) == multiscripts-1.html multiscripts-1-ref.html
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1a.html menclose-1-ref.html
@@ -224,25 +224,25 @@ random-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,80) fails-if(win
 != menclose-1o.html menclose-1-ref.html
 != menclose-1p.html menclose-1-ref.html
 != menclose-1q.html menclose-1-ref.html
-fails-if(B2G) == menclose-2-actuarial.html menclose-2-actuarial-ref.html # B2G slight thickness variation
+== menclose-2-actuarial.html menclose-2-actuarial-ref.html
 == menclose-2-bottom.html menclose-2-bottom-ref.html
-fails-if(B2G) == menclose-2-box.html menclose-2-box-ref.html # B2G slight thickness variation
+== menclose-2-box.html menclose-2-box-ref.html
 == menclose-2-circle.html menclose-2-circle-ref.html
 == menclose-2-downdiagonalstrike.html menclose-2-downdiagonalstrike-ref.html
 == menclose-2-horizontalstrike.html menclose-2-horizontalstrike-ref.html
-fails-if(B2G) == menclose-2-left.html menclose-2-left-ref.html # B2G slight thickness variation
+== menclose-2-left.html menclose-2-left-ref.html
 fuzzy-if(skiaContent,80,5) == menclose-2-longdiv.html menclose-2-longdiv-ref.html
 == menclose-2-right.html menclose-2-right-ref.html
-fails-if(B2G) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # B2G slight thickness variation
-fails-if(B2G) == menclose-2-top.html menclose-2-top-ref.html # B2G slight thickness variation
-fails-if(B2G) == menclose-2-updiagonalarrow.html menclose-2-updiagonalarrow-ref.html # B2G slight thickness variation
+== menclose-2-roundedbox.html menclose-2-roundedbox-ref.html
+== menclose-2-top.html menclose-2-top-ref.html
+== menclose-2-updiagonalarrow.html menclose-2-updiagonalarrow-ref.html
 == menclose-2-updiagonalstrike.html menclose-2-updiagonalstrike-ref.html
 == menclose-2-verticalstrike.html menclose-2-verticalstrike-ref.html
-fails-if(B2G) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # B2G slight thickness variation
+== menclose-2-roundedbox.html menclose-2-roundedbox-ref.html
 == menclose-2-phasorangle.html menclose-2-phasorangle-ref.html
 == menclose-3-box.html menclose-3-box-ref.html
 == menclose-3-madruwb.html menclose-3-madruwb-ref.html
-fails-if(B2G||Android||OSX==1006) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
+fails-if(Android||OSX==1006) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
 == menclose-3-default.html menclose-3-default-ref.html
 == menclose-3-invalid.html menclose-3-invalid-ref.html
 == menclose-3-multiple.html menclose-3-multiple-ref.html
@@ -284,11 +284,11 @@ fuzzy-if(d2d,7,1) == menclose-6-updiagonalstrike.html menclose-6-ref.html
 == menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == subscript-italic-correction.html subscript-italic-correction-ref.html # Windows versions with Cambria Math, bug 961482
-fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==1006) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679
-fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==1006) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679
-fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==1006) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679
+fails-if(Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==1006) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679
+fails-if(Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==1006) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679
+fails-if(Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==1006) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679
 == mathvariant-1d.html mathvariant-1d-ref.html
-fails-if(B2G||Mulet||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
+fails-if(Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
 == mathvariant-3.html mathvariant-3-ref.html
 == mathvariant-4.html mathvariant-4-ref.html
 == mathvariant-5.html mathvariant-5-ref.html
