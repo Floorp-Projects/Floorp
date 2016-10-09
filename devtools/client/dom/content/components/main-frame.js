@@ -40,10 +40,12 @@ var MainFrame = React.createClass({
           dispatch: this.props.dispatch,
           object: this.props.object
         }),
-        DomTree({
-          object: this.props.object,
-          filter: this.props.filter,
-        })
+        div({className: "treeTableBox"},
+          DomTree({
+            object: this.props.object,
+            filter: this.props.filter,
+          })
+        )
       )
     );
   }
