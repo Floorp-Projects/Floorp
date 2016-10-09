@@ -237,7 +237,7 @@ public class PasswordsRepositorySession extends
 
   @Override
   public void store(final Record record) throws NoStoreDelegateException {
-    if (delegate == null) {
+    if (storeDelegate == null) {
       Logger.error(LOG_TAG, "No store delegate.");
       throw new NoStoreDelegateException();
     }
@@ -257,13 +257,13 @@ public class PasswordsRepositorySession extends
       public void run() {
         if (!isActive()) {
           Logger.warn(LOG_TAG, "RepositorySession is inactive. Store failing.");
-          delegate.onRecordStoreFailed(new InactiveSessionException(null), record.guid);
+          storeDelegate.onRecordStoreFailed(new InactiveSessionException(), record.guid);
           return;
         }
 
         final String guid = remoteRecord.guid;
         if (guid == null) {
-          delegate.onRecordStoreFailed(new RuntimeException("Can't store record with null GUID."), record.guid);
+          storeDelegate.onRecordStoreFailed(new RuntimeException("Can't store record with null GUID."), record.guid);
           return;
         }
 
@@ -272,7 +272,7 @@ public class PasswordsRepositorySession extends
           existingRecord = retrieveByGUID(guid);
         } catch (NullCursorException | RemoteException e) {
           // Indicates a serious problem.
-          delegate.onRecordStoreFailed(e, record.guid);
+          storeDelegate.onRecordStoreFailed(e, record.guid);
           return;
         }
 
@@ -324,7 +324,7 @@ public class PasswordsRepositorySession extends
         // Validate the incoming record.
         if (!remoteRecord.isValid()) {
             Logger.warn(LOG_TAG, "Incoming record is invalid. Reporting store failed.");
-            delegate.onRecordStoreFailed(new RuntimeException("Can't store invalid password record."), record.guid);
+            storeDelegate.onRecordStoreFailed(new RuntimeException("Can't store invalid password record."), record.guid);
             return;
         }
 
@@ -335,10 +335,10 @@ public class PasswordsRepositorySession extends
             existingRecord = findExistingRecord(remoteRecord);
           } catch (RemoteException e) {
             Logger.error(LOG_TAG, "Remote exception in findExistingRecord.");
-            delegate.onRecordStoreFailed(e, record.guid);
+            storeDelegate.onRecordStoreFailed(e, record.guid);
           } catch (NullCursorException e) {
             Logger.error(LOG_TAG, "Null cursor in findExistingRecord.");
-            delegate.onRecordStoreFailed(e, record.guid);
+            storeDelegate.onRecordStoreFailed(e, record.guid);
           }
         }
 
@@ -351,11 +351,11 @@ public class PasswordsRepositorySession extends
             inserted = insert(remoteRecord);
           } catch (RemoteException e) {
             Logger.debug(LOG_TAG, "Record insert caused a RemoteException.");
-            delegate.onRecordStoreFailed(e, record.guid);
+            storeDelegate.onRecordStoreFailed(e, record.guid);
             return;
           }
           trackRecord(inserted);
-          delegate.onRecordStoreSucceeded(inserted.guid);
+          storeDelegate.onRecordStoreSucceeded(inserted.guid);
           return;
         }
 
@@ -381,7 +381,7 @@ public class PasswordsRepositorySession extends
           replaced = replace(existingRecord, toStore);
         } catch (RemoteException e) {
           Logger.debug(LOG_TAG, "Record replace caused a RemoteException.");
-          delegate.onRecordStoreFailed(e, record.guid);
+          storeDelegate.onRecordStoreFailed(e, record.guid);
           return;
         }
 
@@ -389,7 +389,7 @@ public class PasswordsRepositorySession extends
         // of reconcileRecords.
         Logger.debug(LOG_TAG, "Calling delegate callback with guid " + replaced.guid +
                               "(" + replaced.androidID + ")");
-        delegate.onRecordStoreSucceeded(record.guid);
+        storeDelegate.onRecordStoreSucceeded(record.guid);
         return;
       }
     };
@@ -644,10 +644,10 @@ public class PasswordsRepositorySession extends
       deleteGUID(record.guid);
     } catch (RemoteException e) {
       Logger.error(LOG_TAG, "RemoteException in password delete.");
-      delegate.onRecordStoreFailed(e, record.guid);
+      storeDelegate.onRecordStoreFailed(e, record.guid);
       return;
     }
-    delegate.onRecordStoreSucceeded(record.guid);
+    storeDelegate.onRecordStoreSucceeded(record.guid);
   }
 
   /**

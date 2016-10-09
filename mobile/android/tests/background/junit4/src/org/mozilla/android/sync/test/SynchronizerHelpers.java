@@ -74,11 +74,11 @@ public class SynchronizerHelpers {
       delegate.deferredCreationDelegate().onSessionCreated(new WBORepositorySession(this) {
         @Override
         public void store(final Record record) throws NoStoreDelegateException {
-          if (delegate == null) {
+          if (storeDelegate == null) {
             throw new NoStoreDelegateException();
           }
           if (record.guid.contains(FAIL_SENTINEL)) {
-            delegate.onRecordStoreFailed(new StoreFailedException(), record.guid);
+            storeDelegate.onRecordStoreFailed(new StoreFailedException(), record.guid);
           } else {
             super.store(record);
           }
@@ -108,7 +108,7 @@ public class SynchronizerHelpers {
 
       @Override
       public void store(final Record record) throws NoStoreDelegateException {
-        if (delegate == null) {
+        if (storeDelegate == null) {
           throw new NoStoreDelegateException();
         }
         synchronized (batch) {
@@ -134,12 +134,12 @@ public class SynchronizerHelpers {
             Logger.trace("XXX", "Notifying about batch.  Failure? " + thisBatchShouldFail);
             for (Record batchRecord : thisBatch) {
               if (thisBatchShouldFail) {
-                delegate.onRecordStoreFailed(new StoreFailedException(), batchRecord.guid);
+                storeDelegate.onRecordStoreFailed(new StoreFailedException(), batchRecord.guid);
               } else {
                 try {
                   superStore(batchRecord);
                 } catch (NoStoreDelegateException e) {
-                  delegate.onRecordStoreFailed(e, batchRecord.guid);
+                  storeDelegate.onRecordStoreFailed(e, batchRecord.guid);
                 }
               }
             }

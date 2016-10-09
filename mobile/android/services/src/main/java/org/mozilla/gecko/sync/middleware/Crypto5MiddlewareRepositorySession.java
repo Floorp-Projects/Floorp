@@ -150,12 +150,12 @@ public class Crypto5MiddlewareRepositorySession extends MiddlewareRepositorySess
   public void setStoreDelegate(RepositorySessionStoreDelegate delegate) {
     // TODO: it remains to be seen how this will work.
     inner.setStoreDelegate(delegate);
-    this.delegate = delegate;             // So we can handle errors without involving inner.
+    this.storeDelegate = delegate;             // So we can handle errors without involving inner.
   }
 
   @Override
   public void store(Record record) throws NoStoreDelegateException {
-    if (delegate == null) {
+    if (storeDelegate == null) {
       throw new NoStoreDelegateException();
     }
     CryptoRecord rec = record.getEnvelope();
@@ -163,7 +163,7 @@ public class Crypto5MiddlewareRepositorySession extends MiddlewareRepositorySess
     try {
       rec.encrypt();
     } catch (UnsupportedEncodingException | CryptoException e) {
-      delegate.onRecordStoreFailed(e, record.guid);
+      storeDelegate.onRecordStoreFailed(e, record.guid);
       return;
     }
     // Allow the inner session to do delegate handling.

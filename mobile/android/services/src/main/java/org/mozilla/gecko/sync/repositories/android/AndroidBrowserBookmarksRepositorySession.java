@@ -614,7 +614,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     try {
       Uri recordURI = dbHelper.insert(toStore);
       if (recordURI == null) {
-        delegate.onRecordStoreFailed(new RuntimeException("Got null URI inserting folder with guid " + toStore.guid + "."), record.guid);
+        storeDelegate.onRecordStoreFailed(new RuntimeException("Got null URI inserting folder with guid " + toStore.guid + "."), record.guid);
         return false;
       }
       toStore.androidID = ContentUris.parseId(recordURI);
@@ -622,11 +622,11 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
       updateBookkeeping(toStore);
     } catch (Exception e) {
-      delegate.onRecordStoreFailed(e, record.guid);
+      storeDelegate.onRecordStoreFailed(e, record.guid);
       return false;
     }
     trackRecord(toStore);
-    delegate.onRecordStoreSucceeded(record.guid);
+    storeDelegate.onRecordStoreSucceeded(record.guid);
     return true;
   }
 
@@ -649,13 +649,13 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         // Something failed; most pessimistic action is to declare that all insertions failed.
         // TODO: perform the bulkInsert in a transaction and rollback unless all insertions succeed?
         for (Record failed : toStores) {
-          delegate.onRecordStoreFailed(new RuntimeException("Possibly failed to bulkInsert non-folder with guid " + failed.guid + "."), failed.guid);
+          storeDelegate.onRecordStoreFailed(new RuntimeException("Possibly failed to bulkInsert non-folder with guid " + failed.guid + "."), failed.guid);
         }
         return;
       }
     } catch (NullCursorException e) {
       for (Record failed : toStores) {
-        delegate.onRecordStoreFailed(e, failed.guid);
+        storeDelegate.onRecordStoreFailed(e, failed.guid);
       }
       return;
     }
@@ -668,7 +668,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         Logger.warn(LOG_TAG, "Got exception updating bookkeeping of non-folder with guid " + succeeded.guid + ".", e);
       }
       trackRecord(succeeded);
-      delegate.onRecordStoreSucceeded(succeeded.guid);
+      storeDelegate.onRecordStoreSucceeded(succeeded.guid);
     }
   }
 
