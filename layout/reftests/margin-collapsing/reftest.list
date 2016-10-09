@@ -13,9 +13,9 @@
 != inline-horizontal-1.html inline-horizontal-1-noref.html
 == inline-horizontal-2.html inline-horizontal-2-ref.html
 != inline-horizontal-2.html inline-horizontal-2-noref.html
-skip-if(B2G||Mulet) == inline-horizontal-1-dyn.html inline-horizontal-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== inline-horizontal-1-dyn.html inline-horizontal-1-ref.html
 != inline-horizontal-1-dyn.html inline-horizontal-1-noref.html
-skip-if(B2G||Mulet) == inline-horizontal-2-dyn.html inline-horizontal-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== inline-horizontal-2-dyn.html inline-horizontal-2-ref.html
 != inline-horizontal-2-dyn.html inline-horizontal-2-noref.html
 # Horizontal margins of block boxes do not collapse.
 # These block boxes are actually floats - in CSS 2.1 there is no other
@@ -28,27 +28,27 @@ skip-if(B2G||Mulet) == inline-horizontal-2-dyn.html inline-horizontal-2-ref.html
 != block-horizontal-3.html block-horizontal-3-noref.html
 == block-horizontal-4.html block-horizontal-4-ref.html
 != block-horizontal-4.html block-horizontal-4-noref.html
-skip-if(B2G||Mulet) == block-horizontal-1-dyn.html block-horizontal-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== block-horizontal-1-dyn.html block-horizontal-1-ref.html
 != block-horizontal-1-dyn.html block-horizontal-1-noref.html
-skip-if(B2G||Mulet) == block-horizontal-2-dyn.html block-horizontal-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== block-horizontal-2-dyn.html block-horizontal-2-ref.html
 != block-horizontal-2-dyn.html block-horizontal-2-noref.html
-skip-if(B2G||Mulet) == block-horizontal-3-dyn.html block-horizontal-3-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== block-horizontal-3-dyn.html block-horizontal-3-ref.html
 != block-horizontal-3-dyn.html block-horizontal-3-noref.html
-skip-if(B2G||Mulet) == block-horizontal-4-dyn.html block-horizontal-4-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== block-horizontal-4-dyn.html block-horizontal-4-ref.html
 != block-horizontal-4-dyn.html block-horizontal-4-noref.html
 # Horizontal margins of inline-block boxes do not collapse.
 == inline-block-horizontal-1.html inline-block-horizontal-1-ref.html
 != inline-block-horizontal-1.html inline-block-horizontal-1-noref.html
 == inline-block-horizontal-2.html inline-block-horizontal-2-ref.html
 != inline-block-horizontal-2.html inline-block-horizontal-2-noref.html
-skip-if(B2G||Mulet) == inline-block-horizontal-1-dyn.html inline-block-horizontal-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== inline-block-horizontal-1-dyn.html inline-block-horizontal-1-ref.html
 != inline-block-horizontal-1-dyn.html inline-block-horizontal-1-noref.html
-skip-if(B2G||Mulet) == inline-block-horizontal-2-dyn.html inline-block-horizontal-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== inline-block-horizontal-2-dyn.html inline-block-horizontal-2-ref.html
 != inline-block-horizontal-2-dyn.html inline-block-horizontal-2-noref.html
 # Horizontal margins of inline-tables do not collapse.
 == inline-table-horizontal-1.html inline-table-horizontal-1-ref.html
 != inline-table-horizontal-1.html inline-table-horizontal-1-noref.html
-skip-if(B2G||Mulet) == inline-table-horizontal-1-dyn.html inline-table-horizontal-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== inline-table-horizontal-1-dyn.html inline-table-horizontal-1-ref.html
 != inline-table-horizontal-1-dyn.html inline-table-horizontal-1-noref.html
 # "In CSS, the adjoining margins of two or more boxes
 #  (which might or might not be siblings) can combine to form a single margin.
@@ -87,7 +87,7 @@ skip-if(B2G||Mulet) == inline-table-horizontal-1-dyn.html inline-table-horizonta
 == block-sibling-1c-dyn.html block-sibling-1-ref.html
 == block-sibling-1c-dyn.html block-sibling-1-ref2.html
 != block-sibling-1c-dyn.html block-sibling-1-noref2.html
-skip-if(B2G||Mulet) == block-sibling-2-dyn.html block-sibling-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== block-sibling-2-dyn.html block-sibling-2-ref.html
 == block-sibling-2-dyn.html block-sibling-2-ref2.html
 != block-sibling-2-dyn.html block-sibling-2-noref.html
 == block-sibling-3-dyn.html block-sibling-1-ref.html
@@ -575,10 +575,10 @@ fails == block-max-height-last-child-9a-dyn.html block-max-height-last-child-9-r
 == block-overflow-1.html block-overflow-1-ref2.html
 == block-overflow-2.html block-overflow-2-ref.html
 == block-overflow-2.html block-overflow-2-ref2.html
-skip-if(B2G||Mulet) == block-overflow-3.html block-overflow-3-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == block-overflow-3.html block-overflow-3-ref2.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == block-overflow-4.html block-overflow-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == block-overflow-4.html block-overflow-4-ref2.html # Initial mulet triage: parity with B2G/B2G Desktop
+== block-overflow-3.html block-overflow-3-ref.html
+== block-overflow-3.html block-overflow-3-ref2.html
+== block-overflow-4.html block-overflow-4-ref.html
+== block-overflow-4.html block-overflow-4-ref2.html
 == block-overflow-5a.html block-overflow-5-ref.html
 == block-overflow-5a.html block-overflow-5-ref2.html
 == block-overflow-5b.html block-overflow-5-ref.html
@@ -589,8 +589,8 @@ skip-if(B2G||Mulet) == block-overflow-4.html block-overflow-4-ref2.html # Initia
 == block-overflow-5d.html block-overflow-5-ref2.html
 == block-overflow-1-dyn.html block-overflow-1-ref2.html
 == block-overflow-2-dyn.html block-overflow-2-ref2.html
-skip-if(B2G||Mulet) == block-overflow-3-dyn.html block-overflow-3-ref2.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == block-overflow-4-dyn.html block-overflow-4-ref2.html # Initial mulet triage: parity with B2G/B2G Desktop
+== block-overflow-3-dyn.html block-overflow-3-ref2.html
+== block-overflow-4-dyn.html block-overflow-4-ref2.html
 == block-overflow-5a-dyn.html block-overflow-5-ref2.html
 == block-overflow-5b-dyn.html block-overflow-5-ref2.html
 == block-overflow-5c-dyn.html block-overflow-5c-ref2.html
@@ -630,19 +630,19 @@ skip-if(B2G||Mulet) == block-overflow-4-dyn.html block-overflow-4-ref2.html # In
 != table-sibling-2b.html table-sibling-2-noref.html
 == table-sibling-2c.html table-sibling-2-ref.html
 != table-sibling-2c.html table-sibling-2-noref2.html
-skip-if(B2G||Mulet) == table-sibling-1a-dyn.html table-sibling-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-1a-dyn.html table-sibling-1-ref.html
 != table-sibling-1a-dyn.html table-sibling-1-noref.html
-skip-if(B2G||Mulet) == table-sibling-1b-dyn.html table-sibling-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-1b-dyn.html table-sibling-1-ref.html
 != table-sibling-1b-dyn.html table-sibling-1-noref.html
-skip-if(B2G||Mulet) == table-sibling-1c-dyn.html table-sibling-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-1c-dyn.html table-sibling-1-ref.html
 != table-sibling-1c-dyn.html table-sibling-1-noref2.html
-skip-if(B2G||Mulet) == table-sibling-2a-dyn.html table-sibling-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-2a-dyn.html table-sibling-2-ref.html
 != table-sibling-2a-dyn.html table-sibling-2-noref.html
-skip-if(B2G||Mulet) == table-sibling-2b-dyn.html table-sibling-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-2b-dyn.html table-sibling-2-ref.html
 != table-sibling-2b-dyn.html table-sibling-2-noref.html
-skip-if(B2G||Mulet) == table-sibling-2c-dyn.html table-sibling-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-2c-dyn.html table-sibling-2-ref.html
 != table-sibling-2c-dyn.html table-sibling-2-noref2.html
-skip-if(B2G||Mulet) == table-sibling-3-dyn.html table-sibling-3-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-3-dyn.html table-sibling-3-ref.html
 != table-sibling-3-dyn.html table-sibling-3-noref.html
 # * table-caption boxes, per CSS 2.1 §9.4.1 (Block formatting contexts):
 # "[...] block containers (such as [...] table-captions) [...]
