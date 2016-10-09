@@ -670,6 +670,58 @@ js::ObjectCreateWithTemplate(JSContext* cx, HandlePlainObject templateObj)
     return ObjectCreateImpl(cx, proto, GenericObject, group);
 }
 
+// ES 2017 draft 19.1.2.3.1
+static bool
+ObjectDefineProperties(JSContext* cx, HandleObject obj, HandleValue properties)
+{
+    // Step 1. implicit
+    // Step 2.
+    RootedObject props(cx, ToObject(cx, properties));
+    if (!props)
+        return false;
+
+    // Step 3.
+    AutoIdVector keys(cx);
+    if (!GetPropertyKeys(cx, props, JSITER_OWNONLY | JSITER_SYMBOLS | JSITER_HIDDEN, &keys))
+        return false;
+
+    RootedId nextKey(cx);
+    Rooted<PropertyDescriptor> desc(cx);
+    RootedValue descObj(cx);
+
+    // Step 4.
+    Rooted<PropertyDescriptorVector> descriptors(cx, PropertyDescriptorVector(cx));
+    AutoIdVector descriptorKeys(cx);
+
+    // Step 5.
+    for (size_t i = 0, len = keys.length(); i < len; i++) {
+        nextKey = keys[i];
+
+        // Step 5.a.
+        if (!GetOwnPropertyDescriptor(cx, props, nextKey, &desc))
+            return false;
+
+        // Step 5.b.
+        if (desc.object() && desc.enumerable()) {
+            if (!GetProperty(cx, props, props, nextKey, &descObj) ||
+                !ToPropertyDescriptor(cx, descObj, false, &desc) ||
+                !descriptors.append(desc) ||
+                !descriptorKeys.append(nextKey))
+            {
+                return false;
+            }
+        }
+    }
+
+    // Step 6.
+    for (size_t i = 0, len = descriptors.length(); i < len; i++) {
+        if (!DefineProperty(cx, obj, descriptorKeys[i], descriptors[i]))
+            return false;
+    }
+
+    return true;
+}
+
 // ES6 draft rev34 (2015/02/20) 19.1.2.2 Object.create(O [, Properties])
 bool
 js::obj_create(JSContext* cx, unsigned argc, Value* vp)
@@ -702,9 +754,7 @@ js::obj_create(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 3.
     if (args.hasDefined(1)) {
-        RootedValue val(cx, args[1]);
-        RootedObject props(cx, ToObject(cx, val));
-        if (!props || !DefineProperties(cx, obj, props))
+        if (!ObjectDefineProperties(cx, obj, args[1]))
             return false;
     }
 
@@ -770,7 +820,6 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args, EnumerableOwnPr
         nobj = &obj->as<NativeObject>();
     RootedShape shape(cx);
     Rooted<PropertyDescriptor> desc(cx);
-
     // Step 4.
     size_t out = 0;
     for (size_t i = 0; i < len; i++) {
@@ -987,13 +1036,9 @@ obj_defineProperties(JSContext* cx, unsigned argc, Value* vp)
                                   "Object.defineProperties", "0", "s");
         return false;
     }
-    RootedValue val(cx, args[1]);
-    RootedObject props(cx, ToObject(cx, val));
-    if (!props)
-        return false;
 
     /* Steps 3-6. */
-    return DefineProperties(cx, obj, props);
+    return ObjectDefineProperties(cx, obj, args[1]);
 }
 
 // ES6 20141014 draft 19.1.2.15 Object.preventExtensions(O)
