@@ -9,9 +9,9 @@
 == abspos-breaking-005.html abspos-breaking-005-ref.html
 == abspos-breaking-006.html abspos-breaking-006-ref.html
 pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-007.html abspos-breaking-007-ref.html
-skip-if(B2G||Mulet) pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html abspos-breaking-008-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html abspos-breaking-008-ref.html
+pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009-ref.html
+pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010-ref.html
 == abspos-breaking-011.html abspos-breaking-011-ref.html
 == abspos-overflow-01.xhtml abspos-overflow-01.ref.xhtml
 == abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.ref.xhtml
@@ -52,23 +52,23 @@ fuzzy-if(skiaContent,1,23) == resize-reflow-001.html resize-reflow-001.ref.html
 == table-page-break-after-always-1.html table-page-break-before-auto-2-ref.html
 == table-page-break-after-left-1.html table-page-break-before-auto-2-ref.html
 == table-page-break-after-right-1.html table-page-break-before-auto-2-ref.html
-skip-if(B2G||Mulet) == rowgroup-page-break-after-always-1.html table-page-break-before-auto-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == row-page-break-after-always-1.html table-page-break-before-auto-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == row-page-break-after-always-2.html table-page-break-before-auto-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == rowgroup-thead-page-break-after-always-1.html table-page-break-before-auto-3-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == rowgroup-tfoot-page-break-after-always-1.html table-page-break-before-auto-3-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-tfoot-thead-1.html table-tfoot-thead-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== rowgroup-page-break-after-always-1.html table-page-break-before-auto-2-ref.html
+== row-page-break-after-always-1.html table-page-break-before-auto-2-ref.html
+== row-page-break-after-always-2.html table-page-break-before-auto-2-ref.html
+== rowgroup-thead-page-break-after-always-1.html table-page-break-before-auto-3-ref.html
+== rowgroup-tfoot-page-break-after-always-1.html table-page-break-before-auto-3-ref.html
+== table-tfoot-thead-1.html table-tfoot-thead-1-ref.html
 == table-caption-splitrowgroup-1.html table-caption-splitrowgroup-1-ref.html
 == table-caption-splitaftercaption-1.html table-caption-splitaftercaption-1-ref.html
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-2.html table-caption-splitaftercaption-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-3.html table-caption-splitaftercaption-3-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-4.html table-caption-splitaftercaption-4-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-5.html table-caption-splitaftercaption-5-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-6.html table-caption-splitaftercaption-6-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-7.html table-caption-splitaftercaption-7-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== table-caption-splitaftercaption-2.html table-caption-splitaftercaption-2-ref.html
+== table-caption-splitaftercaption-3.html table-caption-splitaftercaption-3-ref.html
+== table-caption-splitaftercaption-4.html table-caption-splitaftercaption-4-ref.html
+== table-caption-splitaftercaption-5.html table-caption-splitaftercaption-5-ref.html
+== table-caption-splitaftercaption-6.html table-caption-splitaftercaption-6-ref.html
+== table-caption-splitaftercaption-7.html table-caption-splitaftercaption-7-ref.html
 # == table-caption-splitaftercaption-8.html blank.html # bug 672654
 # == table-caption-splitaftercaption-9.html blank.html # bug 672654
 # == table-caption-splitaftercaption-10.html blank.html # bug 672654
 # == table-caption-splitaftercaption-11.html blank.html # bug 672654
 == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2-ref.html
-fails-if(B2G||Mulet) == combobox-page-break-inside.html combobox-page-break-inside-ref.html # reftest-print doesn't work on B2G # Initial mulet triage: parity with B2G/B2G Desktop
+== combobox-page-break-inside.html combobox-page-break-inside-ref.html
