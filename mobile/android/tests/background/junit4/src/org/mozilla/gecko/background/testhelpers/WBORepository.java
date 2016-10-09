@@ -125,7 +125,7 @@ public class WBORepository extends Repository {
 
     @Override
     public void store(final Record record) throws NoStoreDelegateException {
-      if (delegate == null) {
+      if (storeDelegate == null) {
         throw new NoStoreDelegateException();
       }
       final long now = now();
@@ -137,7 +137,7 @@ public class WBORepository extends Repository {
       if (existing != null &&
           existing.lastModified > record.lastModified) {
         Logger.debug(LOG_TAG, "Local record is newer. Not storing.");
-        delegate.deferredStoreDelegate(delegateExecutor).onRecordStoreSucceeded(record.guid);
+        storeDelegate.deferredStoreDelegate(delegateExecutor).onRecordStoreSucceeded(record.guid);
         return;
       }
       if (existing != null) {
@@ -152,7 +152,7 @@ public class WBORepository extends Repository {
       wbos.put(record.guid, toStore);
 
       trackRecord(toStore);
-      delegate.deferredStoreDelegate(delegateExecutor).onRecordStoreSucceeded(record.guid);
+      storeDelegate.deferredStoreDelegate(delegateExecutor).onRecordStoreSucceeded(record.guid);
     }
 
     @Override
@@ -193,7 +193,7 @@ public class WBORepository extends Repository {
         stats.storeBegan = end;
       }
       stats.storeCompleted = end;
-      delegate.deferredStoreDelegate(delegateExecutor).onStoreCompleted(end);
+      storeDelegate.deferredStoreDelegate(delegateExecutor).onStoreCompleted(end);
     }
   }
 

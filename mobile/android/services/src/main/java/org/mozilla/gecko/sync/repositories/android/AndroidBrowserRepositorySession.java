@@ -383,7 +383,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
 
   @Override
   public void store(final Record record) throws NoStoreDelegateException {
-    if (delegate == null) {
+    if (storeDelegate == null) {
       throw new NoStoreDelegateException();
     }
     if (record == null) {
@@ -402,7 +402,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       public void run() {
         if (!isActive()) {
           Logger.warn(LOG_TAG, "AndroidBrowserRepositorySession is inactive. Store failing.");
-          delegate.onRecordStoreFailed(new InactiveSessionException(null), record.guid);
+          storeDelegate.onRecordStoreFailed(new InactiveSessionException(), record.guid);
           return;
         }
 
@@ -517,20 +517,20 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
           // of reconcileRecords.
           Logger.debug(LOG_TAG, "Calling delegate callback with guid " + replaced.guid +
                                 "(" + replaced.androidID + ")");
-          delegate.onRecordStoreSucceeded(replaced.guid);
+          storeDelegate.onRecordStoreSucceeded(replaced.guid);
           return;
 
         } catch (MultipleRecordsForGuidException e) {
           Logger.error(LOG_TAG, "Multiple records returned for given guid: " + record.guid);
-          delegate.onRecordStoreFailed(e, record.guid);
+          storeDelegate.onRecordStoreFailed(e, record.guid);
           return;
         } catch (NoGuidForIdException e) {
           Logger.error(LOG_TAG, "Store failed for " + record.guid, e);
-          delegate.onRecordStoreFailed(e, record.guid);
+          storeDelegate.onRecordStoreFailed(e, record.guid);
           return;
         } catch (Exception e) {
           Logger.error(LOG_TAG, "Store failed for " + record.guid, e);
-          delegate.onRecordStoreFailed(e, record.guid);
+          storeDelegate.onRecordStoreFailed(e, record.guid);
           return;
         }
       }
@@ -549,7 +549,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     // TODO: we ought to mark the record as deleted rather than purging it,
     // in order to support syncing to multiple destinations. Bug 722607.
     dbHelper.purgeGuid(record.guid);
-    delegate.onRecordStoreSucceeded(record.guid);
+    storeDelegate.onRecordStoreSucceeded(record.guid);
   }
 
   protected void insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
@@ -562,7 +562,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
 
     updateBookkeeping(toStore);
     trackRecord(toStore);
-    delegate.onRecordStoreSucceeded(toStore.guid);
+    storeDelegate.onRecordStoreSucceeded(toStore.guid);
 
     Logger.debug(LOG_TAG, "Inserted record with guid " + toStore.guid + " as androidID " + toStore.androidID);
   }
@@ -777,7 +777,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     @Override
     public void run() {
       if (!isActive()) {
-        delegate.onWipeFailed(new InactiveSessionException(null));
+        delegate.onWipeFailed(new InactiveSessionException());
         return;
       }
       dbHelper.wipe();
