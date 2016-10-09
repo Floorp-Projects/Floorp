@@ -14,7 +14,7 @@
 == system-extends-invalid.html    system-extends-invalid-ref.html
 == descriptor-negative.html descriptor-negative-ref.html
 == descriptor-prefix.html   descriptor-prefix-ref.html
-fails-if(B2G||Mulet) == descriptor-suffix.html   descriptor-suffix-ref.html # B2G kerning # Initial mulet triage: parity with B2G/B2G Desktop
+== descriptor-suffix.html   descriptor-suffix-ref.html
 == descriptor-range.html    descriptor-range-ref.html
 == descriptor-pad.html      descriptor-pad-ref.html
 == descriptor-fallback.html descriptor-fallback-ref.html
