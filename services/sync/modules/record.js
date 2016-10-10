@@ -558,7 +558,7 @@ Collection.prototype = {
     if (this.limit > 0 && this.limit != Infinity)
       args.push("limit=" + this.limit);
     if (this._batch)
-      args.push("batch=" + this._batch);
+      args.push("batch=" + encodeURIComponent(this._batch));
     if (this._commit)
       args.push("commit=true");
 
@@ -676,9 +676,9 @@ Collection.prototype = {
 
     // Handle config edge cases
     if (config.max_post_records <= 0) { config.max_post_records = MAX_UPLOAD_RECORDS; }
-    if (config.max_batch_records <= 0) { config.max_post_records = Infinity; }
-    if (config.max_post_bytes <= 0) { config.max_post_records = MAX_UPLOAD_BYTES; }
-    if (config.max_batch_bytes <= 0) { config.max_post_records = Infinity; }
+    if (config.max_batch_records <= 0) { config.max_batch_records = Infinity; }
+    if (config.max_post_bytes <= 0) { config.max_post_bytes = MAX_UPLOAD_BYTES; }
+    if (config.max_batch_bytes <= 0) { config.max_batch_bytes = Infinity; }
 
     // Max size of BSO payload is 256k. This assumes at most 4k of overhead,
     // which sounds like plenty. If the server says it can't handle this, we
