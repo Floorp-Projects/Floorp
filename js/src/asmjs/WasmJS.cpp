@@ -452,8 +452,8 @@ ToNonWrappingUint32(JSContext* cx, HandleValue v, uint32_t max, const char* kind
 }
 
 static bool
-GetResizableLimits(JSContext* cx, HandleObject obj, uint32_t max, const char* kind,
-                   ResizableLimits* limits)
+GetLimits(JSContext* cx, HandleObject obj, uint32_t max, const char* kind,
+          Limits* limits)
 {
     JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
     if (!initialAtom)
@@ -939,8 +939,8 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject obj(cx, &args[0].toObject());
-    ResizableLimits limits;
-    if (!GetResizableLimits(cx, obj, UINT32_MAX / PageSize, "Memory", &limits))
+    Limits limits;
+    if (!GetLimits(cx, obj, UINT32_MAX / PageSize, "Memory", &limits))
         return false;
 
     limits.initial *= PageSize;
@@ -1182,7 +1182,7 @@ WasmTableObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 /* static */ WasmTableObject*
-WasmTableObject::create(JSContext* cx, ResizableLimits limits)
+WasmTableObject::create(JSContext* cx, Limits limits)
 {
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
 
@@ -1247,8 +1247,8 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    ResizableLimits limits;
-    if (!GetResizableLimits(cx, obj, UINT32_MAX, "Table", &limits))
+    Limits limits;
+    if (!GetLimits(cx, obj, UINT32_MAX, "Table", &limits))
         return false;
 
     RootedWasmTableObject table(cx, WasmTableObject::create(cx, limits));
