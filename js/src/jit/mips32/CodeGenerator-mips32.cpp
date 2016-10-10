@@ -454,6 +454,20 @@ CodeGeneratorMIPS::visitUDivOrModI64(LUDivOrModI64* lir)
 }
 
 void
+CodeGeneratorMIPS::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
+{
+    Register input = ToRegister(lir->input());
+    Register64 output = ToOutRegister64(lir);
+
+    if (input != output.low)
+        masm.move32(input, output.low);
+    if (lir->mir()->isUnsigned())
+        masm.move32(Imm32(0), output.high);
+    else
+        masm.ma_sra(output.high, output.low, Imm32(31));
+}
+
+void
 CodeGeneratorMIPS::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.code_ == ReturnDoubleReg.code_);
