@@ -1055,7 +1055,7 @@ ExpandoObjectFinalize(JSFreeOp* fop, JSObject* obj)
     NS_RELEASE(principal);
 }
 
-static const JSClassOps ExpandoObjectClassOps = {
+const JSClassOps XrayExpandoObjectClassOps = {
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, ExpandoObjectFinalize
 };
@@ -1064,7 +1064,7 @@ const JSClass ExpandoObjectClass = {
     "XrayExpandoObject",
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT) |
     JSCLASS_FOREGROUND_FINALIZE,
-    &ExpandoObjectClassOps
+    &XrayExpandoObjectClassOps
 };
 
 bool
