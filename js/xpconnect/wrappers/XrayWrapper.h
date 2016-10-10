@@ -107,6 +107,11 @@ public:
     bool setExpandoChain(JSContext* cx, JS::HandleObject obj, JS::HandleObject chain);
     bool cloneExpandoChain(JSContext* cx, JS::HandleObject dst, JS::HandleObject src);
 
+protected:
+    // Get the JSClass we should use for our expando object.
+    virtual const JSClass* getExpandoClass(JSContext* cx,
+                                           JS::HandleObject target) const;
+
 private:
     bool expandoObjectMatchesConsumer(JSContext* cx, JS::HandleObject expandoObject,
                                       nsIPrincipal* consumerOrigin,
@@ -211,6 +216,10 @@ public:
     virtual JSObject* createHolder(JSContext* cx, JSObject* wrapper) override;
 
     static DOMXrayTraits singleton;
+
+protected:
+    virtual const JSClass* getExpandoClass(JSContext* cx,
+                                           JS::HandleObject target) const override;
 };
 
 class JSXrayTraits : public XrayTraits
