@@ -875,16 +875,17 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void lshift64(Imm32 imm, Register64 dest) PER_ARCH;
     inline void rshift64(Imm32 imm, Register64 dest) PER_ARCH;
-    inline void rshift64Arithmetic(Imm32 imm, Register64 dest) DEFINED_ON(x86, x64, arm);
+    inline void rshift64Arithmetic(Imm32 imm, Register64 dest) DEFINED_ON(x86, x64, arm, mips64);
 
     // On x86_shared these have the constraint that shift must be in CL.
     inline void lshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32Arithmetic(Register shift, Register srcDest) PER_SHARED_ARCH;
 
-    inline void lshift64(Register shift, Register64 srcDest) DEFINED_ON(x86, x64, arm);
-    inline void rshift64(Register shift, Register64 srcDest) DEFINED_ON(x86, x64, arm);
-    inline void rshift64Arithmetic(Register shift, Register64 srcDest) DEFINED_ON(x86, x64, arm);
+    inline void lshift64(Register shift, Register64 srcDest) DEFINED_ON(x86, x64, arm, mips64);
+    inline void rshift64(Register shift, Register64 srcDest) DEFINED_ON(x86, x64, arm, mips64);
+    inline void rshift64Arithmetic(Register shift, Register64 srcDest)
+        DEFINED_ON(x86, x64, arm, mips64);
 
     // ===============================================================
     // Rotation functions
