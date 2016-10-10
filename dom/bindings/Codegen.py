@@ -36,6 +36,11 @@ def memberReservedSlot(member, descriptor):
             member.slotIndices[descriptor.interface.identifier.name])
 
 
+def memberXrayExpandoReservedSlot(member, descriptor):
+    return ("(xpc::JSSLOT_EXPANDO_COUNT + %d)" %
+            member.slotIndices[descriptor.interface.identifier.name])
+
+
 def toStringBool(arg):
     return str(not not arg).lower()
 
@@ -3889,6 +3894,16 @@ class CGClearCachedValueMethod(CGAbstractMethod):
             saveMember = ""
             regetMember = ""
 
+        if self.descriptor.wantsXrays:
+            clearXrayExpandoSlots = fill(
+                """
+                xpc::ClearXrayExpandoSlots(obj, ${xraySlotIndex});
+                """,
+                xraySlotIndex=memberXrayExpandoReservedSlot(self.member,
+                                                            self.descriptor))
+        else :
+            clearXrayExpandoSlots = ""
+
         return fill(
             """
             $*{declObj}
@@ -3898,12 +3913,14 @@ class CGClearCachedValueMethod(CGAbstractMethod):
             }
             $*{saveMember}
             js::SetReservedSlot(obj, ${slotIndex}, JS::UndefinedValue());
+            $*{clearXrayExpandoSlots}
             $*{regetMember}
             """,
             declObj=declObj,
             noopRetval=noopRetval,
             saveMember=saveMember,
             slotIndex=slotIndex,
+            clearXrayExpandoSlots=clearXrayExpandoSlots,
             regetMember=regetMember)
 
 

@@ -11,6 +11,7 @@
 #include "nsDependentString.h"
 #include "nsIScriptError.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #include "XPCWrapper.h"
 #include "xpcprivate.h"
@@ -1247,6 +1248,26 @@ XrayTraits::cloneExpandoChain(JSContext* cx, HandleObject dst, HandleObject src)
         oldHead = JS_GetReservedSlot(oldHead, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
     }
     return true;
+}
+
+void
+ClearXrayExpandoSlots(JSObject* target, size_t slotIndex)
+{
+    if (!NS_IsMainThread()) {
+        // No Xrays
+        return;
+    }
+
+    MOZ_ASSERT(GetXrayTraits(target) == &DOMXrayTraits::singleton);
+    RootingContext* rootingCx = RootingCx();
+    RootedObject rootedTarget(rootingCx, target);
+    RootedObject head(rootingCx,
+                      DOMXrayTraits::singleton.getExpandoChain(rootedTarget));
+    while (head) {
+        MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(js::GetObjectClass(head)) > slotIndex);
+        js::SetReservedSlot(head, slotIndex, UndefinedValue());
+        head = js::GetReservedSlot(head, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
+    }
 }
 
 const JSClass*

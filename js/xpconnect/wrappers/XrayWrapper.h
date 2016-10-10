@@ -596,6 +596,14 @@ enum ExpandoSlots {
 
 extern const JSClassOps XrayExpandoObjectClassOps;
 
+/*
+ * Clear the given slot on all Xray expandos for the given object.
+ *
+ * No-op when called on non-main threads (where Xrays don't exist).
+ */
+void
+ClearXrayExpandoSlots(JSObject* target, size_t slotIndex);
+
 } // namespace xpc
 
 #endif
