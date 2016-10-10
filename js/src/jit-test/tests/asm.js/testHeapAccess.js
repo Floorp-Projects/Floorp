@@ -18,7 +18,19 @@ assertEq(f(0), 0);
 
 setCachingEnabled(true);
 
+// In order to allow following tests work on both big-endian and little-
+// endian architectures we need to define least significant byte (lsb) and
+// least significant word (lsw).
 var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
+var f = asmLink(code, this, null, new ArrayBuffer(BUF_MIN));
+var lsb=0;
+var lsw=0
+if (f(0x12345678) == 0x12) {
+  lsb=3;
+  lsw=1;
+}
+
+var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return i8[' + lsb + ']|0}; return f');
 var f = asmLink(code, this, null, new ArrayBuffer(BUF_MIN));
 assertEq(f(0),0);
 assertEq(f(0x7f),0x7f);
@@ -27,7 +39,7 @@ assertEq(f(0x100),0);
 
 {
       var buf = new ArrayBuffer(BUF_MIN);
-      var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + '/* not a clone */ function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
+      var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + '/* not a clone */ function f(i) {i=i|0; i32[0] = i; return i8[' + lsb + ']|0}; return f');
       var f = asmLink(code, this, null, buf);
       assertEq(f(0),0);
       assertEq(f(0x7f),0x7f);
@@ -40,21 +52,21 @@ assertEq(f(0x100),0);
 
 setCachingEnabled(false);
 
-var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return u8[0]|0}; return f');
+var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return u8[' + lsb + ']|0}; return f');
 var f = asmLink(code, this, null, new ArrayBuffer(BUF_MIN));
 assertEq(f(0),0);
 assertEq(f(0x7f),0x7f);
 assertEq(f(0xff),0xff);
 assertEq(f(0x100),0);
 
-var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return i16[0]|0}; return f');
+var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return i16[' + lsw + ']|0}; return f');
 var f = asmLink(code, this, null, new ArrayBuffer(BUF_MIN));
 assertEq(f(0),0);
 assertEq(f(0x7fff),0x7fff);
 assertEq(f(0xffff),-1);
 assertEq(f(0x10000),0);
 
-var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return u16[0]|0}; return f');
+var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return u16[' + lsw + ']|0}; return f');
 var f = asmLink(code, this, null, new ArrayBuffer(BUF_MIN));
 assertEq(f(0),0);
 assertEq(f(0x7fff),0x7fff);
@@ -75,14 +87,14 @@ assertEq(f(0x7fffffff),0x7fffffff);
 assertEq(f(0xffffffff),-1);
 assertEq(f(0x100000000),0);
 
-var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
+var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return i8[' + lsb + ']|0}; return f');
 var f = asmLink(code, this, null, new ArrayBuffer(BUF_MIN));
 assertEq(f(0),0);
 assertEq(f(0x7f),0x7f);
 assertEq(f(0xff),-1);
 assertEq(f(0x100),0);
 
-var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return u8[0]|0}; return f');
+var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return u8[' + lsb + ']|0}; return f');
 var f = asmLink(code, this, null, new ArrayBuffer(BUF_MIN));
 assertEq(f(0),0);
 assertEq(f(0x7f),0x7f);
