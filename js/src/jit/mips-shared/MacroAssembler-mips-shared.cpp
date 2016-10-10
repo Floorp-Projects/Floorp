@@ -446,47 +446,46 @@ MacroAssemblerMIPSShared::ma_load(Register dest, const BaseIndex& src,
 }
 
 void
-MacroAssemblerMIPSShared::ma_load_unaligned(Register dest, const BaseIndex& src,
-                                  Register temp, LoadStoreSize size, LoadStoreExtension extension)
+MacroAssemblerMIPSShared::ma_load_unaligned(Register dest, const BaseIndex& src, Register temp,
+                                            LoadStoreSize size, LoadStoreExtension extension)
 {
-    int16_t encodedOffset;
+    int16_t lowOffset, hiOffset;
     Register base;
 
     asMasm().computeScaledAddress(src, SecondScratchReg);
 
     if (Imm16::IsInSignedRange(src.offset) && Imm16::IsInSignedRange(src.offset + size / 8 - 1)) {
-        encodedOffset = Imm16(src.offset).encode();
         base = SecondScratchReg;
+        lowOffset = Imm16(src.offset).encode();
+        hiOffset = Imm16(src.offset + size / 8 - 1).encode();
     } else {
         ma_li(ScratchRegister, Imm32(src.offset));
         as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
         base = ScratchRegister;
-        encodedOffset = Imm16(0).encode();
+        lowOffset = Imm16(0).encode();
+        hiOffset = Imm16(size / 8 - 1).encode();
     }
 
     switch (size) {
-      case SizeByte:
-        if (ZeroExtend == extension)
-            as_lbu(dest, base, encodedOffset);
-        else
-            as_lb(dest, base, encodedOffset);
-        break;
       case SizeHalfWord:
-        as_lbu(dest, base, encodedOffset);
-        as_lbu(temp, base, encodedOffset + 1);
-        as_ins(dest, temp, 8, 8);
-        if (ZeroExtend != extension)
-            as_seh(dest, dest);
+        as_lbu(dest, base, lowOffset);
+        if (extension != ZeroExtend)
+            as_lbu(temp, base, hiOffset);
+        else
+            as_lb(temp, base, hiOffset);
+        as_ins(dest, temp, 8, 24);
         break;
       case SizeWord:
-        as_lwl(dest, base, encodedOffset + 3);
-        as_lwr(dest, base, encodedOffset);
-        if (ZeroExtend == extension)
-            as_ext(dest, dest, 0, 32);
+        as_lwl(dest, base, hiOffset);
+        as_lwr(dest, base, lowOffset);
+#ifdef JS_CODEGEN_MIPS64
+        if (extension != ZeroExtend)
+            as_dext(dest, dest, 0, 32);
+#endif
         break;
       case SizeDouble:
-        as_ldl(dest, base, encodedOffset + 7);
-        as_ldr(dest, base, encodedOffset);
+        as_ldl(dest, base, hiOffset);
+        as_ldr(dest, base, lowOffset);
         break;
       default:
         MOZ_CRASH("Invalid argument for ma_load");
@@ -594,40 +593,39 @@ MacroAssemblerMIPSShared::ma_store(Imm32 imm, const BaseIndex& dest,
 }
 
 void
-MacroAssemblerMIPSShared::ma_store_unaligned(Register data, const BaseIndex& dest,
-                                   Register temp, LoadStoreSize size, LoadStoreExtension extension)
+MacroAssemblerMIPSShared::ma_store_unaligned(Register data, const BaseIndex& dest, Register temp,
+                                             LoadStoreSize size, LoadStoreExtension extension)
 {
-    int16_t encodedOffset;
+    int16_t lowOffset, hiOffset;
     Register base;
 
     asMasm().computeEffectiveAddress(dest, SecondScratchReg);
 
     if (Imm16::IsInSignedRange(dest.offset) && Imm16::IsInSignedRange(dest.offset + size / 8 - 1)) {
-        encodedOffset = Imm16(dest.offset).encode();
         base = SecondScratchReg;
+        lowOffset = Imm16(dest.offset).encode();
+        hiOffset = Imm16(dest.offset + size / 8 - 1).encode();
     } else {
         ma_li(ScratchRegister, Imm32(dest.offset));
         as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
         base = ScratchRegister;
-        encodedOffset = Imm16(0).encode();
+        lowOffset = Imm16(0).encode();
+        hiOffset = Imm16(size / 8 - 1).encode();
     }
 
     switch (size) {
-      case SizeByte:
-        as_sb(data, base, encodedOffset);
-        break;
       case SizeHalfWord:
-        as_sb(data, base, encodedOffset);
+        as_sb(data, base, lowOffset);
         as_ext(temp, data, 8, 8);
-        as_sb(temp, base, encodedOffset + 1);
+        as_sb(temp, base, hiOffset);
         break;
       case SizeWord:
-        as_swl(data, base, encodedOffset + 3);
-        as_swr(data, base, encodedOffset);
+        as_swl(data, base, hiOffset);
+        as_swr(data, base, lowOffset);
         break;
       case SizeDouble:
-        as_sdl(data, base, encodedOffset + 7);
-        as_sdr(data, base, encodedOffset);
+        as_sdl(data, base, hiOffset);
+        as_sdr(data, base, lowOffset);
         break;
       default:
         MOZ_CRASH("Invalid argument for ma_store");

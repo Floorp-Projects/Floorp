@@ -1926,19 +1926,19 @@ CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
 
     memoryBarrier(mir->barrierBefore());
 
+    BaseIndex address(HeapReg, ptr, TimesOne);
+
     if (mir->isUnaligned()) {
         Register temp = ToRegister(lir->getTemp(1));
 
         if (isFloat) {
-            if (byteSize == 4) {
-                masm.loadUnalignedFloat32(BaseIndex(HeapReg, ptr, TimesOne), temp,
-                                          ToFloatRegister(lir->output()));
-            } else
-                masm.loadUnalignedDouble(BaseIndex(HeapReg, ptr, TimesOne), temp,
-                                         ToFloatRegister(lir->output()));
+            if (byteSize == 4)
+                masm.loadUnalignedFloat32(address, temp, ToFloatRegister(lir->output()));
+            else
+                masm.loadUnalignedDouble(address, temp, ToFloatRegister(lir->output()));
         } else {
-            masm.ma_load_unaligned(ToRegister(lir->output()), BaseIndex(HeapReg, ptr, TimesOne),
-                                   temp, static_cast<LoadStoreSize>(8 * byteSize),
+            masm.ma_load_unaligned(ToRegister(lir->output()), address, temp,
+                                   static_cast<LoadStoreSize>(8 * byteSize),
                                    isSigned ? SignExtend : ZeroExtend);
         }
 
@@ -1947,13 +1947,14 @@ CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
     }
 
     if (isFloat) {
-        if (byteSize == 4) {
-            masm.loadFloat32(BaseIndex(HeapReg, ptr, TimesOne), ToFloatRegister(lir->output()));
-        } else
-            masm.loadDouble(BaseIndex(HeapReg, ptr, TimesOne), ToFloatRegister(lir->output()));
+        if (byteSize == 4)
+            masm.loadFloat32(address, ToFloatRegister(lir->output()));
+        else
+            masm.loadDouble(address, ToFloatRegister(lir->output()));
     } else {
-        masm.ma_load(ToRegister(lir->output()), BaseIndex(HeapReg, ptr, TimesOne),
-                     static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+        masm.ma_load(ToRegister(lir->output()), address,
+                     static_cast<LoadStoreSize>(8 * byteSize),
+                     isSigned ? SignExtend : ZeroExtend);
     }
 
     memoryBarrier(mir->barrierAfter());
@@ -2010,19 +2011,19 @@ CodeGeneratorMIPSShared::emitWasmStore(T* lir)
 
     memoryBarrier(mir->barrierBefore());
 
+    BaseIndex address(HeapReg, ptr, TimesOne);
+
     if (mir->isUnaligned()) {
         Register temp = ToRegister(lir->getTemp(1));
 
         if (isFloat) {
-            if (byteSize == 4) {
-                masm.storeUnalignedFloat32(ToFloatRegister(lir->value()), temp,
-                                           BaseIndex(HeapReg, ptr, TimesOne));
-            } else
-                masm.storeUnalignedDouble(ToFloatRegister(lir->value()), temp,
-                                          BaseIndex(HeapReg, ptr, TimesOne));
+            if (byteSize == 4)
+                masm.storeUnalignedFloat32(ToFloatRegister(lir->value()), temp, address);
+            else
+                masm.storeUnalignedDouble(ToFloatRegister(lir->value()), temp, address);
         } else {
-            masm.ma_store_unaligned(ToRegister(lir->value()), BaseIndex(HeapReg, ptr, TimesOne),
-                                    temp, static_cast<LoadStoreSize>(8 * byteSize),
+            masm.ma_store_unaligned(ToRegister(lir->value()), address, temp,
+                                    static_cast<LoadStoreSize>(8 * byteSize),
                                     isSigned ? SignExtend : ZeroExtend);
         }
 
@@ -2032,12 +2033,13 @@ CodeGeneratorMIPSShared::emitWasmStore(T* lir)
 
     if (isFloat) {
         if (byteSize == 4) {
-            masm.storeFloat32(ToFloatRegister(lir->value()), BaseIndex(HeapReg, ptr, TimesOne));
+            masm.storeFloat32(ToFloatRegister(lir->value()), address);
         } else
-            masm.storeDouble(ToFloatRegister(lir->value()), BaseIndex(HeapReg, ptr, TimesOne));
+            masm.storeDouble(ToFloatRegister(lir->value()), address);
     } else {
-        masm.ma_store(ToRegister(lir->value()), BaseIndex(HeapReg, ptr, TimesOne),
-                      static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+        masm.ma_store(ToRegister(lir->value()), address,
+                      static_cast<LoadStoreSize>(8 * byteSize),
+                      isSigned ? SignExtend : ZeroExtend);
     }
 
     memoryBarrier(mir->barrierAfter());
