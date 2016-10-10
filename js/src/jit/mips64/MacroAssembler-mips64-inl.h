@@ -401,6 +401,35 @@ MacroAssembler::rotateRight64(Register count, Register64 src, Register64 dest, R
 }
 
 // ===============================================================
+// Bit counting functions
+
+void
+MacroAssembler::popcnt64(Register64 input, Register64 output, Register tmp)
+{
+    ma_move(output.reg, input.reg);
+    ma_dsra(tmp, input.reg, Imm32(1));
+    ma_li(ScratchRegister, ImmWord(0x5555555555555555UL));
+    ma_and(tmp, ScratchRegister);
+    ma_dsubu(output.reg, tmp);
+    ma_dsra(tmp, output.reg, Imm32(2));
+    ma_li(ScratchRegister, ImmWord(0x3333333333333333UL));
+    ma_and(output.reg, ScratchRegister);
+    ma_and(tmp, ScratchRegister);
+    ma_daddu(output.reg, tmp);
+    ma_dsrl(tmp, output.reg, Imm32(4));
+    ma_daddu(output.reg, tmp);
+    ma_li(ScratchRegister, ImmWord(0xF0F0F0F0F0F0F0FUL));
+    ma_and(output.reg, ScratchRegister);
+    ma_dsll(tmp, output.reg, Imm32(8));
+    ma_daddu(output.reg, tmp);
+    ma_dsll(tmp, output.reg, Imm32(16));
+    ma_daddu(output.reg, tmp);
+    ma_dsll(tmp, output.reg, Imm32(32));
+    ma_daddu(output.reg, tmp);
+    ma_dsra(output.reg, output.reg, Imm32(56));
+}
+
+// ===============================================================
 // Branch functions
 
 void
