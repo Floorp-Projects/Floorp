@@ -148,6 +148,42 @@ function test()
   // ECMAScript-defined properties live on the prototype, overriding any named properties.
   checkXrayProperty(coll, "toString", [ undefined, undefined, win.Object.prototype.toString ]);
 
+  // NavigatorProperty things should come from the target compartment, always.
+  var contacts = win.navigator.mozContacts;
+  isnot(contacts, undefined,
+        "Must have a mozContacts for this to work.  Find another " +
+        "NavigatorProperty, or remove all this NavigatorProperty code")
+  ok(Cu.isXrayWrapper(contacts),
+     "Should have an Xray for the underlying value, not a value newly " +
+     "created for us");
+  is(Cu.getGlobalForObject(contacts), win,
+     "contacts should come from the underlying window");
+  // Unfortunately, I can't figure out a decent way to test that we're not
+  // creating a separate thing from the thing content sees, because none of the
+  // NavigatorProperty things are available to content.
+
+  // Frozen arrays should come from our compartment, not the target one.
+  var languages1 = win.navigator.languages;
+  isnot(languages1, undefined, "Must have .languages");
+  ok(Array.isArray(languages1), ".languages should be an array");
+  ok(Object.isFrozen(languages1), ".languages should be a frozen array");
+  ok(!Cu.isXrayWrapper(languages1), "Should have our own version of array");
+  is(Cu.getGlobalForObject(languages1), window,
+     "languages1 should come from our window");
+  // We want to get .languages in the content compartment, but without waiving
+  // Xrays altogether.
+  var languages2 = win.eval("navigator.languages");
+  isnot(languages2, undefined, "Must still have .languages");
+  ok(Array.isArray(languages2), ".languages should still be an array");
+  ok(Cu.isXrayWrapper(languages2), "Should have xray for content version of array");
+  is(Cu.getGlobalForObject(languages2), win,
+     "languages2 come from the underlying window");
+  ok(Object.isFrozen(languages2.wrappedJSObject),
+     ".languages should still be a frozen array underneath");
+  isnot(languages1, languages2, "Must have distinct arrays");
+  isnot(languages1, languages2.wrappedJSObject,
+        "Must have distinct arrays no matter how we slice it");
+
   SimpleTest.finish();
 }
 
