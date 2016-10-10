@@ -136,6 +136,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     virtual void visitBitOpI64(LBitOpI64* ins);
 
     virtual void visitMulI(LMulI* ins);
+    virtual void visitMulI64(LMulI64* ins);
 
     virtual void visitDivI(LDivI* ins);
     virtual void visitDivPowTwoI(LDivPowTwoI* ins);
