@@ -573,6 +573,18 @@ extern const SandboxCallableProxyHandler sandboxCallableProxyHandler;
 
 class AutoSetWrapperNotShadowing;
 
+/*
+ * Slots for Xray expando objects.  See comments in XrayWrapper.cpp for details
+ * of how these get used; we mostly want the value of JSSLOT_EXPANDO_COUNT here.
+ */
+enum ExpandoSlots {
+    JSSLOT_EXPANDO_NEXT = 0,
+    JSSLOT_EXPANDO_ORIGIN,
+    JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL,
+    JSSLOT_EXPANDO_PROTOTYPE,
+    JSSLOT_EXPANDO_COUNT
+};
+
 } // namespace xpc
 
 #endif

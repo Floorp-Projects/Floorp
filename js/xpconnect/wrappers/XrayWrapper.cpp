@@ -1034,14 +1034,6 @@ GetXrayTraits(JSObject* obj)
  * them. They are private to the origin that placed them.
  */
 
-enum ExpandoSlots {
-    JSSLOT_EXPANDO_NEXT = 0,
-    JSSLOT_EXPANDO_ORIGIN,
-    JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL,
-    JSSLOT_EXPANDO_PROTOTYPE,
-    JSSLOT_EXPANDO_COUNT
-};
-
 static nsIPrincipal*
 ObjectPrincipal(JSObject* obj)
 {
