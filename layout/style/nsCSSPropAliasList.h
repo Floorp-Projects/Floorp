@@ -187,42 +187,6 @@ CSS_PROP_ALIAS(-moz-text-align-last,
                text_align_last,
                MozTextAlignLast,
                "")
-CSS_PROP_ALIAS(-moz-column-count,
-               column_count,
-               MozColumnCount,
-               "")
-CSS_PROP_ALIAS(-moz-column-fill,
-               column_fill,
-               MozColumnFill,
-               "")
-CSS_PROP_ALIAS(-moz-column-gap,
-               column_gap,
-               MozColumnGap,
-               "")
-CSS_PROP_ALIAS(-moz-column-rule,
-               column_rule,
-               MozColumnRule,
-               "")
-CSS_PROP_ALIAS(-moz-column-rule-color,
-               column_rule_color,
-               MozColumnRuleColor,
-               "")
-CSS_PROP_ALIAS(-moz-column-rule-style,
-               column_rule_style,
-               MozColumnRuleStyle,
-               "")
-CSS_PROP_ALIAS(-moz-column-rule-width,
-               column_rule_width,
-               MozColumnRuleWidth,
-               "")
-CSS_PROP_ALIAS(-moz-column-width,
-               column_width,
-               MozColumnWidth,
-               "")
-CSS_PROP_ALIAS(-moz-columns,
-               columns,
-               MozColumns,
-               "")
 
 #define WEBKIT_PREFIX_PREF "layout.css.prefixes.webkit"
 
