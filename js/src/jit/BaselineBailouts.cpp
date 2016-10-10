@@ -1013,7 +1013,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
             // Not every monitored op has a monitored fallback stub, e.g.
             // JSOP_NEWOBJECT, which always returns the same type for a
             // particular script/pc location.
-            ICEntry& icEntry = baselineScript->icEntryFromPCOffset(pcOff);
+            BaselineICEntry& icEntry = baselineScript->icEntryFromPCOffset(pcOff);
             ICFallbackStub* fallbackStub = icEntry.firstStub()->getChainFallback();
             if (fallbackStub->isMonitoredFallback())
                 enterMonitorChain = true;
@@ -1028,7 +1028,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
         builder.setResumeFramePtr(prevFramePtr);
 
         if (enterMonitorChain) {
-            ICEntry& icEntry = baselineScript->icEntryFromPCOffset(pcOff);
+            BaselineICEntry& icEntry = baselineScript->icEntryFromPCOffset(pcOff);
             ICFallbackStub* fallbackStub = icEntry.firstStub()->getChainFallback();
             MOZ_ASSERT(fallbackStub->isMonitoredFallback());
             JitSpew(JitSpew_BaselineBailouts, "      [TYPE-MONITOR CHAIN]");
@@ -1177,7 +1177,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
 
     // Calculate and write out return address.
     // The icEntry in question MUST have an inlinable fallback stub.
-    ICEntry& icEntry = baselineScript->icEntryFromPCOffset(pcOff);
+    BaselineICEntry& icEntry = baselineScript->icEntryFromPCOffset(pcOff);
     MOZ_ASSERT(IsInlinableFallback(icEntry.firstStub()->getChainFallback()));
     if (!builder.writePtr(baselineScript->returnAddressForIC(icEntry), "ReturnAddr"))
         return false;
