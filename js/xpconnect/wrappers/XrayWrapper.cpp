@@ -1155,8 +1155,10 @@ XrayTraits::attachExpandoObject(JSContext* cx, HandleObject target,
 #endif
 
     // Create the expando object.
+    const JSClass* expandoClass = getExpandoClass(cx, target);
+    MOZ_ASSERT(!strcmp(expandoClass->name, "XrayExpandoObject"));
     RootedObject expandoObject(cx,
-      JS_NewObjectWithGivenProto(cx, &DefaultXrayExpandoObjectClass, nullptr));
+      JS_NewObjectWithGivenProto(cx, expandoClass, nullptr));
     if (!expandoObject)
         return nullptr;
 
@@ -1245,6 +1247,12 @@ XrayTraits::cloneExpandoChain(JSContext* cx, HandleObject dst, HandleObject src)
         oldHead = JS_GetReservedSlot(oldHead, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
     }
     return true;
+}
+
+const JSClass*
+XrayTraits::getExpandoClass(JSContext* cx, HandleObject target) const
+{
+    return &DefaultXrayExpandoObjectClass;
 }
 
 namespace XrayUtils {
@@ -1774,6 +1782,12 @@ JSObject*
 DOMXrayTraits::createHolder(JSContext* cx, JSObject* wrapper)
 {
     return JS_NewObjectWithGivenProto(cx, nullptr, nullptr);
+}
+
+const JSClass*
+DOMXrayTraits::getExpandoClass(JSContext* cx, HandleObject target) const
+{
+    return XrayGetExpandoClass(cx, target);
 }
 
 namespace XrayUtils {
