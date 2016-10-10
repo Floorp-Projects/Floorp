@@ -48,6 +48,7 @@ class CodeGeneratorMIPS : public CodeGeneratorMIPSShared
     void visitCtzI64(LCtzI64* ins);
     void visitNotI64(LNotI64* ins);
     void visitWasmTruncateToInt64(LWasmTruncateToInt64* ins);
+    void visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
