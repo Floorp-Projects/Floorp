@@ -362,6 +362,45 @@ MacroAssembler::rshift64Arithmetic(Register shift, Register64 dest)
 }
 
 // ===============================================================
+// Rotation functions
+
+void
+MacroAssembler::rotateLeft64(Imm32 count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+
+    if (count.value)
+        ma_drol(dest.reg, src.reg, count);
+    else
+        ma_move(dest.reg, src.reg);
+}
+
+void
+MacroAssembler::rotateLeft64(Register count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    ma_drol(dest.reg, src.reg, count);
+}
+
+void
+MacroAssembler::rotateRight64(Imm32 count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+
+    if (count.value)
+        ma_dror(dest.reg, src.reg, count);
+    else
+        ma_move(dest.reg, src.reg);
+}
+
+void
+MacroAssembler::rotateRight64(Register count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    ma_dror(dest.reg, src.reg, count);
+}
+
+// ===============================================================
 // Branch functions
 
 void
