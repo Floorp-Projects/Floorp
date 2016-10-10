@@ -585,6 +585,8 @@ enum ExpandoSlots {
     JSSLOT_EXPANDO_COUNT
 };
 
+extern const JSClassOps XrayExpandoObjectClassOps;
+
 } // namespace xpc
 
 #endif
