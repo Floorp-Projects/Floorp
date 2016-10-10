@@ -2400,6 +2400,12 @@ XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
   return JS_WrapObject(cx, protop);
 }
 
+/**
+ * Get the Xray expando class to use for the given DOM object.
+ */
+const JSClass*
+XrayGetExpandoClass(JSContext* cx, JS::Handle<JSObject*> obj);
+
 extern NativePropertyHooks sEmptyNativePropertyHooks;
 
 extern const js::ClassOps sBoringInterfaceObjectClassClassOps;

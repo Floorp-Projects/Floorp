@@ -1893,6 +1893,20 @@ XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                    obj, flags, props);
 }
 
+const JSClass*
+XrayGetExpandoClass(JSContext* cx, JS::Handle<JSObject*> obj)
+{
+  DOMObjectType type;
+  const NativePropertyHooks* nativePropertyHooks =
+    GetNativePropertyHooks(cx, obj, type);
+  if (!IsInstance(type)) {
+    // Non-instances don't need any special expando classes.
+    return &DefaultXrayExpandoObjectClass;
+  }
+
+  return nativePropertyHooks->mXrayExpandoClass;
+}
+
 DEFINE_XRAY_EXPANDO_CLASS(, DefaultXrayExpandoObjectClass, 0);
 
 NativePropertyHooks sEmptyNativePropertyHooks = {
