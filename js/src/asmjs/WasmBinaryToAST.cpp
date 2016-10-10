@@ -1511,8 +1511,8 @@ AstDecodeTableSection(AstDecodeContext& c)
     if (typeConstructorValue != uint32_t(TypeConstructor::AnyFunc))
         return c.d.fail("unknown type constructor kind");
 
-    ResizableLimits table;
-    if (!DecodeResizable(c.d, &table))
+    Limits table;
+    if (!DecodeLimits(c.d, &table))
         return false;
 
     if (table.initial > MaxTableElems)
@@ -1547,7 +1547,7 @@ AstDecodeName(AstDecodeContext& c, AstName* name)
 }
 
 static bool
-AstDecodeResizableTable(AstDecodeContext& c, ResizableLimits* resizable)
+AstDecodeLimitsTable(AstDecodeContext& c, Limits* limits)
 {
     uint32_t kind;
     if (!c.d.readVarU32(&kind))
@@ -1556,7 +1556,7 @@ AstDecodeResizableTable(AstDecodeContext& c, ResizableLimits* resizable)
     if (kind != uint32_t(TypeConstructor::AnyFunc))
         return c.d.fail("unknown type constructor kind");
 
-    if (!DecodeResizable(c.d, resizable))
+    if (!DecodeLimits(c.d, limits))
         return false;
 
     return true;
@@ -1611,8 +1611,8 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
         break;
       }
       case uint32_t(DefinitionKind::Table): {
-        ResizableLimits table;
-        if (!AstDecodeResizableTable(c, &table))
+        Limits table;
+        if (!AstDecodeLimitsTable(c, &table))
             return false;
 
         *import = new(c.lifo) AstImport(importName, moduleName, fieldName,
@@ -1620,8 +1620,8 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
         break;
       }
       case uint32_t(DefinitionKind::Memory): {
-        ResizableLimits memory;
-        if (!DecodeResizable(c.d, &memory))
+        Limits memory;
+        if (!DecodeLimits(c.d, &memory))
             return false;
 
         *import = new(c.lifo) AstImport(importName, moduleName, fieldName,
@@ -1684,8 +1684,8 @@ AstDecodeMemorySection(AstDecodeContext& c)
     if (numMemories != 1)
         return c.d.fail("the number of memories must be exactly one");
 
-    ResizableLimits memory;
-    if (!DecodeResizable(c.d, &memory))
+    Limits memory;
+    if (!DecodeLimits(c.d, &memory))
         return false;
 
     if (!c.d.finishSection(sectionStart, sectionSize, "memory"))
