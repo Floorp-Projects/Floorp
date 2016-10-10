@@ -48,22 +48,35 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
 void
 MacroAssembler::and64(Imm64 imm, Register64 dest)
 {
-    and32(Imm32(imm.value & LOW_32_MASK), dest.low);
-    and32(Imm32((imm.value >> 32) & LOW_32_MASK), dest.high);
+    if (imm.low().value != int32_t(0xFFFFFFFF))
+        and32(imm.low(), dest.low);
+    if (imm.hi().value != int32_t(0xFFFFFFFF))
+        and32(imm.hi(), dest.high);
+}
+
+void
+MacroAssembler::and64(Register64 src, Register64 dest)
+{
+    and32(src.low, dest.low);
+    and32(src.high, dest.high);
 }
 
 void
 MacroAssembler::or64(Imm64 imm, Register64 dest)
 {
-    or32(Imm32(imm.value & LOW_32_MASK), dest.low);
-    or32(Imm32((imm.value >> 32) & LOW_32_MASK), dest.high);
+    if (imm.low().value)
+        or32(imm.low(), dest.low);
+    if (imm.hi().value)
+        or32(imm.hi(), dest.high);
 }
 
 void
 MacroAssembler::xor64(Imm64 imm, Register64 dest)
 {
-    xor32(Imm32(imm.value & LOW_32_MASK), dest.low);
-    xor32(Imm32((imm.value >> 32) & LOW_32_MASK), dest.high);
+    if (imm.low().value)
+        xor32(imm.low(), dest.low);
+    if (imm.hi().value)
+        xor32(imm.hi(), dest.high);
 }
 
 void
