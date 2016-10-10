@@ -65,8 +65,7 @@ var security = {
         isBroken : isBroken,
         isMixed : isMixed,
         isEV : isEV,
-        cert : cert,
-        certificateTransparency : undefined
+        cert : cert
       };
 
       var version;
@@ -96,27 +95,6 @@ var security = {
           break;
       }
 
-      // Select status text to display for Certificate Transparency.
-      switch (status.certificateTransparencyStatus) {
-        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE:
-          // CT compliance checks were not performed,
-          // do not display any status text.
-          retval.certificateTransparency = null;
-          break;
-        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_NONE:
-          retval.certificateTransparency = "None";
-          break;
-        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_OK:
-          retval.certificateTransparency = "OK";
-          break;
-        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_UNKNOWN_LOG:
-          retval.certificateTransparency = "UnknownLog";
-          break;
-        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_INVALID:
-          retval.certificateTransparency = "Invalid";
-          break;
-      }
-
       return retval;
     }
     return {
@@ -128,8 +106,7 @@ var security = {
       isBroken : isBroken,
       isMixed : isMixed,
       isEV : isEV,
-      cert : null,
-      certificateTransparency : null
+      cert : null
     };
   },
 
@@ -306,16 +283,6 @@ function securityOnLoad(uri, windowInfo) {
   setText("security-technical-shortform", hdr);
   setText("security-technical-longform1", msg1);
   setText("security-technical-longform2", msg2);
-
-  const ctStatus =
-    document.getElementById("security-technical-certificate-transparency");
-  if (info.certificateTransparency) {
-    ctStatus.hidden = false;
-    ctStatus.value = pkiBundle.getString(
-      "pageInfo_CertificateTransparency_" + info.certificateTransparency);
-  } else {
-    ctStatus.hidden = true;
-  }
 }
 
 function setText(id, value)
