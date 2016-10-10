@@ -7,7 +7,6 @@ const { Ci } = require("chrome");
 const { Class } = require("sdk/core/heritage");
 const { resolve } = require("promise");
 const Services = require("Services");
-const { Task } = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "HarCollector", "devtools/client/netmonitor/har/har-collector", true);
 loader.lazyRequireGetter(this, "HarExporter", "devtools/client/netmonitor/har/har-exporter", true);
@@ -200,51 +199,6 @@ var HarAutomation = Class({
   getString: function (stringGrip) {
     return this.webConsoleClient.getString(stringGrip);
   },
-
-  /**
-   * Extracts any urlencoded form data sections (e.g. "?foo=bar&baz=42") from a
-   * POST request.
-   *
-   * @param object headers
-   *        The "requestHeaders".
-   * @param object uploadHeaders
-   *        The "requestHeadersFromUploadStream".
-   * @param object postData
-   *        The "requestPostData".
-   * @return array
-   *        A promise that is resolved with the extracted form data.
-   */
-  _getFormDataSections: Task.async(function* (headers, uploadHeaders,
-                                              postData) {
-    let formDataSections = [];
-
-    let { headers: requestHeaders } = headers;
-    let { headers: payloadHeaders } = uploadHeaders;
-    let allHeaders = [...payloadHeaders, ...requestHeaders];
-
-    let contentTypeHeader = allHeaders.find(e => {
-      return e.name.toLowerCase() == "content-type";
-    });
-
-    let contentTypeLongString = contentTypeHeader ?
-      contentTypeHeader.value : "";
-    let contentType = yield this.getString(contentTypeLongString);
-
-    if (contentType.includes("x-www-form-urlencoded")) {
-      let postDataLongString = postData.postData.text;
-      let data = yield this.getString(postDataLongString);
-
-      for (let section of data.split(/\r\n|\r|\n/)) {
-        // Before displaying it, make sure this section of the POST data
-        // isn't a line containing upload stream headers.
-        if (payloadHeaders.every(header => !section.startsWith(header.name))) {
-          formDataSections.push(section);
-        }
-      }
-    }
-
-    return formDataSections;
-  }),
 });
 
 // Helpers
