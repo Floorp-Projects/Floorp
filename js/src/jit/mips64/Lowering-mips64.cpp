@@ -15,6 +15,19 @@
 using namespace js;
 using namespace js::jit;
 
+void
+LIRGeneratorMIPS64::defineInt64Phi(MPhi* phi, size_t lirIndex)
+{
+    defineTypedPhi(phi, lirIndex);
+}
+
+void
+LIRGeneratorMIPS64::lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition,
+                                       LBlock* block, size_t lirIndex)
+{
+    lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
+}
+
 LBoxAllocation
 LIRGeneratorMIPS64::useBoxFixed(MDefinition* mir, Register reg1, Register reg2, bool useAtStart)
 {

@@ -42,6 +42,42 @@ CodeGeneratorMIPSShared::CodeGeneratorMIPSShared(MIRGenerator* gen, LIRGraph* gr
 {
 }
 
+Operand
+CodeGeneratorMIPSShared::ToOperand(const LAllocation& a)
+{
+    if (a.isGeneralReg())
+        return Operand(a.toGeneralReg()->reg());
+    if (a.isFloatReg())
+        return Operand(a.toFloatReg()->reg());
+    return Operand(masm.getStackPointer(), ToStackOffset(&a));
+}
+
+Operand
+CodeGeneratorMIPSShared::ToOperand(const LAllocation* a)
+{
+    return ToOperand(*a);
+}
+
+Operand
+CodeGeneratorMIPSShared::ToOperand(const LDefinition* def)
+{
+    return ToOperand(def->output());
+}
+
+#ifdef JS_PUNBOX64
+Operand
+CodeGeneratorMIPSShared::ToOperandOrRegister64(const LInt64Allocation input)
+{
+    return ToOperand(input.value());
+}
+#else
+Register64
+CodeGeneratorMIPSShared::ToOperandOrRegister64(const LInt64Allocation input)
+{
+    return ToRegister64(input);
+}
+#endif
+
 void
 CodeGeneratorMIPSShared::branchToBlock(Assembler::FloatFormat fmt, FloatRegister lhs, FloatRegister rhs,
                                        MBasicBlock* mir, Assembler::DoubleCondition cond)
