@@ -1470,9 +1470,9 @@ CSS_PROP_SVG(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
 CSS_PROP_COLUMN(
-    -moz-column-count,
+    column-count,
     column_count,
-    CSS_PROP_DOMPROP_PREFIXED(ColumnCount),
+    ColumnCount,
     CSS_PROPERTY_PARSE_VALUE |
         // Need to reject 0 in addition to negatives.  If we accept 0, we
         // need to change NS_STYLE_COLUMN_COUNT_AUTO to something else.
@@ -1483,9 +1483,9 @@ CSS_PROP_COLUMN(
     offsetof(nsStyleColumn, mColumnCount),
     eStyleAnimType_Custom)
 CSS_PROP_COLUMN(
-    -moz-column-fill,
+    column-fill,
     column_fill,
-    CSS_PROP_DOMPROP_PREFIXED(ColumnFill),
+    ColumnFill,
     CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HK,
@@ -1493,9 +1493,9 @@ CSS_PROP_COLUMN(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_COLUMN(
-    -moz-column-gap,
+    column-gap,
     column_gap,
-    CSS_PROP_DOMPROP_PREFIXED(ColumnGap),
+    ColumnGap,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE,
     "",
@@ -1504,15 +1504,15 @@ CSS_PROP_COLUMN(
     offsetof(nsStyleColumn, mColumnGap),
     eStyleAnimType_Coord)
 CSS_PROP_SHORTHAND(
-    -moz-column-rule,
+    column-rule,
     column_rule,
-    CSS_PROP_DOMPROP_PREFIXED(ColumnRule),
+    ColumnRule,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
 CSS_PROP_COLUMN(
-    -moz-column-rule-color,
+    column-rule-color,
     column_rule_color,
-    CSS_PROP_DOMPROP_PREFIXED(ColumnRuleColor),
+    ColumnRuleColor,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
@@ -1521,9 +1521,9 @@ CSS_PROP_COLUMN(
     offsetof(nsStyleColumn, mColumnRuleColor),
     eStyleAnimType_ComplexColor)
 CSS_PROP_COLUMN(
-    -moz-column-rule-style,
+    column-rule-style,
     column_rule_style,
-    CSS_PROP_DOMPROP_PREFIXED(ColumnRuleStyle),
+    ColumnRuleStyle,
     CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HK,
@@ -1531,9 +1531,9 @@ CSS_PROP_COLUMN(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_COLUMN(
-    -moz-column-rule-width,
+    column-rule-width,
     column_rule_width,
-    CSS_PROP_DOMPROP_PREFIXED(ColumnRuleWidth),
+    ColumnRuleWidth,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE,
     "",
@@ -1542,9 +1542,9 @@ CSS_PROP_COLUMN(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
 CSS_PROP_COLUMN(
-    -moz-column-width,
+    column-width,
     column_width,
-    CSS_PROP_DOMPROP_PREFIXED(ColumnWidth),
+    ColumnWidth,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE,
     "",
@@ -1553,9 +1553,9 @@ CSS_PROP_COLUMN(
     offsetof(nsStyleColumn, mColumnWidth),
     eStyleAnimType_Coord)
 CSS_PROP_SHORTHAND(
-    -moz-columns,
     columns,
-    CSS_PROP_DOMPROP_PREFIXED(Columns),
+    columns,
+    Columns,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
 CSS_PROP_DISPLAY(
