@@ -179,6 +179,10 @@ private:
    */
   float mPreviousSpan;
 
+  /* Properties similar to mSpanChange and mPreviousSpan, but for the focus */
+  ParentLayerCoord mFocusChange;
+  ParentLayerPoint mPreviousFocus;
+
   /**
    * Cached copy of the last touch input.
    */
