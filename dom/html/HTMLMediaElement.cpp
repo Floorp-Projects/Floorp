@@ -6206,6 +6206,10 @@ void
 HTMLMediaElement::DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                                     const nsAString& aInitDataType)
 {
+  LOG(LogLevel::Debug,
+      ("%p DispatchEncrypted initDataType='%s'",
+      this, NS_ConvertUTF16toUTF8(aInitDataType).get()));
+
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
     // Ready state not HAVE_METADATA (yet), don't dispatch encrypted now.
     // Queueing for later dispatch in MetadataLoaded.
