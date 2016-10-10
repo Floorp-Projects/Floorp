@@ -928,6 +928,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         store32(src, address);
     }
 
+    void store64(Imm64 imm, Address address) {
+        storePtr(ImmWord(imm.value), address);
+    }
+
     void store64(Register64 src, Address address) {
         storePtr(src.reg, address);
     }

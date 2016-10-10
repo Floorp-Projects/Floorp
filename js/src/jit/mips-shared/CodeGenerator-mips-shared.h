@@ -223,6 +223,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
 
     void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
+    void visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins);
     void visitAsmSelect(LAsmSelect* ins);
     void visitAsmReinterpret(LAsmReinterpret* ins);
 
