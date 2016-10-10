@@ -150,9 +150,17 @@ MacroAssembler::add64(Register64 src, Register64 dest)
 void
 MacroAssembler::add64(Imm32 imm, Register64 dest)
 {
-    as_addiu(dest.low, dest.low, imm.value);
-    as_sltiu(ScratchRegister, dest.low, imm.value);
+    ma_li(ScratchRegister, imm);
+    as_addu(dest.low, dest.low, ScratchRegister);
+    as_sltu(ScratchRegister, dest.low, ScratchRegister);
     as_addu(dest.high, dest.high, ScratchRegister);
+}
+
+void
+MacroAssembler::add64(Imm64 imm, Register64 dest)
+{
+    add64(imm.low(), dest);
+    ma_addu(dest.high, dest.high, imm.hi());
 }
 
 void
