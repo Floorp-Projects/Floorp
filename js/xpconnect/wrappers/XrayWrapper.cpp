@@ -22,6 +22,7 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/XrayExpandoClass.h"
 #include "nsGlobalWindow.h"
 
 using namespace mozilla::dom;
@@ -1060,13 +1061,6 @@ const JSClassOps XrayExpandoObjectClassOps = {
     nullptr, nullptr, nullptr, ExpandoObjectFinalize
 };
 
-const JSClass ExpandoObjectClass = {
-    "XrayExpandoObject",
-    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT) |
-    JSCLASS_FOREGROUND_FINALIZE,
-    &XrayExpandoObjectClassOps
-};
-
 bool
 XrayTraits::expandoObjectMatchesConsumer(JSContext* cx,
                                          HandleObject expandoObject,
@@ -1162,7 +1156,7 @@ XrayTraits::attachExpandoObject(JSContext* cx, HandleObject target,
 
     // Create the expando object.
     RootedObject expandoObject(cx,
-      JS_NewObjectWithGivenProto(cx, &ExpandoObjectClass, nullptr));
+      JS_NewObjectWithGivenProto(cx, &DefaultXrayExpandoObjectClass, nullptr));
     if (!expandoObject)
         return nullptr;
 
