@@ -477,6 +477,18 @@ CodeGeneratorMIPS64::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
 }
 
 void
+CodeGeneratorMIPS64::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
+{
+    const LAllocation* input = lir->getOperand(0);
+    Register output = ToRegister(lir->output());
+
+    if (lir->mir()->isUnsigned())
+        masm.ma_dext(output, ToRegister(input), Imm32(0), Imm32(32));
+    else
+        masm.ma_sll(output, ToRegister(input), Imm32(0));
+}
+
+void
 CodeGeneratorMIPS64::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.reg_ == FloatRegisters::f0);
