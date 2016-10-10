@@ -468,6 +468,18 @@ CodeGeneratorMIPS::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
 }
 
 void
+CodeGeneratorMIPS::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
+{
+    const LInt64Allocation& input = lir->getInt64Operand(0);
+    Register output = ToRegister(lir->output());
+
+    if (lir->mir()->bottomHalf())
+        masm.move32(ToRegister(input.low()), output);
+    else
+        masm.move32(ToRegister(input.high()), output);
+}
+
+void
 CodeGeneratorMIPS::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.code_ == ReturnDoubleReg.code_);
