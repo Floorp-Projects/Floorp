@@ -500,13 +500,13 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
                 masm.move32(Imm32(0), output.high);
             else
                 masm.ma_sra(output.high, output.low, Imm32(31));
-
         } else {
             ScratchRegisterScope scratch(masm);
-            masm.ma_load_unaligned(output.low, BaseIndex(HeapReg, ptr, TimesOne), temp, SizeWord);
+            masm.ma_load_unaligned(output.low, BaseIndex(HeapReg, ptr, TimesOne),
+                                   temp, SizeWord, isSigned ? SignExtend : ZeroExtend);
             masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
             masm.ma_load_unaligned(output.high, BaseIndex(HeapReg, scratch, TimesOne),
-                                   temp, SizeWord);
+                                   temp, SizeWord, isSigned ? SignExtend : ZeroExtend);
         }
         return;
     }
@@ -561,6 +561,17 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
     }
 
     unsigned byteSize = mir->byteSize();
+    bool isSigned;
+    switch (mir->accessType()) {
+        case Scalar::Int8:   isSigned = true; break;
+        case Scalar::Uint8:  isSigned = false; break;
+        case Scalar::Int16:  isSigned = true; break;
+        case Scalar::Uint16: isSigned = false; break;
+        case Scalar::Int32:  isSigned = true; break;
+        case Scalar::Uint32: isSigned = false; break;
+        case Scalar::Int64:  isSigned = true; break;
+        default: MOZ_CRASH("unexpected array type");
+    }
 
     memoryBarrier(mir->barrierBefore());
 
@@ -570,13 +581,15 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
 
         if (byteSize <= 4) {
             masm.ma_store_unaligned(value.low, BaseIndex(HeapReg, ptr, TimesOne),
-                                    temp, static_cast<LoadStoreSize>(8 * byteSize));
+                                    temp, static_cast<LoadStoreSize>(8 * byteSize),
+                                    isSigned ? SignExtend : ZeroExtend);
         } else {
             ScratchRegisterScope scratch(masm);
-            masm.ma_store_unaligned(value.low, BaseIndex(HeapReg, ptr, TimesOne), temp, SizeWord);
+            masm.ma_store_unaligned(value.low, BaseIndex(HeapReg, ptr, TimesOne),
+                                    temp, SizeWord, isSigned ? SignExtend : ZeroExtend);
             masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
             masm.ma_store_unaligned(value.high, BaseIndex(HeapReg, scratch, TimesOne),
-                                    temp, SizeWord);
+                                    temp, SizeWord, isSigned ? SignExtend : ZeroExtend);
         }
         return;
     }
