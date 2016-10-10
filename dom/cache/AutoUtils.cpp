@@ -240,50 +240,40 @@ MatchInPutList(InternalRequest* aRequest,
     RefPtr<InternalHeaders> cachedResponseHeaders =
       TypeUtils::ToInternalHeaders(cachedResponse.headers());
 
-    AutoTArray<nsCString, 16> varyHeaders;
+    nsCString varyHeaders;
     ErrorResult rv;
-    cachedResponseHeaders->GetAll(NS_LITERAL_CSTRING("vary"), varyHeaders, rv);
+    cachedResponseHeaders->Get(NS_LITERAL_CSTRING("vary"), varyHeaders, rv);
     MOZ_ALWAYS_TRUE(!rv.Failed());
 
     // Assume the vary headers match until we find a conflict
     bool varyHeadersMatch = true;
 
-    for (uint32_t j = 0; j < varyHeaders.Length(); ++j) {
-      // Extract the header names inside the Vary header value.
-      nsAutoCString varyValue(varyHeaders[j]);
-      char* rawBuffer = varyValue.BeginWriting();
-      char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
-      bool bailOut = false;
-      for (; token;
-           token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
-        nsDependentCString header(token);
-        MOZ_ASSERT(!header.EqualsLiteral("*"),
-                   "We should have already caught this in "
-                   "TypeUtils::ToPCacheResponseWithoutBody()");
+    char* rawBuffer = varyHeaders.BeginWriting();
+    char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
+    for (; token;
+         token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
+      nsDependentCString header(token);
+      MOZ_ASSERT(!header.EqualsLiteral("*"),
+                 "We should have already caught this in "
+                 "TypeUtils::ToPCacheResponseWithoutBody()");
 
-        ErrorResult headerRv;
-        nsAutoCString value;
-        requestHeaders->Get(header, value, headerRv);
-        if (NS_WARN_IF(headerRv.Failed())) {
-          headerRv.SuppressException();
-          MOZ_ASSERT(value.IsEmpty());
-        }
-
-        nsAutoCString cachedValue;
-        cachedRequestHeaders->Get(header, value, headerRv);
-        if (NS_WARN_IF(headerRv.Failed())) {
-          headerRv.SuppressException();
-          MOZ_ASSERT(cachedValue.IsEmpty());
-        }
-
-        if (value != cachedValue) {
-          varyHeadersMatch = false;
-          bailOut = true;
-          break;
-        }
+      ErrorResult headerRv;
+      nsAutoCString value;
+      requestHeaders->Get(header, value, headerRv);
+      if (NS_WARN_IF(headerRv.Failed())) {
+        headerRv.SuppressException();
+        MOZ_ASSERT(value.IsEmpty());
       }
 
-      if (bailOut) {
+      nsAutoCString cachedValue;
+      cachedRequestHeaders->Get(header, cachedValue, headerRv);
+      if (NS_WARN_IF(headerRv.Failed())) {
+        headerRv.SuppressException();
+        MOZ_ASSERT(cachedValue.IsEmpty());
+      }
+
+      if (value != cachedValue) {
+        varyHeadersMatch = false;
         break;
       }
     }
