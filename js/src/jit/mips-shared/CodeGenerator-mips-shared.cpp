@@ -1532,7 +1532,29 @@ CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCh
                 masm.as_truncwd(ScratchFloat32Reg, ScratchDoubleReg);
                 masm.jump(ool->rejoin());
             }
+        } else if (toType == MIRType::Int64) {
+            if (fromType == MIRType::Double) {
+                masm.loadConstantDouble(double(INT64_MIN), ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleLessThan, input, ScratchDoubleReg, &fail);
+
+                masm.loadConstantDouble(double(INT64_MAX) + 1.0, ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input,
+                                  ScratchDoubleReg, &fail);
+                masm.jump(ool->rejoin());
+            }
         }
+    } else {
+        if (toType == MIRType::Int64) {
+            if (fromType == MIRType::Double) {
+                masm.loadConstantDouble(double(-1), ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, &fail);
+
+                masm.loadConstantDouble(double(UINT64_MAX) + 1.0, ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input,
+                                  ScratchDoubleReg, &fail);
+                masm.jump(ool->rejoin());
+            }
+       }
     }
 
     // Handle errors.
