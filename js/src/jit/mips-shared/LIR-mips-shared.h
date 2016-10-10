@@ -277,6 +277,20 @@ class LUDivOrMod : public LBinaryMath<0>
     }
 };
 
+class LInt64ToFloatingPoint : public LInstructionHelper<1, INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(Int64ToFloatingPoint);
+
+    explicit LInt64ToFloatingPoint(const LInt64Allocation& in) {
+        setInt64Operand(0, in);
+    }
+
+    MInt64ToFloatingPoint* mir() const {
+        return mir_->toInt64ToFloatingPoint();
+    }
+};
+
 } // namespace jit
 } // namespace js
 
