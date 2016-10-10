@@ -405,11 +405,6 @@ partial interface Window {
 };
 #endif
 
-// https://w3c.github.io/webappsec-secure-contexts/#monkey-patching-global-object
-partial interface Window {
-  readonly attribute boolean isSecureContext;
-};
-
 #ifdef HAVE_SIDEBAR
 // Mozilla extension
 partial interface Window {

@@ -173,6 +173,15 @@ WorkerGlobalScope::GetCaches(ErrorResult& aRv)
   return ref.forget();
 }
 
+bool
+WorkerGlobalScope::IsSecureContext() const
+{
+  bool globalSecure =
+    JS_GetIsSecureContext(js::GetObjectCompartment(GetWrapperPreserveColor()));
+  MOZ_ASSERT(globalSecure == mWorkerPrivate->IsSecureContext());
+  return globalSecure;
+}
+
 already_AddRefed<WorkerLocation>
 WorkerGlobalScope::Location()
 {
