@@ -38,6 +38,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 
+#include "nsArray.h"
+#include "nsArrayUtils.h"
 #include "nsIDOMStorage.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
@@ -205,7 +207,6 @@
 #include "nsISecureBrowserUI.h"
 #include "nsISocketProvider.h"
 #include "nsIStringBundle.h"
-#include "nsISupportsArray.h"
 #include "nsIURIFixup.h"
 #include "nsIURILoader.h"
 #include "nsIURL.h"
@@ -6684,21 +6685,20 @@ nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
   refreshTimer->mMetaRefresh = aMetaRefresh;
 
   if (!mRefreshURIList) {
-    NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(mRefreshURIList)),
-                      NS_ERROR_FAILURE);
+    mRefreshURIList = nsArray::Create();
   }
 
   if (busyFlags & BUSY_FLAGS_BUSY || (!mIsActive && mDisableMetaRefreshWhenInactive)) {
     // We don't  want to create the timer right now. Instead queue up the request
     // and trigger the timer in EndPageLoad() or whenever we become active.
-    mRefreshURIList->AppendElement(refreshTimer);
+    mRefreshURIList->AppendElement(refreshTimer, /*weak =*/ false);
   } else {
     // There is no page loading going on right now.  Create the
     // timer and fire it right away.
     nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
     NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
 
-    mRefreshURIList->AppendElement(timer);  // owning timer ref
+    mRefreshURIList->AppendElement(timer, /*weak =*/ false);  // owning timer ref
     timer->InitWithCallback(refreshTimer, aDelay, nsITimer::TYPE_ONE_SHOT);
   }
   return NS_OK;
@@ -6715,7 +6715,7 @@ nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
   // Remove aTimer from mRefreshURIList if needed
   if (mRefreshURIList) {
     uint32_t n = 0;
-    mRefreshURIList->Count(&n);
+    mRefreshURIList->GetLength(&n);
 
     for (uint32_t i = 0; i < n; ++i) {
       nsCOMPtr<nsITimer> timer = do_QueryElementAt(mRefreshURIList, i);
@@ -7082,14 +7082,14 @@ nsDocShell::SetupRefreshURI(nsIChannel* aChannel)
 }
 
 static void
-DoCancelRefreshURITimers(nsISupportsArray* aTimerList)
+DoCancelRefreshURITimers(nsIMutableArray* aTimerList)
 {
   if (!aTimerList) {
     return;
   }
 
   uint32_t n = 0;
-  aTimerList->Count(&n);
+  aTimerList->GetLength(&n);
 
   while (n) {
     nsCOMPtr<nsITimer> timer(do_QueryElementAt(aTimerList, --n));
@@ -7122,7 +7122,7 @@ nsDocShell::GetRefreshPending(bool* aResult)
   }
 
   uint32_t count;
-  nsresult rv = mRefreshURIList->Count(&count);
+  nsresult rv = mRefreshURIList->GetLength(&count);
   if (NS_SUCCEEDED(rv)) {
     *aResult = (count != 0);
   }
@@ -7134,7 +7134,7 @@ nsDocShell::SuspendRefreshURIs()
 {
   if (mRefreshURIList) {
     uint32_t n = 0;
-    mRefreshURIList->Count(&n);
+    mRefreshURIList->GetLength(&n);
 
     for (uint32_t i = 0; i < n; ++i) {
       nsCOMPtr<nsITimer> timer = do_QueryElementAt(mRefreshURIList, i);
@@ -7152,7 +7152,7 @@ nsDocShell::SuspendRefreshURIs()
       NS_ASSERTION(rt,
                    "RefreshURIList timer callbacks should only be RefreshTimer objects");
 
-      mRefreshURIList->ReplaceElementAt(rt, i);
+      mRefreshURIList->ReplaceElementAt(rt, i, /*weak =*/ false);
     }
   }
 
@@ -7192,12 +7192,11 @@ nsDocShell::RefreshURIFromQueue()
     return NS_OK;
   }
   uint32_t n = 0;
-  mRefreshURIList->Count(&n);
+  mRefreshURIList->GetLength(&n);
 
   while (n) {
-    nsCOMPtr<nsISupports> element;
-    mRefreshURIList->GetElementAt(--n, getter_AddRefs(element));
-    nsCOMPtr<nsITimerCallback> refreshInfo(do_QueryInterface(element));
+    nsCOMPtr<nsITimerCallback> refreshInfo =
+        do_QueryElementAt(mRefreshURIList, --n);
 
     if (refreshInfo) {
       // This is the nsRefreshTimer object, waiting to be
@@ -7212,7 +7211,7 @@ nsDocShell::RefreshURIFromQueue()
         // its corresponding timer object, so that in case another
         // load comes through before the timer can go off, the timer will
         // get cancelled in CancelRefreshURITimer()
-        mRefreshURIList->ReplaceElementAt(timer, n);
+        mRefreshURIList->ReplaceElementAt(timer, n, /*weak =*/ false);
         timer->InitWithCallback(refreshInfo, delay, nsITimer::TYPE_ONE_SHOT);
       }
     }
@@ -8735,7 +8734,7 @@ nsDocShell::RestoreFromHistory()
 
   // Restore the refresh URI list.  The refresh timers will be restarted
   // when EndPageLoad() is called.
-  nsCOMPtr<nsISupportsArray> refreshURIList;
+  nsCOMPtr<nsIMutableArray> refreshURIList;
   mLSHE->GetRefreshURIList(getter_AddRefs(refreshURIList));
 
   // Reattach to the window object.
@@ -8755,7 +8754,7 @@ nsDocShell::RestoreFromHistory()
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsISupportsArray> refreshURIs;
+    nsCOMPtr<nsIMutableArray> refreshURIs;
     mLSHE->GetRefreshURIList(getter_AddRefs(refreshURIs));
     nsCOMPtr<nsIDocShellTreeItem> childShell;
     mLSHE->ChildShellAt(0, getter_AddRefs(childShell));
