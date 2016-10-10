@@ -1658,6 +1658,12 @@ MacroAssemblerMIPS64Compat::loadConstantFloat32(float f, FloatRegister dest)
 }
 
 void
+MacroAssemblerMIPS64Compat::loadConstantFloat32(wasm::RawF32 f, FloatRegister dest)
+{
+    ma_lis(dest, f);
+}
+
+void
 MacroAssemblerMIPS64Compat::loadInt32OrDouble(const Address& src, FloatRegister dest)
 {
     Label notInt32, end;
@@ -1705,6 +1711,15 @@ void
 MacroAssemblerMIPS64Compat::loadConstantDouble(double dp, FloatRegister dest)
 {
     ma_lid(dest, dp);
+}
+
+void
+MacroAssemblerMIPS64Compat::loadConstantDouble(wasm::RawF64 d, FloatRegister dest)
+{
+    ImmWord imm(d.bits());
+
+    ma_li(ScratchRegister, imm);
+    moveToDouble(ScratchRegister, dest);
 }
 
 Register
