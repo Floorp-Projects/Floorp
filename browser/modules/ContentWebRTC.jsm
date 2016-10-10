@@ -261,8 +261,8 @@ function forgetPendingListsEventually(aContentWindow) {
 }
 
 function updateIndicators() {
-  let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
-  let count = contentWindowSupportsArray.Count();
+  let contentWindowArray = MediaManagerService.activeMediaCaptureWindows;
+  let count = contentWindowArray.length;
 
   let state = {
     showGlobalIndicator: count > 0,
@@ -280,7 +280,7 @@ function updateIndicators() {
   // sending duplicate notifications.
   let contentWindows = new Set();
   for (let i = 0; i < count; ++i) {
-    contentWindows.add(contentWindowSupportsArray.GetElementAt(i).top);
+    contentWindows.add(contentWindowArray.queryElementAt(i, Ci.nsISupports).top);
   }
 
   for (let contentWindow of contentWindows) {
