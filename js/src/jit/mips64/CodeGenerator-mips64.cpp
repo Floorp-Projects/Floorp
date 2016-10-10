@@ -530,6 +530,88 @@ CodeGeneratorMIPS64::visitNotI64(LNotI64* lir)
 }
 
 void
+CodeGeneratorMIPS64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+
+    MWasmTruncateToInt64* mir = lir->mir();
+    MIRType fromType = mir->input()->type();
+
+    MOZ_ASSERT(fromType == MIRType::Double || fromType == MIRType::Float32);
+
+    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    if (mir->isUnsigned()) {
+        Label isLarge, done;
+
+        if (fromType == MIRType::Double) {
+            masm.loadConstantDouble(double(INT64_MAX), ScratchDoubleReg);
+            masm.ma_bc1d(ScratchDoubleReg, input, &isLarge,
+                         Assembler::DoubleLessThanOrEqual, ShortJump);
+
+            masm.as_truncld(ScratchDoubleReg, input);
+        } else {
+            masm.loadConstantFloat32(float(INT64_MAX), ScratchFloat32Reg);
+            masm.ma_bc1s(ScratchFloat32Reg, input, &isLarge,
+                         Assembler::DoubleLessThanOrEqual, ShortJump);
+
+            masm.as_truncls(ScratchDoubleReg, input);
+        }
+
+        // Check that the result is in the uint64_t range.
+        masm.moveFromDouble(ScratchDoubleReg, output);
+        masm.as_cfc1(ScratchRegister, Assembler::FCSR);
+        masm.as_ext(ScratchRegister, ScratchRegister, 16, 1);
+        masm.ma_dsrl(SecondScratchReg, output, Imm32(63));
+        masm.ma_or(SecondScratchReg, ScratchRegister);
+        masm.ma_b(SecondScratchReg, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+        masm.ma_b(&done, ShortJump);
+
+        // The input is greater than double(INT64_MAX).
+        masm.bind(&isLarge);
+        if (fromType == MIRType::Double) {
+            masm.as_subd(ScratchDoubleReg, input, ScratchDoubleReg);
+            masm.as_truncld(ScratchDoubleReg, ScratchDoubleReg);
+        } else {
+            masm.as_subs(ScratchDoubleReg, input, ScratchDoubleReg);
+            masm.as_truncls(ScratchDoubleReg, ScratchDoubleReg);
+        }
+
+        // Check that the result is in the uint64_t range.
+        masm.moveFromDouble(ScratchDoubleReg, output);
+        masm.as_cfc1(ScratchRegister, Assembler::FCSR);
+        masm.as_ext(ScratchRegister, ScratchRegister, 16, 1);
+        masm.ma_dsrl(SecondScratchReg, output, Imm32(63));
+        masm.ma_or(SecondScratchReg, ScratchRegister);
+        masm.ma_b(SecondScratchReg, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+        masm.ma_li(ScratchRegister, Imm32(1));
+        masm.ma_dins(output, ScratchRegister, Imm32(63), Imm32(1));
+
+        masm.bind(&done);
+        return;
+    }
+
+    // When the input value is Infinity, NaN, or rounds to an integer outside the
+    // range [INT64_MIN; INT64_MAX + 1[, the Invalid Operation flag is set in the FCSR.
+    if (fromType == MIRType::Double)
+        masm.as_truncld(ScratchDoubleReg, input);
+    else
+        masm.as_truncls(ScratchDoubleReg, input);
+
+    // Check that the result is in the int64_t range.
+    masm.as_cfc1(output, Assembler::FCSR);
+    masm.as_ext(output, output, 16, 1);
+    masm.ma_b(output, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+    masm.bind(ool->rejoin());
+    masm.moveFromDouble(ScratchDoubleReg, output);
+}
+
+void
 CodeGeneratorMIPS64::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.reg_ == FloatRegisters::f0);

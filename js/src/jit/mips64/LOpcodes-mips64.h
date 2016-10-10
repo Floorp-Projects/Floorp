@@ -13,6 +13,7 @@
     _(ModMaskI)                 \
     _(DivOrModI64)              \
     _(UDivOrMod)                \
-    _(UDivOrModI64)
+    _(UDivOrModI64)             \
+    _(WasmTruncateToInt64)
 
 #endif // jit_mips64_LOpcodes_mips64_h__
