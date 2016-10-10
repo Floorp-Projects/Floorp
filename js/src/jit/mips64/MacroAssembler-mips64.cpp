@@ -277,6 +277,12 @@ MacroAssemblerMIPS64::ma_liPatchable(Register dest, ImmWord imm, LiFlags flags)
     }
 }
 
+void
+MacroAssemblerMIPS64::ma_dnegu(Register rd, Register rs)
+{
+    as_dsubu(rd, zero, rs);
+}
+
 // Shifts
 void
 MacroAssemblerMIPS64::ma_dsll(Register rd, Register rt, Imm32 shift)
@@ -380,6 +386,17 @@ MacroAssemblerMIPS64::ma_dext(Register rt, Register rs, Imm32 pos, Imm32 size)
     } else {
         as_dextu(rt, rs, pos.value, size.value);
     }
+}
+
+void
+MacroAssemblerMIPS64::ma_dctz(Register rd, Register rs)
+{
+    ma_dnegu(ScratchRegister, rs);
+    as_and(rd, ScratchRegister, rs);
+    as_dclz(rd, rd);
+    ma_dnegu(SecondScratchReg, rd);
+    ma_daddu(SecondScratchReg, Imm32(0x3f));
+    as_movn(rd, SecondScratchReg, ScratchRegister);
 }
 
 // Arithmetic-based ops.

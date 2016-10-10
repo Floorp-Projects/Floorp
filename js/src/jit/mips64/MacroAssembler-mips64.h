@@ -63,6 +63,9 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
     void ma_liPatchable(Register dest, ImmPtr imm);
     void ma_liPatchable(Register dest, ImmWord imm, LiFlags flags = Li48);
 
+    // Negate
+    void ma_dnegu(Register rd, Register rs);
+
     // Shift operations
     void ma_dsll(Register rd, Register rt, Imm32 shift);
     void ma_dsrl(Register rd, Register rt, Imm32 shift);
@@ -78,6 +81,8 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
 
     void ma_dins(Register rt, Register rs, Imm32 pos, Imm32 size);
     void ma_dext(Register rt, Register rs, Imm32 pos, Imm32 size);
+
+    void ma_dctz(Register rd, Register rs);
 
     // load
     void ma_load(Register dest, Address address, LoadStoreSize size = SizeWord,
