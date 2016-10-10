@@ -22,6 +22,38 @@ extern "C" {
 
 namespace nss_test {
 
+class TlsInspectorCertificateRequestSigAlgSetter : public TlsHandshakeFilter {
+ public:
+  TlsInspectorCertificateRequestSigAlgSetter(SSLSignatureAndHashAlg sig_alg)
+    : sig_alg_(sig_alg) {}
+
+  virtual PacketFilter::Action FilterHandshake(
+      const HandshakeHeader& header,
+      const DataBuffer& input, DataBuffer* output) {
+    if (header.handshake_type() != kTlsHandshakeCertificateRequest) {
+      return KEEP;
+    }
+
+    TlsParser parser(input);
+    *output = input;
+
+    // Skip certificate types.
+    parser.SkipVariable(1);
+
+    // Skip sig algs length.
+    parser.Skip(2);
+
+    // Write signature algorithm.
+    output->Write(parser.consumed(), sig_alg_.hashAlg, 1);
+    output->Write(parser.consumed() + 1, sig_alg_.sigAlg, 1);
+
+    return CHANGE;
+  }
+
+ private:
+  SSLSignatureAndHashAlg sig_alg_;
+};
+
 TEST_P(TlsConnectGeneric, ClientAuth) {
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
@@ -335,6 +367,43 @@ TEST_P(TlsConnectGenericPre13, AuthCompleteBeforeFinishedWithFalseStart) {
   Connect();
   server_->SendData(10);
   Receive(10);
+}
+
+TEST_P(TlsConnectTls12, ClientAuthNoMatchingSigAlgs) {
+  Reset(TlsAgent::kServerEcdsa);
+  server_->RequestClientAuth(false);
+  client_->SetupClientAuth();
+
+  server_->EnableCiphersByAuthType(ssl_auth_ecdh_ecdsa);
+  server_->SetSignatureAlgorithms(SignatureEcdsaSha256,
+                                  PR_ARRAY_SIZE(SignatureEcdsaSha256));
+
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
+  EXPECT_TRUE(!SSL_PeerCertificate(server_->ssl_fd()));
+}
+
+TEST_P(TlsConnectTls12, CertificateRequestMd5) {
+  const SSLSignatureAndHashAlg md5_sig_alg = {ssl_hash_md5, ssl_sign_rsa};
+
+  const SSLSignatureAndHashAlg serverAlgorithms[] = {
+    {ssl_hash_sha1, ssl_sign_rsa},
+    {ssl_hash_sha256, ssl_sign_rsa}
+  };
+
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  server_->SetPacketFilter(new TlsInspectorCertificateRequestSigAlgSetter
+                           (md5_sig_alg));
+  server_->SetSignatureAlgorithms(serverAlgorithms,
+                                  PR_ARRAY_SIZE(serverAlgorithms));
+
+  client_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384);
+  server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384);
+
+  ConnectExpectFail();
+  ASSERT_EQ(SEC_ERROR_BAD_SIGNATURE, server_->error_code());
+  ASSERT_EQ(SSL_ERROR_DECRYPT_ERROR_ALERT, client_->error_code());
 }
 
 }
