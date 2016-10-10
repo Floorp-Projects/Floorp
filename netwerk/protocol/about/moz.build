@@ -16,7 +16,6 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'nsAboutBlank.cpp',
-    'nsAboutBloat.cpp',
     'nsAboutCache.cpp',
     'nsAboutCacheEntry.cpp',
     'nsAboutProtocolHandler.cpp',
