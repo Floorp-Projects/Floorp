@@ -403,6 +403,27 @@ class ConfigureSandbox(dict):
 
         return value
 
+    def _dependency(self, arg, callee_name, arg_name=None):
+        if isinstance(arg, types.StringTypes):
+            prefix, name, values = Option.split_option(arg)
+            if values != ():
+                raise ConfigureError("Option must not contain an '='")
+            if name not in self._options:
+                raise ConfigureError("'%s' is not a known option. "
+                                     "Maybe it's declared too late?"
+                                     % arg)
+            arg = self._options[name]
+            self._seen.add(arg)
+        elif isinstance(arg, SandboxDependsFunction):
+            assert arg in self._depends
+            arg = self._depends[arg]
+        else:
+            raise TypeError(
+                "Cannot use object of type '%s' as %sargument to %s"
+                % (type(arg).__name__, '`%s` ' % arg_name if arg_name else '',
+                   callee_name))
+        return arg
+
     def option_impl(self, *args, **kwargs):
         '''Implementation of option()
         This function creates and returns an Option() object, passing it the
@@ -450,28 +471,7 @@ class ConfigureSandbox(dict):
         if not args:
             raise ConfigureError('@depends needs at least one argument')
 
-        dependencies = []
-        for arg in args:
-            if isinstance(arg, types.StringTypes):
-                prefix, name, values = Option.split_option(arg)
-                if values != ():
-                    raise ConfigureError("Option must not contain an '='")
-                if name not in self._options:
-                    raise ConfigureError("'%s' is not a known option. "
-                                         "Maybe it's declared too late?"
-                                         % arg)
-                arg = self._options[name]
-                self._seen.add(arg)
-                dependencies.append(arg)
-            elif isinstance(arg, SandboxDependsFunction):
-                assert arg in self._depends
-                arg = self._depends[arg]
-                dependencies.append(arg)
-            else:
-                raise TypeError(
-                    "Cannot use object of type '%s' as argument to @depends"
-                    % type(arg).__name__)
-        dependencies = tuple(dependencies)
+        dependencies = tuple(self._dependency(arg, '@depends') for arg in args)
 
         def decorator(func):
             if inspect.isgeneratorfunction(func):
