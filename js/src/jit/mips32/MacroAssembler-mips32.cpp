@@ -1413,6 +1413,12 @@ MacroAssemblerMIPSCompat::loadConstantFloat32(float f, FloatRegister dest)
 }
 
 void
+MacroAssemblerMIPSCompat::loadConstantFloat32(wasm::RawF32 f, FloatRegister dest)
+{
+    ma_lis(dest, f);
+}
+
+void
 MacroAssemblerMIPSCompat::loadInt32OrDouble(const Address& src, FloatRegister dest)
 {
     Label notInt32, end;
@@ -1460,6 +1466,34 @@ void
 MacroAssemblerMIPSCompat::loadConstantDouble(double dp, FloatRegister dest)
 {
     ma_lid(dest, dp);
+}
+
+void
+MacroAssemblerMIPSCompat::loadConstantDouble(wasm::RawF64 d, FloatRegister dest)
+{
+    struct DoubleStruct {
+        uint32_t lo;
+        uint32_t hi;
+    } ;
+    DoubleStruct intStruct = mozilla::BitwiseCast<DoubleStruct>(d.bits());
+
+    // put hi part of 64 bit value into the odd register
+    if (intStruct.hi == 0) {
+        moveToDoubleHi(zero, dest);
+    } else {
+        ScratchRegisterScope scratch(asMasm());
+        ma_li(scratch, Imm32(intStruct.hi));
+        moveToDoubleHi(scratch, dest);
+    }
+
+    // put low part of 64 bit value into the even register
+    if (intStruct.lo == 0) {
+        moveToDoubleLo(zero, dest);
+    } else {
+        ScratchRegisterScope scratch(asMasm());
+        ma_li(scratch, Imm32(intStruct.lo));
+        moveToDoubleLo(scratch, dest);
+    }
 }
 
 Register
