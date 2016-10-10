@@ -67,7 +67,9 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         mStatusText = (TextView) content.findViewById(R.id.find_status);
 
         mInflated = true;
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this, "TextSelection:Data");
+        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+            "FindInPage:MatchesCountResult",
+            "TextSelection:Data");
     }
 
     public void show() {
@@ -110,7 +112,34 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         if (!mInflated) {
             return;
         }
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this, "TextSelection:Data");
+        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
+            "FindInPage:MatchesCountResult",
+            "TextSelection:Data");
+    }
+
+    private void onMatchesCountResult(final int total, final int current, final int limit, final String searchString) {
+        if (total == -1) {
+            updateResult(Integer.toString(limit) + "+");
+        } else if (total > 0) {
+            updateResult(Integer.toString(current) + "/" + Integer.toString(total));
+        } else if (TextUtils.isEmpty(searchString)) {
+            updateResult("");
+        } else {
+            // We display 0/0, when there were no
+            // matches found, or if matching has been turned off by setting
+            // pref accessibility.typeaheadfind.matchesCountLimit to 0.
+            updateResult("0/0");
+        }
+    }
+
+    private void updateResult(final String statusText) {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mStatusText.setVisibility(statusText.isEmpty() ? View.GONE : View.VISIBLE);
+                mStatusText.setText(statusText);
+            }
+        });
     }
 
     // TextWatcher implementation
@@ -160,6 +189,14 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
 
     @Override
     public void handleMessage(String event, JSONObject message) {
+        if (event.equals("FindInPage:MatchesCountResult")) {
+            onMatchesCountResult(message.optInt("total", 0),
+                message.optInt("current", 0),
+                message.optInt("limit", 0),
+                message.optString("searchString"));
+            return;
+        }
+
         if (!event.equals("TextSelection:Data") || !REQUEST_ID.equals(message.optString("requestId"))) {
             return;
         }
@@ -203,21 +240,8 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         GeckoAppShell.sendRequestToGecko(new GeckoRequest(request, searchString) {
             @Override
             public void onResponse(NativeJSObject nativeJSObject) {
-                final int total = nativeJSObject.optInt("total", 0);
-                if (total == -1) {
-                    final int limit = nativeJSObject.optInt("limit", 0);
-                    updateResult(Integer.toString(limit) + "+");
-                } else if (total > 0) {
-                    final int current = nativeJSObject.optInt("current", 0);
-                    updateResult(Integer.toString(current) + "/" + Integer.toString(total));
-                } else if (TextUtils.isEmpty(searchString)) {
-                    updateResult("");
-                } else {
-                    // We display 0/0, when there were no
-                    // matches found, or if matching has been turned off by setting
-                    // pref accessibility.typeaheadfind.matchesCountLimit to 0.
-                    updateResult("0/0");
-                }
+                // We don't care about the return value, because `onMatchesCountResult`
+                // does the heavy lifting.
             }
 
             @Override
@@ -226,16 +250,6 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
                 Log.d(LOGTAG, "No response from Gecko on request to match string: [" +
                     searchString + "]");
                 updateResult("");
-            }
-
-            private void updateResult(final String statusText) {
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mStatusText.setVisibility(statusText.isEmpty() ? View.GONE : View.VISIBLE);
-                        mStatusText.setText(statusText);
-                    }
-                });
             }
         });
     }

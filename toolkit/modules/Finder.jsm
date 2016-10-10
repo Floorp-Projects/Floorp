@@ -394,7 +394,8 @@ Finder.prototype = {
   _notifyMatchesCount: function(result = this._currentMatchesCountResult) {
     // The `_currentFound` property is only used for internal bookkeeping.
     delete result._currentFound;
-    if (result.total == this.matchesCountLimit)
+    result.limit = this.matchesCountLimit;
+    if (result.total == result.limit)
       result.total = -1;
 
     for (let l of this._listeners) {
