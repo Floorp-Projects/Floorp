@@ -83,7 +83,8 @@ function ConsoleApiCall(props) {
     collapseTitle = l10n.getStr("groupToggle");
   }
 
-  const collapsible = attachment !== null || isGroupType(type);
+  const collapsible = isGroupType(type)
+    || (type === "error" && Array.isArray(stacktrace));
   const topLevelClasses = ["cm-s-mozilla"];
 
   return Message({
