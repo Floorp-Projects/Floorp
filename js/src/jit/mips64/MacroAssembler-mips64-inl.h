@@ -213,6 +213,36 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // Branch functions
 
 void
+MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* success, Label* fail)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal ||
+               cond == Assembler::LessThan || cond == Assembler::LessThanOrEqual ||
+               cond == Assembler::GreaterThan || cond == Assembler::GreaterThanOrEqual ||
+               cond == Assembler::Below || cond == Assembler::BelowOrEqual ||
+               cond == Assembler::Above || cond == Assembler::AboveOrEqual,
+               "other condition codes not supported");
+
+    branchPtr(cond, lhs.reg, ImmWord(val.value), success);
+    if (fail)
+        jump(fail);
+}
+
+void
+MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success, Label* fail)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal ||
+               cond == Assembler::LessThan || cond == Assembler::LessThanOrEqual ||
+               cond == Assembler::GreaterThan || cond == Assembler::GreaterThanOrEqual ||
+               cond == Assembler::Below || cond == Assembler::BelowOrEqual ||
+               cond == Assembler::Above || cond == Assembler::AboveOrEqual,
+               "other condition codes not supported");
+
+    branchPtr(cond, lhs.reg, rhs.reg, success);
+    if (fail)
+        jump(fail);
+}
+
+void
 MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val, Label* label)
 {
     MOZ_ASSERT(cond == Assembler::NotEqual,

@@ -304,6 +304,54 @@ CodeGeneratorMIPS64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 }
 
 void
+CodeGeneratorMIPS64::visitCompareI64(LCompareI64* lir)
+{
+    MCompare* mir = lir->mir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register lhsReg = ToRegister64(lhs).reg;
+    Register output = ToRegister(lir->output());
+    Register rhsReg;
+
+    if (IsConstant(rhs)) {
+        rhsReg = ScratchRegister;
+        masm.ma_li(rhsReg, ImmWord(ToInt64(rhs)));
+    } else {
+        rhsReg = ToRegister64(rhs).reg;
+    }
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    masm.cmpPtrSet(JSOpToCondition(lir->jsop(), isSigned), lhsReg, rhsReg, output);
+}
+
+void
+CodeGeneratorMIPS64::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
+{
+    MCompare* mir = lir->cmpMir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register lhsReg = ToRegister64(lhs).reg;
+    Register rhsReg;
+
+    if (IsConstant(rhs)) {
+        rhsReg = ScratchRegister;
+        masm.ma_li(rhsReg, ImmWord(ToInt64(rhs)));
+    } else {
+        rhsReg = ToRegister64(rhs).reg;
+    }
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    Assembler::Condition cond = JSOpToCondition(lir->jsop(), isSigned);
+    emitBranch(lhsReg, rhsReg, cond, lir->ifTrue(), lir->ifFalse());
+}
+
+void
 CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
 {
     const MWasmLoad* mir = lir->mir();
