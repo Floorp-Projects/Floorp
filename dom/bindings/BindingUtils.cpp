@@ -51,6 +51,7 @@
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "mozilla/dom/XrayExpandoClass.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsDOMClassInfo.h"
 #include "ipc/ErrorIPCUtils.h"
@@ -1891,6 +1892,8 @@ XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
          XrayOwnNativePropertyKeys(cx, wrapper, nativePropertyHooks, type,
                                    obj, flags, props);
 }
+
+DEFINE_XRAY_EXPANDO_CLASS(, DefaultXrayExpandoObjectClass, 0);
 
 NativePropertyHooks sEmptyNativePropertyHooks = {
   nullptr,
