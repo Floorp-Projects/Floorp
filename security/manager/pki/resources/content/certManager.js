@@ -23,6 +23,10 @@ var { Services } = Components.utils.import("resource://gre/modules/Services.jsm"
 
 var key;
 
+/**
+ * List of certs currently selected in the active tab.
+ * @type nsIX509Cert[]
+ */
 var selected_certs = [];
 var selected_tree_items = [];
 var selected_index = [];
@@ -329,8 +333,8 @@ function editCerts()
   getSelectedCerts();
 
   for (let cert of selected_certs) {
-    window.openDialog("chrome://pippki/content/editcacert.xul", cert.dbKey,
-                      "chrome,centerscreen,modal");
+    window.openDialog("chrome://pippki/content/editcacert.xul", "",
+                      "chrome,centerscreen,modal", cert);
   }
 }
 
