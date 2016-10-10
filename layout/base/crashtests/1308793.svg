@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<title>Crash test for bug 1308793</title>
+
+<style id="s" type="text/css">
+tspan { fill: green;}
+.flex { display:flex; }
+.grid { display:grid; }
+.col { columns: 3; }
+</style>
+
+<text class="flex">
+  <tspan x="100" y="50">A</tspan>
+  B
+</text>
+
+<text class="grid">
+  <tspan x="100" y="50">A</tspan>
+  B
+</text>
+
+<text class="col">
+  <tspan x="100" y="50">A</tspan>
+  B
+</text>
+
+</svg>

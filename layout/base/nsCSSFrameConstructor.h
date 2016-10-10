@@ -689,6 +689,12 @@ private:
    * display:contents
    */
 #define FCDATA_IS_CONTENTS 0x100000
+  /**
+   * When FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS is set, this bit says
+   * if we should create a grid/flex/columnset container instead of
+   * a block wrapper when the styles says so.
+   */
+#define FCDATA_ALLOW_GRID_FLEX_COLUMNSET 0x200000
 
   /* Structure representing information about how a frame should be
      constructed.  */
