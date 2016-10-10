@@ -329,10 +329,22 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
     MDefinition* value = ins->value();
-    LAllocation valueAlloc = useRegisterAtStart(value);
     LAllocation baseAlloc = useRegisterAtStart(base);
-    auto* lir = new(alloc()) LWasmStore(baseAlloc, valueAlloc);
 
+#ifdef JS_CODEGEN_MIPS64
+    if (ins->type() == MIRType::Int64) {
+        LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
+        auto* lir = new(alloc()) LWasmStoreI64(baseAlloc, valueAlloc);
+        if (ins->offset())
+            lir->setTemp(0, tempCopy(base, 0));
+
+        add(lir, ins);
+        return;
+    }
+#endif
+
+    LAllocation valueAlloc = useRegisterAtStart(value);
+    auto* lir = new(alloc()) LWasmStore(baseAlloc, valueAlloc);
     if (ins->offset())
         lir->setTemp(0, tempCopy(base, 0));
 
