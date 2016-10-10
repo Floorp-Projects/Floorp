@@ -927,6 +927,11 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         store32(src.high, Address(address.base, address.offset + HIGH_32_OFFSET));
     }
 
+    void store64(Imm64 imm, Address address) {
+        store32(imm.low(), Address(address.base, address.offset + LOW_32_OFFSET));
+        store32(imm.hi(), Address(address.base, address.offset + HIGH_32_OFFSET));
+    }
+
     template <typename T> void storePtr(ImmWord imm, T address);
     template <typename T> void storePtr(ImmPtr imm, T address);
     template <typename T> void storePtr(ImmGCPtr imm, T address);
