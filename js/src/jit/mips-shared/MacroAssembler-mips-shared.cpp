@@ -999,6 +999,15 @@ MacroAssemblerMIPSShared::ma_lis(FloatRegister dest, float value)
 }
 
 void
+MacroAssemblerMIPSShared::ma_lis(FloatRegister dest, wasm::RawF32 value)
+{
+    Imm32 imm(value.bits());
+
+    ma_li(ScratchRegister, imm);
+    moveToFloat32(ScratchRegister, dest);
+}
+
+void
 MacroAssemblerMIPSShared::ma_liNegZero(FloatRegister dest)
 {
     moveToDoubleLo(zero, dest);
