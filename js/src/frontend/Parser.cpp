@@ -8752,8 +8752,16 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 
             if (propAtom == context->names().proto) {
                 if (seenPrototypeMutation) {
-                    report(ParseError, false, propName, JSMSG_DUPLICATE_PROPERTY, "__proto__");
-                    return null();
+                    // Directly report the error when we're not in a
+                    // destructuring context.
+                    if (!possibleError) {
+                        report(ParseError, false, propName, JSMSG_DUPLICATE_PROTO_PROPERTY);
+                        return null();
+                    }
+
+                    // Otherwise delay error reporting until we've determined
+                    // whether or not we're destructuring.
+                    possibleError->setPending(propName, JSMSG_DUPLICATE_PROTO_PROPERTY);
                 }
                 seenPrototypeMutation = true;
 
