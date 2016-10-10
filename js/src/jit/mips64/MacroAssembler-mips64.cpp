@@ -459,6 +459,12 @@ MacroAssemblerMIPS64::ma_dsubu(Register rd, Register rs, Imm32 imm)
 }
 
 void
+MacroAssemblerMIPS64::ma_dsubu(Register rd, Register rs)
+{
+    as_dsubu(rd, rd, rs);
+}
+
+void
 MacroAssemblerMIPS64::ma_dsubu(Register rd, Imm32 imm)
 {
     ma_dsubu(rd, rd, imm);
