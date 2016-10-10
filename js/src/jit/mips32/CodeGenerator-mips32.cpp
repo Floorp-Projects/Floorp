@@ -591,6 +591,30 @@ CodeGeneratorMIPS::visitAsmSelectI64(LAsmSelectI64* lir)
 }
 
 void
+CodeGeneratorMIPS::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    masm.moveToDoubleLo(input.low, output);
+    masm.moveToDoubleHi(input.high, output);
+}
+
+void
+CodeGeneratorMIPS::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+    MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);
+    FloatRegister input = ToFloatRegister(lir->getOperand(0));
+    Register64 output = ToOutRegister64(lir);
+
+    masm.moveFromDoubleLo(input, output.low);
+    masm.moveFromDoubleHi(input, output.high);
+}
+
+void
 CodeGeneratorMIPS::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
 {
     Register input = ToRegister(lir->input());
