@@ -489,6 +489,181 @@ MacroAssembler::rshift64Arithmetic(Register unmaskedShift, Register64 dest)
 }
 
 // ===============================================================
+// Rotation functions
+
+void
+MacroAssembler::rotateLeft64(Imm32 count, Register64 input, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    MOZ_ASSERT(input.low != dest.high && input.high != dest.low);
+
+    int32_t amount = count.value & 0x3f;
+    if (amount > 32) {
+        rotateRight64(Imm32(64 - amount), input, dest, temp);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        if (amount == 0) {
+            ma_move(dest.low, input.low);
+            ma_move(dest.high, input.high);
+        } else if (amount == 32) {
+            ma_move(scratch, input.low);
+            ma_move(dest.low, input.high);
+            ma_move(dest.high, scratch);
+        } else {
+            MOZ_ASSERT(0 < amount && amount < 32);
+            ma_move(scratch, input.high);
+            ma_sll(dest.high, input.high, Imm32(amount));
+            ma_srl(SecondScratchReg, input.low, Imm32(32 - amount));
+            as_or(dest.high, dest.high, SecondScratchReg);
+            ma_sll(dest.low, input.low, Imm32(amount));
+            ma_srl(SecondScratchReg, scratch, Imm32(32 - amount));
+            as_or(dest.low, dest.low, SecondScratchReg);
+
+        }
+    }
+}
+
+void
+MacroAssembler::rotateLeft64(Register shift, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp != src.low && temp != src.high);
+    MOZ_ASSERT(shift != src.low && shift != src.high);
+    MOZ_ASSERT(temp != InvalidReg);
+
+    ScratchRegisterScope shift_value(*this);
+    Label high, done, zero;
+
+    ma_and(temp, shift, Imm32(0x3f));
+    ma_b(temp, Imm32(32), &high, GreaterThanOrEqual);
+
+    // high = high << shift | low >> 32 - shift
+    // low = low << shift | high >> 32 - shift
+    ma_sll(dest.high, src.high, temp);
+    ma_b(temp, Imm32(0), &zero, Equal);
+    ma_li(SecondScratchReg, Imm32(32));
+    as_subu(shift_value, SecondScratchReg, temp);
+
+    ma_srl(SecondScratchReg, src.low, shift_value);
+    as_or(dest.high, dest.high, SecondScratchReg);
+
+    ma_sll(dest.low, src.low, temp);
+    ma_srl(SecondScratchReg, src.high, shift_value);
+    as_or(dest.low, dest.low, SecondScratchReg);
+    ma_b(&done);
+
+    bind(&zero);
+    ma_move(dest.low, src.low);
+    ma_move(dest.high, src.high);
+    ma_b(&done);
+
+    // A 32 - 64 shift is a 0 - 32 shift in the other direction.
+    bind(&high);
+    ma_and(shift, shift, Imm32(0x3f));
+    ma_li(SecondScratchReg, Imm32(64));
+    as_subu(temp, SecondScratchReg, shift);
+
+    ma_srl(dest.high, src.high, temp);
+    ma_li(SecondScratchReg, Imm32(32));
+    as_subu(shift_value, SecondScratchReg, temp);
+    ma_sll(SecondScratchReg, src.low, shift_value);
+    as_or(dest.high, dest.high, SecondScratchReg);
+
+    ma_srl(dest.low, src.low, temp);
+    ma_sll(SecondScratchReg, src.high, shift_value);
+    as_or(dest.low, dest.low, SecondScratchReg);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::rotateRight64(Imm32 count, Register64 input, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    MOZ_ASSERT(input.low != dest.high && input.high != dest.low);
+
+    int32_t amount = count.value & 0x3f;
+    if (amount > 32) {
+        rotateLeft64(Imm32(64 - amount), input, dest, temp);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        if (amount == 0) {
+            ma_move(dest.low, input.low);
+            ma_move(dest.high, input.high);
+        } else if (amount == 32) {
+            ma_move(scratch, input.low);
+            ma_move(dest.low, input.high);
+            ma_move(dest.high, scratch);
+        } else {
+            MOZ_ASSERT(0 < amount && amount < 32);
+            ma_move(scratch, input.high);
+            ma_srl(dest.high, input.high, Imm32(amount));
+            ma_sll(SecondScratchReg, input.low, Imm32(32 - amount));
+            as_or(dest.high, dest.high, SecondScratchReg);
+            ma_srl(dest.low, input.low, Imm32(amount));
+            ma_sll(SecondScratchReg, scratch, Imm32(32 - amount));
+            as_or(dest.low, dest.low, SecondScratchReg);
+        }
+    }
+}
+
+void
+MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp != src.low && temp != src.high);
+    MOZ_ASSERT(shift != src.low && shift != src.high);
+    MOZ_ASSERT(temp != InvalidReg);
+
+    ScratchRegisterScope shift_value(*this);
+    Label high, done, zero;
+
+    ma_and(temp, shift, Imm32(0x3f));
+    ma_b(temp, Imm32(32), &high, GreaterThanOrEqual);
+
+    // high = high >> shift | low << 32 - shift
+    // low = low >> shift | high << 32 - shift
+    ma_srl(dest.high, src.high, temp);
+    ma_b(temp, Imm32(0), &zero, Equal);
+    ma_li(SecondScratchReg, Imm32(32));
+    as_subu(shift_value, SecondScratchReg, temp);
+
+    ma_sll(SecondScratchReg, src.low, shift_value);
+    as_or(dest.high, dest.high, SecondScratchReg);
+
+    ma_srl(dest.low, src.low, temp);
+
+    //ma_li(SecondScratchReg, Imm32(32));
+    //as_subu(shift_value, SecondScratchReg, shift_value);
+    ma_sll(SecondScratchReg, src.high, shift_value);
+    as_or(dest.low, dest.low, SecondScratchReg);
+
+    ma_b(&done);
+
+    bind(&zero);
+    ma_move(dest.low, src.low);
+    ma_move(dest.high, src.high);
+    ma_b(&done);
+
+    // A 32 - 64 shift is a 0 - 32 shift in the other direction.
+    bind(&high);
+    ma_and(shift, shift, Imm32(0x3f));
+    ma_li(SecondScratchReg, Imm32(64));
+    as_subu(temp, SecondScratchReg, shift);
+
+    ma_sll(dest.high, src.high, temp);
+    ma_li(SecondScratchReg, Imm32(32));
+    as_subu(shift_value, SecondScratchReg, temp);
+
+    ma_srl(SecondScratchReg, src.low, shift_value);
+    as_or(dest.high, dest.high, SecondScratchReg);
+
+    ma_sll(dest.low, src.low, temp);
+    ma_srl(SecondScratchReg, src.high, shift_value);
+    as_or(dest.low, dest.low, SecondScratchReg);
+
+    bind(&done);
+}
+
+// ===============================================================
 // Branch functions
 
 void
