@@ -3458,6 +3458,14 @@ class IDLInterfaceMember(IDLObjectWithIdentifier, IDLExposureMixins):
                 raise WebIDLError("A [NewObject] method is not idempotent, "
                                   "so it has to depend on something other than DOM state.",
                                   [self.location])
+            if (self.getExtendedAttribute("Cached") or
+                self.getExtendedAttribute("StoreInSlot")):
+                raise WebIDLError("A [NewObject] attribute shouldnt be "
+                                  "[Cached] or [StoreInSlot], since the point "
+                                  "of those is to keep returning the same "
+                                  "thing across multiple calls, which is not "
+                                  "what [NewObject] does.",
+                                  [self.location])
 
     def _setDependsOn(self, dependsOn):
         if self.dependsOn != "Everything":
