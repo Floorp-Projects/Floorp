@@ -1122,18 +1122,10 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                                       Node* forInOrOfExpression);
 
     Node expr(InHandling inHandling, YieldHandling yieldHandling,
-              TripledotHandling tripledotHandling,
-              PossibleError* possibleError,
-              InvokedPrediction invoked = PredictUninvoked);
-    Node expr(InHandling inHandling, YieldHandling yieldHandling,
-              TripledotHandling tripledotHandling,
+              TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr,
               InvokedPrediction invoked = PredictUninvoked);
     Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
-                    TripledotHandling tripledotHandling,
-                    PossibleError* possibleError,
-                    InvokedPrediction invoked = PredictUninvoked);
-    Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
-                    TripledotHandling tripledotHandling,
+                    TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr,
                     InvokedPrediction invoked = PredictUninvoked);
     Node assignExprWithoutYield(YieldHandling yieldHandling, unsigned err);
     Node yieldExpression(InHandling inHandling);
@@ -1146,21 +1138,17 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                  PossibleError* possibleError,
                  InvokedPrediction invoked = PredictUninvoked);
     Node unaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                   PossibleError* possibleError,
+                   PossibleError* possibleError = nullptr,
                    InvokedPrediction invoked = PredictUninvoked);
     Node memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                    PossibleError* possibleError, TokenKind tt,
-                    bool allowCallSyntax, InvokedPrediction invoked = PredictUninvoked);
-    Node memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling, TokenKind tt,
-                    bool allowCallSyntax, InvokedPrediction invoked = PredictUninvoked);
+                    TokenKind tt, bool allowCallSyntax = true,
+                    PossibleError* possibleError = nullptr,
+                    InvokedPrediction invoked = PredictUninvoked);
     Node primaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                     PossibleError* possibleError, TokenKind tt,
+                     TokenKind tt, PossibleError* possibleError,
                      InvokedPrediction invoked = PredictUninvoked);
     Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
-                      TripledotHandling tripledotHandling,
-                      PossibleError* possibleError);
-    Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
-                      TripledotHandling tripledotHandling);
+                      TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr);
 
     bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
