@@ -5,7 +5,8 @@ All notable changes to this program is documented in this file.
 ## Unreleased
 
 ### Added
-- Introduced continous integration builds for Windows 32-bit binaries
+- Introduced continous integration builds for Linux- and Windows 32-bit binaries
+- Added commands for setting- and getting the window position
 - Added new extension commands for finding an element’s anonymous children and querying its attributes; accessible through the `/session/{sessionId}/moz/xbl/{elementId}/anonymous_children` to return all anonymous children and `/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute` to return an anonymous element by a name and attribute query
 - Introduced a `moz:firefoxOptions` capability to customise a Firefox session:
   - The `binary`, `args`, and `profile` entries on this dictionary is equivalent to the old `firefox_binary`, `firefox_args`, and `firefox_profile` capabilities, which have now all been removed
@@ -19,10 +20,14 @@ All notable changes to this program is documented in this file.
 - Disable pop-up blocker in the default profile by @juangj
 - Changed Rust compiler version to 1.12 (beta) temporarily because of [trouble linking Musl binaries](https://github.com/rust-lang/rust/issues/34978)
 - Replaced _env_logger_ logging facility with the _slog_ package, causing the `RUST_LOG` environment variable to no longer have any affect
+- Updated the WebDriver Rust library to version 0.15.
 
 ### Fixed
 - Corrected link to repository in Cargo metadata
-- Verbosity shorthand flag `-v[v]` now works again, following the replacement of the argument parsing library in the previous release.
+- Verbosity shorthand flag `-v[v]` now works again, following the replacement of the argument parsing library in the previous release
+- When the HTTPD fails to start, errors are propagated to the user
+- Disabled the additional welcome URL (`startup.homepage_welcome_url.additional`) so that officially branded Firefox builds do not start with two open tabs in fresh profiles
+- Disabled homepage override URL redirection on milestone upgrades, which means a tab with an upgrade notice is not displayed when launching a new Firefox version
 
 ## 0.10.0 (2016-08-02)
 
