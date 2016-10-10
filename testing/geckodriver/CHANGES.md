@@ -2,7 +2,7 @@
 
 All notable changes to this program is documented in this file.
 
-## Unreleased
+## 0.11.0 (2016-10-10)
 
 ### Added
 - Introduced continous integration builds for Linux- and Windows 32-bit binaries
