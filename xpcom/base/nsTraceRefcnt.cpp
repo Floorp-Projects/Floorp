@@ -574,6 +574,8 @@ HashNumber(const void* aKey)
   return PLHashNumber(NS_PTR_TO_INT32(aKey));
 }
 
+// This method uses MOZ_RELEASE_ASSERT in the unlikely event that
+// somebody uses this in a non-debug build.
 static intptr_t
 GetSerialNumber(void* aPtr, bool aCreate)
 {
@@ -581,15 +583,17 @@ GetSerialNumber(void* aPtr, bool aCreate)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
+    MOZ_RELEASE_ASSERT(!aCreate, "If an object already has a serial number, we should be destroying it.");
     return static_cast<SerialNumberRecord*>((*hep)->value)->serialNumber;
-  } else if (aCreate) {
-    SerialNumberRecord* record = new SerialNumberRecord();
-    WalkTheStackSavingLocations(record->allocationStack);
-    PL_HashTableRawAdd(gSerialNumbers, hep, HashNumber(aPtr),
-                       aPtr, static_cast<void*>(record));
-    return gNextSerialNumber;
   }
-  return 0;
+
+  MOZ_RELEASE_ASSERT(aCreate, "If an object does not have a serial number, we should be creating it.");
+
+  SerialNumberRecord* record = new SerialNumberRecord();
+  WalkTheStackSavingLocations(record->allocationStack);
+  PL_HashTableRawAdd(gSerialNumbers, hep, HashNumber(aPtr),
+                     aPtr, static_cast<void*>(record));
+  return gNextSerialNumber;
 }
 
 static int32_t*
