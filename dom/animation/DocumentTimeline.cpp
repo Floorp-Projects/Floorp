@@ -21,6 +21,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DocumentTimeline)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocumentTimeline,
                                                 AnimationTimeline)
   tmp->UnregisterFromRefreshDriver();
+  if (tmp->isInList()) {
+    tmp->remove();
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocumentTimeline,
@@ -134,6 +137,9 @@ DocumentTimeline::NotifyAnimationUpdated(Animation& aAnimation)
   if (!mIsObservingRefreshDriver) {
     nsRefreshDriver* refreshDriver = GetRefreshDriver();
     if (refreshDriver) {
+      MOZ_ASSERT(isInList(),
+                "We should not register with the refresh driver if we are not"
+                " in the document's list of timelines");
       refreshDriver->AddRefreshObserver(this, Flush_Style);
       mIsObservingRefreshDriver = true;
     }
@@ -198,6 +204,9 @@ DocumentTimeline::NotifyRefreshDriverCreated(nsRefreshDriver* aDriver)
              " it is created");
 
   if (!mAnimationOrder.isEmpty()) {
+    MOZ_ASSERT(isInList(),
+               "We should not register with the refresh driver if we are not"
+               " in the document's list of timelines");
     aDriver->AddRefreshObserver(this, Flush_Style);
     mIsObservingRefreshDriver = true;
   }
