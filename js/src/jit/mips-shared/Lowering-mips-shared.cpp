@@ -678,5 +678,5 @@ LIRGeneratorMIPSShared::visitCopySign(MCopySign* ins)
 void
 LIRGeneratorMIPSShared::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
 {
-    MOZ_CRASH("NYI");
+    defineInt64(new(alloc()) LExtendInt32ToInt64(useRegisterAtStart(ins->input())), ins);
 }
