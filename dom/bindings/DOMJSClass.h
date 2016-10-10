@@ -293,6 +293,10 @@ struct NativePropertyHooks
   // The NativePropertyHooks instance for the parent interface (for
   // ShimInterfaceInfo).
   const NativePropertyHooks* mProtoHooks;
+
+  // The JSClass to use for expandos on our Xrays.  Can be null, in which case
+  // Xrays will use a default class of their choice.
+  const JSClass* mXrayExpandoClass;
 };
 
 enum DOMObjectType : uint8_t {
