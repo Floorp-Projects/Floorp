@@ -16,8 +16,7 @@ const variableFileContents = require("raw!devtools/client/themes/variables.css")
 
 const THEME_SELECTOR_STRINGS = {
   light: ":root.theme-light {",
-  dark: ":root.theme-dark {",
-  firebug: ":root.theme-firebug {"
+  dark: ":root.theme-dark {"
 };
 
 /**
