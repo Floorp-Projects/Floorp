@@ -21,7 +21,7 @@ function test() {
       "The searchbox data wasn't parsed correctly (2).");
 
     setText(searchbox, ":42");
-    is(filterView.searchData.toSource(), '[":", ["", 42]]',
+    is(filterView.searchData.toSour
       "The searchbox data wasn't parsed correctly (3).");
 
     setText(searchbox, "#token:42");
