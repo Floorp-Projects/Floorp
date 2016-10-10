@@ -1270,6 +1270,17 @@ ClearXrayExpandoSlots(JSObject* target, size_t slotIndex)
     }
 }
 
+JSObject*
+EnsureXrayExpandoObject(JSContext* cx, JS::HandleObject wrapper)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(GetXrayTraits(wrapper) == &DOMXrayTraits::singleton);
+    MOZ_ASSERT(IsXrayWrapper(wrapper));
+
+    RootedObject target(cx, DOMXrayTraits::singleton.getTargetObject(wrapper));
+    return DOMXrayTraits::singleton.ensureExpandoObject(cx, wrapper, target);
+}
+
 const JSClass*
 XrayTraits::getExpandoClass(JSContext* cx, HandleObject target) const
 {

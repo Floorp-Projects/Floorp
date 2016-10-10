@@ -41,6 +41,13 @@ def memberXrayExpandoReservedSlot(member, descriptor):
             member.slotIndices[descriptor.interface.identifier.name])
 
 
+def mayUseXrayExpandoSlots(attr):
+    assert not attr.getExtendedAttribute("NewObject")
+    # For attributes whose type is a Gecko interface we always use
+    # slots on the reflector for caching.
+    return not attr.type.isGeckoInterface()
+
+
 def toStringBool(arg):
     return str(not not arg).lower()
 
@@ -7523,7 +7530,11 @@ class CGPerSignatureCall(CGThing):
             'returnsNewObject': returnsNewObject,
             'isConstructorRetval': self.isConstructor,
             'successCode': successCode,
-            'obj': "reflector" if setSlot else "obj"
+            # 'obj' in this dictionary is the thing whose compartment we are
+            # trying to do the to-JS conversion in.  We're going to put that
+            # thing in a variable named "conversionScope" if setSlot is true.
+            # Otherwise, just use "obj" for lack of anything better.
+            'obj': "conversionScope" if setSlot else "obj"
         }
         try:
             wrapCode += wrapForType(self.returnType, self.descriptor, resultTemplateValues)
@@ -7534,16 +7545,22 @@ class CGPerSignatureCall(CGThing):
                              self.descriptor.interface.identifier.name,
                              self.idlNode.identifier.name))
         if setSlot:
-            # We need to make sure that our initial wrapping is done in the
-            # reflector compartment, but that we finally set args.rval() in the
-            # caller compartment.  We also need to make sure that the actual
-            # wrapping steps happen inside a do/while that they can break out
-            # of.
+            # When using a slot on the Xray expando, we need to make sure that
+            # our initial conversion to a JS::Value is done in the caller
+            # compartment.  When using a slot on our reflector, we want to do
+            # the conversion in the compartment of that reflector (that is,
+            # slotStorage).  In both cases we want to make sure that we finally
+            # set up args.rval() to be in the caller compartment.  We also need
+            # to make sure that the conversion steps happen inside a do/while
+            # that they can break out of on success.
+            #
+            # Of course we always have to wrap the value into the slotStorage
+            # compartment before we store it in slotStorage.
 
-            # postSteps are the steps that run while we're still in the
-            # reflector compartment but after we've finished the initial
-            # wrapping into args.rval().
-            postSteps = ""
+            # postConversionSteps are the steps that run while we're still in
+            # the compartment we do our conversion in but after we've finished
+            # the initial conversion into args.rval().
+            postConversionSteps = ""
             if self.idlNode.getExtendedAttribute("Frozen"):
                 assert self.idlNode.type.isSequence() or self.idlNode.type.isDictionary()
                 freezeValue = CGGeneric(
@@ -7554,9 +7571,23 @@ class CGPerSignatureCall(CGThing):
                 if self.idlNode.type.nullable():
                     freezeValue = CGIfWrapper(freezeValue,
                                               "args.rval().isObject()")
-                postSteps += freezeValue.define()
-            postSteps += ("js::SetReservedSlot(reflector, %s, args.rval());\n" %
-                          memberReservedSlot(self.idlNode, self.descriptor))
+                postConversionSteps += freezeValue.define()
+
+            # slotStorageSteps are steps that run once we have entered the
+            # slotStorage compartment.
+            slotStorageSteps= fill(
+                """
+                // Make a copy so that we don't do unnecessary wrapping on args.rval().
+                JS::Rooted<JS::Value> storedVal(cx, args.rval());
+                if (!${maybeWrap}(cx, &storedVal)) {
+                  return false;
+                }
+                js::SetReservedSlot(slotStorage, slotIndex, storedVal);
+                """,
+                maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type))
+
+            checkForXray = mayUseXrayExpandoSlots(self.idlNode)
+
             # For the case of Cached attributes, go ahead and preserve our
             # wrapper if needed.  We need to do this because otherwise the
             # wrapper could get garbage-collected and the cached value would
@@ -7567,22 +7598,48 @@ class CGPerSignatureCall(CGThing):
             # already-preserved wrapper.
             if (self.idlNode.getExtendedAttribute("Cached") and
                 self.descriptor.wrapperCache):
-                postSteps += "PreserveWrapper(self);\n"
+                preserveWrapper = dedent(
+                    """
+                    PreserveWrapper(self);
+                    """)
+                if checkForXray:
+                    preserveWrapper = fill(
+                        """
+                        if (!isXray) {
+                          // In the Xray case we don't need to do this, because getting the
+                          // expando object already preserved our wrapper.
+                          $*{preserveWrapper}
+                        }
+                        """,
+                        preserveWrapper=preserveWrapper)
+                slotStorageSteps += preserveWrapper
+
+            if checkForXray:
+                conversionScope = "isXray ? obj : slotStorage"
+            else:
+                conversionScope = "slotStorage"
 
             wrapCode = fill(
                 """
-                { // Make sure we wrap and store in the slot in reflector's compartment
-                  JSAutoCompartment ac(cx, reflector);
+                {
+                  JS::Rooted<JSObject*> conversionScope(cx, ${conversionScope});
+                  JSAutoCompartment ac(cx, conversionScope);
                   do { // block we break out of when done wrapping
                     $*{wrapCode}
                   } while (0);
-                  $*{postSteps}
+                  $*{postConversionSteps}
+                }
+                { // And now store things in the compartment of our slotStorage.
+                  JSAutoCompartment ac(cx, slotStorage);
+                  $*{slotStorageSteps}
                 }
                 // And now make sure args.rval() is in the caller compartment
                 return ${maybeWrap}(cx, args.rval());
                 """,
+                conversionScope=conversionScope,
                 wrapCode=wrapCode,
-                postSteps=postSteps,
+                postConversionSteps=postConversionSteps,
+                slotStorageSteps=slotStorageSteps,
                 maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type))
         return wrapCode
 
@@ -8076,7 +8133,13 @@ class CGNavigatorGetterCall(CGPerSignatureCall):
                                     True, descriptor, attr, getter=True)
 
     def getArguments(self):
-        return [(FakeArgument(BuiltinTypes[IDLBuiltinType.Types.object], self.idlNode), "reflector")]
+        # The navigator object should be associated with the global of
+        # the navigator it's coming from, which will be the global of
+        # the object whose slot it gets cached in.  That's stored in
+        # "slotStorage".
+        return [(FakeArgument(BuiltinTypes[IDLBuiltinType.Types.object],
+                              self.idlNode),
+                 "slotStorage")]
 
 
 class FakeIdentifier():
@@ -8690,27 +8753,64 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                                 "can't use our slot for property '%s'!" %
                                 (self.descriptor.interface.identifier.name,
                                  self.attr.identifier.name))
-            prefix = fill(
+
+            # We're going to store this return value in a slot on some object,
+            # to cache it.  The question is, which object?  For dictionary and
+            # sequence return values, we want to use a slot on the Xray expando
+            # if we're called via Xrays, and a slot on our reflector otherwise.
+            # On the other hand, when dealing with some interfacce types
+            # (navigator properties, window.document) we want to avoid calling
+            # the getter more than once.  In the case of navigator properties
+            # that's because the getter actually creates a new object each time.
+            # In the case of window.document, it's because the getter can start
+            # returning null, which would get hidden in he non-Xray case by the
+            # fact that it's [StoreOnSlot], so the cached version is always
+            # around.
+            #
+            # The upshot is that we use the reflector slot for any getter whose
+            # type is a gecko interface, whether we're called via Xrays or not.
+            # Since [Cached] and [StoreInSlot] cannot be used with "NewObject",
+            # we know that in the interface type case the returned object is
+            # wrappercached.  So creating Xrays to it is reasonable.
+            if mayUseXrayExpandoSlots(self.attr):
+                prefix = fill(
+                    """
+                    // Have to either root across the getter call or reget after.
+                    bool isXray;
+                    JS::Rooted<JSObject*> slotStorage(cx, GetCachedSlotStorageObject(cx, obj, &isXray));
+                    if (!slotStorage) {
+                      return false;
+                    }
+                    const size_t slotIndex = isXray ? ${xraySlotIndex} : ${slotIndex};
+                    """,
+                    xraySlotIndex=memberXrayExpandoReservedSlot(self.attr,
+                                                                self.descriptor),
+                    slotIndex=memberReservedSlot(self.attr, self.descriptor))
+            else:
+                prefix = fill(
+                    """
+                    // Have to either root across the getter call or reget after.
+                    JS::Rooted<JSObject*> slotStorage(cx, js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false));
+                    MOZ_ASSERT(IsDOMObject(slotStorage));
+                    const size_t slotIndex = ${slotIndex};
+                    """,
+                    slotIndex=memberReservedSlot(self.attr, self.descriptor))
+
+            prefix += fill(
                 """
-                // Have to either root across the getter call or reget after.
-                JS::Rooted<JSObject*> reflector(cx);
-                // Safe to do an unchecked unwrap, since we've gotten this far.
-                // Also make sure to unwrap outer windows, since we want the
-                // real DOM object.
-                reflector = IsDOMObject(obj) ? obj : js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
+                MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(js::GetObjectClass(slotStorage)) > slotIndex);
                 {
                   // Scope for cachedVal
-                  JS::Value cachedVal = js::GetReservedSlot(reflector, ${slot});
+                  JS::Value cachedVal = js::GetReservedSlot(slotStorage, slotIndex);
                   if (!cachedVal.isUndefined()) {
                     args.rval().set(cachedVal);
-                    // The cached value is in the compartment of reflector,
+                    // The cached value is in the compartment of slotStorage,
                     // so wrap into the caller compartment as needed.
                     return ${maybeWrap}(cx, args.rval());
                   }
                 }
 
                 """,
-                slot=memberReservedSlot(self.attr, self.descriptor),
                 maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
         else:
             prefix = ""
