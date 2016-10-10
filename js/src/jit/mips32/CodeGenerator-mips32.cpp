@@ -567,6 +567,30 @@ CodeGeneratorMIPS::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
 }
 
 void
+CodeGeneratorMIPS::visitAsmSelectI64(LAsmSelectI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+    Register cond = ToRegister(lir->condExpr());
+    const LInt64Allocation trueExpr = lir->trueExpr();
+    const LInt64Allocation falseExpr = lir->falseExpr();
+
+    Register64 output = ToOutRegister64(lir);
+
+    masm.move64(ToRegister64(trueExpr), output);
+
+    if (falseExpr.low().isRegister()) {
+        masm.as_movz(output.low, ToRegister(falseExpr.low()), cond);
+        masm.as_movz(output.high, ToRegister(falseExpr.high()), cond);
+    } else {
+        Label done;
+        masm.ma_b(cond, cond, &done, Assembler::NonZero, ShortJump);
+        masm.loadPtr(ToAddress(falseExpr.low()), output.low);
+        masm.loadPtr(ToAddress(falseExpr.high()), output.high);
+        masm.bind(&done);
+    }
+}
+
+void
 CodeGeneratorMIPS::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
 {
     Register input = ToRegister(lir->input());
