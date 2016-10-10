@@ -7659,7 +7659,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
           frame = nullptr;
         }
         // Implicit pointer capture for touch
-        if (sPointerEventImplicitCapture &&
+        if (frame && sPointerEventImplicitCapture &&
             pointerEvent->mMessage == ePointerDown &&
             pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
           nsCOMPtr<nsIContent> targetContent;
