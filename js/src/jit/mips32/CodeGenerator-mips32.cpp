@@ -454,6 +454,95 @@ CodeGeneratorMIPS::visitUDivOrModI64(LUDivOrModI64* lir)
 }
 
 void
+CodeGeneratorMIPS::visitWasmLoadI64(LWasmLoadI64* lir)
+{
+    const MWasmLoad* mir = lir->mir();
+    Register64 output = ToOutRegister64(lir);
+
+    uint32_t offset = mir->offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+
+    Register ptr = ToRegister(lir->ptr());
+
+    if (offset) {
+        Register ptrPlusOffset = ToRegister(lir->ptrCopy());
+        masm.addPtr(Imm32(offset), ptrPlusOffset);
+        ptr = ptrPlusOffset;
+    } else {
+        MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
+    }
+
+    unsigned byteSize = mir->byteSize();
+    bool isSigned;
+    switch (mir->accessType()) {
+        case Scalar::Int8:   isSigned = true; break;
+        case Scalar::Uint8:  isSigned = false; break;
+        case Scalar::Int16:  isSigned = true; break;
+        case Scalar::Uint16: isSigned = false; break;
+        case Scalar::Int32:  isSigned = true; break;
+        case Scalar::Uint32: isSigned = false; break;
+        case Scalar::Int64:  isSigned = true; break;
+        default: MOZ_CRASH("unexpected array type");
+    }
+
+    memoryBarrier(mir->barrierBefore());
+
+    MOZ_ASSERT(INT64LOW_OFFSET == 0);
+    if (byteSize <= 4) {
+        masm.ma_load(output.low, BaseIndex(HeapReg, ptr, TimesOne),
+                     static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+        if (!isSigned)
+            masm.move32(Imm32(0), output.high);
+        else
+            masm.ma_sra(output.high, output.low, Imm32(31));
+    } else {
+        ScratchRegisterScope scratch(masm);
+        masm.ma_load(output.low, BaseIndex(HeapReg, ptr, TimesOne), SizeWord);
+        masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
+        masm.ma_load(output.high, BaseIndex(HeapReg, scratch, TimesOne), SizeWord);
+    }
+
+    memoryBarrier(mir->barrierAfter());
+}
+
+void
+CodeGeneratorMIPS::visitWasmStoreI64(LWasmStoreI64* lir)
+{
+    const MWasmStore* mir = lir->mir();
+    Register64 value = ToRegister64(lir->getInt64Operand(lir->ValueIndex));
+
+    uint32_t offset = mir->offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+
+    Register ptr = ToRegister(lir->ptr());
+
+    if (offset) {
+        Register ptrPlusOffset = ToRegister(lir->ptrCopy());
+        masm.addPtr(Imm32(offset), ptrPlusOffset);
+        ptr = ptrPlusOffset;
+    } else {
+        MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
+    }
+
+    unsigned byteSize = mir->byteSize();
+
+    memoryBarrier(mir->barrierBefore());
+
+    MOZ_ASSERT(INT64LOW_OFFSET == 0);
+    if (byteSize <= 4) {
+        masm.ma_store(value.low, BaseIndex(HeapReg, ptr, TimesOne),
+                      static_cast<LoadStoreSize>(8 * byteSize));
+    } else {
+        ScratchRegisterScope scratch(masm);
+        masm.ma_store(value.low, BaseIndex(HeapReg, ptr, TimesOne), SizeWord);
+        masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
+        masm.ma_store(value.high, BaseIndex(HeapReg, scratch, TimesOne), SizeWord);
+    }
+
+    memoryBarrier(mir->barrierAfter());
+}
+
+void
 CodeGeneratorMIPS::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
 {
     Register input = ToRegister(lir->input());
