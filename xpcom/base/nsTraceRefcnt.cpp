@@ -356,17 +356,14 @@ public:
   void DumpTotal(FILE* aOut)
   {
     mClassSize /= mAllStats.mCreates;
-    Dump(-1, aOut, nsTraceRefcnt::ALL_STATS);
+    Dump(-1, aOut);
   }
 
-  bool PrintDumpHeader(FILE* aOut, const char* aMsg,
-                       nsTraceRefcnt::StatisticsType aType)
+  bool PrintDumpHeader(FILE* aOut, const char* aMsg)
   {
     fprintf(aOut, "\n== BloatView: %s, %s process %d\n", aMsg,
             XRE_ChildProcessTypeToString(XRE_GetProcessType()), getpid());
-    nsTraceRefcntStats& stats =
-      (aType == nsTraceRefcnt::NEW_STATS) ? mNewStats : mAllStats;
-    if (gLogLeaksOnly && !stats.HaveLeaks()) {
+    if (gLogLeaksOnly && !mAllStats.HaveLeaks()) {
       return false;
     }
 
@@ -380,21 +377,19 @@ public:
     return true;
   }
 
-  void Dump(int aIndex, FILE* aOut, nsTraceRefcnt::StatisticsType aType)
+  void Dump(int aIndex, FILE* aOut)
   {
-    nsTraceRefcntStats* stats =
-      (aType == nsTraceRefcnt::NEW_STATS) ? &mNewStats : &mAllStats;
-    if (gLogLeaksOnly && !stats->HaveLeaks()) {
+    if (gLogLeaksOnly && !mAllStats.HaveLeaks()) {
       return;
     }
 
-    if (stats->HaveLeaks() || stats->mCreates != 0) {
+    if (mAllStats.HaveLeaks() || mAllStats.mCreates != 0) {
       fprintf(aOut, "%4d |%-38.38s| %8d %8" PRId64 "|%8" PRIu64 " %8" PRId64"|\n",
               aIndex + 1, mClassName,
               GetClassSize(),
-              nsCRT::strcmp(mClassName, "TOTAL") ? (stats->NumLeaked() * GetClassSize()) : mTotalLeaked,
-              stats->mCreates,
-              stats->NumLeaked());
+              nsCRT::strcmp(mClassName, "TOTAL") ? (mAllStats.NumLeaked() * GetClassSize()) : mTotalLeaked,
+              mAllStats.mCreates,
+              mAllStats.NumLeaked());
     }
   }
 
@@ -514,7 +509,7 @@ public:
 
 
 nsresult
-nsTraceRefcnt::DumpStatistics(StatisticsType aType)
+nsTraceRefcnt::DumpStatistics()
 {
   if (!gBloatLog || !gBloatView) {
     return NS_ERROR_FAILURE;
@@ -534,20 +529,12 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType)
   BloatEntry total("TOTAL", 0);
   PL_HashTableEnumerateEntries(gBloatView, BloatEntry::TotalEntries, &total);
   const char* msg;
-  if (aType == NEW_STATS) {
-    if (gLogLeaksOnly) {
-      msg = "NEW (incremental) LEAK STATISTICS";
-    } else {
-      msg = "NEW (incremental) LEAK AND BLOAT STATISTICS";
-    }
+  if (gLogLeaksOnly) {
+    msg = "ALL (cumulative) LEAK STATISTICS";
   } else {
-    if (gLogLeaksOnly) {
-      msg = "ALL (cumulative) LEAK STATISTICS";
-    } else {
-      msg = "ALL (cumulative) LEAK AND BLOAT STATISTICS";
-    }
+    msg = "ALL (cumulative) LEAK AND BLOAT STATISTICS";
   }
-  const bool leaked = total.PrintDumpHeader(gBloatLog, msg, aType);
+  const bool leaked = total.PrintDumpHeader(gBloatLog, msg);
 
   nsTArray<BloatEntry*> entries;
   PL_HashTableEnumerateEntries(gBloatView, BloatEntry::DumpEntry, &entries);
@@ -559,7 +546,7 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType)
 
     for (uint32_t i = 0; i < count; ++i) {
       BloatEntry* entry = entries[i];
-      entry->Dump(i, gBloatLog, aType);
+      entry->Dump(i, gBloatLog);
     }
 
     fprintf(gBloatLog, "\n");
