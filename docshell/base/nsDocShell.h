@@ -84,11 +84,11 @@ class nsIDOMNode;
 class nsIDocShellTreeOwner;
 class nsIGlobalHistory2;
 class nsIHttpChannel;
+class nsIMutableArray;
 class nsIPrompt;
 class nsISHistory;
 class nsISecureBrowserUI;
 class nsIStringBundle;
-class nsISupportsArray;
 class nsIURIFixup;
 class nsIURILoader;
 class nsIWebBrowserFind;
@@ -810,8 +810,8 @@ protected:
   nsCString mContentTypeHint;
   nsIntPoint mDefaultScrollbarPref; // persistent across doc loads
 
-  nsCOMPtr<nsISupportsArray> mRefreshURIList;
-  nsCOMPtr<nsISupportsArray> mSavedRefreshURIList;
+  nsCOMPtr<nsIMutableArray> mRefreshURIList;
+  nsCOMPtr<nsIMutableArray> mSavedRefreshURIList;
   RefPtr<nsDSURIContentListener> mContentListener;
   nsCOMPtr<nsIContentViewer> mContentViewer;
   nsCOMPtr<nsIWidget> mParentWidget;
