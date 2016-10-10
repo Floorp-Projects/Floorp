@@ -213,6 +213,33 @@ MacroAssembler::subPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::sub64(Register64 src, Register64 dest)
+{
+    as_dsubu(dest.reg, dest.reg, src.reg);
+}
+
+void
+MacroAssembler::sub64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        sub64(scratch, dest);
+    } else {
+        sub64(Register64(src.toReg()), dest);
+    }
+}
+
+void
+MacroAssembler::sub64(Imm64 imm, Register64 dest)
+{
+    MOZ_ASSERT(dest.reg != ScratchRegister);
+    mov(ImmWord(imm.value), ScratchRegister);
+    as_dsubu(dest.reg, dest.reg, ScratchRegister);
+}
+
+void
 MacroAssembler::mul64(Imm64 imm, const Register64& dest)
 {
     MOZ_ASSERT(dest.reg != ScratchRegister);

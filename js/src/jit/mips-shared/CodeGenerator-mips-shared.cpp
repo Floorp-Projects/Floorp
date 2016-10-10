@@ -376,6 +376,22 @@ CodeGeneratorMIPSShared::visitSubI(LSubI* ins)
 }
 
 void
+CodeGeneratorMIPSShared::visitSubI64(LSubI64* lir)
+{
+    const LInt64Allocation lhs = lir->getInt64Operand(LSubI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LSubI64::Rhs);
+
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+
+    if (IsConstant(rhs)) {
+        masm.sub64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
+        return;
+    }
+
+    masm.sub64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+}
+
+void
 CodeGeneratorMIPSShared::visitMulI(LMulI* ins)
 {
     const LAllocation* lhs = ins->lhs();
