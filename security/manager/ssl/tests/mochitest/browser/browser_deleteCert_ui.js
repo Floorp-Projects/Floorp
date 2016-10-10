@@ -14,7 +14,6 @@
  * @type nsIMutableArray<nsICertTreeItem>
  */
 var gCertArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-var gImportedCerts = [];
 
 const FAKE_HOST_PORT = "Fake host and port";
 
@@ -75,19 +74,11 @@ function openDeleteCertConfirmDialog(tabID) {
   });
 }
 
-registerCleanupFunction(() => {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
-  for (let cert of gImportedCerts) {
-    certdb.deleteCertificate(cert);
-  }
-});
-
 add_task(function* setup() {
   for (let testCase of TEST_CASES) {
     let cert = null;
     if (testCase.certFilename) {
-      cert = yield readCertificate(testCase.certFilename, ",,", gImportedCerts);
+      cert = yield readCertificate(testCase.certFilename, ",,");
     }
     let certTreeItem = {
       hostPort: FAKE_HOST_PORT,
