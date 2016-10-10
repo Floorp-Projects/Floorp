@@ -3844,7 +3844,8 @@ Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<Declarat
 template <>
 bool
 Parser<FullParseHandler>::checkDestructuringPattern(ParseNode* pattern,
-                                                    Maybe<DeclarationKind> maybeDecl);
+                                                    Maybe<DeclarationKind> maybeDecl,
+                                                    PossibleError* possibleError /* = nullptr */);
 
 template <>
 bool
@@ -3956,22 +3957,31 @@ Parser<FullParseHandler>::checkDestructuringArray(ParseNode* arrayPattern,
 template <>
 bool
 Parser<FullParseHandler>::checkDestructuringPattern(ParseNode* pattern,
-                                                    Maybe<DeclarationKind> maybeDecl)
+                                                    Maybe<DeclarationKind> maybeDecl,
+                                                    PossibleError* possibleError /* = nullptr */)
 {
     if (pattern->isKind(PNK_ARRAYCOMP)) {
         report(ParseError, false, pattern, JSMSG_ARRAY_COMP_LEFTSIDE);
         return false;
     }
 
-    if (pattern->isKind(PNK_ARRAY))
-        return checkDestructuringArray(pattern, maybeDecl);
-    return checkDestructuringObject(pattern, maybeDecl);
+    bool isDestructuring = pattern->isKind(PNK_ARRAY)
+                           ? checkDestructuringArray(pattern, maybeDecl)
+                           : checkDestructuringObject(pattern, maybeDecl);
+
+    // Resolve asap instead of checking since we already know that we are
+    // destructuring.
+    if (isDestructuring && possibleError)
+        possibleError->setResolved();
+
+    return isDestructuring;
 }
 
 template <>
 bool
 Parser<SyntaxParseHandler>::checkDestructuringPattern(Node pattern,
-                                                      Maybe<DeclarationKind> maybeDecl)
+                                                      Maybe<DeclarationKind> maybeDecl,
+                                                      PossibleError* possibleError /* = nullptr */)
 {
     return abortIfSyntaxParser();
 }
@@ -3982,20 +3992,20 @@ Parser<ParseHandler>::destructuringDeclaration(DeclarationKind kind, YieldHandli
                                                TokenKind tt)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
+    MOZ_ASSERT(tt == TOK_LB || tt == TOK_LC);
 
-    pc->inDestructuringDecl = Some(kind);
     PossibleError possibleError(*this);
-    Node pn = primaryExpr(yieldHandling, TripledotProhibited, tt, &possibleError);
+    Node pattern;
+    {
+        pc->inDestructuringDecl = Some(kind);
+        pattern = primaryExpr(yieldHandling, TripledotProhibited, tt, &possibleError);
+        pc->inDestructuringDecl = Nothing();
+    }
 
-    // Resolve asap instead of checking since we already know that we are
-    // destructuring.
-    possibleError.setResolved();
-    pc->inDestructuringDecl = Nothing();
-    if (!pn)
+    if (!pattern || !checkDestructuringPattern(pattern, Some(kind), &possibleError))
         return null();
-    if (!checkDestructuringPattern(pn, Some(kind)))
-        return null();
-    return pn;
+
+    return pattern;
 }
 
 template <typename ParseHandler>
@@ -4055,18 +4065,7 @@ Parser<ParseHandler>::declarationPattern(Node decl, DeclarationKind declKind, To
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LB) ||
                tokenStream.isCurrentTokenType(TOK_LC));
 
-    Node pattern;
-    {
-        pc->inDestructuringDecl = Some(declKind);
-
-        PossibleError possibleError(*this);
-        pattern = primaryExpr(yieldHandling, TripledotProhibited, tt, &possibleError);
-
-        // Resolve asap instead of checking since we already know that we are
-        // destructuring.
-        possibleError.setResolved();
-        pc->inDestructuringDecl = Nothing();
-    }
+    Node pattern = destructuringDeclaration(declKind, yieldHandling, tt);
     if (!pattern)
         return null();
 
@@ -4088,9 +4087,6 @@ Parser<ParseHandler>::declarationPattern(Node decl, DeclarationKind declKind, To
         }
 
         if (*forHeadKind != PNK_FORHEAD) {
-            if (!checkDestructuringPattern(pattern, Some(declKind)))
-                return null();
-
             *forInOrOfExpression = expressionAfterForInOrOf(*forHeadKind, yieldHandling);
             if (!*forInOrOfExpression)
                 return null();
@@ -4098,9 +4094,6 @@ Parser<ParseHandler>::declarationPattern(Node decl, DeclarationKind declKind, To
             return pattern;
         }
     }
-
-    if (!checkDestructuringPattern(pattern, Some(declKind)))
-        return null();
 
     TokenKind token;
     if (!tokenStream.getToken(&token, TokenStream::None))
@@ -5116,15 +5109,8 @@ template <class ParseHandler>
 bool
 Parser<ParseHandler>::validateForInOrOfLHSExpression(Node target, PossibleError* possibleError)
 {
-    if (handler.isUnparenthesizedDestructuringPattern(target)) {
-        bool isDestructuring = checkDestructuringPattern(target);
-        // Here we've successfully distinguished between destructuring and an
-        // object literal. In the case where "CoverInitializedName" syntax was
-        // used there will be a pending error that needs clearing.
-        if (isDestructuring)
-            possibleError->setResolved();
-        return isDestructuring;
-    }
+    if (handler.isUnparenthesizedDestructuringPattern(target))
+        return checkDestructuringPattern(target, Nothing(), possibleError);
 
     // All other permitted targets are simple.
     if (!reportIfNotValidSimpleAssignmentTarget(target, ForInOrOfTarget))
@@ -7222,13 +7208,7 @@ Parser<ParseHandler>::checkAndMarkAsAssignmentLhs(Node target, AssignmentFlavor 
             return false;
         }
 
-        bool isDestructuring = checkDestructuringPattern(target);
-        // Here we've successfully distinguished between destructuring and
-        // an object literal. In the case where "CoverInitializedName"
-        // syntax was used there will be a pending error that needs clearing.
-        if (possibleError && isDestructuring)
-            possibleError->setResolved();
-        return isDestructuring;
+        return checkDestructuringPattern(target, Nothing(), possibleError);
     }
 
     // All other permitted targets are simple.

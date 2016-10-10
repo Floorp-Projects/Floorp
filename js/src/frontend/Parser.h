@@ -1316,8 +1316,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node objectLiteral(YieldHandling yieldHandling, PossibleError* possibleError);
 
     // Top-level entrypoint into destructuring pattern checking/name-analyzing.
-    bool checkDestructuringPattern(Node pattern,
-                                   mozilla::Maybe<DeclarationKind> maybeDecl = mozilla::Nothing());
+    bool checkDestructuringPattern(Node pattern, mozilla::Maybe<DeclarationKind> maybeDecl,
+                                   PossibleError* possibleError = nullptr);
 
     // Recursive methods for checking/name-analyzing subcomponents of a
     // destructuring pattern.  The array/object methods *must* be passed arrays
