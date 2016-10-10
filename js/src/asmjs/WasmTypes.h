@@ -935,7 +935,7 @@ enum ModuleKind
 
 // Represents the resizable limits of memories and tables.
 
-struct ResizableLimits
+struct Limits
 {
     uint32_t initial;
     Maybe<uint32_t> maximum;
@@ -956,10 +956,10 @@ struct TableDesc
     TableKind kind;
     bool external;
     uint32_t globalDataOffset;
-    ResizableLimits limits;
+    Limits limits;
 
     TableDesc() = default;
-    TableDesc(TableKind kind, ResizableLimits limits)
+    TableDesc(TableKind kind, Limits limits)
      : kind(kind),
        external(false),
        globalDataOffset(UINT32_MAX),

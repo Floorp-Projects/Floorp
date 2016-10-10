@@ -503,9 +503,8 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
 }
 
 static bool
-CheckResizableLimits(JSContext* cx, uint32_t declaredMin, Maybe<uint32_t> declaredMax,
-                     uint32_t actualLength, Maybe<uint32_t> actualMax,
-                     bool isAsmJS, const char* kind)
+CheckLimits(JSContext* cx, uint32_t declaredMin, Maybe<uint32_t> declaredMax, uint32_t actualLength,
+            Maybe<uint32_t> actualMax, bool isAsmJS, const char* kind)
 {
     if (isAsmJS) {
         MOZ_ASSERT(actualLength >= declaredMin);
@@ -515,14 +514,12 @@ CheckResizableLimits(JSContext* cx, uint32_t declaredMin, Maybe<uint32_t> declar
     }
 
     if (actualLength < declaredMin || actualLength > declaredMax.valueOr(UINT32_MAX)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE,
-                                  kind);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, kind);
         return false;
     }
 
     if ((actualMax && (!declaredMax || *actualMax > *declaredMax)) || (!actualMax && declaredMax)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_MAX,
-                                  kind);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_MAX, kind);
         return false;
     }
 
@@ -549,9 +546,8 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
         MOZ_ASSERT_IF(metadata_->isAsmJS(), buffer.isPreparedForAsmJS());
         MOZ_ASSERT_IF(!metadata_->isAsmJS(), buffer.as<ArrayBufferObject>().isWasm());
 
-        if (!CheckResizableLimits(cx, declaredMin, declaredMax,
-                                  buffer.byteLength(), buffer.wasmMaxSize(),
-                                  metadata_->isAsmJS(), "Memory")) {
+        if (!CheckLimits(cx, declaredMin, declaredMax, buffer.byteLength(), buffer.wasmMaxSize(),
+                         metadata_->isAsmJS(), "Memory")) {
             return false;
         }
     } else {
@@ -585,9 +581,8 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
         MOZ_ASSERT(td.external);
 
         Table& table = tableObj->table();
-        if (!CheckResizableLimits(cx, td.limits.initial, td.limits.maximum,
-                                  table.length(), table.maximum(),
-                                  metadata_->isAsmJS(), "Table")) {
+        if (!CheckLimits(cx, td.limits.initial, td.limits.maximum, table.length(), table.maximum(),
+                         metadata_->isAsmJS(), "Table")) {
             return false;
         }
 

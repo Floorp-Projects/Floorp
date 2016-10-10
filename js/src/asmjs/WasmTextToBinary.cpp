@@ -2649,7 +2649,7 @@ ParseDataSegment(WasmParseContext& c)
 }
 
 static bool
-ParseResizable(WasmParseContext& c, ResizableLimits* resizable)
+ParseLimits(WasmParseContext& c, Limits* resizable)
 {
     WasmToken initial;
     if (!c.ts.match(WasmToken::Index, &initial, c.error))
@@ -2660,7 +2660,7 @@ ParseResizable(WasmParseContext& c, ResizableLimits* resizable)
     if (c.ts.getIf(WasmToken::Index, &token))
         maximum.emplace(token.index());
 
-    ResizableLimits r = { initial.index(), maximum };
+    Limits r = { initial.index(), maximum };
     *resizable = r;
     return true;
 }
@@ -2688,7 +2688,7 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
                 return false;
         }
 
-        ResizableLimits memory = { uint32_t(pages), Some(uint32_t(pages)) };
+        Limits memory = { uint32_t(pages), Some(uint32_t(pages)) };
         if (!module->setMemory(memory))
             return false;
 
@@ -2698,8 +2698,8 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
         return true;
     }
 
-    ResizableLimits memory;
-    if (!ParseResizable(c, &memory))
+    Limits memory;
+    if (!ParseLimits(c, &memory))
         return false;
 
     if (!module->setMemory(memory)) {
@@ -2756,8 +2756,8 @@ ParseImport(WasmParseContext& c, AstModule* module)
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
         if (c.ts.getIf(WasmToken::Memory)) {
-            ResizableLimits memory;
-            if (!ParseResizable(c, &memory))
+            Limits memory;
+            if (!ParseLimits(c, &memory))
                 return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
@@ -2765,8 +2765,8 @@ ParseImport(WasmParseContext& c, AstModule* module)
                                          DefinitionKind::Memory, memory);
         }
         if (c.ts.getIf(WasmToken::Table)) {
-            ResizableLimits table;
-            if (!ParseResizable(c, &table))
+            Limits table;
+            if (!ParseLimits(c, &table))
                 return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
@@ -2914,8 +2914,8 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
     if (c.ts.getIf(WasmToken::OpenParen)) {
         if (!c.ts.match(WasmToken::Resizable, c.error))
             return false;
-        ResizableLimits table;
-        if (!ParseResizable(c, &table))
+        Limits table;
+        if (!ParseLimits(c, &table))
             return false;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
             return false;
@@ -2938,7 +2938,7 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
     if (numElements != elems.length())
         return false;
 
-    ResizableLimits r = { numElements, Some(numElements) };
+    Limits r = { numElements, Some(numElements) };
     if (!module->setTable(r)) {
         c.ts.generateError(token, c.error);
         return false;
@@ -4072,20 +4072,20 @@ EncodeBytes(Encoder& e, AstName wasmName)
 }
 
 static bool
-EncodeResizable(Encoder& e, const ResizableLimits& resizable)
+EncodeLimits(Encoder& e, const Limits& limits)
 {
     uint32_t flags = uint32_t(ResizableFlags::Default);
-    if (resizable.maximum)
+    if (limits.maximum)
         flags |= uint32_t(ResizableFlags::HasMaximum);
 
     if (!e.writeVarU32(flags))
         return false;
 
-    if (!e.writeVarU32(resizable.initial))
+    if (!e.writeVarU32(limits.initial))
         return false;
 
-    if (resizable.maximum) {
-        if (!e.writeVarU32(*resizable.maximum))
+    if (limits.maximum) {
+        if (!e.writeVarU32(*limits.maximum))
             return false;
     }
 
@@ -4093,12 +4093,12 @@ EncodeResizable(Encoder& e, const ResizableLimits& resizable)
 }
 
 static bool
-EncodeResizableTable(Encoder& e, const ResizableLimits& resizable)
+EncodeTableLimits(Encoder& e, const Limits& limits)
 {
     if (!e.writeVarU32(uint32_t(TypeConstructor::AnyFunc)))
         return false;
 
-    return EncodeResizable(e, resizable);
+    return EncodeLimits(e, limits);
 }
 
 static bool
@@ -4126,11 +4126,11 @@ EncodeImport(Encoder& e, AstImport& imp)
             return false;
         break;
       case DefinitionKind::Table:
-        if (!EncodeResizableTable(e, imp.resizable()))
+        if (!EncodeTableLimits(e, imp.resizable()))
             return false;
         break;
       case DefinitionKind::Memory:
-        if (!EncodeResizable(e, imp.resizable()))
+        if (!EncodeLimits(e, imp.resizable()))
             return false;
         break;
     }
@@ -4174,9 +4174,9 @@ EncodeMemorySection(Encoder& e, AstModule& module)
     if (!e.writeVarU32(numMemories))
         return false;
 
-    const ResizableLimits& memory = module.memory();
+    const Limits& memory = module.memory();
 
-    if (!EncodeResizable(e, memory))
+    if (!EncodeLimits(e, memory))
         return false;
 
     e.finishSection(offset);
@@ -4273,8 +4273,8 @@ EncodeTableSection(Encoder& e, AstModule& module)
     if (!e.writeVarU32(numTables))
         return false;
 
-    const ResizableLimits& table = module.table();
-    if (!EncodeResizableTable(e, table))
+    const Limits& table = module.table();
+    if (!EncodeTableLimits(e, table))
         return false;
 
     e.finishSection(offset);
