@@ -48,6 +48,9 @@ ParseARMCpuFeatures(const char* features, bool override = false)
 {
     uint32_t flags = 0;
 
+    // For ease of running tests we want it to be the default to fixup faults.
+    bool fixupAlignmentFault = true;
+
     for (;;) {
         char ch = *features;
         if (!ch) {
@@ -86,8 +89,10 @@ ParseARMCpuFeatures(const char* features, bool override = false)
         else if (count == 5 && strncmp(features, "armv7", 5) == 0)
             flags |= HWCAP_ARMv7;
         else if (count == 5 && strncmp(features, "align", 5) == 0)
-            flags |= HWCAP_ALIGNMENT_FAULT;
+            flags |= HWCAP_ALIGNMENT_FAULT | HWCAP_FIXUP_FAULT;
 #if defined(JS_SIMULATOR_ARM)
+        else if (count == 7 && strncmp(features, "nofixup", 7) == 0)
+            fixupAlignmentFault = false;
         else if (count == 6 && strncmp(features, "hardfp", 6) == 0)
             flags |= HWCAP_USE_HARDFP_ABI;
 #endif
@@ -95,6 +100,10 @@ ParseARMCpuFeatures(const char* features, bool override = false)
             fprintf(stderr, "Warning: unexpected ARM feature at: %s\n", features);
         features = end;
     }
+
+    if (!fixupAlignmentFault)
+        flags &= ~HWCAP_FIXUP_FAULT;
+
     return flags;
 }
 
@@ -152,8 +161,9 @@ ParseARMHwCapFlags(const char* armHwCap)
                "  idivt    \n"
                "  vfpd32   \n"
                "  armv7    \n"
-               "  align    \n"
+               "  align    - unaligned accesses will trap and be emulated\n"
 #ifdef JS_SIMULATOR_ARM
+               "  nofixup  - disable emulation of unaligned accesses\n"
                "  hardfp   \n"
 #endif
                "\n"
