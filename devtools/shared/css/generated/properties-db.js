@@ -747,7 +747,7 @@ exports.CSS_PROPERTIES = {
   "-moz-column-count": {
     "isInherited": false,
     "subproperties": [
-      "-moz-column-count"
+      "column-count"
     ],
     "supports": [
       7
@@ -762,7 +762,7 @@ exports.CSS_PROPERTIES = {
   "-moz-column-fill": {
     "isInherited": false,
     "subproperties": [
-      "-moz-column-fill"
+      "column-fill"
     ],
     "supports": [],
     "values": [
@@ -776,7 +776,7 @@ exports.CSS_PROPERTIES = {
   "-moz-column-gap": {
     "isInherited": false,
     "subproperties": [
-      "-moz-column-gap"
+      "column-gap"
     ],
     "supports": [
       6
@@ -793,9 +793,9 @@ exports.CSS_PROPERTIES = {
   "-moz-column-rule": {
     "isInherited": false,
     "subproperties": [
-      "-moz-column-rule-width",
-      "-moz-column-rule-style",
-      "-moz-column-rule-color"
+      "column-rule-width",
+      "column-rule-style",
+      "column-rule-color"
     ],
     "supports": [
       2,
@@ -832,7 +832,7 @@ exports.CSS_PROPERTIES = {
   "-moz-column-rule-color": {
     "isInherited": false,
     "subproperties": [
-      "-moz-column-rule-color"
+      "column-rule-color"
     ],
     "supports": [
       2
@@ -853,7 +853,7 @@ exports.CSS_PROPERTIES = {
   "-moz-column-rule-style": {
     "isInherited": false,
     "subproperties": [
-      "-moz-column-rule-style"
+      "column-rule-style"
     ],
     "supports": [],
     "values": [
@@ -875,7 +875,7 @@ exports.CSS_PROPERTIES = {
   "-moz-column-rule-width": {
     "isInherited": false,
     "subproperties": [
-      "-moz-column-rule-width"
+      "column-rule-width"
     ],
     "supports": [
       6
@@ -894,7 +894,7 @@ exports.CSS_PROPERTIES = {
   "-moz-column-width": {
     "isInherited": false,
     "subproperties": [
-      "-moz-column-width"
+      "column-width"
     ],
     "supports": [
       6
@@ -911,8 +911,8 @@ exports.CSS_PROPERTIES = {
   "-moz-columns": {
     "isInherited": false,
     "subproperties": [
-      "-moz-column-count",
-      "-moz-column-width"
+      "column-count",
+      "column-width"
     ],
     "supports": [
       6,
@@ -2879,13 +2879,13 @@ exports.CSS_PROPERTIES = {
       "color-adjust",
       "color-interpolation",
       "color-interpolation-filters",
-      "-moz-column-count",
-      "-moz-column-fill",
-      "-moz-column-gap",
-      "-moz-column-rule-color",
-      "-moz-column-rule-style",
-      "-moz-column-rule-width",
-      "-moz-column-width",
+      "column-count",
+      "column-fill",
+      "column-gap",
+      "column-rule-color",
+      "column-rule-style",
+      "column-rule-width",
+      "column-width",
       "contain",
       "content",
       "-moz-control-character-visibility",
@@ -5393,6 +5393,189 @@ exports.CSS_PROPERTIES = {
       "initial",
       "linearrgb",
       "srgb",
+      "unset"
+    ]
+  },
+  "column-count": {
+    "isInherited": false,
+    "subproperties": [
+      "column-count"
+    ],
+    "supports": [
+      7
+    ],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "column-fill": {
+    "isInherited": false,
+    "subproperties": [
+      "column-fill"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "balance",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "column-gap": {
+    "isInherited": false,
+    "subproperties": [
+      "column-gap"
+    ],
+    "supports": [
+      6
+    ],
+    "values": [
+      "-moz-calc",
+      "calc",
+      "inherit",
+      "initial",
+      "normal",
+      "unset"
+    ]
+  },
+  "column-rule": {
+    "isInherited": false,
+    "subproperties": [
+      "column-rule-width",
+      "column-rule-style",
+      "column-rule-color"
+    ],
+    "supports": [
+      2,
+      6
+    ],
+    "values": [
+      "COLOR",
+      "-moz-calc",
+      "calc",
+      "currentColor",
+      "dashed",
+      "dotted",
+      "double",
+      "groove",
+      "hidden",
+      "hsl",
+      "hsla",
+      "inherit",
+      "initial",
+      "inset",
+      "medium",
+      "none",
+      "outset",
+      "rgb",
+      "rgba",
+      "ridge",
+      "solid",
+      "thick",
+      "thin",
+      "transparent",
+      "unset"
+    ]
+  },
+  "column-rule-color": {
+    "isInherited": false,
+    "subproperties": [
+      "column-rule-color"
+    ],
+    "supports": [
+      2
+    ],
+    "values": [
+      "COLOR",
+      "currentColor",
+      "hsl",
+      "hsla",
+      "inherit",
+      "initial",
+      "rgb",
+      "rgba",
+      "transparent",
+      "unset"
+    ]
+  },
+  "column-rule-style": {
+    "isInherited": false,
+    "subproperties": [
+      "column-rule-style"
+    ],
+    "supports": [],
+    "values": [
+      "dashed",
+      "dotted",
+      "double",
+      "groove",
+      "hidden",
+      "inherit",
+      "initial",
+      "inset",
+      "none",
+      "outset",
+      "ridge",
+      "solid",
+      "unset"
+    ]
+  },
+  "column-rule-width": {
+    "isInherited": false,
+    "subproperties": [
+      "column-rule-width"
+    ],
+    "supports": [
+      6
+    ],
+    "values": [
+      "-moz-calc",
+      "calc",
+      "inherit",
+      "initial",
+      "medium",
+      "thick",
+      "thin",
+      "unset"
+    ]
+  },
+  "column-width": {
+    "isInherited": false,
+    "subproperties": [
+      "column-width"
+    ],
+    "supports": [
+      6
+    ],
+    "values": [
+      "-moz-calc",
+      "auto",
+      "calc",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "columns": {
+    "isInherited": false,
+    "subproperties": [
+      "column-count",
+      "column-width"
+    ],
+    "supports": [
+      6,
+      7
+    ],
+    "values": [
+      "-moz-calc",
+      "auto",
+      "calc",
+      "inherit",
+      "initial",
       "unset"
     ]
   },
@@ -9530,39 +9713,39 @@ exports.PREFERENCES = [
     ""
   ],
   [
-    "-moz-column-count",
+    "column-count",
     ""
   ],
   [
-    "-moz-column-fill",
+    "column-fill",
     ""
   ],
   [
-    "-moz-column-gap",
+    "column-gap",
     ""
   ],
   [
-    "-moz-column-rule",
+    "column-rule",
     ""
   ],
   [
-    "-moz-column-rule-color",
+    "column-rule-color",
     ""
   ],
   [
-    "-moz-column-rule-style",
+    "column-rule-style",
     ""
   ],
   [
-    "-moz-column-rule-width",
+    "column-rule-width",
     ""
   ],
   [
-    "-moz-column-width",
+    "column-width",
     ""
   ],
   [
-    "-moz-columns",
+    "columns",
     ""
   ],
   [
@@ -9991,7 +10174,7 @@ exports.PREFERENCES = [
   ],
   [
     "mask-type",
-    "layout.css.masking.enabled"
+    ""
   ],
   [
     "max-block-size",
@@ -10663,6 +10846,42 @@ exports.PREFERENCES = [
   ],
   [
     "-moz-text-align-last",
+    ""
+  ],
+  [
+    "-moz-column-count",
+    ""
+  ],
+  [
+    "-moz-column-fill",
+    ""
+  ],
+  [
+    "-moz-column-gap",
+    ""
+  ],
+  [
+    "-moz-column-rule",
+    ""
+  ],
+  [
+    "-moz-column-rule-color",
+    ""
+  ],
+  [
+    "-moz-column-rule-style",
+    ""
+  ],
+  [
+    "-moz-column-rule-width",
+    ""
+  ],
+  [
+    "-moz-column-width",
+    ""
+  ],
+  [
+    "-moz-columns",
     ""
   ],
   [
