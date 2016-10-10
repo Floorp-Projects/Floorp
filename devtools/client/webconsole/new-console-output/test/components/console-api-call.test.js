@@ -123,6 +123,9 @@ describe("ConsoleAPICall component:", () => {
 
       expect(frameLinks.eq(2).find(".frame-link-function-display-name").text()).toBe("triggerPacket");
       expect(frameLinks.eq(2).find(".frame-link-filename").text()).toBe(filepath);
+
+      //it should not be collapsible.
+      expect(wrapper.find(`.theme-twisty`).length).toBe(0);
     });
   });
 
