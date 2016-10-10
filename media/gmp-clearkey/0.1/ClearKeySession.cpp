@@ -62,13 +62,7 @@ ClearKeySession::Init(uint32_t aCreateSessionToken,
   if (aInitDataType == "cenc") {
     ParseCENCInitData(aInitData, aInitDataSize, mKeyIds);
   } else if (aInitDataType == "keyids") {
-    std::string sessionType;
-    ClearKeyUtils::ParseKeyIdsInitData(aInitData, aInitDataSize, mKeyIds, sessionType);
-    if (sessionType != ClearKeyUtils::SessionTypeToString(mSessionType)) {
-      const char message[] = "Session type specified in keyids init data doesn't match session type.";
-      mCallback->RejectPromise(aPromiseId, kGMPInvalidAccessError, message, strlen(message));
-      return;
-    }
+    ClearKeyUtils::ParseKeyIdsInitData(aInitData, aInitDataSize, mKeyIds);
   } else if (aInitDataType == "webm" && aInitDataSize <= kMaxWebmInitDataSize) {
     // "webm" initData format is simply the raw bytes of the keyId.
     vector<uint8_t> keyId;
