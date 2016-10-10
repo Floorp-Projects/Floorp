@@ -301,6 +301,7 @@ MSG_DEF(JSMSG_RC_AFTER_EXPORT_SPEC_LIST, 0, JSEXN_SYNTAXERR, "missing '}' after 
 MSG_DEF(JSMSG_RC_AFTER_IMPORT_SPEC_LIST, 0, JSEXN_SYNTAXERR, "missing '}' after module specifier list")
 MSG_DEF(JSMSG_REDECLARED_CATCH_IDENTIFIER, 1, JSEXN_SYNTAXERR, "redeclaration of identifier '{0}' in catch")
 MSG_DEF(JSMSG_RESERVED_ID,             1, JSEXN_SYNTAXERR, "{0} is a reserved identifier")
+MSG_DEF(JSMSG_REST_WITH_COMMA,         0, JSEXN_SYNTAXERR, "rest element may not have a trailing comma")
 MSG_DEF(JSMSG_REST_WITH_DEFAULT,       0, JSEXN_SYNTAXERR, "rest parameter may not have a default")
 MSG_DEF(JSMSG_SELFHOSTED_TOP_LEVEL_LEXICAL, 1, JSEXN_SYNTAXERR, "self-hosted code cannot contain top-level {0} declarations")
 MSG_DEF(JSMSG_SELFHOSTED_METHOD_CALL,  0, JSEXN_SYNTAXERR, "self-hosted code may not contain direct method calls. Use callFunction() or callContentFunction()")
