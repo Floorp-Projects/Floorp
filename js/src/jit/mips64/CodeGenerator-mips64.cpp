@@ -521,6 +521,15 @@ CodeGeneratorMIPS64::visitCtzI64(LCtzI64* lir)
 }
 
 void
+CodeGeneratorMIPS64::visitNotI64(LNotI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register output = ToRegister(lir->output());
+
+    masm.cmp64Set(Assembler::Equal, input.reg, Imm32(0), output);
+}
+
+void
 CodeGeneratorMIPS64::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.reg_ == FloatRegisters::f0);
