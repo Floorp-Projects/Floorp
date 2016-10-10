@@ -176,6 +176,25 @@ MacroAssembler::subPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::sub64(Register64 src, Register64 dest)
+{
+    as_sltu(ScratchRegister, dest.low, src.low);
+    as_subu(dest.high, dest.high, ScratchRegister);
+    as_subu(dest.low, dest.low, src.low);
+    as_subu(dest.high, dest.high, src.high);
+}
+
+void
+MacroAssembler::sub64(Imm64 imm, Register64 dest)
+{
+    ma_li(ScratchRegister, imm.low());
+    as_sltu(ScratchRegister, dest.low, ScratchRegister);
+    as_subu(dest.high, dest.high, ScratchRegister);
+    ma_subu(dest.low, dest.low, imm.low());
+    ma_subu(dest.high, dest.high, imm.hi());
+}
+
+void
 MacroAssembler::mul64(Imm64 imm, const Register64& dest)
 {
     // LOW32  = LOW(LOW(dest) * LOW(imm));
