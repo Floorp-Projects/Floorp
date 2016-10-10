@@ -354,7 +354,7 @@ class BytecodeParser
         uint32_t offset = offsetForStackOperand(script_->pcToOffset(pc), operand);
         if (offset >= SpecialOffsets::FirstSpecialOffset)
             return nullptr;
-        return script_->offsetToPC(offsetForStackOperand(script_->pcToOffset(pc), operand));
+        return script_->offsetToPC(offset);
     }
 
   private:
