@@ -1037,11 +1037,13 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
     def funsize_props(self):
         """Set buildbot properties required to trigger funsize tasks
          responsible to generate partial updates for successfully generated locales"""
+        locales = self.query_locales()
         funsize_info = {
-            'locales': self.query_locales(),
+            'locales': locales,
             'branch': self.config['branch'],
             'appName': self.config['appName'],
             'platform': self.config['platform'],
+            'completeMarUrls':  {locale: self._query_complete_mar_url(locale) for locale in locales},
         }
         self.info('funsize info: %s' % funsize_info)
         self.set_buildbot_property('funsize_info', json.dumps(funsize_info),
