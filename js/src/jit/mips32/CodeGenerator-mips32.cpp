@@ -543,6 +543,30 @@ CodeGeneratorMIPS::visitWasmStoreI64(LWasmStoreI64* lir)
 }
 
 void
+CodeGeneratorMIPS::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
+{
+    const MWasmLoadGlobalVar* mir = ins->mir();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    MOZ_ASSERT(mir->type() == MIRType::Int64);
+    Register64 output = ToOutRegister64(ins);
+
+    masm.load32(Address(GlobalReg, addr + INT64LOW_OFFSET), output.low);
+    masm.load32(Address(GlobalReg, addr + INT64HIGH_OFFSET), output.high);
+}
+
+void
+CodeGeneratorMIPS::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
+{
+    const MWasmStoreGlobalVar* mir = ins->mir();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    MOZ_ASSERT (mir->value()->type() == MIRType::Int64);
+    Register64 input = ToRegister64(ins->value());
+
+    masm.store32(input.low, Address(GlobalReg, addr + INT64LOW_OFFSET));
+    masm.store32(input.high, Address(GlobalReg, addr + INT64HIGH_OFFSET));
+}
+
+void
 CodeGeneratorMIPS::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
 {
     Register input = ToRegister(lir->input());
