@@ -38,6 +38,50 @@ LIRGeneratorMIPS64::useBoxFixed(MDefinition* mir, Register reg1, Register reg2, 
 }
 
 void
+LIRGeneratorMIPS64::lowerDivI64(MDiv* div)
+{
+    if (div->isUnsigned()) {
+        lowerUDivI64(div);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useRegister(div->lhs()), useRegister(div->rhs()),
+                                                  temp());
+    defineInt64(lir, div);
+}
+
+void
+LIRGeneratorMIPS64::lowerModI64(MMod* mod)
+{
+    if (mod->isUnsigned()) {
+        lowerUModI64(mod);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useRegister(mod->lhs()), useRegister(mod->rhs()),
+                                                  temp());
+    defineInt64(lir, mod);
+}
+
+void
+LIRGeneratorMIPS64::lowerUDivI64(MDiv* div)
+{
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useRegister(div->lhs()),
+                                                    useRegister(div->rhs()),
+                                                    temp());
+    defineInt64(lir, div);
+}
+
+void
+LIRGeneratorMIPS64::lowerUModI64(MMod* mod)
+{
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useRegister(mod->lhs()),
+                                                    useRegister(mod->rhs()),
+                                                    temp());
+    defineInt64(lir, mod);
+}
+
+void
 LIRGeneratorMIPS64::visitBox(MBox* box)
 {
     MDefinition* opd = box->getOperand(0);
