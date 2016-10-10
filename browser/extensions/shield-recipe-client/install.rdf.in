@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+#filter substitution
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>shield-recipe-client@mozilla.org</em:id>
+    <em:type>2</em:type>
+    <em:bootstrap>true</em:bootstrap>
+    <em:unpack>false</em:unpack>
+    <em:version>1.0.0</em:version>
+    <em:name>Shield Recipe Client</em:name>
+    <em:description>Client to download and run recipes for SHIELD, Heartbeat, etc.</em:description>
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>@MOZ_APP_VERSION@</em:minVersion>
+        <em:maxVersion>@MOZ_APP_MAXVERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+</RDF>
