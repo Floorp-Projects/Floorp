@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsNSSComponent.h"
 #include "nssb64.h"
+#include "pkix/pkixnss.h"
 #include "pkix/pkixtypes.h"
 #include "ScopedNSSTypes.h"
 #include "secerr.h"
@@ -256,11 +257,16 @@ VerifyCertificate(CERTCertificate* cert, void* voidContext, void* pinArg)
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
-  return MapSECStatus(certVerifier->VerifyCert(cert,
-                                               certificateUsageObjectSigner,
-                                               Now(), pinArg,
-                                               nullptr, // hostname
-                                               context->builtChain));
+  Result result = certVerifier->VerifyCert(cert,
+                                           certificateUsageObjectSigner,
+                                           Now(), pinArg,
+                                           nullptr, // hostname
+                                           context->builtChain);
+  if (result != Success) {
+    return GetXPCOMFromNSSError(MapResultToPRErrorCode(result));
+  }
+
+  return NS_OK;
 }
 
 } // namespace
