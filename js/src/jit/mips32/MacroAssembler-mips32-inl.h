@@ -240,6 +240,66 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest)
 }
 
 void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest, const Register temp)
+{
+    // LOW32  = LOW(LOW(dest) * LOW(imm));
+    // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+    //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+    //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+
+    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
+    MOZ_ASSERT(temp != dest.high && temp != dest.low);
+
+    ma_li(ScratchRegister, imm.firstHalf());
+    as_multu(dest.high, ScratchRegister);
+    as_mflo(dest.high);
+
+    ma_li(ScratchRegister, imm.secondHalf());
+    as_multu(dest.low, ScratchRegister);
+    as_mflo(temp);
+    as_addu(temp, dest.high, temp);
+
+    ma_li(ScratchRegister, imm.firstHalf());
+    as_multu(dest.low, ScratchRegister);
+    as_mfhi(dest.high);
+    as_mflo(dest.low);
+    as_addu(dest.high, dest.high, temp);
+}
+
+void
+MacroAssembler::mul64(const Register64& src, const Register64& dest, const Register temp)
+{
+    // LOW32  = LOW(LOW(dest) * LOW(imm));
+    // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+    //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+    //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+
+    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
+    MOZ_ASSERT(dest != src);
+    MOZ_ASSERT(dest.low != src.high && dest.high != src.low);
+
+    as_multu(dest.high, src.low); // (2)
+    as_mflo(dest.high);
+    as_multu(dest.low, src.high); // (3)
+    as_mflo(temp);
+    as_addu(temp, dest.high, temp);
+    as_multu(dest.low, src.low);  // (4) + (1)
+    as_mfhi(dest.high);
+    as_mflo(dest.low);
+    as_addu(dest.high, dest.high, temp);
+}
+
+void
+MacroAssembler::neg64(Register64 reg)
+{
+    ma_li(ScratchRegister, Imm32(1));
+    as_movz(ScratchRegister, zero, reg.low);
+    ma_negu(reg.low, reg.low);
+    as_addu(reg.high, reg.high, ScratchRegister);
+    ma_negu(reg.high, reg.high);
+}
+
+void
 MacroAssembler::mulBy3(Register src, Register dest)
 {
     as_addu(dest, src, src);
