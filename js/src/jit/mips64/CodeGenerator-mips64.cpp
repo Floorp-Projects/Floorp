@@ -489,6 +489,22 @@ CodeGeneratorMIPS64::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
 }
 
 void
+CodeGeneratorMIPS64::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
+{
+    const LAllocation* input = lir->getOperand(0);
+    Register output = ToRegister(lir->output());
+
+    if (lir->mir()->bottomHalf()) {
+        if (input->isMemory())
+            masm.load32(ToAddress(input), output);
+        else
+            masm.ma_sll(output, ToRegister(input), Imm32(0));
+    } else {
+        MOZ_CRASH("Not implemented.");
+    }
+}
+
+void
 CodeGeneratorMIPS64::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.reg_ == FloatRegisters::f0);
