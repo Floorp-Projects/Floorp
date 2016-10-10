@@ -174,9 +174,30 @@ MacroAssembler::add64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::add64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        add64(scratch, dest);
+    } else {
+        add64(Register64(src.toReg()), dest);
+    }
+}
+
+void
 MacroAssembler::add64(Imm32 imm, Register64 dest)
 {
     ma_daddu(dest.reg, imm);
+}
+
+void
+MacroAssembler::add64(Imm64 imm, Register64 dest)
+{
+    MOZ_ASSERT(dest.reg != ScratchRegister);
+    mov(ImmWord(imm.value), ScratchRegister);
+    ma_daddu(dest.reg, ScratchRegister);
 }
 
 void
