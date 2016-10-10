@@ -585,11 +585,16 @@ public:
             ErrorInvalidValue("%s: `pixels` must not be null.", funcName);
             return;
         }
-        ReadPixels(x, y, width, height, format, type, maybeView.Value(), rv);
+        ReadPixels(x, y, width, height, format, type, maybeView.Value(), 0, rv);
     }
 
     void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
-                    GLenum type, const dom::ArrayBufferView& pixels, ErrorResult& rv);
+                    GLenum type, WebGLsizeiptr offset, ErrorResult& out_error);
+
+    void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
+                    GLenum type, const dom::ArrayBufferView& dstData, GLuint dstOffset,
+                    ErrorResult& out_error);
+
     void RenderbufferStorage(GLenum target, GLenum internalFormat,
                              GLsizei width, GLsizei height);
 protected:

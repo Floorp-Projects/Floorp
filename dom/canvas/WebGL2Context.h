@@ -53,15 +53,6 @@ private:
 public:
     void GetBufferSubData(GLenum target, GLintptr offset,
                           const dom::ArrayBufferView& dstData);
-    void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
-                    GLenum type, WebGLsizeiptr offset, ErrorResult& out_error);
-
-    void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
-                    GLenum type, const dom::ArrayBufferView& pixels,
-                    ErrorResult& out_error)
-    {
-        WebGLContext::ReadPixels(x, y, width, height, format, type, pixels, out_error);
-    }
 
     // -------------------------------------------------------------------------
     // Framebuffer objects - WebGL2ContextFramebuffers.cpp

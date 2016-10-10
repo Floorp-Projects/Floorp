@@ -1429,51 +1429,47 @@ WebGLContext::ValidatePackSize(const char* funcName, uint32_t width, uint32_t he
 
 void
 WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
-                         GLenum type, const dom::ArrayBufferView& view,
-                         ErrorResult& out_error)
+                         GLenum type, const dom::ArrayBufferView& dstView,
+                         GLuint dstElemOffset, ErrorResult& out_error)
 {
+    const char funcName[] = "readPixels";
     if (!ReadPixels_SharedPrecheck(&out_error))
         return;
 
     if (mBoundPixelPackBuffer) {
-        ErrorInvalidOperation("readPixels: PIXEL_PACK_BUFFER must be null.");
+        ErrorInvalidOperation("%s: PIXEL_PACK_BUFFER must be null.", funcName);
         return;
     }
 
-    //////
+    ////
 
     js::Scalar::Type reqScalarType;
     if (!GetJSScalarFromGLType(type, &reqScalarType)) {
-        ErrorInvalidEnum("readPixels: Bad `type`.");
+        ErrorInvalidEnum("%s: Bad `type`.", funcName);
         return;
     }
 
-    const js::Scalar::Type dataScalarType = JS_GetArrayBufferViewType(view.Obj());
-    if (dataScalarType != reqScalarType) {
-        ErrorInvalidOperation("readPixels: `pixels` type does not match `type`.");
+    const auto& viewElemType = dstView.Type();
+    if (viewElemType != reqScalarType) {
+        ErrorInvalidOperation("%s: `pixels` type does not match `type`.", funcName);
         return;
     }
 
-    //////
+    ////
 
-    // Compute length and data.  Don't reenter after this point, lest the
-    // precomputed go out of sync with the instant length/data.
-    view.ComputeLengthAndData();
-    void* data = view.DataAllowShared();
-    const auto dataLen = view.LengthAllowShared();
-
-    if (!data) {
-        ErrorOutOfMemory("readPixels: buffer storage is null. Did we run out of memory?");
-        out_error.Throw(NS_ERROR_OUT_OF_MEMORY);
+    uint8_t* bytes;
+    size_t byteLen;
+    if (!ValidateArrayBufferView(funcName, dstView, dstElemOffset, 0, &bytes, &byteLen))
         return;
-    }
 
-    ReadPixelsImpl(x, y, width, height, format, type, data, dataLen);
+    ////
+
+    ReadPixelsImpl(x, y, width, height, format, type, bytes, byteLen);
 }
 
 void
-WebGL2Context::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
-                          GLenum type, WebGLsizeiptr offset, ErrorResult& out_error)
+WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
+                         GLenum type, WebGLsizeiptr offset, ErrorResult& out_error)
 {
     if (!ReadPixels_SharedPrecheck(&out_error))
         return;
