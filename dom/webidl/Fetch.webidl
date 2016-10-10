@@ -24,10 +24,3 @@ interface Body {
   [Throws]
   Promise<USVString> text();
 };
-
-[NoInterfaceObject, Exposed=(Window,Worker)]
-interface GlobalFetch {
-  [Throws]
-  Promise<Response> fetch(RequestInfo input, optional RequestInit init);
-};
-
