@@ -672,10 +672,6 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
           break;
         }
       }
-      // if both have been found we don't need to search further
-      if (bIncludesDouble && bIncludesSingle) {
-        break;
-      }
     }
 
     // Delimiter and escaping is according to the following table
