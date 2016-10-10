@@ -7,7 +7,6 @@
 "use strict";
 
 const {gDevTools} = require("devtools/client/framework/devtools");
-const Services = require("Services");
 
 const DEFAULT_PREVIEW_TEXT = "Abc";
 const PREVIEW_UPDATE_DELAY = 150;
