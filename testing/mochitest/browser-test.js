@@ -606,7 +606,7 @@ Tester.prototype = {
             // Run the GC and CC a few times to make sure that as much
             // as possible is freed.
             let numCycles = 3;
-            for (i = 0; i < numCycles; i++) {
+            for (let i = 0; i < numCycles; i++) {
               Cu.forceGC();
               Cu.forceCC();
             }
