@@ -762,7 +762,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void add64(Register64 src, Register64 dest) PER_ARCH;
     inline void add64(Imm32 imm, Register64 dest) PER_ARCH;
-    inline void add64(Imm64 imm, Register64 dest) DEFINED_ON(x86, x64, arm, mips64);
+    inline void add64(Imm64 imm, Register64 dest) DEFINED_ON(x86, x64, arm, mips32, mips64);
     inline void add64(const Operand& src, Register64 dest) DEFINED_ON(x64, mips64);
 
     inline void addFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
