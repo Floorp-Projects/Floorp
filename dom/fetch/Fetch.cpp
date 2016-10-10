@@ -1286,16 +1286,16 @@ FetchBody<Derived>::SetMimeType()
 {
   // Extract mime type.
   ErrorResult result;
-  nsTArray<nsCString> contentTypeValues;
+  nsCString contentTypeValues;
   MOZ_ASSERT(DerivedClass()->GetInternalHeaders());
-  DerivedClass()->GetInternalHeaders()->GetAll(NS_LITERAL_CSTRING("Content-Type"),
-                                               contentTypeValues, result);
+  DerivedClass()->GetInternalHeaders()->Get(NS_LITERAL_CSTRING("Content-Type"),
+                                            contentTypeValues, result);
   MOZ_ALWAYS_TRUE(!result.Failed());
 
   // HTTP ABNF states Content-Type may have only one value.
   // This is from the "parse a header value" of the fetch spec.
-  if (contentTypeValues.Length() == 1) {
-    mMimeType = contentTypeValues[0];
+  if (!contentTypeValues.IsVoid() && contentTypeValues.Find(",") == -1) {
+    mMimeType = contentTypeValues;
     ToLowerCase(mMimeType);
   }
 }

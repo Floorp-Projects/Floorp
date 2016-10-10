@@ -74,9 +74,8 @@ public:
   void Append(const nsACString& aName, const nsACString& aValue,
               ErrorResult& aRv);
   void Delete(const nsACString& aName, ErrorResult& aRv);
-  void Get(const nsACString& aName, nsCString& aValue, ErrorResult& aRv) const;
-  void GetAll(const nsACString& aName, nsTArray<nsCString>& aResults,
-              ErrorResult& aRv) const;
+  void Get(const nsACString& aName, nsACString& aValue, ErrorResult& aRv) const;
+  void GetFirst(const nsACString& aName, nsACString& aValue, ErrorResult& aRv) const;
   bool Has(const nsACString& aName, ErrorResult& aRv) const;
   void Set(const nsACString& aName, const nsACString& aValue, ErrorResult& aRv);
 
