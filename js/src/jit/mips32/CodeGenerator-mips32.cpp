@@ -453,8 +453,9 @@ CodeGeneratorMIPS::visitUDivOrModI64(LUDivOrModI64* lir)
         masm.callWithABI(wasm::SymbolicAddress::UDivI64);
 }
 
+template <typename T>
 void
-CodeGeneratorMIPS::visitWasmLoadI64(LWasmLoadI64* lir)
+CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
     Register64 output = ToOutRegister64(lir);
@@ -488,6 +489,28 @@ CodeGeneratorMIPS::visitWasmLoadI64(LWasmLoadI64* lir)
     memoryBarrier(mir->barrierBefore());
 
     MOZ_ASSERT(INT64LOW_OFFSET == 0);
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        if (byteSize <= 4) {
+            masm.ma_load_unaligned(output.low, BaseIndex(HeapReg, ptr, TimesOne),
+                                   temp, static_cast<LoadStoreSize>(8 * byteSize),
+                                   isSigned ? SignExtend : ZeroExtend);
+            if (!isSigned)
+                masm.move32(Imm32(0), output.high);
+            else
+                masm.ma_sra(output.high, output.low, Imm32(31));
+
+        } else {
+            ScratchRegisterScope scratch(masm);
+            masm.ma_load_unaligned(output.low, BaseIndex(HeapReg, ptr, TimesOne), temp, SizeWord);
+            masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
+            masm.ma_load_unaligned(output.high, BaseIndex(HeapReg, scratch, TimesOne),
+                                   temp, SizeWord);
+        }
+        return;
+    }
+
     if (byteSize <= 4) {
         masm.ma_load(output.low, BaseIndex(HeapReg, ptr, TimesOne),
                      static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
@@ -506,7 +529,20 @@ CodeGeneratorMIPS::visitWasmLoadI64(LWasmLoadI64* lir)
 }
 
 void
-CodeGeneratorMIPS::visitWasmStoreI64(LWasmStoreI64* lir)
+CodeGeneratorMIPS::visitWasmLoadI64(LWasmLoadI64* lir)
+{
+    emitWasmLoadI64(lir);
+}
+
+void
+CodeGeneratorMIPS::visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir)
+{
+    emitWasmLoadI64(lir);
+}
+
+template <typename T>
+void
+CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
 {
     const MWasmStore* mir = lir->mir();
     Register64 value = ToRegister64(lir->getInt64Operand(lir->ValueIndex));
@@ -529,6 +565,22 @@ CodeGeneratorMIPS::visitWasmStoreI64(LWasmStoreI64* lir)
     memoryBarrier(mir->barrierBefore());
 
     MOZ_ASSERT(INT64LOW_OFFSET == 0);
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        if (byteSize <= 4) {
+            masm.ma_store_unaligned(value.low, BaseIndex(HeapReg, ptr, TimesOne),
+                                    temp, static_cast<LoadStoreSize>(8 * byteSize));
+        } else {
+            ScratchRegisterScope scratch(masm);
+            masm.ma_store_unaligned(value.low, BaseIndex(HeapReg, ptr, TimesOne), temp, SizeWord);
+            masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
+            masm.ma_store_unaligned(value.high, BaseIndex(HeapReg, scratch, TimesOne),
+                                    temp, SizeWord);
+        }
+        return;
+    }
+
     if (byteSize <= 4) {
         masm.ma_store(value.low, BaseIndex(HeapReg, ptr, TimesOne),
                       static_cast<LoadStoreSize>(8 * byteSize));
@@ -540,6 +592,18 @@ CodeGeneratorMIPS::visitWasmStoreI64(LWasmStoreI64* lir)
     }
 
     memoryBarrier(mir->barrierAfter());
+}
+
+void
+CodeGeneratorMIPS::visitWasmStoreI64(LWasmStoreI64* lir)
+{
+    emitWasmStoreI64(lir);
+}
+
+void
+CodeGeneratorMIPS::visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* lir)
+{
+    emitWasmStoreI64(lir);
 }
 
 void
