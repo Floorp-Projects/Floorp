@@ -39,6 +39,7 @@
 #include "nsThreadUtils.h"
 #include "nspr.h"
 #include "pkix/Time.h"
+#include "pkix/pkixnss.h"
 #include "pkix/pkixtypes.h"
 #include "secasn1.h"
 #include "secder.h"
@@ -613,17 +614,17 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t* data, uint32_t length,
     }
 
     UniqueCERTCertList certChain;
-    SECStatus srv = certVerifier->VerifyCert(node->cert,
-                                             certificateUsageEmailRecipient,
-                                             mozilla::pkix::Now(), ctx,
-                                             nullptr, certChain);
-    if (srv != SECSuccess) {
+    mozilla::pkix::Result result =
+      certVerifier->VerifyCert(node->cert, certificateUsageEmailRecipient,
+                               mozilla::pkix::Now(), ctx, nullptr, certChain);
+    if (result != mozilla::pkix::Success) {
       nsCOMPtr<nsIX509Cert> certToShow = nsNSSCertificate::Create(node->cert);
       DisplayCertificateAlert(ctx, "NotImportingUnverifiedCert", certToShow, locker);
       continue;
     }
-    srv = ImportCertsIntoPermanentStorage(certChain, certUsageEmailRecipient,
-                                          false);
+    SECStatus srv = ImportCertsIntoPermanentStorage(certChain,
+                                                    certUsageEmailRecipient,
+                                                    false);
     if (srv != SECSuccess) {
       return NS_ERROR_FAILURE;
     }
@@ -669,18 +670,18 @@ nsNSSCertificateDB::ImportValidCACertsInList(const UniqueCERTCertList& filteredC
        !CERT_LIST_END(node, filteredCerts.get());
        node = CERT_LIST_NEXT(node)) {
     UniqueCERTCertList certChain;
-    SECStatus rv = certVerifier->VerifyCert(node->cert,
-                                            certificateUsageVerifyCA,
-                                            mozilla::pkix::Now(), ctx,
-                                            nullptr, certChain);
-    if (rv != SECSuccess) {
+    mozilla::pkix::Result result =
+      certVerifier->VerifyCert(node->cert, certificateUsageVerifyCA,
+                               mozilla::pkix::Now(), ctx, nullptr, certChain);
+    if (result != mozilla::pkix::Success) {
       nsCOMPtr<nsIX509Cert> certToShow = nsNSSCertificate::Create(node->cert);
       DisplayCertificateAlert(ctx, "NotImportingUnverifiedCert", certToShow, proofOfLock);
       continue;
     }
 
-    rv = ImportCertsIntoPermanentStorage(certChain, certUsageAnyCA, true);
-    if (rv != SECSuccess) {
+    SECStatus srv = ImportCertsIntoPermanentStorage(certChain, certUsageAnyCA,
+                                                    true);
+    if (srv != SECSuccess) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -1140,13 +1141,13 @@ nsNSSCertificateDB::FindCertByEmailAddress(const char* aEmailAddress,
        node = CERT_LIST_NEXT(node)) {
 
     UniqueCERTCertList unusedCertChain;
-    SECStatus srv = certVerifier->VerifyCert(node->cert,
-                                             certificateUsageEmailRecipient,
-                                             mozilla::pkix::Now(),
-                                             nullptr /*XXX pinarg*/,
-                                             nullptr /*hostname*/,
-                                             unusedCertChain);
-    if (srv == SECSuccess) {
+    mozilla::pkix::Result result =
+      certVerifier->VerifyCert(node->cert, certificateUsageEmailRecipient,
+                               mozilla::pkix::Now(),
+                               nullptr /*XXX pinarg*/,
+                               nullptr /*hostname*/,
+                               unusedCertChain);
+    if (result == mozilla::pkix::Success) {
       break;
     }
   }
@@ -1488,45 +1489,38 @@ VerifyCertAtTime(nsIX509Cert* aCert,
 
   UniqueCERTCertList resultChain;
   SECOidTag evOidPolicy;
-  SECStatus srv;
+  mozilla::pkix::Result result;
 
   if (aHostname && aUsage == certificateUsageSSLServer) {
-    srv = certVerifier->VerifySSLServerCert(nssCert,
-                                            nullptr, // stapledOCSPResponse
-                                            nullptr, // sctsFromTLSExtension
-                                            aTime,
-                                            nullptr, // Assume no context
-                                            aHostname,
-                                            resultChain,
-                                            false, // don't save intermediates
-                                            aFlags,
-                                            &evOidPolicy);
+    result = certVerifier->VerifySSLServerCert(nssCert,
+                                               nullptr, // stapledOCSPResponse
+                                               nullptr, // sctsFromTLSExtension
+                                               aTime,
+                                               nullptr, // Assume no context
+                                               aHostname,
+                                               resultChain,
+                                               false, // don't save intermediates
+                                               aFlags,
+                                               &evOidPolicy);
   } else {
-    srv = certVerifier->VerifyCert(nssCert.get(), aUsage, aTime,
-                                   nullptr, // Assume no context
-                                   aHostname,
-                                   resultChain,
-                                   aFlags,
-                                   nullptr, // stapledOCSPResponse
-                                   nullptr, // sctsFromTLSExtension
-                                   &evOidPolicy);
+    result = certVerifier->VerifyCert(nssCert.get(), aUsage, aTime,
+                                      nullptr, // Assume no context
+                                      aHostname,
+                                      resultChain,
+                                      aFlags,
+                                      nullptr, // stapledOCSPResponse
+                                      nullptr, // sctsFromTLSExtension
+                                      &evOidPolicy);
   }
-
-  PRErrorCode error = PR_GetError();
 
   nsCOMPtr<nsIX509CertList> nssCertList;
   // This adopts the list
   nssCertList = new nsNSSCertList(Move(resultChain), locker);
   NS_ENSURE_TRUE(nssCertList, NS_ERROR_FAILURE);
 
-  if (srv == SECSuccess) {
-    if (evOidPolicy != SEC_OID_UNKNOWN) {
-      *aHasEVPolicy = true;
-    }
-    *_retval = 0;
-  } else {
-    NS_ENSURE_TRUE(error != 0, NS_ERROR_FAILURE);
-    *_retval = error;
+  *_retval = mozilla::pkix::MapResultToPRErrorCode(result);
+  if (result == mozilla::pkix::Success && evOidPolicy != SEC_OID_UNKNOWN) {
+    *aHasEVPolicy = true;
   }
   nssCertList.forget(aVerifiedChain);
 

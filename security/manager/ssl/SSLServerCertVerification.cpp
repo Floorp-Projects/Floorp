@@ -1309,8 +1309,6 @@ AuthCertificate(CertVerifier& certVerifier,
   MOZ_ASSERT(infoObject);
   MOZ_ASSERT(cert);
 
-  SECStatus rv;
-
   // We want to avoid storing any intermediate cert information when browsing
   // in private, transient contexts.
   bool saveIntermediates =
@@ -1331,20 +1329,18 @@ AuthCertificate(CertVerifier& certVerifier,
     flags |= CertVerifier::FLAG_TLS_IGNORE_STATUS_REQUEST;
   }
 
-  rv = certVerifier.VerifySSLServerCert(cert, stapledOCSPResponse,
-                                        sctsFromTLSExtension, time, infoObject,
-                                        infoObject->GetHostNameRaw(),
-                                        certList, saveIntermediates, flags,
-                                        &evOidPolicy, &ocspStaplingStatus,
-                                        &keySizeStatus, &sha1ModeResult,
-                                        &pinningTelemetryInfo,
-                                        &certificateTransparencyInfo);
-  PRErrorCode savedErrorCode;
-  if (rv != SECSuccess) {
-    savedErrorCode = PR_GetError();
-  }
+  Result rv = certVerifier.VerifySSLServerCert(cert, stapledOCSPResponse,
+                                               sctsFromTLSExtension, time,
+                                               infoObject,
+                                               infoObject->GetHostNameRaw(),
+                                               certList, saveIntermediates,
+                                               flags, &evOidPolicy,
+                                               &ocspStaplingStatus,
+                                               &keySizeStatus, &sha1ModeResult,
+                                               &pinningTelemetryInfo,
+                                               &certificateTransparencyInfo);
 
-  uint32_t evStatus = (rv != SECSuccess) ? 0                // 0 = Failure
+  uint32_t evStatus = (rv != Success) ? 0                   // 0 = Failure
                     : (evOidPolicy == SEC_OID_UNKNOWN) ? 1  // 1 = DV
                     : 2;                                    // 2 = EV
   Telemetry::Accumulate(Telemetry::CERT_EV_STATUS, evStatus);
@@ -1379,15 +1375,14 @@ AuthCertificate(CertVerifier& certVerifier,
   RefPtr<nsNSSCertificate> nsc;
 
   if (!status || !status->HasServerCert()) {
-    if( rv == SECSuccess ){
+    if (rv == Success) {
       nsc = nsNSSCertificate::Create(cert.get(), &evOidPolicy);
-    }
-    else {
+    } else {
       nsc = nsNSSCertificate::Create(cert.get());
     }
   }
 
-  if (rv == SECSuccess) {
+  if (rv == Success) {
     GatherSuccessfulValidationTelemetry(certList);
     GatherCertificateTransparencyTelemetry(certList,
                                            certificateTransparencyInfo);
@@ -1400,13 +1395,13 @@ AuthCertificate(CertVerifier& certVerifier,
       infoObject->SetSSLStatus(status);
     }
 
-    if (rv == SECSuccess) {
+    if (rv == Success) {
       // Certificate verification succeeded delete any potential record
       // of certificate error bits.
       RememberCertErrorsTable::GetInstance().RememberCertHasError(infoObject,
-                                                                  nullptr, rv);
-    }
-    else {
+                                                                  nullptr,
+                                                                  SECSuccess);
+    } else {
       // Certificate verification failed, update the status' bits.
       RememberCertErrorsTable::GetInstance().LookupCertErrorBits(
         infoObject, status);
@@ -1414,7 +1409,7 @@ AuthCertificate(CertVerifier& certVerifier,
 
     if (status && !status->HasServerCert()) {
       nsNSSCertificate::EVStatus evStatus;
-      if (evOidPolicy == SEC_OID_UNKNOWN || rv != SECSuccess) {
+      if (evOidPolicy == SEC_OID_UNKNOWN || rv != Success) {
         evStatus = nsNSSCertificate::ev_status_invalid;
       } else {
         evStatus = nsNSSCertificate::ev_status_valid;
@@ -1426,14 +1421,14 @@ AuthCertificate(CertVerifier& certVerifier,
     }
   }
 
-  if (rv != SECSuccess) {
+  if (rv != Success) {
     // Certificate validation failed; store the peer certificate chain on
     // infoObject so it can be used for error reporting.
     infoObject->SetFailedCertChain(Move(peerCertChain));
-    PR_SetError(savedErrorCode, 0);
+    PR_SetError(MapResultToPRErrorCode(rv), 0);
   }
 
-  return rv;
+  return rv == Success ? SECSuccess : SECFailure;
 }
 
 /*static*/ SECStatus

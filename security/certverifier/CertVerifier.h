@@ -97,23 +97,24 @@ public:
 
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
   // Only one usage per verification is supported.
-  SECStatus VerifyCert(CERTCertificate* cert,
-                       SECCertificateUsage usage,
-                       mozilla::pkix::Time time,
-                       void* pinArg,
-                       const char* hostname,
-               /*out*/ UniqueCERTCertList& builtChain,
-                       Flags flags = 0,
-       /*optional in*/ const SECItem* stapledOCSPResponse = nullptr,
-       /*optional in*/ const SECItem* sctsFromTLS = nullptr,
-      /*optional out*/ SECOidTag* evOidPolicy = nullptr,
-      /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr,
-      /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
-      /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
-      /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
-      /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr);
+  mozilla::pkix::Result VerifyCert(
+                    CERTCertificate* cert,
+                    SECCertificateUsage usage,
+                    mozilla::pkix::Time time,
+                    void* pinArg,
+                    const char* hostname,
+            /*out*/ UniqueCERTCertList& builtChain,
+                    Flags flags = 0,
+    /*optional in*/ const SECItem* stapledOCSPResponse = nullptr,
+    /*optional in*/ const SECItem* sctsFromTLS = nullptr,
+   /*optional out*/ SECOidTag* evOidPolicy = nullptr,
+   /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr,
+   /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
+   /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
+   /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
+   /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr);
 
-  SECStatus VerifySSLServerCert(
+  mozilla::pkix::Result VerifySSLServerCert(
                     const UniqueCERTCertificate& peerCert,
        /*optional*/ const SECItem* stapledOCSPResponse,
        /*optional*/ const SECItem* sctsFromTLS,
