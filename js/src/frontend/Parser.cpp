@@ -93,6 +93,8 @@ DeclarationKindString(DeclarationKind kind)
       case DeclarationKind::PositionalFormalParameter:
       case DeclarationKind::FormalParameter:
         return "formal parameter";
+      case DeclarationKind::CoverArrowParameter:
+        return "cover arrow parameter";
       case DeclarationKind::Var:
         return "var";
       case DeclarationKind::Let:
@@ -1299,6 +1301,10 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
 
         break;
       }
+
+      case DeclarationKind::CoverArrowParameter:
+        // CoverArrowParameter is only used as a placeholder declaration kind.
+        break;
 
       case DeclarationKind::PositionalFormalParameter:
         MOZ_CRASH("Positional formal parameter names should use "
@@ -2628,12 +2634,39 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
             if (!tokenStream.getToken(&tt, TokenStream::Operand))
                 return false;
             MOZ_ASSERT_IF(parenFreeArrow, tt == TOK_NAME || tt == TOK_YIELD);
+
+            if (tt == TOK_TRIPLEDOT) {
+                if (IsSetterKind(kind)) {
+                    report(ParseError, false, null(),
+                           JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
+                    return false;
+                }
+
+                disallowDuplicateParams = true;
+                if (duplicatedParam) {
+                    // Has duplicated args before the rest parameter.
+                    report(ParseError, false, null(), JSMSG_BAD_DUP_ARGS);
+                    return false;
+                }
+
+                hasRest = true;
+                funbox->function()->setHasRest();
+
+                if (!tokenStream.getToken(&tt))
+                    return false;
+
+                if (tt != TOK_NAME && tt != TOK_YIELD && tt != TOK_LB && tt != TOK_LC) {
+                    report(ParseError, false, null(), JSMSG_NO_REST_NAME);
+                    return false;
+                }
+            }
+
             switch (tt) {
               case TOK_LB:
               case TOK_LC: {
-                /* See comment below in the TOK_NAME case. */
                 disallowDuplicateParams = true;
                 if (duplicatedParam) {
+                    // Has duplicated args before the destructuring parameter.
                     report(ParseError, false, null(), JSMSG_BAD_DUP_ARGS);
                     return false;
                 }
@@ -2652,31 +2685,6 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
 
                 break;
               }
-
-              case TOK_TRIPLEDOT:
-                if (IsSetterKind(kind)) {
-                    report(ParseError, false, null(),
-                           JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
-                    return false;
-                }
-
-                hasRest = true;
-                funbox->function()->setHasRest();
-
-                disallowDuplicateParams = true;
-                if (duplicatedParam) {
-                    // Has duplicated args before the rest parameter.
-                    report(ParseError, false, null(), JSMSG_BAD_DUP_ARGS);
-                    return false;
-                }
-
-                if (!tokenStream.getToken(&tt))
-                    return false;
-                if (tt != TOK_NAME && tt != TOK_YIELD) {
-                    report(ParseError, false, null(), JSMSG_NO_REST_NAME);
-                    return false;
-                }
-                MOZ_FALLTHROUGH;
 
               case TOK_NAME:
               case TOK_YIELD: {
@@ -3941,9 +3949,8 @@ Parser<FullParseHandler>::checkDestructuringArray(ParseNode* arrayPattern,
  * pc->inDestructuringDecl clear, so the lvalue expressions in the
  * pattern are parsed normally.  primaryExpr links variable references
  * into the appropriate use chains; creates placeholder definitions;
- * and so on.  checkDestructuringPattern is called with |data| nullptr
- * (since we won't be binding any new names), and we specialize lvalues
- * as appropriate.
+ * and so on.  checkDestructuringPattern won't bind any new names and
+ * we specialize lvalues as appropriate.
  *
  * In declaration-like contexts, the normal variable reference
  * processing would just be an obstruction, because we're going to
@@ -3953,8 +3960,7 @@ Parser<FullParseHandler>::checkDestructuringArray(ParseNode* arrayPattern,
  * whatever name nodes it creates unconnected.  Then, here in
  * checkDestructuringPattern, we require the pattern's property value
  * positions to be simple names, and define them as appropriate to the
- * context.  For these calls, |data| points to the right sort of
- * BindData.
+ * context.
  */
 template <>
 bool
@@ -9085,13 +9091,24 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
         if (!tokenStream.getToken(&next))
             return null();
 
-        // This doesn't check that the provided name is allowed, e.g. if the
-        // enclosing code is strict mode code, any of "arguments", "let", or
-        // "yield" should be prohibited.  Argument-parsing code handles that.
-        if (next != TOK_NAME && next != TOK_YIELD) {
-            report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
-                   "rest argument name", TokenKindToDesc(next));
-            return null();
+        if (next == TOK_LB || next == TOK_LC) {
+            // Validate, but don't store the pattern right now. The whole arrow
+            // function is reparsed in functionFormalParametersAndBody().
+            if (!destructuringDeclaration(DeclarationKind::CoverArrowParameter, yieldHandling,
+                                          next))
+            {
+                return null();
+            }
+        } else {
+            // This doesn't check that the provided name is allowed, e.g. if
+            // the enclosing code is strict mode code, any of "let", "yield",
+            // or "arguments" should be prohibited.  Argument-parsing code
+            // handles that.
+            if (next != TOK_NAME && next != TOK_YIELD) {
+                report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+                    "rest argument name", TokenKindToDesc(next));
+                return null();
+            }
         }
 
         if (!tokenStream.getToken(&next))

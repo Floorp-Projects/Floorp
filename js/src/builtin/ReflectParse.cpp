@@ -3496,7 +3496,6 @@ ASTSerializer::functionArgs(ParseNode* pn, ParseNode* pnargs,
         if (!pattern(pat, &node))
             return false;
         if (rest.isUndefined() && arg->pn_next == pnargs->last()) {
-            MOZ_ASSERT(arg->isKind(PNK_NAME));
             rest.setObject(node.toObject());
         } else {
             if (!args.append(node))
