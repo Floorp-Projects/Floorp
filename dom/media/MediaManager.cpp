@@ -21,7 +21,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPermissionManager.h"
 #include "nsIPopupWindowManager.h"
-#include "nsISupportsArray.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsISupportsPrimitives.h"
@@ -2407,14 +2406,10 @@ if (privileged) {
         return;
       }
 
-      nsCOMPtr<nsISupportsArray> devicesCopy; // before we give up devices below
+      nsCOMPtr<nsIMutableArray> devicesCopy = nsArray::Create(); // before we give up devices below
       if (!askPermission) {
-        nsresult rv = NS_NewISupportsArray(getter_AddRefs(devicesCopy));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
         for (auto& device : **devices) {
-          rv = devicesCopy->AppendElement(device);
+          nsresult rv = devicesCopy->AppendElement(device, /*weak =*/ false);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return;
           }
@@ -3032,15 +3027,15 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     if (aSubject) {
       // A particular device or devices were chosen by the user.
       // NOTE: does not allow setting a device to null; assumes nullptr
-      nsCOMPtr<nsISupportsArray> array(do_QueryInterface(aSubject));
+      nsCOMPtr<nsIArray> array(do_QueryInterface(aSubject));
       MOZ_ASSERT(array);
       uint32_t len = 0;
-      array->Count(&len);
+      array->GetLength(&len);
       bool videoFound = false, audioFound = false;
       for (uint32_t i = 0; i < len; i++) {
-        nsCOMPtr<nsISupports> supports;
-        array->GetElementAt(i,getter_AddRefs(supports));
-        nsCOMPtr<nsIMediaDevice> device(do_QueryInterface(supports));
+        nsCOMPtr<nsIMediaDevice> device;
+        array->QueryElementAt(i, NS_GET_IID(nsIMediaDevice),
+                              getter_AddRefs(device));
         MOZ_ASSERT(device); // shouldn't be returning anything else...
         if (device) {
           nsString type;
