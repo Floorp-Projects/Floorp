@@ -545,6 +545,36 @@ CodeGeneratorMIPS::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 }
 
 void
+CodeGeneratorMIPS::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    MInt64ToFloatingPoint* mir = lir->mir();
+    MIRType toType = mir->type();
+
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(input.low);
+    regs.take(input.high);
+    Register temp = regs.takeAny();
+
+    masm.setupUnalignedABICall(temp);
+    masm.passABIArg(input.high);
+    masm.passABIArg(input.low);
+
+    if (lir->mir()->isUnsigned())
+        masm.callWithABI(wasm::SymbolicAddress::Uint64ToFloatingPoint, MoveOp::DOUBLE);
+    else
+        masm.callWithABI(wasm::SymbolicAddress::Int64ToFloatingPoint, MoveOp::DOUBLE);
+
+    MOZ_ASSERT_IF(toType == MIRType::Double, output == ReturnDoubleReg);
+    if (toType == MIRType::Float32) {
+         MOZ_ASSERT(output == ReturnFloat32Reg);
+         masm.convertDoubleToFloat32(ReturnDoubleReg, output);
+    }
+}
+
+void
 CodeGeneratorMIPS::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.code_ == ReturnDoubleReg.code_);
