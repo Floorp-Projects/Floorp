@@ -634,6 +634,16 @@ CodeGeneratorMIPS64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
 }
 
 void
+CodeGeneratorMIPS64::visitTestI64AndBranch(LTestI64AndBranch* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    MBasicBlock* ifTrue = lir->ifTrue();
+    MBasicBlock* ifFalse = lir->ifFalse();
+
+    emitBranch(input.reg, Imm32(0), Assembler::NonZero, ifTrue, ifFalse);
+}
+
+void
 CodeGeneratorMIPS64::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.reg_ == FloatRegisters::f0);
