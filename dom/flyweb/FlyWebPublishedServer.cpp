@@ -139,7 +139,7 @@ FlyWebPublishedServer::OnWebSocketAccept(InternalRequest* aConnectRequest,
 
   nsAutoCString extensions, negotiatedExtensions;
   aConnectRequest->Headers()->
-    Get(NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"), extensions, aRv);
+    GetFirst(NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"), extensions, aRv);
   mozilla::net::ProcessServerWebSocketExtensions(extensions,
                                                  negotiatedExtensions);
 
@@ -402,7 +402,7 @@ FlyWebPublishedServerChild::OnWebSocketAcceptInternal(InternalRequest* aRequest,
 
     nsAutoCString reqProtocols;
     aRequest->Headers()->
-      Get(NS_LITERAL_CSTRING("Sec-WebSocket-Protocol"), reqProtocols, aRv);
+      GetFirst(NS_LITERAL_CSTRING("Sec-WebSocket-Protocol"), reqProtocols, aRv);
     if (!ContainsToken(reqProtocols, NS_ConvertUTF16toUTF8(protocol))) {
       // Should throw a better error here
       aRv.Throw(NS_ERROR_FAILURE);

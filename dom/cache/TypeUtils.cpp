@@ -45,21 +45,18 @@ namespace {
 static bool
 HasVaryStar(mozilla::dom::InternalHeaders* aHeaders)
 {
-  AutoTArray<nsCString, 16> varyHeaders;
+  nsCString varyHeaders;
   ErrorResult rv;
-  aHeaders->GetAll(NS_LITERAL_CSTRING("vary"), varyHeaders, rv);
+  aHeaders->Get(NS_LITERAL_CSTRING("vary"), varyHeaders, rv);
   MOZ_ALWAYS_TRUE(!rv.Failed());
 
-  for (uint32_t i = 0; i < varyHeaders.Length(); ++i) {
-    nsAutoCString varyValue(varyHeaders[i]);
-    char* rawBuffer = varyValue.BeginWriting();
-    char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
-    for (; token;
-         token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
-      nsDependentCString header(token);
-      if (header.EqualsLiteral("*")) {
-        return true;
-      }
+  char* rawBuffer = varyHeaders.BeginWriting();
+  char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
+  for (; token;
+       token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
+    nsDependentCString header(token);
+    if (header.EqualsLiteral("*")) {
+      return true;
     }
   }
   return false;
