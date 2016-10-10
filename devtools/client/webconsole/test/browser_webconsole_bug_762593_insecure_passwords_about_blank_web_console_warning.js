@@ -10,7 +10,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-bug-762593-insecure-passwords-about-blank-web-console-warning.html";
 const INSECURE_PASSWORD_MSG = "Password fields present on an insecure " +
-  "(http://) page. This is a security risk that allows user login " +
+  "(http://) iframe. This is a security risk that allows user login " +
   "credentials to be stolen.";
 
 add_task(function* () {
