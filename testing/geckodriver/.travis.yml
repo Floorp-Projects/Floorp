@@ -32,6 +32,15 @@ matrix:
           - libbz2-dev
     - os: linux
       env:
+        - TARGET=i686-unknown-linux-musl
+        - NAME=linux32
+        - EXT=tar.gz
+      addons:
+        apt:
+          packages: &i686
+          - gcc-multilib
+    - os: linux
+      env:
         - TARGET=x86_64-pc-windows-gnu
         - NAME=win64
         - EXT=zip
