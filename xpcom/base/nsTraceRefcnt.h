@@ -19,8 +19,7 @@ public:
     NEW_STATS
   };
 
-  static nsresult DumpStatistics(StatisticsType aType = ALL_STATS,
-                                 FILE* aOut = 0);
+  static nsresult DumpStatistics(StatisticsType aType = ALL_STATS);
 
   static void ResetStatistics();
 
