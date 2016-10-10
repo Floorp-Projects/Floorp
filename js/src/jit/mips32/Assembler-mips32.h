@@ -127,6 +127,9 @@ class Assembler : public AssemblerMIPSShared
       : AssemblerMIPSShared()
     { }
 
+    static Condition UnsignedCondition(Condition cond);
+    static Condition ConditionWithoutEqual(Condition cond);
+
     // MacroAssemblers hold onto gcthings, so they are traced by the GC.
     void trace(JSTracer* trc);
 
