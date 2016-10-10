@@ -128,6 +128,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     virtual void visitSqrtD(LSqrtD* ins);
     virtual void visitSqrtF(LSqrtF* ins);
     virtual void visitAddI(LAddI* ins);
+    virtual void visitAddI64(LAddI64* ins);
     virtual void visitSubI(LSubI* ins);
     virtual void visitBitNotI(LBitNotI* ins);
     virtual void visitBitOpI(LBitOpI* ins);
