@@ -14,6 +14,7 @@
     _(DivOrModI64)              \
     _(UDivOrMod)                \
     _(UDivOrModI64)             \
-    _(WasmTruncateToInt64)
+    _(WasmTruncateToInt64)      \
+    _(Int64ToFloatingPoint)
 
 #endif // jit_mips64_LOpcodes_mips64_h__
