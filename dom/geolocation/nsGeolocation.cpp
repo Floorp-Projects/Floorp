@@ -1247,14 +1247,8 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
     return NS_ERROR_FAILURE;
   }
 
-  return GetCurrentPositionReady(request);
-}
-
-nsresult
-Geolocation::GetCurrentPositionReady(nsGeolocationRequest* aRequest)
-{
   if (mOwner) {
-    if (!RegisterRequestWithPrompt(aRequest)) {
+    if (!RegisterRequestWithPrompt(request)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -1265,7 +1259,7 @@ Geolocation::GetCurrentPositionReady(nsGeolocationRequest* aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(true, aRequest);
+  nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(true, request);
   NS_DispatchToMainThread(ev);
 
   return NS_OK;
@@ -1334,14 +1328,8 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
     return NS_ERROR_FAILURE;
   }
 
-  return WatchPositionReady(request);
-}
-
-nsresult
-Geolocation::WatchPositionReady(nsGeolocationRequest* aRequest)
-{
   if (mOwner) {
-    if (!RegisterRequestWithPrompt(aRequest))
+    if (!RegisterRequestWithPrompt(request))
       return NS_ERROR_NOT_AVAILABLE;
 
     return NS_OK;
@@ -1351,7 +1339,7 @@ Geolocation::WatchPositionReady(nsGeolocationRequest* aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  aRequest->Allow(JS::UndefinedHandleValue);
+  request->Allow(JS::UndefinedHandleValue);
 
   return NS_OK;
 }
@@ -1388,20 +1376,6 @@ Geolocation::ClearWatch(int32_t aWatchId)
   }
 
   return NS_OK;
-}
-
-void
-Geolocation::ServiceReady()
-{
-  for (uint32_t length = mPendingRequests.Length(); length > 0; --length) {
-    if (mPendingRequests[0]->IsWatch()) {
-      WatchPositionReady(mPendingRequests[0]);
-    } else {
-      GetCurrentPositionReady(mPendingRequests[0]);
-    }
-
-    mPendingRequests.RemoveElementAt(0);
-  }
 }
 
 bool
