@@ -16,6 +16,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"
+#include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SyntaxParseHandler.h"
