@@ -7881,7 +7881,7 @@ done:
     return rv;
 }
 
-static void
+static SECStatus
 ssl3_DecideTls12CertVerifyHash(sslSocket *ss, const SECItem *algorithms);
 
 typedef struct dnameNode {
@@ -8112,7 +8112,10 @@ ssl3_CompleteHandleCertificateRequest(sslSocket *ss, SECItem *algorithms,
             }
             if (ss->ssl3.hs.hashType == handshake_hash_record ||
                 ss->ssl3.hs.hashType == handshake_hash_single) {
-                ssl3_DecideTls12CertVerifyHash(ss, algorithms);
+                rv = ssl3_DecideTls12CertVerifyHash(ss, algorithms);
+                if (rv != SECSuccess) {
+                    goto send_no_certificate;
+                }
             }
             break; /* not an error */
 
@@ -10187,7 +10190,7 @@ ssl3_PickSignatureHashAlgorithm(sslSocket *ss,
     return SECFailure;
 }
 
-static void
+static SECStatus
 ssl3_DecideTls12CertVerifyHash(sslSocket *ss, const SECItem *algorithms)
 {
     SECStatus rv;
@@ -10201,7 +10204,7 @@ ssl3_DecideTls12CertVerifyHash(sslSocket *ss, const SECItem *algorithms)
     /* Determine the key's signature algorithm and whether it prefers SHA-1. */
     rv = ssl3_ExtractClientKeyInfo(ss, &sigAlg, &preferSha1);
     if (rv != SECSuccess) {
-        return;
+        return SECFailure;
     }
 
     /* Determine the server's hash support for that signature algorithm. */
@@ -10210,6 +10213,9 @@ ssl3_DecideTls12CertVerifyHash(sslSocket *ss, const SECItem *algorithms)
             SSLHashType hashAlg = algorithms->data[i];
             SECOidTag hashOID;
             PRUint32 policy;
+            if (hashAlg == ssl_hash_md5) {
+                continue; /* No MD5 signature support. */
+            }
             if (hashAlg == ssl_hash_sha1 &&
                 ss->ssl3.pwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
                 /* TLS 1.3 explicitly forbids using SHA-1 with certificate_verify. */
@@ -10239,6 +10245,13 @@ ssl3_DecideTls12CertVerifyHash(sslSocket *ss, const SECItem *algorithms)
     } else {
         ss->ssl3.hs.tls12CertVerifyHash = otherHashAlg;
     }
+
+    /* We didn't find a sigAlg matching the client cert's key type. */
+    if (ss->ssl3.hs.tls12CertVerifyHash == ssl_hash_none) {
+        return SECFailure;
+    }
+
+    return SECSuccess;
 }
 
 static SECStatus
