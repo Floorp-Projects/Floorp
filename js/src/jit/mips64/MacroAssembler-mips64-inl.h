@@ -404,6 +404,18 @@ MacroAssembler::rotateRight64(Register count, Register64 src, Register64 dest, R
 // Bit counting functions
 
 void
+MacroAssembler::clz64(Register64 src, Register dest)
+{
+    as_dclz(dest, src.reg);
+}
+
+void
+MacroAssembler::ctz64(Register64 src, Register dest)
+{
+    ma_dctz(dest, src.reg);
+}
+
+void
 MacroAssembler::popcnt64(Register64 input, Register64 output, Register tmp)
 {
     ma_move(output.reg, input.reg);
