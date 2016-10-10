@@ -984,6 +984,11 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     }
     void cmp32Set(Assembler::Condition cond, Register lhs, Address rhs, Register dest);
 
+    void cmp64Set(Assembler::Condition cond, Register lhs, Imm32 rhs, Register dest)
+    {
+        ma_cmp_set(dest, lhs, rhs, cond);
+    }
+
   protected:
     bool buildOOLFakeExitFrame(void* fakeReturnAddr);
 
