@@ -322,7 +322,6 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
-#ifdef JS_CODEGEN_MIPS64
     if (ins->type() == MIRType::Int64) {
         auto* lir = new(alloc()) LWasmLoadI64(useRegisterAtStart(base));
         if (ins->offset())
@@ -331,7 +330,6 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
         defineInt64(lir, ins);
         return;
     }
-#endif
 
     auto* lir = new(alloc()) LWasmLoad(useRegisterAtStart(base));
     if (ins->offset())
@@ -349,7 +347,6 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
     MDefinition* value = ins->value();
     LAllocation baseAlloc = useRegisterAtStart(base);
 
-#ifdef JS_CODEGEN_MIPS64
     if (ins->type() == MIRType::Int64) {
         LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
         auto* lir = new(alloc()) LWasmStoreI64(baseAlloc, valueAlloc);
@@ -359,7 +356,6 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
         add(lir, ins);
         return;
     }
-#endif
 
     LAllocation valueAlloc = useRegisterAtStart(value);
     auto* lir = new(alloc()) LWasmStore(baseAlloc, valueAlloc);
