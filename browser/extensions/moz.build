@@ -10,6 +10,7 @@ DIRS += [
     'pdfjs',
     'pocket',
     'webcompat',
+    'shield-recipe-client',
 ]
 
 # Only include the following system add-ons if building Aurora or Nightly
