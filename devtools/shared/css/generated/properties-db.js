@@ -9530,39 +9530,39 @@ exports.PREFERENCES = [
     ""
   ],
   [
-    "-moz-column-count",
+    "column-count",
     ""
   ],
   [
-    "-moz-column-fill",
+    "column-fill",
     ""
   ],
   [
-    "-moz-column-gap",
+    "column-gap",
     ""
   ],
   [
-    "-moz-column-rule",
+    "column-rule",
     ""
   ],
   [
-    "-moz-column-rule-color",
+    "column-rule-color",
     ""
   ],
   [
-    "-moz-column-rule-style",
+    "column-rule-style",
     ""
   ],
   [
-    "-moz-column-rule-width",
+    "column-rule-width",
     ""
   ],
   [
-    "-moz-column-width",
+    "column-width",
     ""
   ],
   [
-    "-moz-columns",
+    "columns",
     ""
   ],
   [
@@ -9991,7 +9991,7 @@ exports.PREFERENCES = [
   ],
   [
     "mask-type",
-    "layout.css.masking.enabled"
+    ""
   ],
   [
     "max-block-size",
@@ -10663,6 +10663,42 @@ exports.PREFERENCES = [
   ],
   [
     "-moz-text-align-last",
+    ""
+  ],
+  [
+    "-moz-column-count",
+    ""
+  ],
+  [
+    "-moz-column-fill",
+    ""
+  ],
+  [
+    "-moz-column-gap",
+    ""
+  ],
+  [
+    "-moz-column-rule",
+    ""
+  ],
+  [
+    "-moz-column-rule-color",
+    ""
+  ],
+  [
+    "-moz-column-rule-style",
+    ""
+  ],
+  [
+    "-moz-column-rule-width",
+    ""
+  ],
+  [
+    "-moz-column-width",
+    ""
+  ],
+  [
+    "-moz-columns",
     ""
   ],
   [
