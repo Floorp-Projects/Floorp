@@ -604,6 +604,14 @@ extern const JSClassOps XrayExpandoObjectClassOps;
 void
 ClearXrayExpandoSlots(JSObject* target, size_t slotIndex);
 
+/*
+ * Ensure the given wrapper has an expando object and return it.  This can
+ * return null on failure.  Will only be called when "wrapper" is an Xray for a
+ * DOM object.
+ */
+JSObject*
+EnsureXrayExpandoObject(JSContext* cx, JS::HandleObject wrapper);
+
 } // namespace xpc
 
 #endif

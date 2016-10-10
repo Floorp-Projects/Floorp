@@ -2406,6 +2406,35 @@ XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
 const JSClass*
 XrayGetExpandoClass(JSContext* cx, JS::Handle<JSObject*> obj);
 
+/**
+ * Get the object which should be used to cache the return value of a property
+ * getter in the case of a [Cached] or [StoreInSlot] property.  `obj` is the
+ * `this` value for our property getter that we're working with.
+ *
+ * This function can return null on failure to allocate the object, throwing on
+ * the JSContext in the process.
+ *
+ * The isXray outparam will be set to true if obj is an Xray and false
+ * otherwise.
+ *
+ * Note that the Slow version should only be called from
+ * GetCachedSlotStorageObject.
+ */
+JSObject*
+GetCachedSlotStorageObjectSlow(JSContext* cx, JS::Handle<JSObject*> obj,
+                               bool* isXray);
+
+inline JSObject*
+GetCachedSlotStorageObject(JSContext* cx, JS::Handle<JSObject*> obj,
+                           bool* isXray) {
+  if (IsDOMObject(obj)) {
+    *isXray = false;
+    return obj;
+  }
+
+  return GetCachedSlotStorageObjectSlow(cx, obj, isXray);
+}
+
 extern NativePropertyHooks sEmptyNativePropertyHooks;
 
 extern const js::ClassOps sBoringInterfaceObjectClassClassOps;

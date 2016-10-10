@@ -1907,6 +1907,21 @@ XrayGetExpandoClass(JSContext* cx, JS::Handle<JSObject*> obj)
   return nativePropertyHooks->mXrayExpandoClass;
 }
 
+JSObject*
+GetCachedSlotStorageObjectSlow(JSContext* cx, JS::Handle<JSObject*> obj,
+                               bool* isXray)
+{
+  if (!xpc::WrapperFactory::IsXrayWrapper(obj)) {
+    JSObject* retval = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
+    MOZ_ASSERT(IsDOMObject(retval));
+    *isXray = false;
+    return retval;
+  }
+
+  *isXray = true;
+  return xpc::EnsureXrayExpandoObject(cx, obj);;
+}
+
 DEFINE_XRAY_EXPANDO_CLASS(, DefaultXrayExpandoObjectClass, 0);
 
 NativePropertyHooks sEmptyNativePropertyHooks = {
