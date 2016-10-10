@@ -379,6 +379,10 @@ nsNSSSocketInfo::DriveHandshake()
 NS_IMETHODIMP
 nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
 {
+  NS_ENSURE_ARG(_retval);
+
+  *_retval = false;
+
   // If this is the same hostname then the certicate status does not
   // need to be considered. They are joinable.
   if (hostname.Equals(GetHostName())) {
@@ -444,16 +448,17 @@ nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
   nsAutoCString hostnameFlat(PromiseFlatCString(hostname));
   CertVerifier::Flags flags = CertVerifier::FLAG_LOCAL_ONLY;
   UniqueCERTCertList unusedBuiltChain;
-  SECStatus rv = certVerifier->VerifySSLServerCert(nssCert,
-                                                   nullptr, // stapledOCSPResponse
-                                                   nullptr, // sctsFromTLSExtension
-                                                   mozilla::pkix::Now(),
-                                                   nullptr, // pinarg
-                                                   hostnameFlat.get(),
-                                                   unusedBuiltChain,
-                                                   false, // save intermediates
-                                                   flags);
-  if (rv != SECSuccess) {
+  mozilla::pkix::Result result =
+    certVerifier->VerifySSLServerCert(nssCert,
+                                      nullptr, // stapledOCSPResponse
+                                      nullptr, // sctsFromTLSExtension
+                                      mozilla::pkix::Now(),
+                                      nullptr, // pinarg
+                                      hostnameFlat.get(),
+                                      unusedBuiltChain,
+                                      false, // save intermediates
+                                      flags);
+  if (result != mozilla::pkix::Success) {
     return NS_OK;
   }
 
