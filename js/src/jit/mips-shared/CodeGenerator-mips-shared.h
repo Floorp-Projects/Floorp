@@ -146,6 +146,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     virtual void visitPowHalfD(LPowHalfD* ins);
     virtual void visitShiftI(LShiftI* ins);
     virtual void visitShiftI64(LShiftI64* ins);
+    virtual void visitRotateI64(LRotateI64* lir);
     virtual void visitUrshD(LUrshD* ins);
 
     virtual void visitClzI(LClzI* ins);
