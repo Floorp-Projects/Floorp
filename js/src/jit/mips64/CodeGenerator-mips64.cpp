@@ -416,14 +416,9 @@ CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
     const MWasmLoad* mir = lir->mir();
 
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
-    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
 
     uint32_t offset = mir->offset();
-    if (offset > INT32_MAX) {
-        // This is unreachable because of bounds checks.
-        masm.breakpoint();
-        return;
-    }
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
 
@@ -436,7 +431,69 @@ CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
-    masm.ma_load(ToRegister(lir->output()), BaseIndex(HeapReg, ptr, TimesOne), SizeDouble);
+    unsigned byteSize = mir->byteSize();
+    bool isSigned;
+
+    switch (mir->accessType()) {
+      case Scalar::Int8:    isSigned = true;  break;
+      case Scalar::Uint8:   isSigned = false; break;
+      case Scalar::Int16:   isSigned = true;  break;
+      case Scalar::Uint16:  isSigned = false; break;
+      case Scalar::Int32:   isSigned = true;  break;
+      case Scalar::Uint32:  isSigned = false; break;
+      case Scalar::Int64:   isSigned = true;  break;
+      default: MOZ_CRASH("unexpected array type");
+    }
+
+    memoryBarrier(mir->barrierBefore());
+
+    masm.ma_load(ToOutRegister64(lir).reg, BaseIndex(HeapReg, ptr, TimesOne),
+                 static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+
+    memoryBarrier(mir->barrierAfter());
+}
+
+void
+CodeGeneratorMIPS64::visitWasmStoreI64(LWasmStoreI64* lir)
+{
+    const MWasmStore* mir = lir->mir();
+
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+
+    uint32_t offset = mir->offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+
+    Register ptr = ToRegister(lir->ptr());
+
+    // Maybe add the offset.
+    if (offset) {
+        Register ptrPlusOffset = ToRegister(lir->ptrCopy());
+        masm.addPtr(Imm32(offset), ptrPlusOffset);
+        ptr = ptrPlusOffset;
+    } else {
+        MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
+    }
+
+    unsigned byteSize = mir->byteSize();
+    bool isSigned;
+
+    switch (mir->accessType()) {
+      case Scalar::Int8:    isSigned = true;  break;
+      case Scalar::Uint8:   isSigned = false; break;
+      case Scalar::Int16:   isSigned = true;  break;
+      case Scalar::Uint16:  isSigned = false; break;
+      case Scalar::Int32:   isSigned = true;  break;
+      case Scalar::Uint32:  isSigned = false; break;
+      case Scalar::Int64:   isSigned = true;  break;
+      default: MOZ_CRASH("unexpected array type");
+    }
+
+    memoryBarrier(mir->barrierBefore());
+
+    masm.ma_store(ToRegister64(lir->value()).reg, BaseIndex(HeapReg, ptr, TimesOne),
+                  static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+
+    memoryBarrier(mir->barrierAfter());
 }
 
 void
