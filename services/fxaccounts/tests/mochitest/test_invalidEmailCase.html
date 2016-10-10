@@ -116,7 +116,6 @@ function runTest() {
 };
 
 SpecialPowers.pushPrefEnv({"set": [
-    ["dom.identity.enabled", true],                // navigator.mozId
     ["identity.fxaccounts.enabled", true],         // fx accounts
     ["identity.fxaccounts.auth.uri", TEST_SERVER], // our sjs server
     ["toolkit.identity.debug", true],              // verbose identity logging
