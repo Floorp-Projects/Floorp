@@ -339,7 +339,6 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
             lir->setTemp(0, tempCopy(base, 0));
 
         define(lir, ins);
-
         return;
     }
 
@@ -385,7 +384,6 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
             lir->setTemp(0, tempCopy(base, 0));
 
         add(lir, ins);
-
         return;
     }
 
