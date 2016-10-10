@@ -1141,28 +1141,30 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
     InitTraceLog();
   }
 
-  if (gLogging != NoLogging) {
-    AutoTraceLogLock lock;
+  if (gLogging == NoLogging) {
+    return;
+  }
 
-    if (gBloatLog) {
-      BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
-      if (entry) {
-        entry->Ctor();
-      }
-    }
+  AutoTraceLogLock lock;
 
-    bool loggingThisType = (!gTypesToLog || LogThisType(aType));
-    intptr_t serialno = 0;
-    if (gSerialNumbers && loggingThisType) {
-      serialno = GetSerialNumber(aPtr, true);
+  if (gBloatLog) {
+    BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
+    if (entry) {
+      entry->Ctor();
     }
+  }
 
-    bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
-    if (gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Ctor (%d)\n",
-              aType, aPtr, serialno, aInstanceSize);
-      WalkTheStackCached(gAllocLog);
-    }
+  bool loggingThisType = (!gTypesToLog || LogThisType(aType));
+  intptr_t serialno = 0;
+  if (gSerialNumbers && loggingThisType) {
+    serialno = GetSerialNumber(aPtr, true);
+  }
+
+  bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
+  if (gAllocLog && loggingThisType && loggingThisObject) {
+    fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Ctor (%d)\n",
+            aType, aPtr, serialno, aInstanceSize);
+    WalkTheStackCached(gAllocLog);
   }
 }
 
@@ -1175,32 +1177,34 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
     InitTraceLog();
   }
 
-  if (gLogging != NoLogging) {
-    AutoTraceLogLock lock;
+  if (gLogging == NoLogging) {
+    return;
+  }
 
-    if (gBloatLog) {
-      BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
-      if (entry) {
-        entry->Dtor();
-      }
+  AutoTraceLogLock lock;
+
+  if (gBloatLog) {
+    BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
+    if (entry) {
+      entry->Dtor();
     }
+  }
 
-    bool loggingThisType = (!gTypesToLog || LogThisType(aType));
-    intptr_t serialno = 0;
-    if (gSerialNumbers && loggingThisType) {
-      serialno = GetSerialNumber(aPtr, false);
-      RecycleSerialNumberPtr(aPtr);
-    }
+  bool loggingThisType = (!gTypesToLog || LogThisType(aType));
+  intptr_t serialno = 0;
+  if (gSerialNumbers && loggingThisType) {
+    serialno = GetSerialNumber(aPtr, false);
+    RecycleSerialNumberPtr(aPtr);
+  }
 
-    bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
+  bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
 
-    // (If we're on a losing architecture, don't do this because we'll be
-    // using LogDeleteXPCOM instead to get file and line numbers.)
-    if (gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Dtor (%d)\n",
-              aType, aPtr, serialno, aInstanceSize);
-      WalkTheStackCached(gAllocLog);
-    }
+  // (If we're on a losing architecture, don't do this because we'll be
+  // using LogDeleteXPCOM instead to get file and line numbers.)
+  if (gAllocLog && loggingThisType && loggingThisObject) {
+    fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Dtor (%d)\n",
+            aType, aPtr, serialno, aInstanceSize);
+    WalkTheStackCached(gAllocLog);
   }
 }
 
