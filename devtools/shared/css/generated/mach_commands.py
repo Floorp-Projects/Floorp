@@ -29,6 +29,10 @@ def resolve_path(start, relativePath):
     """Helper to resolve a path from a start, and a relative path"""
     return os.path.normpath(os.path.join(start, relativePath))
 
+def stringify(obj):
+    """Helper to stringify to JSON"""
+    return json.dumps(obj, sort_keys=True, indent=2, separators=(',', ': '))
+
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command(
@@ -42,9 +46,9 @@ class MachCommands(MachCommandBase):
         db = self.get_properties_db_from_xpcshell()
 
         self.output_template({
-            'preferences': json.dumps(preferences),
-            'cssProperties': json.dumps(db['cssProperties']),
-            'pseudoElements': json.dumps(db['pseudoElements'])})
+            'preferences': stringify(preferences),
+            'cssProperties': stringify(db['cssProperties']),
+            'pseudoElements': stringify(db['pseudoElements'])})
 
     def get_preferences(self):
         """Get all of the preferences associated with enabling and disabling a property."""
