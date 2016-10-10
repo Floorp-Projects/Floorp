@@ -33,6 +33,11 @@ class CodeGeneratorMIPS : public CodeGeneratorMIPSShared
 
     void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
 
+    template <typename T>
+    void emitWasmLoadI64(T* ins);
+    template <typename T>
+    void emitWasmStoreI64(T* ins);
+
   public:
     void visitCompareB(LCompareB* lir);
     void visitCompareBAndBranch(LCompareBAndBranch* lir);
@@ -43,7 +48,9 @@ class CodeGeneratorMIPS : public CodeGeneratorMIPSShared
     void visitDivOrModI64(LDivOrModI64* lir);
     void visitUDivOrModI64(LUDivOrModI64* lir);
     void visitWasmLoadI64(LWasmLoadI64* ins);
+    void visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir);
     void visitWasmStoreI64(LWasmStoreI64* ins);
+    void visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* ins);
     void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);
     void visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins);
     void visitAsmSelectI64(LAsmSelectI64* lir);

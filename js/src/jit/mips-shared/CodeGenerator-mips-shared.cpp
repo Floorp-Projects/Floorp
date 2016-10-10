@@ -1888,8 +1888,9 @@ CodeGeneratorMIPSShared::visitWasmCallI64(LWasmCallI64* ins)
     emitWasmCallBase(ins);
 }
 
+template <typename T>
 void
-CodeGeneratorMIPSShared::visitWasmLoad(LWasmLoad* lir)
+CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
@@ -1925,6 +1926,26 @@ CodeGeneratorMIPSShared::visitWasmLoad(LWasmLoad* lir)
 
     memoryBarrier(mir->barrierBefore());
 
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        if (isFloat) {
+            if (byteSize == 4) {
+                masm.loadUnalignedFloat32(BaseIndex(HeapReg, ptr, TimesOne), temp,
+                                          ToFloatRegister(lir->output()));
+            } else
+                masm.loadUnalignedDouble(BaseIndex(HeapReg, ptr, TimesOne), temp,
+                                         ToFloatRegister(lir->output()));
+        } else {
+            masm.ma_load_unaligned(ToRegister(lir->output()), BaseIndex(HeapReg, ptr, TimesOne),
+                                   temp, static_cast<LoadStoreSize>(8 * byteSize),
+                                   isSigned ? SignExtend : ZeroExtend);
+        }
+
+        memoryBarrier(mir->barrierAfter());
+        return;
+    }
+
     if (isFloat) {
         if (byteSize == 4) {
             masm.loadFloat32(BaseIndex(HeapReg, ptr, TimesOne), ToFloatRegister(lir->output()));
@@ -1932,14 +1953,27 @@ CodeGeneratorMIPSShared::visitWasmLoad(LWasmLoad* lir)
             masm.loadDouble(BaseIndex(HeapReg, ptr, TimesOne), ToFloatRegister(lir->output()));
     } else {
         masm.ma_load(ToRegister(lir->output()), BaseIndex(HeapReg, ptr, TimesOne),
-                      static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+                     static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
     }
 
     memoryBarrier(mir->barrierAfter());
 }
 
 void
-CodeGeneratorMIPSShared::visitWasmStore(LWasmStore* lir)
+CodeGeneratorMIPSShared::visitWasmLoad(LWasmLoad* lir)
+{
+    emitWasmLoad(lir);
+}
+
+void
+CodeGeneratorMIPSShared::visitWasmUnalignedLoad(LWasmUnalignedLoad* lir)
+{
+    emitWasmLoad(lir);
+}
+
+template <typename T>
+void
+CodeGeneratorMIPSShared::emitWasmStore(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
@@ -1976,6 +2010,26 @@ CodeGeneratorMIPSShared::visitWasmStore(LWasmStore* lir)
 
     memoryBarrier(mir->barrierBefore());
 
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        if (isFloat) {
+            if (byteSize == 4) {
+                masm.storeUnalignedFloat32(ToFloatRegister(lir->value()), temp,
+                                           BaseIndex(HeapReg, ptr, TimesOne));
+            } else
+                masm.storeUnalignedDouble(ToFloatRegister(lir->value()), temp,
+                                          BaseIndex(HeapReg, ptr, TimesOne));
+        } else {
+            masm.ma_store_unaligned(ToRegister(lir->value()), BaseIndex(HeapReg, ptr, TimesOne),
+                                    temp, static_cast<LoadStoreSize>(8 * byteSize),
+                                    isSigned ? SignExtend : ZeroExtend);
+        }
+
+        memoryBarrier(mir->barrierAfter());
+        return;
+    }
+
     if (isFloat) {
         if (byteSize == 4) {
             masm.storeFloat32(ToFloatRegister(lir->value()), BaseIndex(HeapReg, ptr, TimesOne));
@@ -1987,6 +2041,18 @@ CodeGeneratorMIPSShared::visitWasmStore(LWasmStore* lir)
     }
 
     memoryBarrier(mir->barrierAfter());
+}
+
+void
+CodeGeneratorMIPSShared::visitWasmStore(LWasmStore* lir)
+{
+    emitWasmStore(lir);
+}
+
+void
+CodeGeneratorMIPSShared::visitWasmUnalignedStore(LWasmUnalignedStore* lir)
+{
+    emitWasmStore(lir);
 }
 
 void

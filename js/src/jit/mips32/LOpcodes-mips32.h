@@ -15,6 +15,10 @@
     _(UDivOrMod)                \
     _(DivOrModI64)              \
     _(UDivOrModI64)             \
+    _(WasmUnalignedLoad)        \
+    _(WasmUnalignedStore)       \
+    _(WasmUnalignedLoadI64)     \
+    _(WasmUnalignedStoreI64)    \
     _(WasmTruncateToInt64)      \
     _(Int64ToFloatingPoint)
 
