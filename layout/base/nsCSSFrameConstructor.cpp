@@ -3587,7 +3587,8 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     SIMPLE_TAG_CREATE(frameset, NS_NewHTMLFramesetFrame),
     SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
     { &nsGkAtoms::button,
-      FCDATA_WITH_WRAPPING_BLOCK(FCDATA_ALLOW_BLOCK_STYLES,
+      FCDATA_WITH_WRAPPING_BLOCK(FCDATA_ALLOW_BLOCK_STYLES |
+                                 FCDATA_ALLOW_GRID_FLEX_COLUMNSET,
                                  NS_NewHTMLButtonControlFrame,
                                  nsCSSAnonBoxes::buttonContent) },
     SIMPLE_TAG_CHAIN(canvas, nsCSSFrameConstructor::FindCanvasData),
@@ -3893,42 +3894,48 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       nsContainerFrame* container = static_cast<nsContainerFrame*>(newFrame);
       nsContainerFrame* outerFrame;
       nsContainerFrame* innerFrame;
-      switch (display->mDisplay) {
-        case StyleDisplay::Flex:
-        case StyleDisplay::InlineFlex:
-          outerFrame = NS_NewFlexContainerFrame(mPresShell, outerSC);
-          InitAndRestoreFrame(aState, content, container, outerFrame);
-          innerFrame = outerFrame;
-          break;
-        case StyleDisplay::Grid:
-        case StyleDisplay::InlineGrid:
-          outerFrame = NS_NewGridContainerFrame(mPresShell, outerSC);
-          InitAndRestoreFrame(aState, content, container, outerFrame);
-          innerFrame = outerFrame;
-          break;
-        default: {
-          nsContainerFrame* columnSetFrame = nullptr;
-          RefPtr<nsStyleContext> innerSC = outerSC;
-          const nsStyleColumn* columns = outerSC->StyleColumn();
-          if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO ||
-              columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
-            columnSetFrame =
-              NS_NewColumnSetFrame(mPresShell, outerSC, nsFrameState(0));
-            InitAndRestoreFrame(aState, content, container, columnSetFrame);
-            innerSC = mPresShell->StyleSet()->ResolveAnonymousBoxStyle(
-              nsCSSAnonBoxes::columnContent, outerSC);
+      if (bits & FCDATA_ALLOW_GRID_FLEX_COLUMNSET) {
+        switch (display->mDisplay) {
+          case StyleDisplay::Flex:
+          case StyleDisplay::InlineFlex:
+            outerFrame = NS_NewFlexContainerFrame(mPresShell, outerSC);
+            InitAndRestoreFrame(aState, content, container, outerFrame);
+            innerFrame = outerFrame;
+            break;
+          case StyleDisplay::Grid:
+          case StyleDisplay::InlineGrid:
+            outerFrame = NS_NewGridContainerFrame(mPresShell, outerSC);
+            InitAndRestoreFrame(aState, content, container, outerFrame);
+            innerFrame = outerFrame;
+            break;
+          default: {
+            nsContainerFrame* columnSetFrame = nullptr;
+            RefPtr<nsStyleContext> innerSC = outerSC;
+            const nsStyleColumn* columns = outerSC->StyleColumn();
+            if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO ||
+                columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
+              columnSetFrame =
+                NS_NewColumnSetFrame(mPresShell, outerSC, nsFrameState(0));
+              InitAndRestoreFrame(aState, content, container, columnSetFrame);
+              innerSC = mPresShell->StyleSet()->ResolveAnonymousBoxStyle(
+                nsCSSAnonBoxes::columnContent, outerSC);
+            }
+            innerFrame = NS_NewBlockFormattingContext(mPresShell, innerSC);
+            if (columnSetFrame) {
+              InitAndRestoreFrame(aState, content, columnSetFrame, innerFrame);
+              SetInitialSingleChild(columnSetFrame, innerFrame);
+              outerFrame = columnSetFrame;
+            } else {
+              InitAndRestoreFrame(aState, content, container, innerFrame);
+              outerFrame = innerFrame;
+            }
+            break;
           }
-          innerFrame = NS_NewBlockFormattingContext(mPresShell, innerSC);
-          if (columnSetFrame) {
-            InitAndRestoreFrame(aState, content, columnSetFrame, innerFrame);
-            SetInitialSingleChild(columnSetFrame, innerFrame);
-            outerFrame = columnSetFrame;
-          } else {
-            InitAndRestoreFrame(aState, content, container, innerFrame);
-            outerFrame = innerFrame;
-          }
-          break;
         }
+      } else {
+        innerFrame = NS_NewBlockFormattingContext(mPresShell, outerSC);
+        InitAndRestoreFrame(aState, content, container, innerFrame);
+        outerFrame = innerFrame;
       }
 
       SetInitialSingleChild(container, outerFrame);
