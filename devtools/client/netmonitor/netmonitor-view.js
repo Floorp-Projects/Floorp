@@ -33,7 +33,7 @@ const {ViewHelpers, Heritage, WidgetMethods, setNamedTimeout} =
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {Curl, CurlUtils} = require("devtools/client/shared/curl");
 const {Filters, isFreetextMatch} = require("devtools/client/netmonitor/filter-predicates");
-
+const {getFormDataSections} = require("devtools/client/netmonitor/request-utils");
 /**
  * Localization convenience methods.
  */
@@ -761,64 +761,18 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Extracts any urlencoded form data sections (e.g. "?foo=bar&baz=42") from a
-   * POST request.
-   *
-   * @param object headers
-   *        The "requestHeaders".
-   * @param object uploadHeaders
-   *        The "requestHeadersFromUploadStream".
-   * @param object postData
-   *        The "requestPostData".
-   * @return array
-   *        A promise that is resolved with the extracted form data.
-   */
-  _getFormDataSections: Task.async(function* (headers, uploadHeaders,
-                                              postData) {
-    let formDataSections = [];
-
-    let { headers: requestHeaders } = headers;
-    let { headers: payloadHeaders } = uploadHeaders;
-    let allHeaders = [...payloadHeaders, ...requestHeaders];
-
-    let contentTypeHeader = allHeaders.find(e => {
-      return e.name.toLowerCase() == "content-type";
-    });
-
-    let contentTypeLongString = contentTypeHeader ?
-      contentTypeHeader.value : "";
-
-    let contentType = yield gNetwork.getString(contentTypeLongString);
-
-    if (contentType.includes("x-www-form-urlencoded")) {
-      let postDataLongString = postData.postData.text;
-      let text = yield gNetwork.getString(postDataLongString);
-
-      for (let section of text.split(/\r\n|\r|\n/)) {
-        // Before displaying it, make sure this section of the POST data
-        // isn't a line containing upload stream headers.
-        if (payloadHeaders.every(header => !section.startsWith(header.name))) {
-          formDataSections.push(section);
-        }
-      }
-    }
-
-    return formDataSections;
-  }),
-
-  /**
    * Copy the request form data parameters (or raw payload) from
    * the currently selected item.
    */
   copyPostData: Task.async(function* () {
     let selected = this.selectedItem.attachment;
-    let view = this;
 
     // Try to extract any form data parameters.
-    let formDataSections = yield view._getFormDataSections(
+    let formDataSections = yield getFormDataSections(
       selected.requestHeaders,
       selected.requestHeadersFromUploadStream,
-      selected.requestPostData);
+      selected.requestPostData,
+      gNetwork.getString.bind(gNetwork));
 
     let params = [];
     formDataSections.forEach(section => {
@@ -3152,8 +3106,11 @@ NetworkDetailsView.prototype = {
       return;
     }
 
-    let formDataSections = yield RequestsMenuView.prototype
-      ._getFormDataSections(headers, uploadHeaders, postData);
+    let formDataSections = yield getFormDataSections(
+      headers,
+      uploadHeaders,
+      postData,
+      gNetwork.getString.bind(gNetwork));
 
     this._params.onlyEnumVisible = false;
 
