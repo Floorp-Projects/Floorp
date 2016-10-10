@@ -136,6 +136,21 @@ class LUDivOrModI64 : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES*2
     }
 };
 
+class LWasmTruncateToInt64 : public LCallInstructionHelper<INT64_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(WasmTruncateToInt64);
+
+    explicit LWasmTruncateToInt64(const LAllocation& in)
+    {
+        setOperand(0, in);
+    }
+
+    MWasmTruncateToInt64* mir() const {
+        return mir_->toWasmTruncateToInt64();
+    }
+};
+
 } // namespace jit
 } // namespace js
 

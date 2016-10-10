@@ -508,6 +508,43 @@ CodeGeneratorMIPS::visitNotI64(LNotI64* lir)
 }
 
 void
+CodeGeneratorMIPS::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister scratch = input;
+    Register64 output = ToOutRegister64(lir);
+    MWasmTruncateToInt64* mir = lir->mir();
+    MIRType fromType = mir->input()->type();
+
+    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    if (fromType == MIRType::Double) {
+        masm.branchDouble(Assembler::DoubleUnordered, input, input, ool->entry());
+    } else if (fromType == MIRType::Float32) {
+        masm.branchFloat(Assembler::DoubleUnordered, input, input, ool->entry());
+        scratch = ScratchDoubleReg;
+        masm.convertFloat32ToDouble(input, scratch);
+    } else {
+        MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
+    }
+
+    masm.setupUnalignedABICall(output.high);
+    masm.passABIArg(scratch, MoveOp::DOUBLE);
+    if (lir->mir()->isUnsigned())
+        masm.callWithABI(wasm::SymbolicAddress::TruncateDoubleToUint64);
+    else
+        masm.callWithABI(wasm::SymbolicAddress::TruncateDoubleToInt64);
+    masm.ma_b(output.high, Imm32(0x80000000), ool->rejoin(), Assembler::NotEqual);
+    masm.ma_b(output.low, Imm32(0x00000000), ool->rejoin(), Assembler::NotEqual);
+    masm.ma_b(ool->entry());
+
+    masm.bind(ool->rejoin());
+
+    MOZ_ASSERT(ReturnReg64 == output);
+}
+
+void
 CodeGeneratorMIPS::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.code_ == ReturnDoubleReg.code_);
