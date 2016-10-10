@@ -1074,6 +1074,16 @@ CodeGeneratorMIPSShared::visitPopcntI(LPopcntI* ins)
 }
 
 void
+CodeGeneratorMIPSShared::visitPopcntI64(LPopcntI64* ins)
+{
+    Register64 input = ToRegister64(ins->getInt64Operand(0));
+    Register64 output = ToOutRegister64(ins);
+    Register tmp = ToRegister(ins->getTemp(0));
+
+    masm.popcnt64(input, output, tmp);
+}
+
+void
 CodeGeneratorMIPSShared::visitPowHalfD(LPowHalfD* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
