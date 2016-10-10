@@ -3165,7 +3165,7 @@ nsGlobalWindow::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
                "Probably too late to call ComputeIsSecureContext again");
     mHadOriginalOpener = true;
     mOriginalOpenerWasSecureContext =
-      nsGlobalWindow::Cast(aOpener->GetCurrentInnerWindow())->IsSecureContext();
+      aOpener->GetCurrentInnerWindow()->IsSecureContext();
   }
 
 #ifdef DEBUG
@@ -3858,6 +3858,12 @@ nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
       Performance::CreateForMainThread(this, timing, timedChannel,
                                        parentPerformance);
   }
+}
+
+bool
+nsPIDOMWindowInner::IsSecureContext() const
+{
+  return nsGlobalWindow::Cast(this)->IsSecureContext();
 }
 
 SuspendTypes
