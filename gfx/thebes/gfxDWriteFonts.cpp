@@ -110,7 +110,7 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
             static_cast<gfxDWriteFontFamily*>(fontList->GetDefaultFont(aFontStyle));
 
         mFont = defaultFontFamily->GetDefaultFont();
-        NS_WARNING("Using default font");
+        MOZ_ASSERT(mFont);
     }
 
     HRESULT hr = mFont->GetFontFamily(getter_AddRefs(mFontFamily));
