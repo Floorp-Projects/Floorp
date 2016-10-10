@@ -975,8 +975,9 @@ PresShell::Init(nsIDocument* aDocument,
     animCtrl->NotifyRefreshDriverCreated(GetPresContext()->RefreshDriver());
   }
 
-  mDocument->Timeline()->NotifyRefreshDriverCreated(GetPresContext()->
-                                                      RefreshDriver());
+  for (DocumentTimeline* timeline : mDocument->Timelines()) {
+    timeline->NotifyRefreshDriverCreated(GetPresContext()->RefreshDriver());
+  }
 
   // Get our activeness from the docShell.
   QueryIsActive();
@@ -1276,8 +1277,9 @@ PresShell::Destroy()
     if (mDocument->HasAnimationController()) {
       mDocument->GetAnimationController()->NotifyRefreshDriverDestroying(rd);
     }
-
-    mDocument->Timeline()->NotifyRefreshDriverDestroying(rd);
+    for (DocumentTimeline* timeline : mDocument->Timelines()) {
+      timeline->NotifyRefreshDriverDestroying(rd);
+    }
   }
 
   if (mPresContext) {

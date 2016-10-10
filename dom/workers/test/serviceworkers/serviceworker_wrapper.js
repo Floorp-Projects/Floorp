@@ -31,21 +31,6 @@ function workerTestDone() {
   client.postMessage({ type: 'finish' });
 }
 
-function workerTestGetPermissions(permissions, cb) {
-  addEventListener('message', function workerTestGetPermissionsCB(e) {
-    if (e.data.type != 'returnPermissions' ||
-        !workerTestArrayEquals(permissions, e.data.permissions)) {
-      return;
-    }
-    removeEventListener('message', workerTestGetPermissionsCB);
-    cb(e.data.result);
-  });
-  client.postMessage({
-    type: 'getPermissions',
-    permissions: permissions
-  });
-}
-
 function workerTestGetVersion(cb) {
   addEventListener('message', function workerTestGetVersionCB(e) {
     if (e.data.type !== 'returnVersion') {
@@ -82,19 +67,6 @@ function workerTestGetOSCPU(cb) {
   });
   client.postMessage({
     type: 'getOSCPU'
-  });
-}
-
-function workerTestGetIsB2G(cb) {
-  addEventListener('message', function workerTestGetIsB2GCB(e) {
-    if (e.data.type !== 'returnIsB2G') {
-      return;
-    }
-    removeEventListener('message', workerTestGetIsB2GCB);
-    cb(e.data.result);
-  });
-  client.postMessage({
-    type: 'getIsB2G'
   });
 }
 
