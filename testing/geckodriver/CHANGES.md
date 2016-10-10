@@ -2,6 +2,11 @@
 
 All notable changes to this program is documented in this file.
 
+## 0.11.1 (2016-10-10)
+
+### Fixed
+- Version number in binary now reflects the release version.
+
 ## 0.11.0 (2016-10-10)
 
 ### Added
