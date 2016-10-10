@@ -410,8 +410,9 @@ CodeGeneratorMIPS64::visitUDivOrModI64(LUDivOrModI64* lir)
     masm.bind(&done);
 }
 
+template <typename T>
 void
-CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
+CodeGeneratorMIPS64::emitWasmLoadI64(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
@@ -447,6 +448,15 @@ CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
 
     memoryBarrier(mir->barrierBefore());
 
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        masm.ma_load_unaligned(ToOutRegister64(lir).reg, BaseIndex(HeapReg, ptr, TimesOne),
+                               temp, static_cast<LoadStoreSize>(8 * byteSize),
+                               isSigned ? SignExtend : ZeroExtend);
+        return;
+    }
+
     masm.ma_load(ToOutRegister64(lir).reg, BaseIndex(HeapReg, ptr, TimesOne),
                  static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
 
@@ -454,7 +464,20 @@ CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitWasmStoreI64(LWasmStoreI64* lir)
+CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
+{
+    emitWasmLoadI64(lir);
+}
+
+void
+CodeGeneratorMIPS64::visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir)
+{
+    emitWasmLoadI64(lir);
+}
+
+template <typename T>
+void
+CodeGeneratorMIPS64::emitWasmStoreI64(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
@@ -490,10 +513,30 @@ CodeGeneratorMIPS64::visitWasmStoreI64(LWasmStoreI64* lir)
 
     memoryBarrier(mir->barrierBefore());
 
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        masm.ma_store_unaligned(ToRegister64(lir->value()).reg, BaseIndex(HeapReg, ptr, TimesOne),
+                                temp, static_cast<LoadStoreSize>(8 * byteSize),
+                                isSigned ? SignExtend : ZeroExtend);
+        return;
+    }
     masm.ma_store(ToRegister64(lir->value()).reg, BaseIndex(HeapReg, ptr, TimesOne),
                   static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
 
     memoryBarrier(mir->barrierAfter());
+}
+
+void
+CodeGeneratorMIPS64::visitWasmStoreI64(LWasmStoreI64* lir)
+{
+    emitWasmStoreI64(lir);
+}
+
+void
+CodeGeneratorMIPS64::visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* lir)
+{
+    emitWasmStoreI64(lir);
 }
 
 void

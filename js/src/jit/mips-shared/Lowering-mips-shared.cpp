@@ -322,8 +322,29 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
+    LAllocation ptr = useRegisterAtStart(base);
+
+    if (ins->isUnaligned()) {
+        if (ins->type() == MIRType::Int64) {
+            auto* lir = new(alloc()) LWasmUnalignedLoadI64(ptr, temp());
+            if (ins->offset())
+                lir->setTemp(0, tempCopy(base, 0));
+
+            defineInt64(lir, ins);
+            return;
+        }
+
+        auto* lir = new(alloc()) LWasmUnalignedLoad(ptr, temp());
+        if (ins->offset())
+            lir->setTemp(0, tempCopy(base, 0));
+
+        define(lir, ins);
+
+        return;
+    }
+
     if (ins->type() == MIRType::Int64) {
-        auto* lir = new(alloc()) LWasmLoadI64(useRegisterAtStart(base));
+        auto* lir = new(alloc()) LWasmLoadI64(ptr);
         if (ins->offset())
             lir->setTemp(0, tempCopy(base, 0));
 
@@ -331,7 +352,7 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
         return;
     }
 
-    auto* lir = new(alloc()) LWasmLoad(useRegisterAtStart(base));
+    auto* lir = new(alloc()) LWasmLoad(ptr);
     if (ins->offset())
         lir->setTemp(0, tempCopy(base, 0));
 
@@ -346,6 +367,27 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
 
     MDefinition* value = ins->value();
     LAllocation baseAlloc = useRegisterAtStart(base);
+
+    if (ins->isUnaligned()) {
+        if (ins->type() == MIRType::Int64) {
+            LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
+            auto* lir = new(alloc()) LWasmUnalignedStoreI64(baseAlloc, valueAlloc, temp());
+            if (ins->offset())
+                lir->setTemp(0, tempCopy(base, 0));
+
+            add(lir, ins);
+            return;
+        }
+
+        LAllocation valueAlloc = useRegisterAtStart(value);
+        auto* lir = new(alloc()) LWasmUnalignedStore(baseAlloc, valueAlloc, temp());
+        if (ins->offset())
+            lir->setTemp(0, tempCopy(base, 0));
+
+        add(lir, ins);
+
+        return;
+    }
 
     if (ins->type() == MIRType::Int64) {
         LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);

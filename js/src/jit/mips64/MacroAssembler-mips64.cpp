@@ -1151,6 +1151,25 @@ MacroAssemblerMIPS64Compat::loadDouble(const BaseIndex& src, FloatRegister dest)
 }
 
 void
+MacroAssemblerMIPS64Compat::loadUnalignedDouble(const BaseIndex& src, Register temp,
+                                                FloatRegister dest)
+{
+    computeScaledAddress(src, SecondScratchReg);
+
+    if (Imm16::IsInSignedRange(src.offset) && Imm16::IsInSignedRange(src.offset + 7)) {
+        as_ldl(temp, SecondScratchReg, src.offset + 7);
+        as_ldr(temp, SecondScratchReg, src.offset);
+    } else {
+        ma_li(ScratchRegister, Imm32(src.offset));
+        as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
+        as_ldl(temp, ScratchRegister, 7);
+        as_ldr(temp, ScratchRegister, 0);
+    }
+
+    moveToDouble(temp, dest);
+}
+
+void
 MacroAssemblerMIPS64Compat::loadFloatAsDouble(const Address& address, FloatRegister dest)
 {
     ma_ls(dest, address);
@@ -1175,6 +1194,25 @@ MacroAssemblerMIPS64Compat::loadFloat32(const BaseIndex& src, FloatRegister dest
 {
     computeScaledAddress(src, SecondScratchReg);
     ma_ls(dest, Address(SecondScratchReg, src.offset));
+}
+
+void
+MacroAssemblerMIPS64Compat::loadUnalignedFloat32(const BaseIndex& src, Register temp,
+                                                 FloatRegister dest)
+{
+    computeScaledAddress(src, SecondScratchReg);
+
+    if (Imm16::IsInSignedRange(src.offset) && Imm16::IsInSignedRange(src.offset + 3)) {
+        as_lwl(temp, SecondScratchReg, src.offset + 3);
+        as_lwr(temp, SecondScratchReg, src.offset);
+    } else {
+        ma_li(ScratchRegister, Imm32(src.offset));
+        as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
+        as_lwl(temp, ScratchRegister, 3);
+        as_lwr(temp, ScratchRegister, 0);
+    }
+
+    moveToFloat32(temp, dest);
 }
 
 void
@@ -1308,6 +1346,42 @@ MacroAssemblerMIPS64Compat::storePtr(Register src, AbsoluteAddress dest)
 {
     movePtr(ImmPtr(dest.addr), ScratchRegister);
     storePtr(src, Address(ScratchRegister, 0));
+}
+
+void
+MacroAssemblerMIPS64Compat::storeUnalignedFloat32(FloatRegister src, Register temp,
+                                                  const BaseIndex& dest)
+{
+    computeScaledAddress(dest, SecondScratchReg);
+    moveFromFloat32(src, temp);
+
+    if (Imm16::IsInSignedRange(dest.offset) && Imm16::IsInSignedRange(dest.offset + 3)) {
+        as_swl(temp, SecondScratchReg, dest.offset + 3);
+        as_swr(temp, SecondScratchReg, dest.offset);
+    } else {
+        ma_li(ScratchRegister, Imm32(dest.offset));
+        as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
+        as_swl(temp, ScratchRegister, 3);
+        as_swr(temp, ScratchRegister, 0);
+    }
+}
+
+void
+MacroAssemblerMIPS64Compat::storeUnalignedDouble(FloatRegister src, Register temp,
+                                                 const BaseIndex& dest)
+{
+    computeScaledAddress(dest, SecondScratchReg);
+    moveFromDouble(src, temp);
+
+    if (Imm16::IsInSignedRange(dest.offset) && Imm16::IsInSignedRange(dest.offset + 7)) {
+        as_sdl(temp, SecondScratchReg, dest.offset + 7);
+        as_sdr(temp, SecondScratchReg, dest.offset);
+    } else {
+        ma_li(ScratchRegister, Imm32(dest.offset));
+        as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
+        as_sdl(temp, ScratchRegister, 7);
+        as_sdr(temp, ScratchRegister, 0);
+    }
 }
 
 // Note: this function clobbers the input register.

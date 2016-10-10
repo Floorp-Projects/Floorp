@@ -119,6 +119,11 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
         emitBranch(reg, Imm32(0), cond, ifTrue, ifFalse);
     }
 
+    template <typename T>
+    void emitWasmLoad(T* ins);
+    template <typename T>
+    void emitWasmStore(T* ins);
+
   public:
     // Instruction visitors.
     virtual void visitMinMaxD(LMinMaxD* ins);
@@ -214,7 +219,9 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     void visitWasmCall(LWasmCall* ins);
     void visitWasmCallI64(LWasmCallI64* ins);
     void visitWasmLoad(LWasmLoad* ins);
+    void visitWasmUnalignedLoad(LWasmUnalignedLoad* ins);
     void visitWasmStore(LWasmStore* ins);
+    void visitWasmUnalignedStore(LWasmUnalignedStore* ins);
     void visitWasmAddOffset(LWasmAddOffset* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);

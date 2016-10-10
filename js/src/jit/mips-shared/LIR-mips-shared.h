@@ -291,6 +291,110 @@ class LInt64ToFloatingPoint : public LInstructionHelper<1, INT64_PIECES, 0>
     }
 };
 
+namespace details {
+
+// Base class for the int64 and non-int64 variants.
+template<size_t NumDefs>
+class LWasmUnalignedLoadBase : public details::LWasmLoadBase<NumDefs, 2>
+{
+  public:
+    typedef LWasmLoadBase<NumDefs, 2> Base;
+
+    explicit LWasmUnalignedLoadBase(const LAllocation& ptr, const LDefinition& valueHelper)
+      : Base(ptr)
+    {
+        Base::setTemp(0, LDefinition::BogusTemp());
+        Base::setTemp(1, valueHelper);
+    }
+    const LAllocation* ptr() {
+        return Base::getOperand(0);
+    }
+    const LDefinition* ptrCopy() {
+        return Base::getTemp(0);
+    }
+};
+
+} // namespace details
+
+class LWasmUnalignedLoad : public details::LWasmUnalignedLoadBase<1>
+{
+  public:
+    explicit LWasmUnalignedLoad(const LAllocation& ptr, const LDefinition& valueHelper)
+      : LWasmUnalignedLoadBase(ptr, valueHelper)
+    {}
+    LIR_HEADER(WasmUnalignedLoad);
+};
+
+class LWasmUnalignedLoadI64 : public details::LWasmUnalignedLoadBase<INT64_PIECES>
+{
+  public:
+    explicit LWasmUnalignedLoadI64(const LAllocation& ptr, const LDefinition& valueHelper)
+      : LWasmUnalignedLoadBase(ptr, valueHelper)
+    {}
+    LIR_HEADER(WasmUnalignedLoadI64);
+};
+
+namespace details {
+
+// Base class for the int64 and non-int64 variants.
+template<size_t NumOps>
+class LWasmUnalignedStoreBase : public LInstructionHelper<0, NumOps, 2>
+{
+  public:
+    typedef LInstructionHelper<0, NumOps, 2> Base;
+
+    static const size_t PtrIndex = 0;
+    static const size_t ValueIndex = 1;
+
+    LWasmUnalignedStoreBase(const LAllocation& ptr, const LDefinition& valueHelper)
+    {
+        Base::setOperand(0, ptr);
+        Base::setTemp(0, LDefinition::BogusTemp());
+        Base::setTemp(1, valueHelper);
+    }
+    MWasmStore* mir() const {
+        return Base::mir_->toWasmStore();
+    }
+    const LAllocation* ptr() {
+        return Base::getOperand(PtrIndex);
+    }
+    const LDefinition* ptrCopy() {
+        return Base::getTemp(0);
+    }
+};
+
+} // namespace details
+
+class LWasmUnalignedStore : public details::LWasmUnalignedStoreBase<2>
+{
+  public:
+    LIR_HEADER(WasmUnalignedStore);
+    LWasmUnalignedStore(const LAllocation& ptr, const LAllocation& value,
+                        const LDefinition& valueHelper)
+      : LWasmUnalignedStoreBase(ptr, valueHelper)
+    {
+        setOperand(1, value);
+    }
+    const LAllocation* value() {
+        return Base::getOperand(ValueIndex);
+    }
+};
+
+class LWasmUnalignedStoreI64 : public details::LWasmUnalignedStoreBase<1 + INT64_PIECES>
+{
+  public:
+    LIR_HEADER(WasmUnalignedStoreI64);
+    LWasmUnalignedStoreI64(const LAllocation& ptr, const LInt64Allocation& value,
+                           const LDefinition& valueHelper)
+      : LWasmUnalignedStoreBase(ptr, valueHelper)
+    {
+        setInt64Operand(1, value);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(ValueIndex);
+    }
+};
+
 } // namespace jit
 } // namespace js
 
