@@ -51,6 +51,25 @@ MacroAssembler::and64(Imm64 imm, Register64 dest)
 }
 
 void
+MacroAssembler::and64(Register64 src, Register64 dest)
+{
+    ma_and(dest.reg, src.reg);
+}
+
+void
+MacroAssembler::and64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        and64(scratch, dest);
+    } else {
+        and64(Register64(src.toReg()), dest);
+    }
+}
+
+void
 MacroAssembler::or64(Imm64 imm, Register64 dest)
 {
     ma_li(ScratchRegister, ImmWord(imm.value));
@@ -83,9 +102,35 @@ MacroAssembler::or64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::or64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        or64(scratch, dest);
+    } else {
+        or64(Register64(src.toReg()), dest);
+    }
+}
+
+void
 MacroAssembler::xor64(Register64 src, Register64 dest)
 {
     ma_xor(dest.reg, src.reg);
+}
+
+void
+MacroAssembler::xor64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        xor64(scratch, dest);
+    } else {
+        xor64(Register64(src.toReg()), dest);
+    }
 }
 
 void
