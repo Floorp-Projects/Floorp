@@ -514,13 +514,10 @@ public:
 
 
 nsresult
-nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
+nsTraceRefcnt::DumpStatistics(StatisticsType aType)
 {
   if (!gBloatLog || !gBloatView) {
     return NS_ERROR_FAILURE;
-  }
-  if (!aOut) {
-    aOut = gBloatLog;
   }
 
   AutoTraceLogLock lock;
@@ -550,7 +547,7 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
       msg = "ALL (cumulative) LEAK AND BLOAT STATISTICS";
     }
   }
-  const bool leaked = total.PrintDumpHeader(aOut, msg, aType);
+  const bool leaked = total.PrintDumpHeader(gBloatLog, msg, aType);
 
   nsTArray<BloatEntry*> entries;
   PL_HashTableEnumerateEntries(gBloatView, BloatEntry::DumpEntry, &entries);
@@ -562,17 +559,17 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
 
     for (uint32_t i = 0; i < count; ++i) {
       BloatEntry* entry = entries[i];
-      entry->Dump(i, aOut, aType);
+      entry->Dump(i, gBloatLog, aType);
     }
 
-    fprintf(aOut, "\n");
+    fprintf(gBloatLog, "\n");
   }
 
-  fprintf(aOut, "nsTraceRefcnt::DumpStatistics: %d entries\n", count);
+  fprintf(gBloatLog, "nsTraceRefcnt::DumpStatistics: %d entries\n", count);
 
   if (gSerialNumbers) {
-    fprintf(aOut, "\nSerial Numbers of Leaked Objects:\n");
-    PL_HashTableEnumerateEntries(gSerialNumbers, DumpSerialNumbers, aOut);
+    fprintf(gBloatLog, "\nSerial Numbers of Leaked Objects:\n");
+    PL_HashTableEnumerateEntries(gSerialNumbers, DumpSerialNumbers, gBloatLog);
   }
 
   return NS_OK;
