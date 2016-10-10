@@ -353,6 +353,11 @@ class CGNativePropertyHooks(CGThing):
         parentHooks = (toBindingNamespace(parentProtoName) + "::sNativePropertyHooks"
                        if parentProtoName else 'nullptr')
 
+        if self.descriptor.wantsXrayExpandoClass:
+            expandoClass = "&sXrayExpandoObjectClass"
+        else:
+            expandoClass = "&DefaultXrayExpandoObjectClass"
+
         return fill(
             """
             const NativePropertyHooks sNativePropertyHooks[] = { {
@@ -361,7 +366,8 @@ class CGNativePropertyHooks(CGThing):
               { ${regular}, ${chrome} },
               ${prototypeID},
               ${constructorID},
-              ${parentHooks}
+              ${parentHooks},
+              ${expandoClass}
             } };
             """,
             resolveOwnProperty=resolveOwnProperty,
@@ -370,7 +376,8 @@ class CGNativePropertyHooks(CGThing):
             chrome=chrome,
             prototypeID=prototypeID,
             constructorID=constructorID,
-            parentHooks=parentHooks)
+            parentHooks=parentHooks,
+            expandoClass=expandoClass)
 
 
 def NativePropertyHooks(descriptor):
@@ -527,6 +534,35 @@ class CGDOMProxyJSClass(CGThing):
             flags=" | ".join(flags),
             objectMoved=objectMovedHook,
             descriptor=DOMClass(self.descriptor))
+
+
+class CGXrayExpandoJSClass(CGThing):
+    """
+    Generate a JSClass for an Xray expando object.  This is only
+    needed if we have members in slots (for [Cached] or [StoreInSlot]
+    stuff).
+    """
+    def __init__(self, descriptor):
+        assert descriptor.interface.totalMembersInSlots != 0
+        assert descriptor.wantsXrays
+        assert descriptor.wantsXrayExpandoClass
+        CGThing.__init__(self)
+        self.descriptor = descriptor;
+
+    def declare(self):
+        return ""
+
+    def define(self):
+        return fill(
+            """
+            // This may allocate too many slots, because we only really need
+            // slots for our non-interface-typed members that we cache.  But
+            // allocating slots only for those would make the slot index
+            // computations much more complicated, so let's do this the simple
+            // way for now.
+            DEFINE_XRAY_EXPANDO_CLASS(static, sXrayExpandoObjectClass, ${memberSlots});
+            """,
+            memberSlots=self.descriptor.interface.totalMembersInSlots)
 
 
 def PrototypeIDAndDepth(descriptor):
@@ -12073,6 +12109,8 @@ class CGDescriptor(CGThing):
             elif descriptor.needsXrayResolveHooks():
                 cgThings.append(CGResolveOwnPropertyViaResolve(descriptor))
                 cgThings.append(CGEnumerateOwnPropertiesViaGetOwnPropertyNames(descriptor))
+            if descriptor.wantsXrayExpandoClass:
+                cgThings.append(CGXrayExpandoJSClass(descriptor))
 
         # Now that we have our ResolveOwnProperty/EnumerateOwnProperties stuff
         # done, set up our NativePropertyHooks.
@@ -13473,6 +13511,10 @@ class CGBindingRoot(CGThing):
             descriptorRequiresTelemetry(d) for d in descriptors)
         bindingHeaders["mozilla/dom/SimpleGlobalObject.h"] = any(
             CGDictionary.dictionarySafeToJSONify(d) for d in dictionaries)
+        bindingHeaders["XrayWrapper.h"] = any(
+            d.wantsXrays and d.wantsXrayExpandoClass for d in descriptors)
+        bindingHeaders["mozilla/dom/XrayExpandoClass.h"] = any(
+            d.wantsXrays for d in descriptors)
 
         cgthings.extend(traverseMethods)
         cgthings.extend(unlinkMethods)
