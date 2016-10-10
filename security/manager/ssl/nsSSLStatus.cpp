@@ -9,7 +9,6 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
-#include "SignedCertificateTimestamp.h"
 #include "ssl.h"
 
 NS_IMETHODIMP
@@ -88,16 +87,6 @@ nsSSLStatus::GetProtocolVersion(uint16_t* aProtocolVersion)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetCertificateTransparencyStatus(
-  uint16_t* aCertificateTransparencyStatus)
-{
-  NS_ENSURE_ARG_POINTER(aCertificateTransparencyStatus);
-
-  *aCertificateTransparencyStatus = mCertificateTransparencyStatus;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSSLStatus::GetIsDomainMismatch(bool* aIsDomainMismatch)
 {
   NS_ENSURE_ARG_POINTER(aIsDomainMismatch);
@@ -163,8 +152,6 @@ nsSSLStatus::Read(nsIObjectInputStream* aStream)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->Read16(&mProtocolVersion);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStream->Read16(&mCertificateTransparencyStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aStream->ReadBoolean(&mIsDomainMismatch);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -196,8 +183,6 @@ nsSSLStatus::Write(nsIObjectOutputStream* aStream)
   rv = aStream->Write16(mCipherSuite);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->Write16(mProtocolVersion);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStream->Write16(mCertificateTransparencyStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aStream->WriteBoolean(mIsDomainMismatch);
@@ -277,8 +262,6 @@ nsSSLStatus::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc)
 nsSSLStatus::nsSSLStatus()
 : mCipherSuite(0)
 , mProtocolVersion(0)
-, mCertificateTransparencyStatus(nsISSLStatus::
-    CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE)
 , mIsDomainMismatch(false)
 , mIsNotValidAtThisTime(false)
 , mIsUntrusted(false)
@@ -316,56 +299,4 @@ nsSSLStatus::SetServerCert(nsNSSCertificate* aServerCert,
     mHasIsEVStatus = true;
   }
 #endif
-}
-
-void
-nsSSLStatus::SetCertificateTransparencyInfo(
-  const mozilla::psm::CertificateTransparencyInfo& info)
-{
-  using mozilla::ct::SignedCertificateTimestamp;
-
-  if (!info.enabled) {
-    // CT disabled.
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
-    return;
-  }
-
-  if (!info.processedSCTs) {
-    // No SCTs processed on the connection.
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_NONE;
-    return;
-  }
-
-  bool hasOKSCTs = false;
-  bool hasUnknownLogSCTs = false;
-  bool hasInvalidSCTs = false;
-  for (const SignedCertificateTimestamp& sct : info.verifyResult.scts) {
-    switch (sct.verificationStatus) {
-      case SignedCertificateTimestamp::VerificationStatus::OK:
-        hasOKSCTs = true;
-        break;
-      case SignedCertificateTimestamp::VerificationStatus::UnknownLog:
-        hasUnknownLogSCTs = true;
-        break;
-      case SignedCertificateTimestamp::VerificationStatus::InvalidSignature:
-      case SignedCertificateTimestamp::VerificationStatus::InvalidTimestamp:
-        hasInvalidSCTs = true;
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected SCT::VerificationStatus type");
-    }
-  }
-
-  if (hasOKSCTs) {
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_OK;
-  } else if (hasUnknownLogSCTs) {
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_UNKNOWN_LOG;
-  } else if (hasInvalidSCTs) {
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_INVALID;
-  }
 }
