@@ -4792,97 +4792,56 @@ JS::RejectPromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue rejec
 }
 
 JS_PUBLIC_API(JSObject*)
-JS::CallOriginalPromiseThen(JSContext* cx, JS::HandleObject promise,
-                            JS::HandleObject onResolve, JS::HandleObject onReject)
+JS::CallOriginalPromiseThen(JSContext* cx, JS::HandleObject promiseObj,
+                            JS::HandleObject onResolveObj, JS::HandleObject onRejectObj)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, promise, onResolve, onReject);
+    assertSameCompartment(cx, promiseObj, onResolveObj, onRejectObj);
 
-    MOZ_ASSERT(promise->is<PromiseObject>());
-    MOZ_ASSERT(onResolve == nullptr || IsCallable(onResolve));
-    MOZ_ASSERT(onReject == nullptr || IsCallable(onReject));
+    MOZ_ASSERT_IF(onResolveObj, IsCallable(onResolveObj));
+    MOZ_ASSERT_IF(onRejectObj, IsCallable(onRejectObj));
 
-    JSObject* obj;
-    {
-        FixedInvokeArgs<2> args(cx);
-
-        args[0].setObjectOrNull(onResolve);
-        args[1].setObjectOrNull(onReject);
-
-        RootedValue thisvOrRval(cx, ObjectValue(*promise));
-        if (!CallSelfHostedFunction(cx, "Promise_then", thisvOrRval, args, &thisvOrRval))
-            return nullptr;
-
-        MOZ_ASSERT(thisvOrRval.isObject());
-        obj = &thisvOrRval.toObject();
-    }
-
-    MOZ_ASSERT(obj->is<PromiseObject>());
-    return obj;
+    Rooted<PromiseObject*> promise(cx, &promiseObj->as<PromiseObject>());
+    RootedValue onFulfilled(cx, ObjectOrNullValue(onResolveObj));
+    RootedValue onRejected(cx, ObjectOrNullValue(onRejectObj));
+    return OriginalPromiseThen(cx, promise, onFulfilled, onRejected);
 }
 
 JS_PUBLIC_API(bool)
-JS::AddPromiseReactions(JSContext* cx, JS::HandleObject promise,
-                        JS::HandleObject onResolve, JS::HandleObject onReject)
+JS::AddPromiseReactions(JSContext* cx, JS::HandleObject promiseObj,
+                        JS::HandleObject onResolvedObj, JS::HandleObject onRejectedObj)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, promise, onResolve, onReject);
+    assertSameCompartment(cx, promiseObj, onResolvedObj, onRejectedObj);
 
-    MOZ_ASSERT(promise->is<PromiseObject>());
-    MOZ_ASSERT(IsCallable(onResolve));
-    MOZ_ASSERT(IsCallable(onReject));
+    MOZ_ASSERT(IsCallable(onResolvedObj));
+    MOZ_ASSERT(IsCallable(onRejectedObj));
 
-    FixedInvokeArgs<4> args(cx);
-
-    args[0].setObject(*promise);
-    args[1].setNull();
-    args[2].setObject(*onResolve);
-    args[3].setObject(*onReject);
-
-    RootedValue dummy(cx);
-    return CallSelfHostedFunction(cx, "EnqueuePromiseReactions", UndefinedHandleValue, args,
-                                  &dummy);
+    Rooted<PromiseObject*> promise(cx, &promiseObj->as<PromiseObject>());
+    RootedValue onResolved(cx, ObjectValue(*onResolvedObj));
+    RootedValue onRejected(cx, ObjectValue(*onRejectedObj));
+    return EnqueuePromiseReactions(cx, promise, nullptr, onResolved, onRejected);
 }
 
+/**
+ * Unforgeable version of Promise.all for internal use.
+ *
+ * Takes a dense array of Promise objects and returns a promise that's
+ * resolved with an array of resolution values when all those promises ahve
+ * been resolved, or rejected with the rejection value of the first rejected
+ * promise.
+ *
+ * Asserts that the array is dense and all entries are Promise objects.
+ */
 JS_PUBLIC_API(JSObject*)
 JS::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    RootedArrayObject arr(cx, NewDenseFullyAllocatedArray(cx, promises.length()));
-    if (!arr)
-        return nullptr;
-    arr->ensureDenseInitializedLength(cx, 0, promises.length());
-    for (size_t i = 0, len = promises.length(); i < len; i++) {
-#ifdef DEBUG
-        JSObject* obj = promises[i];
-        assertSameCompartment(cx, obj);
-        if (IsWrapper(obj))
-            obj = UncheckedUnwrap(obj);
-        MOZ_ASSERT(obj->is<PromiseObject>());
-#endif
-        arr->setDenseElement(i, ObjectValue(*promises[i]));
-    }
-
-    JSObject* obj;
-    {
-        FixedInvokeArgs<1> args(cx);
-
-        args[0].setObject(*arr);
-
-        RootedValue thisvOrRval(cx, UndefinedValue());
-        if (!CallSelfHostedFunction(cx, "GetWaitForAllPromise", thisvOrRval, args, &thisvOrRval))
-            return nullptr;
-
-        MOZ_ASSERT(thisvOrRval.isObject());
-        obj = &thisvOrRval.toObject();
-    }
-
-    MOZ_ASSERT(obj->is<PromiseObject>());
-    return obj;
+    return js::GetWaitForAllPromise(cx, promises);
 }
 
 JS_PUBLIC_API(void)
