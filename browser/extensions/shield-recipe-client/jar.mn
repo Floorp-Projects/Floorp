@@ -1,0 +1,9 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[features/shield-recipe-client@mozilla.org] chrome.jar:
+% resource shield-recipe-client %content/
+  content/lib/ (./lib/*)
+  content/data/ (./data/*)
+  content/node_modules/jexl/ (./node_modules/jexl/*)
