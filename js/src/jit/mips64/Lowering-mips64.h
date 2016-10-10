@@ -37,6 +37,11 @@ class LIRGeneratorMIPS64 : public LIRGeneratorMIPSShared
     void lowerTruncateDToInt32(MTruncateToInt32* ins);
     void lowerTruncateFToInt32(MTruncateToInt32* ins);
 
+    void lowerDivI64(MDiv* div);
+    void lowerModI64(MMod* mod);
+    void lowerUDivI64(MDiv* div);
+    void lowerUModI64(MMod* mod);
+
   public:
     void visitBox(MBox* box);
     void visitUnbox(MUnbox* unbox);
