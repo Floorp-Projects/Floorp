@@ -289,7 +289,7 @@ public:
   {
     MOZ_ASSERT(strlen(aClassName) > 0, "BloatEntry name must be non-empty");
     mClassName = PL_strdup(aClassName);
-    mAllStats.Clear();
+    mStats.Clear();
     mTotalLeaked = 0;
   }
 
@@ -309,12 +309,12 @@ public:
 
   void Ctor()
   {
-    mAllStats.mCreates++;
+    mStats.mCreates++;
   }
 
   void Dtor()
   {
-    mAllStats.mDestroys++;
+    mStats.mDestroys++;
   }
 
   static int DumpEntry(PLHashEntry* aHashEntry, int aIndex, void* aArg)
@@ -337,15 +337,15 @@ public:
 
   void Total(BloatEntry* aTotal)
   {
-    aTotal->mAllStats.mCreates += mAllStats.mCreates;
-    aTotal->mAllStats.mDestroys += mAllStats.mDestroys;
-    aTotal->mClassSize += mClassSize * mAllStats.mCreates;    // adjust for average in DumpTotal
-    aTotal->mTotalLeaked += mClassSize * mAllStats.NumLeaked();
+    aTotal->mStats.mCreates += mStats.mCreates;
+    aTotal->mStats.mDestroys += mStats.mDestroys;
+    aTotal->mClassSize += mClassSize * mStats.mCreates;    // adjust for average in DumpTotal
+    aTotal->mTotalLeaked += mClassSize * mStats.NumLeaked();
   }
 
   void DumpTotal(FILE* aOut)
   {
-    mClassSize /= mAllStats.mCreates;
+    mClassSize /= mStats.mCreates;
     Dump(-1, aOut);
   }
 
@@ -353,7 +353,7 @@ public:
   {
     fprintf(aOut, "\n== BloatView: %s, %s process %d\n", aMsg,
             XRE_ChildProcessTypeToString(XRE_GetProcessType()), getpid());
-    if (gLogLeaksOnly && !mAllStats.HaveLeaks()) {
+    if (gLogLeaksOnly && !mStats.HaveLeaks()) {
       return false;
     }
 
@@ -369,17 +369,17 @@ public:
 
   void Dump(int aIndex, FILE* aOut)
   {
-    if (gLogLeaksOnly && !mAllStats.HaveLeaks()) {
+    if (gLogLeaksOnly && !mStats.HaveLeaks()) {
       return;
     }
 
-    if (mAllStats.HaveLeaks() || mAllStats.mCreates != 0) {
+    if (mStats.HaveLeaks() || mStats.mCreates != 0) {
       fprintf(aOut, "%4d |%-38.38s| %8d %8" PRId64 "|%8" PRIu64 " %8" PRId64"|\n",
               aIndex + 1, mClassName,
               GetClassSize(),
-              nsCRT::strcmp(mClassName, "TOTAL") ? (mAllStats.NumLeaked() * GetClassSize()) : mTotalLeaked,
-              mAllStats.mCreates,
-              mAllStats.NumLeaked());
+              nsCRT::strcmp(mClassName, "TOTAL") ? (mStats.NumLeaked() * GetClassSize()) : mTotalLeaked,
+              mStats.mCreates,
+              mStats.NumLeaked());
     }
   }
 
@@ -387,7 +387,7 @@ protected:
   char* mClassName;
   double mClassSize; // This is stored as a double because of the way we compute the avg class size for total bloat.
   int64_t mTotalLeaked; // Used only for TOTAL entry.
-  nsTraceRefcntStats mAllStats;
+  nsTraceRefcntStats mStats;
 };
 
 static void
