@@ -4335,9 +4335,9 @@ BytecodeEmitter::emitDestructuringLHS(ParseNode* target, DestructuringFlavor fla
     else if (target->isKind(PNK_ASSIGN))
         target = target->pn_left;
     if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
-        if (!emitDestructuringOpsHelper(target, flav))
+        if (!emitDestructuringOps(target, flav))
             return false;
-        // Per its post-condition, emitDestructuringOpsHelper has left the
+        // Per its post-condition, emitDestructuringOps has left the
         // to-be-destructured value on top of the stack.
         if (!emit1(JSOP_POP))
             return false;
@@ -4514,7 +4514,7 @@ BytecodeEmitter::emitDefault(ParseNode* defaultExpr)
 }
 
 bool
-BytecodeEmitter::emitDestructuringOpsArrayHelper(ParseNode* pattern, DestructuringFlavor flav)
+BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlavor flav)
 {
     MOZ_ASSERT(pattern->isKind(PNK_ARRAY));
     MOZ_ASSERT(pattern->isArity(PN_LIST));
@@ -4781,7 +4781,7 @@ BytecodeEmitter::emitComputedPropertyName(ParseNode* computedPropName)
 }
 
 bool
-BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, DestructuringFlavor flav)
+BytecodeEmitter::emitDestructuringOpsObject(ParseNode* pattern, DestructuringFlavor flav)
 {
     MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
     MOZ_ASSERT(pattern->isArity(PN_LIST));
@@ -4855,28 +4855,12 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, Destructur
     return true;
 }
 
-/*
- * Recursive helper for emitDestructuringOps.
- * EmitDestructuringOpsHelper assumes the to-be-destructured value has been
- * pushed on the stack and emits code to destructure each part of a [] or {}
- * lhs expression.
- */
-bool
-BytecodeEmitter::emitDestructuringOpsHelper(ParseNode* pattern, DestructuringFlavor flav)
-{
-    if (pattern->isKind(PNK_ARRAY))
-        return emitDestructuringOpsArrayHelper(pattern, flav);
-    return emitDestructuringOpsObjectHelper(pattern, flav);
-}
-
 bool
 BytecodeEmitter::emitDestructuringOps(ParseNode* pattern, DestructuringFlavor flav)
 {
-    /*
-     * Call our recursive helper to emit the destructuring assignments and
-     * related stack manipulations.
-     */
-    return emitDestructuringOpsHelper(pattern, flav);
+    if (pattern->isKind(PNK_ARRAY))
+        return emitDestructuringOpsArray(pattern, flav);
+    return emitDestructuringOpsObject(pattern, flav);
 }
 
 bool
@@ -4949,7 +4933,7 @@ BytecodeEmitter::emitDeclarationList(ParseNode* declList)
             if (!emitTree(decl->pn_right))
                 return false;
 
-            if (!emitDestructuringOpsHelper(pattern, DestructuringDeclaration))
+            if (!emitDestructuringOps(pattern, DestructuringDeclaration))
                 return false;
 
             if (!emit1(JSOP_POP))
