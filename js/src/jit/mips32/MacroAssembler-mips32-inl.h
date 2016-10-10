@@ -664,6 +664,29 @@ MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, R
 }
 
 // ===============================================================
+// Bit counting functions
+
+void
+MacroAssembler::popcnt64(Register64 src, Register64 dest, Register tmp)
+{
+    MOZ_ASSERT(dest.low != tmp);
+    MOZ_ASSERT(dest.high != tmp);
+    MOZ_ASSERT(dest.low != dest.high);
+
+    if (dest.low != src.high) {
+        popcnt32(src.low, dest.low, tmp);
+        popcnt32(src.high, dest.high, tmp);
+    } else {
+        MOZ_ASSERT(dest.high != src.high);
+        popcnt32(src.low, dest.high, tmp);
+        popcnt32(src.high, dest.low, tmp);
+    }
+
+    ma_addu(dest.low, dest.high);
+    move32(Imm32(0), dest.high);
+}
+
+// ===============================================================
 // Branch functions
 
 void
