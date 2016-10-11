@@ -188,7 +188,7 @@ public:
   // align covered by <applet>
   // name covered by <applet>
   nsIDocument*
-  GetSVGDocument(const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal)
+  GetSVGDocument(nsIPrincipal& aSubjectPrincipal)
   {
     return GetContentDocument(aSubjectPrincipal);
   }

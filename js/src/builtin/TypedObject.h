@@ -549,14 +549,14 @@ class TypedObject : public ShapedObject
 
     int32_t offset() const;
     int32_t length() const;
-    uint8_t* typedMem(const JS::AutoAssertOnGC&) const { return typedMem(); }
+    uint8_t* typedMem(const JS::AutoRequireNoGC&) const { return typedMem(); }
     bool isAttached() const;
 
     int32_t size() const {
         return typeDescr().size();
     }
 
-    uint8_t* typedMem(size_t offset, const JS::AutoAssertOnGC& nogc) const {
+    uint8_t* typedMem(size_t offset, const JS::AutoRequireNoGC& nogc) const {
         // It seems a bit surprising that one might request an offset
         // == size(), but it can happen when taking the "address of" a
         // 0-sized value. (In other words, we maintain the invariant
@@ -704,7 +704,7 @@ class InlineTypedObject : public TypedObject
         return gc::GetGCObjectKindForBytes(nbytes + sizeof(TypedObject));
     }
 
-    uint8_t* inlineTypedMem(const JS::AutoAssertOnGC&) const {
+    uint8_t* inlineTypedMem(const JS::AutoRequireNoGC&) const {
         return inlineTypedMem();
     }
 
