@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: promise-based play() method</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+// Name: playAndPauseBeforeCanPlay
+// Case: invlke play() and then pause() on an element that deoen't have enough data to play.
+// Expected result: reject the promise with AbortError DOM exception.
+// Note: the pause() cancels the play() because the promise is still pending.
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  ok(element.readyState == HTMLMediaElement.HAVE_NOTHING);
+  element.play().then(
+    (result) => {
+      ok(false, `${token} is resolved with ${result}.`);
+    },
+    (error) => {
+      if (error.name == "AbortError") {
+        ok(true, `${token} is rejected with ${error.name}.`);
+      } else {
+        ok(false, `${token} is rejected with ${error.name}.`);
+      }
+    }
+  ).then( () => { manager.finished(token); } );
+  ok(!element.paused, `playAndPauseBeforeCanPlay(${token}) element should not be paused.`);
+  element.pause();
+  ok(element.paused, `playAndPauseBeforeCanPlay(${token}) element should be paused.`);
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>
