@@ -2843,10 +2843,18 @@ nsHTMLDocument::SetDesignMode(const nsAString& aDesignMode)
 
 void
 nsHTMLDocument::SetDesignMode(const nsAString& aDesignMode,
+                              nsIPrincipal& aSubjectPrincipal,
+                              ErrorResult& rv)
+{
+  SetDesignMode(aDesignMode, Some(&aSubjectPrincipal), rv);
+}
+
+void
+nsHTMLDocument::SetDesignMode(const nsAString& aDesignMode,
                               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                               ErrorResult& rv)
 {
-  if (!nsContentUtils::LegacyIsCallerNativeCode() &&
+  if (aSubjectPrincipal.isSome() &&
       !aSubjectPrincipal.value()->Subsumes(NodePrincipal())) {
     rv.Throw(NS_ERROR_DOM_PROP_ACCESS_DENIED);
     return;

@@ -91,10 +91,6 @@
 #include "AudioChannelManager.h"
 #endif
 
-#ifdef MOZ_B2G_FM
-#include "mozilla/dom/FMRadio.h"
-#endif
-
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "nsJSUtils.h"
 
@@ -291,13 +287,6 @@ Navigator::Invalidate()
   }
 
   mBatteryPromise = nullptr;
-
-#ifdef MOZ_B2G_FM
-  if (mFMRadio) {
-    mFMRadio->Shutdown();
-    mFMRadio = nullptr;
-  }
-#endif
 
   if (mPowerManager) {
     mPowerManager->Shutdown();
@@ -1545,30 +1534,6 @@ Navigator::GetMozNotification(ErrorResult& aRv)
   mNotification = new DesktopNotificationCenter(mWindow);
   return mNotification;
 }
-
-#ifdef MOZ_B2G_FM
-
-using mozilla::dom::FMRadio;
-
-FMRadio*
-Navigator::GetMozFMRadio(ErrorResult& aRv)
-{
-  if (!mFMRadio) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
-
-    mFMRadio = new FMRadio();
-    mFMRadio->Init(mWindow);
-  }
-
-  return mFMRadio;
-}
-
-#endif  // MOZ_B2G_FM
 
 //*****************************************************************************
 //    Navigator::nsINavigatorBattery

@@ -12,8 +12,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://devtools/shared/Loader.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
-                                  "resource://gre/modules/LoginManagerContent.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",
                                    "nsIContentSecurityManager");
@@ -40,32 +38,6 @@ this.InsecurePasswordUtils = {
   },
 
   /**
-   * Checks whether the passed nested document is insecure
-   * or is inside an insecure parent document.
-   *
-   * We check the chain of frame ancestors all the way until the top document
-   * because MITM attackers could replace https:// iframes if they are nested inside
-   * http:// documents with their own content, thus creating a security risk
-   * and potentially stealing user data. Under such scenario, a user might not
-   * get a Mixed Content Blocker message, if the main document is served over HTTP
-   * and framing an HTTPS page as it would under the reverse scenario (http
-   * inside https).
-   */
-  _checkForInsecureNestedDocuments(domDoc) {
-    if (domDoc.defaultView == domDoc.defaultView.parent) {
-      // We are at the top, nothing to check here
-      return false;
-    }
-    if (!LoginManagerContent.isDocumentSecure(domDoc)) {
-      // We are insecure
-      return true;
-    }
-    // I am secure, but check my parent
-    return this._checkForInsecureNestedDocuments(domDoc.defaultView.parent.document);
-  },
-
-
-  /**
    * Checks if there are insecure password fields present on the form's document
    * i.e. passwords inside forms with http action, inside iframes with http src,
    * or on insecure web pages. If insecure password fields are present,
@@ -80,20 +52,15 @@ this.InsecurePasswordUtils = {
     }
 
     let domDoc = aForm.ownerDocument;
-    let topDocument = domDoc.defaultView.top.document;
-    let isSafePage = LoginManagerContent.isDocumentSecure(topDocument);
+    let isSafePage = domDoc.defaultView.isSecureContext;
 
     if (!isSafePage) {
-      this._sendWebConsoleMessage("InsecurePasswordsPresentOnPage", domDoc);
+      if (domDoc.defaultView == domDoc.defaultView.parent) {
+        this._sendWebConsoleMessage("InsecurePasswordsPresentOnPage", domDoc);
+      } else {
+        this._sendWebConsoleMessage("InsecurePasswordsPresentOnIframe", domDoc);
+      }
       this._formRootsWarned.set(aForm.rootElement, true);
-    }
-
-    // Check if we are on an iframe with insecure src, or inside another
-    // insecure iframe or document.
-    if (this._checkForInsecureNestedDocuments(domDoc)) {
-      this._sendWebConsoleMessage("InsecurePasswordsPresentOnIframe", domDoc);
-      this._formRootsWarned.set(aForm.rootElement, true);
-      isSafePage = false;
     }
 
     let isFormSubmitHTTP = false, isFormSubmitSecure = false;

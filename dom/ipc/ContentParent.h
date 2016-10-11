@@ -869,10 +869,6 @@ private:
 
   virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor) override;
 
-  virtual PFMRadioParent* AllocPFMRadioParent() override;
-
-  virtual bool DeallocPFMRadioParent(PFMRadioParent* aActor) override;
-
   virtual PPresentationParent* AllocPPresentationParent() override;
 
   virtual bool DeallocPPresentationParent(PPresentationParent* aActor) override;

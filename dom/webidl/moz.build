@@ -768,11 +768,6 @@ else:
         'InstallTrigger.webidl',
     ]
 
-if CONFIG['MOZ_B2G_FM']:
-    WEBIDL_FILES += [
-        'FMRadio.webidl',
-    ]
-
 GENERATED_EVENTS_WEBIDL_FILES = [
     'AddonEvent.webidl',
     'AnimationPlaybackEvent.webidl',

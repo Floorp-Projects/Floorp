@@ -130,7 +130,6 @@ LOCAL_INCLUDES += [
     '/dom/devicestorage',
     '/dom/events',
     '/dom/filesystem',
-    '/dom/fmradio/ipc',
     '/dom/geolocation',
     '/dom/media/webspeech/synth/ipc',
     '/dom/mobilemessage/ipc',

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for AppID / FacetID behavior for FIDO Universal Second Factor</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1231681">Mozilla Bug 1231681</a>
+
+<div id="framediv">
+  <iframe id="testing_frame"></iframe>
+</div>
+
+<pre id="log"></pre>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
+                                   ["security.webauth.u2f_enable_softtoken", true],
+                                   ["security.webauth.u2f_enable_usbtoken", false]]},
+function() {
+  // listen for messages from the test harness
+  window.addEventListener("message", handleEventMessage, false);
+  document.getElementById('testing_frame').src = "https://example.com/tests/dom/u2f/tests/frame_appid_facet.html";
+});
+
+</script>
+
+</body>
+</html>
