@@ -486,14 +486,11 @@ VRManagerChild::RecvNotifyVRVSync(const uint32_t& aDisplayID)
 bool
 VRManagerChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
 {
-  // VRManagerChild could be at other processes,
-  // but GamepadManager is only allowed to be run at Content process.
-  if (XRE_IsContentProcess()) {
-    RefPtr<dom::GamepadManager> serivce(dom::GamepadManager::GetService());
-
-    if (serivce) {
-      serivce->Update(aGamepadEvent);
-    }
+  // VRManagerChild could be at other processes, but GamepadManager
+  // only exists at the content process or the parent process
+  // in non-e10s mode.
+  if (mGamepadManager) {
+      mGamepadManager->Update(aGamepadEvent);
   }
 
   return true;
@@ -590,6 +587,14 @@ void
 VRManagerChild::FatalError(const char* const aName, const char* const aMsg) const
 {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+}
+
+void
+VRManagerChild::SetGamepadManager(dom::GamepadManager* aGamepadManager)
+{
+  MOZ_ASSERT(aGamepadManager);
+
+  mGamepadManager = aGamepadManager;
 }
 
 } // namespace gfx
