@@ -271,6 +271,7 @@ add_task(function *test_telemetry_integration() {
   equal(bme.validation.took, duration);
   bme.validation.problems.sort((a, b) => String.localeCompare(a.name, b.name));
   deepEqual(bme.validation.problems, [
+    { name: "badClientRoots", count: 4 },
     { name: "sdiff:childGUIDs", count: 1 },
     { name: "serverMissing", count: 1 },
     { name: "structuralDifferences", count: 1 },
