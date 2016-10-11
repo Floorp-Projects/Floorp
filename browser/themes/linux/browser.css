@@ -959,6 +959,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   padding: 0 8px;
   border-radius: 1em;
   background-color: hsla(0,0%,0%,.05);
+  color: inherit;
   border: 1px solid ThreeDLightShadow;
 }
 
