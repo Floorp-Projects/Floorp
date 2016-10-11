@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/process_util.h"
+#include "base/task.h"
 
 #ifdef OS_POSIX
 #include <errno.h>

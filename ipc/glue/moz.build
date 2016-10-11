@@ -15,6 +15,9 @@ EXPORTS.mozilla.ipc += [
     'BackgroundParent.h',
     'BackgroundUtils.h',
     'BrowserProcessSubThread.h',
+    'CrashReporterClient.h',
+    'CrashReporterHost.h',
+    'CrashReporterMetadataShmem.h',
     'CrossProcessMutex.h',
     'FileDescriptor.h',
     'FileDescriptorSetChild.h',
@@ -119,6 +122,9 @@ UNIFIED_SOURCES += [
     'BackgroundImpl.cpp',
     'BackgroundUtils.cpp',
     'BrowserProcessSubThread.cpp',
+    'CrashReporterClient.cpp',
+    'CrashReporterHost.cpp',
+    'CrashReporterMetadataShmem.cpp',
     'FileDescriptor.cpp',
     'FileDescriptorUtils.cpp',
     'InputStreamUtils.cpp',
@@ -175,8 +181,9 @@ IPDL_SOURCES = [
     'URIParams.ipdlh',
 ]
 
-
 LOCAL_INCLUDES += [
+    '/dom/ipc',
+    '/toolkit/crashreporter',
     '/toolkit/xre',
     '/xpcom/threads',
 ]
@@ -188,10 +195,6 @@ FINAL_LIBRARY = 'xul'
 for var in ('MOZ_CHILD_PROCESS_NAME', 'MOZ_CHILD_PROCESS_NAME_PIE',
             'MOZ_CHILD_PROCESS_BUNDLE', 'DLL_PREFIX', 'DLL_SUFFIX'):
     DEFINES[var] = '"%s"' % CONFIG[var]
-
-LOCAL_INCLUDES += [
-    '/toolkit/crashreporter',
-]
 
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
