@@ -214,6 +214,8 @@ public:
 
   virtual bool HandleAudioCaptured() { return false; }
 
+  virtual RefPtr<ShutdownPromise> HandleShutdown();
+
   virtual void DumpDebugInfo() {}
 
 protected:
@@ -885,6 +887,12 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(false, "Can't seek in shutdown state.");
     return MediaDecoder::SeekPromise::CreateAndReject(true, __func__);
   }
+
+  RefPtr<ShutdownPromise> HandleShutdown() override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
+    return nullptr;
+  }
 };
 
 bool
@@ -904,6 +912,20 @@ StateObject::HandleDormant(bool aDormant)
     mMaster->mQueuedSeek.mPromise.Ensure(__func__);
   SetState<DormantState>();
   return true;
+}
+
+RefPtr<ShutdownPromise>
+MediaDecoderStateMachine::
+StateObject::HandleShutdown()
+{
+  auto master = mMaster;
+  SetState<ShutdownState>();
+
+  return master->mReader->Shutdown()
+    ->Then(master->OwnerThread(), __func__, master,
+           &MediaDecoderStateMachine::FinishShutdown,
+           &MediaDecoderStateMachine::FinishShutdown)
+    ->CompletionPromise();
 }
 
 void
@@ -2144,16 +2166,7 @@ RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::Shutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  mStateObj->SetState<ShutdownState>();
-
-  // Put a task in the decode queue to shutdown the reader.
-  // the queue to spin down.
-  return mReader->Shutdown()
-    ->Then(OwnerThread(), __func__, this,
-           &MediaDecoderStateMachine::FinishShutdown,
-           &MediaDecoderStateMachine::FinishShutdown)
-    ->CompletionPromise();
+  return mStateObj->HandleShutdown();
 }
 
 void MediaDecoderStateMachine::PlayStateChanged()
