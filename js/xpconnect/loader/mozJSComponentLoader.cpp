@@ -154,6 +154,7 @@ private:
 };
 
 static nsresult
+MOZ_FORMAT_PRINTF(2, 3)
 ReportOnCallerUTF8(JSContext* callerContext,
                    const char* format, ...) {
     if (!callerContext) {
@@ -177,6 +178,7 @@ ReportOnCallerUTF8(JSContext* callerContext,
 }
 
 static nsresult
+MOZ_FORMAT_PRINTF(2, 3)
 ReportOnCallerUTF8(JSCLContextHelper& helper,
                    const char* format, ...)
 {

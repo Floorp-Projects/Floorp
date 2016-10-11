@@ -91,16 +91,16 @@ LCovSource::exportInto(GenericPrinter& out) const
 
     outFN_.exportInto(out);
     outFNDA_.exportInto(out);
-    out.printf("FNF:%d\n", numFunctionsFound_);
-    out.printf("FNH:%d\n", numFunctionsHit_);
+    out.printf("FNF:%" PRIuSIZE "\n", numFunctionsFound_);
+    out.printf("FNH:%" PRIuSIZE "\n", numFunctionsHit_);
 
     outBRDA_.exportInto(out);
-    out.printf("BRF:%d\n", numBranchesFound_);
-    out.printf("BRH:%d\n", numBranchesHit_);
+    out.printf("BRF:%" PRIuSIZE "\n", numBranchesFound_);
+    out.printf("BRH:%" PRIuSIZE "\n", numBranchesHit_);
 
     outDA_.exportInto(out);
-    out.printf("LF:%d\n", numLinesInstrumented_);
-    out.printf("LH:%d\n", numLinesHit_);
+    out.printf("LF:%" PRIuSIZE "\n", numLinesInstrumented_);
+    out.printf("LH:%" PRIuSIZE "\n", numLinesHit_);
 
     out.put("end_of_record\n");
 }
@@ -130,7 +130,7 @@ bool
 LCovSource::writeScript(JSScript* script)
 {
     numFunctionsFound_++;
-    outFN_.printf("FN:%d,", script->lineno());
+    outFN_.printf("FN:%" PRIuSIZE ",", script->lineno());
     if (!writeScriptName(outFN_, script))
         return false;
     outFN_.put("\n", 1);
@@ -191,7 +191,7 @@ LCovSource::writeScript(JSScript* script)
             }
 
             if (oldLine != lineno && fallsthrough) {
-                outDA_.printf("DA:%d,%" PRIu64 "\n", lineno, hits);
+                outDA_.printf("DA:%" PRIuSIZE ",%" PRIu64 "\n", lineno, hits);
 
                 // Count the number of lines instrumented & hit.
                 numLinesInstrumented_++;
@@ -220,13 +220,13 @@ LCovSource::writeScript(JSScript* script)
             }
 
             uint64_t taken = hits - fallthroughHits;
-            outBRDA_.printf("BRDA:%d,%d,0,", lineno, branchId);
+            outBRDA_.printf("BRDA:%" PRIuSIZE ",%" PRIuSIZE ",0,", lineno, branchId);
             if (taken)
                 outBRDA_.printf("%" PRIu64 "\n", taken);
             else
                 outBRDA_.put("-\n", 2);
 
-            outBRDA_.printf("BRDA:%d,%d,1,", lineno, branchId);
+            outBRDA_.printf("BRDA:%" PRIuSIZE ",%" PRIuSIZE ",1,", lineno, branchId);
             if (fallthroughHits)
                 outBRDA_.printf("%" PRIu64 "\n", fallthroughHits);
             else
@@ -308,7 +308,8 @@ LCovSource::writeScript(JSScript* script)
                         caseHits -= fallsThroughHits;
                     }
 
-                    outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, caseId);
+                    outBRDA_.printf("BRDA:%" PRIuSIZE ",%" PRIuSIZE ",%" PRIuSIZE ",",
+                                    lineno, branchId, caseId);
                     if (caseHits)
                         outBRDA_.printf("%" PRIu64 "\n", caseHits);
                     else
@@ -359,7 +360,8 @@ LCovSource::writeScript(JSScript* script)
             }
 
             if (defaultHasOwnClause) {
-                outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, caseId);
+                outBRDA_.printf("BRDA:%" PRIuSIZE ",%" PRIuSIZE ",%" PRIuSIZE ",",
+                                lineno, branchId, caseId);
                 if (defaultHits)
                     outBRDA_.printf("%" PRIu64 "\n", defaultHits);
                 else

@@ -1872,7 +1872,7 @@ irregexp::CompilePattern(JSContext* cx, RegExpShared* shared, RegExpCompileData*
     Analysis analysis(cx, ignore_case, is_ascii, unicode);
     analysis.EnsureAnalyzed(node);
     if (analysis.has_failed()) {
-        JS_ReportErrorASCII(cx, analysis.errorMessage());
+        JS_ReportErrorASCII(cx, "%s", analysis.errorMessage());
         return RegExpCode();
     }
 

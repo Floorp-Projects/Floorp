@@ -229,7 +229,7 @@ class IonBuilder
     MOZ_MUST_USE bool inspectOpcode(JSOp op);
     uint32_t readIndex(jsbytecode* pc);
     JSAtom* readAtom(jsbytecode* pc);
-    bool abort(const char* message, ...);
+    bool abort(const char* message, ...) MOZ_FORMAT_PRINTF(2, 3);
     void trackActionableAbort(const char* message);
     void spew(const char* message);
 
