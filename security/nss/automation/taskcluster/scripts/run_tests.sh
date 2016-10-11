@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -v -e -x
-
 source $(dirname $0)/tools.sh
 
 if [ $(id -u) = 0 ]; then

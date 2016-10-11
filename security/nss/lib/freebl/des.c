@@ -10,15 +10,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "des.h"
+#include "blapii.h"
 #include <stddef.h> /* for ptrdiff_t */
 /* #define USE_INDEXING 1 */
-
-/* Some processors automatically fix up unaligned memory access, so they can
- * read or write a HALF (4 bytes) at a time whether the address is 4-byte
- * aligned or not. */
-#if defined(NSS_X86_OR_X64)
-#define HAVE_UNALIGNED_ACCESS 1
-#endif
 
 /*
  * The tables below are the 8 sbox functions, with the 6-bit input permutation
@@ -561,7 +555,7 @@ DES_MakeSchedule(HALF *ks, const BYTE *key, DESDirection direction)
     right ^= temp = ((left >> 4) ^ right) & 0x0f0f0f0f;  \
     left ^= temp << 4;
 
-void
+void NO_SANITIZE_ALIGNMENT
 DES_Do1Block(HALF *ks, const BYTE *inbuf, BYTE *outbuf)
 {
     register HALF left, right;
