@@ -2542,7 +2542,7 @@ struct StyleShapeSource
     : StyleShapeSource()
   {
     if (aSource.mType == StyleShapeSourceType::URL) {
-      CopyURL(aSource);
+      SetURL(aSource.mURL);
     } else if (aSource.mType == StyleShapeSourceType::Shape) {
       SetBasicShape(aSource.mBasicShape, aSource.mReferenceBox);
     } else if (aSource.mType == StyleShapeSourceType::Box) {
@@ -2562,7 +2562,7 @@ struct StyleShapeSource
     }
 
     if (aOther.mType == StyleShapeSourceType::URL) {
-      CopyURL(aOther);
+      SetURL(aOther.mURL);
     } else if (aOther.mType == StyleShapeSourceType::Shape) {
       SetBasicShape(aOther.mBasicShape, aOther.mReferenceBox);
     } else if (aOther.mType == StyleShapeSourceType::Box) {
@@ -2582,7 +2582,7 @@ struct StyleShapeSource
     }
 
     if (mType == StyleShapeSourceType::URL) {
-      return mURL == aOther.mURL;
+      return mURL->Equals(*aOther.mURL);
     } else if (mType == StyleShapeSourceType::Shape) {
       return *mBasicShape == *aOther.mBasicShape &&
              mReferenceBox == aOther.mReferenceBox;
@@ -2603,22 +2603,18 @@ struct StyleShapeSource
     return mType;
   }
 
-  FragmentOrURL* GetURL() const
+  css::URLValue* GetURL() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::URL, "Wrong shape source type!");
     return mURL;
   }
 
-  bool SetURL(const nsCSSValue* aValue)
+  bool SetURL(css::URLValue* aValue)
   {
-    if (!aValue->GetURLValue()) {
-      return false;
-    }
-
+    MOZ_ASSERT(aValue);
     ReleaseRef();
-
-    mURL = new FragmentOrURL();
-    mURL->SetValue(aValue);
+    mURL = aValue;
+    mURL->AddRef();
     mType = StyleShapeSourceType::URL;
     return true;
   }
@@ -2663,26 +2659,18 @@ private:
       mBasicShape->Release();
     } else if (mType == StyleShapeSourceType::URL) {
       NS_ASSERTION(mURL, "expected pointer");
-      delete mURL;
+      mURL->Release();
     }
     // Both mBasicShape and mURL are pointers in a union. Nulling one of them
     // nulls both of them.
     mURL = nullptr;
   }
 
-  void CopyURL(const StyleShapeSource& aOther)
-  {
-    ReleaseRef();
-
-    mURL = new FragmentOrURL(*aOther.mURL);
-    mType = StyleShapeSourceType::URL;
-  }
-
   void* operator new(size_t) = delete;
 
   union {
     StyleBasicShape* mBasicShape;
-    FragmentOrURL* mURL;
+    css::URLValue* mURL;
   };
   StyleShapeSourceType mType = StyleShapeSourceType::None;
   ReferenceBox mReferenceBox = ReferenceBox::NoBox;

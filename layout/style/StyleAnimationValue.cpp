@@ -4120,12 +4120,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           const StyleShapeSourceType type = clipPath.GetType();
 
           if (type == StyleShapeSourceType::URL) {
-            nsIDocument* doc = aStyleContext->PresContext()->Document();
-            RefPtr<mozilla::css::URLValue> url =
-              FragmentOrURLToURLValue(clipPath.GetURL(), doc);
-
             auto result = MakeUnique<nsCSSValue>();
-            result->SetURLValue(url);
+            result->SetURLValue(clipPath.GetURL());
             aComputedValue.SetAndAdoptCSSValueValue(result.release(), eUnit_URL);
           } else if (type == StyleShapeSourceType::Box) {
             aComputedValue.SetIntValue(clipPath.GetReferenceBox(),
