@@ -61,8 +61,7 @@ public:
               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
               ErrorResult& aRv);
 
-  DataTransferItem* IndexedGetter(uint32_t aIndex, bool& aFound,
-                                  ErrorResult& aRv) const;
+  DataTransferItem* IndexedGetter(uint32_t aIndex, bool& aFound) const;
 
   DataTransfer* GetParentObject() const
   {
