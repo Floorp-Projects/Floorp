@@ -754,30 +754,29 @@ public:
                          WebGLintptr offset, WebGLsizeiptr size);
 
 private:
-    template<typename BufferT>
-    void BufferDataT(GLenum target, const BufferT& data, GLenum usage);
+    void BufferDataImpl(GLenum target, size_t dataLen, const uint8_t* data, GLenum usage);
 
 public:
     void BufferData(GLenum target, WebGLsizeiptr size, GLenum usage);
-    void BufferData(GLenum target, const dom::ArrayBufferView& data,
-                    GLenum usage);
+    void BufferData(GLenum target, const dom::ArrayBufferView& srcData, GLenum usage,
+                    GLuint srcElemOffset = 0, GLuint srcElemCountOverride = 0);
     void BufferData(GLenum target, const dom::Nullable<dom::ArrayBuffer>& maybeData,
                     GLenum usage);
-    void BufferData(GLenum target, const dom::SharedArrayBuffer& data,
-                    GLenum usage);
+    void BufferData(GLenum target, const dom::SharedArrayBuffer& data, GLenum usage);
 
 private:
-    template<typename BufferT>
-    void BufferSubDataT(GLenum target, WebGLsizeiptr byteOffset,
-                        const BufferT& data);
+    void BufferSubDataImpl(GLenum target, WebGLsizeiptr dstByteOffset,
+                           size_t srcDataLen, const uint8_t* srcData);
 
 public:
-    void BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
-                       const dom::ArrayBufferView& data);
-    void BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
-                       const dom::Nullable<dom::ArrayBuffer>& maybeData);
-    void BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
-                       const dom::SharedArrayBuffer& data);
+    void BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
+                       const dom::ArrayBufferView& src, GLuint srcElemOffset = 0,
+                       GLuint srcElemCountOverride = 0);
+    void BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
+                       const dom::Nullable<dom::ArrayBuffer>& maybeSrc);
+    void BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
+                       const dom::SharedArrayBuffer& src);
+
     already_AddRefed<WebGLBuffer> CreateBuffer();
     void DeleteBuffer(WebGLBuffer* buf);
     bool IsBuffer(WebGLBuffer* buf);
