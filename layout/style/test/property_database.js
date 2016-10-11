@@ -1801,6 +1801,14 @@ var gCSSProperties = {
     ],
     invalid_values: [ "5", "..25px", ".+5px", ".px", "-.px", "++5px", "-+4px", "+-3px", "--7px", "+-.6px", "-+.5px", "++.7px", "--.4px" ],
   },
+  "mask-type": {
+    domProp: "maskType",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "luminance" ],
+    other_values: [ "alpha" ],
+    invalid_values: [],
+  },
   "-moz-outline-radius": {
     domProp: "MozOutlineRadius",
     inherited: false,
@@ -5559,17 +5567,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright.enabled")) {
     gCSSProperties["text-combine-upright"].other_values.push(
       "digits", "digits 2", "digits 3", "digits 4", "digits     3");
   }
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.masking.enabled")) {
-  gCSSProperties["mask-type"] = {
-    domProp: "maskType",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "luminance" ],
-    other_values: [ "alpha" ],
-    invalid_values: []
-  };
 }
 
 if (IsCSSPropertyPrefEnabled("svg.paint-order.enabled")) {
