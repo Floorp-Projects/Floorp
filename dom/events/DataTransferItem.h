@@ -35,10 +35,11 @@ public:
     KIND_OTHER,
   };
 
-  DataTransferItem(DataTransfer* aDataTransfer, const nsAString& aType)
+  DataTransferItem(DataTransfer* aDataTransfer, const nsAString& aType,
+                   eKind aKind = KIND_OTHER)
     : mIndex(0)
     , mChromeOnly(false)
-    , mKind(KIND_OTHER)
+    , mKind(aKind)
     , mType(aType)
     , mDataTransfer(aDataTransfer)
   {
@@ -78,10 +79,6 @@ public:
   {
     return mKind;
   }
-  void SetKind(eKind aKind)
-  {
-    mKind = aKind;
-  }
 
   already_AddRefed<File>
   GetAsFile(const Maybe<nsIPrincipal*>& aSubjectPrincipal, ErrorResult& aRv);
@@ -105,6 +102,9 @@ public:
 
   already_AddRefed<nsIVariant> DataNoSecurityCheck();
   already_AddRefed<nsIVariant> Data(nsIPrincipal* aPrincipal, ErrorResult& aRv);
+
+  // Note: This can modify the mKind.  Callers of this method must let the
+  // relevant DataTransfer know, because its types list can change as a result.
   void SetData(nsIVariant* aData);
 
   uint32_t Index() const
