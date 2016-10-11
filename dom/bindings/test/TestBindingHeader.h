@@ -933,6 +933,9 @@ public:
   void SetThrowingGetterAttr(bool arg);
   bool ThrowingSetterAttr() const;
   void SetThrowingSetterAttr(bool arg, ErrorResult& aRv);
+  void NeedsSubjectPrincipalMethod(nsIPrincipal&);
+  bool NeedsSubjectPrincipalAttr(nsIPrincipal&);
+  void SetNeedsSubjectPrincipalAttr(bool, nsIPrincipal&);
   int16_t LegacyCall(const JS::Value&, uint32_t, TestInterface&);
   void PassArgsWithDefaults(JSContext*, const Optional<int32_t>&,
                             TestInterface*, const Dict&, double,

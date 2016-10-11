@@ -21,12 +21,8 @@ SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
                                    ["security.webauth.u2f_enable_softtoken", false],
                                    ["security.webauth.u2f_enable_usbtoken", false]]},
 function() {
-  onmessage = function(event) {
-    //event.data is the response.errorCode
-    isnot(event.data, 0, "The registration should be rejected.");
-    SimpleTest.finish();
-  }
-
+  // listen for messages from the test harness
+  window.addEventListener("message", handleEventMessage, false);
   document.getElementById('testing_frame').src = 'frame_no_token.html';
 });
 

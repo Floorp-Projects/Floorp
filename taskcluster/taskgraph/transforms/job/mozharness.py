@@ -71,6 +71,9 @@ mozharness_run_schema = Schema({
     # If false, indicate that builds should skip producing artifacts.  Not
     # supported on Windows.
     Required('keep-artifacts', default=True): bool,
+
+    # If specified, use the in-tree job script specified.
+    Optional('job-script'): basestring,
 })
 
 
@@ -109,6 +112,9 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 
     if 'custom-build-variant-cfg' in run:
         env['MH_CUSTOM_BUILD_VARIANT_CFG'] = run['custom-build-variant-cfg']
+
+    if 'job-script' in run:
+        env['JOB_SCRIPT'] = run['job-script']
 
     # if we're not keeping artifacts, set some env variables to empty values
     # that will cause the build process to skip copying the results to the
@@ -153,8 +159,11 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         '--vcs-checkout', '/home/worker/workspace/build/src',
         '--tools-checkout', '/home/worker/workspace/build/tools',
         '--',
-        '/home/worker/workspace/build/src/taskcluster/scripts/builder/build-linux.sh',
     ]
+    command.append("/home/worker/workspace/build/src/{}".format(
+        run.get('job-script',
+                "taskcluster/scripts/builder/build-linux.sh"
+                )))
 
     worker['command'] = command
 

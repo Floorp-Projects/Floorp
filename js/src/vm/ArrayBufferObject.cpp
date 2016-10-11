@@ -1498,7 +1498,7 @@ ArrayBufferViewObject::notifyBufferDetached(JSContext* cx, void* newData)
 }
 
 uint8_t*
-ArrayBufferViewObject::dataPointerUnshared(const JS::AutoAssertOnGC& nogc)
+ArrayBufferViewObject::dataPointerUnshared(const JS::AutoRequireNoGC& nogc)
 {
     if (is<DataViewObject>())
         return static_cast<uint8_t*>(as<DataViewObject>().dataPointer());

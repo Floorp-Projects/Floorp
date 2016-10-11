@@ -13,11 +13,14 @@ local_is(window.location.origin, "https://example.com", "Is loaded correctly");
 var version = "U2F_V2";
 var challenge = new Uint8Array(16);
 
+local_expectThisManyTests(5);
+
 u2f.register(null, [{
   version: version,
   challenge: bytesToBase64UrlSafe(challenge),
 }], [], function(res){
   local_is(res.errorCode, 0, "Null AppID should work.");
+  local_completeTest();
 });
 
 u2f.register("", [{
@@ -25,6 +28,7 @@ u2f.register("", [{
   challenge: bytesToBase64UrlSafe(challenge),
 }], [], function(res){
   local_is(res.errorCode, 0, "Empty AppID should work.");
+  local_completeTest();
 });
 
 // Test: Correct TLD, but incorrect scheme
@@ -33,6 +37,7 @@ u2f.register("http://example.com/appId", [{
   challenge: bytesToBase64UrlSafe(challenge),
 }], [], function(res){
   local_isnot(res.errorCode, 0, "HTTP scheme is disallowed");
+  local_completeTest();
 });
 
 // Test: Correct TLD, and also HTTPS
@@ -41,6 +46,7 @@ u2f.register("https://example.com/appId", [{
   challenge: bytesToBase64UrlSafe(challenge),
 }], [], function(res){
   local_is(res.errorCode, 0, "HTTPS origin for example.com should work");
+  local_completeTest();
 });
 
 // Test: Dynamic origin
@@ -49,9 +55,8 @@ u2f.register(window.location.origin + "/otherAppId", [{
   challenge: bytesToBase64UrlSafe(challenge),
 }], [], function(res){
   local_is(res.errorCode, 0, "Direct window origin should work");
+  local_completeTest();
 });
-
-local_finished();
 
 </script>
 </body>

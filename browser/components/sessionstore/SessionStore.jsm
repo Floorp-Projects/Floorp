@@ -170,6 +170,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
   "resource:///modules/sessionstore/SessionFile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabAttributes",
   "resource:///modules/sessionstore/TabAttributes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TabCrashHandler",
+  "resource:///modules/ContentCrashHandlers.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabState",
   "resource:///modules/sessionstore/TabState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
@@ -919,7 +921,7 @@ var SessionStoreInternal = {
         this.saveStateDelayed(win);
         break;
       case "oop-browser-crashed":
-        this.onBrowserCrashed(win, target);
+        this.onBrowserCrashed(target);
         break;
       case "XULFrameLoaderCreated":
         if (target.namespaceURI == NS_XUL &&
@@ -1867,12 +1869,25 @@ var SessionStoreInternal = {
       this._windows[aWindow.__SSi].selected = aWindow.gBrowser.tabContainer.selectedIndex;
 
       let tab = aWindow.gBrowser.selectedTab;
-      // If __SS_restoreState is still on the browser and it is
-      // TAB_STATE_NEEDS_RESTORE, then then we haven't restored
-      // this tab yet. Explicitly call restoreTabContent to kick off the restore.
-      if (tab.linkedBrowser.__SS_restoreState &&
-          tab.linkedBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
-        this.restoreTabContent(tab);
+      let browser = tab.linkedBrowser;
+
+      if (browser.__SS_restoreState &&
+          browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
+        // If __SS_restoreState is still on the browser and it is
+        // TAB_STATE_NEEDS_RESTORE, then then we haven't restored
+        // this tab yet.
+        //
+        // It's possible that this tab was recently revived, and that
+        // we've deferred showing the tab crashed page for it (if the
+        // tab crashed in the background). If so, we need to re-enter
+        // the crashed state, since we'll be showing the tab crashed
+        // page.
+        if (TabCrashHandler.willShowCrashedTab(browser)) {
+          this.enterCrashedState(browser);
+        } else {
+          this.restoreTabContent(tab);
+        }
+      }
     }
   },
 
@@ -1914,23 +1929,37 @@ var SessionStoreInternal = {
    * @param aBrowser
    *        The <xul:browser> that is now in the crashed state.
    */
-  onBrowserCrashed: function(aWindow, aBrowser) {
+  onBrowserCrashed: function(aBrowser) {
     NS_ASSERT(aBrowser.isRemoteBrowser,
               "Only remote browsers should be able to crash");
-    this._crashedBrowsers.add(aBrowser.permanentKey);
+
+    this.enterCrashedState(aBrowser);
+    // The browser crashed so we might never receive flush responses.
+    // Resolve all pending flush requests for the crashed browser.
+    TabStateFlusher.resolveAll(aBrowser);
+  },
+
+  /**
+   * Called when a browser is showing or is about to show the tab
+   * crashed page. This method causes SessionStore to ignore the
+   * tab until it's restored.
+   *
+   * @param browser
+   *        The <xul:browser> that is about to show the crashed page.
+   */
+  enterCrashedState(browser) {
+    this._crashedBrowsers.add(browser.permanentKey);
+
+    let win = browser.ownerGlobal;
 
     // If we hadn't yet restored, or were still in the midst of
     // restoring this browser at the time of the crash, we need
     // to reset its state so that we can try to restore it again
     // when the user revives the tab from the crash.
-    if (aBrowser.__SS_restoreState) {
-      let tab = aWindow.gBrowser.getTabForBrowser(aBrowser);
+    if (browser.__SS_restoreState) {
+      let tab = win.gBrowser.getTabForBrowser(browser);
       this._resetLocalTabRestoringState(tab);
     }
-
-    // The browser crashed so we might never receive flush responses.
-    // Resolve all pending flush requests for the crashed browser.
-    TabStateFlusher.resolveAll(aBrowser);
   },
 
   // Clean up data that has been closed a long time ago.
