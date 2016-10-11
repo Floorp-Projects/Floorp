@@ -108,7 +108,7 @@ function loadRecordingFromFile(file) {
       // If the recording has no label, set it to be the
       // filename without its extension.
       if (!recordingData.label) {
-        recordingData.label = file.leafName.replace(/\..+$/, "");
+        recordingData.label = file.leafName.replace(/\.[^.]+$/, "");
       }
 
       resolve(recordingData);
