@@ -1351,6 +1351,12 @@ protected:
         return true;
     }
 
+    bool ValidateArrayBufferView(const char* funcName, const dom::ArrayBufferView& view,
+                                 GLuint elemOffset, GLuint elemCountOverride,
+                                 uint8_t** const out_bytes, size_t* const out_byteLen);
+
+    ////
+
     void Invalidate();
     void DestroyResourcesAndContext();
 
@@ -1851,10 +1857,7 @@ private:
     void UnwrapImpl();
 };
 
-void
-ComputeLengthAndData(const dom::ArrayBufferViewOrSharedArrayBufferView& view,
-                     void** const out_data, size_t* const out_length,
-                     js::Scalar::Type* const out_type);
+////
 
 void
 Intersect(uint32_t srcSize, int32_t dstStartInSrc, uint32_t dstSize,
