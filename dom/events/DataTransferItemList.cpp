@@ -370,6 +370,10 @@ DataTransferItemList::SetDataWithPrincipal(const nsAString& aType,
 
         DataTransferItem::eKind oldKind = item->Kind();
         item->SetData(aData);
+        if (oldKind != item->Kind()) {
+          // Types list may have changed, even if aIndex == 0.
+          mDataTransfer->TypesListMayHaveChanged();
+        }
 
         if (aIndex != 0) {
           // If the item changes from being a file to not a file or vice-versa,
@@ -433,9 +437,15 @@ DataTransferItemList::AppendNewItem(uint32_t aIndex,
   // adding to is 0, or the item we are adding is a file. If we add an item
   // which is not a file to a non-zero index, invariants could be broken.
   // (namely the invariant that there are not 2 non-file entries in the items
-  // array with the same type)
-  if (!aHidden && (item->Kind() == DataTransferItem::KIND_FILE || aIndex == 0)) {
-    mItems.AppendElement(item);
+  // array with the same type).
+  //
+  // We also want to update our DataTransfer's type list any time we're adding a
+  // KIND_FILE item, or an item at index 0.
+  if (item->Kind() == DataTransferItem::KIND_FILE || aIndex == 0) {
+    if (!aHidden) {
+      mItems.AppendElement(item);
+    }
+    mDataTransfer->TypesListMayHaveChanged();
   }
 
   return item;
@@ -475,6 +485,7 @@ DataTransferItemList::ClearAllItems()
   mItems.Clear();
   mIndexedItems.Clear();
   mIndexedItems.SetLength(1);
+  mDataTransfer->TypesListMayHaveChanged();
 
   // Re-generate files (into an empty list)
   RegenerateFiles();
@@ -516,6 +527,8 @@ DataTransferItemList::ClearDataHelper(DataTransferItem* aItem,
   } else {
     items.RemoveElement(aItem);
   }
+
+  mDataTransfer->TypesListMayHaveChanged();
 
   // Check if we should remove the index. We never remove index 0.
   if (items.Length() == 0 && aItem->Index() != 0) {
