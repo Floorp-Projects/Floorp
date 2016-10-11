@@ -2839,6 +2839,11 @@ CanvasRenderingContext2D::UpdateFilter()
 {
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell || presShell->IsDestroying()) {
+    // Ensure we set an empty filter and update the state to
+    // reflect the current "taint" status of the canvas
+    CurrentState().filter = FilterDescription();
+    CurrentState().filterSourceGraphicTainted =
+      (mCanvasElement && mCanvasElement->IsWriteOnly());
     return;
   }
 
