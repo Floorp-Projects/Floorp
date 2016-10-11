@@ -340,11 +340,10 @@ DataTransfer::GetTypes(ErrorResult& aRv) const
   }
 
   for (uint32_t i = 0; i < mItems->Length(); ++i) {
-    ErrorResult rv;
     bool found = false;
-    DataTransferItem* item = mItems->IndexedGetter(i, found, rv);
-    if (!found || rv.Failed() || item->Kind() != DataTransferItem::KIND_FILE) {
-      rv.SuppressException();
+    DataTransferItem* item = mItems->IndexedGetter(i, found);
+    MOZ_ASSERT(found);
+    if (item->Kind() != DataTransferItem::KIND_FILE) {
       continue;
     }
     if (NS_WARN_IF(!types->Add(NS_LITERAL_STRING("Files")))) {
