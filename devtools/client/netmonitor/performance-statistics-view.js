@@ -172,7 +172,7 @@ PerformanceStatisticsView.prototype = {
     }));
 
     for (let requestItem of items) {
-      let details = requestItem.attachment;
+      let details = requestItem;
       let type;
 
       if (Filters.html(details)) {
@@ -237,11 +237,8 @@ function responseIsFresh({ responseHeaders, status }) {
   }
 
   let list = responseHeaders.headers;
-  let cacheControl = list.filter(e => {
-    return e.name.toLowerCase() == "cache-control";
-  })[0];
-
-  let expires = list.filter(e => e.name.toLowerCase() == "expires")[0];
+  let cacheControl = list.find(e => e.name.toLowerCase() == "cache-control");
+  let expires = list.find(e => e.name.toLowerCase() == "expires");
 
   // Check the "Cache-Control" header for a maximum age value.
   if (cacheControl) {

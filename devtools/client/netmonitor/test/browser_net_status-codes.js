@@ -114,7 +114,8 @@ add_task(function* () {
       requestItems[index] = item;
 
       info("Verifying request #" + index);
-      yield verifyRequestItemTarget(item, request.method, request.uri, request.details);
+      yield verifyRequestItemTarget(RequestsMenu, item,
+        request.method, request.uri, request.details);
 
       index++;
     }
@@ -159,7 +160,7 @@ add_task(function* () {
       uri, "The url summary value is incorrect.");
     is(tabpanel.querySelector("#headers-summary-method-value").getAttribute("value"),
       method, "The method summary value is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-status-circle").getAttribute("code"),
+    is(tabpanel.querySelector("#headers-summary-status-circle").getAttribute("data-code"),
       status, "The status summary code is incorrect.");
     is(tabpanel.querySelector("#headers-summary-status-value").getAttribute("value"),
       status + " " + statusText, "The status summary value is incorrect.");
@@ -207,7 +208,8 @@ add_task(function* () {
    */
   function chooseRequest(index) {
     let onTabUpdated = monitor.panelWin.once(EVENTS.TAB_UPDATED);
-    EventUtils.sendMouseEvent({ type: "mousedown" }, requestItems[index].target);
+    let target = getItemTarget(RequestsMenu, requestItems[index]);
+    EventUtils.sendMouseEvent({ type: "mousedown" }, target);
     return onTabUpdated;
   }
 });

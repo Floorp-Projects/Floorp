@@ -26,8 +26,8 @@ add_task(function* () {
 
   is(RequestsMenu.itemCount, 1, "Only the reload should be recorded.");
   let request = RequestsMenu.getItemAtIndex(0);
-  is(request.attachment.method, "GET", "The method is correct.");
-  is(request.attachment.status, "200", "The status is correct.");
+  is(request.method, "GET", "The method is correct.");
+  is(request.status, "200", "The status is correct.");
 
   yield removeTab(beaconTab);
   return teardown(monitor);
