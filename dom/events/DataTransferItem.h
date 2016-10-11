@@ -50,9 +50,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  // NOTE: This accesses the subject principal, and should not be called from C++
   void GetAsString(FunctionStringCallback* aCallback,
-                   const Maybe<nsIPrincipal*>& aPrincipal,
+                   nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aRv);
 
   void GetKind(nsAString& aKind) const
@@ -81,10 +80,10 @@ public:
   }
 
   already_AddRefed<File>
-  GetAsFile(const Maybe<nsIPrincipal*>& aSubjectPrincipal, ErrorResult& aRv);
+  GetAsFile(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
   already_AddRefed<FileSystemEntry>
-  GetAsEntry(const Maybe<nsIPrincipal*>& aSubjectPrincipal, ErrorResult& aRv);
+  GetAsEntry(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
   DataTransfer* GetParentObject() const
   {

@@ -284,11 +284,10 @@ DataTransfer::GetMozUserCancelled(bool* aUserCancelled)
 }
 
 already_AddRefed<FileList>
-DataTransfer::GetFiles(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+DataTransfer::GetFiles(nsIPrincipal& aSubjectPrincipal,
                        ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-  return mItems->Files(aSubjectPrincipal.value());
+  return mItems->Files(&aSubjectPrincipal);
 }
 
 NS_IMETHODIMP
@@ -352,17 +351,15 @@ DataTransfer::GetTypes(nsTArray<nsString>& aTypes) const
 
 void
 DataTransfer::GetData(const nsAString& aFormat, nsAString& aData,
-                      const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                      nsIPrincipal& aSubjectPrincipal,
                       ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   // return an empty string if data for the format was not found
   aData.Truncate();
 
   nsCOMPtr<nsIVariant> data;
   nsresult rv =
-    GetDataAtInternal(aFormat, 0, aSubjectPrincipal.value(),
+    GetDataAtInternal(aFormat, 0, &aSubjectPrincipal,
                       getter_AddRefs(data));
   if (NS_FAILED(rv)) {
     if (rv != NS_ERROR_DOM_INDEX_SIZE_ERR) {
@@ -412,24 +409,20 @@ DataTransfer::GetData(const nsAString& aFormat, nsAString& aData,
 
 void
 DataTransfer::SetData(const nsAString& aFormat, const nsAString& aData,
-                      const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                      nsIPrincipal& aSubjectPrincipal,
                       ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   RefPtr<nsVariantCC> variant = new nsVariantCC();
   variant->SetAsAString(aData);
 
-  aRv = SetDataAtInternal(aFormat, variant, 0, aSubjectPrincipal.value());
+  aRv = SetDataAtInternal(aFormat, variant, 0, &aSubjectPrincipal);
 }
 
 void
 DataTransfer::ClearData(const Optional<nsAString>& aFormat,
-                        const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                        nsIPrincipal& aSubjectPrincipal,
                         ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   if (mReadOnly) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -616,13 +609,11 @@ void
 DataTransfer::MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
                            uint32_t aIndex,
                            JS::MutableHandle<JS::Value> aRetval,
-                           const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                           nsIPrincipal& aSubjectPrincipal,
                            mozilla::ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   nsCOMPtr<nsIVariant> data;
-  aRv = GetDataAtInternal(aFormat, aIndex, aSubjectPrincipal.value(),
+  aRv = GetDataAtInternal(aFormat, aIndex, &aSubjectPrincipal,
                           getter_AddRefs(data));
   if (aRv.Failed()) {
     return;
@@ -708,26 +699,22 @@ DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
 void
 DataTransfer::MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
                            JS::Handle<JS::Value> aData, uint32_t aIndex,
-                           const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                           nsIPrincipal& aSubjectPrincipal,
                            ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   nsCOMPtr<nsIVariant> data;
   aRv = nsContentUtils::XPConnect()->JSValToVariant(aCx, aData,
                                                     getter_AddRefs(data));
   if (!aRv.Failed()) {
-    aRv = SetDataAtInternal(aFormat, data, aIndex, aSubjectPrincipal.value());
+    aRv = SetDataAtInternal(aFormat, data, aIndex, &aSubjectPrincipal);
   }
 }
 
 void
 DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
-                             const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                             nsIPrincipal& aSubjectPrincipal,
                              ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   if (mReadOnly) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -762,7 +749,7 @@ DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
 
 void
 DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
-                                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                   nsIPrincipal& aSubjectPrincipal,
                                    ErrorResult& aRv)
 {
   MOZ_ASSERT(!mReadOnly);
@@ -770,7 +757,6 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
   MOZ_ASSERT(aIndex == 0 ||
              (mEventMessage != eCut && mEventMessage != eCopy &&
               mEventMessage != ePaste));
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
 
   nsAutoString format;
   GetRealFormat(aFormat, format);
@@ -804,11 +790,9 @@ DataTransfer::SetDragImage(nsIDOMElement* aImage, int32_t aX, int32_t aY)
 }
 
 already_AddRefed<Promise>
-DataTransfer::GetFilesAndDirectories(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+DataTransfer::GetFilesAndDirectories(nsIPrincipal& aSubjectPrincipal,
                                      ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   nsCOMPtr<nsINode> parentNode = do_QueryInterface(mParent);
   if (!parentNode) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -827,7 +811,7 @@ DataTransfer::GetFilesAndDirectories(const Maybe<nsIPrincipal*>& aSubjectPrincip
     return nullptr;
   }
 
-  RefPtr<FileList> files = mItems->Files(aSubjectPrincipal.value());
+  RefPtr<FileList> files = mItems->Files(&aSubjectPrincipal);
   if (NS_WARN_IF(!files)) {
     return nullptr;
   }
@@ -845,7 +829,7 @@ DataTransfer::GetFilesAndDirectories(const Maybe<nsIPrincipal*>& aSubjectPrincip
 
 already_AddRefed<Promise>
 DataTransfer::GetFiles(bool aRecursiveFlag,
-                       const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                       nsIPrincipal& aSubjectPrincipal,
                        ErrorResult& aRv)
 {
   // Currently we don't support directories.

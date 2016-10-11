@@ -3537,10 +3537,8 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
 }
 
 nsIDocument*
-nsObjectLoadingContent::GetContentDocument(const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal)
+nsObjectLoadingContent::GetContentDocument(nsIPrincipal& aSubjectPrincipal)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
@@ -3554,7 +3552,7 @@ nsObjectLoadingContent::GetContentDocument(const mozilla::Maybe<nsIPrincipal*>& 
   }
 
   // Return null for cross-origin contentDocument.
-  if (!aSubjectPrincipal.value()->SubsumesConsideringDomain(sub_doc->NodePrincipal())) {
+  if (!aSubjectPrincipal.SubsumesConsideringDomain(sub_doc->NodePrincipal())) {
     return nullptr;
   }
 
