@@ -107,11 +107,6 @@ const uint8_t kSystemID[] = {
   0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2, 0xfb, 0x4b
 };
 
-const uint8_t kPrimetimeID[] = {
-  0xf2, 0x39, 0xe7, 0x69, 0xef, 0xa3, 0x48, 0x50,
-  0x9c, 0x16, 0xa9, 0x03, 0xc6, 0x93, 0x2e, 0xfb
-};
-
 bool
 ParseCENCInitData(const uint8_t* aInitData,
                   uint32_t aInitDataSize,
@@ -162,12 +157,6 @@ ParseCENCInitData(const uint8_t* aInitData,
       // Insufficient bytes to read SystemID.
       return false;
     }
-    if (!memcmp(kPrimetimeID, sid, sizeof(kSystemID))) {
-      // Allow legacy Primetime key system PSSH boxes, which
-      // don't conform to common encryption format.
-      return true;
-    }
-
     if (memcmp(kSystemID, sid, sizeof(kSystemID))) {
       // Ignore pssh boxes with wrong system ID.
       reader.Seek(std::max<size_t>(reader.Offset(), end));
