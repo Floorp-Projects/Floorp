@@ -59,7 +59,11 @@ XZStream::~XZStream()
 bool
 XZStream::Init()
 {
+#ifdef XZ_USE_CRC64
+  xz_crc64_init();
+#endif
   xz_crc32_init();
+
   mDec = xz_dec_init(XZ_DYNALLOC, kDictSize);
 
   if (!mDec) {
