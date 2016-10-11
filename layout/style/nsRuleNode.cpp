@@ -6688,23 +6688,6 @@ struct BackgroundItemComputer<nsCSSValueList, nsStyleImage>
 };
 
 template <>
-struct BackgroundItemComputer<nsCSSValueList, FragmentOrURL>
-{
-  static void ComputeValue(nsStyleContext* aStyleContext,
-                           const nsCSSValueList* aSpecifiedValue,
-                           FragmentOrURL& aComputedValue,
-                           RuleNodeCacheConditions& aConditions)
-  {
-    if (eCSSUnit_Image == aSpecifiedValue->mValue.GetUnit() ||
-        eCSSUnit_URL == aSpecifiedValue->mValue.GetUnit()) {
-      aComputedValue.SetValue(&aSpecifiedValue->mValue);
-    } else if (eCSSUnit_Null != aSpecifiedValue->mValue.GetUnit()) {
-      aComputedValue.SetNull();
-    }
-  }
-};
-
-template <>
 struct BackgroundItemComputer<nsCSSValueList, RefPtr<css::URLValueData>>
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
