@@ -16,7 +16,7 @@ var callee = i => `(func $f${i} (type $v2i) (result i32) (i32.const ${i}))`;
 // hold instances alive and instances hold imported tables alive. Nothing
 // should hold the export object alive.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (table 2 anyfunc) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
+var i = wasmEvalText(`(module (table (resizable 2)) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);
@@ -54,7 +54,7 @@ assertEq(finalizeCount(), 5);
 
 // A table should hold the instance of any of its elements alive.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (table 1 anyfunc) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
+var i = wasmEvalText(`(module (table (resizable 1)) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);
@@ -80,7 +80,7 @@ assertEq(finalizeCount(), 4);
 
 // Null elements shouldn't keep anything alive.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (table 2 anyfunc) (export "tbl" table) ${caller})`);
+var i = wasmEvalText(`(module (table (resizable 2)) (export "tbl" table) ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 i.edge = makeFinalizeObserver();
@@ -203,7 +203,7 @@ var i = wasmEvalText(
 i.edge = makeFinalizeObserver();
 tbl.set(0, i.exports.f);
 var m = new Module(wasmTextToBinary(`(module
-    (import "a" "b" (table ${N} anyfunc))
+    (import "a" "b" (table ${N}))
     (type $i2i (func (param i32) (result i32)))
     (func $f (param $i i32) (result i32)
         (set_local $i (i32.sub (get_local $i) (i32.const 1)))

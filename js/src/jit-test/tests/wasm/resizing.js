@@ -64,7 +64,7 @@ var exports1 = wasmEvalText(`(module
     (export "grow" $grow)
 )`, {"":{mem}}).exports;
 var exports2 = wasmEvalText(`(module
-    (import "" "tbl" (table 1 anyfunc))
+    (import "" "tbl" (table 1))
     (import "" "mem" (memory 1))
     (type $v2v (func))
     (func $test (result i32)
@@ -128,7 +128,7 @@ assertEq(new Int32Array(mem.buffer)[3*64*1024/4], 99);
 var exports = wasmEvalText(`(module
     (type $v2i (func (result i32)))
     (import $grow "" "grow")
-    (table (export "tbl") 1 anyfunc)
+    (table (resizable 1))
     (func $test (result i32)
         (i32.add
             (call_indirect $v2i (i32.const 0))
@@ -138,6 +138,7 @@ var exports = wasmEvalText(`(module
     (func $one (result i32) (i32.const 1))
     (elem (i32.const 0) $one)
     (func $two (result i32) (i32.const 2))
+    (export "tbl" table)
     (export "test" $test)
     (export "two" $two)
 )`, {"":{grow() { exports.tbl.grow(1); exports.tbl.set(1, exports.two) }}}).exports;
@@ -159,7 +160,7 @@ var exports2 = wasmEvalText(`(module
     (type $v2i (func (result i32)))
     (import $imp "" "imp")
     (elem (i32.const 0) $imp)
-    (table 2 anyfunc)
+    (table (resizable 2))
     (func $test (result i32)
         (i32.add
             (call_indirect $v2i (i32.const 1))
@@ -190,7 +191,7 @@ tbl.set(0, src.one);
 
 var mod = new Module(wasmTextToBinary(`(module
     (type $v2i (func (result i32)))
-    (table (import "" "tbl") 1 anyfunc)
+    (import "" "tbl" (table 1))
     (func $ci (param i32) (result i32) (call_indirect $v2i (get_local 0)))
     (export "call_indirect" $ci)
 )`));
