@@ -75,9 +75,6 @@ public:
                                  MediaKeySystemConfiguration& aOutConfig,
                                  DecoderDoctorDiagnostics* aDiagnostics);
 
-  static bool KeySystemSupportsInitDataType(const nsAString& aKeySystem,
-                                            const nsAString& aInitDataType);
-
 private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   const nsString mKeySystem;

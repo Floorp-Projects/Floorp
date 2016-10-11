@@ -10,7 +10,6 @@
 #include "mozilla/dom/MediaKeyMessageEvent.h"
 #include "mozilla/dom/MediaEncryptedEvent.h"
 #include "mozilla/dom/MediaKeyStatusMap.h"
-#include "mozilla/dom/MediaKeySystemAccess.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -39,15 +38,6 @@ NS_IMPL_RELEASE_INHERITED(MediaKeySession, DOMEventTargetHelper)
 // Count of number of instances. Used to give each instance a
 // unique token.
 static uint32_t sMediaKeySessionNum = 0;
-
-// Max length of keyId in EME "keyIds" or WebM init data format, as enforced
-// by web platform tests.
-static const uint32_t MAX_KEY_ID_LENGTH = 512;
-
-// Max length of CENC PSSH init data tolerated, as enforced by web
-// platform tests.
-static const uint32_t MAX_CENC_INIT_DATA_LENGTH = 64 * 1024;
-
 
 MediaKeySession::MediaKeySession(JSContext* aCx,
                                  nsPIDOMWindowInner* aParent,
@@ -170,40 +160,6 @@ MediaKeySession::KeyStatuses() const
   return mKeyStatusMap;
 }
 
-// The user agent MUST thoroughly validate the Initialization Data before
-// passing it to the CDM. This includes verifying that the length and
-// values of fields are reasonable, verifying that values are within
-// reasonable limits, and stripping irrelevant, unsupported, or unknown
-// data or fields. It is RECOMMENDED that user agents pre-parse, sanitize,
-// and/or generate a fully sanitized version of the Initialization Data.
-// If the Initialization Data format specified by initDataType supports
-// multiple entries, the user agent SHOULD remove entries that are not
-// needed by the CDM. The user agent MUST NOT re-order entries within
-// the Initialization Data.
-static bool
-ValidateInitData(const nsTArray<uint8_t>& aInitData, const nsAString& aInitDataType)
-{
-  if (aInitDataType.LowerCaseEqualsLiteral("webm")) {
-    // WebM initData consists of a single keyId. Ensure it's of reasonable length.
-    return aInitData.Length() <= MAX_KEY_ID_LENGTH;
-  } else if (aInitDataType.LowerCaseEqualsLiteral("cenc")) {
-    // Limit initData to less than 64KB.
-    if (aInitData.Length() > MAX_CENC_INIT_DATA_LENGTH) {
-      return false;
-    }
-    // TODO: Validate PSSH in future patch...
-  } else if (aInitDataType.LowerCaseEqualsLiteral("keyids")) {
-    if (aInitData.Length() > MAX_KEY_ID_LENGTH) {
-      return false;
-    }
-    // TODO: Validate keyIds in future patch...
-  }
-  return true;
-}
-
-// Generates a license request based on the initData. A message of type
-// "license-request" or "individualization-request" will always be queued
-// if the algorithm succeeds and the promise is resolved.
 already_AddRefed<Promise>
 MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
                                  const ArrayBufferViewOrArrayBuffer& aInitData,
@@ -215,30 +171,16 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
     return nullptr;
   }
 
-  // If this object is closed, return a promise rejected with an InvalidStateError.
-  if (IsClosed()) {
-    EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() failed, closed",
-            this, NS_ConvertUTF16toUTF8(mSessionId).get());
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-      NS_LITERAL_CSTRING("Session is closed in MediaKeySession.generateRequest()"));
-    return promise.forget();
-  }
-
-  // If this object's uninitialized value is false, return a promise rejected
-  // with an InvalidStateError.
   if (!mUninitialized) {
     EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() failed, uninitialized",
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
       NS_LITERAL_CSTRING("Session is already initialized in MediaKeySession.generateRequest()"));
     return promise.forget();
   }
 
-  // Let this object's uninitialized value be false.
   mUninitialized = false;
 
-  // If initDataType is the empty string, return a promise rejected
-  // with a newly created TypeError.
   if (aInitDataType.IsEmpty()) {
     promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR,
       NS_LITERAL_CSTRING("Empty initDataType passed to MediaKeySession.generateRequest()"));
@@ -247,55 +189,15 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
     return promise.forget();
   }
 
-  // If initData is an empty array, return a promise rejected with
-  // a newly created TypeError.
   nsTArray<uint8_t> data;
   CopyArrayBufferViewOrArrayBufferData(aInitData, data);
   if (data.IsEmpty()) {
     promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR,
       NS_LITERAL_CSTRING("Empty initData passed to MediaKeySession.generateRequest()"));
     EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() failed, empty initData",
-            this, NS_ConvertUTF16toUTF8(mSessionId).get());
+      this, NS_ConvertUTF16toUTF8(mSessionId).get());
     return promise.forget();
   }
-
-  // If the Key System implementation represented by this object's
-  // cdm implementation value does not support initDataType as an
-  // Initialization Data Type, return a promise rejected with a
-  // NotSupportedError. String comparison is case-sensitive.
-  if (!MediaKeySystemAccess::KeySystemSupportsInitDataType(mKeySystem, aInitDataType)) {
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-      NS_LITERAL_CSTRING("Unsupported initDataType passed to MediaKeySession.generateRequest()"));
-    EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() failed, unsupported initDataType",
-            this, NS_ConvertUTF16toUTF8(mSessionId).get());
-    return promise.forget();
-  }
-
-  // Let init data be a copy of the contents of the initData parameter.
-  // Note: Handled by the CopyArrayBufferViewOrArrayBufferData call above.
-
-  // Let session type be this object's session type.
-
-  // Let promise be a new promise.
-
-  // Run the following steps in parallel:
-
-  // If the init data is not valid for initDataType, reject promise with
-  // a newly created TypeError.
-  if (!ValidateInitData(data, aInitDataType)) {
-    // If the preceding step failed, reject promise with a newly created TypeError.
-    promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR,
-      NS_LITERAL_CSTRING("initData sanitization failed in MediaKeySession.generateRequest()"));
-    EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() initData sanitization failed",
-            this, NS_ConvertUTF16toUTF8(mSessionId).get());
-    return promise.forget();
-  }
-
-  // Let sanitized init data be a validated and sanitized version of init data.
-
-  // If sanitized init data is empty, reject promise with a NotSupportedError.
-
-  // Note: Remaining steps of generateRequest method continue in CDM.
 
   Telemetry::Accumulate(Telemetry::VIDEO_CDM_GENERATE_REQUEST_CALLED,
                         ToCDMTypeTelemetryEnum(mKeySystem));
