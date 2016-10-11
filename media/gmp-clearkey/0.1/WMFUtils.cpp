@@ -26,6 +26,7 @@
 
 #pragma comment(lib, "mfuuid.lib")
 #pragma comment(lib, "wmcodecdspuuid")
+#pragma comment(lib, "mfplat.lib")
 
 void LOG(const char* format, ...)
 {
