@@ -2562,7 +2562,7 @@ WorkerPrivateParent<Derived>::Freeze(nsPIDOMWindowInner* aWindow)
   if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
     AssertIsOnMainThread();
 
-    bool allFrozen = false;
+    bool allFrozen = true;
 
     for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
       if (aWindow && mSharedWorkers[i]->GetOwner() == aWindow) {
