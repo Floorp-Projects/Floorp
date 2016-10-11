@@ -22,11 +22,13 @@ add_task(function* () {
 
   is(RequestsMenu.itemCount, 2, "There were two requests due to redirect.");
 
-  let initial = RequestsMenu.items[0];
-  let redirect = RequestsMenu.items[1];
+  let initial = RequestsMenu.getItemAtIndex(0);
+  let redirect = RequestsMenu.getItemAtIndex(1);
 
-  let initialSecurityIcon = $(".requests-security-state-icon", initial.target);
-  let redirectSecurityIcon = $(".requests-security-state-icon", redirect.target);
+  let initialSecurityIcon =
+    $(".requests-security-state-icon", getItemTarget(RequestsMenu, initial));
+  let redirectSecurityIcon =
+    $(".requests-security-state-icon", getItemTarget(RequestsMenu, redirect));
 
   ok(initialSecurityIcon.classList.contains("security-state-insecure"),
      "Initial request was marked insecure.");

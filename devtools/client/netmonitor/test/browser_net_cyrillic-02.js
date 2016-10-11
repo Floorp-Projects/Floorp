@@ -21,7 +21,7 @@ add_task(function* () {
   tab.linkedBrowser.reload();
   yield wait;
 
-  verifyRequestItemTarget(RequestsMenu.getItemAtIndex(0),
+  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
     "GET", CYRILLIC_URL, {
       status: 200,
       statusText: "OK"
