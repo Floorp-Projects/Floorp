@@ -1,3 +1,27 @@
+// Used by local_addTest() / local_completeTest()
+var _countCompletions = 0;
+var _expectedCompletions = 0;
+
+function handleEventMessage(event) {
+  if ("test" in event.data) {
+    let summary = event.data.test + ": " + event.data.msg;
+    log(event.data.status + ": " + summary);
+    ok(event.data.status, summary);
+  } else if ("done" in event.data) {
+    SimpleTest.finish();
+  } else {
+    ok(false, "Unexpected message in the test harness: " + event.data)
+  }
+}
+
+function log(msg) {
+  console.log(msg)
+  let logBox = document.getElementById("log");
+  if (logBox) {
+    logBox.textContent += "\n" + msg;
+  }
+}
+
 function local_is(value, expected, message) {
   if (value === expected) {
     local_ok(true, message);
@@ -20,12 +44,30 @@ function local_ok(expression, message) {
 }
 
 function local_doesThrow(fn, name) {
-  var gotException = false;
+  let gotException = false;
   try {
     fn();
   } catch (ex) { gotException = true; }
   local_ok(gotException, name);
 };
+
+function local_expectThisManyTests(count) {
+  if (_expectedCompletions > 0) {
+    local_ok(false, "Error: local_expectThisManyTests should only be called once.");
+  }
+  _expectedCompletions = count;
+}
+
+function local_completeTest() {
+  _countCompletions += 1
+  if (_countCompletions == _expectedCompletions) {
+    log("All tests completed.")
+    local_finished();
+  }
+  if (_countCompletions > _expectedCompletions) {
+    local_ok(false, "Error: local_completeTest called more than local_addTest.");
+  }
+}
 
 function local_finished() {
   parent.postMessage({"done":true}, "http://mochi.test:8888");
@@ -36,15 +78,15 @@ function string2buffer(str) {
 }
 
 function buffer2string(buf) {
-  var str = "";
+  let str = "";
   buf.map(x => str += String.fromCharCode(x));
   return str;
 }
 
 function bytesToBase64(u8a){
-  var CHUNK_SZ = 0x8000;
-  var c = [];
-  for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
+  let CHUNK_SZ = 0x8000;
+  let c = [];
+  for (let i = 0; i < u8a.length; i += CHUNK_SZ) {
     c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
   }
   return window.btoa(c.join(""));
@@ -113,7 +155,7 @@ function deriveAppAndChallengeParam(appId, clientData) {
 }
 
 function assembleSignedData(appParam, presenceAndCounter, challengeParam) {
-  var signedData = new Uint8Array(32 + 1 + 4 + 32);
+  let signedData = new Uint8Array(32 + 1 + 4 + 32);
   appParam.map((x, i) => signedData[0 + i] = x);
   presenceAndCounter.map((x, i) => signedData[32 + i] = x);
   challengeParam.map((x, i) => signedData[37 + i] = x);
@@ -121,7 +163,7 @@ function assembleSignedData(appParam, presenceAndCounter, challengeParam) {
 }
 
 function assembleRegistrationSignedData(appParam, challengeParam, keyHandle, pubKey) {
-  var signedData = new Uint8Array(1 + 32 + 32 + keyHandle.length + 65);
+  let signedData = new Uint8Array(1 + 32 + 32 + keyHandle.length + 65);
   signedData[0] = 0x00;
   appParam.map((x, i) => signedData[1 + i] = x);
   challengeParam.map((x, i) => signedData[33 + i] = x);
@@ -137,26 +179,26 @@ function sanitizeSigArray(arr) {
   if (arr.length > 32) {
     arr = arr.slice(arr.length - 32)
   }
-  var ret = new Uint8Array(32);
+  let ret = new Uint8Array(32);
   ret.set(arr, ret.length - arr.length);
   return ret;
 }
 
 function verifySignature(key, data, derSig) {
-  var sigAsn1 = org.pkijs.fromBER(derSig.buffer);
-  var sigR = new Uint8Array(sigAsn1.result.value_block.value[0].value_block.value_hex);
-  var sigS = new Uint8Array(sigAsn1.result.value_block.value[1].value_block.value_hex);
+  let sigAsn1 = org.pkijs.fromBER(derSig.buffer);
+  let sigR = new Uint8Array(sigAsn1.result.value_block.value[0].value_block.value_hex);
+  let sigS = new Uint8Array(sigAsn1.result.value_block.value[1].value_block.value_hex);
 
   // The resulting R and S values from the ASN.1 Sequence must be fit into 32
   // bytes. Sometimes they have leading zeros, sometimes they're too short, it
   // all depends on what lib generated the signature.
-  var R = sanitizeSigArray(sigR);
-  var S = sanitizeSigArray(sigS);
+  let R = sanitizeSigArray(sigR);
+  let S = sanitizeSigArray(sigS);
 
-  var sigData = new Uint8Array(R.length + S.length);
+  let sigData = new Uint8Array(R.length + S.length);
   sigData.set(R);
   sigData.set(S, R.length);
 
-  var alg = {name: "ECDSA", hash: "SHA-256"};
+  let alg = {name: "ECDSA", hash: "SHA-256"};
   return crypto.subtle.verify(alg, key, sigData, data);
 }
