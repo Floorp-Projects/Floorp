@@ -1194,7 +1194,8 @@ SaveIntermediateCerts(const UniqueCERTCertList& certList)
     }
 
     if (node->cert->slot) {
-      // This cert was found on a token, no need to remember it in the temp db.
+      // This cert was found on a token; no need to remember it in the permanent
+      // database.
       continue;
     }
 
@@ -1213,18 +1214,15 @@ SaveIntermediateCerts(const UniqueCERTCertList& certList)
       continue;
     }
 
-    // We have found a signer cert that we want to remember.
     nsAutoCString nickname;
     nsresult rv = DefaultServerNicknameForCert(node->cert, nickname);
     if (NS_FAILED(rv)) {
       continue;
     }
 
-    // Saving valid intermediate certs to the database is a compatibility hack
-    // to work around unknown issuer errors for incorrectly configured servers
-    // that fail to send the necessary intermediate certs. As such, we ignore
-    // the return value of PK11_ImportCert(), since it doesn't really matter if
-    // it fails.
+    // As mentioned in the documentation of this function, we're importing only
+    // to cope with misconfigured servers. As such, we ignore the return value
+    // below, since it doesn't really matter if the import fails.
     Unused << PK11_ImportCert(slot.get(), node->cert, CK_INVALID_HANDLE,
                               nickname.get(), false);
   }
