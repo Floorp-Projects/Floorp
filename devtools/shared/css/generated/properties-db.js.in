@@ -18,9 +18,3 @@ exports.CSS_PROPERTIES = ${cssProperties};
  * A list of the pseudo elements.
  */
 exports.PSEUDO_ELEMENTS = ${pseudoElements};
-
-/**
- * A list of the preferences keys for whether a CSS property is enabled or not. This is
- * exposed for testing purposes.
- */
-exports.PREFERENCES = ${preferences};
