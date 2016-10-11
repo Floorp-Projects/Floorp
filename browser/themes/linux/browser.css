@@ -727,6 +727,7 @@ menuitem.bookmark-item {
   padding: 0 8px;
   border-radius: 1em;
   background-color: hsla(0,0%,0%,.05);
+  color: inherit;
   border: 1px solid ThreeDLightShadow;
 }
 
