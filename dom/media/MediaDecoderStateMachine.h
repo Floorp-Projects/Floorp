@@ -475,9 +475,6 @@ protected:
 
   void EnqueueFirstFrameLoadedEvent();
 
-  // Clears any previous seeking state and initiates a new seek on the decoder.
-  void InitiateSeek(SeekJob aSeekJob);
-
   void DispatchAudioDecodeTaskIfNeeded();
   void DispatchVideoDecodeTaskIfNeeded();
 
