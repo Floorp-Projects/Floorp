@@ -30,6 +30,23 @@ function Narrator(win) {
   this._speechOptions = {};
   this._startTime = 0;
   this._stopped = false;
+
+  this.languagePromise = new Promise(resolve => {
+    let detect = () => {
+      win.document.removeEventListener("AboutReaderContentReady", detect);
+      let sampleText = this._doc.getElementById(
+        "moz-reader-content").textContent.substring(0, 60 * 1024);
+      LanguageDetector.detectLanguage(sampleText).then(result => {
+        resolve(result.confident ? result.language : null);
+      });
+    };
+
+    if (win.document.body.classList.contains("loaded")) {
+      detect();
+    } else {
+      win.document.addEventListener("AboutReaderContentReady", detect);
+    }
+  });
 }
 
 Narrator.prototype = {
@@ -123,20 +140,6 @@ Narrator.prototype = {
 
     let bb = paragraph.getBoundingClientRect();
     return bb.top >= 0 && bb.top < this._win.innerHeight;
-  },
-
-  _detectLanguage: function() {
-    if (this._speechOptions.lang || this._speechOptions.voice) {
-      return Promise.resolve();
-    }
-
-    let sampleText = this._doc.getElementById(
-      "moz-reader-content").textContent.substring(0, 60 * 1024);
-    return LanguageDetector.detectLanguage(sampleText).then(result => {
-      if (result.confident) {
-        this._speechOptions.lang = result.language;
-      }
-    });
   },
 
   _sendTestEvent: function(eventType, detail) {
@@ -263,7 +266,11 @@ Narrator.prototype = {
     };
 
     this._stopped = false;
-    return this._detectLanguage().then(() => {
+    return this.languagePromise.then(language => {
+      if (!this._speechOptions.voice) {
+        this._speechOptions.lang = language;
+      }
+
       let tw = this._treeWalker;
       if (!this._isParagraphInView(tw.currentNode)) {
         tw.currentNode = tw.root;
@@ -452,6 +459,6 @@ Highlighter.prototype = {
    * Get all existing highlight nodes for container.
    */
   get _nodes() {
-    return this.container.querySelectorAll(".narrate-word-highlight")
+    return this.container.querySelectorAll(".narrate-word-highlight");
   }
 };

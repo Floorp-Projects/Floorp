@@ -19,28 +19,36 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
-const TEST_PREFS = [
-  ["reader.parse-on-load.enabled", true],
-  ["media.webspeech.synth.enabled", true],
-  ["media.webspeech.synth.test", true],
-  ["narrate.enabled", true],
-  ["narrate.test", true]
-];
+const TEST_PREFS = {
+  "reader.parse-on-load.enabled": true,
+  "media.webspeech.synth.enabled": true,
+  "media.webspeech.synth.test": true,
+  "narrate.enabled": true,
+  "narrate.test": true,
+  "narrate.voice": null,
+};
 
-function setup(voiceUri) {
-  // Set required test prefs.
-  TEST_PREFS.forEach(([name, value]) => {
-    setBoolPref(name, value);
+function setup(voiceUri = "automatic") {
+  let prefs = Object.assign({}, TEST_PREFS, {
+    "narrate.voice": voiceUri
   });
 
-  if (voiceUri) {
-    Services.prefs.setCharPref("narrate.voice", voiceUri);
-  }
+  // Set required test prefs.
+  Object.entries(prefs).forEach(([name, value]) => {
+    switch (typeof value) {
+      case "boolean":
+        setBoolPref(name, value);
+        break;
+      case "string":
+        setCharPref(name, value);
+        break;
+    }
+  });
 }
 
 function teardown() {
   // Reset test prefs.
-  TEST_PREFS.forEach(pref => {
+  Object.entries(TEST_PREFS).forEach(pref => {
     clearUserPref(pref[0]);
   });
 }
@@ -65,7 +73,10 @@ function setBoolPref(name, value) {
   Services.prefs.setBoolPref(name, value);
 }
 
+function setCharPref(name, value) {
+  Services.prefs.setCharPref(name, value);
+}
+
 function clearUserPref(name) {
   Services.prefs.clearUserPref(name);
 }
-

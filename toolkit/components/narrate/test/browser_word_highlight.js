@@ -21,6 +21,7 @@ add_task(function* testNarrate() {
     toggle.click();
 
     ok(NarrateTestUtils.isVisible(popup), "popup toggled");
+    yield NarrateTestUtils.waitForVoiceOptions(content);
 
     NarrateTestUtils.isStoppedState(content, ok);
 
