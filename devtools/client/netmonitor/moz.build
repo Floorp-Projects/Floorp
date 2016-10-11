@@ -8,6 +8,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'events.js',
     'filter-predicates.js',
     'l10n.js',
     'panel.js',
