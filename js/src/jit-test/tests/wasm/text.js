@@ -92,25 +92,5 @@ assertErrorMessage(() => wasmEvalText(`
     )
 `), SyntaxError, /import after function definition/);
 
-// Globals.
-assertErrorMessage(() => wasmEvalText('(module (global $t (export)))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (global $t (export "g")))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (global $t (export "g") i32))'), SyntaxError, parsingError);
-wasmEvalText('(module (global $t (export "g") i32 (i32.const 42)))');
-
-assertErrorMessage(() => wasmEvalText('(module (global $t (import) i32))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (global $t (import "mod") i32))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (global $t (import "mod" "field")))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (global $t (import "mod" "field")) i32 (i32.const 42))'), SyntaxError, parsingError);
-wasmEvalText('(module (global $t (import "mod" "field") i32))', { mod: {field: 42} });
-
-assertErrorMessage(() => wasmEvalText(`
-    (module
-        (global (import "mod" "a") i32)
-        (global (export "f1") i32 (i32.const 42))
-        (global (import "mod" "b") i32)
-    )
-`), SyntaxError, /import after global definition/);
-
 // Note: the s-expression text format is temporary, this file is mostly just to
 // hold basic error smoke tests.
