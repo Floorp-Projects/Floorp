@@ -340,8 +340,8 @@ wasmFailValidateText('(module (import "a" "b" (table 1 1 anyfunc)) (import "x" "
 var m = new Module(wasmTextToBinary(`
     (module
         (import "a" "b" (memory 1 1))
-        (data (i32.const 0) "\\0a\\0b")
-        (data (i32.const 100) "\\0c\\0d")
+        (data 0 "\\0a\\0b")
+        (data 100 "\\0c\\0d")
         (func $get (param $p i32) (result i32)
             (i32.load8_u (get_local $p)))
         (export "get" $get))
