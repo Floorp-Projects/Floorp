@@ -1345,7 +1345,7 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
       // eCSSUnit_Image here.
 
       // Check #2.
-      bool isLocalRef = aValue.GetURLStructValue()->GetLocalURLFlag();
+      bool isLocalRef = aValue.GetURLStructValue()->IsLocalRef();
 
       // Check #3.
       bool isEqualExceptRef = false;

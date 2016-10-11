@@ -127,8 +127,8 @@ FragmentOrURL::SetValue(const nsCSSValue* aValue)
   mozilla::css::URLValueData *urlData = aValue->GetUnit() == eCSSUnit_URL
     ? static_cast<mozilla::css::URLValueData *>(aValue->GetURLStructValue())
     : static_cast<mozilla::css::URLValueData *>(aValue->GetImageStructValue());
-  MOZ_ASSERT_IF(urlData->GetLocalURLFlag(), urlData->GetURI());
-  mIsLocalRef = urlData->GetLocalURLFlag();
+  MOZ_ASSERT_IF(urlData->IsLocalRef(), urlData->GetURI());
+  mIsLocalRef = urlData->IsLocalRef();
 
   mURL = urlData->GetURI();
 
