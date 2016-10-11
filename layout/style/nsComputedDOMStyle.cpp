@@ -2143,10 +2143,11 @@ nsComputedDOMStyle::DoGetImageLayerImage(const nsStyleImageLayers& aLayers)
     //    Instead, we store the local URI in one place -- on Layer::mSourceURI.
     //    Hence, we must serialize using mSourceURI (instead of
     //    SetValueToStyleImage()/mImage) in this case.
-    if (aLayers.mLayers[i].mSourceURI.IsLocalRef()) {
+    if (aLayers.mLayers[i].mSourceURI &&
+        aLayers.mLayers[i].mSourceURI->IsLocalRef()) {
       // This is how we represent a 'mask-image' reference for a local URI,
       // such as 'mask-image:url(#mymask)' or 'mask:url(#mymask)'
-      SetValueToFragmentOrURL(&aLayers.mLayers[i].mSourceURI, val);
+      SetValueToURLValue(aLayers.mLayers[i].mSourceURI, val);
     } else {
       SetValueToStyleImage(image, val);
     }
@@ -6168,11 +6169,7 @@ nsComputedDOMStyle::DoGetMask()
 
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  if (firstLayer.mSourceURI.GetSourceURL()) {
-    SetValueToFragmentOrURL(&firstLayer.mSourceURI, val);
-  } else {
-    val->SetIdent(eCSSKeyword_none);
-  }
+  SetValueToURLValue(firstLayer.mSourceURI, val);
 
   return val.forget();
 }

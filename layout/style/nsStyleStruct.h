@@ -705,13 +705,14 @@ struct nsStyleImageLayers {
   friend struct Layer;
   struct Layer {
     nsStyleImage  mImage;         // [reset]
-    mozilla::FragmentOrURL mSourceURI;  // [reset]
+    RefPtr<mozilla::css::URLValueData> mSourceURI;  // [reset]
                                   // mask-only property
                                   // This property is used for mask layer only.
                                   // For a background layer, it should always
                                   // be the initial value, which is nullptr.
                                   // Store mask-image URI so that we can resolve
-                                  // SVG mask path later.
+                                  // SVG mask path later.  (Might be a URLValue
+                                  // or an ImageValue.)
     mozilla::Position mPosition;  // [reset]
     Size          mSize;          // [reset]
     uint8_t       mClip;          // [reset] See nsStyleConsts.h
