@@ -139,28 +139,28 @@ public:
   void GetTypes(nsTArray<nsString>& aTypes) const;
 
   void GetData(const nsAString& aFormat, nsAString& aData,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aRv);
 
   void SetData(const nsAString& aFormat, const nsAString& aData,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aRv);
 
   void ClearData(const mozilla::dom::Optional<nsAString>& aFormat,
-                 const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                 nsIPrincipal& aSubjectPrincipal,
                  mozilla::ErrorResult& aRv);
 
   already_AddRefed<FileList>
-  GetFiles(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+  GetFiles(nsIPrincipal& aSubjectPrincipal,
            mozilla::ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  GetFilesAndDirectories(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+  GetFilesAndDirectories(nsIPrincipal& aSubjectPrincipal,
                          mozilla::ErrorResult& aRv);
 
   already_AddRefed<Promise>
   GetFiles(bool aRecursiveFlag,
-           const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+           nsIPrincipal& aSubjectPrincipal,
            ErrorResult& aRv);
 
 
@@ -181,17 +181,17 @@ public:
                                              mozilla::ErrorResult& aRv) const;
 
   void MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
-                      const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                      nsIPrincipal& aSubjectPrincipal,
                       mozilla::ErrorResult& aRv);
 
   void MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
                     JS::Handle<JS::Value> aData, uint32_t aIndex,
-                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                    nsIPrincipal& aSubjectPrincipal,
                     mozilla::ErrorResult& aRv);
 
   void MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
                     uint32_t aIndex, JS::MutableHandle<JS::Value> aRetval,
-                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                    nsIPrincipal& aSubjectPrincipal,
                     mozilla::ErrorResult& aRv);
 
   bool MozUserCancelled() const
@@ -326,7 +326,7 @@ protected:
                                  nsIPrincipal* aPrincipal);
 
   void MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
-                            const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                            nsIPrincipal& aSubjectPrincipal,
                             mozilla::ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;
