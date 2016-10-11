@@ -808,6 +808,7 @@ nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
   mFlip = FlipType_Default;
   mPopupAnchor = POPUPALIGNMENT_NONE;
   mPopupAlignment = POPUPALIGNMENT_NONE;
+  mPosition = POPUPPOSITION_UNKNOWN;
   mIsContextMenu = aIsContextMenu;
   mAdjustOffsetForContextMenu = aIsContextMenu;
   mAnchorType = MenuPopupAnchorType_Point;
@@ -852,6 +853,7 @@ nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
     mAnchorType = MenuPopupAnchorType_Point;
     mPopupAnchor = POPUPALIGNMENT_NONE;
     mPopupAlignment = POPUPALIGNMENT_NONE;
+    mPosition = POPUPPOSITION_UNKNOWN;
     mScreenRect = nsIntRect(aXPos, aYPos, 0, 0);
     mXPos = aXPos;
     mYPos = aYPos;
@@ -1093,8 +1095,10 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
   // position by the height of the menulist label and the selected item's
   // position.
   if (mPosition == POPUPPOSITION_SELECTION) {
-    MOZ_ASSERT(popupAnchor == POPUPALIGNMENT_BOTTOMLEFT);
-    MOZ_ASSERT(popupAlign == POPUPALIGNMENT_TOPLEFT);
+    MOZ_ASSERT(popupAnchor == POPUPALIGNMENT_BOTTOMLEFT ||
+              popupAnchor == POPUPALIGNMENT_BOTTOMRIGHT);
+    MOZ_ASSERT(popupAlign == POPUPALIGNMENT_TOPLEFT ||
+               popupAlign == POPUPALIGNMENT_TOPRIGHT);
 
     nsIFrame* selectedItemFrame = GetSelectedItemForAlignment();
     if (selectedItemFrame) {
