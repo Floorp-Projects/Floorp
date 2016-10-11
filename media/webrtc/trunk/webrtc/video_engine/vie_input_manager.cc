@@ -381,6 +381,7 @@ int32_t ViEInputManager::RegisterObserver(ViEInputObserver* observer) {
     observer_ = observer;
   }
 
+  CriticalSectionScoped cs(device_info_cs_.get());
   if (!GetDeviceInfo())
     return -1;
 
@@ -391,11 +392,15 @@ int32_t ViEInputManager::RegisterObserver(ViEInputObserver* observer) {
 }
 
 int32_t ViEInputManager::DeRegisterObserver() {
-  if (capture_device_info_ != NULL)
-    capture_device_info_->DeRegisterVideoInputFeedBack();
+  {
+    CriticalSectionScoped cs(observer_cs_.get());
+    observer_ = NULL;
+  }
 
-  CriticalSectionScoped cs(observer_cs_.get());
-  observer_ = NULL;
+  CriticalSectionScoped cs(device_info_cs_.get());
+  if (capture_device_info_ != NULL) {
+    capture_device_info_->DeRegisterVideoInputFeedBack();
+  }
   return 0;
 }
 
