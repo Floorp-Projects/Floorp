@@ -65,6 +65,7 @@ class WasmToken
     enum Kind
     {
         Align,
+        AnyFunc,
         BinaryOpcode,
         Block,
         Br,
@@ -106,7 +107,6 @@ class WasmToken
         Offset,
         OpenParen,
         Param,
-        Resizable,
         Result,
         Return,
         Segment,
@@ -283,6 +283,7 @@ class WasmToken
           case Unreachable:
             return true;
           case Align:
+          case AnyFunc:
           case CloseParen:
           case Data:
           case Elem:
@@ -306,7 +307,6 @@ class WasmToken
           case Offset:
           case OpenParen:
           case Param:
-          case Resizable:
           case Result:
           case Segment:
           case SignedInteger:
@@ -321,6 +321,12 @@ class WasmToken
         }
         MOZ_CRASH("unexpected token kind");
     }
+};
+
+struct InlineImport
+{
+    WasmToken module;
+    WasmToken field;
 };
 
 } // end anonymous namespace
@@ -822,6 +828,8 @@ WasmTokenStream::next()
       case 'a':
         if (consume(u"align"))
             return WasmToken(WasmToken::Align, begin, cur_);
+        if (consume(u"anyfunc"))
+            return WasmToken(WasmToken::AnyFunc, begin, cur_);
         break;
 
       case 'b':
@@ -1411,8 +1419,6 @@ WasmTokenStream::next()
         break;
 
       case 'r':
-        if (consume(u"resizable"))
-            return WasmToken(WasmToken::Resizable, begin, cur_);
         if (consume(u"result"))
             return WasmToken(WasmToken::Result, begin, cur_);
         if (consume(u"return"))
@@ -2739,6 +2745,20 @@ ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, uint32_t* flags)
     return true;
 }
 
+static bool
+ParseElemType(WasmParseContext& c)
+{
+    // Only AnyFunc is allowed at the moment.
+    return c.ts.match(WasmToken::AnyFunc, c.error);
+}
+
+static bool
+ParseTableSig(WasmParseContext& c, Limits* table)
+{
+    return ParseLimits(c, table) &&
+           ParseElemType(c);
+}
+
 static AstImport*
 ParseImport(WasmParseContext& c, AstModule* module)
 {
@@ -2765,8 +2785,11 @@ ParseImport(WasmParseContext& c, AstModule* module)
                                          DefinitionKind::Memory, memory);
         }
         if (c.ts.getIf(WasmToken::Table)) {
+            if (name.empty())
+                name = c.ts.getIfName();
+
             Limits table;
-            if (!ParseLimits(c, &table))
+            if (!ParseTableSig(c, &table))
                 return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
@@ -2905,19 +2928,66 @@ ParseExport(WasmParseContext& c)
 
     c.ts.generateError(exportee, c.error);
     return nullptr;
+}
 
+static bool
+ParseInlineImport(WasmParseContext& c, InlineImport* import)
+{
+    return c.ts.match(WasmToken::Text, &import->module, c.error) &&
+           c.ts.match(WasmToken::Text, &import->field, c.error);
+}
+
+static bool
+ParseInlineExport(WasmParseContext& c, DefinitionKind kind, AstModule* module)
+{
+    WasmToken name;
+    if (!c.ts.match(WasmToken::Text, &name, c.error))
+        return false;
+    auto* exp = new(c.lifo) AstExport(name.text(), kind);
+    if (!exp || !module->append(exp))
+        return false;
+    return true;
 }
 
 static bool
 ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
 {
+    AstName name = c.ts.getIfName();
+
     if (c.ts.getIf(WasmToken::OpenParen)) {
-        if (!c.ts.match(WasmToken::Resizable, c.error))
+        // Either an import and we're done, or an export and continue.
+        if (c.ts.getIf(WasmToken::Import)) {
+            InlineImport names;
+            if (!ParseInlineImport(c, &names))
+                return false;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return false;
+
+            Limits table;
+            if (!ParseTableSig(c, &table))
+                return false;
+
+            auto* import = new(c.lifo) AstImport(name, names.module.text(), names.field.text(),
+                                                 DefinitionKind::Table, table);
+
+            return import && module->append(import);
+        }
+
+        if (!c.ts.match(WasmToken::Export, c.error)) {
+            c.ts.generateError(token, c.error);
             return false;
-        Limits table;
-        if (!ParseLimits(c, &table))
+        }
+
+        if (!ParseInlineExport(c, DefinitionKind::Table, module))
             return false;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return false;
+    }
+
+    // Either: min max? anyfunc
+    if (c.ts.peek().kind() == WasmToken::Index) {
+        Limits table;
+        if (!ParseTableSig(c, &table))
             return false;
         if (!module->setTable(table)) {
             c.ts.generateError(token, c.error);
@@ -2926,6 +2996,15 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         return true;
     }
 
+    // Or: anyfunc (elem 1 2 ...)
+    if (!ParseElemType(c))
+        return false;
+
+    if (!c.ts.match(WasmToken::OpenParen, c.error))
+        return false;
+    if (!c.ts.match(WasmToken::Elem, c.error))
+        return false;
+
     AstRefVector elems(c.lifo);
 
     AstRef elem;
@@ -2933,6 +3012,9 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         if (!elems.append(elem))
             return false;
     }
+
+    if (!c.ts.match(WasmToken::CloseParen, c.error))
+        return false;
 
     uint32_t numElements = uint32_t(elems.length());
     if (numElements != elems.length())
@@ -2997,7 +3079,7 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
     if (!c.ts.match(WasmToken::Module, c.error))
         return nullptr;
 
-    auto module = new(c.lifo) AstModule(c.lifo);
+    auto* module = new(c.lifo) AstModule(c.lifo);
     if (!module || !module->init())
         return nullptr;
 

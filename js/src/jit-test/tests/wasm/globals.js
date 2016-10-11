@@ -93,15 +93,14 @@ for (let i = 0; i < 5; i++) {
 }
 
 // Initializer expressions can also be used in elem section initializers.
-wasmFailValidateText(`(module (import "globals" "a" (global f32 immutable)) (table (resizable 4)) (elem (get_global 0) $f) (func $f))`, /type mismatch/);
+wasmFailValidateText(`(module (import "globals" "a" (global f32 immutable)) (table 4 anyfunc) (elem (get_global 0) $f) (func $f))`, /type mismatch/);
 
 module = wasmEvalText(`(module
     (import "globals" "a" (global i32 immutable))
-    (table (resizable 4))
+    (table (export "tbl") 4 anyfunc)
     (elem (get_global 0) $f)
     (func $f)
     (export "f" $f)
-    (export "tbl" table)
 )`, {
     globals: {
         a: 1
