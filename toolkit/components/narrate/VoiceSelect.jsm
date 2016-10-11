@@ -45,15 +45,20 @@ VoiceSelect.prototype = {
     option.setAttribute("role", "option");
     option.textContent = label;
     this.listbox.appendChild(option);
+    return option;
   },
 
-  addOptions: function(options, value) {
+  addOptions: function(options) {
+    let selected = null;
     for (let option of options) {
-      this.add(option.label, option.value);
+      if (option.selected) {
+        selected = this.add(option.label, option.value);
+      } else {
+        this.add(option.label, option.value);
+      }
     }
 
-    let option = value ? this._getOptionFromValue(value) : this.options[0];
-    this._select(option, true);
+    this._select(selected || this.options[0], true);
   },
 
   clear: function() {
