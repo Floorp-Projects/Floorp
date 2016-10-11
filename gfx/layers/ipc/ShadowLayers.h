@@ -392,6 +392,16 @@ public:
   // Returns true if aSurface wraps a Shmem.
   static bool IsShmem(SurfaceDescriptor* aSurface);
 
+  /**
+   * Sends a synchronous ping to the compsoitor.
+   *
+   * This is bad for performance and should only be called as a last resort if the
+   * compositor may be blocked for a long period of time, to avoid that the content
+   * process accumulates resource allocations that the compositor is not consuming
+   * and releasing.
+   */
+  void SyncWithCompositor();
+
   TextureForwarder* GetTextureForwarder() override { return GetCompositorBridgeChild(); }
   LayersIPCActor* GetLayersIPCActor() override { return this; }
 

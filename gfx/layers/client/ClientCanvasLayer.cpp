@@ -31,6 +31,9 @@ namespace layers {
 ClientCanvasLayer::~ClientCanvasLayer()
 {
   MOZ_COUNT_DTOR(ClientCanvasLayer);
+  if (mBufferProvider) {
+    mBufferProvider->ClearCachedResources();
+  }
   if (mCanvasClient) {
     mCanvasClient->OnDetach();
     mCanvasClient = nullptr;
