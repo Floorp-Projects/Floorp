@@ -221,11 +221,7 @@ public:
 
   virtual bool HandleEndOfStream() { return false; }
 
-  virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget)
-  {
-    MOZ_ASSERT(false, "Can't seek in this state");
-    return nullptr;
-  }
+  virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) = 0;
 
 protected:
   using Master = MediaDecoderStateMachine;
@@ -284,6 +280,12 @@ public:
   {
     mPendingDormant = aDormant;
     return true;
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Can't seek while decoding metadata.");
+    return MediaDecoder::SeekPromise::CreateAndReject(true, __func__);
   }
 
 private:
@@ -1137,6 +1139,12 @@ public:
   bool HandleDormant(bool aDormant) override
   {
     return true;
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Can't seek in shutdown state.");
+    return MediaDecoder::SeekPromise::CreateAndReject(true, __func__);
   }
 };
 
