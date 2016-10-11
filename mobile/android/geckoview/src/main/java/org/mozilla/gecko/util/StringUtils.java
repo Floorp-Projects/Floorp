@@ -13,6 +13,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public class StringUtils {
@@ -270,5 +271,24 @@ public class StringUtils {
         }
 
         return "\u200E" + text;
+    }
+
+    /**
+     * Joining together a sequence of strings with a separator.
+     */
+    public static String join(@NonNull String separator, @NonNull List<String> parts) {
+        if (parts.size() == 0) {
+            return "";
+        }
+
+        final StringBuilder builder = new StringBuilder();
+        builder.append(parts.get(0));
+
+        for (int i = 1; i < parts.size(); i++) {
+            builder.append(separator);
+            builder.append(parts.get(i));
+        }
+
+        return builder.toString();
     }
 }
