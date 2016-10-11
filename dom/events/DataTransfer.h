@@ -136,7 +136,8 @@ public:
   void SetDragImage(Element& aElement, int32_t aX, int32_t aY,
                     ErrorResult& aRv);
 
-  void GetTypes(nsTArray<nsString>& aTypes) const;
+  void GetTypes(nsTArray<nsString>& aTypes,
+                nsIPrincipal& aSubjectPrincipal) const;
 
   void GetData(const nsAString& aFormat, nsAString& aData,
                nsIPrincipal& aSubjectPrincipal,

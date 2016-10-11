@@ -310,7 +310,8 @@ DataTransfer::GetFiles(nsIDOMFileList** aFileList)
 }
 
 void
-DataTransfer::GetTypes(nsTArray<nsString>& aTypes) const
+DataTransfer::GetTypes(nsTArray<nsString>& aTypes,
+                       nsIPrincipal& aSubjectPrincipal) const
 {
   // When called from bindings, aTypes will be empty, but since we might have
   // Gecko-internal callers too, clear it to be safe.
@@ -325,7 +326,7 @@ DataTransfer::GetTypes(nsTArray<nsString>& aTypes) const
     DataTransferItem* item = items->ElementAt(i);
     MOZ_ASSERT(item);
 
-    if (item->ChromeOnly() && !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
+    if (item->ChromeOnly() && !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
       continue;
     }
 
