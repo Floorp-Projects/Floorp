@@ -155,7 +155,6 @@ private:
 ServiceWorkerManagerParent::ServiceWorkerManagerParent()
   : mService(ServiceWorkerManagerService::GetOrCreate())
   , mID(++sServiceWorkerManagerParentID)
-  , mActorDestroyed(false)
 {
   AssertIsOnBackgroundThread();
   mService->RegisterActor(this);
@@ -164,17 +163,6 @@ ServiceWorkerManagerParent::ServiceWorkerManagerParent()
 ServiceWorkerManagerParent::~ServiceWorkerManagerParent()
 {
   AssertIsOnBackgroundThread();
-}
-
-already_AddRefed<ContentParent>
-ServiceWorkerManagerParent::GetContentParent() const
-{
-  AssertIsOnBackgroundThread();
-
-  // This object must be released on main-thread.
-  RefPtr<ContentParent> parent =
-    BackgroundParent::GetContentParent(Manager());
-  return parent.forget();
 }
 
 bool
@@ -319,8 +307,6 @@ void
 ServiceWorkerManagerParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   AssertIsOnBackgroundThread();
-
-  mActorDestroyed = true;
 
   if (mService) {
     // This object is about to be released and with it, also mService will be

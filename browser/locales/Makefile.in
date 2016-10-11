@@ -61,12 +61,7 @@ STUB_HOOK = $(NSINSTALL) -D '$(ABS_DIST)/$(PKG_INST_PATH)'; \
     $(NULL)
 endif
 
-SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt)) ddg
-ifeq (,$(filter-out en-US ru be kk tr uk zh-CN zh-TW,$(AB_CD)))
-    SEARCHPLUGINS_NAMES := $(subst google,google:hidden,$(SEARCHPLUGINS_NAMES))
-    SEARCHPLUGINS_NAMES += google-nocodes
-endif
-SEARCHPLUGINS_FILENAMES = $(subst :hidden,,$(SEARCHPLUGINS_NAMES))
+SEARCHPLUGINS_FILENAMES := $(shell $(PYTHON) $(srcdir)/searchplugins.py $(srcdir)/search/list.json $(AB_CD))
 SEARCHPLUGINS_PATH := .deps/generated_$(AB_CD)
 SEARCHPLUGINS_TARGET := libs searchplugins
 SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_FILENAMES)),$(or $(wildcard $(call EN_US_OR_L10N_FILE,searchplugins/$(plugin))),$(warning Missing searchplugin: $(plugin))))
@@ -75,8 +70,8 @@ SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_FILENAMES)),$
 SEARCHPLUGINS_FLAGS := --silence-missing-directive-warnings
 PP_TARGETS += SEARCHPLUGINS
 
-list-txt = $(SEARCHPLUGINS_PATH)/list.txt
-GARBAGE += $(list-txt)
+list-json = $(SEARCHPLUGINS_PATH)/list.json
+GARBAGE += $(list-json)
 
 libs:: searchplugins
 
@@ -88,10 +83,9 @@ include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/toolkit/locales/l10n.mk
 
-$(list-txt): $(call mkdir_deps,$(SEARCHPLUGINS_PATH)) $(if $(IS_LANGUAGE_REPACK),FORCE)
-	$(RM) $(list-txt)
-	$(foreach plugin,$(SEARCHPLUGINS_NAMES),printf '$(plugin)\n' >> $(list-txt);)
-searchplugins:: $(list-txt)
+$(list-json): $(call mkdir_deps,$(SEARCHPLUGINS_PATH)) $(if $(IS_LANGUAGE_REPACK),FORCE)
+	$(shell $(PYTHON) $(srcdir)/searchjson.py $(srcdir)/search/list.json $(AB_CD) $(list-json))
+searchplugins:: $(list-json)
 
 $(STAGEDIST): $(DIST)/branding
 

@@ -24,7 +24,6 @@ markdown Debugger.Environment.md Debugger-API/Debugger.Environment
 markdown Debugger.Frame.md Debugger-API/Debugger.Frame
   label 'frame'                                 "Debugger.Frame"
   label 'vf'            '#visible-frames'       "Debugger.Frame: Visible Frames"
-  label 'generator'     '#generator-frames'     "Debugger.Frame: Generator Frames"
   label 'inv fr'        '#invf'                 "Debugger.Frame: Invocation Frames"
   label 'fr eval'       '#eval'                 "Debugger.Frame: Eval"
 

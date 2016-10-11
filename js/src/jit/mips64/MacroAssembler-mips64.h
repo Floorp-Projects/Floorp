@@ -63,6 +63,9 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
     void ma_liPatchable(Register dest, ImmPtr imm);
     void ma_liPatchable(Register dest, ImmWord imm, LiFlags flags = Li48);
 
+    // Negate
+    void ma_dnegu(Register rd, Register rs);
+
     // Shift operations
     void ma_dsll(Register rd, Register rt, Imm32 shift);
     void ma_dsrl(Register rd, Register rt, Imm32 shift);
@@ -78,6 +81,8 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
 
     void ma_dins(Register rt, Register rs, Imm32 pos, Imm32 size);
     void ma_dext(Register rt, Register rs, Imm32 pos, Imm32 size);
+
+    void ma_dctz(Register rd, Register rs);
 
     // load
     void ma_load(Register dest, Address address, LoadStoreSize size = SizeWord,
@@ -99,6 +104,7 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
 
     // subtract
     void ma_dsubu(Register rd, Register rs, Imm32 imm);
+    void ma_dsubu(Register rd, Register rs);
     void ma_dsubu(Register rd, Imm32 imm);
     void ma_subTestOverflow(Register rd, Register rs, Register rt, Label* overflow);
 
@@ -403,10 +409,12 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void loadInt32OrDouble(const Address& src, FloatRegister dest);
     void loadInt32OrDouble(const BaseIndex& addr, FloatRegister dest);
     void loadConstantDouble(double dp, FloatRegister dest);
+    void loadConstantDouble(wasm::RawF64 d, FloatRegister dest);
 
     void boolValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
+    void loadConstantFloat32(wasm::RawF32 f, FloatRegister dest);
 
     void testNullSet(Condition cond, const ValueOperand& value, Register dest);
 
@@ -898,6 +906,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void loadDouble(const Address& addr, FloatRegister dest);
     void loadDouble(const BaseIndex& src, FloatRegister dest);
+    void loadUnalignedDouble(const BaseIndex& src, Register temp, FloatRegister dest);
 
     // Load a float value into a register, then expand it to a double.
     void loadFloatAsDouble(const Address& addr, FloatRegister dest);
@@ -905,6 +914,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void loadFloat32(const Address& addr, FloatRegister dest);
     void loadFloat32(const BaseIndex& src, FloatRegister dest);
+    void loadUnalignedFloat32(const BaseIndex& src, Register temp, FloatRegister dest);
 
     void store8(Register src, const Address& address);
     void store8(Imm32 imm, const Address& address);
@@ -928,6 +938,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         store32(src, address);
     }
 
+    void store64(Imm64 imm, Address address) {
+        storePtr(ImmWord(imm.value), address);
+    }
+
     void store64(Register64 src, Address address) {
         storePtr(src.reg, address);
     }
@@ -938,6 +952,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void storePtr(Register src, const Address& address);
     void storePtr(Register src, const BaseIndex& address);
     void storePtr(Register src, AbsoluteAddress dest);
+
+    void storeUnalignedFloat32(FloatRegister src, Register temp, const BaseIndex& dest);
+    void storeUnalignedDouble(FloatRegister src, Register temp, const BaseIndex& dest);
+
     void moveDouble(FloatRegister src, FloatRegister dest) {
         as_movd(dest, src);
     }
@@ -945,6 +963,12 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void zeroDouble(FloatRegister reg) {
         moveToDouble(zero, reg);
     }
+
+    void convertInt64ToDouble(Register src, FloatRegister dest);
+    void convertInt64ToFloat32(Register src, FloatRegister dest);
+
+    void convertUInt64ToDouble(Register src, FloatRegister dest);
+    void convertUInt64ToFloat32(Register src, FloatRegister dest);
 
     static bool convertUInt64ToDoubleNeedsTemp();
     void convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp);
@@ -973,6 +997,11 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         ma_cmp_set(dest, lhs, rhs, cond);
     }
     void cmp32Set(Assembler::Condition cond, Register lhs, Address rhs, Register dest);
+
+    void cmp64Set(Assembler::Condition cond, Register lhs, Imm32 rhs, Register dest)
+    {
+        ma_cmp_set(dest, lhs, rhs, cond);
+    }
 
   protected:
     bool buildOOLFakeExitFrame(void* fakeReturnAddr);

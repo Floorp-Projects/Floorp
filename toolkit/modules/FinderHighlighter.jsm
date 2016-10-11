@@ -37,17 +37,24 @@ const kRGBRE = /^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*/i;
 // hard to clash with IDs content authors come up with.
 const kModalIdPrefix = "cedee4d0-74c5-4f2d-ab43-4d37c0f9d463";
 const kModalOutlineId = kModalIdPrefix + "-findbar-modalHighlight-outline";
+const kOutlineBoxColor = "255,197,53";
 const kModalStyles = {
   outlineNode: [
-    ["position", "absolute"],
-    ["background", "#ffc535"],
+    ["background-color", `rgb(${kOutlineBoxColor})`],
+    ["background-clip", "padding-box"],
+    ["border", "2px solid"],
+    ["-moz-border-top-colors", `rgba(${kOutlineBoxColor},.1) rgba(${kOutlineBoxColor},.4) rgba(${kOutlineBoxColor},.7)`],
+    ["-moz-border-right-colors", `rgba(${kOutlineBoxColor},.1) rgba(${kOutlineBoxColor},.4) rgba(${kOutlineBoxColor},.7)`],
+    ["-moz-border-bottom-colors", `rgba(${kOutlineBoxColor},.1) rgba(${kOutlineBoxColor},.4) rgba(${kOutlineBoxColor},.7)`],
+    ["-moz-border-left-colors", `rgba(${kOutlineBoxColor},.1) rgba(${kOutlineBoxColor},.4) rgba(${kOutlineBoxColor},.7)`],
     ["border-radius", "3px"],
     ["box-shadow", "0 2px 0 0 rgba(0,0,0,.1)"],
     ["color", "#000"],
     ["display", "-moz-box"],
     ["margin", "-2px 0 0 -2px !important"],
-    ["padding", "2px !important"],
+    ["overflow", "hidden"],
     ["pointer-events", "none"],
+    ["position", "absolute"],
     ["white-space", "nowrap"],
     ["will-change", "transform"],
     ["z-index", 2]

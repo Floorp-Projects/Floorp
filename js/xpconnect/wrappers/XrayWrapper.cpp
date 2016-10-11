@@ -11,6 +11,7 @@
 #include "nsDependentString.h"
 #include "nsIScriptError.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #include "XPCWrapper.h"
 #include "xpcprivate.h"
@@ -22,6 +23,7 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/XrayExpandoClass.h"
 #include "nsGlobalWindow.h"
 
 using namespace mozilla::dom;
@@ -1034,14 +1036,6 @@ GetXrayTraits(JSObject* obj)
  * them. They are private to the origin that placed them.
  */
 
-enum ExpandoSlots {
-    JSSLOT_EXPANDO_NEXT = 0,
-    JSSLOT_EXPANDO_ORIGIN,
-    JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL,
-    JSSLOT_EXPANDO_PROTOTYPE,
-    JSSLOT_EXPANDO_COUNT
-};
-
 static nsIPrincipal*
 ObjectPrincipal(JSObject* obj)
 {
@@ -1063,16 +1057,9 @@ ExpandoObjectFinalize(JSFreeOp* fop, JSObject* obj)
     NS_RELEASE(principal);
 }
 
-static const JSClassOps ExpandoObjectClassOps = {
+const JSClassOps XrayExpandoObjectClassOps = {
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, ExpandoObjectFinalize
-};
-
-const JSClass ExpandoObjectClass = {
-    "XrayExpandoObject",
-    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT) |
-    JSCLASS_FOREGROUND_FINALIZE,
-    &ExpandoObjectClassOps
 };
 
 bool
@@ -1169,8 +1156,10 @@ XrayTraits::attachExpandoObject(JSContext* cx, HandleObject target,
 #endif
 
     // Create the expando object.
+    const JSClass* expandoClass = getExpandoClass(cx, target);
+    MOZ_ASSERT(!strcmp(expandoClass->name, "XrayExpandoObject"));
     RootedObject expandoObject(cx,
-      JS_NewObjectWithGivenProto(cx, &ExpandoObjectClass, nullptr));
+      JS_NewObjectWithGivenProto(cx, expandoClass, nullptr));
     if (!expandoObject)
         return nullptr;
 
@@ -1259,6 +1248,43 @@ XrayTraits::cloneExpandoChain(JSContext* cx, HandleObject dst, HandleObject src)
         oldHead = JS_GetReservedSlot(oldHead, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
     }
     return true;
+}
+
+void
+ClearXrayExpandoSlots(JSObject* target, size_t slotIndex)
+{
+    if (!NS_IsMainThread()) {
+        // No Xrays
+        return;
+    }
+
+    MOZ_ASSERT(GetXrayTraits(target) == &DOMXrayTraits::singleton);
+    RootingContext* rootingCx = RootingCx();
+    RootedObject rootedTarget(rootingCx, target);
+    RootedObject head(rootingCx,
+                      DOMXrayTraits::singleton.getExpandoChain(rootedTarget));
+    while (head) {
+        MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(js::GetObjectClass(head)) > slotIndex);
+        js::SetReservedSlot(head, slotIndex, UndefinedValue());
+        head = js::GetReservedSlot(head, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
+    }
+}
+
+JSObject*
+EnsureXrayExpandoObject(JSContext* cx, JS::HandleObject wrapper)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(GetXrayTraits(wrapper) == &DOMXrayTraits::singleton);
+    MOZ_ASSERT(IsXrayWrapper(wrapper));
+
+    RootedObject target(cx, DOMXrayTraits::singleton.getTargetObject(wrapper));
+    return DOMXrayTraits::singleton.ensureExpandoObject(cx, wrapper, target);
+}
+
+const JSClass*
+XrayTraits::getExpandoClass(JSContext* cx, HandleObject target) const
+{
+    return &DefaultXrayExpandoObjectClass;
 }
 
 namespace XrayUtils {
@@ -1788,6 +1814,12 @@ JSObject*
 DOMXrayTraits::createHolder(JSContext* cx, JSObject* wrapper)
 {
     return JS_NewObjectWithGivenProto(cx, nullptr, nullptr);
+}
+
+const JSClass*
+DOMXrayTraits::getExpandoClass(JSContext* cx, HandleObject target) const
+{
+    return XrayGetExpandoClass(cx, target);
 }
 
 namespace XrayUtils {

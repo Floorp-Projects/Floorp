@@ -99,26 +99,6 @@ partial interface Window {
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[NoInterfaceObject, Exposed=(Window,Worker)]
-interface WindowTimers {
-  [Throws] long setTimeout(Function handler, optional long timeout = 0, any... arguments);
-  [Throws] long setTimeout(DOMString handler, optional long timeout = 0, any... unused);
-  void clearTimeout(optional long handle = 0);
-  [Throws] long setInterval(Function handler, optional long timeout, any... arguments);
-  [Throws] long setInterval(DOMString handler, optional long timeout, any... unused);
-  void clearInterval(optional long handle = 0);
-};
-Window implements WindowTimers;
-
-// http://www.whatwg.org/specs/web-apps/current-work/
-[NoInterfaceObject, Exposed=(Window,Worker)]
-interface WindowBase64 {
-  [Throws] DOMString btoa(DOMString btoa);
-  [Throws] DOMString atob(DOMString atob);
-};
-Window implements WindowBase64;
-
-// http://www.whatwg.org/specs/web-apps/current-work/
 [NoInterfaceObject]
 interface WindowSessionStorage {
   //[Throws] readonly attribute Storage sessionStorage;
@@ -425,11 +405,6 @@ partial interface Window {
 };
 #endif
 
-// https://w3c.github.io/webappsec-secure-contexts/#monkey-patching-global-object
-partial interface Window {
-  readonly attribute boolean isSecureContext;
-};
-
 #ifdef HAVE_SIDEBAR
 // Mozilla extension
 partial interface Window {
@@ -517,5 +492,4 @@ partial interface Window {
 };
 
 Window implements ChromeWindow;
-Window implements GlobalFetch;
-Window implements ImageBitmapFactories;
+Window implements WindowOrWorkerGlobalScope;

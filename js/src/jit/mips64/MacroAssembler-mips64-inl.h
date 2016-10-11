@@ -51,6 +51,25 @@ MacroAssembler::and64(Imm64 imm, Register64 dest)
 }
 
 void
+MacroAssembler::and64(Register64 src, Register64 dest)
+{
+    ma_and(dest.reg, src.reg);
+}
+
+void
+MacroAssembler::and64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        and64(scratch, dest);
+    } else {
+        and64(Register64(src.toReg()), dest);
+    }
+}
+
+void
 MacroAssembler::or64(Imm64 imm, Register64 dest)
 {
     ma_li(ScratchRegister, ImmWord(imm.value));
@@ -83,9 +102,35 @@ MacroAssembler::or64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::or64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        or64(scratch, dest);
+    } else {
+        or64(Register64(src.toReg()), dest);
+    }
+}
+
+void
 MacroAssembler::xor64(Register64 src, Register64 dest)
 {
     ma_xor(dest.reg, src.reg);
+}
+
+void
+MacroAssembler::xor64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        xor64(scratch, dest);
+    } else {
+        xor64(Register64(src.toReg()), dest);
+    }
 }
 
 void
@@ -129,9 +174,30 @@ MacroAssembler::add64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::add64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        add64(scratch, dest);
+    } else {
+        add64(Register64(src.toReg()), dest);
+    }
+}
+
+void
 MacroAssembler::add64(Imm32 imm, Register64 dest)
 {
     ma_daddu(dest.reg, imm);
+}
+
+void
+MacroAssembler::add64(Imm64 imm, Register64 dest)
+{
+    MOZ_ASSERT(dest.reg != ScratchRegister);
+    mov(ImmWord(imm.value), ScratchRegister);
+    ma_daddu(dest.reg, ScratchRegister);
 }
 
 void
@@ -147,12 +213,67 @@ MacroAssembler::subPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::sub64(Register64 src, Register64 dest)
+{
+    as_dsubu(dest.reg, dest.reg, src.reg);
+}
+
+void
+MacroAssembler::sub64(const Operand& src, Register64 dest)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        sub64(scratch, dest);
+    } else {
+        sub64(Register64(src.toReg()), dest);
+    }
+}
+
+void
+MacroAssembler::sub64(Imm64 imm, Register64 dest)
+{
+    MOZ_ASSERT(dest.reg != ScratchRegister);
+    mov(ImmWord(imm.value), ScratchRegister);
+    as_dsubu(dest.reg, dest.reg, ScratchRegister);
+}
+
+void
 MacroAssembler::mul64(Imm64 imm, const Register64& dest)
 {
     MOZ_ASSERT(dest.reg != ScratchRegister);
     mov(ImmWord(imm.value), ScratchRegister);
     as_dmultu(dest.reg, ScratchRegister);
     as_mflo(dest.reg);
+}
+
+void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest, const Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    mul64(imm, dest);
+}
+
+void
+MacroAssembler::mul64(const Register64& src, const Register64& dest, const Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    as_dmultu(dest.reg, src.reg);
+    as_mflo(dest.reg);
+}
+
+void
+MacroAssembler::mul64(const Operand& src, const Register64& dest, const Register temp)
+{
+    if (src.getTag() == Operand::MEM) {
+        Register64 scratch(ScratchRegister);
+
+        load64(src.toAddress(), scratch);
+        mul64(scratch, dest, temp);
+    } else {
+        mul64(Register64(src.toReg()), dest, temp);
+    }
 }
 
 void
@@ -169,6 +290,12 @@ MacroAssembler::inc64(AbsoluteAddress dest)
     as_ld(SecondScratchReg, ScratchRegister, 0);
     as_daddiu(SecondScratchReg, SecondScratchReg, 1);
     as_sd(SecondScratchReg, ScratchRegister, 0);
+}
+
+void
+MacroAssembler::neg64(Register64 reg)
+{
+    as_dsubu(reg.reg, zero, reg.reg);
 }
 
 // ===============================================================
@@ -189,10 +316,29 @@ MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 }
 
 void
+MacroAssembler::lshift64(Register shift, Register64 dest)
+{
+    ma_dsll(dest.reg, dest.reg, shift);
+}
+
+void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
     MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ma_dsrl(dest, dest, imm);
+}
+
+void
+MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+{
+    MOZ_ASSERT(0 <= imm.value && imm.value < 64);
+    ma_dsrl(dest.reg, dest.reg, imm);
+}
+
+void
+MacroAssembler::rshift64(Register shift, Register64 dest)
+{
+    ma_dsrl(dest.reg, dest.reg, shift);
 }
 
 void
@@ -203,14 +349,130 @@ MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
 }
 
 void
-MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest)
 {
     MOZ_ASSERT(0 <= imm.value && imm.value < 64);
-    ma_dsrl(dest.reg, dest.reg, imm);
+    ma_dsra(dest.reg, dest.reg, imm);
+}
+
+void
+MacroAssembler::rshift64Arithmetic(Register shift, Register64 dest)
+{
+    ma_dsra(dest.reg, dest.reg, shift);
+}
+
+// ===============================================================
+// Rotation functions
+
+void
+MacroAssembler::rotateLeft64(Imm32 count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+
+    if (count.value)
+        ma_drol(dest.reg, src.reg, count);
+    else
+        ma_move(dest.reg, src.reg);
+}
+
+void
+MacroAssembler::rotateLeft64(Register count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    ma_drol(dest.reg, src.reg, count);
+}
+
+void
+MacroAssembler::rotateRight64(Imm32 count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+
+    if (count.value)
+        ma_dror(dest.reg, src.reg, count);
+    else
+        ma_move(dest.reg, src.reg);
+}
+
+void
+MacroAssembler::rotateRight64(Register count, Register64 src, Register64 dest, Register temp)
+{
+    MOZ_ASSERT(temp == InvalidReg);
+    ma_dror(dest.reg, src.reg, count);
+}
+
+// ===============================================================
+// Bit counting functions
+
+void
+MacroAssembler::clz64(Register64 src, Register dest)
+{
+    as_dclz(dest, src.reg);
+}
+
+void
+MacroAssembler::ctz64(Register64 src, Register dest)
+{
+    ma_dctz(dest, src.reg);
+}
+
+void
+MacroAssembler::popcnt64(Register64 input, Register64 output, Register tmp)
+{
+    ma_move(output.reg, input.reg);
+    ma_dsra(tmp, input.reg, Imm32(1));
+    ma_li(ScratchRegister, ImmWord(0x5555555555555555UL));
+    ma_and(tmp, ScratchRegister);
+    ma_dsubu(output.reg, tmp);
+    ma_dsra(tmp, output.reg, Imm32(2));
+    ma_li(ScratchRegister, ImmWord(0x3333333333333333UL));
+    ma_and(output.reg, ScratchRegister);
+    ma_and(tmp, ScratchRegister);
+    ma_daddu(output.reg, tmp);
+    ma_dsrl(tmp, output.reg, Imm32(4));
+    ma_daddu(output.reg, tmp);
+    ma_li(ScratchRegister, ImmWord(0xF0F0F0F0F0F0F0FUL));
+    ma_and(output.reg, ScratchRegister);
+    ma_dsll(tmp, output.reg, Imm32(8));
+    ma_daddu(output.reg, tmp);
+    ma_dsll(tmp, output.reg, Imm32(16));
+    ma_daddu(output.reg, tmp);
+    ma_dsll(tmp, output.reg, Imm32(32));
+    ma_daddu(output.reg, tmp);
+    ma_dsra(output.reg, output.reg, Imm32(56));
 }
 
 // ===============================================================
 // Branch functions
+
+void
+MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* success, Label* fail)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal ||
+               cond == Assembler::LessThan || cond == Assembler::LessThanOrEqual ||
+               cond == Assembler::GreaterThan || cond == Assembler::GreaterThanOrEqual ||
+               cond == Assembler::Below || cond == Assembler::BelowOrEqual ||
+               cond == Assembler::Above || cond == Assembler::AboveOrEqual,
+               "other condition codes not supported");
+
+    branchPtr(cond, lhs.reg, ImmWord(val.value), success);
+    if (fail)
+        jump(fail);
+}
+
+void
+MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success, Label* fail)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal ||
+               cond == Assembler::LessThan || cond == Assembler::LessThanOrEqual ||
+               cond == Assembler::GreaterThan || cond == Assembler::GreaterThanOrEqual ||
+               cond == Assembler::Below || cond == Assembler::BelowOrEqual ||
+               cond == Assembler::Above || cond == Assembler::AboveOrEqual,
+               "other condition codes not supported");
+
+    branchPtr(cond, lhs.reg, rhs.reg, success);
+    if (fail)
+        jump(fail);
+}
 
 void
 MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val, Label* label)

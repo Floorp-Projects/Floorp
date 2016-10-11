@@ -334,18 +334,6 @@ public:
                   const ContentParentId& aCpId,
                   bool aMarkedDestroying);
 
-  /*
-   * Add the appId's reference count by the given ContentParentId and TabId
-   */
-  static bool
-  PermissionManagerAddref(const ContentParentId& aCpId, const TabId& aTabId);
-
-  /*
-   * Release the appId's reference count by the given ContentParentId and TabId
-   */
-  static bool
-  PermissionManagerRelease(const ContentParentId& aCpId, const TabId& aTabId);
-
   void ReportChildAlreadyBlocked();
 
   bool RequestRunToCompletion();

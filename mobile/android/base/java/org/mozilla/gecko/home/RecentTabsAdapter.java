@@ -82,22 +82,22 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
     }
 
     public void startListeningForClosedTabs() {
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this, "ClosedTabs:Data");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "ClosedTabs:Data");
         GeckoAppShell.notifyObservers("ClosedTabs:StartNotifications", null);
     }
 
     public void stopListeningForClosedTabs() {
         GeckoAppShell.notifyObservers("ClosedTabs:StopNotifications", null);
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this, "ClosedTabs:Data");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "ClosedTabs:Data");
         recentlyClosedTabsReceived = false;
     }
 
     public void startListeningForHistorySanitize() {
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this, "Sanitize:Finished");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Sanitize:Finished");
     }
 
     public void stopListeningForHistorySanitize() {
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this, "Sanitize:Finished");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Sanitize:Finished");
     }
 
     @Override

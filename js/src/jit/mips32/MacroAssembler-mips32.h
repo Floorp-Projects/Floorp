@@ -361,10 +361,12 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void loadInt32OrDouble(Register base, Register index,
                            FloatRegister dest, int32_t shift = defaultShift);
     void loadConstantDouble(double dp, FloatRegister dest);
+    void loadConstantDouble(wasm::RawF64 d, FloatRegister dest);
 
     void boolValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
+    void loadConstantFloat32(wasm::RawF32 f, FloatRegister dest);
 
     void testNullSet(Condition cond, const ValueOperand& value, Register dest);
 
@@ -892,6 +894,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void loadDouble(const Address& addr, FloatRegister dest);
     void loadDouble(const BaseIndex& src, FloatRegister dest);
+    void loadUnalignedDouble(const BaseIndex& src, Register temp, FloatRegister dest);
 
     // Load a float value into a register, then expand it to a double.
     void loadFloatAsDouble(const Address& addr, FloatRegister dest);
@@ -899,6 +902,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void loadFloat32(const Address& addr, FloatRegister dest);
     void loadFloat32(const BaseIndex& src, FloatRegister dest);
+    void loadUnalignedFloat32(const BaseIndex& src, Register temp, FloatRegister dest);
 
     void store8(Register src, const Address& address);
     void store8(Imm32 imm, const Address& address);
@@ -927,12 +931,21 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         store32(src.high, Address(address.base, address.offset + HIGH_32_OFFSET));
     }
 
+    void store64(Imm64 imm, Address address) {
+        store32(imm.low(), Address(address.base, address.offset + LOW_32_OFFSET));
+        store32(imm.hi(), Address(address.base, address.offset + HIGH_32_OFFSET));
+    }
+
     template <typename T> void storePtr(ImmWord imm, T address);
     template <typename T> void storePtr(ImmPtr imm, T address);
     template <typename T> void storePtr(ImmGCPtr imm, T address);
     void storePtr(Register src, const Address& address);
     void storePtr(Register src, const BaseIndex& address);
     void storePtr(Register src, AbsoluteAddress dest);
+
+    void storeUnalignedFloat32(FloatRegister src, Register temp, const BaseIndex& dest);
+    void storeUnalignedDouble(FloatRegister src, Register temp, const BaseIndex& dest);
+
     void moveDouble(FloatRegister src, FloatRegister dest) {
         as_movd(dest, src);
     }
