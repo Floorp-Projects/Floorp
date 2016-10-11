@@ -739,7 +739,7 @@ private:
 
   // When ICE completes, we record a bunch of statistics that outlive the
   // PeerConnection. This is just telemetry right now, but this can also
-  // include things like dumping the RLogRingbuffer somewhere, saving away
+  // include things like dumping the RLogConnector somewhere, saving away
   // an RTCStatsReport somewhere so it can be inspected after the call is over,
   // or other things.
   void RecordLongtermICEStatistics();
