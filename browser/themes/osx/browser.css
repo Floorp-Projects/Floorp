@@ -1678,7 +1678,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 0 8px;
   border-radius: 1em;
   background-color: hsla(0,0%,0%,.05);
-  border: 1px solid hsla(0,0%,0%,.1);
+  border: 1px solid ThreeDLightShadow;
 }
 
 #urlbar-zoom-button[animate="true"] {
