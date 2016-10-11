@@ -87,11 +87,12 @@ function testToggleToolboxButtons() {
   let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
   let toggleableTools = toolbox.toolboxButtons;
 
-  // The noautohide button is only displayed in the browser toolbox
+  // The noautohide button is only displayed in the browser toolbox, and the element
+  // picker button is not toggleable.
   toggleableTools = toggleableTools.filter(
-    tool => tool.id != "command-button-noautohide");
+    tool => tool.id != "command-button-noautohide" && tool.id != "command-button-pick");
   toolboxButtonNodes = toolboxButtonNodes.filter(
-    btn => btn.id != "command-button-noautohide");
+    btn => btn.id != "command-button-noautohide" && btn.id != "command-button-pick");
 
   is(checkNodes.length, toggleableTools.length,
     "All of the buttons are toggleable.");

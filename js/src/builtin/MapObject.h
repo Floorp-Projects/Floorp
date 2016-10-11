@@ -74,6 +74,11 @@ typedef OrderedHashSet<HashableValue,
                        HashableValue::Hasher,
                        RuntimeAllocPolicy> ValueSet;
 
+template <typename ObjectT>
+class OrderedHashTableRef;
+
+struct UnbarrieredHashPolicy;
+
 class MapObject : public NativeObject {
   public:
     enum IteratorKind { Keys, Values, Entries };
@@ -87,6 +92,8 @@ class MapObject : public NativeObject {
 
     static JSObject* initClass(JSContext* cx, JSObject* obj);
     static const Class class_;
+
+    enum { NurseryKeysSlot, SlotCount };
 
     static MOZ_MUST_USE bool getKeysAndValuesInterleaved(JSContext* cx, HandleObject obj,
                                             JS::MutableHandle<GCVector<JS::Value>> entries);
@@ -109,6 +116,9 @@ class MapObject : public NativeObject {
     static MOZ_MUST_USE bool clear(JSContext *cx, HandleObject obj);
     static MOZ_MUST_USE bool iterator(JSContext *cx, IteratorKind kind, HandleObject obj,
                                       MutableHandleValue iter);
+
+    using UnbarrieredTable = OrderedHashMap<Value, Value, UnbarrieredHashPolicy, RuntimeAllocPolicy>;
+    friend class OrderedHashTableRef<MapObject>;
 
   private:
     static const ClassOps classOps_;
@@ -180,6 +190,8 @@ class SetObject : public NativeObject {
     static JSObject* initClass(JSContext* cx, JSObject* obj);
     static const Class class_;
 
+    enum { NurseryKeysSlot, SlotCount };
+
     static MOZ_MUST_USE bool keys(JSContext *cx, HandleObject obj,
                                   JS::MutableHandle<GCVector<JS::Value>> keys);
     static MOZ_MUST_USE bool values(JSContext *cx, unsigned argc, Value *vp);
@@ -195,6 +207,9 @@ class SetObject : public NativeObject {
     static MOZ_MUST_USE bool iterator(JSContext *cx, IteratorKind kind, HandleObject obj,
                                       MutableHandleValue iter);
     static MOZ_MUST_USE bool delete_(JSContext *cx, HandleObject obj, HandleValue key, bool *rval);
+
+    using UnbarrieredTable = OrderedHashSet<Value, UnbarrieredHashPolicy, RuntimeAllocPolicy>;
+    friend class OrderedHashTableRef<SetObject>;
 
   private:
     static const ClassOps classOps_;

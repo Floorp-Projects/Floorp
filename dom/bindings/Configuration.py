@@ -279,7 +279,18 @@ class Descriptor(DescriptorProvider):
         self.config = config
         self.interface = interface
 
-        self.wantsXrays = interface.isExposedInWindow()
+        self.wantsXrays = (not interface.isExternal() and
+                           interface.isExposedInWindow())
+
+        if self.wantsXrays:
+            # We could try to restrict self.wantsXrayExpandoClass further.  For
+            # example, we could set it to false if all of our slots store
+            # Gecko-interface-typed things, because we don't use Xray expando
+            # slots for those.  But note that we would need to check the types
+            # of not only the members of "interface" but also of all its
+            # ancestors, because those can have members living in our slots too.
+            # For now, do the simple thing.
+            self.wantsXrayExpandoClass = (interface.totalMembersInSlots != 0)
 
         # Read the desc, and fill in the relevant defaults.
         ifaceName = self.interface.identifier.name

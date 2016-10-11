@@ -43,10 +43,12 @@ class CGConstList {
 
 struct CGObjectList {
     uint32_t            length;     /* number of emitted so far objects */
+    ObjectBox*          firstbox;  /* first emitted object */
     ObjectBox*          lastbox;   /* last emitted object */
 
-    CGObjectList() : length(0), lastbox(nullptr) {}
+    CGObjectList() : length(0), firstbox(nullptr), lastbox(nullptr) {}
 
+    bool isAdded(ObjectBox* objbox);
     unsigned add(ObjectBox* objbox);
     unsigned indexOf(JSObject* obj);
     void finish(ObjectArray* array);
@@ -643,6 +645,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // the stack and emits code to destructure a single lhs expression (either a
     // name or a compound []/{} expression).
     MOZ_MUST_USE bool emitDestructuringLHS(ParseNode* target, DestructuringFlavor flav);
+    MOZ_MUST_USE bool emitConditionallyExecutedDestructuringLHS(ParseNode* target,
+                                                                DestructuringFlavor flav);
 
     MOZ_MUST_USE bool emitDestructuringOps(ParseNode* pattern, DestructuringFlavor flav);
     MOZ_MUST_USE bool emitDestructuringOpsHelper(ParseNode* pattern, DestructuringFlavor flav);

@@ -24,7 +24,7 @@ class nsIContentViewer;
 class nsIDocShellTreeItem;
 class nsILayoutHistoryState;
 class nsDocShellEditorData;
-class nsISupportsArray;
+class nsIMutableArray;
 
 // A document may have multiple SHEntries, either due to hash navigations or
 // calls to history.pushState.  SHEntries corresponding to the same document
@@ -89,7 +89,7 @@ private:
   bool mExpired;
   nsCOMPtr<nsISupports> mWindowState;
   nsIntRect mViewerBounds;
-  nsCOMPtr<nsISupportsArray> mRefreshURIList;
+  nsCOMPtr<nsIMutableArray> mRefreshURIList;
   nsExpirationState mExpirationState;
   nsAutoPtr<nsDocShellEditorData> mEditorData;
 };

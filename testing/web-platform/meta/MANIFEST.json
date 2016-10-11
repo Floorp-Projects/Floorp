@@ -37508,6 +37508,42 @@
             "url": "/html/semantics/scripting-1/the-script-element/script-onload-insertion-point.html"
           }
         ],
+        "secure-contexts/basic-dedicated-worker.html": [
+          {
+            "path": "secure-contexts/basic-dedicated-worker.html",
+            "url": "/secure-contexts/basic-dedicated-worker.html"
+          }
+        ],
+        "secure-contexts/basic-dedicated-worker.https.html": [
+          {
+            "path": "secure-contexts/basic-dedicated-worker.https.html",
+            "url": "/secure-contexts/basic-dedicated-worker.https.html"
+          }
+        ],
+        "secure-contexts/basic-shared-worker.html": [
+          {
+            "path": "secure-contexts/basic-shared-worker.html",
+            "url": "/secure-contexts/basic-shared-worker.html"
+          }
+        ],
+        "secure-contexts/basic-shared-worker.https.html": [
+          {
+            "path": "secure-contexts/basic-shared-worker.https.html",
+            "url": "/secure-contexts/basic-shared-worker.https.html"
+          }
+        ],
+        "secure-contexts/shared-worker-insecure-first.https.html": [
+          {
+            "path": "secure-contexts/shared-worker-insecure-first.https.html",
+            "url": "/secure-contexts/shared-worker-insecure-first.https.html"
+          }
+        ],
+        "secure-contexts/shared-worker-secure-first.https.html": [
+          {
+            "path": "secure-contexts/shared-worker-secure-first.https.html",
+            "url": "/secure-contexts/shared-worker-secure-first.https.html"
+          }
+        ],
         "selectors/child-indexed-pseudo-class.html": [
           {
             "path": "selectors/child-indexed-pseudo-class.html",
