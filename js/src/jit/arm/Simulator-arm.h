@@ -116,6 +116,29 @@ class Simulator
         return Simulator::Current()->stackLimit();
     }
 
+    // Disassemble some instructions starting at instr and print them
+    // on stdout.  Useful for working within GDB after a MOZ_CRASH(),
+    // among other things.
+    //
+    // Typical use within a crashed instruction decoding method is simply:
+    //
+    //   call Simulator::disassemble(instr, 1)
+    //
+    // or use one of the (much) more convenient inline methods below.
+    static void disassemble(SimInstruction* instr, size_t n);
+
+    // Disassemble one instruction.
+    // "call disasm(instr)"
+    void disasm(SimInstruction* instr);
+
+    // Disassemble n instructions starting at instr.
+    // "call disasm(instr, 3)"
+    void disasm(SimInstruction* instr, size_t n);
+
+    // Skip backwards m instructions before starting, then disassemble n instructions.
+    // "call disasm(instr, 3, 7)"
+    void disasm(SimInstruction* instr, size_t m, size_t n);
+
     uintptr_t* addressOfStackLimit();
 
     // Accessors for register state. Reading the pc value adheres to the ARM
