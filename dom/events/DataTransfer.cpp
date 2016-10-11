@@ -356,23 +356,6 @@ DataTransfer::GetTypes(ErrorResult& aRv) const
   return types.forget();
 }
 
-NS_IMETHODIMP
-DataTransfer::GetTypes(nsISupports** aTypes)
-{
-  if (NS_WARN_IF(!aTypes)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult rv;
-  RefPtr<DOMStringList> types = GetTypes(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  types.forget(aTypes);
-  return NS_OK;
-}
-
 void
 DataTransfer::GetData(const nsAString& aFormat, nsAString& aData,
                       const Maybe<nsIPrincipal*>& aSubjectPrincipal,
@@ -431,14 +414,6 @@ DataTransfer::GetData(const nsAString& aFormat, nsAString& aData,
       aData = stringdata;
     }
   }
-}
-
-NS_IMETHODIMP
-DataTransfer::GetData(const nsAString& aFormat, nsAString& aData)
-{
-  ErrorResult rv;
-  GetData(aFormat, aData, Some(nsContentUtils::SubjectPrincipal()), rv);
-  return rv.StealNSResult();
 }
 
 void
