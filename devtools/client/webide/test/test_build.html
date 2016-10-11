@@ -40,8 +40,11 @@
 
             let packagedAppLocation = getTestFilePath("build_app" + testSuffix + "1");
 
+            let onValidated = waitForUpdate(win, "project-validated");
+            let onDetails = waitForUpdate(win, "details");
             yield winProject.projectList.importPackagedApp(packagedAppLocation);
-            yield waitForUpdate(win, "details");
+            yield onValidated;
+            yield onDetails;
 
             let project = win.AppManager.selectedProject;
 
@@ -77,8 +80,11 @@
             // # Now test a full featured package.json
             packagedAppLocation = getTestFilePath("build_app" + testSuffix + "2");
 
+            onValidated = waitForUpdate(win, "project-validated");
+            onDetails = waitForUpdate(win, "details");
             yield winProject.projectList.importPackagedApp(packagedAppLocation);
-            yield waitForUpdate(win, "project-validated");
+            yield onValidated;
+            yield onDetails;
 
             project = win.AppManager.selectedProject;
 
@@ -96,8 +102,11 @@
             is(loggedMessages[3], "succeed", "log messages are correct");
 
             // Switch to the package dir in order to verify the generated webapp.manifest
+            onValidated = waitForUpdate(win, "project-validated");
+            onDetails = waitForUpdate(win, "details");
             yield winProject.projectList.importPackagedApp(packageDir);
-            yield waitForUpdate(win, "project-validated");
+            yield onValidated;
+            yield onDetails;
 
             project = win.AppManager.selectedProject;
 
