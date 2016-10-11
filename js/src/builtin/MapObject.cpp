@@ -274,6 +274,7 @@ const ClassOps MapObject::classOps_ = {
 const Class MapObject::class_ = {
     "Map",
     JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(MapObject::SlotCount) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Map) |
     JSCLASS_FOREGROUND_FINALIZE,
     &MapObject::classOps_
@@ -372,7 +373,7 @@ MapObject::mark(JSTracer* trc, JSObject* obj)
     }
 }
 
-struct UnbarrieredHashPolicy {
+struct js::UnbarrieredHashPolicy {
     typedef Value Lookup;
     static HashNumber hash(const Lookup& v) { return v.asRawBits(); }
     static bool match(const Value& k, const Lookup& l) { return k == l; }
@@ -380,42 +381,102 @@ struct UnbarrieredHashPolicy {
     static void makeEmpty(Value* vp) { vp->setMagic(JS_HASH_KEY_EMPTY); }
 };
 
-template <typename TableType>
-class OrderedHashTableRef : public gc::BufferableRef
+using NurseryKeysVector = Vector<JSObject*, 0, SystemAllocPolicy>;
+
+template <typename TableObject>
+static NurseryKeysVector*
+GetNurseryKeys(TableObject* t)
 {
-    TableType* table;
-    Value key;
+    Value value = t->getReservedSlot(TableObject::NurseryKeysSlot);
+    return reinterpret_cast<NurseryKeysVector*>(value.toPrivate());
+}
+
+template <typename TableObject>
+static NurseryKeysVector*
+AllocNurseryKeys(TableObject* t)
+{
+    MOZ_ASSERT(!GetNurseryKeys(t));
+    auto keys = js_new<NurseryKeysVector>();
+    if (!keys)
+        return nullptr;
+
+    t->setReservedSlot(TableObject::NurseryKeysSlot, PrivateValue(keys));
+    return keys;
+}
+
+template <typename TableObject>
+static void
+DeleteNurseryKeys(TableObject* t)
+{
+    auto keys = GetNurseryKeys(t);
+    MOZ_ASSERT(keys);
+    js_delete(keys);
+    t->setReservedSlot(TableObject::NurseryKeysSlot, PrivateValue(nullptr));
+}
+
+// A generic store buffer entry that traces all nursery keys for an ordered hash
+// map or set.
+template <typename ObjectT>
+class js::OrderedHashTableRef : public gc::BufferableRef
+{
+    ObjectT* object;
 
   public:
-    explicit OrderedHashTableRef(TableType* t, const Value& k) : table(t), key(k) {}
+    explicit OrderedHashTableRef(ObjectT* obj) : object(obj) {}
 
     void trace(JSTracer* trc) override {
-        MOZ_ASSERT(UnbarrieredHashPolicy::hash(key) ==
-                   HashableValue::Hasher::hash(*reinterpret_cast<HashableValue*>(&key)));
-        Value prior = key;
-        TraceManuallyBarrieredEdge(trc, &key, "ordered hash table key");
-        table->rekeyOneEntry(prior, key);
+        auto table = reinterpret_cast<typename ObjectT::UnbarrieredTable*>(object->getData());
+        NurseryKeysVector* keys = GetNurseryKeys(object);
+        MOZ_ASSERT(keys);
+        for (JSObject* obj : *keys) {
+            MOZ_ASSERT(obj);
+            Value key = ObjectValue(*obj);
+            Value prior = key;
+            MOZ_ASSERT(UnbarrieredHashPolicy::hash(key) ==
+                       HashableValue::Hasher::hash(*reinterpret_cast<HashableValue*>(&key)));
+            TraceManuallyBarrieredEdge(trc, &key, "ordered hash table key");
+            table->rekeyOneEntry(prior, key);
+        }
+        DeleteNurseryKeys(object);
     }
 };
 
-inline static void
-WriteBarrierPost(JSRuntime* rt, ValueMap* map, const Value& key)
+template <typename ObjectT>
+inline static MOZ_MUST_USE bool
+WriteBarrierPostImpl(JSRuntime* rt, ObjectT* obj, const Value& keyValue)
 {
-    typedef OrderedHashMap<Value, Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredMap;
-    if (MOZ_UNLIKELY(key.isObject() && IsInsideNursery(&key.toObject()))) {
-        rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredMap>(
-                    reinterpret_cast<UnbarrieredMap*>(map), key));
+    if (MOZ_LIKELY(!keyValue.isObject()))
+        return true;
+
+    JSObject* key = &keyValue.toObject();
+    if (!IsInsideNursery(key))
+        return true;
+
+    NurseryKeysVector* keys = GetNurseryKeys(obj);
+    if (!keys) {
+        keys = AllocNurseryKeys(obj);
+        if (!keys)
+            return false;
+
+        rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<ObjectT>(obj));
     }
+
+    if (!keys->append(key))
+        return false;
+
+    return true;
 }
 
-inline static void
-WriteBarrierPost(JSRuntime* rt, ValueSet* set, const Value& key)
+inline static MOZ_MUST_USE bool
+WriteBarrierPost(JSRuntime* rt, MapObject* map, const Value& key)
 {
-    typedef OrderedHashSet<Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredSet;
-    if (MOZ_UNLIKELY(key.isObject() && IsInsideNursery(&key.toObject()))) {
-        rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredSet>(
-                    reinterpret_cast<UnbarrieredSet*>(set), key));
-    }
+    return WriteBarrierPostImpl(rt, map, key);
+}
+
+inline static MOZ_MUST_USE bool
+WriteBarrierPost(JSRuntime* rt, SetObject* set, const Value& key)
+{
+    return WriteBarrierPostImpl(rt, set, key);
 }
 
 bool
@@ -449,11 +510,13 @@ MapObject::set(JSContext* cx, HandleObject obj, HandleValue k, HandleValue v)
         return false;
 
     HeapPtr<Value> rval(v);
-    if (!map->put(key, rval)) {
+    if (!WriteBarrierPost(cx->runtime(), &obj->as<MapObject>(), key.value()) ||
+        !map->put(key, rval))
+    {
         ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), map, key.value());
+
     return true;
 }
 
@@ -471,6 +534,7 @@ MapObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
         return nullptr;
 
     mapObj->setPrivate(map.release());
+    mapObj->setReservedSlot(NurseryKeysSlot, PrivateValue(nullptr));
     return mapObj;
 }
 
@@ -550,11 +614,12 @@ MapObject::construct(JSContext* cx, unsigned argc, Value* vp)
                     return false;
 
                 HeapPtr<Value> rval(val);
-                if (!map->put(hkey, rval)) {
+                if (!WriteBarrierPost(cx->runtime(), obj, key) ||
+                    !map->put(hkey, rval))
+                {
                     ReportOutOfMemory(cx);
                     return false;
                 }
-                WriteBarrierPost(cx->runtime(), map, key);
             } else {
                 if (!args2.init(2))
                     return false;
@@ -700,11 +765,13 @@ MapObject::set_impl(JSContext* cx, const CallArgs& args)
     ValueMap& map = extract(args);
     ARG0_KEY(cx, args, key);
     HeapPtr<Value> rval(args.get(1));
-    if (!map.put(key, rval)) {
+    if (!WriteBarrierPost(cx->runtime(), &args.thisv().toObject().as<MapObject>(), key.value()) ||
+        !map.put(key, rval))
+    {
         ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), &map, key.value());
+
     args.rval().set(args.thisv());
     return true;
 }
@@ -1017,6 +1084,7 @@ const ClassOps SetObject::classOps_ = {
 const Class SetObject::class_ = {
     "Set",
     JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(SetObject::SlotCount) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Set) |
     JSCLASS_FOREGROUND_FINALIZE,
     &SetObject::classOps_
@@ -1098,11 +1166,12 @@ SetObject::add(JSContext* cx, HandleObject obj, HandleValue k)
     if (!key.setValue(cx, k))
         return false;
 
-    if (!set->put(key)) {
+    if (!WriteBarrierPost(cx->runtime(), &obj->as<SetObject>(), key.value()) ||
+        !set->put(key))
+    {
         ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), set, key.value());
     return true;
 }
 
@@ -1120,6 +1189,7 @@ SetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
         return nullptr;
 
     obj->setPrivate(set.release());
+    obj->setReservedSlot(NurseryKeysSlot, PrivateValue(nullptr));
     return obj;
 }
 
@@ -1189,11 +1259,12 @@ SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
             if (isOriginalAdder) {
                 if (!key.setValue(cx, keyVal))
                     return false;
-                if (!set->put(key)) {
+                if (!WriteBarrierPost(cx->runtime(), obj, keyVal) ||
+                    !set->put(key))
+                {
                     ReportOutOfMemory(cx);
                     return false;
                 }
-                WriteBarrierPost(cx->runtime(), set, keyVal);
             } else {
                 if (!args2.init(1))
                     return false;
@@ -1306,11 +1377,12 @@ SetObject::add_impl(JSContext* cx, const CallArgs& args)
 
     ValueSet& set = extract(args);
     ARG0_KEY(cx, args, key);
-    if (!set.put(key)) {
+    if (!WriteBarrierPost(cx->runtime(), &args.thisv().toObject().as<SetObject>(), key.value()) ||
+        !set.put(key))
+    {
         ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime(), &set, key.value());
     args.rval().set(args.thisv());
     return true;
 }

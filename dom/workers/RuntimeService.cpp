@@ -27,6 +27,7 @@
 #include "GeckoProfiler.h"
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Telemetry.h"
@@ -2446,6 +2447,11 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
   // will reset the loadInfo's window.
   nsCOMPtr<nsPIDOMWindowInner> window = aLoadInfo->mWindow;
 
+  // shouldAttachToWorkerPrivate tracks whether our SharedWorker should actually
+  // get attached to the WorkerPrivate we're using.  It will become false if the
+  // WorkerPrivate already exists and its secure context state doesn't match
+  // what we want for the new SharedWorker.
+  bool shouldAttachToWorkerPrivate = true;
   bool created = false;
   ErrorResult rv;
   if (!workerPrivate) {
@@ -2456,10 +2462,20 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
 
     created = true;
   } else {
+    // Check whether the secure context state matches.  The current compartment
+    // of aCx is the compartment of the SharedWorker constructor that was
+    // invoked, which is the compartment of the document that will be hooked up
+    // to the worker, so that's what we want to check.
+    shouldAttachToWorkerPrivate =
+      workerPrivate->IsSecureContext() ==
+        JS_GetIsSecureContext(js::GetContextCompartment(aCx));
+
     // If we're attaching to an existing SharedWorker private, then we
     // must update the overriden load group to account for our document's
     // load group.
-    workerPrivate->UpdateOverridenLoadGroup(aLoadInfo->mLoadGroup);
+    if (shouldAttachToWorkerPrivate) {
+      workerPrivate->UpdateOverridenLoadGroup(aLoadInfo->mLoadGroup);
+    }
   }
 
   // We don't actually care about this MessageChannel, but we use it to 'steal'
@@ -2472,6 +2488,16 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
 
   RefPtr<SharedWorker> sharedWorker = new SharedWorker(window, workerPrivate,
                                                        channel->Port1());
+
+  if (!shouldAttachToWorkerPrivate) {
+    // We're done here.  Just queue up our error event and return our
+    // dead-on-arrival SharedWorker.
+    RefPtr<AsyncEventDispatcher> errorEvent =
+      new AsyncEventDispatcher(sharedWorker, NS_LITERAL_STRING("error"), false);
+    errorEvent->PostDOMEvent();
+    sharedWorker.forget(aSharedWorker);
+    return NS_OK;
+  }
 
   if (!workerPrivate->RegisterSharedWorker(sharedWorker, channel->Port2())) {
     NS_WARNING("Worker is unreachable, this shouldn't happen!");

@@ -446,6 +446,53 @@ MacroAssemblerMIPSShared::ma_load(Register dest, const BaseIndex& src,
 }
 
 void
+MacroAssemblerMIPSShared::ma_load_unaligned(Register dest, const BaseIndex& src, Register temp,
+                                            LoadStoreSize size, LoadStoreExtension extension)
+{
+    int16_t lowOffset, hiOffset;
+    Register base;
+
+    asMasm().computeScaledAddress(src, SecondScratchReg);
+
+    if (Imm16::IsInSignedRange(src.offset) && Imm16::IsInSignedRange(src.offset + size / 8 - 1)) {
+        base = SecondScratchReg;
+        lowOffset = Imm16(src.offset).encode();
+        hiOffset = Imm16(src.offset + size / 8 - 1).encode();
+    } else {
+        ma_li(ScratchRegister, Imm32(src.offset));
+        as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
+        base = ScratchRegister;
+        lowOffset = Imm16(0).encode();
+        hiOffset = Imm16(size / 8 - 1).encode();
+    }
+
+    switch (size) {
+      case SizeHalfWord:
+        as_lbu(dest, base, lowOffset);
+        if (extension != ZeroExtend)
+            as_lbu(temp, base, hiOffset);
+        else
+            as_lb(temp, base, hiOffset);
+        as_ins(dest, temp, 8, 24);
+        break;
+      case SizeWord:
+        as_lwl(dest, base, hiOffset);
+        as_lwr(dest, base, lowOffset);
+#ifdef JS_CODEGEN_MIPS64
+        if (extension != ZeroExtend)
+            as_dext(dest, dest, 0, 32);
+#endif
+        break;
+      case SizeDouble:
+        as_ldl(dest, base, hiOffset);
+        as_ldr(dest, base, lowOffset);
+        break;
+      default:
+        MOZ_CRASH("Invalid argument for ma_load");
+    }
+}
+
+void
 MacroAssemblerMIPSShared::ma_store(Register data, const BaseIndex& dest,
                                    LoadStoreSize size, LoadStoreExtension extension)
 {
@@ -543,6 +590,46 @@ MacroAssemblerMIPSShared::ma_store(Imm32 imm, const BaseIndex& dest,
     // with offset=0 ScratchRegister will not be used in ma_store()
     // so we can use it as a parameter here
     asMasm().ma_store(ScratchRegister, Address(SecondScratchReg, 0), size, extension);
+}
+
+void
+MacroAssemblerMIPSShared::ma_store_unaligned(Register data, const BaseIndex& dest, Register temp,
+                                             LoadStoreSize size, LoadStoreExtension extension)
+{
+    int16_t lowOffset, hiOffset;
+    Register base;
+
+    asMasm().computeEffectiveAddress(dest, SecondScratchReg);
+
+    if (Imm16::IsInSignedRange(dest.offset) && Imm16::IsInSignedRange(dest.offset + size / 8 - 1)) {
+        base = SecondScratchReg;
+        lowOffset = Imm16(dest.offset).encode();
+        hiOffset = Imm16(dest.offset + size / 8 - 1).encode();
+    } else {
+        ma_li(ScratchRegister, Imm32(dest.offset));
+        as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
+        base = ScratchRegister;
+        lowOffset = Imm16(0).encode();
+        hiOffset = Imm16(size / 8 - 1).encode();
+    }
+
+    switch (size) {
+      case SizeHalfWord:
+        as_sb(data, base, lowOffset);
+        as_ext(temp, data, 8, 8);
+        as_sb(temp, base, hiOffset);
+        break;
+      case SizeWord:
+        as_swl(data, base, hiOffset);
+        as_swr(data, base, lowOffset);
+        break;
+      case SizeDouble:
+        as_sdl(data, base, hiOffset);
+        as_sdr(data, base, lowOffset);
+        break;
+      default:
+        MOZ_CRASH("Invalid argument for ma_store");
+    }
 }
 
 // Branches when done from within mips-specific code.
@@ -904,6 +991,15 @@ void
 MacroAssemblerMIPSShared::ma_lis(FloatRegister dest, float value)
 {
     Imm32 imm(mozilla::BitwiseCast<uint32_t>(value));
+
+    ma_li(ScratchRegister, imm);
+    moveToFloat32(ScratchRegister, dest);
+}
+
+void
+MacroAssemblerMIPSShared::ma_lis(FloatRegister dest, wasm::RawF32 value)
+{
+    Imm32 imm(value.bits());
 
     ma_li(ScratchRegister, imm);
     moveToFloat32(ScratchRegister, dest);

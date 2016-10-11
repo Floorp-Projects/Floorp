@@ -46,6 +46,82 @@ class LUnboxFloatingPoint : public LUnbox
     }
 };
 
+class LDivOrModI64 : public LBinaryMath<1>
+{
+  public:
+    LIR_HEADER(DivOrModI64)
+
+    LDivOrModI64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp);
+    }
+
+    const LDefinition* remainder() {
+        return getTemp(0);
+    }
+
+    MBinaryArithInstruction* mir() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction*>(mir_);
+    }
+    bool canBeDivideByZero() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeDivideByZero();
+        return mir_->toDiv()->canBeDivideByZero();
+    }
+    bool canBeNegativeOverflow() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeNegativeDividend();
+        return mir_->toDiv()->canBeNegativeOverflow();
+    }
+};
+
+class LUDivOrModI64 : public LBinaryMath<1>
+{
+  public:
+    LIR_HEADER(UDivOrModI64);
+
+    LUDivOrModI64(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp);
+    }
+
+    const LDefinition* remainder() {
+        return getTemp(0);
+    }
+
+    const char* extraName() const {
+        return mir()->isTruncated() ? "Truncated" : nullptr;
+    }
+
+    MBinaryArithInstruction* mir() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction*>(mir_);
+    }
+
+    bool canBeDivideByZero() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeDivideByZero();
+        return mir_->toDiv()->canBeDivideByZero();
+    }
+};
+
+class LWasmTruncateToInt64 : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(WasmTruncateToInt64);
+
+    explicit LWasmTruncateToInt64(const LAllocation& in) {
+        setOperand(0, in);
+    }
+
+    MWasmTruncateToInt64* mir() const {
+        return mir_->toWasmTruncateToInt64();
+    }
+};
+
 } // namespace jit
 } // namespace js
 

@@ -41,12 +41,9 @@ partial interface WorkerGlobalScope {
 readonly attribute CacheStorage caches;
 };
 
-WorkerGlobalScope implements WindowTimers;
-WorkerGlobalScope implements WindowBase64;
-WorkerGlobalScope implements GlobalFetch;
 WorkerGlobalScope implements GlobalCrypto;
 WorkerGlobalScope implements IDBEnvironment;
-WorkerGlobalScope implements ImageBitmapFactories;
+WorkerGlobalScope implements WindowOrWorkerGlobalScope;
 
 // Not implemented yet: bug 1072107.
 // WorkerGlobalScope implements FontFaceSource;

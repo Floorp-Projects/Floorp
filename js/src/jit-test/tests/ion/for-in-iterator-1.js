@@ -1,3 +1,5 @@
+gczeal(0);
+
 var values = {
     input1: null,
     input2: undefined,

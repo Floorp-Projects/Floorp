@@ -3593,7 +3593,7 @@ SearchService.prototype = {
   _findJAREngines: function SRCH_SVC_findJAREngines() {
     LOG("_findJAREngines: looking for engines in JARs")
 
-    let chan = makeChannel(APP_SEARCH_PREFIX + "list.txt");
+    let chan = makeChannel(APP_SEARCH_PREFIX + "list.json");
     if (!chan) {
       LOG("_findJAREngines: " + APP_SEARCH_PREFIX + " isn't registered");
       return [];
@@ -3603,8 +3603,17 @@ SearchService.prototype = {
 
     let sis = Cc["@mozilla.org/scriptableinputstream;1"].
                 createInstance(Ci.nsIScriptableInputStream);
-    sis.init(chan.open2());
-    this._parseListTxt(sis.read(sis.available()), uris);
+    try {
+      sis.init(chan.open2());
+      this._parseListJSON(sis.read(sis.available()), uris);
+      // parseListJSON will catch its own errors, so we
+      // should only go into this catch if list.json
+      // doesn't exist
+    } catch (e) {
+      chan = makeChannel(APP_SEARCH_PREFIX + "list.txt");
+      sis.init(chan.open2());
+      this._parseListTxt(sis.read(sis.available()), uris);
+    }
     return uris;
   },
 
@@ -3618,7 +3627,7 @@ SearchService.prototype = {
     return Task.spawn(function() {
       LOG("_asyncFindJAREngines: looking for engines in JARs")
 
-      let listURL = APP_SEARCH_PREFIX + "list.txt";
+      let listURL = APP_SEARCH_PREFIX + "list.json";
       let chan = makeChannel(listURL);
       if (!chan) {
         LOG("_asyncFindJAREngines: " + APP_SEARCH_PREFIX + " isn't registered");
@@ -3627,7 +3636,7 @@ SearchService.prototype = {
 
       let uris = [];
 
-      // Read list.txt to find the engines we need to load.
+      // Read list.json to find the engines we need to load.
       let deferred = Promise.defer();
       let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                       createInstance(Ci.nsIXMLHttpRequest);
@@ -3637,15 +3646,87 @@ SearchService.prototype = {
       };
       request.onerror = function(aEvent) {
         LOG("_asyncFindJAREngines: failed to read " + listURL);
-        deferred.resolve("");
+        // Couldn't find list.json, try list.txt
+        request.onerror = function(aEvent) {
+          LOG("_asyncFindJAREngines: failed to read " + APP_SEARCH_PREFIX + "list.txt");
+          deferred.resolve("");
+        }
+        request.open("GET", NetUtil.newURI(APP_SEARCH_PREFIX + "list.txt").spec, true);
+        request.send();
       };
       request.open("GET", NetUtil.newURI(listURL).spec, true);
       request.send();
       let list = yield deferred.promise;
 
-      this._parseListTxt(list, uris);
+      if (request.responseURL.endsWith(".txt")) {
+        this._parseListTxt(list, uris);
+      } else {
+        this._parseListJSON(list, uris);
+      }
       throw new Task.Result(uris);
     }.bind(this));
+  },
+
+  _parseListJSON: function SRCH_SVC_parseListJSON(list, uris) {
+    let searchSettings;
+    try {
+      searchSettings = JSON.parse(list);
+    } catch(e) {
+      LOG("failing to parse list.json: " + e);
+      return;
+    }
+
+    let jarNames = new Set();
+    for (let region in searchSettings) {
+      // Artifact builds use the full list.json which parses
+      // slightly differently
+      if (!("visibleDefaultEngines" in searchSettings[region])) {
+        continue;
+      }
+      for (let engine of searchSettings[region]["visibleDefaultEngines"]) {
+        jarNames.add(engine);
+      }
+    }
+
+    // Check if we have a useable country specific list of visible default engines.
+    let engineNames;
+    let visibleDefaultEngines = this.getVerifiedGlobalAttr("visibleDefaultEngines");
+    if (visibleDefaultEngines) {
+      engineNames = visibleDefaultEngines.split(",");
+      for (let engineName of engineNames) {
+        // If all engineName values are part of jarNames,
+        // then we can use the country specific list, otherwise ignore it.
+        // The visibleDefaultEngines string containing the name of an engine we
+        // don't ship indicates the server is misconfigured to answer requests
+        // from the specific Firefox version we are running, so ignoring the
+        // value altogether is safer.
+        if (!jarNames.has(engineName)) {
+          LOG("_parseListJSON: ignoring visibleDefaultEngines value because " +
+              engineName + " is not in the jar engines we have found");
+          engineNames = null;
+          break;
+        }
+      }
+    }
+
+    // Fallback to building a list based on the regions in the JSON
+    if (!engineNames || !engineNames.length) {
+      let region;
+      if (Services.prefs.prefHasUserValue("browser.search.region")) {
+        region = Services.prefs.getCharPref("browser.search.region");
+      }
+      if (!region || !(region in searchSettings)) {
+        region = "default";
+      }
+      engineNames = searchSettings[region]["visibleDefaultEngines"];
+    }
+
+    for (let name of engineNames) {
+      uris.push(APP_SEARCH_PREFIX + name + ".xml");
+    }
+
+    // Store this so that it can be used while writing the cache file.
+    this._visibleDefaultEngines = engineNames;
   },
 
   _parseListTxt: function SRCH_SVC_parseListTxt(list, uris) {

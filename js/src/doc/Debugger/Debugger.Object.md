@@ -456,7 +456,7 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
     value, or `{ asConstructor: true }` to invoke the referent as a
     constructor, in which case SpiderMonkey provides an appropriate `this`
     value itself. Each <i>argument</i> must be a debuggee value. All extant
-    handler methods, breakpoints, watchpoints, and so on remain active
+    handler methods, breakpoints, and so on remain active
     during the call. If the referent is not callable, throw a `TypeError`.
     This function follows the [invocation function conventions][inv fr].
 
@@ -469,7 +469,7 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
     an appropriate `this` value itself. <i>Arguments</i> must either be an
     array (in the debugger) of debuggee values, or `null` or `undefined`,
     which are treated as an empty array. All extant handler methods,
-    breakpoints, watchpoints, and so on remain active during the call. If
+    breakpoints, and so on remain active during the call. If
     the referent is not callable, throw a `TypeError`. This function
     follows the [invocation function conventions][inv fr].
 
@@ -477,7 +477,7 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
 :   If the referent is a global object, evaluate <i>code</i> in that global
     environment, and return a [completion value][cv] describing how it completed.
     <i>Code</i> is a string. All extant handler methods, breakpoints,
-    watchpoints, and so on remain active during the call. This function
+    and so on remain active during the call. This function
     follows the [invocation function conventions][inv fr].
     If the referent is not a global object, throw a `TypeError` exception.
 
@@ -521,96 +521,6 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
     instance representing the referent's global lexical scope. The global
     lexical scope's enclosing scope is the global object. If the referent is
     not a global object, throw a `TypeError`.
-
-<code>setObjectWatchpoint(<i>handler</i>)</code> <i>(future plan)</i>
-:   Set a watchpoint on all the referent's own properties, reporting events
-    by calling <i>handler</i>'s methods. Any previous watchpoint handler on
-    this `Debugger.Object` instance is replaced. If <i>handler</i> is null,
-    the referent is no longer watched. <i>Handler</i> may have the following
-    methods, called under the given circumstances:
-
-    <code>add(<i>frame</i>, <i>name</i>, <i>descriptor</i>)</code>
-    :   A property named <i>name</i> has been added to the referent.
-        <i>Descriptor</i> is a property descriptor of the sort accepted by
-        `Debugger.Object.prototype.defineProperty`, giving the newly added
-        property's attributes.
-
-    <code>delete(<i>frame</i>, <i>name</i>)</code>
-    :   The property named <i>name</i> is about to be deleted from the referent.
-
-    <code>change(<i>frame</i>, <i>name</i>, <i>oldDescriptor</i>, <i>newDescriptor</i>)</code>
-    :   The existing property named <i>name</i> on the referent is being changed
-        from those given by <i>oldDescriptor</i> to those given by
-        <i>newDescriptor</i>. This handler method is only called when attributes
-        of the property other than its value are being changed; if only the
-        value is changing, SpiderMonkey calls the handler's `set` method.
-
-    <code>set(<i>frame</i>, <i>oldValue</i>, <i>newValue</i>)</code>
-    :   The data property named <i>name</i> of the referent is about to have its
-        value changed from <i>oldValue</i> to <i>newValue</i>.
-
-        SpiderMonkey only calls this method on assignments to data properties
-        that will succeed; assignments to un-writable data properties fail
-        without notifying the debugger.
-
-    <code>extensionsPrevented(<i>frame</i>)</code>
-    :   The referent has been made non-extensible, as if by a call to
-        `Object.preventExtensions`.
-
-    For all watchpoint handler methods:
-
-    * Handler calls receive the handler object itself as the `this` value.
-
-    * The <i>frame</i> argument is the current stack frame, whose code is
-      about to perform the operation on the object being reported.
-
-    * If the method returns `undefined`, then SpiderMonkey makes the announced
-      change to the object, and continues execution normally. If the method
-      returns an object:
-
-    * If the object has a `superseded` property whose value is a true value,
-      then SpiderMonkey does not make the announced change.
-
-    * If the object has a `resume` property, its value is taken as a
-      [resumption value][rv], indicating how
-      execution should proceed. (However, `return` resumption values are not
-      supported.)
-
-    * If a given method is absent from <i>handler</i>, then events of that
-      sort are ignored. The watchpoint consults <i>handler</i>'s properties
-      each time an event occurs, so adding methods to or removing methods from
-      <i>handler</i> after setting the watchpoint enables or disables
-      reporting of the corresponding events.
-
-    * Values passed to <i>handler</i>'s methods are debuggee values.
-      Descriptors passed to <i>handler</i>'s methods are ordinary objects in
-      the debugger's compartment, except for `value`, `get`, and `set`
-      properties in descriptors, which are debuggee values; they are the sort
-      of value expected by `Debugger.Object.prototype.defineProperty`.
-
-    * Watchpoint handler calls are cross-compartment, intra-thread calls: the
-      call takes place in the same thread that changed the property, and in
-      <i>handler</i>'s method's compartment (typically the same as the
-      debugger's compartment).
-
-    The new watchpoint belongs to the [`Debugger`][debugger-object] instance to which this
-    `Debugger.Object` instance belongs; disabling the [`Debugger`][debugger-object] instance
-    disables this watchpoint.
-
-`clearObjectWatchpoint()` <i>(future plan)</i>
-:   Remove any object watchpoint set on the referent.
-
-<code>setPropertyWatchpoint(<i>name</i>, <i>handler</i>)</code> <i>(future plan)</i>
-:   Set a watchpoint on the referent's property named <i>name</i>, reporting
-    events by calling <i>handler</i>'s methods. Any previous watchpoint
-    handler on this property for this `Debugger.Object` instance is
-    replaced. If <i>handler</i> is null, the property is no longer watched.
-    <i>Handler</i> is as described for
-    `Debugger.Object.prototype.setObjectWatchpoint`, except that it does not
-    receive `extensionsPrevented` events.
-
-<code>clearPropertyWatchpoint(<i>name</i>)</code> <i>(future plan)</i>
-:   Remove any watchpoint set on the referent's property named <i>name</i>.
 
 `unwrap()`
 :   If the referent is a wrapper that this `Debugger.Object`'s compartment

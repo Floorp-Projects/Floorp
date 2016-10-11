@@ -304,19 +304,122 @@ CodeGeneratorMIPS64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
+CodeGeneratorMIPS64::visitCompareI64(LCompareI64* lir)
+{
+    MCompare* mir = lir->mir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register lhsReg = ToRegister64(lhs).reg;
+    Register output = ToRegister(lir->output());
+    Register rhsReg;
+
+    if (IsConstant(rhs)) {
+        rhsReg = ScratchRegister;
+        masm.ma_li(rhsReg, ImmWord(ToInt64(rhs)));
+    } else {
+        rhsReg = ToRegister64(rhs).reg;
+    }
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    masm.cmpPtrSet(JSOpToCondition(lir->jsop(), isSigned), lhsReg, rhsReg, output);
+}
+
+void
+CodeGeneratorMIPS64::visitCompareI64AndBranch(LCompareI64AndBranch* lir)
+{
+    MCompare* mir = lir->cmpMir();
+    MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||
+               mir->compareType() == MCompare::Compare_UInt64);
+
+    const LInt64Allocation lhs = lir->getInt64Operand(LCompareI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LCompareI64::Rhs);
+    Register lhsReg = ToRegister64(lhs).reg;
+    Register rhsReg;
+
+    if (IsConstant(rhs)) {
+        rhsReg = ScratchRegister;
+        masm.ma_li(rhsReg, ImmWord(ToInt64(rhs)));
+    } else {
+        rhsReg = ToRegister64(rhs).reg;
+    }
+
+    bool isSigned = mir->compareType() == MCompare::Compare_Int64;
+    Assembler::Condition cond = JSOpToCondition(lir->jsop(), isSigned);
+    emitBranch(lhsReg, rhsReg, cond, lir->ifTrue(), lir->ifFalse());
+}
+
+void
+CodeGeneratorMIPS64::visitDivOrModI64(LDivOrModI64* lir)
+{
+    Register lhs = ToRegister(lir->lhs());
+    Register rhs = ToRegister(lir->rhs());
+    Register output = ToRegister(lir->output());
+
+    Label done;
+
+    // Handle divide by zero.
+    if (lir->canBeDivideByZero())
+        masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+
+    // Handle an integer overflow exception from INT64_MIN / -1.
+    if (lir->canBeNegativeOverflow()) {
+        Label notmin;
+        masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &notmin);
+        masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &notmin);
+        if (lir->mir()->isMod())
+            masm.ma_xor(output, output);
+        else
+            masm.jump(wasm::JumpTarget::IntegerOverflow);
+        masm.jump(&done);
+        masm.bind(&notmin);
+    }
+
+    masm.as_ddiv(lhs, rhs);
+
+    if (lir->mir()->isMod())
+        masm.as_mfhi(output);
+    else
+        masm.as_mflo(output);
+
+    masm.bind(&done);
+}
+
+void
+CodeGeneratorMIPS64::visitUDivOrModI64(LUDivOrModI64* lir)
+{
+    Register lhs = ToRegister(lir->lhs());
+    Register rhs = ToRegister(lir->rhs());
+    Register output = ToRegister(lir->output());
+
+    Label done;
+
+    // Prevent divide by zero.
+    if (lir->canBeDivideByZero())
+        masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+
+    masm.as_ddivu(lhs, rhs);
+
+    if (lir->mir()->isMod())
+        masm.as_mfhi(output);
+    else
+        masm.as_mflo(output);
+
+    masm.bind(&done);
+}
+
+template <typename T>
+void
+CodeGeneratorMIPS64::emitWasmLoadI64(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
-    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
 
     uint32_t offset = mir->offset();
-    if (offset > INT32_MAX) {
-        // This is unreachable because of bounds checks.
-        masm.breakpoint();
-        return;
-    }
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
 
@@ -329,7 +432,129 @@ CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
-    masm.ma_load(ToRegister(lir->output()), BaseIndex(HeapReg, ptr, TimesOne), SizeDouble);
+    unsigned byteSize = mir->byteSize();
+    bool isSigned;
+
+    switch (mir->accessType()) {
+      case Scalar::Int8:    isSigned = true;  break;
+      case Scalar::Uint8:   isSigned = false; break;
+      case Scalar::Int16:   isSigned = true;  break;
+      case Scalar::Uint16:  isSigned = false; break;
+      case Scalar::Int32:   isSigned = true;  break;
+      case Scalar::Uint32:  isSigned = false; break;
+      case Scalar::Int64:   isSigned = true;  break;
+      default: MOZ_CRASH("unexpected array type");
+    }
+
+    memoryBarrier(mir->barrierBefore());
+
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        masm.ma_load_unaligned(ToOutRegister64(lir).reg, BaseIndex(HeapReg, ptr, TimesOne),
+                               temp, static_cast<LoadStoreSize>(8 * byteSize),
+                               isSigned ? SignExtend : ZeroExtend);
+        return;
+    }
+
+    masm.ma_load(ToOutRegister64(lir).reg, BaseIndex(HeapReg, ptr, TimesOne),
+                 static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+
+    memoryBarrier(mir->barrierAfter());
+}
+
+void
+CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
+{
+    emitWasmLoadI64(lir);
+}
+
+void
+CodeGeneratorMIPS64::visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* lir)
+{
+    emitWasmLoadI64(lir);
+}
+
+template <typename T>
+void
+CodeGeneratorMIPS64::emitWasmStoreI64(T* lir)
+{
+    const MWasmStore* mir = lir->mir();
+
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+
+    uint32_t offset = mir->offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+
+    Register ptr = ToRegister(lir->ptr());
+
+    // Maybe add the offset.
+    if (offset) {
+        Register ptrPlusOffset = ToRegister(lir->ptrCopy());
+        masm.addPtr(Imm32(offset), ptrPlusOffset);
+        ptr = ptrPlusOffset;
+    } else {
+        MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
+    }
+
+    unsigned byteSize = mir->byteSize();
+    bool isSigned;
+
+    switch (mir->accessType()) {
+      case Scalar::Int8:    isSigned = true;  break;
+      case Scalar::Uint8:   isSigned = false; break;
+      case Scalar::Int16:   isSigned = true;  break;
+      case Scalar::Uint16:  isSigned = false; break;
+      case Scalar::Int32:   isSigned = true;  break;
+      case Scalar::Uint32:  isSigned = false; break;
+      case Scalar::Int64:   isSigned = true;  break;
+      default: MOZ_CRASH("unexpected array type");
+    }
+
+    memoryBarrier(mir->barrierBefore());
+
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        masm.ma_store_unaligned(ToRegister64(lir->value()).reg, BaseIndex(HeapReg, ptr, TimesOne),
+                                temp, static_cast<LoadStoreSize>(8 * byteSize),
+                                isSigned ? SignExtend : ZeroExtend);
+        return;
+    }
+    masm.ma_store(ToRegister64(lir->value()).reg, BaseIndex(HeapReg, ptr, TimesOne),
+                  static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+
+    memoryBarrier(mir->barrierAfter());
+}
+
+void
+CodeGeneratorMIPS64::visitWasmStoreI64(LWasmStoreI64* lir)
+{
+    emitWasmStoreI64(lir);
+}
+
+void
+CodeGeneratorMIPS64::visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* lir)
+{
+    emitWasmStoreI64(lir);
+}
+
+void
+CodeGeneratorMIPS64::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
+{
+    const MWasmLoadGlobalVar* mir = ins->mir();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    MOZ_ASSERT(mir->type() == MIRType::Int64);
+    masm.load64(Address(GlobalReg, addr), ToOutRegister64(ins));
+}
+
+void
+CodeGeneratorMIPS64::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
+{
+    const MWasmStoreGlobalVar* mir = ins->mir();
+    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    MOZ_ASSERT(mir->value()->type() == MIRType::Int64);
+    masm.store64(ToRegister64(ins->value()), Address(GlobalReg, addr));
 }
 
 void
@@ -367,6 +592,173 @@ CodeGeneratorMIPS64::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);
     masm.as_dmfc1(ToRegister(lir->output()), ToFloatRegister(lir->input()));
+}
+
+void
+CodeGeneratorMIPS64::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
+{
+    const LAllocation* input = lir->getOperand(0);
+    Register output = ToRegister(lir->output());
+
+    if (lir->mir()->isUnsigned())
+        masm.ma_dext(output, ToRegister(input), Imm32(0), Imm32(32));
+    else
+        masm.ma_sll(output, ToRegister(input), Imm32(0));
+}
+
+void
+CodeGeneratorMIPS64::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
+{
+    const LAllocation* input = lir->getOperand(0);
+    Register output = ToRegister(lir->output());
+
+    if (lir->mir()->bottomHalf()) {
+        if (input->isMemory())
+            masm.load32(ToAddress(input), output);
+        else
+            masm.ma_sll(output, ToRegister(input), Imm32(0));
+    } else {
+        MOZ_CRASH("Not implemented.");
+    }
+}
+
+void
+CodeGeneratorMIPS64::visitClzI64(LClzI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+    masm.clz64(input, output.reg);
+}
+
+void
+CodeGeneratorMIPS64::visitCtzI64(LCtzI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+    masm.ctz64(input, output.reg);
+}
+
+void
+CodeGeneratorMIPS64::visitNotI64(LNotI64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register output = ToRegister(lir->output());
+
+    masm.cmp64Set(Assembler::Equal, input.reg, Imm32(0), output);
+}
+
+void
+CodeGeneratorMIPS64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+
+    MWasmTruncateToInt64* mir = lir->mir();
+    MIRType fromType = mir->input()->type();
+
+    MOZ_ASSERT(fromType == MIRType::Double || fromType == MIRType::Float32);
+
+    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    if (mir->isUnsigned()) {
+        Label isLarge, done;
+
+        if (fromType == MIRType::Double) {
+            masm.loadConstantDouble(double(INT64_MAX), ScratchDoubleReg);
+            masm.ma_bc1d(ScratchDoubleReg, input, &isLarge,
+                         Assembler::DoubleLessThanOrEqual, ShortJump);
+
+            masm.as_truncld(ScratchDoubleReg, input);
+        } else {
+            masm.loadConstantFloat32(float(INT64_MAX), ScratchFloat32Reg);
+            masm.ma_bc1s(ScratchFloat32Reg, input, &isLarge,
+                         Assembler::DoubleLessThanOrEqual, ShortJump);
+
+            masm.as_truncls(ScratchDoubleReg, input);
+        }
+
+        // Check that the result is in the uint64_t range.
+        masm.moveFromDouble(ScratchDoubleReg, output);
+        masm.as_cfc1(ScratchRegister, Assembler::FCSR);
+        masm.as_ext(ScratchRegister, ScratchRegister, 16, 1);
+        masm.ma_dsrl(SecondScratchReg, output, Imm32(63));
+        masm.ma_or(SecondScratchReg, ScratchRegister);
+        masm.ma_b(SecondScratchReg, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+        masm.ma_b(&done, ShortJump);
+
+        // The input is greater than double(INT64_MAX).
+        masm.bind(&isLarge);
+        if (fromType == MIRType::Double) {
+            masm.as_subd(ScratchDoubleReg, input, ScratchDoubleReg);
+            masm.as_truncld(ScratchDoubleReg, ScratchDoubleReg);
+        } else {
+            masm.as_subs(ScratchDoubleReg, input, ScratchDoubleReg);
+            masm.as_truncls(ScratchDoubleReg, ScratchDoubleReg);
+        }
+
+        // Check that the result is in the uint64_t range.
+        masm.moveFromDouble(ScratchDoubleReg, output);
+        masm.as_cfc1(ScratchRegister, Assembler::FCSR);
+        masm.as_ext(ScratchRegister, ScratchRegister, 16, 1);
+        masm.ma_dsrl(SecondScratchReg, output, Imm32(63));
+        masm.ma_or(SecondScratchReg, ScratchRegister);
+        masm.ma_b(SecondScratchReg, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+        masm.ma_li(ScratchRegister, Imm32(1));
+        masm.ma_dins(output, ScratchRegister, Imm32(63), Imm32(1));
+
+        masm.bind(&done);
+        return;
+    }
+
+    // When the input value is Infinity, NaN, or rounds to an integer outside the
+    // range [INT64_MIN; INT64_MAX + 1[, the Invalid Operation flag is set in the FCSR.
+    if (fromType == MIRType::Double)
+        masm.as_truncld(ScratchDoubleReg, input);
+    else
+        masm.as_truncls(ScratchDoubleReg, input);
+
+    // Check that the result is in the int64_t range.
+    masm.as_cfc1(output, Assembler::FCSR);
+    masm.as_ext(output, output, 16, 1);
+    masm.ma_b(output, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+    masm.bind(ool->rejoin());
+    masm.moveFromDouble(ScratchDoubleReg, output);
+}
+
+void
+CodeGeneratorMIPS64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
+{
+    Register input = ToRegister(lir->input());
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    MIRType outputType = lir->mir()->type();
+    MOZ_ASSERT(outputType == MIRType::Double || outputType == MIRType::Float32);
+
+    if (outputType == MIRType::Double) {
+        if (lir->mir()->isUnsigned())
+            masm.convertUInt64ToDouble(input, output);
+        else
+            masm.convertInt64ToDouble(input, output);
+    } else {
+        if (lir->mir()->isUnsigned())
+            masm.convertUInt64ToFloat32(input, output);
+        else
+            masm.convertInt64ToFloat32(input, output);
+    }
+}
+
+void
+CodeGeneratorMIPS64::visitTestI64AndBranch(LTestI64AndBranch* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    MBasicBlock* ifTrue = lir->ifTrue();
+    MBasicBlock* ifFalse = lir->ifFalse();
+
+    emitBranch(input.reg, Imm32(0), Assembler::NonZero, ifTrue, ifFalse);
 }
 
 void

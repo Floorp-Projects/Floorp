@@ -15,7 +15,7 @@ its prototype:
 
 `enabled`
 :   A boolean value indicating whether this `Debugger` instance's handlers,
-    breakpoints, watchpoints, and the like are currently enabled. It is an
+    breakpoints, and the like are currently enabled. It is an
     accessor property with a getter and setter: assigning to it enables or
     disables this `Debugger` instance; reading it produces true if the
     instance is enabled, or false otherwise. This property is initially
@@ -57,7 +57,7 @@ its prototype:
 
 `uncaughtExceptionHook`
 :   Either `null` or a function that SpiderMonkey calls when a call to a
-    debug event handler, breakpoint handler, watchpoint handler, or similar
+    debug event handler, breakpoint handler, or similar
     function throws some exception, which we refer to as
     <i>debugger-exception</i> here. Exceptions thrown in the debugger are
     not propagated to debuggee code; instead, SpiderMonkey calls this
@@ -153,29 +153,6 @@ compartment.
 
     SpiderMonkey only calls `onEnterFrame` to report
     [visible][vf], non-`"debugger"` frames.
-
-<code>onThrow(<i>frame</i>, <i>value</i>) <i>(future plan)</i></code>
-:   The exception <i>value</i> is being thrown by <i>frame</i>, which is
-    running debuggee code. This method should return a
-    [resumption value][rv] specifying how the debuggee's execution should
-    proceed. If it returns `undefined`, the exception is thrown as normal.
-
-    A call to the `onThrow` handler is typically followed by one or more
-    calls to the `onExceptionUnwind` handler.
-
-    *(pending discussion)* If the debuggee executes
-    `try { throw 0; } finally { f(); }` and `f()` executes without error,
-    the `onThrow` handler is called only once. The debugger is not notified
-    when the exception is set aside in order to execute the `finally` block,
-    nor when it is restored after the `finally` block completes normally.
-
-    *(An alternative design here would be: onException(status, frame, value)
-    where status is one of the strings "throw", "unwind", "catch",
-    "finally", "rethrow". JS\_SaveExceptionState would trigger a "finally"
-    event, JS\_RestoreExceptionState would trigger a "rethrow",
-    JS\_ClearPendingException would trigger a "catch"; not sure what
-    JS\_DropExceptionState or a return/throw from a finally block should
-    do.)*
 
 <code>onExceptionUnwind(<i>frame</i>, <i>value</i>)</code>
 :   The exception <i>value</i> has been thrown, and has propagated to
@@ -467,9 +444,6 @@ other kinds of objects.
 
 `clearAllBreakpoints()`
 :   Remove all breakpoints set using this `Debugger` instance.
-
-`clearAllWatchpoints()` <i>(future plan)</i>
-:   Clear all watchpoints owned by this `Debugger` instance.
 
 `findAllGlobals()`
 :   Return an array of [`Debugger.Object`][object] instances referring to all the

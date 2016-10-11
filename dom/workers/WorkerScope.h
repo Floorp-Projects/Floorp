@@ -163,6 +163,8 @@ public:
   already_AddRefed<cache::CacheStorage>
   GetCaches(ErrorResult& aRv);
 
+  bool IsSecureContext() const;
+
   already_AddRefed<Promise>
   CreateImageBitmap(const ImageBitmapSource& aImage, ErrorResult& aRv);
 

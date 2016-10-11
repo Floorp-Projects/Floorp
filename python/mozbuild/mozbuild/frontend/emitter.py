@@ -650,12 +650,19 @@ class TreeMetadataEmitter(LoggingMixin):
                     raise SandboxValidationError(
                         'SYMBOLS_FILE cannot be used along DEFFILE or '
                         'LD_VERSION_SCRIPT.', context)
-                if not os.path.exists(symbols_file.full_path):
-                    raise SandboxValidationError(
-                        'Path specified in SYMBOLS_FILE does not exist: %s '
-                        '(resolved to %s)' % (symbols_file,
-                        symbols_file.full_path), context)
-                shared_args['symbols_file'] = True
+                if isinstance(symbols_file, SourcePath):
+                    if not os.path.exists(symbols_file.full_path):
+                        raise SandboxValidationError(
+                            'Path specified in SYMBOLS_FILE does not exist: %s '
+                            '(resolved to %s)' % (symbols_file,
+                            symbols_file.full_path), context)
+                    shared_args['symbols_file'] = True
+                else:
+                    if symbols_file.target_basename not in generated_files:
+                        raise SandboxValidationError(
+                            ('Objdir file specified in SYMBOLS_FILE not in ' +
+                             'GENERATED_FILES: %s') % (symbols_file,), context)
+                    shared_args['symbols_file'] = symbols_file.target_basename
 
             if shared_lib:
                 lib = SharedLibrary(context, libname, **shared_args)
@@ -667,7 +674,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     yield ChromeManifestEntry(context,
                         'components/components.manifest',
                         ManifestBinaryComponent('components', lib.lib_name))
-                if symbols_file:
+                if symbols_file and isinstance(symbols_file, SourcePath):
                     script = mozpath.join(
                         mozpath.dirname(mozpath.dirname(__file__)),
                         'action', 'generate_symbols_file.py')

@@ -515,7 +515,7 @@ class SharedLibrary(Library):
     MAX_VARIANT = 3
 
     def __init__(self, context, basename, real_name=None, is_sdk=False,
-            soname=None, variant=None, symbols_file=False):
+                 soname=None, variant=None, symbols_file=False):
         assert(variant in range(1, self.MAX_VARIANT) or variant is None)
         Library.__init__(self, context, basename, real_name, is_sdk)
         self.variant = variant
@@ -544,12 +544,19 @@ class SharedLibrary(Library):
         else:
             self.soname = self.lib_name
 
-        if not symbols_file:
+        if symbols_file is False:
+            # No symbols file.
             self.symbols_file = None
-        elif context.config.substs['OS_TARGET'] == 'WINNT':
-            self.symbols_file = '%s.def' % self.lib_name
+        elif symbols_file is True:
+            # Symbols file with default name.
+            if context.config.substs['OS_TARGET'] == 'WINNT':
+                self.symbols_file = '%s.def' % self.lib_name
+            else:
+                self.symbols_file = '%s.symbols' % self.lib_name
         else:
-            self.symbols_file = '%s.symbols' % self.lib_name
+            # Explicitly provided name.
+            self.symbols_file = symbols_file
+
 
 
 class ExternalLibrary(object):
