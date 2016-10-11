@@ -330,46 +330,6 @@ nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
 }
 
 
-NS_IMETHODIMP
-nsPrintOptions::ShowPrintSetupDialog(nsIPrintSettings *aPS)
-{
-  NS_ENSURE_ARG_POINTER(aPS);
-  nsresult rv;
-
-  // create a nsIArray of the parameters
-  // being passed to the window
-  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
-
-  nsCOMPtr<nsISupports> psSupports = do_QueryInterface(aPS);
-  NS_ASSERTION(psSupports, "PrintSettings must be a supports");
-  array->AppendElement(psSupports, /*weak =*/ false);
-
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock =
-      do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  ioParamBlock->SetInt(0, 0);
-
-  nsCOMPtr<nsISupports> blkSupps = do_QueryInterface(ioParamBlock);
-  NS_ASSERTION(blkSupps, "IOBlk must be a supports");
-  array->AppendElement(blkSupps, /*weak =*/ false);
-
-  nsCOMPtr<nsIWindowWatcher> wwatch =
-      do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIDOMWindowProxy> parent;
-  wwatch->GetActiveWindow(getter_AddRefs(parent));
-  // null |parent| is non-fatal
-
-  nsCOMPtr<mozIDOMWindowProxy> newWindow;
-
-  return wwatch->OpenWindow(parent,
-                            "chrome://global/content/printPageSetup.xul",
-                            "_blank","chrome,modal,centerscreen", array,
-                            getter_AddRefs(newWindow));
-}
-
 /** ---------------------------------------------------
  *  Helper function - Creates the "prefix" for the pref
  *  It is either "print."
