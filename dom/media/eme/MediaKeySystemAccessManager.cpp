@@ -65,11 +65,6 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
                                      const nsAString& aKeySystem,
                                      const Sequence<MediaKeySystemConfiguration>& aConfigs)
 {
-  if (aKeySystem.IsEmpty() || aConfigs.IsEmpty()) {
-    aPromise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
-                          NS_LITERAL_CSTRING("Invalid keysystem type or invalid options sequence"));
-    return;
-  }
   Request(aPromise, aKeySystem, aConfigs, RequestType::Initial);
 }
 
