@@ -1969,7 +1969,7 @@ MediaDecoderStateMachine::MaybeStartBuffering()
                    (OutOfDecodedVideo() && mReader->IsWaitingVideoData());
   }
   if (shouldBuffer) {
-    SetState(DECODER_STATE_BUFFERING);
+    mStateObj->SetState<BufferingState>();
   }
 }
 
@@ -2020,54 +2020,6 @@ MediaDecoderStateMachine::ToStateStr()
 {
   MOZ_ASSERT(OnTaskQueue());
   return ToStateStr(mState);
-}
-
-void
-MediaDecoderStateMachine::SetState(State aState)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  if (mState == aState) {
-    return;
-  }
-
-  DECODER_LOG("MDSM state: %s -> %s", ToStateStr(), ToStateStr(aState));
-
-  MOZ_ASSERT(mState == mStateObj->GetState());
-  mStateObj->Exit();
-  mState = aState;
-
-  switch (mState) {
-    case DECODER_STATE_DECODING_METADATA:
-      mStateObj = MakeUnique<DecodeMetadataState>(this);
-      break;
-    case DECODER_STATE_WAIT_FOR_CDM:
-      mStateObj = MakeUnique<WaitForCDMState>(this);
-      break;
-    case DECODER_STATE_DORMANT:
-      mStateObj = MakeUnique<DormantState>(this);
-      break;
-    case DECODER_STATE_DECODING_FIRSTFRAME:
-      mStateObj = MakeUnique<DecodingFirstFrameState>(this);
-      break;
-    case DECODER_STATE_DECODING:
-      mStateObj = MakeUnique<DecodingState>(this);
-      break;
-    case DECODER_STATE_BUFFERING:
-      mStateObj = MakeUnique<BufferingState>(this);
-      break;
-    case DECODER_STATE_COMPLETED:
-      mStateObj = MakeUnique<CompletedState>(this);
-      break;
-    case DECODER_STATE_SHUTDOWN:
-      mStateObj = MakeUnique<ShutdownState>(this);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid state.");
-      break;
-  }
-
-  MOZ_ASSERT(mState == mStateObj->GetState());
-  mStateObj->Enter();
 }
 
 void MediaDecoderStateMachine::VolumeChanged()
@@ -2132,7 +2084,7 @@ MediaDecoderStateMachine::Shutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  SetState(DECODER_STATE_SHUTDOWN);
+  mStateObj->SetState<ShutdownState>();
 
   mDelayedScheduler.Reset();
 
