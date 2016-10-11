@@ -33,7 +33,7 @@ add_task(function* () {
   yield wait;
 
   REQUESTS.forEach(([ fmt ], i) => {
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
+    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(i),
       "GET", CONTENT_TYPE_SJS + "?fmt=" + fmt, {
         status: 200,
         statusText: "OK"
