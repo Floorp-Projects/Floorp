@@ -325,10 +325,6 @@ private:
              ? nsGkAtoms::type : nsGkAtoms::mozframetype;
   }
 
-  // Update the permission manager's app-id refcount based on mOwnerContent's
-  // own-or-containing-app.
-  void ResetPermissionManagerStatus();
-
   void InitializeBrowserAPI();
   void DestroyBrowserFrameScripts();
 
@@ -353,9 +349,6 @@ private:
   // messages from the frame have been received, we keep a strong reference to
   // our <browser> element.
   RefPtr<mozilla::dom::Element> mOwnerContentStrong;
-
-  // Note: this variable must be modified only by ResetPermissionManagerStatus()
-  uint32_t mAppIdSentToPermissionManager;
 
   // Stores the root frame of the subdocument while the subdocument is being
   // reframed. Used to restore the presentation after reframing.

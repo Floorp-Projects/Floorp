@@ -28,6 +28,10 @@ class ArenaCellSet;
  * GC's remembered set. Entries in the store buffer that cannot be represented
  * with the simple pointer-to-a-pointer scheme must derive from this class and
  * use the generic store buffer interface.
+ *
+ * A single BufferableRef entry in the generic buffer can represent many entries
+ * in the remembered set.  For example js::OrderedHashTableRef represents all
+ * the incoming edges corresponding to keys in an ordered hash table.
  */
 class BufferableRef
 {

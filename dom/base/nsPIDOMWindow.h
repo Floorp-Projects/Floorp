@@ -811,6 +811,11 @@ public:
     return mInnerObjectsFreed;
   }
 
+  /**
+   * Check whether this window is a secure context.
+   */
+  bool IsSecureContext() const;
+
 protected:
   void CreatePerformanceObjectIfNeeded();
 };

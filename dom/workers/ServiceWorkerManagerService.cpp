@@ -8,7 +8,6 @@
 #include "ServiceWorkerManagerParent.h"
 #include "ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
@@ -23,84 +22,6 @@ namespace workers {
 namespace {
 
 ServiceWorkerManagerService* sInstance = nullptr;
-
-struct NotifySoftUpdateData
-{
-  RefPtr<ServiceWorkerManagerParent> mParent;
-  RefPtr<ContentParent> mContentParent;
-
-  ~NotifySoftUpdateData()
-  {
-    MOZ_ASSERT(!mContentParent);
-  }
-};
-
-class NotifySoftUpdateIfPrincipalOkRunnable final : public Runnable
-{
-public:
-  NotifySoftUpdateIfPrincipalOkRunnable(
-      nsAutoPtr<nsTArray<NotifySoftUpdateData>>& aData,
-      const PrincipalOriginAttributes& aOriginAttributes,
-      const nsAString& aScope)
-    : mData(aData)
-    , mOriginAttributes(aOriginAttributes)
-    , mScope(aScope)
-    , mBackgroundThread(NS_GetCurrentThread())
-  {
-    AssertIsInMainProcess();
-    AssertIsOnBackgroundThread();
-
-    MOZ_ASSERT(mData && !aData);
-    MOZ_ASSERT(mBackgroundThread);
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    if (NS_IsMainThread()) {
-      for (uint32_t i = 0; i < mData->Length(); ++i) {
-        NotifySoftUpdateData& data = mData->ElementAt(i);
-        nsTArray<TabContext> contextArray =
-          data.mContentParent->GetManagedTabContext();
-        // mContentParent needs to be released in the main thread.
-        data.mContentParent = nullptr;
-        // We only send the notification about the soft update to the
-        // tabs/apps with the same appId and inIsolatedMozBrowser values.
-        // Sending a notification to the wrong process will make the process
-        // to be killed.
-        for (uint32_t j = 0; j < contextArray.Length(); ++j) {
-          if ((contextArray[j].OwnOrContainingAppId() == mOriginAttributes.mAppId) &&
-              (contextArray[j].IsIsolatedMozBrowserElement() == mOriginAttributes.mInIsolatedMozBrowser)) {
-            continue;
-          }
-          // Array entries with no mParent won't receive any notification.
-          data.mParent = nullptr;
-        }
-      }
-
-      MOZ_ALWAYS_SUCCEEDS(mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL));
-      return NS_OK;
-    }
-
-    AssertIsOnBackgroundThread();
-
-    for (uint32_t i = 0; i < mData->Length(); ++i) {
-      NotifySoftUpdateData& data = mData->ElementAt(i);
-      MOZ_ASSERT(!(data.mContentParent));
-      ServiceWorkerManagerParent* parent = data.mParent;
-      if (parent && !parent->ActorDestroyed()) {
-        Unused << parent->SendNotifySoftUpdate(mOriginAttributes, mScope);
-      }
-    }
-    return NS_OK;
-  }
-
-private:
-  nsAutoPtr<nsTArray<NotifySoftUpdateData>> mData;
-  PrincipalOriginAttributes mOriginAttributes;
-  nsString mScope;
-  nsCOMPtr<nsIThread> mBackgroundThread;
-};
 
 } // namespace
 
@@ -197,42 +118,21 @@ ServiceWorkerManagerService::PropagateSoftUpdate(
 {
   AssertIsOnBackgroundThread();
 
-  nsAutoPtr<nsTArray<NotifySoftUpdateData>> notifySoftUpdateDataArray(
-      new nsTArray<NotifySoftUpdateData>());
   DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
     MOZ_ASSERT(parent);
+
+    nsString scope(aScope);
+    Unused << parent->SendNotifySoftUpdate(aOriginAttributes,
+                                           scope);
 
 #ifdef DEBUG
     if (parent->ID() == aParentID) {
       parentFound = true;
     }
 #endif
-
-    RefPtr<ContentParent> contentParent = parent->GetContentParent();
-
-    // If the ContentParent is null we are dealing with a same-process actor.
-    if (!contentParent) {
-      Unused << parent->SendNotifySoftUpdate(aOriginAttributes,
-                                             nsString(aScope));
-      continue;
-    }
-
-    NotifySoftUpdateData* data = notifySoftUpdateDataArray->AppendElement();
-    data->mContentParent.swap(contentParent);
-    data->mParent.swap(parent);
   }
-
-  if (notifySoftUpdateDataArray->IsEmpty()) {
-    return;
-  }
-
-  RefPtr<NotifySoftUpdateIfPrincipalOkRunnable> runnable =
-    new NotifySoftUpdateIfPrincipalOkRunnable(notifySoftUpdateDataArray,
-                                              aOriginAttributes, aScope);
-  MOZ_ASSERT(!notifySoftUpdateDataArray);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 
 #ifdef DEBUG
   MOZ_ASSERT(parentFound);

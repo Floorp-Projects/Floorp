@@ -42,6 +42,42 @@ CodeGeneratorMIPSShared::CodeGeneratorMIPSShared(MIRGenerator* gen, LIRGraph* gr
 {
 }
 
+Operand
+CodeGeneratorMIPSShared::ToOperand(const LAllocation& a)
+{
+    if (a.isGeneralReg())
+        return Operand(a.toGeneralReg()->reg());
+    if (a.isFloatReg())
+        return Operand(a.toFloatReg()->reg());
+    return Operand(masm.getStackPointer(), ToStackOffset(&a));
+}
+
+Operand
+CodeGeneratorMIPSShared::ToOperand(const LAllocation* a)
+{
+    return ToOperand(*a);
+}
+
+Operand
+CodeGeneratorMIPSShared::ToOperand(const LDefinition* def)
+{
+    return ToOperand(def->output());
+}
+
+#ifdef JS_PUNBOX64
+Operand
+CodeGeneratorMIPSShared::ToOperandOrRegister64(const LInt64Allocation input)
+{
+    return ToOperand(input.value());
+}
+#else
+Register64
+CodeGeneratorMIPSShared::ToOperandOrRegister64(const LInt64Allocation input)
+{
+    return ToRegister64(input);
+}
+#endif
+
 void
 CodeGeneratorMIPSShared::branchToBlock(Assembler::FloatFormat fmt, FloatRegister lhs, FloatRegister rhs,
                                        MBasicBlock* mir, Assembler::DoubleCondition cond)
@@ -297,6 +333,22 @@ CodeGeneratorMIPSShared::visitAddI(LAddI* ins)
 }
 
 void
+CodeGeneratorMIPSShared::visitAddI64(LAddI64* lir)
+{
+    const LInt64Allocation lhs = lir->getInt64Operand(LAddI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LAddI64::Rhs);
+
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+
+    if (IsConstant(rhs)) {
+        masm.add64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
+        return;
+    }
+
+    masm.add64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+}
+
+void
 CodeGeneratorMIPSShared::visitSubI(LSubI* ins)
 {
     const LAllocation* lhs = ins->getOperand(0);
@@ -321,6 +373,22 @@ CodeGeneratorMIPSShared::visitSubI(LSubI* ins)
         masm.ma_subTestOverflow(ToRegister(dest), ToRegister(lhs), ToRegister(rhs), &overflow);
 
     bailoutFrom(&overflow, ins->snapshot());
+}
+
+void
+CodeGeneratorMIPSShared::visitSubI64(LSubI64* lir)
+{
+    const LInt64Allocation lhs = lir->getInt64Operand(LSubI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LSubI64::Rhs);
+
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+
+    if (IsConstant(rhs)) {
+        masm.sub64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
+        return;
+    }
+
+    masm.sub64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
 }
 
 void
@@ -442,6 +510,47 @@ CodeGeneratorMIPSShared::visitMulI(LMulI* ins)
 
             masm.bind(&done);
         }
+    }
+}
+
+void
+CodeGeneratorMIPSShared::visitMulI64(LMulI64* lir)
+{
+    const LInt64Allocation lhs = lir->getInt64Operand(LMulI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LMulI64::Rhs);
+
+    MOZ_ASSERT(ToRegister64(lhs) == ToOutRegister64(lir));
+
+    if (IsConstant(rhs)) {
+        int64_t constant = ToInt64(rhs);
+        switch (constant) {
+          case -1:
+            masm.neg64(ToRegister64(lhs));
+            return;
+          case 0:
+            masm.xor64(ToRegister64(lhs), ToRegister64(lhs));
+            return;
+          case 1:
+            // nop
+            return;
+          case 2:
+            masm.add64(ToRegister64(lhs), ToRegister64(lhs));
+            return;
+          default:
+            if (constant > 0) {
+                // Use shift if constant is power of 2.
+                int32_t shift = mozilla::FloorLog2(constant);
+                if (int64_t(1) << shift == constant) {
+                    masm.lshift64(Imm32(shift), ToRegister64(lhs));
+                    return;
+                }
+            }
+            Register temp = ToTempRegisterOrInvalid(lir->temp());
+            masm.mul64(Imm64(constant), ToRegister64(lhs), temp);
+        }
+    } else {
+        Register temp = ToTempRegisterOrInvalid(lir->temp());
+        masm.mul64(ToOperandOrRegister64(rhs), ToRegister64(lhs), temp);
     }
 }
 
@@ -756,6 +865,38 @@ CodeGeneratorMIPSShared::visitBitOpI(LBitOpI* ins)
 }
 
 void
+CodeGeneratorMIPSShared::visitBitOpI64(LBitOpI64* lir)
+{
+    const LInt64Allocation lhs = lir->getInt64Operand(LBitOpI64::Lhs);
+    const LInt64Allocation rhs = lir->getInt64Operand(LBitOpI64::Rhs);
+
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+
+    switch (lir->bitop()) {
+      case JSOP_BITOR:
+        if (IsConstant(rhs))
+            masm.or64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
+        else
+            masm.or64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+        break;
+      case JSOP_BITXOR:
+        if (IsConstant(rhs))
+            masm.xor64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
+        else
+            masm.xor64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+        break;
+      case JSOP_BITAND:
+        if (IsConstant(rhs))
+            masm.and64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
+        else
+            masm.and64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+        break;
+      default:
+        MOZ_CRASH("unexpected binary opcode");
+    }
+}
+
+void
 CodeGeneratorMIPSShared::visitShiftI(LShiftI* ins)
 {
     Register lhs = ToRegister(ins->lhs());
@@ -815,6 +956,78 @@ CodeGeneratorMIPSShared::visitShiftI(LShiftI* ins)
 }
 
 void
+CodeGeneratorMIPSShared::visitShiftI64(LShiftI64* lir)
+{
+    const LInt64Allocation lhs = lir->getInt64Operand(LShiftI64::Lhs);
+    LAllocation* rhs = lir->getOperand(LShiftI64::Rhs);
+
+    MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+
+    if (rhs->isConstant()) {
+        int32_t shift = int32_t(rhs->toConstant()->toInt64() & 0x3F);
+        switch (lir->bitop()) {
+          case JSOP_LSH:
+            if (shift)
+                masm.lshift64(Imm32(shift), ToRegister64(lhs));
+            break;
+          case JSOP_RSH:
+            if (shift)
+                masm.rshift64Arithmetic(Imm32(shift), ToRegister64(lhs));
+            break;
+          case JSOP_URSH:
+            if (shift)
+                masm.rshift64(Imm32(shift), ToRegister64(lhs));
+            break;
+          default:
+            MOZ_CRASH("Unexpected shift op");
+        }
+        return;
+    }
+
+    switch (lir->bitop()) {
+      case JSOP_LSH:
+        masm.lshift64(ToRegister(rhs), ToRegister64(lhs));
+        break;
+      case JSOP_RSH:
+        masm.rshift64Arithmetic(ToRegister(rhs), ToRegister64(lhs));
+        break;
+      case JSOP_URSH:
+        masm.rshift64(ToRegister(rhs), ToRegister64(lhs));
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+}
+
+void
+CodeGeneratorMIPSShared::visitRotateI64(LRotateI64* lir)
+{
+    MRotate* mir = lir->mir();
+    LAllocation* count = lir->count();
+
+    Register64 input = ToRegister64(lir->input());
+    Register64 output = ToOutRegister64(lir);
+    Register temp = ToTempRegisterOrInvalid(lir->temp());
+
+    MOZ_ASSERT(input == output);
+
+    if (count->isConstant()) {
+        int32_t c = int32_t(count->toConstant()->toInt64() & 0x3F);
+        if (!c)
+            return;
+        if (mir->isLeftRotate())
+            masm.rotateLeft64(Imm32(c), input, output, temp);
+        else
+            masm.rotateRight64(Imm32(c), input, output, temp);
+    } else {
+        if (mir->isLeftRotate())
+            masm.rotateLeft64(ToRegister(count), input, output, temp);
+        else
+            masm.rotateRight64(ToRegister(count), input, output, temp);
+    }
+}
+
+void
 CodeGeneratorMIPSShared::visitUrshD(LUrshD* ins)
 {
     Register lhs = ToRegister(ins->lhs());
@@ -858,6 +1071,16 @@ CodeGeneratorMIPSShared::visitPopcntI(LPopcntI* ins)
     Register tmp = ToRegister(ins->temp());
 
     masm.popcnt32(input, output, tmp);
+}
+
+void
+CodeGeneratorMIPSShared::visitPopcntI64(LPopcntI64* ins)
+{
+    Register64 input = ToRegister64(ins->getInt64Operand(0));
+    Register64 output = ToOutRegister64(ins);
+    Register tmp = ToRegister(ins->getTemp(0));
+
+    masm.popcnt64(input, output, tmp);
 }
 
 void
@@ -1309,7 +1532,29 @@ CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCh
                 masm.as_truncwd(ScratchFloat32Reg, ScratchDoubleReg);
                 masm.jump(ool->rejoin());
             }
+        } else if (toType == MIRType::Int64) {
+            if (fromType == MIRType::Double) {
+                masm.loadConstantDouble(double(INT64_MIN), ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleLessThan, input, ScratchDoubleReg, &fail);
+
+                masm.loadConstantDouble(double(INT64_MAX) + 1.0, ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input,
+                                  ScratchDoubleReg, &fail);
+                masm.jump(ool->rejoin());
+            }
         }
+    } else {
+        if (toType == MIRType::Int64) {
+            if (fromType == MIRType::Double) {
+                masm.loadConstantDouble(double(-1), ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, &fail);
+
+                masm.loadConstantDouble(double(UINT64_MAX) + 1.0, ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input,
+                                  ScratchDoubleReg, &fail);
+                masm.jump(ool->rejoin());
+            }
+       }
     }
 
     // Handle errors.
@@ -1643,8 +1888,9 @@ CodeGeneratorMIPSShared::visitWasmCallI64(LWasmCallI64* ins)
     emitWasmCallBase(ins);
 }
 
+template <typename T>
 void
-CodeGeneratorMIPSShared::visitWasmLoad(LWasmLoad* lir)
+CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
@@ -1680,21 +1926,55 @@ CodeGeneratorMIPSShared::visitWasmLoad(LWasmLoad* lir)
 
     memoryBarrier(mir->barrierBefore());
 
+    BaseIndex address(HeapReg, ptr, TimesOne);
+
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        if (isFloat) {
+            if (byteSize == 4)
+                masm.loadUnalignedFloat32(address, temp, ToFloatRegister(lir->output()));
+            else
+                masm.loadUnalignedDouble(address, temp, ToFloatRegister(lir->output()));
+        } else {
+            masm.ma_load_unaligned(ToRegister(lir->output()), address, temp,
+                                   static_cast<LoadStoreSize>(8 * byteSize),
+                                   isSigned ? SignExtend : ZeroExtend);
+        }
+
+        memoryBarrier(mir->barrierAfter());
+        return;
+    }
+
     if (isFloat) {
-        if (byteSize == 4) {
-            masm.loadFloat32(BaseIndex(HeapReg, ptr, TimesOne), ToFloatRegister(lir->output()));
-        } else
-            masm.loadDouble(BaseIndex(HeapReg, ptr, TimesOne), ToFloatRegister(lir->output()));
+        if (byteSize == 4)
+            masm.loadFloat32(address, ToFloatRegister(lir->output()));
+        else
+            masm.loadDouble(address, ToFloatRegister(lir->output()));
     } else {
-        masm.ma_load(ToRegister(lir->output()), BaseIndex(HeapReg, ptr, TimesOne),
-                      static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+        masm.ma_load(ToRegister(lir->output()), address,
+                     static_cast<LoadStoreSize>(8 * byteSize),
+                     isSigned ? SignExtend : ZeroExtend);
     }
 
     memoryBarrier(mir->barrierAfter());
 }
 
 void
-CodeGeneratorMIPSShared::visitWasmStore(LWasmStore* lir)
+CodeGeneratorMIPSShared::visitWasmLoad(LWasmLoad* lir)
+{
+    emitWasmLoad(lir);
+}
+
+void
+CodeGeneratorMIPSShared::visitWasmUnalignedLoad(LWasmUnalignedLoad* lir)
+{
+    emitWasmLoad(lir);
+}
+
+template <typename T>
+void
+CodeGeneratorMIPSShared::emitWasmStore(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
@@ -1731,17 +2011,50 @@ CodeGeneratorMIPSShared::visitWasmStore(LWasmStore* lir)
 
     memoryBarrier(mir->barrierBefore());
 
+    BaseIndex address(HeapReg, ptr, TimesOne);
+
+    if (mir->isUnaligned()) {
+        Register temp = ToRegister(lir->getTemp(1));
+
+        if (isFloat) {
+            if (byteSize == 4)
+                masm.storeUnalignedFloat32(ToFloatRegister(lir->value()), temp, address);
+            else
+                masm.storeUnalignedDouble(ToFloatRegister(lir->value()), temp, address);
+        } else {
+            masm.ma_store_unaligned(ToRegister(lir->value()), address, temp,
+                                    static_cast<LoadStoreSize>(8 * byteSize),
+                                    isSigned ? SignExtend : ZeroExtend);
+        }
+
+        memoryBarrier(mir->barrierAfter());
+        return;
+    }
+
     if (isFloat) {
         if (byteSize == 4) {
-            masm.storeFloat32(ToFloatRegister(lir->value()), BaseIndex(HeapReg, ptr, TimesOne));
+            masm.storeFloat32(ToFloatRegister(lir->value()), address);
         } else
-            masm.storeDouble(ToFloatRegister(lir->value()), BaseIndex(HeapReg, ptr, TimesOne));
+            masm.storeDouble(ToFloatRegister(lir->value()), address);
     } else {
-        masm.ma_store(ToRegister(lir->value()), BaseIndex(HeapReg, ptr, TimesOne),
-                      static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+        masm.ma_store(ToRegister(lir->value()), address,
+                      static_cast<LoadStoreSize>(8 * byteSize),
+                      isSigned ? SignExtend : ZeroExtend);
     }
 
     memoryBarrier(mir->barrierAfter());
+}
+
+void
+CodeGeneratorMIPSShared::visitWasmStore(LWasmStore* lir)
+{
+    emitWasmStore(lir);
+}
+
+void
+CodeGeneratorMIPSShared::visitWasmUnalignedStore(LWasmUnalignedStore* lir)
+{
+    emitWasmStore(lir);
 }
 
 void
@@ -2021,6 +2334,17 @@ CodeGeneratorMIPSShared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
                              Address(StackPointer, mir->spOffset()));
         }
     }
+}
+
+void
+CodeGeneratorMIPSShared::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
+{
+    const MAsmJSPassStackArg* mir = ins->mir();
+    Address dst(StackPointer, mir->spOffset());
+    if (IsConstant(ins->arg()))
+        masm.store64(Imm64(ToInt64(ins->arg())), dst);
+    else
+        masm.store64(ToRegister64(ins->arg()), dst);
 }
 
 void

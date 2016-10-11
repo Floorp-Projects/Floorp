@@ -393,6 +393,14 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name="org.mozilla.gecko.PackageReplacedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"></action>
+            </intent-filter>
+        </receiver>
+
         <service
           android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"
           android:exported="false"/>

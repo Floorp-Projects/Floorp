@@ -43,6 +43,7 @@ EXPORTS.mozilla.dom += [
     'TypedArray.h',
     'UnionMember.h',
     'WebIDLGlobalNameHash.h',
+    'XrayExpandoClass.h',
 ]
 
 # Generated bindings reference *Binding.h, not mozilla/dom/*Binding.h. And,
