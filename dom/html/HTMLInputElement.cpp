@@ -2841,11 +2841,9 @@ HTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
 
 void
 HTMLInputElement::SetUserInput(const nsAString& aInput,
-                               const mozilla::Maybe<nsIPrincipal*>& aPrincipal) {
-  MOZ_ASSERT(aPrincipal.isSome());
-
+                               nsIPrincipal& aSubjectPrincipal) {
   if (mType == NS_FORM_INPUT_FILE &&
-      !nsContentUtils::IsSystemPrincipal(aPrincipal.value())) {
+      !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
     return;
   }
 

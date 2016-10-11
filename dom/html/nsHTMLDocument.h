@@ -211,10 +211,13 @@ public:
   void Writeln(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
                mozilla::ErrorResult& rv);
   void GetDesignMode(nsAString& aDesignMode,
-                     const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal)
+                     nsIPrincipal& aSubjectPrincipal)
   {
     GetDesignMode(aDesignMode);
   }
+  void SetDesignMode(const nsAString& aDesignMode,
+                     nsIPrincipal& aSubjectPrincipal,
+                     mozilla::ErrorResult& rv);
   void SetDesignMode(const nsAString& aDesignMode,
                      const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal,
                      mozilla::ErrorResult& rv);

@@ -67,19 +67,6 @@ interface nsIDOMDataTransfer : nsISupports
   readonly attribute nsIDOMFileList files;
 
   /**
-   * Holds a list of the format types of the data that is stored for the first
-   * item, in the same order the data was added. An empty list will be
-   * returned if no data was added.
-   */
-  readonly attribute nsISupports types;
-
-  /**
-   * Retrieves the data for a given format, or an empty string if data for
-   * that format does not exist or the data transfer contains no data.
-   */
-  DOMString getData(in DOMString format);
-
-  /**
    * Set the image to be used for dragging if a custom one is desired. Most of
    * the time, this would not be set, as a default image is created from the
    * node that was dragged.
