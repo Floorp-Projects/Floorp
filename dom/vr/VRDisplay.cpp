@@ -522,15 +522,6 @@ VRDisplay::GetPose()
   return obj.forget();
 }
 
-already_AddRefed<VRPose>
-VRDisplay::GetImmediatePose()
-{
-  gfx::VRHMDSensorState state = mClient->GetImmediateSensorState();
-  RefPtr<VRPose> obj = new VRPose(GetParentObject(), state);
-
-  return obj.forget();
-}
-
 void
 VRDisplay::ResetPose()
 {
