@@ -16,18 +16,18 @@ wasmFailValidateText(`(module (table 10 anyfunc) (func) (elem (f32.const 0) 0) $
 wasmFailValidateText(`(module (table 10 anyfunc) (elem (i32.const 10) $f0) ${callee(0)})`, /element segment does not fit/);
 wasmFailValidateText(`(module (table 10 anyfunc) (elem (i32.const 8) $f0 $f0 $f0) ${callee(0)})`, /element segment does not fit/);
 
-assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32)) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:10}}), RangeError, /elem segment does not fit/);
-assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32)) (elem (get_global 0) $f0 $f0 $f0) ${callee(0)})`, {globals:{a:8}}), RangeError, /elem segment does not fit/);
+assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:10}}), RangeError, /elem segment does not fit/);
+assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0 $f0 $f0) ${callee(0)})`, {globals:{a:8}}), RangeError, /elem segment does not fit/);
 
 assertEq(new Module(wasmTextToBinary(`(module (table 10 anyfunc) (elem (i32.const 1) $f0 $f0) (elem (i32.const 0) $f0) ${callee(0)})`)) instanceof Module, true);
 assertEq(new Module(wasmTextToBinary(`(module (table 10 anyfunc) (elem (i32.const 1) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`)) instanceof Module, true);
-wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32)) (elem (i32.const 1) $f0 $f0) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:0}});
-wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32)) (elem (get_global 0) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`, {globals:{a:1}});
+wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32 immutable)) (elem (i32.const 1) $f0 $f0) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:0}});
+wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32 immutable)) (elem (get_global 0) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`, {globals:{a:1}});
 
 var m = new Module(wasmTextToBinary(`
     (module
         (import "globals" "table" (table 10 anyfunc))
-        (import "globals" "a" (global i32))
+        (import "globals" "a" (global i32 immutable))
         (elem (get_global 0) $f0 $f0)
         ${callee(0)})
 `));

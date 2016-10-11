@@ -366,7 +366,7 @@ assertEq(i8[102], 0x0);
 
 var m = new Module(wasmTextToBinary(`
     (module
-        (import "glob" "a" (global i32))
+        (import "glob" "a" (global i32 immutable))
         (memory 1)
         (data (get_global 0) "\\0a\\0b"))
 `));
@@ -383,8 +383,8 @@ var m = new Module(wasmTextToBinary(`
     (module
         (import "a" "mem" (memory 1))
         (import "a" "tbl" (table 1 anyfunc))
-        (import $memOff "a" "memOff" (global i32))
-        (import $tblOff "a" "tblOff" (global i32))
+        (import $memOff "a" "memOff" (global i32 immutable))
+        (import $tblOff "a" "tblOff" (global i32 immutable))
         (func $f)
         (func $g)
         (data (i32.const 0) "\\01")
@@ -465,7 +465,7 @@ assertEq(i2.exports.call(0), 0x42);
 assertEq(i2.exports.call(1), 0x13);
 
 var m = new Module(wasmTextToBinary(`(module
-    (import $val "a" "val" (global i32))
+    (import $val "a" "val" (global i32 immutable))
     (import $next "a" "next" (result i32))
     (memory 1)
     (func $start (i32.store (i32.const 0) (get_global $val)))
