@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-#include "PsshParser.h"
+#include "ClearKeyCencParser.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/EndianUtils.h"
+#include "ArrayUtils.h"
+#include "BigEndian.h"
 #include <memory.h>
 #include <algorithm>
 #include <assert.h>
