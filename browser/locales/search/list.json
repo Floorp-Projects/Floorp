@@ -71,13 +71,6 @@
         ]
       }
     },
-    "be": {
-      "default": {
-        "visibleDefaultEngines": [
-          "yandex.by", "yahoo", "google", "ddg", "be-x-old.wikipedia.org", "be.wikipedia.org", "ru.wikipedia.org-be", "tut.by"
-        ]
-      }
-    },
     "bg": {
       "default": {
         "visibleDefaultEngines": [
@@ -103,13 +96,6 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "yahoo-france", "amazon-france", "ddg", "freelang", "klask", "wikipedia-br"
-        ]
-      }
-    },
-    "brx": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google", "yahoo-in", "bing", "ddg", "wikipedia-hi"
         ]
       }
     },
@@ -393,6 +379,13 @@
         ]
       }
     },
+    "kab": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo-france", "bing", "ddg", "wikipedia-kab"
+        ]
+      }
+    },
     "kk": {
       "default": {
         "visibleDefaultEngines": [
@@ -418,20 +411,6 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "ddg", "naver-kr", "danawa-kr", "daum-kr", "wikipedia-kr"
-        ]
-      }
-    },
-    "kok": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google", "yahoo-in", "bing", "ddg", "wikipedia-hi"
-        ]
-      }
-    },
-    "ks": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google", "yahoo-in", "bing", "ddg", "wikipedia-hi"
         ]
       }
     },
@@ -589,13 +568,6 @@
         ]
       }
     },
-    "sat": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google", "yahoo-in", "bing", "wikipedia-hi", "ddg"
-        ]
-      }
-    },
     "si": {
       "default": {
         "visibleDefaultEngines": [
@@ -666,6 +638,13 @@
         ]
       }
     },
+    "tl": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo-tl", "bing", "amazondotcom", "ddg", "twitter", "wikipedia-tl"
+        ]
+      }
+    },
     "tr": {
       "default": {
         "visibleDefaultEngines": [
@@ -725,7 +704,7 @@
     "zh-TW": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo-zh-TW", "ddg", "findbook-zh-TW", "wikipedia-zh-TW", "yahoo-zh-TW-HK", "yahoo-bid-zh-TW", "yahoo-answer-zh-TW"
+          "yahoo-zh-TW", "google", "ddg", "findbook-zh-TW", "wikipedia-zh-TW", "yahoo-zh-TW-HK", "yahoo-bid-zh-TW", "yahoo-answer-zh-TW"
         ]
       }
     }
