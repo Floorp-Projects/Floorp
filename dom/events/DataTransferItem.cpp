@@ -74,12 +74,6 @@ DataTransferItem::Clone(DataTransfer* aDataTransfer) const
 }
 
 void
-DataTransferItem::SetType(const nsAString& aType)
-{
-  mType = aType;
-}
-
-void
 DataTransferItem::SetData(nsIVariant* aData)
 {
   // Invalidate our file cache, we will regenerate it with the new data
@@ -230,26 +224,23 @@ DataTransferItem::FillInExternalData()
 
   SetData(variant);
 
-#ifdef DEBUG
   if (oldKind != Kind()) {
     NS_WARNING("Clipboard data provided by the OS does not match predicted kind");
+    mDataTransfer->TypesListMayHaveChanged();
   }
-#endif
 }
 
 already_AddRefed<File>
-DataTransferItem::GetAsFile(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+DataTransferItem::GetAsFile(nsIPrincipal& aSubjectPrincipal,
                             ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   if (mKind != KIND_FILE) {
     return nullptr;
   }
 
   // This is done even if we have an mCachedFile, as it performs the necessary
   // permissions checks to ensure that we are allowed to access this type.
-  nsCOMPtr<nsIVariant> data = Data(aSubjectPrincipal.value(), aRv);
+  nsCOMPtr<nsIVariant> data = Data(&aSubjectPrincipal, aRv);
   if (NS_WARN_IF(!data || aRv.Failed())) {
     return nullptr;
   }
@@ -283,11 +274,9 @@ DataTransferItem::GetAsFile(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
 }
 
 already_AddRefed<FileSystemEntry>
-DataTransferItem::GetAsEntry(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+DataTransferItem::GetAsEntry(nsIPrincipal& aSubjectPrincipal,
                              ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   RefPtr<File> file = GetAsFile(aSubjectPrincipal, aRv);
   if (NS_WARN_IF(aRv.Failed()) || !file) {
     return nullptr;
@@ -386,11 +375,9 @@ DataTransferItem::CreateFileFromInputStream(nsIInputStream* aStream)
 
 void
 DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
-                              const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                              nsIPrincipal& aSubjectPrincipal,
                               ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
   if (!aCallback || mKind != KIND_STRING) {
     return;
   }
@@ -398,7 +385,7 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
   // Theoretically this should be done inside of the runnable, as it might be an
   // expensive operation on some systems, however we wouldn't get access to the
   // NS_ERROR_DOM_SECURITY_ERROR messages which may be raised by this method.
-  nsCOMPtr<nsIVariant> data = Data(aSubjectPrincipal.value(), aRv);
+  nsCOMPtr<nsIVariant> data = Data(&aSubjectPrincipal, aRv);
   if (NS_WARN_IF(!data || aRv.Failed())) {
     return;
   }

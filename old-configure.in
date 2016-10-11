@@ -970,7 +970,6 @@ case "$target" in
     AC_DEFINE(NO_PW_GECOS)
     if test -n "$gonkdir"; then
         _PLATFORM_HAVE_RIL=1
-        MOZ_B2G_FM=1
         MOZ_SYNTH_PICO=1
     else
         if test "$COMPILE_ENVIRONMENT"; then
@@ -4811,14 +4810,6 @@ if test -n "$MOZ_B2G_RIL"; then
     fi
 fi
 AC_SUBST(MOZ_B2G_RIL)
-
-dnl ========================================================
-dnl = Enable Radio FM for B2G (Gonk usually)
-dnl ========================================================
-if test -n "$MOZ_B2G_FM"; then
-    AC_DEFINE(MOZ_B2G_FM)
-fi
-AC_SUBST(MOZ_B2G_FM)
 
 dnl ========================================================
 dnl = Enable Bluetooth Interface for B2G (Gonk usually)

@@ -822,12 +822,16 @@ this.BrowserTestUtils = {
    *
    * @param (Browser) browser
    *        A remote <xul:browser> element. Must not be null.
+   * @param (bool) shouldShowTabCrashPage
+   *        True if it is expected that the tab crashed page will be shown
+   *        for this browser. If so, the Promise will only resolve once the
+   *        tab crash page has loaded.
    *
    * @returns (Promise)
    * @resolves An Object with key-value pairs representing the data from the
    *           crash report's extra file (if applicable).
    */
-  crashBrowser: Task.async(function*(browser) {
+  crashBrowser: Task.async(function*(browser, shouldShowTabCrashPage=true) {
     let extra = {};
     let KeyValueParser = {};
     if (AppConstants.MOZ_CRASHREPORTER) {
@@ -885,6 +889,8 @@ this.BrowserTestUtils = {
       dies();
     }
 
+    let expectedPromises = [];
+
     let crashCleanupPromise = new Promise((resolve, reject) => {
       let observer = (subject, topic, data) => {
         if (topic != "ipc:content-shutdown") {
@@ -928,31 +934,39 @@ this.BrowserTestUtils = {
 
         Services.obs.removeObserver(observer, 'ipc:content-shutdown');
         dump("\nCrash cleaned up\n");
-        resolve();
+        // There might be other ipc:content-shutdown handlers that need to run before
+        // we want to continue, so we'll resolve on the next tick of the event loop.
+        TestUtils.executeSoon(() => resolve());
       };
 
       Services.obs.addObserver(observer, 'ipc:content-shutdown', false);
     });
 
-    let aboutTabCrashedLoadPromise = new Promise((resolve, reject) => {
-      browser.addEventListener("AboutTabCrashedReady", function onCrash() {
-        browser.removeEventListener("AboutTabCrashedReady", onCrash, false);
-        dump("\nabout:tabcrashed loaded and ready\n");
-        resolve();
-      }, false, true);
-    });
+    expectedPromises.push(crashCleanupPromise);
+
+    if (shouldShowTabCrashPage) {
+      expectedPromises.push(new Promise((resolve, reject) => {
+        browser.addEventListener("AboutTabCrashedReady", function onCrash() {
+          browser.removeEventListener("AboutTabCrashedReady", onCrash, false);
+          dump("\nabout:tabcrashed loaded and ready\n");
+          resolve();
+        }, false, true);
+      }));
+    }
 
     // This frame script will crash the remote browser as soon as it is
     // evaluated.
     let mm = browser.messageManager;
     mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", false);
 
-    yield Promise.all([crashCleanupPromise, aboutTabCrashedLoadPromise]);
+    yield Promise.all(expectedPromises);
 
-    let gBrowser = browser.ownerDocument.defaultView.gBrowser;
-    let tab = gBrowser.getTabForBrowser(browser);
-    if (tab.getAttribute("crashed") != "true") {
-      throw new Error("Tab should be marked as crashed");
+    if (shouldShowTabCrashPage) {
+      let gBrowser = browser.ownerDocument.defaultView.gBrowser;
+      let tab = gBrowser.getTabForBrowser(browser);
+      if (tab.getAttribute("crashed") != "true") {
+        throw new Error("Tab should be marked as crashed");
+      }
     }
 
     return extra;

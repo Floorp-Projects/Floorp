@@ -67,12 +67,10 @@ DOMStorage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 uint32_t
-DOMStorage::GetLength(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+DOMStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
                       ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
-  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
+  if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return 0;
   }
@@ -84,12 +82,10 @@ DOMStorage::GetLength(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
 
 void
 DOMStorage::Key(uint32_t aIndex, nsAString& aResult,
-                const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                nsIPrincipal& aSubjectPrincipal,
                 ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
-  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
+  if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -99,12 +95,10 @@ DOMStorage::Key(uint32_t aIndex, nsAString& aResult,
 
 void
 DOMStorage::GetItem(const nsAString& aKey, nsAString& aResult,
-                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                    nsIPrincipal& aSubjectPrincipal,
                     ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
-  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
+  if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -114,12 +108,10 @@ DOMStorage::GetItem(const nsAString& aKey, nsAString& aResult,
 
 void
 DOMStorage::SetItem(const nsAString& aKey, const nsAString& aData,
-                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                    nsIPrincipal& aSubjectPrincipal,
                     ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
-  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
+  if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -144,12 +136,10 @@ DOMStorage::SetItem(const nsAString& aKey, const nsAString& aData,
 
 void
 DOMStorage::RemoveItem(const nsAString& aKey,
-                       const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                       nsIPrincipal& aSubjectPrincipal,
                        ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
-  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
+  if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -166,12 +156,10 @@ DOMStorage::RemoveItem(const nsAString& aKey,
 }
 
 void
-DOMStorage::Clear(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+DOMStorage::Clear(nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
-  if (!CanUseStorage(nullptr, aSubjectPrincipal, this)) {
+  if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -245,11 +233,8 @@ DOMStorage::BroadcastChangeNotification(const nsSubstring& aKey,
 static const char kPermissionType[] = "cookie";
 static const char kStorageEnabled[] = "dom.storage.enabled";
 
-// static, public
 bool
-DOMStorage::CanUseStorage(nsPIDOMWindowInner* aWindow,
-                          const Maybe<nsIPrincipal*>& aSubjectPrincipal,
-                          DOMStorage* aStorage)
+DOMStorage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
 {
   // This method is responsible for correct setting of mIsSessionOnly.
 
@@ -257,25 +242,15 @@ DOMStorage::CanUseStorage(nsPIDOMWindowInner* aWindow,
     return false;
   }
 
-  nsContentUtils::StorageAccess access = nsContentUtils::StorageAccess::eDeny;
-  if (aWindow) {
-    access = nsContentUtils::StorageAllowedForWindow(aWindow);
-  } else if (aStorage) {
-    access = nsContentUtils::StorageAllowedForPrincipal(aStorage->mPrincipal);
-  }
+  nsContentUtils::StorageAccess access =
+    nsContentUtils::StorageAllowedForPrincipal(mPrincipal);
 
   if (access == nsContentUtils::StorageAccess::eDeny) {
     return false;
   }
 
-  if (aStorage) {
-    aStorage->mIsSessionOnly = access <= nsContentUtils::StorageAccess::eSessionScoped;
-
-    MOZ_ASSERT(aSubjectPrincipal.isSome());
-    return aStorage->CanAccess(aSubjectPrincipal.value());
-  }
-
-  return true;
+  mIsSessionOnly = access <= nsContentUtils::StorageAccess::eSessionScoped;
+  return CanAccess(&aSubjectPrincipal);
 }
 
 DOMStorage::StorageType
@@ -320,8 +295,7 @@ DOMStorage::CanAccess(nsIPrincipal* aPrincipal)
 void
 DOMStorage::GetSupportedNames(nsTArray<nsString>& aKeys)
 {
-  if (!CanUseStorage(nullptr, Some(nsContentUtils::SubjectPrincipal()),
-                     this)) {
+  if (!CanUseStorage(*nsContentUtils::SubjectPrincipal())) {
     // return just an empty array
     aKeys.Clear();
     return;

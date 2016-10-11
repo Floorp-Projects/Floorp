@@ -109,7 +109,7 @@ Window implements WindowSessionStorage;
 // http://www.whatwg.org/specs/web-apps/current-work/
 [NoInterfaceObject]
 interface WindowLocalStorage {
-  [Throws, NeedsSubjectPrincipal] readonly attribute Storage? localStorage;
+  [Throws] readonly attribute Storage? localStorage;
 };
 Window implements WindowLocalStorage;
 

@@ -81,6 +81,7 @@ load 1157994.html
 skip-if(!B2G) load 1158427.html
 load 1185176.html
 load 1185192.html
+load 1223670.html
 load 1228484.html
 load 1304948.html
 load analyser-channels-1.html

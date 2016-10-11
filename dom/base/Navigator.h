@@ -57,10 +57,6 @@ namespace battery {
 class BatteryManager;
 } // namespace battery
 
-#ifdef MOZ_B2G_FM
-class FMRadio;
-#endif
-
 class Promise;
 
 class DesktopNotificationCenter;
@@ -248,9 +244,6 @@ public:
 #endif // MOZ_GAMEPAD
   already_AddRefed<Promise> GetVRDisplays(ErrorResult& aRv);
   void GetActiveVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays) const;
-#ifdef MOZ_B2G_FM
-  FMRadio* GetMozFMRadio(ErrorResult& aRv);
-#endif
 #ifdef MOZ_B2G_BT
   bluetooth::BluetoothManager* GetMozBluetooth(ErrorResult& aRv);
 #endif // MOZ_B2G_BT
@@ -340,9 +333,6 @@ private:
   RefPtr<DesktopNotificationCenter> mNotification;
   RefPtr<battery::BatteryManager> mBatteryManager;
   RefPtr<Promise> mBatteryPromise;
-#ifdef MOZ_B2G_FM
-  RefPtr<FMRadio> mFMRadio;
-#endif
   RefPtr<PowerManager> mPowerManager;
   RefPtr<IccManager> mIccManager;
   RefPtr<MobileMessageManager> mMobileMessageManager;

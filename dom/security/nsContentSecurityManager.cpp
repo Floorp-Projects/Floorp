@@ -169,7 +169,7 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsContentPolicyType contentPolicyType =
     aLoadInfo->GetExternalContentPolicyType();
   nsContentPolicyType internalContentPolicyType =
@@ -671,5 +671,24 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(nsIPrincipal* aPrincipa
     *aIsTrustWorthy = true;
     return NS_OK;
   }
+
+  // If a host is not considered secure according to the default algorithm, then
+  // check to see if it has been whitelisted by the user.  We only apply this
+  // whitelist for network resources, i.e., those with scheme "http" or "ws".
+  // The pref should contain a comma-separated list of hostnames.
+  if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("ws")) {
+    nsAdoptingCString whitelist = Preferences::GetCString("dom.securecontext.whitelist");
+    if (whitelist) {
+      nsCCharSeparatedTokenizer tokenizer(whitelist, ',');
+      while (tokenizer.hasMoreTokens()) {
+        const nsCSubstring& allowedHost = tokenizer.nextToken();
+        if (host.Equals(allowedHost)) {
+          *aIsTrustWorthy = true;
+          return NS_OK;
+        }
+      }
+    }
+  }
+
   return NS_OK;
 }

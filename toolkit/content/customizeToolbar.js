@@ -655,7 +655,7 @@ function onToolbarDragOver(aEvent)
   }
 
   var documentId = gToolboxDocument.documentElement.id;
-  if (!aEvent.dataTransfer.types.contains("text/toolbarwrapper-id/" + documentId.toLowerCase()))
+  if (!aEvent.dataTransfer.types.includes("text/toolbarwrapper-id/" + documentId.toLowerCase()))
     return;
 
   var toolbar = aEvent.target;
@@ -784,7 +784,7 @@ function onPaletteDragOver(aEvent)
     return;
   }
   var documentId = gToolboxDocument.documentElement.id;
-  if (aEvent.dataTransfer.types.contains("text/toolbarwrapper-id/" + documentId.toLowerCase()))
+  if (aEvent.dataTransfer.types.includes("text/toolbarwrapper-id/" + documentId.toLowerCase()))
     aEvent.preventDefault();
 }
 

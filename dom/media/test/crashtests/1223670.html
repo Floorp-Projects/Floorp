@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+
+    var ac = new window.AudioContext("publicnotification");
+
+    setTimeout(function() {
+        document.documentElement.removeAttribute("class");
+        var htmlAudio = new Audio();
+        var stream = htmlAudio.mozCaptureStreamUntilEnded();
+        ac.createMediaStreamSource(stream);
+    }, 0);
+}
+
+</script>
+</head>
+<body onload="boom();">
+</body>
+</html>

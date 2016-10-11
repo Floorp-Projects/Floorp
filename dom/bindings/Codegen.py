@@ -6907,13 +6907,13 @@ class CGCallGenerator(CGThing):
     value, resultVar can be omitted.
     """
     def __init__(self, isFallible, needsSubjectPrincipal, arguments, argsPre,
-                 returnType, extendedAttributes, descriptorProvider,
+                 returnType, extendedAttributes, descriptor,
                  nativeMethodName, static, object="self", argsPost=[],
                  resultVar=None):
         CGThing.__init__(self)
 
         result, resultOutParam, resultRooter, resultArgs, resultConversion = \
-            getRetvalDeclarationForType(returnType, descriptorProvider)
+            getRetvalDeclarationForType(returnType, descriptor)
 
         args = CGList([CGGeneric(arg) for arg in argsPre], ", ")
         for a, name in arguments:
@@ -7008,16 +7008,32 @@ class CGCallGenerator(CGThing):
         self.cgRoot.append(call)
 
         if needsSubjectPrincipal:
-            self.cgRoot.prepend(CGGeneric(dedent(
-               """
-               Maybe<nsIPrincipal*> subjectPrincipal;
-               if (NS_IsMainThread()) {
-                 JSCompartment* compartment = js::GetContextCompartment(cx);
-                 MOZ_ASSERT(compartment);
-                 JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
-                 subjectPrincipal.emplace(nsJSPrincipals::get(principals));
-               }
-               """)))
+            getPrincipal = dedent(
+                """
+                JSCompartment* compartment = js::GetContextCompartment(cx);
+                MOZ_ASSERT(compartment);
+                JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
+                """)
+
+            if descriptor.interface.isExposedInAnyWorker():
+                self.cgRoot.prepend(CGGeneric(fill(
+                    """
+                    Maybe<nsIPrincipal*> subjectPrincipal;
+                    if (NS_IsMainThread()) {
+                      $*{getPrincipal}
+                      subjectPrincipal.emplace(nsJSPrincipals::get(principals));
+                    }
+                    """,
+                    getPrincipal=getPrincipal)))
+            else:
+                self.cgRoot.prepend(CGGeneric(fill(
+                    """
+                    $*{getPrincipal}
+                    // Initializing a nonnull is pretty darn annoying...
+                    NonNull<nsIPrincipal> subjectPrincipal;
+                    subjectPrincipal = static_cast<nsIPrincipal*>(nsJSPrincipals::get(principals));
+                    """,
+                    getPrincipal=getPrincipal)))
 
         if isFallible:
             self.cgRoot.prepend(CGGeneric("binding_detail::FastErrorResult rv;\n"))
@@ -13993,7 +14009,7 @@ class CGNativeMember(ClassMethod):
 
         # And the nsIPrincipal
         if self.member.getExtendedAttribute('NeedsSubjectPrincipal'):
-            args.append(Argument("const Maybe<nsIPrincipal*>&", "aPrincipal"))
+            args.append(Argument("nsIPrincipal&", "aPrincipal"))
         # And the ErrorResult
         if 'infallible' not in self.extendedAttrs:
             # Use aRv so it won't conflict with local vars named "rv"

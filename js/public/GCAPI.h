@@ -484,12 +484,23 @@ extern JS_PUBLIC_API(size_t)
 GetGCNumber();
 
 /**
- * Assert if a GC occurs while this class is live. This class does not disable
- * the static rooting hazard analysis.
+ * Pass a subclass of this "abstract" class to callees to require that they
+ * never GC. Subclasses can use assertions or the hazard analysis to ensure no
+ * GC happens.
  */
-class JS_PUBLIC_API(AutoAssertOnGC)
+class JS_PUBLIC_API(AutoRequireNoGC)
 {
-#ifdef DEBUG
+  protected:
+    AutoRequireNoGC() {}
+    ~AutoRequireNoGC() {}
+};
+
+/**
+ * Release assert if a GC occurs while this class is live. This class does
+ * not disable the static rooting hazard analysis.
+ */
+class JS_PUBLIC_API(AutoAssertOnGC) : public AutoRequireNoGC
+{
     js::gc::GCRuntime* gc;
     size_t gcNumber;
 
@@ -497,16 +508,6 @@ class JS_PUBLIC_API(AutoAssertOnGC)
     AutoAssertOnGC();
     explicit AutoAssertOnGC(JSContext* cx);
     ~AutoAssertOnGC();
-
-    static void VerifyIsSafeToGC(JSRuntime* rt);
-#else
-  public:
-    AutoAssertOnGC() {}
-    explicit AutoAssertOnGC(JSContext* cx) {}
-    ~AutoAssertOnGC() {}
-
-    static void VerifyIsSafeToGC(JSRuntime* rt) {}
-#endif
 };
 
 /**
@@ -529,6 +530,20 @@ class JS_PUBLIC_API(AutoAssertNoAlloc)
     explicit AutoAssertNoAlloc(JSContext* cx) {}
     void disallowAlloc(JSRuntime* rt) {}
 #endif
+};
+
+/**
+ * Assert if a GC barrier is invoked while this class is live. This class does
+ * not disable the static rooting hazard analysis.
+ */
+class JS_PUBLIC_API(AutoAssertOnBarrier)
+{
+    JSContext* context;
+    bool prev;
+
+  public:
+    explicit AutoAssertOnBarrier(JSContext* cx);
+    ~AutoAssertOnBarrier();
 };
 
 /**
@@ -575,13 +590,24 @@ class JS_PUBLIC_API(AutoAssertGCCallback) : public AutoSuppressGCAnalysis
  * internal pointers to GC things where the GC thing itself may not be present
  * for the static analysis: e.g. acquiring inline chars from a JSString* on the
  * heap.
+ *
+ * We only do the assertion checking in DEBUG builds.
  */
+#ifdef DEBUG
 class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
 {
   public:
     AutoCheckCannotGC() : AutoAssertOnGC() {}
     explicit AutoCheckCannotGC(JSContext* cx) : AutoAssertOnGC(cx) {}
 } JS_HAZ_GC_INVALIDATED;
+#else
+class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoRequireNoGC
+{
+  public:
+    AutoCheckCannotGC() {}
+    explicit AutoCheckCannotGC(JSContext* cx) {}
+} JS_HAZ_GC_INVALIDATED;
+#endif
 
 /**
  * Unsets the gray bit for anything reachable from |thing|. |kind| should not be
@@ -609,6 +635,7 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
     if (IsInsideNursery(thing.asCell()))
         return;
     JS::shadow::Runtime* rt = detail::GetGCThingRuntime(thing.unsafeAsUIntPtr());
+    MOZ_DIAGNOSTIC_ASSERT(rt->allowGCBarriers());
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
     else if (JS::GCThingIsMarkedGray(thing))
@@ -619,6 +646,7 @@ static MOZ_ALWAYS_INLINE void
 MarkGCThingAsLive(JSRuntime* aRt, JS::GCCellPtr thing)
 {
     JS::shadow::Runtime* rt = JS::shadow::Runtime::asShadowRuntime(aRt);
+    MOZ_DIAGNOSTIC_ASSERT(rt->allowGCBarriers());
     /*
      * Any object in the nursery will not be freed during any GC running at that time.
      */
@@ -675,6 +703,18 @@ PokeGC(JSContext* cx);
  */
 extern JS_FRIEND_API(void)
 NotifyDidPaint(JSContext* cx);
+
+// GC Interrupt callbacks are run during GC. You should not run JS code or use
+// the JS engine at all while the callback is running. Otherwise they resemble
+// normal JS interrupt callbacks.
+typedef bool
+(* GCInterruptCallback)(JSContext* cx);
+
+extern JS_FRIEND_API(bool)
+AddGCInterruptCallback(JSContext* cx, GCInterruptCallback callback);
+
+extern JS_FRIEND_API(void)
+RequestGCInterruptCallback(JSContext* cx);
 
 } /* namespace JS */
 
