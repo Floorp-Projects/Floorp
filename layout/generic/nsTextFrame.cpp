@@ -3735,7 +3735,7 @@ nsTextPaintStyle::GetTextColor()
       return NS_SAME_AS_FOREGROUND_COLOR;
 
     const nsStyleSVG* style = mFrame->StyleSVG();
-    switch (style->mFill.mType) {
+    switch (style->mFill.Type()) {
       case eStyleSVGPaintType_None:
         return NS_RGBA(0, 0, 0, 0);
       case eStyleSVGPaintType_Color:
@@ -6477,8 +6477,8 @@ nsTextFrame::GetCaretColorAt(int32_t aOffset)
   bool isSolidTextColor = true;
   if (IsSVGText()) {
     const nsStyleSVG* style = StyleSVG();
-    if (style->mFill.mType != eStyleSVGPaintType_None &&
-        style->mFill.mType != eStyleSVGPaintType_Color) {
+    if (style->mFill.Type() != eStyleSVGPaintType_None &&
+        style->mFill.Type() != eStyleSVGPaintType_Color) {
       isSolidTextColor = false;
     }
   }
