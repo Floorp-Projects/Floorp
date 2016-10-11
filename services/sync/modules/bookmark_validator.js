@@ -41,6 +41,8 @@ this.EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
  * - parentNotFolder (array of ids): list of records that have parents that
  *   aren't folders
  * - rootOnServer (boolean): true if the root came from the server
+ * - badClientRoots (array of ids): Contains any client-side root ids where
+ *   the root is missing or isn't a (direct) child of the places root.
  *
  * - clientMissing: Array of ids on the server missing from the client
  * - serverMissing: Array of ids on the client missing from the server
@@ -70,6 +72,7 @@ class BookmarkProblemData {
     this.duplicateChildren = [];
     this.parentNotFolder = [];
 
+    this.badClientRoots = [];
     this.clientMissing = [];
     this.serverMissing = [];
     this.serverDeleted = [];
@@ -122,6 +125,7 @@ class BookmarkProblemData {
       { name: "parentChildMismatches", count: this.parentChildMismatches.length },
       { name: "cycles", count: this.cycles.length },
       { name: "clientCycles", count: this.clientCycles.length },
+      { name: "badClientRoots", count: this.badClientRoots.length },
       { name: "orphans", count: this.orphans.length },
       { name: "missingChildren", count: this.missingChildren.length },
       { name: "deletedChildren", count: this.deletedChildren.length },
@@ -558,6 +562,24 @@ class BookmarkValidator {
     return cycles;
   }
 
+  // Perform client-side sanity checking that doesn't involve server data
+  _validateClient(problemData, clientRecords) {
+    problemData.clientCycles = this._detectCycles(clientRecords);
+    const rootsToCheck = [
+      PlacesUtils.bookmarks.menuGuid,
+      PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarks.unfiledGuid,
+      PlacesUtils.bookmarks.mobileGuid,
+    ];
+    for (let rootGUID of rootsToCheck) {
+      let record = clientRecords.find(record =>
+        record.guid === rootGUID);
+      if (!record || record.parentid !== "places") {
+        problemData.badClientRoots.push(rootGUID);
+      }
+    }
+  }
+
   /**
    * Compare the list of server records with the client tree.
    *
@@ -578,7 +600,7 @@ class BookmarkValidator {
     serverRecords = inspectionInfo.records;
     let problemData = inspectionInfo.problemData;
 
-    problemData.clientCycles = this._detectCycles(clientRecords);
+    this._validateClient(problemData, clientRecords);
 
     let matches = [];
 
