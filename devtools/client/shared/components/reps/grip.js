@@ -59,7 +59,7 @@ define(function (require, exports, module) {
         );
       });
 
-      let ownProperties = object.preview ? object.preview.ownProperties : [];
+      let ownProperties = object.preview ? object.preview.ownProperties : {};
       let indexes = this.getPropIndexes(ownProperties, max, isInterestingProp);
       if (indexes.length < max && indexes.length < object.ownPropertyLength) {
         // There are not enough props yet. Then add uninteresting props to display them.
@@ -70,24 +70,17 @@ define(function (require, exports, module) {
         );
       }
 
-      let props = this.getProps(ownProperties, indexes);
-      if (props.length < object.ownPropertyLength) {
+      const truncate = Object.keys(ownProperties).length > max;
+      let props = this.getProps(ownProperties, indexes, truncate);
+      if (truncate) {
         // There are some undisplayed props. Then display "more...".
         let objectLink = this.props.objectLink || span;
 
         props.push(Caption({
           object: objectLink({
             object: object
-          }, ((object ? object.ownPropertyLength : 0) - max) + " more…")
+          }, `${object.ownPropertyLength - max} more…`)
         }));
-      } else if (props.length > 0) {
-        // Remove the last comma.
-        // NOTE: do not change comp._store.props directly to update a property,
-        // it should be re-rendered or cloned with changed props
-        let last = props.length - 1;
-        props[last] = React.cloneElement(props[last], {
-          delim: ""
-        });
       }
 
       return props;
@@ -98,9 +91,10 @@ define(function (require, exports, module) {
      *
      * @param {Object} ownProperties Props object.
      * @param {Array} indexes Indexes of props.
+     * @param {Boolean} truncate true if the grip will be truncated.
      * @return {Array} Props.
      */
-    getProps: function (ownProperties, indexes) {
+    getProps: function (ownProperties, indexes, truncate) {
       let props = [];
 
       // Make indexes ordered by ascending.
@@ -117,7 +111,7 @@ define(function (require, exports, module) {
           name: name,
           object: value,
           equal: ": ",
-          delim: ", ",
+          delim: i !== indexes.length - 1 || truncate ? ", " : "",
           defaultRep: Grip
         })));
       });
@@ -169,7 +163,7 @@ define(function (require, exports, module) {
         (this.props.mode == "long") ? 100 : 3);
 
       let objectLink = this.props.objectLink || span;
-      if (this.props.mode == "tiny" || !props.length) {
+      if (this.props.mode == "tiny") {
         return (
           span({className: "objectBox objectBox-object"},
             this.getTitle(object),

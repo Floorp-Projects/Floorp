@@ -32,7 +32,8 @@ const {ViewHelpers, Heritage, WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {Curl, CurlUtils} = require("devtools/client/shared/curl");
-
+const {Filters, isFreetextMatch} = require("devtools/client/netmonitor/filter-predicates");
+const {getFormDataSections} = require("devtools/client/netmonitor/request-utils");
 /**
  * Localization convenience methods.
  */
@@ -760,64 +761,18 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Extracts any urlencoded form data sections (e.g. "?foo=bar&baz=42") from a
-   * POST request.
-   *
-   * @param object headers
-   *        The "requestHeaders".
-   * @param object uploadHeaders
-   *        The "requestHeadersFromUploadStream".
-   * @param object postData
-   *        The "requestPostData".
-   * @return array
-   *        A promise that is resolved with the extracted form data.
-   */
-  _getFormDataSections: Task.async(function* (headers, uploadHeaders,
-                                              postData) {
-    let formDataSections = [];
-
-    let { headers: requestHeaders } = headers;
-    let { headers: payloadHeaders } = uploadHeaders;
-    let allHeaders = [...payloadHeaders, ...requestHeaders];
-
-    let contentTypeHeader = allHeaders.find(e => {
-      return e.name.toLowerCase() == "content-type";
-    });
-
-    let contentTypeLongString = contentTypeHeader ?
-      contentTypeHeader.value : "";
-
-    let contentType = yield gNetwork.getString(contentTypeLongString);
-
-    if (contentType.includes("x-www-form-urlencoded")) {
-      let postDataLongString = postData.postData.text;
-      let text = yield gNetwork.getString(postDataLongString);
-
-      for (let section of text.split(/\r\n|\r|\n/)) {
-        // Before displaying it, make sure this section of the POST data
-        // isn't a line containing upload stream headers.
-        if (payloadHeaders.every(header => !section.startsWith(header.name))) {
-          formDataSections.push(section);
-        }
-      }
-    }
-
-    return formDataSections;
-  }),
-
-  /**
    * Copy the request form data parameters (or raw payload) from
    * the currently selected item.
    */
   copyPostData: Task.async(function* () {
     let selected = this.selectedItem.attachment;
-    let view = this;
 
     // Try to extract any form data parameters.
-    let formDataSections = yield view._getFormDataSections(
+    let formDataSections = yield getFormDataSections(
       selected.requestHeaders,
       selected.requestHeadersFromUploadStream,
-      selected.requestPostData);
+      selected.requestPostData,
+      gNetwork.getString.bind(gNetwork));
 
     let params = [];
     formDataSections.forEach(section => {
@@ -1130,7 +1085,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   _enableFilter: function (type) {
     // Make sure this is a valid filter type.
-    if (Object.keys(this._allFilterPredicates).indexOf(type) == -1) {
+    if (!Object.keys(Filters).includes(type)) {
       return;
     }
 
@@ -1152,35 +1107,12 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * the active filters.
    */
   get _filterPredicate() {
-    let filterPredicates = this._allFilterPredicates;
     let currentFreetextFilter = this._currentFreetextFilter;
 
     return requestItem => {
-      return this._activeFilters.some(filterName => {
-        return filterPredicates[filterName].call(this, requestItem) &&
-          filterPredicates.freetext.call(this, requestItem,
-            currentFreetextFilter);
-      });
-    };
-  },
-
-  /**
-   * Returns an object with all the filter predicates as [key: function] pairs.
-   */
-  get _allFilterPredicates() {
-    return {
-      all: () => true,
-      html: this.isHtml,
-      css: this.isCss,
-      js: this.isJs,
-      xhr: this.isXHR,
-      fonts: this.isFont,
-      images: this.isImage,
-      media: this.isMedia,
-      flash: this.isFlash,
-      ws: this.isWS,
-      other: this.isOther,
-      freetext: this.isFreetextMatch
+      const { attachment } = requestItem;
+      return this._activeFilters.some(filterName => Filters[filterName](attachment)) &&
+          isFreetextMatch(attachment, currentFreetextFilter);
     };
   },
 
@@ -1301,125 +1233,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     this.empty();
     this.refreshSummary();
-  },
-
-  /**
-   * Predicates used when filtering items.
-   *
-   * @param object item
-   *        The filtered item.
-   * @return boolean
-   *         True if the item should be visible, false otherwise.
-   */
-  isHtml: function ({ attachment: { mimeType } }) {
-    return mimeType && mimeType.includes("/html");
-  },
-
-  isCss: function ({ attachment: { mimeType } }) {
-    return mimeType && mimeType.includes("/css");
-  },
-
-  isJs: function ({ attachment: { mimeType } }) {
-    return mimeType && (
-      mimeType.includes("/ecmascript") ||
-      mimeType.includes("/javascript") ||
-      mimeType.includes("/x-javascript"));
-  },
-
-  isXHR: function (item) {
-    // Show the request it is XHR, except
-    // if the request is a WS upgrade
-    return item.attachment.isXHR && !this.isWS(item);
-  },
-
-  isFont: function ({ attachment: { url, mimeType } }) {
-    // Fonts are a mess.
-    return (mimeType && (
-        mimeType.includes("font/") ||
-        mimeType.includes("/font"))) ||
-      url.includes(".eot") ||
-      url.includes(".ttf") ||
-      url.includes(".otf") ||
-      url.includes(".woff");
-  },
-
-  isImage: function ({ attachment: { mimeType } }) {
-    return mimeType && mimeType.includes("image/");
-  },
-
-  isMedia: function ({ attachment: { mimeType } }) {
-    // Not including images.
-    return mimeType && (
-      mimeType.includes("audio/") ||
-      mimeType.includes("video/") ||
-      mimeType.includes("model/"));
-  },
-
-  isFlash: function ({ attachment: { url, mimeType } }) {
-    // Flash is a mess.
-    return (mimeType && (
-        mimeType.includes("/x-flv") ||
-        mimeType.includes("/x-shockwave-flash"))) ||
-      url.includes(".swf") ||
-      url.includes(".flv");
-  },
-
-  isWS: function ({ attachment: { requestHeaders, responseHeaders } }) {
-    // Detect a websocket upgrade if request has an Upgrade header
-    // with value 'websocket'
-
-    if (!requestHeaders || !Array.isArray(requestHeaders.headers)) {
-      return false;
-    }
-
-    // Find the 'upgrade' header.
-    let upgradeHeader = requestHeaders.headers.find(header => {
-      return (header.name == "Upgrade");
-    });
-
-    // If no header found on request, check response - mainly to get
-    // something we can unit test, as it is impossible to set
-    // the Upgrade header on outgoing XHR as per the spec.
-    if (!upgradeHeader && responseHeaders &&
-        Array.isArray(responseHeaders.headers)) {
-      upgradeHeader = responseHeaders.headers.find(header => {
-        return (header.name == "Upgrade");
-      });
-    }
-
-    // Return false if there is no such header or if its value isn't
-    // 'websocket'.
-    if (!upgradeHeader || upgradeHeader.value != "websocket") {
-      return false;
-    }
-
-    return true;
-  },
-
-  isOther: function (e) {
-    return !this.isHtml(e) &&
-           !this.isCss(e) &&
-           !this.isJs(e) &&
-           !this.isXHR(e) &&
-           !this.isFont(e) &&
-           !this.isImage(e) &&
-           !this.isMedia(e) &&
-           !this.isFlash(e) &&
-           !this.isWS(e);
-  },
-
-  isFreetextMatch: function ({ attachment: { url } }, text) {
-    let lowerCaseUrl = url.toLowerCase();
-    let lowerCaseText = text.toLowerCase();
-    let textLength = text.length;
-    // Support negative filtering
-    if (text.startsWith("-") && textLength > 1) {
-      lowerCaseText = lowerCaseText.substring(1, textLength);
-      return !lowerCaseUrl.includes(lowerCaseText);
-    }
-
-    // no text is a positive match
-    return !text || lowerCaseUrl.includes(lowerCaseText);
   },
 
   /**
@@ -2947,7 +2760,7 @@ NetworkDetailsView.prototype = {
     $("#raw-headers").hidden = true;
     $("#response-content-image-box").hidden = true;
 
-    let isHtml = RequestsMenuView.prototype.isHtml({ attachment: data });
+    let isHtml = Filters.html(data);
 
     // Show the "Preview" tabpanel only for plain HTML responses.
     this.sidebar.toggleTab(isHtml, "preview-tab");
@@ -3293,8 +3106,11 @@ NetworkDetailsView.prototype = {
       return;
     }
 
-    let formDataSections = yield RequestsMenuView.prototype
-      ._getFormDataSections(headers, uploadHeaders, postData);
+    let formDataSections = yield getFormDataSections(
+      headers,
+      uploadHeaders,
+      postData,
+      gNetwork.getString.bind(gNetwork));
 
     this._params.onlyEnumVisible = false;
 
@@ -3838,8 +3654,7 @@ PerformanceStatisticsView.prototype = {
    */
   _sanitizeChartDataSource: function (items, emptyCache) {
     let data = [
-      "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "ws",
-      "other"
+      "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "ws", "other"
     ].map(e => ({
       cached: 0,
       count: 0,
@@ -3852,31 +3667,31 @@ PerformanceStatisticsView.prototype = {
       let details = requestItem.attachment;
       let type;
 
-      if (RequestsMenuView.prototype.isHtml(requestItem)) {
+      if (Filters.html(details)) {
         // "html"
         type = 0;
-      } else if (RequestsMenuView.prototype.isCss(requestItem)) {
+      } else if (Filters.css(details)) {
         // "css"
         type = 1;
-      } else if (RequestsMenuView.prototype.isJs(requestItem)) {
+      } else if (Filters.js(details)) {
         // "js"
         type = 2;
-      } else if (RequestsMenuView.prototype.isFont(requestItem)) {
+      } else if (Filters.fonts(details)) {
         // "fonts"
         type = 4;
-      } else if (RequestsMenuView.prototype.isImage(requestItem)) {
+      } else if (Filters.images(details)) {
         // "images"
         type = 5;
-      } else if (RequestsMenuView.prototype.isMedia(requestItem)) {
+      } else if (Filters.media(details)) {
         // "media"
         type = 6;
-      } else if (RequestsMenuView.prototype.isFlash(requestItem)) {
+      } else if (Filters.flash(details)) {
         // "flash"
         type = 7;
-      } else if (RequestsMenuView.prototype.isWS(requestItem)) {
+      } else if (Filters.ws(details)) {
         // "ws"
         type = 8;
-      } else if (RequestsMenuView.prototype.isXHR(requestItem)) {
+      } else if (Filters.xhr(details)) {
         // Verify XHR last, to categorize other mime types in their own blobs.
         // "xhr"
         type = 3;

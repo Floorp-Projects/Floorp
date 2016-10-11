@@ -9,8 +9,6 @@
  * to generate these files can be found at devtools/shared/css/generate-properties-db.js.
  */
 
-/* eslint-disable max-len */
-
 /**
  * A list of CSS Properties and their various characteristics.
  */
@@ -26,5 +24,3 @@ exports.PSEUDO_ELEMENTS = ${pseudoElements};
  * exposed for testing purposes.
  */
 exports.PREFERENCES = ${preferences};
-
-/* eslint-enable max-len */

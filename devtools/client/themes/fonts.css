@@ -27,6 +27,7 @@
 
 #font-showall {
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 #font-showall:hover {

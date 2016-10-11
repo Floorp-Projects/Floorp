@@ -42,7 +42,6 @@ const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties"
 
 // Sidebar dimensions
 const INITIAL_SIDEBAR_SIZE = 350;
-const MIN_SIDEBAR_SIZE = 50;
 
 // If the toolbox width is smaller than given amount of pixels,
 // the sidebar automatically switches from 'landscape' to 'portrait' mode.
@@ -457,7 +456,6 @@ Inspector.prototype = {
       className: "inspector-sidebar-splitter",
       initialWidth: INITIAL_SIDEBAR_SIZE,
       initialHeight: INITIAL_SIDEBAR_SIZE,
-      minSize: MIN_SIDEBAR_SIZE,
       splitterSize: 1,
       endPanelControl: true,
       startPanel: this.InspectorTabPanel({
