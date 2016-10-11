@@ -456,7 +456,7 @@ public:
                mMaster->IsStateMachineScheduled(),
                "Must have timer scheduled");
 
-    mMaster->MaybeStartBuffering();
+    MaybeStartBuffering();
   }
 
   State GetState() const override
@@ -503,6 +503,8 @@ public:
   }
 
 private:
+  void MaybeStartBuffering();
+
   void CheckSlowDecoding(TimeStamp aDecodeStart)
   {
     // For non async readers, if the requested video sample was slow to
@@ -1125,6 +1127,43 @@ DecodingState::HandleEndOfStream()
     MaybeStopPrerolling();
   }
   return true;
+}
+
+void
+MediaDecoderStateMachine::
+DecodingState::MaybeStartBuffering()
+{
+  // Buffering makes senses only after decoding first frames.
+  MOZ_ASSERT(mMaster->mSentFirstFrameLoadedEvent);
+
+  // Don't enter buffering when MediaDecoder is not playing.
+  if (mMaster->mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
+    return;
+  }
+
+  // Don't enter buffering while prerolling so that the decoder has a chance to
+  // enqueue some decoded data before we give up and start buffering.
+  if (!mMaster->IsPlaying()) {
+    return;
+  }
+
+  // No more data to download. No need to enter buffering.
+  if (!Resource()->IsExpectingMoreData()) {
+    return;
+  }
+
+  bool shouldBuffer;
+  if (Reader()->UseBufferingHeuristics()) {
+    shouldBuffer = mMaster->HasLowDecodedData() && mMaster->HasLowBufferedData();
+  } else {
+    MOZ_ASSERT(Reader()->IsWaitForDataSupported());
+    shouldBuffer =
+      (mMaster->OutOfDecodedAudio() && Reader()->IsWaitingAudioData()) ||
+      (mMaster->OutOfDecodedVideo() && Reader()->IsWaitingVideoData());
+  }
+  if (shouldBuffer) {
+    SetState<BufferingState>();
+  }
 }
 
 bool
@@ -1934,43 +1973,6 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   DispatchDecodeTasksIfNeeded();
-}
-
-void
-MediaDecoderStateMachine::MaybeStartBuffering()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  // Buffering makes senses only after decoding first frames.
-  MOZ_ASSERT(mSentFirstFrameLoadedEvent);
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING);
-
-  // Don't enter buffering when MediaDecoder is not playing.
-  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
-    return;
-  }
-
-  // Don't enter buffering while prerolling so that the decoder has a chance to
-  // enqueue some decoded data before we give up and start buffering.
-  if (!IsPlaying()) {
-    return;
-  }
-
-  // No more data to download. No need to enter buffering.
-  if (!mResource->IsExpectingMoreData()) {
-    return;
-  }
-
-  bool shouldBuffer;
-  if (mReader->UseBufferingHeuristics()) {
-    shouldBuffer = HasLowDecodedData() && HasLowBufferedData();
-  } else {
-    MOZ_ASSERT(mReader->IsWaitForDataSupported());
-    shouldBuffer = (OutOfDecodedAudio() && mReader->IsWaitingAudioData()) ||
-                   (OutOfDecodedVideo() && mReader->IsWaitingVideoData());
-  }
-  if (shouldBuffer) {
-    mStateObj->SetState<BufferingState>();
-  }
 }
 
 void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
