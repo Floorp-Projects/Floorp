@@ -132,7 +132,7 @@ function display(profileData) {
       let button = document.createElement('button');
       let string = 'openDir';
       if (AppConstants.platform == "win") {
-        string = 'winOpenDir';
+        string = 'winOpenDir2';
       } else if (AppConstants.platform == "macosx") {
         string = 'macOpenDir';
       }
