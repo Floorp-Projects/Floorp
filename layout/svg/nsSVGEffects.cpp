@@ -889,60 +889,6 @@ nsSVGEffects::InvalidateDirectRenderingObservers(nsIFrame* aFrame, uint32_t aFla
 }
 
 static already_AddRefed<nsIURI>
-ResolveFragmentOrURL(nsIFrame* aFrame, const FragmentOrURL* aFragmentOrURL)
-{
-  MOZ_ASSERT(aFrame);
-
-  if (!aFragmentOrURL) {
-    return nullptr;
-  }
-
-  // Non-local-reference URL.
-  if (!aFragmentOrURL->IsLocalRef()) {
-    nsCOMPtr<nsIURI> result = aFragmentOrURL->GetSourceURL();
-    return result.forget();
-  }
-
-  // For a local-reference URL, resolve that fragment against the current
-  // document that relative URLs are resolved against.
-  nsIContent* content = aFrame->GetContent();
-  nsCOMPtr<nsIURI> baseURI = content->OwnerDoc()->GetDocumentURI();
-
-  if (content->IsInAnonymousSubtree()) {
-    nsIContent* bindingParent = content->GetBindingParent();
-    nsCOMPtr<nsIURI> originalURI;
-
-    // content is in a shadow tree.  If this URL was specified in the subtree
-    // referenced by the <use>(or -moz-binding) element, and that subtree came
-    // from a separate resource document, then we want the fragment-only URL
-    // to resolve to an element from the resource document.  Otherwise, the
-    // URL was specified somewhere in the document with the <use> element, and
-    // we want the fragment-only URL to resolve to an element in that document.
-    if (bindingParent) {
-      if (content->IsAnonymousContentInSVGUseSubtree()) {
-        SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
-        originalURI = useElement->GetSourceDocURI();
-      } else {
-        nsXBLBinding* binding = bindingParent->GetXBLBinding();
-        if (binding) {
-          originalURI = binding->GetSourceDocURI();
-        } else {
-          MOZ_ASSERT(content->IsInNativeAnonymousSubtree(),
-                     "an non-native anonymous tree which is not from "
-                     "an XBL binding?");
-        }
-      }
-
-      if (originalURI && aFragmentOrURL->EqualsExceptRef(originalURI)) {
-        baseURI = originalURI;
-      }
-    }
-  }
-
-  return aFragmentOrURL->Resolve(baseURI);
-}
-
-static already_AddRefed<nsIURI>
 ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
 {
   MOZ_ASSERT(aFrame);

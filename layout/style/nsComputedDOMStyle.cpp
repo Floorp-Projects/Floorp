@@ -2388,27 +2388,6 @@ nsComputedDOMStyle::SetValueToPosition(
 
 
 void
-nsComputedDOMStyle::SetValueToFragmentOrURL(
-    const FragmentOrURL* aFragmentOrURL,
-    nsROCSSPrimitiveValue* aValue)
-{
-  if (aFragmentOrURL->IsLocalRef()) {
-    nsString fragment;
-    aFragmentOrURL->GetSourceString(fragment);
-    fragment.Insert(u"url(\"", 0);
-    fragment.Append(u"\")");
-    aValue->SetString(fragment);
-  } else {
-    nsCOMPtr<nsIURI> url = aFragmentOrURL->GetSourceURL();
-    if (url) {
-      aValue->SetURI(url);
-    } else {
-      aValue->SetIdent(eCSSKeyword_none);
-    }
-  }
-}
-
-void
 nsComputedDOMStyle::SetValueToURLValue(const css::URLValueData* aURL,
                                        nsROCSSPrimitiveValue* aValue)
 {
