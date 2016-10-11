@@ -2132,6 +2132,15 @@ nsFlexContainerFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
+nscoord
+nsFlexContainerFrame::GetLogicalBaseline(mozilla::WritingMode aWM) const
+{
+  NS_ASSERTION(mBaselineFromLastReflow != NS_INTRINSIC_WIDTH_UNKNOWN,
+               "baseline has not been set");
+
+  return mBaselineFromLastReflow;
+}
+
 // Helper for BuildDisplayList, to implement this special-case for flex items
 // from the spec:
 //    Flex items paint exactly the same as block-level elements in the
@@ -4263,6 +4272,9 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // XXXdholbert flexContainerAscent needs to be in terms of
   // our parent's writing-mode here. See bug 1155322.
   aDesiredSize.SetBlockStartAscent(flexContainerAscent);
+
+  // Cache this baseline for use outside of this call.
+  mBaselineFromLastReflow = flexContainerAscent;
 
   // Now: If we're complete, add bottom border/padding to desired height (which
   // we skipped via skipSides) -- unless that pushes us over available height,
