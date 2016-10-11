@@ -113,7 +113,11 @@ protected:
                already_AddRefed<PtrHolder<nsIPrincipal>> aOriginPrincipal);
 
 public:
-  bool operator==(const URLValueData& aOther) const;
+  // Returns true iff all fields of the two URLValueData objects are equal.
+  //
+  // Only safe to call on the main thread, since this will call Equals on the
+  // nsIURI and nsIPrincipal objects stored on the URLValueData objects.
+  bool Equals(const URLValueData& aOther) const;
 
   // Returns true iff we know for sure, by comparing the mBaseURI pointer,
   // the specified url() value mString, and the mLocalURLFlag, that these
@@ -202,7 +206,7 @@ protected:
   ~ImageValue();
 
 public:
-  // Inherit operator== from URLValue
+  // Inherit Equals from URLValueData
 
   nsRefPtrHashtable<nsPtrHashKey<nsIDocument>, imgRequestProxy> mRequests;
 };

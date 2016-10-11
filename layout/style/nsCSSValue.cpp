@@ -282,10 +282,10 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
       return *mValue.mArray == *aOther.mValue.mArray;
     }
     else if (eCSSUnit_URL == mUnit) {
-      return *mValue.mURL == *aOther.mValue.mURL;
+      return mValue.mURL->Equals(*aOther.mValue.mURL);
     }
     else if (eCSSUnit_Image == mUnit) {
-      return *mValue.mImage == *aOther.mValue.mImage;
+      return mValue.mImage->Equals(*aOther.mValue.mImage);
     }
     else if (eCSSUnit_Gradient == mUnit) {
       return *mValue.mGradient == *aOther.mValue.mGradient;
@@ -2671,8 +2671,10 @@ css::URLValueData::URLValueData(nsStringBuffer* aString,
 }
 
 bool
-css::URLValueData::operator==(const URLValueData& aOther) const
+css::URLValueData::Equals(const URLValueData& aOther) const
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   bool eq;
   // Cast away const so we can call nsIPrincipal::Equals.
   auto& self = *const_cast<URLValueData*>(this);
