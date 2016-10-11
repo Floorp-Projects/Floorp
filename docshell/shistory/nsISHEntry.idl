@@ -12,12 +12,12 @@
 
 #include "nsISupports.idl"
 
+interface nsIMutableArray;
 interface nsILayoutHistoryState;
 interface nsIContentViewer;
 interface nsIURI;
 interface nsIInputStream;
 interface nsIDocShellTreeItem;
-interface nsISupportsArray;
 interface nsIStructuredCloneContainer;
 interface nsIBFCacheEntry;
 interface nsIPrincipal;
@@ -119,7 +119,7 @@ interface nsISHEntry : nsISupports
     void clearChildShells();
 
     /** Saved refresh URI list for the content viewer */
-    attribute nsISupportsArray refreshURIList;
+    attribute nsIMutableArray refreshURIList;
 
     /**
      * Ensure that the cached presentation members are self-consistent.

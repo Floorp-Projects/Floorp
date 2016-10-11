@@ -50,7 +50,6 @@
 #include "nsIXULWindow.h"
 #include "nsIEditor.h"
 #include "nsIMozBrowserFrame.h"
-#include "nsIPermissionManager.h"
 #include "nsISHistory.h"
 #include "nsNullPrincipal.h"
 #include "nsIScriptError.h"
@@ -146,7 +145,6 @@ NS_INTERFACE_MAP_END
 
 nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   : mOwnerContent(aOwner)
-  , mAppIdSentToPermissionManager(nsIScriptSecurityManager::NO_APP_ID)
   , mDetachedSubdocFrame(nullptr)
   , mRemoteBrowser(nullptr)
   , mChildID(0)
@@ -493,9 +491,6 @@ nsFrameLoader::ReallyStartLoadingInternal()
   mNeedsAsyncDestroy = tmpState;
   mURIToLoad = nullptr;
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Track the appId's reference count if this frame is in-process
-  ResetPermissionManagerStatus();
 
   return NS_OK;
 }
@@ -1753,8 +1748,6 @@ nsFrameLoader::SetOwnerContent(Element* aContent)
   if (RenderFrameParent* rfp = GetCurrentRenderFrame()) {
     rfp->OwnerContentChanged(aContent);
   }
-
-  ResetPermissionManagerStatus();
 }
 
 bool
@@ -3133,69 +3126,6 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
 
     parentTreeOwner->ContentShellAdded(mDocShell, is_primary,
                                        is_targetable, value);
-  }
-}
-
-void
-nsFrameLoader::ResetPermissionManagerStatus()
-{
-  // The resetting of the permissions status can run only
-  // in the main process.
-  // only in-main-process && in-process frame is handled here and all other
-  // cases are handled by ContentParent.
-  if (XRE_IsContentProcess() || mRemoteFrame) {
-    return;
-  }
-
-  // Finding the new app Id:
-  // . first we check if the owner is an app frame
-  // . second, we check if the owner is a browser frame
-  // in both cases we populate the appId variable.
-  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
-  if (OwnerIsAppFrame()) {
-    // You can't be both an app and a browser frame.
-    MOZ_ASSERT(!OwnerIsMozBrowserFrame());
-
-    nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
-    MOZ_ASSERT(ownApp);
-    uint32_t ownAppId = nsIScriptSecurityManager::NO_APP_ID;
-    if (ownApp && NS_SUCCEEDED(ownApp->GetLocalId(&ownAppId))) {
-      appId = ownAppId;
-    }
-  }
-
-  if (OwnerIsMozBrowserFrame()) {
-    // You can't be both a browser and an app frame.
-    MOZ_ASSERT(!OwnerIsAppFrame());
-
-    nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
-    uint32_t containingAppId = nsIScriptSecurityManager::NO_APP_ID;
-    if (containingApp && NS_SUCCEEDED(containingApp->GetLocalId(&containingAppId))) {
-      appId = containingAppId;
-    }
-  }
-
-  // Nothing changed.
-  if (appId == mAppIdSentToPermissionManager) {
-    return;
-  }
-
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  if (!permMgr) {
-    NS_ERROR("No PermissionManager available!");
-    return;
-  }
-
-  // If previously we registered an appId, we have to unregister it.
-  if (mAppIdSentToPermissionManager != nsIScriptSecurityManager::NO_APP_ID) {
-    permMgr->ReleaseAppId(mAppIdSentToPermissionManager);
-    mAppIdSentToPermissionManager = nsIScriptSecurityManager::NO_APP_ID;
-  }
-
-  // Register the new AppId.
-  if (appId != nsIScriptSecurityManager::NO_APP_ID) {
-    mAppIdSentToPermissionManager = appId;
-    permMgr->AddrefAppId(mAppIdSentToPermissionManager);
   }
 }
 

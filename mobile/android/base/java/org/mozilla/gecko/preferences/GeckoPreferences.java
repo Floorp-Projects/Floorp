@@ -367,7 +367,7 @@ OnSharedPreferenceChangeListener
         // Use setResourceToOpen to specify these extras.
         Bundle intentExtras = getIntent().getExtras();
 
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
                                                                   "Sanitize:Finished",
                                                                   "Snackbar:Show");
 
@@ -504,7 +504,7 @@ OnSharedPreferenceChangeListener
     protected void onDestroy() {
         super.onDestroy();
 
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
                                                                     "Sanitize:Finished",
                                                                     "Snackbar:Show");
 

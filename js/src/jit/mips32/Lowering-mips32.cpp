@@ -155,6 +155,36 @@ LIRGeneratorMIPS::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition,
 }
 
 void
+LIRGeneratorMIPS::defineInt64Phi(MPhi* phi, size_t lirIndex)
+{
+    LPhi* low = current->getPhi(lirIndex + INT64LOW_INDEX);
+    LPhi* high = current->getPhi(lirIndex + INT64HIGH_INDEX);
+
+    uint32_t lowVreg = getVirtualRegister();
+
+    phi->setVirtualRegister(lowVreg);
+
+    uint32_t highVreg = getVirtualRegister();
+    MOZ_ASSERT(lowVreg + INT64HIGH_INDEX == highVreg + INT64LOW_INDEX);
+
+    low->setDef(0, LDefinition(lowVreg, LDefinition::INT32));
+    high->setDef(0, LDefinition(highVreg, LDefinition::INT32));
+    annotate(high);
+    annotate(low);
+}
+
+void
+LIRGeneratorMIPS::lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition,
+                                     LBlock* block, size_t lirIndex)
+{
+    MDefinition* operand = phi->getOperand(inputPosition);
+    LPhi* low = block->getPhi(lirIndex + INT64LOW_INDEX);
+    LPhi* high = block->getPhi(lirIndex + INT64HIGH_INDEX);
+    low->setOperand(inputPosition, LUse(operand->virtualRegister() + INT64LOW_INDEX, LUse::ANY));
+    high->setOperand(inputPosition, LUse(operand->virtualRegister() + INT64HIGH_INDEX, LUse::ANY));
+}
+
+void
 LIRGeneratorMIPS::lowerTruncateDToInt32(MTruncateToInt32* ins)
 {
     MDefinition* opd = ins->input();
@@ -170,6 +200,50 @@ LIRGeneratorMIPS::lowerTruncateFToInt32(MTruncateToInt32* ins)
     MOZ_ASSERT(opd->type() == MIRType::Float32);
 
     define(new(alloc()) LTruncateFToInt32(useRegister(opd), LDefinition::BogusTemp()), ins);
+}
+
+void
+LIRGeneratorMIPS::lowerDivI64(MDiv* div)
+{
+    if (div->isUnsigned()) {
+        lowerUDivI64(div);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64RegisterAtStart(div->lhs()),
+                                                  useInt64RegisterAtStart(div->rhs()));
+
+    defineReturn(lir, div);
+}
+
+void
+LIRGeneratorMIPS::lowerModI64(MMod* mod)
+{
+    if (mod->isUnsigned()) {
+        lowerUModI64(mod);
+        return;
+    }
+
+    LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64RegisterAtStart(mod->lhs()),
+                                                  useInt64RegisterAtStart(mod->rhs()));
+
+    defineReturn(lir, mod);
+}
+
+void
+LIRGeneratorMIPS::lowerUDivI64(MDiv* div)
+{
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64RegisterAtStart(div->lhs()),
+                                                    useInt64RegisterAtStart(div->rhs()));
+    defineReturn(lir, div);
+}
+
+void
+LIRGeneratorMIPS::lowerUModI64(MMod* mod)
+{
+    LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64RegisterAtStart(mod->lhs()),
+                                                    useInt64RegisterAtStart(mod->rhs()));
+    defineReturn(lir, mod);
 }
 
 void
