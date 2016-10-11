@@ -8,6 +8,8 @@ UNIFIED_SOURCES += [
     'TestClearKeyUtils.cpp',
 ]
 
+USE_LIBS += ['psshparser']
+
 FINAL_LIBRARY = 'xul-gtest'
 
 LOCAL_INCLUDES += [
