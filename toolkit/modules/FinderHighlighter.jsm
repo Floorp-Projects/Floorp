@@ -38,20 +38,22 @@ const kRGBRE = /^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*/i;
 const kModalIdPrefix = "cedee4d0-74c5-4f2d-ab43-4d37c0f9d463";
 const kModalOutlineId = kModalIdPrefix + "-findbar-modalHighlight-outline";
 const kOutlineBoxColor = "255,197,53";
+const kOutlineBoxBorderSize = 2;
+const kOutlineBoxBorderRadius = 3;
 const kModalStyles = {
   outlineNode: [
     ["background-color", `rgb(${kOutlineBoxColor})`],
     ["background-clip", "padding-box"],
-    ["border", "2px solid"],
+    ["border", `${kOutlineBoxBorderSize}px solid`],
     ["-moz-border-top-colors", `rgba(${kOutlineBoxColor},.1) rgba(${kOutlineBoxColor},.4) rgba(${kOutlineBoxColor},.7)`],
     ["-moz-border-right-colors", `rgba(${kOutlineBoxColor},.1) rgba(${kOutlineBoxColor},.4) rgba(${kOutlineBoxColor},.7)`],
     ["-moz-border-bottom-colors", `rgba(${kOutlineBoxColor},.1) rgba(${kOutlineBoxColor},.4) rgba(${kOutlineBoxColor},.7)`],
     ["-moz-border-left-colors", `rgba(${kOutlineBoxColor},.1) rgba(${kOutlineBoxColor},.4) rgba(${kOutlineBoxColor},.7)`],
-    ["border-radius", "3px"],
-    ["box-shadow", "0 2px 0 0 rgba(0,0,0,.1)"],
+    ["border-radius", `${kOutlineBoxBorderRadius}px`],
+    ["box-shadow", `0 ${kOutlineBoxBorderSize}px 0 0 rgba(0,0,0,.1)`],
     ["color", "#000"],
     ["display", "-moz-box"],
-    ["margin", "-2px 0 0 -2px !important"],
+    ["margin", `-${kOutlineBoxBorderSize}px 0 0 -${kOutlineBoxBorderSize}px !important`],
     ["overflow", "hidden"],
     ["pointer-events", "none"],
     ["position", "absolute"],
@@ -821,7 +823,7 @@ FinderHighlighter.prototype = {
       bounds = this._getRootBounds(window);
 
     let topBounds = this._getRootBounds(window.top, false);
-    let rects = new Set();
+    let rects = [];
     // A range may consist of multiple rectangles, we can also do these kind of
     // precise cut-outs. range.getBoundingClientRect() returns the fully
     // encompassing rectangle, which is too much for our purpose here.
@@ -831,7 +833,7 @@ FinderHighlighter.prototype = {
       rect.y += bounds.y;
       // If the rect is not even visible from the top document, we can ignore it.
       if (rect.intersects(topBounds))
-        rects.add(rect);
+        rects.push(rect);
     }
     return rects;
   },
@@ -903,7 +905,7 @@ FinderHighlighter.prototype = {
     textContent = textContent || this._getRangeContentArray(range);
 
     let outlineAnonNode = dict.modalHighlightOutline;
-    let rectCount = rects.size;
+    let rectCount = rects.length;
     // (re-)Building the outline is conditional and happens when one of the
     // following conditions is met:
     // 1. No outline nodes were built before, or
@@ -946,13 +948,43 @@ FinderHighlighter.prototype = {
       // the textContent with single spaces injected between the text. Otherwise
       // text is set to the current textContent for the matching rect.
       let text = (i == rectCount - 1) ? textContent.slice(i).join(" ") : textContent[i];
+
+      // Next up is to check of the outline box' borders will not overlap with
+      // rects that we drew before or will draw after this one.
+      // We're taking the width of the border into account, which is
+      // `kOutlineBoxBorderSize` pixels.
+      // When left and/ or right sides will overlap with the current, previous
+      // or next rect, make sure to make the necessary adjustments to the style.
+      // These adjustments will override the styles as defined in `kModalStyles.outlineNode`.
+      let intersectingSides = new Set();
+      let previous = rects[i - 1];
+      if (previous &&
+          rect.left - previous.right <= 2 * kOutlineBoxBorderSize) {
+        intersectingSides.add("left");
+      }
+      let next = rects[i + 1];
+      if (next &&
+          next.left - rect.right <= 2 * kOutlineBoxBorderSize) {
+        intersectingSides.add("right");
+      }
+      let borderStyles = [...intersectingSides].map(side => [ "border-" + side, 0 ]);
+      if (intersectingSides.size) {
+        borderStyles.push([ "margin",  `-${kOutlineBoxBorderSize}px 0 0 ${
+          intersectingSides.has("left") ? 0 : -kOutlineBoxBorderSize}px !important`]);
+        borderStyles.push([ "border-radius",
+          (intersectingSides.has("left") ? 0 : kOutlineBoxBorderRadius) + "px " +
+          (intersectingSides.has("right") ? 0 : kOutlineBoxBorderRadius) + "px " +
+          (intersectingSides.has("right") ? 0 : kOutlineBoxBorderRadius) + "px " +
+          (intersectingSides.has("left") ? 0 : kOutlineBoxBorderRadius) + "px" ]);
+      }
+
       ++i;
       let outlineStyle = this._getStyleString(kModalStyles.outlineNode, [
         ["top", rect.top + "px"],
         ["left", rect.left + "px"],
         ["height", rect.height + "px"],
         ["width", rect.width + "px"]
-      ], kDebug ? kModalStyles.outlineNodeDebug : []);
+      ], borderStyles, kDebug ? kModalStyles.outlineNodeDebug : []);
       fontStyle.lineHeight = rect.height + "px";
       let textStyle = this._getStyleString(kModalStyles.outlineText) + "; " +
         this._getHTMLFontStyle(fontStyle);
