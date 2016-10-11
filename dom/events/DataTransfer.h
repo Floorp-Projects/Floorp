@@ -136,7 +136,7 @@ public:
   void SetDragImage(Element& aElement, int32_t aX, int32_t aY,
                     ErrorResult& aRv);
 
-  already_AddRefed<DOMStringList> GetTypes(ErrorResult& rv) const;
+  void GetTypes(nsTArray<nsString>& aTypes) const;
 
   void GetData(const nsAString& aFormat, nsAString& aData,
                const Maybe<nsIPrincipal*>& aSubjectPrincipal,
