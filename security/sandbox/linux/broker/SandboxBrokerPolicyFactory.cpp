@@ -140,8 +140,13 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   // Bug 1308851: NVIDIA proprietary driver when using WebGL
   policy->AddPrefix(rdwr, "/dev", "nvidia");
 
-  // Bug 1312678: radeonsi/Intel with DRI when using WebGL
+    // Bug 1312678: radeonsi/Intel with DRI when using WebGL
   policy->AddDir(rdwr, "/dev/dri");
+
+#ifdef MOZ_ALSA
+  // Bug 1309098: ALSA support
+  policy->AddDir(rdwr, "/dev/snd");
+#endif
 
   mCommonContentPolicy.reset(policy);
 #endif
