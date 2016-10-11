@@ -798,8 +798,13 @@ ComputeTransformDistance(nsCSSValue::Array* aArray1,
         distance = angle.GetAngleValueInRadians() *
                    angle.GetAngleValueInRadians();
       } else {
-        // TODO: Convert to quaternion vectors and calculate the angle.
-        distance = 0.0;
+        // Use quaternion vectors to get the angle difference. Both q1 and q2
+        // are unit vectors, so we can get their angle difference by
+        // cos(theta/2) = (q1 dot q2) / (|q1| * |q2|) = q1 dot q2.
+        gfxQuaternion q1(vector1, a1->Item(4).GetAngleValueInRadians());
+        gfxQuaternion q2(vector2, a2->Item(4).GetAngleValueInRadians());
+        distance = 2.0 * acos(clamped(q1.DotProduct(q2), -1.0, 1.0));
+        distance = distance * distance;
       }
       break;
     }
