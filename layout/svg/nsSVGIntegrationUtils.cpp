@@ -168,10 +168,8 @@ nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(const nsIFrame* aFrame)
          style->mMask.HasLayerWithImage();
 }
 
-// For non-SVG frames, this gives the offset to the frame's "user space".
-// For SVG frames, this returns a zero offset.
-static nsPoint
-GetOffsetToBoundingBox(nsIFrame* aFrame)
+nsPoint
+nsSVGIntegrationUtils::GetOffsetToBoundingBox(nsIFrame* aFrame)
 {
   if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
     // Do NOT call GetAllInFlowRectsUnion for SVG - it will get the
@@ -413,82 +411,7 @@ private:
   nsPoint mOffset;
 };
 
-static IntRect
-ComputeClipExtsInDeviceSpace(gfxContext& aCtx)
-{
-  gfxContextMatrixAutoSaveRestore matRestore(&aCtx);
-
-  // Get the clip extents in device space.
-  aCtx.SetMatrix(gfxMatrix());
-  gfxRect clippedFrameSurfaceRect = aCtx.GetClipExtents();
-  clippedFrameSurfaceRect.RoundOut();
-
-  IntRect result;
-  ToRect(clippedFrameSurfaceRect).ToIntRect(&result);
-  return mozilla::gfx::Factory::CheckSurfaceSize(result.Size()) ? result
-                                                                : IntRect();
-}
-
 typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
-
-static IntRect
-ComputeMaskGeometry(const PaintFramesParams& aParams,
-                    const nsStyleSVGReset *svgReset,
-                    const nsPoint& aOffsetToUserSpace,
-                    const nsTArray<nsSVGMaskFrame *>& aMaskFrames)
-{
-  gfxContext& ctx = aParams.ctx;
-  nsIFrame* frame = aParams.frame;
-
-  // Convert boaderArea and dirtyRect to user space.
-  int32_t appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
-  nsRect userSpaceBorderArea = aParams.borderArea - aOffsetToUserSpace;
-  nsRect userSpaceDirtyRect = aParams.dirtyRect - aOffsetToUserSpace;
-
-  // Union all mask layer rectangles in user space.
-  gfxRect maskInUserSpace;
-  for (size_t i = 0; i < aMaskFrames.Length() ; i++) {
-    nsSVGMaskFrame* maskFrame = aMaskFrames[i];
-    gfxRect currentMaskSurfaceRect;
-
-    if (maskFrame) {
-      currentMaskSurfaceRect = maskFrame->GetMaskArea(aParams.frame);
-    } else {
-      nsCSSRendering::ImageLayerClipState clipState;
-      nsCSSRendering::GetImageLayerClip(svgReset->mMask.mLayers[i],
-                                       frame,
-                                       *frame->StyleBorder(),
-                                       userSpaceBorderArea,
-                                       userSpaceDirtyRect,
-                                       false, /* aWillPaintBorder */
-                                       appUnitsPerDevPixel,
-                                       &clipState);
-      currentMaskSurfaceRect = clipState.mDirtyRectGfx;
-    }
-
-    maskInUserSpace = maskInUserSpace.Union(currentMaskSurfaceRect);
-  }
-
-  ctx.Save();
-
-  // Clip ctx by both frame's visual overflow rect and mask union.
-  gfxRect frameVisualOverflowRect =
-    nsLayoutUtils::RectToGfxRect(frame->GetVisualOverflowRectRelativeToSelf(),
-                                 appUnitsPerDevPixel);
-  ctx.Clip(frameVisualOverflowRect);
-  // maskInUserSpace might be empty if all mask references are not resolvable
-  // or the size of them are empty. We still need to create a transparent mask
-  // before bug 1276834 fixed, so don't clip ctx by an empty rectangle for for
-  // now.
-  if (!maskInUserSpace.IsEmpty()) {
-    ctx.Clip(maskInUserSpace);
-  }
-
-  IntRect result = ComputeClipExtsInDeviceSpace(ctx);
-  ctx.Restore();
-
-  return result;
-}
 
 static DrawResult
 GenerateMaskSurface(const PaintFramesParams& aParams,
@@ -518,9 +441,7 @@ GenerateMaskSurface(const PaintFramesParams& aParams,
     return DrawResult::SUCCESS;
   }
 
-  IntRect maskSurfaceRect = ComputeMaskGeometry(aParams, svgReset,
-                                                aOffsetToUserSpace,
-                                                aMaskFrames);
+  const IntRect& maskSurfaceRect = aParams.maskRect;
   if (maskSurfaceRect.IsEmpty()) {
     return DrawResult::SUCCESS;
   }
@@ -687,7 +608,7 @@ SetupContextMatrix(nsIFrame* aFrame, const PaintFramesParams& aParams,
                    bool aClipCtx)
 {
   aOffsetToBoundingBox = aParams.builder->ToReferenceFrame(aFrame) -
-                         GetOffsetToBoundingBox(aFrame);
+                         nsSVGIntegrationUtils::GetOffsetToBoundingBox(aFrame);
   if (!aFrame->IsFrameOfType(nsIFrame::eSVG)) {
     /* Snap the offset if the reference frame is not a SVG frame,
      * since other frames will be snapped to pixel when rendering. */
@@ -1046,7 +967,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   // to have it anchored at the top left corner of the bounding box of all of
   // mFrame's continuations. So we add a translation transform.
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  nsPoint offset = GetOffsetToBoundingBox(mFrame);
+  nsPoint offset = nsSVGIntegrationUtils::GetOffsetToBoundingBox(mFrame);
   gfxPoint devPxOffset = gfxPoint(offset.x, offset.y) / appUnitsPerDevPixel;
   aContext->Multiply(gfxMatrix::Translation(devPxOffset));
 
