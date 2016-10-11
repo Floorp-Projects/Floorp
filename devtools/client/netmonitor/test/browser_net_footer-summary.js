@@ -4,8 +4,7 @@
 "use strict";
 
 /**
- * Test if the summary text displayed in the network requests menu footer
- * is correct.
+ * Test if the summary text displayed in the network requests menu footer is correct.
  */
 
 add_task(function* () {
@@ -18,7 +17,8 @@ add_task(function* () {
   let { RequestsMenu } = NetMonitorView;
 
   let winRequire = monitor.panelWin.require;
-  let { getSummary } = winRequire("devtools/client/netmonitor/selectors/index");
+  let { getDisplayedRequestsSummary } =
+    winRequire("devtools/client/netmonitor/selectors/index");
   let { L10N } = winRequire("devtools/client/netmonitor/l10n");
   let { PluralForm } = winRequire("devtools/shared/plural-form");
 
@@ -46,26 +46,27 @@ add_task(function* () {
   yield teardown(monitor);
 
   function testStatus() {
-    const { count, totalBytes, totalMillis } = getSummary(gStore.getState());
     let value = $("#requests-menu-network-summary-button").textContent;
     info("Current summary: " + value);
 
-    let totalRequestsCount = RequestsMenu.itemCount;
-    info("Current requests: " + count + " of " + totalRequestsCount + ".");
+    let state = gStore.getState();
+    let totalRequestsCount = state.requests.requests.size;
+    let requestsSummary = getDisplayedRequestsSummary(state);
+    info(`Current requests: ${requestsSummary.count} of ${totalRequestsCount}.`);
 
-    if (!totalRequestsCount || !count) {
+    if (!totalRequestsCount || !requestsSummary.count) {
       is(value, L10N.getStr("networkMenu.empty"),
         "The current summary text is incorrect, expected an 'empty' label.");
       return;
     }
 
-    info("Computed total bytes: " + totalBytes);
-    info("Computed total millis: " + totalMillis);
+    info(`Computed total bytes: ${requestsSummary.bytes}`);
+    info(`Computed total millis: ${requestsSummary.millis}`);
 
-    is(value, PluralForm.get(count, L10N.getStr("networkMenu.summary"))
-      .replace("#1", count)
-      .replace("#2", L10N.numberWithDecimals((totalBytes || 0) / 1024, 2))
-      .replace("#3", L10N.numberWithDecimals((totalMillis || 0) / 1000, 2))
-    , "The current summary text is incorrect.");
+    is(value, PluralForm.get(requestsSummary.count, L10N.getStr("networkMenu.summary"))
+      .replace("#1", requestsSummary.count)
+      .replace("#2", L10N.numberWithDecimals(requestsSummary.bytes / 1024, 2))
+      .replace("#3", L10N.numberWithDecimals(requestsSummary.millis / 1000, 2))
+    , "The current summary text is correct.");
   }
 });
