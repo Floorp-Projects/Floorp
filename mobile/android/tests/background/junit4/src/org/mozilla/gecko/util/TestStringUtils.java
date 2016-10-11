@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.util;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
@@ -20,11 +18,11 @@ public class TestStringUtils {
     @Test
     public void testIsHttpOrHttps() {
         // No value
-        Assert.assertFalse(StringUtils.isHttpOrHttps(null));
-        Assert.assertFalse(StringUtils.isHttpOrHttps(""));
+        assertFalse(StringUtils.isHttpOrHttps(null));
+        assertFalse(StringUtils.isHttpOrHttps(""));
 
         // Garbage
-        Assert.assertFalse(StringUtils.isHttpOrHttps("lksdjflasuf"));
+        assertFalse(StringUtils.isHttpOrHttps("lksdjflasuf"));
 
         // URLs with http/https
         assertTrue(StringUtils.isHttpOrHttps("https://www.google.com"));
@@ -36,13 +34,13 @@ public class TestStringUtils {
         assertTrue(StringUtils.isHttpOrHttps("http://63.245.215.20/en-US/firefox/products"));
 
         // Other protocols
-        Assert.assertFalse(StringUtils.isHttpOrHttps("ftp://people.mozilla.org"));
-        Assert.assertFalse(StringUtils.isHttpOrHttps("javascript:window.google.com"));
-        Assert.assertFalse(StringUtils.isHttpOrHttps("tel://1234567890"));
+        assertFalse(StringUtils.isHttpOrHttps("ftp://people.mozilla.org"));
+        assertFalse(StringUtils.isHttpOrHttps("javascript:window.google.com"));
+        assertFalse(StringUtils.isHttpOrHttps("tel://1234567890"));
 
         // No scheme
-        Assert.assertFalse(StringUtils.isHttpOrHttps("google.com"));
-        Assert.assertFalse(StringUtils.isHttpOrHttps("git@github.com:mozilla/gecko-dev.git"));
+        assertFalse(StringUtils.isHttpOrHttps("google.com"));
+        assertFalse(StringUtils.isHttpOrHttps("git@github.com:mozilla/gecko-dev.git"));
     }
 
     @Test
