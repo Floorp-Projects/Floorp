@@ -153,6 +153,8 @@ FinderHighlighter.prototype = {
    * Each window is unique, globally, and the relation between an active
    * highlighting session and a window is 1:1.
    * For each window we track a number of properties which _at least_ consist of
+   *  - {Boolean} detectedGeometryChange Whether the geometry of the found ranges'
+   *                                     rectangles has changed substantially
    *  - {Set}     dynamicRangesSet       Set of ranges that may move around, depending
    *                                     on page layout changes and user input
    *  - {Map}     frames                 Collection of frames that were encountered
@@ -166,6 +168,7 @@ FinderHighlighter.prototype = {
   getForWindow(window, propName = null) {
     if (!gWindows.has(window)) {
       gWindows.set(window, {
+        detectedGeometryChange: false,
         dynamicRangesSet: new Set(),
         frames: new Map(),
         modalHighlightRectsMap: new Map(),
@@ -435,8 +438,6 @@ FinderHighlighter.prototype = {
         this.show(window);
       else
         this._maybeCreateModalHighlightNodes(window);
-
-      this._updateRangeOutline(dict, textContent);
     }
 
     let outlineNode = dict.modalHighlightOutline;
@@ -863,7 +864,12 @@ FinderHighlighter.prototype = {
 
     // Only fetch the rect at this point, if not passed in as argument.
     dict = dict || this.getForWindow(window.top);
+    let oldRects = dict.modalHighlightRectsMap.get(range);
     dict.modalHighlightRectsMap.set(range, rects);
+    // Check here if we suddenly went down to zero rects from more than zero before,
+    // which indicates that we should re-iterate the document.
+    if (oldRects && oldRects.length && !rects.length)
+      dict.detectedGeometryChange = true;
     if (checkIfDynamic && this._isInDynamicContainer(range))
       dict.dynamicRangesSet.add(range);
     return rects;
@@ -1072,8 +1078,6 @@ FinderHighlighter.prototype = {
       return;
     }
 
-    this._updateRangeOutline(dict);
-
     // Make sure to at least show the dimmed background.
     this._repaintHighlightAllMask(window, false);
   },
@@ -1110,18 +1114,23 @@ FinderHighlighter.prototype = {
       paintContent ? kModalStyles.maskNodeTransition : [],
       kDebug ? kModalStyles.maskNodeDebug : []);
     dict.modalHighlightAllMask.setAttributeForElement(kMaskId, "style", maskStyle);
-    if (dict.brightText)
-      dict.modalHighlightAllMask.setAttributeForElement(kMaskId, "brighttext", "true");
+
+    this._updateRangeOutline(dict);
 
     let allRects = [];
     if (paintContent || dict.modalHighlightAllMask) {
-      this._updateRangeOutline(dict);
       this._updateDynamicRangesRects(dict);
 
       let DOMRect = window.DOMRect;
       for (let [range, rects] of dict.modalHighlightRectsMap) {
         if (dict.updateAllRanges)
           rects = this._updateRangeRects(range);
+
+        // If a geometry change was detected, we bail out right away here, because
+        // the current set of ranges has been invalidated.
+        if (dict.detectedGeometryChange)
+          return;
+
         if (this._checkOverlap(dict.currentFoundRange, range))
           continue;
         for (let rect of rects)
@@ -1201,8 +1210,10 @@ FinderHighlighter.prototype = {
 
       let { width: previousWidth, height: previousHeight } = dict.lastWindowDimensions;
       let { width, height } = dict.lastWindowDimensions = this._getWindowDimensions(window);
-      let pageContentChanged = (Math.abs(previousWidth - width) > kContentChangeThresholdPx ||
+      let pageContentChanged = dict.detectedGeometryChange ||
+                               (Math.abs(previousWidth - width) > kContentChangeThresholdPx ||
                                 Math.abs(previousHeight - height) > kContentChangeThresholdPx);
+      dict.detectedGeometryChange = false;
       // When the page has changed significantly enough in size, we'll restart
       // the iterator with the same parameters as before to find us new ranges.
       if (pageContentChanged)
