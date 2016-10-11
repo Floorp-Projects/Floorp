@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: promise-based play() method</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="play_promise.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+// Name: playWithErrorAlreadySet
+// Case: invoke play() on an element with MEDIA_ERR_SRC_NOT_SUPPORTED has been set
+// Expected result: reject the promise with NotSupportedError DOM exception
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  element.src = getNotSupportedFile(test.name);
+  once(element, "error").then(() => {
+    ok(element.error.code == MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED);
+    element.play().then(
+      (result) => {
+        ok(false, `${token} is resolved with ${result}.`);
+      },
+      (error) => {
+        if (error.name == "NotSupportedError") {
+          ok(true, `${token} is rejected with ${error.name}.`);
+        } else {
+          ok(false, `${token} is rejected with ${error.name}.`);
+        }
+      }
+    ).then( () => { manager.finished(token); } );
+  });
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>
