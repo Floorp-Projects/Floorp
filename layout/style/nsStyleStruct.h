@@ -3652,12 +3652,12 @@ struct nsStyleFilter
   void SetFilterParameter(const nsStyleCoord& aFilterParameter,
                           int32_t aType);
 
-  mozilla::FragmentOrURL* GetURL() const {
-    NS_ASSERTION(mType == NS_STYLE_FILTER_URL, "wrong filter type");
+  mozilla::css::URLValue* GetURL() const {
+    MOZ_ASSERT(mType == NS_STYLE_FILTER_URL, "wrong filter type");
     return mURL;
   }
 
-  bool SetURL(const nsCSSValue* aValue);
+  bool SetURL(mozilla::css::URLValue* aValue);
 
   nsCSSShadowArray* GetDropShadow() const {
     NS_ASSERTION(mType == NS_STYLE_FILTER_DROP_SHADOW, "wrong filter type");
@@ -3667,12 +3667,11 @@ struct nsStyleFilter
 
 private:
   void ReleaseRef();
-  void CopyURL(const nsStyleFilter& aOther);
 
   int32_t mType; // see NS_STYLE_FILTER_* constants in nsStyleConsts.h
   nsStyleCoord mFilterParameter; // coord, percent, factor, angle
   union {
-    mozilla::FragmentOrURL* mURL;
+    mozilla::css::URLValue* mURL;
     nsCSSShadowArray* mDropShadow;
   };
 };
