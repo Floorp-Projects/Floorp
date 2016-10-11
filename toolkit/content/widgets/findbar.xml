@@ -374,8 +374,6 @@
           prefsvc.getIntPref("accessibility.typeaheadfind.timeout");
         this._flashFindBar =
           prefsvc.getIntPref("accessibility.typeaheadfind.flashBar");
-        this._matchesCountLimit =
-          prefsvc.getIntPref("accessibility.typeaheadfind.matchesCountLimit");
         this._useModalHighlight = prefsvc.getBoolPref("findbar.modalHighlight");
 
         prefsvc.addObserver("accessibility.typeaheadfind",
@@ -1309,9 +1307,9 @@
           if (aResult.total !== 0) {
             if (aResult.total == -1) {
               this._foundMatches.value = this.pluralForm.get(
-                this._matchesCountLimit,
+                aResult.limit,
                 this.strBundle.GetStringFromName("FoundMatchesCountLimit")
-              ).replace("#1", this._matchesCountLimit);
+              ).replace("#1", aResult.limit);
             } else {
               this._foundMatches.value = this.pluralForm.get(
                 aResult.total,

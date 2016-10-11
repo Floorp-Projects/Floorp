@@ -8,7 +8,9 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'panel.js'
+    'filter-predicates.js',
+    'panel.js',
+    'request-utils.js',
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
