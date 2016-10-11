@@ -210,12 +210,9 @@ JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
         MOZ_CRASH("Unsupported TypedArray type");
     }
 
-    size_t headerSize = dataOffset() + sizeof(HeapSlot);
-    if (headerSize + nbytes <= GetGCKindBytes(newAllocKind)) {
-        MOZ_ASSERT(oldObj->hasInlineElements());
+    if (dataOffset() + nbytes <= GetGCKindBytes(newAllocKind)) {
         newObj->setInlineElements();
     } else {
-        MOZ_ASSERT(!oldObj->hasInlineElements());
         AutoEnterOOMUnsafeRegion oomUnsafe;
         nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
         void* data = newObj->zone()->pod_malloc<uint8_t>(nbytes);
@@ -238,8 +235,7 @@ JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
 bool
 TypedArrayObject::hasInlineElements() const
 {
-    return elements() == this->fixedData(TypedArrayObject::FIXED_DATA_START) &&
-        byteLength() <= TypedArrayObject::INLINE_BUFFER_LIMIT;
+    return elements() == this->fixedData(TypedArrayObject::FIXED_DATA_START);
 }
 
 void
@@ -587,18 +583,18 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
 
         TypedArrayObject* tarray = &tmp->as<TypedArrayObject>();
-        initTypedArraySlots(cx, tarray, len);
-
         // Template objects do not need memory for its elements, since there
-        // won't be any elements to store. Therefore, we set the pointer to
-        // nullptr and avoid allocating memory that will never be used.
-        tarray->initPrivate(nullptr);
+        // won't be any elements to store. Therefore, we set the pointer to the
+        // inline data and avoid allocating memory that will never be used.
+        void* buf = tarray->fixedData(FIXED_DATA_START);
+        initTypedArraySlots(cx, tarray, len, buf, allocKind);
 
         return tarray;
     }
 
     static void
-    initTypedArraySlots(JSContext* cx, TypedArrayObject* tarray, int32_t len)
+    initTypedArraySlots(JSContext* cx, TypedArrayObject* tarray, int32_t len,
+                        void* buf, AllocKind allocKind)
     {
         MOZ_ASSERT(len >= 0);
         tarray->setFixedSlot(TypedArrayObject::BUFFER_SLOT, NullValue());
@@ -607,12 +603,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         // Verify that the private slot is at the expected place.
         MOZ_ASSERT(tarray->numFixedSlots() == TypedArrayObject::DATA_SLOT);
-    }
 
-    static void
-    initTypedArrayData(JSContext* cx, TypedArrayObject* tarray, int32_t len,
-                       void* buf, AllocKind allocKind)
-    {
         if (buf) {
 #ifdef DEBUG
             Nursery& nursery = cx->runtime()->gc.nursery;
@@ -673,8 +664,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         TypedArrayObject* obj = &tmp->as<TypedArrayObject>();
-        initTypedArraySlots(cx, obj, len);
-        initTypedArrayData(cx, obj, len, buf.forget(), allocKind);
+        initTypedArraySlots(cx, obj, len, buf.forget(), allocKind);
 
         return obj;
     }
