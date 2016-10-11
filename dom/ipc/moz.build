@@ -144,6 +144,7 @@ LOCAL_INCLUDES += [
     '/layout/base',
     '/media/webrtc',
     '/netwerk/base',
+    '/toolkit/crashreporter',
     '/toolkit/xre',
     '/uriloader/exthandler',
     '/widget',
