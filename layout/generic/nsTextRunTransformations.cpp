@@ -71,10 +71,9 @@ nsTransformedTextRun::SetCapitalization(uint32_t aStart, uint32_t aLength,
 
 bool
 nsTransformedTextRun::SetPotentialLineBreaks(Range aRange,
-                                             uint8_t* aBreakBefore)
+                                             const uint8_t* aBreakBefore)
 {
-  bool changed =
-    gfxTextRun::SetPotentialLineBreaks(aRange, aBreakBefore);
+  bool changed = gfxTextRun::SetPotentialLineBreaks(aRange, aBreakBefore);
   if (changed) {
     mNeedsRebuild = true;
   }
