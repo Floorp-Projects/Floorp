@@ -220,13 +220,6 @@ interface VRDisplay : EventTarget {
   [NewObject] VRPose getPose();
 
   /**
-   * Return the current instantaneous pose of the VRDisplay, with no
-   * prediction applied.  Every call to getImmediatePose() may
-   * return a different value, even within a single frame.
-   */
-  [NewObject] VRPose getImmediatePose();
-
-  /**
    * Reset the pose for this display, treating its current position and
    * orientation as the "origin/zero" values. VRPose.position,
    * VRPose.orientation, and VRStageParameters.sittingToStandingTransform may be

@@ -295,7 +295,6 @@ public:
 
   bool GetFrameData(VRFrameData& aFrameData);
   already_AddRefed<VRPose> GetPose();
-  already_AddRefed<VRPose> GetImmediatePose();
   void ResetPose();
 
   double DepthNear() {
