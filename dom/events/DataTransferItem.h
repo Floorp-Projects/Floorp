@@ -73,7 +73,6 @@ public:
   {
     aType = mType;
   }
-  void SetType(const nsAString& aType);
 
   eKind Kind() const
   {
@@ -138,7 +137,7 @@ private:
 
   bool mChromeOnly;
   eKind mKind;
-  nsString mType;
+  const nsString mType;
   nsCOMPtr<nsIVariant> mData;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   RefPtr<DataTransfer> mDataTransfer;
