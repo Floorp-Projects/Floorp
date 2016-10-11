@@ -120,7 +120,7 @@ public:
   bool Equals(const URLValueData& aOther) const;
 
   // Returns true iff we know for sure, by comparing the mBaseURI pointer,
-  // the specified url() value mString, and the mLocalURLFlag, that these
+  // the specified url() value mString, and the mIsLocalRef, that these
   // two URLValueData objects represent the same computed url() value.
   //
   // Doesn't look at mReferrer or mOriginPrincipal.
@@ -134,7 +134,7 @@ public:
 
   nsIURI* GetURI() const;
 
-  bool GetLocalURLFlag() const { return mLocalURLFlag; }
+  bool IsLocalRef() const { return mIsLocalRef; }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLValueData)
 
@@ -149,9 +149,8 @@ public:
   PtrHandle<nsIPrincipal> mOriginPrincipal;
 private:
   mutable bool mURIResolved;
-  // mLocalURLFlag is set when url starts with a U+0023 number
-  // sign(#) character.
-  bool mLocalURLFlag;
+  // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
+  bool mIsLocalRef;
 
 protected:
   virtual ~URLValueData() = default;
