@@ -101,7 +101,7 @@ DataTransferItemList::Remove(uint32_t aIndex,
 }
 
 DataTransferItem*
-DataTransferItemList::IndexedGetter(uint32_t aIndex, bool& aFound, ErrorResult& aRv) const
+DataTransferItemList::IndexedGetter(uint32_t aIndex, bool& aFound) const
 {
   if (aIndex >= mItems.Length()) {
     aFound = false;
@@ -500,14 +500,12 @@ DataTransferItemList::ClearDataHelper(DataTransferItem* aItem,
 
   // Check if the aIndexHint is actually the index, and then remove the item
   // from aItems
-  ErrorResult rv;
   bool found;
-  if (IndexedGetter(aIndexHint, found, rv) == aItem) {
+  if (IndexedGetter(aIndexHint, found) == aItem) {
     mItems.RemoveElementAt(aIndexHint);
   } else {
     mItems.RemoveElement(aItem);
   }
-  rv.SuppressException();
 
   // Check if the aMozIndexHint and aMozOffsetHint are actually the index and
   // offset, and then remove them from mIndexedItems
@@ -564,14 +562,12 @@ DataTransferItemList::GenerateFiles(FileList* aFiles,
   MOZ_ASSERT(aFilesPrincipal);
   uint32_t count = Length();
   for (uint32_t i = 0; i < count; i++) {
-    ErrorResult rv;
     bool found;
-    RefPtr<DataTransferItem> item = IndexedGetter(i, found, rv);
-    if (NS_WARN_IF(!found || rv.Failed())) {
-      continue;
-    }
+    RefPtr<DataTransferItem> item = IndexedGetter(i, found);
+    MOZ_ASSERT(found);
 
     if (item->Kind() == DataTransferItem::KIND_FILE) {
+      IgnoredErrorResult rv;
       RefPtr<File> file = item->GetAsFile(Some(aFilesPrincipal), rv);
       if (NS_WARN_IF(rv.Failed() || !file)) {
         continue;
