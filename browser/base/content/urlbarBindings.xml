@@ -656,10 +656,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="aEvent"/>
         <body>
           var types = aEvent.dataTransfer.types;
-          if (types.contains("application/x-moz-file") ||
-              types.contains("text/x-moz-url") ||
-              types.contains("text/uri-list") ||
-              types.contains("text/unicode"))
+          if (types.includes("application/x-moz-file") ||
+              types.includes("text/x-moz-url") ||
+              types.includes("text/uri-list") ||
+              types.includes("text/unicode"))
             aEvent.preventDefault();
         </body>
       </method>

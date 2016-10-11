@@ -1626,12 +1626,10 @@ CSSStyleSheet::DidDirty()
 }
 
 void
-CSSStyleSheet::SubjectSubsumesInnerPrincipal(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+CSSStyleSheet::SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
                                              ErrorResult& aRv)
 {
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
-
-  if (aSubjectPrincipal.value()->Subsumes(mInner->mPrincipal)) {
+  if (aSubjectPrincipal.Subsumes(mInner->mPrincipal)) {
     return;
   }
 
@@ -1659,7 +1657,7 @@ CSSStyleSheet::SubjectSubsumesInnerPrincipal(const Maybe<nsIPrincipal*>& aSubjec
 
   WillDirty();
 
-  mInner->mPrincipal = aSubjectPrincipal.value();
+  mInner->mPrincipal = &aSubjectPrincipal;
 
   DidDirty();
 }
@@ -1782,13 +1780,13 @@ CSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 {
   ErrorResult rv;
   nsCOMPtr<nsIDOMCSSRuleList> rules =
-    GetCssRules(Some(nsContentUtils::SubjectPrincipal()), rv);
+    GetCssRules(*nsContentUtils::SubjectPrincipal(), rv);
   rules.forget(aCssRules);
   return rv.StealNSResult();
 }
 
 CSSRuleList*
-CSSStyleSheet::GetCssRules(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+CSSStyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
                            ErrorResult& aRv)
 {
   // No doing this on incomplete sheets!
@@ -1819,13 +1817,13 @@ CSSStyleSheet::InsertRule(const nsAString& aRule,
 {
   ErrorResult rv;
   *aReturn =
-    InsertRule(aRule, aIndex, Some(nsContentUtils::SubjectPrincipal()), rv);
+    InsertRule(aRule, aIndex, *nsContentUtils::SubjectPrincipal(), rv);
   return rv.StealNSResult();
 }
 
 uint32_t
 CSSStyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
-                          const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                          nsIPrincipal& aSubjectPrincipal,
                           ErrorResult& aRv)
 {
   //-- Security check: Only scripts whose principal subsumes that of the
@@ -1977,13 +1975,13 @@ NS_IMETHODIMP
 CSSStyleSheet::DeleteRule(uint32_t aIndex)
 {
   ErrorResult rv;
-  DeleteRule(aIndex, Some(nsContentUtils::SubjectPrincipal()), rv);
+  DeleteRule(aIndex, *nsContentUtils::SubjectPrincipal(), rv);
   return rv.StealNSResult();
 }
 
 void
 CSSStyleSheet::DeleteRule(uint32_t aIndex,
-                          const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                          nsIPrincipal& aSubjectPrincipal,
                           ErrorResult& aRv)
 {
   // No doing this if the sheet is not complete!

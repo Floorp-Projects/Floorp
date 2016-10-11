@@ -131,6 +131,7 @@ class StoreBuffer;
 namespace JS {
 
 class JS_PUBLIC_API(AutoEnterCycleCollection);
+class JS_PUBLIC_API(AutoAssertOnBarrier);
 struct PropertyDescriptor;
 
 typedef void (*OffThreadCompileCallback)(void* token, void* callbackData);
@@ -153,11 +154,17 @@ struct Runtime
     friend class JS::AutoEnterCycleCollection;
     JS::HeapState heapState_;
 
+    // In some cases, invoking GC barriers (incremental or otherwise) will break
+    // things. These barriers assert if this flag is set.
+    bool allowGCBarriers_;
+    friend class JS::AutoAssertOnBarrier;
+
     js::gc::StoreBuffer* gcStoreBufferPtr_;
 
   public:
     Runtime()
       : heapState_(JS::HeapState::Idle)
+      , allowGCBarriers_(true)
       , gcStoreBufferPtr_(nullptr)
     {}
 
@@ -168,6 +175,8 @@ struct Runtime
     bool isCycleCollecting() const {
         return heapState_ == JS::HeapState::CycleCollecting;
     }
+
+    bool allowGCBarriers() const { return allowGCBarriers_; }
 
     js::gc::StoreBuffer* gcStoreBufferPtr() { return gcStoreBufferPtr_; }
 

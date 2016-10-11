@@ -856,7 +856,7 @@
       <handler event="dragover">
       <![CDATA[
         var types = event.dataTransfer.types;
-        if (types.contains("text/plain") || types.contains("text/x-moz-text-internal"))
+        if (types.includes("text/plain") || types.includes("text/x-moz-text-internal"))
           event.preventDefault();
       ]]>
       </handler>

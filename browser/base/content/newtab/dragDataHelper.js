@@ -11,7 +11,7 @@ var gDragDataHelper = {
 
   getLinkFromDragEvent: function DragDataHelper_getLinkFromDragEvent(aEvent) {
     let dt = aEvent.dataTransfer;
-    if (!dt || !dt.types.contains(this.mimeType)) {
+    if (!dt || !dt.types.includes(this.mimeType)) {
       return null;
     }
 
