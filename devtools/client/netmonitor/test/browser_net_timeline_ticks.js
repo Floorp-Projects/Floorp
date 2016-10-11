@@ -8,10 +8,12 @@
  */
 
 add_task(function* () {
+  let { L10N } = require("devtools/client/netmonitor/l10n");
+
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { $, $all, L10N, NetMonitorView, NetMonitorController } = monitor.panelWin;
+  let { $, $all, NetMonitorView, NetMonitorController } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   // Disable transferred size column support for this test.
