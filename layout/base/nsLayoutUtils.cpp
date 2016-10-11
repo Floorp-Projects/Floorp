@@ -8897,6 +8897,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
     } else if (CanScrollOriginClobberApz(scrollableFrame->LastScrollOrigin())) {
       metrics.SetScrollOffsetUpdated(scrollableFrame->CurrentScrollGeneration());
     }
+    scrollableFrame->AllowScrollOriginDowngrade();
 
     nsIAtom* lastSmoothScrollOrigin = scrollableFrame->LastSmoothScrollOrigin();
     if (lastSmoothScrollOrigin) {
