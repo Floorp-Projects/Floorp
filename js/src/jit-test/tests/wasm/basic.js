@@ -375,7 +375,7 @@ var {v2i, i2i, i2v} = wasmEvalText(`(module
     (func (type 1) (i32.add (get_local 0) (i32.const 2)))
     (func (type 1) (i32.add (get_local 0) (i32.const 3)))
     (func (type 1) (i32.add (get_local 0) (i32.const 4)))
-    (table 0 1 2 3 4 5)
+    (table anyfunc (elem 0 1 2 3 4 5))
     (func (param i32) (result i32) (call_indirect 0 (get_local 0)))
     (func (param i32) (param i32) (result i32) (call_indirect 1 (get_local 1) (get_local 0)))
     (func (param i32) (call_indirect 2 (i32.const 0) (get_local 0)))
@@ -417,7 +417,7 @@ assertErrorMessage(() => i2v(5), Error, signatureMismatch);
             (import $foo "" "f")
             (func $a (call_import $foo))
             (func $b (result i32) (i32.const 0))
-            (table $a $b)
+            (table anyfunc (elem $a $b))
             (func $bar (call_indirect $v2v (i32.const 0)))
             (export "" $bar)
         )`,
