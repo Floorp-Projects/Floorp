@@ -415,6 +415,7 @@ jit::CheckLogging()
             "  alias-sum  Alias analysis: shows summaries for every block\n"
             "  gvn        Global Value Numbering\n"
             "  licm       Loop invariant code motion\n"
+            "  flac       Fold linear arithmetic constants\n"
             "  sincos     Replace sin/cos by sincos\n"
             "  sink       Sink transformation\n"
             "  regalloc   Register allocation\n"
@@ -471,6 +472,8 @@ jit::CheckLogging()
         EnableChannel(JitSpew_Unrolling);
     if (ContainsFlag(env, "licm"))
         EnableChannel(JitSpew_LICM);
+    if (ContainsFlag(env, "flac"))
+        EnableChannel(JitSpew_FLAC);
     if (ContainsFlag(env, "sincos"))
         EnableChannel(JitSpew_Sincos);
     if (ContainsFlag(env, "sink"))
