@@ -274,7 +274,11 @@ add_task(function* testRemoveAllWithTwoExtensions() {
     browser.contextMenus.onClicked.addListener(() => {
       browser.contextMenus.removeAll();
     });
-    browser.test.onMessage.addListener(() => {
+    browser.test.onMessage.addListener(msg => {
+      if (msg == "ping") {
+        browser.test.sendMessage("pong-alpha");
+        return;
+      }
       browser.contextMenus.create({title: "gamma", contexts: ["all"]});
     });
   }});
@@ -285,12 +289,23 @@ add_task(function* testRemoveAllWithTwoExtensions() {
     browser.contextMenus.onClicked.addListener(() => {
       browser.contextMenus.removeAll();
     });
+
+    browser.test.onMessage.addListener(() => {
+      browser.test.sendMessage("pong-beta");
+    });
   }});
 
   yield first.startup();
   yield second.startup();
 
   function* confirmMenuItems(...items) {
+    // Round-trip to extension to make sure that the context menu state has been
+    // updated by the async contextMenus.create / contextMenus.removeAll calls.
+    first.sendMessage("ping");
+    second.sendMessage("ping");
+    yield first.awaitMessage("pong-alpha");
+    yield second.awaitMessage("pong-beta");
+
     const menu = yield openContextMenu();
     for (const id of ["alpha", "beta", "gamma"]) {
       const expected = items.includes(id);
