@@ -2958,10 +2958,11 @@ function standardTreeWalkerFilter(node) {
     return nodeFilterConstants.FILTER_ACCEPT;
   }
 
-  // Ignore empty whitespace text nodes.
-  if (node.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
-      !/[^\s]/.exec(node.nodeValue)) {
-    return nodeFilterConstants.FILTER_SKIP;
+  // Ignore empty whitespace text nodes that do not impact the layout.
+  if (isWhitespaceTextNode(node)) {
+    return nodeHasSize(node)
+           ? nodeFilterConstants.FILTER_ACCEPT
+           : nodeFilterConstants.FILTER_SKIP;
   }
 
   // Ignore all native and XBL anonymous content inside a non-XUL document
@@ -2982,12 +2983,36 @@ function standardTreeWalkerFilter(node) {
  * it also includes all anonymous content (like internal form controls).
  */
 function allAnonymousContentTreeWalkerFilter(node) {
-  // Ignore empty whitespace text nodes.
-  if (node.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
-      !/[^\s]/.exec(node.nodeValue)) {
-    return nodeFilterConstants.FILTER_SKIP;
+  // Ignore empty whitespace text nodes that do not impact the layout.
+  if (isWhitespaceTextNode(node)) {
+    return nodeHasSize(node)
+           ? nodeFilterConstants.FILTER_ACCEPT
+           : nodeFilterConstants.FILTER_SKIP;
   }
   return nodeFilterConstants.FILTER_ACCEPT;
+}
+
+/**
+ * Is the given node a text node composed of whitespace only?
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isWhitespaceTextNode(node) {
+  return node.nodeType == Ci.nsIDOMNode.TEXT_NODE && !/[^\s]/.exec(node.nodeValue);
+}
+
+/**
+ * Does the given node have non-0 width and height?
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function nodeHasSize(node) {
+  if (!node.getBoxQuads) {
+    return false;
+  }
+
+  let quads = node.getBoxQuads();
+  return quads.length && quads.some(quad => quad.bounds.width && quad.bounds.height);
 }
 
 /**
