@@ -224,6 +224,11 @@ protected:
   MediaDecoderReaderWrapper* Reader() const { return mMaster->mReader; }
   const MediaInfo& Info() const { return mMaster->Info(); }
 
+public:
+  // TODO: this function is public because VisibilityChanged() calls it.
+  // We should handle visibility changes in state objects so this function
+  // can be made protected again.
+  //
   // Note this function will delete the current state object.
   // Don't access members to avoid UAF after this call.
   template <class S, typename... Ts>
@@ -234,7 +239,8 @@ protected:
     auto master = mMaster;
 
     UniquePtr<StateObject> s = MakeUnique<S>(master, Forward<Ts>(aArgs)...);
-    if (master->mState == s->GetState()) {
+    if (master->mState == s->GetState() &&
+        master->mState != DECODER_STATE_SEEKING) {
       return;
     }
 
@@ -246,6 +252,7 @@ protected:
     master->mStateObj->Enter();
   }
 
+protected:
   // Take a raw pointer in order not to change the life cycle of MDSM.
   // It is guaranteed to be valid by MDSM.
   Master* mMaster;
@@ -1010,7 +1017,7 @@ DecodingFirstFrameState::Enter()
   if (mMaster->mQueuedSeek.Exists() &&
       (mMaster->mSentFirstFrameLoadedEvent ||
        Reader()->ForceZeroStartTime())) {
-    mMaster->InitiateSeek(Move(mMaster->mQueuedSeek));
+    SetState<SeekingState>(Move(mMaster->mQueuedSeek));
     return;
   }
 
@@ -1047,7 +1054,7 @@ DecodingFirstFrameState::HandleSeek(SeekTarget aTarget)
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  mMaster->InitiateSeek(Move(seekJob));
+  SetState<SeekingState>(Move(seekJob));
   return p.forget();
 }
 
@@ -1065,7 +1072,7 @@ DecodingFirstFrameState::MaybeFinishDecodeFirstFrame()
   mMaster->FinishDecodeFirstFrame();
 
   if (mMaster->mQueuedSeek.Exists()) {
-    mMaster->InitiateSeek(Move(mMaster->mQueuedSeek));
+    SetState<SeekingState>(Move(mMaster->mQueuedSeek));
   } else {
     SetState<DecodingState>();
   }
@@ -1104,7 +1111,7 @@ DecodingState::HandleSeek(SeekTarget aTarget)
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  mMaster->InitiateSeek(Move(seekJob));
+  SetState<SeekingState>(Move(seekJob));
   return p.forget();
 }
 
@@ -1151,7 +1158,7 @@ SeekingState::HandleSeek(SeekTarget aTarget)
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  mMaster->InitiateSeek(Move(seekJob));
+  SetState<SeekingState>(Move(seekJob));
   return p.forget();
 }
 
@@ -1302,7 +1309,7 @@ BufferingState::HandleSeek(SeekTarget aTarget)
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  mMaster->InitiateSeek(Move(seekJob));
+  SetState<SeekingState>(Move(seekJob));
   return p.forget();
 }
 
@@ -1315,7 +1322,7 @@ CompletedState::HandleSeek(SeekTarget aTarget)
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  mMaster->InitiateSeek(Move(seekJob));
+  SetState<SeekingState>(Move(seekJob));
   return p.forget();
 }
 
@@ -2335,7 +2342,7 @@ void MediaDecoderStateMachine::VisibilityChanged()
     p->Then(AbstractThread::MainThread(), __func__,
             [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
             [](){});
-    InitiateSeek(Move(seekJob));
+    mStateObj->SetState<SeekingState>(Move(seekJob));
   }
 }
 
@@ -2465,19 +2472,6 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
                 VideoQueue().Duration());
     mReader->SetIdle();
   }
-}
-
-void
-MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  // Note we can't call SetState(DECODER_STATE_SEEKING) which does nothing
-  // if we are already in the SEEKING state.
-  mStateObj->Exit();
-  mState = DECODER_STATE_SEEKING;
-  mStateObj = MakeUnique<SeekingState>(this, Move(aSeekJob));
-  mStateObj->Enter();
 }
 
 void
