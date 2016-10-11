@@ -131,7 +131,7 @@ nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame)
   // CanvasRenderingContext2D.
   nsCOMPtr<nsIURI> url = aTargetFrame
     ? nsSVGEffects::GetFilterURI(aTargetFrame, mFilter)
-    : mFilter.GetURL()->Resolve(mTargetContent);
+    : mFilter.GetURL()->ResolveLocalRef(mTargetContent);
 
   if (!url) {
     NS_NOTREACHED("an nsStyleFilter of type URL should have a non-null URL");

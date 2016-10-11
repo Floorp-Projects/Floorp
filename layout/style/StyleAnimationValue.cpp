@@ -4153,11 +4153,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             const nsStyleFilter& filter = filters[i];
             int32_t type = filter.GetType();
             if (type == NS_STYLE_FILTER_URL) {
-              nsIDocument* doc = aStyleContext->PresContext()->Document();
-              RefPtr<mozilla::css::URLValue> url =
-                FragmentOrURLToURLValue(filter.GetURL(), doc);
-
-              item->mValue.SetURLValue(url);
+              item->mValue.SetURLValue(filter.GetURL());
             } else {
               nsCSSKeyword functionName =
                 nsCSSProps::ValueToKeywordEnum(type,

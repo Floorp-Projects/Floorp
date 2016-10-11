@@ -303,7 +303,7 @@ nsSVGFilterChainObserver::nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>
     // CanvasRenderingContext2D.
     nsCOMPtr<nsIURI> filterURL = aFilteredFrame
       ? nsSVGEffects::GetFilterURI(aFilteredFrame, i)
-      : aFilters[i].GetURL()->Resolve(aFilteredElement);
+      : aFilters[i].GetURL()->ResolveLocalRef(aFilteredElement);
 
     RefPtr<nsSVGFilterReference> reference =
       new nsSVGFilterReference(filterURL, aFilteredElement, this);
@@ -1020,7 +1020,7 @@ nsSVGEffects::GetFilterURI(nsIFrame* aFrame, uint32_t aIndex)
   MOZ_ASSERT(effects->mFilters.Length() > aIndex);
   MOZ_ASSERT(effects->mFilters[aIndex].GetType() == NS_STYLE_FILTER_URL);
 
-  return ResolveFragmentOrURL(aFrame, effects->mFilters[aIndex].GetURL());
+  return ResolveURLUsingLocalRef(aFrame, effects->mFilters[aIndex].GetURL());
 }
 
 already_AddRefed<nsIURI>
@@ -1029,7 +1029,7 @@ nsSVGEffects::GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter)
   MOZ_ASSERT(aFrame->StyleEffects()->mFilters.Length());
   MOZ_ASSERT(aFilter.GetType() == NS_STYLE_FILTER_URL);
 
-  return ResolveFragmentOrURL(aFrame, aFilter.GetURL());
+  return ResolveURLUsingLocalRef(aFrame, aFilter.GetURL());
 }
 
 already_AddRefed<nsIURI>
