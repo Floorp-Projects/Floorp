@@ -484,30 +484,32 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     }
 
     private void updateEmptyView(PanelLevel level) {
-        boolean showEmptyHistoryView = false;
-        boolean showEmptyClientsView = false;
-        boolean showEmptyRecentTabsView = false;
+        boolean showEmptyHistoryView = (mPanelLevel == PARENT && mHistoryEmptyView.isShown());
+        boolean showEmptyClientsView = (mPanelLevel == CHILD_SYNC && mClientsEmptyView.isShown());
+        boolean showEmptyRecentTabsView = (mPanelLevel == CHILD_RECENT_TABS && mRecentTabsEmptyView.isShown());
+
         if (mPanelLevel == level) {
             switch (mPanelLevel) {
                 case PARENT:
                     showEmptyHistoryView = mHistoryAdapter.getItemCount() == mHistoryAdapter.getNumVisibleSmartFolders();
-                    mHistoryEmptyView.setVisibility(showEmptyHistoryView ? View.VISIBLE : View.GONE);
                     break;
 
                 case CHILD_SYNC:
                     showEmptyClientsView = mClientsAdapter.getItemCount() == 1;
-                    mClientsEmptyView.setVisibility(showEmptyClientsView ? View.VISIBLE : View.GONE);
                     break;
 
                 case CHILD_RECENT_TABS:
                     showEmptyRecentTabsView = mRecentTabsAdapter.getClosedTabsCount() == 0;
-                    mRecentTabsEmptyView.setVisibility(showEmptyRecentTabsView ? View.VISIBLE : View.GONE);
                     break;
             }
         }
 
         final boolean showEmptyView = showEmptyClientsView || showEmptyHistoryView || showEmptyRecentTabsView;
         mRecyclerView.setOverScrollMode(showEmptyView ? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+
+        mHistoryEmptyView.setVisibility(showEmptyHistoryView ? View.VISIBLE : View.GONE);
+        mClientsEmptyView.setVisibility(showEmptyClientsView ? View.VISIBLE : View.GONE);
+        mRecentTabsEmptyView.setVisibility(showEmptyRecentTabsView ? View.VISIBLE : View.GONE);
     }
 
     /**
