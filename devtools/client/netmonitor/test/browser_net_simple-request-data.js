@@ -8,10 +8,12 @@
  */
 
 function test() {
+  let { L10N } = require("devtools/client/netmonitor/l10n");
+
   initNetMonitor(SIMPLE_SJS).then(({ tab, monitor }) => {
     info("Starting test... ");
 
-    let { L10N, NetMonitorView } = monitor.panelWin;
+    let { NetMonitorView } = monitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
