@@ -352,6 +352,15 @@ public:
    */
   virtual nsIAtom* LastScrollOrigin() = 0;
   /**
+   * Sets a flag on the scrollframe that indicates the current scroll origin
+   * has been sent over in a layers transaction, and subsequent changes to
+   * the scroll position by "weaker" origins are permitted to overwrite the
+   * the scroll origin. Scroll origins that nsLayoutUtils::CanScrollOriginClobberApz
+   * returns false for are considered "weaker" than scroll origins for which
+   * that function returns true.
+   */
+  virtual void AllowScrollOriginDowngrade() = 0;
+  /**
    * Returns the origin that triggered the last smooth scroll.
    * Will equal nsGkAtoms::apz when the compositor's replica frame
    * metrics includes the latest smooth scroll.  The compositor will always
