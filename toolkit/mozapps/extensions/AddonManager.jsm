@@ -67,10 +67,9 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
-const WEBAPI_INSTALL_HOSTS = ["addons.mozilla.org", "addons.cdn.mozilla.net", "testpilot.firefox.com"];
+const WEBAPI_INSTALL_HOSTS = ["addons.mozilla.org", "testpilot.firefox.com"];
 const WEBAPI_TEST_INSTALL_HOSTS = [
-  "addons.allizom.org", "addons-stage-cdn.allizom.org",
-  "addons-dev.allizom.org", "addons-dev-cdn-allizom.org",
+  "addons.allizom.org", "addons-dev.allizom.org",
   "testpilot.stage.mozaws.net", "testpilot.dev.mozaws.net",
   "example.com",
 ];
