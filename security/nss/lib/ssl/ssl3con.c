@@ -226,34 +226,46 @@ ssl3_CheckCipherSuiteOrderConsistency()
  * precedence (desirability).  It only includes compression methods we
  * implement.
  */
-static const /*SSLCompressionMethod*/ PRUint8 compressions[] = {
+static const SSLCompressionMethod ssl_compression_methods[] = {
 #ifdef NSS_SSL_ENABLE_ZLIB
     ssl_compression_deflate,
 #endif
     ssl_compression_null
 };
 
-static const int compressionMethodsCount =
-    sizeof(compressions) / sizeof(compressions[0]);
+static const unsigned int ssl_compression_method_count =
+    PR_ARRAY_SIZE(ssl_compression_methods);
 
 /* compressionEnabled returns true iff the compression algorithm is enabled
  * for the given SSL socket. */
 static PRBool
-compressionEnabled(sslSocket *ss, SSLCompressionMethod compression)
+ssl_CompressionEnabled(sslSocket *ss, SSLCompressionMethod compression)
 {
-    switch (compression) {
-        case ssl_compression_null:
-            return PR_TRUE; /* Always enabled */
-#ifdef NSS_SSL_ENABLE_ZLIB
-        case ssl_compression_deflate:
-            if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 && !IS_DTLS(ss)) {
-                return ss->opt.enableDeflate;
-            }
-            return PR_FALSE;
-#endif
-        default:
-            return PR_FALSE;
+    SSL3ProtocolVersion version;
+
+    if (compression == ssl_compression_null) {
+        return PR_TRUE; /* Always enabled */
     }
+    if (ss->sec.isServer) {
+        /* We can't easily check that the client didn't attempt TLS 1.3,
+         * so this will have to do. */
+        PORT_Assert(ss->version < SSL_LIBRARY_VERSION_TLS_1_3);
+        version = ss->version;
+    } else {
+        version = ss->vrange.max;
+    }
+    if (version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        return PR_FALSE;
+    }
+#ifdef NSS_SSL_ENABLE_ZLIB
+    if (compression == ssl_compression_deflate) {
+        if (IS_DTLS(ss)) {
+            return PR_FALSE;
+        }
+        return ss->opt.enableDeflate;
+    }
+#endif
+    return PR_FALSE;
 }
 
 static const /*SSL3ClientCertificateType */ PRUint8 certificate_types[] = {
@@ -1051,6 +1063,52 @@ ssl3_NegotiateVersion(sslSocket *ss, SSL3ProtocolVersion peerVersion,
     ss->version = PR_MIN(peerVersion, ss->vrange.max);
     PORT_Assert(ssl3_VersionIsSupported(ss->protocolVariant, ss->version));
 
+    return SECSuccess;
+}
+
+/* Used by the client when the server produces a version number.
+ * This reads, validates, and normalizes the value. */
+SECStatus
+ssl_ClientReadVersion(sslSocket *ss, SSL3Opaque **b, unsigned int *len,
+                      SSL3ProtocolVersion *version)
+{
+    SSL3ProtocolVersion v;
+    PRInt32 temp;
+
+    temp = ssl3_ConsumeHandshakeNumber(ss, 2, b, len);
+    if (temp < 0) {
+        return SECFailure; /* alert has been sent */
+    }
+
+#ifdef TLS_1_3_DRAFT_VERSION
+    if (temp == SSL_LIBRARY_VERSION_TLS_1_3) {
+        (void)SSL3_SendAlert(ss, alert_fatal, protocol_version);
+        PORT_SetError(SSL_ERROR_UNSUPPORTED_VERSION);
+        return SECFailure;
+    }
+    if (temp == tls13_EncodeDraftVersion(SSL_LIBRARY_VERSION_TLS_1_3)) {
+        v = SSL_LIBRARY_VERSION_TLS_1_3;
+    } else {
+        v = (SSL3ProtocolVersion)temp;
+    }
+#else
+    v = (SSL3ProtocolVersion)temp;
+#endif
+
+    if (IS_DTLS(ss)) {
+        /* If this fails, we get 0 back and the next check to fails. */
+        v = dtls_DTLSVersionToTLSVersion(v);
+    }
+
+    PORT_Assert(!SSL_ALL_VERSIONS_DISABLED(&ss->vrange));
+    if (ss->vrange.min > v || ss->vrange.max < v) {
+        (void)SSL3_SendAlert(ss, alert_fatal,
+                             (v > SSL_LIBRARY_VERSION_3_0) ? protocol_version
+                                                           : handshake_failure);
+        PORT_SetError(SSL_ERROR_UNSUPPORTED_VERSION);
+        return SECFailure;
+    }
+    *version = v;
     return SECSuccess;
 }
 
@@ -4867,12 +4925,20 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
     PRInt32 total_exten_len = 0;
     unsigned paddingExtensionLen;
     unsigned numCompressionMethods;
+    PRUint16 version;
 
     SSL_TRC(3, ("%d: SSL3[%d]: send %s ClientHello handshake", SSL_GETPID(),
                 ss->fd, ssl_ClientHelloTypeName(type)));
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
+
+    /* shouldn't get here if SSL3 is disabled, but ... */
+    if (SSL_ALL_VERSIONS_DISABLED(&ss->vrange)) {
+        PR_NOT_REACHED("No versions of SSL 3.0 or later are enabled");
+        PORT_SetError(SSL_ERROR_SSL_DISABLED);
+        return SECFailure;
+    }
 
     /* If we are responding to a HelloRetryRequest, don't reinitialize. We need
      * to maintain the handshake hashes. */
@@ -4964,7 +5030,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         }
 
         if (sidOK) {
-            /* Set ss->version based on the session cache */
+            /* Set version based on the sid. */
             if (ss->firstHsDone) {
                 /*
                  * Windows SChannel compares the client_version inside the RSA
@@ -4982,7 +5048,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
                  */
                 if (sid->version >= ss->vrange.min &&
                     sid->version <= ss->clientHelloVersion) {
-                    ss->version = ss->clientHelloVersion;
+                    version = ss->clientHelloVersion;
                 } else {
                     sidOK = PR_FALSE;
                 }
@@ -4997,11 +5063,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
                     sid->version > ss->vrange.max) {
                     sidOK = PR_FALSE;
                 } else {
-                    rv = ssl3_NegotiateVersion(ss, SSL_LIBRARY_VERSION_MAX_SUPPORTED,
-                                               PR_TRUE);
-                    if (rv != SECSuccess) {
-                        return rv; /* error code was set */
-                    }
+                    version = ss->vrange.max;
                 }
             }
         }
@@ -5034,26 +5096,25 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
          * ClientHello when renegotiating.
          */
         if (ss->firstHsDone) {
-            ss->version = ss->clientHelloVersion;
+            version = ss->clientHelloVersion;
         } else {
-            rv = ssl3_NegotiateVersion(ss, SSL_LIBRARY_VERSION_MAX_SUPPORTED,
-                                       PR_TRUE);
-            if (rv != SECSuccess)
-                return rv; /* error code was set */
+            version = ss->vrange.max;
         }
 
         sid = ssl3_NewSessionID(ss, PR_FALSE);
         if (!sid) {
             return SECFailure; /* memory error is set */
         }
+        /* ss->version isn't set yet, but the sid needs a sane value. */
+        sid->version = version;
     }
 
-    isTLS = (ss->version > SSL_LIBRARY_VERSION_3_0);
+    isTLS = (version > SSL_LIBRARY_VERSION_3_0);
     ssl_GetSpecWriteLock(ss);
     cwSpec = ss->ssl3.cwSpec;
     if (cwSpec->mac_def->mac == mac_null) {
         /* SSL records are not being MACed. */
-        cwSpec->version = ss->version;
+        cwSpec->version = version;
     }
     ssl_ReleaseSpecWriteLock(ss);
 
@@ -5061,13 +5122,6 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         ssl_FreeSID(ss->sec.ci.sid); /* decrement ref count, free if zero */
     }
     ss->sec.ci.sid = sid;
-
-    /* shouldn't get here if SSL3 is disabled, but ... */
-    if (SSL_ALL_VERSIONS_DISABLED(&ss->vrange)) {
-        PR_NOT_REACHED("No versions of SSL 3.0 or later are enabled");
-        PORT_SetError(SSL_ERROR_SSL_DISABLED);
-        return SECFailure;
-    }
 
     /* how many suites does our PKCS11 support (regardless of policy)? */
     num_suites = ssl3_config_match_init(ss);
@@ -5134,7 +5188,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
     }
 
     fallbackSCSV = ss->opt.enableFallbackSCSV && (!requestingResume ||
-                                                  ss->version < sid->version);
+                                                  version < sid->version);
     /* make room for SCSV */
     if (ss->ssl3.hs.sendingSCSV) {
         ++num_suites;
@@ -5145,8 +5199,8 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
 
     /* count compression methods */
     numCompressionMethods = 0;
-    for (i = 0; i < compressionMethodsCount; i++) {
-        if (compressionEnabled(ss, compressions[i]))
+    for (i = 0; i < ssl_compression_method_count; i++) {
+        if (ssl_CompressionEnabled(ss, ssl_compression_methods[i]))
             numCompressionMethods++;
     }
 
@@ -5186,14 +5240,14 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
     if (ss->firstHsDone) {
         /* The client hello version must stay unchanged to work around
          * the Windows SChannel bug described above. */
-        PORT_Assert(ss->version == ss->clientHelloVersion);
+        PORT_Assert(version == ss->clientHelloVersion);
     }
-    ss->clientHelloVersion = PR_MIN(ss->version, SSL_LIBRARY_VERSION_TLS_1_2);
+    ss->clientHelloVersion = PR_MIN(version, SSL_LIBRARY_VERSION_TLS_1_2);
     if (IS_DTLS(ss)) {
-        PRUint16 version;
+        PRUint16 dtlsVersion;
 
-        version = dtls_TLSVersionToDTLSVersion(ss->clientHelloVersion);
-        rv = ssl3_AppendHandshakeNumber(ss, version, 2);
+        dtlsVersion = dtls_TLSVersionToDTLSVersion(ss->clientHelloVersion);
+        rv = ssl3_AppendHandshakeNumber(ss, dtlsVersion, 2);
     } else {
         rv = ssl3_AppendHandshakeNumber(ss, ss->clientHelloVersion, 2);
     }
@@ -5319,10 +5373,10 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         }
         return rv; /* err set by ssl3_AppendHandshake* */
     }
-    for (i = 0; i < compressionMethodsCount; i++) {
-        if (!compressionEnabled(ss, compressions[i]))
+    for (i = 0; i < ssl_compression_method_count; i++) {
+        if (!ssl_CompressionEnabled(ss, ssl_compression_methods[i]))
             continue;
-        rv = ssl3_AppendHandshakeNumber(ss, compressions[i], 1);
+        rv = ssl3_AppendHandshakeNumber(ss, ssl_compression_methods[i], 1);
         if (rv != SECSuccess) {
             if (sid->u.ssl3.lock) {
                 PR_RWLock_Unlock(sid->u.ssl3.lock);
@@ -5379,7 +5433,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
             ssl_renegotiation_info_xtn;
     }
 
-    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    if (version >= SSL_LIBRARY_VERSION_TLS_1_3) {
         rv = tls13_MaybeDo0RTTHandshake(ss);
         if (rv != SECSuccess) {
             return SECFailure; /* error code set already. */
@@ -5394,7 +5448,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
     if (!IS_DTLS(ss) && ss->ssl3.hs.zeroRttState == ssl_0rtt_sent) {
         int sent;
 
-        PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
+        PORT_Assert(version >= SSL_LIBRARY_VERSION_TLS_1_3);
         PORT_Assert(ss->pendingBuf.len);
         sent = ssl_SendSavedWriteData(ss);
         if (sent < 0) {
@@ -6468,7 +6522,6 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SECItem sidBytes = { siBuffer, NULL, 0 };
     PRBool isTLS = PR_FALSE;
     SSL3AlertDescription desc = illegal_parameter;
-    SSL3ProtocolVersion version;
 #ifndef TLS_1_3_DRAFT_VERSION
     SSL3ProtocolVersion downgradeCheckVersion;
 #endif
@@ -6499,49 +6552,23 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         ss->ssl3.clientPrivateKey = NULL;
     }
 
-    temp = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
-    if (temp < 0) {
+    rv = ssl_ClientReadVersion(ss, &b, &length, &ss->version);
+    if (rv != SECSuccess) {
         goto loser; /* alert has been sent */
-    }
-    version = tls13_DecodeDraftVersion((PRUint16)temp);
-
-    /* Try to translate DTLS versions. */
-    if (IS_DTLS(ss)) {
-        /* RFC 4347 required that you verify that the server versions
-         * match (Section 4.2.1) in the HelloVerifyRequest and the
-         * ServerHello.
-         *
-         * RFC 6347 suggests (SHOULD) that servers always use 1.0
-         * in HelloVerifyRequest and allows the versions not to match,
-         * especially when 1.2 is being negotiated.
-         *
-         * Therefore we do not check for matching here.
-         */
-        version = dtls_DTLSVersionToTLSVersion(version);
-        if (version == 0) { /* Insane version number */
-            goto alert_loser;
-        }
     }
 
     /* We got a HelloRetryRequest, but the server didn't pick 1.3.  Scream. */
-    if (ss->ssl3.hs.helloRetry && version < SSL_LIBRARY_VERSION_TLS_1_3) {
+    if (ss->ssl3.hs.helloRetry && ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
         desc = illegal_parameter;
         errCode = SSL_ERROR_RX_MALFORMED_SERVER_HELLO;
         goto alert_loser;
     }
 
-    rv = ssl3_NegotiateVersion(ss, version, PR_FALSE);
-    if (rv != SECSuccess) {
-        desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version
-                                                   : handshake_failure;
-        errCode = SSL_ERROR_UNSUPPORTED_VERSION;
-        goto alert_loser;
-    }
     /* Check that the server negotiated the same version as it did
      * in the first handshake. This isn't really the best place for
      * us to be getting this version number, but it's what we have.
      * (1294697). */
-    if (ss->firstHsDone && (version != ss->ssl3.crSpec->version)) {
+    if (ss->firstHsDone && (ss->version != ss->ssl3.crSpec->version)) {
         desc = illegal_parameter;
         errCode = SSL_ERROR_UNSUPPORTED_VERSION;
         goto alert_loser;
@@ -6606,7 +6633,12 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     if (temp < 0) {
         goto loser; /* alert has been sent */
     }
-    ssl3_config_match_init(ss);
+    i = ssl3_config_match_init(ss);
+    PORT_Assert(i > 0);
+    if (i <= 0) {
+        errCode = PORT_GetError();
+        goto loser;
+    }
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
         ssl3CipherSuiteCfg *suite = &ss->cipherSuites[i];
         if (temp == suite->cipher_suite) {
@@ -6648,9 +6680,9 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
             goto loser; /* alert has been sent */
         }
         suite_found = PR_FALSE;
-        for (i = 0; i < compressionMethodsCount; i++) {
-            if (temp == compressions[i]) {
-                if (!compressionEnabled(ss, compressions[i])) {
+        for (i = 0; i < ssl_compression_method_count; i++) {
+            if (temp == ssl_compression_methods[i]) {
+                if (!ssl_CompressionEnabled(ss, ssl_compression_methods[i])) {
                     break; /* failure */
                 }
                 suite_found = PR_TRUE;
@@ -8539,7 +8571,7 @@ ssl3_HandleClientHelloPart2(sslSocket *ss,
 #endif
 
             /* Check that the cached compression method is still enabled. */
-            if (!compressionEnabled(ss, sid->u.ssl3.compression))
+            if (!ssl_CompressionEnabled(ss, sid->u.ssl3.compression))
                 break;
 
             /* Check that the cached compression method is in the client's list */
@@ -8620,12 +8652,12 @@ ssl3_HandleClientHelloPart2(sslSocket *ss,
 
     /* Select a compression algorithm. */
     for (i = 0; i < comps->len; i++) {
-        if (!compressionEnabled(ss, comps->data[i]))
+        SSLCompressionMethod method = (SSLCompressionMethod)comps->data[i];
+        if (!ssl_CompressionEnabled(ss, method))
             continue;
-        for (j = 0; j < compressionMethodsCount; j++) {
-            if (comps->data[i] == compressions[j]) {
-                ss->ssl3.hs.compression =
-                    (SSLCompressionMethod)compressions[j];
+        for (j = 0; j < ssl_compression_method_count; j++) {
+            if (method == ssl_compression_methods[j]) {
+                ss->ssl3.hs.compression = ssl_compression_methods[j];
                 goto compression_found;
             }
         }
@@ -11710,6 +11742,13 @@ ssl3_HandlePostHelloHandshakeMessage(sslSocket *ss, SSL3Opaque *b,
             }
             rv = ssl3_HandleHelloRequest(ss);
             break;
+
+        case hello_retry_request:
+            /* This arrives here because - as a client - we haven't received a
+             * final decision on the version from the server. */
+            rv = tls13_HandleHelloRetryRequest(ss, b, length);
+            break;
+
         case hello_verify_request:
             if (!IS_DTLS(ss) || ss->sec.isServer) {
                 (void)SSL3_SendAlert(ss, alert_fatal, unexpected_message);
