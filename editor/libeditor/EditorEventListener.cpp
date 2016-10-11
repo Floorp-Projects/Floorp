@@ -934,19 +934,16 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(domDataTransfer);
   NS_ENSURE_TRUE(dataTransfer, false);
 
-  ErrorResult err;
-  RefPtr<DOMStringList> types = dataTransfer->GetTypes(err);
-  if (NS_WARN_IF(err.Failed())) {
-    return false;
-  }
+  nsTArray<nsString> types;
+  dataTransfer->GetTypes(types);
 
   // Plaintext editors only support dropping text. Otherwise, HTML and files
   // can be dropped as well.
-  if (!types->Contains(NS_LITERAL_STRING(kTextMime)) &&
-      !types->Contains(NS_LITERAL_STRING(kMozTextInternal)) &&
+  if (!types.Contains(NS_LITERAL_STRING(kTextMime)) &&
+      !types.Contains(NS_LITERAL_STRING(kMozTextInternal)) &&
       (mEditorBase->IsPlaintextEditor() ||
-       (!types->Contains(NS_LITERAL_STRING(kHTMLMime)) &&
-        !types->Contains(NS_LITERAL_STRING(kFileMime))))) {
+       (!types.Contains(NS_LITERAL_STRING(kHTMLMime)) &&
+        !types.Contains(NS_LITERAL_STRING(kFileMime))))) {
     return false;
   }
 

@@ -17,8 +17,8 @@ interface DataTransfer {
   [Throws]
   void setDragImage(Element image, long x, long y);
 
-  [Throws]
-  readonly attribute DOMStringList types;
+  [Pure, Cached, Frozen]
+  readonly attribute sequence<DOMString> types;
   [Throws, NeedsSubjectPrincipal]
   DOMString getData(DOMString format);
   [Throws, NeedsSubjectPrincipal]
