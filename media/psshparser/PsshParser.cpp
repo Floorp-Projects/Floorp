@@ -17,7 +17,7 @@
 #include "PsshParser.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
+#include "mozilla/EndianUtils.h"
 #include <memory.h>
 #include <algorithm>
 #include <assert.h>
@@ -112,8 +112,6 @@ ParseCENCInitData(const uint8_t* aInitData,
                   uint32_t aInitDataSize,
                   std::vector<std::vector<uint8_t>>& aOutKeyIds)
 {
-  aOutKeyIds.clear();
-  std::vector<std::vector<uint8_t>> keyIds;
   ByteReader reader(aInitData, aInitDataSize);
   while (reader.CanRead32()) {
     // Box size. For the common system Id, ignore this, as some useragents
@@ -168,14 +166,13 @@ ParseCENCInitData(const uint8_t* aInitData,
     }
     uint32_t kidCount = reader.ReadU32();
 
-    if (kidCount * CENC_KEY_LEN > reader.Remaining()) {
-      // Not enough bytes remaining to read all keys.
-      return false;
-    }
-
     for (uint32_t i = 0; i < kidCount; i++) {
+      if (reader.Remaining() < CENC_KEY_LEN) {
+        // Not enough remaining to read key.
+        return false;
+      }
       const uint8_t* kid = reader.Read(CENC_KEY_LEN);
-      keyIds.push_back(std::vector<uint8_t>(kid, kid + CENC_KEY_LEN));
+      aOutKeyIds.push_back(std::vector<uint8_t>(kid, kid + CENC_KEY_LEN));
     }
 
     // Size of extra data. EME CENC format spec says datasize should
@@ -191,6 +188,5 @@ ParseCENCInitData(const uint8_t* aInitData,
       reader.Seek(end);
     }
   }
-  aOutKeyIds = mozilla::Move(keyIds);
   return true;
 }

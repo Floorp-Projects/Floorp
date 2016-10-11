@@ -112,7 +112,7 @@ const uint8_t gGoogleWPTCencInitData[] = {
 // Example CENC initData from the EME spec format registry:
 // https://w3c.github.io/encrypted-media/format-registry/initdata/cenc.html
 const uint8_t gW3SpecExampleCencInitData[] = {
-  0x00, 0x00, 0x00, 0x44, 0x70, 0x73, 0x73, 0x68, // BMFF box header (68 bytes, 'pssh')
+  0x00, 0x00, 0x00, 0x4c, 0x70, 0x73, 0x73, 0x68, // BMFF box header (76 bytes, 'pssh')
   0x01, 0x00, 0x00, 0x00,                         // Full box header (version = 1, flags = 0)
   0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, // SystemID
   0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2, 0xfb, 0x4b,
@@ -129,9 +129,9 @@ const uint8_t gOverflowBoxSize[] = {
   0xff, 0xff, 0xff, 0xff,                          // size = UINT32_MAX
 };
 
-// Valid box size, but key count too large.
-const uint8_t gTooLargeKeyCountInitData[] = {
-  0x00, 0x00, 0x00, 0x34,                          // size = too big a number
+// Invalid box size, but retrievable data.
+const uint8_t gMalformedCencInitData[] = {
+  0x00, 0x00, 0xff, 0xff,                          // size = too big a number
   0x70, 0x73, 0x73, 0x68,                          // 'pssh'
   0x01,                                            // version = 1
   0xff, 0xff, 0xff,                                // flags
@@ -143,9 +143,12 @@ const uint8_t gTooLargeKeyCountInitData[] = {
   0xff, 0xff, 0xff, 0xff                           // datasize
 };
 
-// Non common SystemID PSSH.
-// No keys Ids can be extracted, but don't consider the box invalid.
-const uint8_t gNonCencInitData[] = {
+// Non PSSH box, followed by Non common SystemID PSSH, followed by common SystemID PSSH box.
+const uint8_t gLeadingNonCommonCencInitData[] = {
+  0x00, 0x00, 0x00, 0x09,                          // size = 9
+  0xff, 0xff, 0xff, 0xff,                          // something other than 'pssh'
+  0xff,                                            // odd number of bytes of garbage to throw off the parser
+
   0x00, 0x00, 0x00, 0x5c,                          // size = 92
   0x70, 0x73, 0x73, 0x68,                          // 'pssh'
   0x01,                                            // version = 1
@@ -160,6 +163,18 @@ const uint8_t gNonCencInitData[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+  // gW3SpecExampleCencInitData
+  0x00, 0x00, 0x00, 0x4c, 0x70, 0x73, 0x73, 0x68, // BMFF box header (76 bytes, 'pssh')
+  0x01, 0x00, 0x00, 0x00,                         // Full box header (version = 1, flags = 0)
+  0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, // SystemID
+  0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2, 0xfb, 0x4b,
+  0x00, 0x00, 0x00, 0x02,                         // KID_count (2)
+  0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, // First KID ("0123456789012345")
+  0x38, 0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35,
+  0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, // Second KID ("ABCDEFGHIJKLMNOP")
+  0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f, 0x50,
+  0x00, 0x00, 0x00, 0x00                         // Size of Data (0)
 };
 
 const uint8_t gNonPSSHBoxZeroSize[] = {
@@ -195,42 +210,46 @@ const uint8_t g2xGoogleWPTCencInitData[] = {
 
 TEST(ClearKey, ParseCencInitData) {
   std::vector<std::vector<uint8_t>> keyIds;
-  bool rv;
 
-  rv = ParseCENCInitData(gGoogleWPTCencInitData, MOZ_ARRAY_LENGTH(gGoogleWPTCencInitData), keyIds);
-  EXPECT_EQ(true, rv);
+  ParseCENCInitData(gGoogleWPTCencInitData, MOZ_ARRAY_LENGTH(gGoogleWPTCencInitData), keyIds);
   EXPECT_EQ(keyIds.size(), 1u);
   EXPECT_EQ(keyIds[0].size(), 16u);
   EXPECT_EQ(memcmp(&keyIds[0].front(), &gGoogleWPTCencInitData[32], 16), 0);
 
-  rv = ParseCENCInitData(gW3SpecExampleCencInitData, MOZ_ARRAY_LENGTH(gW3SpecExampleCencInitData), keyIds);
-  EXPECT_EQ(true, rv);
+  keyIds.clear();
+  ParseCENCInitData(gW3SpecExampleCencInitData, MOZ_ARRAY_LENGTH(gW3SpecExampleCencInitData), keyIds);
   EXPECT_EQ(keyIds.size(), 2u);
   EXPECT_EQ(keyIds[0].size(), 16u);
   EXPECT_EQ(memcmp(&keyIds[0].front(), &gW3SpecExampleCencInitData[32], 16), 0);
   EXPECT_EQ(memcmp(&keyIds[1].front(), &gW3SpecExampleCencInitData[48], 16), 0);
 
-  rv = ParseCENCInitData(gOverflowBoxSize, MOZ_ARRAY_LENGTH(gOverflowBoxSize), keyIds);
-  EXPECT_EQ(false, rv);
+  keyIds.clear();
+  ParseCENCInitData(gOverflowBoxSize, MOZ_ARRAY_LENGTH(gOverflowBoxSize), keyIds);
   EXPECT_EQ(keyIds.size(), 0u);
 
-  rv = ParseCENCInitData(gTooLargeKeyCountInitData, MOZ_ARRAY_LENGTH(gTooLargeKeyCountInitData), keyIds);
-  EXPECT_EQ(false, rv);
-  EXPECT_EQ(0u, keyIds.size());
+  keyIds.clear();
+  ParseCENCInitData(gMalformedCencInitData, MOZ_ARRAY_LENGTH(gMalformedCencInitData), keyIds);
+  EXPECT_EQ(keyIds.size(), 1u);
+  EXPECT_EQ(keyIds[0].size(), 16u);
+  EXPECT_EQ(memcmp(&keyIds[0].front(), &gMalformedCencInitData[32], 16), 0);
 
-  rv = ParseCENCInitData(gNonCencInitData, MOZ_ARRAY_LENGTH(gNonCencInitData), keyIds);
-  EXPECT_EQ(true, rv);
-  EXPECT_EQ(0u, keyIds.size());
+  keyIds.clear();
+  ParseCENCInitData(gLeadingNonCommonCencInitData, MOZ_ARRAY_LENGTH(gLeadingNonCommonCencInitData), keyIds);
+  EXPECT_EQ(keyIds.size(), 2u);
+  EXPECT_EQ(keyIds[0].size(), 16u);
+  EXPECT_EQ(memcmp(&keyIds[0].front(), &gW3SpecExampleCencInitData[32], 16), 0);
+  EXPECT_EQ(memcmp(&keyIds[1].front(), &gW3SpecExampleCencInitData[48], 16), 0);
 
-  rv = ParseCENCInitData(gNonPSSHBoxZeroSize, MOZ_ARRAY_LENGTH(gNonPSSHBoxZeroSize), keyIds);
-  EXPECT_EQ(false, rv);
+  keyIds.clear();
+  ParseCENCInitData(gNonPSSHBoxZeroSize, MOZ_ARRAY_LENGTH(gNonPSSHBoxZeroSize), keyIds);
   EXPECT_EQ(keyIds.size(), 0u);
 
-  rv = ParseCENCInitData(g2xGoogleWPTCencInitData, MOZ_ARRAY_LENGTH(g2xGoogleWPTCencInitData), keyIds);
-  EXPECT_EQ(true, rv);
+  keyIds.clear();
+  ParseCENCInitData(g2xGoogleWPTCencInitData, MOZ_ARRAY_LENGTH(g2xGoogleWPTCencInitData), keyIds);
   EXPECT_EQ(keyIds.size(), 2u);
   EXPECT_EQ(keyIds[0].size(), 16u);
   EXPECT_EQ(keyIds[1].size(), 16u);
   EXPECT_EQ(memcmp(&keyIds[0].front(), &g2xGoogleWPTCencInitData[32], 16), 0);
   EXPECT_EQ(memcmp(&keyIds[1].front(), &g2xGoogleWPTCencInitData[84], 16), 0);
+
 }
