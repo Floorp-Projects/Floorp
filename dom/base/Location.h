@@ -44,8 +44,7 @@ public:
   NS_DECL_NSIDOMLOCATION
 
   #define THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME() { \
-    MOZ_ASSERT(aSubjectPrincipal.isSome()); \
-    if (!CallerSubsumes(aSubjectPrincipal.value())) { \
+    if (!CallerSubsumes(&aSubjectPrincipal)) { \
       aError.Throw(NS_ERROR_DOM_SECURITY_ERR); \
       return; \
     } \
@@ -53,7 +52,7 @@ public:
 
   // WebIDL API:
   void Assign(const nsAString& aUrl,
-              const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+              nsIPrincipal& aSubjectPrincipal,
               ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -61,14 +60,14 @@ public:
   }
 
   void Replace(const nsAString& aUrl,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError)
   {
     aError = Replace(aUrl);
   }
 
   void Reload(bool aForceget,
-              const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+              nsIPrincipal& aSubjectPrincipal,
               ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -76,7 +75,7 @@ public:
   }
 
   void GetHref(nsAString& aHref,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -84,14 +83,14 @@ public:
   }
 
   void SetHref(const nsAString& aHref,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError)
   {
     aError = SetHref(aHref);
   }
 
   void GetOrigin(nsAString& aOrigin,
-                 const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                 nsIPrincipal& aSubjectPrincipal,
                  ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -99,7 +98,7 @@ public:
   }
 
   void GetProtocol(nsAString& aProtocol,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                   nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -107,7 +106,7 @@ public:
   }
 
   void SetProtocol(const nsAString& aProtocol,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                   nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -115,7 +114,7 @@ public:
   }
 
   void GetHost(nsAString& aHost,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -123,7 +122,7 @@ public:
   }
 
   void SetHost(const nsAString& aHost,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -131,7 +130,7 @@ public:
   }
 
   void GetHostname(nsAString& aHostname,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                   nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -139,7 +138,7 @@ public:
   }
 
   void SetHostname(const nsAString& aHostname,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                   nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -147,7 +146,7 @@ public:
   }
 
   void GetPort(nsAString& aPort,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -155,7 +154,7 @@ public:
   }
 
   void SetPort(const nsAString& aPort,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -163,7 +162,7 @@ public:
   }
 
   void GetPathname(nsAString& aPathname,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                   nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -171,7 +170,7 @@ public:
   }
 
   void SetPathname(const nsAString& aPathname,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                   nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -179,7 +178,7 @@ public:
   }
 
   void GetSearch(nsAString& aSeach,
-                 const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                 nsIPrincipal& aSubjectPrincipal,
                  ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -187,7 +186,7 @@ public:
   }
 
   void SetSearch(const nsAString& aSeach,
-                 const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                 nsIPrincipal& aSubjectPrincipal,
                  ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -195,7 +194,7 @@ public:
   }
 
   void GetHash(nsAString& aHash,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -203,7 +202,7 @@ public:
   }
 
   void SetHash(const nsAString& aHash,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError)
   {
     THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
@@ -211,7 +210,7 @@ public:
   }
 
   void Stringify(nsAString& aRetval,
-                 const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                 nsIPrincipal& aSubjectPrincipal,
                  ErrorResult& aError)
   {
     // GetHref checks CallerSubsumes.

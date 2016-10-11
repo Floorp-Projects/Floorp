@@ -794,6 +794,10 @@ interface TestJSImplInterface {
   [Throws] attribute boolean throwingAttr;
   [GetterThrows] attribute boolean throwingGetterAttr;
   [SetterThrows] attribute boolean throwingSetterAttr;
+  // NeedsSubjectPrincipal not supported on JS-implemented things for
+  // now, because we always pass in the caller principal anyway.
+  //  [NeedsSubjectPrincipal] void needsSubjectPrincipalMethod();
+  //  [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
   // legacycaller short(unsigned long arg1, TestInterface arg2);
   void passArgsWithDefaults(optional long arg1,
                             optional TestInterface? arg2 = null,
