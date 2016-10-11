@@ -1022,7 +1022,7 @@ fails-if(Android) fails-if(usesRepeatResampling) == 421885-1.xml 421885-1-ref.xm
 == 422678-1.html 422678-1-ref.html
 == 423130-1.html 423130-1-ref.html
 == 423385-1.html 423385-1-ref.html
-== 423599-1.html 423599-1-ref.html
+random-if(gtkWidget) == 423599-1.html 423599-1-ref.html # bug 1309095
 == 423676-1.html 423676-1-ref.html
 fails == 423823-1.html 423823-1-ref.html # scrolling rowgroups were removed in bug 28800
 == 424074-1.xul 424074-1-ref.xul
