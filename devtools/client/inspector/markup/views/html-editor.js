@@ -1,7 +1,7 @@
-/* vim:set ts=2 sw=2 sts=2 et tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const Editor = require("devtools/client/sourceeditor/editor");
@@ -19,9 +19,9 @@ const EventEmitter = require("devtools/shared/event-emitter");
  *
  * Meant to be embedded inside of an HTML page, as in markup.xhtml.
  *
- * @param HTMLDocument htmlDocument
- *        The document to attach the editor to.  Will also use this
- *        document as a basis for listening resize events.
+ * @param  {HTMLDocument} htmlDocument
+ *         The document to attach the editor to.  Will also use this
+ *         document as a basis for listening resize events.
  */
 function HTMLEditor(htmlDocument) {
   this.doc = htmlDocument;
@@ -82,9 +82,9 @@ HTMLEditor.prototype = {
   /**
    * Anchor the editor to a particular element.
    *
-   * @param DOMNode element
-   *        The element that the editor will be anchored to.
-   *        Should belong to the HTMLDocument passed into the constructor.
+   * @param  {DOMNode} element
+   *         The element that the editor will be anchored to.
+   *         Should belong to the HTMLDocument passed into the constructor.
    */
   _attach: function (element) {
     this._detach();
@@ -106,13 +106,13 @@ HTMLEditor.prototype = {
   /**
    * Anchor the editor to a particular element, and show the editor.
    *
-   * @param DOMNode element
-   *        The element that the editor will be anchored to.
-   *        Should belong to the HTMLDocument passed into the constructor.
-   * @param string text
-   *        Value to set the contents of the editor to
-   * @param function cb
-   *        The function to call when hiding
+   * @param  {DOMNode} element
+   *         The element that the editor will be anchored to.
+   *         Should belong to the HTMLDocument passed into the constructor.
+   * @param  {String} text
+   *         Value to set the contents of the editor to
+   * @param  {Function} cb
+   *         The function to call when hiding
    */
   show: function (element, text) {
     if (this._visible) {
@@ -134,9 +134,9 @@ HTMLEditor.prototype = {
   /**
    * Hide the editor, optionally committing the changes
    *
-   * @param bool shouldCommit
-   *             A change will be committed by default.  If this param
-   *             strictly equals false, no change will occur.
+   * @param  {Boolean} shouldCommit
+   *         A change will be committed by default.  If this param
+   *         strictly equals false, no change will occur.
    */
   hide: function (shouldCommit) {
     if (!this._visible) {
@@ -177,4 +177,4 @@ function stopPropagation(e) {
   e.stopPropagation();
 }
 
-exports.HTMLEditor = HTMLEditor;
+module.exports = HTMLEditor;

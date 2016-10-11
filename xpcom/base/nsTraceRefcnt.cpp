@@ -83,6 +83,7 @@ static PLHashTable* gTypesToLog;
 static PLHashTable* gObjectsToLog;
 static PLHashTable* gSerialNumbers;
 static intptr_t gNextSerialNumber;
+static bool gDumpedStatistics = false;
 
 // By default, debug builds only do bloat logging. Bloat logging
 // only tries to record when an object is created or destroyed, so we
@@ -523,6 +524,11 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
   }
 
   AutoTraceLogLock lock;
+
+  MOZ_ASSERT(!gDumpedStatistics,
+             "Calling DumpStatistics more than once may result in "
+             "bogus positive or negative leaks being reported");
+  gDumpedStatistics = true;
 
   // Don't try to log while we hold the lock, we'd deadlock.
   AutoRestore<LoggingType> saveLogging(gLogging);
