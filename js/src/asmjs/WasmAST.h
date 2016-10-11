@@ -626,14 +626,14 @@ class AstImport : public AstNode
     DefinitionKind kind_;
 
     AstRef funcSig_;
-    Limits resizable_;
+    ResizableLimits resizable_;
     AstGlobal global_;
 
   public:
     AstImport(AstName name, AstName module, AstName field, AstRef funcSig)
       : name_(name), module_(module), field_(field), kind_(DefinitionKind::Function), funcSig_(funcSig)
     {}
-    AstImport(AstName name, AstName module, AstName field, DefinitionKind kind, Limits resizable)
+    AstImport(AstName name, AstName module, AstName field, DefinitionKind kind, ResizableLimits resizable)
       : name_(name), module_(module), field_(field), kind_(kind), resizable_(resizable)
     {}
     AstImport(AstName name, AstName module, AstName field, AstGlobal global)
@@ -649,7 +649,7 @@ class AstImport : public AstNode
         MOZ_ASSERT(kind_ == DefinitionKind::Function);
         return funcSig_;
     }
-    Limits resizable() const {
+    ResizableLimits resizable() const {
         MOZ_ASSERT(kind_ == DefinitionKind::Memory || kind_ == DefinitionKind::Table);
         return resizable_;
     }
@@ -744,8 +744,8 @@ class AstModule : public AstNode
     SigMap               sigMap_;
     ImportVector         imports_;
     NameVector           funcImportNames_;
-    Maybe<Limits>        table_;
-    Maybe<Limits>        memory_;
+    Maybe<ResizableLimits> table_;
+    Maybe<ResizableLimits> memory_;
     ExportVector         exports_;
     Maybe<AstStartFunc>  startFunc_;
     FuncVector           funcs_;
@@ -769,7 +769,7 @@ class AstModule : public AstNode
     bool init() {
         return sigMap_.init();
     }
-    bool setMemory(Limits memory) {
+    bool setMemory(ResizableLimits memory) {
         if (memory_)
             return false;
         memory_.emplace(memory);
@@ -778,10 +778,10 @@ class AstModule : public AstNode
     bool hasMemory() const {
         return !!memory_;
     }
-    const Limits& memory() const {
+    const ResizableLimits& memory() const {
         return *memory_;
     }
-    bool setTable(Limits table) {
+    bool setTable(ResizableLimits table) {
         if (table_)
             return false;
         table_.emplace(table);
@@ -790,7 +790,7 @@ class AstModule : public AstNode
     bool hasTable() const {
         return !!table_;
     }
-    const Limits& table() const {
+    const ResizableLimits& table() const {
         return *table_;
     }
     bool append(AstDataSegment* seg) {

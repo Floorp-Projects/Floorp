@@ -609,8 +609,8 @@ DecodeResizableMemory(Decoder& d, ModuleGeneratorData* init)
     if (UsesMemory(init->memoryUsage))
         return d.fail("already have default memory");
 
-    Limits limits;
-    if (!DecodeLimits(d, &limits))
+    ResizableLimits limits;
+    if (!DecodeResizable(d, &limits))
         return false;
 
     init->memoryUsage = MemoryUsage::Unshared;
@@ -644,8 +644,8 @@ DecodeResizableTable(Decoder& d, ModuleGeneratorData* init)
     if (elementType != uint32_t(TypeConstructor::AnyFunc))
         return d.fail("expected 'anyfunc' element type");
 
-    Limits limits;
-    if (!DecodeLimits(d, &limits))
+    ResizableLimits limits;
+    if (!DecodeResizable(d, &limits))
         return false;
 
     if (!init->tables.empty())

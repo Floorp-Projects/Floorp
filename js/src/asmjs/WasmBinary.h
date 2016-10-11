@@ -1096,10 +1096,10 @@ DecodeLocalEntries(Decoder& d, ValTypeVector* locals);
 MOZ_MUST_USE bool
 DecodeGlobalType(Decoder& d, ValType* type, uint32_t* flags);
 
-struct Limits;
+struct ResizableLimits;
 
 MOZ_MUST_USE bool
-DecodeLimits(Decoder& d, Limits* limits);
+DecodeResizable(Decoder& d, ResizableLimits* resizable);
 
 MOZ_MUST_USE bool
 DecodeUnknownSections(Decoder& d);
