@@ -139,7 +139,7 @@
       ]]></handler>
 
       <handler event="dragover"><![CDATA[
-        if (event.dataTransfer.types.contains("text/plain"))
+        if (event.dataTransfer.types.includes("text/plain"))
           event.preventDefault();
       ]]></handler>
 

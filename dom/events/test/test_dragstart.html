@@ -118,7 +118,7 @@ function doDragStartSelection(event)
   gDataTransfer = dt;
 
   var types = dt.types;
-  is(types instanceof DOMStringList, true, "initial types is a DOMStringList");
+  ok(Array.isArray(types), "initial types is an Array");
   checkTypes(dt, ["text/_moz_htmlcontext", "text/_moz_htmlinfo", "text/html", "text/plain"], 0, "initial selection");
 
   is(dt.getData("text/plain"), "This is a draggable bit of text.", "initial selection text/plain");
@@ -148,7 +148,7 @@ function test_DataTransfer(dt)
   is(dt.mozItemCount, 0, "empty itemCount");
 
   var types = dt.types;
-  is(types instanceof DOMStringList, true, "empty types is a DOMStringList");
+  ok(Array.isArray(types), "empty types is an Array");
   checkTypes(dt, [], 0, "empty");
   is(dt.getData("text/plain"), "", "empty data is empty");
 
