@@ -74,12 +74,6 @@ DataTransferItem::Clone(DataTransfer* aDataTransfer) const
 }
 
 void
-DataTransferItem::SetType(const nsAString& aType)
-{
-  mType = aType;
-}
-
-void
 DataTransferItem::SetData(nsIVariant* aData)
 {
   // Invalidate our file cache, we will regenerate it with the new data
