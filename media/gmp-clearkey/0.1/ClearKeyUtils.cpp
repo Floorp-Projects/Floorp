@@ -55,22 +55,22 @@ IncrementIV(vector<uint8_t>& aIV) {
 ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
                           vector<uint8_t>& aData, vector<uint8_t>& aIV)
 {
-  assert(aIV.size() == CENC_KEY_LEN);
-  assert(aKey.size() == CENC_KEY_LEN);
+  assert(aIV.size() == CLEARKEY_KEY_LEN);
+  assert(aKey.size() == CLEARKEY_KEY_LEN);
 
   OAES_CTX* aes = oaes_alloc();
   oaes_key_import_data(aes, &aKey[0], aKey.size());
   oaes_set_option(aes, OAES_OPTION_ECB, nullptr);
 
-  for (size_t i = 0; i < aData.size(); i += CENC_KEY_LEN) {
+  for (size_t i = 0; i < aData.size(); i += CLEARKEY_KEY_LEN) {
     size_t encLen;
-    oaes_encrypt(aes, &aIV[0], CENC_KEY_LEN, nullptr, &encLen);
+    oaes_encrypt(aes, &aIV[0], CLEARKEY_KEY_LEN, nullptr, &encLen);
 
     vector<uint8_t> enc(encLen);
-    oaes_encrypt(aes, &aIV[0], CENC_KEY_LEN, &enc[0], &encLen);
+    oaes_encrypt(aes, &aIV[0], CLEARKEY_KEY_LEN, &enc[0], &encLen);
 
-    assert(encLen >= 2 * OAES_BLOCK_SIZE + CENC_KEY_LEN);
-    size_t blockLen = min(aData.size() - i, CENC_KEY_LEN);
+    assert(encLen >= 2 * OAES_BLOCK_SIZE + CLEARKEY_KEY_LEN);
+    size_t blockLen = min(aData.size() - i, CLEARKEY_KEY_LEN);
     for (size_t j = 0; j < blockLen; j++) {
       aData[i + j] ^= enc[2 * OAES_BLOCK_SIZE + j];
     }
