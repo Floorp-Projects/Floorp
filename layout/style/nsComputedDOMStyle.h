@@ -593,6 +593,8 @@ private:
                           nsDOMCSSValueList* aValueList);
   void SetValueToFragmentOrURL(const mozilla::FragmentOrURL* aFragmentOrURL,
                                nsROCSSPrimitiveValue* aValue);
+  void SetValueToURLValue(const mozilla::css::URLValueData* aURL,
+                          nsROCSSPrimitiveValue* aValue);
 
   /**
    * A method to get a percentage base for a percentage value.  Returns true
