@@ -600,7 +600,7 @@ nsSVGEffects::GetPaintServer(nsIFrame* aTargetFrame,
                              PaintingPropertyDescriptor aType)
 {
   const nsStyleSVG* svgStyle = aTargetFrame->StyleSVG();
-  if ((svgStyle->*aPaint).mType != eStyleSVGPaintType_Server)
+  if ((svgStyle->*aPaint).Type() != eStyleSVGPaintType_Server)
     return nullptr;
 
   // If we're looking at a frame within SVG text, then we need to look up
@@ -1037,10 +1037,11 @@ nsSVGEffects::GetPaintURI(nsIFrame* aFrame,
                           nsStyleSVGPaint nsStyleSVG::* aPaint)
 {
   const nsStyleSVG* svgStyle = aFrame->StyleSVG();
-  MOZ_ASSERT((svgStyle->*aPaint).mType ==
+  MOZ_ASSERT((svgStyle->*aPaint).Type() ==
              nsStyleSVGPaintType::eStyleSVGPaintType_Server);
 
-  return ResolveFragmentOrURL(aFrame, (svgStyle->*aPaint).mPaint.mPaintServer);
+  return ResolveURLUsingLocalRef(aFrame,
+                                 (svgStyle->*aPaint).GetPaintServer());
 }
 
 already_AddRefed<nsIURI>
