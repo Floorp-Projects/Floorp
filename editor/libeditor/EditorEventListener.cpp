@@ -935,7 +935,7 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   NS_ENSURE_TRUE(dataTransfer, false);
 
   nsTArray<nsString> types;
-  dataTransfer->GetTypes(types);
+  dataTransfer->GetTypes(types, *nsContentUtils::GetSystemPrincipal());
 
   // Plaintext editors only support dropping text. Otherwise, HTML and files
   // can be dropped as well.
