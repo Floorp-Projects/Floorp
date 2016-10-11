@@ -347,8 +347,6 @@ private:
 protected:
   virtual ~MediaDecoderStateMachine();
 
-  void SetState(State aState);
-
   void BufferedRangeUpdated();
 
   void ReaderSuspendedChanged();
