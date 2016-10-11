@@ -9966,6 +9966,9 @@ class MLoadUnboxedScalar
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
     }
+    void setOffsetAdjustment(int32_t offsetAdjustment) {
+        offsetAdjustment_ = offsetAdjustment;
+    }
     AliasSet getAliasSet() const override {
         // When a barrier is needed make the instruction effectful by
         // giving it a "store" effect.

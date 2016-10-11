@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/EffectiveAddressAnalysis.h"
+#include "jit/IonAnalysis.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 
@@ -98,6 +99,76 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
     MEffectiveAddress* eaddr = MEffectiveAddress::New(alloc, base, index, scale, displacement);
     last->replaceAllUsesWith(eaddr);
     last->block()->insertAfter(last, eaddr);
+}
+
+// Transform:
+//
+//   [AddI]
+//   addl       $9, %esi
+//   [LoadUnboxedScalar]
+//   movsd      0x0(%rbx,%rsi,8), %xmm4
+//
+// into:
+//
+//   [LoadUnboxedScalar]
+//   movsd      0x48(%rbx,%rsi,8), %xmm4
+//
+// This is possible when the AddI is only used by the LoadUnboxedScalar opcode.
+static void
+AnalyzeLoadUnboxedScalar(TempAllocator& alloc, MLoadUnboxedScalar* load)
+{
+    if (load->isRecoveredOnBailout())
+        return;
+
+    if (!load->getOperand(1)->isAdd())
+        return;
+
+    JitSpew(JitSpew_EAA, "analyze: %s%u", load->opName(), load->id());
+
+    MAdd* add = load->getOperand(1)->toAdd();
+
+    if (add->specialization() != MIRType::Int32 || !add->hasUses() ||
+        add->truncateKind() != MDefinition::TruncateKind::Truncate)
+    {
+        return;
+    }
+
+    MDefinition* lhs = add->lhs();
+    MDefinition* rhs = add->rhs();
+    MDefinition* constant = nullptr;
+    MDefinition* node = nullptr;
+
+    if (lhs->isConstant()) {
+        constant = lhs;
+        node = rhs;
+    } else if (rhs->isConstant()) {
+        constant = rhs;
+        node = lhs;
+    } else
+        return;
+
+    MOZ_ASSERT(constant->type() == MIRType::Int32);
+
+    size_t storageSize = Scalar::byteSize(load->storageType());
+    int32_t c1 = load->offsetAdjustment();
+    int32_t c2 = 0;
+    if (!SafeMul(constant->maybeConstantValue()->toInt32(), storageSize, &c2))
+        return;
+
+    int32_t offset = 0;
+    if (!SafeAdd(c1, c2, &offset))
+        return;
+
+    JitSpew(JitSpew_EAA, "set offset: %d + %d = %d on: %s%u", c1, c2, offset,
+            load->opName(), load->id());
+    load->setOffsetAdjustment(offset);
+    load->replaceOperand(1, node);
+
+    if (!add->hasLiveDefUses() && DeadIfUnused(add) && add->canRecoverOnBailout()) {
+        JitSpew(JitSpew_EAA, "mark as recovered on bailout: %s%u",
+                add->opName(), add->id());
+        add->setRecoveredOnBailoutUnchecked();
+    }
 }
 
 template<typename AsmJSMemoryAccess>
@@ -194,6 +265,8 @@ EffectiveAddressAnalysis::analyze()
             // (TODO bug 1254935).
             if (i->isLsh())
                 AnalyzeLsh(graph_.alloc(), i->toLsh());
+            else if (i->isLoadUnboxedScalar())
+                AnalyzeLoadUnboxedScalar(graph_.alloc(), i->toLoadUnboxedScalar());
             else if (i->isAsmJSLoadHeap())
                 analyzeAsmJSHeapAccess(i->toAsmJSLoadHeap());
             else if (i->isAsmJSStoreHeap())
