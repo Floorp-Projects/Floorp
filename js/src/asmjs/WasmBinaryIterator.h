@@ -725,7 +725,7 @@ template <typename Policy>
 bool
 ExprIter<Policy>::fail(const char* msg)
 {
-    return d_.fail(msg);
+    return d_.fail("%s", msg);
 }
 
 template <typename Policy>
