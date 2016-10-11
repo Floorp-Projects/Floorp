@@ -157,7 +157,7 @@ ClearKeySessionManager::PersistentSessionDataLoaded(GMPErr aStatus,
   CK_LOGD("ClearKeySessionManager::PersistentSessionDataLoaded");
   if (GMP_FAILED(aStatus) ||
       Contains(mSessions, aSessionId) ||
-      (aKeyDataSize % (2 * CENC_KEY_LEN)) != 0) {
+      (aKeyDataSize % (2 * CLEARKEY_KEY_LEN)) != 0) {
     mCallback->ResolveLoadSessionPromise(aPromiseId, false);
     return;
   }
@@ -167,20 +167,20 @@ ClearKeySessionManager::PersistentSessionDataLoaded(GMPErr aStatus,
                                                  kGMPPersistentSession);
   mSessions[aSessionId] = session;
 
-  uint32_t numKeys = aKeyDataSize / (2 * CENC_KEY_LEN);
+  uint32_t numKeys = aKeyDataSize / (2 * CLEARKEY_KEY_LEN);
 
   vector<GMPMediaKeyInfo> key_infos;
   vector<KeyIdPair> keyPairs;
   for (uint32_t i = 0; i < numKeys; i ++) {
-    const uint8_t* base = aKeyData + 2 * CENC_KEY_LEN * i;
+    const uint8_t* base = aKeyData + 2 * CLEARKEY_KEY_LEN * i;
 
     KeyIdPair keyPair;
 
-    keyPair.mKeyId = KeyId(base, base + CENC_KEY_LEN);
-    assert(keyPair.mKeyId.size() == CENC_KEY_LEN);
+    keyPair.mKeyId = KeyId(base, base + CLEARKEY_KEY_LEN);
+    assert(keyPair.mKeyId.size() == CLEARKEY_KEY_LEN);
 
-    keyPair.mKey = Key(base + CENC_KEY_LEN, base + 2 * CENC_KEY_LEN);
-    assert(keyPair.mKey.size() == CENC_KEY_LEN);
+    keyPair.mKey = Key(base + CLEARKEY_KEY_LEN, base + 2 * CLEARKEY_KEY_LEN);
+    assert(keyPair.mKey.size() == CLEARKEY_KEY_LEN);
 
     session->AddKeyId(keyPair.mKeyId);
 
@@ -267,10 +267,10 @@ ClearKeySessionManager::Serialize(const ClearKeySession* aSession,
     if (!mDecryptionManager->HasKeyForKeyId(keyId)) {
       continue;
     }
-    assert(keyId.size() == CENC_KEY_LEN);
+    assert(keyId.size() == CLEARKEY_KEY_LEN);
     aOutKeyData.insert(aOutKeyData.end(), keyId.begin(), keyId.end());
     const Key& key = mDecryptionManager->GetDecryptionKey(keyId);
-    assert(key.size() == CENC_KEY_LEN);
+    assert(key.size() == CLEARKEY_KEY_LEN);
     aOutKeyData.insert(aOutKeyData.end(), key.begin(), key.end());
   }
 }
