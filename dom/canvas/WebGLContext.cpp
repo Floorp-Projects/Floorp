@@ -2512,6 +2512,41 @@ WebGLContext::StartVRPresentation()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool
+WebGLContext::ValidateArrayBufferView(const char* funcName,
+                                      const dom::ArrayBufferView& view, GLuint elemOffset,
+                                      GLuint elemCountOverride, uint8_t** const out_bytes,
+                                      size_t* const out_byteLen)
+{
+    view.ComputeLengthAndData();
+    uint8_t* const bytes = view.DataAllowShared();
+    const size_t byteLen = view.LengthAllowShared();
+
+    const auto& elemType = view.Type();
+    const auto& elemSize = js::Scalar::byteSize(elemType);
+
+    size_t elemCount = byteLen / elemSize;
+    if (elemOffset > elemCount) {
+        ErrorInvalidValue("%s: Invalid offset into ArrayBufferView.", funcName);
+        return false;
+    }
+    elemCount -= elemOffset;
+
+    if (elemCountOverride) {
+        if (elemCountOverride > elemCount) {
+            ErrorInvalidValue("%s: Invalid sub-length for ArrayBufferView.", funcName);
+            return false;
+        }
+        elemCount = elemCountOverride;
+    }
+
+    *out_bytes = bytes + (elemOffset * elemSize);
+    *out_byteLen = elemCount * elemSize;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // XPCOM goop
 
 void
