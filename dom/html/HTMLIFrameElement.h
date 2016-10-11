@@ -168,7 +168,7 @@ public:
     GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
   }
   nsIDocument*
-  GetSVGDocument(const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal)
+  GetSVGDocument(nsIPrincipal& aSubjectPrincipal)
   {
     return GetContentDocument(aSubjectPrincipal);
   }
