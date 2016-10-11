@@ -421,22 +421,8 @@ this.FinderIterator = {
     if (this._timeout) {
       if (this._timer)
         clearTimeout(this._timer);
-      if (this._runningFindResolver)
-        this._runningFindResolver();
-
-      let timeout = this._timeout;
-      let searchTerm = this._currentParams.word;
-      // Wait a little longer when the first or second character is typed into
-      // the findbar.
-      if (searchTerm.length == 1)
-        timeout *= 4;
-      else if (searchTerm.length == 2)
-        timeout *= 2;
-      yield new Promise(resolve => {
-        this._runningFindResolver = resolve;
-        this._timer = setTimeout(resolve, timeout);
-      });
-      this._timer = this._runningFindResolver = null;
+      yield new Promise(resolve => this._timer = setTimeout(resolve, this._timeout));
+      this._timer = null;
       // During the timeout, we could have gotten the signal to stop iterating.
       // Make sure we do here.
       if (!this.running || spawnId !== this._spawnId)
