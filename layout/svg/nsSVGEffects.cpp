@@ -943,7 +943,7 @@ ResolveFragmentOrURL(nsIFrame* aFrame, const FragmentOrURL* aFragmentOrURL)
 }
 
 static already_AddRefed<nsIURI>
-ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValue* aURL)
+ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
 {
   MOZ_ASSERT(aFrame);
 
@@ -1050,6 +1050,6 @@ nsSVGEffects::GetMaskURI(nsIFrame* aFrame, uint32_t aIndex)
   const nsStyleSVGReset* svgReset = aFrame->StyleSVGReset();
   MOZ_ASSERT(svgReset->mMask.mLayers.Length() > aIndex);
 
-  return ResolveFragmentOrURL(aFrame,
-                              &svgReset->mMask.mLayers[aIndex].mSourceURI);
+  return ResolveURLUsingLocalRef(aFrame,
+                                 svgReset->mMask.mLayers[aIndex].mSourceURI);
 }
