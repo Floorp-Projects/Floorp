@@ -16,9 +16,17 @@ const {gDevTools} = require("devtools/client/framework/devtools");
 const {Curl, CurlUtils} = require("devtools/client/shared/curl");
 const {PluralForm} = require("devtools/shared/plural-form");
 const {Filters, isFreetextMatch} = require("./filter-predicates");
-const {getFormDataSections, formDataURI, writeHeaderText, getKeyWithEvent,
-       loadCauseString} = require("./request-utils");
+const {Sorters} = require("./sort-predicates");
 const {L10N, WEBCONSOLE_L10N} = require("./l10n");
+const {getFormDataSections,
+       formDataURI,
+       writeHeaderText,
+       getKeyWithEvent,
+       getAbbreviatedMimeType,
+       getUriNameWithQuery,
+       getUriHostPort,
+       getUriHost,
+       loadCauseString} = require("./request-utils");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
@@ -92,9 +100,6 @@ function RequestsMenuView() {
   this._onSwap = this._onSwap.bind(this);
   this._onResize = this._onResize.bind(this);
   this._onScroll = this._onScroll.bind(this);
-  this._byFile = this._byFile.bind(this);
-  this._byDomain = this._byDomain.bind(this);
-  this._byType = this._byType.bind(this);
   this._onSecurityIconClick = this._onSecurityIconClick.bind(this);
 }
 
@@ -122,7 +127,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#requests-menu-contents").addEventListener("scroll", this._onScroll, true);
 
     Prefs.filters.forEach(type => this.filterOn(type));
-    this.sortContents(this._byTiming);
+    this.sortContents((a, b) => Sorters.waterfall(a.attachment, b.attachment));
 
     this.allowFocusOnRightClick = true;
     this.maintainSelectionVisible = true;
@@ -789,65 +794,65 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     switch (type) {
       case "status":
         if (direction == "ascending") {
-          this.sortContents(this._byStatus);
+          this.sortContents((a, b) => Sorters.status(a.attachment, b.attachment));
         } else {
-          this.sortContents((a, b) => !this._byStatus(a, b));
+          this.sortContents((a, b) => -Sorters.status(a.attachment, b.attachment));
         }
         break;
       case "method":
         if (direction == "ascending") {
-          this.sortContents(this._byMethod);
+          this.sortContents((a, b) => Sorters.method(a.attachment, b.attachment));
         } else {
-          this.sortContents((a, b) => !this._byMethod(a, b));
+          this.sortContents((a, b) => -Sorters.method(a.attachment, b.attachment));
         }
         break;
       case "file":
         if (direction == "ascending") {
-          this.sortContents(this._byFile);
+          this.sortContents((a, b) => Sorters.file(a.attachment, b.attachment));
         } else {
-          this.sortContents((a, b) => !this._byFile(a, b));
+          this.sortContents((a, b) => -Sorters.file(a.attachment, b.attachment));
         }
         break;
       case "domain":
         if (direction == "ascending") {
-          this.sortContents(this._byDomain);
+          this.sortContents((a, b) => Sorters.domain(a.attachment, b.attachment));
         } else {
-          this.sortContents((a, b) => !this._byDomain(a, b));
+          this.sortContents((a, b) => -Sorters.domain(a.attachment, b.attachment));
         }
         break;
       case "cause":
         if (direction == "ascending") {
-          this.sortContents(this._byCause);
+          this.sortContents((a, b) => Sorters.cause(a.attachment, b.attachment));
         } else {
-          this.sortContents((a, b) => !this._byCause(a, b));
+          this.sortContents((a, b) => -Sorters.cause(a.attachment, b.attachment));
         }
         break;
       case "type":
         if (direction == "ascending") {
-          this.sortContents(this._byType);
+          this.sortContents((a, b) => Sorters.type(a.attachment, b.attachment));
         } else {
-          this.sortContents((a, b) => !this._byType(a, b));
+          this.sortContents((a, b) => -Sorters.type(a.attachment, b.attachment));
         }
         break;
       case "transferred":
         if (direction == "ascending") {
-          this.sortContents(this._byTransferred);
+          this.sortContents((a, b) => Sorters.transferred(a.attachment, b.attachment));
         } else {
-          this.sortContents((a, b) => !this._byTransferred(a, b));
+          this.sortContents((a, b) => -Sorters.transferred(a.attachment, b.attachment));
         }
         break;
       case "size":
         if (direction == "ascending") {
-          this.sortContents(this._bySize);
+          this.sortContents((a, b) => Sorters.size(a.attachment, b.attachment));
         } else {
-          this.sortContents((a, b) => !this._bySize(a, b));
+          this.sortContents((a, b) => -Sorters.size(a.attachment, b.attachment));
         }
         break;
       case "waterfall":
         if (direction == "ascending") {
-          this.sortContents(this._byTiming);
+          this.sortContents((a, b) => Sorters.waterfall(a.attachment, b.attachment));
         } else {
-          this.sortContents((a, b) => !this._byTiming(a, b));
+          this.sortContents((a, b) => -Sorters.waterfall(a.attachment, b.attachment));
         }
         break;
     }
@@ -868,76 +873,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     this.empty();
     this.refreshSummary();
-  },
-
-  /**
-   * Predicates used when sorting items.
-   *
-   * @param object aFirst
-   *        The first item used in the comparison.
-   * @param object aSecond
-   *        The second item used in the comparison.
-   * @return number
-   *         -1 to sort aFirst to a lower index than aSecond
-   *          0 to leave aFirst and aSecond unchanged with respect to each other
-   *          1 to sort aSecond to a lower index than aFirst
-   */
-  _byTiming: function ({ attachment: first }, { attachment: second }) {
-    return first.startedMillis > second.startedMillis;
-  },
-
-  _byStatus: function ({ attachment: first }, { attachment: second }) {
-    return first.status == second.status
-           ? first.startedMillis > second.startedMillis
-           : first.status > second.status;
-  },
-
-  _byMethod: function ({ attachment: first }, { attachment: second }) {
-    return first.method == second.method
-           ? first.startedMillis > second.startedMillis
-           : first.method > second.method;
-  },
-
-  _byFile: function ({ attachment: first }, { attachment: second }) {
-    let firstUrl = this._getUriNameWithQuery(first.url).toLowerCase();
-    let secondUrl = this._getUriNameWithQuery(second.url).toLowerCase();
-    return firstUrl == secondUrl
-      ? first.startedMillis > second.startedMillis
-      : firstUrl > secondUrl;
-  },
-
-  _byDomain: function ({ attachment: first }, { attachment: second }) {
-    let firstDomain = this._getUriHostPort(first.url).toLowerCase();
-    let secondDomain = this._getUriHostPort(second.url).toLowerCase();
-    return firstDomain == secondDomain
-      ? first.startedMillis > second.startedMillis
-      : firstDomain > secondDomain;
-  },
-
-  _byCause: function ({ attachment: first }, { attachment: second }) {
-    let firstCause = loadCauseString(first.cause.type);
-    let secondCause = loadCauseString(second.cause.type);
-
-    return firstCause == secondCause
-      ? first.startedMillis > second.startedMillis
-      : firstCause > secondCause;
-  },
-
-  _byType: function ({ attachment: first }, { attachment: second }) {
-    let firstType = this._getAbbreviatedMimeType(first.mimeType).toLowerCase();
-    let secondType = this._getAbbreviatedMimeType(second.mimeType).toLowerCase();
-
-    return firstType == secondType
-      ? first.startedMillis > second.startedMillis
-      : firstType > secondType;
-  },
-
-  _byTransferred: function ({ attachment: first }, { attachment: second }) {
-    return first.transferredSize > second.transferredSize;
-  },
-
-  _bySize: function ({ attachment: first }, { attachment: second }) {
-    return first.contentSize > second.contentSize;
   },
 
   /**
@@ -1345,9 +1280,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
           // User input may not make a well-formed url yet.
           break;
         }
-        let nameWithQuery = this._getUriNameWithQuery(uri);
-        let hostPort = this._getUriHostPort(uri);
-        let host = this._getUriHost(uri);
+        let nameWithQuery = getUriNameWithQuery(uri);
+        let hostPort = getUriHostPort(uri);
+        let host = getUriHost(uri);
         let unicodeUrl = NetworkHelper.convertToUnicode(unescape(uri.spec));
 
         let file = $(".requests-menu-file", target);
@@ -1464,7 +1399,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         break;
       }
       case "mimeType": {
-        let type = this._getAbbreviatedMimeType(value);
+        let type = getAbbreviatedMimeType(value);
         let node = $(".requests-menu-type", target);
         let text = CONTENT_MIME_TYPE_ABBREVIATIONS[type] || type;
         node.setAttribute("value", text);
@@ -1991,48 +1926,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     if (this._lastRequestEndedMillis < unixTime) {
       this._lastRequestEndedMillis = unixTime;
     }
-  },
-
-  /**
-   * Helpers for getting details about an nsIURL.
-   *
-   * @param nsIURL | string url
-   * @return string
-   */
-  _getUriNameWithQuery: function (url) {
-    if (!(url instanceof Ci.nsIURL)) {
-      url = NetworkHelper.nsIURL(url);
-    }
-
-    let name = NetworkHelper.convertToUnicode(
-      unescape(url.fileName || url.filePath || "/"));
-    let query = NetworkHelper.convertToUnicode(unescape(url.query));
-
-    return name + (query ? "?" + query : "");
-  },
-
-  _getUriHostPort: function (url) {
-    if (!(url instanceof Ci.nsIURL)) {
-      url = NetworkHelper.nsIURL(url);
-    }
-    return NetworkHelper.convertToUnicode(unescape(url.hostPort));
-  },
-
-  _getUriHost: function (url) {
-    return this._getUriHostPort(url).replace(/:\d+$/, "");
-  },
-
-  /**
-   * Helper for getting an abbreviated string for a mime type.
-   *
-   * @param string mimeType
-   * @return string
-   */
-  _getAbbreviatedMimeType: function (mimeType) {
-    if (!mimeType) {
-      return "";
-    }
-    return (mimeType.split(";")[0].split("/")[1] || "").split("+")[0];
   },
 
   /**
