@@ -201,9 +201,7 @@ HarCollector.prototype = {
     this.files.set(actor, file);
 
     // Mimic the Net panel data structure
-    this.items.push({
-      attachment: file
-    });
+    this.items.push(file);
   },
 
   onNetworkEventUpdate: function (type, packet) {
