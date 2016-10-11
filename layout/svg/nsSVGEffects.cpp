@@ -708,11 +708,11 @@ nsSVGEffects::UpdateEffects(nsIFrame* aFrame)
       static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
     // Set marker properties here to avoid reference loops
     nsCOMPtr<nsIURI> markerURL =
-      nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
+      GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
     GetMarkerProperty(markerURL, aFrame, MarkerBeginProperty());
-    markerURL = nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
+    markerURL = GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
     GetMarkerProperty(markerURL, aFrame, MarkerMiddleProperty());
-    markerURL = nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
+    markerURL = GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
     GetMarkerProperty(markerURL, aFrame, MarkerEndProperty());
   }
 }
@@ -998,9 +998,9 @@ ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValue* aURL)
 
 already_AddRefed<nsIURI>
 nsSVGEffects::GetMarkerURI(nsIFrame* aFrame,
-                           FragmentOrURL nsStyleSVG::* aMarker)
+                           RefPtr<css::URLValue> nsStyleSVG::* aMarker)
 {
-  return ResolveFragmentOrURL(aFrame, &(aFrame->StyleSVG()->*aMarker));
+  return ResolveURLUsingLocalRef(aFrame, aFrame->StyleSVG()->*aMarker);
 }
 
 already_AddRefed<nsIURI>

@@ -5630,7 +5630,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerEnd()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToFragmentOrURL(&StyleSVG()->mMarkerEnd, val);
+  SetValueToURLValue(StyleSVG()->mMarkerEnd, val);
 
   return val.forget();
 }
@@ -5639,7 +5639,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerMid()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToFragmentOrURL(&StyleSVG()->mMarkerMid, val);
+  SetValueToURLValue(StyleSVG()->mMarkerMid, val);
 
   return val.forget();
 }
@@ -5648,7 +5648,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMarkerStart()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToFragmentOrURL(&StyleSVG()->mMarkerStart, val);
+  SetValueToURLValue(StyleSVG()->mMarkerStart, val);
 
   return val.forget();
 }
