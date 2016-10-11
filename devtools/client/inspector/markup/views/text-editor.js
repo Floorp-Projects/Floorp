@@ -7,6 +7,9 @@
 const {getAutocompleteMaxWidth} = require("devtools/client/inspector/markup/utils");
 const {editableField} = require("devtools/client/shared/inplace-editor");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+
+const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
 
 /**
  * Creates a simple text editor node, used for TEXT and COMMENT
@@ -79,6 +82,16 @@ TextEditor.prototype = {
     }).then(str => {
       longstr.release().then(null, console.error);
       this.value.textContent = str;
+
+      let isWhitespace = !/[^\s]/.exec(str);
+      this.value.classList.toggle("whitespace", isWhitespace);
+
+      let chars = str.replace(/\n/g, "⏎")
+                     .replace(/\t/g, "⇥")
+                     .replace(/ /g, "◦");
+      this.value.setAttribute("title", isWhitespace
+        ? INSPECTOR_L10N.getFormatStr("markupView.whitespaceOnly", chars)
+        : "");
     }).then(null, console.error);
   },
 

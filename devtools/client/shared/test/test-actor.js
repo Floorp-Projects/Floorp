@@ -754,6 +754,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
         tagName: node.tagName,
         namespaceURI: node.namespaceURI,
         numChildren: node.children.length,
+        numNodes: node.childNodes.length,
         attributes: [...node.attributes].map(({name, value, namespaceURI}) => {
           return {name, value, namespaceURI};
         }),
