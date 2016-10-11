@@ -316,6 +316,20 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     const GLenum MAX_CLIENT_WAIT_TIMEOUT_WEBGL                 = 0x9247;
 
     /* Buffer objects */
+    // WebGL1:
+    void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
+    void bufferData(GLenum target, ArrayBufferView data, GLenum usage);
+    void bufferData(GLenum target, ArrayBuffer? data, GLenum usage);
+    void bufferData(GLenum target, SharedArrayBuffer data, GLenum usage);
+    void bufferSubData(GLenum target, GLintptr offset, ArrayBufferView data);
+    void bufferSubData(GLenum target, GLintptr offset, ArrayBuffer? data);
+    void bufferSubData(GLenum target, GLintptr offset, SharedArrayBuffer data);
+    // WebGL2:
+    void bufferData(GLenum target, ArrayBufferView srcData, GLenum usage, GLuint srcOffset,
+                    optional GLuint length = 0);
+    void bufferSubData(GLenum target, GLintptr dstByteOffset, ArrayBufferView srcData,
+                       GLuint srcOffset, optional GLuint length = 0);
+
     void copyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset,
                            GLintptr writeOffset, GLsizeiptr size);
     void getBufferSubData(GLenum target, GLintptr offset, ArrayBufferView dstData);
