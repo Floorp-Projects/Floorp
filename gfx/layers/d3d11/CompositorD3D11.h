@@ -115,6 +115,8 @@ public:
    */
   virtual void EndFrame() override;
 
+  virtual void CancelFrame() override;
+
   /**
    * Setup the viewport and projection matrix for rendering
    * to a window of the given dimensions.
