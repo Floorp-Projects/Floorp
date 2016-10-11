@@ -421,6 +421,38 @@ Simulator::Destroy(Simulator* sim)
     js_delete(sim);
 }
 
+void
+Simulator::disassemble(SimInstruction* instr, size_t n)
+{
+    disasm::NameConverter converter;
+    disasm::Disassembler dasm(converter);
+    disasm::EmbeddedVector<char, disasm::ReasonableBufferSize> buffer;
+    while (n-- > 0) {
+        dasm.InstructionDecode(buffer,
+                               reinterpret_cast<uint8_t*>(instr));
+        printf("  0x%08x  %s\n", uint32_t(instr), buffer.start());
+        instr = reinterpret_cast<SimInstruction*>(reinterpret_cast<uint8_t*>(instr) + 4);
+    }
+}
+
+void
+Simulator::disasm(SimInstruction* instr)
+{
+    disassemble(instr, 1);
+}
+
+void
+Simulator::disasm(SimInstruction* instr, size_t n)
+{
+    disassemble(instr, n);
+}
+
+void
+Simulator::disasm(SimInstruction* instr, size_t m, size_t n)
+{
+    disassemble(reinterpret_cast<SimInstruction*>(reinterpret_cast<uint8_t*>(instr) - m * 4), n);
+}
+
 // The ArmDebugger class is used by the simulator while debugging simulated ARM
 // code.
 class ArmDebugger {
