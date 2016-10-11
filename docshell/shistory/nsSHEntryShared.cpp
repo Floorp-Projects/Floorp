@@ -19,7 +19,7 @@
 #include "nsILayoutHistoryState.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
-#include "nsISupportsArray.h"
+#include "nsArray.h"
 
 namespace dom = mozilla::dom;
 

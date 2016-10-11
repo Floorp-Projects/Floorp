@@ -1343,6 +1343,12 @@ AssemblerMIPSShared::as_cvtsd(FloatRegister fd, FloatRegister fs)
 }
 
 BufferOffset
+AssemblerMIPSShared::as_cvtsl(FloatRegister fd, FloatRegister fs)
+{
+    return writeInst(InstReg(op_cop1, rs_l, zero, fs, fd, ff_cvt_s_fmt).encode());
+}
+
+BufferOffset
 AssemblerMIPSShared::as_cvtsw(FloatRegister fd, FloatRegister fs)
 {
     return writeInst(InstReg(op_cop1, rs_w, zero, fs, fd, ff_cvt_s_fmt).encode());

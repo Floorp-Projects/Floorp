@@ -610,6 +610,7 @@ WEBIDL_FILES = [
     'WheelEvent.webidl',
     'WidevineCDMManifest.webidl',
     'WifiOptions.webidl',
+    'WindowOrWorkerGlobalScope.webidl',
     'WindowRoot.webidl',
     'Worker.webidl',
     'WorkerDebuggerGlobalScope.webidl',

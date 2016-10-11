@@ -39,10 +39,10 @@ function assertIterable(expectCalls, fn, expectResult) {
 assertIterable([1,1,1,1],
   it => { var [a] = it; return [a]; },
   [1]);
-assertIterable([3,3,1,1],
+assertIterable([2,2,1,1],
   it => { var [a,b,c] = it; return [a,b,c]; },
   [1,undefined,undefined]);
-assertIterable([3,3,1,1],
+assertIterable([2,2,1,1],
   it => { var [a,b,...rest] = it; return [a,b,...rest]; },
   [1,undefined]);
 assertIterable([5,5,4,4],
