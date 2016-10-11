@@ -416,6 +416,7 @@ jit::CheckLogging()
             "  gvn        Global Value Numbering\n"
             "  licm       Loop invariant code motion\n"
             "  flac       Fold linear arithmetic constants\n"
+            "  eaa        Effective address analysis\n"
             "  sincos     Replace sin/cos by sincos\n"
             "  sink       Sink transformation\n"
             "  regalloc   Register allocation\n"
@@ -474,6 +475,8 @@ jit::CheckLogging()
         EnableChannel(JitSpew_LICM);
     if (ContainsFlag(env, "flac"))
         EnableChannel(JitSpew_FLAC);
+    if (ContainsFlag(env, "eaa"))
+        EnableChannel(JitSpew_EAA);
     if (ContainsFlag(env, "sincos"))
         EnableChannel(JitSpew_Sincos);
     if (ContainsFlag(env, "sink"))
