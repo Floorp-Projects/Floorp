@@ -95,7 +95,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "MediaStreamGraph.h"
 #include "DOMMediaStream.h"
-#include "rlogringbuffer.h"
+#include "rlogconnector.h"
 #include "WebrtcGlobalInformation.h"
 #include "mozilla/dom/Event.h"
 #include "nsIDOMCustomEvent.h"
@@ -347,7 +347,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
 {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   MOZ_ASSERT(NS_IsMainThread());
-  auto log = RLogRingBuffer::CreateInstance();
+  auto log = RLogConnector::CreateInstance();
   if (aGlobal) {
     mWindow = do_QueryInterface(aGlobal->GetAsSupports());
     if (IsPrivateBrowsing(mWindow)) {
@@ -381,7 +381,7 @@ PeerConnectionImpl::~PeerConnectionImpl()
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   if (mPrivateWindow) {
-    auto * log = RLogRingBuffer::GetInstance();
+    auto * log = RLogConnector::GetInstance();
     if (log) {
       log->ExitPrivateMode();
     }

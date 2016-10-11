@@ -50,8 +50,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    debug purposes on an about:webrtc page or similar.
 */
 
-#ifndef rlogringbuffer_h__
-#define rlogringbuffer_h__
+#ifndef rlogconnector_h__
+#define rlogconnector_h__
 
 #include <stdint.h>
 
@@ -65,14 +65,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace mozilla {
 
-class RLogRingBuffer {
+class RLogConnector {
   public:
     /*
        NB: These are not threadsafe, nor are they safe to call during static
        init/deinit.
     */
-    static RLogRingBuffer* CreateInstance();
-    static RLogRingBuffer* GetInstance();
+    static RLogConnector* CreateInstance();
+    static RLogConnector* GetInstance();
     static void DestroyInstance();
 
     /*
@@ -95,7 +95,7 @@ class RLogRingBuffer {
     }
 
     void SetLogLimit(uint32_t new_limit);
-    void Log(std::string&& log);
+    void Log(int level, std::string&& log);
     void Clear();
 
     // Methods to signal when a PeerConnection exists in a Private Window.
@@ -103,12 +103,12 @@ class RLogRingBuffer {
     void ExitPrivateMode();
 
   private:
-    RLogRingBuffer();
-    ~RLogRingBuffer();
+    RLogConnector();
+    ~RLogConnector();
     void RemoveOld();
     void AddMsg(std::string&& msg);
 
-    static RLogRingBuffer* instance;
+    static RLogConnector* instance;
 
     /*
      * Might be worthwhile making this a circular buffer, but I think it is
@@ -121,9 +121,9 @@ class RLogRingBuffer {
     OffTheBooksMutex mutex_;
     uint32_t disableCount_;
 
-    DISALLOW_COPY_ASSIGN(RLogRingBuffer);
-}; // class RLogRingBuffer
+    DISALLOW_COPY_ASSIGN(RLogConnector);
+}; // class RLogConnector
 
 } // namespace mozilla
 
-#endif // rlogringbuffer_h__
+#endif // rlogconnector_h__
