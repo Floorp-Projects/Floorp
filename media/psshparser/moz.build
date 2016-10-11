@@ -19,7 +19,3 @@ Library('psshparser')
 
 DISABLE_STL_WRAPPING = True
 DEFINES['MOZ_NO_MOZALLOC'] = True
-
-TEST_DIRS += [
-    'gtest',
-]
