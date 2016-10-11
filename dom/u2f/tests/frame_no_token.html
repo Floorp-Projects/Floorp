@@ -16,8 +16,11 @@ var regRequest = {
   challenge: bytesToBase64UrlSafe(challenge),
 };
 
-u2f.register(window.location.origin, [regRequest], [], function (regResponse) {
-  parent.postMessage(regResponse.errorCode, '*');
+local_expectThisManyTests(1);
+
+u2f.register(window.location.origin, [regRequest], [], function (res) {
+  local_isnot(res.errorCode, 0, "The registration should be rejected.");
+  local_completeTest();
 });
 
 </script>
