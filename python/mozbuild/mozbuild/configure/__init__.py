@@ -317,12 +317,8 @@ class ConfigureSandbox(dict):
 
     def _resolve(self, arg, need_help_dependency=True):
         if isinstance(arg, SandboxDependsFunction):
-            assert arg in self._depends
-            f = self._depends[arg]
-            if need_help_dependency and self._help_option not in f.dependencies:
-                raise ConfigureError("Missing @depends for `%s`: '--help'" %
-                                     f.name)
-            return self._value_for(arg)
+            return self._value_for_depends(self._depends[arg],
+                                           need_help_dependency)
         return arg
 
     def _value_for(self, obj):
@@ -339,7 +335,7 @@ class ConfigureSandbox(dict):
         assert False
 
     @memoize
-    def _value_for_depends(self, obj):
+    def _value_for_depends(self, obj, need_help_dependency=False):
         assert not inspect.isgeneratorfunction(obj.func)
         with_help = self._help_option in obj.dependencies
         if with_help:
@@ -350,10 +346,13 @@ class ConfigureSandbox(dict):
                             "`%s` depends on '--help' and `%s`. "
                             "`%s` must depend on '--help'"
                             % (obj.name, arg.name, arg.name))
-        elif self._help:
+        elif self._help or need_help_dependency:
             raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                  obj.name)
+        return self._value_for_depends_real(obj)
 
+    @memoize
+    def _value_for_depends_real(self, obj):
         resolved_args = [self._value_for(d) for d in obj.dependencies]
         return obj.func(*resolved_args)
 
