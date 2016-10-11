@@ -237,6 +237,7 @@ class TelemetryRecord {
       failureReason: this.failureReason,
       status: this.status,
       deviceID: this.deviceID,
+      devices: this.devices,
     };
     let engines = [];
     for (let engine of this.engines) {
@@ -259,6 +260,10 @@ class TelemetryRecord {
       this.failureReason = transformError(error);
     }
 
+    // We don't bother including the "devices" field if we can't come up with a
+    // UID or device ID for *this* device -- If that's the case, any data we'd
+    // put there would be likely to be full of garbage anyway.
+    let includeDeviceInfo = false;
     try {
       this.uid = Weave.Service.identity.hashedUID();
       let deviceID = Weave.Service.identity.deviceID();
@@ -267,10 +272,22 @@ class TelemetryRecord {
         // unique identifier that can't be mapped back to the user's FxA
         // identity without knowing the metrics HMAC key.
         this.deviceID = Utils.sha256(deviceID + this.uid);
+        includeDeviceInfo = true;
       }
     } catch (e) {
       this.uid = "0".repeat(32);
       this.deviceID = undefined;
+    }
+
+    if (includeDeviceInfo) {
+      let remoteDevices = Weave.Service.clientsEngine.remoteDevices;
+      this.devices = remoteDevices.map(device => {
+        return {
+          os: device.os,
+          version: device.version,
+          id: Utils.sha256(device.id + this.uid)
+        };
+      });
     }
 
     // Check for engine statuses. -- We do this now, and not in engine.finished
