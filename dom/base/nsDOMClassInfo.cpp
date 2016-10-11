@@ -100,10 +100,6 @@
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
 
-#ifdef MOZ_B2G_FM
-#include "FMRadio.h"
-#endif
-
 #include "nsDebug.h"
 
 #include "mozilla/dom/BindingUtils.h"
