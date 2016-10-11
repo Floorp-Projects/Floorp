@@ -12,6 +12,7 @@
 #if defined(XP_WIN)
 # include "mozilla/gfx/DeviceManagerDx.h"
 #endif
+#include "mozilla/ipc/CrashReporterHost.h"
 
 namespace mozilla {
 namespace gfx {
@@ -113,9 +114,27 @@ GPUChild::RecvGraphicsError(const nsCString& aError)
   return true;
 }
 
+bool
+GPUChild::RecvInitCrashReporter(Shmem&& aShmem)
+{
+#ifdef MOZ_CRASHREPORTER
+  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(GeckoProcessType_GPU, aShmem);
+#endif
+  return true;
+}
+
 void
 GPUChild::ActorDestroy(ActorDestroyReason aWhy)
 {
+  if (aWhy == AbnormalShutdown) {
+#ifdef MOZ_CRASHREPORTER
+    if (mCrashReporter) {
+      mCrashReporter->GenerateCrashReport(OtherPid());
+      mCrashReporter = nullptr;
+    }
+#endif
+  }
+
   gfxVars::RemoveReceiver(this);
   mHost->OnChannelClosed();
 }
