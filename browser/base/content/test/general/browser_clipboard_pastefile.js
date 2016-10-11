@@ -44,7 +44,7 @@ add_task(function*() {
 
       let dt = event.clipboardData;
       is(dt.types.length, 3, "number of types");
-      ok(dt.types.contains("text/plain"), "text/plain exists in types");
+      ok(dt.types.includes("text/plain"), "text/plain exists in types");
       ok(dt.mozTypesAt(0).contains("text/plain"), "text/plain exists in mozTypesAt");
       is(dt.getData("text/plain"), "Alternate", "text/plain returned in getData");
       is(dt.mozGetDataAt("text/plain", 0), "Alternate", "text/plain returned in mozGetDataAt");

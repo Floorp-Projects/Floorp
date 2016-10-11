@@ -70,21 +70,21 @@ public:
     return mWindow;
   }
 
-  uint32_t GetLength(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+  uint32_t GetLength(nsIPrincipal& aSubjectPrincipal,
                      ErrorResult& aRv);
 
   void Key(uint32_t aIndex, nsAString& aResult,
-           const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+           nsIPrincipal& aSubjectPrincipal,
            ErrorResult& aRv);
 
   void GetItem(const nsAString& aKey, nsAString& aResult,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aRv);
 
   void GetSupportedNames(nsTArray<nsString>& aKeys);
 
   void NamedGetter(const nsAString& aKey, bool& aFound, nsAString& aResult,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                   nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aRv)
   {
     GetItem(aKey, aResult, aSubjectPrincipal, aRv);
@@ -92,22 +92,22 @@ public:
   }
 
   void SetItem(const nsAString& aKey, const nsAString& aValue,
-               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aRv);
 
   void NamedSetter(const nsAString& aKey, const nsAString& aValue,
-                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                   nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aRv)
   {
     SetItem(aKey, aValue, aSubjectPrincipal, aRv);
   }
 
   void RemoveItem(const nsAString& aKey,
-                  const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                  nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv);
 
   void NamedDeleter(const nsAString& aKey, bool& aFound,
-                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                    nsIPrincipal& aSubjectPrincipal,
                     ErrorResult& aRv)
   {
     RemoveItem(aKey, aSubjectPrincipal, aRv);
@@ -115,19 +115,8 @@ public:
     aFound = !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION);
   }
 
-  void Clear(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+  void Clear(nsIPrincipal& aSubjectPrincipal,
              ErrorResult& aRv);
-
-  // The method checks whether the caller can use a storage.
-  // CanUseStorage is called before any DOM initiated operation
-  // on a storage is about to happen and ensures that the storage's
-  // session-only flag is properly set according the current settings.
-  // It is an optimization since the privileges check and session only
-  // state determination are complex and share the code (comes hand in
-  // hand together).
-  static bool CanUseStorage(nsPIDOMWindowInner* aWindow,
-                            const Maybe<nsIPrincipal*>& aSubjectPrincipal,
-                            DOMStorage* aStorage = nullptr);
 
   bool IsPrivate() const;
   bool IsSessionOnly() const { return mIsSessionOnly; }
@@ -137,6 +126,16 @@ public:
     MOZ_ASSERT(aOther);
     return mCache == aOther->mCache;
   }
+
+protected:
+  // The method checks whether the caller can use a storage.
+  // CanUseStorage is called before any DOM initiated operation
+  // on a storage is about to happen and ensures that the storage's
+  // session-only flag is properly set according the current settings.
+  // It is an optimization since the privileges check and session only
+  // state determination are complex and share the code (comes hand in
+  // hand together).
+  bool CanUseStorage(nsIPrincipal& aSubjectPrincipal);
 
 private:
   ~DOMStorage();

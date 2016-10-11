@@ -110,9 +110,18 @@ public:
     void Clear();
 
     // Must be copy-constructable and assignable
+#if defined(XP_WIN) && (defined(_M_IX86) || defined(_M_X64))
+#pragma pack(1)
+#endif
     struct nsEntry
     {
         nsHttpAtom header;
+#if defined(XP_WIN) && (defined(_M_IX86) || defined(_M_X64))
+        char padding[4096 -
+                     sizeof(nsTArrayHeader) -
+                     sizeof(nsHttpAtom) -
+                     sizeof(void*)];
+#endif
         nsCString value;
         HeaderVariety variety = eVarietyUnknown;
 
@@ -127,6 +136,9 @@ public:
             return header == aOther.header && value == aOther.value;
         }
     };
+#if defined(XP_WIN) && (defined(_M_IX86) || defined(_M_X64))
+#pragma pack()
+#endif
 
     bool operator==(const nsHttpHeaderArray& aOther) const
     {

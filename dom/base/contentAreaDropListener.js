@@ -138,11 +138,11 @@ ContentAreaDropListener.prototype =
 
     let dataTransfer = aEvent.dataTransfer;
     let types = dataTransfer.types;
-    if (!types.contains("application/x-moz-file") &&
-        !types.contains("text/x-moz-url") &&
-        !types.contains("text/uri-list") &&
-        !types.contains("text/x-moz-text-internal") &&
-        !types.contains("text/plain"))
+    if (!types.includes("application/x-moz-file") &&
+        !types.includes("text/x-moz-url") &&
+        !types.includes("text/uri-list") &&
+        !types.includes("text/x-moz-text-internal") &&
+        !types.includes("text/plain"))
       return false;
 
     if (aAllowSameDocument)

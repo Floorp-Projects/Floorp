@@ -821,7 +821,7 @@ public:
   nsIEditor* GetEditor();
 
   void SetUserInput(const nsAString& aInput,
-                    const mozilla::Maybe<nsIPrincipal*>& aPrincipal);
+                    nsIPrincipal& aSubjectPrincipal);
 
   // XPCOM GetPhonetic() is OK
 

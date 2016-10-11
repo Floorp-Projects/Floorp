@@ -6817,13 +6817,12 @@ nsGlobalWindow::CanMoveResizeWindows(bool aCallerIsChrome)
 bool
 nsGlobalWindow::AlertOrConfirm(bool aAlert,
                                const nsAString& aMessage,
-                               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                               nsIPrincipal& aSubjectPrincipal,
                                ErrorResult& aError)
 {
   // XXX This method is very similar to nsGlobalWindow::Prompt, make
   // sure any modifications here don't need to happen over there!
   MOZ_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
 
   if (!AreDialogsEnabled()) {
     // Just silently return.  In the case of alert(), the return value is
@@ -6842,7 +6841,7 @@ nsGlobalWindow::AlertOrConfirm(bool aAlert,
   EnsureReflowFlushAndPaint();
 
   nsAutoString title;
-  MakeScriptDialogTitle(title, aSubjectPrincipal.value());
+  MakeScriptDialogTitle(title, &aSubjectPrincipal);
 
   // Remove non-terminating null characters from the
   // string. See bug #310037.
@@ -6895,7 +6894,7 @@ nsGlobalWindow::AlertOrConfirm(bool aAlert,
 }
 
 void
-nsGlobalWindow::Alert(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+nsGlobalWindow::Alert(nsIPrincipal& aSubjectPrincipal,
                       ErrorResult& aError)
 {
   MOZ_ASSERT(IsInnerWindow());
@@ -6904,7 +6903,7 @@ nsGlobalWindow::Alert(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
 
 void
 nsGlobalWindow::AlertOuter(const nsAString& aMessage,
-                           const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                           nsIPrincipal& aSubjectPrincipal,
                            ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
@@ -6913,7 +6912,7 @@ nsGlobalWindow::AlertOuter(const nsAString& aMessage,
 
 void
 nsGlobalWindow::Alert(const nsAString& aMessage,
-                      const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                      nsIPrincipal& aSubjectPrincipal,
                       ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(AlertOuter, (aMessage, aSubjectPrincipal, aError),
@@ -6922,7 +6921,7 @@ nsGlobalWindow::Alert(const nsAString& aMessage,
 
 bool
 nsGlobalWindow::ConfirmOuter(const nsAString& aMessage,
-                             const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                             nsIPrincipal& aSubjectPrincipal,
                              ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
@@ -6933,7 +6932,7 @@ nsGlobalWindow::ConfirmOuter(const nsAString& aMessage,
 
 bool
 nsGlobalWindow::Confirm(const nsAString& aMessage,
-                        const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                        nsIPrincipal& aSubjectPrincipal,
                         ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(ConfirmOuter, (aMessage, aSubjectPrincipal, aError),
@@ -6951,13 +6950,12 @@ void
 nsGlobalWindow::PromptOuter(const nsAString& aMessage,
                             const nsAString& aInitial,
                             nsAString& aReturn,
-                            const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                            nsIPrincipal& aSubjectPrincipal,
                             ErrorResult& aError)
 {
   // XXX This method is very similar to nsGlobalWindow::AlertOrConfirm, make
   // sure any modifications here don't need to happen over there!
   MOZ_RELEASE_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
 
   SetDOMStringToNull(aReturn);
 
@@ -6976,7 +6974,7 @@ nsGlobalWindow::PromptOuter(const nsAString& aMessage,
   EnsureReflowFlushAndPaint();
 
   nsAutoString title;
-  MakeScriptDialogTitle(title, aSubjectPrincipal.value());
+  MakeScriptDialogTitle(title, &aSubjectPrincipal);
 
   // Remove non-terminating null characters from the
   // string. See bug #310037.
@@ -7037,7 +7035,7 @@ nsGlobalWindow::PromptOuter(const nsAString& aMessage,
 void
 nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
                        nsAString& aReturn,
-                       const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                       nsIPrincipal& aSubjectPrincipal,
                        ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(PromptOuter,
@@ -8283,11 +8281,10 @@ void
 nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                                     const nsAString& aTargetOrigin,
                                     JS::Handle<JS::Value> aTransfer,
-                                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                    nsIPrincipal& aSubjectPrincipal,
                                     ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
 
   //
   // Window.postMessage is an intentional subversion of the same-origin policy.
@@ -8370,7 +8367,7 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
     }
 
     PrincipalOriginAttributes attrs =
-      BasePrincipal::Cast(aSubjectPrincipal.value())->OriginAttributesRef();
+      BasePrincipal::Cast(&aSubjectPrincipal)->OriginAttributesRef();
     // Create a nsIPrincipal inheriting the app/browser attributes from the
     // caller.
     providedPrincipal = BasePrincipal::CreateCodebasePrincipal(originURI, attrs);
@@ -8408,7 +8405,7 @@ void
 nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                                const nsAString& aTargetOrigin,
                                JS::Handle<JS::Value> aTransfer,
-                               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                               nsIPrincipal& aSubjectPrincipal,
                                ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(PostMessageMozOuter,
@@ -8421,7 +8418,7 @@ void
 nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                                const nsAString& aTargetOrigin,
                                const Optional<Sequence<JS::Value>>& aTransfer,
-                               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                               nsIPrincipal& aSubjectPrincipal,
                                ErrorResult& aError)
 {
   JS::Rooted<JS::Value> transferArray(aCx, JS::UndefinedValue());
@@ -9049,10 +9046,9 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
 }
 
 Element*
-nsGlobalWindow::GetFrameElementOuter(const Maybe<nsIPrincipal*>& aSubjectPrincipal)
+nsGlobalWindow::GetFrameElementOuter(nsIPrincipal& aSubjectPrincipal)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
 
   if (!mDocShell || mDocShell->GetIsMozBrowserOrApp()) {
     return nullptr;
@@ -9064,8 +9060,7 @@ nsGlobalWindow::GetFrameElementOuter(const Maybe<nsIPrincipal*>& aSubjectPrincip
     return nullptr;
   }
 
-  if (!aSubjectPrincipal.value()->
-         SubsumesConsideringDomain(element->NodePrincipal())) {
+  if (!aSubjectPrincipal.SubsumesConsideringDomain(element->NodePrincipal())) {
     return nullptr;
   }
 
@@ -9073,7 +9068,7 @@ nsGlobalWindow::GetFrameElementOuter(const Maybe<nsIPrincipal*>& aSubjectPrincip
 }
 
 Element*
-nsGlobalWindow::GetFrameElement(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+nsGlobalWindow::GetFrameElement(nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(GetFrameElementOuter, (aSubjectPrincipal), aError,
@@ -9252,11 +9247,10 @@ already_AddRefed<nsIVariant>
 nsGlobalWindow::ShowModalDialogOuter(const nsAString& aUrl,
                                      nsIVariant* aArgument,
                                      const nsAString& aOptions,
-                                     const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                     nsIPrincipal& aSubjectPrincipal,
                                      ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
 
   if (mDoc) {
     mDoc->WarnOnceAbout(nsIDocument::eShowModalDialog);
@@ -9268,7 +9262,7 @@ nsGlobalWindow::ShowModalDialogOuter(const nsAString& aUrl,
   }
 
   RefPtr<DialogValueHolder> argHolder =
-    new DialogValueHolder(aSubjectPrincipal.value(), aArgument);
+    new DialogValueHolder(&aSubjectPrincipal, aArgument);
 
   // Before bringing up the window/dialog, unsuppress painting and flush
   // pending reflows.
@@ -9325,7 +9319,7 @@ nsGlobalWindow::ShowModalDialogOuter(const nsAString& aUrl,
 already_AddRefed<nsIVariant>
 nsGlobalWindow::ShowModalDialog(const nsAString& aUrl, nsIVariant* aArgument,
                                 const nsAString& aOptions,
-                                const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(ShowModalDialogOuter,
@@ -9338,7 +9332,7 @@ nsGlobalWindow::ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
                                 JS::Handle<JS::Value> aArgument,
                                 const nsAString& aOptions,
                                 JS::MutableHandle<JS::Value> aRetval,
-                                const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aError)
 {
   MOZ_ASSERT(IsInnerWindow());
@@ -10587,8 +10581,7 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
 }
 
 DOMStorage*
-nsGlobalWindow::GetLocalStorage(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
-                                ErrorResult& aError)
+nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
@@ -10597,7 +10590,8 @@ nsGlobalWindow::GetLocalStorage(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
   }
 
   if (!mLocalStorage) {
-    if (!DOMStorage::CanUseStorage(AsInner(), aSubjectPrincipal)) {
+    if (nsContentUtils::StorageAllowedForWindow(AsInner()) ==
+          nsContentUtils::StorageAccess::eDeny) {
       aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
@@ -11663,10 +11657,7 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
 
   RefPtr<DOMStorage> storage;
   if (storageArea->GetType() == DOMStorage::LocalStorage) {
-    storage = GetLocalStorage(nsContentUtils::GetCurrentJSContext()
-                                ? Some(nsContentUtils::SubjectPrincipal())
-                                : Nothing(),
-                              aRv);
+    storage = GetLocalStorage(aRv);
   } else {
     MOZ_ASSERT(storageArea->GetType() == DOMStorage::SessionStorage);
     storage = GetSessionStorage(aRv);
@@ -14001,11 +13992,10 @@ NS_IMPL_RELEASE_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
 void
 nsGlobalWindow::GetDialogArgumentsOuter(JSContext* aCx,
                                         JS::MutableHandle<JS::Value> aRetval,
-                                        const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                        nsIPrincipal& aSubjectPrincipal,
                                         ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
   MOZ_ASSERT(IsModalContentWindow(),
              "This should only be called on modal windows!");
 
@@ -14019,14 +14009,13 @@ nsGlobalWindow::GetDialogArgumentsOuter(JSContext* aCx,
   // does not subsumes the origin of the arguments.
   JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
   JSAutoCompartment ac(aCx, wrapper);
-  mDialogArguments->Get(aCx, wrapper, aSubjectPrincipal.value(),
-                        aRetval, aError);
+  mDialogArguments->Get(aCx, wrapper, &aSubjectPrincipal, aRetval, aError);
 }
 
 void
 nsGlobalWindow::GetDialogArguments(JSContext* aCx,
                                    JS::MutableHandle<JS::Value> aRetval,
-                                   const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                   nsIPrincipal& aSubjectPrincipal,
                                    ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(GetDialogArgumentsOuter,
@@ -14070,19 +14059,17 @@ nsGlobalWindow::InitWasOffline()
 void
 nsGlobalWindow::GetReturnValueOuter(JSContext* aCx,
                                     JS::MutableHandle<JS::Value> aReturnValue,
-                                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                    nsIPrincipal& aSubjectPrincipal,
                                     ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
   MOZ_ASSERT(IsModalContentWindow(),
              "This should only be called on modal windows!");
 
   if (mReturnValue) {
     JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
     JSAutoCompartment ac(aCx, wrapper);
-    mReturnValue->Get(aCx, wrapper, aSubjectPrincipal.value(),
-                      aReturnValue, aError);
+    mReturnValue->Get(aCx, wrapper, &aSubjectPrincipal, aReturnValue, aError);
   } else {
     aReturnValue.setUndefined();
   }
@@ -14091,7 +14078,7 @@ nsGlobalWindow::GetReturnValueOuter(JSContext* aCx,
 void
 nsGlobalWindow::GetReturnValue(JSContext* aCx,
                                JS::MutableHandle<JS::Value> aReturnValue,
-                               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                               nsIPrincipal& aSubjectPrincipal,
                                ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(GetReturnValueOuter,
@@ -14115,11 +14102,10 @@ nsGlobalModalWindow::GetReturnValue(nsIVariant **aRetVal)
 void
 nsGlobalWindow::SetReturnValueOuter(JSContext* aCx,
                                     JS::Handle<JS::Value> aReturnValue,
-                                    const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                    nsIPrincipal& aSubjectPrincipal,
                                     ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
-  MOZ_ASSERT(aSubjectPrincipal.isSome());
   MOZ_ASSERT(IsModalContentWindow(),
              "This should only be called on modal windows!");
 
@@ -14128,15 +14114,14 @@ nsGlobalWindow::SetReturnValueOuter(JSContext* aCx,
     nsContentUtils::XPConnect()->JSToVariant(aCx, aReturnValue,
                                              getter_AddRefs(returnValue));
   if (!aError.Failed()) {
-    mReturnValue = new DialogValueHolder(aSubjectPrincipal.value(),
-                                         returnValue);
+    mReturnValue = new DialogValueHolder(&aSubjectPrincipal, returnValue);
   }
 }
 
 void
 nsGlobalWindow::SetReturnValue(JSContext* aCx,
                                JS::Handle<JS::Value> aReturnValue,
-                               const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                               nsIPrincipal& aSubjectPrincipal,
                                ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(SetReturnValueOuter,

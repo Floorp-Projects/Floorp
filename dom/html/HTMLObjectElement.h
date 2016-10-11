@@ -158,7 +158,7 @@ public:
   using nsObjectLoadingContent::GetContentDocument;
 
   nsPIDOMWindowOuter*
-  GetContentWindow(const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal);
+  GetContentWindow(nsIPrincipal& aSubjectPrincipal);
 
   using nsIConstraintValidation::CheckValidity;
   using nsIConstraintValidation::ReportValidity;
@@ -239,7 +239,7 @@ public:
   }
 
   nsIDocument*
-  GetSVGDocument(const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal)
+  GetSVGDocument(nsIPrincipal& aSubjectPrincipal)
   {
     return GetContentDocument(aSubjectPrincipal);
   }
