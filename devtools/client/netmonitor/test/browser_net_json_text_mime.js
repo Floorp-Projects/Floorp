@@ -24,7 +24,7 @@ add_task(function* () {
   });
   yield wait;
 
-  verifyRequestItemTarget(RequestsMenu.getItemAtIndex(0),
+  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
     "GET", CONTENT_TYPE_SJS + "?fmt=json-text-mime", {
       status: 200,
       statusText: "OK",
