@@ -4,10 +4,20 @@
 
 // Test utils.
 const expect = require("expect");
-const { render } = require("enzyme");
+const { render, mount } = require("enzyme");
+const sinon = require("sinon");
+
+// React
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const Provider = createFactory(require("react-redux").Provider);
+const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 // Components under test.
 const PageError = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
+const {
+  MESSAGE_OPEN,
+  MESSAGE_CLOSE,
+} = require("devtools/client/webconsole/new-console-output/constants");
 const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/components/message-indent");
 
 // Test fakes.
@@ -37,9 +47,48 @@ describe("PageError component:", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
     const wrapper = render(PageError({ message, serviceContainer, open: true }));
 
+    // There should be a collapse button.
+    expect(wrapper.find(".theme-twisty.open").length).toBe(1);
+
     // There should be three stacktrace items.
     const frameLinks = wrapper.find(`.stack-trace span.frame-link`);
     expect(frameLinks.length).toBe(3);
+  });
+
+  it("toggle the stacktrace when the collapse button is clicked", () => {
+    const store = setupStore([]);
+    store.dispatch = sinon.spy();
+    const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
+
+    let wrapper = mount(Provider({store},
+      PageError({
+        message,
+        open: true,
+        dispatch: store.dispatch,
+        serviceContainer,
+      })
+    ));
+    wrapper.find(".theme-twisty.open").simulate("click");
+    let call = store.dispatch.getCall(0);
+    expect(call.args[0]).toEqual({
+      id: message.id,
+      type: MESSAGE_CLOSE
+    });
+
+    wrapper = mount(Provider({store},
+      PageError({
+        message,
+        open: false,
+        dispatch: store.dispatch,
+        serviceContainer,
+      })
+    ));
+    wrapper.find(".theme-twisty").simulate("click");
+    call = store.dispatch.getCall(1);
+    expect(call.args[0]).toEqual({
+      id: message.id,
+      type: MESSAGE_OPEN
+    });
   });
 
   it("has the expected indent", () => {

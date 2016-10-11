@@ -2716,14 +2716,33 @@ CalculateDisplayPortSize(const CSSSize& aCompositionSize,
     yMultiplier += gfxPrefs::APZYSkateHighMemAdjust();
   }
 
-  // Ensure that it is at least as large as the visible area inflated by the
-  // danger zone. If this is not the case then the "AboutToCheckerboard"
-  // function in TiledContentClient.cpp will return true even in the stable
-  // state.
-  float xSize = std::max(aCompositionSize.width * xMultiplier,
-                         aCompositionSize.width + (2 * gfxPrefs::APZDangerZoneX()));
-  float ySize = std::max(aCompositionSize.height * yMultiplier,
-                         aCompositionSize.height + (2 * gfxPrefs::APZDangerZoneY()));
+  return aCompositionSize * CSSSize(xMultiplier, yMultiplier);
+}
+
+/**
+ * Ensures that the displayport is at least as large as the visible area
+ * inflated by the danger zone. If this is not the case then the
+ * "AboutToCheckerboard" function in TiledContentClient.cpp will return true
+ * even in the stable state.
+ */
+static CSSSize
+ExpandDisplayPortToDangerZone(const CSSSize& aDisplayPortSize,
+                              const FrameMetrics& aFrameMetrics)
+{
+  CSSSize dangerZone(0.0f, 0.0f);
+  if (aFrameMetrics.LayersPixelsPerCSSPixel().xScale != 0 &&
+      aFrameMetrics.LayersPixelsPerCSSPixel().yScale != 0) {
+    dangerZone = LayerSize(
+      gfxPrefs::APZDangerZoneX(),
+      gfxPrefs::APZDangerZoneY()) / aFrameMetrics.LayersPixelsPerCSSPixel();
+  }
+  const CSSSize compositionSize = aFrameMetrics.CalculateBoundedCompositedSizeInCssPixels();
+
+  const float xSize = std::max(aDisplayPortSize.width,
+                               compositionSize.width + (2 * dangerZone.width));
+
+  const float ySize = std::max(aDisplayPortSize.height,
+                               compositionSize.height + (2 * dangerZone.height));
 
   return CSSSize(xSize, ySize);
 }
@@ -2768,6 +2787,8 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
 
   // Calculate the displayport size based on how fast we're moving along each axis.
   CSSSize displayPortSize = CalculateDisplayPortSize(compositionSize, velocity);
+
+  displayPortSize = ExpandDisplayPortToDangerZone(displayPortSize, aFrameMetrics);
 
   if (gfxPrefs::APZEnlargeDisplayPortWhenClipped()) {
     RedistributeDisplayPortExcess(displayPortSize, scrollableRect);

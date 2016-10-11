@@ -23,15 +23,16 @@ job-defaults:
         implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
-        env:
-            # NOTE: this should really be a different "using" since it's using
-            # build-l10n.sh instead of build-linux.sh.  Preferably, build-linux.sh
-            # and the mozharness run implementation should be modified to support
-            # the functionality that l10n needs
 
-            JOB_SCRIPT: "taskcluster/scripts/builder/build-l10n.sh"
     # don't run anywhere by default, but still available via try
     run-on-projects: []
+    run:
+        # NOTE: this should really be a different "using" since it's using
+        # build-l10n.sh instead of build-linux.sh.  Preferably, build-linux.sh
+        # and the mozharness run implementation should be modified to support
+        # the functionality that l10n needs
+        using: mozharness
+        job-script: taskcluster/scripts/builder/build-l10n.sh
     when:
         files-changed:
             - browser/locales/all-locales
@@ -52,7 +53,6 @@ jobs:
             platform: linux32/opt
             symbol: tc(L10n)
         run:
-            using: mozharness
             script: mozharness/scripts/desktop_l10n.py
             actions: [clone-locales list-locales setup repack summary]
             config:
@@ -75,7 +75,6 @@ jobs:
             platform: linux64/opt
             symbol: tc(L10n)
         run:
-            using: mozharness
             script: mozharness/scripts/desktop_l10n.py
             actions: [clone-locales list-locales setup repack summary]
             config:
@@ -102,7 +101,6 @@ jobs:
         worker:
             max-run-time: 18000
         run:
-            using: mozharness
             script: mozharness/scripts/mobile_l10n.py
             actions: [clone-locales list-locales setup repack upload-repacks summary]
             config:

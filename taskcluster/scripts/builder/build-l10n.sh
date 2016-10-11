@@ -86,6 +86,8 @@ if [ -n "$MOZHARNESS_OPTIONS" ]; then
     done
 fi
 
+cd /home/worker
+
 python2.7 $WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} \
   --disable-mock \
   --revision ${GECKO_HEAD_REV} \
