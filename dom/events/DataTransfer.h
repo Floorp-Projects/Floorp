@@ -289,6 +289,11 @@ public:
                                   nsIVariant* aData,
                                   nsIPrincipal* aPrincipal);
 
+  // Notify the DataTransfer that the list returned from GetTypes may have
+  // changed.  This can happen due to items we care about for purposes of
+  // GetTypes being added or removed or changing item kinds.
+  void TypesListMayHaveChanged();
+
 protected:
 
   // caches text and uri-list data formats that exist in the drag service or
