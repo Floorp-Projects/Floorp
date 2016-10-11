@@ -58,7 +58,7 @@ add_task(function* () {
     info("Selecting the request.");
     RequestsMenu.selectedIndex = 0;
 
-    is(RequestsMenu.selectedItem.attachment.securityState, undefined,
+    is(RequestsMenu.selectedItem.securityState, undefined,
        "Security state has not yet arrived.");
     is(tabEl.hidden, !testcase.visibleOnNewEvent,
        "Security tab is " +
@@ -70,7 +70,7 @@ add_task(function* () {
     info("Waiting for security information to arrive.");
     yield onSecurityInfo;
 
-    ok(RequestsMenu.selectedItem.attachment.securityState,
+    ok(RequestsMenu.selectedItem.securityState,
        "Security state arrived.");
     is(tabEl.hidden, !testcase.visibleOnSecurityInfo,
        "Security tab is " +

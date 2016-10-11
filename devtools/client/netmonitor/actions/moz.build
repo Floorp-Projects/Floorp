@@ -3,8 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'batching.js',
     'filters.js',
     'index.js',
     'requests.js',
+    'selection.js',
+    'sort.js',
+    'timing-markers.js',
     'ui.js',
 )

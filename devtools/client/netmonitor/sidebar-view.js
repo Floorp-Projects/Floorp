@@ -26,7 +26,6 @@ SidebarView.prototype = {
    */
   toggle: function (visibleFlag) {
     NetMonitorView.toggleDetailsPane({ visible: visibleFlag });
-    NetMonitorView.RequestsMenu._flushWaterfallViews(true);
   },
 
   /**
