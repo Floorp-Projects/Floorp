@@ -942,6 +942,60 @@ ResolveFragmentOrURL(nsIFrame* aFrame, const FragmentOrURL* aFragmentOrURL)
   return aFragmentOrURL->Resolve(baseURI);
 }
 
+static already_AddRefed<nsIURI>
+ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValue* aURL)
+{
+  MOZ_ASSERT(aFrame);
+
+  if (!aURL) {
+    return nullptr;
+  }
+
+  // Non-local-reference URL.
+  if (!aURL->IsLocalRef()) {
+    nsCOMPtr<nsIURI> result = aURL->GetURI();
+    return result.forget();
+  }
+
+  // For a local-reference URL, resolve that fragment against the current
+  // document that relative URLs are resolved against.
+  nsIContent* content = aFrame->GetContent();
+  nsCOMPtr<nsIURI> baseURI = content->OwnerDoc()->GetDocumentURI();
+
+  if (content->IsInAnonymousSubtree()) {
+    nsIContent* bindingParent = content->GetBindingParent();
+    nsCOMPtr<nsIURI> originalURI;
+
+    // content is in a shadow tree.  If this URL was specified in the subtree
+    // referenced by the <use>(or -moz-binding) element, and that subtree came
+    // from a separate resource document, then we want the fragment-only URL
+    // to resolve to an element from the resource document.  Otherwise, the
+    // URL was specified somewhere in the document with the <use> element, and
+    // we want the fragment-only URL to resolve to an element in that document.
+    if (bindingParent) {
+      if (content->IsAnonymousContentInSVGUseSubtree()) {
+        SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
+        originalURI = useElement->GetSourceDocURI();
+      } else {
+        nsXBLBinding* binding = bindingParent->GetXBLBinding();
+        if (binding) {
+          originalURI = binding->GetSourceDocURI();
+        } else {
+          MOZ_ASSERT(content->IsInNativeAnonymousSubtree(),
+                     "an non-native anonymous tree which is not from "
+                     "an XBL binding?");
+        }
+      }
+
+      if (originalURI && aURL->EqualsExceptRef(originalURI)) {
+        baseURI = originalURI;
+      }
+    }
+  }
+
+  return aURL->ResolveLocalRef(baseURI);
+}
+
 already_AddRefed<nsIURI>
 nsSVGEffects::GetMarkerURI(nsIFrame* aFrame,
                            FragmentOrURL nsStyleSVG::* aMarker)
@@ -955,8 +1009,8 @@ nsSVGEffects::GetClipPathURI(nsIFrame* aFrame)
   const nsStyleSVGReset* svgResetStyle = aFrame->StyleSVGReset();
   MOZ_ASSERT(svgResetStyle->mClipPath.GetType() == StyleShapeSourceType::URL);
 
-  FragmentOrURL* url = svgResetStyle->mClipPath.GetURL();
-  return ResolveFragmentOrURL(aFrame, url);
+  css::URLValue* url = svgResetStyle->mClipPath.GetURL();
+  return ResolveURLUsingLocalRef(aFrame, url);
 }
 
 already_AddRefed<nsIURI>
