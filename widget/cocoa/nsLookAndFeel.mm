@@ -9,6 +9,7 @@
 #include "nsNativeThemeColors.h"
 #include "nsStyleConsts.h"
 #include "nsCocoaFeatures.h"
+#include "nsIContent.h"
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
 #include "gfxPlatformMac.h"
@@ -417,24 +418,8 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = NS_ALERT_TOP;
       break;
     case eIntID_TabFocusModel:
-    {
-      // we should probably cache this
-      CFPropertyListRef fullKeyboardAccessProperty;
-      fullKeyboardAccessProperty = ::CFPreferencesCopyValue(CFSTR("AppleKeyboardUIMode"),
-                                                            kCFPreferencesAnyApplication,
-                                                            kCFPreferencesCurrentUser,
-                                                            kCFPreferencesAnyHost);
-      aResult = 1;    // default to just textboxes
-      if (fullKeyboardAccessProperty) {
-        int32_t fullKeyboardAccessPrefVal;
-        if (::CFNumberGetValue((CFNumberRef) fullKeyboardAccessProperty, kCFNumberIntType, &fullKeyboardAccessPrefVal)) {
-          // the second bit means  "Full keyboard access" is on
-          if (fullKeyboardAccessPrefVal & (1 << 1))
-            aResult = 7; // everything that can be focused
-        }
-        ::CFRelease(fullKeyboardAccessProperty);
-      }
-    }
+      aResult = [NSApp isFullKeyboardAccessEnabled] ?
+                  nsIContent::eTabFocus_any : nsIContent::eTabFocus_textControlsMask;
       break;
     case eIntID_ScrollToClick:
     {
