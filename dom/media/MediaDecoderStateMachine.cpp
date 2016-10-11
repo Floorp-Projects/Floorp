@@ -226,7 +226,25 @@ protected:
 
   // Note this function will delete the current state object.
   // Don't access members to avoid UAF after this call.
-  void SetState(State aState) { mMaster->SetState(aState); }
+  template <class S, typename... Ts>
+  void SetState(Ts&&... aArgs)
+  {
+    // keep mMaster in a local object because mMaster will become invalid after
+    // the current state object is deleted.
+    auto master = mMaster;
+
+    UniquePtr<StateObject> s = MakeUnique<S>(master, Forward<Ts>(aArgs)...);
+    if (master->mState == s->GetState()) {
+      return;
+    }
+
+    SLOG("change state to: %s", ToStateStr(s->GetState()));
+
+    Exit();
+    master->mState = s->GetState();
+    master->mStateObj = Move(s); // Will delete |this|!
+    master->mStateObj->Enter();
+  }
 
   // Take a raw pointer in order not to change the life cycle of MDSM.
   // It is guaranteed to be valid by MDSM.
@@ -878,7 +896,7 @@ StateObject::HandleDormant(bool aDormant)
   // need to create the promise even it is not used at all.
   RefPtr<MediaDecoder::SeekPromise> unused =
     mMaster->mQueuedSeek.mPromise.Ensure(__func__);
-  SetState(DECODER_STATE_DORMANT);
+  SetState<DormantState>();
   return true;
 }
 
@@ -936,18 +954,18 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
 
   if (mPendingDormant) {
     // No need to store mQueuedSeek because we are at position 0.
-    SetState(DECODER_STATE_DORMANT);
+    SetState<DormantState>();
     return;
   }
 
   if (waitingForCDM) {
     // Metadata parsing was successful but we're still waiting for CDM caps
     // to become available so that we can build the correct decryptor/decoder.
-    SetState(DECODER_STATE_WAIT_FOR_CDM);
+    SetState<WaitForCDMState>();
     return;
   }
 
-  SetState(DECODER_STATE_DECODING_FIRSTFRAME);
+  SetState<DecodingFirstFrameState>();
 }
 
 bool
@@ -956,7 +974,7 @@ WaitForCDMState::HandleDormant(bool aDormant)
 {
   if (aDormant) {
     // No need to store mQueuedSeek because we are at position 0.
-    SetState(DECODER_STATE_DORMANT);
+    SetState<DormantState>();
   }
   return true;
 }
@@ -967,9 +985,11 @@ DormantState::HandleDormant(bool aDormant)
 {
   if (!aDormant) {
     // Exit dormant state. Check if we need the CDMProxy to start decoding.
-    SetState(Info().IsEncrypted() && !mMaster->mCDMProxy
-      ? DECODER_STATE_WAIT_FOR_CDM
-      : DECODER_STATE_DECODING_FIRSTFRAME);
+    if (Info().IsEncrypted() && !mMaster->mCDMProxy) {
+      SetState<WaitForCDMState>();
+    } else {
+      SetState<DecodingFirstFrameState>();
+    }
   }
   return true;
 }
@@ -978,7 +998,7 @@ bool
 MediaDecoderStateMachine::
 WaitForCDMState::HandleCDMProxyReady()
 {
-  SetState(DECODER_STATE_DECODING_FIRSTFRAME);
+  SetState<DecodingFirstFrameState>();
   return true;
 }
 
@@ -996,7 +1016,7 @@ DecodingFirstFrameState::Enter()
 
   // Transition to DECODING if we've decoded first frames.
   if (mMaster->mSentFirstFrameLoadedEvent) {
-    SetState(DECODER_STATE_DECODING);
+    SetState<DecodingState>();
     return;
   }
 
@@ -1047,7 +1067,7 @@ DecodingFirstFrameState::MaybeFinishDecodeFirstFrame()
   if (mMaster->mQueuedSeek.Exists()) {
     mMaster->InitiateSeek(Move(mMaster->mQueuedSeek));
   } else {
-    SetState(DECODER_STATE_DECODING);
+    SetState<DecodingState>();
   }
 }
 
@@ -1061,7 +1081,7 @@ DecodingState::Enter()
   MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
 
   if (mMaster->CheckIfDecodeComplete()) {
-    SetState(DECODER_STATE_COMPLETED);
+    SetState<CompletedState>();
     return;
   }
 
@@ -1093,7 +1113,7 @@ MediaDecoderStateMachine::
 DecodingState::HandleEndOfStream()
 {
   if (mMaster->CheckIfDecodeComplete()) {
-    SetState(DECODER_STATE_COMPLETED);
+    SetState<CompletedState>();
   } else {
     MaybeStopPrerolling();
   }
@@ -1118,7 +1138,7 @@ SeekingState::HandleDormant(bool aDormant)
     mSeekJob.mTarget.SetVideoOnly(false);
   }
   mMaster->mQueuedSeek = Move(mSeekJob);
-  SetState(DECODER_STATE_DORMANT);
+  SetState<DormantState>();
   return true;
 }
 
@@ -1208,7 +1228,11 @@ SeekingState::SeekCompleted()
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
 
-  SetState(nextState);
+  if (nextState == DECODER_STATE_COMPLETED) {
+    SetState<CompletedState>();
+  } else {
+    SetState<DecodingState>();
+  }
 }
 
 void
@@ -1253,7 +1277,7 @@ BufferingState::Step()
   }
 
   SLOG("Buffered for %.3lfs", (now - mBufferingStart).ToSeconds());
-  SetState(DECODER_STATE_DECODING);
+  SetState<DecodingState>();
 }
 
 bool
@@ -1261,7 +1285,7 @@ MediaDecoderStateMachine::
 BufferingState::HandleEndOfStream()
 {
   if (mMaster->CheckIfDecodeComplete()) {
-    SetState(DECODER_STATE_COMPLETED);
+    SetState<CompletedState>();
   } else {
     // Check if we can exit buffering.
     mMaster->ScheduleStateMachine();
