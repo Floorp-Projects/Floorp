@@ -221,7 +221,12 @@ add_task(function* testModalResults() {
       yield promiseOpenFindbar(findbar);
       Assert.ok(!findbar.hidden, "Findbar should be open now.");
 
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+      let timeout = kIteratorTimeout;
+      if (word.length == 1)
+        timeout *= 4;
+      else if (word.length == 2)
+        timeout *= 2;
+      yield new Promise(resolve => setTimeout(resolve, timeout));
       let promise = promiseTestHighlighterOutput(browser, word, expectedResult,
         expectedResult.extraTest);
       yield promiseEnterStringIntoFindField(findbar, word);
