@@ -21,6 +21,7 @@ public:
   nsPresState()
     : mContentData(nullptr)
     , mScrollState(0, 0)
+    , mAllowScrollOriginDowngrade(true)
     , mResolution(1.0)
     , mScaleToResolution(false)
     , mDisabledSet(false)
@@ -36,6 +37,16 @@ public:
   nsPoint GetScrollPosition() const
   {
     return mScrollState;
+  }
+
+  void SetAllowScrollOriginDowngrade(bool aAllowScrollOriginDowngrade)
+  {
+    mAllowScrollOriginDowngrade = aAllowScrollOriginDowngrade;
+  }
+
+  bool GetAllowScrollOriginDowngrade()
+  {
+    return mAllowScrollOriginDowngrade;
   }
 
   void SetResolution(float aSize)
@@ -104,6 +115,7 @@ public:
 protected:
   nsCOMPtr<nsISupports> mContentData;
   nsPoint mScrollState;
+  bool mAllowScrollOriginDowngrade;
   float mResolution;
   bool mScaleToResolution;
   bool mDisabledSet;
