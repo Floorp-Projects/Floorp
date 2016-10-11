@@ -796,8 +796,10 @@ Code::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
             if (!name.append('\0'))
                 return false;
 
-            UniqueChars label(JS_smprintf("%hs (%s:%u)",
-                                          name.begin(),
+            TwoByteChars chars(name.begin(), name.length());
+            UniqueChars utf8Name(JS::CharsToNewUTF8CharsZ(nullptr, chars).c_str());
+            UniqueChars label(JS_smprintf("%s (%s:%u)",
+                                          utf8Name.get(),
                                           metadata_->filename.get(),
                                           codeRange.funcLineOrBytecode()));
             if (!label) {

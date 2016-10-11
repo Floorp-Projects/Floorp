@@ -8,6 +8,8 @@
 
 #include "jit/JSONSpewer.h"
 
+#include "mozilla/SizePrintfMacros.h"
+
 #include <stdarg.h>
 
 #include "jit/BacktrackingAllocator.h"
@@ -146,7 +148,7 @@ JSONSpewer::beginFunction(JSScript* script)
 {
     beginObject();
     if (script)
-        stringProperty("name", "%s:%d", script->filename(), script->lineno());
+        stringProperty("name", "%s:%" PRIuSIZE, script->filename(), script->lineno());
     else
         stringProperty("name", "asm.js compilation");
     beginListProperty("passes");
@@ -156,7 +158,7 @@ void
 JSONSpewer::beginPass(const char* pass)
 {
     beginObject();
-    stringProperty("name", pass);
+    stringProperty("name", "%s", pass);
 }
 
 void

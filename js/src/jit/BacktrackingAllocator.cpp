@@ -1245,7 +1245,7 @@ bool
 BacktrackingAllocator::processBundle(MIRGenerator* mir, LiveBundle* bundle)
 {
     if (JitSpewEnabled(JitSpew_RegAlloc)) {
-        JitSpew(JitSpew_RegAlloc, "Allocating %s [priority %lu] [weight %lu]",
+        JitSpew(JitSpew_RegAlloc, "Allocating %s [priority %" PRIuSIZE "] [weight %" PRIuSIZE "]",
                 bundle->toString().get(), computePriority(bundle), computeSpillWeight(bundle));
     }
 
@@ -1437,13 +1437,13 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r, LiveBundle* bund
         if (JitSpewEnabled(JitSpew_RegAlloc)) {
             if (aliasedConflicting.length() == 1) {
                 LiveBundle* existing = aliasedConflicting[0];
-                JitSpew(JitSpew_RegAlloc, "  %s collides with %s [weight %lu]",
+                JitSpew(JitSpew_RegAlloc, "  %s collides with %s [weight %" PRIuSIZE "]",
                         r.reg.name(), existing->toString().get(), computeSpillWeight(existing));
             } else {
                 JitSpew(JitSpew_RegAlloc, "  %s collides with the following", r.reg.name());
                 for (size_t i = 0; i < aliasedConflicting.length(); i++) {
                     LiveBundle* existing = aliasedConflicting[i];
-                    JitSpew(JitSpew_RegAlloc, "      %s [weight %lu]",
+                    JitSpew(JitSpew_RegAlloc, "      %s [weight %" PRIuSIZE "]",
                             existing->toString().get(), computeSpillWeight(existing));
                 }
             }
@@ -1482,7 +1482,7 @@ bool
 BacktrackingAllocator::evictBundle(LiveBundle* bundle)
 {
     if (JitSpewEnabled(JitSpew_RegAlloc)) {
-        JitSpew(JitSpew_RegAlloc, "  Evicting %s [priority %lu] [weight %lu]",
+        JitSpew(JitSpew_RegAlloc, "  Evicting %s [priority %" PRIuSIZE "] [weight %" PRIuSIZE "]",
                 bundle->toString().get(), computePriority(bundle), computeSpillWeight(bundle));
     }
 
@@ -2296,7 +2296,8 @@ LiveBundle::toString() const
 {
     AutoEnterOOMUnsafeRegion oomUnsafe;
 
-    char *buf = JS_smprintf("");
+    // Suppress -Wformat warning.
+    char *buf = JS_smprintf("%s", "");
 
     for (LiveRange::BundleLinkIterator iter = rangesBegin(); buf && iter; iter++) {
         buf = JS_sprintf_append(buf, "%s %s",
