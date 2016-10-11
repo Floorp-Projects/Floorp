@@ -105,17 +105,17 @@ add_task(function* () {
 
     for (let header of headers) {
       if (header != target) {
-        is(header.hasAttribute("sorted"), false,
-          "The " + header.id + " header should not have a 'sorted' attribute.");
-        is(header.hasAttribute("tooltiptext"), false,
-          "The " + header.id + " header should not have a 'tooltiptext' attribute.");
+        ok(!header.hasAttribute("data-sorted"),
+          "The " + header.id + " header does not have a 'data-sorted' attribute.");
+        ok(!header.getAttribute("title"),
+          "The " + header.id + " header does not have a 'title' attribute.");
       } else {
-        is(header.getAttribute("sorted"), direction,
-          "The " + header.id + " header has an incorrect 'sorted' attribute.");
-        is(header.getAttribute("tooltiptext"), direction == "ascending"
+        is(header.getAttribute("data-sorted"), direction,
+          "The " + header.id + " header has a correct 'data-sorted' attribute.");
+        is(header.getAttribute("title"), direction == "ascending"
           ? L10N.getStr("networkMenu.sortedAsc")
           : L10N.getStr("networkMenu.sortedDesc"),
-          "The " + header.id + " has an incorrect 'tooltiptext' attribute.");
+          "The " + header.id + " header has a correct 'title' attribute.");
       }
     }
   }
@@ -132,16 +132,12 @@ add_task(function* () {
       "There should be a specific number of items in the requests menu.");
     is(RequestsMenu.visibleItems.length, order.length,
       "There should be a specific number of visbile items in the requests menu.");
-    is($all(".side-menu-widget-item").length, order.length,
+    is($all(".request-list-item").length, order.length,
       "The visible items in the requests menu are, in fact, visible!");
 
-    for (let i = 0; i < order.length; i++) {
-      is(RequestsMenu.getItemAtIndex(i), RequestsMenu.items[i],
-        "The requests menu items aren't ordered correctly. Misplaced item " + i + ".");
-    }
-
     for (let i = 0, len = order.length / 5; i < len; i++) {
-      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i]),
+      verifyRequestItemTarget(RequestsMenu,
+        RequestsMenu.getItemAtIndex(order[i]),
         "GET1", SORTING_SJS + "?index=1", {
           fuzzyUrl: true,
           status: 101,
@@ -154,7 +150,8 @@ add_task(function* () {
         });
     }
     for (let i = 0, len = order.length / 5; i < len; i++) {
-      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len]),
+      verifyRequestItemTarget(RequestsMenu,
+        RequestsMenu.getItemAtIndex(order[i + len]),
         "GET2", SORTING_SJS + "?index=2", {
           fuzzyUrl: true,
           status: 200,
@@ -167,7 +164,8 @@ add_task(function* () {
         });
     }
     for (let i = 0, len = order.length / 5; i < len; i++) {
-      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len * 2]),
+      verifyRequestItemTarget(RequestsMenu,
+        RequestsMenu.getItemAtIndex(order[i + len * 2]),
         "GET3", SORTING_SJS + "?index=3", {
           fuzzyUrl: true,
           status: 300,
@@ -180,7 +178,8 @@ add_task(function* () {
         });
     }
     for (let i = 0, len = order.length / 5; i < len; i++) {
-      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len * 3]),
+      verifyRequestItemTarget(RequestsMenu,
+        RequestsMenu.getItemAtIndex(order[i + len * 3]),
         "GET4", SORTING_SJS + "?index=4", {
           fuzzyUrl: true,
           status: 400,
@@ -193,7 +192,8 @@ add_task(function* () {
         });
     }
     for (let i = 0, len = order.length / 5; i < len; i++) {
-      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len * 4]),
+      verifyRequestItemTarget(RequestsMenu,
+        RequestsMenu.getItemAtIndex(order[i + len * 4]),
         "GET5", SORTING_SJS + "?index=5", {
           fuzzyUrl: true,
           status: 500,

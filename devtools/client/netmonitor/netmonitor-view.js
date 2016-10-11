@@ -18,6 +18,7 @@ const { ToolbarView } = require("./toolbar-view");
 const { SidebarView } = require("./sidebar-view");
 const { DetailsView } = require("./details-view");
 const { PerformanceStatisticsView } = require("./performance-statistics-view");
+var {Prefs} = require("./prefs");
 
 // Initialize the global redux variables
 var gStore = configureStore();
@@ -80,12 +81,6 @@ var NetMonitorView = {
     this._detailsPane.setAttribute("width", Prefs.networkDetailsWidth);
     this._detailsPane.setAttribute("height", Prefs.networkDetailsHeight);
     this.toggleDetailsPane({ visible: false });
-
-    // Disable the performance statistics mode.
-    if (!Prefs.statistics) {
-      $("#request-menu-context-perf").hidden = true;
-      $("#notice-perf-message").hidden = true;
-    }
   },
 
   /**
@@ -169,7 +164,6 @@ var NetMonitorView = {
    */
   showNetworkInspectorView: function () {
     this._body.selectedPanel = $("#network-inspector-view");
-    this.RequestsMenu._flushWaterfallViews(true);
   },
 
   /**
@@ -192,7 +186,7 @@ var NetMonitorView = {
         // • The response content size and request total time are necessary for
         // populating the statistics view.
         // • The response mime type is used for categorization.
-        yield whenDataAvailable(requestsView, [
+        yield whenDataAvailable(requestsView.store, [
           "responseHeaders", "status", "contentSize", "mimeType", "totalTime"
         ]);
       } catch (ex) {
@@ -200,8 +194,9 @@ var NetMonitorView = {
         console.error(ex);
       }
 
-      statisticsView.createPrimedCacheChart(requestsView.items);
-      statisticsView.createEmptyCacheChart(requestsView.items);
+      const requests = requestsView.store.getState().requests.requests;
+      statisticsView.createPrimedCacheChart(requests);
+      statisticsView.createEmptyCacheChart(requests);
     });
   },
 
@@ -251,34 +246,36 @@ var $all = (selector, target = document) => target.querySelectorAll(selector);
 /**
  * Makes sure certain properties are available on all objects in a data store.
  *
- * @param array dataStore
- *        The request view object from which to fetch the item list.
+ * @param Store dataStore
+ *        A Redux store for which to check the availability of properties.
  * @param array mandatoryFields
  *        A list of strings representing properties of objects in dataStore.
  * @return object
  *         A promise resolved when all objects in dataStore contain the
  *         properties defined in mandatoryFields.
  */
-function whenDataAvailable(requestsView, mandatoryFields) {
-  let deferred = promise.defer();
+function whenDataAvailable(dataStore, mandatoryFields) {
+  return new Promise((resolve, reject) => {
+    let interval = setInterval(() => {
+      const { requests } = dataStore.getState().requests;
+      const allFieldsPresent = !requests.isEmpty() && requests.every(
+        item => mandatoryFields.every(
+          field => item.get(field) !== undefined
+        )
+      );
 
-  let interval = setInterval(() => {
-    const { attachments } = requestsView;
-    if (attachments.length > 0 && attachments.every(item => {
-      return mandatoryFields.every(field => field in item);
-    })) {
+      if (allFieldsPresent) {
+        clearInterval(interval);
+        clearTimeout(timer);
+        resolve();
+      }
+    }, WDA_DEFAULT_VERIFY_INTERVAL);
+
+    let timer = setTimeout(() => {
       clearInterval(interval);
-      clearTimeout(timer);
-      deferred.resolve();
-    }
-  }, WDA_DEFAULT_VERIFY_INTERVAL);
-
-  let timer = setTimeout(() => {
-    clearInterval(interval);
-    deferred.reject(new Error("Timed out while waiting for data"));
-  }, WDA_DEFAULT_GIVE_UP_TIMEOUT);
-
-  return deferred.promise;
+      reject(new Error("Timed out while waiting for data"));
+    }, WDA_DEFAULT_GIVE_UP_TIMEOUT);
+  });
 }
 
 /**
