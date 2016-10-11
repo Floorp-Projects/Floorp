@@ -24,14 +24,14 @@ function startTest(test, token) {
 
   element.src = test.name;
   element.test = test;
-  element.stream = element.mozCaptureStream();
   element.preload = "auto";
 
   // Set up MediaRecorder once loadedmetadata fires and tracks are available.
   element.onloadedmetadata = function() {
     element.onloadedmetadata = null;
 
-    var mediaRecorder = new MediaRecorder(element.stream);
+    const stream = element.mozCaptureStream();
+    const mediaRecorder = new MediaRecorder(stream);
 
     mediaRecorder.onerror = function () {
       ok(false, 'Unexpected onerror callback fired');
@@ -80,7 +80,7 @@ function startTest(test, token) {
         mediaRecorder.stop();
         is(mediaRecorder.state, 'inactive',
            'Media recorder is inactive after being stopped');
-        is(mediaRecorder.stream, element.stream,
+        is(mediaRecorder.stream, stream,
            'Media recorder stream = element stream post recording');
 
       } else if (dataAvailableCount === 2) {
@@ -92,7 +92,7 @@ function startTest(test, token) {
     mediaRecorder.start(250);
     element.play();
     is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
-    is(mediaRecorder.stream, element.stream,
+    is(mediaRecorder.stream, stream,
        'Media recorder stream = element stream at the start of recording');
   };
 }
