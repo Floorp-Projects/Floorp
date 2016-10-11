@@ -543,7 +543,7 @@ VRDisplay::RequestPresent(const nsTArray<VRLayer>& aLayers, ErrorResult& aRv)
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE(obs, nullptr);
 
-  if (IsPresenting()) {
+  if (mClient->GetIsPresenting()) {
     // Only one presentation allowed per VRDisplay
     // on a first-come-first-serve basis.
     promise->MaybeRejectWithUndefined();
@@ -594,12 +594,20 @@ VRDisplay::ExitPresent(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  ExitPresentInternal();
+
 
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
-  promise->MaybeResolve(JS::UndefinedHandleValue);
+  if (!IsPresenting()) {
+    // We can not exit a presentation outside of the context that
+    // started the presentation.
+    promise->MaybeRejectWithUndefined();
+  } else {
+    promise->MaybeResolve(JS::UndefinedHandleValue);
+    ExitPresentInternal();
+  }
+
   return promise.forget();
 }
 
@@ -653,7 +661,9 @@ VRDisplay::CancelAnimationFrame(int32_t aHandle, ErrorResult& aError)
 bool
 VRDisplay::IsPresenting() const
 {
-  return mClient->GetIsPresenting();
+  // IsPresenting returns true only if this Javascript context is presenting
+  // and will return false if another context is presenting.
+  return mPresentation != nullptr;
 }
 
 bool
