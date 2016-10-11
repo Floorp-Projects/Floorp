@@ -999,7 +999,7 @@ dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 {
     int errCode = SSL_ERROR_RX_MALFORMED_HELLO_VERIFY_REQUEST;
     SECStatus rv;
-    PRInt32 temp;
+    SSL3ProtocolVersion temp;
     SSL3AlertDescription desc = illegal_parameter;
 
     SSL_TRC(3, ("%d: SSL3[%d]: handle hello_verify_request handshake",
@@ -1013,15 +1013,22 @@ dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         goto alert_loser;
     }
 
-    /* The version */
-    temp = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
-    if (temp < 0) {
+    /* The version.
+     *
+     * RFC 4347 required that you verify that the server versions
+     * match (Section 4.2.1) in the HelloVerifyRequest and the
+     * ServerHello.
+     *
+     * RFC 6347 suggests (SHOULD) that servers always use 1.0 in
+     * HelloVerifyRequest and allows the versions not to match,
+     * especially when 1.2 is being negotiated.
+     *
+     * Therefore we do not do anything to enforce a match, just
+     * read and check that this value is sane.
+     */
+    rv = ssl_ClientReadVersion(ss, &b, &length, &temp);
+    if (rv != SECSuccess) {
         goto loser; /* alert has been sent */
-    }
-
-    if (temp != SSL_LIBRARY_VERSION_DTLS_1_0_WIRE &&
-        temp != SSL_LIBRARY_VERSION_DTLS_1_2_WIRE) {
-        goto alert_loser;
     }
 
     /* Read the cookie.

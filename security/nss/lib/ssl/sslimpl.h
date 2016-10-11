@@ -1716,6 +1716,9 @@ extern SECStatus ssl3_HandleHandshakeMessage(sslSocket *ss, SSL3Opaque *b,
 
 extern void ssl3_DestroySSL3Info(sslSocket *ss);
 
+extern SECStatus ssl_ClientReadVersion(sslSocket *ss, SSL3Opaque **b,
+                                       PRUint32 *length,
+                                       SSL3ProtocolVersion *version);
 extern SECStatus ssl3_NegotiateVersion(sslSocket *ss,
                                        SSL3ProtocolVersion peerVersion,
                                        PRBool allowLargerPeerVersion);
