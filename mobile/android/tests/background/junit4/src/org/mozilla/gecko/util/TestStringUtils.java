@@ -9,6 +9,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -83,5 +86,22 @@ public class TestStringUtils {
         assertEquals(5, forcedLtrString.length());
         final String forcedAgainLtrString = StringUtils.forceLTR(forcedLtrString);
         assertEquals(5, forcedAgainLtrString.length());
+    }
+
+    @Test
+    public void testJoin() {
+        assertEquals("", StringUtils.join("", Collections.<String>emptyList()));
+        assertEquals("", StringUtils.join("-", Collections.<String>emptyList()));
+        assertEquals("", StringUtils.join("", Collections.singletonList("")));
+        assertEquals("", StringUtils.join(".", Collections.singletonList("")));
+
+        assertEquals("192.168.0.1", StringUtils.join(".", Arrays.asList("192", "168", "0", "1")));
+        assertEquals("www.mozilla.org", StringUtils.join(".", Arrays.asList("www", "mozilla", "org")));
+
+        assertEquals("hello", StringUtils.join("", Collections.singletonList("hello")));
+        assertEquals("helloworld", StringUtils.join("", Arrays.asList("hello", "world")));
+        assertEquals("hello world", StringUtils.join(" ", Arrays.asList("hello", "world")));
+
+        assertEquals("m::o::z::i::l::l::a", StringUtils.join("::", Arrays.asList("m", "o", "z", "i", "l", "l", "a")));
     }
 }
