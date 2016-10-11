@@ -1082,6 +1082,18 @@ protected:
     RefPtr<nsSVGFilterChainObserver> filterChainObserver;
     mozilla::gfx::FilterDescription filter;
     nsTArray<RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
+
+    // This keeps track of whether the canvas was "tainted" or not when
+    // we last used a filter. This is a security measure, whereby the
+    // canvas is flipped to write-only if a cross-origin image is drawn to it.
+    // This is to stop bad actors from reading back data they shouldn't have
+    // access to.
+    //
+    // This also limits what filters we can apply to the context; in particular
+    // feDisplacementMap is restricted.
+    //
+    // We keep track of this to ensure that if this gets out of sync with the
+    // tainted state of the canvas itself, we update our filters accordingly.
     bool filterSourceGraphicTainted;
 
     bool imageSmoothingEnabled;
