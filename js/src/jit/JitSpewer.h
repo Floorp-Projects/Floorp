@@ -172,9 +172,9 @@ class JitSpewIndent
     ~JitSpewIndent();
 };
 
-void JitSpew(JitSpewChannel channel, const char* fmt, ...);
-void JitSpewStart(JitSpewChannel channel, const char* fmt, ...);
-void JitSpewCont(JitSpewChannel channel, const char* fmt, ...);
+void JitSpew(JitSpewChannel channel, const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
+void JitSpewStart(JitSpewChannel channel, const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
+void JitSpewCont(JitSpewChannel channel, const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
 void JitSpewFin(JitSpewChannel channel);
 void JitSpewHeader(JitSpewChannel channel);
 bool JitSpewEnabled(JitSpewChannel channel);
