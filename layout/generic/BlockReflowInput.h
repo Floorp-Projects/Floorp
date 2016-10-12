@@ -22,6 +22,8 @@ namespace mozilla {
 // block frame uses along with ReflowInput. Like ReflowInput, this
 // is read-only data that is passed down from a parent frame to its children.
 class BlockReflowInput {
+  using BandInfoType = nsFloatManager::BandInfoType;
+  using ShapeType = nsFloatManager::ShapeType;
 
   // Block reflow input flags.
   struct Flags {
@@ -121,10 +123,14 @@ public:
    */
   nsFlowAreaRect GetFloatAvailableSpace() const
     { return GetFloatAvailableSpace(mBCoord); }
+  nsFlowAreaRect GetFloatAvailableSpaceForPlacingFloat(nscoord aBCoord) const
+    { return GetFloatAvailableSpaceWithState(
+        aBCoord, ShapeType::Margin, nullptr); }
   nsFlowAreaRect GetFloatAvailableSpace(nscoord aBCoord) const
-    { return GetFloatAvailableSpaceWithState(aBCoord, nullptr); }
+    { return GetFloatAvailableSpaceWithState(
+        aBCoord, ShapeType::ShapeOutside, nullptr); }
   nsFlowAreaRect
-    GetFloatAvailableSpaceWithState(nscoord aBCoord,
+    GetFloatAvailableSpaceWithState(nscoord aBCoord, ShapeType aShapeType,
                                     nsFloatManager::SavedState *aState) const;
   nsFlowAreaRect
     GetFloatAvailableSpaceForBSize(nscoord aBCoord, nscoord aBSize,
