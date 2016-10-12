@@ -115,6 +115,11 @@ public class Crypto5MiddlewareRepositorySession extends MiddlewareRepositorySess
     }
 
     @Override
+    public void onBatchCompleted() {
+      next.onBatchCompleted();
+    }
+
+    @Override
     public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor) {
       // Synchronously perform *our* work, passing through appropriately.
       RepositorySessionFetchRecordsDelegate deferredNext = next.deferredFetchDelegate(executor);

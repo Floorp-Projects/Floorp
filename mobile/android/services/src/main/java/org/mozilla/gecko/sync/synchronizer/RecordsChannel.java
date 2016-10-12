@@ -217,6 +217,10 @@ public class RecordsChannel implements
   }
 
   @Override
+  public void onBatchCompleted() {
+  }
+
+  @Override
   public void onRecordStoreFailed(Exception ex, String recordGuid) {
     Logger.trace(LOG_TAG, "Failed to store record with guid " + recordGuid);
     numStoreFailed.incrementAndGet();

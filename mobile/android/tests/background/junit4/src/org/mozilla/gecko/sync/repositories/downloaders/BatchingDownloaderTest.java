@@ -52,6 +52,7 @@ public class BatchingDownloaderTest {
         public boolean isFailure;
         public boolean isFetched;
         public boolean isSuccess;
+        public int batchesCompleted;
         public Exception ex;
         public Record record;
 
@@ -71,6 +72,11 @@ public class BatchingDownloaderTest {
         @Override
         public void onFetchCompleted(long fetchEnd) {
             this.isSuccess = true;
+        }
+
+        @Override
+        public void onBatchCompleted() {
+            this.batchesCompleted += 1;
         }
 
         @Override
