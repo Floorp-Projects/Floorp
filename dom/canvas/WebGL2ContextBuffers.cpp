@@ -91,39 +91,33 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
 }
 
 void
-WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
-                                const dom::ArrayBufferView& data)
+WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
+                                const dom::ArrayBufferView& dstData, GLuint dstElemOffset,
+                                GLuint dstElemCountOverride)
 {
     const char funcName[] = "getBufferSubData";
     if (IsContextLost())
         return;
 
-    if (!ValidateNonNegative(funcName, "offset", offset))
+    if (!ValidateNonNegative(funcName, "srcByteOffset", srcByteOffset))
         return;
+
+    uint8_t* bytes;
+    size_t byteLen;
+    if (!ValidateArrayBufferView(funcName, dstData, dstElemOffset, dstElemCountOverride,
+                                 &bytes, &byteLen))
+    {
+        return;
+    }
+
+    ////
 
     const auto& buffer = ValidateBufferSelection(funcName, target);
     if (!buffer)
         return;
 
-    ////
-
-    // If offset + returnedData.byteLength would extend beyond the end
-    // of the buffer an INVALID_VALUE error is generated.
-    data.ComputeLengthAndData();
-
-    const auto neededByteLength = CheckedInt<size_t>(offset) + data.LengthAllowShared();
-    if (!neededByteLength.isValid()) {
-        ErrorInvalidValue("%s: Integer overflow computing the needed byte length.",
-                          funcName);
+    if (!buffer->ValidateRange(funcName, srcByteOffset, byteLen))
         return;
-    }
-
-    if (neededByteLength.value() > buffer->ByteLength()) {
-        ErrorInvalidValue("%s: Not enough data. Operation requires %d bytes, but buffer"
-                          " only has %d bytes.",
-                          funcName, neededByteLength.value(), buffer->ByteLength());
-        return;
-    }
 
     ////
 
@@ -142,15 +136,23 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
         return;
     }
 
+    if (!CheckedInt<GLsizeiptr>(byteLen).isValid()) {
+        ErrorOutOfMemory("%s: Size too large.", funcName);
+        return;
+    }
+    const GLsizeiptr glByteLen(byteLen);
+
     ////
 
     gl->MakeCurrent();
     const ScopedLazyBind readBind(gl, target, buffer);
 
-    const auto ptr = gl->fMapBufferRange(target, offset, data.LengthAllowShared(),
-                                         LOCAL_GL_MAP_READ_BIT);
+    const auto mappedBytes = gl->fMapBufferRange(target, srcByteOffset, glByteLen,
+                                                 LOCAL_GL_MAP_READ_BIT);
     // Warning: Possibly shared memory.  See bug 1225033.
-    memcpy(data.DataAllowShared(), ptr, data.LengthAllowShared());
+    if (byteLen) {
+        memcpy(bytes, mappedBytes, byteLen);
+    }
     gl->fUnmapBuffer(target);
 }
 
