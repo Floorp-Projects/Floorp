@@ -205,6 +205,7 @@ public class RecordsChannel implements
   @Override
   public void onFetchFailed(Exception ex) {
     Logger.warn(LOG_TAG, "onFetchFailed. Informing sink, calling for immediate stop.", ex);
+    sink.sourceFailed(ex);
     numFetchFailed.incrementAndGet();
     this.consumer.halt();
     delegate.onFlowFetchFailed(this, ex);
@@ -227,6 +228,7 @@ public class RecordsChannel implements
 
   @Override
   public void onBatchCompleted() {
+    this.sink.storeFlush();
   }
 
   @Override
