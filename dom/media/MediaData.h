@@ -6,10 +6,11 @@
 #if !defined(MediaData_h)
 #define MediaData_h
 
+#include "AudioSampleFormat.h"
+#include "ImageTypes.h"
 #include "nsSize.h"
 #include "mozilla/gfx/Rect.h"
 #include "nsRect.h"
-#include "AudioSampleFormat.h"
 #include "nsIMemoryReporter.h"
 #include "SharedBuffer.h"
 #include "mozilla/RefPtr.h"
@@ -443,6 +444,7 @@ public:
     };
 
     Plane mPlanes[3];
+    YUVColorSpace mYUVColorSpace = YUVColorSpace::BT601;
   };
 
   // Constructs a VideoData object. If aImage is nullptr, creates a new Image

@@ -943,6 +943,14 @@ struct ParamTraits<mozilla::StereoMode>
 {};
 
 template <>
+struct ParamTraits<mozilla::YUVColorSpace>
+  : public ContiguousEnumSerializer<
+             mozilla::YUVColorSpace,
+             mozilla::YUVColorSpace::BT601,
+             mozilla::YUVColorSpace::UNKNOWN>
+{};
+
+template <>
 struct ParamTraits<mozilla::layers::ScrollableLayerGuid>
 {
   typedef mozilla::layers::ScrollableLayerGuid paramType;
