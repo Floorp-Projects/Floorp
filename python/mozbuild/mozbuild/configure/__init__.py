@@ -372,6 +372,10 @@ class ConfigureSandbox(dict):
                 continue
             self._implied_options.remove(implied_option)
 
+            if (implied_option.when and
+                not self._value_for(implied_option.when)):
+                continue
+
             value = self._resolve(implied_option.value,
                                   need_help_dependency=False)
 
@@ -718,7 +722,7 @@ class ConfigureSandbox(dict):
         self._execution_queue.append((
             self._resolve_and_set, (defines, name, value, when)))
 
-    def imply_option_impl(self, option, value, reason=None):
+    def imply_option_impl(self, option, value, reason=None, when=None):
         '''Implementation of imply_option().
         Injects additional options as if they had been passed on the command
         line. The `option` argument is a string as in option()'s `name` or
@@ -784,6 +788,9 @@ class ConfigureSandbox(dict):
                 "the `imply_option` call."
                 % option)
 
+        if when is not None:
+            when = self._dependency(when, 'imply_option', 'when')
+
         prefix, name, values = Option.split_option(option)
         if values != ():
             raise ConfigureError("Implied option must not contain an '='")
@@ -795,6 +802,7 @@ class ConfigureSandbox(dict):
             value=value,
             caller=inspect.stack()[1],
             reason=reason,
+            when=when,
         ))
 
     def _prepare_function(self, func):

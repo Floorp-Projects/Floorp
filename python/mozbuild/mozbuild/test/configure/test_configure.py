@@ -677,6 +677,23 @@ class TestConfigure(unittest.TestCase):
         self.assertEquals(e.exception.message,
                           "Unexpected type: 'int'")
 
+    def test_imply_option_when(self):
+        with self.moz_configure('''
+            option('--with-foo', help='foo')
+            imply_option('--with-qux', True, when='--with-foo')
+            option('--with-qux', help='qux')
+            set_config('QUX', depends('--with-qux')(lambda x: x))
+        '''):
+            config = self.get_config()
+            self.assertEquals(config, {
+                'QUX': NegativeOptionValue(),
+            })
+
+            config = self.get_config(['--with-foo'])
+            self.assertEquals(config, {
+                'QUX': PositiveOptionValue(),
+            })
+
     def test_option_failures(self):
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('option("--with-foo", help="foo")'):
