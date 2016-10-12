@@ -10,6 +10,7 @@
 #define nsFloatManager_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/WritingModes.h"
 #include "nsCoord.h"
 #include "nsFrameList.h" // for DEBUG_FRAME_DUMP
@@ -142,8 +143,14 @@ public:
    *     space if a float begins or ends in it.)  The inline size of the
    *     resulting rectangle can be negative.
    *
-   * @param aBCoord [in] block-dir coordinate for block start of
-   *           available space desired
+   * ShapeType can be used to request two different types of flow areas.
+   * (This is the float area defined in CSS Shapes Module Level 1 §1.4):
+   *    Margin: uses the float element's margin-box to request the flow area.
+   *    ShapeOutside: uses the float element's shape-outside value to request
+   *      the float area.
+   *
+   * @param aBCoord [in] block-dir coordinate for block start of available space
+   *          desired, which are positioned relative to the current translation.
    * @param aBSize [in] see above
    * @param aContentArea [in] an nsRect representing the content area
    * @param aState [in] If null, use the current state, otherwise, do
@@ -153,16 +160,15 @@ public:
    *           mRect is the resulting rectangle for line boxes.  It will not
    *             extend beyond aContentArea's inline bounds, but may be
    *             narrower when floats are present.
-   *          mBandHasFloats is whether there are floats at the sides of the
-   *            return value including those that do not reduce the line box
-   *            inline size at all (because they are entirely in the margins)
-   *
-   * aBCoord and aAvailSpace are positioned relative to the current translation
+   *           mHasFloats is whether there are floats at the sides of the
+   *             return value including those that do not reduce the line box
+   *             inline size at all (because they are entirely in the margins)
    */
   enum class BandInfoType { BandFromPoint, WidthWithinHeight };
+  enum class ShapeType { Margin, ShapeOutside };
   nsFlowAreaRect GetFlowArea(mozilla::WritingMode aWM,
                              nscoord aBCoord, nscoord aBSize,
-                             BandInfoType aBandInfoType,
+                             BandInfoType aBandInfoType, ShapeType aShapeType,
                              mozilla::LogicalRect aContentArea,
                              SavedState* aState,
                              const nsSize& aContainerSize) const;
@@ -324,6 +330,18 @@ private:
     nscoord BSize() const { return mRect.height; }
     bool IsEmpty() const { return mRect.IsEmpty(); }
 
+    nsRect ShapeBoxRect() const { return mShapeBoxRect.valueOr(mRect); }
+    nscoord LineLeft(ShapeType aShapeType) const;
+    nscoord LineRight(ShapeType aShapeType) const;
+    nscoord BStart(ShapeType aShapeType) const
+    {
+      return aShapeType == ShapeType::Margin ? BStart() : ShapeBoxRect().y;
+    }
+    nscoord BEnd(ShapeType aShapeType) const
+    {
+      return aShapeType == ShapeType::Margin ? BEnd() : ShapeBoxRect().YMost();
+    }
+
 #ifdef NS_BUILD_REFCNT_LOGGING
     FloatInfo(const FloatInfo& aOther);
     ~FloatInfo();
@@ -336,6 +354,10 @@ private:
     // the line-relative axis of the frame manager and its block
     // coordinates are in the frame manager's real block direction.
     nsRect mRect;
+    // This is the reference box of css shape-outside if specified, which
+    // implements the <shape-box> value in the CSS Shapes Module Level 1.
+    // The coordinate setup is the same as mRect.
+    mozilla::Maybe<nsRect> mShapeBoxRect;
   };
 
 #ifdef DEBUG
