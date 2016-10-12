@@ -158,6 +158,25 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
     }
 }
 
+bool
+WebGLBuffer::ValidateRange(const char* funcName, size_t byteOffset, size_t byteLen) const
+{
+    auto availLength = mByteLength;
+    if (byteOffset > availLength) {
+        mContext->ErrorInvalidValue("%s: Offset passes the end of the buffer.", funcName);
+        return false;
+    }
+    availLength -= byteOffset;
+
+    if (byteLen > availLength) {
+        mContext->ErrorInvalidValue("%s: Offset+size passes the end of the buffer.",
+                                    funcName);
+        return false;
+    }
+
+    return true;
+}
+
 ////////////////////////////////////////
 
 bool
