@@ -51,8 +51,9 @@ private:
     void GetBufferSubDataT(GLenum target, GLintptr offset, const BufferT& data);
 
 public:
-    void GetBufferSubData(GLenum target, GLintptr offset,
-                          const dom::ArrayBufferView& dstData);
+    void GetBufferSubData(GLenum target, GLintptr srcByteOffset,
+                          const dom::ArrayBufferView& dstData, GLuint dstElemOffset,
+                          GLuint dstElemCountOverride);
 
     // -------------------------------------------------------------------------
     // Framebuffer objects - WebGL2ContextFramebuffers.cpp
