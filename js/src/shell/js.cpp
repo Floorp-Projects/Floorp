@@ -3533,7 +3533,10 @@ ScheduleWatchdog(JSContext* cx, double t)
     LockGuard<Mutex> guard(sc->watchdogLock);
     if (!sc->watchdogThread) {
         MOZ_ASSERT(!sc->watchdogTimeout);
-        sc->watchdogThread.emplace(WatchdogMain, cx);
+        sc->watchdogThread.emplace();
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!sc->watchdogThread->init(WatchdogMain, cx))
+            oomUnsafe.crash("watchdogThread.init");
     } else if (!sc->watchdogTimeout || timeout < sc->watchdogTimeout.value()) {
         sc->watchdogWakeup.notify_one();
     }
