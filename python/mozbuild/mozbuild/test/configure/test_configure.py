@@ -701,6 +701,109 @@ class TestConfigure(unittest.TestCase):
             'Option `--with-foo` already defined'
         )
 
+    def test_option_when(self):
+        with self.moz_configure('''
+            @depends('--help')
+            def always(_):
+                return True
+            @depends('--help')
+            def never(_):
+                return False
+            option('--with-foo', help='foo', when=always)
+            option('--with-bar', help='bar', when=never)
+            option('--with-qux', help='qux', when='--with-foo')
+
+            set_config('FOO', depends('--with-foo', when=always)(lambda x: x))
+            set_config('BAR', depends('--with-bar', when=never)(lambda x: x))
+            set_config('QUX', depends('--with-qux', when='--with-foo')(lambda x: x))
+        '''):
+            config = self.get_config()
+            self.assertEquals(config, {
+                'FOO': NegativeOptionValue(),
+            })
+
+            config = self.get_config(['--with-foo'])
+            self.assertEquals(config, {
+                'FOO': PositiveOptionValue(),
+                'QUX': NegativeOptionValue(),
+            })
+
+            config = self.get_config(['--with-foo', '--with-qux'])
+            self.assertEquals(config, {
+                'FOO': PositiveOptionValue(),
+                'QUX': PositiveOptionValue(),
+            })
+
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--with-bar'])
+
+            self.assertEquals(
+                e.exception.message,
+                '--with-bar is not available in this configuration'
+            )
+
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--with-qux'])
+
+            self.assertEquals(
+                e.exception.message,
+                '--with-qux is not available in this configuration'
+            )
+
+            help, config = self.get_config(['--help'])
+            self.assertEquals(help, textwrap.dedent('''\
+                Usage: configure [options]
+
+                Options: [defaults in brackets after descriptions]
+                  --help                    print this message
+                  --with-foo                foo
+
+                Environment variables:
+            '''))
+
+            help, config = self.get_config(['--help', '--with-foo'])
+            self.assertEquals(help, textwrap.dedent('''\
+                Usage: configure [options]
+
+                Options: [defaults in brackets after descriptions]
+                  --help                    print this message
+                  --with-foo                foo
+                  --with-qux                qux
+
+                Environment variables:
+            '''))
+
+        with self.moz_configure('''
+            @depends('--help')
+            def always(_):
+                return True
+            option('--with-foo', help='foo', when=always)
+            set_config('FOO', depends('--with-foo')(lambda x: x))
+        '''):
+            with self.assertRaises(ConfigureError) as e:
+                self.get_config()
+
+            self.assertEquals(e.exception.message,
+                              '@depends function needs the same `when` as '
+                              'options it depends on')
+
+        with self.moz_configure('''
+            @depends('--help')
+            def always(_):
+                return True
+            @depends('--help')
+            def always2(_):
+                return True
+            option('--with-foo', help='foo', when=always)
+            set_config('FOO', depends('--with-foo', when=always2)(lambda x: x))
+        '''):
+            with self.assertRaises(ConfigureError) as e:
+                self.get_config()
+
+            self.assertEquals(e.exception.message,
+                              '@depends function needs the same `when` as '
+                              'options it depends on')
+
     def test_include_failures(self):
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('include("../foo.configure")'):
