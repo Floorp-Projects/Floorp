@@ -58,7 +58,7 @@ function run_test_pt02() {
                                       "20080811053724",
                                       "http://details/",
                                       "true",
-                                      "true", "345600",
+                                      "true", "345600", "1200",
                                       "custom1_attr=\"custom1 value\"",
                                       "custom2_attr=\"custom2 value\"");
   gResponseBody = getRemoteUpdatesXMLString(updates);
@@ -101,6 +101,9 @@ function check_test_pt02() {
             "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.promptWaitTime, "345600",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  // The default and maximum value for backgroundInterval is 600
+  Assert.equal(bestUpdate.getProperty("backgroundInterval"), "600",
+               "the update backgroundInterval attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.serviceURL, gURLData + gHTTPHandlerPath + "?force=1",
                "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.channel, "test_channel",
