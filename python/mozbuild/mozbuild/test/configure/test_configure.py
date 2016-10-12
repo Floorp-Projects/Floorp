@@ -41,8 +41,9 @@ class TestConfigure(unittest.TestCase):
 
         sandbox.run(mozpath.join(test_data_path, configure))
 
-        if '--help' not in options:
-            self.assertEquals('', out.getvalue())
+        if '--help' in options:
+            return out.getvalue(), config
+        self.assertEquals('', out.getvalue())
         return config
 
     def moz_configure(self, source):
@@ -68,11 +69,7 @@ class TestConfigure(unittest.TestCase):
         }, config)
 
     def test_help(self):
-        config = {}
-        out = StringIO()
-        sandbox = ConfigureSandbox(config, {}, ['configure', '--help'],
-                                   out, out)
-        sandbox.run(mozpath.join(test_data_path, 'moz.configure'))
+        help, config = self.get_config(['--help'], prog='configure')
 
         self.assertEquals({}, config)
         self.maxDiff = None
@@ -96,7 +93,7 @@ class TestConfigure(unittest.TestCase):
             '\n'
             'Environment variables:\n'
             '  CC                        C Compiler\n',
-            out.getvalue()
+            help
         )
 
     def test_unknown(self):
@@ -408,7 +405,7 @@ class TestConfigure(unittest.TestCase):
         def get_config(*args):
             return self.get_config(*args, configure='set_config.configure')
 
-        config = get_config(['--help'])
+        help, config = get_config(['--help'])
         self.assertEquals(config, {})
 
         config = get_config(['--set-foo'])
@@ -440,7 +437,7 @@ class TestConfigure(unittest.TestCase):
         def get_config(*args):
             return self.get_config(*args, configure='set_define.configure')
 
-        config = get_config(['--help'])
+        help, config = get_config(['--help'])
         self.assertEquals(config, {'DEFINES': {}})
 
         config = get_config(['--set-foo'])
@@ -473,7 +470,7 @@ class TestConfigure(unittest.TestCase):
             return self.get_config(
                 *args, configure='imply_option/simple.configure')
 
-        config = get_config(['--help'])
+        help, config = get_config(['--help'])
         self.assertEquals(config, {})
 
         config = get_config([])
@@ -496,7 +493,7 @@ class TestConfigure(unittest.TestCase):
             return self.get_config(
                 *args, configure='imply_option/negative.configure')
 
-        config = get_config(['--help'])
+        help, config = get_config(['--help'])
         self.assertEquals(config, {})
 
         config = get_config([])
@@ -531,7 +528,7 @@ class TestConfigure(unittest.TestCase):
             return self.get_config(
                 *args, configure='imply_option/values.configure')
 
-        config = get_config(['--help'])
+        help, config = get_config(['--help'])
         self.assertEquals(config, {})
 
         config = get_config([])
@@ -558,7 +555,7 @@ class TestConfigure(unittest.TestCase):
             return self.get_config(
                 *args, configure='imply_option/infer.configure')
 
-        config = get_config(['--help'])
+        help, config = get_config(['--help'])
         self.assertEquals(config, {})
 
         config = get_config([])
@@ -585,7 +582,7 @@ class TestConfigure(unittest.TestCase):
             return self.get_config(
                 *args, configure='imply_option/imm.configure')
 
-        config = get_config(['--help'])
+        help, config = get_config(['--help'])
         self.assertEquals(config, {})
 
         config = get_config([])
