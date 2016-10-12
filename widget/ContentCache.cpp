@@ -510,6 +510,7 @@ ContentCacheInParent::ContentCacheInParent()
   : ContentCache()
   , mCommitStringByRequest(nullptr)
   , mPendingEventsNeedingAck(0)
+  , mPendingCompositionCount(0)
   , mWidgetHasComposition(false)
 {
 }
@@ -1059,11 +1060,12 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     ("0x%p OnCompositionEvent(aEvent={ "
      "mMessage=%s, mData=\"%s\" (Length()=%u), mRanges->Length()=%u }), "
      "mPendingEventsNeedingAck=%u, mWidgetHasComposition=%s, "
-     "mCommitStringByRequest=0x%p",
+     "mPendingCompositionCount=%u, mCommitStringByRequest=0x%p",
      this, ToChar(aEvent.mMessage),
      GetEscapedUTF8String(aEvent.mData).get(), aEvent.mData.Length(),
      aEvent.mRanges ? aEvent.mRanges->Length() : 0, mPendingEventsNeedingAck,
-     GetBoolName(mWidgetHasComposition), mCommitStringByRequest));
+     GetBoolName(mWidgetHasComposition), mPendingCompositionCount,
+     mCommitStringByRequest));
 
   // We must be able to simulate the selection because
   // we might not receive selection updates in time
@@ -1074,6 +1076,9 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     } else {
       mCompositionStart = mSelection.StartOffset();
     }
+    MOZ_ASSERT(aEvent.mMessage == eCompositionStart);
+    MOZ_RELEASE_ASSERT(mPendingCompositionCount < UINT8_MAX);
+    mPendingCompositionCount++;
   }
 
   mWidgetHasComposition = !aEvent.CausesDOMCompositionEndEvent();
@@ -1108,13 +1113,14 @@ ContentCacheInParent::OnSelectionEvent(
     ("0x%p OnSelectionEvent(aEvent={ "
      "mMessage=%s, mOffset=%u, mLength=%u, mReversed=%s, "
      "mExpandToClusterBoundary=%s, mUseNativeLineBreak=%s }), "
-     "mPendingEventsNeedingAck=%u, mWidgetHasComposition=%s",
+     "mPendingEventsNeedingAck=%u, mWidgetHasComposition=%s, "
+     "mPendingCompositionCount=%u",
      this, ToChar(aSelectionEvent.mMessage),
      aSelectionEvent.mOffset, aSelectionEvent.mLength,
      GetBoolName(aSelectionEvent.mReversed),
      GetBoolName(aSelectionEvent.mExpandToClusterBoundary),
      GetBoolName(aSelectionEvent.mUseNativeLineBreak), mPendingEventsNeedingAck,
-     GetBoolName(mWidgetHasComposition)));
+     GetBoolName(mWidgetHasComposition), mPendingCompositionCount));
 
   mPendingEventsNeedingAck++;
 }
@@ -1128,8 +1134,13 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p OnEventNeedingAckHandled(aWidget=0x%p, "
-     "aMessage=%s), mPendingEventsNeedingAck=%u",
+     "aMessage=%s), mPendingEventsNeedingAck=%u, mPendingCompositionCount=%u",
      this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck));
+
+  if (WidgetCompositionEvent::IsFollowedByCompositionEnd(aMessage)) {
+    MOZ_RELEASE_ASSERT(mPendingCompositionCount > 0);
+    mPendingCompositionCount--;
+  }
 
   MOZ_RELEASE_ASSERT(mPendingEventsNeedingAck > 0);
   if (--mPendingEventsNeedingAck) {
