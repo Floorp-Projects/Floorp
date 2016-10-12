@@ -38,15 +38,15 @@ public class SynchronizerHelpers {
             @Override
             public void onFetchedRecord(Record record) {
               if (record.guid.contains(FAIL_SENTINEL)) {
-                delegate.onFetchFailed(new FetchFailedException(), record);
+                delegate.onFetchFailed(new FetchFailedException());
               } else {
                 delegate.onFetchedRecord(record);
               }
             }
 
             @Override
-            public void onFetchFailed(Exception ex, Record record) {
-              delegate.onFetchFailed(ex, record);
+            public void onFetchFailed(Exception ex) {
+              delegate.onFetchFailed(ex);
             }
 
             @Override

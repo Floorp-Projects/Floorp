@@ -159,7 +159,7 @@ public class WBORepository extends Repository {
     @Override
     public void wipe(final RepositorySessionWipeDelegate delegate) {
       if (!isActive()) {
-        delegate.onWipeFailed(new InactiveSessionException(null));
+        delegate.onWipeFailed(new InactiveSessionException());
         return;
       }
 

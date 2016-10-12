@@ -20,7 +20,7 @@ public class ExpectSuccessRepositorySessionFetchRecordsDelegate extends
   }
 
   @Override
-  public void onFetchFailed(Exception ex, Record record) {
+  public void onFetchFailed(Exception ex) {
     log("Fetch failed.", ex);
     performNotify(new AssertionFailedError("onFetchFailed: fetch should not have failed."));
   }
