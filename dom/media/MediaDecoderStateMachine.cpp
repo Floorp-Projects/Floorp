@@ -241,10 +241,9 @@ public:
     auto master = mMaster;
 
     UniquePtr<StateObject> s = MakeUnique<S>(master, Forward<Ts>(aArgs)...);
-    if (master->mState == s->GetState() &&
-        master->mState != DECODER_STATE_SEEKING) {
-      return;
-    }
+
+    MOZ_ASSERT(master->mState != s->GetState() ||
+               master->mState == DECODER_STATE_SEEKING);
 
     SLOG("change state to: %s", ToStateStr(s->GetState()));
 
