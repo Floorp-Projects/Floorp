@@ -92,10 +92,10 @@ typedef any Transferable;
 Window implements GlobalEventHandlers;
 Window implements WindowEventHandlers;
 
-// https://w3c.github.io/manifest/#oninstall-attribute
+// https://www.w3.org/TR/appmanifest/#onappinstalled-attribute
 partial interface Window {
-  [Pref="dom.manifest.oninstall"]
-  attribute EventHandler oninstall;
+  [Pref="dom.manifest.onappinstalled"]
+  attribute EventHandler onappinstalled;
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/
