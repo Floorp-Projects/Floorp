@@ -149,6 +149,8 @@ gujar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in 
     'util/NonEvictingLruCache.java',
     'util/PrefUtils.java',
     'util/ProxySelector.java',
+    'util/publicsuffix/PublicSuffix.java',
+    'util/publicsuffix/PublicSuffixPatterns.java',
     'util/RawResource.java',
     'util/StringUtils.java',
     'util/ThreadUtils.java',

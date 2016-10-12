@@ -51,7 +51,6 @@ static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo)
   nsContentPolicyType type = aLoadInfo->InternalContentPolicyType();
   if (type != nsIContentPolicy::TYPE_INTERNAL_IMAGE  &&
       type != nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD &&
-      type != nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON &&
       type != nsIContentPolicy::TYPE_IMAGESET) {
     return false;
   }

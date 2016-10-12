@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* globals window, document, NetMonitorView */
+/* exported loader */
 "use strict";
 
 var { utils: Cu } = Components;
@@ -108,7 +109,13 @@ const ACTIVITY_TYPE = {
   DISABLE_CACHE: 4
 };
 
-const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var BrowserLoaderModule = {};
+Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
+var { loader, require } = BrowserLoaderModule.BrowserLoader({
+  baseURI: "resource://devtools/client/netmonitor/",
+  window
+});
+
 const promise = require("promise");
 const Services = require("Services");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
@@ -116,10 +123,12 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const Editor = require("devtools/client/sourceeditor/editor");
 const {TimelineFront} = require("devtools/shared/fronts/timeline");
 const {Task} = require("devtools/shared/task");
+const {Prefs} = require("./prefs");
 
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 XPCOMUtils.defineConstant(this, "ACTIVITY_TYPE", ACTIVITY_TYPE);
 XPCOMUtils.defineConstant(this, "Editor", Editor);
+XPCOMUtils.defineConstant(this, "Prefs", Prefs);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Chart",
   "resource://devtools/client/shared/widgets/Chart.jsm");
