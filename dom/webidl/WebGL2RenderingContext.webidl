@@ -371,18 +371,32 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void texStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height,
                       GLsizei depth);
 
-    //////
+    ////
+
+    [Throws] // Another overhead throws.
+    void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLint border, GLenum format, GLenum type, ArrayBufferView srcData,
+                    GLuint srcOffset);
+    [Throws] // Another overhead throws.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                       GLsizei height, GLenum format, GLenum type, ArrayBufferView srcData,
+                       GLuint srcOffset);
+
+    ////
 
     void texImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum format,
                     GLenum type, ArrayBufferView? pixels);
+    void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLsizei depth, GLint border, GLenum format, GLenum type, ArrayBufferView srcData,
+                    GLuint srcOffset);
 
-    //////
+    ////
 
-    [Throws] // Can't actually throw.
-    void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-                       GLenum format, GLenum type, ArrayBufferView pixels);
+    [Throws] // Another overhead throws.
+    void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                       GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+                       ArrayBufferView srcData, optional GLuint srcOffset = 0);
     [Throws] // Can't actually throw.
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLenum format, GLenum type, ImageData data);
@@ -397,19 +411,39 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLenum format, GLenum type, HTMLVideoElement video);
 
-    //////
+    ////
+
+    void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                              GLsizei height, GLint border, GLintptr offset);
+    void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                              GLsizei height, GLint border, ArrayBufferView srcData,
+                              optional GLuint srcOffset = 0);
+
+    void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                              GLsizei height, GLsizei depth, GLint border, GLintptr offset);
+    void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                              GLsizei height, GLsizei depth, GLint border, ArrayBufferView srcData,
+                              optional GLuint srcOffset = 0);
+
+    void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                                 GLsizei width, GLsizei height, GLenum format, GLintptr offset);
+    void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                                 GLsizei width, GLsizei height, GLenum format,
+                                 ArrayBufferView srcData, optional GLuint srcOffset = 0);
+
+    void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                                 GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
+                                 GLenum format, GLintptr offset);
+    void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                                 GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
+                                 GLenum format, ArrayBufferView srcData,
+                                 optional GLuint srcOffset = 0);
+
+    ////
 
     void copyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                            GLint zoffset, GLint x, GLint y, GLsizei width,
                            GLsizei height);
-
-    void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat,
-                              GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                              ArrayBufferView data);
-    void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                                 GLint zoffset, GLsizei width, GLsizei height,
-                                 GLsizei depth, GLenum format,
-                                 ArrayBufferView data);
 
     ////////////////
     // Texture from PBO
