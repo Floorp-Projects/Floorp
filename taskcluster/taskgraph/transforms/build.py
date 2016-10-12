@@ -25,5 +25,7 @@ def set_defaults(config, jobs):
             job.setdefault('extra', {})
             job['extra'].setdefault('chainOfTrust', {})
             job['extra']['chainOfTrust'].setdefault('inputs', {})
-            job['extra']['chainOfTrust']['inputs']['docker-image'] = {"task-reference": "<docker-image>"}
+            job['extra']['chainOfTrust']['inputs']['docker-image'] = {
+                "task-reference": "<docker-image>"
+            }
         yield job
