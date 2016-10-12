@@ -1142,7 +1142,11 @@ public:
         ApplyConstraints(nsPIDOMWindowInner* aWindow,
                          const MediaTrackConstraints& aConstraints) override
         {
-          if (sInShutdown || !mListener) {
+          if (sInShutdown || !mListener ||
+              mSource == MediaSourceEnum::Browser ||
+              mSource == MediaSourceEnum::Screen ||
+              mSource == MediaSourceEnum::Application ||
+              mSource == MediaSourceEnum::Window) {
             // Track has been stopped, or we are in shutdown. In either case
             // there's no observable outcome, so pretend we succeeded.
             RefPtr<PledgeVoid> p = new PledgeVoid();
