@@ -7,13 +7,10 @@ config = {
                 ('http://archive.mozilla.org/pub', 'http://download.cdn.mozilla.net/pub'),
             ],
             'balrog_usernames': {
-                'b2g': 'b2gbld',
                 'firefox': 'ffxbld',
                 'thunderbird': 'tbirdbld',
                 'mobile': 'ffxbld',
                 'Fennec': 'ffxbld',
-                'graphene': 'ffxbld',
-                'horizon': 'ffxbld',
             }
         }
     ]

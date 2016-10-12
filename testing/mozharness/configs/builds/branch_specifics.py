@@ -96,9 +96,6 @@ config = {
             'macosx64-st-an': {
                 'update_channel': 'default',
             },
-            'macosx64-mulet': {
-                'update_channel': 'default',
-            },
             'macosx64-st-an-debug': {
                 'update_channel': 'default',
             },
@@ -106,9 +103,6 @@ config = {
                 'update_channel': 'default',
             },
             'win32-debug': {
-                'update_channel': 'default',
-            },
-            'win32-mulet': {
                 'update_channel': 'default',
             },
             'win32-add-on-devel': {
@@ -182,9 +176,6 @@ config = {
             'macosx64-st-an': {
                 'update_channel': 'default',
             },
-            'macosx64-mulet': {
-                'update_channel': 'default',
-            },
             'macosx64-st-an-debug': {
                 'update_channel': 'default',
             },
@@ -192,9 +183,6 @@ config = {
                 'update_channel': 'default',
             },
             'win32-debug': {
-                'update_channel': 'default',
-            },
-            'win32-mulet': {
                 'update_channel': 'default',
             },
             'win32-add-on-devel': {
@@ -266,16 +254,10 @@ config = {
             'macosx64-st-an': {
                 'update_channel': 'default',
             },
-            'macosx64-mulet': {
-                'update_channel': 'default',
-            },
             'macosx64-st-an-debug': {
                 'update_channel': 'default',
             },
             'win32-debug': {
-                'update_channel': 'default',
-            },
-            'win32-mulet': {
                 'update_channel': 'default',
             },
             'win64-debug': {
@@ -373,9 +355,6 @@ config = {
             'macosx64-st-an': {
                 'update_channel': 'default',
             },
-            'macosx64-mulet': {
-                'update_channel': 'default',
-            },
             'macosx64-st-an-debug': {
                 'update_channel': 'default',
             },
@@ -383,9 +362,6 @@ config = {
                 'src_mozconfig': 'browser/config/mozconfigs/win32/beta',
             },
             'win32-debug': {
-                'update_channel': 'default',
-            },
-            'win32-mulet': {
                 'update_channel': 'default',
             },
             'win64': {
@@ -466,9 +442,6 @@ config = {
             'macosx64-st-an': {
                 'update_channel': 'default',
             },
-            'macosx64-mulet': {
-                'update_channel': 'default',
-            },
             'macosx64-st-an-debug': {
                 'update_channel': 'default',
             },
@@ -476,9 +449,6 @@ config = {
                 'src_mozconfig': 'browser/config/mozconfigs/win32/release',
             },
             'win32-debug': {
-                'update_channel': 'default',
-            },
-            'win32-mulet': {
                 'update_channel': 'default',
             },
             'win64': {
