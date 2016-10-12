@@ -6,6 +6,7 @@
 #include "CrashReporterParent.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 #include "nsAutoPtr.h"
 #include "nsXULAppAPI.h"
 #include <time.h>
@@ -21,6 +22,8 @@
 
 namespace mozilla {
 namespace dom {
+
+using namespace mozilla::ipc;
 
 void
 CrashReporterParent::AnnotateCrashReport(const nsCString& key,
@@ -94,7 +97,7 @@ CrashReporterParent::SetChildData(const NativeThreadId& tid,
 {
   mInitialized = true;
   mMainThread = tid;
-  mProcessType = processType;
+  mProcessType = GeckoProcessType(processType);
 }
 
 #ifdef MOZ_CRASHREPORTER
@@ -162,74 +165,7 @@ CrashReporterParent::FinalizeChildData()
 {
   MOZ_ASSERT(mInitialized);
 
-  if (NS_IsMainThread()) {
-    // Inline, this is the main thread. Get this done.
-    NotifyCrashService();
-    return;
-  }
-
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  class NotifyOnMainThread : public Runnable
-  {
-  public:
-    explicit NotifyOnMainThread(CrashReporterParent* aCR)
-      : mCR(aCR)
-    { }
-
-    NS_IMETHOD Run() override {
-      mCR->NotifyCrashService();
-      return NS_OK;
-    }
-  private:
-    CrashReporterParent* mCR;
-  };
-  SyncRunnable::DispatchToThread(mainThread, new NotifyOnMainThread(this));
-}
-
-void
-CrashReporterParent::NotifyCrashService()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mChildDumpID.IsEmpty());
-
-  nsCOMPtr<nsICrashService> crashService =
-    do_GetService("@mozilla.org/crashservice;1");
-  if (!crashService) {
-    return;
-  }
-
-  int32_t processType;
-  int32_t crashType = nsICrashService::CRASH_TYPE_CRASH;
-
-  nsCString telemetryKey;
-
-  switch (mProcessType) {
-    case GeckoProcessType_Content:
-      processType = nsICrashService::PROCESS_TYPE_CONTENT;
-      telemetryKey.AssignLiteral("content");
-      break;
-    case GeckoProcessType_Plugin: {
-      processType = nsICrashService::PROCESS_TYPE_PLUGIN;
-      telemetryKey.AssignLiteral("plugin");
-      nsAutoCString val;
-      if (mNotes.Get(NS_LITERAL_CSTRING("PluginHang"), &val) &&
-        val.Equals(NS_LITERAL_CSTRING("1"))) {
-        crashType = nsICrashService::CRASH_TYPE_HANG;
-        telemetryKey.AssignLiteral("pluginhang");
-      }
-      break;
-    }
-    case GeckoProcessType_GMPlugin:
-      processType = nsICrashService::PROCESS_TYPE_GMPLUGIN;
-      telemetryKey.AssignLiteral("gmplugin");
-      break;
-    default:
-      NS_ERROR("unknown process type");
-      return;
-  }
-
-  crashService->AddCrash(processType, crashType, mChildDumpID);
-  Telemetry::Accumulate(Telemetry::SUBPROCESS_CRASHES_WITH_DUMP, telemetryKey, 1);
+  CrashReporterHost::NotifyCrashService(mProcessType, mChildDumpID, &mNotes);
   mNotes.Clear();
 }
 #endif

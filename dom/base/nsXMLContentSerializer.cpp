@@ -892,6 +892,10 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
   bool forceFormat = false;
   nsresult rv = NS_OK;
   if (!CheckElementStart(content, forceFormat, aStr, rv)) {
+    // When we go to AppendElementEnd for this element, we're going to
+    // MaybeLeaveFromPreContent().  So make sure to MaybeEnterInPreContent()
+    // now, so our PreLevel() doesn't get confused.
+    MaybeEnterInPreContent(content);
     return rv;
   }
 
@@ -1040,8 +1044,11 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
   }
 
   if (!outputElementEnd) {
+    // Keep this in sync with the cleanup at the end of this method.
     PopNameSpaceDeclsFor(aElement);
+    MaybeLeaveFromPreContent(content);
     MaybeFlagNewlineForRootNode(aElement);
+    AfterElementEnd(content, aStr);
     return NS_OK;
   }
 
@@ -1085,6 +1092,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
   NS_ENSURE_TRUE(AppendToString(tagLocalName, aStr), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(AppendToString(kGreaterThan, aStr), NS_ERROR_OUT_OF_MEMORY);
 
+  // Keep what follows in sync with the cleanup in the !outputElementEnd case.
   PopNameSpaceDeclsFor(aElement);
 
   MaybeLeaveFromPreContent(content);

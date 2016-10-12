@@ -13,6 +13,7 @@
 #include "GPUProcessHost.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/APZCTreeManager.h"
@@ -27,6 +28,7 @@
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
+#include "nsExceptionHandler.h"
 #if defined(XP_WIN)
 # include "DeviceManagerD3D9.h"
 # include "mozilla/gfx/DeviceManagerDx.h"
@@ -69,6 +71,11 @@ GPUParent::Init(base::ProcessId aParentPid,
   }
 
   nsDebugImpl::SetMultiprocessMode("GPU");
+
+#ifdef MOZ_CRASHREPORTER
+  // Init crash reporter support.
+  CrashReporterClient::InitSingleton(this);
+#endif
 
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();
@@ -320,6 +327,9 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
   gfxPrefs::DestroySingleton();
+#ifdef MOZ_CRASHREPORTER
+  CrashReporterClient::DestroySingleton();
+#endif
   NS_ShutdownXPCOM(nullptr);
   XRE_ShutdownChildProcess();
 }

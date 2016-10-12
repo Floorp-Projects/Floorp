@@ -70,13 +70,13 @@ assertEq(new Instance(m5, {a:{b:mem2Page}}) instanceof Instance, true);
 assertEq(new Instance(m5, {a:{b:mem3Page}}) instanceof Instance, true);
 assertEq(new Instance(m5, {a:{b:mem4Page}}) instanceof Instance, true);
 
-const m6 = new Module(wasmTextToBinary('(module (import "a" "b" (table 2)))'));
+const m6 = new Module(wasmTextToBinary('(module (import "a" "b" (table 2 anyfunc)))'));
 assertErrorMessage(() => new Instance(m6, {a:{b:tab1Elem}}), TypeError, /imported Table with incompatible size/);
 assertEq(new Instance(m6, {a:{b:tab2Elem}}) instanceof Instance, true);
 assertEq(new Instance(m6, {a:{b:tab3Elem}}) instanceof Instance, true);
 assertEq(new Instance(m6, {a:{b:tab4Elem}}) instanceof Instance, true);
 
-const m7 = new Module(wasmTextToBinary('(module (import "a" "b" (table 2 3)))'));
+const m7 = new Module(wasmTextToBinary('(module (import "a" "b" (table 2 3 anyfunc)))'));
 assertErrorMessage(() => new Instance(m7, {a:{b:tab1Elem}}), TypeError, /imported Table with incompatible size/);
 assertErrorMessage(() => new Instance(m7, {a:{b:tab2Elem}}), TypeError, /imported Table with incompatible maximum size/);
 assertErrorMessage(() => new Instance(m7, {a:{b:tab3Elem}}), TypeError, /imported Table with incompatible maximum size/);
@@ -84,8 +84,8 @@ assertErrorMessage(() => new Instance(m7, {a:{b:tab4Elem}}), TypeError, /importe
 
 wasmFailValidateText('(module (memory 2 1))', /maximum length 1 is less than initial length 2/);
 wasmFailValidateText('(module (import "a" "b" (memory 2 1)))', /maximum length 1 is less than initial length 2/);
-wasmFailValidateText('(module (table (resizable 2 1)))', /maximum length 1 is less than initial length 2/);
-wasmFailValidateText('(module (import "a" "b" (table 2 1)))', /maximum length 1 is less than initial length 2/);
+wasmFailValidateText('(module (table 2 1 anyfunc))', /maximum length 1 is less than initial length 2/);
+wasmFailValidateText('(module (import "a" "b" (table 2 1 anyfunc)))', /maximum length 1 is less than initial length 2/);
 
 // Import wasm-wasm type mismatch
 
@@ -198,13 +198,13 @@ assertEq(Object.keys(e).length, 1);
 assertEq(String(Object.keys(e)), "");
 assertEq(e[""] instanceof Memory, true);
 
-var code = wasmTextToBinary('(module (table) (export "tbl" table))');
+var code = wasmTextToBinary('(module (table 0 anyfunc) (export "tbl" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "tbl");
 assertEq(e.tbl instanceof Table, true);
 assertEq(e.tbl.length, 0);
 
-var code = wasmTextToBinary('(module (table (resizable 2)) (export "t1" table) (export "t2" table))');
+var code = wasmTextToBinary('(module (table 2 anyfunc) (export "t1" table) (export "t2" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "t1,t2");
 assertEq(e.t1 instanceof Table, true);
@@ -212,7 +212,7 @@ assertEq(e.t2 instanceof Table, true);
 assertEq(e.t1, e.t2);
 assertEq(e.t1.length, 2);
 
-var code = wasmTextToBinary('(module (table (resizable 2)) (memory 1 1) (func) (export "t" table) (export "m" memory) (export "f" 0))');
+var code = wasmTextToBinary('(module (table 2 anyfunc) (memory 1 1) (func) (export "t" table) (export "m" memory) (export "f" 0))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "t,m,f");
 assertEq(e.f(), undefined);
@@ -220,7 +220,7 @@ assertEq(e.t instanceof Table, true);
 assertEq(e.m instanceof Memory, true);
 assertEq(e.t.length, 2);
 
-var code = wasmTextToBinary('(module (table (resizable 1)) (memory 1 1) (func) (export "m" memory) (export "f" 0) (export "t" table))');
+var code = wasmTextToBinary('(module (table 1 anyfunc) (memory 1 1) (func) (export "m" memory) (export "f" 0) (export "t" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "m,f,t");
 assertEq(e.f(), undefined);
@@ -228,7 +228,7 @@ assertEq(e.t instanceof Table, true);
 assertEq(e.m instanceof Memory, true);
 +assertEq(e.t.length, 1);
 
-var code = wasmTextToBinary('(module (table) (export "" table))');
+var code = wasmTextToBinary('(module (table 0 anyfunc) (export "" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).length, 1);
 assertEq(String(Object.keys(e)), "");
@@ -241,7 +241,7 @@ var code = wasmTextToBinary(`(module
     (func $f (result i32) (i32.const 1))
     (func $g (result i32) (i32.const 2))
     (func $h (result i32) (i32.const 3))
-    (table (resizable 4))
+    (table 4 anyfunc)
     (elem (i32.const 0) $f)
     (elem (i32.const 2) $g)
     (export "f1" $f)
@@ -280,13 +280,13 @@ var e = new Instance(new Module(code), {a:{b:mem}}).exports;
 assertEq(mem, e.foo);
 assertEq(mem, e.bar);
 
-var code = wasmTextToBinary('(module (import "a" "b" (table 1 1)) (export "foo" table) (export "bar" table))');
+var code = wasmTextToBinary('(module (import "a" "b" (table 1 1 anyfunc)) (export "foo" table) (export "bar" table))');
 var tbl = new Table({initial:1, maximum:1, element:"anyfunc"});
 var e = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(tbl, e.foo);
 assertEq(tbl, e.bar);
 
-var code = wasmTextToBinary('(module (import "a" "b" (table 2 2)) (func $foo) (elem (i32.const 0) $foo) (export "foo" $foo))');
+var code = wasmTextToBinary('(module (import "a" "b" (table 2 2 anyfunc)) (func $foo) (elem (i32.const 0) $foo) (export "foo" $foo))');
 var tbl = new Table({initial:2, maximum:2, element:"anyfunc"});
 var e1 = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(e1.foo, tbl.get(0));
@@ -298,7 +298,7 @@ assertEq(e1.foo, tbl.get(1));
 assertEq(tbl.get(0) === e1.foo, false);
 assertEq(e1.foo === e2.foo, false);
 
-var code = wasmTextToBinary('(module (table (resizable 2 2)) (import $foo "a" "b" (result i32)) (func $bar (result i32) (i32.const 13)) (elem (i32.const 0) $foo $bar) (export "foo" $foo) (export "bar" $bar) (export "tbl" table))');
+var code = wasmTextToBinary('(module (table 2 2 anyfunc) (import $foo "a" "b" (result i32)) (func $bar (result i32) (i32.const 13)) (elem (i32.const 0) $foo $bar) (export "foo" $foo) (export "bar" $bar) (export "tbl" table))');
 var foo = new Instance(new Module(wasmTextToBinary('(module (func (result i32) (i32.const 42)) (export "foo" 0))'))).exports.foo;
 var e1 = new Instance(new Module(code), {a:{b:foo}}).exports;
 assertEq(foo, e1.foo);
@@ -332,16 +332,16 @@ wasmFailValidateText('(module (export "a" table))', /exported table index out of
 
 wasmFailValidateText('(module (import "a" "b" (memory 1 1)) (memory 1 1))', /already have default memory/);
 wasmFailValidateText('(module (import "a" "b" (memory 1 1)) (import "x" "y" (memory 2 2)))', /already have default memory/);
-wasmFailValidateText('(module (import "a" "b" (table 1 1)) (table 1 1))', /already have default table/);
-wasmFailValidateText('(module (import "a" "b" (table 1 1)) (import "x" "y" (table 2 2)))', /already have default table/);
+wasmFailValidateText('(module (import "a" "b" (table 1 1 anyfunc)) (table 1 1 anyfunc))', /already have default table/);
+wasmFailValidateText('(module (import "a" "b" (table 1 1 anyfunc)) (import "x" "y" (table 2 2 anyfunc)))', /already have default table/);
 
 // Data segments on imports
 
 var m = new Module(wasmTextToBinary(`
     (module
         (import "a" "b" (memory 1 1))
-        (data 0 "\\0a\\0b")
-        (data 100 "\\0c\\0d")
+        (data (i32.const 0) "\\0a\\0b")
+        (data (i32.const 100) "\\0c\\0d")
         (func $get (param $p i32) (result i32)
             (i32.load8_u (get_local $p)))
         (export "get" $get))
@@ -366,7 +366,7 @@ assertEq(i8[102], 0x0);
 
 var m = new Module(wasmTextToBinary(`
     (module
-        (import "glob" "a" (global i32 immutable))
+        (import "glob" "a" (global i32))
         (memory 1)
         (data (get_global 0) "\\0a\\0b"))
 `));
@@ -382,9 +382,9 @@ assertErrorMessage(() => new Instance(m, {glob:{a:64*1024}}), RangeError, /data 
 var m = new Module(wasmTextToBinary(`
     (module
         (import "a" "mem" (memory 1))
-        (import "a" "tbl" (table 1))
-        (import $memOff "a" "memOff" (global i32 immutable))
-        (import $tblOff "a" "tblOff" (global i32 immutable))
+        (import "a" "tbl" (table 1 anyfunc))
+        (import $memOff "a" "memOff" (global i32))
+        (import $tblOff "a" "tblOff" (global i32))
         (func $f)
         (func $g)
         (data (i32.const 0) "\\01")
@@ -420,7 +420,7 @@ assertEq(tbl.get(1), i.exports.g);
 
 var m = new Module(wasmTextToBinary(`
     (module
-        (import "a" "b" (table 10))
+        (import "a" "b" (table 10 anyfunc))
         (elem (i32.const 0) $one $two)
         (elem (i32.const 3) $three $four)
         (func $one (result i32) (i32.const 1))
@@ -454,7 +454,7 @@ var i2 = new Instance(new Module(wasmTextToBinary(`(module
     (import $imp "a" "b" (result i32))
     (memory 1 1)
     (data (i32.const 0) "\\13")
-    (table (resizable 2 2))
+    (table 2 2 anyfunc)
     (elem (i32.const 0) $imp $def)
     (func $def (result i32) (i32.load (i32.const 0)))
     (type $v2i (func (result i32)))
@@ -465,7 +465,7 @@ assertEq(i2.exports.call(0), 0x42);
 assertEq(i2.exports.call(1), 0x13);
 
 var m = new Module(wasmTextToBinary(`(module
-    (import $val "a" "val" (global i32 immutable))
+    (import $val "a" "val" (global i32))
     (import $next "a" "next" (result i32))
     (memory 1)
     (func $start (i32.store (i32.const 0) (get_global $val)))

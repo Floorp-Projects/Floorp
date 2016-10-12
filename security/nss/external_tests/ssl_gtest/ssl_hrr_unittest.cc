@@ -9,6 +9,9 @@
 #include "sslerr.h"
 #include "sslproto.h"
 
+// This is internal, just to get TLS_1_3_DRAFT_VERSION.
+#include "ssl3prot.h"
+
 #include "gtest_utils.h"
 #include "scoped_ptrs.h"
 #include "tls_connect.h"
@@ -196,8 +199,7 @@ class HelloRetryRequestAgentTest : public TlsAgentTestClient {
     DataBuffer hrr_data;
     hrr_data.Allocate(len + 4);
     size_t i = 0;
-    i = hrr_data.Write(i, static_cast<uint32_t>(SSL_LIBRARY_VERSION_TLS_1_3),
-                       2);
+    i = hrr_data.Write(i, 0x7f00 | TLS_1_3_DRAFT_VERSION, 2);
     i = hrr_data.Write(i, static_cast<uint32_t>(len), 2);
     if (len) {
       hrr_data.Write(i, body, len);

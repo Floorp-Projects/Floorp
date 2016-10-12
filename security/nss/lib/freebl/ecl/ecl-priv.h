@@ -8,6 +8,7 @@
 #include "ecl.h"
 #include "mpi.h"
 #include "mplogic.h"
+#include "../blapii.h"
 
 /* MAX_FIELD_SIZE_DIGITS is the maximum size of field element supported */
 /* the following needs to go away... */
