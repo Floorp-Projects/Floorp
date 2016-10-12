@@ -528,11 +528,12 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
   mTextRectArray = aOther.mTextRectArray;
   mEditorRect = aOther.mEditorRect;
 
-  if (mWidgetHasComposition) {
-    NS_WARNING_ASSERTION(mCompositionStart != UINT32_MAX, "mCompositionStart");
+  // Only when there is one composition, the TextComposition instance in this
+  // process is managing the composition in the remote process.  Therefore,
+  // we shouldn't update composition start offset of TextComposition with
+  // old composition which is still being handled by the child process.
+  if (mWidgetHasComposition && mPendingCompositionCount == 1) {
     IMEStateManager::MaybeStartOffsetUpdatedInChild(aWidget, mCompositionStart);
-  } else {
-    NS_WARNING_ASSERTION(mCompositionStart == UINT32_MAX, "mCompositionStart");
   }
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
@@ -543,7 +544,7 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
      "mFocusCharRects[ePrevCharRect]=%s, mRect=%s }, "
      "mFirstCharRect=%s, mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ "
      "mStart=%u, mRects.Length()=%u }, mWidgetHasComposition=%s, "
-     "mCompositionStart=%u, mEditorRect=%s",
+     "mPendingCompositionCount=%u, mCompositionStart=%u, mEditorRect=%s",
      this, GetNotificationName(aNotification),
      mText.Length(), mSelection.mAnchor, mSelection.mFocus,
      GetWritingModeName(mSelection.mWritingMode).get(),
@@ -554,7 +555,8 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
      GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get(),
      mCaret.mOffset, GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), GetBoolName(mWidgetHasComposition),
-     mCompositionStart, GetRectText(mEditorRect).get()));
+     mPendingCompositionCount, mCompositionStart,
+     GetRectText(mEditorRect).get()));
 }
 
 bool
