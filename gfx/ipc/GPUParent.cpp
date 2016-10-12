@@ -169,7 +169,7 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
 bool
 GPUParent::RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint)
 {
-  VsyncBridgeParent::Start(Move(aVsyncEndpoint));
+  mVsyncBridge = VsyncBridgeParent::Start(Move(aVsyncEndpoint));
   return true;
 }
 
@@ -325,6 +325,7 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 
   if (mVsyncBridge) {
     mVsyncBridge->Shutdown();
+    mVsyncBridge = nullptr;
   }
   CompositorThreadHolder::Shutdown();
 #if defined(XP_WIN)
