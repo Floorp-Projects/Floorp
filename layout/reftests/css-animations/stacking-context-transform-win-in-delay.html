@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <title>
-Transform animation creates a stacking context even if the transform property
-is overridden by an !important rule
+Transform animation winning over another transform animation in delay phase
+creates a stacking context
 </title>
 <style>
 span {
@@ -14,11 +14,13 @@ span {
 @keyframes TransformNone {
   from, to { transform: none; }
 }
+@keyframes Transform100px {
+  from, to { transform: translateX(100px); }
+}
 #test {
   width: 100px; height: 100px;
   background: blue;
-  animation: TransformNone 100s infinite;
-  transform: none !important;
+  animation: Transform100px 100s 100s, TransformNone 100s;
 }
 </style>
 <span></span>
