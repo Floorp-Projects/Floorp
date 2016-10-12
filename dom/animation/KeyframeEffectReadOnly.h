@@ -235,25 +235,12 @@ public:
                     ErrorResult& aRv);
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                     nsStyleContext* aStyleContext);
-
-  // Returns true if the effect includes |aProperty| regardless of whether the
-  // property is overridden by !important rule.
-  bool HasAnimationOfProperty(nsCSSPropertyID aProperty) const;
-
-  // GetEffectiveAnimationOfProperty returns AnimationProperty corresponding
-  // to a given CSS property if the effect includes the property and the
-  // property is not overridden by !important rules.
-  // Also EffectiveAnimationOfProperty returns true under the same condition.
-  //
-  // NOTE: We don't currently check for !important rules for properties that
-  // can't run on the compositor.
-  bool HasEffectiveAnimationOfProperty(nsCSSPropertyID aProperty) const
+  const AnimationProperty*
+  GetAnimationOfProperty(nsCSSPropertyID aProperty) const;
+  bool HasAnimationOfProperty(nsCSSPropertyID aProperty) const
   {
-    return GetEffectiveAnimationOfProperty(aProperty) != nullptr;
+    return GetAnimationOfProperty(aProperty) != nullptr;
   }
-  const AnimationProperty* GetEffectiveAnimationOfProperty(
-    nsCSSPropertyID aProperty) const;
-
   const InfallibleTArray<AnimationProperty>& Properties() const
   {
     return mProperties;

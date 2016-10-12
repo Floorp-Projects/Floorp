@@ -192,8 +192,7 @@ KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
 }
 
 const AnimationProperty*
-KeyframeEffectReadOnly::GetEffectiveAnimationOfProperty(
-  nsCSSPropertyID aProperty) const
+KeyframeEffectReadOnly::GetAnimationOfProperty(nsCSSPropertyID aProperty) const
 {
   if (!IsInEffect()) {
     return nullptr;
@@ -218,17 +217,6 @@ KeyframeEffectReadOnly::GetEffectiveAnimationOfProperty(
     }
   }
   return nullptr;
-}
-
-bool
-KeyframeEffectReadOnly::HasAnimationOfProperty(nsCSSPropertyID aProperty) const
-{
-  for (const AnimationProperty& property : mProperties) {
-    if (property.mProperty == aProperty) {
-      return true;
-    }
-  }
-  return false;
 }
 
 #ifdef DEBUG
@@ -938,12 +926,10 @@ KeyframeEffectReadOnly::CanThrottle() const
   // already running on compositor.
   for (const LayerAnimationInfo::Record& record :
         LayerAnimationInfo::sRecords) {
-    // Skip properties that are overridden by !important rules.
-    // (GetEffectiveAnimationOfProperty, as called by
-    // HasEffectiveAnimationOfProperty, only returns a property which is
-    // neither overridden by !important rules nor overridden by other
-    // animation.)
-    if (!HasEffectiveAnimationOfProperty(record.mProperty)) {
+    // Skip properties that are overridden in the cascade.
+    // (GetAnimationOfProperty, as called by HasAnimationOfProperty,
+    // only returns an animation if it currently wins in the cascade.)
+    if (!HasAnimationOfProperty(record.mProperty)) {
       continue;
     }
 

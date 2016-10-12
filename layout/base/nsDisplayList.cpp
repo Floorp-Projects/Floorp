@@ -487,21 +487,21 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
     MOZ_ASSERT(keyframeEffect,
                "A playing animation should have a keyframe effect");
     const AnimationProperty* property =
-      keyframeEffect->GetEffectiveAnimationOfProperty(aProperty);
+      keyframeEffect->GetAnimationOfProperty(aProperty);
     if (!property) {
       continue;
     }
 
     // Note that if the property is overridden by !important rules,
-    // GetEffectiveAnimationOfProperty returns null instead.
+    // GetAnimationOfProperty returns null instead.
     // This is what we want, since if we have animations overridden by
     // !important rules, we don't want to send them to the compositor.
     MOZ_ASSERT(anim->CascadeLevel() !=
                  EffectCompositor::CascadeLevel::Animations ||
                !effects->PropertiesWithImportantRules()
                   .HasProperty(aProperty),
-               "GetEffectiveAnimationOfProperty already tested the property "
-               "is not overridden by !important rules");
+               "GetAnimationOfProperty already tested the property is not "
+               "overridden by !important rules");
 
     // Don't add animations that are pending if their timeline does not
     // track wallclock time. This is because any pending animations on layers
