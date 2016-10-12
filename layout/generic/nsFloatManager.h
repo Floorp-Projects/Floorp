@@ -124,7 +124,7 @@ public:
   /**
    * Get information about the area available to content that flows
    * around floats.  Two different types of space can be requested:
-   *   BAND_FROM_POINT: returns the band containing block-dir coordinate
+   *   BandFromPoint: returns the band containing block-dir coordinate
    *     |aBCoord| (though actually with the top truncated to begin at
    *     aBCoord), but up to at most |aBSize| (which may be nscoord_MAX).
    *     This will return the tallest rectangle whose block start is
@@ -134,7 +134,7 @@ public:
    *     of the rectangle give the area available for line boxes in that
    *     space. The inline size of this resulting rectangle will not be
    *     negative.
-   *   WIDTH_WITHIN_HEIGHT: This returns a rectangle whose block start
+   *   WidthWithinHeight: This returns a rectangle whose block start
    *     is aBCoord and whose block size is exactly aBSize.  Its inline
    *     start and end edges give the corresponding edges of the space
    *     that can be used for line boxes *throughout* that space.  (It
@@ -159,10 +159,11 @@ public:
    *
    * aBCoord and aAvailSpace are positioned relative to the current translation
    */
-  enum BandInfoType { BAND_FROM_POINT, WIDTH_WITHIN_HEIGHT };
+  enum class BandInfoType { BandFromPoint, WidthWithinHeight };
   nsFlowAreaRect GetFlowArea(mozilla::WritingMode aWM,
-                             nscoord aBCoord, BandInfoType aInfoType,
-                             nscoord aBSize, mozilla::LogicalRect aContentArea,
+                             nscoord aBCoord, nscoord aBSize,
+                             BandInfoType aBandInfoType,
+                             mozilla::LogicalRect aContentArea,
                              SavedState* aState,
                              const nsSize& aContainerSize) const;
 
