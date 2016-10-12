@@ -332,6 +332,9 @@ public:
   nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction);
 
   void ClearIncrementalString() { mIncrementalString.Truncate(); }
+  static bool IsWithinIncrementalTime(DOMTimeStamp time) {
+    return !sTimeoutOfIncrementalSearch || time - sLastKeyTime <= sTimeoutOfIncrementalSearch;
+  }
 
   virtual nsIAtom* GetType() const override { return nsGkAtoms::menuPopupFrame; }
 
@@ -615,6 +618,8 @@ protected:
   nsRect mOverrideConstraintRect;
 
   static int8_t sDefaultLevelIsTop;
+
+  static DOMTimeStamp sLastKeyTime;
 
   // If 0, never timed out.  Otherwise, the value is in milliseconds.
   static uint32_t sTimeoutOfIncrementalSearch;

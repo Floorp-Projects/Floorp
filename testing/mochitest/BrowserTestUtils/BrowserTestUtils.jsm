@@ -468,6 +468,8 @@ this.BrowserTestUtils = {
    *          remote:  A boolean indicating if the window should run
    *                   remote browser tabs or not. If omitted, the window
    *                   will choose the profile default state.
+   *          width: Desired width of window
+   *          height: Desired height of window
    *        }
    * @return {Promise}
    *         Resolves with the new window once it is loaded.
@@ -480,6 +482,13 @@ this.BrowserTestUtils = {
 
     if (options.private) {
       features += ",private";
+    }
+
+    if (options.width) {
+      features += ",width=" + options.width;
+    }
+    if (options.height) {
+      features += ",height=" + options.height;
     }
 
     if (options.hasOwnProperty("remote")) {
