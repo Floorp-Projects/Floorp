@@ -68,6 +68,7 @@
 #include "mozilla/TimelineConsumers.h"
 #include "nsAnimationManager.h"
 #include "nsIDOMEvent.h"
+#include "nsDisplayList.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -1908,7 +1909,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
     mViewManagerFlushIsPending = false;
     RefPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();
-    vm->ProcessPendingUpdates();
+    {
+      PaintTelemetry::AutoRecordPaint record;
+      vm->ProcessPendingUpdates();
+    }
 
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
