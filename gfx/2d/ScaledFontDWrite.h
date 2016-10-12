@@ -10,6 +10,7 @@
 #include "ScaledFontBase.h"
 
 struct ID2D1GeometrySink;
+struct gfxFontStyle;
 
 namespace mozilla {
 namespace gfx {
@@ -20,23 +21,13 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontDwrite)
   ScaledFontDWrite(IDWriteFontFace *aFont, Float aSize)
     : ScaledFontBase(aSize)
-    , mFont(nullptr)
-    , mFontFamily(nullptr)
     , mFontFace(aFont)
     , mUseEmbeddedBitmap(false)
     , mForceGDIMode(false)
   {}
 
-  ScaledFontDWrite(IDWriteFont* aFont, IDWriteFontFamily* aFontFamily,
-                   IDWriteFontFace *aFontFace, Float aSize, bool aUseEmbeddedBitmap,
-                   bool aForceGDIMode)
-    : ScaledFontBase(aSize)
-    , mFont(aFont)
-    , mFontFamily(aFontFamily)
-    , mFontFace(aFontFace)
-    , mUseEmbeddedBitmap(aUseEmbeddedBitmap)
-    , mForceGDIMode(aForceGDIMode)
-  {}
+  ScaledFontDWrite(IDWriteFontFace *aFontFace, Float aSize, bool aUseEmbeddedBitmap,
+                   bool aForceGDIMode, const gfxFontStyle* aStyle);
 
   virtual FontType GetType() const { return FontType::DWRITE; }
 
@@ -56,13 +47,9 @@ public:
 
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface();
-  bool GetFontDataFromSystemFonts(IDWriteFactory* aFactory);
-  bool DefaultToArialFont(IDWriteFontCollection* aSystemFonts);
+  SkFontStyle mStyle;
 #endif
 
-  // The font and font family are only used with Skia
-  RefPtr<IDWriteFont> mFont;
-  RefPtr<IDWriteFontFamily> mFontFamily;
   RefPtr<IDWriteFontFace> mFontFace;
   bool mUseEmbeddedBitmap;
   bool mForceGDIMode;
