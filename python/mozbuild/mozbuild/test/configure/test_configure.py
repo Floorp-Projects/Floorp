@@ -867,6 +867,17 @@ class TestConfigure(unittest.TestCase):
         self.assertEquals(e.exception.message,
                           "The `foo` function may not be called")
 
+        with self.assertRaises(TypeError) as e:
+            with self.moz_configure('''
+                @depends('--help', foo=42)
+                def foo(_):
+                    return
+            '''):
+                self.get_config()
+
+        self.assertEquals(e.exception.message,
+                          "depends_impl() got an unexpected keyword argument 'foo'")
+
     def test_imports_failures(self):
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('''
