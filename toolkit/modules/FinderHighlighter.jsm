@@ -221,7 +221,8 @@ FinderHighlighter.prototype = {
         linksOnly, word,
         finder: this.finder,
         listener: this,
-        useCache: true
+        useCache: true,
+        window
       };
       if (this.iterator._areParamsEqual(params, dict.lastIteratorParams))
         return this._found;

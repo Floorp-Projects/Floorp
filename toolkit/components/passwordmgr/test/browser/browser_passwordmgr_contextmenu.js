@@ -12,7 +12,7 @@ function test() {
         "http://example.com/",
         "http://mozilla.org/",
         "http://spreadfirefox.com/",
-        "https://developer.mozilla.org/",
+        "https://support.mozilla.org/",
         "http://hg.mozilla.org/"
     ];
     let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",

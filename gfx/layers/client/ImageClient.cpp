@@ -123,6 +123,7 @@ ImageClient::CreateTextureClientForImage(Image* aImage, KnowsCompositor* aForwar
     }
     texture = TextureClient::CreateForYCbCr(aForwarder,
                                             data->mYSize, data->mCbCrSize, data->mStereoMode,
+                                            data->mYUVColorSpace,
                                             TextureFlags::DEFAULT);
     if (!texture) {
       return nullptr;
@@ -231,7 +232,6 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
         RefPtr<GonkNativeHandle::NhObj> nhObj = overlayImage->GetSidebandStream().GetDupNhObj();
         GonkNativeHandle handle(nhObj);
         if (!handle.IsValid()) {
-          gfxWarning() << "ImageClientSingle::UpdateImage failed in GetDupNhObj";
           return false;
         }
         source.handle() = OverlayHandle(handle);

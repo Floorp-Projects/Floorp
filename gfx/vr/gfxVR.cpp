@@ -23,7 +23,8 @@ VRDisplayManager::AllocateDisplayID()
 }
 
 Matrix4x4
-VRFieldOfView::ConstructProjectionMatrix(float zNear, float zFar, bool rightHanded)
+VRFieldOfView::ConstructProjectionMatrix(float zNear, float zFar,
+                                         bool rightHanded) const
 {
   float upTan = tan(upDegrees * M_PI / 180.0);
   float downTan = tan(downDegrees * M_PI / 180.0);

@@ -44,7 +44,8 @@ public:
     void RemoveObserver(webrtc::CPULoadStateObserver * aObserver) override;
 
 private:
-    LoadManagerSingleton(int aLoadMeasurementInterval,
+    LoadManagerSingleton(bool aEncoderOnly,
+                         int aLoadMeasurementInterval,
                          int aAveragingMeasurements,
                          float aHighLoadThreshold,
                          float aLowLoadThreshold);

@@ -641,17 +641,19 @@ struct MOZ_STACK_CLASS BytecodeEmitter
         DestructuringAssignment
     };
 
-    // EmitDestructuringLHS assumes the to-be-destructured value has been pushed on
+    // emitDestructuringLHS assumes the to-be-destructured value has been pushed on
     // the stack and emits code to destructure a single lhs expression (either a
     // name or a compound []/{} expression).
     MOZ_MUST_USE bool emitDestructuringLHS(ParseNode* target, DestructuringFlavor flav);
     MOZ_MUST_USE bool emitConditionallyExecutedDestructuringLHS(ParseNode* target,
                                                                 DestructuringFlavor flav);
 
+    // emitDestructuringOps assumes the to-be-destructured value has been
+    // pushed on the stack and emits code to destructure each part of a [] or
+    // {} lhs expression.
     MOZ_MUST_USE bool emitDestructuringOps(ParseNode* pattern, DestructuringFlavor flav);
-    MOZ_MUST_USE bool emitDestructuringOpsHelper(ParseNode* pattern, DestructuringFlavor flav);
-    MOZ_MUST_USE bool emitDestructuringOpsArrayHelper(ParseNode* pattern, DestructuringFlavor flav);
-    MOZ_MUST_USE bool emitDestructuringOpsObjectHelper(ParseNode* pattern, DestructuringFlavor flav);
+    MOZ_MUST_USE bool emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlavor flav);
+    MOZ_MUST_USE bool emitDestructuringOpsObject(ParseNode* pattern, DestructuringFlavor flav);
 
     typedef bool
     (*DestructuringDeclEmitter)(BytecodeEmitter* bce, ParseNode* pn);

@@ -32,6 +32,7 @@ public:
                                            gfx::IntSize aYSize,
                                            gfx::IntSize aCbCrSize,
                                            StereoMode aStereoMode,
+                                           YUVColorSpace aYUVColorSpace,
                                            TextureFlags aTextureFlags);
 
   // It is generally better to use CreateForYCbCr instead.
@@ -39,6 +40,7 @@ public:
   // offsets in the buffer.
   static BufferTextureData* CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
                                                          int32_t aSize,
+                                                         YUVColorSpace aYUVColorSpace,
                                                          TextureFlags aTextureFlags);
 
   virtual bool Lock(OpenMode aMode, FenceHandle*) override { return true; }
@@ -62,6 +64,8 @@ public:
   void SetDesciptor(const BufferDescriptor& aDesc);
 
   Maybe<gfx::IntSize> GetCbCrSize() const;
+
+  Maybe<YUVColorSpace> GetYUVColorSpace() const;
 
   Maybe<StereoMode> GetStereoMode() const;
 

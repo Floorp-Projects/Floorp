@@ -1224,7 +1224,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
     PRUint32 srvNameLen = 0;
     CK_MECHANISM_TYPE msWrapMech = 0; /* dummy default value,
                                           * must be >= 0 */
-    ssl3CipherSpec *spec = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ? ss->ssl3.cwSpec : ss->ssl3.pwSpec;
+    ssl3CipherSpec *spec;
     const sslServerCertType *certType;
     SECItem alpnSelection = { siBuffer, NULL, 0 };
 
@@ -1249,6 +1249,11 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
     if (rv != SECSuccess)
         goto loser;
 
+    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        spec = ss->ssl3.cwSpec;
+    } else {
+        spec = ss->ssl3.pwSpec;
+    }
     if (spec->msItem.len && spec->msItem.data) {
         /* The master secret is available unwrapped. */
         ms_item.data = spec->msItem.data;
@@ -1287,22 +1292,24 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
     }
 
     ciphertext_length =
-        sizeof(PRUint16)                                                                        /* ticket_version */
-        + sizeof(SSL3ProtocolVersion)                                                           /* ssl_version */
-        + sizeof(ssl3CipherSuite)                                                               /* ciphersuite */
-        + 1                                                                                     /* compression */
-        + 10                                                                                    /* cipher spec parameters */
-        + 1                                                                                     /* certType arguments */
-        + 1                                                                                     /* SessionTicket.ms_is_wrapped */
-        + 4                                                                                     /* msWrapMech */
-        + 2                                                                                     /* master_secret.length */
-        + ms_item.len                                                                           /* master_secret */
-        + 1                                                                                     /* client_auth_type */
-        + cert_length                                                                           /* cert */
-        + 1                                                                                     /* server name type */
-        + srvNameLen                                                                            /* name len + length field */
-        + 1                                                                                     /* extendedMasterSecretUsed */
-        + sizeof(ticket->ticket_lifetime_hint) + sizeof(ticket->flags) + 1 + alpnSelection.len; /* npn value + length field. */
+        sizeof(PRUint16)                       /* ticket_version */
+        + sizeof(SSL3ProtocolVersion)          /* ssl_version */
+        + sizeof(ssl3CipherSuite)              /* ciphersuite */
+        + 1                                    /* compression */
+        + 10                                   /* cipher spec parameters */
+        + 1                                    /* certType arguments */
+        + 1                                    /* SessionTicket.ms_is_wrapped */
+        + 4                                    /* msWrapMech */
+        + 2                                    /* master_secret.length */
+        + ms_item.len                          /* master_secret */
+        + 1                                    /* client_auth_type */
+        + cert_length                          /* cert */
+        + 1                                    /* server name type */
+        + srvNameLen                           /* name len + length field */
+        + 1                                    /* extendedMasterSecretUsed */
+        + sizeof(ticket->ticket_lifetime_hint) /* ticket lifetime hint */
+        + sizeof(ticket->flags)                /* ticket flags */
+        + 1 + alpnSelection.len;               /* npn value + length field. */
     padding_length = AES_BLOCK_SIZE -
                      (ciphertext_length %
                       AES_BLOCK_SIZE);
@@ -2181,7 +2188,6 @@ ssl3_HandleParsedExtensions(sslSocket *ss,
             handlers = newSessionTicketHandlers;
             break;
         case hello_retry_request:
-            PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
             handlers = helloRetryRequestHandlers;
             break;
         case encrypted_extensions:
@@ -2317,7 +2323,7 @@ ssl3_CallHelloExtensionSenders(sslSocket *ss, PRBool append, PRUint32 maxBytes,
     int i;
 
     if (!sender) {
-        if (ss->version > SSL_LIBRARY_VERSION_3_0) {
+        if (ss->vrange.max > SSL_LIBRARY_VERSION_3_0) {
             sender = &clientHelloSendersTLS[0];
         } else {
             sender = &clientHelloSendersSSL3[0];
@@ -2690,7 +2696,7 @@ ssl3_ClientSendSigAlgsXtn(sslSocket *ss, PRBool append, PRUint32 maxBytes)
     PRUint32 len;
     SECStatus rv;
 
-    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_2) {
+    if (ss->vrange.max < SSL_LIBRARY_VERSION_TLS_1_2) {
         return 0;
     }
 
@@ -3061,7 +3067,7 @@ tls13_ClientSendKeyShareXtn(sslSocket *ss, PRBool append,
 {
     PRUint32 extension_length;
 
-    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+    if (ss->vrange.max < SSL_LIBRARY_VERSION_TLS_1_3) {
         return 0;
     }
 
@@ -3198,7 +3204,7 @@ tls13_ClientHandleKeyShareXtnHrr(sslSocket *ss, PRUint16 ex_type, SECItem *data)
     const sslNamedGroupDef *group;
 
     PORT_Assert(!ss->sec.isServer);
-    PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
+    PORT_Assert(ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3);
 
     SSL_TRC(3, ("%d: SSL3[%d]: handle key_share extension in HRR",
                 SSL_GETPID(), ss->fd));
@@ -3349,8 +3355,11 @@ tls13_ClientSendPreSharedKeyXtn(sslSocket *ss,
     static const unsigned long ke_modes_len = sizeof(ke_modes);
     NewSessionTicket *session_ticket;
 
+    /* We only set statelessResume on the client in TLS 1.3 code. */
     if (!ss->statelessResume)
         return 0;
+
+    PORT_Assert(ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3);
 
     session_ticket = &ss->sec.ci.sid->u.ssl3.locked.sessionTicket;
 
@@ -3811,7 +3820,7 @@ tls13_ClientSendSupportedVersionsXtn(sslSocket *ss, PRBool append,
     PRUint16 version;
     SECStatus rv;
 
-    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+    if (ss->vrange.max < SSL_LIBRARY_VERSION_TLS_1_3) {
         return 0;
     }
 

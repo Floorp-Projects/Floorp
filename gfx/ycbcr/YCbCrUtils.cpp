@@ -118,6 +118,7 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                         aData.mCbCrStride,
                         aStride,
                         yuvtype,
+                        aData.mYUVColorSpace,
                         FILTER_BILINEAR);
   } else { // no prescale
 #if defined(HAVE_YCBCR_TO_RGB565)
@@ -147,7 +148,8 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                           aData.mYStride,
                           aData.mCbCrStride,
                           aStride,
-                          yuvtype);
+                          yuvtype,
+                          aData.mYUVColorSpace);
   }
 }
 
