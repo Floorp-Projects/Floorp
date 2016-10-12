@@ -876,7 +876,7 @@ ReadTransforms(const nsCSSValueList* aList,
 bool
 Decompose2DMatrix(const Matrix& aMatrix,
                   Point3D& aScale,
-                  float aShear[3],
+                  ShearArray& aShear,
                   gfxQuaternion& aRotate,
                   Point3D& aTranslate)
 {
@@ -916,7 +916,7 @@ Decompose2DMatrix(const Matrix& aMatrix,
 
   float rotate = atan2f(B, A);
   aRotate = gfxQuaternion(0, 0, sin(rotate/2), cos(rotate/2));
-  aShear[XYSHEAR] = XYshear;
+  aShear[ShearType::XYSHEAR] = XYshear;
   aScale.x = scaleX;
   aScale.y = scaleY;
   aTranslate.x = aMatrix._31;
@@ -937,7 +937,7 @@ Decompose2DMatrix(const Matrix& aMatrix,
 bool
 Decompose3DMatrix(const Matrix4x4& aMatrix,
                   Point3D& aScale,
-                  float aShear[3],
+                  ShearArray& aShear,
                   gfxQuaternion& aRotate,
                   Point3D& aTranslate,
                   Point4D& aPerspective)
@@ -994,26 +994,26 @@ Decompose3DMatrix(const Matrix4x4& aMatrix,
   local[0] /= aScale.x;
 
   /* Compute XY shear factor and make 2nd local orthogonal to 1st. */
-  aShear[XYSHEAR] = local[0].DotProduct(local[1]);
-  local[1] -= local[0] * aShear[XYSHEAR];
+  aShear[ShearType::XYSHEAR] = local[0].DotProduct(local[1]);
+  local[1] -= local[0] * aShear[ShearType::XYSHEAR];
 
   /* Now, compute Y scale and normalize 2nd local. */
   aScale.y = local[1].Length();
   local[1] /= aScale.y;
-  aShear[XYSHEAR] /= aScale.y;
+  aShear[ShearType::XYSHEAR] /= aScale.y;
 
   /* Compute XZ and YZ shears, make 3rd local orthogonal */
-  aShear[XZSHEAR] = local[0].DotProduct(local[2]);
-  local[2] -= local[0] * aShear[XZSHEAR];
-  aShear[YZSHEAR] = local[1].DotProduct(local[2]);
-  local[2] -= local[1] * aShear[YZSHEAR];
+  aShear[ShearType::XZSHEAR] = local[0].DotProduct(local[2]);
+  local[2] -= local[0] * aShear[ShearType::XZSHEAR];
+  aShear[ShearType::YZSHEAR] = local[1].DotProduct(local[2]);
+  local[2] -= local[1] * aShear[ShearType::YZSHEAR];
 
   /* Next, get Z scale and normalize 3rd local. */
   aScale.z = local[2].Length();
   local[2] /= aScale.z;
 
-  aShear[XZSHEAR] /= aScale.z;
-  aShear[YZSHEAR] /= aScale.z;
+  aShear[ShearType::XZSHEAR] /= aScale.z;
+  aShear[ShearType::YZSHEAR] /= aScale.z;
 
   /**
    * At this point, the matrix (in locals) is orthonormal.
