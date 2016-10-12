@@ -332,7 +332,11 @@ interface WebGL2RenderingContext : WebGLRenderingContext
 
     void copyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset,
                            GLintptr writeOffset, GLsizeiptr size);
-    void getBufferSubData(GLenum target, GLintptr offset, ArrayBufferView dstData);
+    // MapBufferRange, in particular its read-only and write-only modes,
+    // can not be exposed safely to JavaScript. GetBufferSubData
+    // replaces it for the purpose of fetching data back from the GPU.
+    void getBufferSubData(GLenum target, GLintptr srcByteOffset, ArrayBufferView dstData,
+                          optional GLuint dstOffset = 0, optional GLuint length = 0);
 
     [Throws] // Throws on readback in a write-only context.
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
