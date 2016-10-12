@@ -18,9 +18,11 @@ from multiprocessing import Process, Event
 from ..localpaths import repo_root
 
 import sslutils
+from manifest.sourcefile import meta_re
 from wptserve import server as wptserve, handlers
 from wptserve import stash
 from wptserve.logger import set_logger
+from wptserve.handlers import filesystem_path
 from mod_pywebsocket import standalone as pywebsocket
 
 def replace_end(s, old, new):
@@ -33,7 +35,9 @@ def replace_end(s, old, new):
 
 
 class WorkersHandler(object):
-    def __init__(self):
+    def __init__(self, base_path=None, url_base="/"):
+        self.base_path = base_path
+        self.url_base = url_base
         self.handler = handlers.handler(self.handle_request)
 
     def __call__(self, request, response):
@@ -41,15 +45,32 @@ class WorkersHandler(object):
 
     def handle_request(self, request, response):
         worker_path = replace_end(request.url_parts.path, ".worker.html", ".worker.js")
+        meta = self._get_meta(request)
         return """<!doctype html>
 <meta charset=utf-8>
+%(meta)s
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
 <script>
-fetch_tests_from_worker(new Worker("%s"));
+fetch_tests_from_worker(new Worker("%(worker_path)s"));
 </script>
-""" % (worker_path,)
+""" % {"meta": meta, "worker_path": worker_path}
+
+    def _get_meta(self, request):
+        path = filesystem_path(self.base_path, request, self.url_base)
+        path = path.replace(".worker.html", ".worker.js")
+        meta_values = []
+        with open(path) as f:
+            for line in f:
+                m = meta_re.match(line)
+                if m:
+                    name, content = m.groups()
+                    name = name.replace('"', '\\"').replace(">", "&gt;")
+                    content = content.replace('"', '\\"').replace(">", "&gt;")
+                    meta_values.append((name, content))
+        return "\n".join('<meta name="%s" content="%s">' % item for item in meta_values)
+
 
 
 class AnyHtmlHandler(object):
