@@ -89,7 +89,7 @@ function startTest(test, token) {
       }
     };
 
-    mediaRecorder.start(250);
+    mediaRecorder.start(1);
     element.play();
     is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
     is(mediaRecorder.stream, stream,
