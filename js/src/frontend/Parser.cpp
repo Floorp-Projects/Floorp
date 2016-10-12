@@ -3719,24 +3719,21 @@ Parser<ParseHandler>::matchLabel(YieldHandling yieldHandling, MutableHandle<Prop
 
 template <typename ParseHandler>
 Parser<ParseHandler>::PossibleError::PossibleError(Parser<ParseHandler>& parser)
-                                                   : parser_(parser)
-{
-    state_ = ErrorState::None;
-}
+  : parser_(parser),
+    state_(ErrorState::None)
+{}
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::PossibleError::setPending(ParseReportKind kind, unsigned errorNumber,
-                                                bool strict)
+Parser<ParseHandler>::PossibleError::setPending(Node pn, unsigned errorNumber)
 {
+    // Don't overwrite a previously recorded error.
     if (hasError())
         return false;
 
     // If we report an error later, we'll do it from the position where we set
     // the state to pending.
-    offset_      = parser_.pos().begin;
-    reportKind_  = kind;
-    strict_      = strict;
+    offset_      = (pn ? parser_.handler.getPosition(pn) : parser_.pos()).begin;
     errorNumber_ = errorNumber;
     state_       = ErrorState::Pending;
 
@@ -3761,27 +3758,25 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::PossibleError::checkForExprErrors()
 {
-    bool err = hasError();
-    if (err)
-        parser_.reportWithOffset(reportKind_, strict_, offset_, errorNumber_);
-    return !err;
+    if (hasError()) {
+        parser_.reportWithOffset(ParseError, false, offset_, errorNumber_);
+        return false;
+    }
+    return true;
 }
 
 template <typename ParseHandler>
 void
 Parser<ParseHandler>::PossibleError::transferErrorTo(PossibleError* other)
 {
-    if (other) {
-        MOZ_ASSERT(this != other);
-        MOZ_ASSERT(!other->hasError());
+    MOZ_ASSERT(other);
+    MOZ_ASSERT(this != other);
+    MOZ_ASSERT(&parser_ == &other->parser_,
+               "Can't transfer fields to an instance which belongs to a different parser");
 
-        // We should never allow fields to be copied between instances
-        // that point to different underlying parsers.
-        MOZ_ASSERT(&parser_ == &other->parser_);
+    if (hasError() && !other->hasError()) {
         other->offset_        = offset_;
-        other->reportKind_    = reportKind_;
         other->errorNumber_   = errorNumber_;
-        other->strict_        = strict_;
         other->state_         = state_;
     }
 }
@@ -8867,7 +8862,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                 // Here we set a pending error so that later in the parse, once we've
                 // determined whether or not we're destructuring, the error can be
                 // reported or ignored appropriately.
-                if (!possibleError->setPending(ParseError, JSMSG_COLON_AFTER_ID, false)) {
+                if (!possibleError->setPending(null(), JSMSG_COLON_AFTER_ID)) {
                     // Report any previously pending error.
                     possibleError->checkForExprErrors();
                     return null();

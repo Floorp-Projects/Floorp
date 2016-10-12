@@ -722,6 +722,8 @@ template <typename ParseHandler>
 class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 {
   private:
+    using Node = typename ParseHandler::Node;
+
     /*
      * A class for temporarily stashing errors while parsing continues.
      *
@@ -739,12 +741,12 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      *
      * Ex:
      *   PossibleError possibleError(*this);
-     *   possibleError.setPending(ParseError, JSMSG_BAD_PROP_ID, false);
+     *   possibleError.setPending(pn, JSMSG_BAD_PROP_ID);
      *   // A JSMSG_BAD_PROP_ID ParseError is reported, returns false.
      *   possibleError.checkForExprErrors();
      *
      *   PossibleError possibleError(*this);
-     *   possibleError.setPending(ParseError, JSMSG_BAD_PROP_ID, false);
+     *   possibleError.setPending(pn, JSMSG_BAD_PROP_ID);
      *   possibleError.setResolved();
      *   // Returns true, no error is reported.
      *   possibleError.checkForExprErrors();
@@ -756,22 +758,21 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     class MOZ_STACK_CLASS PossibleError
     {
       protected:
+        Parser<ParseHandler>& parser_;
+
         enum ErrorState { None, Pending };
         ErrorState state_;
 
         // Error reporting fields.
         uint32_t offset_;
         unsigned errorNumber_;
-        ParseReportKind reportKind_;
-        Parser<ParseHandler>& parser_;
-        bool strict_;
 
       public:
         explicit PossibleError(Parser<ParseHandler>& parser);
 
         // Set a pending error. Only a single error may be set per instance.
         // Returns true on success or false on failure.
-        bool setPending(ParseReportKind kind, unsigned errorNumber, bool strict);
+        bool setPending(Node pn, unsigned errorNumber);
 
         // Resolve any pending error.
         void setResolved();
@@ -833,8 +834,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     /* Unexpected end of input, i.e. TOK_EOF not at top-level. */
     bool isUnexpectedEOF_:1;
-
-    typedef typename ParseHandler::Node Node;
 
   public:
     /* State specific to the kind of parse being performed. */
