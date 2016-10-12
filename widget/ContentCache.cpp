@@ -520,7 +520,6 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
                                     nsIWidget* aWidget,
                                     const IMENotification* aNotification)
 {
-  mCompositionStart = aOther.mCompositionStart;
   mText = aOther.mText;
   mSelection = aOther.mSelection;
   mFirstCharRect = aOther.mFirstCharRect;
@@ -534,6 +533,23 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
   // old composition which is still being handled by the child process.
   if (mWidgetHasComposition && mPendingCompositionCount == 1) {
     IMEStateManager::MaybeStartOffsetUpdatedInChild(aWidget, mCompositionStart);
+  }
+
+  // When the widget has composition, we should set mCompositionStart to
+  // *current* composition start offset.  Note that, in strictly speaking,
+  // widget should not use WidgetQueryContentEvent if there are some pending
+  // compositions (i.e., when mPendingCompositionCount is 2 or more).
+  if (mWidgetHasComposition) {
+    if (aOther.mCompositionStart != UINT32_MAX) {
+      mCompositionStart = aOther.mCompositionStart;
+    } else {
+      mCompositionStart = mSelection.StartOffset();
+      NS_WARNING_ASSERTION(mCompositionStart != UINT32_MAX,
+                           "mCompositionStart shouldn't be invalid offset when "
+                           "the widget has composition");
+    }
+  } else {
+    mCompositionStart = UINT32_MAX;
   }
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
