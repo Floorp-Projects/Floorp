@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_CustomElementsRegistry_h
-#define mozilla_dom_CustomElementsRegistry_h
+#ifndef mozilla_dom_CustomElementRegistry_h
+#define mozilla_dom_CustomElementRegistry_h
 
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
@@ -129,19 +129,19 @@ struct CustomElementDefinition
   uint32_t mDocOrder;
 };
 
-class CustomElementsRegistry final : public nsISupports,
-                                     public nsWrapperCache
+class CustomElementRegistry final : public nsISupports,
+                                    public nsWrapperCache
 {
   // Allow nsDocument to access mCustomDefinitions and mCandidatesMap.
   friend class ::nsDocument;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CustomElementsRegistry)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CustomElementRegistry)
 
 public:
-  static bool IsCustomElementsEnabled(JSContext* aCx, JSObject* aObject);
-  static already_AddRefed<CustomElementsRegistry> Create(nsPIDOMWindowInner* aWindow);
+  static bool IsCustomElementEnabled(JSContext* aCx, JSObject* aObject);
+  static already_AddRefed<CustomElementRegistry> Create(nsPIDOMWindowInner* aWindow);
   static void ProcessTopElementQueue();
 
   static void XPCOMShutdown();
@@ -169,8 +169,8 @@ public:
                           JS::MutableHandle<JSObject*> aPrototype);
 
 private:
-  explicit CustomElementsRegistry(nsPIDOMWindowInner* aWindow);
-  ~CustomElementsRegistry();
+  explicit CustomElementRegistry(nsPIDOMWindowInner* aWindow);
+  ~CustomElementRegistry();
 
   /**
    * Registers an unresolved custom element that is a candidate for
@@ -221,7 +221,7 @@ private:
 private:
   class MOZ_RAII AutoSetRunningFlag final {
     public:
-      explicit AutoSetRunningFlag(CustomElementsRegistry* aRegistry)
+      explicit AutoSetRunningFlag(CustomElementRegistry* aRegistry)
         : mRegistry(aRegistry)
       {
         MOZ_ASSERT(!mRegistry->mIsCustomDefinitionRunning,
@@ -234,7 +234,7 @@ private:
       }
 
     private:
-      CustomElementsRegistry* mRegistry;
+      CustomElementRegistry* mRegistry;
   };
 
 public:
@@ -255,4 +255,4 @@ public:
 } // namespace mozilla
 
 
-#endif // mozilla_dom_CustomElementsRegistry_h
+#endif // mozilla_dom_CustomElementRegistry_h
