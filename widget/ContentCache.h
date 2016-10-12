@@ -414,6 +414,9 @@ private:
   // a selection event and decreased after they are received in the child
   // process.
   uint32_t mPendingEventsNeedingAck;
+  // mCompositionStartInChild stores current composition start offset in the
+  // remote process.
+  uint32_t mCompositionStartInChild;
   // mPendingCompositionCount is number of compositions which started in widget
   // but not yet handled in the child process.
   uint8_t mPendingCompositionCount;

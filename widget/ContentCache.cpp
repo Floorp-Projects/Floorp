@@ -510,6 +510,7 @@ ContentCacheInParent::ContentCacheInParent()
   : ContentCache()
   , mCommitStringByRequest(nullptr)
   , mPendingEventsNeedingAck(0)
+  , mCompositionStartInChild(UINT32_MAX)
   , mPendingCompositionCount(0)
   , mWidgetHasComposition(false)
 {
@@ -539,6 +540,7 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
   // *current* composition start offset.  Note that, in strictly speaking,
   // widget should not use WidgetQueryContentEvent if there are some pending
   // compositions (i.e., when mPendingCompositionCount is 2 or more).
+  mCompositionStartInChild = aOther.mCompositionStart;
   if (mWidgetHasComposition) {
     if (aOther.mCompositionStart != UINT32_MAX) {
       mCompositionStart = aOther.mCompositionStart;
@@ -1091,6 +1093,12 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     if (aEvent.mWidget && aEvent.mWidget->PluginHasFocus()) {
       // If focus is on plugin, we cannot get selection range
       mCompositionStart = 0;
+    } else if (mCompositionStartInChild != UINT32_MAX) {
+      // If there is pending composition in the remote process, let's use
+      // its start offset temporarily because this stores a lot of information
+      // around it and the user must look around there, so, showing some UI
+      // around it must make sense.
+      mCompositionStart = mCompositionStartInChild;
     } else {
       mCompositionStart = mSelection.StartOffset();
     }
