@@ -105,8 +105,6 @@
 using mozilla::dom::gonk::SystemWorkerManager;
 #define SYSTEMWORKERMANAGER_CID \
   {0xd53b6524, 0x6ac3, 0x42b0, {0xae, 0xca, 0x62, 0xb3, 0xc4, 0xe5, 0x2b, 0x04}}
-#define SYSTEMWORKERMANAGER_CONTRACTID \
-  "@mozilla.org/telephony/system-worker-manager;1"
 #endif
 
 #ifdef MOZ_B2G_BT
@@ -213,7 +211,6 @@ static void Shutdown();
 #include "StreamingProtocolService.h"
 
 #include "nsIPresentationService.h"
-#include "nsITelephonyService.h"
 
 #include "FakeInputPortService.h"
 #include "InputPortData.h"
@@ -359,8 +356,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIMediaManagerService,
                                          MediaManager::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIMobileConnectionService,
                                          NS_CreateMobileConnectionService)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelephonyService,
-                                         NS_CreateTelephonyService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PresentationDeviceManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TextInputProcessor)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(FakeInputPortService,
@@ -794,7 +789,6 @@ NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 NS_DEFINE_NAMED_CID(GONK_GPS_GEOLOCATION_PROVIDER_CID);
 #endif
 #endif
-NS_DEFINE_NAMED_CID(TELEPHONY_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_MOBILE_CONNECTION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(ICC_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
@@ -1103,7 +1097,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #ifdef ACCESSIBILITY
   { &kNS_ACCESSIBILITY_SERVICE_CID, false, nullptr, CreateA11yService },
 #endif
-  { &kTELEPHONY_SERVICE_CID, false, nullptr, nsITelephonyServiceConstructor },
   { &kNS_MOBILE_CONNECTION_SERVICE_CID, false, NULL, nsIMobileConnectionServiceConstructor },
   { &kPRESENTATION_SERVICE_CID, false, nullptr, nsIPresentationServiceConstructor },
   { &kPRESENTATION_DEVICE_MANAGER_CID, false, nullptr, PresentationDeviceManagerConstructor },
@@ -1257,7 +1250,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/accessibilityService;1", &kNS_ACCESSIBILITY_SERVICE_CID },
   { "@mozilla.org/accessibleRetrieval;1", &kNS_ACCESSIBILITY_SERVICE_CID },
 #endif
-  { TELEPHONY_SERVICE_CONTRACTID, &kTELEPHONY_SERVICE_CID },
   { "@mozilla.org/gecko-media-plugin-service;1",  &kGECKO_MEDIA_PLUGIN_SERVICE_CID },
   { NS_MOBILE_CONNECTION_SERVICE_CONTRACTID, &kNS_MOBILE_CONNECTION_SERVICE_CID },
   { PRESENTATION_SERVICE_CONTRACTID, &kPRESENTATION_SERVICE_CID },

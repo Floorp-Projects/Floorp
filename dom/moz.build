@@ -93,7 +93,6 @@ DIRS += [
     'messagechannel',
     'promise',
     'smil',
-    'telephony',
     'url',
     'inputmethod',
     'webidl',
