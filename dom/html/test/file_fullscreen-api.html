@@ -254,10 +254,62 @@ function error3(event) {
 }
 
 function begin() {
-  addFullscreenChangeContinuation("enter", enter1);
-  fullScreenElement().requestFullscreen();
+  testNamespaces(() => {
+    addFullscreenChangeContinuation("enter", enter1);
+    fullScreenElement().requestFullscreen();
+  });
 }
 
+function testNamespaces(followupTestFn) {
+  let tests = [
+    {allowed: false, name: "element", ns: "http://www.w3.org/XML/1998/namespace"},
+    {allowed: false, name: "element", ns: "http://www.w3.org/1999/xlink"},
+    {allowed: false, name: "element", ns: "http://www.w3.org/2000/svg"},
+    {allowed: false, name: "element", ns: "http://www.w3.org/1998/Math/MathML"},
+    {allowed: false, name: "mathml",  ns: "unknown"},
+    {allowed: false, name: "svg",     ns: "unknown"},
+    {allowed: true,  name: "element", ns: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"},
+    {allowed: true,  name: "element", ns: "http://www.w3.org/1999/xhtml"},
+    {allowed: true,  name: "svg",     ns: "http://www.w3.org/1999/xhtml"},
+    {allowed: true,  name: "math",    ns: "http://www.w3.org/1999/xhtml"},
+    {allowed: true,  name: "svg",     ns: "http://www.w3.org/2000/svg"},
+    {allowed: true,  name: "math",    ns: "http://www.w3.org/1998/Math/MathML"},
+    {allowed: true,  name: "element"},
+  ];
+
+  function runNextNamespaceTest() {
+    let test = tests.shift();
+    if (!test) {
+      followupTestFn();
+      return;
+    }
+
+    let elem = test.ns ? document.createElementNS(test.ns, test.name) :
+                         document.createElement(test.name);
+    document.body.appendChild(elem);
+
+    if (test.allowed) {
+      addFullscreenChangeContinuation("enter", () => {
+        ok(document.fullscreen, "Document should be in fullscreen");
+        is(document.fullscreenElement, elem,
+           `Element named '${test.name}' in this namespace should be allowed: ${test.ns}`);
+        addFullscreenChangeContinuation("exit", runNextNamespaceTest);
+        document.body.removeChild(elem);
+      });
+    } else {
+      addFullscreenErrorContinuation(() => {
+        ok(!document.fullscreenElement,
+           `Element named '${test.name}' in this namespace should not be allowed: ${test.ns}`);
+        document.body.removeChild(elem);
+        runNextNamespaceTest();
+      });
+    }
+
+    elem.requestFullscreen();
+  }
+
+  runNextNamespaceTest();
+}
 </script>
 </pre>
 <div id="full-screen-element"></div>

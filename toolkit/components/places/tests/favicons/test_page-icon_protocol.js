@@ -7,7 +7,7 @@ function fetchIconForSpec(spec) {
     NetUtil.asyncFetch({
       uri: NetUtil.newURI("page-icon:" + TEST_URI.spec),
       loadUsingSystemPrincipal: true,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
     }, (input, status, request) => {
        if (!Components.isSuccessCode(status)) {
         reject(new Error("unable to load icon"));

@@ -1053,11 +1053,7 @@ protected:
   /**
    * Returns if the step attribute apply for the current type.
    */
-  bool DoesStepApply() const
-  {
-    // TODO: this is temporary until bug 888316 is fixed.
-    return DoesMinMaxApply() && mType != NS_FORM_INPUT_WEEK;
-  }
+  bool DoesStepApply() const { return DoesMinMaxApply(); }
 
   /**
    * Returns if stepDown and stepUp methods apply for the current type.
@@ -1507,9 +1503,13 @@ protected:
   static const Decimal kStepScaleFactorNumberRange;
   static const Decimal kStepScaleFactorTime;
   static const Decimal kStepScaleFactorMonth;
+  static const Decimal kStepScaleFactorWeek;
 
   // Default step base value when a type do not have specific one.
   static const Decimal kDefaultStepBase;
+  // Default step base value when type=week does not not have a specific one,
+  // which is −259200000, the start of week 1970-W01.
+  static const Decimal kDefaultStepBaseWeek;
 
   // Default step used when there is no specified step.
   static const Decimal kDefaultStep;

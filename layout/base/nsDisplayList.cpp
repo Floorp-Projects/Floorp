@@ -61,8 +61,10 @@
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "ActiveLayerTracker.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
@@ -1811,9 +1813,14 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
 
   ContainerLayerParameters containerParameters
     (presShell->GetResolution(), presShell->GetResolution());
-  RefPtr<ContainerLayer> root = layerBuilder->
-    BuildContainerLayerFor(aBuilder, layerManager, frame, nullptr, this,
-                           containerParameters, nullptr);
+
+  RefPtr<ContainerLayer> root;
+  {
+    PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
+    root = layerBuilder->
+      BuildContainerLayerFor(aBuilder, layerManager, frame, nullptr, this,
+                             containerParameters, nullptr);
+  }
 
   nsIDocument* document = presShell->GetDocument();
 
@@ -7105,3 +7112,106 @@ nsDisplayFilter::PrintEffects(nsACString& aTo)
   aTo += ")";
 }
 #endif
+
+namespace mozilla {
+
+uint32_t PaintTelemetry::sPaintLevel = 0;
+uint32_t PaintTelemetry::sMetricLevel = 0;
+EnumeratedArray<PaintTelemetry::Metric,
+                PaintTelemetry::Metric::COUNT,
+                double> PaintTelemetry::sMetrics;
+
+PaintTelemetry::AutoRecordPaint::AutoRecordPaint()
+{
+  // Don't record nested paints.
+  if (sPaintLevel++ > 0) {
+    return;
+  }
+
+  // Reset metrics for a new paint.
+  for (auto& metric : sMetrics) {
+    metric = 0.0;
+  }
+  mStart = TimeStamp::Now();
+}
+
+PaintTelemetry::AutoRecordPaint::~AutoRecordPaint()
+{
+  MOZ_ASSERT(sPaintLevel != 0);
+  if (--sPaintLevel > 0) {
+    return;
+  }
+
+  // If we're in multi-process mode, don't include paint times for the parent
+  // process.
+  if (gfxVars::BrowserTabsRemoteAutostart() && XRE_IsParentProcess()) {
+    return;
+  }
+
+  double totalMs = (TimeStamp::Now() - mStart).ToMilliseconds();
+
+  // Record the total time.
+  Telemetry::Accumulate(Telemetry::CONTENT_PAINT_TIME, static_cast<uint32_t>(totalMs));
+
+  // If the total time was >= 16ms, then it's likely we missed a frame due to
+  // painting. In this case we'll gather some detailed metrics below.
+  if (totalMs <= 16.0) {
+    return;
+  }
+
+  auto record = [=](const char* aKey, double aDurationMs) -> void {
+    MOZ_ASSERT(aDurationMs <= totalMs);
+
+    uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
+
+    nsDependentCString key(aKey);
+    Telemetry::Accumulate(Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT, key, amount);
+  };
+
+  double dlMs = sMetrics[Metric::DisplayList];
+  double flbMs = sMetrics[Metric::Layerization];
+  double rMs = sMetrics[Metric::Rasterization];
+
+  // Record all permutations since aggregation makes it difficult to
+  // correlate. For example we can't derive "flb+r" from "dl" because we
+  // don't know the total time associated with a bucket entry. So we just
+  // play it safe and include everything. We can however derive "other" time
+  // from the final permutation.
+  record("dl", dlMs);
+  record("flb", flbMs);
+  record("r", rMs);
+  record("dl,flb", dlMs + flbMs);
+  record("dl,r", dlMs + rMs);
+  record("flb,r", flbMs + rMs);
+  record("dl,flb,r", dlMs + flbMs + rMs);
+}
+
+PaintTelemetry::AutoRecord::AutoRecord(Metric aMetric)
+ : mMetric(aMetric)
+{
+  // Don't double-record anything nested.
+  if (sMetricLevel++ > 0) {
+    return;
+  }
+
+  // Don't record inside nested paints, or outside of paints.
+  if (sPaintLevel != 1) {
+    return;
+  }
+
+  mStart = TimeStamp::Now();
+}
+
+PaintTelemetry::AutoRecord::~AutoRecord()
+{
+  MOZ_ASSERT(sMetricLevel != 0);
+
+  sMetricLevel--;
+  if (mStart.IsNull()) {
+    return;
+  }
+
+  sMetrics[mMetric] += (TimeStamp::Now() - mStart).ToMilliseconds();
+}
+
+} // namespace mozilla
