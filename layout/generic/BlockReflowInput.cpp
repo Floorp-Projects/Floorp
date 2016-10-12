@@ -345,9 +345,9 @@ BlockReflowInput::GetFloatAvailableSpaceWithState(
   nscoord blockSize = (mContentArea.BSize(wm) == nscoord_MAX)
     ? nscoord_MAX : std::max(mContentArea.BEnd(wm) - aBCoord, 0);
   nsFlowAreaRect result =
-    mFloatManager->GetFlowArea(wm, aBCoord, nsFloatManager::BAND_FROM_POINT,
-                               blockSize, mContentArea, aState,
-                               ContainerSize());
+    mFloatManager->GetFlowArea(wm, aBCoord, blockSize,
+                               nsFloatManager::BandInfoType::BandFromPoint,
+                               mContentArea, aState, ContainerSize());
   // Keep the inline size >= 0 for compatibility with nsSpaceManager.
   if (result.mRect.ISize(wm) < 0) {
     result.mRect.ISize(wm) = 0;
@@ -379,8 +379,9 @@ BlockReflowInput::GetFloatAvailableSpaceForBSize(
                "bad coord system");
 #endif
   nsFlowAreaRect result =
-    mFloatManager->GetFlowArea(wm, aBCoord, nsFloatManager::WIDTH_WITHIN_HEIGHT,
-                               aBSize, mContentArea, aState, ContainerSize());
+    mFloatManager->GetFlowArea(wm, aBCoord, aBSize,
+                               nsFloatManager::BandInfoType::WidthWithinHeight,
+                               mContentArea, aState, ContainerSize());
   // Keep the width >= 0 for compatibility with nsSpaceManager.
   if (result.mRect.ISize(wm) < 0) {
     result.mRect.ISize(wm) = 0;
