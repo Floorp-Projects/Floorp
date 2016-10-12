@@ -2171,50 +2171,74 @@
     "kind": "boolean",
     "description": "Rate of page load from offline cache"
   },
-  "HTTP_CACHE_IO_QUEUE_OPEN_PRIORITY": {
-    "expires_in_version": "54",
+  "HTTP_CACHE_IO_QUEUE_2_OPEN_PRIORITY": {
+    "alert_emails": ["hbambas@mozilla.com"],
+    "bug_numbers": [1294183],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "description": "HTTP Cache IO queue length"
   },
-  "HTTP_CACHE_IO_QUEUE_READ_PRIORITY": {
-    "expires_in_version": "54",
+  "HTTP_CACHE_IO_QUEUE_2_READ_PRIORITY": {
+    "alert_emails": ["hbambas@mozilla.com"],
+    "bug_numbers": [1294183],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "description": "HTTP Cache IO queue length"
   },
-  "HTTP_CACHE_IO_QUEUE_OPEN": {
-    "expires_in_version": "54",
+  "HTTP_CACHE_IO_QUEUE_2_MANAGEMENT": {
+    "alert_emails": ["hbambas@mozilla.com"],
+    "bug_numbers": [1294183],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "description": "HTTP Cache IO queue length"
   },
-  "HTTP_CACHE_IO_QUEUE_READ": {
-    "expires_in_version": "54",
+  "HTTP_CACHE_IO_QUEUE_2_OPEN": {
+    "alert_emails": ["hbambas@mozilla.com"],
+    "bug_numbers": [1294183],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "description": "HTTP Cache IO queue length"
   },
-  "HTTP_CACHE_IO_QUEUE_MANAGEMENT": {
-    "expires_in_version": "54",
+  "HTTP_CACHE_IO_QUEUE_2_READ": {
+    "alert_emails": ["hbambas@mozilla.com"],
+    "bug_numbers": [1294183],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "description": "HTTP Cache IO queue length"
   },
-  "HTTP_CACHE_IO_QUEUE_WRITE": {
-    "expires_in_version": "54",
+  "HTTP_CACHE_IO_QUEUE_2_WRITE": {
+    "alert_emails": ["hbambas@mozilla.com"],
+    "bug_numbers": [1294183],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "description": "HTTP Cache IO queue length"
   },
-  "HTTP_CACHE_IO_QUEUE_INDEX": {
-    "expires_in_version": "54",
+  "HTTP_CACHE_IO_QUEUE_2_WRITE_PRIORITY": {
+    "alert_emails": ["hbambas@mozilla.com"],
+    "bug_numbers": [1294183],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "description": "HTTP Cache IO queue length"
   },
-  "HTTP_CACHE_IO_QUEUE_EVICT": {
-    "expires_in_version": "54",
+  "HTTP_CACHE_IO_QUEUE_2_INDEX": {
+    "alert_emails": ["hbambas@mozilla.com"],
+    "bug_numbers": [1294183],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_2_EVICT": {
+    "alert_emails": ["hbambas@mozilla.com"],
+    "bug_numbers": [1294183],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "description": "HTTP Cache IO queue length"
