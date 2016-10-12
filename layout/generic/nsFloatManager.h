@@ -312,8 +312,9 @@ private:
     // this one.
     nscoord mLeftBEnd, mRightBEnd;
 
-    FloatInfo(nsIFrame* aFrame, nscoord aLineLeft, nscoord aBStart,
-              nscoord aISize, nscoord aBSize);
+    FloatInfo(nsIFrame* aFrame, nscoord aLineLeft, nscoord aBlockStart,
+              const mozilla::LogicalRect& aMarginRect,
+              mozilla::WritingMode aWM, const nsSize& aContainerSize);
 
     nscoord LineLeft() const { return mRect.x; }
     nscoord LineRight() const { return mRect.XMost(); }
