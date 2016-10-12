@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/CustomElementsRegistry.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 
-#include "mozilla/dom/CustomElementsRegistryBinding.h"
+#include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "nsIParserService.h"
@@ -99,16 +99,16 @@ CustomElementData::RunCallbackQueue()
 }
 
 // Only needed for refcounted objects.
-NS_IMPL_CYCLE_COLLECTION_CLASS(CustomElementsRegistry)
+NS_IMPL_CYCLE_COLLECTION_CLASS(CustomElementRegistry)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CustomElementsRegistry)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CustomElementRegistry)
   tmp->mCustomDefinitions.Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWhenDefinedPromiseMap)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementsRegistry)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementRegistry)
   for (auto iter = tmp->mCustomDefinitions.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<LifecycleCallbacks>& callbacks = iter.UserData()->mCallbacks;
 
@@ -141,7 +141,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementsRegistry)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CustomElementsRegistry)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CustomElementRegistry)
   for (auto iter = tmp->mCustomDefinitions.Iter(); !iter.Done(); iter.Next()) {
     aCallbacks.Trace(&iter.UserData()->mConstructor,
                      "mCustomDefinitions constructor",
@@ -153,16 +153,16 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CustomElementsRegistry)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(CustomElementsRegistry)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(CustomElementsRegistry)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(CustomElementRegistry)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(CustomElementRegistry)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CustomElementsRegistry)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CustomElementRegistry)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 /* static */ bool
-CustomElementsRegistry::IsCustomElementsEnabled(JSContext* aCx, JSObject* aObject)
+CustomElementRegistry::IsCustomElementEnabled(JSContext* aCx, JSObject* aObject)
 {
   JS::Rooted<JSObject*> obj(aCx, aObject);
   if (Preferences::GetBool("dom.webcomponents.customelements.enabled") ||
@@ -173,8 +173,8 @@ CustomElementsRegistry::IsCustomElementsEnabled(JSContext* aCx, JSObject* aObjec
   return false;
 }
 
-/* static */ already_AddRefed<CustomElementsRegistry>
-CustomElementsRegistry::Create(nsPIDOMWindowInner* aWindow)
+/* static */ already_AddRefed<CustomElementRegistry>
+CustomElementRegistry::Create(nsPIDOMWindowInner* aWindow)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsInnerWindow());
@@ -188,13 +188,13 @@ CustomElementsRegistry::Create(nsPIDOMWindowInner* aWindow)
     return nullptr;
   }
 
-  RefPtr<CustomElementsRegistry> customElementsRegistry =
-    new CustomElementsRegistry(aWindow);
-  return customElementsRegistry.forget();
+  RefPtr<CustomElementRegistry> customElementRegistry =
+    new CustomElementRegistry(aWindow);
+  return customElementRegistry.forget();
 }
 
 /* static */ void
-CustomElementsRegistry::ProcessTopElementQueue()
+CustomElementRegistry::ProcessTopElementQueue()
 {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
@@ -222,15 +222,15 @@ CustomElementsRegistry::ProcessTopElementQueue()
 }
 
 /* static */ void
-CustomElementsRegistry::XPCOMShutdown()
+CustomElementRegistry::XPCOMShutdown()
 {
   sProcessingStack.reset();
 }
 
 /* static */ Maybe<nsTArray<RefPtr<CustomElementData>>>
-CustomElementsRegistry::sProcessingStack;
+CustomElementRegistry::sProcessingStack;
 
-CustomElementsRegistry::CustomElementsRegistry(nsPIDOMWindowInner* aWindow)
+CustomElementRegistry::CustomElementRegistry(nsPIDOMWindowInner* aWindow)
  : mWindow(aWindow)
  , mIsCustomDefinitionRunning(false)
 {
@@ -243,14 +243,14 @@ CustomElementsRegistry::CustomElementsRegistry(nsPIDOMWindowInner* aWindow)
   }
 }
 
-CustomElementsRegistry::~CustomElementsRegistry()
+CustomElementRegistry::~CustomElementRegistry()
 {
   mozilla::DropJSObjects(this);
 }
 
 CustomElementDefinition*
-CustomElementsRegistry::LookupCustomElementDefinition(const nsAString& aLocalName,
-                                                      const nsAString* aIs) const
+CustomElementRegistry::LookupCustomElementDefinition(const nsAString& aLocalName,
+                                                     const nsAString* aIs) const
 {
   nsCOMPtr<nsIAtom> localNameAtom = NS_Atomize(aLocalName);
   nsCOMPtr<nsIAtom> typeAtom = aIs ? NS_Atomize(*aIs) : localNameAtom;
@@ -264,7 +264,7 @@ CustomElementsRegistry::LookupCustomElementDefinition(const nsAString& aLocalNam
 }
 
 void
-CustomElementsRegistry::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTypeName)
+CustomElementRegistry::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTypeName)
 {
   mozilla::dom::NodeInfo* info = aElement->NodeInfo();
 
@@ -289,8 +289,8 @@ CustomElementsRegistry::RegisterUnresolvedElement(Element* aElement, nsIAtom* aT
 }
 
 void
-CustomElementsRegistry::SetupCustomElement(Element* aElement,
-                                           const nsAString* aTypeExtension)
+CustomElementRegistry::SetupCustomElement(Element* aElement,
+                                          const nsAString* aTypeExtension)
 {
   nsCOMPtr<nsIAtom> tagAtom = aElement->NodeInfo()->NameAtom();
   nsCOMPtr<nsIAtom> typeAtom = aTypeExtension ?
@@ -326,10 +326,10 @@ CustomElementsRegistry::SetupCustomElement(Element* aElement,
 }
 
 void
-CustomElementsRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
-                                                 Element* aCustomElement,
-                                                 LifecycleCallbackArgs* aArgs,
-                                                 CustomElementDefinition* aDefinition)
+CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
+                                                Element* aCustomElement,
+                                                LifecycleCallbackArgs* aArgs,
+                                                CustomElementDefinition* aDefinition)
 {
   CustomElementData* elementData = aCustomElement->GetCustomElementData();
 
@@ -443,15 +443,15 @@ CustomElementsRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackTyp
       // Create a script runner to process the top of the processing
       // stack as soon as it is safe to run script.
       nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableFunction(&CustomElementsRegistry::ProcessTopElementQueue);
+        NS_NewRunnableFunction(&CustomElementRegistry::ProcessTopElementQueue);
       nsContentUtils::AddScriptRunner(runnable);
     }
   }
 }
 
 void
-CustomElementsRegistry::GetCustomPrototype(nsIAtom* aAtom,
-                                           JS::MutableHandle<JSObject*> aPrototype)
+CustomElementRegistry::GetCustomPrototype(nsIAtom* aAtom,
+                                          JS::MutableHandle<JSObject*> aPrototype)
 {
   mozilla::dom::CustomElementDefinition* definition = mCustomDefinitions.Get(aAtom);
   if (definition) {
@@ -462,9 +462,9 @@ CustomElementsRegistry::GetCustomPrototype(nsIAtom* aAtom,
 }
 
 void
-CustomElementsRegistry::UpgradeCandidates(JSContext* aCx,
-                                          nsIAtom* aKey,
-                                          CustomElementDefinition* aDefinition)
+CustomElementRegistry::UpgradeCandidates(JSContext* aCx,
+                                         nsIAtom* aKey,
+                                         CustomElementDefinition* aDefinition)
 {
   nsAutoPtr<nsTArray<nsWeakPtr>> candidates;
   mCandidatesMap.RemoveAndForget(aKey, candidates);
@@ -509,12 +509,12 @@ CustomElementsRegistry::UpgradeCandidates(JSContext* aCx,
 }
 
 JSObject*
-CustomElementsRegistry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+CustomElementRegistry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CustomElementsRegistryBinding::Wrap(aCx, this, aGivenProto);
+  return CustomElementRegistryBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsISupports* CustomElementsRegistry::GetParentObject() const
+nsISupports* CustomElementRegistry::GetParentObject() const
 {
   return mWindow;
 }
@@ -558,10 +558,10 @@ CheckLifeCycleCallbacks(JSContext* aCx,
 
 // https://html.spec.whatwg.org/multipage/scripting.html#element-definition
 void
-CustomElementsRegistry::Define(const nsAString& aName,
-                               Function& aFunctionConstructor,
-                               const ElementDefinitionOptions& aOptions,
-                               ErrorResult& aRv)
+CustomElementRegistry::Define(const nsAString& aName,
+                              Function& aFunctionConstructor,
+                              const ElementDefinitionOptions& aOptions,
+                              ErrorResult& aRv)
 {
   aRv.MightThrowJSException();
 
@@ -589,7 +589,7 @@ CustomElementsRegistry::Define(const nsAString& aName,
   }
 
   if (!JS::IsConstructor(constructorUnwrapped)) {
-    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(NS_LITERAL_STRING("Argument 2 of CustomElementsRegistry.define"));
+    aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(NS_LITERAL_STRING("Argument 2 of CustomElementRegistry.define"));
     return;
   }
 
@@ -604,7 +604,7 @@ CustomElementsRegistry::Define(const nsAString& aName,
   }
 
   /**
-   * 3. If this CustomElementsRegistry contains an entry with name name, then
+   * 3. If this CustomElementRegistry contains an entry with name name, then
    *    throw a "NotSupportedError" DOMException and abort these steps.
    */
   if (mCustomDefinitions.Get(nameAtom)) {
@@ -613,7 +613,7 @@ CustomElementsRegistry::Define(const nsAString& aName,
   }
 
   /**
-   * 4. If this CustomElementsRegistry contains an entry with constructor constructor,
+   * 4. If this CustomElementRegistry contains an entry with constructor constructor,
    *    then throw a "NotSupportedError" DOMException and abort these steps.
    */
   // TODO: Step 3 of HTMLConstructor also needs a way to look up definition by
@@ -772,7 +772,7 @@ CustomElementsRegistry::Define(const nsAString& aName,
                                 0 /* TODO dependent on HTML imports. Bug 877072 */);
 
   /**
-   * 12. Add definition to this CustomElementsRegistry.
+   * 12. Add definition to this CustomElementRegistry.
    */
   mCustomDefinitions.Put(nameAtom, definition);
 
@@ -783,11 +783,11 @@ CustomElementsRegistry::Define(const nsAString& aName,
   UpgradeCandidates(cx, nameAtom, definition);
 
   /**
-   * 16. If this CustomElementsRegistry's when-defined promise map contains an
+   * 16. If this CustomElementRegistry's when-defined promise map contains an
    *     entry with key name:
    *     1. Let promise be the value of that entry.
    *     2. Resolve promise with undefined.
-   *     3. Delete the entry with key name from this CustomElementsRegistry's
+   *     3. Delete the entry with key name from this CustomElementRegistry's
    *        when-defined promise map.
    */
   RefPtr<Promise> promise;
@@ -799,8 +799,8 @@ CustomElementsRegistry::Define(const nsAString& aName,
 }
 
 void
-CustomElementsRegistry::Get(JSContext* aCx, const nsAString& aName,
-                            JS::MutableHandle<JS::Value> aRetVal)
+CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
+                           JS::MutableHandle<JS::Value> aRetVal)
 {
   nsCOMPtr<nsIAtom> nameAtom(NS_Atomize(aName));
   CustomElementDefinition* data = mCustomDefinitions.Get(nameAtom);
@@ -815,7 +815,7 @@ CustomElementsRegistry::Get(JSContext* aCx, const nsAString& aName,
 }
 
 already_AddRefed<Promise>
-CustomElementsRegistry::WhenDefined(const nsAString& aName, ErrorResult& aRv)
+CustomElementRegistry::WhenDefined(const nsAString& aName, ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
   RefPtr<Promise> promise = Promise::Create(global, aRv);

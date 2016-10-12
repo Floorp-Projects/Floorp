@@ -3799,12 +3799,12 @@ nsGlobalWindow::GetHistory(ErrorResult& aError)
   return mHistory;
 }
 
-CustomElementsRegistry*
+CustomElementRegistry*
 nsGlobalWindow::CustomElements()
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
   if (!mCustomElements) {
-      mCustomElements = CustomElementsRegistry::Create(AsInner());
+      mCustomElements = CustomElementRegistry::Create(AsInner());
   }
 
   return mCustomElements;

@@ -219,8 +219,8 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/UndoManager.h"
 #include "mozilla/dom/WebComponentsBinding.h"
-#include "mozilla/dom/CustomElementsRegistryBinding.h"
-#include "mozilla/dom/CustomElementsRegistry.h"
+#include "mozilla/dom/CustomElementRegistryBinding.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "nsFrame.h"
 #include "nsDOMCaretPosition.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -5373,8 +5373,8 @@ bool IsLowercaseASCII(const nsAString& aValue)
   return true;
 }
 
-already_AddRefed<mozilla::dom::CustomElementsRegistry>
-nsDocument::GetCustomElementsRegistry()
+already_AddRefed<mozilla::dom::CustomElementRegistry>
+nsDocument::GetCustomElementRegistry()
 {
   nsAutoString contentType;
   GetContentType(contentType);
@@ -5390,7 +5390,7 @@ nsDocument::GetCustomElementsRegistry()
     return nullptr;
   }
 
-  RefPtr<CustomElementsRegistry> registry = window->CustomElements();
+  RefPtr<CustomElementRegistry> registry = window->CustomElements();
   if (!registry) {
     return nullptr;
   }
@@ -5689,7 +5689,7 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
     return true;
   }
 
-  RefPtr<mozilla::dom::CustomElementsRegistry> registry = window->CustomElements();
+  RefPtr<mozilla::dom::CustomElementRegistry> registry = window->CustomElements();
   if (!registry) {
     return true;
   }
@@ -5757,7 +5757,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
                             JS::MutableHandle<JSObject*> aRetval,
                             ErrorResult& rv)
 {
-  RefPtr<CustomElementsRegistry> registry(GetCustomElementsRegistry());
+  RefPtr<CustomElementRegistry> registry(GetCustomElementRegistry());
   if (!registry) {
     rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;

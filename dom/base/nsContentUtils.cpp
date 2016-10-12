@@ -38,7 +38,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/CustomElementsRegistry.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/Element.h"
@@ -9538,7 +9538,7 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
     return nullptr;
   }
 
-  RefPtr<CustomElementsRegistry> registry(window->CustomElements());
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
   if (!registry) {
     return nullptr;
   }
@@ -9571,7 +9571,7 @@ nsContentUtils::SetupCustomElement(Element* aElement,
     return;
   }
 
-  RefPtr<CustomElementsRegistry> registry(window->CustomElements());
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
   if (!registry) {
     return;
   }
@@ -9600,7 +9600,7 @@ nsContentUtils::EnqueueLifecycleCallback(nsIDocument* aDoc,
     return;
   }
 
-  RefPtr<CustomElementsRegistry> registry(window->CustomElements());
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
   if (!registry) {
     return;
   }
@@ -9629,7 +9629,7 @@ nsContentUtils::GetCustomPrototype(nsIDocument* aDoc,
     return;
   }
 
-  RefPtr<CustomElementsRegistry> registry(window->CustomElements());
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
   if (!registry) {
     return;
   }
