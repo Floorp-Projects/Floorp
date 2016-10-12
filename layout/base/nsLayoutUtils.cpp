@@ -483,7 +483,7 @@ nsLayoutUtils::HasActiveAnimationOfProperty(const nsIFrame* aFrame,
     [&aProperty](KeyframeEffectReadOnly& aEffect)
     {
       return aEffect.IsCurrent() && aEffect.IsInEffect() &&
-        aEffect.HasEffectiveAnimationOfProperty(aProperty);
+        aEffect.HasAnimationOfProperty(aProperty);
     }
   );
 }
@@ -502,27 +502,14 @@ nsLayoutUtils::HasCurrentTransitions(const nsIFrame* aFrame)
 }
 
 bool
-nsLayoutUtils::HasAnimationOfProperty(const nsIFrame* aFrame,
-                                      nsCSSPropertyID aProperty)
+nsLayoutUtils::HasRelevantAnimationOfProperty(const nsIFrame* aFrame,
+                                              nsCSSPropertyID aProperty)
 {
   return HasMatchingAnimations(aFrame,
     [&aProperty](KeyframeEffectReadOnly& aEffect)
     {
       return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
              aEffect.HasAnimationOfProperty(aProperty);
-    }
-  );
-}
-
-bool
-nsLayoutUtils::HasEffectiveAnimation(const nsIFrame* aFrame,
-                                     nsCSSPropertyID aProperty)
-{
-  return HasMatchingAnimations(aFrame,
-    [&aProperty](KeyframeEffectReadOnly& aEffect)
-    {
-      return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
-             aEffect.HasEffectiveAnimationOfProperty(aProperty);
     }
   );
 }

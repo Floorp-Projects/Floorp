@@ -148,7 +148,7 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
       return false;
     }
 
-    if (!effect->HasEffectiveAnimationOfProperty(aProperty)) {
+    if (!effect->HasAnimationOfProperty(aProperty)) {
       continue;
     }
 
