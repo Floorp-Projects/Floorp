@@ -25,6 +25,7 @@
 #include "asmjs/WasmBinaryToExperimentalText.h"
 #include "asmjs/WasmBinaryToText.h"
 #include "asmjs/WasmJS.h"
+#include "asmjs/WasmModule.h"
 #include "asmjs/WasmSignalHandlers.h"
 #include "asmjs/WasmTextToBinary.h"
 #include "builtin/Promise.h"
@@ -617,6 +618,26 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setString(result);
+    return true;
+}
+
+static bool
+WasmExtractCode(JSContext* cx, unsigned argc, Value* vp)
+{
+    MOZ_ASSERT(cx->options().wasm());
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.get(0).isObject() || !args.get(0).toObject().is<WasmModuleObject>()) {
+        JS_ReportErrorASCII(cx, "argument is not a WebAssembly.Module");
+        return false;
+    }
+
+    Rooted<WasmModuleObject*> module(cx, &args.get(0).toObject().as<WasmModuleObject>());
+    RootedValue result(cx);
+    if (!module->module().extractCode(cx, &result))
+        return false;
+
+    args.rval().set(result);
     return true;
 }
 
@@ -3817,6 +3838,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmBinaryToText", WasmBinaryToText, 1, 0,
 "wasmBinaryToText(bin)",
 "  Translates binary encoding to text format"),
+
+    JS_FN_HELP("wasmExtractCode", WasmExtractCode, 1, 0,
+"wasmExtractCode(module)",
+"  Extracts generated machine code from WebAssembly.Module."),
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",
