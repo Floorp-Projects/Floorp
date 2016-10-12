@@ -121,8 +121,8 @@ void nsFloatManager::Shutdown()
   "incompatible writing modes")
 
 nsFlowAreaRect
-nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord,
-                            BandInfoType aInfoType, nscoord aBSize,
+nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
+                            BandInfoType aBandInfoType,
                             LogicalRect aContentArea, SavedState* aState,
                             const nsSize& aContainerSize) const
 {
@@ -161,7 +161,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord,
   if (aBSize == nscoord_MAX) {
     // This warning (and the two below) are possible to hit on pages
     // with really large objects.
-    NS_WARNING_ASSERTION(aInfoType == BAND_FROM_POINT, "bad height");
+    NS_WARNING_ASSERTION(aBandInfoType == BandInfoType::BandFromPoint, "bad height");
     blockEnd = nscoord_MAX;
   } else {
     blockEnd = blockStart + aBSize;
@@ -195,24 +195,24 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord,
 
     nscoord floatBStart = fi.BStart();
     nscoord floatBEnd = fi.BEnd();
-    if (blockStart < floatBStart && aInfoType == BAND_FROM_POINT) {
+    if (blockStart < floatBStart && aBandInfoType == BandInfoType::BandFromPoint) {
       // This float is below our band.  Shrink our band's height if needed.
       if (floatBStart < blockEnd) {
         blockEnd = floatBStart;
       }
     }
-    // If blockStart == blockEnd (which happens only with WIDTH_WITHIN_HEIGHT),
+    // If blockStart == blockEnd (which happens only with WidthWithinHeight),
     // we include floats that begin at our 0-height vertical area.  We
-    // need to to this to satisfy the invariant that a
-    // WIDTH_WITHIN_HEIGHT call is at least as narrow on both sides as a
-    // BAND_WITHIN_POINT call beginning at its blockStart.
+    // need to do this to satisfy the invariant that a
+    // WidthWithinHeight call is at least as narrow on both sides as a
+    // BandFromPoint call beginning at its blockStart.
     else if (blockStart < floatBEnd &&
              (floatBStart < blockEnd ||
               (floatBStart == blockEnd && blockStart == blockEnd))) {
       // This float is in our band.
 
       // Shrink our band's height if needed.
-      if (floatBEnd < blockEnd && aInfoType == BAND_FROM_POINT) {
+      if (floatBEnd < blockEnd && aBandInfoType == BandInfoType::BandFromPoint) {
         blockEnd = floatBEnd;
       }
 
