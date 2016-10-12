@@ -38438,6 +38438,32 @@
     "deleted": [],
     "deleted_reftests": {},
     "items": {
+      "manual": {
+        "html/browsers/windows/noreferrer-cross-origin-close-manual.sub.html": [
+          {
+            "path": "html/browsers/windows/noreferrer-cross-origin-close-manual.sub.html",
+            "url": "/html/browsers/windows/noreferrer-cross-origin-close-manual.sub.html"
+          }
+        ],
+        "mediacapture-streams/MediaStream-id-manual.https.html": [
+          {
+            "path": "mediacapture-streams/MediaStream-id-manual.https.html",
+            "url": "/mediacapture-streams/MediaStream-id-manual.https.html"
+          }
+        ],
+        "presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html": [
+          {
+            "path": "presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html",
+            "url": "/presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html"
+          }
+        ],
+        "presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html": [
+          {
+            "path": "presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html",
+            "url": "/presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html"
+          }
+        ]
+      },
       "reftest": {
         "html/semantics/grouping-content/the-ol-element/reversed-1e.html": [
           {
@@ -38453,10 +38479,144 @@
         ]
       },
       "testharness": {
-        "WebCryptoAPI/wrapKey_unwrapKey/wrapKey_unwrapKey.worker.js": [
+        "WebCryptoAPI/generateKey/failures_AES-CBC.worker.js": [
           {
-            "path": "WebCryptoAPI/wrapKey_unwrapKey/wrapKey_unwrapKey.worker.js",
-            "url": "/WebCryptoAPI/wrapKey_unwrapKey/wrapKey_unwrapKey.worker"
+            "path": "WebCryptoAPI/generateKey/failures_AES-CBC.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_AES-CBC.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_AES-CTR.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_AES-CTR.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_AES-CTR.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_AES-GCM.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_AES-GCM.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_AES-GCM.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_AES-KW.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_AES-KW.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_AES-KW.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_ECDH.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_ECDH.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_ECDH.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_ECDSA.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_ECDSA.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_ECDSA.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_HMAC.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_HMAC.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_HMAC.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_RSA-OAEP.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_RSA-OAEP.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_RSA-OAEP.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_RSA-PSS.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_RSA-PSS.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_RSA-PSS.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_RSASSA-PKCS1-v1_5.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_RSASSA-PKCS1-v1_5.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_RSASSA-PKCS1-v1_5.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_AES-CBC.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_AES-CBC.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_AES-CBC.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_AES-CTR.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_AES-CTR.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_AES-CTR.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_AES-GCM.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_AES-GCM.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_AES-GCM.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_AES-KW.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_AES-KW.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_AES-KW.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_ECDH.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_ECDH.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_ECDH.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_ECDSA.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_ECDSA.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_ECDSA.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_HMAC.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_HMAC.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_HMAC.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_RSA-OAEP.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_RSA-OAEP.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_RSA-OAEP.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_RSA-PSS.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_RSA-PSS.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_RSA-PSS.worker"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_RSASSA-PKCS1-v1_5.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_RSASSA-PKCS1-v1_5.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_RSASSA-PKCS1-v1_5.worker"
           }
         ],
         "html/browsers/the-window-object/window-open-noopener.html": [
