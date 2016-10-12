@@ -2408,18 +2408,6 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
     return NS_OK;
   }
 
-  // We skip the favicon loading here. The favicon loading might be
-  // triggered by the XUL image. For that case, the loadContext will have
-  // default originAttributes since the XUL image uses SystemPrincipal, but
-  // the loadInfo will use originAttributes from the content. Thus, the
-  // originAttributes between loadInfo and loadContext will be different.
-  // That's why we have to skip the comparison for the favicon loading.
-  if (nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal()) &&
-      loadInfo->InternalContentPolicyType() ==
-        nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON) {
-    return NS_OK;
-  }
-
   uint32_t loadContextAppId = 0;
   nsresult rv = loadContext->GetAppId(&loadContextAppId);
   if (NS_FAILED(rv)) {

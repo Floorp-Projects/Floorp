@@ -62,7 +62,7 @@ function run_test()
   let channel = NetUtil.newChannel({
     uri: fs.defaultFavicon,
     loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
   });
   channel.asyncOpen2(new streamListener("image/png"));
   do_test_pending();
@@ -72,7 +72,7 @@ function run_test()
   channel = NetUtil.newChannel({
     uri: moz_anno_favicon_prefix + "http://mozilla.org",
     loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
   });
   channel.asyncOpen2(new streamListener("image/png"));
   do_test_pending();
@@ -88,7 +88,7 @@ function run_test()
   channel = NetUtil.newChannel({
     uri: moz_anno_favicon_prefix + testURI.spec,
     loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
   });
   channel.asyncOpen2(new streamListener("image/png"));
   do_test_pending();
