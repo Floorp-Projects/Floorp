@@ -13,6 +13,7 @@
 #include <stdarg.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
 #ifdef __cplusplus
 
@@ -26,9 +27,7 @@ int VsprintfLiteral(char (&buffer)[N], const char* format, va_list args)
 }
 
 template <size_t N>
-#if defined(__GNUC__)
-  __attribute__((format(printf, 2, 3)))
-#endif
+MOZ_FORMAT_PRINTF(2, 3)
 int SprintfLiteral(char (&buffer)[N], const char* format, ...)
 {
   va_list args;
