@@ -10,43 +10,53 @@
 
 var { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 
+var certificates = [];
+
+registerCleanupFunction(function() {
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
+                 .getService(Ci.nsIX509CertDB);
+  certificates.forEach(cert => {
+    certdb.deleteCertificate(cert);
+  });
+});
+
 add_task(function* () {
-  let cert = yield readCertificate("ca.pem", "CTu,CTu,CTu");
+  let cert = yield readCertificate("ca.pem", "CTu,CTu,CTu", certificates);
   let win = yield displayCertificate(cert);
   checkUsages(win, ["SSL Certificate Authority"]);
   yield BrowserTestUtils.closeWindow(win);
 });
 
 add_task(function* () {
-  let cert = yield readCertificate("ssl-ee.pem", ",,");
+  let cert = yield readCertificate("ssl-ee.pem", ",,", certificates);
   let win = yield displayCertificate(cert);
   checkUsages(win, ["SSL Server Certificate", "SSL Client Certificate"]);
   yield BrowserTestUtils.closeWindow(win);
 });
 
 add_task(function* () {
-  let cert = yield readCertificate("email-ee.pem", ",,");
+  let cert = yield readCertificate("email-ee.pem", ",,", certificates);
   let win = yield displayCertificate(cert);
   checkUsages(win, ["Email Recipient Certificate", "Email Signer Certificate"]);
   yield BrowserTestUtils.closeWindow(win);
 });
 
 add_task(function* () {
-  let cert = yield readCertificate("code-ee.pem", ",,");
+  let cert = yield readCertificate("code-ee.pem", ",,", certificates);
   let win = yield displayCertificate(cert);
   checkUsages(win, ["Object Signer"]);
   yield BrowserTestUtils.closeWindow(win);
 });
 
 add_task(function* () {
-  let cert = yield readCertificate("expired-ca.pem", ",,");
+  let cert = yield readCertificate("expired-ca.pem", ",,", certificates);
   let win = yield displayCertificate(cert);
   checkError(win, "Could not verify this certificate because it has expired.");
   yield BrowserTestUtils.closeWindow(win);
 });
 
 add_task(function* () {
-  let cert = yield readCertificate("ee-from-expired-ca.pem", ",,");
+  let cert = yield readCertificate("ee-from-expired-ca.pem", ",,", certificates);
   let win = yield displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because the CA certificate " +
@@ -55,7 +65,7 @@ add_task(function* () {
 });
 
 add_task(function* () {
-  let cert = yield readCertificate("unknown-issuer.pem", ",,");
+  let cert = yield readCertificate("unknown-issuer.pem", ",,", certificates);
   let win = yield displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because the issuer is " +
@@ -64,7 +74,7 @@ add_task(function* () {
 });
 
 add_task(function* () {
-  let cert = yield readCertificate("md5-ee.pem", ",,");
+  let cert = yield readCertificate("md5-ee.pem", ",,", certificates);
   let win = yield displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because it was signed using " +
@@ -74,7 +84,7 @@ add_task(function* () {
 });
 
 add_task(function* () {
-  let cert = yield readCertificate("untrusted-ca.pem", "p,p,p");
+  let cert = yield readCertificate("untrusted-ca.pem", "p,p,p", certificates);
   let win = yield displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because it is not trusted.");
@@ -82,7 +92,8 @@ add_task(function* () {
 });
 
 add_task(function* () {
-  let cert = yield readCertificate("ee-from-untrusted-ca.pem", ",,");
+  let cert = yield readCertificate("ee-from-untrusted-ca.pem", ",,",
+                                   certificates);
   let win = yield displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because the issuer is not " +
@@ -99,7 +110,7 @@ add_task(function* () {
   certBlocklist.revokeCertBySubjectAndPubKey(
     "MBIxEDAOBgNVBAMMB3Jldm9rZWQ=", // CN=revoked
     "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8="); // hash of the shared key
-  let cert = yield readCertificate("revoked.pem", ",,");
+  let cert = yield readCertificate("revoked.pem", ",,", certificates);
   let win = yield displayCertificate(cert);
   checkError(win,
              "Could not verify this certificate because it has been revoked.");
@@ -111,7 +122,7 @@ add_task(function* () {
   // keyCertSign, but it doesn't have a basicConstraints extension. This
   // shouldn't be valid for any usage. Sadly, we give a pretty lame error
   // message in this case.
-  let cert = yield readCertificate("invalid.pem", ",,");
+  let cert = yield readCertificate("invalid.pem", ",,", certificates);
   let win = yield displayCertificate(cert);
   checkError(win, "Could not verify this certificate for unknown reasons.");
   yield BrowserTestUtils.closeWindow(win);
