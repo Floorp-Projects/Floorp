@@ -3840,9 +3840,6 @@ private:
 class nsDisplaySVGEffects: public nsDisplayWrapList {
 public:
   nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      nsDisplayList* aList, bool aHandleOpacity,
-                      const DisplayItemScrollClip* aScrollClip);
-  nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsDisplayList* aList, bool aHandleOpacity);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplaySVGEffects();
@@ -3889,8 +3886,7 @@ protected:
 class nsDisplayMask : public nsDisplaySVGEffects {
 public:
   nsDisplayMask(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                nsDisplayList* aList, bool aHandleOpacity,
-                const DisplayItemScrollClip* aScrollClip);
+                      nsDisplayList* aList, bool aHandleOpacity);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMask();
 #endif

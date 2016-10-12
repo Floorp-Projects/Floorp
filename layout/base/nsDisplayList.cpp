@@ -6725,17 +6725,6 @@ nsCharClipDisplayItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
 
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList,
-                                         bool aHandleOpacity,
-                                         const DisplayItemScrollClip* aScrollClip)
-  : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
-  , mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
-  , mHandleOpacity(aHandleOpacity)
-{
-  MOZ_COUNT_CTOR(nsDisplaySVGEffects);
-}
-
-nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame, nsDisplayList* aList,
                                          bool aHandleOpacity)
   : nsDisplayWrapList(aBuilder, aFrame, aList)
   , mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
@@ -6828,9 +6817,8 @@ bool nsDisplaySVGEffects::ValidateSVGFrame()
 
 nsDisplayMask::nsDisplayMask(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayList* aList,
-                             bool aHandleOpacity,
-                             const DisplayItemScrollClip* aScrollClip)
-  : nsDisplaySVGEffects(aBuilder, aFrame, aList, aHandleOpacity, aScrollClip)
+                             bool aHandleOpacity)
+  : nsDisplaySVGEffects(aBuilder, aFrame, aList, aHandleOpacity)
 {
   MOZ_COUNT_CTOR(nsDisplayMask);
 }
