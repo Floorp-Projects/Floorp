@@ -20,6 +20,7 @@ EXTRA_PATHS = (
     'python/jsmin',
     'python/mach',
     'python/mozbuild',
+    'python/mozversioncontrol',
     'python/which',
     'testing/mozbase/manifestparser',
     'testing/mozbase/mozfile',
