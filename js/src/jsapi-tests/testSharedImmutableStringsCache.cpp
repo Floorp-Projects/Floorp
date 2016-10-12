@@ -68,7 +68,8 @@ BEGIN_TEST(testSharedImmutableStringsCache)
     for (auto i : mozilla::MakeRange(NUM_THREADS)) {
         auto cacheAndIndex = js_new<CacheAndIndex>(&cache, i);
         CHECK(cacheAndIndex);
-        threads.infallibleEmplaceBack(getString, cacheAndIndex);
+        threads.infallibleEmplaceBack();
+        CHECK(threads.back().init(getString, cacheAndIndex));
     }
 
     for (auto& thread : threads)

@@ -77,7 +77,8 @@ BEGIN_TEST(testExclusiveData)
     for (auto i : mozilla::MakeRange(NumThreads)) {
         auto counterAndBit = js_new<CounterAndBit>(i, counter);
         CHECK(counterAndBit);
-        CHECK(threads.emplaceBack(setBitAndCheck, counterAndBit));
+        CHECK(threads.emplaceBack());
+        CHECK(threads.back().init(setBitAndCheck, counterAndBit));
     }
 
     for (auto& thread : threads)
