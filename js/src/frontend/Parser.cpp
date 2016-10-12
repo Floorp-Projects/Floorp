@@ -3724,20 +3724,18 @@ Parser<ParseHandler>::PossibleError::PossibleError(Parser<ParseHandler>& parser)
 {}
 
 template <typename ParseHandler>
-bool
+void
 Parser<ParseHandler>::PossibleError::setPending(Node pn, unsigned errorNumber)
 {
     // Don't overwrite a previously recorded error.
     if (hasError())
-        return false;
+        return;
 
     // If we report an error later, we'll do it from the position where we set
     // the state to pending.
     offset_      = (pn ? parser_.handler.getPosition(pn) : parser_.pos()).begin;
     errorNumber_ = errorNumber;
     state_       = ErrorState::Pending;
-
-    return true;
 }
 
 template <typename ParseHandler>
@@ -6981,19 +6979,14 @@ Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
         if (!pn)
             return null();
 
-        // If we find an error here we should report it immedately instead of
-        // passing it back out of the function.
-        if (possibleErrorInner.hasError())  {
-
-            // We begin by checking for an outer pending error since it would
-            // have occurred first.
-            if (possibleError && !possibleError->checkForExprErrors())
+        if (!possibleError) {
+            // Report any pending expression error.
+            if (!possibleErrorInner.checkForExprErrors())
                 return null();
-
-            // Go ahead and report the inner error.
-            possibleErrorInner.checkForExprErrors();
-            return null();
+        } else {
+            possibleErrorInner.transferErrorTo(possibleError);
         }
+
         handler.addList(seq, pn);
 
         if (!tokenStream.matchToken(&matched, TOK_COMMA))
@@ -8440,7 +8433,7 @@ Parser<ParseHandler>::newRegExp()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling)
+Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling, PossibleError* possibleError)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LB));
 
@@ -8487,13 +8480,15 @@ Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling)
             } else if (tt == TOK_TRIPLEDOT) {
                 tokenStream.consumeKnownToken(TOK_TRIPLEDOT, TokenStream::Operand);
                 uint32_t begin = pos().begin;
-                Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+                Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                                        possibleError);
                 if (!inner)
                     return null();
                 if (!handler.addSpreadElement(literal, begin, inner))
                     return null();
             } else {
-                Node element = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+                Node element = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                                          possibleError);
                 if (!element)
                     return null();
                 if (foldConstants && !FoldConstants(context, &element, this))
@@ -8747,7 +8742,8 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
             return null();
 
         if (propType == PropertyType::Normal) {
-            Node propExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+            Node propExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                                       possibleError);
             if (!propExpr)
                 return null();
 
@@ -8842,11 +8838,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                 // Here we set a pending error so that later in the parse, once we've
                 // determined whether or not we're destructuring, the error can be
                 // reported or ignored appropriately.
-                if (!possibleError->setPending(null(), JSMSG_COLON_AFTER_ID)) {
-                    // Report any previously pending error.
-                    possibleError->checkForExprErrors();
-                    return null();
-                }
+                possibleError->setPending(null(), JSMSG_COLON_AFTER_ID);
             }
 
             Node rhs;
@@ -8980,7 +8972,7 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
         return classDefinition(yieldHandling, ClassExpression, NameRequired);
 
       case TOK_LB:
-        return arrayInitializer(yieldHandling);
+        return arrayInitializer(yieldHandling, possibleError);
 
       case TOK_LC:
         return objectLiteral(yieldHandling, possibleError);
