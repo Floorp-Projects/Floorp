@@ -122,9 +122,9 @@ public:
   // Returns the buffered range currently managed.
   // This may be called on any thread.
   // Buffered must conform to http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
-  media::TimeIntervals Buffered();
-  media::TimeUnit HighestStartTime();
-  media::TimeUnit HighestEndTime();
+  media::TimeIntervals Buffered() const;
+  media::TimeUnit HighestStartTime() const;
+  media::TimeUnit HighestEndTime() const;
 
   // Return the size of the data managed by this SourceBufferContentManager.
   int64_t GetSize() const;
@@ -138,10 +138,10 @@ public:
   int64_t EvictionThreshold() const;
 
   // Interface for MediaSourceDemuxer
-  MediaInfo GetMetadata();
-  const TrackBuffer& GetTrackBuffer(TrackInfo::TrackType aTrack);
-  const media::TimeIntervals& Buffered(TrackInfo::TrackType);
-  const media::TimeUnit& HighestStartTime(TrackInfo::TrackType);
+  MediaInfo GetMetadata() const;
+  const TrackBuffer& GetTrackBuffer(TrackInfo::TrackType aTrack) const;
+  const media::TimeIntervals& Buffered(TrackInfo::TrackType) const;
+  const media::TimeUnit& HighestStartTime(TrackInfo::TrackType) const;
   media::TimeIntervals SafeBuffered(TrackInfo::TrackType) const;
   bool IsEnded() const
   {
@@ -160,11 +160,11 @@ public:
                                            const media::TimeUnit& aFuzz,
                                            MediaResult& aResult);
   int32_t FindCurrentPosition(TrackInfo::TrackType aTrack,
-                              const media::TimeUnit& aFuzz);
+                              const media::TimeUnit& aFuzz) const;
   media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,
                                            const media::TimeUnit& aFuzz);
 
-  void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
+  void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes) const;
 
 private:
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> CodedFrameProcessingPromise;
@@ -376,7 +376,7 @@ private:
       mNextInsertionIndex.reset();
     }
 
-    void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
+    void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes) const;
   };
 
   void CheckSequenceDiscontinuity(const media::TimeUnit& aPresentationTime);
@@ -413,6 +413,7 @@ private:
   MozPromiseHolder<CodedFrameProcessingPromise> mProcessingPromise;
 
   // Trackbuffers definition.
+  nsTArray<const TrackData*> GetTracksList() const;
   nsTArray<TrackData*> GetTracksList();
   TrackData& GetTracksData(TrackType aTrack)
   {
@@ -438,11 +439,11 @@ private:
   TrackData mAudioTracks;
 
   // TaskQueue methods and objects.
-  AbstractThread* GetTaskQueue()
+  AbstractThread* GetTaskQueue() const
   {
     return mTaskQueue;
   }
-  bool OnTaskQueue()
+  bool OnTaskQueue() const
   {
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }
