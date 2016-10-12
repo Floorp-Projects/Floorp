@@ -3,6 +3,8 @@
 
 package org.mozilla.android.sync.test;
 
+import android.os.SystemClock;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.TrackingWBORepository;
@@ -10,10 +12,8 @@ import org.mozilla.android.sync.test.helpers.BaseTestStorageRequestDelegate;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
-import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
-import org.mozilla.gecko.sync.JSONRecordFetcher;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.middleware.Crypto5MiddlewareRepository;
@@ -22,13 +22,10 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
-import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.Server11Repository;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecordFactory;
-import org.mozilla.gecko.sync.stage.SafeConstrainedServer11Repository;
 import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.simpleframework.http.ContentType;
@@ -36,7 +33,7 @@ import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -63,8 +60,6 @@ public class TestServer11RepositorySession {
   private static final int    TEST_PORT   = HTTPServerTestHelper.getTestPort();
   private static final String TEST_SERVER = "http://localhost:" + TEST_PORT + "/";
   static final String LOCAL_BASE_URL      = TEST_SERVER + "1.1/n6ec3u5bee3tixzp2asys7bs6fve4jfw/";
-  static final String LOCAL_INFO_BASE_URL = LOCAL_BASE_URL + "info/";
-  static final String LOCAL_COUNTS_URL    = LOCAL_INFO_BASE_URL + "collection_counts";
 
   // Corresponds to rnewman+atest1@mozilla.com, local.
   static final String TEST_USERNAME          = "n6ec3u5bee3tixzp2asys7bs6fve4jfw";
@@ -79,9 +74,6 @@ public class TestServer11RepositorySession {
     }
   };
   protected final InfoConfiguration infoConfiguration = new InfoConfiguration();
-
-  // Few-second timeout so that our longer operations don't time out and cause spurious error-handling results.
-  private static final int SHORT_TIMEOUT = 10000;
 
   public AuthHeaderProvider getAuthHeaderProvider() {
     return new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD);
@@ -118,7 +110,9 @@ public class TestServer11RepositorySession {
     final String COLLECTION = "test";
 
     final TrackingWBORepository local = getLocal(100);
-    final Server11Repository remote = new Server11Repository(COLLECTION, getCollectionURL(COLLECTION), authHeaderProvider, infoCollections, infoConfiguration);
+    final Server11Repository remote = new Server11Repository(
+            COLLECTION, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+            getCollectionURL(COLLECTION), authHeaderProvider, infoCollections, infoConfiguration);
     KeyBundle collectionKey = new KeyBundle(TEST_USERNAME, SYNC_KEY);
     Crypto5MiddlewareRepository cryptoRepo = new Crypto5MiddlewareRepository(remote, collectionKey);
     cryptoRepo.recordFactory = new BookmarkRecordFactory();
