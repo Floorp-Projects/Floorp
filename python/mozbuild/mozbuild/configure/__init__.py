@@ -165,6 +165,9 @@ class ConfigureSandbox(dict):
         # Queue of functions to execute, with their arguments
         self._execution_queue = []
 
+        # Store the `when`s associated to some options/depends.
+        self._conditions = {}
+
         self._helper = CommandLineHelper(environ, argv)
 
         assert isinstance(config, dict)
@@ -353,6 +356,10 @@ class ConfigureSandbox(dict):
 
     @memoize
     def _value_for_depends_real(self, obj):
+        when = self._conditions.get(obj)
+        if when and not self._value_for(when):
+            return None
+
         resolved_args = [self._value_for(d) for d in obj.dependencies]
         return obj.func(*resolved_args)
 
@@ -449,7 +456,7 @@ class ConfigureSandbox(dict):
 
         return option
 
-    def depends_impl(self, *args):
+    def depends_impl(self, *args, **kwargs):
         '''Implementation of @depends()
         This function is a decorator. It returns a function that subsequently
         takes a function and returns a dummy function. The dummy function
@@ -470,6 +477,16 @@ class ConfigureSandbox(dict):
         if not args:
             raise ConfigureError('@depends needs at least one argument')
 
+        for k in kwargs:
+            if k != 'when':
+                raise TypeError(
+                    "depends_impl() got an unexpected keyword argument '%s'"
+                    % k)
+
+        when = kwargs.get('when')
+        if when is not None:
+            when = self._dependency(when, '@depends', 'when')
+
         dependencies = tuple(self._dependency(arg, '@depends') for arg in args)
 
         def decorator(func):
@@ -478,6 +495,8 @@ class ConfigureSandbox(dict):
                     'Cannot decorate generator functions with @depends')
             func, glob = self._prepare_function(func)
             depends = DependsFunction(self, func, dependencies)
+            if when:
+                self._conditions[depends] = when
 
             # Only @depends functions with a dependency on '--help' are
             # executed immediately. Everything else is queued for later

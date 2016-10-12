@@ -878,6 +878,45 @@ class TestConfigure(unittest.TestCase):
         self.assertEquals(e.exception.message,
                           "depends_impl() got an unexpected keyword argument 'foo'")
 
+    def test_depends_when(self):
+        with self.moz_configure('''
+            @depends('--help')
+            def always(_):
+                return True
+            @depends('--help')
+            def never(_):
+                return False
+
+            @depends('--help', when=always)
+            def foo(_):
+                return 'foo'
+
+            set_config('FOO', foo)
+
+            @depends('--help', when=never)
+            def bar(_):
+                return 'bar'
+
+            set_config('BAR', bar)
+
+            option('--with-qux', help='qux')
+            @depends('--help', when='--with-qux')
+            def qux(_):
+                return 'qux'
+
+            set_config('QUX', qux)
+        '''):
+            config = self.get_config()
+            self.assertEquals(config, {
+                'FOO': 'foo',
+            })
+
+            config = self.get_config(['--with-qux'])
+            self.assertEquals(config, {
+                'FOO': 'foo',
+                'QUX': 'qux',
+            })
+
     def test_imports_failures(self):
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('''
