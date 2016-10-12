@@ -2574,8 +2574,8 @@ public:
                     const mozilla::dom::ElementRegistrationOptions& aOptions,
                     JS::MutableHandle<JSObject*> aRetval,
                     mozilla::ErrorResult& rv) = 0;
-  virtual already_AddRefed<mozilla::dom::CustomElementsRegistry>
-    GetCustomElementsRegistry() = 0;
+  virtual already_AddRefed<mozilla::dom::CustomElementRegistry>
+    GetCustomElementRegistry() = 0;
 
   already_AddRefed<nsContentList>
   GetElementsByTagName(const nsAString& aTagName)
