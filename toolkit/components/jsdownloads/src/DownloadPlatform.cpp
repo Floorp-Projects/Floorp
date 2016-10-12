@@ -4,7 +4,10 @@
 
 #include "DownloadPlatform.h"
 #include "nsAutoPtr.h"
+#include "nsNetUtil.h"
 #include "nsString.h"
+#include "nsINestedURI.h"
+#include "nsIProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
@@ -165,6 +168,8 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIF
                                                  path.Length());
     }
     if (pathCFStr) {
+      bool isFromWeb = IsURLPossiblyFromWeb(aSource);
+
       CFURLRef sourceCFURL = CreateCFURLFromNSIURI(aSource);
       CFURLRef referrerCFURL = CreateCFURLFromNSIURI(aReferrer);
 
@@ -173,7 +178,8 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIF
                                               referrerCFURL);
       CocoaFileUtils::AddQuarantineMetadataToFile(pathCFStr,
                                                   sourceCFURL,
-                                                  referrerCFURL);
+                                                  referrerCFURL,
+                                                  isFromWeb);
 
       ::CFRelease(pathCFStr);
       if (sourceCFURL) {
@@ -226,4 +232,56 @@ nsresult DownloadPlatform::MapUrlToZone(const nsAString& aURL,
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+}
+
+// Check if a URI is likely to be web-based, by checking its URI flags.
+// If in doubt (e.g. if anything fails during the check) claims things
+// are from the web.
+bool DownloadPlatform::IsURLPossiblyFromWeb(nsIURI* aURI)
+{
+  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  nsCOMPtr<nsIURI> uri = aURI;
+  if (!ios) {
+    return true;
+  }
+
+  while (uri) {
+    // We're not using nsIIOService::ProtocolHasFlags because it doesn't
+    // take per-URI flags into account. We're also not using
+    // NS_URIChainHasFlags because we're checking for *any* of 3 flags
+    // to be present on *all* of the nested URIs, which it can't do.
+    nsAutoCString scheme;
+    nsresult rv = uri->GetScheme(scheme);
+    if (NS_FAILED(rv)) {
+      return true;
+    }
+    nsCOMPtr<nsIProtocolHandler> ph;
+    rv = ios->GetProtocolHandler(scheme.get(), getter_AddRefs(ph));
+    if (NS_FAILED(rv)) {
+      return true;
+    }
+    uint32_t flags;
+    rv = ph->DoGetProtocolFlags(uri, &flags);
+    if (NS_FAILED(rv)) {
+      return true;
+    }
+    // If not dangerous to load, not a UI resource and not a local file,
+    // assume this is from the web:
+    if (!(flags & nsIProtocolHandler::URI_DANGEROUS_TO_LOAD) &&
+        !(flags & nsIProtocolHandler::URI_IS_UI_RESOURCE) &&
+        !(flags & nsIProtocolHandler::URI_IS_LOCAL_FILE)) {
+      return true;
+    }
+    // Otherwise, check if the URI is nested, and if so go through
+    // the loop again:
+    nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(uri);
+    uri = nullptr;
+    if (nestedURI) {
+      rv = nestedURI->GetInnerURI(getter_AddRefs(uri));
+      if (NS_FAILED(rv)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }

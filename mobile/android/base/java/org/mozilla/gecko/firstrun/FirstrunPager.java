@@ -64,7 +64,7 @@ public class FirstrunPager extends ViewPager {
     public void load(Context appContext, FragmentManager fm, final FirstrunAnimationContainer.OnFinishListener onFinishListener) {
         final List<FirstrunPagerConfig.FirstrunPanelConfig> panels;
 
-        if (Restrictions.isUserRestricted(context)) {
+        if (Restrictions.isRestrictedProfile(context)) {
             panels = FirstrunPagerConfig.getRestricted();
         } else {
             panels = FirstrunPagerConfig.getDefault(appContext);

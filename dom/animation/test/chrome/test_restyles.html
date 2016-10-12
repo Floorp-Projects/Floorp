@@ -743,6 +743,74 @@ waitForAllPaints(function() {
     }
   );
 
+  add_task(function* restyling_for_animation_on_orphaned_element() {
+    var div = addDiv(null);
+    var animation = div.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+
+    yield animation.ready;
+
+    div.remove();
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'Animation on orphaned element should not cause restyles');
+
+    document.body.appendChild(div);
+
+    markers = yield observeStyling(1);
+    // We are observing restyles in rAF callback which is processed before
+    // restyling process in each frame, so in the first frame there should be
+    // no observed restyle since we don't process restyle while the element
+    // is not attached to the document.
+    is(markers.length, 0,
+       'We observe no restyle in the first frame right after re-atatching ' +
+       'to the document');
+    markers = yield observeStyling(5);
+    is(markers.length, 5,
+       'Animation on re-attached to the document begins to update style');
+
+    yield ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(
+    // Tests that if we remove an element from the document whose animation
+    // cascade needs recalculating, that it is correctly updated when it is
+    // re-attached to the document.
+    function* restyling_for_opacity_animation_on_re_attached_element() {
+      var div = addDiv(null, { style: 'opacity: 1 ! important' });
+      var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+      yield animation.ready;
+      ok(!animation.isRunningOnCompositor,
+         'The opacity animation overridden by an !important rule is NOT ' +
+         'running on the compositor');
+
+      // Drop the !important rule to update the cascade.
+      div.style.setProperty('opacity', '1', '');
+
+      div.remove();
+
+      var markers = yield observeStyling(5);
+      is(markers.length, 0,
+         'Opacity animation on orphaned element should not cause restyles');
+
+      document.body.appendChild(div);
+
+      // Need a frame to give the animation a chance to be sent to the
+      // compositor.
+      yield waitForFrame();
+
+      ok(animation.isRunningOnCompositor,
+         'The opacity animation which is no longer overridden by the ' +
+         '!important rule begins running on the compositor even if the ' +
+         '!important rule had been dropped before the target element was ' +
+         'removed');
+
+      yield ensureElementRemoval(div);
+    }
+  );
+
 });
 
 </script>

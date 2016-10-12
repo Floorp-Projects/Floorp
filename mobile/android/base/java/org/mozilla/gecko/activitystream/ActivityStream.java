@@ -6,12 +6,44 @@
 package org.mozilla.gecko.activitystream;
 
 import android.content.Context;
+import android.net.Uri;
+import android.text.TextUtils;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.publicsuffix.PublicSuffix;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class ActivityStream {
+    /**
+     * List of undesired prefixes for labels based on a URL.
+     *
+     * This list is by no means complete and is based on those sources:
+     * - https://gist.github.com/nchapman/36502ad115e8825d522a66549971a3f0
+     * - https://github.com/mozilla/activity-stream/issues/1311
+     */
+    private static final List<String> UNDESIRED_LABEL_PREFIXES = Arrays.asList(
+            "index.",
+            "home."
+    );
+
+    /**
+     * Undesired labels for labels based on a URL.
+     *
+     * This list is by no means complete and is based on those sources:
+     * - https://gist.github.com/nchapman/36502ad115e8825d522a66549971a3f0
+     * - https://github.com/mozilla/activity-stream/issues/1311
+     */
+    private static final List<String> UNDESIRED_LABELS = Arrays.asList(
+            "render",
+            "login",
+            "edit"
+    );
+
     public static boolean isEnabled(Context context) {
         if (!AppConstants.MOZ_ANDROID_ACTIVITY_STREAM) {
             return false;
@@ -27,5 +59,47 @@ public class ActivityStream {
      */
     public static boolean isHomePanel() {
         return true;
+    }
+
+    /**
+     * Extract a label from a URL to use in Activity Stream.
+     *
+     * This method implements the proposal from this desktop AS issue:
+     * https://github.com/mozilla/activity-stream/issues/1311
+     */
+    public static String extractLabel(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return "";
+        }
+
+        final Uri uri = Uri.parse(url);
+
+        // Use last path segment if suitable
+        final String segment = uri.getLastPathSegment();
+        if (!TextUtils.isEmpty(segment)
+                && !UNDESIRED_LABELS.contains(segment)
+                && !segment.matches("^[0-9]+$")) {
+
+            boolean hasUndesiredPrefix = false;
+            for (int i = 0; i < UNDESIRED_LABEL_PREFIXES.size(); i++) {
+                if (segment.startsWith(UNDESIRED_LABEL_PREFIXES.get(i))) {
+                    hasUndesiredPrefix = true;
+                    break;
+                }
+            }
+
+            if (!hasUndesiredPrefix) {
+                return segment;
+            }
+        }
+
+        // If no usable path segment was found then use the host without public suffix and common subdomains
+        final String host = uri.getHost();
+        if (TextUtils.isEmpty(host)) {
+            return url;
+        }
+
+        return StringUtils.stripCommonSubdomains(
+                PublicSuffix.stripPublicSuffix(host));
     }
 }
