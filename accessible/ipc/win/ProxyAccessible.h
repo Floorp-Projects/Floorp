@@ -43,7 +43,7 @@ public:
 protected:
   explicit ProxyAccessible(DocAccessibleParent* aThisAsDoc)
     : ProxyAccessibleBase(aThisAsDoc)
-  { MOZ_COUNT_CTOR(ProxyAccessibleBase); }
+  { MOZ_COUNT_CTOR(ProxyAccessible); }
 
   void SetCOMInterface(const RefPtr<IAccessible>& aIAccessible)
   { mCOMProxy = aIAccessible; }
