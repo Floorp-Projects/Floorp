@@ -2781,11 +2781,15 @@ CrossAxisPositionTracker::
   // XXX strip of the <overflow-position> bit until we implement that
   mAlignContent &= ~NS_STYLE_ALIGN_FLAG_BITS;
 
-  if (!aFirstLine->getNext()) {
+  const bool isSingleLine =
+    NS_STYLE_FLEX_WRAP_NOWRAP == aReflowInput.mStylePosition->mFlexWrap;
+  if (isSingleLine) {
+    MOZ_ASSERT(!aFirstLine->getNext(),
+               "If we're styled as single-line, we should only have 1 line");
     // "If the flex container is single-line and has a definite cross size, the
     // cross size of the flex line is the flex container's inner cross size."
     //
-    // SOURCE: http://dev.w3.org/csswg/css-flexbox/#algo-line-break
+    // SOURCE: https://drafts.csswg.org/css-flexbox/#algo-cross-line
     // NOTE: This means (by definition) that there's no packing space, which
     // means we don't need to be concerned with "align-conent" at all and we
     // can return early. This is handy, because this is the usual case (for
