@@ -411,22 +411,6 @@ private:
   nsPoint mOffset;
 };
 
-/**
- * Returns true if any of the masks is an image mask (and not an SVG mask).
- */
-static bool
-HasNonSVGMask(const nsTArray<nsSVGMaskFrame *>& aMaskFrames)
-{
-  for (size_t i = 0; i < aMaskFrames.Length() ; i++) {
-    nsSVGMaskFrame *maskFrame = aMaskFrames[i];
-    if (!maskFrame) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
 
 static DrawResult
@@ -492,7 +476,14 @@ GenerateMaskSurface(const PaintFramesParams& aParams,
   // Set aAppliedOpacity as true only if all mask layers are svg mask.
   // In this case, we will apply opacity into the final mask surface, so the
   // caller does not need to apply it again.
-  aOpacityApplied = !HasNonSVGMask(aMaskFrames);
+  aOpacityApplied = true;
+  for (size_t i = 0; i < aMaskFrames.Length() ; i++) {
+    nsSVGMaskFrame *maskFrame = aMaskFrames[i];
+    if (!maskFrame) {
+      aOpacityApplied = false;
+      break;
+    }
+  }
 
   // Multiple SVG masks interleave with image mask. Paint each layer onto
   // maskDT one at a time.
@@ -765,11 +756,12 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       // so we setup context matrix by the position of the current frame,
       // instead of the first continuation frame.
       SetupContextMatrix(frame, aParams, offsetToBoundingBox,
-                         offsetToUserSpace, false);
+                         offsetToUserSpace, true);
       result = GenerateMaskSurface(aParams, opacity,
                                   firstFrame->StyleContext(),
                                   maskFrames, offsetToUserSpace,
                                   maskTransform, maskSurface, opacityApplied);
+      context.PopClip();
       if (!maskSurface) {
         // Entire surface is clipped out.
         return result;
