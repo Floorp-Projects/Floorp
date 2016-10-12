@@ -2183,10 +2183,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     }
     inTransform = true;
   }
-  bool usingFilter = StyleEffects()->HasFilters();
-  bool usingMask = nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
-  bool usingSVGEffects = usingFilter || usingMask;
 
+  bool usingSVGEffects = nsSVGIntegrationUtils::UsingEffectsForFrame(this);
   nsRect dirtyRectOutsideSVGEffects = dirtyRect;
   nsDisplayList hoistedScrollInfoItemsStorage;
   if (usingSVGEffects) {
@@ -2228,7 +2226,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     eTransform,
     eSeparatorTransforms,
     eOpacity,
-    eFilter,
+    eSVGEffects,
     eBlendContainer
   };
 
@@ -2260,8 +2258,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     } else {
       clipCapturedBy = ContainerItemType::eTransform;
     }
-  } else if (usingFilter) {
-    clipCapturedBy = ContainerItemType::eFilter;
+  } else if (usingSVGEffects) {
+    clipCapturedBy = ContainerItemType::eSVGEffects;
   }
 
   bool clearClip = false;
@@ -2409,21 +2407,26 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * output even if the element being filtered wouldn't otherwise do so.
    */
   if (usingSVGEffects) {
-    MOZ_ASSERT(usingFilter ||usingMask,
+    MOZ_ASSERT(StyleEffects()->HasFilters() ||
+               nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this),
                "Beside filter & mask/clip-path, what else effect do we have?");
 
-    if (clipCapturedBy == ContainerItemType::eFilter) {
+    if (clipCapturedBy == ContainerItemType::eSVGEffects) {
       clipState.ExitStackingContextContents(&containerItemScrollClip);
     }
     // Revert to the post-filter dirty rect.
     buildingDisplayList.SetDirtyRect(dirtyRectOutsideSVGEffects);
 
     // Skip all filter effects while generating glyph mask.
-    if (usingFilter && !aBuilder->IsForGenerateGlyphMask()) {
+    bool createFilter =
+      StyleEffects()->HasFilters() && !aBuilder->IsForGenerateGlyphMask();
+    bool createMask = nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
+
+    if (createFilter) {
       // If we are going to create a mask display item, handle opacity effect
       // in that mask display item; Otherwise, take care of opacity in this
       // filter display item.
-      bool handleOpacity = !usingMask && !useOpacity;
+      bool handleOpacity = !createMask && !useOpacity;
 
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop(
@@ -2431,13 +2434,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                        handleOpacity));
     }
 
-    if (usingMask) {
-      DisplayListClipState::AutoSaveRestore maskClipState(aBuilder);
-      maskClipState.Clear();
+    if (createMask) {
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop(
           new (aBuilder) nsDisplayMask(aBuilder, this, &resultList,
-                                       !useOpacity, containerItemScrollClip));
+                                       !useOpacity));
     }
 
     // Also add the hoisted scroll info items. We need those for APZ scrolling
