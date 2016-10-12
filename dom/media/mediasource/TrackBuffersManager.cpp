@@ -422,7 +422,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
 
   // Video is what takes the most space, only evict there if we have video.
   auto& track = HasVideo() ? mVideoTracks : mAudioTracks;
-  const auto& buffer = track.mBuffers.LastElement();
+  const auto& buffer = track.GetTrackBuffer();
   // Remove any data we've already played, or before the next sample to be
   // demuxed whichever is lowest.
   TimeUnit lowerLimit = std::min(track.mNextSampleTime, aPlaybackTime);
@@ -550,7 +550,7 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
     // 2. If this track buffer has a random access point timestamp that is greater than or equal to end,
     // then update remove end timestamp to that random access point timestamp.
     if (end < track->mBufferedRanges.GetEnd()) {
-      for (auto& frame : track->mBuffers.LastElement()) {
+      for (auto& frame : track->GetTrackBuffer()) {
         if (frame->mKeyframe && frame->mTime >= end.ToMicroseconds()) {
           removeEndTimestamp = TimeUnit::FromMicroseconds(frame->mTime);
           break;
@@ -1248,7 +1248,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
 
 #if defined(DEBUG)
   if (HasVideo()) {
-    const auto& track = mVideoTracks.mBuffers.LastElement();
+    const auto& track = mVideoTracks.GetTrackBuffer();
     MOZ_ASSERT(track.IsEmpty() || track[0]->mKeyframe);
     for (uint32_t i = 1; i < track.Length(); i++) {
       MOZ_ASSERT((track[i-1]->mTrackInfo->GetID() == track[i]->mTrackInfo->GetID() && track[i-1]->mTimecode <= track[i]->mTimecode) ||
@@ -1256,7 +1256,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
     }
   }
   if (HasAudio()) {
-    const auto& track = mAudioTracks.mBuffers.LastElement();
+    const auto& track = mAudioTracks.GetTrackBuffer();
     MOZ_ASSERT(track.IsEmpty() || track[0]->mKeyframe);
     for (uint32_t i = 1; i < track.Length(); i++) {
       MOZ_ASSERT((track[i-1]->mTrackInfo->GetID() == track[i]->mTrackInfo->GetID() && track[i-1]->mTimecode <= track[i]->mTimecode) ||
@@ -1596,7 +1596,7 @@ TrackBuffersManager::CheckNextInsertionIndex(TrackData& aTrackData,
     return true;
   }
 
-  TrackBuffer& data = aTrackData.mBuffers.LastElement();
+  const TrackBuffer& data = aTrackData.GetTrackBuffer();
 
   if (data.IsEmpty() || aSampleTime < aTrackData.mBufferedRanges.GetStart()) {
     aTrackData.mNextInsertionIndex = Some(0u);
@@ -1714,7 +1714,7 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
     }
   }
 
-  TrackBuffer& data = trackBuffer.mBuffers.LastElement();
+  TrackBuffer& data = trackBuffer.GetTrackBuffer();
   data.InsertElementsAt(trackBuffer.mNextInsertionIndex.ref(), aSamples);
   trackBuffer.mNextInsertionIndex.ref() += aSamples.Length();
 
@@ -1745,7 +1745,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
                                   TrackData& aTrackData,
                                   uint32_t aStartIndex)
 {
-  TrackBuffer& data = aTrackData.mBuffers.LastElement();
+  TrackBuffer& data = aTrackData.GetTrackBuffer();
   Maybe<uint32_t> firstRemovedIndex;
   uint32_t lastRemovedIndex = 0;
 
@@ -1990,7 +1990,7 @@ TrackBuffersManager::UpdateEvictionIndex(TrackData& aTrackData,
                                          uint32_t currentIndex)
 {
   uint32_t evictable = 0;
-  TrackBuffer& data = aTrackData.mBuffers.LastElement();
+  TrackBuffer& data = aTrackData.GetTrackBuffer();
   MOZ_DIAGNOSTIC_ASSERT(currentIndex >= aTrackData.mEvictionIndex.mLastIndex,
                         "Invalid call");
   MOZ_DIAGNOSTIC_ASSERT(currentIndex == data.Length() ||
@@ -2009,7 +2009,7 @@ const TrackBuffersManager::TrackBuffer&
 TrackBuffersManager::GetTrackBuffer(TrackInfo::TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
-  return GetTracksData(aTrack).mBuffers.LastElement();
+  return GetTracksData(aTrack).GetTrackBuffer();
 }
 
 uint32_t TrackBuffersManager::FindSampleIndex(const TrackBuffer& aTrackBuffer,
