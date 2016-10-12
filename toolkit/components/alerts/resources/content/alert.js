@@ -23,6 +23,7 @@ var gAlertListener = null;
 var gAlertTextClickable = false;
 var gAlertCookie = "";
 var gIsReplaced = false;
+var gRequireInteraction = false;
 
 function prefillAlertInfo() {
   // unwrap all the args....
@@ -34,28 +35,29 @@ function prefillAlertInfo() {
   // arguments[5] --> the alert origin reported by the look and feel
   // arguments[6] --> bidi
   // arguments[7] --> lang
-  // arguments[8] --> replaced alert window (nsIDOMWindow)
-  // arguments[9] --> an optional callback listener (nsIObserver)
-  // arguments[10] -> the nsIURI.hostPort of the origin, optional
-  // arguments[11] -> the alert icon URL, optional
+  // arguments[8] --> requires interaction
+  // arguments[9] --> replaced alert window (nsIDOMWindow)
+  // arguments[10] --> an optional callback listener (nsIObserver)
+  // arguments[11] -> the nsIURI.hostPort of the origin, optional
+  // arguments[12] -> the alert icon URL, optional
 
   switch (window.arguments.length) {
     default:
-    case 12: {
-      if (window.arguments[11]) {
+    case 13: {
+      if (window.arguments[12]) {
         let alertBox = document.getElementById("alertBox");
         alertBox.setAttribute("hasIcon", true);
 
         let icon = document.getElementById("alertIcon");
-        icon.src = window.arguments[11];
+        icon.src = window.arguments[12];
       }
     }
-    case 11: {
-      if (window.arguments[10]) {
+    case 12: {
+      if (window.arguments[11]) {
         let alertBox = document.getElementById("alertBox");
         alertBox.setAttribute("hasOrigin", true);
 
-        let hostPort = window.arguments[10];
+        let hostPort = window.arguments[11];
         const ALERT_BUNDLE = Services.strings.createBundle(
           "chrome://alerts/locale/alert.properties");
         const BRAND_BUNDLE = Services.strings.createBundle(
@@ -81,10 +83,12 @@ function prefillAlertInfo() {
           ALERT_BUNDLE.GetStringFromName("webActions.settings.label"));
       }
     }
+    case 11:
+      gAlertListener = window.arguments[10];
     case 10:
-      gAlertListener = window.arguments[9];
+      gReplacedWindow = window.arguments[9];
     case 9:
-      gReplacedWindow = window.arguments[8];
+      gRequireInteraction = window.arguments[8];
     case 8:
       if (window.arguments[7]) {
         document.getElementById("alertTitleLabel").setAttribute("lang", window.arguments[7]);
@@ -163,19 +167,22 @@ function onAlertLoad() {
 
   window.addEventListener("XULAlertClose", function() { window.close(); });
 
-  if (Services.prefs.getBoolPref("alerts.disableSlidingEffect")) {
-    setTimeout(function() { window.close(); }, ALERT_DURATION_IMMEDIATE);
-  } else {
-    let alertBox = document.getElementById("alertBox");
-    alertBox.addEventListener("animationend", function hideAlert(event) {
-      if (event.animationName == "alert-animation" ||
-          event.animationName == "alert-clicked-animation" ||
-          event.animationName == "alert-closing-animation") {
-        alertBox.removeEventListener("animationend", hideAlert, false);
-        window.close();
-      }
-    }, false);
-    alertBox.setAttribute("animate", true);
+  // If the require interaction flag is set, prevent auto-closing the notification.
+  if (!gRequireInteraction) {
+    if (Services.prefs.getBoolPref("alerts.disableSlidingEffect")) {
+      setTimeout(function() { window.close(); }, ALERT_DURATION_IMMEDIATE);
+    } else {
+      let alertBox = document.getElementById("alertBox");
+      alertBox.addEventListener("animationend", function hideAlert(event) {
+        if (event.animationName == "alert-animation" ||
+            event.animationName == "alert-clicked-animation" ||
+            event.animationName == "alert-closing-animation") {
+          alertBox.removeEventListener("animationend", hideAlert, false);
+          window.close();
+        }
+      }, false);
+      alertBox.setAttribute("animate", true);
+    }
   }
 
   let alertSettings = document.getElementById("alertSettings");
