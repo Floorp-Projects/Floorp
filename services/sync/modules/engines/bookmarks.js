@@ -1143,9 +1143,9 @@ BookmarksTracker.prototype = {
         PlacesUtils.bookmarks.setItemTitle(mobile[0], title, SOURCE_SYNC);
       }
       let rootTitle =
-        PlacesUtils.bookmarks.getItemTitle(BookmarkSpecialIds.mobile);
+        PlacesUtils.bookmarks.getItemTitle(PlacesUtils.mobileFolderId);
       if (rootTitle != title) {
-        PlacesUtils.bookmarks.setItemTitle(BookmarkSpecialIds.mobile, title,
+        PlacesUtils.bookmarks.setItemTitle(PlacesUtils.mobileFolderId, title,
                                            SOURCE_SYNC);
       }
     }
