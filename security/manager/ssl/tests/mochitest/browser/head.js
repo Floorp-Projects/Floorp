@@ -2,23 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-var gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
-                .getService(Ci.nsIX509CertDB);
-
-/**
- * List of certs imported via readCertificate(). Certs in this list are
- * automatically deleted from the cert DB when a test including this head file
- * finishes.
- * @type nsIX509Cert[]
- */
-var gImportedCerts = [];
-
-registerCleanupFunction(() => {
-  for (let cert of gImportedCerts) {
-    gCertDB.deleteCertificate(cert);
-  }
-});
-
 /**
  * This function serves the same purpose as the one defined in head_psm.js.
  */
@@ -33,18 +16,18 @@ function pemToBase64(pem) {
  * a handle to the certificate when that certificate has been read and imported
  * with the given trust settings.
  *
- * Certs imported via this function will automatically be deleted from the cert
- * DB once the calling test finishes.
- *
  * @param {String} filename
  *        The filename of the certificate (assumed to be in the same directory).
  * @param {String} trustString
  *        A string describing how the certificate should be trusted (see
  *        `certutil -A --help`).
+ * @param {nsIX509Cert[]} certificates
+ *        An array to append the imported cert to. Useful for making sure
+ *        imported certs are cleaned up.
  * @return {Promise}
  *         A promise that will resolve with a handle to the certificate.
  */
-function readCertificate(filename, trustString) {
+function readCertificate(filename, trustString, certificates) {
   return OS.File.read(getTestFilePath(filename)).then(data => {
     let decoder = new TextDecoder();
     let pem = decoder.decode(data);
@@ -53,7 +36,7 @@ function readCertificate(filename, trustString) {
     let base64 = pemToBase64(pem);
     certdb.addCertFromBase64(base64, trustString, "unused");
     let cert = certdb.constructX509FromBase64(base64);
-    gImportedCerts.push(cert);
+    certificates.push(cert);
     return cert;
   }, error => { throw error; });
 }
