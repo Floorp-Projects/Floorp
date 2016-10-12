@@ -281,10 +281,6 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   PROFILER_LABEL("ClientLayerManager", "EndTransactionInternal",
     js::ProfileEntry::Category::GRAPHICS);
 
-  if (!mForwarder || !mForwarder->IPCOpen()) {
-    return false;
-  }
-
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();
@@ -359,6 +355,12 @@ ClientLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                    void* aCallbackData,
                                    EndTransactionFlags aFlags)
 {
+  if (!mForwarder->IPCOpen()) {
+    mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
+    mInTransaction = false;
+    return;
+  }
+
   if (mWidget) {
     mWidget->PrepareWindowEffects();
   }
@@ -384,9 +386,11 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
   mInTransaction = false;
 
-  if (!mRoot) {
+  if (!mRoot || !mForwarder->IPCOpen()) {
+    mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
     return false;
   }
+
   if (!EndTransactionInternal(nullptr, nullptr, aFlags)) {
     // Return without calling ForwardTransaction. This leaves the
     // ShadowLayerForwarder transaction open; the following
