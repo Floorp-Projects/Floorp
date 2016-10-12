@@ -4,7 +4,7 @@
 'use strict';
 
 var {
-  Loader, main, unload, parseStack, generateMap, resolve, join,
+  Loader, main, unload, parseStack, resolve, join,
   Require, Module
 } = require('toolkit/loader');
 var { readURI } = require('sdk/net/url');

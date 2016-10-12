@@ -36,21 +36,55 @@ const { join: pathJoin, normalize, dirname } = Cu.import("resource://gre/modules
 
 XPCOMUtils.defineLazyGetter(this, "XulApp", () => {
   let xulappURI = module.uri.replace("toolkit/loader.js",
-                                       "sdk/system/xul-app.jsm");
+                                     "sdk/system/xul-app.jsm");
   return Cu.import(xulappURI, {});
 });
 
 // Define some shortcuts.
 const bind = Function.call.bind(Function.bind);
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-const define = Object.defineProperties;
 const prototypeOf = Object.getPrototypeOf;
-const create = Object.create;
-const keys = Object.keys;
 const getOwnIdentifiers = x => [...Object.getOwnPropertyNames(x),
                                 ...Object.getOwnPropertySymbols(x)];
 
-const NODE_MODULES = ["assert", "buffer_ieee754", "buffer", "child_process", "cluster", "console", "constants", "crypto", "_debugger", "dgram", "dns", "domain", "events", "freelist", "fs", "http", "https", "_linklist", "module", "net", "os", "path", "punycode", "querystring", "readline", "repl", "stream", "string_decoder", "sys", "timers", "tls", "tty", "url", "util", "vm", "zlib"];
+const NODE_MODULES = new Set([
+  "assert",
+  "buffer_ieee754",
+  "buffer",
+  "child_process",
+  "cluster",
+  "console",
+  "constants",
+  "crypto",
+  "_debugger",
+  "dgram",
+  "dns",
+  "domain",
+  "events",
+  "freelist",
+  "fs",
+  "http",
+  "https",
+  "_linklist",
+  "module",
+  "net",
+  "os",
+  "path",
+  "punycode",
+  "querystring",
+  "readline",
+  "repl",
+  "stream",
+  "string_decoder",
+  "sys",
+  "timers",
+  "tls",
+  "tty",
+  "url",
+  "util",
+  "vm",
+  "zlib",
+]);
 
 const COMPONENT_ERROR = '`Components` is not available in this context.\n' +
   'Functionality provided by Components may be available in an SDK\n' +
@@ -122,7 +156,7 @@ const override = iced(function override(target, source) {
   getOwnIdentifiers(extension).forEach(function(name) {
     properties[name] = extension[name];
   });
-  return define({}, properties);
+  return Object.defineProperties({}, properties);
 });
 Loader.override = override;
 
@@ -193,7 +227,7 @@ function readURI(uri) {
 }
 
 // Combines all arguments into a resolved, normalized path
-function join (...paths) {
+function join(...paths) {
   let joined = pathJoin(...paths);
   let resolved = normalize(joined);
 
@@ -310,12 +344,12 @@ const load = iced(function load(loader, module) {
     getOwnIdentifiers(globals).forEach(function(name) {
       descriptors[name] = getOwnPropertyDescriptor(globals, name)
     });
-    define(sandbox, descriptors);
+    Object.defineProperties(sandbox, descriptors);
   }
   else {
     sandbox = Sandbox({
       name: module.uri,
-      prototype: create(globals, descriptors),
+      prototype: Object.create(globals, descriptors),
       wantXrays: false,
       wantGlobalProperties: module.id == "sdk/indexed-db" ? ["indexedDB"] : [],
       invisibleToDebugger: loader.invisibleToDebugger,
@@ -359,7 +393,7 @@ const load = iced(function load(loader, module) {
     let prototype = typeof(error) === "object" ? error.constructor.prototype :
                     Error.prototype;
 
-    throw create(prototype, {
+    throw Object.create(prototype, {
       message: { value: message, writable: true, configurable: true },
       fileName: { value: fileName, writable: true, configurable: true },
       lineNumber: { value: lineNumber, writable: true, configurable: true },
@@ -368,7 +402,7 @@ const load = iced(function load(loader, module) {
     });
   }
 
-  if(loadModuleHook) {
+  if (loadModuleHook) {
     module = loadModuleHook(module, require);
   }
 
@@ -387,7 +421,7 @@ const load = iced(function load(loader, module) {
 Loader.load = load;
 
 // Utility function to normalize module `uri`s so they have `.js` extension.
-function normalizeExt (uri) {
+function normalizeExt(uri) {
   return isJSURI(uri) ? uri :
          isJSONURI(uri) ? uri :
          isJSMURI(uri) ? uri :
@@ -396,7 +430,7 @@ function normalizeExt (uri) {
 
 // Strips `rootURI` from `string` -- used to remove absolute resourceURI
 // from a relative path
-function stripBase (rootURI, string) {
+function stripBase(rootURI, string) {
   return string.replace(rootURI, './');
 }
 
@@ -404,15 +438,14 @@ function stripBase (rootURI, string) {
 // `requirer.uri` but in some cases it may be `baseURI`. In order to
 // avoid complexity we require `baseURI` with a trailing `/`.
 const resolve = iced(function resolve(id, base) {
-  if (!isRelative(id)) return id;
-  let basePaths = base.split('/');
-  // Pop the last element in the `base`, because it is from a
-  // relative file
-  // '../mod.js' from '/path/to/file.js' should resolve to '/path/mod.js'
-  basePaths.pop();
-  if (!basePaths.length)
+  if (!isRelative(id))
+    return id;
+
+  let baseDir = dirname(base);
+  if (!baseDir)
     return normalize(id);
-  let resolved = join(basePaths.join('/'), id);
+
+  let resolved = join(baseDir, id);
 
   // Joining and normalizing removes the './' from relative files.
   // We need to ensure the resolution still has the root
@@ -422,6 +455,78 @@ const resolve = iced(function resolve(id, base) {
   return resolved;
 });
 Loader.resolve = resolve;
+
+// Attempts to load `path` and then `path.js`
+// Returns `path` with valid file, or `undefined` otherwise
+function resolveAsFile(path) {
+  let found;
+
+  // As per node's loader spec,
+  // we first should try and load 'path' (with no extension)
+  // before trying 'path.js'. We will not support this feature
+  // due to performance, but may add it if necessary for adoption.
+  try {
+    // Append '.js' to path name unless it's another support filetype
+    path = normalizeExt(path);
+    readURI(path);
+    found = path;
+  } catch (e) {}
+
+  return found;
+}
+
+// Attempts to load `path/package.json`'s `main` entry,
+// followed by `path/index.js`, or `undefined` otherwise
+function resolveAsDirectory(path) {
+  try {
+    // If `path/package.json` exists, parse the `main` entry
+    // and attempt to load that
+    let main = getManifestMain(JSON.parse(readURI(path + '/package.json')));
+    if (main != null) {
+      let tmpPath = join(path, main);
+      let found = resolveAsFile(tmpPath);
+      if (found)
+        return found
+    }
+  } catch (e) {}
+
+  try {
+    let tmpPath = path + '/index.js';
+    readURI(tmpPath);
+    return tmpPath;
+  } catch (e) {}
+
+  return null;
+}
+
+function resolveRelative(rootURI, modulesDir, id) {
+  let fullId = join(rootURI, modulesDir, id);
+  let resolvedPath;
+
+  if ((resolvedPath = resolveAsFile(fullId)))
+    return stripBase(rootURI, resolvedPath);
+
+  if ((resolvedPath = resolveAsDirectory(fullId)))
+    return stripBase(rootURI, resolvedPath);
+
+  return null;
+}
+
+// From `resolve` module
+// https://github.com/substack/node-resolve/blob/master/lib/node-modules-paths.js
+function* getNodeModulePaths(start) {
+  // Configurable in node -- do we need this to be configurable?
+  let moduleDir = 'node_modules';
+
+  let parts = start.split('/');
+  while (parts.length) {
+    let leaf = parts.pop();
+    if (leaf !== moduleDir)
+      yield join(...parts, leaf, moduleDir);
+  }
+
+  yield moduleDir;
+}
 
 // Node-style module lookup
 // Takes an id and path and attempts to load a file using node's resolving
@@ -434,39 +539,31 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
 
   // If this is already an absolute URI then there is no resolution to do
   if (isAbsoluteURI(id))
-    return void 0;
+    return null;
 
   // we assume that extensions are correct, i.e., a directory doesnt't have '.js'
   // and a js file isn't named 'file.json.js'
-  let fullId = join(rootURI, id);
   let resolvedPath;
 
-  if ((resolvedPath = loadAsFile(fullId)))
-    return stripBase(rootURI, resolvedPath);
-
-  if ((resolvedPath = loadAsDirectory(fullId)))
-    return stripBase(rootURI, resolvedPath);
+  if ((resolvedPath = resolveRelative(rootURI, "", id)))
+    return resolvedPath;
 
   // If the requirer is an absolute URI then the node module resolution below
   // won't work correctly as we prefix everything with rootURI
   if (isAbsoluteURI(requirer))
-    return void 0;
+    return null;
 
   // If manifest has dependencies, attempt to look up node modules
   // in the `dependencies` list
-  let dirs = getNodeModulePaths(dirname(requirer)).map(dir => join(rootURI, dir, id));
-  for (let i = 0; i < dirs.length; i++) {
-    if ((resolvedPath = loadAsFile(dirs[i])))
-      return stripBase(rootURI, resolvedPath);
-
-    if ((resolvedPath = loadAsDirectory(dirs[i])))
-      return stripBase(rootURI, resolvedPath);
+  for (let modulesDir of getNodeModulePaths(dirname(requirer))) {
+    if ((resolvedPath = resolveRelative(rootURI, modulesDir, id)))
+      return resolvedPath;
   }
 
   // We would not find lookup for things like `sdk/tabs`, as that's part of
   // the alias mapping. If during `generateMap`, the runtime lookup resolves
   // with `resolveURI` -- if during runtime, then `resolve` will throw.
-  return void 0;
+  return null;
 });
 
 // String (`${rootURI}:${requirer}:${id}`) -> resolvedPath
@@ -488,100 +585,18 @@ const nodeResolveWithCache = iced(function cacheNodeResolutions(id, requirer, { 
 });
 Loader.nodeResolve = nodeResolveWithCache;
 
-// Attempts to load `path` and then `path.js`
-// Returns `path` with valid file, or `undefined` otherwise
-function loadAsFile (path) {
-  let found;
-
-  // As per node's loader spec,
-  // we first should try and load 'path' (with no extension)
-  // before trying 'path.js'. We will not support this feature
-  // due to performance, but may add it if necessary for adoption.
-  try {
-    // Append '.js' to path name unless it's another support filetype
-    path = normalizeExt(path);
-    readURI(path);
-    found = path;
-  } catch (e) {}
-
-  return found;
-}
-
-// Attempts to load `path/package.json`'s `main` entry,
-// followed by `path/index.js`, or `undefined` otherwise
-function loadAsDirectory (path) {
-  try {
-    // If `path/package.json` exists, parse the `main` entry
-    // and attempt to load that
-    let main = getManifestMain(JSON.parse(readURI(path + '/package.json')));
-    if (main != null) {
-      let tmpPath = join(path, main);
-      let found = loadAsFile(tmpPath);
-      if (found)
-        return found
-    }
-    try {
-      let tmpPath = path + '/index.js';
-      readURI(tmpPath);
-      return tmpPath;
-    } catch (e) {}
-  } catch (e) {
-    try {
-      let tmpPath = path + '/index.js';
-      readURI(tmpPath);
-      return tmpPath;
-    } catch (e) {}
-  }
-  return void 0;
-}
-
-// From `resolve` module
-// https://github.com/substack/node-resolve/blob/master/lib/node-modules-paths.js
-function getNodeModulePaths (start) {
-  // Configurable in node -- do we need this to be configurable?
-  let moduleDir = 'node_modules';
-
-  let parts = start.split('/');
-  let dirs = [];
-  for (let i = parts.length - 1; i >= 0; i--) {
-    if (parts[i] === moduleDir) continue;
-    let dir = join(parts.slice(0, i + 1).join('/'), moduleDir);
-    dirs.push(dir);
-  }
-  dirs.push(moduleDir);
-  return dirs;
-}
-
-
-function addTrailingSlash (path) {
-  return !path ? null : !path.endsWith('/') ? path + '/' : path;
-}
-
-// Utility function to determine of module id `name` is a built in
-// module in node (fs, path, etc.);
-function isNodeModule (name) {
-  return !!~NODE_MODULES.indexOf(name);
-}
-
-// Make mapping array that is sorted from longest path to shortest path
-// to allow overlays. Used by `resolveURI`, returns an array
-function sortPaths (paths) {
-  return keys(paths).
-    sort((a, b) => (b.length - a.length)).
-    map((path) => [ path, paths[path] ]);
+function addTrailingSlash(path) {
+  return path.replace(/\/*$/, "/");
 }
 
 const resolveURI = iced(function resolveURI(id, mapping) {
-  let count = mapping.length, index = 0;
-
   // Do not resolve if already a resource URI
-  if (isAbsoluteURI(id)) return normalizeExt(id);
+  if (isAbsoluteURI(id))
+    return normalizeExt(id);
 
-  while (index < count) {
-    let [ path, uri ] = mapping[index++];
-
+  for (let [path, uri] of mapping) {
     // Strip off any trailing slashes to make comparisons simpler
-    let stripped = path.endsWith('/') ? path.slice(0, -1) : path;
+    let stripped = path.replace(/\/+$/, "");
 
     // We only want to match path segments explicitly. Examples:
     // * "foo/bar" matches for "foo/bar"
@@ -592,13 +607,11 @@ const resolveURI = iced(function resolveURI(id, mapping) {
     //
     // Check for an empty path, an exact match, or a substring match
     // with the next character being a forward slash.
-    if(stripped === "" ||
-       (id.indexOf(stripped) === 0 &&
-        (id.length === path.length || id[stripped.length] === '/'))) {
+    if(stripped === "" || id === stripped || id.startsWith(stripped + "/")) {
       return normalizeExt(id.replace(path, uri));
     }
   }
-  return void 0; // otherwise we raise a warning, see bug 910304
+  return null;
 });
 Loader.resolveURI = resolveURI;
 
@@ -704,19 +717,16 @@ const Require = iced(function Require(loader, requirer) {
       let { overrides } = manifest.jetpack;
       for (let key in overrides) {
         // ignore any overrides using relative keys
-        if (/^[\.\/]/.test(key)) {
+        if (/^[.\/]/.test(key)) {
           continue;
         }
 
         // If the override is for x -> y,
         // then using require("x/lib/z") to get reqire("y/lib/z")
         // should also work
-        if (id == key || (id.substr(0, key.length + 1) == (key + "/"))) {
+        if (id == key || id.startsWith(key + "/")) {
           id = overrides[key] + id.substr(key.length);
-          id = id.replace(/^[\.\/]+/, "./");
-          if (id.substr(0, 2) == "./") {
-            id = "" + id.substr(2);
-          }
+          id = id.replace(/^[.\/]+/, "");
         }
       }
 
@@ -728,7 +738,7 @@ const Require = iced(function Require(loader, requirer) {
 
       // If no requireMap was provided, or resolution not found in
       // the requireMap, and not a npm dependency, attempt a runtime lookup
-      if (!requirement && !isNodeModule(id)) {
+      if (!requirement && !NODE_MODULES.has(id)) {
         // If `isNative` defined, this is using the new, native-style
         // loader, not cuddlefish, so lets resolve using node's algorithm
         // and get back a path that needs to be resolved via paths mapping
@@ -747,9 +757,12 @@ const Require = iced(function Require(loader, requirer) {
         requirement = isRelative(id) ? Loader.resolve(id, requirer.id) : id;
       }
     }
-    else {
+    else if (requirer) {
       // Resolve `id` to its requirer if it's relative.
-      requirement = requirer ? loaderResolve(id, requirer.id) : id;
+      requirement = loaderResolve(id, requirer.id);
+    }
+    else {
+      requirement = id;
     }
 
     // Resolves `uri` of module using loaders resolve function.
@@ -790,9 +803,9 @@ Loader.main = main;
 // Makes module object that is made available to CommonJS modules when they
 // are evaluated, along with `exports` and `require`.
 const Module = iced(function Module(id, uri) {
-  return create(null, {
+  return Object.create(null, {
     id: { enumerable: true, value: id },
-    exports: { enumerable: true, writable: true, value: create(null),
+    exports: { enumerable: true, writable: true, value: Object.create(null),
                configurable: true },
     uri: { value: uri }
   });
@@ -878,9 +891,12 @@ function Loader(options) {
   // which loader is unloaded. Please note that we intentionally don't
   // use `loader` as subject to prevent a loader access leakage through
   // observer notifications.
-  let destructor = freeze(create(null));
+  let destructor = freeze(Object.create(null));
 
-  let mapping = sortPaths(paths);
+  // Make mapping array that is sorted from longest path to shortest path.
+  let mapping = Object.keys(paths)
+                      .sort((a, b) => b.length - a.length)
+                      .map(path => [path, paths[path]]);
 
   // Define pseudo modules.
   modules = override({
@@ -895,7 +911,8 @@ function Loader(options) {
   }, modules);
 
   const builtinModuleExports = modules;
-  modules = keys(modules).reduce(function(result, id) {
+  modules = {};
+  for (let id of Object.keys(builtinModuleExports)) {
     // We resolve `uri` from `id` since modules are cached by `uri`.
     let uri = resolveURI(id, mapping);
     // In native loader, the mapping will not contain values for
@@ -913,9 +930,8 @@ function Loader(options) {
       }
     });
 
-    result[uri] = freeze(module);
-    return result;
-  }, {});
+    modules[uri] = freeze(module);
+  }
 
   let sharedGlobalSandbox;
   if (sharedGlobal) {
@@ -981,150 +997,23 @@ function Loader(options) {
     returnObj.rootURI = { enumerable: false, value: addTrailingSlash(rootURI) };
   }
 
-  return freeze(create(null, returnObj));
+  return freeze(Object.create(null, returnObj));
 };
 Loader.Loader = Loader;
 
-var isJSONURI = uri => uri.substr(-5) === '.json';
-var isJSMURI = uri => uri.substr(-4) === '.jsm';
-var isJSURI = uri => uri.substr(-3) === '.js';
-var isAbsoluteURI = uri => uri.indexOf("resource://") >= 0 ||
-                           uri.indexOf("chrome://") >= 0 ||
-                           uri.indexOf("file://") >= 0
-var isRelative = id => id[0] === '.'
-
-const generateMap = iced(function generateMap(options, callback) {
-  let { rootURI, resolve, paths } = override({
-    paths: {},
-    resolve: Loader.nodeResolve
-  }, options);
-
-  rootURI = addTrailingSlash(rootURI);
-
-  let manifest;
-  let manifestURI = join(rootURI, 'package.json');
-
-  if (rootURI)
-    manifest = JSON.parse(readURI(manifestURI));
-  else
-    throw new Error('No `rootURI` given to generate map');
-
-  let main = getManifestMain(manifest);
-
-  findAllModuleIncludes(main, {
-    resolve: resolve,
-    manifest: manifest,
-    rootURI: rootURI
-  }, {}, callback);
-
-});
-Loader.generateMap = generateMap;
+var isJSONURI = uri => uri.endsWith('.json');
+var isJSMURI = uri => uri.endsWith('.jsm');
+var isJSURI = uri => uri.endsWith('.js');
+var isAbsoluteURI = uri => uri.startsWith("resource://") ||
+                           uri.startsWith("chrome://") ||
+                           uri.startsWith("file://");
+var isRelative = id => id.startsWith(".");
 
 // Default `main` entry to './index.js' and ensure is relative,
 // since node allows 'lib/index.js' without relative `./`
-function getManifestMain (manifest) {
+function getManifestMain(manifest) {
   let main = manifest.main || './index.js';
   return isRelative(main) ? main : './' + main;
-}
-
-function findAllModuleIncludes (uri, options, results, callback) {
-  let { resolve, manifest, rootURI } = options;
-  results = results || {};
-
-  // Abort if JSON or JSM
-  if (isJSONURI(uri) || isJSMURI(uri)) {
-    callback(results);
-    return;
-  }
-
-  findModuleIncludes(join(rootURI, uri), modules => {
-    // If no modules are included in the file, just call callback immediately
-    if (!modules.length) {
-      callback(results);
-      return;
-    }
-
-    results[uri] = modules.reduce((agg, mod) => {
-      let resolved = resolve(mod, uri, { manifest: manifest, rootURI: rootURI });
-
-      // If resolution found, store the resolution; otherwise,
-      // skip storing it as runtime lookup will handle this
-      if (!resolved)
-        return agg;
-      agg[mod] = resolved;
-      return agg;
-    }, {});
-
-    let includes = keys(results[uri]);
-    let count = 0;
-    let subcallback = () => { if (++count >= includes.length) callback(results) };
-    includes.map(id => {
-      let moduleURI = results[uri][id];
-      if (!results[moduleURI])
-        findAllModuleIncludes(moduleURI, options, results, subcallback);
-      else
-        subcallback();
-    });
-  });
-}
-
-// From Substack's detector
-// https://github.com/substack/node-detective
-//
-// Given a resource URI or source, return an array of strings passed into
-// the require statements from the source
-function findModuleIncludes (uri, callback) {
-  let src = isAbsoluteURI(uri) ? readURI(uri) : uri;
-  let modules = [];
-
-  walk(src, function (node) {
-    if (isRequire(node))
-      modules.push(node.arguments[0].value);
-  });
-
-  callback(modules);
-}
-
-function walk (src, callback) {
-  // Import Reflect.jsm from here to prevent loading it until someone uses it
-  let { Reflect } = Cu.import("resource://gre/modules/reflect.jsm", {});
-  let nodes = Reflect.parse(src);
-  traverse(nodes, callback);
-}
-
-function traverse (node, cb) {
-  if (Array.isArray(node)) {
-    node.map(x => {
-      if (x != null) {
-        x.parent = node;
-        traverse(x, cb);
-      }
-    });
-  }
-  else if (node && typeof node === 'object') {
-    cb(node);
-    keys(node).map(key => {
-      if (key === 'parent' || !node[key]) return;
-      if (typeof node[key] === "object")
-        node[key].parent = node;
-      traverse(node[key], cb);
-    });
-  }
-}
-
-// From Substack's detector
-// https://github.com/substack/node-detective
-// Check an AST node to see if its a require statement.
-// A modification added to only evaluate to true if it actually
-// has a value being passed in as an argument
-function isRequire (node) {
-  var c = node.callee;
-  return c
-    && node.type === 'CallExpression'
-    && c.type === 'Identifier'
-    && c.name === 'require'
-    && node.arguments.length
-   && node.arguments[0].type === 'Literal';
 }
 
 module.exports = iced(Loader);
