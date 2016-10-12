@@ -205,15 +205,3 @@ MessageEvent::SetSource(mozilla::dom::MessagePort* aPort)
 
 } // namespace dom
 } // namespace mozilla
-
-using namespace mozilla;
-using namespace mozilla::dom;
-
-already_AddRefed<MessageEvent>
-NS_NewDOMMessageEvent(EventTarget* aOwner,
-                      nsPresContext* aPresContext,
-                      WidgetEvent* aEvent)
-{
-  RefPtr<MessageEvent> it = new MessageEvent(aOwner, aPresContext, aEvent);
-  return it.forget();
-}

@@ -8,11 +8,11 @@
  */
 
 add_task(function* () {
+  let { L10N } = require("devtools/client/netmonitor/l10n");
+
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  ok(monitor.panelWin.L10N,
-    "Should have a localization object available on the panel window.");
   ok(monitor.panelWin.Prefs,
     "Should have a preferences object available on the panel window.");
 
@@ -22,7 +22,6 @@ add_task(function* () {
   return teardown(monitor);
 
   function testL10N() {
-    let { L10N } = monitor.panelWin;
     is(typeof L10N.getStr("netmonitor.security.enabled"), "string",
       "The getStr() method didn't return a valid string.");
     is(typeof L10N.getFormatStr("networkMenu.totalMS", "foo"), "string",

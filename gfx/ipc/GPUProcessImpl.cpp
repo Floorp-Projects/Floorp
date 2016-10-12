@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUProcessImpl.h"
 #include "mozilla/ipc/IOThreadChild.h"
+#include "nsXPCOM.h"
 
 namespace mozilla {
 namespace gfx {
@@ -31,6 +32,7 @@ GPUProcessImpl::Init()
 void
 GPUProcessImpl::CleanUp()
 {
+  NS_ShutdownXPCOM(nullptr);
 }
 
 } // namespace gfx
