@@ -236,7 +236,7 @@ public:
                        GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
                        GLint border, GLenum unpackFormat, GLenum unpackType,
-                       const dom::ArrayBufferView* view);
+                       const dom::ArrayBufferView* srcView, GLuint srcElemOffset);
 
     void TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
                        GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
@@ -288,11 +288,11 @@ public:
     void CompressedTexImage(const char* funcName, TexImageTarget target, GLint level,
                             GLenum internalFormat, GLsizei width, GLsizei height,
                             GLsizei depth, GLint border,
-                            const dom::ArrayBufferView& view);
+                            const dom::ArrayBufferView& srcView, GLuint srcElemOffset);
     void CompressedTexSubImage(const char* funcName, TexImageTarget target, GLint level,
                                GLint xOffset, GLint yOffset, GLint zOffset, GLsizei width,
                                GLsizei height, GLsizei depth, GLenum sizedUnpackFormat,
-                               const dom::ArrayBufferView& view);
+                               const dom::ArrayBufferView& srcView, GLuint srcElemOffset);
     void CopyTexImage2D(TexImageTarget target, GLint level, GLenum internalFormat,
                         GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
     void CopyTexSubImage(const char* funcName, TexImageTarget target, GLint level,
