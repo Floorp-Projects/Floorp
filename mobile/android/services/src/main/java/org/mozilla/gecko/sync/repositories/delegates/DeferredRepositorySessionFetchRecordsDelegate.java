@@ -47,6 +47,16 @@ public class DeferredRepositorySessionFetchRecordsDelegate implements Repository
   }
 
   @Override
+  public void onBatchCompleted() {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onBatchCompleted();
+      }
+    });
+  }
+
+  @Override
   public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService newExecutor) {
     if (newExecutor == executor) {
       return this;
