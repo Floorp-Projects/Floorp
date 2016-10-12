@@ -30,6 +30,7 @@ private:
   ~VsyncBridgeParent();
 
   void Open(Endpoint<PVsyncBridgeParent>&& aEndpoint);
+  void ShutdownImpl();
 
 private:
   bool mOpen;
