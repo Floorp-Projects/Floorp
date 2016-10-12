@@ -32,7 +32,12 @@ body {
 
 /* Space for read only properties icon */
 .treeTable td.treeValueCell {
-  padding-left: 16px;
+  padding-inline-start: 16px;
+}
+
+.treeTable .treeLabel,
+.treeTable td.treeValueCell .objectBox {
+  direction: ltr; /* Don't change the direction of english labels */
 }
 
 /* Read only properties have a padlock icon */
@@ -40,6 +45,10 @@ body {
   background: url("chrome://devtools/skin/images/firebug/read-only.svg") no-repeat;
   background-position: 1px 5px;
   background-size: 10px 10px;
+}
+
+.treeTable tr:not(.writable) td.treeValueCell:dir(rtl) {
+  background-position-x: right 1px;
 }
 
 /* Non-enumerable properties are grayed out */
@@ -85,14 +94,6 @@ body {
 .treeTable .ordinalLabel {
   color: SlateBlue;
   font-weight: bold;
-}
-
-/******************************************************************************/
-/* Selection */
-
-.treeTable .treeRow:hover a,
-.treeTable .treeRow:hover span {
-  color: var(--theme-selection-color) !important;
 }
 
 /******************************************************************************/
