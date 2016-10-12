@@ -3,6 +3,8 @@
 
 package org.mozilla.android.sync.net.test;
 
+import android.os.SystemClock;
+
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
@@ -50,6 +52,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -65,6 +68,7 @@ public class TestGlobalSession {
   private final String TEST_PASSWORD            = "password";
   private final String TEST_SYNC_KEY            = "abcdeabcdeabcdeabcdeabcdea";
   private final long   TEST_BACKOFF_IN_SECONDS  = 2401;
+  private final long   SYNC_DEADLINE            = SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30);
 
   public static WaitHelper getTestWaiter() {
     return WaitHelper.getTestWaiter();
@@ -147,7 +151,7 @@ public class TestGlobalSession {
         @Override
         public void run() {
           try {
-            session.start();
+            session.start(SYNC_DEADLINE);
           } catch (Exception e) {
             final AssertionFailedError error = new AssertionFailedError();
             error.initCause(e);
@@ -195,7 +199,7 @@ public class TestGlobalSession {
         @Override
         public void run() {
           try {
-            session.start();
+            session.start(SYNC_DEADLINE);
           } catch (Exception e) {
             final AssertionFailedError error = new AssertionFailedError();
             error.initCause(e);
@@ -275,7 +279,7 @@ public class TestGlobalSession {
       @Override
       public void run() {
         try {
-          session.start();
+          session.start(SYNC_DEADLINE);
         } catch (Exception e) {
           final AssertionFailedError error = new AssertionFailedError();
           error.initCause(e);

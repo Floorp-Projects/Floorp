@@ -4,6 +4,7 @@
 package org.mozilla.gecko.sync.repositories.uploaders;
 
 import android.net.Uri;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 
 import static org.junit.Assert.*;
@@ -25,6 +26,7 @@ import java.net.URISyntaxException;
 import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(TestRunner.class)
 public class BatchingUploaderTest {
@@ -480,6 +482,7 @@ public class BatchingUploaderTest {
         try {
             return new Server11Repository(
                     "dummyCollection",
+                    SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                     "http://dummy.url/",
                     null,
                     infoCollections,
