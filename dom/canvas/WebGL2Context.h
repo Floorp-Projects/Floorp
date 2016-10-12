@@ -92,14 +92,44 @@ public:
     void TexStorage3D(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width,
                       GLsizei height, GLsizei depth);
 
+    ////
+
+private:
     void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
-                    GLenum unpackType, const dom::Nullable<dom::ArrayBufferView>& data);
+                    GLenum unpackType, const dom::ArrayBufferView* srcView,
+                    GLuint srcElemOffset);
+
+public:
+    void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
+                    GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
+                    GLenum unpackType,
+                    const dom::Nullable<dom::ArrayBufferView>& maybeSrc)
+    {
+        const dom::ArrayBufferView* srcView = nullptr;
+        if (!maybeSrc.IsNull()) {
+            srcView = &maybeSrc.Value();
+        }
+        TexImage3D(target, level, internalFormat, width, height, depth, border,
+                   unpackFormat, unpackType, srcView, 0);
+    }
+
+    void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
+                    GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
+                    GLenum unpackType, const dom::ArrayBufferView& srcView,
+                    GLuint srcElemOffset)
+    {
+        TexImage3D(target, level, internalFormat, width, height, depth, border,
+                   unpackFormat, unpackType, &srcView, srcElemOffset);
+    }
+
+    ////
 
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
                        GLenum unpackFormat, GLenum unpackType,
-                       const dom::ArrayBufferView& data, ErrorResult&);
+                       const dom::ArrayBufferView& srcView, GLuint srcElemOffset,
+                       ErrorResult&);
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLenum unpackFormat, GLenum unpackType,
                        const dom::ImageData& data, ErrorResult&);
@@ -107,16 +137,22 @@ public:
                        GLint zOffset, GLenum unpackFormat, GLenum unpackType,
                        const dom::Element& elem, ErrorResult& out_error);
 
+    ////
+
     void CopyTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                            GLint zOffset, GLint x, GLint y, GLsizei width,
                            GLsizei height);
+
+    ////
+
     void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
-                              GLsizei width, GLsizei height, GLsizei depth,
-                              GLint border, const dom::ArrayBufferView& data);
+                              GLsizei width, GLsizei height, GLsizei depth, GLint border,
+                              const dom::ArrayBufferView& srcView, GLuint srcElemOffset);
     void CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                                  GLint zOffset, GLsizei width, GLsizei height,
                                  GLsizei depth, GLenum sizedUnpackFormat,
-                                 const dom::ArrayBufferView& data);
+                                 const dom::ArrayBufferView& srcView,
+                                 GLuint srcElemOffset);
 
     ////////////////
     // Texture PBOs
