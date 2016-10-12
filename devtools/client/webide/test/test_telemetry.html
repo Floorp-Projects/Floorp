@@ -120,8 +120,11 @@
         return Task.spawn(function*() {
           let packagedAppLocation = getTestFilePath("../app");
           let winProject = getProjectWindow(win);
+          let onValidated = waitForUpdate(win, "project-validated");
+          let onDetails = waitForUpdate(win, "details");
           yield winProject.projectList.importPackagedApp(packagedAppLocation);
-          yield waitForUpdate(win, "project-validated");
+          yield onValidated;
+          yield onDetails;
         });
       }
 

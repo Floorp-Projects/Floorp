@@ -71,8 +71,8 @@ fuzzy-if(OSX==1010&&browserIsRemote,1,17) fuzzy-if(Android,4,8) HTTP(..) == stre
 fuzzy-if(OSX==1010,3,5) HTTP(..) == stretchmapping-137.html stretchmapping-137-ref.html
 
 # test for font-stretch using @font-face
-skip-if(Android) HTTP(..) == font-stretch-1.html font-stretch-1-ref.html # bug 927602
-skip-if(Android) HTTP(..) == font-shorthand-stretch-1.html font-stretch-1-ref.html # bug 927602
+HTTP(..) == font-stretch-1.html font-stretch-1-ref.html
+HTTP(..) == font-shorthand-stretch-1.html font-stretch-1-ref.html
 
 # bug 724231 - applying synthetic styles to a single @font-face font
 # should apply artificial obliquing, not switch to a true styled face

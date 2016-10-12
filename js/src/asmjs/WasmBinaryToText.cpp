@@ -1170,7 +1170,7 @@ RenderTableSection(WasmRenderContext& c, const AstModule& module)
     if (!RenderIndent(c))
         return false;
 
-    if (!c.buffer.append("(table"))
+    if (!c.buffer.append("(table anyfunc (elem "))
         return false;
 
     for (const AstRef& elem : segment.elems()) {
@@ -1189,7 +1189,7 @@ RenderTableSection(WasmRenderContext& c, const AstModule& module)
         }
     }
 
-    if (!c.buffer.append(")\n"))
+    if (!c.buffer.append("))\n"))
         return false;
 
     return true;

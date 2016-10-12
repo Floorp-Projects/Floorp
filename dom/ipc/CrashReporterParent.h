@@ -178,7 +178,7 @@ public:
   NativeThreadId mMainThread;
   time_t mStartTime;
   // stores the child process type
-  uint32_t mProcessType;
+  GeckoProcessType mProcessType;
   bool mInitialized;
 };
 

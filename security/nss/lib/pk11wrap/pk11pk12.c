@@ -233,15 +233,21 @@ PK11_ImportDERPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, SECItem *derPKI,
 
     rv = SEC_ASN1DecodeItem(pki->arena, pki, SECKEY_PrivateKeyInfoTemplate,
 		derPKI);
-    if (rv != SECSuccess || pki->privateKey.data == NULL) {
+    if (rv != SECSuccess) {
         /* If SEC_ASN1DecodeItem fails, we cannot assume anything about the
          * validity of the data in pki. The best we can do is free the arena
-         * and return. Do the same if SECKEYPrivateKeyInfo.privateKey is a
-         * zero-length octet string (i.e. NULL) to avoid trying to zero the
-         * corresponding SECItem.
-         */
+         * and return. */
         PORT_FreeArena(temparena, PR_TRUE);
         return rv;
+    }
+    if (pki->privateKey.data == NULL) {
+        /* If SEC_ASN1DecodeItems succeeds but SECKEYPrivateKeyInfo.privateKey
+         * is a zero-length octet string, free the arena and return a failure
+         * to avoid trying to zero the corresponding SECItem in
+         * SECKEY_DestroyPrivateKeyInfo(). */
+        PORT_FreeArena(temparena, PR_TRUE);
+        PORT_SetError(SEC_ERROR_BAD_KEY);
+        return SECFailure;
     }
 
     rv = PK11_ImportPrivateKeyInfoAndReturnKey(slot, pki, nickname,

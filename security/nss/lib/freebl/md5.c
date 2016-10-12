@@ -13,6 +13,7 @@
 #include "prlong.h"
 
 #include "blapi.h"
+#include "blapii.h"
 
 #define MD5_HASH_LEN 16
 #define MD5_BUFFER_SIZE 64
@@ -338,7 +339,7 @@ md5_prep_buffer_le(MD5Context *cx, const PRUint8 *beBuf)
 #define II(a, b, c, d, bufint, s, ti) \
     a = b + cls(a + I(b, c, d) + bufint + ti, s)
 
-static void
+static void NO_SANITIZE_ALIGNMENT
 md5_compress(MD5Context *cx, const PRUint32 *wBuf)
 {
     PRUint32 a, b, c, d;
@@ -445,7 +446,7 @@ MD5_Update(MD5Context *cx, const unsigned char *input, unsigned int inputLen)
     /* Iterate over 64-byte chunks of the message. */
     while (inputLen >= MD5_BUFFER_SIZE) {
 #ifdef IS_LITTLE_ENDIAN
-#ifdef NSS_X86_OR_X64
+#ifdef HAVE_UNALIGNED_ACCESS
         /* x86 can handle arithmetic on non-word-aligned buffers */
         wBuf = (PRUint32 *)input;
 #else

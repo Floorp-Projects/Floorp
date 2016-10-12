@@ -9,6 +9,8 @@
  * corrupt, nor a JSON backup nor bookmarks.html are available.
  */
 
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
+
 function run_test() {
   // Remove bookmarks.html from profile.
   remove_bookmarks_html();
@@ -46,5 +48,8 @@ add_task(function* () {
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: SMART_BOOKMARKS_ON_TOOLBAR
   });
-  do_check_eq(bm.title, "Getting Started");
+
+  // Bug 1283076: Nightly bookmark points to Get Involved page, not Getting Started one
+  let chanTitle = AppConstants.NIGHTLY_BUILD ? "Get Involved" : "Getting Started";
+  do_check_eq(bm.title, chanTitle);
 });

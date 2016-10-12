@@ -117,8 +117,6 @@ interface VRStageParameters {
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRPose {
-  readonly attribute DOMHighResTimeStamp timestamp;
-
   /**
    * position, linearVelocity, and linearAcceleration are 3-component vectors.
    * position is relative to a sitting space. Transforming this point with
@@ -133,6 +131,21 @@ interface VRPose {
   /* angularVelocity and angularAcceleration are the components of 3-dimensional vectors. */
   [Constant, Throws] readonly attribute Float32Array? angularVelocity;
   [Constant, Throws] readonly attribute Float32Array? angularAcceleration;
+};
+
+[Constructor,
+ Pref="dom.vr.enabled",
+ HeaderFile="mozilla/dom/VRDisplay.h"]
+interface VRFrameData {
+  readonly attribute DOMHighResTimeStamp timestamp;
+
+  [Throws, Pure] readonly attribute Float32Array leftProjectionMatrix;
+  [Throws, Pure] readonly attribute Float32Array leftViewMatrix;
+
+  [Throws, Pure] readonly attribute Float32Array rightProjectionMatrix;
+  [Throws, Pure] readonly attribute Float32Array rightViewMatrix;
+
+  [Pure] readonly attribute VRPose pose;
 };
 
 [Pref="dom.vr.enabled",
@@ -190,6 +203,12 @@ interface VRDisplay : EventTarget {
   [Constant] readonly attribute DOMString displayName;
 
   /**
+   * Populates the passed VRFrameData with the information required to render
+   * the current frame.
+   */
+  boolean getFrameData(VRFrameData frameData);
+
+  /**
    * Return a VRPose containing the future predicted pose of the VRDisplay
    * when the current frame will be presented. Subsequent calls to getPose()
    * MUST return a VRPose with the same values until the next call to
@@ -199,13 +218,6 @@ interface VRDisplay : EventTarget {
    * and acceleration of each of these properties.
    */
   [NewObject] VRPose getPose();
-
-  /**
-   * Return the current instantaneous pose of the VRDisplay, with no
-   * prediction applied.  Every call to getImmediatePose() may
-   * return a different value, even within a single frame.
-   */
-  [NewObject] VRPose getImmediatePose();
 
   /**
    * Reset the pose for this display, treating its current position and
