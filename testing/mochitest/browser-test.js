@@ -287,7 +287,11 @@ Tester.prototype = {
 
     // Replace the last tab with a fresh one
     if (window.gBrowser) {
-      gBrowser.addTab("about:blank", { skipAnimation: true });
+      // Let's reuse the content process of the last selected tab (relatedBrowser).
+      let newTab = gBrowser.addTab("about:blank", {
+        skipAnimation: true,
+        relatedBrowser: gBrowser.selectedTab.linkedBrowser
+      });
       gBrowser.removeTab(gBrowser.selectedTab, { skipPermitUnload: true });
       gBrowser.stop();
     }
