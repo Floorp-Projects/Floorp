@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function () {
 const {VariablesView} = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
 const {VariablesViewController} = require("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 const {ToolSidebar} = require("devtools/client/framework/sidebar");
-const { testing: isTesting } = require("devtools/shared/flags");
+const {testing: isTesting} = require("devtools/shared/flags");
 const {ViewHelpers, Heritage} = require("devtools/client/shared/widgets/view-helpers");
 const {PluralForm} = require("devtools/shared/plural-form");
 const {Filters} = require("./filter-predicates");
