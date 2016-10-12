@@ -46,6 +46,7 @@
           // for time=0, immediately update the value to show or hide the hours.
           // It's less intrusive to do it now than when the user clicks play and
           // is looking right next to the thumb.
+          if (!this.timeLabel) return;
           var displayedTime = this.timeLabel.getAttribute("value");
           if (val && displayedTime == "0:00")
               this.timeLabel.setAttribute("value", "0:00:00");
@@ -131,7 +132,11 @@
                     this.Utils.positionLabel.setAttribute("value", this.thumb.timeLabel.value);
                     // Update the value bar to match the thumb position.
                     let percent = newValue / this.max;
-                    this.valueBar.value = Math.round(percent * 10000); // has max=10000
+                    if (!isNaN(percent) && percent != Infinity) {
+                      this.valueBar.value = Math.round(percent * 10000); // has max=10000
+                    } else {
+                      this.valueBar.removeAttribute("value");
+                    }
                 }
 
                 // The value of userChanged is true when changing the position with the mouse,
@@ -203,61 +208,67 @@
         <stylesheet src="chrome://global/skin/media/videocontrols.css"/>
     </resources>
 
-    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                 class="mediaControlsFrame">
-        <stack flex="1">
-            <vbox flex="1" class="statusOverlay" hidden="true">
-                <box class="statusIcon"/>
-                <label class="errorLabel" anonid="errorAborted">&error.aborted;</label>
-                <label class="errorLabel" anonid="errorNetwork">&error.network;</label>
-                <label class="errorLabel" anonid="errorDecode">&error.decode;</label>
-                <label class="errorLabel" anonid="errorSrcNotSupported">&error.srcNotSupported;</label>
-                <label class="errorLabel" anonid="errorNoSource">&error.noSource2;</label>
-                <label class="errorLabel" anonid="errorGeneric">&error.generic;</label>
-            </vbox>
+    <xbl:content xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.w3.org/1999/xhtml" class="mediaControlsFrame">
+        <div anonid="controlsContainer" class="controlsContainer" role="none">
+            <div anonid="statusOverlay" class="statusOverlay stackItem" hidden="true">
+                <div anonid="statusIcon" class="statusIcon"></div>
+                <span class="errorLabel" anonid="errorAborted">&error.aborted;</span>
+                <span class="errorLabel" anonid="errorNetwork">&error.network;</span>
+                <span class="errorLabel" anonid="errorDecode">&error.decode;</span>
+                <span class="errorLabel" anonid="errorSrcNotSupported">&error.srcNotSupported;</span>
+                <span class="errorLabel" anonid="errorNoSource">&error.noSource2;</span>
+                <span class="errorLabel" anonid="errorGeneric">&error.generic;</span>
+            </div>
 
-            <vbox class="controlsOverlay">
-                <stack flex="1">
-                    <spacer class="controlsSpacer" flex="1"/>
-                    <box class="clickToPlay" hidden="true" flex="1"/>
-                    <vbox class="textTrackList" hidden="true" offlabel="&closedCaption.off;"></vbox>
-                </stack>
-                <hbox class="controlBar" hidden="true">
-                    <button class="playButton"
+            <div anonid="controlsOverlay" class="controlsOverlay stackItem">
+                <div class="controlsSpacerStack" aria-hideen="true">
+                  <div anonid="controlsSpacer" class="controlsSpacer stackItem" role="none"></div>
+                  <div anonid="clickToPlay" class="clickToPlay" hidden="true"></div>
+                </div>
+                <div anonid="controlBar" class="controlBar" hidden="true">
+                    <button anonid="playButton"
+                            class="playButton"
                             playlabel="&playButton.playLabel;"
                             pauselabel="&playButton.pauseLabel;"/>
-                    <stack class="scrubberStack" flex="1">
-                        <box class="backgroundBar"/>
-                        <progressmeter class="bufferBar"/>
-                        <progressmeter class="progressBar" max="10000"/>
-                        <scale class="scrubber" movetoclick="true"/>
-                    </stack>
-                    <vbox class="durationBox">
-                        <label class="positionLabel" role="presentation"/>
-                        <label class="durationLabel" role="presentation"/>
-                    </vbox>
-                    <button class="muteButton"
+                    <div anonid="scrubberStack" class="scrubberStack progressContainer" role="none">
+                      <div class="progressBackgroundBar stackItem" role="none">
+                        <div class="progressStack" role="none">
+                          <progress anonid="bufferBar" class="bufferBar" value="0" max="100"></progress>
+                          <progress anonid="progressBar" class="progressBar" value="0" max="100"></progress>
+                        </div>
+                      </div>
+                      <input type="range" anonid="scrubber" class="scrubber"/>
+                    </div>
+                    <span anonid="positionLabel" class="positionLabel" role="presentation"></span>
+                    <span anonid="durationLabel" class="durationLabel" role="presentation"></span>
+                    <div anonid="positionDurationBox" class="positionDurationBox" role="none">
+                      &positionAndDuration.nameFormat;
+                    </div>
+                    <div anonid="controlBarSpacer" class="controlBarSpacer" hidden="true" role="none"></div>
+                    <button anonid="muteButton"
+                            class="muteButton"
                             mutelabel="&muteButton.muteLabel;"
                             unmutelabel="&muteButton.unmuteLabel;"/>
-                    <stack class="volumeStack">
-                      <box class="volumeBackground"/>
-                      <box class="volumeForeground" anonid="volumeForeground"/>
-                      <scale class="volumeControl" movetoclick="true"/>
-                    </stack>
-                    <button class="closedCaptionButton"/>
-                    <button class="fullscreenButton"
+                    <div anonid="volumeStack" class="volumeStack progressContainer" role="none">
+                      <input type="range" anonid="volumeControl" class="volumeControl" min="0" max="100" step="1"/>
+                    </div>
+                    <button anonid="closedCaptionButton" class="closedCaptionButton"/>
+                    <button anonid="fullscreenButton"
+                            class="fullscreenButton"
                             enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
                             exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
-                </hbox>
-            </vbox>
-        </stack>
+                </div>
+                <div anonid="textTrackList" class="textTrackList" hidden="true" offlabel="&closedCaption.off;"></div>
+            </div>
+        </div>
     </xbl:content>
 
     <implementation>
 
         <constructor>
             <![CDATA[
-            this.isTouchControl = false;
+            this.isTouchControls = false;
             this.randomID = 0;
 
             this.Utils = {
@@ -270,7 +281,6 @@
                 volumeControl  : null,
                 durationLabel  : null,
                 positionLabel  : null,
-                scrubberThumb  : null,
                 scrubber       : null,
                 progressBar    : null,
                 bufferBar      : null,
@@ -293,6 +303,7 @@
                 firstFrameShown : false,
                 timeUpdateCount : 0,
                 maxCurrentTimeSeen : 0,
+                isPausedByDragging: false,
                 _isAudioOnly : false,
                 get isAudioOnly() { return this._isAudioOnly; },
                 set isAudioOnly(val) {
@@ -302,7 +313,7 @@
                     if (!this.isTopLevelSyntheticDocument)
                         return;
                     if (this._isAudioOnly) {
-                        this.video.style.height = this._controlBarHeight + "px";
+                        this.video.style.height = this.controlBar.minHeight + "px";
                         this.video.style.width = "66%";
                     } else {
                         this.video.style.removeProperty("height");
@@ -366,6 +377,7 @@
                     this.log("Initial playback position is at " + currentTime + " of " + duration);
                     // It would be nice to retain maxCurrentTimeSeen, but it would be difficult
                     // to determine if the media source changed while we were detached.
+                    this.initPositionDurationBox();
                     this.maxCurrentTimeSeen = currentTime;
                     this.showPosition(currentTime, duration);
 
@@ -396,11 +408,11 @@
                     // We can't determine the exact buffering status, but do know if it's
                     // fully loaded. (If it's still loading, it will fire a progress event
                     // and we'll figure out the exact state then.)
-                    this.bufferBar.setAttribute("max", 100);
+                    this.bufferBar.max = 100;
                     if (this.video.readyState >= this.video.HAVE_METADATA)
                         this.showBuffered();
                     else
-                        this.bufferBar.setAttribute("value", 0);
+                        this.bufferBar.value = 0;
 
                     // Set the current status icon.
                     if (this.hasError()) {
@@ -412,15 +424,66 @@
 
                     // An event handler for |onresize| should be added when bug 227495 is fixed.
                     this.controlBar.hidden = false;
-                    this._playButtonWidth = this.playButton.clientWidth;
-                    this._durationLabelWidth = this.durationLabel.clientWidth;
-                    this._muteButtonWidth = this.muteButton.clientWidth;
-                    this._volumeControlWidth = this.volumeControl.clientWidth;
-                    this._closedCaptionButtonWidth = this.closedCaptionButton.clientWidth;
-                    this._fullscreenButtonWidth = this.fullscreenButton.clientWidth;
-                    this._controlBarHeight = this.controlBar.clientHeight;
-                    this.controlBar.hidden = true;
+
+                    let layoutControls = [
+                      ...this.controlBar.children,
+                      this.durationSpan,
+                      this.controlBar,
+                      this.clickToPlay
+                    ];
+
+                    for (let control of layoutControls) {
+                      if (!control) {
+                        break;
+                      }
+
+                      Object.defineProperties(control, {
+                        minWidth: {
+                          value: control.clientWidth,
+                          writable: true
+                        },
+                        minHeight: {
+                          value: control.clientHeight,
+                          writable: true
+                        },
+                        isAdjustableControl: {
+                          value: true
+                        },
+                        isWanted: {
+                          value: true,
+                          writable: true
+                        },
+                        hideByAdjustment: {
+                          set: (v) => {
+                            if (v) {
+                              control.setAttribute("hidden", "true");
+                            } else {
+                              control.removeAttribute("hidden");
+                            }
+
+                            control._isHiddenByAdjustment = v;
+                          },
+                          get: () => control._isHiddenByAdjustment
+                        },
+                        _isHiddenByAdjustment: {
+                          value: false,
+                          writable: true
+                        }
+                      });
+                    }
+                    // Cannot get minimal width of flexible scrubber and clickToPlay.
+                    // Rewrite to empirical value for now.
+                    this.controlBar.minHeight = 40;
+                    this.scrubberStack.minWidth = 64;
+                    this.volumeControl.minWidth = 48;
+                    this.clickToPlay.minWidth = 48;
+
+                    if (this.positionDurationBox) {
+                      this.positionDurationBox.minWidth -= this.durationSpan.minWidth;
+                    }
+
                     this.adjustControlSize();
+                    this.controlBar.hidden = true;
 
                     // Can only update the volume controls once we've computed
                     // _volumeControlWidth, since the volume slider implementation
@@ -443,8 +506,10 @@
                       (this.video.paused &&
                        !(this.video.autoplay && this.video.mozAutoplayEnabled));
                     // Hide the overlay if the video time is non-zero or if an error occurred to workaround bug 718107.
-                    this.startFade(this.clickToPlay, shouldShow && !this.isAudioOnly &&
-                                   this.video.currentTime == 0 && !this.hasError(), true);
+                    let shouldClickToPlayShow = shouldShow && !this.isAudioOnly &&
+                                                this.video.currentTime == 0 && !this.hasError();
+                    this.startFade(this.clickToPlay, shouldClickToPlayShow, true);
+                    this.startFade(this.controlsSpacer, shouldClickToPlayShow, true);
                     this.startFade(this.controlBar, shouldShow, true);
                 },
 
@@ -464,12 +529,16 @@
                     return enabled;
                 },
 
+                updateVolume() {
+                  const volume = this.volumeControl.value;
+                  this.setVolume(volume / 100);
+                },
+
                 updateVolumeControls() {
                     var volume = this.video.muted ? 0 : this.video.volume;
                     var volumePercentage = Math.round(volume * 100);
                     this.updateMuteButtonState();
                     this.volumeControl.value = volumePercentage;
-                    this.volumeForeground.style.paddingRight = (1 - volume) * this._volumeControlWidth + "px";
                 },
 
                 handleEvent : function (aEvent) {
@@ -486,7 +555,7 @@
                         case "play":
                             this.setPlayButtonState(false);
                             this.setupStatusFader();
-                            if (!this._triggeredByControls && this.dynamicControls && this.videocontrols.isTouchControl)
+                            if (!this._triggeredByControls && this.dynamicControls && this.videocontrols.isTouchControls)
                                 this.startFadeOut(this.controlBar);
                             if (!this._triggeredByControls)
                                 this.clickToPlay.hidden = true;
@@ -585,10 +654,11 @@
 
                             // If the user is dragging the scrubber ignore the delayed seek
                             // responses (don't yank the thumb away from the user)
-                            if (this.scrubber.isDragging)
+                            if (this.scrubber.isDragging || this.scrubber.startToDrag)
                                 return;
 
                             this.showPosition(currentTime, duration);
+                            this.showBuffered();
                             break;
                         case "emptied":
                             this.bufferBar.value = 0;
@@ -744,6 +814,37 @@
                     return timeString;
                 },
 
+                initPositionDurationBox : function () {
+                  if (this.videocontrols.isTouchControls) {
+                    return;
+                  }
+
+                  const positionTextNode = Array.prototype.find.call(
+                    this.positionDurationBox.childNodes, (n) => !!~n.textContent.search("#1"));
+                  const durationSpan = this.durationSpan;
+                  const durationFormat = durationSpan.textContent;
+                  const positionFormat = positionTextNode.textContent;
+
+                  durationSpan.classList.add("duration");
+                  durationSpan.setAttribute("role", "none");
+
+                  Object.defineProperties(this.positionDurationBox, {
+                    durationSpan: {
+                      value: durationSpan
+                    },
+                    position: {
+                      set: (v) => {
+                        positionTextNode.textContent = positionFormat.replace("#1", v);
+                      }
+                    },
+                    duration: {
+                      set: (v) => {
+                        durationSpan.textContent = v ? durationFormat.replace("#2", v) : "";
+                      }
+                    }
+                  });
+                },
+
                 showDuration : function (duration) {
                     let isInfinite = (duration == Infinity);
                     this.log("Duration is " + duration + "ms.\n");
@@ -753,20 +854,68 @@
 
                     // Format the duration as "h:mm:ss" or "m:ss"
                     let timeString = isInfinite ? "" : this.formatTime(duration);
-                    this.durationLabel.setAttribute("value", timeString);
+                    if (this.videocontrols.isTouchControls) {
+                      this.durationLabel.setAttribute("value", timeString);
+                    } else {
+                      this.positionDurationBox.duration = timeString;
+                    }
 
                     // "durationValue" property is used by scale binding to
                     // generate accessible name.
                     this.scrubber.durationValue = timeString;
 
                     // If the duration is over an hour, thumb should show h:mm:ss instead of mm:ss
-                    this.scrubberThumb.showHours = (duration >= 3600000);
 
                     this.scrubber.max = duration;
                     // XXX Can't set increment here, due to bug 473103. Also, doing so causes
                     // snapping when dragging with the mouse, so we can't just set a value for
                     // the arrow-keys.
                     this.scrubber.pageIncrement = Math.round(duration / 10);
+                },
+
+                pauseVideoDuringDragging: function() {
+                  if (!this.video.paused &&
+                      !this.isPausedByDragging &&
+                      this.scrubber.isDragging) {
+                    this.isPausedByDragging = true;
+                    this.video.pause();
+                  }
+                },
+
+                onScrubberInput: function(e) {
+                  const duration = Math.round(this.video.duration * 1000); // in ms
+                  let time = this.scrubber.value;
+
+                  if (!this.scrubber.startToDrag || this.scrubber.isDragging) {
+                    this.seekToPosition(time);
+                    this.showPosition(time, duration);
+                  }
+
+                  this.scrubber.startToDrag = true;
+                },
+
+                onScrubberChange: function(e) {
+                  this.scrubber.startToDrag = false;
+                  this.scrubber.isDragging = false;
+
+                  if (this.isPausedByDragging) {
+                    this.video.play();
+                    this.isPausedByDragging = false;
+                  }
+                },
+
+                updateScrubberProgress() {
+                  if (this.videocontrols.isTouchControls) {
+                    return;
+                  }
+
+                  const positionPercent = this.scrubber.value / this.scrubber.max * 100;
+
+                  if (!isNaN(positionPercent) && positionPercent != Infinity) {
+                    this.progressBar.value = positionPercent;
+                  } else {
+                    this.progressBar.value = 0;
+                  }
                 },
 
                 seekToPosition : function(newPosition) {
@@ -798,8 +947,15 @@
 
                     this.log("time update @ " + currentTime + "ms of " + duration + "ms");
 
-                    this.positionLabel.setAttribute("value", this.formatTime(currentTime));
+                    let positionTime = this.formatTime(currentTime);
+
                     this.scrubber.value = currentTime;
+                    if (this.videocontrols.isTouchControls) {
+                      this.positionLabel.setAttribute("value", positionTime);
+                    } else {
+                      this.positionDurationBox.position = positionTime;
+                      this.updateScrubberProgress();
+                    }
                 },
 
                 showBuffered : function() {
@@ -831,8 +987,9 @@
                     }
 
                     var duration = Math.round(this.video.duration * 1000);
-                    if (isNaN(duration))
+                    if (isNaN(duration) || duration == Infinity) {
                         duration = this.maxCurrentTimeSeen;
+                    }
 
                     // Find the range that the current play position is in and use that
                     // range for bufferBar.  At some point we may support multiple ranges
@@ -870,8 +1027,9 @@
                 HIDE_CONTROLS_TIMEOUT_MS : 2000,
                 onMouseMove : function (event) {
                     // Pause playing video when the mouse is dragging over the control bar.
-                    if (this.scrubber.isDragging) {
-                      this.scrubber.pauseVideoDuringDragging();
+                    if (this.scrubber.startToDrag) {
+                      this.scrubber.isDragging = true;
+                      this.pauseVideoDuringDragging();
                     }
 
                     // If the controls are static, don't change anything.
@@ -959,7 +1117,11 @@
                         // so our dependent state (eg, timestamp in the thumb) will be stale.
                         // As a workaround, update it manually when it first becomes unhidden.
                         if (element.hidden)
+                          if (this.videocontrols.isTouchControls) {
                             this.scrubber.valueChanged("curpos", this.video.currentTime * 1000, false);
+                          } else {
+                            this.scrubber.value = this.video.currentTime * 1000;
+                          }
                     }
 
                     if (immediate)
@@ -967,7 +1129,7 @@
                     else
                         element.removeAttribute("immediate");
 
-                    if (fadeIn) {
+                    if (fadeIn && !(element.isAdjustableControl && element.hideByAdjustment)) {
                         element.hidden = false;
                         // force style resolution, so that transition begins
                         // when we remove the attribute.
@@ -995,7 +1157,9 @@
                     if (!element.hasAttribute("fadeout"))
                         return;
 
-                    this.scrubber.dragStateChanged(false);
+                    if (this.videocontrols.isTouchControls) {
+                      this.scrubber.dragStateChanged(false);
+                    }
                     element.hidden = true;
                 },
 
@@ -1102,14 +1266,17 @@
                     // shows the animation unless the video is too small
                     // to show 2/3 of the animation.
                     let animationScale = 2;
-                    if (this._overlayPlayButtonHeight * animationScale > (videoHeight - this._controlBarHeight)||
-                        this._overlayPlayButtonWidth * animationScale > videoWidth) {
-                        this.clickToPlay.setAttribute("immediate", "true");
-                        this.clickToPlay.hidden = true;
+                    let animationMinSize = this.clickToPlay.minWidth * animationScale;
+
+                    if (animationMinSize > videoWidth ||
+                        animationMinSize > (videoHeight - this.controlBar.minHeight)) {
+                      this.clickToPlay.setAttribute("immediate", "true");
+                      this.clickToPlay.hidden = true;
                     } else {
                         this.clickToPlay.removeAttribute("immediate");
                     }
                     this.clickToPlay.setAttribute("fadeout", "true");
+                    this.controlsSpacer.setAttribute("fadeout", "true");
                 },
 
                 setPlayButtonState : function(aPaused) {
@@ -1253,6 +1420,10 @@
                          textTrack.kind == "captions";
                 },
 
+                get isClosedCaptionAvailable() {
+                  return this.overlayableTextTracks.length && !this.videocontrols.isTouchControls;
+                },
+
                 get overlayableTextTracks() {
                   return Array.prototype.filter.call(this.video.textTracks, this.isSupportedTextTrack);
                 },
@@ -1268,7 +1439,7 @@
                 },
 
                 setClosedCaptionButtonState : function () {
-                  if (!this.overlayableTextTracks.length || this.videocontrols.isTouchControl) {
+                  if (!this.isClosedCaptionAvailable) {
                     this.closedCaptionButton.setAttribute("hidden", "true");
                     return;
                   }
@@ -1280,6 +1451,7 @@
                   } else {
                     this.closedCaptionButton.removeAttribute("enabled");
                   }
+                  this.adjustControlSize();
 
                   let ttItems = this.textTrackList.childNodes;
 
@@ -1353,32 +1525,10 @@
                 },
 
                 toggleClosedCaption : function () {
-                  if (this.overlayableTextTracks.length === 1) {
-                    const lastTTIdx = this.overlayableTextTracks[0].index;
-                    this.changeTextTrack(this.isClosedCaptionOn() ? 0 : lastTTIdx);
-                    return;
-                  }
-
                   if (this.textTrackList.hasAttribute("hidden")) {
                     this.textTrackList.removeAttribute("hidden");
                   } else {
                     this.textTrackList.setAttribute("hidden", "true");
-                  }
-
-                  let maxButtonWidth = 0;
-
-                  for (let tti of this.textTrackList.childNodes) {
-                    if (tti.clientWidth > maxButtonWidth) {
-                      maxButtonWidth = tti.clientWidth;
-                    }
-                  }
-
-                  if (maxButtonWidth > this.video.clientWidth) {
-                    maxButtonWidth = this.video.clientWidth;
-                  }
-
-                  for (let tti of this.textTrackList.childNodes) {
-                    tti.style.width = maxButtonWidth + "px";
                   }
                 },
 
@@ -1414,6 +1564,11 @@
                 },
 
                 initTextTracks : function () {
+                  if (!this.isClosedCaptionAvailable) {
+                    this.closedCaptionButton.setAttribute("hidden", "true");
+                    return;
+                  }
+
                   const offLabel = this.textTrackList.getAttribute("offlabel");
 
                   this.addNewTextTrack({
@@ -1451,108 +1606,146 @@
                   return doc.mozSyntheticDocument && win === win.top;
                 },
 
-                _playButtonWidth : 0,
-                _durationLabelWidth : 0,
-                _muteButtonWidth : 0,
-                _volumeControlWidth : 0,
-                _closedCaptionButtonWidth : 0,
-                _fullscreenButtonWidth : 0,
-                _controlBarHeight : 0,
-                _overlayPlayButtonHeight : 64,
-                _overlayPlayButtonWidth : 64,
-                _controlBarPaddingEnd: 8,
                 adjustControlSize : function adjustControlSize() {
-                    let doc = this.video.ownerDocument;
+                  if (!this.controlBar.minWidth || this.videocontrols.isTouchControls) {
+                    return;
+                  }
 
-                    // The scrubber has |flex=1|, therefore |minScrubberWidth|
-                    // was generated by empirical testing.
-                    let minScrubberWidth = 25;
-                    let minWidthAllControls = this._playButtonWidth +
-                                              minScrubberWidth +
-                                              this._durationLabelWidth +
-                                              this._muteButtonWidth +
-                                              this._volumeControlWidth +
-                                              this._closedCaptionButtonWidth +
-                                              this._fullscreenButtonWidth;
+                  let videoWidth = this.video.clientWidth;
+                  let videoHeight = this.video.clientHeight;
+                  const minControlBarPaddingWidth = 18;
 
-                    let isFullscreenUnavailable = this.controlBar.hasAttribute("fullscreen-unavailable");
-                    if (isFullscreenUnavailable) {
-                        // When the fullscreen button is hidden we add margin-end to the volume stack.
-                        minWidthAllControls -= this._fullscreenButtonWidth - this._controlBarPaddingEnd;
+                  if (this.video.readyState >= this.video.HAVE_METADATA) {
+                    if (!this.isAudioOnly && this.video.videoWidth && this.video.videoHeight) {
+                      let rect = this.video.getBoundingClientRect();
+                      let widthRatio = rect.width / this.video.videoWidth;
+                      let heightRatio = rect.height / this.video.videoHeight;
+                      let resizedWidth = this.video.videoWidth * Math.min(widthRatio, heightRatio);
+
+                      this.controlsContainer.style.width = `${resizedWidth}px`;
+                      this.controlsContainer.style.left = `${(videoWidth - resizedWidth) / 2}px`;
+
+                      videoWidth = resizedWidth;
+                    } else {
+                      this.controlsContainer.style.width = "";
+                      this.controlsContainer.style.left = "";
+                    }
+                  }
+                  // Hide and show control in order.
+                  const prioritizedControls = [
+                    this.playButton,
+                    this.muteButton,
+                    this.fullscreenButton,
+                    this.closedCaptionButton,
+                    this.positionDurationBox,
+                    this.scrubberStack,
+                    this.durationSpan,
+                    this.volumeStack
+                  ];
+
+                  if (this.controlBar.hasAttribute("fullscreen-unavailable")) {
+                    this.fullscreenButton.isWanted = false;
+                  }
+                  if (!this.isClosedCaptionAvailable) {
+                    this.closedCaptionButton.isWanted = false;
+                  }
+                  if (this.muteButton.hasAttribute("noAudio")) {
+                    this.volumeStack.isWanted = false;
+                  }
+
+                  let widthUsed = minControlBarPaddingWidth;
+                  let preventAppendControl = false;
+
+                  for (let control of prioritizedControls) {
+                    if (!control.isWanted) {
+                      control.hideByAdjustment = true;
+                      continue;
                     }
 
-                    let minHeightForControlBar = this._controlBarHeight;
-                    let minWidthOnlyPlayPause = this._playButtonWidth + this._muteButtonWidth;
+                    control.hideByAdjustment = preventAppendControl ||
+                                               widthUsed + control.minWidth > videoWidth;
 
-                    let isAudioOnly = this.isAudioOnly;
-                    let videoHeight = isAudioOnly ? minHeightForControlBar : this.video.clientHeight;
-                    let videoWidth = isAudioOnly ? minWidthAllControls : this.video.clientWidth;
-
-                    // Adapt the size of the controls to the size of the video
-                    if (this.video.readyState >= this.video.HAVE_METADATA) {
-                      if (!this.isAudioOnly && this.video.videoWidth && this.video.videoHeight) {
-                        var rect = this.video.getBoundingClientRect();
-                        var widthRatio = rect.width / this.video.videoWidth;
-                        var heightRatio = rect.height / this.video.videoHeight;
-                        var width = this.video.videoWidth * Math.min(widthRatio, heightRatio);
-
-                        this.controlsOverlay.setAttribute("scaled", true);
-                        this.controlsOverlay.style.width = width + "px";
-                        this.controlsSpacer.style.width = width + "px";
-                        this.controlBar.style.width = width + "px";
-                      } else {
-                        this.controlsOverlay.removeAttribute("scaled");
-                        this.controlsOverlay.style.width = "";
-                        this.controlsSpacer.style.width = "";
-                        this.controlBar.style.width = "";
-                      }
+                    if (control.hideByAdjustment) {
+                      preventAppendControl = true;
+                    } else {
+                      widthUsed += control.minWidth;
                     }
+                  }
 
-                    if ((this._overlayPlayButtonHeight + this._controlBarHeight) > videoHeight ||
-                        this._overlayPlayButtonWidth > videoWidth) {
-                        this.clickToPlay.hidden = true;
-                    } else if (this.clickToPlay.hidden &&
-                               !this.video.played.length &&
-                               this.video.paused) {
-                        // Check this.video.paused to handle when a video is
-                        // playing but hasn't processed any frames yet
-                        this.clickToPlay.hidden = false;
+                  if (this.durationSpan.hideByAdjustment) {
+                    this.positionDurationBox.setAttribute("positionOnly", "true");
+                  } else {
+                    this.positionDurationBox.removeAttribute("positionOnly");
+                  }
+
+                  if (videoHeight < this.controlBar.minHeight ||
+                      widthUsed === minControlBarPaddingWidth) {
+                    this.controlBar.setAttribute("size", "hidden");
+                    this.controlBar.hideByAdjustment = true;
+                  } else {
+                    this.controlBar.removeAttribute("size");
+                    this.controlBar.hideByAdjustment = false;
+                  }
+
+                  // Use flexible spacer to separate controls when scrubber is hidden.
+                  // As long as muteButton hidden, which means only play button presents,
+                  // hide spacer and make playButton centered.
+                  this.controlBarSpacer.hidden = !this.scrubberStack.hidden || this.muteButton.hidden;
+
+                  // Adjust clickToPlayButton size.
+                  const minVideoSideLength = Math.min(videoWidth, videoHeight);
+                  const clickToPlayViewRatio = 0.15;
+                  const clickToPlayScaledSize = Math.max(
+                    this.clickToPlay.minWidth, minVideoSideLength * clickToPlayViewRatio);
+
+                  if (clickToPlayScaledSize >= videoWidth ||
+                    (clickToPlayScaledSize + this.controlBar.minHeight / 2 >= videoHeight / 2 )) {
+
+                    this.clickToPlay.hideByAdjustment = true;
+                  } else {
+                    if (this.clickToPlay.hidden && !this.video.played.length && this.video.paused) {
+                      this.clickToPlay.hideByAdjustment = false;
                     }
-
-                    let size = "normal";
-                    if (videoHeight < minHeightForControlBar)
-                        size = "hidden";
-                    else if (videoWidth < minWidthOnlyPlayPause)
-                        size = "hidden";
-                    else if (videoWidth < minWidthAllControls)
-                        size = "small";
-                    this.controlBar.setAttribute("size", size);
+                    this.clickToPlay.style.width = `${clickToPlayScaledSize}px`;
+                    this.clickToPlay.style.height = `${clickToPlayScaledSize}px`;
+                  }
                 },
 
                 init : function (binding) {
                     this.video = binding.parentNode;
                     this.videocontrols = binding;
 
-                    this.statusIcon    = document.getAnonymousElementByAttribute(binding, "class", "statusIcon");
-                    this.controlBar    = document.getAnonymousElementByAttribute(binding, "class", "controlBar");
-                    this.playButton    = document.getAnonymousElementByAttribute(binding, "class", "playButton");
-                    this.muteButton    = document.getAnonymousElementByAttribute(binding, "class", "muteButton");
-                    this.volumeControl = document.getAnonymousElementByAttribute(binding, "class", "volumeControl");
-                    this.progressBar   = document.getAnonymousElementByAttribute(binding, "class", "progressBar");
-                    this.bufferBar     = document.getAnonymousElementByAttribute(binding, "class", "bufferBar");
-                    this.scrubber      = document.getAnonymousElementByAttribute(binding, "class", "scrubber");
-                    this.scrubberThumb = document.getAnonymousElementByAttribute(this.scrubber, "class", "scale-thumb");
-                    this.durationLabel = document.getAnonymousElementByAttribute(binding, "class", "durationLabel");
-                    this.positionLabel = document.getAnonymousElementByAttribute(binding, "class", "positionLabel");
-                    this.statusOverlay = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
-                    this.controlsOverlay = document.getAnonymousElementByAttribute(binding, "class", "controlsOverlay");
-                    this.controlsSpacer     = document.getAnonymousElementByAttribute(binding, "class", "controlsSpacer");
-                    this.clickToPlay        = document.getAnonymousElementByAttribute(binding, "class", "clickToPlay");
-                    this.fullscreenButton   = document.getAnonymousElementByAttribute(binding, "class", "fullscreenButton");
-                    this.volumeForeground   = document.getAnonymousElementByAttribute(binding, "anonid", "volumeForeground");
-                    this.closedCaptionButton = document.getAnonymousElementByAttribute(binding, "class", "closedCaptionButton");
-                    this.textTrackList = document.getAnonymousElementByAttribute(binding, "class", "textTrackList");
+                    this.controlsContainer    = document.getAnonymousElementByAttribute(binding, "anonid", "controlsContainer");
+                    this.statusIcon    = document.getAnonymousElementByAttribute(binding, "anonid", "statusIcon");
+                    this.controlBar    = document.getAnonymousElementByAttribute(binding, "anonid", "controlBar");
+                    this.playButton    = document.getAnonymousElementByAttribute(binding, "anonid", "playButton");
+                    this.controlBarSpacer    = document.getAnonymousElementByAttribute(binding, "anonid", "controlBarSpacer");
+                    this.muteButton    = document.getAnonymousElementByAttribute(binding, "anonid", "muteButton");
+                    this.volumeStack   = document.getAnonymousElementByAttribute(binding, "anonid", "volumeStack");
+                    this.volumeControl = document.getAnonymousElementByAttribute(binding, "anonid", "volumeControl");
+                    this.progressBar   = document.getAnonymousElementByAttribute(binding, "anonid", "progressBar");
+                    this.bufferBar     = document.getAnonymousElementByAttribute(binding, "anonid", "bufferBar");
+                    this.scrubberStack = document.getAnonymousElementByAttribute(binding, "anonid", "scrubberStack");
+                    this.scrubber      = document.getAnonymousElementByAttribute(binding, "anonid", "scrubber");
+                    this.durationLabel = document.getAnonymousElementByAttribute(binding, "anonid", "durationLabel");
+                    this.positionLabel = document.getAnonymousElementByAttribute(binding, "anonid", "positionLabel");
+                    this.positionDurationBox   = document.getAnonymousElementByAttribute(binding, "anonid", "positionDurationBox");
+                    this.statusOverlay = document.getAnonymousElementByAttribute(binding, "anonid", "statusOverlay");
+                    this.controlsOverlay = document.getAnonymousElementByAttribute(binding, "anonid", "controlsOverlay");
+                    this.controlsSpacer     = document.getAnonymousElementByAttribute(binding, "anonid", "controlsSpacer");
+                    this.clickToPlay        = document.getAnonymousElementByAttribute(binding, "anonid", "clickToPlay");
+                    this.fullscreenButton   = document.getAnonymousElementByAttribute(binding, "anonid", "fullscreenButton");
+                    this.closedCaptionButton = document.getAnonymousElementByAttribute(binding, "anonid", "closedCaptionButton");
+                    this.textTrackList = document.getAnonymousElementByAttribute(binding, "anonid", "textTrackList");
 
+                    if (this.positionDurationBox) {
+                      this.durationSpan = this.positionDurationBox.getElementsByTagName("span")[0];
+                    }
+
+                    // XXX controlsContainer is a desktop only element. To determine whether
+                    // isTouchControls or not during the whole initialization process, get
+                    // this state overridden here.
+                    this.videocontrols.isTouchControls = !this.controlsContainer;
                     this.isAudioOnly = (this.video instanceof HTMLAudioElement);
                     this.setupInitialState();
                     this.setupNewLoadState();
@@ -1579,10 +1772,10 @@
                       elem.addEventListener(eventName, boundFunc, { mozSystemGroup: true });
                     }
 
-                    addListener(this.muteButton, "command", this.toggleMute);
-                    addListener(this.closedCaptionButton, "command", this.toggleClosedCaption);
+                    addListener(this.muteButton, "click", this.toggleMute);
+                    addListener(this.closedCaptionButton, "click", this.toggleClosedCaption);
+                    addListener(this.fullscreenButton, "click", this.toggleFullscreen);
                     addListener(this.playButton, "click", this.clickToPlayClickHandler);
-                    addListener(this.fullscreenButton, "command", this.toggleFullscreen);
                     addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "dblclick", this.toggleFullscreen);
@@ -1590,19 +1783,26 @@
                     addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
                     addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
                     addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
-                    addListener(this.videocontrols, "transitionend", this.onControlBarTransitioned);
+                    addListener(this.controlBar, "transitionend", this.onControlBarTransitioned);
                     addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
                     addListener(this.video, "keypress", this.keyHandler);
-                    addListener(this.video.textTracks, "addtrack", this.onTextTrackAdd);
-                    addListener(this.video.textTracks, "removetrack", this.onTextTrackRemove);
 
                     addListener(this.videocontrols, "dragstart", function(event) {
                         event.preventDefault(); // prevent dragging of controls image (bug 517114)
                     });
 
+                    if (!this.videocontrols.isTouchControls) {
+                      addListener(this.scrubber, "input", this.onScrubberInput);
+                      addListener(this.scrubber, "change", this.onScrubberChange);
+                      addListener(this.volumeControl, "input", this.updateVolume);
+                      addListener(this.video.textTracks, "addtrack", this.onTextTrackAdd);
+                      addListener(this.video.textTracks, "removetrack", this.onTextTrackRemove);
+                    }
+
                     this.log("--- videocontrols initialized ---");
                 }
             };
+
             this.Utils.init(this);
             ]]>
         </constructor>
@@ -1621,15 +1821,15 @@
 
     <handlers>
         <handler event="mouseover">
-            if (!this.isTouchControl)
+            if (!this.isTouchControls)
                 this.Utils.onMouseInOut(event);
         </handler>
         <handler event="mouseout">
-            if (!this.isTouchControl)
+            if (!this.isTouchControls)
                 this.Utils.onMouseInOut(event);
         </handler>
         <handler event="mousemove">
-            if (!this.isTouchControl)
+            if (!this.isTouchControls)
                 this.Utils.onMouseMove(event);
         </handler>
     </handlers>
@@ -1639,8 +1839,8 @@
 
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="mediaControlsFrame">
         <stack flex="1">
-            <vbox flex="1" class="statusOverlay" hidden="true">
-                <box class="statusIcon"/>
+            <vbox anonid="statusOverlay" flex="1" class="statusOverlay" hidden="true">
+                <box anonid="statusIcon" class="statusIcon"/>
                 <label class="errorLabel" anonid="errorAborted">&error.aborted;</label>
                 <label class="errorLabel" anonid="errorNetwork">&error.network;</label>
                 <label class="errorLabel" anonid="errorDecode">&error.decode;</label>
@@ -1649,38 +1849,41 @@
                 <label class="errorLabel" anonid="errorGeneric">&error.generic;</label>
             </vbox>
 
-            <vbox class="controlsOverlay">
-                <spacer class="controlsSpacer" flex="1"/>
+            <vbox anonid="controlsOverlay" class="controlsOverlay">
+                <spacer anonid="controlsSpacer" class="controlsSpacer" flex="1"/>
                 <box flex="1" hidden="true">
-                    <box class="clickToPlay" hidden="true" flex="1"/>
-                    <vbox class="textTrackList" hidden="true" offlabel="&closedCaption.off;"></vbox>
+                    <box anonid="clickToPlay" class="clickToPlay" hidden="true" flex="1"/>
+                    <vbox anonid="textTrackList" class="textTrackList" hidden="true" offlabel="&closedCaption.off;"></vbox>
                 </box>
-                <vbox class="controlBar" hidden="true">
+                <vbox anonid="controlBar" class="controlBar" hidden="true">
                     <hbox class="buttonsBar">
-                        <button class="playButton"
+                        <button anonid="playButton"
+                                class="playButton"
                                 playlabel="&playButton.playLabel;"
                                 pauselabel="&playButton.pauseLabel;"/>
-                        <label class="positionLabel" role="presentation"/>
-                        <stack class="scrubberStack">
+                        <label anonid="positionLabel" class="positionLabel" role="presentation"/>
+                        <stack anonid="scrubberStack" class="scrubberStack">
                             <box class="backgroundBar"/>
                             <progressmeter class="flexibleBar" value="100"/>
-                            <progressmeter class="bufferBar"/>
-                            <progressmeter class="progressBar" max="10000"/>
-                            <scale class="scrubber" movetoclick="true"/>
+                            <progressmeter anonid="bufferBar" class="bufferBar"/>
+                            <progressmeter anonid="progressBar" class="progressBar" max="10000"/>
+                            <scale anonid="scrubber" class="scrubber" movetoclick="true"/>
                         </stack>
-                        <label class="durationLabel" role="presentation"/>
-                        <button class="muteButton"
+                        <label anonid="durationLabel" class="durationLabel" role="presentation"/>
+                        <button anonid="muteButton"
+                                class="muteButton"
                                 mutelabel="&muteButton.muteLabel;"
                                 unmutelabel="&muteButton.unmuteLabel;"/>
-                        <stack class="volumeStack">
-                          <box class="volumeBackground"/>
-                          <box class="volumeForeground" anonid="volumeForeground"/>
-                          <scale class="volumeControl" movetoclick="true"/>
+                        <stack anonid="volumeStack" class="volumeStack">
+                          <box anonid="volumeBackground" class="volumeBackground"/>
+                          <box anonid="volumeForeground" class="volumeForeground"/>
+                          <scale anonid="volumeControl" class="volumeControl" movetoclick="true"/>
                         </stack>
-                        <button class="castingButton" hidden="true"
+                        <button anonid="castingButton" class="castingButton" hidden="true"
                                 aria-label="&castingButton.castingLabel;"/>
-                        <button class="closedCaptionButton" hidden="true"/>
-                        <button class="fullscreenButton"
+                        <button anonid="closedCaptionButton" class="closedCaptionButton" hidden="true"/>
+                        <button anonid="fullscreenButton"
+                            class="fullscreenButton"
                             enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
                             exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
                     </hbox>
@@ -1690,10 +1893,9 @@
     </xbl:content>
 
     <implementation>
-
         <constructor>
           <![CDATA[
-          this.isTouchControl = true;
+          this.isTouchControls = true;
           this.TouchUtils = {
             videocontrols: null,
             video: null,
@@ -1828,7 +2030,7 @@
               }, false);
               this.Utils.muteButton.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); }, false);
 
-              this.castingButton = document.getAnonymousElementByAttribute(binding, "class", "castingButton");
+              this.castingButton = document.getAnonymousElementByAttribute(binding, "anonid", "castingButton");
               this.castingButton.addEventListener("command", function() {
                 self.startCasting();
               }, false);
@@ -1858,7 +2060,8 @@
               }
             }
           };
-          this.TouchUtils.init(this);
+
+          this.TouchUtils.init(this)
           this.dispatchEvent(new CustomEvent("VideoBindingAttached"));
       ]]>
       </constructor>
