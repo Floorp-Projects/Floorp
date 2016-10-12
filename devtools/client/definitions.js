@@ -467,6 +467,27 @@ exports.defaultThemes = [
   Tools.firebugTheme,
 ];
 
+// White-list buttons that can be toggled to prevent adding prefs for
+// addons that have manually inserted toolbarbuttons into DOM.
+// (By default, supported target is only local tab)
+exports.ToolboxButtons = [
+  { id: "command-button-frames",
+    isTargetSupported: target => {
+      return target.activeTab && target.activeTab.traits.frames;
+    }
+  },
+  { id: "command-button-splitconsole",
+    isTargetSupported: target => !target.isAddon },
+  { id: "command-button-responsive" },
+  { id: "command-button-paintflashing" },
+  { id: "command-button-scratchpad" },
+  { id: "command-button-screenshot" },
+  { id: "command-button-rulers" },
+  { id: "command-button-measure" },
+  { id: "command-button-noautohide",
+    isTargetSupported: target => target.chrome },
+];
+
 /**
  * Lookup l10n string from a string bundle.
  *
