@@ -759,7 +759,7 @@ sec_asn1e_write_header(sec_asn1e_state *state)
              * Do the "before" field notification.
              */
             sec_asn1e_notify_before(state->top, state->src, state->depth);
-            state = sec_asn1e_init_state_based_on_template(state);
+            (void)sec_asn1e_init_state_based_on_template(state);
         }
         return;
     }
@@ -841,8 +841,9 @@ sec_asn1e_write_header(sec_asn1e_state *state)
             SEC_ASN1GetSubtemplate(state->theTemplate, state->src, PR_TRUE);
         state->place = afterContents;
         state = sec_asn1e_push_state(state->top, subt, state->src, PR_TRUE);
-        if (state != NULL)
-            state = sec_asn1e_init_state_based_on_template(state);
+        if (state != NULL) {
+            (void)sec_asn1e_init_state_based_on_template(state);
+        }
         return;
     }
 
@@ -868,8 +869,9 @@ sec_asn1e_write_header(sec_asn1e_state *state)
                 subt = SEC_ASN1GetSubtemplate(state->theTemplate, state->src,
                                               PR_TRUE);
                 state = sec_asn1e_push_state(state->top, subt, *group, PR_TRUE);
-                if (state != NULL)
-                    state = sec_asn1e_init_state_based_on_template(state);
+                if (state != NULL) {
+                    (void)sec_asn1e_init_state_based_on_template(state);
+                }
             }
             break;
 
@@ -886,7 +888,7 @@ sec_asn1e_write_header(sec_asn1e_state *state)
                  * Do the "before" field notification.
                  */
                 sec_asn1e_notify_before(state->top, state->src, state->depth);
-                state = sec_asn1e_init_state_based_on_template(state);
+                (void)sec_asn1e_init_state_based_on_template(state);
             }
             break;
 

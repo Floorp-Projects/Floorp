@@ -1085,8 +1085,9 @@ sec_asn1d_prepare_for_contents(sec_asn1d_state *state)
                                                             state->dest,
                                                             PR_FALSE),
                                      state->dest, PR_TRUE);
-        if (state != NULL)
-            state = sec_asn1d_init_state_based_on_template(state);
+        if (state != NULL) {
+            (void)sec_asn1d_init_state_based_on_template(state);
+        }
         return;
     }
 
@@ -1117,7 +1118,7 @@ sec_asn1d_prepare_for_contents(sec_asn1d_state *state)
                  * Do the "before" field notification for next in group.
                  */
                 sec_asn1d_notify_before(state->top, state->dest, state->depth);
-                state = sec_asn1d_init_state_based_on_template(state);
+                (void)sec_asn1d_init_state_based_on_template(state);
             }
         } else {
             /*
@@ -1142,7 +1143,7 @@ sec_asn1d_prepare_for_contents(sec_asn1d_state *state)
                  * Do the "before" field notification.
                  */
                 sec_asn1d_notify_before(state->top, state->dest, state->depth);
-                state = sec_asn1d_init_state_based_on_template(state);
+                (void)sec_asn1d_init_state_based_on_template(state);
             }
             break;
 
@@ -1368,7 +1369,7 @@ sec_asn1d_prepare_for_contents(sec_asn1d_state *state)
                 state = sec_asn1d_push_state(state->top, sub, item, PR_TRUE);
                 if (state != NULL) {
                     state->substring = PR_TRUE; /* XXX propogate? */
-                    state = sec_asn1d_init_state_based_on_template(state);
+                    (void)sec_asn1d_init_state_based_on_template(state);
                 }
             } else if (state->indefinite) {
                 /*

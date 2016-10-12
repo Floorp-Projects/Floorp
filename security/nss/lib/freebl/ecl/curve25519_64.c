@@ -199,7 +199,7 @@ fsquare(felem *output, const felem *in)
 }
 
 /* Take a 32-byte number and expand it into polynomial form */
-static void
+static void NO_SANITIZE_ALIGNMENT
 fexpand(felem *output, const u8 *in)
 {
     output[0] = *((const uint64_t *)(in)) & MASK51;

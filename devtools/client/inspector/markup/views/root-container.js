@@ -27,11 +27,12 @@ RootContainer.prototype = {
   destroy: function () {},
 
   /**
-   * If the node has children, return the list of containers for all these
-   * children.
+   * If the node has children, return the list of containers for all these children.
+   * @return {Array} An array of child containers or null.
    */
   getChildContainers: function () {
-    return [...this.children.children].map(node => node.container);
+    return [...this.children.children].filter(node => node.container)
+                                      .map(node => node.container);
   },
 
   /**

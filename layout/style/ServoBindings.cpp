@@ -802,16 +802,16 @@ Gecko_CopyStyleContentsFrom(nsStyleContent* aContent, const nsStyleContent* aOth
 }
 
 void
-Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen)
+Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen,
+                              nsStyleImageLayers::LayerType aLayerType)
 {
-  aLayers->mLayers.EnsureLengthAtLeast(aLen);
-}
+  size_t oldLength = aLayers->mLayers.Length();
 
-void
-Gecko_InitializeImageLayer(nsStyleImageLayers::Layer* aLayer,
-                                nsStyleImageLayers::LayerType aLayerType)
-{
-  aLayer->Initialize(aLayerType);
+  aLayers->mLayers.EnsureLengthAtLeast(aLen);
+
+  for (size_t i = oldLength; i < aLen; ++i) {
+    aLayers->mLayers[i].Initialize(aLayerType);
+  }
 }
 
 void

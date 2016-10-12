@@ -699,6 +699,66 @@ checkbox:-moz-focusring {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
+/* Twisty and checkbox controls */
+.theme-twisty, .theme-checkbox {
+  width: 14px;
+  height: 14px;
+  background-repeat: no-repeat;
+  background-image: url("chrome://devtools/skin/images/controls.png");
+  background-size: 56px 28px;
+}
+
+.theme-twisty {
+  cursor: pointer;
+  background-position: 0 -14px;
+}
+
+.theme-selected ~ .theme-twisty,
+.theme-dark .theme-twisty {
+  background-position: -28px -14px;
+}
+
+.theme-twisty:-moz-focusring {
+  outline-style: none;
+}
+
+.theme-twisty[open], .theme-twisty.open {
+  background-position: -14px -14px;
+}
+
+.theme-selected ~ .theme-twisty[open],
+.theme-dark .theme-twisty[open], .theme-dark .theme-twisty.open  {
+  background-position: -42px -14px;
+}
+
+.theme-twisty[invisible] {
+  visibility: hidden;
+}
+
+/* Mirror the twisty for rtl direction */
+.theme-twisty:dir(rtl),
+.theme-twisty:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.theme-checkbox {
+  display: inline-block;
+  border: 0;
+  padding: 0;
+  outline: none;
+  background-position: -28px 0;
+}
+
+.theme-checkbox[checked] {
+  background-position: -42px 0;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .theme-twisty, .theme-checkbox {
+    background-image: url("chrome://devtools/skin/images/controls@2x.png");
+  }
+}
+
 /* Throbbers */
 .devtools-throbber::before {
   content: "";

@@ -70,7 +70,7 @@ runTest(`
 (module
   (type $type1 (func (param i32) (result i32)))
   (import $import1 "mod" "test" (param f32) (result f32))
-  (table $func1 $func2)
+  (table anyfunc (elem $func1 $func2))
   (func $func1 (param i32) (param f32) (nop))
   (func $func2 (param i32) (result i32) (get_local 0))
   (func $test

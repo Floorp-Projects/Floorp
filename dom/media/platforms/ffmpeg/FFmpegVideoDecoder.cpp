@@ -301,7 +301,19 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
     b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = (mFrame->height + 1) >> 1;
   }
-
+  if (mLib->av_frame_get_colorspace) {
+    switch (mLib->av_frame_get_colorspace(mFrame)) {
+      case AVCOL_SPC_BT709:
+        b.mYUVColorSpace = YUVColorSpace::BT709;
+        break;
+      case AVCOL_SPC_SMPTE170M:
+      case AVCOL_SPC_BT470BG:
+        b.mYUVColorSpace = YUVColorSpace::BT601;
+        break;
+      default:
+        NS_WARNING("Unsupported yuv color space.");
+    }
+  }
   RefPtr<VideoData> v =
     VideoData::CreateAndCopyData(mInfo,
                                   mImageContainer,
