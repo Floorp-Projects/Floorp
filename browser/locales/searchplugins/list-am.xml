@@ -1,0 +1,16 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>List.am</ShortName>
+  <Description>Հանրային զերծ ads մասին: Վաճառք եւ գնման բնակարաններ, կենցաղային իրեր, որոնել աշխատանքի.</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="16" height="16">
+  data:image/gif;base64,R0lGODlhGAAYAIQfAKwVGN9vY/bw0ShPifHln1NqluXMLhxMjbC2ytKTidVDKcvP2vr29OyuoOC8F/PYHejJxNvc4hw4ertQRODCGOPDDx1qsvvoG/XkWM0gGjddmJoyQOCSh+Pm7IObwf///yH5BAEAAB8ALAAAAAAYABYAAAWs4CeOZGmeaKqSyTQlKxpkNADHJKQESgYAENyIE2D0aDdhQ7GkKZIphoAgWCqOiuCKUKE4HLyMArDxRFQEA8b77W0GknghpWawwW+N5iAZIFBqaw4PXgUeHQV8A3MnGF1eFw8Ohgt7B4sodg6QDxgFepcWmCgEX4MUAh4HqweiHmhsGB8RlpcFHVsGFQSzCJcHBQs4UyIRDInBQrPFHwsFZ8rQ0srMJNDRJdclIQA7
+  </Image>
+  <SearchForm>http://www.list.am/category?q=</SearchForm>
+  <Url type="text/html" method="GET" template="http://www.list.am/category" resultdomain="list.am">
+    <Param name="q" value="{searchTerms}"/>
+  </Url>
+</SearchPlugin>
