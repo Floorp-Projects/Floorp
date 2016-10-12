@@ -124,6 +124,16 @@ def test_worker():
 
     assert items(s) == [("testharness", "/html/test.worker.html")]
 
+def test_worker_long_timeout():
+    s = create("html/test.worker.js",
+               contents="""// <meta> timeout=long
+importScripts('/resources/testharnes.js')
+test()""")
+
+    manifest_items = s.manifest_items()
+    assert len(manifest_items) == 1
+    assert manifest_items[0].timeout == "long"
+
 
 def test_multi_global():
     s = create("html/test.any.js")
