@@ -902,6 +902,78 @@ class TestConfigure(unittest.TestCase):
 
         self.assertEquals(e.exception.message, "Unexpected type: 'int'")
 
+    def test_include_when(self):
+        with MockedOpen({
+            os.path.join(test_data_path, 'moz.configure'): textwrap.dedent('''
+                @depends('--help')
+                def always(_):
+                    return True
+                @depends('--help')
+                def never(_):
+                    return False
+
+                option('--with-foo', help='foo')
+
+                include('always.configure', when=always)
+                include('never.configure', when=never)
+                include('foo.configure', when='--with-foo')
+
+                set_config('FOO', foo)
+                set_config('BAR', bar)
+                set_config('QUX', qux)
+            '''),
+            os.path.join(test_data_path, 'always.configure'): textwrap.dedent('''
+                option('--with-bar', help='bar')
+                @depends('--with-bar')
+                def bar(x):
+                    if x:
+                        return 'bar'
+            '''),
+            os.path.join(test_data_path, 'never.configure'): textwrap.dedent('''
+                option('--with-qux', help='qux')
+                @depends('--with-qux')
+                def qux(x):
+                    if x:
+                        return 'qux'
+            '''),
+            os.path.join(test_data_path, 'foo.configure'): textwrap.dedent('''
+                option('--with-foo-really', help='really foo')
+                @depends('--with-foo-really')
+                def foo(x):
+                    if x:
+                        return 'foo'
+
+                include('foo2.configure', when='--with-foo-really')
+            '''),
+            os.path.join(test_data_path, 'foo2.configure'): textwrap.dedent('''
+                set_config('FOO2', True)
+            '''),
+        }):
+            config = self.get_config()
+            self.assertEquals(config, {})
+
+            config = self.get_config(['--with-foo'])
+            self.assertEquals(config, {})
+
+            config = self.get_config(['--with-bar'])
+            self.assertEquals(config, {
+                'BAR': 'bar',
+            })
+
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--with-qux'])
+
+            self.assertEquals(
+                e.exception.message,
+                '--with-qux is not available in this configuration'
+            )
+
+            config = self.get_config(['--with-foo', '--with-foo-really'])
+            self.assertEquals(config, {
+                'FOO': 'foo',
+                'FOO2': True,
+            })
+
     def test_sandbox_failures(self):
         with self.assertRaises(KeyError) as e:
             with self.moz_configure('''
@@ -1146,6 +1218,95 @@ class TestConfigure(unittest.TestCase):
 
         self.assertEquals(e.exception.message,
                           "Invalid argument to @imports: 'os*'")
+
+    def test_only_when(self):
+        moz_configure = '''
+            option('--enable-when', help='when')
+            @depends('--enable-when', '--help')
+            def when(value, _):
+                return bool(value)
+
+            with only_when(when):
+                option('--foo', nargs='*', help='foo')
+                @depends('--foo')
+                def foo(value):
+                    return value
+
+                set_config('FOO', foo)
+                set_define('FOO', foo)
+
+            # It is possible to depend on a function defined in a only_when
+            # block. It then resolves to `None`.
+            set_config('BAR', depends(foo)(lambda x: x))
+            set_define('BAR', depends(foo)(lambda x: x))
+        '''
+
+        with self.moz_configure(moz_configure):
+            config = self.get_config()
+            self.assertEqual(config, {
+                'DEFINES': {},
+            })
+
+            config = self.get_config(['--enable-when'])
+            self.assertEqual(config, {
+                'BAR': NegativeOptionValue(),
+                'FOO': NegativeOptionValue(),
+                'DEFINES': {
+                    'BAR': NegativeOptionValue(),
+                    'FOO': NegativeOptionValue(),
+                },
+            })
+
+            config = self.get_config(['--enable-when', '--foo=bar'])
+            self.assertEqual(config, {
+                'BAR': PositiveOptionValue(['bar']),
+                'FOO': PositiveOptionValue(['bar']),
+                'DEFINES': {
+                    'BAR': PositiveOptionValue(['bar']),
+                    'FOO': PositiveOptionValue(['bar']),
+                },
+            })
+
+            # The --foo option doesn't exist when --enable-when is not given.
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['--foo'])
+
+            self.assertEquals(e.exception.message,
+                              '--foo is not available in this configuration')
+
+        # Cannot depend on an option defined in a only_when block, because we
+        # don't know what OptionValue would make sense.
+        with self.moz_configure(moz_configure + '''
+            set_config('QUX', depends('--foo')(lambda x: x))
+        '''):
+            with self.assertRaises(ConfigureError) as e:
+                self.get_config()
+
+            self.assertEquals(e.exception.message,
+                              '@depends function needs the same `when` as '
+                              'options it depends on')
+
+        with self.moz_configure(moz_configure + '''
+            set_config('QUX', depends('--foo', when=when)(lambda x: x))
+        '''):
+            self.get_config(['--enable-when'])
+
+        # Using imply_option for an option defined in a only_when block fails
+        # similarly if the imply_option happens outside the block.
+        with self.moz_configure('''
+            imply_option('--foo', True)
+        ''' + moz_configure):
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config()
+
+            self.assertEquals(e.exception.message,
+                              '--foo is not available in this configuration')
+
+        # And similarly doesn't fail when the condition is true.
+        with self.moz_configure('''
+            imply_option('--foo', True)
+        ''' + moz_configure):
+            self.get_config(['--enable-when'])
 
 
 if __name__ == '__main__':

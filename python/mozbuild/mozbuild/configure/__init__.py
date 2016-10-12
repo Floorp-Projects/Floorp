@@ -31,6 +31,7 @@ from mozbuild.configure.util import (
 from mozbuild.util import (
     exec_,
     memoize,
+    memoized_property,
     ReadOnlyDict,
     ReadOnlyNamespace,
 )
@@ -50,13 +51,24 @@ class SandboxDependsFunction(object):
 
 
 class DependsFunction(object):
-    __slots__ = ('func', 'dependencies', 'sandboxed')
-    def __init__(self, sandbox, func, dependencies):
+    __slots__ = (
+        'func', 'dependencies', 'when', 'sandboxed', 'sandbox', '_result')
+
+    def __init__(self, sandbox, func, dependencies, when=None):
         assert isinstance(sandbox, ConfigureSandbox)
         self.func = func
         self.dependencies = dependencies
         self.sandboxed = wraps(func)(SandboxDependsFunction())
+        self.sandbox = sandbox
+        self.when = when
         sandbox._depends[self.sandboxed] = self
+
+        # Only @depends functions with a dependency on '--help' are executed
+        # immediately. Everything else is queued for later execution.
+        if sandbox._help_option in dependencies:
+            sandbox._value_for(self)
+        elif not sandbox._help:
+            sandbox._execution_queue.append((sandbox._value_for, (self,)))
 
     @property
     def name(self):
@@ -69,6 +81,14 @@ class DependsFunction(object):
             for d in self.dependencies
         ]
 
+    @memoized_property
+    def result(self):
+        if self.when and not self.sandbox._value_for(self.when):
+            return None
+
+        resolved_args = [self.sandbox._value_for(d) for d in self.dependencies]
+        return self.func(*resolved_args)
+
     def __repr__(self):
         return '<%s.%s %s(%s)>' % (
             self.__class__.__module__,
@@ -77,6 +97,50 @@ class DependsFunction(object):
             ', '.join(repr(d) for d in self.dependencies),
         )
 
+
+class CombinedDependsFunction(DependsFunction):
+    def __init__(self, sandbox, func, dependencies):
+        @memoize
+        @wraps(func)
+        def wrapper(*args):
+            return func(args)
+
+        flatten_deps = []
+        for d in dependencies:
+            if isinstance(d, CombinedDependsFunction) and d.func == wrapper:
+                for d2 in d.dependencies:
+                    if d2 not in flatten_deps:
+                        flatten_deps.append(d2)
+            elif d not in flatten_deps:
+                flatten_deps.append(d)
+
+        # Automatically add a --help dependency if one of the dependencies
+        # depends on it.
+        for d in flatten_deps:
+            if (isinstance(d, DependsFunction) and
+                sandbox._help_option in d.dependencies):
+                flatten_deps.insert(0, sandbox._help_option)
+                break
+
+        super(CombinedDependsFunction, self).__init__(
+            sandbox, wrapper, flatten_deps)
+
+    @memoized_property
+    def result(self):
+        # Ignore --help for the combined result
+        deps = self.dependencies
+        if deps[0] == self.sandbox._help_option:
+            deps = deps[1:]
+        resolved_args = [self.sandbox._value_for(d) for d in deps]
+        return self.func(*resolved_args)
+
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and
+                self.func == other.func and
+                set(self.dependencies) == set(other.dependencies))
+
+    def __ne__(self, other):
+        return not self == other
 
 class SandboxedGlobal(dict):
     '''Identifiable dict type for use as function global'''
@@ -91,7 +155,7 @@ class ConfigureSandbox(dict):
     This is a different kind of sandboxing than the one used for moz.build
     processing.
 
-    The sandbox has 8 primitives:
+    The sandbox has 9 primitives:
     - option
     - depends
     - template
@@ -100,9 +164,11 @@ class ConfigureSandbox(dict):
     - set_config
     - set_define
     - imply_option
+    - only_when
 
     `option`, `include`, `set_config`, `set_define` and `imply_option` are
-    functions. `depends`, `template`, and `imports` are decorators.
+    functions. `depends`, `template`, and `imports` are decorators. `only_when`
+    is a context_manager.
 
     These primitives are declared as name_impl methods to this class and
     the mapping name -> name_impl is done automatically in __getitem__.
@@ -165,8 +231,11 @@ class ConfigureSandbox(dict):
         # Queue of functions to execute, with their arguments
         self._execution_queue = []
 
-        # Store the `when`s associated to some options/depends.
+        # Store the `when`s associated to some options.
         self._conditions = {}
+
+        # A list of conditions to apply as a default `when` for every *_impl()
+        self._default_conditions = []
 
         self._helper = CommandLineHelper(environ, argv)
 
@@ -353,16 +422,7 @@ class ConfigureSandbox(dict):
         elif self._help or need_help_dependency:
             raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                  obj.name)
-        return self._value_for_depends_real(obj)
-
-    @memoize
-    def _value_for_depends_real(self, obj):
-        when = self._conditions.get(obj)
-        if when and not self._value_for(when):
-            return None
-
-        resolved_args = [self._value_for(d) for d in obj.dependencies]
-        return obj.func(*resolved_args)
+        return obj.result
 
     @memoize
     def _value_for_option(self, option):
@@ -441,6 +501,35 @@ class ConfigureSandbox(dict):
                    callee_name))
         return arg
 
+    def _normalize_when(self, when, callee_name):
+        if when is not None:
+            when = self._dependency(when, callee_name, 'when')
+
+        if self._default_conditions:
+            # Create a pseudo @depends function for the combination of all
+            # default conditions and `when`.
+            dependencies = [when] if when else []
+            dependencies.extend(self._default_conditions)
+            if len(dependencies) == 1:
+                return dependencies[0]
+            return CombinedDependsFunction(self, all, dependencies)
+        return when
+
+    @contextmanager
+    def only_when_impl(self, when):
+        '''Implementation of only_when()
+
+        `only_when` is a context manager that essentially makes calls to
+        other sandbox functions within the context block ignored.
+        '''
+        when = self._normalize_when(when, 'only_when')
+        if when and self._default_conditions[-1:] != [when]:
+            self._default_conditions.append(when)
+            yield
+            self._default_conditions.pop()
+        else:
+            yield
+
     def option_impl(self, *args, **kwargs):
         '''Implementation of option()
         This function creates and returns an Option() object, passing it the
@@ -450,9 +539,7 @@ class ConfigureSandbox(dict):
         Command line argument/environment variable parsing for this Option is
         handled here.
         '''
-        when = kwargs.get('when')
-        if when is not None:
-            when = self._dependency(when, 'option', 'when')
+        when = self._normalize_when(kwargs.get('when'), 'option')
         args = [self._resolve(arg) for arg in args]
         kwargs = {k: self._resolve(v) for k, v in kwargs.iteritems()
                                       if k != 'when'}
@@ -501,9 +588,7 @@ class ConfigureSandbox(dict):
                     "depends_impl() got an unexpected keyword argument '%s'"
                     % k)
 
-        when = kwargs.get('when')
-        if when is not None:
-            when = self._dependency(when, '@depends', 'when')
+        when = self._normalize_when(kwargs.get('when'), '@depends')
 
         dependencies = tuple(self._dependency(arg, '@depends') for arg in args)
 
@@ -522,34 +607,24 @@ class ConfigureSandbox(dict):
                 raise ConfigureError(
                     'Cannot decorate generator functions with @depends')
             func, glob = self._prepare_function(func)
-            depends = DependsFunction(self, func, dependencies)
-            if when:
-                self._conditions[depends] = when
-
-            # Only @depends functions with a dependency on '--help' are
-            # executed immediately. Everything else is queued for later
-            # execution.
-            if self._help_option in dependencies:
-                self._value_for(depends)
-            elif not self._help:
-                self._execution_queue.append((self._value_for, (depends,)))
-
+            depends = DependsFunction(self, func, dependencies, when=when)
             return depends.sandboxed
 
         return decorator
 
-    def include_impl(self, what):
+    def include_impl(self, what, when=None):
         '''Implementation of include().
         Allows to include external files for execution in the sandbox.
         It is possible to use a @depends function as argument, in which case
         the result of the function is the file name to include. This latter
         feature is only really meant for --enable-application/--enable-project.
         '''
-        what = self._resolve(what)
-        if what:
-            if not isinstance(what, types.StringTypes):
-                raise TypeError("Unexpected type: '%s'" % type(what).__name__)
-            self.include_file(what)
+        with self.only_when_impl(when):
+            what = self._resolve(what)
+            if what:
+                if not isinstance(what, types.StringTypes):
+                    raise TypeError("Unexpected type: '%s'" % type(what).__name__)
+                self.include_file(what)
 
     def template_impl(self, func):
         '''Implementation of @template.
@@ -701,8 +776,7 @@ class ConfigureSandbox(dict):
         in which case the result from these functions is used. If the result
         of either function is None, the configuration item is not set.
         '''
-        if when is not None:
-            when = self._dependency(when, 'set_config', 'when')
+        when = self._normalize_when(when, 'set_config')
 
         self._execution_queue.append((
             self._resolve_and_set, (self._config, name, value, when)))
@@ -715,8 +789,7 @@ class ConfigureSandbox(dict):
         is None, the define is not set. If the result is False, the define is
         explicitly undefined (-U).
         '''
-        if when is not None:
-            when = self._dependency(when, 'set_define', 'when')
+        when = self._normalize_when(when, 'set_define')
 
         defines = self._config.setdefault('DEFINES', {})
         self._execution_queue.append((
@@ -788,8 +861,7 @@ class ConfigureSandbox(dict):
                 "the `imply_option` call."
                 % option)
 
-        if when is not None:
-            when = self._dependency(when, 'imply_option', 'when')
+        when = self._normalize_when(when, 'imply_option')
 
         prefix, name, values = Option.split_option(option)
         if values != ():
