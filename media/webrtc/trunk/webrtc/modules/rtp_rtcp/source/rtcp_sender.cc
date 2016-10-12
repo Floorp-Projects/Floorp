@@ -100,7 +100,7 @@ RTCPSender::RTCPSender(
       _sendREMB(false),
       _TMMBR(false),
       _IJ(false),
-      _nextTimeToSendRTCP(0),
+      _nextTimeToSendRTCP(clock->TimeInMilliseconds()),
       start_timestamp_(0),
       last_rtp_timestamp_(0),
       last_frame_capture_time_ms_(-1),
@@ -188,8 +188,7 @@ void RTCPSender::SetRTCPStatus(RTCPMethod method) {
   if (method == kRtcpOff)
     return;
   _nextTimeToSendRTCP =
-      _clock->TimeInMilliseconds() +
-      (_audio ? RTCP_INTERVAL_AUDIO_MS / 2 : RTCP_INTERVAL_VIDEO_MS / 2);
+    _clock->TimeInMilliseconds() + RTCP_INTERVAL_RAPID_SYNC_MS / 2;
 }
 
 bool

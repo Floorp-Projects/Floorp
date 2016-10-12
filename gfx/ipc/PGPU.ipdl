@@ -78,6 +78,8 @@ child:
 
   // Graphics errors, analogous to PContent::GraphicsError
   async GraphicsError(nsCString aError);
+
+  async InitCrashReporter(Shmem shmem);
 };
 
 } // namespace gfx

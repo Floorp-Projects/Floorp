@@ -383,12 +383,15 @@ class BeforeFinished13 : public PacketFilter {
   size_t records_;
 };
 
+static SECStatus AuthCompleteBlock(TlsAgent*, PRBool, PRBool) {
+  return SECWouldBlock;
+}
+
 // This test uses an AuthCertificateCallback that blocks.  A filter is used to
 // split the server's first flight into two pieces.  Before the second piece is
 // processed by the client, SSL_AuthCertificateComplete() is called.
 TEST_F(TlsConnectDatagram13, AuthCompleteBeforeFinished) {
-  client_->SetAuthCertificateCallback(
-      [](TlsAgent*, PRBool, PRBool) -> SECStatus { return SECWouldBlock; });
+  client_->SetAuthCertificateCallback(AuthCompleteBlock);
   server_->SetPacketFilter(new BeforeFinished13(client_, server_, [this]() {
     EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
   }));
@@ -434,8 +437,7 @@ TEST_P(TlsConnectGenericPre13, ClientWriteBetweenCCSAndFinishedWithFalseStart) {
 
 TEST_P(TlsConnectGenericPre13, AuthCompleteBeforeFinishedWithFalseStart) {
   client_->EnableFalseStart();
-  client_->SetAuthCertificateCallback(
-      [](TlsAgent*, PRBool, PRBool) -> SECStatus { return SECWouldBlock; });
+  client_->SetAuthCertificateCallback(AuthCompleteBlock);
   server_->SetPacketFilter(new BeforeFinished(
       client_, server_,
       []() {
@@ -453,6 +455,74 @@ TEST_P(TlsConnectGenericPre13, AuthCompleteBeforeFinishedWithFalseStart) {
   Connect();
   server_->SendData(10);
   Receive(10);
+}
+
+class EnforceNoActivity : public PacketFilter {
+ protected:
+  PacketFilter::Action Filter(const DataBuffer& input,
+                              DataBuffer* output) override {
+    std::cerr << "Unexpected packet: " << input << std::endl;
+    EXPECT_TRUE(false) << "should not send anything";
+    return KEEP;
+  }
+};
+
+// In this test, we want to make sure that the server completes its handshake,
+// but the client does not.  Because the AuthCertificate callback blocks and we
+// never call SSL_AuthCertificateComplete(), the client should never report that
+// it has completed the handshake.  Manually call Handshake(), alternating sides
+// between client and server, until the desired state is reached.
+TEST_P(TlsConnectGenericPre13, AuthCompleteDelayed) {
+  client_->SetAuthCertificateCallback(AuthCompleteBlock);
+
+  server_->StartConnect();
+  client_->StartConnect();
+  client_->Handshake();  // Send ClientHello
+  server_->Handshake();  // Send ServerHello
+  client_->Handshake();  // Send ClientKeyExchange and Finished
+  server_->Handshake();  // Send Finished
+  // The server should now report that it is connected
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
+
+  // The client should send nothing from here on.
+  client_->SetPacketFilter(new EnforceNoActivity());
+  client_->Handshake();
+  EXPECT_EQ(TlsAgent::STATE_CONNECTING, client_->state());
+
+  // This should allow the handshake to complete now.
+  EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
+  client_->Handshake();  // Transition to connected
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
+
+  // Remove this before closing or the close_notify alert will trigger it.
+  client_->SetPacketFilter(nullptr);
+}
+
+// TLS 1.3 handles a delayed AuthComplete callback differently since the
+// shape of the handshake is different.
+TEST_P(TlsConnectTls13, AuthCompleteDelayed) {
+  client_->SetAuthCertificateCallback(AuthCompleteBlock);
+
+  server_->StartConnect();
+  client_->StartConnect();
+  client_->Handshake();  // Send ClientHello
+  server_->Handshake();  // Send ServerHello
+  EXPECT_EQ(TlsAgent::STATE_CONNECTING, client_->state());
+  EXPECT_EQ(TlsAgent::STATE_CONNECTING, server_->state());
+
+  // The client will send nothing until AuthCertificateComplete is called.
+  client_->SetPacketFilter(new EnforceNoActivity());
+  client_->Handshake();
+  EXPECT_EQ(TlsAgent::STATE_CONNECTING, client_->state());
+
+  // This should allow the handshake to complete now.
+  client_->SetPacketFilter(nullptr);
+  EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
+  client_->Handshake();  // Send Finished
+  server_->Handshake();  // Transition to connected and send NewSessionTicket
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
 }
 
 static const SSLExtraServerCertData ServerCertDataRsaPkcs1Decrypt = {

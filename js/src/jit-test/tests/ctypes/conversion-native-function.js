@@ -6,7 +6,7 @@ load(libdir + 'asserts.js');
 function test() {
   let lib;
   try {
-    lib = ctypes.open(ctypes.libraryName("c"));
+    lib = ctypes.open(ctypes.libraryName("m"));
   } catch (e) {
   }
   if (!lib)

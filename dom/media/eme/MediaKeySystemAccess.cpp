@@ -512,6 +512,16 @@ GetKeySystemConfig(const nsAString& aKeySystem)
   return nullptr;
 }
 
+/* static */
+bool
+MediaKeySystemAccess::KeySystemSupportsInitDataType(const nsAString& aKeySystem,
+                                                    const nsAString& aInitDataType)
+{
+  const KeySystemConfig* implementation = GetKeySystemConfig(aKeySystem);
+  return implementation &&
+         implementation->mInitDataTypes.Contains(aInitDataType);
+}
+
 enum CodecType
 {
   Audio,

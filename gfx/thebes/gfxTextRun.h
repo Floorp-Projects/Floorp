@@ -171,7 +171,8 @@ public:
      * @return true if this changed the linebreaks, false if the new line
      * breaks are the same as the old
      */
-    virtual bool SetPotentialLineBreaks(Range aRange, uint8_t *aBreakBefore);
+    virtual bool SetPotentialLineBreaks(Range aRange,
+                                        const uint8_t* aBreakBefore);
 
     /**
      * Layout provides PropertyProvider objects. These allow detection of

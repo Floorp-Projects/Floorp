@@ -4335,9 +4335,9 @@ BytecodeEmitter::emitDestructuringLHS(ParseNode* target, DestructuringFlavor fla
     else if (target->isKind(PNK_ASSIGN))
         target = target->pn_left;
     if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
-        if (!emitDestructuringOpsHelper(target, flav))
+        if (!emitDestructuringOps(target, flav))
             return false;
-        // Per its post-condition, emitDestructuringOpsHelper has left the
+        // Per its post-condition, emitDestructuringOps has left the
         // to-be-destructured value on top of the stack.
         if (!emit1(JSOP_POP))
             return false;
@@ -4514,7 +4514,7 @@ BytecodeEmitter::emitDefault(ParseNode* defaultExpr)
 }
 
 bool
-BytecodeEmitter::emitDestructuringOpsArrayHelper(ParseNode* pattern, DestructuringFlavor flav)
+BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlavor flav)
 {
     MOZ_ASSERT(pattern->isKind(PNK_ARRAY));
     MOZ_ASSERT(pattern->isArity(PN_LIST));
@@ -4781,7 +4781,7 @@ BytecodeEmitter::emitComputedPropertyName(ParseNode* computedPropName)
 }
 
 bool
-BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, DestructuringFlavor flav)
+BytecodeEmitter::emitDestructuringOpsObject(ParseNode* pattern, DestructuringFlavor flav)
 {
     MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
     MOZ_ASSERT(pattern->isArity(PN_LIST));
@@ -4855,28 +4855,12 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, Destructur
     return true;
 }
 
-/*
- * Recursive helper for emitDestructuringOps.
- * EmitDestructuringOpsHelper assumes the to-be-destructured value has been
- * pushed on the stack and emits code to destructure each part of a [] or {}
- * lhs expression.
- */
-bool
-BytecodeEmitter::emitDestructuringOpsHelper(ParseNode* pattern, DestructuringFlavor flav)
-{
-    if (pattern->isKind(PNK_ARRAY))
-        return emitDestructuringOpsArrayHelper(pattern, flav);
-    return emitDestructuringOpsObjectHelper(pattern, flav);
-}
-
 bool
 BytecodeEmitter::emitDestructuringOps(ParseNode* pattern, DestructuringFlavor flav)
 {
-    /*
-     * Call our recursive helper to emit the destructuring assignments and
-     * related stack manipulations.
-     */
-    return emitDestructuringOpsHelper(pattern, flav);
+    if (pattern->isKind(PNK_ARRAY))
+        return emitDestructuringOpsArray(pattern, flav);
+    return emitDestructuringOpsObject(pattern, flav);
 }
 
 bool
@@ -4940,55 +4924,20 @@ BytecodeEmitter::emitDeclarationList(ParseNode* declList)
             return false;
         next = decl->pn_next;
 
-        if (decl->isKind(PNK_ARRAY) || decl->isKind(PNK_OBJECT)) {
-            // Destructuring BindingPattern in a deprecated comprehension:
-            //     a = [x*y for (let [x, y] of pts)];
-            //
-            // (When emitting code for a plain LexicalDeclaration, like
-            // `let [x, y] = pt;`, decl will be a PNK_ASSIGN node, not a
-            // PNK_ARRAY node.  `let [x, y];` without an initializer is a
-            // SyntaxError.)
-
-            MOZ_ASSERT(declList->pn_count == 1);
-
-            auto emitInitializeToUndefined = [](BytecodeEmitter* bce, ParseNode *pn) {
-                MOZ_ASSERT(bce->lookupName(pn->name()).hasKnownSlot());
-                MOZ_ASSERT(bce->lookupName(pn->name()).isLexical());
-                auto emitUndefined = [](BytecodeEmitter* bce, const NameLocation&, bool) {
-                    return bce->emit1(JSOP_UNDEFINED);
-                };
-                if (!bce->emitInitializeName(pn, emitUndefined))
-                    return false;
-                // Pop the RHS.
-                return bce->emit1(JSOP_POP);
-            };
-
-            if (!emitDestructuringDeclsWithEmitter(decl, emitInitializeToUndefined))
-                return false;
-        } else if (decl->isKind(PNK_ASSIGN)) {
-            /*
-             * A destructuring initialiser assignment preceded by var will
-             * never occur to the left of 'in' in a for-in loop.  As with 'for
-             * (var x = i in o)...', this will cause the entire 'var [a, b] =
-             * i' to be hoisted out of the loop.
-             */
+        if (decl->isKind(PNK_ASSIGN)) {
             MOZ_ASSERT(decl->isOp(JSOP_NOP));
 
-            if (decl->pn_left->isKind(PNK_NAME)) {
-                if (!emitSingleDeclaration(declList, decl->pn_left, decl->pn_right))
-                    return false;
-            } else {
-                ParseNode* initializer = decl->pn_left;
+            ParseNode* pattern = decl->pn_left;
+            MOZ_ASSERT(pattern->isKind(PNK_ARRAY) || pattern->isKind(PNK_OBJECT));
 
-                if (!emitTree(decl->pn_right))
-                    return false;
+            if (!emitTree(decl->pn_right))
+                return false;
 
-                if (!emitDestructuringOpsHelper(initializer, DestructuringDeclaration))
-                    return false;
+            if (!emitDestructuringOps(pattern, DestructuringDeclaration))
+                return false;
 
-                if (!emit1(JSOP_POP))
-                    return false;
-            }
+            if (!emit1(JSOP_POP))
+                return false;
         } else {
             if (!emitSingleDeclaration(declList, decl, decl->expr()))
                 return false;
@@ -6082,9 +6031,7 @@ BytecodeEmitter::emitInitializeForInOrOfTarget(ParseNode* forHead)
     }
 
     MOZ_ASSERT(!target->isKind(PNK_ASSIGN),
-               "for-in/of loop declarations can't have initializers; or if "
-               "they do, those initializers are ignored -- see "
-               "Parser::declarationPattern");
+               "for-in/of loop destructuring declarations can't have initializers");
 
     MOZ_ASSERT(target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT));
     return emitDestructuringOps(target, DestructuringDeclaration);
@@ -6226,6 +6173,33 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
     MOZ_ASSERT(forInHead->isKind(PNK_FORIN));
     MOZ_ASSERT(forInHead->isArity(PN_TERNARY));
 
+    // Annex B: Evaluate the var-initializer expression if present.
+    // |for (var i = initializer in expr) { ... }|
+    ParseNode* forInTarget = forInHead->pn_kid1;
+    if (parser->handler.isDeclarationList(forInTarget)) {
+        ParseNode* decl = parser->handler.singleBindingFromDeclaration(forInTarget);
+        if (decl->isKind(PNK_NAME)) {
+            if (ParseNode* initializer = decl->expr()) {
+                MOZ_ASSERT(forInTarget->isKind(PNK_VAR),
+                           "for-in initializers are only permitted for |var| declarations");
+
+                if (!updateSourceCoordNotes(decl->pn_pos.begin))
+                    return false;
+
+                auto emitRhs = [initializer](BytecodeEmitter* bce, const NameLocation&, bool) {
+                    return bce->emitTree(initializer);
+                };
+
+                if (!emitInitializeName(decl, emitRhs))
+                    return false;
+
+                // Pop the initializer.
+                if (!emit1(JSOP_POP))
+                    return false;
+            }
+        }
+    }
+
     // Evaluate the expression being iterated.
     ParseNode* expr = forInHead->pn_kid3;
     if (!emitTree(expr))                                  // EXPR
@@ -6268,7 +6242,6 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
         // recreation each iteration. If a lexical scope exists for the head,
         // it must be the innermost one. If that scope has closed-over
         // bindings inducing an environment, recreate the current environment.
-        DebugOnly<ParseNode*> forInTarget = forInHead->pn_kid1;
         MOZ_ASSERT(forInTarget->isKind(PNK_LET) || forInTarget->isKind(PNK_CONST));
         MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope);
         MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);

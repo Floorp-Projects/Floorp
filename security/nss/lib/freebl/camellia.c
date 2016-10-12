@@ -34,7 +34,7 @@
  *  macros
  */
 
-#if defined(SHA_ALLOW_UNALIGNED_ACCESS)
+#if defined(HAVE_UNALIGNED_ACCESS)
 
 /* require a CPU that allows unaligned access */
 

@@ -86,16 +86,22 @@ FFmpegLibWrapper::Link()
       return false;
   }
 
-#define AV_FUNC(func, ver)                                                     \
-  if ((ver) & version) {                                                      \
+#define AV_FUNC_OPTION(func, ver)                                              \
+  if ((ver) & version) {                                                       \
     if (!(func = (decltype(func))PR_FindSymbol(((ver) & AV_FUNC_AVUTIL_MASK) ? mAVUtilLib : mAVCodecLib, #func))) { \
       FFMPEG_LOG("Couldn't load function " # func);                            \
-      Unlink();                                                                \
-      return false;                                                            \
     }                                                                          \
   } else {                                                                     \
     func = (decltype(func))nullptr;                                            \
   }
+
+#define AV_FUNC(func, ver)                                                     \
+  AV_FUNC_OPTION(func, ver)                                                    \
+  if ((ver) & version && !func) {                                              \
+    Unlink();                                                                  \
+    return false;                                                              \
+  }
+
   AV_FUNC(av_lockmgr_register, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(avcodec_alloc_context3, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(avcodec_close, AV_FUNC_AVCODEC_ALL)
@@ -118,7 +124,9 @@ FFmpegLibWrapper::Link()
   AV_FUNC(av_frame_alloc, (AV_FUNC_AVUTIL_55 | AV_FUNC_AVUTIL_56 | AV_FUNC_AVUTIL_57))
   AV_FUNC(av_frame_free, (AV_FUNC_AVUTIL_55 | AV_FUNC_AVUTIL_56 | AV_FUNC_AVUTIL_57))
   AV_FUNC(av_frame_unref, (AV_FUNC_AVUTIL_55 | AV_FUNC_AVUTIL_56 | AV_FUNC_AVUTIL_57))
+  AV_FUNC_OPTION(av_frame_get_colorspace, AV_FUNC_AVUTIL_ALL)
 #undef AV_FUNC
+#undef AV_FUNC_OPTION
 
   avcodec_register_all();
 #ifdef DEBUG

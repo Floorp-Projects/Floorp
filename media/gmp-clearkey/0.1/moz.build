@@ -13,7 +13,6 @@ FINAL_TARGET_PP_FILES += ['clearkey.info.in']
 UNIFIED_SOURCES += [
     'ClearKeyAsyncShutdown.cpp',
     'ClearKeyBase64.cpp',
-    'ClearKeyCencParser.cpp',
     'ClearKeyDecryptionManager.cpp',
     'ClearKeyPersistence.cpp',
     'ClearKeySession.cpp',
@@ -55,10 +54,10 @@ LOCAL_INCLUDES += [
     '/dom/media/gmp',
 ]
 
-USE_STATIC_LIBS = True
-
 DISABLE_STL_WRAPPING = True
 DEFINES['MOZ_NO_MOZALLOC'] = True
+
+USE_LIBS += ['psshparser']
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CXX']:

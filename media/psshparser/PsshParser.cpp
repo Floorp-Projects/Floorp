@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "ClearKeyCencParser.h"
+#include "PsshParser.h"
 
 #include "mozilla/Assertions.h"
-#include "ArrayUtils.h"
-#include "BigEndian.h"
+#include "mozilla/EndianUtils.h"
+#include "mozilla/Move.h"
 #include <memory.h>
 #include <algorithm>
 #include <assert.h>
@@ -108,11 +108,18 @@ const uint8_t kSystemID[] = {
   0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2, 0xfb, 0x4b
 };
 
-void
+const uint8_t kPrimetimeID[] = {
+  0xf2, 0x39, 0xe7, 0x69, 0xef, 0xa3, 0x48, 0x50,
+  0x9c, 0x16, 0xa9, 0x03, 0xc6, 0x93, 0x2e, 0xfb
+};
+
+bool
 ParseCENCInitData(const uint8_t* aInitData,
                   uint32_t aInitDataSize,
                   std::vector<std::vector<uint8_t>>& aOutKeyIds)
 {
+  aOutKeyIds.clear();
+  std::vector<std::vector<uint8_t>> keyIds;
   ByteReader reader(aInitData, aInitDataSize);
   while (reader.CanRead32()) {
     // Box size. For the common system Id, ignore this, as some useragents
@@ -121,23 +128,26 @@ ParseCENCInitData(const uint8_t* aInitData,
     const size_t size = reader.ReadU32();
     if (size > std::numeric_limits<size_t>::max() - start) {
       // Ensure 'start + size' calculation below can't overflow.
-      return;
+      return false;
     }
-    const size_t end = std::min<size_t>(start + size, reader.Length());
+    const size_t end = start + size;
+    if (end > reader.Length()) {
+      // Ridiculous sized box.
+      return false;
+    }
 
     // PSSH box type.
     if (!reader.CanRead32()) {
-      return;
+      return false;
     }
     uint32_t box = reader.ReadU32();
     if (box != FOURCC('p','s','s','h')) {
-      reader.Seek(std::max<size_t>(reader.Offset(), end));
-      continue;
+      return false;
     }
 
     // 1 byte version, 3 bytes flags.
     if (!reader.CanRead32()) {
-      return;
+      return false;
     }
     uint8_t version = reader.ReadU8();
     if (version != 1) {
@@ -150,9 +160,15 @@ ParseCENCInitData(const uint8_t* aInitData,
     // SystemID
     const uint8_t* sid = reader.Read(sizeof(kSystemID));
     if (!sid) {
-      // Insufficinet bytes to read SystemID.
-      return;
+      // Insufficient bytes to read SystemID.
+      return false;
     }
+    if (!memcmp(kPrimetimeID, sid, sizeof(kSystemID))) {
+      // Allow legacy Primetime key system PSSH boxes, which
+      // don't conform to common encryption format.
+      return true;
+    }
+
     if (memcmp(kSystemID, sid, sizeof(kSystemID))) {
       // Ignore pssh boxes with wrong system ID.
       reader.Seek(std::max<size_t>(reader.Offset(), end));
@@ -160,24 +176,25 @@ ParseCENCInitData(const uint8_t* aInitData,
     }
 
     if (!reader.CanRead32()) {
-      return;
+      return false;
     }
     uint32_t kidCount = reader.ReadU32();
 
+    if (kidCount * CENC_KEY_LEN > reader.Remaining()) {
+      // Not enough bytes remaining to read all keys.
+      return false;
+    }
+
     for (uint32_t i = 0; i < kidCount; i++) {
-      if (reader.Remaining() < CLEARKEY_KEY_LEN) {
-        // Not enough remaining to read key.
-        return;
-      }
-      const uint8_t* kid = reader.Read(CLEARKEY_KEY_LEN);
-      aOutKeyIds.push_back(std::vector<uint8_t>(kid, kid + CLEARKEY_KEY_LEN));
+      const uint8_t* kid = reader.Read(CENC_KEY_LEN);
+      keyIds.push_back(std::vector<uint8_t>(kid, kid + CENC_KEY_LEN));
     }
 
     // Size of extra data. EME CENC format spec says datasize should
     // always be 0. We explicitly read the datasize, in case the box
     // size was 0, so that we get to the end of the box.
     if (!reader.CanRead32()) {
-      return;
+      return false;
     }
     reader.ReadU32();
 
@@ -186,4 +203,6 @@ ParseCENCInitData(const uint8_t* aInitData,
       reader.Seek(end);
     }
   }
+  aOutKeyIds = mozilla::Move(keyIds);
+  return true;
 }
