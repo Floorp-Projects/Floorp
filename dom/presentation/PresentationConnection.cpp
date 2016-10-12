@@ -575,8 +575,7 @@ PresentationConnection::DispatchMessageEvent(JS::Handle<JS::Value> aData)
     return rv;
   }
 
-  RefPtr<MessageEvent> messageEvent =
-    NS_NewDOMMessageEvent(this, nullptr, nullptr);
+  RefPtr<MessageEvent> messageEvent = new MessageEvent(this, nullptr, nullptr);
 
   messageEvent->InitMessageEvent(nullptr,
                                  NS_LITERAL_STRING("message"),

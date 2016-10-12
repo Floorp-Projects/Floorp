@@ -51,13 +51,13 @@ function checkAvailability()
     ["date", true],
     ["time", true],
     ["month", true],
+    ["week", true],
     ["color", false],
   ];
 
   var todoList =
   [
     ["datetime", true],
-    ["week", true],
     ["datetime-local", true],
   ];
 
@@ -445,6 +445,70 @@ function checkStepDown()
     [ '2016-01',  'AnY',  null,  null,  1,  null,  true ],
     [ '2016-01',  'aNy',  null,  null,  1,  null,  true ],
   ]},
+  { type: 'week', data: [
+    // Regular case.
+    [ '2016-W40',  null,  null,  null,  null, '2016-W39',   false ],
+    // Argument testing.
+    [ '2016-W40',  null,  null,  null,  1,    '2016-W39',   false ],
+    [ '2016-W40',  null,  null,  null,  5,    '2016-W35',   false ],
+    [ '2016-W40',  null,  null,  null,  -1,   '2016-W41',   false ],
+    [ '2016-W40',  null,  null,  null,  0,    '2016-W40',   false ],
+    // Week/Year wrapping.
+    [ '2016-W01',  null,  null,  null,  1,    '2015-W53',   false ],
+    [ '1969-W02',  null,  null,  null,  4,    '1968-W50',   false ],
+    [ '1969-W01',  null,  null,  null,  -52,  '1970-W01',   false ],
+    // Float values are rounded to integer (1.1 -> 1).
+    [ '2016-W40',  null,  null,  null,  1.1,  '2016-W39',   false ],
+    [ '2016-W01',  null,  null,  null,  1.9,  '2015-W53',   false ],
+    // With step values.
+    [ '2016-W03',  '0.5',  null,       null,  null, '2016-W02',   false ],
+    [ '2016-W03',  '2',    null,       null,  null, '2016-W01',   false ],
+    [ '2016-W03',  '0.25', null,       null,  4,    '2015-W52',   false ],
+    [ '2016-W52',  '1.1',  '2016-W01', null,  1,    '2016-W51',   false ],
+    [ '2016-W52',  '1.1',  '2016-W01', null,  2,    '2016-W50',   false ],
+    [ '2016-W52',  '1.1',  '2016-W01', null,  10,   '2016-W42',   false ],
+    [ '2016-W52',  '1.1',  '2016-W01', null,  52,   '2016-W01',   false ],
+    [ '1968-W52',  '1.1',  '1968-W01', null,  8,    '1968-W44',   false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '2016-W02',  '0',   null,  null,  null, '2016-W01',   false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '2016-W02',  '-1',  null,  null,  null, '2016-W01',   false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '2016-W02',  'foo', null,  null,  null, '2016-W01',   false ],
+    // Min values testing.
+    [ '2016-W03',  '1',    'foo',      null,       2,     '2016-W01',  false ],
+    [ '2016-W02',  '1',    '2016-01',  null,       null,  '2016-W01',  false ],
+    [ '2016-W01',  '1',    '2016-W01', null,       null,  '2016-W01',  false ],
+    [ '2016-W01',  '1',    '2016-W01', null,       1,     '2016-W01',  false ],
+    [ '2016-W05',  '3',    '2016-W01', null,       null,  '2016-W04',  false ],
+    [ '1969-W01',  '5',    '1969-W01', '1969-W02', null,  '1969-W01',  false ],
+    // Max values testing.
+    [ '2016-W02',  '1',    null,  'foo',       null,  '2016-W01',  false ],
+    [ '2016-W02',  null,   null,  '2016-W05',  null,  '2016-W01',  false ],
+    [ '2016-W03',  null,   null,  '2016-W03',  null,  '2016-W02',  false ],
+    [ '2016-W07',  null,   null,  '2016-W04',  4,     '2016-W03',  false ],
+    [ '2016-W07',  '2',    null,  '2016-W04',  3,     '2016-W01',  false ],
+    // Step mismatch.
+    [ '2016-W04',  '2',    '2016-W01',  null,        null,  '2016-W03',  false ],
+    [ '2016-W06',  '2',    '2016-W01',  null,        2,     '2016-W03',  false ],
+    [ '2016-W05',  '2',    '2016-W04',  '2016-W08',  null,  '2016-W04',  false ],
+    [ '1970-W04',  '2',    null,        null,        null,  '1970-W02',  false ],
+    [ '1970-W09',  '3',    null,        null,        null,  '1970-W06',  false ],
+    // Clamping.
+    [ '2016-W05',  null,   null,        '2016-W01',  null,  '2016-W01',  false ],
+    [ '1970-W05',  '2',    '1970-W02',  '1970-W05',  null,  '1970-W04',  false ],
+    [ '1970-W01',  '5',    '1970-W02',  '1970-W09',  10,    '1970-W01',  false ],
+    [ '1970-W07',  '5',    '1969-W52',  '1970-W10',  2,     '1969-W52',  false ],
+    [ '1970-W08',  '3',    '1970-W01',  '1970-W07',  15,    '1970-W01',  false ],
+    [ '1970-W10',  '3',    '1970-W01',  '1970-W06',  2,     '1970-W04',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '1970-W01',    false ],
+    // With step = 'any'.
+    [ '2016-W01',  'any',  null,  null,  1,  null,  true ],
+    [ '2016-W01',  'ANY',  null,  null,  1,  null,  true ],
+    [ '2016-W01',  'AnY',  null,  null,  1,  null,  true ],
+    [ '2016-W01',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
   ];
 
   for (var test of testData) {
@@ -828,6 +892,71 @@ function checkStepUp()
     [ '2016-01',  'ANY',  null,  null,  1,  null,  true ],
     [ '2016-01',  'AnY',  null,  null,  1,  null,  true ],
     [ '2016-01',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
+  { type: 'week', data: [
+    // Regular case.
+    [ '2016-W40',  null,  null,  null,  null, '2016-W41',   false ],
+    // Argument testing.
+    [ '2016-W40',  null,  null,  null,  1,    '2016-W41',   false ],
+    [ '2016-W40',  null,  null,  null,  20,   '2017-W08',   false ],
+    [ '2016-W40',  null,  null,  null,  -1,   '2016-W39',   false ],
+    [ '2016-W40',  null,  null,  null,  0,    '2016-W40',   false ],
+    // Week/Year wrapping.
+    [ '2015-W53',  null,  null,  null,  1,    '2016-W01',   false ],
+    [ '1968-W52',  null,  null,  null,  4,    '1969-W04',   false ],
+    [ '1970-W01',  null,  null,  null,  -52,  '1969-W01',   false ],
+    // Float values are rounded to integer (1.1 -> 1).
+    [ '2016-W01',  null,  null,  null,  1.1,  '2016-W02',   false ],
+    [ '2016-W01',  null,  null,  null,  1.9,  '2016-W02',   false ],
+    // With step values.
+    [ '2016-W01',  '0.5',  null,         null,  null, '2016-W02',   false ],
+    [ '2016-W01',  '2',    null,         null,  null, '2016-W03',   false ],
+    [ '2016-W01',  '0.25', null,         null,  4,    '2016-W05',   false ],
+    [ '2016-W01',  '1.1',  '2016-01',    null,  1,    '2016-W02',   false ],
+    [ '2016-W01',  '1.1',  '2016-01',    null,  2,    '2016-W03',   false ],
+    [ '2016-W01',  '1.1',  '2016-01',    null,  10,   '2016-W11',   false ],
+    [ '2016-W01',  '1.1',  '2016-01',    null,  20,   '2016-W21',   false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '2016-W01',  '0',   null,  null,  null, '2016-W02',   false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '2016-W01',  '-1',  null,  null,  null, '2016-W02',   false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '2016-W01',  'foo', null,  null,  null, '2016-W02',   false ],
+    // Min values testing.
+    [ '2016-W01',  '1',   'foo',       null,  null,  '2016-W02',  false ],
+    [ '2016-W01',  null,  '2015-W53',  null,  null,  '2016-W02',  false ],
+    [ '2016-W01',  null,  '2016-W02',  null,  null,  '2016-W02',  false ],
+    [ '2016-W01',  null,  '2016-W01',  null,  null,  '2016-W02',  false ],
+    [ '2016-W01',  null,  '2016-W04',  null,  4,     '2016-W05',  false ],
+    [ '2016-W01',  '2',   '2016-W04',  null,  3,     '2016-W06',  false ],
+    // Max values testing.
+    [ '2016-W01',  '1',    null,       'foo',         2,     '2016-W03',  false ],
+    [ '2016-W01',  '1',    null,       '2016-W02',    1,     '2016-W02',  false ],
+    [ '2016-W02',  null,   null,       '2016-W01',    null,  '2016-W02',  false ],
+    [ '2016-W02',  null,   null,       '2016-W02',    null,  '2016-W02',  false ],
+    [ '1969-W02',  '5',    '1969-W01', '1969-W02',    null,  '1969-W02',  false ],
+    // Step mismatch.
+    [ '2016-W02',  '2',    '2016-W01',  null,          null,  '2016-W03',  false ],
+    [ '2016-W02',  '2',    '2016-W01',  null,          2,     '2016-W05',  false ],
+    [ '2016-W05',  '2',    '2016-W01',  '2016-W06',    null,  '2016-W05',  false ],
+    [ '1970-W02',  '2',    null,        null,          null,  '1970-W04',  false ],
+    [ '1970-W05',  '3',    null,        null,          null,  '1970-W08',  false ],
+    [ '1970-W03',  '3',    null,        null,          null,  '1970-W06',  false ],
+    [ '1970-W03',  '3',    '1970-W02',  null,          null,  '1970-W05',  false ],
+    // Clamping.
+    [ '2016-W01',  null,   '2016-W52',  null,          null,  '2016-W52',  false ],
+    [ '1970-W02',  '2',    '1970-W01',  '1970-W04',    null,  '1970-W03',  false ],
+    [ '1970-W01',  '5',    '1970-W02',  '1970-W09',    10,    '1970-W07',  false ],
+    [ '1969-W50',  '5',    '1969-W52',  '1970-W06',    3,     '1970-W05',  false ],
+    [ '1970-W01',  '3',    '1970-W02',  '1971-W07',    15,    '1970-W44',  false ],
+    [ '1970-W01',  '3',    '1970-W01',  '1970-W06',    2,     '1970-W04',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '1970-W02',    false ],
+    // With step = 'any'.
+    [ '2016-W01',  'any',  null,  null,  1,  null,  true ],
+    [ '2016-W01',  'ANY',  null,  null,  1,  null,  true ],
+    [ '2016-W01',  'AnY',  null,  null,  1,  null,  true ],
+    [ '2016-W01',  'aNy',  null,  null,  1,  null,  true ],
   ]},
   ];
 
