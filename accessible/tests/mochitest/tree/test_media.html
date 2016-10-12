@@ -45,6 +45,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
             //name: "0:00 of 0:02 elapsed",
             children: []
           },
+          {
+            role: ROLE_TEXT_CONTAINER,
+            children: [
+              {
+                role: ROLE_TEXT_LEAF, // position text
+              },
+              {
+                role: ROLE_TEXT_LEAF, // duration text
+              }
+            ]
+          },
           { // mute button
             role: ROLE_PUSHBUTTON,
             name: "Mute",
