@@ -312,7 +312,7 @@ TrackBuffersManager::Buffered()
   TimeUnit highestEndTime = HighestEndTime();
 
   MonitorAutoLock mon(mMonitor);
-  nsTArray<TimeIntervals*> tracks;
+  nsTArray<const TimeIntervals*> tracks;
   if (HasVideo()) {
     tracks.AppendElement(&mVideoBufferedRanges);
   }
@@ -325,13 +325,16 @@ TrackBuffersManager::Buffered()
 
   // 4. For each track buffer managed by this SourceBuffer, run the following steps:
   //   1. Let track ranges equal the track buffer ranges for the current track buffer.
-  for (auto trackRanges : tracks) {
+  for (const TimeIntervals* trackRanges : tracks) {
     // 2. If readyState is "ended", then set the end time on the last range in track ranges to highest end time.
-    if (mEnded) {
-      trackRanges->Add(TimeInterval(trackRanges->GetEnd(), highestEndTime));
-    }
     // 3. Let new intersection ranges equal the intersection between the intersection ranges and the track ranges.
-    intersection.Intersection(*trackRanges);
+    if (mEnded) {
+      TimeIntervals tR = *trackRanges;
+      tR.Add(TimeInterval(tR.GetEnd(), highestEndTime));
+      intersection.Intersection(tR);
+    } else {
+      intersection.Intersection(*trackRanges);
+    }
   }
   return intersection;
 }
