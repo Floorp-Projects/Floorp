@@ -188,7 +188,6 @@ class MediaDecoderStateMachine::StateObject
 {
 public:
   virtual ~StateObject() {}
-  virtual void Enter() {}; // Entry action.
   virtual void Exit() {};  // Exit action.
   virtual void Step() {}   // Perform a 'cycle' of this state object.
   virtual State GetState() const = 0;
@@ -240,7 +239,7 @@ public:
     // the current state object is deleted.
     auto master = mMaster;
 
-    UniquePtr<StateObject> s = MakeUnique<S>(master, Forward<Ts>(aArgs)...);
+    auto s = new S(master, Forward<Ts>(aArgs)...);
 
     MOZ_ASSERT(master->mState != s->GetState() ||
                master->mState == DECODER_STATE_SEEKING);
@@ -249,8 +248,8 @@ public:
 
     Exit();
     master->mState = s->GetState();
-    master->mStateObj = Move(s); // Will delete |this|!
-    master->mStateObj->Enter();
+    master->mStateObj.reset(s); // Will delete |this|!
+    s->Enter();
   }
 
 protected:
@@ -265,7 +264,7 @@ class MediaDecoderStateMachine::DecodeMetadataState
 public:
   explicit DecodeMetadataState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter() override
+  void Enter()
   {
     MOZ_ASSERT(!mMetadataRequest.Exists());
     SLOG("Dispatching AsyncReadMetadata");
@@ -331,6 +330,8 @@ class MediaDecoderStateMachine::WaitForCDMState
 public:
   explicit WaitForCDMState(Master* aPtr) : StateObject(aPtr) {}
 
+  void Enter() {}
+
   State GetState() const override
   {
     return DECODER_STATE_WAIT_FOR_CDM;
@@ -355,7 +356,7 @@ class MediaDecoderStateMachine::DormantState
 public:
   explicit DormantState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter() override
+  void Enter()
   {
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
@@ -386,7 +387,7 @@ class MediaDecoderStateMachine::DecodingFirstFrameState
 public:
   explicit DecodingFirstFrameState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter() override;
+  void Enter();
 
   State GetState() const override
   {
@@ -427,7 +428,7 @@ class MediaDecoderStateMachine::DecodingState
 public:
   explicit DecodingState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter() override;
+  void Enter();
 
   void Exit() override
   {
@@ -582,7 +583,7 @@ public:
   explicit SeekingState(Master* aPtr, SeekJob aSeekJob)
     : StateObject(aPtr), mSeekJob(Move(aSeekJob)) {}
 
-  void Enter() override
+  void Enter()
   {
     // SeekTask will register its callbacks to MediaDecoderReaderWrapper.
     mMaster->CancelMediaDecoderReaderWrapperCallback();
@@ -728,7 +729,7 @@ class MediaDecoderStateMachine::BufferingState
 public:
   explicit BufferingState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter() override
+  void Enter()
   {
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
@@ -787,7 +788,7 @@ class MediaDecoderStateMachine::CompletedState
 public:
   explicit CompletedState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter() override
+  void Enter()
   {
     mMaster->ScheduleStateMachine();
   }
@@ -864,7 +865,7 @@ class MediaDecoderStateMachine::ShutdownState
 public:
   explicit ShutdownState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter() override;
+  void Enter();
 
   void Exit() override
   {
@@ -1464,7 +1465,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDispatchedStateMachine(false),
   mDelayedScheduler(mTaskQueue),
   INIT_WATCHABLE(mState, DECODER_STATE_DECODING_METADATA),
-  mStateObj(new DecodeMetadataState(this)),
   mCurrentFrameID(0),
   INIT_WATCHABLE(mObservedDuration, TimeUnit()),
   mFragmentEndTime(-1),
@@ -1951,7 +1951,11 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 
   RefPtr<MediaDecoderStateMachine> self = this;
   OwnerThread()->Dispatch(NS_NewRunnableFunction([self] () {
-    self->mStateObj->Enter();
+    MOZ_ASSERT(self->mState == DECODER_STATE_DECODING_METADATA);
+    MOZ_ASSERT(!self->mStateObj);
+    auto s = new DecodeMetadataState(self);
+    self->mStateObj.reset(s);
+    s->Enter();
   }));
 
   return NS_OK;
