@@ -415,7 +415,10 @@ private:
   // process.
   uint32_t mPendingEventsNeedingAck;
 
-  bool mIsComposing;
+  // mWidgetHasComposition is true when the widget in this process thinks that
+  // IME has composition.  So, this is set to true when eCompositionStart is
+  // dispatched and set to false when eCompositionCommit(AsIs) is dispatched.
+  bool mWidgetHasComposition;
 
   /**
    * When following methods' aRoundToExistingOffset is true, even if specified
