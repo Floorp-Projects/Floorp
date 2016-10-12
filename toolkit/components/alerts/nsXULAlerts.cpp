@@ -175,6 +175,10 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
   rv = aAlert->GetSource(source);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  bool requireInteraction;
+  rv = aAlert->GetRequireInteraction(&requireInteraction);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
 
   nsCOMPtr<nsISupportsArray> argsArray;
@@ -239,6 +243,13 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
 
   scriptableLang->SetData(lang);
   rv = argsArray->AppendElement(scriptableLang);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISupportsPRBool> scriptableRequireInteraction (do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID));
+  NS_ENSURE_TRUE(scriptableRequireInteraction, NS_ERROR_FAILURE);
+
+  scriptableRequireInteraction->SetData(requireInteraction);
+  rv = argsArray->AppendElement(scriptableRequireInteraction);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Alerts with the same name should replace the old alert in the same position.
