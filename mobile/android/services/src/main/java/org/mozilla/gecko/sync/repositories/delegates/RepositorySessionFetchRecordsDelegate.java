@@ -23,5 +23,11 @@ public interface RepositorySessionFetchRecordsDelegate {
    */
   public void onFetchCompleted(final long fetchEnd);
 
-  public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor);
+  /**
+   * Called when a number of records have been returned but more are still expected to come,
+   * possibly after a certain pause.
+   */
+  void onBatchCompleted();
+
+  RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor);
 }

@@ -100,6 +100,11 @@ public class DefaultFetchDelegate extends DefaultDelegate implements RepositoryS
   }
 
   @Override
+  public void onBatchCompleted() {
+    Logger.debug(LOG_TAG, "onBatchCompleted. Doing nothing.");
+  }
+
+  @Override
   public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(final ExecutorService executor) {
     return new DeferredRepositorySessionFetchRecordsDelegate(this, executor);
   }
