@@ -90,8 +90,11 @@
 
           let packagedAppLocation = getTestFilePath("app");
 
+          let onValidated = waitForUpdate(win, "project-validated");
+          let onDetails = waitForUpdate(win, "details");
           yield winProject.projectList.importPackagedApp(packagedAppLocation);
-          yield waitForUpdate(win, "project-validated");
+          yield onValidated;
+          yield onDetails;
 
           let panelNode = docRuntime.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
