@@ -178,6 +178,11 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
     return;
   }
 
+  // Ignore animations on orphaned elements.
+  if (!aElement->IsInComposedDoc()) {
+    return;
+  }
+
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
 
@@ -417,7 +422,11 @@ EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
     nsTArray<PseudoElementHashEntry::KeyType> elementsToRestyle(
       elementSet.Count());
     for (auto iter = elementSet.Iter(); !iter.Done(); iter.Next()) {
-      elementsToRestyle.AppendElement(iter.Key());
+      // Skip animations on elements that have been orphaned since they
+      // requested a restyle.
+      if (iter.Key().mElement->IsInComposedDoc()) {
+        elementsToRestyle.AppendElement(iter.Key());
+      }
     }
 
     for (auto& pseudoElem : elementsToRestyle) {

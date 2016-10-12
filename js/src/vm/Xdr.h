@@ -79,14 +79,26 @@ template <XDRMode mode>
 class XDRState {
   public:
     XDRBuffer buf;
+    TranscodeResult resultCode_;
 
   protected:
     explicit XDRState(JSContext* cx)
-      : buf(cx) { }
+      : buf(cx), resultCode_(TranscodeResult_Ok) { }
 
   public:
     JSContext* cx() const {
         return buf.cx();
+    }
+
+    // Record logical failures of XDR.
+    void postProcessContextErrors(JSContext* cx);
+    TranscodeResult resultCode() const {
+        return resultCode_;
+    }
+    bool fail(TranscodeResult code) {
+        MOZ_ASSERT(resultCode_ == TranscodeResult_Ok);
+        resultCode_ = code;
+        return false;
     }
 
     bool codeUint8(uint8_t* n) {

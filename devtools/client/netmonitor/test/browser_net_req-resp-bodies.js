@@ -8,10 +8,12 @@
  */
 
 add_task(function* () {
+  let { L10N } = require("devtools/client/netmonitor/l10n");
+
   let { tab, monitor } = yield initNetMonitor(JSON_LONG_URL);
   info("Starting test... ");
 
-  let { L10N, NetMonitorView } = monitor.panelWin;
+  let { NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;

@@ -5,11 +5,12 @@
 
 package org.mozilla.gecko.util;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -20,11 +21,11 @@ public class TestStringUtils {
     @Test
     public void testIsHttpOrHttps() {
         // No value
-        Assert.assertFalse(StringUtils.isHttpOrHttps(null));
-        Assert.assertFalse(StringUtils.isHttpOrHttps(""));
+        assertFalse(StringUtils.isHttpOrHttps(null));
+        assertFalse(StringUtils.isHttpOrHttps(""));
 
         // Garbage
-        Assert.assertFalse(StringUtils.isHttpOrHttps("lksdjflasuf"));
+        assertFalse(StringUtils.isHttpOrHttps("lksdjflasuf"));
 
         // URLs with http/https
         assertTrue(StringUtils.isHttpOrHttps("https://www.google.com"));
@@ -36,13 +37,13 @@ public class TestStringUtils {
         assertTrue(StringUtils.isHttpOrHttps("http://63.245.215.20/en-US/firefox/products"));
 
         // Other protocols
-        Assert.assertFalse(StringUtils.isHttpOrHttps("ftp://people.mozilla.org"));
-        Assert.assertFalse(StringUtils.isHttpOrHttps("javascript:window.google.com"));
-        Assert.assertFalse(StringUtils.isHttpOrHttps("tel://1234567890"));
+        assertFalse(StringUtils.isHttpOrHttps("ftp://people.mozilla.org"));
+        assertFalse(StringUtils.isHttpOrHttps("javascript:window.google.com"));
+        assertFalse(StringUtils.isHttpOrHttps("tel://1234567890"));
 
         // No scheme
-        Assert.assertFalse(StringUtils.isHttpOrHttps("google.com"));
-        Assert.assertFalse(StringUtils.isHttpOrHttps("git@github.com:mozilla/gecko-dev.git"));
+        assertFalse(StringUtils.isHttpOrHttps("google.com"));
+        assertFalse(StringUtils.isHttpOrHttps("git@github.com:mozilla/gecko-dev.git"));
     }
 
     @Test
@@ -85,5 +86,22 @@ public class TestStringUtils {
         assertEquals(5, forcedLtrString.length());
         final String forcedAgainLtrString = StringUtils.forceLTR(forcedLtrString);
         assertEquals(5, forcedAgainLtrString.length());
+    }
+
+    @Test
+    public void testJoin() {
+        assertEquals("", StringUtils.join("", Collections.<String>emptyList()));
+        assertEquals("", StringUtils.join("-", Collections.<String>emptyList()));
+        assertEquals("", StringUtils.join("", Collections.singletonList("")));
+        assertEquals("", StringUtils.join(".", Collections.singletonList("")));
+
+        assertEquals("192.168.0.1", StringUtils.join(".", Arrays.asList("192", "168", "0", "1")));
+        assertEquals("www.mozilla.org", StringUtils.join(".", Arrays.asList("www", "mozilla", "org")));
+
+        assertEquals("hello", StringUtils.join("", Collections.singletonList("hello")));
+        assertEquals("helloworld", StringUtils.join("", Arrays.asList("hello", "world")));
+        assertEquals("hello world", StringUtils.join(" ", Arrays.asList("hello", "world")));
+
+        assertEquals("m::o::z::i::l::l::a", StringUtils.join("::", Arrays.asList("m", "o", "z", "i", "l", "l", "a")));
     }
 }

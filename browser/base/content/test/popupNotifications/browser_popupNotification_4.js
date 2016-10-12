@@ -133,7 +133,9 @@ var tests = [
       let anchor = win.document.getElementById("default-notification-icon");
 
       yield new Promise(resolve => {
+        let originalCallback = notification.options.eventCallback;
         notification.options.eventCallback = function (eventName) {
+          originalCallback(eventName);
           if (eventName == "shown") {
             resolve();
           }

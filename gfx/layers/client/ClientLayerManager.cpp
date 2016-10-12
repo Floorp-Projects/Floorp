@@ -24,6 +24,7 @@
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "ClientReadbackLayer.h"        // for ClientReadbackLayer
 #include "nsAString.h"
+#include "nsDisplayList.h"
 #include "nsIWidgetListener.h"
 #include "nsTArray.h"                   // for AutoTArray
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
@@ -275,12 +276,10 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
                                            void* aCallbackData,
                                            EndTransactionFlags)
 {
+  PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Rasterization);
+
   PROFILER_LABEL("ClientLayerManager", "EndTransactionInternal",
     js::ProfileEntry::Category::GRAPHICS);
-
-  if (!mForwarder || !mForwarder->IPCOpen()) {
-    return false;
-  }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
@@ -356,6 +355,12 @@ ClientLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                    void* aCallbackData,
                                    EndTransactionFlags aFlags)
 {
+  if (!mForwarder->IPCOpen()) {
+    mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
+    mInTransaction = false;
+    return;
+  }
+
   if (mWidget) {
     mWidget->PrepareWindowEffects();
   }
@@ -381,9 +386,11 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
   mInTransaction = false;
 
-  if (!mRoot) {
+  if (!mRoot || !mForwarder->IPCOpen()) {
+    mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
     return false;
   }
+
   if (!EndTransactionInternal(nullptr, nullptr, aFlags)) {
     // Return without calling ForwardTransaction. This leaves the
     // ShadowLayerForwarder transaction open; the following

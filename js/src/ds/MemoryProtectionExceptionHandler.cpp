@@ -250,9 +250,13 @@ UnixExceptionHandler(int signum, siginfo_t* info, void* context)
     if (sPrevSEGVHandler.sa_flags & SA_SIGINFO)
         sPrevSEGVHandler.sa_sigaction(signum, info, context);
     else if (sPrevSEGVHandler.sa_handler == SIG_DFL || sPrevSEGVHandler.sa_handler == SIG_IGN)
-        raise(signum);
+        sigaction(SIGSEGV, &sPrevSEGVHandler, nullptr);
     else
         sPrevSEGVHandler.sa_handler(signum);
+
+    // If we reach here, we're returning to let the default signal handler deal
+    // with the exception. This is technically undefined behavior, but
+    // everything seems to do it, and it removes us from the crash stack.
 }
 
 bool
@@ -266,7 +270,7 @@ MemoryProtectionExceptionHandler::install()
 
     // Install our new exception handler and save the previous one.
     struct sigaction faultHandler = {};
-    faultHandler.sa_flags = SA_SIGINFO;
+    faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER;
     faultHandler.sa_sigaction = UnixExceptionHandler;
     sigemptyset(&faultHandler.sa_mask);
     sExceptionHandlerInstalled = !sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler);

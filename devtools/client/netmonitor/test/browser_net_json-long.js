@@ -8,6 +8,8 @@
  */
 
 add_task(function* () {
+  let { L10N } = require("devtools/client/netmonitor/l10n");
+
   let { tab, monitor } = yield initNetMonitor(JSON_LONG_URL);
   info("Starting test... ");
 
@@ -15,7 +17,7 @@ add_task(function* () {
   // in a variables view instance. Debug builds are slow.
   requestLongerTimeout(4);
 
-  let { document, EVENTS, L10N, NetMonitorView } = monitor.panelWin;
+  let { document, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;

@@ -70,7 +70,7 @@ AssembleClientData(const nsAString& aOrigin, const nsAString& aTyp,
   }
 
   if (NS_WARN_IF(!aClientData.Assign(NS_ConvertUTF16toUTF8(json)))) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return NS_OK;
@@ -246,7 +246,12 @@ U2FRegisterTask::Run()
         }
 
         MOZ_ASSERT(buffer);
-        regData.Assign(buffer, bufferlen);
+        if (NS_WARN_IF(!regData.Assign(buffer, bufferlen))) {
+          free(buffer);
+          ReturnError(ErrorCode::OTHER_ERROR);
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
         free(buffer);
         registerSuccess = true;
         break;
@@ -424,7 +429,12 @@ U2FSignTask::Run()
         }
 
         MOZ_ASSERT(buffer);
-        signatureData.Assign(buffer, bufferlen);
+        if (NS_WARN_IF(!signatureData.Assign(buffer, bufferlen))) {
+          free(buffer);
+          ReturnError(ErrorCode::OTHER_ERROR);
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
         free(buffer);
         signSuccess = true;
       }

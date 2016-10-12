@@ -408,8 +408,13 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     // On mac, open menulist on either up/down arrow or space (w/o Cmd pressed)
     if (!IsOpen() && ((keyEvent->mCharCode == ' ' && !keyEvent->IsMeta()) ||
         (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN))) {
-      *aEventStatus = nsEventStatus_eConsumeNoDefault;
-      OpenMenu(false);
+
+      // When pressing space, don't open the menu if performing an incremental search.
+      if (keyEvent->mCharCode != ' ' ||
+          !nsMenuPopupFrame::IsWithinIncrementalTime(keyEvent->mTime)) {
+        *aEventStatus = nsEventStatus_eConsumeNoDefault;
+        OpenMenu(false);
+      }
     }
 #else
     // On other platforms, toggle menulist on unmodified F4 or Alt arrow
