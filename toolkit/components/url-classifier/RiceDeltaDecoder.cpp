@@ -25,18 +25,8 @@ class BitBuffer {
  public:
   BitBuffer(const uint8_t* bytes, size_t byte_count);
 
-  // Gets the current offset, in bytes/bits, from the start of the buffer. The
-  // bit offset is the offset into the current byte, in the range [0,7].
-  void GetCurrentOffset(size_t* out_byte_offset, size_t* out_bit_offset);
-
   // The remaining bits in the byte buffer.
   uint64_t RemainingBitCount() const;
-
-  // Reads byte-sized values from the buffer. Returns false if there isn't
-  // enough data left for the specified type.
-  bool ReadUInt8(uint8_t* val);
-  bool ReadUInt16(uint16_t* val);
-  bool ReadUInt32(uint32_t* val);
 
   // Reads bit-sized values from the buffer. Returns false if there isn't enough
   // data left for the specified bit count..
@@ -56,21 +46,10 @@ class BitBuffer {
   // Returns false if there isn't enough data left for the specified type, or if
   // the value wouldn't fit in a uint32_t.
   bool ReadExponentialGolomb(uint32_t* val);
-  // Reads signed exponential golomb values at the current offset. Signed
-  // exponential golomb values are just the unsigned values mapped to the
-  // sequence 0, 1, -1, 2, -2, etc. in order.
-  bool ReadSignedExponentialGolomb(int32_t* val);
 
-  // Moves current position |byte_count| bytes forward. Returns false if
-  // there aren't enough bytes left in the buffer.
-  bool ConsumeBytes(size_t byte_count);
   // Moves current position |bit_count| bits forward. Returns false if
   // there aren't enough bits left in the buffer.
   bool ConsumeBits(size_t bit_count);
-
-  // Sets the current offset to the provied byte/bit offsets. The bit
-  // offset is from the given byte, in the range [0,7].
-  bool Seek(size_t byte_offset, size_t bit_offset);
 
  protected:
   const uint8_t* const bytes_;
@@ -180,30 +159,6 @@ uint64_t BitBuffer::RemainingBitCount() const {
   return (static_cast<uint64_t>(byte_count_) - byte_offset_) * 8 - bit_offset_;
 }
 
-bool BitBuffer::ReadUInt8(uint8_t* val) {
-  uint32_t bit_val;
-  if (!ReadBits(&bit_val, sizeof(uint8_t) * 8)) {
-    return false;
-  }
-  MOZ_ASSERT(bit_val <= std::numeric_limits<uint8_t>::max());
-  *val = static_cast<uint8_t>(bit_val);
-  return true;
-}
-
-bool BitBuffer::ReadUInt16(uint16_t* val) {
-  uint32_t bit_val;
-  if (!ReadBits(&bit_val, sizeof(uint16_t) * 8)) {
-    return false;
-  }
-  MOZ_ASSERT(bit_val <= std::numeric_limits<uint16_t>::max());
-  *val = static_cast<uint16_t>(bit_val);
-  return true;
-}
-
-bool BitBuffer::ReadUInt32(uint32_t* val) {
-  return ReadBits(val, sizeof(uint32_t) * 8);
-}
-
 bool BitBuffer::PeekBits(uint32_t* val, size_t bit_count) {
   if (!val || bit_count > RemainingBitCount() || bit_count > 32) {
     return false;
@@ -238,10 +193,6 @@ bool BitBuffer::ReadBits(uint32_t* val, size_t bit_count) {
   return PeekBits(val, bit_count) && ConsumeBits(bit_count);
 }
 
-bool BitBuffer::ConsumeBytes(size_t byte_count) {
-  return ConsumeBits(byte_count * 8);
-}
-
 bool BitBuffer::ConsumeBits(size_t bit_count) {
   if (bit_count > RemainingBitCount()) {
     return false;
@@ -273,36 +224,4 @@ bool BitBuffer::ReadExponentialGolomb(uint32_t* val) {
   *val = one_bit_count;
   return true;
 }
-
-bool BitBuffer::ReadSignedExponentialGolomb(int32_t* val) {
-  uint32_t unsigned_val;
-  if (!ReadExponentialGolomb(&unsigned_val)) {
-    return false;
-  }
-  if ((unsigned_val & 1) == 0) {
-    *val = -static_cast<int32_t>(unsigned_val / 2);
-  } else {
-    *val = (unsigned_val + 1) / 2;
-  }
-  return true;
 }
-
-void BitBuffer::GetCurrentOffset(
-    size_t* out_byte_offset, size_t* out_bit_offset) {
-  MOZ_ASSERT(out_byte_offset != NULL);
-  MOZ_ASSERT(out_bit_offset != NULL);
-  *out_byte_offset = byte_offset_;
-  *out_bit_offset = bit_offset_;
-}
-
-bool BitBuffer::Seek(size_t byte_offset, size_t bit_offset) {
-  if (byte_offset > byte_count_ || bit_offset > 7 ||
-      (byte_offset == byte_count_ && bit_offset > 0)) {
-    return false;
-  }
-  byte_offset_ = byte_offset;
-  bit_offset_ = bit_offset;
-  return true;
-}
-}
-
