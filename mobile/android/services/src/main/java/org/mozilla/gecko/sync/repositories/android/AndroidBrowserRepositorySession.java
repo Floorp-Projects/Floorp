@@ -209,7 +209,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     @Override
     public void run() {
       if (!isActive()) {
-        delegate.onGuidsSinceFailed(new InactiveSessionException(null));
+        delegate.onGuidsSinceFailed(new InactiveSessionException());
         return;
       }
 
@@ -280,10 +280,10 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
           delegate.onFetchCompleted(end);
         } catch (NoGuidForIdException e) {
           Logger.warn(LOG_TAG, "No GUID for ID.", e);
-          delegate.onFetchFailed(e, null);
+          delegate.onFetchFailed(e);
         } catch (Exception e) {
           Logger.warn(LOG_TAG, "Exception in fetchFromCursor.", e);
-          delegate.onFetchFailed(e, null);
+          delegate.onFetchFailed(e);
           return;
         }
       } finally {
@@ -311,13 +311,13 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     @Override
     public void run() {
       if (!isActive()) {
-        delegate.onFetchFailed(new InactiveSessionException(null), null);
+        delegate.onFetchFailed(new InactiveSessionException());
         return;
       }
 
       if (guids == null || guids.length < 1) {
         Logger.error(LOG_TAG, "No guids sent to fetch");
-        delegate.onFetchFailed(new InvalidRequestException(null), null);
+        delegate.onFetchFailed(new InvalidRequestException());
         return;
       }
 
@@ -325,7 +325,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
         Cursor cursor = dbHelper.fetch(guids);
         this.fetchFromCursor(cursor, filter, end);
       } catch (NullCursorException e) {
-        delegate.onFetchFailed(e, null);
+        delegate.onFetchFailed(e);
       }
     }
   }
@@ -360,7 +360,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     @Override
     public void run() {
       if (!isActive()) {
-        delegate.onFetchFailed(new InactiveSessionException(null), null);
+        delegate.onFetchFailed(new InactiveSessionException());
         return;
       }
 
@@ -368,7 +368,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
         Cursor cursor = dbHelper.fetchSince(since);
         this.fetchFromCursor(cursor, filter, end);
       } catch (NullCursorException e) {
-        delegate.onFetchFailed(e, null);
+        delegate.onFetchFailed(e);
         return;
       }
     }

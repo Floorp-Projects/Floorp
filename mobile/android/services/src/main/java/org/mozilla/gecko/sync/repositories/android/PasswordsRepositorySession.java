@@ -78,7 +78,7 @@ public class PasswordsRepositorySession extends
       public void run() {
 
         if (!isActive()) {
-          delegate.onGuidsSinceFailed(new InactiveSessionException(null));
+          delegate.onGuidsSinceFailed(new InactiveSessionException());
           return;
         }
 
@@ -131,7 +131,7 @@ public class PasswordsRepositorySession extends
       @Override
       public void run() {
         if (!isActive()) {
-          delegate.onFetchFailed(new InactiveSessionException(null), null);
+          delegate.onFetchFailed(new InactiveSessionException());
           return;
         }
 
@@ -165,7 +165,7 @@ public class PasswordsRepositorySession extends
           }
         } catch (Exception e) {
           Logger.error(LOG_TAG, "Exception in fetch.");
-          delegate.onFetchFailed(e, null);
+          delegate.onFetchFailed(e);
         }
       }
     };
@@ -193,7 +193,7 @@ public class PasswordsRepositorySession extends
       @Override
       public void run() {
         if (!isActive()) {
-          delegate.onFetchFailed(new InactiveSessionException(null), null);
+          delegate.onFetchFailed(new InactiveSessionException());
           return;
         }
 
@@ -222,7 +222,7 @@ public class PasswordsRepositorySession extends
 
         } catch (Exception e) {
           Logger.error(LOG_TAG, "Exception in fetch.");
-          delegate.onFetchFailed(e, null);
+          delegate.onFetchFailed(e);
         }
       }
     };
@@ -404,7 +404,7 @@ public class PasswordsRepositorySession extends
       @Override
       public void run() {
         if (!isActive()) {
-          delegate.onWipeFailed(new InactiveSessionException(null));
+          delegate.onWipeFailed(new InactiveSessionException());
           return;
         }
 
@@ -559,7 +559,7 @@ public class PasswordsRepositorySession extends
       }
     } catch (Exception e) {
       Logger.error(LOG_TAG, "Exception in fetch.");
-      delegate.onFetchFailed(e, null);
+      delegate.onFetchFailed(e);
       return false;
     } finally {
       cursor.close();
@@ -654,8 +654,6 @@ public class PasswordsRepositorySession extends
    * Make a PasswordRecord from a Cursor.
    * @param cur
    *        Cursor from query.
-   * @param deleted
-   *        true if creating a deleted Record, false if otherwise.
    * @return
    *        PasswordRecord populated from Cursor.
    */

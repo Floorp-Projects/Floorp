@@ -127,7 +127,7 @@ public class FormHistoryRepositorySession extends
       @Override
       public void run() {
         if (!isActive()) {
-          delegate.onGuidsSinceFailed(new InactiveSessionException(null));
+          delegate.onGuidsSinceFailed(new InactiveSessionException());
           return;
         }
 
@@ -251,7 +251,7 @@ public class FormHistoryRepositorySession extends
       @Override
       public void run() {
         if (!isActive()) {
-          delegate.onFetchFailed(new InactiveSessionException(null), null);
+          delegate.onFetchFailed(new InactiveSessionException());
           return;
         }
 
@@ -262,7 +262,7 @@ public class FormHistoryRepositorySession extends
             fetchFromCursor(cursor, filter, delegate); // Closes cursor.
           } catch (Exception e) {
             Logger.warn(LOG_TAG, "Exception during fetchHelper", e);
-            delegate.onFetchFailed(e, null);
+            delegate.onFetchFailed(e);
             return;
           }
         }

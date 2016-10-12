@@ -168,7 +168,7 @@ public class FennecTabsRepository extends Repository {
               cursor.close();
             }
           } catch (Exception e) {
-            delegate.onFetchFailed(e, null);
+            delegate.onFetchFailed(e);
             return;
           }
           delegate.onFetchCompleted(now());
