@@ -1,5 +1,6 @@
 import imp
 import os
+import re
 from six.moves.urllib.parse import urljoin
 from fnmatch import fnmatch
 try:
@@ -14,6 +15,7 @@ from .item import Stub, ManualTest, WebdriverSpecTest, RefTest, TestharnessTest
 from .utils import rel_path_to_url, is_blacklisted, ContextManagerBytesIO, cached_property
 
 wd_pattern = "*.py"
+meta_re = re.compile("//\s*<meta>\s*(\w*)=(.*)$")
 
 def replace_end(s, old, new):
     """
@@ -57,7 +59,7 @@ class SourceFile(object):
 
         self.type_flag = None
         if "-" in self.name:
-            self.type_flag = self.name.rsplit("-", 1)[1]
+            self.type_flag = self.name.rsplit("-", 1)[1].split(".")[0]
 
         self.meta_flags = self.name.split(".")[1:]
 
@@ -205,6 +207,15 @@ class SourceFile(object):
     def timeout(self):
         """The timeout of a test or reference file. "long" if the file has an extended timeout
         or None otherwise"""
+        if self.name_is_worker:
+            with self.open() as f:
+                for line in f:
+                    m = meta_re.match(line)
+                    if m and m.groups()[0] == "timeout":
+                        if m.groups()[1].lower() == "long":
+                            return "long"
+                        return
+
         if not self.root:
             return
 
@@ -332,7 +343,8 @@ class SourceFile(object):
             ]
 
         elif self.name_is_worker:
-            rv = [TestharnessTest(self, replace_end(self.url, ".worker.js", ".worker"))]
+            rv = [TestharnessTest(self, replace_end(self.url, ".worker.js", ".worker"),
+                                  timeout=self.timeout)]
 
         elif self.name_is_webdriver:
             rv = [WebdriverSpecTest(self, self.url)]
