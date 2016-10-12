@@ -887,7 +887,21 @@ public:
                     GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
                     GLenum unpackType,
                     const dom::Nullable<dom::ArrayBufferView>& maybeView,
-                    ErrorResult&);
+                    ErrorResult& out_error)
+    {
+        if (IsContextLost())
+            return;
+
+        TexImage2D(texImageTarget, level, internalFormat, width, height, border,
+                   unpackFormat, unpackType, maybeView, 0, out_error);
+    }
+
+    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
+                    GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
+                    GLenum unpackType,
+                    const dom::Nullable<dom::ArrayBufferView>& maybeSrc,
+                    GLuint srcElemOffset, ErrorResult&);
+
 protected:
     void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
                     GLenum unpackFormat, GLenum unpackType,
@@ -912,33 +926,21 @@ public:
                        ErrorResult& out_error);
 
     ////////////////
-    // Pseudo-nullable WebGL1 entrypoints
+    // dom::ImageData
 
     void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
                     GLenum unpackFormat, GLenum unpackType,
                     const dom::ImageData* imageData, ErrorResult& out_error)
     {
         const char funcName[] = "texImage2D";
-        if (!imageData) {
-            ErrorInvalidValue("%s: `data` must not be null.", funcName);
+        if (IsContextLost())
             return;
-        }
+
+        if (!imageData)
+            return ErrorInvalidValue("%s: `data` must not be null.", funcName);
+
         TexImage2D(texImageTarget, level, internalFormat, unpackFormat, unpackType,
                    *imageData, out_error);
-    }
-
-    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
-                       GLsizei width, GLsizei height, GLenum unpackFormat,
-                       GLenum unpackType,
-                       const dom::Nullable<dom::ArrayBufferView>& maybeView, ErrorResult&)
-    {
-        const char funcName[] = "texSubImage2D";
-        if (maybeView.IsNull()) {
-            ErrorInvalidValue("%s: `data` must not be null.", funcName);
-            return;
-        }
-        TexSubImage2D(texImageTarget, level, xOffset, yOffset, width, height,
-                      unpackFormat, unpackType, maybeView.Value());
     }
 
     void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
@@ -953,6 +955,32 @@ public:
         TexSubImage2D(texImageTarget, level, xOffset, yOffset, unpackFormat, unpackType,
                       *imageData, out_error);
     }
+
+    ////
+    // ArrayBufferView
+
+    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
+                       GLsizei width, GLsizei height, GLenum unpackFormat,
+                       GLenum unpackType,
+                       const dom::Nullable<dom::ArrayBufferView>& maybeSrc,
+                       ErrorResult& out_error)
+    {
+        const char funcName[] = "texSubImage2D";
+        if (IsContextLost())
+            return;
+
+        if (maybeSrc.IsNull())
+            return ErrorInvalidValue("%s: `data` must not be null.", funcName);
+
+        TexSubImage2D(texImageTarget, level, xOffset, yOffset, width, height,
+                      unpackFormat, unpackType, maybeView.Value(), 0, out_error);
+    }
+
+    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
+                       GLsizei width, GLsizei height, GLenum unpackFormat,
+                       GLenum unpackType,
+                       const dom::ArrayBufferView& srcView, GLuint srcElemOffset,
+                       ErrorResult&);
 
     //////
     // WebGLTextureUpload.cpp
