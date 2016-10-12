@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<title>
+Reference of testcases which don't create a stacking context for bug 1278136
+</title>
+<style>
+span {
+  height: 100px;
+  width: 100px;
+  background: green;
+  position: fixed;
+  top: 50px;
+}
+#test {
+  height: 100px;
+  width: 100px;
+  background: blue;
+}
+</style>
+<span></span>
+<div id="test"></div>
