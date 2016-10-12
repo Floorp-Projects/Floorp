@@ -554,8 +554,7 @@ nsFrame::Init(nsIContent*       aContent,
   }
   const nsStyleDisplay *disp = StyleDisplay();
   if (disp->HasTransform(this) ||
-      nsLayoutUtils::HasRelevantAnimationOfProperty(this,
-                                                    eCSSProperty_transform)) {
+      nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_transform)) {
     // The frame gets reconstructed if we toggle the -moz-transform
     // property, so we can set this bit here and then ignore it.
     mState |= NS_FRAME_MAY_BE_TRANSFORMED;
@@ -1140,8 +1139,8 @@ nsIFrame::IsTransformed() const
           (StyleDisplay()->HasTransform(this) ||
            IsSVGTransformed() ||
            (mContent &&
-            nsLayoutUtils::HasRelevantAnimationOfProperty(
-              this, eCSSProperty_transform) &&
+            nsLayoutUtils::HasAnimationOfProperty(this,
+                                                  eCSSProperty_transform) &&
             IsFrameOfType(eSupportsCSSTransforms) &&
             mContent->GetPrimaryFrame() == this)));
 }
@@ -1153,8 +1152,7 @@ nsIFrame::HasOpacityInternal(float aThreshold) const
   return StyleEffects()->mOpacity < aThreshold ||
          (StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) ||
          (mContent &&
-           nsLayoutUtils::HasRelevantAnimationOfProperty(
-             this, eCSSProperty_opacity) &&
+           nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_opacity) &&
            mContent->GetPrimaryFrame() == this);
 }
 
@@ -2115,8 +2113,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   bool opacityItemForEventsAndPluginsOnly = false;
   if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
-      !nsLayoutUtils::HasActiveAnimationOfProperty(this,
-                                                   eCSSProperty_opacity)) {
+      !nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_opacity)) {
     if (needEventRegions ||
         aBuilder->WillComputePluginGeometry()) {
       opacityItemForEventsAndPluginsOnly = true;
