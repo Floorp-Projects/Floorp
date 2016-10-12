@@ -183,7 +183,7 @@ WebGLContext::ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
 static bool
 ValidateUnpackBytes(WebGLContext* webgl, const char* funcName, uint32_t width,
                     uint32_t height, uint32_t depth, const webgl::PackingInfo& pi,
-                    uint32_t byteCount, webgl::TexUnpackBlob* blob)
+                    size_t byteCount, webgl::TexUnpackBlob* blob)
 {
     if (!width || !height || !depth)
         return true;
@@ -240,7 +240,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
                             GLint yOffset, GLint zOffset, GLsizei rawWidth,
                             GLsizei rawHeight, GLsizei rawDepth, GLint border,
                             GLenum unpackFormat, GLenum unpackType,
-                            const dom::ArrayBufferView* view)
+                            const dom::ArrayBufferView* srcView, GLuint srcElemOffset)
 {
     uint32_t width, height, depth;
     if (!ValidateExtents(mContext, funcName, rawWidth, rawHeight, rawDepth, border,
@@ -257,17 +257,19 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     ////
 
     const uint8_t* bytes = nullptr;
-    uint32_t byteCount = 0;
+    size_t byteCount = 0;
 
-    if (view) {
-        view->ComputeLengthAndData();
-        bytes = view->DataAllowShared();
-        byteCount = view->LengthAllowShared();
-
-        const auto& jsType = view->Type();
+    if (srcView) {
+        const auto& jsType = srcView->Type();
         if (!DoesJSTypeMatchUnpackType(pi.type, jsType)) {
             mContext->ErrorInvalidOperation("%s: `pixels` not compatible with `type`.",
                                             funcName);
+            return;
+        }
+
+        if (!mContext->ValidateArrayBufferView(funcName, *srcView, srcElemOffset, 0,
+                                               &bytes, &byteCount))
+        {
             return;
         }
     } else if (isSubImage) {
@@ -1451,7 +1453,8 @@ void
 WebGLTexture::CompressedTexImage(const char* funcName, TexImageTarget target, GLint level,
                                  GLenum internalFormat, GLsizei rawWidth,
                                  GLsizei rawHeight, GLsizei rawDepth, GLint border,
-                                 const dom::ArrayBufferView& view)
+                                 const dom::ArrayBufferView& srcView,
+                                 GLuint srcElemOffset)
 {
     uint32_t width, height, depth;
     if (!ValidateExtents(mContext, funcName, rawWidth, rawHeight, rawDepth, border,
@@ -1491,12 +1494,16 @@ WebGLTexture::CompressedTexImage(const char* funcName, TexImageTarget target, GL
     ////////////////////////////////////
     // Get source info
 
-    view.ComputeLengthAndData();
-    const void* data = view.DataAllowShared();
-    size_t dataSize = view.LengthAllowShared();
+    uint8_t* bytes;
+    size_t byteLen;
+    if (!mContext->ValidateArrayBufferView(funcName, srcView, srcElemOffset, 0, &bytes,
+                                           &byteLen))
+    {
+        return;
+    }
 
     if (!ValidateCompressedTexUnpack(mContext, funcName, width, height, depth, format,
-                                     dataSize))
+                                     byteLen))
     {
         return;
     }
@@ -1517,7 +1524,7 @@ WebGLTexture::CompressedTexImage(const char* funcName, TexImageTarget target, GL
 
     // Warning: Possibly shared memory.  See bug 1225033.
     GLenum error = DoCompressedTexImage(mContext->gl, target, level, internalFormat,
-                                        width, height, depth, dataSize, data);
+                                        width, height, depth, byteLen, bytes);
     if (error == LOCAL_GL_OUT_OF_MEMORY) {
         mContext->ErrorOutOfMemory("%s: Ran out of memory during upload.", funcName);
         return;
@@ -1564,7 +1571,8 @@ WebGLTexture::CompressedTexSubImage(const char* funcName, TexImageTarget target,
                                     GLint level, GLint xOffset, GLint yOffset,
                                     GLint zOffset, GLsizei rawWidth, GLsizei rawHeight,
                                     GLsizei rawDepth, GLenum sizedUnpackFormat,
-                                    const dom::ArrayBufferView& view)
+                                    const dom::ArrayBufferView& srcView,
+                                    GLuint srcElemOffset)
 {
     uint32_t width, height, depth;
     if (!ValidateExtents(mContext, funcName, rawWidth, rawHeight, rawDepth, 0, &width,
@@ -1590,9 +1598,13 @@ WebGLTexture::CompressedTexSubImage(const char* funcName, TexImageTarget target,
     ////////////////////////////////////
     // Get source info
 
-    view.ComputeLengthAndData();
-    size_t dataSize = view.LengthAllowShared();
-    const void* data = view.DataAllowShared();
+    uint8_t* bytes;
+    size_t byteLen;
+    if (!mContext->ValidateArrayBufferView(funcName, srcView, srcElemOffset, 0, &bytes,
+                                           &byteLen))
+    {
+        return;
+    }
 
     auto srcUsage = mContext->mFormatUsage->GetSizedTexUsage(sizedUnpackFormat);
     if (!srcUsage->format->compression) {
@@ -1610,7 +1622,7 @@ WebGLTexture::CompressedTexSubImage(const char* funcName, TexImageTarget target,
     auto format = srcUsage->format;
     MOZ_ASSERT(format == dstFormat);
     if (!ValidateCompressedTexUnpack(mContext, funcName, width, height, depth, format,
-                                     dataSize))
+                                     byteLen))
     {
         return;
     }
@@ -1669,7 +1681,7 @@ WebGLTexture::CompressedTexSubImage(const char* funcName, TexImageTarget target,
     // Warning: Possibly shared memory.  See bug 1225033.
     GLenum error = DoCompressedTexSubImage(mContext->gl, target, level, xOffset, yOffset,
                                            zOffset, width, height, depth,
-                                           sizedUnpackFormat, dataSize, data);
+                                           sizedUnpackFormat, byteLen, bytes);
     if (error == LOCAL_GL_OUT_OF_MEMORY) {
         mContext->ErrorOutOfMemory("%s: Ran out of memory during upload.", funcName);
         return;
