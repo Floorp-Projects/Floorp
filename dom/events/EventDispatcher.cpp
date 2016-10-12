@@ -995,7 +995,8 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   }
   if (aEventType.LowerCaseEqualsLiteral("messageevent")) {
     LOG_EVENT_CREATION(MESSAGEEVENT);
-    return NS_NewDOMMessageEvent(aOwner, aPresContext, nullptr);
+    RefPtr<Event> event = new MessageEvent(aOwner, aPresContext, nullptr);
+    return event.forget();
   }
   if (aEventType.LowerCaseEqualsLiteral("notifypaintevent")) {
     LOG_EVENT_CREATION(NOTIFYPAINTEVENT);
