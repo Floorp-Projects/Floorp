@@ -30,8 +30,7 @@ var data = [
   { type: 'datetime', apply: true, todo: true },
   { type: 'date', apply: true },
   { type: 'month', apply: true },
-  // TODO: temporary set to false until bug 888316 is fixed.
-  { type: 'week', apply: false },
+  { type: 'week', apply: true },
   { type: 'time', apply: true },
   { type: 'datetime-local', apply: true, todo: true },
   { type: 'number', apply: true },
@@ -840,7 +839,115 @@ for (var test of data) {
 
       break;
     case 'week':
-      // TODO: this is temporary until bug 888316 is fixed.
+      // When step is invalid, every week is valid
+      input.step = 0;
+      input.value = '2016-W30';
+      checkValidity(input, true, apply);
+
+      input.step = 'foo';
+      input.value = '1970-W01';
+      checkValidity(input, true, apply);
+
+      input.step = '-1';
+      input.value = '1970-W01';
+      checkValidity(input, true, apply);
+
+      input.removeAttribute('step');
+      input.value = '1500-W01';
+      checkValidity(input, true, apply);
+
+      input.step = 'any';
+      input.value = '1966-W52';
+      checkValidity(input, true, apply);
+
+      input.step = 'ANY';
+      input.value = '2013-W10';
+      checkValidity(input, true, apply);
+
+      // When min is set to a valid week, there is a step base.
+      input.min = '2000-W01';
+      input.step = '2';
+      input.value = '2000-W03';
+      checkValidity(input, true, apply);
+
+      input.value = '2000-W02';
+      checkValidity(input, false, apply, { low: "2000-W01", high: "2000-W03" });
+
+      input.min = '2012-W52';
+      input.value = '2013-W01';
+      checkValidity(input, false, apply, { low: "2012-W52", high: "2013-W02" });
+
+      input.min = '2010-W01';
+      input.step = '1.1';
+      input.value = '2010-W02';
+      checkValidity(input, true, apply);
+
+      input.min = '2010-W05';
+      input.step = '1.9';
+      input.value = '2010-W06';
+      checkValidity(input, false, apply, { low: "2010-W05", high: "2010-W07" });
+
+      // Without any step attribute the week is valid
+      input.removeAttribute('step');
+      checkValidity(input, true, apply);
+
+      input.min = '1950-W01';
+      input.step = '53';
+      input.value = '1951-W01';
+      checkValidity(input, false, apply, { low: "1950-W01", high: "1951-W02" });
+
+      input.min = '1951-W01';
+      input.step = '52';
+      input.value = '1952-W01';
+      checkValidity(input, true, apply);
+
+      input.step = '0.9';
+      input.value = '1951-W02';
+      checkValidity(input, true, apply);
+
+      input.step = '1.5';
+      input.value = '1951-W04';
+      checkValidity(input, false, apply, { low: "1951-W03", high: "1951-W05" });
+
+      input.value = '1951-W20';
+      checkValidity(input, false, apply, { low: "1951-W19", high: "1951-W21" });
+
+      input.step = '300';
+      input.min= '1968-W01';
+      input.value = '1968-W05';
+      checkValidity(input, false, apply, { low: "1968-W01", high: "1973-W40" });
+
+      input.value = '1971-W01';
+      checkValidity(input, false, apply, { low: "1968-W01", high: "1973-W40" });
+
+      input.value = '1975-W01';
+      checkValidity(input, false, apply, { low: "1973-W40", high: "1979-W27" });
+
+      input.value = '1985-W14';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1991-W01';
+      input.value = '1991-W01';
+      checkValidity(input, true, apply);
+
+      input.value = '1991-W02';
+      checkValidity(input, false, apply, { low: "1991-W01", high: "1991-W03" });
+
+      input.value = '1991-W03';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1969-W52';
+      input.value = '1969-W52';
+      checkValidity(input, true, apply);
+
+      input.value = '1970-W01';
+      checkValidity(input, false, apply, { low: "1969-W52", high: "1970-W02" });
+
+      input.value = '1970-W02';
+      checkValidity(input, true, apply);
+
       break;
     default:
       ok(false, "Implement the tests for <input type='" + test.type + " >");

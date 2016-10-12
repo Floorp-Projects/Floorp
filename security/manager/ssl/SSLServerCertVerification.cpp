@@ -1367,10 +1367,6 @@ AuthCertificate(CertVerifier& certVerifier,
                           pinningTelemetryInfo.certPinningResultBucket);
   }
 
-  // We want to remember the CA certs in the temp db, so that the application can find the
-  // complete chain at any time it might need it.
-  // But we keep only those CA certs in the temp db, that we didn't already know.
-
   RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
   RefPtr<nsNSSCertificate> nsc;
 
