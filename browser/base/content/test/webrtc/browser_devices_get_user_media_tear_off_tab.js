@@ -65,7 +65,10 @@ var gTests = [
 
 function test() {
   waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 1]]}, runTest);
+}
 
+function runTest() {
   // An empty tab where we can load the content script without leaving it
   // behind at the end of the test.
   gBrowser.addTab();

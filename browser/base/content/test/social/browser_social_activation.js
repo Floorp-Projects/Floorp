@@ -169,7 +169,9 @@ function test() {
     PopupNotifications.panel.removeAttribute("animate");
   });
   waitForExplicitFinish();
-  runSocialTests(tests, undefined, postTestCleanup);
+  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 1]]}, () => {
+    runSocialTests(tests, undefined, postTestCleanup);
+  });
 }
 
 var tests = {
