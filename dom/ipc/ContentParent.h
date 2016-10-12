@@ -843,10 +843,6 @@ private:
 
   virtual bool DeallocPHandlerServiceParent(PHandlerServiceParent*) override;
 
-  virtual PTelephonyParent* AllocPTelephonyParent() override;
-
-  virtual bool DeallocPTelephonyParent(PTelephonyParent*) override;
-
   virtual PMediaParent* AllocPMediaParent() override;
 
   virtual bool DeallocPMediaParent(PMediaParent* aActor) override;

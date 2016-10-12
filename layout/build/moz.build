@@ -42,7 +42,6 @@ LOCAL_INCLUDES += [
     '/dom/speakermanager',
     '/dom/storage',
     '/dom/svg',
-    '/dom/telephony',
     '/dom/xbl',
     '/dom/xslt/base',
     '/dom/xslt/xml',
