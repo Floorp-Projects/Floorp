@@ -297,23 +297,6 @@ AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
   aResultTail = &resultItem->mNext;
 }
 
-static already_AddRefed<mozilla::css::URLValue>
-FragmentOrURLToURLValue(FragmentOrURL* aUrl, nsIDocument* aDoc)
-{
-  nsString path;
-  aUrl->GetSourceString(path);
-  RefPtr<nsStringBuffer> uriStringBuffer = nsCSSValue::BufferFromString(path);
-  // XXXheycam We should store URLValue objects inside FragmentOrURLs so that
-  // we can extract the original base URI, referrer and principal to pass in
-  // here.
-  RefPtr<mozilla::css::URLValue> result =
-    new mozilla::css::URLValue(aUrl->GetSourceURL(), uriStringBuffer,
-                               aUrl->GetSourceURL(), aDoc->GetDocumentURI(),
-                               aDoc->NodePrincipal());
-
-  return result.forget();
-}
-
 // Like nsStyleCoord::CalcValue, but with length in float pixels instead
 // of nscoord.
 struct PixelCalcValue
@@ -4120,12 +4103,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           const StyleShapeSourceType type = clipPath.GetType();
 
           if (type == StyleShapeSourceType::URL) {
-            nsIDocument* doc = aStyleContext->PresContext()->Document();
-            RefPtr<mozilla::css::URLValue> url =
-              FragmentOrURLToURLValue(clipPath.GetURL(), doc);
-
             auto result = MakeUnique<nsCSSValue>();
-            result->SetURLValue(url);
+            result->SetURLValue(clipPath.GetURL());
             aComputedValue.SetAndAdoptCSSValueValue(result.release(), eUnit_URL);
           } else if (type == StyleShapeSourceType::Box) {
             aComputedValue.SetIntValue(clipPath.GetReferenceBox(),
@@ -4157,11 +4136,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             const nsStyleFilter& filter = filters[i];
             int32_t type = filter.GetType();
             if (type == NS_STYLE_FILTER_URL) {
-              nsIDocument* doc = aStyleContext->PresContext()->Document();
-              RefPtr<mozilla::css::URLValue> url =
-                FragmentOrURLToURLValue(filter.GetURL(), doc);
-
-              item->mValue.SetURLValue(url);
+              item->mValue.SetURLValue(filter.GetURL());
             } else {
               nsCSSKeyword functionName =
                 nsCSSProps::ValueToKeywordEnum(type,
@@ -4316,42 +4291,40 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
     case eStyleAnimType_PaintServer: {
       const nsStyleSVGPaint& paint =
         StyleDataAtOffset<nsStyleSVGPaint>(styleStruct, ssOffset);
-      if (paint.mType == eStyleSVGPaintType_Color) {
-        aComputedValue.SetColorValue(paint.mPaint.mColor);
-        return true;
-      }
-      if (paint.mType == eStyleSVGPaintType_Server) {
-        if (!paint.mPaint.mPaintServer) {
-          NS_WARNING("Null paint server");
-          return false;
+      switch (paint.Type()) {
+        case eStyleSVGPaintType_Color:
+          aComputedValue.SetColorValue(paint.GetColor());
+          return true;
+        case eStyleSVGPaintType_Server: {
+          css::URLValue* url = paint.GetPaintServer();
+          if (!url) {
+            NS_WARNING("Null paint server");
+            return false;
+          }
+          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
+          pair->mXValue.SetURLValue(url);
+          pair->mYValue.SetColorValue(paint.GetFallbackColor());
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
+                                                      eUnit_CSSValuePair);
+          return true;
         }
-        nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
-
-        nsIDocument* doc = aStyleContext->PresContext()->Document();
-        RefPtr<mozilla::css::URLValue> url =
-          FragmentOrURLToURLValue(paint.mPaint.mPaintServer, doc);
-
-        pair->mXValue.SetURLValue(url);
-        pair->mYValue.SetColorValue(paint.mFallbackColor);
-        aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
-                                                    eUnit_CSSValuePair);
-        return true;
+        case eStyleSVGPaintType_ContextFill:
+        case eStyleSVGPaintType_ContextStroke: {
+          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
+          pair->mXValue.SetIntValue(paint.Type() == eStyleSVGPaintType_ContextFill ?
+                                    NS_COLOR_CONTEXT_FILL : NS_COLOR_CONTEXT_STROKE,
+                                    eCSSUnit_Enumerated);
+          pair->mYValue.SetColorValue(paint.GetFallbackColor());
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
+                                                      eUnit_CSSValuePair);
+          return true;
+        }
+        default:
+          MOZ_ASSERT(paint.Type() == eStyleSVGPaintType_None,
+                     "Unexpected SVG paint type");
+          aComputedValue.SetNoneValue();
+          return true;
       }
-      if (paint.mType == eStyleSVGPaintType_ContextFill ||
-          paint.mType == eStyleSVGPaintType_ContextStroke) {
-        nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
-        pair->mXValue.SetIntValue(paint.mType == eStyleSVGPaintType_ContextFill ?
-                                  NS_COLOR_CONTEXT_FILL : NS_COLOR_CONTEXT_STROKE,
-                                  eCSSUnit_Enumerated);
-        pair->mYValue.SetColorValue(paint.mFallbackColor);
-        aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
-                                                    eUnit_CSSValuePair);
-        return true;
-      }
-      MOZ_ASSERT(paint.mType == eStyleSVGPaintType_None,
-                 "Unexpected SVG paint type");
-      aComputedValue.SetNoneValue();
-      return true;
     }
     case eStyleAnimType_Shadow: {
       const nsCSSShadowArray* shadowArray =

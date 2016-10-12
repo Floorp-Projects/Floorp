@@ -33,6 +33,7 @@
 #include "gfxFontFamilyList.h"
 
 class imgRequestProxy;
+class nsIContent;
 class nsIDocument;
 class nsIPrincipal;
 class nsIURI;
@@ -92,6 +93,7 @@ namespace css {
 
 struct URLValueData
 {
+protected:
   // Methods are not inline because using an nsIPrincipal means requiring
   // caps, which leads to REQUIRES hell, since this header is included all
   // over.
@@ -111,10 +113,15 @@ struct URLValueData
                already_AddRefed<PtrHolder<nsIURI>> aReferrer,
                already_AddRefed<PtrHolder<nsIPrincipal>> aOriginPrincipal);
 
-  bool operator==(const URLValueData& aOther) const;
+public:
+  // Returns true iff all fields of the two URLValueData objects are equal.
+  //
+  // Only safe to call on the main thread, since this will call Equals on the
+  // nsIURI and nsIPrincipal objects stored on the URLValueData objects.
+  bool Equals(const URLValueData& aOther) const;
 
   // Returns true iff we know for sure, by comparing the mBaseURI pointer,
-  // the specified url() value mString, and the mLocalURLFlag, that these
+  // the specified url() value mString, and the mIsLocalRef, that these
   // two URLValueData objects represent the same computed url() value.
   //
   // Doesn't look at mReferrer or mOriginPrincipal.
@@ -128,9 +135,20 @@ struct URLValueData
 
   nsIURI* GetURI() const;
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  bool IsLocalRef() const { return mIsLocalRef; }
 
-  bool GetLocalURLFlag() const { return mLocalURLFlag; }
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLValueData)
+
+  // When matching a url with mIsLocalRef set, resolve it against aURI;
+  // Otherwise, ignore aURL and return mURL directly.
+  already_AddRefed<nsIURI> ResolveLocalRef(nsIURI* aURI) const;
+  already_AddRefed<nsIURI> ResolveLocalRef(nsIContent* aContent) const;
+
+  // Serializes mURI as a computed URI value, taking into account mIsLocalRef
+  // and serializing just the fragment if true.
+  void GetSourceString(nsString& aRef) const;
+
+  bool EqualsExceptRef(nsIURI* aURI) const;
 
 private:
   // mURI stores the lazily resolved URI.  This may be null if the URI is
@@ -143,15 +161,20 @@ public:
   PtrHandle<nsIPrincipal> mOriginPrincipal;
 private:
   mutable bool mURIResolved;
-  // mLocalURLFlag is set when url starts with a U+0023 number
-  // sign(#) character.
-  bool mLocalURLFlag;
+  // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
+  bool mIsLocalRef;
 
+protected:
+  virtual ~URLValueData() = default;
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+private:
   URLValueData(const URLValueData& aOther) = delete;
   URLValueData& operator=(const URLValueData& aOther) = delete;
 };
 
-struct URLValue : public URLValueData
+struct URLValue final : public URLValueData
 {
   // These two constructors are safe to call only on the main thread.
   URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
@@ -171,15 +194,9 @@ struct URLValue : public URLValueData
   URLValue& operator=(const URLValue&) = delete;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-protected:
-  ~URLValue() {}
-
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLValue)
 };
 
-struct ImageValue : public URLValueData
+struct ImageValue final : public URLValueData
 {
   // Not making the constructor and destructor inline because that would
   // force us to include imgIRequest.h, which leads to REQUIRES hell, since
@@ -196,15 +213,13 @@ struct ImageValue : public URLValueData
 
   // XXXheycam We should have our own SizeOfIncludingThis method.
 
-private:
+protected:
   ~ImageValue();
 
 public:
-  // Inherit operator== from URLValue
+  // Inherit Equals from URLValueData
 
   nsRefPtrHashtable<nsPtrHashKey<nsIDocument>, imgRequestProxy> mRequests;
-
-  NS_INLINE_DECL_REFCOUNTING(ImageValue)
 };
 
 struct GridNamedArea {

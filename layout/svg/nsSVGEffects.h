@@ -599,7 +599,8 @@ public:
    * A helper function to resolve marker's URL.
    */
   static already_AddRefed<nsIURI>
-  GetMarkerURI(nsIFrame* aFrame, mozilla::FragmentOrURL nsStyleSVG::* aMarker);
+  GetMarkerURI(nsIFrame* aFrame,
+               RefPtr<mozilla::css::URLValue> nsStyleSVG::* aMarker);
 
   /**
    * A helper function to resolve clip-path URL.

@@ -118,6 +118,7 @@ var Bookmarks = Object.freeze({
    menuGuid:    "menu________",
    toolbarGuid: "toolbar_____",
    unfiledGuid: "unfiled_____",
+   mobileGuid:  "mobile______",
 
    // With bug 424160, tags will stop being bookmarks, thus this root will
    // be removed.  Do not rely on this, rather use the tagging service API.
@@ -410,7 +411,7 @@ var Bookmarks = Object.freeze({
 
     // Disallow removing the root folders.
     if ([this.rootGuid, this.menuGuid, this.toolbarGuid, this.unfiledGuid,
-         this.tagsGuid].includes(info.guid)) {
+         this.tagsGuid, this.mobileGuid].includes(info.guid)) {
       throw new Error("It's not possible to remove Places root folders.");
     }
 
@@ -465,7 +466,8 @@ var Bookmarks = Object.freeze({
   eraseEverything: function(options={}) {
     return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: eraseEverything",
       db => db.executeTransaction(function* () {
-        const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid];
+        const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid,
+                             this.mobileGuid];
         yield removeFoldersContents(db, folderGuids, options);
         const time = PlacesUtils.toPRTime(new Date());
         for (let folderGuid of folderGuids) {

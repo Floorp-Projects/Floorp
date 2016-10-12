@@ -58,8 +58,10 @@ add_task(function* test_annos_expire_session() {
     let stmt = DBConn(true).createAsyncStatement(
       `SELECT id FROM moz_annos
        UNION ALL
-       SELECT id FROM moz_items_annos`
+       SELECT id FROM moz_items_annos
+       WHERE expiration = :expiration`
     );
+    stmt.params.expiration = as.EXPIRE_SESSION;
     stmt.executeAsync({
       handleResult: function(aResultSet) {
         dump_table("moz_annos");

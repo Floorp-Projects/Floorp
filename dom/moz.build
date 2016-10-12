@@ -139,7 +139,6 @@ if CONFIG['MOZ_SECUREELEMENT']:
 if CONFIG['MOZ_B2G']:
     DIRS += [
         'downloads',
-        'identity'
     ]
 
 DIRS += ['presentation']

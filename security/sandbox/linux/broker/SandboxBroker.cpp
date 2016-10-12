@@ -523,7 +523,7 @@ SandboxBroker::ThreadMain(void)
       pathLen2 = strnlen(pathBuf2, kMaxPathLen);
       if (pathLen2 > 0) {
         // Force 0 termination.
-        pathBuf[pathLen2] = '\0';
+        pathBuf2[pathLen2] = '\0';
         pathLen2 = ConvertToRealPath(pathBuf2, sizeof(pathBuf2), pathLen2);
         int perms2 = mPolicy->Lookup(nsDependentCString(pathBuf2, pathLen2));
 

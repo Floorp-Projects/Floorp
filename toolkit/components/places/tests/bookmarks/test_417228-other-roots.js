@@ -25,7 +25,7 @@ tests.push({
     // check initial size
     var rootNode = PlacesUtils.getFolderContents(PlacesUtils.placesRootId,
                                                  false, false).root;
-    do_check_eq(rootNode.childCount, 4);
+    do_check_eq(rootNode.childCount, 5);
 
     // create a test root
     this._folderTitle = "test folder";
@@ -33,7 +33,7 @@ tests.push({
       PlacesUtils.bookmarks.createFolder(PlacesUtils.placesRootId,
                                          this._folderTitle,
                                          PlacesUtils.bookmarks.DEFAULT_INDEX);
-    do_check_eq(rootNode.childCount, 5);
+    do_check_eq(rootNode.childCount, 6);
 
     // add a tag
     this._testURI = PlacesUtils._uri("http://test");
@@ -42,7 +42,8 @@ tests.push({
 
     // add a child to each root, including our test root
     this._roots = [PlacesUtils.bookmarksMenuFolderId, PlacesUtils.toolbarFolderId,
-                   PlacesUtils.unfiledBookmarksFolderId, this._folderId];
+                   PlacesUtils.unfiledBookmarksFolderId, PlacesUtils.mobileFolderId,
+                   this._folderId];
     this._roots.forEach(function(aRootId) {
       // clean slate
       PlacesUtils.bookmarks.removeFolderChildren(aRootId);
@@ -57,7 +58,7 @@ tests.push({
       PlacesUtils.bookmarks.createFolder(PlacesUtils.placesRootId,
                                          "excluded",
                                          PlacesUtils.bookmarks.DEFAULT_INDEX);
-    do_check_eq(rootNode.childCount, 6);
+    do_check_eq(rootNode.childCount, 7);
     this.excludeItemsFromRestore.push(excludedFolderId);
 
     // add a test bookmark to it
@@ -90,7 +91,7 @@ tests.push({
     do_check_neq(rootNode.getChild(0).title, this._litterTitle);
 
     // test root count is the same
-    do_check_eq(rootNode.childCount, 6);
+    do_check_eq(rootNode.childCount, 7);
 
     var foundTestFolder = 0;
     for (var i = 0; i < rootNode.childCount; i++) {

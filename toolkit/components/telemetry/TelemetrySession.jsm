@@ -1161,9 +1161,16 @@ var Impl = {
           TOTAL_MEMORY_COLLECTOR_TIMEOUT);
         this._childrenToHearFrom = new Set();
         for (let i = 1; i < ppmm.childCount; i++) {
-          ppmm.getChildAt(i).sendAsyncMessage(MESSAGE_TELEMETRY_GET_CHILD_USS, {id: this._nextTotalMemoryId});
-          this._childrenToHearFrom.add(this._nextTotalMemoryId);
-          this._nextTotalMemoryId++;
+          let child = ppmm.getChildAt(i);
+          try {
+            child.sendAsyncMessage(MESSAGE_TELEMETRY_GET_CHILD_USS, {id: this._nextTotalMemoryId});
+            this._childrenToHearFrom.add(this._nextTotalMemoryId);
+            this._nextTotalMemoryId++;
+          } catch (ex) {
+            // If a content process has just crashed, then attempting to send it
+            // an async message will throw an exception.
+            Cu.reportError(ex);
+          }
         }
       } else {
         boundHandleMemoryReport(

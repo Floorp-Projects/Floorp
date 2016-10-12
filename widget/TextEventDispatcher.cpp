@@ -397,7 +397,8 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
                        const WidgetKeyboardEvent& aKeyboardEvent,
                        nsEventStatus& aStatus,
                        void* aData,
-                       uint32_t aIndexOfKeypress)
+                       uint32_t aIndexOfKeypress,
+                       bool aNeedsCallback)
 {
   // Note that this method is also used for dispatching key events on a plugin
   // because key events on a plugin should be dispatched same as normal key
@@ -501,7 +502,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   keyEvent.mAlternativeCharCodes.Clear();
   if ((WidgetKeyboardEvent::IsKeyDownOrKeyDownOnPlugin(aMessage) ||
        aMessage == eKeyPress) &&
-      (keyEvent.IsControl() || keyEvent.IsAlt() ||
+      (aNeedsCallback || keyEvent.IsControl() || keyEvent.IsAlt() ||
        keyEvent.IsMeta() || keyEvent.IsOS())) {
     nsCOMPtr<TextEventDispatcherListener> listener =
       do_QueryReferent(mListener);
@@ -538,7 +539,8 @@ bool
 TextEventDispatcher::MaybeDispatchKeypressEvents(
                        const WidgetKeyboardEvent& aKeyboardEvent,
                        nsEventStatus& aStatus,
-                       void* aData)
+                       void* aData,
+                       bool aNeedsCallback)
 {
   // If the key event was consumed, keypress event shouldn't be fired.
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
@@ -563,7 +565,7 @@ TextEventDispatcher::MaybeDispatchKeypressEvents(
   for (size_t i = 0; i < keypressCount; i++) {
     aStatus = nsEventStatus_eIgnore;
     if (!DispatchKeyboardEventInternal(eKeyPress, aKeyboardEvent,
-                                       aStatus, aData, i)) {
+                                       aStatus, aData, i, aNeedsCallback)) {
       // The widget must have been gone.
       break;
     }

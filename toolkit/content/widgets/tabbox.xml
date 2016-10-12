@@ -349,15 +349,26 @@
         </setter>
       </property>
 
-      <field name="tabbox" readonly="true"><![CDATA[
-        var parent = this.parentNode;
-        while (parent) {
-          if (parent.localName == "tabbox")
-            break;
-          parent = parent.parentNode;
-        }
-        parent;
-      ]]></field>
+      <property name="tabbox" readonly="true">
+        <getter><![CDATA[
+          let parent = this.parentNode;
+          while (parent) {
+            if (parent.localName == "tabbox") {
+              break;
+            }
+            parent = parent.parentNode;
+          }
+
+          // Avoid having to recalculate the tabbox property each time
+          Object.defineProperty(this, "tabbox", {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: parent
+          });
+          return parent;
+        ]]></getter>
+      </property>
 
       <!-- _tabbox is deprecated, it exists only for backwards compatibility. -->
       <field name="_tabbox" readonly="true"><![CDATA[
@@ -633,15 +644,26 @@
       </method>
 
       <!-- public -->
-      <field name="tabbox" readonly="true"><![CDATA[
-        var parent = this.parentNode;
-        while (parent) {
-          if (parent.localName == "tabbox")
-            break;
-          parent = parent.parentNode;
-        }
-        parent;
-      ]]></field>
+      <property name="tabbox" readonly="true">
+        <getter><![CDATA[
+          let parent = this.parentNode;
+          while (parent) {
+            if (parent.localName == "tabbox") {
+              break;
+            }
+            parent = parent.parentNode;
+          }
+
+          // Avoid having to recalculate the tabbox property each time
+          Object.defineProperty(this, "tabbox", {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: parent
+          });
+          return parent;
+        ]]></getter>
+      </property>
 
       <field name="_selectedPanel">this.childNodes.item(this.selectedIndex)</field>
 
@@ -770,13 +792,19 @@
       <field name="arrowKeysShouldWrap" readonly="true">
         /Mac/.test(navigator.platform)
       </field>
-      <field name="TelemetryStopwatch" readonly="true">
-        {
-          let tmp = {};
-          Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", tmp);
-          tmp.TelemetryStopwatch;
-        }
-      </field>
+      <property name="TelemetryStopwatch" readonly="true">
+        <getter><![CDATA[
+          let module = {};
+          Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", module);
+          Object.defineProperty(this, "TelemetryStopwatch", {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: module.TelemetryStopwatch
+          });
+          return module.TelemetryStopwatch;
+        ]]></getter>
+      </property>
     </implementation>
 
     <handlers>

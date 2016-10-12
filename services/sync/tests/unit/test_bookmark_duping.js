@@ -149,8 +149,8 @@ add_task(function* test_dupe_bookmark() {
 
     engine.sync();
 
-    // We've added the bookmark, its parent (folder1) plus "menu", "toolbar" and "unfiled"
-    equal(collection.count(), 5);
+    // We've added the bookmark, its parent (folder1) plus "menu", "toolbar", "unfiled", and "mobile".
+    equal(collection.count(), 6);
     equal(getFolderChildrenIDs(folder1_id).length, 1);
 
     // Now create a new incoming record that looks alot like a dupe.
@@ -170,7 +170,7 @@ add_task(function* test_dupe_bookmark() {
     engine.sync();
 
     // We should have logically deleted the dupe record.
-    equal(collection.count(), 6);
+    equal(collection.count(), 7);
     ok(getServerRecord(collection, bmk1_guid).deleted);
     // and physically removed from the local store.
     yield promiseNoLocalItem(bmk1_guid);
@@ -204,8 +204,8 @@ add_task(function* test_dupe_reparented_bookmark() {
 
     engine.sync();
 
-    // We've added the bookmark, 2 folders plus "menu", "toolbar" and "unfiled"
-    equal(collection.count(), 6);
+    // We've added the bookmark, 2 folders plus "menu", "toolbar", "unfiled", and "mobile".
+    equal(collection.count(), 7);
     equal(getFolderChildrenIDs(folder1_id).length, 1);
     equal(getFolderChildrenIDs(folder2_id).length, 0);
 
@@ -228,7 +228,7 @@ add_task(function* test_dupe_reparented_bookmark() {
     engine.sync();
 
     // We should have logically deleted the dupe record.
-    equal(collection.count(), 7);
+    equal(collection.count(), 8);
     ok(getServerRecord(collection, bmk1_guid).deleted);
     // and physically removed from the local store.
     yield promiseNoLocalItem(bmk1_guid);
@@ -270,8 +270,8 @@ add_task(function* test_dupe_reparented_locally_changed_bookmark() {
 
     engine.sync();
 
-    // We've added the bookmark, 2 folders plus "menu", "toolbar" and "unfiled"
-    equal(collection.count(), 6);
+    // We've added the bookmark, 2 folders plus "menu", "toolbar", "unfiled", and "mobile".
+    equal(collection.count(), 7);
     equal(getFolderChildrenIDs(folder1_id).length, 1);
     equal(getFolderChildrenIDs(folder2_id).length, 0);
 
@@ -300,7 +300,7 @@ add_task(function* test_dupe_reparented_locally_changed_bookmark() {
     engine.sync();
 
     // We should have logically deleted the dupe record.
-    equal(collection.count(), 7);
+    equal(collection.count(), 8);
     ok(getServerRecord(collection, bmk1_guid).deleted);
     // and physically removed from the local store.
     yield promiseNoLocalItem(bmk1_guid);
@@ -343,8 +343,8 @@ add_task(function* test_dupe_reparented_to_earlier_appearing_parent_bookmark() {
 
     engine.sync();
 
-    // We've added the bookmark, 2 folders plus "menu", "toolbar" and "unfiled"
-    equal(collection.count(), 6);
+    // We've added the bookmark, 2 folders plus "menu", "toolbar", "unfiled", and "mobile".
+    equal(collection.count(), 7);
     equal(getFolderChildrenIDs(folder1_id).length, 1);
 
     let newGUID = Utils.makeGUID();
@@ -420,8 +420,8 @@ add_task(function* test_dupe_reparented_to_later_appearing_parent_bookmark() {
 
     engine.sync();
 
-    // We've added the bookmark, 2 folders plus "menu", "toolbar" and "unfiled"
-    equal(collection.count(), 6);
+    // We've added the bookmark, 2 folders plus "menu", "toolbar", "unfiled", and "mobile".
+    equal(collection.count(), 7);
     equal(getFolderChildrenIDs(folder1_id).length, 1);
 
     // Now create a new incoming record that looks alot like a dupe of the
@@ -497,8 +497,8 @@ add_task(function* test_dupe_reparented_to_future_arriving_parent_bookmark() {
 
     engine.sync();
 
-    // We've added the bookmark, 2 folders plus "menu", "toolbar" and "unfiled"
-    equal(collection.count(), 6);
+    // We've added the bookmark, 2 folders plus "menu", "toolbar", "unfiled", and "mobile".
+    equal(collection.count(), 7);
     equal(getFolderChildrenIDs(folder1_id).length, 1);
 
     // Now create a new incoming record that looks alot like a dupe of the
@@ -522,7 +522,7 @@ add_task(function* test_dupe_reparented_to_future_arriving_parent_bookmark() {
     engine.sync();
 
     // We should have logically deleted the dupe record.
-    equal(collection.count(), 7);
+    equal(collection.count(), 8);
     ok(getServerRecord(collection, bmk1_guid).deleted);
     // and physically removed from the local store.
     yield promiseNoLocalItem(bmk1_guid);
@@ -612,8 +612,8 @@ add_task(function* test_dupe_empty_folder() {
 
     engine.sync();
 
-    // We've added 1 folder, "menu", "toolbar" and "unfiled"
-    equal(collection.count(), 4);
+    // We've added 1 folder, "menu", "toolbar", "unfiled", and "mobile".
+    equal(collection.count(), 5);
 
     // Now create new incoming records that looks alot like a dupe of "Folder 1".
     let newFolderGUID = Utils.makeGUID();
@@ -633,7 +633,7 @@ add_task(function* test_dupe_empty_folder() {
     yield validate(collection);
 
     // Collection now has one additional record - the logically deleted dupe.
-    equal(collection.count(), 5);
+    equal(collection.count(), 6);
     // original folder should be logically deleted.
     ok(getServerRecord(collection, folder1_guid).deleted);
     yield promiseNoLocalItem(folder1_guid);

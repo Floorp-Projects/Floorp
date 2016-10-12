@@ -1280,10 +1280,10 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
 {
   const nsStyleSVGPaint &paint = aStyleContext->StyleSVG()->*aFillOrStroke;
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
-  bool isServer = paint.mType == eStyleSVGPaintType_Server ||
-                  paint.mType == eStyleSVGPaintType_ContextFill ||
-                  paint.mType == eStyleSVGPaintType_ContextStroke;
-  nscolor color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
+  bool isServer = paint.Type() == eStyleSVGPaintType_Server ||
+                  paint.Type() == eStyleSVGPaintType_ContextFill ||
+                  paint.Type() == eStyleSVGPaintType_ContextStroke;
+  nscolor color = isServer ? paint.GetFallbackColor() : paint.GetColor();
   if (styleIfVisited) {
     const nsStyleSVGPaint &paintIfVisited =
       styleIfVisited->StyleSVG()->*aFillOrStroke;
@@ -1294,9 +1294,9 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
     // paint server is used or switch between paint servers and simple
     // colors.  A :visited style may only override a simple color with
     // another simple color.
-    if (paintIfVisited.mType == eStyleSVGPaintType_Color &&
-        paint.mType == eStyleSVGPaintType_Color) {
-      nscolor colors[2] = { color, paintIfVisited.mPaint.mColor };
+    if (paintIfVisited.Type() == eStyleSVGPaintType_Color &&
+        paint.Type() == eStyleSVGPaintType_Color) {
+      nscolor colors[2] = { color, paintIfVisited.GetColor() };
       return nsStyleContext::CombineVisitedColors(
                colors, aStyleContext->RelevantLinkVisited());
     }
@@ -1311,7 +1311,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
                                SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
-  if (style->mFill.mType == eStyleSVGPaintType_None) {
+  if (style->mFill.Type() == eStyleSVGPaintType_None) {
     return;
   }
 
@@ -1345,7 +1345,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
 
   if (aContextPaint) {
     RefPtr<gfxPattern> pattern;
-    switch (style->mFill.mType) {
+    switch (style->mFill.Type()) {
     case eStyleSVGPaintType_ContextFill:
       pattern = aContextPaint->GetFillPattern(dt, fillOpacity,
                                               aContext->CurrentMatrix());
@@ -1379,7 +1379,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
                                  SVGContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
-  if (style->mStroke.mType == eStyleSVGPaintType_None) {
+  if (style->mStroke.Type() == eStyleSVGPaintType_None) {
     return;
   }
 
@@ -1413,7 +1413,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
 
   if (aContextPaint) {
     RefPtr<gfxPattern> pattern;
-    switch (style->mStroke.mType) {
+    switch (style->mStroke.Type()) {
     case eStyleSVGPaintType_ContextFill:
       pattern = aContextPaint->GetFillPattern(dt, strokeOpacity,
                                               aContext->CurrentMatrix());
@@ -1619,9 +1619,9 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
   case NS_STYLE_POINTER_EVENTS_AUTO:
   case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
     if (aFrame->StyleVisibility()->IsVisible()) {
-      if (aFrame->StyleSVG()->mFill.mType != eStyleSVGPaintType_None)
+      if (aFrame->StyleSVG()->mFill.Type() != eStyleSVGPaintType_None)
         flags |= SVG_HIT_TEST_FILL;
-      if (aFrame->StyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
+      if (aFrame->StyleSVG()->mStroke.Type() != eStyleSVGPaintType_None)
         flags |= SVG_HIT_TEST_STROKE;
       if (aFrame->StyleSVG()->mStrokeOpacity > 0)
         flags |= SVG_HIT_TEST_CHECK_MRECT;
@@ -1643,9 +1643,9 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
     }
     break;
   case NS_STYLE_POINTER_EVENTS_PAINTED:
-    if (aFrame->StyleSVG()->mFill.mType != eStyleSVGPaintType_None)
+    if (aFrame->StyleSVG()->mFill.Type() != eStyleSVGPaintType_None)
       flags |= SVG_HIT_TEST_FILL;
-    if (aFrame->StyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
+    if (aFrame->StyleSVG()->mStroke.Type() != eStyleSVGPaintType_None)
       flags |= SVG_HIT_TEST_STROKE;
     if (aFrame->StyleSVG()->mStrokeOpacity)
       flags |= SVG_HIT_TEST_CHECK_MRECT;
