@@ -1318,7 +1318,13 @@ XPCJSContext::InterruptCallback(JSContext* cx)
         return true;
     }
 
-    MOZ_ASSERT(!win->IsDying());
+    if (win->IsDying()) {
+        // The window is being torn down. When that happens we try to prevent
+        // the dispatch of new runnables, so it also makes sense to kill any
+        // long-running script. The user is primarily interested in this page
+        // going away.
+        return false;
+    }
 
     if (win->GetIsPrerendered()) {
         // We cannot display a dialog if the page is being prerendered, so
