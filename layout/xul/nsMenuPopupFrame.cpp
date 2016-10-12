@@ -61,6 +61,8 @@ using mozilla::dom::PopupBoxObject;
 
 int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
+DOMTimeStamp nsMenuPopupFrame::sLastKeyTime = 0;
+
 // XXX, kyle.yuan@sun.com, there are 4 definitions for the same purpose:
 //  nsMenuPopupFrame.h, nsListControlFrame.cpp, listbox.xml, tree.xml
 //  need to find a good place to put them together.
@@ -533,6 +535,11 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
   // finally, if the popup just opened, send a popupshown event
   if (mIsOpenChanged) {
     mIsOpenChanged = false;
+
+    // Make sure the current selection in a menulist is visible.
+    if (IsMenuList() && mCurrentMenu) {
+      EnsureMenuItemIsVisible(mCurrentMenu);
+    }
 
 #ifndef MOZ_WIDGET_GTK
     // If the animate attribute is set to open, check for a transition and wait
@@ -2002,7 +2009,6 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   bool isMenu = parentContent &&
                   !parentContent->NodeInfo()->Equals(nsGkAtoms::menulist, kNameSpaceID_XUL);
 
-  static DOMTimeStamp lastKeyTime = 0;
   DOMTimeStamp keyTime;
   aKeyEvent->AsEvent()->GetTimeStamp(&keyTime);
 
@@ -2027,12 +2033,11 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
     if (isMenu) {
       // Menu supports only first-letter navigation
       mIncrementalString = uniChar;
-    } else if (sTimeoutOfIncrementalSearch &&
-               keyTime - lastKeyTime > sTimeoutOfIncrementalSearch) {
+    } else if (IsWithinIncrementalTime(keyTime)) {
+      mIncrementalString.Append(uniChar);
+    } else {
       // Interval too long, treat as new typing
       mIncrementalString = uniChar;
-    } else {
-      mIncrementalString.Append(uniChar);
     }
   }
 
@@ -2047,7 +2052,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
     stringLength = 1;
   }
 
-  lastKeyTime = keyTime;
+  sLastKeyTime = keyTime;
 
   // NOTE: If you crashed here due to a bogus |immediateParent| it is 
   //       possible that the menu whose shortcut is being looked up has 

@@ -1078,8 +1078,7 @@ EventSource::DispatchAllMessageEvents()
     // create an event that uses the MessageEvent interface,
     // which does not bubble, is not cancelable, and has no default action
 
-    RefPtr<MessageEvent> event =
-      NS_NewDOMMessageEvent(this, nullptr, nullptr);
+    RefPtr<MessageEvent> event = new MessageEvent(this, nullptr, nullptr);
 
     event->InitMessageEvent(nullptr, message->mEventName, false, false, jsData,
                             mOrigin, message->mLastEventID, nullptr, nullptr);

@@ -1148,9 +1148,8 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
         if (!JS::ToUint32(cx, args[2], &size))
             return false;
         sizeGiven = true;
-        if (offset > size) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE,
-                                      "2");
+        if (size == 0) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return false;
         }
     }
@@ -1168,7 +1167,7 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
             JS_ReportErrorASCII(cx, "Unable to stat file");
             return false;
         }
-        if (st.st_size < off_t(offset)) {
+        if (off_t(offset) >= st.st_size) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                       JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
             return false;
@@ -1512,6 +1511,42 @@ CacheEntry_setBytecode(JSContext* cx, HandleObject cache, uint8_t* buffer, uint3
 }
 
 static bool
+ConvertTranscodeResultToJSException(JSContext* cx, TranscodeResult rv)
+{
+    switch (rv) {
+      case TranscodeResult_Ok:
+        return true;
+
+      default:
+        MOZ_FALLTHROUGH;
+      case TranscodeResult_Failure:
+        MOZ_ASSERT(!cx->isExceptionPending());
+        JS_ReportErrorASCII(cx, "generic warning");
+        return false;
+      case TranscodeResult_Failure_BadBuildId:
+        MOZ_ASSERT(!cx->isExceptionPending());
+        JS_ReportErrorASCII(cx, "the build-id does not match");
+        return false;
+      case TranscodeResult_Failure_RunOnceNotSupported:
+        MOZ_ASSERT(!cx->isExceptionPending());
+        JS_ReportErrorASCII(cx, "run-once script are not supported by XDR");
+        return false;
+      case TranscodeResult_Failure_AsmJSNotSupported:
+        MOZ_ASSERT(!cx->isExceptionPending());
+        JS_ReportErrorASCII(cx, "Asm.js is not supported by XDR");
+        return false;
+      case TranscodeResult_Failure_UnknownClassKind:
+        MOZ_ASSERT(!cx->isExceptionPending());
+        JS_ReportErrorASCII(cx, "Unknown class kind, go fix it.");
+        return false;
+
+      case TranscodeResult_Throw:
+        MOZ_ASSERT(cx->isExceptionPending());
+        return false;
+    }
+}
+
+static bool
 Evaluate(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1656,7 +1691,9 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
             }
 
             if (loadBytecode) {
-                script = JS_DecodeScript(cx, loadBuffer, loadLength);
+                TranscodeResult rv = JS_DecodeScript(cx, loadBuffer, loadLength, &script);
+                if (!ConvertTranscodeResultToJSException(cx, rv))
+                    return false;
             } else {
                 mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
                 (void) JS::Compile(cx, options, chars.start().get(), chars.length(), &script);
@@ -1705,8 +1742,9 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         }
 
         if (saveBytecode) {
-            saveBuffer = reinterpret_cast<uint8_t*>(JS_EncodeScript(cx, script, &saveLength));
-            if (!saveBuffer)
+            TranscodeResult rv = JS_EncodeScript(cx, script, &saveLength,
+                                                 reinterpret_cast<void**>(&saveBuffer.rwget()));
+            if (!ConvertTranscodeResultToJSException(cx, rv))
                 return false;
         }
     }
@@ -3533,7 +3571,10 @@ ScheduleWatchdog(JSContext* cx, double t)
     LockGuard<Mutex> guard(sc->watchdogLock);
     if (!sc->watchdogThread) {
         MOZ_ASSERT(!sc->watchdogTimeout);
-        sc->watchdogThread.emplace(WatchdogMain, cx);
+        sc->watchdogThread.emplace();
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!sc->watchdogThread->init(WatchdogMain, cx))
+            oomUnsafe.crash("watchdogThread.init");
     } else if (!sc->watchdogTimeout || timeout < sc->watchdogTimeout.value()) {
         sc->watchdogWakeup.notify_one();
     }

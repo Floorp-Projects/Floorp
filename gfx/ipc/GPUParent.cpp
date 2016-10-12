@@ -21,14 +21,15 @@
 #include "mozilla/dom/VideoDecoderManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
-#include "nsDebugImpl.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
-#include "ProcessUtils.h"
+#include "nsDebugImpl.h"
+#include "nsExceptionHandler.h"
+#include "nsThreadManager.h"
 #include "prenv.h"
+#include "ProcessUtils.h"
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
-#include "nsExceptionHandler.h"
 #if defined(XP_WIN)
 # include "DeviceManagerD3D9.h"
 # include "mozilla/gfx/DeviceManagerDx.h"
@@ -66,6 +67,13 @@ GPUParent::Init(base::ProcessId aParentPid,
                 MessageLoop* aIOLoop,
                 IPC::Channel* aChannel)
 {
+  // Initialize the thread manager before starting IPC. Otherwise, messages
+  // may be posted to the main thread and we won't be able to process them.
+  if (NS_WARN_IF(NS_FAILED(nsThreadManager::get().Init()))) {
+    return false;
+  }
+
+  // Now it's safe to start IPC.
   if (NS_WARN_IF(!Open(aChannel, aParentPid, aIOLoop))) {
     return false;
   }
@@ -161,7 +169,7 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
 bool
 GPUParent::RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint)
 {
-  VsyncBridgeParent::Start(Move(aVsyncEndpoint));
+  mVsyncBridge = VsyncBridgeParent::Start(Move(aVsyncEndpoint));
   return true;
 }
 
@@ -317,6 +325,7 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 
   if (mVsyncBridge) {
     mVsyncBridge->Shutdown();
+    mVsyncBridge = nullptr;
   }
   CompositorThreadHolder::Shutdown();
 #if defined(XP_WIN)
@@ -330,7 +339,6 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 #ifdef MOZ_CRASHREPORTER
   CrashReporterClient::DestroySingleton();
 #endif
-  NS_ShutdownXPCOM(nullptr);
   XRE_ShutdownChildProcess();
 }
 

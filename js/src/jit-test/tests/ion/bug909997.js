@@ -1,3 +1,10 @@
+// getJitCompilerOptions will always return array with zeros when JIT is
+// disabled. Therefore we quit now.
+if (inJit() == 'Baseline is disabled.') {
+    print("JIT is disabled.");
+    quit();
+}
+
 var wait = 100;
 
 var method_A = function() {

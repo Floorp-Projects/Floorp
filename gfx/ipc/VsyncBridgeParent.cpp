@@ -55,10 +55,16 @@ VsyncBridgeParent::Shutdown()
 {
   MessageLoop* ccloop = CompositorThreadHolder::Loop();
   if (MessageLoop::current() != ccloop) {
-    ccloop->PostTask(NewRunnableMethod(this, &VsyncBridgeParent::Shutdown));
+    ccloop->PostTask(NewRunnableMethod(this, &VsyncBridgeParent::ShutdownImpl));
     return;
   }
 
+  ShutdownImpl();
+}
+
+void
+VsyncBridgeParent::ShutdownImpl()
+{
   if (mOpen) {
     Close();
     mOpen = false;
