@@ -242,9 +242,9 @@
                     </div>
                     <span anonid="positionLabel" class="positionLabel" role="presentation"></span>
                     <span anonid="durationLabel" class="durationLabel" role="presentation"></span>
-                    <div anonid="positionDurationBox" class="positionDurationBox" role="none">
+                    <span anonid="positionDurationBox" class="positionDurationBox" aria-hidden="true">
                       &positionAndDuration.nameFormat;
-                    </div>
+                    </span>
                     <div anonid="controlBarSpacer" class="controlBarSpacer" hidden="true" role="none"></div>
                     <button anonid="muteButton"
                             class="muteButton"
