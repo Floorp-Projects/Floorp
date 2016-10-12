@@ -671,9 +671,11 @@ class ConfigureSandbox(dict):
         exec_(import_line, {}, glob)
         return glob['imported']
 
-    def _resolve_and_set(self, data, name, value):
+    def _resolve_and_set(self, data, name, value, when=None):
         # Don't set anything when --help was on the command line
         if self._help:
+            return
+        if when and not self._value_for(when):
             return
         name = self._resolve(name, need_help_dependency=False)
         if name is None:
@@ -688,17 +690,20 @@ class ConfigureSandbox(dict):
         if value is not None:
             data[name] = value
 
-    def set_config_impl(self, name, value):
+    def set_config_impl(self, name, value, when=None):
         '''Implementation of set_config().
         Set the configuration items with the given name to the given value.
         Both `name` and `value` can be references to @depends functions,
         in which case the result from these functions is used. If the result
         of either function is None, the configuration item is not set.
         '''
-        self._execution_queue.append((
-            self._resolve_and_set, (self._config, name, value)))
+        if when is not None:
+            when = self._dependency(when, 'set_config', 'when')
 
-    def set_define_impl(self, name, value):
+        self._execution_queue.append((
+            self._resolve_and_set, (self._config, name, value, when)))
+
+    def set_define_impl(self, name, value, when=None):
         '''Implementation of set_define().
         Set the define with the given name to the given value. Both `name` and
         `value` can be references to @depends functions, in which case the
@@ -706,9 +711,12 @@ class ConfigureSandbox(dict):
         is None, the define is not set. If the result is False, the define is
         explicitly undefined (-U).
         '''
+        if when is not None:
+            when = self._dependency(when, 'set_define', 'when')
+
         defines = self._config.setdefault('DEFINES', {})
         self._execution_queue.append((
-            self._resolve_and_set, (defines, name, value)))
+            self._resolve_and_set, (defines, name, value, when)))
 
     def imply_option_impl(self, option, value, reason=None):
         '''Implementation of imply_option().
