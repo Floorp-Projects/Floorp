@@ -310,6 +310,18 @@ private:
     Maybe<uint32_t> mNextInsertionIndex;
     // Samples just demuxed, but not yet parsed.
     TrackBuffer mQueuedSamples;
+    const TrackBuffer& GetTrackBuffer() const
+    {
+      MOZ_RELEASE_ASSERT(mBuffers.Length(),
+                         "TrackBuffer must have been created");
+      return mBuffers.LastElement();
+    }
+    TrackBuffer& GetTrackBuffer()
+    {
+      MOZ_RELEASE_ASSERT(mBuffers.Length(),
+                         "TrackBuffer must have been created");
+      return mBuffers.LastElement();
+    }
     // We only manage a single track of each type at this time.
     nsTArray<TrackBuffer> mBuffers;
     // Track buffer ranges variable that represents the presentation time ranges
