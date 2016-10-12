@@ -261,11 +261,8 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
   NS_ASSERTION(aMarginRect.ISize(aWM) >= 0, "negative inline size!");
   NS_ASSERTION(aMarginRect.BSize(aWM) >= 0, "negative block size!");
 
-  FloatInfo info(aFloatFrame,
-                 aMarginRect.LineLeft(aWM, aContainerSize) + mLineLeft,
-                 aMarginRect.BStart(aWM) + mBlockStart,
-                 aMarginRect.ISize(aWM),
-                 aMarginRect.BSize(aWM));
+  FloatInfo info(aFloatFrame, mLineLeft, mBlockStart, aMarginRect, aWM,
+                 aContainerSize);
 
   // Set mLeftBEnd and mRightBEnd.
   if (HasAnyFloats()) {
@@ -529,10 +526,15 @@ nsFloatManager::ClearContinues(StyleClear aBreakType) const
 // FloatInfo
 
 nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
-                                     nscoord aLineLeft, nscoord aBStart,
-                                     nscoord aISize, nscoord aBSize)
+                                     nscoord aLineLeft, nscoord aBlockStart,
+                                     const LogicalRect& aMarginRect,
+                                     WritingMode aWM,
+                                     const nsSize& aContainerSize)
   : mFrame(aFrame)
-  , mRect(aLineLeft, aBStart, aISize, aBSize)
+  , mRect(aMarginRect.LineLeft(aWM, aContainerSize) + aLineLeft,
+          aMarginRect.BStart(aWM) + aBlockStart,
+          aMarginRect.ISize(aWM),
+          aMarginRect.BSize(aWM))
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 }
