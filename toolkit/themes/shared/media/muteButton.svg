@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 18 18">
+  <style>
+    use:not(:target) {
+      display: none;
+    }
+    use {
+      fill: #ffffff;
+    }
+    use[id$="-hover"] {
+      fill: #48a0f7;
+    }
+    use[id$="-active"] {
+      fill: #2d89e6;
+    }
+    use[id$="-focus"] {
+      fill: #48a0f7;
+    }
+    use[id$="-disabled"] {
+      fill: #ffffff;
+    }
+  </style>
+  <symbol id="unmute-shape">
+    <path d="M3.52,5.367c-1.332,0-2.422,1.09-2.422,2.422v2.422c0,1.332,1.09,2.422,2.422,2.422h1.516l4.102,3.633
+    V1.735L5.035,5.367H3.52z M12.059,9c0-0.727-0.484-1.211-1.211-1.211v2.422C11.574,10.211,12.059,9.727,12.059,9z M14.48,9
+    c0-1.695-1.211-3.148-2.785-3.512l-0.363,1.09C12.422,6.82,13.27,7.789,13.27,9c0,1.211-0.848,2.18-1.938,2.422l0.484,1.09
+    C13.27,12.148,14.48,10.695,14.48,9z M12.543,3.188l-0.484,1.09C14.238,4.883,15.691,6.82,15.691,9c0,2.18-1.453,4.117-3.512,4.601
+    l0.484,1.09c2.422-0.605,4.238-2.906,4.238-5.691C16.902,6.215,15.086,3.914,12.543,3.188z"/>
+  </symbol>
+  <symbol id="mute-shape">
+    <path d="M3.52,5.367c-1.332,0-2.422,1.09-2.422,2.422v2.422c0,1.332,1.09,2.422,2.422,2.422h1.516l4.102,3.633
+      V1.735L5.035,5.367H3.52z"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.155,12.066l-1.138-1.138l4.872-4.872l1.138,1.138
+      L12.155,12.066z"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M10.998,7.204l1.138-1.138l4.872,4.872l-1.138,1.138L10.998,7.204
+		z"/>
+  </symbol>
+  <symbol id="noaudio-shape">
+	  <path d="M14.901,3.571l-4.412,3.422V1.919L6.286,5.46H4.869c-1.298,0-2.36,1.062-2.36,2.36v2.36
+		c0,1.062,0.708,1.888,1.652,2.242l-2.242,1.77l1.18,1.416L16.081,4.987L14.901,3.571z M10.489,16.081V11.36l-2.669,2.36
+		L10.489,16.081z"/>
+  </symbol>
+  <use id="unmute" xlink:href="#unmute-shape"/>
+  <use id="unmute-hover" xlink:href="#unmute-shape"/>
+  <use id="unmute-active" xlink:href="#unmute-shape"/>
+  <use id="unmute-focus" xlink:href="#unmute-shape"/>
+  <use id="unmute-disabled" xlink:href="#unmute-shape"/>
+
+  <use id="mute" xlink:href="#mute-shape"/>
+  <use id="mute-hover" xlink:href="#mute-shape"/>
+  <use id="mute-active" xlink:href="#mute-shape"/>
+  <use id="mute-focus" xlink:href="#mute-shape"/>
+  <use id="mute-disabled" xlink:href="#mute-shape"/>
+
+  <use id="noaudio" xlink:href="#noaudio-shape"/>
+</svg>
