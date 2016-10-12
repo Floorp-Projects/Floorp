@@ -30,6 +30,8 @@ random-if(cocoaWidget) == ja-3.html ja-3-ref.html
 skip-if(gtkWidget) == quotationmarks-cjk-1.html quotationmarks-cjk-1-ref.html
 == smileys-1.html smileys-1-ref.html
 == smileys-2.html smileys-2-ref.html
+== space-cluster-1.html space-cluster-1-ref.html
+== space-cluster-2.html space-cluster-2-ref.html
 == url-1.html url-1-ref.html
 == url-2.html url-2-ref.html
 == url-3.html url-3-ref.html

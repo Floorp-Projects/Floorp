@@ -222,13 +222,13 @@ LCovSource::writeScript(JSScript* script)
             uint64_t taken = hits - fallthroughHits;
             outBRDA_.printf("BRDA:%d,%d,0,", lineno, branchId);
             if (taken)
-                outBRDA_.printf("%d\n", taken);
+                outBRDA_.printf("%" PRIu64 "\n", taken);
             else
                 outBRDA_.put("-\n", 2);
 
             outBRDA_.printf("BRDA:%d,%d,1,", lineno, branchId);
             if (fallthroughHits)
-                outBRDA_.printf("%d\n", fallthroughHits);
+                outBRDA_.printf("%" PRIu64 "\n", fallthroughHits);
             else
                 outBRDA_.put("-\n", 2);
 
@@ -310,7 +310,7 @@ LCovSource::writeScript(JSScript* script)
 
                     outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, caseId);
                     if (caseHits)
-                        outBRDA_.printf("%d\n", caseHits);
+                        outBRDA_.printf("%" PRIu64 "\n", caseHits);
                     else
                         outBRDA_.put("-\n", 2);
 
@@ -361,7 +361,7 @@ LCovSource::writeScript(JSScript* script)
             if (defaultHasOwnClause) {
                 outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, caseId);
                 if (defaultHits)
-                    outBRDA_.printf("%d\n", defaultHits);
+                    outBRDA_.printf("%" PRIu64 "\n", defaultHits);
                 else
                     outBRDA_.put("-\n", 2);
                 numBranchesFound_++;

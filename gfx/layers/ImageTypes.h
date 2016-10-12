@@ -115,6 +115,13 @@ enum class StereoMode {
   MAX,
 };
 
+enum class YUVColorSpace {
+  BT601,
+  BT709,
+  // This represents the unknown format.
+  UNKNOWN,
+};
+
 } // namespace mozilla
 
 #endif

@@ -162,8 +162,14 @@ TEST_P(TlsConnectStream, ConnectTls10AndServerRenegotiateHigher) {
   server_->ResetPreliminaryInfo();
   server_->StartRenegotiate();
   Handshake();
-  client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
-  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  if (test_version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    // In TLS 1.3, the server detects this problem.
+    client_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
+    server_->CheckErrorCode(SSL_ERROR_RENEGOTIATION_NOT_ALLOWED);
+  } else {
+    client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
+    server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  }
 }
 
 TEST_P(TlsConnectStream, ConnectTls10AndClientRenegotiateHigher) {
@@ -189,8 +195,14 @@ TEST_P(TlsConnectStream, ConnectTls10AndClientRenegotiateHigher) {
   server_->ResetPreliminaryInfo();
   client_->StartRenegotiate();
   Handshake();
-  client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
-  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  if (test_version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    // In TLS 1.3, the server detects this problem.
+    client_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
+    server_->CheckErrorCode(SSL_ERROR_RENEGOTIATION_NOT_ALLOWED);
+  } else {
+    client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
+    server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  }
 }
 
 TEST_F(TlsConnectTest, Tls13RejectsRehandshakeClient) {

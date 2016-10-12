@@ -45,7 +45,7 @@ export async function buildTask({name, path}) {
     artifacts: {
       "public/image.tar": {
         type: "file",
-        expires: 24 * 365,
+        expires: 24 * 90,
         path: "/artifacts/image.tar"
       }
     },

@@ -33,15 +33,25 @@ define(function (require, exports, module) {
       // Compute indentation dynamically. The deeper the item is
       // inside the hierarchy, the bigger is the left padding.
       let rowStyle = {
-        "paddingLeft": (level * 16) + "px",
+        "paddingInlineStart": (level * 16) + "px",
       };
+
+      let iconClassList = ["treeIcon"];
+      if (member.hasChildren && member.loading) {
+        iconClassList.push("devtools-throbber");
+      } else if (member.hasChildren) {
+        iconClassList.push("theme-twisty");
+      }
+      if (member.open) {
+        iconClassList.push("open");
+      }
 
       return (
         td({
           className: "treeLabelCell",
           key: "default",
           style: rowStyle},
-          span({ className: "treeIcon" }),
+          span({ className: iconClassList.join(" ") }),
           span({
             className: "treeLabel " + member.type + "Label",
             "data-level": level

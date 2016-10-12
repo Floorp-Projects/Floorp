@@ -41,11 +41,12 @@ def memberXrayExpandoReservedSlot(member, descriptor):
             member.slotIndices[descriptor.interface.identifier.name])
 
 
-def mayUseXrayExpandoSlots(attr):
+def mayUseXrayExpandoSlots(descriptor, attr):
     assert not attr.getExtendedAttribute("NewObject")
     # For attributes whose type is a Gecko interface we always use
-    # slots on the reflector for caching.
-    return not attr.type.isGeckoInterface()
+    # slots on the reflector for caching.  Also, for interfaces that
+    # don't want Xrays we obviously never use the Xray expando slot.
+    return descriptor.wantsXrays and not attr.type.isGeckoInterface()
 
 
 def toStringBool(arg):
@@ -7602,7 +7603,7 @@ class CGPerSignatureCall(CGThing):
                 """,
                 maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type))
 
-            checkForXray = mayUseXrayExpandoSlots(self.idlNode)
+            checkForXray = mayUseXrayExpandoSlots(self.descriptor, self.idlNode)
 
             # For the case of Cached attributes, go ahead and preserve our
             # wrapper if needed.  We need to do this because otherwise the
@@ -8788,7 +8789,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             # Since [Cached] and [StoreInSlot] cannot be used with "NewObject",
             # we know that in the interface type case the returned object is
             # wrappercached.  So creating Xrays to it is reasonable.
-            if mayUseXrayExpandoSlots(self.attr):
+            if mayUseXrayExpandoSlots(self.descriptor, self.attr):
                 prefix = fill(
                     """
                     // Have to either root across the getter call or reget after.

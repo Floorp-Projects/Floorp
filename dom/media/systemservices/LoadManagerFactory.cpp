@@ -24,6 +24,8 @@ LoadManagerSingleton::Get() {
   if (!sSingleton) {
     MOZ_ASSERT(NS_IsMainThread());
 
+    bool loadEncoderOnly =
+      mozilla::Preferences::GetBool("media.navigator.load_adapt.encoder_only", true);
     int loadMeasurementInterval =
       mozilla::Preferences::GetInt("media.navigator.load_adapt.measure_interval", 1000);
     int averagingSeconds =
@@ -33,7 +35,8 @@ LoadManagerSingleton::Get() {
     float lowLoadThreshold =
       mozilla::Preferences::GetFloat("media.navigator.load_adapt.low_load", 0.40f);
 
-    sSingleton = new LoadManagerSingleton(loadMeasurementInterval,
+    sSingleton = new LoadManagerSingleton(loadEncoderOnly,
+                                          loadMeasurementInterval,
                                           averagingSeconds,
                                           highLoadThreshold,
                                           lowLoadThreshold);

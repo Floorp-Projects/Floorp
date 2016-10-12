@@ -18,7 +18,7 @@
 /* TreeView Table*/
 
 .treeTable .treeLabelCell {
-  padding: 2px 0 2px 0px;
+  padding: 2px 0;
   vertical-align: top;
   white-space: nowrap;
 }
@@ -29,20 +29,21 @@
 }
 
 .treeTable .treeValueCell {
-  padding: 2px 0 2px 5px;
+  padding: 2px 0;
+  padding-inline-start: 5px;
   overflow: hidden;
 }
 
 .treeTable .treeLabel {
   cursor: default;
   overflow: hidden;
-  padding-left: 4px;
+  padding-inline-start: 4px;
   white-space: nowrap;
 }
 
 /* No paddding if there is actually no label */
 .treeTable .treeLabel:empty {
-  padding-left: 0;
+  padding-inline-start: 0;
 }
 
 .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
@@ -60,11 +61,12 @@
 /* Toggle Icon */
 
 .treeTable .treeRow .treeIcon {
-  height: 12px;
+  height: 14px;
   width: 14px;
+  font-size: 10px; /* Set the size of loading spinner */
   display: inline-block;
   vertical-align: bottom;
-  margin-left: 3px;
+  margin-inline-start: 3px;
   padding-top: 1px;
 }
 
@@ -73,14 +75,6 @@
 .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
   cursor: pointer;
   background-repeat: no-repeat;
-}
-
-/* Spinner (used for async fetch). Needs to have higher priority than
-   theme toggle icons */
-.treeTable .treeRow.hasChildren.loading > .treeLabelCell > .treeIcon {
-  background-image: url(chrome://devtools/skin/images/firebug/spinner.png) !important;
-  background-position: 2px 1px !important;
-  background-size: 9px 9px !important;
 }
 
 /******************************************************************************/
@@ -106,7 +100,9 @@
 }
 
 .treeTable .treeHeaderCellBox {
-  padding: 2px 14px 2px 10px;
+  padding: 2px 0;
+  padding-inline-start: 10px;
+  padding-inline-end: 14px;
 }
 
 .treeTable .treeHeaderRow > .treeHeaderCell:first-child > .treeHeaderCellBox {
@@ -137,44 +133,9 @@
 /******************************************************************************/
 /* Themes */
 
-/* Light, Firebug Theme: toggle icon */
-.theme-light .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon,
-.theme-firebug .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
-  background-image: url(chrome://devtools/skin/images/controls.png);
-  background-size: 56px 28px;
-  background-position: 0 -14px;
-}
-
-.theme-light .treeTable .treeRow.hasChildren.opened > .treeLabelCell > .treeIcon,
-.theme-firebug .treeTable .treeRow.hasChildren.opened > .treeLabelCell > .treeIcon {
-  background-image: url(chrome://devtools/skin/images/controls.png);
-  background-size: 56px 28px;
-  background-position: -14px -14px;
-}
-
-/* Dark Theme: toggle icon */
-.theme-dark .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
-  background-image: url(chrome://devtools/skin/images/controls.png);
-  background-size: 56px 28px;
-  background-position: -28px -14px;
-}
-
-.theme-dark .treeTable .treeRow.hasChildren.opened > .treeLabelCell > .treeIcon {
-  background-image: url(chrome://devtools/skin/images/controls.png);
-  background-size: 56px 28px;
-  background-position: -42px -14px;
-}
-
-/* Support for retina displays */
-@media (min-resolution: 1.1dppx) {
-  .treeTable .treeRow.hasChildren > .treeLabelCell > .treeIcon {
-    background-image: url("chrome://devtools/skin/images/controls@2x.png") !important;
-  }
-}
-
 .theme-light .treeTable .treeRow:hover,
 .theme-dark .treeTable .treeRow:hover {
-  background-color: var(--theme-selection-background) !important;
+  background-color: var(--theme-selection-background-semitransparent) !important;
 }
 
 .theme-firebug .treeTable .treeRow:hover {

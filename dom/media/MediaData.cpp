@@ -239,6 +239,7 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
   data.mPicY = aPicture.y;
   data.mPicSize = aPicture.Size();
   data.mStereoMode = aInfo.mStereoMode;
+  data.mYUVColorSpace = aBuffer.mYUVColorSpace;
 
   aVideoImage->SetDelayedConversion(true);
   if (aCopyData) {

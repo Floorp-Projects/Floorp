@@ -1818,11 +1818,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
           nsAutoCString file;
           nsAutoCString scheme;
           uri->GetScheme(scheme);
-          if (scheme.LowerCaseEqualsLiteral("app")) {
-            uri->GetPath(file);
-            // The actual file inside zip package has no leading slash.
-            file.Trim("/", true, false, false);
-          } else if (scheme.LowerCaseEqualsLiteral("jar")) {
+          if (scheme.LowerCaseEqualsLiteral("jar")) {
             nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri);
             if (jarURI) {
               jarURI->GetJAREntry(file);
@@ -2897,8 +2893,7 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
     rv = mChannel->GetURI(getter_AddRefs(uri));
     if (NS_SUCCEEDED(rv)) {
       uri->GetScheme(scheme);
-      if (scheme.LowerCaseEqualsLiteral("app") ||
-          scheme.LowerCaseEqualsLiteral("jar")) {
+      if (scheme.LowerCaseEqualsLiteral("jar")) {
         mIsMappedArrayBuffer = true;
       }
     }
