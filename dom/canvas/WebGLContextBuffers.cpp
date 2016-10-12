@@ -334,7 +334,7 @@ WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage)
     if (!zeroBuffer)
         return ErrorOutOfMemory("%s: Failed to allocate zeros.", funcName);
 
-    BufferDataImpl(target, size_t(size), zeroBuffer.get(), usage);
+    BufferDataImpl(target, size_t(size), (const uint8_t*)zeroBuffer.get(), usage);
 }
 
 void
