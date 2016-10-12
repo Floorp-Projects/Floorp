@@ -30,6 +30,7 @@ crashtest:
     description: "Crashtest run"
     suite: reftest/crashtest
     treeherder-symbol: tc-R(C)
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: desktop_unittest.py
         chunked: true
@@ -388,6 +389,7 @@ reftest:
     suite: reftest/reftest
     treeherder-symbol: tc-R(R)
     chunks: 8
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -404,6 +406,7 @@ reftest-no-accel:
     suite: reftest/reftest-no-accel
     treeherder-symbol: tc-R(Ru)
     chunks: 8
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
