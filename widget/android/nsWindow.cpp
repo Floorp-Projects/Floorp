@@ -345,8 +345,7 @@ public:
     static void Open(const jni::Class::LocalRef& aCls,
                      GeckoView::Window::Param aWindow,
                      GeckoView::Param aView, jni::Object::Param aCompositor,
-                     jni::String::Param aChromeURI,
-                     int32_t aWidth, int32_t aHeight);
+                     jni::String::Param aChromeURI);
 
     // Close and destroy the nsWindow.
     void Close();
@@ -1320,8 +1319,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  GeckoView::Window::Param aWindow,
                                  GeckoView::Param aView,
                                  jni::Object::Param aCompositor,
-                                 jni::String::Param aChromeURI,
-                                 int32_t aWidth, int32_t aHeight)
+                                 jni::String::Param aChromeURI)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1341,25 +1339,9 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
         }
     }
 
-    nsCOMPtr<nsISupportsArray> args
-            = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
-    nsCOMPtr<nsISupportsPRInt32> widthArg
-            = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
-    nsCOMPtr<nsISupportsPRInt32> heightArg
-            = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
-
-    // Arguments are optional so it's okay if this fails.
-    if (args && widthArg && heightArg &&
-            NS_SUCCEEDED(widthArg->SetData(aWidth)) &&
-            NS_SUCCEEDED(heightArg->SetData(aHeight)))
-    {
-        args->AppendElement(widthArg);
-        args->AppendElement(heightArg);
-    }
-
     nsCOMPtr<mozIDOMWindowProxy> domWindow;
     ww->OpenWindow(nullptr, url, nullptr, "chrome,dialog=0,resizable",
-                   args, getter_AddRefs(domWindow));
+                   nullptr, getter_AddRefs(domWindow));
     MOZ_RELEASE_ASSERT(domWindow);
 
     nsCOMPtr<nsPIDOMWindowOuter> pdomWindow =

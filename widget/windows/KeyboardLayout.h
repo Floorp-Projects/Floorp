@@ -57,14 +57,10 @@ static const uint32_t sModifierKeyMap[][3] = {
 
 class KeyboardLayout;
 
-struct UniCharsAndModifiers
+class MOZ_STACK_CLASS UniCharsAndModifiers final
 {
-  // Dead-key + up to 4 characters
-  char16_t mChars[5];
-  Modifiers mModifiers[5];
-  uint32_t  mLength;
-
-  UniCharsAndModifiers() : mLength(0) {}
+public:
+  UniCharsAndModifiers() {}
   UniCharsAndModifiers operator+(const UniCharsAndModifiers& aOther) const;
   UniCharsAndModifiers& operator+=(const UniCharsAndModifiers& aOther);
 
@@ -72,15 +68,51 @@ struct UniCharsAndModifiers
    * Append a pair of unicode character and the final modifier.
    */
   void Append(char16_t aUniChar, Modifiers aModifiers);
-  void Clear() { mLength = 0; }
-  bool IsEmpty() const { return !mLength; }
+  void Clear()
+  {
+    mChars.Truncate();
+    mModifiers.Clear();
+  }
+  bool IsEmpty() const
+  {
+    MOZ_ASSERT(mChars.Length() == mModifiers.Length());
+    return mChars.IsEmpty();
+  }
+
+  char16_t CharAt(size_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex < Length());
+    return mChars[aIndex];
+  }
+  Modifiers ModifiersAt(size_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex < Length());
+    return mModifiers[aIndex];
+  }
+  size_t Length() const
+  {
+    MOZ_ASSERT(mChars.Length() == mModifiers.Length());
+    return mChars.Length();
+  }
 
   void FillModifiers(Modifiers aModifiers);
+  /**
+   * OverwriteModifiersIfBeginsWith() assigns mModifiers with aOther between
+   * [0] and [aOther.mLength - 1] only when mChars begins with aOther.mChars.
+   */
+  void OverwriteModifiersIfBeginsWith(const UniCharsAndModifiers& aOther);
 
   bool UniCharsEqual(const UniCharsAndModifiers& aOther) const;
   bool UniCharsCaseInsensitiveEqual(const UniCharsAndModifiers& aOther) const;
+  bool BeginsWith(const UniCharsAndModifiers& aOther) const;
 
-  nsString ToString() const { return nsString(mChars, mLength); }
+  const nsString& ToString() const { return mChars; }
+
+private:
+  nsAutoString mChars;
+  // 5 is enough number for normal keyboard layout handling.  On Windows,
+  // a dead key sequence may cause inputting up to 5 characters per key press.
+  AutoTArray<Modifiers, 5> mModifiers;
 };
 
 struct DeadKeyEntry;
@@ -292,7 +324,9 @@ private:
   // mFollowingCharMsgs stores WM_CHAR, WM_SYSCHAR, WM_DEADCHAR or
   // WM_SYSDEADCHAR message which follows WM_KEYDOWN.
   // Note that the stored messaged are already removed from the queue.
-  nsTArray<MSG> mFollowingCharMsgs;
+  // FYI: 5 is enough number for usual keyboard layout handling.  On Windows,
+  // a dead key sequence may cause inputting up to 5 characters per key press.
+  AutoTArray<MSG, 5> mFollowingCharMsgs;
   // mRemovedOddCharMsgs stores WM_CHAR messages which are caused by ATOK or
   // WXG (they are Japanese IME) when the user tries to do "Kakutei-undo"
   // (it means "undo the last commit").
@@ -367,6 +401,15 @@ private:
 
   void InitWithAppCommand();
   void InitWithKeyChar();
+
+  /**
+   * InitCommittedCharsAndModifiersWithFollowingCharMessages() initializes
+   * mCommittedCharsAndModifiers with mFollowingCharMsgs and aModKeyState.
+   * If mFollowingCharMsgs includes non-printable char messages, they are
+   * ignored (skipped).
+   */
+  void InitCommittedCharsAndModifiersWithFollowingCharMessages(
+         const ModifierKeyState& aModKeyState);
 
   /**
    * Returns true if the key event is caused by auto repeat.
@@ -466,6 +509,7 @@ private:
   }
   bool MayBeSameCharMessage(const MSG& aCharMsg1, const MSG& aCharMsg2) const;
   bool IsFollowedByPrintableCharMessage() const;
+  bool IsFollowedByPrintableCharOrSysCharMessage() const;
   bool IsFollowedByDeadCharMessage() const;
   bool IsKeyMessageOnPlugin() const
   {
@@ -475,6 +519,11 @@ private:
   bool IsPrintableCharMessage(const MSG& aMSG) const
   {
     return aMSG.message == WM_CHAR &&
+           !IsControlChar(static_cast<char16_t>(aMSG.wParam));
+  }
+  bool IsPrintableCharOrSysCharMessage(const MSG& aMSG) const
+  {
+    return IsCharOrSysCharMessage(aMSG) &&
            !IsControlChar(static_cast<char16_t>(aMSG.wParam));
   }
   bool IsControlCharMessage(const MSG& aMSG) const
@@ -535,10 +584,23 @@ private:
                              const MSG* aMsgSentToPlugin = nullptr) const;
 
   /**
+   * MaybeInitPluginEventOfKeyEvent() may initialize aKeyEvent::mPluginEvent
+   * with aMsgSentToPlugin if it's necessary.
+   */
+  void MaybeInitPluginEventOfKeyEvent(WidgetKeyboardEvent& aKeyEvent,
+                                      const MSG& aMsgSentToPlugin) const;
+
+  /**
    * Dispatches a command event for aEventCommand.
    * Returns true if the event is consumed.  Otherwise, false.
    */
   bool DispatchCommandEvent(uint32_t aEventCommand) const;
+
+  /**
+   * DispatchKeyPressEventsWithRetrievedCharMessages() dispatches keypress
+   * event(s) with retrieved char messages.
+   */
+  bool DispatchKeyPressEventsWithRetrievedCharMessages() const;
 
   /**
    * DispatchKeyPressEventsWithoutCharMessage() dispatches keypress event(s)
@@ -554,13 +616,6 @@ private:
    * plugin event.
    */
   bool MaybeDispatchPluginEventsForRemovedCharMessages() const;
-
-  /**
-   * DispatchKeyPressEventForFollowingCharMessage() dispatches keypress event
-   * for following WM_*CHAR message which is removed and set to aCharMsg.
-   * Returns true if the event is consumed.  Otherwise, false.
-   */
-  bool DispatchKeyPressEventForFollowingCharMessage(const MSG& aCharMsg) const;
 
   /**
    * Checkes whether the key event down message is handled without following

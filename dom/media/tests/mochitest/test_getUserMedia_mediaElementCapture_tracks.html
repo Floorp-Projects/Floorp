@@ -29,7 +29,7 @@ runTest(() => getUserMedia({audio: true, video: true})
     audioElement = createMediaElement("gUMAudio", "local", "gUMAudio", true);
     audioElement.srcObject = stream;
 
-    return haveEvent(audioElement, "loadedmetadata", wait(5000, new Error("Timeout")));
+    return haveEvent(audioElement, "loadedmetadata", wait(50000, new Error("Timeout")));
   })
   .then(() => {
     info("Capturing audio element (loadedmetadata -> captureStream)");
@@ -53,7 +53,7 @@ runTest(() => getUserMedia({audio: true, video: true})
        "video element should have no tracks before metadata known");
 
     return haveEventsButNoMore(
-        videoCaptureStream, "addtrack", 3, wait(5000, new Error("No event")));
+        videoCaptureStream, "addtrack", 3, wait(50000, new Error("No event")));
   })
   .then(() => {
     is(videoCaptureStream.getAudioTracks().length, 2,
@@ -65,7 +65,7 @@ runTest(() => getUserMedia({audio: true, video: true})
     audioElement.srcObject.addTrack(
         audioElement.srcObject.getAudioTracks()[0].clone());
     return haveEventsButNoMore(
-        audioCaptureStream, "addtrack", 1, wait(5000, new Error("No event")));
+        audioCaptureStream, "addtrack", 1, wait(50000, new Error("No event")));
   })
   .then(() => {
     is(audioCaptureStream.getAudioTracks().length, 3,
@@ -84,7 +84,7 @@ runTest(() => getUserMedia({audio: true, video: true})
     videoElement.srcObject.addTrack(
         videoElement.srcObject.getAudioTracks()[0].clone());
     return haveEventsButNoMore(
-        videoCaptureStream, "addtrack", 1, wait(5000, new Error("Timeout")));
+        videoCaptureStream, "addtrack", 1, wait(50000, new Error("Timeout")));
   })
   .then(() => {
     is(videoCaptureStream.getAudioTracks().length, 3,
@@ -108,7 +108,7 @@ runTest(() => getUserMedia({audio: true, video: true})
        "Captured video should have still have one video track captured.");
 
     return haveEvent(videoCaptureStream.getVideoTracks()[0], "ended",
-                     wait(5000, new Error("Timeout")));
+                     wait(50000, new Error("Timeout")));
   })
   .then(() => {
     is(videoCaptureStream.getVideoTracks()
@@ -122,10 +122,10 @@ runTest(() => getUserMedia({audio: true, video: true})
     videoElement.srcObject = stream;
     return Promise.all(videoCaptureStream.getTracks()
         .filter(t => t.readyState == "live")
-        .map(t => haveEvent(t, "ended", wait(5000, new Error("Timeout")))));
+        .map(t => haveEvent(t, "ended", wait(50000, new Error("Timeout")))));
   })
   .then(() => haveEventsButNoMore(
-                  videoCaptureStream, "addtrack", 2, wait(5000, new Error("Timeout"))))
+                  videoCaptureStream, "addtrack", 2, wait(50000, new Error("Timeout"))))
   .then(() => {
     is(videoCaptureStream.getAudioTracks()
         .filter(t => t.readyState == "ended").length, 3,
@@ -147,7 +147,7 @@ runTest(() => getUserMedia({audio: true, video: true})
     untilEndedElement.srcObject = audioElement.srcObject;
 
     return haveEvent(untilEndedElement, "loadedmetadata",
-                     wait(5000, new Error("Timeout")));
+                     wait(50000, new Error("Timeout")));
   })
   .then(() => {
     streamUntilEnded = untilEndedElement.mozCaptureStreamUntilEnded();
@@ -162,16 +162,16 @@ runTest(() => getUserMedia({audio: true, video: true})
     untilEndedElement.srcObject.stop();
 
     return Promise.all([
-      haveEvent(untilEndedElement, "ended", wait(5000, new Error("Timeout"))),
+      haveEvent(untilEndedElement, "ended", wait(50000, new Error("Timeout"))),
       ...streamUntilEnded.getTracks()
-           .map(t => haveEvent(t, "ended", wait(5000, new Error("Timeout"))))
+           .map(t => haveEvent(t, "ended", wait(50000, new Error("Timeout"))))
     ]);
   })
   .then(() => {
     info("Element and tracks ended. Ensuring that new tracks aren't created.");
     untilEndedElement.srcObject = videoElement.srcObject;
     return haveEventsButNoMore(
-        untilEndedElement, "loadedmetadata", 1, wait(5000, new Error("Timeout")));
+        untilEndedElement, "loadedmetadata", 1, wait(50000, new Error("Timeout")));
   })
   .then(() => is(streamUntilEnded.getTracks().length, 4,
                  "Should still have 4 tracks"))

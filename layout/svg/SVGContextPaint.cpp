@@ -50,7 +50,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
   }
   if (aOuterContextPaint) {
     RefPtr<gfxPattern> pattern;
-    switch ((style->*aFillOrStroke).mType) {
+    switch ((style->*aFillOrStroke).Type()) {
     case eStyleSVGPaintType_ContextFill:
       pattern = aOuterContextPaint->GetFillPattern(aDrawTarget, aOpacity,
                                                    aContextMatrix);
@@ -63,7 +63,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
       ;
     }
     if (pattern) {
-      aTargetPaint.SetContextPaint(aOuterContextPaint, (style->*aFillOrStroke).mType);
+      aTargetPaint.SetContextPaint(aOuterContextPaint, (style->*aFillOrStroke).Type());
       return;
     }
   }
@@ -83,7 +83,7 @@ SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
   const nsStyleSVG *style = aFrame->StyleSVG();
 
   // fill:
-  if (style->mFill.mType == eStyleSVGPaintType_None) {
+  if (style->mFill.Type() == eStyleSVGPaintType_None) {
     SetFillOpacity(0.0f);
   } else {
     float opacity = nsSVGUtils::GetOpacity(style->FillOpacitySource(),
@@ -101,7 +101,7 @@ SVGContextPaintImpl::Init(const DrawTarget* aDrawTarget,
   }
 
   // stroke:
-  if (style->mStroke.mType == eStyleSVGPaintType_None) {
+  if (style->mStroke.Type() == eStyleSVGPaintType_None) {
     SetStrokeOpacity(0.0f);
   } else {
     float opacity = nsSVGUtils::GetOpacity(style->StrokeOpacitySource(),

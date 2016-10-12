@@ -117,6 +117,9 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
       case PlacesUtils.unfiledBookmarksFolderId:
         compare_prop_to_value("root", "unfiledBookmarksFolder");
         break;
+      case PlacesUtils.mobileFolderId:
+        compare_prop_to_value("root", "mobileFolder");
+        break;
       default:
         check_unset("root");
       }
@@ -248,6 +251,6 @@ add_task(function* () {
     },
     includeItemIds: true
   }, [PlacesUtils.bookmarks.menuGuid]);
-  do_check_eq(guidsPassedToExcludeCallback.size, 4);
-  do_check_eq(placesRootWithoutTheMenu.children.length, 2);
+  do_check_eq(guidsPassedToExcludeCallback.size, 5);
+  do_check_eq(placesRootWithoutTheMenu.children.length, 3);
 });

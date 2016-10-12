@@ -906,7 +906,6 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
 if CONFIG['MOZ_B2G']:
     WEBIDL_FILES += [
         'Apps.webidl',
-        'Identity.webidl',
         'MozApplicationEvent.webidl'
     ]
     GENERATED_EVENTS_WEBIDL_FILES += [

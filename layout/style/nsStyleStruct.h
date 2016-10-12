@@ -119,39 +119,6 @@ static_assert((NS_RULE_NODE_IS_ANIMATION_RULE & NS_STYLE_INHERIT_MASK) == 0,
 
 namespace mozilla {
 
-struct FragmentOrURL
-{
-  FragmentOrURL() : mIsLocalRef(false) {}
-  FragmentOrURL(const FragmentOrURL& aSource)
-    : mIsLocalRef(false)
-  { *this = aSource; }
-
-  void SetValue(const nsCSSValue* aValue);
-  void SetNull();
-
-  FragmentOrURL& operator=(const FragmentOrURL& aOther);
-  bool operator==(const FragmentOrURL& aOther) const;
-  bool operator!=(const FragmentOrURL& aOther) const {
-    return !(*this == aOther);
-  }
-
-  bool EqualsExceptRef(nsIURI* aURI) const;
-
-  nsIURI* GetSourceURL() const { return mURL; }
-  void GetSourceString(nsString& aRef) const;
-
-  // When matching a url with mIsLocalRef set, resolve it against aURI;
-  // Otherwise, ignore aURL and return mURL directly.
-  already_AddRefed<nsIURI> Resolve(nsIURI* aURI) const;
-  already_AddRefed<nsIURI> Resolve(nsIContent* aContent) const;
-
-  bool IsLocalRef() const { return mIsLocalRef; }
-
-private:
-  nsCOMPtr<nsIURI> mURL;
-  bool    mIsLocalRef;
-};
-
 struct Position {
   using Coord = nsStyleCoord::CalcValue;
 
@@ -705,13 +672,14 @@ struct nsStyleImageLayers {
   friend struct Layer;
   struct Layer {
     nsStyleImage  mImage;         // [reset]
-    mozilla::FragmentOrURL mSourceURI;  // [reset]
+    RefPtr<mozilla::css::URLValueData> mSourceURI;  // [reset]
                                   // mask-only property
                                   // This property is used for mask layer only.
                                   // For a background layer, it should always
                                   // be the initial value, which is nullptr.
                                   // Store mask-image URI so that we can resolve
-                                  // SVG mask path later.
+                                  // SVG mask path later.  (Might be a URLValue
+                                  // or an ImageValue.)
     mozilla::Position mPosition;  // [reset]
     Size          mSize;          // [reset]
     uint8_t       mClip;          // [reset] See nsStyleConsts.h
@@ -2542,7 +2510,7 @@ struct StyleShapeSource
     : StyleShapeSource()
   {
     if (aSource.mType == StyleShapeSourceType::URL) {
-      CopyURL(aSource);
+      SetURL(aSource.mURL);
     } else if (aSource.mType == StyleShapeSourceType::Shape) {
       SetBasicShape(aSource.mBasicShape, aSource.mReferenceBox);
     } else if (aSource.mType == StyleShapeSourceType::Box) {
@@ -2562,7 +2530,7 @@ struct StyleShapeSource
     }
 
     if (aOther.mType == StyleShapeSourceType::URL) {
-      CopyURL(aOther);
+      SetURL(aOther.mURL);
     } else if (aOther.mType == StyleShapeSourceType::Shape) {
       SetBasicShape(aOther.mBasicShape, aOther.mReferenceBox);
     } else if (aOther.mType == StyleShapeSourceType::Box) {
@@ -2582,7 +2550,7 @@ struct StyleShapeSource
     }
 
     if (mType == StyleShapeSourceType::URL) {
-      return mURL == aOther.mURL;
+      return mURL->Equals(*aOther.mURL);
     } else if (mType == StyleShapeSourceType::Shape) {
       return *mBasicShape == *aOther.mBasicShape &&
              mReferenceBox == aOther.mReferenceBox;
@@ -2603,22 +2571,18 @@ struct StyleShapeSource
     return mType;
   }
 
-  FragmentOrURL* GetURL() const
+  css::URLValue* GetURL() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::URL, "Wrong shape source type!");
     return mURL;
   }
 
-  bool SetURL(const nsCSSValue* aValue)
+  bool SetURL(css::URLValue* aValue)
   {
-    if (!aValue->GetURLValue()) {
-      return false;
-    }
-
+    MOZ_ASSERT(aValue);
     ReleaseRef();
-
-    mURL = new FragmentOrURL();
-    mURL->SetValue(aValue);
+    mURL = aValue;
+    mURL->AddRef();
     mType = StyleShapeSourceType::URL;
     return true;
   }
@@ -2663,26 +2627,18 @@ private:
       mBasicShape->Release();
     } else if (mType == StyleShapeSourceType::URL) {
       NS_ASSERTION(mURL, "expected pointer");
-      delete mURL;
+      mURL->Release();
     }
     // Both mBasicShape and mURL are pointers in a union. Nulling one of them
     // nulls both of them.
     mURL = nullptr;
   }
 
-  void CopyURL(const StyleShapeSource& aOther)
-  {
-    ReleaseRef();
-
-    mURL = new FragmentOrURL(*aOther.mURL);
-    mType = StyleShapeSourceType::URL;
-  }
-
   void* operator new(size_t) = delete;
 
   union {
     StyleBasicShape* mBasicShape;
-    FragmentOrURL* mURL;
+    css::URLValue* mURL;
   };
   StyleShapeSourceType mType = StyleShapeSourceType::None;
   ReferenceBox mReferenceBox = ReferenceBox::NoBox;
@@ -3453,26 +3409,56 @@ enum nsStyleSVGOpacitySource : uint8_t {
   eStyleSVGOpacitySource_ContextStrokeOpacity
 };
 
-struct nsStyleSVGPaint
+class nsStyleSVGPaint
 {
-  union {
-    nscolor mColor;
-    mozilla::FragmentOrURL* mPaintServer;
-  } mPaint;
-  nsStyleSVGPaintType mType;
-  nscolor mFallbackColor;
-
+public:
   explicit nsStyleSVGPaint(nsStyleSVGPaintType aType = nsStyleSVGPaintType(0));
   nsStyleSVGPaint(const nsStyleSVGPaint& aSource);
   ~nsStyleSVGPaint();
-  void Reset();
-  void SetType(nsStyleSVGPaintType aType);
-  nsStyleSVGPaint& operator=(const nsStyleSVGPaint& aOther);
-  bool operator==(const nsStyleSVGPaint& aOther) const;
 
+  nsStyleSVGPaint& operator=(const nsStyleSVGPaint& aOther);
+
+  nsStyleSVGPaintType Type() const { return mType; }
+
+  void SetNone();
+  void SetColor(nscolor aColor);
+  void SetPaintServer(mozilla::css::URLValue* aPaintServer,
+                      nscolor aFallbackColor);
+  void SetContextValue(nsStyleSVGPaintType aType,
+                       nscolor aFallbackColor);
+
+  nscolor GetColor() const {
+    MOZ_ASSERT(mType == eStyleSVGPaintType_Color);
+    return mPaint.mColor;
+  }
+
+  mozilla::css::URLValue* GetPaintServer() const {
+    MOZ_ASSERT(mType == eStyleSVGPaintType_Server);
+    return mPaint.mPaintServer;
+  }
+
+  nscolor GetFallbackColor() const {
+    MOZ_ASSERT(mType == eStyleSVGPaintType_Server ||
+               mType == eStyleSVGPaintType_ContextFill ||
+               mType == eStyleSVGPaintType_ContextStroke);
+    return mFallbackColor;
+  }
+
+  bool operator==(const nsStyleSVGPaint& aOther) const;
   bool operator!=(const nsStyleSVGPaint& aOther) const {
     return !(*this == aOther);
   }
+
+private:
+  void Reset();
+  void Assign(const nsStyleSVGPaint& aOther);
+
+  union {
+    nscolor mColor;
+    mozilla::css::URLValue* mPaintServer;
+  } mPaint;
+  nsStyleSVGPaintType mType;
+  nscolor mFallbackColor;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
@@ -3508,9 +3494,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
 
   nsStyleSVGPaint  mFill;             // [inherited]
   nsStyleSVGPaint  mStroke;           // [inherited]
-  mozilla::FragmentOrURL mMarkerEnd;        // [inherited]
-  mozilla::FragmentOrURL mMarkerMid;        // [inherited]
-  mozilla::FragmentOrURL mMarkerStart;      // [inherited]
+  RefPtr<mozilla::css::URLValue> mMarkerEnd;   // [inherited]
+  RefPtr<mozilla::css::URLValue> mMarkerMid;   // [inherited]
+  RefPtr<mozilla::css::URLValue> mMarkerStart; // [inherited]
   nsTArray<nsStyleCoord> mStrokeDasharray;  // [inherited] coord, percent, factor
 
   nsStyleCoord     mStrokeDashoffset; // [inherited] coord, percent, factor
@@ -3572,8 +3558,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
   }
 
   bool HasMarker() const {
-    return mMarkerStart.GetSourceURL() || mMarkerMid.GetSourceURL() ||
-           mMarkerEnd.GetSourceURL();
+    return mMarkerStart || mMarkerMid || mMarkerEnd;
   }
 
   /**
@@ -3581,7 +3566,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
    * than zero. This ignores stroke-widths as that depends on the context.
    */
   bool HasStroke() const {
-    return mStroke.mType != eStyleSVGPaintType_None && mStrokeOpacity > 0;
+    return mStroke.Type() != eStyleSVGPaintType_None && mStrokeOpacity > 0;
   }
 
   /**
@@ -3589,7 +3574,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
    * than zero.
    */
   bool HasFill() const {
-    return mFill.mType != eStyleSVGPaintType_None && mFillOpacity > 0;
+    return mFill.Type() != eStyleSVGPaintType_None && mFillOpacity > 0;
   }
 
 private:
@@ -3635,12 +3620,12 @@ struct nsStyleFilter
   void SetFilterParameter(const nsStyleCoord& aFilterParameter,
                           int32_t aType);
 
-  mozilla::FragmentOrURL* GetURL() const {
-    NS_ASSERTION(mType == NS_STYLE_FILTER_URL, "wrong filter type");
+  mozilla::css::URLValue* GetURL() const {
+    MOZ_ASSERT(mType == NS_STYLE_FILTER_URL, "wrong filter type");
     return mURL;
   }
 
-  bool SetURL(const nsCSSValue* aValue);
+  bool SetURL(mozilla::css::URLValue* aValue);
 
   nsCSSShadowArray* GetDropShadow() const {
     NS_ASSERTION(mType == NS_STYLE_FILTER_DROP_SHADOW, "wrong filter type");
@@ -3650,12 +3635,11 @@ struct nsStyleFilter
 
 private:
   void ReleaseRef();
-  void CopyURL(const nsStyleFilter& aOther);
 
   int32_t mType; // see NS_STYLE_FILTER_* constants in nsStyleConsts.h
   nsStyleCoord mFilterParameter; // coord, percent, factor, angle
   union {
-    mozilla::FragmentOrURL* mURL;
+    mozilla::css::URLValue* mURL;
     nsCSSShadowArray* mDropShadow;
   };
 };

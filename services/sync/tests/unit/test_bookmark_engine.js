@@ -7,7 +7,6 @@ Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/bookmark_utils.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
@@ -141,50 +140,6 @@ add_task(function* bad_record_allIDs() {
 
   _("Clean up.");
   PlacesUtils.bookmarks.removeItem(badRecordID);
-  yield new Promise(r => server.stop(r));
-});
-
-add_task(function* test_ID_caching() {
-  let server = new SyncServer();
-  server.start();
-  let syncTesting = new SyncTestingInfrastructure(server.server);
-
-  _("Ensure that Places IDs are not cached.");
-  let engine = new BookmarksEngine(Service);
-  let store = engine._store;
-  _("All IDs: " + JSON.stringify(store.getAllIDs()));
-
-  let mobileID = store.idForGUID("mobile");
-  _("Change the GUID for that item, and drop the mobile anno.");
-  let mobileRoot = BookmarkSpecialIds.specialIdForGUID("mobile", false);
-  let mobileGUID = yield PlacesUtils.promiseItemGuid(mobileRoot);
-  yield PlacesSyncUtils.bookmarks.changeGuid(mobileGUID, "abcdefghijkl");
-  PlacesUtils.annotations.removeItemAnnotation(mobileID, "mobile/bookmarksRoot");
-
-  let err;
-  let newMobileID;
-
-  // With noCreate, we don't find an entry.
-  try {
-    newMobileID = store.idForGUID("mobile", true);
-    _("New mobile ID: " + newMobileID);
-  } catch (ex) {
-    err = ex;
-    _("Error: " + Log.exceptionStr(err));
-  }
-
-  do_check_true(!err);
-
-  // With !noCreate, lookup works, and it's different.
-  newMobileID = store.idForGUID("mobile", false);
-  _("New mobile ID: " + newMobileID);
-  do_check_true(!!newMobileID);
-  do_check_neq(newMobileID, mobileID);
-
-  // And it's repeatable, even with creation enabled.
-  do_check_eq(newMobileID, store.idForGUID("mobile", false));
-
-  do_check_eq(store.GUIDForId(mobileID), "abcdefghijkl");
   yield new Promise(r => server.stop(r));
 });
 
@@ -404,6 +359,8 @@ function FakeRecord(constructor, r) {
   for (let x in r) {
     this[x] = r[x];
   }
+  // Borrow the constructor's conversion functions.
+  this.toSyncBookmark = constructor.prototype.toSyncBookmark;
 }
 
 // Bug 632287.
@@ -539,37 +496,34 @@ add_task(function* test_bookmark_tag_but_no_uri() {
 
   yield PlacesSyncUtils.bookmarks.insert({
     kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-    guid: Utils.makeGUID(),
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    syncId: Utils.makeGUID(),
+    parentSyncId: "toolbar",
     url: "http://example.com",
     tags: ["foo"],
   });
   yield PlacesSyncUtils.bookmarks.insert({
     kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-    guid: Utils.makeGUID(),
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    syncId: Utils.makeGUID(),
+    parentSyncId: "toolbar",
     url: "http://example.org",
     tags: null,
   });
   yield PlacesSyncUtils.bookmarks.insert({
     kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-    guid: Utils.makeGUID(),
+    syncId: Utils.makeGUID(),
     url: "about:fake",
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    parentSyncId: "toolbar",
     tags: null,
   });
 
-  let record = {
-    parentid:    PlacesUtils.bookmarks.toolbarGuid,
+  let record = new FakeRecord(BookmarkFolder, {
+    parentid:    "toolbar",
     id:          Utils.makeGUID(),
     description: "",
     tags:        ["foo"],
     title:       "Taggy tag",
     type:        "folder"
-  };
-
-  // Because update() walks the cleartext.
-  record.cleartext = record;
+  });
 
   store.create(record);
   record.tags = ["bar"];

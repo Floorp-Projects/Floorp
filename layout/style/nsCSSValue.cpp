@@ -282,10 +282,10 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
       return *mValue.mArray == *aOther.mValue.mArray;
     }
     else if (eCSSUnit_URL == mUnit) {
-      return *mValue.mURL == *aOther.mValue.mURL;
+      return mValue.mURL->Equals(*aOther.mValue.mURL);
     }
     else if (eCSSUnit_Image == mUnit) {
-      return *mValue.mImage == *aOther.mValue.mImage;
+      return mValue.mImage->Equals(*aOther.mValue.mImage);
     }
     else if (eCSSUnit_Gradient == mUnit) {
       return *mValue.mGradient == *aOther.mValue.mGradient;
@@ -2646,7 +2646,7 @@ css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
   , mReferrer(Move(aReferrer))
   , mOriginPrincipal(Move(aOriginPrincipal))
   , mURIResolved(true)
-  , mLocalURLFlag(IsLocalRefURL(aString))
+  , mIsLocalRef(IsLocalRefURL(aString))
 {
   MOZ_ASSERT(mString);
   MOZ_ASSERT(mBaseURI);
@@ -2663,7 +2663,7 @@ css::URLValueData::URLValueData(nsStringBuffer* aString,
   , mReferrer(Move(aReferrer))
   , mOriginPrincipal(Move(aOriginPrincipal))
   , mURIResolved(false)
-  , mLocalURLFlag(IsLocalRefURL(aString))
+  , mIsLocalRef(IsLocalRefURL(aString))
 {
   MOZ_ASSERT(aString);
   MOZ_ASSERT(mBaseURI);
@@ -2671,8 +2671,10 @@ css::URLValueData::URLValueData(nsStringBuffer* aString,
 }
 
 bool
-css::URLValueData::operator==(const URLValueData& aOther) const
+css::URLValueData::Equals(const URLValueData& aOther) const
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   bool eq;
   // Cast away const so we can call nsIPrincipal::Equals.
   auto& self = *const_cast<URLValueData*>(this);
@@ -2688,7 +2690,7 @@ css::URLValueData::operator==(const URLValueData& aOther) const
             eq)) &&
           (mOriginPrincipal == aOther.mOriginPrincipal ||
            self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get())) &&
-          mLocalURLFlag == aOther.mLocalURLFlag;
+          mIsLocalRef == aOther.mIsLocalRef;
 }
 
 bool
@@ -2724,6 +2726,69 @@ css::URLValueData::GetURI() const
   }
 
   return mURI;
+}
+
+already_AddRefed<nsIURI>
+css::URLValueData::ResolveLocalRef(nsIURI* aURI) const
+{
+  nsCOMPtr<nsIURI> result = GetURI();
+
+  if (result && mIsLocalRef) {
+    nsCString ref;
+    mURI->GetRef(ref);
+
+    aURI->Clone(getter_AddRefs(result));
+    result->SetRef(ref);
+  }
+
+  return result.forget();
+}
+
+already_AddRefed<nsIURI>
+css::URLValueData::ResolveLocalRef(nsIContent* aContent) const
+{
+  nsCOMPtr<nsIURI> url = aContent->GetBaseURI();
+  return ResolveLocalRef(url);
+}
+
+void
+css::URLValueData::GetSourceString(nsString& aRef) const
+{
+  nsIURI* uri = GetURI();
+  if (!uri) {
+    aRef.Truncate();
+    return;
+  }
+
+  nsCString cref;
+  if (mIsLocalRef) {
+    // XXXheycam It's possible we can just return mString in this case, since
+    // it should be the "#fragment" string the URLValueData was created with.
+    uri->GetRef(cref);
+    cref.Insert('#', 0);
+  } else {
+    // It's not entirely clear how to best handle failure here. Ensuring the
+    // string is empty seems safest.
+    nsresult rv = uri->GetSpec(cref);
+    if (NS_FAILED(rv)) {
+      cref.Truncate();
+    }
+  }
+
+  aRef = NS_ConvertUTF8toUTF16(cref);
+}
+
+bool
+css::URLValueData::EqualsExceptRef(nsIURI* aURI) const
+{
+  nsIURI* uri = GetURI();
+  if (!uri) {
+    return false;
+  }
+
+  bool ret = false;
+  uri->EqualsExceptRef(aURI, &ret);
+  return ret;
 }
 
 size_t

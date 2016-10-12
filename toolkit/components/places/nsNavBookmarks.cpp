@@ -134,6 +134,7 @@ nsNavBookmarks::nsNavBookmarks()
   , mTagsRoot(0)
   , mUnfiledRoot(0)
   , mToolbarRoot(0)
+  , mMobileRoot(0)
   , mCanNotify(false)
   , mCacheObservers("bookmark-observers")
   , mBatching(false)
@@ -214,7 +215,7 @@ nsNavBookmarks::ReadRoots()
   nsresult rv = mDB->MainConn()->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT guid, id FROM moz_bookmarks WHERE guid IN ( "
       "'root________', 'menu________', 'toolbar_____', "
-      "'tags________', 'unfiled_____' )"
+      "'tags________', 'unfiled_____', 'mobile______' )"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -242,9 +243,13 @@ nsNavBookmarks::ReadRoots()
     else if (guid.EqualsLiteral("unfiled_____")) {
       mUnfiledRoot = id;
     }
+    else if (guid.EqualsLiteral("mobile______")) {
+      mMobileRoot = id;
+    }
   }
 
-  if (!mRoot || !mMenuRoot || !mToolbarRoot || !mTagsRoot || !mUnfiledRoot)
+  if (!mRoot || !mMenuRoot || !mToolbarRoot || !mTagsRoot || !mUnfiledRoot ||
+      !mMobileRoot)
     return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -341,6 +346,14 @@ NS_IMETHODIMP
 nsNavBookmarks::GetUnfiledBookmarksFolder(int64_t* aRoot)
 {
   *aRoot = mUnfiledRoot;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavBookmarks::GetMobileFolder(int64_t* aRoot)
+{
+  *aRoot = mMobileRoot;
   return NS_OK;
 }
 

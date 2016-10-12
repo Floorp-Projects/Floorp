@@ -60,17 +60,19 @@ EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
 }
 
 static bool
-DefinitelyEqualURIsAndPrincipal(css::URLValue* aURI1, css::URLValue* aURI2)
+DefinitelyEqualURIs(css::URLValueData* aURI1,
+                    css::URLValueData* aURI2)
+{
+  return aURI1 == aURI2 ||
+         (aURI1 && aURI2 && aURI1->DefinitelyEqualURIs(*aURI2));
+}
+
+static bool
+DefinitelyEqualURIsAndPrincipal(css::URLValueData* aURI1,
+                                css::URLValueData* aURI2)
 {
   return aURI1 == aURI2 ||
          (aURI1 && aURI2 && aURI1->DefinitelyEqualURIsAndPrincipal(*aURI2));
-}
-
-static
-bool EqualURIs(const FragmentOrURL* aURI1, const FragmentOrURL* aURI2)
-{
-  return aURI1 == aURI2 ||    // handle null==null, and optimize
-         (aURI1 && aURI2 && *aURI1 == *aURI2);
 }
 
 static bool
@@ -117,109 +119,6 @@ StyleStructContext::HackilyFindSomeDeviceContext()
 }
 
 static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs);
-
-// --------------------
-// FragmentOrURL
-//
-void
-FragmentOrURL::SetValue(const nsCSSValue* aValue)
-{
-  mozilla::css::URLValueData *urlData = aValue->GetUnit() == eCSSUnit_URL
-    ? static_cast<mozilla::css::URLValueData *>(aValue->GetURLStructValue())
-    : static_cast<mozilla::css::URLValueData *>(aValue->GetImageStructValue());
-  MOZ_ASSERT_IF(urlData->GetLocalURLFlag(), urlData->GetURI());
-  mIsLocalRef = urlData->GetLocalURLFlag();
-
-  mURL = urlData->GetURI();
-
-#ifdef DEBUG
-  if (mIsLocalRef) {
-    bool hasRef = false;
-    mURL->GetHasRef(&hasRef);
-    MOZ_ASSERT(hasRef);
-  }
-#endif
-}
-
-void
-FragmentOrURL::SetNull()
-{
-  mURL = nullptr;
-  mIsLocalRef = false;
-}
-
-FragmentOrURL&
-FragmentOrURL::operator=(const FragmentOrURL& aOther)
-{
-  mIsLocalRef = aOther.mIsLocalRef;
-  mURL = aOther.mURL;
-
-  return *this;
-}
-
-bool
-FragmentOrURL::operator==(const FragmentOrURL& aOther) const
-{
-  if (aOther.mIsLocalRef != mIsLocalRef) {
-    return false;
-  }
-
-  return EqualURIs(aOther.mURL, mURL);
-}
-
-bool
-FragmentOrURL::EqualsExceptRef(nsIURI* aURI) const
-{
-  bool ret = false;
-  mURL->EqualsExceptRef(aURI, &ret);
-  return ret;
-}
-
-void
-FragmentOrURL::GetSourceString(nsString &aRef) const
-{
-  MOZ_ASSERT(mURL);
-
-  nsCString cref;
-  if (mIsLocalRef) {
-    mURL->GetRef(cref);
-    cref.Insert('#', 0);
-  } else {
-    // It's not entirely clear how to best handle failure here. Ensuring the
-    // string is empty seems safest.
-    nsresult rv = mURL->GetSpec(cref);
-    if (NS_FAILED(rv)) {
-      cref.Truncate();
-    }
-  }
-
-  aRef = NS_ConvertUTF8toUTF16(cref);
-}
-
-already_AddRefed<nsIURI>
-FragmentOrURL::Resolve(nsIURI* aURI) const
-{
-  nsCOMPtr<nsIURI> result;
-
-  if (mIsLocalRef) {
-    nsCString ref;
-    mURL->GetRef(ref);
-
-    aURI->Clone(getter_AddRefs(result));
-    result->SetRef(ref);
-  } else {
-    result = mURL;
-  }
-
-  return result.forget();
-}
-
-already_AddRefed<nsIURI>
-FragmentOrURL::Resolve(nsIContent* aContent) const
-{
-  nsCOMPtr<nsIURI> url = aContent->GetBaseURI();
-  return Resolve(url);
-}
 
 // --------------------
 // nsStyleFont
@@ -1006,12 +905,13 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 static bool
 PaintURIChanged(const nsStyleSVGPaint& aPaint1, const nsStyleSVGPaint& aPaint2)
 {
-  if (aPaint1.mType != aPaint2.mType) {
-    return aPaint1.mType == eStyleSVGPaintType_Server ||
-           aPaint2.mType == eStyleSVGPaintType_Server;
+  if (aPaint1.Type() != aPaint2.Type()) {
+    return aPaint1.Type() == eStyleSVGPaintType_Server ||
+           aPaint2.Type() == eStyleSVGPaintType_Server;
   }
-  return aPaint1.mType == eStyleSVGPaintType_Server &&
-    !EqualURIs(aPaint1.mPaint.mPaintServer, aPaint2.mPaint.mPaintServer);
+  return aPaint1.Type() == eStyleSVGPaintType_Server &&
+         !DefinitelyEqualURIs(aPaint1.GetPaintServer(),
+                              aPaint2.GetPaintServer());
 }
 
 nsChangeHint
@@ -1019,8 +919,9 @@ nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (mMarkerEnd != aNewData.mMarkerEnd || mMarkerMid != aNewData.mMarkerMid ||
-      mMarkerStart != aNewData.mMarkerStart) {
+  if (!DefinitelyEqualURIs(mMarkerEnd, aNewData.mMarkerEnd) ||
+      !DefinitelyEqualURIs(mMarkerMid, aNewData.mMarkerMid) ||
+      !DefinitelyEqualURIs(mMarkerStart, aNewData.mMarkerStart)) {
     // Markers currently contribute to nsSVGPathGeometryFrame::mRect,
     // so we need a reflow as well as a repaint. No intrinsic sizes need
     // to change, so nsChangeHint_NeedReflow is sufficient.
@@ -1123,7 +1024,7 @@ nsStyleFilter::nsStyleFilter(const nsStyleFilter& aSource)
 {
   MOZ_COUNT_CTOR(nsStyleFilter);
   if (aSource.mType == NS_STYLE_FILTER_URL) {
-    CopyURL(aSource);
+    SetURL(aSource.mURL);
   } else if (aSource.mType == NS_STYLE_FILTER_DROP_SHADOW) {
     SetDropShadow(aSource.mDropShadow);
   } else if (aSource.mType != NS_STYLE_FILTER_NONE) {
@@ -1145,7 +1046,7 @@ nsStyleFilter::operator=(const nsStyleFilter& aOther)
   }
 
   if (aOther.mType == NS_STYLE_FILTER_URL) {
-    CopyURL(aOther);
+    SetURL(aOther.mURL);
   } else if (aOther.mType == NS_STYLE_FILTER_DROP_SHADOW) {
     SetDropShadow(aOther.mDropShadow);
   } else if (aOther.mType != NS_STYLE_FILTER_NONE) {
@@ -1166,7 +1067,7 @@ nsStyleFilter::operator==(const nsStyleFilter& aOther) const
   }
 
   if (mType == NS_STYLE_FILTER_URL) {
-    return EqualURIs(mURL, aOther.mURL);
+    return DefinitelyEqualURIs(mURL, aOther.mURL);
   } else if (mType == NS_STYLE_FILTER_DROP_SHADOW) {
     return *mDropShadow == *aOther.mDropShadow;
   } else if (mType != NS_STYLE_FILTER_NONE) {
@@ -1184,17 +1085,9 @@ nsStyleFilter::ReleaseRef()
     mDropShadow->Release();
   } else if (mType == NS_STYLE_FILTER_URL) {
     NS_ASSERTION(mURL, "expected pointer");
-    delete mURL;
+    mURL->Release();
   }
   mURL = nullptr;
-}
-
-void
-nsStyleFilter::CopyURL(const nsStyleFilter& aOther)
-{
-  ReleaseRef();
-  mURL = new FragmentOrURL(*aOther.mURL);
-  mType = NS_STYLE_FILTER_URL;
 }
 
 void
@@ -1207,17 +1100,11 @@ nsStyleFilter::SetFilterParameter(const nsStyleCoord& aFilterParameter,
 }
 
 bool
-nsStyleFilter::SetURL(const nsCSSValue* aValue)
+nsStyleFilter::SetURL(css::URLValue* aURL)
 {
-  if (!aValue->GetURLValue()) {
-    return false;
-  }
-
   ReleaseRef();
-
-  mURL = new FragmentOrURL();
-  mURL->SetValue(aValue);
-
+  mURL = aURL;
+  mURL->AddRef();
   mType = NS_STYLE_FILTER_URL;
   return true;
 }
@@ -1321,24 +1208,19 @@ nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aNewData) const
 
 // nsStyleSVGPaint implementation
 nsStyleSVGPaint::nsStyleSVGPaint(nsStyleSVGPaintType aType)
-  : mType(nsStyleSVGPaintType(0))
+  : mType(aType)
   , mFallbackColor(NS_RGB(0, 0, 0))
 {
-  SetType(aType);
+  MOZ_ASSERT(aType == nsStyleSVGPaintType(0) ||
+             aType == eStyleSVGPaintType_None ||
+             aType == eStyleSVGPaintType_Color);
+  mPaint.mColor = NS_RGB(0, 0, 0);
 }
 
 nsStyleSVGPaint::nsStyleSVGPaint(const nsStyleSVGPaint& aSource)
-  : mType(nsStyleSVGPaintType(0))
-  , mFallbackColor(NS_RGB(0, 0, 0))
+  : nsStyleSVGPaint(nsStyleSVGPaintType(0))
 {
-  SetType(aSource.mType);
-
-  mFallbackColor = aSource.mFallbackColor;
-  if (mType == eStyleSVGPaintType_Server) {
-    mPaint.mPaintServer = new FragmentOrURL(*aSource.mPaint.mPaintServer);
-  } else {
-    mPaint.mColor = aSource.mPaint.mColor;
-  }
+  Assign(aSource);
 }
 
 nsStyleSVGPaint::~nsStyleSVGPaint()
@@ -1349,37 +1231,93 @@ nsStyleSVGPaint::~nsStyleSVGPaint()
 void
 nsStyleSVGPaint::Reset()
 {
-  SetType(nsStyleSVGPaintType(0));
-}
-
-void
-nsStyleSVGPaint::SetType(nsStyleSVGPaintType aType)
-{
-  if (mType == eStyleSVGPaintType_Server) {
-    delete mPaint.mPaintServer;
-    mPaint.mPaintServer = nullptr;
-  } else {
-    mPaint.mColor = NS_RGB(0, 0, 0);
+  switch (mType) {
+    case eStyleSVGPaintType_None:
+      break;
+    case eStyleSVGPaintType_Color:
+      mPaint.mColor = NS_RGB(0, 0, 0);
+      break;
+    case eStyleSVGPaintType_Server:
+      mPaint.mPaintServer->Release();
+      mPaint.mPaintServer = nullptr;
+      MOZ_FALLTHROUGH;
+    case eStyleSVGPaintType_ContextFill:
+    case eStyleSVGPaintType_ContextStroke:
+      mFallbackColor = NS_RGB(0, 0, 0);
+      break;
   }
-  mType = aType;
+  mType = nsStyleSVGPaintType(0);
 }
 
 nsStyleSVGPaint&
 nsStyleSVGPaint::operator=(const nsStyleSVGPaint& aOther)
 {
-  if (this == &aOther) {
-    return *this;
-  }
-
-  SetType(aOther.mType);
-
-  mFallbackColor = aOther.mFallbackColor;
-  if (mType == eStyleSVGPaintType_Server) {
-    mPaint.mPaintServer = new FragmentOrURL(*aOther.mPaint.mPaintServer);
-  } else {
-    mPaint.mColor = aOther.mPaint.mColor;
+  if (this != &aOther) {
+    Assign(aOther);
   }
   return *this;
+}
+
+void
+nsStyleSVGPaint::Assign(const nsStyleSVGPaint& aOther)
+{
+  MOZ_ASSERT(aOther.mType != nsStyleSVGPaintType(0),
+             "shouldn't copy uninitialized nsStyleSVGPaint");
+
+  switch (aOther.mType) {
+    case eStyleSVGPaintType_None:
+      SetNone();
+      break;
+    case eStyleSVGPaintType_Color:
+      SetColor(aOther.mPaint.mColor);
+      break;
+    case eStyleSVGPaintType_Server:
+      SetPaintServer(aOther.mPaint.mPaintServer,
+                     aOther.mFallbackColor);
+      break;
+    case eStyleSVGPaintType_ContextFill:
+    case eStyleSVGPaintType_ContextStroke:
+      SetContextValue(aOther.mType, aOther.mFallbackColor);
+      break;
+  }
+}
+
+void
+nsStyleSVGPaint::SetNone()
+{
+  Reset();
+  mType = eStyleSVGPaintType_None;
+}
+
+void
+nsStyleSVGPaint::SetContextValue(nsStyleSVGPaintType aType,
+                                 nscolor aFallbackColor)
+{
+  MOZ_ASSERT(aType == eStyleSVGPaintType_ContextFill ||
+             aType == eStyleSVGPaintType_ContextStroke);
+  Reset();
+  mType = aType;
+  mFallbackColor = aFallbackColor;
+}
+
+void
+nsStyleSVGPaint::SetColor(nscolor aColor)
+{
+  Reset();
+  mType = eStyleSVGPaintType_Color;
+  mPaint.mColor = aColor;
+}
+
+void
+nsStyleSVGPaint::SetPaintServer(css::URLValue* aPaintServer,
+                                nscolor aFallbackColor)
+{
+  MOZ_ASSERT(aPaintServer);
+  Reset();
+  mType = eStyleSVGPaintType_Server;
+  mPaint.mPaintServer = aPaintServer;
+  mPaint.mPaintServer->AddRef();
+  mFallbackColor = aFallbackColor;
 }
 
 bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
@@ -1387,14 +1325,21 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
   if (mType != aOther.mType) {
     return false;
   }
-  if (mType == eStyleSVGPaintType_Server) {
-    return EqualURIs(mPaint.mPaintServer, aOther.mPaint.mPaintServer) &&
-           mFallbackColor == aOther.mFallbackColor;
+  switch (mType) {
+    case eStyleSVGPaintType_Color:
+      return mPaint.mColor == aOther.mPaint.mColor;
+    case eStyleSVGPaintType_Server:
+      return DefinitelyEqualURIs(mPaint.mPaintServer,
+                                 aOther.mPaint.mPaintServer) &&
+             mFallbackColor == aOther.mFallbackColor;
+    case eStyleSVGPaintType_ContextFill:
+    case eStyleSVGPaintType_ContextStroke:
+      return mFallbackColor == aOther.mFallbackColor;
+    default:
+      MOZ_ASSERT(mType == eStyleSVGPaintType_None,
+                 "Unexpected SVG paint type");
+      return true;
   }
-  if (mType == eStyleSVGPaintType_Color) {
-    return mPaint.mColor == aOther.mPaint.mColor;
-  }
-  return true;
 }
 
 // --------------------
@@ -2492,7 +2437,8 @@ nsStyleImageLayers::HasLayerWithImage() const
     // mLayers[i].mImage can be empty if mask-image prop value is a reference
     // to SVG mask element.
     // So we need to test both mSourceURI and mImage.
-    if (mLayers[i].mSourceURI.GetSourceURL() || !mLayers[i].mImage.IsEmpty()) {
+    if ((mLayers[i].mSourceURI && mLayers[i].mSourceURI->GetURI()) ||
+        !mLayers[i].mImage.IsEmpty()) {
       return true;
     }
   }
@@ -2726,7 +2672,7 @@ nsStyleImageLayers::Layer::operator==(const Layer& aOther) const
          mImage == aOther.mImage &&
          mMaskMode == aOther.mMaskMode &&
          mComposite == aOther.mComposite &&
-         mSourceURI == aOther.mSourceURI;
+         DefinitelyEqualURIs(mSourceURI, aOther.mSourceURI);
 }
 
 nsChangeHint
@@ -2734,7 +2680,7 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
                                           nsChangeHint aPositionChangeHint) const
 {
   nsChangeHint hint = nsChangeHint(0);
-  if (mSourceURI != aNewLayer.mSourceURI) {
+  if (!DefinitelyEqualURIs(mSourceURI, aNewLayer.mSourceURI)) {
     hint |= nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects;
 
     // If Layer::mSourceURI links to a SVG mask, it has a fragment. Not vice
@@ -2749,17 +2695,21 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
     // That is, if mSourceURI has a fragment, it may link to a SVG mask; If
     // not, it "must" not link to a SVG mask.
     bool maybeSVGMask = false;
-    if (mSourceURI.IsLocalRef()) {
-      maybeSVGMask = true;
-    } else if (mSourceURI.GetSourceURL()) {
-      mSourceURI.GetSourceURL()->GetHasRef(&maybeSVGMask);
+    if (mSourceURI) {
+      if (mSourceURI->IsLocalRef()) {
+        maybeSVGMask = true;
+      } else if (mSourceURI->GetURI()) {
+        mSourceURI->GetURI()->GetHasRef(&maybeSVGMask);
+      }
     }
 
     if (!maybeSVGMask) {
-      if (aNewLayer.mSourceURI.IsLocalRef()) {
-        maybeSVGMask = true;
-      } else if (aNewLayer.mSourceURI.GetSourceURL()) {
-        aNewLayer.mSourceURI.GetSourceURL()->GetHasRef(&maybeSVGMask);
+      if (aNewLayer.mSourceURI) {
+        if (aNewLayer.mSourceURI->IsLocalRef()) {
+          maybeSVGMask = true;
+        } else if (aNewLayer.mSourceURI->GetURI()) {
+          aNewLayer.mSourceURI->GetURI()->GetHasRef(&maybeSVGMask);
+        }
       }
     }
 

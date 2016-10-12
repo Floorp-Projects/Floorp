@@ -247,6 +247,25 @@ ul.children + .tag-line::before {
   font: inherit;
 }
 
+/* Whitespace only text nodes are sometimes shown in the markup-view, and when they do
+   they get a greyed-out whitespace symbol so users know what they are */
+.editor.text .whitespace {
+  padding: 0 .5em;
+}
+
+.editor.text .whitespace::before {
+  content: "";
+  display: inline-block;
+  height: 4px;
+  width: 4px;
+  border: 1px solid var(--theme-body-color-inactive);
+  border-radius: 50%;
+}
+
+.tag-line[selected] .editor.text .whitespace::before {
+  border-color: white;
+}
+
 .more-nodes {
   padding-left: 16px;
 }

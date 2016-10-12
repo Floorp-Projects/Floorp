@@ -3274,12 +3274,10 @@ public:
                 Window::Param,
                 GeckoView::Param,
                 mozilla::jni::Object::Param,
-                mozilla::jni::String::Param,
-                int32_t,
-                int32_t> Args;
+                mozilla::jni::String::Param> Args;
         static constexpr char name[] = "open";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;Ljava/lang/String;II)V";
+                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;Ljava/lang/String;)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;

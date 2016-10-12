@@ -1345,7 +1345,7 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
       // eCSSUnit_Image here.
 
       // Check #2.
-      bool isLocalRef = aValue.GetURLStructValue()->GetLocalURLFlag();
+      bool isLocalRef = aValue.GetURLStructValue()->IsLocalRef();
 
       // Check #3.
       bool isEqualExceptRef = false;
@@ -6452,7 +6452,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       break;
     case eCSSUnit_URL: {
       display->mShapeOutside = StyleShapeOutside();
-      display->mShapeOutside.SetURL(shapeOutsideValue);
+      display->mShapeOutside.SetURL(shapeOutsideValue->GetURLStructValue());
       break;
     }
     case eCSSUnit_Array: {
@@ -6688,18 +6688,25 @@ struct BackgroundItemComputer<nsCSSValueList, nsStyleImage>
 };
 
 template <>
-struct BackgroundItemComputer<nsCSSValueList, FragmentOrURL>
+struct BackgroundItemComputer<nsCSSValueList, RefPtr<css::URLValueData>>
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
                            const nsCSSValueList* aSpecifiedValue,
-                           FragmentOrURL& aComputedValue,
+                           RefPtr<css::URLValueData>& aComputedValue,
                            RuleNodeCacheConditions& aConditions)
   {
-    if (eCSSUnit_Image == aSpecifiedValue->mValue.GetUnit() ||
-        eCSSUnit_URL == aSpecifiedValue->mValue.GetUnit()) {
-      aComputedValue.SetValue(&aSpecifiedValue->mValue);
-    } else if (eCSSUnit_Null != aSpecifiedValue->mValue.GetUnit()) {
-      aComputedValue.SetNull();
+    switch (aSpecifiedValue->mValue.GetUnit()) {
+      case eCSSUnit_Null:
+        break;
+      case eCSSUnit_URL:
+        aComputedValue = aSpecifiedValue->mValue.GetURLStructValue();
+        break;
+      case eCSSUnit_Image:
+        aComputedValue = aSpecifiedValue->mValue.GetImageStructValue();
+        break;
+      default:
+        aComputedValue = nullptr;
+        break;
     }
   }
 };
@@ -9168,6 +9175,12 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
             nsStyleSVGPaint& aResult, nsStyleSVGPaintType aInitialPaintType,
             RuleNodeCacheConditions& aConditions)
 {
+  MOZ_ASSERT(aInitialPaintType == eStyleSVGPaintType_None ||
+             aInitialPaintType == eStyleSVGPaintType_Color,
+             "SetSVGPaint only supports initial values being either 'black' "
+             "(represented by eStyleSVGPaintType_Color) or none (by "
+             "eStyleSVGPaintType_None)");
+
   nscolor color;
 
   if (aValue.GetUnit() == eCSSUnit_Inherit ||
@@ -9175,30 +9188,39 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
     aResult = parentPaint;
     aConditions.SetUncacheable();
   } else if (aValue.GetUnit() == eCSSUnit_None) {
-    aResult.SetType(eStyleSVGPaintType_None);
+    aResult.SetNone();
   } else if (aValue.GetUnit() == eCSSUnit_Initial) {
-    aResult.SetType(aInitialPaintType);
-    aResult.mPaint.mColor = NS_RGB(0, 0, 0);
-    aResult.mFallbackColor = NS_RGB(0, 0, 0);
+    if (aInitialPaintType == eStyleSVGPaintType_None) {
+      aResult.SetNone();
+    } else {
+      aResult.SetColor(NS_RGB(0, 0, 0));
+    }
   } else if (SetColor(aValue, NS_RGB(0, 0, 0), aPresContext, aContext,
                       color, aConditions)) {
-    aResult.SetType(eStyleSVGPaintType_Color);
-    aResult.mPaint.mColor = color;
+    aResult.SetColor(color);
   } else if (aValue.GetUnit() == eCSSUnit_Pair) {
     const nsCSSValuePair& pair = aValue.GetPairValue();
 
+    nscolor fallback;
+    if (pair.mYValue.GetUnit() == eCSSUnit_None) {
+      fallback = NS_RGBA(0, 0, 0, 0);
+    } else {
+      MOZ_ASSERT(pair.mYValue.GetUnit() != eCSSUnit_Inherit,
+                 "cannot inherit fallback colour");
+      SetColor(pair.mYValue, NS_RGB(0, 0, 0), aPresContext, aContext,
+               fallback, aConditions);
+    }
+
     if (pair.mXValue.GetUnit() == eCSSUnit_URL) {
-      aResult.SetType(eStyleSVGPaintType_Server);
-      aResult.mPaint.mPaintServer = new FragmentOrURL();
-      aResult.mPaint.mPaintServer->SetValue(&pair.mXValue);
+      aResult.SetPaintServer(pair.mXValue.GetURLStructValue(), fallback);
     } else if (pair.mXValue.GetUnit() == eCSSUnit_Enumerated) {
 
       switch (pair.mXValue.GetIntValue()) {
       case NS_COLOR_CONTEXT_FILL:
-        aResult.SetType(eStyleSVGPaintType_ContextFill);
+        aResult.SetContextValue(eStyleSVGPaintType_ContextFill, fallback);
         break;
       case NS_COLOR_CONTEXT_STROKE:
-        aResult.SetType(eStyleSVGPaintType_ContextStroke);
+        aResult.SetContextValue(eStyleSVGPaintType_ContextStroke, fallback);
         break;
       default:
         NS_NOTREACHED("unknown keyword as paint server value");
@@ -9208,14 +9230,6 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
       NS_NOTREACHED("malformed paint server value");
     }
 
-    if (pair.mYValue.GetUnit() == eCSSUnit_None) {
-      aResult.mFallbackColor = NS_RGBA(0, 0, 0, 0);
-    } else {
-      MOZ_ASSERT(pair.mYValue.GetUnit() != eCSSUnit_Inherit,
-                 "cannot inherit fallback colour");
-      SetColor(pair.mYValue, NS_RGB(0, 0, 0), aPresContext, aContext,
-               aResult.mFallbackColor, aConditions);
-    }
   } else {
     MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Null,
                "malformed paint server value");
@@ -9351,10 +9365,10 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   // marker-end: url, none, inherit
   const nsCSSValue* markerEndValue = aRuleData->ValueForMarkerEnd();
   if (eCSSUnit_URL == markerEndValue->GetUnit()) {
-    svg->mMarkerEnd.SetValue(markerEndValue);
+    svg->mMarkerEnd = markerEndValue->GetURLStructValue();
   } else if (eCSSUnit_None == markerEndValue->GetUnit() ||
              eCSSUnit_Initial == markerEndValue->GetUnit()) {
-    svg->mMarkerEnd.SetNull();
+    svg->mMarkerEnd = nullptr;
   } else if (eCSSUnit_Inherit == markerEndValue->GetUnit() ||
              eCSSUnit_Unset == markerEndValue->GetUnit()) {
     conditions.SetUncacheable();
@@ -9364,10 +9378,10 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   // marker-mid: url, none, inherit
   const nsCSSValue* markerMidValue = aRuleData->ValueForMarkerMid();
   if (eCSSUnit_URL == markerMidValue->GetUnit()) {
-    svg->mMarkerMid.SetValue(markerMidValue);
+    svg->mMarkerMid = markerMidValue->GetURLStructValue();
   } else if (eCSSUnit_None == markerMidValue->GetUnit() ||
              eCSSUnit_Initial == markerMidValue->GetUnit()) {
-    svg->mMarkerMid.SetNull();
+    svg->mMarkerMid = nullptr;
   } else if (eCSSUnit_Inherit == markerMidValue->GetUnit() ||
              eCSSUnit_Unset == markerMidValue->GetUnit()) {
     conditions.SetUncacheable();
@@ -9377,10 +9391,10 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   // marker-start: url, none, inherit
   const nsCSSValue* markerStartValue = aRuleData->ValueForMarkerStart();
   if (eCSSUnit_URL == markerStartValue->GetUnit()) {
-    svg->mMarkerStart.SetValue(markerStartValue);
+    svg->mMarkerStart = markerStartValue->GetURLStructValue();
   } else if (eCSSUnit_None == markerStartValue->GetUnit() ||
              eCSSUnit_Initial == markerStartValue->GetUnit()) {
-    svg->mMarkerStart.SetNull();
+    svg->mMarkerStart = nullptr;
   } else if (eCSSUnit_Inherit == markerStartValue->GetUnit() ||
              eCSSUnit_Unset == markerStartValue->GetUnit()) {
     conditions.SetUncacheable();
@@ -9759,7 +9773,7 @@ SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
 {
   nsCSSUnit unit = aValue.GetUnit();
   if (unit == eCSSUnit_URL) {
-    return aStyleFilter->SetURL(&aValue);
+    return aStyleFilter->SetURL(aValue.GetURLStructValue());
   }
 
   MOZ_ASSERT(unit == eCSSUnit_Function, "expected a filter function");
@@ -9865,7 +9879,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
       break;
     case eCSSUnit_URL: {
       svgReset->mClipPath = StyleClipPath();
-      svgReset->mClipPath.SetURL(clipPathValue);
+      svgReset->mClipPath.SetURL(clipPathValue->GetURLStructValue());
       break;
     }
     case eCSSUnit_Array: {
@@ -9931,7 +9945,8 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     svgReset->mMask.mLayers,
                     parentSVGReset->mMask.mLayers,
                     &nsStyleImageLayers::Layer::mSourceURI,
-                    FragmentOrURL(), parentSVGReset->mMask.mImageCount,
+                    RefPtr<css::URLValueData>(),
+                    parentSVGReset->mMask.mImageCount,
                     svgReset->mMask.mImageCount,
                     maxItemCount, rebuild, conditions);
 

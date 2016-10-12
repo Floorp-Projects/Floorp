@@ -1858,13 +1858,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="progresstext" readonly="true">
         document.getElementById("addon-progress-notification-progresstext");
       </field>
-      <field name="DownloadUtils" readonly="true">
-        {
-          let utils = {};
-          Components.utils.import("resource://gre/modules/DownloadUtils.jsm", utils);
-          utils.DownloadUtils;
-        }
-      </field>
+      <property name="DownloadUtils" readonly="true">
+        <getter><![CDATA[
+          let module = {};
+          Components.utils.import("resource://gre/modules/DownloadUtils.jsm", module);
+          Object.defineProperty(this, "DownloadUtils", {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: module.DownloadUtils
+          });
+          return module.DownloadUtils;
+        ]]></getter>
+      </property>
 
       <method name="destroy">
         <body><![CDATA[

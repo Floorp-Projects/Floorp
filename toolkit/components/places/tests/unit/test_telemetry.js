@@ -19,7 +19,9 @@ var histograms = {
   //PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS:  val => do_check_true(val > 1),
   PLACES_IDLE_FRECENCY_DECAY_TIME_MS: val => do_check_true(val > 0),
   PLACES_IDLE_MAINTENANCE_TIME_MS: val => do_check_true(val > 0),
-  PLACES_ANNOS_BOOKMARKS_COUNT: val => do_check_eq(val, 1),
+  // One from the `setItemAnnotation` call; the other from the mobile root.
+  // This can be removed along with the anno in bug 1306445.
+  PLACES_ANNOS_BOOKMARKS_COUNT: val => do_check_eq(val, 2),
   PLACES_ANNOS_PAGES_COUNT: val => do_check_eq(val, 1),
   PLACES_MAINTENANCE_DAYSFROMLAST: val => do_check_true(val >= 0),
 }

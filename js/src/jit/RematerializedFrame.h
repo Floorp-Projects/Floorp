@@ -169,6 +169,7 @@ class RematerializedFrame
     }
     JSFunction* callee() const {
         MOZ_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(callee_);
         return callee_;
     }
     Value calleev() const {

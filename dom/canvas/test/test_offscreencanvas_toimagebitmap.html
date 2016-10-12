@@ -35,17 +35,17 @@ function runTest() {
 
       var htmlCanvas = document.getElementById("c");
       var bitmapRenderer = htmlCanvas.getContext("bitmaprenderer");
-      bitmapRenderer.transferImageBitmap(msg.bitmap);
+      bitmapRenderer.transferFromImageBitmap(msg.bitmap);
 
       ok(c.toDataURL() == htmlCanvas.toDataURL(),
          "imagebitmap should return a 64x64 green square");
 
       // The ownership of msg.bitmap should be transferred to canvas "c" when
-      // we called transferImageBitmap. So we test if the ownership is actually
+      // we called transferFromImageBitmap. So we test if the ownership is actually
       // transferred here.
       var htmlCanvas = document.getElementById("c2");
       var bitmapRenderer = htmlCanvas.getContext("bitmaprenderer");
-      bitmapRenderer.transferImageBitmap(msg.bitmap);
+      bitmapRenderer.transferFromImageBitmap(msg.bitmap);
 
       SimpleTest.doesThrow(
         function() { c2.toDataURL(); },

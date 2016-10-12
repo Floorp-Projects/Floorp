@@ -53,6 +53,9 @@ add_task(function* test_bookmark_order() {
     // `CreateRoot` calls in `Database::CreateBookmarkRoots`).
     guid: PlacesUtils.bookmarks.unfiledGuid,
     index: 3,
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "clean slate");
 
   function bookmark(name, parent) {
@@ -96,6 +99,9 @@ add_task(function* test_bookmark_order() {
       guid: id10,
       index: 0,
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "basic add first bookmark");
   let id20 = "20_aaaaaaaaa";
   _("basic append behind 10");
@@ -116,6 +122,9 @@ add_task(function* test_bookmark_order() {
       guid: id20,
       index: 1,
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "basic append behind 10");
 
   let id31 = "31_aaaaaaaaa";
@@ -147,6 +156,9 @@ add_task(function* test_bookmark_order() {
         index: 0,
       }],
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "basic create in folder");
 
   let id41 = "41_aaaaaaaaa";
@@ -180,6 +192,9 @@ add_task(function* test_bookmark_order() {
       index: 3,
       requestedParent: id40,
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "insert missing parent -> append to unfiled");
 
   let id42 = "42_aaaaaaaaa";
@@ -217,6 +232,9 @@ add_task(function* test_bookmark_order() {
       index: 4,
       requestedParent: id40,
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "insert another missing parent -> append");
 
   _("insert folder -> move children and followers");
@@ -255,6 +273,9 @@ add_task(function* test_bookmark_order() {
         index: 1,
       }]
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "insert folder -> move children and followers");
 
   _("Moving 41 behind 42 -> update f40");
@@ -293,6 +314,9 @@ add_task(function* test_bookmark_order() {
         index: 1,
       }]
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "Moving 41 behind 42 -> update f40");
 
   _("Moving 10 back to front -> update 10, 20");
@@ -331,6 +355,9 @@ add_task(function* test_bookmark_order() {
         index: 1,
       }]
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "Moving 10 back to front -> update 10, 20");
 
   _("Moving 20 behind 42 in f40 -> update 50");
@@ -368,6 +395,9 @@ add_task(function* test_bookmark_order() {
         index: 2,
       }]
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "Moving 20 behind 42 in f40 -> update 50");
 
   _("Moving 10 in front of 31 in f30 -> update 10, f30");
@@ -407,6 +437,9 @@ add_task(function* test_bookmark_order() {
         index: 2,
       }]
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "Moving 10 in front of 31 in f30 -> update 10, f30");
 
   _("Moving 20 from f40 to f30 -> update 20, f30");
@@ -446,6 +479,9 @@ add_task(function* test_bookmark_order() {
         index: 1,
       }]
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "Moving 20 from f40 to f30 -> update 20, f30");
 
   _("Move 20 back to front -> update 20, f30");
@@ -485,6 +521,9 @@ add_task(function* test_bookmark_order() {
       guid: id20,
       index: 2,
     }],
+  }, {
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    index: 4,
   }], "Move 20 back to front -> update 20, f30");
 
 });
