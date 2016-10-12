@@ -1931,8 +1931,8 @@ private:
 
 template<typename Type, typename Method, typename... Args>
 GMPTask*
-WrapTaskRefCounted(Type* aType, Method aMethod, Args... args)
+WrapTaskRefCounted(Type* aType, Method aMethod, Args&&... args)
 {
-  GMPTask* t = WrapTask(aType, aMethod, args...);
+  GMPTask* t = WrapTask(aType, aMethod, std::forward<Args>(args)...);
   return new RefCountTaskWrapper(t, aType);
 }

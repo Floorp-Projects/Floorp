@@ -2664,33 +2664,18 @@ HttpBaseChannel::ShouldIntercept(nsIURI* aURI)
   return shouldIntercept;
 }
 
-#ifdef DEBUG
-void HttpBaseChannel::AssertPrivateBrowsingId()
+void HttpBaseChannel::CheckPrivateBrowsing()
 {
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(this, loadContext);
   // For addons it's possible that mLoadInfo is null.
-  if (!mLoadInfo) {
-    return;
+  if (mLoadInfo && loadContext) {
+      DocShellOriginAttributes docShellAttrs;
+      loadContext->GetOriginAttributes(docShellAttrs);
+      MOZ_ASSERT(mLoadInfo->GetOriginAttributes().mPrivateBrowsingId == docShellAttrs.mPrivateBrowsingId,
+                 "PrivateBrowsingId values are not the same between LoadInfo and LoadContext.");
   }
-
-  if (!loadContext) {
-    return;
-  }
-
-  // We skip testing of favicon loading here since it could be triggered by XUL image
-  // which uses SystemPrincipal. The SystemPrincpal doesn't have mPrivateBrowsingId.
-  if (nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal()) &&
-      mLoadInfo->InternalContentPolicyType() == nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON) {
-    return;
-  }
-
-  DocShellOriginAttributes docShellAttrs;
-  loadContext->GetOriginAttributes(docShellAttrs);
-  MOZ_ASSERT(mLoadInfo->GetOriginAttributes().mPrivateBrowsingId == docShellAttrs.mPrivateBrowsingId,
-             "PrivateBrowsingId values are not the same between LoadInfo and LoadContext.");
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsITraceableChannel

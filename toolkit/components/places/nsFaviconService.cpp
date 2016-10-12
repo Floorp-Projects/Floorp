@@ -413,7 +413,7 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
                           nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
                           nsILoadInfo::SEC_ALLOW_CHROME |
                           nsILoadInfo::SEC_DISALLOW_SCRIPT,
-                          nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON);
+                          nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   nsCOMPtr<nsIChannel> channel;
   rv = protocolHandler->NewChannel2(dataURI, loadInfo, getter_AddRefs(channel));
