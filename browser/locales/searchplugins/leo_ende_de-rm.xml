@@ -1,0 +1,18 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>LEO Eng-Tud</ShortName>
+<Description>Pledari tudestg-englais da LEO</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAACtElEQVR4nF3Ma0hTYQDG8ec9e8/OOdNd9KjTwAwrmTjNDOxDVFJpIEVFgRkUhRkWXaAkMNDCyqgsumBIReGHiILCIOhDUBG1IE2FrprXXEwTJ7bN7d25vH0owvp//j0PSbc7fxqapnNNM4oIuQykUYGaOgc0B01uNOWlAIPVCllW42YjDceiM1ocQLbLme6wy9/8NA4OCImY26jZSoEIYAPEDM04RguqIFoVADlAc/PJjo5nRwjpBwbtmGkF7wPvAu8Cf5+hdV/TOd9V10413SwC1gMez0KvNzcgSQKNuc9AWQ2EAABihm7UY9HeqrpHbbdeC0XATUACFEUmBNxK0pthK5ul9Xrm2bO99mHb9ZeQKL0hi2kzjAGU0mBwWi3WZ38b9os0a+tY2Cgt8axb6yUCoamGzoAIEVwuZyAw5s7X/2qm108/jmqBs6KALbJICAFA4ywOIGKzuN2pPl/n3CT+W4eGqkdq77ChUfwb5QB1gBdbVDV5YmIiSwXEjNDw7tHjb9iIH4T8PxBTxLRTjL+0UGpljCkONcYaAldeGOFI2r6dRBCIIpnxOIHJwe2SRNVzorKMCc8FgHAOi/OQPL9Sl30BV+LAisKenu6hd75Ygk2gFlmyToVNauZr0SC+jxumaWRlZZ4+2qTP60oMjbu9C/L8A2Vly72Hqx2OJCABiJSs2ojpV9aayvS2tlbOpzmf6uvrDIVGOY/zP4WDwWGf72lLy6W15RugbqGiaJmMZu7YsQ0QGIu5XK7u7g+fPz8Y7Ov/Ojz+pXfMpFLFphV5g6NNSkpS5RqqJM45sHl1xcr1THV3vff/mNTm52TvN8ZKqHWosOKTrxcmvkzl1t2unzl7+UTnM6oZDZm+T/LimvvtH2HJQYLhWVJQ7n9ColFJtkOwwCbeu/uWA7fPH0y+cPUXI+Y0JNj13cUAAAAASUVORK5CYII=</Image>
+<Url type="application/x-suggestions+json" method="get"
+     template="http://dict.leo.org/dictQuery/m-query/conf/ende/query.conf/strlist.json?q={searchTerms}&amp;sort=PLa&amp;shortQuery&amp;noDescription&amp;noQueryURLs"/>
+<Url type="text/html" method="GET" template="http://dict.leo.org/ende" resultdomain="leo.org">
+<Param name="lang" value="de"/>
+<Param name="from" value="fxdesktop"/>
+<Param name="search" value="{searchTerms}"/>
+</Url>
+<SearchForm>http://dict.leo.org</SearchForm>
+</SearchPlugin>

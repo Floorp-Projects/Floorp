@@ -1,0 +1,19 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>flip.kz</ShortName>
+<LongName>flip.kz көмегімен іздестіру</LongName>
+<Description>Қазақстандық интернет-дүкенде іздеу</Description>
+<InputEncoding>utf-8</InputEncoding>
+<Image height="16" width="16" type="image/png">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABGdBTUEAAK%2FINwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAADoSURBVHjaYkxY%2BpiNgYGhDogTgFiagTjwFIgXAHETC5BoBOIKBtIAyKJqIGZmAhLJDOSDZJALRNFFO30lGMR4WbDqKNv0guH1lz8wrigTugIHVW6cmrEBDJVcrKhmrr7wEYX%2F7dc%2F%2FAagg23XPpPmAnQwP0oGzr724idD977XqAaAAuTS0x8M7779BQvICrAyhBrwYzXs5ec%2FDKvPQ7wkxMXMoCfNwcBy4sE3hh%2B%2F%2F%2BN0Qd22l3D2h%2B9%2F4WyQhSC9LPg0g0Df%2Fjc45UB6mRgoBBQbgBEL5598R%2FE3IcDIXXLl%2F4B6ASDAAE8uSkx9GD%2FfAAAAAElFTkSuQmCC</Image>
+<Url type="application/x-suggestions+json" template="http://www.flip.kz/ajax/search_keyword.php">
+  <Param name="q" value="{searchTerms}"/>
+  <Param name="type" value="os"/>
+</Url>
+<Url type="text/html" method="get" template="http://www.flip.kz/search" resultdomain="flip.kz">
+  <Param name="search" value="{searchTerms}"/>
+</Url>
+<SearchForm>http://flip.kz/</SearchForm>
+</SearchPlugin>
