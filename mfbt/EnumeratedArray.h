@@ -54,6 +54,11 @@ private:
 public:
   EnumeratedArray() {}
 
+  template <typename... Args>
+  MOZ_IMPLICIT EnumeratedArray(Args&&... aArgs)
+    : mArray{mozilla::Forward<Args>(aArgs)...}
+  {}
+
   explicit EnumeratedArray(const EnumeratedArray& aOther)
   {
     for (size_t i = 0; i < kSize; i++) {
