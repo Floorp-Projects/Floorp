@@ -177,6 +177,10 @@ task_description_schema = Schema({
 
         # the maximum time to run, in seconds
         'max-run-time': int,
+
+        # the exit status code that indicates the task should be retried
+        Optional('retry-exit-status'): int,
+
     }, {
         Required('implementation'): 'generic-worker',
 
@@ -330,6 +334,9 @@ def build_docker_worker_payload(config, task, task_def):
     if 'max-run-time' in worker:
         payload['maxRunTime'] = worker['max-run-time']
 
+    if 'retry-exit-status' in worker:
+        payload['onExitStatus'] = {'retry': [worker['retry-exit-status']]}
+
     if 'artifacts' in worker:
         artifacts = {}
         for artifact in worker['artifacts']:
@@ -379,6 +386,9 @@ def build_generic_worker_payload(config, task, task_def):
         'env': worker['env'],
         'maxRunTime': worker['max-run-time'],
     }
+
+    if 'retry-exit-status' in worker:
+        raise Exception("retry-exit-status not supported in generic-worker")
 
 
 transforms = TransformSequence()
