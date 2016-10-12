@@ -974,6 +974,7 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
       // send errors.
       this.curBrowser.pendingCommands.push(() => {
         cmd.parameters.command_id = id;
+        cmd.parameters.pageTimeout = this.pageTimeout;
         this.mm.broadcastAsyncMessage(
             "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
             cmd.parameters);
