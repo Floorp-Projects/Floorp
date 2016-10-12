@@ -39,6 +39,7 @@ using namespace mozilla::css;
 using namespace mozilla::gfx;
 using nsStyleTransformMatrix::Decompose2DMatrix;
 using nsStyleTransformMatrix::Decompose3DMatrix;
+using nsStyleTransformMatrix::ShearType;
 
 // HELPER METHODS
 // --------------
@@ -1609,16 +1610,21 @@ StyleAnimationValue::InterpolateTransformMatrix(const Matrix4x4 &aMatrix1,
   // Decompose both matrices
 
   // TODO: What do we do if one of these returns false (singular matrix)
-
   Point3D scale1(1, 1, 1), translate1;
   Point4D perspective1(0, 0, 0, 1);
   gfxQuaternion rotate1;
-  float shear1[3] = { 0.0f, 0.0f, 0.0f};
+  nsStyleTransformMatrix::ShearArray shear1;
+  for (auto&& s : shear1) {
+    s = 0.0f;
+  }
 
   Point3D scale2(1, 1, 1), translate2;
   Point4D perspective2(0, 0, 0, 1);
   gfxQuaternion rotate2;
-  float shear2[3] = { 0.0f, 0.0f, 0.0f};
+  nsStyleTransformMatrix::ShearArray shear2;
+  for (auto&& s : shear2) {
+    s = 0.0f;
+  }
 
   Matrix matrix2d1, matrix2d2;
   if (aMatrix1.Is2D(&matrix2d1) && aMatrix2.Is2D(&matrix2d2)) {
@@ -1651,19 +1657,25 @@ StyleAnimationValue::InterpolateTransformMatrix(const Matrix4x4 &aMatrix1,
   // TODO: Would it be better to interpolate these as angles?
   //       How do we convert back to angles?
   float yzshear =
-    InterpolateNumerically(shear1[YZSHEAR], shear2[YZSHEAR], aProgress);
+    InterpolateNumerically(shear1[ShearType::YZSHEAR],
+                           shear2[ShearType::YZSHEAR],
+                           aProgress);
   if (yzshear != 0.0) {
     result.SkewYZ(yzshear);
   }
 
   float xzshear =
-    InterpolateNumerically(shear1[XZSHEAR], shear2[XZSHEAR], aProgress);
+    InterpolateNumerically(shear1[ShearType::XZSHEAR],
+                           shear2[ShearType::XZSHEAR],
+                           aProgress);
   if (xzshear != 0.0) {
     result.SkewXZ(xzshear);
   }
 
   float xyshear =
-    InterpolateNumerically(shear1[XYSHEAR], shear2[XYSHEAR], aProgress);
+    InterpolateNumerically(shear1[ShearType::XYSHEAR],
+                           shear2[ShearType::XYSHEAR],
+                           aProgress);
   if (xyshear != 0.0) {
     result.SkewXY(xyshear);
   }
