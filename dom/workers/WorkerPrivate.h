@@ -419,7 +419,7 @@ public:
   void
   QueueRunnable(nsIRunnable* aRunnable)
   {
-    AssertIsOnMainThread();
+    AssertIsOnParentThread();
     mQueuedRunnables.AppendElement(aRunnable);
   }
 
