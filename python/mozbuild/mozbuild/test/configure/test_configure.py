@@ -433,6 +433,29 @@ class TestConfigure(unittest.TestCase):
             # set_config('FOO'...)
             get_config(['--set-foo', '--set-name=FOO'])
 
+    def test_set_config_when(self):
+        with self.moz_configure('''
+            @depends('--help')
+            def always(_):
+                return True
+            @depends('--help')
+            def never(_):
+                return False
+            option('--with-qux', help='qux')
+            set_config('FOO', 'foo', when=always)
+            set_config('BAR', 'bar', when=never)
+            set_config('QUX', 'qux', when='--with-qux')
+        '''):
+            config = self.get_config()
+            self.assertEquals(config, {
+                'FOO': 'foo',
+            })
+            config = self.get_config(['--with-qux'])
+            self.assertEquals(config, {
+                'FOO': 'foo',
+                'QUX': 'qux',
+            })
+
     def test_set_define(self):
         def get_config(*args):
             return self.get_config(*args, configure='set_define.configure')
@@ -464,6 +487,29 @@ class TestConfigure(unittest.TestCase):
             # Both --set-foo and --set-name=FOO are going to try to
             # set_define('FOO'...)
             get_config(['--set-foo', '--set-name=FOO'])
+
+    def test_set_define_when(self):
+        with self.moz_configure('''
+            @depends('--help')
+            def always(_):
+                return True
+            @depends('--help')
+            def never(_):
+                return False
+            option('--with-qux', help='qux')
+            set_define('FOO', 'foo', when=always)
+            set_define('BAR', 'bar', when=never)
+            set_define('QUX', 'qux', when='--with-qux')
+        '''):
+            config = self.get_config()
+            self.assertEquals(config['DEFINES'], {
+                'FOO': 'foo',
+            })
+            config = self.get_config(['--with-qux'])
+            self.assertEquals(config['DEFINES'], {
+                'FOO': 'foo',
+                'QUX': 'qux',
+            })
 
     def test_imply_option_simple(self):
         def get_config(*args):
