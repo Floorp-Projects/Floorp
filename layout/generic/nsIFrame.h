@@ -2602,8 +2602,8 @@ public:
 
   /**
    * Returns a rect that encompasses everything that might be painted by
-   * this frame.  This includes this frame, all its descendant frames, this
-   * frame's outline, and descendant frames' outline, but does not include
+   * this frame.  This includes this frame, all its descendent frames, this
+   * frame's outline, and descentant frames' outline, but does not include
    * areas clipped out by the CSS "overflow" and "clip" properties.
    *
    * HasOverflowRects() (below) will return true when this overflow
