@@ -18,7 +18,7 @@
   var worker = new Worker("url_worker.js");
 
   worker.onmessage = function(event) {
-    is(event.target, worker);
+    is(event.target, worker, "Correct worker");
 
     if (event.data.type == 'finish') {
       runTest();
@@ -37,7 +37,7 @@
   };
 
   worker.onerror = function(event) {
-    is(event.target, worker);
+    is(event.target, worker, "Correct worker");
     ok(false, "Worker had an error: " + event.message);
     SimpleTest.finish();
   };
