@@ -595,8 +595,13 @@ public:
 
   bool IsFollowedByCompositionEnd() const
   {
-    return mOriginalMessage == eCompositionCommit ||
-           mOriginalMessage == eCompositionCommitAsIs;
+    return IsFollowedByCompositionEnd(mOriginalMessage);
+  }
+
+  static bool IsFollowedByCompositionEnd(EventMessage aEventMessage)
+  {
+    return aEventMessage == eCompositionCommit ||
+           aEventMessage == eCompositionCommitAsIs;
   }
 };
 
