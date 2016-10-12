@@ -3853,6 +3853,11 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*> *aOutFrames) override;
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) override {
+    *aSnap = false;
+    return mEffectsBounds + ToReferenceFrame();
+  }
 
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
@@ -3932,11 +3937,7 @@ public:
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override {
-    *aSnap = false;
-    return mEffectsBounds + ToReferenceFrame();
-  }
+
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
 #ifdef MOZ_DUMP_PAINTING
