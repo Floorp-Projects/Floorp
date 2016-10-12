@@ -122,7 +122,7 @@ void nsFloatManager::Shutdown()
 
 nsFlowAreaRect
 nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
-                            BandInfoType aBandInfoType,
+                            BandInfoType aBandInfoType, ShapeType aShapeType,
                             LogicalRect aContentArea, SavedState* aState,
                             const nsSize& aContainerSize) const
 {
@@ -193,8 +193,8 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
       continue;
     }
 
-    nscoord floatBStart = fi.BStart();
-    nscoord floatBEnd = fi.BEnd();
+    nscoord floatBStart = fi.BStart(aShapeType);
+    nscoord floatBEnd = fi.BEnd(aShapeType);
     if (blockStart < floatBStart && aBandInfoType == BandInfoType::BandFromPoint) {
       // This float is below our band.  Shrink our band's height if needed.
       if (floatBStart < blockEnd) {
@@ -220,7 +220,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
       StyleFloat floatStyle = fi.mFrame->StyleDisplay()->PhysicalFloats(aWM);
       if (floatStyle == StyleFloat::Left) {
         // A left float
-        nscoord lineRightEdge = fi.LineRight();
+        nscoord lineRightEdge = fi.LineRight(aShapeType);
         if (lineRightEdge > lineLeft) {
           lineLeft = lineRightEdge;
           // Only set haveFloats to true if the float is inside our
@@ -231,7 +231,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
         }
       } else {
         // A right float
-        nscoord lineLeftEdge = fi.LineLeft();
+        nscoord lineLeftEdge = fi.LineLeft(aShapeType);
         if (lineLeftEdge < lineRight) {
           lineRight = lineLeftEdge;
           // See above.
@@ -537,14 +537,44 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
           aMarginRect.BSize(aWM))
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
+
+  const StyleShapeOutside& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
+
+  if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
+    // Initialize shape-box reference rect.
+    LogicalRect rect = aMarginRect;
+
+    switch (shapeOutside.GetReferenceBox()) {
+      case StyleShapeOutsideShapeBox::Content:
+        rect.Deflate(aWM, mFrame->GetLogicalUsedPadding(aWM));
+        MOZ_FALLTHROUGH;
+      case StyleShapeOutsideShapeBox::Padding:
+        rect.Deflate(aWM, mFrame->GetLogicalUsedBorder(aWM));
+        MOZ_FALLTHROUGH;
+      case StyleShapeOutsideShapeBox::Border:
+        rect.Deflate(aWM, mFrame->GetLogicalUsedMargin(aWM));
+        break;
+      case StyleShapeOutsideShapeBox::Margin:
+        // Do nothing. rect is already a margin rect.
+        break;
+      case StyleShapeOutsideShapeBox::NoBox:
+        MOZ_ASSERT_UNREACHABLE("Why don't we have a shape-box?");
+        break;
+    }
+
+    mShapeBoxRect.emplace(rect.LineLeft(aWM, aContainerSize) + aLineLeft,
+                          rect.BStart(aWM) + aBlockStart,
+                          rect.ISize(aWM), rect.BSize(aWM));
+  }
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 nsFloatManager::FloatInfo::FloatInfo(const FloatInfo& aOther)
-  : mFrame(aOther.mFrame),
-    mLeftBEnd(aOther.mLeftBEnd),
-    mRightBEnd(aOther.mRightBEnd),
-    mRect(aOther.mRect)
+  : mFrame(aOther.mFrame)
+  , mLeftBEnd(aOther.mLeftBEnd)
+  , mRightBEnd(aOther.mRightBEnd)
+  , mRect(aOther.mRect)
+  , mShapeBoxRect(aOther.mShapeBoxRect)
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 }
@@ -554,6 +584,50 @@ nsFloatManager::FloatInfo::~FloatInfo()
   MOZ_COUNT_DTOR(nsFloatManager::FloatInfo);
 }
 #endif
+
+nscoord
+nsFloatManager::FloatInfo::LineLeft(ShapeType aShapeType) const
+{
+  if (aShapeType == ShapeType::Margin) {
+    return LineLeft();
+  }
+
+  MOZ_ASSERT(aShapeType == ShapeType::ShapeOutside);
+  const StyleShapeOutside& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
+  if (shapeOutside.GetType() == StyleShapeSourceType::None) {
+    return LineLeft();
+  }
+
+  if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
+    return ShapeBoxRect().x;
+  }
+
+  // XXX: Other shape source types are not implemented yet.
+
+  return LineLeft();
+}
+
+nscoord
+nsFloatManager::FloatInfo::LineRight(ShapeType aShapeType) const
+{
+  if (aShapeType == ShapeType::Margin) {
+    return LineRight();
+  }
+
+  MOZ_ASSERT(aShapeType == ShapeType::ShapeOutside);
+  const StyleShapeOutside& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
+  if (shapeOutside.GetType() == StyleShapeSourceType::None) {
+    return LineRight();
+  }
+
+  if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
+    return ShapeBoxRect().XMost();
+  }
+
+  // XXX: Other shape source types are not implemented yet.
+
+  return LineRight();
+}
 
 //----------------------------------------------------------------------
 

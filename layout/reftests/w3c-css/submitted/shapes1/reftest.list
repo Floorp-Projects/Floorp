@@ -1,0 +1,11 @@
+default-preferences pref(layout.css.shape-outside.enabled,true)
+
+# <shape-box> only
+== shape-outside-margin-box-001.html shape-outside-margin-box-001-ref.html
+== shape-outside-margin-box-002.html shape-outside-margin-box-002-ref.html
+== shape-outside-border-box-001.html shape-outside-border-box-001-ref.html
+== shape-outside-border-box-002.html shape-outside-border-box-002-ref.html
+== shape-outside-padding-box-001.html shape-outside-padding-box-001-ref.html
+== shape-outside-padding-box-002.html shape-outside-padding-box-002-ref.html
+== shape-outside-content-box-001.html shape-outside-content-box-001-ref.html
+== shape-outside-content-box-002.html shape-outside-content-box-002-ref.html
