@@ -875,7 +875,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 
       matSR.SetContext(&context);
       SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
-                         offsetToUserSpace, false);
+                         offsetToUserSpace, true);
     }
 
     if (aParams.layerManager->GetRoot()->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) {
@@ -920,6 +920,12 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 
   if (shouldGenerateMask) {
     context.PopGroupAndBlend();
+
+    if (!shouldGenerateClipMaskLayer && !shouldGenerateMaskLayer) {
+      MOZ_ASSERT(opacity != 1.0f);
+      // Pop the clip push by SetupContextMatrix
+      context.PopClip();
+    }
   }
 
   return result;
