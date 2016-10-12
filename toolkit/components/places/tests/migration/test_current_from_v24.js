@@ -23,7 +23,8 @@ add_task(function* test_bookmark_guid_annotation_removed()
     [PlacesUtils.bookmarksMenuFolderId, PlacesUtils.bookmarks.menuGuid],
     [PlacesUtils.toolbarFolderId, PlacesUtils.bookmarks.toolbarGuid],
     [PlacesUtils.unfiledBookmarksFolderId, PlacesUtils.bookmarks.unfiledGuid],
-    [PlacesUtils.tagsFolderId, PlacesUtils.bookmarks.tagsGuid]
+    [PlacesUtils.tagsFolderId, PlacesUtils.bookmarks.tagsGuid],
+    [PlacesUtils.mobileFolderId, PlacesUtils.bookmarks.mobileGuid],
   ]);
 
   let rows = yield db.execute(`SELECT id, guid FROM moz_bookmarks`);

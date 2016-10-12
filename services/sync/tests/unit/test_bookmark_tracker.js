@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://services-sync/bookmark_utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines.js");
@@ -348,7 +348,7 @@ add_task(function* test_onItemChanged_changeBookmarkURI() {
 
     _("Set a tracked annotation to make sure we only notify once");
     PlacesUtils.annotations.setItemAnnotation(
-      fx_id, BookmarkAnnos.DESCRIPTION_ANNO, "A test description", 0,
+      fx_id, PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO, "A test description", 0,
       PlacesUtils.annotations.EXPIRE_NEVER);
 
     yield startTracking();
@@ -688,7 +688,7 @@ add_task(function* test_onItemAnnoChanged() {
 
     yield startTracking();
     PlacesUtils.annotations.setItemAnnotation(
-      b, BookmarkAnnos.DESCRIPTION_ANNO, "A test description", 0,
+      b, PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO, "A test description", 0,
       PlacesUtils.annotations.EXPIRE_NEVER);
     // bookmark should be tracked, folder should not.
     yield verifyTrackedItems([bGUID]);
@@ -696,7 +696,7 @@ add_task(function* test_onItemAnnoChanged() {
     yield resetTracker();
 
     PlacesUtils.annotations.removeItemAnnotation(b,
-      BookmarkAnnos.DESCRIPTION_ANNO);
+      PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO);
     yield verifyTrackedItems([bGUID]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
@@ -1272,19 +1272,16 @@ add_task(function* test_async_onItemDeleted_eraseEverything() {
   try {
     yield stopTracking();
 
-    let mobileRoot = BookmarkSpecialIds.findMobileRoot(true);
-    let mobileGUID = yield PlacesUtils.promiseItemGuid(mobileRoot);
-
     let fxBmk = yield PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      parentGuid: mobileGUID,
+      parentGuid: PlacesUtils.bookmarks.mobileGuid,
       url: "http://getfirefox.com",
       title: "Get Firefox!",
     });
     _(`Firefox GUID: ${fxBmk.guid}`);
     let tbBmk = yield PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      parentGuid: mobileGUID,
+      parentGuid: PlacesUtils.bookmarks.mobileGuid,
       url: "http://getthunderbird.com",
       title: "Get Thunderbird!",
     });
@@ -1340,8 +1337,9 @@ add_task(function* test_async_onItemDeleted_eraseEverything() {
     // (bzBmk.guid, bugsGrandChildBmk.guid, bugsChildFolder.guid), even
     // though we should.
     yield verifyTrackedItems(["menu", mozBmk.guid, mdnBmk.guid, "toolbar",
-                              bugsFolder.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);
+                              bugsFolder.guid, "mobile", fxBmk.guid,
+                              tbBmk.guid]);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 10);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1352,10 +1350,8 @@ add_task(function* test_onItemDeleted_removeFolderChildren() {
   _("Removing a folder's children should track the folder and its children");
 
   try {
-    let mobileRoot = BookmarkSpecialIds.findMobileRoot(true);
-    let mobileGUID = engine._store.GUIDForId(mobileRoot);
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      mobileRoot,
+      PlacesUtils.mobileFolderId,
       Utils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
@@ -1363,7 +1359,7 @@ add_task(function* test_onItemDeleted_removeFolderChildren() {
     _(`Firefox GUID: ${fx_guid}`);
 
     let tb_id = PlacesUtils.bookmarks.insertBookmark(
-      mobileRoot,
+      PlacesUtils.mobileFolderId,
       Utils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
@@ -1381,8 +1377,8 @@ add_task(function* test_onItemDeleted_removeFolderChildren() {
 
     yield startTracking();
 
-    _(`Mobile root ID: ${mobileRoot}`);
-    PlacesUtils.bookmarks.removeFolderChildren(mobileRoot);
+    _(`Mobile root ID: ${PlacesUtils.mobileFolderId}`);
+    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.mobileFolderId);
 
     yield verifyTrackedItems(["mobile", fx_guid, tb_guid]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);

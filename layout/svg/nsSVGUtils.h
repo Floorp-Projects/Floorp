@@ -33,6 +33,7 @@ class nsIDocument;
 class nsIFrame;
 class nsPresContext;
 class nsStyleContext;
+class nsStyleSVGPaint;
 class nsSVGDisplayContainerFrame;
 class nsSVGElement;
 class nsSVGEnum;
@@ -42,7 +43,6 @@ class nsSVGPathGeometryFrame;
 class nsTextFrame;
 
 struct nsStyleSVG;
-struct nsStyleSVGPaint;
 struct nsRect;
 
 namespace mozilla {

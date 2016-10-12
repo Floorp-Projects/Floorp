@@ -69,14 +69,13 @@
 
       <!-- =================== nsIAutoCompleteInput =================== -->
 
-      <field name="popup"><![CDATA[
-        // Wrap in a block so that the let statements don't
-        // create properties on 'this' (bug 635252).
-        {
+      <property name="popup" readonly="true">
+        <getter><![CDATA[
           let popup = null;
           let popupId = this.getAttribute("autocompletepopup");
-          if (popupId)
+          if (popupId) {
             popup = document.getElementById(popupId);
+          }
           if (!popup) {
             popup = document.createElement("panel");
             popup.setAttribute("type", "autocomplete");
@@ -86,9 +85,17 @@
             popupset.appendChild(popup);
           }
           popup.mInput = this;
-          popup;
-        }
-      ]]></field>
+
+          // Avoid having to recalculate the popup property each time
+          Object.defineProperty(this, "popup", {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: popup
+          });
+          return popup;
+        ]]></getter>
+      </property>
 
       <property name="controller" onget="return this.mController;" readonly="true"/>
 
@@ -149,13 +156,19 @@
         parseInt(this.getAttribute("shrinkdelay")) || 0
       </field>
 
-      <field name="PrivateBrowsingUtils" readonly="true">
-        {
-          let utils = {};
-          Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", utils);
-          utils.PrivateBrowsingUtils
-        }
-      </field>
+      <property name="PrivateBrowsingUtils" readonly="true">
+        <getter><![CDATA[
+          let module = {};
+          Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", module);
+          Object.defineProperty(this, "PrivateBrowsingUtils", {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: module.PrivateBrowsingUtils
+          });
+          return module.PrivateBrowsingUtils;
+        ]]></getter>
+      </property>
 
       <property name="inPrivateContext" readonly="true"
                 onget="return this.PrivateBrowsingUtils.isWindowPrivate(window);"/>

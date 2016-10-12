@@ -284,12 +284,16 @@ public:
    * @param aData           Calling this method may cause calling
    *                        WillDispatchKeyboardEvent() of the listener.
    *                        aData will be set to its argument.
+   * @param aNeedsCallback  Set true when caller needs to initialize each
+   *                        eKeyPress event immediately before dispatch.
+   *                        Then, WillDispatchKeyboardEvent() is always called.
    * @return                true if one or more events are dispatched.
    *                        Otherwise, false.
    */
   bool MaybeDispatchKeypressEvents(const WidgetKeyboardEvent& aKeyboardEvent,
                                    nsEventStatus& aStatus,
-                                   void* aData = nullptr);
+                                   void* aData = nullptr,
+                                   bool aNeedsCallback = false);
 
 private:
   // mWidget is owner of the instance.  When this is created, this is set.
@@ -463,13 +467,17 @@ private:
    *                            text, this must be between 0 and
    *                            mKeyValue.Length() - 1 since keypress events
    *                            sending only one character per event.
+   * @param aNeedsCallback  Set true when caller needs to initialize each
+   *                        eKeyPress event immediately before dispatch.
+   *                        Then, WillDispatchKeyboardEvent() is always called.
    * @return                true if an event is dispatched.  Otherwise, false.
    */
   bool DispatchKeyboardEventInternal(EventMessage aMessage,
                                      const WidgetKeyboardEvent& aKeyboardEvent,
                                      nsEventStatus& aStatus,
                                      void* aData,
-                                     uint32_t aIndexOfKeypress = 0);
+                                     uint32_t aIndexOfKeypress = 0,
+                                     bool aNeedsCallback = false);
 };
 
 } // namespace widget

@@ -3789,7 +3789,7 @@ SVGTextFrame::ReflowSVG()
   TextRenderedRunIterator it(this, TextRenderedRunIterator::eAllFrames);
   for (TextRenderedRun run = it.Current(); run.mFrame; run = it.Next()) {
     uint32_t runFlags = 0;
-    if (run.mFrame->StyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+    if (run.mFrame->StyleSVG()->mFill.Type() != eStyleSVGPaintType_None) {
       runFlags |= TextRenderedRun::eIncludeFill |
                   TextRenderedRun::eIncludeTextShadow;
     }
@@ -3862,7 +3862,7 @@ TextRenderedRunFlagsForBBoxContribution(const TextRenderedRun& aRun,
   uint32_t flags = 0;
   if ((aBBoxFlags & nsSVGUtils::eBBoxIncludeFillGeometry) ||
       ((aBBoxFlags & nsSVGUtils::eBBoxIncludeFill) &&
-       aRun.mFrame->StyleSVG()->mFill.mType != eStyleSVGPaintType_None)) {
+       aRun.mFrame->StyleSVG()->mFill.Type() != eStyleSVGPaintType_None)) {
     flags |= TextRenderedRun::eIncludeFill;
   }
   if ((aBBoxFlags & nsSVGUtils::eBBoxIncludeStrokeGeometry) ||
@@ -5200,8 +5200,8 @@ SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
 
   // Fill is a non-solid paint, has a non-default fill-rule or has
   // non-1 opacity.
-  if (!(style->mFill.mType == eStyleSVGPaintType_None ||
-        (style->mFill.mType == eStyleSVGPaintType_Color &&
+  if (!(style->mFill.Type() == eStyleSVGPaintType_None ||
+        (style->mFill.Type() == eStyleSVGPaintType_Color &&
          style->mFillOpacity == 1))) {
     return true;
   }

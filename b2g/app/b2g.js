@@ -791,9 +791,6 @@ pref("memory.dump_reports_on_oom", false);
 pref("layout.framevisibility.numscrollportwidths", 1);
 pref("layout.framevisibility.numscrollportheights", 1);
 
-// Enable native identity (persona/browserid)
-pref("dom.identity.enabled", true);
-
 // Wait up to this much milliseconds when orientation changed
 pref("layers.orientation.sync.timeout", 1000);
 
@@ -962,7 +959,7 @@ pref("layout.accessiblecaret.timeout_ms", 3000);
 // Hide carets and text selection dialog during scrolling.
 pref("layout.accessiblecaret.always_show_when_scrolling", false);
 
-// Enable sync and mozId with Firefox Accounts.
+// Enable sync with Firefox Accounts.
 pref("services.sync.fxaccounts.enabled", true);
 pref("identity.fxaccounts.enabled", true);
 

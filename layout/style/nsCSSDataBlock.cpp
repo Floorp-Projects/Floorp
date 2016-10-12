@@ -74,7 +74,7 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
       // nsIURI::EqualsExceptRef bellow, we get performance gain by this
       // early return.
       URLValue* urlValue = aValue.GetURLStructValue();
-      if (urlValue->GetLocalURLFlag()) {
+      if (urlValue->IsLocalRef()) {
         return;
       }
 

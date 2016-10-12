@@ -114,7 +114,7 @@ public class GeckoView extends LayerView
         /* package */ Window() {}
 
         static native void open(Window instance, GeckoView view, Object compositor,
-                                String chromeURI, int width, int height);
+                                String chromeURI);
 
         @Override protected native void disposeNative();
         native void close();
@@ -225,17 +225,15 @@ public class GeckoView extends LayerView
     }
 
     private void openWindow() {
-        final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
-
         final String chromeURI = getGeckoInterface().getDefaultChromeURI();
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(window, this, getCompositor(),
-                        chromeURI, metrics.widthPixels, metrics.heightPixels);
+                        chromeURI);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
                     "open", window, GeckoView.class, this, Object.class, getCompositor(),
-                    String.class, chromeURI, metrics.widthPixels, metrics.heightPixels);
+                    String.class, chromeURI);
         }
     }
 

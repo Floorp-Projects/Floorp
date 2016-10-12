@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const EXCLUDE_FROM_BACKUP_ANNO = "places/excludeFromBackup";
-// Menu, Toolbar, Unsorted, Tags
-const PLACES_ROOTS_COUNT  = 4;
+// Menu, Toolbar, Unsorted, Tags, Mobile
+const PLACES_ROOTS_COUNT  = 5;
 var tests = [];
 
 /*

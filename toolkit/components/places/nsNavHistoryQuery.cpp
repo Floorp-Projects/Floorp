@@ -174,7 +174,8 @@ namespace PlacesFolderConversion {
   #define TAGS_FOLDER "TAGS"
   #define UNFILED_BOOKMARKS_FOLDER "UNFILED_BOOKMARKS"
   #define TOOLBAR_FOLDER "TOOLBAR"
-  
+  #define MOBILE_BOOKMARKS_FOLDER "MOBILE_BOOKMARKS"
+
   /**
    * Converts a folder name to a folder id.
    *
@@ -198,6 +199,8 @@ namespace PlacesFolderConversion {
       (void)bs->GetUnfiledBookmarksFolder(&folderID);
     else if (aName.EqualsLiteral(TOOLBAR_FOLDER))
       (void)bs->GetToolbarFolder(&folderID);
+    else if (aName.EqualsLiteral(MOBILE_BOOKMARKS_FOLDER))
+      (void)bs->GetMobileFolder(&folderID);
 
     return folderID;
   }
@@ -238,6 +241,10 @@ namespace PlacesFolderConversion {
     else if (NS_SUCCEEDED(bs->GetToolbarFolder(&folderID)) &&
              aFolderID == folderID) {
       aQuery.AppendLiteral(TOOLBAR_FOLDER);
+    }
+    else if (NS_SUCCEEDED(bs->GetMobileFolder(&folderID)) &&
+             aFolderID == folderID) {
+      aQuery.AppendLiteral(MOBILE_BOOKMARKS_FOLDER);
     }
     else {
       // It wasn't one of our named constants, so just convert it to a string.
