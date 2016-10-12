@@ -10,6 +10,7 @@
 #ifndef nsStyleTransformMatrix_h_
 #define nsStyleTransformMatrix_h_
 
+#include "mozilla/EnumeratedArray.h"
 #include "nsCSSValue.h"
 
 class nsIFrame;
@@ -174,16 +175,21 @@ namespace nsStyleTransformMatrix {
                                          bool* aContains3dTransform);
 
   // Shear type for decomposition.
-  #define XYSHEAR 0
-  #define XZSHEAR 1
-  #define YZSHEAR 2
+  enum class ShearType {
+    XYSHEAR,
+    XZSHEAR,
+    YZSHEAR,
+    Count
+  };
+  using ShearArray =
+    mozilla::EnumeratedArray<ShearType, ShearType::Count, float>;
 
   /*
    * Implements the 2d transform matrix decomposition algorithm.
    */
   bool Decompose2DMatrix(const mozilla::gfx::Matrix& aMatrix,
                          mozilla::gfx::Point3D& aScale,
-                         float aShear[3],
+                         ShearArray& aShear,
                          gfxQuaternion& aRotate,
                          mozilla::gfx::Point3D& aTranslate);
   /*
@@ -191,7 +197,7 @@ namespace nsStyleTransformMatrix {
    */
   bool Decompose3DMatrix(const mozilla::gfx::Matrix4x4& aMatrix,
                          mozilla::gfx::Point3D& aScale,
-                         float aShear[3],
+                         ShearArray& aShear,
                          gfxQuaternion& aRotate,
                          mozilla::gfx::Point3D& aTranslate,
                          mozilla::gfx::Point4D& aPerspective);
