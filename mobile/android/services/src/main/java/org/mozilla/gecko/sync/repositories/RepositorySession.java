@@ -280,14 +280,14 @@ public abstract class RepositorySession {
   protected synchronized void executeDelegateCommand(Runnable command)
       throws InactiveSessionException {
     if (!isActive() || delegateQueue.isShutdown()) {
-      throw new InactiveSessionException(null);
+      throw new InactiveSessionException();
     }
     delegateQueue.execute(command);
   }
 
   public synchronized void ensureActive() throws InactiveSessionException {
     if (!isActive()) {
-      throw new InactiveSessionException(null);
+      throw new InactiveSessionException();
     }
   }
 

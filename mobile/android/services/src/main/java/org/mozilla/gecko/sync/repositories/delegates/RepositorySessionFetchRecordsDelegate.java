@@ -9,8 +9,8 @@ import java.util.concurrent.ExecutorService;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 public interface RepositorySessionFetchRecordsDelegate {
-  public void onFetchFailed(Exception ex, Record record);
-  public void onFetchedRecord(Record record);
+  void onFetchFailed(Exception ex);
+  void onFetchedRecord(Record record);
 
   /**
    * Called when all records in this fetch have been returned.
@@ -21,7 +21,7 @@ public interface RepositorySessionFetchRecordsDelegate {
    *        which the request was received.
    *        E.g., the (normalized) value of the X-Weave-Timestamp header.
    */
-  public void onFetchCompleted(final long fetchEnd);
+  void onFetchCompleted(final long fetchEnd);
 
   /**
    * Called when a number of records have been returned but more are still expected to come,

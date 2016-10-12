@@ -27,7 +27,7 @@ public class DefaultFetchDelegate extends DefaultDelegate implements RepositoryS
   public Set<String> ignore = new HashSet<String>();
 
   @Override
-  public void onFetchFailed(Exception ex, Record record) {
+  public void onFetchFailed(Exception ex) {
     performNotify("Fetch failed.", ex);
   }
 

@@ -79,8 +79,8 @@ public class Crypto5MiddlewareRepositorySession extends MiddlewareRepositorySess
     }
 
     @Override
-    public void onFetchFailed(Exception ex, Record record) {
-      next.onFetchFailed(ex, record);
+    public void onFetchFailed(Exception ex) {
+      next.onFetchFailed(ex);
     }
 
     @Override
@@ -89,21 +89,21 @@ public class Crypto5MiddlewareRepositorySession extends MiddlewareRepositorySess
       try {
         r = (CryptoRecord) record;
       } catch (ClassCastException e) {
-        next.onFetchFailed(e, record);
+        next.onFetchFailed(e);
         return;
       }
       r.keyBundle = keyBundle;
       try {
         r.decrypt();
       } catch (Exception e) {
-        next.onFetchFailed(e, r);
+        next.onFetchFailed(e);
         return;
       }
       Record transformed;
       try {
         transformed = this.recordFactory.createRecord(r);
       } catch (Exception e) {
-        next.onFetchFailed(e, r);
+        next.onFetchFailed(e);
         return;
       }
       next.onFetchedRecord(transformed);

@@ -141,7 +141,7 @@ public class BatchingDownloader {
                     batchLimit, true, sort, null, offset);
             this.fetchWithParameters(timestamp, batchLimit, true, sort, null, request, fetchRecordsDelegate);
         } catch (URISyntaxException | UnsupportedEncodingException e) {
-            fetchRecordsDelegate.onFetchFailed(e, null);
+            fetchRecordsDelegate.onFetchFailed(e);
         }
     }
 
@@ -154,7 +154,7 @@ public class BatchingDownloader {
                     -1, -1, true, index, ids, null);
             this.fetchWithParameters(-1, -1, true, index, ids, request, fetchRecordsDelegate);
         } catch (URISyntaxException | UnsupportedEncodingException e) {
-            fetchRecordsDelegate.onFetchFailed(e, null);
+            fetchRecordsDelegate.onFetchFailed(e);
         }
     }
 
@@ -212,7 +212,7 @@ public class BatchingDownloader {
                 @Override
                 public void run() {
                     Logger.debug(LOG_TAG, "Delayed onFetchCompleted running.");
-                    fetchRecordsDelegate.onFetchFailed(e, null);
+                    fetchRecordsDelegate.onFetchFailed(e);
                 }
             });
             return;
@@ -253,7 +253,7 @@ public class BatchingDownloader {
             @Override
             public void run() {
                 Logger.debug(LOG_TAG, "Running onFetchFailed.");
-                fetchRecordsDelegate.onFetchFailed(ex, null);
+                fetchRecordsDelegate.onFetchFailed(ex);
             }
         });
     }

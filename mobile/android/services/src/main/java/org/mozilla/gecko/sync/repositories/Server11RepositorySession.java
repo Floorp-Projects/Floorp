@@ -65,7 +65,7 @@ public class Server11RepositorySession extends RepositorySession {
   @Override
   public void wipe(RepositorySessionWipeDelegate delegate) {
     if (!isActive()) {
-      delegate.onWipeFailed(new InactiveSessionException(null));
+      delegate.onWipeFailed(new InactiveSessionException());
       return;
     }
     // TODO: implement wipe.

@@ -57,10 +57,9 @@ public class BatchingDownloaderTest {
         public Record record;
 
         @Override
-        public void onFetchFailed(Exception ex, Record record) {
+        public void onFetchFailed(Exception ex) {
             this.isFailure = true;
             this.ex = ex;
-            this.record = record;
         }
 
         @Override
