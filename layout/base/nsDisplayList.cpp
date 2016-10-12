@@ -6938,17 +6938,8 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                                   aManager,
                                                   mHandleOpacity);
 
-  // Clip the drawing target by mVisibleRect, which contains the visible
-  // region of the target frame and its out-of-flow and inflow descendants.
-  gfxContext* context = aCtx->ThebesContext();
-  context->Clip(NSRectToSnappedRect(mVisibleRect,
-                                    mFrame->PresContext()->AppUnitsPerDevPixel(),
-                                    *aCtx->GetDrawTarget()));
-
   image::DrawResult result =
     nsSVGIntegrationUtils::PaintMaskAndClipPath(params);
-
-  context->PopClip();
 
   nsDisplaySVGEffectsGeometry::UpdateDrawResult(this, result);
 }
