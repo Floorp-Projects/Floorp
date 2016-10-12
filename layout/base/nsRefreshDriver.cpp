@@ -173,7 +173,8 @@ public:
       NS_ASSERTION(mRootRefreshDrivers.Contains(aDriver), "RemoveRefreshDriver for a refresh driver that's not in the root refresh list!");
       mRootRefreshDrivers.RemoveElement(aDriver);
     } else {
-      nsPresContext* rootContext = aDriver->PresContext()->GetRootPresContext();
+      nsPresContext* pc = aDriver->GetPresContext();
+      nsPresContext* rootContext = pc ? pc->GetRootPresContext() : nullptr;
       // During PresContext shutdown, we can't accurately detect
       // if a root refresh driver exists or not. Therefore, we have to
       // search and find out which list this driver exists in.
@@ -227,7 +228,8 @@ protected:
 
   bool IsRootRefreshDriver(nsRefreshDriver* aDriver)
   {
-    nsPresContext* rootContext = aDriver->PresContext()->GetRootPresContext();
+    nsPresContext* pc = aDriver->GetPresContext();
+    nsPresContext* rootContext = pc ? pc->GetRootPresContext() : nullptr;
     if (!rootContext) {
       return false;
     }
@@ -2100,7 +2102,8 @@ nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime)
 
   // Try find the 'root' refresh driver for the current window and check
   // if that is waiting for a paint.
-  nsPresContext *rootContext = PresContext()->GetRootPresContext();
+  nsPresContext* pc = GetPresContext();
+  nsPresContext* rootContext = pc ? pc->GetRootPresContext() : nullptr;
   if (rootContext) {
     nsRefreshDriver *rootRefresh = rootContext->RefreshDriver();
     if (rootRefresh && rootRefresh != this) {
