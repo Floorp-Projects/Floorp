@@ -809,7 +809,7 @@ fuzzy-if(skiaContent,1,500) == 393760-2.xml 393760-2-ref.xml
 == 394534-1.html 394534-1-ref.html
 == 394676-1.xhtml 394676-1-ref.xhtml
 == 395107-1.html 395107-1-ref.html
-== 395107-2.html 395107-2-ref.html
+fuzzy-if(Android,4,2) == 395107-2.html 395107-2-ref.html # bug 1309533 fuzzy after test rebucketed
 fuzzy-if(skiaContent,1,118) == 395107-3.html 395107-3-ref.html
 == 395107-4.html 395107-4-ref.html
 == 395107-5.html 395107-5-ref.html
