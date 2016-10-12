@@ -178,16 +178,6 @@ this.AutoCompletePopup = {
 
   removeLogin(login) {
     Services.logins.removeLogin(login);
-
-    // It's possible to race and have the deleted login no longer be in our
-    // resultCache's logins, so we remove it from the database above and only
-    // deal with our resultCache below.
-    let idx = this._resultCache.logins.findIndex(cur => {
-      return login.guid === cur.QueryInterface(Ci.nsILoginMetaInfo).guid
-    });
-    if (idx !== -1) {
-      this.removeEntry(idx, false);
-    }
   },
 
   receiveMessage: function(message) {

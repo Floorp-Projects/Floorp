@@ -292,8 +292,7 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
               nsIContentPolicy::TYPE_INTERNAL_IMAGE == 37 &&
               nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD == 38 &&
               nsIContentPolicy::TYPE_INTERNAL_STYLESHEET == 39 &&
-              nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD == 40 &&
-              nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON == 41,
+              nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD == 40,
               "nsContentPolicyType values are as expected");
 
 namespace {
