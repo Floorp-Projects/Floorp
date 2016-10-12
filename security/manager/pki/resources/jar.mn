@@ -19,7 +19,7 @@ pippki.jar:
     content/pippki/OrphanOverlay.xul         (content/OrphanOverlay.xul)
     content/pippki/viewCertDetails.xul       (content/viewCertDetails.xul)
     content/pippki/editcacert.xul            (content/editcacert.xul)
-    content/pippki/editcacert.js             (content/editcacert.js)
+    content/pippki/editcerts.js              (content/editcerts.js)
 *   content/pippki/exceptionDialog.xul       (content/exceptionDialog.xul)
     content/pippki/exceptionDialog.js        (content/exceptionDialog.js)
     content/pippki/deletecert.xul            (content/deletecert.xul)
