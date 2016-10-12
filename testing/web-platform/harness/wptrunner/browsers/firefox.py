@@ -12,6 +12,7 @@ from mozprocess import ProcessHandler
 from mozprofile import FirefoxProfile, Preferences
 from mozprofile.permissions import ServerLocations
 from mozrunner import FirefoxRunner
+from mozrunner.utils import get_stack_fixer_function
 from mozcrash import mozcrash
 
 from .base import (get_free_port,
@@ -56,7 +57,8 @@ def browser_kwargs(**kwargs):
             "stackwalk_binary": kwargs["stackwalk_binary"],
             "certutil_binary": kwargs["certutil_binary"],
             "ca_certificate_path": kwargs["ssl_env"].ca_cert_path(),
-            "e10s": kwargs["gecko_e10s"]}
+            "e10s": kwargs["gecko_e10s"],
+            "stackfix_dir": kwargs["stackfix_dir"]}
 
 
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
@@ -99,7 +101,7 @@ class FirefoxBrowser(Browser):
 
     def __init__(self, logger, binary, prefs_root, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
-                 ca_certificate_path=None, e10s=False):
+                 ca_certificate_path=None, e10s=False, stackfix_dir=None):
         Browser.__init__(self, logger)
         self.binary = binary
         self.prefs_root = prefs_root
@@ -112,6 +114,11 @@ class FirefoxBrowser(Browser):
         self.ca_certificate_path = ca_certificate_path
         self.certutil_binary = certutil_binary
         self.e10s = e10s
+        if self.symbols_path and stackfix_dir:
+            self.stack_fixer = get_stack_fixer_function(stackfix_dir,
+                                                        self.symbols_path)
+        else:
+            self.stack_fixer = None
 
     def start(self):
         self.marionette_port = get_free_port(2828, exclude=self.used_ports)
@@ -188,8 +195,11 @@ class FirefoxBrowser(Browser):
 
     def on_output(self, line):
         """Write a line of output from the firefox process to the log"""
+        data = line.decode("utf8", "replace")
+        if self.stack_fixer:
+            data = self.stack_fixer(data)
         self.logger.process_output(self.pid(),
-                                   line.decode("utf8", "replace"),
+                                   data,
                                    command=" ".join(self.runner.command))
 
     def is_alive(self):
