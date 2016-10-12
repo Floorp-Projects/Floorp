@@ -121,7 +121,7 @@ void nsFloatManager::Shutdown()
   "incompatible writing modes")
 
 nsFlowAreaRect
-nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
+nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord,
                             BandInfoType aInfoType, nscoord aBSize,
                             LogicalRect aContentArea, SavedState* aState,
                             const nsSize& aContainerSize) const
@@ -131,7 +131,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
   NS_ASSERTION(aContentArea.ISize(aWM) >= 0,
                "unexpected content area inline size");
 
-  nscoord blockStart = aBOffset + mBlockStart;
+  nscoord blockStart = aBCoord + mBlockStart;
   if (blockStart < nscoord_MIN) {
     NS_WARNING("bad value");
     blockStart = nscoord_MIN;
@@ -153,7 +153,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
   if (floatCount == 0 ||
       (mFloats[floatCount-1].mLeftBEnd <= blockStart &&
        mFloats[floatCount-1].mRightBEnd <= blockStart)) {
-    return nsFlowAreaRect(aWM, aContentArea.IStart(aWM), aBOffset,
+    return nsFlowAreaRect(aWM, aContentArea.IStart(aWM), aBCoord,
                           aContentArea.ISize(aWM), aBSize, false);
   }
 
