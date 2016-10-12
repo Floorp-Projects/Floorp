@@ -324,13 +324,14 @@ class ConfigureSandbox(dict):
                                            need_help_dependency)
         return arg
 
-    def _value_for(self, obj):
+    def _value_for(self, obj, need_help_dependency=False):
         if isinstance(obj, SandboxDependsFunction):
             assert obj in self._depends
-            return self._value_for_depends(self._depends[obj])
+            return self._value_for_depends(self._depends[obj],
+                                           need_help_dependency)
 
         elif isinstance(obj, DependsFunction):
-            return self._value_for_depends(obj)
+            return self._value_for_depends(obj, need_help_dependency)
 
         elif isinstance(obj, Option):
             return self._value_for_option(obj)
@@ -407,6 +408,12 @@ class ConfigureSandbox(dict):
         if option_string:
             self._raw_options[option] = option_string
 
+        when = self._conditions.get(option)
+        if (when and not self._value_for(when, need_help_dependency=True) and
+            value is not None and value.origin != 'default'):
+            raise InvalidOptionError(
+                '%s is not available in this configuration' % option_string)
+
         return value
 
     def _dependency(self, arg, callee_name, arg_name=None):
@@ -439,9 +446,15 @@ class ConfigureSandbox(dict):
         Command line argument/environment variable parsing for this Option is
         handled here.
         '''
+        when = kwargs.get('when')
+        if when is not None:
+            when = self._dependency(when, 'option', 'when')
         args = [self._resolve(arg) for arg in args]
-        kwargs = {k: self._resolve(v) for k, v in kwargs.iteritems()}
+        kwargs = {k: self._resolve(v) for k, v in kwargs.iteritems()
+                                      if k != 'when'}
         option = Option(*args, **kwargs)
+        if when:
+            self._conditions[option] = when
         if option.name in self._options:
             raise ConfigureError('Option `%s` already defined' % option.option)
         if option.env in self._options:
@@ -451,7 +464,8 @@ class ConfigureSandbox(dict):
         if option.env:
             self._options[option.env] = option
 
-        if self._help:
+        if self._help and (when is None or
+                           self._value_for(when, need_help_dependency=True)):
             self._help.add(option)
 
         return option
@@ -488,6 +502,16 @@ class ConfigureSandbox(dict):
             when = self._dependency(when, '@depends', 'when')
 
         dependencies = tuple(self._dependency(arg, '@depends') for arg in args)
+
+        conditions = [
+            self._conditions[d]
+            for d in dependencies
+            if d in self._conditions and isinstance(d, Option)
+        ]
+        for c in conditions:
+            if c != when:
+                raise ConfigureError('@depends function needs the same `when` '
+                                     'as options it depends on')
 
         def decorator(func):
             if inspect.isgeneratorfunction(func):
