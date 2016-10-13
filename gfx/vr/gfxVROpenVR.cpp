@@ -54,6 +54,35 @@ static pfn_VR_IsRuntimeInstalled vr_IsRuntimeInstalled = nullptr;
 static pfn_VR_GetStringForHmdError vr_GetStringForHmdError = nullptr;
 static pfn_VR_GetGenericInterface vr_GetGenericInterface = nullptr;
 
+// EButton_System, EButton_DPad_xx, and EButton_A
+// can not be triggered in Steam Vive in OpenVR SDK 1.0.3.
+const uint64_t gOpenVRButtonMask[] = {
+  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_System),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_ApplicationMenu),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Grip),
+  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Left),
+  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Up),
+  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Right),
+  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Down),
+  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_A),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Touchpad),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Trigger)
+};
+
+const uint32_t gNumOpenVRButtonMask = sizeof(gOpenVRButtonMask) /
+                                      sizeof(uint64_t);
+
+const uint64_t gOpenVRAxisMask[] = {
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis0),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis1),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis2),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis3),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis4)
+};
+
+const uint32_t gNumOpenVRAxisMask = sizeof(gOpenVRAxisMask) /
+                                    sizeof(uint64_t);
+
 bool
 LoadOpenVRRuntime()
 {
@@ -448,6 +477,9 @@ VRControllerOpenVR::VRControllerOpenVR()
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
   mControllerInfo.mControllerName.AssignLiteral("OpenVR HMD");
+  mControllerInfo.mMappingType = dom::GamepadMappingType::_empty;
+  mControllerInfo.mNumButtons = gNumOpenVRButtonMask;
+  mControllerInfo.mNumAxes = gNumOpenVRAxisMask;
 }
 
 VRControllerOpenVR::~VRControllerOpenVR()
@@ -525,30 +557,38 @@ VRControllerManagerOpenVR::Destroy()
 void
 VRControllerManagerOpenVR::HandleInput()
 {
+  RefPtr<impl::VRControllerOpenVR> controller;
+  vr::VRControllerState_t state;
+
   MOZ_ASSERT(mVRSystem);
 
   // Process OpenVR controller state
-  for (vr::TrackedDeviceIndex_t trackedDevice = 0;
-       trackedDevice < vr::k_unMaxTrackedDeviceCount; trackedDevice++ ) {
-    vr::VRControllerState_t state;
+  for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
+    controller = mOpenVRController[i];
 
-    if (mVRSystem->GetTrackedDeviceClass(trackedDevice)
-        != vr::TrackedDeviceClass_Controller) {
-      continue;
-    }
+    MOZ_ASSERT(mVRSystem->GetTrackedDeviceClass(controller->GetTrackedIndex())
+               == vr::TrackedDeviceClass_Controller);
 
-    if (mVRSystem->GetControllerState(trackedDevice, &state)) {
+    if (mVRSystem->GetControllerState(controller->GetTrackedIndex(), &state)) {
       if (state.ulButtonPressed) {
-        // TODO: For Bug 1299929 after landing, convert the button mask to an ID button
-        // NewButtonEvent(1,
-        //                0,
-        //                0,
-        //                true);
+        HandleButtonPress(controller->GetIndex(), state.ulButtonPressed);
       }
+
+      // Handle Axis support in Bug 1299930
     }
   }
+}
 
-  return;
+void
+VRControllerManagerOpenVR::HandleButtonPress(uint32_t aControllerIdx,
+                                             uint64_t aButtonPressed)
+{
+  uint64_t buttonMask = 0;
+
+  for (uint32_t i = 0; i < gNumOpenVRButtonMask; ++i) {
+    buttonMask = gOpenVRButtonMask[i];
+    NewButtonEvent(aControllerIdx, i, aButtonPressed & buttonMask);
+  }
 }
 
 void
@@ -591,7 +631,7 @@ VRControllerManagerOpenVR::ScanForDevices()
 
     // Not already present, add it.
     AddGamepad("OpenVR Gamepad", GamepadMappingType::_empty,
-               kOpenVRControllerAxes, kOpenVRControllerButtons);
+               gNumOpenVRButtonMask, gNumOpenVRAxisMask);
     ++mControllerCount;
   }
 }
