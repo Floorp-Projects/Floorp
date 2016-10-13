@@ -49,6 +49,17 @@ class SandboxDependsFunction(object):
                              % self.__name__)
 
 
+class DependsFunction(object):
+    __slots__ = ('func', 'dependencies')
+    def __init__(self, func, dependencies):
+        self.func = func
+        self.dependencies = dependencies
+
+    @property
+    def name(self):
+        return self.func.__name__
+
+
 class SandboxedGlobal(dict):
     '''Identifiable dict type for use as function global'''
 
@@ -115,8 +126,7 @@ class ConfigureSandbox(dict):
         self._paths = []
         self._all_paths = set()
         self._templates = set()
-        # Store the real function and its dependencies, behind each
-        # DependsFunction generated from @depends.
+        # Associate SandboxDependsFunctions to DependsFunctions.
         self._depends = {}
         self._seen = set()
         # Store the @imports added to a given function.
@@ -290,10 +300,10 @@ class ConfigureSandbox(dict):
     def _resolve(self, arg, need_help_dependency=True):
         if isinstance(arg, SandboxDependsFunction):
             assert arg in self._depends
-            func, deps = self._depends[arg]
-            if need_help_dependency and self._help_option not in deps:
+            f = self._depends[arg]
+            if need_help_dependency and self._help_option not in f.dependencies:
                 raise ConfigureError("Missing @depends for `%s`: '--help'" %
-                                     func.__name__)
+                                     f.name)
             return self._value_for(arg)
         return arg
 
@@ -309,24 +319,23 @@ class ConfigureSandbox(dict):
     @memoize
     def _value_for_depends(self, obj):
         assert obj in self._depends
-        func, dependencies = self._depends[obj]
-        assert not inspect.isgeneratorfunction(func)
-        with_help = self._help_option in dependencies
+        f = self._depends[obj]
+        assert not inspect.isgeneratorfunction(f.func)
+        with_help = self._help_option in f.dependencies
         if with_help:
-            for arg in dependencies:
+            for arg in f.dependencies:
                 if isinstance(arg, SandboxDependsFunction):
-                    _, deps = self._depends[arg]
-                    if self._help_option not in deps:
+                    if self._help_option not in self._depends[arg].dependencies:
                         raise ConfigureError(
                             "`%s` depends on '--help' and `%s`. "
                             "`%s` must depend on '--help'"
-                            % (func.__name__, arg.__name__, arg.__name__))
+                            % (f.name, arg.__name__, arg.__name__))
         elif self._help:
             raise ConfigureError("Missing @depends for `%s`: '--help'" %
-                                 func.__name__)
+                                 f.name)
 
-        resolved_args = [self._value_for(d) for d in dependencies]
-        return func(*resolved_args)
+        resolved_args = [self._value_for(d) for d in f.dependencies]
+        return f.func(*resolved_args)
 
     @memoize
     def _value_for_option(self, option):
@@ -449,7 +458,7 @@ class ConfigureSandbox(dict):
                     'Cannot decorate generator functions with @depends')
             func, glob = self._prepare_function(func)
             dummy = wraps(func)(SandboxDependsFunction())
-            self._depends[dummy] = func, dependencies
+            self._depends[dummy] = DependsFunction(func, dependencies)
 
             # Only @depends functions with a dependency on '--help' are
             # executed immediately. Everything else is queued for later
@@ -687,7 +696,7 @@ class ConfigureSandbox(dict):
         if self._help:
             return
         if not reason and isinstance(value, SandboxDependsFunction):
-            deps = self._depends[value][1]
+            deps = self._depends[value].dependencies
             possible_reasons = [d for d in deps if d != self._help_option]
             if len(possible_reasons) == 1:
                 if isinstance(possible_reasons[0], Option):
