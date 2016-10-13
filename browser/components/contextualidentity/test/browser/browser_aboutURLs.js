@@ -38,10 +38,11 @@ add_task(function* () {
   }
 
   for (let url of aboutURLs) {
+    info("Loading about:" + url);
     let tab = gBrowser.addTab("about:"+url, {userContextId: 1});
     yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-    ok(true);
+    ok(true, "Done loading about:" + url);
 
     yield BrowserTestUtils.removeTab(tab);
   }

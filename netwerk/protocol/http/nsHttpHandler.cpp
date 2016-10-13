@@ -166,6 +166,7 @@ nsHttpHandler::nsHttpHandler()
     , mReferrerLevel(0xff) // by default we always send a referrer
     , mSpoofReferrerSource(false)
     , mReferrerTrimmingPolicy(0)
+    , mReferrerXOriginTrimmingPolicy(0)
     , mReferrerXOriginPolicy(0)
     , mFastFallbackToIPv4(false)
     , mProxyPipelining(true)
@@ -202,7 +203,6 @@ nsHttpHandler::nsHttpHandler()
     , mCompatFirefoxEnabled(false)
     , mUserAgentIsDirty(true)
     , mPromptTempRedirect(true)
-    , mSendSecureXSiteReferrer(true)
     , mEnablePersistentHttpsCaching(false)
     , mDoNotTrackEnabled(false)
     , mSafeHintEnabled(false)
@@ -1085,6 +1085,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             mReferrerTrimmingPolicy = (uint8_t) clamped(val, 0, 2);
     }
 
+    if (PREF_CHANGED(HTTP_PREF("referer.XOriginTrimmingPolicy"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("referer.XOriginTrimmingPolicy"), &val);
+        if (NS_SUCCEEDED(rv))
+            mReferrerXOriginTrimmingPolicy = (uint8_t) clamped(val, 0, 2);
+    }
+
     if (PREF_CHANGED(HTTP_PREF("referer.XOriginPolicy"))) {
         rv = prefs->GetIntPref(HTTP_PREF("referer.XOriginPolicy"), &val);
         if (NS_SUCCEEDED(rv))
@@ -1228,12 +1234,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("qos"), &val);
         if (NS_SUCCEEDED(rv))
             mQoSBits = (uint8_t) clamped(val, 0, 0xff);
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("sendSecureXSiteReferrer"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("sendSecureXSiteReferrer"), &cVar);
-        if (NS_SUCCEEDED(rv))
-            mSendSecureXSiteReferrer = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("accept.default"))) {

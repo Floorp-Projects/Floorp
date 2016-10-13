@@ -10,7 +10,20 @@
  * above each list indicates how it should be updated.
  */
 
-const { CSS_PROPERTIES, PSEUDO_ELEMENTS } = require("devtools/shared/css/generated/properties-db");
+let db;
+
+// Allow this require to fail in case it's been deleted in the process of running
+// `mach devtools-css-db` to regenerate the database.
+try {
+  db = require("devtools/shared/css/generated/properties-db");
+} catch (error) {
+  console.error(`If this error is being displayed and "mach devtools-css-db" is not ` +
+                `being run, then it needs to be fixed.`, error);
+  db = {
+    CSS_PROPERTIES: {},
+    PSEUDO_ELEMENTS: []
+  };
+}
 
 /**
  * All CSS types that properties can support. This list can be manually edited.
@@ -57,7 +70,7 @@ exports.ANGLE_TAKING_FUNCTIONS = ["linear-gradient", "-moz-linear-gradient",
  *
  * This list can be updated with `mach devtools-css-db`.
  */
-exports.PSEUDO_ELEMENTS = PSEUDO_ELEMENTS;
+exports.PSEUDO_ELEMENTS = db.PSEUDO_ELEMENTS;
 
 /**
  * A list of CSS Properties and their various characteristics. This is used on the
@@ -69,9 +82,9 @@ exports.PSEUDO_ELEMENTS = PSEUDO_ELEMENTS;
  *    "supports": [ 7, 9, 10 ]
  *  }
  */
-exports.CSS_PROPERTIES = CSS_PROPERTIES;
+exports.CSS_PROPERTIES = db.CSS_PROPERTIES;
 
 exports.CSS_PROPERTIES_DB = {
-  properties: CSS_PROPERTIES,
-  pseudoElements: PSEUDO_ELEMENTS
+  properties: db.CSS_PROPERTIES,
+  pseudoElements: db.PSEUDO_ELEMENTS
 };

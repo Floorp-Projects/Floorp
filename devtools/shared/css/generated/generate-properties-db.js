@@ -11,15 +11,17 @@
 var {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 var {generateCssProperties} = require("devtools/server/actors/css-properties");
 
+// xpcshell can output extra information, so place some delimiter text between
+// the output of the css properties database.
+dump("DEVTOOLS_CSS_DB_DELIMITER");
+
 // Output JSON
 dump(JSON.stringify({
   cssProperties: cssProperties(),
   pseudoElements: pseudoElements()
 }));
-// In a debug build, xpcshell might print extra debugging information,
-// so we emit a trailing newline and then arrange to just read a
-// single (long) line of JSON from the output.
-dump("\n");
+
+dump("DEVTOOLS_CSS_DB_DELIMITER");
 
 /*
  * A list of CSS Properties and their various characteristics. This is used on the
