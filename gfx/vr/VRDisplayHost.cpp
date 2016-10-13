@@ -156,3 +156,21 @@ VRControllerHost::~VRControllerHost()
 {
   MOZ_COUNT_DTOR(VRControllerHost);
 }
+
+const VRControllerInfo&
+VRControllerHost::GetControllerInfo() const
+{
+  return mControllerInfo;
+}
+
+void
+VRControllerHost::SetIndex(uint32_t aIndex)
+{
+  mIndex = aIndex;
+}
+
+uint32_t
+VRControllerHost::GetIndex()
+{
+  return mIndex;
+}
