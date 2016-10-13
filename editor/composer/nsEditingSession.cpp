@@ -48,6 +48,8 @@
 #include "nsPresContext.h"              // for nsPresContext
 #include "nsReadableUtils.h"            // for AppendUTF16toUTF8
 #include "nsStringFwd.h"                // for nsAFlatString
+#include "mozilla/dom/Selection.h"      // for AutoHideSelectionChanges
+#include "nsFrameSelection.h"           // for nsFrameSelection
 
 class nsISupports;
 class nsIURI;
@@ -405,17 +407,23 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
   //  only if we haven't found some error above,
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   if (!mInteractive) {
     // Disable animation of images in this document:
-    nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
     nsPresContext* presContext = presShell->GetPresContext();
     NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
     mImageAnimationMode = presContext->ImageAnimationMode();
     presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
   }
+
+  // Hide selection changes during initialization, in order to hide this
+  // from web pages.
+  RefPtr<nsFrameSelection> fs = presShell->FrameSelection();
+  NS_ENSURE_TRUE(fs, NS_ERROR_FAILURE);
+  mozilla::dom::AutoHideSelectionChanges hideSelectionChanges(fs);
 
   // create and set editor
   // Try to reuse an existing editor
