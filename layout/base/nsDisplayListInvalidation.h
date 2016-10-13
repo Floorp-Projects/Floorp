@@ -277,6 +277,8 @@ public:
   gfxRect mBBox;
   gfxPoint mUserSpaceOffset;
   nsPoint mFrameOffsetToReferenceFrame;
+
+  nsTArray<nsRect> mDestRects;
 };
 
 class nsDisplayFilterGeometry : public nsDisplayItemGeometry
