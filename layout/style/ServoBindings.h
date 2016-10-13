@@ -321,6 +321,9 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 nsCSSShadowArray* Gecko_NewCSSShadowArray(uint32_t len);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
 
+nsStyleQuoteValues* Gecko_NewStyleQuoteValues(uint32_t len);
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleQuoteValues, QuoteValues);
+
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \
   struct nsStyle##name;                                                        \
