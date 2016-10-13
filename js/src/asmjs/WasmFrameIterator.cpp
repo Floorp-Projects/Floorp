@@ -858,7 +858,7 @@ wasm::ToggleProfiling(const Code& code, const CallThunk& callThunk, bool enabled
 {
     const CodeRange& cr = code.metadata().codeRanges[callThunk.u.codeRangeIndex];
     uint32_t calleeOffset = enabled ? cr.funcProfilingEntry() : cr.funcNonProfilingEntry();
-    MacroAssembler::repatchThunk(code.segment().base(), callThunk.offset, calleeOffset);
+    MacroAssembler::repatchFarJump(code.segment().base(), callThunk.offset, calleeOffset);
 }
 
 void
