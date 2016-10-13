@@ -64,75 +64,19 @@
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">
         <toolbarbutton id="requests-menu-clear-button"
                        class="devtools-toolbarbutton devtools-clear-icon"
-                       data-localization="tooltiptext=netmonitor.footer.clear"/>
-        <hbox id="requests-menu-filter-buttons">
-          <button id="requests-menu-filter-all-button"
-                  class="requests-menu-filter-button"
-                  checked="true"
-                  data-key="all"
-                  data-localization="label=netmonitor.footer.filterAll">
-          </button>
-          <button id="requests-menu-filter-html-button"
-                  class="requests-menu-filter-button"
-                  data-key="html"
-                  data-localization="label=netmonitor.footer.filterHTML">
-          </button>
-          <button id="requests-menu-filter-css-button"
-                  class="requests-menu-filter-button"
-                  data-key="css"
-                  data-localization="label=netmonitor.footer.filterCSS">
-          </button>
-          <button id="requests-menu-filter-js-button"
-                  class="requests-menu-filter-button"
-                  data-key="js"
-                  data-localization="label=netmonitor.footer.filterJS">
-          </button>
-          <button id="requests-menu-filter-xhr-button"
-                  class="requests-menu-filter-button"
-                  data-key="xhr"
-                  data-localization="label=netmonitor.footer.filterXHR">
-          </button>
-          <button id="requests-menu-filter-fonts-button"
-                  class="requests-menu-filter-button"
-                  data-key="fonts"
-                  data-localization="label=netmonitor.footer.filterFonts">
-          </button>
-          <button id="requests-menu-filter-images-button"
-                  class="requests-menu-filter-button"
-                  data-key="images"
-                  data-localization="label=netmonitor.footer.filterImages">
-          </button>
-          <button id="requests-menu-filter-media-button"
-                  class="requests-menu-filter-button"
-                  data-key="media"
-                  data-localization="label=netmonitor.footer.filterMedia">
-          </button>
-          <button id="requests-menu-filter-flash-button"
-                  class="requests-menu-filter-button"
-                  data-key="flash"
-                  data-localization="label=netmonitor.footer.filterFlash">
-          </button>
-          <button id="requests-menu-filter-ws-button"
-                  class="requests-menu-filter-button"
-                  data-key="ws"
-                  data-localization="label=netmonitor.footer.filterWS">
-          </button>
-          <button id="requests-menu-filter-other-button"
-                  class="requests-menu-filter-button"
-                  data-key="other"
-                  data-localization="label=netmonitor.footer.filterOther">
-          </button>
-        </hbox>
+                       data-localization="tooltiptext=netmonitor.toolbar.clear"/>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-filter-buttons-hook"/>
         <spacer id="requests-menu-spacer"
                 flex="1"/>
         <toolbarbutton id="requests-menu-network-summary-button"
                        class="devtools-toolbarbutton icon-and-text"
-                       data-localization="tooltiptext=netmonitor.footer.perf"/>
+                       data-localization="tooltiptext=netmonitor.toolbar.perf"/>
         <textbox id="requests-menu-filter-freetext-text"
                  class="devtools-filterinput"
                  type="search"
                  required="true"
-                 data-localization="placeholder=netmonitor.footer.filterFreetext.label"/>
+                 data-localization="placeholder=netmonitor.toolbar.filterFreetext.label"/>
         <toolbarbutton id="details-pane-toggle"
                        class="devtools-toolbarbutton"
                        data-localization="tooltiptext=netmonitor.panesButton.tooltip"

@@ -404,15 +404,15 @@ function testFilterButtons(aMonitor, aFilterType) {
  */
 function testFilterButtonsCustom(aMonitor, aIsChecked) {
   let doc = aMonitor.panelWin.document;
-  let buttons = doc.querySelectorAll(".requests-menu-filter-button");
+  let buttons = doc.querySelectorAll(".menu-filter-button");
   for (let i = 0; i < aIsChecked.length; i++) {
     let button = buttons[i];
     if (aIsChecked[i]) {
-      is(button.hasAttribute("checked"), true,
-        "The " + button.id + " button should have a 'checked' attribute.");
+      is(button.classList.contains("checked"), true,
+        "The " + button.id + " button should have a 'checked' class.");
     } else {
-      is(button.hasAttribute("checked"), false,
-        "The " + button.id + " button should not have a 'checked' attribute.");
+      is(button.classList.contains("checked"), false,
+        "The " + button.id + " button should not have a 'checked' class.");
     }
   }
 }

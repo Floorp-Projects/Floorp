@@ -28,6 +28,7 @@ const {getFormDataSections,
        getUriHostPort,
        getUriHost,
        loadCauseString} = require("./request-utils");
+const Actions = require("./actions/index");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
@@ -87,6 +88,19 @@ const CONTENT_MIME_TYPE_ABBREVIATIONS = {
   "x-javascript": "js"
 };
 
+// A smart store watcher to notify store changes as necessary
+function storeWatcher(initialValue, reduceValue, onChange) {
+  let currentValue = initialValue;
+
+  return () => {
+    const newValue = reduceValue(currentValue);
+    if (newValue !== currentValue) {
+      onChange(newValue, currentValue);
+      currentValue = newValue;
+    }
+  };
+}
+
 /**
  * Functions handling the requests menu (containing details about each request,
  * like status, method, file, domain, as well as a waterfall representing
@@ -108,7 +122,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the network monitor is started.
    */
-  initialize: function () {
+  initialize: function (store) {
     dumpn("Initializing the RequestsMenuView");
 
     let widgetParentEl = $("#requests-menu-contents");
@@ -127,7 +141,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     });
     $("#requests-menu-contents").addEventListener("scroll", this._onScroll, true);
 
-    Prefs.filters.forEach(type => this.filterOn(type));
     this.sortContents((a, b) => Sorters.waterfall(a.attachment, b.attachment));
 
     this.allowFocusOnRightClick = true;
@@ -140,9 +153,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     this.requestsMenuSortEvent = getKeyWithEvent(this.sortBy.bind(this));
     this.requestsMenuSortKeyboardEvent = getKeyWithEvent(this.sortBy.bind(this), true);
-    this.requestsMenuFilterEvent = getKeyWithEvent(this.filterOn.bind(this));
-    this.requestsMenuFilterKeyboardEvent = getKeyWithEvent(
-      this.filterOn.bind(this), true);
     this.reqeustsMenuClearEvent = this.clear.bind(this);
     this._onContextShowing = this._onContextShowing.bind(this);
     this._onContextNewTabCommand = this.openRequestInTab.bind(this);
@@ -176,10 +186,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       this.requestsMenuSortEvent, false);
     $("#toolbar-labels").addEventListener("keydown",
       this.requestsMenuSortKeyboardEvent, false);
-    $("#requests-menu-filter-buttons").addEventListener("click",
-      this.requestsMenuFilterEvent, false);
-    $("#requests-menu-filter-buttons").addEventListener("keydown",
-      this.requestsMenuFilterKeyboardEvent, false);
     $("#requests-menu-clear-button").addEventListener("click",
       this.reqeustsMenuClearEvent, false);
     $("#network-request-popup").addEventListener("popupshowing",
@@ -194,6 +200,21 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       "command", this._onContextCopyImageAsDataUriCommand, false);
     $("#toggle-raw-headers").addEventListener("click",
       this.toggleRawHeadersEvent, false);
+
+    this.unsubscribeStore = store.subscribe(storeWatcher(
+      null,
+      () => store.getState().filters.types,
+      (newTypes) => {
+        this._activeFilters = newTypes
+          .toSeq()
+          .filter((checked, key) => checked)
+          .keySeq()
+          .toArray();
+        this.reFilterRequests();
+      }
+    ));
+
+    Prefs.filters.forEach(type => store.dispatch(Actions.toggleFilter(type)));
 
     window.once("connected", this._onConnect.bind(this));
   },
@@ -260,10 +281,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       this.requestsMenuSortEvent, false);
     $("#toolbar-labels").removeEventListener("keydown",
       this.requestsMenuSortKeyboardEvent, false);
-    $("#requests-menu-filter-buttons").removeEventListener("click",
-      this.requestsMenuFilterEvent, false);
-    $("#requests-menu-filter-buttons").removeEventListener("keydown",
-      this.requestsMenuFilterKeyboardEvent, false);
     $("#requests-menu-clear-button").removeEventListener("click",
       this.reqeustsMenuClearEvent, false);
     this.freetextFilterBox.removeEventListener("input",
@@ -306,6 +323,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       this.cloneSelectedRequestEvent, false);
     $("#toggle-raw-headers").removeEventListener("click",
       this.toggleRawHeadersEvent, false);
+
+    this.unsubscribeStore();
   },
 
   /**
@@ -650,97 +669,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.filterContents(this._filterPredicate);
     this.refreshSummary();
     this.refreshZebra();
-  },
-
-  /**
-   * Filters all network requests in this container by a specified type.
-   *
-   * @param string type
-   *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
-   *        "flash", "ws" or "other".
-   */
-  filterOn: function (type = "all") {
-    if (type === "all") {
-      // The filter "all" is special as it doesn't toggle.
-      // - If some filters are selected and 'all' is clicked, the previously
-      //   selected filters will be disabled and 'all' is the only active one.
-      // - If 'all' is already selected, do nothing.
-      if (this._activeFilters.indexOf("all") !== -1) {
-        return;
-      }
-
-      // Uncheck all other filters and select 'all'. Must create a copy as
-      // _disableFilter removes the filters from the list while it's being
-      // iterated. 'all' will be enabled automatically by _disableFilter once
-      // the last filter is disabled.
-      this._activeFilters.slice().forEach(this._disableFilter, this);
-    } else if (this._activeFilters.indexOf(type) === -1) {
-      this._enableFilter(type);
-    } else {
-      this._disableFilter(type);
-    }
-
-    this.reFilterRequests();
-  },
-
-  /**
-   * Same as `filterOn`, except that it only allows a single type exclusively.
-   *
-   * @param string type
-   *        @see RequestsMenuView.prototype.fitlerOn
-   */
-  filterOnlyOn: function (type = "all") {
-    this._activeFilters.slice().forEach(this._disableFilter, this);
-    this.filterOn(type);
-  },
-
-  /**
-   * Disables the given filter, its button and toggles 'all' on if the filter to
-   * be disabled is the last one active.
-   *
-   * @param string type
-   *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
-   *        "flash", "ws" or "other".
-   */
-  _disableFilter: function (type) {
-    // Remove the filter from list of active filters.
-    this._activeFilters.splice(this._activeFilters.indexOf(type), 1);
-
-    // Remove the checked status from the filter.
-    let target = $("#requests-menu-filter-" + type + "-button");
-    target.removeAttribute("checked");
-
-    // Check if the filter disabled was the last one. If so, toggle all on.
-    if (this._activeFilters.length === 0) {
-      this._enableFilter("all");
-    }
-  },
-
-  /**
-   * Enables the given filter, its button and toggles 'all' off if the filter to
-   * be enabled is the first one active.
-   *
-   * @param string type
-   *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
-   *        "flash", "ws" or "other".
-   */
-  _enableFilter: function (type) {
-    // Make sure this is a valid filter type.
-    if (!Object.keys(Filters).includes(type)) {
-      return;
-    }
-
-    // Add the filter to the list of active filters.
-    this._activeFilters.push(type);
-
-    // Add the checked status to the filter button.
-    let target = $("#requests-menu-filter-" + type + "-button");
-    target.setAttribute("checked", true);
-
-    // Check if 'all' was selected before. If so, disable it.
-    if (type !== "all" && this._activeFilters.indexOf("all") !== -1) {
-      this._disableFilter("all");
-    }
   },
 
   /**
