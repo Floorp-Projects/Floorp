@@ -276,40 +276,45 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
 
     for (; lastPatchedCallsite_ < masm_.callSites().length(); lastPatchedCallsite_++) {
         const CallSiteAndTarget& cs = masm_.callSites()[lastPatchedCallsite_];
-        if (!cs.isDefinition())
-            continue;
-
         uint32_t callerOffset = cs.returnAddressOffset();
         MOZ_RELEASE_ASSERT(callerOffset < INT32_MAX);
 
-        if (funcIsDefined(cs.funcDefIndex())) {
-            uint32_t calleeOffset = funcDefCodeRange(cs.funcDefIndex()).funcNonProfilingEntry();
-            MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
+        switch (cs.kind()) {
+          case CallSiteDesc::Dynamic:
+          case CallSiteDesc::Symbolic:
+            break;
+          case CallSiteDesc::FuncDef: {
+            if (funcIsDefined(cs.funcDefIndex())) {
+                uint32_t calleeOffset = funcDefCodeRange(cs.funcDefIndex()).funcNonProfilingEntry();
+                MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
 
-            if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
-                masm_.patchCall(callerOffset, calleeOffset);
-                continue;
+                if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
+                    masm_.patchCall(callerOffset, calleeOffset);
+                    break;
+                }
             }
+
+            OffsetMap::AddPtr p = alreadyThunked.lookupForAdd(cs.funcDefIndex());
+            if (!p) {
+                Offsets offsets;
+                offsets.begin = masm_.currentOffset();
+                uint32_t thunkOffset = masm_.thunkWithPatch().offset();
+                offsets.end = masm_.currentOffset();
+                if (masm_.oom())
+                    return false;
+
+                if (!metadata_->codeRanges.emplaceBack(CodeRange::CallThunk, offsets))
+                    return false;
+                if (!metadata_->callThunks.emplaceBack(thunkOffset, cs.funcDefIndex()))
+                    return false;
+                if (!alreadyThunked.add(p, cs.funcDefIndex(), offsets.begin))
+                    return false;
+            }
+
+            masm_.patchCall(callerOffset, p->value());
+            break;
+          }
         }
-
-        OffsetMap::AddPtr p = alreadyThunked.lookupForAdd(cs.funcDefIndex());
-        if (!p) {
-            Offsets offsets;
-            offsets.begin = masm_.currentOffset();
-            uint32_t thunkOffset = masm_.thunkWithPatch().offset();
-            if (masm_.oom())
-                return false;
-            offsets.end = masm_.currentOffset();
-
-            if (!metadata_->codeRanges.emplaceBack(CodeRange::CallThunk, offsets))
-                return false;
-            if (!metadata_->callThunks.emplaceBack(thunkOffset, cs.funcDefIndex()))
-                return false;
-            if (!alreadyThunked.add(p, cs.funcDefIndex(), offsets.begin))
-                return false;
-        }
-
-        masm_.patchCall(callerOffset, p->value());
     }
 
     // Create thunks for jumps to stubs. Stubs are always generated at the end
