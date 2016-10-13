@@ -35,6 +35,9 @@ public:
                               PrefixStringMap& aInputMap,
                               PrefixStringMap& aOutputMap);
 
+  nsresult WriteMetadata(TableUpdateV4* aTableUpdate);
+  nsresult LoadMetadata(nsACString& aState, nsACString& aChecksum);
+
   static const int VER;
 
 protected:
