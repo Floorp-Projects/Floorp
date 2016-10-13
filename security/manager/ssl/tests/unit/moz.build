@@ -31,5 +31,6 @@ TEST_DIRS += [
     'test_ocsp_url',
     'test_onecrl',
     'test_pinning_dynamic',
+    'test_startcom_wosign',
     'test_validity',
 ]
