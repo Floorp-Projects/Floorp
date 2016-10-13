@@ -264,7 +264,7 @@ AnnotateCrashReportWithErrno(const char* tag, int error)
 void
 LogMessageForProtocol(const char* aTopLevelProtocol, base::ProcessId aOtherPid,
                       const char* aContextDescription,
-                      const char* aMessageDescription,
+                      uint32_t aMessageId,
                       MessageDirection aDirection)
 {
   nsPrintfCString logMessage("[time: %" PRId64 "][%d%s%d] [%s] %s %s\n",
@@ -272,7 +272,7 @@ LogMessageForProtocol(const char* aTopLevelProtocol, base::ProcessId aOtherPid,
                              aDirection == MessageDirection::eReceiving ? "<-" : "->",
                              aOtherPid, aTopLevelProtocol,
                              aContextDescription,
-                             aMessageDescription);
+                             StringFromIPCMessageType(aMessageId));
 #ifdef ANDROID
   __android_log_write(ANDROID_LOG_INFO, "GeckoIPC", logMessage.get());
 #endif
