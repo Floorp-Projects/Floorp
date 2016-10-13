@@ -48,6 +48,8 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsWrapperCache.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "mozilla/dom/WebGL2RenderingContextBinding.h"
 
 class nsIDocShell;
 
@@ -615,104 +617,174 @@ public:
 
     //////
 
-    void Uniform1i(WebGLUniformLocation* loc, GLint x);
-    void Uniform2i(WebGLUniformLocation* loc, GLint x, GLint y);
-    void Uniform3i(WebGLUniformLocation* loc, GLint x, GLint y, GLint z);
-    void Uniform4i(WebGLUniformLocation* loc, GLint x, GLint y, GLint z, GLint w);
-
     void Uniform1f(WebGLUniformLocation* loc, GLfloat x);
     void Uniform2f(WebGLUniformLocation* loc, GLfloat x, GLfloat y);
     void Uniform3f(WebGLUniformLocation* loc, GLfloat x, GLfloat y, GLfloat z);
     void Uniform4f(WebGLUniformLocation* loc, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 
+    void Uniform1i(WebGLUniformLocation* loc, GLint x);
+    void Uniform2i(WebGLUniformLocation* loc, GLint x, GLint y);
+    void Uniform3i(WebGLUniformLocation* loc, GLint x, GLint y, GLint z);
+    void Uniform4i(WebGLUniformLocation* loc, GLint x, GLint y, GLint z, GLint w);
+
+    void Uniform1ui(WebGLUniformLocation* loc, GLuint v0);
+    void Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1);
+    void Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2);
+    void Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2,
+                    GLuint v3);
+
     //////////////////////////
 
-protected:
-    template<typename elemT, typename arrT>
-    struct Arr {
-        size_t dataCount;
-        const elemT* data;
+    typedef dom::Float32ArrayOrUnrestrictedFloatSequence Float32ListU;
+    typedef dom::Int32ArrayOrLongSequence Int32ListU;
+    typedef dom::Uint32ArrayOrUnsignedLongSequence Uint32ListU;
 
-        explicit Arr(const arrT& arr) {
-            arr.ComputeLengthAndData();
-            dataCount = arr.LengthAllowShared();
-            data = arr.DataAllowShared();
+protected:
+    template<typename elemT, typename viewT>
+    struct Arr {
+        const size_t elemCount;
+        const elemT* const elemBytes;
+
+    private:
+        static size_t ComputeAndReturnLength(const viewT& view) {
+            view.ComputeLengthAndData();
+            return view.LengthAllowShared();
         }
 
-        explicit Arr(const dom::Sequence<elemT>& arr) {
-            dataCount = arr.Length();
-            data = arr.Elements();
+    public:
+        explicit Arr(const viewT& view)
+            : elemCount(ComputeAndReturnLength(view))
+            , elemBytes(view.DataAllowShared())
+        { }
+
+        explicit Arr(const dom::Sequence<elemT>& seq)
+            : elemCount(seq.Length())
+            , elemBytes(seq.Elements())
+        { }
+
+        Arr(size_t _elemCount, const elemT* _elemBytes)
+            : elemCount(_elemCount)
+            , elemBytes(_elemBytes)
+        { }
+
+        ////
+
+        static Arr From(const Float32ListU& list) {
+            if (list.IsFloat32Array())
+                return Arr(list.GetAsFloat32Array());
+
+            return Arr(list.GetAsUnrestrictedFloatSequence());
+        }
+
+        static Arr From(const Int32ListU& list) {
+            if (list.IsInt32Array())
+                return Arr(list.GetAsInt32Array());
+
+            return Arr(list.GetAsLongSequence());
+        }
+
+        static Arr From(const Uint32ListU& list) {
+            if (list.IsUint32Array())
+                return Arr(list.GetAsUint32Array());
+
+            return Arr(list.GetAsUnsignedLongSequence());
         }
     };
 
-    typedef Arr<GLint, dom::Int32Array> IntArr;
-    typedef Arr<GLfloat, dom::Float32Array> FloatArr;
+    typedef Arr<GLfloat, dom::Float32Array> Float32Arr;
+    typedef Arr<GLint, dom::Int32Array> Int32Arr;
+    typedef Arr<GLuint, dom::Uint32Array> Uint32Arr;
 
     ////////////////
 
-    void UniformNiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
-                    const IntArr& arr);
-
     void UniformNfv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
-                    const FloatArr& arr);
+                    const Float32Arr& arr, GLuint elemOffset, GLuint elemCountOverride);
+    void UniformNiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
+                    const Int32Arr& arr, GLuint elemOffset, GLuint elemCountOverride);
+    void UniformNuiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
+                     const Uint32Arr& arr, GLuint elemOffset, GLuint elemCountOverride);
 
     void UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
                             WebGLUniformLocation* loc, bool transpose,
-                            const FloatArr& arr);
+                            const Float32Arr& arr, GLuint elemOffset,
+                            GLuint elemCountOverride);
 
     ////////////////
 
 public:
-    template<typename T>
-    void Uniform1iv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNiv("uniform1iv", 1, loc, IntArr(arr));
-    }
-    template<typename T>
-    void Uniform2iv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNiv("uniform2iv", 2, loc, IntArr(arr));
-    }
-    template<typename T>
-    void Uniform3iv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNiv("uniform3iv", 3, loc, IntArr(arr));
-    }
-    template<typename T>
-    void Uniform4iv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNiv("uniform4iv", 4, loc, IntArr(arr));
-    }
+    #define FOO(N) \
+        void Uniform ## N ## fv(WebGLUniformLocation* loc, const Float32ListU& list,  \
+                                GLuint elemOffset = 0, GLuint elemCountOverride = 0)  \
+        {                                                                             \
+            UniformNfv("uniform" #N "fv", N, loc, Float32Arr::From(list), elemOffset, \
+                       elemCountOverride);                                            \
+        }
+
+    FOO(1)
+    FOO(2)
+    FOO(3)
+    FOO(4)
+
+    #undef FOO
 
     //////
 
-    template<typename T>
-    void Uniform1fv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNfv("uniform1fv", 1, loc, FloatArr(arr));
-    }
-    template<typename T>
-    void Uniform2fv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNfv("uniform2fv", 2, loc, FloatArr(arr));
-    }
-    template<typename T>
-    void Uniform3fv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNfv("uniform3fv", 3, loc, FloatArr(arr));
-    }
-    template<typename T>
-    void Uniform4fv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNfv("uniform4fv", 4, loc, FloatArr(arr));
-    }
+    #define FOO(N) \
+        void Uniform ## N ## iv(WebGLUniformLocation* loc, const Int32ListU& list,   \
+                                GLuint elemOffset = 0, GLuint elemCountOverride = 0) \
+        {                                                                            \
+            UniformNiv("uniform" #N "iv", N, loc, Int32Arr::From(list), elemOffset,  \
+                       elemCountOverride);                                           \
+        }
+
+    FOO(1)
+    FOO(2)
+    FOO(3)
+    FOO(4)
+
+    #undef FOO
 
     //////
 
-    template<typename T>
-    void UniformMatrix2fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
-        UniformMatrixAxBfv("uniformMatrix2fv", 2, 2, loc, transpose, FloatArr(arr));
-    }
-    template<typename T>
-    void UniformMatrix3fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
-        UniformMatrixAxBfv("uniformMatrix3fv", 3, 3, loc, transpose, FloatArr(arr));
-    }
-    template<typename T>
-    void UniformMatrix4fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
-        UniformMatrixAxBfv("uniformMatrix4fv", 4, 4, loc, transpose, FloatArr(arr));
-    }
+    #define FOO(N) \
+        void Uniform ## N ## uiv(WebGLUniformLocation* loc, const Uint32ListU& list,   \
+                                 GLuint elemOffset = 0, GLuint elemCountOverride = 0)  \
+        {                                                                              \
+            UniformNuiv("uniform" #N "uiv", N, loc, Uint32Arr::From(list), elemOffset, \
+                        elemCountOverride);                                            \
+        }
+
+    FOO(1)
+    FOO(2)
+    FOO(3)
+    FOO(4)
+
+    #undef FOO
+
+    //////
+
+    #define FOO(X,A,B) \
+        void UniformMatrix ## X ## fv(WebGLUniformLocation* loc, bool transpose,       \
+                                      const Float32ListU& list, GLuint elemOffset = 0, \
+                                      GLuint elemCountOverride = 0)                    \
+        {                                                                              \
+            UniformMatrixAxBfv("uniformMatrix" #X "fv", A, B, loc, transpose,          \
+                               Float32Arr::From(list), elemOffset, elemCountOverride); \
+        }
+
+    FOO(2,2,2)
+    FOO(2x3,2,3)
+    FOO(2x4,2,4)
+
+    FOO(3x2,3,2)
+    FOO(3,3,3)
+    FOO(3x4,3,4)
+
+    FOO(4x2,4,2)
+    FOO(4x3,4,3)
+    FOO(4,4,4)
+
+    #undef FOO
 
     ////////////////////////////////////
 
