@@ -665,6 +665,10 @@ public:
     { return eCSSUnit_Point <= aUnit && aUnit <= eCSSUnit_Pixel; }
   bool      IsPixelLengthUnit() const
     { return IsPixelLengthUnit(mUnit); }
+  static bool IsPercentLengthUnit(nsCSSUnit aUnit)
+    { return aUnit == eCSSUnit_Percent; }
+  bool      IsPercentLengthUnit()
+    { return IsPercentLengthUnit(mUnit); }
   static bool IsFloatUnit(nsCSSUnit aUnit)
     { return eCSSUnit_Number <= aUnit; }
   bool      IsAngularUnit() const  
