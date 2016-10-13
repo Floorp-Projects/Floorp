@@ -61,7 +61,7 @@ button {
   min-height: 34px;
   display: flex;
   flex-direction: row;
-  align-items: self-start;
+  align-items: start;
 }
 
 .target-icon {
