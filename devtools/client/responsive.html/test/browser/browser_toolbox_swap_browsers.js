@@ -30,6 +30,12 @@ let checkToolbox = Task.async(function* (tab, location) {
   ok(!!gDevTools.getToolbox(target), `Toolbox exists ${location}`);
 });
 
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount", 1]]
+  });
+});
+
 add_task(function* () {
   let tab = yield addTab(TEST_URL);
 

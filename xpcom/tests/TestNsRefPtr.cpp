@@ -356,12 +356,12 @@ TestBloat_Smart()
 public:                                                                       \
   NS_METHOD_(MozExternalRefCountType) AddRef(void) const {                    \
     MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                                \
-    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                      \
+    MOZ_RELEASE_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");              \
     nsrefcnt count = ++mRefCnt;                                               \
     return (nsrefcnt) count;                                                  \
   }                                                                           \
   NS_METHOD_(MozExternalRefCountType) Release(void) const {                   \
-    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                          \
+    MOZ_RELEASE_ASSERT(int32_t(mRefCnt) > 0, "dup release");                  \
     nsrefcnt count = --mRefCnt;                                               \
     if (count == 0) {                                                         \
       delete (this);                                                          \
@@ -668,4 +668,3 @@ main()
     printf("<<main()\n");
     return 0;
   }
-
