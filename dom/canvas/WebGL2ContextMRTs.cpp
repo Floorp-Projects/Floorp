@@ -10,28 +10,30 @@
 
 namespace mozilla {
 
-bool WebGL2Context::ValidateClearBuffer(const char* info, GLenum buffer, GLint drawbuffer, size_t elemCount)
+bool
+WebGL2Context::ValidateClearBuffer(const char* info, GLenum buffer, GLint drawbuffer,
+                                   size_t elemCount)
 {
-    size_t requiredElements = -1;
-    GLint maxDrawbuffer = -1;
+    size_t requiredElements;
+    GLint maxDrawbuffer;
     switch (buffer) {
-      case LOCAL_GL_COLOR:
-      case LOCAL_GL_FRONT:
-      case LOCAL_GL_BACK:
-      case LOCAL_GL_LEFT:
-      case LOCAL_GL_RIGHT:
-      case LOCAL_GL_FRONT_AND_BACK:
+    case LOCAL_GL_COLOR:
+    case LOCAL_GL_FRONT:
+    case LOCAL_GL_BACK:
+    case LOCAL_GL_LEFT:
+    case LOCAL_GL_RIGHT:
+    case LOCAL_GL_FRONT_AND_BACK:
           requiredElements = 4;
           maxDrawbuffer = mGLMaxDrawBuffers - 1;
           break;
 
-      case LOCAL_GL_DEPTH:
-      case LOCAL_GL_STENCIL:
+    case LOCAL_GL_DEPTH:
+    case LOCAL_GL_STENCIL:
           requiredElements = 1;
           maxDrawbuffer = 0;
           break;
 
-      default:
+    default:
           ErrorInvalidEnumInfo(info, buffer);
           return false;
     }
@@ -47,6 +49,7 @@ bool WebGL2Context::ValidateClearBuffer(const char* info, GLenum buffer, GLint d
                           info, requiredElements, elemCount);
         return false;
     }
+
     return true;
 }
 
