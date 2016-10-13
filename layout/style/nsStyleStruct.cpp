@@ -2765,33 +2765,6 @@ nsStyleImageLayers::Size::operator==(const Size& aOther) const
          (mHeightType != eLengthPercentage || mHeight == aOther.mHeight);
 }
 
-bool
-nsStyleImageLayers::Repeat::IsInitialValue(LayerType aType) const
-{
-  if (aType == LayerType::Background) {
-    return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT &&
-           mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
-  } else {
-    MOZ_ASSERT(aType == LayerType::Mask);
-    return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT &&
-           mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
-  }
-}
-
-void
-nsStyleImageLayers::Repeat::SetInitialValues(LayerType aType)
-{
-  if (aType == LayerType::Background) {
-    mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
-    mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
-  } else {
-    MOZ_ASSERT(aType == LayerType::Mask);
-
-    mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
-    mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
-  }
-}
-
 nsStyleImageLayers::Layer::Layer()
   : mClip(NS_STYLE_IMAGELAYER_CLIP_BORDER)
   , mAttachment(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL)
@@ -2810,7 +2783,7 @@ nsStyleImageLayers::Layer::~Layer()
 void
 nsStyleImageLayers::Layer::Initialize(nsStyleImageLayers::LayerType aType)
 {
-  mRepeat.SetInitialValues(aType);
+  mRepeat.SetInitialValues();
 
   float initialPositionValue =
     nsStyleImageLayers::GetInitialPositionForLayerType(aType);
