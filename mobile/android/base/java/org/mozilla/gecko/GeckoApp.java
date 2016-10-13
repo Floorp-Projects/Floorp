@@ -160,7 +160,6 @@ public abstract class GeckoApp
 
     public static final String SAVED_STATE_IN_BACKGROUND   = "inBackground";
     public static final String SAVED_STATE_PRIVATE_SESSION = "privateSession";
-    public static final String SAVED_STATE_LAST_TAB        = "lastTab";
 
     // Delay before running one-time "cleanup" tasks that may be needed
     // after a version upgrade.
@@ -202,8 +201,6 @@ public abstract class GeckoApp
     private boolean mSessionRestoreParsingFinished = false;
 
     private EventDispatcher eventDispatcher;
-
-    private Tab lastSelectedTab = null;
 
     private static final class LastSessionParser extends SessionParser {
         private JSONArray tabs;
@@ -586,15 +583,6 @@ public abstract class GeckoApp
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
-        outState.putInt(SAVED_STATE_LAST_TAB, lastSelectedTab.getId());
-    }
-
-    @Override
-    protected void onRestoreInstanceState(final Bundle state) {
-        super.onRestoreInstanceState(state);
-
-        final int tabId = state.getInt(SAVED_STATE_LAST_TAB);
-        Tabs.getInstance().selectTab(tabId);
     }
 
     public void addTab() { }
@@ -2092,10 +2080,6 @@ public abstract class GeckoApp
 
         GeckoAppShell.setGeckoInterface(this);
 
-        if (lastSelectedTab != null) {
-            Tabs.getInstance().selectTab(lastSelectedTab.getId());
-        }
-
         int newOrientation = getResources().getConfiguration().orientation;
         if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
             refreshChrome();
@@ -2169,8 +2153,6 @@ public abstract class GeckoApp
             super.onPause();
             return;
         }
-
-        lastSelectedTab = Tabs.getInstance().getSelectedTab();
 
         final HealthRecorder rec = mHealthRecorder;
         final Context context = this;
