@@ -948,12 +948,9 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
                                   uint32_t aCount)
 {
   nsresult rv = mSourceBuffer->AppendFromInputStream(aInputStream, aCount);
-  MOZ_ASSERT(rv == NS_OK || rv == NS_ERROR_OUT_OF_MEMORY);
-
-  if (MOZ_UNLIKELY(rv == NS_ERROR_OUT_OF_MEMORY)) {
+  if (NS_FAILED(rv)) {
     DoError();
   }
-
   return rv;
 }
 
