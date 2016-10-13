@@ -1516,7 +1516,14 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
     if (!instance || !instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
         return false;
 
-    set_pc(int32_t(instance->codeSegment().outOfBoundsCode()));
+    const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
+    if (!memoryAccess) {
+        set_pc(int32_t(instance->codeSegment().outOfBoundsCode()));
+        return true;
+    }
+
+    MOZ_ASSERT(memoryAccess->hasTrapOutOfLineCode());
+    set_pc(int32_t(memoryAccess->trapOutOfLineCode(instance->codeBase())));
     return true;
 }
 

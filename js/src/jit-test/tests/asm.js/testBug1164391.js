@@ -24,4 +24,4 @@ if (isAsmJSCompilationAvailable())
 
 var sab = new SharedArrayBuffer(65536);
 var {add_sharedEv} = m(this, {}, sab);
-assertErrorMessage(() => add_sharedEv(sab.byteLength), RangeError, /out-of-range index/);
+assertErrorMessage(() => add_sharedEv(sab.byteLength), WebAssembly.RuntimeError, /index out of bounds/);

@@ -262,12 +262,14 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     typedef typename Policy::ControlItem ControlItem;
 
     Decoder& d_;
+    const size_t offsetInModule_;
 
     Vector<TypeAndValue<Value>, 0, SystemAllocPolicy> valueStack_;
     Vector<ControlStackEntry<ControlItem>, 0, SystemAllocPolicy> controlStack_;
     bool reachable_;
 
     DebugOnly<Expr> expr_;
+    size_t offsetOfExpr_;
 
     MOZ_MUST_USE bool readFixedU8(uint8_t* out) {
         if (Validate)
@@ -500,13 +502,18 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     bool checkBrIfValues(uint32_t relativeDepth, Value* condition, ExprType* type, Value* value);
 
   public:
-    explicit ExprIter(Decoder& decoder)
-      : d_(decoder), reachable_(true), expr_(Expr::Limit)
-    {
-    }
+    explicit ExprIter(Decoder& decoder, uint32_t offsetInModule = 0)
+      : d_(decoder), offsetInModule_(offsetInModule), reachable_(true),
+        expr_(Expr::Limit), offsetOfExpr_(0)
+    {}
 
     // Return the decoding byte offset.
     uint32_t currentOffset() const { return d_.currentOffset(); }
+
+    // Returning the offset within the entire module of the last-read Expr.
+    TrapOffset trapOffset() const {
+        return TrapOffset(offsetInModule_ + offsetOfExpr_);
+    }
 
     // Test whether the iterator has reached the end of the buffer.
     bool done() const { return d_.done(); }
@@ -820,6 +827,8 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readExpr(Expr* expr)
 {
+    offsetOfExpr_ = d_.currentOffset();
+
     if (Validate) {
         if (MOZ_UNLIKELY(!d_.readExpr(expr)))
             return fail("unable to read opcode");

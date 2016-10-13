@@ -40,11 +40,17 @@ GenerateInterpExit(jit::MacroAssembler& masm, const FuncImport& fi, uint32_t fun
 extern ProfilingOffsets
 GenerateJitExit(jit::MacroAssembler& masm, const FuncImport& fi, jit::Label* throwLabel);
 
-extern Offsets
-GenerateJumpTarget(jit::MacroAssembler& masm, JumpTarget target, jit::Label* throwLabel);
+extern ProfilingOffsets
+GenerateTrapExit(jit::MacroAssembler& masm, Trap trap, jit::Label* throwLabel);
 
 extern Offsets
-GenerateInterruptStub(jit::MacroAssembler& masm, jit::Label* throwLabel);
+GenerateOutOfBoundsExit(jit::MacroAssembler& masm, jit::Label* throwLabel);
+
+extern Offsets
+GenerateUnalignedExit(jit::MacroAssembler& masm, jit::Label* throwLabel);
+
+extern Offsets
+GenerateInterruptExit(jit::MacroAssembler& masm, jit::Label* throwLabel);
 
 extern Offsets
 GenerateThrowStub(jit::MacroAssembler& masm, jit::Label* throwLabel);

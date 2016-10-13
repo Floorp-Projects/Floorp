@@ -520,8 +520,9 @@ MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* labe
     ma_b(lhs, rhs, label, cond);
 }
 
+template <class L>
 void
-MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, L label)
 {
     loadPtr(lhs, SecondScratchReg);
     branchPtr(cond, SecondScratchReg, rhs, label);

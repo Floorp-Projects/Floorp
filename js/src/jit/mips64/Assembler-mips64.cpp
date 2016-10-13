@@ -336,7 +336,7 @@ Assembler::bind(RepatchLabel* label)
             inst[0].setBOffImm16(BOffImm16(offset));
         } else if (inst[0].encode() == inst_beq.encode()) {
             // Handle open long unconditional jumps created by
-            // MacroAssemblerMIPSShared::ma_b(..., wasm::JumpTarget, ...).
+            // MacroAssemblerMIPSShared::ma_b(..., wasm::Trap, ...).
             // We need to add it to long jumps array here.
             // See MacroAssemblerMIPS64::branchWithCode().
             MOZ_ASSERT(inst[1].encode() == NopInst);
@@ -349,7 +349,7 @@ Assembler::bind(RepatchLabel* label)
             inst[4] = InstReg(op_special, ScratchRegister, zero, zero, ff_jr).encode();
         } else {
             // Handle open long conditional jumps created by
-            // MacroAssemblerMIPSShared::ma_b(..., wasm::JumpTarget, ...).
+            // MacroAssemblerMIPSShared::ma_b(..., wasm::Trap, ...).
             inst[0] = invertBranch(inst[0], BOffImm16(7 * sizeof(uint32_t)));
             // No need for a "nop" here because we can clobber scratch.
             // We need to add it to long jumps array here.

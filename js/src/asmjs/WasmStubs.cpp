@@ -805,43 +805,54 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     return offsets;
 }
 
-// Generate a stub that is called immediately after the prologue when there is a
-// stack overflow. This stub calls a C++ function to report the error and then
-// jumps to the throw stub to pop the activation.
-static Offsets
-GenerateStackOverflow(MacroAssembler& masm, Label* throwLabel)
+// Generate a stub that calls into ReportTrap with the right trap reason.
+// This stub is called with ABIStackAlignment by a trap out-of-line path. A
+// profiling prologue/epilogue is used so that stack unwinding picks up the
+// current WasmActivation. Unwinding will begin at the caller of this trap exit.
+ProfilingOffsets
+wasm::GenerateTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel)
 {
     masm.haltingAlign(CodeAlignment);
 
-    Offsets offsets;
-    offsets.begin = masm.currentOffset();
+    masm.setFramePushed(0);
 
-    // If we reach here via the non-profiling prologue, WasmActivation::fp has
-    // not been updated. To enable stack unwinding from C++, store to it now. If
-    // we reached here via the profiling prologue, we'll just store the same
-    // value again. Do not update AsmJSFrame::callerFP as it is not necessary in
-    // the non-profiling case (there is no return path from this point) and, in
-    // the profiling case, it is already correct.
-    Register activation = ABINonArgReturnReg0;
-    masm.loadWasmActivationFromTls(activation);
-    masm.storePtr(masm.getStackPointer(), Address(activation, WasmActivation::offsetOfFP()));
+    MIRTypeVector args;
+    MOZ_ALWAYS_TRUE(args.append(MIRType::Int32));
 
-    // Prepare the stack for calling C++.
-    if (uint32_t d = StackDecrementForCall(ABIStackAlignment, sizeof(AsmJSFrame), ShadowStackSpace))
-        masm.subFromStackPtr(Imm32(d));
+    uint32_t framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
 
-    // No need to restore the stack; the throw stub pops everything.
+    ProfilingOffsets offsets;
+    GenerateExitPrologue(masm, framePushed, ExitReason::Trap, &offsets);
+
+    ABIArgMIRTypeIter i(args);
+    if (i->kind() == ABIArg::GPR)
+        masm.move32(Imm32(int32_t(trap)), i->gpr());
+    else
+        masm.store32(Imm32(int32_t(trap)), Address(masm.getStackPointer(), i->offsetFromArgBase()));
+    i++;
+    MOZ_ASSERT(i.done());
+
     masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(SymbolicAddress::ReportOverRecursed);
+    masm.call(SymbolicAddress::ReportTrap);
+
     masm.jump(throwLabel);
+
+    GenerateExitEpilogue(masm, framePushed, ExitReason::Trap, &offsets);
 
     offsets.end = masm.currentOffset();
     return offsets;
 }
 
-// Generate a stub that calls into HandleTrap with the right trap reason.
+// Generate a stub which is only used by the signal handlers to handle out of
+// bounds access by experimental SIMD.js and Atomics and unaligned accesses on
+// ARM. This stub is executed by direct PC transfer from the faulting memory
+// access and thus the stack depth is unknown. Since WasmActivation::fp is not
+// set before calling the error reporter, the current wasm activation will be
+// lost. This stub should be removed when SIMD.js and Atomics are moved to wasm
+// and given proper traps and when we use a non-faulting strategy for unaligned
+// ARM access.
 static Offsets
-GenerateTrapStub(MacroAssembler& masm, Trap reason, Label* throwLabel)
+GenerateGenericMemoryAccessTrap(MacroAssembler& masm, SymbolicAddress reporter, Label* throwLabel)
 {
     masm.haltingAlign(CodeAlignment);
 
@@ -855,21 +866,7 @@ GenerateTrapStub(MacroAssembler& masm, Trap reason, Label* throwLabel)
     if (ShadowStackSpace)
         masm.subFromStackPtr(Imm32(ShadowStackSpace));
 
-    MIRTypeVector args;
-    JS_ALWAYS_TRUE(args.append(MIRType::Int32));
-
-    ABIArgMIRTypeIter i(args);
-    if (i->kind() == ABIArg::GPR) {
-        masm.move32(Imm32(int32_t(reason)), i->gpr());
-    } else {
-        masm.store32(Imm32(int32_t(reason)),
-                     Address(masm.getStackPointer(), i->offsetFromArgBase()));
-    }
-
-    i++;
-    MOZ_ASSERT(i.done());
-
-    masm.call(SymbolicAddress::HandleTrap);
+    masm.call(reporter);
     masm.jump(throwLabel);
 
     offsets.end = masm.currentOffset();
@@ -877,25 +874,15 @@ GenerateTrapStub(MacroAssembler& masm, Trap reason, Label* throwLabel)
 }
 
 Offsets
-wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target, Label* throwLabel)
+wasm::GenerateOutOfBoundsExit(MacroAssembler& masm, Label* throwLabel)
 {
-    switch (target) {
-      case JumpTarget::StackOverflow:
-        return GenerateStackOverflow(masm, throwLabel);
-      case JumpTarget::IndirectCallToNull:
-      case JumpTarget::IndirectCallBadSig:
-      case JumpTarget::OutOfBounds:
-      case JumpTarget::UnalignedAccess:
-      case JumpTarget::Unreachable:
-      case JumpTarget::IntegerOverflow:
-      case JumpTarget::InvalidConversionToInteger:
-      case JumpTarget::IntegerDivideByZero:
-      case JumpTarget::ImpreciseSimdConversion:
-        return GenerateTrapStub(masm, Trap(target), throwLabel);
-      case JumpTarget::Limit:
-        break;
-    }
-    MOZ_CRASH("bad JumpTarget");
+    return GenerateGenericMemoryAccessTrap(masm, SymbolicAddress::ReportOutOfBounds, throwLabel);
+}
+
+Offsets
+wasm::GenerateUnalignedExit(MacroAssembler& masm, Label* throwLabel)
+{
+    return GenerateGenericMemoryAccessTrap(masm, SymbolicAddress::ReportUnalignedAccess, throwLabel);
 }
 
 static const LiveRegisterSet AllRegsExceptSP(
@@ -911,7 +898,7 @@ static const LiveRegisterSet AllRegsExceptSP(
 // after restoring all registers. To hack around this, push the resumePC on the
 // stack so that it can be popped directly into PC.
 Offsets
-wasm::GenerateInterruptStub(MacroAssembler& masm, Label* throwLabel)
+wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
 {
     masm.haltingAlign(CodeAlignment);
 

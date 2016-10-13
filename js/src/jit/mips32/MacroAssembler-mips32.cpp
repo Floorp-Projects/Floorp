@@ -249,8 +249,8 @@ template void
 MacroAssemblerMIPS::ma_addTestOverflow<Label*>(Register rd, Register rs,
                                                Register rt, Label* overflow);
 template void
-MacroAssemblerMIPS::ma_addTestOverflow<wasm::JumpTarget>(Register rd, Register rs, Register rt,
-                                                         wasm::JumpTarget overflow);
+MacroAssemblerMIPS::ma_addTestOverflow<wasm::TrapDesc>(Register rd, Register rs, Register rt,
+                                                       wasm::TrapDesc overflow);
 
 template <typename L>
 void
@@ -281,8 +281,8 @@ template void
 MacroAssemblerMIPS::ma_addTestOverflow<Label*>(Register rd, Register rs,
                                                Imm32 imm, Label* overflow);
 template void
-MacroAssemblerMIPS::ma_addTestOverflow<wasm::JumpTarget>(Register rd, Register rs, Imm32 imm,
-                                                         wasm::JumpTarget overflow);
+MacroAssemblerMIPS::ma_addTestOverflow<wasm::TrapDesc>(Register rd, Register rs, Imm32 imm,
+                                                       wasm::TrapDesc overflow);
 
 // Subtract.
 void

@@ -5,6 +5,7 @@ const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
 const Memory = WebAssembly.Memory;
+const RuntimeError = WebAssembly.RuntimeError;
 
 // ======
 // MEMORY
@@ -197,16 +198,16 @@ var mod = new Module(wasmTextToBinary(`(module
 var exp1 = new Instance(mod, {"":{tbl}}).exports;
 var exp2 = new Instance(mod, {"":{tbl}}).exports;
 assertEq(exp1.call_indirect(0), 1);
-assertErrorMessage(() => exp1.call_indirect(1), Error, /out-of-range/);
+assertErrorMessage(() => exp1.call_indirect(1), RuntimeError, /index out of bounds/);
 assertEq(exp2.call_indirect(0), 1);
-assertErrorMessage(() => exp2.call_indirect(1), Error, /out-of-range/);
+assertErrorMessage(() => exp2.call_indirect(1), RuntimeError, /index out of bounds/);
 assertEq(tbl.grow(1), 1);
 assertEq(tbl.length, 2);
 assertEq(exp1.call_indirect(0), 1);
 assertErrorMessage(() => exp1.call_indirect(1), Error, /indirect call to null/);
 tbl.set(1, src.two);
 assertEq(exp1.call_indirect(1), 2);
-assertErrorMessage(() => exp1.call_indirect(2), Error, /out-of-range/);
+assertErrorMessage(() => exp1.call_indirect(2), RuntimeError, /index out of bounds/);
 assertEq(tbl.grow(2), 2);
 assertEq(tbl.length, 4);
 assertEq(exp2.call_indirect(0), 1);

@@ -142,8 +142,9 @@ FrameIterator::settle()
         break;
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
+      case CodeRange::TrapExit:
       case CodeRange::Inline:
-      case CodeRange::CallThunk:
+      case CodeRange::FarJumpIsland:
         MOZ_CRASH("Should not encounter an exit during iteration");
     }
 }
@@ -363,7 +364,7 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason
 // profiling or non-profiling entry point.
 void
 wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
-                               FuncOffsets* offsets)
+                               const TrapOffset& trapOffset, FuncOffsets* offsets)
 {
 #if defined(JS_CODEGEN_ARM)
     // Flush pending pools so they do not get dumped between the 'begin' and
@@ -380,17 +381,16 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
     // Generate table entry thunk:
     masm.haltingAlign(CodeAlignment);
     offsets->tableEntry = masm.currentOffset();
+    TrapDesc trap(trapOffset, Trap::IndirectCallBadSig, masm.framePushed());
     switch (sigId.kind()) {
       case SigIdDesc::Kind::Global: {
         Register scratch = WasmTableCallScratchReg;
         masm.loadWasmGlobalPtr(sigId.globalDataOffset(), scratch);
-        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch,
-                      JumpTarget::IndirectCallBadSig);
+        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch, trap);
         break;
       }
       case SigIdDesc::Kind::Immediate:
-        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, Imm32(sigId.immediate()),
-                      JumpTarget::IndirectCallBadSig);
+        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, Imm32(sigId.immediate()), trap);
         break;
       case SigIdDesc::Kind::None:
         break;
@@ -559,8 +559,9 @@ ProfilingFrameIterator::initFromFP()
         break;
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
+      case CodeRange::TrapExit:
       case CodeRange::Inline:
-      case CodeRange::CallThunk:
+      case CodeRange::FarJumpIsland:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
 
@@ -582,7 +583,7 @@ typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
 static bool
 InThunk(const CodeRange& codeRange, uint32_t offsetInModule)
 {
-    if (codeRange.kind() == CodeRange::CallThunk)
+    if (codeRange.kind() == CodeRange::FarJumpIsland)
         return true;
 
     return codeRange.isFunction() &&
@@ -624,11 +625,12 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     const CodeRange* codeRange = code_->lookupRange(state.pc);
     switch (codeRange->kind()) {
       case CodeRange::Function:
-      case CodeRange::CallThunk:
+      case CodeRange::FarJumpIsland:
       case CodeRange::ImportJitExit:
-      case CodeRange::ImportInterpExit: {
+      case CodeRange::ImportInterpExit:
+      case CodeRange::TrapExit: {
         // When the pc is inside the prologue/epilogue, the innermost
-        // call's AsmJSFrame is not complete and thus fp points to the the
+        // call's AsmJSFrame is not complete and thus fp points to the
         // second-to-innermost call's AsmJSFrame. Since fp can only tell you
         // about its caller (via ReturnAddressFromFP(fp)), naively unwinding
         // while pc is in the prologue/epilogue would skip the second-to-
@@ -741,8 +743,9 @@ ProfilingFrameIterator::operator++()
       case CodeRange::Function:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
+      case CodeRange::TrapExit:
       case CodeRange::Inline:
-      case CodeRange::CallThunk:
+      case CodeRange::FarJumpIsland:
         stackAddress_ = callerFP_;
         callerPC_ = ReturnAddressFromFP(callerFP_);
         AssertMatchesCallSite(*activation_, callerPC_, CallerFPFromFP(callerFP_), callerFP_);
@@ -766,6 +769,7 @@ ProfilingFrameIterator::label() const
     const char* importJitDescription = "fast FFI trampoline (in asm.js)";
     const char* importInterpDescription = "slow FFI trampoline (in asm.js)";
     const char* nativeDescription = "native call (in asm.js)";
+    const char* trapDescription = "trap handling (in asm.js)";
 
     switch (exitReason_) {
       case ExitReason::None:
@@ -776,6 +780,8 @@ ProfilingFrameIterator::label() const
         return importInterpDescription;
       case ExitReason::Native:
         return nativeDescription;
+      case ExitReason::Trap:
+        return trapDescription;
     }
 
     switch (codeRange_->kind()) {
@@ -783,8 +789,9 @@ ProfilingFrameIterator::label() const
       case CodeRange::Entry:            return "entry trampoline (in asm.js)";
       case CodeRange::ImportJitExit:    return importJitDescription;
       case CodeRange::ImportInterpExit: return importInterpDescription;
+      case CodeRange::TrapExit:         return trapDescription;
       case CodeRange::Inline:           return "inline stub (in asm.js)";
-      case CodeRange::CallThunk:        return "call thunk (in asm.js)";
+      case CodeRange::FarJumpIsland:    return "interstitial (in asm.js)";
     }
 
     MOZ_CRASH("bad code range kind");

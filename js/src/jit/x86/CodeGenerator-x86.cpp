@@ -527,7 +527,7 @@ CodeGeneratorX86::asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg)
     // the abstraction that is atomicBinopToTypedIntArray at this time.
     masm.movl(ptrReg, addrTemp);
     masm.addlWithPatch(Imm32(0), addrTemp);
-    masm.append(wasm::MemoryAccess(masm.size()));
+    masm.append(wasm::MemoryPatch(masm.size()));
 }
 
 void
@@ -1047,7 +1047,7 @@ CodeGeneratorX86::visitDivOrModI64(LDivOrModI64* lir)
 
     // Handle divide by zero.
     if (lir->canBeDivideByZero())
-        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, wasm::JumpTarget::IntegerDivideByZero);
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, trap(lir, wasm::Trap::IntegerDivideByZero));
 
     // Handle an integer overflow exception from INT64_MIN / -1.
     if (lir->canBeNegativeOverflow()) {
@@ -1057,7 +1057,7 @@ CodeGeneratorX86::visitDivOrModI64(LDivOrModI64* lir)
         if (lir->mir()->isMod())
             masm.xor64(output, output);
         else
-            masm.jump(wasm::JumpTarget::IntegerOverflow);
+            masm.jump(trap(lir, wasm::Trap::IntegerOverflow));
         masm.jump(&done);
         masm.bind(&notmin);
     }
@@ -1102,7 +1102,7 @@ CodeGeneratorX86::visitUDivOrModI64(LUDivOrModI64* lir)
 
     // Prevent divide by zero.
     if (lir->canBeDivideByZero())
-        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, wasm::JumpTarget::IntegerDivideByZero);
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, trap(lir, wasm::Trap::IntegerDivideByZero));
 
     masm.setupUnalignedABICall(temp);
     masm.passABIArg(lhs.high);

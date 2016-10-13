@@ -433,7 +433,8 @@ CodeGeneratorX86Shared::visitWasmAddOffset(LWasmAddOffset* lir)
     if (base != out)
         masm.move32(base, out);
     masm.add32(Imm32(mir->offset()), out);
-    masm.j(Assembler::CarrySet, wasm::JumpTarget::OutOfBounds);
+
+    masm.j(Assembler::CarrySet, trap(mir, wasm::Trap::OutOfBounds));
 }
 
 void
@@ -1024,7 +1025,7 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod* ins)
         masm.test32(rhs, rhs);
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError()) {
-                masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
+                masm.j(Assembler::Zero, trap(ins, wasm::Trap::IntegerDivideByZero));
             } else {
                 ool = new(alloc()) ReturnZero(output);
                 masm.j(Assembler::Zero, ool->entry());
@@ -1072,7 +1073,7 @@ CodeGeneratorX86Shared::visitUDivOrModConstant(LUDivOrModConstant *ins) {
     if (d == 0) {
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError())
-                masm.jump(wasm::JumpTarget::IntegerDivideByZero);
+                masm.jump(trap(ins, wasm::Trap::IntegerDivideByZero));
             else
                 masm.xorl(output, output);
         } else {
@@ -1211,7 +1212,7 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
         if (!mir->isTruncated())
             bailoutIf(Assembler::Overflow, ins->snapshot());
         else if (mir->trapOnError())
-            masm.j(Assembler::Overflow, wasm::JumpTarget::IntegerOverflow);
+            masm.j(Assembler::Overflow, trap(mir, wasm::Trap::IntegerOverflow));
     } else if (mir->isUnsigned() && !mir->isTruncated()) {
         // Unsigned division by 1 can overflow if output is not
         // truncated.
@@ -1330,7 +1331,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
     if (mir->canBeDivideByZero()) {
         masm.test32(rhs, rhs);
         if (mir->trapOnError()) {
-            masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
+            masm.j(Assembler::Zero, trap(mir, wasm::Trap::IntegerDivideByZero));
         } else if (mir->canTruncateInfinities()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             if (!ool)
@@ -1349,7 +1350,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
         masm.j(Assembler::NotEqual, &notmin);
         masm.cmp32(rhs, Imm32(-1));
         if (mir->trapOnError()) {
-            masm.j(Assembler::Equal, wasm::JumpTarget::IntegerOverflow);
+            masm.j(Assembler::Equal, trap(mir, wasm::Trap::IntegerOverflow));
         } else if (mir->canTruncateOverflow()) {
             // (-INT32_MIN)|0 == INT32_MIN and INT32_MIN is already in the
             // output register (lhs == eax).
@@ -1492,12 +1493,14 @@ CodeGeneratorX86Shared::visitModI(LModI* ins)
     if (lhs != eax)
         masm.mov(lhs, eax);
 
+    MMod* mir = ins->mir();
+
     // Prevent divide by zero.
-    if (ins->mir()->canBeDivideByZero()) {
+    if (mir->canBeDivideByZero()) {
         masm.test32(rhs, rhs);
-        if (ins->mir()->isTruncated()) {
-            if (ins->mir()->trapOnError()) {
-                masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
+        if (mir->isTruncated()) {
+            if (mir->trapOnError()) {
+                masm.j(Assembler::Zero, trap(mir, wasm::Trap::IntegerDivideByZero));
             } else {
                 if (!ool)
                     ool = new(alloc()) ReturnZero(edx);
@@ -1511,13 +1514,13 @@ CodeGeneratorX86Shared::visitModI(LModI* ins)
     Label negative;
 
     // Switch based on sign of the lhs.
-    if (ins->mir()->canBeNegativeDividend())
+    if (mir->canBeNegativeDividend())
         masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
 
     // If lhs >= 0 then remainder = lhs % rhs. The remainder must be positive.
     {
         // Check if rhs is a power-of-two.
-        if (ins->mir()->canBePowerOfTwoDivisor()) {
+        if (mir->canBePowerOfTwoDivisor()) {
             MOZ_ASSERT(rhs != remainder);
 
             // Rhs y is a power-of-two if (y & (y-1)) == 0. Note that if
@@ -1543,7 +1546,7 @@ CodeGeneratorX86Shared::visitModI(LModI* ins)
     }
 
     // Otherwise, we have to beware of two special cases:
-    if (ins->mir()->canBeNegativeDividend()) {
+    if (mir->canBeNegativeDividend()) {
         masm.jump(&done);
 
         masm.bind(&negative);
@@ -1557,7 +1560,7 @@ CodeGeneratorX86Shared::visitModI(LModI* ins)
         masm.cdq();
         masm.idiv(rhs);
 
-        if (!ins->mir()->isTruncated()) {
+        if (!mir->isTruncated()) {
             // A remainder of 0 means that the rval must be -0, which is a double.
             masm.test32(remainder, remainder);
             bailoutIf(Assembler::Zero, ins->snapshot());
@@ -1567,12 +1570,12 @@ CodeGeneratorX86Shared::visitModI(LModI* ins)
     masm.bind(&done);
 
     if (overflow) {
-        addOutOfLineCode(overflow, ins->mir());
+        addOutOfLineCode(overflow, mir);
         masm.bind(overflow->done());
     }
 
     if (ool) {
-        addOutOfLineCode(ool, ins->mir());
+        addOutOfLineCode(ool, mir);
         masm.bind(ool->rejoin());
     }
 }
@@ -2454,7 +2457,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4* ins)
 
     masm.convertFloat32x4ToInt32x4(in, out);
 
-    OutOfLineSimdFloatToIntCheck *ool = new(alloc()) OutOfLineSimdFloatToIntCheck(temp, in, ins);
+    auto* ool = new(alloc()) OutOfLineSimdFloatToIntCheck(temp, in, ins, ins->mir()->trapOffset());
     addOutOfLineCode(ool, ins->mir());
 
     static const SimdConstant InvalidResult = SimdConstant::SplatX4(int32_t(-2147483648));
@@ -2498,7 +2501,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
     masm.jump(ool->rejoin());
 
     if (gen->compilingAsmJS()) {
-        masm.bindLater(&onConversionError, wasm::JumpTarget::ImpreciseSimdConversion);
+        masm.bindLater(&onConversionError, trap(ool, wasm::Trap::ImpreciseSimdConversion));
     } else {
         masm.bind(&onConversionError);
         bailout(ool->ins()->snapshot());
@@ -2511,6 +2514,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
 void
 CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
 {
+    const MSimdConvert* mir = ins->mir();
     FloatRegister in = ToFloatRegister(ins->input());
     FloatRegister out = ToFloatRegister(ins->output());
     Register temp = ToRegister(ins->tempR());
@@ -2577,7 +2581,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     masm.cmp32(temp, Imm32(0));
 
     if (gen->compilingAsmJS())
-        masm.j(Assembler::NotEqual, wasm::JumpTarget::ImpreciseSimdConversion);
+        masm.j(Assembler::NotEqual, trap(mir, wasm::Trap::ImpreciseSimdConversion));
     else
         bailoutIf(Assembler::NotEqual, ins->snapshot());
 }
@@ -4570,19 +4574,20 @@ CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateChe
     MIRType toType = ool->toType();
     Label* oolRejoin = ool->rejoin();
     bool isUnsigned = ool->isUnsigned();
+    wasm::TrapOffset off = ool->trapOffset();
 
     if (fromType == MIRType::Float32) {
         if (toType == MIRType::Int32)
-            masm.outOfLineWasmTruncateFloat32ToInt32(input, isUnsigned, oolRejoin);
+            masm.outOfLineWasmTruncateFloat32ToInt32(input, isUnsigned, off, oolRejoin);
         else if (toType == MIRType::Int64)
-            masm.outOfLineWasmTruncateFloat32ToInt64(input, isUnsigned, oolRejoin);
+            masm.outOfLineWasmTruncateFloat32ToInt64(input, isUnsigned, off, oolRejoin);
         else
             MOZ_CRASH("unexpected type");
     } else if (fromType == MIRType::Double) {
         if (toType == MIRType::Int32)
-            masm.outOfLineWasmTruncateDoubleToInt32(input, isUnsigned, oolRejoin);
+            masm.outOfLineWasmTruncateDoubleToInt32(input, isUnsigned, off, oolRejoin);
         else if (toType == MIRType::Int64)
-            masm.outOfLineWasmTruncateDoubleToInt64(input, isUnsigned, oolRejoin);
+            masm.outOfLineWasmTruncateDoubleToInt64(input, isUnsigned, off, oolRejoin);
         else
             MOZ_CRASH("unexpected type");
     } else {

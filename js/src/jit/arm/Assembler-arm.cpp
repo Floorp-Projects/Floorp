@@ -2442,7 +2442,7 @@ Assembler::as_b(Label* l, Condition c)
 }
 
 BufferOffset
-Assembler::as_b(wasm::JumpTarget target, Condition c)
+Assembler::as_b(wasm::TrapDesc target, Condition c)
 {
     Label l;
     BufferOffset ret = as_b(&l, c);
@@ -2875,12 +2875,12 @@ Assembler::bind(Label* label, BufferOffset boff)
 }
 
 void
-Assembler::bindLater(Label* label, wasm::JumpTarget target)
+Assembler::bindLater(Label* label, wasm::TrapDesc target)
 {
     if (label->used()) {
         BufferOffset b(label);
         do {
-            append(target, b.getOffset());
+            append(wasm::TrapSite(target, b.getOffset()));
         } while (nextLink(b, &b));
     }
     label->reset();

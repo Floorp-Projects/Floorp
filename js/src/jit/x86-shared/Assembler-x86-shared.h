@@ -919,12 +919,12 @@ class AssemblerX86Shared : public AssemblerShared
     void j(Condition cond, RepatchLabel* label) { jSrc(cond, label); }
     void jmp(RepatchLabel* label) { jmpSrc(label); }
 
-    void j(Condition cond, wasm::JumpTarget target) {
+    void j(Condition cond, wasm::TrapDesc target) {
         Label l;
         j(cond, &l);
         bindLater(&l, target);
     }
-    void jmp(wasm::JumpTarget target) {
+    void jmp(wasm::TrapDesc target) {
         Label l;
         jmp(&l);
         bindLater(&l, target);
@@ -960,11 +960,11 @@ class AssemblerX86Shared : public AssemblerShared
         }
         label->bind(dst.offset());
     }
-    void bindLater(Label* label, wasm::JumpTarget target) {
+    void bindLater(Label* label, wasm::TrapDesc target) {
         if (label->used()) {
             JmpSrc jmp(label->offset());
             do {
-                append(target, jmp.offset());
+                append(wasm::TrapSite(target, jmp.offset()));
             } while (masm.nextJump(jmp, &jmp));
         }
         label->reset();

@@ -386,17 +386,18 @@ CodeGeneratorMIPS::visitDivOrModI64(LDivOrModI64* lir)
 
     // Handle divide by zero.
     if (lir->canBeDivideByZero())
-        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, wasm::JumpTarget::IntegerDivideByZero);
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, trap(lir, wasm::Trap::IntegerDivideByZero));
 
     // Handle an integer overflow exception from INT64_MIN / -1.
     if (lir->canBeNegativeOverflow()) {
         Label notmin;
         masm.branch64(Assembler::NotEqual, lhs, Imm64(INT64_MIN), &notmin);
         masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notmin);
-        if (lir->mir()->isMod())
+        if (lir->mir()->isMod()) {
             masm.xor64(output, output);
-        else
-            masm.jump(wasm::JumpTarget::IntegerOverflow);
+        } else {
+            masm.jump(trap(lir, wasm::Trap::IntegerOverflow));
+        }
         masm.jump(&done);
         masm.bind(&notmin);
     }
@@ -438,7 +439,7 @@ CodeGeneratorMIPS::visitUDivOrModI64(LUDivOrModI64* lir)
 
     // Prevent divide by zero.
     if (lir->canBeDivideByZero())
-        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, wasm::JumpTarget::IntegerDivideByZero);
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, trap(lir, wasm::Trap::IntegerDivideByZero));
 
     masm.setupUnalignedABICall(temp);
     masm.passABIArg(lhs.high);

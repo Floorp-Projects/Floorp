@@ -548,7 +548,7 @@ class MacroAssemblerX86Shared : public Assembler
     void jump(const Address& addr) {
         jmp(Operand(addr));
     }
-    void jump(wasm::JumpTarget target) {
+    void jump(wasm::TrapDesc target) {
         jmp(target);
     }
 

@@ -234,8 +234,8 @@ template void
 MacroAssemblerMIPSShared::ma_addTestCarry<Label*>(Register rd, Register rs,
                                                   Register rt, Label* overflow);
 template void
-MacroAssemblerMIPSShared::ma_addTestCarry<wasm::JumpTarget>(Register rd, Register rs, Register rt,
-                                                            wasm::JumpTarget overflow);
+MacroAssemblerMIPSShared::ma_addTestCarry<wasm::TrapDesc>(Register rd, Register rs, Register rt,
+                                                          wasm::TrapDesc overflow);
 
 template <typename L>
 void
@@ -249,8 +249,8 @@ template void
 MacroAssemblerMIPSShared::ma_addTestCarry<Label*>(Register rd, Register rs,
                                                   Imm32 imm, Label* overflow);
 template void
-MacroAssemblerMIPSShared::ma_addTestCarry<wasm::JumpTarget>(Register rd, Register rs, Imm32 imm,
-                                                            wasm::JumpTarget overflow);
+MacroAssemblerMIPSShared::ma_addTestCarry<wasm::TrapDesc>(Register rd, Register rs, Imm32 imm,
+                                                          wasm::TrapDesc overflow);
 
 // Subtract.
 void
@@ -684,7 +684,7 @@ MacroAssemblerMIPSShared::ma_b(Register lhs, ImmPtr imm, Label* l, Condition c, 
 
 template <typename T>
 void
-MacroAssemblerMIPSShared::ma_b(Register lhs, T rhs, wasm::JumpTarget target, Condition c,
+MacroAssemblerMIPSShared::ma_b(Register lhs, T rhs, wasm::TrapDesc target, Condition c,
                                JumpKind jumpKind)
 {
     Label label;
@@ -693,13 +693,13 @@ MacroAssemblerMIPSShared::ma_b(Register lhs, T rhs, wasm::JumpTarget target, Con
 }
 
 template void MacroAssemblerMIPSShared::ma_b<Register>(Register lhs, Register rhs,
-                                                       wasm::JumpTarget target, Condition c,
+                                                       wasm::TrapDesc target, Condition c,
                                                        JumpKind jumpKind);
 template void MacroAssemblerMIPSShared::ma_b<Imm32>(Register lhs, Imm32 rhs,
-                                                       wasm::JumpTarget target, Condition c,
+                                                       wasm::TrapDesc target, Condition c,
                                                        JumpKind jumpKind);
 template void MacroAssemblerMIPSShared::ma_b<ImmTag>(Register lhs, ImmTag rhs,
-                                                       wasm::JumpTarget target, Condition c,
+                                                       wasm::TrapDesc target, Condition c,
                                                        JumpKind jumpKind);
 
 void
@@ -709,7 +709,7 @@ MacroAssemblerMIPSShared::ma_b(Label* label, JumpKind jumpKind)
 }
 
 void
-MacroAssemblerMIPSShared::ma_b(wasm::JumpTarget target, JumpKind jumpKind)
+MacroAssemblerMIPSShared::ma_b(wasm::TrapDesc target, JumpKind jumpKind)
 {
     Label label;
     asMasm().branchWithCode(getBranchCode(BranchIsJump), &label, jumpKind);

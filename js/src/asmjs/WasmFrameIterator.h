@@ -26,19 +26,18 @@ class JSAtom;
 namespace js {
 
 class WasmActivation;
-namespace jit { class MacroAssembler; class Label; }
+namespace jit { class MacroAssembler; }
 
 namespace wasm {
 
 class CallSite;
 class Code;
 class CodeRange;
-class Instance;
 class SigIdDesc;
 struct CallThunk;
 struct FuncOffsets;
-struct Metadata;
 struct ProfilingOffsets;
+struct TrapOffset;
 
 // Iterates over the frames of a single WasmActivation, called synchronously
 // from C++ in the thread of the asm.js.
@@ -81,7 +80,8 @@ enum class ExitReason : uint32_t
     None,          // default state, the pc is in wasm code
     ImportJit,     // fast-path call directly into JIT code
     ImportInterp,  // slow-path call into C++ Invoke()
-    Native         // call to native C++ code (e.g., Math.sin, ToInt32(), interrupt)
+    Native,        // call to native C++ code (e.g., Math.sin, ToInt32(), interrupt)
+    Trap           // call to trap handler for the trap in WasmActivation::trap
 };
 
 // Iterates over the frames of a single WasmActivation, given an
@@ -121,7 +121,7 @@ GenerateExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason
                      ProfilingOffsets* offsets);
 void
 GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
-                         FuncOffsets* offsets);
+                         const TrapOffset& trapOffset, FuncOffsets* offsets);
 void
 GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);
 
