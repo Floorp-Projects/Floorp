@@ -26,9 +26,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
 
     void storeUnboxedValue(const LAllocation* value, MIRType valueType,
                            Operand dest, MIRType slotType);
-    void memoryBarrier(MemoryBarrierBits barrier);
 
-    void wasmStore(Scalar::Type type, unsigned numSimdElems, const LAllocation* value, Operand dstAddr);
+    void wasmStore(const wasm::MemoryAccessDesc& access, const LAllocation* value, Operand dstAddr);
     template <typename T> void emitWasmLoad(T* ins);
     template <typename T> void emitWasmStore(T* ins);
 

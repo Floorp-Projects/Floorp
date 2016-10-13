@@ -1169,6 +1169,12 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
     storeFloat32(scratch, destZ);
 }
 
+void
+MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
+{
+    if (barrier & MembarStoreLoad)
+        storeLoadFence();
+}
 
 // ========================================================================
 // Truncate floating point.

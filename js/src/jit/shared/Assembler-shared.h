@@ -12,6 +12,7 @@
 #include <limits.h>
 
 #include "asmjs/WasmTypes.h"
+#include "jit/AtomicOp.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
@@ -695,6 +696,50 @@ struct AsmJSAbsoluteAddress
 } // namespace jit
 
 namespace wasm {
+
+class MemoryAccessDesc
+{
+    uint32_t offset_;
+    uint32_t align_;
+    Scalar::Type type_;
+    unsigned numSimdElems_;
+    jit::MemoryBarrierBits barrierBefore_;
+    jit::MemoryBarrierBits barrierAfter_;
+
+  public:
+    explicit MemoryAccessDesc(Scalar::Type type, uint32_t align, uint32_t offset,
+                              unsigned numSimdElems = 0,
+                              jit::MemoryBarrierBits barrierBefore = jit::MembarNobits,
+                              jit::MemoryBarrierBits barrierAfter = jit::MembarNobits)
+      : offset_(offset),
+        align_(align),
+        type_(type),
+        numSimdElems_(numSimdElems),
+        barrierBefore_(barrierBefore),
+        barrierAfter_(barrierAfter)
+    {
+        MOZ_ASSERT_IF(!Scalar::isSimdType(type), numSimdElems == 0);
+        MOZ_ASSERT(numSimdElems <= jit::ScalarTypeToLength(type));
+        MOZ_ASSERT(mozilla::IsPowerOfTwo(align));
+    }
+
+    uint32_t offset() const { return offset_; }
+    uint32_t align() const { return align_; }
+    Scalar::Type type() const { return type_; }
+    unsigned byteSize() const {
+        return Scalar::isSimdType(type())
+               ? Scalar::scalarByteSize(type()) * numSimdElems()
+               : Scalar::byteSize(type());
+    }
+    unsigned numSimdElems() const { MOZ_ASSERT(isSimd()); return numSimdElems_; }
+    jit::MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
+    jit::MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
+    bool isAtomic() const { return (barrierBefore_ | barrierAfter_) != jit::MembarNobits; }
+    bool isSimd() const { return Scalar::isSimdType(type_); }
+    bool isUnaligned() const { return align() && align() < byteSize(); }
+
+    void clearOffset() { offset_ = 0; }
+};
 
 // Summarizes a global access for a mutable (in asm.js) or immutable value (in
 // asm.js or the MVP) that needs to get patched later.
