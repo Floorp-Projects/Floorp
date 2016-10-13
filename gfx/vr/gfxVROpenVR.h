@@ -92,9 +92,14 @@ class VRControllerOpenVR : public VRControllerHost
 {
 public:
   explicit VRControllerOpenVR();
+  void SetTrackedIndex(uint32_t aTrackedIndex);
+  uint32_t GetTrackedIndex();
 
 protected:
   virtual ~VRControllerOpenVR();
+
+  // The index of tracked devices from vr::IVRSystem.
+  uint32_t mTrackedIndex;
 };
 
 } // namespace impl
