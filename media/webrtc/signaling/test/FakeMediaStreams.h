@@ -70,6 +70,7 @@ public:
     gGraph = new MediaStreamGraph();
     return gGraph;
   }
+  uint32_t GraphRate() { return 16000; }
 };
 }
 
@@ -185,8 +186,6 @@ class Fake_MediaStream {
 
  public:
   Fake_MediaStream () : mListeners(), mTrackListeners(), mMutex("Fake MediaStream") {}
-
-  static uint32_t GraphRate() { return 16000; }
 
   void AddListener(Fake_MediaStreamListener *aListener) {
     mozilla::MutexAutoLock lock(mMutex);
