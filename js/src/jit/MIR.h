@@ -13519,57 +13519,15 @@ class MWasmAddOffset
     }
 };
 
-class MWasmMemoryAccess
-{
-    uint32_t offset_;
-    uint32_t align_;
-    Scalar::Type accessType_ : 8;
-    unsigned numSimdElems_;
-    MemoryBarrierBits barrierBefore_;
-    MemoryBarrierBits barrierAfter_;
-
-  public:
-    explicit MWasmMemoryAccess(Scalar::Type accessType, uint32_t align, uint32_t offset,
-                               unsigned numSimdElems = 0,
-                               MemoryBarrierBits barrierBefore = MembarNobits,
-                               MemoryBarrierBits barrierAfter = MembarNobits)
-      : offset_(offset),
-        align_(align),
-        accessType_(accessType),
-        numSimdElems_(numSimdElems),
-        barrierBefore_(barrierBefore),
-        barrierAfter_(barrierAfter)
-    {
-        MOZ_ASSERT(numSimdElems <= ScalarTypeToLength(accessType));
-        MOZ_ASSERT(mozilla::IsPowerOfTwo(align));
-    }
-
-    uint32_t offset() const { return offset_; }
-    uint32_t align() const { return align_; }
-    Scalar::Type accessType() const { return accessType_; }
-    unsigned byteSize() const {
-        return Scalar::isSimdType(accessType())
-               ? Scalar::scalarByteSize(accessType()) * numSimdElems()
-               : TypedArrayElemSize(accessType());
-    }
-    unsigned numSimdElems() const { return numSimdElems_; }
-    MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
-    MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
-    bool isAtomicAccess() const { return (barrierBefore_ | barrierAfter_) != MembarNobits; }
-    bool isSimdAccess() const { return Scalar::isSimdType(accessType_); }
-    bool isUnaligned() const { return align() && align() < byteSize(); }
-
-    void clearOffset() { offset_ = 0; }
-};
-
 class MWasmLoad
   : public MUnaryInstruction,
-    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
-    MWasmLoad(MDefinition* base, const MWasmMemoryAccess& access, MIRType resultType)
+    wasm::MemoryAccessDesc access_;
+
+    MWasmLoad(MDefinition* base, const wasm::MemoryAccessDesc& access, MIRType resultType)
       : MUnaryInstruction(base),
-        MWasmMemoryAccess(access)
+        access_(access)
     {
         setGuard();
         setResultType(resultType);
@@ -13580,10 +13538,14 @@ class MWasmLoad
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, base))
 
+    const wasm::MemoryAccessDesc& access() const {
+        return access_;
+    }
+
     AliasSet getAliasSet() const override {
         // When a barrier is needed, make the instruction effectful by giving
         // it a "store" effect.
-        if (isAtomicAccess())
+        if (access_.isAtomic())
             return AliasSet::Store(AliasSet::AsmJSHeap);
         return AliasSet::Load(AliasSet::AsmJSHeap);
     }
@@ -13591,12 +13553,13 @@ class MWasmLoad
 
 class MWasmStore
   : public MBinaryInstruction,
-    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
-    MWasmStore(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* value)
+    wasm::MemoryAccessDesc access_;
+
+    MWasmStore(MDefinition* base, const wasm::MemoryAccessDesc& access, MDefinition* value)
       : MBinaryInstruction(base, value),
-        MWasmMemoryAccess(access)
+        access_(access)
     {
         setGuard();
     }
@@ -13605,6 +13568,10 @@ class MWasmStore
     INSTRUCTION_HEADER(WasmStore)
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, base), (1, value))
+
+    const wasm::MemoryAccessDesc& access() const {
+        return access_;
+    }
 
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::AsmJSHeap);
@@ -13632,6 +13599,10 @@ class MAsmJSMemoryAccess
     Scalar::Type accessType() const { return accessType_; }
     unsigned byteSize() const { return TypedArrayElemSize(accessType()); }
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
+
+    wasm::MemoryAccessDesc access() const {
+        return wasm::MemoryAccessDesc(accessType_, Scalar::byteSize(accessType_), offset_);
+    }
 
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
     void setOffset(uint32_t o) { offset_ = o; }
@@ -13688,13 +13659,14 @@ class MAsmJSStoreHeap
 
 class MAsmJSCompareExchangeHeap
   : public MQuaternaryInstruction,
-    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSCompareExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
+    wasm::MemoryAccessDesc access_;
+
+    MAsmJSCompareExchangeHeap(MDefinition* base, const wasm::MemoryAccessDesc& access,
                               MDefinition* oldv, MDefinition* newv, MDefinition* tls)
         : MQuaternaryInstruction(base, oldv, newv, tls),
-          MWasmMemoryAccess(access)
+          access_(access)
     {
         setGuard();             // Not removable
         setResultType(MIRType::Int32);
@@ -13703,6 +13675,8 @@ class MAsmJSCompareExchangeHeap
   public:
     INSTRUCTION_HEADER(AsmJSCompareExchangeHeap)
     TRIVIAL_NEW_WRAPPERS
+
+    const wasm::MemoryAccessDesc& access() const { return access_; }
 
     MDefinition* base() const { return getOperand(0); }
     MDefinition* oldValue() const { return getOperand(1); }
@@ -13716,13 +13690,14 @@ class MAsmJSCompareExchangeHeap
 
 class MAsmJSAtomicExchangeHeap
   : public MTernaryInstruction,
-    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSAtomicExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
+    wasm::MemoryAccessDesc access_;
+
+    MAsmJSAtomicExchangeHeap(MDefinition* base, const wasm::MemoryAccessDesc& access,
                              MDefinition* value, MDefinition* tls)
         : MTernaryInstruction(base, value, tls),
-          MWasmMemoryAccess(access)
+          access_(access)
     {
         setGuard();             // Not removable
         setResultType(MIRType::Int32);
@@ -13731,6 +13706,8 @@ class MAsmJSAtomicExchangeHeap
   public:
     INSTRUCTION_HEADER(AsmJSAtomicExchangeHeap)
     TRIVIAL_NEW_WRAPPERS
+
+    const wasm::MemoryAccessDesc& access() const { return access_; }
 
     MDefinition* base() const { return getOperand(0); }
     MDefinition* value() const { return getOperand(1); }
@@ -13743,16 +13720,16 @@ class MAsmJSAtomicExchangeHeap
 
 class MAsmJSAtomicBinopHeap
   : public MTernaryInstruction,
-    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
     AtomicOp op_;
+    wasm::MemoryAccessDesc access_;
 
-    MAsmJSAtomicBinopHeap(AtomicOp op, MDefinition* base, const MWasmMemoryAccess& access,
+    MAsmJSAtomicBinopHeap(AtomicOp op, MDefinition* base, const wasm::MemoryAccessDesc& access,
                           MDefinition* v, MDefinition* tls)
         : MTernaryInstruction(base, v, tls),
-          MWasmMemoryAccess(access),
-          op_(op)
+          op_(op),
+          access_(access)
     {
         setGuard();         // Not removable
         setResultType(MIRType::Int32);
@@ -13763,6 +13740,8 @@ class MAsmJSAtomicBinopHeap
     TRIVIAL_NEW_WRAPPERS
 
     AtomicOp operation() const { return op_; }
+    const wasm::MemoryAccessDesc& access() const { return access_; }
+
     MDefinition* base() const { return getOperand(0); }
     MDefinition* value() const { return getOperand(1); }
     MDefinition* tls() const { return getOperand(2); }

@@ -2047,6 +2047,20 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
     MOZ_CRASH("NYI");
 }
 
+void
+MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
+{
+    // On ARMv6 the optional argument (BarrierST, etc) is ignored.
+    if (barrier == (MembarStoreStore|MembarSynchronizing))
+        ma_dsb(BarrierST);
+    else if (barrier & MembarSynchronizing)
+        ma_dsb();
+    else if (barrier == MembarStoreStore)
+        ma_dmb(BarrierST);
+    else if (barrier)
+        ma_dmb();
+}
+
 // ===============================================================
 // Clamping functions.
 

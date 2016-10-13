@@ -2363,11 +2363,11 @@ CodeGeneratorARM::emitWasmLoad(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
-    uint32_t offset = mir->offset();
+    uint32_t offset = mir->access().offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
-    Scalar::Type type = mir->accessType();
+    Scalar::Type type = mir->access().type();
 
     // Maybe add the offset.
     if (offset || type == Scalar::Int64) {
@@ -2382,9 +2382,9 @@ CodeGeneratorARM::emitWasmLoad(T* lir)
 
     bool isSigned = type == Scalar::Int8 || type == Scalar::Int16 || type == Scalar::Int32 ||
                     type == Scalar::Int64;
-    unsigned byteSize = mir->byteSize();
+    unsigned byteSize = mir->access().byteSize();
 
-    memoryBarrier(mir->barrierBefore());
+    masm.memoryBarrier(mir->access().barrierBefore());
 
     if (mir->type() == MIRType::Int64) {
         Register64 output = ToOutRegister64(lir);
@@ -2413,7 +2413,7 @@ CodeGeneratorARM::emitWasmLoad(T* lir)
         }
     }
 
-    memoryBarrier(mir->barrierAfter());
+    masm.memoryBarrier(mir->access().barrierAfter());
 }
 
 void
@@ -2434,7 +2434,7 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
-    uint32_t offset = mir->offset();
+    uint32_t offset = mir->access().offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptrCopy());
@@ -2446,8 +2446,8 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
     // Add HeapReg to ptr, so we can use base+index addressing in the byte loads.
     masm.ma_add(HeapReg, ptr);
 
-    unsigned byteSize = mir->byteSize();
-    Scalar::Type type = mir->accessType();
+    unsigned byteSize = mir->access().byteSize();
+    Scalar::Type type = mir->access().type();
     bool isSigned = type == Scalar::Int8 || type == Scalar::Int16 || type == Scalar::Int32 ||
                     type == Scalar::Int64;
 
@@ -2466,7 +2466,7 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
     MOZ_ASSERT(low != tmp);
     MOZ_ASSERT(low != ptr);
 
-    memoryBarrier(mir->barrierBefore());
+    masm.memoryBarrier(mir->access().barrierBefore());
 
     masm.emitUnalignedLoad(isSigned, Min(byteSize, 4u), ptr, tmp, low);
 
@@ -2497,7 +2497,7 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
         }
     }
 
-    memoryBarrier(mir->barrierAfter());
+    masm.memoryBarrier(mir->access().barrierAfter());
 }
 
 void
@@ -2530,12 +2530,12 @@ CodeGeneratorARM::emitWasmStore(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
-    uint32_t offset = mir->offset();
+    uint32_t offset = mir->access().offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
-    unsigned byteSize = mir->byteSize();
-    Scalar::Type type = mir->accessType();
+    unsigned byteSize = mir->access().byteSize();
+    Scalar::Type type = mir->access().type();
 
     // Maybe add the offset.
     if (offset || type == Scalar::Int64) {
@@ -2548,7 +2548,7 @@ CodeGeneratorARM::emitWasmStore(T* lir)
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
-    memoryBarrier(mir->barrierBefore());
+    masm.memoryBarrier(mir->access().barrierBefore());
 
     if (type == Scalar::Int64) {
         MOZ_ASSERT(INT64LOW_OFFSET == 0);
@@ -2572,7 +2572,7 @@ CodeGeneratorARM::emitWasmStore(T* lir)
         }
     }
 
-    memoryBarrier(mir->barrierAfter());
+    masm.memoryBarrier(mir->access().barrierAfter());
 }
 
 void
@@ -2593,7 +2593,7 @@ CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
-    uint32_t offset = mir->offset();
+    uint32_t offset = mir->access().offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptrCopy());
@@ -2607,7 +2607,7 @@ CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
 
     MIRType mirType = mir->value()->type();
 
-    memoryBarrier(mir->barrierAfter());
+    masm.memoryBarrier(mir->access().barrierAfter());
 
     Register val = ToRegister(lir->valueHelper());
     if (IsFloatingPointType(mirType)) {
@@ -2618,7 +2618,7 @@ CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
             masm.ma_mov(input.low, val);
     }
 
-    unsigned byteSize = mir->byteSize();
+    unsigned byteSize = mir->access().byteSize();
     masm.emitUnalignedStore(Min(byteSize, 4u), ptr, val);
 
     if (byteSize > 4) {
@@ -2636,7 +2636,7 @@ CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
         masm.emitUnalignedStore(4, ptr, val, /* offset */ 4);
     }
 
-    memoryBarrier(mir->barrierBefore());
+    masm.memoryBarrier(mir->access().barrierBefore());
 }
 
 void
@@ -2720,9 +2720,9 @@ void
 CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 {
     MAsmJSCompareExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
-    Scalar::Type vt = mir->accessType();
+    Scalar::Type vt = mir->access().type();
     const LAllocation* ptr = ins->ptr();
     Register ptrReg = ToRegister(ptr);
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
@@ -2740,7 +2740,7 @@ void
 CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout* ins)
 {
     const MAsmJSCompareExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());
     Register oldval = ToRegister(ins->oldval());
@@ -2752,7 +2752,7 @@ CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout*
     MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
 
     masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
-    masm.ma_mov(Imm32(mir->accessType()), viewType);
+    masm.ma_mov(Imm32(mir->access().type()), viewType);
 
     masm.setupAlignedABICall();
     masm.passABIArg(instance);
@@ -2767,9 +2767,9 @@ void
 CodeGeneratorARM::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
 {
     MAsmJSAtomicExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
-    Scalar::Type vt = mir->accessType();
+    Scalar::Type vt = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
@@ -2783,7 +2783,7 @@ void
 CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* ins)
 {
     const MAsmJSAtomicExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
@@ -2794,7 +2794,7 @@ CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* i
     MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
 
     masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
-    masm.ma_mov(Imm32(mir->accessType()), viewType);
+    masm.ma_mov(Imm32(mir->access().type()), viewType);
 
     masm.setupAlignedABICall();
     masm.passABIArg(instance);
@@ -2808,10 +2808,10 @@ void
 CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
     MOZ_ASSERT(mir->hasUses());
 
-    Scalar::Type vt = mir->accessType();
+    Scalar::Type vt = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register flagTemp = ToRegister(ins->flagTemp());
     const LAllocation* value = ins->value();
@@ -2835,10 +2835,10 @@ void
 CodeGeneratorARM::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
     MOZ_ASSERT(!mir->hasUses());
 
-    Scalar::Type vt = mir->accessType();
+    Scalar::Type vt = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register flagTemp = ToRegister(ins->flagTemp());
     const LAllocation* value = ins->value();
@@ -2857,7 +2857,7 @@ void
 CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
 {
     const MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
@@ -2866,7 +2866,7 @@ CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
     Register viewType = ToRegister(ins->getTemp(1));
 
     masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
-    masm.move32(Imm32(mir->accessType()), viewType);
+    masm.move32(Imm32(mir->access().type()), viewType);
 
     masm.setupAlignedABICall();
     masm.passABIArg(instance);
@@ -3149,23 +3149,9 @@ CodeGeneratorARM::visitNegF(LNegF* ins)
 }
 
 void
-CodeGeneratorARM::memoryBarrier(MemoryBarrierBits barrier)
-{
-    // On ARMv6 the optional argument (BarrierST, etc) is ignored.
-    if (barrier == (MembarStoreStore|MembarSynchronizing))
-        masm.ma_dsb(masm.BarrierST);
-    else if (barrier & MembarSynchronizing)
-        masm.ma_dsb();
-    else if (barrier == MembarStoreStore)
-        masm.ma_dmb(masm.BarrierST);
-    else if (barrier)
-        masm.ma_dmb();
-}
-
-void
 CodeGeneratorARM::visitMemoryBarrier(LMemoryBarrier* ins)
 {
-    memoryBarrier(ins->type());
+    masm.memoryBarrier(ins->type());
 }
 
 void

@@ -3020,8 +3020,8 @@ class BaseCompiler
     // Return true only for real asm.js (HEAP[i>>2]|0) accesses which have the
     // peculiar property of not throwing on out-of-bounds. Everything else
     // (wasm, SIMD.js, Atomics) throws on out-of-bounds.
-    bool isAsmJSAccess(const MWasmMemoryAccess& access) {
-        return isCompilingAsmJS() && !access.isSimdAccess() && !access.isAtomicAccess();
+    bool isAsmJSAccess(const MemoryAccessDesc& access) {
+        return isCompilingAsmJS() && !access.isSimd() && !access.isAtomic();
     }
 
 #ifndef WASM_HUGE_MEMORY
@@ -3074,7 +3074,7 @@ class BaseCompiler
 #endif
 
   private:
-    void checkOffset(MWasmMemoryAccess* access, RegI32 ptr) {
+    void checkOffset(MemoryAccessDesc* access, RegI32 ptr) {
         if (access->offset() >= OffsetGuardLimit) {
             masm.branchAdd32(Assembler::CarrySet,
                              Imm32(access->offset()), ptr.reg,
@@ -3085,13 +3085,13 @@ class BaseCompiler
 
   public:
     MOZ_MUST_USE
-    bool load(MWasmMemoryAccess access, RegI32 ptr, AnyReg dest) {
+    bool load(MemoryAccessDesc access, RegI32 ptr, AnyReg dest) {
         checkOffset(&access, ptr);
 
         OutOfLineCode* ool = nullptr;
 #ifndef WASM_HUGE_MEMORY
         if (isAsmJSAccess(access)) {
-            ool = new (alloc_) AsmJSLoadOOB(access.accessType(), dest.any());
+            ool = new (alloc_) AsmJSLoadOOB(access.type(), dest.any());
             if (!addOutOfLineCode(ool))
                 return false;
 
@@ -3106,9 +3106,9 @@ class BaseCompiler
 
         uint32_t before = masm.size();
         if (dest.tag == AnyReg::I64)
-            masm.wasmLoadI64(access.accessType(), srcAddr, dest.i64().reg);
+            masm.wasmLoadI64(access, srcAddr, dest.i64().reg);
         else
-            masm.wasmLoad(access.accessType(), 0, srcAddr, dest.any());
+            masm.wasmLoad(access, srcAddr, dest.any());
 
         if (isAsmJSAccess(access))
             masm.append(MemoryAccess(before));
@@ -3116,12 +3116,12 @@ class BaseCompiler
         Operand srcAddr(ptr.reg, access.offset());
 
         if (dest.tag == AnyReg::I64) {
-            masm.wasmLoadI64(access.accessType(), srcAddr, dest.i64().reg);
+            masm.wasmLoadI64(access, srcAddr, dest.i64().reg);
         } else {
             bool byteRegConflict = access.byteSize() == 1 && !singleByteRegs_.has(dest.i32().reg);
             AnyRegister out = byteRegConflict ? AnyRegister(ScratchRegX86) : dest.any();
 
-            masm.wasmLoad(access.accessType(), 0, srcAddr, out);
+            masm.wasmLoad(access, srcAddr, out);
 
             if (byteRegConflict)
                 masm.mov(ScratchRegX86, dest.i32().reg);
@@ -3136,7 +3136,7 @@ class BaseCompiler
     }
 
     MOZ_MUST_USE
-    bool store(MWasmMemoryAccess access, RegI32 ptr, AnyReg src) {
+    bool store(MemoryAccessDesc access, RegI32 ptr, AnyReg src) {
         checkOffset(&access, ptr);
 
         Label rejoin;
@@ -3152,15 +3152,15 @@ class BaseCompiler
         Operand dstAddr(HeapReg, ptr.reg, TimesOne, access.offset());
 
         uint32_t before = masm.size();
-        masm.wasmStore(access.accessType(), 0, src.any(), dstAddr);
+        masm.wasmStore(access, src.any(), dstAddr);
 
         if (isCompilingAsmJS())
             masm.append(MemoryAccess(before));
 # elif defined(JS_CODEGEN_X86)
         Operand dstAddr(ptr.reg, access.offset());
 
-        if (access.accessType() == Scalar::Int64) {
-            masm.wasmStoreI64(src.i64().reg, dstAddr);
+        if (access.type() == Scalar::Int64) {
+            masm.wasmStoreI64(access, src.i64().reg, dstAddr);
         } else {
             AnyRegister value;
             if (src.tag == AnyReg::I64) {
@@ -3172,7 +3172,7 @@ class BaseCompiler
                 value = src.any();
             }
 
-            masm.wasmStore(access.accessType(), 0, value, dstAddr);
+            masm.wasmStore(access, value, dstAddr);
         }
 # else
         MOZ_CRASH("Compiler bug: unexpected platform");
@@ -5795,7 +5795,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MWasmMemoryAccess access(viewType, addr.align, addr.offset);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset);
 
     switch (type) {
       case ValType::I32: {
@@ -5861,7 +5861,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MWasmMemoryAccess access(viewType, addr.align, addr.offset);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset);
 
     switch (resultType) {
       case ValType::I32: {
@@ -5921,7 +5921,7 @@ BaseCompiler::emitTeeStore(ValType resultType, Scalar::Type viewType)
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MWasmMemoryAccess access(viewType, addr.align, addr.offset);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset);
 
     switch (resultType) {
       case ValType::I32: {
@@ -6204,7 +6204,7 @@ BaseCompiler::emitTeeStoreWithCoercion(ValType resultType, Scalar::Type viewType
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MWasmMemoryAccess access(viewType, addr.align, addr.offset);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset);
 
     if (resultType == ValType::F32 && viewType == Scalar::Float64) {
         RegF32 rv = popF32();

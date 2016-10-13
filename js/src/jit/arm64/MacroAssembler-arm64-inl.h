@@ -1528,6 +1528,12 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
     MOZ_CRASH("NYI");
 }
 
+void
+MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
+{
+    MOZ_CRASH("NYI");
+}
+
 // ===============================================================
 // Clamping functions.
 

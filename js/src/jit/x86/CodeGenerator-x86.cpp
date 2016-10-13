@@ -342,34 +342,25 @@ CodeGeneratorX86::visitWasmCallI64(LWasmCallI64* ins)
     emitWasmCall(ins);
 }
 
-void
-CodeGeneratorX86::memoryBarrier(MemoryBarrierBits barrier)
-{
-    if (barrier & MembarStoreLoad)
-        masm.storeLoadFence();
-}
-
 template <typename T>
 void
 CodeGeneratorX86::emitWasmLoad(T* ins)
 {
     const MWasmLoad* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() < wasm::OffsetGuardLimit);
+
+    uint32_t offset = mir->access().offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     const LAllocation* ptr = ins->ptr();
 
     Operand srcAddr = ptr->isBogus()
-                      ? Operand(PatchedAbsoluteAddress(mir->offset()))
-                      : Operand(ToRegister(ptr), mir->offset());
-
-    memoryBarrier(mir->barrierBefore());
+                      ? Operand(PatchedAbsoluteAddress(offset))
+                      : Operand(ToRegister(ptr), offset);
 
     if (mir->type() == MIRType::Int64)
-        masm.wasmLoadI64(mir->accessType(), srcAddr, ToOutRegister64(ins));
+        masm.wasmLoadI64(mir->access(), srcAddr, ToOutRegister64(ins));
     else
-        masm.wasmLoad(mir->accessType(), mir->numSimdElems(), srcAddr, ToAnyRegister(ins->output()));
-
-    memoryBarrier(mir->barrierAfter());
+        masm.wasmLoad(mir->access(), srcAddr, ToAnyRegister(ins->output()));
 }
 
 void
@@ -389,24 +380,22 @@ void
 CodeGeneratorX86::emitWasmStore(T* ins)
 {
     const MWasmStore* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() < wasm::OffsetGuardLimit);
+
+    uint32_t offset = mir->access().offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     const LAllocation* ptr = ins->ptr();
     Operand dstAddr = ptr->isBogus()
-                      ? Operand(PatchedAbsoluteAddress(mir->offset()))
-                      : Operand(ToRegister(ptr), mir->offset());
+                      ? Operand(PatchedAbsoluteAddress(offset))
+                      : Operand(ToRegister(ptr), offset);
 
-    memoryBarrier(mir->barrierBefore());
-
-    if (mir->accessType() == Scalar::Int64) {
+    if (mir->access().type() == Scalar::Int64) {
         Register64 value = ToRegister64(ins->getInt64Operand(LWasmStoreI64::ValueIndex));
-        masm.wasmStoreI64(value, dstAddr);
+        masm.wasmStoreI64(mir->access(), value, dstAddr);
     } else {
         AnyRegister value = ToAnyRegister(ins->getOperand(LWasmStore::ValueIndex));
-        masm.wasmStore(mir->accessType(), mir->numSimdElems(), value, dstAddr);
+        masm.wasmStore(mir->access(), value, dstAddr);
     }
-
-    memoryBarrier(mir->barrierBefore());
 }
 
 void
@@ -425,7 +414,7 @@ void
 CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 {
     const MAsmJSLoadHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
     const LAllocation* ptr = ins->ptr();
     AnyRegister out = ToAnyRegister(ins->output());
@@ -445,7 +434,7 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
                       ? Operand(PatchedAbsoluteAddress())
                       : Operand(ToRegister(ptr), 0);
 
-    masm.wasmLoad(accessType, 0, srcAddr, out);
+    masm.wasmLoad(mir->access(), srcAddr, out);
 
     if (ool)
         masm.bind(ool->rejoin());
@@ -521,7 +510,7 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     if (mir->needsBoundsCheck())
         masm.wasmBoundsCheck(Assembler::AboveOrEqual, ToRegister(ptr), &rejoin);
 
-    masm.wasmStore(accessType, 0, ToAnyRegister(value), dstAddr);
+    masm.wasmStore(mir->access(), ToAnyRegister(value), dstAddr);
 
     if (rejoin.used())
         masm.bind(&rejoin);
@@ -545,9 +534,9 @@ void
 CodeGeneratorX86::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 {
     MAsmJSCompareExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register oldval = ToRegister(ins->oldValue());
     Register newval = ToRegister(ins->newValue());
@@ -568,9 +557,9 @@ void
 CodeGeneratorX86::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
 {
     MAsmJSAtomicExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     Register addrTemp = ToRegister(ins->addrTemp());
@@ -589,9 +578,9 @@ void
 CodeGeneratorX86::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register temp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
     Register addrTemp = ToRegister(ins->addrTemp());
@@ -622,10 +611,10 @@ void
 CodeGeneratorX86::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
     MOZ_ASSERT(!mir->hasUses());
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register addrTemp = ToRegister(ins->addrTemp());
     const LAllocation* value = ins->value();

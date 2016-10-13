@@ -460,7 +460,7 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
     const MWasmLoad* mir = lir->mir();
     Register64 output = ToOutRegister64(lir);
 
-    uint32_t offset = mir->offset();
+    uint32_t offset = mir->access().offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
@@ -473,9 +473,9 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
-    unsigned byteSize = mir->byteSize();
+    unsigned byteSize = mir->access().byteSize();
     bool isSigned;
-    switch (mir->accessType()) {
+    switch (mir->access().type()) {
         case Scalar::Int8:   isSigned = true; break;
         case Scalar::Uint8:  isSigned = false; break;
         case Scalar::Int16:  isSigned = true; break;
@@ -486,10 +486,10 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
         default: MOZ_CRASH("unexpected array type");
     }
 
-    memoryBarrier(mir->barrierBefore());
+    masm.memoryBarrier(mir->access().barrierBefore());
 
     MOZ_ASSERT(INT64LOW_OFFSET == 0);
-    if (mir->isUnaligned()) {
+    if (mir->access().isUnaligned()) {
         Register temp = ToRegister(lir->getTemp(1));
 
         if (byteSize <= 4) {
@@ -525,7 +525,7 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
         masm.ma_load(output.high, BaseIndex(HeapReg, scratch, TimesOne), SizeWord);
     }
 
-    memoryBarrier(mir->barrierAfter());
+    masm.memoryBarrier(mir->access().barrierAfter());
 }
 
 void
@@ -547,7 +547,7 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
     const MWasmStore* mir = lir->mir();
     Register64 value = ToRegister64(lir->getInt64Operand(lir->ValueIndex));
 
-    uint32_t offset = mir->offset();
+    uint32_t offset = mir->access().offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
@@ -560,9 +560,9 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
-    unsigned byteSize = mir->byteSize();
+    unsigned byteSize = mir->access().byteSize();
     bool isSigned;
-    switch (mir->accessType()) {
+    switch (mir->access().type()) {
         case Scalar::Int8:   isSigned = true; break;
         case Scalar::Uint8:  isSigned = false; break;
         case Scalar::Int16:  isSigned = true; break;
@@ -573,10 +573,10 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
         default: MOZ_CRASH("unexpected array type");
     }
 
-    memoryBarrier(mir->barrierBefore());
+    masm.memoryBarrier(mir->access().barrierBefore());
 
     MOZ_ASSERT(INT64LOW_OFFSET == 0);
-    if (mir->isUnaligned()) {
+    if (mir->access().isUnaligned()) {
         Register temp = ToRegister(lir->getTemp(1));
 
         if (byteSize <= 4) {
@@ -604,7 +604,7 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
         masm.ma_store(value.high, BaseIndex(HeapReg, scratch, TimesOne), SizeWord);
     }
 
-    memoryBarrier(mir->barrierAfter());
+    masm.memoryBarrier(mir->access().barrierAfter());
 }
 
 void

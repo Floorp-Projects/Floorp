@@ -91,8 +91,6 @@ MacroAssemblerMIPS64Compat::convertInt64ToFloat32(Register src, FloatRegister de
 void
 MacroAssemblerMIPS64Compat::convertUInt64ToDouble(Register src, FloatRegister dest)
 {
-    MOZ_ASSERT(temp == Register::Invalid());
-
     Label positive, done;
     ma_b(src, src, &positive, NotSigned, ShortJump);
 
