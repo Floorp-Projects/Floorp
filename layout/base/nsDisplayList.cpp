@@ -6789,8 +6789,8 @@ nsDisplaySVGEffects::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                                const nsDisplayItemGeometry* aGeometry,
                                                nsRegion* aInvalidRegion)
 {
-  const nsDisplaySVGEffectsGeometry* geometry =
-    static_cast<const nsDisplaySVGEffectsGeometry*>(aGeometry);
+  const nsDisplayMaskGeometry* geometry =
+    static_cast<const nsDisplayMaskGeometry*>(aGeometry);
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
   if (geometry->mFrameOffsetToReferenceFrame != ToReferenceFrame() ||
@@ -7076,7 +7076,7 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
 
   context->PopClip();
 
-  nsDisplaySVGEffectsGeometry::UpdateDrawResult(this, result);
+  nsDisplayMaskGeometry::UpdateDrawResult(this, result);
 }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -7233,7 +7233,7 @@ nsDisplayFilter::PaintAsLayer(nsDisplayListBuilder* aBuilder,
   image::DrawResult result =
     nsSVGIntegrationUtils::PaintFilter(params);
 
-  nsDisplaySVGEffectsGeometry::UpdateDrawResult(this, result);
+  nsDisplayMaskGeometry::UpdateDrawResult(this, result);
 }
 
 #ifdef MOZ_DUMP_PAINTING
