@@ -26,7 +26,6 @@ XPIDL_SOURCES += [
 
 if CONFIG['NS_PRINTING']:
     XPIDL_SOURCES += [
-        'nsIPrintingPrompt.idl',
         'nsIPrintingPromptService.idl',
         'nsIWebBrowserPrint.idl',
     ]

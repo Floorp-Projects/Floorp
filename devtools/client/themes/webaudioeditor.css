@@ -20,31 +20,28 @@
 svg {
   overflow: hidden;
   -moz-box-flex: 1;
+  --arrow-color: var(--theme-splitter-color);
+  --text-color: var(--theme-body-color-alt);
+}
+
+.theme-dark svg {
+  --arrow-color: var(--theme-body-color-alt);
 }
 
 /* Edges in graph */
 .edgePath path {
   stroke-width: 1px;
-  fill: none;
+  stroke: var(--arrow-color);
 }
-
-.theme-dark .edgePath path {
-  stroke: var(--theme-body-color-alt);
-}
-.theme-light .edgePath path {
-  stroke: var(--theme-splitter-color);
+svg #arrowhead {
+  /* !important is needed to override inline style */
+  fill: var(--arrow-color) !important;
 }
 
 /* AudioParam connection edges */
-g.edgePath.param-connection {
+g.edgePath.param-connection path {
   stroke-dasharray: 5,5;
-}
-
-.theme-dark .edgePath.param-connection path {
-  stroke: var(--theme-body-color-alt);
-}
-.theme-light .edgePath.param-connection path {
-  stroke: var(--theme-splitter-color);
+  stroke: var(--arrow-colo);
 }
 
 /* Labels in AudioParam connection should have background that match
@@ -54,14 +51,14 @@ g.edgeLabel rect {
   fill: var(--theme-body-background);
 }
 g.edgeLabel tspan {
-  fill: var(--theme-body-color-alt);
+  fill: var(--text-color);
 }
 
 /* Audio Nodes */
 .nodes rect {
   stroke-width: 1px;
   cursor: pointer;
-  stroke: var(--theme-tab-toolbar-background);
+  stroke: var(--theme-splitter-color);
   fill: var(--theme-toolbar-background);
 }
 
@@ -72,18 +69,18 @@ g.edgeLabel tspan {
 .theme-light .nodes g.bypassed rect {
   fill: url(chrome://devtools/skin/images/filters.svg#bypass-light);
 }
+
 .theme-dark .nodes g.bypassed rect {
   fill: url(chrome://devtools/skin/images/filters.svg#bypass-dark);
 }
+
 .nodes g.bypassed.selected rect {
   stroke: var(--theme-selection-background);
 }
 
-/*
 .nodes g.bypassed text {
-  opacity: 0.8;
+  opacity: 0.6;
 }
-*/
 
 /**
  * Selected Nodes
@@ -92,24 +89,20 @@ g.edgeLabel tspan {
   fill: var(--theme-selection-background);
 }
 
-/* Don't style bypassed nodes text different because it'd be illegible in light-theme */
-.theme-light g.selected:not(.bypassed) text {
-  fill: var(--theme-toolbar-background);
+/* Don't style bypassed nodes text differently because it'd be illegible in light-theme */
+g.selected:not(.bypassed) text {
+  fill: var(--theme-selection-color);
 }
 
 
 /* Text in nodes and edges */
 text {
   cursor: default; /* override the "text" cursor */
-  font-weight: 300;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
-  font-size: 14px;
+  fill: var(--text-color);
+  font-size: 1.25em;
+  /* Make sure text stays inside its container in RTL locales */
+  direction: ltr;
 }
-
-text {
-  fill: var(--theme-body-color-alt);
-}
-
 
 .nodes text {
   cursor: pointer;

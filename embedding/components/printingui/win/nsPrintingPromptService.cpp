@@ -142,7 +142,7 @@ nsPrintingPromptService::GetHWNDForDOMWindow(mozIDOMWindowProxy *aWindow)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIPrintingPrompt
+// nsIPrintingPromptService
 
 //-----------------------------------------------------------
 NS_IMETHODIMP 

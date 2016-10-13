@@ -2275,7 +2275,7 @@ CacheStorageService::Flush(nsIObserver* aObserver)
   RefPtr<CacheStorageService::PurgeFromMemoryRunnable> r =
     new CacheStorageService::PurgeFromMemoryRunnable(this, CacheEntry::PURGE_WHOLE);
 
-  return thread->Dispatch(r, CacheIOThread::CLOSE);
+  return thread->Dispatch(r, CacheIOThread::WRITE);
 }
 
 } // namespace net

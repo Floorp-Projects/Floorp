@@ -15,6 +15,7 @@
 #include "js/Utility.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/SelfHosting.h"
 
 #include "jsobjinlines.h"
 
@@ -564,73 +565,12 @@ MapObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isNullOrUndefined()) {
-        RootedValue adderVal(cx);
-        if (!GetProperty(cx, obj, obj, cx->names().set, &adderVal))
+        FixedInvokeArgs<1> args2(cx);
+        args2[0].set(args[0]);
+
+        RootedValue thisv(cx, ObjectValue(*obj));
+        if (!CallSelfHostedFunction(cx, cx->names().MapConstructorInit, thisv, args2, args2.rval()))
             return false;
-
-        if (!IsCallable(adderVal))
-            return ReportIsNotFunction(cx, adderVal);
-
-        bool isOriginalAdder = IsNativeFunction(adderVal, MapObject::set);
-        RootedValue mapVal(cx, ObjectValue(*obj));
-        FastCallGuard fig(cx, adderVal);
-        InvokeArgs& args2 = fig.args();
-
-        ForOfIterator iter(cx);
-        if (!iter.init(args[0]))
-            return false;
-
-        RootedValue pairVal(cx);
-        RootedObject pairObj(cx);
-        RootedValue dummy(cx);
-        Rooted<HashableValue> hkey(cx);
-        ValueMap* map = obj->getData();
-        while (true) {
-            bool done;
-            if (!iter.next(&pairVal, &done))
-                return false;
-            if (done)
-                break;
-            if (!pairVal.isObject()) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_MAP_ITERABLE,
-                                          "Map");
-                return false;
-            }
-
-            pairObj = &pairVal.toObject();
-            if (!pairObj)
-                return false;
-
-            RootedValue key(cx);
-            if (!GetElement(cx, pairObj, pairObj, 0, &key))
-                return false;
-
-            RootedValue val(cx);
-            if (!GetElement(cx, pairObj, pairObj, 1, &val))
-                return false;
-
-            if (isOriginalAdder) {
-                if (!hkey.setValue(cx, key))
-                    return false;
-
-                HeapPtr<Value> rval(val);
-                if (!WriteBarrierPost(cx->runtime(), obj, key) ||
-                    !map->put(hkey, rval))
-                {
-                    ReportOutOfMemory(cx);
-                    return false;
-                }
-            } else {
-                if (!args2.init(2))
-                    return false;
-
-                args2[0].set(key);
-                args2[1].set(val);
-
-                if (!fig.call(cx, adderVal, mapVal, &dummy))
-                    return false;
-            }
-        }
     }
 
     args.rval().setObject(*obj);
@@ -1213,6 +1153,12 @@ SetObject::finalize(FreeOp* fop, JSObject* obj)
 }
 
 bool
+SetObject::isBuiltinAdd(HandleValue add, JSContext* cx)
+{
+    return IsNativeFunction(add, SetObject::add);
+}
+
+bool
 SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1230,33 +1176,20 @@ SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isNullOrUndefined()) {
-        RootedValue adderVal(cx);
-        if (!GetProperty(cx, obj, obj, cx->names().add, &adderVal))
+        RootedValue iterable(cx, args[0]);
+        bool optimized = false;
+        if (!IsOptimizableInitForSet<GlobalObject::getOrCreateSetPrototype, isBuiltinAdd>(cx, obj, iterable, &optimized))
             return false;
 
-        if (!IsCallable(adderVal))
-            return ReportIsNotFunction(cx, adderVal);
+        if (optimized) {
+            RootedValue keyVal(cx);
+            Rooted<HashableValue> key(cx);
+            ValueSet* set = obj->getData();
+            ArrayObject* array = &iterable.toObject().as<ArrayObject>();
+            for (uint32_t index = 0; index < array->getDenseInitializedLength(); ++index) {
+                keyVal.set(array->getDenseElement(index));
+                MOZ_ASSERT(!keyVal.isMagic(JS_ELEMENTS_HOLE));
 
-        bool isOriginalAdder = IsNativeFunction(adderVal, SetObject::add);
-        RootedValue setVal(cx, ObjectValue(*obj));
-        FastCallGuard fig(cx, adderVal);
-        InvokeArgs& args2 = fig.args();
-
-        RootedValue keyVal(cx);
-        ForOfIterator iter(cx);
-        if (!iter.init(args[0]))
-            return false;
-        Rooted<HashableValue> key(cx);
-        RootedValue dummy(cx);
-        ValueSet* set = obj->getData();
-        while (true) {
-            bool done;
-            if (!iter.next(&keyVal, &done))
-                return false;
-            if (done)
-                break;
-
-            if (isOriginalAdder) {
                 if (!key.setValue(cx, keyVal))
                     return false;
                 if (!WriteBarrierPost(cx->runtime(), obj, keyVal) ||
@@ -1265,15 +1198,14 @@ SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
                     ReportOutOfMemory(cx);
                     return false;
                 }
-            } else {
-                if (!args2.init(1))
-                    return false;
-
-                args2[0].set(keyVal);
-
-                if (!fig.call(cx, adderVal, setVal, &dummy))
-                    return false;
             }
+        } else {
+            FixedInvokeArgs<1> args2(cx);
+            args2[0].set(args[0]);
+
+            RootedValue thisv(cx, ObjectValue(*obj));
+            if (!CallSelfHostedFunction(cx, cx->names().SetConstructorInit, thisv, args2, args2.rval()))
+                return false;
         }
     }
 
