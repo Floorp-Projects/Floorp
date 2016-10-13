@@ -492,19 +492,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     CodeOffset callWithPatch() PER_SHARED_ARCH;
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) PER_SHARED_ARCH;
 
-    // Thunks provide the ability to jump to any uint32_t offset from any other
-    // uint32_t offset without using a constant pool (thus returning a simple
-    // CodeOffset instead of a CodeOffsetJump).
-    CodeOffset thunkWithPatch() PER_SHARED_ARCH;
-    void patchThunk(uint32_t thunkOffset, uint32_t targetOffset) PER_SHARED_ARCH;
-    static void repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset) PER_SHARED_ARCH;
-
-    // Emit a nop that can be patched to and from a nop and a jump with an int8
-    // relative displacement.
-    CodeOffset nopPatchableToNearJump() PER_SHARED_ARCH;
-    static void patchNopToNearJump(uint8_t* jump, uint8_t* target) PER_SHARED_ARCH;
-    static void patchNearJumpToNop(uint8_t* jump) PER_SHARED_ARCH;
-
     // Push the return address and make a call. On platforms where this function
     // is not defined, push the link register (pushReturnAddress) at the entry
     // point of the callee.
@@ -513,6 +500,23 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void pushReturnAddress() DEFINED_ON(mips_shared, arm, arm64);
     void popReturnAddress() DEFINED_ON(mips_shared, arm, arm64);
+
+  public:
+    // ===============================================================
+    // Patchable near/far jumps.
+
+    // "Far jumps" provide the ability to jump to any uint32_t offset from any
+    // other uint32_t offset without using a constant pool (thus returning a
+    // simple CodeOffset instead of a CodeOffsetJump).
+    CodeOffset farJumpWithPatch() PER_SHARED_ARCH;
+    void patchFarJump(CodeOffset farJump, uint32_t targetOffset) PER_SHARED_ARCH;
+    static void repatchFarJump(uint8_t* code, uint32_t farJumpOffset, uint32_t targetOffset) PER_SHARED_ARCH;
+
+    // Emit a nop that can be patched to and from a nop and a jump with an int8
+    // relative displacement.
+    CodeOffset nopPatchableToNearJump() PER_SHARED_ARCH;
+    static void patchNopToNearJump(uint8_t* jump, uint8_t* target) PER_SHARED_ARCH;
+    static void patchNearJumpToNop(uint8_t* jump) PER_SHARED_ARCH;
 
   public:
     // ===============================================================

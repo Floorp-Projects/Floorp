@@ -1060,16 +1060,16 @@ class AssemblerX86Shared : public AssemblerShared
         X86Encoding::AutoUnprotectAssemblerBufferRegion unprotect(masm, callerOffset - 4, 4);
         X86Encoding::SetRel32(code + callerOffset, code + calleeOffset);
     }
-    CodeOffset thunkWithPatch() {
+    CodeOffset farJumpWithPatch() {
         return CodeOffset(masm.jmp().offset());
     }
-    void patchThunk(uint32_t thunkOffset, uint32_t targetOffset) {
+    void patchFarJump(CodeOffset farJump, uint32_t targetOffset) {
         unsigned char* code = masm.data();
-        X86Encoding::AutoUnprotectAssemblerBufferRegion unprotect(masm, thunkOffset - 4, 4);
-        X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
+        X86Encoding::AutoUnprotectAssemblerBufferRegion unprotect(masm, farJump.offset() - 4, 4);
+        X86Encoding::SetRel32(code + farJump.offset(), code + targetOffset);
     }
-    static void repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset) {
-        X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
+    static void repatchFarJump(uint8_t* code, uint32_t farJumpOffset, uint32_t targetOffset) {
+        X86Encoding::SetRel32(code + farJumpOffset, code + targetOffset);
     }
 
     CodeOffset twoByteNop() {

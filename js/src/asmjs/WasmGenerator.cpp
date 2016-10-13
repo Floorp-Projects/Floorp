@@ -298,14 +298,14 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
             if (!p) {
                 Offsets offsets;
                 offsets.begin = masm_.currentOffset();
-                uint32_t thunkOffset = masm_.thunkWithPatch().offset();
+                uint32_t jumpOffset = masm_.farJumpWithPatch().offset();
                 offsets.end = masm_.currentOffset();
                 if (masm_.oom())
                     return false;
 
                 if (!metadata_->codeRanges.emplaceBack(CodeRange::CallThunk, offsets))
                     return false;
-                if (!metadata_->callThunks.emplaceBack(thunkOffset, cs.funcDefIndex()))
+                if (!metadata_->callThunks.emplaceBack(jumpOffset, cs.funcDefIndex()))
                     return false;
                 if (!alreadyThunked.add(p, cs.funcDefIndex(), offsets.begin))
                     return false;
@@ -332,14 +332,14 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
 
         Offsets offsets;
         offsets.begin = masm_.currentOffset();
-        uint32_t thunkOffset = masm_.thunkWithPatch().offset();
+        uint32_t jumpOffset = masm_.farJumpWithPatch().offset();
         if (masm_.oom())
             return false;
         offsets.end = masm_.currentOffset();
 
         if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, offsets))
             return false;
-        if (!jumpThunks_[target].append(thunkOffset))
+        if (!jumpThunks_[target].append(jumpOffset))
             return false;
     }
 
@@ -531,12 +531,13 @@ ModuleGenerator::finishCodegen()
     for (CallThunk& callThunk : metadata_->callThunks) {
         uint32_t funcDefIndex = callThunk.u.funcDefIndex;
         callThunk.u.codeRangeIndex = funcDefIndexToCodeRange_[funcDefIndex];
-        masm_.patchThunk(callThunk.offset, funcDefCodeRange(funcDefIndex).funcNonProfilingEntry());
+        CodeOffset farJump(callThunk.offset);
+        masm_.patchFarJump(farJump, funcDefCodeRange(funcDefIndex).funcNonProfilingEntry());
     }
 
     for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit)) {
-        for (uint32_t thunkOffset : jumpThunks_[target])
-            masm_.patchThunk(thunkOffset, jumpTargets[target].begin);
+        for (uint32_t jumpOffset : jumpThunks_[target])
+            masm_.patchFarJump(CodeOffset(jumpOffset), jumpTargets[target].begin);
     }
 
     // Code-generation is complete!

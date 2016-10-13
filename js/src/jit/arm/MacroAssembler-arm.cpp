@@ -5004,7 +5004,7 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 }
 
 CodeOffset
-MacroAssembler::thunkWithPatch()
+MacroAssembler::farJumpWithPatch()
 {
     static_assert(32 * 1024 * 1024 - JumpImmediateRange > wasm::MaxFuncs * 3 * sizeof(Instruction),
                   "always enough space for thunks");
@@ -5027,20 +5027,20 @@ MacroAssembler::thunkWithPatch()
     // Branch by making pc the destination register.
     ma_add(pc, scratch, pc, LeaveCC, Always);
 
-    // Allocate space which will be patched by patchThunk().
-    CodeOffset u32Offset(currentOffset());
+    // Allocate space which will be patched by patchFarJump().
+    CodeOffset farJump(currentOffset());
     writeInst(UINT32_MAX);
 
-    return u32Offset;
+    return farJump;
 }
 
 void
-MacroAssembler::patchThunk(uint32_t u32Offset, uint32_t targetOffset)
+MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset)
 {
-    uint32_t* u32 = reinterpret_cast<uint32_t*>(editSrc(BufferOffset(u32Offset)));
+    uint32_t* u32 = reinterpret_cast<uint32_t*>(editSrc(BufferOffset(farJump.offset())));
     MOZ_ASSERT(*u32 == UINT32_MAX);
 
-    uint32_t addOffset = u32Offset - 4;
+    uint32_t addOffset = farJump.offset() - 4;
     MOZ_ASSERT(editSrc(BufferOffset(addOffset))->is<InstALU>());
 
     // When pc is read as the operand of the add, its value is the address of
@@ -5049,11 +5049,11 @@ MacroAssembler::patchThunk(uint32_t u32Offset, uint32_t targetOffset)
 }
 
 void
-MacroAssembler::repatchThunk(uint8_t* code, uint32_t u32Offset, uint32_t targetOffset)
+MacroAssembler::repatchFarJump(uint8_t* code, uint32_t farJumpOffset, uint32_t targetOffset)
 {
-    uint32_t* u32 = reinterpret_cast<uint32_t*>(code + u32Offset);
+    uint32_t* u32 = reinterpret_cast<uint32_t*>(code + farJumpOffset);
 
-    uint32_t addOffset = u32Offset - 4;
+    uint32_t addOffset = farJumpOffset - 4;
     MOZ_ASSERT(reinterpret_cast<Instruction*>(code + addOffset)->is<InstALU>());
 
     *u32 = (targetOffset - addOffset) - 8;
