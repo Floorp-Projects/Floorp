@@ -8,7 +8,7 @@ import os, sys
 from cStringIO import StringIO
 
 from ipdl.cgen import IPDLCodeGen
-from ipdl.lower import LowerToCxx
+from ipdl.lower import LowerToCxx, msgenums
 from ipdl.parser import Parser
 from ipdl.type import TypeCheck
 
@@ -58,6 +58,9 @@ def gencxx(ipdlfilename, ast, outheadersdir, outcppdir):
 def genipdl(ast, outdir):
     return IPDLCodeGen().cgen(ast)
 
+
+def genmsgenum(ast):
+    return msgenums(ast.protocol, pretty=True)
 
 def writeifmodified(contents, file):
     dir = os.path.dirname(file)
