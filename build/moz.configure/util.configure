@@ -358,7 +358,9 @@ never = dependable(False)
 @template
 @imports('__sandbox__')
 def delayed_getattr(func, key):
-    _, deps = __sandbox__._depends.get(func, (None, ()))
+    deps = __sandbox__._depends.get(func, ())
+    if deps:
+        deps = deps.dependencies
 
     def result(value, _=None):
         # The @depends function we're being passed may have returned
