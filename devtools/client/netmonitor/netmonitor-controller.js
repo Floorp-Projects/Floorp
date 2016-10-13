@@ -3,7 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* globals window, document, NetMonitorView */
+/* globals window, document, NetMonitorView, gStore, Actions */
 /* exported loader */
 "use strict";
 
@@ -298,7 +298,7 @@ var NetMonitorController = {
       request = NetMonitorView.RequestsMenu.getItemForPredicate(predicate);
       if (!request) {
         // Reset filters so that the request is visible.
-        NetMonitorView.RequestsMenu.filterOn("all");
+        gStore.dispatch(Actions.toggleFilter("all"));
         request = NetMonitorView.RequestsMenu.getItemForPredicate(predicate);
       }
 
