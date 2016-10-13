@@ -142,6 +142,13 @@ pref("dom.select_events.enabled", true);
 pref("dom.select_events.enabled", false);
 #endif
 
+// Whether or not selection events on text controls are enabled
+#ifdef NIGHTLY_BUILD
+pref("dom.select_events.textcontrols.enabled", true);
+#else
+pref("dom.select_events.textcontrols.enabled", false);
+#endif
+
 // Whether or not Web Workers are enabled.
 pref("dom.workers.enabled", true);
 
