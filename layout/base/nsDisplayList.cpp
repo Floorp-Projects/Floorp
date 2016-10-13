@@ -7059,7 +7059,14 @@ nsDisplayMask::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   nsRect bounds = GetBounds(aBuilder, &snap);
   if (aBuilder->ShouldSyncDecodeImages() &&
       geometry->ShouldInvalidateToSyncDecodeImages()) {
-    aInvalidRegion->Or(*aInvalidRegion, bounds);
+    const nsStyleSVGReset *svgReset = mFrame->StyleSVGReset();
+    NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, svgReset->mMask) {
+      const nsStyleImage& image = svgReset->mMask.mLayers[i].mImage;
+      if (image.GetType() == eStyleImageType_Image ) {
+        aInvalidRegion->Or(*aInvalidRegion, bounds);
+        break;
+      }
+    }
   }
 }
 
