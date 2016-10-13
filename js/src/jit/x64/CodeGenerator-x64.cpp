@@ -413,20 +413,17 @@ CodeGeneratorX64::visitWasmCallI64(LWasmCallI64* ins)
 }
 
 void
-CodeGeneratorX64::memoryBarrier(MemoryBarrierBits barrier)
-{
-    if (barrier & MembarStoreLoad)
-        masm.storeLoadFence();
-}
-
-void
-CodeGeneratorX64::wasmStore(Scalar::Type type, unsigned numSimdElems, const LAllocation* value,
+CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access, const LAllocation* value,
                             Operand dstAddr)
 {
     if (value->isConstant()) {
+        MOZ_ASSERT(!access.isSimd());
+
+        masm.memoryBarrier(access.barrierBefore());
+
         const MConstant* mir = value->toConstant();
         Imm32 cst = Imm32(mir->type() == MIRType::Int32 ? mir->toInt32() : mir->toInt64());
-        switch (type) {
+        switch (access.type()) {
           case Scalar::Int8:
           case Scalar::Uint8:
             masm.movb(cst, dstAddr);
@@ -450,8 +447,10 @@ CodeGeneratorX64::wasmStore(Scalar::Type type, unsigned numSimdElems, const LAll
           case Scalar::MaxTypedArrayViewType:
             MOZ_CRASH("unexpected array type");
         }
+
+        masm.memoryBarrier(access.barrierAfter());
     } else {
-        masm.wasmStore(type, numSimdElems, ToAnyRegister(value), dstAddr);
+        masm.wasmStore(access, ToAnyRegister(value), dstAddr);
     }
 }
 
@@ -460,21 +459,19 @@ void
 CodeGeneratorX64::emitWasmLoad(T* ins)
 {
     const MWasmLoad* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() < wasm::OffsetGuardLimit);
+
+    uint32_t offset = mir->access().offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     const LAllocation* ptr = ins->ptr();
     Operand srcAddr = ptr->isBogus()
-                      ? Operand(HeapReg, mir->offset())
-                      : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
-
-    memoryBarrier(mir->barrierBefore());
+                      ? Operand(HeapReg, offset)
+                      : Operand(HeapReg, ToRegister(ptr), TimesOne, offset);
 
     if (mir->type() == MIRType::Int64)
-        masm.wasmLoadI64(mir->accessType(), srcAddr, ToOutRegister64(ins));
+        masm.wasmLoadI64(mir->access(), srcAddr, ToOutRegister64(ins));
     else
-        masm.wasmLoad(mir->accessType(), mir->numSimdElems(), srcAddr, ToAnyRegister(ins->output()));
-
-    memoryBarrier(mir->barrierAfter());
+        masm.wasmLoad(mir->access(), srcAddr, ToAnyRegister(ins->output()));
 }
 
 void
@@ -494,17 +491,17 @@ void
 CodeGeneratorX64::emitWasmStore(T* ins)
 {
     const MWasmStore* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() < wasm::OffsetGuardLimit);
+
+    uint32_t offset = mir->access().offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     const LAllocation* value = ins->getOperand(ins->ValueIndex);
     const LAllocation* ptr = ins->ptr();
     Operand dstAddr = ptr->isBogus()
-                      ? Operand(HeapReg, mir->offset())
-                      : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
+                      ? Operand(HeapReg, offset)
+                      : Operand(HeapReg, ToRegister(ptr), TimesOne, offset);
 
-    memoryBarrier(mir->barrierBefore());
-    wasmStore(mir->accessType(), mir->numSimdElems(), value, dstAddr);
-    memoryBarrier(mir->barrierAfter());
+    wasmStore(mir->access(), value, dstAddr);
 }
 
 void
@@ -528,7 +525,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     const LAllocation* ptr = ins->ptr();
     const LDefinition* out = ins->output();
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     MOZ_ASSERT(!Scalar::isSimdType(accessType));
 
     Operand srcAddr = ptr->isBogus()
@@ -536,7 +533,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
                       : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
 
     uint32_t before = masm.size();
-    masm.wasmLoad(accessType, 0, srcAddr, ToAnyRegister(out));
+    masm.wasmLoad(mir->access(), srcAddr, ToAnyRegister(out));
     uint32_t after = masm.size();
 
     verifyLoadDisassembly(before, after, accessType, srcAddr, *out->output());
@@ -552,7 +549,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     const LAllocation* ptr = ins->ptr();
     const LAllocation* value = ins->value();
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     MOZ_ASSERT(!Scalar::isSimdType(accessType));
 
     canonicalizeIfDeterministic(accessType, value);
@@ -562,7 +559,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
                       : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
 
     uint32_t before = masm.size();
-    wasmStore(accessType, 0, value, dstAddr);
+    wasmStore(mir->access(), value, dstAddr);
     uint32_t after = masm.size();
 
     verifyStoreDisassembly(before, after, accessType, dstAddr, *value);
@@ -573,14 +570,14 @@ void
 CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 {
     MAsmJSCompareExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());
     Register oldval = ToRegister(ins->oldValue());
     Register newval = ToRegister(ins->newValue());
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     BaseIndex srcAddr(HeapReg, ptr, TimesOne);
 
     masm.compareExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
@@ -595,13 +592,13 @@ void
 CodeGeneratorX64::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
 {
     MAsmJSAtomicExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     MOZ_ASSERT(accessType <= Scalar::Uint32);
 
     BaseIndex srcAddr(HeapReg, ptr, TimesOne);
@@ -617,7 +614,7 @@ void
 CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
     MOZ_ASSERT(mir->hasUses());
 
     Register ptr = ToRegister(ins->ptr());
@@ -626,7 +623,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
     AnyRegister output = ToAnyRegister(ins->output());
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     if (accessType == Scalar::Uint32)
         accessType = Scalar::Int32;
 
@@ -646,14 +643,14 @@ void
 CodeGeneratorX64::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() == 0);
+    MOZ_ASSERT(mir->access().offset() == 0);
     MOZ_ASSERT(!mir->hasUses());
 
     Register ptr = ToRegister(ins->ptr());
     const LAllocation* value = ins->value();
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
-    Scalar::Type accessType = mir->accessType();
+    Scalar::Type accessType = mir->access().type();
     AtomicOp op = mir->operation();
 
     BaseIndex srcAddr(HeapReg, ptr, TimesOne);

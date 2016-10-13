@@ -558,9 +558,11 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
 // wasm specific methods, used in both the wasm baseline compiler and ion.
 
 void
-MacroAssembler::wasmLoad(Scalar::Type type, unsigned numSimdElems, Operand srcAddr, AnyRegister out)
+MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, AnyRegister out)
 {
-    switch (type) {
+    memoryBarrier(access.barrierBefore());
+
+    switch (access.type()) {
       case Scalar::Int8:
         movsblWithPatch(srcAddr, out.gpr());
         break;
@@ -584,7 +586,7 @@ MacroAssembler::wasmLoad(Scalar::Type type, unsigned numSimdElems, Operand srcAd
         vmovsdWithPatch(srcAddr, out.fpu());
         break;
       case Scalar::Float32x4:
-        switch (numSimdElems) {
+        switch (access.numSimdElems()) {
           // In memory-to-register mode, movss zeroes out the high lanes.
           case 1: vmovssWithPatch(srcAddr, out.fpu()); break;
           // See comment above, which also applies to movsd.
@@ -594,7 +596,7 @@ MacroAssembler::wasmLoad(Scalar::Type type, unsigned numSimdElems, Operand srcAd
         }
         break;
       case Scalar::Int32x4:
-        switch (numSimdElems) {
+        switch (access.numSimdElems()) {
           // In memory-to-register mode, movd zeroes out the high lanes.
           case 1: vmovdWithPatch(srcAddr, out.fpu()); break;
           // See comment above, which also applies to movq.
@@ -604,11 +606,11 @@ MacroAssembler::wasmLoad(Scalar::Type type, unsigned numSimdElems, Operand srcAd
         }
         break;
       case Scalar::Int8x16:
-        MOZ_ASSERT(numSimdElems == 16, "unexpected partial load");
+        MOZ_ASSERT(access.numSimdElems() == 16, "unexpected partial load");
         vmovdquWithPatch(srcAddr, out.fpu());
         break;
       case Scalar::Int16x8:
-        MOZ_ASSERT(numSimdElems == 8, "unexpected partial load");
+        MOZ_ASSERT(access.numSimdElems() == 8, "unexpected partial load");
         vmovdquWithPatch(srcAddr, out.fpu());
         break;
       case Scalar::Int64:
@@ -617,12 +619,17 @@ MacroAssembler::wasmLoad(Scalar::Type type, unsigned numSimdElems, Operand srcAd
         MOZ_CRASH("unexpected type");
     }
     append(wasm::MemoryAccess(size()));
+
+    memoryBarrier(access.barrierAfter());
 }
 
 void
-MacroAssembler::wasmLoadI64(Scalar::Type type, Operand srcAddr, Register64 out)
+MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAddr, Register64 out)
 {
-    switch (type) {
+    MOZ_ASSERT(!access.isAtomic());
+    MOZ_ASSERT(!access.isSimd());
+
+    switch (access.type()) {
       case Scalar::Int8:
         MOZ_ASSERT(out == Register64(edx, eax));
         movsblWithPatch(srcAddr, out.low);
@@ -699,10 +706,11 @@ MacroAssembler::wasmLoadI64(Scalar::Type type, Operand srcAddr, Register64 out)
 }
 
 void
-MacroAssembler::wasmStore(Scalar::Type type, unsigned numSimdElems, AnyRegister value,
-                          Operand dstAddr)
+MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Operand dstAddr)
 {
-    switch (type) {
+    memoryBarrier(access.barrierBefore());
+
+    switch (access.type()) {
       case Scalar::Int8:
       case Scalar::Uint8Clamped:
       case Scalar::Uint8:
@@ -723,7 +731,7 @@ MacroAssembler::wasmStore(Scalar::Type type, unsigned numSimdElems, AnyRegister 
         vmovsdWithPatch(value.fpu(), dstAddr);
         break;
       case Scalar::Float32x4:
-        switch (numSimdElems) {
+        switch (access.numSimdElems()) {
           // In memory-to-register mode, movss zeroes out the high lanes.
           case 1: vmovssWithPatch(value.fpu(), dstAddr); break;
           // See comment above, which also applies to movsd.
@@ -733,7 +741,7 @@ MacroAssembler::wasmStore(Scalar::Type type, unsigned numSimdElems, AnyRegister 
         }
         break;
       case Scalar::Int32x4:
-        switch (numSimdElems) {
+        switch (access.numSimdElems()) {
           // In memory-to-register mode, movd zeroes out the high lanes.
           case 1: vmovdWithPatch(value.fpu(), dstAddr); break;
           // See comment above, which also applies to movsd.
@@ -743,11 +751,11 @@ MacroAssembler::wasmStore(Scalar::Type type, unsigned numSimdElems, AnyRegister 
         }
         break;
       case Scalar::Int8x16:
-        MOZ_ASSERT(numSimdElems == 16, "unexpected partial store");
+        MOZ_ASSERT(access.numSimdElems() == 16, "unexpected partial store");
         vmovdquWithPatch(value.fpu(), dstAddr);
         break;
       case Scalar::Int16x8:
-        MOZ_ASSERT(numSimdElems == 8, "unexpected partial store");
+        MOZ_ASSERT(access.numSimdElems() == 8, "unexpected partial store");
         vmovdquWithPatch(value.fpu(), dstAddr);
         break;
       case Scalar::Int64:
@@ -756,11 +764,16 @@ MacroAssembler::wasmStore(Scalar::Type type, unsigned numSimdElems, AnyRegister 
         MOZ_CRASH("unexpected type");
     }
     append(wasm::MemoryAccess(size()));
+
+    memoryBarrier(access.barrierAfter());
 }
 
 void
-MacroAssembler::wasmStoreI64(Register64 value, Operand dstAddr)
+MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Operand dstAddr)
 {
+    MOZ_ASSERT(!access.isAtomic());
+    MOZ_ASSERT(!access.isSimd());
+
     if (dstAddr.kind() == Operand::MEM_ADDRESS32) {
         Operand low(PatchedAbsoluteAddress(uint32_t(dstAddr.address()) + INT64LOW_OFFSET));
         Operand high(PatchedAbsoluteAddress(uint32_t(dstAddr.address()) + INT64HIGH_OFFSET));

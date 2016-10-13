@@ -1306,6 +1306,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType, const T& dest,
                            MIRType slotType) PER_ARCH;
 
+    inline void memoryBarrier(MemoryBarrierBits barrier) PER_SHARED_ARCH;
+
   public:
     // ========================================================================
     // Truncate floating point.
@@ -1340,10 +1342,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     // wasm::MemoryAccessVector (there can be multiple when i64 is involved).
     // On x64, only some asm.js accesses need a wasm::MemoryAccess so the caller
     // is responsible for doing this instead.
-    void wasmLoad(Scalar::Type type, unsigned numSimdElems, Operand srcAddr, AnyRegister out) DEFINED_ON(x86, x64);
-    void wasmLoadI64(Scalar::Type type, Operand srcAddr, Register64 out) DEFINED_ON(x86, x64);
-    void wasmStore(Scalar::Type type, unsigned numSimdElems, AnyRegister value, Operand dstAddr) DEFINED_ON(x86, x64);
-    void wasmStoreI64(Register64 value, Operand dstAddr) DEFINED_ON(x86);
+    void wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, AnyRegister out) DEFINED_ON(x86, x64);
+    void wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAddr, Register64 out) DEFINED_ON(x86, x64);
+    void wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Operand dstAddr) DEFINED_ON(x86, x64);
+    void wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Operand dstAddr) DEFINED_ON(x86);
 
     // wasm specific methods, used in both the wasm baseline compiler and ion.
     void wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64);
