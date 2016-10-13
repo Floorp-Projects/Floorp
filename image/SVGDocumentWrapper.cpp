@@ -30,6 +30,7 @@
 #include "nsMimeTypes.h"
 #include "DOMSVGLength.h"
 #include "nsDocument.h"
+#include "mozilla/dom/ImageTracker.h"
 
 // undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
 #undef GetCurrentTime
@@ -154,7 +155,7 @@ SVGDocumentWrapper::StartAnimation()
     if (controller) {
       controller->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
     }
-    doc->SetImagesNeedAnimating(true);
+    doc->ImageTracker()->SetImagesNeedAnimating(true);
   }
 }
 
@@ -173,7 +174,7 @@ SVGDocumentWrapper::StopAnimation()
     if (controller) {
       controller->Pause(nsSMILTimeContainer::PAUSE_IMAGE);
     }
-    doc->SetImagesNeedAnimating(false);
+    doc->ImageTracker()->SetImagesNeedAnimating(false);
   }
 }
 
