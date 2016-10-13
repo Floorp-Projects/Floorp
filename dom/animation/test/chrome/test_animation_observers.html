@@ -129,23 +129,6 @@ function await_event(aElement, aEventName) {
   });
 }
 
-// Returns a Promise that is resolved after a given timeout duration.
-function await_timeout(aTimeout) {
-  return new Promise(function(aResolve) {
-    setTimeout(function() {
-      aResolve();
-    }, aTimeout);
-  });
-}
-
-// Returns a Promise that is resolved when the MutationObserver is next
-// invoked.
-function await_records() {
-  return new Promise(function(aResolve) {
-    gRecordPromiseResolvers.push(aResolve);
-  });
-}
-
 function assert_record_list(actual, expected, desc, index, listName) {
   is(actual.length, expected.length, `${desc} - record[${index}].${listName} length`);
   if (actual.length != expected.length) {
