@@ -6952,6 +6952,21 @@ nsDisplayMask::nsDisplayMask(nsDisplayListBuilder* aBuilder,
   : nsDisplaySVGEffects(aBuilder, aFrame, aList, aHandleOpacity, aScrollClip)
 {
   MOZ_COUNT_CTOR(nsDisplayMask);
+
+  nsPresContext* presContext = mFrame->PresContext();
+  uint32_t flags = aBuilder->GetBackgroundPaintFlags() |
+                   nsCSSRendering::PAINTBG_MASK_IMAGE;
+  const nsStyleSVGReset *svgReset = aFrame->StyleSVGReset();
+  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, svgReset->mMask) {
+    bool isTransformedFixed;
+    nsBackgroundLayerState state =
+      nsCSSRendering::PrepareImageLayer(presContext, aFrame, flags,
+                                        mFrame->GetRectRelativeToSelf(),
+                                        mFrame->GetRectRelativeToSelf(),
+                                        svgReset->mMask.mLayers[i],
+                                        &isTransformedFixed);
+    mDestRects.AppendElement(state.mDestArea);
+  }
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -7057,6 +7072,18 @@ nsDisplayMask::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
     static_cast<const nsDisplayMaskGeometry*>(aGeometry);
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
+
+  if (mDestRects.Length() != geometry->mDestRects.Length()) {
+    aInvalidRegion->Or(bounds, geometry->mBounds);
+  } else {
+    for (size_t i = 0; i < mDestRects.Length(); i++) {
+      if (!mDestRects[i].IsEqualInterior(geometry->mDestRects[i])) {
+        aInvalidRegion->Or(bounds, geometry->mBounds);
+        break;
+      }
+    }
+  }
+
   if (aBuilder->ShouldSyncDecodeImages() &&
       geometry->ShouldInvalidateToSyncDecodeImages()) {
     const nsStyleSVGReset *svgReset = mFrame->StyleSVGReset();

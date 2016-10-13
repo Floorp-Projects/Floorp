@@ -3913,6 +3913,13 @@ public:
   void PaintAsLayer(nsDisplayListBuilder* aBuilder,
                     nsRenderingContext* aCtx,
                     LayerManager* aManager);
+
+  const nsTArray<nsRect>& GetDestRects()
+  {
+    return mDestRects;
+  }
+private:
+  nsTArray<nsRect> mDestRects;
 };
 
 /**
