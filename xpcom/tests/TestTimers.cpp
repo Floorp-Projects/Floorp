@@ -60,7 +60,7 @@ class AutoCreateAndDestroyReentrantMonitor
 public:
   AutoCreateAndDestroyReentrantMonitor() {
     mReentrantMonitor = new ReentrantMonitor("TestTimers::AutoMon");
-    MOZ_ASSERT(mReentrantMonitor, "Out of memory!");
+    MOZ_RELEASE_ASSERT(mReentrantMonitor, "Out of memory!");
   }
 
   ~AutoCreateAndDestroyReentrantMonitor() {
@@ -84,12 +84,12 @@ public:
   : mThreadPtr(aThreadPtr), mReentrantMonitor(aReentrantMonitor) { }
 
   NS_IMETHOD Notify(nsITimer* aTimer) override {
-    MOZ_ASSERT(mThreadPtr, "Callback was not supposed to be called!");
+    MOZ_RELEASE_ASSERT(mThreadPtr, "Callback was not supposed to be called!");
     nsCOMPtr<nsIThread> current(do_GetCurrentThread());
 
     ReentrantMonitorAutoEnter mon(*mReentrantMonitor);
 
-    MOZ_ASSERT(!*mThreadPtr, "Timer called back more than once!");
+    MOZ_RELEASE_ASSERT(!*mThreadPtr, "Timer called back more than once!");
     *mThreadPtr = current;
 
     mon.Notify();
@@ -201,9 +201,7 @@ class FuzzTestThreadState final : public nsITimerCallback {
     {
       nsCOMPtr<nsIRunnable> runnable = new StartRunnable(this);
       nsresult rv = mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-      if (NS_FAILED(rv)) {
-        MOZ_ASSERT(false, "Failed to dispatch StartRunnable.");
-      }
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "Failed to dispatch StartRunnable.");
     }
 
     void Stop()
@@ -215,37 +213,27 @@ class FuzzTestThreadState final : public nsITimerCallback {
     {
       bool onCorrectThread;
       nsresult rv = mThread->IsOnCurrentThread(&onCorrectThread);
-      MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to perform thread check.");
-      MOZ_ASSERT(onCorrectThread, "Notify invoked on wrong thread.");
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "Failed to perform thread check.");
+      MOZ_RELEASE_ASSERT(onCorrectThread, "Notify invoked on wrong thread.");
 
       uint32_t delay;
       rv = aTimer->GetDelay(&delay);
-      if (NS_FAILED(rv)) {
-        MOZ_ASSERT(false, "GetDelay failed.");
-        return rv;
-      }
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "GetDelay failed.");
 
-      if (delay > FUZZ_MAX_TIMEOUT) {
-        MOZ_ASSERT(false, "Delay was an invalid value for this test.");
-        return NS_ERROR_FAILURE;
-      }
+      MOZ_RELEASE_ASSERT(delay <= FUZZ_MAX_TIMEOUT,
+                         "Delay was an invalid value for this test.");
 
       uint32_t type;
       rv = aTimer->GetType(&type);
-      MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to get timer type.");
-      MOZ_ASSERT(type <= nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "Failed to get timer type.");
+      MOZ_RELEASE_ASSERT(type <= nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
 
       if (type == nsITimer::TYPE_ONE_SHOT) {
-        if (mOneShotTimersByDelay[delay].empty()) {
-          MOZ_ASSERT(false, "Unexpected one-shot timer.");
-          return NS_ERROR_FAILURE;
-        }
+        MOZ_RELEASE_ASSERT(!mOneShotTimersByDelay[delay].empty(),
+                           "Unexpected one-shot timer.");
 
-        if (mOneShotTimersByDelay[delay].front().get() != aTimer) {
-          MOZ_ASSERT(false,
-                     "One-shot timers for a given duration have been reordered.");
-          return NS_ERROR_FAILURE;
-        }
+        MOZ_RELEASE_ASSERT(mOneShotTimersByDelay[delay].front().get() == aTimer,
+                           "One-shot timers have been reordered.");
 
         mOneShotTimersByDelay[delay].pop_front();
         --mTimersOutstanding;
@@ -267,8 +255,8 @@ class FuzzTestThreadState final : public nsITimerCallback {
     ~FuzzTestThreadState()
     {
       for (size_t i = 0; i <= FUZZ_MAX_TIMEOUT; ++i) {
-        MOZ_ASSERT(mOneShotTimersByDelay[i].empty(),
-                   "Timers remain at end of test.");
+        MOZ_RELEASE_ASSERT(mOneShotTimersByDelay[i].empty(),
+                           "Timers remain at end of test.");
       }
     }
 
@@ -293,8 +281,8 @@ class FuzzTestThreadState final : public nsITimerCallback {
       }
 
       const size_t numTimersDesired = (rand() % 100) + 100;
-      MOZ_ASSERT(numTimersDesired >= 100);
-      MOZ_ASSERT(numTimersDesired < 200);
+      MOZ_RELEASE_ASSERT(numTimersDesired >= 100);
+      MOZ_RELEASE_ASSERT(numTimersDesired < 200);
       int adjustment = numTimersDesired - mTimersOutstanding;
 
       while (adjustment > 0) {
@@ -307,7 +295,7 @@ class FuzzTestThreadState final : public nsITimerCallback {
         ++adjustment;
       }
 
-      MOZ_ASSERT(numTimersDesired == mTimersOutstanding);
+      MOZ_RELEASE_ASSERT(numTimersDesired == mTimersOutstanding);
     }
 
     void RescheduleSomeTimers()
@@ -332,16 +320,10 @@ class FuzzTestThreadState final : public nsITimerCallback {
     {
       nsresult rv;
       nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) {
-        MOZ_ASSERT(false, "Failed to create timer.");
-        return;
-      }
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "Failed to create timer.");
 
       rv = timer->SetTarget(static_cast<nsIEventTarget*>(mThread.get()));
-      if (NS_FAILED(rv)) {
-        MOZ_ASSERT(false, "Failed to set target.");
-        return;
-      }
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "Failed to set target.");
 
       InitRandomTimer(timer.get());
     }
@@ -355,7 +337,7 @@ class FuzzTestThreadState final : public nsITimerCallback {
 
     nsCOMPtr<nsITimer> RemoveRandomTimer()
     {
-      MOZ_ASSERT(mTimersOutstanding);
+      MOZ_RELEASE_ASSERT(mTimersOutstanding);
 
       if ((GetRandomType() == nsITimer::TYPE_ONE_SHOT && CountOneShotTimers())
           || mRepeatingTimers.empty()) {
@@ -389,8 +371,7 @@ class FuzzTestThreadState final : public nsITimerCallback {
         return removed;
       }
 
-      MOZ_ASSERT_UNREACHABLE("Unable to remove a timer");
-      return nullptr;
+      MOZ_CRASH("Unable to remove a timer");
     }
 
     void InitRandomTimer(nsITimer* aTimer)
@@ -399,10 +380,7 @@ class FuzzTestThreadState final : public nsITimerCallback {
       uint32_t delay = rand() % (FUZZ_MAX_TIMEOUT + 1);
       uint32_t type = GetRandomType();
       nsresult rv = aTimer->InitWithCallback(this, delay, type);
-      if (NS_FAILED(rv)) {
-        MOZ_ASSERT(false, "Failed to set timer.");
-        return;
-      }
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "Failed to set timer.");
 
       if (type == nsITimer::TYPE_ONE_SHOT) {
         mOneShotTimersByDelay[delay].push_back(aTimer);
@@ -459,10 +437,9 @@ FuzzTestTimers()
   PRIntervalTime start = PR_IntervalNow();
   for (auto& threadState : threadStates) {
     while (threadState->HasTimersOutstanding()) {
-      if (PR_IntervalToMilliseconds(PR_IntervalNow() - start) > 10000) {
-        MOZ_ASSERT(false, "Timed out waiting for all timers to pop");
-        return NS_ERROR_FAILURE;
-      }
+      uint32_t elapsedMs = PR_IntervalToMilliseconds(PR_IntervalNow() - start);
+      MOZ_RELEASE_ASSERT(elapsedMs <= 10000,
+                         "Timed out waiting for all timers to pop");
       PR_Sleep(PR_MillisecondsToInterval(10));
     }
   }

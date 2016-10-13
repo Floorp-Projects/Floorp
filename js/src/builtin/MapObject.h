@@ -10,6 +10,8 @@
 #include "jsobj.h"
 
 #include "builtin/SelfHostingDefines.h"
+#include "vm/GlobalObject.h"
+#include "vm/PIC.h"
 #include "vm/Runtime.h"
 
 namespace js {
@@ -228,6 +230,8 @@ class SetObject : public NativeObject {
     static bool is(HandleValue v);
     static bool is(HandleObject o);
 
+    static bool isBuiltinAdd(HandleValue add, JSContext* cx);
+
     static MOZ_MUST_USE bool iterator_impl(JSContext* cx, const CallArgs& args, IteratorKind kind);
 
     static MOZ_MUST_USE bool size_impl(JSContext* cx, const CallArgs& args);
@@ -265,6 +269,48 @@ class SetIteratorObject : public NativeObject
 
 extern bool
 InitSelfHostingCollectionIteratorFunctions(JSContext* cx, js::HandleObject obj);
+
+bool IsPackedArray(JSObject* obj);
+
+using SetInitGetPrototypeOp = NativeObject* (*)(JSContext*, Handle<GlobalObject*>);
+using SetInitIsBuiltinOp = bool (*)(HandleValue, JSContext*);
+
+template <SetInitGetPrototypeOp getPrototypeOp, SetInitIsBuiltinOp isBuiltinOp>
+static MOZ_MUST_USE bool
+IsOptimizableInitForSet(JSContext* cx, HandleObject setObject, HandleValue iterable, bool* optimized)
+{
+    if (!iterable.isObject())
+        return true;
+
+    RootedObject array(cx, &iterable.toObject());
+    if (!IsPackedArray(array))
+        return true;
+
+    // Get the canonical prototype object.
+    RootedNativeObject setProto(cx, getPrototypeOp(cx, cx->global()));
+    if (!setProto)
+        return false;
+
+    // Ensures setObject's prototype is the canonical prototype.
+    if (setObject->staticPrototype() != setProto)
+        return true;
+
+    // Look up the 'add' value on the prototype object.
+    Shape* addShape = setProto->lookup(cx, cx->names().add);
+    if (!addShape || !addShape->hasSlot())
+        return true;
+
+    // Get the referred value, ensure it holds the canonical add function.
+    RootedValue add(cx, setProto->getSlot(addShape->slot()));
+    if (!isBuiltinOp(add, cx))
+        return true;
+
+    ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
+    if (!stubChain)
+        return false;
+
+    return stubChain->tryOptimizeArray(cx, array.as<ArrayObject>(), optimized);
+}
 
 extern JSObject*
 InitMapClass(JSContext* cx, HandleObject obj);

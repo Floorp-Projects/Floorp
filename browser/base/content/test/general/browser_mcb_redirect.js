@@ -91,7 +91,7 @@ function waitForCondition(condition, nextTest, errorMsg, okMsg) {
       moveOn();
     }
     tries++;
-  }, 100);
+  }, 500);
   var moveOn = function() {
     clearInterval(interval); nextTest();
   };

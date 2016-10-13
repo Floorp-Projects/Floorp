@@ -43,11 +43,11 @@ public:
   enum ELevel : uint32_t {
     OPEN_PRIORITY,
     READ_PRIORITY,
+    MANAGEMENT, // Doesn't do any actual I/O
     OPEN,
     READ,
-    MANAGEMENT,
+    WRITE_PRIORITY,
     WRITE,
-    CLOSE = WRITE,
     INDEX,
     EVICT,
     LAST_LEVEL,

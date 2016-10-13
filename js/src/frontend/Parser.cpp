@@ -3719,28 +3719,23 @@ Parser<ParseHandler>::matchLabel(YieldHandling yieldHandling, MutableHandle<Prop
 
 template <typename ParseHandler>
 Parser<ParseHandler>::PossibleError::PossibleError(Parser<ParseHandler>& parser)
-                                                   : parser_(parser)
-{
-    state_ = ErrorState::None;
-}
+  : parser_(parser),
+    state_(ErrorState::None)
+{}
 
 template <typename ParseHandler>
-bool
-Parser<ParseHandler>::PossibleError::setPending(ParseReportKind kind, unsigned errorNumber,
-                                                bool strict)
+void
+Parser<ParseHandler>::PossibleError::setPending(Node pn, unsigned errorNumber)
 {
+    // Don't overwrite a previously recorded error.
     if (hasError())
-        return false;
+        return;
 
     // If we report an error later, we'll do it from the position where we set
     // the state to pending.
-    offset_      = parser_.pos().begin;
-    reportKind_  = kind;
-    strict_      = strict;
+    offset_      = (pn ? parser_.handler.getPosition(pn) : parser_.pos()).begin;
     errorNumber_ = errorNumber;
     state_       = ErrorState::Pending;
-
-    return true;
 }
 
 template <typename ParseHandler>
@@ -3761,27 +3756,25 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::PossibleError::checkForExprErrors()
 {
-    bool err = hasError();
-    if (err)
-        parser_.reportWithOffset(reportKind_, strict_, offset_, errorNumber_);
-    return !err;
+    if (hasError()) {
+        parser_.reportWithOffset(ParseError, false, offset_, errorNumber_);
+        return false;
+    }
+    return true;
 }
 
 template <typename ParseHandler>
 void
 Parser<ParseHandler>::PossibleError::transferErrorTo(PossibleError* other)
 {
-    if (other) {
-        MOZ_ASSERT(this != other);
-        MOZ_ASSERT(!other->hasError());
+    MOZ_ASSERT(other);
+    MOZ_ASSERT(this != other);
+    MOZ_ASSERT(&parser_ == &other->parser_,
+               "Can't transfer fields to an instance which belongs to a different parser");
 
-        // We should never allow fields to be copied between instances
-        // that point to different underlying parsers.
-        MOZ_ASSERT(&parser_ == &other->parser_);
+    if (hasError() && !other->hasError()) {
         other->offset_        = offset_;
-        other->reportKind_    = reportKind_;
         other->errorNumber_   = errorNumber_;
-        other->strict_        = strict_;
         other->state_         = state_;
     }
 }
@@ -3849,7 +3842,8 @@ Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<Declarat
 template <>
 bool
 Parser<FullParseHandler>::checkDestructuringPattern(ParseNode* pattern,
-                                                    Maybe<DeclarationKind> maybeDecl);
+                                                    Maybe<DeclarationKind> maybeDecl,
+                                                    PossibleError* possibleError /* = nullptr */);
 
 template <>
 bool
@@ -3961,22 +3955,31 @@ Parser<FullParseHandler>::checkDestructuringArray(ParseNode* arrayPattern,
 template <>
 bool
 Parser<FullParseHandler>::checkDestructuringPattern(ParseNode* pattern,
-                                                    Maybe<DeclarationKind> maybeDecl)
+                                                    Maybe<DeclarationKind> maybeDecl,
+                                                    PossibleError* possibleError /* = nullptr */)
 {
     if (pattern->isKind(PNK_ARRAYCOMP)) {
         report(ParseError, false, pattern, JSMSG_ARRAY_COMP_LEFTSIDE);
         return false;
     }
 
-    if (pattern->isKind(PNK_ARRAY))
-        return checkDestructuringArray(pattern, maybeDecl);
-    return checkDestructuringObject(pattern, maybeDecl);
+    bool isDestructuring = pattern->isKind(PNK_ARRAY)
+                           ? checkDestructuringArray(pattern, maybeDecl)
+                           : checkDestructuringObject(pattern, maybeDecl);
+
+    // Resolve asap instead of checking since we already know that we are
+    // destructuring.
+    if (isDestructuring && possibleError)
+        possibleError->setResolved();
+
+    return isDestructuring;
 }
 
 template <>
 bool
 Parser<SyntaxParseHandler>::checkDestructuringPattern(Node pattern,
-                                                      Maybe<DeclarationKind> maybeDecl)
+                                                      Maybe<DeclarationKind> maybeDecl,
+                                                      PossibleError* possibleError /* = nullptr */)
 {
     return abortIfSyntaxParser();
 }
@@ -3987,21 +3990,20 @@ Parser<ParseHandler>::destructuringDeclaration(DeclarationKind kind, YieldHandli
                                                TokenKind tt)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
+    MOZ_ASSERT(tt == TOK_LB || tt == TOK_LC);
 
-    pc->inDestructuringDecl = Some(kind);
     PossibleError possibleError(*this);
-    Node pn = primaryExpr(yieldHandling, TripledotProhibited,
-                          &possibleError, tt);
+    Node pattern;
+    {
+        pc->inDestructuringDecl = Some(kind);
+        pattern = primaryExpr(yieldHandling, TripledotProhibited, tt, &possibleError);
+        pc->inDestructuringDecl = Nothing();
+    }
 
-    // Resolve asap instead of checking since we already know that we are
-    // destructuring.
-    possibleError.setResolved();
-    pc->inDestructuringDecl = Nothing();
-    if (!pn)
+    if (!pattern || !checkDestructuringPattern(pattern, Some(kind), &possibleError))
         return null();
-    if (!checkDestructuringPattern(pn, Some(kind)))
-        return null();
-    return pn;
+
+    return pattern;
 }
 
 template <typename ParseHandler>
@@ -4061,19 +4063,7 @@ Parser<ParseHandler>::declarationPattern(Node decl, DeclarationKind declKind, To
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LB) ||
                tokenStream.isCurrentTokenType(TOK_LC));
 
-    Node pattern;
-    {
-        pc->inDestructuringDecl = Some(declKind);
-
-        PossibleError possibleError(*this);
-        pattern = primaryExpr(yieldHandling, TripledotProhibited,
-                              &possibleError, tt);
-
-        // Resolve asap instead of checking since we already know that we are
-        // destructuring.
-        possibleError.setResolved();
-        pc->inDestructuringDecl = Nothing();
-    }
+    Node pattern = destructuringDeclaration(declKind, yieldHandling, tt);
     if (!pattern)
         return null();
 
@@ -4095,9 +4085,6 @@ Parser<ParseHandler>::declarationPattern(Node decl, DeclarationKind declKind, To
         }
 
         if (*forHeadKind != PNK_FORHEAD) {
-            if (!checkDestructuringPattern(pattern, Some(declKind)))
-                return null();
-
             *forInOrOfExpression = expressionAfterForInOrOf(*forHeadKind, yieldHandling);
             if (!*forInOrOfExpression)
                 return null();
@@ -4105,9 +4092,6 @@ Parser<ParseHandler>::declarationPattern(Node decl, DeclarationKind declKind, To
             return pattern;
         }
     }
-
-    if (!checkDestructuringPattern(pattern, Some(declKind)))
-        return null();
 
     TokenKind token;
     if (!tokenStream.getToken(&token, TokenStream::None))
@@ -4968,7 +4952,8 @@ typename ParseHandler::Node
 Parser<ParseHandler>::expressionStatement(YieldHandling yieldHandling, InvokedPrediction invoked)
 {
     tokenStream.ungetToken();
-    Node pnexpr = expr(InAllowed, yieldHandling, TripledotProhibited, invoked);
+    Node pnexpr = expr(InAllowed, yieldHandling, TripledotProhibited,
+                       /* possibleError = */ nullptr, invoked);
     if (!pnexpr)
         return null();
     if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
@@ -5122,15 +5107,8 @@ template <class ParseHandler>
 bool
 Parser<ParseHandler>::validateForInOrOfLHSExpression(Node target, PossibleError* possibleError)
 {
-    if (handler.isUnparenthesizedDestructuringPattern(target)) {
-        bool isDestructuring = checkDestructuringPattern(target);
-        // Here we've successfully distinguished between destructuring and an
-        // object literal. In the case where "CoverInitializedName" syntax was
-        // used there will be a pending error that needs clearing.
-        if (isDestructuring)
-            possibleError->setResolved();
-        return isDestructuring;
-    }
+    if (handler.isUnparenthesizedDestructuringPattern(target))
+        return checkDestructuringPattern(target, Nothing(), possibleError);
 
     // All other permitted targets are simple.
     if (!reportIfNotValidSimpleAssignmentTarget(target, ForInOrOfTarget))
@@ -6347,7 +6325,7 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
     if (hasHeritage) {
         if (!tokenStream.getToken(&tt))
             return null();
-        classHeritage = memberExpr(yieldHandling, TripledotProhibited, tt, true);
+        classHeritage = memberExpr(yieldHandling, TripledotProhibited, tt);
         if (!classHeritage)
             return null();
     }
@@ -6946,8 +6924,8 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
                            TripledotHandling tripledotHandling,
-                           PossibleError* possibleError,
-                           InvokedPrediction invoked)
+                           PossibleError* possibleError /* = nullptr */,
+                           InvokedPrediction invoked /* = PredictUninvoked */)
 {
     Node pn = assignExpr(inHandling, yieldHandling, tripledotHandling,
                          possibleError, invoked);
@@ -7001,19 +6979,14 @@ Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
         if (!pn)
             return null();
 
-        // If we find an error here we should report it immedately instead of
-        // passing it back out of the function.
-        if (possibleErrorInner.hasError())  {
-
-            // We begin by checking for an outer pending error since it would
-            // have occurred first.
-            if (possibleError && !possibleError->checkForExprErrors())
+        if (!possibleError) {
+            // Report any pending expression error.
+            if (!possibleErrorInner.checkForExprErrors())
                 return null();
-
-            // Go ahead and report the inner error.
-            possibleErrorInner.checkForExprErrors();
-            return null();
+        } else {
+            possibleErrorInner.transferErrorTo(possibleError);
         }
+
         handler.addList(seq, pn);
 
         if (!tokenStream.matchToken(&matched, TOK_COMMA))
@@ -7022,19 +6995,6 @@ Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
             break;
     }
     return seq;
-}
-
-template <typename ParseHandler>
-typename ParseHandler::Node
-Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
-                           TripledotHandling tripledotHandling,
-                           InvokedPrediction invoked)
-{
-    PossibleError possibleError(*this);
-    Node pn = expr(inHandling, yieldHandling, tripledotHandling, &possibleError, invoked);
-    if (!pn || !possibleError.checkForExprErrors())
-        return null();
-    return pn;
 }
 
 static const JSOp ParseNodeKindToJSOp[] = {
@@ -7126,7 +7086,7 @@ MOZ_ALWAYS_INLINE typename ParseHandler::Node
 Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling,
                               TripledotHandling tripledotHandling,
                               PossibleError* possibleError,
-                              InvokedPrediction invoked)
+                              InvokedPrediction invoked /* = PredictUninvoked */)
 {
     // Shift-reduce parser for the binary operator part of the JS expression
     // syntax.
@@ -7150,7 +7110,8 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
 
         ParseNodeKind pnk;
         if (tok == TOK_IN ? inHandling == InAllowed : TokenKindIsBinaryOp(tok)) {
-            // Destructuring defaults are an error in this context
+            // We're definitely not in a destructuring context, so report any
+            // pending expression error now.
             if (possibleError && !possibleError->checkForExprErrors())
                 return null();
             // Report an error for unary expressions on the LHS of **.
@@ -7201,22 +7162,20 @@ MOZ_ALWAYS_INLINE typename ParseHandler::Node
 Parser<ParseHandler>::condExpr1(InHandling inHandling, YieldHandling yieldHandling,
                                 TripledotHandling tripledotHandling,
                                 PossibleError* possibleError,
-                                InvokedPrediction invoked)
+                                InvokedPrediction invoked /* = PredictUninvoked */)
 {
     Node condition = orExpr1(inHandling, yieldHandling, tripledotHandling, possibleError, invoked);
 
     if (!condition || !tokenStream.isCurrentTokenType(TOK_HOOK))
         return condition;
 
-    Node thenExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
-                               nullptr /* possibleError */);
+    Node thenExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
     if (!thenExpr)
         return null();
 
     MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
 
-    Node elseExpr = assignExpr(inHandling, yieldHandling, TripledotProhibited,
-                               nullptr /* possibleError */);
+    Node elseExpr = assignExpr(inHandling, yieldHandling, TripledotProhibited);
     if (!elseExpr)
         return null();
 
@@ -7242,13 +7201,7 @@ Parser<ParseHandler>::checkAndMarkAsAssignmentLhs(Node target, AssignmentFlavor 
             return false;
         }
 
-        bool isDestructuring = checkDestructuringPattern(target);
-        // Here we've successfully distinguished between destructuring and
-        // an object literal. In the case where "CoverInitializedName"
-        // syntax was used there will be a pending error that needs clearing.
-        if (possibleError && isDestructuring)
-            possibleError->setResolved();
-        return isDestructuring;
+        return checkDestructuringPattern(target, Nothing(), possibleError);
     }
 
     // All other permitted targets are simple.
@@ -7296,8 +7249,8 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandling,
                                  TripledotHandling tripledotHandling,
-                                 PossibleError* possibleError,
-                                 InvokedPrediction invoked)
+                                 PossibleError* possibleError /* = nullptr */,
+                                 InvokedPrediction invoked /* = PredictUninvoked */)
 {
     JS_CHECK_RECURSION(context, return null());
 
@@ -7356,9 +7309,8 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
 
     PossibleError possibleErrorInner(*this);
     Node lhs = condExpr1(inHandling, yieldHandling, tripledotHandling, &possibleErrorInner, invoked);
-    if (!lhs) {
+    if (!lhs)
         return null();
-    }
 
     ParseNodeKind kind;
     JSOp op;
@@ -7462,26 +7414,12 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
     Node rhs;
     {
         AutoClearInDestructuringDecl autoClear(pc);
-        rhs = assignExpr(inHandling, yieldHandling, TripledotProhibited, possibleError);
+        rhs = assignExpr(inHandling, yieldHandling, TripledotProhibited);
         if (!rhs)
             return null();
     }
 
     return handler.newAssignment(kind, lhs, rhs, op);
-}
-
-template <typename ParseHandler>
-typename ParseHandler::Node
-Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandling,
-                                 TripledotHandling tripledotHandling,
-                                 InvokedPrediction invoked)
-{
-    PossibleError possibleError(*this);
-    Node expr = assignExpr(inHandling, yieldHandling, tripledotHandling, &possibleError, invoked);
-    if (!expr || !possibleError.checkForExprErrors())
-        return null();
-
-    return expr;
 }
 
 template <typename ParseHandler>
@@ -7606,9 +7544,8 @@ typename ParseHandler::Node
 Parser<ParseHandler>::unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind, JSOp op,
                                   uint32_t begin)
 {
-    PossibleError possibleError(*this);
-    Node kid = unaryExpr(yieldHandling, TripledotProhibited, &possibleError);
-    if (!kid || !possibleError.checkForExprErrors())
+    Node kid = unaryExpr(yieldHandling, TripledotProhibited);
+    if (!kid)
         return null();
     return handler.newUnary(kind, op, begin, kid);
 }
@@ -7616,7 +7553,8 @@ Parser<ParseHandler>::unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kin
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                                PossibleError* possibleError, InvokedPrediction invoked)
+                                PossibleError* possibleError /* = nullptr */,
+                                InvokedPrediction invoked /* = PredictUninvoked */)
 {
     JS_CHECK_RECURSION(context, return null());
 
@@ -7648,7 +7586,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
         //   // Evaluates expression, triggering a runtime ReferenceError for
         //   // the undefined name.
         //   typeof (1, nonExistentName);
-        Node kid = unaryExpr(yieldHandling, TripledotProhibited, nullptr /* possibleError */);
+        Node kid = unaryExpr(yieldHandling, TripledotProhibited);
         if (!kid)
             return null();
 
@@ -7661,8 +7599,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
         TokenKind tt2;
         if (!tokenStream.getToken(&tt2, TokenStream::Operand))
             return null();
-        Node pn2 = memberExpr(yieldHandling, TripledotProhibited, nullptr /* possibleError */,
-                              tt2, true);
+        Node pn2 = memberExpr(yieldHandling, TripledotProhibited, tt2);
         if (!pn2)
             return null();
         AssignmentFlavor flavor = (tt == TOK_INC) ? IncrementAssignment : DecrementAssignment;
@@ -7674,7 +7611,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
       }
 
       case TOK_DELETE: {
-        Node expr = unaryExpr(yieldHandling, TripledotProhibited, nullptr /* possibleError */);
+        Node expr = unaryExpr(yieldHandling, TripledotProhibited);
         if (!expr)
             return null();
 
@@ -7690,8 +7627,8 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
       }
 
       default: {
-        Node pn = memberExpr(yieldHandling, tripledotHandling, possibleError, tt,
-                             /* allowCallSyntax = */ true, invoked);
+        Node pn = memberExpr(yieldHandling, tripledotHandling, tt, /* allowCallSyntax = */ true,
+                             possibleError, invoked);
         if (!pn)
             return null();
 
@@ -8103,8 +8040,9 @@ Parser<ParseHandler>::checkAndMarkSuperScope()
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                                 PossibleError* possibleError, TokenKind tt,
-                                 bool allowCallSyntax, InvokedPrediction invoked)
+                                 TokenKind tt, bool allowCallSyntax /* = true */,
+                                 PossibleError* possibleError /* = nullptr */,
+                                 InvokedPrediction invoked /* = PredictUninvoked */)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
 
@@ -8128,8 +8066,9 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
 
             // Gotten by tryNewTarget
             tt = tokenStream.currentToken().type;
-            Node ctorExpr = memberExpr(yieldHandling, TripledotProhibited,
-                                       nullptr /* possibleError */, tt, false, PredictInvoked);
+            Node ctorExpr = memberExpr(yieldHandling, TripledotProhibited, tt,
+                                       /* allowCallSyntax = */ false,
+                                       /* possibleError = */ nullptr, PredictInvoked);
             if (!ctorExpr)
                 return null();
 
@@ -8154,7 +8093,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
         if (!lhs)
             return null();
     } else {
-        lhs = primaryExpr(yieldHandling, tripledotHandling, possibleError, tt, invoked);
+        lhs = primaryExpr(yieldHandling, tripledotHandling, tt, possibleError, invoked);
         if (!lhs)
             return null();
     }
@@ -8185,7 +8124,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                 return null();
             }
         } else if (tt == TOK_LB) {
-            Node propExpr = expr(InAllowed, yieldHandling, TripledotProhibited, nullptr /* possibleError */);
+            Node propExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
             if (!propExpr)
                 return null();
 
@@ -8313,19 +8252,6 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
     }
 
     return lhs;
-}
-
-template <typename ParseHandler>
-typename ParseHandler::Node
-Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling, TokenKind tt,
-                                 bool allowCallSyntax, InvokedPrediction invoked)
-{
-    PossibleError possibleError(*this);
-    Node pn = memberExpr(yieldHandling, tripledotHandling, &possibleError, tt,
-                         allowCallSyntax, invoked);
-    if (!pn || !possibleError.checkForExprErrors())
-        return null();
-    return pn;
 }
 
 template <typename ParseHandler>
@@ -8507,7 +8433,7 @@ Parser<ParseHandler>::newRegExp()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling)
+Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling, PossibleError* possibleError)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LB));
 
@@ -8554,13 +8480,15 @@ Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling)
             } else if (tt == TOK_TRIPLEDOT) {
                 tokenStream.consumeKnownToken(TOK_TRIPLEDOT, TokenStream::Operand);
                 uint32_t begin = pos().begin;
-                Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+                Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                                        possibleError);
                 if (!inner)
                     return null();
                 if (!handler.addSpreadElement(literal, begin, inner))
                     return null();
             } else {
-                Node element = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+                Node element = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                                          possibleError);
                 if (!element)
                     return null();
                 if (foldConstants && !FoldConstants(context, &element, this))
@@ -8814,7 +8742,8 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
             return null();
 
         if (propType == PropertyType::Normal) {
-            Node propExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+            Node propExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                                       possibleError);
             if (!propExpr)
                 return null();
 
@@ -8823,8 +8752,16 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 
             if (propAtom == context->names().proto) {
                 if (seenPrototypeMutation) {
-                    report(ParseError, false, propName, JSMSG_DUPLICATE_PROPERTY, "__proto__");
-                    return null();
+                    // Directly report the error when we're not in a
+                    // destructuring context.
+                    if (!possibleError) {
+                        report(ParseError, false, propName, JSMSG_DUPLICATE_PROTO_PROPERTY);
+                        return null();
+                    }
+
+                    // Otherwise delay error reporting until we've determined
+                    // whether or not we're destructuring.
+                    possibleError->setPending(propName, JSMSG_DUPLICATE_PROTO_PROPERTY);
                 }
                 seenPrototypeMutation = true;
 
@@ -8909,11 +8846,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                 // Here we set a pending error so that later in the parse, once we've
                 // determined whether or not we're destructuring, the error can be
                 // reported or ignored appropriately.
-                if (!possibleError->setPending(ParseError, JSMSG_COLON_AFTER_ID, false)) {
-                    // Report any previously pending error.
-                    possibleError->checkForExprErrors();
-                    return null();
-                }
+                possibleError->setPending(null(), JSMSG_COLON_AFTER_ID);
             }
 
             Node rhs;
@@ -9033,8 +8966,8 @@ Parser<ParseHandler>::tryNewTarget(Node &newTarget)
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                                  PossibleError* possibleError, TokenKind tt,
-                                  InvokedPrediction invoked)
+                                  TokenKind tt, PossibleError* possibleError,
+                                  InvokedPrediction invoked /* = PredictUninvoked */)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
     JS_CHECK_RECURSION(context, return null());
@@ -9047,7 +8980,7 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
         return classDefinition(yieldHandling, ClassExpression, NameRequired);
 
       case TOK_LB:
-        return arrayInitializer(yieldHandling);
+        return arrayInitializer(yieldHandling, possibleError);
 
       case TOK_LC:
         return objectLiteral(yieldHandling, possibleError);
@@ -9082,6 +9015,7 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
             return generatorComprehension(begin);
         }
 
+        // Pass |possibleError| to support destructuring in arrow parameters.
         Node expr = exprInParens(InAllowed, yieldHandling, TripledotAllowed, possibleError);
         if (!expr)
             return null();
@@ -9193,19 +9127,10 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::exprInParens(InHandling inHandling, YieldHandling yieldHandling,
                                    TripledotHandling tripledotHandling,
-                                   PossibleError* possibleError)
+                                   PossibleError* possibleError /* = nullptr */)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LP));
     return expr(inHandling, yieldHandling, tripledotHandling, possibleError, PredictInvoked);
-}
-
-template <typename ParseHandler>
-typename ParseHandler::Node
-Parser<ParseHandler>::exprInParens(InHandling inHandling, YieldHandling yieldHandling,
-                                   TripledotHandling tripledotHandling)
-{
-    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LP));
-    return expr(inHandling, yieldHandling, tripledotHandling, PredictInvoked);
 }
 
 template <typename ParseHandler>

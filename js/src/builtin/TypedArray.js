@@ -1436,6 +1436,7 @@ function TypedArraySpecies() {
     // Step 1.
     return this;
 }
+_SetCanonicalName(TypedArraySpecies, "get [Symbol.species]");
 
 // ES 2017 draft June 2, 2016 22.2.3.32
 function TypedArrayToStringTag() {

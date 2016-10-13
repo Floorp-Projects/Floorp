@@ -1,14 +1,14 @@
 <meta charset=utf-8>
 <script>
 "use strict";
-window.addEventListener("install", () => {
+window.addEventListener("appinstalled", () => {
   document
     .querySelector("#output")
     .innerHTML = "event received!";
   // Send a custom event back to the browser
   // to acknowledge that we got this
   const detail = { result: true }
-  const ev = new CustomEvent("dom.manifest.oninstall", { detail });
+  const ev = new CustomEvent("dom.manifest.onappinstalled", { detail });
   document.dispatchEvent(ev);
 });
 </script>

@@ -722,6 +722,8 @@ template <typename ParseHandler>
 class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 {
   private:
+    using Node = typename ParseHandler::Node;
+
     /*
      * A class for temporarily stashing errors while parsing continues.
      *
@@ -739,12 +741,12 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      *
      * Ex:
      *   PossibleError possibleError(*this);
-     *   possibleError.setPending(ParseError, JSMSG_BAD_PROP_ID, false);
+     *   possibleError.setPending(pn, JSMSG_BAD_PROP_ID);
      *   // A JSMSG_BAD_PROP_ID ParseError is reported, returns false.
      *   possibleError.checkForExprErrors();
      *
      *   PossibleError possibleError(*this);
-     *   possibleError.setPending(ParseError, JSMSG_BAD_PROP_ID, false);
+     *   possibleError.setPending(pn, JSMSG_BAD_PROP_ID);
      *   possibleError.setResolved();
      *   // Returns true, no error is reported.
      *   possibleError.checkForExprErrors();
@@ -756,22 +758,21 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     class MOZ_STACK_CLASS PossibleError
     {
       protected:
+        Parser<ParseHandler>& parser_;
+
         enum ErrorState { None, Pending };
         ErrorState state_;
 
         // Error reporting fields.
         uint32_t offset_;
         unsigned errorNumber_;
-        ParseReportKind reportKind_;
-        Parser<ParseHandler>& parser_;
-        bool strict_;
 
       public:
         explicit PossibleError(Parser<ParseHandler>& parser);
 
         // Set a pending error. Only a single error may be set per instance.
         // Returns true on success or false on failure.
-        bool setPending(ParseReportKind kind, unsigned errorNumber, bool strict);
+        void setPending(Node pn, unsigned errorNumber);
 
         // Resolve any pending error.
         void setResolved();
@@ -833,8 +834,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     /* Unexpected end of input, i.e. TOK_EOF not at top-level. */
     bool isUnexpectedEOF_:1;
-
-    typedef typename ParseHandler::Node Node;
 
   public:
     /* State specific to the kind of parse being performed. */
@@ -1122,18 +1121,10 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                                       Node* forInOrOfExpression);
 
     Node expr(InHandling inHandling, YieldHandling yieldHandling,
-              TripledotHandling tripledotHandling,
-              PossibleError* possibleError,
-              InvokedPrediction invoked = PredictUninvoked);
-    Node expr(InHandling inHandling, YieldHandling yieldHandling,
-              TripledotHandling tripledotHandling,
+              TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr,
               InvokedPrediction invoked = PredictUninvoked);
     Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
-                    TripledotHandling tripledotHandling,
-                    PossibleError* possibleError,
-                    InvokedPrediction invoked = PredictUninvoked);
-    Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
-                    TripledotHandling tripledotHandling,
+                    TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr,
                     InvokedPrediction invoked = PredictUninvoked);
     Node assignExprWithoutYield(YieldHandling yieldHandling, unsigned err);
     Node yieldExpression(InHandling inHandling);
@@ -1146,21 +1137,17 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                  PossibleError* possibleError,
                  InvokedPrediction invoked = PredictUninvoked);
     Node unaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                   PossibleError* possibleError,
+                   PossibleError* possibleError = nullptr,
                    InvokedPrediction invoked = PredictUninvoked);
     Node memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                    PossibleError* possibleError, TokenKind tt,
-                    bool allowCallSyntax, InvokedPrediction invoked = PredictUninvoked);
-    Node memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling, TokenKind tt,
-                    bool allowCallSyntax, InvokedPrediction invoked = PredictUninvoked);
+                    TokenKind tt, bool allowCallSyntax = true,
+                    PossibleError* possibleError = nullptr,
+                    InvokedPrediction invoked = PredictUninvoked);
     Node primaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                     PossibleError* possibleError, TokenKind tt,
+                     TokenKind tt, PossibleError* possibleError,
                      InvokedPrediction invoked = PredictUninvoked);
     Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
-                      TripledotHandling tripledotHandling,
-                      PossibleError* possibleError);
-    Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
-                      TripledotHandling tripledotHandling);
+                      TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr);
 
     bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
@@ -1323,14 +1310,14 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node propertyName(YieldHandling yieldHandling, Node propList,
                       PropertyType* propType, MutableHandleAtom propAtom);
     Node computedPropertyName(YieldHandling yieldHandling, Node literal);
-    Node arrayInitializer(YieldHandling yieldHandling);
+    Node arrayInitializer(YieldHandling yieldHandling, PossibleError* possibleError);
     Node newRegExp();
 
     Node objectLiteral(YieldHandling yieldHandling, PossibleError* possibleError);
 
     // Top-level entrypoint into destructuring pattern checking/name-analyzing.
-    bool checkDestructuringPattern(Node pattern,
-                                   mozilla::Maybe<DeclarationKind> maybeDecl = mozilla::Nothing());
+    bool checkDestructuringPattern(Node pattern, mozilla::Maybe<DeclarationKind> maybeDecl,
+                                   PossibleError* possibleError = nullptr);
 
     // Recursive methods for checking/name-analyzing subcomponents of a
     // destructuring pattern.  The array/object methods *must* be passed arrays

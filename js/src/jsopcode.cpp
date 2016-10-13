@@ -1578,14 +1578,20 @@ DecompileArgumentFromStack(JSContext* cx, int formalIndex, char** res)
         return true;
 
     /* Don't handle getters, setters or calls from fun.call/fun.apply. */
-    if (JSOp(*current) != JSOP_CALL || static_cast<unsigned>(formalIndex) >= GET_ARGC(current))
+    JSOp op = JSOp(*current);
+    if (op != JSOP_CALL && op != JSOP_NEW)
+        return true;
+
+    if (static_cast<unsigned>(formalIndex) >= GET_ARGC(current))
         return true;
 
     BytecodeParser parser(cx, script);
     if (!parser.parse())
         return false;
 
-    int formalStackIndex = parser.stackDepthAtPC(current) - GET_ARGC(current) + formalIndex;
+    bool pushedNewTarget = op == JSOP_NEW;
+    int formalStackIndex = parser.stackDepthAtPC(current) - GET_ARGC(current) - pushedNewTarget +
+                           formalIndex;
     MOZ_ASSERT(formalStackIndex >= 0);
     if (uint32_t(formalStackIndex) >= parser.stackDepthAtPC(current))
         return true;
