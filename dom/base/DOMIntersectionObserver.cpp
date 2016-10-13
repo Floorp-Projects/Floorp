@@ -307,8 +307,25 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
     nsRect targetRect;
     Maybe<nsRect> intersectionRect;
 
-    if (rootFrame && targetFrame &&
-       (!mRoot || nsLayoutUtils::IsAncestorFrameCrossDoc(rootFrame, targetFrame))) {
+    if (rootFrame && targetFrame) {
+      // If mRoot is set we are testing intersection with a container element
+      // instead of the implicit root.
+      if (mRoot) {
+        // Skip further processing of this target if it is not in the same
+        // Document as the intersection root, e.g. if root is an element of
+        // the main document and target an element from an embedded iframe.
+        if (target->GetComposedDoc() != root->GetComposedDoc()) {
+          continue;
+        }
+        // Skip further processing of this target if is not a descendant of the
+        // intersection root in the containing block chain. E.g. this would be
+        // the case if the target is in a position:absolute element whose
+        // containing block is an ancestor of root.
+        if (!nsLayoutUtils::IsAncestorFrameCrossDoc(rootFrame, targetFrame)) {
+          continue;
+        }
+      }
+
       targetRect = nsLayoutUtils::GetAllInFlowRectsUnion(
         targetFrame,
         nsLayoutUtils::GetContainingBlockForClientRect(targetFrame),
