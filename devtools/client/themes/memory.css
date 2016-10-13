@@ -595,45 +595,43 @@ html, body, #app, #memory-tool {
  * Dagre-D3 graphs
  */
 
+svg {
+  --arrow-color: var(--theme-splitter-color);
+  --text-color: var(--theme-body-color-alt);
+}
+
+.theme-dark svg {
+  --arrow-color: var(--theme-body-color-alt);
+}
+
+svg #arrowhead {
+  /* !important is needed to override inline style */
+  fill: var(--arrow-color) !important;
+}
+
 .edgePath path {
   stroke-width: 1px;
   fill: none;
-}
-
-.theme-dark .edgePath path {
-  stroke: var(--theme-body-color-alt);
-}
-.theme-light .edgePath path {
-  stroke: var(--theme-splitter-color);
+  stroke: var(--arrow-color);
 }
 
 g.edgeLabel rect {
   fill: var(--theme-body-background);
 }
+
 g.edgeLabel tspan {
-  fill: var(--theme-body-color-alt);
+  fill: var(--text-color);
 }
 
 .nodes rect {
   stroke-width: 1px;
-}
-
-.nodes rect {
-  stroke: var(--theme-tab-toolbar-background);
-}
-.theme-light rect {
-  fill: var(--theme-tab-toolbar-background);
-}
-.theme-dark rect {
+  stroke: var(--theme-splitter-color);
   fill: var(--theme-toolbar-background);
 }
 
 text {
-  font-weight: 300;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
-  font-size: 14px;
-}
-
-text {
-  fill: var(--theme-body-color-alt);
+  font-size: 1.25em;
+  fill: var(--text-color);
+  /* Make sure text stays inside its container in RTL locales */
+  direction: ltr;
 }
