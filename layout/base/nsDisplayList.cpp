@@ -6804,11 +6804,6 @@ nsDisplaySVGEffects::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
     // nothing in the filter input.
     aInvalidRegion->Or(bounds, geometry->mBounds);
   }
-
-  if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
-    aInvalidRegion->Or(*aInvalidRegion, bounds);
-  }
 }
 
 bool nsDisplaySVGEffects::ValidateSVGFrame()
@@ -7051,6 +7046,24 @@ bool nsDisplayMask::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 void
+nsDisplayMask::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                               const nsDisplayItemGeometry* aGeometry,
+                                               nsRegion* aInvalidRegion)
+{
+  nsDisplaySVGEffects::ComputeInvalidationRegion(aBuilder, aGeometry,
+                                                 aInvalidRegion);
+
+  const nsDisplayMaskGeometry* geometry =
+    static_cast<const nsDisplayMaskGeometry*>(aGeometry);
+  bool snap;
+  nsRect bounds = GetBounds(aBuilder, &snap);
+  if (aBuilder->ShouldSyncDecodeImages() &&
+      geometry->ShouldInvalidateToSyncDecodeImages()) {
+    aInvalidRegion->Or(*aInvalidRegion, bounds);
+  }
+}
+
+void
 nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                             nsRenderingContext* aCtx,
                             LayerManager* aManager)
@@ -7230,10 +7243,8 @@ nsDisplayFilter::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                                   aManager,
                                                   mHandleOpacity);
 
-  image::DrawResult result =
-    nsSVGIntegrationUtils::PaintFilter(params);
-
-  nsDisplayMaskGeometry::UpdateDrawResult(this, result);
+  image::DrawResult result = nsSVGIntegrationUtils::PaintFilter(params);
+  nsDisplayFilterGeometry::UpdateDrawResult(this, result);
 }
 
 #ifdef MOZ_DUMP_PAINTING
