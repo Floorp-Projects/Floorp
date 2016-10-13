@@ -4,6 +4,10 @@
 // check that if a page captured in the background attempts to set a cookie,
 // that cookie is not saved for subsequent requests.
 function* runTests() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["privacy.about_newtab_segragation.enabled", true]]
+  });
+
   let url = bgTestPageURL({
     setRedCookie: true,
     iframe: bgTestPageURL({ setRedCookie: true}),
