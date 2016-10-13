@@ -311,7 +311,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
         b.mYUVColorSpace = YUVColorSpace::BT601;
         break;
       default:
-        NS_WARNING("Unsupported yuv color space.");
+        break;
     }
   }
   RefPtr<VideoData> v =
