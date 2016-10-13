@@ -369,6 +369,66 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
              bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
 }
 
+
+// Extracting machine code as JS object. The result has the "code" property, as
+// a Uint8Array, and the "segments" property as array objects. The objects
+// contain offsets in the "code" array and basic information about a code
+// segment/function body.
+bool
+Module::extractCode(JSContext* cx, MutableHandleValue vp)
+{
+    RootedPlainObject result(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!result)
+        return false;
+
+    RootedObject code(cx, JS_NewUint8Array(cx, code_.length()));
+    if (!code)
+        return false;
+
+    memcpy(code->as<TypedArrayObject>().viewDataUnshared(), code_.begin(), code_.length());
+
+    RootedValue value(cx, ObjectValue(*code));
+    if (!JS_DefineProperty(cx, result, "code", value, JSPROP_ENUMERATE))
+        return false;
+
+    RootedObject segments(cx, NewDenseEmptyArray(cx));
+    if (!segments)
+        return false;
+
+    for (auto p = metadata_->codeRanges.begin(); p != metadata_->codeRanges.end(); p++) {
+        RootedObject segment(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+        value.setNumber((uint32_t)p->begin());
+        if (!JS_DefineProperty(cx, segment, "begin", value, JSPROP_ENUMERATE))
+            return false;
+        value.setNumber((uint32_t)p->end());
+        if (!JS_DefineProperty(cx, segment, "end", value, JSPROP_ENUMERATE))
+            return false;
+        value.setNumber((uint32_t)p->kind());
+        if (!JS_DefineProperty(cx, segment, "kind", value, JSPROP_ENUMERATE))
+            return false;
+        if (p->isFunction()) {
+            value.setNumber((uint32_t)p->funcDefIndex());
+            if (!JS_DefineProperty(cx, segment, "funcDefIndex", value, JSPROP_ENUMERATE))
+                return false;
+            value.setNumber((uint32_t)p->funcNonProfilingEntry());
+            if (!JS_DefineProperty(cx, segment, "funcBodyBegin", value, JSPROP_ENUMERATE))
+                return false;
+            value.setNumber((uint32_t)p->funcProfilingEpilogue());
+            if (!JS_DefineProperty(cx, segment, "funcBodyEnd", value, JSPROP_ENUMERATE))
+                return false;
+        }
+        if (!NewbornArrayPush(cx, segments, ObjectValue(*segment)))
+            return false;
+    }
+
+    value.setObject(*segments);
+    if (!JS_DefineProperty(cx, result, "segments", value, JSPROP_ENUMERATE))
+        return false;
+
+    vp.setObject(*result);
+    return true;
+}
+
 static uint32_t
 EvaluateInitExpr(const ValVector& globalImports, InitExpr initExpr)
 {

@@ -2075,7 +2075,7 @@ nsPluginHost::AddPluginTag(nsPluginTag* aPluginTag)
 static bool
 PluginInfoIsFlash(const nsPluginInfo& info)
 {
-  if (strcmp(info.fName, "Shockwave Flash") != 0) {
+  if (!info.fName || strcmp(info.fName, "Shockwave Flash") != 0) {
     return false;
   }
   for (uint32_t i = 0; i < info.fVariantCount; ++i) {

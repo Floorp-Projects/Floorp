@@ -49,7 +49,7 @@ class TestSuicide : public mozilla::Runnable {
       NS_DispatchToMainThread(this);
       return NS_OK;
     }
-    MOZ_ASSERT(mThread);
+    MOZ_RELEASE_ASSERT(mThread);
     mThread->Shutdown();
     gRunnableExecuted[TEST_CALL_NEWTHREAD_SUICIDAL] = true;
     return NS_OK;
@@ -124,7 +124,7 @@ struct TestCopyWithNoMove
   // Destructor nulls member variable...
   ~TestCopyWithNoMove() { mCopyCounter = nullptr; }
   // ... so we can check that the object is called when still alive.
-  void operator()() { MOZ_ASSERT(mCopyCounter); }
+  void operator()() { MOZ_RELEASE_ASSERT(mCopyCounter); }
   int* mCopyCounter;
 };
 struct TestCopyWithDeletedMove
@@ -134,7 +134,7 @@ struct TestCopyWithDeletedMove
   // Deleted move prevents passing by rvalue (even if copy would work)
   TestCopyWithDeletedMove(TestCopyWithDeletedMove&&) = delete;
   ~TestCopyWithDeletedMove() { mCopyCounter = nullptr; }
-  void operator()() { MOZ_ASSERT(mCopyCounter); }
+  void operator()() { MOZ_RELEASE_ASSERT(mCopyCounter); }
   int* mCopyCounter;
 };
 struct TestMove
@@ -143,7 +143,7 @@ struct TestMove
   TestMove(const TestMove&) = delete;
   TestMove(TestMove&& a) : mMoveCounter(a.mMoveCounter) { a.mMoveCounter = nullptr; ++mMoveCounter; }
   ~TestMove() { mMoveCounter = nullptr; }
-  void operator()() { MOZ_ASSERT(mMoveCounter); }
+  void operator()() { MOZ_RELEASE_ASSERT(mMoveCounter); }
   int* mMoveCounter;
 };
 struct TestCopyMove
@@ -152,7 +152,7 @@ struct TestCopyMove
   TestCopyMove(const TestCopyMove& a) : mCopyCounter(a.mCopyCounter), mMoveCounter(a.mMoveCounter) { ++mCopyCounter; };
   TestCopyMove(TestCopyMove&& a) : mCopyCounter(a.mCopyCounter), mMoveCounter(a.mMoveCounter) { a.mMoveCounter = nullptr; ++mMoveCounter; }
   ~TestCopyMove() { mCopyCounter = nullptr; mMoveCounter = nullptr; }
-  void operator()() { MOZ_ASSERT(mCopyCounter); MOZ_ASSERT(mMoveCounter); }
+  void operator()() { MOZ_RELEASE_ASSERT(mCopyCounter); MOZ_RELEASE_ASSERT(mMoveCounter); }
   int* mCopyCounter;
   int* mMoveCounter;
 };
@@ -379,7 +379,7 @@ int main(int argc, char** argv)
   // Now test a suicidal event in NS_New(Named)Thread
   nsCOMPtr<nsIThread> thread;
   NS_NewNamedThread("SuicideThread", getter_AddRefs(thread), new TestSuicide());
-  MOZ_ASSERT(thread);
+  MOZ_RELEASE_ASSERT(thread);
 
   while (!gRunnableExecuted[TEST_CALL_NEWTHREAD_SUICIDAL]) {
     NS_ProcessPendingEvents(nullptr);

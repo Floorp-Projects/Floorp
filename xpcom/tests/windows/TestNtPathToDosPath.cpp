@@ -77,7 +77,7 @@ DriveMapping::ChangeDriveLetter()
 {
   wchar_t prevDriveLetter = mDriveLetter;
   bool result = DoMapping();
-  MOZ_ASSERT(mDriveLetter != prevDriveLetter);
+  MOZ_RELEASE_ASSERT(mDriveLetter != prevDriveLetter);
   if (result && prevDriveLetter) {
     Disconnect(prevDriveLetter);
   }
@@ -88,8 +88,8 @@ void
 DriveMapping::Disconnect(wchar_t aDriveLetter)
 {
   wchar_t drvTemplate[] = {aDriveLetter, L':', L'\0'};
-  mozilla::DebugOnly<DWORD> result = WNetCancelConnection2W(drvTemplate, 0, TRUE);
-  MOZ_ASSERT(result == NO_ERROR);
+  DWORD result = WNetCancelConnection2W(drvTemplate, 0, TRUE);
+  MOZ_RELEASE_ASSERT(result == NO_ERROR);
 }
 
 DriveMapping::~DriveMapping()
@@ -232,4 +232,3 @@ int main(int argc, char* argv[])
 
   return result;
 }
-

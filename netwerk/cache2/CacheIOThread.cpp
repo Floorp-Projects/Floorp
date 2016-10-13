@@ -44,14 +44,15 @@ void CacheIOTelemetry::Report(uint32_t aLevel, CacheIOTelemetry::size_type aLeng
   }
 
   static Telemetry::ID telemetryID[] = {
-    Telemetry::HTTP_CACHE_IO_QUEUE_OPEN_PRIORITY,
-    Telemetry::HTTP_CACHE_IO_QUEUE_READ_PRIORITY,
-    Telemetry::HTTP_CACHE_IO_QUEUE_OPEN,
-    Telemetry::HTTP_CACHE_IO_QUEUE_READ,
-    Telemetry::HTTP_CACHE_IO_QUEUE_MANAGEMENT,
-    Telemetry::HTTP_CACHE_IO_QUEUE_WRITE,
-    Telemetry::HTTP_CACHE_IO_QUEUE_INDEX,
-    Telemetry::HTTP_CACHE_IO_QUEUE_EVICT
+    Telemetry::HTTP_CACHE_IO_QUEUE_2_OPEN_PRIORITY,
+    Telemetry::HTTP_CACHE_IO_QUEUE_2_READ_PRIORITY,
+    Telemetry::HTTP_CACHE_IO_QUEUE_2_MANAGEMENT,
+    Telemetry::HTTP_CACHE_IO_QUEUE_2_OPEN,
+    Telemetry::HTTP_CACHE_IO_QUEUE_2_READ,
+    Telemetry::HTTP_CACHE_IO_QUEUE_2_WRITE_PRIORITY,
+    Telemetry::HTTP_CACHE_IO_QUEUE_2_WRITE,
+    Telemetry::HTTP_CACHE_IO_QUEUE_2_INDEX,
+    Telemetry::HTTP_CACHE_IO_QUEUE_2_EVICT
   };
 
   // Each bucket is a multiply of kGranularity (30, 60, 90..., 300+)
