@@ -163,6 +163,14 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLFormElement)
                                nsIRadioGroupContainer)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 
+// EventTarget
+void
+HTMLFormElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  if (mFormPasswordEventDispatcher == aEvent) {
+    mFormPasswordEventDispatcher = nullptr;
+  }
+}
 
 // nsIDOMHTMLFormElement
 
@@ -1160,8 +1168,8 @@ HTMLFormElement::PostPasswordEvent()
   }
 
   mFormPasswordEventDispatcher =
-    new FormPasswordEventDispatcher(this,
-                                    NS_LITERAL_STRING("DOMFormHasPassword"));
+    new AsyncEventDispatcher(this, NS_LITERAL_STRING("DOMFormHasPassword"),
+                             true, true);
   mFormPasswordEventDispatcher->PostDOMEvent();
 }
 
