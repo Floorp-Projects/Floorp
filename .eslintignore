@@ -69,6 +69,8 @@ browser/components/privatebrowsing/**
 browser/components/sessionstore/**
 browser/components/tabview/**
 browser/components/translation/**
+# generated files in cld2
+browser/components/translation/cld2/cld-worker.js
 browser/extensions/pdfjs/**
 # generated or library files in pocket
 browser/extensions/pocket/content/panels/js/tmpl.js
