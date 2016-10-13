@@ -442,10 +442,12 @@ ModuleGenerator::finishCodegen()
     ProfilingOffsetVector jitExits;
     EnumeratedArray<JumpTarget, JumpTarget::Limit, Offsets> jumpTargets;
     Offsets interruptExit;
+    Offsets throwStub;
 
     {
         TempAllocator alloc(&lifo_);
         MacroAssembler masm(MacroAssembler::AsmJSToken(), alloc);
+        Label throwLabel;
 
         if (!entries.resize(numFuncDefExports))
             return false;
@@ -457,14 +459,15 @@ ModuleGenerator::finishCodegen()
         if (!jitExits.resize(numFuncImports()))
             return false;
         for (uint32_t i = 0; i < numFuncImports(); i++) {
-            interpExits[i] = GenerateInterpExit(masm, metadata_->funcImports[i], i);
-            jitExits[i] = GenerateJitExit(masm, metadata_->funcImports[i]);
+            interpExits[i] = GenerateInterpExit(masm, metadata_->funcImports[i], i, &throwLabel);
+            jitExits[i] = GenerateJitExit(masm, metadata_->funcImports[i], &throwLabel);
         }
 
         for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit))
-            jumpTargets[target] = GenerateJumpTarget(masm, target);
+            jumpTargets[target] = GenerateJumpTarget(masm, target, &throwLabel);
 
-        interruptExit = GenerateInterruptStub(masm);
+        interruptExit = GenerateInterruptStub(masm, &throwLabel);
+        throwStub = GenerateThrowStub(masm, &throwLabel);
 
         if (masm.oom() || !masm_.asmMergeWith(masm))
             return false;
@@ -500,6 +503,10 @@ ModuleGenerator::finishCodegen()
 
     interruptExit.offsetBy(offsetInWhole);
     if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, interruptExit))
+        return false;
+
+    throwStub.offsetBy(offsetInWhole);
+    if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, throwStub))
         return false;
 
     // Fill in LinkData with the offsets of these stubs.
