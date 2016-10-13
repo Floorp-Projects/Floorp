@@ -141,7 +141,7 @@ function promisePanelOpened()
   return deferred.promise;
 }
 
-function task_resetState()
+function* task_resetState()
 {
   // Remove all downloads.
   let publicList = yield Downloads.getList(Downloads.PUBLIC);
@@ -185,7 +185,7 @@ function* task_addDownloads(aItems)
   }
 }
 
-function task_openPanel()
+function* task_openPanel()
 {
   yield promiseFocus();
 
@@ -194,7 +194,7 @@ function task_openPanel()
   yield promise;
 }
 
-function setDownloadDir() {
+function* setDownloadDir() {
   let tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   tmpDir.append("testsavedir");
   if (!tmpDir.exists()) {
