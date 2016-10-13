@@ -14,79 +14,60 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489415
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=489415">Mozilla Bug 489415</a>
 <p id="display"></p>
 
-<video id="v1" preload="metadata" onended="onendedcb('v1')"></video>
-<video id="v2" preload="metadata" onended="onendedcb('v2')"></video>
+<video id="v1" autoplay onended="loaded('v1')"></video>
+<video id="v2" autoplay onended="loaded('v2')"></video>
 
 <pre id="test">
 <script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
-var throwOutside = e => setTimeout(() => { throw e; });
-
 var v1 = document.getElementById("v1");
 var v2 = document.getElementById("v2");
-var count = 0;
 
-function onendedcb(id) {
-  var c = document.createElement("canvas");
-  var ctx = c.getContext("2d");
-  var v = document.getElementById(id);
-  ctx.drawImage(v, 0, 0);
-  try {
-    c.toDataURL();
-    ok(false, "Failed to throw exception in toDataURL for " + id);
-  } catch (ex) {
-    ok(true, "Threw exception in toDataURL for " + id);
-  }
-  if (++count == 2) {
-    SimpleTest.finish();
-  }
-}
+var resource = getPlayableVideo(gSeekTests);
 
-function testMixedPrincipals(resource) {
-  if (!resource) {
-    todo(false, "No types supported");
-    return;
-  }
-  // Make sure the media cache size(50MB) is large enough that the data could
-  // be download in MediaCache completely.
-  return pushPrefs(['media.cache_size', 50*1024])
-  .then(() => {
+if (resource != null) {
+  var count = 0;
 
-    // Generate a random key. The first load with that key will return
-    // data, the second and subsequent loads with that key will return a redirect
-    // to a different origin ('localhost:8888' will be redirected to 'example.org',
-    // and 'example.org' will be redirected to 'localhost:8888'). We rely on the
-    // fact that Ogg will do a seek to the end of the resource, triggering a new
-    // load with the same key which will return a same-origin resource.
-    // Loading data from two different origins should be detected by the media
-    // cache and result in a null principal so that the canvas usage above fails.
-    var key = Math.floor(Math.random()*100000000);
-
-    // In v1, try loading from same-origin first and then getting redirected to
-    // another origin.
-    v1.src =
-        "http://mochi.test:8888/tests/dom/media/test/dynamic_redirect.sjs?key=v1_" +
-        key + "&res=" + resource.name;
-    v1.onloadeddata = function () {
-      // To limit readahead, avoid racing with playback and "catching up" mode.
-      v1.play();
+  function loaded(id) {
+    var c = document.createElement("canvas");
+    var ctx = c.getContext("2d");
+    var v = document.getElementById(id);
+    ctx.drawImage(v, 0, 0);
+    try {
+      c.toDataURL();
+      ok(false, "Failed to throw exception in toDataURL for " + id);
+    } catch (ex) {
+      ok(true, "Threw exception in toDataURL for " + id);
     }
-
-    // In v2, try loading cross-origin first and then getting redirected to
-    // our origin.
-    v2.src = "http://example.org/tests/dom/media/test/dynamic_redirect.sjs?key=v2_" + key + "&res=" + resource.name;
-    v2.onloadeddata = function () {
-      // To limit readahead, avoid racing with playback and "catching up" mode.
-      v2.play();
+    if (++count == 2) {
+      SimpleTest.finish();
     }
-  });
+  }
+
+  // Generate a random key. The first load with that key will return
+  // data, the second and subsequent loads with that key will return a redirect
+  // to a different origin ('localhost:8888' will be redirected to 'example.org',
+  // and 'example.org' will be redirected to 'localhost:8888'). We rely on the
+  // fact that Ogg will do a seek to the end of the resource, triggering a new
+  // load with the same key which will return a same-origin resource.
+  // Loading data from two different origins should be detected by the media
+  // cache and result in a null principal so that the canvas usage above fails.
+  var key = Math.floor(Math.random()*100000000);
+
+  // In v1, try loading from same-origin first and then getting redirected to
+  // another origin.
+  v1.src = "http://mochi.test:8888/tests/dom/media/test/dynamic_redirect.sjs?key=v1_" + key + "&res=" + resource.name;
+  v1.load();
+
+  // In v2, try loading cross-origin first and then getting redirected to
+  // our origin.
+  v2.src = "http://example.org/tests/dom/media/test/dynamic_redirect.sjs?key=v2_" + key + "&res=" + resource.name;
+  v2.load();
+  
+} else {
+  todo(false, "No types supported");
 }
-
-testMixedPrincipals({ name:"pixel_aspect_ratio.mp4", type:"video/mp4", duration:28})
-.catch(e => throwOutside(e));
-
 </script>
 </pre>
 
