@@ -132,8 +132,35 @@ interface nsIDocShell : nsIDocShellTreeItem
    *                               ignored.
    * @param aReferrer            - Referring URI
    * @param aReferrerPolicy      - Referrer policy
-   * @param aTriggeringPrincipal - Principal that initiated that load
-   * @param aPrincipalToInherit  - Principal to be inherited for that load
+   * @param aTriggeringPrincipal - Principal that initiated that load. If passing
+   *                               null for this argument, then internally a
+   *                               principal is created from aReferrer. If
+   *                               aReferrer is also null, then the
+   *                               triggeringPrincipal defaults to the
+   *                               SystemPrincipal. Please note that this is the
+   *                               principal that is used for security checks. If
+   *                               the argument aURI is provided by the web, then
+   *                               please pass an explicit triggeringPrincipal to
+   *                               avoid the fallback to SystemPrincipal and
+   *                               hence a potential security risk.
+   *                               If aTriggeringPrincipal is null then either
+   *                               aPrincipalToInherit is null or it's
+   *                               a NullPrincipal.
+   * @param aPrincipalToInherit  - Principal to be inherited for that load. If
+   *                               passing null for this argument, then internally
+   *                               the triggeringPrincipal is also used for the
+   *                               principalToInherit. There are cases where those
+   *                               two principals need to be different though.
+   *                               E.g. the system might initiate a load for
+   *                               'about:blank', hence SystemPrincipal is passed
+   *                               for aTriggeringPrincipal. But the principal to
+   *                               be inherited for that load should be a
+   *                               NullPrincipal and not the SystemPrincipal.
+   *                               In that case, please pass a non null
+   *                               principalToInherit.
+   *                               If aPrincipalToInherit is null then either
+   *                               aTriggeringPrincipal is null or
+   *                               INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL is set.
    * @param aFlags               - Any of the load flags defined within above.
    * @param aStopActiveDoc       - Flag indicating whether loading the current
    *                               document should be stopped.
