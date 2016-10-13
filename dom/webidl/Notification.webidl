@@ -52,6 +52,9 @@ interface Notification : EventTarget {
   readonly attribute DOMString? icon;
 
   [Constant]
+  readonly attribute boolean requireInteraction;
+
+  [Constant]
   readonly attribute any data;
 
   void close();
@@ -63,6 +66,7 @@ dictionary NotificationOptions {
   DOMString body = "";
   DOMString tag = "";
   DOMString icon = "";
+  boolean requireInteraction = false;
   any data = null;
   NotificationBehavior mozbehavior = null;
 };
