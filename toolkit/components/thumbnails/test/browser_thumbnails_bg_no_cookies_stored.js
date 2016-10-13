@@ -5,7 +5,7 @@
 // that cookie is not saved for subsequent requests.
 function* runTests() {
   yield SpecialPowers.pushPrefEnv({
-    set: [["privacy.about_newtab_segragation.enabled", true]]
+    set: [["privacy.about_newtab_segregation.enabled", true]]
   });
 
   let url = bgTestPageURL({
