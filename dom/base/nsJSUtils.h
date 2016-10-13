@@ -65,11 +65,18 @@ public:
                                   JSObject** aFunctionObject);
 
   struct MOZ_STACK_CLASS EvaluateOptions {
+    bool coerceToString;
     JS::AutoObjectVector scopeChain;
 
     explicit EvaluateOptions(JSContext* cx)
-      : scopeChain(cx)
+      : coerceToString(false)
+      , scopeChain(cx)
     {}
+
+    EvaluateOptions& setCoerceToString(bool aCoerce) {
+      coerceToString = aCoerce;
+      return *this;
+    }
   };
 
   // aEvaluationGlobal is the global to evaluate in.  The return value
