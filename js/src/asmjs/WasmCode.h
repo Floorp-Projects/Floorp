@@ -19,7 +19,7 @@
 #ifndef wasm_code_h
 #define wasm_code_h
 
-#include "asmjs/WasmBinaryToExperimentalText.h"
+#include "asmjs/WasmGeneratedSourceMap.h"
 #include "asmjs/WasmTypes.h"
 
 namespace js {
