@@ -40,16 +40,16 @@ class nsDisplayItemGeometry
 public:
   nsDisplayItemGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
   virtual ~nsDisplayItemGeometry();
-  
+
   /**
    * Compute the area required to be invalidated if this
    * display item is removed.
    */
   const nsRect& ComputeInvalidationRegion() { return mBounds; }
-  
+
   /**
    * Shifts all retained areas of the nsDisplayItemGeometry by the given offset.
-   * 
+   *
    * This is used to compensate for scrolling, since the destination buffer
    * can scroll without requiring a full repaint.
    *
@@ -85,9 +85,9 @@ public:
 bool ShouldSyncDecodeImages(nsDisplayListBuilder* aBuilder);
 
 /**
- * nsImageGeometryMixin is a mixin for geometry items that draw images. Geometry
- * items that include this mixin can track drawing results and use that
- * information to inform invalidation decisions.
+ * nsImageGeometryMixin is a mixin for geometry items that draw images.
+ * Geometry items that include this mixin can track drawing results and use
+ * that information to inform invalidation decisions.
  *
  * This mixin uses CRTP; its template parameter should be the type of the class
  * that is inheriting from it. See nsDisplayItemGenericImageGeometry for an
@@ -219,7 +219,7 @@ class nsDisplayBoxShadowInnerGeometry : public nsDisplayItemGeometry
 {
 public:
   nsDisplayBoxShadowInnerGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
-  
+
   virtual void MoveBy(const nsPoint& aOffset) override;
 
   nsRect mPaddingRect;
