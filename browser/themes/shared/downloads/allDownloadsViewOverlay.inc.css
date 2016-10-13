@@ -65,6 +65,10 @@
   background-image: url("chrome://browser/skin/info.svg");
 }
 
+@item@ > toolbarseparator {
+  display: none;
+}
+
 .downloadTarget {
   margin-bottom: 3px;
   cursor: inherit;
@@ -78,6 +82,7 @@
 
 .downloadButton {
   -moz-appearance: none;
+  -moz-box-align: center;
   background: transparent;
   min-width: 0;
   min-height: 0;
