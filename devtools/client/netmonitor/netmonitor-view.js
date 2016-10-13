@@ -28,6 +28,12 @@ const {getFormDataSections,
        getUriHostPort} = require("./request-utils");
 const {L10N} = require("./l10n");
 const {RequestsMenuView} = require("./requests-menu-view");
+const {ToolbarView} = require("./toolbar-view");
+const {configureStore} = require("./store");
+const Actions = require("./actions/index");
+
+// Initialize the global redux variables
+var gStore = configureStore();
 
 // ms
 const WDA_DEFAULT_VERIFY_INTERVAL = 50;
@@ -88,8 +94,8 @@ var NetMonitorView = {
   initialize: function () {
     this._initializePanes();
 
-    this.Toolbar.initialize();
-    this.RequestsMenu.initialize();
+    this.Toolbar.initialize(gStore);
+    this.RequestsMenu.initialize(gStore);
     this.NetworkDetails.initialize();
     this.CustomRequest.initialize();
   },
@@ -292,56 +298,6 @@ var NetMonitorView = {
   _collapsePaneString: "",
   _expandPaneString: "",
   _editorPromises: new Map()
-};
-
-/**
- * Functions handling the toolbar view: expand/collapse button etc.
- */
-function ToolbarView() {
-  dumpn("ToolbarView was instantiated");
-
-  this._onTogglePanesPressed = this._onTogglePanesPressed.bind(this);
-}
-
-ToolbarView.prototype = {
-  /**
-   * Initialization function, called when the debugger is started.
-   */
-  initialize: function () {
-    dumpn("Initializing the ToolbarView");
-
-    this._detailsPaneToggleButton = $("#details-pane-toggle");
-    this._detailsPaneToggleButton.addEventListener("mousedown",
-      this._onTogglePanesPressed, false);
-  },
-
-  /**
-   * Destruction function, called when the debugger is closed.
-   */
-  destroy: function () {
-    dumpn("Destroying the ToolbarView");
-
-    this._detailsPaneToggleButton.removeEventListener("mousedown",
-      this._onTogglePanesPressed, false);
-  },
-
-  /**
-   * Listener handling the toggle button click event.
-   */
-  _onTogglePanesPressed: function () {
-    let requestsMenu = NetMonitorView.RequestsMenu;
-    let selectedIndex = requestsMenu.selectedIndex;
-
-    // Make sure there's a selection if the button is pressed, to avoid
-    // showing an empty network details pane.
-    if (selectedIndex == -1 && requestsMenu.itemCount) {
-      requestsMenu.selectedIndex = 0;
-    } else {
-      requestsMenu.selectedIndex = -1;
-    }
-  },
-
-  _detailsPaneToggleButton: null
 };
 
 /**
@@ -1491,7 +1447,8 @@ PerformanceStatisticsView.prototype = {
     });
 
     chart.on("click", (_, item) => {
-      NetMonitorView.RequestsMenu.filterOnlyOn(item.label);
+      // Reset FilterButtons and enable one filter exclusively
+      gStore.dispatch(Actions.enableFilterOnly(item.label));
       NetMonitorView.showNetworkInspectorView();
     });
 

@@ -4,17 +4,10 @@
 "use strict";
 
 const createStore = require("devtools/client/shared/redux/create-store");
-const reducers = require("devtools/client/netmonitor/reducers/index");
+const reducers = require("./reducers/index");
 
 function configureStore() {
-  const initialState = {
-      // All initial application states will be defined as store from here
-  };
-
-  return createStore()(
-    reducers,
-    initialState
-  );
+  return createStore()(reducers);
 }
 
 exports.configureStore = configureStore;
