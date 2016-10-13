@@ -1172,15 +1172,20 @@ public:
    * Indices into aRadii are the NS_CORNER_* constants in nsStyleConsts.h
    * aSkipSides is a union of SIDE_BIT_LEFT/RIGHT/TOP/BOTTOM bits that says
    * which side(s) to skip.
+   *
+   * Note: GetMarginBoxBorderRadii() and GetShapeBoxBorderRadii() work only
+   * on frames that establish block formatting contexts since they don't
+   * participate in margin-collapsing.
    */
   virtual bool GetBorderRadii(const nsSize& aFrameSize,
                               const nsSize& aBorderArea,
                               Sides aSkipSides,
                               nscoord aRadii[8]) const;
   bool GetBorderRadii(nscoord aRadii[8]) const;
-
+  bool GetMarginBoxBorderRadii(nscoord aRadii[8]) const;
   bool GetPaddingBoxBorderRadii(nscoord aRadii[8]) const;
   bool GetContentBoxBorderRadii(nscoord aRadii[8]) const;
+  bool GetShapeBoxBorderRadii(nscoord aRadii[8]) const;
 
   /**
    * Get the position of the frame's baseline, relative to the top of
