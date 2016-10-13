@@ -265,11 +265,11 @@ public:
   mozilla::gfx::Color mColor;
 };
 
-class nsDisplaySVGEffectsGeometry : public nsDisplayItemGeometry
-  , public nsImageGeometryMixin<nsDisplaySVGEffectsGeometry>
+class nsDisplayMaskGeometry : public nsDisplayItemGeometry
+  , public nsImageGeometryMixin<nsDisplayMaskGeometry>
 {
 public:
-  nsDisplaySVGEffectsGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder);
+  nsDisplayMaskGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder);
 
   virtual void MoveBy(const nsPoint& aOffset) override;
 
