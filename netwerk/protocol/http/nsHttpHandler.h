@@ -82,8 +82,10 @@ public:
     uint8_t        ReferrerLevel()           { return mReferrerLevel; }
     bool           SpoofReferrerSource()     { return mSpoofReferrerSource; }
     uint8_t        ReferrerTrimmingPolicy()  { return mReferrerTrimmingPolicy; }
+    uint8_t        ReferrerXOriginTrimmingPolicy() {
+        return mReferrerXOriginTrimmingPolicy;
+    }
     uint8_t        ReferrerXOriginPolicy()   { return mReferrerXOriginPolicy; }
-    bool           SendSecureXSiteReferrer() { return mSendSecureXSiteReferrer; }
     bool           PackagedAppsEnabled()     { return mPackagedAppsEnabled; }
     uint8_t        RedirectionLimit()        { return mRedirectionLimit; }
     PRIntervalTime IdleTimeout()             { return mIdleTimeout; }
@@ -417,6 +419,7 @@ private:
     uint8_t  mReferrerLevel;
     uint8_t  mSpoofReferrerSource;
     uint8_t  mReferrerTrimmingPolicy;
+    uint8_t  mReferrerXOriginTrimmingPolicy;
     uint8_t  mReferrerXOriginPolicy;
 
     bool mFastFallbackToIPv4;
@@ -492,9 +495,6 @@ private:
 
 
     bool           mPromptTempRedirect;
-    // mSendSecureXSiteReferrer: default is false,
-    // if true allow referrer headers between secure non-matching hosts
-    bool           mSendSecureXSiteReferrer;
 
     // Persistent HTTPS caching flag
     bool           mEnablePersistentHttpsCaching;
