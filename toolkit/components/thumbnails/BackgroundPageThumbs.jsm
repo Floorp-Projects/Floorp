@@ -35,8 +35,6 @@ XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_TIMEOUT", TEL_CAPTURE_DONE_TIM
 XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_CRASHED", TEL_CAPTURE_DONE_CRASHED);
 XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_BAD_URI", TEL_CAPTURE_DONE_BAD_URI);
 
-XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-                                  "resource://gre/modules/ContextualIdentityService.jsm");
 const global = this;
 
 const BackgroundPageThumbs = {
@@ -195,11 +193,6 @@ const BackgroundPageThumbs = {
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
     browser.setAttribute("disableglobalhistory", "true");
-
-    // Use the private container for thumbnails.
-    let privateIdentity =
-      ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
-    browser.setAttribute("usercontextid", privateIdentity.userContextId);
 
     // Size the browser.  Make its aspect ratio the same as the canvases' that
     // the thumbnails are drawn into; the canvases' aspect ratio is the same as
@@ -426,12 +419,6 @@ Capture.prototype = {
           Cu.reportError(err);
         }
       }
-
-      // Clear the data in the private container for thumbnails.
-      let privateIdentity =
-        ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
-      Services.obs.notifyObservers(null, "clear-origin-data",
-          JSON.stringify({ userContextId: privateIdentity.userContextId }));
     };
 
     if (!data) {
