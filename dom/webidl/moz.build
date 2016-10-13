@@ -281,6 +281,7 @@ WEBIDL_FILES = [
     'InputPort.webidl',
     'InputPortManager.webidl',
     'InspectorUtils.webidl',
+    'IntersectionObserver.webidl',
     'IterableIterator.webidl',
     'KeyAlgorithm.webidl',
     'KeyboardEvent.webidl',

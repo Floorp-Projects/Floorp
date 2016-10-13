@@ -80,6 +80,7 @@ static mozilla::LazyLogModule sRefreshDriverLog("nsRefreshDriver");
 
 #define DEFAULT_THROTTLED_FRAME_RATE 1
 #define DEFAULT_RECOMPUTE_VISIBILITY_INTERVAL_MS 1000
+#define DEFAULT_NOTIFY_INTERSECTION_OBSERVERS_INTERVAL_MS 100
 // after 10 minutes, stop firing off inactive timers
 #define DEFAULT_INACTIVE_TIMER_DISABLE_SECONDS 600
 
@@ -976,6 +977,17 @@ nsRefreshDriver::GetMinRecomputeVisibilityInterval()
   return TimeDuration::FromMilliseconds(interval);
 }
 
+/* static */ mozilla::TimeDuration
+nsRefreshDriver::GetMinNotifyIntersectionObserversInterval()
+{
+  int32_t interval =
+    Preferences::GetInt("layout.visibility.min-notify-intersection-observers-interval-ms", -1);
+  if (interval <= 0) {
+    interval = DEFAULT_NOTIFY_INTERSECTION_OBSERVERS_INTERVAL_MS;
+  }
+  return TimeDuration::FromMilliseconds(interval);
+}
+
 double
 nsRefreshDriver::GetRefreshTimerInterval() const
 {
@@ -1018,6 +1030,8 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     mThrottledFrameRequestInterval(TimeDuration::FromMilliseconds(
                                      GetThrottledTimerInterval())),
     mMinRecomputeVisibilityInterval(GetMinRecomputeVisibilityInterval()),
+    mMinNotifyIntersectionObserversInterval(
+      GetMinNotifyIntersectionObserversInterval()),
     mThrottled(false),
     mNeedToRecomputeVisibility(false),
     mTestControllingRefreshes(false),
@@ -1038,6 +1052,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
   mMostRecentTick = mMostRecentRefresh;
   mNextThrottledFrameRequestTick = mMostRecentTick;
   mNextRecomputeVisibilityTick = mMostRecentTick;
+  mNextNotifyIntersectionObserversTick = mMostRecentTick;
 
   ++sRefreshDriverCount;
 }
@@ -1826,6 +1841,22 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     mNeedToRecomputeVisibility = false;
 
     presShell->ScheduleApproximateFrameVisibilityUpdateNow();
+  }
+
+  bool notifyIntersectionObservers = false;
+  if (aNowTime >= mNextNotifyIntersectionObserversTick) {
+    mNextNotifyIntersectionObserversTick =
+      aNowTime + mMinNotifyIntersectionObserversInterval;
+    notifyIntersectionObservers = true;
+  }
+  nsCOMArray<nsIDocument> documents;
+  CollectDocuments(mPresContext->Document(), &documents);
+  for (int32_t i = 0; i < documents.Count(); ++i) {
+    nsIDocument* doc = documents[i];
+    doc->UpdateIntersectionObservations();
+    if (notifyIntersectionObservers) {
+      doc->ScheduleIntersectionObserverNotification();
+    }
   }
 
   /*

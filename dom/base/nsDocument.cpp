@@ -1451,6 +1451,8 @@ nsDocument::~nsDocument()
   // Clear mObservers to keep it in sync with the mutationobserver list
   mObservers.Clear();
 
+  mIntersectionObservers.Clear();
+
   if (mStyleSheetSetList) {
     mStyleSheetSetList->Disconnect();
   }
@@ -1720,6 +1722,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnDemandBuiltInUASheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreloadingImages)
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntersectionObservers)
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSubImportLinks)
 
   for (uint32_t i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
@@ -1805,6 +1809,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   tmp->mParentDocument = nullptr;
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreloadingImages)
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntersectionObservers)
 
   tmp->ClearAllBoxObjects();
 
@@ -12303,6 +12309,51 @@ nsDocument::ReportUseCounters()
         }
       }
     }
+  }
+}
+
+void
+nsDocument::AddIntersectionObserver(DOMIntersectionObserver* aObserver)
+{
+  NS_ASSERTION(mIntersectionObservers.IndexOf(aObserver) == nsTArray<int>::NoIndex,
+               "Intersection observer already in the list");
+  mIntersectionObservers.AppendElement(aObserver);
+}
+
+void
+nsDocument::RemoveIntersectionObserver(DOMIntersectionObserver* aObserver)
+{
+  mIntersectionObservers.RemoveElement(aObserver);
+}
+
+void
+nsDocument::UpdateIntersectionObservations()
+{
+  DOMHighResTimeStamp time = 0;
+  if (nsPIDOMWindowInner* window = GetInnerWindow()) {
+    Performance* perf = window->GetPerformance();
+    if (perf) {
+      time = perf->Now();
+    }
+  }
+  for (const auto& observer : mIntersectionObservers) {
+    observer->Update(this, time);
+  }
+}
+
+void
+nsDocument::ScheduleIntersectionObserverNotification()
+{
+  nsCOMPtr<nsIRunnable> notification = NewRunnableMethod(this,
+    &nsDocument::NotifyIntersectionObservers);
+  NS_DispatchToCurrentThread(notification);
+}
+
+void
+nsDocument::NotifyIntersectionObservers()
+{
+  for (const auto& observer : mIntersectionObservers) {
+    observer->Notify();
   }
 }
 
