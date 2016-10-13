@@ -235,4 +235,4 @@ add_old_configure_assignment('JS_HAS_CTYPES', js_has_ctypes)
 def ctypes_and_compile_environment(ctypes, compile_environment, _):
     return ctypes and compile_environment
 
-include_when('ffi.configure', when=ctypes_and_compile_environment)
+include('ffi.configure', when=ctypes_and_compile_environment)

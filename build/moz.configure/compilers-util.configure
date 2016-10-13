@@ -47,7 +47,7 @@ def compiler_class(compiler):
             @checking_fn
             def func(compiler, flags, extra_flags):
                 flags = flags or []
-                flags += extra_flags
+                flags += extra_flags or []
                 flags.append('-c')
 
                 if try_invoke_compiler(
