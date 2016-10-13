@@ -120,12 +120,12 @@ private:
   VRControllerManagerOpenVR();
   ~VRControllerManagerOpenVR();
 
+  virtual void HandleButtonPress(uint32_t aControllerIdx,
+                                 uint64_t aButtonPressed) override;
+
   bool mOpenVRInstalled;
   nsTArray<RefPtr<impl::VRControllerOpenVR>> mOpenVRController;
   vr::IVRSystem *mVRSystem;
-
-  const uint32_t kOpenVRControllerButtons = 8;
-  const uint32_t kOpenVRControllerAxes = 5;
 };
 
 } // namespace gfx

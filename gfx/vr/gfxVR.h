@@ -262,6 +262,10 @@ protected:
   bool mInstalled;
   uint32_t mControllerCount;
   static Atomic<uint32_t> sControllerBase;
+
+private:
+  virtual void HandleButtonPress(uint32_t aControllerIdx,
+                                 uint64_t aButtonPressed) = 0;
 };
 
 } // namespace gfx
