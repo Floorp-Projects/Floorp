@@ -4793,7 +4793,7 @@ enum {
   // kE10sDisabledInSafeMode = 3, was removed in bug 1172491.
   kE10sDisabledForAccessibility = 4,
   // kE10sDisabledForMacGfx = 5, was removed in bug 1068674.
-  kE10sDisabledForBidi = 6,
+  // kE10sDisabledForBidi = 6, removed in bug 1309599
   kE10sDisabledForAddons = 7,
   kE10sForceDisabled = 8,
   // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
@@ -4889,25 +4889,6 @@ MultiprocessBlockPolicy() {
     return gMultiprocessBlockPolicy;
   }
 #endif // XP_WIN
-
-#if defined(MOZ_WIDGET_GTK)
-  /**
-   * Avoids enabling e10s for certain locales that require bidi selection,
-   * which currently doesn't work well with e10s.
-   */
-  bool disabledForBidi = false;
-
-  nsCOMPtr<nsIXULChromeRegistry> registry =
-   mozilla::services::GetXULChromeRegistryService();
-  if (registry) {
-     registry->IsLocaleRTL(NS_LITERAL_CSTRING("global"), &disabledForBidi);
-  }
-
-  if (disabledForBidi) {
-    gMultiprocessBlockPolicy = kE10sDisabledForBidi;
-    return gMultiprocessBlockPolicy;
-  }
-#endif // MOZ_WIDGET_GTK
 
   /*
    * None of the blocking policies matched, so e10s is allowed to run.

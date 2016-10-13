@@ -80,6 +80,7 @@
 #include "nsCSSProps.h"
 #include "nsPluginFrame.h"
 #include "DisplayItemScrollClip.h"
+#include "nsSVGMaskFrame.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount().
@@ -6725,6 +6726,17 @@ nsCharClipDisplayItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
 
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList,
+                                         bool aHandleOpacity,
+                                         const DisplayItemScrollClip* aScrollClip)
+  : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
+  , mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
+  , mHandleOpacity(aHandleOpacity)
+{
+  MOZ_COUNT_CTOR(nsDisplaySVGEffects);
+}
+
+nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame, nsDisplayList* aList,
                                          bool aHandleOpacity)
   : nsDisplayWrapList(aBuilder, aFrame, aList)
   , mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
@@ -6815,10 +6827,132 @@ bool nsDisplaySVGEffects::ValidateSVGFrame()
   return true;
 }
 
+static IntRect
+ComputeClipExtsInDeviceSpace(gfxContext& aCtx)
+{
+  gfxContextMatrixAutoSaveRestore matRestore(&aCtx);
+
+  // Get the clip extents in device space.
+  aCtx.SetMatrix(gfxMatrix());
+  gfxRect clippedFrameSurfaceRect = aCtx.GetClipExtents();
+  clippedFrameSurfaceRect.RoundOut();
+
+  IntRect result;
+  ToRect(clippedFrameSurfaceRect).ToIntRect(&result);
+  return mozilla::gfx::Factory::CheckSurfaceSize(result.Size()) ? result
+                                                                : IntRect();
+}
+
+typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
+
+static nsPoint
+ComputeOffsetToUserSpace(const PaintFramesParams& aParams)
+{
+  nsIFrame* frame = aParams.frame;
+  nsPoint offsetToBoundingBox = aParams.builder->ToReferenceFrame(frame) -
+                         nsSVGIntegrationUtils::GetOffsetToBoundingBox(frame);
+  if (!frame->IsFrameOfType(nsIFrame::eSVG)) {
+    // Snap the offset if the reference frame is not a SVG frame, since other
+    // frames will be snapped to pixel when rendering.
+    offsetToBoundingBox = nsPoint(
+      frame->PresContext()->RoundAppUnitsToNearestDevPixels(offsetToBoundingBox.x),
+      frame->PresContext()->RoundAppUnitsToNearestDevPixels(offsetToBoundingBox.y));
+  }
+
+  // After applying only "offsetToBoundingBox", aParams.ctx would have its
+  // origin at the top left corner of frame's bounding box (over all
+  // continuations).
+  // However, SVG painting needs the origin to be located at the origin of the
+  // SVG frame's "user space", i.e. the space in which, for example, the
+  // frame's BBox lives.
+  // SVG geometry frames and foreignObject frames apply their own offsets, so
+  // their position is relative to their user space. So for these frame types,
+  // if we want aCtx to be in user space, we first need to subtract the
+  // frame's position so that SVG painting can later add it again and the
+  // frame is painted in the right place.
+  gfxPoint toUserSpaceGfx = nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(frame);
+  nsPoint toUserSpace =
+    nsPoint(nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.x)),
+            nsPresContext::CSSPixelsToAppUnits(float(toUserSpaceGfx.y)));
+
+  return (offsetToBoundingBox - toUserSpace);
+}
+
+static void
+ComputeMaskGeometry(PaintFramesParams& aParams)
+{
+  // Properties are added lazily and may have been removed by a restyle, so
+  // make sure all applicable ones are set again.
+  nsIFrame* firstFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(aParams.frame);
+
+  const nsStyleSVGReset *svgReset = firstFrame->StyleSVGReset();
+
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+  nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
+
+  if (maskFrames.Length() == 0) {
+    return;
+  }
+
+  gfxContext& ctx = aParams.ctx;
+  nsIFrame* frame = aParams.frame;
+
+  nsPoint offsetToUserSpace = ComputeOffsetToUserSpace(aParams);
+  gfxPoint devPixelOffsetToUserSpace =
+    nsLayoutUtils::PointToGfxPoint(offsetToUserSpace,
+                                   frame->PresContext()->AppUnitsPerDevPixel());
+
+  gfxContextMatrixAutoSaveRestore matSR(&ctx);
+  ctx.SetMatrix(ctx.CurrentMatrix().Translate(devPixelOffsetToUserSpace));
+
+  // Convert boaderArea and dirtyRect to user space.
+  int32_t appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
+  nsRect userSpaceBorderArea = aParams.borderArea - offsetToUserSpace;
+  nsRect userSpaceDirtyRect = aParams.dirtyRect - offsetToUserSpace;
+
+  // Union all mask layer rectangles in user space.
+  gfxRect maskInUserSpace;
+  for (size_t i = 0; i < maskFrames.Length() ; i++) {
+    nsSVGMaskFrame* maskFrame = maskFrames[i];
+    gfxRect currentMaskSurfaceRect;
+
+    if (maskFrame) {
+      currentMaskSurfaceRect = maskFrame->GetMaskArea(aParams.frame);
+    } else {
+      nsCSSRendering::ImageLayerClipState clipState;
+      nsCSSRendering::GetImageLayerClip(svgReset->mMask.mLayers[i],
+                                       frame,
+                                       *frame->StyleBorder(),
+                                       userSpaceBorderArea,
+                                       userSpaceDirtyRect,
+                                       false, /* aWillPaintBorder */
+                                       appUnitsPerDevPixel,
+                                       &clipState);
+      currentMaskSurfaceRect = clipState.mDirtyRectGfx;
+    }
+
+    maskInUserSpace = maskInUserSpace.Union(currentMaskSurfaceRect);
+  }
+
+  ctx.Save();
+
+  if (!maskInUserSpace.IsEmpty()) {
+    ctx.Clip(maskInUserSpace);
+  }
+
+  IntRect result = ComputeClipExtsInDeviceSpace(ctx);
+  ctx.Restore();
+
+  aParams.maskRect = result;
+}
+
 nsDisplayMask::nsDisplayMask(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayList* aList,
-                             bool aHandleOpacity)
-  : nsDisplaySVGEffects(aBuilder, aFrame, aList, aHandleOpacity)
+                             bool aHandleOpacity,
+                             const DisplayItemScrollClip* aScrollClip)
+  : nsDisplaySVGEffects(aBuilder, aFrame, aList, aHandleOpacity, aScrollClip)
 {
   MOZ_COUNT_CTOR(nsDisplayMask);
 }
@@ -6926,8 +7060,19 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                                   aManager,
                                                   mHandleOpacity);
 
+  // Clip the drawing target by mVisibleRect, which contains the visible
+  // region of the target frame and its out-of-flow and inflow descendants.
+  gfxContext* context = aCtx->ThebesContext();
+  context->Clip(NSRectToSnappedRect(mVisibleRect,
+                                    mFrame->PresContext()->AppUnitsPerDevPixel(),
+                                    *aCtx->GetDrawTarget()));
+
+  ComputeMaskGeometry(params);
+
   image::DrawResult result =
     nsSVGIntegrationUtils::PaintMaskAndClipPath(params);
+
+  context->PopClip();
 
   nsDisplaySVGEffectsGeometry::UpdateDrawResult(this, result);
 }

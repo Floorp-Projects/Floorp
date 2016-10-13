@@ -23,7 +23,7 @@ function run_test() {
                                      "http://service1/", "1238441300314",
                                      "test status text", "false",
                                      "test_channel", "true", "true", "true",
-                                     "345600", "3.0",
+                                     "345600", "300", "3.0",
                                      "custom1_attr=\"custom1 value\"",
                                      "custom2_attr=\"custom2 value\"");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
@@ -37,7 +37,7 @@ function run_test() {
                                  "http://service2/", null,
                                  getString("patchApplyFailure"), "true",
                                  "test_channel", "false", null, null, "691200",
-                                 null,
+                                 null, null,
                                  "custom3_attr=\"custom3 value\"",
                                  "custom4_attr=\"custom4 value\"");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
@@ -82,6 +82,8 @@ function run_test() {
             "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.promptWaitTime, "345600",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.getProperty("backgroundInterval"), "300",
+               "the update backgroundInterval attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.previousAppVersion, "3.0",
                "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
   // Custom attributes
@@ -139,6 +141,9 @@ function run_test() {
             "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.promptWaitTime, "691200",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  // The default and maximum value for backgroundInterval is 600
+  Assert.equal(update.getProperty("backgroundInterval"), "600",
+               "the update backgroundInterval attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.previousAppVersion, null,
                "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
   // Custom attributes
