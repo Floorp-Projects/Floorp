@@ -1465,6 +1465,19 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
 
 ##-----------------------------------------------------------------------------
 
+def msgenums(protocol, pretty=False):
+    msgenum = TypeEnum('MessageType')
+    msgstart = _messageStartName(protocol.decl.type) +' << 16'
+    msgenum.addId(protocol.name + 'Start', msgstart)
+
+    for md in protocol.messageDecls:
+        msgenum.addId(md.prettyMsgName() if pretty else  md.msgId())
+        if md.hasReply():
+            msgenum.addId(md.prettyReplyName() if pretty else md.replyId())
+
+    msgenum.addId(protocol.name +'End')
+    return msgenum
+
 class _GenerateProtocolCode(ipdl.ast.Visitor):
     '''Creates code common to both the parent and child actors.'''
     def __init__(self):
@@ -1663,17 +1676,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         ns.addstmts([ StmtDecl(Decl(stateenum,'')), Whitespace.NL ])
 
         # spit out message type enum and classes
-        msgenum = TypeEnum('MessageType')
-        msgstart = _messageStartName(self.protocol.decl.type) +' << 16'
-        msgenum.addId(self.protocol.name + 'Start', msgstart)
-        #msgenum.addId(self.protocol.name +'PreStart', '('+ msgstart +') - 1')
-
-        for md in p.messageDecls:
-            msgenum.addId(md.msgId())
-            if md.hasReply():
-                msgenum.addId(md.replyId())
-
-        msgenum.addId(self.protocol.name +'End')
+        msgenum = msgenums(self.protocol)
         ns.addstmts([ StmtDecl(Decl(msgenum, '')), Whitespace.NL ])
 
         tfDecl, tfDefn = _splitFuncDeclDefn(self.genTransitionFunc())
@@ -5195,15 +5198,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         msgexpr = ExprAddrOf(msgvar)
         isctor = md.decl.type.isCtor()
         stmts = ([
-            # this is kind of naughty, but the only two other options
-            # are forwarding the message name (yuck) or making the
-            # IPDL|*Channel abstraction leak more
-            StmtExpr(ExprCall(
-                ExprSelect(
-                    ExprCast(msgvar, Type('Message', ref=1), const=1),
-                    '.', 'set_name'),
-                args=[ ExprLiteral.String(md.prettyMsgName(self.protocol.name
-                                                           +'::')) ])),
             self.logMessage(md, msgexpr, 'Received ',
                             receiving=True),
             self.profilerLabel('Recv', md.decl.progname),
@@ -5366,7 +5360,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                               args=[ ExprLiteral.String(actorname),
                                      self.protocol.callOtherPid(actor),
                                      ExprLiteral.String(pfx),
-                                     ExprCall(ExprSelect(msgptr, '->', 'name')),
+                                     ExprCall(ExprSelect(msgptr, '->', 'type')),
                                      ExprVar('mozilla::ipc::MessageDirection::eReceiving'
                                              if receiving
                                              else 'mozilla::ipc::MessageDirection::eSending') ])) ])
