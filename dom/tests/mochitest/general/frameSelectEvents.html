@@ -46,6 +46,11 @@
         var cancel = false;
         var selectstartTarget = null;
 
+        function* UpdateSelectEventsOntextControlsPref(aEnabled) {
+          yield SpecialPowers.pushPrefEnv({'set': [['dom.select_events.textcontrols.enabled', aEnabled]]});
+        }
+        yield* UpdateSelectEventsOntextControlsPref(false);
+
         document.addEventListener('selectstart', function(aEvent) {
           console.log("originaltarget", aEvent.originalTarget, "new", selectstartTarget);
           is(aEvent.originalTarget, selectstartTarget,
@@ -319,7 +324,16 @@
 
         // Select a region
 
-        yield* mouseAction(elt("input"), 50, "mousedown", 0, 1, 1, 0);
+        // Without the dom.select_events.textcontrols.enabled pref,
+        // pressing the mouse shouldn't do anything.
+        yield* mouseAction(elt("input"), 50, "mousedown", 0, 1, 0, 0);
+
+        // Releasing the mouse shouldn't do anything
+        yield* mouseAction(elt("input"), 50, "mouseup", 0, 0, 0, 0);
+
+        yield* UpdateSelectEventsOntextControlsPref(true);
+
+        yield* mouseAction(elt("input"), 50, "mousedown", 0, 0, 0, 0);
 
         selectstartTarget = elt("input");
         yield* mouseAction(elt("input"), 100, "mousemove", 1, 0, 1, 0);
@@ -360,10 +374,21 @@
         yield* mouseAction(elt("input"), 100, "mouseup", 0, 0, 0, 0);
 
 
-        // Select a region
+        yield* UpdateSelectEventsOntextControlsPref(false);
+
+        // Without the dom.select_events.textcontrols.enabled pref,
+        // pressing the mouse shouldn't do anything.
         // XXX For some reason we fire 2 selectchange events on the body
         // when switching from the input to the text area.
-        yield* mouseAction(elt("textarea"), 50, "mousedown", 0, 2, 0, 1);
+        yield* mouseAction(elt("textarea"), 50, "mousedown", 0, 2, 0, 0);
+
+        // Releasing the mouse shouldn't do anything
+        yield* mouseAction(elt("textarea"), 50, "mouseup", 0, 0, 0, 0);
+
+        yield* UpdateSelectEventsOntextControlsPref(true);
+
+        // Select a region
+        yield* mouseAction(elt("textarea"), 50, "mousedown", 0, 0, 0, 0);
 
         selectstartTarget = elt("textarea");
         yield* mouseAction(elt("textarea"), 100, "mousemove", 1, 0, 0, 1);

@@ -925,6 +925,8 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
 
     Preferences::AddBoolVarCache(&sSelectionEventsEnabled,
                                  "dom.select_events.enabled", false);
+    Preferences::AddBoolVarCache(&sSelectionEventsOnTextControlsEnabled,
+                                 "dom.select_events.textcontrols.enabled", false);
   }
 
   RefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
@@ -949,6 +951,7 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
 }
 
 bool nsFrameSelection::sSelectionEventsEnabled = false;
+bool nsFrameSelection::sSelectionEventsOnTextControlsEnabled = false;
 
 nsresult
 nsFrameSelection::MoveCaret(nsDirection       aDirection,
@@ -3860,25 +3863,40 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex, bool aNoStartSelect)
         // initiated event.
         bool defaultAction = true;
 
-        // Get the first element which isn't in a native anonymous subtree
+        // The spec currently doesn't say that we should dispatch this event
+        // on text controls, so for now we only support doing that under a
+        // pref, disabled by default.
+        // See https://github.com/w3c/selection-api/issues/53.
+        bool dispatchEvent = true;
         nsCOMPtr<nsINode> target = aItem->GetStartParent();
-        while (target && target->IsInNativeAnonymousSubtree()) {
-          target = target->GetParent();
+        if (nsFrameSelection::sSelectionEventsOnTextControlsEnabled) {
+          // Get the first element which isn't in a native anonymous subtree
+          while (target && target->IsInNativeAnonymousSubtree()) {
+            target = target->GetParent();
+          }
+        } else {
+          if (target->IsInNativeAnonymousSubtree()) {
+            // This is a selection under a text control, so don't dispatch the
+            // event.
+            dispatchEvent = false;
+          }
         }
 
-        nsContentUtils::DispatchTrustedEvent(GetParentObject(), target,
-                                             NS_LITERAL_STRING("selectstart"),
-                                             true, true, &defaultAction);
+        if (dispatchEvent) {
+          nsContentUtils::DispatchTrustedEvent(GetParentObject(), target,
+                                               NS_LITERAL_STRING("selectstart"),
+                                               true, true, &defaultAction);
 
-        if (!defaultAction) {
-          return NS_OK;
-        }
+          if (!defaultAction) {
+            return NS_OK;
+          }
 
-        // As we just dispatched an event to the DOM, something could have
-        // changed under our feet. Re-generate the rangesToAdd array, and ensure
-        // that the range we are about to add is still valid.
-        if (!aItem->IsPositioned()) {
-          return NS_ERROR_UNEXPECTED;
+          // As we just dispatched an event to the DOM, something could have
+          // changed under our feet. Re-generate the rangesToAdd array, and ensure
+          // that the range we are about to add is still valid.
+          if (!aItem->IsPositioned()) {
+            return NS_ERROR_UNEXPECTED;
+          }
         }
       }
 
@@ -6720,33 +6738,54 @@ SelectionChangeListener::NotifySelectionChanged(nsIDOMDocument* aDoc,
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> target;
+  // The spec currently doesn't say that we should dispatch this event on text
+  // controls, so for now we only support doing that under a pref, disabled by
+  // default.
+  // See https://github.com/w3c/selection-api/issues/53.
+  if (nsFrameSelection::sSelectionEventsOnTextControlsEnabled) {
+    nsCOMPtr<nsINode> target;
 
-  // Check if we should be firing this event to a different node than the
-  // document. The limiter of the nsFrameSelection will be within the native
-  // anonymous subtree of the node we want to fire the event on. We need to
-  // climb up the parent chain to escape the native anonymous subtree, and then
-  // fire the event.
-  if (nsFrameSelection* fs = sel->GetFrameSelection()) {
-    if (nsCOMPtr<nsIContent> root = fs->GetLimiter()) {
-      while (root && root->IsInNativeAnonymousSubtree()) {
-        root = root->GetParent();
+    // Check if we should be firing this event to a different node than the
+    // document. The limiter of the nsFrameSelection will be within the native
+    // anonymous subtree of the node we want to fire the event on. We need to
+    // climb up the parent chain to escape the native anonymous subtree, and then
+    // fire the event.
+    if (nsFrameSelection* fs = sel->GetFrameSelection()) {
+      if (nsCOMPtr<nsIContent> root = fs->GetLimiter()) {
+        while (root && root->IsInNativeAnonymousSubtree()) {
+          root = root->GetParent();
+        }
+
+        target = root.forget();
       }
-
-      target = root.forget();
     }
-  }
 
-  // If we didn't get a target before, we can instead fire the event at the document.
-  if (!target) {
+    // If we didn't get a target before, we can instead fire the event at the document.
+    if (!target) {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+      target = doc.forget();
+    }
+
+    if (target) {
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(target, NS_LITERAL_STRING("selectionchange"), false);
+      asyncDispatcher->PostDOMEvent();
+    }
+  } else {
+    if (nsFrameSelection* fs = sel->GetFrameSelection()) {
+      if (nsCOMPtr<nsIContent> root = fs->GetLimiter()) {
+        if (root->IsInNativeAnonymousSubtree()) {
+          return NS_OK;
+        }
+      }
+    }
+
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-    target = doc.forget();
-  }
-
-  if (target) {
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(target, NS_LITERAL_STRING("selectionchange"), false);
-    asyncDispatcher->PostDOMEvent();
+    if (doc) {
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(doc, NS_LITERAL_STRING("selectionchange"), false);
+      asyncDispatcher->PostDOMEvent();
+    }
   }
 
   return NS_OK;

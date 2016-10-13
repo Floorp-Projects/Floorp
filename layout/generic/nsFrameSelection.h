@@ -762,6 +762,7 @@ private:
   int8_t mCaretMovementStyle;
 
   static bool sSelectionEventsEnabled;
+  static bool sSelectionEventsOnTextControlsEnabled;
 };
 
 #endif /* nsFrameSelection_h___ */
