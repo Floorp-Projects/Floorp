@@ -190,6 +190,11 @@ exports.setInspectingNode = function (val) {
  *         Properly cased version of the node tag name
  */
 const getNodeDisplayName = function (rawNode) {
+  if (rawNode.nodeName && !rawNode.localName) {
+    // The localName & prefix APIs have been moved from the Node interface to the Element
+    // interface. Use Node.nodeName as a fallback.
+    return rawNode.nodeName;
+  }
   return (rawNode.prefix ? rawNode.prefix + ":" : "") + rawNode.localName;
 };
 exports.getNodeDisplayName = getNodeDisplayName;
