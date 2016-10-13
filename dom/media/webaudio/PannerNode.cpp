@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PannerNode.h"
+#include "AlignmentUtils.h"
+#include "AudioDestinationNode.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioListener.h"
