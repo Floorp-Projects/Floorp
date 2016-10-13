@@ -1313,7 +1313,7 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   // find first node in range
   int32_t offset = mRange->StartOffset();
 
-  nsINode* node;
+  nsINode* node = nullptr;
   if (!startParent->GetChildCount()) {
     // no children, start at the node itself
     node = startParent;
