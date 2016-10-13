@@ -152,6 +152,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
 
   MOZ_ASSERT_IF(aCompileOptions.versionSet,
                 aCompileOptions.version != JSVERSION_UNKNOWN);
+  MOZ_ASSERT_IF(aEvaluateOptions.coerceToString, !aCompileOptions.noScriptRval);
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
   MOZ_ASSERT(aSrcBuf.get());
   MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(aEvaluationGlobal) ==
@@ -204,6 +205,13 @@ nsJSUtils::EvaluateString(JSContext* aCx,
       }
     } else if (ok) {
       ok = JS::Evaluate(aCx, scopeChain, aCompileOptions, aSrcBuf, aRetValue);
+    }
+
+    if (ok && aEvaluateOptions.coerceToString && !aRetValue.isUndefined()) {
+      JS::Rooted<JS::Value> value(aCx, aRetValue);
+      JSString* str = JS::ToString(aCx, value);
+      ok = !!str;
+      aRetValue.set(ok ? JS::StringValue(str) : JS::UndefinedValue());
     }
   }
 
