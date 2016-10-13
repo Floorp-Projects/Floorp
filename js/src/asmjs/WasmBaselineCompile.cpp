@@ -396,13 +396,23 @@ class BaseCompiler
       private:
         Label entry_;
         Label rejoin_;
+        uint32_t framePushed_;
 
       public:
+        OutOfLineCode() : framePushed_(UINT32_MAX) {}
+
         Label* entry() { return &entry_; }
         Label* rejoin() { return &rejoin_; }
 
+        void setFramePushed(uint32_t framePushed) {
+            MOZ_ASSERT(framePushed_ == UINT32_MAX);
+            framePushed_ = framePushed;
+        }
+
         void bind(MacroAssembler& masm) {
+            MOZ_ASSERT(framePushed_ != UINT32_MAX);
             masm.bind(&entry_);
+            masm.setFramePushed(framePushed_);
         }
 
         // Save volatile registers but not ReturnReg.
@@ -457,6 +467,7 @@ class BaseCompiler
     Label                       returnLabel_;
     Label                       outOfLinePrologue_;
     Label                       bodyLabel_;
+    TrapOffset                  prologueTrapOffset_;
 
     FuncCompileResults&         compileResults_;
     MacroAssembler&             masm;            // No '_' suffix - too tedious...
@@ -543,8 +554,9 @@ class BaseCompiler
 
     MOZ_MUST_USE
     OutOfLineCode* addOutOfLineCode(OutOfLineCode* ool) {
-        if (ool && !outOfLine_.append(ool))
+        if (!ool || !outOfLine_.append(ool))
             return nullptr;
+        ool->setFramePushed(masm.framePushed());
         return ool;
     }
 
@@ -1855,7 +1867,8 @@ class BaseCompiler
         JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
 
         SigIdDesc sigId = mg_.funcDefSigs[func_.defIndex()]->id;
-        wasm::GenerateFunctionPrologue(masm, localSize_, sigId, &compileResults_.offsets());
+        GenerateFunctionPrologue(masm, localSize_, sigId, prologueTrapOffset_,
+                                 &compileResults_.offsets());
 
         MOZ_ASSERT(masm.framePushed() == uint32_t(localSize_));
 
@@ -1938,17 +1951,16 @@ class BaseCompiler
         masm.movePtr(masm.getStackPointer(), ABINonArgReg0);
         masm.subPtr(Imm32(maxFramePushed_ - localSize_), ABINonArgReg0);
         masm.branchPtr(Assembler::Below,
-                       Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
+                       Address(WasmTlsReg, offsetof(TlsData, stackLimit)),
                        ABINonArgReg0,
                        &bodyLabel_);
 
-
-        // The stack overflow stub assumes that only sizeof(AsmJSFrame) bytes
-        // have been pushed. The overflow check occurs after incrementing by
-        // localSize_, so pop that before jumping to the overflow exit.
-
-        masm.addToStackPtr(Imm32(localSize_));
-        masm.jump(wasm::JumpTarget::StackOverflow);
+        // Since we just overflowed the stack, to be on the safe side, pop the
+        // stack so that, when the trap exit stub executes, it is a safe
+        // distance away from the end of the native stack.
+        if (localSize_)
+            masm.addToStackPtr(Imm32(localSize_));
+        masm.jump(TrapDesc(prologueTrapOffset_, Trap::StackOverflow, /* framePushed = */ 0));
 
         masm.bind(&returnLabel_);
 
@@ -1956,7 +1968,7 @@ class BaseCompiler
         // preserve the TLS register.
         loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
 
-        wasm::GenerateFunctionEpilogue(masm, localSize_, &compileResults_.offsets());
+        GenerateFunctionEpilogue(masm, localSize_, &compileResults_.offsets());
 
 #if defined(JS_ION_PERF)
         // FIXME - profiling code missing
@@ -1967,6 +1979,8 @@ class BaseCompiler
 
         if (!generateOutOfLineCode())
             return false;
+
+        masm.wasmEmitTrapOutOfLineCode();
 
         compileResults_.offsets().end = masm.currentOffset();
 
@@ -2200,7 +2214,7 @@ class BaseCompiler
         masm.call(desc, funcDefIndex);
     }
 
-    void callSymbolic(wasm::SymbolicAddress callee, const FunctionCall& call) {
+    void callSymbolic(SymbolicAddress callee, const FunctionCall& call) {
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
         masm.call(callee);
     }
@@ -2273,7 +2287,7 @@ class BaseCompiler
     void addInterruptCheck()
     {
         // Always use signals for interrupts with Asm.JS/Wasm
-        MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
+        MOZ_RELEASE_ASSERT(HaveSignalHandlers());
     }
 
     void jumpTable(LabelVector& labels) {
@@ -2399,7 +2413,7 @@ class BaseCompiler
             masm.jump(done);
             masm.bind(&notDivByZero);
         } else {
-            masm.branchTest32(Assembler::Zero, rhs.reg, rhs.reg, wasm::JumpTarget::IntegerDivideByZero);
+            masm.branchTest32(Assembler::Zero, rhs.reg, rhs.reg, trap(Trap::IntegerDivideByZero));
         }
     }
 
@@ -2407,12 +2421,11 @@ class BaseCompiler
         MOZ_ASSERT(!isCompilingAsmJS());
 #ifdef JS_CODEGEN_X64
         masm.testq(rhs.reg.reg, rhs.reg.reg);
-        masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
+        masm.j(Assembler::Zero, trap(Trap::IntegerDivideByZero));
 #elif defined(JS_CODEGEN_X86)
         Label nonZero;
         masm.branchTest32(Assembler::NonZero, rhs.reg.low, rhs.reg.low, &nonZero);
-        masm.branchTest32(Assembler::Zero, rhs.reg.high, rhs.reg.high,
-                          wasm::JumpTarget::IntegerDivideByZero);
+        masm.branchTest32(Assembler::Zero, rhs.reg.high, rhs.reg.high, trap(Trap::IntegerDivideByZero));
         masm.bind(&nonZero);
 #else
         MOZ_CRASH("BaseCompiler platform hook: checkDivideByZeroI64");
@@ -2430,7 +2443,7 @@ class BaseCompiler
             // (-INT32_MIN)|0 == INT32_MIN and INT32_MIN is already in srcDest.
             masm.branch32(Assembler::Equal, rhs.reg, Imm32(-1), done);
         } else {
-            masm.branch32(Assembler::Equal, rhs.reg, Imm32(-1), wasm::JumpTarget::IntegerOverflow);
+            masm.branch32(Assembler::Equal, rhs.reg, Imm32(-1), trap(Trap::IntegerOverflow));
         }
         masm.bind(&notMin);
     }
@@ -2444,7 +2457,7 @@ class BaseCompiler
         if (zeroOnOverflow)
             masm.xor64(srcDest.reg, srcDest.reg);
         else
-            masm.jump(wasm::JumpTarget::IntegerOverflow);
+            masm.j(Assembler::Equal, trap(Trap::IntegerOverflow));
         masm.jump(done);
         masm.bind(&notmin);
 #else
@@ -2692,13 +2705,16 @@ class BaseCompiler
         RegI32 dest;
         bool isAsmJS;
         bool isUnsigned;
+        TrapOffset off;
 
       public:
-        OutOfLineTruncateF32OrF64ToI32(AnyReg src, RegI32 dest, bool isAsmJS, bool isUnsigned)
+        OutOfLineTruncateF32OrF64ToI32(AnyReg src, RegI32 dest, bool isAsmJS, bool isUnsigned,
+                                       TrapOffset off)
           : src(src),
             dest(dest),
             isAsmJS(isAsmJS),
-            isUnsigned(isUnsigned)
+            isUnsigned(isUnsigned),
+            off(off)
         {
             MOZ_ASSERT_IF(isAsmJS, !isUnsigned);
         }
@@ -2714,9 +2730,9 @@ class BaseCompiler
             } else {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
                 if (isFloat)
-                    masm.outOfLineWasmTruncateFloat32ToInt32(fsrc, isUnsigned, rejoin());
+                    masm.outOfLineWasmTruncateFloat32ToInt32(fsrc, isUnsigned, off, rejoin());
                 else
-                    masm.outOfLineWasmTruncateDoubleToInt32(fsrc, isUnsigned, rejoin());
+                    masm.outOfLineWasmTruncateDoubleToInt32(fsrc, isUnsigned, off, rejoin());
 #else
                 (void)isUnsigned; // Suppress warning for unused private.
                 MOZ_CRASH("BaseCompiler platform hook: OutOfLineTruncateF32OrF64ToI32 wasm");
@@ -2727,16 +2743,17 @@ class BaseCompiler
 
     MOZ_MUST_USE
     bool truncateF32ToI32(RegF32 src, RegI32 dest, bool isUnsigned) {
+        TrapOffset off = trapOffset();
         OutOfLineCode* ool;
         if (isCompilingAsmJS()) {
-            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, true, false);
+            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, true, false, off);
             ool = addOutOfLineCode(ool);
             if (!ool)
                 return false;
             masm.branchTruncateFloat32ToInt32(src.reg, dest.reg, ool->entry());
         } else {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, false, isUnsigned);
+            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, false, isUnsigned, off);
             ool = addOutOfLineCode(ool);
             if (!ool)
                 return false;
@@ -2754,16 +2771,17 @@ class BaseCompiler
 
     MOZ_MUST_USE
     bool truncateF64ToI32(RegF64 src, RegI32 dest, bool isUnsigned) {
+        TrapOffset off = trapOffset();
         OutOfLineCode* ool;
         if (isCompilingAsmJS()) {
-            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, true, false);
+            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, true, false, off);
             ool = addOutOfLineCode(ool);
             if (!ool)
                 return false;
             masm.branchTruncateDoubleToInt32(src.reg, dest.reg, ool->entry());
         } else {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, false, isUnsigned);
+            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, false, isUnsigned, off);
             ool = addOutOfLineCode(ool);
             if (!ool)
                 return false;
@@ -2784,18 +2802,20 @@ class BaseCompiler
     {
         AnyReg src;
         bool isUnsigned;
+        TrapOffset off;
 
       public:
-        OutOfLineTruncateCheckF32OrF64ToI64(AnyReg src, bool isUnsigned)
+        OutOfLineTruncateCheckF32OrF64ToI64(AnyReg src, bool isUnsigned, TrapOffset off)
           : src(src),
-            isUnsigned(isUnsigned)
+            isUnsigned(isUnsigned),
+            off(off)
         {}
 
         virtual void generate(MacroAssembler& masm) {
             if (src.tag == AnyReg::F32)
-                masm.outOfLineWasmTruncateFloat32ToInt64(src.f32().reg, isUnsigned, rejoin());
+                masm.outOfLineWasmTruncateFloat32ToInt64(src.f32().reg, isUnsigned, off, rejoin());
             else if (src.tag == AnyReg::F64)
-                masm.outOfLineWasmTruncateDoubleToInt64(src.f64().reg, isUnsigned, rejoin());
+                masm.outOfLineWasmTruncateDoubleToInt64(src.f64().reg, isUnsigned, off, rejoin());
             else
                 MOZ_CRASH("unexpected type");
         }
@@ -2807,7 +2827,8 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         OutOfLineCode* ool =
             addOutOfLineCode(new (alloc_) OutOfLineTruncateCheckF32OrF64ToI64(AnyReg(src),
-                                                                              isUnsigned));
+                                                                              isUnsigned,
+                                                                              trapOffset()));
         if (!ool)
             return false;
         if (isUnsigned)
@@ -2827,7 +2848,8 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         OutOfLineCode* ool =
             addOutOfLineCode(new (alloc_) OutOfLineTruncateCheckF32OrF64ToI64(AnyReg(src),
-                                                                              isUnsigned));
+                                                                              isUnsigned,
+                                                                              trapOffset()));
         if (!ool)
             return false;
         if (isUnsigned)
@@ -2891,7 +2913,7 @@ class BaseCompiler
 
     void unreachableTrap()
     {
-        masm.jump(wasm::JumpTarget::Unreachable);
+        masm.jump(trap(Trap::Unreachable));
 #ifdef DEBUG
         masm.breakpoint();
 #endif
@@ -3017,13 +3039,6 @@ class BaseCompiler
     //
     // Heap access.
 
-    // Return true only for real asm.js (HEAP[i>>2]|0) accesses which have the
-    // peculiar property of not throwing on out-of-bounds. Everything else
-    // (wasm, SIMD.js, Atomics) throws on out-of-bounds.
-    bool isAsmJSAccess(const MemoryAccessDesc& access) {
-        return isCompilingAsmJS() && !access.isSimd() && !access.isAtomic();
-    }
-
 #ifndef WASM_HUGE_MEMORY
     class AsmJSLoadOOB : public OutOfLineCode
     {
@@ -3078,7 +3093,7 @@ class BaseCompiler
         if (access->offset() >= OffsetGuardLimit) {
             masm.branchAdd32(Assembler::CarrySet,
                              Imm32(access->offset()), ptr.reg,
-                             JumpTarget::OutOfBounds);
+                             trap(Trap::OutOfBounds));
             access->clearOffset();
         }
     }
@@ -3090,28 +3105,24 @@ class BaseCompiler
 
         OutOfLineCode* ool = nullptr;
 #ifndef WASM_HUGE_MEMORY
-        if (isAsmJSAccess(access)) {
+        if (access.isPlainAsmJS()) {
             ool = new (alloc_) AsmJSLoadOOB(access.type(), dest.any());
             if (!addOutOfLineCode(ool))
                 return false;
 
             masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr.reg, ool->entry());
         } else {
-            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr.reg, JumpTarget::OutOfBounds);
+            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr.reg, trap(Trap::OutOfBounds));
         }
 #endif
 
 # if defined(JS_CODEGEN_X64)
         Operand srcAddr(HeapReg, ptr.reg, TimesOne, access.offset());
 
-        uint32_t before = masm.size();
         if (dest.tag == AnyReg::I64)
             masm.wasmLoadI64(access, srcAddr, dest.i64().reg);
         else
             masm.wasmLoad(access, srcAddr, dest.any());
-
-        if (isAsmJSAccess(access))
-            masm.append(MemoryAccess(before));
 # elif defined(JS_CODEGEN_X86)
         Operand srcAddr(ptr.reg, access.offset());
 
@@ -3141,21 +3152,17 @@ class BaseCompiler
 
         Label rejoin;
 #ifndef WASM_HUGE_MEMORY
-        if (isAsmJSAccess(access))
+        if (access.isPlainAsmJS())
             masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr.reg, &rejoin);
         else
-            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr.reg, JumpTarget::OutOfBounds);
+            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr.reg, trap(Trap::OutOfBounds));
 #endif
 
         // Emit the store
 # if defined(JS_CODEGEN_X64)
         Operand dstAddr(HeapReg, ptr.reg, TimesOne, access.offset());
 
-        uint32_t before = masm.size();
         masm.wasmStore(access, src.any(), dstAddr);
-
-        if (isCompilingAsmJS())
-            masm.append(MemoryAccess(before));
 # elif defined(JS_CODEGEN_X86)
         Operand dstAddr(ptr.reg, access.offset());
 
@@ -3231,10 +3238,10 @@ class BaseCompiler
     //
     // Sundry helpers.
 
-    uint32_t readCallSiteLineOrBytecode(uint32_t callOffset) {
+    uint32_t readCallSiteLineOrBytecode() {
         if (!func_.callSiteLineNums().empty())
             return func_.callSiteLineNums()[lastReadCallSite_++];
-        return callOffset;
+        return trapOffset().bytecodeOffset;
     }
 
     bool done() const {
@@ -3243,6 +3250,16 @@ class BaseCompiler
 
     bool isCompilingAsmJS() const {
         return mg_.kind == ModuleKind::AsmJS;
+    }
+
+    TrapOffset trapOffset() const {
+        return iter_.trapOffset();
+    }
+    Maybe<TrapOffset> trapIfNotAsmJS() const {
+        return isCompilingAsmJS() ? Nothing() : Some(trapOffset());
+    }
+    TrapDesc trap(Trap t) const {
+        return TrapDesc(trapOffset(), t, masm.framePushed());
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -3272,15 +3289,15 @@ class BaseCompiler
     MOZ_MUST_USE
     bool emitCallImportCommon(uint32_t lineOrBytecode, uint32_t funcImportIndex);
     MOZ_MUST_USE
-    bool emitCall(uint32_t callOffset);
+    bool emitCall();
     MOZ_MUST_USE
-    bool emitCallImport(uint32_t callOffset);
+    bool emitCallImport();
     MOZ_MUST_USE
-    bool emitCallIndirect(uint32_t callOffset, bool oldStyle);
+    bool emitCallIndirect(bool oldStyle);
     MOZ_MUST_USE
-    bool emitUnaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress callee, ValType operandType);
+    bool emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
     MOZ_MUST_USE
-    bool emitBinaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress callee, ValType operandType);
+    bool emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
 #ifdef JS_NUNBOX32
     void emitDivOrModI64BuiltinCall(SymbolicAddress callee, RegI64 rhs, RegI64 srcDest,
                                     RegI32 temp);
@@ -3406,8 +3423,8 @@ class BaseCompiler
     void emitConvertU64ToF64();
     void emitReinterpretI32AsF32();
     void emitReinterpretI64AsF64();
-    MOZ_MUST_USE bool emitGrowMemory(uint32_t callOffset);
-    MOZ_MUST_USE bool emitCurrentMemory(uint32_t callOffset);
+    MOZ_MUST_USE bool emitGrowMemory();
+    MOZ_MUST_USE bool emitCurrentMemory();
 };
 
 void
@@ -5242,9 +5259,9 @@ BaseCompiler::emitCallImportCommon(uint32_t lineOrBytecode, uint32_t funcImportI
 }
 
 bool
-BaseCompiler::emitCall(uint32_t callOffset)
+BaseCompiler::emitCall()
 {
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     uint32_t calleeIndex;
     if (!iter_.readCall(&calleeIndex))
@@ -5292,11 +5309,11 @@ BaseCompiler::emitCall(uint32_t callOffset)
 }
 
 bool
-BaseCompiler::emitCallImport(uint32_t callOffset)
+BaseCompiler::emitCallImport()
 {
     MOZ_ASSERT(!mg_.firstFuncDefIndex);
 
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     uint32_t funcImportIndex;
     if (!iter_.readCallImport(&funcImportIndex))
@@ -5306,9 +5323,9 @@ BaseCompiler::emitCallImport(uint32_t callOffset)
 }
 
 bool
-BaseCompiler::emitCallIndirect(uint32_t callOffset, bool oldStyle)
+BaseCompiler::emitCallIndirect(bool oldStyle)
 {
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     uint32_t sigIndex;
     Nothing callee_;
@@ -5378,13 +5395,12 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset, bool oldStyle)
 
 
 bool
-BaseCompiler::emitUnaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress callee,
-                                       ValType operandType)
+BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType)
 {
     if (deadCode_)
         return true;
 
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     sync();
 
@@ -5429,8 +5445,7 @@ BaseCompiler::emitUnaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress call
 }
 
 bool
-BaseCompiler::emitBinaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress callee,
-                                        ValType operandType)
+BaseCompiler::emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandType)
 {
     MOZ_ASSERT(operandType == ValType::F64);
 
@@ -5441,7 +5456,7 @@ BaseCompiler::emitBinaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress cal
     if (callee == SymbolicAddress::ModD) {
         // Not actually a call in the binary representation
     } else {
-        readCallSiteLineOrBytecode(callOffset);
+        readCallSiteLineOrBytecode();
     }
 
     sync();
@@ -5795,7 +5810,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
 
     switch (type) {
       case ValType::I32: {
@@ -5861,7 +5876,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
 
     switch (resultType) {
       case ValType::I32: {
@@ -5921,7 +5936,7 @@ BaseCompiler::emitTeeStore(ValType resultType, Scalar::Type viewType)
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
 
     switch (resultType) {
       case ValType::I32: {
@@ -6204,7 +6219,7 @@ BaseCompiler::emitTeeStoreWithCoercion(ValType resultType, Scalar::Type viewType
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
 
     if (resultType == ValType::F32 && viewType == Scalar::Float64) {
         RegF32 rv = popF32();
@@ -6235,12 +6250,12 @@ BaseCompiler::emitTeeStoreWithCoercion(ValType resultType, Scalar::Type viewType
 }
 
 bool
-BaseCompiler::emitGrowMemory(uint32_t callOffset)
+BaseCompiler::emitGrowMemory()
 {
     if (deadCode_)
         return true;
 
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     sync();
 
@@ -6271,12 +6286,12 @@ BaseCompiler::emitGrowMemory(uint32_t callOffset)
 }
 
 bool
-BaseCompiler::emitCurrentMemory(uint32_t callOffset)
+BaseCompiler::emitCurrentMemory()
 {
     if (deadCode_)
         return true;
 
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     sync();
 
@@ -6351,8 +6366,6 @@ BaseCompiler::emitBody()
         if (done())
             return true;
 
-        uint32_t exprOffset = iter_.currentOffset();
-
         Expr expr;
         CHECK(iter_.readExpr(&expr));
 
@@ -6395,13 +6408,13 @@ BaseCompiler::emitBody()
 
           // Calls
           case Expr::Call:
-            CHECK_NEXT(emitCall(exprOffset));
+            CHECK_NEXT(emitCall());
           case Expr::CallIndirect:
-            CHECK_NEXT(emitCallIndirect(exprOffset, /* oldStyle = */ false));
+            CHECK_NEXT(emitCallIndirect(/* oldStyle = */ false));
           case Expr::OldCallIndirect:
-            CHECK_NEXT(emitCallIndirect(exprOffset, /* oldStyle = */ true));
+            CHECK_NEXT(emitCallIndirect(/* oldStyle = */ true));
           case Expr::CallImport:
-            CHECK_NEXT(emitCallImport(exprOffset));
+            CHECK_NEXT(emitCallImport());
 
           // Locals and globals
           case Expr::GetLocal:
@@ -6630,9 +6643,9 @@ BaseCompiler::emitBody()
           case Expr::F32Sqrt:
             CHECK_NEXT(emitUnary(emitSqrtF32, ValType::F32));
           case Expr::F32Ceil:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::CeilF, ValType::F32));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::CeilF, ValType::F32));
           case Expr::F32Floor:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::FloorF, ValType::F32));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::FloorF, ValType::F32));
           case Expr::F32DemoteF64:
             CHECK_NEXT(emitConversion(emitConvertF64ToF32, ValType::F64, ValType::F32));
           case Expr::F32ConvertSI32:
@@ -6656,9 +6669,9 @@ BaseCompiler::emitBody()
           case Expr::F32CopySign:
             CHECK_NEXT(emitBinary(emitCopysignF32, ValType::F32));
           case Expr::F32Nearest:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::NearbyIntF, ValType::F32));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::NearbyIntF, ValType::F32));
           case Expr::F32Trunc:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::TruncF, ValType::F32));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::TruncF, ValType::F32));
 
           // F64
           case Expr::F64Const: {
@@ -6677,7 +6690,7 @@ BaseCompiler::emitBody()
           case Expr::F64Div:
             CHECK_NEXT(emitBinary(emitDivideF64, ValType::F64));
           case Expr::F64Mod:
-            CHECK_NEXT(emitBinaryMathBuiltinCall(exprOffset, SymbolicAddress::ModD, ValType::F64));
+            CHECK_NEXT(emitBinaryMathBuiltinCall(SymbolicAddress::ModD, ValType::F64));
           case Expr::F64Min:
             CHECK_NEXT(emitBinary(emitMinF64, ValType::F64));
           case Expr::F64Max:
@@ -6689,29 +6702,29 @@ BaseCompiler::emitBody()
           case Expr::F64Sqrt:
             CHECK_NEXT(emitUnary(emitSqrtF64, ValType::F64));
           case Expr::F64Ceil:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::CeilD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::CeilD, ValType::F64));
           case Expr::F64Floor:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::FloorD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::FloorD, ValType::F64));
           case Expr::F64Sin:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::SinD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::SinD, ValType::F64));
           case Expr::F64Cos:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::CosD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::CosD, ValType::F64));
           case Expr::F64Tan:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::TanD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::TanD, ValType::F64));
           case Expr::F64Asin:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::ASinD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::ASinD, ValType::F64));
           case Expr::F64Acos:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::ACosD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::ACosD, ValType::F64));
           case Expr::F64Atan:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::ATanD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::ATanD, ValType::F64));
           case Expr::F64Exp:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::ExpD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::ExpD, ValType::F64));
           case Expr::F64Log:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::LogD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::LogD, ValType::F64));
           case Expr::F64Pow:
-            CHECK_NEXT(emitBinaryMathBuiltinCall(exprOffset, SymbolicAddress::PowD, ValType::F64));
+            CHECK_NEXT(emitBinaryMathBuiltinCall(SymbolicAddress::PowD, ValType::F64));
           case Expr::F64Atan2:
-            CHECK_NEXT(emitBinaryMathBuiltinCall(exprOffset, SymbolicAddress::ATan2D, ValType::F64));
+            CHECK_NEXT(emitBinaryMathBuiltinCall(SymbolicAddress::ATan2D, ValType::F64));
           case Expr::F64PromoteF32:
             CHECK_NEXT(emitConversion(emitConvertF32ToF64, ValType::F32, ValType::F64));
           case Expr::F64ConvertSI32:
@@ -6735,9 +6748,9 @@ BaseCompiler::emitBody()
           case Expr::F64CopySign:
             CHECK_NEXT(emitBinary(emitCopysignF64, ValType::F64));
           case Expr::F64Nearest:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::NearbyIntD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::NearbyIntD, ValType::F64));
           case Expr::F64Trunc:
-            CHECK_NEXT(emitUnaryMathBuiltinCall(exprOffset, SymbolicAddress::TruncD, ValType::F64));
+            CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::TruncD, ValType::F64));
 
           // Comparisons
           case Expr::I32Eq:
@@ -6879,9 +6892,9 @@ BaseCompiler::emitBody()
 
           // Memory Related
           case Expr::GrowMemory:
-            CHECK_NEXT(emitGrowMemory(exprOffset));
+            CHECK_NEXT(emitGrowMemory());
           case Expr::CurrentMemory:
-            CHECK_NEXT(emitCurrentMemory(exprOffset));
+            CHECK_NEXT(emitCurrentMemory());
 
           case Expr::Limit:;
         }
@@ -6948,7 +6961,7 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
                            const ValTypeVector& locals,
                            FuncCompileResults& compileResults)
     : mg_(mg),
-      iter_(decoder),
+      iter_(decoder, func.lineOrBytecode()),
       func_(func),
       lastReadCallSite_(0),
       alloc_(compileResults.alloc()),
@@ -6958,6 +6971,7 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
       varHigh_(0),
       maxFramePushed_(0),
       deadCode_(false),
+      prologueTrapOffset_(trapOffset()),
       compileResults_(compileResults),
       masm(compileResults_.masm()),
       availGPR_(GeneralRegisterSet::All()),

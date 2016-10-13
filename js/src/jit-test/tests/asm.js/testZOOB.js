@@ -115,6 +115,8 @@ function testSimdX4(ctor, shift, scale, disp, simdName, simdCtor) {
                        'return { load: load, load2: load2, load1: load1, store: store, store2 : store2, store1 : store1 }');
     var f = asmLink(c, this, null, ab);
 
+    const RuntimeError = WebAssembly.RuntimeError;
+
     for (var i of indices) {
         var index = ((i<<scale)+disp)>>shift;
 
@@ -141,17 +143,17 @@ function testSimdX4(ctor, shift, scale, disp, simdName, simdCtor) {
         var r = false, r2 = false, r1 = false;
         try { l = f.load(i); }
         catch (e) {
-            assertEq(e instanceof RangeError, true);
+            assertEq(e instanceof RuntimeError, true);
             r = true;
         }
         try { l2 = f.load2(i); }
         catch (e) {
-            assertEq(e instanceof RangeError, true);
+            assertEq(e instanceof RuntimeError, true);
             r2 = true;
         }
         try { l1 = f.load1(i); }
         catch (e) {
-            assertEq(e instanceof RangeError, true);
+            assertEq(e instanceof RuntimeError, true);
             r1 = true;
         }
         assertEq(t, r);
@@ -167,19 +169,19 @@ function testSimdX4(ctor, shift, scale, disp, simdName, simdCtor) {
             f.store(i, v);
             assertEqX4(simdCtor.load(arr, index), v);
         } else
-            assertThrowsInstanceOf(() => f.store(i, simdCtor()), RangeError);
+            assertThrowsInstanceOf(() => f.store(i, simdCtor()), RuntimeError);
         if (!t2) {
             simdCtor.store2(arr, index, simdCtor.neg(v2));
             f.store2(i, v2);
             assertEqX4(simdCtor.load2(arr, index), v2);
         } else
-            assertThrowsInstanceOf(() => f.store2(i, simdCtor()), RangeError);
+            assertThrowsInstanceOf(() => f.store2(i, simdCtor()), RuntimeError);
         if (!t1) {
             simdCtor.store1(arr, index, simdCtor.neg(v1));
             f.store1(i, v1);
             assertEqX4(simdCtor.load1(arr, index), v1);
         } else
-            assertThrowsInstanceOf(() => f.store1(i, simdCtor()), RangeError);
+            assertThrowsInstanceOf(() => f.store1(i, simdCtor()), RuntimeError);
     }
 }
 

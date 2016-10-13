@@ -297,7 +297,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         branch(code);
     }
 
-    void jump(wasm::JumpTarget target) {
+    void jump(wasm::TrapDesc target) {
         ma_b(target);
     }
 

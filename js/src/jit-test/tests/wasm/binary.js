@@ -1,35 +1,8 @@
 // |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
+load(libdir + "wasm-binary.js");
 
 const CompileError = WebAssembly.CompileError;
-
-// MagicNumber = 0x6d736100;
-const magic0 = 0x00;  // '\0'
-const magic1 = 0x61;  // 'a'
-const magic2 = 0x73;  // 's'
-const magic3 = 0x6d;  // 'm'
-
-// EncodingVersion (temporary; to be set to 1 at some point before release)
-const ver0 = (Wasm.experimentalVersion >>>  0) & 0xff;
-const ver1 = (Wasm.experimentalVersion >>>  8) & 0xff;
-const ver2 = (Wasm.experimentalVersion >>> 16) & 0xff;
-const ver3 = (Wasm.experimentalVersion >>> 24) & 0xff;
-
-// Section opcodes
-const userDefinedId = 0;
-const typeId = 1;
-const importId = 2;
-const functionId = 3;
-const tableId = 4;
-const memoryId = 5;
-const globalId = 6;
-const exportId = 7;
-const startId = 8;
-const elemId = 9;
-const codeId = 10;
-const dataId = 11;
-
-const nameName = "name";
 
 const magicError = /failed to match magic number/;
 const unknownSection = /expected user-defined section/;
@@ -43,34 +16,6 @@ function versionError(actual) {
     var str = `binary version 0x${actual.toString(16)} does not match expected version 0x${expect.toString(16)}`;
     return RegExp(str);
 }
-
-const VoidCode = 0;
-const I32Code = 1;
-const I64Code = 2;
-const F32Code = 3;
-const F64Code = 4;
-
-const AnyFuncCode = 0x20;
-const FunctionConstructorCode = 0x40;
-
-const Unreachable = 0x00;
-const Block       = 0x01;
-const End         = 0x0f;
-const I32Const    = 0x10;
-const I64Const    = 0x11;
-const F64Const    = 0x12;
-const F32Const    = 0x13;
-const Call        = 0x16;
-
-// DefinitionKind
-const FunctionCode = 0x00;
-const TableCode    = 0x01;
-const MemoryCode   = 0x02;
-const GlobalCode   = 0x03;
-
-// ResizableFlags
-const DefaultFlag    = 0x1;
-const HasMaximumFlag = 0x2;
 
 function toU8(array) {
     for (let b of array)
@@ -208,7 +153,7 @@ function funcBody(func) {
     for (let local of func.locals)
         body.push(...varU32(local));
     body = body.concat(...func.body);
-    body.push(End);
+    body.push(EndCode);
     body.splice(0, 0, ...varU32(body.length));
     return body;
 }
@@ -265,9 +210,9 @@ function elemSection(elemArrays) {
     body.push(...varU32(elemArrays.length));
     for (let array of elemArrays) {
         body.push(...varU32(0)); // table index
-        body.push(...varU32(I32Const));
+        body.push(...varU32(I32ConstCode));
         body.push(...varS32(array.offset));
-        body.push(...varU32(End));
+        body.push(...varU32(EndCode));
         body.push(...varU32(array.elems.length));
         for (let elem of array.elems)
             body.push(...varU32(elem));
@@ -373,14 +318,14 @@ assertErrorMessage(() => wasmEval(moduleWithSections([invalidMemorySection0()]))
 
 // Test early 'end'
 const bodyMismatch = /function body length mismatch/;
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[End]})])])), CompileError, bodyMismatch);
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[Unreachable,End]})])])), CompileError, bodyMismatch);
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[End,Unreachable]})])])), CompileError, bodyMismatch);
+assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[EndCode]})])])), CompileError, bodyMismatch);
+assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[UnreachableCode,EndCode]})])])), CompileError, bodyMismatch);
+assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[EndCode,UnreachableCode]})])])), CompileError, bodyMismatch);
 
 // Deep nesting shouldn't crash or even throw.
 var manyBlocks = [];
 for (var i = 0; i < 20000; i++)
-    manyBlocks.push(Block, VoidCode, End);
+    manyBlocks.push(BlockCode, VoidCode, EndCode);
 wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:manyBlocks})])]));
 
 // Ignore errors in name section.
@@ -403,7 +348,7 @@ wasmEval(moduleWithSections([userDefSec, userDefSec, sigSec, declSec, bodySec]))
 wasmEval(moduleWithSections([userDefSec, userDefSec, sigSec, userDefSec, declSec, userDefSec, bodySec]));
 
 // Diagnose nonstandard block signature types.
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[Block, F64Code + 1, End]})])])), CompileError, /unknown block signature type/);
+assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, F64Code + 1, EndCode]})])])), CompileError, /unknown block signature type/);
 
 // Checking stack trace.
 function runStackTraceTest(namesContent, expectedName) {
@@ -412,7 +357,7 @@ function runStackTraceTest(namesContent, expectedName) {
         importSection([{sigIndex:0, module:"env", func:"callback"}]),
         declSection([0]),
         exportSection([{funcIndex:1, name: "run"}]),
-        bodySection([funcBody({locals: [], body: [Call, varU32(0)]})]),
+        bodySection([funcBody({locals: [], body: [CallCode, varU32(0)]})]),
         userDefinedSection("whoa"),
         userDefinedSection("wee", 42),
     ];
