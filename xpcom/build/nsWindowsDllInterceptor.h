@@ -7,6 +7,8 @@
 #ifndef NS_WINDOWS_DLL_INTERCEPTOR_H_
 #define NS_WINDOWS_DLL_INTERCEPTOR_H_
 
+#include "mozilla/Assertions.h"
+
 #include <windows.h>
 #include <winternl.h>
 
@@ -66,57 +68,6 @@
 
 namespace mozilla {
 namespace internal {
-
-// Get op length of '/r'
-static size_t
-GetOpLengthByModRM(const uint8_t* aOp)
-{
-  uint8_t mod = *aOp >> 6;
-  uint8_t rm = *aOp & 0x7;
-
-  switch (mod) {
-  case 0:
-    if (rm == 4) {
-      // SIB
-      if ((*(aOp + 1) & 0x7) == 5) {
-        // disp32
-        return 6;
-      }
-      return 2;
-    } else if (rm == 5) {
-      // [RIP/EIP + disp32]
-      // Since we don't modify relative offset, we should mark as impossible
-      // code.
-      return 0;
-    }
-    // [r/m]
-    return 1;
-
-  case 1:
-    if (rm == 4) {
-      // [SIB + imm8]
-      return 3;
-    }
-    // [r/m + imm8]
-    return 2;
-
-  case 2:
-    if (rm == 4) {
-      // [SIB + imm32]
-      return 6;
-    }
-    // [r/m + imm32]
-    return 5;
-
-  case 3:
-    // r/w
-    return 1;
-
-  default:
-     break;
-  }
-  return 0;
-}
 
 class AutoVirtualProtect
 {
@@ -423,6 +374,69 @@ protected:
   int mMaxHooks;
   int mCurHooks;
 
+  // rex bits
+  static const BYTE kMaskHighNibble = 0xF0;
+  static const BYTE kRexOpcode = 0x40;
+  static const BYTE kMaskRexW = 0x08;
+  static const BYTE kMaskRexR = 0x04;
+  static const BYTE kMaskRexX = 0x02;
+  static const BYTE kMaskRexB = 0x01;
+
+  // mod r/m bits
+  static const BYTE kRegFieldShift = 3;
+  static const BYTE kMaskMod = 0xC0;
+  static const BYTE kMaskReg = 0x38;
+  static const BYTE kMaskRm = 0x07;
+  static const BYTE kRmNeedSib = 0x04;
+  static const BYTE kModReg = 0xC0;
+  static const BYTE kModDisp32 = 0x80;
+  static const BYTE kModDisp8 = 0x40;
+  static const BYTE kModNoRegDisp = 0x00;
+  static const BYTE kRmNoRegDispDisp32 = 0x05;
+
+  // sib bits
+  static const BYTE kMaskSibScale = 0xC0;
+  static const BYTE kMaskSibIndex = 0x38;
+  static const BYTE kMaskSibBase = 0x07;
+  static const BYTE kSibBaseEbp = 0x05;
+
+  int CountModRmSib(const BYTE *aModRm, BYTE* aSubOpcode = nullptr)
+  {
+    if (!aModRm) {
+      return -1;
+    }
+    int numBytes = 1; // Start with 1 for mod r/m byte itself
+    switch (*aModRm & kMaskMod) {
+      case kModReg:
+        return numBytes;
+      case kModDisp8:
+        numBytes += 1;
+        break;
+      case kModDisp32:
+        numBytes += 4;
+        break;
+      case kModNoRegDisp:
+        if ((*aModRm & kMaskRm) == kRmNoRegDispDisp32 ||
+            ((*aModRm & kMaskRm) == kRmNeedSib &&
+             (*(aModRm + 1) & kMaskSibBase) == kSibBaseEbp)) {
+          numBytes += 4;
+        }
+        break;
+      default:
+        // This should not be reachable
+        MOZ_ASSERT_UNREACHABLE("Impossible value for modr/m byte mod bits");
+        return -1;
+    }
+    if ((*aModRm & kMaskRm) == kRmNeedSib) {
+      // SIB byte
+      numBytes += 1;
+    }
+    if (aSubOpcode) {
+      *aSubOpcode = (*aModRm & kMaskReg) >> kRegFieldShift;
+    }
+    return numBytes;
+  }
+
 #if defined(_M_X64)
   // To patch for JMP and JE
 
@@ -705,8 +719,8 @@ protected:
         if (origBytes[nBytes + 1] == 0x48 &&
             (origBytes[nBytes + 2] >= 0x88 && origBytes[nBytes + 2] <= 0x8b)) {
           nBytes += 3;
-          size_t len = GetOpLengthByModRM(origBytes + nBytes);
-          if (!len) {
+          int len = CountModRmSib(origBytes + nBytes);
+          if (len < 0) {
             // no way to support this yet.
             return;
           }
@@ -720,6 +734,17 @@ protected:
       } else if (origBytes[nBytes] == 0xb8) {
         // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
         nBytes += 5;
+      } else if (origBytes[nBytes] == 0xf6) {
+        // test r/m8, imm8 (used by ntdll on Windows 10 x64)
+        // (no flags are affected by near jmp since there is no task switch,
+        // so it is ok for a jmp to be written immediately after a test)
+        BYTE subOpcode = 0;
+        int nModRmSibBytes = CountModRmSib(&origBytes[nBytes + 1], &subOpcode);
+        if (nModRmSibBytes < 0 || subOpcode != 0) {
+          // Unsupported
+          return;
+        }
+        nBytes += 2 + nModRmSibBytes;
       } else if (origBytes[nBytes] == 0xc3) {
         // ret
         nBytes++;
