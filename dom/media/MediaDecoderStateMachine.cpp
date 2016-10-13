@@ -233,13 +233,14 @@ public:
   // Note this function will delete the current state object.
   // Don't access members to avoid UAF after this call.
   template <class S, typename... Ts>
-  void SetState(Ts&&... aArgs)
+  auto SetState(Ts&&... aArgs)
+    -> decltype(DeclVal<S>().Enter(Forward<Ts>(aArgs)...))
   {
     // keep mMaster in a local object because mMaster will become invalid after
     // the current state object is deleted.
     auto master = mMaster;
 
-    auto s = new S(master, Forward<Ts>(aArgs)...);
+    auto s = new S(master);
 
     MOZ_ASSERT(master->mState != s->GetState() ||
                master->mState == DECODER_STATE_SEEKING);
@@ -249,7 +250,7 @@ public:
     Exit();
     master->mState = s->GetState();
     master->mStateObj.reset(s); // Will delete |this|!
-    s->Enter();
+    return s->Enter(Forward<Ts>(aArgs)...);
   }
 
 protected:
@@ -580,11 +581,12 @@ class MediaDecoderStateMachine::SeekingState
   : public MediaDecoderStateMachine::StateObject
 {
 public:
-  explicit SeekingState(Master* aPtr, SeekJob aSeekJob)
-    : StateObject(aPtr), mSeekJob(Move(aSeekJob)) {}
+  explicit SeekingState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter()
+  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob aSeekJob)
   {
+    mSeekJob = Move(aSeekJob);
+
     // SeekTask will register its callbacks to MediaDecoderReaderWrapper.
     mMaster->CancelMediaDecoderReaderWrapperCallback();
 
@@ -640,6 +642,7 @@ public:
              }));
 
     MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+    return mSeekJob.mPromise.Ensure(__func__);
   }
 
   void Exit() override
@@ -865,7 +868,7 @@ class MediaDecoderStateMachine::ShutdownState
 public:
   explicit ShutdownState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter();
+  RefPtr<ShutdownPromise> Enter();
 
   void Exit() override
   {
@@ -918,14 +921,7 @@ RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::
 StateObject::HandleShutdown()
 {
-  auto master = mMaster;
-  SetState<ShutdownState>();
-
-  return master->mReader->Shutdown()
-    ->Then(master->OwnerThread(), __func__, master,
-           &MediaDecoderStateMachine::FinishShutdown,
-           &MediaDecoderStateMachine::FinishShutdown)
-    ->CompletionPromise();
+  return SetState<ShutdownState>();
 }
 
 void
@@ -1074,9 +1070,7 @@ DecodingFirstFrameState::HandleSeek(SeekTarget aTarget)
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
-  RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  SetState<SeekingState>(Move(seekJob));
-  return p.forget();
+  return SetState<SeekingState>(Move(seekJob));
 }
 
 void
@@ -1131,9 +1125,7 @@ DecodingState::HandleSeek(SeekTarget aTarget)
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
-  RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  SetState<SeekingState>(Move(seekJob));
-  return p.forget();
+  return SetState<SeekingState>(Move(seekJob));
 }
 
 bool
@@ -1215,9 +1207,7 @@ SeekingState::HandleSeek(SeekTarget aTarget)
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
-  RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  SetState<SeekingState>(Move(seekJob));
-  return p.forget();
+  return SetState<SeekingState>(Move(seekJob));
 }
 
 void
@@ -1366,9 +1356,7 @@ BufferingState::HandleSeek(SeekTarget aTarget)
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
-  RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  SetState<SeekingState>(Move(seekJob));
-  return p.forget();
+  return SetState<SeekingState>(Move(seekJob));
 }
 
 RefPtr<MediaDecoder::SeekPromise>
@@ -1379,12 +1367,10 @@ CompletedState::HandleSeek(SeekTarget aTarget)
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
-  RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-  SetState<SeekingState>(Move(seekJob));
-  return p.forget();
+  return SetState<SeekingState>(Move(seekJob));
 }
 
-void
+RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::
 ShutdownState::Enter()
 {
@@ -1444,6 +1430,12 @@ ShutdownState::Enter()
 
   // Shut down the watch manager to stop further notifications.
   master->mWatchManager.Shutdown();
+
+  return Reader()->Shutdown()
+    ->Then(OwnerThread(), __func__, master,
+           &MediaDecoderStateMachine::FinishShutdown,
+           &MediaDecoderStateMachine::FinishShutdown)
+    ->CompletionPromise();
 }
 
 #define INIT_WATCHABLE(name, val) \
@@ -2309,11 +2301,10 @@ void MediaDecoderStateMachine::VisibilityChanged()
                                  MediaDecoderEventVisibility::Suppressed,
                                  true /* aVideoOnly */);
 
-    RefPtr<MediaDecoder::SeekPromise> p = seekJob.mPromise.Ensure(__func__);
-    p->Then(AbstractThread::MainThread(), __func__,
-            [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
-            [](){});
-    mStateObj->SetState<SeekingState>(Move(seekJob));
+    mStateObj->SetState<SeekingState>(Move(seekJob))->Then(
+      AbstractThread::MainThread(), __func__,
+      [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
+      [](){});
   }
 }
 
