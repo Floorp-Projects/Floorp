@@ -42,7 +42,7 @@ class ConfigureError(Exception):
     pass
 
 
-class DependsFunction(object):
+class SandboxDependsFunction(object):
     '''Sandbox-visible representation of @depends functions.'''
     def __call__(self, *arg, **kwargs):
         raise ConfigureError('The `%s` function may not be called'
@@ -279,7 +279,7 @@ class ConfigureSandbox(dict):
         if inspect.isfunction(value) and value not in self._templates:
             value, _ = self._prepare_function(value)
 
-        elif (not isinstance(value, DependsFunction) and
+        elif (not isinstance(value, SandboxDependsFunction) and
                 value not in self._templates and
                 not (inspect.isclass(value) and issubclass(value, Exception))):
             raise KeyError('Cannot assign `%s` because it is neither a '
@@ -288,7 +288,7 @@ class ConfigureSandbox(dict):
         return super(ConfigureSandbox, self).__setitem__(key, value)
 
     def _resolve(self, arg, need_help_dependency=True):
-        if isinstance(arg, DependsFunction):
+        if isinstance(arg, SandboxDependsFunction):
             assert arg in self._depends
             func, deps = self._depends[arg]
             if need_help_dependency and self._help_option not in deps:
@@ -298,7 +298,7 @@ class ConfigureSandbox(dict):
         return arg
 
     def _value_for(self, obj):
-        if isinstance(obj, DependsFunction):
+        if isinstance(obj, SandboxDependsFunction):
             return self._value_for_depends(obj)
 
         elif isinstance(obj, Option):
@@ -314,7 +314,7 @@ class ConfigureSandbox(dict):
         with_help = self._help_option in dependencies
         if with_help:
             for arg in dependencies:
-                if isinstance(arg, DependsFunction):
+                if isinstance(arg, SandboxDependsFunction):
                     _, deps = self._depends[arg]
                     if self._help_option not in deps:
                         raise ConfigureError(
@@ -434,7 +434,7 @@ class ConfigureSandbox(dict):
                 arg = self._options[name]
                 self._seen.add(arg)
                 dependencies.append(arg)
-            elif isinstance(arg, DependsFunction):
+            elif isinstance(arg, SandboxDependsFunction):
                 assert arg in self._depends
                 dependencies.append(arg)
             else:
@@ -448,7 +448,7 @@ class ConfigureSandbox(dict):
                 raise ConfigureError(
                     'Cannot decorate generator functions with @depends')
             func, glob = self._prepare_function(func)
-            dummy = wraps(func)(DependsFunction())
+            dummy = wraps(func)(SandboxDependsFunction())
             self._depends[dummy] = func, dependencies
 
             # Only @depends functions with a dependency on '--help' are
@@ -686,7 +686,7 @@ class ConfigureSandbox(dict):
         # Don't do anything when --help was on the command line
         if self._help:
             return
-        if not reason and isinstance(value, DependsFunction):
+        if not reason and isinstance(value, SandboxDependsFunction):
             deps = self._depends[value][1]
             possible_reasons = [d for d in deps if d != self._help_option]
             if len(possible_reasons) == 1:
