@@ -53,6 +53,11 @@ DIRS += [
     'client',
 ]
 
+if CONFIG['NIGHTLY_BUILD']:
+    DIRS += [
+        'jsoncpp/src/lib_json',
+    ]
+
 if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
     DIRS += ['injector']
     UNIFIED_SOURCES += [
