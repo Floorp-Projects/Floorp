@@ -11,7 +11,7 @@
       <span id="inner">A bunch of text in a span inside of a div which should be selected</span>
     </div>
 
-    <div id="ce" contenteditable>
+    <div id="ce">
       This is a random block of text
     </div>
 
@@ -127,6 +127,25 @@
           reset();
         }
 
+        function* contentEditableAction(aElement, aContentEditable,
+                                        aSelStart, aSelChng,
+                                        aISelChng, aTSelChng)
+        {
+          aElement.setAttribute("contenteditable",
+                                aContentEditable ? "true" : "false");
+          yield spin();
+
+          is(selectstart, aSelStart,
+             "SelStart ContentEditable Action");
+          is(selectionchange, aSelChng,
+             "SelStart ContentEditable Action");
+          is(inputSelectionchange, aISelChng || 0,
+             "SelStart ContentEditable Action");
+          is(textareaSelectionchange, aTSelChng || 0,
+             "SelStart ContentEditable Action");
+          reset();
+        }
+
         var selection = document.getSelection();
         function isCollapsed() {
           is(selection.isCollapsed, true, "Selection is collapsed");
@@ -134,6 +153,15 @@
         function isNotCollapsed() {
           is(selection.isCollapsed, false, "Selection is not collapsed");
         }
+
+        // Make sure setting the element to contentEditable doesn't cause any selectionchange events
+        yield* contentEditableAction(elt("ce"), true, 0, 0, 0, 0);
+
+        // Make sure setting the element to not be contentEditable doesn't cause any selectionchange events
+        yield* contentEditableAction(elt("ce"), false, 0, 0, 0, 0);
+
+        // Now make the div contentEditable and proceed with the test
+        yield* contentEditableAction(elt("ce"), true, 0, 0, 0, 0);
 
         // Focus the contenteditable text
         yield* mouseAction(elt("ce"), 100, "click", 0, 1);
