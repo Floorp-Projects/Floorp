@@ -2617,19 +2617,19 @@ MainAxisPositionTracker::
   }
 
   // Map 'left'/'right' to 'start'/'end'
-  if (mJustifyContent == NS_STYLE_ALIGN_LEFT ||
-      mJustifyContent == NS_STYLE_ALIGN_RIGHT) {
+  if (mJustifyContent == NS_STYLE_JUSTIFY_LEFT ||
+      mJustifyContent == NS_STYLE_JUSTIFY_RIGHT) {
     if (aAxisTracker.IsColumnOriented()) {
       // Container's alignment axis is not parallel to the inline axis,
       // so we map both 'left' and 'right' to 'start'.
-      mJustifyContent = NS_STYLE_ALIGN_START;
+      mJustifyContent = NS_STYLE_JUSTIFY_START;
     } else {
       // Row-oriented, so we map 'left' and 'right' to 'start' or 'end',
       // depending on left-to-right writing mode.
       const bool isLTR = aAxisTracker.GetWritingMode().IsBidiLTR();
-      const bool isAlignLeft = (mJustifyContent == NS_STYLE_ALIGN_LEFT);
-      mJustifyContent = (isAlignLeft == isLTR) ? NS_STYLE_ALIGN_START
-                                               : NS_STYLE_ALIGN_END;
+      const bool isJustifyLeft = (mJustifyContent == NS_STYLE_JUSTIFY_LEFT);
+      mJustifyContent = (isJustifyLeft == isLTR) ? NS_STYLE_JUSTIFY_START
+                                                 : NS_STYLE_JUSTIFY_END;
     }
   }
 
