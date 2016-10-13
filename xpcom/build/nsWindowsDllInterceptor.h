@@ -594,6 +594,71 @@ protected:
 
 #endif
 
+  enum ePrefixGroupBits
+  {
+    eNoPrefixes = 0,
+    ePrefixGroup1 = (1 << 0),
+    ePrefixGroup2 = (1 << 1),
+    ePrefixGroup3 = (1 << 2),
+    ePrefixGroup4 = (1 << 3)
+  };
+
+  int CountPrefixBytes(byteptr_t aBytes, const int aBytesIndex,
+                       unsigned char* aOutGroupBits)
+  {
+    unsigned char& groupBits = *aOutGroupBits;
+    groupBits = eNoPrefixes;
+    int index = aBytesIndex;
+    while (true) {
+      switch (aBytes[index]) {
+        // Group 1
+        case 0xF0: // LOCK
+        case 0xF2: // REPNZ
+        case 0xF3: // REP / REPZ
+          if (groupBits & ePrefixGroup1) {
+            return -1;
+          }
+          groupBits |= ePrefixGroup1;
+          ++index;
+          break;
+
+        // Group 2
+        case 0x2E: // CS override / branch not taken
+        case 0x36: // SS override
+        case 0x3E: // DS override / branch taken
+        case 0x64: // FS override
+        case 0x65: // GS override
+          if (groupBits & ePrefixGroup2) {
+            return -1;
+          }
+          groupBits |= ePrefixGroup2;
+          ++index;
+          break;
+
+        // Group 3
+        case 0x66: // operand size override
+          if (groupBits & ePrefixGroup3) {
+            return -1;
+          }
+          groupBits |= ePrefixGroup3;
+          ++index;
+          break;
+
+        // Group 4
+        case 0x67: // Address size override
+          if (groupBits & ePrefixGroup4) {
+            return -1;
+          }
+          groupBits |= ePrefixGroup4;
+          ++index;
+          break;
+
+        default:
+          return index - aBytesIndex;
+      }
+    }
+  }
+
   void CreateTrampoline(void* aOrigFunction, intptr_t aDest, void** aOutTramp)
   {
     *aOutTramp = nullptr;
@@ -615,6 +680,14 @@ protected:
       //
       // Note!  If we ever need to understand jump instructions, we'll
       // need to rewrite the displacement argument.
+      unsigned char prefixGroups;
+      int numPrefixBytes = CountPrefixBytes(origBytes, nBytes, &prefixGroups);
+      if (numPrefixBytes < 0 || (prefixGroups & (ePrefixGroup3 | ePrefixGroup4))) {
+        // Either the prefix sequence was bad, or there are prefixes that
+        // we don't currently support (groups 3 and 4)
+        return;
+      }
+      nBytes += numPrefixBytes;
       if (origBytes[nBytes] >= 0x88 && origBytes[nBytes] <= 0x8B) {
         // various MOVs
         unsigned char b = origBytes[nBytes + 1];
