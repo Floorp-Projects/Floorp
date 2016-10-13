@@ -3679,9 +3679,9 @@ JSObject::allocKindForTenure(const js::Nursery& nursery) const
      */
     if (is<TypedArrayObject>() && !as<TypedArrayObject>().hasBuffer()) {
         size_t nbytes = as<TypedArrayObject>().byteLength();
-        if (nbytes >= TypedArrayObject::INLINE_BUFFER_LIMIT)
-            return GetGCObjectKind(getClass());
-        return GetBackgroundAllocKind(TypedArrayObject::AllocKindForLazyBuffer(nbytes));
+        if (as<TypedArrayObject>().hasInlineElements())
+            return GetBackgroundAllocKind(TypedArrayObject::AllocKindForLazyBuffer(nbytes));
+        return GetGCObjectKind(getClass());
     }
 
     // Proxies that are CrossCompartmentWrappers may be nursery allocated.
