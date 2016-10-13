@@ -24,6 +24,7 @@ from .vcs import VCSFiles
 def _run_linters(queue, paths, **lintargs):
     parse = Parser()
     results = defaultdict(list)
+    return_code = 0
 
     while True:
         try:
@@ -34,7 +35,7 @@ def _run_linters(queue, paths, **lintargs):
             # Queue is dead and IOError is raised.
             linter_path = queue.get(False)
         except (Empty, IOError):
-            return results
+            return results, return_code
 
         # Ideally we would pass the entire LINTER definition as an argument
         # to the worker instead of re-parsing it. But passing a function from
@@ -45,6 +46,8 @@ def _run_linters(queue, paths, **lintargs):
         res = func(paths, linter, **lintargs) or []
 
         if not isinstance(res, (list, tuple)):
+            if res:
+                return_code = 1
             continue
 
         for r in res:
@@ -77,6 +80,8 @@ class LintRoller(object):
         self.linters = []
         self.lintargs = lintargs
         self.lintargs['root'] = root or self.vcs.root or os.getcwd()
+
+        self.return_code = None
 
     def read(self, paths):
         """Parse one or more linters and add them to the registry.
@@ -135,9 +140,12 @@ class LintRoller(object):
         # ignore SIGINT in parent so we can still get partial results
         # from child processes. These should shutdown quickly anyway.
         signal.signal(signal.SIGINT, signal.SIG_IGN)
+        self.return_code = 0
         for worker in workers:
             # parent process blocks on worker.get()
-            for k, v in worker.get().iteritems():
+            results, return_code = worker.get()
+            if results or return_code:
+                self.return_code = 1
+            for k, v in results.iteritems():
                 all_results[k].extend(v)
-
         return all_results
