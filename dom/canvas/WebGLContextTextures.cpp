@@ -327,9 +327,8 @@ WebGLContext::TexParameter_base(GLenum rawTexTarget, GLenum pname, GLint* maybeI
 void
 WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
                          GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
-                         GLenum unpackType,
-                         const dom::Nullable<dom::ArrayBufferView>& maybeView,
-                         ErrorResult&)
+                         GLenum unpackType, const dom::ArrayBufferView* maybeView,
+                         GLuint elemOffset)
 {
     const char funcName[] = "texImage2D";
     const uint8_t funcDims = 2;
@@ -342,11 +341,6 @@ WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalF
         return;
     }
 
-    const dom::ArrayBufferView* view = nullptr;
-    if (!maybeView.IsNull()) {
-        view = &maybeView.Value();
-    }
-
     const bool isSubImage = false;
     const GLint xOffset = 0;
     const GLint yOffset = 0;
@@ -354,7 +348,7 @@ WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalF
     const GLsizei depth = 1;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
                        yOffset, zOffset, width, height, depth, border, unpackFormat,
-                       unpackType, view);
+                       unpackType, maybeView, elemOffset);
 }
 
 void
@@ -412,7 +406,8 @@ void
 WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                             GLint yOffset, GLsizei width, GLsizei height,
                             GLenum unpackFormat, GLenum unpackType,
-                            const dom::ArrayBufferView& view)
+                            const dom::ArrayBufferView& view, GLuint elemOffset,
+                            ErrorResult&)
 {
     const char funcName[] = "texSubImage2D";
     const uint8_t funcDims = 2;
@@ -432,7 +427,7 @@ WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset
     const GLint border = 0;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
                        yOffset, zOffset, width, height, depth, border, unpackFormat,
-                       unpackType, &view);
+                       unpackType, &view, elemOffset);
 }
 
 void
@@ -487,8 +482,8 @@ WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset
 void
 WebGLContext::CompressedTexImage2D(GLenum rawTexImageTarget, GLint level,
                                    GLenum internalFormat, GLsizei width, GLsizei height,
-                                   GLint border,
-                                   const dom::ArrayBufferView& view)
+                                   GLint border, const dom::ArrayBufferView& srcView,
+                                   GLuint srcElemOffset)
 {
     const char funcName[] = "compressedTexImage2D";
     const uint8_t funcDims = 2;
@@ -502,16 +497,16 @@ WebGLContext::CompressedTexImage2D(GLenum rawTexImageTarget, GLint level,
     }
 
     const GLsizei depth = 1;
-
     tex->CompressedTexImage(funcName, target, level, internalFormat, width, height, depth,
-                            border, view);
+                            border, srcView, srcElemOffset);
 }
 
 void
 WebGLContext::CompressedTexSubImage2D(GLenum rawTexImageTarget, GLint level,
                                       GLint xOffset, GLint yOffset, GLsizei width,
                                       GLsizei height, GLenum sizedUnpackFormat,
-                                      const dom::ArrayBufferView& view)
+                                      const dom::ArrayBufferView& srcView,
+                                      GLuint srcElemOffset)
 {
     const char funcName[] = "compressedTexSubImage2D";
     const uint8_t funcDims = 2;
@@ -526,9 +521,8 @@ WebGLContext::CompressedTexSubImage2D(GLenum rawTexImageTarget, GLint level,
 
     const GLint zOffset = 0;
     const GLsizei depth = 1;
-
     tex->CompressedTexSubImage(funcName, target, level, xOffset, yOffset, zOffset, width,
-                               height, depth, sizedUnpackFormat, view);
+                               height, depth, sizedUnpackFormat, srcView, srcElemOffset);
 }
 
 ////////////////////////////////////////

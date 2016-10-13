@@ -268,7 +268,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
         }
 
         if (!mContext->ValidateArrayBufferView(funcName, *srcView, srcElemOffset, 0,
-                                               &bytes, &byteCount))
+                                               const_cast<uint8_t**>(&bytes), &byteCount))
         {
             return;
         }
@@ -1494,10 +1494,10 @@ WebGLTexture::CompressedTexImage(const char* funcName, TexImageTarget target, GL
     ////////////////////////////////////
     // Get source info
 
-    uint8_t* bytes;
+    const uint8_t* bytes;
     size_t byteLen;
-    if (!mContext->ValidateArrayBufferView(funcName, srcView, srcElemOffset, 0, &bytes,
-                                           &byteLen))
+    if (!mContext->ValidateArrayBufferView(funcName, srcView, srcElemOffset, 0,
+                                           const_cast<uint8_t**>(&bytes), &byteLen))
     {
         return;
     }
@@ -1598,10 +1598,10 @@ WebGLTexture::CompressedTexSubImage(const char* funcName, TexImageTarget target,
     ////////////////////////////////////
     // Get source info
 
-    uint8_t* bytes;
+    const uint8_t* bytes;
     size_t byteLen;
-    if (!mContext->ValidateArrayBufferView(funcName, srcView, srcElemOffset, 0, &bytes,
-                                           &byteLen))
+    if (!mContext->ValidateArrayBufferView(funcName, srcView, srcElemOffset, 0,
+                                           const_cast<uint8_t**>(&bytes), &byteLen))
     {
         return;
     }
