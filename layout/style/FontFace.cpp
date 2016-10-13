@@ -101,6 +101,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(FontFace)
 
 FontFace::FontFace(nsISupports* aParent, FontFaceSet* aFontFaceSet)
   : mParent(aParent)
+  , mLoadedRejection(NS_OK)
   , mStatus(FontFaceLoadStatus::Unloaded)
   , mSourceType(SourceType(0))
   , mSourceBuffer(nullptr)
@@ -109,16 +110,6 @@ FontFace::FontFace(nsISupports* aParent, FontFaceSet* aFontFaceSet)
   , mInFontFaceSet(false)
 {
   MOZ_COUNT_CTOR(FontFace);
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
-
-  // If the pref is not set, don't create the Promise (which the page wouldn't
-  // be able to get to anyway) as it causes the window.FontFace constructor
-  // to be created.
-  if (global && FontFaceSet::PrefEnabled()) {
-    ErrorResult rv;
-    mLoaded = Promise::Create(global, rv);
-  }
 }
 
 FontFace::~FontFace()
@@ -198,13 +189,7 @@ FontFace::InitializeSource(const StringOrArrayBufferOrArrayBufferView& aSource)
     if (!ParseDescriptor(eCSSFontDesc_Src,
                          aSource.GetAsString(),
                          mDescriptors->mSrc)) {
-      if (mLoaded) {
-        // The SetStatus call we are about to do assumes that for
-        // FontFace objects with sources other than ArrayBuffer(View)s, that the
-        // mLoaded Promise is rejected with a network error.  We get
-        // in here beforehand to set it to the required syntax error.
-        mLoaded->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
-      }
+      Reject(NS_ERROR_DOM_SYNTAX_ERR);
 
       SetStatus(FontFaceLoadStatus::Error);
       return;
@@ -378,6 +363,8 @@ FontFace::Load(ErrorResult& aRv)
 {
   mFontFaceSet->FlushUserFontSet();
 
+  EnsurePromise();
+
   if (!mLoaded) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -433,6 +420,8 @@ FontFace::GetLoaded(ErrorResult& aRv)
 {
   mFontFaceSet->FlushUserFontSet();
 
+  EnsurePromise();
+
   if (!mLoaded) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -467,17 +456,15 @@ FontFace::SetStatus(FontFaceLoadStatus aStatus)
     otherSet->OnFontFaceStatusChanged(this);
   }
 
-  if (!mLoaded) {
-    return;
-  }
-
   if (mStatus == FontFaceLoadStatus::Loaded) {
-    mLoaded->MaybeResolve(this);
+    if (mLoaded) {
+      mLoaded->MaybeResolve(this);
+    }
   } else if (mStatus == FontFaceLoadStatus::Error) {
     if (mSourceType == eSourceType_Buffer) {
-      mLoaded->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
+      Reject(NS_ERROR_DOM_SYNTAX_ERR);
     } else {
-      mLoaded->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+      Reject(NS_ERROR_DOM_NETWORK_ERR);
     }
   }
 }
@@ -570,9 +557,7 @@ FontFace::SetDescriptors(const nsAString& aFamily,
     // on the FontFace.
     mDescriptors = new CSSFontFaceDescriptors;
 
-    if (mLoaded) {
-      mLoaded->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
-    }
+    Reject(NS_ERROR_DOM_SYNTAX_ERR);
 
     SetStatus(FontFaceLoadStatus::Error);
     return false;
@@ -745,6 +730,40 @@ FontFace::RemoveFontFaceSet(FontFaceSet* aFontFaceSet)
     mInFontFaceSet = false;
   } else {
     mOtherFontFaceSets.RemoveElement(aFontFaceSet);
+  }
+}
+
+void
+FontFace::Reject(nsresult aResult)
+{
+  if (mLoaded) {
+    mLoaded->MaybeReject(aResult);
+  } else if (mLoadedRejection == NS_OK) {
+    mLoadedRejection = aResult;
+  }
+}
+
+void
+FontFace::EnsurePromise()
+{
+  if (mLoaded) {
+    return;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
+
+  // If the pref is not set, don't create the Promise (which the page wouldn't
+  // be able to get to anyway) as it causes the window.FontFace constructor
+  // to be created.
+  if (global && FontFaceSet::PrefEnabled()) {
+    ErrorResult rv;
+    mLoaded = Promise::Create(global, rv);
+
+    if (mStatus == FontFaceLoadStatus::Loaded) {
+      mLoaded->MaybeResolve(this);
+    } else if (mLoadedRejection != NS_OK) {
+      mLoaded->MaybeReject(mLoadedRejection);
+    }
   }
 }
 
