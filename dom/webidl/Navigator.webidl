@@ -277,12 +277,6 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.voicemail.enabled", ChromeOnly,
-   UnsafeInPrerendering]
-  readonly attribute MozVoicemail mozVoicemail;
-};
-
-partial interface Navigator {
   [Throws, Pref="dom.icc.enabled", ChromeOnly,
    UnsafeInPrerendering]
   readonly attribute MozIccManager? mozIccManager;
