@@ -327,7 +327,6 @@ WEBIDL_FILES = [
     'MessageChannel.webidl',
     'MessageEvent.webidl',
     'MessagePort.webidl',
-    'MessagePortList.webidl',
     'MimeType.webidl',
     'MimeTypeArray.webidl',
     'MMICall.webidl',
