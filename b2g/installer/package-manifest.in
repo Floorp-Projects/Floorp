@@ -203,7 +203,6 @@
 @RESPATH@/components/dom_tv.xpt
 @RESPATH@/components/dom_inputport.xpt
 @RESPATH@/components/dom_views.xpt
-@RESPATH@/components/dom_voicemail.xpt
 #ifdef MOZ_WEBSPEECH
 @RESPATH@/components/dom_webspeechrecognition.xpt
 #endif
@@ -490,8 +489,6 @@
 #ifndef DISABLE_MOZ_RIL_GEOLOC
 @RESPATH@/components/TelephonyService.js
 @RESPATH@/components/TelephonyService.manifest
-@RESPATH@/components/VoicemailService.js
-@RESPATH@/components/VoicemailService.manifest
 #endif
 #endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
 
