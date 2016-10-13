@@ -21,12 +21,141 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(ConstantSourceNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(ConstantSourceNode, AudioNode)
 
+class ConstantSourceNodeEngine final : public AudioNodeEngine
+{
+public:
+  ConstantSourceNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
+    : AudioNodeEngine(aNode)
+    , mSource(nullptr)
+    , mDestination(aDestination->Stream())
+    , mStart(-1)
+    , mStop(STREAM_TIME_MAX)
+    // Keep the default values in sync with ConstantSourceNode::ConstantSourceNode.
+    , mOffset(1.0f)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  void SetSourceStream(AudioNodeStream* aSource)
+  {
+    mSource = aSource;
+  }
+
+  enum Parameters {
+    OFFSET,
+    START,
+    STOP,
+  };
+  void RecvTimelineEvent(uint32_t aIndex,
+                         AudioTimelineEvent& aEvent) override
+  {
+    MOZ_ASSERT(mDestination);
+
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
+                                                    mDestination);
+
+    switch (aIndex) {
+    case OFFSET:
+      mOffset.InsertEvent<int64_t>(aEvent);
+      break;
+    default:
+      NS_ERROR("Bad ConstantSourceNodeEngine TimelineParameter");
+    }
+  }
+
+  void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) override
+  {
+    switch (aIndex) {
+    case START:
+      mStart = aParam;
+      mSource->SetActive();
+      break;
+    case STOP: mStop = aParam; break;
+    default:
+      NS_ERROR("Bad ConstantSourceNodeEngine StreamTimeParameter");
+    }
+  }
+
+  void ProcessBlock(AudioNodeStream* aStream,
+                    GraphTime aFrom,
+                    const AudioBlock& aInput,
+                    AudioBlock* aOutput,
+                    bool* aFinished) override
+  {
+    MOZ_ASSERT(mSource == aStream, "Invalid source stream");
+
+    StreamTime ticks = mDestination->GraphTimeToStreamTime(aFrom);
+    if (mStart == -1) {
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+      return;
+    }
+
+    if (ticks + WEBAUDIO_BLOCK_SIZE <= mStart || ticks >= mStop) {
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+    } else {
+      aOutput->AllocateChannels(1);
+      float* output = aOutput->ChannelFloatsForWrite(0);
+
+      if (mOffset.HasSimpleValue()) {
+        for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
+          output[i] = mOffset.GetValueAtTime(aFrom, 0);
+        }
+      } else {
+        mOffset.GetValuesAtTime(ticks, output, WEBAUDIO_BLOCK_SIZE);
+      }
+    }
+
+    if (ticks + WEBAUDIO_BLOCK_SIZE >= mStop) {
+      // We've finished playing.
+      *aFinished = true;
+    }
+  }
+
+  bool IsActive() const override
+  {
+    // start() has been called.
+    return mStart != -1;
+  }
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  {
+    size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
+
+    // Not owned:
+    // - mSource
+    // - mDestination
+    // - mOffset (internal ref owned by node)
+
+    return amount;
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  AudioNodeStream* mSource;
+  AudioNodeStream* mDestination;
+  StreamTime mStart;
+  StreamTime mStop;
+  AudioParamTimeline mOffset;
+};
+
 ConstantSourceNode::ConstantSourceNode(AudioContext* aContext)
   : AudioNode(aContext,
               1,
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
+  , mOffset(new AudioParam(this, ConstantSourceNodeEngine::OFFSET,
+                           1.0, "offset"))
+  , mStartCalled(false)
 {
+  ConstantSourceNodeEngine* engine = new ConstantSourceNodeEngine(this, aContext->Destination());
+  mStream = AudioNodeStream::Create(aContext, engine,
+                                    AudioNodeStream::NEED_MAIN_THREAD_FINISHED,
+                                    aContext->Graph());
+  engine->SetSourceStream(mStream);
+  mStream->AddMainThreadListener(this);
 }
 
 ConstantSourceNode::~ConstantSourceNode()
@@ -56,30 +185,101 @@ ConstantSourceNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto
 
 already_AddRefed<ConstantSourceNode>
 ConstantSourceNode::Constructor(const GlobalObject& aGlobal,
-                                const AudioContext& aContext,
+                                AudioContext& aContext,
                                 const ConstantSourceOptions& aOptions,
                                 ErrorResult& aRv)
 {
+  RefPtr<ConstantSourceNode> object = new ConstantSourceNode(&aContext);
+  object->mOffset->SetValue(aOptions.mOffset);
+  return object.forget();
 }
 
 void
 ConstantSourceNode::DestroyMediaStream()
 {
+  if (mStream) {
+    mStream->RemoveMainThreadListener(this);
+  }
+  AudioNode::DestroyMediaStream();
 }
 
 void
-ConstantSourceNode::Start(double aWhen, ErrorResult& rv)
+ConstantSourceNode::Start(double aWhen, ErrorResult& aRv)
 {
+  if (!WebAudioUtils::IsTimeValid(aWhen)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  if (mStartCalled) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+  mStartCalled = true;
+
+  if (!mStream) {
+    return;
+  }
+
+  mStream->SetStreamTimeParameter(ConstantSourceNodeEngine::START,
+                                  Context(), aWhen);
+
+  MarkActive();
 }
 
 void
-ConstantSourceNode::Stop(double aWhen, ErrorResult& rv)
+ConstantSourceNode::Stop(double aWhen, ErrorResult& aRv)
 {
+  if (!WebAudioUtils::IsTimeValid(aWhen)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  if (!mStartCalled) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  if (!mStream || !Context()) {
+    return;
+  }
+
+  mStream->SetStreamTimeParameter(ConstantSourceNodeEngine::STOP,
+                                  Context(), std::max(0.0, aWhen));
 }
 
 void
 ConstantSourceNode::NotifyMainThreadStreamFinished()
 {
+  MOZ_ASSERT(mStream->IsFinished());
+
+  class EndedEventDispatcher final : public Runnable
+  {
+  public:
+    explicit EndedEventDispatcher(ConstantSourceNode* aNode)
+      : mNode(aNode) {}
+    NS_IMETHOD Run() override
+    {
+      // If it's not safe to run scripts right now, schedule this to run later
+      if (!nsContentUtils::IsSafeToRunScript()) {
+        nsContentUtils::AddScriptRunner(this);
+        return NS_OK;
+      }
+
+      mNode->DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
+      // Release stream resources.
+      mNode->DestroyMediaStream();
+      return NS_OK;
+    }
+  private:
+    RefPtr<ConstantSourceNode> mNode;
+  };
+
+  NS_DispatchToMainThread(new EndedEventDispatcher(this));
+
+  // Drop the playing reference
+  // Warning: The below line might delete this.
+  MarkInactive();
 }
 
 } // namespace dom
