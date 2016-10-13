@@ -13,39 +13,39 @@ namespace mozilla {
 namespace dom {
 
 ImageTracker::ImageTracker()
-  : mLockingImages(false)
-  , mAnimatingImages(true)
+  : mLocking(false)
+  , mAnimating(true)
 {
 }
 
 ImageTracker::~ImageTracker()
 {
-  SetImageLockingState(false);
+  SetLockingState(false);
 }
 
 nsresult
-ImageTracker::AddImage(imgIRequest* aImage)
+ImageTracker::Add(imgIRequest* aImage)
 {
   MOZ_ASSERT(aImage);
 
   // See if the image is already in the hashtable. If it is, get the old count.
   uint32_t oldCount = 0;
-  mImageTracker.Get(aImage, &oldCount);
+  mImages.Get(aImage, &oldCount);
 
   // Put the image in the hashtable, with the proper count.
-  mImageTracker.Put(aImage, oldCount + 1);
+  mImages.Put(aImage, oldCount + 1);
 
   nsresult rv = NS_OK;
 
   // If this is the first insertion and we're locking images, lock this image
   // too.
-  if (oldCount == 0 && mLockingImages) {
+  if (oldCount == 0 && mLocking) {
     rv = aImage->LockImage();
   }
 
   // If this is the first insertion and we're animating images, request
   // that this image be animated too.
-  if (oldCount == 0 && mAnimatingImages) {
+  if (oldCount == 0 && mAnimating) {
     nsresult rv2 = aImage->IncrementAnimationConsumers();
     rv = NS_SUCCEEDED(rv) ? rv2 : rv;
   }
@@ -54,13 +54,13 @@ ImageTracker::AddImage(imgIRequest* aImage)
 }
 
 nsresult
-ImageTracker::RemoveImage(imgIRequest* aImage, uint32_t aFlags)
+ImageTracker::Remove(imgIRequest* aImage, uint32_t aFlags)
 {
   NS_ENSURE_ARG_POINTER(aImage);
 
   // Get the old count. It should exist and be > 0.
   uint32_t count = 0;
-  DebugOnly<bool> found = mImageTracker.Get(aImage, &count);
+  DebugOnly<bool> found = mImages.Get(aImage, &count);
   MOZ_ASSERT(found, "Removing image that wasn't in the tracker!");
   MOZ_ASSERT(count > 0, "Entry in the cache tracker with count 0!");
 
@@ -70,29 +70,29 @@ ImageTracker::RemoveImage(imgIRequest* aImage, uint32_t aFlags)
   // If the count is now zero, remove from the tracker.
   // Otherwise, set the new value.
   if (count != 0) {
-    mImageTracker.Put(aImage, count);
+    mImages.Put(aImage, count);
     return NS_OK;
   }
 
-  mImageTracker.Remove(aImage);
+  mImages.Remove(aImage);
 
   nsresult rv = NS_OK;
 
   // Now that we're no longer tracking this image, unlock it if we'd
   // previously locked it.
-  if (mLockingImages) {
+  if (mLocking) {
     rv = aImage->UnlockImage();
   }
 
   // If we're animating images, remove our request to animate this one.
-  if (mAnimatingImages) {
+  if (mAnimating) {
     nsresult rv2 = aImage->DecrementAnimationConsumers();
     rv = NS_SUCCEEDED(rv) ? rv2 : rv;
   }
 
   if (aFlags & REQUEST_DISCARD) {
     // Request that the image be discarded if nobody else holds a lock on it.
-    // Do this even if !mLockingImages, because even if we didn't just unlock
+    // Do this even if !mLocking, because even if we didn't just unlock
     // this image, it might still be a candidate for discarding.
     aImage->RequestDiscard();
   }
@@ -101,7 +101,7 @@ ImageTracker::RemoveImage(imgIRequest* aImage, uint32_t aFlags)
 }
 
 nsresult
-ImageTracker::SetImageLockingState(bool aLocked)
+ImageTracker::SetLockingState(bool aLocked)
 {
   if (XRE_IsContentProcess() &&
       !Preferences::GetBool("image.mem.allow_locking_in_content_processes", true)) {
@@ -109,11 +109,11 @@ ImageTracker::SetImageLockingState(bool aLocked)
   }
 
   // If there's no change, there's nothing to do.
-  if (mLockingImages == aLocked)
+  if (mLocking == aLocked)
     return NS_OK;
 
   // Otherwise, iterate over our images and perform the appropriate action.
-  for (auto iter = mImageTracker.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
     imgIRequest* image = iter.Key();
     if (aLocked) {
       image->LockImage();
@@ -123,20 +123,20 @@ ImageTracker::SetImageLockingState(bool aLocked)
   }
 
   // Update state.
-  mLockingImages = aLocked;
+  mLocking = aLocked;
 
   return NS_OK;
 }
 
 void
-ImageTracker::SetImagesNeedAnimating(bool aAnimating)
+ImageTracker::SetAnimatingState(bool aAnimating)
 {
   // If there's no change, there's nothing to do.
-  if (mAnimatingImages == aAnimating)
+  if (mAnimating == aAnimating)
     return;
 
   // Otherwise, iterate over our images and perform the appropriate action.
-  for (auto iter = mImageTracker.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
     imgIRequest* image = iter.Key();
     if (aAnimating) {
       image->IncrementAnimationConsumers();
@@ -146,13 +146,13 @@ ImageTracker::SetImagesNeedAnimating(bool aAnimating)
   }
 
   // Update state.
-  mAnimatingImages = aAnimating;
+  mAnimating = aAnimating;
 }
 
 void
 ImageTracker::RequestDiscardAll()
 {
-  for (auto iter = mImageTracker.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
     iter.Key()->RequestDiscard();
   }
 }

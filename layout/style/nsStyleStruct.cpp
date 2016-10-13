@@ -2012,7 +2012,7 @@ nsStyleImage::TrackImage(nsPresContext* aContext)
   // Register the image with the document
   nsIDocument* doc = aContext->Document();
   if (doc) {
-    doc->ImageTracker()->AddImage(mImage);
+    doc->ImageTracker()->Add(mImage);
   }
 
   // Mark state
@@ -2032,7 +2032,7 @@ nsStyleImage::UntrackImage(nsPresContext* aContext)
   // Unregister the image with the document
   nsIDocument* doc = aContext->Document();
   if (doc) {
-    doc->ImageTracker()->RemoveImage(mImage);
+    doc->ImageTracker()->Remove(mImage);
   }
 
   // Mark state
@@ -3439,7 +3439,7 @@ nsStyleContentData::TrackImage(nsPresContext* aContext)
   // Register the image with the document
   nsIDocument* doc = aContext->Document();
   if (doc) {
-    doc->ImageTracker()->AddImage(mContent.mImage);
+    doc->ImageTracker()->Add(mContent.mImage);
   }
 
   // Mark state
@@ -3461,7 +3461,7 @@ nsStyleContentData::UntrackImage(nsPresContext* aContext)
   // Unregister the image with the document
   nsIDocument* doc = aContext->Document();
   if (doc) {
-    doc->ImageTracker()->RemoveImage(mContent.mImage);
+    doc->ImageTracker()->Remove(mContent.mImage);
   }
 
   // Mark state

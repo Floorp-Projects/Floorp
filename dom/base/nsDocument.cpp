@@ -8714,7 +8714,7 @@ nsDocument::OnPageShow(bool aPersisted,
   }
 
   if (aPersisted) {
-    ImageTracker()->SetImagesNeedAnimating(true);
+    ImageTracker()->SetAnimatingState(true);
   }
 
   UpdateVisibilityState();
@@ -8809,7 +8809,7 @@ nsDocument::OnPageHide(bool aPersisted,
   // when the page is refreshing while being dragged out
   nsDocShell* docShell = mDocumentContainer.get();
   if (aPersisted && !(docShell && docShell->InFrameSwap())) {
-    ImageTracker()->SetImagesNeedAnimating(false);
+    ImageTracker()->SetAnimatingState(false);
   }
 
   ExitPointerLock();

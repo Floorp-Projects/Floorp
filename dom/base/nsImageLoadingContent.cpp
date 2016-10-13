@@ -1476,11 +1476,11 @@ nsImageLoadingContent::TrackImage(imgIRequest* aImage)
 
   if (aImage == mCurrentRequest && !(mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
     mCurrentRequestFlags |= REQUEST_IS_TRACKED;
-    doc->ImageTracker()->AddImage(mCurrentRequest);
+    doc->ImageTracker()->Add(mCurrentRequest);
   }
   if (aImage == mPendingRequest && !(mPendingRequestFlags & REQUEST_IS_TRACKED)) {
     mPendingRequestFlags |= REQUEST_IS_TRACKED;
-    doc->ImageTracker()->AddImage(mPendingRequest);
+    doc->ImageTracker()->Add(mPendingRequest);
   }
 }
 
@@ -1503,7 +1503,7 @@ nsImageLoadingContent::UntrackImage(imgIRequest* aImage,
   if (aImage == mCurrentRequest) {
     if (doc && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
       mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;
-      doc->ImageTracker()->RemoveImage(
+      doc->ImageTracker()->Remove(
         mCurrentRequest,
         aNonvisibleAction == Some(OnNonvisible::DISCARD_IMAGES)
           ? ImageTracker::REQUEST_DISCARD
@@ -1516,7 +1516,7 @@ nsImageLoadingContent::UntrackImage(imgIRequest* aImage,
   if (aImage == mPendingRequest) {
     if (doc && (mPendingRequestFlags & REQUEST_IS_TRACKED)) {
       mPendingRequestFlags &= ~REQUEST_IS_TRACKED;
-      doc->ImageTracker()->RemoveImage(
+      doc->ImageTracker()->Remove(
         mPendingRequest,
         aNonvisibleAction == Some(OnNonvisible::DISCARD_IMAGES)
           ? ImageTracker::REQUEST_DISCARD

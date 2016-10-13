@@ -26,7 +26,7 @@ namespace dom {
  * they are and are not visible. When an image is on-screen, we want to call
  * LockImage() on it so that it doesn't do things like discarding frame data
  * to save memory. The PresShell informs its document's image tracker whether
- * its images should be locked or not via SetImageLockingState().
+ * its images should be locked or not via SetLockingState().
  *
  * See bug 512260.
  */
@@ -39,28 +39,28 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageTracker)
 
-  nsresult AddImage(imgIRequest* aImage);
+  nsresult Add(imgIRequest* aImage);
 
   enum { REQUEST_DISCARD = 0x1 };
-  nsresult RemoveImage(imgIRequest* aImage, uint32_t aFlags = 0);
+  nsresult Remove(imgIRequest* aImage, uint32_t aFlags = 0);
 
   // Makes the images on this document locked/unlocked. By default, the locking
   // state is unlocked/false.
-  nsresult SetImageLockingState(bool aLocked);
+  nsresult SetLockingState(bool aLocked);
 
   // Makes the images on this document capable of having their animation
   // active or suspended. An Image will animate as long as at least one of its
   // owning Documents needs it to animate; otherwise it can suspend.
-  void SetImagesNeedAnimating(bool aAnimating);
+  void SetAnimatingState(bool aAnimating);
 
   void RequestDiscardAll();
 
 private:
   ~ImageTracker();
 
-  nsDataHashtable<nsPtrHashKey<imgIRequest>, uint32_t> mImageTracker;
-  bool mLockingImages;
-  bool mAnimatingImages;
+  nsDataHashtable<nsPtrHashKey<imgIRequest>, uint32_t> mImages;
+  bool mLocking;
+  bool mAnimating;
 };
 
 } // namespace dom

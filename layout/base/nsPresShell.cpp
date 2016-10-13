@@ -10943,7 +10943,7 @@ PresShell::UpdateImageLockingState()
   // We're locked if we're both thawed and active.
   bool locked = !mFrozen && mIsActive;
 
-  nsresult rv = mDocument->ImageTracker()->SetImageLockingState(locked);
+  nsresult rv = mDocument->ImageTracker()->SetLockingState(locked);
 
   if (locked) {
     // Request decodes for visible image frames; we want to start decoding as
