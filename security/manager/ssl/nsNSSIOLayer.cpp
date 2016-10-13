@@ -2514,7 +2514,7 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   }
   // This ensures that we send key shares for X25519 and P-256 in TLS 1.3, so
   // that servers are less likely to use HelloRetryRequest.
-  if (SECSuccess != SSL_SendAdditionalKeyShares(fd, 2)) {
+  if (SECSuccess != SSL_SendAdditionalKeyShares(fd, 1)) {
     return NS_ERROR_FAILURE;
   }
 
