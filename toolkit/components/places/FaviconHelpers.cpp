@@ -422,7 +422,7 @@ AsyncFetchAndSetIconForPage::FetchFromNetwork() {
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
                      nsILoadInfo::SEC_ALLOW_CHROME |
                      nsILoadInfo::SEC_DISALLOW_SCRIPT,
-                     nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+                     nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON);
 
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIInterfaceRequestor> listenerRequestor =
