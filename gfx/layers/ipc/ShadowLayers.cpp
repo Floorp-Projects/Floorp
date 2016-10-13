@@ -54,7 +54,7 @@ class ClientTiledLayerBuffer;
 
 typedef nsTArray<SurfaceDescriptor> BufferArray;
 typedef std::vector<Edit> EditVector;
-typedef std::set<ShadowableLayer*> ShadowableLayerSet;
+typedef nsTHashtable<nsPtrHashKey<ShadowableLayer>> ShadowableLayerSet;
 typedef nsTArray<OpDestroy> OpDestroyVector;
 
 class Transaction
@@ -119,13 +119,13 @@ public:
   void AddMutant(ShadowableLayer* aLayer)
   {
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
-    mMutants.insert(aLayer);
+    mMutants.PutEntry(aLayer);
   }
   void End()
   {
     mCset.clear();
     mPaints.clear();
-    mMutants.clear();
+    mMutants.Clear();
     mDestroyedActors.Clear();
     mOpen = false;
     mSwapRequired = false;
@@ -133,7 +133,7 @@ public:
   }
 
   bool Empty() const {
-    return mCset.empty() && mPaints.empty() && mMutants.empty()
+    return mCset.empty() && mPaints.empty() && mMutants.IsEmpty()
            && mDestroyedActors.IsEmpty();
   }
   bool RotationChanged() const {
@@ -625,9 +625,9 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
   // attribute changes before new pixels arrive, which can be useful
   // for setting up back/front buffers.
   RenderTraceScope rendertrace2("Foward Transaction", "000092");
-  for (ShadowableLayerSet::const_iterator it = mTxn->mMutants.begin();
-       it != mTxn->mMutants.end(); ++it) {
-    ShadowableLayer* shadow = *it;
+  for (ShadowableLayerSet::Iterator it(&mTxn->mMutants);
+       !it.Done(); it.Next()) {
+    ShadowableLayer* shadow = it.Get()->GetKey();
 
     if (!shadow->HasShadow()) {
       continue;
