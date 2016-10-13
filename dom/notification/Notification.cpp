@@ -959,11 +959,13 @@ Notification::Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
                            const nsAString& aTitle, const nsAString& aBody,
                            NotificationDirection aDir, const nsAString& aLang,
                            const nsAString& aTag, const nsAString& aIconUrl,
+                           bool aRequireInteraction,
                            const NotificationBehavior& aBehavior)
   : DOMEventTargetHelper(),
     mWorkerPrivate(nullptr), mObserver(nullptr),
     mID(aID), mTitle(aTitle), mBody(aBody), mDir(aDir), mLang(aLang),
-    mTag(aTag), mIconUrl(aIconUrl), mBehavior(aBehavior), mData(JS::NullValue()),
+    mTag(aTag), mIconUrl(aIconUrl), mRequireInteraction(aRequireInteraction),
+    mBehavior(aBehavior), mData(JS::NullValue()),
     mIsClosed(false), mIsStored(false), mTaskCount(0)
 {
   if (NS_IsMainThread()) {
@@ -1186,6 +1188,7 @@ Notification::CreateInternal(nsIGlobalObject* aGlobal,
                                                          aOptions.mLang,
                                                          aOptions.mTag,
                                                          aOptions.mIcon,
+                                                         aOptions.mRequireInteraction,
                                                          aOptions.mMozbehavior);
   rv = notification->Init();
   NS_ENSURE_SUCCESS(rv, nullptr);
@@ -1831,7 +1834,8 @@ Notification::ShowInternal()
                    mLang,
                    mDataAsBase64,
                    GetPrincipal(),
-                   inPrivateBrowsing);
+                   inPrivateBrowsing,
+                   mRequireInteraction);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (isPersistent) {
@@ -2359,6 +2363,12 @@ Notification::GetOrigin(nsIPrincipal* aPrincipal, nsString& aOrigin)
   }
 
   return NS_OK;
+}
+
+bool
+Notification::RequireInteraction() const
+{
+  return mRequireInteraction;
 }
 
 void

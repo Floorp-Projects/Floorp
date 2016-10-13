@@ -280,6 +280,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  bool RequireInteraction() const;
+
   void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 
   void InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData, ErrorResult& aRv);
@@ -329,6 +331,7 @@ protected:
                const nsAString& aTitle, const nsAString& aBody,
                NotificationDirection aDir, const nsAString& aLang,
                const nsAString& aTag, const nsAString& aIconUrl,
+               bool aRequireNotification,
                const NotificationBehavior& aBehavior);
 
   static already_AddRefed<Notification> CreateInternal(nsIGlobalObject* aGlobal,
@@ -397,6 +400,7 @@ protected:
   const nsString mLang;
   const nsString mTag;
   const nsString mIconUrl;
+  const bool mRequireInteraction;
   nsString mDataAsBase64;
   const NotificationBehavior mBehavior;
 

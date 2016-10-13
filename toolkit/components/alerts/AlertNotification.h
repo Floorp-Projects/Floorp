@@ -70,6 +70,7 @@ private:
   nsString mCookie;
   nsString mDir;
   nsString mLang;
+  bool mRequireInteraction;
   nsString mData;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   bool mInPrivateBrowsing;

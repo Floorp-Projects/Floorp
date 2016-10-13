@@ -79,8 +79,9 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
                                    const nsAString& aAlertText, bool aAlertTextClickable,
                                    const nsAString& aAlertCookie, nsIObserver* aAlertListener,
                                    const nsAString& aAlertName, const nsAString& aBidi,
-                                   const nsAString& aLang, const nsAString & aData,
-                                   nsIPrincipal* aPrincipal, bool aInPrivateBrowsing)
+                                   const nsAString& aLang, const nsAString& aData,
+                                   nsIPrincipal* aPrincipal, bool aInPrivateBrowsing,
+                                   bool aRequireInteraction)
 {
   nsCOMPtr<nsIAlertNotification> alert =
     do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
@@ -88,7 +89,8 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
   nsresult rv = alert->Init(aAlertName, aImageUrl, aAlertTitle,
                             aAlertText, aAlertTextClickable,
                             aAlertCookie, aBidi, aLang, aData,
-                            aPrincipal, aInPrivateBrowsing);
+                            aPrincipal, aInPrivateBrowsing,
+                            aRequireInteraction);
   NS_ENSURE_SUCCESS(rv, rv);
   return ShowAlert(alert, aAlertListener);
 }
