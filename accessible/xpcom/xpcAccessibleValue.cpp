@@ -26,11 +26,7 @@ xpcAccessibleValue::GetMaximumValue(double* aValue)
   if (Intl().IsAccessible()) {
     value = Intl().AsAccessible()->MaxValue();
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     value = Intl().AsProxy()->MaxValue();
-#endif
   }
 
   if (!IsNaN(value))
@@ -55,11 +51,7 @@ xpcAccessibleValue::GetMinimumValue(double* aValue)
   if (Intl().IsAccessible()) {
     value = Intl().AsAccessible()->MinValue();
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     value = Intl().AsProxy()->MinValue();
-#endif
   }
 
   if (!IsNaN(value))
@@ -84,11 +76,7 @@ xpcAccessibleValue::GetCurrentValue(double* aValue)
   if (Intl().IsAccessible()) {
     value = Intl().AsAccessible()->CurValue();
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     value = Intl().AsProxy()->CurValue();
-#endif
   }
 
   if (!IsNaN(value))
@@ -109,11 +97,7 @@ xpcAccessibleValue::SetCurrentValue(double aValue)
   if (Intl().IsAccessible()) {
     Intl().AsAccessible()->SetCurValue(aValue);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     Intl().AsProxy()->SetCurValue(aValue);
-#endif
   }
 
   return NS_OK;
