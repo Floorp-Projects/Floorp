@@ -3,11 +3,18 @@
 
 /**
  * Test that the devtool's client-side CSS properties database is in sync with the values
- * on the platform. If they are not, then `mach devtools-css-db` needs to be run to
- * make everything up to date. Nightly, aurora, beta, and release may have different
- * preferences for what CSS values are enabled. The static CSS properties database can
- * be slightly different from the target platform as long as there is a preference that
- * exists that turns off that CSS property.
+ * on the platform (in Nightly only). If they are not, then `mach devtools-css-db` needs
+ * to be run to make everything up to date. Nightly, aurora, beta, and release may have
+ * different CSS properties and values. These are based on preferences and compiler flags.
+ *
+ * This test broke uplifts as the database needed to be regenerated every uplift. The
+ * combination of compiler flags and preferences means that it's too difficult to
+ * statically determine which properties are enabled between Firefox releases.
+ *
+ * Because of these difficulties, the database only needs to be up to date with Nightly.
+ * It is a fallback that is only used if the remote debugging protocol doesn't support
+ * providing a CSS database, so it's ok if the provided properties don't exactly match
+ * the inspected target in this particular case.
  */
 
 "use strict";
@@ -15,9 +22,8 @@
 const DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
                            .getService(Components.interfaces.inIDOMUtils);
 
-const {PSEUDO_ELEMENTS, CSS_PROPERTIES, PREFERENCES} = require("devtools/shared/css/generated/properties-db");
+const {PSEUDO_ELEMENTS, CSS_PROPERTIES} = require("devtools/shared/css/generated/properties-db");
 const {generateCssProperties} = require("devtools/server/actors/css-properties");
-const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 
 function run_test() {
   const propertiesErrorMessage = "If this assertion fails, then the client side CSS " +
@@ -32,9 +38,7 @@ function run_test() {
 
   /**
    * Check that the platform and client match for the details on their CSS properties.
-   * Enumerate each property to aid in debugging. Sometimes these properties don't
-   * completely agree due to differences in preferences. Check the currently set
-   * preference for that property to see if it's enabled.
+   * Enumerate each property to aid in debugging.
    */
   const platformProperties = generateCssProperties();
 
@@ -71,14 +75,8 @@ function run_test() {
   }
 
   mismatches.forEach(propertyName => {
-    if (getPreference(propertyName) === false) {
-      ok(true, `The static database and platform do not agree on the property ` +
-               `"${propertyName}" This is ok because it is currently disabled through ` +
-               `a preference.`);
-    } else {
-      ok(false, `The static database and platform do not agree on the property ` +
-                `"${propertyName}" ${propertiesErrorMessage}`);
-    }
+    ok(false, `The static database and platform do not agree on the property ` +
+              `"${propertyName}" ${propertiesErrorMessage}`);
   });
 }
 
@@ -117,24 +115,6 @@ function isJsonDeepEqual(a, b) {
 
   // Not something handled by these cases, therefore not equal.
   return false;
-}
-
-/**
- * Get the preference value of whether this property is enabled. Returns an empty string
- * if no preference exists.
- *
- * @param {String} propertyName
- * @return {Boolean|undefined}
- */
-function getPreference(propertyName) {
-  const preference = PREFERENCES.find(([prefPropertyName, preferenceKey]) => {
-    return prefPropertyName === propertyName && !!preferenceKey;
-  });
-
-  if (preference) {
-    return Preferences.get(preference[1]);
-  }
-  return undefined;
 }
 
 /**
