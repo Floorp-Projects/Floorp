@@ -336,6 +336,10 @@ nsStylePadding::CalcDifference(const nsStylePadding& aNewData) const
   // to force children to reflow so that we can reposition them, since their
   // offsets are from our frame bounds but our content rect's position within
   // those bounds is moving.
+  // FIXME: It would be good to return a weaker hint here that doesn't
+  // force reflow of all descendants, but the hint would need to force
+  // reflow of the frame's children (see how
+  // ReflowInput::InitResizeFlags initializes the inline-resize flag).
   return NS_STYLE_HINT_REFLOW & ~nsChangeHint_ClearDescendantIntrinsics;
 }
 
@@ -470,8 +474,13 @@ nsStyleBorder::Destroy(nsPresContext* aContext) {
 nsChangeHint
 nsStyleBorder::CalcDifference(const nsStyleBorder& aNewData) const
 {
-  // XXXbz we should be able to return a more specific change hint for
-  // at least GetComputedBorder() differences...
+  // FIXME: XXXbz: As in nsStylePadding::CalcDifference, many of these
+  // differences should not need to clear descendant intrinsics.
+  // FIXME: It would be good to return a weaker hint for the
+  // GetComputedBorder() differences (and perhaps others) that doesn't
+  // force reflow of all descendants, but the hint would need to force
+  // reflow of the frame's children (see how
+  // ReflowInput::InitResizeFlags initializes the inline-resize flag).
   if (mTwipsPerPixel != aNewData.mTwipsPerPixel ||
       GetComputedBorder() != aNewData.GetComputedBorder() ||
       mFloatEdge != aNewData.mFloatEdge ||
