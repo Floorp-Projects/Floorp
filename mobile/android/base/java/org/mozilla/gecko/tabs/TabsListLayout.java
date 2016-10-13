@@ -106,4 +106,9 @@ public class TabsListLayout extends TabsLayout {
             cascadeDelay += ANIMATION_CASCADE_DELAY;
         }
     }
+
+    @Override
+    protected boolean addAtIndexRequiresScroll(int index) {
+        return index == 0 || index == getAdapter().getItemCount() - 1;
+    }
 }

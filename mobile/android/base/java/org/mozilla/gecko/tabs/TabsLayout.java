@@ -98,8 +98,13 @@ public abstract class TabsLayout extends RecyclerView
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         switch (msg) {
             case ADDED:
-                // Refresh the list to make sure the new tab is added in the right position.
-                refreshTabsData();
+                final int tabIndex = Integer.parseInt(data);
+                tabsAdapter.notifyTabInserted(tab, tabIndex);
+                if (addAtIndexRequiresScroll(tabIndex)) {
+                    // (The current Tabs implementation updates the SELECTED tab *after* this
+                    // call to ADDED, so don't just call updateSelectedPosition().)
+                    scrollToPosition(tabIndex);
+                }
                 break;
 
             case CLOSED:
@@ -118,6 +123,10 @@ public abstract class TabsLayout extends RecyclerView
                 break;
         }
     }
+
+    // Addition of a tab at selected positions (dependent on LayoutManager) will result in a tab
+    // being added out of view - return true if index is such a position.
+    abstract protected boolean addAtIndexRequiresScroll(int index);
 
     @Override
     public void onItemClicked(RecyclerView recyclerView, int position, View v) {
