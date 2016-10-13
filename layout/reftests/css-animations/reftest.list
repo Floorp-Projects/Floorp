@@ -14,8 +14,8 @@ test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-co
 test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-transform-none-animation.html stacking-context-animation-ref.html
 == no-stacking-context-opacity-removing-animation-in-delay.html no-stacking-context-animation-ref.html
 == no-stacking-context-transform-removing-animation-in-delay.html no-stacking-context-animation-ref.html
-fails == stacking-context-lose-opacity-1.html stacking-context-animation-ref.html
-fails == stacking-context-lose-transform-none.html stacking-context-animation-ref.html
+== stacking-context-lose-opacity-1.html stacking-context-animation-ref.html
+== stacking-context-lose-transform-none.html stacking-context-animation-ref.html
 == stacking-context-opacity-win-in-delay.html stacking-context-animation-ref.html
 == stacking-context-opacity-win-in-delay-on-main-thread.html stacking-context-animation-ref.html
 == stacking-context-opacity-wins-over-transition.html stacking-context-animation-ref.html
@@ -33,10 +33,10 @@ fails == stacking-context-lose-transform-none.html stacking-context-animation-re
 == stacking-context-transform-none-animation-with-preserve-3d.html stacking-context-animation-ref.html
 == stacking-context-transform-none-with-fill-backwards.html stacking-context-animation-ref.html
 == stacking-context-transform-none-with-fill-forwards.html stacking-context-animation-ref.html
-fails == stacking-context-opacity-1-in-delay.html stacking-context-animation-ref.html # bug 1278136 and bug 1279403
-fails == stacking-context-opacity-removing-important-in-delay.html stacking-context-animation-ref.html
-fails == stacking-context-transform-none-in-delay.html stacking-context-animation-ref.html # bug 1278136 and bug 1279403
-fails == stacking-context-transform-removing-important-in-delay.html stacking-context-animation-ref.html
+== stacking-context-opacity-1-in-delay.html stacking-context-animation-ref.html
+== stacking-context-opacity-removing-important-in-delay.html stacking-context-animation-ref.html
+== stacking-context-transform-none-in-delay.html stacking-context-animation-ref.html
+== stacking-context-transform-removing-important-in-delay.html stacking-context-animation-ref.html
 == background-position-in-delay.html background-position-ref.html
 == background-position-after-finish.html background-position-ref.html
 fails == background-position-running.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position currently creates an active layer, and reftest-opaque-layer only handles items assigned to PaintedLayers.
