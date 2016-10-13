@@ -136,11 +136,7 @@ pref("dom.fileHandle.enabled", true);
 pref("dom.manifest.onappinstalled", false);
 
 // Whether or not selection events are enabled
-#ifdef NIGHTLY_BUILD
 pref("dom.select_events.enabled", true);
-#else
-pref("dom.select_events.enabled", false);
-#endif
 
 // Whether or not selection events on text controls are enabled
 #ifdef NIGHTLY_BUILD
