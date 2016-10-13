@@ -260,7 +260,20 @@ richlistitem[type="download"] > .downloadMainArea {
   border: none;
   background: transparent;
   padding: 8px;
-  list-style-image: url("chrome://browser/skin/downloads/buttons.png");
+  color: graytext;
+}
+
+.downloadButton > .button-box > .button-icon {
+  width: 16px;
+  height: 16px;
+  margin: 1px;
+  filter: url("chrome://browser/skin/filters.svg#fill");
+  fill: currentColor;
+}
+
+.downloadButton > .button-box > .button-text {
+  margin: 0 !important;
+  padding: 0;
 }
 
 @itemFinished@[exists]:hover > .downloadMainArea,
@@ -294,6 +307,36 @@ richlistitem[type="download"] > .downloadMainArea {
   color: white;
 }
 
+@item@[verdict="Malware"]:hover > .downloadButtonArea > .downloadButton {
+  color: inherit;
+}
+
+/*** Button icons ***/
+
+.downloadIconCancel > .button-box > .button-icon {
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#cancel");
+}
+
+.downloadIconShow > .button-box > .button-icon {
+%ifdef XP_MACOSX
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#magnifier");
+%else
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#folder");
+%endif
+}
+
+.downloadIconRetry > .button-box > .button-icon {
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#retry");
+}
+
+.downloadShowBlockedInfo > .button-box > .button-icon {
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-right");
+}
+
+.downloadShowBlockedInfo > .button-box > .button-icon:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-left");
+}
+
 /*** Blocked subview ***/
 
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype=main] > .panel-subviews {
@@ -305,11 +348,15 @@ richlistitem[type="download"] > .downloadMainArea {
 /* When the subview is showing, turn the download button into an arrow pointing
    back to the main view. */
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton {
-  list-style-image: url("chrome://browser/skin/customizableui/subView-arrow-back-inverted.png");
+  color: HighlightText;
 }
 
-#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl.png");
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton > .button-box > .button-icon {
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-left");
+}
+
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton > .button-box > .button-icon:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-right");
 }
 
 #downloadsPanel-blockedSubview {
