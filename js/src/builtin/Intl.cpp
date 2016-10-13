@@ -11,7 +11,6 @@
 
 #include "builtin/Intl.h"
 
-#include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 
@@ -48,7 +47,6 @@ using namespace js;
 using mozilla::IsFinite;
 using mozilla::IsNegativeZero;
 using mozilla::MakeScopeExit;
-using mozilla::PodCopy;
 
 #if ENABLE_INTL_API
 using icu::Locale;
@@ -379,25 +377,6 @@ ucal_getAttribute(const UCalendar*    cal,
                   UCalendarAttribute  attr)
 {
     MOZ_CRASH("ucal_getAttribute: Intl API disabled");
-}
-
-static UEnumeration*
-ucal_openTimeZones(UErrorCode* status)
-{
-    MOZ_CRASH("ucal_openTimeZones: Intl API disabled");
-}
-
-static int32_t
-ucal_getCanonicalTimeZoneID(const UChar* id, int32_t len, UChar* result, int32_t resultCapacity,
-                            UBool* isSystemID, UErrorCode* status)
-{
-    MOZ_CRASH("ucal_getCanonicalTimeZoneID: Intl API disabled");
-}
-
-static int32_t
-ucal_getDefaultTimeZone(UChar* result, int32_t resultCapacity, UErrorCode* status)
-{
-    MOZ_CRASH("ucal_getDefaultTimeZone: Intl API disabled");
 }
 
 typedef void* UDateTimePatternGenerator;
@@ -1952,160 +1931,6 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/**
- * Create a time zone map key. Time zones are keyed by their upper case name.
- */
-static UniqueChars
-TimeZoneKey(JSContext* cx, const char* timeZone, size_t size)
-{
-    UniqueChars timeZoneKey = cx->make_pod_array<char>(size);
-    if (!timeZoneKey)
-        return timeZoneKey;
-    PodCopy(timeZoneKey.get(), timeZone, size);
-
-    // Convert time zone name to ASCII upper case.
-    char* chars = timeZoneKey.get();
-    for (unsigned i = 0; i < size; i++) {
-        char c = chars[i];
-        if ('a' <= c && c <= 'z')
-            chars[i] = c & ~0x20;
-    }
-
-    return timeZoneKey;
-}
-
-bool
-js::intl_availableTimeZones(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 0);
-
-    UErrorCode status = U_ZERO_ERROR;
-    UEnumeration* values = ucal_openTimeZones(&status);
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-    ScopedICUObject<UEnumeration, uenum_close> toClose(values);
-
-    RootedObject timeZones(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
-    if (!timeZones)
-        return false;
-    RootedString jsTimeZone(cx);
-    RootedValue element(cx);
-    while (true) {
-        int32_t size;
-        const char* timeZone = uenum_next(values, &size, &status);
-        if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-            return false;
-        }
-        if (timeZone == nullptr)
-            break;
-
-        MOZ_ASSERT(size >= 0);
-        UniqueChars timeZoneKey = TimeZoneKey(cx, timeZone, size_t(size));
-        if (!timeZoneKey)
-            return false;
-
-        RootedAtom atom(cx, Atomize(cx, timeZoneKey.get(), size_t(size)));
-        if (!atom)
-            return false;
-
-        jsTimeZone = NewStringCopyN<CanGC>(cx, timeZone, size_t(size));
-        if (!jsTimeZone)
-            return false;
-        element.setString(jsTimeZone);
-
-        if (!DefineProperty(cx, timeZones, atom->asPropertyName(), element))
-            return false;
-    }
-
-    args.rval().setObject(*timeZones);
-    return true;
-}
-
-bool
-js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isString());
-
-    AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, args[0].toString()))
-        return false;
-
-    mozilla::Range<const char16_t> tzchars = stableChars.twoByteRange();
-
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-
-    UBool* isSystemID = nullptr;
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t size = ucal_getCanonicalTimeZoneID(Char16ToUChar(tzchars.start().get()),
-                                               tzchars.length(), Char16ToUChar(chars.begin()),
-                                               INITIAL_CHAR_BUFFER_SIZE, isSystemID, &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size_t(size)))
-            return false;
-        status = U_ZERO_ERROR;
-        ucal_getCanonicalTimeZoneID(Char16ToUChar(tzchars.start().get()), tzchars.length(),
-                                    Char16ToUChar(chars.begin()), size, isSystemID, &status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
-    if (!str)
-        return false;
-    args.rval().setString(str);
-    return true;
-}
-
-bool
-js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 0);
-
-    // The current default might be stale, because JS::ResetTimeZone() doesn't
-    // immediately update ICU's default time zone. So perform an update if
-    // needed.
-    js::ResyncICUDefaultTimeZone();
-
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t size = ucal_getDefaultTimeZone(Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                                           &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size_t(size)))
-            return false;
-        status = U_ZERO_ERROR;
-        ucal_getDefaultTimeZone(Char16ToUChar(chars.begin()), size, &status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
-    if (!str)
-        return false;
-    args.rval().setString(str);
-    return true;
-}
-
 bool
 js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -2181,33 +2006,60 @@ NewUDateFormat(JSContext* cx, HandleObject dateTimeFormat)
     if (!locale)
         return nullptr;
 
+    // UDateFormat options with default values.
+    const UChar* uTimeZone = nullptr;
+    uint32_t uTimeZoneLength = 0;
+    const UChar* uPattern = nullptr;
+    uint32_t uPatternLength = 0;
+
     // We don't need to look at calendar and numberingSystem - they can only be
     // set via the Unicode locale extension and are therefore already set on
     // locale.
 
-    if (!GetProperty(cx, internals, internals, cx->names().timeZone, &value))
+    RootedId id(cx, NameToId(cx->names().timeZone));
+    bool hasP;
+    if (!HasProperty(cx, internals, id, &hasP))
         return nullptr;
 
     AutoStableStringChars timeZoneChars(cx);
-    Rooted<JSFlatString*> timeZoneFlat(cx, value.toString()->ensureFlat(cx));
-    if (!timeZoneFlat || !timeZoneChars.initTwoByte(cx, timeZoneFlat))
-        return nullptr;
-
-    const UChar* uTimeZone = Char16ToUChar(timeZoneChars.twoByteRange().start().get());
-    uint32_t uTimeZoneLength = u_strlen(uTimeZone);
-
+    if (hasP) {
+        if (!GetProperty(cx, internals, internals, cx->names().timeZone, &value))
+            return nullptr;
+        if (!value.isUndefined()) {
+            JSFlatString* flat = value.toString()->ensureFlat(cx);
+            if (!flat || !timeZoneChars.initTwoByte(cx, flat))
+                return nullptr;
+            uTimeZone = Char16ToUChar(timeZoneChars.twoByteRange().start().get());
+            if (!uTimeZone)
+                return nullptr;
+            uTimeZoneLength = u_strlen(uTimeZone);
+        }
+    }
     if (!GetProperty(cx, internals, internals, cx->names().pattern, &value))
         return nullptr;
 
     AutoStableStringChars patternChars(cx);
-    Rooted<JSFlatString*> patternFlat(cx, value.toString()->ensureFlat(cx));
-    if (!patternFlat || !patternChars.initTwoByte(cx, patternFlat))
+    JSFlatString* flat = value.toString()->ensureFlat(cx);
+    if (!flat || !patternChars.initTwoByte(cx, flat))
         return nullptr;
 
-    const UChar* uPattern = Char16ToUChar(patternChars.twoByteRange().start().get());
-    uint32_t uPatternLength = u_strlen(uPattern);
+    uPattern = Char16ToUChar(patternChars.twoByteRange().start().get());
+    if (!uPattern)
+        return nullptr;
+    uPatternLength = u_strlen(uPattern);
 
     UErrorCode status = U_ZERO_ERROR;
+
+    if (!uTimeZone) {
+        // When no time zone was specified, we use ICU's default time zone.
+        // The current default might be stale, because JS::ResetTimeZone()
+        // doesn't immediately update ICU's default time zone.  So perform an
+        // update if needed.
+        js::ResyncICUDefaultTimeZone();
+    }
+
+    // If building with ICU headers before 50.1, use UDAT_IGNORE instead of
+    // UDAT_PATTERN.
     UDateFormat* df =
         udat_open(UDAT_PATTERN, UDAT_PATTERN, icuLocale(locale.ptr()), uTimeZone, uTimeZoneLength,
                   uPattern, uPatternLength, &status);
