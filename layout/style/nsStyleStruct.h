@@ -670,10 +670,6 @@ struct nsStyleImageLayers {
 
   static bool IsInitialPositionForLayerType(mozilla::Position aPosition, LayerType aType);
 
-  static float GetInitialPositionForLayerType(LayerType aType) {
-    return (aType == LayerType::Background) ? 0.0f : 0.5f;
-  }
-
   struct Size;
   friend struct Size;
   struct Size {
