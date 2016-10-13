@@ -548,15 +548,15 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
     MOZ_RELEASE_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
     if (!isEnabled() || isEmpty()) {
-        /*
-         * Our barriers are not always exact, and there may be entries in the
-         * storebuffer even when the nursery is disabled or empty. It's not
-         * safe to keep these entries as they may refer to tenured cells which
-         * may be freed after this point.
-         */
+        // Our barriers are not always exact, and there may be entries in the
+        // storebuffer even when the nursery is disabled or empty. It's not safe
+        // to keep these entries as they may refer to tenured cells which may be
+        // freed after this point.
         rt->gc.storeBuffer.clear();
-        return;
     }
+
+    if (!isEnabled())
+        return;
 
     rt->gc.incMinorGcNumber();
 
@@ -578,7 +578,14 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
     JS::AutoSuppressGCAnalysis nogc;
 
     TenureCountCache tenureCounts;
-    double promotionRate = doCollection(rt, reason, tenureCounts);
+    double promotionRate = 0;
+    if (!isEmpty())
+        promotionRate = doCollection(rt, reason, tenureCounts);
+
+    // Resize the nursery.
+    maybeStartProfile(ProfileKey::Resize);
+    maybeResizeNursery(reason, promotionRate);
+    maybeEndProfile(ProfileKey::Resize);
 
     // If we are promoting the nursery, or exhausted the store buffer with
     // pointers to nursery things, which will force a collection well before
@@ -749,13 +756,8 @@ js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
 #endif
     maybeEndProfile(ProfileKey::CheckHashTables);
 
-    // Resize the nursery.
-    maybeStartProfile(ProfileKey::Resize);
-    double promotionRate = mover.tenuredSize / double(initialNurserySize);
-    maybeResizeNursery(reason, promotionRate);
-    maybeEndProfile(ProfileKey::Resize);
-
-    return promotionRate;
+    // Calculate and return the promotion rate.
+    return mover.tenuredSize / double(initialNurserySize);
 }
 
 void
