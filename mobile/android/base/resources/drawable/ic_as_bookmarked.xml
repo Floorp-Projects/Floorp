@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="24dp"
+        android:height="24dp"
+        android:viewportWidth="24.0"
+        android:viewportHeight="24.0">
+    <path
+        android:fillColor="@color/activity_stream_icon"
+        android:pathData="M12.01,1a1.34,1.34 0,0 0,-1.085 0.89l-2.747,5.67 -5.877,0.99c-1.345,0.22 -1.679,1.19 -0.744,2.15l4.16,4.49 -0.969,6.31c-0.147,0.94 0.242,1.5 0.925,1.5a1.986,1.986 0,0 0,0.891 -0.25l5.457,-2.93 5.521,2.93a1.993,1.993 0,0 0,0.892 0.25c0.683,0 1.07,-0.56 0.926,-1.5l-0.966,-6.31 4.111,-4.49c0.936,-0.96 0.6,-1.93 -0.744,-2.15l-5.789,-0.99 -2.877,-5.67a1.339,1.339 0,0 0,-1.085 -0.89h0Z"/>
+</vector>
