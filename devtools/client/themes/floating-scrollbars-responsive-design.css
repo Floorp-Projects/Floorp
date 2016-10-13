@@ -1,6 +1,12 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
-scrollbar {
+/* Restrict all styles to `*|*:not(html|select) > scrollbar` so that scrollbars
+   inside a <select> are excluded (including them hides the select arrow on
+   Windows).  We want to include both the root scrollbars for the document as
+   well as any overflow: scroll elements within the page, while excluding
+   <select>. */
+*|*:not(html|select) > scrollbar {
   -moz-appearance: none !important;
   position: relative;
   background-color: transparent;
@@ -12,31 +18,30 @@ scrollbar {
 
 /* Scrollbar code will reset the margin to the correct side depending on
    where layout actually puts the scrollbar */
-scrollbar[orient="vertical"] {
+*|*:not(html|select) > scrollbar[orient="vertical"] {
   margin-left: -10px;
   min-width: 10px;
   max-width: 10px;
 }
 
-scrollbar[orient="horizontal"] {
+*|*:not(html|select) > scrollbar[orient="horizontal"] {
   margin-top: -10px;
   min-height: 10px;
   max-height: 10px;
 }
 
-slider {
+*|*:not(html|select) > scrollbar slider {
   -moz-appearance: none !important;
 }
 
-thumb {
+*|*:not(html|select) > scrollbar thumb {
   -moz-appearance: none !important;
   background-color: rgba(0,0,0,0.2);
-  border-radius: 3px;
   border-width: 0px !important;
   border-radius: 3px !important;
 }
 
-scrollbar scrollbarbutton,
-scrollbar gripper {
+*|*:not(html|select) > scrollbar scrollbarbutton,
+*|*:not(html|select) > scrollbar gripper {
   display: none;
 }
