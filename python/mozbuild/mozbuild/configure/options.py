@@ -370,6 +370,10 @@ class Option(object):
 
         return values
 
+    def __repr__(self):
+        return '<%s.%s [%s]>' % (self.__class__.__module__,
+                                 self.__class__.__name__, self.option)
+
 
 class CommandLineHelper(object):
     '''Helper class to handle the various ways options can be given either
