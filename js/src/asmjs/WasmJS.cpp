@@ -55,6 +55,13 @@ wasm::HasCompilerSupport(ExclusiveContext* cx)
     if (!wasm::HaveSignalHandlers())
         return false;
 
+#if defined(JS_CODEGEN_ARM)
+    // movw/t are required for the loadWasmActivationFromSymbolicAddress in
+    // GenerateProfilingPrologue/Epilogue to avoid using the constant pool.
+    if (!HasMOVWT())
+        return false;
+#endif
+
 #if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
     return false;
 #else
