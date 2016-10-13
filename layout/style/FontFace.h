@@ -199,11 +199,23 @@ private:
    */
   void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength);
 
+  // Acts like mLoaded->MaybeReject(aResult), except it doesn't create mLoaded
+  // if it doesn't already exist.
+  void Reject(nsresult aResult);
+
+  // Creates mLoaded if it doesn't already exist. It may immediately resolve or
+  // reject mLoaded based on mStatus and mLoadedRejection.
+  void EnsurePromise();
+
   nsCOMPtr<nsISupports> mParent;
 
-  // A Promise that is fulfilled once the font represented by this FontFace
-  // is loaded, and is rejected if the load fails.
+  // A Promise that is fulfilled once the font represented by this FontFace is
+  // loaded, and is rejected if the load fails. This promise is created lazily
+  // when JS asks for it.
   RefPtr<mozilla::dom::Promise> mLoaded;
+
+  // Saves the rejection code for mLoaded if mLoaded hasn't been created yet.
+  nsresult mLoadedRejection;
 
   // The @font-face rule this FontFace object is reflecting, if it is a
   // rule backed FontFace.
