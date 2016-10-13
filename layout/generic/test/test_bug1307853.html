@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<title>Test for Mozilla Bug 1307853</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style>
+iframe {
+  margin: 0; padding: 0; border: none;
+}
+</style>
+<body onload="run_tests()">
+<iframe id="i" src="file_bug1307853.html" style="width: 200px; height: 100px"></iframe>
+<script>
+function run_tests() {
+  test(function() {
+         var iframe = document.getElementById("i");
+         var idoc = iframe.contentDocument;
+         var iwin = iframe.contentWindow;
+         var inner = idoc.getElementById("inner");
+
+         assert_equals(inner.clientWidth, 60,
+                       "width of element before iframe resize");
+         iframe.style.width = "300px";
+         assert_equals(inner.clientWidth, 40,
+                       "width of element after iframe resize");
+       },
+       "resize_iframe_percent_padding_fixed_width_boxsizing_borderbox");
+}
+</script>
