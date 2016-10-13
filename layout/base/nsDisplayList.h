@@ -3840,6 +3840,9 @@ private:
 class nsDisplaySVGEffects: public nsDisplayWrapList {
 public:
   nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                      nsDisplayList* aList, bool aHandleOpacity,
+                      const DisplayItemScrollClip* aScrollClip);
+  nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsDisplayList* aList, bool aHandleOpacity);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplaySVGEffects();
@@ -3850,11 +3853,6 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*> *aOutFrames) override;
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override {
-    *aSnap = false;
-    return mEffectsBounds + ToReferenceFrame();
-  }
 
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
@@ -3886,7 +3884,8 @@ protected:
 class nsDisplayMask : public nsDisplaySVGEffects {
 public:
   nsDisplayMask(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      nsDisplayList* aList, bool aHandleOpacity);
+                nsDisplayList* aList, bool aHandleOpacity,
+                const DisplayItemScrollClip* aScrollClip);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMask();
 #endif
@@ -3933,7 +3932,11 @@ public:
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
-
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) override {
+    *aSnap = false;
+    return mEffectsBounds + ToReferenceFrame();
+  }
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
 #ifdef MOZ_DUMP_PAINTING

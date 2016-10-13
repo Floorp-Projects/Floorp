@@ -58,23 +58,27 @@ function test() {
 
   Services.prefs.setCharPref(PREF_DISCOVERURL, MAIN_URL);
 
-  var gProvider = new MockProvider();
-  gProvider.createAddons([{
-    id: "test1@tests.mozilla.org",
-    name: "Test add-on 1",
-    description: "foo"
-  },
-  {
-    id: "test2@tests.mozilla.org",
-    name: "Test add-on 2",
-    description: "bar"
-  },
-  {
-    id: "test3@tests.mozilla.org",
-    name: "Test add-on 3",
-    type: "theme",
-    description: "bar"
-  }]);
+  SpecialPowers.pushPrefEnv({"set": [
+      ["dom.ipc.processCount", 1],
+    ]}, () => {
+    var gProvider = new MockProvider();
+    gProvider.createAddons([{
+      id: "test1@tests.mozilla.org",
+      name: "Test add-on 1",
+      description: "foo"
+    },
+    {
+      id: "test2@tests.mozilla.org",
+      name: "Test add-on 2",
+      description: "bar"
+    },
+    {
+      id: "test3@tests.mozilla.org",
+      name: "Test add-on 3",
+      type: "theme",
+      description: "bar"
+    }]);
+  });
 
   run_next_test();
 }

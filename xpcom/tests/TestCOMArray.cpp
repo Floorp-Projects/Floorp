@@ -114,7 +114,7 @@ NS_IMETHODIMP_(MozExternalRefCountType)
 Bar::Release(void)
 {
   ++Bar::sReleaseCalled;
-  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
+  MOZ_RELEASE_ASSERT(int32_t(mRefCnt) > 0, "dup release");
   NS_ASSERT_OWNINGTHREAD(_class);
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "Bar");

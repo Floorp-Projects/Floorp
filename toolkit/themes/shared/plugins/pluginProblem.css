@@ -78,6 +78,7 @@ html|a {
 :-moz-handler-blocked .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginBlocked.png);
 }
+a .icon,
 :-moz-handler-clicktoplay .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginActivate.png);
   -moz-user-focus: normal;
@@ -108,13 +109,15 @@ html|a {
 }
 
 @media not all and (-moz-touch-enabled) {
-  :-moz-handler-clicktoplay .msgTapToPlay {
+  :-moz-handler-clicktoplay .msgTapToPlay,
+  a .msgTapToPlay  {
     display: none;
   }
 }
 
 @media (-moz-touch-enabled) {
-  :-moz-handler-clicktoplay .msgClickToPlay {
+    :-moz-handler-clicktoplay .msgClickToPlay,
+    a .msgClickToPlay {
     display: none;
   }
 }

@@ -578,6 +578,11 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 {
   *aSent = false;
 
+  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
+  if (!IPCOpen()) {
+    return false;
+  }
+
   GetCompositorBridgeChild()->WillEndTransaction();
 
   MOZ_ASSERT(aId);
@@ -586,7 +591,6 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     js::ProfileEntry::Category::GRAPHICS);
 
   RenderTraceScope rendertrace("Foward Transaction", "000091");
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
   MOZ_ASSERT(!mTxn->Finished(), "forgot BeginTransaction?");
 
   DiagnosticTypes diagnostics = gfxPlatform::GetPlatform()->GetLayerDiagnosticTypes();
@@ -729,9 +733,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
   if (mTxn->mSwapRequired) {
     MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
     RenderTraceScope rendertrace3("Forward Transaction", "000093");
-    if (!HasShadowManager() ||
-        !mShadowManager->IPCOpen() ||
-        !mShadowManager->SendUpdate(cset, mTxn->mDestroyedActors,
+    if (!mShadowManager->SendUpdate(cset, mTxn->mDestroyedActors,
                                     GetFwdTransactionId(),
                                     aId, targetConfig, mPluginWindowData,
                                     mIsFirstPaint, aScheduleComposite,
@@ -745,9 +747,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     // assumes that aReplies is empty (DEBUG assertion)
     MOZ_LAYERS_LOG(("[LayersForwarder] sending no swap transaction..."));
     RenderTraceScope rendertrace3("Forward NoSwap Transaction", "000093");
-    if (!HasShadowManager() ||
-        !mShadowManager->IPCOpen() ||
-        !mShadowManager->SendUpdateNoSwap(cset, mTxn->mDestroyedActors,
+    if (!mShadowManager->SendUpdateNoSwap(cset, mTxn->mDestroyedActors,
                                           GetFwdTransactionId(),
                                           aId, targetConfig, mPluginWindowData,
                                           mIsFirstPaint, aScheduleComposite,

@@ -16,22 +16,11 @@
 #include "nsXPCOMCIDInternal.h"
 #include "pratom.h"
 #include "prmon.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
 #include "mozilla/ReentrantMonitor.h"
 using namespace mozilla;
-
-#ifdef DEBUG
-#define TEST_ASSERTION(_test, _msg) \
-    NS_ASSERTION(_test, _msg);
-#else
-#define TEST_ASSERTION(_test, _msg) \
-  PR_BEGIN_MACRO \
-    if (!(_test)) { \
-      NS_DebugBreak(NS_DEBUG_ABORT, _msg, #_test, __FILE__, __LINE__); \
-    } \
-  PR_END_MACRO
-#endif
 
 /* f93f6bdc-88af-42d7-9d64-1b43c649a3e5 */ 
 #define FACTORY_CID1                                 \
@@ -71,7 +60,7 @@ public:
   : mReentrantMonitorPtr(aReentrantMonitorPtr) {
     *aReentrantMonitorPtr =
       new ReentrantMonitor("TestRacingServiceManager::AutoMon");
-    TEST_ASSERTION(*aReentrantMonitorPtr, "Out of memory!");
+    MOZ_RELEASE_ASSERT(*aReentrantMonitorPtr, "Out of memory!");
   }
 
   ~AutoCreateAndDestroyReentrantMonitor() {
@@ -117,7 +106,7 @@ public:
   Component1() {
     // This is the real test - make sure that only one instance is ever created.
     int32_t count = PR_AtomicIncrement(&gComponent1Count);
-    TEST_ASSERTION(count == 1, "Too many components created!");
+    MOZ_RELEASE_ASSERT(count == 1, "Too many components created!");
   }
 };
 
@@ -138,7 +127,7 @@ public:
   Component2() {
     // This is the real test - make sure that only one instance is ever created.
     int32_t count = PR_AtomicIncrement(&gComponent2Count);
-    TEST_ASSERTION(count == 1, "Too many components created!");
+    MOZ_RELEASE_ASSERT(count == 1, "Too many components created!");
   }
 };
 
@@ -156,7 +145,7 @@ Factory::CreateInstance(nsISupports* aDelegate,
 {
   // Make sure that the second thread beat the main thread to the getService
   // call.
-  TEST_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  MOZ_RELEASE_ASSERT(!NS_IsMainThread(), "Wrong thread!");
 
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
@@ -216,7 +205,7 @@ TestRunnable::Run()
   else {
     component = do_GetService(FACTORY_CONTRACTID, &rv);
   }
-  TEST_ASSERTION(NS_SUCCEEDED(rv), "GetService failed!");
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "GetService failed!");
 
   return NS_OK;
 }
