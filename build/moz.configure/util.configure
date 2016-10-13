@@ -333,9 +333,9 @@ def namespace(**kwargs):
 # or, for convenience, a @depends function.
 @template
 @imports(_from='inspect', _import='isfunction')
-@imports(_from='mozbuild.configure', _import='DependsFunction')
+@imports(_from='mozbuild.configure', _import='SandboxDependsFunction')
 def dependable(obj):
-    if isinstance(obj, DependsFunction):
+    if isinstance(obj, SandboxDependsFunction):
         return obj
     if isfunction(obj):
         return depends('--help')(lambda _: obj())
