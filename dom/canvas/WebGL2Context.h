@@ -175,81 +175,29 @@ public:
     // Uniforms and attributes - WebGL2ContextUniforms.cpp
     void VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, GLintptr offset);
 
-    // GL 3.0 & ES 3.0
-    void Uniform1ui(WebGLUniformLocation* loc, GLuint v0);
-    void Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1);
-    void Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2);
-    void Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2,
-                    GLuint v3);
-
     ////////////////
 
-protected:
-    typedef Arr<GLuint, dom::Uint32Array> UintArr;
-
-    void UniformNuiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
-                     const UintArr& arr);
-
-    //////
-
-public:
-    template<typename T>
-    void Uniform1uiv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNuiv("uniform1uiv", 1, loc, UintArr(arr));
-    }
-    template<typename T>
-    void Uniform2uiv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNuiv("uniform2uiv", 2, loc, UintArr(arr));
-    }
-    template<typename T>
-    void Uniform3uiv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNuiv("uniform3uiv", 3, loc, UintArr(arr));
-    }
-    template<typename T>
-    void Uniform4uiv(WebGLUniformLocation* loc, const T& arr) {
-        UniformNuiv("uniform4uiv", 4, loc, UintArr(arr));
-    }
-
-    //////
-
-    template<typename T>
-    void UniformMatrix2x3fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
-        UniformMatrixAxBfv("uniformMatrix2x3fv", 2, 3, loc, transpose, FloatArr(arr));
-    }
-    template<typename T>
-    void UniformMatrix2x4fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
-        UniformMatrixAxBfv("uniformMatrix2x4fv", 2, 4, loc, transpose, FloatArr(arr));
-    }
-    template<typename T>
-    void UniformMatrix3x2fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
-        UniformMatrixAxBfv("uniformMatrix3x2fv", 3, 2, loc, transpose, FloatArr(arr));
-    }
-    template<typename T>
-    void UniformMatrix3x4fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
-        UniformMatrixAxBfv("uniformMatrix3x4fv", 3, 4, loc, transpose, FloatArr(arr));
-    }
-    template<typename T>
-    void UniformMatrix4x2fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
-        UniformMatrixAxBfv("uniformMatrix4x2fv", 4, 2, loc, transpose, FloatArr(arr));
-    }
-    template<typename T>
-    void UniformMatrix4x3fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
-        UniformMatrixAxBfv("uniformMatrix4x3fv", 4, 3, loc, transpose, FloatArr(arr));
-    }
-
-    ////////////////
-
-private:
-    void VertexAttribI4iv(GLuint index, size_t length, const GLint* v);
-    void VertexAttribI4uiv(GLuint index, size_t length, const GLuint* v);
-
-public:
     // GL 3.0 & ES 3.0
     void VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
-    void VertexAttribI4iv(GLuint index, const dom::Sequence<GLint>& v);
     void VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
-    void VertexAttribI4uiv(GLuint index, const dom::Sequence<GLuint>& v);
 
+    void VertexAttribI4iv(GLuint index, const Int32ListU& list) {
+        const auto& arr = Int32Arr::From(list);
+        if (!ValidateAttribArraySetter("vertexAttribI4iv", 4, arr.elemCount))
+            return;
+
+        const auto& itr = arr.elemBytes;
+        VertexAttribI4i(index, itr[0], itr[1], itr[2], itr[3]);
+    }
+
+    void VertexAttribI4uiv(GLuint index, const Uint32ListU& list) {
+        const auto& arr = Uint32Arr::From(list);
+        if (!ValidateAttribArraySetter("vertexAttribI4uiv", 4, arr.elemCount))
+            return;
+
+        const auto& itr = arr.elemBytes;
+        VertexAttribI4ui(index, itr[0], itr[1], itr[2], itr[3]);
+    }
 
     // -------------------------------------------------------------------------
     // Writing to the drawing buffer
