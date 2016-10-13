@@ -52,7 +52,7 @@ function addAsyncAnimTest(aName, aOptions, aTestGenerator) {
 }
 
 function runAsyncTest(aTestGenerator) {
-  return await_frame().then(function() {
+  return waitForFrame().then(function() {
     var generator;
 
     function step(arg) {
@@ -106,15 +106,6 @@ ok = function(a, message) {
     message = `[${gCurrentTestName}] ${message}`;
   }
   old_ok(a, message);
-}
-
-// Returns a Promise that is resolved by a requestAnimationFrame callback.
-function await_frame() {
-  return new Promise(function(aResolve) {
-    requestAnimationFrame(function() {
-      aResolve();
-    });
-  });
 }
 
 // Adds an event listener and returns a Promise that is resolved when the
@@ -182,7 +173,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after transition start");
 
@@ -196,7 +187,7 @@ function assert_records(expected, desc) {
 
     // Wait for the change MutationRecord for seeking the Animation to be
     // delivered, followed by the the removal MutationRecord.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] },
                     { added: [], changed: [], removed: animations }],
                    "records after transition end");
@@ -217,7 +208,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after transition start");
 
@@ -226,7 +217,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after transition end");
 
@@ -246,7 +237,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after transition start");
 
@@ -257,7 +248,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after transition end");
 
@@ -277,7 +268,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after transition start");
 
@@ -286,7 +277,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after transition end");
 
@@ -308,7 +299,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [firstAnimation], changed: [], removed: [] }],
                    "records after transition start");
 
@@ -333,7 +324,7 @@ function assert_records(expected, desc) {
     // Wait for the change Mutation record from seeking the first animation
     // to be delivered, followed by a subsequent MutationRecord for the removal
     // of the original Animation and the addition of the new Animation.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [firstAnimation], removed: [] },
                     { added: [secondAnimation], changed: [],
                       removed: [firstAnimation] }],
@@ -344,7 +335,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: [secondAnimation] }],
                    "records after transition end");
 
@@ -365,7 +356,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation additions to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after transition starts");
 
@@ -396,7 +387,7 @@ function assert_records(expected, desc) {
 
     // Wait for the MutationRecords to be delivered: one for each animation
     // that was seeked, followed by one for the removal of the color animation.
-    yield await_frame();
+    yield waitForFrame();
     assert_records(seekRecords.concat(
                     { added: [], changed: [], removed: colorAnimation }),
                    "records after color transition end");
@@ -406,7 +397,7 @@ function assert_records(expected, desc) {
 
     // Wait for the MutationRecord for the other two Animation
     // removals to be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: otherAnimations }],
                    "records after other transition ends");
 
@@ -428,7 +419,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after animation start");
 
@@ -443,7 +434,7 @@ function assert_records(expected, desc) {
     // Wait for the change MutationRecord from seeking the Animation to
     // be delivered, followed by a further MutationRecord for the Animation
     // removal.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] },
                     { added: [], changed: [], removed: animations }],
                    "records after animation end");
@@ -464,7 +455,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after animation start");
 
@@ -473,7 +464,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after animation end");
 
@@ -493,7 +484,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after animation start");
 
@@ -507,7 +498,7 @@ function assert_records(expected, desc) {
     // Wait for the change MutationRecord from seeking the Animation to
     // be delivered, followed by a further MutationRecord for the Animation
     // removal.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] },
                     { added: [], changed: [], removed: animations }],
                    "records after animation end");
@@ -528,7 +519,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after animation start");
 
@@ -537,7 +528,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after animation end");
 
@@ -560,7 +551,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after animation start");
 
@@ -578,7 +569,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after animation end");
 
@@ -599,7 +590,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after animation start");
 
@@ -608,7 +599,7 @@ function assert_records(expected, desc) {
 
     // The only MutationRecord at this point should be the change from
     // seeking the Animation.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] }],
                    "records after seeking animations");
 
@@ -617,7 +608,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after animation end");
 
@@ -637,7 +628,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after animation start");
 
@@ -646,13 +637,13 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after animation end");
 
     // Re-trigger the animation
     animations[0].play();
-    yield await_frame();
+    yield waitForFrame();
 
     // Wait for the single MutationRecord for the Animation (re-)addition to
     // be delivered.
@@ -682,7 +673,7 @@ function assert_records(expected, desc) {
 
       // Wait for the single MutationRecord for the Animation addition to
       // be delivered.
-      yield await_frame();
+      yield waitForFrame();
       assert_records([{ added: animations, changed: [], removed: [] }],
                      "records after animation start");
 
@@ -691,7 +682,7 @@ function assert_records(expected, desc) {
 
       // Wait for the single MutationRecord for the Animation change to
       // be delivered.
-      yield await_frame();
+      yield waitForFrame();
       assert_records([{ added: [], changed: animations, removed: [] }],
                      "records after animation change");
 
@@ -699,7 +690,7 @@ function assert_records(expected, desc) {
       e.style.animationName = "none";
 
       // Wait for the addition, change and removal MutationRecords to be delivered.
-      yield await_frame();
+      yield waitForFrame();
       assert_records([{ added: [], changed: [], removed: animations }],
                       "records after animation end");
 
@@ -729,7 +720,7 @@ function assert_records(expected, desc) {
 
       // Wait for the single MutationRecord for the Animation addition to
       // be delivered.
-      yield await_frame();
+      yield waitForFrame();
       assert_records([{ added: animations, changed: [], removed: [] }],
                      "records after animation start");
 
@@ -744,7 +735,7 @@ function assert_records(expected, desc) {
 
       // Wait for the single MutationRecord for the Animation change to
       // be delivered.
-      yield await_frame();
+      yield waitForFrame();
       assert_records([{ added: [], changed: animations, removed: [] }],
                      "records after animation property change");
 
@@ -752,7 +743,7 @@ function assert_records(expected, desc) {
       e.style = "";
 
       // Wait for the single removal notification.
-      yield await_frame();
+      yield waitForFrame();
       assert_records([{ added: [], changed: [], removed: animations }],
                      "records after animation end");
     });
@@ -762,21 +753,21 @@ function assert_records(expected, desc) {
     e.style.animation = "anim 100s";
 
     var animation = div.getAnimations()[0];
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [animation], changed: [], removed: []}],
                    "records after creation");
     animation.id = "new id";
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [animation], removed: []}],
                    "records after id is changed");
 
     animation.id = "new id";
-    yield await_frame();
+    yield waitForFrame();
     assert_records([],
                    "records after assigning same value with id");
 
     e.style.animation = "";
-    yield await_frame();
+    yield waitForFrame();
   });
 
   // Test that making a redundant change to currentTime while an Animation
@@ -793,7 +784,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -810,7 +801,7 @@ function assert_records(expected, desc) {
 
     // Wait for the two MutationRecords for the Animation changes to
     // be delivered: one for pausing, one for aborting the pause.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] },
                     { added: [], changed: animations, removed: [] }],
                     "records after pausing then seeking");
@@ -819,7 +810,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -835,7 +826,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -844,7 +835,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation change to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] }],
                     "records after calling reverse()");
 
@@ -852,7 +843,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -869,7 +860,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -878,7 +869,7 @@ function assert_records(expected, desc) {
     animations[0].playbackRate = 0;
 
     // Wait for the MutationRecords, one for each change, to be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] },
                     { added: [], changed: animations, removed: [] }],
                     "records after seeking and setting playbackRate");
@@ -893,7 +884,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -910,7 +901,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -922,7 +913,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation change to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] }],
                     "records after finish()");
 
@@ -930,14 +921,14 @@ function assert_records(expected, desc) {
     animations[0].finish();
 
     // Wait to ensure no change is dispatched
-    yield await_frame();
+    yield waitForFrame();
     assert_records([], "records after redundant finish()");
 
     // Cancel the animation.
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -954,7 +945,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -966,7 +957,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after finishing");
 
@@ -986,7 +977,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -1016,7 +1007,7 @@ function assert_records(expected, desc) {
     // Wait for the single MutationRecord for the Animation change to
     // be delivered. Even though the currentTime does not change, the
     // playState will change.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] }],
                     "records after finish() and pause()");
 
@@ -1024,7 +1015,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -1041,7 +1032,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -1061,7 +1052,7 @@ function assert_records(expected, desc) {
 
     // Wait for three MutationRecords for the Animation changes to
     // be delivered: one for each finish(), pause(), finish() operation.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] },
                     { added: [], changed: animations, removed: [] },
                     { added: [], changed: animations, removed: [] }],
@@ -1071,7 +1062,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -1088,7 +1079,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -1108,14 +1099,14 @@ function assert_records(expected, desc) {
     animations[0].play();
 
     // Wait to ensure no change is dispatched
-    yield await_frame();
+    yield waitForFrame();
     assert_records([], "records after redundant play()");
 
     // Cancel the animation.
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -1132,7 +1123,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -1144,7 +1135,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation change to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] }],
                     "records after finish()");
 
@@ -1154,7 +1145,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation change to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: [] }],
                     "records after play()");
 
@@ -1162,7 +1153,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -1179,7 +1170,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -1191,7 +1182,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation removal to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after finish()");
 
@@ -1201,7 +1192,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after play()");
 
@@ -1209,7 +1200,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -1226,7 +1217,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -1253,7 +1244,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -1270,7 +1261,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -1292,7 +1283,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -1309,7 +1300,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after animation start");
 
@@ -1332,7 +1323,7 @@ function assert_records(expected, desc) {
     e.style = "";
 
     // Wait for the single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                     "records after animation end");
   });
@@ -1349,7 +1340,7 @@ function assert_records(expected, desc) {
 
     // Wait for the single MutationRecord for the Animation addition to
     // be delivered.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after animation start");
 
@@ -1360,7 +1351,7 @@ function assert_records(expected, desc) {
     e.style.animationDuration = "0.5s";
 
     // We should get a single removal notification.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after animation end");
 
@@ -1378,7 +1369,7 @@ function assert_records(expected, desc) {
     is(animations.length, 0, "getAnimations().length after animation start");
 
     // And we should get no notifications.
-    yield await_frame();
+    yield waitForFrame();
     assert_records([], "records after attempted animation start");
 
     e.style = "";
@@ -1388,22 +1379,22 @@ function assert_records(expected, desc) {
     e.style.animation = "anim 100s, anotherAnim 100s";
 
     var animations = e.getAnimations();
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: animations, changed: [], removed: []}],
                    "records after creation");
     e.style.animation = "anotherAnim 100s, anim 100s";
     animations = e.getAnimations();
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: animations, removed: []}],
                    "records after the order is changed");
 
     e.style.animation = "anotherAnim 100s, anim 100s";
-    yield await_frame();
+    yield waitForFrame();
     assert_records([],
                    "no records after applying the same order");
 
     e.style.animation = "";
-    yield await_frame();
+    yield waitForFrame();
   });
 
 });
@@ -1472,7 +1463,7 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   //
   // We currently expect to get records in order div::after, childA, childB,
   // childB::before, div, div::before
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: divAfterAnimations, changed: [], removed: [] },
                   { added: childAAnimations, changed: [], removed: [] },
                   { added: childBAnimations, changed: [], removed: [] },
@@ -1536,41 +1527,41 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
                    { observe: div, subtree: true }, function*() {
     var anim = target.animate({ opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
 
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [anim], changed: [], removed: [] }],
                    "records after animation is added");
 
     anim.effect.timing.duration = 100 * MS_PER_SEC;
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [anim], removed: [] }],
                    "records after duration is changed");
 
     anim.effect.timing.duration = 100 * MS_PER_SEC;
-    yield await_frame();
+    yield waitForFrame();
     assert_records([], "records after assigning same value");
 
     anim.currentTime = anim.effect.timing.duration * 2;
     anim.finish();
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: [anim] }],
                    "records after animation end");
 
     anim.effect.timing.duration = anim.effect.timing.duration * 3;
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [anim], changed: [], removed: [] }],
                    "records after animation restarted");
 
     anim.effect.timing.duration = "auto";
-    yield await_frame();
+    yield waitForFrame();
     assert_records([{ added: [], changed: [], removed: [anim] }],
                    "records after duration set \"auto\"");
 
     anim.effect.timing.duration = "auto";
-    yield await_frame();
+    yield waitForFrame();
     assert_records([], "records after assigning same value \"auto\"");
 
     anim.cancel();
-    yield await_frame();
+    yield waitForFrame();
   });
 });
 
@@ -1578,30 +1569,30 @@ addAsyncAnimTest("change_enddelay_and_currenttime",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] }, { duration: 100 * MS_PER_SEC });
 
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect.timing.endDelay = 10 * MS_PER_SEC;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [anim], removed: [] }],
                  "records after endDelay is changed");
 
   anim.effect.timing.endDelay = 10 * MS_PER_SEC;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "records after assigning same value");
 
   anim.currentTime = 109 * MS_PER_SEC;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after currentTime during endDelay");
 
   anim.effect.timing.endDelay = -110 * MS_PER_SEC;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "records after assigning negative value");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
 });
 
 addAsyncAnimTest("change_enddelay_and_currenttime",
@@ -1609,7 +1600,7 @@ addAsyncAnimTest("change_enddelay_and_currenttime",
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { duration: 100 * MS_PER_SEC,
                            endDelay: -100 * MS_PER_SEC });
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "records after animation is added");
 });
 
@@ -1617,31 +1608,31 @@ addAsyncAnimTest("change_iterations",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect.timing.iterations = 2;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [anim], removed: [] }],
                  "records after iterations is changed");
 
   anim.effect.timing.iterations = 2;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "records after assigning same value");
 
   anim.effect.timing.iterations = 0;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation end");
 
   anim.effect.timing.iterations = Infinity;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation restarted");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation end");
 });
@@ -1650,31 +1641,31 @@ addAsyncAnimTest("change_delay",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] }, 100000);
 
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect.timing.delay = 100;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [anim], removed: [] }],
                  "records after delay is changed");
 
   anim.effect.timing.delay = 100;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "records after assigning same value");
 
   anim.effect.timing.delay = -100000;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation end");
 
   anim.effect.timing.delay = 0;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation restarted");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation end");
 });
@@ -1685,28 +1676,28 @@ addAsyncAnimTest("change_easing",
                          { duration: 100 * MS_PER_SEC,
                            easing: "steps(2, start)" });
 
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect.timing.easing = "steps(2, end)";
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [anim], removed: [] }],
                  "records after easing is changed");
 
   anim.effect.timing.easing = "steps(2, end)";
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "records after assigning same value");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
 });
 
 addAsyncAnimTest("negative_delay_in_constructor",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { duration: 100, delay: -100 });
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "records after assigning negative value");
 });
 
@@ -1717,13 +1708,13 @@ addAsyncAnimTest("exclude_animations_targeting_pseudo_elements",
   var pAnim = pseudoTarget.animate({ opacity: [ 0, 1 ] },
                                    { duration: 100 * MS_PER_SEC });
 
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.finish();
   pAnim.finish();
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation is finished");
 });
@@ -1735,11 +1726,11 @@ addAsyncAnimTest("create_animation_without_target",
                                           { duration: 10000 });
   var anim = new Animation(effect, document.timeline);
   anim.play();
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "no records after animation is added");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "no records after animation is removed");
 });
 
@@ -1748,30 +1739,30 @@ addAsyncAnimTest("set_animation_target",
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { duration: 100 * MS_PER_SEC });
 
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect.target = null;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after setting null");
 
   anim.effect.target = div;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after setting a target");
 
   var newTarget = document.createElement("div");
   document.body.appendChild(newTarget);
   anim.effect.target = newTarget;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] },
                   { added: [anim], changed: [], removed: [] }],
                  "records after setting a different target");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation ends");
 
@@ -1782,42 +1773,42 @@ addAsyncAnimTest("set_redundant_animation_target",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { duration: 100 * MS_PER_SEC });
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect.target = div;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "no records after setting the same target");
 
   anim.effect.target = null;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after setting null");
 
   anim.effect.target = null;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "records after setting redundant null");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
 });
 
 addAsyncAnimTest("set_null_animation_effect",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] },
                          { duration: 100 * MS_PER_SEC });
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect = null;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation is removed");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
 });
 
 addAsyncAnimTest("set_effect_on_null_effect_animation",
@@ -1826,53 +1817,53 @@ addAsyncAnimTest("set_effect_on_null_effect_animation",
   anim.play();
   anim.effect = new KeyframeEffect(div, { opacity: [ 0, 1 ] },
                                    100 * MS_PER_SEC);
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
 });
 
 addAsyncAnimTest("replace_effect_targeting_on_the_same_element",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ marginLeft: [ "0px", "100px" ] },
                          100 * MS_PER_SEC);
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect = new KeyframeEffect(div, { opacity: [ 0, 1 ] },
                                    100 * MS_PER_SEC);
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [anim], removed: [] }],
                  "records after replace effects");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
 });
 
 addAsyncAnimTest("replace_effect_targeting_on_the_same_element_not_in_effect",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ marginLeft: [ "0px", "100px" ] },
                          100 * MS_PER_SEC);
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.currentTime = 60 * MS_PER_SEC;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [anim], removed: [] }],
                  "records after animation is changed");
 
   anim.effect = new KeyframeEffect(div, { opacity: [ 0, 1 ] },
                                    50 * MS_PER_SEC);
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after replacing effects");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
 });
 
 addAsyncAnimTest("set_effect_with_previous_animation",
@@ -1884,7 +1875,7 @@ addAsyncAnimTest("set_effect_with_previous_animation",
                           100 * MS_PER_SEC);
   var anim2 = child.animate({ marginLeft: [ "0px", "100px" ] },
                               50 * MS_PER_SEC);
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim1], changed: [], removed: [] },
                   { added: [anim2], changed: [], removed: [] }],
                  "records after animation is added");
@@ -1894,7 +1885,7 @@ addAsyncAnimTest("set_effect_with_previous_animation",
   // anim2. Finally, add back the anim1 which is in effect on |child| now.
   // In addition, we sort them by tree order and they are batched.
   anim1.effect = anim2.effect;
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim1] },       // div
                   { added: [anim1], changed: [], removed: [anim2] }], // child
                  "records after animation effects are changed");
@@ -1902,7 +1893,7 @@ addAsyncAnimTest("set_effect_with_previous_animation",
   anim1.cancel();
   anim2.cancel();
   child.remove();
-  yield await_frame();
+  yield waitForFrame();
 });
 
 addAsyncAnimTest("set_spacing",
@@ -1912,17 +1903,17 @@ addAsyncAnimTest("set_spacing",
                            { marginLeft: "100px" },
                            { marginLeft: "50px" } ],
                          { duration: 100 * MS_PER_SEC });
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect.spacing = "paced(margin-left)";
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [anim], removed: [] }],
                  "records after animation is changed");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation end");
 });
@@ -1935,17 +1926,17 @@ addAsyncAnimTest("set_spacing_on_a_non-animatable_property",
                            { marginLeft: "50px" } ],
                          { duration: 100 * MS_PER_SEC,
                            spacing: "paced(margin-left)" });
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect.spacing = "paced(animation-duration)";
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [anim], removed: [] }],
                  "records after setting a non-animatable paced property");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation end");
 });
@@ -1958,16 +1949,16 @@ addAsyncAnimTest("set_the_same_spacing",
                            { marginLeft: "50px" } ],
                          { duration: 100 * MS_PER_SEC,
                            spacing: "paced(margin-left)" });
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
 
   anim.effect.spacing = "paced(margin-left)";
-  yield await_frame();
+  yield waitForFrame();
   assert_records([], "no record after setting the same spacing");
 
   anim.cancel();
-  yield await_frame();
+  yield waitForFrame();
   assert_records([{ added: [], changed: [], removed: [anim] }],
                  "records after animation end");
 });
