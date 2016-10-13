@@ -47,10 +47,10 @@ function amManager() {
 
   let globalMM = Services.mm;
   globalMM.loadFrameScript(CHILD_SCRIPT, true);
+  globalMM.addMessageListener(MSG_INSTALL_ENABLED, this);
   globalMM.addMessageListener(MSG_INSTALL_ADDONS, this);
 
   gParentMM = Services.ppmm;
-  gParentMM.addMessageListener(MSG_INSTALL_ENABLED, this);
   gParentMM.addMessageListener(MSG_PROMISE_REQUEST, this);
   gParentMM.addMessageListener(MSG_INSTALL_CLEANUP, this);
   gParentMM.addMessageListener(MSG_ADDON_EVENT_REQ, this);
@@ -212,9 +212,10 @@ amManager.prototype = {
       case MSG_INSTALL_ADDONS: {
         let callback = null;
         if (payload.callbackID != -1) {
+          let mm = aMessage.target.messageManager;
           callback = {
             onInstallEnded: function(url, status) {
-              gParentMM.broadcastAsyncMessage(MSG_INSTALL_CALLBACK, {
+              mm.sendAsyncMessage(MSG_INSTALL_CALLBACK, {
                 callbackID: payload.callbackID,
                 url: url,
                 status: status
