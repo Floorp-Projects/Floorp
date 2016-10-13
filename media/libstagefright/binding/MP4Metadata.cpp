@@ -745,6 +745,7 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     case MP4PARSE_CODEC_FLAC: codec_string = "flac"; break;
     case MP4PARSE_CODEC_AVC: codec_string = "h.264"; break;
     case MP4PARSE_CODEC_VP9: codec_string = "vp9"; break;
+    case MP4PARSE_CODEC_MP3: codec_string = "mp3"; break;
   }
   MOZ_LOG(sLog, LogLevel::Debug, ("track codec %s (%u)\n",
         codec_string, info.codec));
@@ -778,6 +779,8 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
         track->mMimeType = MEDIA_MIMETYPE_AUDIO_AAC;
       } else if (info.codec == MP4PARSE_CODEC_FLAC) {
         track->mMimeType = MEDIA_MIMETYPE_AUDIO_FLAC;
+      } else if (info.codec == MP4PARSE_CODEC_MP3) {
+        track->mMimeType = MEDIA_MIMETYPE_AUDIO_MPEG;
       }
       track->mCodecSpecificConfig->AppendElements(
           audio.codec_specific_config.data,
