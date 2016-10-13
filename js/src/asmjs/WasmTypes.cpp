@@ -98,7 +98,7 @@ WasmHandleExecutionInterrupt()
 }
 
 static void
-HandleTrap(int32_t trapIndex)
+WasmReportTrap(int32_t trapIndex)
 {
     JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
 
@@ -129,16 +129,30 @@ HandleTrap(int32_t trapIndex)
         errorNumber = JSMSG_SIMD_FAILED_CONVERSION;
         break;
       case Trap::OutOfBounds:
-        errorNumber = JSMSG_BAD_INDEX;
+        errorNumber = JSMSG_WASM_OUT_OF_BOUNDS;
         break;
-      case Trap::UnalignedAccess:
-        errorNumber = JSMSG_WASM_UNALIGNED_ACCESS;
+      case Trap::StackOverflow:
+        errorNumber = JSMSG_OVER_RECURSED;
         break;
       default:
         MOZ_CRASH("unexpected trap");
     }
 
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
+}
+
+static void
+WasmReportOutOfBounds()
+{
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
+}
+
+static void
+WasmReportUnalignedAccess()
+{
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
 }
 
 static int32_t
@@ -262,8 +276,12 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(WasmReportOverRecursed, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
         return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
-      case SymbolicAddress::HandleTrap:
-        return FuncCast(HandleTrap, Args_General1);
+      case SymbolicAddress::ReportTrap:
+        return FuncCast(WasmReportTrap, Args_General1);
+      case SymbolicAddress::ReportOutOfBounds:
+        return FuncCast(WasmReportOutOfBounds, Args_General0);
+      case SymbolicAddress::ReportUnalignedAccess:
+        return FuncCast(WasmReportUnalignedAccess, Args_General0);
       case SymbolicAddress::CallImport_Void:
         return FuncCast(Instance::callImport_void, Args_General4);
       case SymbolicAddress::CallImport_I32:

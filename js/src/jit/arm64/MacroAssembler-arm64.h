@@ -510,10 +510,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     using vixl::MacroAssembler::B;
-    void B(wasm::JumpTarget) {
+    void B(wasm::TrapDesc) {
         MOZ_CRASH("NYI");
     }
-    void B(wasm::JumpTarget, Condition cond) {
+    void B(wasm::TrapDesc, Condition cond) {
         MOZ_CRASH("NYI");
     }
 
@@ -685,7 +685,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         loadPtr(addr, ip0);
         Br(vixl::ip0);
     }
-    void jump(wasm::JumpTarget target) {
+    void jump(wasm::TrapDesc target) {
         MOZ_CRASH("NYI");
     }
 

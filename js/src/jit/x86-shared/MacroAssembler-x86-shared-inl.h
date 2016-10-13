@@ -545,8 +545,9 @@ MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* labe
     branchPtrImpl(cond, lhs, rhs, label);
 }
 
+template <class L>
 void
-MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, L label)
 {
     branchPtrImpl(cond, lhs, rhs, label);
 }
@@ -569,9 +570,9 @@ MacroAssembler::branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label
     branchPtrImpl(cond, lhs, rhs, label);
 }
 
-template <typename T, typename S>
+template <typename T, typename S, typename L>
 void
-MacroAssembler::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+MacroAssembler::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, L label)
 {
     cmpPtr(Operand(lhs), rhs);
     j(cond, label);

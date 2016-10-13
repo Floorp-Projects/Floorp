@@ -708,6 +708,52 @@ struct FuncOffsets : ProfilingOffsets
     }
 };
 
+// A wasm::Trap represents a wasm-defined trap that can occur during execution
+// which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
+// symbolically, passing the bytecode offset to report as the trap offset. The
+// generated jump will be bound to a tiny stub which fills the offset and
+// then jumps to a per-Trap shared stub at the end of the module.
+
+enum class Trap
+{
+    // The Unreachable opcode has been executed.
+    Unreachable,
+    // An integer arithmetic operation led to an overflow.
+    IntegerOverflow,
+    // Trying to coerce NaN to an integer.
+    InvalidConversionToInteger,
+    // Integer division by zero.
+    IntegerDivideByZero,
+    // Out of bounds on wasm memory accesses and asm.js SIMD/atomic accesses.
+    OutOfBounds,
+    // call_indirect to null.
+    IndirectCallToNull,
+    // call_indirect signature mismatch.
+    IndirectCallBadSig,
+
+    // (asm.js only) SIMD float to int conversion failed because the input
+    // wasn't in bounds.
+    ImpreciseSimdConversion,
+
+    // The internal stack space was exhausted. For compatibility, this throws
+    // the same over-recursed error as JS.
+    StackOverflow,
+
+    Limit
+};
+
+// A wrapper around the bytecode offset of a wasm instruction within a whole
+// module. Trap offsets should refer to the first byte of the instruction that
+// triggered the trap and should ultimately derive from ExprIter::trapOffset.
+
+struct TrapOffset
+{
+    uint32_t bytecodeOffset;
+
+    TrapOffset() = default;
+    explicit TrapOffset(uint32_t bytecodeOffset) : bytecodeOffset(bytecodeOffset) {}
+};
+
 // While the frame-pointer chain allows the stack to be unwound without
 // metadata, Error.stack still needs to know the line/column of every call in
 // the chain. A CallSiteDesc describes a single callsite to which CallSite adds
@@ -722,7 +768,8 @@ class CallSiteDesc
     enum Kind {
         FuncDef,   // pc-relative call to a specific function
         Dynamic,   // dynamic callee called via register
-        Symbolic   // call to a single symbolic callee
+        Symbolic,  // call to a single symbolic callee
+        TrapExit   // call to a trap exit
     };
     CallSiteDesc() {}
     explicit CallSiteDesc(Kind kind)
@@ -769,7 +816,7 @@ WASM_DECLARE_POD_VECTOR(CallSite, CallSiteVector)
 
 class CallSiteAndTarget : public CallSite
 {
-    uint32_t funcDefIndex_;
+    uint32_t index_;
 
   public:
     explicit CallSiteAndTarget(CallSite cs)
@@ -778,12 +825,19 @@ class CallSiteAndTarget : public CallSite
         MOZ_ASSERT(cs.kind() != FuncDef);
     }
     CallSiteAndTarget(CallSite cs, uint32_t funcDefIndex)
-      : CallSite(cs), funcDefIndex_(funcDefIndex)
+      : CallSite(cs), index_(funcDefIndex)
     {
         MOZ_ASSERT(cs.kind() == FuncDef);
     }
+    CallSiteAndTarget(CallSite cs, Trap trap)
+      : CallSite(cs),
+        index_(uint32_t(trap))
+    {
+        MOZ_ASSERT(cs.kind() == TrapExit);
+    }
 
-    uint32_t funcDefIndex() const { MOZ_ASSERT(kind() == FuncDef); return funcDefIndex_; }
+    uint32_t funcDefIndex() const { MOZ_ASSERT(kind() == FuncDef); return index_; }
+    Trap trap() const { MOZ_ASSERT(kind() == TrapExit); return Trap(index_); }
 };
 
 typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
@@ -832,7 +886,9 @@ enum class SymbolicAddress
     InterruptUint32,
     ReportOverRecursed,
     HandleExecutionInterrupt,
-    HandleTrap,
+    ReportTrap,
+    ReportOutOfBounds,
+    ReportUnalignedAccess,
     CallImport_Void,
     CallImport_I32,
     CallImport_I64,
@@ -854,59 +910,6 @@ enum class SymbolicAddress
 
 void*
 AddressOf(SymbolicAddress imm, ExclusiveContext* cx);
-
-// A wasm::Trap is a reason for why we reached a trap in executed code. Each
-// different trap is mapped to a different error message.
-
-enum class Trap
-{
-    // The Unreachable opcode has been executed.
-    Unreachable,
-    // An integer arithmetic operation led to an overflow.
-    IntegerOverflow,
-    // Trying to coerce NaN to an integer.
-    InvalidConversionToInteger,
-    // Integer division by zero.
-    IntegerDivideByZero,
-    // Out of bounds on wasm memory accesses and asm.js SIMD/atomic accesses.
-    OutOfBounds,
-    // Unaligned memory access.
-    UnalignedAccess,
-    // call_indirect to null.
-    IndirectCallToNull,
-    // call_indirect signature mismatch.
-    IndirectCallBadSig,
-
-    // (asm.js only) SIMD float to int conversion failed because the input
-    // wasn't in bounds.
-    ImpreciseSimdConversion,
-
-    Limit
-};
-
-// A wasm::JumpTarget represents one of a special set of stubs that can be
-// jumped to from any function. Because wasm modules can be larger than the
-// range of a plain jump, these potentially out-of-range jumps must be recorded
-// and patched specially by the MacroAssembler and ModuleGenerator.
-
-enum class JumpTarget
-{
-    // Traps
-    Unreachable = unsigned(Trap::Unreachable),
-    IntegerOverflow = unsigned(Trap::IntegerOverflow),
-    InvalidConversionToInteger = unsigned(Trap::InvalidConversionToInteger),
-    IntegerDivideByZero = unsigned(Trap::IntegerDivideByZero),
-    OutOfBounds = unsigned(Trap::OutOfBounds),
-    UnalignedAccess = unsigned(Trap::UnalignedAccess),
-    IndirectCallToNull = unsigned(Trap::IndirectCallToNull),
-    IndirectCallBadSig = unsigned(Trap::IndirectCallBadSig),
-    ImpreciseSimdConversion = unsigned(Trap::ImpreciseSimdConversion),
-    // Non-traps
-    StackOverflow,
-    Limit
-};
-
-typedef EnumeratedArray<JumpTarget, JumpTarget::Limit, Uint32Vector> JumpSiteArray;
 
 // Assumptions captures ambient state that must be the same when compiling and
 // deserializing a module for the compiled code to be valid. If it's not, then
@@ -1294,6 +1297,8 @@ class BoundsCheck
     uint32_t cmpOffset_;
 };
 
+WASM_DECLARE_POD_VECTOR(BoundsCheck, BoundsCheckVector)
+
 // Metadata for memory accesses. On WASM_HUGE_MEMORY platforms, only
 // (non-SIMD/Atomic) asm.js loads and stores create a MemoryAccess so that the
 // signal handler can implement the semantically-correct wraparound logic; the
@@ -1302,46 +1307,57 @@ class BoundsCheck
 // the MemoryAccess records the location of each for patching. On all other
 // platforms, no MemoryAccess is created.
 
-#ifdef WASM_HUGE_MEMORY
 class MemoryAccess
 {
     uint32_t insnOffset_;
+    uint32_t trapOutOfLineOffset_;
 
   public:
     MemoryAccess() = default;
-    explicit MemoryAccess(uint32_t insnOffset)
-      : insnOffset_(insnOffset)
+    explicit MemoryAccess(uint32_t insnOffset, uint32_t trapOutOfLineOffset = UINT32_MAX)
+      : insnOffset_(insnOffset),
+        trapOutOfLineOffset_(trapOutOfLineOffset)
     {}
 
-    uint32_t insnOffset() const { return insnOffset_; }
+    uint32_t insnOffset() const {
+        return insnOffset_;
+    }
+    bool hasTrapOutOfLineCode() const {
+        return trapOutOfLineOffset_ != UINT32_MAX;
+    }
+    uint8_t* trapOutOfLineCode(uint8_t* code) const {
+        MOZ_ASSERT(hasTrapOutOfLineCode());
+        return code + trapOutOfLineOffset_;
+    }
 
-    void offsetBy(uint32_t offset) { insnOffset_ += offset; }
+    void offsetBy(uint32_t delta) {
+        insnOffset_ += delta;
+        if (hasTrapOutOfLineCode())
+            trapOutOfLineOffset_ += delta;
+    }
 };
-#elif defined(JS_CODEGEN_X86)
-class MemoryAccess
-{
-    uint32_t nextInsOffset_;
-
-  public:
-    MemoryAccess() = default;
-    explicit MemoryAccess(uint32_t nextInsOffset)
-      : nextInsOffset_(nextInsOffset)
-    { }
-
-    void* patchMemoryPtrImmAt(uint8_t* code) const { return code + nextInsOffset_; }
-    void offsetBy(uint32_t offset) { nextInsOffset_ += offset; }
-};
-#else
-class MemoryAccess {
-  public:
-    MemoryAccess() { MOZ_CRASH(); }
-    void offsetBy(uint32_t) { MOZ_CRASH(); }
-    uint32_t insnOffset() const { MOZ_CRASH(); }
-};
-#endif
 
 WASM_DECLARE_POD_VECTOR(MemoryAccess, MemoryAccessVector)
-WASM_DECLARE_POD_VECTOR(BoundsCheck, BoundsCheckVector)
+
+// Metadata for the offset of an instruction to patch with the base address of
+// memory. In practice, this is only used for x86 where the offset points to the
+// *end* of the instruction (which is a non-fixed offset from the beginning of
+// the instruction). As part of the move away from code patching, this should be
+// removed.
+
+struct MemoryPatch
+{
+    uint32_t offset;
+
+    MemoryPatch() = default;
+    explicit MemoryPatch(uint32_t offset) : offset(offset) {}
+
+    void offsetBy(uint32_t delta) {
+        offset += delta;
+    }
+};
+
+WASM_DECLARE_POD_VECTOR(MemoryPatch, MemoryPatchVector)
 
 // Constants:
 

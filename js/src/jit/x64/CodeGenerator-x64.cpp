@@ -289,8 +289,7 @@ CodeGeneratorX64::visitDivOrModI64(LDivOrModI64* lir)
 
     // Handle divide by zero.
     if (lir->canBeDivideByZero()) {
-        masm.testPtr(rhs, rhs);
-        masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
+        masm.branchTestPtr(Assembler::Zero, rhs, rhs, trap(lir, wasm::Trap::IntegerDivideByZero));
     }
 
     // Handle an integer overflow exception from INT64_MIN / -1.
@@ -301,7 +300,7 @@ CodeGeneratorX64::visitDivOrModI64(LDivOrModI64* lir)
         if (lir->mir()->isMod())
             masm.xorl(output, output);
         else
-            masm.jump(wasm::JumpTarget::IntegerOverflow);
+            masm.jump(trap(lir, wasm::Trap::IntegerOverflow));
         masm.jump(&done);
         masm.bind(&notmin);
     }
@@ -332,10 +331,8 @@ CodeGeneratorX64::visitUDivOrModI64(LUDivOrModI64* lir)
     Label done;
 
     // Prevent divide by zero.
-    if (lir->canBeDivideByZero()) {
-        masm.testPtr(rhs, rhs);
-        masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
-    }
+    if (lir->canBeDivideByZero())
+        masm.branchTestPtr(Assembler::Zero, rhs, rhs, trap(lir, wasm::Trap::IntegerDivideByZero));
 
     // Zero extend the lhs into rdx to make (rdx:rax).
     masm.xorl(rdx, rdx);
@@ -423,6 +420,8 @@ CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access, const LAllocat
 
         const MConstant* mir = value->toConstant();
         Imm32 cst = Imm32(mir->type() == MIRType::Int32 ? mir->toInt32() : mir->toInt64());
+
+        size_t storeOffset = masm.size();
         switch (access.type()) {
           case Scalar::Int8:
           case Scalar::Uint8:
@@ -447,6 +446,7 @@ CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access, const LAllocat
           case Scalar::MaxTypedArrayViewType:
             MOZ_CRASH("unexpected array type");
         }
+        masm.append(access, storeOffset, masm.framePushed());
 
         masm.memoryBarrier(access.barrierAfter());
     } else {
@@ -535,9 +535,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     uint32_t before = masm.size();
     masm.wasmLoad(mir->access(), srcAddr, ToAnyRegister(out));
     uint32_t after = masm.size();
-
     verifyLoadDisassembly(before, after, accessType, srcAddr, *out->output());
-    masm.append(wasm::MemoryAccess(before));
 }
 
 void
@@ -561,9 +559,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     uint32_t before = masm.size();
     wasmStore(mir->access(), value, dstAddr);
     uint32_t after = masm.size();
-
     verifyStoreDisassembly(before, after, accessType, dstAddr, *value);
-    masm.append(wasm::MemoryAccess(before));
 }
 
 void

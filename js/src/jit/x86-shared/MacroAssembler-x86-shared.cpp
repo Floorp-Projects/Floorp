@@ -724,18 +724,19 @@ struct MOZ_RAII AutoHandleWasmTruncateToIntErrors
     MacroAssembler& masm;
     Label inputIsNaN;
     Label fail;
+    wasm::TrapOffset off;
 
-    explicit AutoHandleWasmTruncateToIntErrors(MacroAssembler& masm)
-      : masm(masm)
+    explicit AutoHandleWasmTruncateToIntErrors(MacroAssembler& masm, wasm::TrapOffset off)
+      : masm(masm), off(off)
     { }
 
     ~AutoHandleWasmTruncateToIntErrors() {
         // Handle errors.
         masm.bind(&fail);
-        masm.jump(wasm::JumpTarget::IntegerOverflow);
+        masm.jump(wasm::TrapDesc(off, wasm::Trap::IntegerOverflow, masm.framePushed()));
 
         masm.bind(&inputIsNaN);
-        masm.jump(wasm::JumpTarget::InvalidConversionToInteger);
+        masm.jump(wasm::TrapDesc(off, wasm::Trap::InvalidConversionToInteger, masm.framePushed()));
     }
 };
 
@@ -757,9 +758,9 @@ MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output,
 
 void
 MacroAssembler::outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isUnsigned,
-                                                   Label* rejoin)
+                                                   wasm::TrapOffset off, Label* rejoin)
 {
-    AutoHandleWasmTruncateToIntErrors traps(*this);
+    AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
     // Eagerly take care of NaNs.
     branchDouble(Assembler::DoubleUnordered, input, input, &traps.inputIsNaN);
@@ -780,9 +781,9 @@ MacroAssembler::outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isU
 
 void
 MacroAssembler::outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool isUnsigned,
-                                                    Label* rejoin)
+                                                    wasm::TrapOffset off, Label* rejoin)
 {
-    AutoHandleWasmTruncateToIntErrors traps(*this);
+    AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
     // Eagerly take care of NaNs.
     branchFloat(Assembler::DoubleUnordered, input, input, &traps.inputIsNaN);
@@ -801,9 +802,9 @@ MacroAssembler::outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool is
 
 void
 MacroAssembler::outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned,
-                                                   Label* rejoin)
+                                                   wasm::TrapOffset off, Label* rejoin)
 {
-    AutoHandleWasmTruncateToIntErrors traps(*this);
+    AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
     // Eagerly take care of NaNs.
     branchDouble(Assembler::DoubleUnordered, input, input, &traps.inputIsNaN);
@@ -828,9 +829,9 @@ MacroAssembler::outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isU
 
 void
 MacroAssembler::outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool isUnsigned,
-                                                    Label* rejoin)
+                                                    wasm::TrapOffset off, Label* rejoin)
 {
-    AutoHandleWasmTruncateToIntErrors traps(*this);
+    AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
     // Eagerly take care of NaNs.
     branchFloat(Assembler::DoubleUnordered, input, input, &traps.inputIsNaN);
