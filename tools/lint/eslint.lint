@@ -330,8 +330,11 @@ def lint(paths, binary=None, fix=None, setup=None, **lintargs):
         proc.kill()
         return []
 
+    if not proc.output:
+        return []  # no output means success
+
     try:
-        jsonresult = json.loads(proc.output[0] or '[]')
+        jsonresult = json.loads(proc.output[0])
     except ValueError:
         print(ESLINT_ERROR_MESSAGE.format("\n".join(proc.output)))
         return 1
