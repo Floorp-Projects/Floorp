@@ -14,6 +14,7 @@
 #include "prinrval.h"
 #include "prmon.h"
 #include "prthread.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
 #include "mozilla/ReentrantMonitor.h"
@@ -33,18 +34,6 @@ static bool gAllRunnablesPosted = false;
 static bool gAllThreadsCreated = false;
 static bool gAllThreadsShutDown = false;
 
-#ifdef DEBUG
-#define TEST_ASSERTION(_test, _msg) \
-    NS_ASSERTION(_test, _msg);
-#else
-#define TEST_ASSERTION(_test, _msg) \
-  PR_BEGIN_MACRO \
-    if (!(_test)) { \
-      NS_DebugBreak(NS_DEBUG_ABORT, _msg, #_test, __FILE__, __LINE__); \
-    } \
-  PR_END_MACRO
-#endif
-
 class Listener final : public nsIThreadPoolListener
 {
   ~Listener() {}
@@ -60,7 +49,7 @@ NS_IMETHODIMP
 Listener::OnThreadCreated()
 {
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
-  TEST_ASSERTION(current, "Couldn't get current thread!");
+  MOZ_RELEASE_ASSERT(current, "Couldn't get current thread!");
 
   ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
@@ -70,7 +59,7 @@ Listener::OnThreadCreated()
 
   for (uint32_t i = 0; i < NUMBER_OF_THREADS; i++) {
     nsIThread* thread = gCreatedThreadList[i];
-    TEST_ASSERTION(thread != current, "Saw the same thread twice!");
+    MOZ_RELEASE_ASSERT(thread != current, "Saw the same thread twice!");
 
     if (!thread) {
       gCreatedThreadList[i] = current;
@@ -82,7 +71,7 @@ Listener::OnThreadCreated()
     }
   }
 
-  TEST_ASSERTION(false, "Too many threads!");
+  MOZ_RELEASE_ASSERT(false, "Too many threads!");
   return NS_ERROR_FAILURE;
 }
 
@@ -90,13 +79,13 @@ NS_IMETHODIMP
 Listener::OnThreadShuttingDown()
 {
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
-  TEST_ASSERTION(current, "Couldn't get current thread!");
+  MOZ_RELEASE_ASSERT(current, "Couldn't get current thread!");
 
   ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
   for (uint32_t i = 0; i < NUMBER_OF_THREADS; i++) {
     nsIThread* thread = gShutDownThreadList[i];
-    TEST_ASSERTION(thread != current, "Saw the same thread twice!");
+    MOZ_RELEASE_ASSERT(thread != current, "Saw the same thread twice!");
 
     if (!thread) {
       gShutDownThreadList[i] = current;
@@ -108,7 +97,7 @@ Listener::OnThreadShuttingDown()
     }
   }
 
-  TEST_ASSERTION(false, "Too many threads!");
+  MOZ_RELEASE_ASSERT(false, "Too many threads!");
   return NS_ERROR_FAILURE;
 }
 
@@ -118,7 +107,7 @@ public:
   explicit AutoCreateAndDestroyReentrantMonitor(ReentrantMonitor** aReentrantMonitorPtr)
   : mReentrantMonitorPtr(aReentrantMonitorPtr) {
     *aReentrantMonitorPtr = new ReentrantMonitor("TestThreadPoolListener::AutoMon");
-    TEST_ASSERTION(*aReentrantMonitorPtr, "Out of memory!");
+    MOZ_RELEASE_ASSERT(*aReentrantMonitorPtr, "Out of memory!");
   }
 
   ~AutoCreateAndDestroyReentrantMonitor() {
