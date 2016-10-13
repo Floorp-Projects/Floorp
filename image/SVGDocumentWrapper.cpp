@@ -155,7 +155,7 @@ SVGDocumentWrapper::StartAnimation()
     if (controller) {
       controller->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
     }
-    doc->ImageTracker()->SetImagesNeedAnimating(true);
+    doc->ImageTracker()->SetAnimatingState(true);
   }
 }
 
@@ -174,7 +174,7 @@ SVGDocumentWrapper::StopAnimation()
     if (controller) {
       controller->Pause(nsSMILTimeContainer::PAUSE_IMAGE);
     }
-    doc->ImageTracker()->SetImagesNeedAnimating(false);
+    doc->ImageTracker()->SetAnimatingState(false);
   }
 }
 
