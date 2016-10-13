@@ -27,16 +27,21 @@ window.addEventListener("load", () => {
   var target = document.getElementById("test");
   target.style.animation = "TransformNone 100s 100s";
 
-  requestAnimationFrame(() => {
+  // We need to wait for MozAfterPaint instead of requestAnimationFrame to
+  // ensure the stacking context has been updated (removed) on the compositor
+  // before we snapshot.
+  window.addEventListener("MozAfterPaint", function firstPaint() {
+    window.removeEventListener("MozAfterPaint", firstPaint, false);
     // Here we have CSS animation on transform:none style element, so
     // there should be a stacking context.
 
     target.style.animation = "";
-    requestAnimationFrame(() => {
+    window.addEventListener("MozAfterPaint", function secondPaint() {
+      window.removeEventListener("MozAfterPaint", secondPaint, false);
       // Now we have only transform:none style, so we should not create any
       // stacking context.
       document.documentElement.classList.remove("reftest-wait");
-    });
-  });
+    }, false);
+  }, false);
 });
 </script>
