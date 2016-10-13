@@ -171,7 +171,7 @@ gfxSVGGlyphsDocument::SetupPresentation()
     if (controller) {
       controller->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
     }
-    mDocument->ImageTracker()->SetImagesNeedAnimating(true);
+    mDocument->ImageTracker()->SetAnimatingState(true);
 
     mViewer = viewer;
     mPresShell = presShell;
