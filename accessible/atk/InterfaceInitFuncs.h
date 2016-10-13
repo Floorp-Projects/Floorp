@@ -27,7 +27,6 @@ void hypertextInterfaceInitCB(AtkHypertextIface* aIface);
 void imageInterfaceInitCB(AtkImageIface* aIface);
 void selectionInterfaceInitCB(AtkSelectionIface* aIface);
 void tableInterfaceInitCB(AtkTableIface *aIface);
-void tableCellInterfaceInitCB(AtkTableCellIface *aIface);
 void textInterfaceInitCB(AtkTextIface* aIface);
 void valueInterfaceInitCB(AtkValueIface *aIface);
 }
