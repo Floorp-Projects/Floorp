@@ -196,8 +196,8 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
 {
   this.startingUpdate_ = false;
   var initialUpdateDelay = 3000;
-  // Add a fuzz of 0-5 minutes.
-  initialUpdateDelay += Math.floor(Math.random() * (5 * 60 * 1000));
+  // Add a fuzz of 0-1 minutes for both v2 and v4 according to Bug 1305478.
+  initialUpdateDelay += Math.floor(Math.random() * (1 * 60 * 1000));
 
   // If the user has never downloaded tables, do the check now.
   log("needsUpdate: " + JSON.stringify(this.needsUpdate_, undefined, 2));

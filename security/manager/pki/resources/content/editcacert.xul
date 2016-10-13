@@ -7,19 +7,18 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<dialog id="editCaCert"
+<dialog id="editCaCert" 
         title="&certmgr.editcacert.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel"
-        ondialogaccept="return onDialogAccept();"
-        onload="onLoad();"
+        ondialogaccept="return doOK();"
+        onload="setWindowName();"
 >
 
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
 
   <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
-  <script type="application/javascript"
-          src="chrome://pippki/content/editcacert.js"/>
+  <script type="application/javascript" src="chrome://pippki/content/editcerts.js"/>
 
   <description id="certmsg"/>
   <separator/>
