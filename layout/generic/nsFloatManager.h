@@ -331,8 +331,15 @@ private:
     bool IsEmpty() const { return mRect.IsEmpty(); }
 
     nsRect ShapeBoxRect() const { return mShapeBoxRect.valueOr(mRect); }
-    nscoord LineLeft(ShapeType aShapeType) const;
-    nscoord LineRight(ShapeType aShapeType) const;
+
+    // aBStart and aBEnd are the starting and ending coordinate of a band.
+    // LineLeft() and LineRight() return the innermost line-left extent and
+    // line-right extent within the given band, respectively.
+    nscoord LineLeft(ShapeType aShapeType, const nscoord aBStart,
+                     const nscoord aBEnd) const;
+    nscoord LineRight(ShapeType aShapeType, const nscoord aBStart,
+                     const nscoord aBEnd) const;
+
     nscoord BStart(ShapeType aShapeType) const
     {
       return aShapeType == ShapeType::Margin ? BStart() : ShapeBoxRect().y;
@@ -341,6 +348,22 @@ private:
     {
       return aShapeType == ShapeType::Margin ? BEnd() : ShapeBoxRect().YMost();
     }
+
+    // Compute the minimum x-axis difference between the bounding shape box
+    // and its rounded corner within the given band (y-axis region). This is
+    // used as a helper function to compute the LineRight() and LineLeft().
+    // See the picture in the implementation for an example.
+    //
+    // Returns the x-axis diff, or 0 if there's no rounded corner within
+    // the given band.
+    static nscoord ComputeEllipseXInterceptDiff(
+      const nscoord aShapeBoxY, const nscoord aShapeBoxYMost,
+      const nscoord aTopCornerRadiusX, const nscoord aTopCornerRadiusY,
+      const nscoord aBottomCornerRadiusX, const nscoord aBottomCornerRadiusY,
+      const nscoord aBandY, const nscoord aBandYMost);
+
+    static nscoord XInterceptAtY(const nscoord aY, const nscoord aRadiusX,
+                                 const nscoord aRadiusY);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     FloatInfo(const FloatInfo& aOther);
