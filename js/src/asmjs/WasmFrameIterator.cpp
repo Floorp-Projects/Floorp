@@ -218,19 +218,19 @@ FrameIterator::lineOrBytecode() const
 static const unsigned PushedRetAddr = 0;
 static const unsigned PostStorePrePopFP = 0;
 # endif
-static const unsigned PushedFP = 16;
-static const unsigned StoredFP = 23;
+static const unsigned PushedFP = 23;
+static const unsigned StoredFP = 30;
 #elif defined(JS_CODEGEN_X86)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
 static const unsigned PostStorePrePopFP = 0;
 # endif
-static const unsigned PushedFP = 11;
-static const unsigned StoredFP = 14;
+static const unsigned PushedFP = 14;
+static const unsigned StoredFP = 17;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned PushedRetAddr = 4;
-static const unsigned PushedFP = 20;
-static const unsigned StoredFP = 24;
+static const unsigned PushedFP = 24;
+static const unsigned StoredFP = 28;
 static const unsigned PostStorePrePopFP = 4;
 #elif defined(JS_CODEGEN_ARM64)
 static const unsigned PushedRetAddr = 0;
@@ -239,8 +239,8 @@ static const unsigned StoredFP = 0;
 static const unsigned PostStorePrePopFP = 0;
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 static const unsigned PushedRetAddr = 8;
-static const unsigned PushedFP = 28;
-static const unsigned StoredFP = 32;
+static const unsigned PushedFP = 32;
+static const unsigned StoredFP = 36;
 static const unsigned PostStorePrePopFP = 4;
 #elif defined(JS_CODEGEN_NONE)
 # if defined(DEBUG)
@@ -281,7 +281,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
     // randomly inserted between two instructions.
     {
 #if defined(JS_CODEGEN_ARM)
-        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 6);
+        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 7);
 #endif
 
         offsets->begin = masm.currentOffset();
@@ -289,7 +289,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
         PushRetAddr(masm);
         MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - offsets->begin);
 
-        masm.loadWasmActivationFromTls(scratch);
+        masm.loadWasmActivationFromSymbolicAddress(scratch);
         masm.push(Address(scratch, WasmActivation::offsetOfFP()));
         MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - offsets->begin);
 
@@ -318,7 +318,7 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason
     if (framePushed)
         masm.addToStackPtr(Imm32(framePushed));
 
-    masm.loadWasmActivationFromTls(scratch);
+    masm.loadWasmActivationFromSymbolicAddress(scratch);
 
     if (reason != ExitReason::None) {
         masm.store32(Imm32(int32_t(ExitReason::None)),
