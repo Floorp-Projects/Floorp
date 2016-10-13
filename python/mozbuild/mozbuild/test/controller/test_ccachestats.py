@@ -124,6 +124,34 @@ class TestCcacheStats(unittest.TestCase):
     max cache size                       6.0 GB
     """
 
+    STAT6 = """
+    cache directory                     /Users/tlin/.ccache
+    primary config                      /Users/tlin/.ccache/ccache.conf
+    secondary config      (readonly)    /usr/local/Cellar/ccache/3.3.2/etc/ccache.conf
+    cache hit (direct)                319287
+    cache hit (preprocessed)          125987
+    cache miss                        749959
+    cache hit rate                     37.25 %
+    called for link                    87978
+    called for preprocessing          418591
+    multiple source files               1861
+    compiler produced no output          122
+    compiler produced empty output       174
+    compile failed                     14330
+    ccache internal error                  1
+    preprocessor error                  9459
+    can't use precompiled header           4
+    bad compiler arguments              2077
+    unsupported source language        18195
+    autoconf compile/link              51485
+    unsupported compiler option          322
+    no input file                     309538
+    cleanups performed                     1
+    files in cache                     17358
+    cache size                          15.4 GB
+    max cache size                      17.2 GB
+    """
+
     def test_parse_garbage_stats_message(self):
         self.assertRaises(ValueError, CCacheStats, self.STAT_GARBAGE)
 
@@ -166,6 +194,14 @@ class TestCcacheStats(unittest.TestCase):
         stats_diff = stat5 - stat4
         self.assertTrue(stat4)
         self.assertTrue(stat5)
+        self.assertTrue(stats_diff)
+
+    def test_stats_version33(self):
+        stat3 = CCacheStats(self.STAT3)
+        stat6 = CCacheStats(self.STAT6)
+        stats_diff = stat6 - stat3
+        self.assertTrue(stat6)
+        self.assertTrue(stat3)
         self.assertTrue(stats_diff)
 
 if __name__ == '__main__':
