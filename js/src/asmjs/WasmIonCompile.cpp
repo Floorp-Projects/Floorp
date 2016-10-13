@@ -983,7 +983,7 @@ class FunctionCompiler
             return true;
         }
 
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Relative);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::FuncDef);
         MIRType ret = ToMIRType(sig.ret());
         auto callee = CalleeDesc::definition(funcDefIndex);
         auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret,
@@ -1030,7 +1030,7 @@ class FunctionCompiler
             callee = CalleeDesc::wasmTable(table, sig.id);
         }
 
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
         auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ToMIRType(sig.ret()),
                                    call.spIncrement_, call.tlsStackOffset_, index);
         if (!ins)
@@ -1051,7 +1051,7 @@ class FunctionCompiler
 
         MOZ_ASSERT(call.tlsStackOffset_ != MWasmCall::DontSaveTls);
 
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
         auto callee = CalleeDesc::import(globalDataOffset);
         auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ToMIRType(ret),
                                    call.spIncrement_, call.tlsStackOffset_);
@@ -1071,7 +1071,7 @@ class FunctionCompiler
             return true;
         }
 
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
         auto callee = CalleeDesc::builtin(builtin);
         auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ToMIRType(ret),
                                    call.spIncrement_, MWasmCall::DontSaveTls);
@@ -1091,7 +1091,7 @@ class FunctionCompiler
             return true;
         }
 
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
         auto* ins = MWasmCall::NewBuiltinInstanceMethodCall(alloc(), desc, builtin,
                                                             call.instanceArg_, call.regArgs_,
                                                             ToMIRType(ret), call.spIncrement_,
