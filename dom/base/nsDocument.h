@@ -94,6 +94,7 @@ namespace mozilla {
 class EventChainPreVisitor;
 namespace dom {
 class BoxObject;
+class ImageTracker;
 class UndoManager;
 struct LifecycleCallbacks;
 class CallbackFunction;
@@ -890,8 +891,6 @@ public:
   virtual mozilla::PendingAnimationTracker*
   GetOrCreatePendingAnimationTracker() override;
 
-  void SetImagesNeedAnimating(bool aAnimating) override;
-
   virtual void SuppressEventHandling(SuppressionType aWhat,
                                      uint32_t aIncrease) override;
 
@@ -983,10 +982,6 @@ public:
   virtual Element *LookupImageElement(const nsAString& aElementId) override;
   virtual void MozSetImageElement(const nsAString& aImageElementId,
                                   Element* aElement) override;
-
-  virtual nsresult AddImage(imgIRequest* aImage) override;
-  virtual nsresult RemoveImage(imgIRequest* aImage, uint32_t aFlags) override;
-  virtual nsresult SetImageLockingState(bool aLocked) override;
 
   // AddPlugin adds a plugin-related element to mPlugins when the element is
   // added to the tree.
@@ -1417,12 +1412,6 @@ public:
 
   bool mInXBLUpdate:1;
 
-  // Whether we're currently holding a lock on all of our images.
-  bool mLockingImages:1;
-
-  // Whether we currently require our images to animate
-  bool mAnimatingImages:1;
-
   // Whether we're currently under a FlushPendingNotifications call to
   // our presshell.  This is used to handle flush reentry correctly.
   bool mInFlush:1;
@@ -1591,9 +1580,6 @@ private:
   nsCString mScrollToRef;
   uint8_t mScrolledToRefAlready : 1;
   uint8_t mChangeScrollPosWhenScrollingToRef : 1;
-
-  // Tracking for images in the document.
-  nsDataHashtable< nsPtrHashKey<imgIRequest>, uint32_t> mImageTracker;
 
   // Tracking for plugins in the document.
   nsTHashtable< nsPtrHashKey<nsIObjectLoadingContent> > mPlugins;

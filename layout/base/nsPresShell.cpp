@@ -195,6 +195,7 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/dom/ImageTracker.h"
 
 #ifdef ANDROID
 #include "nsIDocShellTreeOwner.h"
@@ -10942,7 +10943,7 @@ PresShell::UpdateImageLockingState()
   // We're locked if we're both thawed and active.
   bool locked = !mFrozen && mIsActive;
 
-  nsresult rv = mDocument->SetImageLockingState(locked);
+  nsresult rv = mDocument->ImageTracker()->SetImageLockingState(locked);
 
   if (locked) {
     // Request decodes for visible image frames; we want to start decoding as
