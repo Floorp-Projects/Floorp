@@ -113,7 +113,7 @@ nsDisplaySolidColorRegionGeometry::MoveBy(const nsPoint& aOffset)
   mRegion.MoveBy(aOffset);
 }
 
-nsDisplaySVGEffectsGeometry::nsDisplaySVGEffectsGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder)
+nsDisplayMaskGeometry::nsDisplayMaskGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
   , nsImageGeometryMixin(aItem, aBuilder)
   , mBBox(aItem->BBoxInUserSpace())
@@ -122,7 +122,7 @@ nsDisplaySVGEffectsGeometry::nsDisplaySVGEffectsGeometry(nsDisplaySVGEffects* aI
 {}
 
 void
-nsDisplaySVGEffectsGeometry::MoveBy(const nsPoint& aOffset)
+nsDisplayMaskGeometry::MoveBy(const nsPoint& aOffset)
 {
   mBounds.MoveBy(aOffset);
   mFrameOffsetToReferenceFrame += aOffset;
