@@ -796,7 +796,7 @@ ProfilingFrameIterator::label() const
 void
 wasm::ToggleProfiling(const Code& code, const CallSite& callSite, bool enabled)
 {
-    if (callSite.kind() != CallSite::Relative)
+    if (callSite.kind() != CallSite::FuncDef)
         return;
 
     uint8_t* callerRetAddr = code.segment().base() + callSite.returnAddressOffset();

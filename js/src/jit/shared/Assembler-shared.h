@@ -753,13 +753,14 @@ class AssemblerShared
         return embedsNurseryPointers_;
     }
 
+    template <typename... Args>
     void append(const wasm::CallSiteDesc& desc, CodeOffset retAddr, size_t framePushed,
-                uint32_t funcDefIndex = wasm::CallSiteAndTarget::NOT_DEFINITION)
+                Args&&... args)
     {
-        // framePushed does not include sizeof(AsmJSFrame), so add it in here (see
-        // CallSite::stackDepth).
-        wasm::CallSite callsite(desc, retAddr.offset(), framePushed + sizeof(AsmJSFrame));
-        enoughMemory_ &= callsites_.append(wasm::CallSiteAndTarget(callsite, funcDefIndex));
+        // framePushed does not include sizeof(AsmJSFrame), so add it in explicitly when
+        // setting the CallSite::stackDepth.
+        wasm::CallSite cs(desc, retAddr.offset(), framePushed + sizeof(AsmJSFrame));
+        enoughMemory_ &= callsites_.emplaceBack(cs, mozilla::Forward<Args>(args)...);
     }
     wasm::CallSiteAndTargetVector& callSites() { return callsites_; }
 

@@ -2196,12 +2196,12 @@ class BaseCompiler
 
     void callDefinition(uint32_t funcDefIndex, const FunctionCall& call)
     {
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Relative);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::FuncDef);
         masm.call(desc, funcDefIndex);
     }
 
     void callSymbolic(wasm::SymbolicAddress callee, const FunctionCall& call) {
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
         masm.call(callee);
     }
 
@@ -2230,7 +2230,7 @@ class BaseCompiler
             callee = CalleeDesc::wasmTable(table, sig.id);
         }
 
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
         masm.wasmCallIndirect(desc, callee);
 
         // After return, restore the caller's TLS and pinned registers.
@@ -2245,7 +2245,7 @@ class BaseCompiler
         // There is no need to preserve WasmTlsReg since it has already been
         // spilt to a local slot.
 
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
         CalleeDesc callee = CalleeDesc::import(globalDataOffset);
         masm.wasmCallImport(desc, callee);
 
@@ -2262,7 +2262,7 @@ class BaseCompiler
     void builtinInstanceMethodCall(SymbolicAddress builtin, const ABIArg& instanceArg,
                                    const FunctionCall& call)
     {
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
+        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
         masm.wasmCallBuiltinInstanceMethod(instanceArg, builtin);
     }
 

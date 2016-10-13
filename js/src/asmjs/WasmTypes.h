@@ -716,21 +716,25 @@ struct FuncOffsets : ProfilingOffsets
 
 class CallSiteDesc
 {
-    uint32_t lineOrBytecode_ : 31;
-    uint32_t kind_ : 1;
+    uint32_t lineOrBytecode_ : 30;
+    uint32_t kind_ : 2;
   public:
     enum Kind {
-        Relative,  // pc-relative call
-        Register   // call *register
+        FuncDef,   // pc-relative call to a specific function
+        Dynamic,   // dynamic callee called via register
+        Symbolic   // call to a single symbolic callee
     };
     CallSiteDesc() {}
     explicit CallSiteDesc(Kind kind)
       : lineOrBytecode_(0), kind_(kind)
-    {}
+    {
+        MOZ_ASSERT(kind == Kind(kind_));
+    }
     CallSiteDesc(uint32_t lineOrBytecode, Kind kind)
       : lineOrBytecode_(lineOrBytecode), kind_(kind)
     {
-        MOZ_ASSERT(lineOrBytecode_ == lineOrBytecode, "must fit in 31 bits");
+        MOZ_ASSERT(kind == Kind(kind_));
+        MOZ_ASSERT(lineOrBytecode == lineOrBytecode_);
     }
     uint32_t lineOrBytecode() const { return lineOrBytecode_; }
     Kind kind() const { return Kind(kind_); }
@@ -768,14 +772,18 @@ class CallSiteAndTarget : public CallSite
     uint32_t funcDefIndex_;
 
   public:
+    explicit CallSiteAndTarget(CallSite cs)
+      : CallSite(cs)
+    {
+        MOZ_ASSERT(cs.kind() != FuncDef);
+    }
     CallSiteAndTarget(CallSite cs, uint32_t funcDefIndex)
       : CallSite(cs), funcDefIndex_(funcDefIndex)
-    { }
+    {
+        MOZ_ASSERT(cs.kind() == FuncDef);
+    }
 
-    static const uint32_t NOT_DEFINITION = UINT32_MAX;
-
-    bool isDefinition() const { return funcDefIndex_ != NOT_DEFINITION; }
-    uint32_t funcDefIndex() const { MOZ_ASSERT(isDefinition()); return funcDefIndex_; }
+    uint32_t funcDefIndex() const { MOZ_ASSERT(kind() == FuncDef); return funcDefIndex_; }
 };
 
 typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
