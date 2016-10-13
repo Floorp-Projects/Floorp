@@ -647,22 +647,37 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
     Assembler::patchCall(callerOffset, calleeOffset);
 }
 
+void
+MacroAssembler::callAndPushReturnAddress(Register reg)
+{
+    call(reg);
+}
+
+void
+MacroAssembler::callAndPushReturnAddress(Label* label)
+{
+    call(label);
+}
+
+// ===============================================================
+// Patchable near/far jumps.
+
 CodeOffset
-MacroAssembler::thunkWithPatch()
+MacroAssembler::farJumpWithPatch()
 {
-    return Assembler::thunkWithPatch();
+    return Assembler::farJumpWithPatch();
 }
 
 void
-MacroAssembler::patchThunk(uint32_t thunkOffset, uint32_t targetOffset)
+MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset)
 {
-    Assembler::patchThunk(thunkOffset, targetOffset);
+    Assembler::patchFarJump(farJump, targetOffset);
 }
 
 void
-MacroAssembler::repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset)
+MacroAssembler::repatchFarJump(uint8_t* code, uint32_t farJumpOffset, uint32_t targetOffset)
 {
-    Assembler::repatchThunk(code, thunkOffset, targetOffset);
+    Assembler::repatchFarJump(code, farJumpOffset, targetOffset);
 }
 
 CodeOffset
@@ -681,18 +696,6 @@ void
 MacroAssembler::patchNearJumpToNop(uint8_t* jump)
 {
     Assembler::patchJumpToTwoByteNop(jump);
-}
-
-void
-MacroAssembler::callAndPushReturnAddress(Register reg)
-{
-    call(reg);
-}
-
-void
-MacroAssembler::callAndPushReturnAddress(Label* label)
-{
-    call(label);
 }
 
 // ===============================================================
