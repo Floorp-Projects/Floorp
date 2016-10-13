@@ -2190,6 +2190,14 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 
   if (str.Length() != 1 || IsIMEComposing()) {
     InsertTextAsCommittingComposition(aAttrString, aReplacementRange);
+    // For now, consume keypress events when we dispatch the string with a
+    // composition for preventing to dispatch keypress events later.
+    // TODO: When there is a currentKeyEvent, we should dispatch keypress
+    //       events even if the length of the string is over 1.
+    if (currentKeyEvent) {
+      currentKeyEvent->mKeyPressHandled = true;
+      currentKeyEvent->mKeyPressDispatched = true;
+    }
     return;
   }
 
