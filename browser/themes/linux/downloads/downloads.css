@@ -16,8 +16,6 @@
 
 :root {
   --downloads-item-height: 6em;
-  --downloads-item-border-top-color: hsla(0,0%,100%,.2);
-  --downloads-item-border-bottom-color: hsla(0,0%,0%,.15);
   --downloads-item-font-size-factor: 0.9;
   --downloads-item-target-margin-bottom: 7px;
   --downloads-item-details-margin-top: 1px;
@@ -33,23 +31,6 @@
 @keyfocus@ @itemFocused@ {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
-}
-
-@notKeyfocus@ @itemFinished@[exists]:hover,
-@item@[showingsubview] {
-  border-radius: 3px;
-  border-top: 1px solid hsla(0,0%,100%,.3);
-  border-bottom: 1px solid hsla(0,0%,0%,.2);
-  background-color: Highlight;
-  background-image: linear-gradient(hsla(0,0%,100%,.1), transparent);
-  color: HighlightText;
-  cursor: pointer;
-}
-
-@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover,
-@item@[showingsubview][verdict="Malware"] {
-  background-color: hsl(4, 82%, 47%);
-  color: white;
 }
 
 /*** Button icons ***/

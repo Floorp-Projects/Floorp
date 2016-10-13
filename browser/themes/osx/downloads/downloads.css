@@ -20,8 +20,6 @@
 
 :root {
   --downloads-item-height: 7em;
-  --downloads-item-border-top-color: hsla(0,0%,100%,.07);
-  --downloads-item-border-bottom-color: hsla(0,0%,0%,.2);
   --downloads-item-font-size-factor: 0.95;
   --downloads-item-target-margin-bottom: 6px;
   --downloads-item-details-margin-top: 0;
@@ -33,28 +31,15 @@
   outline-offset: -2px;
 }
 
+@item@[verdict="Malware"] {
+  color: #aa1b08;
+}
+
 /*** Highlighted list items ***/
 
-@keyfocus@ @itemFocused@,
-@notKeyfocus@ @itemFinished@[exists]:hover,
-@item@[showingsubview] {
-  border-radius: 3px;
-  border-top: 1px solid hsla(0,0%,100%,.2);
-  border-bottom: 1px solid hsla(0,0%,0%,.4);
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-@item@[showingsubview] {
-  transition: background-color var(--panelui-subview-transition-duration),
-              color var(--panelui-subview-transition-duration);
-}
-
-@keyfocus@ @itemFocused@[verdict="Malware"],
-@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover,
-@item@[showingsubview][verdict="Malware"] {
-  background-color: hsl(4, 82%, 47%);
-  color: white;
+@keyfocus@ @itemFocused@ {
+  outline: 2px -moz-mac-focusring solid;
+  outline-offset: -2px;
 }
 
 @notKeyfocus@ @itemFinished@[exists]:hover {

@@ -25,7 +25,7 @@
 
 #downloadsListBox {
   background: transparent;
-  padding: 4px;
+  padding: 0;
   color: inherit;
   -moz-appearance: none;
   margin: 0;
@@ -45,7 +45,8 @@
   border-top: 1px solid var(--panel-separator-color);
 }
 
-.downloadsPanelFooter toolbarseparator {
+.downloadsPanelFooter toolbarseparator,
+@item@ > toolbarseparator {
   margin: 0;
   border: 0;
   min-width: 0;
@@ -108,6 +109,11 @@ toolbarseparator.downloadsDropmarkerSplitter {
   margin: 7px 0;
 }
 
+@item@ > toolbarseparator {
+  margin: 10px 0;
+}
+
+@item@:hover > toolbarseparator,
 #downloadsFooter:hover toolbarseparator.downloadsDropmarkerSplitter,
 #downloadsFooter[showingdropdown] toolbarseparator {
   margin: 0;
@@ -168,18 +174,17 @@ richlistitem[type="download"] {
 
 richlistitem[type="download"] {
   margin: 0;
-  border-top: 1px solid var(--downloads-item-border-top-color);
-  border-bottom: 1px solid var(--downloads-item-border-bottom-color);
+  border-bottom: 1px solid var(--panel-separator-color);
   background: transparent;
-  padding: 8px;
-}
-
-richlistitem[type="download"]:first-child {
-  border-top: 1px solid transparent;
+  padding: 0;
 }
 
 richlistitem[type="download"]:last-child {
-  border-bottom: 1px solid transparent;
+  border-bottom: none;
+}
+
+richlistitem[type="download"] > .downloadMainArea {
+  padding: 8px;
 }
 
 .downloadTypeIcon {
@@ -244,21 +249,50 @@ richlistitem[type="download"]:last-child {
   cursor: inherit;
 }
 
+@item@[verdict] > toolbarseparator {
+  visibility: hidden;
+}
+
 .downloadButton {
   -moz-appearance: none;
-  min-width: 0;
-  min-height: 0;
-  margin: 3px;
+  min-width: 58px;
+  margin: 0;
   border: none;
   background: transparent;
-  padding: 5px;
+  padding: 8px;
   list-style-image: url("chrome://browser/skin/downloads/buttons.png");
 }
 
-.downloadButton > .button-box {
-  padding: 0;
+@itemFinished@[exists]:hover > .downloadMainArea,
+@item@:not([verdict]):hover > .downloadButtonArea {
+  background-color: var(--arrowpanel-dimmed);
 }
 
+@itemFinished@[exists] .downloadMainArea:hover,
+@item@:not([verdict]) > .downloadButtonArea:hover,
+@item@[verdict]:hover {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+@itemFinished@[exists] > .downloadMainArea:hover:active,
+@item@:not([verdict]) > .downloadButtonArea:hover:active,
+@item@[verdict]:hover:active {
+  background-color: var(--arrowpanel-dimmed-even-further);
+}
+
+@item@[showingsubview] {
+  background-color: Highlight;
+  color: HighlightText;
+  transition: background-color var(--panelui-subview-transition-duration),
+              color var(--panelui-subview-transition-duration);
+}
+
+@item@[verdict="Malware"]:hover,
+@item@[verdict="Malware"]:hover:active,
+@item@[verdict="Malware"][showingsubview] {
+  background-color: #aa1b08;
+  color: white;
+}
 
 /*** Blocked subview ***/
 

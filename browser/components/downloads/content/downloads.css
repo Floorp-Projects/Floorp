@@ -18,7 +18,8 @@ richlistitem[type="download"]:not([selected]) button {
   display: none;
 }
 
-richlistitem[type="download"].download-state[state="1"]:not([exists]) .downloadShow {
+richlistitem[type="download"].download-state[state="1"]:not([exists]) > .downloadButtonArea,
+richlistitem[type="download"].download-state[state="1"]:not([exists]) > toolbarseparator {
   display: none;
 }
 
@@ -162,6 +163,11 @@ richlistitem.download button {
 .download-state:not(          [state="1"]  /* Finished           */)
                                            .downloadShow,
 
+.download-state:-moz-any(     [state="6"], /* Blocked (parental) */
+                              [state="7"], /* Scanning           */
+                              [state="9"]) /* Blocked (policy)   */
+                                           > toolbarseparator,
+
 /* The "show blocked info" button is shown only in the downloads panel. */
 .downloadShowBlockedInfo
 {
@@ -217,7 +223,7 @@ richlistitem.download button {
 /* Hide the buttons of all downloads except the one that triggered the
    subview. */
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state:not([showingsubview]) .downloadButton {
-  display: none;
+  visibility: hidden;
 }
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton {
   display: inline;
