@@ -2023,12 +2023,43 @@ WebGLContext::Uniform4f(WebGLUniformLocation* loc, GLfloat a1, GLfloat a2,
 ////////////////////////////////////////
 // Array
 
+static bool
+ValidateArrOffsetAndCount(WebGLContext* webgl, const char* funcName, size_t elemsAvail,
+                          GLuint elemOffset, GLuint elemCountOverride,
+                          size_t* const out_elemCount)
+{
+    if (elemOffset > elemsAvail) {
+        webgl->ErrorInvalidValue("%s: Bad offset into list.", funcName);
+        return false;
+    }
+    elemsAvail -= elemOffset;
+
+    if (elemCountOverride) {
+        if (elemCountOverride > elemsAvail) {
+            webgl->ErrorInvalidValue("%s: Bad count override for sub-list.", funcName);
+            return false;
+        }
+        elemsAvail = elemCountOverride;
+    }
+
+    *out_elemCount = elemsAvail;
+    return true;
+}
+
 void
 WebGLContext::UniformNiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
-                         const IntArr& arr)
+                         const Int32Arr& arr, GLuint elemOffset, GLuint elemCountOverride)
 {
+    size_t elemCount;
+    if (!ValidateArrOffsetAndCount(this, funcName, arr.elemCount, elemOffset,
+                                   elemCountOverride, &elemCount))
+    {
+        return;
+    }
+    const auto elemBytes = arr.elemBytes + elemOffset;
+
     uint32_t numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, N, LOCAL_GL_INT, arr.dataCount, funcName,
+    if (!ValidateUniformArraySetter(loc, N, LOCAL_GL_INT, elemCount, funcName,
                                     &numElementsToUpload))
     {
         return;
@@ -2036,7 +2067,7 @@ WebGLContext::UniformNiv(const char* funcName, uint8_t N, WebGLUniformLocation* 
 
     bool error;
     const ValidateIfSampler samplerValidator(this, funcName, loc, numElementsToUpload,
-                                             arr.data, &error);
+                                             elemBytes, &error);
     if (error)
         return;
 
@@ -2049,16 +2080,25 @@ WebGLContext::UniformNiv(const char* funcName, uint8_t N, WebGLUniformLocation* 
     const auto func = kFuncList[N-1];
 
     MakeContextCurrent();
-    (gl->*func)(loc->mLoc, numElementsToUpload, arr.data);
+    (gl->*func)(loc->mLoc, numElementsToUpload, elemBytes);
 }
 
 void
-WebGL2Context::UniformNuiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
-                           const UintArr& arr)
+WebGLContext::UniformNuiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
+                          const Uint32Arr& arr, GLuint elemOffset,
+                          GLuint elemCountOverride)
 {
+    size_t elemCount;
+    if (!ValidateArrOffsetAndCount(this, funcName, arr.elemCount, elemOffset,
+                                   elemCountOverride, &elemCount))
+    {
+        return;
+    }
+    const auto elemBytes = arr.elemBytes + elemOffset;
+
     uint32_t numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, N, LOCAL_GL_UNSIGNED_INT, arr.dataCount,
-                                    funcName, &numElementsToUpload))
+    if (!ValidateUniformArraySetter(loc, N, LOCAL_GL_UNSIGNED_INT, elemCount, funcName,
+                                    &numElementsToUpload))
     {
         return;
     }
@@ -2073,15 +2113,24 @@ WebGL2Context::UniformNuiv(const char* funcName, uint8_t N, WebGLUniformLocation
     const auto func = kFuncList[N-1];
 
     MakeContextCurrent();
-    (gl->*func)(loc->mLoc, numElementsToUpload, arr.data);
+    (gl->*func)(loc->mLoc, numElementsToUpload, elemBytes);
 }
 
 void
 WebGLContext::UniformNfv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
-                         const FloatArr& arr)
+                         const Float32Arr& arr, GLuint elemOffset,
+                         GLuint elemCountOverride)
 {
+    size_t elemCount;
+    if (!ValidateArrOffsetAndCount(this, funcName, arr.elemCount, elemOffset,
+                                   elemCountOverride, &elemCount))
+    {
+        return;
+    }
+    const auto elemBytes = arr.elemBytes + elemOffset;
+
     uint32_t numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, N, LOCAL_GL_FLOAT, arr.dataCount, funcName,
+    if (!ValidateUniformArraySetter(loc, N, LOCAL_GL_FLOAT, elemCount, funcName,
                                     &numElementsToUpload))
     {
         return;
@@ -2097,16 +2146,25 @@ WebGLContext::UniformNfv(const char* funcName, uint8_t N, WebGLUniformLocation* 
     const auto func = kFuncList[N-1];
 
     MakeContextCurrent();
-    (gl->*func)(loc->mLoc, numElementsToUpload, arr.data);
+    (gl->*func)(loc->mLoc, numElementsToUpload, elemBytes);
 }
 
 void
 WebGLContext::UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
                                  WebGLUniformLocation* loc, bool transpose,
-                                 const FloatArr& arr)
+                                 const Float32Arr& arr, GLuint elemOffset,
+                                 GLuint elemCountOverride)
 {
+    size_t elemCount;
+    if (!ValidateArrOffsetAndCount(this, funcName, arr.elemCount, elemOffset,
+                                   elemCountOverride, &elemCount))
+    {
+        return;
+    }
+    const auto elemBytes = arr.elemBytes + elemOffset;
+
     uint32_t numElementsToUpload;
-    if (!ValidateUniformMatrixArraySetter(loc, A, B, LOCAL_GL_FLOAT, arr.dataCount,
+    if (!ValidateUniformMatrixArraySetter(loc, A, B, LOCAL_GL_FLOAT, elemCount,
                                           transpose, funcName, &numElementsToUpload))
     {
         return;
@@ -2129,7 +2187,7 @@ WebGLContext::UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
     const auto func = kFuncList[3*(A-2) + (B-2)];
 
     MakeContextCurrent();
-    (gl->*func)(loc->mLoc, numElementsToUpload, false, arr.data);
+    (gl->*func)(loc->mLoc, numElementsToUpload, false, elemBytes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

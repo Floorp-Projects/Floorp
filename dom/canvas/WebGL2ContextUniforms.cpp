@@ -27,7 +27,7 @@ WebGL2Context::ValidateUniformMatrixTranspose(bool /*transpose*/, const char* /*
 // Uniforms
 
 void
-WebGL2Context::Uniform1ui(WebGLUniformLocation* loc, GLuint v0)
+WebGLContext::Uniform1ui(WebGLUniformLocation* loc, GLuint v0)
 {
     if (!ValidateUniformSetter(loc, 1, LOCAL_GL_UNSIGNED_INT, "uniform1ui"))
         return;
@@ -37,7 +37,7 @@ WebGL2Context::Uniform1ui(WebGLUniformLocation* loc, GLuint v0)
 }
 
 void
-WebGL2Context::Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1)
+WebGLContext::Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1)
 {
     if (!ValidateUniformSetter(loc, 2, LOCAL_GL_UNSIGNED_INT, "uniform2ui"))
         return;
@@ -47,7 +47,7 @@ WebGL2Context::Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1)
 }
 
 void
-WebGL2Context::Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2)
+WebGLContext::Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2)
 {
     if (!ValidateUniformSetter(loc, 3, LOCAL_GL_UNSIGNED_INT, "uniform3ui"))
         return;
@@ -57,8 +57,8 @@ WebGL2Context::Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuin
 }
 
 void
-WebGL2Context::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2,
-                          GLuint v3)
+WebGLContext::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2,
+                         GLuint v3)
 {
     if (!ValidateUniformSetter(loc, 4, LOCAL_GL_UNSIGNED_INT, "uniform4ui"))
         return;
@@ -66,7 +66,6 @@ WebGL2Context::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuin
     MakeContextCurrent();
     gl->fUniform4ui(loc->mLoc, v0, v1, v2, v3);
 }
-
 
 // -------------------------------------------------------------------------
 // Uniform Buffer Objects and Transform Feedback Buffers
