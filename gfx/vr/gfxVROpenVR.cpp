@@ -455,6 +455,18 @@ VRControllerOpenVR::~VRControllerOpenVR()
   MOZ_COUNT_DTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
 }
 
+void
+VRControllerOpenVR::SetTrackedIndex(uint32_t aTrackedIndex)
+{
+  mTrackedIndex = aTrackedIndex;
+}
+
+uint32_t
+VRControllerOpenVR::GetTrackedIndex()
+{
+  return mTrackedIndex;
+}
+
 VRControllerManagerOpenVR::VRControllerManagerOpenVR()
   : mOpenVRInstalled(false), mVRSystem(nullptr)
 {
@@ -573,6 +585,8 @@ VRControllerManagerOpenVR::ScanForDevices()
     }
 
     RefPtr<VRControllerOpenVR> openVRController = new VRControllerOpenVR();
+    openVRController->SetIndex(mControllerCount);
+    openVRController->SetTrackedIndex(trackedDevice);
     mOpenVRController.AppendElement(openVRController);
 
     // Not already present, add it.
