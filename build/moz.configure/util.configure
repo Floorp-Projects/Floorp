@@ -360,7 +360,7 @@ never = dependable(False)
 def delayed_getattr(func, key):
     deps = __sandbox__._depends.get(func, ())
     if deps:
-        deps = deps.dependencies
+        deps = deps.sandboxed_dependencies
 
     def result(value, _=None):
         # The @depends function we're being passed may have returned

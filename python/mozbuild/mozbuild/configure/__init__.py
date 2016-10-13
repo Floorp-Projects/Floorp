@@ -50,14 +50,32 @@ class SandboxDependsFunction(object):
 
 
 class DependsFunction(object):
-    __slots__ = ('func', 'dependencies')
-    def __init__(self, func, dependencies):
+    __slots__ = ('func', 'dependencies', 'sandboxed')
+    def __init__(self, sandbox, func, dependencies):
+        assert isinstance(sandbox, ConfigureSandbox)
         self.func = func
         self.dependencies = dependencies
+        self.sandboxed = wraps(func)(SandboxDependsFunction())
+        sandbox._depends[self.sandboxed] = self
 
     @property
     def name(self):
         return self.func.__name__
+
+    @property
+    def sandboxed_dependencies(self):
+        return [
+            d.sandboxed if isinstance(d, DependsFunction) else d
+            for d in self.dependencies
+        ]
+
+    def __repr__(self):
+        return '<%s.%s %s(%s)>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.name,
+            ', '.join(repr(d) for d in self.dependencies),
+        )
 
 
 class SandboxedGlobal(dict):
@@ -309,6 +327,10 @@ class ConfigureSandbox(dict):
 
     def _value_for(self, obj):
         if isinstance(obj, SandboxDependsFunction):
+            assert obj in self._depends
+            return self._value_for_depends(self._depends[obj])
+
+        elif isinstance(obj, DependsFunction):
             return self._value_for_depends(obj)
 
         elif isinstance(obj, Option):
@@ -318,24 +340,22 @@ class ConfigureSandbox(dict):
 
     @memoize
     def _value_for_depends(self, obj):
-        assert obj in self._depends
-        f = self._depends[obj]
-        assert not inspect.isgeneratorfunction(f.func)
-        with_help = self._help_option in f.dependencies
+        assert not inspect.isgeneratorfunction(obj.func)
+        with_help = self._help_option in obj.dependencies
         if with_help:
-            for arg in f.dependencies:
-                if isinstance(arg, SandboxDependsFunction):
-                    if self._help_option not in self._depends[arg].dependencies:
+            for arg in obj.dependencies:
+                if isinstance(arg, DependsFunction):
+                    if self._help_option not in arg.dependencies:
                         raise ConfigureError(
                             "`%s` depends on '--help' and `%s`. "
                             "`%s` must depend on '--help'"
-                            % (f.name, arg.__name__, arg.__name__))
+                            % (obj.name, arg.name, arg.name))
         elif self._help:
             raise ConfigureError("Missing @depends for `%s`: '--help'" %
-                                 f.name)
+                                 obj.name)
 
-        resolved_args = [self._value_for(d) for d in f.dependencies]
-        return f.func(*resolved_args)
+        resolved_args = [self._value_for(d) for d in obj.dependencies]
+        return obj.func(*resolved_args)
 
     @memoize
     def _value_for_option(self, option):
@@ -445,6 +465,7 @@ class ConfigureSandbox(dict):
                 dependencies.append(arg)
             elif isinstance(arg, SandboxDependsFunction):
                 assert arg in self._depends
+                arg = self._depends[arg]
                 dependencies.append(arg)
             else:
                 raise TypeError(
@@ -457,18 +478,17 @@ class ConfigureSandbox(dict):
                 raise ConfigureError(
                     'Cannot decorate generator functions with @depends')
             func, glob = self._prepare_function(func)
-            dummy = wraps(func)(SandboxDependsFunction())
-            self._depends[dummy] = DependsFunction(func, dependencies)
+            depends = DependsFunction(self, func, dependencies)
 
             # Only @depends functions with a dependency on '--help' are
             # executed immediately. Everything else is queued for later
             # execution.
             if self._help_option in dependencies:
-                self._value_for(dummy)
+                self._value_for(depends)
             elif not self._help:
-                self._execution_queue.append((self._value_for, (dummy,)))
+                self._execution_queue.append((self._value_for, (depends,)))
 
-            return dummy
+            return depends.sandboxed
 
         return decorator
 
