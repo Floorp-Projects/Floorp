@@ -227,10 +227,24 @@ public class Tabs implements GeckoEventListener {
 
         // Suppress the ADDED event to prevent animation of tabs created via session restore.
         if (mInitialTabsAdded) {
-            notifyListeners(tab, TabEvents.ADDED);
+            notifyListeners(tab, TabEvents.ADDED,
+                    Integer.toString(getPrivacySpecificTabIndex(tabIndex, isPrivate)));
         }
 
         return tab;
+    }
+
+    // Return the index, among those tabs whose privacy setting matches isPrivate, of the tab at
+    // position index in mOrder.  Returns -1, for "new last tab", when index is -1.
+    private int getPrivacySpecificTabIndex(int index, boolean isPrivate) {
+        int privacySpecificIndex = -1;
+        for (int i = 0; i <= index; i++) {
+            final Tab tab = mOrder.get(i);
+            if (tab.isPrivate() == isPrivate) {
+                privacySpecificIndex++;
+            }
+        }
+        return privacySpecificIndex;
     }
 
     public synchronized void removeTab(int id) {
