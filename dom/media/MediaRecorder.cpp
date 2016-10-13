@@ -777,15 +777,6 @@ private:
       }
     }
 
-    // Try to use direct listeners if possible
-    if (domStream && domStream->GetInputStream()) {
-      mInputStream = domStream->GetInputStream()->AsSourceStream();
-      if (mInputStream) {
-        mInputStream->AddDirectListener(mEncoder.get());
-        mEncoder->SetDirectConnect(true);
-      }
-    }
-
     // Create a thread to read encode media data from MediaEncoder.
     if (!mReadThread) {
       nsresult rv = NS_NewNamedThread("Media_Encoder", getter_AddRefs(mReadThread));
@@ -845,13 +836,6 @@ private:
   }
   void CleanupStreams()
   {
-    if (mInputStream) {
-      if (mEncoder) {
-        mInputStream->RemoveDirectListener(mEncoder.get());
-      }
-      mInputStream = nullptr;
-    }
-
     if (mTrackUnionStream) {
       if (mEncoder) {
         nsTArray<RefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
@@ -930,7 +914,6 @@ private:
   // Receive track data from source and dispatch to Encoder.
   // Pause/ Resume controller.
   RefPtr<ProcessedMediaStream> mTrackUnionStream;
-  RefPtr<SourceMediaStream> mInputStream;
   nsTArray<RefPtr<MediaInputPort>> mInputPorts;
 
   // Stream currently recorded.
