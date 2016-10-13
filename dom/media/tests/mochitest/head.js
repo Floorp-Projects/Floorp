@@ -66,7 +66,8 @@ AudioStreamAnalyser.prototype = {
    */
   enableDebugCanvas: function() {
     var cvs = this.debugCanvas = document.createElement("canvas");
-    document.getElementById("content").appendChild(cvs);
+    const content = document.getElementById("content");
+    content.insertBefore(cvs, content.children[0]);
 
     // Easy: 1px per bin
     cvs.width = this.analyser.frequencyBinCount;

@@ -343,13 +343,10 @@ add_task(function* test_update_annos() {
   let guids = yield populateTree(PlacesUtils.bookmarks.menuGuid, {
     kind: "folder",
     title: "folder",
-    description: "Folder description",
   }, {
     kind: "bookmark",
     title: "bmk",
     url: "https://example.com",
-    description: "Bookmark description",
-    loadInSidebar: true,
   });
 
   do_print("Add folder description");
@@ -1000,6 +997,148 @@ add_task(function* test_insert_orphans() {
     let child = yield PlacesUtils.bookmarks.fetch({ guid: childGuid });
     equal(child.parentGuid, parentGuid,
       "Should reparent child after inserting missing parent");
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(function* test_fetch() {
+  let folder = yield PlacesSyncUtils.bookmarks.insert({
+    syncId: makeGuid(),
+    parentSyncId: "menu",
+    kind: "folder",
+    description: "Folder description",
+  });
+  let bmk = yield PlacesSyncUtils.bookmarks.insert({
+    syncId: makeGuid(),
+    parentSyncId: "menu",
+    kind: "bookmark",
+    url: "https://example.com",
+    description: "Bookmark description",
+    loadInSidebar: true,
+    tags: ["taggy"],
+  });
+  let folderBmk = yield PlacesSyncUtils.bookmarks.insert({
+    syncId: makeGuid(),
+    parentSyncId: folder.syncId,
+    kind: "bookmark",
+    url: "https://example.org",
+    keyword: "kw",
+  });
+  let folderSep = yield PlacesSyncUtils.bookmarks.insert({
+    syncId: makeGuid(),
+    parentSyncId: folder.syncId,
+    kind: "separator",
+  });
+  let tagQuery = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "query",
+    syncId: makeGuid(),
+    parentSyncId: "toolbar",
+    url: "place:type=7&folder=90",
+    folder: "taggy",
+    title: "Tagged stuff",
+  });
+  let [, tagFolderId] = /\bfolder=(\d+)\b/.exec(tagQuery.url.pathname);
+  let smartBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "query",
+    syncId: makeGuid(),
+    parentSyncId: "toolbar",
+    url: "place:folder=TOOLBAR",
+    query: "BookmarksToolbar",
+    title: "Bookmarks toolbar query",
+  });
+
+  do_print("Fetch empty folder with description");
+  {
+    let item = yield PlacesSyncUtils.bookmarks.fetch(folder.syncId);
+    deepEqual(item, {
+      syncId: folder.syncId,
+      kind: "folder",
+      parentSyncId: "menu",
+      description: "Folder description",
+      childSyncIds: [folderBmk.syncId, folderSep.syncId],
+      parentTitle: "Bookmarks Menu",
+    }, "Should include description, children, and parent title in folder");
+  }
+
+  do_print("Fetch bookmark with description, sidebar anno, and tags");
+  {
+    let item = yield PlacesSyncUtils.bookmarks.fetch(bmk.syncId);
+    deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId", "url",
+      "tags", "description", "loadInSidebar", "parentTitle"].sort(),
+      "Should include bookmark-specific properties");
+    equal(item.syncId, bmk.syncId, "Sync ID should match");
+    equal(item.url.href, "https://example.com/", "Should return URL");
+    equal(item.parentSyncId, "menu", "Should return parent sync ID");
+    deepEqual(item.tags, ["taggy"], "Should return tags");
+    equal(item.description, "Bookmark description", "Should return bookmark description");
+    strictEqual(item.loadInSidebar, true, "Should return sidebar anno");
+    equal(item.parentTitle, "Bookmarks Menu", "Should return parent title");
+  }
+
+  do_print("Fetch bookmark with keyword; without parent title or annos");
+  {
+    let item = yield PlacesSyncUtils.bookmarks.fetch(folderBmk.syncId);
+    deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
+      "url", "keyword", "tags", "loadInSidebar"].sort(),
+      "Should omit blank bookmark-specific properties");
+    strictEqual(item.loadInSidebar, false, "Should not load bookmark in sidebar");
+    deepEqual(item.tags, [], "Tags should be empty");
+    equal(item.keyword, "kw", "Should return keyword");
+  }
+
+  do_print("Fetch separator");
+  {
+    let item = yield PlacesSyncUtils.bookmarks.fetch(folderSep.syncId);
+    strictEqual(item.index, 1, "Should return separator position");
+  }
+
+  do_print("Fetch tag query");
+  {
+    let item = yield PlacesSyncUtils.bookmarks.fetch(tagQuery.syncId);
+    deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
+      "url", "title", "folder", "parentTitle"].sort(),
+      "Should include query-specific properties");
+    equal(item.url.href, `place:type=7&folder=${tagFolderId}`, "Should not rewrite outgoing tag queries");
+    equal(item.folder, "taggy", "Should return tag name for tag queries");
+  }
+
+  do_print("Fetch smart bookmark");
+  {
+    let item = yield PlacesSyncUtils.bookmarks.fetch(smartBmk.syncId);
+    deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
+      "url", "title", "query", "parentTitle"].sort(),
+      "Should include smart bookmark-specific properties");
+    equal(item.query, "BookmarksToolbar", "Should return query name for smart bookmarks");
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(function* test_fetch_livemark() {
+  let { server, site, stopServer } = makeLivemarkServer();
+
+  try {
+    do_print("Create livemark");
+    let livemark = yield PlacesUtils.livemarks.addLivemark({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      feedURI: uri(site + "/feed/1"),
+      siteURI: uri(site),
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+    });
+    PlacesUtils.annotations.setItemAnnotation(livemark.id, DESCRIPTION_ANNO,
+      "Livemark description", 0, PlacesUtils.annotations.EXPIRE_NEVER);
+
+    do_print("Fetch livemark");
+    let item = yield PlacesSyncUtils.bookmarks.fetch(livemark.guid);
+    deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
+      "description", "feed", "site", "parentTitle"].sort(),
+      "Should include livemark-specific properties");
+    equal(item.description, "Livemark description", "Should return description");
+    equal(item.feed.href, site + "/feed/1", "Should return feed URL");
+    equal(item.site.href, site + "/", "Should return site URL");
+  } finally {
+    yield stopServer();
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();

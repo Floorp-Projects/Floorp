@@ -11,9 +11,10 @@ body {
   font-size: 24pt;
 }
 
-/* use full names */
+/* Bitstream Vera must be adjacent to DejaVu to because the latter is picked
+   up by fontconfig aliases for the former. */
 
-p { font-family: Helvetica Neue, Bitstream Vera Sans, FreeSans, SwissA, DejaVu Sans, Arial, serif; }
+p { font-family: Helvetica Neue, Bitstream Vera Sans, DejaVu Sans, FreeSans, SwissA, Arial, serif; }
 
 .regular {  }
 .bold { font-weight: bold; }

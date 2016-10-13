@@ -3,11 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-This script implements the `mach devtools-css-db` command. It runs the C preprocessor
-on the CSS properties header file to get the list of preferences associated with
-a specific property, and it runs an xpcshell script that uses inIDOMUtils to query
-the CSS properties used by the browser. This information is used to generate the
-properties-db.js file.
+This script implements the `mach devtools-css-db` command. It runs an xpcshell script
+that uses inIDOMUtils to query the CSS properties used by the browser. This information
+is used to generate the properties-db.js file.
 """
 
 import json
@@ -15,7 +13,6 @@ import os
 import sys
 import string
 import subprocess
-from mozbuild import shellutil
 from mozbuild.base import (
     MozbuildObject,
     MachCommandBase,
@@ -42,45 +39,11 @@ class MachCommands(MachCommandBase):
         """Generate the static css properties database for devtools and write it to file."""
 
         print("Re-generating the css properties database...")
-        preferences = self.get_preferences()
         db = self.get_properties_db_from_xpcshell()
 
         self.output_template({
-            'preferences': stringify(preferences),
             'cssProperties': stringify(db['cssProperties']),
             'pseudoElements': stringify(db['pseudoElements'])})
-
-    def get_preferences(self):
-        """Get all of the preferences associated with enabling and disabling a property."""
-        # Build the command to run the preprocessor on PythonCSSProps.h
-        headerPath = resolve_path(self.topsrcdir, 'layout/style/PythonCSSProps.h')
-
-        cpp = self.substs['CPP']
-
-        if not cpp:
-            print("Unable to find the cpp program. Please do a full, non-artifact")
-            print("build and try this again.")
-            sys.exit(1)
-
-        if type(cpp) is list:
-            cmd = cpp
-        else:
-            cmd = shellutil.split(cpp)
-        cmd += shellutil.split(self.substs['ACDEFINES'])
-        cmd.append(headerPath)
-
-        # The preprocessed list takes the following form:
-        # [ (name, prop, id, flags, pref, proptype), ... ]
-        preprocessed = eval(subprocess.check_output(cmd))
-
-        # Map this list
-        # (name, prop, id, flags, pref, proptype) => (name, pref)
-        preferences = [
-            (name, pref)
-            for name, prop, id, flags, pref, proptype in preprocessed
-            if 'CSS_PROPERTY_INTERNAL' not in flags]
-
-        return preferences
 
     def get_properties_db_from_xpcshell(self):
         """Generate the static css properties db for devtools from an xpcshell script."""
@@ -103,9 +66,9 @@ class MachCommands(MachCommandBase):
         contents = subprocess.check_output([xpcshell_path, '-g', gre_path,
                                             '-a', browser_path, script_path],
                                            env = sub_env)
-        # Extract just the first line of output, since a debug-build
-        # xpcshell might emit extra output that we don't want.
-        contents = contents.split('\n')[0]
+        # Extract just the output between the delimiters as the xpcshell output can
+        # have extra output that we don't want.
+        contents = contents.split('DEVTOOLS_CSS_DB_DELIMITER')[1]
 
         return json.loads(contents)
 

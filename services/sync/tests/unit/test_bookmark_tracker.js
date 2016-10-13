@@ -9,6 +9,7 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource:///modules/PlacesUIUtils.jsm");
 
 Service.engineManager.register(BookmarksEngine);
 var engine = Service.engineManager.get("bookmarks");
@@ -64,6 +65,13 @@ function* verifyTrackedItems(tracked) {
 function* verifyTrackedCount(expected) {
   let changes = engine.pullNewChanges();
   equal(changes.count(), expected);
+}
+
+// Copied from PlacesSyncUtils.jsm.
+function findAnnoItems(anno, val) {
+  let annos = PlacesUtils.annotations;
+  return annos.getItemsWithAnnotation(anno, {}).filter(id =>
+    annos.getItemAnnotation(id, anno) == val);
 }
 
 add_task(function* test_tracking() {
@@ -1427,6 +1435,64 @@ add_task(function* test_onItemDeleted_tree() {
 
     yield verifyTrackedItems([fx_guid, tb_guid, folder1_guid, folder2_guid]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);
+  } finally {
+    _("Clean up.");
+    yield cleanup();
+  }
+});
+
+add_task(function* test_mobile_query() {
+  _("Ensure we correctly create the mobile query");
+
+  try {
+    // Creates the organizer queries as a side effect.
+    let leftPaneId = PlacesUIUtils.leftPaneFolderId;
+    _(`Left pane root ID: ${leftPaneId}`);
+
+    let allBookmarksIds = findAnnoItems("PlacesOrganizer/OrganizerQuery", "AllBookmarks");
+    equal(allBookmarksIds.length, 1, "Should create folder with all bookmarks queries");
+    let allBookmarkGuid = yield PlacesUtils.promiseItemGuid(allBookmarksIds[0]);
+
+    _("Try creating query after organizer is ready");
+    tracker._ensureMobileQuery();
+    let queryIds = findAnnoItems("PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
+    equal(queryIds.length, 0, "Should not create query without any mobile bookmarks");
+
+    _("Insert mobile bookmark, then create query");
+    yield PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.mobileGuid,
+      url: "https://mozilla.org",
+    });
+    tracker._ensureMobileQuery();
+    queryIds = findAnnoItems("PlacesOrganizer/OrganizerQuery", "MobileBookmarks", {});
+    equal(queryIds.length, 1, "Should create query once mobile bookmarks exist");
+
+    let queryId = queryIds[0];
+    let queryGuid = yield PlacesUtils.promiseItemGuid(queryId);
+
+    let queryInfo = yield PlacesUtils.bookmarks.fetch(queryGuid);
+    equal(queryInfo.url, `place:folder=${PlacesUtils.mobileFolderId}`, "Query should point to mobile root");
+    equal(queryInfo.title, "Mobile Bookmarks", "Query title should be localized");
+    equal(queryInfo.parentGuid, allBookmarkGuid, "Should append mobile query to all bookmarks queries");
+
+    _("Rename root and query, then recreate");
+    yield PlacesUtils.bookmarks.update({
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      title: "renamed root",
+    });
+    yield PlacesUtils.bookmarks.update({
+      guid: queryGuid,
+      title: "renamed query",
+    });
+    tracker._ensureMobileQuery();
+    let rootInfo = yield PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.mobileGuid);
+    equal(rootInfo.title, "Mobile Bookmarks", "Should fix root title");
+    queryInfo = yield PlacesUtils.bookmarks.fetch(queryGuid);
+    equal(queryInfo.title, "Mobile Bookmarks", "Should fix query title");
+
+    _("We shouldn't track the query or the left pane root");
+    yield verifyTrackedCount(0);
+    do_check_eq(tracker.score, 0);
   } finally {
     _("Clean up.");
     yield cleanup();

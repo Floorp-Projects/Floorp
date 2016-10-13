@@ -19,7 +19,11 @@ const { testing: isTesting } = require("devtools/shared/flags");
 const {ViewHelpers, Heritage} = require("devtools/client/shared/widgets/view-helpers");
 const {PluralForm} = require("devtools/shared/plural-form");
 const {Filters} = require("./filter-predicates");
-const {getFormDataSections, formDataURI, writeHeaderText, getKeyWithEvent} = require("./request-utils");
+const {getFormDataSections,
+       formDataURI,
+       writeHeaderText,
+       getKeyWithEvent,
+       getUriHostPort} = require("./request-utils");
 const {L10N} = require("./l10n");
 const {RequestsMenuView} = require("./requests-menu-view");
 
@@ -1315,7 +1319,7 @@ NetworkDetailsView.prototype = {
       setValue("#security-ciphersuite-value", securityInfo.cipherSuite);
 
       // Host header
-      let domain = NetMonitorView.RequestsMenu._getUriHostPort(url);
+      let domain = getUriHostPort(url);
       let hostHeader = L10N.getFormatStr("netmonitor.security.hostHeader",
         domain);
       setValue("#security-info-host-header", hostHeader);

@@ -677,32 +677,6 @@ private:
     return GetAmpleVideoFrames() / 2;
   }
 
-  bool DonePrerollingAudio()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return !IsAudioDecoding() ||
-        GetDecodedAudioDuration() >= AudioPrerollUsecs() * mPlaybackRate;
-  }
-
-  bool DonePrerollingVideo()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return !IsVideoDecoding() ||
-        static_cast<uint32_t>(VideoQueue().GetSize()) >=
-            VideoPrerollFrames() * mPlaybackRate + 1;
-  }
-
-  void MaybeStopPrerolling();
-
-  // When we start decoding (either for the first time, or after a pause)
-  // we may be low on decoded data. We don't want our "low data" logic to
-  // kick in and decide that we're low on decoded data because the download
-  // can't keep up with the decode, and cause us to pause playback. So we
-  // have a "preroll" stage, where we ignore the results of our "low data"
-  // logic during the first few frames of our decode. This occurs during
-  // playback.
-  bool mIsPrerolling = false;
-
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
 

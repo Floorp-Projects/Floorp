@@ -31,7 +31,7 @@
     const SAMPLE_TEXT = "Some text in a text field.";
     const SEARCH_TEXT = "Text Test";
     const NOT_FOUND_TEXT = "This text is not on the page."
-    const ITERATOR_TIMEOUT = gPrefsvc.getIntPref("findbar.iteratorTimeout") + 20;
+    const ITERATOR_TIMEOUT = gPrefsvc.getIntPref("findbar.iteratorTimeout");
 
     var gFindBar = null;
     var gBrowser;
@@ -255,7 +255,7 @@
         };
         gFindBar.browser.finder.addResultListener(listener);
         // Make sure we resolve _at least_ after five times the find iterator timeout.
-        setTimeout(resolve, ITERATOR_TIMEOUT * 5);
+        setTimeout(resolve, (ITERATOR_TIMEOUT * 5) + 20);
       });
     }
 
@@ -523,7 +523,7 @@
       if (matchCase.checked) {
         promise = promiseFindResult();
         matchCase.click();
-        yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT));
+        yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT + 20));
         yield promise;
       }
 
@@ -558,7 +558,13 @@
         gFindBar._findField.select();
         gFindBar._findField.focus();
 
-        yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT));
+        let timeout = ITERATOR_TIMEOUT;
+        if (test.text.length == 1)
+          timeout *= 4;
+        else if (test.text.length == 2)
+          timeout *= 2;
+        timeout += 20;
+        yield new Promise(resolve => setTimeout(resolve, timeout));
         yield enterStringIntoFindField(test.text, false);
         yield promiseMatchesCountResult();
         let matches = foundMatches.value.match(regex);
@@ -567,7 +573,7 @@
         } else {
           assertMatches(test, matches);
           for (let i = 1; i < test.total; i++) {
-            yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT));
+            yield new Promise(resolve => setTimeout(resolve, timeout));
             gFindBar.onFindAgainCommand();
             yield promiseMatchesCountResult();
             // test.current + 1, test.current + 2, ..., test.total, 1, ..., test.current
@@ -659,7 +665,7 @@
       let result = yield promise;
       is(result.result, Ci.nsITypeAheadFind.FIND_FOUND, "Text should be found");
 
-      yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT));
+      yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT + 20));
       promise = promiseFindResult();
       let check = gFindBar.getElement("find-entire-word");
       check.click();
