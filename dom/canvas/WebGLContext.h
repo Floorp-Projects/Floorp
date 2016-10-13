@@ -870,10 +870,11 @@ protected:
 public:
     void CompressedTexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
                               GLsizei width, GLsizei height, GLint border,
-                              const dom::ArrayBufferView& view);
+                              const dom::ArrayBufferView& view, GLuint srcElemOffset = 0);
     void CompressedTexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset,
                                  GLint yOffset, GLsizei width, GLsizei height,
-                                 GLenum unpackFormat, const dom::ArrayBufferView& view);
+                                 GLenum unpackFormat, const dom::ArrayBufferView& view,
+                                 GLuint srcElemOffset = 0);
 
     void CopyTexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
                         GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
@@ -887,43 +888,55 @@ public:
                     GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
                     GLenum unpackType,
                     const dom::Nullable<dom::ArrayBufferView>& maybeView,
-                    ErrorResult& out_error)
+                    ErrorResult&)
     {
-        if (IsContextLost())
-            return;
+        const dom::ArrayBufferView* view = nullptr;
+        if (!maybeView.IsNull()) {
+            view = &(maybeView.Value());
+        }
 
         TexImage2D(texImageTarget, level, internalFormat, width, height, border,
-                   unpackFormat, unpackType, maybeView, 0, out_error);
+                   unpackFormat, unpackType, view, 0);
     }
 
     void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
                     GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
-                    GLenum unpackType,
-                    const dom::Nullable<dom::ArrayBufferView>& maybeSrc,
-                    GLuint srcElemOffset, ErrorResult&);
+                    GLenum unpackType, const dom::ArrayBufferView& srcView,
+                    GLuint srcElemOffset, ErrorResult&)
+    {
+        TexImage2D(texImageTarget, level, internalFormat, width, height, border,
+                   unpackFormat, unpackType, &srcView, srcElemOffset);
+    }
 
 protected:
+    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
+                    GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
+                    GLenum unpackType, const dom::ArrayBufferView* srcView,
+                    GLuint srcElemOffset);
+
+public:
     void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
                     GLenum unpackFormat, GLenum unpackType,
                     const dom::ImageData& imageData, ErrorResult& out_error);
-public:
     void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
                     GLenum unpackFormat, GLenum unpackType, const dom::Element& elem,
                     ErrorResult& out_error);
+    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
+                    GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
+                    GLenum unpackType, WebGLsizeiptr offset, ErrorResult&);
 
     ////
 
-protected:
-    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
-                       GLsizei width, GLsizei height, GLenum unpackFormat,
-                       GLenum unpackType, const dom::ArrayBufferView& view);
     void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
                        GLenum unpackFormat, GLenum unpackType,
                        const dom::ImageData& imageData, ErrorResult& out_error);
-public:
     void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
                        GLenum unpackFormat, GLenum unpackType, const dom::Element& elem,
                        ErrorResult& out_error);
+
+    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
+                       GLsizei width, GLsizei height, GLenum unpackFormat,
+                       GLenum unpackType, WebGLsizeiptr offset, ErrorResult&);
 
     ////////////////
     // dom::ImageData
@@ -973,7 +986,7 @@ public:
             return ErrorInvalidValue("%s: `data` must not be null.", funcName);
 
         TexSubImage2D(texImageTarget, level, xOffset, yOffset, width, height,
-                      unpackFormat, unpackType, maybeView.Value(), 0, out_error);
+                      unpackFormat, unpackType, maybeSrc.Value(), 0, out_error);
     }
 
     void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
