@@ -48,7 +48,6 @@
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/URLSearchParamsBinding.h"
 #include "mozilla/dom/XMLHttpRequest.h"
-#include "mozilla/DeferredFinalize.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -412,7 +411,7 @@ sandbox_finalize(js::FreeOp* fop, JSObject* obj)
     }
 
     static_cast<SandboxPrivate*>(sop)->ForgetGlobalObject();
-    DeferredFinalize(sop);
+    NS_RELEASE(sop);
     DestroyProtoAndIfaceCache(obj);
 }
 
