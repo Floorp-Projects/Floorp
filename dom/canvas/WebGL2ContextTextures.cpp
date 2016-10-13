@@ -45,7 +45,7 @@ void
 WebGL2Context::TexImage3D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
                           GLsizei width, GLsizei height, GLsizei depth, GLint border,
                           GLenum unpackFormat, GLenum unpackType,
-                          const dom::ArrayBufferView>* srcView, GLuint srcElemOffset)
+                          const dom::ArrayBufferView* srcView, GLuint srcElemOffset)
 {
     const char funcName[] = "texImage3D";
     const uint8_t funcDims = 3;
@@ -64,7 +64,7 @@ WebGL2Context::TexImage3D(GLenum rawTexImageTarget, GLint level, GLenum internal
     const GLint zOffset = 0;
     tex->TexOrSubImage(isSubImage, funcName, target, level, internalFormat, xOffset,
                        yOffset, zOffset, width, height, depth, border, unpackFormat,
-                       unpackType, view, srcElemOffset);
+                       unpackType, srcView, srcElemOffset);
 }
 
 void
@@ -158,7 +158,7 @@ WebGL2Context::CompressedTexImage3D(GLenum rawTexImageTarget, GLint level,
     }
 
     tex->CompressedTexImage(funcName, target, level, internalFormat, width, height, depth,
-                            border, view, srcElemOffset);
+                            border, srcView, srcElemOffset);
 }
 
 void
@@ -181,7 +181,7 @@ WebGL2Context::CompressedTexSubImage3D(GLenum rawTexImageTarget, GLint level,
     }
 
     tex->CompressedTexSubImage(funcName, target, level, xOffset, yOffset, zOffset, width,
-                               height, depth, sizedUnpackFormat, view, srcElemOffset);
+                               height, depth, sizedUnpackFormat, srcView, srcElemOffset);
 }
 
 void
@@ -207,10 +207,10 @@ WebGL2Context::CopyTexSubImage3D(GLenum rawTexImageTarget, GLint level, GLint xO
 ////////////////////
 
 void
-WebGL2Context::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
-                          GLsizei width, GLsizei height, GLint border,
-                          GLenum unpackFormat, GLenum unpackType, WebGLsizeiptr offset,
-                          ErrorResult&)
+WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
+                         GLsizei width, GLsizei height, GLint border,
+                         GLenum unpackFormat, GLenum unpackType, WebGLsizeiptr offset,
+                         ErrorResult&)
 {
     const char funcName[] = "texImage2D";
     const uint8_t funcDims = 2;
@@ -234,10 +234,10 @@ WebGL2Context::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internal
 }
 
 void
-WebGL2Context::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
-                             GLint yOffset, GLsizei width, GLsizei height,
-                             GLenum unpackFormat, GLenum unpackType, WebGLsizeiptr offset,
-                             ErrorResult&)
+WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
+                            GLint yOffset, GLsizei width, GLsizei height,
+                            GLenum unpackFormat, GLenum unpackType, WebGLsizeiptr offset,
+                            ErrorResult&)
 {
     const char funcName[] = "texSubImage2D";
     const uint8_t funcDims = 2;
