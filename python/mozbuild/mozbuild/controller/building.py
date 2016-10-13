@@ -480,6 +480,7 @@ class CCacheStats(object):
         # Refer to stats.c in ccache project for all the descriptions.
         ('cache_hit_direct', 'cache hit (direct)'),
         ('cache_hit_preprocessed', 'cache hit (preprocessed)'),
+        ('cache_hit_rate', 'cache hit rate'),
         ('cache_miss', 'cache miss'),
         ('link', 'called for link'),
         ('preprocessing', 'called for preprocessing'),
@@ -502,6 +503,7 @@ class CCacheStats(object):
         ('out_device', 'output to a non-regular file'),
         ('no_input', 'no input file'),
         ('bad_extra_file', 'error hashing extra file'),
+        ('num_cleanups', 'cleanups performed'),
         ('cache_files', 'files in cache'),
         ('cache_size', 'cache size'),
         ('cache_max_size', 'max cache size'),
