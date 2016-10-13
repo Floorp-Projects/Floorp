@@ -1520,6 +1520,52 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
     return true;
 }
 
+uint64_t
+Simulator::readQ(int32_t addr, SimInstruction* instr, UnalignedPolicy f)
+{
+    if (handleWasmFault(addr, 8))
+        return -1;
+
+    if ((addr & 3) == 0 || (f == AllowUnaligned && !HasAlignmentFault())) {
+        uint64_t* ptr = reinterpret_cast<uint64_t*>(addr);
+        return *ptr;
+    }
+
+    // See the comments below in readW.
+    if (wasm::IsPCInWasmCode(reinterpret_cast<void *>(get_pc()))) {
+        char* ptr = reinterpret_cast<char*>(addr);
+        uint64_t value;
+        memcpy(&value, ptr, sizeof(value));
+        return value;
+    }
+
+    printf("Unaligned read at 0x%08x, pc=%p\n", addr, instr);
+    MOZ_CRASH();
+}
+
+void
+Simulator::writeQ(int32_t addr, uint64_t value, SimInstruction* instr, UnalignedPolicy f)
+{
+    if (handleWasmFault(addr, 8))
+        return;
+
+    if ((addr & 3) == 0 || (f == AllowUnaligned && !HasAlignmentFault())) {
+        uint64_t* ptr = reinterpret_cast<uint64_t*>(addr);
+        *ptr = value;
+        return;
+    }
+
+    // See the comments above in readW.
+    if (wasm::IsPCInWasmCode(reinterpret_cast<void *>(get_pc()))) {
+        char* ptr = reinterpret_cast<char*>(addr);
+        memcpy(ptr, &value, sizeof(value));
+        return;
+    }
+
+    printf("Unaligned write at 0x%08x, pc=%p\n", addr, instr);
+    MOZ_CRASH();
+}
+
 int
 Simulator::readW(int32_t addr, SimInstruction* instr, UnalignedPolicy f)
 {
@@ -4341,21 +4387,17 @@ Simulator::decodeType6CoprocessorIns(SimInstruction* instr)
             int32_t address = get_register(rn) + 4 * offset;
             if (instr->hasL()) {
                 // Load double from memory: vldr.
-                int32_t data[] = {
-                    readW(address, instr),
-                    readW(address + 4, instr)
-                };
+                uint64_t data = readQ(address, instr);
                 double val;
-                memcpy(&val, data, 8);
+                memcpy(&val, &data, 8);
                 set_d_register_from_double(vd, val);
             } else {
                 // Store double to memory: vstr.
-                int32_t data[2];
+                uint64_t data;
                 double val;
                 get_double_from_d_register(vd, &val);
-                memcpy(data, &val, 8);
-                writeW(address, data[0], instr);
-                writeW(address + 4, data[1], instr);
+                memcpy(&data, &val, 8);
+                writeQ(address, data, instr);
             }
             break;
           }
