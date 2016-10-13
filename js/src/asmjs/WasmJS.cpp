@@ -46,6 +46,9 @@ using mozilla::Nothing;
 bool
 wasm::HasCompilerSupport(ExclusiveContext* cx)
 {
+    if (gc::SystemPageSize() > wasm::PageSize)
+        return false;
+
     if (!cx->jitSupportsFloatingPoint())
         return false;
 
