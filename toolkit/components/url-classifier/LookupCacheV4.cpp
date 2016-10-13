@@ -11,6 +11,8 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define LOG(args) MOZ_LOG(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
 
+#define METADATA_SUFFIX NS_LITERAL_CSTRING(".metadata")
+
 namespace mozilla {
 namespace safebrowsing {
 
@@ -231,6 +233,165 @@ LookupCacheV4::ApplyPartialUpdate(TableUpdateV4* aTableUpdate,
   }
 
   return NS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// A set of lightweight functions for reading/writing value from/to file.
+
+namespace {
+
+template<typename T>
+struct ValueTraits
+{
+  static uint32_t Length(const T& aValue) { return sizeof(T); }
+  static char* WritePtr(T& aValue, uint32_t aLength) { return (char*)&aValue; }
+  static const char* ReadPtr(const T& aValue) { return (char*)&aValue; }
+  static bool IsFixedLength() { return true; }
+};
+
+template<>
+struct ValueTraits<nsACString>
+{
+  static bool IsFixedLength() { return false; }
+
+  static uint32_t Length(const nsACString& aValue)
+  {
+    return aValue.Length();
+  }
+
+  static char* WritePtr(nsACString& aValue, uint32_t aLength)
+  {
+    aValue.SetLength(aLength);
+    return aValue.BeginWriting();
+  }
+
+  static const char* ReadPtr(const nsACString& aValue)
+  {
+    return aValue.BeginReading();
+  }
+};
+
+template<typename T> static nsresult
+WriteValue(nsIOutputStream *aOutputStream, const T& aValue)
+{
+  uint32_t writeLength = ValueTraits<T>::Length(aValue);
+  if (!ValueTraits<T>::IsFixedLength()) {
+    // We need to write out the variable value length.
+    nsresult rv = WriteValue(aOutputStream, writeLength);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Write out the value.
+  auto valueReadPtr = ValueTraits<T>::ReadPtr(aValue);
+  uint32_t written;
+  nsresult rv = aOutputStream->Write(valueReadPtr, writeLength, &written);
+  if (NS_FAILED(rv) || written != writeLength) {
+    LOG(("Failed to write the value."));
+    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+template<typename T> static nsresult
+ReadValue(nsIInputStream* aInputStream, T& aValue)
+{
+  nsresult rv;
+
+  uint32_t readLength;
+  if (ValueTraits<T>::IsFixedLength()) {
+    readLength = ValueTraits<T>::Length(aValue);
+  } else {
+    // Read the variable value length from file.
+    nsresult rv = ReadValue(aInputStream, readLength);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Read the value.
+  uint32_t read;
+  auto valueWritePtr = ValueTraits<T>::WritePtr(aValue, readLength);
+  rv = aInputStream->Read(valueWritePtr, readLength, &read);
+  if (NS_FAILED(rv) || read != readLength) {
+    LOG(("Failed to read the value."));
+    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+} // end of unnamed namespace.
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+LookupCacheV4::WriteMetadata(TableUpdateV4* aTableUpdate)
+{
+  NS_ENSURE_ARG_POINTER(aTableUpdate);
+
+  nsCOMPtr<nsIFile> metaFile;
+  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(metaFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = metaFile->AppendNative(mTableName + METADATA_SUFFIX);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIOutputStream> outputStream;
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), metaFile,
+                                   PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
+  if (!NS_SUCCEEDED(rv)) {
+    LOG(("Unable to create file to store metadata."));
+    return rv;
+  }
+
+  // Write the state.
+  rv = WriteValue(outputStream, aTableUpdate->ClientState());
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to write the list state."));
+    return rv;
+  }
+
+  // Write the checksum.
+  rv = WriteValue(outputStream, aTableUpdate->Checksum());
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to write the list checksum."));
+    return rv;
+  }
+
+  return rv;
+}
+
+nsresult
+LookupCacheV4::LoadMetadata(nsACString& aState, nsACString& aChecksum)
+{
+  nsCOMPtr<nsIFile> metaFile;
+  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(metaFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = metaFile->AppendNative(mTableName + METADATA_SUFFIX);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInputStream> localInFile;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(localInFile), metaFile,
+                                  PR_RDONLY | nsIFile::OS_READAHEAD);
+  if (NS_FAILED(rv)) {
+    LOG(("Unable to open metadata file."));
+    return rv;
+  }
+
+  // Read the list state.
+  rv = ReadValue(localInFile, aState);
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to read state."));
+    return rv;
+  }
+
+  // Read the checksum.
+  rv = ReadValue(localInFile, aChecksum);
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to read checksum."));
+    return rv;
+  }
+
+  return rv;
 }
 
 VLPrefixSet::VLPrefixSet(const PrefixStringMap& aMap)
