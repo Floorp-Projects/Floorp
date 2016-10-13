@@ -211,16 +211,17 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
               (floatBStart == blockEnd && blockStart == blockEnd))) {
       // This float is in our band.
 
-      // Shrink our band's height if needed.
-      if (floatBEnd < blockEnd && aBandInfoType == BandInfoType::BandFromPoint) {
-        blockEnd = floatBEnd;
-      }
-
       // Shrink our band's width if needed.
       StyleFloat floatStyle = fi.mFrame->StyleDisplay()->PhysicalFloats(aWM);
+
+      // When aBandInfoType is BandFromPoint, we're only intended to
+      // consider a point along the y axis rather than a band.
+      const nscoord bandBlockEnd =
+        aBandInfoType == BandInfoType::BandFromPoint ? blockStart : blockEnd;
       if (floatStyle == StyleFloat::Left) {
         // A left float
-        nscoord lineRightEdge = fi.LineRight(aShapeType);
+        nscoord lineRightEdge =
+          fi.LineRight(aShapeType, blockStart, bandBlockEnd);
         if (lineRightEdge > lineLeft) {
           lineLeft = lineRightEdge;
           // Only set haveFloats to true if the float is inside our
@@ -231,12 +232,18 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
         }
       } else {
         // A right float
-        nscoord lineLeftEdge = fi.LineLeft(aShapeType);
+        nscoord lineLeftEdge =
+          fi.LineLeft(aShapeType, blockStart, bandBlockEnd);
         if (lineLeftEdge < lineRight) {
           lineRight = lineLeftEdge;
           // See above.
           haveFloats = true;
         }
+      }
+
+      // Shrink our band's height if needed.
+      if (floatBEnd < blockEnd && aBandInfoType == BandInfoType::BandFromPoint) {
+        blockEnd = floatBEnd;
       }
     }
   }
@@ -586,7 +593,9 @@ nsFloatManager::FloatInfo::~FloatInfo()
 #endif
 
 nscoord
-nsFloatManager::FloatInfo::LineLeft(ShapeType aShapeType) const
+nsFloatManager::FloatInfo::LineLeft(ShapeType aShapeType,
+                                    const nscoord aBStart,
+                                    const nscoord aBEnd) const
 {
   if (aShapeType == ShapeType::Margin) {
     return LineLeft();
@@ -599,7 +608,20 @@ nsFloatManager::FloatInfo::LineLeft(ShapeType aShapeType) const
   }
 
   if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
-    return ShapeBoxRect().x;
+    nscoord radii[8];
+    bool hasRadii = mFrame->GetShapeBoxBorderRadii(radii);
+
+    if (!hasRadii) {
+      return ShapeBoxRect().x;
+    }
+    // Bug 1316549: Fix non-ltr direction and writing-mode.
+    nscoord lineLeftDiff =
+      ComputeEllipseXInterceptDiff(
+        ShapeBoxRect().y, ShapeBoxRect().YMost(),
+        radii[NS_CORNER_TOP_LEFT_X], radii[NS_CORNER_TOP_LEFT_Y],
+        radii[NS_CORNER_BOTTOM_LEFT_X], radii[NS_CORNER_BOTTOM_LEFT_Y],
+        aBStart, aBEnd);
+    return ShapeBoxRect().x + lineLeftDiff;
   }
 
   // XXX: Other shape source types are not implemented yet.
@@ -608,7 +630,9 @@ nsFloatManager::FloatInfo::LineLeft(ShapeType aShapeType) const
 }
 
 nscoord
-nsFloatManager::FloatInfo::LineRight(ShapeType aShapeType) const
+nsFloatManager::FloatInfo::LineRight(ShapeType aShapeType,
+                                     const nscoord aBStart,
+                                     const nscoord aBEnd) const
 {
   if (aShapeType == ShapeType::Margin) {
     return LineRight();
@@ -621,12 +645,102 @@ nsFloatManager::FloatInfo::LineRight(ShapeType aShapeType) const
   }
 
   if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
-    return ShapeBoxRect().XMost();
+    nscoord radii[8];
+    bool hasRadii = mFrame->GetShapeBoxBorderRadii(radii);
+
+    if (!hasRadii) {
+      return ShapeBoxRect().XMost();
+    }
+    // Bug 1316549: Fix non-ltr direction and writing-mode.
+    nscoord lineRightDiff =
+      ComputeEllipseXInterceptDiff(
+        ShapeBoxRect().y, ShapeBoxRect().YMost(),
+        radii[NS_CORNER_TOP_RIGHT_X], radii[NS_CORNER_TOP_RIGHT_Y],
+        radii[NS_CORNER_BOTTOM_RIGHT_X], radii[NS_CORNER_BOTTOM_RIGHT_Y],
+        aBStart, aBEnd);
+    return ShapeBoxRect().XMost() - lineRightDiff;
   }
 
   // XXX: Other shape source types are not implemented yet.
 
   return LineRight();
+}
+
+/* static */ nscoord
+nsFloatManager::FloatInfo::ComputeEllipseXInterceptDiff(
+  const nscoord aShapeBoxY, const nscoord aShapeBoxYMost,
+  const nscoord aTopCornerRadiusX, const nscoord aTopCornerRadiusY,
+  const nscoord aBottomCornerRadiusX, const nscoord aBottomCornerRadiusY,
+  const nscoord aBandY, const nscoord aBandYMost)
+{
+  // An Example for the band intersects with the top right corner of an ellipse.
+  //
+  //                                xIntercept xDiff
+  //                                    |       |
+  //  +---------------------------------|-------|-+---- aShapeBoxY
+  //  |                ##########^      |       | |
+  //  |            ##############|####  |       | |
+  //  +---------#################|######|-------|-+---- aBandY
+  //  |       ###################|######|##     | |
+  //  |      # aTopCornerRadiusY |######|###    | |
+  //  |    ######################|######|#####  | |
+  //  +---#######################|<-----------><->^---- aBandYMost
+  //  |  ########################|##############  |
+  //  |  ########################|##############  |---- y
+  //  | #########################|############### |
+  //  | ######################## v<-------------->v
+  //  |######################### aTopCornerRadiusX|
+  //  |###########################################|
+  //  |###########################################|
+  //  |###########################################|
+  //  |###########################################|
+  //  | ######################################### |
+  //  | ######################################### |
+  //  |  #######################################  |
+  //  |  #######################################  |
+  //  |   #####################################   |
+  //  |    ###################################    |
+  //  |      ###############################      |
+  //  |       #############################       |
+  //  |         #########################         |
+  //  |            ###################            |
+  //  |                ###########                |
+  //  +-------------------------------------------+----- aShapeBoxYMost
+
+  NS_ASSERTION(aShapeBoxY <= aShapeBoxYMost, "Bad shape box coordinates!");
+  NS_ASSERTION(aBandY <= aBandYMost, "Bad band coordinates!");
+
+  nscoord xDiff = 0;
+
+  // If the band intersects both the top and bottom corners, we don't need
+  // to enter either branch because the correct xDiff is 0.
+  if (aBandYMost >= aShapeBoxY &&
+      aBandYMost <= aShapeBoxY + aTopCornerRadiusY) {
+    // The band intersects only the top corner.
+    nscoord y = aTopCornerRadiusY - (aBandYMost - aShapeBoxY);
+    nscoord xIntercept =
+      XInterceptAtY(y, aTopCornerRadiusX, aTopCornerRadiusY);
+    xDiff = aTopCornerRadiusX - xIntercept;
+  } else if (aBandY >= aShapeBoxYMost - aBottomCornerRadiusY &&
+             aBandY <= aShapeBoxYMost) {
+    // The band intersects only the bottom corner.
+    nscoord y = aBottomCornerRadiusY - (aShapeBoxYMost - aBandY);
+    nscoord xIntercept =
+      XInterceptAtY(y, aBottomCornerRadiusX, aBottomCornerRadiusY);
+    xDiff = aBottomCornerRadiusX - xIntercept;
+  }
+
+  return xDiff;
+}
+
+/* static */ nscoord
+nsFloatManager::FloatInfo::XInterceptAtY(const nscoord aY,
+                                         const nscoord aRadiusX,
+                                         const nscoord aRadiusY)
+{
+  // Solve for x in the ellipse equation (x/radiusX)^2 + (y/radiusY)^2 = 1.
+  MOZ_ASSERT(aRadiusY > 0);
+  return aRadiusX * std::sqrt(1 - (aY * aY) / double(aRadiusY * aRadiusY));
 }
 
 //----------------------------------------------------------------------
