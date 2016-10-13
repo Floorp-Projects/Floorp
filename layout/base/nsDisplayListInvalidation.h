@@ -17,9 +17,10 @@ class nsDisplayBackgroundImage;
 class nsCharClipDisplayItem;
 class nsDisplayItem;
 class nsDisplayListBuilder;
-class nsDisplaySVGEffects;
 class nsDisplayTableItem;
 class nsDisplayThemedBackground;
+class nsDisplayMask;
+class nsDisplayFilter;
 
 namespace mozilla {
 namespace gfx {
@@ -269,7 +270,21 @@ class nsDisplayMaskGeometry : public nsDisplayItemGeometry
   , public nsImageGeometryMixin<nsDisplayMaskGeometry>
 {
 public:
-  nsDisplayMaskGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder);
+  nsDisplayMaskGeometry(nsDisplayMask* aItem, nsDisplayListBuilder* aBuilder);
+
+  virtual void MoveBy(const nsPoint& aOffset) override;
+
+  gfxRect mBBox;
+  gfxPoint mUserSpaceOffset;
+  nsPoint mFrameOffsetToReferenceFrame;
+};
+
+class nsDisplayFilterGeometry : public nsDisplayItemGeometry
+  , public nsImageGeometryMixin<nsDisplayMaskGeometry>
+{
+public:
+  nsDisplayFilterGeometry(nsDisplayFilter* aItem,
+                          nsDisplayListBuilder* aBuilder);
 
   virtual void MoveBy(const nsPoint& aOffset) override;
 
