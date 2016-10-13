@@ -33,17 +33,6 @@ assertEq(nopLine.length, 1);
 assertEq(nopLine[0].offsets.length, 1);
 assertEq(nopLine[0].offsets[0] > 0, true);
 
-var sqrtLine = result1.filter(i => i.str.indexOf('sqrt') >= 0);
-assertEq(sqrtLine.length, 1);
-// The sqrtLine shall have 5 offsets but they were produced from AST postorder decoding:
-//   drop(f32.sqrt(1.0 + 2.0)) ~~> 88,87,86,76,81
-assertEq(sqrtLine[0].offsets.length, 5);
-assertEq(sqrtLine[0].offsets[3] > 0, true);
-assertEq(sqrtLine[0].offsets[3] < sqrtLine[0].offsets[4], true);
-assertEq(sqrtLine[0].offsets[2] > sqrtLine[0].offsets[3], true);
-assertEq(sqrtLine[0].offsets[1] > sqrtLine[0].offsets[2], true);
-assertEq(sqrtLine[0].offsets[0] > sqrtLine[0].offsets[1], true);
-
-var noOffsetLines = result1.filter(i => i.str.indexOf('nop') < 0 && i.str.indexOf('sqrt') < 0);
-// Other lines will not have offsets.
-assertEq(noOffsetLines.every(i => i.offsets.length == 0), true);
+var singleOffsetLines = result1.filter(i => i.offsets.length === 1);
+// There shall be total 6 lines with single offset.
+assertEq(singleOffsetLines.length === 6, true);
