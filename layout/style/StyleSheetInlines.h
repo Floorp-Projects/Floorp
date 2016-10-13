@@ -7,40 +7,13 @@
 #ifndef mozilla_StyleSheetInlines_h
 #define mozilla_StyleSheetInlines_h
 
-#include "mozilla/TypeTraits.h"
 #include "mozilla/StyleSheetInfo.h"
 #include "mozilla/ServoStyleSheet.h"
 #include "mozilla/CSSStyleSheet.h"
 
 namespace mozilla {
 
-CSSStyleSheet*
-StyleSheet::AsGecko()
-{
-  MOZ_ASSERT(IsGecko());
-  return static_cast<CSSStyleSheet*>(this);
-}
-
-ServoStyleSheet*
-StyleSheet::AsServo()
-{
-  MOZ_ASSERT(IsServo());
-  return static_cast<ServoStyleSheet*>(this);
-}
-
-const CSSStyleSheet*
-StyleSheet::AsGecko() const
-{
-  MOZ_ASSERT(IsGecko());
-  return static_cast<const CSSStyleSheet*>(this);
-}
-
-const ServoStyleSheet*
-StyleSheet::AsServo() const
-{
-  MOZ_ASSERT(IsServo());
-  return static_cast<const ServoStyleSheet*>(this);
-}
+MOZ_DEFINE_STYLO_METHODS(StyleSheet, CSSStyleSheet, ServoStyleSheet)
 
 StyleSheetInfo&
 StyleSheet::SheetInfo()
@@ -60,30 +33,16 @@ StyleSheet::SheetInfo() const
   return *AsGecko()->mInner;
 }
 
-#define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \
-  static_assert(!IsSame<decltype(&StyleSheet::method_), \
-                        decltype(&CSSStyleSheet::method_)>::value, \
-                "CSSStyleSheet should define its own " #method_); \
-  static_assert(!IsSame<decltype(&StyleSheet::method_), \
-                        decltype(&ServoStyleSheet::method_)>::value, \
-                "ServoStyleSheet should define its own " #method_); \
-  if (IsServo()) { \
-    return AsServo()->method_ servoargs_; \
-  } \
-  return AsGecko()->method_ geckoargs_;
-
-#define FORWARD(method_, args_) FORWARD_CONCRETE(method_, args_, args_)
-
 MozExternalRefCountType
 StyleSheet::AddRef()
 {
-  FORWARD(AddRef, ())
+  MOZ_STYLO_FORWARD(AddRef, ())
 }
 
 MozExternalRefCountType
 StyleSheet::Release()
 {
-  FORWARD(Release, ())
+  MOZ_STYLO_FORWARD(Release, ())
 }
 
 bool
@@ -132,25 +91,26 @@ StyleSheet::IsApplicable() const
 bool
 StyleSheet::HasRules() const
 {
-  FORWARD(HasRules, ())
+  MOZ_STYLO_FORWARD(HasRules, ())
 }
 
 void
 StyleSheet::SetOwningDocument(nsIDocument* aDocument)
 {
-  FORWARD(SetOwningDocument, (aDocument))
+  MOZ_STYLO_FORWARD(SetOwningDocument, (aDocument))
 }
 
 StyleSheet*
 StyleSheet::GetParentSheet() const
 {
-  FORWARD(GetParentSheet, ())
+  MOZ_STYLO_FORWARD(GetParentSheet, ())
 }
 
 void
 StyleSheet::AppendStyleSheet(StyleSheet* aSheet)
 {
-  FORWARD_CONCRETE(AppendStyleSheet, (aSheet->AsGecko()), (aSheet->AsServo()))
+  MOZ_STYLO_FORWARD_CONCRETE(AppendStyleSheet,
+                             (aSheet->AsGecko()), (aSheet->AsServo()))
 }
 
 nsIPrincipal*
@@ -193,19 +153,16 @@ StyleSheet::GetIntegrity(dom::SRIMetadata& aResult) const
 size_t
 StyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  FORWARD(SizeOfIncludingThis, (aMallocSizeOf))
+  MOZ_STYLO_FORWARD(SizeOfIncludingThis, (aMallocSizeOf))
 }
 
 #ifdef DEBUG
 void
 StyleSheet::List(FILE* aOut, int32_t aIndex) const
 {
-  FORWARD(List, (aOut, aIndex))
+  MOZ_STYLO_FORWARD(List, (aOut, aIndex))
 }
 #endif
-
-#undef FORWARD
-#undef FORWARD_CONCRETE
 
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
