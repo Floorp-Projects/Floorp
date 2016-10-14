@@ -4,39 +4,56 @@
 
 #include "mozilla/Likely.h"
 
+// INT32_MAX is (2^31)-1. Therefore, the highest power-of-two that fits
+// is 2^30. Note that this is counting char16_t units. The underlying
+// bytes will be twice that, but they fit even in 32-bit size_t even
+// if a contiguous chunk of memory of that size is pretty unlikely to
+// be available on a 32-bit system.
+#define MAX_POWER_OF_TWO_IN_INT32 0x40000000
+
 bool
 nsHtml5Tokenizer::EnsureBufferSpace(int32_t aLength)
 {
-  MOZ_ASSERT(aLength >= 0, "Negative length.");
+  MOZ_RELEASE_ASSERT(aLength >= 0, "Negative length.");
+  if (aLength > MAX_POWER_OF_TWO_IN_INT32) {
+    // Can't happen when loading from network.
+    return false;
+  }
+  CheckedInt<int32_t> worstCase(strBufLen);
+  worstCase += aLength;
+  worstCase += charRefBufLen;
   // Add 2 to account for emissions of LT_GT, LT_SOLIDUS and RSQB_RSQB.
   // Adding to the general worst case instead of only the
   // TreeBuilder-exposed worst case to avoid re-introducing a bug when
   // unifying the tokenizer and tree builder buffers in the future.
-  size_t worstCase = size_t(strBufLen) +
-                     size_t(aLength) +
-                     size_t(charRefBufLen) +
-                     size_t(2);
-  if (worstCase > INT32_MAX) {
-    // Since we index into the buffer using int32_t due to the Java heritage
-    // of the code, let's treat this as OOM.
+  worstCase += 2;
+  if (!worstCase.isValid()) {
+    return false;
+  }
+  if (worstCase.value() > MAX_POWER_OF_TWO_IN_INT32) {
     return false;
   }
   // TODO: Unify nsHtml5Tokenizer::strBuf and nsHtml5TreeBuilder::charBuffer
   // so that the call below becomes unnecessary.
-  tokenHandler->EnsureBufferSpace(worstCase);
+  if (!tokenHandler->EnsureBufferSpace(worstCase.value())) {
+    return false;
+  }
   if (!strBuf) {
-    // Add one to round to the next power of two to avoid immediate
-    // reallocation once there are a few characters in the buffer.
-    strBuf = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase + 1));
+    if (worstCase.value() < MAX_POWER_OF_TWO_IN_INT32) {
+      // Add one to round to the next power of two to avoid immediate
+      // reallocation once there are a few characters in the buffer.
+      worstCase += 1;
+    }
+    strBuf = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase.value()));
     if (!strBuf) {
       return false;
     }
-  } else if (worstCase > size_t(strBuf.length)) {
-    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase));
+  } else if (worstCase.value() > strBuf.length) {
+    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase.value()));
     if (!newBuf) {
       return false;
     }
-    memcpy(newBuf,strBuf, sizeof(char16_t) * strBufLen);
+    memcpy(newBuf, strBuf, sizeof(char16_t) * size_t(strBufLen));
     strBuf = newBuf;
   }
   return true;
