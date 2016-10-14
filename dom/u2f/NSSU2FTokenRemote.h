@@ -12,7 +12,7 @@
 class NSSU2FTokenRemote : public nsIU2FToken
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIU2FTOKEN
 
   NSSU2FTokenRemote();

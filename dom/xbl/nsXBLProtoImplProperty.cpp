@@ -20,11 +20,11 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsXBLProtoImplProperty::nsXBLProtoImplProperty(const char16_t* aName,
-                                               const char16_t* aGetter, 
+                                               const char16_t* aGetter,
                                                const char16_t* aSetter,
                                                const char16_t* aReadOnly,
                                                uint32_t aLineNumber) :
-  nsXBLProtoImplMember(aName), 
+  nsXBLProtoImplMember(aName),
   mJSAttributes(JSPROP_ENUMERATE)
 #ifdef DEBUG
   , mIsCompiled(false)
@@ -310,7 +310,7 @@ nsXBLProtoImplProperty::Read(nsIObjectInputStream* aStream,
     mJSAttributes |= JSPROP_GETTER | JSPROP_SHARED;
   }
   mGetter.SetJSFunction(getterObject);
-  
+
   JS::Rooted<JSObject*> setterObject(cx);
   if (aType == XBLBinding_Serialize_SetterProperty ||
       aType == XBLBinding_Serialize_GetterSetterProperty) {
@@ -352,21 +352,16 @@ nsXBLProtoImplProperty::Write(nsIObjectOutputStream* aStream)
   rv = aStream->WriteWStringZ(mName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // The calls to fromMarkedLocation() below are safe because mSetter and
-  // mGetter are traced by the Trace() method above, and because their values
-  // are never changed after they have been set to a compiled function.
   MOZ_ASSERT_IF(mJSAttributes & (JSPROP_GETTER | JSPROP_SETTER), mIsCompiled);
 
   if (mJSAttributes & JSPROP_GETTER) {
-    JS::Handle<JSObject*> function =
-      JS::Handle<JSObject*>::fromMarkedLocation(mGetter.AsHeapObject().address());
+    JS::Rooted<JSObject*> function(RootingCx(), mGetter.GetJSFunction());
     rv = XBL_SerializeFunction(aStream, function);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (mJSAttributes & JSPROP_SETTER) {
-     JS::Handle<JSObject*> function =
-      JS::Handle<JSObject*>::fromMarkedLocation(mSetter.AsHeapObject().address());
+    JS::Rooted<JSObject*> function(RootingCx(), mSetter.GetJSFunction());
     rv = XBL_SerializeFunction(aStream, function);
     NS_ENSURE_SUCCESS(rv, rv);
   }
