@@ -131,6 +131,7 @@ private:
 
   bool mShutdown = false;
   RefPtr<StartTimeRendezvous> mStartTimeRendezvous;
+  Maybe<media::TimeUnit> mStartTime;
 
   MozPromiseRequestHolder<MediaDataPromise> mAudioDataRequest;
   MozPromiseRequestHolder<MediaDataPromise> mVideoDataRequest;
