@@ -5,6 +5,7 @@
 from .base import BaseHandler
 import re
 
+
 class ValgrindHandler(BaseHandler):
 
     def __init__(self, inner):
@@ -17,18 +18,20 @@ class ValgrindHandler(BaseHandler):
         if tmp is not None:
             self.inner(tmp)
 
+
 class ValgrindFilter(object):
     '''
     A class for handling Valgrind output.
 
     Valgrind errors look like this:
 
-    ==60741== 40 (24 direct, 16 indirect) bytes in 1 blocks are definitely lost in loss record 2,746 of 5,235
+    ==60741== 40 (24 direct, 16 indirect) bytes in 1 blocks are definitely lost in loss
+                  record 2,746 of 5,235
     ==60741==    at 0x4C26B43: calloc (vg_replace_malloc.c:593)
     ==60741==    by 0x63AEF65: PR_Calloc (prmem.c:443)
     ==60741==    by 0x69F236E: PORT_ZAlloc_Util (secport.c:117)
     ==60741==    by 0x69F1336: SECITEM_AllocItem_Util (secitem.c:28)
-    ==60741==    by 0xA04280B: ffi_call_unix64 (in /builds/slave/m-in-l64-valgrind-000000000000/objdir/toolkit/library/libxul.so)
+    ==60741==    by 0xA04280B: ffi_call_unix64 (in /builds/slave/m-in-l64-valgrind-000000000000/objdir/toolkit/library/libxul.so) # noqa
     ==60741==    by 0xA042443: ffi_call (ffi64.c:485)
 
     For each such error, this class extracts most or all of the first (error
@@ -54,20 +57,20 @@ class ValgrindFilter(object):
         # Valgrind is English-only, so we don't have to worry about
         # localization.
         self.re_error = \
-            re.compile( \
-            r'==\d+== (' + \
-            r'(Use of uninitialised value of size \d+)|' + \
-            r'(Conditional jump or move depends on uninitialised value\(s\))|' + \
-            r'(Syscall param .* contains uninitialised byte\(s\))|' + \
-            r'(Syscall param .* points to (unaddressable|uninitialised) byte\(s\))|' + \
-            r'((Unaddressable|Uninitialised) byte\(s\) found during client check request)|' + \
-            r'(Invalid free\(\) / delete / delete\[\] / realloc\(\))|' + \
-            r'(Mismatched free\(\) / delete / delete \[\])|' + \
-            r'(Invalid (read|write) of size \d+)|' + \
-            r'(Jump to the invalid address stated on the next line)|' + \
-            r'(Source and destination overlap in .*)|' + \
-            r'(.* bytes in .* blocks are .* lost)' + \
-            r')' \
+            re.compile(
+                r'==\d+== (' +
+                r'(Use of uninitialised value of size \d+)|' +
+                r'(Conditional jump or move depends on uninitialised value\(s\))|' +
+                r'(Syscall param .* contains uninitialised byte\(s\))|' +
+                r'(Syscall param .* points to (unaddressable|uninitialised) byte\(s\))|' +
+                r'((Unaddressable|Uninitialised) byte\(s\) found during client check request)|' +
+                r'(Invalid free\(\) / delete / delete\[\] / realloc\(\))|' +
+                r'(Mismatched free\(\) / delete / delete \[\])|' +
+                r'(Invalid (read|write) of size \d+)|' +
+                r'(Jump to the invalid address stated on the next line)|' +
+                r'(Source and destination overlap in .*)|' +
+                r'(.* bytes in .* blocks are .* lost)' +
+                r')'
             )
         # Match identifer chars, plus ':' for namespaces, and '\?' in order to
         # match "???" which Valgrind sometimes produces.
@@ -119,15 +122,15 @@ class ValgrindFilter(object):
                 # buffered lines, and then reset state.  Copy the mandatory
                 # fields from the incoming message, since there's nowhere
                 # else to get them from.
-                output_message = { # Mandatory fields
-                                   u"action": "valgrind_error",
-                                   u"time":   msg["time"],
-                                   u"thread": msg["thread"],
-                                   u"pid":    msg["pid"],
-                                   u"source": msg["source"],
-                                   # valgrind_error specific fields
-                                   u"primary":   self.curr_failure_msg,
-                                   u"secondary": self.buffered_lines }
+                output_message = {  # Mandatory fields
+                    u"action": "valgrind_error",
+                    u"time":   msg["time"],
+                    u"thread": msg["thread"],
+                    u"pid":    msg["pid"],
+                    u"source": msg["source"],
+                    # valgrind_error specific fields
+                    u"primary":   self.curr_failure_msg,
+                    u"secondary": self.buffered_lines}
                 self.curr_failure_msg = ""
                 self.buffered_lines = []
 

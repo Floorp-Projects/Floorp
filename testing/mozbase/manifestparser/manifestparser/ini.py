@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
+
 __all__ = ['read_ini']
 
-import os
 
 def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
              comments=';#', separators=('=', ':'),
@@ -58,7 +59,8 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
 
             if strict:
                 # make sure this section doesn't already exist
-                assert section not in section_names, "Section '%s' already found in '%s'" % (section, section_names)
+                assert section not in section_names, "Section '%s' already found in '%s'" % (
+                    section, section_names)
 
             section_names.add(section)
             current_section = {}
@@ -119,7 +121,8 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
                                     ('support-files', '%s %s')):
             local_value, global_value = local_dict.get(field_name), variables.get(field_name)
             if local_value and global_value:
-                local_dict[field_name] = pattern % (global_value.split('#')[0], local_value.split('#')[0])
+                local_dict[field_name] = pattern % (
+                    global_value.split('#')[0], local_value.split('#')[0])
         variables.update(local_dict)
 
         return variables

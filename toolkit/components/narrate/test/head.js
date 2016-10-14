@@ -3,12 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* exported teardown, setup, toggleExtension,
-   spawnInNewReaderTab, TEST_ARTICLE  */
+   spawnInNewReaderTab, TEST_ARTICLE, TEST_ITALIAN_ARTICLE  */
 
 "use strict";
 
 const TEST_ARTICLE =
   "http://example.com/browser/toolkit/components/narrate/test/moby_dick.html";
+
+const TEST_ITALIAN_ARTICLE =
+  "http://example.com/browser/toolkit/components/narrate/test/inferno.html";
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -19,28 +22,38 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
-const TEST_PREFS = [
-  ["reader.parse-on-load.enabled", true],
-  ["media.webspeech.synth.enabled", true],
-  ["media.webspeech.synth.test", true],
-  ["narrate.enabled", true],
-  ["narrate.test", true]
-];
+const TEST_PREFS = {
+  "reader.parse-on-load.enabled": true,
+  "media.webspeech.synth.enabled": true,
+  "media.webspeech.synth.test": true,
+  "narrate.enabled": true,
+  "narrate.test": true,
+  "narrate.voice": null,
+  "narrate.filter-voices": false,
+};
 
-function setup(voiceUri) {
-  // Set required test prefs.
-  TEST_PREFS.forEach(([name, value]) => {
-    setBoolPref(name, value);
+function setup(voiceUri = "automatic", filterVoices = false) {
+  let prefs = Object.assign({}, TEST_PREFS, {
+    "narrate.filter-voices": filterVoices,
+    "narrate.voice": JSON.stringify({ en: voiceUri })
   });
 
-  if (voiceUri) {
-    Services.prefs.setCharPref("narrate.voice", voiceUri);
-  }
+  // Set required test prefs.
+  Object.entries(prefs).forEach(([name, value]) => {
+    switch (typeof value) {
+      case "boolean":
+        setBoolPref(name, value);
+        break;
+      case "string":
+        setCharPref(name, value);
+        break;
+    }
+  });
 }
 
 function teardown() {
   // Reset test prefs.
-  TEST_PREFS.forEach(pref => {
+  Object.entries(TEST_PREFS).forEach(pref => {
     clearUserPref(pref[0]);
   });
 }
@@ -65,7 +78,10 @@ function setBoolPref(name, value) {
   Services.prefs.setBoolPref(name, value);
 }
 
+function setCharPref(name, value) {
+  Services.prefs.setCharPref(name, value);
+}
+
 function clearUserPref(name) {
   Services.prefs.clearUserPref(name);
 }
-

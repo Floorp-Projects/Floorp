@@ -27,13 +27,13 @@ def verify_ip_in_list(ip):
     # Regex to match IPv4 addresses.
     # 0-255.0-255.0-255.0-255, note order is important here.
     regexip = re.compile("((25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.){3}"
-                              "(25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)")
+                         "(25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)")
 
     if mozinfo.isLinux or mozinfo.isMac or mozinfo.isBsd:
         # if "/sbin/ifconfig" exist, use it because it may not be in the
         # PATH (at least on some linux platforms)
         if os.path.isfile('/sbin/ifconfig') and os.access('/sbin/ifconfig',
-                                                           os.X_OK):
+                                                          os.X_OK):
             args = ['/sbin/ifconfig']
         else:
             args = ["ifconfig"]

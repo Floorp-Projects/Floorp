@@ -4,6 +4,7 @@
 
 from ..reader import LogHandler
 
+
 class BaseFormatter(LogHandler):
     """Base class for implementing non-trivial formatters.
 

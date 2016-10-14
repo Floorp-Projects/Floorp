@@ -13,6 +13,7 @@ from mozprofile.webapps import WebappCollection, Webapp, WebappFormatException
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 class WebappTest(unittest.TestCase):
     """Tests reading, installing and cleaning webapps
     from a profile.
@@ -50,24 +51,24 @@ class WebappTest(unittest.TestCase):
         """Tests a webapp with a missing required key"""
         webapps = WebappCollection(self.profile)
         # Missing the required key "description", exception should be raised
-        self.assertRaises(WebappFormatException, webapps.append, { 'name': 'foo' })
+        self.assertRaises(WebappFormatException, webapps.append, {'name': 'foo'})
 
     def test_webapp_collection(self):
         """Tests the methods of the WebappCollection object"""
-        webapp_1 = { 'name': 'test_app_1',
-                     'description': 'a description',
-                     'manifestURL': 'http://example.com/1/manifest.webapp',
-                     'appStatus': 1 }
+        webapp_1 = {'name': 'test_app_1',
+                    'description': 'a description',
+                    'manifestURL': 'http://example.com/1/manifest.webapp',
+                    'appStatus': 1}
 
-        webapp_2 = { 'name': 'test_app_2',
-                     'description': 'another description',
-                     'manifestURL': 'http://example.com/2/manifest.webapp',
-                     'appStatus': 2 }
+        webapp_2 = {'name': 'test_app_2',
+                    'description': 'another description',
+                    'manifestURL': 'http://example.com/2/manifest.webapp',
+                    'appStatus': 2}
 
-        webapp_3 = { 'name': 'test_app_2',
-                     'description': 'a third description',
-                     'manifestURL': 'http://example.com/3/manifest.webapp',
-                     'appStatus': 3 }
+        webapp_3 = {'name': 'test_app_2',
+                    'description': 'a third description',
+                    'manifestURL': 'http://example.com/3/manifest.webapp',
+                    'appStatus': 3}
 
         webapps = WebappCollection(self.profile)
         self.assertEqual(len(webapps), 0)
@@ -145,12 +146,14 @@ class WebappTest(unittest.TestCase):
         # The new apps should be added
         for app in webapps_json:
             self.assertIsInstance(app, Webapp)
-            self.assertTrue(os.path.isfile(os.path.join(self.webapps_dir, app['name'], 'manifest.webapp')))
+            self.assertTrue(os.path.isfile(os.path.join(self.webapps_dir, app['name'],
+                                                        'manifest.webapp')))
         # The removed app should not exist in the manifest
         self.assertNotIn(removed_app, webapps_json)
         self.assertFalse(os.path.exists(os.path.join(self.webapps_dir, removed_app['name'])))
 
-        # Cleaning should delete the webapps directory entirely since there was nothing there before
+        # Cleaning should delete the webapps directory entirely
+        # since there was nothing there before
         webapps.clean()
         self.assertFalse(os.path.isdir(self.webapps_dir))
 
@@ -180,7 +183,8 @@ class WebappTest(unittest.TestCase):
         self.assertEqual(len(webapps_json), 12)
         for app in webapps_json:
             self.assertIsInstance(app, Webapp)
-            self.assertTrue(os.path.isfile(os.path.join(self.webapps_dir, app['name'], 'manifest.webapp')))
+            self.assertTrue(os.path.isfile(os.path.join(self.webapps_dir, app['name'],
+                                                        'manifest.webapp')))
 
         # Upon cleaning the backup should be restored
         webapps.clean()
@@ -190,7 +194,8 @@ class WebappTest(unittest.TestCase):
         webapps_json = webapps.read_json(self.webapps_json_path)
         for app in webapps_json:
             self.assertIsInstance(app, Webapp)
-            self.assertTrue(os.path.isfile(os.path.join(self.webapps_dir, app['name'], 'manifest.webapp')))
+            self.assertTrue(os.path.isfile(os.path.join(self.webapps_dir, app['name'],
+                                                        'manifest.webapp')))
         self.assertEqual(webapps_json, manifest_json_2)
 
 if __name__ == '__main__':

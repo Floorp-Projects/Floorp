@@ -16,6 +16,7 @@ except ImportError:
 """Adapter used to output structuredlog messages from unittest
 testsuites"""
 
+
 def get_test_class_name(test):
     """
     This method is used to return the full class name from a
@@ -28,6 +29,7 @@ def get_test_class_name(test):
     return "%s.%s" % (test.__class__.__module__,
                       test.__class__.__name__)
 
+
 def get_test_method_name(test):
     """
     This method is used to return the full method name from a
@@ -39,7 +41,9 @@ def get_test_method_name(test):
     """
     return test._testMethodName
 
+
 class StructuredTestResult(TextTestResult):
+
     def __init__(self, *args, **kwargs):
         self.logger = kwargs.pop('logger')
         self.test_list = kwargs.pop("test_list", [])
@@ -133,7 +137,7 @@ class StructuredTestResult(TextTestResult):
         extra = self.call_callbacks(test, "ERROR")
         extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
-                            "FAIL",
+                             "FAIL",
                              message=self._extract_err_message(err),
                              expected="PASS",
                              stack=self._extract_stacktrace(err, test),
@@ -147,7 +151,7 @@ class StructuredTestResult(TextTestResult):
         extra = self.call_callbacks(test, "ERROR")
         extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
-                            "FAIL",
+                             "FAIL",
                              message=self._extract_err_message(err),
                              expected="FAIL",
                              stack=self._extract_stacktrace(err, test),

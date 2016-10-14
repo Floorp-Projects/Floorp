@@ -126,10 +126,7 @@ function NarrateControls(mm, win) {
   // The rate is stored as an integer.
   rateRange.value = branch.getIntPref("rate");
 
-  if (this._setupVoices(branch.getCharPref("voice"))) {
-    // We disable this entire feature if there are no synthesis voices.
-    dropdown.querySelector("#narrate-toggle").hidden = false;
-  }
+  this._setupVoices();
 
   let tb = win.document.getElementById("reader-toolbar");
   tb.appendChild(dropdown);
@@ -149,9 +146,7 @@ NarrateControls.prototype = {
         this._onButtonClick(evt);
         break;
       case "voiceschanged":
-        // We disable this entire feature if there are no synthesis voices.
-        this._doc.getElementById("narrate-toggle").hidden =
-          !this._setupVoices(Services.prefs.getCharPref("narrate.voice"));
+        this._setupVoices();
         break;
     }
   },
@@ -159,27 +154,47 @@ NarrateControls.prototype = {
   /**
    * Returns true if synth voices are available.
    */
-  _setupVoices: function(selectedVoice) {
-    this.voiceSelect.clear();
-    let win = this._win;
-    let comparer = win.Intl ?
-      (new Intl.Collator()).compare : (a, b) => a.localeCompare(b);
-    let options = win.speechSynthesis.getVoices().map(v => {
-      return {
-        label: this._createVoiceLabel(v),
-        value: v.voiceURI
-      };
-    }).sort((a, b) => comparer(a.label, b.label));
+  _setupVoices: function() {
+    return this.narrator.languagePromise.then(language => {
+      this.voiceSelect.clear();
+      let win = this._win;
+      let doc = win.document;
+      let voicePrefs = this._getVoicePref();
+      let selectedVoice = voicePrefs[language || "default"];
+      let comparer = win.Intl ?
+        (new Intl.Collator()).compare : (a, b) => a.localeCompare(b);
+      let filter = !Services.prefs.getBoolPref("narrate.filter-voices");
+      let options = win.speechSynthesis.getVoices().filter(v => {
+        return filter || !language || v.lang.split("-")[0] == language;
+      }).map(v => {
+        return {
+          label: this._createVoiceLabel(v),
+          value: v.voiceURI,
+          selected: selectedVoice == v.voiceURI
+        };
+      }).sort((a, b) => comparer(a.label, b.label));
 
-    if (options.length) {
-      options.unshift({
-        label: gStrings.GetStringFromName("defaultvoice"),
-        value: "automatic"
-      });
-      this.voiceSelect.addOptions(options, selectedVoice);
+      if (options.length) {
+        options.unshift({
+          label: gStrings.GetStringFromName("defaultvoice"),
+          value: "automatic",
+          selected: selectedVoice == "automatic"
+        });
+        this.voiceSelect.addOptions(options);
+      }
+
+      // We disable this entire feature if there are no available voices.
+      doc.getElementById("narrate-toggle").hidden = !options.length;
+    });
+  },
+
+  _getVoicePref: function() {
+    let voicePref = Services.prefs.getCharPref("narrate.voice");
+    try {
+      return JSON.parse(voicePref);
+    } catch (e) {
+      return { default: voicePref };
     }
-
-    return !!options.length;
   },
 
   _onRateInput: function(evt) {
@@ -189,8 +204,14 @@ NarrateControls.prototype = {
 
   _onVoiceChange: function() {
     let voice = this.voice;
-    AsyncPrefs.set("narrate.voice", voice);
     this.narrator.setVoice(voice);
+    this.narrator.languagePromise.then(language => {
+      if (language) {
+        let voicePref = this._getVoicePref();
+        voicePref[language || "default"] = voice;
+        AsyncPrefs.set("narrate.voice", JSON.stringify(voicePref));
+      }
+    });
   },
 
   _onButtonClick: function(evt) {

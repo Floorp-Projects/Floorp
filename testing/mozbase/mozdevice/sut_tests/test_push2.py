@@ -7,6 +7,7 @@ import posixpath
 
 from dmunit import DeviceManagerTestCase
 
+
 class Push2TestCase(DeviceManagerTestCase):
 
     def runTest(self):

@@ -23,6 +23,7 @@ from moztest.adapters.unit import StructuredTestRunner
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 def unittests(path):
     """return the unittests in a .py file"""
 
@@ -30,15 +31,16 @@ def unittests(path):
     unittests = []
     assert os.path.exists(path)
     directory = os.path.dirname(path)
-    sys.path.insert(0, directory) # insert directory into path for top-level imports
+    sys.path.insert(0, directory)  # insert directory into path for top-level imports
     modname = os.path.splitext(os.path.basename(path))[0]
     module = imp.load_source(modname, path)
-    sys.path.pop(0) # remove directory from global path
+    sys.path.pop(0)  # remove directory from global path
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromModule(module)
     for test in suite:
         unittests.append(test)
     return unittests
+
 
 def main(args=sys.argv[1:]):
 
@@ -46,8 +48,8 @@ def main(args=sys.argv[1:]):
     usage = '%prog [options] manifest.ini <manifest.ini> <...>'
     parser = optparse.OptionParser(usage=usage, description=__doc__)
     parser.add_option('-b', "--binary",
-                  dest="binary", help="Binary path",
-                  metavar=None, default=None)
+                      dest="binary", help="Binary path",
+                      metavar=None, default=None)
     parser.add_option('--list', dest='list_tests',
                       action='store_true', default=False,
                       help="list paths of tests to be run")

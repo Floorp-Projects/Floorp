@@ -12,6 +12,7 @@ import tempfile
 import unittest
 from mozprofile.permissions import Permissions
 
+
 class PermissionsTest(unittest.TestCase):
 
     locations = """http://mochi.test:8888  primary,privileged

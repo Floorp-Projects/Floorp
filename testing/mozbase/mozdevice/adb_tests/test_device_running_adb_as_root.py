@@ -10,7 +10,9 @@ import sys
 
 from mozdevice import DeviceManagerADB
 
+
 class TestFileOperations(unittest.TestCase):
+
     def setUp(self):
         dm = DeviceManagerADB()
         dm.reboot(wait=True)
@@ -34,13 +36,13 @@ class TestFileOperations(unittest.TestCase):
 if __name__ == "__main__":
     dm = DeviceManagerADB()
     if not dm.devices():
-       print "There are no connected adb devices"
-       sys.exit(1)
+        print "There are no connected adb devices"
+        sys.exit(1)
     else:
-        if not (int(dm._runCmd(["shell", "getprop", "ro.secure"]).output[0]) and \
+        if not (int(dm._runCmd(["shell", "getprop", "ro.secure"]).output[0]) and
                 int(dm._runCmd(["shell", "getprop", "ro.debuggable"]).output[0])):
             print "This test case is meant for devices with devices that start " \
-                    "adbd as non-root and allows for adbd to be restarted as root."
+                "adbd as non-root and allows for adbd to be restarted as root."
             sys.exit(1)
 
     unittest.main()

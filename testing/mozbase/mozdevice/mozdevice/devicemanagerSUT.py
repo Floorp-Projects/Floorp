@@ -17,6 +17,7 @@ from devicemanager import DeviceManager, DMError, _pop_last_line
 import errno
 from distutils.version import StrictVersion
 
+
 class DeviceManagerSUT(DeviceManager):
     """
     Implementation of DeviceManager interface that speaks to a device over
@@ -45,7 +46,7 @@ class DeviceManagerSUT(DeviceManager):
         self._everConnected = False
 
         # Get version
-        verstring = self._runCmds([{ 'cmd': 'ver' }])
+        verstring = self._runCmds([{'cmd': 'ver'}])
         ver_re = re.match('(\S+) Version (\S+)', verstring)
         self.agentProductName = ver_re.group(1)
         self.agentVersion = ver_re.group(2)
@@ -109,7 +110,7 @@ class DeviceManagerSUT(DeviceManager):
                 return True
         return False
 
-    def _sendCmds(self, cmdlist, outputfile, timeout = None, retryLimit = None):
+    def _sendCmds(self, cmdlist, outputfile, timeout=None, retryLimit=None):
         """
         Wrapper for _doCmds that loops up to retryLimit iterations
         """
@@ -138,9 +139,10 @@ class DeviceManagerSUT(DeviceManager):
                     self._logger.info('Could not connect; sleeping for %d seconds.' % sleep_time)
                     time.sleep(sleep_time)
 
-        raise DMError("Remote Device Error: unable to connect to %s after %s attempts" % (self.host, retryLimit))
+        raise DMError("Remote Device Error: unable to connect to %s after %s attempts" %
+                      (self.host, retryLimit))
 
-    def _runCmds(self, cmdlist, timeout = None, retryLimit = None):
+    def _runCmds(self, cmdlist, timeout=None, retryLimit=None):
         """
         Similar to _sendCmds, but just returns any output as a string instead of
         writing to a file
@@ -156,7 +158,8 @@ class DeviceManagerSUT(DeviceManager):
         shouldCloseSocket = False
 
         if not timeout:
-            # We are asserting that all commands will complete in this time unless otherwise specified
+            # We are asserting that all commands will complete in this time unless
+            # otherwise specified
             timeout = self.default_timeout
 
         if not self._sock:
@@ -166,7 +169,7 @@ class DeviceManagerSUT(DeviceManager):
                 self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             except socket.error as msg:
                 self._sock = None
-                raise DMError("Automation Error: unable to create socket: "+str(msg))
+                raise DMError("Automation Error: unable to create socket: " + str(msg))
 
             try:
                 self._sock.settimeout(float(timeout))
@@ -174,7 +177,7 @@ class DeviceManagerSUT(DeviceManager):
                 self._everConnected = True
             except socket.error as msg:
                 self._sock = None
-                raise DMError("Remote Device Error: Unable to connect socket: "+str(msg))
+                raise DMError("Remote Device Error: Unable to connect socket: " + str(msg))
 
             # consume prompt
             try:
@@ -182,7 +185,9 @@ class DeviceManagerSUT(DeviceManager):
             except socket.error as msg:
                 self._sock.close()
                 self._sock = None
-                raise DMError("Remote Device Error: Did not get prompt after connecting: " + str(msg), fatal=True)
+                raise DMError(
+                    "Remote Device Error: Did not get prompt after connecting: " + str(msg),
+                    fatal=True)
 
             # future recv() timeouts are handled by select() calls
             self._sock.settimeout(None)
@@ -208,8 +213,8 @@ class DeviceManagerSUT(DeviceManager):
             except socket.error as msg:
                 self._sock.close()
                 self._sock = None
-                self._logger.error("Remote Device Error: Error sending data"\
-                        " to socket. cmd=%s; err=%s" % (cmd['cmd'], msg))
+                self._logger.error("Remote Device Error: Error sending data"
+                                   " to socket. cmd=%s; err=%s" % (cmd['cmd'], msg))
                 return False
 
             # Check if the command should close the socket
@@ -243,7 +248,8 @@ class DeviceManagerSUT(DeviceManager):
                         if timer > timeout:
                             self._sock.close()
                             self._sock = None
-                            raise DMError("Automation Error: Timeout in command %s" % cmd['cmd'], fatal=True)
+                            raise DMError("Automation Error: Timeout in command %s" %
+                                          cmd['cmd'], fatal=True)
                     except socket.error as err:
                         socketClosed = True
                         errStr = str(err)
@@ -254,7 +260,9 @@ class DeviceManagerSUT(DeviceManager):
                     if socketClosed:
                         self._sock.close()
                         self._sock = None
-                        raise DMError("Automation Error: Error receiving data from socket. cmd=%s; err=%s" % (cmd, errStr))
+                        raise DMError(
+                            "Automation Error: Error receiving data from socket. "
+                            "cmd=%s; err=%s" % (cmd, errStr))
 
                     data += temp
 
@@ -276,8 +284,8 @@ class DeviceManagerSUT(DeviceManager):
                     # periodically flush data to output file to make sure it doesn't get
                     # too big/unwieldly
                     if len(data) > 1024:
-                            outputfile.write(data[0:1024])
-                            data = data[1024:]
+                        outputfile.write(data[0:1024])
+                        data = data[1024:]
 
                 if commandFailed:
                     raise DMError("Automation Error: Error processing command '%s'; err='%s'" %
@@ -297,7 +305,7 @@ class DeviceManagerSUT(DeviceManager):
     def _setupDeviceRoot(self, deviceRoot):
         if not deviceRoot:
             deviceRoot = "%s/tests" % self._runCmds(
-                [{ 'cmd': 'testroot' }]).strip()
+                [{'cmd': 'testroot'}]).strip()
         self.mkDir(deviceRoot)
 
         return deviceRoot
@@ -327,16 +335,16 @@ class DeviceManagerSUT(DeviceManager):
             cmd += "su"
 
         if cwd:
-            self._sendCmds([{ 'cmd': '%s %s %s' % (cmd, cwd, cmdline) }], outputfile, timeout)
+            self._sendCmds([{'cmd': '%s %s %s' % (cmd, cwd, cmdline)}], outputfile, timeout)
         else:
             if (not root) or haveExecSu:
-                self._sendCmds([{ 'cmd': '%s %s' % (cmd, cmdline) }], outputfile, timeout)
+                self._sendCmds([{'cmd': '%s %s' % (cmd, cmdline)}], outputfile, timeout)
             else:
                 # need to manually inject su -c for backwards compatibility (this may
                 # not work on ICS or above!!)
                 # (FIXME: this backwards compatibility code is really ugly and should
                 # be deprecated at some point in the future)
-                self._sendCmds([ { 'cmd': '%s su -c "%s"' % (cmd, cmdline) }], outputfile,
+                self._sendCmds([{'cmd': '%s su -c "%s"' % (cmd, cmdline)}], outputfile,
                                timeout)
 
         # dig through the output to get the return code
@@ -347,7 +355,8 @@ class DeviceManagerSUT(DeviceManager):
                 return int(m.group(1))
 
         # woops, we couldn't find an end of line/return value
-        raise DMError("Automation Error: Error finding end of line/return value when running '%s'" % cmdline)
+        raise DMError(
+            "Automation Error: Error finding end of line/return value when running '%s'" % cmdline)
 
     def pushFile(self, localname, destname, retryLimit=None, createDir=True):
         retryLimit = retryLimit or self.retryLimit
@@ -357,8 +366,8 @@ class DeviceManagerSUT(DeviceManager):
         try:
             filesize = os.path.getsize(localname)
             with open(localname, 'rb') as f:
-                remoteHash = self._runCmds([{ 'cmd': 'push ' + destname + ' ' + str(filesize),
-                                              'data': f.read() }], retryLimit=retryLimit).strip()
+                remoteHash = self._runCmds([{'cmd': 'push ' + destname + ' ' + str(filesize),
+                                             'data': f.read()}], retryLimit=retryLimit).strip()
         except OSError:
             raise DMError("DeviceManager: Error reading file to push")
 
@@ -372,7 +381,7 @@ class DeviceManagerSUT(DeviceManager):
 
     def mkDir(self, name):
         if not self.dirExists(name):
-            self._runCmds([{ 'cmd': 'mkdr ' + name }])
+            self._runCmds([{'cmd': 'mkdr ' + name}])
 
     def pushDir(self, localDir, remoteDir, retryLimit=None, timeout=None):
         retryLimit = retryLimit or self.retryLimit
@@ -394,10 +403,11 @@ class DeviceManagerSUT(DeviceManager):
                     self.mkDirs(remoteName)
                     existentDirectories.append(parent)
 
-                self.pushFile(os.path.join(root, f), remoteName, retryLimit=retryLimit, createDir=False)
+                self.pushFile(os.path.join(root, f), remoteName,
+                              retryLimit=retryLimit, createDir=False)
 
     def dirExists(self, remotePath):
-        ret = self._runCmds([{ 'cmd': 'isdir ' + remotePath }]).strip()
+        ret = self._runCmds([{'cmd': 'isdir ' + remotePath}]).strip()
         if not ret:
             raise DMError('Automation Error: DeviceManager isdir returned null')
 
@@ -418,7 +428,7 @@ class DeviceManagerSUT(DeviceManager):
         rootdir = posixpath.normpath(rootdir)
         if not self.dirExists(rootdir):
             return []
-        data = self._runCmds([{ 'cmd': 'cd ' + rootdir }, { 'cmd': 'ls' }])
+        data = self._runCmds([{'cmd': 'cd ' + rootdir}, {'cmd': 'ls'}])
 
         files = filter(lambda x: x, data.splitlines())
         if len(files) == 1 and files[0] == '<empty>':
@@ -430,20 +440,20 @@ class DeviceManagerSUT(DeviceManager):
     def removeFile(self, filename):
         self._logger.info("removing file: " + filename)
         if self.fileExists(filename):
-            self._runCmds([{ 'cmd': 'rm ' + filename }])
+            self._runCmds([{'cmd': 'rm ' + filename}])
 
     def removeDir(self, remoteDir):
         if self.dirExists(remoteDir):
-            self._runCmds([{ 'cmd': 'rmdr ' + remoteDir }])
+            self._runCmds([{'cmd': 'rmdr ' + remoteDir}])
 
     def moveTree(self, source, destination):
-        self._runCmds([{ 'cmd': 'mv %s %s' % (source, destination) }])
+        self._runCmds([{'cmd': 'mv %s %s' % (source, destination)}])
 
     def copyTree(self, source, destination):
-        self._runCmds([{ 'cmd': 'dd if=%s of=%s' % (source, destination) }])
+        self._runCmds([{'cmd': 'dd if=%s of=%s' % (source, destination)}])
 
     def getProcessList(self):
-        data = self._runCmds([{ 'cmd': 'ps' }])
+        data = self._runCmds([{'cmd': 'ps'}])
 
         processTuples = []
         for line in data.splitlines():
@@ -478,12 +488,12 @@ class DeviceManagerSUT(DeviceManager):
 
         self._logger.info("FIRE PROC: '%s'" % appname)
 
-        if (self.processExist(appname) != None):
+        if (self.processExist(appname) is None):
             self._logger.warning("process %s appears to be running already\n" % appname)
             if (failIfRunning):
                 raise DMError("Automation Error: Process is already running")
 
-        self._runCmds([{ 'cmd': 'exec ' + appname }])
+        self._runCmds([{'cmd': 'exec ' + appname}])
 
         # The 'exec' command may wait for the process to start and end, so checking
         # for the process here may result in process = None.
@@ -501,7 +511,7 @@ class DeviceManagerSUT(DeviceManager):
         self._logger.debug("got pid: %s for process: %s" % (pid, appname))
         return pid
 
-    def launchProcess(self, cmd, outputFile = "process.txt", cwd = '', env = '', failIfRunning=False):
+    def launchProcess(self, cmd, outputFile="process.txt", cwd='', env='', failIfRunning=False):
         """
         Launches a process, redirecting output to standard out
 
@@ -545,32 +555,32 @@ class DeviceManagerSUT(DeviceManager):
             if pid and pid > 0:
                 try:
                     self.shellCheckOutput(['kill', '-%d' % sig, str(pid)],
-                           root=True)
+                                          root=True)
                 except DMError as err:
                     self._logger.warning("unable to kill -%d %s (pid %s)" %
-                           (sig, appname, str(pid)))
+                                         (sig, appname, str(pid)))
                     self._logger.debug(err)
                     raise err
             else:
                 self._logger.warning("unable to kill -%d %s -- not running?" %
-                       (sig, appname))
+                                     (sig, appname))
         else:
             retries = 0
             while retries < self.retryLimit:
                 try:
                     if self.processExist(appname):
-                        self._runCmds([{ 'cmd': 'kill ' + appname }])
+                        self._runCmds([{'cmd': 'kill ' + appname}])
                     return
                 except DMError as err:
                     retries += 1
                     self._logger.warning("try %d of %d failed to kill %s" %
-                           (retries, self.retryLimit, appname))
+                                         (retries, self.retryLimit, appname))
                     self._logger.debug(err)
                     if retries >= self.retryLimit:
                         raise err
 
     def getTempDir(self):
-        return self._runCmds([{ 'cmd': 'tmpd' }]).strip()
+        return self._runCmds([{'cmd': 'tmpd'}]).strip()
 
     def pullFile(self, remoteFile, offset=None, length=None):
         # The "pull" command is different from other commands in that DeviceManager
@@ -605,7 +615,7 @@ class DeviceManagerSUT(DeviceManager):
 
         def read_until_char(c, buf, error_msg):
             """ read until 'c' is found; buffer rest """
-            while not c in buf:
+            while c not in buf:
                 data = uread(1024, error_msg)
                 buf += data
             return buf.partition(c)
@@ -631,10 +641,10 @@ class DeviceManagerSUT(DeviceManager):
             cmd = 'pull %s %d %d' % (remoteFile, offset, length)
         elif offset is not None:
             cmd = 'pull %s %d' % (remoteFile, offset)
-        else: 
+        else:
             cmd = 'pull %s' % remoteFile
 
-        self._runCmds([{ 'cmd': cmd }])
+        self._runCmds([{'cmd': cmd}])
 
         # read metadata; buffer the rest
         metadata, sep, buf = read_until_char('\n', buf, 'could not find metadata')
@@ -658,7 +668,8 @@ class DeviceManagerSUT(DeviceManager):
             # prompt should follow
             read_exact(len(prompt), buf, 'could not find prompt')
             # failures are expected, so don't use "Remote Device Error" or we'll RETRY
-            raise DMError("DeviceManager: pulling file '%s' unsuccessful: %s" % (remoteFile, error_str))
+            raise DMError("DeviceManager: pulling file '%s' unsuccessful: %s" %
+                          (remoteFile, error_str))
 
         # read file data
         total_to_recv = filesize + len(prompt)
@@ -703,7 +714,7 @@ class DeviceManagerSUT(DeviceManager):
         remoteHash = self._getRemoteHash(remoteFile)
         localHash = self._getLocalHash(localFile)
 
-        if (remoteHash == None):
+        if (remoteHash is None):
             return False
 
         if (remoteHash == localHash):
@@ -712,7 +723,7 @@ class DeviceManagerSUT(DeviceManager):
         return False
 
     def _getRemoteHash(self, filename):
-        data = self._runCmds([{ 'cmd': 'hash ' + filename }]).strip()
+        data = self._runCmds([{'cmd': 'hash ' + filename}]).strip()
         self._logger.debug("remote hash returned: '%s'" % data)
         return data
 
@@ -729,7 +740,7 @@ class DeviceManagerSUT(DeviceManager):
         if destDir[-1] != '/':
             destDir += '/'
 
-        self._runCmds([{ 'cmd': 'unzp %s %s' % (filePath, destDir)}])
+        self._runCmds([{'cmd': 'unzp %s %s' % (filePath, destDir)}])
 
     def _getRebootServerSocket(self, ipAddr):
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -770,7 +781,6 @@ class DeviceManagerSUT(DeviceManager):
                           "to 'settle'" % self.reboot_settling_time)
         time.sleep(self.reboot_settling_time)
 
-
     def reboot(self, ipAddr=None, port=30000, wait=False):
         # port ^^^ is here for backwards compatibility only, we now
         # determine a port automatically and safely
@@ -809,14 +819,14 @@ class DeviceManagerSUT(DeviceManager):
         result = {}
         collapseSpaces = re.compile('  +')
 
-        directives = ['os','id','uptime','uptimemillis','systime','screen',
-                      'rotation','memory','process','disk','power','sutuserinfo',
+        directives = ['os', 'id', 'uptime', 'uptimemillis', 'systime', 'screen',
+                      'rotation', 'memory', 'process', 'disk', 'power', 'sutuserinfo',
                       'temperature']
         if (directive in directives):
             directives = [directive]
 
         for d in directives:
-            data = self._runCmds([{ 'cmd': 'info ' + d }])
+            data = self._runCmds([{'cmd': 'info ' + d}])
 
             data = collapseSpaces.sub(' ', data)
             result[d] = data.split('\n')
@@ -841,7 +851,7 @@ class DeviceManagerSUT(DeviceManager):
         if destPath:
             cmd += ' ' + destPath
 
-        data = self._runCmds([{ 'cmd': cmd }])
+        data = self._runCmds([{'cmd': cmd}])
 
         if 'installation complete [0]' not in data:
             raise DMError("Remove Device Error: Error installing app. Error message: %s" % data)
@@ -850,7 +860,7 @@ class DeviceManagerSUT(DeviceManager):
         cmd = 'uninstall ' + appName
         if installPath:
             cmd += ' ' + installPath
-        data = self._runCmds([{ 'cmd': cmd }])
+        data = self._runCmds([{'cmd': cmd}])
 
         status = data.split('\n')[0].strip()
         self._logger.debug("uninstallApp: '%s'" % status)
@@ -862,7 +872,7 @@ class DeviceManagerSUT(DeviceManager):
         cmd = 'uninst ' + appName
         if installPath:
             cmd += ' ' + installPath
-        data = self._runCmds([{ 'cmd': cmd }])
+        data = self._runCmds([{'cmd': cmd}])
 
         self._logger.debug("uninstallAppAndReboot: %s" % data)
         return
@@ -897,7 +907,7 @@ class DeviceManagerSUT(DeviceManager):
             self._waitForRebootPing(serverSocket)
 
     def getCurrentTime(self):
-        return int(self._runCmds([{ 'cmd': 'clok' }]).strip())
+        return int(self._runCmds([{'cmd': 'clok'}]).strip())
 
     def _formatEnvString(self, env):
         """
@@ -907,7 +917,7 @@ class DeviceManagerSUT(DeviceManager):
         Output - a quoted string of the form: '"envvar1=val1,envvar2=val2..."'
         If env is None or '' return '' (empty quoted string)
         """
-        if (env == None or env == ''):
+        if (env is None or env == ''):
             return ''
 
         retVal = '"%s"' % ','.join(map(lambda x: '%s=%s' % (x[0], x[1]), env.iteritems()))
@@ -922,7 +932,8 @@ class DeviceManagerSUT(DeviceManager):
 
         NOTE: this only works on a tegra ATM
 
-        supported resolutions: 640x480, 800x600, 1024x768, 1152x864, 1200x1024, 1440x900, 1680x1050, 1920x1080
+        supported resolutions: 640x480, 800x600, 1024x768, 1152x864, 1200x1024, 1440x900,
+        1680x1050, 1920x1080
         """
         if self.getInfo('os')['os'][0].split()[0] != 'harmony-eng':
             self._logger.warning("unable to adjust screen resolution on non Tegra device")
@@ -930,9 +941,11 @@ class DeviceManagerSUT(DeviceManager):
 
         results = self.getInfo('screen')
         parts = results['screen'][0].split(':')
-        self._logger.debug("we have a current resolution of %s, %s" % (parts[1].split()[0], parts[2].split()[0]))
+        self._logger.debug("we have a current resolution of %s, %s" %
+                           (parts[1].split()[0], parts[2].split()[0]))
 
-        #verify screen type is valid, and set it to the proper value (https://bugzilla.mozilla.org/show_bug.cgi?id=632895#c4)
+        # verify screen type is valid, and set it to the proper value
+        # (https://bugzilla.mozilla.org/show_bug.cgi?id=632895#c4)
         screentype = -1
         if (type == 'hdmi'):
             screentype = 5
@@ -941,7 +954,7 @@ class DeviceManagerSUT(DeviceManager):
         else:
             return False
 
-        #verify we have numbers
+        # verify we have numbers
         if not (isinstance(width, int) and isinstance(height, int)):
             return False
 
@@ -953,8 +966,10 @@ class DeviceManagerSUT(DeviceManager):
 
         self._logger.debug("adjusting screen resolution to %s, %s and rebooting" % (width, height))
 
-        self._runCmds([{ 'cmd': "exec setprop persist.tegra.dpy%s.mode.width %s" % (screentype, width) }])
-        self._runCmds([{ 'cmd': "exec setprop persist.tegra.dpy%s.mode.height %s" % (screentype, height) }])
+        self._runCmds(
+            [{'cmd': "exec setprop persist.tegra.dpy%s.mode.width %s" % (screentype, width)}])
+        self._runCmds(
+            [{'cmd': "exec setprop persist.tegra.dpy%s.mode.height %s" % (screentype, height)}])
 
     def chmodDir(self, remoteDir, **kwargs):
-        self._runCmds([{ 'cmd': "chmod "+remoteDir }])
+        self._runCmds([{'cmd': "chmod " + remoteDir}])

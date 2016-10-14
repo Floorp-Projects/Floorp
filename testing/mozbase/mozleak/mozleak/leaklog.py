@@ -5,10 +5,6 @@
 
 import os
 import re
-import sys
-
-import mozinfo
-import mozrunner.utils
 
 
 def _get_default_logger():
@@ -71,8 +67,9 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                 # Multiple default processes can end up writing their bloat views into a single
                 # log, particularly on B2G. Eventually, these should be split into multiple
                 # logs (bug 1068869), but for now, we report the largest leak.
-                if totalBytesLeaked != None:
-                    leakAnalysis.append("WARNING | leakcheck | %s multiple BloatView byte totals found"
+                if totalBytesLeaked is not None:
+                    leakAnalysis.append("WARNING | leakcheck | %s "
+                                        "multiple BloatView byte totals found"
                                         % processString)
                 else:
                     totalBytesLeaked = 0
@@ -194,7 +191,7 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
                  % (processType, leakThresholds.get(processType, 0)))
 
     for processType in leakThresholds:
-        if not processType in knownProcessTypes:
+        if processType not in knownProcessTypes:
             log.info("TEST-UNEXPECTED-FAIL | leakcheck | Unknown process type %s in leakThresholds"
                      % processType)
 
@@ -213,7 +210,7 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
                 processType = m.group(1)
             else:
                 processType = "default"
-            if not processType in knownProcessTypes:
+            if processType not in knownProcessTypes:
                 log.info("TEST-UNEXPECTED-FAIL | leakcheck | Leak log with unknown process type %s"
                          % processType)
             leakThreshold = leakThresholds.get(processType, 0)

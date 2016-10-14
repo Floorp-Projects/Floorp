@@ -12,6 +12,7 @@ import unittest
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 class TestProfilePrint(unittest.TestCase):
 
     def test_profileprint(self):
@@ -20,7 +21,7 @@ class TestProfilePrint(unittest.TestCase):
         """
 
         keys = set(['Files', 'Path', 'user.js'])
-        ff_prefs = mozprofile.FirefoxProfile.preferences # shorthand
+        ff_prefs = mozprofile.FirefoxProfile.preferences  # shorthand
         pref_string = '\n'.join(['%s: %s' % (key, ff_prefs[key])
                                  for key in sorted(ff_prefs.keys())])
 

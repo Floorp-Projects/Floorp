@@ -474,18 +474,21 @@ TISInputSourceWrapper::InitByLayoutID(SInt32 aLayoutID,
       InitByInputSourceID("com.apple.keylayout.Arabic");
       break;
     case 7:
-      InitByInputSourceID("com.apple.keylayout.French");
+      InitByInputSourceID("com.apple.keylayout.ArabicPC");
       break;
     case 8:
-      InitByInputSourceID("com.apple.keylayout.Hebrew");
+      InitByInputSourceID("com.apple.keylayout.French");
       break;
     case 9:
-      InitByInputSourceID("com.apple.keylayout.Lithuanian");
+      InitByInputSourceID("com.apple.keylayout.Hebrew");
       break;
     case 10:
-      InitByInputSourceID("com.apple.keylayout.Norwegian");
+      InitByInputSourceID("com.apple.keylayout.Lithuanian");
       break;
     case 11:
+      InitByInputSourceID("com.apple.keylayout.Norwegian");
+      break;
+    case 12:
       InitByInputSourceID("com.apple.keylayout.Spanish");
       break;
     default:
@@ -2187,6 +2190,14 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 
   if (str.Length() != 1 || IsIMEComposing()) {
     InsertTextAsCommittingComposition(aAttrString, aReplacementRange);
+    // For now, consume keypress events when we dispatch the string with a
+    // composition for preventing to dispatch keypress events later.
+    // TODO: When there is a currentKeyEvent, we should dispatch keypress
+    //       events even if the length of the string is over 1.
+    if (currentKeyEvent) {
+      currentKeyEvent->mKeyPressHandled = true;
+      currentKeyEvent->mKeyPressDispatched = true;
+    }
     return;
   }
 

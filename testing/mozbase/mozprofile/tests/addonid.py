@@ -43,7 +43,7 @@ class AddonIDTest(unittest.TestCase):
             if you want it to pass.
         """
         tests = [
-"""<?xml version="1.0"?>
+            """<?xml version="1.0"?>
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
    <Description about="urn:mozilla:install-manifest">
@@ -51,7 +51,8 @@ class AddonIDTest(unittest.TestCase):
      <em:name>MozMill</em:name>
      <em:version>2.0a</em:version>
      <em:creator>Adam Christian</em:creator>
-     <em:description>A testing extension based on the Windmill Testing Framework client source</em:description>
+     <em:description>A testing extension based on the
+            Windmill Testing Framework client source</em:description>
      <em:unpack>true</em:unpack>
      <em:targetApplication>
        <!-- Firefox -->
@@ -102,7 +103,7 @@ class AddonIDTest(unittest.TestCase):
      </em:targetApplication>
    </Description>
 </RDF>""",
-"""<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+            """<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
    <Description about="urn:mozilla:install-manifest">
      <em:targetApplication>
@@ -117,20 +118,22 @@ class AddonIDTest(unittest.TestCase):
      <em:name>MozMill</em:name>
      <em:version>2.0a</em:version>
      <em:creator>Adam Christian</em:creator>
-     <em:description>A testing extension based on the Windmill Testing Framework client source</em:description>
+     <em:description>A testing extension based on the
+            Windmill Testing Framework client source</em:description>
      <em:unpack>true</em:unpack>
     </Description>
  </RDF>""",
-"""<RDF xmlns="http://www.mozilla.org/2004/em-rdf#"
+            """<RDF xmlns="http://www.mozilla.org/2004/em-rdf#"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <rdf:Description about="urn:mozilla:install-manifest">
      <id>winning</id>
      <name>foo</name>
      <version>42</version>
-     <description>A testing extension based on the Windmill Testing Framework client source</description>
+     <description>A testing extension based on the
+            Windmill Testing Framework client source</description>
  </rdf:Description>
 </RDF>""",
-"""<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+            """<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:foobar="http://www.mozilla.org/2004/em-rdf#">
    <Description about="urn:mozilla:install-manifest">
      <foobar:targetApplication>
@@ -145,11 +148,12 @@ class AddonIDTest(unittest.TestCase):
      <foobar:name>MozMill</foobar:name>
      <foobar:version>2.0a</foobar:version>
      <foobar:creator>Adam Christian</foobar:creator>
-     <foobar:description>A testing extension based on the Windmill Testing Framework client source</foobar:description>
+     <foobar:description>A testing extension based on the
+            Windmill Testing Framework client source</foobar:description>
      <foobar:unpack>true</foobar:unpack>
     </Description>
  </RDF>""",
-"""<?xml version="1.0"?>
+            """<?xml version="1.0"?>
 <!--
 
 -->

@@ -44,3 +44,5 @@ content from the current directory, defines a single API endpoint
 
 from mozhttpd import MozHttpd, Request, RequestHandler, main
 from handlers import json_response
+
+__all__ = ['MozHttpd', 'Request', 'RequestHandler', 'main', 'json_response']

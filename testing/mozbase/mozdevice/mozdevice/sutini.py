@@ -23,6 +23,7 @@ SCHEMA = {'Registration Server': (('IPAddr', ''),
                                ('ENCR', ''),
                                ('EAP', ''))}
 
+
 def get_cfg(d, ini_path):
     cfg = ConfigParser.RawConfigParser()
     try:

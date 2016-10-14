@@ -21,13 +21,13 @@ def strsig(n):
         for k in dir(signal):
             if (k.startswith("SIG")
                 and not k.startswith("SIG_")
-                and k != "SIGCLD" and k != "SIGPOLL"):
+                    and k != "SIGCLD" and k != "SIGPOLL"):
 
                 _SIG_NAME[getattr(signal, k)] = k
 
         # Realtime signals mostly have no names
         if hasattr(signal, "SIGRTMIN") and hasattr(signal, "SIGRTMAX"):
-            for r in range(signal.SIGRTMIN+1, signal.SIGRTMAX+1):
+            for r in range(signal.SIGRTMIN + 1, signal.SIGRTMAX + 1):
                 _SIG_NAME[r] = "SIGRTMIN+" + str(r - signal.SIGRTMIN)
 
     if n < 0 or n >= signal.NSIG:

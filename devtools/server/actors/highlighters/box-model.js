@@ -4,8 +4,10 @@
 
 "use strict";
 
+const { Cu } = require("chrome");
 const { extend } = require("sdk/core/heritage");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
+const { CssGridHighlighter } = require("./css-grid");
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
@@ -18,6 +20,7 @@ const {
 const { setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 const inspector = require("devtools/server/actors/inspector");
 const nodeConstants = require("devtools/shared/dom-node-constants");
+const Services = require("Services");
 
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
@@ -27,6 +30,8 @@ const BOX_MODEL_SIDES = ["top", "right", "bottom", "left"];
 const GUIDE_STROKE_WIDTH = 1;
 // FIXME: add ":visited" and ":link" after bug 713106 is fixed
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
+
+const GRID_ENABLED_PREF = "layout.css.grid.enabled";
 
 /**
  * The BoxModelHighlighter draws the box model regions on top of a node.
@@ -91,6 +96,10 @@ const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
  */
 function BoxModelHighlighter(highlighterEnv) {
   AutoRefreshHighlighter.call(this, highlighterEnv);
+
+  if (Services.prefs.getBoolPref(GRID_ENABLED_PREF)) {
+    this.cssGridHighlighter = new CssGridHighlighter(this.highlighterEnv);
+  }
 
   this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
     this._buildMarkup.bind(this));
@@ -254,6 +263,11 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   destroy: function () {
     AutoRefreshHighlighter.prototype.destroy.call(this);
     this.markup.destroy();
+
+    if (this.cssGridHighlighter) {
+      this.cssGridHighlighter.destroy();
+      this.cssGridHighlighter = null;
+    }
   },
 
   getElement: function (id) {
@@ -276,6 +290,28 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   _show: function () {
     if (BOX_MODEL_REGIONS.indexOf(this.options.region) == -1) {
       this.options.region = "content";
+    }
+
+    // Show the CSS grid highlighter if the current node is a grid container or grid item.
+    if (this.cssGridHighlighter) {
+      this.cssGridHighlighter.hide();
+      let gridNode;
+      if (this.currentNode &&
+          this.currentNode.getGridFragments &&
+          this.currentNode.getGridFragments().length) {
+        gridNode = this.currentNode;
+      } else if (this.currentNode.parentNode &&
+                 this.currentNode.parentNode.getGridFragments &&
+                 this.currentNode.parentNode.getGridFragments().length) {
+        gridNode = this.currentNode.parentNode;
+      }
+
+      if (gridNode) {
+        // Display the grid highlighter for the grid container and
+        // hide the box model guides.
+        this.cssGridHighlighter.show(gridNode);
+        this.options.hideGuides = true;
+      }
     }
 
     let shown = this._update();
@@ -341,6 +377,10 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this._untrackMutations();
     this._hideBoxModel();
     this._hideInfobar();
+
+    if (this.cssGridHighlighter) {
+      this.cssGridHighlighter.hide();
+    }
 
     setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
   },

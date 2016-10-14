@@ -2015,6 +2015,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mAsyncScroll(nullptr)
   , mAsyncSmoothMSDScroll(nullptr)
   , mLastScrollOrigin(nsGkAtoms::other)
+  , mAllowScrollOriginDowngrade(false)
   , mLastSmoothScrollOrigin(nullptr)
   , mScrollGeneration(++sScrollGenerationCounter)
   , mDestination(0, 0)
@@ -2820,7 +2821,21 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
 
   // Update frame position for scrolling
   mScrolledFrame->SetPosition(mScrollPort.TopLeft() - pt);
-  mLastScrollOrigin = aOrigin;
+
+  // If |mLastScrollOrigin| is already set to something that can clobber APZ's
+  // scroll offset, then we don't want to change it to something that can't.
+  // If we allowed this, then we could end up in a state where APZ ignores
+  // legitimate scroll offset updates because the origin has been masked by
+  // a later change within the same refresh driver tick.
+  bool isScrollOriginDowngrade =
+    nsLayoutUtils::CanScrollOriginClobberApz(mLastScrollOrigin) &&
+    !nsLayoutUtils::CanScrollOriginClobberApz(aOrigin);
+  bool allowScrollOriginChange = mAllowScrollOriginDowngrade ||
+    !isScrollOriginDowngrade;
+  if (allowScrollOriginChange) {
+    mLastScrollOrigin = aOrigin;
+    mAllowScrollOriginDowngrade = false;
+  }
   mLastSmoothScrollOrigin = nullptr;
   mScrollGeneration = ++sScrollGenerationCounter;
 
@@ -5905,6 +5920,9 @@ ScrollFrameHelper::SaveState() const
   }
 
   nsPresState* state = new nsPresState();
+  bool allowScrollOriginDowngrade =
+    !nsLayoutUtils::CanScrollOriginClobberApz(mLastScrollOrigin) ||
+    mAllowScrollOriginDowngrade;
   // Save mRestorePos instead of our actual current scroll position, if it's
   // valid and we haven't moved since the last update of mLastPos (same check
   // that ScrollToRestoredPosition uses). This ensures if a reframe occurs
@@ -5917,11 +5935,13 @@ ScrollFrameHelper::SaveState() const
   nsPoint pt = GetLogicalScrollPosition();
   if (isInSmoothScroll) {
     pt = mDestination;
+    allowScrollOriginDowngrade = false;
   }
   if (mRestorePos.y != -1 && pt == mLastPos) {
     pt = mRestorePos;
   }
   state->SetScrollState(pt);
+  state->SetAllowScrollOriginDowngrade(allowScrollOriginDowngrade);
   if (mIsRoot) {
     // Only save resolution properties for root scroll frames
     nsIPresShell* shell = mOuter->PresContext()->PresShell();
@@ -5935,6 +5955,8 @@ void
 ScrollFrameHelper::RestoreState(nsPresState* aState)
 {
   mRestorePos = aState->GetScrollPosition();
+  MOZ_ASSERT(mLastScrollOrigin == nsGkAtoms::other);
+  mAllowScrollOriginDowngrade = aState->GetAllowScrollOriginDowngrade();
   mDidHistoryRestore = true;
   mLastPos = mScrolledFrame ? GetLogicalScrollPosition() : nsPoint(0,0);
 

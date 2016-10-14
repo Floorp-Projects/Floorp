@@ -6,3 +6,6 @@ from .base import LogLevelFilter, StreamHandler, BaseHandler
 from .statushandler import StatusHandler
 from .bufferhandler import BufferHandler
 from .valgrindhandler import ValgrindHandler
+
+__all__ = ['LogLevelFilter', 'StreamHandler', 'BaseHandler',
+           'StatusHandler', 'BufferHandler', 'ValgrindHandler']

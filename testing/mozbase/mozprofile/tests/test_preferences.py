@@ -16,6 +16,7 @@ from mozprofile.profile import Profile
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 class PreferencesTest(unittest.TestCase):
     """test mozprofile preference handling"""
 
@@ -121,7 +122,7 @@ general.warnOnAboutConfig = False
             os.close(fd)
             commandline = ["--preferences", name]
 
-             # test the [DEFAULT] section
+            # test the [DEFAULT] section
             _prefs = {'general.warnOnAboutConfig': 'False'}
             self.compare_generated(_prefs, commandline)
 
@@ -191,7 +192,7 @@ general.warnOnAboutConfig = False
 
         # add some preferences
         prefs1 = [("browser.startup.homepage", "http://planet.mozilla.org/"),
-                   ("zoom.minPercent", 30)]
+                  ("zoom.minPercent", 30)]
         profile.set_preferences(prefs1)
         self.assertEqual(prefs1, Preferences.read_prefs(prefs_file))
         lines = file(prefs_file).read().strip().splitlines()
@@ -202,7 +203,7 @@ general.warnOnAboutConfig = False
 
         # add some more preferences
         prefs2 = [("zoom.maxPercent", 300),
-                   ("webgl.verbose", 'false')]
+                  ("webgl.verbose", 'false')]
         profile.set_preferences(prefs2)
         self.assertEqual(prefs1 + prefs2, Preferences.read_prefs(prefs_file))
         lines = file(prefs_file).read().strip().splitlines()
@@ -342,11 +343,11 @@ user_pref("webgl.force-enabled", true);
             "zoom.minPercent": 30,
             "webgl.verbose": "false",
             "browser.bar": "somethingxyz"
-            }
+        }
         values = {
             "server": "server-name",
             "abc": "something"
-            }
+        }
         path = os.path.join(here, 'files', 'prefs_with_interpolation.js')
         read_prefs = Preferences.read_prefs(path, interpolation=values)
         self.assertEqual(dict(read_prefs), expected_prefs)

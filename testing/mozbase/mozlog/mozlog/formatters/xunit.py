@@ -3,14 +3,15 @@ from xml.etree import ElementTree
 
 import base
 
+
 def format_test_id(test_id):
     """Take a test id and return something that looks a bit like
     a class path"""
     if type(test_id) not in types.StringTypes:
-        #Not sure how to deal with reftests yet
+        # Not sure how to deal with reftests yet
         raise NotImplementedError
 
-    #Turn a path into something like a class heirachy
+    # Turn a path into something like a class heirachy
     return test_id.replace('.', '_').replace('/', ".")
 
 

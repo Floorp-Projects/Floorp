@@ -54,7 +54,7 @@ class XUnitOutput(Output):
         doc = dom.Document()
 
         failed = sum([count(results_collection.tests_with_result(t))
-                     for t in TestResult.FAIL_RESULTS])
+                      for t in TestResult.FAIL_RESULTS])
         passed = count(results_collection.tests_with_result('PASS'))
         skipped = count(results_collection.tests_with_result('SKIPPED'))
 

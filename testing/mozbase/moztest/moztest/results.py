@@ -83,7 +83,7 @@ class TestResult(object):
         result_expected = string representing the expected outcome of the test"""
 
         msg = "Result '%s' not in possible results: %s" %\
-                    (result_expected, ', '.join(self.POSSIBLE_RESULTS))
+              (result_expected, ', '.join(self.POSSIBLE_RESULTS))
         assert isinstance(name, basestring), "name has to be a string"
         assert result_expected in self.POSSIBLE_RESULTS, msg
 
@@ -159,14 +159,14 @@ class TestResult(object):
         if result in self.POSSIBLE_RESULTS:
             self._result_actual = result
             self.result = self.calculate_result(self._result_expected,
-                                            self._result_actual)
+                                                self._result_actual)
         elif result in self.COMPUTED_RESULTS:
             self.infer_results(result)
             self.result = result
         else:
             valid = self.POSSIBLE_RESULTS + self.COMPUTED_RESULTS
             msg = "Result '%s' not valid. Need one of: %s" %\
-                    (result, ', '.join(valid))
+                  (result, ', '.join(valid))
             raise ValueError(msg)
 
         # use lists instead of multiline strings
@@ -207,7 +207,7 @@ class TestResultCollection(list):
 
     def __str__(self):
         return "%s (%.2fs)\n%s" % (self.suite_name, self.time_taken,
-                                list.__str__(self))
+                                   list.__str__(self))
 
     def subset(self, predicate):
         tests = self.filter(predicate)
@@ -232,7 +232,7 @@ class TestResultCollection(list):
     def tests_with_result(self, result):
         """ Returns a generator of TestResults with the given result """
         msg = "Result '%s' not in possible results: %s" %\
-                    (result, ', '.join(self.resultClass.COMPUTED_RESULTS))
+              (result, ', '.join(self.resultClass.COMPUTED_RESULTS))
         assert result in self.resultClass.COMPUTED_RESULTS, msg
         return self.filter(lambda t: t.result == result)
 
@@ -242,13 +242,13 @@ class TestResultCollection(list):
         return (t for t in self)
 
     def add_result(self, test, result_expected='PASS',
-                        result_actual='PASS', output='', context=None):
+                   result_actual='PASS', output='', context=None):
         def get_class(test):
             return test.__class__.__module__ + '.' + test.__class__.__name__
 
         t = self.resultClass(name=str(test).split()[0], test_class=get_class(test),
-                       time_start=0, result_expected=result_expected,
-                       context=context)
+                             time_start=0, result_expected=result_expected,
+                             context=context)
         t.finish(result_actual, time_end=0, reason=relevant_line(output),
                  output=output)
         self.append(t)

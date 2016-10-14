@@ -6,9 +6,7 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const nodeConstants = require("devtools/shared/dom-node-constants");
-const { getRootBindingParent } = require("devtools/shared/layout/utils");
 var EventEmitter = require("devtools/shared/event-emitter");
 
 /**
@@ -61,14 +59,12 @@ function Selection(walker) {
 
   this._onMutations = this._onMutations.bind(this);
   this.setWalker(walker);
-  this.setNode(null);
 }
 
 exports.Selection = Selection;
 
 Selection.prototype = {
   _walker: null,
-  _node: null,
 
   _onMutations: function (mutations) {
     let attributeChange = false;
@@ -106,7 +102,6 @@ Selection.prototype = {
   },
 
   destroy: function () {
-    this.setNode(null);
     this.setWalker(null);
   },
 
@@ -120,27 +115,6 @@ Selection.prototype = {
     }
   },
 
-  // Not remote-safe
-  setNode: function (value, reason = "unknown") {
-    if (value) {
-      value = this._walker.frontForRawNode(value);
-    }
-    this.setNodeFront(value, reason);
-  },
-
-  // Not remote-safe
-  get node() {
-    return this._node;
-  },
-
-  // Not remote-safe
-  get document() {
-    if (this.isNode()) {
-      return this.node.ownerDocument;
-    }
-    return null;
-  },
-
   setNodeFront: function (value, reason = "unknown") {
     this.reason = reason;
 
@@ -150,15 +124,7 @@ Selection.prototype = {
       value = parentNode;
     }
 
-    // We used to return here if the node had not changed but we now need to
-    // set the node even if it is already set otherwise it is not possible to
-    // e.g. highlight the same node twice.
-    let rawValue = null;
-    if (value && value.isLocalToBeDeprecated()) {
-      rawValue = value.rawNode();
-    }
     this.emit("before-new-node-front", value, reason);
-    this._node = rawValue;
     this._nodeFront = value;
     this.emit("new-node-front", value, this.reason);
   },
@@ -178,49 +144,12 @@ Selection.prototype = {
   },
 
   isNode: function () {
-    if (!this._nodeFront) {
-      return false;
-    }
-
-    // As long as tools are still accessing node.rawNode(),
-    // this needs to stay here.
-    if (this._node && Cu.isDeadWrapper(this._node)) {
-      return false;
-    }
-
-    return true;
-  },
-
-  isLocal: function () {
-    return !!this._node;
+    return !!this._nodeFront;
   },
 
   isConnected: function () {
     let node = this._nodeFront;
     if (!node || !node.actorID) {
-      return false;
-    }
-
-    // As long as there are still tools going around
-    // accessing node.rawNode, this needs to stay.
-    let rawNode = null;
-    if (node.isLocalToBeDeprecated()) {
-      rawNode = node.rawNode();
-    }
-    if (rawNode) {
-      try {
-        let doc = this.document;
-        if (doc && doc.defaultView) {
-          let docEl = doc.documentElement;
-          let bindingParent = getRootBindingParent(rawNode);
-
-          if (docEl.contains(bindingParent)) {
-            return true;
-          }
-        }
-      } catch (e) {
-        // "can't access dead object" error
-      }
       return false;
     }
 

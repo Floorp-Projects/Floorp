@@ -1,61 +1,130 @@
-.tabs {
-  font-size: 1.25em;
-  margin: 100px auto;
-  margin-bottom: 0;
-  width: calc(100% - 200px);
+.landing-page {
+  flex: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: row;
 }
 
-.tabs .tab-group {
-  margin-top: 20px;
+.landing-page .sidebar {
+  display: flex;
+  background-color: var(--theme-content-color1);
+  width: 200px;
+  height: 100%;
+  flex-direction: column;
 }
 
-.tabs .tab-group-title {
-  font-size: 1.25em;
-  margin: 0 0 1em 10px;
-  color: var(--theme-highlight-lightorange);
+.landing-page .sidebar h1 {
+  color: white;
+  font-size: 24px;
+  margin: 0;
+  line-height: 30px;
+  font-weight: normal;
+  padding: 40px 20px;
 }
 
-.tabs .tab-list {
+.landing-page .sidebar ul {
+  list-style: none;
+  padding: 0;
+  line-height: 30px;
+  font-size: 18px;
+}
+
+.landing-page .sidebar li {
+  padding: 5px 20px;
+}
+
+.landing-page .sidebar li.selected {
+  background: #1f2327;
+}
+
+.landing-page .sidebar li:hover {
+  background: #1f2327;
+  cursor: pointer;
+}
+
+.landing-page .sidebar li a {
+  color: var(--theme-comment-alt);
+}
+
+.landing-page .panel {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: auto;
+  flex-direction: column;
+}
+
+.landing-page .panel .title {
+  margin: 20px 40px;
+  width: calc(100% - 80px);
+  padding: 0 20px;
+  font-size: 16px;
+  border-bottom: 1px solid #cccccc;
+  height: 54px;
+}
+
+.landing-page .panel h2 {
+  color: var(--theme-body-color);
+  font-weight: normal;
+}
+
+.landing-page .panel .center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-page .panel .center .center-message {
+  margin: 40px;
+  font-size: 16px;
+  line-height: 25px;
+  padding: 10px;
+}
+
+.landing-page .center a {
+  color: var(--theme-highlight-bluegrey);
+  text-decoration: none;
+}
+
+.landing-page .tab-group {
+  margin: 40px;
+}
+
+.landing-page .tab-list {
   list-style: none;
   padding: 0px;
   margin: 0px;
 }
 
-.tabs .tab:first-child {
-  border-top: 1px solid var(--theme-splitter-color);
-}
-
-.tabs .tab {
+.landing-page .tab {
   border-bottom: 1px solid var(--theme-splitter-color);
   padding: 10px;
   font-family: sans-serif;
 }
 
-.tabs .tab:hover {
+.landing-page .tab:hover {
   background-color: var(--theme-toolbar-background);
   cursor: pointer;
 }
 
-.tabs .tab-title {
+.landing-page .tab-title {
   line-height: 25px;
-  color: var(--theme-content-color1);
-}
-
-.tabs .tab-url {
+  font-size: 16px;
   color: var(--theme-highlight-bluegrey);
 }
 
-.connect-message {
-  margin: 20px;
-  padding: 50px 100px;
-  text-align: center;
-  color: #9a9a9a;
+.landing-page .tab-url {
+  color: var(--theme-comment);
 }
 
-.connect-message.not-connected {
-  border: 1px solid #dddddd;
-  background-color: #fbfbfb;
-  color: #9a9a9a;
+.landing-page .panel .center .footer-note {
+  flex: 1;
+  padding: 50px;
+  font-size: 14px;
+  color: var(--theme-comment);
+  bottom: 0;
+  position: absolute;
 }
 /* vim:set ts=2 sw=2 sts=2 et: */
 
@@ -88,6 +157,7 @@ body {
 .debugger {
   display: flex;
   flex: 1;
+  height: 100%;
 }
 
 .center-pane {
@@ -125,6 +195,23 @@ body {
   width: 16px;
   margin-top: 25px;
   margin-right: 20px;
+}
+
+.welcomebox {
+  width: calc(100% - 1px);
+
+  /* Offsetting it by 30px for the sources-header area */
+  height: calc(100% - 30px);
+  position: absolute;
+  top: 30px;
+  left: 0;
+  padding: 50px 0;
+  text-align: center;
+  font-size: 1.25em;
+  color: var(--theme-comment-alt);
+  background-color: var(--theme-tab-toolbar-background);
+  font-weight: lighter;
+  z-index: 100;
 }
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -258,6 +345,11 @@ body {
   overflow: hidden;
 }
 
+.sources-panel * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
 .sources-header {
   height: 30px;
   border-bottom: 1px solid var(--theme-splitter-color);
@@ -267,10 +359,12 @@ body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  -moz-user-select: none;
+  user-select: none;
 }
 
 .sources-header-info {
-  font-size: 0.7em;
+  font-size: 12px;
   color: var(--theme-comment-alt);
   font-weight: lighter;
   white-space: nowrap;
@@ -398,13 +492,20 @@ ul.sources-list {
   position: absolute;
   bottom: 0;
   left: 0;
-  right: 0;
+  right: 1px;
   opacity: 1;
   z-index: 100;
+  -moz-user-select: none;
+  user-select: none;
 }
 
 .source-footer .command-bar {
   float: right;
+}
+
+.source-footer .command-bar * {
+  -moz-user-select: none;
+  user-select: none;
 }
 
 .command-bar > span {
@@ -434,6 +535,52 @@ ul.sources-list {
   padding-left: 4px;
   font-size: 10px;
 }
+.search-bar {
+  width: calc(100% - 1px);
+  height: 40px;
+  background: white;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: flex;
+}
+
+.search-bar svg {
+  width: 16px;
+}
+
+.search-bar i {
+  display: block;
+  padding: 13px 0 0 13px;
+}
+
+.search-bar input {
+  border: none;
+  line-height: 30px;
+  font-size: 14px;
+  color: var(--theme-comment);
+  width: calc(100% - 38px);
+  padding-left: 10px;
+  display: flex;
+  padding-right: 100px;
+  flex: 1;
+}
+
+.search-bar input::placeholder {
+  color: var(--theme-body-color-inactive);
+}
+
+.search-bar input:focus {
+  outline-width: 0;
+}
+
+.search-bar input.empty {
+  color: var(--theme-highlight-orange);
+}
+
+.search-bar .summary {
+  line-height: 40px;
+  padding-right: 10px;
+  color: var(--theme-body-color-inactive);
+}
 /* vim:set ts=2 sw=2 sts=2 et: */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -461,14 +608,18 @@ ul.sources-list {
 .editor.new-breakpoint svg {
   fill: var(--theme-selection-background);
   width: 60px;
-  height: 12px;
+  height: 14px;
   position: absolute;
-  top: 0;
+  top: 0px;
   right: -4px;
 }
 
 .editor.new-breakpoint.breakpoint-disabled svg {
   opacity: 0.3;
+}
+
+.search-bar ~ .editor-mount {
+  height: calc(100% - 58px);
 }
 
 .editor-mount,
@@ -480,6 +631,7 @@ ul.sources-list {
 
 .CodeMirror-linenumber {
   font-size: 11px;
+  line-height: 14px;
 }
 
 /* set the linenumber white when there is a breakpoint */
@@ -490,6 +642,11 @@ ul.sources-list {
 /* move the breakpoint below the linenumber */
 .new-breakpoint .CodeMirror-gutter-elt:last-child {
   z-index: 0;
+}
+
+.editor-wrapper .CodeMirror-line {
+  font-size: 11px;
+  line-height: 14px;
 }
 
 .debug-line .CodeMirror-line {
@@ -526,6 +683,8 @@ ul.sources-list {
   background-color: var(--theme-tab-toolbar-background);
   font-weight: lighter;
   z-index: 100;
+  -moz-user-select: none;
+  user-select: none;
 }
 .close-btn path {
   fill: var(--theme-body-color);
@@ -553,18 +712,28 @@ ul.sources-list {
 .close-btn .close:hover path {
   fill: white;
 }
+.breakpoints-list * {
+  -moz-user-select: none;
+  user-select: none;
+}
 
 .breakpoints-list .breakpoint {
   font-size: 12px;
   color: var(--theme-content-color1);
-  margin: 0.25em 0;
-  padding: 0.25em 0;
+  padding: 0.5em 1px;
   line-height: 1em;
   position: relative;
+  border-left: 4px solid transparent;
+
+}
+
+.breakpoints-list .breakpoint:last-of-type {
+  padding-bottom: 0.45em;
 }
 
 .breakpoints-list .breakpoint.paused {
   background-color: var(--theme-toolbar-background-alt);
+  border-color: var(--breakpoint-active-color);
 }
 
 .breakpoints-list .breakpoint.disabled .breakpoint-label {
@@ -577,8 +746,18 @@ ul.sources-list {
   background-color: var(--theme-toolbar-background);
 }
 
+.breakpoints-list .breakpoint.paused:hover {
+  border-color: var(--breakpoint-active-color-hover);
+}
+
+.breakpoints-list .breakpoint-checkbox {
+  margin-left: 0;
+}
+
 .breakpoints-list .breakpoint-label {
   display: inline-block;
+  padding-left: 2px;
+  padding-bottom: 4px;
 }
 
 .breakpoints-list .pause-indicator {
@@ -588,7 +767,7 @@ ul.sources-list {
 
 .breakpoint-snippet {
   color: var(--theme-comment);
-  padding-left: 20px;
+  padding-left: 18px;
 }
 
 .breakpoint .close-btn {
@@ -859,7 +1038,6 @@ ul.sources-list {
 .scopes-list .tree-node {
   overflow: hidden;
 }
-
 .frames ul {
   list-style: none;
   margin: 0;
@@ -868,9 +1046,14 @@ ul.sources-list {
 
 .frames ul li {
   cursor: pointer;
-  padding: 10px;
+  padding: 7px 10px 7px 21px;
   clear: both;
   overflow: hidden;
+}
+
+.frames ul li * {
+  -moz-user-select: none;
+  user-select: none;
 }
 
 .frames ul li:nth-of-type(2n) {
@@ -925,13 +1108,19 @@ ul.sources-list {
 }
 
 .accordion ._content {
-  border-bottom: 1px solid var(--theme-splitter-color);;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  font-size: 12px;
 }
 .right-sidebar {
   display: flex;
   flex-direction: column;
   flex: 1;
   white-space: nowrap;
+}
+
+.right-siderbar * {
+  -moz-user-select: none;
+  user-select: none;
 }
 
 .right-sidebar .accordion {
@@ -945,7 +1134,7 @@ ul.sources-list {
 
 .command-bar {
   height: 30px;
-  padding: 8px 5px 10px 10px;
+  padding: 8px 5px 10px 1px;
 }
 
 .command-bar > span {
@@ -996,6 +1185,11 @@ span.pause-exceptions.all {
   border-bottom: 1px solid var(--theme-splitter-color);
   height: 30px;
   flex: 1;
+}
+
+.source-header * {
+  -moz-user-select: none;
+  user-select: none;
 }
 
 .source-tabs {
@@ -1091,6 +1285,11 @@ span.pause-exceptions.all {
 .autocomplete {
   width: 100%;
   padding: 20px;
+}
+
+.autocomplete .results * {
+  -moz-user-select: none;
+  user-select: none;
 }
 
 .autocomplete ul {

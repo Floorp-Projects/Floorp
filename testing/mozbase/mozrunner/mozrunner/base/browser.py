@@ -4,7 +4,6 @@
 
 import mozinfo
 import os
-import platform
 import sys
 
 from .runner import BaseRunner

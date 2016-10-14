@@ -6,6 +6,7 @@ import logging
 import unittest
 from sut import MockAgent
 
+
 class MkDirsTest(unittest.TestCase):
 
     def test_mkdirs(self):
@@ -26,9 +27,10 @@ class MkDirsTest(unittest.TestCase):
                               ('isdir /mnt/sdcard', 'TRUE'),
                               ('isdir /mnt/sdcard/baz', 'FALSE'),
                               ('mkdr /mnt/sdcard/baz',
-                               '##AGENT-WARNING## Could not create the directory /mnt/sdcard/baz')],
+                               "##AGENT-WARNING## "
+                               "Could not create the directory /mnt/sdcard/baz")],
                      'expectException': True},
-                     ]
+                    ]
         for subTest in subTests:
             a = MockAgent(self, commands=subTest['cmds'])
 

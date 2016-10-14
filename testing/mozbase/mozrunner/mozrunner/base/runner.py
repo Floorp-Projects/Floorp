@@ -38,7 +38,8 @@ class BaseRunner(object):
             self.profile = self.app_ctx.profile_class(profile=profile,
                                                       addons=addons)
         else:
-            self.profile = profile or self.app_ctx.profile_class(**getattr(self.app_ctx, 'profile_args', {}))
+            self.profile = profile or self.app_ctx.profile_class(**getattr(self.app_ctx,
+                                                                           'profile_args', {}))
 
         # process environment
         if env is None:
