@@ -91,7 +91,8 @@ HTMLTableSectionElement::InsertRow(int32_t aIndex, ErrorResult& aError)
   }
 
   if (doInsert) {
-    nsINode::InsertBefore(*rowContent, rows->Item(aIndex), aError);
+    nsCOMPtr<nsINode> refNode = rows->Item(aIndex);
+    nsINode::InsertBefore(*rowContent, refNode, aError);
   } else {
     nsINode::AppendChild(*rowContent, aError);
   }
