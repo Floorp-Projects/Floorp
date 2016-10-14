@@ -112,45 +112,16 @@ ServoStyleSheet::List(FILE* aOut, int32_t aIndex) const
 }
 #endif
 
-// nsIDOMStyleSheet implementation
-
-NS_IMETHODIMP
-ServoStyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
+nsMediaList*
+ServoStyleSheet::Media()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nullptr;
 }
 
-NS_IMETHODIMP
-ServoStyleSheet::GetMedia(nsIDOMMediaList** aMedia)
+nsIDOMCSSRule*
+ServoStyleSheet::GetDOMOwnerRule() const
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// nsIDOMCSSStyleSheet implementation
-
-nsresult
-ServoStyleSheet::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-ServoStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-ServoStyleSheet::InsertRule(const nsAString& rule,
-                            uint32_t aIndex, uint32_t* aReturn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-ServoStyleSheet::DeleteRule(uint32_t aIndex)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nullptr;
 }
 
 CSSRuleList*
