@@ -88,7 +88,8 @@ DeleteNodeTransaction::UndoTransaction()
   }
 
   ErrorResult error;
-  mParent->InsertBefore(*mNode, mRefNode, error);
+  nsCOMPtr<nsIContent> refNode = mRefNode;
+  mParent->InsertBefore(*mNode, refNode, error);
   return error.StealNSResult();
 }
 
