@@ -262,14 +262,16 @@ GamepadManager::RemoveGamepad(uint32_t aIndex, GamepadServiceType aServiceType)
 }
 
 void
-GamepadManager::NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
-                               double aValue)
+GamepadManager::NewButtonEvent(uint32_t aIndex, GamepadServiceType aServiceType,
+                               uint32_t aButton, bool aPressed, double aValue)
 {
   if (mShuttingDown) {
     return;
   }
 
-  RefPtr<Gamepad> gamepad = GetGamepad(aIndex);
+  uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
+
+  RefPtr<Gamepad> gamepad = GetGamepad(newIndex);
   if (!gamepad) {
     return;
   }
@@ -291,9 +293,9 @@ GamepadManager::NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
       continue;
     }
 
-    bool firstTime = MaybeWindowHasSeenGamepad(listeners[i], aIndex);
+    bool firstTime = MaybeWindowHasSeenGamepad(listeners[i], newIndex);
 
-    RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(aIndex);
+    RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(newIndex);
     if (listenerGamepad) {
       listenerGamepad->SetButton(aButton, aPressed, aValue);
       if (firstTime) {
@@ -330,13 +332,16 @@ GamepadManager::FireButtonEvent(EventTarget* aTarget,
 }
 
 void
-GamepadManager::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue)
+GamepadManager::NewAxisMoveEvent(uint32_t aIndex, GamepadServiceType aServiceType,
+                                 uint32_t aAxis, double aValue)
 {
   if (mShuttingDown) {
     return;
   }
 
-  RefPtr<Gamepad> gamepad = GetGamepad(aIndex);
+  uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
+
+  RefPtr<Gamepad> gamepad = GetGamepad(newIndex);
   if (!gamepad) {
     return;
   }
@@ -357,9 +362,9 @@ GamepadManager::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue)
       continue;
     }
 
-    bool firstTime = MaybeWindowHasSeenGamepad(listeners[i], aIndex);
+    bool firstTime = MaybeWindowHasSeenGamepad(listeners[i], newIndex);
 
-    RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(aIndex);
+    RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(newIndex);
     if (listenerGamepad) {
       listenerGamepad->SetAxis(aAxis, aValue);
       if (firstTime) {
@@ -592,12 +597,13 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadButtonInformation) {
     const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
-    NewButtonEvent(a.index(), a.button(), a.pressed(), a.value());
+    NewButtonEvent(a.index(), a.service_type(), a.button(),
+                   a.pressed(), a.value());
     return;
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadAxisInformation) {
     const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
-    NewAxisMoveEvent(a.index(), a.axis(), a.value());
+    NewAxisMoveEvent(a.index(), a.service_type(), a.axis(), a.value());
     return;
   }
 
