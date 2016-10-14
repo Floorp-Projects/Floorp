@@ -207,5 +207,17 @@ CheckerboardReportService::SetRecordingEnabled(bool aEnabled)
   gfxPrefs::SetAPZRecordCheckerboarding(aEnabled);
 }
 
+void
+CheckerboardReportService::FlushActiveReports()
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+  MOZ_ASSERT(obsSvc);
+  if (obsSvc) {
+    obsSvc->NotifyObservers(nullptr, "APZ:FlushActiveCheckerboard", nullptr);
+  }
+}
+
 } // namespace dom
 } // namespace mozilla
