@@ -158,11 +158,14 @@ struct EffectRGB : public TexturedEffect
 
 struct EffectYCbCr : public TexturedEffect
 {
-  EffectYCbCr(TextureSource *aSource, gfx::SamplingFilter aSamplingFilter)
+  EffectYCbCr(TextureSource *aSource, YUVColorSpace aYUVColorSpace, gfx::SamplingFilter aSamplingFilter)
     : TexturedEffect(EffectTypes::YCBCR, aSource, false, aSamplingFilter)
+    , mYUVColorSpace(aYUVColorSpace)
   {}
 
   virtual const char* Name() { return "EffectYCbCr"; }
+
+  YUVColorSpace mYUVColorSpace;
 };
 
 struct EffectNV12 : public TexturedEffect
@@ -239,11 +242,11 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
   case gfx::SurfaceFormat::R8G8B8A8:
     result = new EffectRGB(aSource, isAlphaPremultiplied, aSamplingFilter);
     break;
-  case gfx::SurfaceFormat::YUV:
-    result = new EffectYCbCr(aSource, aSamplingFilter);
-    break;
   case gfx::SurfaceFormat::NV12:
     result = new EffectNV12(aSource, aSamplingFilter);
+    break;
+  case gfx::SurfaceFormat::YUV:
+    MOZ_ASSERT_UNREACHABLE("gfx::SurfaceFormat::YUV is invalid");
     break;
   default:
     NS_WARNING("unhandled program type");
@@ -252,6 +255,30 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
 
   result->mState = state;
 
+  return result.forget();
+}
+
+inline already_AddRefed<TexturedEffect>
+CreateTexturedEffect(TextureHost* aHost,
+                     TextureSource* aSource,
+                     const gfx::SamplingFilter aSamplingFilter,
+                     bool isAlphaPremultiplied,
+                     const LayerRenderState &state = LayerRenderState())
+{
+  MOZ_ASSERT(aHost);
+  MOZ_ASSERT(aSource);
+
+  RefPtr<TexturedEffect> result;
+  if (aHost->GetReadFormat() == gfx::SurfaceFormat::YUV) {
+    MOZ_ASSERT(aHost->GetYUVColorSpace() != YUVColorSpace::UNKNOWN);
+    result = new EffectYCbCr(aSource, aHost->GetYUVColorSpace(), aSamplingFilter);
+  } else {
+    result = CreateTexturedEffect(aHost->GetReadFormat(),
+                                  aSource,
+                                  aSamplingFilter,
+                                  isAlphaPremultiplied,
+                                  state);
+  }
   return result.forget();
 }
 

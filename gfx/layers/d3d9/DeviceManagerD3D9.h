@@ -31,6 +31,7 @@ const int CBvLayerQuad = 10;
 // we don't use opacity with solid color shaders
 const int CBfLayerOpacity = 0;
 const int CBvColor = 0;
+const int CBmYuvColorMatrix = 1;
 
 enum DeviceManagerState {
   // The device and swap chain are OK.
