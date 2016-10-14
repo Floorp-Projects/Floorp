@@ -97,6 +97,16 @@ body {
 }
 
 /******************************************************************************/
+/* Search box */
+.devtools-searchbox {
+  float: right;
+}
+
+.devtools-searchbox:dir(rtl) {
+  float: left;
+}
+
+/******************************************************************************/
 /* Theme Dark */
 
 .theme-dark .treeTable > tbody > tr > td {
