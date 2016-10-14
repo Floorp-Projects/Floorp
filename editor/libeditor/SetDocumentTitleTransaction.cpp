@@ -118,8 +118,10 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
   nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
   NS_ENSURE_STATE(document);
 
-  dom::Element* head = document->GetHeadElement();
-  NS_ENSURE_STATE(head);
+  RefPtr<dom::Element> headElement = document->GetHeadElement();
+  if (NS_WARN_IF(!headElement)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   bool     newTitleNode = false;
   uint32_t newTitleIndex = 0;
@@ -136,7 +138,7 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
     newTitleNode = true;
 
     // Get index so we append new title node after all existing HEAD children.
-    newTitleIndex = head->GetChildCount();
+    newTitleIndex = headElement->GetChildCount();
   }
 
   // Append a text node under the TITLE
@@ -161,12 +163,22 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
       res = editor->InsertNode(newNode, titleNode, 0);
     }
     NS_ENSURE_SUCCESS(res, res);
+    // Calling AppendChild() or InsertNode() could cause removing the head
+    // element.  So, let's mark it dirty.
+    headElement = nullptr;
   }
 
   if (newTitleNode)
   {
+    if (!headElement) {
+      headElement = document->GetHeadElement();
+      if (NS_WARN_IF(!headElement)) {
+        // XXX Can we return NS_OK when there is no head element?
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
     // Undoable transaction to insert title+text together
-    res = editor->InsertNode(titleNode, head->AsDOMNode(), newTitleIndex);
+    res = editor->InsertNode(titleNode, headElement->AsDOMNode(), newTitleIndex);
   }
   return res;
 }
