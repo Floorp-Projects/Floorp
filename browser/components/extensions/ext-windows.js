@@ -160,20 +160,16 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
         return new Promise(resolve => {
           window.addEventListener("load", function listener() {
             window.removeEventListener("load", listener);
-
-            if (createData.state == "maximized" || createData.state == "normal" ||
-                (createData.state == "fullscreen" && AppConstants.platform != "macosx")) {
+            if (["maximized", "normal"].includes(createData.state)) {
               window.document.documentElement.setAttribute("sizemode", createData.state);
-            } else if (createData.state !== null) {
-              // window.minimize() has no effect until the window has been shown.
-              return promiseObserved("document-shown", doc => doc == window.document).then(() => {
-                WindowManager.setState(window, createData.state);
-                resolve();
-              });
             }
-            resolve();
+            resolve(promiseObserved("browser-delayed-startup-finished", win => win == window));
           });
         }).then(() => {
+          // Some states only work after delayed-startup-finished
+          if (["minimized", "fullscreen", "docked"].includes(createData.state)) {
+            WindowManager.setState(window, createData.state);
+          }
           if (allowScriptsToClose) {
             for (let {linkedBrowser} of window.gBrowser.tabs) {
               onXULFrameLoaderCreated({target: linkedBrowser});
@@ -181,7 +177,7 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
                                              "XULFrameLoaderCreated", onXULFrameLoaderCreated);
             }
           }
-          return WindowManager.convert(extension, window);
+          return WindowManager.convert(extension, window, {populate: true});
         });
       },
 

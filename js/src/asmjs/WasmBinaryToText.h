@@ -21,6 +21,7 @@
 
 #include "NamespaceImports.h"
 
+#include "asmjs/WasmGeneratedSourceMap.h"
 #include "gc/Rooting.h"
 #include "js/Class.h"
 
@@ -34,7 +35,8 @@ namespace wasm {
 // representation.
 
 MOZ_MUST_USE bool
-BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer);
+BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer,
+             GeneratedSourceMap* sourceMap = nullptr);
 
 }  // namespace wasm
 
