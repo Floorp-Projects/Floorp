@@ -63,6 +63,12 @@ public:
 protected:
   ~ServoStyleSheet();
 
+  // Internal methods which do not have security check and completeness check.
+  dom::CSSRuleList* GetCssRulesInternal(ErrorResult& aRv);
+  uint32_t InsertRuleInternal(const nsAString& aRule,
+                              uint32_t aIndex, ErrorResult& aRv);
+  void DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv);
+
 private:
   void DropSheet();
 
