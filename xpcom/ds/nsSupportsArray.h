@@ -56,7 +56,6 @@ public:
   }
   // XXX this is badly named - should be RemoveFirstElement
   MOZ_MUST_USE NS_IMETHOD RemoveElement(nsISupports* aElement) override;
-  MOZ_MUST_USE NS_IMETHOD_(bool) MoveElement(int32_t aFrom, int32_t aTo) override;
   NS_IMETHOD Enumerate(nsIEnumerator** aResult) override;
   NS_IMETHOD Clear(void) override;
 
