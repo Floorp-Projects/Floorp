@@ -1844,16 +1844,24 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
   }
 
   cairo_surface_t* similar;
+  switch (cairo_surface_get_type(mSurface)) {
 #ifdef CAIRO_HAS_WIN32_SURFACE
-  if (cairo_surface_get_type(mSurface) == CAIRO_SURFACE_TYPE_WIN32) {
-    similar = cairo_win32_surface_create_with_dib(GfxFormatToCairoFormat(aFormat),
-                                                  aSize.width, aSize.height);
-  } else
+    case CAIRO_SURFACE_TYPE_WIN32:
+      similar = cairo_win32_surface_create_with_dib(
+        GfxFormatToCairoFormat(aFormat), aSize.width, aSize.height);
+      break;
 #endif
-  {
-    similar = cairo_surface_create_similar(mSurface,
-                                           GfxFormatToCairoContent(aFormat),
-                                           aSize.width, aSize.height);
+#ifdef CAIRO_HAS_QUARTZ_SURFACE
+    case CAIRO_SURFACE_TYPE_QUARTZ:
+      similar = cairo_quartz_surface_create_cg_layer(
+        mSurface, GfxFormatToCairoContent(aFormat), aSize.width, aSize.height);
+      break;
+#endif
+    default:
+      similar = cairo_surface_create_similar(mSurface,
+                                             GfxFormatToCairoContent(aFormat),
+                                             aSize.width, aSize.height);
+      break;
   }
 
   if (!cairo_surface_status(similar)) {
@@ -1864,6 +1872,7 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
   }
 
   gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize))) << "Failed to create similar cairo surface! Size: " << aSize << " Status: " << cairo_surface_status(similar) << cairo_surface_status(cairo_get_group_target(mContext)) << " format " << (int)aFormat;
+  cairo_surface_destroy(similar);
 
   return nullptr;
 }
