@@ -133,6 +133,12 @@ public:
   NS_IMETHOD GetHref(nsAString& aHref) final;
   NS_IMETHOD GetTitle(nsAString& aTitle) final;
 
+  // Changes to sheets should be inside of a WillDirty-DidDirty pair.
+  // However, the calls do not need to be matched; it's ok to call
+  // WillDirty and then make no change and skip the DidDirty call.
+  inline void WillDirty();
+  inline void DidDirty();
+
 private:
   // Get a handle to the various stylesheet bits which live on the 'inner' for
   // gecko stylesheets and live on the StyleSheet for Servo stylesheets.
