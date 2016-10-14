@@ -138,7 +138,7 @@
      *                next call to this method.
      * @return true if successful; false if out of memory
      */
-    bool EnsureBufferSpace(size_t aLength);
+    bool EnsureBufferSpace(int32_t aLength);
 
     void EnableViewSource(nsHtml5Highlighter* aHighlighter);
 
