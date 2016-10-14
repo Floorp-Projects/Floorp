@@ -22,7 +22,7 @@ function assertEditorBreakpoint(dbg, line, shouldExist) {
 }
 
 add_task(function* () {
-  const dbg = yield initDebugger("doc-scripts.html", "simple1.js");
+  const dbg = yield initDebugger("doc-scripts.html");
   const { selectors: { getBreakpoints, getBreakpoint }, getState } = dbg;
   const source = findSource(dbg, "simple1.js");
 
