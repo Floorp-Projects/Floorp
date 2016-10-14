@@ -6430,9 +6430,7 @@ nsIPresShell::SetPointerCapturingContent(uint32_t aPointerId,
   if (pointerCaptureInfo) {
     pointerCaptureInfo->mPendingContent = aContent;
   } else {
-    pointerCaptureInfo =
-      new PointerCaptureInfo(aContent, GetPointerPrimaryState(aPointerId));
-    sPointerCaptureList->Put(aPointerId, pointerCaptureInfo);
+    sPointerCaptureList->Put(aPointerId, new PointerCaptureInfo(aContent));
   }
 }
 

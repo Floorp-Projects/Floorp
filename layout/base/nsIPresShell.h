@@ -1265,11 +1265,9 @@ public:
   public:
     nsCOMPtr<nsIContent> mPendingContent;
     nsCOMPtr<nsIContent> mOverrideContent;
-    bool mPrimaryState;
 
-    explicit PointerCaptureInfo(nsIContent* aPendingContent, bool aPrimaryState)
+    explicit PointerCaptureInfo(nsIContent* aPendingContent)
       : mPendingContent(aPendingContent)
-      , mPrimaryState(aPrimaryState)
     {
       MOZ_COUNT_CTOR(PointerCaptureInfo);
     }
