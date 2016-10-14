@@ -1,25 +1,4 @@
-const constructors = [
-    Int8Array,
-    Uint8Array,
-    Uint8ClampedArray,
-    Int16Array,
-    Uint16Array,
-    Int32Array,
-    Uint32Array,
-    Float32Array,
-    Float64Array ];
-
-if (typeof SharedArrayBuffer != "undefined")
-    constructors.push(sharedConstructor(Int8Array),
-		      sharedConstructor(Uint8Array),
-		      sharedConstructor(Int16Array),
-		      sharedConstructor(Uint16Array),
-		      sharedConstructor(Int32Array),
-		      sharedConstructor(Uint32Array),
-		      sharedConstructor(Float32Array),
-		      sharedConstructor(Float64Array));
-
-for (var constructor of constructors) {
+for (var constructor of anyTypedArrayConstructors) {
     // If the mapfn argument to %TypedArray%.from is undefined, don't map.
     assertDeepEq(constructor.from([3, 4, 5], undefined), new constructor([3, 4, 5]));
     assertDeepEq(constructor.from([4, 5, 6], undefined, Math), new constructor([4, 5, 6]));
@@ -58,8 +37,7 @@ for (var constructor of constructors) {
 
 // %TypedArray%.from(obj, map) is not exactly the same as %TypedArray%.from(obj).map(mapFn).
 assertDeepEq(Int8Array.from([150], v => v / 2), new Int8Array([75]));
-// Uncomment the following line when we implement the .map method.
-// assertDeepEq(Int8Array.from([150]).map(v => v / 2), new Int8Array([-53]));
+assertDeepEq(Int8Array.from([150]).map(v => v / 2), new Int8Array([-53]));
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);

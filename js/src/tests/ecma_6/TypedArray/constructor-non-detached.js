@@ -1,18 +1,6 @@
 // |reftest| skip-if(!xulRuntime.shell) -- needs detachArrayBuffer
 
-const constructors = [
-    Int8Array,
-    Uint8Array,
-    Uint8ClampedArray,
-    Int16Array,
-    Uint16Array,
-    Int32Array,
-    Uint32Array,
-    Float32Array,
-    Float64Array
-];
-
-for (var constructor of constructors) {
+for (var constructor of typedArrayConstructors) {
     var buf = new constructor();
     detachArrayBuffer(buf.buffer);
     assertThrowsInstanceOf(() => new constructor(buf), TypeError);
