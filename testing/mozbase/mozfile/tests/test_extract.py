@@ -118,7 +118,7 @@ class TestExtract(unittest.TestCase):
             os.rmdir(dest)
         self.assertTrue(isinstance(exception, Exception))
 
-    ### utility functions
+    # utility functions
 
     def create_tarball(self):
         """create a stub tarball for testing"""

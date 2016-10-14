@@ -414,8 +414,16 @@ private:
   // a selection event and decreased after they are received in the child
   // process.
   uint32_t mPendingEventsNeedingAck;
-
-  bool mIsComposing;
+  // mCompositionStartInChild stores current composition start offset in the
+  // remote process.
+  uint32_t mCompositionStartInChild;
+  // mPendingCompositionCount is number of compositions which started in widget
+  // but not yet handled in the child process.
+  uint8_t mPendingCompositionCount;
+  // mWidgetHasComposition is true when the widget in this process thinks that
+  // IME has composition.  So, this is set to true when eCompositionStart is
+  // dispatched and set to false when eCompositionCommit(AsIs) is dispatched.
+  bool mWidgetHasComposition;
 
   /**
    * When following methods' aRoundToExistingOffset is true, even if specified

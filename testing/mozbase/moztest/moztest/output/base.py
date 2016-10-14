@@ -15,10 +15,13 @@ except ImportError:
     def abstractmethod(method):
         line = method.func_code.co_firstlineno
         filename = method.func_code.co_filename
+
         def not_implemented(*args, **kwargs):
-            raise NotImplementedError('Abstract method %s at File "%s", line %s  should be implemented by a concrete class' %
-                                      (repr(method), filename,line))
+            raise NotImplementedError('Abstract method %s at File "%s", '
+                                      'line %s  should be implemented by a concrete class' %
+                                      (repr(method), filename, line))
         return not_implemented
+
 
 class Output(object):
     """ Abstract base class for outputting test results """

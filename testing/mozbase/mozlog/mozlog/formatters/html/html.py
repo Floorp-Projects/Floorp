@@ -17,6 +17,7 @@ raw = None
 
 base_path = os.path.split(__file__)[0]
 
+
 def do_defered_imports():
     global html
     global raw
@@ -26,6 +27,7 @@ def do_defered_imports():
 
 class HTMLFormatter(base.BaseFormatter):
     """Formatter that produces a simple HTML-formatted report."""
+
     def __init__(self):
         do_defered_imports()
         self.suite_name = None
@@ -52,12 +54,16 @@ class HTMLFormatter(base.BaseFormatter):
             self.env["Device identifier"] = version_info.get("device_id")
             self.env["Device firmware (base)"] = version_info.get("device_firmware_version_base")
             self.env["Device firmware (date)"] = (
-                datetime.utcfromtimestamp(int(version_info.get("device_firmware_date"))).strftime(date_format) if
+                datetime.utcfromtimestamp(int(version_info.get("device_firmware_date")))
+                .strftime(date_format) if
                 "device_firmware_date" in version_info else None)
-            self.env["Device firmware (incremental)"] = version_info.get("device_firmware_version_incremental")
-            self.env["Device firmware (release)"] = version_info.get("device_firmware_version_release")
+            self.env["Device firmware (incremental)"] = version_info.get(
+                "device_firmware_version_incremental")
+            self.env["Device firmware (release)"] = version_info.get(
+                "device_firmware_version_release")
             self.env["Gaia date"] = (
-                datetime.utcfromtimestamp(int(version_info.get("gaia_date"))).strftime(date_format) if
+                datetime.utcfromtimestamp(int(version_info.get("gaia_date")))
+                .strftime(date_format) if
                 "gaia_date" in version_info else None)
             self.env["Gecko version"] = version_info.get("application_version")
             self.env["Gecko build"] = version_info.get("application_buildid")
@@ -74,7 +80,8 @@ class HTMLFormatter(base.BaseFormatter):
             if version_info.get("gaia_changeset"):
                 self.env["Gaia revision"] = html.a(
                     version_info.get("gaia_changeset")[:12],
-                    href="https://github.com/mozilla-b2g/gaia/commit/%s" % version_info.get("gaia_changeset"),
+                    href="https://github.com/mozilla-b2g/gaia/commit/%s" % version_info.get(
+                        "gaia_changeset"),
                     target="_blank")
 
         device_info = data.get("device_info")
@@ -102,8 +109,8 @@ class HTMLFormatter(base.BaseFormatter):
         if debug.get('reftest_screenshots'):
             log_data = debug.get("reftest_screenshots", {})
             debug = {
-                'image1':'data:image/png;base64,' + log_data[0].get("screenshot", {}),
-                'image2':'data:image/png;base64,' + log_data[2].get("screenshot", {}),
+                'image1': 'data:image/png;base64,' + log_data[0].get("screenshot", {}),
+                'image2': 'data:image/png;base64,' + log_data[2].get("screenshot", {}),
                 'differences': "Not Implemented",
             }
 
@@ -122,8 +129,8 @@ class HTMLFormatter(base.BaseFormatter):
         if status in ['SKIP', 'FAIL', 'ERROR']:
             if debug.get('differences'):
                 images = [
-                    ('image1','Image 1 (test)'),
-                    ('image2','Image 2 (reference)')
+                    ('image1', 'Image 1 (test)'),
+                    ('image2', 'Image 2 (reference)')
                 ]
                 for title, description in images:
                     screenshot = '%s' % debug[title]
@@ -196,7 +203,8 @@ class HTMLFormatter(base.BaseFormatter):
                         generated.strftime('%H:%M:%S'))),
                     html.h2('Environment'),
                     html.table(
-                        [html.tr(html.td(k), html.td(v)) for k, v in sorted(self.env.items()) if v],
+                        [html.tr(html.td(k), html.td(v))
+                         for k, v in sorted(self.env.items()) if v],
                         id='environment'),
 
                     html.h2('Summary'),
@@ -206,8 +214,10 @@ class HTMLFormatter(base.BaseFormatter):
                            html.br(),
                            html.span('%i passed' % self.test_count["PASS"], class_='pass'), ', ',
                            html.span('%i skipped' % self.test_count["SKIP"], class_='skip'), ', ',
-                           html.span('%i failed' % self.test_count["UNEXPECTED_FAIL"], class_='fail'), ', ',
-                           html.span('%i errors' % self.test_count["UNEXPECTED_ERROR"], class_='error'), '.',
+                           html.span('%i failed' % self.test_count[
+                                     "UNEXPECTED_FAIL"], class_='fail'), ', ',
+                           html.span('%i errors' % self.test_count[
+                                     "UNEXPECTED_ERROR"], class_='error'), '.',
                            html.br(),
                            html.span('%i expected failures' % self.test_count["EXPECTED_FAIL"],
                                      class_='expected_fail'), ', ',
@@ -220,6 +230,7 @@ class HTMLFormatter(base.BaseFormatter):
                             html.th('Test', class_='sortable', col='name'),
                             html.th('Duration', class_='sortable numeric', col='duration'),
                             html.th('Links')]), id='results-table-head'),
-                        html.tbody(self.result_rows, id='results-table-body')], id='results-table')))
+                        html.tbody(self.result_rows,
+                                   id='results-table-body')], id='results-table')))
 
         return u"<!DOCTYPE html>\n" + doc.unicode(indent=2)

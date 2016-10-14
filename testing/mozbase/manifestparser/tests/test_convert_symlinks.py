@@ -11,6 +11,7 @@ import unittest
 
 from manifestparser import convert, ManifestParser
 
+
 class TestSymlinkConversion(unittest.TestCase):
     """
     test conversion of a directory tree with symlinks to a manifest structure
@@ -125,6 +126,7 @@ class TestSymlinkConversion(unittest.TestCase):
         open(os.path.join(workspace, 'dir1', 'ldir2', 'f2.txt'), 'a').close()
 
         data = []
+
         def callback(rootdirectory, directory, subdirs, files):
             for f in files:
                 data.append(f)

@@ -11,6 +11,7 @@ import sys
 
 __all__ = ['view_profile']
 
+
 def view_profile(args=sys.argv[1:]):
 
     usage = '%prog [options] profile_path <...>'

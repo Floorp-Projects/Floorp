@@ -3,6 +3,7 @@ import mozdevice
 import logging
 import unittest
 
+
 class BasicTest(unittest.TestCase):
 
     def test_init(self):
@@ -24,22 +25,22 @@ class BasicTest(unittest.TestCase):
 
     def test_timeout_normal(self):
         """Tests DeviceManager timeout, normal case."""
-        a = MockAgent(self, commands = [("isdir /mnt/sdcard/tests", "TRUE"),
-                                        ("cd /mnt/sdcard/tests", ""),
-                                        ("ls", "test.txt"),
-                                        ("rm /mnt/sdcard/tests/test.txt",
-                                         "Removed the file")])
+        a = MockAgent(self, commands=[("isdir /mnt/sdcard/tests", "TRUE"),
+                                      ("cd /mnt/sdcard/tests", ""),
+                                      ("ls", "test.txt"),
+                                      ("rm /mnt/sdcard/tests/test.txt",
+                                       "Removed the file")])
         d = mozdevice.DroidSUT("127.0.0.1", port=a.port, logLevel=logging.DEBUG)
         ret = d.removeFile('/mnt/sdcard/tests/test.txt')
-        self.assertEqual(ret, None) # if we didn't throw an exception, we're ok
+        self.assertEqual(ret, None)  # if we didn't throw an exception, we're ok
         a.wait()
 
     def test_timeout_timeout(self):
         """Tests DeviceManager timeout, timeout case."""
-        a = MockAgent(self, commands = [("isdir /mnt/sdcard/tests", "TRUE"),
-                                        ("cd /mnt/sdcard/tests", ""),
-                                        ("ls", "test.txt"),
-                                        ("rm /mnt/sdcard/tests/test.txt", 0)])
+        a = MockAgent(self, commands=[("isdir /mnt/sdcard/tests", "TRUE"),
+                                      ("cd /mnt/sdcard/tests", ""),
+                                      ("ls", "test.txt"),
+                                      ("rm /mnt/sdcard/tests/test.txt", 0)])
         d = mozdevice.DroidSUT("127.0.0.1", port=a.port, logLevel=logging.DEBUG)
         d.default_timeout = 1
         exceptionThrown = False
@@ -53,8 +54,8 @@ class BasicTest(unittest.TestCase):
 
     def test_shell(self):
         """Tests shell command"""
-        for cmd in [ ("exec foobar", False), ("execsu foobar", True) ]:
-            for retcode in [ 1, 2 ]:
+        for cmd in [("exec foobar", False), ("execsu foobar", True)]:
+            for retcode in [1, 2]:
                 a = MockAgent(self, commands=[(cmd[0],
                                                "\nreturn code [%s]" % retcode)])
                 d = mozdevice.DroidSUT("127.0.0.1", port=a.port)

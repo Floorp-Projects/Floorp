@@ -4,6 +4,7 @@
 
 from dmunit import DeviceManagerTestCase
 
+
 class InfoTestCase(DeviceManagerTestCase):
 
     runs_on_test_device = False

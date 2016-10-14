@@ -867,6 +867,16 @@ Gecko_NewCSSShadowArray(uint32_t aLen)
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
 
+nsStyleQuoteValues*
+Gecko_NewStyleQuoteValues(uint32_t aLen)
+{
+  RefPtr<nsStyleQuoteValues> values = new nsStyleQuoteValues;
+  values->mQuotePairs.SetLength(aLen);
+  return values.forget().take();
+}
+
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleQuoteValues, QuoteValues);
+
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
                                                                               \
 void                                                                          \

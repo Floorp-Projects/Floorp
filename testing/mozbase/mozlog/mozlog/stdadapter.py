@@ -2,7 +2,9 @@ import logging
 
 from structuredlog import StructuredLogger, log_levels
 
+
 class UnstructuredHandler(logging.Handler):
+
     def __init__(self, name=None, level=logging.NOTSET):
         self.structured = StructuredLogger(name)
         logging.Handler.__init__(self, level=level)
@@ -17,7 +19,9 @@ class UnstructuredHandler(logging.Handler):
     def handle(self, record):
         self.emit(record)
 
+
 class LoggingWrapper(object):
+
     def __init__(self, wrapped):
         self.wrapped = wrapped
         self.wrapped.addHandler(UnstructuredHandler(self.wrapped.name,
@@ -31,6 +35,7 @@ class LoggingWrapper(object):
 
     def __getattr__(self, name):
         return getattr(self.wrapped, name)
+
 
 def std_logging_adapter(logger):
     """Adapter for stdlib logging so that it produces structured

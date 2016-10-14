@@ -10,6 +10,7 @@ import tempfile
 from mozdevice.devicemanager import DMError
 from dmunit import DeviceManagerTestCase
 
+
 class GetDirectoryTestCase(DeviceManagerTestCase):
 
     def _setUp(self):
@@ -46,5 +47,5 @@ class GetDirectoryTestCase(DeviceManagerTestCase):
         self.assertTrue(os.path.exists(
             os.path.join(self.localdestdir, 'push1', 'emptysub')))
         self.assertRaises(DMError, self.dm.getDirectory,
-                '/dummy', os.path.join(self.localdestdir, '/none'))
+                          '/dummy', os.path.join(self.localdestdir, '/none'))
         self.assertFalse(os.path.exists(self.localdestdir + '/none'))

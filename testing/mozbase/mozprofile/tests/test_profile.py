@@ -10,6 +10,7 @@ from mozprofile import Profile
 
 
 class TestProfile(unittest.TestCase):
+
     def test_with_profile_should_cleanup(self):
         with Profile() as profile:
             self.assertTrue(os.path.exists(profile.profile))
@@ -20,7 +21,7 @@ class TestProfile(unittest.TestCase):
         with self.assertRaises(ZeroDivisionError):
             with Profile() as profile:
                 self.assertTrue(os.path.exists(profile.profile))
-                1/0  # will raise ZeroDivisionError
+                1 / 0  # will raise ZeroDivisionError
         # profile is cleaned
         self.assertFalse(os.path.exists(profile.profile))
 

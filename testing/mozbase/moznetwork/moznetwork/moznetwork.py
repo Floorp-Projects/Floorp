@@ -48,7 +48,7 @@ def _get_interface_list():
         ))[0]
         namestr = names.tostring()
         return [(namestr[i:i + 32].split('\0', 1)[0],
-                socket.inet_ntoa(namestr[i + 20:i + 24]))
+                 socket.inet_ntoa(namestr[i + 20:i + 24]))
                 for i in range(0, outbytes, struct_size)]
 
     except IOError:
@@ -156,13 +156,13 @@ def get_lan_ip():
 def cli(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description='Retrieve IP address')
-    structured.commandline.add_logging_group(
+    mozlog.commandline.add_logging_group(
         parser,
-        include_formatters=structured.commandline.TEXT_FORMATTERS
+        include_formatters=mozlog.commandline.TEXT_FORMATTERS
     )
 
     args = parser.parse_args()
-    structured.commandline.setup_logging(
+    mozlog.commandline.setup_logging(
         'mozversion', args, {'mach': sys.stdout})
 
     _get_logger().info('IP address: %s' % get_ip())

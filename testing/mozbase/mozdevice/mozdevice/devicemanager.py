@@ -14,25 +14,29 @@ import zlib
 
 from functools import wraps
 
+
 class DMError(Exception):
     "generic devicemanager exception."
 
-    def __init__(self, msg= '', fatal = False):
+    def __init__(self, msg='', fatal=False):
         self.msg = msg
         self.fatal = fatal
 
     def __str__(self):
         return self.msg
 
+
 def abstractmethod(method):
     line = method.func_code.co_firstlineno
     filename = method.func_code.co_filename
+
     @wraps(method)
     def not_implemented(*args, **kwargs):
         raise NotImplementedError('Abstract method %s at File "%s", line %s '
-                                   'should be implemented by a concrete class' %
-                                   (repr(method), filename, line))
+                                  'should be implemented by a concrete class' %
+                                  (repr(method), filename, line))
     return not_implemented
+
 
 class DeviceManager(object):
     """
@@ -52,7 +56,7 @@ class DeviceManager(object):
     def __init__(self, logLevel=None, deviceRoot=None):
         try:
             self._logger = mozlog.get_default_logger(component="mozdevice")
-            if not self._logger: # no global structured logger, fall back to reg logging
+            if not self._logger:  # no global structured logger, fall back to reg logging
                 self._logger = mozlog.unstructured.getLogger("mozdevice")
                 if logLevel is not None:
                     self._logger.setLevel(logLevel)
@@ -96,7 +100,7 @@ class DeviceManager(object):
     @debug.setter
     def debug_setter(self, newDebug):
         self._logger.warning("dm.debug is deprecated. Use logLevel.")
-        newDebug = 5 if newDebug > 5 else newDebug # truncate >=5 to 5
+        newDebug = 5 if newDebug > 5 else newDebug  # truncate >=5 to 5
         levels = {5: logging.DEBUG, 3: logging.INFO, 2: logging.WARNING,
                   1: logging.ERROR, 0: logging.CRITICAL}
         self.logLevel = levels[newDebug]
@@ -111,7 +115,8 @@ class DeviceManager(object):
           - `os` - name of the os
           - `id` - unique id of the device
           - `uptime` - uptime of the device
-          - `uptimemillis` - uptime of the device in milliseconds (NOT supported on all implementations)
+          - `uptimemillis` - uptime of the device in milliseconds
+            (NOT supported on all implementations)
           - `systime` - system time of the device
           - `screen` - screen resolution
           - `memory` - memory stats
@@ -137,7 +142,7 @@ class DeviceManager(object):
         for interface in interfaces:
             match = re.match(r"%s: ip (\S+)" % interface,
                              self.shellCheckOutput(['ifconfig', interface],
-                             timeout=self.short_timeout))
+                                                   timeout=self.short_timeout))
             if match:
                 return match.group(1)
 
@@ -145,15 +150,17 @@ class DeviceManager(object):
         """
         Clears the logcat file making it easier to view specific events.
         """
-        #TODO: spawn this off in a separate thread/process so we can collect all the logcat information
+        # TODO: spawn this off in a separate thread/process so we can collect all
+        # the logcat information
 
-        # Right now this is just clearing the logcat so we can only see what happens after this call.
+        # Right now this is just clearing the logcat so we can only see what
+        # happens after this call.
         self.shellCheckOutput(['/system/bin/logcat', '-c'], root=self._logcatNeedsRoot,
                               timeout=self.short_timeout)
 
     def getLogcat(self, filterSpecs=["dalvikvm:I", "ConnectivityService:S",
-                                      "WifiMonitor:S", "WifiStateTracker:S",
-                                      "wpa_supplicant:S", "NetworkStateTracker:S"],
+                                     "WifiMonitor:S", "WifiStateTracker:S",
+                                     "wpa_supplicant:S", "NetworkStateTracker:S"],
                   format="time",
                   filterOutRegexps=[]):
         """
@@ -162,8 +169,8 @@ class DeviceManager(object):
         """
         cmdline = ["/system/bin/logcat", "-v", format, "-d"] + filterSpecs
         output = self.shellCheckOutput(cmdline,
-                                      root=self._logcatNeedsRoot,
-                                      timeout=self.short_timeout)
+                                       root=self._logcatNeedsRoot,
+                                       timeout=self.short_timeout)
         lines = output.replace('\r\n', '\n').splitlines(True)
 
         for regex in filterOutRegexps:
@@ -252,8 +259,8 @@ class DeviceManager(object):
                 if (parts[1] == ""):
                     remoteRoot = remoteDirname
                 remoteName = remoteRoot + '/' + f
-                if (self.validateFile(remoteName, os.path.join(root, f)) <> True):
-                        return False
+                if (self.validateFile(remoteName, os.path.join(root, f)) is not True):
+                    return False
         return True
 
     @abstractmethod
@@ -277,7 +284,7 @@ class DeviceManager(object):
             for part in parts[:-1]:
                 if part != "":
                     name = posixpath.join(name, part)
-                    self.mkDir(name) # mkDir will check previous existence
+                    self.mkDir(name)  # mkDir will check previous existence
 
     @abstractmethod
     def dirExists(self, dirpath):
@@ -314,21 +321,21 @@ class DeviceManager(object):
 
     @abstractmethod
     def moveTree(self, source, destination):
-         """
-         Does a move of the file or directory on the device.
+        """
+        Does a move of the file or directory on the device.
 
-        :param source: Path to the original file or directory
-        :param destination: Path to the destination file or directory
-         """
+       :param source: Path to the original file or directory
+       :param destination: Path to the destination file or directory
+        """
 
     @abstractmethod
     def copyTree(self, source, destination):
-         """
-         Does a copy of the file or directory on the device.
+        """
+        Does a copy of the file or directory on the device.
 
-        :param source: Path to the original file or directory
-        :param destination: Path to the destination file or directory
-         """
+       :param source: Path to the original file or directory
+       :param destination: Path to the destination file or directory
+        """
 
     @abstractmethod
     def chmodDir(self, remoteDirname, mask="777"):
@@ -402,7 +409,9 @@ class DeviceManager(object):
         output = str(buf.getvalue()[0:-1]).rstrip()
         buf.close()
         if retval != 0:
-            raise DMError("Non-zero return code for command: %s (output: '%s', retval: '%s')" % (cmd, output, retval))
+            raise DMError(
+                "Non-zero return code for command: %s "
+                "(output: '%s', retval: '%s')" % (cmd, output, retval))
         return output
 
     @abstractmethod
@@ -424,12 +433,12 @@ class DeviceManager(object):
 
         processInfo = None
 
-        #filter out extra spaces
+        # filter out extra spaces
         parts = filter(lambda x: x != '', processName.split(' '))
         processName = ' '.join(parts)
 
-        #filter out the quoted env string if it exists
-        #ex: '"name=value;name2=value2;etc=..." process args' -> 'process args'
+        # filter out the quoted env string if it exists
+        # ex: '"name=value;name2=value2;etc=..." process args' -> 'process args'
         parts = processName.split('"')
         if (len(parts) > 2):
             processName = ' '.join(parts[2:]).strip()
@@ -485,7 +494,8 @@ class DeviceManager(object):
         Installs an application onto the device.
 
         :param appBundlePath: path to the application bundle on the device
-        :param destPath: destination directory of where application should be installed to (optional)
+        :param destPath: destination directory of where application should be
+                         installed to (optional)
         """
 
     @abstractmethod
@@ -531,15 +541,19 @@ class DeviceManager(object):
         """
         # Based on: http://code.activestate.com/recipes/577443-write-a-png-image-in-native-python/
         width_byte_4 = width * 4
-        raw_data = b"".join(b'\x00' + buf[span:span + width_byte_4] for span in range(0, (height - 1) * width * 4, width_byte_4))
+        raw_data = b"".join(b'\x00' + buf[span:span + width_byte_4]
+                            for span in range(0, (height - 1) * width * 4, width_byte_4))
+
         def png_pack(png_tag, data):
             chunk_head = png_tag + data
-            return struct.pack("!I", len(data)) + chunk_head + struct.pack("!I", 0xFFFFFFFF & zlib.crc32(chunk_head))
+            return struct.pack("!I", len(data)) \
+                + chunk_head \
+                + struct.pack("!I", 0xFFFFFFFF & zlib.crc32(chunk_head))
         return b"".join([
-                b'\x89PNG\r\n\x1a\n',
-                png_pack(b'IHDR', struct.pack("!2I5B", width, height, 8, 6, 0, 0, 0)),
-                png_pack(b'IDAT', zlib.compress(raw_data, 9)),
-                png_pack(b'IEND', b'')])
+            b'\x89PNG\r\n\x1a\n',
+            png_pack(b'IHDR', struct.pack("!2I5B", width, height, 8, 6, 0, 0, 0)),
+            png_pack(b'IDAT', zlib.compress(raw_data, 9)),
+            png_pack(b'IEND', b'')])
 
     @abstractmethod
     def _getRemoteHash(self, filename):
@@ -553,7 +567,7 @@ class DeviceManager(object):
         Return the MD5 sum of a file on the host.
         """
         f = open(filename, 'rb')
-        if (f == None):
+        if f is None:
             return None
 
         try:
@@ -582,7 +596,7 @@ class DeviceManager(object):
             arg.replace('&', '\&')
 
             needsQuoting = False
-            for char in [ ' ', '(', ')', '"', '&' ]:
+            for char in [' ', '(', ')', '"', '&']:
                 if arg.find(char) >= 0:
                     needsQuoting = True
                     break
@@ -592,6 +606,7 @@ class DeviceManager(object):
             quotedCmd.append(arg)
 
         return " ".join(quotedCmd)
+
 
 def _pop_last_line(file_obj):
     """
@@ -603,20 +618,20 @@ def _pop_last_line(file_obj):
     file_obj.seek(0, 2)
     length = file_obj.tell() + 1
     while bytes_from_end < length:
-        file_obj.seek((-1)*bytes_from_end, 2)
+        file_obj.seek((-1) * bytes_from_end, 2)
         data = file_obj.read()
 
-        if bytes_from_end == length-1 and len(data) == 0: # no data, return None
+        if bytes_from_end == length - 1 and len(data) == 0:  # no data, return None
             return None
 
-        if data[0] == '\n' or bytes_from_end == length-1:
+        if data[0] == '\n' or bytes_from_end == length - 1:
             # found the last line, which should have the return value
             if data[0] == '\n':
                 data = data[1:]
 
             # truncate off the return code line
             file_obj.truncate(length - bytes_from_end)
-            file_obj.seek(0,2)
+            file_obj.seek(0, 2)
             file_obj.write('\0')
 
             return data
@@ -625,14 +640,16 @@ def _pop_last_line(file_obj):
 
     return None
 
+
 class ZeroconfListener(object):
+
     def __init__(self, hwid, evt):
         self.hwid = hwid
         self.evt = evt
 
     # Format is 'SUTAgent [hwid:015d2bc2825ff206] [ip:10_242_29_221]._sutagent._tcp.local.'
     def addService(self, zeroconf, type, name):
-        #print "Found _sutagent service broadcast:", name
+        # print "Found _sutagent service broadcast:", name
         if not name.startswith("SUTAgent"):
             return
 
