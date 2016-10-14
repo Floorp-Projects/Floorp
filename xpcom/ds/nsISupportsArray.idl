@@ -65,6 +65,9 @@ interface nsISupportsArray : nsICollection {
 
   [notxpcom] boolean RemoveElementsAt(in unsigned long aIndex,
                                       in unsigned long aCount);
+
+  [notxpcom] boolean SizeTo(in long aSize);
+  
 };
 
 %{C++

@@ -396,6 +396,38 @@ nsSupportsArray::Compact(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(bool)
+nsSupportsArray::SizeTo(int32_t aSize)
+{
+  NS_ASSERTION(aSize >= 0, "negative aSize!");
+
+  // XXX for aSize < mCount we could resize to mCount
+  if (mArraySize == (uint32_t)aSize || (uint32_t)aSize < mCount) {
+    return true;  // nothing to do
+  }
+
+  // switch back to autoarray if possible
+  nsISupports** oldArray = mArray;
+  if ((uint32_t)aSize <= kAutoArraySize) {
+    mArray = mAutoArray;
+    mArraySize = kAutoArraySize;
+  } else {
+    mArray = new nsISupports*[aSize];
+    if (!mArray) {
+      mArray = oldArray;
+      return false;
+    }
+    mArraySize = aSize;
+  }
+
+  ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
+  if (oldArray != mAutoArray) {
+    delete[] oldArray;
+  }
+
+  return true;
+}
+
 NS_IMETHODIMP
 nsSupportsArray::Enumerate(nsIEnumerator** aResult)
 {
