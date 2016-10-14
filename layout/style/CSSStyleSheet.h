@@ -214,26 +214,19 @@ public:
   }
 
   // WebIDL StyleSheet API
-  CSSStyleSheet* GetParentStyleSheet() const { return mParent; }
-  nsMediaList* Media();
+  using GetParentStyleSheet;
+  nsMediaList* Media() final;
 
   // WebIDL CSSStyleSheet API
   // Can't be inline because we can't include ImportRule here.  And can't be
   // called GetOwnerRule because that would be ambiguous with the ImportRule
   // version.
-  nsIDOMCSSRule* GetDOMOwnerRule() const;
+  nsIDOMCSSRule* GetDOMOwnerRule() const final;
   using StyleSheet::GetCssRules;
   using StyleSheet::InsertRule;
   using StyleSheet::DeleteRule;
 
   // WebIDL miscellaneous bits
-  dom::ParentObject GetParentObject() const {
-    if (mOwningNode) {
-      return dom::ParentObject(mOwningNode);
-    }
-
-    return dom::ParentObject(static_cast<nsIDOMCSSStyleSheet*>(mParent), mParent);
-  }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void WillDirty();
