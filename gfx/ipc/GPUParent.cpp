@@ -305,17 +305,6 @@ GPUParent::RecvAddLayerTreeIdMapping(const uint64_t& aLayersId, const ProcessId&
   return true;
 }
 
-bool
-GPUParent::RecvNotifyGpuObservers(const nsCString& aTopic)
-{
-  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-  MOZ_ASSERT(obsSvc);
-  if (obsSvc) {
-    obsSvc->NotifyObservers(nullptr, aTopic.get(), nullptr);
-  }
-  return true;
-}
-
 void
 GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 {

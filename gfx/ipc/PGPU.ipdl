@@ -68,10 +68,6 @@ parent:
   // one is available (i.e., Init has completed).
   sync GetDeviceStatus() returns (GPUDeviceData status);
 
-  // Have a message be broadcasted to the GPU process by the GPU process
-  // observer service.
-  async NotifyGpuObservers(nsCString aTopic);
-
 child:
   // Sent when the GPU process has initialized devices. This occurs once, after
   // Init().
@@ -84,10 +80,6 @@ child:
   async GraphicsError(nsCString aError);
 
   async InitCrashReporter(Shmem shmem);
-
-  // Have a message be broadcasted to the UI process by the UI process
-  // observer service.
-  async NotifyUiObservers(nsCString aTopic);
 };
 
 } // namespace gfx

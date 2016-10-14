@@ -14,7 +14,6 @@
 #include "InputData.h"                  // for InputData, etc
 #include "Layers.h"                     // for Layer, etc
 #include "mozilla/dom/Touch.h"          // for Touch
-#include "mozilla/gfx/GPUParent.h"      // for GPUParent
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnCompositorThread, etc
@@ -85,76 +84,6 @@ struct APZCTreeManager::TreeBuildingState {
   std::map<ScrollableLayerGuid, AsyncPanZoomController*> mApzcMap;
 };
 
-class APZCTreeManager::CheckerboardFlushObserver : public nsIObserver {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  explicit CheckerboardFlushObserver(APZCTreeManager* aTreeManager)
-    : mTreeManager(aTreeManager)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-    MOZ_ASSERT(obsSvc);
-    if (obsSvc) {
-      obsSvc->AddObserver(this, "APZ:FlushActiveCheckerboard", false);
-    }
-  }
-
-  void Unregister()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-    if (obsSvc) {
-      obsSvc->RemoveObserver(this, "APZ:FlushActiveCheckerboard");
-    }
-    mTreeManager = nullptr;
-  }
-
-protected:
-  virtual ~CheckerboardFlushObserver() {}
-
-private:
-  RefPtr<APZCTreeManager> mTreeManager;
-};
-
-NS_IMPL_ISUPPORTS(APZCTreeManager::CheckerboardFlushObserver, nsIObserver)
-
-NS_IMETHODIMP
-APZCTreeManager::CheckerboardFlushObserver::Observe(nsISupports* aSubject,
-                                                    const char* aTopic,
-                                                    const char16_t*)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTreeManager.get());
-
-  MutexAutoLock lock(mTreeManager->mTreeLock);
-  if (mTreeManager->mRootNode) {
-    ForEachNode<ReverseIterator>(mTreeManager->mRootNode.get(),
-        [](HitTestingTreeNode* aNode)
-        {
-          if (aNode->IsPrimaryHolder()) {
-            MOZ_ASSERT(aNode->GetApzc());
-            aNode->GetApzc()->FlushActiveCheckerboardReport();
-          }
-        });
-  }
-  if (XRE_IsGPUProcess()) {
-    if (gfx::GPUParent* gpu = gfx::GPUParent::GetSingleton()) {
-      nsCString topic("APZ:FlushActiveCheckerboard:Done");
-      Unused << gpu->SendNotifyUiObservers(topic);
-    }
-  } else {
-    MOZ_ASSERT(XRE_IsParentProcess());
-    nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-    if (obsSvc) {
-      obsSvc->NotifyObservers(nullptr, "APZ:FlushActiveCheckerboard:Done", nullptr);
-    }
-  }
-  return NS_OK;
-}
-
-
 /*static*/ const ScreenMargin
 APZCTreeManager::CalculatePendingDisplayPort(
   const FrameMetrics& aFrameMetrics,
@@ -169,8 +98,7 @@ APZCTreeManager::APZCTreeManager()
       mTreeLock("APZCTreeLock"),
       mHitResultForInputBlock(HitNothing),
       mRetainedTouchIdentifier(-1),
-      mApzcTreeLog("apzctree"),
-      mFlushObserver(new CheckerboardFlushObserver(this))
+      mApzcTreeLog("apzctree")
 {
   AsyncPanZoomController::InitializeGlobalState();
   mApzcTreeLog.ConditionOnPrefFunction(gfxPrefs::APZPrintTree);
@@ -1347,12 +1275,6 @@ APZCTreeManager::ClearTree()
     nodesToDestroy[i]->Destroy();
   }
   mRootNode = nullptr;
-
-  RefPtr<APZCTreeManager> self(this);
-  NS_DispatchToMainThread(NS_NewRunnableFunction([self] {
-    self->mFlushObserver->Unregister();
-    self->mFlushObserver = nullptr;
-  }));
 }
 
 RefPtr<HitTestingTreeNode>

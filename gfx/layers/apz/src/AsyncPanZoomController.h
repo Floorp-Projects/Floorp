@@ -235,15 +235,6 @@ public:
   void ReportCheckerboard(const TimeStamp& aSampleTime);
 
   /**
-   * Flush any active checkerboard report that's in progress. This basically
-   * pretends like any in-progress checkerboard event has terminated, and pushes
-   * out the report to the checkerboard reporting service and telemetry. If the
-   * checkerboard event has not really finished, it will start a new event
-   * on the next composite.
-   */
-  void FlushActiveCheckerboardReport();
-
-  /**
    * Returns whether or not the APZC is currently in a state of checkerboarding.
    * This is a simple computation based on the last-painted content and whether
    * the async transform has pushed it so far that it doesn't fully contain the
@@ -1176,10 +1167,6 @@ private:
    * recording.
    */
 private:
-  // Helper function to update the in-progress checkerboard event, if any.
-  void UpdateCheckerboardEvent(const MutexAutoLock& aProofOfLock,
-                               uint32_t aMagnitude);
-
   // Mutex protecting mCheckerboardEvent
   Mutex mCheckerboardEventLock;
   // This is created when this APZC instance is first included as part of a
