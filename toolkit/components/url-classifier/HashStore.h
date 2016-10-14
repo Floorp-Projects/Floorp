@@ -165,6 +165,8 @@ public:
   bool IsFullUpdate() const { return mFullUpdate; }
   PrefixStdStringMap& Prefixes() { return mPrefixesMap; }
   RemovalIndiceArray& RemovalIndices() { return mRemovalIndiceArray; }
+  const nsACString& ClientState() const { return mClientState; }
+  const nsACString& Checksum() const { return mChecksum; }
 
   // For downcasting.
   static const int TAG = 4;
@@ -172,6 +174,8 @@ public:
   void SetFullUpdate(bool aIsFullUpdate) { mFullUpdate = aIsFullUpdate; }
   void NewPrefixes(int32_t aSize, std::string& aPrefixes);
   void NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
+  void SetNewClientState(const nsACString& aState) { mClientState = aState; }
+  void NewChecksum(const std::string& aChecksum);
 
 private:
   virtual int Tag() const override { return TAG; }
@@ -179,6 +183,8 @@ private:
   bool mFullUpdate;
   PrefixStdStringMap mPrefixesMap;
   RemovalIndiceArray mRemovalIndiceArray;
+  nsCString mClientState;
+  nsCString mChecksum;
 };
 
 // There is one hash store per table.
