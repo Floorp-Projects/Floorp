@@ -938,7 +938,6 @@ pref("browser.autofocus", false);
 pref("dom.wakelock.enabled", true);
 
 // Enable webapps add-ons
-pref("dom.apps.customization.enabled", true);
 pref("dom.apps.reviewer_paths", "/reviewers/,/extension/reviewers/");
 
 // New implementation to unify touch-caret and selection-carets.

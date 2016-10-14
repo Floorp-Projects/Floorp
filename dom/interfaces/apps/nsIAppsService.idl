@@ -82,11 +82,4 @@ interface nsIAppsService : nsISupports
    * Returns the scope for app to use with service workers.
    */
   DOMString getScopeByLocalId(in unsigned long localId);
-
-  /**
-   * Returns true if this uri is a script or css resource loaded
-   * from an extension.
-   * Available only in the parent process.
-   */
-  bool isExtensionResource(in nsIURI uri);
 };
