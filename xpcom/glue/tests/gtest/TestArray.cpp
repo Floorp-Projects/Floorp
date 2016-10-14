@@ -119,12 +119,19 @@ TEST(Array, main)
 
 
     // test IndexOf && LastIndexOf
-    int32_t expectedIndex = 0;
+    int32_t expectedIndex[5] = {0, 4, 6, 12, -1};
+    int32_t count = 0;
     int32_t index = array->IndexOf(foo);
-    EXPECT_EQ(index, expectedIndex);
-    expectedIndex = 12;
+    EXPECT_EQ(index, expectedIndex[count]);
+    while (-1 != index) {
+      count++;
+      index = array->IndexOfStartingAt(foo, index + 1);
+      if (-1 != index)
+        EXPECT_EQ(index, expectedIndex[count]);
+    }
     index = array->LastIndexOf(foo);
-    EXPECT_EQ(index, expectedIndex);
+    count--;
+    EXPECT_EQ(index, expectedIndex[count]);
 
     // test ReplaceElementAt
     array->ReplaceElementAt(foo, 8);
