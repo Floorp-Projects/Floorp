@@ -1,0 +1,331 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
+-->
+<window title="Mozilla Bug 1276553"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="run();">
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
+  Cu.import("resource://testing-common/TestUtils.jsm");
+  Cu.import("resource://testing-common/ContentTask.jsm");
+  Cu.import("resource://testing-common/BrowserTestUtils.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+  ContentTask.setTestScope(window.opener.wrappedJSObject);
+
+  let imports = ['SimpleTest', 'SpecialPowers', 'ok', 'is', 'info'];
+  for (let name of imports) {
+    window[name] = window.opener.wrappedJSObject[name];
+  }
+
+  /** Test for Bug 1276553 **/
+  function run() {
+    new Promise(resolve => SpecialPowers.pushPrefEnv(
+      {'set' : [[ 'browser.groupedhistory.enabled', true ]]}, resolve))
+    .then(() => test(false))
+    .then(() => test(true))
+    .then(() => {
+      window.close();
+      SimpleTest.finish();
+    });
+  }
+
+  function test(remote) {
+    let act, bg1, bg2;
+    return Promise.resolve()
+
+    // create first browser with 1 entry (which will always be the active one)
+    .then(() => info('TEST-INFO | test create active browser, remote=' + remote))
+    .then(() => createBrowser('pen', remote))
+    .then(b => act = b)
+    .then(() => verifyBrowser(act, 'pen'       /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    false      /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    false      /* partial */ ))
+
+    // create background browser 1 with 1 entry
+    .then(() => info('TEST-INFO | test create background browser 1, remote=' + remote))
+    .then(() => createBrowser('pineapple', remote))
+    .then(b => bg1 = b)
+    .then(() => verifyBrowser(bg1, 'pineapple' /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    false      /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    false      /* partial */ ))
+
+     // create background browser 2 with 2 entries
+    .then(() => info('TEST-INFO | test create background browser 2, remote=' + remote))
+    .then(() => createBrowser('apple', remote))
+    .then(b => bg2 = b)
+    .then(() => verifyBrowser(bg2, 'apple'     /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    false      /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    false      /* partial */ ))
+    .then(() => loadURI(bg2, getDummyHtml('pencil')))
+    .then(() => verifyBrowser(bg2, 'pencil'    /* title */,
+                                    1          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    false      /* partial */ ))
+
+    // merge to 2 entries pen-pineapple
+    .then(() => info('TEST-INFO | test merge history, remote=' + remote))
+    .then(() => mergeHistory(act, bg1))
+    .then(() => verifyBrowser(act, 'pineapple' /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    true       /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    true       /* partial */,
+                                    1          /* offset */,
+                                    2          /* globalLength */ ))
+
+    // merge to 4 entries pen-pineapple-apple-pencil
+    .then(() => mergeHistory(act, bg2))
+    .then(() => verifyBrowser(act, 'pencil'    /* title */,
+                                    1          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */ ))
+
+    // test go back
+    .then(() => info('TEST-INFO | test history go back, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.goBack.bind(act)))
+    .then(() => verifyBrowser(act, 'apple'     /* title */,
+                                    0          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */ ))
+    // XXX The 2nd pageshow comes from reload as current index of the active
+    // partial history remains the same
+    .then(() => wrapHistoryNavFn(act, act.goBack.bind(act), true))
+    .then(() => verifyBrowser(act, 'pineapple' /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    1          /* offset */,
+                                    4          /* globalLength */ ))
+    .then(() => wrapHistoryNavFn(act, act.goBack.bind(act), true))
+    .then(() => verifyBrowser(act, 'pen'       /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    false      /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    0          /* offset */,
+                                    4          /* globalLength */ ))
+
+    // test go forward
+    .then(() => info('TEST-INFO | test history go forward, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.goForward.bind(act), true))
+    .then(() => verifyBrowser(act, 'pineapple' /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    1          /* offset */,
+                                    4          /* globalLength */ ))
+    .then(() => wrapHistoryNavFn(act, act.goForward.bind(act), true))
+    .then(() => verifyBrowser(act, 'apple'     /* title */,
+                                    0          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */ ))
+    .then(() => wrapHistoryNavFn(act, act.goForward.bind(act)))
+    .then(() => verifyBrowser(act, 'pencil'    /* title */,
+                                    1          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */ ))
+
+    // test goto index
+    .then(() => info('TEST-INFO | test history goto index, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 0), true))
+    .then(() => verifyBrowser(act, 'pen'       /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    false      /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    0          /* offset */,
+                                    4          /* globalLength */ ))
+    // expect 2 pageshow since we're also changing mIndex of the partial history
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 2), true, 2))
+    .then(() => verifyBrowser(act, 'apple'     /* title */,
+                                    0          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */ ))
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 1), true))
+    .then(() => verifyBrowser(act, 'pineapple' /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    1          /* offset */,
+                                    4          /* globalLength */ ))
+    // expect 2 pageshow since we're also changing mIndex of the partial history
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 3), true, 2))
+    .then(() => verifyBrowser(act, 'pencil'    /* title */,
+                                    1          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */ ))
+
+    // test history change to 3 entries pen-pineapple-banana
+    .then(() => info('TEST-INFO | test history change, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 1), true))
+    .then(() => verifyBrowser(act, 'pineapple' /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    1          /* offset */,
+                                    4          /* globalLength */ ))
+    .then(() => loadURI(act, getDummyHtml('banana')))
+    .then(() => verifyBrowser(act, 'banana'    /* title */,
+                                    1          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    true       /* partial */,
+                                    1          /* offset */,
+                                    3          /* globalLength */ ))
+  }
+
+  function getDummyHtml(title) {
+    return 'data:text/html;charset=UTF-8,' +
+     '<html><head><title>' + title + '</title></head></html>'
+  }
+
+  function createBrowser(title, remote) {
+    let browser = document.createElement('browser');
+    browser.setAttribute('type', 'content');
+    browser.setAttribute('remote', remote);
+    browser.setAttribute('src', getDummyHtml(title));
+    document.getElementById('stack').appendChild(browser);
+    return BrowserTestUtils.browserLoaded(browser)
+           .then(() => {
+             browser.messageManager.loadFrameScript('data:,' +
+               'addEventListener("pageshow", () => sendAsyncMessage("test:pageshow", null), false);' +
+               'addEventListener("pagehide", () => sendAsyncMessage("test:pagehide", null), false);',
+               true);
+           })
+           .then(() => {
+             // a trick to ensure webProgress object is created for e10s case
+             ok(browser.webProgress, 'check browser.webProgress exists');
+             return browser;
+           });
+  }
+
+  function loadURI(browser, uri) {
+    let promise = BrowserTestUtils.browserLoaded(browser, false, uri);
+    browser.loadURI(uri);
+    return promise;
+  }
+
+  function mergeHistory(b1, b2) {
+    let promises = [];
+    let pagehide1, pagehide2;
+
+    // For swapping there should be a pagehide followed by a pageshow.
+    promises.push(BrowserTestUtils.waitForMessage(b1.messageManager, 'test:pagehide', msg => pagehide1 = true));
+    promises.push(BrowserTestUtils.waitForMessage(b2.messageManager, 'test:pagehide', msg => pagehide2 = true));
+    promises.push(BrowserTestUtils.waitForMessage(b1.messageManager, 'test:pageshow', msg => pagehide1));
+    promises.push(BrowserTestUtils.waitForMessage(b2.messageManager, 'test:pageshow', msg => pagehide2));
+    promises.push(Promise.resolve().then(() => {
+      let f1 = b1.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+      let f2 = b2.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+      f1.appendPartialSessionHistoryAndSwap(f2);
+    }));
+
+    return Promise.all(promises);
+  }
+
+  function wrapHistoryNavFn(browser, navFn, expectSwap = false, expectPageshowCount = 1) {
+    let promises = [];
+    let pagehide = false;
+    let pageshowCount = 0;
+
+    if (expectSwap) {
+      // For swapping there should be a pagehide followed by a pageshow.
+      promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
+        'test:pagehide', msg => pagehide = true));
+    }
+    promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
+      'test:pageshow', msg => {
+        // Only count events after pagehide for swapping case.
+        if (!expectSwap || pagehide) {
+          return !--expectPageshowCount;
+        }
+        return false;
+      }));
+    promises.push(Task.spawn(navFn));
+
+    return Promise.all(promises);
+  }
+
+  function verifyBrowser(browser, title, index, length, canGoBack, canGoForward,
+                         partial, offset = 0, globalLength = length) {
+    is(browser.canGoBack, canGoBack, 'check browser.canGoBack');
+    is(browser.canGoForward, canGoForward, 'check browser.canGoForward');
+    if (partial) {
+      let frameLoader = browser.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+      is(frameLoader.groupedSessionHistory.count, globalLength, 'check groupedSHistory.count');
+    }
+
+    return ContentTask.spawn(browser,
+                             { title, index, length, canGoBack, canGoForward, partial, offset, globalLength },
+                             ({ title, index, length, canGoBack, canGoForward, partial, offset, globalLength }) => {
+      let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+      let shistory = webNav.sessionHistory;
+      is(content.document.title, title, 'check title');
+      is(webNav.canGoBack, canGoBack, 'check webNav.canGoBack');
+      is(webNav.canGoForward, canGoForward, 'check webNav.canGoForward');
+      is(shistory.index, index, 'check shistory.index');
+      is(shistory.count, length, 'check shistory.count');
+      is(shistory.isPartial, partial, 'check shistory.isPartial');
+      is(shistory.globalIndexOffset, offset, 'check shistory.globalIndexOffset');
+      is(shistory.globalCount, globalLength, 'check shistory.globalCount');
+    });
+  }
+
+  ]]>
+  </script>
+  <stack id="stack" flex="1" />
+</window>
