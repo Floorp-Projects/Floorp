@@ -14,6 +14,4 @@ interface RTCDTMFSender : EventTarget {
                     optional unsigned long interToneGap = 70);
              attribute EventHandler  ontonechange;
     readonly attribute DOMString     toneBuffer;
-    readonly attribute unsigned long duration;
-    readonly attribute unsigned long interToneGap;
 };

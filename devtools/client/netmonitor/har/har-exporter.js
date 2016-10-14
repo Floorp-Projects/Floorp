@@ -3,9 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-
+/* eslint-disable mozilla/reject-some-requires */
 const { Cc, Ci } = require("chrome");
 const Services = require("Services");
+/* eslint-disable mozilla/reject-some-requires */
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { resolve } = require("promise");
 const { HarUtils } = require("./har-utils.js");

@@ -347,8 +347,6 @@ private:
 protected:
   virtual ~MediaDecoderStateMachine();
 
-  void SetState(State aState);
-
   void BufferedRangeUpdated();
 
   void ReaderSuspendedChanged();
@@ -458,10 +456,6 @@ protected:
   // Must be called with the decode monitor held.
   void MaybeStartPlayback();
 
-  // Check to see if we don't have enough data to play up to the next frame.
-  // If we don't, switch to buffering mode.
-  void MaybeStartBuffering();
-
   // Moves the decoder into the shutdown state, and dispatches an error
   // event to the media element. This begins shutting down the decoder.
   // The decoder monitor must be held. This is only called on the
@@ -474,9 +468,6 @@ protected:
   void EnqueueLoadedMetadataEvent();
 
   void EnqueueFirstFrameLoadedEvent();
-
-  // Clears any previous seeking state and initiates a new seek on the decoder.
-  void InitiateSeek(SeekJob aSeekJob);
 
   void DispatchAudioDecodeTaskIfNeeded();
   void DispatchVideoDecodeTaskIfNeeded();

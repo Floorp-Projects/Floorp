@@ -377,17 +377,19 @@ class ScriptMixin(PlatformMixin):
                 parsed_url = urlparse.urlparse(url)
 
         request = urllib2.Request(url)
-        # Exceptions to be retried:
-        # Bug 1300663 - HTTPError: HTTP Error 404: Not Found
-        # Bug 1300413 - HTTPError: HTTP Error 500: Internal Server Error
-        # Bug 1300943 - HTTPError: HTTP Error 503: Service Unavailable
-        # Bug 1300953 - URLError: <urlopen error [Errno -2] Name or service not known>
-        # Bug 1301594 - URLError: <urlopen error [Errno 10054] An existing connection was ...
-        # Bug 1301597 - URLError: <urlopen error [Errno 8] _ssl.c:504: EOF occurred in ...
-        # Bug 1301855 - URLError: <urlopen error [Errno 60] Operation timed out>
-        # Bug 1302237 - URLError: <urlopen error [Errno 104] Connection reset by peer>
-        # Bug 1301807 - BadStatusLine: ''
-        response = urllib2.urlopen(request)
+        # When calling fetch_url_into_memory() you should retry when we raise one of these exceptions:
+        # * Bug 1300663 - HTTPError: HTTP Error 404: Not Found
+        # * Bug 1300413 - HTTPError: HTTP Error 500: Internal Server Error
+        # * Bug 1300943 - HTTPError: HTTP Error 503: Service Unavailable
+        # * Bug 1300953 - URLError: <urlopen error [Errno -2] Name or service not known>
+        # * Bug 1301594 - URLError: <urlopen error [Errno 10054] An existing connection was ...
+        # * Bug 1301597 - URLError: <urlopen error [Errno 8] _ssl.c:504: EOF occurred in ...
+        # * Bug 1301855 - URLError: <urlopen error [Errno 60] Operation timed out>
+        # * Bug 1302237 - URLError: <urlopen error [Errno 104] Connection reset by peer>
+        # * Bug 1301807 - BadStatusLine: ''
+        #
+        # Bug 1309912 - Adding timeout in hopes to solve blocking on response.read() (bug 1300413)
+        response = urllib2.urlopen(request, timeout=30)
 
         if parsed_url.scheme in ('http', 'https'):
             expected_file_size = int(response.headers.get('Content-Length'))
