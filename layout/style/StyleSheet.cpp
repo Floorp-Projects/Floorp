@@ -193,4 +193,22 @@ StyleSheet::SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
   DidDirty();
 }
 
+bool
+StyleSheet::AreRulesAvailable(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                              ErrorResult& aRv)
+{
+  // Rules are not available on incomplete sheets.
+  if (!SheetInfo().mComplete) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return false;
+  }
+  //-- Security check: Only scripts whose principal subsumes that of the
+  //   style sheet can access rule collections.
+  SubjectSubsumesInnerPrincipal(aSubjectPrincipal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return false;
+  }
+  return true;
+}
+
 } // namespace mozilla
