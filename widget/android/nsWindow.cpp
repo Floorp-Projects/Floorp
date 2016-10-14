@@ -35,7 +35,6 @@ using mozilla::Unused;
 #include "nsIDOMChromeWindow.h"
 #include "nsIObserverService.h"
 #include "nsISelection.h"
-#include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWidgetListener.h"
 #include "nsIWindowWatcher.h"
