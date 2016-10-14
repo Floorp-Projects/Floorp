@@ -27,7 +27,8 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
 StyleSheet::StyleSheet(const StyleSheet& aCopy,
                        nsIDocument* aDocumentToUse,
                        nsINode* aOwningNodeToUse)
-  : mDocument(aDocumentToUse)
+  : mTitle(aCopy.mTitle)
+  , mDocument(aDocumentToUse)
   , mOwningNode(aOwningNodeToUse)
   , mParsingMode(aCopy.mParsingMode)
   , mType(aCopy.mType)
@@ -93,6 +94,64 @@ StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
   if (!mPrincipal) {
     NS_RUNTIMEABORT("nsNullPrincipal::Init failed");
   }
+}
+
+// nsIDOMStyleSheet interface
+
+NS_IMETHODIMP
+StyleSheet::GetType(nsAString& aType)
+{
+  aType.AssignLiteral("text/css");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StyleSheet::GetDisabled(bool* aDisabled)
+{
+  *aDisabled = Disabled();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StyleSheet::SetDisabled(bool aDisabled)
+{
+  // DOM method, so handle BeginUpdate/EndUpdate
+  MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_STYLE, true);
+  if (IsGecko()) {
+    AsGecko()->SetEnabled(!aDisabled);
+  } else {
+    MOZ_CRASH("stylo: unimplemented SetEnabled");
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StyleSheet::GetOwnerNode(nsIDOMNode** aOwnerNode)
+{
+  nsCOMPtr<nsIDOMNode> ownerNode = do_QueryInterface(GetOwnerNode());
+  ownerNode.forget(aOwnerNode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StyleSheet::GetHref(nsAString& aHref)
+{
+  if (nsIURI* sheetURI = SheetInfo().mOriginalSheetURI) {
+    nsAutoCString str;
+    nsresult rv = sheetURI->GetSpec(str);
+    NS_ENSURE_SUCCESS(rv, rv);
+    CopyUTF8toUTF16(str, aHref);
+  } else {
+    SetDOMStringToNull(aHref);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StyleSheet::GetTitle(nsAString& aTitle)
+{
+  aTitle.Assign(mTitle);
+  return NS_OK;
 }
 
 } // namespace mozilla

@@ -27,7 +27,7 @@ public:
                   net::ReferrerPolicy aReferrerPolicy,
                   const dom::SRIMetadata& aIntegrity);
 
-  NS_INLINE_DECL_REFCOUNTING(ServoStyleSheet)
+  NS_DECL_ISUPPORTS
 
   bool HasRules() const;
 
@@ -49,6 +49,13 @@ public:
 #endif
 
   RawServoStyleSheet* RawSheet() const { return mSheet; }
+
+  // nsIDOMStyleSheet interface
+  NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) final;
+  NS_IMETHOD GetMedia(nsIDOMMediaList** aMedia) final;
+
+  // nsIDOMCSSStyleSheet interface
+  NS_DECL_NSIDOMCSSSTYLESHEET
 
 protected:
   ~ServoStyleSheet();

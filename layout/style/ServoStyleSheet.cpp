@@ -23,6 +23,14 @@ ServoStyleSheet::~ServoStyleSheet()
   DropSheet();
 }
 
+NS_INTERFACE_MAP_BEGIN(ServoStyleSheet)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(ServoStyleSheet)
+NS_IMPL_RELEASE(ServoStyleSheet)
+
 bool
 ServoStyleSheet::HasRules() const
 {
@@ -103,5 +111,46 @@ ServoStyleSheet::List(FILE* aOut, int32_t aIndex) const
   MOZ_CRASH("stylo: not implemented");
 }
 #endif
+
+// nsIDOMStyleSheet implementation
+
+NS_IMETHODIMP
+ServoStyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ServoStyleSheet::GetMedia(nsIDOMMediaList** aMedia)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsIDOMCSSStyleSheet implementation
+
+nsresult
+ServoStyleSheet::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+ServoStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+ServoStyleSheet::InsertRule(const nsAString& rule,
+                            uint32_t aIndex, uint32_t* aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+ServoStyleSheet::DeleteRule(uint32_t aIndex)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 } // namespace mozilla
