@@ -15,6 +15,7 @@
 #include "mozilla/ServoUtils.h"
 
 #include "nsIDOMCSSStyleSheet.h"
+#include "nsWrapperCache.h"
 
 class nsIDocument;
 class nsINode;
@@ -36,14 +37,19 @@ class SRIMetadata;
  * Superclass for data common to CSSStyleSheet and ServoStyleSheet.
  */
 class StyleSheet : public nsIDOMCSSStyleSheet
+                 , public nsWrapperCache
 {
 protected:
   StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode);
   StyleSheet(const StyleSheet& aCopy,
              nsIDocument* aDocumentToUse,
              nsINode* aOwningNodeToUse);
+  virtual ~StyleSheet() {}
 
 public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheet)
+
   void SetOwningNode(nsINode* aOwningNode)
   {
     mOwningNode = aOwningNode;
@@ -62,9 +68,6 @@ public:
   void SetComplete();
 
   MOZ_DECL_STYLO_METHODS(CSSStyleSheet, ServoStyleSheet)
-
-  inline MozExternalRefCountType AddRef();
-  inline MozExternalRefCountType Release();
 
   // Whether the sheet is for an inline <style> element.
   inline bool IsInline() const;
@@ -143,6 +146,7 @@ public:
 
   // WebIDL miscellaneous bits
   inline dom::ParentObject GetParentObject() const;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
   // nsIDOMStyleSheet interface
   NS_IMETHOD GetType(nsAString& aType) final;

@@ -25,7 +25,6 @@
 #include "nsString.h"
 #include "mozilla/CORSMode.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/dom/SRIMetadata.h"
 
@@ -101,7 +100,6 @@ struct CSSStyleSheetInner : public StyleSheetInfo
 
 class CSSStyleSheet final : public StyleSheet
                           , public nsICSSLoaderObserver
-                          , public nsWrapperCache
 {
 public:
   typedef net::ReferrerPolicy ReferrerPolicy;
@@ -111,9 +109,8 @@ public:
                 CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy,
                 const dom::SRIMetadata& aIntegrity);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(CSSStyleSheet,
-                                                         nsIDOMCSSStyleSheet)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSStyleSheet, StyleSheet)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_SHEET_IMPL_CID)
 
@@ -216,9 +213,6 @@ public:
   // called GetOwnerRule because that would be ambiguous with the ImportRule
   // version.
   nsIDOMCSSRule* GetDOMOwnerRule() const final;
-
-  // WebIDL miscellaneous bits
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void WillDirty();
   void DidDirty();
