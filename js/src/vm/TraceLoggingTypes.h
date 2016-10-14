@@ -58,6 +58,7 @@
     _(LoopUnrolling)                                  \
     _(Sink)                                           \
     _(RemoveUnnecessaryBitops)                        \
+    _(FoldLinearArithConstants)                       \
     _(EffectiveAddressAnalysis)                       \
     _(AlignmentMaskAnalysis)                          \
     _(EliminateDeadCode)                              \

@@ -13,18 +13,9 @@ addEventListener("load", function(event) {
 // Function allows to initialize prerequisites before testing
 // and adds some callbacks to support mochitest system.
 function preExecute() {
-  add_result_callback(parent.result_function);
-  add_completion_callback(parent.completion_function);
-  parent.turnOnPointerEvents(window.callExecute);
-}
-
-// The main function allows to execute tests in auto mode
-function callExecute() {
-  console.log("Run 'executeTest' function");
-  if(!!parent.executeTest)
-    parent.executeTest(window);
-  else
-    parent.is(!!parent.executeTest, true, "parent-document should have function 'executeTest'");
+  add_result_callback(testContext.result_callback);
+  add_completion_callback(testContext.completion_callback);
+  testContext.execute(window);
 }
 
 function addListeners(elem) {

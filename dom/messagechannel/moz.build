@@ -10,7 +10,6 @@ EXPORTS.mozilla.dom += [
     'MessageChannel.h',
     'MessagePort.h',
     'MessagePortChild.h',
-    'MessagePortList.h',
     'MessagePortParent.h',
 ]
 
@@ -18,7 +17,6 @@ UNIFIED_SOURCES += [
     'MessageChannel.cpp',
     'MessagePort.cpp',
     'MessagePortChild.cpp',
-    'MessagePortList.cpp',
     'MessagePortParent.cpp',
     'MessagePortService.cpp',
     'SharedMessagePortMessage.cpp',

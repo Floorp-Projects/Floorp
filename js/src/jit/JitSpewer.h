@@ -44,6 +44,10 @@ namespace jit {
     _(Unrolling)                            \
     /* Information during LICM */           \
     _(LICM)                                 \
+    /* Info about fold linear constants */  \
+    _(FLAC)                                 \
+    /* Effective address analysis info */   \
+    _(EAA)                                  \
     /* Information during regalloc */       \
     _(RegAlloc)                             \
     /* Information during inlining */       \

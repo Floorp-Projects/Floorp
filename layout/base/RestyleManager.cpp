@@ -1569,8 +1569,7 @@ ElementRestyler::AddLayerChangesForAnimation()
     // setKeyframes or changing target element from other target which prevents
     // running on the compositor, etc.
     if (!layer &&
-        nsLayoutUtils::HasRelevantAnimationOfProperty(mFrame,
-                                                      layerInfo.mProperty)) {
+        nsLayoutUtils::HasEffectiveAnimation(mFrame, layerInfo.mProperty)) {
       hint |= layerInfo.mChangeHint;
     }
   }

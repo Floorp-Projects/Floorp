@@ -106,7 +106,7 @@ public:
     // If there is no securityUI, document doesn't have a security state to
     // update.  But we still want to set the document flags, so we don't return
     // early.
-    nsresult stateRV;
+    nsresult stateRV = NS_ERROR_FAILURE;
     if (securityUI) {
       stateRV = securityUI->GetState(&state);
     }

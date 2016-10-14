@@ -434,9 +434,9 @@ assertErrorMessage(() => i2v(5), Error, signatureMismatch);
 }
 
 for (bad of [6, 7, 100, Math.pow(2,31)-1, Math.pow(2,31), Math.pow(2,31)+1, Math.pow(2,32)-2, Math.pow(2,32)-1]) {
-    assertThrowsInstanceOf(() => v2i(bad), RangeError);
-    assertThrowsInstanceOf(() => i2i(bad, 0), RangeError);
-    assertThrowsInstanceOf(() => i2v(bad, 0), RangeError);
+    assertThrowsInstanceOf(() => v2i(bad), WebAssembly.RuntimeError);
+    assertThrowsInstanceOf(() => i2i(bad, 0), WebAssembly.RuntimeError);
+    assertThrowsInstanceOf(() => i2v(bad, 0), WebAssembly.RuntimeError);
 }
 
 wasmValidateText('(module (func $foo (nop)) (func (call $foo)))');

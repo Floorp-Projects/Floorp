@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/MessagePortList.h"
 #include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
@@ -17,7 +16,6 @@ namespace dom {
 
 struct MessageEventInit;
 class MessagePort;
-class MessagePortList;
 class OwningWindowProxyOrMessagePort;
 class WindowProxyOrMessagePort;
 
@@ -49,12 +47,9 @@ public:
   void GetLastEventId(nsAString&) const;
   void GetSource(Nullable<OwningWindowProxyOrMessagePort>& aValue) const;
 
-  MessagePortList* GetPorts()
-  {
-    return mPorts;
-  }
+  void GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts);
 
-  void SetPorts(MessagePortList* aPorts);
+  void SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts);
 
   // Non WebIDL methods
   void SetSource(mozilla::dom::MessagePort* aPort);
@@ -91,7 +86,9 @@ private:
   nsString mLastEventId;
   RefPtr<nsPIDOMWindowInner> mWindowSource;
   RefPtr<MessagePort> mPortSource;
-  RefPtr<MessagePortList> mPorts;
+
+  nsTArray<RefPtr<MessagePort>> mPorts;
+  bool mPortsSet;
 };
 
 } // namespace dom

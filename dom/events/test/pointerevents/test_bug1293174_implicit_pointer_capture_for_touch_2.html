@@ -13,8 +13,7 @@
         setImplicitPointerCapture(false, loadSubFrame);
       }
       function loadSubFrame() {
-        var iframe = document.getElementById("testFrame");
-        iframe.src = "bug1293174_implicit_pointer_capture_for_touch_2.html";
+        runTestInNewWindow("bug1293174_implicit_pointer_capture_for_touch_2.html");
       }
       function executeTest(int_win) {
         sendTouchEvent(int_win, "target0", "touchstart");
@@ -26,7 +25,6 @@
     </script>
   </head>
   <body>
-    <iframe id="testFrame" height="800" width="1000"></iframe>
   </body>
 </html>
 

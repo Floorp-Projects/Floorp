@@ -5,6 +5,7 @@ const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
 const Memory = WebAssembly.Memory;
+const RuntimeError = WebAssembly.RuntimeError;
 
 var callee = i => `(func $f${i} (result i32) (i32.const ${i}))`;
 
@@ -39,28 +40,28 @@ var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result
 var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
 
 var call = wasmEvalText(`(module (table 10 anyfunc) ${callee(0)} ${caller})`).exports.call;
-assertErrorMessage(() => call(0), Error, /indirect call to null/);
-assertErrorMessage(() => call(10), Error, /out-of-range/);
+assertErrorMessage(() => call(0), RuntimeError, /indirect call to null/);
+assertErrorMessage(() => call(10), RuntimeError, /index out of bounds/);
 
 var call = wasmEvalText(`(module (table 10 anyfunc) (elem (i32.const 0)) ${callee(0)} ${caller})`).exports.call;
-assertErrorMessage(() => call(0), Error, /indirect call to null/);
-assertErrorMessage(() => call(10), Error, /out-of-range/);
+assertErrorMessage(() => call(0), RuntimeError, /indirect call to null/);
+assertErrorMessage(() => call(10), RuntimeError, /index out of bounds/);
 
 var call = wasmEvalText(`(module (table 10 anyfunc) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`).exports.call;
 assertEq(call(0), 0);
-assertErrorMessage(() => call(1), Error, /indirect call to null/);
-assertErrorMessage(() => call(2), Error, /indirect call to null/);
-assertErrorMessage(() => call(10), Error, /out-of-range/);
+assertErrorMessage(() => call(1), RuntimeError, /indirect call to null/);
+assertErrorMessage(() => call(2), RuntimeError, /indirect call to null/);
+assertErrorMessage(() => call(10), RuntimeError, /index out of bounds/);
 
 var call = wasmEvalText(`(module (table 10 anyfunc) (elem (i32.const 1) $f0 $f1) (elem (i32.const 4) $f0 $f2) ${callee(0)} ${callee(1)} ${callee(2)} ${caller})`).exports.call;
-assertErrorMessage(() => call(0), Error, /indirect call to null/);
+assertErrorMessage(() => call(0), RuntimeError, /indirect call to null/);
 assertEq(call(1), 0);
 assertEq(call(2), 1);
-assertErrorMessage(() => call(3), Error, /indirect call to null/);
+assertErrorMessage(() => call(3), RuntimeError, /indirect call to null/);
 assertEq(call(4), 0);
 assertEq(call(5), 2);
-assertErrorMessage(() => call(6), Error, /indirect call to null/);
-assertErrorMessage(() => call(10), Error, /out-of-range/);
+assertErrorMessage(() => call(6), RuntimeError, /indirect call to null/);
+assertErrorMessage(() => call(10), RuntimeError, /index out of bounds/);
 
 var tbl = new Table({initial:3, element:"anyfunc"});
 var call = wasmEvalText(`(module (import "a" "b" (table 3 anyfunc)) (export "tbl" table) (elem (i32.const 0) $f0 $f1) ${callee(0)} ${callee(1)} ${caller})`, {a:{b:tbl}}).exports.call;
@@ -68,7 +69,7 @@ assertEq(call(0), 0);
 assertEq(call(1), 1);
 assertEq(tbl.get(0)(), 0);
 assertEq(tbl.get(1)(), 1);
-assertErrorMessage(() => call(2), Error, /indirect call to null/);
+assertErrorMessage(() => call(2), RuntimeError, /indirect call to null/);
 assertEq(tbl.get(2), null);
 
 var exp = wasmEvalText(`(module (import "a" "b" (table 3 anyfunc)) (export "tbl" table) (elem (i32.const 2) $f2) ${callee(2)} ${caller})`, {a:{b:tbl}}).exports;
@@ -89,7 +90,7 @@ assertEq(exp1.tbl.get(1), exp1.f0);
 assertEq(exp1.tbl.get(2), null);
 assertEq(exp1.call(0), 0);
 assertEq(exp1.call(1), 0);
-assertErrorMessage(() => exp1.call(2), Error, /indirect call to null/);
+assertErrorMessage(() => exp1.call(2), RuntimeError, /indirect call to null/);
 var exp2 = wasmEvalText(`(module (import "a" "b" (table 10 anyfunc)) (export "tbl" table) (elem (i32.const 1) $f1 $f1) ${callee(1)} (export "f1" $f1) ${caller})`, {a:{b:exp1.tbl}}).exports
 assertEq(exp1.tbl, exp2.tbl);
 assertEq(exp2.tbl.get(0), exp1.f0);
@@ -111,7 +112,7 @@ tbl.set(1, e2.g);
 tbl.set(2, e3.h);
 var e4 = wasmEvalText(`(module (import "a" "b" (table 3 anyfunc)) ${caller})`, {a:{b:tbl}}).exports;
 assertEq(e4.call(0), 42);
-assertErrorMessage(() => e4.call(1), Error, /indirect call signature mismatch/);
+assertErrorMessage(() => e4.call(1), RuntimeError, /indirect call signature mismatch/);
 assertEq(e4.call(2), 13);
 
 var m = new Module(wasmTextToBinary(`(module
@@ -163,7 +164,7 @@ var call = wasmEvalText(`(module
 )`).exports.call;
 assertEq(call(0), 0);
 assertEq(call(1), 1);
-assertErrorMessage(() => call(2), Error, /indirect call signature mismatch/);
+assertErrorMessage(() => call(2), RuntimeError, /indirect call signature mismatch/);
 
 var call = wasmEvalText(`(module
     (type $A (func (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (param i32) (result i32)))
@@ -187,5 +188,5 @@ var call = wasmEvalText(`(module
 )`).exports.call;
 assertEq(call(0), 42);
 for (var i = 1; i < 7; i++)
-    assertErrorMessage(() => call(i), Error, /indirect call signature mismatch/);
-assertErrorMessage(() => call(7), Error, /out-of-range/);
+    assertErrorMessage(() => call(i), RuntimeError, /indirect call signature mismatch/);
+assertErrorMessage(() => call(7), RuntimeError, /index out of bounds/);

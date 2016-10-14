@@ -95,7 +95,7 @@ exports.location = PropTypes.string;
  */
 exports.screenshot = {
 
-  isCapturing: PropTypes.bool.isRequired,
+  isCapturing: PropTypes.bool,
 
 };
 
@@ -104,8 +104,21 @@ exports.screenshot = {
  */
 exports.touchSimulation = {
 
-  // Whether or not the touch simulation is enabled
-  enabled: PropTypes.bool.isRequired,
+  // Whether or not touch simulation is enabled
+  enabled: PropTypes.bool,
+
+};
+
+/**
+ * Network throttling.
+ */
+exports.networkThrottling = {
+
+  // Whether or not network throttling is enabled
+  enabled: PropTypes.bool,
+
+  // Name of the selected throttling profile
+  profile: PropTypes.string,
 
 };
 
@@ -115,7 +128,7 @@ exports.touchSimulation = {
 exports.viewport = {
 
   // The id of the viewport
-  id: PropTypes.number.isRequired,
+  id: PropTypes.number,
 
   // The currently selected device applied to the viewport.
   device: PropTypes.string,

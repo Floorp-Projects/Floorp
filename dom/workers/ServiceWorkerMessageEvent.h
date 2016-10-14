@@ -14,7 +14,6 @@ namespace dom {
 
 struct ServiceWorkerMessageEventInit;
 class MessagePort;
-class MessagePortList;
 class OwningServiceWorkerOrMessagePort;
 
 namespace workers {
@@ -47,13 +46,13 @@ public:
 
   void GetSource(Nullable<OwningServiceWorkerOrMessagePort>& aValue) const;
 
-  MessagePortList* GetPorts() const;
+  void GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts);
 
   void SetSource(mozilla::dom::MessagePort* aPort);
 
   void SetSource(workers::ServiceWorker* aServiceWorker);
 
-  void SetPorts(MessagePortList* aPorts);
+  void SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts);
 
   static already_AddRefed<ServiceWorkerMessageEvent>
   Constructor(const GlobalObject& aGlobal,
@@ -76,7 +75,9 @@ private:
   nsString mLastEventId;
   RefPtr<workers::ServiceWorker> mServiceWorker;
   RefPtr<MessagePort> mMessagePort;
-  RefPtr<MessagePortList> mPorts;
+
+  nsTArray<RefPtr<MessagePort>> mPorts;
+  bool mPortsSet;
 };
 
 } // namespace dom

@@ -1,5 +1,0 @@
-{
-  "name": "Invalid Launch Path App",
-  "installs_allowed_from": [ "*" ],
-  "launch_path": "///example.com"
-}

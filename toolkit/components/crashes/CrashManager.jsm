@@ -545,6 +545,9 @@ this.CrashManager.prototype = Object.freeze({
             sessionId = reportMeta.TelemetrySessionId;
             delete reportMeta.TelemetrySessionId;
           }
+          if ('StackTraces' in reportMeta) {
+            delete reportMeta.StackTraces;
+          }
           TelemetryController.submitExternalPing("crash",
             {
               version: 1,

@@ -14,6 +14,8 @@ if (!isSimdAvailable() || typeof SIMD === 'undefined') {
     quit(0);
 }
 
+const RuntimeError = WebAssembly.RuntimeError;
+
 const INT32_MAX = Math.pow(2, 31) - 1;
 const INT32_MIN = INT32_MAX + 1 | 0;
 
@@ -140,11 +142,11 @@ assertEqX4(m.f32lcst(), slice(F32, CONSTANT_INDEX, 4));
 assertEqX4(m.f32lbndcheck(CONSTANT_BYTE_INDEX), slice(F32, CONSTANT_INDEX, 4));
 
 //      OOB
-assertThrowsInstanceOf(() => f32l(-1), RangeError);
-assertThrowsInstanceOf(() => f32l(SIZE), RangeError);
-assertThrowsInstanceOf(() => f32l(SIZE - 1), RangeError);
-assertThrowsInstanceOf(() => f32l(SIZE - 2), RangeError);
-assertThrowsInstanceOf(() => f32l(SIZE - 3), RangeError);
+assertThrowsInstanceOf(() => f32l(-1), RuntimeError);
+assertThrowsInstanceOf(() => f32l(SIZE), RuntimeError);
+assertThrowsInstanceOf(() => f32l(SIZE - 1), RuntimeError);
+assertThrowsInstanceOf(() => f32l(SIZE - 2), RuntimeError);
+assertThrowsInstanceOf(() => f32l(SIZE - 3), RuntimeError);
 
 var code = `
     "use asm";
@@ -167,7 +169,7 @@ var code = `
 
     return g;
 `;
-assertThrowsInstanceOf(() => asmLink(asmCompile('glob', 'ffi', 'heap', code), this, {}, new ArrayBuffer(0x10000))(0), RangeError);
+assertThrowsInstanceOf(() => asmLink(asmCompile('glob', 'ffi', 'heap', code), this, {}, new ArrayBuffer(0x10000))(0), RuntimeError);
 
 // Float32x4.store
 function f32s(n, v) { return m.f32s((n|0) << 2 | 0, v); };
@@ -202,10 +204,10 @@ assertEqX4(vec, slice(F32, CONSTANT_INDEX, 4));
 
 //      OOB
 reset();
-assertThrowsInstanceOf(() => f32s(SIZE - 3, vec), RangeError);
-assertThrowsInstanceOf(() => f32s(SIZE - 2, vec), RangeError);
-assertThrowsInstanceOf(() => f32s(SIZE - 1, vec), RangeError);
-assertThrowsInstanceOf(() => f32s(SIZE, vec), RangeError);
+assertThrowsInstanceOf(() => f32s(SIZE - 3, vec), RuntimeError);
+assertThrowsInstanceOf(() => f32s(SIZE - 2, vec), RuntimeError);
+assertThrowsInstanceOf(() => f32s(SIZE - 1, vec), RuntimeError);
+assertThrowsInstanceOf(() => f32s(SIZE, vec), RuntimeError);
 for (var i = 0; i < SIZE; i++)
     assertEq(F32[i], i + 1);
 
@@ -227,11 +229,11 @@ assertEqX4(i32(SIZE - 4), slice(I32, SIZE - 4, 4));
 assertEqX4(m.i32lcst(), slice(I32, CONSTANT_INDEX, 4));
 
 //      OOB
-assertThrowsInstanceOf(() => i32(-1), RangeError);
-assertThrowsInstanceOf(() => i32(SIZE), RangeError);
-assertThrowsInstanceOf(() => i32(SIZE - 1), RangeError);
-assertThrowsInstanceOf(() => i32(SIZE - 2), RangeError);
-assertThrowsInstanceOf(() => i32(SIZE - 3), RangeError);
+assertThrowsInstanceOf(() => i32(-1), RuntimeError);
+assertThrowsInstanceOf(() => i32(SIZE), RuntimeError);
+assertThrowsInstanceOf(() => i32(SIZE - 1), RuntimeError);
+assertThrowsInstanceOf(() => i32(SIZE - 2), RuntimeError);
+assertThrowsInstanceOf(() => i32(SIZE - 3), RuntimeError);
 
 // Int32x4.store
 function i32s(n, v) { return m.i32s((n|0) << 2 | 0, v); };
@@ -257,10 +259,10 @@ assertEqX4(vec2, slice(I32, CONSTANT_INDEX, 4));
 
 //      OOB
 reset();
-assertThrowsInstanceOf(() => i32s(SIZE - 3, vec), RangeError);
-assertThrowsInstanceOf(() => i32s(SIZE - 2, vec), RangeError);
-assertThrowsInstanceOf(() => i32s(SIZE - 1, vec), RangeError);
-assertThrowsInstanceOf(() => i32s(SIZE - 0, vec), RangeError);
+assertThrowsInstanceOf(() => i32s(SIZE - 3, vec), RuntimeError);
+assertThrowsInstanceOf(() => i32s(SIZE - 2, vec), RuntimeError);
+assertThrowsInstanceOf(() => i32s(SIZE - 1, vec), RuntimeError);
+assertThrowsInstanceOf(() => i32s(SIZE - 0, vec), RuntimeError);
 for (var i = 0; i < SIZE; i++)
     assertEq(I32[i], i + 1);
 
@@ -346,10 +348,10 @@ function TestPartialLoads(m, typedArray, x, y, z, w) {
 
     // Test limit and OOB accesses
     assertEqX4(m.load1((SIZE - 1) << 2), [w(SIZE - 4), 0, 0, 0]);
-    assertThrowsInstanceOf(() => m.load1(((SIZE - 1) << 2) + 1), RangeError);
+    assertThrowsInstanceOf(() => m.load1(((SIZE - 1) << 2) + 1), RuntimeError);
 
     assertEqX4(m.load2((SIZE - 2) << 2), [z(SIZE - 4), w(SIZE - 4), 0, 0]);
-    assertThrowsInstanceOf(() => m.load2(((SIZE - 2) << 2) + 1), RangeError);
+    assertThrowsInstanceOf(() => m.load2(((SIZE - 2) << 2) + 1), RuntimeError);
 }
 
 // Partial stores
@@ -384,7 +386,7 @@ function TestPartialStores(m, typedArray, typeName, x, y, z, w) {
     }
 
     function TestOOBStore(f) {
-        assertThrowsInstanceOf(f, RangeError);
+        assertThrowsInstanceOf(f, RuntimeError);
         CheckNotModified(0, SIZE);
     }
 

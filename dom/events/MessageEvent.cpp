@@ -8,7 +8,6 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
-#include "mozilla/dom/MessagePortList.h"
 
 #include "mozilla/HoldDropJSObjects.h"
 #include "jsapi.h"
@@ -47,6 +46,7 @@ MessageEvent::MessageEvent(EventTarget* aOwner,
                            WidgetEvent* aEvent)
   : Event(aOwner, aPresContext, aEvent)
   , mData(JS::UndefinedValue())
+  , mPortsSet(false)
 {
 }
 
@@ -140,12 +140,8 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
   }
 
   if (aParam.mPorts.WasPassed() && !aParam.mPorts.Value().IsNull()) {
-    nsTArray<RefPtr<MessagePort>> ports;
-    for (uint32_t i = 0, len = aParam.mPorts.Value().Value().Length(); i < len; ++i) {
-      ports.AppendElement(aParam.mPorts.Value().Value()[i].get());
-    }
-
-    event->mPorts = new MessagePortList(static_cast<Event*>(event), ports);
+    event->mPorts.AppendElements(aParam.mPorts.Value().Value());
+    event->mPortsSet = true;
   }
 
   return event.forget();
@@ -178,23 +174,34 @@ MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
     }
   }
 
-  mPorts = nullptr;
+  mPorts.Clear();
+  mPortsSet = false;
 
   if (!aPorts.IsNull()) {
-    nsTArray<RefPtr<MessagePort>> ports;
-    for (uint32_t i = 0, len = aPorts.Value().Length(); i < len; ++i) {
-      ports.AppendElement(aPorts.Value()[i]);
-    }
-
-    mPorts = new MessagePortList(static_cast<Event*>(this), ports);
+    mPorts.AppendElements(aPorts.Value());
+    mPortsSet = true;
   }
+
+  MessageEventBinding::ClearCachedPortsValue(this);
 }
 
 void
-MessageEvent::SetPorts(MessagePortList* aPorts)
+MessageEvent::GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts)
 {
-  MOZ_ASSERT(!mPorts && aPorts);
-  mPorts = aPorts;
+  if (!mPortsSet) {
+    aPorts.SetNull();
+    return;
+  }
+
+  aPorts.SetValue(mPorts);
+}
+
+void
+MessageEvent::SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts)
+{
+  MOZ_ASSERT(mPorts.IsEmpty() && !mPortsSet);
+  mPorts = Move(aPorts);
+  mPortsSet = true;
 }
 
 void

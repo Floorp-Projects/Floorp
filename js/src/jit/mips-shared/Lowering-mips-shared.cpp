@@ -324,10 +324,10 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
 
     LAllocation ptr = useRegisterAtStart(base);
 
-    if (ins->isUnaligned()) {
+    if (ins->access().isUnaligned()) {
         if (ins->type() == MIRType::Int64) {
             auto* lir = new(alloc()) LWasmUnalignedLoadI64(ptr, temp());
-            if (ins->offset())
+            if (ins->access().offset())
                 lir->setTemp(0, tempCopy(base, 0));
 
             defineInt64(lir, ins);
@@ -335,7 +335,7 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
         }
 
         auto* lir = new(alloc()) LWasmUnalignedLoad(ptr, temp());
-        if (ins->offset())
+        if (ins->access().offset())
             lir->setTemp(0, tempCopy(base, 0));
 
         define(lir, ins);
@@ -344,7 +344,7 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
 
     if (ins->type() == MIRType::Int64) {
         auto* lir = new(alloc()) LWasmLoadI64(ptr);
-        if (ins->offset())
+        if (ins->access().offset())
             lir->setTemp(0, tempCopy(base, 0));
 
         defineInt64(lir, ins);
@@ -352,7 +352,7 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
     }
 
     auto* lir = new(alloc()) LWasmLoad(ptr);
-    if (ins->offset())
+    if (ins->access().offset())
         lir->setTemp(0, tempCopy(base, 0));
 
     define(lir, ins);
@@ -367,11 +367,11 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
     MDefinition* value = ins->value();
     LAllocation baseAlloc = useRegisterAtStart(base);
 
-    if (ins->isUnaligned()) {
+    if (ins->access().isUnaligned()) {
         if (ins->type() == MIRType::Int64) {
             LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
             auto* lir = new(alloc()) LWasmUnalignedStoreI64(baseAlloc, valueAlloc, temp());
-            if (ins->offset())
+            if (ins->access().offset())
                 lir->setTemp(0, tempCopy(base, 0));
 
             add(lir, ins);
@@ -380,7 +380,7 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
 
         LAllocation valueAlloc = useRegisterAtStart(value);
         auto* lir = new(alloc()) LWasmUnalignedStore(baseAlloc, valueAlloc, temp());
-        if (ins->offset())
+        if (ins->access().offset())
             lir->setTemp(0, tempCopy(base, 0));
 
         add(lir, ins);
@@ -390,7 +390,7 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
     if (ins->type() == MIRType::Int64) {
         LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
         auto* lir = new(alloc()) LWasmStoreI64(baseAlloc, valueAlloc);
-        if (ins->offset())
+        if (ins->access().offset())
             lir->setTemp(0, tempCopy(base, 0));
 
         add(lir, ins);
@@ -399,7 +399,7 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
 
     LAllocation valueAlloc = useRegisterAtStart(value);
     auto* lir = new(alloc()) LWasmStore(baseAlloc, valueAlloc);
-    if (ins->offset())
+    if (ins->access().offset())
         lir->setTemp(0, tempCopy(base, 0));
 
     add(lir, ins);
@@ -475,7 +475,7 @@ LIRGeneratorMIPSShared::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins
 void
 LIRGeneratorMIPSShared::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
-    MOZ_ASSERT(ins->offset() == 0);
+    MOZ_ASSERT(ins->access().offset() == 0);
 
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -496,7 +496,7 @@ LIRGeneratorMIPSShared::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 void
 LIRGeneratorMIPSShared::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 {
-    MOZ_ASSERT(ins->offset() == 0);
+    MOZ_ASSERT(ins->access().offset() == 0);
 
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -591,8 +591,8 @@ LIRGeneratorMIPSShared::visitAtomicExchangeTypedArrayElement(MAtomicExchangeType
 void
 LIRGeneratorMIPSShared::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->accessType() < Scalar::Float32);
-    MOZ_ASSERT(ins->offset() == 0);
+    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
+    MOZ_ASSERT(ins->access().offset() == 0);
 
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -612,7 +612,7 @@ void
 LIRGeneratorMIPSShared::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 {
     MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
-    MOZ_ASSERT(ins->offset() == 0);
+    MOZ_ASSERT(ins->access().offset() == 0);
 
     const LAllocation base = useRegister(ins->base());
     const LAllocation value = useRegister(ins->value());
@@ -632,8 +632,8 @@ LIRGeneratorMIPSShared::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* i
 void
 LIRGeneratorMIPSShared::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 {
-    MOZ_ASSERT(ins->accessType() < Scalar::Float32);
-    MOZ_ASSERT(ins->offset() == 0);
+    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
+    MOZ_ASSERT(ins->access().offset() == 0);
 
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);

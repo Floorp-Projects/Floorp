@@ -103,21 +103,6 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
         return;
     }
 
-    mFont = fe->GetFont();
-    if (!mFont) {
-        gfxPlatformFontList* fontList = gfxPlatformFontList::PlatformFontList();
-        gfxDWriteFontFamily* defaultFontFamily =
-            static_cast<gfxDWriteFontFamily*>(fontList->GetDefaultFont(aFontStyle));
-
-        mFont = defaultFontFamily->GetDefaultFont();
-        MOZ_ASSERT(mFont);
-    }
-
-    HRESULT hr = mFont->GetFontFamily(getter_AddRefs(mFontFamily));
-    if (FAILED(hr)) {
-        MOZ_ASSERT(false);
-    }
-
     ComputeMetrics(anAAOption);
 }
 
@@ -706,9 +691,10 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
         static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
     bool useEmbeddedBitmap = (fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize)));
 
+    const gfxFontStyle* fontStyle = GetStyle();
     mAzureScaledFont =
-            Factory::CreateScaledFontForDWriteFont(mFont, mFontFamily,
-                                                   mFontFace, GetAdjustedSize(),
+            Factory::CreateScaledFontForDWriteFont(mFontFace, fontStyle,
+                                                   GetAdjustedSize(),
                                                    useEmbeddedBitmap,
                                                    GetForceGDIClassic());
   } else {

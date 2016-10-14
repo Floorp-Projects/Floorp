@@ -9,6 +9,7 @@ DevToolsModules(
     'device-modal.js',
     'device-selector.js',
     'global-toolbar.js',
+    'network-throttling-selector.js',
     'resizable-viewport.js',
     'viewport-dimension.js',
     'viewport-toolbar.js',

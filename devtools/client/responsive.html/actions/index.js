@@ -24,9 +24,21 @@ createEnum([
   // Change the device displayed in the viewport.
   "CHANGE_DEVICE",
 
-  // The location of the page has changed.  This may be triggered by the user
+  // Change the location of the page.  This may be triggered by the user
   // directly entering a new URL, navigating with links, etc.
   "CHANGE_LOCATION",
+
+  // Change the network throttling profile.
+  "CHANGE_NETWORK_THROTTLING",
+
+  // Indicates that the device list is being loaded
+  "LOAD_DEVICE_LIST_START",
+
+  // Indicates that the device list loading action threw an error
+  "LOAD_DEVICE_LIST_ERROR",
+
+  // Indicates that the device list has been loaded successfully
+  "LOAD_DEVICE_LIST_END",
 
   // Resize the viewport.
   "RESIZE_VIEWPORT",
@@ -42,15 +54,6 @@ createEnum([
 
   // Update the device display state in the device selector.
   "UPDATE_DEVICE_DISPLAYED",
-
-  // Indicates that the device list is being loaded
-  "LOAD_DEVICE_LIST_START",
-
-  // Indicates that the device list loading action threw an error
-  "LOAD_DEVICE_LIST_ERROR",
-
-  // Indicates that the device list has been loaded successfully
-  "LOAD_DEVICE_LIST_END",
 
   // Update the device modal open state.
   "UPDATE_DEVICE_MODAL_OPEN",

@@ -11,9 +11,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "DOMApplicationRegistry",
-                                  "resource://gre/modules/Webapps.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "SEUtils",
                                   "resource://gre/modules/SEUtils.jsm");
 
@@ -126,58 +123,11 @@ ACEService.prototype = {
       return Promise.resolve(true);
     }
 
-    let manifestURL = DOMApplicationRegistry.getManifestURLByLocalId(localId);
-    if (!manifestURL) {
-      return Promise.reject(Error("Missing manifest for app: " + localId));
-    }
-
-    let rulesManager = this._rulesManagers.get(seType);
-    if (!rulesManager) {
-      debug("App " + manifestURL + " tried to access '" + seType + "' SE" +
-            " which is not supported.");
-      return Promise.reject(Error("SE type '" + seType + "' not supported"));
-    }
-
-    return new Promise((resolve, reject) => {
-      debug("isAccessAllowed for " + manifestURL + " to " + aid);
-
-      // Bug 1132749: Implement ACE crypto signature verification
-      this._getDevCertHashForApp(manifestURL).then((certHash) => {
-        if (!certHash) {
-          debug("App " + manifestURL + " tried to access SE, but no developer" +
-                " certificate present");
-          reject(Error("No developer certificate found"));
-          return;
-        }
-
-        rulesManager.getAccessRules().then((rules) => {
-          let decision = new GPAccessDecision(rules,
-            SEUtils.hexStringToByteArray(certHash), aid);
-
-          resolve(decision.isAccessAllowed());
-        });
-      });
-    });
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   _getDevCertHashForApp: function getDevCertHashForApp(manifestURL) {
-    return DOMApplicationRegistry.getManifestFor(manifestURL)
-    .then((manifest) => {
-      DEBUG && debug("manifest retrieved: " + JSON.stringify(manifest));
-
-      // TODO: Bug 973823
-      //  - retrieve the cert from the app
-      //  - verify GUID signature
-      //  - compute the hash of the cert and possibly store it for future use
-      //    (right now we have the cert hash included in manifest file)
-      //  - remove this once we have fixed all the todos
-      let certHash = manifest.dev_cert_hash || "";
-      return Promise.resolve(certHash);
-    })
-    .catch((error) => {
-      return Promise.reject(Error("Not able to retrieve certificate hash: " +
-                                  error));
-    });
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   classID: Components.ID("{882a7463-2ca7-4d61-a89a-10eb6fd70478}"),

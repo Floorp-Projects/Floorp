@@ -91,8 +91,6 @@ MacroAssemblerMIPS64Compat::convertInt64ToFloat32(Register src, FloatRegister de
 void
 MacroAssemblerMIPS64Compat::convertUInt64ToDouble(Register src, FloatRegister dest)
 {
-    MOZ_ASSERT(temp == Register::Invalid());
-
     Label positive, done;
     ma_b(src, src, &positive, NotSigned, ShortJump);
 
@@ -482,8 +480,8 @@ template void
 MacroAssemblerMIPS64::ma_addTestOverflow<Label*>(Register rd, Register rs,
                                                  Register rt, Label* overflow);
 template void
-MacroAssemblerMIPS64::ma_addTestOverflow<wasm::JumpTarget>(Register rd, Register rs, Register rt,
-                                                           wasm::JumpTarget overflow);
+MacroAssemblerMIPS64::ma_addTestOverflow<wasm::TrapDesc>(Register rd, Register rs, Register rt,
+                                                         wasm::TrapDesc overflow);
 
 template <typename L>
 void
@@ -504,8 +502,8 @@ template void
 MacroAssemblerMIPS64::ma_addTestOverflow<Label*>(Register rd, Register rs,
                                                  Imm32 imm, Label* overflow);
 template void
-MacroAssemblerMIPS64::ma_addTestOverflow<wasm::JumpTarget>(Register rd, Register rs, Imm32 imm,
-                                                           wasm::JumpTarget overflow);
+MacroAssemblerMIPS64::ma_addTestOverflow<wasm::TrapDesc>(Register rd, Register rs, Imm32 imm,
+                                                         wasm::TrapDesc overflow);
 
 // Subtract.
 void

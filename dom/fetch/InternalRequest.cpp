@@ -181,6 +181,7 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
     break;
   case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
   case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
+  case nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
     context = RequestContext::Image;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:

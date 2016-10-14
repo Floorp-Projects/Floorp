@@ -1568,7 +1568,7 @@ AssemblerMIPSShared::bind(Label* label, BufferOffset boff)
 }
 
 void
-AssemblerMIPSShared::bindLater(Label* label, wasm::JumpTarget target)
+AssemblerMIPSShared::bindLater(Label* label, wasm::TrapDesc target)
 {
     if (label->used()) {
         int32_t next;
@@ -1577,7 +1577,7 @@ AssemblerMIPSShared::bindLater(Label* label, wasm::JumpTarget target)
         do {
             Instruction* inst = editSrc(b);
 
-            append(target, b.getOffset());
+            append(wasm::TrapSite(target, b.getOffset()));
             next = inst[1].encode();
             inst[1].makeNop();
 

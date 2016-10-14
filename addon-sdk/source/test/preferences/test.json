@@ -37,7 +37,6 @@
   "browser.pagethumbnails.capturing_disabled": true,
   "browser.download.panel.shown": true,
   "general.useragent.updates.enabled": false,
-  "dom.mozApps.debug": true,
   "dom.apps.customization.enabled": true,
   "media.eme.enabled": true,
   "media.eme.apiVisible": true,

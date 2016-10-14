@@ -1,6 +1,8 @@
 // |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
+const RuntimeError = WebAssembly.RuntimeError;
+
 function loadModule(type, ext, offset, align) {
     return wasmEvalText(
     `(module
@@ -75,7 +77,7 @@ function testLoad(type, ext, base, offset, align, expect) {
 }
 
 function testLoadOOB(type, ext, base, offset, align) {
-    assertErrorMessage(() => loadModule(type, ext, offset, align)(base), Error, /invalid or out-of-range index/);
+    assertErrorMessage(() => loadModule(type, ext, offset, align)(base), RuntimeError, /index out of bounds/);
 }
 
 function testStore(type, ext, base, offset, align, value) {
@@ -98,7 +100,7 @@ function testStore(type, ext, base, offset, align, value) {
 function testStoreOOB(type, ext, base, offset, align, value) {
     if (type === 'i64')
         value = createI64(value);
-    assertErrorMessage(() => storeModule(type, ext, offset, align).store(base, value), Error, /invalid or out-of-range index/);
+    assertErrorMessage(() => storeModule(type, ext, offset, align).store(base, value), RuntimeError, /index out of bounds/);
 }
 
 function badLoadModule(type, ext) {

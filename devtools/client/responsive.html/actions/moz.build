@@ -8,6 +8,7 @@ DevToolsModules(
     'devices.js',
     'index.js',
     'location.js',
+    'network-throttling.js',
     'screenshot.js',
     'touch-simulation.js',
     'viewports.js',

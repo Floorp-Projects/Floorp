@@ -701,10 +701,11 @@ TraceLoggerThreadState::init()
             "                 SplitCriticalEdges, RenumberBlocks, ScalarReplacement, \n"
             "                 DominatorTree, PhiAnalysis, MakeLoopsContiguous, ApplyTypes, \n"
             "                 EagerSimdUnbox, AliasAnalysis, GVN, LICM, Sincos, RangeAnalysis, \n"
-            "                 LoopUnrolling, EffectiveAddressAnalysis, AlignmentMaskAnalysis, \n"
-            "                 EliminateDeadCode, ReorderInstructions, EdgeCaseAnalysis, \n"
-            "                 EliminateRedundantChecks, AddKeepAliveInstructions, GenerateLIR, \n"
-            "                 RegisterAllocation, GenerateCode, Scripts, IonBuilderRestartLoop\n"
+            "                 LoopUnrolling, FoldLinearArithConstants, EffectiveAddressAnalysis, \n"
+            "                 AlignmentMaskAnalysis, EliminateDeadCode, ReorderInstructions, \n"
+            "                 EdgeCaseAnalysis, EliminateRedundantChecks, \n"
+            "                 AddKeepAliveInstructions, GenerateLIR, RegisterAllocation, \n"
+            "                 GenerateCode, Scripts, IonBuilderRestartLoop\n"
             "\n"
             "  VMSpecific     Output the specific name of the VM call"
             "\n"
@@ -773,6 +774,7 @@ TraceLoggerThreadState::init()
         enabledTextIds[TraceLogger_Sincos] = true;
         enabledTextIds[TraceLogger_RangeAnalysis] = true;
         enabledTextIds[TraceLogger_LoopUnrolling] = true;
+        enabledTextIds[TraceLogger_FoldLinearArithConstants] = true;
         enabledTextIds[TraceLogger_EffectiveAddressAnalysis] = true;
         enabledTextIds[TraceLogger_AlignmentMaskAnalysis] = true;
         enabledTextIds[TraceLogger_EliminateDeadCode] = true;

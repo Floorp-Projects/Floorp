@@ -17,7 +17,7 @@ from taskgraph.transforms.job.common import (
 )
 
 sm_run_schema = Schema({
-    Required('using'): Any('spidermonkey', 'spidermonkey-package'),
+    Required('using'): Any('spidermonkey', 'spidermonkey-package', 'spidermonkey-mozjs-crate'),
 
     # The SPIDERMONKEY_VARIANT
     Required('spidermonkey-variant'): basestring,
@@ -30,6 +30,7 @@ sm_run_schema = Schema({
 
 @run_job_using("docker-worker", "spidermonkey")
 @run_job_using("docker-worker", "spidermonkey-package")
+@run_job_using("docker-worker", "spidermonkey-mozjs-crate")
 def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
     run = job['run']
 
@@ -71,6 +72,8 @@ def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
     script = "build-sm.sh"
     if run['using'] == 'spidermonkey-package':
         script = "build-sm-package.sh"
+    elif run['using'] == 'spidermonkey-mozjs-crate':
+        script = "build-sm-mozjs-crate.sh"
 
     worker['command'] = [
         '/home/worker/bin/run-task',

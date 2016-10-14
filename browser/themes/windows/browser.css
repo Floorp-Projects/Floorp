@@ -2647,3 +2647,57 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 .webextension-popup-browser {
   border-radius: inherit;
 }
+
+.contentSelectDropdown-ingroup > .menu-iconic-text {
+  padding-inline-start: 20px;
+}
+
+#ContentSelectDropdown > menupopup {
+  background-color: -moz-field;
+  -moz-border-top-colors: GrayText;
+  -moz-border-right-colors: GrayText;
+  -moz-border-bottom-colors: GrayText;
+  -moz-border-left-colors: GrayText;
+}
+
+#ContentSelectDropdown > menupopup > menucaption,
+#ContentSelectDropdown > menupopup > menuitem {
+  padding: 4px 6px;
+}
+
+#ContentSelectDropdown > menupopup > menucaption > .menu-iconic-text,
+#ContentSelectDropdown > menupopup > menuitem > .menu-iconic-text {
+  font: message-box;
+  font-size: 11px;
+  /**
+   * Remove the extra vertical padding set by menu.css since
+   * the menuitem itself will include enough padding.
+   */
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+#ContentSelectDropdown > menupopup > menucaption > .menu-iconic-text {
+  font-weight: bold;
+}
+
+#ContentSelectDropdown > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
+  color: GrayText;
+  background-color: unset;
+}
+
+#ContentSelectDropdown > menupopup > menucaption {
+  background-color: buttonface;
+}
+
+#ContentSelectDropdown > menupopup > menucaption[disabled="true"] {
+  color: GrayText;
+}
+
+@media (-moz-touch-enabled) {
+  #ContentSelectDropdown > menupopup > menucaption,
+  #ContentSelectDropdown > menupopup > menuitem {
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+}

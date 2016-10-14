@@ -87,6 +87,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     typedef HashSet<uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> Uint32Set;
     typedef Vector<IonCompileTask, 0, SystemAllocPolicy> IonCompileTaskVector;
     typedef Vector<IonCompileTask*, 0, SystemAllocPolicy> IonCompileTaskPtrVector;
+    typedef EnumeratedArray<Trap, Trap::Limit, ProfilingOffsets> TrapExitOffsetArray;
 
     // Constant parameters
     bool                            alwaysBaseline_;
@@ -110,8 +111,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     Uint32Vector                    funcDefIndexToCodeRange_;
     Uint32Set                       exportedFuncDefs_;
     uint32_t                        lastPatchedCallsite_;
-    uint32_t                        startOfUnpatchedBranches_;
-    JumpSiteArray                   jumpThunks_;
+    uint32_t                        startOfUnpatchedCallsites_;
 
     // Parallel compilation
     bool                            parallel_;
@@ -129,7 +129,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t funcIndexToDef(uint32_t funcIndex) const;
     bool funcIsDefined(uint32_t funcDefIndex) const;
     const CodeRange& funcDefCodeRange(uint32_t funcDefIndex) const;
-    MOZ_MUST_USE bool convertOutOfRangeBranchesToThunks();
+    MOZ_MUST_USE bool patchCallSites(TrapExitOffsetArray* maybeTrapExits = nullptr);
     MOZ_MUST_USE bool finishTask(IonCompileTask* task);
     MOZ_MUST_USE bool finishFuncDefExports();
     MOZ_MUST_USE bool finishCodegen();

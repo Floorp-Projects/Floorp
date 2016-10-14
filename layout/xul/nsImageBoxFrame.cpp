@@ -48,6 +48,7 @@
 #include "nsIContent.h"
 
 #include "nsContentUtils.h"
+#include "nsSerializationHelper.h"
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
@@ -226,6 +227,29 @@ nsImageBoxFrame::UpdateImage()
   if (mUseSrcAttr) {
     nsIDocument* doc = mContent->GetComposedDoc();
     if (doc) {
+      // Use the serialized loadingPrincipal from the image element. Fall back
+      // to mContent's principal (SystemPrincipal) if not available.
+      nsContentPolicyType contentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE;
+      nsCOMPtr<nsIPrincipal> loadingPrincipal = mContent->NodePrincipal();
+      nsAutoString imageLoadingPrincipal;
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::loadingprincipal,
+                        imageLoadingPrincipal);
+      if (!imageLoadingPrincipal.IsEmpty()) {
+        nsCOMPtr<nsISupports> serializedPrincipal;
+        NS_DeserializeObject(NS_ConvertUTF16toUTF8(imageLoadingPrincipal),
+                             getter_AddRefs(serializedPrincipal));
+        loadingPrincipal = do_QueryInterface(serializedPrincipal);
+
+        if (loadingPrincipal) {
+          // Set the content policy type to TYPE_INTERNAL_IMAGE_FAVICON for
+          // indicating it's a favicon loading.
+          contentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON;
+        } else {
+          // Fallback if the deserialization is failed.
+          loadingPrincipal = mContent->NodePrincipal();
+        }
+      }
+
       nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
       nsCOMPtr<nsIURI> uri;
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
@@ -233,10 +257,11 @@ nsImageBoxFrame::UpdateImage()
                                                 doc,
                                                 baseURI);
       if (uri) {
-        nsresult rv = nsContentUtils::LoadImage(uri, mContent, doc, mContent->NodePrincipal(),
+        nsresult rv = nsContentUtils::LoadImage(uri, mContent, doc, loadingPrincipal,
                                                 doc->GetDocumentURI(), doc->GetReferrerPolicy(),
                                                 mListener, mLoadFlags,
-                                                EmptyString(), getter_AddRefs(mImageRequest));
+                                                EmptyString(), getter_AddRefs(mImageRequest),
+                                                contentPolicyType);
 
         if (NS_SUCCEEDED(rv) && mImageRequest) {
           nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,

@@ -167,6 +167,12 @@ class LUDivOrMod : public LBinaryMath<1>
             return mir_->toMod()->trapOnError();
         return mir_->toDiv()->trapOnError();
     }
+
+    wasm::TrapOffset trapOffset() const {
+        if (mir_->isMod())
+            return mir_->toMod()->trapOffset();
+        return mir_->toDiv()->trapOffset();
+    }
 };
 
 class LUDivOrModConstant : public LInstructionHelper<1, 1, 1>
@@ -202,6 +208,11 @@ class LUDivOrModConstant : public LInstructionHelper<1, 1, 1>
         if (mir_->isMod())
             return mir_->toMod()->trapOnError();
         return mir_->toDiv()->trapOnError();
+    }
+    wasm::TrapOffset trapOffset() const {
+        if (mir_->isMod())
+            return mir_->toMod()->trapOffset();
+        return mir_->toDiv()->trapOffset();
     }
 };
 

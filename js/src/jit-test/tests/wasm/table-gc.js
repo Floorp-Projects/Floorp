@@ -7,6 +7,7 @@ load(libdir + 'wasm.js');
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
+const RuntimeError = WebAssembly.RuntimeError;
 
 var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect $v2i (get_local $i))) (export "call" $call)`
 var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
@@ -21,8 +22,8 @@ var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);
 assertEq(f(), e.call(0));
-assertErrorMessage(() => e.call(1), Error, /indirect call to null/);
-assertErrorMessage(() => e.call(2), Error, /out-of-range/);
+assertErrorMessage(() => e.call(1), RuntimeError, /indirect call to null/);
+assertErrorMessage(() => e.call(2), RuntimeError, /index out of bounds/);
 assertEq(finalizeCount(), 0);
 i.edge = makeFinalizeObserver();
 e.edge = makeFinalizeObserver();
