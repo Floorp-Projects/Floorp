@@ -556,13 +556,11 @@ public:
   bool IsInSubdocument() { return mPresShellStates.Length() > 1; }
 
   /**
-   * Return true if we're currently building a display list for the root
-   * presshell which is the presshell of a chrome document, or if we're
-   * building the display list for a popup and have not entered a subdocument
-   * inside that popup.
+   * Return true if we're currently building a display list for the presshell
+   * of a chrome document, or if we're building the display list for a popup.
    */
-  bool IsInRootChromeDocumentOrPopup() {
-    return (mIsInChromePresContext || mIsBuildingForPopup) && !IsInSubdocument();
+  bool IsInChromeDocumentOrPopup() {
+    return mIsInChromePresContext || mIsBuildingForPopup;
   }
 
   /**
