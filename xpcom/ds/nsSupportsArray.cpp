@@ -360,6 +360,36 @@ nsSupportsArray::RemoveLastElement(const nsISupports* aElement)
   return false;
 }
 
+NS_IMETHODIMP_(bool)
+nsSupportsArray::MoveElement(int32_t aFrom, int32_t aTo)
+{
+  nsISupports* tempElement;
+
+  if (aTo == aFrom) {
+    return true;
+  }
+
+  if (aTo < 0 || aFrom < 0 ||
+      (uint32_t)aTo >= mCount || (uint32_t)aFrom >= mCount) {
+    // can't extend the array when moving an element.  Also catches mImpl = null
+    return false;
+  }
+  tempElement = mArray[aFrom];
+
+  if (aTo < aFrom) {
+    // Moving one element closer to the head; the elements inbetween move down
+    ::memmove(mArray + aTo + 1, mArray + aTo,
+              (aFrom - aTo) * sizeof(mArray[0]));
+    mArray[aTo] = tempElement;
+  } else { // already handled aFrom == aTo
+    // Moving one element closer to the tail; the elements inbetween move up
+    ::memmove(mArray + aFrom, mArray + aFrom + 1,
+              (aTo - aFrom) * sizeof(mArray[0]));
+    mArray[aTo] = tempElement;
+  }
+
+  return true;
+}
 
 NS_IMETHODIMP
 nsSupportsArray::Clear(void)

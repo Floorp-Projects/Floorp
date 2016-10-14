@@ -63,6 +63,9 @@ interface nsISupportsArray : nsICollection {
 
   nsISupportsArray clone();
 
+  [notxpcom] boolean MoveElement(in long aFrom,
+                                 in long aTo);
+
   [notxpcom] boolean RemoveElementsAt(in unsigned long aIndex,
                                       in unsigned long aCount);
 
