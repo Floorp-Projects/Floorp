@@ -3241,14 +3241,7 @@ AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime)
   if (magnitude) {
     mPotentialCheckerboardTracker.CheckerboardSeen();
   }
-  UpdateCheckerboardEvent(lock, magnitude);
-}
-
-void
-AsyncPanZoomController::UpdateCheckerboardEvent(const MutexAutoLock& aProofOfLock,
-                                                uint32_t aMagnitude)
-{
-  if (mCheckerboardEvent && mCheckerboardEvent->RecordFrameInfo(aMagnitude)) {
+  if (mCheckerboardEvent && mCheckerboardEvent->RecordFrameInfo(magnitude)) {
     // This checkerboard event is done. Report some metrics to telemetry.
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_SEVERITY,
       mCheckerboardEvent->GetSeverity());
@@ -3259,7 +3252,7 @@ AsyncPanZoomController::UpdateCheckerboardEvent(const MutexAutoLock& aProofOfLoc
 
     mPotentialCheckerboardTracker.CheckerboardDone();
 
-    if (gfxPrefs::APZRecordCheckerboarding()) {
+    if (recordTrace) {
       // if the pref is enabled, also send it to the storage class. it may be
       // chosen for public display on about:checkerboard, the hall of fame for
       // checkerboard events.
@@ -3269,15 +3262,6 @@ AsyncPanZoomController::UpdateCheckerboardEvent(const MutexAutoLock& aProofOfLoc
     }
     mCheckerboardEvent = nullptr;
   }
-}
-
-void
-AsyncPanZoomController::FlushActiveCheckerboardReport()
-{
-  MutexAutoLock lock(mCheckerboardEventLock);
-  // Pretend like we got a frame with 0 pixels checkerboarded. This will
-  // terminate the checkerboard event and flush it out
-  UpdateCheckerboardEvent(lock, 0);
 }
 
 bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {

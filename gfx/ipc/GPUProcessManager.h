@@ -128,10 +128,6 @@ public:
   void AddListener(GPUProcessListener* aListener);
   void RemoveListener(GPUProcessListener* aListener);
 
-  // Send a message to the GPU process observer service to broadcast. Returns
-  // true if the message was sent, false if not.
-  bool NotifyGpuObservers(const char* aTopic);
-
   // Returns access to the PGPU protocol if a GPU process is present.
   GPUChild* GetGPUChild() {
     return mGPUChild;

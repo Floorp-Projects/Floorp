@@ -40,10 +40,6 @@ function toggleEnabled() {
   updateEnabled();
 }
 
-function flushReports() {
-  service.flushActiveReports();
-}
-
 function showReport(index) {
   trace.value = reports[index].log;
   loadData();
