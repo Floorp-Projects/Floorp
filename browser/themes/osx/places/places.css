@@ -17,14 +17,18 @@
 
 .sidebar-placesTree,
 .sidebar-placesTreechildren::-moz-tree-row {
-  background-color: transparent;
-  border-color: transparent;
   padding-bottom: 1px;
-  -moz-appearance: none;
   margin: 0;
   height: 24px;
-  border: none;
   font-size: 12px;
+}
+
+.sidebar-placesTree {
+  -moz-appearance: -moz-mac-source-list;
+}
+
+.sidebar-placesTreechildren {
+  border-top: 1px solid #bebebe;
 }
 
 .sidebar-placesTreechildren::-moz-tree-separator {
@@ -32,32 +36,16 @@
   margin: 0 10px;
 }
 
-.sidebar-placesTree {
-  border-top: 1px solid #bebebe;
+.sidebar-placesTreechildren::-moz-tree-row {
+  background-color: transparent;
 }
 
 .sidebar-placesTreechildren::-moz-tree-row(selected) {
-  background: @sidebarItemBackground@;
-  border-top: @sidebarItemBorderTop@;
-  border-bottom: @sidebarItemBorderBottom@;
+  -moz-appearance: -moz-mac-source-list-selection;
 }
 
 .sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
-  background: @sidebarItemFocusedBackground@;
-  border-top: @sidebarItemFocusedBorderTop@;
-  border-bottom: @sidebarItemFocusedBorderBottom@;
-}
-
-.sidebar-placesTreechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected) {
-  background: @sidebarItemGraphiteBackground@;
-  border-top: @sidebarItemGraphiteBorderTop@;
-  border-bottom: @sidebarItemGraphiteBorderBottom@;
-}
-
-.sidebar-placesTreechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected,focus) {
-  background: @sidebarItemGraphiteFocusedBackground@;
-  border-top: @sidebarItemGraphiteFocusedBorderTop@;
-  border-bottom: @sidebarItemGraphiteFocusedBorderBottom@;
+  -moz-appearance: -moz-mac-active-source-list-selection;
 }
 
 .sidebar-placesTreechildren::-moz-tree-cell-text {
@@ -92,30 +80,6 @@
 }
 
 @media (-moz-mac-yosemite-theme) {
-  .sidebar-placesTreechildren::-moz-tree-row(selected) {
-    background: @sidebarItemBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  .sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
-    background: @sidebarItemFocusedBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  .sidebar-placesTreechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected) {
-    background: @sidebarItemGraphiteBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  .sidebar-placesTreechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected,focus) {
-    background: @sidebarItemGraphiteFocusedBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
   .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
     color: -moz-dialogtext;
     font-weight: 500;
