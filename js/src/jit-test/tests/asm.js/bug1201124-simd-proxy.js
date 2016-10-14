@@ -2,8 +2,12 @@
 load(libdir + "asm.js");
 load(libdir + "asserts.js");
 
-if (typeof newGlobal !== 'function')
+if (typeof newGlobal !== 'function' ||
+    !isSimdAvailable() ||
+    typeof SIMD === 'undefined')
+{
     quit();
+}
 
 var stdlib = new (newGlobal().Proxy)(this, new Proxy({
     simdGet: 0,
