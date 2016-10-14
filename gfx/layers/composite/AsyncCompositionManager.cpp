@@ -680,11 +680,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
           timing.mIterationStart = animation.iterationStart();
           timing.mDirection =
             static_cast<dom::PlaybackDirection>(animation.direction());
-          // Animations typically only run on the compositor during their active
-          // interval but if we end up sampling them outside that range (for
-          // example, while they are waiting to be removed) we currently just
-          // assume that we should fill.
-          timing.mFill = dom::FillMode::Both;
+          timing.mFill = static_cast<dom::FillMode>(animation.fillMode());
           timing.mFunction =
             AnimationUtils::TimingFunctionToComputedTimingFunction(
               animation.easingFunction());
