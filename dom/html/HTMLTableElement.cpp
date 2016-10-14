@@ -412,7 +412,8 @@ HTMLTableElement::CreateTHead()
     }
 
     ErrorResult rv;
-    nsINode::InsertBefore(*head, nsINode::GetFirstChild(), rv);
+    nsCOMPtr<nsINode> refNode = nsINode::GetFirstChild();
+    nsINode::InsertBefore(*head, refNode, rv);
   }
   return head.forget();
 }
@@ -503,7 +504,7 @@ HTMLTableElement::CreateTBody()
     NS_NewHTMLTableSectionElement(nodeInfo.forget());
   MOZ_ASSERT(newBody);
 
-  nsIContent* referenceNode = nullptr;
+  nsCOMPtr<nsIContent> referenceNode = nullptr;
   for (nsIContent* child = nsINode::GetLastChild();
        child;
        child = child->GetPreviousSibling()) {
@@ -615,7 +616,8 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
         HTMLTableSectionElement* section =
           static_cast<HTMLTableSectionElement*>(rowGroup.get());
         nsIHTMLCollection* rows = section->Rows();
-        rowGroup->InsertBefore(*newRow, rows->Item(0), aError);
+        nsCOMPtr<nsINode> refNode = rows->Item(0);
+        rowGroup->InsertBefore(*newRow, refNode, aError);
       }
     }
   }
