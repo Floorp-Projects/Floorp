@@ -59,7 +59,6 @@ GLIB_VERSION=2.22
 GLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_26
 GIO_VERSION=2.22
 CAIRO_VERSION=1.10
-PANGO_VERSION=1.22.0
 GTK2_VERSION=2.18.0
 GTK3_VERSION=3.4.0
 GDK_VERSION_MAX_ALLOWED=GDK_VERSION_3_4
@@ -2659,16 +2658,6 @@ MOZ_ANDROID_INSTALL_TRACKING
 
 
 dnl ========================================================
-dnl = Pango
-dnl ========================================================
-if test "$MOZ_ENABLE_GTK"
-then
-    PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
-
-    PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION)
-fi
-
-dnl ========================================================
 dnl = GIO and GConf support module
 dnl ========================================================
 
@@ -5119,13 +5108,8 @@ if test "$USE_FC_FREETYPE"; then
 
     PKG_CHECK_MODULES(_FONTCONFIG, fontconfig >= $FONTCONFIG_VERSION,
     [
-        if test "$MOZ_PANGO"; then
-            MOZ_PANGO_CFLAGS="$MOZ_PANGO_CFLAGS $_FONTCONFIG_CFLAGS"
-            MOZ_PANGO_LIBS="$MOZ_PANGO_LIBS $_FONTCONFIG_LIBS"
-        else
-            FT2_CFLAGS="$FT2_CFLAGS $_FONTCONFIG_CFLAGS"
-            FT2_LIBS="$FT2_LIBS $_FONTCONFIG_LIBS"
-        fi
+        FT2_CFLAGS="$FT2_CFLAGS $_FONTCONFIG_CFLAGS"
+        FT2_LIBS="$FT2_LIBS $_FONTCONFIG_LIBS"
     ])
 fi
 
