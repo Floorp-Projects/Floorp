@@ -285,10 +285,32 @@ pkg_check_modules('MOZ_PANGO',
 fontconfig_info = pkg_check_modules('_FONTCONFIG', 'fontconfig >= 2.7.0',
                                     when=fc_freetype)
 
-add_old_configure_assignment('_FONTCONFIG_CFLAGS',
-                             delayed_getattr(fontconfig_info, 'cflags'))
-add_old_configure_assignment('_FONTCONFIG_LIBS',
-                             delayed_getattr(fontconfig_info, 'libs'))
+@depends(fc_freetype)
+def check_for_freetype2(fc_freetype):
+    if fc_freetype:
+        return True
+
+# Check for freetype2. Flags are combined with fontconfig flags.
+freetype2_info = pkg_check_modules('_FT2', 'freetype2 >= 6.1.0',
+                                   when=check_for_freetype2)
+
+@depends(fontconfig_info, freetype2_info)
+def freetype2_combined_info(fontconfig_info, freetype2_info):
+    if not freetype2_info:
+        return
+    if not fontconfig_info:
+        return freetype2_info
+    return namespace(
+        cflags=freetype2_info.cflags + fontconfig_info.cflags,
+        libs=freetype2_info.libs + fontconfig_info.libs,
+    )
+
+add_old_configure_assignment('_HAVE_FREETYPE2',
+                             depends_if(freetype2_info)(lambda _: True))
+add_old_configure_assignment('FT2_LIBS',
+                             delayed_getattr(freetype2_combined_info, 'libs'))
+add_old_configure_assignment('FT2_CFLAGS',
+                             delayed_getattr(freetype2_combined_info, 'cflags'))
 
 
 # Apple platform decoder support
