@@ -50,12 +50,14 @@ public:
 
   RawServoStyleSheet* RawSheet() const { return mSheet; }
 
-  // nsIDOMStyleSheet interface
-  NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) final;
-  NS_IMETHOD GetMedia(nsIDOMMediaList** aMedia) final;
+  // WebIDL StyleSheet API
+  nsMediaList* Media() final;
 
-  // nsIDOMCSSStyleSheet interface
-  NS_DECL_NSIDOMCSSSTYLESHEET
+  // WebIDL CSSStyleSheet API
+  // Can't be inline because we can't include ImportRule here.  And can't be
+  // called GetOwnerRule because that would be ambiguous with the ImportRule
+  // version.
+  nsIDOMCSSRule* GetDOMOwnerRule() const final;
 
   void WillDirty() {}
   void DidDirty() {}

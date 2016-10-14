@@ -156,6 +156,8 @@ public:
 
   void SetOwnerRule(css::ImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
   css::ImportRule* GetOwnerRule() const { return mOwnerRule; }
+  // Workaround overloaded-virtual warning in GCC.
+  using StyleSheet::GetOwnerRule;
 
   nsXMLNameSpaceMap* GetNameSpaceMap() const { return mInner->mNameSpaceMap; }
 
@@ -194,13 +196,6 @@ public:
 
   void SetInRuleProcessorCache() { mInRuleProcessorCache = true; }
 
-  // nsIDOMStyleSheet interface
-  NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) final;
-  NS_IMETHOD GetMedia(nsIDOMMediaList** aMedia) final;
-
-  // nsIDOMCSSStyleSheet interface
-  NS_DECL_NSIDOMCSSSTYLESHEET
-
   // Function used as a callback to rebuild our inner's child sheet
   // list after we clone a unique inner for ourselves.
   static bool RebuildChildList(css::Rule* aRule, void* aBuilder);
@@ -214,7 +209,6 @@ public:
   }
 
   // WebIDL StyleSheet API
-  using GetParentStyleSheet;
   nsMediaList* Media() final;
 
   // WebIDL CSSStyleSheet API
@@ -222,9 +216,6 @@ public:
   // called GetOwnerRule because that would be ambiguous with the ImportRule
   // version.
   nsIDOMCSSRule* GetDOMOwnerRule() const final;
-  using StyleSheet::GetCssRules;
-  using StyleSheet::InsertRule;
-  using StyleSheet::DeleteRule;
 
   // WebIDL miscellaneous bits
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
