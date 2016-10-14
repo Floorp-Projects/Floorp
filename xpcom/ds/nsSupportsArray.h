@@ -7,6 +7,8 @@
 #ifndef nsSupportsArray_h__
 #define nsSupportsArray_h__
 
+//#define DEBUG_SUPPORTSARRAY 1
+
 #include "nsISupportsArray.h"
 #include "mozilla/Attributes.h"
 
@@ -129,6 +131,10 @@ protected:
   uint32_t mArraySize;
   uint32_t mCount;
   nsISupports*  mAutoArray[kAutoArraySize];
+#if DEBUG_SUPPORTSARRAY
+  uint32_t mMaxCount;
+  uint32_t mMaxSize;
+#endif
 
 private:
   // Copy constructors are not allowed
