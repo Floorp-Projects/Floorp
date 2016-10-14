@@ -20,9 +20,9 @@ function getServerConnections(browser) {
   });
 }
 
-let checkServerConnectionCount = Task.async(function* (browser, expected) {
+let checkServerConnectionCount = Task.async(function* (browser, expected, msg) {
   let conns = yield getServerConnections(browser);
-  is(conns.length || 0, expected, "Server connection count");
+  is(conns.length || 0, expected, "Server connection count: " + msg);
 });
 
 let checkToolbox = Task.async(function* (tab, location) {
@@ -39,49 +39,85 @@ add_task(function* setup() {
 add_task(function* () {
   let tab = yield addTab(TEST_URL);
 
-  // Open toolbox outside RDM
+  info("Open toolbox outside RDM");
   {
     // 0: No DevTools connections yet
-    yield checkServerConnectionCount(tab.linkedBrowser, 0);
+    yield checkServerConnectionCount(tab.linkedBrowser, 0,
+      "0: No DevTools connections yet");
     let { toolbox } = yield openInspector();
-    // 2: One for each tab (starting tab plus the one we opened).  Only one truly needed,
-    //    but calling listTabs will create one for each tab.  `registerTestActor` calls
-    //    this, triggering the extra tab's actor to be made.
-    yield checkServerConnectionCount(tab.linkedBrowser, 2);
+    if (E10S_MULTI_ENABLED) {
+      // 1: Two tabs open, but only one per content process
+      yield checkServerConnectionCount(tab.linkedBrowser, 1,
+        "1: Two tabs open, but only one per content process");
+    } else {
+      // 2: One for each tab (starting tab plus the one we opened)
+      yield checkServerConnectionCount(tab.linkedBrowser, 2,
+        "2: One for each tab (starting tab plus the one we opened)");
+    }
     yield checkToolbox(tab, "outside RDM");
     let { ui } = yield openRDM(tab);
-    // 3: RDM UI uses an extra connection
-    yield checkServerConnectionCount(ui.getViewportBrowser(), 3);
+    if (E10S_MULTI_ENABLED) {
+      // 2: RDM UI adds an extra connection, 1 + 1 = 2
+      yield checkServerConnectionCount(ui.getViewportBrowser(), 2,
+        "2: RDM UI uses an extra connection");
+    } else {
+      // 3: RDM UI adds an extra connection, 2 + 1 = 3
+      yield checkServerConnectionCount(ui.getViewportBrowser(), 3,
+        "3: RDM UI uses an extra connection");
+    }
     yield checkToolbox(tab, "after opening RDM");
     yield closeRDM(tab);
-    // 2: RDM UI closed, back to one for each tab
-    yield checkServerConnectionCount(tab.linkedBrowser, 2);
+    if (E10S_MULTI_ENABLED) {
+      // 1: RDM UI closed, return to previous connection count
+      yield checkServerConnectionCount(tab.linkedBrowser, 1,
+        "1: RDM UI closed, return to previous connection count");
+    } else {
+      // 2: RDM UI closed, return to previous connection count
+      yield checkServerConnectionCount(tab.linkedBrowser, 2,
+        "2: RDM UI closed, return to previous connection count");
+    }
     yield checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
     yield toolbox.destroy();
     // 0: All DevTools usage closed
-    yield checkServerConnectionCount(tab.linkedBrowser, 0);
+    yield checkServerConnectionCount(tab.linkedBrowser, 0,
+      "0: All DevTools usage closed");
   }
 
-  // Open toolbox inside RDM
+  info("Open toolbox inside RDM");
   {
     // 0: No DevTools connections yet
-    yield checkServerConnectionCount(tab.linkedBrowser, 0);
+    yield checkServerConnectionCount(tab.linkedBrowser, 0,
+      "0: No DevTools connections yet");
     let { ui } = yield openRDM(tab);
     // 1: RDM UI uses an extra connection
-    yield checkServerConnectionCount(ui.getViewportBrowser(), 1);
+    yield checkServerConnectionCount(ui.getViewportBrowser(), 1,
+      "1: RDM UI uses an extra connection");
     let { toolbox } = yield openInspector();
-    // 3: One for each tab (starting tab plus the one we opened).  Only one truly needed,
-    //    but calling listTabs will create one for each tab.  `registerTestActor` calls
-    //    this, triggering the extra tab's actor to be made.
-    yield checkServerConnectionCount(ui.getViewportBrowser(), 3);
+    if (E10S_MULTI_ENABLED) {
+      // 2: Two tabs open, but only one per content process
+      yield checkServerConnectionCount(ui.getViewportBrowser(), 2,
+        "2: Two tabs open, but only one per content process");
+    } else {
+      // 3: One for each tab (starting tab plus the one we opened)
+      yield checkServerConnectionCount(ui.getViewportBrowser(), 3,
+        "3: One for each tab (starting tab plus the one we opened)");
+    }
     yield checkToolbox(tab, ui.getViewportBrowser(), "inside RDM");
     yield closeRDM(tab);
-    // 2: RDM UI closed, back to one for each tab
-    yield checkServerConnectionCount(tab.linkedBrowser, 2);
+    if (E10S_MULTI_ENABLED) {
+      // 1: RDM UI closed, one less connection
+      yield checkServerConnectionCount(tab.linkedBrowser, 1,
+        "1: RDM UI closed, one less connection");
+    } else {
+      // 2: RDM UI closed, one less connection
+      yield checkServerConnectionCount(tab.linkedBrowser, 2,
+        "2: RDM UI closed, one less connection");
+    }
     yield checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
     yield toolbox.destroy();
     // 0: All DevTools usage closed
-    yield checkServerConnectionCount(tab.linkedBrowser, 0);
+    yield checkServerConnectionCount(tab.linkedBrowser, 0,
+      "0: All DevTools usage closed");
   }
 
   yield removeTab(tab);
