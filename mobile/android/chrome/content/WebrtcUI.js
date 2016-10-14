@@ -150,19 +150,19 @@ var WebrtcUI = {
     {
       label: Strings.browser.GetStringFromName("getUserMedia.shareRequest.label"),
       callback: function(checked /* ignored */, inputs) {
-        let allowedDevices = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
+        let allowedDevices = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
 
         let audioId = 0;
         if (inputs && inputs.audioDevice != undefined)
           audioId = inputs.audioDevice;
         if (audioDevices[audioId])
-          allowedDevices.AppendElement(audioDevices[audioId]);
+          allowedDevices.appendElement(audioDevices[audioId], /*weak =*/ false);
 
         let videoId = 0;
         if (inputs && inputs.videoSource != undefined)
           videoId = inputs.videoSource;
         if (videoDevices[videoId]) {
-          allowedDevices.AppendElement(videoDevices[videoId]);
+          allowedDevices.appendElement(videoDevices[videoId], /*weak =*/ false);
           let perms = Services.perms;
           // Although the lifetime is "session" it will be removed upon
           // use so it's more of a one-shot.

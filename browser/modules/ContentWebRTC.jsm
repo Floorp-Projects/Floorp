@@ -73,10 +73,10 @@ this.ContentWebRTC = {
         let devices = contentWindow.pendingGetUserMediaRequests.get(callID);
         forgetGUMRequest(contentWindow, callID);
 
-        let allowedDevices = Cc["@mozilla.org/supports-array;1"]
-                               .createInstance(Ci.nsISupportsArray);
+        let allowedDevices = Cc["@mozilla.org/array;1"]
+                               .createInstance(Ci.nsIMutableArray);
         for (let deviceIndex of aMessage.data.devices)
-           allowedDevices.AppendElement(devices[deviceIndex]);
+           allowedDevices.appendElement(devices[deviceIndex], /*weak =*/ false);
 
         Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", callID);
         break;
