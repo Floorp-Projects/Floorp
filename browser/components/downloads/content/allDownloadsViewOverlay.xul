@@ -90,18 +90,10 @@
               class="downloadResumeMenuItem"
               label="&cmd.resume.label;"
               accesskey="&cmd.resume.accesskey;"/>
-    <menuitem command="downloadsCmd_cancel"
-              class="downloadCancelMenuItem"
-              label="&cmd.cancel.label;"
-              accesskey="&cmd.cancel.accesskey;"/>
     <menuitem command="downloadsCmd_unblock"
               class="downloadUnblockMenuItem"
               label="&cmd.unblock2.label;"
               accesskey="&cmd.unblock2.accesskey;"/>
-    <menuitem command="cmd_delete"
-              class="downloadRemoveFromHistoryMenuItem"
-              label="&cmd.removeFromHistory.label;"
-              accesskey="&cmd.removeFromHistory.accesskey;"/>
     <menuitem command="downloadsCmd_show"
               class="downloadShowMenuItem"
 #ifdef XP_MACOSX
@@ -124,6 +116,10 @@
 
     <menuseparator/>
 
+    <menuitem command="cmd_delete"
+              class="downloadRemoveFromHistoryMenuItem"
+              label="&cmd.removeFromHistory.label;"
+              accesskey="&cmd.removeFromHistory.accesskey;"/>
     <menuitem command="downloadsCmd_clearDownloads"
               label="&cmd.clearDownloads.label;"
               accesskey="&cmd.clearDownloads.accesskey;"/>
