@@ -7,9 +7,12 @@
 #ifndef nsSupportsArray_h__
 #define nsSupportsArray_h__
 
+//#define DEBUG_SUPPORTSARRAY 1
+
 #include "nsISupportsArray.h"
-#include "nsTArray.h"
 #include "mozilla/Attributes.h"
+
+static const uint32_t kAutoArraySize = 8;
 
 class nsSupportsArray final : public nsISupportsArray
 {
@@ -28,16 +31,18 @@ public:
   // nsICollection methods:
   NS_IMETHOD Count(uint32_t* aResult) override
   {
-    *aResult = mArray.Length();
+    *aResult = mCount;
     return NS_OK;
   }
   NS_IMETHOD GetElementAt(uint32_t aIndex, nsISupports** aResult) override;
   MOZ_MUST_USE NS_IMETHOD
   QueryElementAt(uint32_t aIndex, const nsIID& aIID, void** aResult) override
   {
-    nsISupports* element = mArray.SafeElementAt(aIndex, nullptr);
-    if (element) {
-      return element->QueryInterface(aIID, aResult);
+    if (aIndex < mCount) {
+      nsISupports* element = mArray[aIndex];
+      if (element) {
+        return element->QueryInterface(aIID, aResult);
+      }
     }
     return NS_ERROR_FAILURE;
   }
@@ -49,20 +54,32 @@ public:
   MOZ_MUST_USE NS_IMETHOD AppendElement(nsISupports* aElement) override
   {
     // XXX Invalid cast of bool to nsresult (bug 778110)
-    return (nsresult)InsertElementAt(aElement, mArray.Length())/* ? NS_OK : NS_ERROR_FAILURE*/;
+    return (nsresult)InsertElementAt(aElement, mCount)/* ? NS_OK : NS_ERROR_FAILURE*/;
   }
   // XXX this is badly named - should be RemoveFirstElement
   MOZ_MUST_USE NS_IMETHOD RemoveElement(nsISupports* aElement) override;
+  MOZ_MUST_USE NS_IMETHOD_(bool) MoveElement(int32_t aFrom, int32_t aTo) override;
   NS_IMETHOD Enumerate(nsIEnumerator** aResult) override;
   NS_IMETHOD Clear(void) override;
 
   // nsISupportsArray methods:
+  NS_IMETHOD_(bool) Equals(const nsISupportsArray* aOther) override;
+
   NS_IMETHOD_(int32_t) IndexOf(const nsISupports* aPossibleElement) override;
+  NS_IMETHOD_(int32_t) IndexOfStartingAt(const nsISupports* aPossibleElement,
+                                         uint32_t aStartIndex = 0) override;
   NS_IMETHOD_(int32_t) LastIndexOf(const nsISupports* aPossibleElement) override;
 
   NS_IMETHOD GetIndexOf(nsISupports* aPossibleElement, int32_t* aResult) override
   {
     *aResult = IndexOf(aPossibleElement);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetIndexOfStartingAt(nsISupports* aPossibleElement,
+                                  uint32_t aStartIndex, int32_t* aResult) override
+  {
+    *aResult = IndexOfStartingAt(aPossibleElement, aStartIndex);
     return NS_OK;
   }
 
@@ -79,7 +96,17 @@ public:
   ReplaceElementAt(nsISupports* aElement, uint32_t aIndex) override;
 
   MOZ_MUST_USE NS_IMETHOD_(bool)
-  RemoveElementAt(uint32_t aIndex) override;
+  RemoveElementAt(uint32_t aIndex) override
+  {
+    return RemoveElementsAt(aIndex, 1);
+  }
+  MOZ_MUST_USE NS_IMETHOD_(bool)
+  RemoveLastElement(const nsISupports* aElement) override;
+
+  MOZ_MUST_USE NS_IMETHOD DeleteLastElement(nsISupports* aElement) override
+  {
+    return (RemoveLastElement(aElement) ? NS_OK : NS_ERROR_FAILURE);
+  }
 
   MOZ_MUST_USE NS_IMETHOD DeleteElementAt(uint32_t aIndex) override
   {
@@ -90,12 +117,28 @@ public:
 
   MOZ_MUST_USE NS_IMETHOD Clone(nsISupportsArray** aResult) override;
 
+  MOZ_MUST_USE NS_IMETHOD_(bool)
+  RemoveElementsAt(uint32_t aIndex, uint32_t aCount) override;
+
+  MOZ_MUST_USE NS_IMETHOD_(bool)
+  SizeTo(int32_t aSize) override;
+protected:
+  void DeleteArray(void);
+
+  bool GrowArrayBy(uint32_t aGrowBy);
+
+  nsISupports** mArray;
+  uint32_t mArraySize;
+  uint32_t mCount;
+  nsISupports*  mAutoArray[kAutoArraySize];
+#if DEBUG_SUPPORTSARRAY
+  uint32_t mMaxCount;
+  uint32_t mMaxSize;
+#endif
+
 private:
   // Copy constructors are not allowed
   explicit nsSupportsArray(const nsISupportsArray& aOther);
-
-  typedef AutoTArray<nsISupports*, 8> ISupportsArray;
-  ISupportsArray mArray;
 };
 
 #endif // nsSupportsArray_h__
