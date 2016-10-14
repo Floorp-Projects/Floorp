@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.6.221';
-var pdfjsBuild = 'f8bd3d4';
+var pdfjsVersion = '1.6.234';
+var pdfjsBuild = 'bc3bceb';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -37498,7 +37498,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               for (var j = 0, jj = items.length; j < jj; j++) {
                 if (typeof items[j] === 'string') {
                   buildTextContentItem(items[j]);
-                } else {
+                } else if (isNum(items[j])) {
                   ensureTextContentItem();
 
                   // PDF Specification 5.3.2 states:
