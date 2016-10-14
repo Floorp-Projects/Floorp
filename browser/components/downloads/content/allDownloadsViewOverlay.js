@@ -1295,6 +1295,7 @@ DownloadsPlacesView.prototype = {
     let download = element._shell.download;
     contextMenu.setAttribute("state",
                              DownloadsCommon.stateOfDownload(download));
+    contextMenu.setAttribute("exists", "true");
     contextMenu.classList.toggle("temporary-block",
                                  !!download.hasBlockedData);
 
