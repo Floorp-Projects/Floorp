@@ -176,6 +176,10 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   } else {
     // This has issues ignoring the alpha channel on windows 7 with images marked opaque.
     MOZ_ASSERT(aSurface->GetFormat() != SurfaceFormat::B8G8R8X8);
+
+    // Bug 1275478 - D2D1 cannot draw A8 surface correctly.
+    MOZ_ASSERT(aSurface->GetFormat() != SurfaceFormat::A8);
+
     mDC->CreateImageBrush(image,
                           D2D1::ImageBrushProperties(samplingBounds,
                                                      D2D1_EXTEND_MODE_CLAMP,

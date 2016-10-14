@@ -27,8 +27,6 @@ public:
                   net::ReferrerPolicy aReferrerPolicy,
                   const dom::SRIMetadata& aIntegrity);
 
-  NS_INLINE_DECL_REFCOUNTING(ServoStyleSheet)
-
   bool HasRules() const;
 
   void SetOwningDocument(nsIDocument* aDocument);
@@ -50,8 +48,26 @@ public:
 
   RawServoStyleSheet* RawSheet() const { return mSheet; }
 
+  // WebIDL StyleSheet API
+  nsMediaList* Media() final;
+
+  // WebIDL CSSStyleSheet API
+  // Can't be inline because we can't include ImportRule here.  And can't be
+  // called GetOwnerRule because that would be ambiguous with the ImportRule
+  // version.
+  nsIDOMCSSRule* GetDOMOwnerRule() const final;
+
+  void WillDirty() {}
+  void DidDirty() {}
+
 protected:
-  ~ServoStyleSheet();
+  virtual ~ServoStyleSheet();
+
+  // Internal methods which do not have security check and completeness check.
+  dom::CSSRuleList* GetCssRulesInternal(ErrorResult& aRv);
+  uint32_t InsertRuleInternal(const nsAString& aRule,
+                              uint32_t aIndex, ErrorResult& aRv);
+  void DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv);
 
 private:
   void DropSheet();

@@ -33,18 +33,6 @@ StyleSheet::SheetInfo() const
   return *AsGecko()->mInner;
 }
 
-MozExternalRefCountType
-StyleSheet::AddRef()
-{
-  MOZ_STYLO_FORWARD(AddRef, ())
-}
-
-MozExternalRefCountType
-StyleSheet::Release()
-{
-  MOZ_STYLO_FORWARD(Release, ())
-}
-
 bool
 StyleSheet::IsInline() const
 {
@@ -106,6 +94,21 @@ StyleSheet::GetParentSheet() const
   MOZ_STYLO_FORWARD(GetParentSheet, ())
 }
 
+StyleSheet*
+StyleSheet::GetParentStyleSheet() const
+{
+  return GetParentSheet();
+}
+
+dom::ParentObject
+StyleSheet::GetParentObject() const
+{
+  if (mOwningNode) {
+    return dom::ParentObject(mOwningNode);
+  }
+  return dom::ParentObject(GetParentSheet());
+}
+
 void
 StyleSheet::AppendStyleSheet(StyleSheet* aSheet)
 {
@@ -164,23 +167,9 @@ StyleSheet::List(FILE* aOut, int32_t aIndex) const
 }
 #endif
 
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            RefPtr<StyleSheet>& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
-  if (aField && aField->IsGecko()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, aName);
-    aCallback.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, aField->AsGecko()));
-  }
-}
+void StyleSheet::WillDirty() { MOZ_STYLO_FORWARD(WillDirty, ()) }
+void StyleSheet::DidDirty() { MOZ_STYLO_FORWARD(DidDirty, ()) }
 
-inline void
-ImplCycleCollectionUnlink(RefPtr<StyleSheet>& aField)
-{
-  aField = nullptr;
-}
 
 }
 

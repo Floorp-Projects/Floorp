@@ -41,7 +41,7 @@ NS_INTERFACE_MAP_END_INHERITING(mozilla::net::nsSimpleURI)
 NS_IMETHODIMP
 nsHostObjectURI::GetBlobImpl(nsISupports** aBlobImpl)
 {
-  RefPtr<BlobImpl> blobImpl(mBlobImpl);
+  RefPtr<mozilla::dom::BlobImpl> blobImpl(mBlobImpl);
   blobImpl.forget(aBlobImpl);
   return NS_OK;
 }
