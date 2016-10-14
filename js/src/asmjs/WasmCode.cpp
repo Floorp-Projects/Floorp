@@ -24,6 +24,7 @@
 
 #include "jsprf.h"
 
+#include "asmjs/WasmBinaryToText.h"
 #include "asmjs/WasmModule.h"
 #include "asmjs/WasmSerialize.h"
 #include "jit/ExecutableAllocator.h"
@@ -717,10 +718,8 @@ Code::createText(JSContext* cx)
         if (!maybeSourceMap_)
             return nullptr;
 
-        if (!BinaryToExperimentalText(cx, bytes.begin(), bytes.length(), buffer,
-                                      ExperimentalTextFormatting(), maybeSourceMap_.get())) {
+        if (!BinaryToText(cx, bytes.begin(), bytes.length(), buffer, maybeSourceMap_.get()))
             return nullptr;
-        }
 
 #if DEBUG
         // Checking source map invariant: expression and function locations must be sorted

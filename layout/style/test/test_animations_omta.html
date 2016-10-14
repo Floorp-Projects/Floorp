@@ -256,13 +256,10 @@ function *testFillMode(fillMode, fillsBackwards, fillsForwards)
   new_div(style);
   listen();
 
-  // Currently backwards fill is not performed on the compositor thread but we
-  // should wait for paints so we can test that transform values are *not* being
-  // set on the compositor thread.
   yield waitForPaintsFlushed();
 
   if (fillsBackwards)
-    omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+    omta_is("transform", { tx: 0 }, RunningOn.Compositor,
             desc + "does affect value during delay (0s)");
   else
     omta_is("transform", { tx: 30 }, RunningOn.MainThread,
@@ -270,7 +267,7 @@ function *testFillMode(fillMode, fillsBackwards, fillsForwards)
 
   advance_clock(2000);
   if (fillsBackwards)
-    omta_is("transform", { tx: 0 }, RunningOn.MainThead,
+    omta_is("transform", { tx: 0 }, RunningOn.Compositor,
             desc + "does affect value during delay (0s)");
   else
     omta_is("transform", { tx: 30 }, RunningOn.MainThread,
@@ -1306,6 +1303,9 @@ addAsyncAnimTest(function *() {
   // test positive delay
   new_div("animation: anim2 1s 0.5s ease-out");
   yield waitForPaintsFlushed();
+  // NOTE: getOMTAStyle() can't detect the animation is running on the
+  // compositor or not during the delay phase, since no opacity style is
+  // applied during the delay phase.
   omta_is("opacity", 1, RunningOn.Either, "positive delay test at 0ms");
   advance_clock(400);
   omta_is("opacity", 1, RunningOn.Either, "positive delay test at 400ms");
@@ -1321,9 +1321,11 @@ addAsyncAnimTest(function *() {
   // that's before the delay)
   new_div("animation: anim2 1s 0.5s ease-out both");
   yield waitForPaintsFlushed();
+  // NOTE: As noted above, getOMTAStyle() can't detect the animation is running
+  // on the compositor during the delay phase.
   omta_is("opacity", 0, RunningOn.Either, "dynamic delay delay test at 0ms");
   advance_clock(400);
-  omta_is("opacity", 0, RunningOn.Either, 
+  omta_is("opacity", 0, RunningOn.Either,
           "dynamic delay delay test at 400ms (1)");
   gDiv.style.animationDelay = "0.2s";
   yield waitForPaintsFlushed();
@@ -1354,6 +1356,8 @@ addAsyncAnimTest(function *() {
   // test delay and play-state interaction
   new_div("animation: anim2 1s 0.5s ease-out");
   yield waitForPaintsFlushed();
+  // NOTE: As noted above, getOMTAStyle() can't detect the animation is running
+  // on the compositor during the delay phase.
   omta_is("opacity", 1, RunningOn.Either,
           "delay and play-state delay test at 0ms");
   advance_clock(400);
@@ -2354,8 +2358,10 @@ addAsyncAnimTest(function *() {
   yield waitForPaintsFlushed();
   gDiv.style.transform = "translate(200px)";
   yield waitForPaintsFlushed();
-  omta_is("transform", { tx: 100 }, RunningOn.MainThread,
-          "transition runs on main thread during delay");
+  // NOTE: As noted above, getOMTAStyle() can't detect the animation is running
+  // on the compositor during the delay phase.
+  omta_is("transform", { tx: 100 }, RunningOn.Either,
+          "transition runs on compositor thread during delay");
   // At the *very* start of the transition the start value of the transition
   // will match the underlying transform value. Various optimizations in
   // RestyleManager may recognize this a "no change" and filter out the

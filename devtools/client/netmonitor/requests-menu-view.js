@@ -1,11 +1,12 @@
 /* globals document, window, dumpn, $, $all, gNetwork, EVENTS, Prefs,
            NetMonitorController, NetMonitorView */
 "use strict";
-
+/* eslint-disable mozilla/reject-some-requires */
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const {Task} = require("devtools/shared/task");
 const {DeferredTask} = Cu.import("resource://gre/modules/DeferredTask.jsm", {});
+/* eslint-disable mozilla/reject-some-requires */
 const {SideMenuWidget} = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {setImageTooltip, getImageDimensions} =

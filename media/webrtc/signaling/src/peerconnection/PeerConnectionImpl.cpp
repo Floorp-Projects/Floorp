@@ -2549,6 +2549,11 @@ PeerConnectionImpl::InsertDTMF(mozilla::dom::RTCRtpSender& sender,
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   PC_AUTO_ENTER_API_CALL(false);
 
+  // Check values passed in from PeerConnection.js
+  MOZ_ASSERT(duration >= 40, "duration must be at least 40");
+  MOZ_ASSERT(duration <= 6000, "duration must be at most 6000");
+  MOZ_ASSERT(interToneGap >= 30, "interToneGap must be at least 30");
+
   JSErrorResult jrv;
 
   // Retrieve track

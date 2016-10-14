@@ -39,14 +39,17 @@ struct WasmRenderContext
 {
     JSContext* cx;
     AstModule* module;
-    StringBuffer& buffer;
+    WasmPrintBuffer& buffer;
+    GeneratedSourceMap* maybeSourceMap;
     uint32_t indent;
 
     uint32_t currentFuncIndex;
 
-    WasmRenderContext(JSContext* cx, AstModule* module, StringBuffer& buffer)
-      : cx(cx), module(module), buffer(buffer), indent(0), currentFuncIndex(0)
+    WasmRenderContext(JSContext* cx, AstModule* module, WasmPrintBuffer& buffer, GeneratedSourceMap* sourceMap)
+      : cx(cx), module(module), buffer(buffer), maybeSourceMap(sourceMap), indent(0), currentFuncIndex(0)
     {}
+
+    StringBuffer& sb() { return buffer.stringBuffer(); }
 };
 
 /*****************************************************************************/
@@ -65,7 +68,7 @@ RenderIndent(WasmRenderContext& c)
 static bool
 RenderInt32(WasmRenderContext& c, int32_t num)
 {
-    return NumberValueToStringBuffer(c.cx, Int32Value(num), c.buffer);
+    return NumberValueToStringBuffer(c.cx, Int32Value(num), c.sb());
 }
 
 static bool
@@ -75,7 +78,7 @@ RenderInt64(WasmRenderContext& c, int64_t num)
         return false;
     if (!num)
         return c.buffer.append("0");
-    return RenderInBase<10>(c.buffer, mozilla::Abs(num));
+    return RenderInBase<10>(c.sb(), mozilla::Abs(num));
 }
 
 static bool
@@ -83,7 +86,7 @@ RenderDouble(WasmRenderContext& c, RawF64 num)
 {
     double d = num.fp();
     if (IsNaN(d))
-        return RenderNaN(c.buffer, num);
+        return RenderNaN(c.sb(), num);
     if (IsNegativeZero(d))
         return c.buffer.append("-0");
     if (IsInfinite(d)) {
@@ -91,7 +94,7 @@ RenderDouble(WasmRenderContext& c, RawF64 num)
             return c.buffer.append("infinity");
         return c.buffer.append("-infinity");
     }
-    return NumberValueToStringBuffer(c.cx, DoubleValue(d), c.buffer);
+    return NumberValueToStringBuffer(c.cx, DoubleValue(d), c.sb());
 }
 
 static bool
@@ -99,7 +102,7 @@ RenderFloat32(WasmRenderContext& c, RawF32 num)
 {
     float f = num.fp();
     if (IsNaN(f))
-        return RenderNaN(c.buffer, num);
+        return RenderNaN(c.sb(), num);
     return RenderDouble(c, RawF64(double(f)));
 }
 
@@ -223,14 +226,23 @@ RenderBlockNameAndSignature(WasmRenderContext& c, const AstName& name, ExprType 
 static bool
 RenderExpr(WasmRenderContext& c, AstExpr& expr);
 
+#define MAP_AST_EXPR(c, expr)                                                         \
+    if (c.maybeSourceMap) {                                                           \
+        uint32_t lineno = c.buffer.lineno();                                          \
+        uint32_t column = c.buffer.column();                                          \
+        if (!c.maybeSourceMap->exprlocs().emplaceBack(lineno, column, expr.offset())) \
+            return false;                                                             \
+    }
+
 /*****************************************************************************/
 // binary format parsing and rendering
 
 static bool
-RenderNop(WasmRenderContext& c)
+RenderNop(WasmRenderContext& c, AstNop& nop)
 {
     if (!RenderIndent(c))
         return false;
+    MAP_AST_EXPR(c, nop);
     return c.buffer.append("nop\n");
 }
 
@@ -242,16 +254,18 @@ RenderDrop(WasmRenderContext& c, AstDrop& drop)
 
     if (!RenderIndent(c))
         return false;
+    MAP_AST_EXPR(c, drop);
     if (!c.buffer.append("drop\n"))
         return false;
     return true;
 }
 
 static bool
-RenderUnreachable(WasmRenderContext& c)
+RenderUnreachable(WasmRenderContext& c, AstUnreachable& unreachable)
 {
     if (!RenderIndent(c))
         return false;
+    MAP_AST_EXPR(c, unreachable);
     return c.buffer.append("unreachable\n");
 }
 
@@ -275,6 +289,7 @@ RenderCall(WasmRenderContext& c, AstCall& call)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, call);
     if (call.expr() == Expr::Call) {
         if (!c.buffer.append("call "))
             return false;
@@ -306,6 +321,7 @@ RenderCallIndirect(WasmRenderContext& c, AstCallIndirect& call)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, call);
     if (!c.buffer.append("call_indirect "))
         return false;
     if (!RenderRef(c, call.sig()))
@@ -323,6 +339,7 @@ RenderConst(WasmRenderContext& c, AstConst& cst)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, cst);
     if (!RenderValType(c, cst.val().type()))
         return false;
     if (!c.buffer.append(".const "))
@@ -360,6 +377,7 @@ RenderGetLocal(WasmRenderContext& c, AstGetLocal& gl)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, gl);
     if (!c.buffer.append("get_local "))
         return false;
     if (!RenderRef(c, gl.local()))
@@ -378,6 +396,7 @@ RenderSetLocal(WasmRenderContext& c, AstSetLocal& sl)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, sl);
     if (!c.buffer.append("set_local "))
         return false;
     if (!RenderRef(c, sl.local()))
@@ -397,6 +416,7 @@ RenderTeeLocal(WasmRenderContext& c, AstTeeLocal& tl)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, tl);
     if (!c.buffer.append("tee_local "))
         return false;
     if (!RenderRef(c, tl.local()))
@@ -423,6 +443,7 @@ RenderBlock(WasmRenderContext& c, AstBlock& block)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, block);
     if (block.expr() == Expr::Block) {
         if (!c.buffer.append("block"))
             return false;
@@ -485,6 +506,7 @@ RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& op)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, op);
     const char* opStr;
     switch (op.expr()) {
       case Expr::I32Eqz:     opStr = "i32.eqz"; break;
@@ -526,6 +548,7 @@ RenderBinaryOperator(WasmRenderContext& c, AstBinaryOperator& op)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, op);
     const char* opStr;
     switch (op.expr()) {
       case Expr::I32Add:      opStr = "i32.add"; break;
@@ -591,6 +614,7 @@ RenderTernaryOperator(WasmRenderContext& c, AstTernaryOperator& op)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, op);
     const char* opStr;
     switch (op.expr()) {
       case Expr::Select: opStr = "select"; break;
@@ -616,6 +640,7 @@ RenderComparisonOperator(WasmRenderContext& c, AstComparisonOperator& op)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, op);
     const char* opStr;
     switch (op.expr()) {
       case Expr::I32Eq:  opStr = "i32.eq"; break;
@@ -670,6 +695,7 @@ RenderConversionOperator(WasmRenderContext& c, AstConversionOperator& op)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, op);
     const char* opStr;
     switch (op.expr()) {
       case Expr::I32WrapI64:        opStr = "i32.wrap/i64"; break;
@@ -716,6 +742,7 @@ RenderIf(WasmRenderContext& c, AstIf& if_)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, if_);
     if (!c.buffer.append("if"))
         return false;
 
@@ -796,6 +823,7 @@ RenderLoad(WasmRenderContext& c, AstLoad& load)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, load);
     uint32_t defaultAlignLog2;
     switch (load.expr()) {
       case Expr::I32Load8S:
@@ -890,6 +918,7 @@ RenderStore(WasmRenderContext& c, AstStore& store)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, store);
     uint32_t defaultAlignLog2;
     switch (store.expr()) {
       case Expr::I32Store8:
@@ -966,6 +995,7 @@ RenderBranch(WasmRenderContext& c, AstBranch& branch)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, branch);
     if (expr == Expr::BrIf ? !c.buffer.append("br_if ") : !c.buffer.append("br "))
         return false;
 
@@ -990,6 +1020,7 @@ RenderBrTable(WasmRenderContext& c, AstBranchTable& table)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, table);
     if (!c.buffer.append("br_table "))
         return false;
 
@@ -1019,6 +1050,7 @@ RenderReturn(WasmRenderContext& c, AstReturn& ret)
     if (!RenderIndent(c))
         return false;
 
+    MAP_AST_EXPR(c, ret);
     if (!c.buffer.append("return"))
         return false;
 
@@ -1032,9 +1064,9 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr)
       case AstExprKind::Drop:
         return RenderDrop(c, expr.as<AstDrop>());
       case AstExprKind::Nop:
-        return RenderNop(c);
+        return RenderNop(c, expr.as<AstNop>());
       case AstExprKind::Unreachable:
-        return RenderUnreachable(c);
+        return RenderUnreachable(c, expr.as<AstUnreachable>());
       case AstExprKind::Call:
         return RenderCall(c, expr.as<AstCall>());
       case AstExprKind::CallIndirect:
@@ -1297,6 +1329,9 @@ RenderFunctionBody(WasmRenderContext& c, AstFunc& func, const AstModule::SigVect
 {
     const AstSig* sig = sigs[func.sig().index()];
 
+    size_t startExprIndex = c.maybeSourceMap ? c.maybeSourceMap->exprlocs().length() : 0;
+    uint32_t startLineno = c.buffer.lineno();
+
     uint32_t argsNum = sig->args().length();
     uint32_t localsNum = func.vars().length();
     if (localsNum > 0) {
@@ -1327,6 +1362,14 @@ RenderFunctionBody(WasmRenderContext& c, AstFunc& func, const AstModule::SigVect
     for (uint32_t i = 0; i < exprsNum; i++) {
       if (!RenderExpr(c, *func.body()[i]))
           return false;
+    }
+
+    size_t endExprIndex = c.maybeSourceMap ? c.maybeSourceMap->exprlocs().length() : 0;
+    uint32_t endLineno = c.buffer.lineno();
+
+    if (c.maybeSourceMap) {
+        if (!c.maybeSourceMap->functionlocs().emplaceBack(startExprIndex, endExprIndex, startLineno, endLineno))
+            return false;
     }
 
     return true;
@@ -1461,11 +1504,13 @@ RenderModule(WasmRenderContext& c, AstModule& module)
     return true;
 }
 
+#undef MAP_AST_EXPR
+
 /*****************************************************************************/
 // Top-level functions
 
 bool
-wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer)
+wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer, GeneratedSourceMap* sourceMap)
 {
 
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
@@ -1474,7 +1519,8 @@ wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuf
     if (!BinaryToAst(cx, bytes, length, lifo, &module))
         return false;
 
-    WasmRenderContext c(cx, module, buffer);
+    WasmPrintBuffer buf(buffer);
+    WasmRenderContext c(cx, module, buf, sourceMap);
 
     if (!RenderModule(c, *module)) {
         if (!cx->isExceptionPending())
