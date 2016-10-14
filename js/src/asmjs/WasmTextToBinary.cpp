@@ -4288,10 +4288,7 @@ EncodeBytes(Encoder& e, AstName wasmName)
 static bool
 EncodeLimits(Encoder& e, const Limits& limits)
 {
-    uint32_t flags = uint32_t(ResizableFlags::Default);
-    if (limits.maximum)
-        flags |= uint32_t(ResizableFlags::HasMaximum);
-
+    uint32_t flags = limits.maximum ? 1 : 0;
     if (!e.writeVarU32(flags))
         return false;
 

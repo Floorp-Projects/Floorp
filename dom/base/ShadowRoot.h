@@ -202,8 +202,8 @@ public:
     return mShadowRoot;
   }
 
-  virtual uint32_t Length() override;
-  virtual CSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) override;
+  uint32_t Length() override;
+  StyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) override;
 
 protected:
   virtual ~ShadowRootStyleSheetList();

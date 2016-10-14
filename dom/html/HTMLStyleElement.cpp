@@ -68,7 +68,7 @@ HTMLStyleElement::GetMozDisabled(bool* aDisabled)
 bool
 HTMLStyleElement::Disabled()
 {
-  CSSStyleSheet* ss = GetSheet();
+  StyleSheet* ss = GetSheet();
   return ss && ss->Disabled();
 }
 
@@ -82,8 +82,7 @@ HTMLStyleElement::SetMozDisabled(bool aDisabled)
 void
 HTMLStyleElement::SetDisabled(bool aDisabled)
 {
-  CSSStyleSheet* ss = GetSheet();
-  if (ss) {
+  if (StyleSheet* ss = GetSheet()) {
     ss->SetDisabled(aDisabled);
   }
 }

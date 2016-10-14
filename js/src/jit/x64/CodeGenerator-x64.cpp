@@ -237,13 +237,10 @@ CodeGeneratorX64::visitCompareI64(LCompareI64* lir)
     Register lhsReg = ToRegister64(lhs).reg;
     Register output = ToRegister(lir->output());
 
-    if (IsConstant(rhs)) {
-        ImmWord imm = ImmWord(ToInt64(rhs));
-        masm.cmpPtr(lhsReg, imm);
-    } else {
-        Register rhsReg = ToRegister64(rhs).reg;
-        masm.cmpPtr(lhsReg, Operand(rhsReg));
-    }
+    if (IsConstant(rhs))
+        masm.cmpPtr(lhsReg, ImmWord(ToInt64(rhs)));
+    else
+        masm.cmpPtr(lhsReg, ToOperand64(rhs));
 
     bool isSigned = mir->compareType() == MCompare::Compare_Int64;
     masm.emitSet(JSOpToCondition(lir->jsop(), isSigned), output);
