@@ -702,7 +702,7 @@ interface WebGLRenderingContext {
                     GLenum type, ArrayBufferView? pixels);
     [Throws] // Can't actually throw.
     void texImage2D(GLenum target, GLint level, GLenum internalformat,
-                    GLenum format, GLenum type, ImageData? pixels);
+                    GLenum format, GLenum type, ImageData pixels);
     [Throws]
     void texImage2D(GLenum target, GLint level, GLenum internalformat,
                     GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
@@ -719,10 +719,10 @@ interface WebGLRenderingContext {
     [Throws] // Can't actually throw.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLsizei width, GLsizei height, GLenum format, GLenum type,
-                       ArrayBufferView? pixels);
+                       ArrayBufferView pixels);
     [Throws] // Can't actually throw.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, ImageData? pixels);
+                       GLenum format, GLenum type, ImageData pixels);
     [Throws]
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
