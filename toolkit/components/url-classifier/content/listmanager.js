@@ -395,6 +395,20 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
       }
     });
 
+    // Build the <tablename, stateBase64> mapping.
+    let tableState = {};
+    tableData.split("\n").forEach(line => {
+      let p = line.indexOf(";");
+      if (-1 === p) {
+        return;
+      }
+      let tableName = line.substring(0, p);
+      let metadata = line.substring(p + 1).split(":");
+      let stateBase64 = metadata[0];
+      log(tableName + " ==> " + stateBase64);
+      tableState[tableName] = stateBase64;
+    });
+
     // The state is a byte stream which server told us from the
     // last table update. The state would be used to do the partial
     // update and the empty string means the table has
@@ -402,12 +416,10 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
     // partial update.
     let stateArray = [];
     tableArray.forEach(listName => {
-      // See Bug 1287059. We save the state to prefs until we support
-      // "saving states to HashStore".
-      let statePrefName = "browser.safebrowsing.provider.google4.state." + listName;
-      let stateBase64 = this.prefs_.getPref(statePrefName, "");
-      stateArray.push(stateBase64);
+      stateArray.push(tableState[listName] || "");
     });
+
+    log("stateArray: " + stateArray);
 
     let urlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
                      .getService(Ci.nsIUrlClassifierUtils);

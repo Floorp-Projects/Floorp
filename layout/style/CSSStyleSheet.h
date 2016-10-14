@@ -20,19 +20,16 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsString.h"
 #include "mozilla/CORSMode.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/dom/SRIMetadata.h"
 
 class CSSRuleListImpl;
 class nsCSSRuleProcessor;
-class nsIPrincipal;
 class nsIURI;
 class nsMediaList;
 class nsMediaQueryResultCacheKey;
@@ -101,10 +98,8 @@ struct CSSStyleSheetInner : public StyleSheetInfo
   { 0x98, 0x99, 0x0c, 0x86, 0xec, 0x12, 0x2f, 0x54 } }
 
 
-class CSSStyleSheet final : public nsIDOMCSSStyleSheet,
-                            public nsICSSLoaderObserver,
-                            public nsWrapperCache,
-                            public StyleSheet
+class CSSStyleSheet final : public StyleSheet
+                          , public nsICSSLoaderObserver
 {
 public:
   typedef net::ReferrerPolicy ReferrerPolicy;
@@ -114,14 +109,11 @@ public:
                 CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy,
                 const dom::SRIMetadata& aIntegrity);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(CSSStyleSheet,
-                                                         nsIDOMCSSStyleSheet)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSStyleSheet, StyleSheet)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_SHEET_IMPL_CID)
 
-  void GetTitle(nsString& aTitle) const;
-  void GetType(nsString& aType) const;
   bool HasRules() const;
 
   /**
@@ -161,6 +153,8 @@ public:
 
   void SetOwnerRule(css::ImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
   css::ImportRule* GetOwnerRule() const { return mOwnerRule; }
+  // Workaround overloaded-virtual warning in GCC.
+  using StyleSheet::GetOwnerRule;
 
   nsXMLNameSpaceMap* GetNameSpaceMap() const { return mInner->mNameSpaceMap; }
 
@@ -183,12 +177,6 @@ public:
   void AddStyleSet(nsStyleSet* aStyleSet);
   void DropStyleSet(nsStyleSet* aStyleSet);
 
-  /**
-   * Like the DOM insertRule() method, but doesn't do any security checks
-   */
-  uint32_t InsertRuleInternal(const nsAString& aRule,
-                              uint32_t aIndex, ErrorResult& aRv);
-
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
@@ -205,12 +193,6 @@ public:
 
   void SetInRuleProcessorCache() { mInRuleProcessorCache = true; }
 
-  // nsIDOMStyleSheet interface
-  NS_DECL_NSIDOMSTYLESHEET
-
-  // nsIDOMCSSStyleSheet interface
-  NS_DECL_NSIDOMCSSSTYLESHEET
-
   // Function used as a callback to rebuild our inner's child sheet
   // list after we clone a unique inner for ourselves.
   static bool RebuildChildList(css::Rule* aRule, void* aBuilder);
@@ -224,51 +206,14 @@ public:
   }
 
   // WebIDL StyleSheet API
-  // Our CSSStyleSheet::GetType is a const method, so it ends up
-  // ambiguous with with the XPCOM version.  Just disambiguate.
-  void GetType(nsString& aType) {
-    const_cast<const CSSStyleSheet*>(this)->GetType(aType);
-  }
-  // Our XPCOM GetHref is fine for WebIDL
-  using StyleSheet::GetOwnerNode;
-  CSSStyleSheet* GetParentStyleSheet() const { return mParent; }
-  // Our CSSStyleSheet::GetTitle is a const method, so it ends up
-  // ambiguous with with the XPCOM version.  Just disambiguate.
-  void GetTitle(nsString& aTitle) {
-    const_cast<const CSSStyleSheet*>(this)->GetTitle(aTitle);
-  }
-  nsMediaList* Media();
-  bool Disabled() const { return mDisabled; }
-  // The XPCOM SetDisabled is fine for WebIDL
+  nsMediaList* Media() final;
 
   // WebIDL CSSStyleSheet API
   // Can't be inline because we can't include ImportRule here.  And can't be
   // called GetOwnerRule because that would be ambiguous with the ImportRule
   // version.
-  nsIDOMCSSRule* GetDOMOwnerRule() const;
-  dom::CSSRuleList* GetCssRules(nsIPrincipal& aSubjectPrincipal,
-                                ErrorResult& aRv);
-  uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv);
+  nsIDOMCSSRule* GetDOMOwnerRule() const final;
 
-  void DeleteRule(uint32_t aIndex,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv);
-
-  // WebIDL miscellaneous bits
-  dom::ParentObject GetParentObject() const {
-    if (mOwningNode) {
-      return dom::ParentObject(mOwningNode);
-    }
-
-    return dom::ParentObject(static_cast<nsIDOMCSSStyleSheet*>(mParent), mParent);
-  }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  // Changes to sheets should be inside of a WillDirty-DidDirty pair.
-  // However, the calls do not need to be matched; it's ok to call
-  // WillDirty and then make no change and skip the DidDirty call.
   void WillDirty();
   void DidDirty();
 
@@ -287,13 +232,6 @@ protected:
 
   void ClearRuleCascades();
 
-  // Return success if the subject principal subsumes the principal of our
-  // inner, error otherwise.  This will also succeed if the subject has
-  // UniversalXPConnect or if access is allowed by CORS.  In the latter case,
-  // it will set the principal of the inner to the subject principal.
-  void SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
-                                     ErrorResult& aRv);
-
   // Add the namespace mapping from this @namespace rule to our namespace map
   nsresult RegisterNamespaceRule(css::Rule* aRule);
 
@@ -309,7 +247,12 @@ protected:
   void TraverseInner(nsCycleCollectionTraversalCallback &);
 
 protected:
-  nsString              mTitle;
+  // Internal methods which do not have security check and completeness check.
+  dom::CSSRuleList* GetCssRulesInternal(ErrorResult& aRv);
+  uint32_t InsertRuleInternal(const nsAString& aRule,
+                              uint32_t aIndex, ErrorResult& aRv);
+  void DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv);
+
   RefPtr<nsMediaList> mMedia;
   RefPtr<CSSStyleSheet> mNext;
   CSSStyleSheet*        mParent;    // weak ref

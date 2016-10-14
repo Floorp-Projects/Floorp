@@ -18,6 +18,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/Base64.h"
 
 // MOZ_LOG=UrlClassifierDbService:5
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
@@ -27,6 +28,8 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define STORE_DIRECTORY      NS_LITERAL_CSTRING("safebrowsing")
 #define TO_DELETE_DIR_SUFFIX NS_LITERAL_CSTRING("-to_delete")
 #define BACKUP_DIR_SUFFIX    NS_LITERAL_CSTRING("-backup")
+
+#define METADATA_SUFFIX      NS_LITERAL_CSTRING(".metadata")
 
 namespace mozilla {
 namespace safebrowsing {
@@ -391,6 +394,7 @@ Classifier::DeleteTables(const nsTArray<nsCString>& aTables)
 void
 Classifier::TableRequest(nsACString& aResult)
 {
+  // Generating v2 table info.
   nsTArray<nsCString> tables;
   ActiveTables(tables);
   for (uint32_t i = 0; i < tables.Length(); i++) {
@@ -424,6 +428,13 @@ Classifier::TableRequest(nsACString& aResult)
 
     aResult.Append('\n');
   }
+
+  // Load meta data from *.metadata files in the root directory.
+  // Specifically for v4 tables.
+  nsCString metadata;
+  nsresult rv = LoadMetadata(mRootStoreDirectory, metadata);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  aResult.Append(metadata);
 }
 
 nsresult
@@ -955,6 +966,7 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
   PrefixStringMap prefixes1, prefixes2;
   PrefixStringMap* output = &prefixes1;
 
+  TableUpdateV4* lastAppliedUpdate = nullptr;
   for (uint32_t i = 0; i < aUpdates->Length(); i++) {
     TableUpdate *update = aUpdates->ElementAt(i);
     if (!update || !update->TableName().Equals(aTable)) {
@@ -999,6 +1011,9 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
       input->Clear();
     }
 
+    // Keep track of the last applied update.
+    lastAppliedUpdate = updateV4;
+
     aUpdates->ElementAt(i) = nullptr;
   }
 
@@ -1007,6 +1022,13 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
 
   rv = lookupCache->WriteFile();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (lastAppliedUpdate) {
+    LOG(("Write meta data of the last applied update."));
+    rv = lookupCache->WriteMetadata(lastAppliedUpdate);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
 
   int64_t now = (PR_Now() / PR_USEC_PER_SEC);
   LOG(("Successfully updated %s\n", PromiseFlatCString(aTable).get()));
@@ -1108,6 +1130,77 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
   }
 
   return NS_OK;
+}
+
+nsresult
+Classifier::LoadMetadata(nsIFile* aDirectory, nsACString& aResult)
+{
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_ARG_POINTER(entries);
+
+  bool hasMore;
+  while (NS_SUCCEEDED(rv = entries->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> supports;
+    rv = entries->GetNext(getter_AddRefs(supports));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
+
+    // If |file| is a directory, recurse to find its entries as well.
+    bool isDirectory;
+    if (NS_FAILED(file->IsDirectory(&isDirectory))) {
+      continue;
+    }
+    if (isDirectory) {
+      LoadMetadata(file, aResult);
+      continue;
+    }
+
+    // Truncate file extension to get the table name.
+    nsCString tableName;
+    rv = file->GetNativeLeafName(tableName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    int32_t dot = tableName.RFind(METADATA_SUFFIX, 0);
+    if (dot == -1) {
+      continue;
+    }
+    tableName.Cut(dot, METADATA_SUFFIX.Length());
+
+    LookupCacheV4* lookupCache =
+      LookupCache::Cast<LookupCacheV4>(GetLookupCache(tableName));
+    if (!lookupCache) {
+      continue;
+    }
+
+    nsCString state;
+    nsCString checksum;
+    rv = lookupCache->LoadMetadata(state, checksum);
+    if (NS_FAILED(rv)) {
+      LOG(("Failed to get metadata for table %s", tableName.get()));
+      continue;
+    }
+
+    // The state might include '\n' so that we have to encode.
+    nsAutoCString stateBase64;
+    rv = Base64Encode(state, stateBase64);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoCString checksumBase64;
+    rv = Base64Encode(checksum, checksumBase64);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    LOG(("Appending state '%s' and checksum '%s' for table %s",
+         stateBase64.get(), checksumBase64.get(), tableName.get()));
+
+    aResult.AppendPrintf("%s;%s:%s\n", tableName.get(),
+                                       stateBase64.get(),
+                                       checksumBase64.get());
+  }
+
+  return rv;
 }
 
 } // namespace safebrowsing
