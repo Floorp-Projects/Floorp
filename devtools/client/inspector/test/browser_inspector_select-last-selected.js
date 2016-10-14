@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+requestLongerTimeout(2);
+
 // Checks that the expected default node is selected after a page navigation or
 // a reload.
 var PAGE_1 = URL_ROOT + "doc_inspector_select-last-selected-01.html";
