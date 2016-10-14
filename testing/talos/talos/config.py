@@ -176,7 +176,8 @@ DEFAULTS = dict(
         'devtools.debugger.remote-enabled': False,
         'devtools.theme': "light",
         'devtools.timeline.enabled': False,
-        'identity.fxaccounts.migrateToDevEdition': False
+        'identity.fxaccounts.migrateToDevEdition': False,
+        'media.libavcodec.allow-obsolete': True
     }
 )
 

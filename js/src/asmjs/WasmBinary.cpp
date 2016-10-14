@@ -148,17 +148,15 @@ wasm::DecodeLimits(Decoder& d, Limits* limits)
     if (!d.readVarU32(&flags))
         return d.fail("expected flags");
 
-    if (flags & ~uint32_t(ResizableFlags::AllowedMask))
-        return d.fail("unexpected bits set in flags: %lu",
-                      (flags & ~uint32_t(ResizableFlags::AllowedMask)));
-
-    if (!(flags & uint32_t(ResizableFlags::Default)))
-        return d.fail("currently, every memory/table must be declared default");
+    // TODO (bug 1310149): tighten this check (s/3/1) when the AngryBots demo
+    // gets updated.
+    if (flags & ~uint32_t(0x3))
+        return d.fail("unexpected bits set in flags: %lu", (flags & ~uint32_t(0x3)));
 
     if (!d.readVarU32(&limits->initial))
         return d.fail("expected initial length");
 
-    if (flags & uint32_t(ResizableFlags::HasMaximum)) {
+    if (flags & 0x1) {
         uint32_t maximum;
         if (!d.readVarU32(&maximum))
             return d.fail("expected maximum length");

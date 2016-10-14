@@ -2844,7 +2844,7 @@ XULDocument::ResumeWalk()
                     if (NS_SUCCEEDED(rv) && blocked)
                         return NS_OK;
                 }
-                else if (scriptproto->GetScriptObject()) {
+                else if (scriptproto->HasScriptObject()) {
                     // An inline script
                     rv = ExecuteScript(scriptproto);
                     if (NS_FAILED(rv)) return rv;
@@ -3210,7 +3210,7 @@ XULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock)
 
     bool isChromeDoc = IsChromeURI(mDocumentURI);
 
-    if (isChromeDoc && aScriptProto->GetScriptObject()) {
+    if (isChromeDoc && aScriptProto->HasScriptObject()) {
         rv = ExecuteScript(aScriptProto);
 
         // Ignore return value from execution, and don't block
@@ -3233,7 +3233,7 @@ XULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock)
             aScriptProto->Set(newScriptObject);
         }
 
-        if (aScriptProto->GetScriptObject()) {
+        if (aScriptProto->HasScriptObject()) {
             rv = ExecuteScript(aScriptProto);
 
             // Ignore return value from execution, and don't block
@@ -3353,7 +3353,7 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             mOffThreadCompileStringLength = 0;
 
             rv = mCurrentScriptProto->Compile(srcBuf, uri, 1, this, this);
-            if (NS_SUCCEEDED(rv) && !mCurrentScriptProto->GetScriptObject()) {
+            if (NS_SUCCEEDED(rv) && !mCurrentScriptProto->HasScriptObject()) {
                 // We will be notified via OnOffThreadCompileComplete when the
                 // compile finishes. Keep the contents of the compiled script
                 // alive until the compilation finishes.
@@ -3378,7 +3378,7 @@ XULDocument::OnScriptCompileComplete(JSScript* aScript, nsresult aStatus)
 {
     // When compiling off thread the script will not have been attached to the
     // script proto yet.
-    if (aScript && !mCurrentScriptProto->GetScriptObject())
+    if (aScript && !mCurrentScriptProto->HasScriptObject())
         mCurrentScriptProto->Set(aScript);
 
     // Allow load events to be fired once off thread compilation finishes.
@@ -3431,11 +3431,11 @@ XULDocument::OnScriptCompileComplete(JSScript* aScript, nsresult aStatus)
         // (See http://bugzilla.mozilla.org/show_bug.cgi?id=98207 for
         // the true crime story.)
         bool useXULCache = nsXULPrototypeCache::GetInstance()->IsEnabled();
-  
-        if (useXULCache && IsChromeURI(mDocumentURI) && scriptProto->GetScriptObject()) {
+
+        if (useXULCache && IsChromeURI(mDocumentURI) && scriptProto->HasScriptObject()) {
+            JS::Rooted<JSScript*> script(RootingCx(), scriptProto->GetScriptObject());
             nsXULPrototypeCache::GetInstance()->PutScript(
-                               scriptProto->mSrcURI,
-                               scriptProto->GetScriptObject());
+                               scriptProto->mSrcURI, script);
         }
 
         if (mIsWritingFastLoad && mCurrentPrototype != mMasterPrototype) {
@@ -3474,7 +3474,7 @@ XULDocument::OnScriptCompileComplete(JSScript* aScript, nsresult aStatus)
         doc->mNextSrcLoadWaiter = nullptr;
 
         // Execute only if we loaded and compiled successfully, then resume
-        if (NS_SUCCEEDED(aStatus) && scriptProto->GetScriptObject()) {
+        if (NS_SUCCEEDED(aStatus) && scriptProto->HasScriptObject()) {
             doc->ExecuteScript(scriptProto);
         }
         doc->ResumeWalk();
@@ -3495,9 +3495,6 @@ XULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     rv = mScriptGlobalObject->EnsureScriptEnvironment();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JS::HandleScript scriptObject = aScript->GetScriptObject();
-    NS_ENSURE_TRUE(scriptObject, NS_ERROR_UNEXPECTED);
-
     // Execute the precompiled script with the given version
     nsAutoMicroTask mt;
 
@@ -3505,6 +3502,10 @@ XULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     // AutoEntryScript. This is Gecko specific and not in any spec.
     AutoEntryScript aes(mScriptGlobalObject, "precompiled XUL <script> element");
     JSContext* cx = aes.cx();
+
+    JS::Rooted<JSScript*> scriptObject(cx, aScript->GetScriptObject());
+    NS_ENSURE_TRUE(scriptObject, NS_ERROR_UNEXPECTED);
+
     JS::Rooted<JSObject*> baseGlobal(cx, JS::CurrentGlobalOrNull(cx));
     NS_ENSURE_TRUE(xpc::Scriptability::Get(baseGlobal).Allowed(), NS_OK);
 
@@ -3513,7 +3514,6 @@ XULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
     JS::ExposeObjectToActiveJS(global);
-    xpc_UnmarkGrayScript(scriptObject);
     JSAutoCompartment ac(cx, global);
 
     // The script is in the compilation scope. Clone it into the target scope

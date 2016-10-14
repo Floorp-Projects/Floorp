@@ -104,4 +104,37 @@ ServoStyleSheet::List(FILE* aOut, int32_t aIndex) const
 }
 #endif
 
+nsMediaList*
+ServoStyleSheet::Media()
+{
+  return nullptr;
+}
+
+nsIDOMCSSRule*
+ServoStyleSheet::GetDOMOwnerRule() const
+{
+  return nullptr;
+}
+
+CSSRuleList*
+ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
+uint32_t
+ServoStyleSheet::InsertRuleInternal(const nsAString& aRule,
+                                    uint32_t aIndex, ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return 0;
+}
+
+void
+ServoStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
 } // namespace mozilla
