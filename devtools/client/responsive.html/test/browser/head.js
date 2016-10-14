@@ -335,3 +335,10 @@ function addDeviceForTest(device) {
     ok(removeDevice(device), `Removed Test Device "${device.name}" from the list.`);
   });
 }
+
+function waitForClientClose(ui) {
+  return new Promise(resolve => {
+    info("RDM's debugger client is now closed");
+    ui.client.addOneTimeListener("closed", resolve);
+  });
+}
