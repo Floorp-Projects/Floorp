@@ -185,6 +185,10 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
   bool forceFormat = false;
   nsresult rv = NS_OK;
   if (!CheckElementStart(content, forceFormat, aStr, rv)) {
+    // When we go to AppendElementEnd for this element, we're going to
+    // MaybeLeaveFromPreContent().  So make sure to MaybeEnterInPreContent()
+    // now, so our PreLevel() doesn't get confused.
+    MaybeEnterInPreContent(content);
     return rv;
   }
 
@@ -351,6 +355,9 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
         IsContainer(parserService->HTMLCaseSensitiveAtomTagToId(name),
                     isContainer);
       if (!isContainer) {
+        // Keep this in sync with the cleanup at the end of this method.
+        MOZ_ASSERT(name != nsGkAtoms::body);
+        MaybeLeaveFromPreContent(content);
         return NS_OK;
       }
     }
@@ -382,6 +389,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
   NS_ENSURE_TRUE(AppendToString(nsDependentAtomString(name), aStr), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(AppendToString(kGreaterThan, aStr), NS_ERROR_OUT_OF_MEMORY);
 
+  // Keep this cleanup in sync with the IsContainer() early return above.
   MaybeLeaveFromPreContent(content);
 
   if ((mDoFormat || forceFormat)&& !mDoRaw  && !PreLevel()

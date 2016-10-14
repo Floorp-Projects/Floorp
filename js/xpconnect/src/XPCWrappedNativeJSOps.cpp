@@ -835,9 +835,9 @@ XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolv
         XPCNativeSet* set = wrapper->GetSet();
         XPCNativeSet* protoSet = wrapper->HasProto() ?
                                     wrapper->GetProto()->GetSet() : nullptr;
-        XPCNativeMember* member;
+        XPCNativeMember* member = nullptr;
         RefPtr<XPCNativeInterface> iface;
-        bool IsLocal;
+        bool IsLocal = false;
 
         if (set->FindMember(id, &member, &iface, protoSet, &IsLocal) &&
             IsLocal) {

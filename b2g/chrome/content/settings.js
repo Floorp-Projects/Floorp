@@ -481,46 +481,6 @@ setUpdateTrackingId();
   });
 })();
 
-// ================ Theme selection ============
-// theme.selected holds the manifest url of the currently used theme.
-SettingsListener.observe("theme.selected",
-                         "app://default_theme.gaiamobile.org/manifest.webapp",
-                         function(value) {
-  if (!value) {
-    return;
-  }
-
-  let newTheme;
-  try {
-    let enabled = Services.prefs.getBoolPref("dom.mozApps.themable");
-    if (!enabled) {
-      return;
-    }
-
-    // Make sure this is a url, and only keep the host part to set the pref.
-    let uri = Services.io.newURI(value, null, null);
-    // We only support overriding in the app:// protocol handler.
-    if (uri.scheme !== "app") {
-      return;
-    }
-    newTheme = uri.host;
-  } catch(e) {
-    return;
-  }
-
-  let currentTheme;
-  try {
-    currentTheme = Services.prefs.getCharPref('dom.mozApps.selected_theme');
-  } catch(e) {};
-
-  if (currentTheme != newTheme) {
-    debug("New theme selected " + value);
-    Services.prefs.setCharPref('dom.mozApps.selected_theme', newTheme);
-    Services.prefs.savePrefFile(null);
-    Services.obs.notifyObservers(null, 'app-theme-changed', newTheme);
-  }
-});
-
 // =================== Proxy server ======================
 (function setupBrowsingProxySettings() {
   function setPAC() {
@@ -639,8 +599,6 @@ var settingsToObserve = {
     resetToPref: true
   },
 
-  'dom.mozApps.use_reviewer_certs': false,
-  'dom.mozApps.signed_apps_installable_from': 'https://marketplace.firefox.com',
   'dom.presentation.discovery.enabled': false,
   'dom.presentation.discoverable': false,
   'dom.serviceWorkers.testing.enabled': false,

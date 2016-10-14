@@ -514,8 +514,6 @@ public:
                                       const nsCString& aTopic,
                                       const nsString& aData) override;
 
-  virtual bool RecvOnAppThemeChanged() override;
-
   virtual bool RecvAssociatePluginId(const uint32_t& aPluginId,
                                      const base::ProcessId& aProcessId) override;
 

@@ -3,19 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_MANIFESTS += [
-    'tests/mochitest.ini',
-]
-
-TEST_HARNESS_FILES.testing.mochitest.tests.devtools.shared.apps.tests.data += [
-    'tests/data/app-certified.zip',
-    'tests/data/app-overload.zip',
-    'tests/data/app-redirect.zip',
-    'tests/data/app-system.zip',
-    'tests/data/app-updated.zip',
-    'tests/data/app.zip',
-]
-
 DevToolsModules(
     'app-actor-front.js',
     'Devices.jsm',

@@ -2244,12 +2244,18 @@ public:
   static bool HasCurrentTransitions(const nsIFrame* aFrame);
 
   /**
-   * Returns true if the frame has current or in-effect (i.e. in before phase,
-   * running or filling) animations or transitions for the
-   * property.
+   * Returns true if |aFrame| has an animation of |aProperty| regardless of
+   * whether the property is overridden by !important rule.
    */
-  static bool HasRelevantAnimationOfProperty(const nsIFrame* aFrame,
-                                             nsCSSPropertyID aProperty);
+  static bool HasAnimationOfProperty(const nsIFrame* aFrame,
+                                     nsCSSPropertyID aProperty);
+
+  /**
+   * Returns true if |aFrame| has an animation of |aProperty| which is
+   * not overridden by !important rules.
+   */
+  static bool HasEffectiveAnimation(const nsIFrame* aFrame,
+                                    nsCSSPropertyID aProperty);
 
   /**
    * Checks if off-main-thread animations are enabled.

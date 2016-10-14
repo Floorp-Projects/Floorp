@@ -433,7 +433,9 @@ public:
   {
     RefPtr<ReleasingTimerHolder> holder = new ReleasingTimerHolder(Move(aArray));
     holder->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (NS_WARN_IF(!holder->mTimer)) {
+
+    // If we are shutting down, we are not able to create a timer.
+    if (!holder->mTimer) {
       return;
     }
 

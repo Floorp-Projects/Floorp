@@ -488,22 +488,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void call(const wasm::CallSiteDesc& desc, const Register reg);
     inline void call(const wasm::CallSiteDesc& desc, uint32_t funcDefIndex);
+    inline void call(const wasm::CallSiteDesc& desc, wasm::Trap trap);
 
     CodeOffset callWithPatch() PER_SHARED_ARCH;
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) PER_SHARED_ARCH;
-
-    // Thunks provide the ability to jump to any uint32_t offset from any other
-    // uint32_t offset without using a constant pool (thus returning a simple
-    // CodeOffset instead of a CodeOffsetJump).
-    CodeOffset thunkWithPatch() PER_SHARED_ARCH;
-    void patchThunk(uint32_t thunkOffset, uint32_t targetOffset) PER_SHARED_ARCH;
-    static void repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset) PER_SHARED_ARCH;
-
-    // Emit a nop that can be patched to and from a nop and a jump with an int8
-    // relative displacement.
-    CodeOffset nopPatchableToNearJump() PER_SHARED_ARCH;
-    static void patchNopToNearJump(uint8_t* jump, uint8_t* target) PER_SHARED_ARCH;
-    static void patchNearJumpToNop(uint8_t* jump) PER_SHARED_ARCH;
 
     // Push the return address and make a call. On platforms where this function
     // is not defined, push the link register (pushReturnAddress) at the entry
@@ -513,6 +501,23 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void pushReturnAddress() DEFINED_ON(mips_shared, arm, arm64);
     void popReturnAddress() DEFINED_ON(mips_shared, arm, arm64);
+
+  public:
+    // ===============================================================
+    // Patchable near/far jumps.
+
+    // "Far jumps" provide the ability to jump to any uint32_t offset from any
+    // other uint32_t offset without using a constant pool (thus returning a
+    // simple CodeOffset instead of a CodeOffsetJump).
+    CodeOffset farJumpWithPatch() PER_SHARED_ARCH;
+    void patchFarJump(CodeOffset farJump, uint32_t targetOffset) PER_SHARED_ARCH;
+    static void repatchFarJump(uint8_t* code, uint32_t farJumpOffset, uint32_t targetOffset) PER_SHARED_ARCH;
+
+    // Emit a nop that can be patched to and from a nop and a jump with an int8
+    // relative displacement.
+    CodeOffset nopPatchableToNearJump() PER_SHARED_ARCH;
+    static void patchNopToNearJump(uint8_t* jump, uint8_t* target) PER_SHARED_ARCH;
+    static void patchNearJumpToNop(uint8_t* jump) PER_SHARED_ARCH;
 
   public:
     // ===============================================================
@@ -985,7 +990,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchPtr(Condition cond, Register lhs, ImmGCPtr rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* label) PER_SHARED_ARCH;
 
-    inline void branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    template <class L>
+    inline void branchPtr(Condition cond, const Address& lhs, Register rhs, L label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, const Address& lhs, ImmPtr rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, const Address& lhs, ImmGCPtr rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, const Address& lhs, ImmWord rhs, Label* label) PER_SHARED_ARCH;
@@ -1213,8 +1219,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branch32Impl(Condition cond, const T& length, const RegisterOrInt32Constant& key,
                              Label* label);
 
-    template <typename T, typename S>
-    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+    template <typename T, typename S, typename L>
+    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, L label)
         DEFINED_ON(x86_shared);
 
     void branchPtrInNurseryChunkImpl(Condition cond, Register ptr, Label* label)
@@ -1302,6 +1308,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType, const T& dest,
                            MIRType slotType) PER_ARCH;
 
+    inline void memoryBarrier(MemoryBarrierBits barrier) PER_SHARED_ARCH;
+
   public:
     // ========================================================================
     // Truncate floating point.
@@ -1336,22 +1344,22 @@ class MacroAssembler : public MacroAssemblerSpecific
     // wasm::MemoryAccessVector (there can be multiple when i64 is involved).
     // On x64, only some asm.js accesses need a wasm::MemoryAccess so the caller
     // is responsible for doing this instead.
-    void wasmLoad(Scalar::Type type, unsigned numSimdElems, Operand srcAddr, AnyRegister out) DEFINED_ON(x86, x64);
-    void wasmLoadI64(Scalar::Type type, Operand srcAddr, Register64 out) DEFINED_ON(x86, x64);
-    void wasmStore(Scalar::Type type, unsigned numSimdElems, AnyRegister value, Operand dstAddr) DEFINED_ON(x86, x64);
-    void wasmStoreI64(Register64 value, Operand dstAddr) DEFINED_ON(x86);
+    void wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, AnyRegister out) DEFINED_ON(x86, x64);
+    void wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAddr, Register64 out) DEFINED_ON(x86, x64);
+    void wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Operand dstAddr) DEFINED_ON(x86, x64);
+    void wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Operand dstAddr) DEFINED_ON(x86);
 
     // wasm specific methods, used in both the wasm baseline compiler and ion.
     void wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64);
     void wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86_shared);
-    void outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
+    void outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isUnsigned, wasm::TrapOffset off, Label* rejoin) DEFINED_ON(x86_shared);
 
     void wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64);
     void wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86_shared);
-    void outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
+    void outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool isUnsigned, wasm::TrapOffset off, Label* rejoin) DEFINED_ON(x86_shared);
 
-    void outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
-    void outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool isUnsigned, Label* rejoin) DEFINED_ON(x86_shared);
+    void outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned, wasm::TrapOffset off, Label* rejoin) DEFINED_ON(x86_shared);
+    void outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool isUnsigned, wasm::TrapOffset off, Label* rejoin) DEFINED_ON(x86_shared);
 
     // This function takes care of loading the callee's TLS and pinned regs but
     // it is the caller's responsibility to save/restore TLS or pinned regs.
@@ -1365,6 +1373,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // (TLS & pinned regs are non-volatile registers in the system ABI).
     void wasmCallBuiltinInstanceMethod(const ABIArg& instanceArg,
                                        wasm::SymbolicAddress builtin);
+
+    // Emit the out-of-line trap code to which trapping jumps/branches are
+    // bound. This should be called once per function after all other codegen,
+    // including "normal" OutOfLineCode.
+    void wasmEmitTrapOutOfLineCode();
 
   public:
     // ========================================================================

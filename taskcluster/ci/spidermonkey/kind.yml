@@ -68,6 +68,21 @@ jobs:
                 - toolkit/mozapps/installer/package-name.mk
                 - toolkit/mozapps/installer/upload-files.mk
 
+    sm-mozjs-sys/debug:
+        description: "Build js/src as the mozjs_sys Rust crate"
+        index:
+            job-name:
+                gecko-v2: sm-mozjs-sys-debug
+        treeherder:
+            symbol: SM-tc(mozjs-crate)
+        run:
+            using: spidermonkey-mozjs-crate
+            spidermonkey-variant: plain
+        run-on-projects:
+            - integration
+            - release
+            - try
+
     sm-plain/debug:
         description: "Spidermonkey Plain"
         index:

@@ -595,8 +595,6 @@
 @RESPATH@/components/TelemetryStartup.manifest
 @RESPATH@/components/XULStore.js
 @RESPATH@/components/XULStore.manifest
-@RESPATH@/components/Webapps.js
-@RESPATH@/components/Webapps.manifest
 @RESPATH@/components/AppsService.js
 @RESPATH@/components/AppsService.manifest
 @RESPATH@/components/Push.js
@@ -856,7 +854,6 @@ bin/libfreebl_32int64_3.so
 #ifdef MOZ_UPDATER
 @RESPATH@/components/UpdatePrompt.js
 #endif
-@RESPATH@/components/WebappsUpdateTimer.js
 @RESPATH@/components/DirectoryProvider.js
 @RESPATH@/components/ProcessGlobal.js
 @RESPATH@/components/OMAContentHandler.js

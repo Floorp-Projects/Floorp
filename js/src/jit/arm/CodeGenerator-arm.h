@@ -209,8 +209,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void modICommon(MMod* mir, Register lhs, Register rhs, Register output, LSnapshot* snapshot,
                     Label& done);
 
-    void memoryBarrier(MemoryBarrierBits barrier);
-
   public:
     CodeGeneratorARM(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 

@@ -235,7 +235,16 @@ typedef Vector<FuncImport, 0, SystemAllocPolicy> FuncImportVector;
 class CodeRange
 {
   public:
-    enum Kind { Function, Entry, ImportJitExit, ImportInterpExit, Inline, CallThunk };
+    enum Kind {
+        Function,          // function definition
+        Entry,             // calls into wasm from C++
+        ImportJitExit,     // fast-path calling from wasm into JIT code
+        ImportInterpExit,  // slow-path calling from wasm into C++ interp
+        TrapExit,          // calls C++ to report and jumps to throw stub
+        FarJumpIsland,     // inserted to connect otherwise out-of-range insns
+        Inline             // stub that is jumped-to, not called, and thus
+                           // replaces/loses preceding innermost frame
+    };
 
   private:
     // All fields are treated as cacheable POD:
@@ -278,6 +287,9 @@ class CodeRange
     bool isImportExit() const {
         return kind() == ImportJitExit || kind() == ImportInterpExit;
     }
+    bool isTrapExit() const {
+        return kind() == TrapExit;
+    }
     bool isInline() const {
         return kind() == Inline;
     }
@@ -286,7 +298,7 @@ class CodeRange
     // which is used for asynchronous profiling to determine the frame pointer.
 
     uint32_t profilingReturn() const {
-        MOZ_ASSERT(isFunction() || isImportExit());
+        MOZ_ASSERT(isFunction() || isImportExit() || isTrapExit());
         return profilingReturn_;
     }
 
@@ -458,6 +470,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     GlobalDescVector      globals;
     TableDescVector       tables;
     MemoryAccessVector    memoryAccesses;
+    MemoryPatchVector     memoryPatches;
     BoundsCheckVector     boundsChecks;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
@@ -528,9 +541,7 @@ class Code
 
     const CallSite* lookupCallSite(void* returnAddress) const;
     const CodeRange* lookupRange(void* pc) const;
-#ifdef WASM_HUGE_MEMORY
     const MemoryAccess* lookupMemoryAccess(void* pc) const;
-#endif
 
     // Return the name associated with a given function index, or generate one
     // if none was given by the module.

@@ -125,9 +125,6 @@ var DoPreloadPostfork = function(aCallback) {
     // chrome process to read permissions.
     Cc["@mozilla.org/permissionmanager;1"].getService(Ci["nsIPermissionManager"]);
 
-    // Create this instance after fork since it loads AppsServiceChild.jsm
-    Cc["@mozilla.org/webapps;1"].createInstance(Ci["nsISupports"]);
-
     // Load nsIProtocolProxyService after fork since it asynchronously accesses
     // the "Proxy Resolution" thread after it's frozen.
     Cc["@mozilla.org/network/protocol-proxy-service;1"].getService(Ci["nsIProtocolProxyService"]);

@@ -133,7 +133,7 @@ function loadTwiceSameBasePlusNonConstModule(type, ext, offset, align) {
  */
 
 function testOOB(mod, args) {
-    assertErrorMessage(() => mod(...args), Error, /invalid or out-of-range index/);
+    assertErrorMessage(() => mod(...args), WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 function testOk(mod, args, expected, expectedType) {
