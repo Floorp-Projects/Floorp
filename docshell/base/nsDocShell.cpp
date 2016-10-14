@@ -9738,20 +9738,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                          nsIDocShell** aDocShell,
                          nsIRequest** aRequest)
 {
-  // In most cases both principals (aTriggeringPrincipal and aPrincipalToInherit)
-  // are both null or both non-null. For the exceptional cases let's make sure that:
-  // * if aTriggeringPrincipal is null then either aPrincipalToInherit is null or
-  //   it's a NullPrincipal
-  // * if aPrincipalToInherit is null then either aTriggeringPrincipal is null or
-  //   it's a NullPrincipal or INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL is set.
-  MOZ_ASSERT(aTriggeringPrincipal ||
-             (!aPrincipalToInherit ||
-              aPrincipalToInherit->GetIsNullPrincipal()));
-  MOZ_ASSERT(aPrincipalToInherit ||
-             (!aTriggeringPrincipal ||
-              aTriggeringPrincipal->GetIsNullPrincipal() ||
-              (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL)));
-
   nsresult rv = NS_OK;
   mOriginalUriString.Truncate();
 
@@ -9943,26 +9929,12 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   {
     bool inherits;
     // One more twist: Don't inherit the principal for external loads.
-    if (!principalToInherit && 
+    if (aLoadType != LOAD_NORMAL_EXTERNAL && !principalToInherit &&
+        (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL) &&
         NS_SUCCEEDED(nsContentUtils::URIInheritsSecurityContext(aURI,
                                                                 &inherits)) &&
         inherits) {
-      if (aLoadType != LOAD_NORMAL_EXTERNAL && 
-          (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL)) {
-        principalToInherit = GetInheritedPrincipal(true);
-      }
-
-      // In case we don't have a principalToInherit and the TriggeringPrincipal
-      // either already is a SystemPrincipal or would fall back to become
-      // a SystemPrincipal within the loadInfo then we should explicitly set
-      // the principalToInherit to a freshly created NullPrincipal.
-      if (!principalToInherit && 
-          (nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal) ||
-           (!aTriggeringPrincipal && !aReferrer))) {
-        // We're going to default to inheriting our system triggering principal, 
-        // more or less by accident.  This doesn't seem like a good idea.
-        principalToInherit = nsNullPrincipal::CreateWithInheritedAttributes(this);
-      }
+      principalToInherit = GetInheritedPrincipal(true);
     }
   }
 
@@ -12328,7 +12300,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
             pAttrs.InheritFromNecko(nAttrs);
             principalToInherit = nsNullPrincipal::Create(pAttrs);
           }
-        } else {
+        } else if (loadInfo->GetForceInheritPrincipal()) {
           principalToInherit = loadInfo->PrincipalToInherit();
         }
       }
