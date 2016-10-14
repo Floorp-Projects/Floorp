@@ -51,10 +51,11 @@ wasmFailValidateText(`(module (global i32 (i32.const 1337)) (func (set_global 0 
 
 // Big module with many variables: test that setting one doesn't overwrite the
 // other ones.
-function get_set(i, type) { return `
-    (func $get_${i} (result ${type}) (get_global ${i}))
-    (func $set_${i} (param ${type}) (set_global ${i} (get_local 0)))
-`
+function get_set(i, type) {
+    return `
+        (func $get_${i} (result ${type}) (get_global ${i}))
+        (func $set_${i} (param ${type}) (set_global ${i} (get_local 0)))
+    `;
 }
 
 var module = wasmEvalText(`(module
@@ -122,6 +123,51 @@ module = wasmEvalText(`(module
 
 assertEq(module.getter(), 42);
 assertEq(module.value, 42);
+
+// Can only import numbers (no implicit coercions).
+module = new WebAssembly.Module(wasmTextToBinary(`(module
+    (global (import "globs" "i32") i32)
+    (global (import "globs" "f32") f32)
+    (global (import "globs" "f64") f32)
+)`));
+
+const assertLinkFails = (m, imp, err) => {
+    assertErrorMessage(() => new WebAssembly.Instance(m, imp), TypeError, err);
+}
+
+var imp = {
+    globs: {
+        i32: 0,
+        f32: Infinity,
+        f64: NaN
+    }
+};
+
+let i = new WebAssembly.Instance(module, imp);
+
+for (let v of [
+    null,
+    {},
+    "42",
+    /not a number/,
+    false,
+    undefined,
+    Symbol(),
+    { valueOf() { return 42; } }
+]) {
+    imp.globs.i32 = v;
+    assertLinkFails(module, imp, /not a number/);
+
+    imp.globs.i32 = 0;
+    imp.globs.f32 = v;
+    assertLinkFails(module, imp, /not a number/);
+
+    imp.globs.f32 = Math.fround(13.37);
+    imp.globs.f64 = v;
+    assertLinkFails(module, imp, /not a number/);
+
+    imp.globs.f64 = 13.37;
+}
 
 // Imported globals and locally defined globals use the same index space.
 module = wasmEvalText(`(module
