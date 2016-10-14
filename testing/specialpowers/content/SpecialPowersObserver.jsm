@@ -76,7 +76,6 @@ SpecialPowersObserver.prototype._loadFrameScript = function()
     this._messageManager.addMessageListener("SpecialPowers.CreateFiles", this);
     this._messageManager.addMessageListener("SpecialPowers.RemoveFiles", this);
     this._messageManager.addMessageListener("SPPermissionManager", this);
-    this._messageManager.addMessageListener("SPWebAppService", this);
     this._messageManager.addMessageListener("SPObserverService", this);
     this._messageManager.addMessageListener("SPLoadChromeScript", this);
     this._messageManager.addMessageListener("SPImportInMainProcess", this);
@@ -149,7 +148,6 @@ SpecialPowersObserver.prototype.uninit = function()
     this._messageManager.removeMessageListener("SpecialPowers.CreateFiles", this);
     this._messageManager.removeMessageListener("SpecialPowers.RemoveFiles", this);
     this._messageManager.removeMessageListener("SPPermissionManager", this);
-    this._messageManager.removeMessageListener("SPWebAppService", this);
     this._messageManager.removeMessageListener("SPObserverService", this);
     this._messageManager.removeMessageListener("SPLoadChromeScript", this);
     this._messageManager.removeMessageListener("SPImportInMainProcess", this);

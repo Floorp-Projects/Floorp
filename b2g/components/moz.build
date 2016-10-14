@@ -23,7 +23,6 @@ EXTRA_COMPONENTS += [
     'SmsProtocolHandler.js',
     'SystemMessageInternal.js',
     'TelProtocolHandler.js',
-    'WebappsUpdateTimer.js',
 ]
 
 if CONFIG['OS_TARGET'] != 'Android':
@@ -67,7 +66,6 @@ EXTRA_JS_MODULES += [
     'SignInToWebsite.jsm',
     'SystemAppProxy.jsm',
     'TelURIParser.jsm',
-    'WebappsUpdater.jsm',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':

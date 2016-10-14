@@ -14,15 +14,15 @@ const message = require("./utils/message");
 const { swapToInnerBrowser } = require("./browser/swap");
 const { EmulationFront } = require("devtools/shared/fronts/emulation");
 const { getStr } = require("./utils/l10n");
-const { TargetFactory } = require("devtools/client/framework/target");
-const { gDevTools } = require("devtools/client/framework/devtools");
 
 const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
 
-loader.lazyRequireGetter(this, "DebuggerClient",
-                         "devtools/shared/client/main", true);
-loader.lazyRequireGetter(this, "DebuggerServer",
-                         "devtools/server/main", true);
+loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
+loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+loader.lazyRequireGetter(this, "throttlingProfiles",
+  "devtools/client/shared/network-throttling-profiles");
 
 /**
  * ResponsiveUIManager is the external API for the browser UI, etc. to use when
@@ -362,9 +362,6 @@ ResponsiveUI.prototype = {
     this.toolWindow.removeEventListener("message", this);
 
     if (!isTabClosing) {
-      // Stop the touch event simulator if it was running
-      yield this.emulationFront.clearTouchEventsOverride();
-
       // Notify the inner browser to stop the frame script
       yield message.request(this.toolWindow, "stop-frame-script");
     }
@@ -377,7 +374,9 @@ ResponsiveUI.prototype = {
     this.toolWindow = null;
     this.swap = null;
 
-    // Close the debugger client used to speak with emulation actor
+    // Close the debugger client used to speak with emulation actor.
+    // The actor handles clearing any overrides itself, so it's not necessary to clear
+    // anything on shutdown client side.
     let clientClosed = this.client.close();
     if (!isTabClosing) {
       yield clientClosed;
@@ -422,64 +421,103 @@ ResponsiveUI.prototype = {
   },
 
   handleMessage(event) {
-    let { browserWindow, tab } = this;
-
     if (event.origin !== "chrome://devtools") {
       return;
     }
 
     switch (event.data.type) {
+      case "change-network-throtting":
+        this.onChangeNetworkThrottling(event);
+        break;
       case "change-viewport-device":
-        let { userAgent, pixelRatio, touch } = event.data.device;
-        this.updateUserAgent(userAgent);
-        this.updateDPPX(pixelRatio);
-        this.updateTouchSimulation(touch);
+        this.onChangeViewportDevice(event);
         break;
       case "content-resize":
-        let { width, height } = event.data;
-        this.emit("content-resize", {
-          width,
-          height,
-        });
+        this.onContentResize(event);
         break;
       case "exit":
-        ResponsiveUIManager.closeIfNeeded(browserWindow, tab);
+        this.onExit();
         break;
       case "update-touch-simulation":
-        let { enabled } = event.data;
-        this.updateTouchSimulation(enabled);
+        this.onUpdateTouchSimulation(event);
         break;
     }
   },
 
-  updateTouchSimulation: Task.async(function* (enabled) {
-    if (enabled) {
-      let reloadNeeded = yield this.emulationFront.setTouchEventsOverride(
-        Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
-      );
-      if (reloadNeeded) {
-        this.getViewportBrowser().reload();
-      }
-    } else {
-      this.emulationFront.clearTouchEventsOverride();
-    }
+  onChangeNetworkThrottling: Task.async(function* (event) {
+    let { enabled, profile } = event.data;
+    yield this.updateNetworkThrottling(enabled, profile);
+    // Used by tests
+    this.emit("network-throttling-changed");
   }),
 
-  updateUserAgent(userAgent) {
-    if (userAgent) {
-      this.emulationFront.setUserAgentOverride(userAgent);
-    } else {
-      this.emulationFront.clearUserAgentOverride();
-    }
+  onChangeViewportDevice(event) {
+    let { userAgent, pixelRatio, touch } = event.data.device;
+    this.updateUserAgent(userAgent);
+    this.updateDPPX(pixelRatio);
+    this.updateTouchSimulation(touch);
+  },
+
+  onContentResize(event) {
+    let { width, height } = event.data;
+    this.emit("content-resize", {
+      width,
+      height,
+    });
+  },
+
+  onExit() {
+    let { browserWindow, tab } = this;
+    ResponsiveUIManager.closeIfNeeded(browserWindow, tab);
+  },
+
+  onUpdateTouchSimulation(event) {
+    let { enabled } = event.data;
+    this.updateTouchSimulation(enabled);
   },
 
   updateDPPX(dppx) {
-    if (dppx) {
-      this.emulationFront.setDPPXOverride(dppx);
-    } else {
+    if (!dppx) {
       this.emulationFront.clearDPPXOverride();
+      return;
     }
+    this.emulationFront.setDPPXOverride(dppx);
   },
+
+  updateNetworkThrottling: Task.async(function* (enabled, profile) {
+    if (!enabled) {
+      yield this.emulationFront.clearNetworkThrottling();
+      return;
+    }
+    let data = throttlingProfiles.find(({ id }) => id == profile);
+    let { download, upload, latency } = data;
+    yield this.emulationFront.setNetworkThrottling({
+      downloadThroughput: download,
+      uploadThroughput: upload,
+      latency,
+    });
+  }),
+
+  updateUserAgent(userAgent) {
+    if (!userAgent) {
+      this.emulationFront.clearUserAgentOverride();
+      return;
+    }
+    this.emulationFront.setUserAgentOverride(userAgent);
+  },
+
+  updateTouchSimulation: Task.async(function* (enabled) {
+    if (!enabled) {
+      yield this.emulationFront.clearTouchEventsOverride();
+      return;
+    }
+    let reloadNeeded = yield this.emulationFront.setTouchEventsOverride(
+      Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
+    );
+    if (reloadNeeded) {
+      this.getViewportBrowser().reload();
+    }
+  }),
 
   /**
    * Helper for tests. Assumes a single viewport for now.

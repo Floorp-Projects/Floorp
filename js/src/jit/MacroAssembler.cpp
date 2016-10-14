@@ -2803,12 +2803,16 @@ MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::Cal
 
     // WebAssembly throws if the index is out-of-bounds.
     loadWasmGlobalPtr(callee.tableLengthGlobalDataOffset(), scratch);
-    branch32(Assembler::Condition::AboveOrEqual, index, scratch, wasm::JumpTarget::OutOfBounds);
+
+    wasm::TrapOffset trapOffset(desc.lineOrBytecode());
+    wasm::TrapDesc oobTrap(trapOffset, wasm::Trap::OutOfBounds, framePushed());
+    branch32(Assembler::Condition::AboveOrEqual, index, scratch, oobTrap);
 
     // Load the base pointer of the table.
     loadWasmGlobalPtr(callee.tableBaseGlobalDataOffset(), scratch);
 
     // Load the callee from the table.
+    wasm::TrapDesc nullTrap(trapOffset, wasm::Trap::IndirectCallToNull, framePushed());
     if (callee.wasmTableIsExternal()) {
         static_assert(sizeof(wasm::ExternalTableElem) == 8 || sizeof(wasm::ExternalTableElem) == 16,
                       "elements of external tables are two words");
@@ -2820,17 +2824,87 @@ MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::Cal
         }
 
         loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, tls)), WasmTlsReg);
-        branchTest32(Assembler::Zero, WasmTlsReg, WasmTlsReg, wasm::JumpTarget::IndirectCallToNull);
+        branchTest32(Assembler::Zero, WasmTlsReg, WasmTlsReg, nullTrap);
 
         loadWasmPinnedRegsFromTls();
 
         loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, code)), scratch);
     } else {
         loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
-        branchTest32(Assembler::Zero, scratch, scratch, wasm::JumpTarget::IndirectCallToNull);
+        branchTest32(Assembler::Zero, scratch, scratch, nullTrap);
     }
 
     call(desc, scratch);
+}
+
+void
+MacroAssembler::wasmEmitTrapOutOfLineCode()
+{
+    for (const wasm::TrapSite& site : trapSites()) {
+        // Trap out-of-line codes are created for two kinds of trap sites:
+        //  - jumps, which are bound directly to the trap out-of-line path
+        //  - memory accesses, which can fault and then have control transferred
+        //    to the out-of-line path directly via signal handler setting pc
+        switch (site.kind) {
+          case wasm::TrapSite::Jump: {
+            RepatchLabel jump;
+            jump.use(site.codeOffset);
+            bind(&jump);
+            break;
+          }
+          case wasm::TrapSite::MemoryAccess: {
+            append(wasm::MemoryAccess(site.codeOffset, size()));
+            break;
+          }
+        }
+
+        if (site.trap == wasm::Trap::IndirectCallBadSig) {
+            // The indirect call bad-signature trap is a special case for two
+            // reasons:
+            //  - the check happens in the very first instructions of the
+            //    prologue, before the stack frame has been set up which messes
+            //    up everything (stack depth computations, unwinding)
+            //  - the check happens in the callee while the trap should be
+            //    reported at the caller's call_indirect
+            // To solve both problems at once, the out-of-line path (far) jumps
+            // directly to the trap exit stub. This takes advantage of the fact
+            // that there is already a CallSite for call_indirect and the
+            // current pre-prologue stack/register state.
+            append(wasm::TrapFarJump(site.trap, farJumpWithPatch()));
+        } else {
+            // Inherit the frame depth of the trap site. This value is captured
+            // by the wasm::CallSite to allow unwinding this frame.
+            setFramePushed(site.framePushed);
+
+            // Align the stack for a nullary call. The call does not return so
+            // there's no need to emit a corresponding increment.
+            size_t alreadyPushed = sizeof(AsmJSFrame) + framePushed();
+            size_t toPush = ABIArgGenerator().stackBytesConsumedSoFar();
+            if (size_t dec = StackDecrementForCall(ABIStackAlignment, alreadyPushed, toPush))
+                reserveStack(dec);
+
+            // Call the trap's exit, using the bytecode offset of the trap site.
+            // Note that this code is inside the same CodeRange::Function as the
+            // trap site so it's as if the trapping instruction called the
+            // trap-handling function. The frame iterator knows to skip the trap
+            // exit's frame so that unwinding begins at the frame and offset of
+            // the trapping instruction.
+            wasm::CallSiteDesc desc(site.bytecodeOffset, wasm::CallSiteDesc::TrapExit);
+            call(desc, site.trap);
+
+#ifdef DEBUG
+            // Traps do not return.
+            breakpoint();
+#endif
+        }
+    }
+
+    // Ensure that the return address of the last emitted call above is always
+    // within this function's CodeRange which is necessary for the stack
+    // iterator to find the right CodeRange while walking the stack.
+    breakpoint();
+
+    clearTrapSites();
 }
 
 //}}} check_macroassembler_style

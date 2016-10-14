@@ -12,6 +12,7 @@
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/ServoUtils.h"
 
 class nsIDocument;
 class nsINode;
@@ -55,22 +56,7 @@ public:
   bool IsComplete() const;
   void SetComplete();
 
-  bool IsGecko() const { return !IsServo(); }
-  bool IsServo() const
-  {
-#ifdef MOZ_STYLO
-    return mType == StyleBackendType::Servo;
-#else
-    return false;
-#endif
-  }
-
-  // Only safe to call if the caller has verified that that |this| is of the
-  // correct type.
-  inline CSSStyleSheet* AsGecko();
-  inline ServoStyleSheet* AsServo();
-  inline const CSSStyleSheet* AsGecko() const;
-  inline const ServoStyleSheet* AsServo() const;
+  MOZ_DECL_STYLO_METHODS(CSSStyleSheet, ServoStyleSheet)
 
   inline MozExternalRefCountType AddRef();
   inline MozExternalRefCountType Release();

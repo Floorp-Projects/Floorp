@@ -216,7 +216,7 @@ LIRGeneratorX64::visitWasmStore(MWasmStore* ins)
 
     MDefinition* value = ins->value();
     LAllocation valueAlloc;
-    switch (ins->accessType()) {
+    switch (ins->access().type()) {
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -266,7 +266,7 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
     LAsmJSStoreHeap* lir = nullptr;  // initialize to silence GCC warning
-    switch (ins->accessType()) {
+    switch (ins->access().type()) {
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:

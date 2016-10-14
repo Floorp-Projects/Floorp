@@ -932,7 +932,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
   // These are only calculated if needed
   nsIFrame::Halignment halign;
   nsIFrame::Valignment valign;
-  nscoord maxAscent;
+  nscoord maxAscent = 0;
   bool isLTR;
 
   if (isHorizontal) {
@@ -957,7 +957,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
       const nscoord endAlign =
         clientRect.YMost() - margin.bottom - childRect.height;
 
-      nscoord y;
+      nscoord y = 0;
       switch (valign) {
         case nsBoxFrame::vAlign_Top:
           y = startAlign;
@@ -986,7 +986,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
       const nscoord rightAlign =
         clientRect.XMost() - margin.right - childRect.width;
 
-      nscoord x;
+      nscoord x = 0;
       switch (halign) {
         case nsBoxFrame::hAlign_Left: // start
           x = isLTR ? leftAlign : rightAlign;

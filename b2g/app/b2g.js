@@ -876,11 +876,6 @@ pref("gfx.screen-mirroring.enabled", true);
 // The url of the page used to display network error details.
 pref("b2g.neterror.url", "net_error.html");
 
-// The origin used for the shared themes uri space.
-pref("b2g.theme.origin", "app://theme.gaiamobile.org");
-pref("dom.mozApps.themable", true);
-pref("dom.mozApps.selected_theme", "default_theme.gaiamobile.org");
-
 // Enable PAC generator for B2G.
 pref("network.proxy.pac_generator", true);
 

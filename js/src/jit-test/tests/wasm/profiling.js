@@ -31,10 +31,23 @@ function normalize(stack)
     return framesOut.join(',');
 }
 
+function removeAdjacentDuplicates(array) {
+    if (array.length < 2)
+        return;
+    let i = 0;
+    for (let j = 1; j < array.length; j++) {
+        if (array[i] !== array[j])
+            array[++i] = array[j];
+    }
+    array.length = i + 1;
+}
+
 function assertEqStacks(got, expect)
 {
     for (let i = 0; i < got.length; i++)
         got[i] = normalize(got[i]);
+
+    removeAdjacentDuplicates(got);
 
     if (got.length != expect.length) {
         print(`Got:\n${got.toSource()}\nExpect:\n${expect.toSource()}`);
@@ -85,15 +98,23 @@ test(
 )`,
 ["", ">", "0,>", "1,0,>", "0,>", ">", ""]);
 
-function testError(code, error)
+function testError(code, error, expect)
 {
     enableSPSProfiling();
-    var f = wasmEvalText(code);
+    var f = wasmEvalText(code).exports[""];
     enableSingleStepProfiling();
     assertThrowsInstanceOf(f, error);
-    disableSingleStepProfiling();
+    assertEqStacks(disableSingleStepProfiling(), expect);
     disableSPSProfiling();
 }
+
+testError(
+`(module
+    (func $foo (unreachable))
+    (func (export "") (call $foo))
+)`,
+WebAssembly.RuntimeError,
+["", ">", "1,>", "0,1,>", "trap handling,0,1,>", "inline stub,0,1,>", ""]);
 
 testError(
 `(module
@@ -104,7 +125,11 @@ testError(
     (table anyfunc (elem $bar))
     (export "" $foo)
 )`,
-Error);
+WebAssembly.RuntimeError,
+// Technically we have this one *one-instruction* interval where
+// the caller is lost (the stack with "1,>"). It's annoying to fix and shouldn't
+// mess up profiles in practice so we ignore it.
+["", ">", "0,>", "1,0,>", "1,>", "trap handling,0,>", "inline stub,0,>", ""]);
 
 (function() {
     var e = wasmEvalText(`

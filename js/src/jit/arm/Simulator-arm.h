@@ -283,6 +283,9 @@ class Simulator
     inline int readW(int32_t addr, SimInstruction* instr, UnalignedPolicy f = ForbidUnaligned);
     inline void writeW(int32_t addr, int value, SimInstruction* instr, UnalignedPolicy f = ForbidUnaligned);
 
+    inline uint64_t readQ(int32_t addr, SimInstruction* instr, UnalignedPolicy f = ForbidUnaligned);
+    inline void writeQ(int32_t addr, uint64_t value, SimInstruction* instr, UnalignedPolicy f = ForbidUnaligned);
+
     inline int readExW(int32_t addr, SimInstruction* instr);
     inline int writeExW(int32_t addr, int value, SimInstruction* instr);
 

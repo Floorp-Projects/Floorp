@@ -9169,19 +9169,18 @@ CodeGenerator::visitRest(LRest* lir)
 }
 
 bool
-CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::FuncOffsets* offsets)
+CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::TrapOffset trapOffset,
+                            wasm::FuncOffsets* offsets)
 {
     JitSpew(JitSpew_Codegen, "# Emitting asm.js code");
 
-    wasm::GenerateFunctionPrologue(masm, frameSize(), sigId, offsets);
+    wasm::GenerateFunctionPrologue(masm, frameSize(), sigId, trapOffset, offsets);
 
     // Overflow checks are omitted by CodeGenerator in some cases (leaf
     // functions with small framePushed). Perform overflow-checking after
     // pushing framePushed to catch cases with really large frames.
     Label onOverflow;
     if (!omitOverRecursedCheck()) {
-        // Get the per-thread stack limit from the TlsData struct pointed
-        // to by the WasmTlsReg hidden argument register.
         masm.branchPtr(Assembler::AboveOrEqual,
                        Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
                        masm.getStackPointer(),
@@ -9195,15 +9194,16 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::FuncOffsets* offsets)
     wasm::GenerateFunctionEpilogue(masm, frameSize(), offsets);
 
     if (!omitOverRecursedCheck()) {
-        // The stack overflow stub assumes that only sizeof(AsmJSFrame) bytes
-        // have been pushed. The overflow check occurs after incrementing by
-        // framePushed, so pop that before jumping to the overflow exit.
+        // Since we just overflowed the stack, to be on the safe side, pop the
+        // stack so that, when the trap exit stub executes, it is a safe
+        // distance away from the end of the native stack.
+        wasm::TrapDesc trap(trapOffset, wasm::Trap::StackOverflow, /* framePushed = */ 0);
         if (frameSize() > 0) {
             masm.bind(&onOverflow);
             masm.addToStackPtr(Imm32(frameSize()));
-            masm.jump(wasm::JumpTarget::StackOverflow);
+            masm.jump(trap);
         } else {
-            masm.bindLater(&onOverflow, wasm::JumpTarget::StackOverflow);
+            masm.bindLater(&onOverflow, trap);
         }
     }
 
@@ -9214,6 +9214,8 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::FuncOffsets* offsets)
 
     if (!generateOutOfLineCode())
         return false;
+
+    masm.wasmEmitTrapOutOfLineCode();
 
     masm.flush();
     if (masm.oom())
@@ -11656,7 +11658,9 @@ void
 CodeGenerator::visitWasmTrap(LWasmTrap* lir)
 {
     MOZ_ASSERT(gen->compilingAsmJS());
-    masm.jump(wasm::JumpTarget(lir->mir()->trap()));
+    const MWasmTrap* mir = lir->mir();
+
+    masm.jump(trap(mir, mir->trap()));
 }
 
 void
@@ -11677,7 +11681,7 @@ CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
         return;
     }
 
-    masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, wasm::JumpTarget::OutOfBounds);
+    masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(mir, wasm::Trap::OutOfBounds));
 }
 
 typedef bool (*RecompileFn)(JSContext*);

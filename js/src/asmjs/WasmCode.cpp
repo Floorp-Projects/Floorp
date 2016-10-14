@@ -113,7 +113,6 @@ SpecializeToMemory(uint8_t* prevMemoryBase, CodeSegment& cs, const Metadata& met
 {
 #ifdef WASM_HUGE_MEMORY
     MOZ_RELEASE_ASSERT(metadata.boundsChecks.empty());
-    MOZ_RELEASE_ASSERT(metadata.isAsmJS() || metadata.memoryAccesses.empty());
 #else
     uint32_t limit = buffer.wasmBoundsCheckLimit();
     MOZ_RELEASE_ASSERT(IsValidBoundsCheckImmediate(limit));
@@ -125,8 +124,8 @@ SpecializeToMemory(uint8_t* prevMemoryBase, CodeSegment& cs, const Metadata& met
 #if defined(JS_CODEGEN_X86)
     uint8_t* memoryBase = buffer.dataPointerEither().unwrap(/* code patching */);
     if (prevMemoryBase != memoryBase) {
-        for (const MemoryAccess& access : metadata.memoryAccesses) {
-            void* patchAt = access.patchMemoryPtrImmAt(cs.base());
+        for (MemoryPatch patch : metadata.memoryPatches) {
+            void* patchAt = cs.base() + patch.offset;
 
             uint8_t* prevImm = (uint8_t*)X86Encoding::GetPointer(patchAt);
             MOZ_ASSERT(prevImm >= prevMemoryBase);
@@ -137,6 +136,8 @@ SpecializeToMemory(uint8_t* prevMemoryBase, CodeSegment& cs, const Metadata& met
             X86Encoding::SetPointer(patchAt, memoryBase + offset);
         }
     }
+#else
+    MOZ_RELEASE_ASSERT(metadata.memoryPatches.empty());
 #endif
 }
 
@@ -350,7 +351,7 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
     kind_(kind)
 {
     MOZ_ASSERT(begin_ <= end_);
-    MOZ_ASSERT(kind_ == Entry || kind_ == Inline || kind_ == CallThunk);
+    MOZ_ASSERT(kind_ == Entry || kind_ == Inline || kind_ == FarJumpIsland);
 }
 
 CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
@@ -368,7 +369,7 @@ CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
 {
     MOZ_ASSERT(begin_ < profilingReturn_);
     MOZ_ASSERT(profilingReturn_ < end_);
-    MOZ_ASSERT(kind_ == ImportJitExit || kind_ == ImportInterpExit);
+    MOZ_ASSERT(kind_ == ImportJitExit || kind_ == ImportInterpExit || kind_ == TrapExit);
 }
 
 CodeRange::CodeRange(uint32_t funcDefIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
@@ -449,6 +450,7 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(globals) +
            SerializedPodVectorSize(tables) +
            SerializedPodVectorSize(memoryAccesses) +
+           SerializedPodVectorSize(memoryPatches) +
            SerializedPodVectorSize(boundsChecks) +
            SerializedPodVectorSize(codeRanges) +
            SerializedPodVectorSize(callSites) +
@@ -468,6 +470,7 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, globals);
     cursor = SerializePodVector(cursor, tables);
     cursor = SerializePodVector(cursor, memoryAccesses);
+    cursor = SerializePodVector(cursor, memoryPatches);
     cursor = SerializePodVector(cursor, boundsChecks);
     cursor = SerializePodVector(cursor, codeRanges);
     cursor = SerializePodVector(cursor, callSites);
@@ -488,6 +491,7 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &globals)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
     (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
+    (cursor = DeserializePodVector(cursor, &memoryPatches)) &&
     (cursor = DeserializePodVector(cursor, &boundsChecks)) &&
     (cursor = DeserializePodVector(cursor, &codeRanges)) &&
     (cursor = DeserializePodVector(cursor, &callSites)) &&
@@ -507,6 +511,7 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            globals.sizeOfExcludingThis(mallocSizeOf) +
            tables.sizeOfExcludingThis(mallocSizeOf) +
            memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
+           memoryPatches.sizeOfExcludingThis(mallocSizeOf) +
            boundsChecks.sizeOfExcludingThis(mallocSizeOf) +
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
@@ -630,7 +635,6 @@ Code::lookupRange(void* pc) const
     return &metadata_->codeRanges[match];
 }
 
-#ifdef WASM_HUGE_MEMORY
 struct MemoryAccessOffset
 {
     const MemoryAccessVector& accesses;
@@ -655,7 +659,6 @@ Code::lookupMemoryAccess(void* pc) const
 
     return &metadata_->memoryAccesses[match];
 }
-#endif
 
 bool
 Code::getFuncDefName(JSContext* cx, uint32_t funcDefIndex, TwoByteName* name) const

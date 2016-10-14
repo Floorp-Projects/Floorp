@@ -362,17 +362,18 @@ CodeGeneratorMIPS64::visitDivOrModI64(LDivOrModI64* lir)
 
     // Handle divide by zero.
     if (lir->canBeDivideByZero())
-        masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+        masm.ma_b(rhs, rhs, trap(lir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
 
     // Handle an integer overflow exception from INT64_MIN / -1.
     if (lir->canBeNegativeOverflow()) {
         Label notmin;
         masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &notmin);
         masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &notmin);
-        if (lir->mir()->isMod())
+        if (lir->mir()->isMod()) {
             masm.ma_xor(output, output);
-        else
-            masm.jump(wasm::JumpTarget::IntegerOverflow);
+        } else {
+            masm.jump(trap(lir, wasm::Trap::IntegerOverflow));
+        }
         masm.jump(&done);
         masm.bind(&notmin);
     }
@@ -398,7 +399,7 @@ CodeGeneratorMIPS64::visitUDivOrModI64(LUDivOrModI64* lir)
 
     // Prevent divide by zero.
     if (lir->canBeDivideByZero())
-        masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+        masm.ma_b(rhs, rhs, trap(lir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
 
     masm.as_ddivu(lhs, rhs);
 
@@ -418,7 +419,7 @@ CodeGeneratorMIPS64::emitWasmLoadI64(T* lir)
 
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 
-    uint32_t offset = mir->offset();
+    uint32_t offset = mir->access().offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
@@ -432,10 +433,10 @@ CodeGeneratorMIPS64::emitWasmLoadI64(T* lir)
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
-    unsigned byteSize = mir->byteSize();
+    unsigned byteSize = mir->access().byteSize();
     bool isSigned;
 
-    switch (mir->accessType()) {
+    switch (mir->access().type()) {
       case Scalar::Int8:    isSigned = true;  break;
       case Scalar::Uint8:   isSigned = false; break;
       case Scalar::Int16:   isSigned = true;  break;
@@ -446,9 +447,9 @@ CodeGeneratorMIPS64::emitWasmLoadI64(T* lir)
       default: MOZ_CRASH("unexpected array type");
     }
 
-    memoryBarrier(mir->barrierBefore());
+    masm.memoryBarrier(mir->access().barrierBefore());
 
-    if (mir->isUnaligned()) {
+    if (mir->access().isUnaligned()) {
         Register temp = ToRegister(lir->getTemp(1));
 
         masm.ma_load_unaligned(ToOutRegister64(lir).reg, BaseIndex(HeapReg, ptr, TimesOne),
@@ -460,7 +461,7 @@ CodeGeneratorMIPS64::emitWasmLoadI64(T* lir)
     masm.ma_load(ToOutRegister64(lir).reg, BaseIndex(HeapReg, ptr, TimesOne),
                  static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
 
-    memoryBarrier(mir->barrierAfter());
+    masm.memoryBarrier(mir->access().barrierAfter());
 }
 
 void
@@ -483,7 +484,7 @@ CodeGeneratorMIPS64::emitWasmStoreI64(T* lir)
 
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 
-    uint32_t offset = mir->offset();
+    uint32_t offset = mir->access().offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     Register ptr = ToRegister(lir->ptr());
@@ -497,10 +498,10 @@ CodeGeneratorMIPS64::emitWasmStoreI64(T* lir)
         MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
-    unsigned byteSize = mir->byteSize();
+    unsigned byteSize = mir->access().byteSize();
     bool isSigned;
 
-    switch (mir->accessType()) {
+    switch (mir->access().type()) {
       case Scalar::Int8:    isSigned = true;  break;
       case Scalar::Uint8:   isSigned = false; break;
       case Scalar::Int16:   isSigned = true;  break;
@@ -511,9 +512,9 @@ CodeGeneratorMIPS64::emitWasmStoreI64(T* lir)
       default: MOZ_CRASH("unexpected array type");
     }
 
-    memoryBarrier(mir->barrierBefore());
+    masm.memoryBarrier(mir->access().barrierBefore());
 
-    if (mir->isUnaligned()) {
+    if (mir->access().isUnaligned()) {
         Register temp = ToRegister(lir->getTemp(1));
 
         masm.ma_store_unaligned(ToRegister64(lir->value()).reg, BaseIndex(HeapReg, ptr, TimesOne),
@@ -524,7 +525,7 @@ CodeGeneratorMIPS64::emitWasmStoreI64(T* lir)
     masm.ma_store(ToRegister64(lir->value()).reg, BaseIndex(HeapReg, ptr, TimesOne),
                   static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
 
-    memoryBarrier(mir->barrierAfter());
+    masm.memoryBarrier(mir->access().barrierAfter());
 }
 
 void
