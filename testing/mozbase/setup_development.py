@@ -30,10 +30,13 @@ here = os.path.dirname(os.path.abspath(__file__))
 # all python packages
 mozbase_packages = [i for i in os.listdir(here)
                     if os.path.exists(os.path.join(here, i, 'setup.py'))]
-test_packages = [ "mock" # testing: https://wiki.mozilla.org/Auto-tools/Projects/Mozbase#Tests
-                  ]
-extra_packages = [ "sphinx" # documentation: https://wiki.mozilla.org/Auto-tools/Projects/Mozbase#Documentation
-                  ]
+
+# testing: https://wiki.mozilla.org/Auto-tools/Projects/Mozbase#Tests
+test_packages = ["mock"]
+
+# documentation: https://wiki.mozilla.org/Auto-tools/Projects/Mozbase#Documentation
+extra_packages = ["sphinx"]
+
 
 def cycle_check(order, dependencies):
     """ensure no cyclic dependencies"""
@@ -43,6 +46,7 @@ def cycle_check(order, dependencies):
         for d in deps:
             assert index > order_dict[d], "Cyclic dependencies detected"
 
+
 def info(directory):
     "get the package setup.py information"
 
@@ -50,7 +54,8 @@ def info(directory):
 
     # setup the egg info
     try:
-        call([sys.executable, 'setup.py', 'egg_info'], cwd=directory, stdout=PIPE)
+        call([sys.executable, 'setup.py', 'egg_info'],
+             cwd=directory, stdout=PIPE)
     except subprocess.CalledProcessError:
         print "Error running setup.py in %s" % directory
         raise
@@ -58,7 +63,8 @@ def info(directory):
     # get the .egg-info directory
     egg_info = [entry for entry in os.listdir(directory)
                 if entry.endswith('.egg-info')]
-    assert len(egg_info) == 1, 'Expected one .egg-info directory in %s, got: %s' % (directory, egg_info)
+    assert len(egg_info) == 1, 'Expected one .egg-info directory in %s, got: %s' % (directory,
+                                                                                    egg_info)
     egg_info = os.path.join(directory, egg_info[0])
     assert os.path.isdir(egg_info), "%s is not a directory" % egg_info
 
@@ -67,12 +73,13 @@ def info(directory):
     info_dict = {}
     for line in file(pkg_info).readlines():
         if not line or line[0].isspace():
-            continue # XXX neglects description
+            continue  # XXX neglects description
         assert ':' in line
         key, value = [i.strip() for i in line.split(':', 1)]
         info_dict[key] = value
 
     return info_dict
+
 
 def get_dependencies(directory):
     "returns the package name and dependencies given a package directory"
@@ -99,6 +106,7 @@ def get_dependencies(directory):
     # return the information
     return info_dict['Name'], dependencies
 
+
 def dependency_info(dep):
     "return dictionary of dependency information from a dependency string"
     retval = dict(Name=None, Type=None, Version=None)
@@ -112,6 +120,7 @@ def dependency_info(dep):
     else:
         retval['Name'] = dep.strip()
     return retval
+
 
 def unroll_dependencies(dependencies):
     """
@@ -141,7 +150,7 @@ def unroll_dependencies(dependencies):
         else:
             raise AssertionError("Cyclic dependencies detected")
 
-    cycle_check(order, dependencies) # sanity check
+    cycle_check(order, dependencies)  # sanity check
 
     return order
 
@@ -165,7 +174,8 @@ def main(args=sys.argv[1:]):
         packages = sorted(mozbase_packages)
 
     # ensure specified packages are in the list
-    assert set(packages).issubset(mozbase_packages), "Packages should be in %s (You gave: %s)" % (mozbase_packages, packages)
+    assert set(packages).issubset(mozbase_packages), \
+        "Packages should be in %s (You gave: %s)" % (mozbase_packages, packages)
 
     if options.list_dependencies:
         # list the package dependencies
@@ -177,7 +187,7 @@ def main(args=sys.argv[1:]):
     # TODO: version conflict checking
     deps = {}
     alldeps = {}
-    mapping = {} # mapping from subdir name to package name
+    mapping = {}  # mapping from subdir name to package name
     # core dependencies
     for package in packages:
         key, value = get_dependencies(os.path.join(here, package))
@@ -217,7 +227,7 @@ def main(args=sys.argv[1:]):
     unrolled = unroll_dependencies(deps)
 
     # make a reverse mapping: package name -> subdirectory
-    reverse_mapping = dict([(j,i) for i, j in mapping.items()])
+    reverse_mapping = dict([(j, i) for i, j in mapping.items()])
 
     # we only care about dependencies in mozbase
     unrolled = [package for package in unrolled if package in reverse_mapping]
@@ -244,7 +254,7 @@ def main(args=sys.argv[1:]):
     # these need to be installed separately and the --no-deps flag
     # subsequently used due to a bug in setuptools; see
     # https://bugzilla.mozilla.org/show_bug.cgi?id=759836
-    pypi_deps = dict([(i, j) for i,j in alldeps.items()
+    pypi_deps = dict([(i, j) for i, j in alldeps.items()
                       if i not in unrolled])
     for package, version in pypi_deps.items():
         # easy_install should be available since we rely on setuptools

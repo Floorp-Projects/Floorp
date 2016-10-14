@@ -12,6 +12,7 @@ import mozfile
 from mozprofile.prefs import Preferences
 from mozprofile.profile import Profile
 
+
 class PreferencesNonceTest(unittest.TestCase):
 
     def test_nonce(self):

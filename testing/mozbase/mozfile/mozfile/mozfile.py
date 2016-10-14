@@ -27,7 +27,8 @@ __all__ = ['extract_tarball',
            'NamedTemporaryFile',
            'TemporaryDirectory']
 
-### utilities for extracting archives
+# utilities for extracting archives
+
 
 def extract_tarball(src, dest):
     """extract a .tar file"""
@@ -122,7 +123,7 @@ def extract(src, dest=None):
     return top_level_files
 
 
-### utilities for removal of files and directories
+# utilities for removal of files and directories
 
 def rmtree(dir):
     """Deprecated wrapper method to remove a directory tree.
@@ -161,7 +162,7 @@ def _call_windows_retry(func, args=(), retry_max=5, retry_delay=0.5):
             retry_count += 1
 
             print '%s() failed for "%s". Reason: %s (%s). Retrying...' % \
-                    (func.__name__, args, e.strerror, e.errno)
+                (func.__name__, args, e.strerror, e.errno)
             time.sleep(retry_count * retry_delay)
         else:
             # If no exception has been thrown it should be done
@@ -261,17 +262,18 @@ def depth(directory):
 
 # ASCII delimeters
 ascii_delimeters = {
-    'vertical_line' : '|',
-    'item_marker'   : '+',
-    'last_child'    : '\\'
-    }
+    'vertical_line': '|',
+    'item_marker': '+',
+    'last_child': '\\'
+}
 
 # unicode delimiters
 unicode_delimeters = {
-    'vertical_line' : '│',
-    'item_marker'   : '├',
-    'last_child'    : '└'
-    }
+    'vertical_line': '│',
+    'item_marker': '├',
+    'last_child': '└'
+}
+
 
 def tree(directory,
          item_marker=unicode_delimeters['item_marker'],
@@ -319,21 +321,21 @@ def tree(directory,
 
         # append the directory and piece of tree structure
         # if the top-level entry directory, print as passed
-        retval.append('%s%s%s'% (''.join(indent[:-1]),
-                                 dirpath_mark,
-                                 basename if retval else directory))
+        retval.append('%s%s%s' % (''.join(indent[:-1]),
+                                  dirpath_mark,
+                                  basename if retval else directory))
         # add the files
         if filenames:
             last_file = filenames[-1]
             retval.extend([('%s%s%s' % (''.join(indent),
                                         files_end if filename == last_file else item_marker,
                                         filename))
-                                        for index, filename in enumerate(filenames)])
+                           for index, filename in enumerate(filenames)])
 
     return '\n'.join(retval)
 
 
-### utilities for temporary resources
+# utilities for temporary resources
 
 class NamedTemporaryFile(object):
     """
@@ -353,6 +355,7 @@ class NamedTemporaryFile(object):
 
     see https://bugzilla.mozilla.org/show_bug.cgi?id=821362
     """
+
     def __init__(self, mode='w+b', bufsize=-1, suffix='', prefix='tmp',
                  dir=None, delete=True):
 
@@ -410,7 +413,7 @@ def TemporaryDirectory():
         shutil.rmtree(tempdir)
 
 
-### utilities dealing with URLs
+# utilities dealing with URLs
 
 def is_url(thing):
     """
@@ -424,6 +427,7 @@ def is_url(thing):
         return len(parsed.scheme) >= 2
     else:
         return len(parsed[0]) >= 2
+
 
 def load(resource):
     """
@@ -443,4 +447,3 @@ def load(resource):
         return file(resource)
 
     return urllib2.urlopen(resource)
-

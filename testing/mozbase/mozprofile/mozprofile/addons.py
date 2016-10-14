@@ -13,7 +13,8 @@ from xml.dom import minidom
 import mozfile
 from mozlog.unstructured import getLogger
 
-# Needed for the AMO's rest API - https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API
+# Needed for the AMO's rest API -
+# https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API
 AMO_API_VERSION = "1.5"
 
 # Logger for 'mozprofile.addons' module
@@ -203,11 +204,14 @@ class AddonManager(object):
 
             # No path specified, try to grab it off AMO
             locale = addon.get('amo_locale', 'en_US')
-            query = 'https://services.addons.mozilla.org/' + locale + '/firefox/api/' + AMO_API_VERSION + '/'
+            query = 'https://services.addons.mozilla.org/' + locale + '/firefox/api/' \
+                    + AMO_API_VERSION + '/'
             if 'amo_id' in addon:
-                query += 'addon/' + addon['amo_id']                 # this query grabs information on the addon base on its id
+                # this query grabs information on the addon base on its id
+                query += 'addon/' + addon['amo_id']
             else:
-                query += 'search/' + addon['name'] + '/default/1'   # this query grabs information on the first addon returned from a search
+                # this query grabs information on the first addon returned from a search
+                query += 'search/' + addon['name'] + '/default/1'
             install_path = AddonManager.get_amo_install_path(query)
             self.install_from_path(install_path)
 
@@ -220,7 +224,7 @@ class AddonManager(object):
 
         :param query: query-documentation_
 
-        .. _query-documentation: https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API
+        .. _query-documentation: https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API # noqa
         """
         response = urllib2.urlopen(query)
         dom = minidom.parseString(response.read())
@@ -287,7 +291,7 @@ class AddonManager(object):
             else:
                 raise IOError('Add-on path is neither an XPI nor a directory: %s' % addon_path)
         except (IOError, KeyError) as e:
-            raise AddonFormatError, str(e), sys.exc_info()[2]
+            raise AddonFormatError(str(e)), None, sys.exc_info()[2]
 
         try:
             doc = minidom.parseString(manifest)
@@ -308,7 +312,7 @@ class AddonManager(object):
                 if entry in details.keys():
                     details.update({entry: get_text(node)})
         except Exception as e:
-            raise AddonFormatError, str(e), sys.exc_info()[2]
+            raise AddonFormatError(str(e)), None, sys.exc_info()[2]
 
         # turn unpack into a true/false value
         if isinstance(details['unpack'], basestring):

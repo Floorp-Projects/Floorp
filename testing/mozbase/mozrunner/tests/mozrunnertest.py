@@ -15,7 +15,7 @@ class MozrunnerTestCase(unittest.TestCase):
 
     def setUp(self):
         self.pids = []
-        self.threads = [ ]
+        self.threads = []
 
         self.profile = mozprofile.FirefoxProfile()
         self.runner = mozrunner.FirefoxRunner(os.environ['BROWSER_PATH'],

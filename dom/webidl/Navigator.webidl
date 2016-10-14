@@ -390,11 +390,6 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Pref="dom.tv.enabled", ChromeOnly]
-  readonly attribute TVManager? tv;
-};
-
-partial interface Navigator {
   [Throws, Pref="dom.inputport.enabled", ChromeOnly]
   readonly attribute InputPortManager inputPortManager;
 };

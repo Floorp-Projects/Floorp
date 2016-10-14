@@ -44,10 +44,12 @@ from StringIO import StringIO
 
 from mozdevice import DeviceManagerADB, DMError
 
+
 def find_mount_permissions(dm, mount_path):
     for mount_point in dm._runCmd(["shell", "mount"]).output:
         if mount_point.find(mount_path) > 0:
             return re.search('(ro|rw)(?=,)', mount_point).group(0)
+
 
 class DeviceManagerADBTestCase(unittest.TestCase):
     tempLocalDir = "tempDir"
@@ -81,7 +83,7 @@ class DeviceManagerADBTestCase(unittest.TestCase):
             open(self.tempLocalFile, 'w').close()
         self.tempRemoteDir = self.dm.getTempDir()
         self.tempRemoteFile = os.path.join(self.tempRemoteDir,
-                os.path.basename(self.tempLocalFile))
+                                           os.path.basename(self.tempLocalFile))
         self.tempRemoteSystemFile = \
             os.path.join("/system", os.path.basename(self.tempLocalFile))
 
@@ -97,6 +99,7 @@ class DeviceManagerADBTestCase(unittest.TestCase):
 
 
 class TestFileOperations(DeviceManagerADBTestCase):
+
     def test_make_and_remove_directory(self):
         dir1 = os.path.join(self.tempRemoteDir, "dir1")
         self.assertFalse(self.dm.dirExists(dir1))
@@ -168,6 +171,7 @@ class TestFileOperations(DeviceManagerADBTestCase):
 
 
 class TestOther(DeviceManagerADBTestCase):
+
     def test_get_list_of_processes(self):
         self.assertEquals(type(self.dm.getProcessList()), list)
 
@@ -183,7 +187,7 @@ class TestOther(DeviceManagerADBTestCase):
     def test_shell(self):
         out = StringIO()
         self.dm.shell(["echo", "$COMPANY", ";", "pwd"], out,
-                env={"COMPANY":"Mozilla"}, cwd="/", timeout=4, root=True)
+                      env={"COMPANY": "Mozilla"}, cwd="/", timeout=4, root=True)
         output = str(out.getvalue()).rstrip().splitlines()
         out.close()
         self.assertEquals(output, ['Mozilla', '/'])
@@ -203,13 +207,13 @@ class TestOther(DeviceManagerADBTestCase):
 if __name__ == '__main__':
     dm = DeviceManagerADB()
     if not dm.devices():
-       print "There are no connected adb devices"
-       sys.exit(1)
+        print "There are no connected adb devices"
+        sys.exit(1)
 
     if find_mount_permissions(dm, "/system") == "rw":
         print "We've found out that /system is mounted as 'rw'. This is because the command " \
-        "'adb remount' has been run before running this test case. Please reboot the device " \
-        "and try again."
+            "'adb remount' has been run before running this test case. Please reboot the device " \
+            "and try again."
         sys.exit(1)
 
     unittest.main()

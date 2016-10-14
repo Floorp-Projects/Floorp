@@ -6,6 +6,7 @@
 
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://testing-common/ContentTaskUtils.jsm");
 
 this.EXPORTED_SYMBOLS = [ "NarrateTestUtils" ];
@@ -119,7 +120,7 @@ this.NarrateTestUtils = {
     return new Promise(resolve => {
       function observeChange() {
         Services.prefs.removeObserver(pref, observeChange);
-        resolve();
+        resolve(Preferences.get(pref));
       }
 
       Services.prefs.addObserver(pref, observeChange, false);

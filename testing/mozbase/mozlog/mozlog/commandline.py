@@ -25,16 +25,20 @@ log_formatters = {
 TEXT_FORMATTERS = ('raw', 'mach')
 """a subset of formatters for non test harnesses related applications"""
 
+
 def level_filter_wrapper(formatter, level):
     return handlers.LogLevelFilter(formatter, level)
+
 
 def verbose_wrapper(formatter, verbose):
     formatter.verbose = verbose
     return formatter
 
+
 def compact_wrapper(formatter, compact):
     formatter.compact = compact
     return formatter
+
 
 def buffer_handler_wrapper(handler, buffer_limit):
     if buffer_limit == "UNLIMITED":
@@ -43,8 +47,10 @@ def buffer_handler_wrapper(handler, buffer_limit):
         buffer_limit = int(buffer_limit)
     return handlers.BufferHandler(handler, buffer_limit)
 
+
 def valgrind_handler_wrapper(handler):
     return handlers.ValgrindHandler(handler)
+
 
 def default_formatter_options(log_type, overrides):
     formatter_option_defaults = {
@@ -71,7 +77,8 @@ fmt_options = {
                 "Enables compact mode for the given formatter.",
                 ["tbpl"], "store_true"),
     'level': (level_filter_wrapper,
-              "A least log level to subscribe to for the given formatter (debug, info, error, etc.)",
+              "A least log level to subscribe to for the given formatter "
+              "(debug, info, error, etc.)",
               ["mach", "raw", "tbpl"], "store"),
     'buffer': (buffer_handler_wrapper,
                "If specified, enables message buffering at the given buffer size limit.",
@@ -134,8 +141,8 @@ def add_logging_group(parser, include_formatters=None):
             group_add("--log-" + name, action="append", type=opt_log_type,
                       help=help_str)
 
-    for optname, (cls, help_str, formatters, action) in fmt_options.iteritems():
-        for fmt in formatters:
+    for optname, (cls, help_str, formatters_, action) in fmt_options.iteritems():
+        for fmt in formatters_:
             # make sure fmt is in log_formatters and is accepted
             if fmt in log_formatters and fmt in include_formatters:
                 group_add("--log-%s-%s" % (fmt, optname), action=action,
@@ -182,7 +189,8 @@ def setup_handlers(logger, formatters, formatter_options, allow_unused_options=F
             logger.add_handler(handler)
 
 
-def setup_logging(logger, args, defaults=None, formatter_defaults=None, allow_unused_options=False):
+def setup_logging(logger, args, defaults=None, formatter_defaults=None,
+                  allow_unused_options=False):
     """
     Configure a structuredlogger based on command line arguments.
 
@@ -250,7 +258,7 @@ def setup_logging(logger, args, defaults=None, formatter_defaults=None, allow_un
                                                                              formatter_defaults)
                 formatter_options[formatter][opt] = values
 
-    #If there is no user-specified logging, go with the default options
+    # If there is no user-specified logging, go with the default options
     if not found:
         for name, value in defaults.iteritems():
             formatters[name].append(value)

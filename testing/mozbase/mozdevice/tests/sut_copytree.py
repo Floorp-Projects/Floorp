@@ -10,7 +10,9 @@ import logging
 import unittest
 from sut import MockAgent
 
+
 class CopyTreeTest(unittest.TestCase):
+
     def test_copyFile(self):
         commands = [('dd if=/mnt/sdcard/tests/test.txt of=/mnt/sdcard/tests/test2.txt', ''),
                     ('isdir /mnt/sdcard/tests', 'TRUE'),
@@ -21,7 +23,7 @@ class CopyTreeTest(unittest.TestCase):
         d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
 
         self.assertEqual(None, d.copyTree('/mnt/sdcard/tests/test.txt',
-                '/mnt/sdcard/tests/test2.txt'))
+                                          '/mnt/sdcard/tests/test2.txt'))
         expected = (commands[3][1].strip()).split('\n')
         self.assertEqual(expected, d.listFiles('/mnt/sdcard/tests'))
 
@@ -33,10 +35,10 @@ class CopyTreeTest(unittest.TestCase):
 
         m = MockAgent(self, commands=commands)
         d = mozdevice.DroidSUT("127.0.0.1", port=m.port,
-                logLevel=logging.DEBUG)
+                               logLevel=logging.DEBUG)
 
         self.assertEqual(None, d.copyTree('/mnt/sdcard/tests/foo',
-                '/mnt/sdcard/tests/bar'))
+                                          '/mnt/sdcard/tests/bar'))
         expected = (commands[3][1].strip()).split('\n')
         self.assertEqual(expected, d.listFiles('/mnt/sdcard/tests'))
 
@@ -52,11 +54,11 @@ class CopyTreeTest(unittest.TestCase):
 
         m = MockAgent(self, commands=commands)
         d = mozdevice.DroidSUT("127.0.0.1", port=m.port,
-                logLevel=logging.DEBUG)
+                               logLevel=logging.DEBUG)
 
         self.assertTrue(d.dirExists('/mnt/sdcard/tests/foo/bar'))
         self.assertEqual(None, d.copyTree('/mnt/sdcard/tests/foo',
-                '/mnt/sdcard/tests/foo2'))
+                                          '/mnt/sdcard/tests/foo2'))
         expected = (commands[4][1].strip()).split('\n')
         self.assertEqual(expected, d.listFiles('/mnt/sdcard/tests'))
         self.assertTrue(d.fileExists('/mnt/sdcard/tests/foo2/bar'))

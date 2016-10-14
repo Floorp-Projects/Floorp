@@ -39,13 +39,19 @@ function CallbackObject(id, callback, urls, mediator) {
   };
 }
 
-function RemoteMediator(windowID) {
-  this._windowID = windowID;
+function RemoteMediator(window) {
+  window.QueryInterface(Ci.nsIInterfaceRequestor);
+  let utils = window.getInterface(Ci.nsIDOMWindowUtils);
+  this._windowID = utils.currentInnerWindowID;
+
+  this.mm = window
+    .getInterface(Ci.nsIDocShell)
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIContentFrameMessageManager);
+  this.mm.addWeakMessageListener(MSG_INSTALL_CALLBACK, this);
+
   this._lastCallbackID = 0;
   this._callbacks = new Map();
-  this.mm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-            .getService(Ci.nsISyncMessageSender);
-  this.mm.addWeakMessageListener(MSG_INSTALL_CALLBACK, this);
 }
 
 RemoteMediator.prototype = {
@@ -136,9 +142,13 @@ InstallTrigger.prototype = {
     this._principal = window.document.nodePrincipal;
     this._url = window.document.documentURIObject;
 
-    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    let utils = window.getInterface(Components.interfaces.nsIDOMWindowUtils);
-    this._mediator = new RemoteMediator(utils.currentInnerWindowID);
+    try {
+      this._mediator = new RemoteMediator(window);
+    } catch (ex) {
+      // If we can't set up IPC (e.g., because this is a top-level window
+      // or something), then don't expose InstallTrigger.
+      return null;
+    }
 
     return window.InstallTriggerImpl._create(window, this);
   },

@@ -7,21 +7,22 @@
 add permissions to the profile
 """
 
-__all__ = ['MissingPrimaryLocationError', 'MultiplePrimaryLocationsError',
-           'DEFAULT_PORTS', 'DuplicateLocationError', 'BadPortLocationError',
-           'LocationsSyntaxError', 'Location', 'ServerLocations',
-           'Permissions']
-
 import codecs
 import os
 import sqlite3
 import urlparse
 
+__all__ = ['MissingPrimaryLocationError', 'MultiplePrimaryLocationsError',
+           'DEFAULT_PORTS', 'DuplicateLocationError', 'BadPortLocationError',
+           'LocationsSyntaxError', 'Location', 'ServerLocations',
+           'Permissions']
+
 # http://hg.mozilla.org/mozilla-central/file/b871dfb2186f/build/automation.py.in#l28
-DEFAULT_PORTS = { 'http': '8888',
-                  'https': '4443',
-                  'ws': '4443',
-                  'wss': '4443' }
+DEFAULT_PORTS = {'http': '8888',
+                 'https': '4443',
+                 'ws': '4443',
+                 'wss': '4443'}
+
 
 class LocationError(Exception):
     """Signifies an improperly formed location."""
@@ -93,7 +94,8 @@ class Location(object):
 
     def isEqual(self, location):
         """compare scheme://host:port, but ignore options"""
-        return len([i for i in self.attrs if getattr(self, i) == getattr(location, i)]) == len(self.attrs)
+        return len([i for i in self.attrs
+                    if getattr(self, i) == getattr(location, i)]) == len(self.attrs)
 
     __eq__ = isEqual
 
@@ -101,7 +103,7 @@ class Location(object):
         return '%s://%s:%s' % (self.scheme, self.host, self.port)
 
     def __str__(self):
-        return  '%s  %s' % (self.url(), ','.join(self.options))
+        return '%s  %s' % (self.url(), ','.join(self.options))
 
 
 class ServerLocations(object):
@@ -144,9 +146,10 @@ class ServerLocations(object):
         Reads the file and adds all valid locations to the ``self._locations`` array.
 
         :param filename: in the format of server-locations.txt_
-        :param check_for_primary: if True, a ``MissingPrimaryLocationError`` exception is raised if no primary is found
+        :param check_for_primary: if True, a ``MissingPrimaryLocationError`` exception is raised
+          if no primary is found
 
-        .. _server-locations.txt: http://dxr.mozilla.org/mozilla-central/source/build/pgo/server-locations.txt
+        .. _server-locations.txt: http://dxr.mozilla.org/mozilla-central/source/build/pgo/server-locations.txt # noqa
 
         The only exception is that the port, if not defined, defaults to 80 or 443.
 
@@ -226,7 +229,7 @@ class Permissions(object):
 
         # Open database and create table
         permDB = sqlite3.connect(os.path.join(self._profileDir, "permissions.sqlite"))
-        cursor = permDB.cursor();
+        cursor = permDB.cursor()
 
         # SQL copied from
         # http://dxr.mozilla.org/mozilla-central/source/extensions/cookie/nsPermissionManager.cpp
@@ -263,7 +266,7 @@ class Permissions(object):
 
         for location in locations:
             # set the permissions
-            permissions = { 'allowXULXBL': 'noxul' not in location.options }
+            permissions = {'allowXULXBL': 'noxul' not in location.options}
             for perm, allow in permissions.iteritems():
                 if allow:
                     permission_type = 1
@@ -401,10 +404,11 @@ function FindProxyForURL(url, host)
 
         # Open database and create table
         permDB = sqlite3.connect(sqlite_file)
-        cursor = permDB.cursor();
+        cursor = permDB.cursor()
 
-        # TODO: only delete values that we add, this would require sending in the full permissions object
-        cursor.execute("DROP TABLE IF EXISTS moz_hosts");
+        # TODO: only delete values that we add, this would require sending
+        # in the full permissions object
+        cursor.execute("DROP TABLE IF EXISTS moz_hosts")
 
         # Commit and close
         permDB.commit()

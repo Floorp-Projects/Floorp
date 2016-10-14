@@ -5,6 +5,7 @@ import unstable
 import format as formatlog
 import logmerge
 
+
 def get_parser():
     parser = argparse.ArgumentParser("structlog",
                                      description="Tools for dealing with structured logs")
@@ -23,6 +24,7 @@ def get_parser():
         command_parser.set_defaults(func=main_func)
 
     return parser
+
 
 def main():
     parser = get_parser()

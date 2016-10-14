@@ -7,7 +7,8 @@
 """
 Creates and/or modifies a Firefox profile.
 The profile can be modified by passing in addons to install or preferences to set.
-If no profile is specified, a new profile is created and the path of the resulting profile is printed.
+If no profile is specified, a new profile is created and the path of the
+resulting profile is printed.
 """
 
 import sys
@@ -17,6 +18,7 @@ from profile import FirefoxProfile
 from profile import Profile
 
 __all__ = ['MozProfileCLI', 'cli']
+
 
 class MozProfileCLI(object):
     """The Command Line Interface for ``mozprofile``."""
@@ -34,20 +36,24 @@ class MozProfileCLI(object):
     def add_options(self, parser):
 
         parser.add_option("-p", "--profile", dest="profile",
-                          help="The path to the profile to operate on. If none, creates a new profile in temp directory")
+                          help="The path to the profile to operate on. "
+                          "If none, creates a new profile in temp directory")
         parser.add_option("-a", "--addon", dest="addons",
                           action="append", default=[],
-                          help="Addon paths to install. Can be a filepath, a directory containing addons, or a url")
+                          help="Addon paths to install. Can be a filepath, "
+                          "a directory containing addons, or a url")
         parser.add_option("--addon-manifests", dest="addon_manifests",
                           action="append",
                           help="An addon manifest to install")
         parser.add_option("--pref", dest="prefs",
                           action='append', default=[],
-                          help="A preference to set. Must be a key-value pair separated by a ':'")
+                          help="A preference to set. "
+                          "Must be a key-value pair separated by a ':'")
         parser.add_option("--preferences", dest="prefs_files",
                           action='append', default=[],
                           metavar="FILE",
-                          help="read preferences from a JSON or INI file. For INI, use 'file.ini:section' to specify a particular section.")
+                          help="read preferences from a JSON or INI file. "
+                          "For INI, use 'file.ini:section' to specify a particular section.")
 
     def profile_args(self):
         """arguments to instantiate the profile class"""
@@ -71,7 +77,8 @@ class MozProfileCLI(object):
         cli_prefs = []
         for pref in self.options.prefs:
             if separator not in pref:
-                self.parser.error("Preference must be a key-value pair separated by a ':' (You gave: %s)" % pref)
+                self.parser.error("Preference must be a key-value pair separated by "
+                                  "a ':' (You gave: %s)" % pref)
             cli_prefs.append(pref.split(separator, 1))
 
         # string preferences

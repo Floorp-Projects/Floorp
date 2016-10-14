@@ -6,7 +6,9 @@ import json
 
 from base import BaseFormatter
 
+
 class ErrorSummaryFormatter(BaseFormatter):
+
     def __init__(self):
         self.line_count = 0
 

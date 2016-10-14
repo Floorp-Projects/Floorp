@@ -50,7 +50,6 @@
 #include "mozilla/dom/TCPSocket.h"
 #include "mozilla/dom/Telephony.h"
 #include "mozilla/dom/Voicemail.h"
-#include "mozilla/dom/TVManager.h"
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/dom/workers/RuntimeService.h"
 #include "mozilla/Hal.h"
@@ -222,7 +221,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileMessageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVoicemail)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTVManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInputPortManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStorageManager)
@@ -310,10 +308,6 @@ Navigator::Invalidate()
   if (mVoicemail) {
     mVoicemail->Shutdown();
     mVoicemail = nullptr;
-  }
-
-  if (mTVManager) {
-    mTVManager = nullptr;
   }
 
   if (mInputPortManager) {
@@ -1672,19 +1666,6 @@ Navigator::GetMozTelephony(ErrorResult& aRv)
   }
 
   return mTelephony;
-}
-
-TVManager*
-Navigator::GetTv()
-{
-  if (!mTVManager) {
-    if (!mWindow) {
-      return nullptr;
-    }
-    mTVManager = TVManager::Create(mWindow);
-  }
-
-  return mTVManager;
 }
 
 InputPortManager*

@@ -6,12 +6,15 @@ import SocketServer
 import socket
 import json
 
+
 class LogMessageServer(SocketServer.TCPServer):
+
     def __init__(self, server_address, logger, message_callback=None, timeout=3):
         SocketServer.TCPServer.__init__(self, server_address, LogMessageHandler)
         self._logger = logger
         self._message_callback = message_callback
         self.timeout = timeout
+
 
 class LogMessageHandler(SocketServer.BaseRequestHandler):
     """Processes output from a connected log source, logging to an

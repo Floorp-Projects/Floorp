@@ -2,6 +2,7 @@ from sut import MockAgent
 import mozdevice
 import unittest
 
+
 class PsTest(unittest.TestCase):
 
     pscommands = [('ps',

@@ -105,7 +105,8 @@ def FennecEmulatorRunner(avd='mozemulator-4.3',
     (which will use an avd), or connect to  an already-running emulator.
 
     :param avd: name of an AVD available in your environment.
-        Typically obtained via tooltool: either 'mozemulator-4.3' or 'mozemulator-x86'. Defaults to 'mozemulator-4.3'
+        Typically obtained via tooltool: either 'mozemulator-4.3' or 'mozemulator-x86'.
+        Defaults to 'mozemulator-4.3'
     :param avd_home: Path to avd parent directory
     :param logdir: Path to save logfiles such as logcat and qemu output.
     :param serial: Serial of emulator to connect to as seen in `adb devices`.
@@ -119,12 +120,11 @@ def FennecEmulatorRunner(avd='mozemulator-4.3',
     """
     kwargs['app_ctx'] = get_app_context('fennec')(app, adb_path=adb_path,
                                                   avd_home=avd_home)
-    device_args = { 'app_ctx': kwargs['app_ctx'],
-                    'avd': avd,
-                    'binary': binary,
-                    'serial': serial,
-                    'logdir': logdir
-                  }
+    device_args = {'app_ctx': kwargs['app_ctx'],
+                   'avd': avd,
+                   'binary': binary,
+                   'serial': serial,
+                   'logdir': logdir}
     return FennecRunner(device_class=EmulatorAVD,
                         device_args=device_args,
                         **kwargs)
@@ -159,17 +159,18 @@ def B2GEmulatorRunner(arch='arm',
     :returns: A DeviceRunner for B2G emulators.
     """
     kwargs['app_ctx'] = get_app_context('b2g')(b2g_home, adb_path=adb_path)
-    device_args = { 'app_ctx': kwargs['app_ctx'],
-                    'arch': arch,
-                    'binary': binary,
-                    'resolution': resolution,
-                    'sdcard': sdcard,
-                    'userdata': userdata,
-                    'no_window': no_window,
-                    'logdir': logdir }
+    device_args = {'app_ctx': kwargs['app_ctx'],
+                   'arch': arch,
+                   'binary': binary,
+                   'resolution': resolution,
+                   'sdcard': sdcard,
+                   'userdata': userdata,
+                   'no_window': no_window,
+                   'logdir': logdir}
     return DeviceRunner(device_class=Emulator,
                         device_args=device_args,
                         **kwargs)
+
 
 def B2GDeviceRunner(b2g_home=None,
                     adb_path=None,
@@ -191,21 +192,20 @@ def B2GDeviceRunner(b2g_home=None,
     :returns: A DeviceRunner for B2G devices.
     """
     kwargs['app_ctx'] = get_app_context('b2g')(b2g_home, adb_path=adb_path)
-    device_args = { 'app_ctx': kwargs['app_ctx'],
-                    'logdir': logdir,
-                    'serial': serial }
+    device_args = {'app_ctx': kwargs['app_ctx'],
+                   'logdir': logdir,
+                   'serial': serial}
     return DeviceRunner(device_class=Device,
                         device_args=device_args,
                         **kwargs)
 
 
 runners = {
- 'default': Runner,
- 'b2g_desktop': B2GDesktopRunner,
- 'b2g_emulator': B2GEmulatorRunner,
- 'b2g_device': B2GDeviceRunner,
- 'firefox': FirefoxRunner,
- 'thunderbird': ThunderbirdRunner,
- 'fennec': FennecEmulatorRunner
+    'default': Runner,
+    'b2g_desktop': B2GDesktopRunner,
+    'b2g_emulator': B2GEmulatorRunner,
+    'b2g_device': B2GDeviceRunner,
+    'firefox': FirefoxRunner,
+    'thunderbird': ThunderbirdRunner,
+    'fennec': FennecEmulatorRunner
 }
-
