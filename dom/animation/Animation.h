@@ -261,10 +261,6 @@ public:
            mPendingState == PendingState::PausePending;
   }
 
-  bool HasInPlayEffect() const
-  {
-    return GetEffect() && GetEffect()->IsInPlay();
-  }
   bool HasCurrentEffect() const
   {
     return GetEffect() && GetEffect()->IsCurrent();

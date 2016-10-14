@@ -44,17 +44,6 @@ AnimationEffectReadOnly::AnimationEffectReadOnly(
   MOZ_ASSERT(aTiming);
 }
 
-// https://w3c.github.io/web-animations/#in-play
-bool
-AnimationEffectReadOnly::IsInPlay() const
-{
-  if (!mAnimation || mAnimation->PlayState() == AnimationPlayState::Finished) {
-    return false;
-  }
-
-  return GetComputedTiming().mPhase == ComputedTiming::AnimationPhase::Active;
-}
-
 // https://w3c.github.io/web-animations/#current
 bool
 AnimationEffectReadOnly::IsCurrent() const
