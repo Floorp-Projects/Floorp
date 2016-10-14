@@ -21,6 +21,8 @@ android {
         ]
         // Used by Robolectric based tests; see TestRunner.
         buildConfigField 'String', 'BUILD_DIR', "\"${project.buildDir}\""
+
+        vectorDrawables.useSupportLibrary = true
     }
 
     compileOptions {

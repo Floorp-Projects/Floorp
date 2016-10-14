@@ -93,7 +93,7 @@ TreeBoxObject::GetTreeBodyFrame(bool aFlushLayout)
   // is true we need to make sure to flush no matter what.
   // XXXbz except that flushing style when we were not asked to flush
   // layout here breaks things.  See bug 585123.
-  nsIFrame* frame;
+  nsIFrame* frame = nullptr;
   if (aFlushLayout) {
     frame = GetFrame(aFlushLayout);
     if (!frame)

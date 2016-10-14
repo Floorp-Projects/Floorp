@@ -759,54 +759,6 @@ class BaseMarionetteTestRunner(object):
             kwargs['workspace'] = self.workspace_path
         return kwargs
 
-    def launch_test_container(self):
-        if self.marionette.session is None:
-            self.marionette.start_session()
-        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-
-        result = self.marionette.execute_async_script("""
-if((navigator.mozSettings == undefined) || (navigator.mozSettings == null) ||
-   (navigator.mozApps == undefined) || (navigator.mozApps == null)) {
-    marionetteScriptFinished(false);
-    return;
-}
-let setReq = navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
-setReq.onsuccess = function() {
-    let appName = 'Test Container';
-    let activeApp = window.wrappedJSObject.Service.currentApp;
-
-    // if the Test Container is already open then do nothing
-    if(activeApp.name === appName){
-        marionetteScriptFinished(true);
-    }
-
-    let appsReq = navigator.mozApps.mgmt.getAll();
-    appsReq.onsuccess = function() {
-        let apps = appsReq.result;
-        for (let i = 0; i < apps.length; i++) {
-            let app = apps[i];
-            if (app.manifest.name === appName) {
-                app.launch();
-                window.addEventListener('appopen', function apploadtime(){
-                    window.removeEventListener('appopen', apploadtime);
-                    marionetteScriptFinished(true);
-                });
-                return;
-            }
-        }
-        marionetteScriptFinished(false);
-    }
-    appsReq.onerror = function() {
-        marionetteScriptFinished(false);
-    }
-}
-setReq.onerror = function() {
-    marionetteScriptFinished(false);
-}""", script_timeout=60000)
-
-        if not result:
-            raise Exception("Could not launch test container app")
-
     def record_crash(self):
         crash = True
         try:
@@ -975,7 +927,7 @@ setReq.onerror = function() {
         rv.start()
         return rv
 
-    def add_test(self, test, expected='pass', test_container=None):
+    def add_test(self, test, expected='pass'):
         filepath = os.path.abspath(test)
 
         if os.path.isdir(filepath):
@@ -1026,20 +978,17 @@ setReq.onerror = function() {
                     raise IOError("test file: {} does not exist".format(i["path"]))
 
                 file_ext = os.path.splitext(os.path.split(i['path'])[-1])[-1]
-                test_container = None
 
-                self.add_test(i["path"], i["expected"], test_container)
+                self.add_test(i["path"], i["expected"])
             return
 
-        self.tests.append({'filepath': filepath, 'expected': expected,
-                          'test_container': test_container})
+        self.tests.append({'filepath': filepath, 'expected': expected})
 
-    def run_test(self, filepath, expected, test_container):
+    def run_test(self, filepath, expected):
 
         testloader = unittest.TestLoader()
         suite = unittest.TestSuite()
         self.test_kwargs['expected'] = expected
-        self.test_kwargs['test_container'] = test_container
         mod_name = os.path.splitext(os.path.split(filepath)[-1])[0]
         for handler in self.test_handlers:
             if handler.match(os.path.basename(filepath)):
@@ -1057,9 +1006,6 @@ setReq.onerror = function() {
                                           marionette=self.marionette,
                                           capabilities=self.capabilities,
                                           result_callbacks=self.result_callbacks)
-
-            if test_container:
-                self.launch_test_container()
 
             results = runner.run(suite)
             self.results.append(results)
@@ -1091,7 +1037,7 @@ setReq.onerror = function() {
             random.shuffle(tests)
 
         for test in tests:
-            self.run_test(test['filepath'], test['expected'], test['test_container'])
+            self.run_test(test['filepath'], test['expected'])
             if self.record_crash():
                 break
 

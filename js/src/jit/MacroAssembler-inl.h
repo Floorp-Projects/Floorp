@@ -92,6 +92,13 @@ MacroAssembler::call(const wasm::CallSiteDesc& desc, uint32_t funcDefIndex)
     append(desc, l, framePushed(), funcDefIndex);
 }
 
+void
+MacroAssembler::call(const wasm::CallSiteDesc& desc, wasm::Trap trap)
+{
+    CodeOffset l = callWithPatch();
+    append(desc, l, framePushed(), trap);
+}
+
 // ===============================================================
 // ABI function calls.
 

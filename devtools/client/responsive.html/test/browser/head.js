@@ -230,9 +230,8 @@ function openDeviceModal(ui) {
     "The device modal is displayed.");
 }
 
-function switchDevice({ toolWindow }, value) {
+function switchSelector({ toolWindow }, selector, value) {
   return new Promise(resolve => {
-    let selector = ".viewport-device-selector";
     let select = toolWindow.document.querySelector(selector);
     isnot(select, null, `selector "${selector}" should match an existing element.`);
 
@@ -254,6 +253,14 @@ function switchDevice({ toolWindow }, value) {
     select.value = value;
     select.dispatchEvent(event);
   });
+}
+
+function switchDevice(ui, value) {
+  return switchSelector(ui, ".viewport-device-selector", value);
+}
+
+function switchNetworkThrottling(ui, value) {
+  return switchSelector(ui, "#global-network-throttling-selector", value);
 }
 
 function getSessionHistory(browser) {

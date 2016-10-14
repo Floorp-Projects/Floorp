@@ -82,11 +82,11 @@ exports.devtoolsModules = [
  * The map/reduce incantation squashes the array of arrays to a single array.
  */
 try {
-  const defaultTools = require("devtools/client/definitions").defaultTools;
+  const { defaultTools } = require("devtools/client/definitions");
   exports.devtoolsToolModules = defaultTools.map(def => def.commands || [])
                                    .reduce((prev, curr) => prev.concat(curr), []);
-} catch(e) {
-  // "definitions" is only accessible from Firefox
+} catch (e) {
+  // "devtools/client/definitions" is only accessible from Firefox
   exports.devtoolsToolModules = [];
 }
 
@@ -96,11 +96,11 @@ try {
  * single array.
  */
 try {
-  const { ToolboxButtons } = require("devtools/client/framework/toolbox");
+  const { ToolboxButtons } = require("devtools/client/definitions");
   exports.devtoolsButtonModules = ToolboxButtons.map(def => def.commands || [])
                                      .reduce((prev, curr) => prev.concat(curr), []);
-} catch(e) {
-  // "devtools/framework/toolbox" is only accessible from Firefox
+} catch (e) {
+  // "devtools/client/definitions" is only accessible from Firefox
   exports.devtoolsButtonModules = [];
 }
 

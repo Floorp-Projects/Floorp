@@ -402,11 +402,6 @@ var DebuggerServer = {
       constructor: "AddonsActor",
       type: { global: true }
     });
-    this.registerModule("devtools/server/actors/webapps", {
-      prefix: "webapps",
-      constructor: "WebappsActor",
-      type: { global: true }
-    });
     this.registerModule("devtools/server/actors/device", {
       prefix: "device",
       constructor: "DeviceActor",

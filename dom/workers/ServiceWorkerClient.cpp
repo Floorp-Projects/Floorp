@@ -176,11 +176,7 @@ private:
                                              NS_LITERAL_STRING("message"), init, rv);
 
     nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
-
-    RefPtr<MessagePortList> portList =
-      new MessagePortList(static_cast<dom::Event*>(event.get()),
-                          ports);
-    event->SetPorts(portList);
+    event->SetPorts(Move(ports));
 
     event->SetTrusted(true);
     bool status = false;

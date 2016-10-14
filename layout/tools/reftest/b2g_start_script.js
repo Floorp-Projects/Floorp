@@ -24,7 +24,6 @@ var cm = Cc["@mozilla.org/categorymanager;1"]
 
 // Disable update timers that cause b2g failures.
 if (cm) {
-  cm.deleteCategoryEntry("update-timer", "WebappsUpdateTimer", false);
   cm.deleteCategoryEntry("update-timer", "nsUpdateService", false);
 }
 

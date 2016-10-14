@@ -58,7 +58,7 @@ var WebrtcUI = {
 
   notify: function() {
     let windows = MediaManagerService.activeMediaCaptureWindows;
-    let count = windows.Count();
+    let count = windows.length;
     let msg = {};
     if (count == 0) {
       if (this._notificationId) {
@@ -76,7 +76,7 @@ var WebrtcUI = {
       let cameraActive = false;
       let audioActive = false;
       for (let i = 0; i < count; i++) {
-        let win = windows.GetElementAt(i);
+        let win = windows.queryElementAt(i, Ci.nsIDOMWindow);
         let hasAudio = {};
         let hasVideo = {};
         MediaManagerService.mediaCaptureWindowState(win, hasVideo, hasAudio);
@@ -150,19 +150,19 @@ var WebrtcUI = {
     {
       label: Strings.browser.GetStringFromName("getUserMedia.shareRequest.label"),
       callback: function(checked /* ignored */, inputs) {
-        let allowedDevices = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
+        let allowedDevices = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
 
         let audioId = 0;
         if (inputs && inputs.audioDevice != undefined)
           audioId = inputs.audioDevice;
         if (audioDevices[audioId])
-          allowedDevices.AppendElement(audioDevices[audioId]);
+          allowedDevices.appendElement(audioDevices[audioId], /*weak =*/ false);
 
         let videoId = 0;
         if (inputs && inputs.videoSource != undefined)
           videoId = inputs.videoSource;
         if (videoDevices[videoId]) {
-          allowedDevices.AppendElement(videoDevices[videoId]);
+          allowedDevices.appendElement(videoDevices[videoId], /*weak =*/ false);
           let perms = Services.perms;
           // Although the lifetime is "session" it will be removed upon
           // use so it's more of a one-shot.

@@ -613,35 +613,6 @@ this.AppsUtils = {
   },
 
   /**
-   * Determines if an update or a factory reset occured.
-   */
-  isFirstRun: function isFirstRun(aPrefBranch) {
-    let savedmstone = null;
-    try {
-      savedmstone = aPrefBranch.getCharPref("dom.apps.lastUpdate.mstone");
-    } catch (e) {}
-
-    let mstone = Services.appinfo.platformVersion;
-
-    let savedBuildID = null;
-    try {
-      savedBuildID = aPrefBranch.getCharPref("dom.apps.lastUpdate.buildID");
-    } catch (e) {}
-
-    let buildID = Services.appinfo.platformBuildID;
-
-    aPrefBranch.setCharPref("dom.apps.lastUpdate.mstone", mstone);
-    aPrefBranch.setCharPref("dom.apps.lastUpdate.buildID", buildID);
-
-    if ((mstone != savedmstone) || (buildID != savedBuildID)) {
-      aPrefBranch.setBoolPref("dom.apps.reset-permissions", false);
-      return true;
-    } else {
-      return false;
-    }
-  },
-
-  /**
    * Check if two manifests have the same set of properties and that the
    * values of these properties are the same, in each locale.
    * Manifests here are raw json ones.

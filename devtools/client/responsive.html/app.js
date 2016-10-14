@@ -15,13 +15,14 @@ const {
   updateDeviceModalOpen,
   updatePreferredDevices,
 } = require("./actions/devices");
+const { changeNetworkThrottling } = require("./actions/network-throttling");
+const { takeScreenshot } = require("./actions/screenshot");
+const { updateTouchSimulationEnabled } = require("./actions/touch-simulation");
 const {
   changeDevice,
   resizeViewport,
   rotateViewport
 } = require("./actions/viewports");
-const { takeScreenshot } = require("./actions/screenshot");
-const { updateTouchSimulationEnabled } = require("./actions/touch-simulation");
 const DeviceModal = createFactory(require("./components/device-modal"));
 const GlobalToolbar = createFactory(require("./components/global-toolbar"));
 const Viewports = createFactory(require("./components/viewports"));
@@ -33,6 +34,7 @@ let App = createClass({
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
+    networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
@@ -40,6 +42,15 @@ let App = createClass({
 
   onBrowserMounted() {
     window.postMessage({ type: "browser-mounted" }, "*");
+  },
+
+  onChangeNetworkThrottling(enabled, profile) {
+    window.postMessage({
+      type: "change-network-throtting",
+      enabled,
+      profile,
+    }, "*");
+    this.props.dispatch(changeNetworkThrottling(enabled, profile));
   },
 
   onChangeViewportDevice(id, device) {
@@ -100,6 +111,7 @@ let App = createClass({
     let {
       devices,
       location,
+      networkThrottling,
       screenshot,
       touchSimulation,
       viewports,
@@ -107,6 +119,7 @@ let App = createClass({
 
     let {
       onBrowserMounted,
+      onChangeNetworkThrottling,
       onChangeViewportDevice,
       onContentResize,
       onDeviceListUpdate,
@@ -124,8 +137,10 @@ let App = createClass({
         id: "app",
       },
       GlobalToolbar({
+        networkThrottling,
         screenshot,
         touchSimulation,
+        onChangeNetworkThrottling,
         onExit,
         onScreenshot,
         onUpdateTouchSimulation,

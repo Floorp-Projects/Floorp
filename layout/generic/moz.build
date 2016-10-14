@@ -8,6 +8,10 @@ with Files('nsBlock*'):
     # Parts of these files are really Layout: Floats
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
+with Files('Block*'):
+    # Parts of these files are really Layout: Floats
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+
 with Files('nsLine*'):
     # Parts of these files are really Layout: Floats
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
@@ -54,11 +58,17 @@ with Files('nsImage*'):
 with Files('nsAbsoluteContainingBlock.*'):
     BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
 
+with Files('Sticky*'):
+    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+
 with Files('nsPluginFrame.*'):
     BUG_COMPONENT = ('Core', 'Plug-ins')
 
 with Files('nsVideoFrame.*'):
     BUG_COMPONENT = ('Core', 'Video/Audio')
+
+with Files('*Selection*'):
+    BUG_COMPONENT = ('Core', 'Selection')
 
 EXPORTS += [
     'AsyncScrollBase.h',

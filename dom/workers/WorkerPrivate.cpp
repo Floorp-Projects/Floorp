@@ -57,7 +57,6 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
-#include "mozilla/dom/MessagePortList.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/Promise.h"
@@ -710,8 +709,8 @@ public:
         return false;
       }
       extendableEvent->SetSource(client);
-      extendableEvent->SetPorts(new MessagePortList(static_cast<dom::Event*>(extendableEvent.get()),
-                                                    ports));
+      extendableEvent->SetPorts(Move(ports));
+
       domEvent = do_QueryObject(extendableEvent);
     } else {
       RefPtr<MessageEvent> event = new MessageEvent(aTarget, nullptr, nullptr);
@@ -724,8 +723,7 @@ public:
                               EmptyString(),
                               nullptr,
                               nullptr);
-      event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
-                                          ports));
+      event->SetPorts(Move(ports));
       domEvent = do_QueryObject(event);
     }
 
@@ -6486,9 +6484,7 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx,
   nsTArray<RefPtr<MessagePort>> ports;
   ports.AppendElement(port);
 
-  RefPtr<MessagePortList> portList =
-    new MessagePortList(static_cast<nsIDOMEventTarget*>(globalScope), ports);
-  event->SetPorts(portList);
+  event->SetPorts(Move(ports));
 
   nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
 

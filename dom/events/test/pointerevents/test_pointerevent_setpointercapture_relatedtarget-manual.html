@@ -14,8 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
     <script type="text/javascript">
       SimpleTest.waitForExplicitFinish();
       function startTest() {
-        var iframe = document.getElementById("testFrame");
-        iframe.src = "pointerevent_setpointercapture_relatedtarget-manual.html";
+        runTestInNewWindow("pointerevent_setpointercapture_relatedtarget-manual.html");
       }
       function executeTest(int_win) {
         sendMouseEvent(int_win, "target1",    "mousemove");
@@ -26,6 +25,5 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
     </script>
   </head>
   <body>
-    <iframe id="testFrame" height="800" width="1000"></iframe>
   </body>
 </html>

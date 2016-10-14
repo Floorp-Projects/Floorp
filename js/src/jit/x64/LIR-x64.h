@@ -109,6 +109,12 @@ class LDivOrModI64 : public LBinaryMath<1>
             return mir_->toMod()->canBeNegativeDividend();
         return mir_->toDiv()->canBeNegativeOverflow();
     }
+    wasm::TrapOffset trapOffset() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        if (mir_->isMod())
+            return mir_->toMod()->trapOffset();
+        return mir_->toDiv()->trapOffset();
+    }
 };
 
 // This class performs a simple x86 'div', yielding either a quotient or
@@ -142,6 +148,13 @@ class LUDivOrModI64 : public LBinaryMath<1>
         if (mir_->isMod())
             return mir_->toMod()->canBeDivideByZero();
         return mir_->toDiv()->canBeDivideByZero();
+    }
+
+    wasm::TrapOffset trapOffset() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        if (mir_->isMod())
+            return mir_->toMod()->trapOffset();
+        return mir_->toDiv()->trapOffset();
     }
 };
 

@@ -7,6 +7,12 @@
 #ifndef NS_WINDOWS_DLL_INTERCEPTOR_H_
 #define NS_WINDOWS_DLL_INTERCEPTOR_H_
 
+#include "mozilla/Assertions.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/UniquePtr.h"
+#include "nsWindowsHelpers.h"
+
+#include <wchar.h>
 #include <windows.h>
 #include <winternl.h>
 
@@ -67,57 +73,6 @@
 namespace mozilla {
 namespace internal {
 
-// Get op length of '/r'
-static size_t
-GetOpLengthByModRM(const uint8_t* aOp)
-{
-  uint8_t mod = *aOp >> 6;
-  uint8_t rm = *aOp & 0x7;
-
-  switch (mod) {
-  case 0:
-    if (rm == 4) {
-      // SIB
-      if ((*(aOp + 1) & 0x7) == 5) {
-        // disp32
-        return 6;
-      }
-      return 2;
-    } else if (rm == 5) {
-      // [RIP/EIP + disp32]
-      // Since we don't modify relative offset, we should mark as impossible
-      // code.
-      return 0;
-    }
-    // [r/m]
-    return 1;
-
-  case 1:
-    if (rm == 4) {
-      // [SIB + imm8]
-      return 3;
-    }
-    // [r/m + imm8]
-    return 2;
-
-  case 2:
-    if (rm == 4) {
-      // [SIB + imm32]
-      return 6;
-    }
-    // [r/m + imm32]
-    return 5;
-
-  case 3:
-    // r/w
-    return 1;
-
-  default:
-     break;
-  }
-  return 0;
-}
-
 class AutoVirtualProtect
 {
 public:
@@ -166,6 +121,7 @@ public:
     , mPatchedFnsLen(0)
   {}
 
+#if defined(_M_IX86)
   ~WindowsDllNopSpacePatcher()
   {
     // Restore the mov edi, edi to the beginning of each function we patched.
@@ -192,6 +148,13 @@ public:
 
   void Init(const char* aModuleName)
   {
+    if (!IsCompatible()) {
+#if defined(MOZILLA_INTERNAL_API)
+      NS_WARNING("NOP space patching is unavailable for compatibility reasons");
+#endif
+      return;
+    }
+
     mModule = LoadLibraryExA(aModuleName, nullptr, 0);
     if (!mModule) {
       //printf("LoadLibraryEx for '%s' failed\n", aModuleName);
@@ -199,10 +162,90 @@ public:
     }
   }
 
-#if defined(_M_IX86)
+  /**
+   * NVIDIA Optimus drivers utilize Microsoft Detours 2.x to patch functions
+   * in our address space. There is a bug in Detours 2.x that causes it to
+   * patch at the wrong address when attempting to detour code that is already
+   * NOP space patched. This function is an effort to detect the presence of
+   * this NVIDIA code in our address space and disable NOP space patching if it
+   * is. We also check AppInit_DLLs since this is the mechanism that the Optimus
+   * drivers use to inject into our process.
+   */
+  static bool IsCompatible()
+  {
+    // These DLLs are known to have bad interactions with this style of patching
+    const wchar_t* kIncompatibleDLLs[] = {
+      L"detoured.dll",
+      L"_etoured.dll",
+      L"nvd3d9wrap.dll",
+      L"nvdxgiwrap.dll"
+    };
+    // See if the infringing DLLs are already loaded
+    for (unsigned int i = 0; i < mozilla::ArrayLength(kIncompatibleDLLs); ++i) {
+      if (GetModuleHandleW(kIncompatibleDLLs[i])) {
+        return false;
+      }
+    }
+    if (GetModuleHandleW(L"user32.dll")) {
+      // user32 is loaded but the infringing DLLs are not, assume we're safe to
+      // proceed.
+      return true;
+    }
+    // If user32 has not loaded yet, check AppInit_DLLs to ensure that Optimus
+    // won't be loaded once user32 is initialized.
+    HKEY hkey = NULL;
+    if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows",
+          0, KEY_QUERY_VALUE, &hkey)) {
+      nsAutoRegKey key(hkey);
+      DWORD numBytes = 0;
+      const wchar_t kAppInitDLLs[] = L"AppInit_DLLs";
+      // Query for required buffer size
+      LONG status = RegQueryValueExW(hkey, kAppInitDLLs, nullptr,
+                                     nullptr, nullptr, &numBytes);
+      mozilla::UniquePtr<wchar_t[]> data;
+      if (!status) {
+        // Allocate the buffer and query for the actual data
+        data = mozilla::MakeUnique<wchar_t[]>(numBytes / sizeof(wchar_t));
+        status = RegQueryValueExW(hkey, kAppInitDLLs, nullptr,
+                                  nullptr, (LPBYTE)data.get(), &numBytes);
+      }
+      if (!status) {
+        // For each token, split up the filename components and then check the
+        // name of the file.
+        const wchar_t kDelimiters[] = L", ";
+        wchar_t* tokenContext = nullptr;
+        wchar_t* token = wcstok_s(data.get(), kDelimiters, &tokenContext);
+        while (token) {
+          wchar_t fname[_MAX_FNAME] = {0};
+          if (!_wsplitpath_s(token, nullptr, 0, nullptr, 0,
+                             fname, mozilla::ArrayLength(fname),
+                             nullptr, 0)) {
+            // nvinit.dll is responsible for bootstrapping the DLL injection, so
+            // that is the library that we check for here
+            const wchar_t kNvInitName[] = L"nvinit";
+            if (!_wcsnicmp(fname, kNvInitName,
+                           mozilla::ArrayLength(kNvInitName))) {
+              return false;
+            }
+          }
+          token = wcstok_s(nullptr, kDelimiters, &tokenContext);
+        }
+      }
+    }
+    return true;
+  }
+
   bool AddHook(const char* aName, intptr_t aHookDest, void** aOrigFunc)
   {
     if (!mModule) {
+      return false;
+    }
+
+    if (!IsCompatible()) {
+#if defined(MOZILLA_INTERNAL_API)
+      NS_WARNING("NOP space patching is unavailable for compatibility reasons");
+#endif
       return false;
     }
 
@@ -295,6 +338,11 @@ private:
     return aOriginalFunction;
   }
 #else
+  void Init(const char* aModuleName)
+  {
+    // Not implemented except on x86-32.
+  }
+
   bool AddHook(const char* aName, intptr_t aHookDest, void** aOrigFunc)
   {
     // Not implemented except on x86-32.
@@ -422,6 +470,69 @@ protected:
   byteptr_t mHookPage;
   int mMaxHooks;
   int mCurHooks;
+
+  // rex bits
+  static const BYTE kMaskHighNibble = 0xF0;
+  static const BYTE kRexOpcode = 0x40;
+  static const BYTE kMaskRexW = 0x08;
+  static const BYTE kMaskRexR = 0x04;
+  static const BYTE kMaskRexX = 0x02;
+  static const BYTE kMaskRexB = 0x01;
+
+  // mod r/m bits
+  static const BYTE kRegFieldShift = 3;
+  static const BYTE kMaskMod = 0xC0;
+  static const BYTE kMaskReg = 0x38;
+  static const BYTE kMaskRm = 0x07;
+  static const BYTE kRmNeedSib = 0x04;
+  static const BYTE kModReg = 0xC0;
+  static const BYTE kModDisp32 = 0x80;
+  static const BYTE kModDisp8 = 0x40;
+  static const BYTE kModNoRegDisp = 0x00;
+  static const BYTE kRmNoRegDispDisp32 = 0x05;
+
+  // sib bits
+  static const BYTE kMaskSibScale = 0xC0;
+  static const BYTE kMaskSibIndex = 0x38;
+  static const BYTE kMaskSibBase = 0x07;
+  static const BYTE kSibBaseEbp = 0x05;
+
+  int CountModRmSib(const BYTE *aModRm, BYTE* aSubOpcode = nullptr)
+  {
+    if (!aModRm) {
+      return -1;
+    }
+    int numBytes = 1; // Start with 1 for mod r/m byte itself
+    switch (*aModRm & kMaskMod) {
+      case kModReg:
+        return numBytes;
+      case kModDisp8:
+        numBytes += 1;
+        break;
+      case kModDisp32:
+        numBytes += 4;
+        break;
+      case kModNoRegDisp:
+        if ((*aModRm & kMaskRm) == kRmNoRegDispDisp32 ||
+            ((*aModRm & kMaskRm) == kRmNeedSib &&
+             (*(aModRm + 1) & kMaskSibBase) == kSibBaseEbp)) {
+          numBytes += 4;
+        }
+        break;
+      default:
+        // This should not be reachable
+        MOZ_ASSERT_UNREACHABLE("Impossible value for modr/m byte mod bits");
+        return -1;
+    }
+    if ((*aModRm & kMaskRm) == kRmNeedSib) {
+      // SIB byte
+      numBytes += 1;
+    }
+    if (aSubOpcode) {
+      *aSubOpcode = (*aModRm & kMaskReg) >> kRegFieldShift;
+    }
+    return numBytes;
+  }
 
 #if defined(_M_X64)
   // To patch for JMP and JE
@@ -693,6 +804,31 @@ protected:
           // not support yet!
           return;
         }
+      } else if (origBytes[nBytes] == 0x66) {
+        // operand override prefix
+        nBytes += 1;
+        // This is the same as the x86 version
+        if (origBytes[nBytes] >= 0x88 && origBytes[nBytes] <= 0x8B) {
+          // various MOVs
+          unsigned char b = origBytes[nBytes + 1];
+          if (((b & 0xc0) == 0xc0) ||
+              (((b & 0xc0) == 0x00) &&
+               ((b & 0x07) != 0x04) && ((b & 0x07) != 0x05))) {
+            // REG=r, R/M=r or REG=r, R/M=[r]
+            nBytes += 2;
+          } else if ((b & 0xc0) == 0x40) {
+            if ((b & 0x07) == 0x04) {
+              // REG=r, R/M=[SIB + disp8]
+              nBytes += 4;
+            } else {
+              // REG=r, R/M=[r + disp8]
+              nBytes += 3;
+            }
+          } else {
+            // complex MOV, bail
+            return;
+          }
+        }
       } else if ((origBytes[nBytes] & 0xf0) == 0x50) {
         // 1-byte push/pop
         nBytes++;
@@ -705,8 +841,8 @@ protected:
         if (origBytes[nBytes + 1] == 0x48 &&
             (origBytes[nBytes + 2] >= 0x88 && origBytes[nBytes + 2] <= 0x8b)) {
           nBytes += 3;
-          size_t len = GetOpLengthByModRM(origBytes + nBytes);
-          if (!len) {
+          int len = CountModRmSib(origBytes + nBytes);
+          if (len < 0) {
             // no way to support this yet.
             return;
           }
@@ -720,6 +856,20 @@ protected:
       } else if (origBytes[nBytes] == 0xb8) {
         // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
         nBytes += 5;
+      } else if (origBytes[nBytes] == 0x33) {
+        // xor r32, r/m32
+        nBytes += 2;
+      } else if (origBytes[nBytes] == 0xf6) {
+        // test r/m8, imm8 (used by ntdll on Windows 10 x64)
+        // (no flags are affected by near jmp since there is no task switch,
+        // so it is ok for a jmp to be written immediately after a test)
+        BYTE subOpcode = 0;
+        int nModRmSibBytes = CountModRmSib(&origBytes[nBytes + 1], &subOpcode);
+        if (nModRmSibBytes < 0 || subOpcode != 0) {
+          // Unsupported
+          return;
+        }
+        nBytes += 2 + nModRmSibBytes;
       } else if (origBytes[nBytes] == 0xc3) {
         // ret
         nBytes++;

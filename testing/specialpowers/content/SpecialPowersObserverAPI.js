@@ -402,57 +402,6 @@ SpecialPowersObserverAPI.prototype = {
         return oldEnabledState;
       }
 
-      case "SPWebAppService": {
-        let Webapps = {};
-        Components.utils.import("resource://gre/modules/Webapps.jsm", Webapps);
-        switch (aMessage.json.op) {
-          case "allow-unsigned-addons":
-            {
-              let utils = {};
-              Components.utils.import("resource://gre/modules/AppsUtils.jsm", utils);
-              utils.AppsUtils.allowUnsignedAddons = true;
-              return;
-            }
-          case "debug-customizations":
-            {
-              let scope = {};
-              Components.utils.import("resource://gre/modules/UserCustomizations.jsm", scope);
-              scope.UserCustomizations._debug = aMessage.json.value;
-              return;
-            }
-          case "inject-app":
-            {
-              let aAppId = aMessage.json.appId;
-              let aApp   = aMessage.json.app;
-
-              let keys = Object.keys(Webapps.DOMApplicationRegistry.webapps);
-              let exists = keys.indexOf(aAppId) !== -1;
-              if (exists) {
-                return false;
-              }
-
-              Webapps.DOMApplicationRegistry.webapps[aAppId] = aApp;
-              return true;
-            }
-          case "reject-app":
-            {
-              let aAppId = aMessage.json.appId;
-
-              let keys = Object.keys(Webapps.DOMApplicationRegistry.webapps);
-              let exists = keys.indexOf(aAppId) !== -1;
-              if (!exists) {
-                return false;
-              }
-
-              delete Webapps.DOMApplicationRegistry.webapps[aAppId];
-              return true;
-            }
-          default:
-            throw new SpecialPowersError("Invalid operation for SPWebAppsService");
-        }
-        return undefined;	// See comment at the beginning of this function.
-      }
-
       case "SPObserverService": {
         let topic = aMessage.json.observerTopic;
         switch (aMessage.json.op) {

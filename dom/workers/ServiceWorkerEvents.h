@@ -25,7 +25,6 @@ namespace mozilla {
 namespace dom {
 class Blob;
 class MessagePort;
-class MessagePortList;
 class Request;
 class ResponseOrPromise;
 
@@ -260,7 +259,8 @@ class ExtendableMessageEvent final : public ExtendableEvent
   RefPtr<ServiceWorkerClient> mClient;
   RefPtr<ServiceWorker> mServiceWorker;
   RefPtr<MessagePort> mMessagePort;
-  RefPtr<MessagePortList> mPorts;
+  nsTArray<RefPtr<MessagePort>> mPorts;
+  bool mPortsSet;
 
 protected:
   explicit ExtendableMessageEvent(EventTarget* aOwner);
@@ -308,9 +308,9 @@ public:
     return NS_OK;
   }
 
-  MessagePortList* GetPorts() const;
+  void GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts);
 
-  void SetPorts(MessagePortList* aPorts);
+  void SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts);
 
   void SetSource(ServiceWorkerClient* aClient);
 

@@ -29,7 +29,6 @@ chrome.jar:
   content/images/desktop/rotate.png     (content/images/desktop/rotate.png)
   content/desktop.js                    (content/desktop.js)
   content/screen.js                     (content/screen.js)
-  content/runapp.js                     (content/runapp.js)
 #endif
 * content/content.css                   (content/content.css)
   content/touchcontrols.css             (content/touchcontrols.css)

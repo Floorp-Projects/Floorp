@@ -142,8 +142,9 @@ FrameIterator::settle()
         break;
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
+      case CodeRange::TrapExit:
       case CodeRange::Inline:
-      case CodeRange::CallThunk:
+      case CodeRange::FarJumpIsland:
         MOZ_CRASH("Should not encounter an exit during iteration");
     }
 }
@@ -218,19 +219,19 @@ FrameIterator::lineOrBytecode() const
 static const unsigned PushedRetAddr = 0;
 static const unsigned PostStorePrePopFP = 0;
 # endif
-static const unsigned PushedFP = 16;
-static const unsigned StoredFP = 23;
+static const unsigned PushedFP = 23;
+static const unsigned StoredFP = 30;
 #elif defined(JS_CODEGEN_X86)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
 static const unsigned PostStorePrePopFP = 0;
 # endif
-static const unsigned PushedFP = 11;
-static const unsigned StoredFP = 14;
+static const unsigned PushedFP = 14;
+static const unsigned StoredFP = 17;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned PushedRetAddr = 4;
-static const unsigned PushedFP = 20;
-static const unsigned StoredFP = 24;
+static const unsigned PushedFP = 24;
+static const unsigned StoredFP = 28;
 static const unsigned PostStorePrePopFP = 4;
 #elif defined(JS_CODEGEN_ARM64)
 static const unsigned PushedRetAddr = 0;
@@ -239,8 +240,8 @@ static const unsigned StoredFP = 0;
 static const unsigned PostStorePrePopFP = 0;
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 static const unsigned PushedRetAddr = 8;
-static const unsigned PushedFP = 28;
-static const unsigned StoredFP = 32;
+static const unsigned PushedFP = 32;
+static const unsigned StoredFP = 36;
 static const unsigned PostStorePrePopFP = 4;
 #elif defined(JS_CODEGEN_NONE)
 # if defined(DEBUG)
@@ -281,7 +282,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
     // randomly inserted between two instructions.
     {
 #if defined(JS_CODEGEN_ARM)
-        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 6);
+        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 7);
 #endif
 
         offsets->begin = masm.currentOffset();
@@ -289,7 +290,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
         PushRetAddr(masm);
         MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - offsets->begin);
 
-        masm.loadWasmActivationFromTls(scratch);
+        masm.loadWasmActivationFromSymbolicAddress(scratch);
         masm.push(Address(scratch, WasmActivation::offsetOfFP()));
         MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - offsets->begin);
 
@@ -318,7 +319,7 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason
     if (framePushed)
         masm.addToStackPtr(Imm32(framePushed));
 
-    masm.loadWasmActivationFromTls(scratch);
+    masm.loadWasmActivationFromSymbolicAddress(scratch);
 
     if (reason != ExitReason::None) {
         masm.store32(Imm32(int32_t(ExitReason::None)),
@@ -363,7 +364,7 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason
 // profiling or non-profiling entry point.
 void
 wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
-                               FuncOffsets* offsets)
+                               const TrapOffset& trapOffset, FuncOffsets* offsets)
 {
 #if defined(JS_CODEGEN_ARM)
     // Flush pending pools so they do not get dumped between the 'begin' and
@@ -380,17 +381,16 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
     // Generate table entry thunk:
     masm.haltingAlign(CodeAlignment);
     offsets->tableEntry = masm.currentOffset();
+    TrapDesc trap(trapOffset, Trap::IndirectCallBadSig, masm.framePushed());
     switch (sigId.kind()) {
       case SigIdDesc::Kind::Global: {
         Register scratch = WasmTableCallScratchReg;
         masm.loadWasmGlobalPtr(sigId.globalDataOffset(), scratch);
-        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch,
-                      JumpTarget::IndirectCallBadSig);
+        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch, trap);
         break;
       }
       case SigIdDesc::Kind::Immediate:
-        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, Imm32(sigId.immediate()),
-                      JumpTarget::IndirectCallBadSig);
+        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, Imm32(sigId.immediate()), trap);
         break;
       case SigIdDesc::Kind::None:
         break;
@@ -559,8 +559,9 @@ ProfilingFrameIterator::initFromFP()
         break;
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
+      case CodeRange::TrapExit:
       case CodeRange::Inline:
-      case CodeRange::CallThunk:
+      case CodeRange::FarJumpIsland:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
 
@@ -582,7 +583,7 @@ typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
 static bool
 InThunk(const CodeRange& codeRange, uint32_t offsetInModule)
 {
-    if (codeRange.kind() == CodeRange::CallThunk)
+    if (codeRange.kind() == CodeRange::FarJumpIsland)
         return true;
 
     return codeRange.isFunction() &&
@@ -624,11 +625,12 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     const CodeRange* codeRange = code_->lookupRange(state.pc);
     switch (codeRange->kind()) {
       case CodeRange::Function:
-      case CodeRange::CallThunk:
+      case CodeRange::FarJumpIsland:
       case CodeRange::ImportJitExit:
-      case CodeRange::ImportInterpExit: {
+      case CodeRange::ImportInterpExit:
+      case CodeRange::TrapExit: {
         // When the pc is inside the prologue/epilogue, the innermost
-        // call's AsmJSFrame is not complete and thus fp points to the the
+        // call's AsmJSFrame is not complete and thus fp points to the
         // second-to-innermost call's AsmJSFrame. Since fp can only tell you
         // about its caller (via ReturnAddressFromFP(fp)), naively unwinding
         // while pc is in the prologue/epilogue would skip the second-to-
@@ -741,8 +743,9 @@ ProfilingFrameIterator::operator++()
       case CodeRange::Function:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
+      case CodeRange::TrapExit:
       case CodeRange::Inline:
-      case CodeRange::CallThunk:
+      case CodeRange::FarJumpIsland:
         stackAddress_ = callerFP_;
         callerPC_ = ReturnAddressFromFP(callerFP_);
         AssertMatchesCallSite(*activation_, callerPC_, CallerFPFromFP(callerFP_), callerFP_);
@@ -766,6 +769,7 @@ ProfilingFrameIterator::label() const
     const char* importJitDescription = "fast FFI trampoline (in asm.js)";
     const char* importInterpDescription = "slow FFI trampoline (in asm.js)";
     const char* nativeDescription = "native call (in asm.js)";
+    const char* trapDescription = "trap handling (in asm.js)";
 
     switch (exitReason_) {
       case ExitReason::None:
@@ -776,6 +780,8 @@ ProfilingFrameIterator::label() const
         return importInterpDescription;
       case ExitReason::Native:
         return nativeDescription;
+      case ExitReason::Trap:
+        return trapDescription;
     }
 
     switch (codeRange_->kind()) {
@@ -783,8 +789,9 @@ ProfilingFrameIterator::label() const
       case CodeRange::Entry:            return "entry trampoline (in asm.js)";
       case CodeRange::ImportJitExit:    return importJitDescription;
       case CodeRange::ImportInterpExit: return importInterpDescription;
+      case CodeRange::TrapExit:         return trapDescription;
       case CodeRange::Inline:           return "inline stub (in asm.js)";
-      case CodeRange::CallThunk:        return "call thunk (in asm.js)";
+      case CodeRange::FarJumpIsland:    return "interstitial (in asm.js)";
     }
 
     MOZ_CRASH("bad code range kind");
@@ -796,7 +803,7 @@ ProfilingFrameIterator::label() const
 void
 wasm::ToggleProfiling(const Code& code, const CallSite& callSite, bool enabled)
 {
-    if (callSite.kind() != CallSite::Relative)
+    if (callSite.kind() != CallSite::FuncDef)
         return;
 
     uint8_t* callerRetAddr = code.segment().base() + callSite.returnAddressOffset();
@@ -858,7 +865,7 @@ wasm::ToggleProfiling(const Code& code, const CallThunk& callThunk, bool enabled
 {
     const CodeRange& cr = code.metadata().codeRanges[callThunk.u.codeRangeIndex];
     uint32_t calleeOffset = enabled ? cr.funcProfilingEntry() : cr.funcNonProfilingEntry();
-    MacroAssembler::repatchThunk(code.segment().base(), callThunk.offset, calleeOffset);
+    MacroAssembler::repatchFarJump(code.segment().base(), callThunk.offset, calleeOffset);
 }
 
 void

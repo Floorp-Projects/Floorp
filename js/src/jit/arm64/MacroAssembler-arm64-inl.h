@@ -806,8 +806,9 @@ MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* labe
     B(label, cond);
 }
 
+template <class L>
 void
-MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, L label)
 {
     vixl::UseScratchRegisterScope temps(this);
     const Register scratch = temps.AcquireX().asUnsized();
@@ -1524,6 +1525,12 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const Address& dest)
 }
 void
 MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
 {
     MOZ_CRASH("NYI");
 }

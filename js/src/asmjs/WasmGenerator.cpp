@@ -51,7 +51,7 @@ ModuleGenerator::ModuleGenerator(ImportVector&& imports)
     masmAlloc_(&lifo_),
     masm_(MacroAssembler::AsmJSToken(), masmAlloc_),
     lastPatchedCallsite_(0),
-    startOfUnpatchedBranches_(0),
+    startOfUnpatchedCallsites_(0),
     parallel_(false),
     outstanding_(0),
     activeFuncDef_(nullptr),
@@ -263,84 +263,96 @@ JumpRange()
 typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> OffsetMap;
 
 bool
-ModuleGenerator::convertOutOfRangeBranchesToThunks()
+ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
 {
     masm_.haltingAlign(CodeAlignment);
 
-    // Create thunks for callsites that have gone out of range. Use a map to
-    // create one thunk for each callee since there is often high reuse.
+    // Create far jumps for calls that have relative offsets that may otherwise
+    // go out of range. Far jumps are created for two cases: direct calls
+    // between function definitions and calls to trap exits by trap out-of-line
+    // paths. Far jump code is shared when possible to reduce bloat. This method
+    // is called both between function bodies (at a frequency determined by the
+    // ISA's jump range) and once at the very end of a module's codegen after
+    // all possible calls/traps have been emitted.
 
-    OffsetMap alreadyThunked;
-    if (!alreadyThunked.init())
+    OffsetMap existingCallFarJumps;
+    if (!existingCallFarJumps.init())
         return false;
+
+    EnumeratedArray<Trap, Trap::Limit, Maybe<uint32_t>> existingTrapFarJumps;
 
     for (; lastPatchedCallsite_ < masm_.callSites().length(); lastPatchedCallsite_++) {
         const CallSiteAndTarget& cs = masm_.callSites()[lastPatchedCallsite_];
-        if (!cs.isDefinition())
-            continue;
-
         uint32_t callerOffset = cs.returnAddressOffset();
         MOZ_RELEASE_ASSERT(callerOffset < INT32_MAX);
 
-        if (funcIsDefined(cs.funcDefIndex())) {
-            uint32_t calleeOffset = funcDefCodeRange(cs.funcDefIndex()).funcNonProfilingEntry();
-            MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
+        switch (cs.kind()) {
+          case CallSiteDesc::Dynamic:
+          case CallSiteDesc::Symbolic:
+            break;
+          case CallSiteDesc::FuncDef: {
+            if (funcIsDefined(cs.funcDefIndex())) {
+                uint32_t calleeOffset = funcDefCodeRange(cs.funcDefIndex()).funcNonProfilingEntry();
+                MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
 
-            if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
-                masm_.patchCall(callerOffset, calleeOffset);
-                continue;
+                if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
+                    masm_.patchCall(callerOffset, calleeOffset);
+                    break;
+                }
             }
+
+            OffsetMap::AddPtr p = existingCallFarJumps.lookupForAdd(cs.funcDefIndex());
+            if (!p) {
+                Offsets offsets;
+                offsets.begin = masm_.currentOffset();
+                uint32_t jumpOffset = masm_.farJumpWithPatch().offset();
+                offsets.end = masm_.currentOffset();
+                if (masm_.oom())
+                    return false;
+
+                if (!metadata_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
+                    return false;
+                if (!existingCallFarJumps.add(p, cs.funcDefIndex(), offsets.begin))
+                    return false;
+
+                // Record calls' far jumps in metadata since they must be
+                // repatched at runtime when profiling mode is toggled.
+                if (!metadata_->callThunks.emplaceBack(jumpOffset, cs.funcDefIndex()))
+                    return false;
+            }
+
+            masm_.patchCall(callerOffset, p->value());
+            break;
+          }
+          case CallSiteDesc::TrapExit: {
+            if (maybeTrapExits) {
+                uint32_t calleeOffset = (*maybeTrapExits)[cs.trap()].begin;
+                MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
+
+                if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
+                    masm_.patchCall(callerOffset, calleeOffset);
+                    break;
+                }
+            }
+
+            if (!existingTrapFarJumps[cs.trap()]) {
+                Offsets offsets;
+                offsets.begin = masm_.currentOffset();
+                masm_.append(TrapFarJump(cs.trap(), masm_.farJumpWithPatch()));
+                offsets.end = masm_.currentOffset();
+                if (masm_.oom())
+                    return false;
+
+                if (!metadata_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
+                    return false;
+                existingTrapFarJumps[cs.trap()] = Some(offsets.begin);
+            }
+
+            masm_.patchCall(callerOffset, *existingTrapFarJumps[cs.trap()]);
+            break;
+          }
         }
-
-        OffsetMap::AddPtr p = alreadyThunked.lookupForAdd(cs.funcDefIndex());
-        if (!p) {
-            Offsets offsets;
-            offsets.begin = masm_.currentOffset();
-            uint32_t thunkOffset = masm_.thunkWithPatch().offset();
-            if (masm_.oom())
-                return false;
-            offsets.end = masm_.currentOffset();
-
-            if (!metadata_->codeRanges.emplaceBack(CodeRange::CallThunk, offsets))
-                return false;
-            if (!metadata_->callThunks.emplaceBack(thunkOffset, cs.funcDefIndex()))
-                return false;
-            if (!alreadyThunked.add(p, cs.funcDefIndex(), offsets.begin))
-                return false;
-        }
-
-        masm_.patchCall(callerOffset, p->value());
     }
-
-    // Create thunks for jumps to stubs. Stubs are always generated at the end
-    // so unconditionally thunk all existing jump sites.
-
-    for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit)) {
-        if (masm_.jumpSites()[target].empty())
-            continue;
-
-        for (uint32_t jumpSite : masm_.jumpSites()[target]) {
-            RepatchLabel label;
-            label.use(jumpSite);
-            masm_.bind(&label);
-        }
-
-        Offsets offsets;
-        offsets.begin = masm_.currentOffset();
-        uint32_t thunkOffset = masm_.thunkWithPatch().offset();
-        if (masm_.oom())
-            return false;
-        offsets.end = masm_.currentOffset();
-
-        if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, offsets))
-            return false;
-        if (!jumpThunks_[target].append(thunkOffset))
-            return false;
-    }
-
-    // Unlike callsites, which need to be persisted in the Module, we can simply
-    // flush jump sites after each patching pass.
-    masm_.clearJumpSites();
 
     return true;
 }
@@ -351,12 +363,13 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     const FuncBytes& func = task->func();
     FuncCompileResults& results = task->results();
 
-    // Before merging in the new function's code, if jumps/calls in a previous
-    // function's body might go out of range, patch these to thunks which have
-    // full range.
-    if ((masm_.size() - startOfUnpatchedBranches_) + results.masm().size() > JumpRange()) {
-        startOfUnpatchedBranches_ = masm_.size();
-        if (!convertOutOfRangeBranchesToThunks())
+    masm_.haltingAlign(CodeAlignment);
+
+    // Before merging in the new function's code, if calls in a prior function
+    // body might go out of range, insert far jumps to extend the range.
+    if ((masm_.size() - startOfUnpatchedCallsites_) + results.masm().size() > JumpRange()) {
+        startOfUnpatchedCallsites_ = masm_.size();
+        if (!patchCallSites())
             return false;
     }
 
@@ -428,6 +441,7 @@ typedef Vector<ProfilingOffsets, 0, SystemAllocPolicy> ProfilingOffsetVector;
 bool
 ModuleGenerator::finishCodegen()
 {
+    masm_.haltingAlign(CodeAlignment);
     uint32_t offsetInWhole = masm_.size();
 
     uint32_t numFuncDefExports = metadata_->funcDefExports.length();
@@ -440,12 +454,16 @@ ModuleGenerator::finishCodegen()
     OffsetVector entries;
     ProfilingOffsetVector interpExits;
     ProfilingOffsetVector jitExits;
-    EnumeratedArray<JumpTarget, JumpTarget::Limit, Offsets> jumpTargets;
+    TrapExitOffsetArray trapExits;
+    Offsets outOfBoundsExit;
+    Offsets unalignedAccessExit;
     Offsets interruptExit;
+    Offsets throwStub;
 
     {
         TempAllocator alloc(&lifo_);
         MacroAssembler masm(MacroAssembler::AsmJSToken(), alloc);
+        Label throwLabel;
 
         if (!entries.resize(numFuncDefExports))
             return false;
@@ -457,14 +475,17 @@ ModuleGenerator::finishCodegen()
         if (!jitExits.resize(numFuncImports()))
             return false;
         for (uint32_t i = 0; i < numFuncImports(); i++) {
-            interpExits[i] = GenerateInterpExit(masm, metadata_->funcImports[i], i);
-            jitExits[i] = GenerateJitExit(masm, metadata_->funcImports[i]);
+            interpExits[i] = GenerateInterpExit(masm, metadata_->funcImports[i], i, &throwLabel);
+            jitExits[i] = GenerateJitExit(masm, metadata_->funcImports[i], &throwLabel);
         }
 
-        for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit))
-            jumpTargets[target] = GenerateJumpTarget(masm, target);
+        for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+            trapExits[trap] = GenerateTrapExit(masm, trap, &throwLabel);
 
-        interruptExit = GenerateInterruptStub(masm);
+        outOfBoundsExit = GenerateOutOfBoundsExit(masm, &throwLabel);
+        unalignedAccessExit = GenerateUnalignedExit(masm, &throwLabel);
+        interruptExit = GenerateInterruptExit(masm, &throwLabel);
+        throwStub = GenerateThrowStub(masm, &throwLabel);
 
         if (masm.oom() || !masm_.asmMergeWith(masm))
             return false;
@@ -492,40 +513,49 @@ ModuleGenerator::finishCodegen()
             return false;
     }
 
-    for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit)) {
-        jumpTargets[target].offsetBy(offsetInWhole);
-        if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, jumpTargets[target]))
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
+        trapExits[trap].offsetBy(offsetInWhole);
+        if (!metadata_->codeRanges.emplaceBack(CodeRange::TrapExit, trapExits[trap]))
             return false;
     }
+
+    outOfBoundsExit.offsetBy(offsetInWhole);
+    if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, outOfBoundsExit))
+        return false;
+
+    unalignedAccessExit.offsetBy(offsetInWhole);
+    if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, unalignedAccessExit))
+        return false;
 
     interruptExit.offsetBy(offsetInWhole);
     if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, interruptExit))
         return false;
 
-    // Fill in LinkData with the offsets of these stubs.
-
-    linkData_.interruptOffset = interruptExit.begin;
-    linkData_.outOfBoundsOffset = jumpTargets[JumpTarget::OutOfBounds].begin;
-    linkData_.unalignedAccessOffset = jumpTargets[JumpTarget::UnalignedAccess].begin;
-
-    // Only call convertOutOfRangeBranchesToThunks after all other codegen that may
-    // emit new jumps to JumpTargets has finished.
-
-    if (!convertOutOfRangeBranchesToThunks())
+    throwStub.offsetBy(offsetInWhole);
+    if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, throwStub))
         return false;
 
-    // Now that all thunks have been generated, patch all the thunks.
+    // Fill in LinkData with the offsets of these stubs.
+
+    linkData_.outOfBoundsOffset = outOfBoundsExit.begin;
+    linkData_.interruptOffset = interruptExit.begin;
+
+    // Now that all other code has been emitted, patch all remaining callsites.
+
+    if (!patchCallSites(&trapExits))
+        return false;
+
+    // Now that all code has been generated, patch far jumps to destinations.
 
     for (CallThunk& callThunk : metadata_->callThunks) {
         uint32_t funcDefIndex = callThunk.u.funcDefIndex;
         callThunk.u.codeRangeIndex = funcDefIndexToCodeRange_[funcDefIndex];
-        masm_.patchThunk(callThunk.offset, funcDefCodeRange(funcDefIndex).funcNonProfilingEntry());
+        CodeOffset farJump(callThunk.offset);
+        masm_.patchFarJump(farJump, funcDefCodeRange(funcDefIndex).funcNonProfilingEntry());
     }
 
-    for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit)) {
-        for (uint32_t thunkOffset : jumpThunks_[target])
-            masm_.patchThunk(thunkOffset, jumpTargets[target].begin);
-    }
+    for (const TrapFarJump& farJump : masm_.trapFarJumps())
+        masm_.patchFarJump(farJump.jump, trapExits[farJump.trap].begin);
 
     // Code-generation is complete!
 
@@ -1093,6 +1123,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 
     // The MacroAssembler has accumulated all the memory accesses during codegen.
     metadata_->memoryAccesses = masm_.extractMemoryAccesses();
+    metadata_->memoryPatches = masm_.extractMemoryPatches();
     metadata_->boundsChecks = masm_.extractBoundsChecks();
 
     // Copy over data from the ModuleGeneratorData.
@@ -1105,6 +1136,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     // These Vectors can get large and the excess capacity can be significant,
     // so realloc them down to size.
     metadata_->memoryAccesses.podResizeToFit();
+    metadata_->memoryPatches.podResizeToFit();
     metadata_->boundsChecks.podResizeToFit();
     metadata_->codeRanges.podResizeToFit();
     metadata_->callSites.podResizeToFit();

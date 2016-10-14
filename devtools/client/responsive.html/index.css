@@ -55,7 +55,7 @@ html, body {
 }
 
 /**
- * Common style for containers and toolbar buttons
+ * Common styles for shared components
  */
 
 .container {
@@ -75,6 +75,57 @@ html, body {
 
 .toolbar-button:active::before {
   filter: url("chrome://devtools/skin/images/filters.svg#checked-icon-state");
+}
+
+select {
+  -moz-appearance: none;
+  background-color: var(--theme-toolbar-background);
+  background-image: var(--viewport-selection-arrow);
+  background-position: 100% 50%;
+  background-repeat: no-repeat;
+  background-size: 7px;
+  border: none;
+  color: var(--viewport-color);
+  padding: 0 8px;
+  text-align: center;
+  text-overflow: ellipsis;
+  font-size: 11px;
+}
+
+select.selected {
+  background-image: var(--viewport-selection-arrow-selected);
+  color: var(--viewport-active-color);
+}
+
+select:hover {
+  background-image: var(--viewport-selection-arrow-hovered);
+  color: var(--viewport-hover-color);
+}
+
+/* This is (believed to be?) separate from the identical select.selected rule
+   set so that it overrides select:hover because of file ordering once the
+   select is focused.  It's unclear whether the visual effect that results here
+   is intentional and desired. */
+select:focus {
+  background-image: var(--viewport-selection-arrow-selected);
+  color: var(--viewport-active-color);
+}
+
+select > option {
+  text-align: left;
+  padding: 5px 10px;
+}
+
+select > option,
+select > option:hover {
+  color: var(--viewport-active-color);
+}
+
+select > option.divider {
+  border-top: 1px solid var(--theme-splitter-color);
+  height: 0px;
+  padding: 0;
+  font-size: 0px;
 }
 
 /**
@@ -131,6 +182,11 @@ html, body {
   opacity: 1 !important;
 }
 
+#global-network-throttling-selector {
+  height: 15px;
+  padding-left: 0;
+  width: 103px;
+}
 
 #viewports {
   /* Make sure left-most viewport is visible when there's horizontal overflow.
@@ -170,50 +226,6 @@ html, body {
   flex-direction: row;
   justify-content: center;
   height: 18px;
-}
-
-.viewport-device-selector {
-  -moz-appearance: none;
-  background-color: var(--theme-toolbar-background);
-  background-image: var(--viewport-selection-arrow);
-  background-position: 100% 52%;
-  background-repeat: no-repeat;
-  background-size: 7px;
-  border: none;
-  color: var(--viewport-color);
-  height: 100%;
-  padding: 0 8px 0 8px;
-  text-align: center;
-  text-overflow: ellipsis;
-  width: 150px;
-  font-size: 11px;
-  width: -moz-fit-content;
-}
-
-.viewport-device-selector.selected {
-  background-image: var(--viewport-selection-arrow-selected);
-  color: var(--viewport-active-color);
-}
-
-.viewport-device-selector:hover {
-  background-image: var(--viewport-selection-arrow-hovered);
-  color: var(--viewport-hover-color);
-}
-
-.viewport-device-selector:focus {
-  background-image: var(--viewport-selection-arrow-selected);
-  color: var(--viewport-active-color);
-}
-
-.viewport-device-selector > option {
-  text-align: left;
-  padding: 5px 10px;
-}
-
-.viewport-device-selector > option,
-.viewport-device-selector > option:hover,
-.viewport-device-selector:hover > option:hover {
-  color: var(--viewport-active-color);
 }
 
 .viewport-rotate-button {
