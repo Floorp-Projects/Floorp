@@ -190,18 +190,16 @@ function tableSection(initialSize) {
     var body = [];
     body.push(...varU32(1));           // number of tables
     body.push(...varU32(AnyFuncCode));
-    body.push(...varU32(DefaultFlag)); // for now, no maximum
+    body.push(...varU32(0x0));         // for now, no maximum
     body.push(...varU32(initialSize));
-    // for now, no maximum
     return { name: tableId, body };
 }
 
 function memorySection(initialSize) {
     var body = [];
     body.push(...varU32(1));           // number of memories
-    body.push(...varU32(DefaultFlag)); // for now, no maximum
+    body.push(...varU32(0x0));         // for now, no maximum
     body.push(...varU32(initialSize));
-    // for now, no maximum
     return { name: memoryId, body };
 }
 
