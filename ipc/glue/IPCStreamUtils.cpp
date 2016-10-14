@@ -173,14 +173,14 @@ CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC)
         streamWithFds.optionalFds().get_PFileDescriptorSetChild());
       MOZ_ASSERT(fdSetActor);
 
-      if (!aConsumedByIPC) {
-        Unused << fdSetActor->Send__delete__(fdSetActor);
-      }
-
       // FileDescriptorSet doesn't clear its fds in its ActorDestroy, so we
       // unconditionally forget them here.  The fds themselves are auto-closed in
       // ~FileDescriptor since they originated in this process.
       fdSetActor->ForgetFileDescriptors(fds);
+
+      if (!aConsumedByIPC) {
+        Unused << fdSetActor->Send__delete__(fdSetActor);
+      }
 
     } else if (streamWithFds.optionalFds().type() ==
                OptionalFileDescriptorSet::TPFileDescriptorSetParent) {
@@ -191,14 +191,14 @@ CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC)
         streamWithFds.optionalFds().get_PFileDescriptorSetParent());
       MOZ_ASSERT(fdSetActor);
 
-      if (!aConsumedByIPC) {
-        Unused << fdSetActor->Send__delete__(fdSetActor);
-      }
-
       // FileDescriptorSet doesn't clear its fds in its ActorDestroy, so we
       // unconditionally forget them here.  The fds themselves are auto-closed in
       // ~FileDescriptor since they originated in this process.
       fdSetActor->ForgetFileDescriptors(fds);
+
+      if (!aConsumedByIPC) {
+        Unused << fdSetActor->Send__delete__(fdSetActor);
+      }
     }
 
     return;
