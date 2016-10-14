@@ -6,6 +6,7 @@
 
 #include "mozilla/StyleSheet.h"
 
+#include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/ServoStyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -152,6 +153,58 @@ StyleSheet::GetTitle(nsAString& aTitle)
 {
   aTitle.Assign(mTitle);
   return NS_OK;
+}
+
+// nsIDOMStyleSheet interface
+
+NS_IMETHODIMP
+StyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
+{
+  NS_ENSURE_ARG_POINTER(aParentStyleSheet);
+  NS_IF_ADDREF(*aParentStyleSheet = GetParentStyleSheet());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StyleSheet::GetMedia(nsIDOMMediaList** aMedia)
+{
+  NS_ADDREF(*aMedia = Media());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StyleSheet::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
+{
+  NS_IF_ADDREF(*aOwnerRule = GetDOMOwnerRule());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
+{
+  ErrorResult rv;
+  nsCOMPtr<nsIDOMCSSRuleList> rules =
+    GetCssRules(*nsContentUtils::SubjectPrincipal(), rv);
+  rules.forget(aCssRules);
+  return rv.StealNSResult();
+}
+
+NS_IMETHODIMP
+StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
+                       uint32_t* aReturn)
+{
+  ErrorResult rv;
+  *aReturn =
+    InsertRule(aRule, aIndex, *nsContentUtils::SubjectPrincipal(), rv);
+  return rv.StealNSResult();
+}
+
+NS_IMETHODIMP
+StyleSheet::DeleteRule(uint32_t aIndex)
+{
+  ErrorResult rv;
+  DeleteRule(aIndex, *nsContentUtils::SubjectPrincipal(), rv);
+  return rv.StealNSResult();
 }
 
 // WebIDL CSSStyleSheet API

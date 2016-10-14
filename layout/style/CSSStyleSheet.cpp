@@ -1628,25 +1628,6 @@ CSSStyleSheet::RegisterNamespaceRule(css::Rule* aRule)
   return NS_OK;
 }
 
-  // nsIDOMStyleSheet interface
-
-NS_IMETHODIMP
-CSSStyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
-{
-  NS_ENSURE_ARG_POINTER(aParentStyleSheet);
-
-  NS_IF_ADDREF(*aParentStyleSheet = mParent);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSStyleSheet::GetMedia(nsIDOMMediaList** aMedia)
-{
-  NS_ADDREF(*aMedia = Media());
-  return NS_OK;
-}
-
 nsMediaList*
 CSSStyleSheet::Media()
 {
@@ -1658,27 +1639,10 @@ CSSStyleSheet::Media()
   return mMedia;
 }
 
-NS_IMETHODIMP    
-CSSStyleSheet::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
-{
-  NS_IF_ADDREF(*aOwnerRule = GetOwnerRule());
-  return NS_OK;
-}
-
 nsIDOMCSSRule*
 CSSStyleSheet::GetDOMOwnerRule() const
 {
   return mOwnerRule ? mOwnerRule->GetDOMRule() : nullptr;
-}
-
-NS_IMETHODIMP    
-CSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
-{
-  ErrorResult rv;
-  nsCOMPtr<nsIDOMCSSRuleList> rules =
-    GetCssRules(*nsContentUtils::SubjectPrincipal(), rv);
-  rules.forget(aCssRules);
-  return rv.StealNSResult();
 }
 
 CSSRuleList*
@@ -1688,17 +1652,6 @@ CSSStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
     mRuleCollection = new CSSRuleListImpl(this);
   }
   return mRuleCollection;
-}
-
-NS_IMETHODIMP    
-CSSStyleSheet::InsertRule(const nsAString& aRule,
-                          uint32_t aIndex,
-                          uint32_t* aReturn)
-{
-  ErrorResult rv;
-  *aReturn =
-    InsertRule(aRule, aIndex, *nsContentUtils::SubjectPrincipal(), rv);
-  return rv.StealNSResult();
 }
 
 static bool
@@ -1830,14 +1783,6 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
   }
 
   return aIndex;
-}
-
-NS_IMETHODIMP    
-CSSStyleSheet::DeleteRule(uint32_t aIndex)
-{
-  ErrorResult rv;
-  DeleteRule(aIndex, *nsContentUtils::SubjectPrincipal(), rv);
-  return rv.StealNSResult();
 }
 
 void
