@@ -235,7 +235,7 @@ function* toggleTool(node) {
 }
 
 function checkUnregistered(toolId, deferred, event, data) {
-  if (data.id == toolId) {
+  if (data == toolId) {
     ok(true, "Correct tool removed");
     // checking tab on the toolbox
     ok(!doc.getElementById("toolbox-tab-" + toolId),

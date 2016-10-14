@@ -190,11 +190,7 @@ OptionsPanel.prototype = {
       let toolDefinition = gDevTools._tools.get(id);
       // Set the kill switch pref boolean to true
       Services.prefs.setBoolPref(toolDefinition.visibilityswitch, this.checked);
-      if (this.checked) {
-        gDevTools.emit("tool-registered", id);
-      } else {
-        gDevTools.emit("tool-unregistered", toolDefinition);
-      }
+      gDevTools.emit(this.checked ? "tool-registered" : "tool-unregistered", id);
     };
 
     let createToolCheckbox = tool => {
