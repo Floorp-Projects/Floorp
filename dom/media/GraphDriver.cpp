@@ -591,25 +591,24 @@ bool IsMacbookOrMacbookAir()
   size_t len = 0;
   sysctlbyname("hw.model", NULL, &len, NULL, 0);
   if (len) {
-    nsAutoPtr<char> model = new char[len];
+    UniquePtr<char[]> model(new char[len]);
     // This string can be
     // MacBook%d,%d for a normal MacBook
     // MacBookPro%d,%d for a MacBook Pro
     // MacBookAir%d,%d for a Macbook Air
-    sysctlbyname("hw.model", model, &len, NULL, 0);
-    char* substring = strstr(model, "MacBook");
+    sysctlbyname("hw.model", model.get(), &len, NULL, 0);
+    char* substring = strstr(model.get(), "MacBook");
     if (substring) {
       const size_t offset = strlen("MacBook");
-      if (strncmp(model + offset, "Air", len - offset) ||
+      if (strncmp(model.get() + offset, "Air", len - offset) ||
           isdigit(model[offset + 1])) {
         return true;
       }
     }
     return false;
   }
-#else
-  return false;
 #endif
+  return false;
 }
 
 void
@@ -668,7 +667,7 @@ AudioCallbackDriver::Init()
   // Macbook and MacBook air don't have enough CPU to run very low latency
   // MediaStreamGraphs, cap the minimal latency to 512 frames int this case.
   if (IsMacbookOrMacbookAir()) {
-    latency_frames = std::max(512, latency_frames);
+    latency_frames = std::max((uint32_t) 512, latency_frames);
   }
 
 
