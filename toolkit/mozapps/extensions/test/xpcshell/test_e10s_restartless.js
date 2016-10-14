@@ -5,6 +5,14 @@
 const ID = "bootstrap1@tests.mozilla.org";
 const ID2 = "bootstrap2@tests.mozilla.org";
 
+const APP_STARTUP   = 1;
+const ADDON_INSTALL = 5;
+
+function getStartupReason(id) {
+  let info = BootstrapMonitor.started.get(id);
+  return info ? info.reason : undefined;
+}
+
 BootstrapMonitor.init();
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -84,6 +92,7 @@ add_task(function*() {
 
   BootstrapMonitor.checkAddonInstalled(ID);
   BootstrapMonitor.checkAddonStarted(ID);
+  do_check_eq(getStartupReason(ID), ADDON_INSTALL);
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -136,6 +145,7 @@ add_task(function*() {
 
   BootstrapMonitor.checkAddonInstalled(ID);
   BootstrapMonitor.checkAddonStarted(ID);
+  do_check_eq(getStartupReason(ID), ADDON_INSTALL);
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -170,6 +180,9 @@ add_task(function*() {
 
   do_check_true(addon.isActive);
   BootstrapMonitor.checkAddonStarted(ID);
+  // This should probably be ADDON_ENABLE, but its not easy to make
+  // that happen.  See bug 1304392 for discussion.
+  do_check_eq(getStartupReason(ID), APP_STARTUP);
 
   do_check_false(hasFlag(addon.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_UNINSTALL));
   addon.uninstall();
@@ -211,6 +224,11 @@ add_task(function*() {
 
   BootstrapMonitor.checkAddonInstalled(ID);
   BootstrapMonitor.checkAddonStarted(ID);
+  do_check_eq(getStartupReason(ID), ADDON_INSTALL);
+
+  BootstrapMonitor.checkAddonInstalled(ID2);
+  BootstrapMonitor.checkAddonStarted(ID2);
+  do_check_eq(getStartupReason(ID2), ADDON_INSTALL);
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -262,6 +280,8 @@ add_task(function*() {
 
   do_check_true(addon.isActive);
   BootstrapMonitor.checkAddonStarted(ID);
+  // Bug 1304392 again (see comment above)
+  do_check_eq(getStartupReason(ID), APP_STARTUP);
 
   do_check_false(hasFlag(addon.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_UNINSTALL));
   addon.uninstall();
