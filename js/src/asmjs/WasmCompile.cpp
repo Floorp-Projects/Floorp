@@ -1034,9 +1034,10 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcDefIndex)
         return d.fail("function body length too big");
 
     const uint8_t* bodyBegin = d.currentPosition();
+    const size_t offsetInModule = d.currentOffset();
 
     FunctionGenerator fg;
-    if (!mg.startFuncDef(d.currentOffset(), &fg))
+    if (!mg.startFuncDef(offsetInModule, &fg))
         return false;
 
     ValTypeVector locals;

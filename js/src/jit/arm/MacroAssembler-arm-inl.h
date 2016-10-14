@@ -1358,8 +1358,9 @@ MacroAssembler::branchPtr(Condition cond, Register lhs, ImmWord rhs, Label* labe
     branch32(cond, lhs, Imm32(rhs.value), label);
 }
 
+template <class L>
 void
-MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label)
+MacroAssembler::branchPtr(Condition cond, const Address& lhs, Register rhs, L label)
 {
     branch32(cond, lhs, rhs, label);
 }
@@ -2045,6 +2046,20 @@ void
 MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
 {
     MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
+{
+    // On ARMv6 the optional argument (BarrierST, etc) is ignored.
+    if (barrier == (MembarStoreStore|MembarSynchronizing))
+        ma_dsb(BarrierST);
+    else if (barrier & MembarSynchronizing)
+        ma_dsb();
+    else if (barrier == MembarStoreStore)
+        ma_dmb(BarrierST);
+    else if (barrier)
+        ma_dmb();
 }
 
 // ===============================================================

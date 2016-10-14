@@ -275,6 +275,13 @@ class LUDivOrMod : public LBinaryMath<0>
             return mir_->toMod()->trapOnError();
         return mir_->toDiv()->trapOnError();
     }
+
+    wasm::TrapOffset trapOffset() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        if (mir_->isMod())
+            return mir_->toMod()->trapOffset();
+        return mir_->toDiv()->trapOffset();
+    }
 };
 
 class LInt64ToFloatingPoint : public LInstructionHelper<1, INT64_PIECES, 0>

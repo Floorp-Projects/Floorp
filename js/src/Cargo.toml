@@ -1,0 +1,18 @@
+[package]
+name = "mozjs_sys"
+version = "0.0.0"
+authors = ["Mozilla"]
+links = "mozjs"
+build = "build.rs"
+
+[features]
+debugmozjs = []
+promises = []
+
+[lib]
+name = "mozjs_sys"
+path = "lib.rs"
+
+[dependencies]
+libc = "0.2"
+libz-sys = "1.0"

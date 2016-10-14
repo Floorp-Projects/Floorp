@@ -23,7 +23,7 @@
 
 namespace js {
 
-namespace jit { class MacroAssembler; }
+namespace jit { class MacroAssembler; class Label; }
 
 namespace wasm {
 
@@ -34,16 +34,26 @@ extern Offsets
 GenerateEntry(jit::MacroAssembler& masm, const FuncDefExport& func);
 
 extern ProfilingOffsets
-GenerateInterpExit(jit::MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex);
+GenerateInterpExit(jit::MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
+                   jit::Label* throwLabel);
 
 extern ProfilingOffsets
-GenerateJitExit(jit::MacroAssembler& masm, const FuncImport& fi);
+GenerateJitExit(jit::MacroAssembler& masm, const FuncImport& fi, jit::Label* throwLabel);
+
+extern ProfilingOffsets
+GenerateTrapExit(jit::MacroAssembler& masm, Trap trap, jit::Label* throwLabel);
 
 extern Offsets
-GenerateJumpTarget(jit::MacroAssembler& masm, JumpTarget target);
+GenerateOutOfBoundsExit(jit::MacroAssembler& masm, jit::Label* throwLabel);
 
 extern Offsets
-GenerateInterruptStub(jit::MacroAssembler& masm);
+GenerateUnalignedExit(jit::MacroAssembler& masm, jit::Label* throwLabel);
+
+extern Offsets
+GenerateInterruptExit(jit::MacroAssembler& masm, jit::Label* throwLabel);
+
+extern Offsets
+GenerateThrowStub(jit::MacroAssembler& masm, jit::Label* throwLabel);
 
 } // namespace wasm
 } // namespace js

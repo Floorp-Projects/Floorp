@@ -675,7 +675,7 @@ class BaseSessionTestRunner(object):
         rv.start()
         return rv
 
-    def add_test(self, test, expected='pass', test_container=None):
+    def add_test(self, test, expected='pass'):
         filepath = os.path.abspath(test)
 
         if os.path.isdir(filepath):
@@ -718,21 +718,19 @@ class BaseSessionTestRunner(object):
                     raise IOError("test file: {} does not exist".format(i["path"]))
 
                 file_ext = os.path.splitext(os.path.split(i['path'])[-1])[-1]
-                test_container = None
 
-                self.add_test(i["path"], i["expected"], test_container)
+                self.add_test(i["path"], i["expected"])
             return
 
-        self.tests.append({'filepath': filepath, 'expected': expected, 'test_container': test_container})
+        self.tests.append({'filepath': filepath, 'expected': expected})
 
-    def run_test(self, filepath, expected, test_container):
+    def run_test(self, filepath, expected):
 
         testloader = unittest.TestLoader()
         suite = unittest.TestSuite()
         self.test_kwargs['binary'] = self.bin
         self.test_kwargs['expected'] = expected
         self.test_kwargs['base_url'] = self.base_url
-        self.test_kwargs['test_container'] = test_container
         mod_name = os.path.splitext(os.path.split(filepath)[-1])[0]
         for handler in self.test_handlers:
             if handler.match(os.path.basename(filepath)):
@@ -748,9 +746,6 @@ class BaseSessionTestRunner(object):
             runner = self.textrunnerclass(logger=self.logger,
                                           result_callbacks=self.result_callbacks,
                                           binary=self.bin)
-
-            if test_container:
-                self.launch_test_container()
 
             results = runner.run(suite)
             self.results.append(results)
@@ -780,7 +775,7 @@ class BaseSessionTestRunner(object):
             random.shuffle(tests)
 
         for test in tests:
-            self.run_test(test['filepath'], test['expected'], test['test_container'])
+            self.run_test(test['filepath'], test['expected'])
 
     def run_test_sets(self):
         if len(self.tests) < 1:

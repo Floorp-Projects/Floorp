@@ -568,11 +568,6 @@ child:
     async NotifyIdleObserver(uint64_t observerId, nsCString topic, nsString str);
 
     /**
-     * Notify windows in the child to apply a new app style.
-     */
-    async OnAppThemeChanged();
-
-    /**
      * Called during plugin initialization to map a plugin id to a child process
      * id.
      */

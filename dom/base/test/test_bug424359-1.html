@@ -10,9 +10,10 @@
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=424359">Mozilla Bug </a>
 <p id="display"></p>
+<!-- IMPORTANT: This iframe needs to actually be displayed, so the serializer
+     sees the relevant styles for <pre> elements. -->
+<iframe id="testframe" src="file_htmlserializer_1.html"></iframe>
 <div id="content" style="display: none">
-  <iframe id="testframe" src="file_htmlserializer_1.html">
-  </iframe>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">

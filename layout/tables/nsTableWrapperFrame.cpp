@@ -845,7 +845,7 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
     InnerTableFrame()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
   nsRect origCaptionRect;
   nsRect origCaptionVisualOverflow;
-  bool captionFirstReflow;
+  bool captionFirstReflow = false;
   if (mCaptionFrames.NotEmpty()) {
     origCaptionRect = mCaptionFrames.FirstChild()->GetRect();
     origCaptionVisualOverflow =

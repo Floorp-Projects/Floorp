@@ -399,12 +399,12 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
 
     // paint the title
-    nscolor overColor;
-    nscolor underColor;
-    nscolor strikeColor;
-    uint8_t overStyle;
-    uint8_t underStyle;
-    uint8_t strikeStyle;
+    nscolor overColor = 0;
+    nscolor underColor = 0;
+    nscolor strikeColor = 0;
+    uint8_t overStyle = 0;
+    uint8_t underStyle = 0;
+    uint8_t strikeStyle = 0;
 
     // Begin with no decorations
     uint8_t decorations = NS_STYLE_TEXT_DECORATION_LINE_NONE;

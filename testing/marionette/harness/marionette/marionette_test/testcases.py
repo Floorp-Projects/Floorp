@@ -431,7 +431,6 @@ class MarionetteTestCase(CommonTestCase):
         self.methodName = methodName
         self.filepath = filepath
         self.testvars = kwargs.pop('testvars', None)
-        self.test_container = kwargs.pop('test_container', None)
         CommonTestCase.__init__(self, methodName, **kwargs)
 
     @classmethod
@@ -514,7 +513,6 @@ class MarionetteJSTestCase(CommonTestCase):
         self.jsFile = jsFile
         self._marionette_weakref = marionette_weakref
         self.marionette = None
-        self.test_container = kwargs.pop('test_container', None)
         CommonTestCase.__init__(self, methodName)
 
     @classmethod

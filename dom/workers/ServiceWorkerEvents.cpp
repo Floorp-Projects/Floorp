@@ -34,7 +34,6 @@
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/FetchEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
-#include "mozilla/dom/MessagePortList.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/PushEventBinding.h"
 #include "mozilla/dom/PushMessageDataBinding.h"
@@ -1172,6 +1171,7 @@ PushEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 ExtendableMessageEvent::ExtendableMessageEvent(EventTarget* aOwner)
   : ExtendableEvent(aOwner)
   , mData(JS::UndefinedValue())
+  , mPortsSet(false)
 {
   mozilla::HoldJSObjects(this);
 }
@@ -1246,29 +1246,30 @@ ExtendableMessageEvent::Constructor(mozilla::dom::EventTarget* aEventTarget,
   }
 
   if (aOptions.mPorts.WasPassed() && !aOptions.mPorts.Value().IsNull()) {
-    nsTArray<RefPtr<MessagePort>> ports;
-    const Sequence<OwningNonNull<MessagePort>>& portsParam =
-      aOptions.mPorts.Value().Value();
-    for (uint32_t i = 0, len = portsParam.Length(); i < len; ++i) {
-      ports.AppendElement(portsParam[i].get());
-    }
-    event->mPorts = new MessagePortList(static_cast<EventBase*>(event), ports);
+    event->mPorts.AppendElements(aOptions.mPorts.Value().Value());
+    event->mPortsSet = true;
   }
 
   return event.forget();
 }
 
-MessagePortList*
-ExtendableMessageEvent::GetPorts() const
+void
+ExtendableMessageEvent::GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts)
 {
-  return mPorts;
+  if (!mPortsSet) {
+    aPorts.SetNull();
+    return;
+  }
+
+  aPorts.SetValue(mPorts);
 }
 
 void
-ExtendableMessageEvent::SetPorts(MessagePortList* aPorts)
+ExtendableMessageEvent::SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts)
 {
-  MOZ_ASSERT(!mPorts && aPorts);
-  mPorts = aPorts;
+  MOZ_ASSERT(mPorts.IsEmpty() && !mPortsSet);
+  mPorts = Move(aPorts);
+  mPortsSet = true;
 }
 
 void
