@@ -69,7 +69,6 @@ GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.15.0
-FONTCONFIG_VERSION=2.7.0
 
 dnl Set various checks
 dnl ========================================================
@@ -5106,11 +5105,8 @@ if test "$USE_FC_FREETYPE"; then
         AC_DEFINE(HAVE_FONTCONFIG_FCFREETYPE_H)
     fi
 
-    PKG_CHECK_MODULES(_FONTCONFIG, fontconfig >= $FONTCONFIG_VERSION,
-    [
-        FT2_CFLAGS="$FT2_CFLAGS $_FONTCONFIG_CFLAGS"
-        FT2_LIBS="$FT2_LIBS $_FONTCONFIG_LIBS"
-    ])
+    FT2_CFLAGS="$FT2_CFLAGS $_FONTCONFIG_CFLAGS"
+    FT2_LIBS="$FT2_LIBS $_FONTCONFIG_LIBS"
 fi
 
 dnl ========================================================
