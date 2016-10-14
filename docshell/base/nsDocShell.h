@@ -295,9 +295,10 @@ private:
   friend void mozilla::TimelineConsumers::AddConsumer(nsDocShell*);
   friend void mozilla::TimelineConsumers::RemoveConsumer(nsDocShell*);
   friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
-    nsDocShell*, const char*, MarkerTracingType);
+    nsDocShell*, const char*, MarkerTracingType, MarkerStackRequest);
   friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
-    nsDocShell*, const char*, const TimeStamp&, MarkerTracingType);
+    nsDocShell*, const char*, const TimeStamp&, MarkerTracingType,
+    MarkerStackRequest);
   friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
     nsDocShell*, UniquePtr<AbstractTimelineMarker>&&);
   friend void mozilla::TimelineConsumers::PopMarkers(nsDocShell*,
