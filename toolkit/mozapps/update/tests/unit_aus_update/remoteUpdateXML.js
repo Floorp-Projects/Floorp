@@ -14,6 +14,11 @@ function run_test() {
   start_httpserver();
   setUpdateURLOverride(gURLData + gHTTPHandlerPath);
   setUpdateChannel("test_channel");
+
+  // This test expects that the app.update.download.backgroundInterval
+  // preference doesn't already exist.
+  Services.prefs.deleteBranch("app.update.download.backgroundInterval");
+
   standardInit();
   do_execute_soon(run_test_pt01);
 }
