@@ -2430,9 +2430,11 @@ static void
 RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsITheme::ThemeGeometryType aType)
 {
-  if (aBuilder->IsInRootChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
+  if (aBuilder->IsInChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
     nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
-    nsRect borderBox(aFrame->GetOffsetTo(displayRoot), aFrame->GetSize());
+    nsPoint offset = aBuilder->IsInSubdocument() ? aBuilder->ToReferenceFrame(aFrame)
+                                                 : aFrame->GetOffsetTo(displayRoot);
+    nsRect borderBox = nsRect(offset, aFrame->GetSize());
     aBuilder->RegisterThemeGeometry(aType,
       LayoutDeviceIntRect::FromUnknownRect(
         borderBox.ToNearestPixels(
@@ -2662,7 +2664,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   if (isThemed) {
     nsITheme* theme = presContext->GetTheme();
     if (theme->NeedToClearBackgroundBehindWidget(aFrame, aFrame->StyleDisplay()->mAppearance) &&
-        aBuilder->IsInRootChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
+        aBuilder->IsInChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
       bgItemList.AppendNewToTop(
         new (aBuilder) nsDisplayClearBackground(aBuilder, aFrame));
     }
