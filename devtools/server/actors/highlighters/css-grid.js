@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Cu } = require("chrome");
 const { extend } = require("sdk/core/heritage");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
@@ -45,7 +46,11 @@ const GRID_GAP_PATTERN_STROKE_STYLE = "#9370DB";
 /**
  * Cached used by `CssGridHighlighter.getGridGapPattern`.
  */
-const gCachedGridPattern = new Map();
+const gCachedGridPattern = new WeakMap();
+// WeakMap key for the Row grid pattern.
+const ROW_KEY = {};
+// WeakMap key for the Column grid pattern.
+const COLUMN_KEY = {};
 
 /**
  * The CssGridHighlighter is the class that overlays a visual grid on top of
@@ -93,6 +98,9 @@ function CssGridHighlighter(highlighterEnv) {
 
   this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
     this._buildMarkup.bind(this));
+
+  this.onNavigate = this.onNavigate.bind(this);
+  this.highlighterEnv.on("navigate", this.onNavigate);
 }
 
 CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
@@ -203,9 +211,9 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   destroy() {
-    AutoRefreshHighlighter.prototype.destroy.call(this);
+    this.highlighterEnv.off("navigate", this.onNavigate);
     this.markup.destroy();
-    gCachedGridPattern.clear();
+    AutoRefreshHighlighter.prototype.destroy.call(this);
   },
 
   getElement(id) {
@@ -223,13 +231,14 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   /**
    * Gets the grid gap pattern used to render the gap regions.
    *
-   * @param  {String} dimensionType
-   *         The grid dimension type which is either the constant COLUMNS or ROWS.
+   * @param  {Object} dimension
+   *         Refers to the WeakMap key for the grid dimension type which is either the
+   *         constant COLUMN or ROW.
    * @return {CanvasPattern} grid gap pattern.
    */
-  getGridGapPattern(dimensionType) {
-    if (gCachedGridPattern.has(dimensionType)) {
-      return gCachedGridPattern.get(dimensionType);
+  getGridGapPattern(dimension) {
+    if (gCachedGridPattern.has(dimension)) {
+      return gCachedGridPattern.get(dimension);
     }
 
     // Create the diagonal lines pattern for the rendering the grid gaps.
@@ -242,7 +251,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     ctx.beginPath();
     ctx.translate(.5, .5);
 
-    if (dimensionType === COLUMNS) {
+    if (dimension === COLUMN_KEY) {
       ctx.moveTo(0, 0);
       ctx.lineTo(GRID_GAP_PATTERN_WIDTH, GRID_GAP_PATTERN_HEIGHT);
     } else {
@@ -254,8 +263,17 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     ctx.stroke();
 
     let pattern = ctx.createPattern(canvas, "repeat");
-    gCachedGridPattern.set(dimensionType, pattern);
+    gCachedGridPattern.set(dimension, pattern);
     return pattern;
+  },
+
+  /**
+   * Called when the page navigates. Used to clear the cached gap patterns and avoid
+   * using DeadWrapper objects as gap patterns the next time.
+   */
+  onNavigate() {
+    gCachedGridPattern.delete(ROW_KEY);
+    gCachedGridPattern.delete(COLUMN_KEY);
   },
 
   _show() {
@@ -602,11 +620,12 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    */
   renderGridGap(linePos, startPos, endPos, breadth, dimensionType) {
     this.ctx.save();
-    this.ctx.fillStyle = this.getGridGapPattern(dimensionType);
 
     if (dimensionType === COLUMNS) {
+      this.ctx.fillStyle = this.getGridGapPattern(COLUMN_KEY);
       this.ctx.fillRect(linePos, startPos, breadth, endPos - startPos);
     } else {
+      this.ctx.fillStyle = this.getGridGapPattern(ROW_KEY);
       this.ctx.fillRect(startPos, linePos, endPos - startPos, breadth);
     }
 
@@ -710,6 +729,10 @@ exports.CssGridHighlighter = CssGridHighlighter;
  * @return {String} representation of the CSS grid fragment data.
  */
 function stringifyGridFragments(fragments = []) {
+  if (fragments[0] && Cu.isDeadWrapper(fragments[0])) {
+    return {};
+  }
+
   return JSON.stringify(fragments.map(getStringifiableFragment));
 }
 

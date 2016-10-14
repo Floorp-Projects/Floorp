@@ -300,9 +300,7 @@ function createDebuggerContext(toolbox) {
 function initDebugger(url, ...sources) {
   return Task.spawn(function* () {
     const toolbox = yield openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
-    const dbg = createDebuggerContext(toolbox);
-    yield waitForSources(dbg, ...sources);
-    return dbg;
+    return createDebuggerContext(toolbox);
   });
 };
 
