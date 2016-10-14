@@ -3112,7 +3112,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
              * traced by TraceProtoAndIfaceCache() and its contents are never
              * changed after they have been set.
              *
-             * Calling address() avoids the read read barrier that does grey
+             * Calling address() avoids the read read barrier that does gray
              * unmarking, but it's not possible for the object to be gray here.
              */
 
