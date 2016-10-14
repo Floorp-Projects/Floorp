@@ -1242,20 +1242,16 @@ CSSStyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
 }
 
 // QueryInterface implementation for CSSStyleSheet
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSStyleSheet)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(CSSStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCSSStyleSheet)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, StyleSheet)
   if (aIID.Equals(NS_GET_IID(CSSStyleSheet)))
     foundInterface = reinterpret_cast<nsISupports*>(this);
   else
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(StyleSheet)
 
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(CSSStyleSheet)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(CSSStyleSheet)
+NS_IMPL_ADDREF_INHERITED(CSSStyleSheet, StyleSheet)
+NS_IMPL_RELEASE_INHERITED(CSSStyleSheet, StyleSheet)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CSSStyleSheet)
 
@@ -1268,18 +1264,15 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSStyleSheet)
   tmp->DropRuleCollection();
   tmp->UnlinkInner();
   tmp->mScopeElement = nullptr;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CSSStyleSheet)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(StyleSheet)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSStyleSheet, StyleSheet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
   // We do not traverse mNext; our parent will handle that.  See
   // comments in Unlink for why.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScopeElement)
   tmp->TraverseInner(cb);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(CSSStyleSheet)
 
 nsresult
 CSSStyleSheet::AddRuleProcessor(nsCSSRuleProcessor* aProcessor)
@@ -2028,13 +2021,6 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
     }
   }
   return NS_OK;
-}
-
-/* virtual */
-JSObject*
-CSSStyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return CSSStyleSheetBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace mozilla

@@ -23,14 +23,6 @@ ServoStyleSheet::~ServoStyleSheet()
   DropSheet();
 }
 
-NS_INTERFACE_MAP_BEGIN(ServoStyleSheet)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(ServoStyleSheet)
-NS_IMPL_RELEASE(ServoStyleSheet)
-
 bool
 ServoStyleSheet::HasRules() const
 {

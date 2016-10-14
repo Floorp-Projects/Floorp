@@ -306,9 +306,8 @@ public:
     return mDocument;
   }
 
-  virtual uint32_t Length() override;
-  virtual mozilla::CSSStyleSheet*
-  IndexedGetter(uint32_t aIndex, bool& aFound) override;
+  uint32_t Length() override;
+  mozilla::StyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) override;
 
 protected:
   virtual ~nsDOMStyleSheetList();
