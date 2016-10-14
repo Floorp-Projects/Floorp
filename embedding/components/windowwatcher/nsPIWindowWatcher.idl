@@ -139,7 +139,7 @@ interface nsPIWindowWatcher : nsISupports
    * @see findItemWithName methods on nsIDocShellTreeItem and
    *      nsIDocShellTreeOwner
    */
-  nsIDocShellTreeItem findItemWithName(in wstring aName,
+  nsIDocShellTreeItem findItemWithName(in AString aName,
                                        in nsIDocShellTreeItem aRequestor,
                                        in nsIDocShellTreeItem aOriginalRequestor);
 };

@@ -148,7 +148,7 @@ interface nsIWindowWatcher : nsISupports {
       frame with the given window name. Make sure you understand the
       security implications of this before using this method!
   */
-  mozIDOMWindowProxy getWindowByName(in wstring aTargetName,
+  mozIDOMWindowProxy getWindowByName(in AString aTargetName,
                                      in mozIDOMWindowProxy aCurrentWindow);
 
   /** The Watcher serves as a global storage facility for the current active

@@ -114,8 +114,7 @@ nsDOMWindowList::NamedItem(const nsAString& aName, mozIDOMWindowProxy** aReturn)
   EnsureFresh();
 
   if (mDocShellNode) {
-    mDocShellNode->FindChildWithName(PromiseFlatString(aName).get(),
-                                     false, false, nullptr,
+    mDocShellNode->FindChildWithName(aName, false, false, nullptr,
                                      nullptr, getter_AddRefs(item));
 
     nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
