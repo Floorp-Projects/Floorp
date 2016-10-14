@@ -116,7 +116,7 @@ TabGroup::Leave(nsPIDOMWindowOuter* aWindow)
 }
 
 nsresult
-TabGroup::FindItemWithName(const char16_t* aName,
+TabGroup::FindItemWithName(const nsAString& aName,
                            nsIDocShellTreeItem* aRequestor,
                            nsIDocShellTreeItem* aOriginalRequestor,
                            nsIDocShellTreeItem** aFoundItem)
@@ -124,13 +124,10 @@ TabGroup::FindItemWithName(const char16_t* aName,
   NS_ENSURE_ARG_POINTER(aFoundItem);
   *aFoundItem = nullptr;
 
-#ifdef DEBUG
-  nsDependentString name(aName);
-  MOZ_ASSERT(!name.LowerCaseEqualsLiteral("_blank") &&
-             !name.LowerCaseEqualsLiteral("_top") &&
-             !name.LowerCaseEqualsLiteral("_parent") &&
-             !name.LowerCaseEqualsLiteral("_self"));
-#endif
+  MOZ_ASSERT(!aName.LowerCaseEqualsLiteral("_blank") &&
+             !aName.LowerCaseEqualsLiteral("_top") &&
+             !aName.LowerCaseEqualsLiteral("_parent") &&
+             !aName.LowerCaseEqualsLiteral("_self"));
 
   for (nsPIDOMWindowOuter* outerWindow : mWindows) {
     // Ignore non-toplevel windows
