@@ -289,7 +289,8 @@ class FileAvoidWrite(BytesIO):
     def __enter__(self):
         return self
     def __exit__(self, type, value, traceback):
-        self.close()
+        if not self.closed:
+            self.close()
 
 
 def resolve_target_to_make(topobjdir, target):
