@@ -25,6 +25,7 @@
 #include "Units.h"
 #include "nsIWebBrowserPersistable.h"
 #include "nsIFrame.h"
+#include "nsIGroupedSHistory.h"
 
 class nsIURI;
 class nsSubDocumentFrame;
@@ -363,6 +364,9 @@ private:
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;
+
+  nsCOMPtr<nsIPartialSHistory> mPartialSessionHistory;
+  nsCOMPtr<nsIGroupedSHistory> mGroupedSessionHistory;
 
   bool mIsPrerendered : 1;
   bool mDepthTooGreat : 1;
