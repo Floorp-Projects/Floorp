@@ -196,35 +196,6 @@ nsSupportsArray::DeleteArray(void)
   }
 }
 
-
-NS_IMETHODIMP_(bool)
-nsSupportsArray::Equals(const nsISupportsArray* aOther)
-{
-  if (aOther) {
-    uint32_t countOther;
-    nsISupportsArray* other = const_cast<nsISupportsArray*>(aOther);
-    nsresult rv = other->Count(&countOther);
-    if (NS_FAILED(rv)) {
-      return false;
-    }
-
-    if (mCount == countOther) {
-      uint32_t index = mCount;
-      nsCOMPtr<nsISupports> otherElem;
-      while (index--) {
-        if (NS_FAILED(other->GetElementAt(index, getter_AddRefs(otherElem)))) {
-          return false;
-        }
-        if (mArray[index] != otherElem) {
-          return false;
-        }
-      }
-      return true;
-    }
-  }
-  return false;
-}
-
 NS_IMETHODIMP
 nsSupportsArray::GetElementAt(uint32_t aIndex, nsISupports** aOutPtr)
 {
