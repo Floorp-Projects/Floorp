@@ -1,0 +1,22 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+fixtures = [
+    'native-addon-test',
+    'native-overrides-test',
+]
+
+output_dir = OBJDIR_FILES._tests.testing.mochitest['jetpack-package']['addon-sdk'].source.test.fixtures
+
+for fixture in fixtures:
+    xpi = '%s.xpi' % fixture
+
+    GENERATED_FILES += [xpi]
+    f = GENERATED_FILES[xpi]
+    f.script = 'create_xpi.py'
+    f.inputs = [fixture]
+
+    output_dir += ['!%s' % xpi]
