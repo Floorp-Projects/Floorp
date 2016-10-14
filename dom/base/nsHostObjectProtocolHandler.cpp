@@ -33,6 +33,7 @@ using mozilla::dom::BlobImpl;
 using mozilla::dom::MediaSource;
 using mozilla::ErrorResult;
 using mozilla::net::LoadInfo;
+using mozilla::Move;
 
 // -----------------------------------------------------------------------
 // Hash table
@@ -615,7 +616,7 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
   }
 
   if (!info->mURIs.IsEmpty()) {
-    ReleasingTimerHolder::Create(Move(info->mURIs));
+    mozilla::ReleasingTimerHolder::Create(Move(info->mURIs));
   }
 
   gDataTable->Remove(aUri);
