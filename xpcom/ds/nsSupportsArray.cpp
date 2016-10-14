@@ -6,11 +6,12 @@
 
 #include <stdint.h>
 #include <string.h>
-
-#include "nsIObjectInputStream.h"
-#include "nsIObjectOutputStream.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/MathAlgorithms.h"
 #include "nsSupportsArray.h"
 #include "nsSupportsArrayEnumerator.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 
 nsresult
 nsQueryElementAt::operator()(const nsIID& aIID, void** aResult) const
@@ -28,11 +29,69 @@ nsQueryElementAt::operator()(const nsIID& aIID, void** aResult) const
 
 nsSupportsArray::nsSupportsArray()
 {
+  mArray = mAutoArray;
+  mArraySize = kAutoArraySize;
+  mCount = 0;
 }
 
 nsSupportsArray::~nsSupportsArray()
 {
-  Clear();
+  DeleteArray();
+}
+
+bool
+nsSupportsArray::GrowArrayBy(uint32_t aGrowBy)
+{
+  const uint32_t kGrowArrayBy = 8;
+  const uint32_t kLinearThreshold = 16 * sizeof(nsISupports*);
+
+  // We have to grow the array. Grow by kGrowArrayBy slots if we're smaller
+  // than kLinearThreshold bytes, or a power of two if we're larger.
+  // This is much more efficient with most memory allocators, especially
+  // if it's very large, or of the allocator is binned.
+  if (aGrowBy < kGrowArrayBy) {
+    aGrowBy = kGrowArrayBy;
+  }
+
+  CheckedUint32 newCount(mArraySize);
+  newCount += aGrowBy;  // Minimum increase
+  CheckedUint32 newSize(sizeof(mArray[0]));
+  newSize *= newCount;
+
+  if (!newSize.isValid()) {
+    return false;
+  }
+
+  if (newSize.value() >= kLinearThreshold) {
+    // newCount includes enough space for at least kGrowArrayBy new slots.
+    // Select the next power-of-two size in bytes above that if newSize is
+    // not a power of two.
+    if (newSize.value() & (newSize.value() - 1)) {
+      newSize = UINT64_C(1) << mozilla::CeilingLog2(newSize.value());
+      if (!newSize.isValid()) {
+        return false;
+      }
+    }
+
+    newCount = newSize / sizeof(mArray[0]);
+  }
+  // XXX This would be far more efficient in many allocators if we used
+  // XXX PR_Realloc(), etc
+  nsISupports** oldArray = mArray;
+
+  mArray = new nsISupports*[newCount.value()];
+  mArraySize = newCount.value();
+
+  if (oldArray) {                   // need to move old data
+    if (0 < mCount) {
+      ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
+    }
+    if (oldArray != &(mAutoArray[0])) {
+      delete[] oldArray;
+    }
+  }
+
+  return true;
 }
 
 nsresult
@@ -53,8 +112,6 @@ NS_IMPL_ISUPPORTS(nsSupportsArray, nsISupportsArray, nsICollection,
 NS_IMETHODIMP
 nsSupportsArray::Read(nsIObjectInputStream* aStream)
 {
-  // TODO(ER): This used to leak when resizing the array. Not sure if that was
-  // intentional, I'm guessing not.
   nsresult rv;
 
   uint32_t newArraySize;
@@ -63,39 +120,42 @@ nsSupportsArray::Read(nsIObjectInputStream* aStream)
     return rv;
   }
 
-  uint32_t count;
-  rv = aStream->Read32(&count);
+  if (newArraySize <= kAutoArraySize) {
+    if (mArray != mAutoArray) {
+      delete[] mArray;
+      mArray = mAutoArray;
+    }
+    newArraySize = kAutoArraySize;
+  } else {
+    if (newArraySize <= mArraySize) {
+      // Keep non-default-size mArray, it's more than big enough.
+      newArraySize = mArraySize;
+    } else {
+      nsISupports** array = new nsISupports*[newArraySize];
+      if (mArray != mAutoArray) {
+        delete[] mArray;
+      }
+      mArray = array;
+    }
+  }
+  mArraySize = newArraySize;
+
+  rv = aStream->Read32(&mCount);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  NS_ASSERTION(count <= newArraySize, "overlarge mCount!");
-  if (count > newArraySize) {
-    count = newArraySize;
+  NS_ASSERTION(mCount <= mArraySize, "overlarge mCount!");
+  if (mCount > mArraySize) {
+    mCount = mArraySize;
   }
 
-  // Don't clear out our array until we know we have enough space for the new
-  // one and have successfully copied everything out of the stream.
-  ISupportsArray tmp;
-  if (!tmp.SetCapacity(newArraySize, mozilla::fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  auto elems = tmp.AppendElements(count, mozilla::fallible);
-  for (uint32_t i = 0; i < count; i++) {
-    rv = aStream->ReadObject(true, &elems[i]);
+  for (uint32_t i = 0; i < mCount; i++) {
+    rv = aStream->ReadObject(true, &mArray[i]);
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
-
-  // Now clear out existing refs and replace with the new array.
-  for (auto& item : mArray) {
-    NS_IF_RELEASE(item);
-  }
-
-  mArray.Clear();
-  mArray.SwapElements(tmp);
 
   return NS_OK;
 }
@@ -105,18 +165,18 @@ nsSupportsArray::Write(nsIObjectOutputStream* aStream)
 {
   nsresult rv;
 
-  rv = aStream->Write32(mArray.Capacity());
+  rv = aStream->Write32(mArraySize);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = aStream->Write32(mArray.Length());
+  rv = aStream->Write32(mCount);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  for (auto& item : mArray) {
-    rv = aStream->WriteObject(item, true);
+  for (uint32_t i = 0; i < mCount; i++) {
+    rv = aStream->WriteObject(mArray[i], true);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -125,42 +185,95 @@ nsSupportsArray::Write(nsIObjectOutputStream* aStream)
   return NS_OK;
 }
 
+void
+nsSupportsArray::DeleteArray(void)
+{
+  Clear();
+  if (mArray != &(mAutoArray[0])) {
+    delete[] mArray;
+    mArray = mAutoArray;
+    mArraySize = kAutoArraySize;
+  }
+}
+
 NS_IMETHODIMP
 nsSupportsArray::GetElementAt(uint32_t aIndex, nsISupports** aOutPtr)
 {
-  NS_IF_ADDREF(*aOutPtr = mArray.SafeElementAt(aIndex, nullptr));
+  *aOutPtr = nullptr;
+  if (aIndex < mCount) {
+    NS_IF_ADDREF(*aOutPtr = mArray[aIndex]);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP_(int32_t)
 nsSupportsArray::IndexOf(const nsISupports* aPossibleElement)
 {
-  return mArray.IndexOf(aPossibleElement);
+  const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
+  const nsISupports** ep = start;
+  const nsISupports** end = (start + mCount);
+  while (ep < end) {
+    if (aPossibleElement == *ep) {
+      return (ep - start);
+    }
+    ep++;
+  }
+  return -1;
 }
 
 NS_IMETHODIMP_(int32_t)
 nsSupportsArray::LastIndexOf(const nsISupports* aPossibleElement)
 {
-  return mArray.LastIndexOf(aPossibleElement);
+  if (0 < mCount) {
+    const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
+    const nsISupports** ep = (start + mCount);
+    while (start <= --ep) {
+      if (aPossibleElement == *ep) {
+        return (ep - start);
+      }
+    }
+  }
+  return -1;
 }
 
 NS_IMETHODIMP_(bool)
 nsSupportsArray::InsertElementAt(nsISupports* aElement, uint32_t aIndex)
 {
+  if (aIndex <= mCount) {
+    CheckedUint32 newCount(mCount);
+    newCount += 1;
+    if (!newCount.isValid()) {
+      return false;
+    }
 
-  if (aIndex > mArray.Length() ||
-      !mArray.InsertElementAt(aIndex, aElement, mozilla::fallible)) {
-    return false;
+    if (mArraySize < newCount.value()) {
+      // need to grow the array
+      if (!GrowArrayBy(1)) {
+        return false;
+      }
+    }
+
+    // Could be slightly more efficient if GrowArrayBy knew about the
+    // split, but the difference is trivial.
+    uint32_t slide = (mCount - aIndex);
+    if (0 < slide) {
+      ::memmove(mArray + aIndex + 1, mArray + aIndex,
+                slide * sizeof(nsISupports*));
+    }
+
+    mArray[aIndex] = aElement;
+    NS_IF_ADDREF(aElement);
+    mCount++;
+
+    return true;
   }
-
-  NS_IF_ADDREF(aElement);
-  return true;
+  return false;
 }
 
 NS_IMETHODIMP_(bool)
 nsSupportsArray::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex)
 {
-  if (aIndex < mArray.Length()) {
+  if (aIndex < mCount) {
     NS_IF_ADDREF(aElement);  // addref first in case it's the same object!
     NS_IF_RELEASE(mArray[aIndex]);
     mArray[aIndex] = aElement;
@@ -172,9 +285,15 @@ nsSupportsArray::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex)
 NS_IMETHODIMP_(bool)
 nsSupportsArray::RemoveElementAt(uint32_t aIndex)
 {
-  if (aIndex + 1 <= mArray.Length()) {
+  if (aIndex + 1 <= mCount) {
     NS_IF_RELEASE(mArray[aIndex]);
-    mArray.RemoveElementAt(aIndex);
+
+    mCount -= 1;
+    int32_t slide = (mCount - aIndex);
+    if (0 < slide) {
+      ::memmove(mArray + aIndex, mArray + aIndex + 1,
+                slide * sizeof(nsISupports*));
+    }
     return true;
   }
   return false;
@@ -194,19 +313,35 @@ nsSupportsArray::RemoveElement(nsISupports* aElement)
 NS_IMETHODIMP
 nsSupportsArray::Clear(void)
 {
-  for (auto& item : mArray) {
-    NS_IF_RELEASE(item);
+  if (0 < mCount) {
+    do {
+      --mCount;
+      NS_IF_RELEASE(mArray[mCount]);
+    } while (0 != mCount);
   }
-
-  mArray.Clear();
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSupportsArray::Compact(void)
 {
-  mArray.Compact();
+  if ((mArraySize != mCount) && (kAutoArraySize < mArraySize)) {
+    nsISupports** oldArray = mArray;
+    if (mCount <= kAutoArraySize) {
+      mArray = mAutoArray;
+      mArraySize = kAutoArraySize;
+    } else {
+      mArray = new nsISupports*[mCount];
+      if (!mArray) {
+        mArray = oldArray;
+        return NS_OK;
+      }
+      mArraySize = mCount;
+    }
+
+    ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
+    delete[] oldArray;
+  }
   return NS_OK;
 }
 
@@ -228,10 +363,10 @@ nsSupportsArray::Clone(nsISupportsArray** aResult)
     return rv;
   }
 
-  for (auto& item : mArray) {
-    // AppendElement does an odd cast of bool to nsresult, we just cast back
-    // here.
-    if (!(bool)newArray->AppendElement(item)) {
+  uint32_t count = 0;
+  Count(&count);
+  for (uint32_t i = 0; i < count; i++) {
+    if (!newArray->InsertElementAt(mArray[i], i)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
