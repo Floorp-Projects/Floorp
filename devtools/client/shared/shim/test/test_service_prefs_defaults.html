@@ -56,6 +56,14 @@ is(Services.prefs.getCharPref("pref3"), "glass winged butterfly", "pref3 value")
 // Only pref3 should be in local storage at this point.
 is(localStorage.length, 1, "local storage is correct");
 
+Services.prefs.setCharPref("pref2", "pref2override");
+
+// Check that a default pref can be overridden properly
+
+// Workaround to reset the prefs helper and force it to read defaults & overrides again.
+Services._prefs = null;
+is(Services.prefs.getCharPref("pref2"), "pref2override", "pref2 value overridden");
+
 // Clean up.
 localStorage.clear();
 

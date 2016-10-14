@@ -246,7 +246,7 @@ PrefBranch.prototype = {
       userValue: this._userValue,
     };
 
-    localStorage.setItem(PREFIX + this.fullName, JSON.stringify(store));
+    localStorage.setItem(PREFIX + this._fullName, JSON.stringify(store));
     this._parent._notify(this._name);
   },
 
@@ -341,8 +341,9 @@ PrefBranch.prototype = {
     let parent = this;
     for (let branch of branchList) {
       if (!parent._children[branch]) {
-        parent._children[branch] = new PrefBranch(parent, branch,
-                                                  parent.root + "." + branch);
+        let isParentRoot = !parent.parent;
+        let branchName = (isParentRoot ? "" : parent.root + ".") + branch;
+        parent._children[branch] = new PrefBranch(parent, branch, branchName);
       }
       parent = parent._children[branch];
     }
