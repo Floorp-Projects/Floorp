@@ -130,7 +130,7 @@ protected:
   // and/or useful in user sheets.
   css::SheetParsingMode mParsingMode;
 
-  StyleBackendType      mType;
+  const StyleBackendType mType;
   bool                  mDisabled;
 };
 
