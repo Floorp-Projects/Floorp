@@ -242,10 +242,10 @@ public:
 
   /**
    * Calls Destroy() on all APZC instances attached to the tree, and resets the
-   * tree back to empty. This function must be called exactly once during the
-   * lifetime of this APZCTreeManager, when this APZCTreeManager is no longer
-   * needed. Failing to call this function may prevent objects from being freed
-   * properly.
+   * tree back to empty. This function may be called multiple times during the
+   * lifetime of this APZCTreeManager, but it must always be called at least once
+   * when this APZCTreeManager is no longer needed. Failing to call this function
+   * may prevent objects from being freed properly.
    */
   void ClearTree();
 
@@ -517,10 +517,6 @@ private:
   /* For logging the APZC tree for debugging (enabled by the apz.printtree
    * pref). */
   gfx::TreeLog mApzcTreeLog;
-
-  class CheckerboardFlushObserver;
-  friend class CheckerboardFlushObserver;
-  RefPtr<CheckerboardFlushObserver> mFlushObserver;
 
   static float sDPI;
 };
