@@ -117,6 +117,8 @@ public:
   MOZ_MUST_USE NS_IMETHOD_(bool)
   RemoveElementsAt(uint32_t aIndex, uint32_t aCount) override;
 
+  MOZ_MUST_USE NS_IMETHOD_(bool)
+  SizeTo(int32_t aSize) override;
 protected:
   void DeleteArray(void);
 
