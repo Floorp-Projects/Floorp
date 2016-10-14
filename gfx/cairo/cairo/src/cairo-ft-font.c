@@ -736,6 +736,7 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 	double min_distance = DBL_MAX;
 	cairo_bool_t magnify = TRUE;
 	int i;
+	int best_i = 0;
 	double best_x_size = 0;
 	double best_y_size = 0;
 
@@ -754,6 +755,7 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 	    if ((magnify && distance >= 0) || fabs (distance) <= min_distance) {
 		magnify = distance < 0;
 		min_distance = fabs (distance);
+		best_i = i;
 		best_x_size = x_size;
 		best_y_size = y_size;
 	    }

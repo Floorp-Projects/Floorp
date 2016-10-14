@@ -916,7 +916,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					      double		     width,
 					      double		     height)
 {
-    cairo_status_t status;
+    cairo_status_t status, status_ignored;
     cairo_ps_surface_t *surface;
 
     surface = malloc (sizeof (cairo_ps_surface_t));
@@ -1003,13 +1003,13 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
  CLEANUP_OUTPUT_STREAM:
-    _cairo_output_stream_destroy (surface->stream);
+    status_ignored = _cairo_output_stream_destroy (surface->stream);
     fclose (surface->tmpfile);
  CLEANUP_SURFACE:
     free (surface);
  CLEANUP:
     /* destroy stream on behalf of caller */
-    _cairo_output_stream_destroy (stream);
+    status_ignored = _cairo_output_stream_destroy (stream);
 
     return _cairo_surface_create_in_error (status);
 }
@@ -1118,40 +1118,41 @@ _extract_ps_surface (cairo_surface_t	 *surface,
 		     cairo_ps_surface_t **ps_surface)
 {
     cairo_surface_t *target;
+    cairo_status_t status_ignored;
 
     if (surface->status)
 	return FALSE;
     if (surface->finished) {
         if (set_error_on_failure)
-            _cairo_surface_set_error (surface,
-				      _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+            status_ignored = _cairo_surface_set_error (surface,
+                                                       _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return FALSE;
     }
 
     if (! _cairo_surface_is_paginated (surface)) {
         if (set_error_on_failure)
-            _cairo_surface_set_error (surface,
-				      _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+            status_ignored = _cairo_surface_set_error (surface,
+                                                       _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 	return FALSE;
     }
 
     target = _cairo_paginated_surface_get_target (surface);
     if (target->status) {
         if (set_error_on_failure)
-            _cairo_surface_set_error (surface, target->status);
+            status_ignored = _cairo_surface_set_error (surface, target->status);
 	return FALSE;
     }
     if (target->finished) {
         if (set_error_on_failure)
-            _cairo_surface_set_error (surface,
-				      _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+            status_ignored = _cairo_surface_set_error (surface,
+                                                       _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return FALSE;
     }
 
     if (! _cairo_surface_is_ps (target)) {
         if (set_error_on_failure)
-            _cairo_surface_set_error (surface,
-				      _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+            status_ignored = _cairo_surface_set_error (surface,
+                                                       _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 	return FALSE;
     }
 
@@ -1813,6 +1814,15 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 	return CAIRO_STATUS_SUCCESS;
 
     return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+}
+
+static cairo_bool_t
+_cairo_ps_surface_operation_supported (cairo_ps_surface_t    *surface,
+				       cairo_operator_t       op,
+				       const cairo_pattern_t       *pattern,
+				       const cairo_rectangle_int_t *extents)
+{
+    return _cairo_ps_surface_analyze_operation (surface, op, pattern, extents) != CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 /* The "standard" implementation limit for PostScript string sizes is
@@ -3766,11 +3776,12 @@ _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
 				      cairo_paginated_mode_t	 paginated_mode)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
     surface->paginated_mode = paginated_mode;
 
     if (surface->clipper.clip.path != NULL) {
-	_cairo_pdf_operators_flush (&surface->pdf_operators);
+	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
 
 	_cairo_output_stream_printf (surface->stream, "Q q\n");
 	_cairo_surface_clipper_reset (&surface->clipper);
