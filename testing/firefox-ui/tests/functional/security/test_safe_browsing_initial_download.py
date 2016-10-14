@@ -32,6 +32,7 @@ class TestSafeBrowsingInitialDownload(FirefoxTestCase):
     }
 
     prefs_safebrowsing = {
+        'browser.safebrowsing.debug': True,
         'browser.safebrowsing.blockedURIs.enabled': True,
         'browser.safebrowsing.downloads.enabled': True,
         'browser.safebrowsing.phishing.enabled': True,
