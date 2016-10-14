@@ -1082,7 +1082,6 @@ CSSStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
-    mTitle(),
     mParent(nullptr),
     mOwnerRule(nullptr),
     mDirty(false),
@@ -1099,7 +1098,6 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              ReferrerPolicy aReferrerPolicy,
                              const SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
-    mTitle(),
     mParent(nullptr),
     mOwnerRule(nullptr),
     mDirty(false),
@@ -1117,7 +1115,6 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
                              nsIDocument* aDocumentToUse,
                              nsINode* aOwningNodeToUse)
   : StyleSheet(aCopy, aDocumentToUse, aOwningNodeToUse),
-    mTitle(aCopy.mTitle),
     mParent(aParentToUse),
     mOwnerRule(aOwnerRuleToUse),
     mDirty(aCopy.mDirty),
@@ -1321,12 +1318,6 @@ CSSStyleSheet::DropStyleSet(nsStyleSet* aStyleSet)
 {
   DebugOnly<bool> found = mStyleSets.RemoveElement(aStyleSet);
   NS_ASSERTION(found, "didn't find style set");
-}
-
-void
-CSSStyleSheet::GetType(nsString& aType) const
-{
-  aType.AssignLiteral("text/css");
 }
 
 bool
@@ -1675,36 +1666,6 @@ CSSStyleSheet::RegisterNamespaceRule(css::Rule* aRule)
 }
 
   // nsIDOMStyleSheet interface
-NS_IMETHODIMP    
-CSSStyleSheet::GetType(nsAString& aType)
-{
-  aType.AssignLiteral("text/css");
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-CSSStyleSheet::GetDisabled(bool* aDisabled)
-{
-  *aDisabled = Disabled();
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-CSSStyleSheet::SetDisabled(bool aDisabled)
-{
-  // DOM method, so handle BeginUpdate/EndUpdate
-  MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_STYLE, true);
-  CSSStyleSheet::SetEnabled(!aDisabled);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSStyleSheet::GetOwnerNode(nsIDOMNode** aOwnerNode)
-{
-  nsCOMPtr<nsIDOMNode> ownerNode = do_QueryInterface(GetOwnerNode());
-  ownerNode.forget(aOwnerNode);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 CSSStyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
@@ -1713,34 +1674,6 @@ CSSStyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
 
   NS_IF_ADDREF(*aParentStyleSheet = mParent);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSStyleSheet::GetHref(nsAString& aHref)
-{
-  if (mInner->mOriginalSheetURI) {
-    nsAutoCString str;
-    nsresult rv = mInner->mOriginalSheetURI->GetSpec(str);
-    NS_ENSURE_SUCCESS(rv, rv);
-    CopyUTF8toUTF16(str, aHref);
-  } else {
-    SetDOMStringToNull(aHref);
-  }
-
-  return NS_OK;
-}
-
-void
-CSSStyleSheet::GetTitle(nsString& aTitle) const
-{
-  aTitle = mTitle;
-}
-
-NS_IMETHODIMP
-CSSStyleSheet::GetTitle(nsAString& aTitle)
-{
-  aTitle.Assign(mTitle);
   return NS_OK;
 }
 

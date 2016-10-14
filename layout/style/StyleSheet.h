@@ -14,6 +14,8 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/ServoUtils.h"
 
+#include "nsIDOMCSSStyleSheet.h"
+
 class nsIDocument;
 class nsINode;
 
@@ -30,7 +32,7 @@ class SRIMetadata;
 /**
  * Superclass for data common to CSSStyleSheet and ServoStyleSheet.
  */
-class StyleSheet
+class StyleSheet : public nsIDOMCSSStyleSheet
 {
 protected:
   StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode);
@@ -115,6 +117,22 @@ public:
   inline void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
 #endif
 
+  // WebIDL StyleSheet API
+  // The XPCOM GetType is fine for WebIDL.
+  // The XPCOM GetHref is fine for WebIDL
+  // GetOwnerNode is defined above.
+  // The XPCOM GetTitle is fine for WebIDL.
+  bool Disabled() const { return mDisabled; }
+  // The XPCOM SetDisabled is fine for WebIDL.
+
+  // nsIDOMStyleSheet interface
+  NS_IMETHOD GetType(nsAString& aType) final;
+  NS_IMETHOD GetDisabled(bool* aDisabled) final;
+  NS_IMETHOD SetDisabled(bool aDisabled) final;
+  NS_IMETHOD GetOwnerNode(nsIDOMNode** aOwnerNode) final;
+  NS_IMETHOD GetHref(nsAString& aHref) final;
+  NS_IMETHOD GetTitle(nsAString& aTitle) final;
+
 private:
   // Get a handle to the various stylesheet bits which live on the 'inner' for
   // gecko stylesheets and live on the StyleSheet for Servo stylesheets.
@@ -122,6 +140,7 @@ private:
   inline const StyleSheetInfo& SheetInfo() const;
 
 protected:
+  nsString              mTitle;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref
 
