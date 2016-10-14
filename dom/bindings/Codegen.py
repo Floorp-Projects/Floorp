@@ -3111,8 +3111,14 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
              * Calling fromMarkedLocation() is safe because protoAndIfaceCache is
              * traced by TraceProtoAndIfaceCache() and its contents are never
              * changed after they have been set.
+             *
+             * Calling address() avoids the read read barrier that does grey
+             * unmarking, but it's not possible for the object to be gray here.
              */
-            return JS::Handle<JSObject*>::fromMarkedLocation(protoAndIfaceCache.EntrySlotMustExist(${id}).address());
+
+            const JS::Heap<JSObject*>& entrySlot = protoAndIfaceCache.EntrySlotMustExist(${id});
+            MOZ_ASSERT_IF(entrySlot, !JS::ObjectIsMarkedGray(entrySlot));
+            return JS::Handle<JSObject*>::fromMarkedLocation(entrySlot.address());
             """,
             id=self.id)
 
