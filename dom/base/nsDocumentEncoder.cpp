@@ -49,9 +49,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "nsContainerFrame.h"
-#include "nsBlockFrame.h"
-#include "nsComputedDOMStyle.h"
+#include "nsLayoutUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -324,85 +322,6 @@ nsDocumentEncoder::IncludeInContext(nsINode *aNode)
   return false;
 }
 
-static
-bool
-LineHasNonEmptyContentWorker(nsIFrame* aFrame)
-{
-  // Look for non-empty frames, but ignore inline and br frames.
-  // For inline frames, descend into the children, if any.
-  if (aFrame->GetType() == nsGkAtoms::inlineFrame) {
-    for (nsIFrame* child : aFrame->PrincipalChildList()) {
-      if (LineHasNonEmptyContentWorker(child)) {
-        return true;
-      }
-    }
-  } else {
-    if (aFrame->GetType() != nsGkAtoms::brFrame &&
-        !aFrame->IsEmpty()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-static
-bool
-LineHasNonEmptyContent(nsLineBox* aLine)
-{
-  int32_t count = aLine->GetChildCount();
-  for (nsIFrame* frame = aLine->mFirstChild; count > 0;
-       --count, frame = frame->GetNextSibling()) {
-    if (LineHasNonEmptyContentWorker(frame)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-static
-bool
-IsInvisibleBreak(nsINode *aNode)
-{
-  if (!aNode->IsElement() || !aNode->IsEditable()) {
-    return false;
-  }
-  nsIFrame* frame = aNode->AsElement()->GetPrimaryFrame();
-  if (!frame || frame->GetType() != nsGkAtoms::brFrame) {
-    return false;
-  }
-
-  nsContainerFrame* f = frame->GetParent();
-  while (f && f->IsFrameOfType(nsBox::eLineParticipant)) {
-    f = f->GetParent();
-  }
-  nsBlockFrame* blockAncestor = do_QueryFrame(f);
-  if (!blockAncestor) {
-    // The container frame doesn't support line breaking.
-    return false;
-  }
-
-  bool valid = false;
-  nsBlockInFlowLineIterator iter(blockAncestor, frame, &valid);
-  if (!valid) {
-    return false;
-  }
-
-  bool lineNonEmpty = LineHasNonEmptyContent(iter.GetLine());
-
-  while (iter.Next()) {
-    auto currentLine = iter.GetLine();
-    // Completely skip empty lines.
-    if (!currentLine->IsEmpty()) {
-      // If we come across an inline line, the BR has caused a visible line break.
-      if (currentLine->IsInline()) {
-        return false;
-      }
-    }
-  }
-
-  return lineNonEmpty;
-}
-
 nsresult
 nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
                                       int32_t aStartOffset,
@@ -437,7 +356,7 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
   if (node->IsElement()) {
     if ((mFlags & (nsIDocumentEncoder::OutputPreformatted |
                    nsIDocumentEncoder::OutputDropInvisibleBreak)) &&
-        IsInvisibleBreak(node)) {
+        nsLayoutUtils::IsInvisibleBreak(node)) {
       return NS_OK;
     }
     Element* originalElement =
