@@ -335,7 +335,7 @@ const load = iced(function load(loader, module) {
   });
 
   let sandbox;
-  if (loader.sharedGlobalSandbox &&
+  if ((loader.useSharedGlobalSandbox || isSystemURI(module.uri)) &&
       loader.sharedGlobalBlocklist.indexOf(module.id) == -1) {
     // Create a new object in this sandbox, that will be used as
     // the scope object for this particular module
@@ -343,6 +343,7 @@ const load = iced(function load(loader, module) {
     // Inject all expected globals in the scope object
     getOwnIdentifiers(globals).forEach(function(name) {
       descriptors[name] = getOwnPropertyDescriptor(globals, name)
+      descriptors[name].configurable = true;
     });
     Object.defineProperties(sandbox, descriptors);
   }
@@ -626,6 +627,14 @@ const Require = iced(function Require(loader, requirer) {
     requireHook
   } = loader;
 
+  if (isSystemURI(requirer.uri)) {
+    // Built-in modules don't require the expensive module resolution
+    // algorithm used by SDK add-ons, so give them the more efficient standard
+    // resolve instead.
+    isNative = false;
+    loaderResolve = Loader.resolve;
+  }
+
   function require(id) {
     if (!id) // Throw if `id` is not passed.
       throw Error('You must provide a module name when calling require() from '
@@ -756,6 +765,9 @@ const Require = iced(function Require(loader, requirer) {
       if (!requirement) {
         requirement = isRelative(id) ? Loader.resolve(id, requirer.id) : id;
       }
+    }
+    else if (modules[id]) {
+      uri = requirement = id;
     }
     else if (requirer) {
       // Resolve `id` to its requirer if it's relative.
@@ -933,24 +945,21 @@ function Loader(options) {
     modules[uri] = freeze(module);
   }
 
-  let sharedGlobalSandbox;
-  if (sharedGlobal) {
-    // Create the unique sandbox we will be using for all modules,
-    // so that we prevent creating a new comportment per module.
-    // The side effect is that all modules will share the same
-    // global objects.
-    sharedGlobalSandbox = Sandbox({
-      name: "Addon-SDK",
-      wantXrays: false,
-      wantGlobalProperties: [],
-      invisibleToDebugger: options.invisibleToDebugger || false,
-      metadata: {
-        addonID: options.id,
-        URI: "Addon-SDK"
-      },
-      prototype: options.sandboxPrototype || {}
-    });
-  }
+  // Create the unique sandbox we will be using for all modules,
+  // so that we prevent creating a new comportment per module.
+  // The side effect is that all modules will share the same
+  // global objects.
+  let sharedGlobalSandbox = Sandbox({
+    name: "Addon-SDK",
+    wantXrays: false,
+    wantGlobalProperties: [],
+    invisibleToDebugger: options.invisibleToDebugger || false,
+    metadata: {
+      addonID: options.id,
+      URI: "Addon-SDK"
+    },
+    prototype: options.sandboxPrototype || {}
+  });
 
   // Loader object is just a representation of a environment
   // state. We freeze it and mark make it's properties non-enumerable
@@ -962,6 +971,7 @@ function Loader(options) {
     // Map of module objects indexed by module URIs.
     modules: { enumerable: false, value: modules },
     metadata: { enumerable: false, value: metadata },
+    useSharedGlobalSandbox: { enumerable: false, value: !!sharedGlobal },
     sharedGlobalSandbox: { enumerable: false, value: sharedGlobalSandbox },
     sharedGlobalBlocklist: { enumerable: false, value: sharedGlobalBlocklist },
     sharedGlobalBlacklist: { enumerable: false, value: sharedGlobalBlocklist },
@@ -1000,6 +1010,8 @@ function Loader(options) {
   return freeze(Object.create(null, returnObj));
 };
 Loader.Loader = Loader;
+
+var isSystemURI = uri => /^resource:\/\/(gre|devtools|testing-common)\//.test(uri);
 
 var isJSONURI = uri => uri.endsWith('.json');
 var isJSMURI = uri => uri.endsWith('.jsm');
