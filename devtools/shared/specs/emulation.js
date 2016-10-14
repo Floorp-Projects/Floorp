@@ -9,6 +9,52 @@ const emulationSpec = generateActorSpec({
   typeName: "emulation",
 
   methods: {
+    setDPPXOverride: {
+      request: {
+        dppx: Arg(0, "number")
+      },
+      response: {
+        valueChanged: RetVal("boolean")
+      }
+    },
+
+    getDPPXOverride: {
+      request: {},
+      response: {
+        dppx: RetVal("number")
+      }
+    },
+
+    clearDPPXOverride: {
+      request: {},
+      response: {
+        valueChanged: RetVal("boolean")
+      }
+    },
+
+    setNetworkThrottling: {
+      request: {
+        options: Arg(0, "json")
+      },
+      response: {
+        valueChanged: RetVal("boolean")
+      }
+    },
+
+    getNetworkThrottling: {
+      request: {},
+      response: {
+        state: RetVal("json")
+      }
+    },
+
+    clearNetworkThrottling: {
+      request: {},
+      response: {
+        valueChanged: RetVal("boolean")
+      }
+    },
+
     setTouchEventsOverride: {
       request: {
         flag: Arg(0, "number")
@@ -49,29 +95,6 @@ const emulationSpec = generateActorSpec({
     },
 
     clearUserAgentOverride: {
-      request: {},
-      response: {
-        valueChanged: RetVal("boolean")
-      }
-    },
-
-    setDPPXOverride: {
-      request: {
-        dppx: Arg(0, "number")
-      },
-      response: {
-        valueChanged: RetVal("boolean")
-      }
-    },
-
-    getDPPXOverride: {
-      request: {},
-      response: {
-        dppx: RetVal("number")
-      }
-    },
-
-    clearDPPXOverride: {
       request: {},
       response: {
         valueChanged: RetVal("boolean")

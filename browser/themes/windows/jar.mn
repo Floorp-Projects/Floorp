@@ -77,8 +77,6 @@ browser.jar:
   skin/classic/browser/customizableui/menu-arrow.svg           (customizableui/menu-arrow.svg)
 * skin/classic/browser/customizableui/panelUI.css       (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
-  skin/classic/browser/downloads/buttons.png                   (downloads/buttons.png)
-  skin/classic/browser/downloads/buttons-XP.png                (downloads/buttons-XP.png)
   skin/classic/browser/downloads/download-glow-menuPanel.png   (downloads/download-glow-menuPanel.png)
   skin/classic/browser/downloads/download-glow-menuPanel-XPVista7.png   (downloads/download-glow-menuPanel-XPVista7.png)
   skin/classic/browser/downloads/download-notification-finish.png (downloads/download-notification-finish.png)
@@ -214,7 +212,6 @@ browser.jar:
 % override chrome://browser/skin/menu-back.png                        chrome://browser/skin/menu-back-XP.png                            os=WINNT osversion<6
 % override chrome://browser/skin/menu-forward.png                     chrome://browser/skin/menu-forward-XP.png                         os=WINNT osversion<6
 % override chrome://browser/skin/pageInfo.png                         chrome://browser/skin/pageInfo-XP.png                             os=WINNT osversion<6
-% override chrome://browser/skin/downloads/buttons.png                chrome://browser/skin/downloads/buttons-XP.png                    os=WINNT osversion<6
 % override chrome://browser/skin/feeds/feedIcon.png                   chrome://browser/skin/feeds/feedIcon-XP.png                       os=WINNT osversion<6
 % override chrome://browser/skin/feeds/feedIcon16.png                 chrome://browser/skin/feeds/feedIcon16-XP.png                     os=WINNT osversion<6
 % override chrome://browser/skin/places/query.png                     chrome://browser/skin/places/query-XP.png                         os=WINNT osversion<6

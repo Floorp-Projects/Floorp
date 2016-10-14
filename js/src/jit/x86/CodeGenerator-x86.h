@@ -28,8 +28,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     ValueOperand ToOutValue(LInstruction* ins);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
-    void memoryBarrier(MemoryBarrierBits barrier);
-
     template <typename T> void emitWasmLoad(T* ins);
     template <typename T> void emitWasmStore(T* ins);
 

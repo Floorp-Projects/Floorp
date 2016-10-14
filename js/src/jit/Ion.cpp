@@ -26,6 +26,7 @@
 #include "jit/EdgeCaseAnalysis.h"
 #include "jit/EffectiveAddressAnalysis.h"
 #include "jit/FlowAliasAnalysis.h"
+#include "jit/FoldLinearArithConstants.h"
 #include "jit/InstructionReordering.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonBuilder.h"
@@ -1788,6 +1789,17 @@ OptimizeMIR(MIRGenerator* mir)
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Remove Unnecessary Bitops"))
+            return false;
+    }
+
+    {
+        AutoTraceLog log(logger, TraceLogger_FoldLinearArithConstants);
+        if (!FoldLinearArithConstants(mir, graph))
+            return false;
+        gs.spewPass("Fold Linear Arithmetic Constants");
+        AssertBasicGraphCoherency(graph);
+
+        if (mir->shouldCancel("Fold Linear Arithmetic Constants"))
             return false;
     }
 

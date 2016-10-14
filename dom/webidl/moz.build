@@ -327,7 +327,6 @@ WEBIDL_FILES = [
     'MessageChannel.webidl',
     'MessageEvent.webidl',
     'MessagePort.webidl',
-    'MessagePortList.webidl',
     'MimeType.webidl',
     'MimeTypeArray.webidl',
     'MMICall.webidl',
@@ -896,7 +895,6 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
 
 if CONFIG['MOZ_B2G']:
     WEBIDL_FILES += [
-        'Apps.webidl',
         'MozApplicationEvent.webidl'
     ]
     GENERATED_EVENTS_WEBIDL_FILES += [

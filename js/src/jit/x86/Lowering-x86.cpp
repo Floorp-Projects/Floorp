@@ -285,7 +285,7 @@ LIRGeneratorX86::visitWasmLoad(MWasmLoad* ins)
 
     auto* lir = new(alloc()) LWasmLoadI64(useRegisterOrZeroAtStart(base));
 
-    Scalar::Type accessType = ins->accessType();
+    Scalar::Type accessType = ins->access().type();
     if (accessType == Scalar::Int8 || accessType == Scalar::Int16 || accessType == Scalar::Int32) {
         // We use cdq to sign-extend the result and cdq demands these registers.
         defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(edx)),
@@ -305,7 +305,7 @@ LIRGeneratorX86::visitWasmStore(MWasmStore* ins)
     LAllocation baseAlloc = useRegisterOrZeroAtStart(base);
 
     LAllocation valueAlloc;
-    switch (ins->accessType()) {
+    switch (ins->access().type()) {
       case Scalar::Int8: case Scalar::Uint8:
         // See comment for LIRGeneratorX86::useByteOpRegister.
         valueAlloc = useFixed(ins->value(), eax);
@@ -364,7 +364,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
                             : useRegisterOrZeroAtStart(base);
 
     LAsmJSStoreHeap* lir = nullptr;
-    switch (ins->accessType()) {
+    switch (ins->access().type()) {
       case Scalar::Int8: case Scalar::Uint8:
         // See comment for LIRGeneratorX86::useByteOpRegister.
         lir = new(alloc()) LAsmJSStoreHeap(baseAlloc, useFixed(ins->value(), eax));
@@ -416,12 +416,12 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
 void
 LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->accessType() < Scalar::Float32);
+    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
 
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
-    bool byteArray = byteSize(ins->accessType()) == 1;
+    bool byteArray = byteSize(ins->access().type()) == 1;
 
     // Register allocation:
     //
@@ -458,7 +458,7 @@ LIRGeneratorX86::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
         new(alloc()) LAsmJSAtomicExchangeHeap(base, value);
 
     lir->setAddrTemp(temp());
-    if (byteSize(ins->accessType()) == 1)
+    if (byteSize(ins->access().type()) == 1)
         defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
     else
         define(lir, ins);
@@ -467,12 +467,12 @@ LIRGeneratorX86::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 void
 LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 {
-    MOZ_ASSERT(ins->accessType() < Scalar::Float32);
+    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
 
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
-    bool byteArray = byteSize(ins->accessType()) == 1;
+    bool byteArray = byteSize(ins->access().type()) == 1;
 
     // Case 1: the result of the operation is not used.
     //

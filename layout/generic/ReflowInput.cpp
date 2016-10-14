@@ -522,9 +522,34 @@ void
 ReflowInput::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType)
 {
   const WritingMode wm = mWritingMode; // just a shorthand
+  // We should report that we have a resize in the inline dimension if
+  // *either* the border-box size or the content-box size in that
+  // dimension has changed.  It might not actually be necessary to do
+  // this if the border-box size has changed and the content-box size
+  // has not changed, but since we've historically used the flag to mean
+  // border-box size change, continue to do that.  (It's possible for
+  // the content-box size to change without a border-box size change or
+  // a style change given (1) a fixed width (possibly fixed by max-width
+  // or min-width), (2) box-sizing:border-box or padding-box, and
+  // (3) percentage padding.)
+  //
+  // However, we don't actually have the information at this point to
+  // tell whether the content-box size has changed, since both style
+  // data and the UsedPaddingProperty() have already been updated.  So,
+  // instead, we explicitly check for the case where it's possible for
+  // the content-box size to have changed without either (a) a change in
+  // the border-box size or (b) an nsChangeHint_NeedDirtyReflow change
+  // hint due to change in border or padding.  Thus we test using the
+  // conditions from the previous paragraph, except without testing (1)
+  // since it's complicated to test properly and less likely to help
+  // with optimizing cases away.
   bool isIResize =
+    // is the border-box resizing?
     mFrame->ISize(wm) !=
-      ComputedISize() + ComputedLogicalBorderPadding().IStartEnd(wm);
+      ComputedISize() + ComputedLogicalBorderPadding().IStartEnd(wm) ||
+    // or is the content-box resizing?  (see comment above)
+    (mStylePosition->mBoxSizing != StyleBoxSizing::Content &&
+     mStylePadding->IsWidthDependent());
 
   if ((mFrame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) &&
       nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {

@@ -304,7 +304,7 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
 }
 
 TimeIntervals
-TrackBuffersManager::Buffered()
+TrackBuffersManager::Buffered() const
 {
   MSE_DEBUG("");
   // http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
@@ -312,7 +312,7 @@ TrackBuffersManager::Buffered()
   TimeUnit highestEndTime = HighestEndTime();
 
   MonitorAutoLock mon(mMonitor);
-  nsTArray<TimeIntervals*> tracks;
+  nsTArray<const TimeIntervals*> tracks;
   if (HasVideo()) {
     tracks.AppendElement(&mVideoBufferedRanges);
   }
@@ -325,13 +325,16 @@ TrackBuffersManager::Buffered()
 
   // 4. For each track buffer managed by this SourceBuffer, run the following steps:
   //   1. Let track ranges equal the track buffer ranges for the current track buffer.
-  for (auto trackRanges : tracks) {
+  for (const TimeIntervals* trackRanges : tracks) {
     // 2. If readyState is "ended", then set the end time on the last range in track ranges to highest end time.
-    if (mEnded) {
-      trackRanges->Add(TimeInterval(trackRanges->GetEnd(), highestEndTime));
-    }
     // 3. Let new intersection ranges equal the intersection between the intersection ranges and the track ranges.
-    intersection.Intersection(*trackRanges);
+    if (mEnded) {
+      TimeIntervals tR = *trackRanges;
+      tR.Add(TimeInterval(tR.GetEnd(), highestEndTime));
+      intersection.Intersection(tR);
+    } else {
+      intersection.Intersection(*trackRanges);
+    }
   }
   return intersection;
 }
@@ -422,7 +425,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
 
   // Video is what takes the most space, only evict there if we have video.
   auto& track = HasVideo() ? mVideoTracks : mAudioTracks;
-  const auto& buffer = track.mBuffers.LastElement();
+  const auto& buffer = track.GetTrackBuffer();
   // Remove any data we've already played, or before the next sample to be
   // demuxed whichever is lowest.
   TimeUnit lowerLimit = std::min(track.mNextSampleTime, aPlaybackTime);
@@ -550,7 +553,7 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
     // 2. If this track buffer has a random access point timestamp that is greater than or equal to end,
     // then update remove end timestamp to that random access point timestamp.
     if (end < track->mBufferedRanges.GetEnd()) {
-      for (auto& frame : track->mBuffers.LastElement()) {
+      for (auto& frame : track->GetTrackBuffer()) {
         if (frame->mKeyframe && frame->mTime >= end.ToMicroseconds()) {
           removeEndTimestamp = TimeUnit::FromMicroseconds(frame->mTime);
           break;
@@ -1248,7 +1251,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
 
 #if defined(DEBUG)
   if (HasVideo()) {
-    const auto& track = mVideoTracks.mBuffers.LastElement();
+    const auto& track = mVideoTracks.GetTrackBuffer();
     MOZ_ASSERT(track.IsEmpty() || track[0]->mKeyframe);
     for (uint32_t i = 1; i < track.Length(); i++) {
       MOZ_ASSERT((track[i-1]->mTrackInfo->GetID() == track[i]->mTrackInfo->GetID() && track[i-1]->mTimecode <= track[i]->mTimecode) ||
@@ -1256,7 +1259,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
     }
   }
   if (HasAudio()) {
-    const auto& track = mAudioTracks.mBuffers.LastElement();
+    const auto& track = mAudioTracks.GetTrackBuffer();
     MOZ_ASSERT(track.IsEmpty() || track[0]->mKeyframe);
     for (uint32_t i = 1; i < track.Length(); i++) {
       MOZ_ASSERT((track[i-1]->mTrackInfo->GetID() == track[i]->mTrackInfo->GetID() && track[i-1]->mTimecode <= track[i]->mTimecode) ||
@@ -1596,7 +1599,7 @@ TrackBuffersManager::CheckNextInsertionIndex(TrackData& aTrackData,
     return true;
   }
 
-  TrackBuffer& data = aTrackData.mBuffers.LastElement();
+  const TrackBuffer& data = aTrackData.GetTrackBuffer();
 
   if (data.IsEmpty() || aSampleTime < aTrackData.mBufferedRanges.GetStart()) {
     aTrackData.mNextInsertionIndex = Some(0u);
@@ -1714,7 +1717,7 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
     }
   }
 
-  TrackBuffer& data = trackBuffer.mBuffers.LastElement();
+  TrackBuffer& data = trackBuffer.GetTrackBuffer();
   data.InsertElementsAt(trackBuffer.mNextInsertionIndex.ref(), aSamples);
   trackBuffer.mNextInsertionIndex.ref() += aSamples.Length();
 
@@ -1745,7 +1748,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
                                   TrackData& aTrackData,
                                   uint32_t aStartIndex)
 {
-  TrackBuffer& data = aTrackData.mBuffers.LastElement();
+  TrackBuffer& data = aTrackData.GetTrackBuffer();
   Maybe<uint32_t> firstRemovedIndex;
   uint32_t lastRemovedIndex = 0;
 
@@ -1909,6 +1912,19 @@ TrackBuffersManager::GetTracksList()
   return tracks;
 }
 
+nsTArray<const TrackBuffersManager::TrackData*>
+TrackBuffersManager::GetTracksList() const
+{
+  nsTArray<const TrackData*> tracks;
+  if (HasVideo()) {
+    tracks.AppendElement(&mVideoTracks);
+  }
+  if (HasAudio()) {
+    tracks.AppendElement(&mAudioTracks);
+  }
+  return tracks;
+}
+
 void
 TrackBuffersManager::SetAppendState(SourceBufferAttributes::AppendState aAppendState)
 {
@@ -1918,21 +1934,21 @@ TrackBuffersManager::SetAppendState(SourceBufferAttributes::AppendState aAppendS
 }
 
 MediaInfo
-TrackBuffersManager::GetMetadata()
+TrackBuffersManager::GetMetadata() const
 {
   MonitorAutoLock mon(mMonitor);
   return mInfo;
 }
 
 const TimeIntervals&
-TrackBuffersManager::Buffered(TrackInfo::TrackType aTrack)
+TrackBuffersManager::Buffered(TrackInfo::TrackType aTrack) const
 {
   MOZ_ASSERT(OnTaskQueue());
   return GetTracksData(aTrack).mBufferedRanges;
 }
 
 const media::TimeUnit&
-TrackBuffersManager::HighestStartTime(TrackInfo::TrackType aTrack)
+TrackBuffersManager::HighestStartTime(TrackInfo::TrackType aTrack) const
 {
   MOZ_ASSERT(OnTaskQueue());
   return GetTracksData(aTrack).mHighestStartTimestamp;
@@ -1948,7 +1964,7 @@ TrackBuffersManager::SafeBuffered(TrackInfo::TrackType aTrack) const
 }
 
 TimeUnit
-TrackBuffersManager::HighestStartTime()
+TrackBuffersManager::HighestStartTime() const
 {
   MonitorAutoLock mon(mMonitor);
   TimeUnit highestStartTime;
@@ -1960,19 +1976,19 @@ TrackBuffersManager::HighestStartTime()
 }
 
 TimeUnit
-TrackBuffersManager::HighestEndTime()
+TrackBuffersManager::HighestEndTime() const
 {
   MonitorAutoLock mon(mMonitor);
   TimeUnit highestEndTime;
 
-  nsTArray<TimeIntervals*> tracks;
+  nsTArray<const TimeIntervals*> tracks;
   if (HasVideo()) {
     tracks.AppendElement(&mVideoBufferedRanges);
   }
   if (HasAudio()) {
     tracks.AppendElement(&mAudioBufferedRanges);
   }
-  for (auto trackRanges : tracks) {
+  for (const auto& trackRanges : tracks) {
     highestEndTime = std::max(trackRanges->GetEnd(), highestEndTime);
   }
   return highestEndTime;
@@ -1990,7 +2006,7 @@ TrackBuffersManager::UpdateEvictionIndex(TrackData& aTrackData,
                                          uint32_t currentIndex)
 {
   uint32_t evictable = 0;
-  TrackBuffer& data = aTrackData.mBuffers.LastElement();
+  TrackBuffer& data = aTrackData.GetTrackBuffer();
   MOZ_DIAGNOSTIC_ASSERT(currentIndex >= aTrackData.mEvictionIndex.mLastIndex,
                         "Invalid call");
   MOZ_DIAGNOSTIC_ASSERT(currentIndex == data.Length() ||
@@ -2006,10 +2022,10 @@ TrackBuffersManager::UpdateEvictionIndex(TrackData& aTrackData,
 }
 
 const TrackBuffersManager::TrackBuffer&
-TrackBuffersManager::GetTrackBuffer(TrackInfo::TrackType aTrack)
+TrackBuffersManager::GetTrackBuffer(TrackInfo::TrackType aTrack) const
 {
   MOZ_ASSERT(OnTaskQueue());
-  return GetTracksData(aTrack).mBuffers.LastElement();
+  return GetTracksData(aTrack).GetTrackBuffer();
 }
 
 uint32_t TrackBuffersManager::FindSampleIndex(const TrackBuffer& aTrackBuffer,
@@ -2328,7 +2344,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
 int32_t
 TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
-                                         const TimeUnit& aFuzz)
+                                         const TimeUnit& aFuzz) const
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& trackData = GetTracksData(aTrack);
@@ -2423,17 +2439,17 @@ TrackBuffersManager::GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,
 }
 
 void
-TrackBuffersManager::TrackData::AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes)
+TrackBuffersManager::TrackData::AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes) const
 {
-  for (TrackBuffer& buffer : mBuffers) {
-    for (MediaRawData* data : buffer) {
+  for (const TrackBuffer& buffer : mBuffers) {
+    for (const MediaRawData* data : buffer) {
       aSizes->mByteSize += data->SizeOfIncludingThis(aSizes->mMallocSizeOf);
     }
   }
 }
 
 void
-TrackBuffersManager::AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes)
+TrackBuffersManager::AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes) const
 {
   MOZ_ASSERT(OnTaskQueue());
   mVideoTracks.AddSizeOfResources(aSizes);

@@ -366,8 +366,6 @@
 @BINPATH@/components/TelemetryStartup.manifest
 @BINPATH@/components/XULStore.js
 @BINPATH@/components/XULStore.manifest
-@BINPATH@/components/Webapps.js
-@BINPATH@/components/Webapps.manifest
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
 @BINPATH@/components/htmlMenuBuilder.js

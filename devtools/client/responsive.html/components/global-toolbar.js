@@ -4,17 +4,21 @@
 
 "use strict";
 
-const { getStr } = require("../utils/l10n");
-const { DOM: dom, createClass, PropTypes, addons } =
+const { DOM: dom, createClass, createFactory, PropTypes, addons } =
   require("devtools/client/shared/vendor/react");
+
+const { getStr } = require("../utils/l10n");
 const Types = require("../types");
+const NetworkThrottlingSelector = createFactory(require("./network-throttling-selector"));
 
 module.exports = createClass({
   displayName: "GlobalToolbar",
 
   propTypes: {
+    networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
+    onChangeNetworkThrottling: PropTypes.func.isRequired,
     onExit: PropTypes.func.isRequired,
     onScreenshot: PropTypes.func.isRequired,
     onUpdateTouchSimulation: PropTypes.func.isRequired,
@@ -24,8 +28,10 @@ module.exports = createClass({
 
   render() {
     let {
+      networkThrottling,
       screenshot,
       touchSimulation,
+      onChangeNetworkThrottling,
       onExit,
       onScreenshot,
       onUpdateTouchSimulation
@@ -45,7 +51,12 @@ module.exports = createClass({
         {
           className: "title",
         },
-        getStr("responsive.title")),
+        getStr("responsive.title")
+      ),
+      NetworkThrottlingSelector({
+        networkThrottling,
+        onChangeNetworkThrottling,
+      }),
       dom.button({
         id: "global-touch-simulation-button",
         className: touchButtonClass,

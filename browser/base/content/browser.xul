@@ -361,7 +361,6 @@
     <menupopup id="placesContext">
       <menuseparator id="placesContext_recentlyBookmarkedSeparator"
                      ignoreitem="true"
-                     ordinal="2"
                      hidden="true"/>
       <menuitem id="placesContext_hideRecentlyBookmarked"
                 label="&hideRecentlyBookmarked.label;"
@@ -369,7 +368,6 @@
                 oncommand="BookmarkingUI.hideRecentlyBookmarked();"
                 closemenu="single"
                 ignoreitem="true"
-                ordinal="2"
                 hidden="true"/>
       <menuitem id="placesContext_showRecentlyBookmarked"
                 label="&showRecentlyBookmarked.label;"
@@ -377,7 +375,6 @@
                 oncommand="BookmarkingUI.showRecentlyBookmarked();"
                 closemenu="single"
                 ignoreitem="true"
-                ordinal="2"
                 hidden="true"/>
     </menupopup>
 
