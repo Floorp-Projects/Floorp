@@ -106,6 +106,21 @@ StyleSheet::GetParentSheet() const
   MOZ_STYLO_FORWARD(GetParentSheet, ())
 }
 
+StyleSheet*
+StyleSheet::GetParentStyleSheet() const
+{
+  return GetParentSheet();
+}
+
+dom::ParentObject
+StyleSheet::GetParentObject() const
+{
+  if (mOwningNode) {
+    return dom::ParentObject(mOwningNode);
+  }
+  return dom::ParentObject(GetParentSheet());
+}
+
 void
 StyleSheet::AppendStyleSheet(StyleSheet* aSheet)
 {
