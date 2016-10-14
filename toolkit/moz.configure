@@ -280,6 +280,17 @@ pkg_check_modules('MOZ_PANGO',
                   'pango >= 1.22.0 pangoft2 >= 1.22.0 pangocairo >= 1.22.0',
                   when=toolkit_gtk)
 
+# Fontconfig
+# ==============================================================
+fontconfig_info = pkg_check_modules('_FONTCONFIG', 'fontconfig >= 2.7.0',
+                                    when=fc_freetype)
+
+add_old_configure_assignment('_FONTCONFIG_CFLAGS',
+                             delayed_getattr(fontconfig_info, 'cflags'))
+add_old_configure_assignment('_FONTCONFIG_LIBS',
+                             delayed_getattr(fontconfig_info, 'libs'))
+
+
 # Apple platform decoder support
 # ==============================================================
 @depends(toolkit)
