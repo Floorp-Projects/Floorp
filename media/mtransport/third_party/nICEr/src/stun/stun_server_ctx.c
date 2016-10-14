@@ -342,6 +342,9 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
     if (NR_STUN_GET_TYPE_CLASS(req->header.type) == NR_CLASS_INDICATION)
         goto skip_response;
 
+    if (!res)
+        goto skip_response;
+
     /* Now respond */
 
     if (_status != 0 && ! nr_stun_message_has_attribute(res, NR_STUN_ATTR_ERROR_CODE, 0))
