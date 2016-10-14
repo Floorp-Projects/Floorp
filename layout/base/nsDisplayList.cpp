@@ -422,10 +422,11 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   Nullable<TimeDuration> startTime = aAnimation->GetCurrentOrPendingStartTime();
   animation->startTime() = startTime.IsNull()
                            ? TimeStamp()
-                           : aAnimation->AnimationTimeToTimeStamp(
-                              StickyTimeDuration(timing.mDelay));
+                           : aAnimation->GetTimeline()->
+                              ToTimeStamp(startTime.Value());
   animation->initialCurrentTime() = aAnimation->GetCurrentTime().Value()
                                     - timing.mDelay;
+  animation->delay() = timing.mDelay;
   animation->duration() = computedTiming.mDuration;
   animation->iterations() = computedTiming.mIterations;
   animation->iterationStart() = computedTiming.mIterationStart;

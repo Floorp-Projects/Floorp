@@ -240,6 +240,13 @@ public:
   Nullable<TimeDuration> GetCurrentOrPendingStartTime() const;
 
   /**
+   * Calculates the corresponding start time to use for an animation that is
+   * currently pending with current time |mHoldTime| but should behave
+   * as if it began or resumed playback at timeline time |aReadyTime|.
+   */
+  TimeDuration StartTimeFromReadyTime(const TimeDuration& aReadyTime) const;
+
+  /**
    * Converts a time in the timescale of this Animation's currentTime, to a
    * TimeStamp. Returns a null TimeStamp if the conversion cannot be performed
    * because of the current state of this Animation (e.g. it has no timeline, a
