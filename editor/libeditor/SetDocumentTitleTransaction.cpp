@@ -35,7 +35,9 @@ SetDocumentTitleTransaction::Init(nsIHTMLEditor* aEditor,
 
 {
   NS_ASSERTION(aEditor && aValue, "null args");
-  if (!aEditor || !aValue) { return NS_ERROR_NULL_POINTER; }
+  if (!aEditor || !aValue) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   mEditor = aEditor;
   mValue = *aValue;
@@ -81,13 +83,11 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
   // (transaction will not be pushed on stack)
   mIsTransient = true;
 
-  nsCOMPtr<nsIDOMNode>titleNode;
-  if(titleList)
-  {
+  nsCOMPtr<nsIDOMNode> titleNode;
+  if(titleList) {
     rv = titleList->Item(0, getter_AddRefs(titleNode));
     NS_ENSURE_SUCCESS(rv, rv);
-    if (titleNode)
-    {
+    if (titleNode) {
       // Delete existing child textnode of title node
       // (Note: all contents under a TITLE node are always in a single text node)
       nsCOMPtr<nsIDOMNode> child;
@@ -95,18 +95,17 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
       if (NS_FAILED(rv)) {
         return rv;
       }
-      if(child)
-      {
+      if(child) {
         // Save current text as the undo value
         nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(child);
-        if(textNode)
-        {
+        if(textNode) {
           textNode->GetData(mUndoValue);
 
           // If title text is identical to what already exists,
           // quit now (mIsTransient is now TRUE)
-          if (mUndoValue == aTitle)
+          if (mUndoValue == aTitle) {
             return NS_OK;
+          }
         }
         rv = editor->DeleteNode(child);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -128,11 +127,10 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
     return NS_ERROR_UNEXPECTED;
   }
 
-  bool     newTitleNode = false;
+  bool newTitleNode = false;
   uint32_t newTitleIndex = 0;
 
-  if (!titleNode)
-  {
+  if (!titleNode) {
     // Didn't find one above: Create a new one
     nsCOMPtr<nsIDOMElement>titleElement;
     rv = domDoc->CreateElement(NS_LITERAL_STRING("title"),
@@ -147,24 +145,19 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
     newTitleIndex = headElement->GetChildCount();
   }
 
-  // Append a text node under the TITLE
-  //  only if the title text isn't empty
-  if (titleNode && !aTitle.IsEmpty())
-  {
+  // Append a text node under the TITLE only if the title text isn't empty.
+  if (titleNode && !aTitle.IsEmpty()) {
     nsCOMPtr<nsIDOMText> textNode;
     rv = domDoc->CreateTextNode(aTitle, getter_AddRefs(textNode));
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(textNode);
     NS_ENSURE_TRUE(newNode, NS_ERROR_FAILURE);
 
-    if (newTitleNode)
-    {
+    if (newTitleNode) {
       // Not undoable: We will insert newTitleNode below
       nsCOMPtr<nsIDOMNode> resultNode;
       rv = titleNode->AppendChild(newNode, getter_AddRefs(resultNode));
-    }
-    else
-    {
+    } else {
       // This is an undoable transaction
       rv = editor->InsertNode(newNode, titleNode, 0);
     }
@@ -174,8 +167,7 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
     headElement = nullptr;
   }
 
-  if (newTitleNode)
-  {
+  if (newTitleNode) {
     if (!headElement) {
       headElement = document->GetHeadElement();
       if (NS_WARN_IF(!headElement)) {
