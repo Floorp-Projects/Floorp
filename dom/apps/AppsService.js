@@ -116,15 +116,6 @@ AppsService.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  getRedirect: function getRedirect(aLocalId, aURI) {
-    debug("getRedirect for " + aLocalId + " " + aURI.spec);
-    if (this.isInvalidId(aLocalId)) {
-      return null;
-    }
-
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-
   getScopeByLocalId: function(aLocalId) {
     debug("getScopeByLocalId( " + aLocalId + " )");
     if (this.isInvalidId(aLocalId)) {
