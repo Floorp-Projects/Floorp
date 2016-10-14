@@ -236,7 +236,7 @@ GetImports(JSContext* cx,
             return ThrowBadImportField(cx, "an Object");
 
         RootedObject obj(cx, &v.toObject());
-        if (!GetProperty(cx, obj, import.func.get(), &v))
+        if (!GetProperty(cx, obj, import.field.get(), &v))
             return false;
 
         switch (import.kind) {
