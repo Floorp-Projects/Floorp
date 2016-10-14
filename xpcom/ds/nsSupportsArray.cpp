@@ -13,6 +13,73 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 
+#if DEBUG_SUPPORTSARRAY
+#define MAXSUPPORTS 20
+
+class SupportsStats
+{
+public:
+  SupportsStats();
+  ~SupportsStats();
+
+};
+
+static int sizesUsed; // number of the elements of the arrays used
+static int sizesAlloced[MAXSUPPORTS]; // sizes of the allocations.  sorted
+static int NumberOfSize[MAXSUPPORTS]; // number of this allocation size (1 per array)
+static int AllocedOfSize[MAXSUPPORTS]; // number of this allocation size (each size for array used)
+static int GrowInPlace[MAXSUPPORTS];
+
+// these are per-allocation
+static int MaxElements[3000];
+
+// very evil
+#define ADD_TO_STATS(x,size) do {int i; for (i = 0; i < sizesUsed; i++) \
+                                  { \
+                                    if (sizesAlloced[i] == (int)(size)) \
+                                    { ((x)[i])++; break; } \
+                                  } \
+                                  if (i >= sizesUsed && sizesUsed < MAXSUPPORTS) \
+                                  { sizesAlloced[sizesUsed] = (size); \
+                                    ((x)[sizesUsed++])++; break; \
+                                  } \
+                                } while (0);
+
+#define SUB_FROM_STATS(x,size) do {int i; for (i = 0; i < sizesUsed; i++) \
+                                    { \
+                                      if (sizesAlloced[i] == (int)(size)) \
+                                      { ((x)[i])--; break; } \
+                                    } \
+                                  } while (0);
+
+
+SupportsStats::SupportsStats()
+{
+  sizesUsed = 1;
+  sizesAlloced[0] = 0;
+}
+
+SupportsStats::~SupportsStats()
+{
+  int i;
+  for (i = 0; i < sizesUsed; ++i) {
+    printf("Size %d:\n", sizesAlloced[i]);
+    printf("\tNumber of SupportsArrays this size (max):     %d\n", NumberOfSize[i]);
+    printf("\tNumber of allocations this size (total):  %d\n", AllocedOfSize[i]);
+    printf("\tNumber of GrowsInPlace this size (total): %d\n", GrowInPlace[i]);
+  }
+  printf("Max Size of SupportsArray:\n");
+  for (i = 0; i < (int)(sizeof(MaxElements) / sizeof(MaxElements[0])); ++i) {
+    if (MaxElements[i]) {
+      printf("\t%d: %d\n", i, MaxElements[i]);
+    }
+  }
+}
+
+// Just so constructor/destructor get called
+SupportsStats gSupportsStats;
+#endif
+
 nsresult
 nsQueryElementAt::operator()(const nsIID& aIID, void** aResult) const
 {
@@ -32,6 +99,12 @@ nsSupportsArray::nsSupportsArray()
   mArray = mAutoArray;
   mArraySize = kAutoArraySize;
   mCount = 0;
+#if DEBUG_SUPPORTSARRAY
+  mMaxCount = 0;
+  mMaxSize = 0;
+  ADD_TO_STATS(NumberOfSize, kAutoArraySize * sizeof(mArray[0]));
+  MaxElements[0]++;
+#endif
 }
 
 nsSupportsArray::~nsSupportsArray()
@@ -82,6 +155,19 @@ nsSupportsArray::GrowArrayBy(uint32_t aGrowBy)
   mArray = new nsISupports*[newCount.value()];
   mArraySize = newCount.value();
 
+#if DEBUG_SUPPORTSARRAY
+  if (oldArray == mArray) { // can't happen without use of realloc
+    ADD_TO_STATS(GrowInPlace, mCount);
+  }
+  ADD_TO_STATS(AllocedOfSize, mArraySize * sizeof(mArray[0]));
+  if (mArraySize > mMaxSize) {
+    ADD_TO_STATS(NumberOfSize, mArraySize * sizeof(mArray[0]));
+    if (oldArray != &(mAutoArray[0])) {
+      SUB_FROM_STATS(NumberOfSize, mCount * sizeof(mArray[0]));
+    }
+    mMaxSize = mArraySize;
+  }
+#endif
   if (oldArray) {                   // need to move old data
     if (0 < mCount) {
       ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
@@ -303,6 +389,14 @@ nsSupportsArray::InsertElementAt(nsISupports* aElement, uint32_t aIndex)
     NS_IF_ADDREF(aElement);
     mCount++;
 
+#if DEBUG_SUPPORTSARRAY
+    if (mCount > mMaxCount &&
+        mCount < (int32_t)(sizeof(MaxElements) / sizeof(MaxElements[0]))) {
+      MaxElements[mCount]++;
+      MaxElements[mMaxCount]--;
+      mMaxCount = mCount;
+    }
+#endif
     return true;
   }
   return false;
@@ -406,6 +500,9 @@ nsSupportsArray::Clear(void)
 NS_IMETHODIMP
 nsSupportsArray::Compact(void)
 {
+#if DEBUG_SUPPORTSARRAY
+  uint32_t oldArraySize = mArraySize;
+#endif
   if ((mArraySize != mCount) && (kAutoArraySize < mArraySize)) {
     nsISupports** oldArray = mArray;
     if (mCount <= kAutoArraySize) {
@@ -419,7 +516,15 @@ nsSupportsArray::Compact(void)
       }
       mArraySize = mCount;
     }
-
+#if DEBUG_SUPPORTSARRAY
+    if (oldArray == mArray &&
+        oldArray != &(mAutoArray[0])) { // can't happen without use of realloc
+      ADD_TO_STATS(GrowInPlace, oldArraySize);
+    }
+    if (oldArray != &(mAutoArray[0])) {
+      ADD_TO_STATS(AllocedOfSize, mArraySize * sizeof(mArray[0]));
+    }
+#endif
     ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
     delete[] oldArray;
   }
@@ -429,6 +534,9 @@ nsSupportsArray::Compact(void)
 NS_IMETHODIMP_(bool)
 nsSupportsArray::SizeTo(int32_t aSize)
 {
+#if DEBUG_SUPPORTSARRAY
+  uint32_t oldArraySize = mArraySize;
+#endif
   NS_ASSERTION(aSize >= 0, "negative aSize!");
 
   // XXX for aSize < mCount we could resize to mCount
@@ -449,7 +557,15 @@ nsSupportsArray::SizeTo(int32_t aSize)
     }
     mArraySize = aSize;
   }
-
+#if DEBUG_SUPPORTSARRAY
+  if (oldArray == mArray &&
+      oldArray != &(mAutoArray[0])) { // can't happen without use of realloc
+    ADD_TO_STATS(GrowInPlace, oldArraySize);
+  }
+  if (oldArray != &(mAutoArray[0])) {
+    ADD_TO_STATS(AllocedOfSize, mArraySize * sizeof(mArray[0]));
+  }
+#endif
   ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
   if (oldArray != mAutoArray) {
     delete[] oldArray;
