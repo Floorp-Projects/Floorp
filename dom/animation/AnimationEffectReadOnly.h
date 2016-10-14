@@ -49,7 +49,6 @@ public:
 
   nsISupports* GetParentObject() const { return mDocument; }
 
-  bool IsInPlay() const;
   bool IsCurrent() const;
   bool IsInEffect() const;
   bool IsActiveDurationZero() const
