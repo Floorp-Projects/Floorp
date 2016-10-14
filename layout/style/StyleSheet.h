@@ -145,6 +145,13 @@ private:
   inline StyleSheetInfo& SheetInfo();
   inline const StyleSheetInfo& SheetInfo() const;
 
+  // Check if the rules are available for read and write.
+  // It does the security check as well as whether the rules have been
+  // completely loaded. aRv will have an exception set if this function
+  // returns false.
+  bool AreRulesAvailable(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                         ErrorResult& aRv);
+
 protected:
   // Return success if the subject principal subsumes the principal of our
   // inner, error otherwise.  This will also succeed if the subject has
