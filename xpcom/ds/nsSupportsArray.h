@@ -95,13 +95,6 @@ public:
   {
     return RemoveElementsAt(aIndex, 1);
   }
-  MOZ_MUST_USE NS_IMETHOD_(bool)
-  RemoveLastElement(const nsISupports* aElement) override;
-
-  MOZ_MUST_USE NS_IMETHOD DeleteLastElement(nsISupports* aElement) override
-  {
-    return (RemoveLastElement(aElement) ? NS_OK : NS_ERROR_FAILURE);
-  }
 
   MOZ_MUST_USE NS_IMETHOD DeleteElementAt(uint32_t aIndex) override
   {
