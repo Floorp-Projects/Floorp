@@ -320,6 +320,18 @@ nsSupportsArray::RemoveElement(nsISupports* aElement)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP_(bool)
+nsSupportsArray::RemoveLastElement(const nsISupports* aElement)
+{
+  int32_t theIndex = LastIndexOf(aElement);
+  if (theIndex >= 0) {
+    return RemoveElementAt(theIndex);
+  }
+
+  return false;
+}
+
+
 NS_IMETHODIMP
 nsSupportsArray::Clear(void)
 {

@@ -50,8 +50,10 @@ interface nsISupportsArray : nsICollection {
                                       in unsigned long aIndex);
 
   [notxpcom] boolean RemoveElementAt(in unsigned long aIndex);
+  [notxpcom] boolean RemoveLastElement([const] in nsISupports aElement);
   
   // xpcom-compatible versions
+  void DeleteLastElement(in nsISupports aElement);
   void DeleteElementAt(in unsigned long aIndex);
   
   void Compact();
