@@ -807,6 +807,16 @@ BufferTextureHost::GetFormat() const
   return mFormat;
 }
 
+YUVColorSpace
+BufferTextureHost::GetYUVColorSpace() const
+{
+  if (mFormat == gfx::SurfaceFormat::YUV) {
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    return desc.yUVColorSpace();
+  }
+  return YUVColorSpace::UNKNOWN;
+}
+
 bool
 BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
 {

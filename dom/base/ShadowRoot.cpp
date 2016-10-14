@@ -745,23 +745,14 @@ ShadowRootStyleSheetList::~ShadowRootStyleSheetList()
   MOZ_COUNT_DTOR(ShadowRootStyleSheetList);
 }
 
-CSSStyleSheet*
+StyleSheet*
 ShadowRootStyleSheetList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   aFound = aIndex < mShadowRoot->mProtoBinding->SheetCount();
-
   if (!aFound) {
     return nullptr;
   }
-
-  // XXXheycam Return null until ServoStyleSheet implements the right
-  // DOM interfaces.
-  StyleSheet* sheet = mShadowRoot->mProtoBinding->StyleSheetAt(aIndex);
-  if (sheet->IsServo()) {
-    NS_ERROR("stylo: can't return ServoStyleSheets to script yet");
-    return nullptr;
-  }
-  return sheet->AsGecko();
+  return mShadowRoot->mProtoBinding->StyleSheetAt(aIndex);
 }
 
 uint32_t

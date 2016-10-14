@@ -523,10 +523,17 @@ extern JS_FRIEND_API(JSObject*)
 GetWeakmapKeyDelegate(JSObject* key);
 
 /**
- * Invoke cellCallback on every gray JS_OBJECT in the given zone.
+ * Invoke cellCallback on every gray JSObject in the given zone.
  */
 extern JS_FRIEND_API(void)
 IterateGrayObjects(JS::Zone* zone, GCThingCallback cellCallback, void* data);
+
+/**
+ * Invoke cellCallback on every gray JSObject in the given zone while cycle
+ * collection is in progress.
+ */
+extern JS_FRIEND_API(void)
+IterateGrayObjectsUnderCC(JS::Zone* zone, GCThingCallback cellCallback, void* data);
 
 #ifdef JS_HAS_CTYPES
 extern JS_FRIEND_API(size_t)

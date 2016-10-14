@@ -98,7 +98,7 @@ inCSSValueSearch::SearchSync()
 
   uint32_t length = sheets->Length();
   for (uint32_t i = 0; i < length; ++i) {
-    RefPtr<CSSStyleSheet> sheet = sheets->Item(i);
+    RefPtr<StyleSheet> sheet = sheets->Item(i);
     SearchStyleSheet(sheet, baseURI);
   }
 
