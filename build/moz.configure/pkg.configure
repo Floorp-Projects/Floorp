@@ -87,7 +87,11 @@ def pkg_check_modules(var, package_desc, when=always,
         # Remove evil flags like -Wl,--export-dynamic
         return tuple(libs.replace('-Wl,--export-dynamic', '').split())
 
+    @depends_when(pkg_cflags, pkg_libs, when=package)
+    def pkg_info(cflags, libs):
+        return namespace(cflags=cflags, libs=libs)
+
     set_config('%s_CFLAGS' % var, pkg_cflags)
     set_config('%s_LIBS' % var, pkg_libs)
 
-    return package
+    return pkg_info

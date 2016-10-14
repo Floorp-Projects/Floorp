@@ -473,7 +473,7 @@ def gpsd(value):
 system_gpsd = pkg_check_modules('MOZ_GPSD', 'libgps >= 3.11',
                                 when=gpsd)
 
-set_config('MOZ_GPSD', system_gpsd)
+set_config('MOZ_GPSD', depends_if(system_gpsd)(lambda _: True))
 
 # Miscellaneous programs
 # ==============================================================
