@@ -71,19 +71,23 @@ public:
   // Main thread only.
   void AddMarkerForDocShell(nsDocShell* aDocShell,
                             const char* aName,
-                            MarkerTracingType aTracingType);
+                            MarkerTracingType aTracingType,
+                            MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
   void AddMarkerForDocShell(nsIDocShell* aDocShell,
                             const char* aName,
-                            MarkerTracingType aTracingType);
+                            MarkerTracingType aTracingType,
+                            MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
 
   void AddMarkerForDocShell(nsDocShell* aDocShell,
                             const char* aName,
                             const TimeStamp& aTime,
-                            MarkerTracingType aTracingType);
+                            MarkerTracingType aTracingType,
+                            MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
   void AddMarkerForDocShell(nsIDocShell* aDocShell,
                             const char* aName,
                             const TimeStamp& aTime,
-                            MarkerTracingType aTracingType);
+                            MarkerTracingType aTracingType,
+                            MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
 
   // These methods register and receive ownership of an already created marker,
   // relevant for a specific docshell.
