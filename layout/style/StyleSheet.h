@@ -146,6 +146,13 @@ private:
   inline const StyleSheetInfo& SheetInfo() const;
 
 protected:
+  // Return success if the subject principal subsumes the principal of our
+  // inner, error otherwise.  This will also succeed if the subject has
+  // UniversalXPConnect or if access is allowed by CORS.  In the latter case,
+  // it will set the principal of the inner to the subject principal.
+  void SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
+                                     ErrorResult& aRv);
+
   nsString              mTitle;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref

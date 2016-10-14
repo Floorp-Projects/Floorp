@@ -267,13 +267,6 @@ protected:
 
   void ClearRuleCascades();
 
-  // Return success if the subject principal subsumes the principal of our
-  // inner, error otherwise.  This will also succeed if the subject has
-  // UniversalXPConnect or if access is allowed by CORS.  In the latter case,
-  // it will set the principal of the inner to the subject principal.
-  void SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
-                                     ErrorResult& aRv);
-
   // Add the namespace mapping from this @namespace rule to our namespace map
   nsresult RegisterNamespaceRule(css::Rule* aRule);
 
