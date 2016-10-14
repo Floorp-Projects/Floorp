@@ -246,8 +246,8 @@ this.SessionStore = {
     return SessionStoreInternal.getClosedTabCount(aWindow);
   },
 
-  getClosedTabData: function ss_getClosedTabDataAt(aWindow) {
-    return SessionStoreInternal.getClosedTabData(aWindow);
+  getClosedTabData: function ss_getClosedTabData(aWindow, aAsString = true) {
+    return SessionStoreInternal.getClosedTabData(aWindow, aAsString);
   },
 
   undoCloseTab: function ss_undoCloseTab(aWindow, aIndex) {
@@ -262,8 +262,8 @@ this.SessionStore = {
     return SessionStoreInternal.getClosedWindowCount();
   },
 
-  getClosedWindowData: function ss_getClosedWindowData() {
-    return SessionStoreInternal.getClosedWindowData();
+  getClosedWindowData: function ss_getClosedWindowData(aAsString = true) {
+    return SessionStoreInternal.getClosedWindowData(aAsString);
   },
 
   undoCloseWindow: function ss_undoCloseWindow(aIndex) {
@@ -2184,9 +2184,11 @@ var SessionStoreInternal = {
     return DyingWindowCache.get(aWindow)._closedTabs.length;
   },
 
-  getClosedTabData: function ssi_getClosedTabDataAt(aWindow) {
+  getClosedTabData: function ssi_getClosedTabData(aWindow, aAsString = true) {
     if ("__SSi" in aWindow) {
-      return JSON.stringify(this._windows[aWindow.__SSi]._closedTabs);
+      return aAsString ?
+        JSON.stringify(this._windows[aWindow.__SSi]._closedTabs) :
+        Cu.cloneInto(this._windows[aWindow.__SSi]._closedTabs, {});
     }
 
     if (!DyingWindowCache.has(aWindow)) {
@@ -2194,7 +2196,7 @@ var SessionStoreInternal = {
     }
 
     let data = DyingWindowCache.get(aWindow);
-    return JSON.stringify(data._closedTabs);
+    return aAsString ? JSON.stringify(data._closedTabs) : Cu.cloneInto(data._closedTabs, {});
   },
 
   undoCloseTab: function ssi_undoCloseTab(aWindow, aIndex) {
@@ -2250,8 +2252,8 @@ var SessionStoreInternal = {
     return this._closedWindows.length;
   },
 
-  getClosedWindowData: function ssi_getClosedWindowData() {
-    return JSON.stringify(this._closedWindows);
+  getClosedWindowData: function ssi_getClosedWindowData(aAsString = true) {
+    return aAsString ? JSON.stringify(this._closedWindows) : Cu.cloneInto(this._closedWindows, {});
   },
 
   undoCloseWindow: function ssi_undoCloseWindow(aIndex) {
