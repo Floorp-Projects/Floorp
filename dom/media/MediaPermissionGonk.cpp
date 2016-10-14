@@ -5,12 +5,12 @@
 #include "MediaManager.h"
 #include "MediaPermissionGonk.h"
 
-#include "nsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIContentPermissionPrompt.h"
 #include "nsIDocument.h"
 #include "nsIDOMNavigatorUserMedia.h"
 #include "nsIStringEnumerator.h"
+#include "nsISupportsArray.h"
 #include "nsJSUtils.h"
 #include "nsQueryObject.h"
 #include "nsPIDOMWindow.h"
@@ -67,10 +67,12 @@ static nsresult
 NotifyPermissionAllow(const nsAString &aCallID, nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices)
 {
   nsresult rv;
-  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
+  nsCOMPtr<nsISupportsArray> array;
+  rv = NS_NewISupportsArray(getter_AddRefs(array));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   for (uint32_t i = 0; i < aDevices.Length(); ++i) {
-    rv = array->AppendElement(aDevices.ElementAt(i), /*weak =*/ false);
+    rv = array->AppendElement(aDevices.ElementAt(i));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
