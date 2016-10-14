@@ -111,7 +111,8 @@ GamepadPlatformService::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
-  GamepadButtonInformation a(aIndex, aButton, aPressed, aValue);
+  GamepadButtonInformation a(aIndex, GamepadServiceType::Standard,
+                             aButton, aPressed, aValue);
   NotifyGamepadChange<GamepadButtonInformation>(a);
 }
 
@@ -135,7 +136,8 @@ GamepadPlatformService::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
-  GamepadAxisInformation a(aIndex, aAxis, aValue);
+  GamepadAxisInformation a(aIndex, GamepadServiceType::Standard,
+                           aAxis, aValue);
   NotifyGamepadChange<GamepadAxisInformation>(a);
 }
 
