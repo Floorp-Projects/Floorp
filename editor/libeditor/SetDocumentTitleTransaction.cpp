@@ -69,12 +69,13 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   NS_ENSURE_TRUE(editor, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMDocument> domDoc;
-  nsresult res = editor->GetDocument(getter_AddRefs(domDoc));
+  nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
   NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNodeList> titleList;
-  res = domDoc->GetElementsByTagName(NS_LITERAL_STRING("title"), getter_AddRefs(titleList));
-  NS_ENSURE_SUCCESS(res, res);
+  rv = domDoc->GetElementsByTagName(NS_LITERAL_STRING("title"),
+                                    getter_AddRefs(titleList));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // First assume we will NOT really do anything
   // (transaction will not be pushed on stack)
@@ -83,15 +84,17 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
   nsCOMPtr<nsIDOMNode>titleNode;
   if(titleList)
   {
-    res = titleList->Item(0, getter_AddRefs(titleNode));
-    NS_ENSURE_SUCCESS(res, res);
+    rv = titleList->Item(0, getter_AddRefs(titleNode));
+    NS_ENSURE_SUCCESS(rv, rv);
     if (titleNode)
     {
       // Delete existing child textnode of title node
       // (Note: all contents under a TITLE node are always in a single text node)
       nsCOMPtr<nsIDOMNode> child;
-      res = titleNode->GetFirstChild(getter_AddRefs(child));
-      if(NS_FAILED(res)) return res;
+      rv = titleNode->GetFirstChild(getter_AddRefs(child));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
       if(child)
       {
         // Save current text as the undo value
@@ -105,8 +108,10 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
           if (mUndoValue == aTitle)
             return NS_OK;
         }
-        res = editor->DeleteNode(child);
-        if(NS_FAILED(res)) return res;
+        rv = editor->DeleteNode(child);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
@@ -130,8 +135,9 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
   {
     // Didn't find one above: Create a new one
     nsCOMPtr<nsIDOMElement>titleElement;
-    res = domDoc->CreateElement(NS_LITERAL_STRING("title"), getter_AddRefs(titleElement));
-    NS_ENSURE_SUCCESS(res, res);
+    rv = domDoc->CreateElement(NS_LITERAL_STRING("title"),
+                               getter_AddRefs(titleElement));
+    NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(titleElement, NS_ERROR_FAILURE);
 
     titleNode = do_QueryInterface(titleElement);
@@ -146,8 +152,8 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
   if (titleNode && !aTitle.IsEmpty())
   {
     nsCOMPtr<nsIDOMText> textNode;
-    res = domDoc->CreateTextNode(aTitle, getter_AddRefs(textNode));
-    NS_ENSURE_SUCCESS(res, res);
+    rv = domDoc->CreateTextNode(aTitle, getter_AddRefs(textNode));
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(textNode);
     NS_ENSURE_TRUE(newNode, NS_ERROR_FAILURE);
 
@@ -155,14 +161,14 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
     {
       // Not undoable: We will insert newTitleNode below
       nsCOMPtr<nsIDOMNode> resultNode;
-      res = titleNode->AppendChild(newNode, getter_AddRefs(resultNode));
+      rv = titleNode->AppendChild(newNode, getter_AddRefs(resultNode));
     }
     else
     {
       // This is an undoable transaction
-      res = editor->InsertNode(newNode, titleNode, 0);
+      rv = editor->InsertNode(newNode, titleNode, 0);
     }
-    NS_ENSURE_SUCCESS(res, res);
+    NS_ENSURE_SUCCESS(rv, rv);
     // Calling AppendChild() or InsertNode() could cause removing the head
     // element.  So, let's mark it dirty.
     headElement = nullptr;
@@ -178,9 +184,9 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
       }
     }
     // Undoable transaction to insert title+text together
-    res = editor->InsertNode(titleNode, headElement->AsDOMNode(), newTitleIndex);
+    rv = editor->InsertNode(titleNode, headElement->AsDOMNode(), newTitleIndex);
   }
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
