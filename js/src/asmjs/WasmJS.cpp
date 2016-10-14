@@ -270,6 +270,8 @@ GetImports(JSContext* cx,
             MOZ_ASSERT(!global.isMutable());
             switch (global.type()) {
               case ValType::I32: {
+                if (!v.isNumber())
+                    return ThrowBadImportField(cx, "a number");
                 int32_t i32;
                 if (!ToInt32(cx, v, &i32))
                     return false;
@@ -292,6 +294,8 @@ GetImports(JSContext* cx,
                     val = Val(RawF32::fromBits(bits));
                     break;
                 }
+                if (!v.isNumber())
+                    return ThrowBadImportField(cx, "a number");
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
@@ -306,6 +310,8 @@ GetImports(JSContext* cx,
                     val = Val(RawF64::fromBits(bits));
                     break;
                 }
+                if (!v.isNumber())
+                    return ThrowBadImportField(cx, "a number");
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;

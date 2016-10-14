@@ -77,15 +77,14 @@
 (assert_return (invoke "get-x") (i32.const 666))
 (assert_return (invoke "get-y") (i32.const 666))
 
-;; TODO; Tests not adapted for a JS host!
-;;(assert_unlinkable
-;;  (module (import "spectest" "unknown" (global i32)))
-;;  "unknown import"
-;;)
-;;(assert_unlinkable
-;;  (module (import "spectest" "print" (global i32)))
-;;  "type mismatch"
-;;)
+(assert_unlinkable
+  (module (import "spectest" "unknown" (global i32)))
+  "unknown import"
+)
+(assert_unlinkable
+  (module (import "spectest" "print" (global i32)))
+  "type mismatch"
+)
 
 ;; TODO;
 ;;(module (import "spectest" "global" (global i64)))
