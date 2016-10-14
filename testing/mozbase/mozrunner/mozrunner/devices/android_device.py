@@ -75,7 +75,7 @@ AVD_DICT = {
 }
 
 
-def verify_android_device(build_obj, install=False, xre=False, debugger=False):
+def verify_android_device(build_obj, install=False, xre=False, debugger=False, verbose=False):
     """
        Determine if any Android device is connected via adb.
        If no device is found, prompt to start an emulator.
@@ -91,7 +91,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
        already connected.
     """
     device_verified = False
-    emulator = AndroidEmulator('*', substs=build_obj.substs)
+    emulator = AndroidEmulator('*', substs=build_obj.substs, verbose=verbose)
     devices = emulator.dm.devices()
     if (len(devices) > 0) and ('device' in [d[1] for d in devices]):
         device_verified = True
