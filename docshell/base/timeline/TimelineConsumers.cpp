@@ -173,11 +173,12 @@ TimelineConsumers::IsEmpty()
 void
 TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
                                         const char* aName,
-                                        MarkerTracingType aTracingType)
+                                        MarkerTracingType aTracingType,
+                                        MarkerStackRequest aStackRequest)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (HasConsumer(aDocShell)) {
-    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aName, aTracingType)));
+    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aName, aTracingType, aStackRequest)));
   }
 }
 
@@ -185,11 +186,12 @@ void
 TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
                                         const char* aName,
                                         const TimeStamp& aTime,
-                                        MarkerTracingType aTracingType)
+                                        MarkerTracingType aTracingType,
+                                        MarkerStackRequest aStackRequest)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (HasConsumer(aDocShell)) {
-    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aName, aTime, aTracingType)));
+    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aName, aTime, aTracingType, aStackRequest)));
   }
 }
 
@@ -206,20 +208,22 @@ TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
 void
 TimelineConsumers::AddMarkerForDocShell(nsIDocShell* aDocShell,
                                         const char* aName,
-                                        MarkerTracingType aTracingType)
+                                        MarkerTracingType aTracingType,
+                                        MarkerStackRequest aStackRequest)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  AddMarkerForDocShell(static_cast<nsDocShell*>(aDocShell), aName, aTracingType);
+  AddMarkerForDocShell(static_cast<nsDocShell*>(aDocShell), aName, aTracingType, aStackRequest);
 }
 
 void
 TimelineConsumers::AddMarkerForDocShell(nsIDocShell* aDocShell,
                                         const char* aName,
                                         const TimeStamp& aTime,
-                                        MarkerTracingType aTracingType)
+                                        MarkerTracingType aTracingType,
+                                        MarkerStackRequest aStackRequest)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  AddMarkerForDocShell(static_cast<nsDocShell*>(aDocShell), aName, aTime, aTracingType);
+  AddMarkerForDocShell(static_cast<nsDocShell*>(aDocShell), aName, aTime, aTracingType, aStackRequest);
 }
 
 void
