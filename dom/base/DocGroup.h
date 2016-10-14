@@ -131,7 +131,7 @@ public:
   // It is illegal to pass in the special case-insensitive names "_blank",
   // "_self", "_parent" or "_top", as those should be handled elsewhere.
   nsresult
-  FindItemWithName(const char16_t* aName,
+  FindItemWithName(const nsAString& aName,
                    nsIDocShellTreeItem* aRequestor,
                    nsIDocShellTreeItem* aOriginalRequestor,
                    nsIDocShellTreeItem** aFoundItem);

@@ -1639,7 +1639,7 @@ nsWindowWatcher::GetChromeForWindow(mozIDOMWindowProxy* aWindow,
 }
 
 NS_IMETHODIMP
-nsWindowWatcher::GetWindowByName(const char16_t* aTargetName,
+nsWindowWatcher::GetWindowByName(const nsAString& aTargetName,
                                  mozIDOMWindowProxy* aCurrentWindow,
                                  mozIDOMWindowProxy** aResult)
 {
@@ -2056,21 +2056,20 @@ nsWindowWatcher::WinHasOption(const nsACString& aOptions, const char* aName,
    necessarily return a failure method value. check aFoundItem.
 */
 NS_IMETHODIMP
-nsWindowWatcher::FindItemWithName(const char16_t* aName,
+nsWindowWatcher::FindItemWithName(const nsAString& aName,
                                   nsIDocShellTreeItem* aRequestor,
                                   nsIDocShellTreeItem* aOriginalRequestor,
                                   nsIDocShellTreeItem** aFoundItem)
 {
   *aFoundItem = nullptr;
-  if (!aName || !*aName) {
+  if (aName.IsEmpty()) {
     return NS_OK;
   }
 
-  nsDependentString name(aName);
-  if (name.LowerCaseEqualsLiteral("_blank") ||
-      name.LowerCaseEqualsLiteral("_top") ||
-      name.LowerCaseEqualsLiteral("_parent") ||
-      name.LowerCaseEqualsLiteral("_self")) {
+  if (aName.LowerCaseEqualsLiteral("_blank") ||
+      aName.LowerCaseEqualsLiteral("_top") ||
+      aName.LowerCaseEqualsLiteral("_parent") ||
+      aName.LowerCaseEqualsLiteral("_self")) {
     return NS_OK;
   }
 
@@ -2113,14 +2112,12 @@ nsWindowWatcher::SafeGetWindowByName(const nsAString& aName,
 
   nsCOMPtr<nsIDocShellTreeItem> callerItem = GetCallerTreeItem(startItem);
 
-  const nsAFlatString& flatName = PromiseFlatString(aName);
-
   nsCOMPtr<nsIDocShellTreeItem> foundItem;
   if (startItem) {
-    startItem->FindItemWithName(flatName.get(), nullptr, callerItem,
+    startItem->FindItemWithName(aName, nullptr, callerItem,
                                 getter_AddRefs(foundItem));
   } else {
-    FindItemWithName(flatName.get(), nullptr, callerItem,
+    FindItemWithName(aName, nullptr, callerItem,
                      getter_AddRefs(foundItem));
   }
 

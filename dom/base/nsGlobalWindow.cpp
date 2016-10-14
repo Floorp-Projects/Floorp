@@ -5999,8 +5999,7 @@ nsGlobalWindow::GetChildWindow(const nsAString& aName)
   NS_ENSURE_TRUE(docShell, nullptr);
 
   nsCOMPtr<nsIDocShellTreeItem> child;
-  docShell->FindChildWithName(PromiseFlatString(aName).get(),
-                              false, true, nullptr, nullptr,
+  docShell->FindChildWithName(aName, false, true, nullptr, nullptr,
                               getter_AddRefs(child));
 
   return child ? child->GetWindow() : nullptr;
@@ -6110,7 +6109,7 @@ nsGlobalWindow::WindowExists(const nsAString& aName,
   }
 
   nsCOMPtr<nsIDocShellTreeItem> namedItem;
-  mDocShell->FindItemWithName(PromiseFlatString(aName).get(), nullptr, caller,
+  mDocShell->FindItemWithName(aName, nullptr, caller,
                               getter_AddRefs(namedItem));
   return namedItem != nullptr;
 }
