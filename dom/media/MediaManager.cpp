@@ -10,6 +10,7 @@
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "GetUserMediaRequest.h"
 #include "MediaStreamListener.h"
+#include "nsArray.h"
 #include "nsContentUtils.h"
 #include "nsHashPropertyBag.h"
 #ifdef MOZ_WIDGET_GONK
@@ -3133,14 +3134,11 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 nsresult
-MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray** aArray)
+MediaManager::GetActiveMediaCaptureWindows(nsIArray** aArray)
 {
   MOZ_ASSERT(aArray);
-  nsISupportsArray* array;
-  nsresult rv = NS_NewISupportsArray(&array); // AddRefs
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+
+  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
 
   for (auto iter = mActiveWindows.Iter(); !iter.Done(); iter.Next()) {
     const uint64_t& id = iter.Key();
@@ -3171,11 +3169,11 @@ MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray** aArray)
       }
     }
     if (capturing) {
-      array->AppendElement(window);
+      array->AppendElement(window, /*weak =*/ false);
     }
   }
 
-  *aArray = array;
+  array.forget(aArray);
   return NS_OK;
 }
 
@@ -3334,14 +3332,14 @@ MediaManager::IterateWindowListeners(nsPIDOMWindowInner* aWindow,
 void
 MediaManager::StopMediaStreams()
 {
-  nsCOMPtr<nsISupportsArray> array;
+  nsCOMPtr<nsIArray> array;
   GetActiveMediaCaptureWindows(getter_AddRefs(array));
   uint32_t len;
-  array->Count(&len);
+  array->GetLength(&len);
   for (uint32_t i = 0; i < len; i++) {
-    nsCOMPtr<nsISupports> window;
-    array->GetElementAt(i, getter_AddRefs(window));
-    nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(window));
+    nsCOMPtr<nsPIDOMWindowInner> win;
+    array->QueryElementAt(i, NS_GET_IID(nsPIDOMWindowInner),
+                          getter_AddRefs(win));
     if (win) {
       OnNavigation(win->WindowID());
     }
@@ -3353,14 +3351,14 @@ MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId)
 {
   // Does page currently have a gUM stream active?
 
-  nsCOMPtr<nsISupportsArray> array;
+  nsCOMPtr<nsIArray> array;
   GetActiveMediaCaptureWindows(getter_AddRefs(array));
   uint32_t len;
-  array->Count(&len);
+  array->GetLength(&len);
   for (uint32_t i = 0; i < len; i++) {
-    nsCOMPtr<nsISupports> window;
-    array->GetElementAt(i, getter_AddRefs(window));
-    nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(window));
+    nsCOMPtr<nsPIDOMWindowInner> win;
+    array->QueryElementAt(i, NS_GET_IID(nsPIDOMWindowInner),
+                          getter_AddRefs(win));
     if (win && win->WindowID() == aWindowId) {
       return true;
     }
