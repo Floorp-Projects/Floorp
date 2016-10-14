@@ -118,10 +118,6 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
             log.debug('| %s', command)
 
         if mozconfig['path']:
-            for key, value in mozconfig['env']['added'].items():
-                inject("export %s=%s" % (key, quote(value)))
-            for key, (old, value) in mozconfig['env']['modified'].items():
-                inject("export %s=%s" % (key, quote(value)))
             for key, value in mozconfig['vars']['added'].items():
                 inject("%s=%s" % (key, quote(value)))
             for key, (old, value) in mozconfig['vars']['modified'].items():
