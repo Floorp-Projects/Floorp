@@ -19,16 +19,11 @@ function insertdtmftest(pc) {
 
   ok(sender.dtmf.toneBuffer === "", "sender should start with empty tonebuffer");
 
+  // These will trigger assertions on debug builds if we do not enforce the
+  // specified minimums and maximums for duration and interToneGap.
   sender.dtmf.insertDTMF("A", 10);
-  is(sender.dtmf.duration, 40, "minimum duration is 40");
   sender.dtmf.insertDTMF("A", 10000);
-  is(sender.dtmf.duration, 6000, "maximum duration is 6000");
   sender.dtmf.insertDTMF("A", 70, 10);
-  is(sender.dtmf.duration, 70, "default duration is 70");
-  is(sender.dtmf.interToneGap, 30, "minimum interToneGap is 30");
-  sender.dtmf.insertDTMF("", 100, 40);
-  is(sender.dtmf.duration, 100, "duration is 70");
-  is(sender.dtmf.interToneGap, 40, "interToneGap is 40");
 
   var threw = false;
   try {

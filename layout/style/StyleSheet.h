@@ -14,8 +14,13 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/ServoUtils.h"
 
+#include "nsIDOMCSSStyleSheet.h"
+#include "nsWrapperCache.h"
+
 class nsIDocument;
 class nsINode;
+class nsIPrincipal;
+class nsMediaList;
 
 namespace mozilla {
 
@@ -24,21 +29,27 @@ class ServoStyleSheet;
 struct StyleSheetInfo;
 
 namespace dom {
+class CSSRuleList;
 class SRIMetadata;
 } // namespace dom
 
 /**
  * Superclass for data common to CSSStyleSheet and ServoStyleSheet.
  */
-class StyleSheet
+class StyleSheet : public nsIDOMCSSStyleSheet
+                 , public nsWrapperCache
 {
 protected:
   StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode);
   StyleSheet(const StyleSheet& aCopy,
              nsIDocument* aDocumentToUse,
              nsINode* aOwningNodeToUse);
+  virtual ~StyleSheet() {}
 
 public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheet)
+
   void SetOwningNode(nsINode* aOwningNode)
   {
     mOwningNode = aOwningNode;
@@ -57,9 +68,6 @@ public:
   void SetComplete();
 
   MOZ_DECL_STYLO_METHODS(CSSStyleSheet, ServoStyleSheet)
-
-  inline MozExternalRefCountType AddRef();
-  inline MozExternalRefCountType Release();
 
   // Whether the sheet is for an inline <style> element.
   inline bool IsInline() const;
@@ -115,13 +123,76 @@ public:
   inline void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
 #endif
 
+  // WebIDL StyleSheet API
+  // The XPCOM GetType is fine for WebIDL.
+  // The XPCOM GetHref is fine for WebIDL
+  // GetOwnerNode is defined above.
+  inline StyleSheet* GetParentStyleSheet() const;
+  // The XPCOM GetTitle is fine for WebIDL.
+  virtual nsMediaList* Media() = 0;
+  bool Disabled() const { return mDisabled; }
+  // The XPCOM SetDisabled is fine for WebIDL.
+
+  // WebIDL CSSStyleSheet API
+  virtual nsIDOMCSSRule* GetDOMOwnerRule() const = 0;
+  dom::CSSRuleList* GetCssRules(nsIPrincipal& aSubjectPrincipal,
+                                ErrorResult& aRv);
+  uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
+                      nsIPrincipal& aSubjectPrincipal,
+                      ErrorResult& aRv);
+  void DeleteRule(uint32_t aIndex,
+                  nsIPrincipal& aSubjectPrincipal,
+                  ErrorResult& aRv);
+
+  // WebIDL miscellaneous bits
+  inline dom::ParentObject GetParentObject() const;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
+
+  // nsIDOMStyleSheet interface
+  NS_IMETHOD GetType(nsAString& aType) final;
+  NS_IMETHOD GetDisabled(bool* aDisabled) final;
+  NS_IMETHOD SetDisabled(bool aDisabled) final;
+  NS_IMETHOD GetOwnerNode(nsIDOMNode** aOwnerNode) final;
+  NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) final;
+  NS_IMETHOD GetHref(nsAString& aHref) final;
+  NS_IMETHOD GetTitle(nsAString& aTitle) final;
+  NS_IMETHOD GetMedia(nsIDOMMediaList** aMedia) final;
+
+  // nsIDOMCSSStyleSheet
+  NS_IMETHOD GetOwnerRule(nsIDOMCSSRule** aOwnerRule) final;
+  NS_IMETHOD GetCssRules(nsIDOMCSSRuleList** aCssRules) final;
+  NS_IMETHOD InsertRule(const nsAString& aRule, uint32_t aIndex,
+                      uint32_t* aReturn) final;
+  NS_IMETHOD DeleteRule(uint32_t aIndex) final;
+
+  // Changes to sheets should be inside of a WillDirty-DidDirty pair.
+  // However, the calls do not need to be matched; it's ok to call
+  // WillDirty and then make no change and skip the DidDirty call.
+  inline void WillDirty();
+  inline void DidDirty();
+
 private:
   // Get a handle to the various stylesheet bits which live on the 'inner' for
   // gecko stylesheets and live on the StyleSheet for Servo stylesheets.
   inline StyleSheetInfo& SheetInfo();
   inline const StyleSheetInfo& SheetInfo() const;
 
+  // Check if the rules are available for read and write.
+  // It does the security check as well as whether the rules have been
+  // completely loaded. aRv will have an exception set if this function
+  // returns false.
+  bool AreRulesAvailable(nsIPrincipal& aSubjectPrincipal,
+                         ErrorResult& aRv);
+
 protected:
+  // Return success if the subject principal subsumes the principal of our
+  // inner, error otherwise.  This will also succeed if the subject has
+  // UniversalXPConnect or if access is allowed by CORS.  In the latter case,
+  // it will set the principal of the inner to the subject principal.
+  void SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
+                                     ErrorResult& aRv);
+
+  nsString              mTitle;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref
 
@@ -130,7 +201,7 @@ protected:
   // and/or useful in user sheets.
   css::SheetParsingMode mParsingMode;
 
-  StyleBackendType      mType;
+  const StyleBackendType mType;
   bool                  mDisabled;
 };
 

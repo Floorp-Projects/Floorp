@@ -139,11 +139,11 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 }
 
 //static
-void
-GeckoChildProcessHost::GetPathToBinary(FilePath& exePath, GeckoProcessType processType)
+auto
+GeckoChildProcessHost::GetPathToBinary(FilePath& exePath, GeckoProcessType processType) -> BinaryPathType
 {
   if (sRunSelfAsContentProc &&
-      processType == GeckoProcessType_Content) {
+      (processType == GeckoProcessType_Content || processType == GeckoProcessType_GPU)) {
 #if defined(OS_WIN)
     wchar_t exePathBuf[MAXPATHLEN];
     if (!::GetModuleFileNameW(nullptr, exePathBuf, MAXPATHLEN)) {
@@ -155,7 +155,7 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath, GeckoProcessType proce
 #else
 #  error Sorry; target OS not supported yet.
 #endif
-    return;
+    return BinaryPathType::Self;
   }
 
   if (ShouldHaveDirectoryService()) {
@@ -202,6 +202,8 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath, GeckoProcessType proce
 #else
   exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
 #endif
+
+  return BinaryPathType::PluginContainer;
 }
 
 #ifdef MOZ_WIDGET_COCOA
@@ -809,7 +811,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 #endif  // OS_LINUX || OS_MACOSX
 
   FilePath exePath;
-  GetPathToBinary(exePath, mProcessType);
+  BinaryPathType pathType = GetPathToBinary(exePath, mProcessType);
 
 #ifdef MOZ_WIDGET_ANDROID
   // The java wrapper unpacks this for us but can't make it executable
@@ -852,8 +854,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
   childArgv.push_back(exePath.value());
 
-  if (sRunSelfAsContentProc &&
-      mProcessType == GeckoProcessType_Content) {
+  if (pathType == BinaryPathType::Self) {
     childArgv.push_back("-contentproc");
   }
 
@@ -993,12 +994,11 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 #elif defined(OS_WIN)
 
   FilePath exePath;
-  GetPathToBinary(exePath, mProcessType);
+  BinaryPathType pathType = GetPathToBinary(exePath, mProcessType);
 
   CommandLine cmdLine(exePath.ToWStringHack());
 
-  if (sRunSelfAsContentProc &&
-      mProcessType == GeckoProcessType_Content) {
+  if (pathType == BinaryPathType::Self) {
     cmdLine.AppendLooseValue(UTF8ToWide("-contentproc"));
   }
 

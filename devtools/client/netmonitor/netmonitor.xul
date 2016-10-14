@@ -9,8 +9,6 @@
 <!DOCTYPE window [
   <!ENTITY % netmonitorDTD SYSTEM "chrome://devtools/locale/netmonitor.dtd">
   %netmonitorDTD;
-  <!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
-  %certManagerDTD;
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -88,7 +86,10 @@
          command="freeTextFilterCommand"/>
   </keyset>
 
-  <deck id="body" class="theme-sidebar" flex="1">
+  <deck id="body"
+        class="theme-sidebar"
+        data-localization-bundle="devtools/locale/netmonitor.properties"
+        flex="1">
 
     <vbox id="network-inspector-view" flex="1">
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">
@@ -720,13 +721,13 @@
                       <vbox class="security-info-section">
                         <vbox class="tabpanel-summary-container">
                           <label class="plain tabpanel-summary-label"
-                                 value="&certmgr.subjectinfo.label;" flex="1"/>
+                                 data-localization="content=certmgr.subjectinfo.label" flex="1"/>
                         </vbox>
                         <vbox class="security-info-section">
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.certdetail.cn;:"/>
+                                   data-localization="content=certmgr.certdetail.cn"/>
                             <textbox id="security-cert-subject-cn"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"
@@ -735,7 +736,7 @@
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.certdetail.o;:"/>
+                                   data-localization="content=certmgr.certdetail.o"/>
                             <textbox id="security-cert-subject-o"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"
@@ -744,7 +745,7 @@
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.certdetail.ou;:"/>
+                                   data-localization="content=certmgr.certdetail.ou"/>
                             <textbox id="security-cert-subject-ou"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"
@@ -753,13 +754,14 @@
                         </vbox>
                         <vbox class="tabpanel-summary-container">
                           <label class="plain tabpanel-summary-label"
-                                 value="&certmgr.issuerinfo.label;" flex="1"/>
+                                 data-localization="content=certmgr.issuerinfo.label"
+                                 flex="1"/>
                         </vbox>
                         <vbox class="security-info-section">
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.certdetail.cn;:"/>
+                                   data-localization="content=certmgr.certdetail.cn"/>
                             <textbox id="security-cert-issuer-cn"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"
@@ -768,7 +770,7 @@
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.certdetail.o;:"/>
+                                   data-localization="content=certmgr.certdetail.o"/>
                             <textbox id="security-cert-issuer-o"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"
@@ -777,7 +779,7 @@
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.certdetail.ou;:"/>
+                                   data-localization="content=certmgr.certdetail.ou"/>
                             <textbox id="security-cert-issuer-ou"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"
@@ -786,13 +788,14 @@
                         </vbox>
                         <vbox class="tabpanel-summary-container">
                           <label class="plain tabpanel-summary-label"
-                                 value="&certmgr.periodofvalidity.label;" flex="1"/>
+                                 data-localization="content=certmgr.periodofvalidity.label"
+                                 flex="1"/>
                         </vbox>
                         <vbox class="security-info-section">
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.begins;:"/>
+                                   data-localization="content=certmgr.begins"/>
                             <textbox id="security-cert-validity-begins"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"
@@ -801,7 +804,7 @@
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.expires;:"/>
+                                   data-localization="content=certmgr.expires"/>
                             <textbox id="security-cert-validity-expires"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"
@@ -810,13 +813,14 @@
                         </vbox>
                         <vbox class="tabpanel-summary-container">
                           <label class="plain tabpanel-summary-label"
-                                 value="&certmgr.fingerprints.label;" flex="1"/>
+                                 data-localization="content=certmgr.fingerprints.label"
+                                 flex="1"/>
                         </vbox>
                         <vbox class="security-info-section">
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.certdetail.sha256fingerprint;:"/>
+                                   data-localization="content=certmgr.certdetail.sha256fingerprint"/>
                             <textbox id="security-cert-sha256-fingerprint"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"
@@ -825,7 +829,7 @@
                           <hbox class="tabpanel-summary-container"
                                 align="baseline">
                             <label class="plain tabpanel-summary-label"
-                                   value="&certmgr.certdetail.sha1fingerprint;:"/>
+                                   data-localization="content=certmgr.certdetail.sha1fingerprint"/>
                             <textbox id="security-cert-sha1-fingerprint"
                                      class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                      flex="1"

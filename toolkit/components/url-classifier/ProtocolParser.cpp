@@ -782,27 +782,6 @@ ProtocolParserProtobuf::End()
   }
 }
 
-// Save state of |aListName| to the following pref:
-//
-//   "browser.safebrowsing.provider.google4.state.[aListName]"
-//
-static nsresult
-SaveStateToPref(const nsACString& aListName, const nsACString& aState)
-{
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString prefName("browser.safebrowsing.provider.google4.state.");
-  prefName.Append(aListName);
-
-  nsCString stateBase64;
-  rv = Base64Encode(aState, stateBase64);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return prefs->SetCharPref(prefName.get(), stateBase64.get());
-}
-
 nsresult
 ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
 {
@@ -862,19 +841,19 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   auto tuV4 = TableUpdate::Cast<TableUpdateV4>(tu);
   NS_ENSURE_TRUE(tuV4, NS_ERROR_FAILURE);
 
-  // See Bug 1287059. We save the state to prefs until we support
-  // "saving states to HashStore".
   nsCString state(aResponse.new_client_state().c_str(),
                   aResponse.new_client_state().size());
-  NS_DispatchToMainThread(NS_NewRunnableFunction([listName, state] () {
-    DebugOnly<nsresult> rv = SaveStateToPref(listName, state);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SaveStateToPref failed");
-  }));
+  tuV4->SetNewClientState(state);
+
+  if (aResponse.has_checksum()) {
+    tuV4->NewChecksum(aResponse.checksum().sha256());
+  }
 
   PARSER_LOG(("==== Update for threat type '%d' ====", aResponse.threat_type()));
   PARSER_LOG(("* listName: %s\n", listName.get()));
   PARSER_LOG(("* newState: %s\n", aResponse.new_client_state().c_str()));
   PARSER_LOG(("* isFullUpdate: %s\n", (isFullUpdate ? "yes" : "no")));
+  PARSER_LOG(("* hasChecksum: %s\n", (aResponse.has_checksum() ? "yes" : "no")));
 
   tuV4->SetFullUpdate(isFullUpdate);
   ProcessAdditionOrRemoval(*tuV4, aResponse.additions(), true /*aIsAddition*/);

@@ -13,7 +13,7 @@
 class nsINode;
 
 namespace mozilla {
-class CSSStyleSheet;
+class StyleSheet;
 
 namespace dom {
 
@@ -30,8 +30,8 @@ public:
   virtual nsINode* GetParentObject() const = 0;
 
   virtual uint32_t Length() = 0;
-  virtual CSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) = 0;
-  CSSStyleSheet* Item(uint32_t aIndex)
+  virtual StyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) = 0;
+  StyleSheet* Item(uint32_t aIndex)
   {
     bool dummy = false;
     return IndexedGetter(aIndex, dummy);

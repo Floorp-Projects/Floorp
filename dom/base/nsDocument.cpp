@@ -592,25 +592,15 @@ nsDOMStyleSheetList::Length()
   return mLength;
 }
 
-CSSStyleSheet*
+StyleSheet*
 nsDOMStyleSheetList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   if (!mDocument || aIndex >= (uint32_t)mDocument->GetNumberOfStyleSheets()) {
     aFound = false;
     return nullptr;
   }
-
   aFound = true;
-  StyleSheet* sheet = mDocument->GetStyleSheetAt(aIndex);
-  NS_ASSERTION(sheet, "Must have a sheet");
-
-  // XXXheycam Return null until ServoStyleSheet implements the right DOM
-  // interfaces.
-  if (sheet->IsServo()) {
-    NS_ERROR("stylo: can't return a ServoStyleSheet to the DOM yet");
-    return nullptr;
-  }
-  return sheet->AsGecko();
+  return mDocument->GetStyleSheetAt(aIndex);
 }
 
 void

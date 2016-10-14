@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "jscompartment.h"
 #include "jsgc.h"
 
@@ -100,19 +102,33 @@ js::IterateScripts(JSContext* cx, JSCompartment* compartment,
     }
 }
 
-void
-js::IterateGrayObjects(Zone* zone, GCThingCallback cellCallback, void* data)
+static void
+IterateGrayObjects(Zone* zone, GCThingCallback cellCallback, void* data)
 {
-    JSRuntime* rt = zone->runtimeFromMainThread();
-    AutoEmptyNursery empty(rt);
-    AutoPrepareForTracing prep(rt->contextFromMainThread(), SkipAtoms);
-
-    for (auto thingKind : ObjectAllocKinds()) {
-        for (auto obj = zone->cellIter<JSObject>(thingKind, empty); !obj.done(); obj.next()) {
+    for (auto kind : ObjectAllocKinds()) {
+        for (GrayObjectIter obj(zone, kind); !obj.done(); obj.next()) {
             if (obj->asTenured().isMarked(GRAY))
                 cellCallback(data, JS::GCCellPtr(obj.get()));
         }
     }
+}
+
+void
+js::IterateGrayObjects(Zone* zone, GCThingCallback cellCallback, void* data)
+{
+    JSRuntime* rt = zone->runtimeFromMainThread();
+    MOZ_ASSERT(!rt->isHeapBusy());
+    AutoPrepareForTracing prep(rt->contextFromMainThread(), SkipAtoms);
+    ::IterateGrayObjects(zone, cellCallback, data);
+}
+
+void
+js::IterateGrayObjectsUnderCC(Zone* zone, GCThingCallback cellCallback, void* data)
+{
+    mozilla::DebugOnly<JSRuntime*> rt = zone->runtimeFromMainThread();
+    MOZ_ASSERT(rt->isCycleCollecting());
+    MOZ_ASSERT(!rt->gc.isIncrementalGCInProgress());
+    ::IterateGrayObjects(zone, cellCallback, data);
 }
 
 JS_PUBLIC_API(void)
