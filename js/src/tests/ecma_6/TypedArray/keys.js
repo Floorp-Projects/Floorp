@@ -1,25 +1,4 @@
-const constructors = [
-    Int8Array,
-    Uint8Array,
-    Uint8ClampedArray,
-    Int16Array,
-    Uint16Array,
-    Int32Array,
-    Uint32Array,
-    Float32Array,
-    Float64Array ];
-
-if (typeof SharedArrayBuffer != "undefined")
-    constructors.push(sharedConstructor(Int8Array),
-		      sharedConstructor(Uint8Array),
-		      sharedConstructor(Int16Array),
-		      sharedConstructor(Uint16Array),
-		      sharedConstructor(Int32Array),
-		      sharedConstructor(Uint32Array),
-		      sharedConstructor(Float32Array),
-		      sharedConstructor(Float64Array));
-
-for (var constructor of constructors) {
+for (var constructor of anyTypedArrayConstructors) {
     assertEq(constructor.prototype.keys.length, 0);
     assertEq(constructor.prototype.keys.name, "keys");
 
@@ -36,7 +15,7 @@ for (var constructor of constructors) {
     assertDeepEq(iterator.next(), {value: undefined, done: true});
 
     // Called from other globals.
-    if (typeof newGlobal === "function" && !isSharedConstructor(constructor)) {
+    if (typeof newGlobal === "function") {
         var keys = newGlobal()[constructor.name].prototype.keys;
         assertDeepEq([...keys.call(new constructor(2))], [0, 1]);
         arr = new (newGlobal()[constructor.name])(2);

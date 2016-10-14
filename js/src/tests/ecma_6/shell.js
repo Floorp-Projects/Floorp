@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 (function(global) {
-  /** Yield every permutation of the elements in some iterable. */
+  /** Yield every permutation of the elements in some array. */
   global.Permutations = function* Permutations(items) {
       if (items.length == 0) {
           yield [];
       } else {
-          let swap;
+          items = items.slice(0);
           for (let i = 0; i < items.length; i++) {
-              swap = items[0];
+              let swap = items[0];
               items[0] = items[i];
               items[i] = swap;
               for (let e of Permutations(items.slice(1, items.length)))

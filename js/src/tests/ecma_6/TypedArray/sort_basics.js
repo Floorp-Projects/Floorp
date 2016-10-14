@@ -62,20 +62,12 @@ function SortTest(dataType, dataSource) {
                  `The array is not properly sorted! ${typedArray[i]} < ${typedArray[i + 1]}, seed: ${SEED}`)
 }
 
-function RunTests(arrayLength) {
-    SortTest(Int32Array,    genRandomArrayBuffer(arrayLength, 32, SEED));
-    SortTest(Uint32Array,   genRandomArrayBuffer(arrayLength, 32, SEED));
-    SortTest(Int16Array,    genRandomArrayBuffer(arrayLength, 16, SEED));
-    SortTest(Uint16Array,   genRandomArrayBuffer(arrayLength, 16, SEED));
-    SortTest(Int8Array,     genRandomArrayBuffer(arrayLength, 8,  SEED));
-    SortTest(Uint8Array,    genRandomArrayBuffer(arrayLength, 8,  SEED));
-    SortTest(Float32Array,  genRandomArrayBuffer(arrayLength, 32, SEED));
-    SortTest(Float64Array,  genRandomArrayBuffer(arrayLength, 64, SEED));
+for (let constructor of anyTypedArrayConstructors) {
+    for (let arrayLength of [256, 16, 0]) {
+        let source = genRandomArrayBuffer(arrayLength, constructor.BYTES_PER_ELEMENT * 8, SEED);
+        SortTest(constructor, source);
+    }
 }
-
-RunTests(256);
-RunTests(16);
-RunTests(0);
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);
