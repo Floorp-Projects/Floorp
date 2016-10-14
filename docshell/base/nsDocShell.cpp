@@ -1253,10 +1253,6 @@ nsDocShell::LoadURI(nsIURI* aURI,
     return NS_OK; // JS may not handle returning of an error code
   }
 
-  if (DoAppRedirectIfNeeded(aURI, aLoadInfo, aFirstParty)) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIURI> referrer;
   nsCOMPtr<nsIURI> originalURI;
   bool loadReplace = false;
@@ -6729,32 +6725,6 @@ nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
   return ForceRefreshURI(aURI, aDelay, aMetaRefresh);
 }
 
-bool
-nsDocShell::DoAppRedirectIfNeeded(nsIURI* aURI,
-                                  nsIDocShellLoadInfo* aLoadInfo,
-                                  bool aFirstParty)
-{
-  uint32_t appId = nsIDocShell::GetAppId();
-
-  if (appId != nsIScriptSecurityManager::NO_APP_ID &&
-      appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    nsCOMPtr<nsIAppsService> appsService =
-      do_GetService(APPS_SERVICE_CONTRACTID);
-    NS_ASSERTION(appsService, "No AppsService available");
-    nsCOMPtr<nsIURI> redirect;
-    nsresult rv = appsService->GetRedirect(appId, aURI, getter_AddRefs(redirect));
-    if (NS_SUCCEEDED(rv) && redirect) {
-      rv = LoadURI(redirect, aLoadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
-                   aFirstParty);
-      if (NS_SUCCEEDED(rv)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
 NS_IMETHODIMP
 nsDocShell::ForceRefreshURI(nsIURI* aURI, int32_t aDelay, bool aMetaRefresh)
 {
@@ -7457,10 +7427,6 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
   aOldChannel->GetURI(getter_AddRefs(oldURI));
   aNewChannel->GetURI(getter_AddRefs(newURI));
   if (!oldURI || !newURI) {
-    return;
-  }
-
-  if (DoAppRedirectIfNeeded(newURI, nullptr, false)) {
     return;
   }
 

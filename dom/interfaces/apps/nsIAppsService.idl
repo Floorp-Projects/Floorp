@@ -74,12 +74,6 @@ interface nsIAppsService : nsISupports
   jsval getAppInfo(in DOMString appId);
 
   /**
-   * Returns a URI to redirect to when we get a redirection to 'uri'.
-   * Returns null if no redirection is declared for this uri.
-   */
-  nsIURI getRedirect(in unsigned long localId, in nsIURI uri);
-
-  /**
    * Returns the localId if the app was installed from a store
    */
   DOMString getAppLocalIdByStoreId(in DOMString storeID);
