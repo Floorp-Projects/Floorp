@@ -82,7 +82,10 @@ public:
   ReplaceElementAt(nsISupports* aElement, uint32_t aIndex) override;
 
   MOZ_MUST_USE NS_IMETHOD_(bool)
-  RemoveElementAt(uint32_t aIndex) override;
+  RemoveElementAt(uint32_t aIndex) override
+  {
+    return RemoveElementsAt(aIndex, 1);
+  }
 
   MOZ_MUST_USE NS_IMETHOD DeleteElementAt(uint32_t aIndex) override
   {
@@ -92,6 +95,9 @@ public:
   NS_IMETHOD Compact(void) override;
 
   MOZ_MUST_USE NS_IMETHOD Clone(nsISupportsArray** aResult) override;
+
+  MOZ_MUST_USE NS_IMETHOD_(bool)
+  RemoveElementsAt(uint32_t aIndex, uint32_t aCount) override;
 
 protected:
   void DeleteArray(void);

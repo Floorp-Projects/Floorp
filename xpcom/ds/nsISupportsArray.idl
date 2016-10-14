@@ -54,6 +54,9 @@ interface nsISupportsArray : nsICollection {
   
 
   nsISupportsArray clone();
+
+  [notxpcom] boolean RemoveElementsAt(in unsigned long aIndex,
+                                      in unsigned long aCount);
 };
 
 %{C++
