@@ -28,11 +28,18 @@ const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu,
 const systemPrincipal = CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')();
 const { loadSubScript } = Cc['@mozilla.org/moz/jssubscript-loader;1'].
                      getService(Ci.mozIJSSubScriptLoader);
-const { notifyObservers } = Cc['@mozilla.org/observer-service;1'].
+const { addObserver, notifyObservers } = Cc['@mozilla.org/observer-service;1'].
                         getService(Ci.nsIObserverService);
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const { join: pathJoin, normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "resProto",
+                                   "@mozilla.org/network/protocol;1?name=resource",
+                                   "nsIResProtocolHandler");
+XPCOMUtils.defineLazyServiceGetter(this, "zipCache",
+                                   "@mozilla.org/libjar/zip-reader-cache;1",
+                                   "nsIZipReaderCache");
 
 XPCOMUtils.defineLazyGetter(this, "XulApp", () => {
   let xulappURI = module.uri.replace("toolkit/loader.js",
@@ -202,14 +209,140 @@ function serializeStack(frames) {
 }
 Loader.serializeStack = serializeStack;
 
+class DefaultMap extends Map {
+  constructor(createItem, items = undefined) {
+    super(items);
+
+    this.createItem = createItem;
+  }
+
+  get(key) {
+    if (!this.has(key)) {
+      this.set(key, this.createItem(key));
+    }
+
+    return super.get(key);
+  }
+}
+
+const urlCache = {
+  /**
+   * Returns a list of fully-qualified URLs for entries within the zip
+   * file at the given URI which are either directories or files with a
+   * .js or .json extension.
+   *
+   * @param {nsIJARURI} uri
+   * @param {string} baseURL
+   *        The original base URL, prior to resolution.
+   *
+   * @returns {Set<string>}
+   */
+  getZipFileContents(uri, baseURL) {
+    // Make sure the path has a trailing slash, and strip off the leading
+    // slash, so that we can easily check whether it is a path prefix.
+    let basePath = addTrailingSlash(uri.JAREntry).slice(1);
+    let file = uri.JARFile.QueryInterface(Ci.nsIFileURL).file;
+
+    let enumerator = zipCache.getZip(file).findEntries("(*.js|*.json|*/)");
+
+    let results = new Set();
+    for (let entry of XPCOMUtils.IterStringEnumerator(enumerator)) {
+      if (entry.startsWith(basePath)) {
+        let path = entry.slice(basePath.length);
+
+        results.add(baseURL + path);
+      }
+    }
+
+    return results;
+  },
+
+  zipContentsCache: new DefaultMap(baseURL => {
+    let uri = NetUtil.newURI(baseURL);
+
+    if (baseURL.startsWith("resource:")) {
+      uri = NetUtil.newURI(resProto.resolveURI(uri));
+    }
+
+    if (uri instanceof Ci.nsIJARURI) {
+      return urlCache.getZipFileContents(uri, baseURL);
+    }
+
+    return null;
+  }),
+
+  filesCache: new DefaultMap(url => {
+    try {
+      let uri = NetUtil.newURI(url).QueryInterface(Ci.nsIFileURL);
+
+      return uri.file.exists();
+    } catch (e) {
+      return false;
+    }
+  }),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference]),
+
+  observe() {
+    // Clear any module resolution caches when the startup cache is flushed,
+    // since it probably means we're loading new copies of extensions.
+    this.zipContentsCache.clear();
+    this.filesCache.clear();
+  },
+
+  /**
+   * Returns the base URL for the given URL, if one can be determined. For
+   * a resource: URL, this is the root of the resource package. For a jar:
+   * URL, it is the root of the JAR file. Otherwise, null is returned.
+   *
+   * @param {string} url
+   * @returns {string?}
+   */
+  getBaseURL(url) {
+    // By using simple string matching for the common case of resource: URLs
+    // backed by jar: URLs, we can avoid creating any nsIURI objects for the
+    // common case where the JAR contents are already cached.
+    if (url.startsWith("resource://")) {
+      return /^resource:\/\/[^\/]+\//.exec(url)[0];
+    }
+
+    let uri = NetUtil.newURI(url);
+    if (uri instanceof Ci.nsIJARURI) {
+      return `jar:${uri.JARFile.spec}!/`;
+    }
+
+    return null;
+  },
+
+  /**
+   * Returns true if the target of the given URL exists as a local file,
+   * or as an entry in a local zip file.
+   *
+   * @param {string} url
+   * @returns {boolean}
+   */
+  exists(url) {
+    if (!/\.(?:js|json)$/.test(url)) {
+      url = addTrailingSlash(url);
+    }
+
+    let baseURL = this.getBaseURL(url);
+    let scripts = baseURL && this.zipContentsCache.get(baseURL);
+    if (scripts) {
+      return scripts.has(url);
+    }
+
+    return this.filesCache.get(url);
+  },
+}
+addObserver(urlCache, "startupcache-invalidate", true);
+
 function readURI(uri) {
   let nsURI = NetUtil.newURI(uri);
   if (nsURI.scheme == "resource") {
     // Resolve to a real URI, this will catch any obvious bad paths without
     // logging assertions in debug builds, see bug 1135219
-    let proto = Cc["@mozilla.org/network/protocol;1?name=resource"].
-                getService(Ci.nsIResProtocolHandler);
-    uri = proto.resolveURI(nsURI);
+    uri = resProto.resolveURI(nsURI);
   }
 
   let stream = NetUtil.newChannel({
@@ -227,17 +360,15 @@ function readURI(uri) {
 }
 
 // Combines all arguments into a resolved, normalized path
-function join(...paths) {
-  let joined = pathJoin(...paths);
-  let resolved = normalize(joined);
+function join(base, ...paths) {
+  // If this is an absolute URL, we need to normalize only the path portion,
+  // or we wind up stripping too many slashes and producing invalid URLs.
+  let match = /^((?:resource|file|chrome)\:\/\/[^\/]*|jar:[^!]+!)(.*)/.exec(base);
+  if (match) {
+    return match[1] + normalize(pathJoin(match[2], ...paths));
+  }
 
-  // OS.File `normalize` strips out any additional slashes breaking URIs like
-  // `resource://`, `resource:///`, `chrome://` or `file:///`, so we work
-  // around this putting back the slashes originally given, for such schemes.
-  let re = /^(resource|file|chrome)(\:\/{1,3})([^\/])/;
-  let matches = joined.match(re);
-
-  return resolved.replace(re, (...args) => args[1] + matches[2] + args[3]);
+  return normalize(pathJoin(base, ...paths));
 }
 Loader.join = join;
 
@@ -460,20 +591,13 @@ Loader.resolve = resolve;
 // Attempts to load `path` and then `path.js`
 // Returns `path` with valid file, or `undefined` otherwise
 function resolveAsFile(path) {
-  let found;
+  // Append '.js' to path name unless it's another support filetype
+  path = normalizeExt(path);
+  if (urlCache.exists(path)) {
+    return path;
+  }
 
-  // As per node's loader spec,
-  // we first should try and load 'path' (with no extension)
-  // before trying 'path.js'. We will not support this feature
-  // due to performance, but may add it if necessary for adoption.
-  try {
-    // Append '.js' to path name unless it's another support filetype
-    path = normalizeExt(path);
-    readURI(path);
-    found = path;
-  } catch (e) {}
-
-  return found;
+  return null;
 }
 
 // Attempts to load `path/package.json`'s `main` entry,
@@ -482,51 +606,50 @@ function resolveAsDirectory(path) {
   try {
     // If `path/package.json` exists, parse the `main` entry
     // and attempt to load that
-    let main = getManifestMain(JSON.parse(readURI(path + '/package.json')));
-    if (main != null) {
-      let tmpPath = join(path, main);
-      let found = resolveAsFile(tmpPath);
-      if (found)
+    let manifestPath = addTrailingSlash(path) + 'package.json';
+
+    let main = (urlCache.exists(manifestPath) &&
+                getManifestMain(JSON.parse(readURI(manifestPath))));
+    if (main) {
+      let found = resolveAsFile(join(path, main));
+      if (found) {
         return found
+      }
     }
   } catch (e) {}
 
-  try {
-    let tmpPath = path + '/index.js';
-    readURI(tmpPath);
-    return tmpPath;
-  } catch (e) {}
-
-  return null;
+  return resolveAsFile(addTrailingSlash(path) + 'index.js');
 }
 
 function resolveRelative(rootURI, modulesDir, id) {
   let fullId = join(rootURI, modulesDir, id);
-  let resolvedPath;
 
-  if ((resolvedPath = resolveAsFile(fullId)))
+  let resolvedPath = (resolveAsFile(fullId) ||
+                      resolveAsDirectory(fullId));
+  if (resolvedPath) {
     return stripBase(rootURI, resolvedPath);
-
-  if ((resolvedPath = resolveAsDirectory(fullId)))
-    return stripBase(rootURI, resolvedPath);
+  }
 
   return null;
 }
 
 // From `resolve` module
 // https://github.com/substack/node-resolve/blob/master/lib/node-modules-paths.js
-function* getNodeModulePaths(start) {
-  // Configurable in node -- do we need this to be configurable?
+function* getNodeModulePaths(rootURI, start) {
   let moduleDir = 'node_modules';
 
   let parts = start.split('/');
   while (parts.length) {
     let leaf = parts.pop();
-    if (leaf !== moduleDir)
-      yield join(...parts, leaf, moduleDir);
+    let path = join(...parts, leaf, moduleDir);
+    if (leaf !== moduleDir && urlCache.exists(join(rootURI, path))) {
+      yield path;
+    }
   }
 
-  yield moduleDir;
+  if (urlCache.exists(join(rootURI, moduleDir))) {
+    yield moduleDir;
+  }
 }
 
 // Node-style module lookup
@@ -539,26 +662,30 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
   id = Loader.resolve(id, requirer);
 
   // If this is already an absolute URI then there is no resolution to do
-  if (isAbsoluteURI(id))
+  if (isAbsoluteURI(id)) {
     return null;
+  }
 
   // we assume that extensions are correct, i.e., a directory doesnt't have '.js'
   // and a js file isn't named 'file.json.js'
   let resolvedPath;
 
-  if ((resolvedPath = resolveRelative(rootURI, "", id)))
+  if ((resolvedPath = resolveRelative(rootURI, "", id))) {
     return resolvedPath;
+  }
 
   // If the requirer is an absolute URI then the node module resolution below
   // won't work correctly as we prefix everything with rootURI
-  if (isAbsoluteURI(requirer))
+  if (isAbsoluteURI(requirer)) {
     return null;
+  }
 
   // If manifest has dependencies, attempt to look up node modules
   // in the `dependencies` list
-  for (let modulesDir of getNodeModulePaths(dirname(requirer))) {
-    if ((resolvedPath = resolveRelative(rootURI, modulesDir, id)))
+  for (let modulesDir of getNodeModulePaths(rootURI, dirname(requirer))) {
+    if ((resolvedPath = resolveRelative(rootURI, modulesDir, id))) {
       return resolvedPath;
+    }
   }
 
   // We would not find lookup for things like `sdk/tabs`, as that's part of
@@ -567,24 +694,7 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
   return null;
 });
 
-// String (`${rootURI}:${requirer}:${id}`) -> resolvedPath
-Loader.nodeResolverCache = new Map();
-
-const nodeResolveWithCache = iced(function cacheNodeResolutions(id, requirer, { rootURI }) {
-  // Compute the cache key based on current arguments.
-  let cacheKey = `${rootURI || ""}:${requirer}:${id}`;
-
-  // Try to get the result from the cache.
-  if (Loader.nodeResolverCache.has(cacheKey)) {
-    return Loader.nodeResolverCache.get(cacheKey);
-  }
-
-  // Resolve and cache if it is not in the cache yet.
-  let result = nodeResolve(id, requirer, { rootURI });
-  Loader.nodeResolverCache.set(cacheKey, result);
-  return result;
-});
-Loader.nodeResolve = nodeResolveWithCache;
+Loader.nodeResolve = nodeResolve;
 
 function addTrailingSlash(path) {
   return path.replace(/\/*$/, "/");
@@ -827,9 +937,6 @@ Loader.Module = Module;
 // Takes `loader`, and unload `reason` string and notifies all observers that
 // they should cleanup after them-self.
 const unload = iced(function unload(loader, reason) {
-  // Clear the nodeResolverCache when the loader is unloaded.
-  Loader.nodeResolverCache.clear();
-
   // subject is a unique object created per loader instance.
   // This allows any code to cleanup on loader unload regardless of how
   // it was loaded. To handle unload for specific loader subject may be
