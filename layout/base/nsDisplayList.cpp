@@ -422,14 +422,16 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   Nullable<TimeDuration> startTime = aAnimation->GetCurrentOrPendingStartTime();
   animation->startTime() = startTime.IsNull()
                            ? TimeStamp()
-                           : aAnimation->AnimationTimeToTimeStamp(
-                              StickyTimeDuration(timing.mDelay));
+                           : aAnimation->GetTimeline()->
+                              ToTimeStamp(startTime.Value());
   animation->initialCurrentTime() = aAnimation->GetCurrentTime().Value()
                                     - timing.mDelay;
+  animation->delay() = timing.mDelay;
   animation->duration() = computedTiming.mDuration;
   animation->iterations() = computedTiming.mIterations;
   animation->iterationStart() = computedTiming.mIterationStart;
   animation->direction() = static_cast<uint8_t>(timing.mDirection);
+  animation->fillMode() = static_cast<uint8_t>(timing.mFill);
   animation->property() = aProperty.mProperty;
   animation->playbackRate() = aAnimation->PlaybackRate();
   animation->data() = aData;
@@ -481,7 +483,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
   // Add from first to last (since last overrides)
   for (size_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
     dom::Animation* anim = aAnimations[animIdx];
-    if (!anim->IsPlaying()) {
+    if (!anim->IsPlayableOnCompositor()) {
       continue;
     }
 

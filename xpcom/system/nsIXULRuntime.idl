@@ -146,7 +146,7 @@ interface nsIXULRuntime : nsISupports
   /**
    * True if this is RELEASE_OR_BETA.
    */
-  readonly attribute boolean isReleaseBuild;
+  readonly attribute boolean isReleaseOrBeta;
 
   /**
    * True if this build uses official branding (MOZ_OFFICIAL_BRANDING).

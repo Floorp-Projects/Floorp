@@ -123,13 +123,6 @@ enum class DefinitionKind
     Global                               = 0x03
 };
 
-enum class ResizableFlags
-{
-    Default                              = 0x1,
-    HasMaximum                           = 0x2,
-    AllowedMask                          = 0x3
-};
-
 enum class GlobalFlags
 {
     IsMutable                            = 0x1,
@@ -330,8 +323,8 @@ enum class Expr
     I64Eqz                               = 0xba,
 
     // Global access.
-    GetGlobal                            = 0xc0,
-    SetGlobal                            = 0xc1,
+    GetGlobal                            = 0xbb,
+    SetGlobal                            = 0xbc,
 
     // ------------------------------------------------------------------------
     // The rest of these operators are currently only emitted internally when

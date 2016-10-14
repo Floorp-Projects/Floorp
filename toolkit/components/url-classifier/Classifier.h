@@ -125,6 +125,8 @@ private:
   bool CheckValidUpdate(nsTArray<TableUpdate*>* aUpdates,
                         const nsACString& aTable);
 
+  nsresult LoadMetadata(nsIFile* aDirectory, nsACString& aResult);
+
   // Root dir of the Local profile.
   nsCOMPtr<nsIFile> mCacheDirectory;
   // Main directory where to store the databases.

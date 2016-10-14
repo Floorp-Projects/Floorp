@@ -209,9 +209,13 @@ class ZoneCellIter<TenuredCell> {
     ZoneCellIter() {}
 
     void init(JS::Zone* zone, AllocKind kind) {
+        MOZ_ASSERT_IF(IsNurseryAllocable(kind),
+                      zone->runtimeFromAnyThread()->gc.nursery.isEmpty());
+        initForTenuredIteration(zone, kind);
+    }
+
+    void initForTenuredIteration(JS::Zone* zone, AllocKind kind) {
         JSRuntime* rt = zone->runtimeFromAnyThread();
-        MOZ_ASSERT(zone);
-        MOZ_ASSERT_IF(IsNurseryAllocable(kind), rt->gc.nursery.isEmpty());
 
         // If called from outside a GC, ensure that the heap is in a state
         // that allows us to iterate.
@@ -344,6 +348,17 @@ class ZoneCellIter : public ZoneCellIter<TenuredCell> {
     GCType* get() const { return ZoneCellIter<TenuredCell>::get<GCType>(); }
     operator GCType*() const { return get(); }
     GCType* operator ->() const { return get(); }
+};
+
+class GrayObjectIter : public ZoneCellIter<TenuredCell> {
+  public:
+    explicit GrayObjectIter(JS::Zone* zone, AllocKind kind) : ZoneCellIter<TenuredCell>() {
+        initForTenuredIteration(zone, kind);
+    }
+
+    JSObject* get() const { return ZoneCellIter<TenuredCell>::get<JSObject>(); }
+    operator JSObject*() const { return get(); }
+    JSObject* operator ->() const { return get(); }
 };
 
 class GCZonesIter

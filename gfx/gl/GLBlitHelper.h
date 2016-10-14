@@ -90,6 +90,7 @@ class GLBlitHelper final
     GLuint mSrcTexEGL;
     GLint mYTexScaleLoc;
     GLint mCbCrTexScaleLoc;
+    GLint mYuvColorMatrixLoc;
     int mTexWidth;
     int mTexHeight;
 

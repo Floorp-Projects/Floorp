@@ -92,6 +92,5 @@ const MemoryCode   = 0x02;
 const GlobalCode   = 0x03;
 
 // ResizableFlags
-const DefaultFlag    = 0x1;
-const HasMaximumFlag = 0x2;
+const HasMaximumFlag = 0x1;
 
