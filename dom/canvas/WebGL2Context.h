@@ -216,20 +216,35 @@ public:
     void DrawBuffers(const dom::Sequence<GLenum>& buffers);
     */
 
-    void ClearBufferiv_base(GLenum buffer, GLint drawbuffer, const GLint* value);
-    void ClearBufferuiv_base(GLenum buffer, GLint drawbuffer, const GLuint* value);
-    void ClearBufferfv_base(GLenum buffer, GLint drawbuffer, const GLfloat* value);
+private:
+    bool ValidateClearBuffer(const char* funcName, GLenum buffer, GLint drawBuffer,
+                             size_t availElemCount, GLuint elemOffset);
 
-    void ClearBufferiv(GLenum buffer, GLint drawbuffer, const dom::Int32Array& value);
-    void ClearBufferiv(GLenum buffer, GLint drawbuffer, const dom::Sequence<GLint>& value);
-    void ClearBufferuiv(GLenum buffer, GLint drawbuffer, const dom::Uint32Array& value);
-    void ClearBufferuiv(GLenum buffer, GLint drawbuffer, const dom::Sequence<GLuint>& value);
-    void ClearBufferfv(GLenum buffer, GLint drawbuffer, const dom::Float32Array& value);
-    void ClearBufferfv(GLenum buffer, GLint drawbuffer, const dom::Sequence<GLfloat>& value);
-    void ClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil);
+    void ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32Arr& src,
+                       GLuint srcElemOffset);
+    void ClearBufferiv(GLenum buffer, GLint drawBuffer, const Int32Arr& src,
+                       GLuint srcElemOffset);
+    void ClearBufferuiv(GLenum buffer, GLint drawBuffer, const Uint32Arr& src,
+                        GLuint srcElemOffset);
 
-    bool ValidateClearBuffer(const char* info, GLenum buffer, GLint drawbuffer, size_t elemCount);
+public:
+    void ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32ListU& list,
+                       GLuint srcElemOffset)
+    {
+        ClearBufferfv(buffer, drawBuffer, Float32Arr::From(list), srcElemOffset);
+    }
+    void ClearBufferiv(GLenum buffer, GLint drawBuffer, const Int32ListU& list,
+                       GLuint srcElemOffset)
+    {
+        ClearBufferiv(buffer, drawBuffer, Int32Arr::From(list), srcElemOffset);
+    }
+    void ClearBufferuiv(GLenum buffer, GLint drawBuffer, const Uint32ListU& list,
+                        GLuint srcElemOffset)
+    {
+        ClearBufferuiv(buffer, drawBuffer, Uint32Arr::From(list), srcElemOffset);
+    }
 
+    void ClearBufferfi(GLenum buffer, GLint drawBuffer, GLfloat depth, GLint stencil);
 
     // -------------------------------------------------------------------------
     // Query Objects - WebGL2ContextQueries.cpp
