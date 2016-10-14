@@ -200,6 +200,12 @@ TableUpdateV4::NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices)
   }
 }
 
+void
+TableUpdateV4::NewChecksum(const std::string& aChecksum)
+{
+  mChecksum.Assign(aChecksum.data(), aChecksum.size());
+}
+
 HashStore::HashStore(const nsACString& aTableName, nsIFile* aRootStoreDir)
   : mTableName(aTableName)
   , mInUpdate(false)

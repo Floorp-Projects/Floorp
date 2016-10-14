@@ -49,9 +49,12 @@ public:
 
   nsISupports* GetParentObject() const { return mDocument; }
 
-  bool IsInPlay() const;
   bool IsCurrent() const;
   bool IsInEffect() const;
+  bool IsActiveDurationZero() const
+  {
+    return SpecifiedTiming().ActiveDuration() == StickyTimeDuration();
+  }
 
   already_AddRefed<AnimationEffectTimingReadOnly> Timing();
   const TimingParams& SpecifiedTiming() const

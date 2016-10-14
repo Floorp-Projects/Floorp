@@ -240,6 +240,13 @@ public:
   Nullable<TimeDuration> GetCurrentOrPendingStartTime() const;
 
   /**
+   * Calculates the corresponding start time to use for an animation that is
+   * currently pending with current time |mHoldTime| but should behave
+   * as if it began or resumed playback at timeline time |aReadyTime|.
+   */
+  TimeDuration StartTimeFromReadyTime(const TimeDuration& aReadyTime) const;
+
+  /**
    * Converts a time in the timescale of this Animation's currentTime, to a
    * TimeStamp. Returns a null TimeStamp if the conversion cannot be performed
    * because of the current state of this Animation (e.g. it has no timeline, a
@@ -254,10 +261,6 @@ public:
            mPendingState == PendingState::PausePending;
   }
 
-  bool HasInPlayEffect() const
-  {
-    return GetEffect() && GetEffect()->IsInPlay();
-  }
   bool HasCurrentEffect() const
   {
     return GetEffect() && GetEffect()->IsCurrent();
@@ -268,21 +271,22 @@ public:
   }
 
   /**
-   * "Playing" is different to "running". An animation in its delay phase is
-   * still running but we only consider it playing when it is in its active
-   * interval. This definition is used for fetching the animations that are
-   * candidates for running on the compositor (since we don't ship animations
-   * to the compositor when they are in their delay phase or paused including
-   * being effectively paused due to having a zero playback rate).
+   * Returns true if this animation's playback state makes it a candidate for
+   * running on the compositor.
+   * We send animations to the compositor when their target effect is 'current'
+   * (a definition that is roughly equivalent to when they are in their before
+   * or active phase). However, we don't send animations to the compositor when
+   * they are paused/pausing (including being effectively paused due to
+   * having a zero playback rate), have a zero-duration active interval, or have
+   * no target effect at all.
    */
-  bool IsPlaying() const
+  bool IsPlayableOnCompositor() const
   {
-    // We need to have an effect in its active interval, and
-    // be either running or waiting to run with a non-zero playback rate.
-    return HasInPlayEffect() &&
+    return HasCurrentEffect() &&
            mPlaybackRate != 0.0 &&
            (PlayState() == AnimationPlayState::Running ||
-            mPendingState == PendingState::PlayPending);
+            mPendingState == PendingState::PlayPending) &&
+           !GetEffect()->IsActiveDurationZero();
   }
   bool IsRelevant() const { return mIsRelevant; }
   void UpdateRelevance();

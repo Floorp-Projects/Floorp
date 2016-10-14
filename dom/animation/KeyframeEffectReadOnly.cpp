@@ -195,10 +195,6 @@ const AnimationProperty*
 KeyframeEffectReadOnly::GetEffectiveAnimationOfProperty(
   nsCSSPropertyID aProperty) const
 {
-  if (!IsInEffect()) {
-    return nullptr;
-  }
-
   EffectSet* effectSet =
     EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
   for (size_t propIdx = 0, propEnd = mProperties.Length();
@@ -1138,17 +1134,11 @@ KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
   const nsIFrame* aFrame,
   AnimationPerformanceWarning::Type& aPerformanceWarning) const
 {
-  // We currently only expect this method to be called when this effect
-  // is attached to a playing Animation. If that ever changes we'll need
-  // to update this to only return true when that is the case since paused,
-  // filling, cancelled Animations etc. shouldn't stop other Animations from
+  // We currently only expect this method to be called for effects whose
+  // animations are eligible for the compositor since, Animations that are
+  // paused, zero-duration, finished etc. should not block other animations from
   // running on the compositor.
-  MOZ_ASSERT(mAnimation && mAnimation->IsPlaying());
-
-  // Should not block other animations if this effect is not in-effect.
-  if (!IsInEffect()) {
-    return false;
-  }
+  MOZ_ASSERT(mAnimation && mAnimation->IsPlayableOnCompositor());
 
   EffectSet* effectSet =
     EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);

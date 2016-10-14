@@ -14,8 +14,15 @@ span {
 #test {
   width: 100px; height: 100px;
   background: blue;
-  transition: opacity 100s steps(1, start);
-  opacity: 0 ! important;
+  /*
+   * On the compositor we use a previous vsync time stamp rather than the
+   * current time stamp, as a result sometimes transition may be still in
+   * before phase after waiting a frame. To compose the same opacity value
+   * regardless of whether the transition is in before or active phase, we use
+   * steps(1, end) here.
+   */
+  transition: opacity 100s steps(1, end);
+  opacity: 1 ! important;
 }
 </style>
 <span></span>
@@ -25,7 +32,7 @@ window.addEventListener("load", () => {
   var target = document.getElementById("test");
   getComputedStyle(target).opacity;
 
-  target.style.setProperty("opacity", "1", "important");
+  target.style.setProperty("opacity", "0", "important");
   getComputedStyle(target).opacity;
 
   requestAnimationFrame(() => {

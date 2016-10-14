@@ -8,9 +8,11 @@
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Task } = require("devtools/shared/task");
+const { localizeMarkup } = require("devtools/shared/l10n");
 
 function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
+  this.panelDoc = iframeWindow.document;
   this._toolbox = toolbox;
 
   this._view = this.panelWin.NetMonitorView;
@@ -34,6 +36,9 @@ NetMonitorPanel.prototype = {
     if (this._opening) {
       return this._opening;
     }
+    // Localize all the nodes containing a data-localization attribute.
+    localizeMarkup(this.panelDoc);
+
     let deferred = promise.defer();
     this._opening = deferred.promise;
 

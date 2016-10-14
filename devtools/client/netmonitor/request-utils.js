@@ -1,5 +1,5 @@
 "use strict";
-
+/* eslint-disable mozilla/reject-some-requires */
 const { Ci } = require("chrome");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { Task } = require("devtools/shared/task");

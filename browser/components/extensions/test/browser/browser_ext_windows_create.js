@@ -35,6 +35,7 @@ add_task(function* testWindowCreate() {
             }
           }
 
+          browser.test.assertEq(1, window.tabs.length, "tabs property got populated");
           return checkWindow(expected).then(() => {
             if (keep) {
               return window;

@@ -334,10 +334,6 @@ FinderHighlighter.prototype = {
    *                                 be the triggering event.
    */
   hide(window = null, skipRange = null, event = null) {
-    // Do not hide on anything but a left-click.
-    if (event && event.type == "click" && event.button !== 0)
-      return;
-
     try {
       window = (window || this.finder._getWindow()).top;
     } catch (ex) {
@@ -345,6 +341,15 @@ FinderHighlighter.prototype = {
       return;
     }
     let dict = this.getForWindow(window);
+
+    let isBusySelecting = dict.busySelecting;
+    dict.busySelecting = false;
+    // Do not hide on anything but a left-click.
+    if (event && event.type == "click" && (event.button !== 0 || event.altKey ||
+        event.ctrlKey || event.metaKey || event.shiftKey || event.relatedTarget ||
+        isBusySelecting || (event.target.localName == "a" && event.target.href))) {
+      return;
+    }
 
     this._clearSelection(this.finder._getSelectionController(window), skipRange);
     for (let frame of dict.frames.keys())
@@ -1245,13 +1250,15 @@ FinderHighlighter.prototype = {
       this._scheduleRepaintOfMask.bind(this, window, { contentChanged: true }),
       this._scheduleRepaintOfMask.bind(this, window, { updateAllRanges: true }),
       this._scheduleRepaintOfMask.bind(this, window, { scrollOnly: true }),
-      this.hide.bind(this, window, null)
+      this.hide.bind(this, window, null),
+      () => dict.busySelecting = true
     ];
     let target = this.iterator._getDocShell(window).chromeEventHandler;
     target.addEventListener("MozAfterPaint", dict.highlightListeners[0]);
     target.addEventListener("resize", dict.highlightListeners[1]);
     target.addEventListener("scroll", dict.highlightListeners[2]);
     target.addEventListener("click", dict.highlightListeners[3]);
+    target.addEventListener("selectstart", dict.highlightListeners[4]);
   },
 
   /**
@@ -1270,6 +1277,7 @@ FinderHighlighter.prototype = {
     target.removeEventListener("resize", dict.highlightListeners[1]);
     target.removeEventListener("scroll", dict.highlightListeners[2]);
     target.removeEventListener("click", dict.highlightListeners[3]);
+    target.removeEventListener("selectstart", dict.highlightListeners[4]);
 
     dict.highlightListeners = null;
   },
