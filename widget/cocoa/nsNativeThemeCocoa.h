@@ -41,6 +41,8 @@ public:
     eThemeGeometryTypeTooltip,
     eThemeGeometryTypeSheet,
     eThemeGeometryTypeSourceList,
+    eThemeGeometryTypeSourceListSelection,
+    eThemeGeometryTypeActiveSourceListSelection
   };
 
   nsNativeThemeCocoa();
