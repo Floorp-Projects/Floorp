@@ -14,6 +14,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsTObserverArray.h"
 #include "nsWeakPtr.h"
+#include "nsIPartialSHistoryListener.h"
 
 #include "prclist.h"
 
@@ -46,7 +47,7 @@ public:
   // Otherwise, it comes straight from the pref.
   static uint32_t GetMaxTotalViewers() { return sHistoryMaxTotalViewers; }
 
-protected:
+private:
   virtual ~nsSHistory();
   friend class nsSHEnumerator;
   friend class nsSHistoryObserver;
@@ -80,7 +81,6 @@ protected:
   nsresult LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
                                  uint32_t aHistCmd);
 
-protected:
   // aIndex is the index of the transaction which may be removed.
   // If aKeepNext is true, aIndex is compared to aIndex + 1,
   // otherwise comparison is done to aIndex - 1.
@@ -90,8 +90,22 @@ protected:
   int32_t mIndex;
   int32_t mLength;
   int32_t mRequestedIndex;
+
+  // Set to true if attached to a grouped session history.
+  bool mIsPartial;
+
+  // The number of entries before this session history object.
+  int32_t mGlobalIndexOffset;
+
+  // The number of entries after this session history object.
+  int32_t mEntriesInFollowingPartialHistories;
+
   // Session History listeners
   nsAutoTObserverArray<nsWeakPtr, 2> mListeners;
+
+  // Partial session history listener
+  nsWeakPtr mPartialHistoryListener;
+
   // Weak reference. Do not refcount this.
   nsIDocShell* mRootDocShell;
 
