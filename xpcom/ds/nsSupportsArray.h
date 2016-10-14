@@ -60,6 +60,8 @@ public:
   NS_IMETHOD Clear(void) override;
 
   // nsISupportsArray methods:
+  NS_IMETHOD_(bool) Equals(const nsISupportsArray* aOther) override;
+
   NS_IMETHOD_(int32_t) IndexOf(const nsISupports* aPossibleElement) override;
   NS_IMETHOD_(int32_t) IndexOfStartingAt(const nsISupports* aPossibleElement,
                                          uint32_t aStartIndex = 0) override;
