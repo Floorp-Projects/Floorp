@@ -1965,25 +1965,11 @@ MediaFormatReader::SetSeekTarget(const SeekTarget& aTarget)
   // Transform the seek target time to the demuxer timeline.
   if (!ForceZeroStartTime()) {
     target.SetTime(aTarget.GetTime() - TimeUnit::FromMicroseconds(StartTime())
-                   + DemuxStartTime());
+                   + mInfo.mStartTime);
   }
 
   mOriginalSeekTarget = target;
   mFallbackSeekTime = mPendingSeekTime = Some(target.GetTime());
-}
-
-TimeUnit
-MediaFormatReader::DemuxStartTime()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(!ForceZeroStartTime());
-  MOZ_ASSERT(HasAudio() || HasVideo());
-
-  const TimeUnit startTime =
-    std::min(mAudio.mFirstDemuxedSampleTime.refOr(TimeUnit::FromInfinity()),
-             mVideo.mFirstDemuxedSampleTime.refOr(TimeUnit::FromInfinity()));
-
-  return startTime.IsInfinite() ? TimeUnit::FromMicroseconds(0) : startTime;
 }
 
 void
