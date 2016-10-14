@@ -253,11 +253,7 @@ nsXBLProtoImplMethod::Write(nsIObjectOutputStream* aStream)
     rv = aStream->WriteWStringZ(mName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Calling fromMarkedLocation() is safe because mMethod is traced by the
-    // Trace() method above, and because its value is never changed after it has
-    // been set to a compiled method.
-    JS::Handle<JSObject*> method =
-      JS::Handle<JSObject*>::fromMarkedLocation(mMethod.AsHeapObject().address());
+    JS::Rooted<JSObject*> method(RootingCx(), GetCompiledMethod());
     return XBL_SerializeFunction(aStream, method);
   }
 
@@ -342,11 +338,7 @@ nsXBLProtoImplAnonymousMethod::Write(nsIObjectOutputStream* aStream,
     rv = aStream->WriteWStringZ(mName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Calling fromMarkedLocation() is safe because mMethod is traced by the
-    // Trace() method above, and because its value is never changed after it has
-    // been set to a compiled method.
-    JS::Handle<JSObject*> method =
-      JS::Handle<JSObject*>::fromMarkedLocation(mMethod.AsHeapObject().address());
+    JS::Rooted<JSObject*> method(RootingCx(), GetCompiledMethod());
     rv = XBL_SerializeFunction(aStream, method);
     NS_ENSURE_SUCCESS(rv, rv);
   }
