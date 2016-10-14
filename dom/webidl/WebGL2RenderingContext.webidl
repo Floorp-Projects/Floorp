@@ -579,12 +579,14 @@ interface WebGL2RenderingContext : WebGLRenderingContext
 
     /* Multiple Render Targets */
     void drawBuffers(sequence<GLenum> buffers);
-    void clearBufferiv(GLenum buffer, GLint drawbuffer, Int32Array value);
-    void clearBufferiv(GLenum buffer, GLint drawbuffer, sequence<GLint> value);
-    void clearBufferuiv(GLenum buffer, GLint drawbuffer, Uint32Array value);
-    void clearBufferuiv(GLenum buffer, GLint drawbuffer, sequence<GLuint> value);
-    void clearBufferfv(GLenum buffer, GLint drawbuffer, Float32Array value);
-    void clearBufferfv(GLenum buffer, GLint drawbuffer, sequence<GLfloat> value);
+
+    void clearBufferfv(GLenum buffer, GLint drawbuffer, Float32List values,
+                       optional GLuint srcOffset = 0);
+    void clearBufferiv(GLenum buffer, GLint drawbuffer, Int32List values,
+                       optional GLuint srcOffset = 0);
+    void clearBufferuiv(GLenum buffer, GLint drawbuffer, Uint32List values,
+                        optional GLuint srcOffset = 0);
+
     void clearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil);
 
     /* Query Objects */
