@@ -178,10 +178,8 @@ union AnimationData {
 };
 
 struct Animation {
-  // Unlike in nsAnimationManager, this start time is at the end of the
-  // delay.  If the delay is changed dynamically, the layer's data will
-  // be updated.
   TimeStamp startTime;
+  TimeDuration delay;
   // The value of the animation's current time at the moment it was created.
   // For animations that are waiting to start, their startTime will be null.
   // Once the animation is ready to start, we calculate an appropriate value

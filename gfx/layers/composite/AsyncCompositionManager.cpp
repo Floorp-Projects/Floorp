@@ -673,24 +673,9 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                      "Failed to resolve start time of pending animations");
           TimeDuration elapsedDuration =
             (aPoint - animation.startTime()).MultDouble(animation.playbackRate());
-          // Skip animations that are yet to start.
-          //
-          // Currently, this should only happen when the refresh driver is under test
-          // control and is made to produce a time in the past or is restored from
-          // test control causing it to jump backwards in time.
-          //
-          // Since activeAnimations is true, this could mean we keep compositing
-          // unnecessarily during the delay, but so long as this only happens while
-          // the refresh driver is under test control that should be ok.
-          if (elapsedDuration.ToSeconds() < 0) {
-            continue;
-          }
-
           TimingParams timing;
           timing.mDuration.emplace(animation.duration());
-          // Currently animations run on the compositor have their delay factored
-          // into their start time, hence the delay is effectively zero.
-          timing.mDelay = TimeDuration(0);
+          timing.mDelay = animation.delay();
           timing.mIterations = animation.iterations();
           timing.mIterationStart = animation.iterationStart();
           timing.mDirection =
@@ -709,8 +694,9 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
               Nullable<TimeDuration>(elapsedDuration), timing,
               animation.playbackRate());
 
-          MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
-                     "iteration progress should not be null");
+          if (computedTiming.mProgress.IsNull()) {
+            continue;
+          }
 
           uint32_t segmentIndex = 0;
           size_t segmentSize = animation.segments().Length();
