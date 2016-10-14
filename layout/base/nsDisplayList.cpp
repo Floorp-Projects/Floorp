@@ -483,7 +483,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
   // Add from first to last (since last overrides)
   for (size_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
     dom::Animation* anim = aAnimations[animIdx];
-    if (!anim->IsPlaying()) {
+    if (!anim->IsPlayableOnCompositor()) {
       continue;
     }
 
