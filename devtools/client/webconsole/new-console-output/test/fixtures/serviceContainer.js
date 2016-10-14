@@ -12,4 +12,5 @@ module.exports = {
   sourceMapService: {
     subscribe: () => {},
   },
+  openLink: () => {},
 };
