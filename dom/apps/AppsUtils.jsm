@@ -157,10 +157,6 @@ this.AppsUtils = {
        usePrivateBrowsing: false,
        isContent: false,
 
-       isAppOfType: function(appType) {
-         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-       },
-
        QueryInterface: XPCOMUtils.generateQI([Ci.nsILoadContext,
                                               Ci.nsIInterfaceRequestor,
                                               Ci.nsISupports]),
