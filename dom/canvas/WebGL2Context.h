@@ -104,7 +104,7 @@ public:
     void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
                     GLenum unpackType,
-                    const dom::Nullable<dom::ArrayBufferView>& maybeSrc)
+                    const dom::Nullable<dom::ArrayBufferView>& maybeSrc, ErrorResult&)
     {
         const dom::ArrayBufferView* srcView = nullptr;
         if (!maybeSrc.IsNull()) {
@@ -117,7 +117,7 @@ public:
     void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
                     GLenum unpackType, const dom::ArrayBufferView& srcView,
-                    GLuint srcElemOffset)
+                    GLuint srcElemOffset, ErrorResult&)
     {
         TexImage3D(target, level, internalFormat, width, height, depth, border,
                    unpackFormat, unpackType, &srcView, srcElemOffset);
@@ -159,7 +159,7 @@ public:
 
     void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
-                    GLenum unpackType, WebGLsizeiptr offset);
+                    GLenum unpackType, WebGLsizeiptr offset, ErrorResult&);
 
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
@@ -308,8 +308,8 @@ public:
     void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, GLintptr offset, GLsizeiptr size);
 */
     virtual JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv) override;
-    void GetIndexedParameter(GLenum target, GLuint index,
-                             dom::Nullable<dom::OwningWebGLBufferOrLongLong>& retval);
+    void GetIndexedParameter(JSContext* cx, GLenum target, GLuint index,
+                             JS::MutableHandleValue retval, ErrorResult& rv);
     void GetUniformIndices(WebGLProgram* program,
                            const dom::Sequence<nsString>& uniformNames,
                            dom::Nullable< nsTArray<GLuint> >& retval);
@@ -322,7 +322,7 @@ public:
     GLuint GetUniformBlockIndex(WebGLProgram* program, const nsAString& uniformBlockName);
     void GetActiveUniformBlockParameter(JSContext*, WebGLProgram* program,
                                         GLuint uniformBlockIndex, GLenum pname,
-                                        dom::Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
+                                        JS::MutableHandleValue retval,
                                         ErrorResult& rv);
     void GetActiveUniformBlockName(WebGLProgram* program, GLuint uniformBlockIndex,
                                    nsAString& retval);
