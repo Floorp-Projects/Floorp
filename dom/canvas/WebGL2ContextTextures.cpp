@@ -265,7 +265,8 @@ WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset
 void
 WebGL2Context::TexImage3D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
                           GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                          GLenum unpackFormat, GLenum unpackType, WebGLsizeiptr offset)
+                          GLenum unpackFormat, GLenum unpackType, WebGLsizeiptr offset,
+                          ErrorResult&)
 {
     const char funcName[] = "texImage3D";
     const uint8_t funcDims = 3;
