@@ -22,22 +22,22 @@ namespace dom {
 
 class TelephonyCall final : public DOMEventTargetHelper
 {
-  RefPtr<Telephony> mTelephony;
-  RefPtr<TelephonyCallGroup> mGroup;
+  MOZ_INIT_OUTSIDE_CTOR RefPtr<Telephony> mTelephony;
+  MOZ_INIT_OUTSIDE_CTOR RefPtr<TelephonyCallGroup> mGroup;
 
-  RefPtr<TelephonyCallId> mId;
+  MOZ_INIT_OUTSIDE_CTOR RefPtr<TelephonyCallId> mId;
   RefPtr<TelephonyCallId> mSecondId;
 
-  uint32_t mServiceId;
-  TelephonyCallState mState;
-  bool mEmergency;
-  RefPtr<DOMError> mError;
+  MOZ_INIT_OUTSIDE_CTOR uint32_t mServiceId;
+  MOZ_INIT_OUTSIDE_CTOR TelephonyCallState mState;
+  MOZ_INIT_OUTSIDE_CTOR bool mEmergency;
+  MOZ_INIT_OUTSIDE_CTOR RefPtr<DOMError> mError;
   Nullable<TelephonyCallDisconnectedReason> mDisconnectedReason;
 
-  bool mSwitchable;
-  bool mMergeable;
+  MOZ_INIT_OUTSIDE_CTOR bool mSwitchable;
+  MOZ_INIT_OUTSIDE_CTOR bool mMergeable;
 
-  uint32_t mCallIndex;
+  MOZ_INIT_OUTSIDE_CTOR uint32_t mCallIndex;
   bool mLive;
 
 public:
