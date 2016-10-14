@@ -6,8 +6,5 @@
 DevToolsModules(
     'dom-tree.js',
     'main-frame.js',
-    'main-toolbar.js',
-    'search-box.css',
-    'search-box.js',
-    'search.svg',
+    'main-toolbar.js'
 )
