@@ -1682,18 +1682,11 @@ CSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 }
 
 CSSRuleList*
-CSSStyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
-                           ErrorResult& aRv)
+CSSStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
 {
-  if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
-    return nullptr;
-  }
-
-  // OK, security check passed, so get the rule collection
   if (!mRuleCollection) {
     mRuleCollection = new CSSRuleListImpl(this);
   }
-
   return mRuleCollection;
 }
 
@@ -1706,17 +1699,6 @@ CSSStyleSheet::InsertRule(const nsAString& aRule,
   *aReturn =
     InsertRule(aRule, aIndex, *nsContentUtils::SubjectPrincipal(), rv);
   return rv.StealNSResult();
-}
-
-uint32_t
-CSSStyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
-                          nsIPrincipal& aSubjectPrincipal,
-                          ErrorResult& aRv)
-{
-  if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
-    return 0;
-  }
-  return InsertRuleInternal(aRule, aIndex, aRv);
 }
 
 static bool
@@ -1859,14 +1841,8 @@ CSSStyleSheet::DeleteRule(uint32_t aIndex)
 }
 
 void
-CSSStyleSheet::DeleteRule(uint32_t aIndex,
-                          nsIPrincipal& aSubjectPrincipal,
-                          ErrorResult& aRv)
+CSSStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
 {
-  if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
-    return;
-  }
-
   // XXX TBI: handle @rule types
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
     

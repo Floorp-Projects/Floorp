@@ -31,7 +31,6 @@
 
 class CSSRuleListImpl;
 class nsCSSRuleProcessor;
-class nsIPrincipal;
 class nsIURI;
 class nsMediaList;
 class nsMediaQueryResultCacheKey;
@@ -179,12 +178,6 @@ public:
   void AddStyleSet(nsStyleSet* aStyleSet);
   void DropStyleSet(nsStyleSet* aStyleSet);
 
-  /**
-   * Like the DOM insertRule() method, but doesn't do any security checks
-   */
-  uint32_t InsertRuleInternal(const nsAString& aRule,
-                              uint32_t aIndex, ErrorResult& aRv);
-
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
@@ -229,15 +222,9 @@ public:
   // called GetOwnerRule because that would be ambiguous with the ImportRule
   // version.
   nsIDOMCSSRule* GetDOMOwnerRule() const;
-  dom::CSSRuleList* GetCssRules(nsIPrincipal& aSubjectPrincipal,
-                                ErrorResult& aRv);
-  uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv);
-
-  void DeleteRule(uint32_t aIndex,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv);
+  using StyleSheet::GetCssRules;
+  using StyleSheet::InsertRule;
+  using StyleSheet::DeleteRule;
 
   // WebIDL miscellaneous bits
   dom::ParentObject GetParentObject() const {
@@ -282,6 +269,12 @@ protected:
   void TraverseInner(nsCycleCollectionTraversalCallback &);
 
 protected:
+  // Internal methods which do not have security check and completeness check.
+  dom::CSSRuleList* GetCssRulesInternal(ErrorResult& aRv);
+  uint32_t InsertRuleInternal(const nsAString& aRule,
+                              uint32_t aIndex, ErrorResult& aRv);
+  void DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv);
+
   RefPtr<nsMediaList> mMedia;
   RefPtr<CSSStyleSheet> mNext;
   CSSStyleSheet*        mParent;    // weak ref

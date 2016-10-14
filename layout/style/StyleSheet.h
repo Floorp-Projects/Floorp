@@ -18,6 +18,7 @@
 
 class nsIDocument;
 class nsINode;
+class nsIPrincipal;
 
 namespace mozilla {
 
@@ -26,6 +27,7 @@ class ServoStyleSheet;
 struct StyleSheetInfo;
 
 namespace dom {
+class CSSRuleList;
 class SRIMetadata;
 } // namespace dom
 
@@ -125,6 +127,16 @@ public:
   bool Disabled() const { return mDisabled; }
   // The XPCOM SetDisabled is fine for WebIDL.
 
+  // WebIDL CSSStyleSheet API
+  dom::CSSRuleList* GetCssRules(nsIPrincipal& aSubjectPrincipal,
+                                ErrorResult& aRv);
+  uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
+                      nsIPrincipal& aSubjectPrincipal,
+                      ErrorResult& aRv);
+  void DeleteRule(uint32_t aIndex,
+                  nsIPrincipal& aSubjectPrincipal,
+                  ErrorResult& aRv);
+
   // nsIDOMStyleSheet interface
   NS_IMETHOD GetType(nsAString& aType) final;
   NS_IMETHOD GetDisabled(bool* aDisabled) final;
@@ -149,7 +161,7 @@ private:
   // It does the security check as well as whether the rules have been
   // completely loaded. aRv will have an exception set if this function
   // returns false.
-  bool AreRulesAvailable(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+  bool AreRulesAvailable(nsIPrincipal& aSubjectPrincipal,
                          ErrorResult& aRv);
 
 protected:

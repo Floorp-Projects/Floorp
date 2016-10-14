@@ -154,6 +154,48 @@ StyleSheet::GetTitle(nsAString& aTitle)
   return NS_OK;
 }
 
+// WebIDL CSSStyleSheet API
+
+#define FORWARD_INTERNAL(method_, args_) \
+  if (IsServo()) { \
+    return AsServo()->method_ args_; \
+  } \
+  return AsGecko()->method_ args_;
+
+dom::CSSRuleList*
+StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
+                        ErrorResult& aRv)
+{
+  if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
+    return nullptr;
+  }
+  FORWARD_INTERNAL(GetCssRulesInternal, (aRv))
+}
+
+uint32_t
+StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
+                       nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv)
+{
+  if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
+    return 0;
+  }
+  FORWARD_INTERNAL(InsertRuleInternal, (aRule, aIndex, aRv))
+}
+
+void
+StyleSheet::DeleteRule(uint32_t aIndex,
+                       nsIPrincipal& aSubjectPrincipal,
+                       ErrorResult& aRv)
+{
+  if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
+    return;
+  }
+  FORWARD_INTERNAL(DeleteRuleInternal, (aIndex, aRv))
+}
+
+#undef FORWARD_INTERNAL
+
 void
 StyleSheet::SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
                                           ErrorResult& aRv)
@@ -194,7 +236,7 @@ StyleSheet::SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
 }
 
 bool
-StyleSheet::AreRulesAvailable(const Maybe<nsIPrincipal*>& aSubjectPrincipal,
+StyleSheet::AreRulesAvailable(nsIPrincipal& aSubjectPrincipal,
                               ErrorResult& aRv)
 {
   // Rules are not available on incomplete sheets.
