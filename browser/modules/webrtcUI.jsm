@@ -10,6 +10,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Cu.import("resource:///modules/syncedtabs/EventEmitter.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -17,12 +18,17 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
   return Services.strings.createBundle("chrome://branding/locale/brand.properties");
 });
 
 this.webrtcUI = {
+  peerConnectionBlockers: new Set(),
+  emitter: new EventEmitter(),
+
   init: function() {
     Services.obs.addObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished", false);
 
@@ -165,49 +171,93 @@ this.webrtcUI = {
     document.getElementById("webRTC-all-windows-shared").hidden = type != "Screen";
   },
 
+  // Add-ons can override stock permission behavior by doing:
+  //
+  //   webrtcUI.addPeerConnectionBlocker(function(aParams) {
+  //     // new permission checking logic
+  //   }));
+  //
+  // The blocking function receives an object with origin, callID, and windowID
+  // parameters.  If it returns the string "deny" or a Promise that resolves
+  // to "deny", the connection is immediately blocked.  With any other return
+  // value (though the string "allow" is suggested for consistency), control
+  // is passed to other registered blockers.  If no registered blockers block
+  // the connection (or of course if there are no registered blockers), then
+  // the connection is allowed.
+  //
+  // Add-ons may also use webrtcUI.on/off to listen to events without
+  // blocking anything:
+  //   peer-request-allowed is emitted when a new peer connection is
+  //                        established (and not blocked).
+  //   peer-request-blocked is emitted when a peer connection request is
+  //                        blocked by some blocking connection handler.
+  //   peer-request-cancel is emitted when a peer-request connection request
+  //                       is canceled.  (This would typically be used in
+  //                       conjunction with a blocking handler to cancel
+  //                       a user prompt or other work done by the handler)
+  addPeerConnectionBlocker: function(aCallback) {
+    this.peerConnectionBlockers.add(aCallback);
+  },
+
+  removePeerConnectionBlocker: function(aCallback) {
+    this.peerConnectionBlockers.delete(aCallback);
+  },
+
+  on: function(...args) {
+    return this.emitter.on(...args);
+  },
+
+  off: function(...args) {
+    return this.emitter.off(...args);
+  },
+
   receiveMessage: function(aMessage) {
     switch (aMessage.name) {
 
-      // Add-ons can override stock permission behavior by doing:
-      //
-      //   var stockReceiveMessage = webrtcUI.receiveMessage;
-      //
-      //   webrtcUI.receiveMessage = function(aMessage) {
-      //     switch (aMessage.name) {
-      //      case "rtcpeer:Request": {
-      //        // new code.
-      //        break;
-      //      ...
-      //      default:
-      //        return stockReceiveMessage.call(this, aMessage);
-      //
-      // Intercepting gUM and peerConnection requests should let an add-on
-      // limit PeerConnection activity with automatic rules and/or prompts
-      // in a sensible manner that avoids double-prompting in typical
-      // gUM+PeerConnection scenarios. For example:
-      //
-      //   State                                    Sample Action
-      //   --------------------------------------------------------------
-      //   No IP leaked yet + No gUM granted        Warn user
-      //   No IP leaked yet + gUM granted           Avoid extra dialog
-      //   No IP leaked yet + gUM request pending.  Delay until gUM grant
-      //   IP already leaked                        Too late to warn
-
       case "rtcpeer:Request": {
-        // Always allow. This code-point exists for add-ons to override.
-        let { callID, windowID } = aMessage.data;
-        // Also available: isSecure, innerWindowID. For contentWindow:
-        //
-        //   let contentWindow = Services.wm.getOuterWindowWithId(windowID);
+        let params = Object.freeze(Object.assign({
+          origin: aMessage.target.contentPrincipal.origin
+        }, aMessage.data));
 
-        let mm = aMessage.target.messageManager;
-        mm.sendAsyncMessage("rtcpeer:Allow",
-                            { callID: callID, windowID: windowID });
+        let blockers = Array.from(this.peerConnectionBlockers);
+
+        Task.spawn(function*() {
+          for (let blocker of blockers) {
+            try {
+              let result = yield blocker(params);
+              if (result == "deny") {
+                return false;
+              }
+            } catch (err) {
+              Cu.reportError(`error in PeerConnection blocker: ${err.message}`);
+            }
+          }
+          return true;
+        }).then(decision => {
+          let message;
+          if (decision) {
+            this.emitter.emit("peer-request-allowed", params);
+            message = "rtcpeer:Allow";
+          } else {
+            this.emitter.emit("peer-request-blocked", params);
+            message = "rtcpeer:Deny";
+          }
+
+          aMessage.target.messageManager.sendAsyncMessage(message, {
+            callID: params.callID,
+            windowID: params.windowID,
+          });
+        });
         break;
       }
-      case "rtcpeer:CancelRequest":
-        // No data to release. This code-point exists for add-ons to override.
+      case "rtcpeer:CancelRequest": {
+        let params = Object.freeze({
+          origin: aMessage.target.contentPrincipal.origin,
+          callID: aMessage.data
+        });
+        this.emitter.emit("peer-request-cancel", params);
         break;
+      }
       case "webrtc:Request":
         prompt(aMessage.target, aMessage.data);
         break;
