@@ -6,13 +6,10 @@
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/netmonitor.css" type="text/css"?>
-<!DOCTYPE window [
-  <!ENTITY % netmonitorDTD SYSTEM "chrome://devtools/locale/netmonitor.dtd">
-  %netmonitorDTD;
-]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml">
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-localization-bundle="devtools/locale/netmonitor.properties">
 
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"/>
@@ -22,55 +19,42 @@
   <popupset id="networkPopupSet">
     <menupopup id="network-request-popup">
       <menuitem id="request-menu-context-copy-url"
-                label="&netmonitorUI.context.copyUrl;"
-                accesskey="&netmonitorUI.context.copyUrl.accesskey;"/>
+                data-localization="label=netmonitor.context.copyUrl;accesskey=netmonitor.context.copyUrl.accesskey"/>
       <menuitem id="request-menu-context-copy-url-params"
-                label="&netmonitorUI.context.copyUrlParams;"
-                accesskey="&netmonitorUI.context.copyUrlParams.accesskey;"
+                data-localization="label=netmonitor.context.copyUrlParams;accesskey=netmonitor.context.copyUrlParams.accesskey"
                 oncommand="NetMonitorView.RequestsMenu.copyUrlParams();"/>
       <menuitem id="request-menu-context-copy-post-data"
-                label="&netmonitorUI.context.copyPostData;"
-                accesskey="&netmonitorUI.context.copyPostData.accesskey;"
+                data-localization="label=netmonitor.context.copyPostData;accesskey=netmonitor.context.copyPostData.accesskey"
                 oncommand="NetMonitorView.RequestsMenu.copyPostData();"/>
       <menuitem id="request-menu-context-copy-as-curl"
-                label="&netmonitorUI.context.copyAsCurl;"
-                accesskey="&netmonitorUI.context.copyAsCurl.accesskey;"
+                data-localization="label=netmonitor.context.copyAsCurl;accesskey=netmonitor.context.copyAsCurl.accesskey"
                 oncommand="NetMonitorView.RequestsMenu.copyAsCurl();"/>
       <menuseparator class="request-menu-context-separator"/>
       <menuitem id="request-menu-context-copy-request-headers"
-                label="&netmonitorUI.context.copyRequestHeaders;"
-                accesskey="&netmonitorUI.context.copyRequestHeaders.accesskey;"
+                data-localization="label=netmonitor.context.copyRequestHeaders;accesskey=netmonitor.context.copyRequestHeaders.accesskey"
                 oncommand="NetMonitorView.RequestsMenu.copyRequestHeaders();"/>
       <menuitem id="response-menu-context-copy-response-headers"
-                label="&netmonitorUI.context.copyResponseHeaders;"
-                accesskey="&netmonitorUI.context.copyResponseHeaders.accesskey;"
+                data-localization="label=netmonitor.context.copyResponseHeaders;accesskey=netmonitor.context.copyResponseHeaders.accesskey"
                 oncommand="NetMonitorView.RequestsMenu.copyResponseHeaders();"/>
       <menuitem id="request-menu-context-copy-response"
-                label="&netmonitorUI.context.copyResponse;"
-                accesskey="&netmonitorUI.context.copyResponse.accesskey;"/>
+                data-localization="label=netmonitor.context.copyResponse;accesskey=netmonitor.context.copyResponse.accesskey"/>
       <menuitem id="request-menu-context-copy-image-as-data-uri"
-                label="&netmonitorUI.context.copyImageAsDataUri;"
-                accesskey="&netmonitorUI.context.copyImageAsDataUri.accesskey;"/>
+                data-localization="label=netmonitor.context.copyImageAsDataUri;accesskey=netmonitor.context.copyImageAsDataUri.accesskey"/>
       <menuseparator class="request-menu-context-separator"/>
       <menuitem id="request-menu-context-copy-all-as-har"
-                label="&netmonitorUI.context.copyAllAsHar;"
-                accesskey="&netmonitorUI.context.copyAllAsHar.accesskey;"
+                data-localization="label=netmonitor.context.copyAllAsHar;accesskey=netmonitor.context.copyAllAsHar.accesskey"
                 oncommand="NetMonitorView.RequestsMenu.copyAllAsHar();"/>
       <menuitem id="request-menu-context-save-all-as-har"
-                label="&netmonitorUI.context.saveAllAsHar;"
-                accesskey="&netmonitorUI.context.saveAllAsHar.accesskey;"
+                data-localization="label=netmonitor.context.saveAllAsHar;accesskey=netmonitor.context.saveAllAsHar.accesskey"
                 oncommand="NetMonitorView.RequestsMenu.saveAllAsHar();"/>
       <menuseparator class="request-menu-context-separator"/>
       <menuitem id="request-menu-context-resend"
-                label="&netmonitorUI.summary.editAndResend;"
-                accesskey="&netmonitorUI.summary.editAndResend.accesskey;"/>
+                data-localization="label=netmonitor.context.editAndResend;accesskey=netmonitor.context.editAndResend.accesskey"/>
       <menuseparator class="request-menu-context-separator"/>
       <menuitem id="request-menu-context-newtab"
-                label="&netmonitorUI.context.newTab;"
-                accesskey="&netmonitorUI.context.newTab.accesskey;"/>
+                data-localization="label=netmonitor.context.newTab;accesskey=netmonitor.context.newTab.accesskey"/>
       <menuitem id="request-menu-context-perf"
-                label="&netmonitorUI.context.perfTools;"
-                accesskey="&netmonitorUI.context.perfTools.accesskey;"/>
+                data-localization="label=netmonitor.context.perfTools;accesskey=netmonitor.context.perfTools.accesskey"/>
     </menupopup>
   </popupset>
 
@@ -81,92 +65,89 @@
 
   <keyset>
     <key id="freeTextFilterKey"
-         key="&netmonitorUI.footer.filterFreetext.key;"
+         data-localization="key=netmonitor.footer.filterFreetext.key"
          modifiers="accel"
          command="freeTextFilterCommand"/>
   </keyset>
 
-  <deck id="body"
-        class="theme-sidebar"
-        data-localization-bundle="devtools/locale/netmonitor.properties"
-        flex="1">
+  <deck id="body" class="theme-sidebar" flex="1">
 
     <vbox id="network-inspector-view" flex="1">
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">
         <toolbarbutton id="requests-menu-clear-button"
                        class="devtools-toolbarbutton devtools-clear-icon"
-                       tooltiptext="&netmonitorUI.footer.clear;"/>
+                       data-localization="tooltiptext=netmonitor.footer.clear"/>
         <hbox id="requests-menu-filter-buttons">
           <button id="requests-menu-filter-all-button"
                   class="requests-menu-filter-button"
                   checked="true"
                   data-key="all"
-                  label="&netmonitorUI.footer.filterAll;">
+                  data-localization="label=netmonitor.footer.filterAll">
           </button>
           <button id="requests-menu-filter-html-button"
                   class="requests-menu-filter-button"
                   data-key="html"
-                  label="&netmonitorUI.footer.filterHTML;">
+                  data-localization="label=netmonitor.footer.filterHTML">
           </button>
           <button id="requests-menu-filter-css-button"
                   class="requests-menu-filter-button"
                   data-key="css"
-                  label="&netmonitorUI.footer.filterCSS;">
+                  data-localization="label=netmonitor.footer.filterCSS">
           </button>
           <button id="requests-menu-filter-js-button"
                   class="requests-menu-filter-button"
                   data-key="js"
-                  label="&netmonitorUI.footer.filterJS;">
+                  data-localization="label=netmonitor.footer.filterJS">
           </button>
           <button id="requests-menu-filter-xhr-button"
                   class="requests-menu-filter-button"
                   data-key="xhr"
-                  label="&netmonitorUI.footer.filterXHR;">
+                  data-localization="label=netmonitor.footer.filterXHR">
           </button>
           <button id="requests-menu-filter-fonts-button"
                   class="requests-menu-filter-button"
                   data-key="fonts"
-                  label="&netmonitorUI.footer.filterFonts;">
+                  data-localization="label=netmonitor.footer.filterFonts">
           </button>
           <button id="requests-menu-filter-images-button"
                   class="requests-menu-filter-button"
                   data-key="images"
-                  label="&netmonitorUI.footer.filterImages;">
+                  data-localization="label=netmonitor.footer.filterImages">
           </button>
           <button id="requests-menu-filter-media-button"
                   class="requests-menu-filter-button"
                   data-key="media"
-                  label="&netmonitorUI.footer.filterMedia;">
+                  data-localization="label=netmonitor.footer.filterMedia">
           </button>
           <button id="requests-menu-filter-flash-button"
                   class="requests-menu-filter-button"
                   data-key="flash"
-                  label="&netmonitorUI.footer.filterFlash;">
+                  data-localization="label=netmonitor.footer.filterFlash">
           </button>
           <button id="requests-menu-filter-ws-button"
                   class="requests-menu-filter-button"
                   data-key="ws"
-                  label="&netmonitorUI.footer.filterWS;">
+                  data-localization="label=netmonitor.footer.filterWS">
           </button>
           <button id="requests-menu-filter-other-button"
                   class="requests-menu-filter-button"
                   data-key="other"
-                  label="&netmonitorUI.footer.filterOther;">
+                  data-localization="label=netmonitor.footer.filterOther">
           </button>
         </hbox>
         <spacer id="requests-menu-spacer"
                 flex="1"/>
         <toolbarbutton id="requests-menu-network-summary-button"
                        class="devtools-toolbarbutton icon-and-text"
-                       tooltiptext="&netmonitorUI.footer.perf;"/>
+                       data-localization="tooltiptext=netmonitor.footer.perf"/>
         <textbox id="requests-menu-filter-freetext-text"
                  class="devtools-filterinput"
                  type="search"
                  required="true"
-                 placeholder="&netmonitorUI.footer.filterFreetext.label;"/>
+                 data-localization="placeholder=netmonitor.footer.filterFreetext.label"/>
         <toolbarbutton id="details-pane-toggle"
                        class="devtools-toolbarbutton"
-                       tooltiptext="&netmonitorUI.panesButton.tooltip;"
+                       data-localization="tooltiptext=netmonitor.panesButton.tooltip"
                        disabled="true"
                        tabindex="0"/>
       </hbox>
@@ -184,7 +165,7 @@
                 <button id="requests-menu-status-button"
                         class="requests-menu-header-button requests-menu-status"
                         data-key="status"
-                        label="&netmonitorUI.toolbar.status3;"
+                        data-localization="label=netmonitor.toolbar.status3"
                         flex="1">
                 </button>
               </hbox>
@@ -194,7 +175,7 @@
                 <button id="requests-menu-method-button"
                         class="requests-menu-header-button requests-menu-method"
                         data-key="method"
-                        label="&netmonitorUI.toolbar.method;"
+                        data-localization="label=netmonitor.toolbar.method"
                         crop="end"
                         flex="1">
                 </button>
@@ -205,7 +186,7 @@
                 <button id="requests-menu-file-button"
                         class="requests-menu-header-button requests-menu-file"
                         data-key="file"
-                        label="&netmonitorUI.toolbar.file;"
+                        data-localization="label=netmonitor.toolbar.file"
                         crop="end"
                         flex="1">
                 </button>
@@ -216,7 +197,7 @@
                 <button id="requests-menu-domain-button"
                         class="requests-menu-header-button requests-menu-security-and-domain"
                         data-key="domain"
-                        label="&netmonitorUI.toolbar.domain;"
+                        data-localization="label=netmonitor.toolbar.domain"
                         crop="end"
                         flex="1">
                 </button>
@@ -227,7 +208,7 @@
                 <button id="requests-menu-cause-button"
                         class="requests-menu-header-button requests-menu-cause"
                         data-key="cause"
-                        label="&netmonitorUI.toolbar.cause;"
+                        data-localization="label=netmonitor.toolbar.cause"
                         crop="end"
                         flex="1">
                 </button>
@@ -238,7 +219,7 @@
                 <button id="requests-menu-type-button"
                         class="requests-menu-header-button requests-menu-type"
                         data-key="type"
-                        label="&netmonitorUI.toolbar.type;"
+                        data-localization="label=netmonitor.toolbar.type"
                         crop="end"
                         flex="1">
                 </button>
@@ -249,7 +230,7 @@
                 <button id="requests-menu-transferred-button"
                         class="requests-menu-header-button requests-menu-transferred"
                         data-key="transferred"
-                        label="&netmonitorUI.toolbar.transferred;"
+                        data-localization="label=netmonitor.toolbar.transferred"
                         crop="end"
                         flex="1">
                 </button>
@@ -260,7 +241,7 @@
                 <button id="requests-menu-size-button"
                         class="requests-menu-header-button requests-menu-size"
                         data-key="size"
-                        label="&netmonitorUI.toolbar.size;"
+                        data-localization="label=netmonitor.toolbar.size"
                         crop="end"
                         flex="1">
                 </button>
@@ -273,13 +254,13 @@
                         class="requests-menu-header-button requests-menu-waterfall"
                         data-key="waterfall"
                         pack="start"
-                        label="&netmonitorUI.toolbar.waterfall;"
+                        data-localization="label=netmonitor.toolbar.waterfall"
                         flex="1">
                   <image id="requests-menu-waterfall-image"/>
                   <box id="requests-menu-waterfall-label-wrapper">
                     <label id="requests-menu-waterfall-label"
                            class="plain requests-menu-waterfall"
-                           value="&netmonitorUI.toolbar.waterfall;"/>
+                           data-localization="label=netmonitor.toolbar.waterfall"/>
                   </box>
                 </button>
               </hbox>
@@ -289,20 +270,20 @@
           <vbox id="requests-menu-empty-notice"
                 class="side-menu-widget-empty-text">
             <hbox id="notice-reload-message" align="center">
-              <label value="&netmonitorUI.reloadNotice1;"/>
+              <label data-localization="content=netmonitor.reloadNotice1"/>
               <button id="requests-menu-reload-notice-button"
                       class="devtools-toolbarbutton"
                       standalone="true"
-                      label="&netmonitorUI.reloadNotice2;"/>
-              <label value="&netmonitorUI.reloadNotice3;"/>
+                      data-localization="label=netmonitor.reloadNotice2"/>
+              <label data-localization="content=netmonitor.reloadNotice3"/>
             </hbox>
             <hbox id="notice-perf-message" align="center">
-              <label value="&netmonitorUI.perfNotice1;"/>
+              <label data-localization="content=netmonitor.perfNotice1"/>
               <button id="requests-menu-perf-notice-button"
+                      class="devtools-toolbarbutton"
                       standalone="true"
-                      tooltiptext="&netmonitorUI.perfNotice3;"
-                      class="devtools-toolbarbutton"/>
-              <label value="&netmonitorUI.perfNotice2;"/>
+                      data-localization="tooltiptext=netmonitor.perfNotice3"/>
+              <label data-localization="content=netmonitor.perfNotice2"/>
             </hbox>
           </vbox>
 
@@ -364,17 +345,17 @@
           <vbox id="custom-pane"
                 class="tabpanel-content">
             <hbox align="baseline">
-              <label value="&netmonitorUI.custom.newRequest;"
+              <label data-localization="content=netmonitor.custom.newRequest"
                      class="plain tabpanel-summary-label
                             custom-header"/>
               <hbox flex="1" pack="end"
                     class="devtools-toolbarbutton-group">
                 <button id="custom-request-send-button"
                         class="devtools-toolbarbutton"
-                        label="&netmonitorUI.custom.send;"/>
+                        data-localization="label=netmonitor.custom.send"/>
                 <button id="custom-request-close-button"
                         class="devtools-toolbarbutton"
-                        label="&netmonitorUI.custom.cancel;"/>
+                        data-localization="label=netmonitor.custom.cancel"/>
               </hbox>
             </hbox>
             <hbox id="custom-method-and-url"
@@ -389,7 +370,7 @@
             <vbox id="custom-query"
                   class="tabpanel-summary-container custom-section">
               <label class="plain tabpanel-summary-label"
-                     value="&netmonitorUI.custom.query;"/>
+                     data-localization="content=netmonitor.custom.query"/>
               <textbox id="custom-query-value"
                        class="tabpanel-summary-input"
                        multiline="true"
@@ -400,7 +381,7 @@
             <vbox id="custom-headers"
                   class="tabpanel-summary-container custom-section">
               <label class="plain tabpanel-summary-label"
-                     value="&netmonitorUI.custom.headers;"/>
+                     data-localization="content=netmonitor.custom.headers"/>
               <textbox id="custom-headers-value"
                        class="tabpanel-summary-input"
                        multiline="true"
@@ -411,7 +392,7 @@
             <vbox id="custom-postdata"
                   class="tabpanel-summary-container custom-section">
               <label class="plain tabpanel-summary-label"
-                     value="&netmonitorUI.custom.postData;"/>
+                     data-localization="content=netmonitor.custom.postData"/>
               <textbox id="custom-postdata-value"
                        class="tabpanel-summary-input"
                        multiline="true"
@@ -426,25 +407,25 @@
             <tabs>
               <tab id="headers-tab"
                    crop="end"
-                   label="&netmonitorUI.tab.headers;"/>
+                   data-localization="label=netmonitor.tab.headers"/>
               <tab id="cookies-tab"
                    crop="end"
-                   label="&netmonitorUI.tab.cookies;"/>
+                   data-localization="label=netmonitor.tab.cookies"/>
               <tab id="params-tab"
                    crop="end"
-                   label="&netmonitorUI.tab.params;"/>
+                   data-localization="label=netmonitor.tab.params"/>
               <tab id="response-tab"
                    crop="end"
-                   label="&netmonitorUI.tab.response;"/>
+                   data-localization="label=netmonitor.tab.response"/>
               <tab id="timings-tab"
                    crop="end"
-                   label="&netmonitorUI.tab.timings;"/>
+                   data-localization="label=netmonitor.tab.timings"/>
               <tab id="security-tab"
                    crop="end"
-                   label="&netmonitorUI.tab.security;"/>
+                   data-localization="label=netmonitor.tab.security"/>
               <tab id="preview-tab"
                    crop="end"
-                   label="&netmonitorUI.tab.preview;"/>
+                   data-localization="label=netmonitor.tab.preview"/>
             </tabs>
             <tabpanels flex="1">
               <tabpanel id="headers-tabpanel"
@@ -454,7 +435,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.summary.url;"/>
+                           data-localization="content=netmonitor.summary.url"/>
                     <textbox id="headers-summary-url-value"
                              class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                              flex="1"
@@ -464,7 +445,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.summary.method;"/>
+                           data-localization="content=netmonitor.summary.method"/>
                     <label id="headers-summary-method-value"
                            class="plain tabpanel-summary-value devtools-monospace"
                            crop="end"
@@ -474,7 +455,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.summary.address;"/>
+                           data-localization="content=netmonitor.summary.address"/>
                     <textbox id="headers-summary-address-value"
                              class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                              flex="1"
@@ -484,7 +465,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.summary.status;"/>
+                           data-localization="content=netmonitor.summary.status"/>
                     <box id="headers-summary-status-circle"
                          class="requests-menu-status-icon"/>
                     <label id="headers-summary-status-value"
@@ -493,16 +474,16 @@
                            flex="1"/>
                     <button id="headers-summary-resend"
                             class="devtools-toolbarbutton"
-                            label="&netmonitorUI.summary.editAndResend;"/>
+                            data-localization="label=netmonitor.summary.editAndResend"/>
                     <button id="toggle-raw-headers"
                             class="devtools-toolbarbutton"
-                            label="&netmonitorUI.summary.rawHeaders;"/>
+                            data-localization="label=netmonitor.summary.rawHeaders"/>
                   </hbox>
                   <hbox id="headers-summary-version"
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.summary.version;"/>
+                           data-localization="content=netmonitor.summary.version"/>
                     <label id="headers-summary-version-value"
                            class="plain tabpanel-summary-value devtools-monospace"
                            crop="end"
@@ -514,14 +495,14 @@
                         hidden="true">
                     <vbox id="raw-request-headers-textarea-box" flex="1" hidden="false">
                       <label class="plain tabpanel-summary-label"
-                        value="&netmonitorUI.summary.rawHeaders.requestHeaders;"/>
+                        data-localization="content=netmonitor.summary.rawHeaders.requestHeaders"/>
                       <textbox id="raw-request-headers-textarea"
                         class="raw-response-textarea"
                         flex="1" multiline="true" readonly="true"/>
                     </vbox>
                     <vbox id="raw-response-headers-textarea-box" flex="1" hidden="false">
                       <label class="plain tabpanel-summary-label"
-                        value="&netmonitorUI.summary.rawHeaders.responseHeaders;"/>
+                        data-localization="content=netmonitor.summary.rawHeaders.responseHeaders"/>
                       <textbox id="raw-response-headers-textarea"
                         class="raw-response-textarea"
                         flex="1" multiline="true" readonly="true"/>
@@ -561,7 +542,7 @@
                     <image id="response-content-image"/>
                     <hbox>
                       <label class="plain tabpanel-summary-label"
-                             value="&netmonitorUI.response.name;"/>
+                             data-localization="content=netmonitor.response.name"/>
                       <label id="response-content-image-name-value"
                              class="plain tabpanel-summary-value devtools-monospace"
                              crop="end"
@@ -569,7 +550,7 @@
                     </hbox>
                     <hbox>
                       <label class="plain tabpanel-summary-label"
-                             value="&netmonitorUI.response.dimensions;"/>
+                             data-localization="content=netmonitor.response.dimensions"/>
                       <label id="response-content-image-dimensions-value"
                              class="plain tabpanel-summary-value devtools-monospace"
                              crop="end"
@@ -577,7 +558,7 @@
                     </hbox>
                     <hbox>
                       <label class="plain tabpanel-summary-label"
-                             value="&netmonitorUI.response.mime;"/>
+                             data-localization="content=netmonitor.response.mime"/>
                       <label id="response-content-image-mime-value"
                              class="plain tabpanel-summary-value devtools-monospace"
                              crop="end"
@@ -593,7 +574,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.timings.blocked;"/>
+                           data-localization="content=netmonitor.timings.blocked"/>
                     <hbox class="requests-menu-timings-box blocked"/>
                     <label class="plain requests-menu-timings-total"/>
                   </hbox>
@@ -601,7 +582,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.timings.dns;"/>
+                           data-localization="content=netmonitor.timings.dns"/>
                     <hbox class="requests-menu-timings-box dns"/>
                     <label class="plain requests-menu-timings-total"/>
                   </hbox>
@@ -609,7 +590,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.timings.connect;"/>
+                           data-localization="content=netmonitor.timings.connect"/>
                     <hbox class="requests-menu-timings-box connect"/>
                     <label class="plain requests-menu-timings-total"/>
                   </hbox>
@@ -617,7 +598,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.timings.send;"/>
+                           data-localization="content=netmonitor.timings.send"/>
                     <hbox class="requests-menu-timings-box send"/>
                     <label class="plain requests-menu-timings-total"/>
                   </hbox>
@@ -625,7 +606,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.timings.wait;"/>
+                           data-localization="content=netmonitor.timings.wait"/>
                     <hbox class="requests-menu-timings-box wait"/>
                     <label class="plain requests-menu-timings-total"/>
                   </hbox>
@@ -633,7 +614,7 @@
                         class="tabpanel-summary-container"
                         align="center">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.timings.receive;"/>
+                           data-localization="content=netmonitor.timings.receive"/>
                     <hbox class="requests-menu-timings-box receive"/>
                     <label class="plain requests-menu-timings-total"/>
                   </hbox>
@@ -645,7 +626,7 @@
                         class="tabpanel-summary-container"
                         flex="1">
                     <label class="plain tabpanel-summary-label"
-                           value="&netmonitorUI.security.error;"/>
+                           data-localization="content=netmonitor.security.error"/>
                     <hbox class="security-info-section"
                           flex="1">
                       <textbox id="security-error-message"
@@ -660,13 +641,13 @@
                     <vbox id="security-info-connection"
                           class="tabpanel-summary-container">
                       <label class="plain tabpanel-summary-label"
-                             value="&netmonitorUI.security.connection;"/>
+                             data-localization="content=netmonitor.security.connection"/>
                       <vbox class="security-info-section">
                         <hbox id="security-protocol-version"
                               class="tabpanel-summary-container"
                               align="baseline">
                           <label class="plain tabpanel-summary-label"
-                                 value="&netmonitorUI.security.protocolVersion;"/>
+                                 data-localization="content=netmonitor.security.protocolVersion"/>
                           <textbox id="security-protocol-version-value"
                                    class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                    flex="1"
@@ -676,14 +657,14 @@
                               class="tabpanel-summary-container"
                               align="baseline">
                           <label class="plain tabpanel-summary-label"
-                                 value="&netmonitorUI.security.cipherSuite;"/>
+                                 data-localization="content=netmonitor.security.cipherSuite"/>
                           <textbox id="security-ciphersuite-value"
                                    class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                    flex="1"
                                    readonly="true"/>
                           <image class="security-warning-icon"
                                  id="security-warning-cipher"
-                                 tooltiptext="&netmonitorUI.security.warning.cipher;" />
+                                 data-localization="tooltiptext=netmonitor.security.warning.cipher" />
                         </hbox>
                       </vbox>
                     </vbox>
@@ -696,7 +677,7 @@
                               class="tabpanel-summary-container"
                               align="baseline">
                           <label class="plain tabpanel-summary-label"
-                                 value="&netmonitorUI.security.hsts;"/>
+                                 data-localization="content=netmonitor.security.hsts"/>
                           <textbox id="security-http-strict-transport-security-value"
                                    class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                    flex="1"
@@ -706,7 +687,7 @@
                               class="tabpanel-summary-container"
                               align="baseline">
                           <label class="plain tabpanel-summary-label"
-                                 value="&netmonitorUI.security.hpkp;"/>
+                                 data-localization="content=netmonitor.security.hpkp"/>
                           <textbox id="security-public-key-pinning-value"
                                    class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                    flex="1"
@@ -717,7 +698,7 @@
                     <vbox id="security-info-certificate"
                           class="tabpanel-summary-container">
                         <label class="plain tabpanel-summary-label"
-                               value="&netmonitorUI.security.certificate;"/>
+                               data-localization="content=netmonitor.security.certificate"/>
                       <vbox class="security-info-section">
                         <vbox class="tabpanel-summary-container">
                           <label class="plain tabpanel-summary-label"
@@ -858,7 +839,7 @@
                class="devtools-toolbar">
         <button id="network-statistics-back-button"
                 class="devtools-toolbarbutton"
-                label="&netmonitorUI.backButton;"/>
+                data-localization="label=netmonitor.backButton"/>
       </toolbar>
       <box id="network-statistics-charts"
            class="devtools-responsive-container"
