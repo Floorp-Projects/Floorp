@@ -209,14 +209,23 @@ nsSupportsArray::GetElementAt(uint32_t aIndex, nsISupports** aOutPtr)
 NS_IMETHODIMP_(int32_t)
 nsSupportsArray::IndexOf(const nsISupports* aPossibleElement)
 {
-  const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
-  const nsISupports** ep = start;
-  const nsISupports** end = (start + mCount);
-  while (ep < end) {
-    if (aPossibleElement == *ep) {
-      return (ep - start);
+  return IndexOfStartingAt(aPossibleElement, 0);
+}
+
+NS_IMETHODIMP_(int32_t)
+nsSupportsArray::IndexOfStartingAt(const nsISupports* aPossibleElement,
+                                   uint32_t aStartIndex)
+{
+  if (aStartIndex < mCount) {
+    const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
+    const nsISupports** ep = (start + aStartIndex);
+    const nsISupports** end = (start + mCount);
+    while (ep < end) {
+      if (aPossibleElement == *ep) {
+        return (ep - start);
+      }
+      ep++;
     }
-    ep++;
   }
   return -1;
 }
@@ -303,7 +312,7 @@ nsSupportsArray::RemoveElementsAt(uint32_t aIndex, uint32_t aCount)
 NS_IMETHODIMP
 nsSupportsArray::RemoveElement(nsISupports* aElement)
 {
-  int32_t theIndex = IndexOf(aElement);
+  int32_t theIndex = IndexOfStartingAt(aElement, 0);
   if (theIndex >= 0) {
     return RemoveElementAt(theIndex) ? NS_OK : NS_ERROR_FAILURE;
   }

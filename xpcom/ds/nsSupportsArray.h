@@ -61,11 +61,20 @@ public:
 
   // nsISupportsArray methods:
   NS_IMETHOD_(int32_t) IndexOf(const nsISupports* aPossibleElement) override;
+  NS_IMETHOD_(int32_t) IndexOfStartingAt(const nsISupports* aPossibleElement,
+                                         uint32_t aStartIndex = 0) override;
   NS_IMETHOD_(int32_t) LastIndexOf(const nsISupports* aPossibleElement) override;
 
   NS_IMETHOD GetIndexOf(nsISupports* aPossibleElement, int32_t* aResult) override
   {
     *aResult = IndexOf(aPossibleElement);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetIndexOfStartingAt(nsISupports* aPossibleElement,
+                                  uint32_t aStartIndex, int32_t* aResult) override
+  {
+    *aResult = IndexOfStartingAt(aPossibleElement, aStartIndex);
     return NS_OK;
   }
 
