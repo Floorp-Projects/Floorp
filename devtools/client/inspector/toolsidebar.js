@@ -99,7 +99,7 @@ ToolSidebar.prototype = {
 
   /**
    * Helper API for adding side-panels that use existing DOM nodes
-   * (defined within inspector.xhtml) as the content.
+   * (defined within inspector.html) as the content.
    *
    * @param {string} tab uniq id
    * @param {string} title tab title
@@ -118,7 +118,7 @@ ToolSidebar.prototype = {
 
   /**
    * Helper API for adding side-panels that use existing <iframe> nodes
-   * (defined within inspector.xhtml) as the content.
+   * (defined within inspector.html) as the content.
    * The document must have a title, which will be used as the name of the tab.
    *
    * @param {string} tab uniq id
