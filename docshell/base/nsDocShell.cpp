@@ -13557,24 +13557,6 @@ nsDocShell::GetNestedFrameId(uint64_t* aId)
 }
 
 NS_IMETHODIMP
-nsDocShell::IsAppOfType(uint32_t aAppType, bool* aIsOfType)
-{
-  RefPtr<nsDocShell> shell = this;
-  while (shell) {
-    uint32_t type;
-    shell->GetAppType(&type);
-    if (type == aAppType) {
-      *aIsOfType = true;
-      return NS_OK;
-    }
-    shell = shell->GetParentDocshell();
-  }
-
-  *aIsOfType = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::IsTrackingProtectionOn(bool* aIsTrackingProtectionOn)
 {
   if (Preferences::GetBool("privacy.trackingprotection.enabled", false)) {
