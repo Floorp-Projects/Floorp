@@ -604,30 +604,59 @@ AddCSSValuePixel(double aCoeff1, const nsCSSValue &aValue1,
                         eCSSUnit_Pixel);
 }
 
+static bool
+AddCSSValuePixelPercentCalc(const uint32_t aValueRestrictions,
+                            const nsCSSUnit aCommonUnit,
+                            double aCoeff1, const nsCSSValue &aValue1,
+                            double aCoeff2, const nsCSSValue &aValue2,
+                            nsCSSValue &aResult)
+{
+  switch (aCommonUnit) {
+    case eCSSUnit_Pixel:
+      AddCSSValuePixel(aCoeff1, aValue1,
+                       aCoeff2, aValue2,
+                       aResult, aValueRestrictions);
+      break;
+    case eCSSUnit_Percent:
+      AddCSSValuePercent(aCoeff1, aValue1,
+                         aCoeff2, aValue2,
+                         aResult, aValueRestrictions);
+      break;
+    case eCSSUnit_Calc:
+      AddCSSValueCanonicalCalc(aCoeff1, aValue1,
+                               aCoeff2, aValue2,
+                               aResult);
+      break;
+    default:
+      return false;
+  }
+
+  return true;
+}
+
 static void
 AddTransformTranslate(double aCoeff1, const nsCSSValue &aValue1,
                       double aCoeff2, const nsCSSValue &aValue2,
                       nsCSSValue &aResult)
 {
+  // Only three possible units: eCSSUnit_Pixel, eCSSUnit_Percent, or
+  // eCSSUnit_Calc.
   MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Percent ||
              aValue1.GetUnit() == eCSSUnit_Pixel ||
-            aValue1.IsCalcUnit(),
-            "unexpected unit");
+             aValue1.IsCalcUnit(),
+             "unexpected unit");
   MOZ_ASSERT(aValue2.GetUnit() == eCSSUnit_Percent ||
              aValue2.GetUnit() == eCSSUnit_Pixel ||
              aValue2.IsCalcUnit(),
              "unexpected unit");
-
-  if (aValue1.GetUnit() != aValue2.GetUnit() || aValue1.IsCalcUnit()) {
-    // different units; create a calc() expression
-    AddCSSValueCanonicalCalc(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
-  } else if (aValue1.GetUnit() == eCSSUnit_Percent) {
-    // both percent
-    AddCSSValuePercent(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
-  } else {
-    // both pixels
-    AddCSSValuePixel(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
-  }
+  AddCSSValuePixelPercentCalc(0,
+                              (aValue1.GetUnit() != aValue2.GetUnit() ||
+                               aValue1.IsCalcUnit())
+                                ? eCSSUnit_Calc
+                                : aValue1.GetUnit(),
+                              aCoeff1, aValue1,
+                              aCoeff2, aValue2,
+                              aResult);
 }
 
 // CLASS METHODS
@@ -1539,36 +1568,6 @@ AddCSSValueNumber(double aCoeff1, const nsCSSValue &aValue1,
                                       aCoeff1 * aValue1.GetFloatValue() +
                                       aCoeff2 * aValue2.GetFloatValue()),
                         eCSSUnit_Number);
-}
-
-static bool
-AddCSSValuePixelPercentCalc(const uint32_t aValueRestrictions,
-                            const nsCSSUnit aCommonUnit,
-                            double aCoeff1, const nsCSSValue &aValue1,
-                            double aCoeff2, const nsCSSValue &aValue2,
-                            nsCSSValue &aResult)
-{
-  switch (aCommonUnit) {
-    case eCSSUnit_Pixel:
-      AddCSSValuePixel(aCoeff1, aValue1,
-                       aCoeff2, aValue2,
-                       aResult, aValueRestrictions);
-      break;
-    case eCSSUnit_Percent:
-      AddCSSValuePercent(aCoeff1, aValue1,
-                         aCoeff2, aValue2,
-                         aResult, aValueRestrictions);
-      break;
-    case eCSSUnit_Calc:
-      AddCSSValueCanonicalCalc(aCoeff1, aValue1,
-                               aCoeff2, aValue2,
-                               aResult);
-      break;
-    default:
-      return false;
-  }
-
-  return true;
 }
 
 static inline float
