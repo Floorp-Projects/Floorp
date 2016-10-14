@@ -175,7 +175,8 @@ GamepadServiceTest::NewButtonEvent(uint32_t aIndex,
     return;
   }
 
-  GamepadButtonInformation a(aIndex, aButton, aPressed, aPressed ? 1.0 : 0);
+  GamepadButtonInformation a(aIndex, GamepadServiceType::Standard,
+                             aButton, aPressed, aPressed ? 1.0 : 0);
   GamepadChangeEvent e(a);
 
   uint32_t id = ++mEventNumber;
@@ -197,7 +198,8 @@ GamepadServiceTest::NewButtonValueEvent(uint32_t aIndex,
     return;
   }
 
-  GamepadButtonInformation a(aIndex, aButton, aPressed, aValue);
+  GamepadButtonInformation a(aIndex, GamepadServiceType::Standard,
+                             aButton, aPressed, aValue);
   GamepadChangeEvent e(a);
 
   uint32_t id = ++mEventNumber;
@@ -218,7 +220,8 @@ GamepadServiceTest::NewAxisMoveEvent(uint32_t aIndex,
     return;
   }
 
-  GamepadAxisInformation a(aIndex, aAxis, aValue);
+  GamepadAxisInformation a(aIndex, GamepadServiceType::Standard,
+                           aAxis, aValue);
   GamepadChangeEvent e(a);
 
   uint32_t id = ++mEventNumber;
