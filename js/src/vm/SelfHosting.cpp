@@ -1165,7 +1165,6 @@ intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx, unsigned argc, Value* v
     MOZ_ASSERT(args[0].isObject());
 
     JSObject* obj = CheckedUnwrap(&args[0].toObject());
-
     if (!obj) {
         JS_ReportErrorASCII(cx, "Permission denied to access object");
         return false;
@@ -1174,6 +1173,25 @@ intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx, unsigned argc, Value* v
     MOZ_ASSERT(obj->is<TypedArrayObject>());
     uint32_t typedArrayLength = obj->as<TypedArrayObject>().length();
     args.rval().setInt32(mozilla::AssertedCast<int32_t>(typedArrayLength));
+    return true;
+}
+
+static bool
+intrinsic_PossiblyWrappedTypedArrayHasDetachedBuffer(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    JSObject* obj = CheckedUnwrap(&args[0].toObject());
+    if (!obj) {
+        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        return false;
+    }
+
+    MOZ_ASSERT(obj->is<TypedArrayObject>());
+    bool detached = obj->as<TypedArrayObject>().hasDetachedBuffer();
+    args.rval().setBoolean(detached);
     return true;
 }
 
@@ -2427,6 +2445,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicTypedArrayLength),
     JS_INLINABLE_FN("PossiblyWrappedTypedArrayLength", intrinsic_PossiblyWrappedTypedArrayLength,
                     1, 0, IntrinsicPossiblyWrappedTypedArrayLength),
+    JS_FN("PossiblyWrappedTypedArrayHasDetachedBuffer",
+          intrinsic_PossiblyWrappedTypedArrayHasDetachedBuffer, 1, 0),
 
     JS_FN("MoveTypedArrayElements",  intrinsic_MoveTypedArrayElements,  4,0),
     JS_FN("SetFromTypedArrayApproach",intrinsic_SetFromTypedArrayApproach, 4, 0),
