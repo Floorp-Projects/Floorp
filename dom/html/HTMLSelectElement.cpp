@@ -587,7 +587,8 @@ HTMLSelectElement::Add(nsGenericHTMLElement& aElement,
 
   // If the before parameter is not null, we are equivalent to the
   // insertBefore method on the parent of before.
-  parent->InsertBefore(aElement, aBefore, aError);
+  nsCOMPtr<nsINode> refNode = aBefore;
+  parent->InsertBefore(aElement, refNode, aError);
 }
 
 NS_IMETHODIMP

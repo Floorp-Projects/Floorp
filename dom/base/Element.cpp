@@ -3723,7 +3723,8 @@ Element::InsertAdjacent(const nsAString& aWhere,
     }
     parent->InsertBefore(*aNode, this, aError);
   } else if (aWhere.LowerCaseEqualsLiteral("afterbegin")) {
-    static_cast<nsINode*>(this)->InsertBefore(*aNode, GetFirstChild(), aError);
+    nsCOMPtr<nsINode> refNode = GetFirstChild();
+    static_cast<nsINode*>(this)->InsertBefore(*aNode, refNode, aError);
   } else if (aWhere.LowerCaseEqualsLiteral("beforeend")) {
     static_cast<nsINode*>(this)->AppendChild(*aNode, aError);
   } else if (aWhere.LowerCaseEqualsLiteral("afterend")) {
@@ -3731,7 +3732,8 @@ Element::InsertAdjacent(const nsAString& aWhere,
     if (!parent) {
       return nullptr;
     }
-    parent->InsertBefore(*aNode, GetNextSibling(), aError);
+    nsCOMPtr<nsINode> refNode = GetNextSibling();
+    parent->InsertBefore(*aNode, refNode, aError);
   } else {
     aError.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;
