@@ -249,9 +249,6 @@ public:
   }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  // Changes to sheets should be inside of a WillDirty-DidDirty pair.
-  // However, the calls do not need to be matched; it's ok to call
-  // WillDirty and then make no change and skip the DidDirty call.
   void WillDirty();
   void DidDirty();
 

@@ -164,6 +164,9 @@ StyleSheet::List(FILE* aOut, int32_t aIndex) const
 }
 #endif
 
+void StyleSheet::WillDirty() { MOZ_STYLO_FORWARD(WillDirty, ()) }
+void StyleSheet::DidDirty() { MOZ_STYLO_FORWARD(DidDirty, ()) }
+
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             RefPtr<StyleSheet>& aField,
