@@ -283,15 +283,16 @@ nsSupportsArray::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex)
 }
 
 NS_IMETHODIMP_(bool)
-nsSupportsArray::RemoveElementAt(uint32_t aIndex)
+nsSupportsArray::RemoveElementsAt(uint32_t aIndex, uint32_t aCount)
 {
-  if (aIndex + 1 <= mCount) {
-    NS_IF_RELEASE(mArray[aIndex]);
-
-    mCount -= 1;
+  if (aIndex + aCount <= mCount) {
+    for (uint32_t i = 0; i < aCount; i++) {
+      NS_IF_RELEASE(mArray[aIndex + i]);
+    }
+    mCount -= aCount;
     int32_t slide = (mCount - aIndex);
     if (0 < slide) {
-      ::memmove(mArray + aIndex, mArray + aIndex + 1,
+      ::memmove(mArray + aIndex, mArray + aIndex + aCount,
                 slide * sizeof(nsISupports*));
     }
     return true;
