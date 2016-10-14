@@ -1729,6 +1729,20 @@ class BaseCompiler
         }
     }
 
+    void maybeReserveJoinRegI(ExprType type) {
+        if (type == ExprType::I32)
+            needI32(joinRegI32);
+        else if (type == ExprType::I64)
+            needI64(joinRegI64);
+    }
+
+    void maybeUnreserveJoinRegI(ExprType type) {
+        if (type == ExprType::I32)
+            freeI32(joinRegI32);
+        else if (type == ExprType::I64)
+            freeI64(joinRegI64);
+    }
+
     // Return the amount of execution stack consumed by the top numval
     // values on the value stack.
 
@@ -4921,16 +4935,13 @@ BaseCompiler::emitBrIf()
     // allowing a conditional expression to be left on the stack and
     // reified here as part of the branch instruction.
 
-    // We'll need the joinreg later, so don't use it for rc.
-    // We assume joinRegI32 and joinRegI64 overlap.
-    if (type == ExprType::I32 || type == ExprType::I64)
-        needI32(joinRegI32);
+    // Don't use joinReg for rc
+    maybeReserveJoinRegI(type);
 
     // Condition value is on top, always I32.
     RegI32 rc = popI32();
 
-    if (type == ExprType::I32 || type == ExprType::I64)
-        freeI32(joinRegI32);
+    maybeUnreserveJoinRegI(type);
 
     // Save any value in the designated join register, where the
     // normal block exit code will also leave it.
@@ -4981,16 +4992,13 @@ BaseCompiler::emitBrTable()
     if (deadCode_)
         return true;
 
-    // We'll need the joinreg later, so don't use it for rc.
-    // We assume joinRegI32 and joinRegI64 overlap.
-    if (type == ExprType::I32 || type == ExprType::I64)
-        needI32(joinRegI32);
+    // Don't use joinReg for rc
+    maybeReserveJoinRegI(type);
 
     // Table switch value always on top.
     RegI32 rc = popI32();
 
-    if (type == ExprType::I32 || type == ExprType::I64)
-        freeI32(joinRegI32);
+    maybeUnreserveJoinRegI(type);
 
     AnyReg r;
     if (!IsVoid(type))
