@@ -19,6 +19,7 @@
 class nsIDocument;
 class nsINode;
 class nsIPrincipal;
+class nsMediaList;
 
 namespace mozilla {
 
@@ -123,11 +124,14 @@ public:
   // The XPCOM GetType is fine for WebIDL.
   // The XPCOM GetHref is fine for WebIDL
   // GetOwnerNode is defined above.
+  inline StyleSheet* GetParentStyleSheet() const;
   // The XPCOM GetTitle is fine for WebIDL.
+  virtual nsMediaList* Media() = 0;
   bool Disabled() const { return mDisabled; }
   // The XPCOM SetDisabled is fine for WebIDL.
 
   // WebIDL CSSStyleSheet API
+  virtual nsIDOMCSSRule* GetDOMOwnerRule() const = 0;
   dom::CSSRuleList* GetCssRules(nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aRv);
   uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
@@ -136,6 +140,9 @@ public:
   void DeleteRule(uint32_t aIndex,
                   nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv);
+
+  // WebIDL miscellaneous bits
+  inline dom::ParentObject GetParentObject() const;
 
   // nsIDOMStyleSheet interface
   NS_IMETHOD GetType(nsAString& aType) final;
