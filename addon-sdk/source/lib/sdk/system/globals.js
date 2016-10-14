@@ -35,5 +35,12 @@ Object.defineProperty(exports, 'define', {
       factory = Array.slice(arguments).pop();
       factory.call(sandbox, sandbox.require, sandbox.exports, sandbox.module);
     }
-  }
+  },
+  set: function(value) {
+    Object.defineProperty(this, 'define', {
+      configurable: true,
+      enumerable: true,
+      value,
+    });
+  },
 });
