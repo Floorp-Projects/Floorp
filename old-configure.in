@@ -3841,6 +3841,9 @@ if test -n "$MOZ_TREE_FREETYPE"; then
    AC_SUBST_LIST(CAIRO_FT_CFLAGS)
 fi
 
+AC_SUBST_LIST(FT2_CFLAGS)
+AC_SUBST_LIST(FT2_LIBS)
+
 AC_CHECK_PROGS(WGET, wget, "")
 AC_SUBST(WGET)
 
@@ -5062,10 +5065,8 @@ AC_SUBST_LIST(GLIB_GMODULE_LIBS)
 if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
         dnl ========================================================
-        dnl = Check for freetype2 and its functionality
+        dnl = Check for freetype2 functionality
         dnl ========================================================
-        PKG_CHECK_MODULES(FT2, freetype2 >= 6.1.0, _HAVE_FREETYPE2=1, _HAVE_FREETYPE2=)
-
         if test "$_HAVE_FREETYPE2"; then
             _SAVE_LIBS="$LIBS"
             _SAVE_CFLAGS="$CFLAGS"
@@ -5101,12 +5102,7 @@ if test "$USE_FC_FREETYPE"; then
         MOZ_CHECK_HEADERS([fontconfig/fcfreetype.h], ,
             [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)], [#include <fontconfig/fontconfig.h>])
         CPPFLAGS="$_SAVE_CPPFLAGS"
-    else
-        AC_DEFINE(HAVE_FONTCONFIG_FCFREETYPE_H)
     fi
-
-    FT2_CFLAGS="$FT2_CFLAGS $_FONTCONFIG_CFLAGS"
-    FT2_LIBS="$FT2_LIBS $_FONTCONFIG_LIBS"
 fi
 
 dnl ========================================================
