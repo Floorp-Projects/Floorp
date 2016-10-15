@@ -14,6 +14,9 @@ include css21/reftest-stylo.list
 # Backgrounds and Borders
 include background/reftest-stylo.list
 
+# Color Level 4
+include color4/reftest-stylo.list
+
 # Conditional Rules Level 3
 include conditional3/reftest-stylo.list
 
