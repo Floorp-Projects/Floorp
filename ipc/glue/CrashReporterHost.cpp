@@ -110,6 +110,10 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
       processType = nsICrashService::PROCESS_TYPE_GMPLUGIN;
       telemetryKey.AssignLiteral("gmplugin");
       break;
+    case GeckoProcessType_GPU:
+      processType = nsICrashService::PROCESS_TYPE_GPU;
+      telemetryKey.AssignLiteral("gpu");
+      break;
     default:
       NS_ERROR("unknown process type");
       return;
