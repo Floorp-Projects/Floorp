@@ -156,6 +156,7 @@ DeviceInfoDS::~DeviceInfoDS()
         DestroyWindow(_hwnd);
     }
     UnregisterClass(_wndClass.lpszClassName, _hInstance);
+    DeviceInfoDSSingleton::GetInfo() = NULL;
 }
 
 int32_t DeviceInfoDS::Init()
