@@ -740,5 +740,16 @@ GPUProcessManager::RemoveListener(GPUProcessListener* aListener)
   mListeners.RemoveElement(aListener);
 }
 
+bool
+GPUProcessManager::NotifyGpuObservers(const char* aTopic)
+{
+  if (!mGPUChild) {
+    return false;
+  }
+  nsCString topic(aTopic);
+  mGPUChild->SendNotifyGpuObservers(topic);
+  return true;
+}
+
 } // namespace gfx
 } // namespace mozilla
