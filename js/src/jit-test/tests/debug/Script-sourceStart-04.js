@@ -20,6 +20,6 @@ function test(string, range) {
 }
 
 test("eval('2 * 3')", [0, 5]);
-test("new Function('2 * 3')", [0, 5]);
-test("new Function('x', 'x * x')", [0, 5]);
+test("new Function('2 * 3')", [0, 12]);
+test("new Function('x', 'x * x')", [0, 13]);
 assertEq(count, 6);

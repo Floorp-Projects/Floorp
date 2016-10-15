@@ -6885,8 +6885,13 @@ class DebuggerSourceGetTextMatcher
         bool hasSourceData = ss->hasSourceData();
         if (!ss->hasSourceData() && !JSScript::loadSource(cx_, ss, &hasSourceData))
             return nullptr;
-        return hasSourceData ? ss->substring(cx_, 0, ss->length())
-                             : NewStringCopyZ<CanGC>(cx_, "[no source]");
+        if (!hasSourceData)
+            return NewStringCopyZ<CanGC>(cx_, "[no source]");
+
+        if (ss->isFunctionBody())
+            return ss->functionBodyString(cx_);
+
+        return ss->substring(cx_, 0, ss->length());
     }
 
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {

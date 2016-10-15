@@ -1050,12 +1050,12 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     // Parse a module.
     Node moduleBody(ModuleSharedContext* modulesc);
 
-    // Parse a function, given only its body. Used for the Function and
-    // Generator constructors.
-    Node standaloneFunctionBody(HandleFunction fun, HandleScope enclosingScope,
-                                Handle<PropertyNameVector> formals,
-                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-                                Directives inheritedDirectives, Directives* newDirectives);
+    // Parse a function, used for the Function, GeneratorFunction, and
+    // AsyncFunction constructors.
+    Node standaloneFunction(HandleFunction fun, HandleScope enclosingScope,
+                            mozilla::Maybe<uint32_t> parameterListEnd,
+                            GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                            Directives inheritedDirectives, Directives* newDirectives);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
@@ -1071,7 +1071,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     // Parse a function's formal parameters and its body assuming its function
     // ParseContext is already on the stack.
     bool functionFormalParametersAndBody(InHandling inHandling, YieldHandling yieldHandling,
-                                         Node pn, FunctionSyntaxKind kind);
+                                         Node pn, FunctionSyntaxKind kind,
+                                         mozilla::Maybe<uint32_t> parameterListEnd = mozilla::Nothing());
 
     // Determine whether |yield| is a valid name in the current context, or
     // whether it's prohibited due to strictness, JS version, or occurrence

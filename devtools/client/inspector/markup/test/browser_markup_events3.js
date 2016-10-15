@@ -115,7 +115,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":1",
+        filename: TEST_URL + ":0",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -129,7 +129,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":1",
+        filename: TEST_URL + ":0",
         attributes: [
           "Bubbling",
           "DOM2"
