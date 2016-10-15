@@ -17,7 +17,10 @@ add_task(function* () {
   // fix a frequent failure allow a longer timeout.
   requestLongerTimeout(2);
 
-  const dbg = yield initDebugger("doc-scripts.html");
+  const dbg = yield initDebugger(
+    "doc-scripts.html",
+    "simple1.js", "simple2.js", "long.js"
+  );
   const { selectors: { getSelectedSource }, getState } = dbg;
   const simple1 = findSource(dbg, "simple1.js");
   const simple2 = findSource(dbg, "simple2.js");
