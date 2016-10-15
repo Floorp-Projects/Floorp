@@ -35,7 +35,9 @@ const invalidSyntax = [
 ];
 
 for (let valid of validSyntax) {
-    eval(`for (${valid} = 0 in {});`)
+    eval(`for (${valid} = 0 in {});`);
+    assertThrowsInstanceOf(() => eval(`"use strict"; for (${valid} = 0 in {});`),
+                           SyntaxError);
 }
 
 for (let invalid of invalidSyntax) {

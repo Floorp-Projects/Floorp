@@ -4160,11 +4160,9 @@ Parser<ParseHandler>::initializerInNameDeclaration(Node decl, Node binding,
                 }
 
                 // This leaves only initialized for-in |var| declarations.  ES6
-                // forbids these, yet they sadly still occur, rarely, on the
-                // web.  *Don't* assign, and warn about this invalid syntax to
-                // incrementally move to ES6 semantics.
+                // forbids these; later ES un-forbids in non-strict mode code.
                 *forHeadKind = PNK_FORIN;
-                if (!report(ParseWarning, pc->sc()->strict(), initializer,
+                if (!report(ParseStrictError, pc->sc()->strict(), initializer,
                             JSMSG_INVALID_FOR_IN_DECL_WITH_INIT))
                 {
                     return false;
