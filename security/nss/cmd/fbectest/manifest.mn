@@ -11,8 +11,8 @@ MODULE = nss
 
 INCLUDES += -I$(CORE_DEPTH)/nss/lib/softoken
 
-CSRCS = ectest.c
+CSRCS = fbectest.c
 
-PROGRAM = ectest
+PROGRAM = fbectest
 
 USE_STATIC_LIBS = 1

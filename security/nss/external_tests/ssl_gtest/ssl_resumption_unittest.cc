@@ -226,7 +226,7 @@ TEST_P(TlsConnectGeneric, ServerSNICertSwitch) {
 
   Connect();
   ScopedCERTCertificate cert2(SSL_PeerCertificate(client_->ssl_fd()));
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
   EXPECT_FALSE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
 }
 
@@ -255,7 +255,7 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceReuseKey) {
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(i1);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
   TlsServerKeyExchangeEcdhe dhe1;
   EXPECT_TRUE(dhe1.Parse(i1->buffer()));
 
@@ -266,7 +266,7 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceReuseKey) {
   server_->SetPacketFilter(i2);
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   TlsServerKeyExchangeEcdhe dhe2;
   EXPECT_TRUE(dhe2.Parse(i2->buffer()));
@@ -287,7 +287,7 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceNewKey) {
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(i1);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
   TlsServerKeyExchangeEcdhe dhe1;
   EXPECT_TRUE(dhe1.Parse(i1->buffer()));
 
@@ -301,7 +301,7 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceNewKey) {
   server_->SetPacketFilter(i2);
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   TlsServerKeyExchangeEcdhe dhe2;
   EXPECT_TRUE(dhe2.Parse(i2->buffer()));
@@ -317,7 +317,7 @@ TEST_P(TlsConnectTls13, TestTls13ResumeDifferentGroup) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
@@ -325,7 +325,7 @@ TEST_P(TlsConnectTls13, TestTls13ResumeDifferentGroup) {
   client_->ConfigNamedGroups(kFFDHEGroups);
   server_->ConfigNamedGroups(kFFDHEGroups);
   Connect();
-  CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_2048, ssl_auth_rsa_sign, ssl_sig_none);
 }
 
 // Test that we don't resume when we can't negotiate the same cipher.
@@ -334,14 +334,14 @@ TEST_P(TlsConnectTls13, TestTls13ResumeClientDifferentCipher) {
   client_->EnableSingleCipher(TLS_AES_128_GCM_SHA256);
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ExpectResumption(RESUME_NONE);
   client_->EnableSingleCipher(TLS_AES_256_GCM_SHA384);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 }
 
 // Test that we don't resume when we can't negotiate the same cipher.
@@ -350,14 +350,14 @@ TEST_P(TlsConnectTls13, TestTls13ResumeServerDifferentCipher) {
   server_->EnableSingleCipher(TLS_AES_128_GCM_SHA256);
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ExpectResumption(RESUME_NONE);
   server_->EnableSingleCipher(TLS_AES_256_GCM_SHA384);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 }
 
 // Test that two TLS resumptions work and produce the same ticket.
@@ -370,7 +370,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
                            SSL_LIBRARY_VERSION_TLS_1_3);
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
   uint16_t original_suite;
   EXPECT_TRUE(client_->cipher_suite(&original_suite));
 
@@ -386,7 +386,8 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   ExpectResumption(RESUME_TICKET);
   Connect();
   SendReceive();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
+            ssl_sig_none);
   // The filter will go away when we reset, so save the captured extension.
   DataBuffer initialTicket(c1->extension());
   ASSERT_LT(0U, initialTicket.len());
@@ -407,7 +408,8 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   ExpectResumption(RESUME_TICKET);
   Connect();
   SendReceive();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
+            ssl_sig_none);
   ASSERT_LT(0U, c2->extension().len());
 
   ScopedCERTCertificate cert2(SSL_PeerCertificate(client_->ssl_fd()));

@@ -5,11 +5,11 @@
 #include "blapi.h"
 #include "ec.h"
 #include "ecl-curve.h"
-#include "nss.h"
-#include "secutil.h"
+#include "prprf.h"
+#include "basicutil.h"
+#include "secder.h"
 #include "secitem.h"
 #include "nspr.h"
-#include "pk11pub.h"
 #include <stdio.h>
 
 typedef struct {
@@ -218,77 +218,6 @@ cleanup:
     return rv;
 }
 
-void
-PrintKey(PK11SymKey *symKey)
-{
-    char *name = PK11_GetSymKeyNickname(symKey);
-    int len = PK11_GetKeyLength(symKey);
-    int strength = PK11_GetKeyStrength(symKey, NULL);
-    SECItem *value = NULL;
-    CK_KEY_TYPE type = PK11_GetSymKeyType(symKey);
-    (void)PK11_ExtractKeyValue(symKey);
-
-    value = PK11_GetKeyData(symKey);
-    printf("%s %3d   %4d   %s  ", name ? name : "no-name", len, strength,
-           type == CKK_GENERIC_SECRET ? "generic" : "ERROR! UNKNOWN KEY TYPE");
-    printBuf(value);
-
-    PORT_Free(name);
-}
-
-SECStatus
-ectest_curve_pkcs11(SECOidTag oid)
-{
-    SECKEYECParams pk_11_ecParams = { siBuffer, NULL, 0 };
-    SECKEYPublicKey *pubKey = NULL;
-    SECKEYPrivateKey *privKey = NULL;
-    SECOidData *oidData = NULL;
-    CK_MECHANISM_TYPE target = CKM_TLS12_MASTER_KEY_DERIVE_DH;
-    PK11SymKey *symKey = NULL;
-    SECStatus rv = SECFailure;
-
-    oidData = SECOID_FindOIDByTag(oid);
-    if (oidData == NULL) {
-        printf(" >>> SECOID_FindOIDByTag failed.\n");
-        goto cleanup;
-    }
-    PORT_Assert(oidData->oid.len < 256);
-    SECITEM_AllocItem(NULL, &pk_11_ecParams, (2 + oidData->oid.len));
-    pk_11_ecParams.data[0] = SEC_ASN1_OBJECT_ID; /* we have to prepend 0x06 */
-    pk_11_ecParams.data[1] = oidData->oid.len;
-    memcpy(pk_11_ecParams.data + 2, oidData->oid.data, oidData->oid.len);
-
-    privKey = SECKEY_CreateECPrivateKey(&pk_11_ecParams, &pubKey, NULL);
-    if (!privKey || !pubKey) {
-        printf(" >>> SECKEY_CreateECPrivateKey failed.\n");
-        goto cleanup;
-    }
-
-    symKey = PK11_PubDeriveWithKDF(privKey, pubKey, PR_FALSE, NULL, NULL,
-                                   CKM_ECDH1_DERIVE, target, CKA_DERIVE, 0,
-                                   CKD_NULL, NULL, NULL);
-    if (!symKey) {
-        printf(" >>> PK11_PubDeriveWithKDF failed.\n");
-        goto cleanup;
-    }
-    PrintKey(symKey);
-    rv = SECSuccess;
-
-cleanup:
-    if (privKey) {
-        SECKEY_DestroyPrivateKey(privKey);
-    }
-    if (pubKey) {
-        SECKEY_DestroyPublicKey(pubKey);
-    }
-    if (symKey) {
-        PK11_FreeSymKey(symKey);
-    }
-    SECITEM_FreeItem(&pk_11_ecParams, PR_FALSE);
-
-    return rv;
-}
-
 SECStatus
 ectest_validate_point(ECDH_BAD *bad)
 {
@@ -313,11 +242,9 @@ void
 printUsage(char *prog)
 {
     printf("Usage: %s [-fp] [-nd]\n"
-           "\t-f: usefreebl\n"
-           "\t-p: usepkcs11\n"
            "\t-n: NIST curves\n"
            "\t-d: non-NIST curves\n"
-           "You have to specify at least f or p and n or d.\n"
+           "You have to specify at at least one of n or d.\n"
            "By default no tests are executed.\n",
            prog);
 }
@@ -331,20 +258,11 @@ main(int argv, char **argc)
     SECStatus rv = SECSuccess;
     int numkats = 0;
     int i = 0;
-    int usepkcs11 = 0;
-    int usefreebl = 0;
     int nist = 0;
     int nonnist = 0;
-    SECOidTag nistOids[3] = { SEC_OID_SECG_EC_SECP256R1,
-                              SEC_OID_SECG_EC_SECP384R1,
-                              SEC_OID_SECG_EC_SECP521R1 };
 
     for (i = 1; i < argv; i++) {
-        if (PL_strcasecmp(argc[i], "-p") == 0) {
-            usepkcs11 = 1;
-        } else if (PL_strcasecmp(argc[i], "-f") == 0) {
-            usefreebl = 1;
-        } else if (PL_strcasecmp(argc[i], "-n") == 0) {
+        if (PL_strcasecmp(argc[i], "-n") == 0) {
             nist = 1;
         } else if (PL_strcasecmp(argc[i], "-d") == 0) {
             nonnist = 1;
@@ -353,79 +271,55 @@ main(int argv, char **argc)
             return 1;
         }
     }
-    if (!(usepkcs11 || usefreebl) || !(nist || nonnist)) {
+    if (!nist && !nonnist) {
         printUsage(argc[0]);
         return 1;
     }
 
-    rv = NSS_NoDB_Init(NULL);
+    rv = SECOID_Init();
     if (rv != SECSuccess) {
-        SECU_PrintError("Error:", "NSS_NoDB_Init");
+        SECU_PrintError("Error:", "SECOID_Init");
         goto cleanup;
     }
 
     /* Test P256, P384, P521 */
-    if (usefreebl) {
-        if (nist) {
-            while (ecdh_testvecs[numkats].curve != ECCurve_pastLastCurve) {
-                numkats++;
-            }
-            printf("1..%d\n", numkats);
-            for (i = 0; ecdh_testvecs[i].curve != ECCurve_pastLastCurve; i++) {
-                if (ectest_ecdh_kat(&ecdh_testvecs[i]) != SECSuccess) {
-                    printf("not okay %d - %s\n", i + 1, ecdh_testvecs[i].name);
-                    rv = SECFailure;
-                } else {
-                    printf("okay %d - %s\n", i + 1, ecdh_testvecs[i].name);
-                }
-            }
+    if (nist) {
+        while (ecdh_testvecs[numkats].curve != ECCurve_pastLastCurve) {
+            numkats++;
         }
-
-        /* Test KAT for non-NIST curves */
-        if (nonnist) {
-            for (i = 0; nonnist_testvecs[i].curve != ECCurve_pastLastCurve; i++) {
-                if (ectest_ecdh_kat(&nonnist_testvecs[i]) != SECSuccess) {
-                    printf("not okay %d - %s\n", i + 1, nonnist_testvecs[i].name);
-                    rv = SECFailure;
-                } else {
-                    printf("okay %d - %s\n", i + 1, nonnist_testvecs[i].name);
-                }
-            }
-            for (i = 0; nonnist_testvecs_bad_values[i].curve != ECCurve_pastLastCurve; i++) {
-                if (ectest_validate_point(&nonnist_testvecs_bad_values[i]) == SECSuccess) {
-                    printf("not okay %d - %s\n", i + 1, nonnist_testvecs_bad_values[i].name);
-                    rv = SECFailure;
-                } else {
-                    printf("okay %d - %s\n", i + 1, nonnist_testvecs_bad_values[i].name);
-                }
+        printf("1..%d\n", numkats);
+        for (i = 0; ecdh_testvecs[i].curve != ECCurve_pastLastCurve; i++) {
+            if (ectest_ecdh_kat(&ecdh_testvecs[i]) != SECSuccess) {
+                printf("not okay %d - %s\n", i + 1, ecdh_testvecs[i].name);
+                rv = SECFailure;
+            } else {
+                printf("okay %d - %s\n", i + 1, ecdh_testvecs[i].name);
             }
         }
     }
 
-    /* Test PK11 for non-NIST curves */
-    if (usepkcs11) {
-        if (nonnist) {
-            if (ectest_curve_pkcs11(SEC_OID_CURVE25519) != SECSuccess) {
-                printf("not okay (OID %d) - PK11 test\n", SEC_OID_CURVE25519);
+    /* Test KAT for non-NIST curves */
+    if (nonnist) {
+        for (i = 0; nonnist_testvecs[i].curve != ECCurve_pastLastCurve; i++) {
+            if (ectest_ecdh_kat(&nonnist_testvecs[i]) != SECSuccess) {
+                printf("not okay %d - %s\n", i + 1, nonnist_testvecs[i].name);
                 rv = SECFailure;
             } else {
-                printf("okay (OID %d) - PK11 test\n", SEC_OID_CURVE25519);
+                printf("okay %d - %s\n", i + 1, nonnist_testvecs[i].name);
             }
         }
-        if (nist) {
-            for (i = 0; i < 3; ++i) {
-                if (ectest_curve_pkcs11(nistOids[i]) != SECSuccess) {
-                    printf("not okay (OID %d) - PK11 test\n", nistOids[i]);
-                    rv = SECFailure;
-                } else {
-                    printf("okay (OID %d) - PK11 test\n", nistOids[i]);
-                }
+        for (i = 0; nonnist_testvecs_bad_values[i].curve != ECCurve_pastLastCurve; i++) {
+            if (ectest_validate_point(&nonnist_testvecs_bad_values[i]) == SECSuccess) {
+                printf("not okay %d - %s\n", i + 1, nonnist_testvecs_bad_values[i].name);
+                rv = SECFailure;
+            } else {
+                printf("okay %d - %s\n", i + 1, nonnist_testvecs_bad_values[i].name);
             }
         }
     }
 
 cleanup:
-    rv |= NSS_Shutdown();
+    rv |= SECOID_Shutdown();
 
     if (rv != SECSuccess) {
         printf("Error: exiting with error value\n");
