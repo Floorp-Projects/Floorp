@@ -1319,7 +1319,6 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
       program->SetTextureTransform(Matrix4x4());
-      program->SetYUVColorSpace(effectYCbCr->mYUVColorSpace);
 
       if (maskType != MaskType::MaskNone) {
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE3, maskQuadTransform);
