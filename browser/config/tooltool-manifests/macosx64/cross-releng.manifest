@@ -55,9 +55,9 @@
 "filename": "genisoimage.tar.xz"
 },
 {
-"version": "rustc 1.11.0 (9b21dcd6a 2016-08-15) repack",
-"size": 171059204,
-"digest": "7554ac993f55818827c80dab90135209e57db70c7c9131bef4309aff3b8d7452c4c0de663df7e8c46bd5702455c36292ade6c7a8007e567c4588c7f91aa88b57",
+"version": "rustc 1.12.0 (3191fbae9 2016-09-23) repack",
+"size": 179757256,
+"digest": "26bbd6a34beab36620634f7eafe63281e3398ae4673b3a4d49e1da4eae0467bc6efc2471ef842682db527ad137e702b74c68f278025c60c8bb69d244cff1e6b6",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
 "unpack": true
