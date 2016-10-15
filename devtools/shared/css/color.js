@@ -822,23 +822,6 @@ function parseHue(lexer, colorArray) {
 }
 
 /**
- * A helper function to examine a token and ensure it is a comma.
- * Then fetch and return the next token.  Returns null if the
- * token was not a comma, or at EOF.
- *
- * @param {CSSLexer} lexer The lexer
- * @param {CSSToken} token A token to be examined
- * @return {CSSToken} The next non-whitespace, non-comment token; or
- * null if token was not a comma, or at EOF.
- */
-function requireComma(lexer, token) {
-  if (!token || token.tokenType !== "symbol" || token.text !== ",") {
-    return null;
-  }
-  return getToken(lexer);
-}
-
-/**
  * A helper function to parse the color components of hsl()/hsla() function.
  * hsl() and hsla() are now aliases.
  *
