@@ -12,6 +12,7 @@
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -339,6 +340,7 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
     mVsyncBridge = nullptr;
   }
   CompositorThreadHolder::Shutdown();
+  Factory::ShutDown();
 #if defined(XP_WIN)
   DeviceManagerDx::Shutdown();
   DeviceManagerD3D9::Shutdown();
