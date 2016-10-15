@@ -1007,9 +1007,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                     mPaintSyncId, fixedLayerMargins);
                 mFixedLayerMargins = fixedLayerMargins;
                 mLayersUpdated = false;
+                mPaintSyncId = 0;
               }
               mIsFirstPaint = false;
-              mPaintSyncId = 0;
             }
           }
 #else
