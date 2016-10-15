@@ -59,8 +59,8 @@ class PendingPACQuery final : public Runnable,
                               public LinkedListElement<PendingPACQuery>
 {
 public:
-  PendingPACQuery(nsPACMan *pacMan, nsIURI *uri, uint32_t appId,
-                  bool isInIsolatedMozBrowser, nsPACManCallback *callback,
+  PendingPACQuery(nsPACMan *pacMan, nsIURI *uri,
+                  nsPACManCallback *callback,
                   bool mainThreadResponse);
 
   // can be called from either thread
@@ -76,11 +76,6 @@ public:
 
 private:
   nsPACMan                  *mPACMan;  // weak reference
-
-public:
-  uint32_t                   mAppId;
-  bool                       mIsInIsolatedMozBrowser;
-  nsString                   mAppOrigin;
 
 private:
   RefPtr<nsPACManCallback> mCallback;
@@ -116,17 +111,12 @@ public:
    *
    * @param uri
    *        The URI to query.
-   * @param appId
-   *        The appId of the app making the connection.
-   * @param isInBrowser
-   *        True if the iframe has mozbrowser but has no mozapp attribute.
    * @param callback
    *        The callback to run once the PAC result is available.
    * @param mustCallbackOnMainThread
    *        If set to false the callback can be made from the PAC thread
    */
-  nsresult AsyncGetProxyForURI(nsIURI *uri, uint32_t appId,
-                               bool isInBrowser,
+  nsresult AsyncGetProxyForURI(nsIURI *uri,
                                nsPACManCallback *callback,
                                bool mustCallbackOnMainThread);
 

@@ -327,10 +327,6 @@ user_pref("extensions.e10sBlocksEnabling", false);
 // Avoid performing Reader Mode intros during tests.
 user_pref("browser.reader.detectedFirstArticle", true);
 
-// Don't let PAC generator to set PAC, as mochitest framework has its own PAC
-// rules during testing.
-user_pref("network.proxy.pac_generator", false);
-
 // Make tests run consistently on DevEdition (which has a lightweight theme
 // selected by default).
 user_pref("lightweightThemes.selectedThemeID", "");

@@ -876,13 +876,6 @@ pref("gfx.screen-mirroring.enabled", true);
 // The url of the page used to display network error details.
 pref("b2g.neterror.url", "net_error.html");
 
-// Enable PAC generator for B2G.
-pref("network.proxy.pac_generator", true);
-
-// List of app origins to apply browsing traffic proxy setting, separated by
-// comma.  Specify '*' in the list to apply to all apps.
-pref("network.proxy.browsing.app_origins", "app://system.gaiamobile.org");
-
 // Enable Web Speech synthesis API
 pref("media.webspeech.synth.enabled", true);
 
