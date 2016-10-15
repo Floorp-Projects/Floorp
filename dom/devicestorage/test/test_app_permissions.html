@@ -197,48 +197,6 @@ var gData = [
     test: TestGet
   },
 
-  // Certified application with permision granted
-  {
-    type: 'pictures',
-    shouldPass: true,
-    fileExtension: '.png',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:pictures"],
-
-    test: TestGet
-  },
-  {
-    type: 'videos',
-    shouldPass: true,
-    fileExtension: '.ogv',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestGet
-  },
-  {
-    type: 'music',
-    shouldPass: true,
-    fileExtension: '.ogg',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestGet
-  },
-  {
-    type: 'sdcard',
-    shouldPass: true,
-    fileExtension: '.txt',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:sdcard"],
-
-    test: TestGet
-  },
-
 
   // Add
 
@@ -315,52 +273,6 @@ var gData = [
     test: TestAdd
   },
 
-  // Certified application with permision granted
-  {
-    type: 'pictures',
-    mimeType: 'image/png',
-    fileExtension: '.png',
-    shouldPass: true,
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:pictures"],
-
-    test: TestAdd
-  },
-  {
-    type: 'videos',
-    mimeType: 'video/ogv',
-    fileExtension: '.ogv',
-    shouldPass: true,
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestAdd
-  },
-  {
-    type: 'music',
-    mimeType: 'audio/ogg',
-    fileExtension: '.ogg',
-    shouldPass: true,
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestAdd
-  },
-  {
-    type: 'sdcard',
-    mimeType: 'text/plain',
-    fileExtension: '.txt',
-    shouldPass: true,
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:sdcard"],
-
-    test: TestAdd
-  },
-
 
 // Delete 
 
@@ -423,48 +335,6 @@ var gData = [
     shouldPass: true,
     fileExtension: '.txt',
 
-    permissions: ["device-storage:sdcard"],
-
-    test: TestDelete
-  },
-
-  // Certified application with permision granted
-  {
-    type: 'pictures',
-    shouldPass: true,
-    fileExtension: '.png',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:pictures"],
-
-    test: TestDelete
-  },
-  {
-    type: 'videos',
-    shouldPass: true,
-    fileExtension: '.ogv',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestDelete
-  },
-  {
-    type: 'music',
-    shouldPass: true,
-    fileExtension: '.ogg',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestDelete
-  },
-  {
-    type: 'sdcard',
-    shouldPass: true,
-    fileExtension: '.txt',
-
-    app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:sdcard"],
 
     test: TestDelete
@@ -536,48 +406,6 @@ var gData = [
     test: TestEnumerate
   },
 
-  // Certified application with permision granted
-  {
-    type: 'pictures',
-    shouldPass: true,
-    fileExtension: '.png',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:pictures"],
-
-    test: TestEnumerate
-  },
-  {
-    type: 'videos',
-    shouldPass: true,
-    fileExtension: '.ogv',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestEnumerate
-  },
-  {
-    type: 'music',
-    shouldPass: true,
-    fileExtension: '.ogg',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestEnumerate
-  },
-  {
-    type: 'sdcard',
-    shouldPass: true,
-    fileExtension: '.txt',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:sdcard"],
-
-    test: TestEnumerate
-  },
-
 ];
 
 function setupTest(iframe,data) {
@@ -610,9 +438,6 @@ function runTest() {
     var data = gData.pop();
 
     iframe.setAttribute('mozbrowser', '');
-    if (data.app) {
-      iframe.setAttribute('mozapp', data.app);
-    }
 
     iframe.src = gTestUri;
 

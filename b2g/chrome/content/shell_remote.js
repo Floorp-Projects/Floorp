@@ -53,7 +53,6 @@ var remoteShell = {
       document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
     systemAppFrame.setAttribute("id", this.id);
     systemAppFrame.setAttribute("mozbrowser", "true");
-    systemAppFrame.setAttribute("mozapp", manifestURL);
     systemAppFrame.setAttribute("allowfullscreen", "true");
     systemAppFrame.setAttribute("src", "blank.html");
 

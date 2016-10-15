@@ -591,7 +591,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
                                 XRE_GetProcessType());
 #endif
 
-  SendGetProcessAttributes(&mID, &mIsForApp, &mIsForBrowser);
+  SendGetProcessAttributes(&mID, &mIsForBrowser);
   InitProcessAttributes();
 
 #ifdef NS_PRINTING
@@ -607,10 +607,10 @@ void
 ContentChild::InitProcessAttributes()
 {
 #ifdef MOZ_WIDGET_GONK
-  if (mIsForApp && !mIsForBrowser) {
-    SetProcessName(NS_LITERAL_STRING("(Preallocated app)"), false);
-  } else {
+  if (mIsForBrowser) {
     SetProcessName(NS_LITERAL_STRING("Browser"), false);
+  } else {
+    SetProcessName(NS_LITERAL_STRING("(Preallocated app)"), false);
   }
 #else
   SetProcessName(NS_LITERAL_STRING("Web Content"), true);
@@ -723,7 +723,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     // We release this ref in DeallocPBrowserChild
     RefPtr<TabChild>(newChild).forget().take(),
     tabId, *ipcContext, aChromeFlags,
-    GetID(), IsForApp(), IsForBrowser());
+    GetID(), IsForBrowser());
 
   nsString name(aName);
   nsAutoCString features(aFeatures);
@@ -1518,14 +1518,12 @@ ContentChild::AllocPBrowserChild(const TabId& aTabId,
                                  const IPCTabContext& aContext,
                                  const uint32_t& aChromeFlags,
                                  const ContentParentId& aCpID,
-                                 const bool& aIsForApp,
                                  const bool& aIsForBrowser)
 {
   return nsIContentChild::AllocPBrowserChild(aTabId,
                                              aContext,
                                              aChromeFlags,
                                              aCpID,
-                                             aIsForApp,
                                              aIsForBrowser);
 }
 
@@ -1535,7 +1533,6 @@ ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                       const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
                                       const ContentParentId& aCpID,
-                                      const bool& aIsForApp,
                                       const bool& aIsForBrowser)
 {
   return PContentChild::SendPBrowserConstructor(aActor,
@@ -1543,7 +1540,6 @@ ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                                 aContext,
                                                 aChromeFlags,
                                                 aCpID,
-                                                aIsForApp,
                                                 aIsForBrowser);
 }
 
@@ -1553,7 +1549,6 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                       const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
                                       const ContentParentId& aCpID,
-                                      const bool& aIsForApp,
                                       const bool& aIsForBrowser)
 {
   // This runs after AllocPBrowserChild() returns and the IPC machinery for this
@@ -1578,7 +1573,6 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
     // Redo InitProcessAttributes() when the app or browser is really
     // launching so the attributes will be correct.
     mID = aCpID;
-    mIsForApp = aIsForApp;
     mIsForBrowser = aIsForBrowser;
     InitProcessAttributes();
   }
@@ -2438,7 +2432,7 @@ ContentChild::RecvAppInit()
   // PreloadSlowThings() may set the docshell of the first TabChild
   // inactive, and we can only safely restore it to active from
   // BrowserElementChild.js.
-  if (mIsForApp || mIsForBrowser) {
+  if (mIsForBrowser) {
     PreloadSlowThings();
   }
 
