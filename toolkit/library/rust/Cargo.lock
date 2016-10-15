@@ -2,14 +2,21 @@
 name = "gkrust"
 version = "0.1.0"
 dependencies = [
- "mp4parse_capi 0.5.1",
- "nsstring 0.1.0",
+ "gkrust-shared 0.1.0",
 ]
 
 [[package]]
 name = "byteorder"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "gkrust-shared"
+version = "0.1.0"
+dependencies = [
+ "mp4parse_capi 0.5.1",
+ "nsstring 0.1.0",
+]
 
 [[package]]
 name = "mp4parse"
