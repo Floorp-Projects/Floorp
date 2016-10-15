@@ -2806,14 +2806,15 @@ CrossAxisPositionTracker::
   }
 
   // If packing space is negative, 'space-between' and 'stretch' behave like
-  // 'flex-start', and 'space-around' behaves like 'center'. In those cases,
-  // it's simplest to just pretend we have a different 'align-content' value
-  // and share code.
+  // 'flex-start', and 'space-around' and 'space-evenly' behave like 'center'.
+  // In those cases, it's simplest to just pretend we have a different
+  // 'align-content' value and share code.
   if (mPackingSpaceRemaining < 0) {
     if (mAlignContent == NS_STYLE_ALIGN_SPACE_BETWEEN ||
         mAlignContent == NS_STYLE_ALIGN_STRETCH) {
       mAlignContent = NS_STYLE_ALIGN_FLEX_START;
-    } else if (mAlignContent == NS_STYLE_ALIGN_SPACE_AROUND) {
+    } else if (mAlignContent == NS_STYLE_ALIGN_SPACE_AROUND ||
+               mAlignContent == NS_STYLE_ALIGN_SPACE_EVENLY) {
       mAlignContent = NS_STYLE_ALIGN_CENTER;
     }
   }
@@ -2858,10 +2859,9 @@ CrossAxisPositionTracker::
     switch (mAlignContent) {
       case NS_STYLE_ALIGN_SELF_START:
       case NS_STYLE_ALIGN_SELF_END:
-      case NS_STYLE_ALIGN_SPACE_EVENLY:
       case NS_STYLE_ALIGN_BASELINE:
       case NS_STYLE_ALIGN_LAST_BASELINE:
-        NS_WARNING("NYI: align-items/align-self:left/right/self-start/self-end/space-evenly/baseline/last-baseline");
+        NS_WARNING("NYI: align-items/align-self:left/right/self-start/self-end/baseline/last-baseline");
         MOZ_FALLTHROUGH;
       case NS_STYLE_ALIGN_FLEX_START:
         // All packing space should go at the end --> nothing to do here.
@@ -2876,6 +2876,7 @@ CrossAxisPositionTracker::
         break;
       case NS_STYLE_ALIGN_SPACE_BETWEEN:
       case NS_STYLE_ALIGN_SPACE_AROUND:
+      case NS_STYLE_ALIGN_SPACE_EVENLY:
         nsFlexContainerFrame::CalculatePackingSpace(numLines,
                                                     mAlignContent,
                                                     &mPosition,
@@ -2915,9 +2916,10 @@ CrossAxisPositionTracker::TraversePackingSpace()
 {
   if (mNumPackingSpacesRemaining) {
     MOZ_ASSERT(mAlignContent == NS_STYLE_ALIGN_SPACE_BETWEEN ||
-               mAlignContent == NS_STYLE_ALIGN_SPACE_AROUND,
+               mAlignContent == NS_STYLE_ALIGN_SPACE_AROUND ||
+               mAlignContent == NS_STYLE_ALIGN_SPACE_EVENLY,
                "mNumPackingSpacesRemaining only applies for "
-               "space-between/space-around");
+               "space-between/space-around/space-evenly");
 
     MOZ_ASSERT(mPackingSpaceRemaining >= 0,
                "ran out of packing space earlier than we expected");
