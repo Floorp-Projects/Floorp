@@ -1558,12 +1558,14 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
         // round-tripping of all other rgba() values.
         aResult.AppendLiteral("transparent");
       } else {
+        // For brevity, we omit the alpha component if it's equal to 255 (full
+        // opaque). Also, we try to preserve the author-specified function name,
+        // unless it's rgba() and we're omitting the alpha component - then we
+        // use rgb().
         uint8_t a = NS_GET_A(color);
-        bool showAlpha =
-          (aSerialization == eNormalized && a < 255) ||
-          (aSerialization == eAuthorSpecified &&
-           unit == eCSSUnit_RGBAColor);
-        if (showAlpha) {
+        bool showAlpha = (a != 255);
+
+        if (unit == eCSSUnit_RGBAColor && showAlpha) {
           aResult.AppendLiteral("rgba(");
         } else {
           aResult.AppendLiteral("rgb(");
@@ -3050,19 +3052,22 @@ nsCSSValueFloatColor::IsNonTransparentColor() const
 void
 nsCSSValueFloatColor::AppendToString(nsCSSUnit aUnit, nsAString& aResult) const
 {
+  // Similar to the rgb()/rgba() case in nsCSSValue::AppendToString. We omit the
+  // alpha component if it's equal to 1.0f (full opaque). Also, we try to
+  // preserve the author-specified function name, unless it's rgba()/hsla() and
+  // we're omitting the alpha component - then we use rgb()/hsl().
   MOZ_ASSERT(nsCSSValue::IsFloatColorUnit(aUnit), "unexpected unit");
 
-  bool hasAlpha = aUnit == eCSSUnit_PercentageRGBAColor ||
-                  aUnit == eCSSUnit_HSLAColor;
-  bool isHSL = aUnit == eCSSUnit_HSLColor ||
-               aUnit == eCSSUnit_HSLAColor;
+  bool showAlpha = (mAlpha != 1.0f);
+  bool isHSL = (aUnit == eCSSUnit_HSLColor ||
+                aUnit == eCSSUnit_HSLAColor);
 
   if (isHSL) {
     aResult.AppendLiteral("hsl");
   } else {
     aResult.AppendLiteral("rgb");
   }
-  if (hasAlpha) {
+  if (showAlpha && (aUnit == eCSSUnit_HSLAColor || aUnit == eCSSUnit_PercentageRGBAColor)) {
     aResult.AppendLiteral("a(");
   } else {
     aResult.Append('(');
@@ -3077,7 +3082,7 @@ nsCSSValueFloatColor::AppendToString(nsCSSUnit aUnit, nsAString& aResult) const
   aResult.AppendFloat(mComponent2 * 100.0f);
   aResult.AppendLiteral("%, ");
   aResult.AppendFloat(mComponent3 * 100.0f);
-  if (hasAlpha) {
+  if (showAlpha) {
     aResult.AppendLiteral("%, ");
     aResult.AppendFloat(mAlpha);
     aResult.Append(')');

@@ -6712,8 +6712,10 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
         }
       }
       break;
-    case eCSSToken_Function:
-      if (mToken.mIdent.LowerCaseEqualsLiteral("rgb") ||
+    case eCSSToken_Function: {
+      bool isRGB;
+      bool isHSL;
+      if ((isRGB = mToken.mIdent.LowerCaseEqualsLiteral("rgb")) ||
           mToken.mIdent.LowerCaseEqualsLiteral("rgba")) {
         // rgb() = rgb( <percentage>{3} [ / <alpha-value> ]? ) |
         //         rgb( <number>{3} [ / <alpha-value> ]? ) |
@@ -6729,21 +6731,23 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
           uint8_t r, g, b, a;
 
           if (ParseRGBColor(r, g, b, a)) {
-            aValue.SetIntegerColorValue(NS_RGBA(r, g, b, a), eCSSUnit_RGBAColor);
+            aValue.SetIntegerColorValue(NS_RGBA(r, g, b, a),
+                isRGB ? eCSSUnit_RGBColor : eCSSUnit_RGBAColor);
             return CSSParseResult::Ok;
           }
         } else {  // <percentage>
           float r, g, b, a;
 
           if (ParseRGBColor(r, g, b, a)) {
-            aValue.SetFloatColorValue(r, g, b, a, eCSSUnit_PercentageRGBAColor);
+            aValue.SetFloatColorValue(r, g, b, a,
+                isRGB ? eCSSUnit_PercentageRGBColor : eCSSUnit_PercentageRGBAColor);
             return CSSParseResult::Ok;
           }
         }
         SkipUntil(')');
         return CSSParseResult::Error;
       }
-      else if (mToken.mIdent.LowerCaseEqualsLiteral("hsl") ||
+      else if ((isHSL = mToken.mIdent.LowerCaseEqualsLiteral("hsl")) ||
                mToken.mIdent.LowerCaseEqualsLiteral("hsla")) {
         // hsl() = hsl( <hue> <percentage> <percentage> [ / <alpha-value> ]? ) ||
         //         hsl( <hue>, <percentage>, <percentage>, <alpha-value>? )
@@ -6753,13 +6757,15 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
         float h, s, l, a;
 
         if (ParseHSLColor(h, s, l, a)) {
-          aValue.SetFloatColorValue(h, s, l, a, eCSSUnit_HSLAColor);
+          aValue.SetFloatColorValue(h, s, l, a,
+              isHSL ? eCSSUnit_HSLColor : eCSSUnit_HSLAColor);
           return CSSParseResult::Ok;
         }
         SkipUntil(')');
         return CSSParseResult::Error;
       }
       break;
+    }
     default:
       break;
   }
