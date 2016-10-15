@@ -788,7 +788,7 @@ class MessageChannel : HasResultCodes
     // Task and state used to asynchronously notify channel has been connected
     // safely.  This is necessary to be able to cancel notification if we are
     // closed at the same time.
-    RefPtr<RefCountedTask> mOnChannelConnectedTask;
+    RefPtr<CancelableRunnable> mOnChannelConnectedTask;
     bool mPeerPidSet;
     int32_t mPeerPid;
 };
