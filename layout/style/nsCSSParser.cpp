@@ -1173,10 +1173,8 @@ protected:
                      ComponentType& aG,
                      ComponentType& aB,
                      ComponentType& aA);
-  // ParseHSLColor parses everything starting with the opening '('
-  // up through and including the aStop char.
   bool ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
-                     char aStop);
+                     float& aOpacity);
 
   // ParseColorOpacity will enforce that the color ends with a ')'
   // after the opacity
@@ -6743,24 +6741,16 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
         SkipUntil(')');
         return CSSParseResult::Error;
       }
-      else if (mToken.mIdent.LowerCaseEqualsLiteral("hsl")) {
-        // hsl ( hue , saturation , lightness )
-        // "hue" is a number, "saturation" and "lightness" are percentages.
-        float h, s, l;
-        if (ParseHSLColor(h, s, l, ')')) {
-          aValue.SetFloatColorValue(h, s, l, 1.0f, eCSSUnit_HSLColor);
-          return CSSParseResult::Ok;
-        }
-        SkipUntil(')');
-        return CSSParseResult::Error;
-      }
-      else if (mToken.mIdent.LowerCaseEqualsLiteral("hsla")) {
-        // hsla ( hue , saturation , lightness , opacity )
-        // "hue" is a number, "saturation" and "lightness" are percentages,
-        // "opacity" is a number.
+      else if (mToken.mIdent.LowerCaseEqualsLiteral("hsl") ||
+               mToken.mIdent.LowerCaseEqualsLiteral("hsla")) {
+        // hsl() = hsl( <hue> <percentage> <percentage> [ / <alpha-value> ]? ) ||
+        //         hsl( <hue>, <percentage>, <percentage>, <alpha-value>? )
+        // <hue> = <number> | <angle>
+        // hsla is an alias of hsl.
+
         float h, s, l, a;
-        if (ParseHSLColor(h, s, l, ',') &&
-            ParseColorOpacity(a)) {
+
+        if (ParseHSLColor(h, s, l, a)) {
           aValue.SetFloatColorValue(h, s, l, a, eCSSUnit_HSLAColor);
           return CSSParseResult::Ok;
         }
@@ -6887,11 +6877,20 @@ CSSParserImpl::ParseColorComponent(float& aComponent, Maybe<char> aSeparator)
 
 bool
 CSSParserImpl::ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
-                             char aStop)
+                             float& aOpacity)
 {
-  float h, s, l;
+  // comma-less expression:
+  // hsl() = hsl( <hue> <saturation> <lightness> [ / <alpha-value> ]? )
+  // the expression with comma:
+  // hsl() = hsl( <hue>, <saturation>, <lightness>, <alpha-value>? )
 
-  // Get the hue
+  const char commaSeparator = ',';
+
+  // Parse hue.
+  // <hue> = <number> | <angle>
+  //
+  // TODO: support <angle> for hue component. Currently, we only support
+  // <number> value.
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorHueEOF);
     return false;
@@ -6901,57 +6900,25 @@ CSSParserImpl::ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
     UngetToken();
     return false;
   }
-  h = mToken.mNumber;
-  h /= 360.0f;
+  aHue = mToken.mNumber;
+  aHue /= 360.0f;
   // hue values are wraparound
-  h = h - floor(h);
+  aHue = aHue - floor(aHue);
+  // Look for a comma separator after "hue" component to determine if the
+  // expression is comma-less or not.
+  bool hasComma = ExpectSymbol(commaSeparator, true);
 
-  if (!ExpectSymbol(',', true)) {
-    REPORT_UNEXPECTED_TOKEN(PEExpectedComma);
-    return false;
-  }
-
-  // Get the saturation
-  if (!GetToken(true)) {
-    REPORT_UNEXPECTED_EOF(PEColorSaturationEOF);
-    return false;
-  }
-  if (mToken.mType != eCSSToken_Percentage) {
-    REPORT_UNEXPECTED_TOKEN(PEExpectedPercent);
-    UngetToken();
-    return false;
-  }
-  s = mToken.mNumber;
-  if (s < 0.0f) s = 0.0f;
-  if (s > 1.0f) s = 1.0f;
-
-  if (!ExpectSymbol(',', true)) {
-    REPORT_UNEXPECTED_TOKEN(PEExpectedComma);
-    return false;
-  }
-
-  // Get the lightness
-  if (!GetToken(true)) {
-    REPORT_UNEXPECTED_EOF(PEColorLightnessEOF);
-    return false;
-  }
-  if (mToken.mType != eCSSToken_Percentage) {
-    REPORT_UNEXPECTED_TOKEN(PEExpectedPercent);
-    UngetToken();
-    return false;
-  }
-  l = mToken.mNumber;
-  if (l < 0.0f) l = 0.0f;
-  if (l > 1.0f) l = 1.0f;
-
-  if (ExpectSymbol(aStop, true)) {
-    aHue = h;
-    aSaturation = s;
-    aLightness = l;
+  // Parse saturation, lightness and opacity.
+  // The saturation and lightness are <percentage>, so reuse the float version
+  // of ParseColorComponent function for them. No need to check the separator
+  // after 'lightness'. It will be checked in opacity value parsing.
+  const char separatorBeforeAlpha = hasComma ? commaSeparator : '/';
+  if (ParseColorComponent(aSaturation, hasComma ? Some(commaSeparator) : Nothing()) &&
+      ParseColorComponent(aLightness, Nothing()) &&
+      ParseColorOpacityAndCloseParen(aOpacity, separatorBeforeAlpha)) {
     return true;
   }
 
-  REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, aStop);
   return false;
 }
 
