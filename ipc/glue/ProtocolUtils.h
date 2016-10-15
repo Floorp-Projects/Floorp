@@ -439,10 +439,8 @@ DuplicateHandle(HANDLE aSourceHandle,
  */
 #ifdef MOZ_CRASHREPORTER
 void AnnotateSystemError();
-void AnnotateProcessInformation(base::ProcessId aPid);
 #else
 #define AnnotateSystemError() do { } while (0)
-#define AnnotateProcessInformation(...) do { } while (0)
 #endif
 
 /**
