@@ -451,11 +451,10 @@ struct MOZ_RAII AutoPhase
 
     ~AutoPhase() {
         if (enabled) {
-            // Bug 1309651 - we only record mainthread time (including time
-            // spent waiting to join with helper threads), but should start
-            // recording total work on helper threads sometime by calling
-            // endParallelPhase here if task is nonnull.
-            stats.endPhase(phase);
+            if (task)
+                stats.endParallelPhase(phase, task);
+            else
+                stats.endPhase(phase);
         }
     }
 
