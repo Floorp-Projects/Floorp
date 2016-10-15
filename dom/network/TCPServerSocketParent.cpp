@@ -65,13 +65,7 @@ TCPServerSocketParent::Init()
 uint32_t
 TCPServerSocketParent::GetAppId()
 {
-  const PContentParent *content = Manager()->Manager();
-  if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
-    TabParent *tab = TabParent::GetFrom(browser);
-    return tab->OwnAppId();
-  } else {
-    return nsIScriptSecurityManager::UNKNOWN_APP_ID;
-  }
+  return nsIScriptSecurityManager::UNKNOWN_APP_ID;
 }
 
 bool

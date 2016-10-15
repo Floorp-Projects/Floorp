@@ -861,10 +861,10 @@ ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(nsISupports* aSubjec
     return;
   }
 
-  // Ignore notifications that aren't from a BrowserOrApp
-  bool isMozBrowserOrApp;
-  fl->GetOwnerIsMozBrowserOrAppFrame(&isMozBrowserOrApp);
-  if (isMozBrowserOrApp) {
+  // Ignore notifications that aren't from a Browser
+  bool isMozBrowser;
+  fl->GetOwnerIsMozBrowserFrame(&isMozBrowser);
+  if (isMozBrowser) {
     ResetPriority();
   }
 

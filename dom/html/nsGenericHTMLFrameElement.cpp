@@ -12,10 +12,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ErrorResult.h"
 #include "GeckoProfiler.h"
-#include "mozIApplication.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentUtils.h"
-#include "nsIAppsService.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIFrame.h"
@@ -189,31 +187,6 @@ nsGenericHTMLFrameElement::GetFrameLoader()
 {
   RefPtr<nsFrameLoader> loader = mFrameLoader;
   return loader.forget();
-}
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetParentApplication(mozIApplication** aApplication)
-{
-  if (!aApplication) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aApplication = nullptr;
-
-  nsIPrincipal *principal = NodePrincipal();
-  uint32_t appId = principal->GetAppId();
-
-  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-  if (NS_WARN_IF(!appsService)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = appsService->GetAppByLocalId(appId, aApplication);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
 }
 
 void
@@ -496,12 +469,12 @@ nsGenericHTMLFrameElement::BrowserFramesEnabled()
 }
 
 /**
- * Return true if this frame element really is a mozbrowser or mozapp.  (It
+ * Return true if this frame element really is a mozbrowser.  (It
  * needs to have the right attributes, and its creator must have the right
  * permissions.)
  */
 /* [infallible] */ nsresult
-nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
+nsGenericHTMLFrameElement::GetReallyIsBrowser(bool *aOut)
 {
   *aOut = false;
 
@@ -529,34 +502,6 @@ nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
 }
 
 /* [infallible] */ NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetReallyIsApp(bool *aOut)
-{
-  nsAutoString manifestURL;
-  GetAppManifestURL(manifestURL);
-
-  *aOut = !manifestURL.IsEmpty();
-  return NS_OK;
-}
-
-namespace {
-
-bool NestedEnabled()
-{
-  static bool sMozNestedEnabled = false;
-  static bool sBoolVarCacheInitialized = false;
-
-  if (!sBoolVarCacheInitialized) {
-    sBoolVarCacheInitialized = true;
-    Preferences::AddBoolVarCache(&sMozNestedEnabled,
-                                 "dom.ipc.tabs.nested.enabled");
-  }
-
-  return sMozNestedEnabled;
-}
-
-} // namespace
-
-/* [infallible] */ NS_IMETHODIMP
 nsGenericHTMLFrameElement::GetIsolated(bool *aOut)
 {
   *aOut = true;
@@ -567,91 +512,6 @@ nsGenericHTMLFrameElement::GetIsolated(bool *aOut)
 
   // Isolation is only disabled if the attribute is present
   *aOut = !HasAttr(kNameSpaceID_None, nsGkAtoms::noisolation);
-  return NS_OK;
-}
-
-/*
- * Get manifest url of app.
- */
-void nsGenericHTMLFrameElement::GetManifestURL(nsAString& aManifestURL)
-{
-  aManifestURL.Truncate();
-
-  nsAutoString manifestURL;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::mozapp, manifestURL);
-  if (manifestURL.IsEmpty()) {
-    return;
-  }
-
-  // Check permission.
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  NS_ENSURE_TRUE_VOID(permMgr);
-  nsIPrincipal *principal = NodePrincipal();
-  const char* aPermissionType = "embed-apps";
-  uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  nsresult rv = permMgr->TestPermissionFromPrincipal(principal,
-                                                     aPermissionType,
-                                                     &permission);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  if (permission != nsIPermissionManager::ALLOW_ACTION) {
-    return;
-  }
-
-  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE_VOID(appsService);
-
-  nsCOMPtr<mozIApplication> app;
-  appsService->GetAppByManifestURL(manifestURL, getter_AddRefs(app));
-
-  if (!app) {
-    return;
-  }
-
-  aManifestURL.Assign(manifestURL);
-}
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
-{
-  aOut.Truncate();
-
-  // At the moment, you can't be an app without being a browser.
-  if (!nsIMozBrowserFrame::GetReallyIsBrowserOrApp()) {
-    return NS_OK;
-  }
-
-  // Only allow content process to embed an app when nested content
-  // process is enabled.
-  if (!XRE_IsParentProcess() &&
-      !(GetBoolAttr(nsGkAtoms::Remote) && NestedEnabled())){
-    NS_WARNING("Can't embed-apps. Embed-apps is restricted to in-proc apps "
-               "or content processes with nested pref enabled, see bug 1097479");
-    return NS_OK;
-  }
-
-  nsAutoString appManifestURL;
-
-  GetManifestURL(appManifestURL);
-
-  bool isApp = !appManifestURL.IsEmpty();
-
-  if (!isApp) {
-    // No valid case to get manifest
-    return NS_OK;
-  }
-
-  if (isApp) {
-    NS_WARNING("Can not simultaneously be mozapp");
-    return NS_OK;
-  }
-
-  nsAutoString manifestURL;
-  if (isApp) {
-    manifestURL.Assign(appManifestURL);
-  }
-
-  aOut.Assign(manifestURL);
-
   return NS_OK;
 }
 
