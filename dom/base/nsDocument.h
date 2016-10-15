@@ -95,7 +95,6 @@ class EventChainPreVisitor;
 namespace dom {
 class BoxObject;
 class ImageTracker;
-class UndoManager;
 struct LifecycleCallbacks;
 class CallbackFunction;
 
@@ -598,8 +597,6 @@ public:
   virtual void DeleteShell() override;
 
   virtual nsresult GetAllowPlugins(bool* aAllowPlugins) override;
-
-  virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager() override;
 
   static bool IsElementAnimateEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
@@ -1570,8 +1567,6 @@ private:
 
   // Tracking for plugins in the document.
   nsTHashtable< nsPtrHashKey<nsIObjectLoadingContent> > mPlugins;
-
-  RefPtr<mozilla::dom::UndoManager> mUndoManager;
 
   RefPtr<mozilla::dom::DocumentTimeline> mDocumentTimeline;
   mozilla::LinkedList<mozilla::dom::DocumentTimeline> mTimelines;
