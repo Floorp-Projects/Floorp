@@ -1,0 +1,46 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test NaN rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - NaN</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+"use strict";
+
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { NaNRep } = browserRequire("devtools/client/shared/components/reps/nan");
+
+  try {
+    yield testNaN();
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testNaN() {
+    const stub = {
+      type: "NaN"
+    };
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, NaNRep.rep,
+      `Rep correctly selects ${NaNRep.rep.displayName} for NaN value`);
+
+    const renderedComponent = renderComponent(NaNRep.rep, {object: stub});
+    is(renderedComponent.textContent, "NaN", "NaN rep has expected text content");
+  }
+});
+</script>
+</pre>
+</body>
+</html>
