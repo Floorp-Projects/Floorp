@@ -48,6 +48,7 @@ protected:
   {
     while (mcc->RunThroughDelayedTasks());
     apzc->Destroy();
+    tm->ClearTree();
   }
 
   void MakeApzcWaitForMainThread()
