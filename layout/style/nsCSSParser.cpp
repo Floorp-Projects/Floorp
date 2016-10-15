@@ -1204,6 +1204,12 @@ protected:
   // The range of color component is [0.0f, 1.0f].
   bool ParseColorComponent(float& aComponent, Maybe<char> aSeparator);
 
+  // Parse a <hue> component.
+  //   <hue> = <number> | <angle>
+  // The unit of outparam 'aAngle' is degree. Assume the unit to be degree if an
+  // unitless <number> is parsed.
+  bool ParseHue(float& aAngle);
+
   bool ParseEnum(nsCSSValue& aValue,
                  const KTableEntry aKeywordTable[]);
 
@@ -6874,6 +6880,33 @@ CSSParserImpl::ParseColorComponent(float& aComponent, Maybe<char> aSeparator)
   return true;
 }
 
+bool
+CSSParserImpl::ParseHue(float& aAngle)
+{
+  if (!GetToken(true)) {
+    REPORT_UNEXPECTED_EOF(PEColorHueEOF);
+    return false;
+  }
+
+  // <number>
+  if (mToken.mType == eCSSToken_Number) {
+    aAngle = mToken.mNumber;
+    return true;
+  }
+  UngetToken();
+
+  // <angle>
+  nsCSSValue angleValue;
+  // The '0' value is handled by <number> parsing, so use VARIANT_ANGLE flag
+  // instead of VARIANT_ANGLE_OR_ZERO.
+  if (ParseSingleTokenVariant(angleValue, VARIANT_ANGLE, nullptr)) {
+    aAngle = angleValue.GetAngleValueInDegrees();
+    return true;
+  }
+
+  REPORT_UNEXPECTED_TOKEN(PEExpectedNumberOrAngle);
+  return false;
+}
 
 bool
 CSSParserImpl::ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
@@ -6888,20 +6921,11 @@ CSSParserImpl::ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
 
   // Parse hue.
   // <hue> = <number> | <angle>
-  //
-  // TODO: support <angle> for hue component. Currently, we only support
-  // <number> value.
-  if (!GetToken(true)) {
-    REPORT_UNEXPECTED_EOF(PEColorHueEOF);
+  float degreeAngle;
+  if (!ParseHue(degreeAngle)) {
     return false;
   }
-  if (mToken.mType != eCSSToken_Number) {
-    REPORT_UNEXPECTED_TOKEN(PEExpectedNumber);
-    UngetToken();
-    return false;
-  }
-  aHue = mToken.mNumber;
-  aHue /= 360.0f;
+  aHue = degreeAngle / 360.0f;
   // hue values are wraparound
   aHue = aHue - floor(aHue);
   // Look for a comma separator after "hue" component to determine if the
