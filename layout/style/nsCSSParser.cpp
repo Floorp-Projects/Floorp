@@ -1165,17 +1165,47 @@ protected:
 
   int32_t ParseChoice(nsCSSValue aValues[],
                       const nsCSSPropertyID aPropIDs[], int32_t aNumIDs);
+
   CSSParseResult ParseColor(nsCSSValue& aValue);
-  bool ParseNumberColorComponent(uint8_t& aComponent, char aStop);
-  bool ParsePercentageColorComponent(float& aComponent, char aStop);
+
+  template<typename ComponentType>
+  bool ParseRGBColor(ComponentType& aR,
+                     ComponentType& aG,
+                     ComponentType& aB,
+                     ComponentType& aA);
   // ParseHSLColor parses everything starting with the opening '('
   // up through and including the aStop char.
   bool ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
                      char aStop);
+
   // ParseColorOpacity will enforce that the color ends with a ')'
   // after the opacity
   bool ParseColorOpacity(uint8_t& aOpacity);
   bool ParseColorOpacity(float& aOpacity);
+  // The ParseColorOpacityAndCloseParen methods below attempt to parse an
+  // optional [ separator <alpha-value> ] expression, followed by a
+  // close-parenthesis, at the end of a css color function (e.g. "rgba()" or
+  // "hsla()"). If these functions simply encounter a close-parenthesis (without
+  // any [separator <alpha-value>]), they will still succeed (i.e. return true),
+  // with outparam 'aOpacity' set to a default opacity value (fully-opaque).
+  //
+  // The range of opacity component is [0, 255], and the default opacity value
+  // is 255 (fully-opaque) for this function.
+  bool ParseColorOpacityAndCloseParen(uint8_t& aOpacity,
+                                      char aSeparator);
+  // Similar to the previous one, but the range of opacity component is
+  // [0.0f, 1.0f] and the default opacity value is 1.0f (fully-opaque).
+  bool ParseColorOpacityAndCloseParen(float& aOpacity,
+                                      char aSeparator);
+
+  // Parse a <number> color component. The range of color component is [0, 255].
+  // If |aSeparator| is provided, this function will also attempt to parse that
+  // character after parsing the color component.
+  bool ParseColorComponent(uint8_t& aComponent, Maybe<char> aSeparator);
+  // Similar to the previous one, but parse a <percentage> color component.
+  // The range of color component is [0.0f, 1.0f].
+  bool ParseColorComponent(float& aComponent, Maybe<char> aSeparator);
+
   bool ParseEnum(nsCSSValue& aValue,
                  const KTableEntry aKeywordTable[]);
 
@@ -6683,53 +6713,29 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
       }
       break;
     case eCSSToken_Function:
-      if (mToken.mIdent.LowerCaseEqualsLiteral("rgb")) {
-        // rgb ( component , component , component )
+      if (mToken.mIdent.LowerCaseEqualsLiteral("rgb") ||
+          mToken.mIdent.LowerCaseEqualsLiteral("rgba")) {
+        // rgb() = rgb( <percentage>{3} [ / <alpha-value> ]? ) |
+        //         rgb( <number>{3} [ / <alpha-value> ]? ) |
+        //         rgb( <percentage>#{3} , <alpha-value>? ) |
+        //         rgb( <number>#{3} , <alpha-value>? )
+        // <alpha-value> = <number> | <percentage>
+        // rgba is an alias of rgb.
+
         if (GetToken(true)) {
           UngetToken();
         }
-        if (mToken.mType == eCSSToken_Number) {
-          uint8_t r, g, b;
-          if (ParseNumberColorComponent(r, ',') &&
-              ParseNumberColorComponent(g, ',') &&
-              ParseNumberColorComponent(b, ')')) {
-            aValue.SetIntegerColorValue(NS_RGB(r, g, b), eCSSUnit_RGBColor);
-            return CSSParseResult::Ok;
-          }
-        } else {
-          float r, g, b;
-          if (ParsePercentageColorComponent(r, ',') &&
-              ParsePercentageColorComponent(g, ',') &&
-              ParsePercentageColorComponent(b, ')')) {
-            aValue.SetFloatColorValue(r, g, b, 1.0f,
-                                      eCSSUnit_PercentageRGBColor);
-            return CSSParseResult::Ok;
-          }
-        }
-        SkipUntil(')');
-        return CSSParseResult::Error;
-      }
-      else if (mToken.mIdent.LowerCaseEqualsLiteral("rgba")) {
-        // rgba ( component , component , component , opacity )
-        if (GetToken(true)) {
-          UngetToken();
-        }
-        if (mToken.mType == eCSSToken_Number) {
+        if (mToken.mType == eCSSToken_Number) { // <number>
           uint8_t r, g, b, a;
-          if (ParseNumberColorComponent(r, ',') &&
-              ParseNumberColorComponent(g, ',') &&
-              ParseNumberColorComponent(b, ',') &&
-              ParseColorOpacity(a)) {
-            aValue.SetIntegerColorValue(NS_RGBA(r, g, b, a),
-                                        eCSSUnit_RGBAColor);
+
+          if (ParseRGBColor(r, g, b, a)) {
+            aValue.SetIntegerColorValue(NS_RGBA(r, g, b, a), eCSSUnit_RGBAColor);
             return CSSParseResult::Ok;
           }
-        } else {
+        } else {  // <percentage>
           float r, g, b, a;
-          if (ParsePercentageColorComponent(r, ',') &&
-              ParsePercentageColorComponent(g, ',') &&
-              ParsePercentageColorComponent(b, ',') &&
-              ParseColorOpacity(a)) {
+
+          if (ParseRGBColor(r, g, b, a)) {
             aValue.SetFloatColorValue(r, g, b, a, eCSSUnit_PercentageRGBAColor);
             return CSSParseResult::Ok;
           }
@@ -6823,33 +6829,35 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
 }
 
 bool
-CSSParserImpl::ParseNumberColorComponent(uint8_t& aComponent, char aStop)
+CSSParserImpl::ParseColorComponent(uint8_t& aComponent, Maybe<char> aSeparator)
 {
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorComponentEOF);
     return false;
   }
 
-  if (mToken.mType != eCSSToken_Number || !mToken.mIntegerValid) {
-    REPORT_UNEXPECTED_TOKEN(PEExpectedInt);
+  if (mToken.mType != eCSSToken_Number) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedNumber);
     UngetToken();
     return false;
   }
 
   float value = mToken.mNumber;
+
+  if (aSeparator && !ExpectSymbol(*aSeparator, true)) {
+    REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, *aSeparator);
+    return false;
+  }
+
   if (value < 0.0f) value = 0.0f;
   if (value > 255.0f) value = 255.0f;
 
-  if (ExpectSymbol(aStop, true)) {
-    aComponent = NSToIntRound(value);
-    return true;
-  }
-  REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, aStop);
-  return false;
+  aComponent = NSToIntRound(value);
+  return true;
 }
 
 bool
-CSSParserImpl::ParsePercentageColorComponent(float& aComponent, char aStop)
+CSSParserImpl::ParseColorComponent(float& aComponent, Maybe<char> aSeparator)
 {
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorComponentEOF);
@@ -6863,15 +6871,17 @@ CSSParserImpl::ParsePercentageColorComponent(float& aComponent, char aStop)
   }
 
   float value = mToken.mNumber;
+
+  if (aSeparator && !ExpectSymbol(*aSeparator, true)) {
+    REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, *aSeparator);
+    return false;
+  }
+
   if (value < 0.0f) value = 0.0f;
   if (value > 1.0f) value = 1.0f;
 
-  if (ExpectSymbol(aStop, true)) {
-    aComponent = value;
-    return true;
-  }
-  REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, aStop);
-  return false;
+  aComponent = value;
+  return true;
 }
 
 
@@ -6947,17 +6957,18 @@ CSSParserImpl::ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
 
 
 bool
-CSSParserImpl::ParseColorOpacity(uint8_t& aOpacity)
+CSSParserImpl::ParseColorOpacityAndCloseParen(uint8_t& aOpacity,
+                                              char aSeparator)
 {
   float floatOpacity;
-  if (!ParseColorOpacity(floatOpacity)) {
+  if (!ParseColorOpacityAndCloseParen(floatOpacity, aSeparator)) {
     return false;
   }
 
   uint8_t value = nsStyleUtil::FloatToColorComponent(floatOpacity);
   // Need to compare to something slightly larger
   // than 0.5 due to floating point inaccuracies.
-  NS_ASSERTION(fabs(255.0f*mToken.mNumber - value) <= 0.51f,
+  NS_ASSERTION(fabs(255.0f * floatOpacity - value) <= 0.51f,
                "FloatToColorComponent did something weird");
 
   aOpacity = value;
@@ -6965,8 +6976,21 @@ CSSParserImpl::ParseColorOpacity(uint8_t& aOpacity)
 }
 
 bool
-CSSParserImpl::ParseColorOpacity(float& aOpacity)
+CSSParserImpl::ParseColorOpacityAndCloseParen(float& aOpacity,
+                                              char aSeparator)
 {
+  if (ExpectSymbol(')', true)) {
+    // The optional [separator <alpha-value>] was omitted, so set the opacity
+    // to a fully-opaque value '1.0f' and return success.
+    aOpacity = 1.0f;
+    return true;
+  }
+
+  if (!ExpectSymbol(aSeparator, true)) {
+    REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, aSeparator);
+    return false;
+  }
+
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorOpacityEOF);
     return false;
@@ -6992,6 +7016,41 @@ CSSParserImpl::ParseColorOpacity(float& aOpacity)
 
   aOpacity = mToken.mNumber;
   return true;
+}
+
+template<typename ComponentType>
+bool
+CSSParserImpl::ParseRGBColor(ComponentType& aR,
+                             ComponentType& aG,
+                             ComponentType& aB,
+                             ComponentType& aA)
+{
+  // comma-less expression:
+  // rgb() = rgb( component{3} [ / <alpha-value> ]? )
+  // the expression with comma:
+  // rgb() = rgb( component#{3} , <alpha-value>? )
+
+  const char commaSeparator = ',';
+
+  // Parse R.
+  if (!ParseColorComponent(aR, Nothing())) {
+    return false;
+  }
+  // Look for a comma separator after "r" component to determine if the
+  // expression is comma-less or not.
+  bool hasComma = ExpectSymbol(commaSeparator, true);
+
+  // Parse G, B and A.
+  // No need to check the separator after 'B'. It will be checked in 'A' value
+  // parsing.
+  const char separatorBeforeAlpha = hasComma ? commaSeparator : '/';
+  if (ParseColorComponent(aG, hasComma ? Some(commaSeparator) : Nothing()) &&
+      ParseColorComponent(aB, Nothing()) &&
+      ParseColorOpacityAndCloseParen(aA, separatorBeforeAlpha)) {
+    return true;
+  }
+
+  return false;
 }
 
 #ifdef MOZ_XUL
@@ -18086,4 +18145,54 @@ nsCSSParser::ControlCharVisibilityDefault()
   return sControlCharVisibility
     ? NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE
     : NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
+}
+
+// XXX these two ParseColorOpacity functions will be removed by a later patch in
+// these series.
+bool
+CSSParserImpl::ParseColorOpacity(uint8_t& aOpacity)
+{
+  float floatOpacity;
+  if (!ParseColorOpacity(floatOpacity)) {
+    return false;
+  }
+
+  uint8_t value = nsStyleUtil::FloatToColorComponent(floatOpacity);
+  // Need to compare to something slightly larger
+  // than 0.5 due to floating point inaccuracies.
+  NS_ASSERTION(fabs(255.0f*mToken.mNumber - value) <= 0.51f,
+               "FloatToColorComponent did something weird");
+
+  aOpacity = value;
+  return true;
+}
+
+bool
+CSSParserImpl::ParseColorOpacity(float& aOpacity)
+{
+  if (!GetToken(true)) {
+    REPORT_UNEXPECTED_EOF(PEColorOpacityEOF);
+    return false;
+  }
+
+  // eCSSToken_Number or eCSSToken_Percentage.
+  if (mToken.mType != eCSSToken_Number && mToken.mType != eCSSToken_Percentage) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedNumberOrPercent);
+    UngetToken();
+    return false;
+  }
+
+  if (!ExpectSymbol(')', true)) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
+    return false;
+  }
+
+  if (mToken.mNumber < 0.0f) {
+    mToken.mNumber = 0.0f;
+  } else if (mToken.mNumber > 1.0f) {
+    mToken.mNumber = 1.0f;
+  }
+
+  aOpacity = mToken.mNumber;
+  return true;
 }
