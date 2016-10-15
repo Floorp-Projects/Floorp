@@ -1675,6 +1675,16 @@ ScriptSource::substringDontDeflate(JSContext* cx, size_t start, size_t stop)
     return NewStringCopyNDontDeflate<CanGC>(cx, chars, len);
 }
 
+JSFlatString*
+ScriptSource::functionBodyString(JSContext* cx)
+{
+    MOZ_ASSERT(isFunctionBody());
+
+    size_t start = parameterListEnd_ + (sizeof(FunctionConstructorMedialSigils) - 1);
+    size_t stop = length() - (sizeof(FunctionConstructorFinalBrace) - 1);
+    return substring(cx, start, stop);
+}
+
 MOZ_MUST_USE bool
 ScriptSource::setSource(ExclusiveContext* cx,
                         mozilla::UniquePtr<char16_t[], JS::FreePolicy>&& source,
@@ -1726,10 +1736,9 @@ ScriptSource::setCompressedSource(SharedImmutableString&& raw, size_t uncompress
 
 bool
 ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
-                            bool argumentsNotIncluded, SourceCompressionTask* task)
+                            SourceCompressionTask* task)
 {
     MOZ_ASSERT(!hasSourceData());
-    argumentsNotIncluded_ = argumentsNotIncluded;
 
     auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
     auto deduped = cache.getOrCreate(srcBuf.get(), srcBuf.length(), [&]() {
@@ -1926,16 +1935,6 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         if (!xdr->codeUint32(&compressedLength))
             return false;
 
-        {
-            uint8_t argumentsNotIncluded;
-            if (mode == XDR_ENCODE)
-                argumentsNotIncluded = argumentsNotIncluded_;
-            if (!xdr->codeUint8(&argumentsNotIncluded))
-                return false;
-            if (mode == XDR_DECODE)
-                argumentsNotIncluded_ = argumentsNotIncluded;
-        }
-
         size_t byteLen = compressedLength ? compressedLength : (len * sizeof(char16_t));
         if (mode == XDR_DECODE) {
             uint8_t* p = xdr->cx()->template pod_malloc<uint8_t>(Max<size_t>(byteLen, 1));
@@ -2060,7 +2059,8 @@ FormatIntroducedFilename(ExclusiveContext* cx, const char* filename, unsigned li
 }
 
 bool
-ScriptSource::initFromOptions(ExclusiveContext* cx, const ReadOnlyCompileOptions& options)
+ScriptSource::initFromOptions(ExclusiveContext* cx, const ReadOnlyCompileOptions& options,
+                              Maybe<uint32_t> parameterListEnd)
 {
     MOZ_ASSERT(!filename_);
     MOZ_ASSERT(!introducerFilename_);
@@ -2069,6 +2069,7 @@ ScriptSource::initFromOptions(ExclusiveContext* cx, const ReadOnlyCompileOptions
 
     introductionType_ = options.introductionType;
     setIntroductionOffset(options.introductionOffset);
+    parameterListEnd_ = parameterListEnd.isSome() ? parameterListEnd.value() : 0;
 
     if (options.hasIntroductionInfo) {
         MOZ_ASSERT(options.introductionType != nullptr);
