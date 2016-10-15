@@ -20,7 +20,6 @@
     // set 'remote' to true here will make the the iframe remote in _inproc_
     // test and in-process in _oop_  test.
     iframe.setAttribute('remote', 'true');
-    iframe.setAttribute('mozapp', 'http://example.org/manifest.webapp');
 
     iframe.addEventListener('mozbrowserloadend', function(e) {
       ok("mute" in iframe, "iframe.mute exists");

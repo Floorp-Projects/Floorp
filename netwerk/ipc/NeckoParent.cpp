@@ -177,19 +177,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
   nsAutoCString debugString;
   for (uint32_t i = 0; i < contextArray.Length(); i++) {
     TabContext tabContext = contextArray[i];
-    uint32_t appId = tabContext.OwnOrContainingAppId();
     bool inBrowserElement = aSerialized.mOriginAttributes.mInIsolatedMozBrowser;
-
-    if (appId == NECKO_UNKNOWN_APP_ID) {
-      debugString.Append("u,");
-      continue;
-    }
-    // We may get appID=NO_APP if child frame is neither a browser nor an app
-    if (appId == NECKO_NO_APP_ID && tabContext.HasOwnApp()) {
-      // NECKO_NO_APP_ID but also is an app?  Weird, skip.
-      debugString.Append("h,");
-      continue;
-    }
 
     if (aSerialized.mOriginAttributes.mUserContextId != tabContext.OriginAttributesRef().mUserContextId) {
       debugString.Append("(");
@@ -200,7 +188,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
       continue;
     }
     aAttrs = DocShellOriginAttributes();
-    aAttrs.mAppId = appId;
+    aAttrs.mAppId = nsIScriptSecurityManager::NO_APP_ID;
     aAttrs.mInIsolatedMozBrowser = inBrowserElement;
     aAttrs.mUserContextId = aSerialized.mOriginAttributes.mUserContextId;
     aAttrs.mPrivateBrowsingId = aSerialized.mOriginAttributes.mPrivateBrowsingId;

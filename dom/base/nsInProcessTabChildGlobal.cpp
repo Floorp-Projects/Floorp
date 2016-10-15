@@ -96,14 +96,14 @@ nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
   SetIsNotDOMBinding();
   mozilla::HoldJSObjects(this);
 
-  // If owner corresponds to an <iframe mozbrowser> or <iframe mozapp>, we'll
-  // have to tweak our PreHandleEvent implementation.
+  // If owner corresponds to an <iframe mozbrowser>, we'll have to tweak our
+  // PreHandleEvent implementation.
   nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwner);
   if (browserFrame) {
-    mIsBrowserOrAppFrame = browserFrame->GetReallyIsBrowserOrApp();
+    mIsBrowserFrame = browserFrame->GetReallyIsBrowser();
   }
   else {
-    mIsBrowserOrAppFrame = false;
+    mIsBrowserFrame = false;
   }
 }
 
@@ -274,7 +274,7 @@ nsInProcessTabChildGlobal::PreHandleEvent(EventChainPreVisitor& aVisitor)
     return NS_OK;
   }
 
-  if (mIsBrowserOrAppFrame &&
+  if (mIsBrowserFrame &&
       (!mOwner || !nsContentUtils::IsInChromeDocshell(mOwner->OwnerDoc()))) {
     if (mOwner) {
       if (nsPIDOMWindowInner* innerWindow = mOwner->OwnerDoc()->GetInnerWindow()) {
