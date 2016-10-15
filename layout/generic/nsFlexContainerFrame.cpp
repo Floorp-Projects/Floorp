@@ -2673,32 +2673,12 @@ MainAxisPositionTracker::
         mPosition += mPackingSpaceRemaining / 2;
         break;
       case NS_STYLE_JUSTIFY_SPACE_BETWEEN:
-        MOZ_ASSERT(mPackingSpaceRemaining >= 0,
-                   "negative packing space should make us use 'flex-start' "
-                   "instead of 'space-between'");
-        // 1 packing space between each flex item, no packing space at ends.
-        mNumPackingSpacesRemaining = aLine->NumItems() - 1;
-        break;
       case NS_STYLE_JUSTIFY_SPACE_AROUND:
-        MOZ_ASSERT(mPackingSpaceRemaining >= 0,
-                   "negative packing space should make us use 'center' "
-                   "instead of 'space-around'");
-        // 1 packing space between each flex item, plus half a packing space
-        // at beginning & end.  So our number of full packing-spaces is equal
-        // to the number of flex items.
-        mNumPackingSpacesRemaining = aLine->NumItems();
-        if (mNumPackingSpacesRemaining > 0) {
-          // The edges (start/end) share one full packing space
-          nscoord totalEdgePackingSpace =
-            mPackingSpaceRemaining / mNumPackingSpacesRemaining;
-
-          // ...and we'll use half of that right now, at the start
-          mPosition += totalEdgePackingSpace / 2;
-          // ...but we need to subtract all of it right away, so that we won't
-          // hand out any of it to intermediate packing spaces.
-          mPackingSpaceRemaining -= totalEdgePackingSpace;
-          mNumPackingSpacesRemaining--;
-        }
+        nsFlexContainerFrame::CalculatePackingSpace(aLine->NumItems(),
+                                                    mJustifyContent,
+                                                    &mPosition,
+                                                    &mNumPackingSpacesRemaining,
+                                                    &mPackingSpaceRemaining);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected justify-content value");
@@ -2892,32 +2872,13 @@ CrossAxisPositionTracker::
         mPosition += mPackingSpaceRemaining / 2;
         break;
       case NS_STYLE_ALIGN_SPACE_BETWEEN:
-        MOZ_ASSERT(mPackingSpaceRemaining >= 0,
-                   "negative packing space should make us use 'flex-start' "
-                   "instead of 'space-between'");
-        // 1 packing space between each flex line, no packing space at ends.
-        mNumPackingSpacesRemaining = numLines - 1;
+      case NS_STYLE_ALIGN_SPACE_AROUND:
+        nsFlexContainerFrame::CalculatePackingSpace(numLines,
+                                                    mAlignContent,
+                                                    &mPosition,
+                                                    &mNumPackingSpacesRemaining,
+                                                    &mPackingSpaceRemaining);
         break;
-      case NS_STYLE_ALIGN_SPACE_AROUND: {
-        MOZ_ASSERT(mPackingSpaceRemaining >= 0,
-                   "negative packing space should make us use 'center' "
-                   "instead of 'space-around'");
-        // 1 packing space between each flex line, plus half a packing space
-        // at beginning & end.  So our number of full packing-spaces is equal
-        // to the number of flex lines.
-        mNumPackingSpacesRemaining = numLines;
-        // The edges (start/end) share one full packing space
-        nscoord totalEdgePackingSpace =
-          mPackingSpaceRemaining / mNumPackingSpacesRemaining;
-
-        // ...and we'll use half of that right now, at the start
-        mPosition += totalEdgePackingSpace / 2;
-        // ...but we need to subtract all of it right away, so that we won't
-        // hand out any of it to intermediate packing spaces.
-        mPackingSpaceRemaining -= totalEdgePackingSpace;
-        mNumPackingSpacesRemaining--;
-        break;
-      }
       case NS_STYLE_ALIGN_STRETCH: {
         // Split space equally between the lines:
         MOZ_ASSERT(mPackingSpaceRemaining > 0,
@@ -4006,6 +3967,53 @@ private:
   const FrameProperties mItemProps;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
+
+void
+nsFlexContainerFrame::CalculatePackingSpace(uint32_t aNumThingsToPack,
+                                            uint8_t aAlignVal,
+                                            nscoord* aFirstSubjectOffset,
+                                            uint32_t* aNumPackingSpacesRemaining,
+                                            nscoord* aPackingSpaceRemaining)
+{
+  MOZ_ASSERT(NS_STYLE_ALIGN_SPACE_BETWEEN == NS_STYLE_JUSTIFY_SPACE_BETWEEN &&
+             NS_STYLE_ALIGN_SPACE_AROUND == NS_STYLE_JUSTIFY_SPACE_AROUND,
+             "CalculatePackingSpace assumes that NS_STYLE_ALIGN_SPACE and "
+             "NS_STYLE_JUSTIFY_SPACE constants are interchangeable");
+
+  MOZ_ASSERT(aAlignVal == NS_STYLE_ALIGN_SPACE_BETWEEN ||
+             aAlignVal == NS_STYLE_ALIGN_SPACE_AROUND,
+             "Unexpected alignment value");
+
+  MOZ_ASSERT(*aPackingSpaceRemaining >= 0,
+             "Should not be called with negative packing space");
+
+  MOZ_ASSERT(aNumThingsToPack >= 1,
+             "Should not be called with less than 1 thing to pack");
+
+  // Packing spaces between items:
+  *aNumPackingSpacesRemaining = aNumThingsToPack - 1;
+
+  if (aAlignVal == NS_STYLE_ALIGN_SPACE_BETWEEN) {
+    // No need to reserve space at beginning/end, so we're done.
+    return;
+  }
+
+  // We need to add 1 packing space, split between beginning/end, for
+  // space-around:
+  size_t numPackingSpacesForEdges = 1;
+
+  // How big will each "full" packing space be:
+  nscoord packingSpaceSize = *aPackingSpaceRemaining /
+    (*aNumPackingSpacesRemaining + numPackingSpacesForEdges);
+  // How much packing-space are we allocating to the edges:
+  nscoord totalEdgePackingSpace = numPackingSpacesForEdges * packingSpaceSize;
+
+  // Use half of that edge packing space right now:
+  *aFirstSubjectOffset += totalEdgePackingSpace / 2;
+  // ...but we need to subtract all of it right away, so that we won't
+  // hand out any of it to intermediate packing spaces.
+  *aPackingSpaceRemaining -= totalEdgePackingSpace;
+}
 
 void
 nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
