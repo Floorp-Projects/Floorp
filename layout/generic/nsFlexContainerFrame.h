@@ -85,7 +85,7 @@ public:
   /**
     * Helper function to calculate packing space and initial offset of alignment
     * subjects in MainAxisPositionTracker() and CrossAxisPositionTracker() for
-    * space-between and space-around.
+    * space-between, space-around, and space-evenly.
     *
     * @param aNumThingsToPack             Number of alignment subjects.
     * @param aAlignVal                    Value for align-self or justify-self.

@@ -2605,13 +2605,15 @@ MainAxisPositionTracker::
     mNumAutoMarginsInMainAxis = 0;
   }
 
-  // If packing space is negative, 'space-between' behaves like 'flex-start',
-  // and 'space-around' behaves like 'center'. In those cases, it's simplest to
-  // just pretend we have a different 'justify-content' value and share code.
+  // If packing space is negative, 'space-between' falls back to 'flex-start',
+  // and 'space-around' & 'space-evenly' fall back to 'center'. In those cases,
+  // it's simplest to just pretend we have a different 'justify-content' value
+  // and share code.
   if (mPackingSpaceRemaining < 0) {
     if (mJustifyContent == NS_STYLE_JUSTIFY_SPACE_BETWEEN) {
       mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
-    } else if (mJustifyContent == NS_STYLE_JUSTIFY_SPACE_AROUND) {
+    } else if (mJustifyContent == NS_STYLE_JUSTIFY_SPACE_AROUND ||
+               mJustifyContent == NS_STYLE_JUSTIFY_SPACE_EVENLY) {
       mJustifyContent = NS_STYLE_JUSTIFY_CENTER;
     }
   }
@@ -2658,8 +2660,7 @@ MainAxisPositionTracker::
     switch (mJustifyContent) {
       case NS_STYLE_JUSTIFY_BASELINE:
       case NS_STYLE_JUSTIFY_LAST_BASELINE:
-      case NS_STYLE_JUSTIFY_SPACE_EVENLY:
-        NS_WARNING("NYI: justify-content:left/right/baseline/last-baseline/space-evenly");
+        NS_WARNING("NYI: justify-content:left/right/baseline/last-baseline");
         MOZ_FALLTHROUGH;
       case NS_STYLE_JUSTIFY_FLEX_START:
         // All packing space should go at the end --> nothing to do here.
@@ -2674,6 +2675,7 @@ MainAxisPositionTracker::
         break;
       case NS_STYLE_JUSTIFY_SPACE_BETWEEN:
       case NS_STYLE_JUSTIFY_SPACE_AROUND:
+      case NS_STYLE_JUSTIFY_SPACE_EVENLY:
         nsFlexContainerFrame::CalculatePackingSpace(aLine->NumItems(),
                                                     mJustifyContent,
                                                     &mPosition,
@@ -2721,9 +2723,10 @@ MainAxisPositionTracker::TraversePackingSpace()
 {
   if (mNumPackingSpacesRemaining) {
     MOZ_ASSERT(mJustifyContent == NS_STYLE_JUSTIFY_SPACE_BETWEEN ||
-               mJustifyContent == NS_STYLE_JUSTIFY_SPACE_AROUND,
+               mJustifyContent == NS_STYLE_JUSTIFY_SPACE_AROUND ||
+               mJustifyContent == NS_STYLE_JUSTIFY_SPACE_EVENLY,
                "mNumPackingSpacesRemaining only applies for "
-               "space-between/space-around");
+               "space-between/space-around/space-evenly");
 
     MOZ_ASSERT(mPackingSpaceRemaining >= 0,
                "ran out of packing space earlier than we expected");
@@ -3976,12 +3979,14 @@ nsFlexContainerFrame::CalculatePackingSpace(uint32_t aNumThingsToPack,
                                             nscoord* aPackingSpaceRemaining)
 {
   MOZ_ASSERT(NS_STYLE_ALIGN_SPACE_BETWEEN == NS_STYLE_JUSTIFY_SPACE_BETWEEN &&
-             NS_STYLE_ALIGN_SPACE_AROUND == NS_STYLE_JUSTIFY_SPACE_AROUND,
+             NS_STYLE_ALIGN_SPACE_AROUND == NS_STYLE_JUSTIFY_SPACE_AROUND &&
+             NS_STYLE_ALIGN_SPACE_EVENLY == NS_STYLE_JUSTIFY_SPACE_EVENLY,
              "CalculatePackingSpace assumes that NS_STYLE_ALIGN_SPACE and "
              "NS_STYLE_JUSTIFY_SPACE constants are interchangeable");
 
   MOZ_ASSERT(aAlignVal == NS_STYLE_ALIGN_SPACE_BETWEEN ||
-             aAlignVal == NS_STYLE_ALIGN_SPACE_AROUND,
+             aAlignVal == NS_STYLE_ALIGN_SPACE_AROUND ||
+             aAlignVal == NS_STYLE_ALIGN_SPACE_EVENLY,
              "Unexpected alignment value");
 
   MOZ_ASSERT(*aPackingSpaceRemaining >= 0,
@@ -3998,9 +4003,10 @@ nsFlexContainerFrame::CalculatePackingSpace(uint32_t aNumThingsToPack,
     return;
   }
 
-  // We need to add 1 packing space, split between beginning/end, for
-  // space-around:
-  size_t numPackingSpacesForEdges = 1;
+  // We need to add 1 or 2 packing spaces, split between beginning/end, for
+  // space-around / space-evenly:
+  size_t numPackingSpacesForEdges =
+    aAlignVal == NS_STYLE_JUSTIFY_SPACE_AROUND ? 1 : 2;
 
   // How big will each "full" packing space be:
   nscoord packingSpaceSize = *aPackingSpaceRemaining /
