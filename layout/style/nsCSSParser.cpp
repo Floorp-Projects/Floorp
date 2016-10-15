@@ -1176,10 +1176,6 @@ protected:
   bool ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
                      float& aOpacity);
 
-  // ParseColorOpacity will enforce that the color ends with a ')'
-  // after the opacity
-  bool ParseColorOpacity(uint8_t& aOpacity);
-  bool ParseColorOpacity(float& aOpacity);
   // The ParseColorOpacityAndCloseParen methods below attempt to parse an
   // optional [ separator <alpha-value> ] expression, followed by a
   // close-parenthesis, at the end of a css color function (e.g. "rgba()" or
@@ -18136,54 +18132,4 @@ nsCSSParser::ControlCharVisibilityDefault()
   return sControlCharVisibility
     ? NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE
     : NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
-}
-
-// XXX these two ParseColorOpacity functions will be removed by a later patch in
-// these series.
-bool
-CSSParserImpl::ParseColorOpacity(uint8_t& aOpacity)
-{
-  float floatOpacity;
-  if (!ParseColorOpacity(floatOpacity)) {
-    return false;
-  }
-
-  uint8_t value = nsStyleUtil::FloatToColorComponent(floatOpacity);
-  // Need to compare to something slightly larger
-  // than 0.5 due to floating point inaccuracies.
-  NS_ASSERTION(fabs(255.0f*mToken.mNumber - value) <= 0.51f,
-               "FloatToColorComponent did something weird");
-
-  aOpacity = value;
-  return true;
-}
-
-bool
-CSSParserImpl::ParseColorOpacity(float& aOpacity)
-{
-  if (!GetToken(true)) {
-    REPORT_UNEXPECTED_EOF(PEColorOpacityEOF);
-    return false;
-  }
-
-  // eCSSToken_Number or eCSSToken_Percentage.
-  if (mToken.mType != eCSSToken_Number && mToken.mType != eCSSToken_Percentage) {
-    REPORT_UNEXPECTED_TOKEN(PEExpectedNumberOrPercent);
-    UngetToken();
-    return false;
-  }
-
-  if (!ExpectSymbol(')', true)) {
-    REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
-    return false;
-  }
-
-  if (mToken.mNumber < 0.0f) {
-    mToken.mNumber = 0.0f;
-  } else if (mToken.mNumber > 1.0f) {
-    mToken.mNumber = 1.0f;
-  }
-
-  aOpacity = mToken.mNumber;
-  return true;
 }
