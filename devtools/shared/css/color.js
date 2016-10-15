@@ -6,6 +6,9 @@
 
 const Services = require("Services");
 
+const {CSS_ANGLEUNIT} = require("devtools/shared/css/properties-db");
+const {getAngleValueInDegrees} = require("devtools/shared/css/parsing-utils");
+
 const {getCSSLexer} = require("devtools/shared/css/lexer");
 const {cssColors} = require("devtools/shared/css/color-db");
 
@@ -650,13 +653,172 @@ function clamp(value, min, max) {
  * null at EOF.
  */
 function getToken(lexer) {
+  if (lexer._hasPushBackToken) {
+    lexer._hasPushBackToken = false;
+    return lexer._currentToken;
+  }
+
   while (true) {
     let token = lexer.nextToken();
     if (!token || (token.tokenType !== "comment" &&
                    token.tokenType !== "whitespace")) {
+      lexer._currentToken = token;
       return token;
     }
   }
+}
+
+/**
+ * A helper function to put a token back to lexer for the next call of
+ * getToken().
+ *
+ * @param {CSSLexer} lexer The lexer
+ */
+function unGetToken(lexer) {
+  if (lexer._hasPushBackToken) {
+    throw new Error("Double pushback.");
+  }
+  lexer._hasPushBackToken = true;
+}
+
+/**
+ * A helper function that checks if the next token matches symbol.
+ * If so, reads the token and returns true.  If not, pushes the
+ * token back and returns false.
+ *
+ * @param {CSSLexer} lexer The lexer.
+ * @param {String} symbol The symbol.
+ * @return {Boolean} The expect symbol is parsed or not.
+ */
+function expectSymbol(lexer, symbol) {
+  let token = getToken(lexer);
+  if (!token) {
+    return false;
+  }
+
+  if (token.tokenType !== "symbol" || token.text !== symbol) {
+    unGetToken(lexer);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Parse a <number> or a <percentage> color component. If |separator| is
+ * provided (not an empty string ""), this function will also attempt to parse that
+ * character after parsing the color component. The range of output component
+ * value is [0, 1] if the "isPercentage" is true. Otherwise, the range is
+ * [0, 255].
+ *
+ * @param {CSSLexer} lexer The lexer.
+ * @param {Boolean} isPercentage The color component is <percentage> or not.
+ * @param {String} separator The separator.
+ * @param {Array} colorArray [out] The parsed color component will push into this array.
+ * @return {Boolean} Return false on error.
+ */
+function parseColorComponent(lexer, isPercentage, separator, colorArray) {
+  let token = getToken(lexer);
+
+  if (!token) {
+    return false;
+  }
+
+  if (isPercentage) {
+    if (token.tokenType !== "percentage") {
+      return false;
+    }
+  } else if (token.tokenType !== "number") {
+    return false;
+  }
+
+  let colorComponent = 0;
+  if (isPercentage) {
+    colorComponent = clamp(token.number, 0, 1);
+  } else {
+    colorComponent = clamp(token.number, 0, 255);
+  }
+
+  if (separator !== "" && !expectSymbol(lexer, separator)) {
+    return false;
+  }
+
+  colorArray.push(colorComponent);
+
+  return true;
+}
+
+/**
+ * Parse an optional [ separator <alpha-value> ] expression, followed by a
+ * close-parenthesis, at the end of a css color function (e.g. rgba() or hsla()).
+ * If this function simply encounters a close-parenthesis (without the
+ * [ separator <alpha-value> ]), it will still succeed. Then put a fully-opaque
+ * alpha value into the colorArray. The range of output alpha value is [0, 1].
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @param {String} separator The separator.
+ * @param {Array} colorArray [out] The parsed color component will push into this array.
+ * @return {Boolean} Return false on error.
+ */
+function parseColorOpacityAndCloseParen(lexer, separator, colorArray) {
+  // The optional [separator <alpha-value>] was omitted, so set the opacity
+  // to a fully-opaque value '1.0' and return success.
+  if (expectSymbol(lexer, ")")) {
+    colorArray.push(1);
+    return true;
+  }
+
+  if (!expectSymbol(lexer, separator)) {
+    return false;
+  }
+
+  let token = getToken(lexer);
+  if (!token) {
+    return false;
+  }
+
+  // <number> or <percentage>
+  if (token.tokenType !== "number" && token.tokenType !== "percentage") {
+    return false;
+  }
+
+  if (!expectSymbol(lexer, ")")) {
+    return false;
+  }
+
+  colorArray.push(clamp(token.number, 0, 1));
+
+  return true;
+}
+
+/**
+ * Parse a hue value.
+ *   <hue> = <number> | <angle>
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @param {Array} colorArray [out] The parsed color component will push into this array.
+ * @return {Boolean} Return false on error.
+ */
+function parseHue(lexer, colorArray) {
+  let token = getToken(lexer);
+
+  if (!token) {
+    return false;
+  }
+
+  let val = 0;
+  if (token.tokenType === "number") {
+    val = token.number;
+  } else if (token.tokenType === "dimension" && token.text in CSS_ANGLEUNIT) {
+    val = getAngleValueInDegrees(token.number, token.text);
+  } else {
+    return false;
+  }
+
+  val = val / 360.0;
+  colorArray.push(val - Math.floor(val));
+
+  return true;
 }
 
 /**
@@ -677,72 +839,96 @@ function requireComma(lexer, token) {
 }
 
 /**
- * A helper function to parse the first three arguments to hsl()
- * or hsla().
+ * A helper function to parse the color components of hsl()/hsla() function.
+ * hsl() and hsla() are now aliases.
  *
  * @param {CSSLexer} lexer The lexer
- * @return {Array} An array of the form [r,g,b]; or null on error.
+ * @return {Array} An array of the form [r,g,b,a]; or null on error.
  */
 function parseHsl(lexer) {
-  let vals = [];
+  // comma-less expression:
+  // hsl() = hsl( <hue> <saturation> <lightness> [ / <alpha-value> ]? )
+  // the expression with comma:
+  // hsl() = hsl( <hue>, <saturation>, <lightness>, <alpha-value>? )
+  //
+  // <hue> = <number> | <angle>
+  // <alpha-value> = <number> | <percentage>
 
-  let token = getToken(lexer);
-  if (!token || token.tokenType !== "number") {
+  const commaSeparator = ",";
+  let hsl = [];
+  let a = [];
+
+  // Parse hue.
+  if (!parseHue(lexer, hsl)) {
     return null;
   }
 
-  let val = token.number / 360.0;
-  vals.push(val - Math.floor(val));
+  // Look for a comma separator after "hue" component to determine if the
+  // expression is comma-less or not.
+  let hasComma = expectSymbol(lexer, commaSeparator);
 
-  for (let i = 0; i < 2; ++i) {
-    token = requireComma(lexer, getToken(lexer));
-    if (!token || token.tokenType !== "percentage") {
-      return null;
-    }
-    vals.push(clamp(token.number, 0, 1));
+  // Parse saturation, lightness and opacity.
+  // The saturation and lightness are <percentage>, so reuse the <percentage>
+  // version of parseColorComponent function for them. No need to check the
+  // separator after 'lightness'. It will be checked in opacity value parsing.
+  let separatorBeforeAlpha = hasComma ? commaSeparator : "/";
+  if (parseColorComponent(lexer, true, hasComma ? commaSeparator : "", hsl) &&
+      parseColorComponent(lexer, true, "", hsl) &&
+      parseColorOpacityAndCloseParen(lexer, separatorBeforeAlpha, a)) {
+    return [...hslToRGB(hsl), ...a];
   }
 
-  return hslToRGB(vals);
+  return null;
 }
 
 /**
- * A helper function to parse the first three arguments to rgb()
- * or rgba().
+ * A helper function to parse the color arguments of rgb()/rgba() function.
+ * rgb() and rgba() now are aliases.
  *
- * @param {CSSLexer} lexer The lexer
- * @return {Array} An array of the form [r,g,b]; or null on error.
+ * @param {CSSLexer} lexer The lexer.
+ * @return {Array} An array of the form [r,g,b,a]; or null on error.
  */
 function parseRgb(lexer) {
-  let isPercentage = false;
-  let vals = [];
-  for (let i = 0; i < 3; ++i) {
-    let token = getToken(lexer);
-    if (i > 0) {
-      token = requireComma(lexer, token);
-    }
-    if (!token) {
-      return null;
-    }
+  // comma-less expression:
+  //   rgb() = rgb( component{3} [ / <alpha-value> ]? )
+  // the expression with comma:
+  //   rgb() = rgb( component#{3} , <alpha-value>? )
+  //
+  // component = <number> | <percentage>
+  // <alpa-value> = <number> | <percentage>
 
-    /* Either all parameters are integers, or all are percentages, so
-       check the first one to see.  */
-    if (i === 0 && token.tokenType === "percentage") {
-      isPercentage = true;
-    }
+  const commaSeparator = ",";
+  let rgba = [];
 
-    if (isPercentage) {
-      if (token.tokenType !== "percentage") {
-        return null;
-      }
-      vals.push(Math.round(255 * clamp(token.number, 0, 1)));
-    } else {
-      if (token.tokenType !== "number" || !token.isInteger) {
-        return null;
-      }
-      vals.push(clamp(token.number, 0, 255));
-    }
+  let token = getToken(lexer);
+  if (token.tokenType !== "percentage" && token.tokenType !== "number") {
+    return null;
   }
-  return vals;
+  unGetToken(lexer);
+  let isPercentage = token.tokenType === "percentage";
+
+  // Parse R.
+  if (!parseColorComponent(lexer, isPercentage, "", rgba)) {
+    return null;
+  }
+  let hasComma = expectSymbol(lexer, commaSeparator);
+
+  // Parse G, B and A.
+  // No need to check the separator after 'B'. It will be checked in 'A' values
+  // parsing.
+  let separatorBeforeAlpha = hasComma ? commaSeparator : "/";
+  if (parseColorComponent(lexer, isPercentage, hasComma ? commaSeparator : "", rgba) &&
+      parseColorComponent(lexer, isPercentage, "", rgba) &&
+      parseColorOpacityAndCloseParen(lexer, separatorBeforeAlpha, rgba)) {
+    if (isPercentage) {
+      rgba[0] = Math.round(255 * rgba[0]);
+      rgba[1] = Math.round(255 * rgba[1]);
+      rgba[2] = Math.round(255 * rgba[2]);
+    }
+    return rgba;
+  }
+
+  return null;
 }
 
 /**
@@ -786,26 +972,9 @@ function colorToRGBA(name) {
   }
 
   let hsl = func.text === "hsl" || func.text === "hsla";
-  let alpha = func.text === "rgba" || func.text === "hsla";
 
   let vals = hsl ? parseHsl(lexer) : parseRgb(lexer);
   if (!vals) {
-    return null;
-  }
-
-  if (alpha) {
-    let token = requireComma(lexer, getToken(lexer));
-    if (!token || token.tokenType !== "number") {
-      return null;
-    }
-    vals.push(clamp(token.number, 0, 1));
-  } else {
-    vals.push(1);
-  }
-
-  let parenToken = getToken(lexer);
-  if (!parenToken || parenToken.tokenType !== "symbol" ||
-      parenToken.text !== ")") {
     return null;
   }
   if (getToken(lexer) !== null) {
