@@ -8,6 +8,7 @@ DIRS += [
     'actions',
     'components',
     'reducers',
+    'utils',
 ]
 
 DevToolsModules(
