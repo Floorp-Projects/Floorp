@@ -274,10 +274,6 @@ class MessageChannel : HasResultCodes
     void MaybeUndeferIncall();
     void EnqueuePendingMessages();
 
-    // Executed on the worker thread. Dequeues one pending message.
-    bool OnMaybeDequeueOne();
-    bool DequeueOne(Message *recvd);
-
     // Dispatches an incoming message to its appropriate handler.
     void DispatchMessage(Message &&aMsg);
 
@@ -308,6 +304,8 @@ class MessageChannel : HasResultCodes
 
     void EndTimeout();
     void CancelTransaction(int transaction);
+
+    void RepostAllMessages();
 
     // The "remote view of stack depth" can be different than the
     // actual stack depth when there are out-of-turn replies.  When we
@@ -454,118 +452,40 @@ class MessageChannel : HasResultCodes
     }
 
   private:
-#if defined(MOZ_CRASHREPORTER) && defined(OS_WIN)
-    // TODO: Remove the condition OS_WIN above once we move to GCC 5 or higher,
-    // the code will be able to get compiled as std::deque will meet C++11
-    // allocator requirements.
-    template<class T>
-    struct AnnotateAllocator
+    class MessageTask :
+        public CancelableRunnable,
+        public LinkedListElement<RefPtr<MessageTask>>
     {
-      typedef T value_type;
-      AnnotateAllocator(MessageChannel& channel) : mChannel(channel) {}
-      template<class U> AnnotateAllocator(const AnnotateAllocator<U>& other) :
-        mChannel(other.mChannel) {}
-      template<class U> bool operator==(const AnnotateAllocator<U>&) { return true; }
-      template<class U> bool operator!=(const AnnotateAllocator<U>&) { return false; }
-      T* allocate(size_t n) {
-        void* p = ::operator new(n * sizeof(T), std::nothrow);
-        if (!p && n) {
-          // Sort the pending messages by its type, note the sorting algorithm
-          // has to be in-place to avoid memory allocation.
-          MessageQueue& q = mChannel.mPending;
-          std::sort(q.begin(), q.end(), [](const Message& a, const Message& b) {
-            return a.type() < b.type();
-          });
+    public:
+        explicit MessageTask(MessageChannel* aChannel, Message&& aMessage)
+          : mChannel(aChannel), mMessage(Move(aMessage)), mScheduled(false)
+        {}
 
-          // Iterate over the sorted queue to find the message that has the
-          // highest number of count.
-          const char* topName = nullptr;
-          const char* curName = nullptr;
-          msgid_t topType = 0, curType = 0;
-          uint32_t topCount = 0, curCount = 0;
-          for (MessageQueue::iterator it = q.begin(); it != q.end(); ++it) {
-            Message &msg = *it;
-            if (msg.type() == curType) {
-              ++curCount;
-            } else {
-              if (curCount > topCount) {
-                topName = curName;
-                topType = curType;
-                topCount = curCount;
-              }
-              curName = StringFromIPCMessageType(msg.type());
-              curType = msg.type();
-              curCount = 1;
-            }
-          }
-          // In case the last type is the top one.
-          if (curCount > topCount) {
-            topName = curName;
-            topType = curType;
-            topCount = curCount;
-          }
+        NS_IMETHOD Run() override;
+        NS_IMETHOD Cancel() override;
+        void Post();
+        void Clear();
 
-          CrashReporter::AnnotatePendingIPC(q.size(), topCount, topName, topType);
+        bool IsScheduled() const { return mScheduled; }
 
-          mozalloc_handle_oom(n * sizeof(T));
-        }
-        return static_cast<T*>(p);
-      }
-      void deallocate(T* p, size_t n) {
-        ::operator delete(p);
-      }
-      MessageChannel& mChannel;
+        Message& Msg() { return mMessage; }
+        const Message& Msg() const { return mMessage; }
+
+    private:
+        MessageTask() = delete;
+        MessageTask(const MessageTask&) = delete;
+
+        MessageChannel* mChannel;
+        Message mMessage;
+        bool mScheduled : 1;
     };
-    typedef std::deque<Message, AnnotateAllocator<Message>> MessageQueue;
-#else
-    typedef std::deque<Message> MessageQueue;
-#endif
+
+    bool ShouldRunMessage(const Message& aMsg);
+    void RunMessage(MessageTask& aTask);
+
+    typedef LinkedList<RefPtr<MessageTask>> MessageQueue;
     typedef std::map<size_t, Message> MessageMap;
     typedef IPC::Message::msgid_t msgid_t;
-
-    // XXXkhuey this can almost certainly die.
-    // All dequeuing tasks require a single point of cancellation,
-    // which is handled via a reference-counted task.
-    class RefCountedTask
-    {
-      public:
-        explicit RefCountedTask(already_AddRefed<CancelableRunnable> aTask)
-          : mTask(aTask)
-        { }
-      private:
-        ~RefCountedTask() { }
-      public:
-        void Run() { mTask->Run(); }
-        void Cancel() { mTask->Cancel(); }
-
-        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedTask)
-
-      private:
-        RefPtr<CancelableRunnable> mTask;
-    };
-
-    // Wrap an existing task which can be cancelled at any time
-    // without the wrapper's knowledge.
-    class DequeueTask : public CancelableRunnable
-    {
-      public:
-        explicit DequeueTask(RefCountedTask* aTask)
-          : mTask(aTask)
-        { }
-        NS_IMETHOD Run() override {
-          if (mTask) {
-            mTask->Run();
-          }
-          return NS_OK;
-        }
-        nsresult Cancel() override {
-          mTask = nullptr;
-          return NS_OK;
-        }
-
-      private:
-        RefPtr<RefCountedTask> mTask;
-    };
 
   private:
     // Based on presumption the listener owns and overlives the channel,
@@ -581,9 +501,6 @@ class MessageChannel : HasResultCodes
     // id() of mWorkerLoop.  This persists even after mWorkerLoop is cleared
     // during channel shutdown.
     int mWorkerLoopID;
-
-    // A task encapsulating dequeuing one pending message.
-    RefPtr<RefCountedTask> mDequeueOneTask;
 
     // Timeout periods are broken up in two to prevent system suspension from
     // triggering an abort. This method (called by WaitForEvent with a 'did
@@ -671,9 +588,7 @@ class MessageChannel : HasResultCodes
     int32_t mTimedOutMessageSeqno;
     int mTimedOutMessageNestedLevel;
 
-    // Queue of all incoming messages, except for replies to sync and urgent
-    // messages, which are delivered directly to mRecvd, and any pending urgent
-    // incall, which is stored in mPendingUrgentRequest.
+    // Queue of all incoming messages.
     //
     // If both this side and the other side are functioning correctly, the queue
     // can only be in certain configurations.  Let
@@ -685,7 +600,7 @@ class MessageChannel : HasResultCodes
     //
     // The queue can only match this configuration
     //
-    //  A<* (S< | C< | R< (?{mStack.size() == 1} A<* (S< | C<)))
+    //  A<* (S< | C< | R< (?{mInterruptStack.size() == 1} A<* (S< | C<)))
     //
     // The other side can send as many async messages |A<*| as it wants before
     // sending us a blocking message.
@@ -700,7 +615,7 @@ class MessageChannel : HasResultCodes
     // |mRemoteStackDepth|, and races don't matter to the queue.)
     //
     // Final case, the other side replied to our most recent out-call |R<|.
-    // If that was the *only* out-call on our stack, |?{mStack.size() == 1}|,
+    // If that was the *only* out-call on our stack, |?{mInterruptStack.size() == 1}|,
     // then other side "finished with us," and went back to its own business.
     // That business might have included sending any number of async message
     // |A<*| until sending a blocking message |(S< | C<)|.  If we had more than
@@ -725,7 +640,7 @@ class MessageChannel : HasResultCodes
     //
     // Then when processing an in-call |c|, it must be true that
     //
-    //   mStack.size() == c.remoteDepth
+    //   mInterruptStack.size() == c.remoteDepth
     //
     // I.e., my depth is actually the same as what the other side thought it
     // was when it sent in-call |c|.  If this fails to hold, we have detected
