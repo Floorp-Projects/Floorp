@@ -61,7 +61,10 @@ var Child = Class({
             stream.write(data);
           }
         },
-        done: function (result) {
+        done: function (result, error) {
+          if (error)
+            return handleError(error);
+
           // Only emit if child is not killed; otherwise,
           // the `kill` method will handle this
           if (!child.killed) {
@@ -170,7 +173,7 @@ function exec (cmd, ...args) {
 
   if (isWindows) {
     file = 'C:\\Windows\\System32\\cmd.exe';
-    cmdArgs = ['/s', '/c', (cmd || '').split(' ')];
+    cmdArgs = ['/S/C', cmd || ''];
   }
   else {
     file = '/bin/sh';
