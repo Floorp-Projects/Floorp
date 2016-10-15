@@ -16,7 +16,10 @@ function isFrameSelected(dbg, index, title) {
 }
 
 add_task(function* () {
-  const dbg = yield initDebugger("doc-script-switching.html");
+  const dbg = yield initDebugger(
+    "doc-script-switching.html",
+    "script-switching-01.js"
+  );
 
   toggleCallStack(dbg);
 

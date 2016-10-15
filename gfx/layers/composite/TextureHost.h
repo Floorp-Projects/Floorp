@@ -421,8 +421,6 @@ public:
    */
   virtual gfx::SurfaceFormat GetReadFormat() const { return GetFormat(); }
 
-  virtual YUVColorSpace GetYUVColorSpace() const { return YUVColorSpace::UNKNOWN; }
-
   /**
    * Called during the transaction. The TextureSource may or may not be composited.
    *
@@ -702,8 +700,6 @@ public:
    * GetFormat will be RGB32 (even though mFormat is SurfaceFormat::YUV).
    */
   virtual gfx::SurfaceFormat GetFormat() const override;
-
-  virtual YUVColorSpace GetYUVColorSpace() const override;
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
