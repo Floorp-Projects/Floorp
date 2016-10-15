@@ -7,6 +7,7 @@
 import json
 import os
 import signal
+import subprocess
 
 import which
 from mozprocess import ProcessHandler
@@ -14,12 +15,21 @@ from mozprocess import ProcessHandler
 from mozlint import result
 
 
+here = os.path.abspath(os.path.dirname(__file__))
+FLAKE8_REQUIREMENTS_PATH = os.path.join(here, 'flake8', 'flake8_requirements.txt')
+
 FLAKE8_NOT_FOUND = """
 Could not find flake8! Install flake8 and try again.
 
-    $ pip install flake8
-""".strip()
+    $ pip install -U --require-hashes -r {}
+""".strip().format(FLAKE8_REQUIREMENTS_PATH)
 
+
+FLAKE8_INSTALL_ERROR = """
+Unable to install correct version of flake8
+Try to install it manually with:
+    $ pip install -U --require-hashes -r {}
+""".strip().format(FLAKE8_REQUIREMENTS_PATH)
 
 LINE_OFFSETS = {
     # continuation line under-indented for hanging indent
@@ -83,17 +93,54 @@ def run_process(cmdargs):
         proc.kill()
 
 
-def lint(files, **lintargs):
+def get_flake8_binary():
+    """
+    Returns the path of the first flake8 binary available
+    if not found returns None
+    """
     binary = os.environ.get('FLAKE8')
-    if not binary:
-        try:
-            binary = which.which('flake8')
-        except which.WhichError:
-            pass
+    if binary:
+        return binary
 
-    if not binary:
-        print(FLAKE8_NOT_FOUND)
-        return []
+    try:
+        return which.which('flake8')
+    except which.WhichError:
+        return None
+
+
+def _run_pip(*args):
+    """
+    Helper function that runs pip with subprocess
+    """
+    try:
+        subprocess.check_output(['pip'] + list(args),
+                                      stderr=subprocess.STDOUT)
+        return True
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        return False
+
+
+def reinstall_flake8():
+    """
+    Try to install flake8 at the target version, returns True on success
+    otherwise prints the otuput of the pip command and returns False
+    """
+    if _run_pip('install', '-U',
+                '--require-hashes', '-r',
+                FLAKE8_REQUIREMENTS_PATH):
+        return True
+
+    return False
+
+
+def lint(files, **lintargs):
+
+    if not reinstall_flake8():
+        print(FLAKE8_INSTALL_ERROR)
+        return 1
+
+    binary = get_flake8_binary()
 
     cmdargs = [
         binary,
@@ -118,7 +165,6 @@ def lint(files, **lintargs):
     exclude = lintargs.get('exclude')
     if exclude:
         cmdargs += ['--exclude', ','.join(lintargs['exclude'])]
-
 
     if no_config:
         run_process(cmdargs+no_config)
