@@ -1,0 +1,19 @@
+[package]
+name = "gkrust-shared"
+version = "0.1.0"
+authors = ["nobody@mozilla.org"]
+license = "MPL-2.0"
+description = "Shared Rust code for libxul"
+
+[dependencies]
+mp4parse_capi = { path = "../../../../media/libstagefright/binding/mp4parse_capi" }
+nsstring = { path = "../../../../xpcom/rust/nsstring" }
+
+[lib]
+path = "lib.rs"
+test = false
+doctest = false
+bench = false
+doc = false
+plugin = false
+harness = false

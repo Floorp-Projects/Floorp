@@ -1,5 +1,5 @@
 [package]
-name = "random-crate"
+name = "rust1"
 version = "0.1.0"
 authors = [
   "Nobody <nobody@mozilla.org>",
@@ -7,6 +7,9 @@ authors = [
 
 [lib]
 crate-type = ["staticlib"]
+
+[profile.dev]
+panic = "abort"
 
 [profile.release]
 panic = "abort"
