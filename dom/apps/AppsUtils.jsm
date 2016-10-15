@@ -53,15 +53,6 @@ mozIApplication.prototype = {
     return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
   },
 
-  hasWidgetPage: function(aPageURL) {
-    let uri = Services.io.newURI(aPageURL, null, null);
-    let filepath = AppsUtils.getFilePath(uri.path);
-    let eliminatedUri = Services.io.newURI(uri.prePath + filepath, null, null);
-    let equalCriterion = aUrl => Services.io.newURI(aUrl, null, null)
-                                            .equals(eliminatedUri);
-    return this.widgetPages.find(equalCriterion) !== undefined;
-  },
-
   get principal() {
     if (this._principal) {
       return this._principal;
@@ -122,7 +113,6 @@ function _setAppProperties(aObj, aApp) {
   aObj.storeId = aApp.storeId || "";
   aObj.storeVersion = aApp.storeVersion || 0;
   aObj.role = aApp.role || "";
-  aObj.widgetPages = aApp.widgetPages || [];
   aObj.kind = aApp.kind;
   aObj.enabled = aApp.enabled !== undefined ? aApp.enabled : true;
   aObj.sideloaded = aApp.sideloaded;
@@ -852,10 +842,6 @@ ManifestHelper.prototype = {
 
   get package_path() {
     return this._localeProp("package_path");
-  },
-
-  get widgetPages() {
-    return this._localeProp("widgetPages");
   },
 
   get size() {

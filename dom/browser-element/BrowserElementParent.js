@@ -319,9 +319,6 @@ BrowserElementParent.prototype = {
 
   _setupMessageListener: function() {
     this._mm = this._frameLoader.messageManager;
-    this._isWidget = this._frameLoader
-                         .QueryInterface(Ci.nsIFrameLoader)
-                         .ownerIsWidget;
     this._mm.addMessageListener('browser-element-api:call', this);
     this._mm.loadFrameScript("chrome://global/content/extensions.js", true);
   },
@@ -389,7 +386,7 @@ BrowserElementParent.prototype = {
 
     if (aMsg.data.msg_name in mmCalls) {
       return mmCalls[aMsg.data.msg_name].apply(this, arguments);
-    } else if (!this._isWidget && aMsg.data.msg_name in mmSecuritySensitiveCalls) {
+    } else if (aMsg.data.msg_name in mmSecuritySensitiveCalls) {
       return mmSecuritySensitiveCalls[aMsg.data.msg_name].apply(this, arguments);
     }
   },
@@ -428,10 +425,8 @@ BrowserElementParent.prototype = {
       }
     };
 
-    // 1. We don't handle password-only prompts.
-    // 2. We don't handle for widget case because of security concern.
-    if (authDetail.isOnlyPassword ||
-        this._frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerIsWidget) {
+    // We don't handle password-only prompts.
+    if (authDetail.isOnlyPassword) {
       cancelCallback();
       return;
     }
