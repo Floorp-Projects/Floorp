@@ -480,8 +480,6 @@ EXTRA_JS_MODULES.commonjs.sdk.system += [
 
 EXTRA_JS_MODULES.commonjs.sdk.system.child_process += [
     'source/lib/sdk/system/child_process/subprocess.js',
-    'source/lib/sdk/system/child_process/subprocess_worker_unix.js',
-    'source/lib/sdk/system/child_process/subprocess_worker_win.js',
 ]
 
 EXTRA_JS_MODULES.commonjs.sdk.tab += [

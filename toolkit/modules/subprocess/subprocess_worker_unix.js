@@ -138,18 +138,22 @@ class InputPipe extends Pipe {
     return buffer;
   }
 
-
   /**
    * Called when one of the IO operations matching the `pollEvents` mask may be
    * performed without blocking.
+   *
+   * @returns {boolean}
+   *        True if any data was successfully read.
    */
   onReady() {
+    let result = false;
     let reads = this.pending;
     while (reads.length) {
       let {resolve, length} = reads[0];
 
       let buffer = this.readBuffer(length);
       if (buffer) {
+        result = true;
         this.shiftPending();
         resolve(buffer);
       } else {
@@ -160,6 +164,7 @@ class InputPipe extends Pipe {
     if (reads.length == 0) {
       io.updatePollFds();
     }
+    return result;
   }
 }
 
@@ -567,10 +572,16 @@ io = {
 
         let handler = handlers[i];
         try {
+          let success = false;
           if (pollfd.revents & handler.pollEvents) {
-            handler.onReady();
+            success = handler.onReady();
           }
-          if (pollfd.revents & (LIBC.POLLERR | LIBC.POLLHUP | LIBC.POLLNVAL)) {
+          // Only call the error handler in this iteration if we didn't also
+          // have a success. This is necessary because Linux systems set POLLHUP
+          // on a pipe when it's closed but there's still buffered data to be
+          // read, and Darwin sets POLLIN and POLLHUP on a closed pipe, even
+          // when there's no data to be read.
+          if (!success && (pollfd.revents & (LIBC.POLLERR | LIBC.POLLHUP | LIBC.POLLNVAL))) {
             handler.onError();
           }
         } catch (e) {

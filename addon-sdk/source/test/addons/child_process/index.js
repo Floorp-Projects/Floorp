@@ -22,7 +22,7 @@ if (app.is("Firefox")) {
     exec(isWindows ? "DIR /A-D" : "ls -al", {
       cwd: PROFILE_DIR
     }, (err, stdout, stderr) => {
-      assert.ok(!err, "no errors");
+      assert.equal(err, null, "no errors");
       assert.equal(stderr, "", "stderr is empty");
       assert.ok(/extensions\.ini/.test(stdout), "stdout output of `ls -al` finds files");
 
