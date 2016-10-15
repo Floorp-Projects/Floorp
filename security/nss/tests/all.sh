@@ -295,32 +295,6 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 fi
 
 # NOTE:
-# Since in make at the top level, modutil is the last file
-# created, we check for modutil to know whether the build
-# is complete. If a new file is created after that, the
-# following test for modutil should check for that instead.
-# Exception: when building softoken only, shlibsign is the
-# last file created.
-if [ "${NSS_BUILD_SOFTOKEN_ONLY}" = "1" ]; then
-  LAST_FILE_BUILT=shlibsign
-else
-  LAST_FILE_BUILT=modutil
-fi
-
-if [ ! -f ${DIST}/${OBJDIR}/bin/${LAST_FILE_BUILT}${PROG_SUFFIX} ]; then
-  if [ "${NSS_BUILD_UTIL_ONLY}" = "1" ]; then
-    # Currently no tests are run or built when building util only.
-    # This may change in the future, atob and bota are
-    # possible candidates.
-    echo "No tests were built"
-  else
-    echo "Build Incomplete. Aborting test." >> ${LOGFILE}
-    html_head "Testing Initialization"
-    Exit "Checking for build"
-  fi
-fi
-
-# NOTE:
 # Lists of enabled tests and other settings are stored to ${ENV_BACKUP}
 # file and are are restored after every test cycle.
 
