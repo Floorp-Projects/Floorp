@@ -440,7 +440,12 @@ class Process extends BaseProcess {
   spawn(options) {
     let {command, arguments: args} = options;
 
-    args = args.map(arg => this.quoteString(arg));
+    if (/\\cmd\.exe$/i.test(command) && args.length == 3 && /^(\/S)?\/C$/i.test(args[1])) {
+      // cmd.exe is insane and requires special treatment.
+      args = [this.quoteString(args[0]), "/S/C", `"${args[2]}"`];
+    } else {
+      args = args.map(arg => this.quoteString(arg));
+    }
 
     let envp = this.stringList(options.environment);
 
