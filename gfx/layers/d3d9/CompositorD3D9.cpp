@@ -16,7 +16,6 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "gfxPrefs.h"
 #include "gfxCrashReporterUtils.h"
-#include "gfxUtils.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "D3D9SurfaceImage.h"
@@ -415,10 +414,6 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
         // because of unsupported dimensions (we don't tile YCbCr textures).
         return;
       }
-
-
-      float* yuvToRgb = gfxUtils::Get4x3YuvColorMatrix(ycbcrEffect->mYUVColorSpace);
-      d3d9Device->SetPixelShaderConstantF(CBmYuvColorMatrix, yuvToRgb, 3);
 
       TextureSourceD3D9* sourceY  = source->GetSubSource(Y)->AsSourceD3D9();
       TextureSourceD3D9* sourceCb = source->GetSubSource(Cb)->AsSourceD3D9();

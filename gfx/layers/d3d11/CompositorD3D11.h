@@ -35,7 +35,6 @@ struct PixelShaderConstants
   float layerColor[4];
   float layerOpacity[4];
   int blendConfig[4];
-  float yuvColorMatrix[3][4];
 };
 
 struct DeviceAttachmentsD3D11;
