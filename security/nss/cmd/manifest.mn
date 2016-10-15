@@ -23,7 +23,7 @@ ifndef NSS_BUILD_UTIL_ONLY
 SOFTOKEN_SRCDIRS = \
  $(BLTEST_SRCDIR) \
  $(ECPERF_SRCDIR) \
- $(ECTEST_SRCDIR) \
+ $(FREEBL_ECTEST_SRCDIR) \
  $(FIPSTEST_SRCDIR)  \
  $(LOWHASHTEST_SRCDIR)  \
  $(SHLIBSIGN_SRCDIR) \
@@ -56,6 +56,7 @@ NSS_SRCDIRS = \
  p7sign  \
  p7verify  \
  pk12util \
+ pk11ectest \
  pk11gcmtest \
  pk11mode \
  pk1sign  \

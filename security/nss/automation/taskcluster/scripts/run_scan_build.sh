@@ -3,10 +3,6 @@
 source $(dirname $0)/tools.sh
 
 if [ $(id -u) = 0 ]; then
-
-    # Set compiler.
-    switch_compilers
-
     # Drop privileges by re-running this script.
     exec su worker $0 $@
 fi
@@ -35,7 +31,7 @@ for i in "${!scan[@]}"; do
 done
 
 # run scan-build (only building affected directories)
-scan-build -o /home/worker/artifacts make nss_build_all && cd ..
+scan-build -o /home/worker/artifacts --use-cc=$(CC) --use-c++=$(CCC) make nss_build_all && cd ..
 
 # print errors we found
 set +v +x

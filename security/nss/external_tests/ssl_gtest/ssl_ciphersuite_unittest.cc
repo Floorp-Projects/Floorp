@@ -294,8 +294,7 @@ TEST_P(TlsCipherSuiteTest, WriteLimit) {
                          TlsConnectTestBase::kTls##versions, k##name##Ciphers, \
                          groups, sigalgs));
 
-static const SSLNamedGroup kDummyNamedGroupParamsArr[] = {
-    static_cast<SSLNamedGroup>(0)};
+static const SSLNamedGroup kDummyNamedGroupParamsArr[] = {ssl_grp_none};
 static const auto kDummyNamedGroupParams =
     ::testing::ValuesIn(kDummyNamedGroupParamsArr);
 static const TlsSignatureScheme kDummySignatureSchemesParamsArr[] = {
@@ -404,9 +403,9 @@ class SecurityStatusTest
       public ::testing::WithParamInterface<SecStatusParams> {
  public:
   SecurityStatusTest()
-      : TlsCipherSuiteTestBase(
-            "TLS", GetParam().version, GetParam().cipher_suite,
-            static_cast<SSLNamedGroup>(0), kTlsSignatureNone) {}
+      : TlsCipherSuiteTestBase("TLS", GetParam().version,
+                               GetParam().cipher_suite, ssl_grp_none,
+                               kTlsSignatureNone) {}
 };
 
 // SSL_SecurityStatus produces fairly useless output when compared to

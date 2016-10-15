@@ -15,9 +15,6 @@
 
 SECStatus SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd);
 
-PRUint32 SSLInt_DetermineKEABits(PRUint16 serverKeyBits,
-                                 SSLAuthType authAlgorithm,
-                                 PRUint32 symKeyBits);
 SECStatus SSLInt_UpdateSSLv2ClientRandom(PRFileDesc *fd, uint8_t *rnd,
                                          size_t rnd_len, uint8_t *msg,
                                          size_t msg_len);
