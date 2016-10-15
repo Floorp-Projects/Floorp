@@ -13,22 +13,13 @@ interface nsITabParent;
 interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
 {
   /**
-   * Gets whether this frame really is a browser or app frame.
+   * Gets whether this frame really is a browser frame.
    *
    * In order to really be a browser frame, this frame's
    * nsIDOMMozBrowserFrame::mozbrowser attribute must be true, and the frame
    * may have to pass various security checks.
    */
-  [infallible] readonly attribute boolean reallyIsBrowserOrApp;
-
-  /**
-   * Gets whether this frame really is an app frame.
-   *
-   * In order to really be an app frame, this frame must really be a browser
-   * frame (this requirement will go away eventually), and  the frame's mozapp
-   * attribute must point to the manifest of a valid app.
-   */
-  [infallible] readonly attribute boolean reallyIsApp;
+  [infallible] readonly attribute boolean reallyIsBrowser;
 
   /**
    * Gets whether this frame is an isolated frame.
@@ -43,14 +34,6 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
    * browser permission (or equivalent access).
    */
   [infallible] readonly attribute boolean isolated;
-
-  /**
-   * Gets this frame's app manifest URL, if the frame really is an app frame.
-   * Otherwise, returns the empty string.
-   *
-   * This method is guaranteed not to fail.
-   */
-  readonly attribute AString appManifestURL;
 
   /**
    * Normally, a frame tries to create its frame loader when its src is

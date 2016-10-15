@@ -342,9 +342,9 @@ this.AccessFu = { // jshint ignore:line
       case 'remote-browser-shown':
       case 'inprocess-browser-shown':
       {
-        // Ignore notifications that aren't from a BrowserOrApp
+        // Ignore notifications that aren't from a Browser
         let frameLoader = aSubject.QueryInterface(Ci.nsIFrameLoader);
-        if (!frameLoader.ownerIsMozBrowserOrAppFrame) {
+        if (!frameLoader.ownerIsMozBrowserFrame) {
           return;
         }
         this._handleMessageManager(frameLoader.messageManager);
