@@ -8,7 +8,6 @@
 
 #include "GLContext.h"                  // for fast inlines of glUniform*
 #include "gfxTypes.h"
-#include "ImageTypes.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Pair.h"               // for Pair
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -82,7 +81,6 @@ public:
     SSEdges,
     ViewportSize,
     VisibleCenter,
-    YuvColorMatrix,
 
     KnownUniformCount
   };
@@ -148,7 +146,6 @@ public:
     case 2:
     case 3:
     case 4:
-    case 9:
     case 16:
       if (memcmp(mValue.f16v, fp, sizeof(float) * cnt) != 0) {
         memcpy(mValue.f16v, fp, sizeof(float) * cnt);
@@ -157,7 +154,7 @@ public:
       return false;
     }
 
-    NS_NOTREACHED("cnt must be 1 2 3 4 9 or 16");
+    NS_NOTREACHED("cnt must be 1 2 3 4 or 16");
     return false;
   }
 
@@ -479,8 +476,6 @@ public:
     SetUniform(KnownUniform::CbCrTexCoordMultiplier, 2, f);
   }
 
-  void SetYUVColorSpace(YUVColorSpace aYUVColorSpace);
-
   // Set whether we want the component alpha shader to return the color
   // vector (pass 1, false) or the alpha vector (pass2, true). With support
   // for multiple render targets we wouldn't need two passes here.
@@ -597,16 +592,6 @@ protected:
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateUniform(16, aFloatValues)) {
       mGL->fUniformMatrix4fv(ku.mLocation, 1, false, ku.mValue.f16v);
-    }
-  }
-
-  void SetMatrix3fvUniform(KnownUniform::KnownUniformName aKnownUniform, const float *aFloatValues) {
-    ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
-
-    KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
-    if (ku.UpdateUniform(9, aFloatValues)) {
-      mGL->fUniformMatrix3fv(ku.mLocation, 1, false, ku.mValue.f16v);
     }
   }
 
