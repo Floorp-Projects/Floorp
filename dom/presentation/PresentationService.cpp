@@ -8,9 +8,7 @@
 
 #include "ipc/PresentationIPCService.h"
 #include "mozilla/Services.h"
-#include "mozIApplication.h"
 #include "nsGlobalWindow.h"
-#include "nsIAppsService.h"
 #include "nsIMutableArray.h"
 #include "nsIObserverService.h"
 #include "nsIPresentationControlChannel.h"
@@ -445,28 +443,6 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
     return rv;
   }
 
-#ifdef MOZ_WIDGET_GONK
-  // Verify the existence of the app if necessary.
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), url);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Disconnect(NS_ERROR_DOM_BAD_URI);
-    return rv;
-  }
-
-  bool isApp;
-  rv = uri->SchemeIs("app", &isApp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Disconnect(rv);
-    return rv;
-  }
-
-  if (NS_WARN_IF(isApp && !IsAppInstalled(uri))) {
-    ctrlChannel->Disconnect(NS_ERROR_DOM_NOT_FOUND_ERR);
-    return NS_OK;
-  }
-#endif
-
   // Create or reuse session info.
   RefPtr<PresentationSessionInfo> info =
     GetSessionInfo(sessionId, nsIPresentationService::ROLE_RECEIVER);
@@ -630,33 +606,6 @@ PresentationService::NotifyAvailableChange(bool aIsAvailable)
     Unused <<
       NS_WARN_IF(NS_FAILED(listener->NotifyAvailableChange(aIsAvailable)));
   }
-}
-
-bool
-PresentationService::IsAppInstalled(nsIURI* aUri)
-{
-  nsAutoCString prePath;
-  nsresult rv = aUri->GetPrePath(prePath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  nsAutoString manifestUrl;
-  AppendUTF8toUTF16(prePath, manifestUrl);
-  manifestUrl.AppendLiteral("/manifest.webapp");
-
-  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-  if (NS_WARN_IF(!appsService)) {
-    return false;
-  }
-
-  nsCOMPtr<mozIApplication> app;
-  appsService->GetAppByManifestURL(manifestUrl, getter_AddRefs(app));
-  if (NS_WARN_IF(!app)) {
-    return false;
-  }
-
-  return true;
 }
 
 NS_IMETHODIMP
