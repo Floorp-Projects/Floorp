@@ -43,7 +43,6 @@ public:
                           const IPCTabContext& aContext,
                           const uint32_t& aChromeFlags,
                           const ContentParentId& aCpID,
-                          const bool& aIsForApp,
                           const bool& aIsForBrowser) override;
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentBridgeParent)
@@ -53,10 +52,6 @@ public:
   virtual ContentParentId ChildID() const override
   {
     return mChildID;
-  }
-  virtual bool IsForApp() const override
-  {
-    return mIsForApp;
   }
   virtual bool IsForBrowser() const override
   {
@@ -74,11 +69,6 @@ protected:
   void SetChildID(ContentParentId aId)
   {
     mChildID = aId;
-  }
-
-  void SetIsForApp(bool aIsForApp)
-  {
-    mIsForApp = aIsForApp;
   }
 
   void SetIsForBrowser(bool aIsForBrowser)
@@ -115,7 +105,6 @@ protected:
                       const IPCTabContext &aContext,
                       const uint32_t& aChromeFlags,
                       const ContentParentId& aCpID,
-                      const bool& aIsForApp,
                       const bool& aIsForBrowser) override;
 
   virtual bool DeallocPBrowserParent(PBrowserParent*) override;
@@ -141,7 +130,6 @@ protected: // members
   RefPtr<ContentBridgeParent> mSelfRef;
   Transport* mTransport; // owned
   ContentParentId mChildID;
-  bool mIsForApp;
   bool mIsForBrowser;
 
 private:

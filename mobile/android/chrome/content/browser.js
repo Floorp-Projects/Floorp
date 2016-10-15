@@ -3416,15 +3416,6 @@ Tab.prototype = {
     BrowserApp.deck.selectedPanel = selectedPanel;
 
     let attrs = {};
-    if (BrowserApp.manifestUrl) {
-      let appsService = Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
-      let manifest = appsService.getAppByManifestURL(BrowserApp.manifestUrl);
-      if (manifest) {
-        let app = manifest.QueryInterface(Ci.mozIApplication);
-        this.browser.docShell.frameType = Ci.nsIDocShell.FRAME_TYPE_APP;
-        attrs['appId'] = app.localId;
-      }
-    }
 
     // Must be called after appendChild so the docShell has been created.
     this.setActive(false);

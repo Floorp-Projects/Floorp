@@ -76,7 +76,6 @@ this.SafeMode = {
     debug("Registry is ready, loading " + url);
     let frame = document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
     frame.setAttribute("mozbrowser", "true");
-    frame.setAttribute("mozapp", shell.manifestURL);
     frame.setAttribute("id", "systemapp"); // To keep screen.js happy.
     let contentBrowser = document.body.appendChild(frame);
 

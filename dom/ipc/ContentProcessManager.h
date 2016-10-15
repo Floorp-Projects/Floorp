@@ -143,15 +143,6 @@ public:
   GetTopLevelTabParentByProcessAndTabId(const ContentParentId& aChildCpId,
                                         const TabId& aChildTabId);
 
-  /**
-   * Return appId by given TabId and ContentParentId.
-   * It will return nsIScriptSecurityManager::NO_APP_ID
-   * if the given tab is not an app.
-   */
-  uint32_t
-  GetAppIdByProcessAndTabId(const ContentParentId& aChildCpId,
-                            const TabId& aChildTabId);
-
 private:
   static StaticAutoPtr<ContentProcessManager> sSingleton;
   TabId mUniqueId;

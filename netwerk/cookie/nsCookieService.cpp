@@ -51,7 +51,6 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Telemetry.h"
 #include "nsIAppsService.h"
-#include "mozIApplication.h"
 #include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIConsoleService.h"
 #include "nsVariant.h"
