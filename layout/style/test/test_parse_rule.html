@@ -125,10 +125,13 @@ base + "/* #a {color: red} */",
 // CSS2.1 section 4.3.6
 base + "#a {color: rgb(255, 0, 0%)}",
 base + "#a {color: rgb(100%, 0, 0)}",
-base + "#a {color: rgb(255.0, 0, 0)}",
 "#a {color: rgb(0, 128, 0)}",
 "#a {color: rgb(0%, 50%, 0%)}",
 "#a {color: rgb(0%, 49.999999999999%, 0%)}",
+
+// CSS-Color-4
+// https://drafts.csswg.org/css-color/#rgb-functions
+"#a {color: rgb(0, 128.0, 0)}",
 ], prop: "color", pseudo: ""
 },
 
