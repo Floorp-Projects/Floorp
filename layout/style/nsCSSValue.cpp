@@ -342,6 +342,23 @@ nsCSSValue::GetAngleValueInRadians() const
   }
 }
 
+double
+nsCSSValue::GetAngleValueInDegrees() const
+{
+  double angle = GetFloatValue();
+
+  switch (GetUnit()) {
+    case eCSSUnit_Degree: return angle;
+    case eCSSUnit_Grad:   return angle * 0.9; // grad / 400 * 360
+    case eCSSUnit_Radian: return angle * 180.0 / M_PI;  // rad / 2pi * 360
+    case eCSSUnit_Turn:   return angle * 360.0;
+
+    default:
+      MOZ_ASSERT(false, "unrecognized angular unit");
+      return 0.0;
+  }
+}
+
 imgRequestProxy* nsCSSValue::GetImageValue(nsIDocument* aDocument) const
 {
   MOZ_ASSERT(mUnit == eCSSUnit_Image, "not an Image value");
