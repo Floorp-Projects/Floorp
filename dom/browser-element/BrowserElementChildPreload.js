@@ -70,7 +70,6 @@ var OBSERVED_EVENTS = [
   'xpcom-shutdown',
   'audio-playback',
   'activity-done',
-  'invalid-widget',
   'will-launch-app'
 ];
 
@@ -396,9 +395,6 @@ BrowserElementChild.prototype = {
         break;
       case 'xpcom-shutdown':
         this._shuttingDown = true;
-        break;
-      case 'invalid-widget':
-        sendAsyncMsg('error', { type: 'invalid-widget' });
         break;
       case 'will-launch-app':
         // If the launcher is not visible, let's ignore the message.
