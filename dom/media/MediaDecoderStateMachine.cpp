@@ -1512,30 +1512,25 @@ MediaDecoderStateMachine::
 SeekingState::SeekCompleted()
 {
   int64_t seekTime = mSeekTask->GetSeekTarget().GetTime().ToMicroseconds();
-  int64_t newCurrentTime = seekTime;
+  int64_t newCurrentTime;
 
-  // Setup timestamp state.
-  RefPtr<MediaData> video = mMaster->VideoQueue().PeekFront();
-  if (seekTime == mMaster->Duration().ToMicroseconds()) {
+  // For the accurate seek, we always set the newCurrentTime = seekTime so that
+  // the updated HTMLMediaElement.currentTime will always be the seek target;
+  // we rely on the MediaSink to handles the gap between the newCurrentTime and
+  // the real decoded samples' start time.
+  // For the other seek types, we update the newCurrentTime with the decoded
+  // samples, set it to be the smallest start time of decoded samples.
+  if (mSeekTask->GetSeekTarget().IsAccurate()) {
     newCurrentTime = seekTime;
-  } else if (mMaster->HasAudio()) {
-    RefPtr<MediaData> audio = mMaster->AudioQueue().PeekFront();
-    // Though we adjust the newCurrentTime in audio-based, and supplemented
-    // by video. For better UX, should NOT bind the slide position to
-    // the first audio data timestamp directly.
-    // While seeking to a position where there's only either audio or video, or
-    // seeking to a position lies before audio or video, we need to check if
-    // seekTime is bounded in suitable duration. See Bug 1112438.
-    int64_t audioStart = audio ? audio->mTime : seekTime;
-    // We only pin the seek time to the video start time if the video frame
-    // contains the seek time.
-    if (video && video->mTime <= seekTime && video->GetEndTime() > seekTime) {
-      newCurrentTime = std::min(audioStart, video->mTime);
-    } else {
-      newCurrentTime = audioStart;
-    }
   } else {
-    newCurrentTime = video ? video->mTime : seekTime;
+    RefPtr<MediaData> audio = mMaster->AudioQueue().PeekFront();
+    RefPtr<MediaData> video = mMaster->VideoQueue().PeekFront();
+    const int64_t audioStart = audio ? audio->mTime : INT64_MAX;
+    const int64_t videoStart = video ? video->mTime : INT64_MAX;
+    newCurrentTime = std::min(audioStart, videoStart);
+    if (newCurrentTime == INT64_MAX) {
+      newCurrentTime = seekTime;
+    }
   }
 
   // Change state to DECODING or COMPLETED now.
@@ -1575,7 +1570,7 @@ SeekingState::SeekCompleted()
   // Try to decode another frame to detect if we're at the end...
   SLOG("Seek completed, mCurrentPosition=%lld", mMaster->mCurrentPosition.Ref());
 
-  if (video) {
+  if (mMaster->VideoQueue().PeekFront()) {
     mMaster->mMediaSink->Redraw(Info().mVideo);
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
