@@ -5,8 +5,8 @@
 
 #include "nsHTMLFormatConverter.h"
 
+#include "nsArray.h"
 #include "nsCRT.h"
-#include "nsISupportsArray.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
@@ -39,15 +39,15 @@ NS_IMPL_ISUPPORTS(nsHTMLFormatConverter, nsIFormatConverter)
 // access them easily via XPConnect.
 //
 NS_IMETHODIMP
-nsHTMLFormatConverter::GetInputDataFlavors(nsISupportsArray **_retval)
+nsHTMLFormatConverter::GetInputDataFlavors(nsIArray **_retval)
 {
   if ( !_retval )
     return NS_ERROR_INVALID_ARG;
   
-  nsresult rv = NS_NewISupportsArray ( _retval );  // addrefs for us
-  if ( NS_SUCCEEDED(rv) )
-    rv = AddFlavorToList ( *_retval, kHTMLMime );
+  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
+  nsresult rv = AddFlavorToList ( array, kHTMLMime );
   
+  array.forget(_retval);
   return rv;
   
 } // GetInputDataFlavors
@@ -64,28 +64,20 @@ nsHTMLFormatConverter::GetInputDataFlavors(nsISupportsArray **_retval)
 // access them easily via XPConnect.
 //
 NS_IMETHODIMP
-nsHTMLFormatConverter::GetOutputDataFlavors(nsISupportsArray **_retval)
+nsHTMLFormatConverter::GetOutputDataFlavors(nsIArray **_retval)
 {
   if ( !_retval )
     return NS_ERROR_INVALID_ARG;
   
-  nsresult rv = NS_NewISupportsArray ( _retval );  // addrefs for us
-  if ( NS_SUCCEEDED(rv) ) {
-    rv = AddFlavorToList ( *_retval, kHTMLMime );
-    if ( NS_FAILED(rv) )
-      return rv;
-#if NOT_NOW
-// pinkerton
-// no one uses this flavor right now, so it's just slowing things down. If anyone cares I
-// can put it back in.
-    rv = AddFlavorToList ( *_retval, kAOLMailMime );
-    if ( NS_FAILED(rv) )
-      return rv;
-#endif
-    rv = AddFlavorToList ( *_retval, kUnicodeMime );
-    if ( NS_FAILED(rv) )
-      return rv;
-  }
+  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
+  nsresult rv = AddFlavorToList ( array, kHTMLMime );
+  if ( NS_FAILED(rv) )
+    return rv;
+  rv = AddFlavorToList ( array, kUnicodeMime );
+  if ( NS_FAILED(rv) )
+    return rv;
+
+  array.forget(_retval);
   return rv;
 
 } // GetOutputDataFlavors
@@ -98,7 +90,7 @@ nsHTMLFormatConverter::GetOutputDataFlavors(nsISupportsArray **_retval)
 // to a list
 //
 nsresult
-nsHTMLFormatConverter :: AddFlavorToList ( nsISupportsArray* inList, const char* inFlavor )
+nsHTMLFormatConverter :: AddFlavorToList ( nsCOMPtr<nsIMutableArray>& inList, const char* inFlavor )
 {
   nsresult rv;
   
@@ -109,7 +101,7 @@ nsHTMLFormatConverter :: AddFlavorToList ( nsISupportsArray* inList, const char*
     // add to list as an nsISupports so the correct interface gets the addref
     // in AppendElement()
     nsCOMPtr<nsISupports> genericFlavor ( do_QueryInterface(dataFlavor) );
-    inList->AppendElement ( genericFlavor);
+    inList->AppendElement ( genericFlavor, /*weak =*/ false);
   }
   return rv;
 

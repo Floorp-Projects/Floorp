@@ -8,7 +8,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsITransferable.h"
-#include "nsISupportsArray.h"
 #include "nsSize.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
