@@ -77,6 +77,36 @@ AccurateSeekTask::NeedToResetMDSM() const
   return true;
 }
 
+int64_t
+AccurateSeekTask::CalculateNewCurrentTime() const
+{
+  AssertOwnerThread();
+
+  const int64_t seekTime = mTarget.GetTime().ToMicroseconds();
+
+  // For the accurate seek, we always set the newCurrentTime = seekTime so that
+  // the updated HTMLMediaElement.currentTime will always be the seek target;
+  // we rely on the MediaSink to handles the gap between the newCurrentTime and
+  // the real decoded samples' start time.
+  if (mTarget.IsAccurate()) {
+    return seekTime;
+  }
+
+  // For the fast seek, we update the newCurrentTime with the decoded audio and
+  // video samples, set it to be the one which is closet to the seekTime.
+  if (mTarget.IsFast()) {
+    MOZ_ASSERT(mSeekedAudioData || mSeekedVideoData);
+    const int64_t audioStart = mSeekedAudioData ? mSeekedAudioData->mTime : INT64_MAX;
+    const int64_t videoStart = mSeekedVideoData ? mSeekedVideoData->mTime : INT64_MAX;
+    const int64_t audioGap = std::abs(audioStart - seekTime);
+    const int64_t videoGap = std::abs(videoStart - seekTime);
+    return audioGap <= videoGap ? audioStart : videoStart;
+  }
+
+  MOZ_ASSERT(false, "AccurateSeekTask doesn't handle other seek types.");
+  return 0;
+}
+
 RefPtr<AccurateSeekTask::SeekTaskPromise>
 AccurateSeekTask::Seek(const media::TimeUnit& aDuration)
 {

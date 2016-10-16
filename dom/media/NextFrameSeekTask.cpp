@@ -68,6 +68,16 @@ NextFrameSeekTask::NeedToResetMDSM() const
   return false;
 }
 
+int64_t
+NextFrameSeekTask::CalculateNewCurrentTime() const
+{
+  AssertOwnerThread();
+
+  // The HTMLMediaElement.currentTime should be updated to the seek target
+  // which has been updated to the next frame's time.
+  return mTarget.GetTime().ToMicroseconds();
+}
+
 /*
  * Remove samples from the queue until aCompare() returns false.
  * aCompare A function object with the signature bool(int64_t) which returns
