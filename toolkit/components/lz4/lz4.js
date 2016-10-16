@@ -105,14 +105,16 @@ exports.compressFileContent = compressFileContent;
 function decompressFileContent(array, options = {}) {
   let bytes = SharedAll.normalizeBufferArgs(array, options.bytes || null);
   if (bytes < HEADER_SIZE) {
-    throw new LZError("decompress", "becauseLZNoHeader", "Buffer is too short (no header)");
+    throw new LZError("decompress", "becauseLZNoHeader",
+      `Buffer is too short (no header) - Data: ${ options.path || array }`);
   }
 
   // Read headers
   let expectMagicNumber = new DataView(array.buffer, 0, MAGIC_NUMBER.byteLength);
   for (let i = 0; i < MAGIC_NUMBER.byteLength; ++i) {
     if (expectMagicNumber.getUint8(i) != MAGIC_NUMBER[i]) {
-      throw new LZError("decompress", "becauseLZWrongMagicNumber", "Invalid header (no magic number");
+      throw new LZError("decompress", "becauseLZWrongMagicNumber",
+        `Invalid header (no magic number) - Data: ${ options.path || array }`);
     }
   }
 
@@ -139,7 +141,8 @@ function decompressFileContent(array, options = {}) {
                                       outputBuffer, outputBuffer.byteLength,
                                       decompressedBytes.address());
   if (!success) {
-    throw new LZError("decompress", "becauseLZInvalidContent", "Invalid content:Decompression stopped at " + decompressedBytes.value);
+    throw new LZError("decompress", "becauseLZInvalidContent",
+      `Invalid content: Decompression stopped at ${decompressedBytes.value} - Data: ${ options.path || array }`);
   }
   return new Uint8Array(outputBuffer.buffer, outputBuffer.byteOffset, decompressedBytes.value);
 }
