@@ -141,21 +141,34 @@
 .ruleview-rule-source {
   text-align: end;
   float: right;
+  max-width: 100%;
+
+  /* Force RTL direction to crop the source link at the beginning. */
+  direction: rtl;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
   -moz-user-select: none;
   margin-bottom: 2px;
 }
 
-.ruleview-rule-source > label {
-  cursor: pointer;
+.ruleview-rule-source-label {
+  white-space: nowrap;
   margin: 0;
+  cursor: pointer;
+
+  /* Create an LTR embed to avoid special characters being shifted to the start due to the
+     parent node direction: rtl; */
+  direction: ltr;
+  unicode-bidi: embed
 }
 
 .ruleview-rule-source[unselectable],
-.ruleview-rule-source[unselectable] > label {
+.ruleview-rule-source[unselectable] > .ruleview-rule-source-label {
   cursor: default;
 }
 
-.theme-firebug .ruleview-rule-source label {
+.theme-firebug .ruleview-rule-source-label {
   font-family: var(--proportional-font-family);
   font-weight: bold;
   color: #0000FF;
