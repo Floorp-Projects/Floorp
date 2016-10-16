@@ -11,6 +11,7 @@
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
 
+#include "nsArrayUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDataObj.h"
 #include "nsIClipboardOwner.h"
@@ -157,18 +158,16 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
   dObj->SetTransferable(aTransferable);
 
   // Get the transferable list of data flavors
-  nsCOMPtr<nsISupportsArray> dfList;
+  nsCOMPtr<nsIArray> dfList;
   aTransferable->FlavorsTransferableCanExport(getter_AddRefs(dfList));
 
   // Walk through flavors that contain data and register them
   // into the DataObj as supported flavors
   uint32_t i;
   uint32_t cnt;
-  dfList->Count(&cnt);
+  dfList->GetLength(&cnt);
   for (i=0;i<cnt;i++) {
-    nsCOMPtr<nsISupports> genericFlavor;
-    dfList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-    nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(dfList, i);
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));
@@ -591,7 +590,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 
   // get flavor list that includes all flavors that can be written (including ones 
   // obtained through conversion)
-  nsCOMPtr<nsISupportsArray> flavorList;
+  nsCOMPtr<nsIArray> flavorList;
   res = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
   if ( NS_FAILED(res) )
     return NS_ERROR_FAILURE;
@@ -599,11 +598,9 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
   // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
   uint32_t i;
   uint32_t cnt;
-  flavorList->Count(&cnt);
+  flavorList->GetLength(&cnt);
   for (i=0;i<cnt;i++) {
-    nsCOMPtr<nsISupports> genericFlavor;
-    flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-    nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));

@@ -9,6 +9,7 @@
 #include <shlobj.h>
 
 #include "nsDataObj.h"
+#include "nsArrayUtils.h"
 #include "nsClipboard.h"
 #include "nsReadableUtils.h"
 #include "nsITransferable.h"
@@ -1205,17 +1206,15 @@ bool nsDataObj :: IsFlavourPresent(const char *inFlavour)
   NS_ENSURE_TRUE(mTransferable, false);
   
   // get the list of flavors available in the transferable
-  nsCOMPtr<nsISupportsArray> flavorList;
+  nsCOMPtr<nsIArray> flavorList;
   mTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
   NS_ENSURE_TRUE(flavorList, false);
 
   // try to find requested flavour
   uint32_t cnt;
-  flavorList->Count(&cnt);
+  flavorList->GetLength(&cnt);
   for (uint32_t i = 0; i < cnt; ++i) {
-    nsCOMPtr<nsISupports> genericFlavor;
-    flavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
-    nsCOMPtr<nsISupportsCString> currentFlavor (do_QueryInterface(genericFlavor));
+    nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
     if (currentFlavor) {
       nsAutoCString flavorStr;
       currentFlavor->GetData(flavorStr);

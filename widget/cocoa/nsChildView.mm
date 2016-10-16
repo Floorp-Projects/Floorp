@@ -18,6 +18,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 
+#include "nsArrayUtils.h"
 #include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
@@ -131,7 +132,7 @@ extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
 
 static bool gChildViewMethodsSwizzled = false;
 
-extern nsISupportsArray *gDraggedTransferables;
+extern nsIArray *gDraggedTransferables;
 
 ChildView* ChildViewMouseTracker::sLastMouseEventView = nil;
 NSEvent* ChildViewMouseTracker::sLastMouseMoveEvent = nil;
@@ -5838,14 +5839,12 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     return nil;
 
   uint32_t transferableCount;
-  rv = gDraggedTransferables->Count(&transferableCount);
+  rv = gDraggedTransferables->GetLength(&transferableCount);
   if (NS_FAILED(rv))
     return nil;
 
   for (uint32_t i = 0; i < transferableCount; i++) {
-    nsCOMPtr<nsISupports> genericItem;
-    gDraggedTransferables->GetElementAt(i, getter_AddRefs(genericItem));
-    nsCOMPtr<nsITransferable> item(do_QueryInterface(genericItem));
+    nsCOMPtr<nsITransferable> item = do_QueryElementAt(gDraggedTransferables, i);
     if (!item) {
       NS_ERROR("no transferable");
       return nil;
