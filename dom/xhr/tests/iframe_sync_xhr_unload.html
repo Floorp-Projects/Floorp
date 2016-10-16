@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+  <script type="application/javascript">
+
+function o() {
+ var xhr = new XMLHttpRequest();
+ xhr.open("GET", "sync_xhr_unload.sjs", false);
+ try { xhr.send(); } catch(e) {}
+}
+
+window.addEventListener("beforeunload", o, false);
+window.addEventListener("unload", o, false)
+
+  </script>
+</body>
+</html>
+
