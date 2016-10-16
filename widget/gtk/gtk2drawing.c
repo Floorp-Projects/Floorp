@@ -16,6 +16,7 @@
 #include "prinrval.h"
 
 #include <math.h>
+#include <stdbool.h> // for MOZ_ASSERT_UNREACHABLE
 
 #define XTHICKNESS(style) (style->xthickness)
 #define YTHICKNESS(style) (style->ythickness)
@@ -1157,7 +1158,6 @@ calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
 
     return MOZ_GTK_SUCCESS;
 }
-
 
 static gint
 calculate_arrow_rect(GtkWidget* arrow, GdkRectangle* rect,
@@ -3198,6 +3198,10 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics *metrics)
         GTK_RANGE(gHorizScrollbarWidget)->min_slider_size;
 
     return MOZ_GTK_SUCCESS;
+}
+void
+moz_gtk_get_widget_min_size(WidgetNodeType aGtkWidgetType, int* width, int* height) {
+  MOZ_ASSERT_UNREACHABLE("get_widget_min_size not available for GTK2");
 }
 
 gint

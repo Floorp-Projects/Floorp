@@ -510,6 +510,13 @@ moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
  */
 gboolean moz_gtk_has_scrollbar_buttons(void);
 
+/**
+ * Get minimum widget size as sum of margin, padding, border and min-width,
+ * min-height.
+ */
+void moz_gtk_get_widget_min_size(WidgetNodeType aGtkWidgetType, int* width,
+                                 int* height);
+
 #if (MOZ_WIDGET_GTK == 2)
 #ifdef __cplusplus
 }
