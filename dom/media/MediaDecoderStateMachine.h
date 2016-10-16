@@ -675,14 +675,6 @@ private:
   // True if all video frames are already rendered.
   bool mVideoCompleted = false;
 
-  // Flag whether we notify metadata before decoding the first frame or after.
-  //
-  // Note that the odd semantics here are designed to replicate the current
-  // behavior where we notify the decoder each time we come out of dormant, but
-  // send suppressed event visibility for those cases. This code can probably be
-  // simplified.
-  bool mNotifyMetadataBeforeFirstFrame;
-
   // True if we should not decode/preroll unnecessary samples, unless we're
   // played. "Prerolling" in this context refers to when we decode and
   // buffer decoded samples in advance of when they're needed for playback.
