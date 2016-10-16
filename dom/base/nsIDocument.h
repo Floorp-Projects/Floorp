@@ -37,6 +37,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/StyleSheet.h"
+#include "mozilla/TimeStamp.h"
 #include <bitset>                        // for member
 
 #ifdef MOZILLA_INTERNAL_API
@@ -215,6 +216,33 @@ public:
 #ifdef MOZILLA_INTERNAL_API
   nsIDocument();
 #endif
+
+  // This helper class must be set when we dispatch beforeunload and unload
+  // events in order to avoid unterminate sync XHRs.
+  class MOZ_RAII PageUnloadingEventTimeStamp
+  {
+    nsCOMPtr<nsIDocument> mDocument;
+    bool mSet;
+
+  public:
+    explicit PageUnloadingEventTimeStamp(nsIDocument* aDocument)
+      : mDocument(aDocument)
+      , mSet(false)
+    {
+      MOZ_ASSERT(aDocument);
+      if (mDocument->mPageUnloadingEventTimeStamp.IsNull()) {
+        mDocument->SetPageUnloadingEventTimeStamp();
+        mSet = true;
+      }
+    }
+
+    ~PageUnloadingEventTimeStamp()
+    {
+      if (mSet) {
+        mDocument->CleanUnloadEventsTimeStamp();
+      }
+    }
+  };
 
   /**
    * Let the document know that we're starting to load data into it.
@@ -936,8 +964,39 @@ public:
   nsresult GetOrCreateId(nsAString& aId);
   void SetId(const nsAString& aId);
 
+  mozilla::TimeStamp GetPageUnloadingEventTimeStamp() const
+  {
+    if (!mParentDocument) {
+      return mPageUnloadingEventTimeStamp;
+    }
+
+    mozilla::TimeStamp parentTimeStamp(mParentDocument->GetPageUnloadingEventTimeStamp());
+    if (parentTimeStamp.IsNull()) {
+      return mPageUnloadingEventTimeStamp;
+    }
+
+    if (!mPageUnloadingEventTimeStamp ||
+        parentTimeStamp < mPageUnloadingEventTimeStamp) {
+      return parentTimeStamp;
+    }
+
+    return mPageUnloadingEventTimeStamp;
+  }
+
 protected:
   virtual Element *GetRootElementInternal() const = 0;
+
+  void SetPageUnloadingEventTimeStamp()
+  {
+    MOZ_ASSERT(!mPageUnloadingEventTimeStamp);
+    mPageUnloadingEventTimeStamp = mozilla::TimeStamp::NowLoRes();
+  }
+
+  void CleanUnloadEventsTimeStamp()
+  {
+    MOZ_ASSERT(mPageUnloadingEventTimeStamp);
+    mPageUnloadingEventTimeStamp = mozilla::TimeStamp();
+  }
 
 private:
   class SelectorCacheKey
@@ -3242,6 +3301,8 @@ protected:
 
   // Whether the user has interacted with the document or not:
   bool mUserHasInteracted;
+
+  mozilla::TimeStamp mPageUnloadingEventTimeStamp;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
