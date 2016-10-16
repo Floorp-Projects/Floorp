@@ -2416,13 +2416,6 @@ pref("bidi.texttype", 1);
 // 5 = persiancontextnumeralBidi
 // 6 = persiannumeralBidi
 pref("bidi.numeral", 0);
-// ------------------
-//  Support Mode
-// ------------------
-// 1 = mozillaBidisupport *
-// 2 = OsBidisupport
-// 3 = disableBidisupport
-pref("bidi.support", 1);
 // Whether delete and backspace should immediately delete characters not
 // visually adjacent to the caret, or adjust the visual position of the caret
 // on the first keypress and delete the character on a second keypress
