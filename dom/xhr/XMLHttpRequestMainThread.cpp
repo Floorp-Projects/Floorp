@@ -123,6 +123,7 @@ namespace {
   "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
+#define MAX_SYNC_TIMEOUT_WHEN_UNLOADING 10000 /* 10 secs */
 
 NS_IMPL_ISUPPORTS(nsXHRParseEndListener, nsIDOMEventListener)
 
@@ -2861,7 +2862,13 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
 
     StopProgressEventTimer();
 
-    {
+    SyncTimeoutType syncTimeoutType = MaybeStartSyncTimeoutTimer();
+    if (syncTimeoutType == eErrorOrExpired) {
+      Abort();
+      rv = NS_ERROR_DOM_NETWORK_ERR;
+    }
+
+    if (NS_SUCCEEDED(rv)) {
       nsAutoSyncOperation sync(suspendedDoc);
       nsIThread *thread = NS_GetCurrentThread();
       while (mFlagSyncLooping) {
@@ -2870,6 +2877,13 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
           break;
         }
       }
+
+      // Time expired... We should throw.
+      if (syncTimeoutType == eTimerStarted && !mSyncTimeoutTimer) {
+        rv = NS_ERROR_DOM_NETWORK_ERR;
+      }
+
+      CancelSyncTimeoutTimer();
     }
 
     if (suspendedDoc) {
@@ -3434,6 +3448,11 @@ XMLHttpRequestMainThread::Notify(nsITimer* aTimer)
     return NS_OK;
   }
 
+  if (mSyncTimeoutTimer == aTimer) {
+    HandleSyncTimeoutTimer();
+    return NS_OK;
+  }
+
   // Just in case some JS user wants to QI to nsITimerCallback and play with us...
   NS_WARNING("Unexpected timer!");
   return NS_ERROR_INVALID_POINTER;
@@ -3483,6 +3502,52 @@ XMLHttpRequestMainThread::StartProgressEventTimer()
     mProgressNotifier->Cancel();
     mProgressNotifier->InitWithCallback(this, NS_PROGRESS_EVENT_INTERVAL,
                                         nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
+XMLHttpRequestMainThread::SyncTimeoutType
+XMLHttpRequestMainThread::MaybeStartSyncTimeoutTimer()
+{
+  MOZ_ASSERT(mFlagSynchronous);
+
+  nsIDocument* doc = GetDocumentIfCurrent();
+  if (!doc || !doc->GetPageUnloadingEventTimeStamp()) {
+    return eNoTimerNeeded;
+  }
+
+  // If we are in a beforeunload or a unload event, we must force a timeout.
+  TimeDuration diff = (TimeStamp::NowLoRes() - doc->GetPageUnloadingEventTimeStamp());
+  if (diff.ToMilliseconds() > MAX_SYNC_TIMEOUT_WHEN_UNLOADING) {
+    return eErrorOrExpired;
+  }
+
+  mSyncTimeoutTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  if (!mSyncTimeoutTimer) {
+    return eErrorOrExpired;
+  }
+
+  uint32_t timeout = MAX_SYNC_TIMEOUT_WHEN_UNLOADING - diff.ToMilliseconds();
+  nsresult rv = mSyncTimeoutTimer->InitWithCallback(this, timeout,
+                                                    nsITimer::TYPE_ONE_SHOT);
+  return NS_FAILED(rv) ? eErrorOrExpired : eTimerStarted;
+}
+
+void
+XMLHttpRequestMainThread::HandleSyncTimeoutTimer()
+{
+  MOZ_ASSERT(mSyncTimeoutTimer);
+  MOZ_ASSERT(mFlagSyncLooping);
+
+  CancelSyncTimeoutTimer();
+  Abort();
+}
+
+void
+XMLHttpRequestMainThread::CancelSyncTimeoutTimer()
+{
+  if (mSyncTimeoutTimer) {
+    mSyncTimeoutTimer->Cancel();
+    mSyncTimeoutTimer = nullptr;
   }
 }
 
