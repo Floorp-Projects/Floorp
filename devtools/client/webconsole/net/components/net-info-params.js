@@ -14,14 +14,14 @@ const PropTypes = React.PropTypes;
  * It's essentially a list of name + value pairs.
  */
 var NetInfoParams = React.createClass({
+  displayName: "NetInfoParams",
+
   propTypes: {
     params: PropTypes.arrayOf(PropTypes.shape({
       name: PropTypes.string.isRequired,
       value: PropTypes.string.isRequired
     })).isRequired,
   },
-
-  displayName: "NetInfoParams",
 
   render() {
     let params = this.props.params || [];
@@ -31,9 +31,9 @@ var NetInfoParams = React.createClass({
     });
 
     let rows = [];
-    params.forEach(param => {
+    params.forEach((param, index) => {
       rows.push(
-        DOM.tr({key: param.name},
+        DOM.tr({key: index},
           DOM.td({className: "netInfoParamName"},
             DOM.span({title: param.name}, param.name)
           ),
