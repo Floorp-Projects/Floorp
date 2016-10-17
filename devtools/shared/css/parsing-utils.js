@@ -14,8 +14,6 @@
 
 "use strict";
 
-const {CSS_ANGLEUNIT} = require("devtools/shared/css/properties-db");
-
 const promise = require("promise");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
 const {Task} = require("devtools/shared/task");
@@ -1135,30 +1133,6 @@ function parseSingleValue(isCssPropertyKnown, value) {
   };
 }
 
-/**
- * Convert an angle value to degree.
- *
- * @param {Number} angleValue The angle value.
- * @param {CSS_ANGLEUNIT} angleUnit The angleValue's angle unit.
- * @return {Number} An angle value in degree.
- */
-function getAngleValueInDegrees(angleValue, angleUnit) {
-  switch (angleUnit) {
-    case CSS_ANGLEUNIT.deg:
-      return angleValue;
-    case CSS_ANGLEUNIT.grad:
-      return angleValue * 0.9;
-    case CSS_ANGLEUNIT.rad:
-      return angleValue * 180 / Math.PI;
-    case CSS_ANGLEUNIT.turn:
-      return angleValue * 360;
-    default:
-      throw new Error("No matched angle unit.");
-  }
-
-  return 0;
-}
-
 exports.cssTokenizer = cssTokenizer;
 exports.cssTokenizerWithLineColumn = cssTokenizerWithLineColumn;
 exports.escapeCSSComment = escapeCSSComment;
@@ -1170,4 +1144,3 @@ exports._parseCommentDeclarations = parseCommentDeclarations;
 exports.RuleRewriter = RuleRewriter;
 exports.parsePseudoClassesAndAttributes = parsePseudoClassesAndAttributes;
 exports.parseSingleValue = parseSingleValue;
-exports.getAngleValueInDegrees = getAngleValueInDegrees;

@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {CSS_ANGLEUNIT} = require("devtools/shared/css/properties-db");
-
 const SPECIALVALUES = new Set([
   "initial",
   "inherit",
@@ -41,7 +39,12 @@ module.exports.angleUtils = {
   classifyAngle: classifyAngle
 };
 
-CssAngle.ANGLEUNIT = CSS_ANGLEUNIT;
+CssAngle.ANGLEUNIT = {
+  "deg": "deg",
+  "rad": "rad",
+  "grad": "grad",
+  "turn": "turn"
+};
 
 CssAngle.prototype = {
   _angleUnit: null,
