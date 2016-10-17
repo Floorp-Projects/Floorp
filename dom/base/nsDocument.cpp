@@ -10010,6 +10010,23 @@ nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
                                   kDeprecationWarnings[aOperation]);
 }
 
+void
+nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
+                           const nsAString& aErrorText,
+                           bool asError /* = false */) const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (HasWarnedAbout(aOperation)) {
+    return;
+  }
+  mDeprecationWarnedAbout[aOperation] = true;
+  const_cast<nsIDocument*>(this)->SetDocumentAndPageUseCounter(OperationToUseCounter(aOperation));
+  uint32_t flags = asError ? nsIScriptError::errorFlag
+                           : nsIScriptError::warningFlag;
+  nsContentUtils::ReportToConsoleNonLocalized(aErrorText, flags,
+                                              NS_LITERAL_CSTRING("DOM Core"), this);
+}
+
 bool
 nsIDocument::HasWarnedAbout(DocumentWarnings aWarning) const
 {
