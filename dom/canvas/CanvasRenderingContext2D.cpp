@@ -3612,8 +3612,9 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     // not render well via the code below.
     if (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL &&
         mState->StyleIsColor(CanvasRenderingContext2D::Style::FILL)) {
+      AdjustedTarget target(mCtx);
       RefPtr<gfxContext> thebes =
-        gfxContext::ForDrawTargetWithTransform(mCtx->mTarget);
+        gfxContext::ForDrawTargetWithTransform(target);
       nscolor fill = mState->colorStyles[CanvasRenderingContext2D::Style::FILL];
       thebes->SetColor(Color::FromABGR(fill));
       gfxTextRun::DrawParams params(thebes);
