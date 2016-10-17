@@ -46,7 +46,6 @@ function checkDelayAndName(timelineEl, hasDelay) {
                         " a delay element, as expected");
 
   if (hasDelay) {
-    let name = timelineEl.querySelector(".name");
     let targetNode = timelineEl.querySelector(".target");
 
     // Check that the delay element does not cause the timeline to overflow.
@@ -54,12 +53,6 @@ function checkDelayAndName(timelineEl, hasDelay) {
     let sidebarWidth = Math.round(targetNode.getBoundingClientRect().width);
     ok(delayLeft >= sidebarWidth,
        "The delay element isn't displayed over the sidebar");
-
-    // Check that the delay is not displayed on top of the name.
-    let delayRight = Math.round(delay.getBoundingClientRect().right);
-    let nameLeft = Math.round(name.getBoundingClientRect().left);
-    ok(delayRight <= nameLeft,
-       "The delay element does not span over the name element");
   }
 }
 
