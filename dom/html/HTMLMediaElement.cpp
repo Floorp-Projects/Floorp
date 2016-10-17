@@ -978,7 +978,7 @@ void HTMLMediaElement::AbortExistingLoads()
   mMediaInfo = MediaInfo();
   mIsEncrypted = false;
   mPendingEncryptedInitData.mInitDatas.Clear();
-  mWaitingForKey = false;
+  mWaitingForKey = NOT_WAITING_FOR_KEY;
   mSourcePointer = nullptr;
 
   mTags = nullptr;
@@ -2891,7 +2891,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mMediaSecurityVerified(false),
     mCORSMode(CORS_NONE),
     mIsEncrypted(false),
-    mWaitingForKey(false),
+    mWaitingForKey(NOT_WAITING_FOR_KEY),
     mDownloadSuspendedByCache(false, "HTMLMediaElement::mDownloadSuspendedByCache"),
     mAudioChannelVolume(1.0),
     mPlayingThroughTheAudioChannel(false),
@@ -4354,6 +4354,9 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
 
 void HTMLMediaElement::FirstFrameLoaded()
 {
+  LOG(LogLevel::Debug, ("%p, FirstFrameLoaded() mFirstFrameLoaded=%d mWaitingForKey=%d",
+      this, mFirstFrameLoaded, mWaitingForKey));
+
   NS_ASSERTION(!mSuspendedAfterFirstFrame, "Should not have already suspended");
 
   if (!mFirstFrameLoaded) {
@@ -4709,8 +4712,26 @@ HTMLMediaElement::UpdateReadyStateInternal()
   }
 
   enum NextFrameStatus nextFrameStatus = NextFrameStatus();
-  if (mDecoder && nextFrameStatus == NEXT_FRAME_UNAVAILABLE) {
-    nextFrameStatus = mDecoder->NextFrameBufferedStatus();
+  if (nextFrameStatus == NEXT_FRAME_UNAVAILABLE) {
+    if (mWaitingForKey != NOT_WAITING_FOR_KEY) {
+      // http://w3c.github.io/encrypted-media/#wait-for-key
+      // Continuing 7.3.4 Queue a "waitingforkey" Event
+      // 4. Queue a task to fire a simple event named waitingforkey
+      // at the media element.
+      if (mWaitingForKey == WAITING_FOR_KEY) {
+        mWaitingForKey = WAITING_FOR_KEY_DISPATCHED;
+        DispatchAsyncEvent(NS_LITERAL_STRING("waitingforkey"));
+      }
+      // 5. Set the readyState of media element to HAVE_METADATA.
+      // NOTE: We'll change to HAVE_CURRENT_DATA or HAVE_METADATA
+      // depending on whether we've loaded the first frame or not
+      // below.
+      // 6. Suspend playback.
+      // Note: Playback will already be stalled, as the next frame is
+      // unavailable.
+    } else if (mDecoder) {
+      nextFrameStatus = mDecoder->NextFrameBufferedStatus();
+    }
   }
 
   if (nextFrameStatus == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING) {
@@ -4845,7 +4866,7 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
-      mWaitingForKey = false;
+      mWaitingForKey = NOT_WAITING_FOR_KEY;
       DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
     }
   }
@@ -6238,21 +6259,18 @@ HTMLMediaElement::GetTopLevelPrincipal()
 void
 HTMLMediaElement::CannotDecryptWaitingForKey()
 {
-  // See: http://w3c.github.io/encrypted-media/#dom-evt-waitingforkey
-  // Spec: 7.5.4 Queue a "waitingforkey" Event
-  // Spec: 1. Let the media element be the specified HTMLMediaElement object.
+  LOG(LogLevel::Debug, ("%p, CannotDecryptWaitingForKey()", this));
 
-  // Note, existing code will handle the ready state of this element, as
-  // such this function does not handle changing or checking mReadyState.
-
-  // Spec: 2. If the media element's waiting for key value is true, abort these steps.
-  if (!mWaitingForKey) {
-    // Spec: 3. Set the media element's waiting for key value to true.
-    // Spec: 4. Queue a task to fire a simple event named waitingforkey at the media element.
-    DispatchAsyncEvent(NS_LITERAL_STRING("waitingforkey"));
-    mWaitingForKey = true;
-    // No need to explicitly suspend playback, it happens automatically when
-    // it's starving for decoded frames.
+  // http://w3c.github.io/encrypted-media/#wait-for-key
+  // 7.3.4 Queue a "waitingforkey" Event
+  // 1. Let the media element be the specified HTMLMediaElement object.
+  // 2. If the media element's waiting for key value is true, abort these steps.
+  if (mWaitingForKey == NOT_WAITING_FOR_KEY) {
+    // 3. Set the media element's waiting for key value to true.
+    // Note: algorithm continues in UpdateReadyStateInternal() when all decoded
+    // data enqueued in the MDSM is consumed.
+    mWaitingForKey = WAITING_FOR_KEY;
+    UpdateReadyStateInternal();
   }
 }
 
