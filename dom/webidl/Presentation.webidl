@@ -13,6 +13,9 @@ interface Presentation : EventTarget {
   * presentation request (as if the controller had called |defaultRequest.start()|).
   *
   * Only used by controlling browsing context (senders).
+  *
+  * The origin of this IDL file is
+  * https://w3c.github.io/presentation-api/#interface-presentation
   */
   [Pref="dom.presentation.controller.enabled"]
   attribute PresentationRequest? defaultRequest;

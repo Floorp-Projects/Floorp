@@ -503,6 +503,10 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       return NS_OK;
     }
 
+    if (IsDisabled() && GetParentMenuListType() != eNotMenuList) {
+      return NS_OK;
+    }
+
     // Let the menu parent know we're the new item.
     menuParent->ChangeMenuItem(this, false, false);
     NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);

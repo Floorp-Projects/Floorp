@@ -66,8 +66,10 @@ public class ActivityStream {
      *
      * This method implements the proposal from this desktop AS issue:
      * https://github.com/mozilla/activity-stream/issues/1311
+     *
+     * @param usePath Use the path of the URL to extract a label (if suitable)
      */
-    public static String extractLabel(String url) {
+    public static String extractLabel(String url, boolean usePath) {
         if (TextUtils.isEmpty(url)) {
             return "";
         }
@@ -75,21 +77,23 @@ public class ActivityStream {
         final Uri uri = Uri.parse(url);
 
         // Use last path segment if suitable
-        final String segment = uri.getLastPathSegment();
-        if (!TextUtils.isEmpty(segment)
-                && !UNDESIRED_LABELS.contains(segment)
-                && !segment.matches("^[0-9]+$")) {
+        if (usePath) {
+            final String segment = uri.getLastPathSegment();
+            if (!TextUtils.isEmpty(segment)
+                    && !UNDESIRED_LABELS.contains(segment)
+                    && !segment.matches("^[0-9]+$")) {
 
-            boolean hasUndesiredPrefix = false;
-            for (int i = 0; i < UNDESIRED_LABEL_PREFIXES.size(); i++) {
-                if (segment.startsWith(UNDESIRED_LABEL_PREFIXES.get(i))) {
-                    hasUndesiredPrefix = true;
-                    break;
+                boolean hasUndesiredPrefix = false;
+                for (int i = 0; i < UNDESIRED_LABEL_PREFIXES.size(); i++) {
+                    if (segment.startsWith(UNDESIRED_LABEL_PREFIXES.get(i))) {
+                        hasUndesiredPrefix = true;
+                        break;
+                    }
                 }
-            }
 
-            if (!hasUndesiredPrefix) {
-                return segment;
+                if (!hasUndesiredPrefix) {
+                    return segment;
+                }
             }
         }
 

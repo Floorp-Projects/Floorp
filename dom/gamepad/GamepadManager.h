@@ -15,6 +15,9 @@
 class nsGlobalWindow;
 
 namespace mozilla {
+namespace gfx {
+class VRManagerChild;
+} // namespace gfx
 namespace dom {
 
 class EventTarget;
@@ -47,10 +50,10 @@ class GamepadManager final : public nsIObserver,
 
   // Add a gamepad to the list of known gamepads.
   void AddGamepad(uint32_t aIndex, const nsAString& aID, GamepadMappingType aMapping,
-                  uint32_t aNumButtons, uint32_t aNumAxes);
+                  GamepadServiceType aServiceType, uint32_t aNumButtons, uint32_t aNumAxes);
 
   // Remove the gamepad at |aIndex| from the list of known gamepads.
-  void RemoveGamepad(uint32_t aIndex);
+  void RemoveGamepad(uint32_t aIndex, GamepadServiceType aServiceType);
 
   // Update the state of |aButton| for the gamepad at |aIndex| for all
   // windows that are listening and visible, and fire one of
@@ -113,6 +116,7 @@ class GamepadManager final : public nsIObserver,
   // will be destroyed during the IPDL shutdown chain, so we
   // don't need to refcount it here.
   nsTArray<GamepadEventChannelChild *> mChannelChildren;
+  gfx::VRManagerChild* mVRChannelChild;
 
  private:
 
@@ -127,6 +131,9 @@ class GamepadManager final : public nsIObserver,
   // Indicate that a window has received data from a gamepad.
   void SetWindowHasSeenGamepad(nsGlobalWindow* aWindow, uint32_t aIndex,
                                bool aHasSeen = true);
+  // Our gamepad index has VR_GAMEPAD_IDX_OFFSET while GamepadChannelType
+  // is from VRManager.
+  uint32_t GetGamepadIndexWithServiceType(uint32_t aIndex, GamepadServiceType aServiceType);
 
   // Gamepads connected to the system. Copies of these are handed out
   // to each window.

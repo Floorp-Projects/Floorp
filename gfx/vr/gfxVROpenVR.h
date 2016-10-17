@@ -86,6 +86,43 @@ protected:
   bool mOpenVRInstalled;
 };
 
+namespace impl {
+
+class VRControllerOpenVR : public VRControllerHost
+{
+public:
+  explicit VRControllerOpenVR();
+
+protected:
+  virtual ~VRControllerOpenVR();
+};
+
+} // namespace impl
+
+class VRControllerManagerOpenVR : public VRControllerManager
+{
+public:
+  static already_AddRefed<VRControllerManagerOpenVR> Create();
+
+  virtual bool Init() override;
+  virtual void Destroy() override;
+  virtual void HandleInput() override;
+  virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
+                              aControllerResult) override;
+  virtual void ScanForDevices() override;
+
+private:
+  VRControllerManagerOpenVR();
+  ~VRControllerManagerOpenVR();
+
+  bool mOpenVRInstalled;
+  nsTArray<RefPtr<impl::VRControllerOpenVR>> mOpenVRController;
+  vr::IVRSystem *mVRSystem;
+
+  const uint32_t kOpenVRControllerButtons = 8;
+  const uint32_t kOpenVRControllerAxes = 5;
+};
+
 } // namespace gfx
 } // namespace mozilla
 

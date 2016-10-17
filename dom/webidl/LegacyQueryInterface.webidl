@@ -81,7 +81,6 @@ Touch implements LegacyQueryInterface;
 TouchList implements LegacyQueryInterface;
 TreeColumns implements LegacyQueryInterface;
 TreeWalker implements LegacyQueryInterface;
-UndoManager implements LegacyQueryInterface;
 ValidityState implements LegacyQueryInterface;
 WebSocket implements LegacyQueryInterface;
 Window implements LegacyQueryInterface;

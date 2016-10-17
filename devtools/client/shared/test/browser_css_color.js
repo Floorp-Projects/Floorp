@@ -124,7 +124,7 @@ function testSetAlpha() {
   });
 
   try {
-    colorUtils.setAlpha("rgb(24, 25, 45, 1)", 1);
+    colorUtils.setAlpha("rgb(24, 25%, 45, 1)", 1);
     ok(false, "Should fail when passing in an invalid color.");
   } catch (e) {
     ok(true, "Fails when setAlpha receives an invalid color.");
