@@ -128,8 +128,6 @@ child:
    */
   async AsyncAuthPromptForNestedFrame(TabId nestedFrameId, nsCString uri,
                                       nsString realm, uint64_t callbackId);
-  // Notifies child that a given app is now offline (or online)
-  async AppOfflineStatus(uint32_t appId, bool offline);
 
   /* Predictor Methods */
   async PredOnPredictPrefetch(URIParams uri, uint32_t httpStatus);
