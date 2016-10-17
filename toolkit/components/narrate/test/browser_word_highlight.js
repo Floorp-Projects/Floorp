@@ -14,6 +14,8 @@ add_task(function* testNarrate() {
   yield spawnInNewReaderTab(TEST_ARTICLE, function* () {
     let $ = content.document.querySelector.bind(content.document);
 
+    yield NarrateTestUtils.waitForNarrateToggle(content);
+
     let popup = $(NarrateTestUtils.POPUP);
     ok(!NarrateTestUtils.isVisible(popup), "popup is initially hidden");
 
@@ -21,7 +23,6 @@ add_task(function* testNarrate() {
     toggle.click();
 
     ok(NarrateTestUtils.isVisible(popup), "popup toggled");
-    yield NarrateTestUtils.waitForVoiceOptions(content);
 
     NarrateTestUtils.isStoppedState(content, ok);
 
