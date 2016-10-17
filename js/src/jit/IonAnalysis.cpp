@@ -3660,7 +3660,7 @@ LinearSum::multiply(int32_t scale)
 }
 
 bool
-LinearSum::divide(int32_t scale)
+LinearSum::divide(uint32_t scale)
 {
     MOZ_ASSERT(scale > 0);
 

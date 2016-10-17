@@ -46,6 +46,10 @@ nsXULAlertObserver::Observe(nsISupports* aSubject, const char* aTopic,
     // be removed if it is the same window that is associated with this listener.
     if (currentAlert == mAlertWindow) {
       mXULAlerts->mNamedWindows.Remove(mAlertName);
+
+      if (mIsPersistent) {
+        mXULAlerts->PersistentAlertFinished();
+      }
     }
   }
 
@@ -74,13 +78,29 @@ nsXULAlerts::GetInstance()
   return instance.forget();
 }
 
+void
+nsXULAlerts::PersistentAlertFinished()
+{
+  MOZ_ASSERT(mPersistentAlertCount);
+  mPersistentAlertCount--;
+
+  // Show next pending persistent alert if any.
+  if (!mPendingPersistentAlerts.IsEmpty()) {
+    ShowAlertWithIconURI(mPendingPersistentAlerts[0].mAlert,
+                         mPendingPersistentAlerts[0].mListener,
+                         nullptr);
+    mPendingPersistentAlerts.RemoveElementAt(0);
+  }
+}
+
 NS_IMETHODIMP
 nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& aAlertTitle,
                                    const nsAString& aAlertText, bool aAlertTextClickable,
                                    const nsAString& aAlertCookie, nsIObserver* aAlertListener,
                                    const nsAString& aAlertName, const nsAString& aBidi,
-                                   const nsAString& aLang, const nsAString & aData,
-                                   nsIPrincipal* aPrincipal, bool aInPrivateBrowsing)
+                                   const nsAString& aLang, const nsAString& aData,
+                                   nsIPrincipal* aPrincipal, bool aInPrivateBrowsing,
+                                   bool aRequireInteraction)
 {
   nsCOMPtr<nsIAlertNotification> alert =
     do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
@@ -88,7 +108,8 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
   nsresult rv = alert->Init(aAlertName, aImageUrl, aAlertTitle,
                             aAlertText, aAlertTextClickable,
                             aAlertCookie, aBidi, aLang, aData,
-                            aPrincipal, aInPrivateBrowsing);
+                            aPrincipal, aInPrivateBrowsing,
+                            aRequireInteraction);
   NS_ENSURE_SUCCESS(rv, rv);
   return ShowAlert(alert, aAlertListener);
 }
@@ -105,7 +126,49 @@ NS_IMETHODIMP
 nsXULAlerts::ShowAlert(nsIAlertNotification* aAlert,
                        nsIObserver* aAlertListener)
 {
-  return ShowAlertWithIconURI(aAlert, aAlertListener, nullptr);
+  nsAutoString name;
+  nsresult rv = aAlert->GetName(name);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If there is a pending alert with the same name in the list of
+  // pending alerts, replace it.
+  if (!mPendingPersistentAlerts.IsEmpty()) {
+    for (uint32_t i = 0; i < mPendingPersistentAlerts.Length(); i++) {
+      nsAutoString pendingAlertName;
+      nsCOMPtr<nsIAlertNotification> pendingAlert = mPendingPersistentAlerts[i].mAlert;
+      rv = pendingAlert->GetName(pendingAlertName);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (pendingAlertName.Equals(name)) {
+        nsAutoString cookie;
+        rv = pendingAlert->GetCookie(cookie);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (mPendingPersistentAlerts[i].mListener) {
+          rv = mPendingPersistentAlerts[i].mListener->Observe(nullptr, "alertfinished", cookie.get());
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        mPendingPersistentAlerts[i].Init(aAlert, aAlertListener);
+        return NS_OK;
+      }
+    }
+  }
+
+  bool requireInteraction;
+  rv = aAlert->GetRequireInteraction(&requireInteraction);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (requireInteraction &&
+      !mNamedWindows.Contains(name) &&
+      static_cast<int32_t>(mPersistentAlertCount) >=
+        Preferences::GetInt("dom.webnotifications.requireinteraction.count", 0)) {
+    PendingAlert* pa = mPendingPersistentAlerts.AppendElement();
+    pa->Init(aAlert, aAlertListener);
+    return NS_OK;
+  } else {
+    return ShowAlertWithIconURI(aAlert, aAlertListener, nullptr);
+  }
 }
 
 NS_IMETHODIMP
@@ -171,6 +234,10 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
 
   nsAutoString source;
   rv = aAlert->GetSource(source);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool requireInteraction;
+  rv = aAlert->GetRequireInteraction(&requireInteraction);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
@@ -239,6 +306,13 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
   rv = argsArray->AppendElement(scriptableLang);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsISupportsPRBool> scriptableRequireInteraction (do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID));
+  NS_ENSURE_TRUE(scriptableRequireInteraction, NS_ERROR_FAILURE);
+
+  scriptableRequireInteraction->SetData(requireInteraction);
+  rv = argsArray->AppendElement(scriptableRequireInteraction);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Alerts with the same name should replace the old alert in the same position.
   // Provide the new alert window with a pointer to the replaced window so that
   // it may take the same position.
@@ -250,11 +324,15 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
   rv = argsArray->AppendElement(replacedWindow);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (requireInteraction) {
+    mPersistentAlertCount++;
+  }
+
   // Add an observer (that wraps aAlertListener) to remove the window from
   // mNamedWindows when it is closed.
   nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  RefPtr<nsXULAlertObserver> alertObserver = new nsXULAlertObserver(this, name, aAlertListener);
+  RefPtr<nsXULAlertObserver> alertObserver = new nsXULAlertObserver(this, name, aAlertListener, requireInteraction);
   nsCOMPtr<nsISupports> iSupports(do_QueryInterface(alertObserver));
   ifptr->SetData(iSupports);
   ifptr->SetDataIID(&NS_GET_IID(nsIObserver));

@@ -7,6 +7,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "nsArrayUtils.h"
 #include "nsClipboard.h"
 #include "nsSupportsPrimitives.h"
 #include "nsString.h"
@@ -158,7 +159,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     GtkTargetList *list = gtk_target_list_new(nullptr, 0);
 
     // Get the types of supported flavors
-    nsCOMPtr<nsISupportsArray> flavors;
+    nsCOMPtr<nsIArray> flavors;
 
     nsresult rv =
         aTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavors));
@@ -168,11 +169,9 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     // Add all the flavors to this widget's supported type.
     bool imagesAdded = false;
     uint32_t count;
-    flavors->Count(&count);
+    flavors->GetLength(&count);
     for (uint32_t i=0; i < count; i++) {
-        nsCOMPtr<nsISupports> tastesLike;
-        flavors->GetElementAt(i, getter_AddRefs(tastesLike));
-        nsCOMPtr<nsISupportsCString> flavor = do_QueryInterface(tastesLike);
+        nsCOMPtr<nsISupportsCString> flavor = do_QueryElementAt(flavors, i);
 
         if (flavor) {
             nsXPIDLCString flavorStr;
@@ -258,20 +257,17 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
     nsAutoCString  foundFlavor;
 
     // Get a list of flavors this transferable can import
-    nsCOMPtr<nsISupportsArray> flavors;
+    nsCOMPtr<nsIArray> flavors;
     nsresult rv;
     rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavors));
     if (!flavors || NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
     uint32_t count;
-    flavors->Count(&count);
+    flavors->GetLength(&count);
     for (uint32_t i=0; i < count; i++) {
-        nsCOMPtr<nsISupports> genericFlavor;
-        flavors->GetElementAt(i, getter_AddRefs(genericFlavor));
-
         nsCOMPtr<nsISupportsCString> currentFlavor;
-        currentFlavor = do_QueryInterface(genericFlavor);
+        currentFlavor = do_QueryElementAt(flavors, i);
 
         if (currentFlavor) {
             nsXPIDLCString flavorStr;

@@ -18,6 +18,8 @@
 
 #include "asmjs/WasmTypes.h"
 
+#include "mozilla/MathAlgorithms.h"
+
 #include "fdlibm.h"
 
 #include "jslibmath.h"
@@ -37,6 +39,7 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::IsNaN;
+using mozilla::IsPowerOfTwo;
 
 void
 Val::writePayload(uint8_t* dst) const

@@ -131,7 +131,7 @@ TypedObjectPrediction::ofArrayKind() const
 }
 
 bool
-TypedObjectPrediction::hasKnownSize(int32_t* out) const
+TypedObjectPrediction::hasKnownSize(uint32_t* out) const
 {
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:

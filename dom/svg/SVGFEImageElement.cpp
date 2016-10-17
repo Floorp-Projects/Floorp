@@ -95,6 +95,15 @@ SVGFEImageElement::LoadSVGImage(bool aForce, bool aNotify)
 }
 
 //----------------------------------------------------------------------
+// EventTarget methods:
+
+void
+SVGFEImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  nsImageLoadingContent::AsyncEventRunning(aEvent);
+}
+
+//----------------------------------------------------------------------
 // nsIContent methods:
 
 NS_IMETHODIMP_(bool)

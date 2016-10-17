@@ -33,6 +33,7 @@
 <!ENTITY ShrinkToFit.label    "Shrink To Fit">
 <!ENTITY customPrompt.title   "Custom Scale…">
 <!ENTITY simplifyPage.label   "Simplify Page">
+<!ENTITY simplifyPage.accesskey "i">
 <!ENTITY simplifyPage.enabled.tooltip  "Change layout for easier reading">
 <!ENTITY simplifyPage.disabled.tooltip "This page cannot be automatically simplified">
 

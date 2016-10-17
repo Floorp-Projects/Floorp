@@ -155,6 +155,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(Notification, DOMEventTargetHelper)
   NS_DECL_NSIOBSERVER
 
+  static bool RequireInteractionEnabled(JSContext* aCx, JSObject* aObj);
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
   // Returns if Notification.get() is allowed for the current global.
   static bool IsGetEnabled(JSContext* aCx, JSObject* aObj);
@@ -280,6 +281,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  bool RequireInteraction() const;
+
   void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 
   void InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData, ErrorResult& aRv);
@@ -329,6 +332,7 @@ protected:
                const nsAString& aTitle, const nsAString& aBody,
                NotificationDirection aDir, const nsAString& aLang,
                const nsAString& aTag, const nsAString& aIconUrl,
+               bool aRequireNotification,
                const NotificationBehavior& aBehavior);
 
   static already_AddRefed<Notification> CreateInternal(nsIGlobalObject* aGlobal,
@@ -397,6 +401,7 @@ protected:
   const nsString mLang;
   const nsString mTag;
   const nsString mIconUrl;
+  const bool mRequireInteraction;
   nsString mDataAsBase64;
   const NotificationBehavior mBehavior;
 

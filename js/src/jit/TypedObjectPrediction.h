@@ -159,7 +159,7 @@ class TypedObjectPrediction {
     // The size may not be statically known if (1) the object is
     // an array whose dimensions are unknown or (2) only a prefix
     // of its type is known.
-    bool hasKnownSize(int32_t* out) const;
+    bool hasKnownSize(uint32_t* out) const;
 
     //////////////////////////////////////////////////////////////////////
     // Simple operations

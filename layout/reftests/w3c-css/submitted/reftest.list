@@ -13,6 +13,9 @@ include css21/reftest.list
 # Backgrounds and Borders
 include background/reftest.list
 
+# Color Level 4
+include color4/reftest.list
+
 # Conditional Rules Level 3
 include conditional3/reftest.list
 

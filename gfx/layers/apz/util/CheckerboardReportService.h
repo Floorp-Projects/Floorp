@@ -130,6 +130,7 @@ public:
   void GetReports(nsTArray<dom::CheckerboardReport>& aOutReports);
   bool IsRecordingEnabled() const;
   void SetRecordingEnabled(bool aEnabled);
+  void FlushActiveReports();
 
 private:
   virtual ~CheckerboardReportService() {}

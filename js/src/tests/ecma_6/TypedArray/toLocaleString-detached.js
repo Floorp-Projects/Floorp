@@ -1,27 +1,15 @@
 if (typeof detachArrayBuffer === "function") {
-    const constructors = [
-        Int8Array,
-        Uint8Array,
-        Uint8ClampedArray,
-        Int16Array,
-        Uint16Array,
-        Int32Array,
-        Uint32Array,
-        Float32Array,
-        Float64Array,
-    ];
-
     const originalNumberToLocaleString = Number.prototype.toLocaleString;
 
     // Throws if array buffer is detached.
-    for (let constructor of constructors) {
+    for (let constructor of typedArrayConstructors) {
         let typedArray = new constructor(42);
         detachArrayBuffer(typedArray.buffer);
         assertThrowsInstanceOf(() => typedArray.toLocaleString(), TypeError);
     }
 
     // Throws a TypeError if detached in Number.prototype.toLocaleString.
-    for (let constructor of constructors) {
+    for (let constructor of typedArrayConstructors) {
         Number.prototype.toLocaleString = function() {
             "use strict";
             if (!detached) {

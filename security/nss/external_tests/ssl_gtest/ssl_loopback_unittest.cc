@@ -29,7 +29,7 @@ TEST_P(TlsConnectGeneric, SetupOnly) {}
 TEST_P(TlsConnectGeneric, Connect) {
   SetExpectedVersion(std::get<1>(GetParam()));
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 }
 
 TEST_P(TlsConnectGeneric, ConnectEcdsa) {

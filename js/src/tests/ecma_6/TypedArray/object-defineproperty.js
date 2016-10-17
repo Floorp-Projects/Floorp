@@ -53,28 +53,7 @@ Object.defineProperties(obj, {0: {value: 20}, 1: {value: 42}});
 assertEq(obj[0], 20);
 assertEq(obj[1], 42);
 
-const constructors = [
-    Int8Array,
-    Uint8Array,
-    Uint8ClampedArray,
-    Int16Array,
-    Uint16Array,
-    Int32Array,
-    Uint32Array,
-    Float32Array,
-    Float64Array ];
-
-if (typeof SharedArrayBuffer != "undefined")
-    constructors.push(sharedConstructor(Int8Array),
-		      sharedConstructor(Uint8Array),
-		      sharedConstructor(Int16Array),
-		      sharedConstructor(Uint16Array),
-		      sharedConstructor(Int32Array),
-		      sharedConstructor(Uint32Array),
-		      sharedConstructor(Float32Array),
-		      sharedConstructor(Float64Array));
-
-constructors.forEach(constructor => {
+anyTypedArrayConstructors.forEach(constructor => {
     var obj = new constructor(4);
     obj[0] = 100;
     obj[1] = 200;

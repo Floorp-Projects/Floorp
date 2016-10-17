@@ -2856,6 +2856,19 @@ public:
    */
   static bool SupportsServoStyleBackend(nsIDocument* aDocument);
 
+  /*
+   * Checks whether a node is an invisible break.
+   * If not, returns the first frame on the next line if such a next line exists.
+   *
+   * @return  true if the node is an invisible break.
+   *          aNextLineFrame is returned null in this case.
+   *          false if the node causes a visible break or if the node is no break.
+   *
+   * @param   aNextLineFrame  assigned to first frame on the next line if such a
+   *                          next line exists, null otherwise.
+   */
+  static bool IsInvisibleBreak(nsINode* aNode, nsIFrame** aNextLineFrame = nullptr);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;

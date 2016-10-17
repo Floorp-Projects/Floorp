@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "certt.h"
 #include "ecl-exp.h"
 #include <stdlib.h>
 
@@ -12,6 +11,10 @@
 #ifdef NSS_ECC_MORE_THAN_SUITE_B
 #error This source file is for Basic ECC only .
 #endif
+
+/* copied from certt.h */
+#define KU_DIGITAL_SIGNATURE (0x80) /* bit 0 */
+#define KU_KEY_AGREEMENT (0x08)     /* bit 4 */
 
 static const ECCurveParams ecCurve_NIST_P256 = {
     "NIST-P256", ECField_GFp, 256,

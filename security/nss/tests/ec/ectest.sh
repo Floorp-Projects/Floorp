@@ -29,7 +29,7 @@ ectest_init()
       . ./init.sh
   fi
   SCRIPTNAME="ectest.sh"
-  html_head "ectest test"
+  html_head "freebl and pk11 ectest tests"
 }
 
 ectest_cleanup()
@@ -71,12 +71,23 @@ ectest_genkeydb_test()
 
 ectest_init
 ectest_genkeydb_test
-ECTEST_OUT=$(ectest -f -p -n -d 2>&1)
-ECTEST_OUT=`echo $ECTEST_OUT | grep -i 'not okay\|Assertion failure'`
 # TODO: expose individual tests and failures instead of overall
-if [ -n "$ECTEST_OUT" ] ; then
-  html_failed "ec freebl and pk11 test"
-else
-  html_passed "ec freebl and pk11 test"
+if [ -f ${BINDIR}/fbectest ]; then
+  FB_ECTEST_OUT=$(fbectest -n -d 2>&1)
+  FB_ECTEST_OUT=`echo $FB_ECTEST_OUT | grep -i 'not okay\|Assertion failure'`
+  if [ -n "$FB_ECTEST_OUT" ] ; then
+    html_failed "freebl ec tests"
+  else
+    html_passed "freebl ec tests"
+  fi
+fi
+if [ -f ${BINDIR}/pk11ectest ]; then
+  PK11_ECTEST_OUT=$(pk11ectest -n -d 2>&1)
+  PK11_ECTEST_OUT=`echo $PK11_ECTEST_OUT | grep -i 'not okay\|Assertion failure'`
+  if [ -n "$PK11_ECTEST_OUT" ] ; then
+    html_failed "pk11 ec tests"
+  else
+    html_passed "pk11 ec tests"
+  fi
 fi
 ectest_cleanup

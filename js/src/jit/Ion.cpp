@@ -911,7 +911,7 @@ IonScript::New(JSContext* cx, RecompileInfo recompileInfo,
                size_t backedgeEntries, size_t sharedStubEntries,
                OptimizationLevel optimizationLevel)
 {
-    static const int DataAlignment = sizeof(void*);
+    constexpr size_t DataAlignment = sizeof(void*);
 
     if (snapshotsListSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t)))

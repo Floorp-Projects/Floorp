@@ -688,6 +688,15 @@ static const uint32_t EnabledCiphers[] = {
 // Anything outside this list is governed by the usual combination of policy
 // and user preferences.
 static const uint32_t DisabledCiphers[] = {
+  // Bug 1310061: disable all SHA384 ciphers until fixed
+  TLS_AES_256_GCM_SHA384,
+  TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+  TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+  TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+  TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+  TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,
+  TLS_DHE_DSS_WITH_AES_256_GCM_SHA384,
+
   TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
   TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
   TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,

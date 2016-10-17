@@ -94,6 +94,9 @@
  */
 
 #include "asmjs/WasmBaselineCompile.h"
+
+#include "mozilla/MathAlgorithms.h"
+
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmSignalHandlers.h"
@@ -114,6 +117,7 @@
 
 using mozilla::DebugOnly;
 using mozilla::FloatingPoint;
+using mozilla::IsPowerOfTwo;
 using mozilla::SpecificNaN;
 
 namespace js {
@@ -625,9 +629,9 @@ class BaseCompiler
 
     int32_t pushLocal(size_t nbytes) {
         if (nbytes == 8)
-            localSize_ = AlignBytes(localSize_, 8);
+            localSize_ = AlignBytes(localSize_, 8u);
         else if (nbytes == 16)
-            localSize_ = AlignBytes(localSize_, 16);
+            localSize_ = AlignBytes(localSize_, 16u);
         localSize_ += nbytes;
         return localSize_;          // Locals grow down so capture base address
     }
@@ -2073,7 +2077,7 @@ class BaseCompiler
         ABIArgIter<const ValTypeVector> i(args);
         while (!i.done())
             i++;
-        return AlignBytes(i.stackBytesConsumedSoFar(), 16);
+        return AlignBytes(i.stackBytesConsumedSoFar(), 16u);
     }
 
     void startCallArgs(FunctionCall& call, size_t stackArgAreaSize)
@@ -7112,7 +7116,7 @@ BaseCompiler::init()
 
     varHigh_ = localSize_;
 
-    localSize_ = AlignBytes(localSize_, 16);
+    localSize_ = AlignBytes(localSize_, 16u);
 
     addInterruptCheck();
 

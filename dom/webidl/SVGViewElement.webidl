@@ -15,5 +15,5 @@ interface SVGViewElement : SVGElement {
 };
 
 SVGViewElement implements SVGFitToViewBox;
-SVGViewElement implements SVGZoomAndPan;
+SVGViewElement implements SVGZoomAndPanValues;
 

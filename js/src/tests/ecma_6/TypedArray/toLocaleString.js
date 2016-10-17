@@ -1,17 +1,5 @@
 const TypedArrayPrototype = Object.getPrototypeOf(Int8Array.prototype);
 
-const constructors = [
-    Int8Array,
-    Uint8Array,
-    Uint8ClampedArray,
-    Int16Array,
-    Uint16Array,
-    Int32Array,
-    Uint32Array,
-    Float32Array,
-    Float64Array,
-];
-
 // %TypedArrayPrototype% has an own "toLocaleString" function property.
 assertEq(TypedArrayPrototype.hasOwnProperty("toLocaleString"), true);
 assertEq(typeof TypedArrayPrototype.toLocaleString, "function");
@@ -20,7 +8,7 @@ assertEq(typeof TypedArrayPrototype.toLocaleString, "function");
 assertEq(TypedArrayPrototype.toLocaleString === Array.prototype.toLocaleString, false);
 
 // The concrete TypedArray prototypes do not have an own "toLocaleString" property.
-assertEq(constructors.every(c => !c.hasOwnProperty("toLocaleString")), true);
+assertEq(anyTypedArrayConstructors.every(c => !c.hasOwnProperty("toLocaleString")), true);
 
 assertDeepEq(Object.getOwnPropertyDescriptor(TypedArrayPrototype, "toLocaleString"), {
     value: TypedArrayPrototype.toLocaleString,
@@ -42,7 +30,7 @@ const localeOne = 1..toLocaleString(),
       localeTwo = 2..toLocaleString(),
       localeSep = [,,].toLocaleString();
 
-for (let constructor of constructors) {
+for (let constructor of anyTypedArrayConstructors) {
     assertEq(new constructor([]).toLocaleString(), "");
     assertEq(new constructor([1]).toLocaleString(), localeOne);
     assertEq(new constructor([1, 2]).toLocaleString(), localeOne + localeSep + localeTwo);
@@ -51,7 +39,7 @@ for (let constructor of constructors) {
 const originalNumberToLocaleString = Number.prototype.toLocaleString;
 
 // Calls Number.prototype.toLocaleString on each element.
-for (let constructor of constructors) {
+for (let constructor of anyTypedArrayConstructors) {
     Number.prototype.toLocaleString = function() {
         "use strict";
 
@@ -75,7 +63,7 @@ Number.prototype.toLocaleString = originalNumberToLocaleString;
 
 // Calls Number.prototype.toLocaleString from the current Realm.
 const otherGlobal = newGlobal();
-for (let constructor of constructors) {
+for (let constructor of anyTypedArrayConstructors) {
     Number.prototype.toLocaleString = function() {
         "use strict";
         called = true;

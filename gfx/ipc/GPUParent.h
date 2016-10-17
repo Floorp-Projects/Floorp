@@ -47,6 +47,7 @@ public:
   bool RecvDeallocateLayerTreeId(const uint64_t& aLayersId) override;
   bool RecvGetDeviceStatus(GPUDeviceData* aOutStatus) override;
   bool RecvAddLayerTreeIdMapping(const uint64_t& aLayersId, const ProcessId& aOwnerId) override;
+  bool RecvNotifyGpuObservers(const nsCString& aTopic) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

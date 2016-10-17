@@ -796,7 +796,7 @@ endif
 # symlinks back to the originals. The symlinks are a no-op for stabs debugging,
 # so no need to conditionalize on OS version or debugging format.
 
-$(SHARED_LIBRARY): $(OBJS) $(RESFILE) $(STATIC_LIBS_DEPS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
+$(SHARED_LIBRARY): $(OBJS) $(RESFILE) $(RUST_STATIC_LIB_FOR_SHARED_LIB) $(STATIC_LIBS_DEPS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 ifndef INCREMENTAL_LINKER
 	$(RM) $@
@@ -805,10 +805,10 @@ ifdef DTRACE_LIB_DEPENDENT
 ifndef XP_MACOSX
 	dtrace -x nolibs -G -C -s $(MOZILLA_DTRACE_SRC) -o  $(DTRACE_PROBE_OBJ) $(shell $(EXPAND_LIBS) $(MOZILLA_PROBE_LIBS))
 endif
-	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(SUB_SHLOBJS) $(DTRACE_PROBE_OBJ) $(MOZILLA_PROBE_LIBS) $(RESFILE) $(LDFLAGS) $(WRAP_LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS) $(SHLIB_LDENDFILE)
+	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(SUB_SHLOBJS) $(DTRACE_PROBE_OBJ) $(MOZILLA_PROBE_LIBS) $(RESFILE) $(LDFLAGS) $(WRAP_LDFLAGS) $(STATIC_LIBS) $(RUST_STATIC_LIB_FOR_SHARED_LIB) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS) $(SHLIB_LDENDFILE)
 	@$(RM) $(DTRACE_PROBE_OBJ)
 else # ! DTRACE_LIB_DEPENDENT
-	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(WRAP_LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS) $(SHLIB_LDENDFILE)
+	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(WRAP_LDFLAGS) $(STATIC_LIBS) $(RUST_STATIC_LIB_FOR_SHARED_LIB) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS) $(SHLIB_LDENDFILE)
 endif # DTRACE_LIB_DEPENDENT
 	$(call CHECK_BINARY,$@)
 
@@ -898,7 +898,7 @@ $(ASOBJS):
 endif
 
 ifdef MOZ_RUST
-ifdef CARGO_FILE
+ifdef RUST_LIBRARY_FILE
 
 ifdef MOZ_DEBUG
 cargo_build_flags =
@@ -927,30 +927,6 @@ force-cargo-build:
 
 $(RUST_LIBRARY_FILE): force-cargo-build
 endif # CARGO_FILE
-
-ifdef RUST_PRELINK
-# Make target for building a prelinked rust library. This merges rust .rlibs
-# together into a single .a file which is used within the FINAL_LIBRARY.
-#
-# RUST_PRELINK_FLAGS, RUST_PRELINK_SRC, and RUST_PRELINK_DEPS are set in
-# recursivemake.py, and together tell rustc how to find the libraries to link
-# together, but we compute the optimization flags below
-
-RUST_PRELINK_FLAGS += -g
-RUST_PRELINK_FLAGS += -C panic=abort
-
-ifdef MOZ_DEBUG
-RUST_PRELINK_FLAGS += -C opt-level=1
-RUST_PRELINK_FLAGS += -C debug-assertions
-else
-RUST_PRELINK_FLAGS += -C opt-level=2
-RUST_PRELINK_FLAGS += -C lto
-endif
-
-$(RUST_PRELINK): $(RUST_PRELINK_DEPS) $(RUST_PRELINK_SRC)
-	$(REPORT_BUILD)
-	$(RUSTC) -o $@ --crate-type staticlib --target $(RUST_TARGET) $(RUST_PRELINK_FLAGS) $(RUST_PRELINK_SRC)
-endif # RUST_PRELINK
 endif # MOZ_RUST
 
 $(SOBJS):

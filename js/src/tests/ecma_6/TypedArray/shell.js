@@ -1,38 +1,113 @@
-// Synthesize a constructor for a shared memory array from the
-// constructor for unshared memory.  This has "good enough" fidelity
-// for many uses.  In cases where it's not good enough, use the
-// __isShared__ flags or call isSharedConstructor for local workarounds.
+(function(global) {
+    "use strict";
 
-function sharedConstructor(constructor) {
-    var c = function(...args) {
-	if (!new.target)
-	    throw new TypeError("Not callable");
-	var array = new constructor(...args);
-	var buffer = array.buffer;
-	var offset = array.byteOffset;
-	var length = array.length;
-	var sharedBuffer = new SharedArrayBuffer(buffer.byteLength);
-	var sharedArray = new constructor(sharedBuffer, offset, length);
-	for ( var i=0 ; i < length ; i++ )
-	    sharedArray[i] = array[i];
-	assertEq(sharedArray.buffer, sharedBuffer);
-	return sharedArray;
-    };
-    c.prototype = Object.create(constructor.prototype);
-    c.__isShared__ = true;
-    c.__baseConstructor__ = constructor;
-    c.from = constructor.from;
-    c.of = constructor.of;
-    return c;
-}
+    const {
+        Float32Array, Float64Array, Object, Reflect, SharedArrayBuffer, WeakMap,
+        assertEq
+    } = global;
+    const {
+        apply: Reflect_apply,
+        construct: Reflect_construct,
+    } = Reflect;
+    const {
+        get: WeakMap_prototype_get,
+        has: WeakMap_prototype_has,
+    } = WeakMap.prototype;
 
-function isSharedConstructor(x) {
-    return typeof x == "function" && x.__isShared__;
-}
+    const sharedConstructors = new WeakMap();
 
-function isFloatingConstructor(c) {
-    return c == Float32Array ||
-	c == Float64Array ||
-	(c.hasOwnProperty("__baseConstructor__") &&
-	 isFloatingConstructor(c.__baseConstructor__));
-}
+    // Synthesize a constructor for a shared memory array from the constructor
+    // for unshared memory. This has "good enough" fidelity for many uses. In
+    // cases where it's not good enough, call isSharedConstructor for local
+    // workarounds.
+    function sharedConstructor(baseConstructor) {
+        // Create SharedTypedArray as a subclass of %TypedArray%, following the
+        // built-in %TypedArray% subclasses.
+        class SharedTypedArray extends Object.getPrototypeOf(baseConstructor) {
+            constructor(...args) {
+                var array = Reflect_construct(baseConstructor, args);
+                var {buffer, byteOffset, length} = array;
+                var sharedBuffer = new SharedArrayBuffer(buffer.byteLength);
+                var sharedArray = Reflect_construct(baseConstructor,
+                                                    [sharedBuffer, byteOffset, length],
+                                                    new.target);
+                for (var i = 0; i < length; i++)
+                    sharedArray[i] = array[i];
+                assertEq(sharedArray.buffer, sharedBuffer);
+                return sharedArray;
+            }
+        }
+
+        // 22.2.5.1 TypedArray.BYTES_PER_ELEMENT
+        Object.defineProperty(SharedTypedArray, "BYTES_PER_ELEMENT",
+                              {__proto__: null, value: baseConstructor.BYTES_PER_ELEMENT});
+
+        // 22.2.6.1 TypedArray.prototype.BYTES_PER_ELEMENT
+        Object.defineProperty(SharedTypedArray.prototype, "BYTES_PER_ELEMENT",
+                              {__proto__: null, value: baseConstructor.BYTES_PER_ELEMENT});
+
+        // Share the same name with the base constructor to avoid calling
+        // isSharedConstructor() in multiple places.
+        Object.defineProperty(SharedTypedArray, "name",
+                              {__proto__: null, value: baseConstructor.name});
+
+        sharedConstructors.set(SharedTypedArray, baseConstructor);
+
+        return SharedTypedArray;
+    }
+
+    /**
+     * All TypedArray constructors for unshared memory.
+     */
+    const typedArrayConstructors = Object.freeze([
+        Int8Array,
+        Uint8Array,
+        Uint8ClampedArray,
+        Int16Array,
+        Uint16Array,
+        Int32Array,
+        Uint32Array,
+        Float32Array,
+        Float64Array,
+    ]);
+
+    /**
+     * All TypedArray constructors for shared memory.
+     */
+    const sharedTypedArrayConstructors = Object.freeze(
+        typedArrayConstructors.map(sharedConstructor)
+    );
+
+    /**
+     * All TypedArray constructors for unshared and shared memory.
+     */
+    const anyTypedArrayConstructors = Object.freeze([
+        ...typedArrayConstructors,
+        ...(typeof SharedArrayBuffer === "function" ? sharedTypedArrayConstructors : []),
+    ]);
+
+    /**
+     * Returns `true` if `constructor` is a TypedArray constructor for shared
+     * memory.
+     */
+    function isSharedConstructor(constructor) {
+        return Reflect_apply(WeakMap_prototype_has, sharedConstructors, [constructor]);
+    }
+
+    /**
+     * Returns `true` if `constructor` is a TypedArray constructor for shared
+     * or unshared memory, with an underlying element type of either Float32 or
+     * Float64.
+     */
+    function isFloatConstructor(constructor) {
+        if (isSharedConstructor(constructor))
+            constructor = Reflect_apply(WeakMap_prototype_get, sharedConstructors, [constructor]);
+        return constructor == Float32Array || constructor == Float64Array;
+    }
+
+    global.typedArrayConstructors = typedArrayConstructors;
+    global.sharedTypedArrayConstructors = sharedTypedArrayConstructors;
+    global.anyTypedArrayConstructors = anyTypedArrayConstructors;
+    global.isSharedConstructor = isSharedConstructor;
+    global.isFloatConstructor = isFloatConstructor;
+})(this);

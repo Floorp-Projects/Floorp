@@ -7,6 +7,8 @@
 #ifndef jit_shared_IonAssemblerBufferWithConstantPools_h
 #define jit_shared_IonAssemblerBufferWithConstantPools_h
 
+#include "mozilla/MathAlgorithms.h"
+
 #include <algorithm>
 
 #include "jit/JitSpewer.h"
@@ -1059,7 +1061,8 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     }
 
     void align(unsigned alignment) {
-        MOZ_ASSERT(IsPowerOfTwo(alignment) && alignment >= InstSize);
+        MOZ_ASSERT(mozilla::IsPowerOfTwo(alignment));
+        MOZ_ASSERT(alignment >= InstSize);
 
         // A pool many need to be dumped at this point, so insert NOP fill here.
         insertNopFill();

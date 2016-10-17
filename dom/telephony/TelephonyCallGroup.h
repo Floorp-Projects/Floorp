@@ -22,7 +22,7 @@ class TelephonyCallGroup final : public DOMEventTargetHelper
 
   RefPtr<CallsList> mCallsList;
 
-  TelephonyCallGroupState mState;
+  MOZ_INIT_OUTSIDE_CTOR TelephonyCallGroupState mState;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED

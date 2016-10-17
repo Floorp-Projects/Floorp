@@ -142,6 +142,9 @@ public:
   // Element
   virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
 
+  // EventTarget
+  virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
+
   // nsIDOMHTMLInputElement
   NS_DECL_NSIDOMHTMLINPUTELEMENT
 

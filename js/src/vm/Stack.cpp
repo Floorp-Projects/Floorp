@@ -1723,7 +1723,8 @@ JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const Register
   : rt_(cx),
     sampleBufferGen_(sampleBufferGen),
     activation_(nullptr),
-    savedPrevJitTop_(nullptr)
+    savedPrevJitTop_(nullptr),
+    nogc_(cx)
 {
     if (!cx->spsProfiler.enabled())
         MOZ_CRASH("ProfilingFrameIterator called when spsProfiler not enabled for runtime.");

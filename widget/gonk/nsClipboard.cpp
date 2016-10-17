@@ -11,6 +11,7 @@
 #include "imgTools.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
+#include "nsArrayUtils.h"
 #include "nsClipboardProxy.h"
 #include "nsISupportsPrimitives.h"
 #include "nsComponentManagerUtils.h"
@@ -73,14 +74,14 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   }
 
   // Get the types of supported flavors.
-  nsCOMPtr<nsISupportsArray> flavorList;
+  nsCOMPtr<nsIArray> flavorList;
   nsresult rv = aTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
   if (!flavorList || NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
 
   uint32_t flavorCount = 0;
-  flavorList->Count(&flavorCount);
+  flavorList->GetLength(&flavorCount);
   bool imageAdded = false;
   for (uint32_t i = 0; i < flavorCount; ++i) {
     nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
@@ -203,7 +204,7 @@ nsClipboard::GetData(nsITransferable *aTransferable,
   // ones obtained through conversion).
   // Note: We don't need to call nsITransferable::AddDataFlavor here
   //       because ContentParent already did.
-  nsCOMPtr<nsISupportsArray> flavorList;
+  nsCOMPtr<nsIArray> flavorList;
   nsresult rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
 
   if (!flavorList || NS_FAILED(rv)) {
@@ -212,7 +213,7 @@ nsClipboard::GetData(nsITransferable *aTransferable,
 
   // Walk through flavors and see which flavor matches the one being pasted.
   uint32_t flavorCount;
-  flavorList->Count(&flavorCount);
+  flavorList->GetLength(&flavorCount);
 
   for (uint32_t i = 0; i < flavorCount; ++i) {
     nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);

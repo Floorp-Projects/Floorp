@@ -145,6 +145,26 @@ protected:
 
 };
 
+struct VRFrameInfo
+{
+  VRFrameInfo();
+
+  void Update(const gfx::VRDisplayInfo& aInfo,
+              const gfx::VRHMDSensorState& aState,
+              float aDepthNear,
+              float aDepthFar);
+
+  void Clear();
+  bool IsDirty();
+
+  gfx::VRHMDSensorState mVRState;
+  gfx::Matrix4x4 mLeftProjection;
+  gfx::Matrix4x4 mLeftView;
+  gfx::Matrix4x4 mRightProjection;
+  gfx::Matrix4x4 mRightView;
+
+};
+
 class VRFrameData final : public nsWrapperCache
 {
 public:
@@ -155,10 +175,7 @@ public:
   static already_AddRefed<VRFrameData> Constructor(const GlobalObject& aGlobal,
                                                    ErrorResult& aRv);
 
-  void Update(const gfx::VRDisplayInfo& aInfo,
-              const gfx::VRHMDSensorState& aState,
-              float aDepthNear,
-              float aDepthFar);
+  void Update(const VRFrameInfo& aFrameInfo);
 
   // WebIDL Members
   double Timestamp() const;
@@ -185,17 +202,12 @@ protected:
   ~VRFrameData();
   nsCOMPtr<nsISupports> mParent;
 
-  gfx::VRHMDSensorState mVRState;
+  VRFrameInfo mFrameInfo;
   RefPtr<VRPose> mPose;
   JS::Heap<JSObject*> mLeftProjectionMatrix;
   JS::Heap<JSObject*> mLeftViewMatrix;
   JS::Heap<JSObject*> mRightProjectionMatrix;
   JS::Heap<JSObject*> mRightViewMatrix;
-
-  gfx::Matrix4x4 mLeftProjection;
-  gfx::Matrix4x4 mLeftView;
-  gfx::Matrix4x4 mRightProjection;
-  gfx::Matrix4x4 mRightView;
 
   void LazyCreateMatrix(JS::Heap<JSObject*>& aArray, gfx::Matrix4x4& aMat,
                         JSContext* aCx, JS::MutableHandle<JSObject*> aRetval,
@@ -320,7 +332,7 @@ public:
   already_AddRefed<Promise> RequestPresent(const nsTArray<VRLayer>& aLayers, ErrorResult& aRv);
   already_AddRefed<Promise> ExitPresent(ErrorResult& aRv);
   void GetLayers(nsTArray<VRLayer>& result);
-  void SubmitFrame(const Optional<NonNull<VRPose>>& aPose);
+  void SubmitFrame();
 
   int32_t RequestAnimationFrame(mozilla::dom::FrameRequestCallback& aCallback,
                                 mozilla::ErrorResult& aError);
@@ -332,6 +344,7 @@ protected:
   virtual void LastRelease() override;
 
   void ExitPresentInternal();
+  void UpdateFrameInfo();
 
   RefPtr<gfx::VRDisplayClient> mClient;
 
@@ -345,6 +358,15 @@ protected:
   double mDepthFar;
 
   RefPtr<gfx::VRDisplayPresentation> mPresentation;
+
+  /**
+  * The WebVR 1.1 spec Requires that VRDisplay.getPose and VRDisplay.getFrameData
+  * must return the same values until the next VRDisplay.submitFrame.
+  * mFrameInfo is updated only on the first call to either function within one
+  * frame.  Subsequent calls before the next SubmitFrame or ExitPresent call
+  * will use these cached values.
+  */
+  VRFrameInfo mFrameInfo;
 };
 
 } // namespace dom

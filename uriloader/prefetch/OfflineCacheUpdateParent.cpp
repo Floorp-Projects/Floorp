@@ -222,12 +222,6 @@ OfflineCacheUpdateParent::GetNestedFrameId(uint64_t* aId)
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateParent::IsAppOfType(uint32_t appType, bool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 OfflineCacheUpdateParent::GetIsContent(bool *aIsContent)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -14,16 +14,34 @@ const WINDOWS_CHECKOUT_CMD =
 
 /*****************************************************************************/
 
+function isSanitizer(task) {
+  return task.collection == "asan" || task.collection == "ubsan";
+}
+
 queue.filter(task => {
   if (task.group == "Builds") {
-    // Remove extra builds on ASan and ARM.
-    if (task.collection == "asan" || task.collection == "arm-debug") {
+    // Remove extra builds on UBSan and ARM.
+    if (task.collection == "ubsan" || task.collection == "arm-debug") {
       return false;
     }
 
-    // Remove extra builds w/o libpkix for non-linux64-debug.
-    if (task.symbol == "noLibpkix" &&
-        (task.platform != "linux64" || task.collection != "debug")) {
+    // Remove extra builds w/o libpkix for non-asan.
+    if (task.symbol == "noLibpkix" && task.collection != "asan") {
+      return false;
+    }
+
+    // Remove extra builds w/ clang-3.9 on ASan.
+    if (task.symbol == "clang-3.9" && task.collection == "asan") {
+      return false;
+    }
+
+    // Remove extra builds w/ gcc-5 on non-ASan.
+    if (task.symbol == "gcc-5" && task.collection != "asan") {
+      return false;
+    }
+
+    // Remove extra builds on gyp builds (TODO: add when it supports CC/CCC).
+    if (task.collection == "gyp") {
       return false;
     }
   }
@@ -40,11 +58,16 @@ queue.filter(task => {
     }
   }
 
+  // Start with BoGo on UBSan builds.
+  if (task.collection == "ubsan" && task.tests && task.tests != "bogo") {
+    return false;
+  }
+
   return true;
 });
 
 queue.map(task => {
-  if (task.collection == "asan") {
+  if (isSanitizer(task)) {
     // CRMF and FIPS tests still leak, unfortunately.
     if (task.tests == "crmf" || task.tests == "fips") {
       task.env.ASAN_OPTIONS = "detect_leaks=0";
@@ -91,10 +114,15 @@ export default async function main() {
     image: LINUX_IMAGE
   });
 
-  await scheduleLinux("Linux 64 (debug)", {
+  await scheduleLinux("Linux 64 (debug, gyp)", {
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh"
+    ],
     env: {USE_64: "1"},
     platform: "linux64",
-    collection: "debug",
+    collection: "gyp",
     image: LINUX_IMAGE
   });
 
@@ -102,13 +130,29 @@ export default async function main() {
     env: {
       NSS_DISABLE_ARENA_FREE_LIST: "1",
       NSS_DISABLE_UNLOAD: "1",
-      GCC_VERSION: "clang",
-      GXX_VERSION: "clang++",
+      CC: "clang",
+      CCC: "clang++",
       USE_ASAN: "1",
       USE_64: "1"
     },
     platform: "linux64",
     collection: "asan",
+    image: LINUX_IMAGE
+  });
+
+  await scheduleLinux("Linux 64 (ASan+UBSan, debug)", {
+    env: {
+      UBSAN_OPTIONS: "print_stacktrace=1",
+      NSS_DISABLE_ARENA_FREE_LIST: "1",
+      NSS_DISABLE_UNLOAD: "1",
+      CC: "clang",
+      CCC: "clang++",
+      USE_UBSAN: "1",
+      USE_ASAN: "1",
+      USE_64: "1"
+    },
+    platform: "linux64",
+    collection: "ubsan",
     image: LINUX_IMAGE
   });
 
@@ -137,7 +181,7 @@ export default async function main() {
 
 async function scheduleLinux(name, base) {
   // Build base definition.
-  let build_base = merge(base, {
+  let build_base = merge({
     command: [
       "/bin/bash",
       "-c",
@@ -152,7 +196,7 @@ async function scheduleLinux(name, base) {
     },
     kind: "build",
     symbol: "B"
-  });
+  }, base);
 
   // The task that builds NSPR+NSS.
   let task_build = queue.scheduleTask(merge(build_base, {name}));
@@ -183,8 +227,8 @@ async function scheduleLinux(name, base) {
   queue.scheduleTask(merge(extra_base, {
     name: `${name} w/ clang-3.9`,
     env: {
-      GCC_VERSION: "clang",
-      GXX_VERSION: "clang++"
+      CC: "clang",
+      CCC: "clang++",
     },
     symbol: "clang-3.9"
   }));
@@ -192,17 +236,26 @@ async function scheduleLinux(name, base) {
   queue.scheduleTask(merge(extra_base, {
     name: `${name} w/ gcc-4.8`,
     env: {
-      GCC_VERSION: "gcc-4.8",
-      GXX_VERSION: "g++-4.8"
+      CC: "gcc-4.8",
+      CCC: "g++-4.8"
     },
     symbol: "gcc-4.8"
   }));
 
   queue.scheduleTask(merge(extra_base, {
+    name: `${name} w/ gcc-5`,
+    env: {
+      CC: "gcc-5",
+      CCC: "g++-5"
+    },
+    symbol: "gcc-5"
+  }));
+
+  queue.scheduleTask(merge(extra_base, {
     name: `${name} w/ gcc-6.1`,
     env: {
-      GCC_VERSION: "gcc-6",
-      GXX_VERSION: "g++-6"
+      CC: "gcc-6",
+      CCC: "g++-6"
     },
     symbol: "gcc-6.1"
   }));
@@ -365,8 +418,8 @@ async function scheduleTools() {
     name: "scan-build-3.9",
     env: {
       USE_64: "1",
-      GCC_VERSION: "clang",
-      GXX_VERSION: "clang++"
+      CC: "clang",
+      CCC: "clang++",
     },
     artifacts: {
       public: {

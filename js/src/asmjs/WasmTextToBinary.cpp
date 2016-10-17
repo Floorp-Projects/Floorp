@@ -42,6 +42,7 @@ using mozilla::CeilingLog2;
 using mozilla::CountLeadingZeroes32;
 using mozilla::CheckedInt;
 using mozilla::FloatingPoint;
+using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
 using mozilla::PositiveInfinity;
 using mozilla::SpecificNaN;

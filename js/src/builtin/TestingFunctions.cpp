@@ -1639,34 +1639,30 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
       return true;
     }
 
-    RootedObject inlineStack(cx);
-    RootedObject inlineFrameInfo(cx);
-    RootedString frameKind(cx);
-    RootedString frameLabel(cx);
-    RootedId idx(cx);
+    struct InlineFrameInfo
+    {
+        InlineFrameInfo(const char* kind, UniqueChars&& label)
+          : kind(kind), label(mozilla::Move(label)) {}
+        const char* kind;
+        UniqueChars label;
+    };
+
+    Vector<Vector<InlineFrameInfo, 0, TempAllocPolicy>, 0, TempAllocPolicy> frameInfo(cx);
 
     JS::ProfilingFrameIterator::RegisterState state;
-    uint32_t physicalFrameNo = 0;
-    const unsigned propAttrs = JSPROP_ENUMERATE;
-    for (JS::ProfilingFrameIterator i(cx, state); !i.done(); ++i, ++physicalFrameNo) {
+    for (JS::ProfilingFrameIterator i(cx, state); !i.done(); ++i) {
         MOZ_ASSERT(i.stackAddress() != nullptr);
 
-        // Array holding all inline frames in a single physical jit stack frame.
-        inlineStack = NewDenseEmptyArray(cx);
-        if (!inlineStack)
+        if (!frameInfo.emplaceBack(cx))
             return false;
 
-        JS::ProfilingFrameIterator::Frame frames[16];
-        uint32_t nframes = i.extractStack(frames, 0, 16);
-        for (uint32_t inlineFrameNo = 0; inlineFrameNo < nframes; inlineFrameNo++) {
-
-            // Object holding frame info.
-            inlineFrameInfo = NewBuiltinClassInstance<PlainObject>(cx);
-            if (!inlineFrameInfo)
-                return false;
-
+        const size_t MaxInlineFrames = 16;
+        JS::ProfilingFrameIterator::Frame frames[MaxInlineFrames];
+        uint32_t nframes = i.extractStack(frames, 0, MaxInlineFrames);
+        MOZ_ASSERT(nframes <= MaxInlineFrames);
+        for (uint32_t i = 0; i < nframes; i++) {
             const char* frameKindStr = nullptr;
-            switch (frames[inlineFrameNo].kind) {
+            switch (frames[i].kind) {
               case JS::ProfilingFrameIterator::Frame_Baseline:
                 frameKindStr = "baseline";
                 break;
@@ -1679,14 +1675,41 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
               default:
                 frameKindStr = "unknown";
             }
-            frameKind = NewStringCopyZ<CanGC>(cx, frameKindStr);
+
+            if (!frameInfo.back().emplaceBack(frameKindStr, mozilla::Move(frames[i].label)))
+                return false;
+        }
+    }
+
+    RootedObject inlineFrameInfo(cx);
+    RootedString frameKind(cx);
+    RootedString frameLabel(cx);
+    RootedId idx(cx);
+
+    const unsigned propAttrs = JSPROP_ENUMERATE;
+
+    uint32_t physicalFrameNo = 0;
+    for (auto& frame : frameInfo) {
+        // Array holding all inline frames in a single physical jit stack frame.
+        RootedObject inlineStack(cx, NewDenseEmptyArray(cx));
+        if (!inlineStack)
+            return false;
+
+        uint32_t inlineFrameNo = 0;
+        for (auto& inlineFrame : frame) {
+            // Object holding frame info.
+            RootedObject inlineFrameInfo(cx, NewBuiltinClassInstance<PlainObject>(cx));
+            if (!inlineFrameInfo)
+                return false;
+
+            frameKind = NewStringCopyZ<CanGC>(cx, inlineFrame.kind);
             if (!frameKind)
                 return false;
 
             if (!JS_DefineProperty(cx, inlineFrameInfo, "kind", frameKind, propAttrs))
                 return false;
 
-            auto chars = frames[inlineFrameNo].label.release();
+            auto chars = inlineFrame.label.release();
             frameLabel = NewString<CanGC>(cx, reinterpret_cast<Latin1Char*>(chars), strlen(chars));
             if (!frameLabel)
                 return false;
@@ -1697,12 +1720,16 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
             idx = INT_TO_JSID(inlineFrameNo);
             if (!JS_DefinePropertyById(cx, inlineStack, idx, inlineFrameInfo, 0))
                 return false;
+
+            ++inlineFrameNo;
         }
 
         // Push inline array into main array.
         idx = INT_TO_JSID(physicalFrameNo);
         if (!JS_DefinePropertyById(cx, stack, idx, inlineStack, 0))
             return false;
+
+        ++physicalFrameNo;
     }
 
     args.rval().setObject(*stack);

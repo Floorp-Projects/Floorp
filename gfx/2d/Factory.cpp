@@ -191,6 +191,7 @@ void
 Factory::ShutDown()
 {
   if (sConfig) {
+    delete sConfig->mLogForwarder;
     delete sConfig;
     sConfig = nullptr;
   }
@@ -979,13 +980,6 @@ Factory::SetGlobalEventRecorder(DrawEventRecorder *aRecorder)
 {
   mRecorder = aRecorder;
 }
-
-// static
-void
-Factory::SetLogForwarder(LogForwarder* aLogFwd) {
-  sConfig->mLogForwarder = aLogFwd;
-}
-
 
 // static
 void

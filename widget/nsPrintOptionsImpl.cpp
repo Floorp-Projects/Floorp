@@ -14,12 +14,12 @@
 #include "nsIPrintSession.h"
 #include "nsServiceManagerUtils.h"
 
+#include "nsArray.h"
 #include "nsIDOMWindow.h"
 #include "nsIDialogParamBlock.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
-#include "nsISupportsArray.h"
 #include "prprf.h"
 
 #include "nsIStringEnumerator.h"
@@ -336,15 +336,13 @@ nsPrintOptions::ShowPrintSetupDialog(nsIPrintSettings *aPS)
   NS_ENSURE_ARG_POINTER(aPS);
   nsresult rv;
 
-  // create a nsISupportsArray of the parameters
+  // create a nsIArray of the parameters
   // being passed to the window
-  nsCOMPtr<nsISupportsArray> array;
-  rv = NS_NewISupportsArray(getter_AddRefs(array));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
 
   nsCOMPtr<nsISupports> psSupports = do_QueryInterface(aPS);
   NS_ASSERTION(psSupports, "PrintSettings must be a supports");
-  array->AppendElement(psSupports);
+  array->AppendElement(psSupports, /*weak =*/ false);
 
   nsCOMPtr<nsIDialogParamBlock> ioParamBlock =
       do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &rv);
@@ -354,7 +352,7 @@ nsPrintOptions::ShowPrintSetupDialog(nsIPrintSettings *aPS)
 
   nsCOMPtr<nsISupports> blkSupps = do_QueryInterface(ioParamBlock);
   NS_ASSERTION(blkSupps, "IOBlk must be a supports");
-  array->AppendElement(blkSupps);
+  array->AppendElement(blkSupps, /*weak =*/ false);
 
   nsCOMPtr<nsIWindowWatcher> wwatch =
       do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);

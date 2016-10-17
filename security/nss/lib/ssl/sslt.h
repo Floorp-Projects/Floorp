@@ -84,10 +84,42 @@ typedef enum {
     ssl_hash_sha512 = 6
 } SSLHashType;
 
+/* Deprecated */
 typedef struct SSLSignatureAndHashAlgStr {
     SSLHashType hashAlg;
     SSLSignType sigAlg;
 } SSLSignatureAndHashAlg;
+
+typedef enum {
+    ssl_sig_none = 0,
+    ssl_sig_rsa_pkcs1_sha1 = 0x0201,
+    ssl_sig_rsa_pkcs1_sha256 = 0x0401,
+    ssl_sig_rsa_pkcs1_sha384 = 0x0501,
+    ssl_sig_rsa_pkcs1_sha512 = 0x0601,
+    /* For ECDSA, the pairing of the hash with a specific curve is only enforced
+     * in TLS 1.3; in TLS 1.2 any curve can be used with each of these. */
+    ssl_sig_ecdsa_secp256r1_sha256 = 0x0403,
+    ssl_sig_ecdsa_secp384r1_sha384 = 0x0503,
+    ssl_sig_ecdsa_secp521r1_sha512 = 0x0603,
+    ssl_sig_rsa_pss_sha256 = 0x0804,
+    ssl_sig_rsa_pss_sha384 = 0x0805,
+    ssl_sig_rsa_pss_sha512 = 0x0806,
+    ssl_sig_ed25519 = 0x0807,
+    ssl_sig_ed448 = 0x0808,
+
+    ssl_sig_dsa_sha1 = 0x0202,
+    ssl_sig_dsa_sha256 = 0x0402,
+    ssl_sig_dsa_sha384 = 0x0502,
+    ssl_sig_dsa_sha512 = 0x0602,
+    ssl_sig_ecdsa_sha1 = 0x0203,
+
+    /* The following value (which can't be used in the protocol), represents
+     * the RSA signature using SHA-1 and MD5 that is used in TLS 1.0 and 1.1.
+     * This is reported as a signature scheme when TLS 1.0 or 1.1 is used.
+     * This should not be passed to SSL_SignatureSchemePrefSet(); this
+     * signature scheme is always used and cannot be disabled. */
+    ssl_sig_rsa_pkcs1_sha1md5 = 0x10101,
+} SSLSignatureScheme;
 
 /*
 ** SSLAuthType describes the type of key that is used to authenticate a
@@ -141,6 +173,42 @@ typedef enum {
     ssl_compression_null = 0,
     ssl_compression_deflate = 1 /* RFC 3749 */
 } SSLCompressionMethod;
+
+typedef enum {
+    ssl_grp_ec_sect163k1 = 1,
+    ssl_grp_ec_sect163r1 = 2,
+    ssl_grp_ec_sect163r2 = 3,
+    ssl_grp_ec_sect193r1 = 4,
+    ssl_grp_ec_sect193r2 = 5,
+    ssl_grp_ec_sect233k1 = 6,
+    ssl_grp_ec_sect233r1 = 7,
+    ssl_grp_ec_sect239k1 = 8,
+    ssl_grp_ec_sect283k1 = 9,
+    ssl_grp_ec_sect283r1 = 10,
+    ssl_grp_ec_sect409k1 = 11,
+    ssl_grp_ec_sect409r1 = 12,
+    ssl_grp_ec_sect571k1 = 13,
+    ssl_grp_ec_sect571r1 = 14,
+    ssl_grp_ec_secp160k1 = 15,
+    ssl_grp_ec_secp160r1 = 16,
+    ssl_grp_ec_secp160r2 = 17,
+    ssl_grp_ec_secp192k1 = 18,
+    ssl_grp_ec_secp192r1 = 19,
+    ssl_grp_ec_secp224k1 = 20,
+    ssl_grp_ec_secp224r1 = 21,
+    ssl_grp_ec_secp256k1 = 22,
+    ssl_grp_ec_secp256r1 = 23,
+    ssl_grp_ec_secp384r1 = 24,
+    ssl_grp_ec_secp521r1 = 25,
+    ssl_grp_ec_curve25519 = 29, /* RFC4492 */
+    ssl_grp_ffdhe_2048 = 256,   /* RFC7919 */
+    ssl_grp_ffdhe_3072 = 257,
+    ssl_grp_ffdhe_4096 = 258,
+    ssl_grp_ffdhe_6144 = 259,
+    ssl_grp_ffdhe_8192 = 260,
+    ssl_grp_none = 65537,        /* special value */
+    ssl_grp_ffdhe_custom = 65538 /* special value */
+} SSLNamedGroup;
 
 typedef struct SSLExtraServerCertDataStr {
     /* When this struct is passed to SSL_ConfigServerCert, and authType is set
@@ -201,9 +269,11 @@ typedef struct SSLChannelInfoStr {
     /* The following fields were added in NSS 3.28. */
     /* These fields have the same meaning as in SSLCipherSuiteInfo. */
     SSLKEAType keaType;
+    SSLNamedGroup keaGroup;
     SSLCipherAlgorithm symCipher;
     SSLMACAlgorithm macAlgorithm;
     SSLAuthType authType;
+    SSLSignatureScheme signatureScheme;
 
     /* When adding new fields to this structure, please document the
      * NSS version in which they were added. */
@@ -342,40 +412,5 @@ typedef enum {
     ssl_ff_dhe_8192_group = 5,
     ssl_dhe_group_max
 } SSLDHEGroupType;
-
-typedef enum {
-    ssl_grp_ec_sect163k1 = 1,
-    ssl_grp_ec_sect163r1 = 2,
-    ssl_grp_ec_sect163r2 = 3,
-    ssl_grp_ec_sect193r1 = 4,
-    ssl_grp_ec_sect193r2 = 5,
-    ssl_grp_ec_sect233k1 = 6,
-    ssl_grp_ec_sect233r1 = 7,
-    ssl_grp_ec_sect239k1 = 8,
-    ssl_grp_ec_sect283k1 = 9,
-    ssl_grp_ec_sect283r1 = 10,
-    ssl_grp_ec_sect409k1 = 11,
-    ssl_grp_ec_sect409r1 = 12,
-    ssl_grp_ec_sect571k1 = 13,
-    ssl_grp_ec_sect571r1 = 14,
-    ssl_grp_ec_secp160k1 = 15,
-    ssl_grp_ec_secp160r1 = 16,
-    ssl_grp_ec_secp160r2 = 17,
-    ssl_grp_ec_secp192k1 = 18,
-    ssl_grp_ec_secp192r1 = 19,
-    ssl_grp_ec_secp224k1 = 20,
-    ssl_grp_ec_secp224r1 = 21,
-    ssl_grp_ec_secp256k1 = 22,
-    ssl_grp_ec_secp256r1 = 23,
-    ssl_grp_ec_secp384r1 = 24,
-    ssl_grp_ec_secp521r1 = 25,
-    ssl_grp_ec_curve25519 = 29, /* RFC4492 */
-    ssl_grp_ffdhe_2048 = 256,   /* RFC7919 */
-    ssl_grp_ffdhe_3072 = 257,
-    ssl_grp_ffdhe_4096 = 258,
-    ssl_grp_ffdhe_6144 = 259,
-    ssl_grp_ffdhe_8192 = 260,
-    ssl_grp_ffdhe_custom = 65537 /* special value */
-} SSLNamedGroup;
 
 #endif /* __sslt_h_ */

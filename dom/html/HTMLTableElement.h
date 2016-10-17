@@ -59,7 +59,8 @@ public:
 
     DeleteTHead();
     if (aTHead) {
-      nsINode::InsertBefore(*aTHead, nsINode::GetFirstChild(), aError);
+      nsCOMPtr<nsINode> refNode = nsINode::GetFirstChild();
+      nsINode::InsertBefore(*aTHead, refNode, aError);
     }
   }
   already_AddRefed<nsGenericHTMLElement> CreateTHead();

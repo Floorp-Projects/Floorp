@@ -3496,15 +3496,8 @@ PRBool
 ssl_NamedGroupEnabled(const sslSocket *ss, const sslNamedGroupDef *groupDef)
 {
     unsigned int i;
-    SECStatus rv;
-    PRUint32 policy;
 
     if (!groupDef) {
-        return PR_FALSE;
-    }
-
-    rv = NSS_GetAlgorithmPolicy(groupDef->oidTag, &policy);
-    if (rv == SECSuccess && !(policy & NSS_USE_ALG_IN_SSL_KX)) {
         return PR_FALSE;
     }
 
@@ -3646,17 +3639,6 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     SECStatus rv;
     sslSocket *ss;
     int i;
-    /* TODO: remove this when 25519 and p256 have equal priority */
-    const SSLNamedGroup preferredGroups[] = {
-        ssl_grp_ec_secp256r1,
-        ssl_grp_ec_secp384r1,
-        ssl_grp_ec_secp521r1,
-        ssl_grp_ffdhe_2048,
-        ssl_grp_ffdhe_3072,
-        ssl_grp_ffdhe_4096,
-        ssl_grp_ffdhe_6144,
-        ssl_grp_ffdhe_8192
-    };
 
     ssl_SetDefaultsFromEnvironment();
 
@@ -3700,10 +3682,8 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
 
     ssl_ChooseOps(ss);
     ssl3_InitSocketPolicy(ss);
-    memset((void *)ss->namedGroupPreferences, 0, sizeof(ss->namedGroupPreferences));
-    PORT_Assert(PR_ARRAY_SIZE(preferredGroups) < SSL_NAMED_GROUP_COUNT);
-    for (i = 0; i < PR_ARRAY_SIZE(preferredGroups); ++i) {
-        ss->namedGroupPreferences[i] = ssl_LookupNamedGroup(preferredGroups[i]);
+    for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
+        ss->namedGroupPreferences[i] = &ssl_named_groups[i];
     }
     ss->additionalShares = 0;
     PR_INIT_CLIST(&ss->ssl3.hs.remoteExtensions);

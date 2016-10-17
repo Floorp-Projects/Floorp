@@ -1220,6 +1220,9 @@ ssl3_SignHashes(sslSocket *ss, SSL3Hashes *hash, SECKEYPrivateKey *key,
         }
     }
 
+    if (ss->sec.isServer) {
+        ss->sec.signatureScheme = ss->ssl3.hs.signatureScheme;
+    }
     PRINT_BUF(60, (NULL, "signed hashes", (unsigned char *)buf->data, buf->len));
 done:
     if (rv != SECSuccess && buf->data) {
@@ -1258,6 +1261,9 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
             encAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
             hashItem.data = hash->u.raw;
             hashItem.len = hash->len;
+            if (scheme == ssl_sig_none) {
+                scheme = ssl_sig_rsa_pkcs1_sha1md5;
+            }
             break;
         case dsaKey:
             encAlg = SEC_OID_ANSIX9_DSA_SIGNATURE;
@@ -1280,6 +1286,9 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
                 }
                 buf = signature;
             }
+            if (scheme == ssl_sig_none) {
+                scheme = ssl_sig_dsa_sha1;
+            }
             break;
 
         case ecKey:
@@ -1297,6 +1306,9 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
             } else {
                 hashItem.data = hash->u.raw;
                 hashItem.len = hash->len;
+            }
+            if (scheme == ssl_sig_none) {
+                scheme = ssl_sig_ecdsa_sha1;
             }
             break;
 
@@ -1344,6 +1356,9 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
     }
     if (rv != SECSuccess) {
         ssl_MapLowLevelError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+    }
+    if (!ss->sec.isServer) {
+        ss->sec.signatureScheme = scheme;
     }
     return rv;
 }
@@ -4423,6 +4438,8 @@ ssl_SignatureSchemeToHashType(SSLSignatureScheme scheme)
         case ssl_sig_rsa_pss_sha512:
         case ssl_sig_dsa_sha512:
             return ssl_hash_sha512;
+        case ssl_sig_rsa_pkcs1_sha1md5:
+            return ssl_hash_none; /* Special for TLS 1.0/1.1. */
         case ssl_sig_none:
         case ssl_sig_ed25519:
         case ssl_sig_ed448:
@@ -4443,6 +4460,7 @@ ssl_SignatureSchemeToKeyType(SSLSignatureScheme scheme)
         case ssl_sig_rsa_pss_sha256:
         case ssl_sig_rsa_pss_sha384:
         case ssl_sig_rsa_pss_sha512:
+        case ssl_sig_rsa_pkcs1_sha1md5:
             return rsaKey;
         case ssl_sig_ecdsa_secp256r1_sha256:
         case ssl_sig_ecdsa_secp384r1_sha384:
@@ -4582,6 +4600,7 @@ ssl_IsSupportedSignatureScheme(SSLSignatureScheme scheme)
         case ssl_sig_ecdsa_sha1:
             return PR_TRUE;
 
+        case ssl_sig_rsa_pkcs1_sha1md5:
         case ssl_sig_none:
         case ssl_sig_ed25519:
         case ssl_sig_ed448:
@@ -6124,7 +6143,7 @@ ssl3_SendDHClientKeyExchange(sslSocket *ss, SECKEYPublicKey *svrPubKey)
     const ssl3DHParams *params;
     ssl3DHParams customParams;
     const sslNamedGroupDef *groupDef;
-    sslNamedGroupDef customGroupDef = {
+    static const sslNamedGroupDef customGroupDef = {
         ssl_grp_ffdhe_custom, 0, ssl_kea_dh, SEC_OID_TLS_DHE_CUSTOM, PR_FALSE
     };
     sslEphemeralKeyPair *keyPair = NULL;
@@ -6143,24 +6162,24 @@ ssl3_SendDHClientKeyExchange(sslSocket *ss, SECKEYPublicKey *svrPubKey)
     }
 
     /* Work out the parameters. */
-    if (ss->opt.requireDHENamedGroups || ss->ssl3.hs.peerSupportsFfdheGroups) {
-        /* We already validated the group in ssl_HandleDHServerKeyExchange(),
-         * but this function also allows us to retrieve the group parameters. */
-        rv = ssl_ValidateDHENamedGroup(ss, &svrPubKey->u.dh.prime,
-                                       &svrPubKey->u.dh.base,
-                                       &groupDef, &params);
-        /* We already checked this. */
-        PORT_Assert(rv == SECSuccess);
-    } else {
+    rv = ssl_ValidateDHENamedGroup(ss, &svrPubKey->u.dh.prime,
+                                   &svrPubKey->u.dh.base,
+                                   &groupDef, &params);
+    if (rv != SECSuccess) {
+        /* If we require named groups, we will have already validated the group
+         * in ssl_HandleDHServerKeyExchange() */
+        PORT_Assert(!ss->opt.requireDHENamedGroups &&
+                    !ss->ssl3.hs.peerSupportsFfdheGroups);
+
         customParams.name = ssl_grp_ffdhe_custom;
         customParams.prime.data = svrPubKey->u.dh.prime.data;
         customParams.prime.len = svrPubKey->u.dh.prime.len;
         customParams.base.data = svrPubKey->u.dh.base.data;
         customParams.base.len = svrPubKey->u.dh.base.len;
         params = &customParams;
-        customGroupDef.bits = SECKEY_PublicKeyStrengthInBits(svrPubKey);
         groupDef = &customGroupDef;
     }
+    ss->sec.keaGroup = groupDef;
 
     rv = ssl_CreateDHEKeyPair(groupDef, params, &keyPair);
     if (rv != SECSuccess) {
@@ -6334,13 +6353,18 @@ static SECStatus
 ssl3_PickServerSignatureScheme(sslSocket *ss)
 {
     sslKeyPair *keyPair = ss->sec.serverCert->serverKeyPair;
+    PRBool isTLS12 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_2;
 
-    if (!ssl3_ExtensionNegotiated(ss, ssl_signature_algorithms_xtn)) {
+    if (!isTLS12 || !ssl3_ExtensionNegotiated(ss, ssl_signature_algorithms_xtn)) {
         /* If the client didn't provide any signature_algorithms extension then
-         * we can assume that they support SHA-1: RFC5246, Section 7.4.1.4.1 */
+         * we can assume that they support SHA-1: RFC5246, Section 7.4.1.4.1. */
         switch (SECKEY_GetPublicKeyType(keyPair->pubKey)) {
             case rsaKey:
-                ss->ssl3.hs.signatureScheme = ssl_sig_rsa_pkcs1_sha1;
+                if (isTLS12) {
+                    ss->ssl3.hs.signatureScheme = ssl_sig_rsa_pkcs1_sha1;
+                } else {
+                    ss->ssl3.hs.signatureScheme = ssl_sig_rsa_pkcs1_sha1md5;
+                }
                 break;
             case ecKey:
                 ss->ssl3.hs.signatureScheme = ssl_sig_ecdsa_sha1;
@@ -9344,6 +9368,7 @@ ssl3_SendDHServerKeyExchange(sslSocket *ss)
         PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
         return SECFailure;
     }
+    ss->sec.keaGroup = groupDef;
 
     params = ssl_GetDHEParams(groupDef);
     rv = ssl_CreateDHEKeyPair(groupDef, params, &keyPair);
@@ -9624,7 +9649,7 @@ ssl3_HandleCertificateVerify(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
     int errCode = SSL_ERROR_RX_MALFORMED_CERT_VERIFY;
     SSL3AlertDescription desc = handshake_failure;
     PRBool isTLS;
-    SSLSignatureScheme sigScheme = ssl_sig_none;
+    SSLSignatureScheme sigScheme;
     SSLHashType hashAlg;
     SSL3Hashes localHashes;
     SSL3Hashes *hashesForVerify = NULL;
@@ -9684,6 +9709,7 @@ ssl3_HandleCertificateVerify(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
         }
     } else {
         hashesForVerify = hashes;
+        sigScheme = ssl_sig_none;
     }
 
     rv = ssl3_ConsumeHandshakeVariable(ss, &signed_hash, 2, &b, &length);
@@ -10743,7 +10769,7 @@ ssl3_AuthCertificate(sslSocket *ss)
         ** in the cert. */
         SECKEYPublicKey *pubKey = CERT_ExtractPublicKey(cert);
         if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-            /* These are filled in in the tls13_HandleCertificateVerify and
+            /* These are filled in in tls13_HandleCertificateVerify and
              * tls13_HandleServerKeyShare. */
             ss->sec.authType = ss->ssl3.hs.kea_def->authKeyType;
             ss->sec.keaType = ss->ssl3.hs.kea_def->exchKeyType;
@@ -10816,9 +10842,11 @@ ssl3_AuthCertificate(sslSocket *ss)
             } else {
                 /* disallow server_key_exchange */
                 ss->ssl3.hs.ws = wait_cert_request;
-                /* This is static RSA key exchange so set the key bits to
-                 * auth bits. */
+                /* This is static RSA key exchange so set the key exchange
+                 * details to compensate for that. */
                 ss->sec.keaKeyBits = ss->sec.authKeyBits;
+                ss->sec.signatureScheme = ssl_sig_none;
+                ss->sec.keaGroup = NULL;
             }
         }
     } else {
@@ -12674,6 +12702,17 @@ process_it:
  * Initialization functions
  */
 
+void
+ssl_InitSecState(sslSecurityInfo *sec)
+{
+    sec->authType = ssl_auth_null;
+    sec->authKeyBits = 0;
+    sec->signatureScheme = ssl_sig_none;
+    sec->keaType = ssl_kea_null;
+    sec->keaKeyBits = 0;
+    sec->keaGroup = NULL;
+}
+
 /* Called from ssl3_InitState, immediately below. */
 /* Caller must hold the SpecWriteLock. */
 void
@@ -12733,6 +12772,8 @@ ssl3_InitState(sslSocket *ss)
         return SECSuccess; /* Function should be idempotent */
 
     ss->ssl3.policy = SSL_ALLOWED;
+
+    ssl_InitSecState(&ss->sec);
 
     ssl_GetSpecWriteLock(ss);
     ss->ssl3.crSpec = ss->ssl3.cwSpec = &ss->ssl3.specs[0];

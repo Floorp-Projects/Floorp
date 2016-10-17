@@ -328,7 +328,7 @@ class ClientNavigateRunnable final : public Runnable
   nsString mUrl;
   nsCString mBaseUrl;
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
-  WorkerPrivate* mWorkerPrivate;
+  MOZ_INIT_OUTSIDE_CTOR WorkerPrivate* mWorkerPrivate;
 
 public:
   ClientNavigateRunnable(uint64_t aWindowId, const nsAString& aUrl,

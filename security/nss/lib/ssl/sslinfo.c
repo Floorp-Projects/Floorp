@@ -76,9 +76,11 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
             /* Get these fromm |ss->sec| because that is accurate
              * even with TLS 1.3 disaggregated cipher suites. */
             inf.keaType = ss->sec.keaType;
+            inf.keaGroup = ss->sec.keaGroup ? ss->sec.keaGroup->name : ssl_grp_none;
             inf.keaKeyBits = ss->sec.keaKeyBits;
             inf.authType = ss->sec.authType;
             inf.authKeyBits = ss->sec.authKeyBits;
+            inf.signatureScheme = ss->sec.signatureScheme;
         }
         if (sid) {
             unsigned int sidLen;

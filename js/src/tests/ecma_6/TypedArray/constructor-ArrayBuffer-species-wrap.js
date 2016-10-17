@@ -1,23 +1,11 @@
 // |reftest| skip-if(!xulRuntime.shell)
 
-const constructors = [
-    Int8Array,
-    Uint8Array,
-    Uint8ClampedArray,
-    Int16Array,
-    Uint16Array,
-    Int32Array,
-    Uint32Array,
-    Float32Array,
-    Float64Array
-];
-
 let g = newGlobal();
 
 // Both TypedArray and ArrayBuffer from different global.
-for (let ctor of constructors) {
+for (let ctor of typedArrayConstructors) {
   let a = g.eval(`new ${ctor.name}([1, 2, 3, 4, 5]);`);
-  for (let ctor2 of constructors) {
+  for (let ctor2 of typedArrayConstructors) {
     let b = new ctor2(a);
     assertEq(Object.getPrototypeOf(b).constructor, ctor2);
     assertEq(Object.getPrototypeOf(b.buffer).constructor, g.ArrayBuffer);
@@ -33,9 +21,9 @@ let modSpecies = {
     return g.ArrayBuffer;
   }
 };
-for (let ctor of constructors) {
+for (let ctor of typedArrayConstructors) {
   let a = new ctor([1, 2, 3, 4, 5]);
-  for (let ctor2 of constructors) {
+  for (let ctor2 of typedArrayConstructors) {
     called = false;
     Object.defineProperty(ArrayBuffer, Symbol.species, modSpecies);
     let b = new ctor2(a);
@@ -58,9 +46,9 @@ var modSpecies = {
   }
 };
 `);
-for (let ctor of constructors) {
+for (let ctor of typedArrayConstructors) {
   let a = g.eval(`new ${ctor.name}([1, 2, 3, 4, 5]);`);
-  for (let ctor2 of constructors) {
+  for (let ctor2 of typedArrayConstructors) {
     g.called = false;
     g.eval(`Object.defineProperty(ArrayBuffer, Symbol.species, modSpecies);`);
     let b = new ctor2(a);

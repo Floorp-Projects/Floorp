@@ -85,6 +85,16 @@ endif
 ifdef NS_USE_GCC
 NSPR_CONFIGURE_ENV = CC=gcc CXX=g++
 endif
+ifdef CC
+NSPR_CONFIGURE_ENV = CC=$(CC)
+endif
+ifdef CCC
+NSPR_CONFIGURE_ENV += CXX=$(CCC)
+endif
+# Remove -arch definitions. NSPR can't handle that.
+NSPR_CONFIGURE_ENV := $(filter-out -arch x86_64,$(NSPR_CONFIGURE_ENV))
+NSPR_CONFIGURE_ENV := $(filter-out -arch i386,$(NSPR_CONFIGURE_ENV))
+NSPR_CONFIGURE_ENV := $(filter-out -arch ppc,$(NSPR_CONFIGURE_ENV))
 
 ifdef SANITIZER_CFLAGS
 ifdef BUILD_OPT
@@ -116,6 +126,7 @@ else
 NSPR_PREFIX = $$(topsrcdir)/../dist/$(OBJDIR_NAME)
 endif
 
+ifndef NSS_GYP
 $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
 	mkdir -p $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
 	cd $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) ; \
@@ -123,9 +134,20 @@ $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
 	$(NSPR_CONFIGURE_OPTS) \
 	--with-dist-prefix='$(NSPR_PREFIX)' \
 	--with-dist-includedir='$(NSPR_PREFIX)/include'
+else
+$(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
+	mkdir -p $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
+	cd $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) ; \
+	$(NSPR_CONFIGURE_ENV) sh ../configure \
+	$(NSPR_CONFIGURE_OPTS) \
+	--prefix='$(NSPR_PREFIX)'
+endif
 
 build_nspr: $(NSPR_CONFIG_STATUS)
 	$(MAKE) -C $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
+
+install_nspr: build_nspr
+	$(MAKE) -C $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) install
 
 clobber_nspr: $(NSPR_CONFIG_STATUS)
 	$(MAKE) -C $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) clobber

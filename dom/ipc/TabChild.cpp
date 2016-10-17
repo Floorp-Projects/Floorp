@@ -3098,10 +3098,16 @@ TabChild::DidRequestComposite(const TimeStamp& aCompositeReqStart,
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
   if (timelines && timelines->HasConsumer(docShell)) {
+    // Since we're assuming that it's impossible for content JS to directly
+    // trigger a synchronous paint, we can avoid capturing a stack trace here,
+    // which means we won't run into JS engine reentrancy issues like bug
+    // 1310014.
     timelines->AddMarkerForDocShell(docShell,
-      "CompositeForwardTransaction", aCompositeReqStart, MarkerTracingType::START);
+      "CompositeForwardTransaction", aCompositeReqStart,
+      MarkerTracingType::START, MarkerStackRequest::NO_STACK);
     timelines->AddMarkerForDocShell(docShell,
-      "CompositeForwardTransaction", aCompositeReqEnd, MarkerTracingType::END);
+      "CompositeForwardTransaction", aCompositeReqEnd,
+      MarkerTracingType::END, MarkerStackRequest::NO_STACK);
   }
 }
 
