@@ -689,11 +689,6 @@ Navigator::CookieEnabled()
 bool
 Navigator::OnLine()
 {
-  if (mWindow && mWindow->GetDoc()) {
-    return !NS_IsOffline() &&
-      !NS_IsAppOffline(mWindow->GetDoc()->NodePrincipal());
-  }
-
   return !NS_IsOffline();
 }
 
