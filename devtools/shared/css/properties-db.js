@@ -43,16 +43,6 @@ exports.CSS_TYPES = {
 };
 
 /**
- * All CSS <angle> types that properties can support. This list can be manually edited.
- */
-exports.CSS_ANGLEUNIT = {
-  "deg": "deg",
-  "rad": "rad",
-  "grad": "grad",
-  "turn": "turn"
-};
-
-/**
  * All cubic-bezier CSS timing-function names. This list can be manually edited.
  */
 exports.BEZIER_KEYWORDS = ["linear", "ease-in-out", "ease-in", "ease-out", "ease"];
