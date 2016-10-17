@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<table><tbody></tbody><tfoot></tfoot></table>
+<script>
+  document.body.offsetTop;
+  let parent = document.querySelector("table");
+  let pi = document.createProcessingInstruction('xml-stylesheet', 'href="test.css"');
+  let footer = document.querySelector("tfoot");
+  parent.insertBefore(pi, footer);
+</script>
