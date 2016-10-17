@@ -855,6 +855,7 @@ if max_sdk_version >= 11:
     gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
         'tabs/TabStrip.java',
         'tabs/TabStripAdapter.java',
+        'tabs/TabStripDividerItem.java',
         'tabs/TabStripItemAnimator.java',
         'tabs/TabStripItemView.java',
         'tabs/TabStripView.java'
