@@ -134,6 +134,9 @@ public:
   static uint32_t
   DataThreshold();
 
+  static uint32_t
+  MaxSerializedMsgSize();
+
   void
   ClearBackgroundActor();
 
