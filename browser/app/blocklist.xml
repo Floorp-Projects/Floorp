@@ -4185,12 +4185,6 @@
         <certItem issuerName="ME0xCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxJzAlBgNVBAMTHkRpZ2lDZXJ0IFNIQTIgU2VjdXJlIFNlcnZlciBDQQ==">
       <serialNumber>Aa8e+91erglSMgsk/mtVaA==</serialNumber>
     </certItem>
-        <certItem issuerName="MEcxCzAJBgNVBAYTAkhLMRYwFAYDVQQKEw1Ib25na29uZyBQb3N0MSAwHgYDVQQDExdIb25na29uZyBQb3N0IFJvb3QgQ0EgMQ==">
-      <serialNumber>BHk=</serialNumber>
-    </certItem>
-        <certItem issuerName="MEcxCzAJBgNVBAYTAkhLMRYwFAYDVQQKEw1Ib25na29uZyBQb3N0MSAwHgYDVQQDExdIb25na29uZyBQb3N0IFJvb3QgQ0EgMQ==">
-      <serialNumber>BHk=</serialNumber>
-    </certItem>
       </certItems>
 
 
