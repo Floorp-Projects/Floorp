@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<table><tbody></tbody><tfoot></tfoot></table>
+<script>
+  document.body.offsetTop;
+  let parent = document.querySelector("table");
+  let comment = document.createComment("hello");
+  let footer = document.querySelector("tfoot");
+  parent.insertBefore(comment, footer);
+</script>
