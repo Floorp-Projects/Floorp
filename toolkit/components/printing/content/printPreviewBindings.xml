@@ -89,6 +89,7 @@
 
       <xul:toolbarseparator class="toolbarseparator-primary"/>
       <xul:checkbox label="&simplifyPage.label;" checked="false" disabled="true"
+        accesskey="&simplifyPage.accesskey;"
         tooltiptext-disabled="&simplifyPage.disabled.tooltip;"
         tooltiptext-enabled="&simplifyPage.enabled.tooltip;"
         oncommand="this.parentNode.simplify();"/>

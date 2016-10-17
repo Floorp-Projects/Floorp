@@ -969,9 +969,11 @@ nsExpatDriver::HandleError()
     }
   }
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mOriginalSink->GetTarget());
-  if (doc && doc->SuppressParserErrorConsoleMessages()) {
-    shouldReportError = false;
+  if (mOriginalSink) {
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mOriginalSink->GetTarget());
+    if (doc && doc->SuppressParserErrorConsoleMessages()) {
+      shouldReportError = false;
+    }
   }
 
   if (shouldReportError) {

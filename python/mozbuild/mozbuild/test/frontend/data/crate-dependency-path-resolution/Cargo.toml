@@ -6,7 +6,7 @@ authors = [
 ]
 
 [lib]
-crate-type = ["rlib"]
+crate-type = ["staticlib"]
 
 [dependencies]
 deep-crate = { version = "0.1.0", path = "the/depths" }

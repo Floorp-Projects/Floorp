@@ -61,17 +61,6 @@ interface nsILoadContext : nsISupports
   readonly attribute unsigned long long nestedFrameId;
 
   /**
-   * Check whether the load is happening in a particular type of application.
-   *
-   * @param an application type.  For now, the constants to be passed here are
-   *        the nsIDocShell APP_TYPE_* constants.
-   *
-   * @return whether there is some ancestor of the associatedWindow that is of
-   *         the given app type.
-   */
-  boolean isAppOfType(in unsigned long appType);
-
-  /**
    * True if the load context is content (as opposed to chrome).  This is
    * determined based on the type of window the load is performed in, NOT based
    * on any URIs that might be around.
