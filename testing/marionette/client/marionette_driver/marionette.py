@@ -2,14 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import ConfigParser
 import base64
-import datetime
+import ConfigParser
 import json
 import os
 import socket
 import sys
-import time
 import traceback
 import warnings
 
@@ -573,10 +571,11 @@ class Marionette(object):
         self.timeout = timeout
         self.socket_timeout = socket_timeout
 
+        startup_timeout = startup_timeout or self.DEFAULT_STARTUP_TIMEOUT
         if self.bin:
             self.instance = self._create_instance(app, instance_args)
             self.instance.start()
-            self.raise_for_connection(timeout=startup_timeout)
+            self.raise_for_port(self.wait_for_port(timeout=startup_timeout))
 
     def _create_instance(self, app, instance_args):
         if not Marionette.is_port_available(self.port, host=self.host):
@@ -640,55 +639,14 @@ class Marionette(object):
         finally:
             s.close()
 
-    def _wait_for_connection(self, timeout=None):
-        """Wait until Marionette server has been created the communication socket.
-
-        :param timeout: Timeout in seconds for the server to be ready.
-
-        """
-        if timeout is None:
-            timeout = self.DEFAULT_STARTUP_TIMEOUT
-
-        runner = None
-        if self.instance is not None:
-            runner = self.instance.runner
-
-        poll_interval = 0.1
-        starttime = datetime.datetime.now()
-
-        while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
-            # If the instance we want to connect to is not running return immediately
-            if runner is not None and not runner.is_running():
-                return False
-
-            sock = None
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(0.5)
-                sock.connect((self.host, self.port))
-                data = sock.recv(16)
-                if ":" in data:
-                    return True
-            except socket.error:
-                pass
-            finally:
-                if sock is not None:
-                    sock.close()
-
-            time.sleep(poll_interval)
-
-        return False
+    def wait_for_port(self, timeout=None):
+        timeout = timeout or self.DEFAULT_STARTUP_TIMEOUT
+        return transport.wait_for_port(self.host, self.port, timeout=timeout)
 
     @do_process_check
-    def raise_for_connection(self, timeout=None):
-        """Raise socket.timeout if no connection can be established.
-
-        :param timeout: Timeout in seconds for the server to be ready.
-
-        """
-        if not self._wait_for_connection(timeout):
-            raise socket.timeout("Timed out waiting for connection on {0}:{1}!".format(
-                self.host, self.port))
+    def raise_for_port(self, port_obtained):
+        if not port_obtained:
+            raise socket.timeout("Timed out waiting for port {}!".format(self.port))
 
     @do_process_check
     def _send_message(self, name, params=None, key=None):
@@ -1074,7 +1032,7 @@ class Marionette(object):
         if not pref_exists:
             self.delete_session()
             self.instance.restart(prefs)
-            self.raise_for_connection()
+            self.raise_for_port(self.wait_for_port())
             self.start_session()
             self.reset_timeouts()
 
@@ -1167,7 +1125,7 @@ class Marionette(object):
                 self._request_in_app_shutdown("eRestart")
 
             try:
-                self.raise_for_connection()
+                self.raise_for_port(self.wait_for_port())
             except socket.timeout:
                 if self.instance.runner.returncode is not None:
                     exc, val, tb = sys.exc_info()
@@ -1177,7 +1135,7 @@ class Marionette(object):
         else:
             self.delete_session()
             self.instance.restart(clean=clean)
-            self.raise_for_connection()
+            self.raise_for_port(self.wait_for_port())
 
         self.start_session(session_id=session_id)
         self.reset_timeouts()
@@ -1220,9 +1178,9 @@ class Marionette(object):
             self.port,
             self.socket_timeout)
 
-        # Call _wait_for_connection() before attempting to connect in
+        # Call wait_for_port() before attempting to connect in
         # the event gecko hasn't started yet.
-        self._wait_for_connection(timeout=timeout)
+        self.wait_for_port(timeout=timeout)
         self.protocol, _ = self.client.connect()
 
         body = {"capabilities": desired_capabilities, "sessionId": session_id}
