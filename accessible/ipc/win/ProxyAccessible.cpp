@@ -36,7 +36,12 @@ ProxyAccessible::GetCOMInterface(void** aOutAccessible) const
     AccessibleWrap* wrap = WrapperFor(this);
     bool isDefunct = false;
     ProxyAccessible* thisPtr = const_cast<ProxyAccessible*>(this);
-    thisPtr->mCOMProxy = wrap->GetIAccessibleFor(kChildIdSelf, &isDefunct);
+    // NB: Don't pass CHILDID_SELF here, use the absolute MSAA ID. Otherwise
+    // GetIAccessibleFor will recurse into this function and we will just
+    // overflow the stack.
+    VARIANT realId = {VT_I4};
+    realId.ulVal = wrap->GetExistingID();
+    thisPtr->mCOMProxy = wrap->GetIAccessibleFor(realId, &isDefunct);
   }
 
   RefPtr<IAccessible> addRefed = mCOMProxy;
