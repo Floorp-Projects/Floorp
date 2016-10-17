@@ -1104,7 +1104,6 @@ class Marionette(object):
                 raise errors.MarionetteException("Something canceled the quit application request")
 
         self._send_message("quitApplication", {"flags": list(flags)})
-        self.delete_session(in_app=True)
 
     @do_process_check
     def quit(self, in_app=False, callback=None):
@@ -1128,9 +1127,11 @@ class Marionette(object):
 
         if in_app:
             if callable(callback):
+                self._send_message("acceptConnections", {"value": False})
                 callback()
             else:
                 self._request_in_app_shutdown()
+            self.delete_session(in_app=True)
 
             # Give the application some time to shutdown
             self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
@@ -1163,9 +1164,11 @@ class Marionette(object):
                 raise ValueError("An in_app restart cannot be triggered with the clean flag set")
 
             if callable(callback):
+                self._send_message("acceptConnections", {"value": False})
                 callback()
             else:
                 self._request_in_app_shutdown("eRestart")
+            self.delete_session(in_app=True)
 
             try:
                 self.raise_for_port()
