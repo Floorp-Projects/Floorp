@@ -204,10 +204,6 @@ const kEventConstructors = {
                                                          return new DownloadEvent(aName, aProps);
                                                        },
                                              },
-  DOMTransactionEvent:                       { create: function (aName, aProps) {
-                                                         return new DOMTransactionEvent(aName, aProps);
-                                                       },
-                                             },
   DragEvent:                                 { create: function (aName, aProps) {
                                                          var e = document.createEvent("dragevent");
                                                          e.initDragEvent(aName, aProps.bubbles, aProps.cancelable,

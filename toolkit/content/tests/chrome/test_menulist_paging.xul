@@ -77,9 +77,6 @@ SimpleTest.waitForExplicitFinish();
 
 let test;
 
-// Windows allows disabled items to be selected.
-let isWindows = navigator.platform.indexOf("Win") >= 0;
-
 // Fields:
 //  list - menulist id
 //  initial - initial selected index
@@ -89,10 +86,10 @@ let isWindows = navigator.platform.indexOf("Win") >= 0;
 let tests = [
   { list: "menulist1", initial: 0, scroll: 0, downs: [3, 6, 9, 9],
                                    ups: [6, 3, 0, 0] },
-  { list: "menulist2", initial: 1, scroll: 0, downs: [4, 7, isWindows ? 9 : 8, isWindows ? 9 : 8],
-                                   ups: [isWindows ? 6 : 5, isWindows ? 3 : 2, isWindows ? 0 : 1] },
-  { list: "menulist3", initial: 1, scroll: -1, downs: [isWindows ? 4 : 6, isWindows ? 7 : 8, 8],
-                                   ups: [isWindows ? 5 : 3, isWindows ? 2 : 1, 1] },
+  { list: "menulist2", initial: 1, scroll: 0, downs: [4, 7, 8, 8],
+                                   ups: [5, 2, 1] },
+  { list: "menulist3", initial: 1, scroll: -1, downs: [6, 8, 8],
+                                   ups: [3, 1, 1] },
   { list: "menulist4", initial: 5, scroll: 2, downs: [], ups: [] }
 ];
 

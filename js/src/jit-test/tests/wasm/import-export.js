@@ -25,16 +25,16 @@ assertErrorMessage(() => new Memory({initial:2, maximum:1}), RangeError, /bad Me
 
 const m1 = new Module(wasmTextToBinary('(module (import "foo" "bar") (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m1), TypeError, /second argument must be an object/);
-assertErrorMessage(() => new Instance(m1, {foo:null}), TypeError, /import object field is not an Object/);
-assertErrorMessage(() => new Instance(m1, {foo:{bar:{}}}), TypeError, /import object field is not a Function/);
-assertErrorMessage(() => new Instance(m1, {foo:{bar:()=>{}}, baz:null}), TypeError, /import object field is not an Object/);
-assertErrorMessage(() => new Instance(m1, {foo:{bar:()=>{}}, baz:{}}), TypeError, /import object field is not a Function/);
+assertErrorMessage(() => new Instance(m1, {foo:null}), TypeError, /import object field 'foo' is not an Object/);
+assertErrorMessage(() => new Instance(m1, {foo:{bar:{}}}), TypeError, /import object field 'bar' is not a Function/);
+assertErrorMessage(() => new Instance(m1, {foo:{bar:()=>{}}, baz:null}), TypeError, /import object field 'baz' is not an Object/);
+assertErrorMessage(() => new Instance(m1, {foo:{bar:()=>{}}, baz:{}}), TypeError, /import object field 'quux' is not a Function/);
 assertEq(new Instance(m1, {foo:{bar:()=>{}}, baz:{quux:()=>{}}}) instanceof Instance, true);
 
 const m2 = new Module(wasmTextToBinary('(module (import "x" "y" (memory 2 3)))'));
 assertErrorMessage(() => new Instance(m2), TypeError, /second argument must be an object/);
-assertErrorMessage(() => new Instance(m2, {x:null}), TypeError, /import object field is not an Object/);
-assertErrorMessage(() => new Instance(m2, {x:{y:{}}}), TypeError, /import object field is not a Memory/);
+assertErrorMessage(() => new Instance(m2, {x:null}), TypeError, /import object field 'x' is not an Object/);
+assertErrorMessage(() => new Instance(m2, {x:{y:{}}}), TypeError, /import object field 'y' is not a Memory/);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem1Page}}), TypeError, /imported Memory with incompatible size/);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem1PageMax1}}), TypeError, /imported Memory with incompatible size/);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem4Page}}), TypeError, /imported Memory with incompatible size/);
@@ -48,19 +48,19 @@ assertErrorMessage(() => new Instance(m2, {x:{y:mem2PageMax4}}), TypeError, /imp
 
 const m3 = new Module(wasmTextToBinary('(module (import "foo" "bar" (memory 1 1)) (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m3), TypeError, /second argument must be an object/);
-assertErrorMessage(() => new Instance(m3, {foo:null}), TypeError, /import object field is not an Object/);
-assertErrorMessage(() => new Instance(m3, {foo:{bar:{}}}), TypeError, /import object field is not a Memory/);
-assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:null}), TypeError, /import object field is not an Object/);
-assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:mem1Page}}), TypeError, /import object field is not a Function/);
+assertErrorMessage(() => new Instance(m3, {foo:null}), TypeError, /import object field 'foo' is not an Object/);
+assertErrorMessage(() => new Instance(m3, {foo:{bar:{}}}), TypeError, /import object field 'bar' is not a Memory/);
+assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:null}), TypeError, /import object field 'baz' is not an Object/);
+assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:mem1Page}}), TypeError, /import object field 'quux' is not a Function/);
 assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:()=>{}}}), TypeError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m3, {foo:{bar:mem1PageMax1}, baz:{quux:()=>{}}}) instanceof Instance, true);
 
 const m4 = new Module(wasmTextToBinary('(module (import "baz" "quux") (import "foo" "bar" (memory 1 1)))'));
 assertErrorMessage(() => new Instance(m4), TypeError, /second argument must be an object/);
-assertErrorMessage(() => new Instance(m4, {baz:null}), TypeError, /import object field is not an Object/);
-assertErrorMessage(() => new Instance(m4, {baz:{quux:{}}}), TypeError, /import object field is not a Function/);
-assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:null}), TypeError, /import object field is not an Object/);
-assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:()=>{}}}), TypeError, /import object field is not a Memory/);
+assertErrorMessage(() => new Instance(m4, {baz:null}), TypeError, /import object field 'baz' is not an Object/);
+assertErrorMessage(() => new Instance(m4, {baz:{quux:{}}}), TypeError, /import object field 'quux' is not a Function/);
+assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:null}), TypeError, /import object field 'foo' is not an Object/);
+assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:()=>{}}}), TypeError, /import object field 'bar' is not a Memory/);
 assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:mem1Page}}), TypeError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m3, {baz:{quux:()=>{}}, foo:{bar:mem1PageMax1}}) instanceof Instance, true);
 
@@ -104,7 +104,7 @@ var importObj = {
     get foo() { arr.push("foo") },
     get baz() { arr.push("bad") },
 };
-assertErrorMessage(() => new Instance(m1, importObj), TypeError, /import object field is not an Object/);
+assertErrorMessage(() => new Instance(m1, importObj), TypeError, /import object field 'foo' is not an Object/);
 assertEq(arr.join(), "foo");
 
 var arr = [];
@@ -115,7 +115,7 @@ var importObj = {
     },
     get baz() { arr.push("bad") },
 };
-assertErrorMessage(() => new Instance(m1, importObj), TypeError, /import object field is not a Function/);
+assertErrorMessage(() => new Instance(m1, importObj), TypeError, /import object field 'bar' is not a Function/);
 assertEq(arr.join(), "foo,bar");
 
 var arr = [];
