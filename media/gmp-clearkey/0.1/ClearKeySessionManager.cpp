@@ -217,6 +217,13 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
   }
   ClearKeySession* session = itr->second;
 
+  // Verify the size of session response.
+  if (aResponseSize >= kMaxSessionResponseLength) {
+    CK_LOGW("Session response size is not within a reasonable size.");
+    mCallback->RejectPromise(aPromiseId, kGMPInvalidAccessError, nullptr, 0);
+    return;
+  }
+
   // Parse the response for any (key ID, key) pairs.
   vector<KeyIdPair> keyPairs;
   if (!ClearKeyUtils::ParseJWK(aResponse, aResponseSize, keyPairs, session->Type())) {

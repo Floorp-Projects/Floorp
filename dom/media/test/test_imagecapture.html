@@ -112,17 +112,8 @@ function trackTest(track) {
 
 function init() {
   return new Promise(function(resolve, reject) {
-    var constraints;
-    if (SpecialPowers.Services.appinfo.widgetToolkit == "gonk") {
-      info("B2G ImageCapture test");
-      // Reduce repeat count due to b2g emulator is very slow.
-      repeat = 20;
-      // Use gonk camera, MedieEngine will be the backend of ImageCapture.
-      constraints = {video: true};
-    } else {
-      // use fake camera, MediaStreamGraph will be the backend of ImageCapture.
-      constraints = {video: true, fake: true}
-    }
+    // use fake camera, MediaStreamGraph will be the backend of ImageCapture.
+    var constraints = {video: true, fake: true}
 
     window.navigator.mozGetUserMedia(
       constraints,

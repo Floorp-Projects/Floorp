@@ -80,7 +80,6 @@ namespace media {
 class AudioNodeEngine;
 class AudioNodeExternalInputStream;
 class AudioNodeStream;
-class CameraPreviewMediaStream;
 class MediaInputPort;
 class MediaStream;
 class MediaStreamGraph;
@@ -159,7 +158,6 @@ class AudioNodeEngine;
 class AudioNodeExternalInputStream;
 class AudioNodeStream;
 class AudioSegment;
-class CameraPreviewMediaStream;
 class DirectMediaStreamListener;
 class DirectMediaStreamTrackListener;
 class MediaInputPort;

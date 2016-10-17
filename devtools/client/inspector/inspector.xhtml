@@ -2,27 +2,28 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/inspector.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/rules.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/computed.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/fonts.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/boxmodel.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/animationinspector.css" type="text/css"?>
-<?xml-stylesheet href="resource://devtools/client/shared/components/sidebar-toggle.css" type="text/css"?>
-<?xml-stylesheet href="resource://devtools/client/shared/components/tabs/tabs.css" type="text/css"?>
-<?xml-stylesheet href="resource://devtools/client/shared/components/tabs/tabbar.css" type="text/css"?>
-<?xml-stylesheet href="resource://devtools/client/inspector/components/side-panel.css" type="text/css"?>
-<?xml-stylesheet href="resource://devtools/client/inspector/components/inspector-tab-panel.css" type="text/css"?>
-<?xml-stylesheet href="resource://devtools/client/shared/components/splitter/split-box.css" type="text/css"?>
-
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml" dir="">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+  <link rel="stylesheet" href="chrome://global/skin/"/>
+  <link rel="stylesheet" href="resource://devtools/client/shared/widgets/widgets.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/widgets.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/inspector.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/rules.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/computed.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/fonts.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/boxmodel.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/animationinspector.css"/>
+  <link rel="stylesheet" href="resource://devtools/client/shared/components/sidebar-toggle.css"/>
+  <link rel="stylesheet" href="resource://devtools/client/shared/components/tabs/tabs.css"/>
+  <link rel="stylesheet" href="resource://devtools/client/shared/components/tabs/tabbar.css"/>
+  <link rel="stylesheet" href="resource://devtools/client/inspector/components/side-panel.css"/>
+  <link rel="stylesheet" href="resource://devtools/client/inspector/components/inspector-tab-panel.css"/>
+  <link rel="stylesheet" href="resource://devtools/client/shared/components/splitter/split-box.css"/>
+
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"></script>
   <script type="application/javascript;version=1.8" src="inspector.js" defer="true"></script>
@@ -35,9 +36,9 @@
       <div id="inspector-toolbar" class="devtools-toolbar" nowindowdrag="true"
                 data-localization-bundle="devtools/locale/inspector.properties">
         <button id="inspector-element-add-button" class="devtools-button"
-                     data-localization="title=inspectorAddNode.label"/>
-        <div class="devtools-toolbar-spacer" />
-        <span id="inspector-searchlabel" />
+                     data-localization="title=inspectorAddNode.label"></button>
+        <div class="devtools-toolbar-spacer"></div>
+        <span id="inspector-searchlabel"></span>
         <div id="inspector-search" class="devtools-searchbox has-clear-btn">
           <input id="inspector-searchbox" class="devtools-searchinput"
                       type="search"
@@ -46,13 +47,13 @@
         </div>
         <button id="inspector-eyedropper-toggle"
                      data-localization="title=inspector.eyedropper.label"
-                     class="devtools-button command-button-invertable" />
-        <div id="inspector-sidebar-toggle-box" />
+                     class="devtools-button command-button-invertable"></button>
+        <div id="inspector-sidebar-toggle-box"></div>
       </div>
-      <div id="markup-box" />
+      <div id="markup-box"></div>
       <div id="inspector-breadcrumbs-toolbar" class="devtools-toolbar">
         <div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"
-                  role="group" data-localization="aria-label=inspector.breadcrumbs.label" tabindex="0" />
+                  role="group" data-localization="aria-label=inspector.breadcrumbs.label" tabindex="0"></div>
       </div>
     </div>
 
@@ -67,7 +68,7 @@
       <div
         xmlns="http://www.w3.org/1999/xhtml"
         id="inspector-sidebar"
-        hidden="true" />
+        hidden="true"></div>
     </div>
 
     <!-- Sidebar panel definitions -->
@@ -115,7 +116,7 @@
                       type="checkbox"
                       class="includebrowserstyles"/>
           <label id="browser-style-checkbox-label" for="browser-style-checkbox"
-                        data-localization="content=inspector.browserStyles.label"/>
+                        data-localization="content=inspector.browserStyles.label"></label>
         </div>
 
         <div id="computedview-container">
@@ -124,16 +125,16 @@
               data-localization-bundle="devtools/locale/boxmodel.properties">
               <div id="boxmodel-header">
                 <div id="boxmodel-expander" class="expander theme-twisty expandable" open=""></div>
-                <span data-localization="content=boxmodel.title"/>
+                <span data-localization="content=boxmodel.title"></span>
               </div>
 
               <div id="boxmodel-container">
                 <div id="boxmodel-main">
-                  <span class="boxmodel-legend" data-box="margin" data-localization="content=boxmodel.margin;title=boxmodel.margin"/>
+                  <span class="boxmodel-legend" data-box="margin" data-localization="content=boxmodel.margin;title=boxmodel.margin"></span>
                   <div id="boxmodel-margins" data-box="margin" data-localization="title=boxmodel.margin">
-                    <span class="boxmodel-legend" data-box="border" data-localization="content=boxmodel.border;title=boxmodel.border"/>
+                    <span class="boxmodel-legend" data-box="border" data-localization="content=boxmodel.border;title=boxmodel.border"></span>
                     <div id="boxmodel-borders" data-box="border" data-localization="title=boxmodel.border">
-                      <span class="boxmodel-legend" data-box="padding" data-localization="content=boxmodel.padding;title=boxmodel.padding"/>
+                      <span class="boxmodel-legend" data-box="padding" data-localization="content=boxmodel.padding;title=boxmodel.padding"></span>
                       <div id="boxmodel-padding" data-box="padding" data-localization="title=boxmodel.padding">
                         <div id="boxmodel-content" data-box="content" data-localization="title=boxmodel.content">
                         </div>
@@ -179,7 +180,7 @@
             <div id="propertyContainer" class="theme-separator" tabindex="0">
             </div>
 
-            <div id="computedview-no-results" hidden="" data-localization="content=inspector.noProperties"/>
+            <div id="computedview-no-results" hidden="" data-localization="content=inspector.noProperties"></div>
           </div>
         </div>
       </div>
@@ -198,7 +199,7 @@
           </div>
           <label id="font-showall" class="theme-link"
                       data-localization="content=fontinspector.seeAll;
-                                         title=fontinspector.seeAll.tooltip"/>
+                                         title=fontinspector.seeAll.tooltip"></label>
         </div>
 
         <div id="font-container">
@@ -212,14 +213,14 @@
             </div>
             <div class="font-info">
               <h1 class="font-name"></h1>
-              <span class="font-is-local" data-localization="content=fontinspector.system"/>
-              <span class="font-is-remote" data-localization="content=fontinspector.remote"/>
+              <span class="font-is-local" data-localization="content=fontinspector.system"></span>
+              <span class="font-is-remote" data-localization="content=fontinspector.remote"></span>
               <p class="font-format-url">
                 <input readonly="readonly" class="font-url"></input>
                 <span class="font-format"></span>
               </p>
               <p class="font-css">
-                <span data-localization="content=fontinspector.usedAs"/> "<span class="font-css-name"></span>"
+                <span data-localization="content=fontinspector.usedAs"></span> "<span class="font-css-name"></span>"
               </p>
               <pre class="font-css-code"></pre>
             </div>
@@ -228,7 +229,7 @@
       </div>
 
       <div id="sidebar-panel-animationinspector" class="devtools-monospace theme-sidebar inspector-tabpanel">
-        <iframe class="devtools-inspector-tab-frame" />
+        <iframe class="devtools-inspector-tab-frame"></iframe>
       </div>
     </div>
 
