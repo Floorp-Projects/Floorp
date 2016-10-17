@@ -10,6 +10,7 @@ include protocol PLayer;
 include protocol PTexture;
 include protocol PVRLayer;
 include LayersMessages;
+include GamepadEventTypes;
 
 include "VRMessageUtils.h";
 
@@ -17,6 +18,7 @@ using struct mozilla::gfx::VRFieldOfView from "gfxVR.h";
 using struct mozilla::gfx::VRDisplayInfo from "gfxVR.h";
 using struct mozilla::gfx::VRSensorUpdate from "gfxVR.h";
 using struct mozilla::gfx::VRHMDSensorState from "gfxVR.h";
+using struct mozilla::gfx::VRControllerInfo from "gfxVR.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 
@@ -56,6 +58,12 @@ parent:
   sync GetImmediateSensorState(uint32_t aDisplayID) returns(VRHMDSensorState aState);
   sync SetHaveEventListener(bool aHaveEventListener);
 
+  async ControllerListenerAdded();
+  async ControllerListenerRemoved();
+  // GetControllers synchronously returns the VR controllers that have already been
+  // enumerated by RefreshVRControllers() but does not enumerate new ones.
+  sync GetControllers() returns(VRControllerInfo[] aControllerInfo);
+
 child:
 
   async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
@@ -68,6 +76,7 @@ child:
 
   async NotifyVSync();
   async NotifyVRVSync(uint32_t aDisplayID);
+  async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
 
   async __delete__();
 

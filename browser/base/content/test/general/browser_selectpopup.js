@@ -137,11 +137,9 @@ function* doSelectTests(contentType, dtd)
   EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
 
   // On Windows, one can navigate on disabled menuitems
-  let expectedIndex = isWindows ? 5 : 9;
-
-  is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(expectedIndex),
+  is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(9),
      "Skip optgroup header and disabled items select item 7");
-  is(menulist.selectedIndex, isWindows ? 5 : 1, "Select or skip disabled item selectedIndex");
+  is(menulist.selectedIndex, isWindows ? 9 : 1, "Select or skip disabled item selectedIndex");
 
   for (let i = 0; i < 10; i++) {
     is(menulist.getItemAtIndex(i).disabled, i >= 4 && i <= 7, "item " + i + " disabled")

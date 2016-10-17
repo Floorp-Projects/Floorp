@@ -2,6 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.home.activitystream;
 
 import android.database.Cursor;
@@ -12,7 +13,6 @@ import android.view.ViewGroup;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.home.activitystream.StreamItem.BottomPanel;
 import org.mozilla.gecko.home.activitystream.StreamItem.HighlightItem;
 import org.mozilla.gecko.home.activitystream.StreamItem.TopPanel;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
@@ -25,16 +25,26 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
     private HomePager.OnUrlOpenListener onUrlOpenListener;
 
+    private int tiles;
+    private int tilesWidth;
+    private int tilesHeight;
+
     void setOnUrlOpenListener(HomePager.OnUrlOpenListener onUrlOpenListener) {
         this.onUrlOpenListener = onUrlOpenListener;
+    }
+
+    public void setTileSize(int tiles, int tilesWidth, int tilesHeight) {
+        this.tilesWidth = tilesWidth;
+        this.tilesHeight = tilesHeight;
+        this.tiles = tiles;
+
+        notifyDataSetChanged();
     }
 
     @Override
     public int getItemViewType(int position) {
         if (position == 0) {
             return TopPanel.LAYOUT_ID;
-        } else if (position == getItemCount() - 1) {
-            return BottomPanel.LAYOUT_ID;
         } else {
             return HighlightItem.LAYOUT_ID;
         }
@@ -46,8 +56,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
         if (type == TopPanel.LAYOUT_ID) {
             return new TopPanel(inflater.inflate(type, parent, false), onUrlOpenListener);
-        } else if (type == BottomPanel.LAYOUT_ID) {
-                return new BottomPanel(inflater.inflate(type, parent, false));
         } else if (type == HighlightItem.LAYOUT_ID) {
             return new HighlightItem(inflater.inflate(type, parent, false));
         } else {
@@ -56,8 +64,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     }
 
     private int translatePositionToCursor(int position) {
-        if (position == 0 ||
-            position == getItemCount() - 1) {
+        if (position == 0) {
             throw new IllegalArgumentException("Requested cursor position for invalid item");
         }
 
@@ -73,9 +80,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             final int cursorPosition = translatePositionToCursor(position);
 
             highlightsCursor.moveToPosition(cursorPosition);
-            holder.bind(highlightsCursor);
+            ((HighlightItem) holder).bind(highlightsCursor, tilesWidth,  tilesHeight);
         } else if (type == TopPanel.LAYOUT_ID) {
-            holder.bind(topSitesCursor);
+            ((TopPanel) holder).bind(topSitesCursor, tiles, tilesWidth, tilesHeight);
         }
     }
 
@@ -104,7 +111,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             highlightsCount = 0;
         }
 
-        return 2 + highlightsCount;
+        return highlightsCount + 1;
     }
 
     public void swapHighlightsCursor(Cursor cursor) {

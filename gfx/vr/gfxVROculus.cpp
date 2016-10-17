@@ -315,7 +315,7 @@ FromFovPort(const ovrFovPort& aFOV)
 } // namespace
 
 VRDisplayOculus::VRDisplayOculus(ovrSession aSession)
-  : VRDisplayHost(VRDisplayType::Oculus)
+  : VRDisplayHost(VRDeviceType::Oculus)
   , mSession(aSession)
   , mTextureSet(nullptr)
   , mQuadVS(nullptr)

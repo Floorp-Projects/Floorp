@@ -475,8 +475,12 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   display: none;
 }
 
-#PopupAutoComplete {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#browser-autocomplete-result-popup");
+#PopupAutoComplete > richlistbox > richlistitem > .ac-type-icon,
+#PopupAutoComplete > richlistbox > richlistitem > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem > .ac-tags,
+#PopupAutoComplete > richlistbox > richlistitem > .ac-separator,
+#PopupAutoComplete > richlistbox > richlistitem > .ac-url {
+  display: none;
 }
 
 #PopupSearchAutoComplete {
