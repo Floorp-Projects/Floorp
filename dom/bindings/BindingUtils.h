@@ -1281,46 +1281,40 @@ FindEnumStringIndexImpl(const CharT* chars, size_t length, const EnumEntry* valu
 }
 
 template<bool InvalidValueFatal>
-inline int
+inline bool
 FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* values,
-                    const char* type, const char* sourceDescription, bool* ok)
+                    const char* type, const char* sourceDescription, int* index)
 {
   // JS_StringEqualsAscii is slow as molasses, so don't use it here.
   JS::RootedString str(cx, JS::ToString(cx, v));
   if (!str) {
-    *ok = false;
-    return 0;
+    return false;
   }
 
   {
-    int index;
     size_t length;
     JS::AutoCheckCannotGC nogc;
     if (js::StringHasLatin1Chars(str)) {
       const JS::Latin1Char* chars = JS_GetLatin1StringCharsAndLength(cx, nogc, str,
                                                                      &length);
       if (!chars) {
-        *ok = false;
-        return 0;
+        return false;
       }
-      index = FindEnumStringIndexImpl(chars, length, values);
+      *index = FindEnumStringIndexImpl(chars, length, values);
     } else {
       const char16_t* chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, str,
                                                                 &length);
       if (!chars) {
-        *ok = false;
-        return 0;
+        return false;
       }
-      index = FindEnumStringIndexImpl(chars, length, values);
+      *index = FindEnumStringIndexImpl(chars, length, values);
     }
-    if (index >= 0) {
-      *ok = true;
-      return index;
+    if (*index >= 0) {
+      return true;
     }
   }
 
-  *ok = EnumValueNotFound<InvalidValueFatal>(cx, str, type, sourceDescription);
-  return -1;
+  return EnumValueNotFound<InvalidValueFatal>(cx, str, type, sourceDescription);
 }
 
 inline nsWrapperCache*

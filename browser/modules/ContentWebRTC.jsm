@@ -73,10 +73,10 @@ this.ContentWebRTC = {
         let devices = contentWindow.pendingGetUserMediaRequests.get(callID);
         forgetGUMRequest(contentWindow, callID);
 
-        let allowedDevices = Cc["@mozilla.org/supports-array;1"]
-                               .createInstance(Ci.nsISupportsArray);
+        let allowedDevices = Cc["@mozilla.org/array;1"]
+                               .createInstance(Ci.nsIMutableArray);
         for (let deviceIndex of aMessage.data.devices)
-           allowedDevices.AppendElement(devices[deviceIndex]);
+           allowedDevices.appendElement(devices[deviceIndex], /*weak =*/ false);
 
         Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", callID);
         break;
@@ -261,8 +261,8 @@ function forgetPendingListsEventually(aContentWindow) {
 }
 
 function updateIndicators() {
-  let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
-  let count = contentWindowSupportsArray.Count();
+  let contentWindowArray = MediaManagerService.activeMediaCaptureWindows;
+  let count = contentWindowArray.length;
 
   let state = {
     showGlobalIndicator: count > 0,
@@ -280,7 +280,7 @@ function updateIndicators() {
   // sending duplicate notifications.
   let contentWindows = new Set();
   for (let i = 0; i < count; ++i) {
-    contentWindows.add(contentWindowSupportsArray.GetElementAt(i).top);
+    contentWindows.add(contentWindowArray.queryElementAt(i, Ci.nsISupports).top);
   }
 
   for (let contentWindow of contentWindows) {

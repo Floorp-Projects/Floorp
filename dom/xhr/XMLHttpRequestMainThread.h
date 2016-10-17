@@ -710,6 +710,18 @@ protected:
   void StartTimeoutTimer();
   void HandleTimeoutCallback();
 
+  nsCOMPtr<nsITimer> mSyncTimeoutTimer;
+
+  enum SyncTimeoutType {
+    eErrorOrExpired,
+    eTimerStarted,
+    eNoTimerNeeded
+  };
+
+  SyncTimeoutType MaybeStartSyncTimeoutTimer();
+  void HandleSyncTimeoutTimer();
+  void CancelSyncTimeoutTimer();
+
   bool mErrorLoad;
   bool mErrorParsingXML;
   bool mWaitingForOnStopRequest;

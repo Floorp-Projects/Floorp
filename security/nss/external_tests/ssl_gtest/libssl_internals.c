@@ -24,29 +24,6 @@ SECStatus SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd) {
   return SECSuccess;
 }
 
-// This function guesses what key exchange strength libssl will choose.
-PRUint32 SSLInt_DetermineKEABits(PRUint16 serverKeyBits,
-                                 SSLAuthType authAlgorithm,
-                                 PRUint32 symKeyBits) {
-  PRUint32 authBits;
-
-  if (authAlgorithm == ssl_auth_ecdsa || authAlgorithm == ssl_auth_ecdh_rsa ||
-      authAlgorithm == ssl_auth_ecdh_ecdsa) {
-    authBits = serverKeyBits;
-  } else {
-    PORT_Assert(authAlgorithm == ssl_auth_rsa_decrypt ||
-                authAlgorithm == ssl_auth_rsa_sign);
-    authBits = SSL_RSASTRENGTH_TO_ECSTRENGTH(serverKeyBits);
-  }
-
-  // We expect a curve for key exchange to be selected based on the symmetric
-  // key strength (times 2) or the server key size, whichever is smaller.
-  PRUint32 targetKeaBits = PR_MIN(symKeyBits * 2, authBits);
-
-  // P-256 is the preferred curve of minimum size.
-  return PR_MAX(256U, targetKeaBits);
-}
-
 /* Use this function to update the ClientRandom of a client's handshake state
  * after replacing its ClientHello message. We for example need to do this
  * when replacing an SSLv3 ClientHello with its SSLv2 equivalent. */

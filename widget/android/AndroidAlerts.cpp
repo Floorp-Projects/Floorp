@@ -26,7 +26,8 @@ AndroidAlerts::ShowAlertNotification(const nsAString & aImageUrl,
                                      const nsAString & aLang,
                                      const nsAString & aData,
                                      nsIPrincipal * aPrincipal,
-                                     bool aInPrivateBrowsing)
+                                     bool aInPrivateBrowsing,
+                                     bool aRequireInteraction)
 {
     MOZ_ASSERT_UNREACHABLE("Should be implemented by nsAlertsService.");
     return NS_ERROR_NOT_IMPLEMENTED;

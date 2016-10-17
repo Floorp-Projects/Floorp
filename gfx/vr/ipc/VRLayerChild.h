@@ -34,7 +34,7 @@ class VRLayerChild : public PVRLayerChild {
 public:
   VRLayerChild(uint32_t aVRDisplayID, VRManagerChild* aVRManagerChild);
   void Initialize(dom::HTMLCanvasElement* aCanvasElement);
-  void SubmitFrame(int32_t aInputFrameID);
+  void SubmitFrame();
 
 protected:
   virtual ~VRLayerChild();

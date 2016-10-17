@@ -8,6 +8,10 @@ ifeq ($(USE_UBSAN), 1)
 SANITIZER_FLAGS_COMMON += -fsanitize=undefined -fno-sanitize-recover=undefined
 endif
 
+ifeq ($(FUZZ), 1)
+SANITIZER_FLAGS_COMMON += -fsanitize-coverage=edge
+endif
+
 SANITIZER_FLAGS_COMMON += $(EXTRA_SANITIZER_FLAGS)
 SANITIZER_CFLAGS = $(SANITIZER_FLAGS_COMMON)
 SANITIZER_LDFLAGS = $(SANITIZER_FLAGS_COMMON)

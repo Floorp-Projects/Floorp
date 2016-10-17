@@ -49,6 +49,9 @@ public:
   // Element
   virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
 
+  // EventTarget
+  virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
+
   // nsIDOMHTMLImageElement
   NS_DECL_NSIDOMHTMLIMAGEELEMENT
 

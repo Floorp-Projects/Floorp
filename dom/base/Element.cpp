@@ -2813,9 +2813,9 @@ Element::DescribeAttribute(uint32_t index, nsAString& aOutDescription) const
   aOutDescription.AppendLiteral("=\"");
   nsAutoString value;
   mAttrsAndChildren.AttrAt(index)->ToString(value);
-  for (int i = value.Length(); i >= 0; --i) {
-    if (value[i] == char16_t('"'))
-      value.Insert(char16_t('\\'), uint32_t(i));
+  for (uint32_t i = value.Length(); i > 0; --i) {
+    if (value[i - 1] == char16_t('"'))
+      value.Insert(char16_t('\\'), i - 1);
   }
   aOutDescription.Append(value);
   aOutDescription.Append('"');
@@ -3723,7 +3723,8 @@ Element::InsertAdjacent(const nsAString& aWhere,
     }
     parent->InsertBefore(*aNode, this, aError);
   } else if (aWhere.LowerCaseEqualsLiteral("afterbegin")) {
-    static_cast<nsINode*>(this)->InsertBefore(*aNode, GetFirstChild(), aError);
+    nsCOMPtr<nsINode> refNode = GetFirstChild();
+    static_cast<nsINode*>(this)->InsertBefore(*aNode, refNode, aError);
   } else if (aWhere.LowerCaseEqualsLiteral("beforeend")) {
     static_cast<nsINode*>(this)->AppendChild(*aNode, aError);
   } else if (aWhere.LowerCaseEqualsLiteral("afterend")) {
@@ -3731,7 +3732,8 @@ Element::InsertAdjacent(const nsAString& aWhere,
     if (!parent) {
       return nullptr;
     }
-    parent->InsertBefore(*aNode, GetNextSibling(), aError);
+    nsCOMPtr<nsINode> refNode = GetNextSibling();
+    parent->InsertBefore(*aNode, refNode, aError);
   } else {
     aError.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;

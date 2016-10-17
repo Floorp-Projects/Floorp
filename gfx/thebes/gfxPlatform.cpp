@@ -890,12 +890,6 @@ gfxPlatform::Shutdown()
       GPUProcessManager::Shutdown();
     }
 
-    // This is a bit iffy - we're assuming that we were the ones that set the
-    // log forwarder in the Factory, so that it's our responsibility to
-    // delete it.
-    delete mozilla::gfx::Factory::GetLogForwarder();
-    mozilla::gfx::Factory::SetLogForwarder(nullptr);
-
     gfx::Factory::ShutDown();
 
     delete gGfxPlatformPrefsLock;

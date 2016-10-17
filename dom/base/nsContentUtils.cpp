@@ -38,7 +38,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/CustomElementsRegistry.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/Element.h"
@@ -67,6 +67,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/TextEvents.h"
+#include "nsArrayUtils.h"
 #include "nsAString.h"
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
@@ -7693,11 +7694,11 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
   MOZ_ASSERT((aChild && !aParent) || (!aChild && aParent));
 
   if (aTransferable) {
-    nsCOMPtr<nsISupportsArray> flavorList;
+    nsCOMPtr<nsIArray> flavorList;
     aTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
     if (flavorList) {
       uint32_t flavorCount = 0;
-      flavorList->Count(&flavorCount);
+      flavorList->GetLength(&flavorCount);
       for (uint32_t j = 0; j < flavorCount; ++j) {
         nsCOMPtr<nsISupportsCString> flavor = do_QueryElementAt(flavorList, j);
         if (!flavor) {
@@ -9537,7 +9538,7 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
     return nullptr;
   }
 
-  RefPtr<CustomElementsRegistry> registry(window->CustomElements());
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
   if (!registry) {
     return nullptr;
   }
@@ -9570,7 +9571,7 @@ nsContentUtils::SetupCustomElement(Element* aElement,
     return;
   }
 
-  RefPtr<CustomElementsRegistry> registry(window->CustomElements());
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
   if (!registry) {
     return;
   }
@@ -9599,7 +9600,7 @@ nsContentUtils::EnqueueLifecycleCallback(nsIDocument* aDoc,
     return;
   }
 
-  RefPtr<CustomElementsRegistry> registry(window->CustomElements());
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
   if (!registry) {
     return;
   }
@@ -9628,7 +9629,7 @@ nsContentUtils::GetCustomPrototype(nsIDocument* aDoc,
     return;
   }
 
-  RefPtr<CustomElementsRegistry> registry(window->CustomElements());
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
   if (!registry) {
     return;
   }

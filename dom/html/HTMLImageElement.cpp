@@ -166,6 +166,12 @@ HTMLImageElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
           nsGenericHTMLElement::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
+void
+HTMLImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  nsImageLoadingContent::AsyncEventRunning(aEvent);
+}
+
 nsresult
 HTMLImageElement::GetCurrentSrc(nsAString& aValue)
 {

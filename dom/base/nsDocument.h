@@ -68,7 +68,7 @@
 #include "jsfriendapi.h"
 #include "ImportManager.h"
 #include "mozilla/LinkedList.h"
-#include "CustomElementsRegistry.h"
+#include "CustomElementRegistry.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -1364,8 +1364,8 @@ private:
     ErrorResult& rv);
 
 public:
-  virtual already_AddRefed<mozilla::dom::CustomElementsRegistry>
-    GetCustomElementsRegistry() override;
+  virtual already_AddRefed<mozilla::dom::CustomElementRegistry>
+    GetCustomElementRegistry() override;
 
   static bool IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject);
 

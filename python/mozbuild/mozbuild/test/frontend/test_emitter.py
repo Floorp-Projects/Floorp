@@ -28,6 +28,7 @@ from mozbuild.frontend.data import (
     HostSources,
     IPDLFile,
     JARManifest,
+    LinkageMultipleRustLibrariesError,
     LocalInclude,
     Program,
     RustLibrary,
@@ -1074,6 +1075,14 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertRegexpMatches(lib.lib_name, "random_crate")
         self.assertRegexpMatches(lib.import_name, "random_crate")
         self.assertRegexpMatches(lib.basename, "random-crate")
+
+    def test_multiple_rust_libraries(self):
+        '''Test that linking multiple Rust libraries throws an error'''
+        reader = self.reader('multiple-rust-libraries',
+                             extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
+        with self.assertRaisesRegexp(LinkageMultipleRustLibrariesError,
+             'Cannot link multiple Rust libraries'):
+            self.read_topsrcdir(reader)
 
     def test_crate_dependency_path_resolution(self):
         '''Test recursive dependencies resolve with the correct paths.'''

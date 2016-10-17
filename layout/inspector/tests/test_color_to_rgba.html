@@ -14,11 +14,16 @@
   testColor("#ff0000", {r:255, g:0, b:0, a:1});
   testColor("ff0000", null);
   testColor("rgb(255,0,0)", {r:255, g:0, b:0, a:1});
+  testColor("rgba(255,0,0)", {r:255, g:0, b:0, a:1});
+  testColor("rgb(255,0,0,0.7)", {r:255, g:0, b:0, a:0.7});
   testColor("rgba(255,0,0,0.7)", {r:255, g:0, b:0, a:0.7});
-  testColor("rgb(255,0,0,0.7)", null);
   testColor("rgb(50%,75%,60%)", {r:128, g:191, b:153, a:1});
+  testColor("rgba(50%,75%,60%)", {r:128, g:191, b:153, a:1});
+  testColor("rgb(100%,50%,25%,0.7)", {r:255, g:128, b:64, a:0.7});
   testColor("rgba(100%,50%,25%,0.7)", {r:255, g:128, b:64, a:0.7});
   testColor("hsl(320,30%,10%)", {r:33, g:17, b:28, a:1});
+  testColor("hsla(320,30%,10%)", {r:33, g:17, b:28, a:1});
+  testColor("hsl(170,60%,40%,0.9)", {r:40, g:163, b:142, a:0.9});
   testColor("hsla(170,60%,40%,0.9)", {r:40, g:163, b:142, a:0.9});
 
   function testColor(color, expected) {

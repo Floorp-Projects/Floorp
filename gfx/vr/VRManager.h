@@ -40,8 +40,8 @@ public:
   RefPtr<gfx::VRDisplayHost> GetDisplay(const uint32_t& aDisplayID);
   void GetVRDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayInfo);
 
-  void SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
-                   layers::PTextureParent* aTexture, const gfx::Rect& aLeftEyeRect,
+  void SubmitFrame(VRLayerParent* aLayer, layers::PTextureParent* aTexture,
+                   const gfx::Rect& aLeftEyeRect,
                    const gfx::Rect& aRightEyeRect);
 
 protected:

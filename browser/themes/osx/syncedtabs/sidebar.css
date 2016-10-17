@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../shared.inc
 %include ../../shared/syncedtabs/sidebar.inc.css
 
 /* These styles are intended to mimic XUL trees and the XUL search box. */
 
-html {
+.content-container {
+  -moz-appearance: -moz-mac-source-list;
 }
 
 .item {
@@ -27,15 +27,11 @@ html {
 }
 
 .item.selected > .item-title-container {
-  background: @sidebarItemBackground@;
-  border-top: @sidebarItemBorderTop@;
-  border-bottom: @sidebarItemBorderBottom@;
+  -moz-appearance: -moz-mac-source-list-selection;
 }
 
 .item.selected:focus > .item-title-container {
-  background: @sidebarItemFocusedBackground@;
-  border-top: @sidebarItemFocusedBorderTop@;
-  border-bottom: @sidebarItemFocusedBorderBottom@;
+  -moz-appearance: -moz-mac-active-source-list-selection;
 }
 
 .item.client .item-twisty-container {
@@ -58,38 +54,6 @@ html {
 
 @media (-moz-mac-yosemite-theme) {
   .item.selected > .item-title-container {
-    font-weight: 500;
-  }
-
-  .item.selected > .item-title-container {
-    background-image: none;
-    background-color: @sidebarItemBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  .item.selected:focus > .item-title-container {
-    background-image: none;
-    background-color: @sidebarItemFocusedBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  .item.selected:-moz-system-metric(mac-graphite-theme) > .item-title-container {
-    background-image: none;
-    background-color: @sidebarItemGraphiteBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  .item.selected:focus:-moz-system-metric(mac-graphite-theme) > .item-title-container {
-    background-image: none;
-    background-color: @sidebarItemGraphiteFocusedBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  .item.selected > .item-title-container {
     color: -moz-dialogtext;
     font-weight: 500;
   }
@@ -98,7 +62,6 @@ html {
     color: #fff;
   }
 }
-
 
 .sidebar-search-container {
   border-bottom: 1px solid #bdbdbd;

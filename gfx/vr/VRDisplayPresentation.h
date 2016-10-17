@@ -20,7 +20,7 @@ class VRDisplayPresentation final
 
 public:
   VRDisplayPresentation(VRDisplayClient *aDisplayClient, const nsTArray<dom::VRLayer>& aLayers);
-  void SubmitFrame(int32_t aInputFrameID);
+  void SubmitFrame();
   void GetDOMLayers(nsTArray<dom::VRLayer>& result);
 
 private:

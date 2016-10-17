@@ -41,7 +41,7 @@ const uint8_t kBogusClientKeyExchange[] = {
 TEST_P(TlsConnectGenericPre13, ConnectStaticRSA) {
   EnableOnlyStaticRsaCiphers();
   Connect();
-  CheckKeys(ssl_kea_rsa, ssl_auth_rsa_decrypt);
+  CheckKeys(ssl_kea_rsa, ssl_grp_none, ssl_auth_rsa_decrypt, ssl_sig_none);
 }
 
 // Test that a totally bogus EPMS is handled correctly.

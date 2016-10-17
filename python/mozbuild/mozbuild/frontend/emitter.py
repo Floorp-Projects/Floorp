@@ -437,7 +437,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 context)
 
         crate_type = crate_type[0]
-        if crate_type != 'rlib':
+        if crate_type != 'staticlib':
             raise SandboxValidationError(
                 'crate-type %s is not permitted for %s' % (crate_type, libname),
                 context)
@@ -463,7 +463,10 @@ class TreeMetadataEmitter(LoggingMixin):
                      ' in [profile.%s] section') % (libname, profile_name),
                     context)
 
-        return RustLibrary(context, libname, cargo_file, crate_type, **static_args)
+        dependencies = set(config.get('dependencies', {}).iterkeys())
+
+        return RustLibrary(context, libname, cargo_file, crate_type,
+                           dependencies, **static_args)
 
     def _handle_linkables(self, context, passthru, generated_files):
         linkables = []
