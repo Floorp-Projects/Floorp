@@ -20,8 +20,11 @@ add_task(function* () {
     let selector = selectors[i];
     yield selectNode(selector, inspector);
     let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
-    let animationEl = timelineEl.querySelectorAll(".animation")[0];
+    let animationEl = timelineEl.querySelector(".animation");
     checkEndDelayAndName(animationEl);
+    const state =
+      panel.animationsTimelineComponent.timeBlocks[0].animation.state;
+    checkPath(animationEl, state);
   }
 });
 
@@ -41,4 +44,35 @@ function checkEndDelayAndName(animationEl) {
   let nameLeft = Math.round(name.getBoundingClientRect().left);
   ok(endDelayRight >= nameLeft,
      "The endDelay element does not span over the name element");
+}
+
+function checkPath(animationEl, state) {
+  // Check existance of enddelay path.
+  const endDelayPathEl = animationEl.querySelector(".enddelay-path");
+  ok(endDelayPathEl, "The endDelay path should exist");
+
+  // Check enddelay path coordinates.
+  const pathSegList = endDelayPathEl.pathSegList;
+  const startingPathSeg = pathSegList.getItem(0);
+  const endingPathSeg = pathSegList.getItem(pathSegList.numberOfItems - 2);
+  if (state.endDelay < 0) {
+    ok(endDelayPathEl.classList.contains("negative"),
+       "The endDelay path should have 'negative' class");
+    const endingX = state.delay + state.iterationCount * state.duration;
+    const startingX = endingX + state.endDelay;
+    is(startingPathSeg.x, startingX,
+       `The x of starting point should be ${ startingX }`);
+    is(endingPathSeg.x, endingX,
+       `The x of ending point should be ${ endingX }`);
+  } else {
+    ok(!endDelayPathEl.classList.contains("negative"),
+       "The endDelay path should not have 'negative' class");
+    const startingX =
+      state.delay + state.iterationCount * state.duration;
+    const endingX = startingX + state.endDelay;
+    is(startingPathSeg.x, startingX,
+       `The x of starting point should be ${ startingX }`);
+    is(endingPathSeg.x, endingX,
+       `The x of ending point should be ${ endingX }`);
+  }
 }
