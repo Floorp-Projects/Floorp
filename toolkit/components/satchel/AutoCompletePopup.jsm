@@ -13,49 +13,45 @@ this.EXPORTED_SYMBOLS = [ "AutoCompletePopup" ];
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-// nsITreeView implementation that feeds the autocomplete popup
-// with the search data.
-var AutoCompleteTreeView = {
+// AutoCompleteResultView is an abstraction around a list of results
+// we got back up from browser-content.js. It implements enough of
+// nsIAutoCompleteController and nsIAutoCompleteInput to make the
+// richlistbox popup work.
+var AutoCompleteResultView = {
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITreeView,
-                                         Ci.nsIAutoCompleteController]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteController,
+                                         Ci.nsIAutoCompleteInput]),
 
   // Private variables
-  treeBox: null,
   results: [],
-
-  // nsITreeView
-  selection: null,
-
-  get rowCount()                     { return this.results.length; },
-  setTree: function(treeBox)         { this.treeBox = treeBox; },
-  getCellText: function(idx, column) { return this.results[idx].value },
-  isContainer: function(idx)         { return false; },
-  getCellValue: function(idx, column) { return false },
-  isContainerOpen: function(idx)     { return false; },
-  isContainerEmpty: function(idx)    { return false; },
-  isSeparator: function(idx)         { return false; },
-  isSorted: function()               { return false; },
-  isEditable: function(idx, column)  { return false; },
-  canDrop: function(idx, orientation, dt) { return false; },
-  getLevel: function(idx)            { return 0; },
-  getParentIndex: function(idx)      { return -1; },
-  hasNextSibling: function(idx, after) { return idx < this.results.length - 1 },
-  toggleOpenState: function(idx)     { },
-  getCellProperties: function(idx, column) { return this.results[idx].style || ""; },
-  getRowProperties: function(idx)    { return ""; },
-  getImageSrc: function(idx, column) { return null; },
-  getProgressMode : function(idx, column) { },
-  cycleHeader: function(column) { },
-  cycleCell: function(idx, column) { },
-  selectionChanged: function() { },
-  performAction: function(action) { },
-  performActionOnCell: function(action, index, column) { },
-  getColumnProperties: function(column) { return ""; },
 
   // nsIAutoCompleteController
   get matchCount() {
-    return this.rowCount;
+    return this.results.length;
+  },
+
+  getValueAt(index) {
+    return this.results[index].value;
+  },
+
+  getLabelAt(index) {
+    // Unused by richlist autocomplete - see getCommentAt.
+    return "";
+  },
+
+  getCommentAt(index) {
+    // The richlist autocomplete popup uses comment for its main
+    // display of an item, which is why we're returning the label
+    // here instead.
+    return this.results[index].label;
+  },
+
+  getStyleAt(index) {
+    return this.results[index].style;
+  },
+
+  getImageAt(index) {
+    return this.results[index].image;
   },
 
   handleEnter: function(aIsPopupSelection) {
@@ -63,6 +59,21 @@ var AutoCompleteTreeView = {
   },
 
   stopSearch: function() {},
+
+  searchString: "",
+
+  // nsIAutoCompleteInput
+  get controller() {
+    return this;
+  },
+
+  get popup() {
+    return null;
+  },
+
+  _focus() {
+    AutoCompletePopup.requestFocus();
+  },
 
   // Internal JS-only API
   clearResults: function() {
@@ -99,10 +110,25 @@ this.AutoCompletePopup = {
   },
 
   handleEvent: function(evt) {
-    if (evt.type === "popuphidden") {
-      this.openedPopup = null;
-      this.weakBrowser = null;
-      evt.target.removeEventListener("popuphidden", this);
+    switch (evt.type) {
+      case "popupshowing": {
+        this.sendMessageToBrowser("FormAutoComplete:PopupOpened");
+        break;
+      }
+
+      case "popuphidden": {
+        AutoCompleteResultView.clearResults();
+        this.sendMessageToBrowser("FormAutoComplete:PopupClosed");
+        // adjustHeight clears the height from the popup so that
+        // we don't have a big shrink effect if we closed with a
+        // large list, and then open on a small one.
+        this.openedPopup.adjustHeight();
+        this.openedPopup = null;
+        this.weakBrowser = null;
+        evt.target.removeEventListener("popuphidden", this);
+        evt.target.removeEventListener("popupshowing", this);
+        break;
+      }
     }
   },
 
@@ -134,20 +160,21 @@ this.AutoCompletePopup = {
     this.openedPopup.setAttribute("width", Math.max(100, rect.width));
     this.openedPopup.style.direction = dir;
 
-    AutoCompleteTreeView.setResults(results);
-    this.openedPopup.view = AutoCompleteTreeView;
+    AutoCompleteResultView.setResults(results);
+    this.openedPopup.view = AutoCompleteResultView;
     this.openedPopup.selectedIndex = -1;
-    this.openedPopup.invalidate();
 
     if (results.length) {
       // Reset fields that were set from the last time the search popup was open
-      this.openedPopup.mInput = null;
+      this.openedPopup.mInput = AutoCompleteResultView;
       this.openedPopup.showCommentColumn = false;
       this.openedPopup.showImageColumn = false;
+      this.openedPopup.addEventListener("popuphidden", this);
+      this.openedPopup.addEventListener("popupshowing", this);
       this.openedPopup.openPopupAtScreenRect("after_start", rect.left, rect.top,
                                              rect.width, rect.height, false,
                                              false);
-      this.openedPopup.addEventListener("popuphidden", this);
+      this.openedPopup.invalidate();
     } else {
       this.closePopup();
     }
@@ -161,19 +188,18 @@ this.AutoCompletePopup = {
     if (!results.length) {
       this.closePopup();
     } else {
-      AutoCompleteTreeView.setResults(results);
-      // We need to re-set the view in order for the
-      // tree to know the view has changed.
-      this.openedPopup.view = AutoCompleteTreeView;
+      AutoCompleteResultView.setResults(results);
       this.openedPopup.invalidate();
     }
   },
 
   closePopup() {
     if (this.openedPopup) {
-      this.openedPopup.closePopup();
+      // Note that hidePopup() closes the popup immediately,
+      // so popuphiding or popuphidden events will be fired
+      // and handled during this call.
+      this.openedPopup.hidePopup();
     }
-    AutoCompleteTreeView.clearResults();
   },
 
   removeLogin(login) {
@@ -189,7 +215,9 @@ this.AutoCompletePopup = {
 
     switch (message.name) {
       case "FormAutoComplete:SelectBy": {
-        this.openedPopup.selectBy(message.data.reverse, message.data.page);
+        if (this.openedPopup) {
+          this.openedPopup.selectBy(message.data.reverse, message.data.page);
+        }
         break;
       }
 
@@ -233,7 +261,7 @@ this.AutoCompletePopup = {
         // any cached data.  This is necessary cause otherwise we'd clear data
         // only when starting a new search, but the next input could not support
         // autocomplete and it would end up inheriting the existing data.
-        AutoCompleteTreeView.clearResults();
+        AutoCompleteResultView.clearResults();
         break;
       }
     }
@@ -246,17 +274,41 @@ this.AutoCompletePopup = {
    * Despite its name, handleEnter is what is called when the
    * user clicks on one of the items in the popup.
    */
-  handleEnter: function(aIsPopupSelection) {
-    let browser = this.weakBrowser ? this.weakBrowser.get()
-                                   : null;
-    if (browser && this.openedPopup) {
-      browser.messageManager.sendAsyncMessage(
-        "FormAutoComplete:HandleEnter",
-        { selectedIndex: this.openedPopup.selectedIndex,
-          isPopupSelection: aIsPopupSelection }
-      );
+  handleEnter(aIsPopupSelection) {
+    if (this.openedPopup) {
+      this.sendMessageToBrowser("FormAutoComplete:HandleEnter", {
+        selectedIndex: this.openedPopup.selectedIndex,
+        isPopupSelection: aIsPopupSelection,
+      });
     }
   },
 
-  stopSearch: function() {}
+  /**
+   * If a browser exists that AutoCompletePopup knows about,
+   * sends it a message. Otherwise, this is a no-op.
+   *
+   * @param {string} msgName
+   *        The name of the message to send.
+   * @param {object} data
+   *        The optional data to send with the message.
+   */
+  sendMessageToBrowser(msgName, data) {
+    let browser = this.weakBrowser ? this.weakBrowser.get()
+                                   : null;
+    if (browser) {
+      browser.messageManager.sendAsyncMessage(msgName, data);
+    }
+  },
+
+  stopSearch: function() {},
+
+  /**
+   * Sends a message to the browser requesting that the input
+   * that the AutoCompletePopup is open for be focused.
+   */
+  requestFocus: function() {
+    if (this.openedPopup) {
+      this.sendMessageToBrowser("FormAutoComplete:Focus");
+    }
+  },
 }

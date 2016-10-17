@@ -8,12 +8,14 @@
 #include "VRManagerChild.h"
 #include "VRManagerParent.h"
 #include "VRDisplayClient.h"
+#include "nsGlobalWindow.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorThread.h" // for CompositorThread
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/VREventObserver.h"
 #include "mozilla/dom/WindowBinding.h" // for FrameRequestCallback
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/GamepadManager.h"
 #include "mozilla/layers/TextureClient.h"
 #include "nsContentUtils.h"
 
@@ -37,6 +39,7 @@ void ReleaseVRManagerParentSingleton() {
 VRManagerChild::VRManagerChild()
   : TextureForwarder()
   , mDisplaysInitialized(false)
+  , mGamepadManager(nullptr)
   , mInputFrameID(-1)
   , mMessageLoop(MessageLoop::current())
   , mFrameRequestCallbackCounter(0)
@@ -480,6 +483,19 @@ VRManagerChild::RecvNotifyVRVSync(const uint32_t& aDisplayID)
   return true;
 }
 
+bool
+VRManagerChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
+{
+  // VRManagerChild could be at other processes, but GamepadManager
+  // only exists at the content process or the parent process
+  // in non-e10s mode.
+  if (mGamepadManager) {
+      mGamepadManager->Update(aGamepadEvent);
+  }
+
+  return true;
+}
+
 void
 VRManagerChild::RunFrameRequestCallbacks()
 {
@@ -571,6 +587,14 @@ void
 VRManagerChild::FatalError(const char* const aName, const char* const aMsg) const
 {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+}
+
+void
+VRManagerChild::SetGamepadManager(dom::GamepadManager* aGamepadManager)
+{
+  MOZ_ASSERT(aGamepadManager);
+
+  mGamepadManager = aGamepadManager;
 }
 
 } // namespace gfx

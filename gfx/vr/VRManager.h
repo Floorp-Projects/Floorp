@@ -22,6 +22,7 @@ namespace gfx {
 class VRLayerParent;
 class VRManagerParent;
 class VRDisplayHost;
+class VRControllerManager;
 
 class VRManager
 {
@@ -37,12 +38,16 @@ public:
   void NotifyVsync(const TimeStamp& aVsyncTimestamp);
   void NotifyVRVsync(const uint32_t& aDisplayID);
   void RefreshVRDisplays(bool aMustDispatch = false);
+  void ScanForDevices();
+  template<class T> void NotifyGamepadChange(const T& aInfo);
   RefPtr<gfx::VRDisplayHost> GetDisplay(const uint32_t& aDisplayID);
   void GetVRDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayInfo);
 
   void SubmitFrame(VRLayerParent* aLayer, layers::PTextureParent* aTexture,
                    const gfx::Rect& aLeftEyeRect,
                    const gfx::Rect& aRightEyeRect);
+  RefPtr<gfx::VRControllerHost> GetController(const uint32_t& aControllerID);
+  void GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo);
 
 protected:
   VRManager();
@@ -55,6 +60,7 @@ private:
   void Destroy();
 
   void DispatchVRDisplayInfoUpdate();
+  void RefreshVRControllers();
 
   typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
@@ -62,8 +68,14 @@ private:
   typedef nsTArray<RefPtr<VRDisplayManager>> VRDisplayManagerArray;
   VRDisplayManagerArray mManagers;
 
+  typedef nsTArray<RefPtr<VRControllerManager>> VRControllerManagerArray;
+  VRControllerManagerArray mControllerManagers;
+
   typedef nsRefPtrHashtable<nsUint32HashKey, gfx::VRDisplayHost> VRDisplayHostHashMap;
   VRDisplayHostHashMap mVRDisplays;
+
+  typedef nsRefPtrHashtable<nsUint32HashKey, gfx::VRControllerHost> VRControllerHostHashMap;
+  VRControllerHostHashMap mVRControllers;
 
   Atomic<bool> mInitialized;
 

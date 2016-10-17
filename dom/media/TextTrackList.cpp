@@ -31,7 +31,6 @@ TextTrackList::TextTrackList(nsPIDOMWindowInner* aOwnerWindow)
 TextTrackList::TextTrackList(nsPIDOMWindowInner* aOwnerWindow,
                              TextTrackManager* aTextTrackManager)
   : DOMEventTargetHelper(aOwnerWindow)
-  , mPendingTextTrackChange(false)
   , mTextTrackManager(aTextTrackManager)
 {
 }
