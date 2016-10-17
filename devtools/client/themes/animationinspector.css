@@ -356,6 +356,10 @@ body {
   stroke: var(--timeline-border-color);
 }
 
+.animation-timeline .animation .summary .infinity.copied {
+  opacity: .3;
+}
+
 .animation-timeline .animation .name {
   position: absolute;
   color: var(--theme-selection-color);
@@ -440,17 +444,6 @@ body {
      animation, so there's already the animation's left border that serves as
      a separation. */
   border-width: 1px;
-}
-
-/* Use for fade mask */
-#animationinspector-fade-gradient stop {
-  /* opaque */
-  stop-color: white;
-}
-
-#animationinspector-fade-gradient stop:nth-child(2) {
-  /* transparent */
-  stop-color: black;
 }
 
 /* Animation target node gutter, contains a preview of the dom node */
