@@ -155,7 +155,6 @@ class SVGSVGElement;
 class Touch;
 class TouchList;
 class TreeWalker;
-class UndoManager;
 class XPathEvaluator;
 class XPathExpression;
 class XPathNSResolver;
@@ -2377,8 +2376,6 @@ public:
    * @return the element associated with |aId|
    */
   virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
-
-  virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager() = 0;
 
   virtual mozilla::dom::DocumentTimeline* Timeline() = 0;
   virtual mozilla::LinkedList<mozilla::dom::DocumentTimeline>& Timelines() = 0;
