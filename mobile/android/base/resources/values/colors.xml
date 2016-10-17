@@ -145,4 +145,6 @@
   <color name="activity_stream_timestamp">#FFD3D3D3</color>
   <color name="activity_stream_icon">#FF919191</color>
 
+  <color name="tablet_tab_strip_divider_color">#555555</color>
+
 </resources>
