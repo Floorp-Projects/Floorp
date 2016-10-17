@@ -23,7 +23,6 @@
 #include <utils/Vector.h>
 #include <utils/threads.h>
 
-#include "CameraCommon.h"
 #include "GonkConsumerBaseJB.h"
 #include "GrallocImages.h"
 #include "mozilla/layers/LayersSurfaces.h"

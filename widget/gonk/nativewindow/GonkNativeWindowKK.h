@@ -23,7 +23,6 @@
 #include <utils/Vector.h>
 #include <utils/threads.h>
 
-#include "CameraCommon.h"
 #include "GonkConsumerBaseKK.h"
 #include "GrallocImages.h"
 #include "IGonkGraphicBufferConsumer.h"

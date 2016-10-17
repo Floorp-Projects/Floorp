@@ -30,7 +30,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/RefPtr.h"
 
-#include "rlogringbuffer.h"
+#include "rlogconnector.h"
 #include "runnable_utils.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
@@ -359,7 +359,7 @@ static void GetLogging_s(WebrtcGlobalChild* aThisChild,
                          const std::string& aPattern)
 {
   // Request log while not on the main thread.
-  RLogRingBuffer* logs = RLogRingBuffer::GetInstance();
+  RLogConnector* logs = RLogConnector::GetInstance();
   nsAutoPtr<std::deque<std::string>> result(new std::deque<std::string>);
   // Might not exist yet.
   if (logs) {
@@ -558,7 +558,7 @@ RunLogQuery(const nsCString& aPattern,
 static void ClearLogs_s()
 {
   // Make call off main thread.
-  RLogRingBuffer* logs = RLogRingBuffer::GetInstance();
+  RLogConnector* logs = RLogConnector::GetInstance();
   if (logs) {
     logs->Clear();
   }

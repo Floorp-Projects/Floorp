@@ -25,9 +25,11 @@ add_task(function* injectJSON() {
 });
 
 add_task(function losslessDecode() {
-  let url = "http://example.com/\u30a2\u30a4\u30a6\u30a8\u30aa";
+  let urlNoScheme = "example.com/\u30a2\u30a4\u30a6\u30a8\u30aa";
+  let url = "http://" + urlNoScheme;
   gURLBar.textValue = url;
-  Assert.equal(gURLBar.inputField.value, url,
+  // Since this is directly setting textValue, it is expected to be trimmed.
+  Assert.equal(gURLBar.inputField.value, urlNoScheme,
                "The string displayed in the textbox should not be escaped");
   gURLBar.value = "";
   gURLBar.handleRevert();

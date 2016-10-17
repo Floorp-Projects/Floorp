@@ -188,23 +188,43 @@
         ]]></body>
       </method>
 
-      <property name="textValue"
-                onget="return this.value;">
-        <setter><![CDATA[
-          // Completing a result should simulate the user typing the result,
-          // so fire an input event.
-          // Trim popup selected values, but never trim results coming from
-          // autofill.
-          if (this.popup.selectedIndex == -1)
+      <method name="setTextValueWithReason">
+        <parameter name="aValue"/>
+        <parameter name="aReason"/>
+        <body><![CDATA[
+          if (aReason == Components.interfaces.nsIAutoCompleteInput
+                                   .TEXTVALUE_REASON_COMPLETEDEFAULT) {
             this._disableTrim = true;
-          this.value = val;
+          }
+          this.textValue = aValue;
           this._disableTrim = false;
+        ]]></body>
+      </method>
 
-          var evt = document.createEvent("UIEvents");
+      <property name="textValue">
+        <getter><![CDATA[
+          if (typeof this.onBeforeTextValueGet == "function") {
+            let result = this.onBeforeTextValueGet();
+            if (result) {
+              return result.value;
+            }
+          }
+          return this.value;
+        ]]></getter>
+        <setter><![CDATA[
+          if (typeof this.onBeforeTextValueSet == "function")
+            val = this.onBeforeTextValueSet(val);
+
+          this.value = val;
+
+          // Completing a result should simulate the user typing the result, so
+          // fire an input event.
+          let evt = document.createEvent("UIEvents");
           evt.initUIEvent("input", true, false, window, 0);
           this.mIgnoreInput = true;
           this.dispatchEvent(evt);
           this.mIgnoreInput = false;
+
           return this.value;
         ]]></setter>
       </property>

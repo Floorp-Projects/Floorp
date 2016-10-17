@@ -300,7 +300,6 @@ EXTRA_JS_MODULES.media += [
 LOCAL_INCLUDES += [
     '/caps',
     '/dom/base',
-    '/dom/camera',
     '/layout/generic',
     '/layout/xul',
     '/netwerk/base',

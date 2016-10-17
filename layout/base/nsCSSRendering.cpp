@@ -3333,6 +3333,9 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
 
   // Background images are tiled over the 'background-clip' area
   // but the origin of the tiling is based on the 'background-origin' area
+  // XXX: Bug 1303623 will bring in new origin value, we should iterate from
+  // NS_STYLE_IMAGELAYER_ORIGIN_MARGIN instead of
+  // NS_STYLE_IMAGELAYER_ORIGIN_BORDER.
   if (aLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_BORDER && geometryFrame) {
     nsMargin border = geometryFrame->GetUsedBorder();
     if (aLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
