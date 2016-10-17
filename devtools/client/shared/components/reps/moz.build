@@ -11,6 +11,7 @@ DevToolsModules(
     'comment-node.js',
     'date-time.js',
     'document.js',
+    'element-node.js',
     'event.js',
     'function.js',
     'grip-array.js',
