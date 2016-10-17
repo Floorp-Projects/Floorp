@@ -248,8 +248,13 @@ public:
     SLOG("change state to: %s", ToStateStr(s->GetState()));
 
     Exit();
+
+    // Note |aArgs| might reference data members of |this|. We need to keep
+    // |this| alive until |s->Enter()| returns.
+    UniquePtr<StateObject> deathGrip(master->mStateObj.release());
+
     master->mState = s->GetState();
-    master->mStateObj.reset(s); // Will delete |this|!
+    master->mStateObj.reset(s);
     return s->Enter(Forward<Ts>(aArgs)...);
   }
 
@@ -982,11 +987,7 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   if (waitingForCDM) {
     // Metadata parsing was successful but we're still waiting for CDM caps
     // to become available so that we can build the correct decryptor/decoder.
-
-    // FIXME: passing data members to SetState() will cause UAF because |this|
-    // is deleted before the call to newState::Enter().
-    bool pendingDormant = mPendingDormant;
-    SetState<WaitForCDMState>(pendingDormant);
+    SetState<WaitForCDMState>(mPendingDormant);
   } else if (mPendingDormant) {
     SetState<DormantState>();
   } else {
