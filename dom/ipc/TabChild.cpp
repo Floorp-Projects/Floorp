@@ -98,7 +98,6 @@
 #include "UnitTransforms.h"
 #include "ClientLayerManager.h"
 #include "LayersLogging.h"
-#include "nsIOService.h"
 #include "nsDOMClassInfoID.h"
 #include "nsColorPickerProxy.h"
 #include "nsDatePickerProxy.h"
@@ -2337,18 +2336,6 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
     CrossProcessCpowHolder cpows(Manager(), aCpows);
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal), nullptr,
                        aMessage, false, &data, &cpows, aPrincipal, nullptr);
-  }
-  return true;
-}
-
-bool
-TabChild::RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline)
-{
-  // Instantiate the service to make sure gIOService is initialized
-  nsCOMPtr<nsIIOService> ioService = mozilla::services::GetIOService();
-  if (gIOService && ioService) {
-    gIOService->SetAppOfflineInternal(aId, aOffline ?
-      nsIAppOfflineInfo::OFFLINE : nsIAppOfflineInfo::ONLINE);
   }
   return true;
 }
