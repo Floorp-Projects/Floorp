@@ -55,6 +55,7 @@ class MachCommands(MachCommandBase):
                      help='Request that eslint automatically fix errors, where possible.')
     @CommandArgument('extra_args', nargs=argparse.REMAINDER,
                      help='Extra args that will be forwarded to eslint.')
-    def eslint(self, paths, **kwargs):
+    def eslint(self, paths, extra_args=[], **kwargs):
         self._mach_context.commands.dispatch('lint', self._mach_context,
-                                             linters=['eslint'], paths=paths, **kwargs)
+                                             linters=['eslint'], paths=paths,
+                                             argv=extra_args, **kwargs)

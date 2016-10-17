@@ -122,7 +122,6 @@ using namespace mozilla::system;
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/dom/HTMLVideoElement.h"
-#include "CameraPreferences.h"
 #include "TouchManager.h"
 #include "MediaDecoder.h"
 #include "MediaPrefs.h"
@@ -295,8 +294,6 @@ nsLayoutStatics::Initialize()
 
   CounterStyleManager::InitializeBuiltinCounterStyles();
 
-  CameraPreferences::Initialize();
-
   IMEStateManager::Init();
 
   ServiceWorkerRegistrar::Initialize();
@@ -441,8 +438,6 @@ nsLayoutStatics::Shutdown()
   CustomElementRegistry::XPCOMShutdown();
 
   CacheObserver::Shutdown();
-
-  CameraPreferences::Shutdown();
 
   PromiseDebugging::Shutdown();
 

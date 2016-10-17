@@ -31,7 +31,7 @@
 #include "nriceresolver.h"
 #include "nrinterfaceprioritizer.h"
 #include "gtest_ringbuffer_dumper.h"
-#include "rlogringbuffer.h"
+#include "rlogconnector.h"
 #include "runnable_utils.h"
 #include "stunserver.h"
 #include "nr_socket_prsock.h"
@@ -141,9 +141,9 @@ public:
         WrapRunnableNM(&NrIceCtx::internal_DeinitializeGlobal),
         NS_DISPATCH_SYNC);
 
-    // NB: NrIceCtx::internal_DeinitializeGlobal destroys the RLogRingBuffer
+    // NB: NrIceCtx::internal_DeinitializeGlobal destroys the RLogConnector
     // singleton.
-    RLogRingBuffer::CreateInstance();
+    RLogConnector::CreateInstance();
 
     test_utils_->sts_target()->Dispatch(
         WrapRunnableNM(&TestStunServer::GetInstance, AF_INET),
@@ -171,7 +171,7 @@ public:
     test_utils_->sts_target()->Dispatch(
         WrapRunnableNM(&TestStunTcpServer::ShutdownInstance), NS_DISPATCH_SYNC);
 
-    RLogRingBuffer::DestroyInstance();
+    RLogConnector::DestroyInstance();
 
     MtransportTest::TearDown();
   }
@@ -3646,7 +3646,7 @@ TEST_F(WebRtcIceConnectTest, TestPollCandPairsDuringConnect) {
   ASSERT_TRUE(ContainsSucceededPair(pairs2));
 }
 
-TEST_F(WebRtcIceConnectTest, TestRLogRingBuffer) {
+TEST_F(WebRtcIceConnectTest, TestRLogConnector) {
   AddStream(1);
   ASSERT_TRUE(Gather());
 
@@ -3674,7 +3674,7 @@ TEST_F(WebRtcIceConnectTest, TestRLogRingBuffer) {
     std::deque<std::string> logs;
     std::string substring("CAND-PAIR(");
     substring += p->codeword;
-    RLogRingBuffer::GetInstance()->Filter(substring, 0, &logs);
+    RLogConnector::GetInstance()->Filter(substring, 0, &logs);
     ASSERT_NE(0U, logs.size());
   }
 
@@ -3682,7 +3682,7 @@ TEST_F(WebRtcIceConnectTest, TestRLogRingBuffer) {
     std::deque<std::string> logs;
     std::string substring("CAND-PAIR(");
     substring += p->codeword;
-    RLogRingBuffer::GetInstance()->Filter(substring, 0, &logs);
+    RLogConnector::GetInstance()->Filter(substring, 0, &logs);
     ASSERT_NE(0U, logs.size());
   }
 }

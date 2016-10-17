@@ -615,9 +615,6 @@ protected:
   class PlaybackStreamListener;
   friend class PlaybackStreamListener;
 
-  // XXX Bug 1124630. Remove with CameraPreviewMediaStream.
-  void CreateAndAddPlaybackStreamListener(MediaStream*);
-
   /**
    * Block a track in our playback stream. Calls NotifyPlaybackTrackBlocked()
    * after the MediaStreamGraph has applied the block and the track is no longer

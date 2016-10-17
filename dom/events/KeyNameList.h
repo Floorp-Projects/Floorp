@@ -34,7 +34,6 @@ DEFINE_KEYNAME_INTERNAL(SoftRight, "MozSoftRight")
 
 #ifdef MOZ_B2G
 DEFINE_KEYNAME_INTERNAL(HomeScreen, "MozHomeScreen")
-DEFINE_KEYNAME_INTERNAL(CameraFocusAdjust, "MozCameraFocusAdjust")
 #endif // #ifdef MOZ_B2G
 
 /******************************************************************************

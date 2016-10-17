@@ -1,7 +1,0 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-component {c332f318-1cce-4f02-b676-bb5031d10736} VoicemailService.js
-contract @mozilla.org/voicemail/gonkvoicemailservice;1 {c332f318-1cce-4f02-b676-bb5031d10736}
-

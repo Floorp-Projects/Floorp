@@ -746,10 +746,18 @@ checkbox:-moz-focusring {
   border: 0;
   padding: 0;
   outline: none;
+  background-position: 0 0;
+}
+
+.theme-dark .theme-checkbox {
   background-position: -28px 0;
 }
 
 .theme-checkbox[checked] {
+  background-position: -14px 0;
+}
+
+.theme-dark .theme-checkbox[checked] {
   background-position: -42px 0;
 }
 
