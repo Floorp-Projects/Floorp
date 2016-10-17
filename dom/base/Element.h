@@ -138,7 +138,6 @@ namespace dom {
 class Animation;
 class CustomElementRegistry;
 class Link;
-class UndoManager;
 class DOMRect;
 class DOMRectList;
 class DestinationInsertionPointList;
@@ -867,20 +866,6 @@ public:
   }
 
   void GetGridFragments(nsTArray<RefPtr<Grid>>& aResult);
-
-  virtual already_AddRefed<UndoManager> GetUndoManager()
-  {
-    return nullptr;
-  }
-
-  virtual bool UndoScope()
-  {
-    return false;
-  }
-
-  virtual void SetUndoScope(bool aUndoScope, ErrorResult& aError)
-  {
-  }
 
   already_AddRefed<Animation>
   Animate(JSContext* aContext,
