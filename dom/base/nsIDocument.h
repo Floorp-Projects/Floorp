@@ -2369,6 +2369,9 @@ public:
   bool HasWarnedAbout(DeprecatedOperations aOperation) const;
   void WarnOnceAbout(DeprecatedOperations aOperation,
                      bool asError = false) const;
+  void WarnOnceAbout(DeprecatedOperations aOperation,
+                     const nsAString& aErrorText,
+                     bool asError = false) const;
 
 #define DOCUMENT_WARNING(_op) e##_op,
   enum DocumentWarnings {

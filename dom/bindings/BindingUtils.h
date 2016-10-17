@@ -3187,7 +3187,8 @@ SetDocumentAndPageUseCounter(JSContext* aCx, JSObject* aObject,
 // Warnings
 void
 DeprecationWarning(JSContext* aCx, JSObject* aObject,
-                   nsIDocument::DeprecatedOperations aOperation);
+                   nsIDocument::DeprecatedOperations aOperation,
+                   const nsAString& aErrorText = EmptyString());
 
 // A callback to perform funToString on an interface object
 JSString*

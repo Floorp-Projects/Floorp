@@ -3286,12 +3286,15 @@ namespace {
 class DeprecationWarningRunnable final : public WorkerProxyToMainThreadRunnable
 {
   nsIDocument::DeprecatedOperations mOperation;
+  nsString mErrorText;
 
 public:
   DeprecationWarningRunnable(WorkerPrivate* aWorkerPrivate,
-                             nsIDocument::DeprecatedOperations aOperation)
+                             nsIDocument::DeprecatedOperations aOperation,
+                             const nsAString& aErrorText)
     : WorkerProxyToMainThreadRunnable(aWorkerPrivate)
     , mOperation(aOperation)
+    , mErrorText(aErrorText)
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -3311,7 +3314,11 @@ private:
 
     nsPIDOMWindowInner* window = wp->GetWindow();
     if (window && window->GetExtantDoc()) {
-      window->GetExtantDoc()->WarnOnceAbout(mOperation);
+      if (mErrorText.IsEmpty()) {
+        window->GetExtantDoc()->WarnOnceAbout(mOperation);
+      } else {
+        window->GetExtantDoc()->WarnOnceAbout(mOperation, mErrorText);
+      }
     }
   }
 
@@ -3324,7 +3331,8 @@ private:
 
 void
 DeprecationWarning(JSContext* aCx, JSObject* aObject,
-                   nsIDocument::DeprecatedOperations aOperation)
+                   nsIDocument::DeprecatedOperations aOperation,
+                   const nsAString& aErrorText /* = EmptyString() */)
 {
   GlobalObject global(aCx, aObject);
   if (global.Failed()) {
@@ -3335,7 +3343,11 @@ DeprecationWarning(JSContext* aCx, JSObject* aObject,
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global.GetAsSupports());
     if (window && window->GetExtantDoc()) {
-      window->GetExtantDoc()->WarnOnceAbout(aOperation);
+      if (aErrorText.IsEmpty()) {
+        window->GetExtantDoc()->WarnOnceAbout(aOperation);
+      } else {
+        window->GetExtantDoc()->WarnOnceAbout(aOperation, aErrorText);
+      }
     }
 
     return;
@@ -3347,7 +3359,7 @@ DeprecationWarning(JSContext* aCx, JSObject* aObject,
   }
 
   RefPtr<DeprecationWarningRunnable> runnable =
-    new DeprecationWarningRunnable(workerPrivate, aOperation);
+    new DeprecationWarningRunnable(workerPrivate, aOperation, aErrorText);
   runnable->Dispatch();
 }
 
