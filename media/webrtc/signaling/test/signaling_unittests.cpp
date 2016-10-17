@@ -36,7 +36,7 @@
 #include "nsQueryObject.h"
 #include "nsWeakReference.h"
 #include "nricectx.h"
-#include "rlogringbuffer.h"
+#include "rlogconnector.h"
 #include "mozilla/SyncRunnable.h"
 #include "logging.h"
 #include "stunserver.h"

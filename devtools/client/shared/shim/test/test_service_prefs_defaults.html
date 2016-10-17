@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1309384
+-->
+<head>
+  <title>Test for Bug 1309384 - Services.prefs replacement defaults handling</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css">
+
+<script type="application/javascript;version=1.8">
+"use strict";
+var exports = {}
+var module = {exports};
+
+// Allow one require("raw!prefs...") to return some defaults, with the
+// others being ignored.
+var firstTime = true;
+function require(something) {
+  if (!something.startsWith("raw!prefs!")) {
+    throw new Error("whoops");
+  }
+  if (!firstTime) {
+    return "";
+  }
+  firstTime = false;
+  return "pref('pref1', 'pref1default');\n" +
+    "pref('pref2', 'pref2default');\n" +
+    "pref('pref3', 'pref3default');\n";
+}
+
+// Pretend that one of the prefs was modifed by the user in an earlier session.
+localStorage.setItem("Services.prefs:pref3", JSON.stringify({
+  // string
+  type: 32,
+  defaultValue: "pref3default",
+  hasUserValue: true,
+  userValue: "glass winged butterfly"
+}));
+
+</script>
+
+  <script type="application/javascript;version=1.8"
+	  src="resource://devtools/client/shared/shim/Services.js"></script>
+</head>
+<body>
+<script type="application/javascript;version=1.8">
+"use strict";
+
+is(Services.prefs.getCharPref("pref1"), "pref1default", "pref1 value");
+is(Services.prefs.getCharPref("pref2"), "pref2default", "pref2 value");
+is(Services.prefs.getCharPref("pref3"), "glass winged butterfly", "pref3 value");
+
+// Only pref3 should be in local storage at this point.
+is(localStorage.length, 1, "local storage is correct");
+
+Services.prefs.setCharPref("pref2", "pref2override");
+
+// Check that a default pref can be overridden properly
+
+// Workaround to reset the prefs helper and force it to read defaults & overrides again.
+Services._prefs = null;
+is(Services.prefs.getCharPref("pref2"), "pref2override", "pref2 value overridden");
+
+// Clean up.
+localStorage.clear();
+
+</script>
+</body>

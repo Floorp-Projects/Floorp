@@ -3861,10 +3861,6 @@ public:
   gfxRect BBoxInUserSpace() const;
   gfxPoint UserSpaceOffset() const;
 
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
-  {
-    return new nsDisplaySVGEffectsGeometry(this, aBuilder);
-  }
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) override;
@@ -3902,6 +3898,14 @@ public:
 
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
+
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
+  {
+    return new nsDisplayMaskGeometry(this, aBuilder);
+  }
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion) override;
 #ifdef MOZ_DUMP_PAINTING
   void PrintEffects(nsACString& aTo);
 #endif
@@ -3909,6 +3913,13 @@ public:
   void PaintAsLayer(nsDisplayListBuilder* aBuilder,
                     nsRenderingContext* aCtx,
                     LayerManager* aManager);
+
+  const nsTArray<nsRect>& GetDestRects()
+  {
+    return mDestRects;
+  }
+private:
+  nsTArray<nsRect> mDestRects;
 };
 
 /**
@@ -3939,6 +3950,11 @@ public:
   }
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
+  {
+    return new nsDisplayFilterGeometry(this, aBuilder);
+  }
+
 #ifdef MOZ_DUMP_PAINTING
   void PrintEffects(nsACString& aTo);
 #endif

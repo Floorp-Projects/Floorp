@@ -92,7 +92,7 @@ extern "C" {
 #include "nricemediastream.h"
 #include "nr_socket_prsock.h"
 #include "nrinterfaceprioritizer.h"
-#include "rlogringbuffer.h"
+#include "rlogconnector.h"
 #include "test_nr_socket.h"
 
 namespace mozilla {
@@ -664,7 +664,7 @@ int NrIceCtx::SetNat(const RefPtr<TestNat>& aNat) {
 void NrIceCtx::internal_DeinitializeGlobal() {
   NR_reg_del((char *)"stun");
   NR_reg_del((char *)"ice");
-  RLogRingBuffer::DestroyInstance();
+  RLogConnector::DestroyInstance();
   nr_crypto_vtbl = nullptr;
   initialized = false;
 }
@@ -986,7 +986,7 @@ void NrIceCtx::SetConnectionState(ConnectionState state) {
   if (connection_state_ == ICE_CTX_FAILED) {
     MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): dumping r_log ringbuffer... ");
     std::deque<std::string> logs;
-    RLogRingBuffer::GetInstance()->GetAny(0, &logs);
+    RLogConnector::GetInstance()->GetAny(0, &logs);
     for (auto l = logs.begin(); l != logs.end(); ++l) {
       MOZ_MTLOG(ML_INFO, *l);
     }

@@ -9,10 +9,10 @@
     <link rel="match" href="mask-image-3-ref.html">
     <meta name="assert" content="Test checks whether apply transfrom to a SVG mask layer works correctly or not.">
     <svg height="0">
-      <mask id="mask1" x="-100" y="-100" width="300" height="300" >
+      <mask id="mask1" x="-100" y="-100" width="300" height="300" maskUnits="userSpaceOnUse">
         <rect x="-100" y="-100" width="50" height="50" style="stroke:none; fill: #ffffff"/>
       </mask>
-      <mask id="mask2" x="-100" y="-100" width="300" height="300" >
+      <mask id="mask2" x="-100" y="-100" width="300" height="300" maskUnits="userSpaceOnUse">
         <circle cx="-50" cy="-50" r="25" style="stroke:none; fill: #ffffff"/>
       </mask>
     </svg>

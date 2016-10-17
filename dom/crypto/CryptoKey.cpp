@@ -330,16 +330,16 @@ CryptoKey::AddPublicKeyData(SECKEYPublicKey* aPublicKey)
   nsNSSShutDownPreventionLock locker;
 
   // Read EC params.
-  ScopedSECItem params(::SECITEM_AllocItem(nullptr, nullptr, 0));
+  ScopedAutoSECItem params;
   SECStatus rv = PK11_ReadRawAttribute(PK11_TypePrivKey, mPrivateKey,
-                                       CKA_EC_PARAMS, params);
+                                       CKA_EC_PARAMS, &params);
   if (rv != SECSuccess) {
     return NS_ERROR_DOM_OPERATION_ERR;
   }
 
   // Read private value.
-  ScopedSECItem value(::SECITEM_AllocItem(nullptr, nullptr, 0));
-  rv = PK11_ReadRawAttribute(PK11_TypePrivKey, mPrivateKey, CKA_VALUE, value);
+  ScopedAutoSECItem value;
+  rv = PK11_ReadRawAttribute(PK11_TypePrivKey, mPrivateKey, CKA_VALUE, &value);
   if (rv != SECSuccess) {
     return NS_ERROR_DOM_OPERATION_ERR;
   }
@@ -357,9 +357,9 @@ CryptoKey::AddPublicKeyData(SECKEYPublicKey* aPublicKey)
     { CKA_PRIVATE,          &falseValue,          sizeof(falseValue) },
     // PrivateKeyFromPrivateKeyTemplate sets the ID.
     { CKA_ID,               nullptr,              0 },
-    { CKA_EC_PARAMS,        params->data,         params->len },
+    { CKA_EC_PARAMS,        params.data,          params.len },
     { CKA_EC_POINT,         point->data,          point->len },
-    { CKA_VALUE,            value->data,          value->len },
+    { CKA_VALUE,            value.data,           value.len },
   };
 
   mPrivateKey = PrivateKeyFromPrivateKeyTemplate(keyTemplate,
@@ -852,18 +852,14 @@ bool ReadAndEncodeAttribute(SECKEYPrivateKey* aKey,
                             CK_ATTRIBUTE_TYPE aAttribute,
                             Optional<nsString>& aDst)
 {
-  ScopedSECItem item(::SECITEM_AllocItem(nullptr, nullptr, 0));
-  if (!item) {
-    return false;
-  }
-
-  if (PK11_ReadRawAttribute(PK11_TypePrivKey, aKey, aAttribute, item)
+  ScopedAutoSECItem item;
+  if (PK11_ReadRawAttribute(PK11_TypePrivKey, aKey, aAttribute, &item)
         != SECSuccess) {
     return false;
   }
 
   CryptoBuffer buffer;
-  if (!buffer.Assign(item)) {
+  if (!buffer.Assign(&item)) {
     return false;
   }
 
@@ -971,22 +967,22 @@ CryptoKey::PrivateKeyToJwk(SECKEYPrivateKey* aPrivKey,
     }
     case ecKey: {
       // Read EC params.
-      ScopedSECItem params(::SECITEM_AllocItem(nullptr, nullptr, 0));
+      ScopedAutoSECItem params;
       SECStatus rv = PK11_ReadRawAttribute(PK11_TypePrivKey, aPrivKey,
-                                           CKA_EC_PARAMS, params);
+                                           CKA_EC_PARAMS, &params);
       if (rv != SECSuccess) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
 
       // Read public point Q.
-      ScopedSECItem ecPoint(::SECITEM_AllocItem(nullptr, nullptr, 0));
+      ScopedAutoSECItem ecPoint;
       rv = PK11_ReadRawAttribute(PK11_TypePrivKey, aPrivKey, CKA_EC_POINT,
-                                 ecPoint);
+                                 &ecPoint);
       if (rv != SECSuccess) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
 
-      if (!ECKeyToJwk(PK11_TypePrivKey, aPrivKey, params, ecPoint, aRetVal)) {
+      if (!ECKeyToJwk(PK11_TypePrivKey, aPrivKey, &params, &ecPoint, aRetVal)) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
 

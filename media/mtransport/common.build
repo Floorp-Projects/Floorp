@@ -14,7 +14,7 @@ mtransport_lcppsrcs = [
     'nriceresolver.cpp',
     'nriceresolverfake.cpp',
     'nrinterfaceprioritizer.cpp',
-    'rlogringbuffer.cpp',
+    'rlogconnector.cpp',
     'simpletokenbucket.cpp',
     'stun_socket_filter.cpp',
     'test_nr_socket.cpp',
