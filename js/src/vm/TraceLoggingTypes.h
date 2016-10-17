@@ -19,7 +19,6 @@
     _(GC)                                             \
     _(GCAllocation)                                   \
     _(GCSweeping)                                     \
-    _(Internal)                                       \
     _(Interpreter)                                    \
     _(InlinedScripts)                                 \
     _(IonAnalysis)                                    \
@@ -84,6 +83,7 @@
 // without using TraceLogCreateTextId, because there are already created.
 enum TraceLoggerTextId {
     TraceLogger_Error = 0,
+    TraceLogger_Internal,
 #define DEFINE_TEXT_ID(textId) TraceLogger_ ## textId,
     TRACELOGGER_TREE_ITEMS(DEFINE_TEXT_ID)
     TraceLogger_LastTreeItem,
@@ -98,6 +98,8 @@ TLTextIdString(TraceLoggerTextId id)
     switch (id) {
       case TraceLogger_Error:
         return "TraceLogger failed to process text";
+      case TraceLogger_Internal:
+        return "TraceLogger overhead";
 #define NAME(textId) case TraceLogger_ ## textId: return #textId;
         TRACELOGGER_TREE_ITEMS(NAME)
         TRACELOGGER_LOG_ITEMS(NAME)
