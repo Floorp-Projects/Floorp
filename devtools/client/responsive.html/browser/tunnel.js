@@ -412,6 +412,8 @@ MessageManagerTunnel.prototype = {
     "Findbar:",
     // Messages sent from RemoteFinder.jsm
     "Finder:",
+    // Messages sent from InlineSpellChecker.jsm
+    "InlineSpellChecker:",
   ],
 
   INNER_TO_OUTER_MESSAGE_PREFIXES: [
