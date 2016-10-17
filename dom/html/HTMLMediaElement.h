@@ -1589,10 +1589,16 @@ protected:
   // True if the media has encryption information.
   bool mIsEncrypted;
 
-  // True when the CDM cannot decrypt the current block, and the
-  // waitingforkey event has been fired. Back to false when keys have become
-  // available and we can advance the current playback position.
-  bool mWaitingForKey;
+  enum WaitingForKeyState {
+    NOT_WAITING_FOR_KEY = 0,
+    WAITING_FOR_KEY = 1,
+    WAITING_FOR_KEY_DISPATCHED = 2
+  };
+
+  // True when the CDM cannot decrypt the current block due to lacking a key.
+  // Note: the "waitingforkey" event is not dispatched until all decoded data
+  // has been rendered.
+  WaitingForKeyState mWaitingForKey;
 
   // Listens for waitingForKey events from the owned decoder.
   MediaEventListener mWaitingForKeyListener;
