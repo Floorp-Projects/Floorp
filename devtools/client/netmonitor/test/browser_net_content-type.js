@@ -83,6 +83,7 @@ add_task(function* () {
       statusText: "OK",
       type: "plain",
       fullMimeType: "text/plain",
+      transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 73),
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 10.73),
       time: true
     });
