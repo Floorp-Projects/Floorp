@@ -8,57 +8,17 @@
 <?xml-stylesheet href="chrome://devtools/skin/netmonitor.css" type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        data-localization-bundle="devtools/locale/netmonitor.properties">
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="text/javascript" src="netmonitor-controller.js"/>
   <script type="text/javascript" src="netmonitor-view.js"/>
 
-  <popupset id="networkPopupSet">
-    <menupopup id="network-request-popup">
-      <menuitem id="request-menu-context-copy-url"
-                data-localization="label=netmonitor.context.copyUrl;accesskey=netmonitor.context.copyUrl.accesskey"/>
-      <menuitem id="request-menu-context-copy-url-params"
-                data-localization="label=netmonitor.context.copyUrlParams;accesskey=netmonitor.context.copyUrlParams.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyUrlParams();"/>
-      <menuitem id="request-menu-context-copy-post-data"
-                data-localization="label=netmonitor.context.copyPostData;accesskey=netmonitor.context.copyPostData.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyPostData();"/>
-      <menuitem id="request-menu-context-copy-as-curl"
-                data-localization="label=netmonitor.context.copyAsCurl;accesskey=netmonitor.context.copyAsCurl.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyAsCurl();"/>
-      <menuseparator class="request-menu-context-separator"/>
-      <menuitem id="request-menu-context-copy-request-headers"
-                data-localization="label=netmonitor.context.copyRequestHeaders;accesskey=netmonitor.context.copyRequestHeaders.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyRequestHeaders();"/>
-      <menuitem id="response-menu-context-copy-response-headers"
-                data-localization="label=netmonitor.context.copyResponseHeaders;accesskey=netmonitor.context.copyResponseHeaders.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyResponseHeaders();"/>
-      <menuitem id="request-menu-context-copy-response"
-                data-localization="label=netmonitor.context.copyResponse;accesskey=netmonitor.context.copyResponse.accesskey"/>
-      <menuitem id="request-menu-context-copy-image-as-data-uri"
-                data-localization="label=netmonitor.context.copyImageAsDataUri;accesskey=netmonitor.context.copyImageAsDataUri.accesskey"/>
-      <menuseparator class="request-menu-context-separator"/>
-      <menuitem id="request-menu-context-copy-all-as-har"
-                data-localization="label=netmonitor.context.copyAllAsHar;accesskey=netmonitor.context.copyAllAsHar.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyAllAsHar();"/>
-      <menuitem id="request-menu-context-save-all-as-har"
-                data-localization="label=netmonitor.context.saveAllAsHar;accesskey=netmonitor.context.saveAllAsHar.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.saveAllAsHar();"/>
-      <menuseparator class="request-menu-context-separator"/>
-      <menuitem id="request-menu-context-resend"
-                data-localization="label=netmonitor.context.editAndResend;accesskey=netmonitor.context.editAndResend.accesskey"/>
-      <menuseparator class="request-menu-context-separator"/>
-      <menuitem id="request-menu-context-newtab"
-                data-localization="label=netmonitor.context.newTab;accesskey=netmonitor.context.newTab.accesskey"/>
-      <menuitem id="request-menu-context-perf"
-                data-localization="label=netmonitor.context.perfTools;accesskey=netmonitor.context.perfTools.accesskey"/>
-    </menupopup>
-  </popupset>
-
-  <deck id="body" class="theme-sidebar" flex="1">
+  <deck id="body"
+        class="theme-sidebar"
+        flex="1"
+        data-localization-bundle="devtools/locale/netmonitor.properties">
 
     <vbox id="network-inspector-view" flex="1">
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">
@@ -219,7 +179,7 @@
             </hbox>
           </vbox>
 
-          <vbox id="requests-menu-contents" flex="1" context="network-request-popup">
+          <vbox id="requests-menu-contents" flex="1">
             <hbox id="requests-menu-item-template" hidden="true">
               <hbox class="requests-menu-subitem requests-menu-status"
                     align="center">
