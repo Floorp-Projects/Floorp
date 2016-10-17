@@ -95,9 +95,6 @@ public:
 
     bool IsLinkUp();
 
-    // Should only be called from NeckoChild. Use SetAppOffline instead.
-    void SetAppOfflineInternal(uint32_t appId, int32_t status);
-
     // Used to trigger a recheck of the captive portal status
     nsresult RecheckCaptivePortal();
 private:
@@ -131,10 +128,6 @@ private:
     // consolidated helper function
     void LookupProxyInfo(nsIURI *aURI, nsIURI *aProxyURI, uint32_t aProxyFlags,
                          nsCString *aScheme, nsIProxyInfo **outPI);
-
-    // notify content processes of offline status
-    // 'status' must be a nsIAppOfflineInfo mode constant.
-    void NotifyAppOfflineStatus(uint32_t appId, int32_t status);
 
     nsresult NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
                                                      nsIURI* aProxyURI,
@@ -179,10 +172,6 @@ private:
     nsTArray<int32_t>                    mRestrictedPortList;
 
     bool                                 mNetworkNotifyChanged;
-    int32_t                              mPreviousWifiState;
-    // Hashtable of (appId, nsIAppOffineInfo::mode) pairs
-    // that is used especially in IsAppOffline
-    nsDataHashtable<nsUint32HashKey, int32_t> mAppsOfflineStatus;
 
     static bool                          sTelemetryEnabled;
 
@@ -200,39 +189,6 @@ public:
     // Used for all default buffer sizes that necko allocates.
     static uint32_t   gDefaultSegmentSize;
     static uint32_t   gDefaultSegmentCount;
-};
-
-/**
- * This class is passed as the subject to a NotifyObservers call for the
- * "network:app-offline-status-changed" topic.
- * Observers will use the appId and mode to get the offline status of an app.
- */
-class nsAppOfflineInfo : public nsIAppOfflineInfo
-{
-    NS_DECL_THREADSAFE_ISUPPORTS
-public:
-    nsAppOfflineInfo(uint32_t aAppId, int32_t aMode)
-        : mAppId(aAppId), mMode(aMode)
-    {
-    }
-
-    NS_IMETHOD GetMode(int32_t *aMode) override
-    {
-        *aMode = mMode;
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetAppId(uint32_t *aAppId) override
-    {
-        *aAppId = mAppId;
-        return NS_OK;
-    }
-
-private:
-    virtual ~nsAppOfflineInfo() {}
-
-    uint32_t mAppId;
-    int32_t mMode;
 };
 
 /**
