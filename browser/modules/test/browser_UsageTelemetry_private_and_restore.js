@@ -5,6 +5,7 @@ const TAB_EVENT_COUNT = "browser.engagement.tab_open_event_count";
 const MAX_CONCURRENT_WINDOWS = "browser.engagement.max_concurrent_window_count";
 const WINDOW_OPEN_COUNT = "browser.engagement.window_open_event_count";
 const TOTAL_URI_COUNT = "browser.engagement.total_uri_count";
+const UNFILTERED_URI_COUNT = "browser.engagement.unfiltered_uri_count";
 const UNIQUE_DOMAINS_COUNT = "browser.engagement.unique_domains_count";
 
 function promiseBrowserStateRestored() {
@@ -30,6 +31,7 @@ add_task(function* test_privateMode() {
     Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
 
   ok(!(TOTAL_URI_COUNT in scalars), "We should not track URIs in private mode.");
+  ok(!(UNFILTERED_URI_COUNT in scalars), "We should not track URIs in private mode.");
   ok(!(UNIQUE_DOMAINS_COUNT in scalars), "We should not track unique domains in private mode.");
   is(scalars[TAB_EVENT_COUNT], 1, "The number of open tab event count must match the expected value.");
   is(scalars[MAX_CONCURRENT_TABS], 2, "The maximum tab count must match the expected value.");
@@ -79,6 +81,7 @@ add_task(function* test_sessionRestore() {
     Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
 
   ok(!(TOTAL_URI_COUNT in scalars), "We should not track URIs from restored sessions.");
+  ok(!(UNFILTERED_URI_COUNT in scalars), "We should not track URIs from restored sessions.");
   ok(!(UNIQUE_DOMAINS_COUNT in scalars), "We should not track unique domains from restored sessions.");
 
   // Restore the original session and cleanup.
