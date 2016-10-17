@@ -371,8 +371,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return;
           }
 
-          // Do the command of the selected one-off if it's not an engine.
+          // Determine whether to use the selected one-off search button.  In
+          // one-off search buttons parlance, "selected" means that the button
+          // has been navigated to via the keyboard.  So we want to use it if
+          // the triggering event is not a mouse click -- i.e., it's a Return
+          // key -- or if the one-off was mouse-clicked.
           let selectedOneOff = this.popup.oneOffSearchButtons.selectedButton;
+          if (selectedOneOff &&
+              isMouseEvent &&
+              event.originalTarget != selectedOneOff) {
+            selectedOneOff = null;
+          }
+
+          // Do the command of the selected one-off if it's not an engine.
           if (selectedOneOff && !selectedOneOff.engine) {
             selectedOneOff.doCommand();
             return;
