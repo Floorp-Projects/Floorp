@@ -68,11 +68,8 @@ AnimationTimeBlock.prototype = {
     // Create a container element to hold the delay and iterations.
     // It is positioned according to its delay (divided by the playbackrate),
     // and its width is according to its duration (divided by the playbackrate).
-    let {x, iterationW, delayX, delayW, negativeDelayW, endDelayX, endDelayW} =
+    const {x, delayX, delayW, endDelayX, endDelayW} =
       TimeScale.getAnimationDimensions(animation);
-
-    // background properties for .iterations element
-    let backgroundIterations = TimeScale.getIterationsBackgroundData(animation);
 
     // Animation summary graph element.
     const summaryEl = createNode({

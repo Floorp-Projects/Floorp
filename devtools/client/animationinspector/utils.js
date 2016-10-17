@@ -268,31 +268,6 @@ var TimeScale = {
 
     return {x, w, iterationW, delayX, delayW, negativeDelayW,
             endDelayX, endDelayW};
-  },
-
-  /**
-   * Given an animation, get the background data for .iterations element.
-   * This background represents iterationCount and iterationStart.
-   * Returns three properties.
-   * 1. size: x of background-size (%)
-   * 2. position: x of background-position (%)
-   * 3. repeat: background-repeat (string)
-   */
-  getIterationsBackgroundData: function ({state}) {
-    let iterationCount = state.iterationCount || 1;
-    let iterationStartW = state.iterationStart % 1 * 100;
-    let background = {};
-    if (iterationCount == 1) {
-      background.size = 100 - iterationStartW;
-      background.position = 0;
-      background.repeat = "no-repeat";
-    } else {
-      background.size = 1 / iterationCount * 100;
-      background.position = -iterationStartW * background.size /
-                              (100 - background.size);
-      background.repeat = "repeat-x";
-    }
-    return background;
   }
 };
 
