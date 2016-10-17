@@ -183,7 +183,6 @@ EXPORTS.mozilla.net += [
     'Dashboard.h',
     'DashboardTypes.h',
     'MemoryDownloader.h',
-    'OfflineObserver.h',
     'Predictor.h',
     'ReferrerPolicy.h',
 ]
@@ -252,7 +251,6 @@ UNIFIED_SOURCES += [
     'nsUnicharStreamLoader.cpp',
     'nsURLHelper.cpp',
     'nsURLParsers.cpp',
-    'OfflineObserver.cpp',
     'PollableEvent.cpp',
     'Predictor.cpp',
     'ProxyAutoConfig.cpp',

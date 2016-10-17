@@ -3474,16 +3474,8 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         return NS_ERROR_FAILURE;
     }
 
-    uint32_t appId = info->OriginAttributesPtr()->mAppId;
-    bool appOffline = false;
-
-    if (appId != NECKO_NO_APP_ID) {
-        gIOService->IsAppOffline(appId, &appOffline);
-        LOG(("nsHttpChannel::OpenCacheEntry appId: %u, offline: %d\n", appId, appOffline));
-    }
-
     uint32_t cacheEntryOpenFlags;
-    bool offline = gIOService->IsOffline() || appOffline;
+    bool offline = gIOService->IsOffline();
 
     nsAutoCString cacheControlRequestHeader;
     mRequestHead.GetHeader(nsHttp::Cache_Control, cacheControlRequestHeader);

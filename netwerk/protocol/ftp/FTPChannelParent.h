@@ -13,7 +13,6 @@
 #include "mozilla/net/NeckoParent.h"
 #include "nsIParentChannel.h"
 #include "nsIInterfaceRequestor.h"
-#include "OfflineObserver.h"
 #include "nsIChannelEventSink.h"
 #include "nsIFTPChannelParentInternal.h"
 
@@ -34,7 +33,6 @@ class FTPChannelParent final : public PFTPChannelParent
                              , public nsIInterfaceRequestor
                              , public ADivertableParentChannel
                              , public nsIChannelEventSink
-                             , public DisconnectableParent
                              , public nsIFTPChannelParentInternal
 {
 public:
@@ -110,9 +108,6 @@ protected:
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-  void OfflineDisconnect() override;
-  uint32_t GetAppId() override;
-
   // if configured to use HTTP proxy for FTP, this can an an HTTP channel.
   nsCOMPtr<nsIChannel> mChannel;
 
@@ -137,7 +132,6 @@ protected:
   // Set if we successfully suspended the nsHttpChannel for diversion. Unset
   // when we call ResumeForDiversion.
   bool mSuspendedForDiversion;
-  RefPtr<OfflineObserver> mObserver;
   RefPtr<mozilla::dom::TabParent> mTabParent;
 
   RefPtr<ChannelEventQueue> mEventQ;

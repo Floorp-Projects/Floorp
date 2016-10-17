@@ -43,10 +43,8 @@
 #include "nsAuthInformationHolder.h"
 #include "nsIAuthPromptCallback.h"
 #include "nsPrincipal.h"
-#include "nsIOService.h"
 #include "nsINetworkPredictor.h"
 #include "nsINetworkPredictorVerifier.h"
-#include "mozilla/net/OfflineObserver.h"
 #include "nsISpeculativeConnect.h"
 
 using mozilla::DocShellOriginAttributes;
@@ -74,8 +72,6 @@ NeckoParent::NeckoParent()
   nsCOMPtr<nsIProtocolHandler> proto =
     do_GetService("@mozilla.org/network/protocol;1?name=http");
 
-  mObserver = new OfflineObserver(this);
-
   // only register once--we will have multiple NeckoParents if there are
   // multiple child processes.
   static bool registeredBool = false;
@@ -88,9 +84,6 @@ NeckoParent::NeckoParent()
 
 NeckoParent::~NeckoParent()
 {
-  if (mObserver) {
-    mObserver->RemoveObserver();
-  }
 }
 
 static PBOverrideStatus
@@ -930,57 +923,6 @@ NeckoParent::RecvPredReset()
 
   predictor->Reset();
   return true;
-}
-
-nsresult
-NeckoParent::OfflineNotification(nsISupports *aSubject)
-{
-  nsCOMPtr<nsIAppOfflineInfo> info(do_QueryInterface(aSubject));
-  if (!info) {
-    return NS_OK;
-  }
-
-  uint32_t targetAppId = NECKO_UNKNOWN_APP_ID;
-  info->GetAppId(&targetAppId);
-
-  nsTArray<TabContext> contextArray =
-      static_cast<ContentParent*>(Manager())->GetManagedTabContext();
-  for (uint32_t i = 0; i < contextArray.Length(); ++i) {
-    TabContext tabContext = contextArray[i];
-    uint32_t appId = tabContext.OwnOrContainingAppId();
-
-    if (appId == targetAppId) {
-      if (gIOService) {
-        bool offline = false;
-        nsresult rv = gIOService->IsAppOffline(appId, &offline);
-        if (NS_FAILED(rv)) {
-          printf_stderr("Unexpected - NeckoParent: "
-                        "appId not found by isAppOffline(): %u\n", appId);
-          break;
-        }
-        if (!SendAppOfflineStatus(appId, offline)) {
-          printf_stderr("NeckoParent: "
-                        "SendAppOfflineStatus failed for appId: %u\n", appId);
-        }
-        // Once we found the targetAppId, we don't need to continue
-        break;
-      }
-    }
-
-  }
-
-  // XPCShells don't have any TabParents
-  // Just send the ipdl message to the child process.
-  if (!UsingNeckoIPCSecurity()) {
-    bool offline = false;
-    gIOService->IsAppOffline(targetAppId, &offline);
-    if (!SendAppOfflineStatus(targetAppId, offline)) {
-      printf_stderr("NeckoParent: "
-                    "SendAppOfflineStatus failed for targetAppId: %u\n", targetAppId);
-    }
-  }
-
-  return NS_OK;
 }
 
 bool
