@@ -183,8 +183,6 @@ class MessageChannel : HasResultCodes
      */
     int32_t GetTopmostMessageRoutingId() const;
 
-    void FlushPendingInterruptQueue();
-
     // Unsound_IsClosed and Unsound_NumQueuedMessages are safe to call from any
     // thread, but they make no guarantees about whether you'll get an
     // up-to-date value; the values are written on one thread and read without
