@@ -52,7 +52,7 @@ public:
   bool CheckClearDisplayInfoDirty();
 
 protected:
-  explicit VRDisplayHost(VRDisplayType aType);
+  explicit VRDisplayHost(VRDeviceType aType);
   virtual ~VRDisplayHost();
 
 #if defined(XP_WIN)
@@ -81,6 +81,19 @@ protected:
 
 private:
   VRDisplayInfo mLastUpdateDisplayInfo;
+};
+
+class VRControllerHost {
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRControllerHost)
+
+  const VRControllerInfo& GetControllerInfo() const { return mControllerInfo; }
+
+protected:
+  explicit VRControllerHost(VRDeviceType aType);
+  virtual ~VRControllerHost();
+
+  VRControllerInfo mControllerInfo;
 };
 
 } // namespace gfx

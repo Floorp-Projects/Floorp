@@ -15,6 +15,7 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/dom/GamepadBinding.h"
 
 namespace mozilla {
 namespace layers {
@@ -23,12 +24,13 @@ class PTextureParent;
 namespace gfx {
 class VRLayerParent;
 class VRDisplayHost;
+class VRControllerHost;
 
-enum class VRDisplayType : uint16_t {
+enum class VRDeviceType : uint16_t {
   Oculus,
   OpenVR,
   OSVR,
-  NumVRDisplayTypes
+  NumVRDeviceTypes
 };
 
 enum class VRDisplayCapabilityFlags : uint16_t {
@@ -122,7 +124,7 @@ struct VRFieldOfView {
 
 struct VRDisplayInfo
 {
-  VRDisplayType GetType() const { return mType; }
+  VRDeviceType GetType() const { return mType; }
   uint32_t GetDisplayID() const { return mDisplayID; }
   const nsCString& GetDisplayName() const { return mDisplayName; }
   VRDisplayCapabilityFlags GetCapabilities() const { return mCapabilityFlags; }
@@ -142,7 +144,7 @@ struct VRDisplayInfo
   };
 
   uint32_t mDisplayID;
-  VRDisplayType mType;
+  VRDeviceType mType;
   nsCString mDisplayName;
   VRDisplayCapabilityFlags mCapabilityFlags;
   VRFieldOfView mEyeFOV[VRDisplayInfo::NumEyes];
@@ -207,6 +209,60 @@ public:
 protected:
   VRDisplayManager() { }
   virtual ~VRDisplayManager() { }
+};
+
+struct VRControllerInfo
+{
+  VRDeviceType GetType() const { return mType; }
+  uint32_t GetControllerID() const { return mControllerID; }
+  const nsCString& GetControllerName() const { return mControllerName; }
+  dom::GamepadMappingType GetMappingType() const { return mMappingType; }
+  uint32_t GetNumButtons() const { return mNumButtons; }
+  uint32_t GetNumAxes() const { return mNumAxes; }
+
+  uint32_t mControllerID;
+  VRDeviceType mType;
+  nsCString mControllerName;
+  dom::GamepadMappingType mMappingType;
+  uint32_t mNumButtons;
+  uint32_t mNumAxes;
+
+  bool operator==(const VRControllerInfo& other) const {
+  return mType == other.mType &&
+         mControllerID == other.mControllerID &&
+         mControllerName == other.mControllerName &&
+         mMappingType == other.mMappingType &&
+         mNumButtons == other.mNumButtons &&
+         mNumAxes == other.mNumAxes;
+  }
+
+  bool operator!=(const VRControllerInfo& other) const {
+    return !(*this == other);
+  }
+};
+
+class VRControllerManager {
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRControllerManager)
+
+  static uint32_t AllocateControllerID();
+  virtual bool Init() = 0;
+  virtual void Destroy() = 0;
+  virtual void HandleInput() = 0;
+  virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult) = 0;
+  virtual void ScanForDevices() = 0;
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton,
+                      bool aPressed, double aValue);
+  void AddGamepad(const char* aID, dom::GamepadMappingType aMapping,
+                  uint32_t aNumButtons, uint32_t aNumAxes);
+
+protected:
+  VRControllerManager() : mInstalled(false), mControllerCount(0) {}
+  virtual ~VRControllerManager() {}
+
+  bool mInstalled;
+  uint32_t mControllerCount;
+  static Atomic<uint32_t> sControllerBase;
 };
 
 } // namespace gfx

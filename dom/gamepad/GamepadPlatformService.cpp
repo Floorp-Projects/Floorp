@@ -87,7 +87,7 @@ GamepadPlatformService::AddGamepad(const char* aID,
 
   uint32_t index = ++mGamepadIndex;
   GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), index,
-                 (uint32_t)aMapping, aNumButtons, aNumAxes);
+                 aMapping, GamepadServiceType::Standard, aNumButtons, aNumAxes);
   NotifyGamepadChange<GamepadAdded>(a);
   return index;
 }
@@ -99,7 +99,7 @@ GamepadPlatformService::RemoveGamepad(uint32_t aIndex)
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
-  GamepadRemoved a(aIndex);
+  GamepadRemoved a(aIndex, GamepadServiceType::Standard);
   NotifyGamepadChange<GamepadRemoved>(a);
 }
 
