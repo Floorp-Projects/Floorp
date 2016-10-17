@@ -329,28 +329,4 @@ typedef struct {
 
 #define TLS_STE_NO_SERVER_NAME -1
 
-typedef enum {
-    ssl_sig_none = 0,
-    ssl_sig_rsa_pkcs1_sha1 = 0x0201,
-    ssl_sig_rsa_pkcs1_sha256 = 0x0401,
-    ssl_sig_rsa_pkcs1_sha384 = 0x0501,
-    ssl_sig_rsa_pkcs1_sha512 = 0x0601,
-    /* For ECDSA, the pairing of the hash with a specific curve is only enforced
-     * in TLS 1.3; in TLS 1.2 any curve can be used with each of these. */
-    ssl_sig_ecdsa_secp256r1_sha256 = 0x0403,
-    ssl_sig_ecdsa_secp384r1_sha384 = 0x0503,
-    ssl_sig_ecdsa_secp521r1_sha512 = 0x0603,
-    ssl_sig_rsa_pss_sha256 = 0x0804,
-    ssl_sig_rsa_pss_sha384 = 0x0805,
-    ssl_sig_rsa_pss_sha512 = 0x0806,
-    ssl_sig_ed25519 = 0x0807,
-    ssl_sig_ed448 = 0x0808,
-
-    ssl_sig_dsa_sha1 = 0x0202,
-    ssl_sig_dsa_sha256 = 0x0402,
-    ssl_sig_dsa_sha384 = 0x0502,
-    ssl_sig_dsa_sha512 = 0x0602,
-    ssl_sig_ecdsa_sha1 = 0x0203
-} SSLSignatureScheme;
-
 #endif /* __ssl3proto_h_ */

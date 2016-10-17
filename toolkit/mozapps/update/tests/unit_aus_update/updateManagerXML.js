@@ -12,6 +12,10 @@ function run_test() {
 
   setUpdateChannel("test_channel");
 
+  // This test expects that the app.update.download.backgroundInterval
+  // preference doesn't already exist.
+  Services.prefs.deleteBranch("app.update.download.backgroundInterval");
+
   // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
   // and until bug 470244 is fixed this will not test the value for detailsURL
   // when it isn't specified in the update xml.

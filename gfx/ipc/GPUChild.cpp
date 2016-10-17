@@ -123,6 +123,17 @@ GPUChild::RecvInitCrashReporter(Shmem&& aShmem)
   return true;
 }
 
+bool
+GPUChild::RecvNotifyUiObservers(const nsCString& aTopic)
+{
+  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+  MOZ_ASSERT(obsSvc);
+  if (obsSvc) {
+    obsSvc->NotifyObservers(nullptr, aTopic.get(), nullptr);
+  }
+  return true;
+}
+
 void
 GPUChild::ActorDestroy(ActorDestroyReason aWhy)
 {

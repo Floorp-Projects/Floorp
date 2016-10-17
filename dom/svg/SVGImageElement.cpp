@@ -137,6 +137,15 @@ SVGImageElement::LoadSVGImage(bool aForce, bool aNotify)
 }
 
 //----------------------------------------------------------------------
+// EventTarget methods:
+
+void
+SVGImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  nsImageLoadingContent::AsyncEventRunning(aEvent);
+}
+
+//----------------------------------------------------------------------
 // nsIContent methods:
 
 nsresult

@@ -514,6 +514,15 @@ static BOOL IsActive(nsIFrame* aFrame, BOOL aIsToolbarControl)
   return FrameIsInActiveWindow(aFrame);
 }
 
+static bool IsInSourceList(nsIFrame* aFrame) {
+  for (nsIFrame* frame = aFrame->GetParent(); frame; frame = frame->GetParent()) {
+    if (frame->StyleDisplay()->mAppearance == NS_THEME_MAC_SOURCE_LIST) {
+      return true;
+    }
+  }
+  return false;
+}
+
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
 
 nsNativeThemeCocoa::nsNativeThemeCocoa()
@@ -2890,6 +2899,31 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       }
     }
       break;
+
+    case NS_THEME_MAC_SOURCE_LIST_SELECTION:
+    case NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION: {
+      // If we're in XUL tree, we need to rely on the source list's clear
+      // background display item. If we cleared the background behind the
+      // selections, the source list would not pick up the right font
+      // smoothing background. So, to simplify a bit, we only support vibrancy
+      // if we're in a source list.
+      if (VibrancyManager::SystemSupportsVibrancy() && IsInSourceList(aFrame)) {
+        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+        DrawVibrancyBackground(cgContext, macRect, aFrame, type);
+      } else {
+        BOOL isActiveSelection =
+          aWidgetType == NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION;
+        RenderWithCoreUI(macRect, cgContext,
+          [NSDictionary dictionaryWithObjectsAndKeys:
+            [NSNumber numberWithBool:isActiveSelection], @"focus",
+            [NSNumber numberWithBool:YES], @"is.flipped",
+            @"kCUIVariantGradientSideBarSelection", @"kCUIVariantKey",
+            (FrameIsInActiveWindow(aFrame) ? @"normal" : @"inactive"), @"state",
+            @"gradient", @"widget",
+            nil]);
+      }
+    }
+      break;
     
     case NS_THEME_TAB:
       DrawSegment(cgContext, macRect, eventState, aFrame, tabRenderSettings);
@@ -3615,6 +3649,8 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_TREEITEM:
     case NS_THEME_TREELINE:
     case NS_THEME_MAC_SOURCE_LIST:
+    case NS_THEME_MAC_SOURCE_LIST_SELECTION:
+    case NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION:
 
     case NS_THEME_RANGE:
 
@@ -3756,6 +3792,12 @@ nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
 {
   switch (aWidgetType) {
     case NS_THEME_MAC_SOURCE_LIST:
+    // If we're in a XUL tree, we don't want to clear the background behind the
+    // selections below, since that would make our source list to not pick up
+    // the right font smoothing background. But since we don't call this method
+    // in nsTreeBodyFrame::BuildDisplayList, we never get here.
+    case NS_THEME_MAC_SOURCE_LIST_SELECTION:
+    case NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION:
     case NS_THEME_MAC_VIBRANCY_LIGHT:
     case NS_THEME_MAC_VIBRANCY_DARK:
     case NS_THEME_TOOLTIP:
@@ -3786,6 +3828,8 @@ nsNativeThemeCocoa::WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
 {
   switch (aWidgetType) {
     case NS_THEME_MAC_SOURCE_LIST:
+    case NS_THEME_MAC_SOURCE_LIST_SELECTION:
+    case NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION:
     case NS_THEME_MAC_VIBRANCY_LIGHT:
     case NS_THEME_MAC_VIBRANCY_DARK:
     case NS_THEME_TOOLTIP:
@@ -3794,7 +3838,10 @@ nsNativeThemeCocoa::WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
     case NS_THEME_CHECKMENUITEM:
     case NS_THEME_DIALOG:
     {
-      if (aWidgetType == NS_THEME_DIALOG && !IsWindowSheet(aFrame)) {
+      if ((aWidgetType == NS_THEME_DIALOG && !IsWindowSheet(aFrame)) ||
+          ((aWidgetType == NS_THEME_MAC_SOURCE_LIST_SELECTION ||
+            aWidgetType == NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION) &&
+            !IsInSourceList(aFrame))) {
         return false;
       }
       ChildView* childView = ChildViewForFrame(aFrame);
@@ -3844,6 +3891,12 @@ nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, uint8_t aWidget
       return IsWindowSheet(aFrame) ? eThemeGeometryTypeSheet : eThemeGeometryTypeUnknown;
     case NS_THEME_MAC_SOURCE_LIST:
       return eThemeGeometryTypeSourceList;
+    case NS_THEME_MAC_SOURCE_LIST_SELECTION:
+      return IsInSourceList(aFrame) ? eThemeGeometryTypeSourceListSelection
+                                    : eThemeGeometryTypeUnknown;
+    case NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION:
+      return IsInSourceList(aFrame) ? eThemeGeometryTypeActiveSourceListSelection
+                                    : eThemeGeometryTypeUnknown;
     default:
       return eThemeGeometryTypeUnknown;
   }

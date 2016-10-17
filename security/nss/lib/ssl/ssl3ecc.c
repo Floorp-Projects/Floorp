@@ -194,6 +194,7 @@ ssl3_SendECDHClientKeyExchange(sslSocket *ss, SECKEYPublicKey *svrPubKey)
         PORT_SetError(SEC_ERROR_BAD_KEY);
         goto loser;
     }
+    ss->sec.keaGroup = groupDef;
     rv = ssl_CreateECDHEphemeralKeyPair(groupDef, &keyPair);
     if (rv != SECSuccess) {
         ssl_MapLowLevelError(SEC_ERROR_KEYGEN_FAIL);
@@ -347,6 +348,7 @@ ssl3_HandleECDHClientKeyExchange(sslSocket *ss, SSL3Opaque *b,
         /* error code set by ssl3_InitPendingCipherSpec */
         return SECFailure;
     }
+    ss->sec.keaGroup = ssl_ECPubKey2NamedGroup(&clntPubKey);
     return SECSuccess;
 }
 

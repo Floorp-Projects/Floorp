@@ -1,16 +1,4 @@
-const constructors = [
-    Int8Array,
-    Uint8Array,
-    Uint8ClampedArray,
-    Int16Array,
-    Uint16Array,
-    Int32Array,
-    Uint32Array,
-    Float32Array,
-    Float64Array
-];
-
-for (var constructor of constructors) {
+for (var constructor of typedArrayConstructors) {
     // Basic tests for our SpeciesConstructor implementation.
     var undefConstructor = new constructor(2);
     undefConstructor.constructor = undefined;
@@ -38,7 +26,7 @@ for (var constructor of constructors) {
 
     // If obj.constructor[@@species] is different constructor, it should be
     // used.
-    for (var constructor2 of constructors) {
+    for (var constructor2 of typedArrayConstructors) {
         var modifiedConstructor = new constructor(2);
         modifiedConstructor.constructor = constructor2;
         assertDeepEq(modifiedConstructor.slice(1), new constructor2(1));

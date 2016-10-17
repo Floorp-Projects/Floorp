@@ -103,10 +103,10 @@ VRDisplayPresentation::~VRDisplayPresentation()
   mDisplayClient->PresentationDestroyed();
 }
 
-void VRDisplayPresentation::SubmitFrame(int32_t aInputFrameID)
+void VRDisplayPresentation::SubmitFrame()
 {
   for (VRLayerChild *layer : mLayers) {
-    layer->SubmitFrame(aInputFrameID);
+    layer->SubmitFrame();
     break; // Currently only one layer supported, submit only the first
   }
 }

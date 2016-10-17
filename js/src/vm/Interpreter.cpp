@@ -4735,6 +4735,8 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
     JSOp op = JSOp(*pc);
     bool constructing = op == JSOP_SPREADNEW || op == JSOP_SPREADSUPERCALL;
 
+    // {Construct,Invoke}Args::init does this too, but this gives us a better
+    // error message.
     if (length > ARGS_LENGTH_MAX) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   constructing ? JSMSG_TOO_MANY_CON_SPREADARGS
@@ -4770,7 +4772,7 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
             return false;
 
         ConstructArgs cargs(cx);
-        if (!cargs.init(length))
+        if (!cargs.init(cx, length))
             return false;
 
         if (!GetElements(cx, aobj, length, cargs.array()))
@@ -4782,7 +4784,7 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
         res.setObject(*obj);
     } else {
         InvokeArgs args(cx);
-        if (!args.init(length))
+        if (!args.init(cx, length))
             return false;
 
         if (!GetElements(cx, aobj, length, args.array()))

@@ -39,6 +39,7 @@ AsyncEventDispatcher::Run()
   if (mCanceled) {
     return NS_OK;
   }
+  mTarget->AsyncEventRunning(this);
   RefPtr<Event> event = mEvent ? mEvent->InternalDOMEvent() : nullptr;
   if (!event) {
     event = NS_NewDOMEvent(mTarget, nullptr, nullptr);

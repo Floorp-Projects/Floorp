@@ -133,10 +133,14 @@ var AnimationsController = {
 
   initialize: Task.async(function* () {
     if (this.initialized) {
-      yield this.initialized.promise;
+      yield this.initialized;
       return;
     }
-    this.initialized = promise.defer();
+
+    let resolver;
+    this.initialized = new Promise(resolve => {
+      resolver = resolve;
+    });
 
     this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
     this.onNewNodeFront = this.onNewNodeFront.bind(this);
@@ -162,7 +166,7 @@ var AnimationsController = {
     this.startListeners();
     yield this.onNewNodeFront();
 
-    this.initialized.resolve();
+    resolver();
   }),
 
   destroy: Task.async(function* () {
@@ -171,10 +175,14 @@ var AnimationsController = {
     }
 
     if (this.destroyed) {
-      yield this.destroyed.promise;
+      yield this.destroyed;
       return;
     }
-    this.destroyed = promise.defer();
+
+    let resolver;
+    this.destroyed = new Promise(resolve => {
+      resolver = resolve;
+    });
 
     this.stopListeners();
     this.destroyAnimationPlayers();
@@ -184,8 +192,7 @@ var AnimationsController = {
       this.animationsFront.destroy();
       this.animationsFront = null;
     }
-
-    this.destroyed.resolve();
+    resolver();
   }),
 
   startListeners: function () {

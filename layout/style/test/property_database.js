@@ -815,7 +815,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     "-webkit-gradient(linear, 1 2, 3 4, from(##00ff00))",
     "-webkit-gradient(linear, 1 2, 3 4, from(#00fff))", // wrong num hex digits
     "-webkit-gradient(linear, 1 2, 3 4, from(xyz(0,0,0)))", // bogus color func
-    "-webkit-gradient(linear, 1 2, 3 4, from(rgb(100, 100.5, 30)))", // fraction
+    // Mixing <number> and <percentage> is invalid.
+    "-webkit-gradient(linear, 1 2, 3 4, from(rgb(100, 100%, 30)))",
 
     // linear w/ color stops that have comma issues
     "-webkit-gradient(linear, 1 2, 3 4 from(lime))",
@@ -2345,8 +2346,8 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "transparent", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(0, 0, 0, 0)", "rgba(255,255,255,-3.7)" ],
-    other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)", "hsl(240, 50%, 50%)", "rgb(50%, 50%, 50%)", "-moz-default-background-color" ],
-    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "rgb(100, 100.0, 100)" ],
+    other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)", "hsl(240, 50%, 50%)", "rgb(50%, 50%, 50%)", "-moz-default-background-color", "rgb(100, 100.0, 100)" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "rgb(100, 100%, 100)" ],
     quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
   },
   "background-image": {
@@ -2857,9 +2858,41 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     /* XXX should test currentColor, but may or may not be initial */
-    initial_values: [ "black", "#000", "#000f", "#000000ff", "rgb(0, 0, 0)", "rgba(0, 0, 0, 1.0)", "-moz-default-color" ],
-    other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent", "-moz-nativehyperlinktext", "rgba(255,128,0,0.5)", "#e0fc", "#10fcee72" ],
-    invalid_values: [ "#f", "#ff", "#fffff", "#fffffff", "#fffffffff" ],
+    initial_values: [ "black", "#000", "#000f", "#000000ff", "-moz-default-color", "rgb(0, 0, 0)", "rgb(0%, 0%, 0%)",
+      /* css-color-4: */
+      /* rgb() and rgba() are aliases of each other. */
+      "rgb(0, 0, 0)", "rgba(0, 0, 0)", "rgb(0, 0, 0, 1)", "rgba(0, 0, 0, 1)",
+      /* hsl() and hsla() are aliases of each other. */
+      "hsl(0, 0%, 0%)", "hsla(0, 0%, 0%)", "hsl(0, 0%, 0%, 1)", "hsla(0, 0%, 0%, 1)",
+      /* rgb() and rgba() functions now accept <number> rather than <integer>. */
+      "rgb(0.0, 0.0, 0.0)", "rgba(0.0, 0.0, 0.0)", "rgb(0.0, 0.0, 0.0, 1)", "rgba(0.0, 0.0, 0.0, 1)",
+      /* <alpha-value> now accepts <percentage> as well as <number> in rgba() and hsla(). */
+      "rgb(0.0, 0.0, 0.0, 100%)", "hsl(0, 0%, 0%, 100%)",
+      /* rgb() and hsl() now support comma-less expression. */
+      "rgb(0 0 0)", "rgb(0 0 0 / 1)", "rgb(0/* comment */0/* comment */0)", "rgb(0/* comment */0/* comment*/0/1.0)",
+      "hsl(0 0% 0%)", "hsl(0 0% 0% / 1)", "hsl(0/* comment */0%/* comment */0%)", "hsl(0/* comment */0%/* comment */0%/1)",
+      /* Support <angle> for hsl() hue component. */
+      "hsl(0deg, 0%, 0%)", "hsl(360deg, 0%, 0%)", "hsl(0grad, 0%, 0%)", "hsl(400grad, 0%, 0%)", "hsl(0rad, 0%, 0%)", "hsl(0turn, 0%, 0%)", "hsl(1turn, 0%, 0%)",
+    ],
+    other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent", "-moz-nativehyperlinktext", "rgba(255,128,0,0.5)", "#e0fc", "#10fcee72",
+      /* css-color-4: */
+      "rgb(100, 100.0, 100)", "rgb(300 300 300 / 200%)", "rgb(300.0 300.0 300.0 / 2.0)", "hsl(720, 200%, 200%, 2.0)", "hsla(720 200% 200% / 200%)",
+      "hsl(480deg, 20%, 30%, 0.3)", "hsl(55grad, 400%, 30%)", "hsl(0.5grad 400% 500% / 9.0)", "hsl(33rad 100% 90% / 4)", "hsl(0.33turn, 40%, 40%, 10%)",
+    ],
+    invalid_values: [ "#f", "#ff", "#fffff", "#fffffff", "#fffffffff",
+      "rgb(100%, 0, 100%)", "rgba(100, 0, 100%, 30%)",
+      "hsl(0, 0, 0%)", "hsla(0%, 0%, 0%, 0.1)",
+      /* trailing commas */
+      "rgb(0, 0, 0,)", "rgba(0, 0, 0, 0,)",
+      "hsl(0, 0%, 0%,)", "hsla(0, 0%, 0%, 1,)",
+      /* css-color-4: */
+      /* comma and comma-less expressions should not mix together. */
+      "rgb(0, 0, 0 / 1)", "rgb(0 0 0, 1)", "rgb(0, 0 0, 1)", "rgb(0 0, 0 / 1)",
+      "hsl(0, 0%, 0% / 1)", "hsl(0 0% 0%, 1)", "hsl(0 0% 0%, 1)", "hsl(0 0%, 0% / 1)",
+      /* trailing slash */
+      "rgb(0 0 0 /)", "rgb(0, 0, 0 /)",
+      "hsl(0 0% 0% /)", "hsl(0, 0%, 0% /)",
+    ],
     quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a", "fff": "#ffffff", "ffffff": "#ffffff", },
   },
   "content": {

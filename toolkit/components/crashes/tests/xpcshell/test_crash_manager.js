@@ -367,6 +367,8 @@ add_task(function* test_addCrash() {
                    "plugin-hang", DUMMY_DATE);
   yield m.addCrash(m.PROCESS_TYPE_GMPLUGIN, m.CRASH_TYPE_CRASH,
                    "gmplugin-crash", DUMMY_DATE);
+  yield m.addCrash(m.PROCESS_TYPE_GPU, m.CRASH_TYPE_CRASH,
+                   "gpu-crash", DUMMY_DATE);
 
   yield m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
                    "changing-item", DUMMY_DATE);
@@ -374,7 +376,7 @@ add_task(function* test_addCrash() {
                    "changing-item", DUMMY_DATE_2);
 
   crashes = yield m.getCrashes();
-  Assert.equal(crashes.length, 8);
+  Assert.equal(crashes.length, 9);
 
   let map = new Map(crashes.map(crash => [crash.id, crash]));
 
@@ -419,6 +421,12 @@ add_task(function* test_addCrash() {
   Assert.equal(crash.crashDate, DUMMY_DATE);
   Assert.equal(crash.type, m.PROCESS_TYPE_GMPLUGIN + "-" + m.CRASH_TYPE_CRASH);
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_GMPLUGIN, m.CRASH_TYPE_CRASH));
+
+  crash = map.get("gpu-crash");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type, m.PROCESS_TYPE_GPU+ "-" + m.CRASH_TYPE_CRASH);
+  Assert.ok(crash.isOfType(m.PROCESS_TYPE_GPU, m.CRASH_TYPE_CRASH));
 
   crash = map.get("changing-item");
   Assert.ok(!!crash);

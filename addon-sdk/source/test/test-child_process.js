@@ -121,8 +121,8 @@ exports.testExecFileCallbackSuccess = function (assert, done) {
 
 exports.testExecFileCallbackError = function (assert, done) {
   execFile('not-real-command', { cwd: PROFILE_DIR }, function (err, stdout, stderr) {
-    assert.ok(/NS_ERROR_FILE_UNRECOGNIZED_PATH/.test(err.message),
-      'error contains error message');
+    assert.ok(/Executable not found/.test(err.message),
+      `error '${err.message}' contains error message`);
     assert.ok(err.lineNumber >= 0, 'error contains lineNumber');
     assert.ok(/resource:\/\//.test(err.fileName), 'error contains fileName');
     assert.equal(stdout, '', 'stdout is empty');

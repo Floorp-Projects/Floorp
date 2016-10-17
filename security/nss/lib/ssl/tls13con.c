@@ -53,8 +53,9 @@ static SECStatus tls13_SendServerHelloSequence(sslSocket *ss);
 static SECStatus tls13_SendEncryptedExtensions(sslSocket *ss);
 static void tls13_SetKeyExchangeType(sslSocket *ss, const sslNamedGroupDef *group);
 static SECStatus tls13_HandleClientKeyShare(sslSocket *ss,
-                                            const sslNamedGroupDef *group,
-                                            PRBool *shouldRetry);
+                                            TLS13KeyShareEntry *peerShare);
+static SECStatus tls13_SendHelloRetryRequest(sslSocket *ss,
+                                             const sslNamedGroupDef *selectedGroup);
 
 static SECStatus tls13_HandleServerKeyShare(sslSocket *ss);
 static SECStatus tls13_HandleEncryptedExtensions(sslSocket *ss, SSL3Opaque *b,
@@ -1037,10 +1038,47 @@ tls13_NegotiateZeroRtt(sslSocket *ss, const sslSessionID *sid)
     }
 }
 
-static SECStatus
-tls13_NegotiateKeyExchange(sslSocket *ss, const sslNamedGroupDef **group)
+/* Check if the offered group is acceptable. */
+static PRBool
+tls13_isGroupAcceptable(const sslNamedGroupDef *offered,
+                        const sslNamedGroupDef *preferredGroup)
 {
-    int index;
+    /* We accept epsilon (e) bits around the offered group size. */
+    const unsigned int e = 2;
+
+    PORT_Assert(offered);
+    PORT_Assert(preferredGroup);
+
+    if (offered->bits >= preferredGroup->bits - e &&
+        offered->bits <= preferredGroup->bits + e) {
+        return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+/* Find remote key share for given group and return it.
+ * Returns NULL if no key share is found. */
+static TLS13KeyShareEntry *
+tls13_FindKeyShareEntry(sslSocket *ss, const sslNamedGroupDef *group)
+{
+    PRCList *cur_p = PR_NEXT_LINK(&ss->ssl3.hs.remoteKeyShares);
+    while (cur_p != &ss->ssl3.hs.remoteKeyShares) {
+        TLS13KeyShareEntry *offer = (TLS13KeyShareEntry *)cur_p;
+        if (offer->group == group) {
+            return offer;
+        }
+        cur_p = PR_NEXT_LINK(cur_p);
+    }
+    return NULL;
+}
+
+static SECStatus
+tls13_NegotiateKeyExchange(sslSocket *ss, TLS13KeyShareEntry **clientShare)
+{
+    unsigned int index;
+    TLS13KeyShareEntry *entry = NULL;
+    const sslNamedGroupDef *preferredGroup = NULL;
 
     /* We insist on DHE. */
     if (ss->statelessResume) {
@@ -1065,18 +1103,54 @@ tls13_NegotiateKeyExchange(sslSocket *ss, const sslNamedGroupDef **group)
     SSL_TRC(3, ("%d: TLS13[%d]: selected KE = %s",
                 SSL_GETPID(), ss->fd, ss->statelessResume ? "PSK + (EC)DHE" : "(EC)DHE"));
 
+    /* Find the preferred group and an according client key share available. */
     for (index = 0; index < SSL_NAMED_GROUP_COUNT; ++index) {
-        /* Enabled here checks for being mutually supported. */
-        if (ssl_NamedGroupEnabled(ss, ss->namedGroupPreferences[index])) {
-            *group = ss->namedGroupPreferences[index];
-            SSL_TRC(3, ("%d: TLS13[%d]: group = %d", (*group)->name));
+        /* Continue to the next group if this one is not enabled. */
+        if (!ss->namedGroupPreferences[index]) {
+            continue;
+        }
 
-            return SECSuccess;
+        /* Check if the client sent a key share for this group. */
+        entry = tls13_FindKeyShareEntry(ss, ss->namedGroupPreferences[index]);
+
+        if (preferredGroup) {
+            /* We already found our preferred group but the group didn't have a share. */
+            if (entry) {
+                /* The client sent a key share with group ss->namedGroupPreferences[index] */
+                if (tls13_isGroupAcceptable(ss->namedGroupPreferences[index],
+                                            preferredGroup)) {
+                    /* This is not the preferred group, but it's acceptable */
+                    preferredGroup = ss->namedGroupPreferences[index];
+                } else {
+                    /* The proposed group is not acceptable. */
+                    entry = NULL;
+                }
+            }
+            break;
+        } else {
+            /* The first enabled group is the preferred group. */
+            preferredGroup = ss->namedGroupPreferences[index];
+            if (entry) {
+                break;
+            }
         }
     }
 
-    FATAL_ERROR(ss, SSL_ERROR_NO_CYPHER_OVERLAP, handshake_failure);
-    return SECFailure;
+    SSL_TRC(3, ("%d: TLS13[%d]: group = %d", preferredGroup->name));
+
+    if (!preferredGroup) {
+        FATAL_ERROR(ss, SSL_ERROR_NO_CYPHER_OVERLAP, handshake_failure);
+        return SECFailure;
+    }
+
+    if (!entry) {
+        return tls13_SendHelloRetryRequest(ss, preferredGroup);
+    }
+
+    PORT_Assert(preferredGroup == entry->group);
+    *clientShare = entry;
+
+    return SECSuccess;
 }
 
 SECStatus
@@ -1178,9 +1252,8 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
 {
     SECStatus rv;
     SSL3Statistics *ssl3stats = SSL_GetStatistics();
-    const sslNamedGroupDef *expectedGroup;
+    TLS13KeyShareEntry *clientShare = NULL;
     int j;
-    PRBool shouldRetry = PR_FALSE;
     ssl3CipherSuite previousCipherSuite;
 
 #ifndef PARANOID
@@ -1231,9 +1304,19 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
     }
 
     /* Select key exchange. */
-    rv = tls13_NegotiateKeyExchange(ss, &expectedGroup);
+    rv = tls13_NegotiateKeyExchange(ss, &clientShare);
     if (rv != SECSuccess) {
         return SECFailure;
+    }
+
+    /* If we didn't find a client key share, we have to retry. */
+    if (!clientShare) {
+        if (sid) { /* Free the sid. */
+            ss->sec.uncache(sid);
+            ssl_FreeSID(sid);
+        }
+        PORT_Assert(ss->ssl3.hs.helloRetry);
+        return SECSuccess;
     }
 
     /* Select the authentication (this is also handshake shape). */
@@ -1286,29 +1369,9 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
     /* If this is TLS 1.3 we are expecting a ClientKeyShare
      * extension. Missing/absent extension cause failure
      * below. */
-    rv = tls13_HandleClientKeyShare(ss, expectedGroup,
-                                    &shouldRetry);
+    rv = tls13_HandleClientKeyShare(ss, clientShare);
     if (rv != SECSuccess) {
         goto loser; /* An alert was sent already. */
-    }
-    if (shouldRetry) {
-        /* Unfortunately, there's a bit of cleanup needed here to back out
-         * changes from the stateless resumption setup. */
-        if (ss->statelessResume) {
-            PK11_FreeSymKey(ss->ssl3.hs.resumptionPsk);
-            SECITEM_FreeItem(&ss->ssl3.hs.resumptionContext, PR_FALSE);
-            CERT_DestroyCertificate(ss->sec.localCert);
-            if (ss->sec.peerCert) {
-                CERT_DestroyCertificate(ss->sec.peerCert);
-            }
-        }
-
-        if (sid) { /* Free the sid. */
-            ss->sec.uncache(sid);
-            ssl_FreeSID(sid);
-        }
-        PORT_Assert(ss->ssl3.hs.helloRetry);
-        return SECSuccess;
     }
 
     /* From this point we are either committed to resumption, or not. */
@@ -1335,7 +1398,6 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
     ss->sec.ci.sid = sid;
     sid = NULL;
 
-    tls13_SetKeyExchangeType(ss, expectedGroup);
     rv = tls13_ComputeEarlySecrets(ss, ss->ssl3.hs.zeroRttState ==
                                            ssl_0rtt_accepted);
     if (rv != SECSuccess) {
@@ -1449,8 +1511,8 @@ tls13_SendHelloRetryRequest(sslSocket *ss, const sslNamedGroupDef *selectedGroup
 
     ss->ssl3.hs.helloRetry = PR_TRUE;
 
-    /* We previously thought that we could accept 0-RTT.  Change of plans. */
-    if (ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted) {
+    /* We received early data but have to ignore it because we sent a retry. */
+    if (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent) {
         ss->ssl3.hs.zeroRttState = ssl_0rtt_ignored;
         ss->ssl3.hs.zeroRttIgnore = ssl_0rtt_ignore_hrr;
     }
@@ -1473,42 +1535,25 @@ loser:
  */
 
 static SECStatus
-tls13_HandleClientKeyShare(sslSocket *ss, const sslNamedGroupDef *selectedGroup,
-                           PRBool *shouldRetry)
+tls13_HandleClientKeyShare(sslSocket *ss, TLS13KeyShareEntry *peerShare)
 {
     SECStatus rv;
-    TLS13KeyShareEntry *peerShare = NULL; /* theirs */
-    sslEphemeralKeyPair *keyPair;         /* ours */
-    PRCList *cur_p;
+    sslEphemeralKeyPair *keyPair; /* ours */
 
     SSL_TRC(3, ("%d: TLS13[%d]: handle client_key_share handshake",
                 SSL_GETPID(), ss->fd));
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
-    PORT_Assert(selectedGroup);
+    PORT_Assert(peerShare);
 
-    /* Now walk through the keys until we find one for our group */
-    cur_p = PR_NEXT_LINK(&ss->ssl3.hs.remoteKeyShares);
-    while (cur_p != &ss->ssl3.hs.remoteKeyShares) {
-        TLS13KeyShareEntry *offer = (TLS13KeyShareEntry *)cur_p;
-
-        if (offer->group == selectedGroup) {
-            peerShare = offer;
-            break;
-        }
-        cur_p = PR_NEXT_LINK(cur_p);
-    }
-
-    if (!peerShare) {
-        *shouldRetry = PR_TRUE;
-        return tls13_SendHelloRetryRequest(ss, selectedGroup);
-    }
+    tls13_SetKeyExchangeType(ss, peerShare->group);
 
     /* Generate our key */
-    rv = tls13_CreateKeyShare(ss, selectedGroup);
-    if (rv != SECSuccess)
+    rv = tls13_CreateKeyShare(ss, peerShare->group);
+    if (rv != SECSuccess) {
         return rv;
+    }
 
     /* We should have exactly one key share. */
     PORT_Assert(!PR_CLIST_IS_EMPTY(&ss->ephemeralKeyPairs));
@@ -1516,7 +1561,6 @@ tls13_HandleClientKeyShare(sslSocket *ss, const sslNamedGroupDef *selectedGroup,
                 PR_NEXT_LINK(&ss->ephemeralKeyPairs));
 
     keyPair = ((sslEphemeralKeyPair *)PR_NEXT_LINK(&ss->ephemeralKeyPairs));
-
     ss->sec.keaKeyBits = SECKEY_PublicKeyStrengthInBits(keyPair->keys->pubKey);
 
     /* Register the sender */
@@ -2063,6 +2107,7 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
 static void
 tls13_SetKeyExchangeType(sslSocket *ss, const sslNamedGroupDef *group)
 {
+    ss->sec.keaGroup = group;
     switch (group->keaType) {
         /* Note: These overwrite on resumption.... so if you start with ECDH
          * and resume with DH, we report DH. That's fine, since no answer
@@ -3532,6 +3577,12 @@ tls13_SendNewSessionTicket(sslSocket *ss)
     if (rv != SECSuccess)
         goto loser;
 
+    /* Encode the ticket. */
+    rv = ssl3_AppendHandshakeVariable(
+        ss, ticket_data.data, ticket_data.len, 2);
+    if (rv != SECSuccess)
+        goto loser;
+
     /* Extensions. */
     rv = ssl3_AppendHandshakeNumber(ss, ticket_age_add_len, 2);
     if (rv != SECSuccess)
@@ -3553,19 +3604,14 @@ tls13_SendNewSessionTicket(sslSocket *ss)
             goto loser;
     }
 
-    /* Encode the ticket. */
-    rv = ssl3_AppendHandshakeVariable(
-        ss, ticket_data.data, ticket_data.len, 2);
-    if (rv != SECSuccess)
-        goto loser;
-
-    rv = SECSuccess;
+    SECITEM_FreeItem(&ticket_data, PR_FALSE);
+    return SECSuccess;
 
 loser:
     if (ticket_data.data) {
         SECITEM_FreeItem(&ticket_data, PR_FALSE);
     }
-    return rv;
+    return SECFailure;
 }
 
 static SECStatus
@@ -3575,6 +3621,7 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     PRInt32 tmp;
     NewSessionTicket ticket = { 0 };
     SECItem data;
+    SECItem ticket_data;
 
     SSL_TRC(3, ("%d: TLS13[%d]: handle new session ticket message",
                 SSL_GETPID(), ss->fd));
@@ -3622,6 +3669,14 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         ticket.flags |= ticket_allow_psk_auth;
     }
 
+    /* Get the ticket value. */
+    rv = ssl3_ConsumeHandshakeVariable(ss, &ticket_data, 2, &b, &length);
+    if (rv != SECSuccess || !ticket_data.len) {
+        FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_NEW_SESSION_TICKET,
+                    decode_error);
+        return SECFailure;
+    }
+
     /* Parse extensions. */
     rv = ssl3_ConsumeHandshakeVariable(ss, &data, 2, &b, &length);
     if (rv != SECSuccess) {
@@ -3637,15 +3692,12 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
                     decode_error);
         return SECFailure;
     }
-
     if (ss->xtnData.ticket_age_add_found) {
         ticket.flags |= ticket_allow_early_data;
         ticket.ticket_age_add = ss->xtnData.ticket_age_add;
     }
 
-    /* Get the ticket value. */
-    rv = ssl3_ConsumeHandshakeVariable(ss, &data, 2, &b, &length);
-    if (rv != SECSuccess || length != 0 || !data.len) {
+    if (length != 0) {
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_NEW_SESSION_TICKET,
                     decode_error);
         return SECFailure;
@@ -3667,7 +3719,7 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
             return SECSuccess;
         }
 
-        rv = SECITEM_CopyItem(NULL, &ticket.ticket, &data);
+        rv = SECITEM_CopyItem(NULL, &ticket.ticket, &ticket_data);
         if (rv != SECSuccess) {
             FATAL_ERROR(ss, SEC_ERROR_NO_MEMORY, internal_error);
             return SECFailure;

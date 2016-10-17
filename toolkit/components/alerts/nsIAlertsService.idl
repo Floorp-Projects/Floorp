@@ -49,7 +49,8 @@ interface nsIAlertNotification : nsISupports
             [optional] in AString aLang,
             [optional] in AString aData,
             [optional] in nsIPrincipal aPrincipal,
-            [optional] in boolean aInPrivateBrowsing);
+            [optional] in boolean aInPrivateBrowsing,
+            [optional] in boolean aRequireInteraction);
 
   /**
    * The name of the notification. On Android, the name is hashed and used as
@@ -119,6 +120,12 @@ interface nsIAlertNotification : nsISupports
    * loaded anonymously (without cookies or authorization tokens).
    */
   readonly attribute boolean inPrivateBrowsing;
+
+  /**
+   * Indicates that the notification should remain readily available until
+   * the user activates or dismisses the notification.
+   */
+  readonly attribute boolean requireInteraction;
 
   /**
    * Indicates whether this alert should show the source string and action
@@ -193,7 +200,8 @@ interface nsIAlertsService : nsISupports
                              [optional] in AString aLang,
                              [optional] in AString aData,
                              [optional] in nsIPrincipal aPrincipal,
-                             [optional] in boolean aInPrivateBrowsing);
+                             [optional] in boolean aInPrivateBrowsing,
+                             [optional] in boolean aRequireInteraction);
 
   /**
    * Close alerts created by the service.

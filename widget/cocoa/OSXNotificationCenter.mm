@@ -241,7 +241,8 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
                                              const nsAString & aLang,
                                              const nsAString & aData,
                                              nsIPrincipal * aPrincipal,
-                                             bool aInPrivateBrowsing)
+                                             bool aInPrivateBrowsing,
+                                             bool aRequireInteraction)
 {
   nsCOMPtr<nsIAlertNotification> alert =
     do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
@@ -249,7 +250,8 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
   nsresult rv = alert->Init(aAlertName, aImageUrl, aAlertTitle,
                             aAlertText, aAlertTextClickable,
                             aAlertCookie, aBidi, aLang, aData,
-                            aPrincipal, aInPrivateBrowsing);
+                            aPrincipal, aInPrivateBrowsing,
+                            aRequireInteraction);
   NS_ENSURE_SUCCESS(rv, rv);
   return ShowAlert(alert, aAlertListener);
 }
