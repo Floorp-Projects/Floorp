@@ -206,12 +206,6 @@ if CONFIG['MOZ_B2G_BT_BLUEZ'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'dbus',
     ]
 
-if CONFIG['MOZ_B2G_CAMERA'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    OS_LIBS += [
-        'stagefright',
-        'stagefright_omx',
-    ]
-
 if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
     OS_LIBS += [
         'rt',

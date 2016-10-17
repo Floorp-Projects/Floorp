@@ -7,6 +7,8 @@
 const TEST_URL = "data:text/html;charset=utf-8,<input%20id=txt>" +
                  "<input%20type=checkbox%20id=chk>";
 
+Cu.import("resource:///modules/sessionstore/SessionStore.jsm");
+
 /**
  * This test ensures that closing a window is a reversible action. We will
  * close the the window, restore it and check that all data has been restored.
@@ -25,7 +27,7 @@ function test() {
   provideWindow(function onTestURLLoaded(newWin) {
     newWin.gBrowser.addTab().linkedBrowser.stop();
 
-    // mark the window with some unique data to be restored later on
+    // Mark the window with some unique data to be restored later on.
     ss.setWindowValue(newWin, uniqueKey, uniqueValue);
     let [txt, chk] = newWin.content.document.querySelectorAll("#txt, #chk");
     txt.value = uniqueText;
@@ -35,11 +37,17 @@ function test() {
       BrowserTestUtils.closeWindow(newWin).then(() => {
         is(ss.getClosedWindowCount(), 1,
            "The closed window was added to Recently Closed Windows");
-        let data = JSON.parse(ss.getClosedWindowData())[0];
-        ok(data.title == TEST_URL && JSON.stringify(data).indexOf(uniqueText) > -1,
+
+        let data = SessionStore.getClosedWindowData(false);
+
+        // Verify that non JSON serialized data is the same as JSON serialized data.
+        is(JSON.stringify(data), ss.getClosedWindowData(),
+           "Non-serialized data is the same as serialized data")
+
+        ok(data[0].title == TEST_URL && JSON.stringify(data[0]).indexOf(uniqueText) > -1,
            "The closed window data was stored correctly");
 
-        // reopen the closed window and ensure its integrity
+        // Reopen the closed window and ensure its integrity.
         let newWin2 = ss.undoCloseWindow(0);
 
         ok(newWin2 instanceof ChromeWindow,
@@ -47,9 +55,9 @@ function test() {
         is(ss.getClosedWindowCount(), 0,
            "The reopened window was removed from Recently Closed Windows");
 
-        // SSTabRestored will fire more than once, so we need to make sure we count them
+        // SSTabRestored will fire more than once, so we need to make sure we count them.
         let restoredTabs = 0;
-        let expectedTabs = data.tabs.length;
+        let expectedTabs = data[0].tabs.length;
         newWin2.addEventListener("SSTabRestored", function sstabrestoredListener(aEvent) {
           ++restoredTabs;
           info("Restored tab " + restoredTabs + "/" + expectedTabs);
@@ -57,7 +65,7 @@ function test() {
             return;
           }
 
-          is(restoredTabs, expectedTabs, "correct number of tabs restored");
+          is(restoredTabs, expectedTabs, "Correct number of tabs restored");
           newWin2.removeEventListener("SSTabRestored", sstabrestoredListener, true);
 
           is(newWin2.gBrowser.tabs.length, 2,
@@ -71,7 +79,7 @@ function test() {
           is(ss.getWindowValue(newWin2, uniqueKey), uniqueValue,
              "The window correctly restored the data associated with it");
 
-          // clean up
+          // Clean up.
           BrowserTestUtils.closeWindow(newWin2).then(finish);
         }, true);
       });

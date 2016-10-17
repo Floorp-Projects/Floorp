@@ -17,9 +17,10 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
+                                  "resource:///modules/sessionstore/SessionStore.jsm");
 
 var navigatorBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-var ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 this.RecentlyClosedTabsAndWindowsMenuUtils = {
 
@@ -40,8 +41,8 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
                             aRestoreAllLabel="menuRestoreAllTabs.label") {
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
-    if (ss.getClosedTabCount(aWindow) != 0) {
-      let closedTabs = JSON.parse(ss.getClosedTabData(aWindow));
+    if (SessionStore.getClosedTabCount(aWindow) != 0) {
+      let closedTabs = SessionStore.getClosedTabData(aWindow, false);
       for (let i = 0; i < closedTabs.length; i++) {
         let element = doc.createElementNS(kNSXUL, aTagName);
         element.setAttribute("label", closedTabs[i].title);
@@ -99,7 +100,7 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
   */
   getWindowsFragment: function(aWindow, aTagName, aPrefixRestoreAll=false,
                             aRestoreAllLabel="menuRestoreAllWindows.label") {
-    let closedWindowData = JSON.parse(ss.getClosedWindowData());
+    let closedWindowData = SessionStore.getClosedWindowData(false);
     let fragment = aWindow.document.createDocumentFragment();
     if (closedWindowData.length != 0) {
       let menuLabelString = navigatorBundle.GetStringFromName("menuUndoCloseWindowLabel");

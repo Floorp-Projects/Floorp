@@ -889,7 +889,7 @@ nsAppShell::Init()
         printf("*** This is stdout. Most of the useful output will be in logcat.\n");
         printf("***\n");
         printf("*****************************************************************\n");
-#if ANDROID_VERSION >= 18 && (defined(MOZ_OMX_DECODER) || defined(MOZ_B2G_CAMERA))
+#if ANDROID_VERSION >= 18 && defined(MOZ_OMX_DECODER)
         android::FakeSurfaceComposer::instantiate();
 #endif
         GonkPermissionService::instantiate();

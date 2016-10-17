@@ -43,10 +43,6 @@
 #include "base/thread.h"
 #include "base/task.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "DOMCameraManager.h"
-#endif
-
 namespace mozilla {
 namespace dom {
 struct MediaStreamConstraints;
@@ -334,9 +330,6 @@ private:
   media::CoatCheck<PledgeSourceSet> mOutstandingPledges;
   media::CoatCheck<PledgeChar> mOutstandingCharPledges;
   media::CoatCheck<PledgeVoid> mOutstandingVoidPledges;
-#if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
-  RefPtr<nsDOMCameraManager> mCameraManager;
-#endif
 public:
   media::CoatCheck<media::Pledge<nsCString>> mGetOriginKeyPledges;
   UniquePtr<media::Parent<media::NonE10s>> mNonE10sParent;

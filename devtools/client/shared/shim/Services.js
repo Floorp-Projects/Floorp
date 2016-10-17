@@ -246,7 +246,7 @@ PrefBranch.prototype = {
       userValue: this._userValue,
     };
 
-    localStorage.setItem(PREFIX + this.fullName, JSON.stringify(store));
+    localStorage.setItem(PREFIX + this._fullName, JSON.stringify(store));
     this._parent._notify(this._name);
   },
 
@@ -341,8 +341,9 @@ PrefBranch.prototype = {
     let parent = this;
     for (let branch of branchList) {
       if (!parent._children[branch]) {
-        parent._children[branch] = new PrefBranch(parent, branch,
-                                                  parent.root + "." + branch);
+        let isParentRoot = !parent.parent;
+        let branchName = (isParentRoot ? "" : parent.root + ".") + branch;
+        parent._children[branch] = new PrefBranch(parent, branch, branchName);
       }
       parent = parent._children[branch];
     }
@@ -356,12 +357,15 @@ PrefBranch.prototype = {
    * @param {String} keyName the full-qualified name of the preference.
    *        This is also the name of the key in local storage.
    * @param {Any} userValue the user value to use if the pref does not exist
-   * @param {Any} defaultValue the default value to use if the pref
-   *        does not exist
    * @param {Boolean} hasUserValue if a new pref is created, whether
    *        the default value is also a user value
+   * @param {Any} defaultValue the default value to use if the pref
+   *        does not exist
+   * @param {Boolean} init if true, then this call is initialization
+   *        from local storage and should override the default prefs
    */
-  _findOrCreatePref: function (keyName, userValue, hasUserValue, defaultValue) {
+  _findOrCreatePref: function (keyName, userValue, hasUserValue, defaultValue,
+                               init = false) {
     let branch = this._createBranch(keyName.split("."));
 
     if (hasUserValue && typeof (userValue) !== typeof (defaultValue)) {
@@ -383,7 +387,7 @@ PrefBranch.prototype = {
         throw new Error("unhandled argument type: " + typeof (defaultValue));
     }
 
-    if (branch._type === PREF_INVALID) {
+    if (init || branch._type === PREF_INVALID) {
       branch._storageUpdated(type, userValue, hasUserValue, defaultValue);
     } else if (branch._type !== type) {
       throw new Error("attempt to change type of pref " + keyName);
@@ -422,7 +426,7 @@ PrefBranch.prototype = {
    * Helper function to initialize the root PrefBranch.
    */
   _initializeRoot: function () {
-    if (localStorage.length === 0 && Services._defaultPrefsEnabled) {
+    if (Services._defaultPrefsEnabled) {
       /* eslint-disable no-eval */
       let devtools = require("raw!prefs!devtools/client/preferences/devtools");
       eval(devtools);
@@ -439,7 +443,7 @@ PrefBranch.prototype = {
         let {userValue, hasUserValue, defaultValue} =
             JSON.parse(localStorage.getItem(keyName));
         this._findOrCreatePref(keyName.slice(PREFIX.length), userValue,
-                               hasUserValue, defaultValue);
+                               hasUserValue, defaultValue, true);
       }
     }
 

@@ -130,7 +130,7 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
 // =================== RIL ====================
 (function RILSettingsToPrefs() {
   // DSDS default service IDs
-  ['mms', 'sms', 'telephony', 'voicemail'].forEach(function(key) {
+  ['mms', 'sms', 'telephony'].forEach(function(key) {
     SettingsListener.observe('ril.' + key + '.defaultServiceId', 0,
                              function(value) {
       if (value != null) {

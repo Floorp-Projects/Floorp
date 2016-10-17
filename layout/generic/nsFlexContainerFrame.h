@@ -82,6 +82,26 @@ public:
   // Flexbox-specific public methods
   bool IsHorizontal();
 
+  /**
+    * Helper function to calculate packing space and initial offset of alignment
+    * subjects in MainAxisPositionTracker() and CrossAxisPositionTracker() for
+    * space-between, space-around, and space-evenly.
+    *
+    * @param aNumThingsToPack             Number of alignment subjects.
+    * @param aAlignVal                    Value for align-self or justify-self.
+    * @param aFirstSubjectOffset          Outparam for first subject offset.
+    * @param aNumPackingSpacesRemaining   Outparam for number of equal-sized
+    *                                     packing spaces to apply between each
+    *                                     alignment subject.
+    * @param aPackingSpaceRemaining       Outparam for total amount of packing
+    *                                     space to be divided up.
+    */
+  static void CalculatePackingSpace(uint32_t aNumThingsToPack,
+                                    uint8_t aAlignVal,
+                                    nscoord* aFirstSubjectOffset,
+                                    uint32_t* aNumPackingSpacesRemaining,
+                                    nscoord* aPackingSpaceRemaining);
+
 protected:
   // Protected constructor & destructor
   explicit nsFlexContainerFrame(nsStyleContext* aContext)
