@@ -243,7 +243,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, 
     mBreakHere = false;
     mAfterBreakableSpace = isBreakableSpace;
 
-    if (isSpace) {
+    if (isSpace || ch == '\n') {
       if (offset > wordStart && aSink) {
         if (!(aFlags & BREAK_SUPPRESS_INSIDE)) {
           if (wordHasComplexChar) {

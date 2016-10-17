@@ -275,10 +275,6 @@ protected:
   virtual ~nsGenericHTMLElement() {}
 
 public:
-  virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager() override;
-  virtual bool UndoScope() override;
-  virtual void SetUndoScope(bool aUndoScope, mozilla::ErrorResult& aError) override;
-
   /**
    * Get width and height, using given image request if attributes are unset.
    * Pass a reference to the image request, since the method may change the
@@ -1150,8 +1146,6 @@ protected:
    * made editable through contentEditable or designMode.
    */
   bool IsEditableRoot() const;
-
-  nsresult SetUndoScopeInternal(bool aUndoScope);
 
 private:
   void ChangeEditableState(int32_t aChange);

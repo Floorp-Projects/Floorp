@@ -90,7 +90,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/dom/Link.h"
-#include "mozilla/dom/UndoManager.h"
 #include "mozilla/BloomFilter.h"
 
 #include "nsVariant.h"
@@ -809,8 +808,6 @@ nsGenericHTMLElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 {
   bool contentEditable = aNameSpaceID == kNameSpaceID_None &&
                            aName == nsGkAtoms::contenteditable;
-  bool undoScope = aNameSpaceID == kNameSpaceID_None &&
-                           aName == nsGkAtoms::undoscope;
   bool accessKey = aName == nsGkAtoms::accesskey && 
                      aNameSpaceID == kNameSpaceID_None;
 
@@ -834,11 +831,6 @@ nsGenericHTMLElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     }
 
     ChangeEditableState(change);
-  }
-
-  if (undoScope) {
-    rv = SetUndoScopeInternal(true);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (accessKey && !aValue.IsEmpty()) {
@@ -866,10 +858,6 @@ nsGenericHTMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
     else if (aAttribute == nsGkAtoms::contenteditable) {
       contentEditable = true;
       contentEditableChange = GetContentEditableValue() == eTrue ? -1 : 0;
-    }
-    else if (aAttribute == nsGkAtoms::undoscope) {
-      nsresult rv = SetUndoScopeInternal(false);
-      NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (aAttribute == nsGkAtoms::accesskey) {
       // Have to unregister before clearing flag. See UnregAccessKey
@@ -1780,78 +1768,6 @@ nsGenericHTMLElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
   return IsAnyOfHTMLElements(nsGkAtoms::details, nsGkAtoms::embed,
                              nsGkAtoms::keygen) ||
          (!aIgnoreTabindex && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
-}
-
-already_AddRefed<UndoManager>
-nsGenericHTMLElement::GetUndoManager()
-{
-  nsDOMSlots* slots = GetExistingDOMSlots();
-  if (slots && slots->mUndoManager) {
-    RefPtr<UndoManager> undoManager = slots->mUndoManager;
-    return undoManager.forget();
-  } else {
-    return nullptr;
-  }
-}
-
-bool
-nsGenericHTMLElement::UndoScope()
-{
-  nsDOMSlots* slots = GetExistingDOMSlots();
-  return slots && slots->mUndoManager;
-}
-
-void
-nsGenericHTMLElement::SetUndoScope(bool aUndoScope, mozilla::ErrorResult& aError)
-{
-  nsresult rv = SetUndoScopeInternal(aUndoScope);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-    return;
-  }
-
-  // The undoScope property must reflect the undoscope boolean attribute.
-  if (aUndoScope) {
-    rv = SetAttr(kNameSpaceID_None, nsGkAtoms::undoscope,
-                 NS_LITERAL_STRING(""), true);
-  } else {
-    rv = UnsetAttr(kNameSpaceID_None, nsGkAtoms::undoscope, true);
-  }
-
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-    return;
-  }
-}
-
-nsresult
-nsGenericHTMLElement::SetUndoScopeInternal(bool aUndoScope)
-{
-  if (aUndoScope) {
-    nsDOMSlots* slots = DOMSlots();
-    if (!slots->mUndoManager) {
-      slots->mUndoManager = new UndoManager(this);
-    }
-  } else {
-    nsDOMSlots* slots = GetExistingDOMSlots();
-    if (slots && slots->mUndoManager) {
-      // Clear transaction history and disconnect.
-      ErrorResult rv;
-      slots->mUndoManager->ClearRedo(rv);
-      if (rv.Failed()) {
-        return rv.StealNSResult();
-      }
-
-      slots->mUndoManager->ClearUndo(rv);
-      if (rv.Failed()) {
-        return rv.StealNSResult();
-      }
-
-      slots->mUndoManager->Disconnect();
-      slots->mUndoManager = nullptr;
-    }
-  }
-  return NS_OK;
 }
 
 // static

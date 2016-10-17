@@ -2543,8 +2543,10 @@ nsXULPopupManager::IsValidMenuItem(nsIContent* aContent, bool aOnPopup)
     return false;
   }
 
+  nsMenuFrame* menuFrame = do_QueryFrame(aContent->GetPrimaryFrame());
+
   bool skipNavigatingDisabledMenuItem = true;
-  if (aOnPopup) {
+  if (aOnPopup && (!menuFrame || menuFrame->GetParentMenuListType() == eNotMenuList)) {
     skipNavigatingDisabledMenuItem =
       LookAndFeel::GetInt(LookAndFeel::eIntID_SkipNavigatingDisabledMenuItem,
                           0) != 0;

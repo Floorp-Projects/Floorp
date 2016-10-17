@@ -122,22 +122,11 @@ public:
           // If frecency hasn't changed simply replace the pointer
           mIndex->mFrecencyArray.ReplaceRecord(mOldRecord, entry->mRec);
         } else {
-          // It is expected that when the frecency is changed the new value is
-          // always bigger than the old one. There is also a special case when
-          // we zero the frecency if eviction of the entry fails. If the above
-          // isn't true, this algorithm might not work properly and needs to be
-          // changed.
-          MOZ_ASSERT(entry->mRec->mFrecency == 0 ||
-                     entry->mRec->mFrecency > mOldFrecency);
-
           // Remove old pointer and insert the new one at the end of the array
           mIndex->mFrecencyArray.RemoveRecord(mOldRecord);
           mIndex->mFrecencyArray.AppendRecord(entry->mRec);
         }
       } else if (entry->mRec->mFrecency != mOldFrecency) {
-        MOZ_ASSERT(entry->mRec->mFrecency == 0 ||
-                   entry->mRec->mFrecency > mOldFrecency);
-
         // Move the element at the end of the array
         mIndex->mFrecencyArray.RemoveRecord(entry->mRec);
         mIndex->mFrecencyArray.AppendRecord(entry->mRec);

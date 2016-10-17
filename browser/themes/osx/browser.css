@@ -1750,6 +1750,8 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 /* ----- AUTOCOMPLETE ----- */
 
+%include ../shared/autocomplete.inc.css
+
 #treecolAutoCompleteImage {
   max-width: 36px;
 }
