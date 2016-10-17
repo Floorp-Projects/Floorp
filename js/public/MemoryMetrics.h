@@ -172,12 +172,11 @@ struct ClassInfo
     macro(Objects, NonHeap,    objectsNonHeapElementsNormal) \
     macro(Objects, NonHeap,    objectsNonHeapElementsShared) \
     macro(Objects, NonHeap,    objectsNonHeapElementsWasm) \
-    macro(Objects, NonHeap,    objectsNonHeapCodeWasm) \
-    macro(Objects, Ignore,     wasmGuardPages)
+    macro(Objects, NonHeap,    objectsNonHeapCodeWasm)
 
     ClassInfo()
       : FOR_EACH_SIZE(ZERO_SIZE)
-        dummy()
+        wasmGuardPages(0)
     {}
 
     void add(const ClassInfo& other) {
@@ -214,7 +213,7 @@ struct ClassInfo
     }
 
     FOR_EACH_SIZE(DECL_SIZE)
-    int dummy;  // present just to absorb the trailing comma from FOR_EACH_SIZE(ZERO_SIZE)
+    size_t wasmGuardPages;
 
 #undef FOR_EACH_SIZE
 };

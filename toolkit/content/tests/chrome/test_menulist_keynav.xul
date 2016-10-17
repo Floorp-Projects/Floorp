@@ -51,7 +51,7 @@ function runTests()
   if (navigator.platform.indexOf("Mac") == -1) {
     expectCommandEvent = true;
     keyCheck(list, "VK_DOWN", 2, "cursor down");
-    keyCheck(list, "VK_DOWN", iswin ? "2b" : 3, "cursor down skip disabled");
+    keyCheck(list, "VK_DOWN", 3, "cursor down skip disabled");
     keyCheck(list, "VK_UP", 2, "cursor up skip disabled");
     keyCheck(list, "VK_UP", 1, "cursor up");
     keyCheck(list, "VK_UP", 4, "cursor up wrap");
@@ -91,7 +91,7 @@ function pressLetter()
 
 function pressedAgain()
 {
-  keyCheck(list, "T", iswin ? "2b" : 3, "letter pressed again");
+  keyCheck(list, "T", 3, "letter pressed again");
   SpecialPowers.setIntPref("ui.menu.incremental_search.timeout", 0); // prevent to timeout
   keyCheck(list, "W", 2, "second letter pressed");
   SpecialPowers.clearUserPref("ui.menu.incremental_search.timeout");

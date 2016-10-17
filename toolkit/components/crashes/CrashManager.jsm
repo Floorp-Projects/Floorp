@@ -535,6 +535,7 @@ this.CrashManager.prototype = Object.freeze({
           // the current environment.
           let crashEnvironment = null;
           let sessionId = null;
+          let stackTraces = null;
           let reportMeta = Cu.cloneInto(metadata, myScope);
           if ('TelemetryEnvironment' in reportMeta) {
             try {
@@ -549,6 +550,11 @@ this.CrashManager.prototype = Object.freeze({
             delete reportMeta.TelemetrySessionId;
           }
           if ('StackTraces' in reportMeta) {
+            try {
+              stackTraces = JSON.parse(reportMeta.StackTraces);
+            } catch (e) {
+              Cu.reportError(e);
+            }
             delete reportMeta.StackTraces;
           }
           TelemetryController.submitExternalPing("crash",
@@ -556,6 +562,8 @@ this.CrashManager.prototype = Object.freeze({
               version: 1,
               crashDate: date.toISOString().slice(0, 10), // YYYY-MM-DD
               sessionId: sessionId,
+              crashId: entry.id,
+              stackTraces: stackTraces,
               metadata: reportMeta,
               hasCrashEnvironment: (crashEnvironment !== null),
             },
