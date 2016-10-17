@@ -20,6 +20,7 @@ if CONFIG['MOZ_GAMEPAD']:
         'GamepadServiceTest.h',
         'ipc/GamepadEventChannelChild.h',
         'ipc/GamepadEventChannelParent.h',
+        'ipc/GamepadMessageUtils.h',
         'ipc/GamepadTestChannelChild.h',
         'ipc/GamepadTestChannelParent.h'
         ]

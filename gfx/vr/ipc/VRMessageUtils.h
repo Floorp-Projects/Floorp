@@ -16,10 +16,10 @@
 namespace IPC {
 
 template<>
-struct ParamTraits<mozilla::gfx::VRDisplayType> :
-  public ContiguousEnumSerializer<mozilla::gfx::VRDisplayType,
-                                  mozilla::gfx::VRDisplayType(0),
-                                  mozilla::gfx::VRDisplayType(mozilla::gfx::VRDisplayType::NumVRDisplayTypes)> {};
+struct ParamTraits<mozilla::gfx::VRDeviceType> :
+  public ContiguousEnumSerializer<mozilla::gfx::VRDeviceType,
+                                  mozilla::gfx::VRDeviceType(0),
+                                  mozilla::gfx::VRDeviceType(mozilla::gfx::VRDeviceType::NumVRDeviceTypes)> {};
 
 template<>
 struct ParamTraits<mozilla::gfx::VRDisplayCapabilityFlags> :
@@ -159,6 +159,35 @@ struct ParamTraits<mozilla::gfx::VRFieldOfView>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::gfx::VRControllerInfo>
+{
+  typedef mozilla::gfx::VRControllerInfo paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mControllerID);
+    WriteParam(aMsg, aParam.mControllerName);
+    WriteParam(aMsg, aParam.mMappingType);
+    WriteParam(aMsg, aParam.mNumButtons);
+    WriteParam(aMsg, aParam.mNumAxes);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->mType)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mControllerID)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mControllerName)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mMappingType)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mNumButtons)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mNumAxes))) {
+      return false;
+    }
+
+    return true;
+  }
+};
 } // namespace IPC
 
 #endif // mozilla_gfx_vr_VRMessageUtils_h

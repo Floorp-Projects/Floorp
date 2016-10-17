@@ -3,14 +3,15 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gecko="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-    android:layout_marginEnd="12dp"
-    android:layout_marginLeft="12dp"
-    android:layout_marginRight="12dp"
-    android:layout_marginStart="12dp"
+    android:layout_marginEnd="@dimen/activity_stream_base_margin"
+    android:layout_marginLeft="@dimen/activity_stream_base_margin"
+    android:layout_marginRight="@dimen/activity_stream_base_margin"
+    android:layout_marginStart="@dimen/activity_stream_base_margin"
     android:layout_marginTop="0dp"
     android:orientation="vertical">
 
@@ -18,13 +19,42 @@
         android:layout_width="fill_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="10dp">
 
         <org.mozilla.gecko.widget.FaviconView
             android:id="@+id/icon"
             android:layout_width="@dimen/favicon_bg"
             android:layout_height="@dimen/favicon_bg"
+            android:layout_gravity="center"
+            gecko:enableRoundCorners="false"
             tools:background="@drawable/favicon_globe" />
+
+        <ImageView
+            android:id="@+id/menu"
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="right|top"
+            android:padding="2dp"
+            android:layout_marginLeft="@dimen/activity_stream_base_margin"
+            android:layout_marginBottom="@dimen/activity_stream_base_margin"
+            android:src="@drawable/menu" />
+
+        <TextView
+            android:id="@+id/page"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="twitter"
+            android:textSize="12sp"
+            android:textColor="@color/activity_stream_subtitle"
+            android:layout_toRightOf="@id/icon"
+            android:layout_toEndOf="@id/icon"
+            android:layout_toLeftOf="@id/menu"
+            android:layout_toStartOf="@id/menu"
+            android:paddingLeft="@dimen/activity_stream_base_margin"
+            android:paddingStart="@dimen/activity_stream_base_margin"/>
 
         <TextView
             android:id="@+id/card_history_label"
@@ -32,31 +62,44 @@
             android:layout_height="wrap_content"
             android:layout_toEndOf="@id/icon"
             android:layout_toRightOf="@id/icon"
-            android:maxLines="2"
-            android:paddingLeft="8dp"
-            android:paddingStart="8dp"
+            android:maxLines="3"
+            android:ellipsize="end"
+            android:paddingLeft="@dimen/activity_stream_base_margin"
+            android:paddingStart="@dimen/activity_stream_base_margin"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#ff000000"
-            tools:text="Descriptive title of a page..." />
+            android:layout_below="@id/page"
+            android:layout_toLeftOf="@id/menu"
+            android:layout_toStartOf="@id/menu"
+            tools:text="Descriptive title of a page that is veeeeeeery long - maybe even too long?" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_toRightOf="@id/icon"
-            android:paddingLeft="8dp"
-            android:paddingStart="8dp"
+            android:layout_toEndOf="@id/icon"
+            android:layout_alignParentBottom="true"
+            android:paddingLeft="@dimen/activity_stream_base_margin"
+            android:paddingStart="@dimen/activity_stream_base_margin"
             android:paddingTop="4dp"
+            android:gravity="center_vertical"
             android:layout_below="@id/card_history_label">
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:background="#ff8e8e8e" />
 
             <TextView
                 android:id="@+id/card_history_source"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="4dp"
                 android:textSize="12sp"
                 android:layout_weight="1"
-                android:textColor="#ff8e8e8e"
+                android:textColor="@color/activity_stream_subtitle"
                 tools:text="Bookmarked" />
 
             <TextView
@@ -64,7 +107,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#ffd2d2d2"
+                android:textColor="@color/activity_stream_timestamp"
                 tools:text="20m" />
 
         </LinearLayout>

@@ -2,19 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using mozilla::dom::GamepadMappingType from "mozilla/dom/GamepadMessageUtils.h";
+using mozilla::dom::GamepadServiceType from "mozilla/dom/GamepadMessageUtils.h";
+
+
 namespace mozilla {
 namespace dom {
 
 struct GamepadAdded {
   nsString id;
   uint32_t index;
-  uint32_t mapping;
+  GamepadMappingType mapping;
+  GamepadServiceType service_type;
   uint32_t num_buttons;
   uint32_t num_axes;
 };
 
 struct GamepadRemoved {
   uint32_t index;
+  GamepadServiceType service_type;
 };
 
 struct GamepadAxisInformation {

@@ -21,14 +21,11 @@ import java.util.LinkedList;
  * all lower-level Adapters that populate the individual topsite items.
  */
 public class TopSitesPagerAdapter extends PagerAdapter {
-    // Note: because of RecyclerView limitations we need to also adjust the layout height when
-    // GRID_HEIGHT is changed.
-    public static final int GRID_HEIGHT = 1;
-    public static final int GRID_WIDTH = 4;
     public static final int PAGES = 4;
 
-    public static final int ITEMS_PER_PAGE = GRID_HEIGHT * GRID_WIDTH;
-    public static final int TOTAL_ITEMS = ITEMS_PER_PAGE * PAGES;
+    private int tiles;
+    private int tilesWidth;
+    private int tilesHeight;
 
     private LinkedList<TopSitesPage> pages = new LinkedList<>();
 
@@ -42,9 +39,15 @@ public class TopSitesPagerAdapter extends PagerAdapter {
         this.onUrlOpenListener = onUrlOpenListener;
     }
 
+    public void setTilesSize(int tiles, int tilesWidth, int tilesHeight) {
+        this.tilesWidth = tilesWidth;
+        this.tilesHeight = tilesHeight;
+        this.tiles = tiles;
+    }
+
     @Override
     public int getCount() {
-        return count;
+        return Math.min(count, 4);
     }
 
     @Override
@@ -62,29 +65,34 @@ public class TopSitesPagerAdapter extends PagerAdapter {
     }
 
     @Override
+    public int getItemPosition(Object object) {
+        return PagerAdapter.POSITION_NONE;
+    }
+
+    @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         container.removeView((View) object);
     }
 
     public void swapCursor(Cursor cursor) {
-        final int oldPages = getCount();
-
         // Divide while rounding up: 0 items = 0 pages, 1-ITEMS_PER_PAGE items = 1 page, etc.
         if (cursor != null) {
-            count = (cursor.getCount() - 1) / ITEMS_PER_PAGE + 1;
+            count = (cursor.getCount() - 1) / tiles + 1;
         } else {
             count = 0;
         }
 
-        final int pageDelta = count - oldPages;
+        pages.clear();
+        final int pageDelta = count;
 
         if (pageDelta > 0) {
             final LayoutInflater inflater = LayoutInflater.from(context);
             for (int i = 0; i < pageDelta; i++) {
                 final TopSitesPage page = (TopSitesPage) inflater.inflate(R.layout.activity_stream_topsites_page, null, false);
 
+                page.setTiles(tiles);
                 page.setOnUrlOpenListener(onUrlOpenListener);
-                page.setAdapter(new TopSitesPageAdapter());
+                page.setAdapter(new TopSitesPageAdapter(context, tiles, tilesWidth, tilesHeight));
                 pages.add(page);
             }
         } else if (pageDelta < 0) {
@@ -103,7 +111,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
         int startIndex = 0;
         for (TopSitesPage page : pages) {
             page.getAdapter().swapCursor(cursor, startIndex);
-            startIndex += ITEMS_PER_PAGE;
+            startIndex += tiles;
         }
 
         notifyDataSetChanged();
