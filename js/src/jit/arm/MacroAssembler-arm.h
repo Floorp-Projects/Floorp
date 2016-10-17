@@ -100,6 +100,12 @@ class MacroAssemblerARM : public Assembler
     void convertInt32ToFloat32(Register src, FloatRegister dest);
     void convertInt32ToFloat32(const Address& src, FloatRegister dest);
 
+    void wasmTruncateToInt32(FloatRegister input, Register output, MIRType fromType,
+                             bool isUnsigned, Label* oolEntry);
+    void outOfLineWasmTruncateToIntCheck(FloatRegister input, MIRType fromType,
+                                         MIRType toType, bool isUnsigned, Label* rejoin,
+                                         wasm::TrapOffset trapOffs);
+
     // Somewhat direct wrappers for the low-level assembler funcitons
     // bitops. Attempt to encode a virtual alu instruction using two real
     // instructions.
