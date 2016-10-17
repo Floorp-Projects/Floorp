@@ -23,7 +23,8 @@ namespace nss_test {
 TEST_P(TlsConnectGeneric, ConnectDhe) {
   EnableOnlyDheCiphers();
   Connect();
-  CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_2048, ssl_auth_rsa_sign,
+            ssl_sig_rsa_pss_sha256);
 }
 
 TEST_P(TlsConnectTls13, SharesForBothEcdheAndDhe) {
@@ -39,7 +40,7 @@ TEST_P(TlsConnectTls13, SharesForBothEcdheAndDhe) {
 
   Connect();
 
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   bool ec, dh;
   auto track_group_type = [&ec, &dh](SSLNamedGroup group) {
@@ -453,7 +454,10 @@ TEST_P(TlsConnectGenericPre13, PreferredFfdhe) {
                                             PR_ARRAY_SIZE(groups)));
 
   Connect();
-  CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign, 3072);
+  client_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
+  server_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
+  client_->CheckAuthType(ssl_auth_rsa_sign, ssl_sig_rsa_pss_sha256);
+  server_->CheckAuthType(ssl_auth_rsa_sign, ssl_sig_rsa_pss_sha256);
 }
 
 TEST_P(TlsConnectGenericPre13, MismatchDHE) {
@@ -490,7 +494,7 @@ TEST_P(TlsConnectTls13, ResumeFfdhe) {
   server_->SetPacketFilter(serverCapture);
   ExpectResumption(RESUME_TICKET);
   Connect();
-  CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_2048, ssl_auth_rsa_sign, ssl_sig_none);
   ASSERT_LT(0UL, clientCapture->extension().len());
   ASSERT_LT(0UL, serverCapture->extension().len());
 }

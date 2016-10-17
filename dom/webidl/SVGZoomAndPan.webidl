@@ -11,13 +11,6 @@
  */
 
 interface SVGZoomAndPan {
-
-  // Zoom and Pan Types
-  const unsigned short SVG_ZOOMANDPAN_UNKNOWN = 0;
-  const unsigned short SVG_ZOOMANDPAN_DISABLE = 1;
-  const unsigned short SVG_ZOOMANDPAN_MAGNIFY = 2;
-
-  [SetterThrows]
-  attribute unsigned short zoomAndPan;
 };
 
+SVGZoomAndPan implements SVGZoomAndPanValues;

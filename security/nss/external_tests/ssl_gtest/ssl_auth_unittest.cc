@@ -25,14 +25,14 @@ namespace nss_test {
 TEST_P(TlsConnectGeneric, ServerAuthBigRsa) {
   Reset(TlsAgent::kRsa2048);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 }
 
 TEST_P(TlsConnectGeneric, ClientAuth) {
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 }
 
 // In TLS 1.3, the client sends its cert rejection on the
@@ -48,7 +48,7 @@ TEST_P(TlsConnectStream, DISABLED_ClientAuthRequiredRejected) {
 TEST_P(TlsConnectGeneric, ClientAuthRequestedRejected) {
   server_->RequestClientAuth(false);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 }
 
 TEST_P(TlsConnectGeneric, ClientAuthEcdsa) {
@@ -64,7 +64,7 @@ TEST_P(TlsConnectGeneric, ClientAuthBigRsa) {
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 }
 
 // Offset is the position in the captured buffer where the signature sits.
@@ -90,14 +90,14 @@ TEST_P(TlsConnectTls12, ServerAuthCheckSigAlg) {
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(capture_ske);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   const DataBuffer& buffer = capture_ske->buffer();
   EXPECT_LT(3U, buffer.len());
   EXPECT_EQ(3U, buffer.data()[0]) << "curve_type == named_curve";
   uint32_t tmp;
   EXPECT_TRUE(buffer.Read(1, 2, &tmp)) << "read NamedCurve";
-  EXPECT_EQ(ssl_grp_ec_secp256r1, tmp);
+  EXPECT_EQ(ssl_grp_ec_curve25519, tmp);
   EXPECT_TRUE(buffer.Read(3, 1, &tmp)) << " read ECPoint";
   CheckSigScheme(capture_ske, 4 + tmp, client_, kTlsSigSchemeRsaPssSha256,
                  1024);
@@ -111,7 +111,7 @@ TEST_P(TlsConnectTls12, ClientAuthCheckSigAlg) {
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   CheckSigScheme(capture_cert_verify, 0, server_, kTlsSigSchemeRsaPkcs1Sha1,
                  1024);
@@ -125,7 +125,7 @@ TEST_P(TlsConnectTls12, ClientAuthBigRsaCheckSigAlg) {
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
   CheckSigScheme(capture_cert_verify, 0, server_, kTlsSigSchemeRsaPssSha256,
                  2048);
 }
@@ -139,6 +139,16 @@ static const SSLSignatureAndHashAlg SignatureRsaSha384[] = {
 static const SSLSignatureAndHashAlg SignatureRsaSha256[] = {
     {ssl_hash_sha256, ssl_sign_rsa}};
 
+static SSLNamedGroup NamedGroupForEcdsa384(uint16_t version) {
+  // NSS tries to match the group size to the symmetric cipher. In TLS 1.1 and
+  // 1.0, TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA is the highest priority suite, so
+  // we use P-384. With TLS 1.2 on we pick AES-128 GCM so use x25519.
+  if (version <= SSL_LIBRARY_VERSION_TLS_1_1) {
+    return ssl_grp_ec_secp384r1;
+  }
+  return ssl_grp_ec_curve25519;
+}
+
 // When signature algorithms match up, this should connect successfully; even
 // for TLS 1.1 and 1.0, where they should be ignored.
 TEST_P(TlsConnectGeneric, SignatureAlgorithmServerAuth) {
@@ -148,7 +158,8 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmServerAuth) {
   server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
+  CheckKeys(ssl_kea_ecdh, NamedGroupForEcdsa384(version_), ssl_auth_ecdsa,
+            ssl_sig_ecdsa_secp384r1_sha384);
 }
 
 // Here the client picks a single option, which should work in all versions.
@@ -163,7 +174,8 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmClientOnly) {
   client_->SetSignatureAlgorithms(clientAlgorithms,
                                   PR_ARRAY_SIZE(clientAlgorithms));
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
+  CheckKeys(ssl_kea_ecdh, NamedGroupForEcdsa384(version_), ssl_auth_ecdsa,
+            ssl_sig_ecdsa_secp384r1_sha384);
 }
 
 // Here the server picks a single option, which should work in all versions.
@@ -173,7 +185,8 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmServerOnly) {
   server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
+  CheckKeys(ssl_kea_ecdh, NamedGroupForEcdsa384(version_), ssl_auth_ecdsa,
+            ssl_sig_ecdsa_secp384r1_sha384);
 }
 
 // In TlS 1.2, a P-256 cert can be used with SHA-384.
@@ -182,10 +195,13 @@ TEST_P(TlsConnectTls12, SignatureSchemeCurveMismatch12) {
   client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
+  // The scheme is reported as using secp384r1, but this is just the generic
+  // ECDSA + SHA-384 codepoint as defined in TLS 1.2.
+  CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_ecdsa,
+            ssl_sig_ecdsa_secp384r1_sha384);
 }
 
-#ifdef NSS_ENABLE_TLS_1_3
+#ifndef NSS_DISABLE_TLS_1_3
 TEST_P(TlsConnectTls13, SignatureAlgorithmServerUnsupported) {
   Reset(TlsAgent::kServerEcdsa256);  // P-256 cert
   server_->SetSignatureAlgorithms(SignatureEcdsaSha384,

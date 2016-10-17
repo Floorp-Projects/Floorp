@@ -1992,7 +1992,7 @@ nsFrameSelection::RepaintSelection(SelectionType aSelectionType)
 #endif
   return mDomSelections[index]->Repaint(mShell->GetPresContext());
 }
- 
+
 nsIFrame*
 nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
                                         int32_t            aOffset,
@@ -2011,11 +2011,12 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
   }
 
   nsIFrame* returnFrame = nullptr;
+  nsCOMPtr<nsIContent> theNode;
 
   while (true) {
     *aReturnOffset = aOffset;
 
-    nsCOMPtr<nsIContent> theNode = aNode;
+    theNode = aNode;
 
     if (aNode->IsElement()) {
       int32_t childIndex  = 0;
@@ -2134,6 +2135,18 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
 
   if (!returnFrame)
     return nullptr;
+
+  // If we ended up here and were asked to position the caret after a visible
+  // break, let's return the frame on the next line instead if it exists.
+  if (aOffset > 0 &&  (uint32_t) aOffset >= aNode->Length() &&
+      theNode == aNode->GetLastChild()) {
+    nsIFrame* newFrame;
+    nsLayoutUtils::IsInvisibleBreak(theNode, &newFrame);
+    if (newFrame) {
+      returnFrame = newFrame;
+      *aReturnOffset = 0;
+    }
+  }
 
   // find the child frame containing the offset we want
   returnFrame->GetChildFrameContainingOffset(*aReturnOffset, aHint == CARET_ASSOCIATE_AFTER,

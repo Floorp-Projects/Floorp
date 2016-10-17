@@ -185,7 +185,8 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                                      const nsAString & aLang,
                                                      const nsAString & aData,
                                                      nsIPrincipal * aPrincipal,
-                                                     bool aInPrivateBrowsing)
+                                                     bool aInPrivateBrowsing,
+                                                     bool aRequireInteraction)
 {
   nsCOMPtr<nsIAlertNotification> alert =
     do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
@@ -193,7 +194,8 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   nsresult rv = alert->Init(aAlertName, aImageUrl, aAlertTitle,
                             aAlertText, aAlertTextClickable,
                             aAlertCookie, aBidi, aLang, aData,
-                            aPrincipal, aInPrivateBrowsing);
+                            aPrincipal, aInPrivateBrowsing,
+                            aRequireInteraction);
   NS_ENSURE_SUCCESS(rv, rv);
   return ShowAlert(alert, aAlertListener);
 }

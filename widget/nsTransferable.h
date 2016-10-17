@@ -14,6 +14,7 @@
 #include "nsTArray.h"
 #include "nsIPrincipal.h"
 
+class nsIMutableArray;
 class nsString;
 
 //
@@ -69,7 +70,7 @@ protected:
   virtual ~nsTransferable();
 
     // get flavors w/out converter
-  nsresult GetTransferDataFlavors(nsISupportsArray** aDataFlavorList);
+  already_AddRefed<nsIMutableArray> GetTransferDataFlavors();
  
   nsTArray<DataStruct> mDataArray;
   nsCOMPtr<nsIFormatConverter> mFormatConv;

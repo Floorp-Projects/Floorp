@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../shared.inc
-
 /* Places Organizer Sidebars */
 
 #placesList > treechildren::-moz-tree-row {
@@ -19,27 +17,11 @@
 }
 
 #placesList > treechildren::-moz-tree-row(selected) {  
-  background: @sidebarItemBackground@;
-  border-top: @sidebarItemBorderTop@;
-  border-bottom: @sidebarItemBorderBottom@;
+  -moz-appearance: -moz-mac-source-list-selection;
 }
 
 #placesList > treechildren::-moz-tree-row(selected,focus) {  
-  background: @sidebarItemFocusedBackground@;
-  border-top: @sidebarItemFocusedBorderTop@;
-  border-bottom: @sidebarItemFocusedBorderBottom@;
-}
-
-#placesList:-moz-system-metric(mac-graphite-theme) > treechildren::-moz-tree-row(selected) {
-  background: @sidebarItemGraphiteBackground@;
-  border-top: @sidebarItemGraphiteBorderTop@;
-  border-bottom: @sidebarItemGraphiteBorderBottom@;
-}
-
-#placesList:-moz-system-metric(mac-graphite-theme) > treechildren::-moz-tree-row(selected,focus) {
-  background: @sidebarItemGraphiteFocusedBackground@;
-  border-top: @sidebarItemGraphiteFocusedBorderTop@;
-  border-bottom: @sidebarItemGraphiteFocusedBorderBottom@;
+  -moz-appearance: -moz-mac-active-source-list-selection;
 }
 
 #placesList > treechildren::-moz-tree-row(History),
@@ -80,30 +62,6 @@
 }
 
 @media (-moz-mac-yosemite-theme) {
-  #placesList > treechildren::-moz-tree-row(selected) {
-    background: @sidebarItemBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  #placesList > treechildren::-moz-tree-row(selected,focus) {
-    background: @sidebarItemFocusedBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  #placesList > treechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected) {
-    background: @sidebarItemGraphiteBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
-  #placesList > treechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected,focus) {
-    background: @sidebarItemGraphiteFocusedBackgroundYosemite@;
-    border-top: none;
-    border-bottom: none;
-  }
-
   #placesList > treechildren::-moz-tree-cell-text(selected) {
     color: -moz-dialogtext;
     font-weight: 500;

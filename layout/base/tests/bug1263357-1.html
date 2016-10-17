@@ -1,0 +1,34 @@
+<!DOCTYPE HTML><html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=bug1263357
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Testcase #1 for bug1263357</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div id="editable" contenteditable='true' spellcheck=false style="outline: 1px solid;"><p><tt>xyz</tt><br></p></div>
+<script>
+
+function start() {
+  var sel = window.getSelection();
+  // Focus on editable block.
+  theDiv = document.getElementById("editable");
+  theDiv.focus();
+  sel.collapse(theDiv, 0);
+  if (navigator.platform.indexOf("Win") == 0) {
+    synthesizeKey("VK_END", {});
+  } else {
+    // End key doesn't work as expected on Mac and Linux.
+    sel.modify("move", "right", "lineboundary");
+  }
+  synthesizeKey("VK_RETURN", {shiftKey: true});
+}
+
+SimpleTest.waitForFocus(start);
+
+</script>
+</body>
+</html>

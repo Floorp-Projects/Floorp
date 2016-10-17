@@ -555,7 +555,7 @@ class IonBuilder
                              LinearSum* ownerOffset);
     void loadTypedObjectElements(MDefinition* typedObj,
                                  const LinearSum& byteOffset,
-                                 int32_t scale,
+                                 uint32_t scale,
                                  MDefinition** ownerElements,
                                  MDefinition** ownerScaledOffset,
                                  int32_t* ownerByteAdjustment);
@@ -571,7 +571,7 @@ class IonBuilder
                                                   const LinearSum& byteOffset,
                                                   ScalarTypeDescr::Type type,
                                                   MDefinition* value);
-    MOZ_MUST_USE bool checkTypedObjectIndexInBounds(int32_t elemSize,
+    MOZ_MUST_USE bool checkTypedObjectIndexInBounds(uint32_t elemSize,
                                                     MDefinition* obj,
                                                     MDefinition* index,
                                                     TypedObjectPrediction objTypeDescrs,
@@ -615,7 +615,7 @@ class IonBuilder
                                                         TypedObjectPrediction objTypeReprs,
                                                         MDefinition* value,
                                                         TypedObjectPrediction elemTypeReprs,
-                                                        int32_t elemSize);
+                                                        uint32_t elemSize);
     MOZ_MUST_USE bool initializeArrayElement(MDefinition* obj, size_t index, MDefinition* value,
                                              JSValueType unboxedType,
                                              bool addResumePointAndIncrementInitializedLength);
@@ -636,7 +636,7 @@ class IonBuilder
                                                         MDefinition* index,
                                                         TypedObjectPrediction objTypeReprs,
                                                         TypedObjectPrediction elemTypeReprs,
-                                                        int32_t elemSize);
+                                                        uint32_t elemSize);
     MOZ_MUST_USE bool getElemTryReferenceElemOfTypedObject(bool* emitted,
                                                            MDefinition* obj,
                                                            MDefinition* index,
@@ -647,7 +647,7 @@ class IonBuilder
                                                          MDefinition* index,
                                                          TypedObjectPrediction objTypeReprs,
                                                          TypedObjectPrediction elemTypeReprs,
-                                                         int32_t elemSize);
+                                                         uint32_t elemSize);
     TemporaryTypeSet* computeHeapType(const TemporaryTypeSet* objTypes, const jsid id);
 
     enum BoundsChecking { DoBoundsCheck, SkipBoundsCheck };

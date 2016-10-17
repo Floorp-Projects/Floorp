@@ -18,6 +18,8 @@
 
 #include "asmjs/WasmIonCompile.h"
 
+#include "mozilla/MathAlgorithms.h"
+
 #include "asmjs/WasmBaselineCompile.h"
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
@@ -30,6 +32,7 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::DebugOnly;
+using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;

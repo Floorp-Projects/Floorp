@@ -3,14 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+CC     ?= gcc
+CCC    ?= g++
+RANLIB ?= ranlib
+
 include $(CORE_DEPTH)/coreconf/UNIX.mk
 include $(CORE_DEPTH)/coreconf/Werror.mk
 
 DEFAULT_COMPILER = gcc
-
-CC		= gcc
-CCC		= g++
-RANLIB		= ranlib
 
 ifndef CPU_ARCH
 # When cross-compiling, CPU_ARCH should already be defined as the target

@@ -105,7 +105,7 @@ class BarProp;
 struct ChannelPixelLayout;
 class Console;
 class Crypto;
-class CustomElementsRegistry;
+class CustomElementRegistry;
 class External;
 class Function;
 class Gamepad;
@@ -812,7 +812,6 @@ public:
 
   // Update the VR displays for this window
   bool UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDisplays);
-  
   // Inner windows only.
   // Called to inform that the set of active VR displays has changed.
   void NotifyActiveVRDisplaysChanged();
@@ -887,7 +886,7 @@ public:
   mozilla::dom::Location* GetLocation(mozilla::ErrorResult& aError);
   nsIDOMLocation* GetLocation() override;
   nsHistory* GetHistory(mozilla::ErrorResult& aError);
-  mozilla::dom::CustomElementsRegistry* CustomElements() override;
+  mozilla::dom::CustomElementRegistry* CustomElements() override;
   mozilla::dom::BarProp* GetLocationbar(mozilla::ErrorResult& aError);
   mozilla::dom::BarProp* GetMenubar(mozilla::ErrorResult& aError);
   mozilla::dom::BarProp* GetPersonalbar(mozilla::ErrorResult& aError);
@@ -1889,7 +1888,7 @@ protected:
   uint32_t                      mTimeoutFiringDepth;
   RefPtr<mozilla::dom::Location> mLocation;
   RefPtr<nsHistory>           mHistory;
-  RefPtr<mozilla::dom::CustomElementsRegistry> mCustomElements;
+  RefPtr<mozilla::dom::CustomElementRegistry> mCustomElements;
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;

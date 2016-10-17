@@ -291,10 +291,17 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
     return false;
   }
 
+  // Reporting a warning on ourselves is rather pointless, because we probably
+  // have no window id (and hence the warning won't show up in any web console)
+  // and probably aren't considered a "content document" because we're not
+  // loaded in a docshell, so won't accumulate telemetry for use counters.  Try
+  // warning on our entry document, if any, since that should have things like
+  // window ids and associated docshells.
+  nsIDocument* docForWarning = callingDoc ? callingDoc.get() : this;
   if (nsContentUtils::IsCallerChrome()) {
-    WarnOnceAbout(nsIDocument::eChromeUseOfDOM3LoadMethod);
+    docForWarning->WarnOnceAbout(nsIDocument::eChromeUseOfDOM3LoadMethod);
   } else {
-    WarnOnceAbout(nsIDocument::eUseOfDOM3LoadMethod);
+    docForWarning->WarnOnceAbout(nsIDocument::eUseOfDOM3LoadMethod);
   } 
 
   nsIURI *baseURI = mDocumentURI;

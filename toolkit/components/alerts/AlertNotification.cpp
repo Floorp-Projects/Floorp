@@ -34,7 +34,7 @@ AlertNotification::Init(const nsAString& aName, const nsAString& aImageURL,
                         bool aTextClickable, const nsAString& aCookie,
                         const nsAString& aDir, const nsAString& aLang,
                         const nsAString& aData, nsIPrincipal* aPrincipal,
-                        bool aInPrivateBrowsing)
+                        bool aInPrivateBrowsing, bool aRequireInteraction)
 {
   mName = aName;
   mImageURL = aImageURL;
@@ -47,6 +47,7 @@ AlertNotification::Init(const nsAString& aName, const nsAString& aImageURL,
   mData = aData;
   mPrincipal = aPrincipal;
   mInPrivateBrowsing = aInPrivateBrowsing;
+  mRequireInteraction = aRequireInteraction;
   return NS_OK;
 }
 
@@ -103,6 +104,13 @@ NS_IMETHODIMP
 AlertNotification::GetLang(nsAString& aLang)
 {
   aLang = mLang;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AlertNotification::GetRequireInteraction(bool* aRequireInteraction)
+{
+  *aRequireInteraction = mRequireInteraction;
   return NS_OK;
 }
 

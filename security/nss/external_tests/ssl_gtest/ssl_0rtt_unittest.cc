@@ -96,7 +96,7 @@ TEST_P(TlsConnectTls13, ZeroRttServerOnly) {
   Handshake();
   CheckConnected();
   SendReceive();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 }
 
 TEST_P(TlsConnectTls13, TestTls13ZeroRttAlpn) {

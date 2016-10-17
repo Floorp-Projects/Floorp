@@ -72,8 +72,13 @@ class TlsConnectTestBase : public ::testing::Test {
   // Connect and expect it to fail.
   void ConnectExpectFail();
   void ConnectWithCipherSuite(uint16_t cipher_suite);
-  void CheckKeys(SSLKEAType kea_type, SSLAuthType auth_type,
-                 size_t kea_size = 0) const;
+  // Check that the keys used in the handshake match expectations.
+  void CheckKeys(SSLKEAType kea_type, SSLNamedGroup kea_group,
+                 SSLAuthType auth_type, SSLSignatureScheme sig_scheme) const;
+  // This version guesses some of the values.
+  void CheckKeys(SSLKEAType kea_type, SSLAuthType auth_type) const;
+  // This version assumes defaults.
+  void CheckKeys() const;
   void CheckGroups(const DataBuffer& groups,
                    std::function<void(SSLNamedGroup)> check_group);
   void CheckShares(const DataBuffer& shares,
@@ -249,6 +254,9 @@ class TlsKeyExchangeTest : public TlsConnectGeneric {
                        const std::vector<SSLNamedGroup>& expectedShares,
                        bool expect_hrr = false);
 };
+
+class TlsKeyExchangeTest13 : public TlsKeyExchangeTest {};
+class TlsKeyExchangeTestPre13 : public TlsKeyExchangeTest {};
 
 }  // namespace nss_test
 

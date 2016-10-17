@@ -3,6 +3,8 @@
 *OPT.OBJ/
 *DBG.OBJ/
 *DBG.OBJD/
+out/*
+*.pyc
 *.bak
 *.out
 *.rej
@@ -13,3 +15,5 @@ GTAGS
 #*
 .#*
 .ycm_extra_conf.py*
+fuzz/libFuzzer/*
+fuzz/corpus

@@ -1,17 +1,5 @@
-const constructors = [
-    Int8Array,
-    Uint8Array,
-    Uint8ClampedArray,
-    Int16Array,
-    Uint16Array,
-    Int32Array,
-    Uint32Array,
-    Float32Array,
-    Float64Array
-];
-
 let logs = [];
-for (let ctor of constructors) {
+for (let ctor of typedArrayConstructors) {
   let arr = new ctor([1, 2, 3, 4, 5, 6, 7, 8]);
 
   let ctorObj = {};
@@ -44,7 +32,7 @@ for (let ctor of constructors) {
     }
   };
 
-  for (let ctor2 of constructors) {
+  for (let ctor2 of typedArrayConstructors) {
     logs.length = 0;
     let arr2 = new ctor2(arr);
     assertDeepEq(logs, ["get @@species", "get ctor.prototype"]);

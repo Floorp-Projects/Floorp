@@ -40,6 +40,7 @@ public:
   bool RecvInitCrashReporter(Shmem&& shmem) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool RecvGraphicsError(const nsCString& aError) override;
+  bool RecvNotifyUiObservers(const nsCString& aTopic) override;
 
   static void Destroy(UniquePtr<GPUChild>&& aChild);
 

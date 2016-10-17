@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 
 #include "jsbytecode.h"
+#include "js/GCAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
@@ -39,6 +40,10 @@ struct ForEachTrackedOptimizationTypeInfoOp;
 // arbitrary pc. To provide acurate results, profiling must have been enabled
 // (via EnableRuntimeProfilingStack) before executing the callstack being
 // unwound.
+//
+// Note that the caller must not do anything that could cause GC to happen while
+// the iterator is alive, since this could invalidate Ion code and cause its
+// contents to become out of date.
 class JS_PUBLIC_API(ProfilingFrameIterator)
 {
     JSRuntime* rt_;
@@ -49,6 +54,8 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     // from it to use as the exit-frame pointer when the next caller jit
     // activation (if any) comes around.
     void* savedPrevJitTop_;
+
+    JS::AutoCheckCannotGC nogc_;
 
     static const unsigned StorageSpace = 8 * sizeof(void*);
     mozilla::AlignedStorage<StorageSpace> storage_;

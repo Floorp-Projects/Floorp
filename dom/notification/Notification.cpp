@@ -928,6 +928,21 @@ NotificationTask::Run()
   return NS_OK;
 }
 
+bool
+Notification::RequireInteractionEnabled(JSContext* aCx, JSObject* aOjb)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.webnotifications.requireinteraction.enabled", false);
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return false;
+  }
+
+  return workerPrivate->DOMWorkerNotificationRIEnabled();
+}
+
 // static
 bool
 Notification::PrefEnabled(JSContext* aCx, JSObject* aObj)
@@ -959,11 +974,13 @@ Notification::Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
                            const nsAString& aTitle, const nsAString& aBody,
                            NotificationDirection aDir, const nsAString& aLang,
                            const nsAString& aTag, const nsAString& aIconUrl,
+                           bool aRequireInteraction,
                            const NotificationBehavior& aBehavior)
   : DOMEventTargetHelper(),
     mWorkerPrivate(nullptr), mObserver(nullptr),
     mID(aID), mTitle(aTitle), mBody(aBody), mDir(aDir), mLang(aLang),
-    mTag(aTag), mIconUrl(aIconUrl), mBehavior(aBehavior), mData(JS::NullValue()),
+    mTag(aTag), mIconUrl(aIconUrl), mRequireInteraction(aRequireInteraction),
+    mBehavior(aBehavior), mData(JS::NullValue()),
     mIsClosed(false), mIsStored(false), mTaskCount(0)
 {
   if (NS_IsMainThread()) {
@@ -1186,6 +1203,7 @@ Notification::CreateInternal(nsIGlobalObject* aGlobal,
                                                          aOptions.mLang,
                                                          aOptions.mTag,
                                                          aOptions.mIcon,
+                                                         aOptions.mRequireInteraction,
                                                          aOptions.mMozbehavior);
   rv = notification->Init();
   NS_ENSURE_SUCCESS(rv, nullptr);
@@ -1818,6 +1836,11 @@ Notification::ShowInternal()
   uniqueCookie.AppendInt(sCount++);
   bool inPrivateBrowsing = IsInPrivateBrowsing();
 
+  bool requireInteraction = mRequireInteraction;
+  if (!Preferences::GetBool("dom.webnotifications.requireinteraction.enabled", false)) {
+    requireInteraction = false;
+  }
+
   nsAutoString alertName;
   GetAlertName(alertName);
   nsCOMPtr<nsIAlertNotification> alert =
@@ -1831,7 +1854,8 @@ Notification::ShowInternal()
                    mLang,
                    mDataAsBase64,
                    GetPrincipal(),
-                   inPrivateBrowsing);
+                   inPrivateBrowsing,
+                   requireInteraction);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (isPersistent) {
@@ -2361,6 +2385,12 @@ Notification::GetOrigin(nsIPrincipal* aPrincipal, nsString& aOrigin)
   return NS_OK;
 }
 
+bool
+Notification::RequireInteraction() const
+{
+  return mRequireInteraction;
+}
+
 void
 Notification::GetData(JSContext* aCx,
                       JS::MutableHandle<JS::Value> aRetval)
@@ -2692,7 +2722,7 @@ Notification::ShowPersistentNotification(JSContext* aCx,
   // which leads to uglier code.
   NotificationPermission permission = GetPermission(aGlobal, aRv);
 
-  // "If permission for notification’s origin is not "granted", reject promise with a TypeError exception, and terminate these substeps."
+  // "If permission for notification's origin is not "granted", reject promise with a TypeError exception, and terminate these substeps."
   if (NS_WARN_IF(aRv.Failed()) || permission == NotificationPermission::Denied) {
     ErrorResult result;
     result.ThrowTypeError<MSG_NOTIFICATION_PERMISSION_DENIED>();

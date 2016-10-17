@@ -292,3 +292,5 @@
 
 #define NS_THEME_GTK_INFO_BAR                              247
 #define NS_THEME_MAC_SOURCE_LIST                           248
+#define NS_THEME_MAC_SOURCE_LIST_SELECTION                 249
+#define NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION          250

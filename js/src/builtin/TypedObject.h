@@ -166,12 +166,16 @@ class TypeDescr : public NativeObject
         return !opaque();
     }
 
-    int32_t alignment() const {
-        return getReservedSlot(JS_DESCR_SLOT_ALIGNMENT).toInt32();
+    uint32_t alignment() const {
+        int32_t i = getReservedSlot(JS_DESCR_SLOT_ALIGNMENT).toInt32();
+        MOZ_ASSERT(i >= 0);
+        return uint32_t(i);
     }
 
-    int32_t size() const {
-        return getReservedSlot(JS_DESCR_SLOT_SIZE).toInt32();
+    uint32_t size() const {
+        int32_t i = getReservedSlot(JS_DESCR_SLOT_SIZE).toInt32();
+        MOZ_ASSERT(i >= 0);
+        return uint32_t(i);
     }
 
     // Whether id is an 'own' property of objects with this descriptor.
@@ -218,8 +222,8 @@ class ScalarTypeDescr : public SimpleTypeDescr
 
     static const type::Kind Kind = type::Scalar;
     static const bool Opaque = false;
-    static int32_t size(Type t);
-    static int32_t alignment(Type t);
+    static uint32_t size(Type t);
+    static uint32_t alignment(Type t);
     static const char* typeName(Type type);
 
     static const Class class_;
@@ -299,8 +303,8 @@ class ReferenceTypeDescr : public SimpleTypeDescr
     static const type::Kind Kind = type::Reference;
     static const bool Opaque = true;
     static const Class class_;
-    static int32_t size(Type t);
-    static int32_t alignment(Type t);
+    static uint32_t size(Type t);
+    static uint32_t alignment(Type t);
     static const JSFunctionSpec typeObjectMethods[];
 
     ReferenceTypeDescr::Type type() const {
@@ -342,8 +346,8 @@ class SimdTypeDescr : public ComplexTypeDescr
     static const type::Kind Kind = type::Simd;
     static const bool Opaque = false;
     static const Class class_;
-    static int32_t size(SimdType t);
-    static int32_t alignment(SimdType t);
+    static uint32_t size(SimdType t);
+    static uint32_t alignment(SimdType t);
     static MOZ_MUST_USE bool call(JSContext* cx, unsigned argc, Value* vp);
     static bool is(const Value& v);
 
@@ -407,8 +411,10 @@ class ArrayTypeDescr : public ComplexTypeDescr
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<TypeDescr>();
     }
 
-    int32_t length() const {
-        return getReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH).toInt32();
+    uint32_t length() const {
+        int32_t i = getReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH).toInt32();
+        MOZ_ASSERT(i >= 0);
+        return uint32_t(i);
     }
 
     static int32_t offsetOfLength() {
@@ -547,12 +553,12 @@ class TypedObject : public ShapedObject
         return group()->typeDescr();
     }
 
-    int32_t offset() const;
-    int32_t length() const;
+    uint32_t offset() const;
+    uint32_t length() const;
     uint8_t* typedMem(const JS::AutoRequireNoGC&) const { return typedMem(); }
     bool isAttached() const;
 
-    int32_t size() const {
+    uint32_t size() const {
         return typeDescr().size();
     }
 
@@ -650,13 +656,13 @@ class OutlineTypedObject : public TypedObject
     static OutlineTypedObject* createDerived(JSContext* cx,
                                              HandleTypeDescr type,
                                              Handle<TypedObject*> typedContents,
-                                             int32_t offset);
+                                             uint32_t offset);
 
     // Use this method when `buffer` is the owner of the memory.
-    void attach(JSContext* cx, ArrayBufferObject& buffer, int32_t offset);
+    void attach(JSContext* cx, ArrayBufferObject& buffer, uint32_t offset);
 
     // Otherwise, use this to attach to memory referenced by another typedObj.
-    void attach(JSContext* cx, TypedObject& typedObj, int32_t offset);
+    void attach(JSContext* cx, TypedObject& typedObj, uint32_t offset);
 
     // Invoked when array buffer is transferred elsewhere
     void notifyBufferDetached(void* newData);

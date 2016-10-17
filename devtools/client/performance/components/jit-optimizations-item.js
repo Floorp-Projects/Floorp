@@ -164,7 +164,7 @@ const JITOptimizationsItem = createClass({
     return dom.div(
       {
         className: `optimization-tree-item optimization-tree-item-${type}`,
-        style: { marginLeft: depth * TREE_ROW_HEIGHT }
+        style: { marginInlineStart: depth * TREE_ROW_HEIGHT }
       },
       arrow,
       content

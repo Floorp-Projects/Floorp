@@ -736,6 +736,9 @@ public:
   // Converts any angle to radians.
   double GetAngleValueInRadians() const;
 
+  // Converts any angle to degrees.
+  double GetAngleValueInDegrees() const;
+
   nsAString& GetStringValue(nsAString& aBuffer) const
   {
     MOZ_ASSERT(UnitHasStringValue(), "not a string value");

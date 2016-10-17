@@ -3,6 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+CC     ?= gcc
+CCC    ?= g++
+RANLIB ?= ranlib
+
 include $(CORE_DEPTH)/coreconf/UNIX.mk
 
 #
@@ -15,10 +19,6 @@ endif
 ifeq ($(USE_PTHREADS),1)
 	IMPL_STRATEGY = _PTH
 endif
-
-CC			= gcc
-CCC			= g++
-RANLIB			= ranlib
 
 DEFAULT_COMPILER = gcc
 

@@ -308,17 +308,58 @@ void TlsConnectTestBase::CheckConnected() {
   server_->CheckSecretsDestroyed();
 }
 
-void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type, SSLAuthType auth_type,
-                                   size_t kea_size) const {
-  if (kea_size) {
-    client_->CheckKEA(kea_type, kea_size);
-    server_->CheckKEA(kea_type, kea_size);
-  } else {
-    client_->CheckKEA(kea_type);
-    server_->CheckKEA(kea_type);
+void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type, SSLNamedGroup kea_group,
+                                   SSLAuthType auth_type,
+                                   SSLSignatureScheme sig_scheme) const {
+  client_->CheckKEA(kea_type, kea_group);
+  server_->CheckKEA(kea_type, kea_group);
+  client_->CheckAuthType(auth_type, sig_scheme);
+  server_->CheckAuthType(auth_type, sig_scheme);
+}
+
+void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type,
+                                   SSLAuthType auth_type) const {
+  SSLNamedGroup group;
+  switch (kea_type) {
+    case ssl_kea_ecdh:
+      group = ssl_grp_ec_curve25519;
+      break;
+    case ssl_kea_dh:
+      group = ssl_grp_ffdhe_2048;
+      break;
+    case ssl_kea_rsa:
+      group = ssl_grp_none;
+      break;
+    default:
+      EXPECT_TRUE(false) << "unexpected KEA";
+      group = ssl_grp_none;
+      break;
   }
-  client_->CheckAuthType(auth_type);
-  server_->CheckAuthType(auth_type);
+
+  SSLSignatureScheme scheme;
+  switch (auth_type) {
+    case ssl_auth_rsa_decrypt:
+      scheme = ssl_sig_none;
+      break;
+    case ssl_auth_rsa_sign:
+      scheme = ssl_sig_rsa_pss_sha256;
+      break;
+    case ssl_auth_ecdsa:
+      scheme = ssl_sig_ecdsa_secp256r1_sha256;
+      break;
+    case ssl_auth_dsa:
+      scheme = ssl_sig_dsa_sha1;
+      break;
+    default:
+      EXPECT_TRUE(false) << "unexpected auth type";
+      scheme = static_cast<SSLSignatureScheme>(0x0100);
+      break;
+  }
+  CheckKeys(kea_type, group, auth_type, scheme);
+}
+
+void TlsConnectTestBase::CheckKeys() const {
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
 }
 
 void TlsConnectTestBase::ConnectExpectFail() {
@@ -463,7 +504,7 @@ void TlsConnectTestBase::SetupForZeroRtt() {
   server_->Set0RttEnabled(true);  // So we signal that we allow 0-RTT.
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   Reset();
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
@@ -480,7 +521,7 @@ void TlsConnectTestBase::SetupForResume() {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys();
 
   Reset();
 }
