@@ -181,6 +181,33 @@ add_task(function* test_nested_batch_tracking() {
   yield cleanup();
 });
 
+add_task(function* test_tracker_sql_batching() {
+  _("Test tracker does the correct thing when it is forced to batch SQL queries");
+
+  const SQLITE_MAX_VARIABLE_NUMBER = 999;
+  let numItems = SQLITE_MAX_VARIABLE_NUMBER * 2 + 10;
+  let createdIDs = [];
+
+  yield startTracking();
+
+  PlacesUtils.bookmarks.runInBatchMode({
+    runBatched: function() {
+      for (let i = 0; i < numItems; i++) {
+        let syncBmkID = PlacesUtils.bookmarks.insertBookmark(
+                          PlacesUtils.bookmarks.unfiledBookmarksFolder,
+                          Utils.makeURI("https://example.org/" + i),
+                          PlacesUtils.bookmarks.DEFAULT_INDEX,
+                          "Sync Bookmark " + i);
+        createdIDs.push(syncBmkID);
+      }
+    }
+  }, null);
+
+  do_check_eq(createdIDs.length, numItems);
+  yield verifyTrackedCount(numItems + 1); // the folder is also tracked.
+  yield cleanup();
+});
+
 add_task(function* test_onItemAdded() {
   _("Items inserted via the synchronous bookmarks API should be tracked");
 
