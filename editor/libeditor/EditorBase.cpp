@@ -2272,6 +2272,15 @@ EditorBase::ScrollSelectionIntoView(bool aScrollToAnchor)
 }
 
 void
+EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsIDOMNode>& aNode,
+                                     int32_t& aOffset)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  FindBetterInsertionPoint(node, aOffset);
+  aNode = do_QueryInterface(node);
+}
+
+void
 EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
                                      int32_t& aOffset)
 {

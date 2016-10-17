@@ -922,6 +922,8 @@ public:
    * FindBetterInsertionPoint() tries to look for better insertion point which
    * is typically the nearest text node and offset in it.
    */
+  void FindBetterInsertionPoint(nsCOMPtr<nsIDOMNode>& aNode,
+                                int32_t& aOffset);
   void FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
                                 int32_t& aOffset);
 
