@@ -80,7 +80,7 @@ public:
   void SwapFrameLoaders(nsXULElement& aOtherLoaderOwner,
                         mozilla::ErrorResult& aError);
 
-  void SwapFrameLoaders(RefPtr<nsFrameLoader>& aOtherLoader,
+  void SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
                         mozilla::ErrorResult& rv);
 
   void PresetOpenerWindow(mozIDOMWindowProxy* aOpenerWindow,
