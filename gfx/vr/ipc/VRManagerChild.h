@@ -17,6 +17,7 @@
 
 namespace mozilla {
 namespace dom {
+class GamepadManager;
 class Navigator;
 class VRDisplay;
 class VREventObserver;
@@ -77,6 +78,9 @@ public:
     int32_t *aHandle);
   void CancelFrameRequestCallback(int32_t aHandle);
   void RunFrameRequestCallbacks();
+  // GamepadManager has to be set by the content side to make sure we are using
+  // the same singleton GamepadManager from the same process.
+  void SetGamepadManager(dom::GamepadManager* aGamepadManager);
 
   void UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates);
   void FireDOMVRDisplayConnectEvent();
@@ -114,7 +118,7 @@ protected:
 
   virtual bool RecvNotifyVSync() override;
   virtual bool RecvNotifyVRVSync(const uint32_t& aDisplayID) override;
-
+  virtual bool RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
 
   // ShmemAllocator
 
@@ -151,6 +155,7 @@ private:
   nsTArray<RefPtr<VRDisplayClient> > mDisplays;
   bool mDisplaysInitialized;
   nsTArray<dom::Navigator*> mNavigatorCallbacks;
+  dom::GamepadManager* mGamepadManager;
 
   int32_t mInputFrameID;
 

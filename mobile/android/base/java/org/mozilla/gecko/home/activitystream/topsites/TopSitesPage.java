@@ -23,10 +23,14 @@ public class TopSitesPage
                         @Nullable AttributeSet attrs) {
         super(context, attrs);
 
-        setLayoutManager(new GridLayoutManager(context, TopSitesPagerAdapter.GRID_WIDTH));
+        setLayoutManager(new GridLayoutManager(context, 1));
 
         RecyclerViewClickSupport.addTo(this)
                 .setOnItemClickListener(this);
+    }
+
+    public void setTiles(int tiles) {
+        setLayoutManager(new GridLayoutManager(getContext(), tiles));
     }
 
     private HomePager.OnUrlOpenListener onUrlOpenListener = null;

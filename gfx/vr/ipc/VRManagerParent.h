@@ -84,6 +84,9 @@ protected:
   virtual bool RecvGetSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
   virtual bool RecvGetImmediateSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
   virtual bool RecvSetHaveEventListener(const bool& aHaveEventListener) override;
+  virtual bool RecvControllerListenerAdded() override;
+  virtual bool RecvControllerListenerRemoved() override;
+  virtual bool RecvGetControllers(nsTArray<VRControllerInfo> *aControllers) override;
 
 private:
   void RegisterWithManager();
