@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsISocketFilter.h"
 #include "js/TypeDecls.h"
-#include "mozilla/net/OfflineObserver.h"
 
 #define TCPSOCKETPARENT_CID \
   { 0x4e7246c6, 0xa8b3, 0x426d, { 0x9c, 0x17, 0x76, 0xda, 0xb1, 0xe1, 0xe1, 0x4a } }
@@ -24,7 +23,6 @@ namespace dom {
 class TCPSocket;
 
 class TCPSocketParentBase : public nsISupports
-                          , public mozilla::net::DisconnectableParent
 {
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS(TCPSocketParentBase)
@@ -38,7 +36,6 @@ protected:
   virtual ~TCPSocketParentBase();
 
   RefPtr<TCPSocket> mSocket;
-  RefPtr<mozilla::net::OfflineObserver> mObserver;
   bool mIPCOpen;
 };
 
@@ -68,8 +65,6 @@ public:
   virtual bool RecvData(const SendableData& aData,
                         const uint32_t& aTrackingNumber) override;
   virtual bool RecvRequestDelete() override;
-  virtual nsresult OfflineNotification(nsISupports *) override;
-  virtual uint32_t GetAppId() override;
   bool GetInIsolatedMozBrowser();
 
   void FireErrorEvent(const nsAString& aName, const nsAString& aType, TCPReadyState aReadyState);
@@ -82,6 +77,7 @@ public:
   nsresult GetPort(uint16_t* aPort);
 
 private:
+  virtual uint32_t GetAppId();
   virtual void ActorDestroy(ActorDestroyReason why) override;
   void SendEvent(const nsAString& aType, CallbackData aData, TCPReadyState aReadyState);
   nsresult SetFilter(const nsCString& aFilter);
