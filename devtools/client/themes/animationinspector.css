@@ -45,6 +45,12 @@
 .animation {
   --timeline-border-color: var(--theme-body-color);
   --timeline-background-color: var(--theme-splitter-color);
+  /* The color of the endDelay hidden progress */
+  --enddelay-hidden-progress-color: var(--theme-graphs-grey);
+  /* The color of none fill mode */
+  --fill-none-color: var(--theme-highlight-gray);
+  /* The color of enable fill mode */
+  --fill-enable-color: var(--timeline-border-color);
 }
 
 .animation.cssanimation {
@@ -360,6 +366,13 @@ body {
   opacity: .3;
 }
 
+.animation-timeline .animation .summary path.delay-path.negative,
+.animation-timeline .animation .summary path.enddelay-path.negative {
+  fill: none;
+  stroke: var(--enddelay-hidden-progress-color);
+  stroke-dasharray: 2, 2;
+}
+
 .animation-timeline .animation .name {
   position: absolute;
   color: var(--theme-selection-color);
@@ -412,38 +425,41 @@ body {
 .animation-timeline .animation .delay,
 .animation-timeline .animation .end-delay {
   position: absolute;
-  height: 100%;
-  border: 1px solid var(--timeline-border-color);
-  box-sizing: border-box;
+  border-bottom: 3px solid var(--fill-none-color);
+  bottom: -0.5px;
 }
 
-.animation-timeline .animation .delay {
-  border-width: 1px 0 1px 1px;
-  background-image: repeating-linear-gradient(45deg,
-                                              transparent,
-                                              transparent 1px,
-                                              var(--theme-selection-color) 1px,
-                                              var(--theme-selection-color) 4px);
-  background-color: var(--timeline-border-color);
+.animation-timeline .animation .delay::after,
+.animation-timeline .animation .end-delay::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  width: 3px;
+  height: 3px;
+  border: 2px solid var(--fill-none-color);
+  background-color: var(--fill-none-color);
+  border-radius: 50%;
 }
 
-.animation-timeline .animation .end-delay {
-  border-width: 1px 1px 1px 0;
-  background-image: repeating-linear-gradient(
-                      -45deg,
-                      transparent,
-                      transparent 3px,
-                      var(--timeline-border-color) 3px,
-                      var(--timeline-border-color) 4px);
+.animation-timeline .animation .negative.delay::after,
+.animation-timeline .animation .positive.end-delay::after {
+  right: -3px;
 }
 
-.animation-timeline .animation .delay.negative,
-.animation-timeline .animation .end-delay.negative {
-  /* Negative delays are displayed on top of the animation, so they need a
-     right border. Whereas normal delays are displayed just before the
-     animation, so there's already the animation's left border that serves as
-     a separation. */
-  border-width: 1px;
+.animation-timeline .animation .positive.delay::after,
+.animation-timeline .animation .negative.end-delay::after {
+  left: -3px;
+}
+
+.animation-timeline .animation .fill.delay,
+.animation-timeline .animation .fill.end-delay {
+  border-color: var(--fill-enable-color);
+}
+
+.animation-timeline .animation .fill.delay::after,
+.animation-timeline .animation .fill.end-delay::after {
+  border-color: var(--fill-enable-color);
+  background-color: var(--fill-enable-color);
 }
 
 /* Animation target node gutter, contains a preview of the dom node */
