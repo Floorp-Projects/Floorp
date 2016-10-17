@@ -5341,7 +5341,173 @@ template void
 MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType,
                                   const BaseIndex& dest, MIRType slotType);
 
+void
+MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    wasmTruncateToInt32(input, output, MIRType::Double, /* isUnsigned= */ true, oolEntry);
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    wasmTruncateToInt32(input, output, MIRType::Double, /* isUnsigned= */ false, oolEntry);
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    wasmTruncateToInt32(input, output, MIRType::Float32, /* isUnsigned= */ true, oolEntry);
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    wasmTruncateToInt32(input, output, MIRType::Float32, /* isUnsigned= */ false, oolEntry);
+}
+
 //}}} check_macroassembler_style
+
+void
+MacroAssemblerARM::wasmTruncateToInt32(FloatRegister input, Register output, MIRType fromType,
+                                       bool isUnsigned, Label* oolEntry)
+{
+    // vcvt* converts NaN into 0, so check for NaNs here.
+    {
+        if (fromType == MIRType::Double)
+            asMasm().compareDouble(input, input);
+        else if (fromType == MIRType::Float32)
+            asMasm().compareFloat(input, input);
+        else
+            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+        ma_b(oolEntry, Assembler::VFP_Unordered);
+    }
+
+    ScratchDoubleScope scratchScope(asMasm());
+    ScratchRegisterScope scratchReg(asMasm());
+    FloatRegister scratch = scratchScope.uintOverlay();
+
+    // ARM conversion instructions clamp the value to ensure it fits within the
+    // target's type bounds, so every time we see those, we need to check the
+    // input.
+    if (isUnsigned) {
+        if (fromType == MIRType::Double)
+            ma_vcvt_F64_U32(input, scratch);
+        else if (fromType == MIRType::Float32)
+            ma_vcvt_F32_U32(input, scratch);
+        else
+            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+        ma_vxfer(scratch, output);
+
+        // int32_t(UINT32_MAX) == -1.
+        ma_cmp(output, Imm32(-1), scratchReg);
+        as_cmp(output, Imm8(0), Assembler::NotEqual);
+        ma_b(oolEntry, Assembler::Equal);
+
+        return;
+    }
+
+    scratch = scratchScope.sintOverlay();
+
+    if (fromType == MIRType::Double)
+        ma_vcvt_F64_I32(input, scratch);
+    else if (fromType == MIRType::Float32)
+        ma_vcvt_F32_I32(input, scratch);
+    else
+        MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+    ma_vxfer(scratch, output);
+    ma_cmp(output, Imm32(INT32_MAX), scratchReg);
+    ma_cmp(output, Imm32(INT32_MIN), scratchReg, Assembler::NotEqual);
+    ma_b(oolEntry, Assembler::Equal);
+}
+
+void
+MacroAssemblerARM::outOfLineWasmTruncateToIntCheck(FloatRegister input, MIRType fromType,
+                                                   MIRType toType, bool isUnsigned, Label* rejoin,
+                                                   wasm::TrapOffset trapOffset)
+{
+    ScratchDoubleScope scratchScope(asMasm());
+    FloatRegister scratch;
+
+    // Eagerly take care of NaNs.
+    Label inputIsNaN;
+    if (fromType == MIRType::Double)
+        asMasm().branchDouble(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else if (fromType == MIRType::Float32)
+        asMasm().branchFloat(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else
+        MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
+
+    // Handle special values.
+    Label fail;
+
+    // By default test for the following inputs and bail:
+    // signed:   ] -Inf, INTXX_MIN - 1.0 ] and [ INTXX_MAX + 1.0 : +Inf [
+    // unsigned: ] -Inf, -1.0 ] and [ UINTXX_MAX + 1.0 : +Inf [
+    // Note: we cannot always represent those exact values. As a result
+    // this changes the actual comparison a bit.
+    double minValue, maxValue;
+    Assembler::DoubleCondition minCond = Assembler::DoubleLessThanOrEqual;
+    Assembler::DoubleCondition maxCond = Assembler::DoubleGreaterThanOrEqual;
+    if (toType == MIRType::Int64) {
+        if (isUnsigned) {
+            minValue = -1;
+            maxValue = double(UINT64_MAX) + 1.0;
+        } else {
+            // In the float32/double range there exists no value between
+            // INT64_MIN and INT64_MIN - 1.0. Making INT64_MIN the lower-bound.
+            minValue = double(INT64_MIN);
+            minCond = Assembler::DoubleLessThan;
+            maxValue = double(INT64_MAX) + 1.0;
+        }
+    } else {
+        if (isUnsigned) {
+            minValue = -1;
+            maxValue = double(UINT32_MAX) + 1.0;
+        } else {
+            if (fromType == MIRType::Float32) {
+                // In the float32 range there exists no value between
+                // INT32_MIN and INT32_MIN - 1.0. Making INT32_MIN the lower-bound.
+                minValue = double(INT32_MIN);
+                minCond = Assembler::DoubleLessThan;
+            } else {
+                minValue = double(INT32_MIN) - 1.0;
+            }
+            maxValue = double(INT32_MAX) + 1.0;
+        }
+    }
+
+    if (fromType == MIRType::Double) {
+        scratch = scratchScope.doubleOverlay();
+        asMasm().loadConstantDouble(minValue, scratch);
+        asMasm().branchDouble(minCond, input, scratch, &fail);
+
+        asMasm().loadConstantDouble(maxValue, scratch);
+        asMasm().branchDouble(maxCond, input, scratch, &fail);
+    } else {
+        MOZ_ASSERT(fromType == MIRType::Float32);
+        scratch = scratchScope.singleOverlay();
+        asMasm().loadConstantFloat32(float(minValue), scratch);
+        asMasm().branchFloat(minCond, input, scratch, &fail);
+
+        asMasm().loadConstantFloat32(float(maxValue), scratch);
+        asMasm().branchFloat(maxCond, input, scratch, &fail);
+    }
+
+    // We had an actual correct value, get back to where we were.
+    ma_b(rejoin);
+
+    // Handle errors.
+    bind(&fail);
+    asMasm().jump(wasm::TrapDesc(trapOffset, wasm::Trap::IntegerOverflow,
+                                 asMasm().framePushed()));
+
+    bind(&inputIsNaN);
+    asMasm().jump(wasm::TrapDesc(trapOffset, wasm::Trap::InvalidConversionToInteger,
+                                 asMasm().framePushed()));
+}
 
 void
 MacroAssemblerARM::emitUnalignedLoad(bool isSigned, unsigned byteSize, Register ptr, Register tmp,
