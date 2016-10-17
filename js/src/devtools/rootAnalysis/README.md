@@ -23,13 +23,20 @@ To use it on SpiderMonkey:
 
         mkdir work
         cd work
-        GECKO_DIR=$SRCDIR $SRCDIR/taskcluster/scripts/builder/build-haz-linux.sh $(pwd) --dep
+        ( export GECKO_DIR=$SRCDIR; $GECKO_DIR/taskcluster/scripts/builder/build-haz-linux.sh $(pwd) --dep )
 
 The `--dep` is optional, and will avoid rebuilding the JS shell used to run the
-analysis later. Output goes to `analysis/hazards.txt`. This will run the
+analysis later.
+
+If you see the error ``/lib/../lib64/crti.o: unrecognized relocation (0x2a) in section .init`` then have a version mismatch between the precompiled gcc used in automation and your installed glibc. The easiest way to fix this is to delete the ld provided with the precompiled gcc (it will be in two places, one given in the first part of the error message), which will cause gcc to fall back to your system ld. But you will need to additionally pass ``--no-tooltool`` to build-haz-linux.sh. With the current package, you could do the deletion with
+
+    rm gcc/bin/ld
+    rm gcc/x86_64-unknown-linux-gnu/bin/ld
+
+Output goes to `analysis/hazards.txt`. This will run the
 analysis on the js/src tree only; if you wish to analyze the full browser, use
 
-    GECKO_DIR=$SRCDIR $SRCDIR/taskcluster/scripts/builder/build-haz-linux.sh --project browser $(pwd)
+    ( export GECKO_DIR=$SRCDIR; $GECKO_DIR/taskcluster/scripts/builder/build-haz-linux.sh --project browser $(pwd) )
 
 After running the analysis once, you can reuse the `*.xdb` database files
 generated, using modified analysis scripts, by running
