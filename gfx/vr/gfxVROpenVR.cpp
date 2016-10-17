@@ -24,6 +24,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 #include "openvr/openvr.h"
+#include "mozilla/dom/Gamepad.h"
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
@@ -33,6 +34,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::gfx::impl;
 using namespace mozilla::layers;
+using namespace mozilla::dom;
 
 namespace {
 extern "C" {
@@ -85,7 +87,7 @@ LoadOpenVRRuntime()
 VRDisplayOpenVR::VRDisplayOpenVR(::vr::IVRSystem *aVRSystem,
                                  ::vr::IVRChaperone *aVRChaperone,
                                  ::vr::IVRCompositor *aVRCompositor)
-  : VRDisplayHost(VRDisplayType::OpenVR)
+  : VRDisplayHost(VRDeviceType::OpenVR)
   , mVRSystem(aVRSystem)
   , mVRChaperone(aVRChaperone)
   , mVRCompositor(aVRCompositor)
@@ -438,5 +440,144 @@ VRDisplayManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 
   if (mOpenVRHMD) {
     aHMDResult.AppendElement(mOpenVRHMD);
+  }
+}
+
+VRControllerOpenVR::VRControllerOpenVR()
+  : VRControllerHost(VRDeviceType::OpenVR)
+{
+  MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
+  mControllerInfo.mControllerName.AssignLiteral("OpenVR HMD");
+}
+
+VRControllerOpenVR::~VRControllerOpenVR()
+{
+  MOZ_COUNT_DTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
+}
+
+VRControllerManagerOpenVR::VRControllerManagerOpenVR()
+  : mOpenVRInstalled(false), mVRSystem(nullptr)
+{
+}
+
+VRControllerManagerOpenVR::~VRControllerManagerOpenVR()
+{
+  Destroy();
+}
+
+/*static*/ already_AddRefed<VRControllerManagerOpenVR>
+VRControllerManagerOpenVR::Create()
+{
+  if (!gfxPrefs::VREnabled() || !gfxPrefs::VROpenVREnabled()) {
+    return nullptr;
+  }
+
+  RefPtr<VRControllerManagerOpenVR> manager = new VRControllerManagerOpenVR();
+  return manager.forget();
+}
+
+bool
+VRControllerManagerOpenVR::Init()
+{
+  if (mOpenVRInstalled)
+    return true;
+
+  if (!vr_IsRuntimeInstalled())
+    return false;
+
+  // Loading the OpenVR Runtime
+  vr::EVRInitError err = vr::VRInitError_None;
+
+  vr_InitInternal(&err, vr::VRApplication_Scene);
+  if (err != vr::VRInitError_None) {
+    return false;
+  }
+
+  mVRSystem = (vr::IVRSystem *)vr_GetGenericInterface(vr::IVRSystem_Version, &err);
+  if ((err != vr::VRInitError_None) || !mVRSystem) {
+    vr_ShutdownInternal();
+    return false;
+  }
+
+  mOpenVRInstalled = true;
+  return true;
+}
+
+void
+VRControllerManagerOpenVR::Destroy()
+{
+  mOpenVRController.Clear();
+  mOpenVRInstalled = false;
+}
+
+void
+VRControllerManagerOpenVR::HandleInput()
+{
+  MOZ_ASSERT(mVRSystem);
+
+  // Process OpenVR controller state
+  for (vr::TrackedDeviceIndex_t trackedDevice = 0;
+       trackedDevice < vr::k_unMaxTrackedDeviceCount; trackedDevice++ ) {
+    vr::VRControllerState_t state;
+
+    if (mVRSystem->GetTrackedDeviceClass(trackedDevice)
+        != vr::TrackedDeviceClass_Controller) {
+      continue;
+    }
+
+    if (mVRSystem->GetControllerState(trackedDevice, &state)) {
+      if (state.ulButtonPressed) {
+        // TODO: For Bug 1299929 after landing, convert the button mask to an ID button
+        // NewButtonEvent(1,
+        //                0,
+        //                0,
+        //                true);
+      }
+    }
+  }
+
+  return;
+}
+
+void
+VRControllerManagerOpenVR::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult)
+{
+  if (!mOpenVRInstalled) {
+    return;
+  }
+
+  aControllerResult.Clear();
+  for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
+    aControllerResult.AppendElement(mOpenVRController[i]);
+  }
+}
+
+void
+VRControllerManagerOpenVR::ScanForDevices()
+{
+  mControllerCount = 0;
+  mOpenVRController.Clear();
+
+  if (!mVRSystem)
+    return;
+
+  // Basically, we would have HMDs in the tracked devices, but we are just interested in the controllers.
+  for ( vr::TrackedDeviceIndex_t trackedDevice = vr::k_unTrackedDeviceIndex_Hmd + 1;
+        trackedDevice < vr::k_unMaxTrackedDeviceCount; ++trackedDevice ) {
+    if (!mVRSystem->IsTrackedDeviceConnected(trackedDevice)) {
+      continue;
+    }
+
+    if (mVRSystem->GetTrackedDeviceClass(trackedDevice) != vr::TrackedDeviceClass_Controller) {
+      continue;
+    }
+
+    RefPtr<VRControllerOpenVR> openVRController = new VRControllerOpenVR();
+    mOpenVRController.AppendElement(openVRController);
+
+    // Not already present, add it.
+    AddGamepad("OpenVR Gamepad", GamepadMappingType::_empty,
+               kOpenVRControllerAxes, kOpenVRControllerButtons);
+    ++mControllerCount;
   }
 }
