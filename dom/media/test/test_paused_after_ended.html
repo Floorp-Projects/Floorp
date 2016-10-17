@@ -29,6 +29,7 @@ function pause(evt) {
 
 function startTest(test, token) {
   var v = document.createElement('video');
+  document.body.appendChild(v);
   v.token = token;
   manager.started(v.token);
   v.src = test.name;
