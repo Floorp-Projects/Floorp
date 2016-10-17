@@ -662,7 +662,10 @@ public class UpdateService extends IntentService {
         if (updatePath == null) {
             updatePath = getLastFileName();
         }
-        applyUpdate(new File(updatePath));
+
+        if (updatePath != null) {
+            applyUpdate(new File(updatePath));
+        }
     }
 
     private void applyUpdate(File updateFile) {
