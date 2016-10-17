@@ -72,6 +72,7 @@ case $cmd in
        ${tgtpath}
 
     cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js
+    cp -pPR ${TOPSRCDIR}/js/ffi.configure ${tgtpath}/js
 
     mkdir -p ${tgtpath}/taskcluster
     cp -pPR ${TOPSRCDIR}/taskcluster/moz.build ${tgtpath}/taskcluster/
