@@ -36,12 +36,12 @@ window.onload = Task.async(function* () {
 
   function testMultiline() {
     const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testMultiline") });
-    is(renderedComponent.textContent, "\"aaaaaaaaaaaaaaaaaaaaa\\nbbbbbbbbbbbbbbbbbbb\\ncccccccccccccccc\\n\"", "String rep has expected text content for multiline string");
+    is(renderedComponent.textContent, "\"aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n\"", "String rep has expected text content for multiline string");
   }
 
   function testMultilineLimit() {
     const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testMultiline"), cropLimit: 20 });
-    is(renderedComponent.textContent, "\"aaaaaaaaaa…cccccccc\\n\"", "String rep has expected text content for multiline string with specified number of characters");
+    is(renderedComponent.textContent, "\"aaaaaaaaaa…cccccccc\n\"", "String rep has expected text content for multiline string with specified number of characters");
   }
 
   function testMultilineOpen() {
