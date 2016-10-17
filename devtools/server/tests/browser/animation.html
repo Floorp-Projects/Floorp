@@ -28,7 +28,10 @@
     border-radius: 50%;
     background: #eee;
 
-    animation: move 200s infinite, glow 100s 5;
+    animation: move 200s infinite , glow 100s 5;
+    animation-timing-function: ease-out;
+    animation-direction: reverse;
+    animation-fill-mode: both;
   }
 
   .transition {
@@ -39,7 +42,7 @@
     border-radius: 50%;
     background: #f06;
 
-    transition: width 500s;
+    transition: width 500s ease-out;
   }
   .transition.get-round {
     width: 200px;
