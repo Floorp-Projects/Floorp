@@ -51,6 +51,8 @@ public class TabStripView extends RecyclerView {
 
         animatorListener = new TabAnimatorListener();
 
+        setChildrenDrawingOrderEnabled(true);
+
         adapter = new TabStripAdapter(context);
         setAdapter(adapter);
 
@@ -60,7 +62,7 @@ public class TabStripView extends RecyclerView {
 
         setItemAnimator(new TabStripItemAnimator(ANIM_TIME_MS));
 
-        // TODO add item decoration.
+        addItemDecoration(new TabStripDividerItem(context));
     }
 
     /* package */ void refreshTabs() {
@@ -124,8 +126,12 @@ public class TabStripView extends RecyclerView {
         adapter.notifyTabChanged(tab);
     }
 
+    public int getPositionForSelectedTab() {
+        return adapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+    }
+
     private void updateSelectedPosition() {
-        final int selected = adapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+        final int selected = getPositionForSelectedTab();
         if (selected != -1) {
             scrollToPosition(selected);
         }
@@ -148,6 +154,45 @@ public class TabStripView extends RecyclerView {
         // Make sure we didn't miss any resets after animations etc.
         child.setTranslationX(0);
         child.setTranslationY(0);
+    }
+
+    /**
+     * Return the position of the currently selected tab relative to the tabs currently visible in
+     * the tabs list, or -1 if the currently selected tab isn't visible in the tabs list.
+     */
+    private int getRelativeSelectedPosition(int visibleTabsCount) {
+        final int selectedPosition = getPositionForSelectedTab();
+        final LinearLayoutManager layoutManager = (LinearLayoutManager) getLayoutManager();
+        final int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
+        final int relativeSelectedPosition = selectedPosition - firstVisiblePosition;
+        if (relativeSelectedPosition < 0 || relativeSelectedPosition > visibleTabsCount - 1) {
+            return -1;
+        }
+
+        return relativeSelectedPosition;
+    }
+
+    @Override
+    protected int getChildDrawingOrder(int childCount, int i) {
+        final int relativeSelectedPosition = getRelativeSelectedPosition(childCount);
+        if (relativeSelectedPosition == -1) {
+            // The selected tab isn't visible, so we don't need to adjust drawing order.
+            return i;
+        }
+
+        // Explanation of the input parameters: there are childCount tabs visible, and right now
+        // we're returning which of those tabs to draw i'th, for some i between 0 and
+        // childCount - 1.
+        if (i == childCount - 1) {
+            // Draw the selected tab last.
+            return relativeSelectedPosition;
+        } else if (i >= relativeSelectedPosition) {
+            // Draw the tabs after the selected tab one iteration earlier than normal.
+            return i + 1;
+        } else {
+            // Draw the tabs before the selected tab in their normal order.
+            return i;
+        }
     }
 
     @Override
