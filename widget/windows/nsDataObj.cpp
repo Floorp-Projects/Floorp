@@ -1132,9 +1132,11 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
     return E_OUTOFMEMORY;
 
   nsCOMPtr<nsIURI> aUri;
-  NS_NewURI(getter_AddRefs(aUri), url);
+  nsresult rv = NS_NewURI(getter_AddRefs(aUri), url);
+  if (NS_FAILED(rv)) {
+    return E_FAIL;
+  }
 
-  nsresult rv;
   nsAutoCString asciiUrl;
   rv = aUri->GetAsciiSpec(asciiUrl);
   if (NS_FAILED(rv)) {
