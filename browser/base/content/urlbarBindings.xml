@@ -1724,17 +1724,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
            should show in their labels and include in their url attributes. -->
       <property name="overrideSearchEngineName" readonly="true">
         <getter><![CDATA[
-          // When building the popup, autocomplete reuses an item at index i if
-          // that item's url attribute matches the controller's value at index
-          // i, but only if overrideSearchEngineName matches the engine in the
-          // url attribute.  To absolutely avoid reusing items that shouldn't be
-          // reused, always return a non-null name here by falling back to the
-          // current engine.
-          let engine =
-            (this.oneOffSearchButtons.selectedButton &&
-             this.oneOffSearchButtons.selectedButton.engine) ||
-             Services.search.currentEngine;
-          return engine ? engine.name : null;
+          let button = this.oneOffSearchButtons.selectedButton;
+          return button && button.engine && button.engine.name;
         ]]></getter>
       </property>
 
