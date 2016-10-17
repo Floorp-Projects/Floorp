@@ -3147,7 +3147,12 @@ MediaDecoderStateMachine::DumpDebugInfo()
       mAudioCompleted.Ref(), mVideoCompleted.Ref());
   });
 
-  OwnerThread()->DispatchStateChange(r.forget());
+  // Since the task is run asynchronously, it is possible other tasks get first
+  // and change the object states before we print them. Therefore we want to
+  // dispatch this task immediately without waiting for the tail dispatching
+  // phase so object states are less likely to change before being printed.
+  OwnerThread()->Dispatch(r.forget(),
+    AbstractThread::AssertDispatchSuccess, AbstractThread::TailDispatch);
 }
 
 void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
