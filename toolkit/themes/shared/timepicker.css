@@ -3,26 +3,45 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --font-size: 1.2rem;
-  --spinner-item-height: 2rem;
-  --spinner-width: 5rem;
-  --spinner-height: 10rem;
-  --scroller-width: 1.5rem;
-  --disabled-color: #ccc;
-  --selected-color: #fff;
-  --selected-bgcolor: #83BFFC;
-  --hover-bgcolor: #aaa;
-  --hover-outline: #999;
+  --font-size-default: 1.1rem;
+  --spinner-width: 3rem;
+  --spinner-margin-top-bottom: 0.4rem;
+  --spinner-item-height: 2.4rem;
+  --spinner-item-margin-bottom: 0.1rem;
+  --spinner-button-height: 1.2rem;
+  --colon-width: 2rem;
+  --day-period-spacing-width: 1rem;
+
+  --border: 0.1rem solid #D6D6D6;
+  --border-radius: 0.3rem;
+
+  --font-color: #191919;
+  --fill-color: #EBEBEB;
+
+  --selected-font-color: #FFFFFF;
+  --selected-fill-color: #0996F8;
+
+  --button-font-color: #858585;
+  --button-font-color-hover: #4D4D4D;
+  --button-font-color-active: #191919;
+
+  --disabled-opacity: 0.2;
+}
+
+html {
+  font-size: 10px;
 }
 
 body {
   margin: 0;
-  font-size: var(--font-size);
+  color: var(--font-color);
+  font-size: var(--font-size-default);
 }
 
 #time-picker {
   display: flex;
   flex-direction: row;
+  justify-content: space-around;
 }
 
 .spinner-container {
@@ -32,57 +51,103 @@ body {
   width: var(--spinner-width);
 }
 
-.spinner-container button {
+.spinner-container > button {
   -moz-appearance: none;
   border: none;
   background: none;
-  height: var(--spinner-item-height);
+  background-color: var(--button-font-color);
+  height: var(--spinner-button-height);
 }
 
-.spinner-container .stack {
+.spinner-container > button:hover {
+  background-color: var(--button-font-color-hover);
+}
+
+.spinner-container > button.active {
+  background-color: var(--button-font-color-active);
+}
+
+.spinner-container > button.up {
+  mask: url("chrome://global/skin/icons/find-arrows.svg#glyph-find-previous") no-repeat 50% 50%;
+}
+
+.spinner-container > button.down {
+  mask: url("chrome://global/skin/icons/find-arrows.svg#glyph-find-next") no-repeat 50% 50%;
+}
+
+.spinner-container.hide-buttons > button {
+  visibility: hidden;
+}
+
+.spinner-container > .spinner {
   position: relative;
-  height: var(--spinner-height);
-}
-
-.spinner-container .spinner {
-  position: absolute;
-  height: var(--spinner-height);
   width: 100%;
+  margin: var(--spinner-margin-top-bottom) 0;
   cursor: default;
   overflow-y: scroll;
   scroll-snap-type: mandatory;
   scroll-snap-points-y: repeat(100%);
 }
 
-.spinner-container .spinner > div {
+.spinner-container > .spinner > div {
+  box-sizing: border-box;
   position: relative;
   text-align: center;
-  padding: calc(var(--spinner-item-height) / 4) 0;
-  height: calc(var(--spinner-item-height) / 2);
+  padding: calc((var(--spinner-item-height) - var(--font-size-default)) / 2) 0;
+  margin-bottom: var(--spinner-item-margin-bottom);
+  height: var(--spinner-item-height);
   -moz-user-select: none;
   scroll-snap-coordinate: 0 0;
 }
 
-.spinner-container .spinner > div:last-child {
-  margin-bottom: calc(var(--spinner-item-height) * 2);
-}
-
-.spinner-container .spinner > div.selection {
-  color: var(--selected-color);
-}
-
-.spinner-container .spinner > div.selection::before {
+.spinner-container > .spinner > div:hover::before {
+  background: var(--fill-color);
+  border: var(--border);
+  border-radius: var(--border-radius);
   content: "";
-  background: var(--selected-bgcolor);
   position: absolute;
-  top: 5%;
-  bottom: 5%;
-  left: 10%;
-  right: 10%;
-  border-radius: 5%;
+  top: 0%;
+  bottom: 0%;
+  left: 0%;
+  right: 0%;
   z-index: -10;
 }
 
-.spinner-container .spinner > div.disabled {
-  color: var(--disabled-color);
+.spinner-container > .spinner:not(.scrolling) > div.selection {
+  color: var(--selected-font-color);
+}
+
+.spinner-container > .spinner > div.selection::before {
+  background: var(--selected-fill-color);
+  border: none;
+  border-radius: var(--border-radius);
+  content: "";
+  position: absolute;
+  top: 0%;
+  bottom: 0%;
+  left: 0%;
+  right: 0%;
+  z-index: -10;
+}
+
+.spinner-container > .spinner > div.disabled::before,
+.spinner-container > .spinner.scrolling > div.selection::before,
+.spinner-container > .spinner.scrolling > div:hover::before {
+  display: none;
+}
+
+.spinner-container > .spinner > div.disabled {
+  opacity: var(--disabled-opacity);
+}
+
+.colon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--colon-width);
+  margin-bottom: 0.3rem;
+}
+
+.spacer {
+  width: var(--day-period-spacing-width);
 }
