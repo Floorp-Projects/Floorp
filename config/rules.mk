@@ -816,8 +816,16 @@ ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifdef MSMANIFEST_TOOL
 ifdef EMBED_MANIFEST_AT
 	@if test -f $@.manifest; then \
-		$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
-		rm -f $@.manifest; \
+		if test -f '$(srcdir)/$@.manifest'; then \
+			echo 'Embedding manifest from $(srcdir)/$@.manifest and $@.manifest'; \
+			$(MT) -NOLOGO -MANIFEST '$(win_srcdir)/$@.manifest' $@.manifest -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
+		else \
+			echo 'Embedding manifest from $@.manifest'; \
+			$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
+		fi; \
+	elif test -f '$(srcdir)/$@.manifest'; then \
+		echo 'Embedding manifest from $(srcdir)/$@.manifest'; \
+		$(MT) -NOLOGO -MANIFEST '$(win_srcdir)/$@.manifest' -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
 	fi
 endif   # EMBED_MANIFEST_AT
 endif	# MSVC with manifest tool
