@@ -1280,7 +1280,14 @@ class Marionette(object):
             be raised
 
         """
-        self._send_message("timeouts", {"script": timeout})
+        try:
+            self._send_message("timeouts", {"script": timeout})
+        except errors.MarionetteException as e:
+            # remove when 52.0a is stable
+            if "Not a Number" in e.message:
+                self._send_message("timeouts", {"type": "script", "ms": timeout})
+            else:
+                raise e
 
     def set_search_timeout(self, timeout):
         """Sets a timeout for the find methods.
@@ -1296,7 +1303,14 @@ class Marionette(object):
         :param timeout: Timeout in milliseconds.
 
         """
-        self._send_message("timeouts", {"implicit": timeout})
+        try:
+            self._send_message("timeouts", {"implicit": timeout})
+        except errors.MarionetteException as e:
+            # remove when 52.0a is stable
+            if "Not a Number" in e.message:
+                self._send_message("timeouts", {"type": "implicit", "ms": timeout})
+            else:
+                raise e
 
     def set_page_load_timeout(self, timeout):
         """Sets a timeout for loading pages.
@@ -1308,7 +1322,14 @@ class Marionette(object):
         :param timeout: Timeout in milliseconds.
 
         """
-        self._send_message("timeouts", {"page load": timeout})
+        try:
+            self._send_message("timeouts", {"page load": timeout})
+        except errors.MarionetteException as e:
+            # remove when 52.0a is stable
+            if "Not a Number" in e.message:
+                self._send_message("timeouts", {"type": "page load", "ms": timeout})
+            else:
+                raise e
 
     @property
     def current_window_handle(self):
