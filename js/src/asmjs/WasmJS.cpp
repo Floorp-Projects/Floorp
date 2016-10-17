@@ -193,9 +193,9 @@ ThrowBadImportArg(JSContext* cx)
 }
 
 static bool
-ThrowBadImportField(JSContext* cx, const char* str)
+ThrowBadImportField(JSContext* cx, const char* field, const char* str)
 {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_FIELD, str);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_FIELD, field, str);
     return false;
 }
 
@@ -233,7 +233,7 @@ GetImports(JSContext* cx,
             return false;
 
         if (!v.isObject())
-            return ThrowBadImportField(cx, "an Object");
+            return ThrowBadImportField(cx, import.module.get(), "an Object");
 
         RootedObject obj(cx, &v.toObject());
         if (!GetProperty(cx, obj, import.field.get(), &v))
@@ -242,7 +242,7 @@ GetImports(JSContext* cx,
         switch (import.kind) {
           case DefinitionKind::Function:
             if (!IsFunctionObject(v))
-                return ThrowBadImportField(cx, "a Function");
+                return ThrowBadImportField(cx, import.field.get(), "a Function");
 
             if (!funcImports.append(&v.toObject().as<JSFunction>()))
                 return false;
@@ -250,14 +250,14 @@ GetImports(JSContext* cx,
             break;
           case DefinitionKind::Table:
             if (!v.isObject() || !v.toObject().is<WasmTableObject>())
-                return ThrowBadImportField(cx, "a Table");
+                return ThrowBadImportField(cx, import.field.get(), "a Table");
 
             MOZ_ASSERT(!tableImport);
             tableImport.set(&v.toObject().as<WasmTableObject>());
             break;
           case DefinitionKind::Memory:
             if (!v.isObject() || !v.toObject().is<WasmMemoryObject>())
-                return ThrowBadImportField(cx, "a Memory");
+                return ThrowBadImportField(cx, import.field.get(), "a Memory");
 
             MOZ_ASSERT(!memoryImport);
             memoryImport.set(&v.toObject().as<WasmMemoryObject>());
@@ -271,7 +271,7 @@ GetImports(JSContext* cx,
             switch (global.type()) {
               case ValType::I32: {
                 if (!v.isNumber())
-                    return ThrowBadImportField(cx, "a number");
+                    return ThrowBadImportField(cx, import.field.get(), "a number");
                 int32_t i32;
                 if (!ToInt32(cx, v, &i32))
                     return false;
@@ -295,7 +295,7 @@ GetImports(JSContext* cx,
                     break;
                 }
                 if (!v.isNumber())
-                    return ThrowBadImportField(cx, "a number");
+                    return ThrowBadImportField(cx, import.field.get(), "a number");
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
@@ -311,7 +311,7 @@ GetImports(JSContext* cx,
                     break;
                 }
                 if (!v.isNumber())
-                    return ThrowBadImportField(cx, "a number");
+                    return ThrowBadImportField(cx, import.field.get(), "a number");
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;

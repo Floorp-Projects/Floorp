@@ -93,8 +93,8 @@ const noImportObj = "second argument must be an object";
 assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', 1), TypeError, noImportObj);
 assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', null), TypeError, noImportObj);
 
-const notObject = /import object field is not an Object/;
-const notFunction = /import object field is not a Function/;
+const notObject = /import object field '\w*' is not an Object/;
+const notFunction = /import object field '\w*' is not a Function/;
 
 var code = '(module (import "a" "b"))';
 assertErrorMessage(() => wasmEvalText(code), TypeError, noImportObj);
