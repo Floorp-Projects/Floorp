@@ -6,7 +6,7 @@
 == capitalize-6.html capitalize-6-ref.html
 == capitalize-7.html capitalize-7-ref.html
 == capitalize-7a.html capitalize-7-ref.html
-fails == capitalize-8.html capitalize-8-ref.html # bug 1309582
+== capitalize-8.html capitalize-8-ref.html
 == lowercase-1.html lowercase-ref.html
 == lowercase-sigma-1.html lowercase-sigma-1-ref.html
 random-if(winWidget) == small-caps-1.html small-caps-1-ref.html # fails if default font supports 'smcp'
