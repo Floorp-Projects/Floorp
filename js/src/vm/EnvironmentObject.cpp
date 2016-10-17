@@ -2875,6 +2875,7 @@ GetDebugEnvironmentForMissing(JSContext* cx, const EnvironmentIter& ei)
         // Generators should always reify their scopes.
         MOZ_ASSERT(!callee->isGenerator());
 
+        JS::ExposeObjectToActiveJS(callee);
         Rooted<CallObject*> callobj(cx, CallObject::createHollowForDebug(cx, callee));
         if (!callobj)
             return nullptr;
