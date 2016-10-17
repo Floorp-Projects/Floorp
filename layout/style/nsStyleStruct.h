@@ -740,9 +740,7 @@ struct nsStyleImageLayers {
     bool RenderingMightDependOnPositioningAreaSizeChange() const;
 
     // Compute the change hint required by changes in just this layer.
-    // aPositionChangeHint indicates the hint for position change.
-    nsChangeHint CalcDifference(const Layer& aNewLayer,
-                                nsChangeHint aPositionChangeHint) const;
+    nsChangeHint CalcDifference(const Layer& aNewLayer) const;
 
     // An equality operator that compares the images using URL-equality
     // rather than pointer-equality.
@@ -3669,6 +3667,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
            nsChangeHint_UpdateOverflow |
            nsChangeHint_NeutralChange |
            nsChangeHint_RepaintFrame |
+           nsChangeHint_UpdateBackgroundPosition |
            NS_STYLE_HINT_REFLOW;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {

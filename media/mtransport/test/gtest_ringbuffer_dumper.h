@@ -16,9 +16,9 @@
 
 #include "mtransport_test_utils.h"
 #include "runnable_utils.h"
-#include "rlogringbuffer.h"
+#include "rlogconnector.h"
 
-using mozilla::RLogRingBuffer;
+using mozilla::RLogConnector;
 using mozilla::WrapRunnable;
 
 namespace test {
@@ -29,20 +29,20 @@ class RingbufferDumper : public ::testing::EmptyTestEventListener {
     {}
 
     void ClearRingBuffer_s() {
-      RLogRingBuffer::CreateInstance();
+      RLogConnector::CreateInstance();
       // Set limit to zero to clear the ringbuffer
-      RLogRingBuffer::GetInstance()->SetLogLimit(0);
-      RLogRingBuffer::GetInstance()->SetLogLimit(UINT32_MAX);
+      RLogConnector::GetInstance()->SetLogLimit(0);
+      RLogConnector::GetInstance()->SetLogLimit(UINT32_MAX);
     }
 
     void DestroyRingBuffer_s() {
-      RLogRingBuffer::DestroyInstance();
+      RLogConnector::DestroyInstance();
     }
 
     void DumpRingBuffer_s() {
       std::deque<std::string> logs;
       // Get an unlimited number of log lines, with no filter
-      RLogRingBuffer::GetInstance()->GetAny(0, &logs);
+      RLogConnector::GetInstance()->GetAny(0, &logs);
       for (auto l = logs.begin(); l != logs.end(); ++l) {
         std::cout << *l << std::endl;
       }
@@ -64,7 +64,7 @@ class RingbufferDumper : public ::testing::EmptyTestEventListener {
     // Called after a failed assertion or a SUCCEED() invocation.
     virtual void OnTestPartResult(const ::testing::TestPartResult& testResult) {
       if (testResult.failed()) {
-        // Dump (and empty) the RLogRingBuffer
+        // Dump (and empty) the RLogConnector
         mozilla::SyncRunnable::DispatchToThread(
             test_utils_->sts_target(),
             WrapRunnable(this, &RingbufferDumper::DumpRingBuffer_s));

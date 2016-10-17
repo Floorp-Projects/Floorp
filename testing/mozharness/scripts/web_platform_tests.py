@@ -141,7 +141,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
                                                        "wpt_errorsummary.log"),
                 "--binary=%s" % self.binary_path,
                 "--symbols-path=%s" % self.query_symbols_url(),
-                "--stackwalk-binary=%s" % self.query_minidump_stackwalk()]
+                "--stackwalk-binary=%s" % self.query_minidump_stackwalk(),
+                "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin")]
 
         for test_type in c.get("test_type", []):
             cmd.append("--test-type=%s" % test_type)

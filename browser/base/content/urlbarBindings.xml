@@ -147,7 +147,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       -->
       <method name="onBeforeValueGet">
         <body><![CDATA[
-          return {value: this._value};
+          return { value: this._value };
         ]]></body>
       </method>
 
@@ -919,12 +919,24 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <property name="textValue">
-        <getter><![CDATA[
-          return this.inputField.value;
-        ]]></getter>
-        <setter>
-          <![CDATA[
+      <!--
+        onBeforeTextValueSet is called by the base-binding's .textValue getter.
+        It should return the value that the getter should use.
+      -->
+      <method name="onBeforeTextValueGet">
+        <body><![CDATA[
+          return { value: this.inputField.value };
+        ]]></body>
+      </method>
+
+      <!--
+        onBeforeTextValueSet is called by the base-binding's .textValue setter.
+        It should return the value that the setter should use.
+      -->
+      <method name="onBeforeTextValueSet">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          let val = aValue;
           let uri;
           try {
             uri = makeURI(val);
@@ -939,33 +951,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
           }
 
-          // Trim popup selected values, but never trim results coming from
-          // autofill.
-          let styles = new Set(
-            this.popup.selectedIndex == -1 ? [] :
-            this.mController.getStyleAt(this.popup.selectedIndex).split(/\s+/)
-          );
-          if (this.popup.selectedIndex == -1 ||
-              this.mController
-                  .getStyleAt(this.popup.selectedIndex)
-                  .split(/\s+/).indexOf("autofill") >= 0) {
-            this._disableTrim = true;
-          }
-          this.value = val;
-          this._disableTrim = false;
-
-          // Completing a result should simulate the user typing the result, so
-          // fire an input event.
-          let evt = document.createEvent("UIEvents");
-          evt.initUIEvent("input", true, false, window, 0);
-          this.mIgnoreInput = true;
-          this.dispatchEvent(evt);
-          this.mIgnoreInput = false;
-
-          return this.value;
-          ]]>
-        </setter>
-      </property>
+          return val;
+        ]]></body>
+      </method>
 
       <method name="_parseActionUrl">
         <parameter name="aUrl"/>

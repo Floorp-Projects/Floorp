@@ -2380,11 +2380,6 @@ nsChangeHint
 nsStyleImageLayers::CalcDifference(const nsStyleImageLayers& aNewLayers,
                                    nsStyleImageLayers::LayerType aType) const
 {
-  nsChangeHint positionChangeHint =
-    (aType == nsStyleImageLayers::LayerType::Background)
-    ? nsChangeHint_UpdateBackgroundPosition
-    : nsChangeHint_RepaintFrame;
-
   nsChangeHint hint = nsChangeHint(0);
 
   const nsStyleImageLayers& moreLayers =
@@ -2397,8 +2392,7 @@ nsStyleImageLayers::CalcDifference(const nsStyleImageLayers& aNewLayers,
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, moreLayers) {
     if (i < lessLayers.mImageCount) {
       nsChangeHint layerDifference =
-        moreLayers.mLayers[i].CalcDifference(lessLayers.mLayers[i],
-                                             positionChangeHint);
+        moreLayers.mLayers[i].CalcDifference(lessLayers.mLayers[i]);
       hint |= layerDifference;
       if (layerDifference &&
           ((moreLayers.mLayers[i].mImage.GetType() == eStyleImageType_Element) ||
@@ -2686,8 +2680,7 @@ nsStyleImageLayers::Layer::operator==(const Layer& aOther) const
 }
 
 nsChangeHint
-nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewLayer,
-                                          nsChangeHint aPositionChangeHint) const
+nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewLayer) const
 {
   nsChangeHint hint = nsChangeHint(0);
   if (!DefinitelyEqualURIs(mSourceURI, aNewLayer.mSourceURI)) {
@@ -2743,7 +2736,7 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
   }
 
   if (mPosition != aNewLayer.mPosition) {
-    hint |= aPositionChangeHint;
+    hint |= nsChangeHint_UpdateBackgroundPosition;
   }
 
   return hint;

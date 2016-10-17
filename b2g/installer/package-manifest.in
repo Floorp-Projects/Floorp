@@ -165,9 +165,6 @@
 #ifdef MOZ_B2G_BT
 @RESPATH@/components/dom_bluetooth.xpt
 #endif
-#ifdef MOZ_B2G_CAMERA
-@RESPATH@/components/dom_camera.xpt
-#endif
 @RESPATH@/components/dom_canvas.xpt
 @RESPATH@/components/dom_contacts.xpt
 @RESPATH@/components/dom_core.xpt
@@ -206,7 +203,6 @@
 @RESPATH@/components/dom_tv.xpt
 @RESPATH@/components/dom_inputport.xpt
 @RESPATH@/components/dom_views.xpt
-@RESPATH@/components/dom_voicemail.xpt
 #ifdef MOZ_WEBSPEECH
 @RESPATH@/components/dom_webspeechrecognition.xpt
 #endif
@@ -446,12 +442,6 @@
 @RESPATH@/components/WifiWorker.manifest
 #endif // MOZ_WIDGET_GONK
 
-; Camera
-#ifdef MOZ_B2G_CAMERA
-@RESPATH@/components/CameraTestHardware.js
-@RESPATH@/components/CameraTestHardware.manifest
-#endif // MOZ_B2G_CAMERA
-
 ; Tethering
 #ifdef MOZ_WIDGET_GONK
 @RESPATH@/components/TetheringManager.js
@@ -499,8 +489,6 @@
 #ifndef DISABLE_MOZ_RIL_GEOLOC
 @RESPATH@/components/TelephonyService.js
 @RESPATH@/components/TelephonyService.manifest
-@RESPATH@/components/VoicemailService.js
-@RESPATH@/components/VoicemailService.manifest
 #endif
 #endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
 

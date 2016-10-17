@@ -851,12 +851,6 @@ private:
 
   virtual bool DeallocPTelephonyParent(PTelephonyParent*) override;
 
-  virtual PVoicemailParent* AllocPVoicemailParent() override;
-
-  virtual bool RecvPVoicemailConstructor(PVoicemailParent* aActor) override;
-
-  virtual bool DeallocPVoicemailParent(PVoicemailParent* aActor) override;
-
   virtual PMediaParent* AllocPMediaParent() override;
 
   virtual bool DeallocPMediaParent(PMediaParent* aActor) override;

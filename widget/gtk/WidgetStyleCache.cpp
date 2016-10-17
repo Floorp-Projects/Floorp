@@ -546,6 +546,10 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       style = CreateChildCSSNode(GTK_STYLE_CLASS_SLIDER,
                                  MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
       break;
+    case MOZ_GTK_SCROLLBAR_BUTTON:
+      style = CreateChildCSSNode(GTK_STYLE_CLASS_BUTTON,
+                                 MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL);
+      break;
     case MOZ_GTK_RADIOBUTTON:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_RADIO,
                                  MOZ_GTK_RADIOBUTTON_CONTAINER);
