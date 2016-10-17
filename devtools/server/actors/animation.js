@@ -238,6 +238,30 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     return this.player.effect.getComputedTiming().iterationStart;
   },
 
+  /**
+   * Get the animation easing from this player.
+   * @return {String}
+   */
+  getEasing: function () {
+    return this.player.effect.timing.easing;
+  },
+
+  /**
+   * Get the animation fill mode from this player.
+   * @return {String}
+   */
+  getFill: function () {
+    return this.player.effect.getComputedTiming().fill;
+  },
+
+  /**
+   * Get the animation direction from this player.
+   * @return {String}
+   */
+  getDirection: function () {
+    return this.player.effect.getComputedTiming().direction;
+  },
+
   getPropertiesCompositorStatus: function () {
     let properties = this.player.effect.getProperties();
     return properties.map(prop => {
@@ -280,6 +304,9 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       endDelay: this.getEndDelay(),
       iterationCount: this.getIterationCount(),
       iterationStart: this.getIterationStart(),
+      fill: this.getFill(),
+      easing: this.getEasing(),
+      direction: this.getDirection(),
       // animation is hitting the fast path or not. Returns false whenever the
       // animation is paused as it is taken off the compositor then.
       isRunningOnCompositor:
