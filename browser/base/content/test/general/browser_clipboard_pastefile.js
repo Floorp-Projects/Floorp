@@ -2,15 +2,16 @@
 // event.clipboardData.
 
 add_task(function*() {
-  var searchbar = document.getElementById("searchbar");
+  var textbox = document.createElement("textbox");
+  document.documentElement.appendChild(textbox);
 
-  searchbar.focus();
-  searchbar.value = "Text";
-  searchbar.select();
+  textbox.focus();
+  textbox.value = "Text";
+  textbox.select();
 
   yield new Promise((resolve, reject) => {
-    searchbar.addEventListener("copy", function copyEvent(event) {
-      searchbar.removeEventListener("copy", copyEvent, true);
+    textbox.addEventListener("copy", function copyEvent(event) {
+      textbox.removeEventListener("copy", copyEvent, true);
       event.clipboardData.setData("text/plain", "Alternate");
       // For this test, it doesn't matter that the file isn't actually a file.
       event.clipboardData.setData("application/x-moz-file", "Sample");
@@ -36,11 +37,11 @@ add_task(function*() {
   });
   is (output, "Passed", "Paste file");
 
-  searchbar.focus();
+  textbox.focus();
 
   yield new Promise((resolve, reject) => {
-    searchbar.addEventListener("paste", function copyEvent(event) {
-      searchbar.removeEventListener("paste", copyEvent, true);
+    textbox.addEventListener("paste", function copyEvent(event) {
+      textbox.removeEventListener("paste", copyEvent, true);
 
       let dt = event.clipboardData;
       is(dt.types.length, 3, "number of types");
@@ -54,6 +55,8 @@ add_task(function*() {
 
     EventUtils.synthesizeKey("v", { accelKey: true });
   });
+
+  document.documentElement.removeChild(textbox);
 
   yield BrowserTestUtils.removeTab(tab);
 });
