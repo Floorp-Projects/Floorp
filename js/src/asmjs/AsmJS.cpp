@@ -56,6 +56,7 @@ using mozilla::Compression::LZ4;
 using mozilla::HashGeneric;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
+using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::PodCopy;
@@ -7409,13 +7410,20 @@ LinkFail(JSContext* cx, const char* str)
 }
 
 static bool
+IsMaybeWrappedScriptedProxy(JSObject* obj)
+{
+    JSObject* unwrapped = UncheckedUnwrap(obj);
+    return unwrapped && IsScriptedProxy(unwrapped);
+}
+
+static bool
 GetDataProperty(JSContext* cx, HandleValue objVal, HandleAtom field, MutableHandleValue v)
 {
     if (!objVal.isObject())
         return LinkFail(cx, "accessing property of non-object");
 
     RootedObject obj(cx, &objVal.toObject());
-    if (IsScriptedProxy(obj))
+    if (IsMaybeWrappedScriptedProxy(obj))
         return LinkFail(cx, "accessing property of a Proxy");
 
     Rooted<PropertyDescriptor> desc(cx);
@@ -7690,8 +7698,6 @@ ValidateSimdType(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal
 static bool
 ValidateSimdOperation(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal)
 {
-    // SIMD operations are loaded from the SIMD type, so the type must have been
-    // validated before the operation.
     RootedValue v(cx);
     JS_ALWAYS_TRUE(ValidateSimdType(cx, global, globalVal, &v));
 

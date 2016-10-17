@@ -6,8 +6,11 @@
 #ifndef nsHTMLFormatConverter_h__
 #define nsHTMLFormatConverter_h__
 
+#include "nsCOMPtr.h"
 #include "nsIFormatConverter.h"
 #include "nsString.h"
+
+class nsIMutableArray;
 
 class nsHTMLFormatConverter : public nsIFormatConverter
 {
@@ -22,7 +25,7 @@ public:
 protected:
   virtual ~nsHTMLFormatConverter();
 
-  nsresult AddFlavorToList ( nsISupportsArray* inList, const char* inFlavor ) ;
+  nsresult AddFlavorToList ( nsCOMPtr<nsIMutableArray>& inList, const char* inFlavor ) ;
 
   NS_IMETHOD ConvertFromHTMLToUnicode(const nsAutoString & aFromStr, nsAutoString & aToStr);
   NS_IMETHOD ConvertFromHTMLToAOLMail(const nsAutoString & aFromStr, nsAutoString & aToStr);

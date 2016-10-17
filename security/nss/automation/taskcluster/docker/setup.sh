@@ -48,16 +48,6 @@ ln -s /usr/include/x86_64-linux-gnu/zconf.h /usr/include
 # Install clang-3.9 into /usr/local/.
 curl http://llvm.org/releases/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz | tar xJv -C /usr/local --strip-components=1
 
-# Compiler options.
-update-alternatives --install /usr/bin/gcc gcc /usr/local/bin/clang 5
-update-alternatives --install /usr/bin/g++ g++ /usr/local/bin/clang++ 5
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 10
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 10
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 20
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 20
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 30
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 30
-
 locale-gen en_US.UTF-8
 dpkg-reconfigure locales
 

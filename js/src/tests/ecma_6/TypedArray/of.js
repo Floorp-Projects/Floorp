@@ -1,41 +1,16 @@
-const constructors = [
-    Int8Array,
-    Uint8Array,
-    Uint8ClampedArray,
-    Int16Array,
-    Uint16Array,
-    Int32Array,
-    Uint32Array,
-    Float32Array,
-    Float64Array ];
-
-if (typeof SharedArrayBuffer != "undefined")
-    constructors.push(sharedConstructor(Int8Array),
-		      sharedConstructor(Uint8Array),
-		      sharedConstructor(Int16Array),
-		      sharedConstructor(Uint16Array),
-		      sharedConstructor(Int32Array),
-		      sharedConstructor(Uint32Array),
-		      sharedConstructor(Float32Array),
-		      sharedConstructor(Float64Array));
-
-for (var constructor of constructors) {
+for (var constructor of anyTypedArrayConstructors) {
     assertEq(constructor.of.length, 0);
 
-    if (!isSharedConstructor(constructor)) {
-	assertDeepEq(Object.getOwnPropertyDescriptor(constructor.__proto__, "of"), {
-            value: constructor.of,
-            writable: true,
-            enumerable: false,
-            configurable: true
-	});
-    }
+    assertDeepEq(Object.getOwnPropertyDescriptor(constructor.__proto__, "of"), {
+        value: constructor.of,
+        writable: true,
+        enumerable: false,
+        configurable: true
+    });
 
     // Basic tests.
-    if (!isSharedConstructor(constructor)) {
-	assertEq(constructor.of().constructor, constructor);
-	assertEq(constructor.of() instanceof constructor, true);
-    }
+    assertEq(constructor.of().constructor, constructor);
+    assertEq(constructor.of() instanceof constructor, true);
     assertDeepEq(constructor.of(10), new constructor([10]));
     assertDeepEq(constructor.of(1, 2, 3), new constructor([1, 2, 3]));
     assertDeepEq(constructor.of("1", "2", "3"), new constructor([1, 2, 3]));
@@ -57,7 +32,7 @@ for (var constructor of constructors) {
     assertEq(hits, 1);
 
     // Behavior across compartments.
-    if (typeof newGlobal === "function" && !isSharedConstructor(constructor)) {
+    if (typeof newGlobal === "function") {
         var newC = newGlobal()[constructor.name];
         assertEq(newC.of() instanceof newC, true);
         assertEq(newC.of() instanceof constructor, false);
@@ -112,8 +87,9 @@ for (var constructor of constructors) {
     }, TypeError);
 }
 
-assertDeepEq(Float32Array.of(0.1, null, undefined, NaN), new Float32Array([0.1, 0, NaN, NaN]));
-assertDeepEq(Float64Array.of(0.1, null, undefined, NaN), new Float64Array([0.1, 0, NaN, NaN]));
+for (let constructor of anyTypedArrayConstructors.filter(isFloatConstructor)) {
+    assertDeepEq(constructor.of(0.1, null, undefined, NaN), new constructor([0.1, 0, NaN, NaN]));
+}
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);

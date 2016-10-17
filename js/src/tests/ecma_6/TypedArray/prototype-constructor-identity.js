@@ -32,11 +32,7 @@ assertEq(typedArrayProps.indexOf("copyWithin") >= 0, true);
 assertEq(typedArrayProps.indexOf("subarray") >= 0, true);
 assertEq(typedArrayProps.indexOf("set") >= 0, true);
 
-var ctors = [Int8Array, Uint8Array, Uint8ClampedArray,
-             Int16Array, Uint16Array,
-             Int32Array, Uint32Array,
-             Float32Array, Float64Array];
-ctors.forEach(function(ctor) {
+anyTypedArrayConstructors.forEach(function(ctor) {
   assertEq(Object.getPrototypeOf(ctor), TypedArray);
 
   var proto = ctor.prototype;

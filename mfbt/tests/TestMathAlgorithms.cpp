@@ -41,40 +41,40 @@ TestClamp()
 static void
 TestIsPowerOfTwo()
 {
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(0u));
-  MOZ_RELEASE_ASSERT( IsPowerOfTwo(1u));
-  MOZ_RELEASE_ASSERT( IsPowerOfTwo(2u));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(3u));
-  MOZ_RELEASE_ASSERT( IsPowerOfTwo(4u));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(5u));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(6u));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(7u));
-  MOZ_RELEASE_ASSERT( IsPowerOfTwo(8u));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(9u));
+  static_assert(!IsPowerOfTwo(0u), "0 isn't a power of two");
+  static_assert(IsPowerOfTwo(1u), "1 is a power of two");
+  static_assert(IsPowerOfTwo(2u), "2 is a power of two");
+  static_assert(!IsPowerOfTwo(3u), "3 isn't a power of two");
+  static_assert(IsPowerOfTwo(4u), "4 is a power of two");
+  static_assert(!IsPowerOfTwo(5u), "5 isn't a power of two");
+  static_assert(!IsPowerOfTwo(6u), "6 isn't a power of two");
+  static_assert(!IsPowerOfTwo(7u), "7 isn't a power of two");
+  static_assert(IsPowerOfTwo(8u), "8 is a power of two");
+  static_assert(!IsPowerOfTwo(9u), "9 isn't a power of two");
 
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint8_t(UINT8_MAX/2)));     // 127, 0x7f
-  MOZ_RELEASE_ASSERT( IsPowerOfTwo(uint8_t(UINT8_MAX/2 + 1))); // 128, 0x80
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint8_t(UINT8_MAX/2 + 2))); // 129, 0x81
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint8_t(UINT8_MAX - 1)));   // 254, 0xfe
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint8_t(UINT8_MAX)));       // 255, 0xff
+  static_assert(!IsPowerOfTwo(uint8_t(UINT8_MAX/2)), "127, 0x7f isn't a power of two");
+  static_assert(IsPowerOfTwo(uint8_t(UINT8_MAX/2 + 1)), "128, 0x80 is a power of two");
+  static_assert(!IsPowerOfTwo(uint8_t(UINT8_MAX/2 + 2)), "129, 0x81 isn't a power of two");
+  static_assert(!IsPowerOfTwo(uint8_t(UINT8_MAX - 1)), "254, 0xfe isn't a power of two");
+  static_assert(!IsPowerOfTwo(uint8_t(UINT8_MAX)), "255, 0xff isn't a power of two");
 
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint16_t(UINT16_MAX/2)));     // 0x7fff
-  MOZ_RELEASE_ASSERT( IsPowerOfTwo(uint16_t(UINT16_MAX/2 + 1))); // 0x8000
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint16_t(UINT16_MAX/2 + 2))); // 0x8001
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint16_t(UINT16_MAX - 1)));   // 0xfffe
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint16_t(UINT16_MAX)));       // 0xffff
+  static_assert(!IsPowerOfTwo(uint16_t(UINT16_MAX/2)), "0x7fff isn't a power of two");
+  static_assert(IsPowerOfTwo(uint16_t(UINT16_MAX/2 + 1)), "0x8000 is a power of two");
+  static_assert(!IsPowerOfTwo(uint16_t(UINT16_MAX/2 + 2)), "0x8001 isn't a power of two");
+  static_assert(!IsPowerOfTwo(uint16_t(UINT16_MAX - 1)), "0xfffe isn't a power of two");
+  static_assert(!IsPowerOfTwo(uint16_t(UINT16_MAX)), "0xffff isn't a power of two");
 
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint32_t(UINT32_MAX/2)));
-  MOZ_RELEASE_ASSERT( IsPowerOfTwo(uint32_t(UINT32_MAX/2 + 1)));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint32_t(UINT32_MAX/2 + 2)));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint32_t(UINT32_MAX - 1)));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint32_t(UINT32_MAX)));
+  static_assert(!IsPowerOfTwo(uint32_t(UINT32_MAX/2)), "0x7fffffff isn't a power of two");
+  static_assert(IsPowerOfTwo(uint32_t(UINT32_MAX/2 + 1)), "0x80000000 is a power of two");
+  static_assert(!IsPowerOfTwo(uint32_t(UINT32_MAX/2 + 2)), "0x80000001 isn't a power of two");
+  static_assert(!IsPowerOfTwo(uint32_t(UINT32_MAX - 1)), "0xfffffffe isn't a power of two");
+  static_assert(!IsPowerOfTwo(uint32_t(UINT32_MAX)), "0xffffffff isn't a power of two");
 
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint64_t(UINT64_MAX/2)));
-  MOZ_RELEASE_ASSERT( IsPowerOfTwo(uint64_t(UINT64_MAX/2 + 1)));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint64_t(UINT64_MAX/2 + 2)));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint64_t(UINT64_MAX - 1)));
-  MOZ_RELEASE_ASSERT(!IsPowerOfTwo(uint64_t(UINT64_MAX)));
+  static_assert(!IsPowerOfTwo(uint64_t(UINT64_MAX/2)), "0x7fffffffffffffff isn't a power of two");
+  static_assert(IsPowerOfTwo(uint64_t(UINT64_MAX/2 + 1)), "0x8000000000000000 is a power of two");
+  static_assert(!IsPowerOfTwo(uint64_t(UINT64_MAX/2 + 2)), "0x8000000000000001 isn't a power of two");
+  static_assert(!IsPowerOfTwo(uint64_t(UINT64_MAX - 1)), "0xfffffffffffffffe isn't a power of two");
+  static_assert(!IsPowerOfTwo(uint64_t(UINT64_MAX)), "0xffffffffffffffff isn't a power of two");
 }
 
 int

@@ -6,6 +6,7 @@
 #include "mozilla/Logging.h"
 
 #include "nsDragService.h"
+#include "nsArrayUtils.h"
 #include "nsObjCExceptions.h"
 #include "nsITransferable.h"
 #include "nsString.h"
@@ -387,13 +388,13 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
     return NS_ERROR_FAILURE;
 
   // get flavor list that includes all acceptable flavors (including ones obtained through conversion)
-  nsCOMPtr<nsISupportsArray> flavorList;
+  nsCOMPtr<nsIArray> flavorList;
   nsresult rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
   uint32_t acceptableFlavorCount;
-  flavorList->Count(&acceptableFlavorCount);
+  flavorList->GetLength(&acceptableFlavorCount);
 
   // if this drag originated within Mozilla we should just use the cached data from
   // when the drag started if possible
@@ -404,9 +405,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       nsCOMPtr<nsITransferable> currentTransferable(do_QueryInterface(currentTransferableSupports));
       if (currentTransferable) {
         for (uint32_t i = 0; i < acceptableFlavorCount; i++) {
-          nsCOMPtr<nsISupports> genericFlavor;
-          flavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
-          nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
+          nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
           if (!currentFlavor)
             continue;
           nsXPIDLCString flavorStr;
@@ -426,10 +425,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
 
   // now check the actual clipboard for data
   for (uint32_t i = 0; i < acceptableFlavorCount; i++) {
-    nsCOMPtr<nsISupports> genericFlavor;
-    flavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
-    nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
-
+    nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
     if (!currentFlavor)
       continue;
 
@@ -598,17 +594,15 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
       if (!currentTransferable)
         continue;
 
-      nsCOMPtr<nsISupportsArray> flavorList;
+      nsCOMPtr<nsIArray> flavorList;
       nsresult rv = currentTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
       if (NS_FAILED(rv))
         continue;
 
       uint32_t flavorCount;
-      flavorList->Count(&flavorCount);
+      flavorList->GetLength(&flavorCount);
       for (uint32_t j = 0; j < flavorCount; j++) {
-        nsCOMPtr<nsISupports> genericFlavor;
-        flavorList->GetElementAt(j, getter_AddRefs(genericFlavor));
-        nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
+        nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, j);
         if (!currentFlavor)
           continue;
         nsXPIDLCString flavorStr;
