@@ -217,7 +217,6 @@
 #include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/UndoManager.h"
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/CustomElementRegistry.h"
@@ -1711,7 +1710,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedEncoder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStateObjectCached)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUndoManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentTimeline)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingAnimationTracker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTemplateContentsOwner)
@@ -1795,7 +1793,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedEncoder)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mUndoManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentTimeline)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingAnimationTracker)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTemplateContentsOwner)
@@ -2953,22 +2950,6 @@ nsDocument::GetAllowPlugins(bool * aAllowPlugins)
   }
 
   return NS_OK;
-}
-
-already_AddRefed<UndoManager>
-nsDocument::GetUndoManager()
-{
-  Element* rootElement = GetRootElement();
-  if (!rootElement) {
-    return nullptr;
-  }
-
-  if (!mUndoManager) {
-    mUndoManager = new UndoManager(rootElement);
-  }
-
-  RefPtr<UndoManager> undoManager = mUndoManager;
-  return undoManager.forget();
 }
 
 bool
