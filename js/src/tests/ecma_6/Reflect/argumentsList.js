@@ -159,5 +159,7 @@ function testMany(...args) {
 }
 assertEq(Reflect.apply(testMany, "pass", args), "pass");
 assertEq(Reflect.construct(testMany, args) instanceof testMany, true);
+assertEq(Reflect.apply(new Proxy(testMany, {}), "pass", args), "pass");
+assertEq(Reflect.construct(new Proxy(testMany, {}), args) instanceof testMany, true);
 
 reportCompare(0, 0);

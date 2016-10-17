@@ -380,16 +380,13 @@ function RegExpGetComplexReplacement(result, matched, S, position,
           case 0:
             return ToString(replaceValue(matched, position, S));
          case 1:
-            return ToString(replaceValue(matched, captures[0], position, S));
+            return ToString(replaceValue(matched, SPREAD(captures, 1), position, S));
           case 2:
-            return ToString(replaceValue(matched, captures[0], captures[1],
-                                         position, S));
+            return ToString(replaceValue(matched, SPREAD(captures, 2), position, S));
           case 3:
-            return ToString(replaceValue(matched, captures[0], captures[1],
-                                         captures[2], position, S));
+            return ToString(replaceValue(matched, SPREAD(captures, 3), position, S));
           case 4:
-            return  ToString(replaceValue(matched, captures[0], captures[1],
-                                          captures[2], captures[3], position, S));
+            return ToString(replaceValue(matched, SPREAD(captures, 4), position, S));
           default:
             // Steps 14.j.ii-v.
             _DefineDataProperty(captures, capturesLength++, position);
