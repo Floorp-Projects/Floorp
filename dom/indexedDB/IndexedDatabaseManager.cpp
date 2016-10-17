@@ -6,6 +6,7 @@
 
 #include "IndexedDatabaseManager.h"
 
+#include "chrome/common/ipc_channel.h" // for IPC::Channel::kMaximumMessageSize
 #include "nsIConsoleService.h"
 #include "nsIDiskSpaceWatcher.h"
 #include "nsIDOMWindow.h"
@@ -138,12 +139,16 @@ const uint32_t kDeleteTimeoutMs = 1000;
 // Anything larger is compressed and stored outside the database.
 const int32_t kDefaultDataThresholdBytes = 1024 * 1024; // 1MB
 
+// The maximal size of a serialized object to be transfered through IPC.
+const int32_t kDefaultMaxSerializedMsgSize = IPC::Channel::kMaximumMessageSize;
+
 #define IDB_PREF_BRANCH_ROOT "dom.indexedDB."
 
 const char kTestingPref[] = IDB_PREF_BRANCH_ROOT "testing";
 const char kPrefExperimental[] = IDB_PREF_BRANCH_ROOT "experimental";
 const char kPrefFileHandle[] = "dom.fileHandle.enabled";
 const char kDataThresholdPref[] = IDB_PREF_BRANCH_ROOT "dataThreshold";
+const char kPrefMaxSerilizedMsgSize[] = IDB_PREF_BRANCH_ROOT "maxSerializedMsgSize";
 
 #define IDB_PREF_LOGGING_BRANCH_ROOT IDB_PREF_BRANCH_ROOT "logging."
 
@@ -166,6 +171,7 @@ Atomic<bool> gTestingMode(false);
 Atomic<bool> gExperimentalFeaturesEnabled(false);
 Atomic<bool> gFileHandleEnabled(false);
 Atomic<int32_t> gDataThresholdBytes(0);
+Atomic<int32_t> gMaxSerializedMsgSize(0);
 
 class DeleteFilesRunnable final
   : public nsIRunnable
@@ -267,6 +273,18 @@ DataThresholdPrefChangedCallback(const char* aPrefName, void* aClosure)
   }
 
   gDataThresholdBytes = dataThresholdBytes;
+}
+
+void
+MaxSerializedMsgSizePrefChangeCallback(const char* aPrefName, void* aClosure)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPrefName, kPrefMaxSerilizedMsgSize));
+  MOZ_ASSERT(!aClosure);
+
+  gMaxSerializedMsgSize =
+    Preferences::GetInt(aPrefName, kDefaultMaxSerializedMsgSize);
+  MOZ_ASSERT(gMaxSerializedMsgSize > 0);
 }
 
 } // namespace
@@ -409,6 +427,9 @@ IndexedDatabaseManager::Init()
   Preferences::RegisterCallbackAndCall(DataThresholdPrefChangedCallback,
                                        kDataThresholdPref);
 
+  Preferences::RegisterCallbackAndCall(MaxSerializedMsgSizePrefChangeCallback,
+                                       kPrefMaxSerilizedMsgSize);
+
 #ifdef ENABLE_INTL_API
   const nsAdoptingCString& acceptLang =
     Preferences::GetLocalizedCString("intl.accept_languages");
@@ -471,6 +492,9 @@ IndexedDatabaseManager::Destroy()
 
   Preferences::UnregisterCallback(DataThresholdPrefChangedCallback,
                                   kDataThresholdPref);
+
+  Preferences::UnregisterCallback(MaxSerializedMsgSizePrefChangeCallback,
+                                  kPrefMaxSerilizedMsgSize);
 
   delete this;
 }
@@ -781,6 +805,17 @@ IndexedDatabaseManager::DataThreshold()
              "DataThreshold() called before indexedDB has been initialized!");
 
   return gDataThresholdBytes;
+}
+
+// static
+uint32_t
+IndexedDatabaseManager::MaxSerializedMsgSize()
+{
+  MOZ_ASSERT(gDBManager,
+             "MaxSerializedMsgSize() called before indexedDB has been initialized!");
+  MOZ_ASSERT(gMaxSerializedMsgSize > 0);
+
+  return gMaxSerializedMsgSize;
 }
 
 void
