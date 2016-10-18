@@ -651,12 +651,8 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
              * Zero arguments: the format string (if it exists) is the
              * entire message.
              */
-            if (efs->format) {
-                char* message = DuplicateString(cx, efs->format).release();
-                if (!message)
-                    return false;
-                reportp->initOwnedMessage(message);
-            }
+            if (efs->format)
+                reportp->initBorrowedMessage(efs->format);
         }
     }
     if (!reportp->message()) {
