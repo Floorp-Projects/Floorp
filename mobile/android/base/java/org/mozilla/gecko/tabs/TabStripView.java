@@ -58,7 +58,7 @@ public class TabStripView extends RecyclerView {
         layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         setLayoutManager(layoutManager);
 
-        // TODO add item animator.
+        setItemAnimator(new TabStripItemAnimator(ANIM_TIME_MS));
 
         // TODO add item decoration.
     }
@@ -148,7 +148,6 @@ public class TabStripView extends RecyclerView {
         // Make sure we didn't miss any resets after animations etc.
         child.setTranslationX(0);
         child.setTranslationY(0);
-        child.setAlpha(1);
     }
 
     @Override
