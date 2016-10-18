@@ -432,7 +432,9 @@ GetSupportedKeySystems()
       clearkey.mPersistentState = KeySystemFeatureSupport::Requestable;
       clearkey.mDistinctiveIdentifier = KeySystemFeatureSupport::Prohibited;
       clearkey.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
-      clearkey.mSessionTypes.AppendElement(MediaKeySessionType::Persistent_license);
+      if (MediaPrefs::ClearKeyPersistentLicenseEnabled()) {
+        clearkey.mSessionTypes.AppendElement(MediaKeySessionType::Persistent_license);
+      }
 #if defined(XP_WIN)
       // Clearkey CDM uses WMF decoders on Windows.
       if (WMFDecoderModule::HasAAC()) {
