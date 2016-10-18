@@ -61,25 +61,6 @@ var MockServices = (function () {
       }, alertListener);
     },
 
-    showAppNotification: function(aImageUrl, aTitle, aText, aAlertListener, aDetails) {
-      var listener = aAlertListener || (activeAlertNotifications[aDetails.id] ? activeAlertNotifications[aDetails.id].listener : undefined);
-      activeAppNotifications[aDetails.id] = {
-        observer: listener,
-        title: aTitle,
-        text: aText,
-        manifestURL: aDetails.manifestURL,
-        imageURL: aImageUrl,
-        lang: aDetails.lang || undefined,
-        id: aDetails.id || undefined,
-        dbId: aDetails.dbId || undefined,
-        dir: aDetails.dir || undefined,
-        tag: aDetails.tag || undefined,
-        timestamp: aDetails.timestamp || undefined,
-        data: aDetails.data || undefined
-      };
-      this.showAlertNotification(aImageUrl, aTitle, aText, true, "", listener, aDetails.id);
-    },
-
     closeAlert: function(name) {
       var alertNotification = activeAlertNotifications[name];
       if (alertNotification) {
@@ -97,8 +78,7 @@ var MockServices = (function () {
 
     QueryInterface: function(aIID) {
       if (SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
-          SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService) ||
-          SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAppNotificationService)) {
+          SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService)) {
         return this;
       }
       throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
