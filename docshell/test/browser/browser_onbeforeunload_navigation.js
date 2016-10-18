@@ -116,15 +116,20 @@ function runNextTest() {
     }
     // Run the same tests again, but this time let the navigation happen:
     stayingOnPage = false;
+    // Remove onbeforeunload handler, or this load will trigger the dialog...
+    contentWindow.onbeforeunload = null;
     currentTest = 0;
   }
 
 
   if (!stayingOnPage) {
+    // Right now we're on the data: page. Null contentWindow out to
+    // avoid CPOW errors when contentWindow is no longer the correct
+    // outer window proxy object.
+    contentWindow = null;
+
     onAfterPageLoad = runCurrentTest;
     loadExpected = TEST_PAGE;
-    // Remove onbeforeunload handler, or this load will trigger the dialog...
-    contentWindow.onbeforeunload = null;
     testTab.linkedBrowser.loadURI(TEST_PAGE);
   } else {
     runCurrentTest();
