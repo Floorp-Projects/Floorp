@@ -8465,7 +8465,7 @@ CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, Value* vp)
   Value valType = JS_GetReservedSlot(obj, SLOT_DATAFINALIZER_VALTYPE);
   MOZ_ASSERT(valType.isObject());
 
-  JSObject* objCTypes = CType::GetGlobalCTypes(cx, &valType.toObject());
+  RootedObject objCTypes(cx, CType::GetGlobalCTypes(cx, &valType.toObject()));
   if (!objCTypes)
     return false;
 
