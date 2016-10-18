@@ -217,7 +217,7 @@ private:
   // storing a series of updates.
   nsTArray<mozilla::safebrowsing::TableUpdate*> mTableUpdates;
 
-  int32_t mUpdateWait;
+  uint32_t mUpdateWaitSec;
 
   // Entries that cannot be completed. We expect them to die at
   // the next update
