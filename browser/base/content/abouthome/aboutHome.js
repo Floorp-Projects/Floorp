@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* import-globals-from ../contentSearchUI.js */
+
 // The process of adding a new default snippet involves:
 //   * add a new entity to aboutHome.dtd
 //   * add a <span/> for it in aboutHome.xhtml

@@ -3,9 +3,5 @@
 module.exports = {
   "extends": [
     "../../../../../testing/mochitest/browser.eslintrc.js"
-  ],
-
-  "rules": {
-    "no-undef": 2
-  }
+  ]
 };
