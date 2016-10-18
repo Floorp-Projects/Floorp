@@ -7716,7 +7716,7 @@ GCRuntime::invokeInterruptCallback(JSContext* cx)
 {
     JS::AutoAssertOnGC nogc(cx);
     JS::AutoAssertOnBarrier nobarrier(cx);
-    JS::AutoSuppressGCAnalysis suppress;
+    JS::AutoSuppressGCAnalysis suppress(cx);
     for (JS::GCInterruptCallback callback : interruptCallbacks) {
         (*callback)(cx);
     }
