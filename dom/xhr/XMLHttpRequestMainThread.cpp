@@ -801,7 +801,6 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
         return;
       }
     }
-    JS::ExposeObjectToActiveJS(mResultArrayBuffer);
     aResponse.setObject(*mResultArrayBuffer);
     return;
   }
@@ -856,7 +855,6 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
         mResultJSON.setNull();
       }
     }
-    JS::ExposeValueToActiveJS(mResultJSON);
     aResponse.set(mResultJSON);
     return;
   }

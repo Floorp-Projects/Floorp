@@ -122,9 +122,6 @@ MediaEncryptedEvent::GetInitData(JSContext* cx,
     }
     mRawInitData.Clear();
   }
-  if (mInitData) {
-    JS::ExposeObjectToActiveJS(mInitData);
-  }
   aData.set(mInitData);
 }
 

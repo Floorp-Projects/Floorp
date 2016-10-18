@@ -60,7 +60,6 @@ public:
   {
     NS_ASSERTION(mDone || mResult.isUndefined(),
                  "Result should be undefined when pending");
-    JS::ExposeValueToActiveJS(mResult);
     aRetval.set(mResult);
   }
 

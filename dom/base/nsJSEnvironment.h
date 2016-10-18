@@ -63,7 +63,6 @@ public:
 
   virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) override;
   virtual JSObject* GetWindowProxy() override;
-  virtual JSObject* GetWindowProxyPreserveColor() override;
 
   static void LoadStart();
   static void LoadEnd();

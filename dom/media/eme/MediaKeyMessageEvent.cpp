@@ -120,7 +120,6 @@ MediaKeyMessageEvent::GetMessage(JSContext* cx,
     }
     mRawMessage.Clear();
   }
-  JS::ExposeObjectToActiveJS(mMessage);
   aMessage.set(mMessage);
 }
 
