@@ -14,8 +14,7 @@ ServoDeclarationBlock::FromStyleAttribute(const nsAString& aString)
 {
   NS_ConvertUTF16toUTF8 value(aString);
   RefPtr<RawServoDeclarationBlock> raw = Servo_ParseStyleAttribute(
-      reinterpret_cast<const uint8_t*>(value.get()),
-      value.Length(), nullptr).Consume();
+      reinterpret_cast<const uint8_t*>(value.get()), value.Length()).Consume();
   RefPtr<ServoDeclarationBlock> decl = new ServoDeclarationBlock(raw.forget());
   return decl.forget();
 }

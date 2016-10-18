@@ -313,7 +313,7 @@ Gecko_StoreStyleDifference(RawGeckoNodeBorrowed aNode, nsChangeHint aChangeHintT
 #endif
 }
 
-RawServoDeclarationBlock*
+RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
 {
   const nsAttrValue* attr = aElement->GetParsedAttr(nsGkAtoms::style);
@@ -331,7 +331,8 @@ Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
     NS_WARNING("stylo: requesting a Gecko declaration block?");
     return nullptr;
   }
-  return decl->AsServo()->RefRaw();
+  return reinterpret_cast<const RawServoDeclarationBlockStrong*>
+    (&decl->AsServo()->RefRaw());
 }
 
 void
