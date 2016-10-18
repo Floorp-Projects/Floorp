@@ -116,7 +116,7 @@ public:
   /*
    * Helper to test whether a node is a link
    */
-  static bool IsLink(mozilla::dom::Element* aElement);
+  static bool IsLink(const mozilla::dom::Element* aElement);
 
   /**
    * Returns true if the given aElement matches aSelector.

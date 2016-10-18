@@ -223,7 +223,7 @@ MarkChildrenAsDirtyForServo(nsIContent* aContent)
 }
 
 /* static */ nsIFrame*
-ServoRestyleManager::FrameForPseudoElement(nsIContent* aContent,
+ServoRestyleManager::FrameForPseudoElement(const nsIContent* aContent,
                                            nsIAtom* aPseudoTagOrNull)
 {
   MOZ_ASSERT_IF(aPseudoTagOrNull, aContent->IsElement());

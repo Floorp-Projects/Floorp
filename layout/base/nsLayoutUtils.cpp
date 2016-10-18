@@ -1477,7 +1477,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
 
 /*static*/ nsIFrame*
 nsLayoutUtils::GetBeforeFrameForContent(nsIFrame* aFrame,
-                                        nsIContent* aContent)
+                                        const nsIContent* aContent)
 {
   // We need to call GetGenConPseudos() on the first continuation/ib-split.
   // Find it, for symmetry with GetAfterFrameForContent.
@@ -1516,7 +1516,7 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
 
 /*static*/ nsIFrame*
 nsLayoutUtils::GetAfterFrameForContent(nsIFrame* aFrame,
-                                       nsIContent* aContent)
+                                       const nsIContent* aContent)
 {
   // We need to call GetGenConPseudos() on the first continuation,
   // but callers are likely to pass the last.
