@@ -332,7 +332,7 @@ Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
     return nullptr;
   }
   return reinterpret_cast<const RawServoDeclarationBlockStrong*>
-    (&decl->AsServo()->RefRaw());
+    (decl->AsServo()->RefRaw());
 }
 
 void
