@@ -113,11 +113,15 @@ def vcs_checkout(source_repo, dest, base_repo=None, revision=None, branch=None):
 
     hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
 
+    # Put the shared stores as a sibling of the checkout directory. This ensures
+    # they are on the same cache.
+    share_base = os.path.normpath(os.path.join(os.path.dirname(dest), b'hg-shared'))
+
     args = [
         b'/usr/bin/hg',
         b'--config', b'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
         b'robustcheckout',
-        b'--sharebase', b'/home/worker/hg-shared',
+        b'--sharebase', share_base,
         b'--purge',
     ]
 
@@ -262,8 +266,18 @@ def main(args):
                 raise
 
         # And that it is owned by the appropriate user/group.
-        os.chown('/home/worker/hg-shared', uid, gid)
         os.chown(os.path.dirname(checkout), uid, gid)
+
+        # And ensure the shared store path (derived from the checkout path)
+        # exists and has proper permissions.
+        share_path = os.path.join(os.path.dirname(checkout), 'hg-shared')
+        try:
+            os.makedirs(share_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        os.chown(share_path, uid, gid)
 
     prepare_checkout_dir(args.vcs_checkout)
     prepare_checkout_dir(args.tools_checkout)

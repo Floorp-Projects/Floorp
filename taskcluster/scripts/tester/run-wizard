@@ -93,10 +93,14 @@ def clone():
         print('revision is not specified for checkout')
         return 1
 
+    # Put the shared stores as a sibling of the checkout directory. This ensures
+    # they are on the same cache.
+    share_base = os.path.normpath(os.path.join(os.path.dirname(dest), b'hg-shared'))
+
     # TODO Bug 1301382 - pin hg.mozilla.org fingerprint.
     call([
         b'/usr/bin/hg', b'robustcheckout',
-        b'--sharebase', b'/home/worker/hg-shared',
+        b'--sharebase', share_base
         b'--purge',
         b'--upstream', b'https://hg.mozilla.org/mozilla-unified',
         revision_flag, revision,

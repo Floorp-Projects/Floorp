@@ -34,7 +34,6 @@ ADD topsrcdir/taskcluster/scripts/tester/test-ubuntu.sh /home/worker/bin/test-li
 # This will create a host mounted filesystem when the cache is stripped
 # on Try. This cancels out some of the performance losses of aufs. See
 # bug 1291940.
-VOLUME /home/worker/hg-shared
 VOLUME /home/worker/checkouts
 VOLUME /home/worker/workspace
 
