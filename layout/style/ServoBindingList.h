@@ -66,8 +66,7 @@ SERVO_BINDING_FUNC(Servo_RestyleWithAddedDeclaration,
 
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
-                   const uint8_t* bytes, uint32_t length,
-                   nsHTMLCSSStyleSheet* cache)
+                   const uint8_t* bytes, uint32_t length)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddRef, void,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
@@ -75,12 +74,6 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Equals, bool,
                    RawServoDeclarationBlockBorrowed a,
                    RawServoDeclarationBlockBorrowed b)
-SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetCache, nsHTMLCSSStyleSheet*,
-                   RawServoDeclarationBlockBorrowed declarations)
-SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetImmutable, void,
-                   RawServoDeclarationBlockBorrowed declarations)
-SERVO_BINDING_FUNC(Servo_DeclarationBlock_ClearCachePointer, void,
-                   RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SerializeOneValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsString* buffer)
