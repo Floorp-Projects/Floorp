@@ -418,14 +418,18 @@
     }
 
     function recvDead(msg) {
-      try {
-        msg.objects.thing.value;
-        ok(false, "Should have been a dead CPOW");
-      } catch(e if /dead CPOW/.test(String(e))) {
-        ok(true, "Got the expected dead CPOW");
-        ok(e.stack, "The exception has a stack");
-      }
-      msg.target.messageManager.sendAsyncMessage("cpows:dead_done");
+      // Need to do this in a separate turn of the event loop.
+      setTimeout(() => {
+        msg.objects.gcTrigger();
+        try {
+          msg.objects.thing.value;
+          ok(false, "Should have been a dead CPOW");
+        } catch(e if /dead CPOW/.test(String(e))) {
+          ok(true, "Got the expected dead CPOW");
+          ok(e.stack, "The exception has a stack");
+        }
+        msg.target.messageManager.sendAsyncMessage("cpows:dead_done");
+      }, 0);
     }
 
     function run_tests(type) {
