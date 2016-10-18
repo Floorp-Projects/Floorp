@@ -88,11 +88,11 @@ add_task(function* () {
     let plugin = content.document.getElementsByTagName("embed")[1];
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     Assert.ok(objLoadingContent.activated, "Test 1d, Plugin should be activated");
-  });
 
-  let promise = waitForEvent(gTestBrowser.contentWindow, "hashchange", null);
-  gTestBrowser.contentWindow.location += "#anchorNavigation";
-  yield promise;
+    let promise = ContentTaskUtils.waitForEvent(content, "hashchange");
+    content.location += "#anchorNavigation";
+    yield promise;
+  });
 });
 
 add_task(function* () {

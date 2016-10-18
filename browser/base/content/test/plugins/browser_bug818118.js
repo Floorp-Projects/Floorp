@@ -33,6 +33,8 @@ add_task(function* () {
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "plugin should be click to play");
   ok(!pluginInfo.activated, "plugin should not be activated");
 
-  let unknown = gTestBrowser.contentDocument.getElementById("unknown");
-  ok(unknown, "should have unknown plugin in page");
+  yield ContentTask.spawn(gTestBrowser, null, () => {
+    let unknown = content.document.getElementById("unknown");
+    ok(unknown, "should have unknown plugin in page");
+  });
 });
