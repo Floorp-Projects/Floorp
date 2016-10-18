@@ -570,6 +570,21 @@ class Value
     }
 
   public:
+    /*** JIT-only interfaces to interact with and create raw Values ***/
+#if defined(JS_NUNBOX32)
+    PayloadType toNunboxPayload() const {
+        return data.s.payload.i32;
+    }
+
+    JSValueTag toNunboxTag() const {
+        return data.s.tag;
+    }
+#elif defined(JS_PUNBOX64)
+    const void* bitsAsPunboxPointer() const {
+        return reinterpret_cast<void*>(data.asBits);
+    }
+#endif
+
     /*** Value type queries ***/
 
     /*
@@ -795,6 +810,11 @@ class Value
         MOZ_ASSERT((ptrBits & 0x7) == 0);
         return reinterpret_cast<js::gc::Cell*>(ptrBits);
 #endif
+    }
+
+    js::gc::Cell* toMarkablePointer() const {
+        MOZ_ASSERT(isMarkable());
+        return toGCThing();
     }
 
     GCCellPtr toGCCellPtr() const {
