@@ -907,6 +907,11 @@ public:
     return true;
   }
 
+  void HandleVideoSuspendTimeout() override
+  {
+    // Do nothing since no decoding is going on.
+  }
+
 private:
   bool mSentPlaybackEndedEvent = false;
 };
