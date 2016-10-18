@@ -693,7 +693,7 @@ TimerThread::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef)
   (timer->GetTracedTask()).SetTLSTraceInfo();
 #endif
 
-  nsIEventTarget* target = timer->mEventTarget;
+  nsCOMPtr<nsIEventTarget> target = timer->mEventTarget;
   event->SetTimer(timer.forget());
 
   nsresult rv;
