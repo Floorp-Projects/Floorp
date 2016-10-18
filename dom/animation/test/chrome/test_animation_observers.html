@@ -18,10 +18,6 @@
   background-color: yellow;
   line-height: 16px;
 }
-.init::before {
-  content: "";
-  animation: anim 100s;
-}
 </style>
 <div id=container><div id=target></div></div>
 <script>
@@ -35,10 +31,6 @@ var gObserver = new MutationObserver(function(newRecords) {
   gRecordPromiseResolvers = [];
   resolvers.forEach(fn => fn());
 });
-// Get the pseudo element target.
-div.classList.add("init");
-var pseudoTarget = document.getAnimations()[0].effect.target;
-div.classList.remove("init");
 
 // Asynchronous testing framework based on layout/style/test/animation_utils.js.
 
@@ -1176,65 +1168,6 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   childA.remove();
   childB.remove();
   extraStyle.remove();
-});
-
-addAsyncAnimTest("change_duration_and_currenttime",
-                 { observe: div, subtree: true }, function*() {
-  var anim = pseudoTarget.animate({ opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
-
-  yield waitForFrame();
-  assert_records([{ added: [anim], changed: [], removed: [] }],
-                 "records after animation is added");
-
-  anim.effect.timing.duration = 100 * MS_PER_SEC;
-  yield waitForFrame();
-  assert_records([{ added: [], changed: [anim], removed: [] }],
-                 "records after duration is changed");
-
-  anim.effect.timing.duration = 100 * MS_PER_SEC;
-  yield waitForFrame();
-  assert_records([], "records after assigning same value");
-
-  anim.currentTime = anim.effect.timing.duration * 2;
-  anim.finish();
-  yield waitForFrame();
-  assert_records([{ added: [], changed: [], removed: [anim] }],
-                 "records after animation end");
-
-  anim.effect.timing.duration = anim.effect.timing.duration * 3;
-  yield waitForFrame();
-  assert_records([{ added: [anim], changed: [], removed: [] }],
-                 "records after animation restarted");
-
-  anim.effect.timing.duration = "auto";
-  yield waitForFrame();
-  assert_records([{ added: [], changed: [], removed: [anim] }],
-                 "records after duration set \"auto\"");
-
-  anim.effect.timing.duration = "auto";
-  yield waitForFrame();
-  assert_records([], "records after assigning same value \"auto\"");
-
-  anim.cancel();
-  yield waitForFrame();
-});
-
-addAsyncAnimTest("exclude_animations_targeting_pseudo_elements",
-                 { observe: div, subtree: false }, function*() {
-  var anim = div.animate({ opacity: [ 0, 1 ] },
-                         { duration: 100 * MS_PER_SEC });
-  var pAnim = pseudoTarget.animate({ opacity: [ 0, 1 ] },
-                                   { duration: 100 * MS_PER_SEC });
-
-  yield waitForFrame();
-  assert_records([{ added: [anim], changed: [], removed: [] }],
-                 "records after animation is added");
-
-  anim.finish();
-  pAnim.finish();
-  yield waitForFrame();
-  assert_records([{ added: [], changed: [], removed: [anim] }],
-                 "records after animation is finished");
 });
 
 // Run the tests.
