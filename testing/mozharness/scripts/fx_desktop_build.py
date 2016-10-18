@@ -126,7 +126,10 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
 
         if self.try_message_has_flag('artifact'):
             self.info('Artifact build requested in try syntax.')
-            self._update_build_variant(rw_config)
+            variant = 'artifact'
+            if c.get('build_variant') in ['debug', 'cross-debug']:
+                variant = 'debug-artifact'
+            self._update_build_variant(rw_config, variant)
 
     # helpers
     def _update_build_variant(self, rw_config, variant='artifact'):
