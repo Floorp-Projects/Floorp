@@ -1006,7 +1006,7 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
     nsCString baseString;
     aDocument->GetDocumentURI()->GetSpec(baseString);
 
-    RefPtr<ServoDeclarationBlock> servoDeclarationBlock =
+    RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
       Servo_ParseProperty(
         reinterpret_cast<const uint8_t*>(name.get()), name.Length(),
         reinterpret_cast<const uint8_t*>(value.get()), value.Length(),

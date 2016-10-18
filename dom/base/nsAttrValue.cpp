@@ -463,7 +463,7 @@ nsAttrValue::SetTo(css::Declaration* aValue, const nsAString* aSerialized)
 }
 
 void
-nsAttrValue::SetTo(already_AddRefed<ServoDeclarationBlock> aValue,
+nsAttrValue::SetTo(already_AddRefed<RawServoDeclarationBlock> aValue,
                    const nsAString* aSerialized)
 {
   MiscContainer* cont = EnsureEmptyMiscContainer();
@@ -1773,7 +1773,7 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
 
   if (ownerDoc->GetStyleBackendType() == StyleBackendType::Servo) {
     NS_ConvertUTF16toUTF8 value(aString);
-    RefPtr<ServoDeclarationBlock> decl = Servo_ParseStyleAttribute(
+    RefPtr<RawServoDeclarationBlock> decl = Servo_ParseStyleAttribute(
         reinterpret_cast<const uint8_t*>(value.get()),
         value.Length(), sheet).Consume();
     MOZ_ASSERT(decl);
