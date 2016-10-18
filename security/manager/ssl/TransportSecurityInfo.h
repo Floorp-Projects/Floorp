@@ -62,6 +62,9 @@ public:
   nsresult GetPort(int32_t *aPort);
   nsresult SetPort(int32_t aPort);
 
+  const char* GetFirstPartyDomainRaw() const { return mFirstPartyDomain.get(); }
+  nsresult SetFirstPartyDomain(const nsACString& aFirstPartyDomain);
+
   PRErrorCode GetErrorCode() const;
   
   void GetErrorLogMessage(PRErrorCode errorCode,
@@ -100,6 +103,7 @@ private:
 
   int32_t mPort;
   nsXPIDLCString mHostName;
+  nsCString mFirstPartyDomain;
 
   /* SSL Status */
   RefPtr<nsSSLStatus> mSSLStatus;
