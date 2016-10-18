@@ -18,6 +18,7 @@
 #endif
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/MemoryReporting.h"
 #include "CSSVariableDeclarations.h"
 #include "nsCSSDataBlock.h"
@@ -82,14 +83,16 @@ private:
 // be copied before it can be modified, which is taken care of by
 // |EnsureMutable|.
 
-class Declaration final : public nsIStyleRule {
+class Declaration final : public DeclarationBlock
+                        , public nsIStyleRule
+{
 public:
   /**
    * Construct an |Declaration| that is in an invalid state (null
    * |mData|) and cannot be used until its |CompressFrom| method or
    * |InitializeEmpty| method is called.
    */
-  Declaration();
+  Declaration() : DeclarationBlock(StyleBackendType::Gecko) {}
 
   Declaration(const Declaration& aCopy);
 
@@ -277,29 +280,9 @@ public:
   }
 
   /**
-   * Return whether |this| may be modified.
-   */
-  bool IsMutable() const {
-    return !mImmutable;
-  }
-
-  /**
    * Copy |this|, if necessary to ensure that it can be modified.
    */
   already_AddRefed<Declaration> EnsureMutable();
-
-  /**
-   * Crash if |this| cannot be modified.
-   */
-  void AssertMutable() const {
-    MOZ_ASSERT(IsMutable(), "someone forgot to call EnsureMutable");
-  }
-
-  /**
-   * Mark this declaration as unmodifiable.  It's 'const' so it can
-   * be called from ToString.
-   */
-  void SetImmutable() const { mImmutable = true; }
 
   /**
    * Clear the data, in preparation for its replacement with entirely
@@ -313,37 +296,6 @@ public:
     mImportantVariables = nullptr;
     mOrder.Clear();
     mVariableOrder.Clear();
-  }
-
-  void SetOwningRule(Rule* aRule) {
-    MOZ_ASSERT(!mContainer.mOwningRule || !aRule,
-               "should never overwrite one rule with another");
-    mContainer.mOwningRule = aRule;
-  }
-
-  Rule* GetOwningRule() const {
-    if (mContainer.mRaw & 0x1) {
-      return nullptr;
-    }
-    return mContainer.mOwningRule;
-  }
-
-  void SetHTMLCSSStyleSheet(nsHTMLCSSStyleSheet* aHTMLCSSStyleSheet) {
-    MOZ_ASSERT(!mContainer.mHTMLCSSStyleSheet || !aHTMLCSSStyleSheet,
-               "should never overwrite one sheet with another");
-    mContainer.mHTMLCSSStyleSheet = aHTMLCSSStyleSheet;
-    if (aHTMLCSSStyleSheet) {
-      mContainer.mRaw |= uintptr_t(1);
-    }
-  }
-
-  nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() const {
-    if (!(mContainer.mRaw & 0x1)) {
-      return nullptr;
-    }
-    auto c = mContainer;
-    c.mRaw &= ~uintptr_t(1);
-    return c.mHTMLCSSStyleSheet;
   }
 
   ImportantStyleData* GetImportantStyleData() {
@@ -438,29 +390,8 @@ private:
   // may be null
   nsAutoPtr<CSSVariableDeclarations> mImportantVariables;
 
-  union {
-    // We only ever have one of these since we have an
-    // nsHTMLCSSStyleSheet only for style attributes, and style
-    // attributes never have an owning rule.
-
-    // It's an nsHTMLCSSStyleSheet if the low bit is set.
-
-    uintptr_t mRaw;
-
-    // The style rule that owns this declaration.  May be null.
-    Rule* mOwningRule;
-
-    // The nsHTMLCSSStyleSheet that is responsible for this declaration.
-    // Only non-null for style attributes.
-    nsHTMLCSSStyleSheet* mHTMLCSSStyleSheet;
-  } mContainer;
-
   friend class ImportantStyleData;
   ImportantStyleData mImportantStyleData;
-
-  // set when declaration put in the rule tree;
-  // also by ToString (hence the 'mutable').
-  mutable bool mImmutable;
 };
 
 inline ::mozilla::css::Declaration*
