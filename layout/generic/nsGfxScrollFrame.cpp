@@ -5773,6 +5773,15 @@ ScrollFrameHelper::GetScrolledRect() const
   // Expand / contract the result by up to half a layer pixel so that scrolling
   // to the right / bottom edge does not change the layer pixel alignment of
   // the scrolled contents.
+
+  if (result.x == 0 && result.y == 0 &&
+      result.width == mScrollPort.width &&
+      result.height == mScrollPort.height) {
+    // The edges that we would snap are already aligned with the scroll port,
+    // so we can skip all the work below.
+    return result;
+  }
+
   // For that, we first convert the scroll port and the scrolled rect to rects
   // relative to the reference frame, since that's the space where painting does
   // snapping.
