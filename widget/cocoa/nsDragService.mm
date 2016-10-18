@@ -5,6 +5,7 @@
 
 #include "mozilla/Logging.h"
 
+#include "nsArrayUtils.h"
 #include "nsDragService.h"
 #include "nsArrayUtils.h"
 #include "nsObjCExceptions.h"
@@ -43,7 +44,7 @@ extern bool gUserCancelledDrag;
 
 // This global makes the transferable array available to Cocoa's promised
 // file destination callback.
-nsISupportsArray *gDraggedTransferables = nullptr;
+nsIArray *gDraggedTransferables = nullptr;
 
 NSString* const kWildcardPboardType = @"MozillaWildcard";
 NSString* const kCorePboardType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
@@ -64,7 +65,7 @@ nsDragService::~nsDragService()
 {
 }
 
-static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
+static nsresult SetUpDragClipboard(nsIArray* aTransferableArray)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -72,17 +73,12 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
     return NS_ERROR_FAILURE;
 
   uint32_t count = 0;
-  aTransferableArray->Count(&count);
+  aTransferableArray->GetLength(&count);
 
   NSPasteboard* dragPBoard = [NSPasteboard pasteboardWithName:NSDragPboard];
 
   for (uint32_t j = 0; j < count; j++) {
-    nsCOMPtr<nsISupports> currentTransferableSupports;
-    aTransferableArray->GetElementAt(j, getter_AddRefs(currentTransferableSupports));
-    if (!currentTransferableSupports)
-      return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsITransferable> currentTransferable(do_QueryInterface(currentTransferableSupports));
+    nsCOMPtr<nsITransferable> currentTransferable = do_QueryElementAt(aTransferableArray, j);
     if (!currentTransferable)
       return NS_ERROR_FAILURE;
 
@@ -310,7 +306,7 @@ nsDragService::GetFilePath(NSPasteboardItem* item)
 // within NSView's 'mouseDown:' or 'mouseDragged:'. Luckily 'mouseDragged' is always on the
 // stack when InvokeDragSession gets called.
 nsresult
-nsDragService::InvokeDragSessionImpl(nsISupportsArray* aTransferableArray,
+nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
                                      nsIScriptableRegion* aDragRgn,
                                      uint32_t aActionType)
 {
@@ -399,25 +395,21 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
   // if this drag originated within Mozilla we should just use the cached data from
   // when the drag started if possible
   if (mDataItems) {
-    nsCOMPtr<nsISupports> currentTransferableSupports;
-    mDataItems->GetElementAt(aItemIndex, getter_AddRefs(currentTransferableSupports));
-    if (currentTransferableSupports) {
-      nsCOMPtr<nsITransferable> currentTransferable(do_QueryInterface(currentTransferableSupports));
-      if (currentTransferable) {
-        for (uint32_t i = 0; i < acceptableFlavorCount; i++) {
-          nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
-          if (!currentFlavor)
-            continue;
-          nsXPIDLCString flavorStr;
-          currentFlavor->ToString(getter_Copies(flavorStr));
+    nsCOMPtr<nsITransferable> currentTransferable = do_QueryElementAt(mDataItems, aItemIndex);
+    if (currentTransferable) {
+      for (uint32_t i = 0; i < acceptableFlavorCount; i++) {
+        nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
+        if (!currentFlavor)
+          continue;
+        nsXPIDLCString flavorStr;
+        currentFlavor->ToString(getter_Copies(flavorStr));
 
-          nsCOMPtr<nsISupports> dataSupports;
-          uint32_t dataSize = 0;
-          rv = currentTransferable->GetTransferData(flavorStr, getter_AddRefs(dataSupports), &dataSize);
-          if (NS_SUCCEEDED(rv)) {
-            aTransferable->SetTransferData(flavorStr, dataSupports, dataSize);
-            return NS_OK; // maybe try to fill in more types? Is there a point?
-          }
+        nsCOMPtr<nsISupports> dataSupports;
+        uint32_t dataSize = 0;
+        rv = currentTransferable->GetTransferData(flavorStr, getter_AddRefs(dataSupports), &dataSize);
+        if (NS_SUCCEEDED(rv)) {
+          aTransferable->SetTransferData(flavorStr, dataSupports, dataSize);
+          return NS_OK; // maybe try to fill in more types? Is there a point?
         }
       }
     }
@@ -583,14 +575,9 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
   // first see if we have data for this in our cached transferable
   if (mDataItems) {
     uint32_t dataItemsCount;
-    mDataItems->Count(&dataItemsCount);
+    mDataItems->GetLength(&dataItemsCount);
     for (unsigned int i = 0; i < dataItemsCount; i++) {
-      nsCOMPtr<nsISupports> currentTransferableSupports;
-      mDataItems->GetElementAt(i, getter_AddRefs(currentTransferableSupports));
-      if (!currentTransferableSupports)
-        continue;
-
-      nsCOMPtr<nsITransferable> currentTransferable(do_QueryInterface(currentTransferableSupports));
+      nsCOMPtr<nsITransferable> currentTransferable = do_QueryElementAt(mDataItems, i);
       if (!currentTransferable)
         continue;
 
@@ -654,7 +641,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems)
 
   // first check to see if we have a number of items cached
   if (mDataItems) {
-    mDataItems->Count(aNumItems);
+    mDataItems->GetLength(aNumItems);
     return NS_OK;
   }
 

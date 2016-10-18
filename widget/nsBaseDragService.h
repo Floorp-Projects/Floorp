@@ -75,7 +75,7 @@ protected:
    * in this process.  This is expected to ensure that StartDragSession() and
    * EndDragSession() get called if the platform drag is successfully invoked.
    */
-  virtual nsresult InvokeDragSessionImpl(nsISupportsArray* aTransferableArray,
+  virtual nsresult InvokeDragSessionImpl(nsIArray* aTransferableArray,
                                          nsIScriptableRegion* aDragRgn,
                                          uint32_t aActionType) = 0;
 

@@ -22,7 +22,7 @@ public:
   nsDragService();
 
   // nsBaseDragService
-  virtual nsresult InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
+  virtual nsresult InvokeDragSessionImpl(nsIArray* anArrayTransferables,
                                          nsIScriptableRegion* aRegion,
                                          uint32_t aActionType);
   // nsIDragService
@@ -47,7 +47,7 @@ private:
   NSString* GetTitleForURL(NSPasteboardItem* item);
   NSString* GetFilePath(NSPasteboardItem* item);
 
-  nsCOMPtr<nsISupportsArray> mDataItems; // only valid for a drag started within gecko
+  nsCOMPtr<nsIArray> mDataItems; // only valid for a drag started within gecko
   NSView* mNativeDragView;
   NSEvent* mNativeDragEvent;
 };
