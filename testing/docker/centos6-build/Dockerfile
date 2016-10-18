@@ -11,7 +11,6 @@ WORKDIR       /home/worker
 # bug 1291940.
 VOLUME /home/worker/workspace
 VOLUME /home/worker/tooltool-cache
-VOLUME /home/worker/hg-shared
 
 # install non-build specific dependencies in a single layer
 ADD           system-setup.sh   /tmp/system-setup.sh
