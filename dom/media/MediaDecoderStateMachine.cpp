@@ -447,6 +447,11 @@ public:
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
 
+  void HandleVideoSuspendTimeout() override
+  {
+    // Do nothing for we need to decode the 1st video frame to get the dimensions.
+  }
+
 private:
   // Notify FirstFrameLoaded if having decoded first frames and
   // transition to SEEKING if there is any pending seek, or DECODING otherwise.
