@@ -133,7 +133,7 @@ Gecko_MaybeCreateStyleChildrenIterator(RawGeckoNodeBorrowed aNode)
     return nullptr;
   }
 
-  Element* el = aNode->AsElement();
+  const Element* el = aNode->AsElement();
   return StyleChildrenIterator::IsNeeded(el) ? new StyleChildrenIterator(el)
                                              : nullptr;
 }
@@ -224,13 +224,13 @@ Gecko_GetNodeFlags(RawGeckoNodeBorrowed aNode)
 void
 Gecko_SetNodeFlags(RawGeckoNodeBorrowed aNode, uint32_t aFlags)
 {
-  aNode->SetFlags(aFlags);
+  const_cast<nsINode*>(aNode)->SetFlags(aFlags);
 }
 
 void
 Gecko_UnsetNodeFlags(RawGeckoNodeBorrowed aNode, uint32_t aFlags)
 {
-  aNode->UnsetFlags(aFlags);
+  const_cast<nsINode*>(aNode)->UnsetFlags(aFlags);
 }
 
 nsStyleContext*
@@ -279,7 +279,7 @@ Gecko_StoreStyleDifference(RawGeckoNodeBorrowed aNode, nsChangeHint aChangeHintT
   MOZ_ASSERT(aNode->IsDirtyForServo(),
              "Change hint stored in a not-dirty node");
 
-  Element* aElement = aNode->AsElement();
+  const Element* aElement = aNode->AsElement();
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
   if (!primaryFrame) {
     // If there's no primary frame, that means that either this content is
