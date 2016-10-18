@@ -79,7 +79,14 @@ add_task(function* ()
 <div style="height: 200%; border: 1px solid black;"></div>\
 </body></html>'},
     {elem: 'r', expected: expectScrollNone, testwindow: true, middlemousepastepref: true},
-    {elem: 's', expected: expectScrollNone, testwindow: true, middlemousepastepref: true}
+    {elem: 's', expected: expectScrollNone, testwindow: true, middlemousepastepref: true},
+    {dataUri: 'data:text/html,<html><head><meta charset="utf-8">\
+<style>\
+body > div {scroll-behavior: smooth;width: 300px;height: 300px;overflow: scroll;}\
+body > div > div {width: 1000px;height: 1000px;}\
+</style>\
+</head><body><div id="t"><div></div></div></body></html>'},
+    {elem: 't', expected: expectScrollBoth},
   ];
 
   for (let test of allTests) {
