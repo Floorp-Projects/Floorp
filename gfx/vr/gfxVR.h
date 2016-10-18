@@ -79,9 +79,14 @@ enum class VRDisplayCapabilityFlags : uint16_t {
    */
   Cap_StageParameters = 1 << 7,
   /**
+   * Cap_MountDetection is set if the VRDisplay is capable of sensing when the
+   * user is wearing the device.
+   */
+  Cap_MountDetection = 1 << 8,
+  /**
    * Cap_All used for validity checking during IPC serialization
    */
-  Cap_All = (1 << 8) - 1
+  Cap_All = (1 << 9) - 1
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(VRDisplayCapabilityFlags)
@@ -137,6 +142,7 @@ struct VRDisplayInfo
   const Point3D& GetEyeTranslation(uint32_t whichEye) const { return mEyeTranslation[whichEye]; }
   const VRFieldOfView& GetEyeFOV(uint32_t whichEye) const { return mEyeFOV[whichEye]; }
   bool GetIsConnected() const { return mIsConnected; }
+  bool GetIsMounted() const { return mIsMounted; }
   bool GetIsPresenting() const { return mIsPresenting; }
   const Size& GetStageSize() const { return mStageSize; }
   const Matrix4x4& GetSittingToStandingTransform() const { return mSittingToStandingTransform; }
@@ -155,6 +161,7 @@ struct VRDisplayInfo
   Point3D mEyeTranslation[VRDisplayInfo::NumEyes];
   IntSize mEyeResolution;
   bool mIsConnected;
+  bool mIsMounted;
   bool mIsPresenting;
   Size mStageSize;
   Matrix4x4 mSittingToStandingTransform;
@@ -166,6 +173,7 @@ struct VRDisplayInfo
            mCapabilityFlags == other.mCapabilityFlags &&
            mEyeResolution == other.mEyeResolution &&
            mIsConnected == other.mIsConnected &&
+           mIsMounted == other.mIsMounted &&
            mIsPresenting == other.mIsPresenting &&
            mEyeFOV[0] == other.mEyeFOV[0] &&
            mEyeFOV[1] == other.mEyeFOV[1] &&

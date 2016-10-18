@@ -378,6 +378,8 @@ NS_EVENT_MESSAGE(eOrientationChange)
 #endif
 
 // WebVR events
+NS_EVENT_MESSAGE(eVRDisplayActivate)
+NS_EVENT_MESSAGE(eVRDisplayDeactivate)
 NS_EVENT_MESSAGE(eVRDisplayConnect)
 NS_EVENT_MESSAGE(eVRDisplayDisconnect)
 NS_EVENT_MESSAGE(eVRDisplayPresentChange)
