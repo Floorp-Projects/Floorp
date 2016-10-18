@@ -7,6 +7,7 @@
 #ifndef nsSupportsArray_h__
 #define nsSupportsArray_h__
 
+#include "nsIArray.h"
 #include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "mozilla/Attributes.h"
