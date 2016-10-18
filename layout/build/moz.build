@@ -16,11 +16,6 @@ UNIFIED_SOURCES += [
     'nsLayoutStatics.cpp',
 ]
 
-if CONFIG['MOZ_NFC']:
-    LOCAL_INCLUDES += [
-        '/dom/nfc'
-    ]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [

@@ -192,7 +192,6 @@ BrowserElementProxy.prototype = {
   reload: defineNoReturnMethod('reload'),
   stop: defineNoReturnMethod('stop'),
   zoom: defineNoReturnMethod('zoom'),
-  setNFCFocus: defineNoReturnMethod('setNFCFocus'),
   findAll: defineNoReturnMethod('findAll'),
   findNext: defineNoReturnMethod('findNext'),
   clearMatch: defineNoReturnMethod('clearMatch'),

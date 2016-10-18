@@ -1970,19 +1970,6 @@ Navigator::HasWifiManagerSupport(JSContext* /* unused */,
   return permission == nsIPermissionManager::ALLOW_ACTION;
 }
 
-#ifdef MOZ_NFC
-/* static */
-bool
-Navigator::HasNFCSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindowInner> win = GetWindowFromGlobal(aGlobal);
-
-  // Do not support NFC if NFC content helper does not exist.
-  nsCOMPtr<nsISupports> contentHelper = do_GetService("@mozilla.org/nfc/content-helper;1");
-  return !!contentHelper;
-}
-#endif // MOZ_NFC
-
 /* static */
 bool
 Navigator::HasUserMediaSupport(JSContext* /* unused */,
