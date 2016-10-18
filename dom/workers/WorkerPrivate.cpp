@@ -722,7 +722,7 @@ public:
                               EmptyString(),
                               EmptyString(),
                               nullptr,
-                              nullptr);
+                              Sequence<OwningNonNull<MessagePort>>());
       event->SetPorts(Move(ports));
       domEvent = do_QueryObject(event);
     }
@@ -814,7 +814,7 @@ private:
                             EmptyString(),
                             EmptyString(),
                             nullptr,
-                            nullptr);
+                            Sequence<OwningNonNull<MessagePort>>());
     event->SetTrusted(true);
 
     nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
