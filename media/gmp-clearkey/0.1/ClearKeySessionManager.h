@@ -73,14 +73,10 @@ public:
 
   virtual void DecryptingComplete() override;
 
-  void PersistentSessionDataLoaded(GMPErr aStatus,
-                                   uint32_t aPromiseId,
-                                   const std::string& aSessionId,
-                                   const uint8_t* aKeyData,
-                                   uint32_t aKeyDataSize);
-
 private:
   ~ClearKeySessionManager();
+
+  std::string GetNewSessionId();
 
   void DoDecrypt(GMPBuffer* aBuffer, GMPEncryptedBufferMetadata* aMetadata);
   void Shutdown();
