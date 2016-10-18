@@ -204,7 +204,7 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
   for (var updateUrl in this.needsUpdate_) {
     // If we haven't already kicked off updates for this updateUrl, set a
     // non-repeating timer for it. The timer delay will be reset either on
-    // updateSuccess to this.updateinterval, or backed off on downloadError.
+    // updateSuccess to this.updateInterval, or backed off on downloadError.
     // Don't set the updateChecker unless at least one table has updates
     // enabled.
     if (this.updatesNeeded_(updateUrl) && !this.updateCheckers_[updateUrl]) {
@@ -492,12 +492,15 @@ PROT_ListManager.prototype.makeUpdateRequestForEntry_ = function(updateUrl,
  *        wait before requesting again.
  */
 PROT_ListManager.prototype.updateSuccess_ = function(tableList, updateUrl,
-                                                     waitForUpdate) {
+                                                     waitForUpdateSec) {
   log("update success for " + tableList + " from " + updateUrl + ": " +
-      waitForUpdate + "\n");
+      waitForUpdateSec + "\n");
+
+  // The time unit below are all milliseconds if not specified.
+
   var delay = 0;
-  if (waitForUpdate) {
-    delay = parseInt(waitForUpdate, 10) * 1000;
+  if (waitForUpdateSec) {
+    delay = parseInt(waitForUpdateSec, 10) * 1000;
   }
   // As long as the delay is something sane (5 min to 1 day), update
   // our delay time for requesting updates. We always use a non-repeating
@@ -556,7 +559,7 @@ PROT_ListManager.prototype.updateSuccess_ = function(tableList, updateUrl,
 PROT_ListManager.prototype.updateError_ = function(table, updateUrl, result) {
   log("update error for " + table + " from " + updateUrl + ": " + result + "\n");
   // There was some trouble applying the updates. Don't try again for at least
-  // updateInterval seconds.
+  // updateInterval milliseconds.
   this.updateCheckers_[updateUrl] =
     new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
                 this.updateInterval, false);
