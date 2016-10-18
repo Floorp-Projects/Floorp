@@ -308,29 +308,6 @@ nsSupportsArray::Clear(void)
 }
 
 NS_IMETHODIMP
-nsSupportsArray::Compact(void)
-{
-  if ((mArraySize != mCount) && (kAutoArraySize < mArraySize)) {
-    nsISupports** oldArray = mArray;
-    if (mCount <= kAutoArraySize) {
-      mArray = mAutoArray;
-      mArraySize = kAutoArraySize;
-    } else {
-      mArray = new nsISupports*[mCount];
-      if (!mArray) {
-        mArray = oldArray;
-        return NS_OK;
-      }
-      mArraySize = mCount;
-    }
-
-    ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
-    delete[] oldArray;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSupportsArray::Enumerate(nsIEnumerator** aResult)
 {
   nsSupportsArrayEnumerator* e = new nsSupportsArrayEnumerator(this);
