@@ -263,7 +263,7 @@ public:
    * number of output frames will be exactly equal. */
   uint32_t input_needed_for_output(uint32_t output_frame_count)
   {
-    return (uint32_t)ceilf((output_frame_count - samples_to_frames(resampling_out_buffer.length()))
+    return (uint32_t)roundf((output_frame_count - samples_to_frames(resampling_out_buffer.length()))
                           * resampling_ratio);
 
   }
