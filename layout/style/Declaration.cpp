@@ -58,14 +58,9 @@ ImportantStyleData::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-Declaration::Declaration()
-  : mImmutable(false)
-{
-  mContainer.mRaw = uintptr_t(0);
-}
-
 Declaration::Declaration(const Declaration& aCopy)
-  : mOrder(aCopy.mOrder),
+  : DeclarationBlock(aCopy),
+    mOrder(aCopy.mOrder),
     mVariableOrder(aCopy.mVariableOrder),
     mData(aCopy.mData ? aCopy.mData->Clone() : nullptr),
     mImportantData(aCopy.mImportantData ?
@@ -75,10 +70,8 @@ Declaration::Declaration(const Declaration& aCopy)
         nullptr),
     mImportantVariables(aCopy.mImportantVariables ?
         new CSSVariableDeclarations(*aCopy.mImportantVariables) :
-        nullptr),
-    mImmutable(false)
+        nullptr)
 {
-  mContainer.mRaw = uintptr_t(0);
 }
 
 Declaration::~Declaration()

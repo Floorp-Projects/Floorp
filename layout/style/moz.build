@@ -86,6 +86,7 @@ EXPORTS.mozilla += [
     'CSSVariableDeclarations.h',
     'CSSVariableResolver.h',
     'CSSVariableValues.h',
+    'DeclarationBlock.h',
     'HandleRefPtr.h',
     'IncrementalClearCOMRuleArray.h',
     'LayerAnimationInfo.h',
