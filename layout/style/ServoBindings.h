@@ -176,7 +176,7 @@ RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed 
 // faster) sibling traversal.
 StyleChildrenIteratorOwnedOrNull Gecko_MaybeCreateStyleChildrenIterator(RawGeckoNodeBorrowed node);
 void Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned it);
-RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowed it);
+RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut it);
 
 // Selector Matching.
 uint8_t Gecko_ElementState(RawGeckoElementBorrowed element);
