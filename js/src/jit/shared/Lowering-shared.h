@@ -92,6 +92,7 @@ class LIRGeneratorShared : public MDefinitionVisitor
     inline LUse useFixed(MDefinition* mir, FloatRegister reg);
     inline LUse useFixed(MDefinition* mir, AnyRegister reg);
     inline LUse useFixedAtStart(MDefinition* mir, Register reg);
+    inline LUse useFixedAtStart(MDefinition* mir, AnyRegister reg);
     inline LAllocation useOrConstant(MDefinition* mir);
     inline LAllocation useOrConstantAtStart(MDefinition* mir);
     // "Any" is architecture dependent, and will include registers and stack
