@@ -92,10 +92,12 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
     return nullptr;
 
   css::Declaration* declaration;
-  if (mIsSMILOverride)
+  if (mIsSMILOverride) {
     declaration = mElement->GetSMILOverrideStyleDeclaration();
-  else
-    declaration = mElement->GetInlineStyleDeclaration();
+  } else {
+    DeclarationBlock* decl = mElement->GetInlineStyleDeclaration();
+    declaration = decl && decl->IsGecko() ? decl->AsGecko() : nullptr;
+  }
 
   // Notify observers that our style="" attribute is going to change
   // unless:

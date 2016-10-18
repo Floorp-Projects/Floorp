@@ -29,6 +29,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
@@ -316,10 +317,21 @@ RawServoDeclarationBlock*
 Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
 {
   const nsAttrValue* attr = aElement->GetParsedAttr(nsGkAtoms::style);
-  if (!attr || attr->Type() != nsAttrValue::eServoCSSDeclaration) {
+  if (!attr || attr->Type() != nsAttrValue::eCSSDeclaration) {
     return nullptr;
   }
-  return attr->GetServoCSSDeclarationValue();
+  DeclarationBlock* decl = attr->GetCSSDeclarationValue();
+  if (!decl) {
+    return nullptr;
+  }
+  if (decl->IsGecko()) {
+    // XXX This can happen at least when script sets style attribute
+    //     since we haven't implemented Element.style for stylo. But
+    //     we may want to turn it into an assertion after that's done.
+    NS_WARNING("stylo: requesting a Gecko declaration block?");
+    return nullptr;
+  }
+  return decl->AsServo()->RefRaw();
 }
 
 void
