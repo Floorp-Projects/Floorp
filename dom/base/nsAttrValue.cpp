@@ -18,7 +18,7 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoBindingHelpers.h"
-#include "mozilla/css/Declaration.h"
+#include "mozilla/DeclarationBlockInlines.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
@@ -73,26 +73,16 @@ void
 MiscContainer::Cache()
 {
   // Not implemented for anything else yet.
-  MOZ_ASSERT(mType == nsAttrValue::eGeckoCSSDeclaration ||
-             mType == nsAttrValue::eServoCSSDeclaration);
+  if (mType != nsAttrValue::eCSSDeclaration) {
+    MOZ_ASSERT_UNREACHABLE("unexpected cached nsAttrValue type");
+    return;
+  }
+
   MOZ_ASSERT(IsRefCounted());
   MOZ_ASSERT(mValue.mRefCount > 0);
   MOZ_ASSERT(!mValue.mCached);
 
-  nsHTMLCSSStyleSheet* sheet;
-  switch (mType) {
-    case nsAttrValue::eGeckoCSSDeclaration:
-      sheet = mValue.mGeckoCSSDeclaration->GetHTMLCSSStyleSheet();
-      break;
-    case nsAttrValue::eServoCSSDeclaration:
-      sheet = Servo_DeclarationBlock_GetCache(mValue.mServoCSSDeclaration);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected cached nsAttrValue type");
-      sheet = nullptr;
-      break;
-  }
-
+  nsHTMLCSSStyleSheet* sheet = mValue.mCSSDeclaration->GetHTMLCSSStyleSheet();
   if (!sheet) {
     return;
   }
@@ -107,25 +97,17 @@ MiscContainer::Cache()
   mValue.mCached = 1;
 
   // This has to be immutable once it goes into the cache.
-  switch (mType) {
-    case nsAttrValue::eGeckoCSSDeclaration:
-      mValue.mGeckoCSSDeclaration->SetImmutable();
-      break;
-    case nsAttrValue::eServoCSSDeclaration:
-      Servo_DeclarationBlock_SetImmutable(mValue.mServoCSSDeclaration);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected cached nsAttrValue type");
-      break;
-  }
+  mValue.mCSSDeclaration->SetImmutable();
 }
 
 void
 MiscContainer::Evict()
 {
   // Not implemented for anything else yet.
-  MOZ_ASSERT(mType == nsAttrValue::eGeckoCSSDeclaration ||
-             mType == nsAttrValue::eServoCSSDeclaration);
+  if (mType != nsAttrValue::eCSSDeclaration) {
+    MOZ_ASSERT_UNREACHABLE("unexpected cached nsAttrValue type");
+    return;
+  }
   MOZ_ASSERT(IsRefCounted());
   MOZ_ASSERT(mValue.mRefCount == 0);
 
@@ -133,19 +115,7 @@ MiscContainer::Evict()
     return;
   }
 
-  nsHTMLCSSStyleSheet* sheet;
-  switch (mType) {
-    case nsAttrValue::eGeckoCSSDeclaration:
-      sheet = mValue.mGeckoCSSDeclaration->GetHTMLCSSStyleSheet();
-      break;
-    case nsAttrValue::eServoCSSDeclaration:
-      sheet = Servo_DeclarationBlock_GetCache(mValue.mServoCSSDeclaration);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected cached nsAttrValue type");
-      sheet = nullptr;
-      break;
-  }
+  nsHTMLCSSStyleSheet* sheet = mValue.mCSSDeclaration->GetHTMLCSSStyleSheet();
   MOZ_ASSERT(sheet);
 
   nsString str;
@@ -181,10 +151,11 @@ nsAttrValue::nsAttrValue(nsIAtom* aValue)
   SetTo(aValue);
 }
 
-nsAttrValue::nsAttrValue(css::Declaration* aValue, const nsAString* aSerialized)
+nsAttrValue::nsAttrValue(already_AddRefed<DeclarationBlock> aValue,
+                         const nsAString* aSerialized)
     : mBits(0)
 {
-  SetTo(aValue, aSerialized);
+  SetTo(Move(aValue), aSerialized);
 }
 
 nsAttrValue::nsAttrValue(const nsIntMargin& aValue)
@@ -343,8 +314,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mValue.mColor = otherCont->mValue.mColor;
       break;
     }
-    case eGeckoCSSDeclaration:
-    case eServoCSSDeclaration:
+    case eCSSDeclaration:
     {
       MOZ_CRASH("These should be refcounted!");
     }
@@ -451,25 +421,13 @@ nsAttrValue::SetTo(double aValue, const nsAString* aSerialized)
 }
 
 void
-nsAttrValue::SetTo(css::Declaration* aValue, const nsAString* aSerialized)
-{
-  MiscContainer* cont = EnsureEmptyMiscContainer();
-  MOZ_ASSERT(cont->mValue.mRefCount == 0);
-  NS_ADDREF(cont->mValue.mGeckoCSSDeclaration = aValue);
-  cont->mType = eGeckoCSSDeclaration;
-  NS_ADDREF(cont);
-  SetMiscAtomOrString(aSerialized);
-  MOZ_ASSERT(cont->mValue.mRefCount == 1);
-}
-
-void
-nsAttrValue::SetTo(already_AddRefed<RawServoDeclarationBlock> aValue,
+nsAttrValue::SetTo(already_AddRefed<DeclarationBlock> aValue,
                    const nsAString* aSerialized)
 {
   MiscContainer* cont = EnsureEmptyMiscContainer();
   MOZ_ASSERT(cont->mValue.mRefCount == 0);
-  cont->mValue.mServoCSSDeclaration = aValue.take();
-  cont->mType = eServoCSSDeclaration;
+  cont->mValue.mCSSDeclaration = aValue.take();
+  cont->mType = eCSSDeclaration;
   NS_ADDREF(cont);
   SetMiscAtomOrString(aSerialized);
   MOZ_ASSERT(cont->mValue.mRefCount == 1);
@@ -682,17 +640,15 @@ nsAttrValue::ToString(nsAString& aResult) const
 
       break;
     }
-    case eGeckoCSSDeclaration:
+    case eCSSDeclaration:
     {
-      // XXXheycam Once we support CSSOM access to them, we should
-      // probably serialize eServoCSSDeclarations like this too.
-      // For now, we will return the string from the MiscContainer
-      // at the top of this function.
       aResult.Truncate();
       MiscContainer *container = GetMiscContainer();
-      css::Declaration *decl = container->mValue.mGeckoCSSDeclaration;
-      if (decl) {
-        decl->ToString(aResult);
+      DeclarationBlock* decl = container->mValue.mCSSDeclaration;
+      // XXXheycam Once we support CSSOM access to them, we should
+      // probably serialize ServoDeclarationBlock like this too.
+      if (decl && decl->IsGecko()) {
+        decl->AsGecko()->ToString(aResult);
       }
       const_cast<nsAttrValue*>(this)->SetMiscAtomOrString(&aResult);
 
@@ -935,13 +891,9 @@ nsAttrValue::HashValue() const
     {
       return cont->mValue.mColor;
     }
-    case eGeckoCSSDeclaration:
+    case eCSSDeclaration:
     {
-      return NS_PTR_TO_INT32(cont->mValue.mGeckoCSSDeclaration);
-    }
-    case eServoCSSDeclaration:
-    {
-      return NS_PTR_TO_INT32(cont->mValue.mServoCSSDeclaration);
+      return NS_PTR_TO_INT32(cont->mValue.mCSSDeclaration);
     }
     // Intentionally identical, so that loading the image does not change the
     // hash code.
@@ -1048,10 +1000,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
       }
       break;
     }
-    case eGeckoCSSDeclaration:
+    case eCSSDeclaration:
     {
-      return thisCont->mValue.mGeckoCSSDeclaration ==
-               otherCont->mValue.mGeckoCSSDeclaration;
+      return thisCont->mValue.mCSSDeclaration ==
+               otherCont->mValue.mCSSDeclaration;
     }
     case eURL:
     {
@@ -1080,11 +1032,6 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eIntMarginValue:
     {
       return thisCont->mValue.mIntMargin == otherCont->mValue.mIntMargin;
-    }
-    case eServoCSSDeclaration:
-    {
-      return thisCont->mValue.mServoCSSDeclaration ==
-               otherCont->mValue.mServoCSSDeclaration;
     }
     default:
     {
@@ -1771,26 +1718,20 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
     }
   }
 
+  RefPtr<DeclarationBlock> decl;
   if (ownerDoc->GetStyleBackendType() == StyleBackendType::Servo) {
-    NS_ConvertUTF16toUTF8 value(aString);
-    RefPtr<RawServoDeclarationBlock> decl = Servo_ParseStyleAttribute(
-        reinterpret_cast<const uint8_t*>(value.get()),
-        value.Length(), sheet).Consume();
-    MOZ_ASSERT(decl);
-    SetTo(decl.forget(), &aString);
+    decl = ServoDeclarationBlock::FromStyleAttribute(aString);
   } else {
     css::Loader* cssLoader = ownerDoc->CSSLoader();
     nsCSSParser cssParser(cssLoader);
-
-    RefPtr<css::Declaration> declaration =
-      cssParser.ParseStyleAttribute(aString, docURI, baseURI,
-                                    aElement->NodePrincipal());
-    if (!declaration) {
-      return false;
-    }
-    declaration->SetHTMLCSSStyleSheet(sheet);
-    SetTo(declaration, &aString);
+    decl = cssParser.ParseStyleAttribute(aString, docURI, baseURI,
+                                         aElement->NodePrincipal());
   }
+  if (!decl) {
+    return false;
+  }
+  decl->SetHTMLCSSStyleSheet(sheet);
+  SetTo(decl.forget(), &aString);
 
   if (cachingAllowed) {
     MiscContainer* cont = GetMiscContainer();
@@ -1808,15 +1749,14 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
                "Trying to re-set atom or string!");
   if (aValue) {
     uint32_t len = aValue->Length();
-    // * We're allowing eGeckoCSSDeclaration and eServoCSSDeclaration
-    //   attributes to store empty strings as it can be beneficial to store
-    //   an empty style attribute as a parsed rule.
+    // * We're allowing eCSSDeclaration attributes to store empty
+    //   strings as it can be beneficial to store an empty style
+    //   attribute as a parsed rule.
     // * We're allowing enumerated values because sometimes the empty
     //   string corresponds to a particular enumerated value, especially
     //   for enumerated values that are not limited enumerated.
     // Add other types as needed.
-    NS_ASSERTION(len || Type() == eGeckoCSSDeclaration ||
-                 Type() == eServoCSSDeclaration || Type() == eEnum,
+    NS_ASSERTION(len || Type() == eCSSDeclaration || Type() == eEnum,
                  "Empty string?");
     MiscContainer* cont = GetMiscContainer();
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
@@ -1880,17 +1820,12 @@ nsAttrValue::ClearMiscContainer()
     }
     else {
       switch (cont->mType) {
-        case eGeckoCSSDeclaration:
-        case eServoCSSDeclaration:
+        case eCSSDeclaration:
         {
           MOZ_ASSERT(cont->mValue.mRefCount == 1);
           cont->Release();
           cont->Evict();
-          if (cont->mType == eGeckoCSSDeclaration) {
-            NS_RELEASE(cont->mValue.mGeckoCSSDeclaration);
-          } else {
-            Servo_DeclarationBlock_Release(cont->mValue.mServoCSSDeclaration);
-          }
+          NS_RELEASE(cont->mValue.mCSSDeclaration);
           break;
         }
         case eURL:
@@ -2020,16 +1955,12 @@ nsAttrValue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
         n += str ? str->SizeOfIncludingThisIfUnshared(aMallocSizeOf) : 0;
       }
 
-      if (Type() == eGeckoCSSDeclaration &&
-          container->mValue.mGeckoCSSDeclaration) {
-        // TODO: mGeckoCSSDeclaration might be owned by another object which
+      if (Type() == eCSSDeclaration && container->mValue.mCSSDeclaration) {
+        // TODO: mCSSDeclaration might be owned by another object which
         //       would make us count them twice, bug 677493.
-        //n += container->mGeckoCSSDeclaration->SizeOfIncludingThis(aMallocSizeOf);
-      } else if (Type() == eServoCSSDeclaration &&
-                 container->mValue.mServoCSSDeclaration) {
-        // Bug 1281964: As with eGeckoCSSDeclaration, but if we do measure we'll
-        // need a way to call the Servo heap_size_of function for the
-        // declaration block.
+        // Bug 1281964: For ServoDeclarationBlock if we do measure we'll
+        // need a way to call the Servo heap_size_of function.
+        //n += container->mCSSDeclaration->SizeOfIncludingThis(aMallocSizeOf);
       } else if (Type() == eAtomArray && container->mValue.mAtomArray) {
         // Don't measure each nsIAtom, they are measured separatly.
         n += container->mValue.mAtomArray->ShallowSizeOfIncludingThis(aMallocSizeOf);

@@ -18,9 +18,7 @@
 #include "mozilla/dom/Element.h"
 
 namespace mozilla {
-namespace css {
-class Declaration;
-} // namespace css
+class DeclarationBlock;
 } // namespace mozilla
 
 // IID for nsStyledElement interface
@@ -46,8 +44,8 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   // Element interface methods
-  virtual mozilla::css::Declaration* GetInlineStyleDeclaration() override;
-  virtual nsresult SetInlineStyleDeclaration(mozilla::css::Declaration* aDeclaration,
+  virtual mozilla::DeclarationBlock* GetInlineStyleDeclaration() override;
+  virtual nsresult SetInlineStyleDeclaration(mozilla::DeclarationBlock* aDeclaration,
                                              const nsAString* aSerialized,
                                              bool aNotify) override;
 

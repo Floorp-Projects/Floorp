@@ -35,11 +35,10 @@ class nsAString;
 class nsIDocument;
 class nsStyledElement;
 struct MiscContainer;
-struct RawServoDeclarationBlock;
 
 namespace mozilla {
+class DeclarationBlock;
 namespace css {
-class Declaration;
 struct URLValue;
 struct ImageValue;
 } // namespace css
@@ -98,8 +97,7 @@ public:
     ePercent =      0x0F, // 1111
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
-    eGeckoCSSDeclaration = 0x10,
-    eServoCSSDeclaration,
+    eCSSDeclaration = 0x10,
     eURL,
     eImage,
     eAtomArray,
@@ -125,7 +123,8 @@ public:
   nsAttrValue(const nsAttrValue& aOther);
   explicit nsAttrValue(const nsAString& aValue);
   explicit nsAttrValue(nsIAtom* aValue);
-  nsAttrValue(mozilla::css::Declaration* aValue, const nsAString* aSerialized);
+  nsAttrValue(already_AddRefed<mozilla::DeclarationBlock> aValue,
+              const nsAString* aSerialized);
   explicit nsAttrValue(const nsIntMargin& aValue);
   ~nsAttrValue();
 
@@ -150,8 +149,7 @@ public:
   void SetTo(int16_t aInt);
   void SetTo(int32_t aInt, const nsAString* aSerialized);
   void SetTo(double aValue, const nsAString* aSerialized);
-  void SetTo(mozilla::css::Declaration* aValue, const nsAString* aSerialized);
-  void SetTo(already_AddRefed<RawServoDeclarationBlock> aDeclarationBlock,
+  void SetTo(already_AddRefed<mozilla::DeclarationBlock> aValue,
              const nsAString* aSerialized);
   void SetTo(mozilla::css::URLValue* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
@@ -203,8 +201,7 @@ public:
   inline int16_t GetEnumValue() const;
   inline float GetPercentValue() const;
   inline AtomArray* GetAtomArrayValue() const;
-  inline mozilla::css::Declaration* GetGeckoCSSDeclarationValue() const;
-  inline RawServoDeclarationBlock* GetServoCSSDeclarationValue() const;
+  inline mozilla::DeclarationBlock* GetCSSDeclarationValue() const;
   inline mozilla::css::URLValue* GetURLValue() const;
   inline mozilla::css::ImageValue* GetImageValue() const;
   inline double GetDoubleValue() const;
