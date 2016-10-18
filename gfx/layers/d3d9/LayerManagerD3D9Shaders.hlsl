@@ -18,6 +18,7 @@ sampler s2DMask;
 
 float fLayerOpacity;
 float4 fLayerColor;
+row_major float3x3 mYuvColorMatrix : register(ps, c1);
 
 struct VS_INPUT {
   float4 vPosition : POSITION;
@@ -139,18 +140,36 @@ float4 RGBShader(const VS_OUTPUT aVertex) : COLOR
   return result * fLayerOpacity;
 }
 
+/* From Rec601:
+[R]   [1.1643835616438356,  0.0,                 1.5960267857142858]      [ Y -  16]
+[G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708]    x [Cb - 128]
+[B]   [1.1643835616438356,  2.017232142857143,   8.862867620416422e-17]   [Cr - 128]
+
+For [0,1] instead of [0,255], and to 5 places:
+[R]   [1.16438,  0.00000,  1.59603]   [ Y - 0.06275]
+[G] = [1.16438, -0.39176, -0.81297] x [Cb - 0.50196]
+[B]   [1.16438,  2.01723,  0.00000]   [Cr - 0.50196]
+
+From Rec709:
+[R]   [1.1643835616438356,  4.2781193979771426e-17, 1.7927410714285714]     [ Y -  16]
+[G] = [1.1643835616438358, -0.21324861427372963,   -0.532909328559444]    x [Cb - 128]
+[B]   [1.1643835616438356,  2.1124017857142854,     0.0]                    [Cr - 128]
+
+For [0,1] instead of [0,255], and to 5 places:
+[R]   [1.16438,  0.00000,  1.79274]   [ Y - 0.06275]
+[G] = [1.16438, -0.21325, -0.53291] x [Cb - 0.50196]
+[B]   [1.16438,  2.11240,  0.00000]   [Cr - 0.50196]
+*/
 float4 YCbCrShader(const VS_OUTPUT aVertex) : COLOR
 {
-  float4 yuv;
+  float3 yuv;
   float4 color;
 
-  yuv.r = tex2D(s2DCr, aVertex.vTexCoords).a - 0.5;
-  yuv.g = tex2D(s2DY, aVertex.vTexCoords).a - 0.0625;
-  yuv.b = tex2D(s2DCb, aVertex.vTexCoords).a - 0.5;
+  yuv.x = tex2D(s2DY, aVertex.vTexCoords).a  - 0.06275;
+  yuv.y = tex2D(s2DCb, aVertex.vTexCoords).a - 0.50196;
+  yuv.z = tex2D(s2DCr, aVertex.vTexCoords).a - 0.50196;
 
-  color.r = yuv.g * 1.164 + yuv.r * 1.596;
-  color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;
-  color.b = yuv.g * 1.164 + yuv.b * 2.018;
+  color.rgb = mul(mYuvColorMatrix, yuv);
   color.a = 1.0f;
 
   return color * fLayerOpacity;
@@ -198,28 +217,16 @@ float4 RGBShaderMask(const VS_OUTPUT_MASK aVertex) : COLOR
   return result * fLayerOpacity * mask;
 }
 
-/* From Rec601:
-[R]   [1.1643835616438356,  0.0,                 1.5960267857142858]      [ Y -  16]
-[G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708]    x [Cb - 128]
-[B]   [1.1643835616438356,  2.017232142857143,   8.862867620416422e-17]   [Cr - 128]
-
-For [0,1] instead of [0,255], and to 5 places:
-[R]   [1.16438,  0.00000,  1.59603]   [ Y - 0.06275]
-[G] = [1.16438, -0.39176, -0.81297] x [Cb - 0.50196]
-[B]   [1.16438,  2.01723,  0.00000]   [Cr - 0.50196]
-*/
 float4 YCbCrShaderMask(const VS_OUTPUT_MASK aVertex) : COLOR
 {
-  float4 yuv;
+  float3 yuv;
   float4 color;
 
-  yuv.r = tex2D(s2DCr, aVertex.vTexCoords).a - 0.50196;
-  yuv.g = tex2D(s2DY, aVertex.vTexCoords).a  - 0.06275;
-  yuv.b = tex2D(s2DCb, aVertex.vTexCoords).a - 0.50196;
+  yuv.x = tex2D(s2DY, aVertex.vTexCoords).a  - 0.06275;
+  yuv.y = tex2D(s2DCb, aVertex.vTexCoords).a - 0.50196;
+  yuv.z = tex2D(s2DCr, aVertex.vTexCoords).a - 0.50196;
 
-  color.r = yuv.g * 1.16438 + yuv.r * 1.59603;
-  color.g = yuv.g * 1.16438 - 0.81297 * yuv.r - 0.39176 * yuv.b;
-  color.b = yuv.g * 1.16438 + yuv.b * 2.01723;
+  color.rgb = mul((float3x3)mYuvColorMatrix, yuv);
   color.a = 1.0f;
 
   float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;

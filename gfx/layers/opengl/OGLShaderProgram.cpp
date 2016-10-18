@@ -7,6 +7,7 @@
 #include <sstream>                      // for ostringstream
 #include "gfxEnv.h"
 #include "gfxRect.h"                    // for gfxRect
+#include "gfxUtils.h"
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/layers/Compositor.h"  // for BlendOpIsMixBlendMode
 #include "nsAString.h"
@@ -58,6 +59,7 @@ AddUniforms(ProgramProfileOGL& aProfile)
         "uSSEdges",
         "uViewportSize",
         "uVisibleCenter",
+        "uYuvColorMatrix",
         nullptr
     };
 
@@ -375,6 +377,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     fs << "uniform sampler2D uYTexture;" << endl;
     fs << "uniform sampler2D uCbTexture;" << endl;
     fs << "uniform sampler2D uCrTexture;" << endl;
+    fs << "uniform mat3 uYuvColorMatrix;" << endl;
   } else if (aConfig.mFeatures & ENABLE_TEXTURE_NV12) {
     fs << "uniform " << sampler2D << " uYTexture;" << endl;
     fs << "uniform " << sampler2D << " uCbTexture;" << endl;
@@ -433,22 +436,11 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
         }
       }
 
-      /* From Rec601:
-[R]   [1.1643835616438356,  0.0,                 1.5960267857142858]      [ Y -  16]
-[G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708]    x [Cb - 128]
-[B]   [1.1643835616438356,  2.017232142857143,   8.862867620416422e-17]   [Cr - 128]
-
-For [0,1] instead of [0,255], and to 5 places:
-[R]   [1.16438,  0.00000,  1.59603]   [ Y - 0.06275]
-[G] = [1.16438, -0.39176, -0.81297] x [Cb - 0.50196]
-[B]   [1.16438,  2.01723,  0.00000]   [Cr - 0.50196]
-       */
-      fs << "  y = (y - 0.06275) * 1.16438;" << endl;
+      fs << "  y = y - 0.06275;" << endl;
       fs << "  cb = cb - 0.50196;" << endl;
       fs << "  cr = cr - 0.50196;" << endl;
-      fs << "  color.r = y + 1.59603*cr;" << endl;
-      fs << "  color.g = y - 0.39176*cb - 0.81297*cr;" << endl;
-      fs << "  color.b = y + 2.01723*cb;" << endl;
+      fs << "  vec3 yuv = vec3(y, cb, cr);" << endl;
+      fs << "  color.rgb = uYuvColorMatrix * yuv;" << endl;
       fs << "  color.a = 1.0;" << endl;
     } else if (aConfig.mFeatures & ENABLE_TEXTURE_COMPONENT_ALPHA) {
       if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
@@ -969,6 +961,13 @@ ShaderProgramOGL::SetBlurRadius(float aRX, float aRY)
     gaussianKernel[i] /= sum;
   }
   SetArrayUniform(KnownUniform::BlurGaussianKernel, GAUSSIAN_KERNEL_HALF_WIDTH, gaussianKernel);
+}
+
+void
+ShaderProgramOGL::SetYUVColorSpace(YUVColorSpace aYUVColorSpace)
+{
+  float* yuvToRgb = gfxUtils::Get3x3YuvColorMatrix(aYUVColorSpace);
+  SetMatrix3fvUniform(KnownUniform::YuvColorMatrix, yuvToRgb);
 }
 
 } // namespace layers
