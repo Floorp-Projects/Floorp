@@ -61,6 +61,12 @@ struct InterfaceIID<IAccessibleValue>
   static REFIID Value() { return IID_IAccessibleValue; }
 };
 
+template<>
+struct InterfaceIID<IAccessibleText>
+{
+  static REFIID Value() { return IID_IAccessibleText; }
+};
+
 /**
  * Get the COM proxy for this proxy accessible and QueryInterface it with the
  * correct IID
@@ -376,6 +382,217 @@ ProxyAccessible::MaxValue()
   }
 
   return maximumValue.dblVal;
+}
+
+static IA2TextBoundaryType
+GetIA2TextBoundary(AccessibleTextBoundary aGeckoBoundaryType)
+{
+  switch (aGeckoBoundaryType) {
+    case nsIAccessibleText::BOUNDARY_CHAR:
+      return IA2_TEXT_BOUNDARY_CHAR;
+    case nsIAccessibleText::BOUNDARY_WORD_START:
+      return IA2_TEXT_BOUNDARY_WORD;
+    case nsIAccessibleText::BOUNDARY_LINE_START:
+      return IA2_TEXT_BOUNDARY_LINE;
+    default:
+      MOZ_RELEASE_ASSERT(false);
+  }
+}
+
+bool
+ProxyAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
+                               nsString& aText) const
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return false;
+  }
+
+  BSTR result;
+  HRESULT hr = acc->get_text(static_cast<long>(aStartOffset),
+                             static_cast<long>(aEndOffset), &result);
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  _bstr_t resultWrap(result, false);
+  aText = (wchar_t*)result;
+
+  return true;
+}
+
+void
+ProxyAccessible::GetTextBeforeOffset(int32_t aOffset,
+                                    AccessibleTextBoundary aBoundaryType,
+                                    nsString& aText, int32_t* aStartOffset,
+                                    int32_t* aEndOffset)
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return;
+  }
+
+  BSTR result;
+  long start, end;
+  HRESULT hr = acc->get_textBeforeOffset(aOffset,
+                                         GetIA2TextBoundary(aBoundaryType),
+                                         &start, &end, &result);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  _bstr_t resultWrap(result, false);
+  *aStartOffset = start;
+  *aEndOffset = end;
+  aText = (wchar_t*)result;
+}
+
+void
+ProxyAccessible::GetTextAfterOffset(int32_t aOffset,
+                                    AccessibleTextBoundary aBoundaryType,
+                                    nsString& aText, int32_t* aStartOffset,
+                                    int32_t* aEndOffset)
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return;
+  }
+
+  BSTR result;
+  long start, end;
+  HRESULT hr = acc->get_textAfterOffset(aOffset,
+                                        GetIA2TextBoundary(aBoundaryType),
+                                        &start, &end, &result);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  _bstr_t resultWrap(result, false);
+  aText = (wchar_t*)result;
+  *aStartOffset = start;
+  *aEndOffset = end;
+}
+
+void
+ProxyAccessible::GetTextAtOffset(int32_t aOffset,
+                                    AccessibleTextBoundary aBoundaryType,
+                                    nsString& aText, int32_t* aStartOffset,
+                                    int32_t* aEndOffset)
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return;
+  }
+
+  BSTR result;
+  long start, end;
+  HRESULT hr = acc->get_textAtOffset(aOffset, GetIA2TextBoundary(aBoundaryType),
+                                     &start, &end, &result);
+  if (FAILED(hr)) {
+    return;
+  }
+
+  _bstr_t resultWrap(result, false);
+  aText = (wchar_t*)result;
+  *aStartOffset = start;
+  *aEndOffset = end;
+}
+
+bool
+ProxyAccessible::AddToSelection(int32_t aStartOffset, int32_t aEndOffset)
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return false;
+  }
+
+  return SUCCEEDED(acc->addSelection(static_cast<long>(aStartOffset),
+                                     static_cast<long>(aEndOffset)));
+}
+
+bool
+ProxyAccessible::RemoveFromSelection(int32_t aSelectionNum)
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return false;
+  }
+
+  return SUCCEEDED(acc->removeSelection(static_cast<long>(aSelectionNum)));
+}
+
+int32_t
+ProxyAccessible::CaretOffset()
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return -1;
+  }
+
+  long offset;
+  HRESULT hr = acc->get_caretOffset(&offset);
+  if (FAILED(hr)) {
+    return -1;
+  }
+
+  return static_cast<int32_t>(offset);
+}
+
+void
+ProxyAccessible::SetCaretOffset(int32_t aOffset)
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return;
+  }
+
+  acc->setCaretOffset(static_cast<long>(aOffset));
+}
+
+/**
+ * aScrollType should be one of the nsIAccessiblescrollType constants.
+ */
+void
+ProxyAccessible::ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
+                                   uint32_t aScrollType)
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return;
+  }
+
+  acc->scrollSubstringTo(static_cast<long>(aStartOffset),
+                         static_cast<long>(aEndOffset),
+                         static_cast<IA2ScrollType>(aScrollType));
+}
+
+/**
+ * aCoordinateType is one of the nsIAccessibleCoordinateType constants.
+ */
+void
+ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
+                                        uint32_t aCoordinateType, int32_t aX,
+                                        int32_t aY)
+{
+  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
+  if (!acc) {
+    return;
+  }
+
+  IA2CoordinateType coordType;
+  if (aCoordinateType == nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE) {
+    coordType = IA2_COORDTYPE_SCREEN_RELATIVE;
+  } else if (aCoordinateType == nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE) {
+    coordType = IA2_COORDTYPE_PARENT_RELATIVE;
+  } else {
+    MOZ_RELEASE_ASSERT(false, "unsupported coord type");
+  }
+
+  acc->scrollSubstringToPoint(static_cast<long>(aStartOffset),
+                              static_cast<long>(aEndOffset),
+                              coordType,
+                              static_cast<long>(aX),
+                              static_cast<long>(aY));
 }
 
 } // namespace a11y
