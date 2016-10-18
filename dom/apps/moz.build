@@ -17,10 +17,8 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'AppsServiceChild.jsm',
-    'MessageBroadcaster.jsm',
     'PermissionsInstaller.jsm',
     'PermissionsTable.jsm',
-    'UserCustomizations.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [

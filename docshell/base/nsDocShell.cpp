@@ -43,7 +43,6 @@
 #include "nsIDOMStorage.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIMozBrowserFrame.h"
 #include "nsCURILoader.h"
 #include "nsDocShellCID.h"
 #include "nsDOMCID.h"
@@ -1251,10 +1250,6 @@ nsDocShell::LoadURI(nsIURI* aURI,
   // firing, so we call IsNavigationAllowed rather than just IsPrintingOrPP.
   if (!IsNavigationAllowed(true, false)) {
     return NS_OK; // JS may not handle returning of an error code
-  }
-
-  if (DoAppRedirectIfNeeded(aURI, aLoadInfo, aFirstParty)) {
-    return NS_OK;
   }
 
   nsCOMPtr<nsIURI> referrer;
@@ -6729,32 +6724,6 @@ nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
   return ForceRefreshURI(aURI, aDelay, aMetaRefresh);
 }
 
-bool
-nsDocShell::DoAppRedirectIfNeeded(nsIURI* aURI,
-                                  nsIDocShellLoadInfo* aLoadInfo,
-                                  bool aFirstParty)
-{
-  uint32_t appId = nsIDocShell::GetAppId();
-
-  if (appId != nsIScriptSecurityManager::NO_APP_ID &&
-      appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    nsCOMPtr<nsIAppsService> appsService =
-      do_GetService(APPS_SERVICE_CONTRACTID);
-    NS_ASSERTION(appsService, "No AppsService available");
-    nsCOMPtr<nsIURI> redirect;
-    nsresult rv = appsService->GetRedirect(appId, aURI, getter_AddRefs(redirect));
-    if (NS_SUCCEEDED(rv) && redirect) {
-      rv = LoadURI(redirect, aLoadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
-                   aFirstParty);
-      if (NS_SUCCEEDED(rv)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
 NS_IMETHODIMP
 nsDocShell::ForceRefreshURI(nsIURI* aURI, int32_t aDelay, bool aMetaRefresh)
 {
@@ -7457,10 +7426,6 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
   aOldChannel->GetURI(getter_AddRefs(oldURI));
   aNewChannel->GetURI(getter_AddRefs(newURI));
   if (!oldURI || !newURI) {
-    return;
-  }
-
-  if (DoAppRedirectIfNeeded(newURI, nullptr, false)) {
     return;
   }
 
@@ -10806,35 +10771,6 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   } else {
     MOZ_ASSERT(aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
     "DoURILoad thinks this is a document and InternalLoad does not");
-  }
-
-
-  // For mozWidget, display a load error if we navigate to a page which is not
-  // claimed in |widgetPages|.
-  // When we go to display a load error for an invalid mozWidget page, we will
-  // try to load an about:neterror page, which is also an invalid mozWidget
-  // page. To avoid recursion, we skip this check if aURI's scheme is "about".
-
-  // The goal is to prevent leaking sensitive information of an invalid page of
-  // an app, so allowing about:blank would not be conflict to the goal.
-  bool isAbout = false;
-  rv = aURI->SchemeIs("about", &isAbout);
-  if (NS_SUCCEEDED(rv) && !isAbout &&
-      nsIDocShell::GetIsApp()) {
-    nsCOMPtr<Element> frameElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
-    if (frameElement) {
-      nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(frameElement);
-      // |GetReallyIsApp| indicates the browser frame is a valid app or widget.
-      // Here we prevent navigating to an app or widget which loses its validity
-      // by loading invalid page or other way.
-      if (browserFrame && !browserFrame->GetReallyIsApp()) {
-        nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-        if (serv) {
-            serv->NotifyObservers(GetDocument(), "invalid-widget", nullptr);
-        }
-        return NS_ERROR_MALFORMED_URI;
-      }
-    }
   }
 
   // open a channel for the url

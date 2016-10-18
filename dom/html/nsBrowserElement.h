@@ -34,7 +34,7 @@ class ErrorResult;
 class nsBrowserElement
 {
 public:
-  nsBrowserElement() : mOwnerIsWidget(false) {}
+  nsBrowserElement() {}
   virtual ~nsBrowserElement() {}
 
   void SetVisible(bool aVisible, ErrorResult& aRv);
@@ -136,8 +136,6 @@ protected:
 
 private:
   bool IsBrowserElementOrThrow(ErrorResult& aRv);
-  bool IsNotWidgetOrThrow(ErrorResult& aRv);
-  bool mOwnerIsWidget;
 };
 
 } // namespace mozilla

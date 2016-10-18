@@ -31,7 +31,6 @@
 #include "mozilla/HashFunctions.h"
 
 #include "nsIAppsService.h"
-#include "mozIApplication.h"
 
 using namespace mozilla;
 
