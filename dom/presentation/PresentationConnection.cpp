@@ -580,8 +580,7 @@ PresentationConnection::DispatchMessageEvent(JS::Handle<JS::Value> aData)
   messageEvent->InitMessageEvent(nullptr,
                                  NS_LITERAL_STRING("message"),
                                  false, false, aData, origin,
-                                 EmptyString(), nullptr,
-                                 Sequence<OwningNonNull<MessagePort>>());
+                                 EmptyString(), nullptr, nullptr);
   messageEvent->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
