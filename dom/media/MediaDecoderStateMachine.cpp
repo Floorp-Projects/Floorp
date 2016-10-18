@@ -535,6 +535,13 @@ public:
     return true;
   }
 
+  void HandleVideoSuspendTimeout() override
+  {
+    mMaster->mVideoDecodeSuspended = true;
+    mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
+    Reader()->SetVideoBlankDecode(true);
+  }
+
   void DumpDebugInfo() override
   {
     SDUMP("mIsPrerolling=%d", mIsPrerolling);
@@ -1128,6 +1135,14 @@ DecodingState::Enter()
   // Pending seek should've been handled by DECODING_FIRSTFRAME before
   // transitioning to DECODING.
   MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+
+  if (!mMaster->mIsVisible &&
+      !mMaster->mVideoDecodeSuspendTimer.IsScheduled() &&
+      !mMaster->mVideoDecodeSuspended) {
+    // If we are not visible and the timer is not schedule, it means the timer
+    // has timed out and we should suspend video decoding now if necessary.
+    HandleVideoSuspendTimeout();
+  }
 
   if (mMaster->CheckIfDecodeComplete()) {
     SetState<CompletedState>();
