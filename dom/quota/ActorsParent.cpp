@@ -1022,14 +1022,14 @@ class GetUsageOp final
 public:
   explicit GetUsageOp(const UsageRequestParams& aParams);
 
-  bool
+  MOZ_IS_CLASS_INIT bool
   Init(Quota* aQuota);
 
 private:
   ~GetUsageOp()
   { }
 
-  virtual nsresult
+  MOZ_IS_CLASS_INIT virtual nsresult
   DoInitOnMainThread() override;
 
   nsresult
