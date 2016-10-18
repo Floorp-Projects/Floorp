@@ -138,7 +138,7 @@ TEST(Array, main)
     int32_t   replaceResult[13] = {3, 0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
     CheckArray(array, 13, replaceResult, 9);
 
-    // test RemoveElementAt, RemoveElement RemoveLastElement
+    // test RemoveElementAt, RemoveElement
     array->RemoveElementAt(0);
     int32_t   removeResult[12] = {0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
     CheckArray(array, 12, removeResult, 9);
@@ -148,9 +148,6 @@ TEST(Array, main)
     array->RemoveElement(foo);
     int32_t   removeResult3[10] = {0, 1, 2, 4, 3, 5, 7, 8, 9, 3};
     CheckArray(array, 10, removeResult3, 9);
-    array->RemoveLastElement(foo);
-    int32_t   removeResult4[9] = {0, 1, 2, 4, 3, 5, 7, 8, 9};
-    CheckArray(array, 9, removeResult4, 9);
 
     foo = nullptr;
 
