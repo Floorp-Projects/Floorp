@@ -52,7 +52,4 @@ toolkit.jar:
    skin/classic/mozapps/plugins/contentPluginBlocked.png   (mozapps/plugins/contentPluginBlocked.png)
    skin/classic/mozapps/plugins/contentPluginClose.png     (mozapps/plugins/contentPluginClose.png)
    skin/classic/mozapps/plugins/contentPluginCrashed.png   (mozapps/plugins/contentPluginCrashed.png)
-   skin/classic/mozapps/plugins/contentPluginDisabled.png  (mozapps/plugins/contentPluginDisabled.png)
-   skin/classic/mozapps/plugins/contentPluginDownload.png  (mozapps/plugins/contentPluginDownload.png)
-   skin/classic/mozapps/plugins/contentPluginMissing.png   (mozapps/plugins/contentPluginMissing.png)
    skin/classic/mozapps/plugins/contentPluginStripe.png    (mozapps/plugins/contentPluginStripe.png)

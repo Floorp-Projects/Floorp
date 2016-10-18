@@ -98,8 +98,6 @@ add_task(function*() {
   pluginTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
   pluginBrowser = pluginTab.linkedBrowser;
 
-  condition = () => PopupNotifications.getNotification("click-to-play-plugins", pluginBrowser);
-  yield BrowserTestUtils.waitForCondition(condition, "part7: disabled plugins still show a notification");
   yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
     let testPlugin = content.document.getElementById("test");
     ok(testPlugin, "part7: should have a plugin element in the page");
