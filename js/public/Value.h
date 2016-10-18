@@ -377,36 +377,10 @@ DOUBLE_TO_JSVAL_IMPL(double d)
     return l;
 }
 
-static inline bool
-JSVAL_IS_INT32_IMPL(const jsval_layout& l)
-{
-    return l.s.tag == JSVAL_TAG_INT32;
-}
-
 static inline int32_t
 JSVAL_TO_INT32_IMPL(const jsval_layout& l)
 {
     return l.s.payload.i32;
-}
-
-static inline bool
-JSVAL_IS_NUMBER_IMPL(const jsval_layout& l)
-{
-    JSValueTag tag = l.s.tag;
-    MOZ_ASSERT(tag != JSVAL_TAG_CLEAR);
-    return (uint32_t)tag <= (uint32_t)JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET;
-}
-
-static inline bool
-JSVAL_IS_UNDEFINED_IMPL(const jsval_layout& l)
-{
-    return l.s.tag == JSVAL_TAG_UNDEFINED;
-}
-
-static inline bool
-JSVAL_IS_STRING_IMPL(const jsval_layout& l)
-{
-    return l.s.tag == JSVAL_TAG_STRING;
 }
 
 static inline jsval_layout
@@ -423,12 +397,6 @@ static inline JSString*
 JSVAL_TO_STRING_IMPL(const jsval_layout& l)
 {
     return l.s.payload.str;
-}
-
-static inline bool
-JSVAL_IS_SYMBOL_IMPL(const jsval_layout& l)
-{
-    return l.s.tag == JSVAL_TAG_SYMBOL;
 }
 
 static inline jsval_layout
@@ -448,12 +416,6 @@ JSVAL_TO_SYMBOL_IMPL(const jsval_layout& l)
 }
 
 static inline bool
-JSVAL_IS_BOOLEAN_IMPL(const jsval_layout& l)
-{
-    return l.s.tag == JSVAL_TAG_BOOLEAN;
-}
-
-static inline bool
 JSVAL_TO_BOOLEAN_IMPL(const jsval_layout& l)
 {
     return bool(l.s.payload.boo);
@@ -466,31 +428,6 @@ BOOLEAN_TO_JSVAL_IMPL(bool b)
     l.s.tag = JSVAL_TAG_BOOLEAN;
     l.s.payload.boo = uint32_t(b);
     return l;
-}
-
-static inline bool
-JSVAL_IS_MAGIC_IMPL(const jsval_layout& l)
-{
-    return l.s.tag == JSVAL_TAG_MAGIC;
-}
-
-static inline bool
-JSVAL_IS_OBJECT_IMPL(const jsval_layout& l)
-{
-    return l.s.tag == JSVAL_TAG_OBJECT;
-}
-
-static inline bool
-JSVAL_IS_PRIMITIVE_IMPL(const jsval_layout& l)
-{
-    return (uint32_t)l.s.tag < (uint32_t)JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET;
-}
-
-static inline bool
-JSVAL_IS_OBJECT_OR_NULL_IMPL(const jsval_layout& l)
-{
-    MOZ_ASSERT((uint32_t)l.s.tag <= (uint32_t)JSVAL_TAG_OBJECT);
-    return (uint32_t)l.s.tag >= (uint32_t)JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET;
 }
 
 static inline JSObject*
@@ -507,12 +444,6 @@ OBJECT_TO_JSVAL_IMPL(JSObject* obj)
     l.s.tag = JSVAL_TAG_OBJECT;
     l.s.payload.obj = obj;
     return l;
-}
-
-static inline bool
-JSVAL_IS_NULL_IMPL(const jsval_layout& l)
-{
-    return l.s.tag == JSVAL_TAG_NULL;
 }
 
 static inline jsval_layout
@@ -555,13 +486,6 @@ JSVAL_IS_PRIVATE_GCTHING_IMPL(const jsval_layout& l)
     return l.s.tag == JSVAL_TAG_PRIVATE_GCTHING;
 }
 
-static inline bool
-JSVAL_IS_GCTHING_IMPL(const jsval_layout& l)
-{
-    /* gcc sometimes generates signed < without explicit casts. */
-    return (uint32_t)l.s.tag >= (uint32_t)JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET;
-}
-
 static inline js::gc::Cell*
 JSVAL_TO_GCTHING_IMPL(const jsval_layout& l)
 {
@@ -580,18 +504,6 @@ JSVAL_TRACE_KIND_IMPL(const jsval_layout& l)
     if (MOZ_UNLIKELY(JSVAL_IS_PRIVATE_GCTHING_IMPL(l)))
         return (uint32_t)JS::GCThingTraceKind(JSVAL_TO_GCTHING_IMPL(l));
     return l.s.tag & 0x03;
-}
-
-static inline bool
-JSVAL_IS_SPECIFIC_INT32_IMPL(const jsval_layout& l, int32_t i32)
-{
-    return l.s.tag == JSVAL_TAG_INT32 && l.s.payload.i32 == i32;
-}
-
-static inline bool
-JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(const jsval_layout& l, bool b)
-{
-    return (l.s.tag == JSVAL_TAG_BOOLEAN) && (l.s.payload.boo == uint32_t(b));
 }
 
 static inline jsval_layout
@@ -644,34 +556,10 @@ DOUBLE_TO_JSVAL_IMPL(double d)
     return l;
 }
 
-static inline bool
-JSVAL_IS_INT32_IMPL(const jsval_layout& l)
-{
-    return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_INT32;
-}
-
 static inline int32_t
 JSVAL_TO_INT32_IMPL(const jsval_layout& l)
 {
     return (int32_t)l.asBits;
-}
-
-static inline bool
-JSVAL_IS_NUMBER_IMPL(const jsval_layout& l)
-{
-    return l.asBits < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET;
-}
-
-static inline bool
-JSVAL_IS_UNDEFINED_IMPL(const jsval_layout& l)
-{
-    return l.asBits == JSVAL_SHIFTED_TAG_UNDEFINED;
-}
-
-static inline bool
-JSVAL_IS_STRING_IMPL(const jsval_layout& l)
-{
-    return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_STRING;
 }
 
 static inline jsval_layout
@@ -689,12 +577,6 @@ static inline JSString*
 JSVAL_TO_STRING_IMPL(const jsval_layout& l)
 {
     return (JSString*)(l.asBits & JSVAL_PAYLOAD_MASK);
-}
-
-static inline bool
-JSVAL_IS_SYMBOL_IMPL(const jsval_layout& l)
-{
-    return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_SYMBOL;
 }
 
 static inline jsval_layout
@@ -715,12 +597,6 @@ JSVAL_TO_SYMBOL_IMPL(const jsval_layout& l)
 }
 
 static inline bool
-JSVAL_IS_BOOLEAN_IMPL(const jsval_layout& l)
-{
-    return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_BOOLEAN;
-}
-
-static inline bool
 JSVAL_TO_BOOLEAN_IMPL(const jsval_layout& l)
 {
     return (bool)(l.asBits & JSVAL_PAYLOAD_MASK);
@@ -732,32 +608,6 @@ BOOLEAN_TO_JSVAL_IMPL(bool b)
     jsval_layout l;
     l.asBits = ((uint64_t)(uint32_t)b) | JSVAL_SHIFTED_TAG_BOOLEAN;
     return l;
-}
-
-static inline bool
-JSVAL_IS_MAGIC_IMPL(const jsval_layout& l)
-{
-    return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_MAGIC;
-}
-
-static inline bool
-JSVAL_IS_PRIMITIVE_IMPL(const jsval_layout& l)
-{
-    return l.asBits < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET;
-}
-
-static inline bool
-JSVAL_IS_OBJECT_IMPL(const jsval_layout& l)
-{
-    MOZ_ASSERT((l.asBits >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT);
-    return l.asBits >= JSVAL_SHIFTED_TAG_OBJECT;
-}
-
-static inline bool
-JSVAL_IS_OBJECT_OR_NULL_IMPL(const jsval_layout& l)
-{
-    MOZ_ASSERT((l.asBits >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT);
-    return l.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET;
 }
 
 static inline JSObject*
@@ -780,21 +630,9 @@ OBJECT_TO_JSVAL_IMPL(JSObject* obj)
 }
 
 static inline bool
-JSVAL_IS_NULL_IMPL(const jsval_layout& l)
-{
-    return l.asBits == JSVAL_SHIFTED_TAG_NULL;
-}
-
-static inline bool
 JSVAL_IS_PRIVATE_GCTHING_IMPL(const jsval_layout& l)
 {
     return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_PRIVATE_GCTHING;
-}
-
-static inline bool
-JSVAL_IS_GCTHING_IMPL(const jsval_layout& l)
-{
-    return l.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET;
 }
 
 static inline js::gc::Cell*
@@ -855,18 +693,6 @@ PRIVATE_GCTHING_TO_JSVAL_IMPL(js::gc::Cell* cell)
     return l;
 }
 
-static inline bool
-JSVAL_IS_SPECIFIC_INT32_IMPL(const jsval_layout& l, int32_t i32)
-{
-    return l.asBits == (((uint64_t)(uint32_t)i32) | JSVAL_SHIFTED_TAG_INT32);
-}
-
-static inline bool
-JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(const jsval_layout& l, bool b)
-{
-    return l.asBits == (((uint64_t)(uint32_t)b) | JSVAL_SHIFTED_TAG_BOOLEAN);
-}
-
 static inline jsval_layout
 MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
 {
@@ -899,12 +725,6 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
 }
 
 #endif  /* JS_PUNBOX64 */
-
-static inline bool
-JSVAL_IS_TRACEABLE_IMPL(const jsval_layout& l)
-{
-    return JSVAL_IS_GCTHING_IMPL(l) && !JSVAL_IS_NULL_IMPL(l);
-}
 
 static inline jsval_layout JSVAL_TO_IMPL(const JS::Value& v);
 static inline JS_VALUE_CONSTEXPR JS::Value IMPL_TO_JSVAL(const jsval_layout& l);
@@ -1088,14 +908,39 @@ class Value
         data.asBits = tmp;
     }
 
+  private:
+    JSValueTag toTag() const {
+#if defined(JS_NUNBOX32)
+        return data.s.tag;
+#elif defined(JS_PUNBOX64)
+        return JSValueTag(data.asBits >> JSVAL_TAG_SHIFT);
+#endif
+    }
+
+  public:
     /*** Value type queries ***/
 
+    /*
+     * N.B. GCC, in some but not all cases, chooses to emit signed comparison
+     * of JSValueTag even though its underlying type has been forced to be
+     * uint32_t.  Thus, all comparisons should explicitly cast operands to
+     * uint32_t.
+     */
+
     bool isUndefined() const {
-        return JSVAL_IS_UNDEFINED_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return toTag() == JSVAL_TAG_UNDEFINED;
+#elif defined(JS_PUNBOX64)
+        return data.asBits == JSVAL_SHIFTED_TAG_UNDEFINED;
+#endif
     }
 
     bool isNull() const {
-        return JSVAL_IS_NULL_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return toTag() == JSVAL_TAG_NULL;
+#elif defined(JS_PUNBOX64)
+        return data.asBits == JSVAL_SHIFTED_TAG_NULL;
+#endif
     }
 
     bool isNullOrUndefined() const {
@@ -1103,68 +948,96 @@ class Value
     }
 
     bool isInt32() const {
-        return JSVAL_IS_INT32_IMPL(data);
+        return toTag() == JSVAL_TAG_INT32;
     }
 
     bool isInt32(int32_t i32) const {
-        return JSVAL_IS_SPECIFIC_INT32_IMPL(data, i32);
+        return data.asBits == bitsFromTagAndPayload(JSVAL_TAG_INT32, uint32_t(i32));
     }
 
     bool isDouble() const {
-        return JSVAL_IS_DOUBLE_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return uint32_t(toTag()) <= uint32_t(JSVAL_TAG_CLEAR);
+#elif defined(JS_PUNBOX64)
+        return (data.asBits | mozilla::DoubleTypeTraits::kSignBit) <= JSVAL_SHIFTED_TAG_MAX_DOUBLE;
+#endif
     }
 
     bool isNumber() const {
-        return JSVAL_IS_NUMBER_IMPL(data);
+#if defined(JS_NUNBOX32)
+        MOZ_ASSERT(toTag() != JSVAL_TAG_CLEAR);
+        return uint32_t(toTag()) <= uint32_t(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET);
+#elif defined(JS_PUNBOX64)
+        return data.asBits < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET;
+#endif
     }
 
     bool isString() const {
-        return JSVAL_IS_STRING_IMPL(data);
+        return toTag() == JSVAL_TAG_STRING;
     }
 
     bool isSymbol() const {
-        return JSVAL_IS_SYMBOL_IMPL(data);
+        return toTag() == JSVAL_TAG_SYMBOL;
     }
 
     bool isObject() const {
-        return JSVAL_IS_OBJECT_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return toTag() == JSVAL_TAG_OBJECT;
+#elif defined(JS_PUNBOX64)
+        MOZ_ASSERT((data.asBits >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT);
+        return data.asBits >= JSVAL_SHIFTED_TAG_OBJECT;
+#endif
     }
 
     bool isPrimitive() const {
-        return JSVAL_IS_PRIMITIVE_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return uint32_t(toTag()) < uint32_t(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET);
+#elif defined(JS_PUNBOX64)
+        return data.asBits < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET;
+#endif
     }
 
     bool isObjectOrNull() const {
-        return JSVAL_IS_OBJECT_OR_NULL_IMPL(data);
+        MOZ_ASSERT(uint32_t(toTag()) <= uint32_t(JSVAL_TAG_OBJECT));
+#if defined(JS_NUNBOX32)
+        return uint32_t(toTag()) >= uint32_t(JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET);
+#elif defined(JS_PUNBOX64)
+        return data.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET;
+#endif
     }
 
     bool isGCThing() const {
-        return JSVAL_IS_GCTHING_IMPL(data);
+#if defined(JS_NUNBOX32)
+        /* gcc sometimes generates signed < without explicit casts. */
+        return uint32_t(toTag()) >= uint32_t(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET);
+#elif defined(JS_PUNBOX64)
+        return data.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET;
+#endif
     }
 
     bool isBoolean() const {
-        return JSVAL_IS_BOOLEAN_IMPL(data);
+        return toTag() == JSVAL_TAG_BOOLEAN;
     }
 
     bool isTrue() const {
-        return JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(data, true);
+        return data.asBits == bitsFromTagAndPayload(JSVAL_TAG_BOOLEAN, uint32_t(true));
     }
 
     bool isFalse() const {
-        return JSVAL_IS_SPECIFIC_BOOLEAN_IMPL(data, false);
+        return data.asBits == bitsFromTagAndPayload(JSVAL_TAG_BOOLEAN, uint32_t(false));
     }
 
     bool isMagic() const {
-        return JSVAL_IS_MAGIC_IMPL(data);
+        return toTag() == JSVAL_TAG_MAGIC;
     }
 
     bool isMagic(JSWhyMagic why) const {
         MOZ_ASSERT_IF(isMagic(), data.s.payload.why == why);
-        return JSVAL_IS_MAGIC_IMPL(data);
+        return isMagic();
     }
 
     bool isMarkable() const {
-        return JSVAL_IS_TRACEABLE_IMPL(data);
+        return isGCThing() && !isNull();
     }
 
     JS::TraceKind traceKind() const {
@@ -1299,7 +1172,7 @@ class Value
     }
 
     bool isPrivateGCThing() const {
-        return JSVAL_IS_PRIVATE_GCTHING_IMPL(data);
+        return toTag() == JSVAL_TAG_PRIVATE_GCTHING;
     }
 
     /*
