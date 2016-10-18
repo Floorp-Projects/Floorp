@@ -947,7 +947,7 @@ class GCRuntime
     void requestMajorGC(JS::gcreason::Reason reason);
     SliceBudget defaultBudget(JS::gcreason::Reason reason, int64_t millis);
     void budgetIncrementalGC(SliceBudget& budget, AutoLockForExclusiveAccess& lock);
-    void resetIncrementalGC(const char* reason, AutoLockForExclusiveAccess& lock);
+    void resetIncrementalGC(AbortReason reason, AutoLockForExclusiveAccess& lock);
 
     // Assert if the system state is such that we should never
     // receive a request to do GC work.

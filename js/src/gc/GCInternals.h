@@ -58,28 +58,8 @@ class MOZ_RAII AutoPrepareForTracing
     AutoTraceSession& session() { return session_.ref(); }
 };
 
-class IncrementalSafety
-{
-    const char* reason_;
-
-    explicit IncrementalSafety(const char* reason) : reason_(reason) {}
-
-  public:
-    static IncrementalSafety Safe() { return IncrementalSafety(nullptr); }
-    static IncrementalSafety Unsafe(const char* reason) { return IncrementalSafety(reason); }
-
-    explicit operator bool() const {
-        return reason_ == nullptr;
-    }
-
-    const char* reason() {
-        MOZ_ASSERT(reason_);
-        return reason_;
-    }
-};
-
-IncrementalSafety
-IsIncrementalGCSafe(JSRuntime* rt);
+AbortReason
+IsIncrementalGCUnsafe(JSRuntime* rt);
 
 #ifdef JS_GC_ZEAL
 
