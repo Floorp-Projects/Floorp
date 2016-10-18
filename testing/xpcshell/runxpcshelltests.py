@@ -16,7 +16,6 @@ import random
 import re
 import shutil
 import signal
-import subprocess
 import sys
 import tempfile
 import time
@@ -24,7 +23,6 @@ import traceback
 
 from collections import deque, namedtuple
 from distutils import dir_util
-from distutils.version import LooseVersion
 from multiprocessing import cpu_count
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, STDOUT
@@ -994,28 +992,16 @@ class XPCShellTests(object):
         """
           Run node for HTTP/2 tests, if available, and updates mozinfo as appropriate.
         """
-        nodeMozInfo = {'hasNode': False} # Assume the worst
         nodeBin = None
 
         # We try to find the node executable in the path given to us by the user in
         # the MOZ_NODE_PATH environment variable
         localPath = os.getenv('MOZ_NODE_PATH', None)
         if localPath and os.path.exists(localPath) and os.path.isfile(localPath):
-            try:
-                version_str = subprocess.check_output([localPath, "--version"],
-                                                      stderr=subprocess.STDOUT)
-                # nodejs prefixes its version strings with "v"
-                version = LooseVersion(version_str.lstrip('v'))
-                # Use node only if node version is >=5.0.0 because
-                # node did not support ALPN until this version.
-                if version >= LooseVersion("5.0.0"):
-                    nodeBin = localPath
-            except (subprocess.CalledProcessError, OSError), e:
-                self.log.error('Could not retrieve node version: %s' % str(e))
+            nodeBin = localPath
 
         if os.getenv('MOZ_ASSUME_NODE_RUNNING', None):
             self.log.info('Assuming required node servers are already running')
-            nodeMozInfo['hasNode'] = True
         elif nodeBin:
             self.log.info('Found node at %s' % (nodeBin,))
 
@@ -1034,7 +1020,6 @@ class XPCShellTests(object):
                         # tell us it's started
                         msg = process.stdout.readline()
                         if 'server listening' in msg:
-                            nodeMozInfo['hasNode'] = True
                             searchObj = re.search( r'HTTP2 server listening on port (.*)', msg, 0)
                             if searchObj:
                               self.env["MOZHTTP2_PORT"] = searchObj.group(1)
@@ -1044,8 +1029,6 @@ class XPCShellTests(object):
 
             myDir = os.path.split(os.path.abspath(__file__))[0]
             startServer('moz-http2', os.path.join(myDir, 'moz-http2', 'moz-http2.js'))
-
-        mozinfo.update(nodeMozInfo)
 
     def shutdownNode(self):
         """
