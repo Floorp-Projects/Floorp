@@ -22,7 +22,6 @@
 #include "ClearKeySessionManager.h"
 #include "ClearKeyUtils.h"
 #include "ClearKeyStorage.h"
-#include "ClearKeyPersistence.h"
 #include "gmp-task-utils.h"
 #include <assert.h>
 
@@ -52,7 +51,13 @@ ClearKeySessionManager::Init(GMPDecryptorCallback* aCallback,
 {
   CK_LOGD("ClearKeySessionManager::Init");
   mCallback = aCallback;
-  ClearKeyPersistence::EnsureInitialized();
+}
+
+string
+ClearKeySessionManager::GetNewSessionId()
+{
+  static uint32_t sNextSessionId = 1;
+  return to_string(sNextSessionId++);
 }
 
 void
@@ -77,17 +82,7 @@ ClearKeySessionManager::CreateSession(uint32_t aCreateSessionToken,
     return;
   }
 
-  if (ClearKeyPersistence::DeferCreateSessionIfNotReady(this,
-                                                        aCreateSessionToken,
-                                                        aPromiseId,
-                                                        initDataType,
-                                                        aInitData,
-                                                        aInitDataSize,
-                                                        aSessionType)) {
-    return;
-  }
-
-  string sessionId = ClearKeyPersistence::GetNewSessionId(aSessionType);
+  string sessionId = GetNewSessionId();
   assert(mSessions.find(sessionId) == mSessions.end());
 
   ClearKeySession* session = new ClearKeySession(sessionId, mCallback, aSessionType);
@@ -124,79 +119,8 @@ ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
                                     uint32_t aSessionIdLength)
 {
   CK_LOGD("ClearKeySessionManager::LoadSession");
-
-  if (!ClearKeyUtils::IsValidSessionId(aSessionId, aSessionIdLength)) {
-    mCallback->ResolveLoadSessionPromise(aPromiseId, false);
-    return;
-  }
-
-  if (ClearKeyPersistence::DeferLoadSessionIfNotReady(this,
-                                                      aPromiseId,
-                                                      aSessionId,
-                                                      aSessionIdLength)) {
-    return;
-  }
-
-  string sid(aSessionId, aSessionId + aSessionIdLength);
-  if (!ClearKeyPersistence::IsPersistentSessionId(sid)) {
-    mCallback->ResolveLoadSessionPromise(aPromiseId, false);
-    return;
-  }
-
-  // Callsback PersistentSessionDataLoaded with results...
-  ClearKeyPersistence::LoadSessionData(this, sid, aPromiseId);
-}
-
-void
-ClearKeySessionManager::PersistentSessionDataLoaded(GMPErr aStatus,
-                                                    uint32_t aPromiseId,
-                                                    const string& aSessionId,
-                                                    const uint8_t* aKeyData,
-                                                    uint32_t aKeyDataSize)
-{
-  CK_LOGD("ClearKeySessionManager::PersistentSessionDataLoaded");
-  if (GMP_FAILED(aStatus) ||
-      Contains(mSessions, aSessionId) ||
-      (aKeyDataSize % (2 * CENC_KEY_LEN)) != 0) {
-    mCallback->ResolveLoadSessionPromise(aPromiseId, false);
-    return;
-  }
-
-  ClearKeySession* session = new ClearKeySession(aSessionId,
-                                                 mCallback,
-                                                 kGMPPersistentSession);
-  mSessions[aSessionId] = session;
-
-  uint32_t numKeys = aKeyDataSize / (2 * CENC_KEY_LEN);
-
-  vector<GMPMediaKeyInfo> key_infos;
-  vector<KeyIdPair> keyPairs;
-  for (uint32_t i = 0; i < numKeys; i ++) {
-    const uint8_t* base = aKeyData + 2 * CENC_KEY_LEN * i;
-
-    KeyIdPair keyPair;
-
-    keyPair.mKeyId = KeyId(base, base + CENC_KEY_LEN);
-    assert(keyPair.mKeyId.size() == CENC_KEY_LEN);
-
-    keyPair.mKey = Key(base + CENC_KEY_LEN, base + 2 * CENC_KEY_LEN);
-    assert(keyPair.mKey.size() == CENC_KEY_LEN);
-
-    session->AddKeyId(keyPair.mKeyId);
-
-    mDecryptionManager->ExpectKeyId(keyPair.mKeyId);
-    mDecryptionManager->InitKey(keyPair.mKeyId, keyPair.mKey);
-    mKeyIds.insert(keyPair.mKey);
-
-    keyPairs.push_back(keyPair);
-    key_infos.push_back(GMPMediaKeyInfo(&keyPairs[i].mKeyId[0],
-                                        keyPairs[i].mKeyId.size(),
-                                        kGMPUsable));
-  }
-  mCallback->BatchedKeyStatusChanged(&aSessionId[0], aSessionId.size(),
-                                     key_infos.data(), key_infos.size());
-
-  mCallback->ResolveLoadSessionPromise(aPromiseId, true);
+  const char message[] = "Persistent sessions not supported.";
+  mCallback->RejectPromise(aPromiseId, kGMPNotSupportedError, message, strlen(message));
 }
 
 void
@@ -336,8 +260,6 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
     mCallback->ResolvePromise(aPromiseId);
     return;
   }
-
-  ClearKeyPersistence::PersistentSessionRemoved(sid);
 
   // Overwrite the record storing the sessionId's key data with a zero
   // length record to delete it.
