@@ -177,7 +177,6 @@ VREyeParameters::GetOffset(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval,
       return;
     }
   }
-  JS::ExposeObjectToActiveJS(mOffset);
   aRetval.set(mOffset);
 }
 
@@ -244,7 +243,6 @@ VRStageParameters::GetSittingToStandingTransform(JSContext* aCx,
       return;
     }
   }
-  JS::ExposeObjectToActiveJS(mSittingToStandingTransformArray);
   aRetval.set(mSittingToStandingTransformArray);
 }
 
@@ -335,9 +333,6 @@ VRPose::GetPosition(JSContext* aCx,
       return;
     }
   }
-  if (mPosition) {
-    JS::ExposeObjectToActiveJS(mPosition);
-  }
   aRetval.set(mPosition);
 }
 
@@ -353,9 +348,6 @@ VRPose::GetLinearVelocity(JSContext* aCx,
       aRv.NoteJSContextException(aCx);
       return;
     }
-  }
-  if (mLinearVelocity) {
-    JS::ExposeObjectToActiveJS(mLinearVelocity);
   }
   aRetval.set(mLinearVelocity);
 }
@@ -373,9 +365,6 @@ VRPose::GetLinearAcceleration(JSContext* aCx,
       return;
     }
   }
-  if (mLinearAcceleration) {
-    JS::ExposeObjectToActiveJS(mLinearAcceleration);
-  }
   aRetval.set(mLinearAcceleration);
 }
 
@@ -391,9 +380,6 @@ VRPose::GetOrientation(JSContext* aCx,
       aRv.NoteJSContextException(aCx);
       return;
     }
-  }
-  if (mOrientation) {
-    JS::ExposeObjectToActiveJS(mOrientation);
   }
   aRetval.set(mOrientation);
 }
@@ -411,9 +397,6 @@ VRPose::GetAngularVelocity(JSContext* aCx,
       return;
     }
   }
-  if (mAngularVelocity) {
-    JS::ExposeObjectToActiveJS(mAngularVelocity);
-  }
   aRetval.set(mAngularVelocity);
 }
 
@@ -429,9 +412,6 @@ VRPose::GetAngularAcceleration(JSContext* aCx,
       aRv.NoteJSContextException(aCx);
       return;
     }
-  }
-  if (mAngularAcceleration) {
-    JS::ExposeObjectToActiveJS(mAngularAcceleration);
   }
   aRetval.set(mAngularAcceleration);
 }
