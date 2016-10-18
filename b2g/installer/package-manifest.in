@@ -624,9 +624,6 @@
 @RESPATH@/components/TestInterfaceJSMaplike.js
 #endif
 
-@RESPATH@/components/PACGenerator.js
-@RESPATH@/components/PACGenerator.manifest
-
 ; Modules
 @RESPATH@/modules/*
 

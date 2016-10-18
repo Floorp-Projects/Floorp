@@ -215,10 +215,6 @@ protected:
      *
      * @param channel
      *        The channel to test.
-     * @param appId
-     *        The id of the app making the query.
-     * @param isInBrowser
-     *        True if the iframe has mozbrowser but has no mozapp attribute.
      * @param info
      *        Information about the URI's protocol.
      * @param flags
@@ -230,8 +226,6 @@ protected:
      *        The resulting proxy info or null.
      */
     nsresult Resolve_Internal(nsIChannel *channel,
-                              uint32_t appId,
-                              bool isInBrowser,
                               const nsProtocolInfo &info,
                               uint32_t flags,
                               bool *usePAC,

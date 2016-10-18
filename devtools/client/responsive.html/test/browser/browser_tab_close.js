@@ -7,13 +7,6 @@
 
 const TEST_URL = "http://example.com/";
 
-function waitForClientClose(ui) {
-  return new Promise(resolve => {
-    info("RDM's debugger client is now closed");
-    ui.client.addOneTimeListener("closed", resolve);
-  });
-}
-
 add_task(function* () {
   let tab = yield addTab(TEST_URL);
 
