@@ -99,13 +99,7 @@ function tunnelToInnerBrowser(outer, inner) {
       // even though it's not true.  Since the actions the browser UI performs are sent
       // down to the inner browser by this tunnel, the tab's remoteness effectively is the
       // remoteness of the inner browser.
-      Object.defineProperty(outer, "isRemoteBrowser", {
-        get() {
-          return true;
-        },
-        configurable: true,
-        enumerable: true,
-      });
+      outer.setAttribute("remote", "true");
 
       // Clear out any cached state that references the current non-remote XBL binding,
       // such as form fill controllers.  Otherwise they will remain in place and leak the
@@ -222,10 +216,12 @@ function tunnelToInnerBrowser(outer, inner) {
       // Reset overridden XBL properties and methods.  Deleting the override
       // means it will fallback to the original XBL binding definitions which
       // are on the prototype.
-      delete outer.isRemoteBrowser;
       delete outer.hasContentOpener;
       delete outer.docShellIsActive;
       delete outer.preserveLayers;
+
+      // Reset @remote since this is now back to a regular, non-remote browser
+      outer.setAttribute("remote", "false");
 
       // Delete the PopupNotifications getter added for permission doorhangers
       delete inner.ownerGlobal.PopupNotifications;

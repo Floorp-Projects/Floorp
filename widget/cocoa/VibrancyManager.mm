@@ -204,9 +204,11 @@ HasVibrantForeground(VibrancyType aType)
   }
 }
 
+#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
 enum {
-  NSVisualEffectMaterialMenuItem = 4
+  NSVisualEffectMaterialSelection = 4
 };
+#endif
 
 @interface NSView(NSVisualEffectViewMethods)
 - (void)setState:(NSUInteger)state;
@@ -239,7 +241,7 @@ VibrancyManager::CreateEffectView(VibrancyType aType)
   } else if (aType == VibrancyType::HIGHLIGHTED_MENUITEM ||
              aType == VibrancyType::SOURCE_LIST_SELECTION ||
              aType == VibrancyType::ACTIVE_SOURCE_LIST_SELECTION) {
-    [effectView setMaterial:NSVisualEffectMaterialMenuItem];
+    [effectView setMaterial:NSVisualEffectMaterialSelection];
     if ([effectView respondsToSelector:@selector(setEmphasized:)] &&
         aType != VibrancyType::SOURCE_LIST_SELECTION) {
       [effectView setEmphasized:YES];

@@ -289,9 +289,6 @@ user_pref("browser.translation.engine", "bing");
 // Make sure we don't try to load snippets from the network.
 user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 
-// Enable apps customizations
-user_pref("dom.apps.customization.enabled", true);
-
 // Don't fetch or send directory tiles data from real servers
 user_pref("browser.newtabpage.directory.source", 'data:application/json,{"testing":1}');
 user_pref("browser.newtabpage.directory.ping", "");
@@ -329,10 +326,6 @@ user_pref("extensions.e10sBlocksEnabling", false);
 
 // Avoid performing Reader Mode intros during tests.
 user_pref("browser.reader.detectedFirstArticle", true);
-
-// Don't let PAC generator to set PAC, as mochitest framework has its own PAC
-// rules during testing.
-user_pref("network.proxy.pac_generator", false);
 
 // Make tests run consistently on DevEdition (which has a lightweight theme
 // selected by default).

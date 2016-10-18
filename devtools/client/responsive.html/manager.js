@@ -324,6 +324,8 @@ ResponsiveUI.prototype = {
     });
     yield this.swap.start();
 
+    this.tab.addEventListener("BeforeTabRemotenessChange", this);
+
     // Notify the inner browser to start the frame script
     yield message.request(this.toolWindow, "start-frame-script");
 
@@ -350,18 +352,21 @@ ResponsiveUI.prototype = {
     // gracefully, but that shouldn't be a problem since the tab will go away.
     // So, skip any yielding when we're about to close the tab.
     let isWindowClosing = options && options.reason === "unload";
-    let isTabClosing = (options && options.reason === "TabClose") || isWindowClosing;
+    let isTabContentDestroying =
+      isWindowClosing || (options && (options.reason === "TabClose" ||
+                                      options.reason === "BeforeTabRemotenessChange"));
 
     // Ensure init has finished before starting destroy
-    if (!isTabClosing) {
+    if (!isTabContentDestroying) {
       yield this.inited;
     }
 
     this.tab.removeEventListener("TabClose", this);
+    this.tab.removeEventListener("BeforeTabRemotenessChange", this);
     this.browserWindow.removeEventListener("unload", this);
     this.toolWindow.removeEventListener("message", this);
 
-    if (!isTabClosing) {
+    if (!isTabContentDestroying) {
       // Notify the inner browser to stop the frame script
       yield message.request(this.toolWindow, "stop-frame-script");
     }
@@ -378,7 +383,7 @@ ResponsiveUI.prototype = {
     // The actor handles clearing any overrides itself, so it's not necessary to clear
     // anything on shutdown client side.
     let clientClosed = this.client.close();
-    if (!isTabClosing) {
+    if (!isTabContentDestroying) {
       yield clientClosed;
     }
     this.client = this.emulationFront = null;
@@ -411,8 +416,9 @@ ResponsiveUI.prototype = {
       case "message":
         this.handleMessage(event);
         break;
-      case "unload":
+      case "BeforeTabRemotenessChange":
       case "TabClose":
+      case "unload":
         ResponsiveUIManager.closeIfNeeded(browserWindow, tab, {
           reason: event.type,
         });

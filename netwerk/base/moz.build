@@ -73,7 +73,6 @@ XPIDL_SOURCES += [
     'nsINetworkProperties.idl',
     'nsINSSErrorsService.idl',
     'nsINullChannel.idl',
-    'nsIPACGenerator.idl',
     'nsIPackagedAppService.idl',
     'nsIPackagedAppUtils.idl',
     'nsIPackagedAppVerifier.idl',
@@ -293,11 +292,6 @@ elif CONFIG['OS_ARCH'] == 'Linux':
         'NetworkInfoServiceLinux.cpp',
         'nsNetworkInfoService.cpp',
     ]
-
-EXTRA_COMPONENTS += [
-    'PACGenerator.js',
-    'PACGenerator.manifest'
-]
 
 EXTRA_JS_MODULES += [
     'NetUtil.jsm',
