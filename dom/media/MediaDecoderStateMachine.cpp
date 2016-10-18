@@ -819,6 +819,13 @@ public:
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
 
+  void HandleVideoSuspendTimeout() override
+  {
+    mMaster->mVideoDecodeSuspended = true;
+    mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
+    Reader()->SetVideoBlankDecode(true);
+  }
+
 private:
   TimeStamp mBufferingStart;
 
