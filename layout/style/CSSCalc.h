@@ -354,6 +354,27 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
   }
 }
 
+/**
+ * ReduceNumberCalcOps is a CalcOps implementation for pure-number calc()
+ * (sub-)expressions, input as nsCSSValues.
+ * For example, nsCSSParser::ParseCalcMultiplicativeExpression uses it to
+ * simplify numeric sub-expressions in order to check for division-by-zero.
+ */
+struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps,
+                             public mozilla::css::CSSValueInputCalcOps
+{
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
+  {
+    MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
+    return aValue.GetFloatValue();
+  }
+
+  float ComputeNumber(const nsCSSValue& aValue)
+  {
+    return mozilla::css::ComputeCalc(aValue, *this);
+  }
+};
+
 } // namespace css
 
 } // namespace mozilla
