@@ -268,11 +268,6 @@ this.PermissionsTable =  { geolocation: {
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
-                           "embed-widgets": {
-                             app: DENY_ACTION,
-                             privileged: ALLOW_ACTION,
-                             certified: ALLOW_ACTION
-                           },
                            "background-sensors": {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,

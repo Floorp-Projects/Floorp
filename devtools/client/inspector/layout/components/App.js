@@ -4,18 +4,29 @@
 
 "use strict";
 
-const { createClass, DOM: dom } = require("devtools/client/shared/vendor/react");
+const { getStr } = require("../utils/l10n");
+const { DOM: dom, createClass, createFactory } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-let App = createClass({
+const Accordion = createFactory(require("./Accordion"));
+const Grid = createFactory(require("./Grid"));
+
+const App = createClass({
 
   displayName: "App",
 
   render() {
     return dom.div(
       {
-        id: "app",
-      }
+        id: "layoutview-container-focusable",
+      },
+      Accordion({
+        items: [
+          { header: getStr("layout.header"),
+            component: Grid,
+            opened: true }
+        ]
+      })
     );
   },
 

@@ -34,7 +34,6 @@ add_test(() => {
     storeId: "aStoreId",
     storeVersion: 1,
     role: "aRole",
-    redirects: "aRedirects",
     kind: "aKind",
     enabled: true,
     sideloaded: false
