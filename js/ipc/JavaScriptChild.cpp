@@ -26,10 +26,17 @@ UpdateChildWeakPointersBeforeSweepingZoneGroup(JSContext* cx, void* data)
     static_cast<JavaScriptChild*>(data)->updateWeakPointers();
 }
 
+static void
+TraceChild(JSTracer* trc, void* data)
+{
+    static_cast<JavaScriptChild*>(data)->trace(trc);
+}
+
 JavaScriptChild::~JavaScriptChild()
 {
     JSContext* cx = dom::danger::GetJSContext();
     JS_RemoveWeakPointerZoneGroupCallback(cx, UpdateChildWeakPointersBeforeSweepingZoneGroup);
+    JS_RemoveExtraGCRootsTracer(cx, TraceChild, this);
 }
 
 bool
@@ -42,7 +49,14 @@ JavaScriptChild::init()
 
     JSContext* cx = dom::danger::GetJSContext();
     JS_AddWeakPointerZoneGroupCallback(cx, UpdateChildWeakPointersBeforeSweepingZoneGroup, this);
+    JS_AddExtraGCRootsTracer(cx, TraceChild, this);
     return true;
+}
+
+void
+JavaScriptChild::trace(JSTracer* trc)
+{
+    objects_.trace(trc, strongReferenceObjIdMinimum_);
 }
 
 void
@@ -59,6 +73,13 @@ JavaScriptChild::scopeForTargetObjects()
     // CPOWs from the parent need to point into the child's privileged junk
     // scope so that they can benefit from XrayWrappers in the child.
     return xpc::PrivilegedJunkScope();
+}
+
+bool
+JavaScriptChild::RecvDropTemporaryStrongReferences(const uint64_t& upToObjId)
+{
+    strongReferenceObjIdMinimum_ = upToObjId + 1;
+    return true;
 }
 
 PJavaScriptChild*

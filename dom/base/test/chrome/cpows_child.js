@@ -366,14 +366,17 @@ function dead_test(finish)
     return;
   }
 
+  let gcTrigger = function() {
+    // Force the GC to dead-ify the thing.
+    content.QueryInterface(Ci.nsIInterfaceRequestor)
+           .getInterface(Ci.nsIDOMWindowUtils)
+           .garbageCollect();
+  }
+
   {
     let thing = { value: "Gonna croak" };
-    sendAsyncMessage("cpows:dead", null, { thing });
+    sendAsyncMessage("cpows:dead", null, { thing, gcTrigger });
   }
-  // Force the GC to dead-ify the thing.
-  content.QueryInterface(Ci.nsIInterfaceRequestor)
-         .getInterface(Ci.nsIDOMWindowUtils)
-         .garbageCollect();
 
   addMessageListener("cpows:dead_done", finish);
 }
