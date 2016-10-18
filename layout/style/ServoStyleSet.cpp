@@ -146,7 +146,7 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
   if (parent->IsGeneratedContentContainerForBefore() ||
       parent->IsGeneratedContentContainerForAfter()) {
     MOZ_ASSERT(aParentContext);
-    ServoComputedValues* parentComputedValues =
+    const ServoComputedValues* parentComputedValues =
       aParentContext->StyleSource().AsServoComputedValues();
     computedValues =
       Servo_ComputedValues_Inherit(parentComputedValues).Consume();
@@ -163,7 +163,7 @@ ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
 {
   // The parent context can be null if the non-element share a style context
   // with the root of an anonymous subtree.
-  ServoComputedValues* parent =
+  const ServoComputedValues* parent =
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues() : nullptr;
   RefPtr<ServoComputedValues> computedValues =
     Servo_ComputedValues_Inherit(parent).Consume();
@@ -208,7 +208,7 @@ ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
              aFlags == nsStyleSet::eSkipParentDisplayBasedStyleFixup);
   bool skipFixup = aFlags & nsStyleSet::eSkipParentDisplayBasedStyleFixup;
 
-  ServoComputedValues* parentStyle =
+  const ServoComputedValues* parentStyle =
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues()
                    : nullptr;
   RefPtr<ServoComputedValues> computedValues =
