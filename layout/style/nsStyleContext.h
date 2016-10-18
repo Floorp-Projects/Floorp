@@ -383,7 +383,7 @@ public:
    * Like the above, but allows comparing ServoComputedValues instead of needing
    * a full-fledged style context.
    */
-  nsChangeHint CalcStyleDifference(ServoComputedValues* aNewComputedValues,
+  nsChangeHint CalcStyleDifference(const ServoComputedValues* aNewComputedValues,
                                    nsChangeHint aParentHintsNotHandledForDescendants,
                                    uint32_t* aEqualStructs,
                                    uint32_t* aSamePointerStructs);

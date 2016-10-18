@@ -3244,7 +3244,7 @@ StyleAnimationValue::ComputeValues(
     return false;
   }
 
-  RefPtr<ServoComputedValues> previousStyle =
+  const ServoComputedValues* previousStyle =
     aStyleContext->StyleSource().AsServoComputedValues();
 
   // FIXME: Servo bindings don't yet represent const-ness so we just
