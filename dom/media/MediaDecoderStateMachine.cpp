@@ -371,7 +371,18 @@ public:
   void Enter(bool aPendingDormant)
   {
     MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
+
+    // WAIT_FOR_CDM is transitioned from DECODING_METADATA
+    // where mQueuedSeek must be empty.
+    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+
     mPendingDormant = aPendingDormant;
+  }
+
+  void Exit() override
+  {
+    // Transfer the seek job so it is available to the next state.
+    mMaster->mQueuedSeek = Move(mPendingSeek);
   }
 
   State GetState() const override
@@ -386,9 +397,9 @@ public:
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
   {
     SLOG("Not Enough Data to seek at this stage, queuing seek");
-    mMaster->mQueuedSeek.RejectIfExists(__func__);
-    mMaster->mQueuedSeek.mTarget = aTarget;
-    return mMaster->mQueuedSeek.mPromise.Ensure(__func__);
+    mPendingSeek.RejectIfExists(__func__);
+    mPendingSeek.mTarget = aTarget;
+    return mPendingSeek.mPromise.Ensure(__func__);
   }
 
   void HandleVideoSuspendTimeout() override
@@ -404,6 +415,7 @@ public:
 
 private:
   bool mPendingDormant = false;
+  SeekJob mPendingSeek;
 };
 
 /**
