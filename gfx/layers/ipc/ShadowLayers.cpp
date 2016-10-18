@@ -208,7 +208,7 @@ ShadowLayerForwarder::BeginTransaction(const gfx::IntRect& aTargetBounds,
                                        ScreenRotation aRotation,
                                        dom::ScreenOrientationInternal aOrientation)
 {
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
+  MOZ_ASSERT(IPCOpen(), "no manager to forward to");
   MOZ_ASSERT(mTxn->Finished(), "uncommitted txn?");
   UpdateFwdTransactionId();
   mTxn->Begin(aTargetBounds, aRotation, aOrientation);
@@ -560,7 +560,7 @@ ShadowLayerForwarder::StorePluginWidgetConfigurations(const nsTArray<nsIWidget::
 void
 ShadowLayerForwarder::SendPaintTime(uint64_t aId, TimeDuration aPaintTime)
 {
-  if (!HasShadowManager() || !mShadowManager->IPCOpen() ||
+  if (!IPCOpen() ||
       !mShadowManager->SendPaintTime(aId, aPaintTime)) {
     NS_WARNING("Could not send paint times over IPC");
   }
@@ -578,7 +578,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 {
   *aSent = false;
 
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
+  MOZ_ASSERT(IPCOpen(), "no manager to forward to");
   if (!IPCOpen()) {
     return false;
   }
@@ -768,7 +768,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 void
 ShadowLayerForwarder::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
 {
-  if (!HasShadowManager() || !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   Unused << mShadowManager->SendSetLayerObserverEpoch(aLayerObserverEpoch);
@@ -788,9 +788,8 @@ ShadowLayerForwarder::IPCOpen() const
 PLayerChild*
 ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
 {
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  MOZ_ASSERT(IPCOpen(), "no manager to forward to");
+  if (!IPCOpen()) {
     return nullptr;
   }
   return mShadowManager->SendPLayerConstructor(new ShadowLayerChild(aLayer));
@@ -814,8 +813,7 @@ ShadowLayerForwarder::Connect(CompositableClient* aCompositable,
 #endif
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(mShadowManager);
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   PCompositableChild* actor =
@@ -850,8 +848,7 @@ void ShadowLayerForwarder::SetShadowManager(PLayerTransactionChild* aShadowManag
 
 void ShadowLayerForwarder::StopReceiveAsyncParentMessge()
 {
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   mShadowManager->SetForwarder(nullptr);
@@ -859,8 +856,7 @@ void ShadowLayerForwarder::StopReceiveAsyncParentMessge()
 
 void ShadowLayerForwarder::ClearCachedResources()
 {
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   mShadowManager->SendClearCachedResources();
@@ -868,8 +864,7 @@ void ShadowLayerForwarder::ClearCachedResources()
 
 void ShadowLayerForwarder::Composite()
 {
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   mShadowManager->SendForceComposite();
