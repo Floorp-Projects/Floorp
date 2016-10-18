@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "nsArrayEnumerator.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsSupportsArray.h"
@@ -47,7 +48,7 @@ nsSupportsArray::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return it->QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_ISUPPORTS(nsSupportsArray, nsISupportsArray, nsICollection,
+NS_IMPL_ISUPPORTS(nsSupportsArray, nsIArray, nsISupportsArray, nsICollection,
                   nsISerializable)
 
 NS_IMETHODIMP
@@ -172,7 +173,7 @@ nsSupportsArray::Clear(void)
 }
 
 NS_IMETHODIMP
-nsSupportsArray::Enumerate(nsIEnumerator** aResult)
+nsSupportsArray::DeprecatedEnumerate(nsIEnumerator** aResult)
 {
   RefPtr<nsSupportsArrayEnumerator> e = new nsSupportsArrayEnumerator(this);
   e.forget(aResult);
@@ -207,4 +208,40 @@ NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
   rv = nsSupportsArray::Create(nullptr, NS_GET_IID(nsISupportsArray),
                                (void**)aInstancePtrResult);
   return rv;
+}
+
+/**
+ * nsIArray adapters.
+ */
+NS_IMETHODIMP
+nsSupportsArray::GetLength(uint32_t* aLength) {
+  return Count(aLength);
+}
+
+NS_IMETHODIMP
+nsSupportsArray::QueryElementAt(uint32_t aIndex, const nsIID& aIID, void** aResult)
+{
+  nsISupports* element = mArray.SafeElementAt(aIndex);
+  if (element) {
+    return element->QueryInterface(aIID, aResult);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSupportsArray::IndexOf(uint32_t aStartIndex, nsISupports* aElement, uint32_t* aResult)
+{
+  int32_t idx = mArray.IndexOf(aElement, aStartIndex);
+  if (idx < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aResult = static_cast<uint32_t>(idx);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSupportsArray::Enumerate(nsISimpleEnumerator** aResult)
+{
+  return NS_NewArrayEnumerator(aResult, this);
 }

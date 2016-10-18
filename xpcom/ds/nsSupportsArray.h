@@ -11,7 +11,8 @@
 #include "nsCOMArray.h"
 #include "mozilla/Attributes.h"
 
-class nsSupportsArray final : public nsISupportsArray
+class nsSupportsArray final : public nsISupportsArray,
+                              public nsIArray
 {
   ~nsSupportsArray(void); // nonvirtual since we're not subclassed
 
@@ -33,15 +34,6 @@ public:
   }
   NS_IMETHOD GetElementAt(uint32_t aIndex, nsISupports** aResult) override;
   MOZ_MUST_USE NS_IMETHOD
-  QueryElementAt(uint32_t aIndex, const nsIID& aIID, void** aResult) override
-  {
-    nsISupports* element = mArray.SafeElementAt(aIndex);
-    if (element) {
-      return element->QueryInterface(aIID, aResult);
-    }
-    return NS_ERROR_FAILURE;
-  }
-  MOZ_MUST_USE NS_IMETHOD
   SetElementAt(uint32_t aIndex, nsISupports* aValue) override
   {
     return ReplaceElementAt(aValue, aIndex) ? NS_OK : NS_ERROR_FAILURE;
@@ -53,7 +45,7 @@ public:
   }
   // XXX this is badly named - should be RemoveFirstElement
   MOZ_MUST_USE NS_IMETHOD RemoveElement(nsISupports* aElement) override;
-  NS_IMETHOD Enumerate(nsIEnumerator** aResult) override;
+  NS_IMETHOD DeprecatedEnumerate(nsIEnumerator** aResult) override;
   NS_IMETHOD Clear(void) override;
 
   // nsISupportsArray methods:
@@ -80,6 +72,11 @@ public:
   }
 
   MOZ_MUST_USE NS_IMETHOD Clone(nsISupportsArray** aResult) override;
+
+  /**
+   * nsIArray adapters.
+   */
+  NS_DECL_NSIARRAY
 
 private:
   // Copy constructors are not allowed
