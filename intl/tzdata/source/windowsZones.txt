@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/windowsZones.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 windowsZones:table(nofallback){
     mapTimezones{
         "AUS Central Standard Time"{
@@ -23,9 +17,17 @@ windowsZones:table(nofallback){
         "Alaskan Standard Time"{
             001{"America/Anchorage"}
             US{
-                "America/Anchorage America/Juneau America/Nome America/Sitka America/"
-                "Yakutat"
+                "America/Anchorage America/Juneau America/Metlakatla America/Nome Ame"
+                "rica/Sitka America/Yakutat"
             }
+        }
+        "Aleutian Standard Time"{
+            001{"America/Adak"}
+            US{"America/Adak"}
+        }
+        "Altai Standard Time"{
+            001{"Asia/Barnaul"}
+            RU{"Asia/Barnaul"}
         }
         "Arab Standard Time"{
             001{"Asia/Riyadh"}
@@ -54,11 +56,19 @@ windowsZones:table(nofallback){
                 "uaia America/Catamarca America/Cordoba America/Jujuy America/Mendoza"
             }
         }
+        "Astrakhan Standard Time"{
+            001{"Europe/Astrakhan"}
+            RU{"Europe/Astrakhan Europe/Ulyanovsk"}
+        }
         "Atlantic Standard Time"{
             001{"America/Halifax"}
             BM{"Atlantic/Bermuda"}
             CA{"America/Halifax America/Glace_Bay America/Goose_Bay America/Moncton"}
             GL{"America/Thule"}
+        }
+        "Aus Central W. Standard Time"{
+            001{"Australia/Eucla"}
+            AU{"Australia/Eucla"}
         }
         "Azerbaijan Standard Time"{
             001{"Asia/Baku"}
@@ -81,6 +91,10 @@ windowsZones:table(nofallback){
         "Belarus Standard Time"{
             001{"Europe/Minsk"}
             BY{"Europe/Minsk"}
+        }
+        "Bougainville Standard Time"{
+            001{"Pacific/Bougainville"}
+            PG{"Pacific/Bougainville"}
         }
         "Canada Central Standard Time"{
             001{"America/Regina"}
@@ -145,7 +159,6 @@ windowsZones:table(nofallback){
             AU{"Antarctica/Macquarie"}
             FM{"Pacific/Ponape Pacific/Kosrae"}
             NC{"Pacific/Noumea"}
-            PG{"Pacific/Bougainville"}
             SB{"Pacific/Guadalcanal"}
             VU{"Pacific/Efate"}
             ZZ{"Etc/GMT-11"}
@@ -171,11 +184,19 @@ windowsZones:table(nofallback){
             }
             ZZ{"CST6CDT"}
         }
+        "Chatham Islands Standard Time"{
+            001{"Pacific/Chatham"}
+            NZ{"Pacific/Chatham"}
+        }
         "China Standard Time"{
             001{"Asia/Shanghai"}
             CN{"Asia/Shanghai"}
             HK{"Asia/Hong_Kong"}
             MO{"Asia/Macau"}
+        }
+        "Cuba Standard Time"{
+            001{"America/Havana"}
+            CU{"America/Havana"}
         }
         "Dateline Standard Time"{
             001{"Etc/GMT+12"}
@@ -202,9 +223,17 @@ windowsZones:table(nofallback){
             001{"Australia/Brisbane"}
             AU{"Australia/Brisbane Australia/Lindeman"}
         }
+        "E. Europe Standard Time"{
+            001{"Europe/Chisinau"}
+            MD{"Europe/Chisinau"}
+        }
         "E. South America Standard Time"{
             001{"America/Sao_Paulo"}
             BR{"America/Sao_Paulo"}
+        }
+        "Easter Island Standard Time"{
+            001{"Pacific/Easter"}
+            CL{"Pacific/Easter"}
         }
         "Eastern Standard Time (Mexico)"{
             001{"America/Cancun"}
@@ -217,8 +246,6 @@ windowsZones:table(nofallback){
                 "America/Toronto America/Iqaluit America/Montreal America/Nipigon Ame"
                 "rica/Pangnirtung America/Thunder_Bay"
             }
-            CU{"America/Havana"}
-            HT{"America/Port-au-Prince"}
             US{
                 "America/New_York America/Detroit America/Indiana/Petersburg America/"
                 "Indiana/Vincennes America/Indiana/Winamac America/Kentucky/Monticell"
@@ -263,7 +290,6 @@ windowsZones:table(nofallback){
             001{"Europe/Bucharest"}
             CY{"Asia/Nicosia"}
             GR{"Europe/Athens"}
-            MD{"Europe/Chisinau"}
             RO{"Europe/Bucharest"}
         }
         "Georgian Standard Time"{
@@ -291,6 +317,10 @@ windowsZones:table(nofallback){
             SN{"Africa/Dakar"}
             ST{"Africa/Sao_Tome"}
             TG{"Africa/Lome"}
+        }
+        "Haiti Standard Time"{
+            001{"America/Port-au-Prince"}
+            HT{"America/Port-au-Prince"}
         }
         "Hawaiian Standard Time"{
             001{"Pacific/Honolulu"}
@@ -333,9 +363,17 @@ windowsZones:table(nofallback){
             KI{"Pacific/Kiritimati"}
             ZZ{"Etc/GMT-14"}
         }
+        "Lord Howe Standard Time"{
+            001{"Australia/Lord_Howe"}
+            AU{"Australia/Lord_Howe"}
+        }
         "Magadan Standard Time"{
             001{"Asia/Magadan"}
             RU{"Asia/Magadan"}
+        }
+        "Marquesas Standard Time"{
+            001{"Pacific/Marquesas"}
+            PF{"Pacific/Marquesas"}
         }
         "Mauritius Standard Time"{
             001{"Indian/Mauritius"}
@@ -377,7 +415,7 @@ windowsZones:table(nofallback){
         }
         "N. Central Asia Standard Time"{
             001{"Asia/Novosibirsk"}
-            RU{"Asia/Novosibirsk Asia/Omsk"}
+            RU{"Asia/Novosibirsk"}
         }
         "Namibia Standard Time"{
             001{"Africa/Windhoek"}
@@ -396,13 +434,25 @@ windowsZones:table(nofallback){
             001{"America/St_Johns"}
             CA{"America/St_Johns"}
         }
+        "Norfolk Standard Time"{
+            001{"Pacific/Norfolk"}
+            NF{"Pacific/Norfolk"}
+        }
         "North Asia East Standard Time"{
             001{"Asia/Irkutsk"}
-            RU{"Asia/Irkutsk Asia/Chita"}
+            RU{"Asia/Irkutsk"}
         }
         "North Asia Standard Time"{
             001{"Asia/Krasnoyarsk"}
             RU{"Asia/Krasnoyarsk Asia/Novokuznetsk"}
+        }
+        "North Korea Standard Time"{
+            001{"Asia/Pyongyang"}
+            KP{"Asia/Pyongyang"}
+        }
+        "Omsk Standard Time"{
+            001{"Asia/Omsk"}
+            RU{"Asia/Omsk"}
         }
         "Pacific SA Standard Time"{
             001{"America/Santiago"}
@@ -410,13 +460,12 @@ windowsZones:table(nofallback){
             CL{"America/Santiago"}
         }
         "Pacific Standard Time (Mexico)"{
-            001{"America/Santa_Isabel"}
-            MX{"America/Santa_Isabel"}
+            001{"America/Tijuana"}
+            MX{"America/Tijuana America/Santa_Isabel"}
         }
         "Pacific Standard Time"{
             001{"America/Los_Angeles"}
             CA{"America/Vancouver America/Dawson America/Whitehorse"}
-            MX{"America/Tijuana"}
             US{"America/Los_Angeles"}
             ZZ{"PST8PDT"}
         }
@@ -449,14 +498,15 @@ windowsZones:table(nofallback){
         }
         "Russian Standard Time"{
             001{"Europe/Moscow"}
-            RU{"Europe/Moscow Europe/Simferopol Europe/Volgograd"}
+            RU{"Europe/Moscow Europe/Kirov Europe/Volgograd"}
+            UA{"Europe/Simferopol"}
         }
         "SA Eastern Standard Time"{
             001{"America/Cayenne"}
             AQ{"Antarctica/Rothera"}
             BR{
-                "America/Fortaleza America/Araguaina America/Belem America/Maceio Ame"
-                "rica/Recife America/Santarem"
+                "America/Fortaleza America/Belem America/Maceio America/Recife Americ"
+                "a/Santarem"
             }
             FK{"Atlantic/Stanley"}
             GF{"America/Cayenne"}
@@ -499,7 +549,6 @@ windowsZones:table(nofallback){
             MS{"America/Montserrat"}
             PR{"America/Puerto_Rico"}
             SX{"America/Lower_Princes"}
-            TC{"America/Grand_Turk"}
             TT{"America/Port_of_Spain"}
             VC{"America/St_Vincent"}
             VG{"America/Tortola"}
@@ -513,10 +562,17 @@ windowsZones:table(nofallback){
             ID{"Asia/Jakarta Asia/Pontianak"}
             KH{"Asia/Phnom_Penh"}
             LA{"Asia/Vientiane"}
-            MN{"Asia/Hovd"}
             TH{"Asia/Bangkok"}
             VN{"Asia/Saigon"}
             ZZ{"Etc/GMT-7"}
+        }
+        "Saint Pierre Standard Time"{
+            001{"America/Miquelon"}
+            PM{"America/Miquelon"}
+        }
+        "Sakhalin Standard Time"{
+            001{"Asia/Sakhalin"}
+            RU{"Asia/Sakhalin"}
         }
         "Samoa Standard Time"{
             001{"Pacific/Apia"}
@@ -562,6 +618,10 @@ windowsZones:table(nofallback){
             001{"Australia/Hobart"}
             AU{"Australia/Hobart Australia/Currie"}
         }
+        "Tocantins Standard Time"{
+            001{"America/Araguaina"}
+            BR{"America/Araguaina"}
+        }
         "Tokyo Standard Time"{
             001{"Asia/Tokyo"}
             ID{"Asia/Jayapura"}
@@ -570,6 +630,10 @@ windowsZones:table(nofallback){
             TL{"Asia/Dili"}
             ZZ{"Etc/GMT-9"}
         }
+        "Tomsk Standard Time"{
+            001{"Asia/Tomsk"}
+            RU{"Asia/Tomsk"}
+        }
         "Tonga Standard Time"{
             001{"Pacific/Tongatapu"}
             KI{"Pacific/Enderbury"}
@@ -577,9 +641,17 @@ windowsZones:table(nofallback){
             TO{"Pacific/Tongatapu"}
             ZZ{"Etc/GMT-13"}
         }
+        "Transbaikal Standard Time"{
+            001{"Asia/Chita"}
+            RU{"Asia/Chita"}
+        }
         "Turkey Standard Time"{
             001{"Europe/Istanbul"}
             TR{"Europe/Istanbul"}
+        }
+        "Turks And Caicos Standard Time"{
+            001{"America/Grand_Turk"}
+            TC{"America/Grand_Turk"}
         }
         "US Eastern Standard Time"{
             001{"America/Indianapolis"}
@@ -587,7 +659,7 @@ windowsZones:table(nofallback){
         }
         "US Mountain Standard Time"{
             001{"America/Phoenix"}
-            CA{"America/Dawson_Creek America/Creston"}
+            CA{"America/Dawson_Creek America/Creston America/Fort_Nelson"}
             MX{"America/Hermosillo"}
             US{"America/Phoenix"}
             ZZ{"Etc/GMT+7"}
@@ -613,6 +685,16 @@ windowsZones:table(nofallback){
             GS{"Atlantic/South_Georgia"}
             ZZ{"Etc/GMT+2"}
         }
+        "UTC-08"{
+            001{"Etc/GMT+8"}
+            PN{"Pacific/Pitcairn"}
+            ZZ{"Etc/GMT+8"}
+        }
+        "UTC-09"{
+            001{"Etc/GMT+9"}
+            PF{"Pacific/Gambier"}
+            ZZ{"Etc/GMT+9"}
+        }
         "UTC-11"{
             001{"Etc/GMT+11"}
             AS{"Pacific/Pago_Pago"}
@@ -630,7 +712,7 @@ windowsZones:table(nofallback){
         }
         "Vladivostok Standard Time"{
             001{"Asia/Vladivostok"}
-            RU{"Asia/Vladivostok Asia/Sakhalin Asia/Ust-Nera"}
+            RU{"Asia/Vladivostok Asia/Ust-Nera"}
         }
         "W. Australia Standard Time"{
             001{"Australia/Perth"}
@@ -673,6 +755,10 @@ windowsZones:table(nofallback){
             SM{"Europe/San_Marino"}
             VA{"Europe/Vatican"}
         }
+        "W. Mongolia Standard Time"{
+            001{"Asia/Hovd"}
+            MN{"Asia/Hovd"}
+        }
         "West Asia Standard Time"{
             001{"Asia/Tashkent"}
             AQ{"Antarctica/Mawson"}
@@ -683,6 +769,10 @@ windowsZones:table(nofallback){
             TM{"Asia/Ashgabat"}
             UZ{"Asia/Tashkent Asia/Samarkand"}
             ZZ{"Etc/GMT-5"}
+        }
+        "West Bank Standard Time"{
+            001{"Asia/Hebron"}
+            PS{"Asia/Hebron Asia/Gaza"}
         }
         "West Pacific Standard Time"{
             001{"Pacific/Port_Moresby"}
