@@ -1739,7 +1739,7 @@ struct BarrierMethods<JS::Value>
     static void postBarrier(JS::Value* v, const JS::Value& prev, const JS::Value& next) {
         JS::HeapValuePostBarrier(v, prev, next);
     }
-    static void exposeToJS(JS::Value v) {
+    static void exposeToJS(const JS::Value& v) {
         JS::ExposeValueToActiveJS(v);
     }
 };
