@@ -950,6 +950,11 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
     return nullptr;
   }
+
+  void HandleVideoSuspendTimeout() override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
+  }
 };
 
 bool
