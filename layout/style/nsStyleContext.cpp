@@ -1281,7 +1281,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
 class MOZ_STACK_CLASS FakeStyleContext
 {
 public:
-  explicit FakeStyleContext(ServoComputedValues* aComputedValues)
+  explicit FakeStyleContext(const ServoComputedValues* aComputedValues)
     : mComputedValues(aComputedValues) {}
 
   mozilla::NonOwningStyleContextSource StyleSource() const {
@@ -1302,11 +1302,11 @@ public:
   #undef STYLE_STRUCT
 
 private:
-  ServoComputedValues* MOZ_NON_OWNING_REF mComputedValues;
+  const ServoComputedValues* MOZ_NON_OWNING_REF mComputedValues;
 };
 
 nsChangeHint
-nsStyleContext::CalcStyleDifference(ServoComputedValues* aNewComputedValues,
+nsStyleContext::CalcStyleDifference(const ServoComputedValues* aNewComputedValues,
                                     nsChangeHint aParentHintsNotHandledForDescendants,
                                     uint32_t* aEqualStructs,
                                     uint32_t* aSamePointerStructs)
