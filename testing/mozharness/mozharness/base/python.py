@@ -280,7 +280,8 @@ class VirtualenvMixin(object):
             if parsed.scheme != 'https':
                 trusted_hosts.add(parsed.hostname)
 
-        if self.pip_version >= distutils.version.LooseVersion('6.0'):
+        if (install_method != 'easy_install' and
+                    self.pip_version >= distutils.version.LooseVersion('6.0')):
             for host in sorted(trusted_hosts):
                 command.extend(['--trusted-host', host])
 

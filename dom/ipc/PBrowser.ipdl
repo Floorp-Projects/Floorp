@@ -801,11 +801,6 @@ child:
     async ThemeChanged(LookAndFeelInt[] lookAndFeelIntCache);
 
     /**
-     * Tell the child of an app's offline status
-     */
-    async AppOfflineStatus(uint32_t id, bool offline);
-
-    /**
      * Tell the browser that its frame loader has been swapped
      * with another.
      */

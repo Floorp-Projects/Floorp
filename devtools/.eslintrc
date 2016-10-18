@@ -29,7 +29,6 @@
     "URL": true,
     "WebSocket": true,
     "XMLHttpRequest": true,
-    "_Iterator": true,
   },
   "rules": {
     // These are the rules that have been configured so far to match the

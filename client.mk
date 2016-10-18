@@ -127,7 +127,9 @@ MOZCONFIG_OUT_FILTERED := $(filter-out $(START_COMMENT)%,$(MOZCONFIG_OUT_LINES))
 ifdef AUTOCLOBBER
 export AUTOCLOBBER=1
 endif
+ifdef MOZ_PGO
 export MOZ_PGO
+endif
 
 ifdef MOZ_PARALLEL_BUILD
   MOZ_MAKE_FLAGS := $(filter-out -j%,$(MOZ_MAKE_FLAGS))

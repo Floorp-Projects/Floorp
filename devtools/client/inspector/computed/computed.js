@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals StopIteration */
-
 "use strict";
 
 const ToolDefinitions = require("devtools/client/definitions").Tools;
@@ -39,8 +37,8 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
  *
  * @param {Window} win
  *        Timeouts will be set on this window when appropriate.
- * @param {Generator} generator
- *        Will iterate this generator.
+ * @param {Array} array
+ *        The array of items to process.
  * @param {Object} options
  *        Options for the update process:
  *          onItem {function} Will be called with the value of each iteration.
@@ -50,9 +48,11 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
  *          onCancel {function} Will be called if the process is canceled.
  *          threshold {int} How long to process before yielding, in ms.
  */
-function UpdateProcess(win, generator, options) {
+function UpdateProcess(win, array, options) {
   this.win = win;
-  this.iter = _Iterator(generator);
+  this.index = 0;
+  this.array = array;
+
   this.onItem = options.onItem || function () {};
   this.onBatch = options.onBatch || function () {};
   this.onDone = options.onDone || function () {};
@@ -63,6 +63,11 @@ function UpdateProcess(win, generator, options) {
 }
 
 UpdateProcess.prototype = {
+  /**
+   * Error thrown when the array of items to process is empty.
+   */
+  ERROR_ITERATION_DONE: new Error("UpdateProcess iteration done"),
+
   /**
    * Schedule a new batch on the main loop.
    */
@@ -92,7 +97,7 @@ UpdateProcess.prototype = {
       this._runBatch();
       this.schedule();
     } catch (e) {
-      if (e instanceof StopIteration) {
+      if (e === this.ERROR_ITERATION_DONE) {
         this.onBatch();
         this.onDone();
         return;
@@ -105,15 +110,25 @@ UpdateProcess.prototype = {
   _runBatch: function () {
     let time = Date.now();
     while (!this.canceled) {
-      // Continue until iter.next() throws...
-      let next = this.iter.next();
-      this.onItem(next[1]);
+      let next = this._next();
+      this.onItem(next);
       if ((Date.now() - time) > this.threshold) {
         this.onBatch();
         return;
       }
     }
-  }
+  },
+
+  /**
+   * Returns the item at the current index and increases the index.
+   * If all items have already been processed, will throw ERROR_ITERATION_DONE.
+   */
+  _next: function () {
+    if (this.index < this.array.length) {
+      return this.array[this.index++];
+    }
+    throw this.ERROR_ITERATION_DONE;
+  },
 };
 
 /**

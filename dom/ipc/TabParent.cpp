@@ -287,7 +287,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mIsDestroyed(false)
   , mIsDetached(true)
   , mAppPackageFileDescriptorSent(false)
-  , mSendOfflineStatus(true)
   , mChromeFlags(aChromeFlags)
   , mDragAreaX(0)
   , mDragAreaY(0)
@@ -780,14 +779,6 @@ TabParent::LoadURL(nsIURI* aURI)
         mDelayedURL = spec;
         return;
     }
-
-    uint32_t appId = OwnOrContainingAppId();
-    if (mSendOfflineStatus && NS_IsAppOffline(appId)) {
-      // If the app is offline in the parent process
-      // pass that state to the child process as well
-      Unused << SendAppOfflineStatus(appId, true);
-    }
-    mSendOfflineStatus = false;
 
     Unused << SendLoadURL(spec, GetShowInfo());
 

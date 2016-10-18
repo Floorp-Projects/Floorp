@@ -1,6 +1,12 @@
-@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
-xul|scrollbar {
+/* Restrict all styles to `*|*:not(html|select) > scrollbar` so that scrollbars
+   inside a <select> are excluded (including them hides the select arrow on
+   Windows).  We want to include both the root scrollbars for the document as
+   well as any overflow: scroll elements within the page, while excluding
+   <select>. */
+*|*:not(html|select) > scrollbar {
   -moz-appearance: none !important;
   position: relative;
   background-color: transparent;
@@ -9,38 +15,38 @@ xul|scrollbar {
   padding: 2px;
 }
 
-:root[platform="mac"] xul|scrollbar {
+*|*:root[platform="mac"] *|*:not(html|select) > scrollbar {
   border: none;
 }
 
 /* Scrollbar code will reset the margin to the correct side depending on
    where layout actually puts the scrollbar */
-xul|scrollbar[orient="vertical"] {
+*|*:not(html|select) > scrollbar[orient="vertical"] {
   margin-left: -10px;
   min-width: 10px;
   max-width: 10px;
 }
 
-xul|scrollbar[orient="horizontal"] {
+*|*:not(html|select) > scrollbar[orient="horizontal"] {
   margin-top: -10px;
   min-height: 10px;
   max-height: 10px;
 }
 
-xul|scrollbar xul|thumb {
+*|*:not(html|select) > scrollbar thumb {
   background-color: rgba(170, 170, 170, .2) !important; /* --toolbar-tab-hover */
   -moz-appearance: none !important;
   border-width: 0px !important;
   border-radius: 3px !important;
 }
 
-:root[platform="mac"] xul|slider {
+*|*:root[platform="mac"] *|*:not(html|select) > scrollbar slider {
   -moz-appearance: none !important;
 }
 
-:root[platform="win"] xul|scrollbar xul|scrollbarbutton,
-:root[platform="linux"] xul|scrollbar xul|scrollbarbutton,
-:root[platform="win"] xul|scrollbar xul|gripper,
-:root[platform="linux"] xul|scrollbar xul|gripper {
+*|*:root[platform="win"] *|*:not(html|select) > scrollbar scrollbarbutton,
+*|*:root[platform="linux"] *|*:not(html|select) > scrollbar scrollbarbutton,
+*|*:root[platform="win"] *|*:not(html|select) > scrollbar gripper,
+*|*:root[platform="linux"] *|*:not(html|select) > scrollbar gripper {
   display: none;
 }
