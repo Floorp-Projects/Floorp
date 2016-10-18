@@ -146,10 +146,6 @@ TEST(Array, main)
     FillArray(array, 4);
     CheckArray(array, 4, fillResult, 4);
 
-    // test compact
-    array->Compact();
-    CheckArray(array, 4, fillResult, 4);
-
     // test delete
     NS_RELEASE(array);
   }

@@ -82,8 +82,6 @@ public:
     return (RemoveElementAt(aIndex) ? NS_OK : NS_ERROR_FAILURE);
   }
 
-  NS_IMETHOD Compact(void) override;
-
   MOZ_MUST_USE NS_IMETHOD Clone(nsISupportsArray** aResult) override;
 
 protected:

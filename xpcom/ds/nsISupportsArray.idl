@@ -48,9 +48,6 @@ interface nsISupportsArray : nsICollection {
   // xpcom-compatible versions
   void DeleteElementAt(in unsigned long aIndex);
   
-  void Compact();
-  
-
   nsISupportsArray clone();
 };
 
