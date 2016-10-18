@@ -46,6 +46,7 @@ MessageEvent::MessageEvent(EventTarget* aOwner,
                            WidgetEvent* aEvent)
   : Event(aOwner, aPresContext, aEvent)
   , mData(JS::UndefinedValue())
+  , mPortsSet(false)
 {
 }
 
@@ -119,8 +120,13 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
 
   mozilla::HoldJSObjects(event.get());
 
-  event->mOrigin = aParam.mOrigin;
-  event->mLastEventId = aParam.mLastEventId;
+  if (aParam.mOrigin.WasPassed()) {
+    event->mOrigin = aParam.mOrigin.Value();
+  }
+
+  if (aParam.mLastEventId.WasPassed()) {
+    event->mLastEventId = aParam.mLastEventId.Value();
+  }
 
   if (!aParam.mSource.IsNull()) {
     if (aParam.mSource.Value().IsWindow()) {
@@ -132,7 +138,10 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
     MOZ_ASSERT(event->mWindowSource || event->mPortSource);
   }
 
-  event->mPorts.AppendElements(aParam.mPorts);
+  if (aParam.mPorts.WasPassed() && !aParam.mPorts.Value().IsNull()) {
+    event->mPorts.AppendElements(aParam.mPorts.Value().Value());
+    event->mPortsSet = true;
+  }
 
   return event.forget();
 }
@@ -144,7 +153,7 @@ MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
                                const nsAString& aOrigin,
                                const nsAString& aLastEventId,
                                const Nullable<WindowProxyOrMessagePort>& aSource,
-                               const Sequence<OwningNonNull<MessagePort>>& aPorts)
+                               const Nullable<Sequence<OwningNonNull<MessagePort>>>& aPorts)
 {
   Event::InitEvent(aType, aCanBubble, aCancelable);
   mData = aData;
@@ -165,21 +174,33 @@ MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
   }
 
   mPorts.Clear();
-  mPorts.AppendElements(aPorts);
+  mPortsSet = false;
+
+  if (!aPorts.IsNull()) {
+    mPorts.AppendElements(aPorts.Value());
+    mPortsSet = true;
+  }
+
   MessageEventBinding::ClearCachedPortsValue(this);
 }
 
 void
-MessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts)
+MessageEvent::GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts)
 {
-  aPorts = mPorts;
+  if (!mPortsSet) {
+    aPorts.SetNull();
+    return;
+  }
+
+  aPorts.SetValue(mPorts);
 }
 
 void
 MessageEvent::SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts)
 {
-  MOZ_ASSERT(mPorts.IsEmpty());
+  MOZ_ASSERT(mPorts.IsEmpty() && !mPortsSet);
   mPorts = Move(aPorts);
+  mPortsSet = true;
 }
 
 void

@@ -1081,8 +1081,7 @@ EventSource::DispatchAllMessageEvents()
     RefPtr<MessageEvent> event = new MessageEvent(this, nullptr, nullptr);
 
     event->InitMessageEvent(nullptr, message->mEventName, false, false, jsData,
-                            mOrigin, message->mLastEventID, nullptr,
-                            Sequence<OwningNonNull<MessagePort>>());
+                            mOrigin, message->mLastEventID, nullptr, nullptr);
     event->SetTrusted(true);
 
     rv = DispatchDOMEvent(nullptr, static_cast<Event*>(event), nullptr,

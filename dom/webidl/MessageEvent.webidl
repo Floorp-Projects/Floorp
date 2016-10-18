@@ -41,18 +41,18 @@ interface MessageEvent : Event {
    * data, origin, source, and lastEventId attributes of this appropriately.
    */
   [Pure, Cached, Frozen]
-  readonly attribute sequence<MessagePort> ports;
+  readonly attribute sequence<MessagePort>? ports;
 
   void initMessageEvent(DOMString type, boolean bubbles, boolean cancelable,
                         any data, DOMString origin, DOMString lastEventId,
                         (WindowProxy or MessagePort)? source,
-                        sequence<MessagePort> ports);
+                        sequence<MessagePort>? ports);
 };
 
 dictionary MessageEventInit : EventInit {
-  any data = null;
-  DOMString origin = "";
-  DOMString lastEventId = "";
+  any data;
+  DOMString origin;
+  DOMString lastEventId;
   (Window or MessagePort)? source = null;
-  sequence<MessagePort> ports = [];
+  sequence<MessagePort>? ports;
 };
