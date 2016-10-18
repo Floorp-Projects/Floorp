@@ -135,7 +135,6 @@ public:
 
   typedef std::map<Layer*, ClipParts> ClipPartsCache;
 private:
-  void TransformScrollableLayer(Layer* aLayer);
   // Return true if an AsyncPanZoomController content transform was
   // applied for |aLayer|. |*aOutFoundRoot| is set to true on Android only, if
   // one of the metrics on one of the layers was determined to be the "root"
@@ -152,14 +151,6 @@ private:
   void SetFirstPaintViewport(const LayerIntPoint& aOffset,
                              const CSSToLayerScale& aZoom,
                              const CSSRect& aCssPageRect);
-  void SetPageRect(const CSSRect& aCssPageRect);
-  void SyncViewportInfo(const LayerIntRect& aDisplayPort,
-                        const CSSToLayerScale& aDisplayResolution,
-                        bool aLayersUpdated,
-                        int32_t aPaintSyncId,
-                        ParentLayerRect& aScrollRect,
-                        CSSToParentLayerScale& aScale,
-                        ScreenMargin& aFixedLayerMargins);
   void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                         const CSSToParentLayerScale& aZoom,
                         const CSSRect& aCssPageRect,
