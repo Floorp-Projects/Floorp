@@ -1,3 +1,6 @@
+# Allow linting of .eslintrc.js files.
+!**/.eslintrc.js
+
 # Always ignore node_modules.
 **/node_modules/**/*.*
 
