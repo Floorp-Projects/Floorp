@@ -216,6 +216,45 @@ struct BasicFloatCalcOps
   }
 };
 
+struct BasicIntegerCalcOps
+{
+  typedef int result_type;
+  typedef int coeff_type;
+
+  result_type
+  MergeAdditive(nsCSSUnit aCalcFunction,
+                result_type aValue1, result_type aValue2)
+  {
+    if (aCalcFunction == eCSSUnit_Calc_Plus) {
+      return aValue1 + aValue2;
+    }
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Minus,
+               "unexpected unit");
+    return aValue1 - aValue2;
+  }
+
+  result_type
+  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
+                       coeff_type aValue1, result_type aValue2)
+  {
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L,
+               "unexpected unit");
+    return aValue1 * aValue2;
+  }
+
+  result_type
+  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
+                       result_type aValue1, coeff_type aValue2)
+  {
+    if (aCalcFunction == eCSSUnit_Calc_Times_R) {
+      return aValue1 * aValue2;
+    }
+    MOZ_ASSERT_UNREACHABLE("We should catch and prevent divisions in integer "
+                           "calc()s in the parser.");
+    return 1;
+  }
+};
+
 /**
  * A ComputeCoefficient implementation for callers that can assume coefficients
  * are floats and are already normalized (i.e., anything past the parser except
@@ -384,6 +423,27 @@ struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps,
   }
 
   coeff_type ComputeCoefficient(const nsCSSValue& aValue)
+  {
+    return mozilla::css::ComputeCalc(aValue, *this);
+  }
+};
+
+/**
+ * ReduceIntegerCalcOps is a CalcOps implementation for pure-integer calc()
+ * (sub-)expressions, input as nsCSSValues.
+ */
+struct ReduceIntegerCalcOps : public mozilla::css::BasicIntegerCalcOps,
+                              public mozilla::css::CSSValueInputCalcOps
+{
+  result_type
+  ComputeLeafValue(const nsCSSValue& aValue)
+  {
+    MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Integer, "unexpected unit");
+    return aValue.GetIntValue();
+  }
+
+  coeff_type
+  ComputeCoefficient(const nsCSSValue& aValue)
   {
     return mozilla::css::ComputeCalc(aValue, *this);
   }
