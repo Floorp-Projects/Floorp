@@ -44,7 +44,7 @@ using namespace mozilla::dom;
 
 IMPL_STRONG_REF_TYPE_FOR(ServoComputedValues)
 IMPL_STRONG_REF_TYPE_FOR(RawServoStyleSheet)
-IMPL_STRONG_REF_TYPE_FOR(ServoDeclarationBlock)
+IMPL_STRONG_REF_TYPE_FOR(RawServoDeclarationBlock)
 
 #undef IMPL_STRONG_REF_TYPE_FOR
 
@@ -312,7 +312,7 @@ Gecko_StoreStyleDifference(RawGeckoNodeBorrowed aNode, nsChangeHint aChangeHintT
 #endif
 }
 
-ServoDeclarationBlock*
+RawServoDeclarationBlock*
 Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
 {
   const nsAttrValue* attr = aElement->GetParsedAttr(nsGkAtoms::style);

@@ -32,7 +32,7 @@ struct MiscContainer final
         uint32_t mEnumValue;
         int32_t mPercent;
         mozilla::css::Declaration* mGeckoCSSDeclaration;
-        ServoDeclarationBlock* mServoCSSDeclaration;
+        RawServoDeclarationBlock* mServoCSSDeclaration;
         mozilla::css::URLValue* mURL;
         mozilla::css::ImageValue* mImage;
         nsAttrValue::AtomArray* mAtomArray;
@@ -155,7 +155,7 @@ nsAttrValue::GetGeckoCSSDeclarationValue() const
   return GetMiscContainer()->mValue.mGeckoCSSDeclaration;
 }
 
-inline ServoDeclarationBlock*
+inline RawServoDeclarationBlock*
 nsAttrValue::GetServoCSSDeclarationValue() const
 {
   NS_PRECONDITION(Type() == eServoCSSDeclaration, "wrong type");
