@@ -479,12 +479,11 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);
     void pushValue(const Value& val) {
-        jsval_layout jv = JSVAL_TO_IMPL(val);
-        push(Imm32(jv.s.tag));
+        push(Imm32(val.toNunboxTag()));
         if (val.isMarkable())
-            push(ImmGCPtr(reinterpret_cast<gc::Cell*>(val.toGCThing())));
+            push(ImmGCPtr(val.toMarkablePointer()));
         else
-            push(Imm32(jv.s.payload.i32));
+            push(Imm32(val.toNunboxPayload()));
     }
     void pushValue(JSValueType type, Register reg) {
         push(ImmTag(JSVAL_TYPE_TO_TAG(type)));

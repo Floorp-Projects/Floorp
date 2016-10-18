@@ -3269,12 +3269,11 @@ MacroAssemblerARMCompat::extractTag(const BaseIndex& address, Register scratch)
 void
 MacroAssemblerARMCompat::moveValue(const Value& val, Register type, Register data)
 {
-    jsval_layout jv = JSVAL_TO_IMPL(val);
-    ma_mov(Imm32(jv.s.tag), type);
+    ma_mov(Imm32(val.toNunboxTag()), type);
     if (val.isMarkable())
-        ma_mov(ImmGCPtr(reinterpret_cast<gc::Cell*>(val.toGCThing())), data);
+        ma_mov(ImmGCPtr(val.toMarkablePointer()), data);
     else
-        ma_mov(Imm32(jv.s.payload.i32), data);
+        ma_mov(Imm32(val.toNunboxPayload()), data);
 }
 
 void
@@ -3447,11 +3446,10 @@ MacroAssemblerARMCompat::storePayload(const Value& val, const Address& dest)
     ScratchRegisterScope scratch(asMasm());
     SecondScratchRegisterScope scratch2(asMasm());
 
-    jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable())
-        ma_mov(ImmGCPtr((gc::Cell*)jv.s.payload.ptr), scratch);
+        ma_mov(ImmGCPtr(val.toMarkablePointer()), scratch);
     else
-        ma_mov(Imm32(jv.s.payload.i32), scratch);
+        ma_mov(Imm32(val.toNunboxPayload()), scratch);
     ma_str(scratch, ToPayload(dest), scratch2);
 }
 
@@ -3470,11 +3468,10 @@ MacroAssemblerARMCompat::storePayload(const Value& val, const BaseIndex& dest)
     ScratchRegisterScope scratch(asMasm());
     SecondScratchRegisterScope scratch2(asMasm());
 
-    jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable())
-        ma_mov(ImmGCPtr((gc::Cell*)jv.s.payload.ptr), scratch);
+        ma_mov(ImmGCPtr(val.toMarkablePointer()), scratch);
     else
-        ma_mov(Imm32(jv.s.payload.i32), scratch);
+        ma_mov(Imm32(val.toNunboxPayload()), scratch);
 
     // If NUNBOX32_PAYLOAD_OFFSET is not zero, the memory operand [base + index
     // << shift + imm] cannot be encoded into a single instruction, and cannot
@@ -5302,12 +5299,11 @@ MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
     // equal, short circuit false (NotEqual).
     ScratchRegisterScope scratch(*this);
 
-    jsval_layout jv = JSVAL_TO_IMPL(rhs);
     if (rhs.isMarkable())
-        ma_cmp(lhs.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell*>(rhs.toGCThing())), scratch);
+        ma_cmp(lhs.payloadReg(), ImmGCPtr(rhs.toMarkablePointer()), scratch);
     else
-        ma_cmp(lhs.payloadReg(), Imm32(jv.s.payload.i32), scratch);
-    ma_cmp(lhs.typeReg(), Imm32(jv.s.tag), scratch, Equal);
+        ma_cmp(lhs.payloadReg(), Imm32(rhs.toNunboxPayload()), scratch);
+    ma_cmp(lhs.typeReg(), Imm32(rhs.toNunboxTag()), scratch, Equal);
     ma_b(label, cond);
 }
 

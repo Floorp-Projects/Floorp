@@ -2662,7 +2662,7 @@ IsNonNurseryConstant(MDefinition* def)
     if (!def->isConstant())
         return false;
     Value v = def->toConstant()->toJSValue();
-    return !v.isMarkable() || !IsInsideNursery(v.toGCThing());
+    return !v.isMarkable() || !IsInsideNursery(v.toMarkablePointer());
 }
 
 void
