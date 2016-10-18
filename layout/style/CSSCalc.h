@@ -27,6 +27,8 @@ namespace css {
  *   typedef ... input_type;
  *   typedef ... input_array_type;
  *
+ *   typedef ... coeff_type;
+ *
  *   typedef ... result_type;
  *
  *   // GetUnit(avalue) must return the correct nsCSSUnit for any
@@ -40,17 +42,17 @@ namespace css {
  *
  *   result_type
  *   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
- *                        float aValue1, result_type aValue2);
+ *                        coeff_type aValue1, result_type aValue2);
  *
  *   result_type
  *   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
- *                        result_type aValue1, float aValue2);
+ *                        result_type aValue1, coeff_type aValue2);
  *
  *   result_type
  *   ComputeLeafValue(const input_type& aValue);
  *
- *   float
- *   ComputeNumber(const input_type& aValue);
+ *   coeff_type
+ *   ComputeCoefficient(const coeff_type& aValue);
  *
  * The CalcOps methods might compute the calc() expression down to a
  * number, reduce some parts of it to a number but replicate other
@@ -59,18 +61,21 @@ namespace css {
  * values).
  *
  * For each leaf in the calc() expression, ComputeCalc will call either
- * ComputeNumber (when the leaf is the left side of a Times_L or the
+ * ComputeCoefficient (when the leaf is the left side of a Times_L or the
  * right side of a Times_R or Divided) or ComputeLeafValue (otherwise).
  * (The CalcOps in the CSS parser that reduces purely numeric
  * expressions in turn calls ComputeCalc on numbers; other ops can
- * presume that expressions in the number positions have already been
- * normalized to a single numeric value and derive from
- * NumbersAlreadyNormalizedCalcOps.)
+ * presume that expressions in the coefficient positions have already been
+ * normalized to a single numeric value and derive from, if their coefficient
+ * types are floats, FloatCoeffsAlreadyNormalizedCalcOps.)
+ *
+ * coeff_type will be float most of the time, but it's templatized so that
+ * ParseCalc can be used with <integer>s too.
  *
  * For non-leaves, one of the Merge functions will be called:
  *   MergeAdditive for Plus and Minus
- *   MergeMultiplicativeL for Times_L (number * value)
- *   MergeMultiplicativeR for Times_R (value * number) and Divided
+ *   MergeMultiplicativeL for Times_L (coeff * value)
+ *   MergeMultiplicativeR for Times_R (value * coeff) and Divided
  */
 template <class CalcOps>
 static typename CalcOps::result_type
@@ -93,7 +98,7 @@ ComputeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
     case eCSSUnit_Calc_Times_L: {
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       MOZ_ASSERT(arr->Count() == 2, "unexpected length");
-      float lhs = aOps.ComputeNumber(arr->Item(0));
+      typename CalcOps::coeff_type lhs = aOps.ComputeCoefficient(arr->Item(0));
       typename CalcOps::result_type rhs = ComputeCalc(arr->Item(1), aOps);
       return aOps.MergeMultiplicativeL(CalcOps::GetUnit(aValue), lhs, rhs);
     }
@@ -102,7 +107,7 @@ ComputeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       MOZ_ASSERT(arr->Count() == 2, "unexpected length");
       typename CalcOps::result_type lhs = ComputeCalc(arr->Item(0), aOps);
-      float rhs = aOps.ComputeNumber(arr->Item(1));
+      typename CalcOps::coeff_type rhs = aOps.ComputeCoefficient(arr->Item(1));
       return aOps.MergeMultiplicativeR(CalcOps::GetUnit(aValue), lhs, rhs);
     }
     default: {
@@ -135,6 +140,7 @@ struct CSSValueInputCalcOps
 struct BasicCoordCalcOps
 {
   typedef nscoord result_type;
+  typedef float coeff_type;
 
   result_type
   MergeAdditive(nsCSSUnit aCalcFunction,
@@ -150,7 +156,7 @@ struct BasicCoordCalcOps
 
   result_type
   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
-                       float aValue1, result_type aValue2)
+                       coeff_type aValue1, result_type aValue2)
   {
     MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L,
                "unexpected unit");
@@ -159,7 +165,7 @@ struct BasicCoordCalcOps
 
   result_type
   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
-                       result_type aValue1, float aValue2)
+                       result_type aValue1, coeff_type aValue2)
   {
     MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_R ||
                aCalcFunction == eCSSUnit_Calc_Divided,
@@ -174,6 +180,7 @@ struct BasicCoordCalcOps
 struct BasicFloatCalcOps
 {
   typedef float result_type;
+  typedef float coeff_type;
 
   result_type
   MergeAdditive(nsCSSUnit aCalcFunction,
@@ -189,7 +196,7 @@ struct BasicFloatCalcOps
 
   result_type
   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
-                       float aValue1, result_type aValue2)
+                       coeff_type aValue1, result_type aValue2)
   {
     MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L,
                "unexpected unit");
@@ -198,7 +205,7 @@ struct BasicFloatCalcOps
 
   result_type
   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
-                       result_type aValue1, float aValue2)
+                       result_type aValue1, coeff_type aValue2)
   {
     if (aCalcFunction == eCSSUnit_Calc_Times_R) {
       return aValue1 * aValue2;
@@ -210,12 +217,15 @@ struct BasicFloatCalcOps
 };
 
 /**
- * A ComputeNumber implementation for callers that can assume numbers
- * are already normalized (i.e., anything past the parser).
+ * A ComputeCoefficient implementation for callers that can assume coefficients
+ * are floats and are already normalized (i.e., anything past the parser except
+ * pure-integer calcs, whose coefficients are integers).
  */
-struct NumbersAlreadyNormalizedOps : public CSSValueInputCalcOps
+struct FloatCoeffsAlreadyNormalizedOps : public CSSValueInputCalcOps
 {
-  float ComputeNumber(const nsCSSValue& aValue)
+  typedef float coeff_type;
+
+  coeff_type ComputeCoefficient(const nsCSSValue& aValue)
   {
     MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
     return aValue.GetFloatValue();
@@ -240,7 +250,11 @@ struct NumbersAlreadyNormalizedOps : public CSSValueInputCalcOps
  *
  *   void Append(const char* aString);
  *   void AppendLeafValue(const input_type& aValue);
- *   void AppendNumber(const input_type& aValue);
+ *
+ *   // AppendCoefficient accepts an input_type value, which represents a
+ *   // value in the coefficient position, not a value of coeff_type,
+ *   // because we're serializing the calc() expression itself.
+ *   void AppendCoefficient(const input_type& aValue);
  *
  * Data structures given may or may not have a toplevel eCSSUnit_Calc
  * node representing a calc whose toplevel is not min() or max().
@@ -320,7 +334,7 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
       aOps.Append("(");
     }
     if (unit == eCSSUnit_Calc_Times_L) {
-      aOps.AppendNumber(array->Item(0));
+      aOps.AppendCoefficient(array->Item(0));
     } else {
       SerializeCalcInternal(array->Item(0), aOps);
     }
@@ -344,7 +358,7 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
     if (unit == eCSSUnit_Calc_Times_L) {
       SerializeCalcInternal(array->Item(1), aOps);
     } else {
-      aOps.AppendNumber(array->Item(1));
+      aOps.AppendCoefficient(array->Item(1));
     }
     if (needParens) {
       aOps.Append(")");
@@ -369,7 +383,7 @@ struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps,
     return aValue.GetFloatValue();
   }
 
-  float ComputeNumber(const nsCSSValue& aValue)
+  coeff_type ComputeCoefficient(const nsCSSValue& aValue)
   {
     return mozilla::css::ComputeCalc(aValue, *this);
   }
