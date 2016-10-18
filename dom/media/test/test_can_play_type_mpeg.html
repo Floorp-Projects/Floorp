@@ -137,7 +137,6 @@ var haveMp4 = (getPref("media.wmf.enabled") && IsWindowsVistaOrLater()) ||
               IsMacOSSnowLeopardOrLater() ||
               (IsSupportedAndroid() &&
                (IsJellyBeanOrLater() || getPref("media.plugins.enabled"))) ||
-              getPref("media.omx.enabled") ||
               (IsLinux() && getPref("media.ffmpeg.enabled"));
 
 check_mp4(document.getElementById('v'), haveMp4);

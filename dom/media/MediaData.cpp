@@ -6,10 +6,6 @@
 
 #include "MediaData.h"
 #include "MediaInfo.h"
-#ifdef MOZ_OMX_DECODER
-#include "GrallocImages.h"
-#include "mozilla/layers/TextureClient.h"
-#endif
 #include "VideoUtils.h"
 #include "ImageContainer.h"
 
@@ -383,52 +379,6 @@ VideoData::CreateFromImage(const VideoInfo& aInfo,
   v->mImage = aImage;
   return v.forget();
 }
-
-#ifdef MOZ_OMX_DECODER
-/* static */
-already_AddRefed<VideoData>
-VideoData::CreateAndCopyIntoTextureClient(const VideoInfo& aInfo,
-                                          int64_t aOffset,
-                                          int64_t aTime,
-                                          int64_t aDuration,
-                                          mozilla::layers::TextureClient* aBuffer,
-                                          bool aKeyframe,
-                                          int64_t aTimecode,
-                                          const IntRect& aPicture)
-{
-  // The following situations could be triggered by invalid input
-  if (aPicture.width <= 0 || aPicture.height <= 0) {
-    NS_WARNING("Empty picture rect");
-    return nullptr;
-  }
-
-  // Ensure the picture size specified in the headers can be extracted out of
-  // the frame we've been supplied without indexing out of bounds.
-  CheckedUint32 xLimit = aPicture.x + CheckedUint32(aPicture.width);
-  CheckedUint32 yLimit = aPicture.y + CheckedUint32(aPicture.height);
-  if (!xLimit.isValid() || !yLimit.isValid())
-  {
-    // The specified picture dimensions can't be contained inside the video
-    // frame, we'll stomp memory if we try to copy it. Fail.
-    NS_WARNING("Overflowing picture rect");
-    return nullptr;
-  }
-
-  RefPtr<VideoData> v(new VideoData(aOffset,
-                                    aTime,
-                                    aDuration,
-                                    aKeyframe,
-                                    aTimecode,
-                                    aInfo.mDisplay,
-                                    0));
-
-  RefPtr<layers::GrallocImage> image = new layers::GrallocImage();
-  image->AdoptData(aBuffer, aPicture.Size());
-  v->mImage = image;
-
-  return v.forget();
-}
-#endif  // MOZ_OMX_DECODER
 
 MediaRawData::MediaRawData()
   : MediaData(RAW_DATA, 0)
