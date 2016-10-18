@@ -8148,10 +8148,14 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   }
   if ((aVariantMask & VARIANT_CALC) &&
       IsCSSTokenCalcFunction(*tk)) {
-    // calc() currently allows only lengths and percents and number inside it.
-    // And note that in current implementation, number cannot be mixed with
-    // length and percent.
-    if (!ParseCalc(aValue, aVariantMask & VARIANT_LPN)) {
+    // calc() currently allows only lengths, percents, numbers, and integers.
+    //
+    // Note that VARIANT_NUMBER can be mixed with VARIANT_LENGTH and
+    // VARIANT_PERCENTAGE in the list of allowed types (numbers can be used as
+    // coefficients).
+    // However, the the resulting type is not a mixed type with number.
+    // VARIANT_INTEGER can't be mixed with anything else.
+    if (!ParseCalc(aValue, aVariantMask & (VARIANT_LPN | VARIANT_INTEGER))) {
       return CSSParseResult::Error;
     }
     return CSSParseResult::Ok;
@@ -13638,6 +13642,9 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, uint32_t aVariantMask)
   // This can be done without lookahead when we assume that the property
   // values cannot themselves be numbers.
   MOZ_ASSERT(aVariantMask != 0, "unexpected variant mask");
+  MOZ_ASSERT(!(aVariantMask & VARIANT_LPN) != !(aVariantMask & VARIANT_INTEGER),
+             "variant mask must intersect with exactly one of VARIANT_LPN "
+             "or VARIANT_INTEGER");
 
   bool oldUnitlessLengthQuirk = mUnitlessLengthQuirk;
   mUnitlessLengthQuirk = false;
@@ -13733,9 +13740,18 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
   nsCSSValue *storage = &aValue;
   for (;;) {
     uint32_t variantMask;
-    if (afterDivision || gotValue) {
+    if (aVariantMask & VARIANT_INTEGER) {
+      MOZ_ASSERT(aVariantMask == VARIANT_INTEGER,
+                 "integers in calc expressions can't be mixed with anything "
+                 "else.");
+      variantMask = aVariantMask;
+    } else if (afterDivision || gotValue) {
+      // At this point in the calc expression, we expect a coefficient or a
+      // divisor, which must be a number. (Not a length/%/etc.)
       variantMask = VARIANT_NUMBER;
     } else {
+      // At this point in the calc expression, we'll accept a coefficient
+      // (a number) or a value of whatever type |aVariantMask| specifies.
       variantMask = aVariantMask | VARIANT_NUMBER;
     }
     if (!ParseCalcTerm(*storage, variantMask))
@@ -13763,9 +13779,15 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
         MOZ_ASSERT(storage == &aValue.GetArrayValue()->Item(1),
                    "unexpected relationship to current storage");
         nsCSSValue &leftValue = aValue.GetArrayValue()->Item(0);
-        mozilla::css::ReduceNumberCalcOps ops;
-        float number = mozilla::css::ComputeCalc(leftValue, ops);
-        leftValue.SetFloatValue(number, eCSSUnit_Number);
+        if (variantMask & VARIANT_INTEGER) {
+          mozilla::css::ReduceIntegerCalcOps ops;
+          int integer = mozilla::css::ComputeCalc(leftValue, ops);
+          leftValue.SetIntValue(integer, eCSSUnit_Integer);
+        } else {
+          mozilla::css::ReduceNumberCalcOps ops;
+          float number = mozilla::css::ComputeCalc(leftValue, ops);
+          leftValue.SetFloatValue(number, eCSSUnit_Number);
+        }
       }
     }
 
@@ -13779,6 +13801,19 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
       unit = gotValue ? eCSSUnit_Calc_Times_R : eCSSUnit_Calc_Times_L;
       afterDivision = false;
     } else if (mToken.IsSymbol('/')) {
+      if (variantMask & VARIANT_INTEGER) {
+        // Integers aren't mixed with anything else (see the assert at the top
+        // of CSSParserImpl::ParseCalc).
+        // We don't allow division at all in calc()s for expressions where an
+        // integer is expected, because calc() division can't be resolved to
+        // an integer, as implied by spec text about '/' here:
+        // https://drafts.csswg.org/css-values-3/#calc-type-checking
+        // We've consumed the '/' token, but it doesn't matter as we're in an
+        // error-handling situation where we've already consumed a lot of
+        // other tokens (e.g. the token before the '/'). ParseVariant will
+        // indicate this with CSSParseResult::Error.
+        return false;
+      }
       unit = eCSSUnit_Calc_Divided;
       afterDivision = true;
     } else {
@@ -13838,15 +13873,24 @@ CSSParserImpl::ParseCalcTerm(nsCSSValue& aValue, uint32_t& aVariantMask)
   }
   // ... or just a value
   UngetToken();
-  // Always pass VARIANT_NUMBER to ParseVariant so that unitless zero
-  // always gets picked up
-  if (ParseVariant(aValue, aVariantMask | VARIANT_NUMBER, nullptr) !=
-      CSSParseResult::Ok) {
-    return false;
-  }
-  // ...and do the VARIANT_NUMBER check ourselves.
-  if (!(aVariantMask & VARIANT_NUMBER) && aValue.GetUnit() == eCSSUnit_Number) {
-    return false;
+  if (aVariantMask & VARIANT_INTEGER) {
+    // Integers aren't mixed with anything else (see the assert at the
+    // top of CSSParserImpl::ParseCalc).
+    if (ParseVariant(aValue, aVariantMask, nullptr) != CSSParseResult::Ok) {
+      return false;
+    }
+  } else {
+    // Always pass VARIANT_NUMBER to ParseVariant so that unitless zero
+    // always gets picked up (we want to catch unitless zeroes using
+    // VARIANT_NUMBER and then error out)
+    if (ParseVariant(aValue, aVariantMask | VARIANT_NUMBER, nullptr) !=
+        CSSParseResult::Ok) {
+      return false;
+    }
+    // ...and do the VARIANT_NUMBER check ourselves.
+    if (!(aVariantMask & VARIANT_NUMBER) && aValue.GetUnit() == eCSSUnit_Number) {
+      return false;
+    }
   }
   // If we did the value parsing, we need to adjust aVariantMask to
   // reflect which option we took (see above).
