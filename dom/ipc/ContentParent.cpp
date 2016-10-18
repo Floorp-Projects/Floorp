@@ -61,7 +61,6 @@
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/icc/IccParent.h"
 #include "mozilla/dom/mobileconnection/MobileConnectionParent.h"
-#include "mozilla/dom/mobilemessage/SmsParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/PresentationParent.h"
@@ -292,7 +291,6 @@ using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::icc;
 using namespace mozilla::dom::power;
 using namespace mozilla::dom::mobileconnection;
-using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::telephony;
 using namespace mozilla::media;
 using namespace mozilla::embedding;
@@ -3429,25 +3427,6 @@ bool
 ContentParent::DeallocPHandlerServiceParent(PHandlerServiceParent* aHandlerServiceParent)
 {
   static_cast<HandlerServiceParent*>(aHandlerServiceParent)->Release();
-  return true;
-}
-
-PSmsParent*
-ContentParent::AllocPSmsParent()
-{
-  if (!AssertAppProcessPermission(this, "sms")) {
-    return nullptr;
-  }
-
-  SmsParent* parent = new SmsParent();
-  parent->AddRef();
-  return parent;
-}
-
-bool
-ContentParent::DeallocPSmsParent(PSmsParent* aSms)
-{
-  static_cast<SmsParent*>(aSms)->Release();
   return true;
 }
 
