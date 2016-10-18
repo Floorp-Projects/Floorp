@@ -203,7 +203,6 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsSandboxFlags.h"
 #include "nsIAddonPolicyService.h"
-#include "nsIAppsService.h"
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -2544,32 +2543,9 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
   NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
 
-  // Figure out if we need to apply an app default CSP or a CSP from an app manifest
-  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
-
-  uint16_t appStatus = principal->GetAppStatus();
-  bool applyAppDefaultCSP = false;
-  bool applyAppManifestCSP = false;
-
-  nsAutoString appManifestCSP;
-  nsAutoString appDefaultCSP;
-  if (appStatus != nsIPrincipal::APP_STATUS_NOT_INSTALLED) {
-    nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-    if (appsService) {
-      uint32_t appId = principal->GetAppId();
-      appsService->GetManifestCSPByLocalId(appId, appManifestCSP);
-      if (!appManifestCSP.IsEmpty()) {
-        applyAppManifestCSP = true;
-      }
-      appsService->GetDefaultCSPByLocalId(appId, appDefaultCSP);
-      if (!appDefaultCSP.IsEmpty()) {
-        applyAppDefaultCSP = true;
-      }
-    }
-  }
-
   // Check if this is a document from a WebExtension.
   nsString addonId;
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   principal->GetAddonId(addonId);
   bool applyAddonCSP = !addonId.IsEmpty();
 
@@ -2581,9 +2557,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
 
   // If there's no CSP to apply, go ahead and return early
-  if (!applyAppDefaultCSP &&
-      !applyAppManifestCSP &&
-      !applyAddonCSP &&
+  if (!applyAddonCSP &&
       !applySignedContentCSP &&
       cspHeaderValue.IsEmpty() &&
       cspROHeaderValue.IsEmpty()) {
@@ -2593,52 +2567,18 @@ nsDocument::InitCSP(nsIChannel* aChannel)
       nsAutoCString aspec;
       chanURI->GetAsciiSpec(aspec);
       MOZ_LOG(gCspPRLog, LogLevel::Debug,
-             ("no CSP for document, %s, %s",
-              aspec.get(),
-              applyAppDefaultCSP ? "is app" : "not an app"));
+             ("no CSP for document, %s",
+              aspec.get()));
     }
 
     return NS_OK;
   }
 
-  MOZ_LOG(gCspPRLog, LogLevel::Debug, ("Document is an app or CSP header specified %p", this));
-
-  // If Document is an app check to see if we already set CSP and return early
-  // if that is indeed the case.
-  //
-  // In general (see bug 947831), we should not be setting CSP on a principal
-  // that aliases another document. For non-app code this is not a problem
-  // since we only share the underlying principal with nested browsing
-  // contexts for which a header cannot be set (e.g., about:blank and
-  // about:srcodoc iframes) and thus won't try to set the CSP again. This
-  // check ensures that we do not try to set CSP for an app.
-  if (applyAppDefaultCSP || applyAppManifestCSP) {
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    rv = principal->GetCsp(getter_AddRefs(csp));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (csp) {
-      MOZ_LOG(gCspPRLog, LogLevel::Debug, ("%s %s %s",
-           "This document is sharing principal with another document.",
-           "Since the document is an app, CSP was already set.",
-           "Skipping attempt to set CSP."));
-      return NS_OK;
-    }
-  }
+  MOZ_LOG(gCspPRLog, LogLevel::Debug, ("Document is an add-on or CSP header specified %p", this));
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   rv = principal->EnsureCSP(this, getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // ----- if the doc is an app and we want a default CSP, apply it.
-  if (applyAppDefaultCSP) {
-    csp->AppendPolicy(appDefaultCSP, false, false);
-  }
-
-  // ----- if the doc is an app and specifies a CSP in its manifest, apply it.
-  if (applyAppManifestCSP) {
-    csp->AppendPolicy(appManifestCSP, false, false);
-  }
 
   // ----- if the doc is an addon, apply its CSP.
   if (applyAddonCSP) {

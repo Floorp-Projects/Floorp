@@ -47,16 +47,6 @@ interface nsIAppsService : nsISupports
   DOMString getManifestURLByLocalId(in unsigned long localId);
 
   /**
-   * Returns the manifest CSP associated to this localId.
-   */
-  DOMString getManifestCSPByLocalId(in unsigned long localId);
-
-  /**
-   * Returns the default CSP associated to this localId.
-   */
-  DOMString getDefaultCSPByLocalId(in unsigned long localId);
-
-  /**
    * Returns the basepath for core apps
    */
   DOMString getCoreAppsBasePath();
