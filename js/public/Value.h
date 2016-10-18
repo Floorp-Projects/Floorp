@@ -356,48 +356,6 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
 
 #if defined(JS_NUNBOX32)
 
-static inline int32_t
-JSVAL_TO_INT32_IMPL(const jsval_layout& l)
-{
-    return l.s.payload.i32;
-}
-
-static inline JSString*
-JSVAL_TO_STRING_IMPL(const jsval_layout& l)
-{
-    return l.s.payload.str;
-}
-
-static inline JS::Symbol*
-JSVAL_TO_SYMBOL_IMPL(const jsval_layout& l)
-{
-    return l.s.payload.sym;
-}
-
-static inline bool
-JSVAL_TO_BOOLEAN_IMPL(const jsval_layout& l)
-{
-    return bool(l.s.payload.boo);
-}
-
-static inline JSObject*
-JSVAL_TO_OBJECT_IMPL(const jsval_layout& l)
-{
-    return l.s.payload.obj;
-}
-
-static inline void*
-JSVAL_TO_PRIVATE_PTR_IMPL(const jsval_layout& l)
-{
-    return l.s.payload.ptr;
-}
-
-static inline js::gc::Cell*
-JSVAL_TO_GCTHING_IMPL(const jsval_layout& l)
-{
-    return l.s.payload.cell;
-}
-
 static inline JSValueType
 JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
 {
@@ -407,53 +365,6 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
 }
 
 #elif defined(JS_PUNBOX64)
-
-static inline int32_t
-JSVAL_TO_INT32_IMPL(const jsval_layout& l)
-{
-    return (int32_t)l.asBits;
-}
-
-static inline JSString*
-JSVAL_TO_STRING_IMPL(const jsval_layout& l)
-{
-    return (JSString*)(l.asBits & JSVAL_PAYLOAD_MASK);
-}
-
-static inline JS::Symbol*
-JSVAL_TO_SYMBOL_IMPL(const jsval_layout& l)
-{
-    return (JS::Symbol*)(l.asBits & JSVAL_PAYLOAD_MASK);
-}
-
-static inline bool
-JSVAL_TO_BOOLEAN_IMPL(const jsval_layout& l)
-{
-    return (bool)(l.asBits & JSVAL_PAYLOAD_MASK);
-}
-
-static inline JSObject*
-JSVAL_TO_OBJECT_IMPL(const jsval_layout& l)
-{
-    uint64_t ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
-    MOZ_ASSERT((ptrBits & 0x7) == 0);
-    return (JSObject*)ptrBits;
-}
-
-static inline js::gc::Cell*
-JSVAL_TO_GCTHING_IMPL(const jsval_layout& l)
-{
-    uint64_t ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
-    MOZ_ASSERT((ptrBits & 0x7) == 0);
-    return reinterpret_cast<js::gc::Cell*>(ptrBits);
-}
-
-static inline void*
-JSVAL_TO_PRIVATE_PTR_IMPL(const jsval_layout& l)
-{
-    MOZ_ASSERT((l.asBits & 0x8000000000000000LL) == 0);
-    return (void*)(l.asBits << 1);
-}
 
 static inline JSValueType
 JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
@@ -812,7 +723,7 @@ class Value
         static_assert((JSVAL_TAG_OBJECT & 0x03) == size_t(JS::TraceKind::Object),
                       "Value type tags must correspond with JS::TraceKinds.");
         if (MOZ_UNLIKELY(isPrivateGCThing()))
-            return JS::GCThingTraceKind(JSVAL_TO_GCTHING_IMPL(data));
+            return JS::GCThingTraceKind(toGCThing());
         return JS::TraceKind(toTag() & 0x03);
     }
 
@@ -842,7 +753,11 @@ class Value
 
     int32_t toInt32() const {
         MOZ_ASSERT(isInt32());
-        return JSVAL_TO_INT32_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return data.s.payload.i32;
+#elif defined(JS_PUNBOX64)
+        return int32_t(data.asBits);
+#endif
     }
 
     double toDouble() const {
@@ -857,27 +772,51 @@ class Value
 
     JSString* toString() const {
         MOZ_ASSERT(isString());
-        return JSVAL_TO_STRING_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return data.s.payload.str;
+#elif defined(JS_PUNBOX64)
+        return reinterpret_cast<JSString*>(data.asBits & JSVAL_PAYLOAD_MASK);
+#endif
     }
 
     JS::Symbol* toSymbol() const {
         MOZ_ASSERT(isSymbol());
-        return JSVAL_TO_SYMBOL_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return data.s.payload.sym;
+#elif defined(JS_PUNBOX64)
+        return reinterpret_cast<JS::Symbol*>(data.asBits & JSVAL_PAYLOAD_MASK);
+#endif
     }
 
     JSObject& toObject() const {
         MOZ_ASSERT(isObject());
-        return *JSVAL_TO_OBJECT_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return *data.s.payload.obj;
+#elif defined(JS_PUNBOX64)
+        return *toObjectOrNull();
+#endif
     }
 
     JSObject* toObjectOrNull() const {
         MOZ_ASSERT(isObjectOrNull());
-        return JSVAL_TO_OBJECT_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return data.s.payload.obj;
+#elif defined(JS_PUNBOX64)
+        uint64_t ptrBits = data.asBits & JSVAL_PAYLOAD_MASK;
+        MOZ_ASSERT((ptrBits & 0x7) == 0);
+        return reinterpret_cast<JSObject*>(ptrBits);
+#endif
     }
 
     js::gc::Cell* toGCThing() const {
         MOZ_ASSERT(isGCThing());
-        return JSVAL_TO_GCTHING_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return data.s.payload.cell;
+#elif defined(JS_PUNBOX64)
+        uint64_t ptrBits = data.asBits & JSVAL_PAYLOAD_MASK;
+        MOZ_ASSERT((ptrBits & 0x7) == 0);
+        return reinterpret_cast<js::gc::Cell*>(ptrBits);
+#endif
     }
 
     GCCellPtr toGCCellPtr() const {
@@ -886,7 +825,11 @@ class Value
 
     bool toBoolean() const {
         MOZ_ASSERT(isBoolean());
-        return JSVAL_TO_BOOLEAN_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return bool(data.s.payload.boo);
+#elif defined(JS_PUNBOX64)
+        return bool(data.asBits & JSVAL_PAYLOAD_MASK);
+#endif
     }
 
     uint32_t payloadAsRawUint32() const {
@@ -924,7 +867,12 @@ class Value
 
     void* toPrivate() const {
         MOZ_ASSERT(isDouble());
-        return JSVAL_TO_PRIVATE_PTR_IMPL(data);
+#if defined(JS_NUNBOX32)
+        return data.s.payload.ptr;
+#elif defined(JS_PUNBOX64)
+        MOZ_ASSERT((data.asBits & 0x8000000000000000ULL) == 0);
+        return reinterpret_cast<void*>(data.asBits << 1);
+#endif
     }
 
     void setPrivateUint32(uint32_t ui) {
