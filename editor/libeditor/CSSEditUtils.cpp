@@ -9,7 +9,7 @@
 #include "mozilla/ChangeStyleTransaction.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/css/Declaration.h"
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
@@ -544,15 +544,19 @@ CSSEditUtils::GetCSSInlinePropertyBase(nsINode* aNode,
   }
 
   MOZ_ASSERT(aStyleType == eSpecified);
-  RefPtr<css::Declaration> decl = element->GetInlineStyleDeclaration();
+  RefPtr<DeclarationBlock> decl = element->GetInlineStyleDeclaration();
   if (!decl) {
     return NS_OK;
+  }
+  if (decl->IsServo()) {
+    MOZ_CRASH("stylo: not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
   nsCSSPropertyID prop =
     nsCSSProps::LookupProperty(nsDependentAtomString(aProperty),
                                CSSEnabledState::eForAllContent);
   MOZ_ASSERT(prop != eCSSProperty_UNKNOWN);
-  decl->GetValue(prop, aValue);
+  decl->AsGecko()->GetValue(prop, aValue);
 
   return NS_OK;
 }
