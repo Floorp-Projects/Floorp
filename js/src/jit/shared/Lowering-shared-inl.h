@@ -587,6 +587,12 @@ LIRGeneratorShared::useFixed(MDefinition* mir, AnyRegister reg)
     return reg.isFloat() ? use(mir, LUse(reg.fpu())) : use(mir, LUse(reg.gpr()));
 }
 
+LUse
+LIRGeneratorShared::useFixedAtStart(MDefinition* mir, AnyRegister reg)
+{
+    return reg.isFloat() ? use(mir, LUse(reg.fpu(), true)) : use(mir, LUse(reg.gpr(), true));
+}
+
 LDefinition
 LIRGeneratorShared::temp(LDefinition::Type type, LDefinition::Policy policy)
 {

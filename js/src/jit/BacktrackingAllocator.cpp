@@ -661,17 +661,20 @@ BacktrackingAllocator::buildLivenessInfo()
                 if (inputAlloc->isUse()) {
                     LUse* use = inputAlloc->toUse();
 
-                    // Call uses should always be at-start or fixed, since
-                    // calls use all registers.
+                    // Call uses should always be at-start, since calls use all
+                    // registers.
                     MOZ_ASSERT_IF(ins->isCall() && !inputAlloc.isSnapshotInput(),
-                                  use->isFixedRegister() || use->usedAtStart());
+                                  use->usedAtStart());
 
 #ifdef DEBUG
                     // Don't allow at-start call uses if there are temps of the same kind,
-                    // so that we don't assign the same register.
+                    // so that we don't assign the same register. Only allow this when the
+                    // use and temp are fixed registers, as they can't alias.
                     if (ins->isCall() && use->usedAtStart()) {
-                        for (size_t i = 0; i < ins->numTemps(); i++)
-                            MOZ_ASSERT(vreg(ins->getTemp(i)).type() != vreg(use).type());
+                        for (size_t i = 0; i < ins->numTemps(); i++) {
+                            MOZ_ASSERT(vreg(ins->getTemp(i)).type() != vreg(use).type() ||
+                                       (use->isFixedRegister() && ins->getTemp(i)->isFixed()));
+                        }
                     }
 
                     // If there are both useRegisterAtStart(x) and useRegister(y)
@@ -692,12 +695,7 @@ BacktrackingAllocator::buildLivenessInfo()
                     if (use->policy() == LUse::RECOVERED_INPUT)
                         continue;
 
-                    // Fixed uses on calls are specially overridden to happen
-                    // at the input position.
-                    CodePosition to =
-                        (use->usedAtStart() || (ins->isCall() && use->isFixedRegister()))
-                        ? inputOf(*ins)
-                        : outputOf(*ins);
+                    CodePosition to = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
                     if (use->isFixedRegister()) {
                         LAllocation reg(AnyRegister::FromCode(use->registerCode()));
                         for (size_t i = 0; i < ins->numDefs(); i++) {

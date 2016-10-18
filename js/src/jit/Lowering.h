@@ -49,6 +49,10 @@ class LIRGenerator : public LIRGeneratorSpecific
     MOZ_MUST_USE bool generate();
 
   private:
+    LBoxAllocation useBoxFixedAtStart(MDefinition* mir, Register reg1, Register reg2) {
+        return useBoxFixed(mir, reg1, reg2, /* useAtStart = */ true);
+    }
+
     LBoxAllocation useBoxFixedAtStart(MDefinition* mir, ValueOperand op);
     LBoxAllocation useBoxAtStart(MDefinition* mir, LUse::Policy policy = LUse::REGISTER);
 
