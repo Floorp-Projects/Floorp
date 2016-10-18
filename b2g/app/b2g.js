@@ -542,7 +542,6 @@ pref("dom.webapps.useCurrentProfile", true);
 // Enable system message
 pref("dom.sysmsg.enabled", true);
 pref("media.plugins.enabled", false);
-pref("media.omx.enabled", true);
 pref("media.rtsp.enabled", true);
 pref("media.rtsp.video.enabled", true);
 

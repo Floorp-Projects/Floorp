@@ -1328,17 +1328,6 @@ MediaRecorder::IsTypeSupported(const nsAString& aMIMEType)
     codeclist = gWebMVideoEncoderCodecs;
   }
 #endif
-#ifdef MOZ_OMX_ENCODER
-    // We're working on MP4 encoder support for desktop
-  else if (mimeType.EqualsLiteral(VIDEO_MP4) ||
-           mimeType.EqualsLiteral(AUDIO_3GPP) ||
-           mimeType.EqualsLiteral(AUDIO_3GPP2)) {
-    if (MediaEncoder::IsOMXEncoderEnabled()) {
-      // XXX check codecs for MP4/3GPP
-      return true;
-    }
-  }
-#endif
 
   // codecs don't matter if we don't support the container
   if (!codeclist) {
