@@ -1967,9 +1967,8 @@ nsIWidget::SynthesizeNativeTouchTap(LayoutDeviceIntPoint aPoint, bool aLongTap,
   }
 
   if (!aLongTap) {
-    nsresult rv = SynthesizeNativeTouchPoint(pointerId, TOUCH_REMOVE,
-                                             aPoint, 0, 0, nullptr);
-    return rv;
+    return SynthesizeNativeTouchPoint(pointerId, TOUCH_REMOVE,
+                                      aPoint, 0, 0, nullptr);
   }
 
   // initiate a long tap
