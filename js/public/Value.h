@@ -354,9 +354,6 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
 #  define JS_VALUE_CONSTEXPR_VAR const
 #endif
 
-static inline jsval_layout JSVAL_TO_IMPL(const JS::Value& v);
-static inline JS_VALUE_CONSTEXPR JS::Value IMPL_TO_JSVAL(const jsval_layout& l);
-
 namespace JS {
 
 static inline JS_VALUE_CONSTEXPR JS::Value UndefinedValue();
@@ -945,7 +942,6 @@ class Value
 #if defined(JS_VALUE_IS_CONSTEXPR)
     explicit JS_VALUE_CONSTEXPR Value(uint64_t asBits) : data({ .asBits = asBits }) {}
     explicit JS_VALUE_CONSTEXPR Value(double d) : data({ .asDouble = d }) {}
-    MOZ_IMPLICIT JS_VALUE_CONSTEXPR Value(const jsval_layout& layout) : data(layout) {}
 #endif
 
     void staticAssertions() {
@@ -955,8 +951,6 @@ class Value
         JS_STATIC_ASSERT(sizeof(Value) == 8);
     }
 
-    friend jsval_layout (::JSVAL_TO_IMPL)(const Value&);
-    friend Value JS_VALUE_CONSTEXPR (::IMPL_TO_JSVAL)(const jsval_layout& l);
     friend Value JS_VALUE_CONSTEXPR (JS::UndefinedValue)();
 
   public:
@@ -1520,24 +1514,6 @@ template <class S> struct IdentityDefaultAdaptor { static S defaultValue(const S
 template <class S, bool v> struct BoolDefaultAdaptor { static bool defaultValue(const S&) { return v; } };
 
 } // namespace js
-
-inline jsval_layout
-JSVAL_TO_IMPL(const JS::Value& v)
-{
-    return v.data;
-}
-
-inline JS_VALUE_CONSTEXPR JS::Value
-IMPL_TO_JSVAL(const jsval_layout& l)
-{
-#if defined(JS_VALUE_IS_CONSTEXPR)
-    return JS::Value(l);
-#else
-    JS::Value v;
-    v.data = l;
-    return v;
-#endif
-}
 
 namespace JS {
 
