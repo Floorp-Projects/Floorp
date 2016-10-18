@@ -181,8 +181,9 @@ function tunnelToInnerBrowser(outer, inner) {
         inner.frameLoader.tabParent.preserveLayers(value);
       };
 
-      // Make the PopupNotifications object available on the iframe's owner
-      // This is used for permission doorhangers
+      // Expose `PopupNotifications` on the content's owner global.
+      // This is used by PermissionUI.jsm for permission doorhangers.
+      // Note: This pollutes the responsive.html tool UI's global.
       Object.defineProperty(inner.ownerGlobal, "PopupNotifications", {
         get() {
           return outer.ownerGlobal.PopupNotifications;
@@ -190,7 +191,46 @@ function tunnelToInnerBrowser(outer, inner) {
         configurable: true,
         enumerable: true,
       });
+
+      // Expose `whereToOpenLink` on the content's owner global.
+      // This is used by ContentClick.jsm when opening links in ways other than just
+      // navigating the viewport.
+      // Note: This pollutes the responsive.html tool UI's global.
+      Object.defineProperty(inner.ownerGlobal, "whereToOpenLink", {
+        get() {
+          return outer.ownerGlobal.whereToOpenLink;
+        },
+        configurable: true,
+        enumerable: true,
+      });
+
+      // Add mozbrowser event handlers
+      inner.addEventListener("mozbrowseropenwindow", this);
     }),
+
+    handleEvent(event) {
+      if (event.type != "mozbrowseropenwindow") {
+        return;
+      }
+
+      // Minimal support for <a target/> and window.open() which just ensures we at
+      // least open them somewhere (in a new tab).  The following things are ignored:
+      //   * Specific target names (everything treated as _blank)
+      //   * Window features
+      //   * window.opener
+      // These things are deferred for now, since content which does depend on them seems
+      // outside the main focus of RDM.
+      let { detail } = event;
+      event.preventDefault();
+      let uri = Services.io.newURI(detail.url, null, null);
+      // This API is used mainly because it's near the path used for <a target/> with
+      // regular browser tabs (which calls `openURIInFrame`).  The more elaborate APIs
+      // that support openers, window features, etc. didn't seem callable from JS and / or
+      // this event doesn't give enough info to use them.
+      browserWindow.browserDOMWindow
+                   .openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+                            Ci.nsIBrowserDOMWindow.OPEN_NEWTAB);
+    },
 
     stop() {
       let tab = gBrowser.getTabForBrowser(outer);
@@ -223,8 +263,12 @@ function tunnelToInnerBrowser(outer, inner) {
       // Reset @remote since this is now back to a regular, non-remote browser
       outer.setAttribute("remote", "false");
 
-      // Delete the PopupNotifications getter added for permission doorhangers
+      // Delete browser window properties exposed on content's owner global
       delete inner.ownerGlobal.PopupNotifications;
+      delete inner.ownerGlobal.whereToOpenLink;
+
+      // Remove mozbrowser event handlers
+      inner.removeEventListener("mozbrowseropenwindow", this);
 
       mmTunnel.destroy();
       mmTunnel = null;
