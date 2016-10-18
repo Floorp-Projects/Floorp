@@ -19,6 +19,7 @@
 #include "gfxPrefs.h"
 #include "gfxConfig.h"
 #include "gfxCrashReporterUtils.h"
+#include "gfxUtils.h"
 #include "mozilla/gfx/StackArray.h"
 #include "mozilla/Services.h"
 #include "mozilla/widget/WinCompositorWidget.h"
@@ -887,6 +888,9 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
         // because of unsupported dimensions (we don't tile YCbCr textures).
         return;
       }
+
+      float* yuvToRgb = gfxUtils::Get4x3YuvColorMatrix(ycbcrEffect->mYUVColorSpace);
+      memcpy(&mPSConstants.yuvColorMatrix, yuvToRgb, sizeof(mPSConstants.yuvColorMatrix));
 
       TextureSourceD3D11* sourceY  = source->GetSubSource(Y)->AsSourceD3D11();
       TextureSourceD3D11* sourceCb = source->GetSubSource(Cb)->AsSourceD3D11();

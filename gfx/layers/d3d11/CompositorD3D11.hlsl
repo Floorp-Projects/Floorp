@@ -25,6 +25,8 @@ float fLayerOpacity : register(ps, c1);
 // w = is premultiplied
 uint4 iBlendConfig : register(ps, c2);
 
+row_major float3x3 mYuvColorMatrix : register(ps, c3);
+
 sampler sSampler : register(ps, s0);
 
 // The mix-blend mega shader uses all variables, so we have to make sure they
@@ -190,19 +192,27 @@ For [0,1] instead of [0,255], and to 5 places:
 [R]   [1.16438,  0.00000,  1.59603]   [ Y - 0.06275]
 [G] = [1.16438, -0.39176, -0.81297] x [Cb - 0.50196]
 [B]   [1.16438,  2.01723,  0.00000]   [Cr - 0.50196]
+
+From Rec709:
+[R]   [1.1643835616438356,  4.2781193979771426e-17, 1.7927410714285714]     [ Y -  16]
+[G] = [1.1643835616438358, -0.21324861427372963,   -0.532909328559444]    x [Cb - 128]
+[B]   [1.1643835616438356,  2.1124017857142854,     0.0]                    [Cr - 128]
+
+For [0,1] instead of [0,255], and to 5 places:
+[R]   [1.16438,  0.00000,  1.79274]   [ Y - 0.06275]
+[G] = [1.16438, -0.21325, -0.53291] x [Cb - 0.50196]
+[B]   [1.16438,  2.11240,  0.00000]   [Cr - 0.50196]
 */
 float4 CalculateYCbCrColor(const float2 aTexCoords)
 {
-  float4 yuv;
+  float3 yuv;
   float4 color;
 
-  yuv.r = tCr.Sample(sSampler, aTexCoords).r - 0.50196;
-  yuv.g = tY.Sample(sSampler, aTexCoords).r  - 0.06275;
-  yuv.b = tCb.Sample(sSampler, aTexCoords).r - 0.50196;
+  yuv.x = tY.Sample(sSampler, aTexCoords).r  - 0.06275;
+  yuv.y = tCb.Sample(sSampler, aTexCoords).r - 0.50196;
+  yuv.z = tCr.Sample(sSampler, aTexCoords).r - 0.50196;
 
-  color.r = yuv.g * 1.16438 + yuv.r * 1.59603;
-  color.g = yuv.g * 1.16438 - 0.81297 * yuv.r - 0.39176 * yuv.b;
-  color.b = yuv.g * 1.16438 + yuv.b * 2.01723;
+  color.rgb = mul(mYuvColorMatrix, yuv);
   color.a = 1.0f;
 
   return color;
