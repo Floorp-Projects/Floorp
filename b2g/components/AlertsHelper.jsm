@@ -56,13 +56,10 @@ const kTopicAlertFinished      = "alertfinished";
 const kMozChromeNotificationEvent  = "mozChromeNotificationEvent";
 const kMozContentNotificationEvent = "mozContentNotificationEvent";
 
-const kMessageAppNotificationSend    = "app-notification-send";
-const kMessageAppNotificationReturn  = "app-notification-return";
 const kMessageAlertNotificationSend  = "alert-notification-send";
 const kMessageAlertNotificationClose = "alert-notification-close";
 
 const kMessages = [
-  kMessageAppNotificationSend,
   kMessageAlertNotificationSend,
   kMessageAlertNotificationClose
 ];
@@ -132,35 +129,6 @@ var AlertsHelper = {
         listener.observer.observe(null, topic, listener.cookie);
       } catch (e) { }
     } else {
-      try {
-        listener.mm.sendAsyncMessage(kMessageAppNotificationReturn, {
-          uid: uid,
-          topic: topic,
-          target: listener.target
-        });
-      } catch (e) {
-        // we get an exception if the app is not launched yet
-        if (detail.type !== kDesktopNotificationShow) {
-          // excluding the 'show' event: there is no reason a unlaunched app
-          // would want to be notified that a notification is shown. This
-          // happens when a notification is still displayed at reboot time.
-          gSystemMessenger.sendMessage(kNotificationSystemMessageName, {
-              clicked: (detail.type === kDesktopNotificationClick),
-              title: listener.title,
-              body: listener.text,
-              imageURL: listener.imageURL,
-              lang: listener.lang,
-              dir: listener.dir,
-              id: listener.id,
-              tag: listener.tag,
-              timestamp: listener.timestamp,
-              data: listener.dataObj
-            },
-            Services.io.newURI(listener.target, null, null),
-            Services.io.newURI(listener.manifestURL, null, null)
-          );
-        }
-      }
       if (detail.type === kDesktopNotificationClose && listener.dbId) {
         notificationStorage.delete(listener.manifestURL, listener.dbId);
       }
@@ -280,31 +248,6 @@ var AlertsHelper = {
                           data.lang, dataObj, null, data.inPrivateBrowsing);
   },
 
-  showAppNotification: function(aMessage) {
-    let data = aMessage.data;
-    let details = data.details;
-    let dataObject = this.deserializeStructuredClone(details.data);
-    let listener = {
-      mm: aMessage.target,
-      title: data.title,
-      text: data.text,
-      manifestURL: details.manifestURL,
-      imageURL: data.imageURL,
-      lang: details.lang || undefined,
-      id: details.id || undefined,
-      dbId: details.dbId || undefined,
-      dir: details.dir || undefined,
-      tag: details.tag || undefined,
-      timestamp: details.timestamp || undefined,
-      dataObj: dataObject || undefined
-    };
-    this.registerAppListener(data.uid, listener);
-    this.showNotification(data.imageURL, data.title, data.text,
-                          details.textClickable, null, data.uid, details.dir,
-                          details.lang, dataObject, details.manifestURL,
-                          details.timestamp, details.mozbehavior);
-  },
-
   closeAlert: function(name) {
     SystemAppProxy._sendCustomEvent(kMozChromeNotificationEvent, {
       type: kDesktopNotificationClose,
@@ -321,10 +264,6 @@ var AlertsHelper = {
     }
 
     switch(aMessage.name) {
-      case kMessageAppNotificationSend:
-        this.showAppNotification(aMessage);
-        break;
-
       case kMessageAlertNotificationSend:
         this.showAlertNotification(aMessage);
         break;

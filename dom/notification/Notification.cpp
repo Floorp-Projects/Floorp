@@ -55,10 +55,6 @@
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 
-#ifdef MOZ_B2G
-#include "nsIDOMDesktopNotification.h"
-#endif
-
 namespace mozilla {
 namespace dom {
 
