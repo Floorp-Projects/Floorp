@@ -23,13 +23,8 @@
 <script>
 var div = document.getElementById("target");
 var gRecords = [];
-var gRecordPromiseResolvers = [];
 var gObserver = new MutationObserver(function(newRecords) {
   gRecords.push(...newRecords);
-
-  var resolvers = gRecordPromiseResolvers;
-  gRecordPromiseResolvers = [];
-  resolvers.forEach(fn => fn());
 });
 
 // Asynchronous testing framework based on layout/style/test/animation_utils.js.
