@@ -108,9 +108,10 @@ function delayed(aIsSelectedTab) {
     gBrowser.selectedTab = gNewTab;
   }
 
-  ok(isRedirectedURISpec(content.location.href),
+  let currentURI = gBrowser.selectedBrowser.currentURI.spec;
+  ok(isRedirectedURISpec(currentURI),
      "The content area is redirected. aIsSelectedTab:" + aIsSelectedTab);
-  is(gURLBar.value, content.location.href,
+  is(gURLBar.value, currentURI,
      "The URL bar shows the content URI. aIsSelectedTab:" + aIsSelectedTab);
 
   if (!aIsSelectedTab) {
