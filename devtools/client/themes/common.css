@@ -585,7 +585,7 @@ checkbox:-moz-focusring {
 
 /* Searchbox is a div container element for a search input element */
 .devtools-searchbox {
-  display: flex;
+  display: inline-flex;
   flex: 1;
   height: 23px;
   position: relative;
@@ -598,6 +598,7 @@ checkbox:-moz-focusring {
 .devtools-searchbox > .devtools-filterinput {
   margin-left: 0;
   margin-right: 0;
+  width: 100%;
 }
 
 .devtools-textinput:focus,
@@ -633,7 +634,8 @@ checkbox:-moz-focusring {
   width: 100%;
 }
 
-.devtools-rule-searchbox[filled] {
+.devtools-searchinput:-moz-any([filled],.filled),
+.devtools-filterinput:-moz-any([filled],.filled) {
   background-color: var(--searchbox-background-color);
   border-color: var(--searchbox-border-color);
 }

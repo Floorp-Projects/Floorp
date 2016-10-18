@@ -19,6 +19,10 @@
   --breadcrumbs-border-color: #454d5d;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 /* Make sure to hide scroll bars for the parent window */
 window {
   overflow: hidden;

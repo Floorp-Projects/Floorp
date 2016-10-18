@@ -349,9 +349,11 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     setIgnoreLayoutChanges(true);
 
     if (this._updateBoxModel()) {
-      // Show the infobar only if configured to do so and the node is an element.
-      if (!this.options.hideInfoBar &&
-          this.currentNode.nodeType === this.currentNode.ELEMENT_NODE) {
+      // Show the infobar only if configured to do so and the node is an element or a text
+      // node.
+      if (!this.options.hideInfoBar && (
+          this.currentNode.nodeType === this.currentNode.ELEMENT_NODE ||
+          this.currentNode.nodeType === this.currentNode.TEXT_NODE)) {
         this._showInfobar();
       } else {
         this._hideInfobar();
@@ -697,9 +699,7 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
                     ? "." + [...node.classList].join(".")
                     : "";
 
-    let pseudos = PSEUDO_CLASSES.filter(pseudo => {
-      return hasPseudoClassLock(node, pseudo);
-    }, this).join("");
+    let pseudos = this._getPseudoClasses(node).join("");
     if (pseudo) {
       // Display :after as ::after
       pseudos += ":" + pseudo;
@@ -717,6 +717,15 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.getElement("infobar-dimensions").setTextContent(dim);
 
     this._moveInfobar();
+  },
+
+  _getPseudoClasses: function (node) {
+    if (node.nodeType !== nodeConstants.ELEMENT_NODE) {
+      // hasPseudoClassLock can only be used on Elements.
+      return [];
+    }
+
+    return PSEUDO_CLASSES.filter(pseudo => hasPseudoClassLock(node, pseudo));
   },
 
   /**

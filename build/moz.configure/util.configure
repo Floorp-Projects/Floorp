@@ -333,9 +333,9 @@ def namespace(**kwargs):
 # or, for convenience, a @depends function.
 @template
 @imports(_from='inspect', _import='isfunction')
-@imports(_from='mozbuild.configure', _import='DependsFunction')
+@imports(_from='mozbuild.configure', _import='SandboxDependsFunction')
 def dependable(obj):
-    if isinstance(obj, DependsFunction):
+    if isinstance(obj, SandboxDependsFunction):
         return obj
     if isfunction(obj):
         return depends('--help')(lambda _: obj())
@@ -358,7 +358,9 @@ never = dependable(False)
 @template
 @imports('__sandbox__')
 def delayed_getattr(func, key):
-    _, deps = __sandbox__._depends.get(func, (None, ()))
+    deps = __sandbox__._depends.get(func, ())
+    if deps:
+        deps = deps.sandboxed_dependencies
 
     def result(value, _=None):
         # The @depends function we're being passed may have returned
@@ -403,13 +405,3 @@ def depends_when(*args, **kwargs):
                 return fn(*args)
         return wrapper
     return decorator
-
-# Includes a file when the given condition evaluates to a truthy value.
-@template
-def include_when(filename, when):
-    # Assume, for now, our condition already depends on --help.
-    @depends(when, '--help')
-    def conditional_include(value, _):
-        if value:
-            return filename
-    include(conditional_include)

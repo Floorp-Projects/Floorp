@@ -611,7 +611,8 @@ function makeFilteringListener(eventType, listener)
   // Some events are actually targeted at the <browser> element
   // itself, so we only handle the ones where know that won't happen.
   let eventTypes = ["mousedown", "mouseup", "click"];
-  if (eventTypes.indexOf(eventType) == -1) {
+  if (!eventTypes.includes(eventType) || !listener ||
+      (typeof listener != "object" && typeof listener != "function")) {
     return listener;
   }
 

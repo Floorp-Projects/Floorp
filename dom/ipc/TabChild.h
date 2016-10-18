@@ -418,9 +418,6 @@ public:
                                 const IPC::Principal& aPrincipal,
                                 const ClonedMessageData& aData) override;
 
-  virtual bool RecvAppOfflineStatus(const uint32_t& aId,
-                                    const bool& aOffline) override;
-
   virtual bool
   RecvSwappedWithOtherRemoteLoader(const IPCTabContext& aContext) override;
 

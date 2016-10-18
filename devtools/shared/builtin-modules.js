@@ -219,7 +219,6 @@ const globals = exports.globals = {
   atob: atob,
   btoa: btoa,
   URL,
-  _Iterator: Iterator,
   loader: {
     lazyGetter: defineLazyGetter,
     lazyImporter: defineLazyModuleGetter,

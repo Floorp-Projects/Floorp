@@ -11,7 +11,6 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "SerializedLoadContext.h"
-#include "nsIOService.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/WebSocketChannel.h"
 
@@ -35,14 +34,10 @@ WebSocketChannelParent::WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvi
 {
   // Websocket channels can't have a private browsing override
   MOZ_ASSERT_IF(!aLoadContext, aOverrideStatus == kPBOverride_Unset);
-  mObserver = new OfflineObserver(this);
 }
 
 WebSocketChannelParent::~WebSocketChannelParent()
 {
-  if (mObserver) {
-    mObserver->RemoveObserver();
-  }
 }
 //-----------------------------------------------------------------------------
 // WebSocketChannelParent::PWebSocketChannelParent
@@ -76,34 +71,10 @@ WebSocketChannelParent::RecvAsyncOpen(const OptionalURIParams& aURI,
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsILoadInfo> loadInfo;
-  bool appOffline = false;
-  uint32_t appId = NECKO_NO_APP_ID;
-  NeckoOriginAttributes attrs;
 
   rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(loadInfo));
   if (NS_FAILED(rv)) {
     goto fail;
-  }
-
-  if (loadInfo) {
-    rv = loadInfo->GetOriginAttributes(&attrs);
-    if (NS_FAILED(rv)) {
-      goto fail;
-    }
-
-    appId = attrs.mAppId;
-  } else {
-    // If the WebSocket is a server-side socket, then
-    // loadInfo will be null (since it's an incoming connection).
-    // AppID is irrelevant in these circumstances.
-    appId = NECKO_UNKNOWN_APP_ID;
-  }
-  if (appId != NECKO_UNKNOWN_APP_ID &&
-      appId != NECKO_NO_APP_ID) {
-    gIOService->IsAppOffline(appId, &appOffline);
-    if (appOffline) {
-      goto fail;
-    }
   }
 
   if (aSecure) {
@@ -329,34 +300,6 @@ WebSocketChannelParent::GetInterface(const nsIID & iid, void **result)
   }
 
   return QueryInterface(iid, result);
-}
-
-void
-WebSocketChannelParent::OfflineDisconnect()
-{
-  if (mChannel) {
-    mChannel->Close(nsIWebSocketChannel::CLOSE_GOING_AWAY,
-                    nsCString("App is offline"));
-  }
-}
-
-uint32_t
-WebSocketChannelParent::GetAppId()
-{
-  nsresult rv;
-
-  uint32_t appId = NECKO_UNKNOWN_APP_ID;
-  if (mChannel) {
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-
-    if (NS_SUCCEEDED(rv) && loadInfo) {
-      NeckoOriginAttributes attrs;
-      loadInfo->GetOriginAttributes(&attrs);
-      appId = attrs.mAppId;
-    }
-  }
-  return appId;
 }
 
 } // namespace net

@@ -6,9 +6,9 @@
 
 @template
 @imports('textwrap')
-@imports(_from='mozbuild.configure', _import='DependsFunction')
+@imports(_from='mozbuild.configure', _import='SandboxDependsFunction')
 def compiler_class(compiler):
-    class Compiler(DependsFunction):
+    class Compiler(SandboxDependsFunction):
         # Generates a test program and attempts to compile it. In case of
         # failure, the resulting check will return None. If the test program
         # succeeds, it will return the output of the test program.
@@ -47,7 +47,7 @@ def compiler_class(compiler):
             @checking_fn
             def func(compiler, flags, extra_flags):
                 flags = flags or []
-                flags += extra_flags
+                flags += extra_flags or []
                 flags.append('-c')
 
                 if try_invoke_compiler(

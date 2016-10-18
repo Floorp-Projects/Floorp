@@ -436,18 +436,6 @@ NeckoChild::RecvPredOnPredictDNS(const URIParams& aURI)
 }
 
 bool
-NeckoChild::RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline)
-{
-  // Instantiate the service to make sure gIOService is initialized
-  nsCOMPtr<nsIIOService> ioService = do_GetIOService();
-  if (gIOService) {
-    gIOService->SetAppOfflineInternal(aId, aOffline ?
-      nsIAppOfflineInfo::OFFLINE : nsIAppOfflineInfo::ONLINE);
-  }
-  return true;
-}
-
-bool
 NeckoChild::RecvSpeculativeConnectRequest()
 {
   nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();

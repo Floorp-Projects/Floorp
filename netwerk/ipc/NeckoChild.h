@@ -87,7 +87,6 @@ protected:
                                                  const nsCString& aUri,
                                                  const nsString& aRealm,
                                                  const uint64_t& aCallbackId) override;
-  virtual bool RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline) override;
   virtual PWebSocketEventListenerChild*
     AllocPWebSocketEventListenerChild(const uint64_t& aInnerWindowID) override;
   virtual bool DeallocPWebSocketEventListenerChild(PWebSocketEventListenerChild*) override;

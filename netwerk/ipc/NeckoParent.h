@@ -8,7 +8,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/net/NeckoCommon.h"
-#include "mozilla/net/OfflineObserver.h"
 #include "nsIAuthPrompt2.h"
 #include "nsINetworkPredictor.h"
 #include "nsNetUtil.h"
@@ -29,7 +28,6 @@ enum PBOverrideStatus {
 // Header file contents
 class NeckoParent
   : public PNeckoParent
-  , public DisconnectableParent
 {
 public:
   NeckoParent();
@@ -56,8 +54,6 @@ public:
                            nsCOMPtr<nsILoadContext> &aResult);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-  virtual nsresult OfflineNotification(nsISupports *) override;
-  virtual uint32_t GetAppId() override { return NECKO_UNKNOWN_APP_ID; }
   virtual PCookieServiceParent* AllocPCookieServiceParent() override;
   virtual bool
   RecvPCookieServiceConstructor(PCookieServiceParent* aActor) override
@@ -236,9 +232,6 @@ protected:
   virtual bool RecvPredReset() override;
 
   virtual bool RecvRemoveRequestContext(const nsCString& rcid) override;
-
-private:
-  RefPtr<OfflineObserver> mObserver;
 };
 
 } // namespace net

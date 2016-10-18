@@ -3968,7 +3968,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   else {
     AssertIsOnMainThread();
     RuntimeService::GetDefaultPreferences(mPreferences);
-    mOnLine = !NS_IsOffline() && !NS_IsAppOffline(aLoadInfo.mPrincipal);
+    mOnLine = !NS_IsOffline();
   }
 
   nsCOMPtr<nsIEventTarget> target;

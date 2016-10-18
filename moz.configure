@@ -108,14 +108,14 @@ include('build/moz.configure/pkg.configure')
 # requiring this file in unit tests.
 add_old_configure_assignment('PKG_CONFIG', pkg_config)
 
-include_when('build/moz.configure/toolchain.configure',
-             when='--enable-compile-environment')
-include_when('build/moz.configure/memory.configure',
-             when='--enable-compile-environment')
-include_when('build/moz.configure/headers.configure',
-             when='--enable-compile-environment')
-include_when('build/moz.configure/warnings.configure',
-             when='--enable-compile-environment')
+include('build/moz.configure/toolchain.configure',
+        when='--enable-compile-environment')
+include('build/moz.configure/memory.configure',
+        when='--enable-compile-environment')
+include('build/moz.configure/headers.configure',
+        when='--enable-compile-environment')
+include('build/moz.configure/warnings.configure',
+        when='--enable-compile-environment')
 
 include(include_project_configure)
 

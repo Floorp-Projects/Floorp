@@ -91,12 +91,12 @@ this.Context.fromString = function(s) {
  *
  * @param {string} appName
  *     Description of the product, for example "B2G" or "Firefox".
- * @param {function()} stopSignal
- *     Signal to stop the Marionette server.
+ * @param {MarionetteServer} server
+ *     The instance of Marionette server.
  */
-this.GeckoDriver = function(appName, stopSignal) {
+this.GeckoDriver = function(appName, server) {
   this.appName = appName;
-  this.stopSignal_ = stopSignal;
+  this._server = server;
 
   this.sessionId = null;
   this.wins = new browser.Windows();
@@ -2560,6 +2560,30 @@ GeckoDriver.prototype._checkIfAlertIsPresent = function() {
 };
 
 /**
+ * Enables or disables accepting new socket connections.
+ *
+ * By calling this method with `false` the server will not accept any further
+ * connections, but existing connections will not be forcible closed. Use `true`
+ * to re-enable accepting connections.
+ *
+ * Please note that when closing the connection via the client you can end-up in
+ * a non-recoverable state if it hasn't been enabled before.
+ *
+ * This method is used for custom in application shutdowns via marionette.quit()
+ * or marionette.restart(), like File -> Quit.
+ *
+ * @param {boolean} state
+ *     True if the server should accept new socket connections.
+ */
+GeckoDriver.prototype.acceptConnections = function(cmd, resp) {
+  if (typeof cmd.parameters.value != "boolean") {
+    throw InvalidArgumentError("Value has to be of type 'boolean'");
+  }
+
+  this._server.acceptConnections = cmd.parameters.value;
+}
+
+/**
  * Quits Firefox with the provided flags and tears down the current
  * session.
  */
@@ -2573,7 +2597,7 @@ GeckoDriver.prototype.quitApplication = function(cmd, resp) {
     flags |= Ci.nsIAppStartup[k];
   }
 
-  this.stopSignal_();
+  this._server.acceptConnections = false;
   resp.send();
 
   this.sessionTearDown();
@@ -2776,5 +2800,6 @@ GeckoDriver.prototype.commands = {
   "acceptDialog": GeckoDriver.prototype.acceptDialog,
   "getTextFromDialog": GeckoDriver.prototype.getTextFromDialog,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
+  "acceptConnections": GeckoDriver.prototype.acceptConnections,
   "quitApplication": GeckoDriver.prototype.quitApplication,
 };

@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsIUDPSocket.h"
 #include "nsISocketFilter.h"
-#include "mozilla/net/OfflineObserver.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 
 namespace mozilla {
@@ -23,7 +22,6 @@ namespace dom {
 
 class UDPSocketParent : public mozilla::net::PUDPSocketParent
                       , public nsIUDPSocketListener
-                      , public mozilla::net::DisconnectableParent
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -54,8 +52,6 @@ public:
                                  const nsCString& aInterface) override;
   virtual bool RecvLeaveMulticast(const nsCString& aMulticastAddress,
                                   const nsCString& aInterface) override;
-  virtual nsresult OfflineNotification(nsISupports *) override;
-  virtual uint32_t GetAppId() override;
 
 private:
   virtual ~UDPSocketParent();
@@ -79,7 +75,6 @@ private:
   bool mIPCOpen;
   nsCOMPtr<nsIUDPSocket> mSocket;
   nsCOMPtr<nsISocketFilter> mFilter;
-  RefPtr<mozilla::net::OfflineObserver> mObserver;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
