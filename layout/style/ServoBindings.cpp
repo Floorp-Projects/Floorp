@@ -146,7 +146,7 @@ Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned aIterator)
 }
 
 RawGeckoNodeBorrowed
-Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowed aIterator)
+Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut aIterator)
 {
   MOZ_ASSERT(aIterator);
   return aIterator->GetNextChild();
