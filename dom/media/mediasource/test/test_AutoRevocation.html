@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: auto-revocation</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function () {
+  var ms = new MediaSource();
+  var o = URL.createObjectURL(ms);
+  var v = document.createElement("video");
+
+  v.addEventListener("error", function (e) {
+    ok(true, "ObjectURL should be auto-revoked");
+    SimpleTest.finish();
+  });
+
+  v.addEventListener("stalled", function (e) {
+    ok(false, "If auto-revocation is gone, please turn on TODOs in browser_mediaSourceURL.js");
+    SimpleTest.finish();
+  });
+
+  setTimeout(function() {
+    v.src = o;
+    v.preload = "auto";
+    document.body.appendChild(v);
+  }, 0);
+});
+
+</script>
+</pre>
+</body>
+</html>
