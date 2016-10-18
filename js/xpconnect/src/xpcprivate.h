@@ -2376,12 +2376,6 @@ public:
                                         const char* methodName,
                                         nsIException** exception);
 
-    static nsresult JSErrorToXPCException(const char* toStringResult,
-                                          const char* ifaceName,
-                                          const char* methodName,
-                                          const JSErrorReport* report,
-                                          nsIException** exception);
-
     static nsresult ConstructException(nsresult rv, const char* message,
                                        const char* ifaceName,
                                        const char* methodName,
