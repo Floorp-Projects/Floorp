@@ -118,12 +118,9 @@ TEST(Array, main)
     CheckArray(array, 13, appendResult, 10);
 
 
-    // test IndexOf && LastIndexOf
+    // test IndexOf
     int32_t expectedIndex = 0;
     int32_t index = array->IndexOf(foo);
-    EXPECT_EQ(index, expectedIndex);
-    expectedIndex = 12;
-    index = array->LastIndexOf(foo);
     EXPECT_EQ(index, expectedIndex);
 
     // test ReplaceElementAt

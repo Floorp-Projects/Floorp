@@ -221,21 +221,6 @@ nsSupportsArray::IndexOf(const nsISupports* aPossibleElement)
   return -1;
 }
 
-NS_IMETHODIMP_(int32_t)
-nsSupportsArray::LastIndexOf(const nsISupports* aPossibleElement)
-{
-  if (0 < mCount) {
-    const nsISupports** start = (const nsISupports**)mArray;  // work around goofy compiler behavior
-    const nsISupports** ep = (start + mCount);
-    while (start <= --ep) {
-      if (aPossibleElement == *ep) {
-        return (ep - start);
-      }
-    }
-  }
-  return -1;
-}
-
 NS_IMETHODIMP_(bool)
 nsSupportsArray::InsertElementAt(nsISupports* aElement, uint32_t aIndex)
 {
