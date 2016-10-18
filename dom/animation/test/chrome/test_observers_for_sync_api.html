@@ -44,6 +44,20 @@ function assert_equals_records(actual, expected, desc) {
   }
 }
 
+// Create a pseudo element
+function createPseudo(test, element, type) {
+  addStyle(test, { '@keyframes anim': '',
+                   ['.pseudo::' + type]: 'animation: anim 10s;' });
+  element.classList.add('pseudo');
+  var anims = document.getAnimations();
+  assert_true(anims.length >= 1);
+  var anim = anims[anims.length - 1];
+  assert_equals(anim.effect.target.parentElement, element);
+  assert_equals(anim.effect.target.type, '::' + type);
+  anim.cancel();
+  return anim.effect.target;
+}
+
 [ { subtree: false },
   { subtree: true }
 ].forEach(aOptions => {
@@ -773,5 +787,68 @@ test(t => {
      { added: [anim], changed: [], removed: [] }],
     "records after setting a different target");
 }, "set_animation_target");
+
+test(t => {
+  var div = addDiv(t);
+  var pseudoTarget = createPseudo(t, div, 'before');
+  var observer = setupSynchronousObserver(t, div, true);
+
+  var anim = pseudoTarget.animate({ opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
+
+  assert_equals_records(observer.takeRecords(),
+    [{ added: [anim], changed: [], removed: [] }],
+    "records after animation is added");
+
+  anim.effect.timing.duration = 100 * MS_PER_SEC;
+  assert_equals_records(observer.takeRecords(),
+    [{ added: [], changed: [anim], removed: [] }],
+    "records after duration is changed");
+
+  anim.effect.timing.duration = 100 * MS_PER_SEC;
+  assert_equals_records(observer.takeRecords(),
+    [], "records after assigning same value");
+
+  anim.currentTime = anim.effect.timing.duration * 2;
+  anim.finish();
+  assert_equals_records(observer.takeRecords(),
+    [{ added: [], changed: [], removed: [anim] }],
+    "records after animation end");
+
+  anim.effect.timing.duration = anim.effect.timing.duration * 3;
+  assert_equals_records(observer.takeRecords(),
+    [{ added: [anim], changed: [], removed: [] }],
+    "records after animation restarted");
+
+  anim.effect.timing.duration = "auto";
+  assert_equals_records(observer.takeRecords(),
+    [{ added: [], changed: [], removed: [anim] }],
+    "records after duration set \"auto\"");
+
+  anim.effect.timing.duration = "auto";
+  assert_equals_records(observer.takeRecords(),
+    [], "records after assigning same value \"auto\"");
+}, "change_duration_and_currenttime_on_pseudo_elements");
+
+test(t => {
+  var div = addDiv(t);
+  var pseudoTarget = createPseudo(t, div, 'before');
+  var observer = setupSynchronousObserver(t, div, false);
+
+  var anim = div.animate({ opacity: [ 0, 1 ] },
+                         { duration: 100 * MS_PER_SEC });
+  var pAnim = pseudoTarget.animate({ opacity: [ 0, 1 ] },
+                                   { duration: 100 * MS_PER_SEC });
+
+  assert_equals_records(observer.takeRecords(),
+    [{ added: [anim], changed: [], removed: [] }],
+    "records after animation is added");
+
+  anim.finish();
+  pAnim.finish();
+
+  assert_equals_records(observer.takeRecords(),
+    [{ added: [], changed: [], removed: [anim] }],
+    "records after animation is finished");
+}, "exclude_animations_targeting_pseudo_elements");
 
 </script>
