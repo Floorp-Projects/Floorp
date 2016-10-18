@@ -28,7 +28,7 @@ nsDragServiceProxy::~nsDragServiceProxy()
 }
 
 nsresult
-nsDragServiceProxy::InvokeDragSessionImpl(nsISupportsArray* aArrayTransferables,
+nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
                                           nsIScriptableRegion* aRegion,
                                           uint32_t aActionType)
 {
