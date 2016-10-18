@@ -102,6 +102,9 @@ using mozilla::dom::StyleChildrenIterator;
 DECL_ARC_REF_TYPE_FOR(ServoComputedValues)
 DECL_ARC_REF_TYPE_FOR(RawServoStyleSheet)
 DECL_ARC_REF_TYPE_FOR(RawServoDeclarationBlock)
+// This is a reference to a reference of RawServoDeclarationBlock, which
+// corresponds to Option<&Arc<RawServoDeclarationBlock>> in Servo side.
+DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoDeclarationBlockStrong)
 
 DECL_OWNED_REF_TYPE_FOR(RawServoStyleSet)
 DECL_NULLABLE_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
