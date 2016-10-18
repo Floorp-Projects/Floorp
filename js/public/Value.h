@@ -944,6 +944,7 @@ class Value
   private:
 #if defined(JS_VALUE_IS_CONSTEXPR)
     explicit JS_VALUE_CONSTEXPR Value(uint64_t asBits) : data({ .asBits = asBits }) {}
+    explicit JS_VALUE_CONSTEXPR Value(double d) : data({ .asDouble = d }) {}
     MOZ_IMPLICIT JS_VALUE_CONSTEXPR Value(const jsval_layout& layout) : data(layout) {}
 #endif
 
@@ -989,6 +990,17 @@ class Value
     static JS_VALUE_CONSTEXPR Value
     fromInt32(int32_t i) {
         return fromTagAndPayload(JSVAL_TAG_INT32, uint32_t(i));
+    }
+
+    static JS_VALUE_CONSTEXPR Value
+    fromDouble(double d) {
+#if defined(JS_VALUE_IS_CONSTEXPR)
+        return Value(d);
+#else
+        Value v;
+        v.data.asDouble = d;
+        return v;
+#endif
     }
 } JS_HAZ_GC_POINTER;
 
@@ -1042,24 +1054,9 @@ DoubleValue(double dbl)
 static inline JS_VALUE_CONSTEXPR Value
 CanonicalizedDoubleValue(double d)
 {
-    /*
-     * This is a manually inlined version of:
-     *    d = JS_CANONICALIZE_NAN(d);
-     *    return IMPL_TO_JSVAL(DOUBLE_TO_JSVAL_IMPL(d));
-     * because GCC from XCode 3.1.4 miscompiles the above code.
-     */
-#if defined(JS_VALUE_IS_CONSTEXPR)
-    return IMPL_TO_JSVAL(MOZ_UNLIKELY(mozilla::IsNaN(d))
-                         ? (jsval_layout) { .asBits = 0x7FF8000000000000LL }
-                         : (jsval_layout) { .asDouble = d });
-#else
-    jsval_layout l;
-    if (MOZ_UNLIKELY(d != d))
-        l.asBits = 0x7FF8000000000000LL;
-    else
-        l.asDouble = d;
-    return IMPL_TO_JSVAL(l);
-#endif
+    return MOZ_UNLIKELY(mozilla::IsNaN(d))
+           ? Value::fromRawBits(0x7FF8000000000000ULL)
+           : Value::fromDouble(d);
 }
 
 static inline Value
