@@ -813,11 +813,7 @@ class Value
                       "Value type tags must correspond with JS::TraceKinds.");
         if (MOZ_UNLIKELY(isPrivateGCThing()))
             return JS::GCThingTraceKind(JSVAL_TO_GCTHING_IMPL(data));
-#if defined(JS_NUNBOX32)
         return JS::TraceKind(toTag() & 0x03);
-#elif defined(JS_PUNBOX64)
-        return JS::TraceKind(uint32_t(data.asBits >> JSVAL_TAG_SHIFT) & 0x03);
-#endif
     }
 
     JSWhyMagic whyMagic() const {
