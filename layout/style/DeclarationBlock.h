@@ -12,13 +12,17 @@
 #ifndef mozilla_DeclarationBlock_h
 #define mozilla_DeclarationBlock_h
 
+#include "mozilla/ServoUtils.h"
 #include "mozilla/StyleBackendType.h"
 
 class nsHTMLCSSStyleSheet;
 
 namespace mozilla {
 
+class ServoDeclarationBlock;
+
 namespace css {
+class Declaration;
 class Rule;
 } // namespace css
 
@@ -32,6 +36,11 @@ protected:
     : DeclarationBlock(aCopy.mType) {}
 
 public:
+  MOZ_DECL_STYLO_METHODS(css::Declaration, ServoDeclarationBlock)
+
+  inline MozExternalRefCountType AddRef();
+  inline MozExternalRefCountType Release();
+
   /**
    * Return whether |this| may be modified.
    */
