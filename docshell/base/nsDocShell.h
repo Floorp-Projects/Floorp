@@ -727,12 +727,6 @@ protected:
   // Convenience method for getting our parent docshell. Can return null
   already_AddRefed<nsDocShell> GetParentDocshell();
 
-  // Check if we have an app redirect registered for the URI and redirect if
-  // needed. Returns true if a redirect happened, false otherwise.
-  bool DoAppRedirectIfNeeded(nsIURI* aURI,
-                             nsIDocShellLoadInfo* aLoadInfo,
-                             bool aFirstParty);
-
   // Check if aURI is about:newtab.
   bool IsAboutNewtab(nsIURI* aURI);
 

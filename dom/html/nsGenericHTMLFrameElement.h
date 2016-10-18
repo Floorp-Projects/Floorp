@@ -125,7 +125,7 @@ protected:
   bool mFullscreenFlag = false;
 
 private:
-  void GetManifestURLByType(nsIAtom *aAppType, nsAString& aOut);
+  void GetManifestURL(nsAString& aOut);
 };
 
 #endif // nsGenericHTMLFrameElement_h

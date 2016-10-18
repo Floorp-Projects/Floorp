@@ -31,10 +31,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkService",
                                    "@mozilla.org/network/service;1",
                                    "nsINetworkService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gPACGenerator",
-                                   "@mozilla.org/pac-generator;1",
-                                   "nsIPACGenerator");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gTetheringService",
                                    "@mozilla.org/tethering/service;1",
                                    "nsITetheringService");
@@ -62,8 +58,7 @@ const CONNECTION_TYPE_WIFI      = 3;
 const CONNECTION_TYPE_OTHER     = 4;
 const CONNECTION_TYPE_NONE      = 5;
 
-const PROXY_TYPE_MANUAL = Ci.nsIProtocolProxyService.PROXYCONFIG_MANUAL;
-const PROXY_TYPE_PAC    = Ci.nsIProtocolProxyService.PROXYCONFIG_PAC;
+const MANUAL_PROXY_CONFIGURATION = 1;
 
 var debug;
 function updateDebug() {
@@ -1111,6 +1106,8 @@ NetworkManager.prototype = {
       }
 
       debug("Going to set proxy settings for " + aNetwork.info.name + " network interface.");
+      // Sets manual proxy configuration.
+      Services.prefs.setIntPref("network.proxy.type", MANUAL_PROXY_CONFIGURATION);
 
       // Do not use this proxy server for all protocols.
       Services.prefs.setBoolPref("network.proxy.share_proxy_settings", false);
@@ -1119,19 +1116,6 @@ NetworkManager.prototype = {
       let port = aNetwork.httpProxyPort === 0 ? 8080 : aNetwork.httpProxyPort;
       Services.prefs.setIntPref("network.proxy.http_port", port);
       Services.prefs.setIntPref("network.proxy.ssl_port", port);
-
-      let usePAC;
-      try {
-        usePAC = Services.prefs.getBoolPref("network.proxy.pac_generator");
-      } catch (ex) {}
-
-      if (usePAC) {
-        Services.prefs.setCharPref("network.proxy.autoconfig_url",
-                                   gPACGenerator.generate());
-        Services.prefs.setIntPref("network.proxy.type", PROXY_TYPE_PAC);
-      } else {
-        Services.prefs.setIntPref("network.proxy.type", PROXY_TYPE_MANUAL);
-      }
     } catch(ex) {
         debug("Exception " + ex + ". Unable to set proxy setting for " +
               aNetwork.info.name + " network interface.");
@@ -1141,24 +1125,12 @@ NetworkManager.prototype = {
   clearNetworkProxy: function() {
     debug("Going to clear all network proxy.");
 
+    Services.prefs.clearUserPref("network.proxy.type");
     Services.prefs.clearUserPref("network.proxy.share_proxy_settings");
     Services.prefs.clearUserPref("network.proxy.http");
     Services.prefs.clearUserPref("network.proxy.http_port");
     Services.prefs.clearUserPref("network.proxy.ssl");
     Services.prefs.clearUserPref("network.proxy.ssl_port");
-
-    let usePAC;
-    try {
-      usePAC = Services.prefs.getBoolPref("network.proxy.pac_generator");
-    } catch (ex) {}
-
-    if (usePAC) {
-      Services.prefs.setCharPref("network.proxy.autoconfig_url",
-                                 gPACGenerator.generate());
-      Services.prefs.setIntPref("network.proxy.type", PROXY_TYPE_PAC);
-    } else {
-      Services.prefs.clearUserPref("network.proxy.type");
-    }
   },
 };
 

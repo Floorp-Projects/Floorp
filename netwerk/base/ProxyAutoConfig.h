@@ -36,9 +36,6 @@ public:
   void     Shutdown();
   void     GC();
   bool     MyIPAddress(const JS::CallArgs &aArgs);
-  bool     MyAppId(const JS::CallArgs &aArgs);
-  bool     MyAppOrigin(const JS::CallArgs &aArgs);
-  bool     IsInIsolatedMozBrowser(const JS::CallArgs &aArgs);
   bool     ResolveAddress(const nsCString &aHostName,
                           NetAddr *aNetAddr, unsigned int aTimeout);
 
@@ -72,25 +69,12 @@ public:
    *        The URI as an ASCII string to test.
    * @param aTestHost
    *        The ASCII hostname to test.
-   * @param aAppId
-   *        The id of the app requesting connection.
-   * @param aAppOrigin
-   *        The origin of the app requesting connection.
-   * @param aIsInIsolatedMozBrowser
-   *        True if the frame is an isolated mozbrowser element. <iframe
-   *        mozbrowser mozapp> and <xul:browser> are not considered to be
-   *        mozbrowser elements.  <iframe mozbrowser noisolation> does not count
-   *        as isolated since isolation is disabled.  Isolation can only be
-   *        disabled if the containing document is chrome.
    *
    * @param result
    *        result string as defined above.
    */
   nsresult GetProxyForURI(const nsCString &aTestURI,
                           const nsCString &aTestHost,
-                          uint32_t aAppId,
-                          const nsString &aAppOrigin,
-                          bool aIsInIsolatedMozBrowser,
                           nsACString &result);
 
 private:
@@ -111,9 +95,6 @@ private:
   nsCString         mPACURI;
   bool              mIncludePath;
   nsCString         mRunningHost;
-  uint32_t          mRunningAppId;
-  nsString          mRunningAppOrigin;
-  bool              mRunningIsInIsolatedMozBrowser;
   nsCOMPtr<nsITimer> mTimer;
 };
 
