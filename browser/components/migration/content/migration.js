@@ -425,7 +425,12 @@ var MigrationWizard = {
       break;
     case "Migration:Ended":
       if (this.isInitialMigration) {
-        this.reportDataRecencyTelemetry();
+        // Ensure errors in reporting data recency do not affect the rest of the migration.
+        try {
+          this.reportDataRecencyTelemetry();
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
       }
       if (this._autoMigrate) {
         let hasImportedHomepage = !!(this._newHomePage && this._newHomePage != "DEFAULT");
