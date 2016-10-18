@@ -363,7 +363,6 @@ WEBIDL_FILES = [
     'Permissions.webidl',
     'PermissionSettings.webidl',
     'PermissionStatus.webidl',
-    'PhoneNumberService.webidl',
     'Plugin.webidl',
     'PluginArray.webidl',
     'PointerEvent.webidl',
