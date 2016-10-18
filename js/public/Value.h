@@ -392,30 +392,10 @@ JSVAL_TO_PRIVATE_PTR_IMPL(const jsval_layout& l)
     return l.s.payload.ptr;
 }
 
-static inline bool
-JSVAL_IS_PRIVATE_GCTHING_IMPL(const jsval_layout& l)
-{
-    return l.s.tag == JSVAL_TAG_PRIVATE_GCTHING;
-}
-
 static inline js::gc::Cell*
 JSVAL_TO_GCTHING_IMPL(const jsval_layout& l)
 {
     return l.s.payload.cell;
-}
-
-static inline uint32_t
-JSVAL_TRACE_KIND_IMPL(const jsval_layout& l)
-{
-    static_assert((JSVAL_TAG_STRING & 0x03) == size_t(JS::TraceKind::String),
-                  "Value type tags must correspond with JS::TraceKinds.");
-    static_assert((JSVAL_TAG_SYMBOL & 0x03) == size_t(JS::TraceKind::Symbol),
-                  "Value type tags must correspond with JS::TraceKinds.");
-    static_assert((JSVAL_TAG_OBJECT & 0x03) == size_t(JS::TraceKind::Object),
-                  "Value type tags must correspond with JS::TraceKinds.");
-    if (MOZ_UNLIKELY(JSVAL_IS_PRIVATE_GCTHING_IMPL(l)))
-        return (uint32_t)JS::GCThingTraceKind(JSVAL_TO_GCTHING_IMPL(l));
-    return l.s.tag & 0x03;
 }
 
 static inline JSValueType
@@ -460,32 +440,12 @@ JSVAL_TO_OBJECT_IMPL(const jsval_layout& l)
     return (JSObject*)ptrBits;
 }
 
-static inline bool
-JSVAL_IS_PRIVATE_GCTHING_IMPL(const jsval_layout& l)
-{
-    return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_PRIVATE_GCTHING;
-}
-
 static inline js::gc::Cell*
 JSVAL_TO_GCTHING_IMPL(const jsval_layout& l)
 {
     uint64_t ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
     MOZ_ASSERT((ptrBits & 0x7) == 0);
     return reinterpret_cast<js::gc::Cell*>(ptrBits);
-}
-
-static inline uint32_t
-JSVAL_TRACE_KIND_IMPL(const jsval_layout& l)
-{
-    static_assert((JSVAL_TAG_STRING & 0x03) == size_t(JS::TraceKind::String),
-                  "Value type tags must correspond with JS::TraceKinds.");
-    static_assert((JSVAL_TAG_SYMBOL & 0x03) == size_t(JS::TraceKind::Symbol),
-                  "Value type tags must correspond with JS::TraceKinds.");
-    static_assert((JSVAL_TAG_OBJECT & 0x03) == size_t(JS::TraceKind::Object),
-                  "Value type tags must correspond with JS::TraceKinds.");
-    if (MOZ_UNLIKELY(JSVAL_IS_PRIVATE_GCTHING_IMPL(l)))
-        return (uint32_t)JS::GCThingTraceKind(JSVAL_TO_GCTHING_IMPL(l));
-    return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) & 0x03;
 }
 
 static inline void*
@@ -845,7 +805,19 @@ class Value
 
     JS::TraceKind traceKind() const {
         MOZ_ASSERT(isMarkable());
-        return JS::TraceKind(JSVAL_TRACE_KIND_IMPL(data));
+        static_assert((JSVAL_TAG_STRING & 0x03) == size_t(JS::TraceKind::String),
+                      "Value type tags must correspond with JS::TraceKinds.");
+        static_assert((JSVAL_TAG_SYMBOL & 0x03) == size_t(JS::TraceKind::Symbol),
+                      "Value type tags must correspond with JS::TraceKinds.");
+        static_assert((JSVAL_TAG_OBJECT & 0x03) == size_t(JS::TraceKind::Object),
+                      "Value type tags must correspond with JS::TraceKinds.");
+        if (MOZ_UNLIKELY(isPrivateGCThing()))
+            return JS::GCThingTraceKind(JSVAL_TO_GCTHING_IMPL(data));
+#if defined(JS_NUNBOX32)
+        return JS::TraceKind(toTag() & 0x03);
+#elif defined(JS_PUNBOX64)
+        return JS::TraceKind(uint32_t(data.asBits >> JSVAL_TAG_SHIFT) & 0x03);
+#endif
     }
 
     JSWhyMagic whyMagic() const {
