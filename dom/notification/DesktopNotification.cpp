@@ -11,7 +11,6 @@
 #include "nsContentPermissionHelper.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/PBrowserChild.h"
-#include "nsIDOMDesktopNotification.h"
 #include "mozilla/Preferences.h"
 #include "nsGlobalWindow.h"
 #include "nsIScriptSecurityManager.h"
