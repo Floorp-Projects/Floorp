@@ -222,7 +222,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void writeDataRelocation(const Value& val) {
         if (val.isMarkable()) {
-            gc::Cell* cell = reinterpret_cast<gc::Cell *>(val.toGCThing());
+            gc::Cell* cell = val.toMarkablePointer();
             if (cell && gc::IsInsideNursery(cell))
                 embedsNurseryPointers_ = true;
             dataRelocations_.writeUnsigned(currentOffset());
