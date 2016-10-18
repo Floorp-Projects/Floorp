@@ -1609,10 +1609,6 @@ public abstract class GeckoApp
         //app state callbacks
         mAppStateListeners = new LinkedList<GeckoAppShell.AppStateListener>();
 
-        if (SmsManager.isEnabled()) {
-            SmsManager.getInstance().start();
-        }
-
         mPromptService = new PromptService(this);
 
         // Trigger the completion of the telemetry timer that wraps activity startup,
