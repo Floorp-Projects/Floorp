@@ -217,6 +217,8 @@ public:
 
   virtual void HandleVideoSuspendTimeout() = 0;
 
+  virtual void HandleResumeVideoDecoding();
+
   virtual void DumpDebugInfo() {}
 
 protected:
@@ -274,6 +276,7 @@ public:
 
   void Enter()
   {
+    MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
     MOZ_ASSERT(!mMetadataRequest.Exists());
     SLOG("Dispatching AsyncReadMetadata");
 
@@ -319,6 +322,12 @@ public:
     // Do nothing since no decoders are created yet.
   }
 
+  void HandleResumeVideoDecoding() override
+  {
+    // We never suspend video decoding in this state.
+    MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
+  }
+
 private:
   void OnMetadataRead(MetadataHolder* aMetadata);
 
@@ -343,7 +352,11 @@ class MediaDecoderStateMachine::WaitForCDMState
 public:
   explicit WaitForCDMState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter(bool aPendingDormant) { mPendingDormant = aPendingDormant; }
+  void Enter(bool aPendingDormant)
+  {
+    MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
+    mPendingDormant = aPendingDormant;
+  }
 
   State GetState() const override
   {
@@ -365,6 +378,12 @@ public:
   void HandleVideoSuspendTimeout() override
   {
     // Do nothing since no decoders are created yet.
+  }
+
+  void HandleResumeVideoDecoding() override
+  {
+    // We never suspend video decoding in this state.
+    MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
   }
 
 private:
@@ -404,6 +423,11 @@ public:
   void HandleVideoSuspendTimeout() override
   {
     // Do nothing since we've released decoders in Enter().
+  }
+
+  void HandleResumeVideoDecoding() override
+  {
+    // Do nothing since we won't resume decoding until exiting dormant.
   }
 };
 
@@ -445,6 +469,12 @@ public:
   void HandleVideoSuspendTimeout() override
   {
     // Do nothing for we need to decode the 1st video frame to get the dimensions.
+  }
+
+  void HandleResumeVideoDecoding() override
+  {
+    // We never suspend video decoding in this state.
+    MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
   }
 
 private:
@@ -729,6 +759,12 @@ public:
     // Do nothing since we want a valid video frame to show when seek is done.
   }
 
+  void HandleResumeVideoDecoding() override
+  {
+    // We set mVideoDecodeSuspended to false in Enter().
+    MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
+  }
+
 private:
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
   {
@@ -968,6 +1004,11 @@ public:
   {
     MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
   }
+
+  void HandleResumeVideoDecoding() override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
+  }
 };
 
 bool
@@ -994,6 +1035,78 @@ MediaDecoderStateMachine::
 StateObject::HandleShutdown()
 {
   return SetState<ShutdownState>();
+}
+
+static void
+ReportRecoveryTelemetry(const TimeStamp& aRecoveryStart,
+                        const MediaInfo& aMediaInfo,
+                        bool aIsHardwareAccelerated)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!aMediaInfo.HasVideo()) {
+    return;
+  }
+
+  // Keyed by audio+video or video alone, hardware acceleration,
+  // and by a resolution range.
+  nsCString key(aMediaInfo.HasAudio() ? "AV" : "V");
+  key.AppendASCII(aIsHardwareAccelerated ? "(hw)," : ",");
+  static const struct { int32_t mH; const char* mRes; } sResolutions[] = {
+    {  240, "0-240" },
+    {  480, "241-480" },
+    {  720, "481-720" },
+    { 1080, "721-1080" },
+    { 2160, "1081-2160" }
+  };
+  const char* resolution = "2161+";
+  int32_t height = aMediaInfo.mVideo.mImage.height;
+  for (const auto& res : sResolutions) {
+    if (height <= res.mH) {
+      resolution = res.mRes;
+      break;
+    }
+  }
+  key.AppendASCII(resolution);
+
+  TimeDuration duration = TimeStamp::Now() - aRecoveryStart;
+  double duration_ms = duration.ToMilliseconds();
+  Telemetry::Accumulate(Telemetry::VIDEO_SUSPEND_RECOVERY_TIME_MS,
+                        key,
+                        uint32_t(duration_ms + 0.5));
+  Telemetry::Accumulate(Telemetry::VIDEO_SUSPEND_RECOVERY_TIME_MS,
+                        NS_LITERAL_CSTRING("All"),
+                        uint32_t(duration_ms + 0.5));
+}
+
+void
+MediaDecoderStateMachine::
+StateObject::HandleResumeVideoDecoding()
+{
+  MOZ_ASSERT(mMaster->mVideoDecodeSuspended);
+
+  // Start counting recovery time from right now.
+  TimeStamp start = TimeStamp::Now();
+
+  // Local reference to mInfo, so that it will be copied in the lambda below.
+  auto& info = Info();
+  bool hw = Reader()->VideoIsHardwareAccelerated();
+
+  // Start video-only seek to the current time.
+  SeekJob seekJob;
+
+  const SeekTarget::Type type = mMaster->HasAudio()
+                                ? SeekTarget::Type::Accurate
+                                : SeekTarget::Type::PrevSyncPoint;
+
+  seekJob.mTarget = SeekTarget(mMaster->GetMediaTime(),
+                               type,
+                               MediaDecoderEventVisibility::Suppressed,
+                               true /* aVideoOnly */);
+
+  SetState<SeekingState>(Move(seekJob))->Then(
+    AbstractThread::MainThread(), __func__,
+    [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
+    [](){});
 }
 
 void
@@ -1107,6 +1220,8 @@ DecodingFirstFrameState::Enter()
     SetState<DecodingState>();
     return;
   }
+
+  MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
 
   // Dispatch tasks to decode first frames.
   mMaster->DispatchDecodeTasksIfNeeded();
@@ -2272,47 +2387,6 @@ void MediaDecoderStateMachine::PlayStateChanged()
   ScheduleStateMachine();
 }
 
-static void
-ReportRecoveryTelemetry(const TimeStamp& aRecoveryStart,
-                        const MediaInfo& aMediaInfo,
-                        bool aIsHardwareAccelerated)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aMediaInfo.HasVideo()) {
-    return;
-  }
-
-  // Keyed by audio+video or video alone, hardware acceleration,
-  // and by a resolution range.
-  nsCString key(aMediaInfo.HasAudio() ? "AV" : "V");
-  key.AppendASCII(aIsHardwareAccelerated ? "(hw)," : ",");
-  static const struct { int32_t mH; const char* mRes; } sResolutions[] = {
-    {  240, "0-240" },
-    {  480, "241-480" },
-    {  720, "481-720" },
-    { 1080, "721-1080" },
-    { 2160, "1081-2160" }
-  };
-  const char* resolution = "2161+";
-  int32_t height = aMediaInfo.mVideo.mImage.height;
-  for (const auto& res : sResolutions) {
-    if (height <= res.mH) {
-      resolution = res.mRes;
-      break;
-    }
-  }
-  key.AppendASCII(resolution);
-
-  TimeDuration duration = TimeStamp::Now() - aRecoveryStart;
-  double duration_ms = duration.ToMilliseconds();
-  Telemetry::Accumulate(Telemetry::VIDEO_SUSPEND_RECOVERY_TIME_MS,
-                        key,
-                        uint32_t(duration_ms + 0.5));
-  Telemetry::Accumulate(Telemetry::VIDEO_SUSPEND_RECOVERY_TIME_MS,
-                        NS_LITERAL_CSTRING("All"),
-                        uint32_t(duration_ms + 0.5));
-}
-
 void MediaDecoderStateMachine::VisibilityChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2337,39 +2411,7 @@ void MediaDecoderStateMachine::VisibilityChanged()
   mVideoDecodeSuspendTimer.Reset();
 
   if (mVideoDecodeSuspended) {
-
-    if (mIsReaderSuspended) {
-      return;
-    }
-
-    // If an existing seek is in flight don't bother creating a new
-    // one to catch up.
-    if (mState == DECODER_STATE_SEEKING || mQueuedSeek.Exists()) {
-      return;
-    }
-
-    // Start counting recovery time from right now.
-    TimeStamp start = TimeStamp::Now();
-    // Local reference to mInfo, so that it will be copied in the lambda below.
-    auto& info = Info();
-    bool hw = mReader->VideoIsHardwareAccelerated();
-
-    // Start video-only seek to the current time.
-    SeekJob seekJob;
-
-    const SeekTarget::Type type = HasAudio()
-                                  ? SeekTarget::Type::Accurate
-                                  : SeekTarget::Type::PrevSyncPoint;
-
-    seekJob.mTarget = SeekTarget(GetMediaTime(),
-                                 type,
-                                 MediaDecoderEventVisibility::Suppressed,
-                                 true /* aVideoOnly */);
-
-    mStateObj->SetState<SeekingState>(Move(seekJob))->Then(
-      AbstractThread::MainThread(), __func__,
-      [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
-      [](){});
+    mStateObj->HandleResumeVideoDecoding();
   }
 }
 
