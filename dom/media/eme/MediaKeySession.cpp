@@ -350,23 +350,36 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
     return nullptr;
   }
 
-  if (aSessionId.IsEmpty()) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
-                         NS_LITERAL_CSTRING("Trying to load a session with empty session ID"));
-    // "The sessionId parameter is empty."
-    EME_LOG("MediaKeySession[%p,''] Load() failed, no sessionId", this);
+  // 1. If this object is closed, return a promise rejected with an InvalidStateError.
+  if (IsClosed()) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                         NS_LITERAL_CSTRING("Session is closed in MediaKeySession.load()"));
+    EME_LOG("MediaKeySession[%p,'%s'] Load() failed, closed",
+      this, NS_ConvertUTF16toUTF8(aSessionId).get());
     return promise.forget();
   }
 
+  // 2.If this object's uninitialized value is false, return a promise rejected
+  // with an InvalidStateError.
   if (!mUninitialized) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
                          NS_LITERAL_CSTRING("Session is already initialized in MediaKeySession.load()"));
     EME_LOG("MediaKeySession[%p,'%s'] Load() failed, uninitialized",
       this, NS_ConvertUTF16toUTF8(aSessionId).get());
     return promise.forget();
   }
 
+  // 3.Let this object's uninitialized value be false.
   mUninitialized = false;
+
+  // 4. If sessionId is the empty string, return a promise rejected with a newly created TypeError.
+  if (aSessionId.IsEmpty()) {
+    promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR,
+                         NS_LITERAL_CSTRING("Trying to load a session with empty session ID"));
+    // "The sessionId parameter is empty."
+    EME_LOG("MediaKeySession[%p,''] Load() failed, no sessionId", this);
+    return promise.forget();
+  }
 
   // We now know the sessionId being loaded into this session. Remove the
   // session from its owning MediaKey's set of sessions awaiting a sessionId.
