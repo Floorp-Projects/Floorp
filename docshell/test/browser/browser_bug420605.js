@@ -46,8 +46,8 @@ function test() {
     function clickLinkIfReady() {
       _clickLinkTimes++;
       if (_clickLinkTimes == 2) {
-        EventUtils.sendMouseEvent({type:'click'}, 'firefox-link',
-                                  gBrowser.selectedBrowser.contentWindow);
+        BrowserTestUtils.synthesizeMouseAtCenter('#firefox-link', {},
+                                                 gBrowser.selectedBrowser);
       }
     }
 
