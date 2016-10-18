@@ -1,14 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+/* globals do_get_tempdir */
 
+"use strict";
+
+/* exported run_test */
 function run_test() {
   run_next_test();
 }
 
 function readFile(file) {
-  let stream = Cc['@mozilla.org/network/file-input-stream;1']
+  let stream = Cc["@mozilla.org/network/file-input-stream;1"]
                .createInstance(Ci.nsIFileInputStream);
   stream.init(file, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
@@ -91,9 +94,7 @@ function promiseMigrator(name, srcDir, targetDir) {
   let migrators = migrator._getResourcesInternal(srcDir, targetDir);
   for (let m of migrators) {
     if (m.name == name) {
-      return new Promise((resolve, reject) => {
-        m.migrate(resolve);
-      });
+      return new Promise(resolve => m.migrate(resolve));
     }
   }
   throw new Error("failed to find the " + name + " migrator");
@@ -185,7 +186,7 @@ add_task(function* test_datareporting_empty() {
   let [srcDir, targetDir] = getTestDirs();
 
   // Migrate with an empty 'datareporting' subdir.
-  let subDir = createSubDir(srcDir, "datareporting");
+  createSubDir(srcDir, "datareporting");
   let ok = yield promiseTelemetryMigrator(srcDir, targetDir);
   Assert.ok(ok, "callback should have been true");
 
@@ -199,7 +200,7 @@ add_task(function* test_healthreport_empty() {
   let [srcDir, targetDir] = getTestDirs();
 
   // Migrate with no 'datareporting' and an empty 'healthreport' subdir.
-  let subDir = createSubDir(srcDir, "healthreport");
+  createSubDir(srcDir, "healthreport");
   let ok = yield promiseTelemetryMigrator(srcDir, targetDir);
   Assert.ok(ok, "callback should have been true");
 

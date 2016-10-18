@@ -1,3 +1,5 @@
+"use strict";
+
 add_task(function* () {
   let migrator = MigrationUtils.getMigrator("ie");
   // Sanity check for the source.
