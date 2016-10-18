@@ -20,7 +20,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/KeyframeEffectParams.h"
 #include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
-#include "mozilla/ServoBindingHelpers.h" // ServoDeclarationBlock and
+#include "mozilla/ServoBindingHelpers.h" // RawServoDeclarationBlock and
                                          // associated RefPtrTraits
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
@@ -67,7 +67,7 @@ struct PropertyValuePair
   // The specified value when using the Servo backend. However, even when
   // using the Servo backend, we still fill in |mValue| in the case where we
   // fail to parse the value since we use it to store the original string.
-  RefPtr<ServoDeclarationBlock> mServoDeclarationBlock;
+  RefPtr<RawServoDeclarationBlock> mServoDeclarationBlock;
 
   bool operator==(const PropertyValuePair& aOther) const {
     return mProperty == aOther.mProperty &&

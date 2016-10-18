@@ -35,7 +35,7 @@ class nsAString;
 class nsIDocument;
 class nsStyledElement;
 struct MiscContainer;
-struct ServoDeclarationBlock;
+struct RawServoDeclarationBlock;
 
 namespace mozilla {
 namespace css {
@@ -151,7 +151,7 @@ public:
   void SetTo(int32_t aInt, const nsAString* aSerialized);
   void SetTo(double aValue, const nsAString* aSerialized);
   void SetTo(mozilla::css::Declaration* aValue, const nsAString* aSerialized);
-  void SetTo(already_AddRefed<ServoDeclarationBlock> aDeclarationBlock,
+  void SetTo(already_AddRefed<RawServoDeclarationBlock> aDeclarationBlock,
              const nsAString* aSerialized);
   void SetTo(mozilla::css::URLValue* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
@@ -204,7 +204,7 @@ public:
   inline float GetPercentValue() const;
   inline AtomArray* GetAtomArrayValue() const;
   inline mozilla::css::Declaration* GetGeckoCSSDeclarationValue() const;
-  inline ServoDeclarationBlock* GetServoCSSDeclarationValue() const;
+  inline RawServoDeclarationBlock* GetServoCSSDeclarationValue() const;
   inline mozilla::css::URLValue* GetURLValue() const;
   inline mozilla::css::ImageValue* GetImageValue() const;
   inline double GetDoubleValue() const;

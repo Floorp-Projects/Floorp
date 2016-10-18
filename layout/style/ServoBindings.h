@@ -50,7 +50,7 @@ struct nsStyleGradientStop;
 class nsStyleGradient;
 class nsStyleCoord;
 struct nsStyleDisplay;
-struct ServoDeclarationBlock;
+struct RawServoDeclarationBlock;
 
 namespace mozilla {
 namespace dom {
@@ -101,7 +101,7 @@ using mozilla::dom::StyleChildrenIterator;
 
 DECL_ARC_REF_TYPE_FOR(ServoComputedValues)
 DECL_ARC_REF_TYPE_FOR(RawServoStyleSheet)
-DECL_ARC_REF_TYPE_FOR(ServoDeclarationBlock)
+DECL_ARC_REF_TYPE_FOR(RawServoDeclarationBlock)
 
 DECL_OWNED_REF_TYPE_FOR(RawServoStyleSet)
 DECL_NULLABLE_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
@@ -216,7 +216,8 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot,
 #undef SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS
 
 // Style attributes.
-ServoDeclarationBlockBorrowedOrNull Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed element);
+RawServoDeclarationBlockBorrowedOrNull
+Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed element);
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
