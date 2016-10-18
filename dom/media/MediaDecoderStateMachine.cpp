@@ -319,6 +319,11 @@ public:
     return MediaDecoder::SeekPromise::CreateAndReject(true, __func__);
   }
 
+  void HandleVideoSuspendTimeout() override
+  {
+    // Do nothing since no decoders are created yet.
+  }
+
 private:
   void OnMetadataRead(MetadataHolder* aMetadata);
 
