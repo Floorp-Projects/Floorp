@@ -367,6 +367,11 @@ public:
     return mMaster->mQueuedSeek.mPromise.Ensure(__func__);
   }
 
+  void HandleVideoSuspendTimeout() override
+  {
+    // Do nothing since no decoders are created yet.
+  }
+
 private:
   bool mPendingDormant = false;
 };
