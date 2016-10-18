@@ -184,7 +184,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           // Set the actiontype only if the user is not overriding actions.
-          if (action && this._noActionsKeys.size == 0) {
+          if (action && this._pressedNoActionKeys.size == 0) {
             this.setAttribute("actiontype", action.type);
           } else {
             this.removeAttribute("actiontype");
@@ -1000,14 +1000,22 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <field name="_noActionsKeys"><![CDATA[
-        new Set();
+      <field name="_noActionKeys"><![CDATA[
+        [
+          KeyEvent.DOM_VK_ALT,
+          KeyEvent.DOM_VK_SHIFT,
+          KeyEvent.DOM_VK_META,
+        ]
+      ]]></field>
+
+      <field name="_pressedNoActionKeys"><![CDATA[
+        new Set()
       ]]></field>
 
       <method name="_clearNoActions">
         <parameter name="aURL"/>
         <body><![CDATA[
-          this._noActionsKeys.clear();
+          this._pressedNoActionKeys.clear();
           this.popup.removeAttribute("noactions");
           let action = this._parseActionUrl(this._value);
           if (action)
@@ -1114,24 +1122,22 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
     <handlers>
       <handler event="keydown"><![CDATA[
-        if ((event.keyCode === KeyEvent.DOM_VK_ALT ||
-             event.keyCode === KeyEvent.DOM_VK_SHIFT) &&
+        if (this._noActionKeys.includes(event.keyCode) &&
             this.popup.selectedIndex >= 0 &&
-            !this._noActionsKeys.has(event.keyCode)) {
-          if (this._noActionsKeys.size == 0) {
+            !this._pressedNoActionKeys.has(event.keyCode)) {
+          if (this._pressedNoActionKeys.size == 0) {
             this.popup.setAttribute("noactions", "true");
             this.removeAttribute("actiontype");
           }
-          this._noActionsKeys.add(event.keyCode);
+          this._pressedNoActionKeys.add(event.keyCode);
         }
       ]]></handler>
 
       <handler event="keyup"><![CDATA[
-        if ((event.keyCode === KeyEvent.DOM_VK_ALT ||
-             event.keyCode === KeyEvent.DOM_VK_SHIFT) &&
-            this._noActionsKeys.has(event.keyCode)) {
-          this._noActionsKeys.delete(event.keyCode);
-          if (this._noActionsKeys.size == 0)
+        if (this._noActionKeys.includes(event.keyCode) &&
+            this._pressedNoActionKeys.has(event.keyCode)) {
+          this._pressedNoActionKeys.delete(event.keyCode);
+          if (this._pressedNoActionKeys.size == 0)
             this._clearNoActions();
         }
       ]]></handler>
