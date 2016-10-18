@@ -14,9 +14,6 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
-#ifdef MOZ_NFC
-#include "mozilla/dom/MozNDEFRecord.h"
-#endif
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
 #include "nsIDOMFileList.h"
@@ -41,7 +38,6 @@ enum StackScopedCloneTags {
     SCTAG_REFLECTOR,
     SCTAG_BLOB,
     SCTAG_FUNCTION,
-    SCTAG_DOM_NFC_NDEF
 };
 
 // The HTML5 structured cloning algorithm includes a few DOM objects, notably
@@ -145,26 +141,6 @@ public:
             return val.toObjectOrNull();
         }
 
-        if (aTag == SCTAG_DOM_NFC_NDEF) {
-#ifdef MOZ_NFC
-          nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
-          if (!global) {
-            return nullptr;
-          }
-
-          // Prevent the return value from being trashed by a GC during ~nsRefPtr.
-          JS::Rooted<JSObject*> result(aCx);
-          {
-            RefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
-            result = ndefRecord->ReadStructuredClone(aCx, aReader) ?
-                     ndefRecord->WrapObject(aCx, nullptr) : nullptr;
-          }
-          return result;
-#else
-          return nullptr;
-#endif
-        }
-
         MOZ_ASSERT_UNREACHABLE("Encountered garbage in the clone stream!");
         return nullptr;
     }
@@ -212,16 +188,6 @@ public:
                 return false;
             }
         }
-
-#ifdef MOZ_NFC
-        {
-          MozNDEFRecord* ndefRecord;
-          if (NS_SUCCEEDED(UNWRAP_OBJECT(MozNDEFRecord, aObj, ndefRecord))) {
-            return JS_WriteUint32Pair(aWriter, SCTAG_DOM_NFC_NDEF, 0) &&
-                   ndefRecord->WriteStructuredClone(aCx, aWriter);
-          }
-        }
-#endif
 
         JS_ReportErrorASCII(aCx, "Encountered unsupported value type writing stack-scoped structured clone");
         return false;

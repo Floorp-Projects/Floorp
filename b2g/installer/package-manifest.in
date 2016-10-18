@@ -175,9 +175,6 @@
 #ifdef MOZ_SECUREELEMENT
 @RESPATH@/components/dom_secureelement.xpt
 #endif
-#ifdef MOZ_NFC
-@RESPATH@/components/dom_nfc.xpt
-#endif
 @RESPATH@/components/dom_notification.xpt
 @RESPATH@/components/dom_html.xpt
 @RESPATH@/components/dom_offline.xpt
@@ -556,14 +553,6 @@
 @RESPATH@/components/webvtt.xpt
 @RESPATH@/components/WebVTT.manifest
 @RESPATH@/components/WebVTTParserWrapper.js
-#ifdef MOZ_NFC
-@RESPATH@/components/nsNfc.manifest
-@RESPATH@/components/nsNfc.js
-@RESPATH@/components/Nfc.manifest
-@RESPATH@/components/Nfc.js
-@RESPATH@/components/NfcContentHelper.manifest
-@RESPATH@/components/NfcContentHelper.js
-#endif
 #ifdef MOZ_SECUREELEMENT
 @RESPATH@/components/DOMSecureElement.manifest
 @RESPATH@/components/DOMSecureElement.js

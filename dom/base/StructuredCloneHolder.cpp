@@ -41,9 +41,6 @@
 #include "nsIRemoteBlob.h"
 #include "nsQueryObject.h"
 
-#ifdef MOZ_NFC
-#include "mozilla/dom/MozNDEFRecord.h"
-#endif // MOZ_NFC
 #ifdef MOZ_WEBRTC
 #include "mozilla/dom/RTCCertificate.h"
 #include "mozilla/dom/RTCCertificateBinding.h"
@@ -406,28 +403,6 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
     return result.toObjectOrNull();
   }
 
-#ifdef MOZ_NFC
-  if (aTag == SCTAG_DOM_NFC_NDEF) {
-    if (!NS_IsMainThread()) {
-      return nullptr;
-    }
-
-    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
-    if (!global) {
-      return nullptr;
-    }
-
-    // Prevent the return value from being trashed by a GC during ~nsRefPtr.
-    JS::Rooted<JSObject*> result(aCx);
-    {
-      RefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
-      result = ndefRecord->ReadStructuredClone(aCx, aReader) ?
-               ndefRecord->WrapObject(aCx, nullptr) : nullptr;
-    }
-    return result;
-  }
-#endif
-
 #ifdef MOZ_WEBRTC
   if (aTag == SCTAG_DOM_RTC_CERTIFICATE) {
     if (!NS_IsMainThread()) {
@@ -509,17 +484,6 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
       return nsjsprincipals->write(aCx, aWriter);
     }
   }
-
-#ifdef MOZ_NFC
-  {
-    MozNDEFRecord* ndefRecord = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(MozNDEFRecord, aObj, ndefRecord))) {
-      MOZ_ASSERT(NS_IsMainThread());
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_NFC_NDEF, 0) &&
-             ndefRecord->WriteStructuredClone(aCx, aWriter);
-    }
-  }
-#endif // MOZ_NFC
 
   // Don't know what this is
   xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);

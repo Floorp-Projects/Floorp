@@ -107,17 +107,14 @@ if test -n "$gonkdir"; then
     case "$android_version" in
     15)
         CPPFLAGS="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/ -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib -I$gonkdir/dalvik/libnativehelper/include/nativehelper $CPPFLAGS"
-        MOZ_NFC=1
         MOZ_SECUREELEMENT=1
         ;;
     17|18)
         CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
-        MOZ_NFC=1
         MOZ_SECUREELEMENT=1
         ;;
     19)
         CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
-        MOZ_NFC=1
         MOZ_AUDIO_OFFLOAD=1
         MOZ_SECUREELEMENT=1
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
@@ -128,7 +125,6 @@ if test -n "$gonkdir"; then
         MOZ_AUDIO_OFFLOAD=1
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-        MOZ_NFC=1
         ;;
     *)
         AC_MSG_ERROR([Unsupported platform version: $android_version])
@@ -4788,18 +4784,6 @@ fi
 AC_SUBST(MOZ_B2G_BT)
 AC_SUBST(MOZ_B2G_BT_BLUEZ)
 AC_SUBST(MOZ_B2G_BT_DAEMON)
-
-dnl ========================================================
-dnl = Enable NFC Interface for B2G (Gonk usually)
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(nfc,
-[  --enable-nfc         Set compile flags necessary for compiling NFC API ],
-    MOZ_NFC=1,
-    MOZ_NFC= )
-if test -n "$MOZ_NFC"; then
-   AC_DEFINE(MOZ_NFC)
-fi
-AC_SUBST(MOZ_NFC)
 
 dnl ========================================================
 dnl = Enable Pico Speech Synthesis (Gonk usually)

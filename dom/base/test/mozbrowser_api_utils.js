@@ -21,7 +21,6 @@ const METHODS = {
   getCanGoForward: {},
   getContentDimensions: {},
   setInputMethodActive: {},
-  setNFCFocus: {},
   findAll: {},
   findNext: {},
   clearMatch: {},

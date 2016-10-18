@@ -129,7 +129,6 @@ BrowserElementParentProxyCallHandler.prototype = {
       case 'reload':
       case 'stop':
       case 'zoom':
-      case 'setNFCFocus':
       case 'findAll':
       case 'findNext':
       case 'clearMatch':
@@ -1087,35 +1086,6 @@ BrowserElementParent.prototype = {
 
     return this._sendDOMRequest('set-input-method-active',
                                 {isActive: isActive});
-  },
-
-  setNFCFocus: function(isFocus) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    // For now, we use tab id as an identifier to let NFC module know
-    // which app is in foreground. But this approach will not work in
-    // in-process mode because tab id doesn't exist. Fix bug 1116449
-    // if we are going to support in-process mode.
-    try {
-      var tabId = this._frameLoader.QueryInterface(Ci.nsIFrameLoader)
-                                   .tabParent
-                                   .tabId;
-    } catch(e) {
-      debug("SetNFCFocus for in-process mode is not yet supported");
-      throw Components.Exception("SetNFCFocus for in-process mode is not yet supported",
-                                 Cr.NS_ERROR_NOT_IMPLEMENTED);
-    }
-
-    try {
-      let nfcContentHelper =
-        Cc["@mozilla.org/nfc/content-helper;1"].getService(Ci.nsINfcBrowserAPI);
-      nfcContentHelper.setFocusTab(tabId, isFocus);
-    } catch(e) {
-      // Not all platforms support NFC
-    }
   },
 
   getAudioChannelVolume: function(aAudioChannel) {
