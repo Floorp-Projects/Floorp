@@ -354,28 +354,6 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
 #  define JS_VALUE_CONSTEXPR_VAR const
 #endif
 
-#if defined(JS_NUNBOX32)
-
-static inline JSValueType
-JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
-{
-    uint32_t type = l.s.tag & 0xF;
-    MOZ_ASSERT(type > JSVAL_TYPE_DOUBLE);
-    return (JSValueType)type;
-}
-
-#elif defined(JS_PUNBOX64)
-
-static inline JSValueType
-JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
-{
-   uint64_t type = (l.asBits >> JSVAL_TAG_SHIFT) & 0xF;
-   MOZ_ASSERT(type > JSVAL_TYPE_DOUBLE);
-   return (JSValueType)type;
-}
-
-#endif  /* JS_PUNBOX64 */
-
 static inline jsval_layout JSVAL_TO_IMPL(const JS::Value& v);
 static inline JS_VALUE_CONSTEXPR JS::Value IMPL_TO_JSVAL(const jsval_layout& l);
 
@@ -842,7 +820,9 @@ class Value
     }
 
     JSValueType extractNonDoubleType() const {
-        return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
+        uint32_t type = toTag() & 0xF;
+        MOZ_ASSERT(type > JSVAL_TYPE_DOUBLE);
+        return JSValueType(type);
     }
 
     /*
