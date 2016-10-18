@@ -1268,17 +1268,65 @@ nsXULElement::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
+bool
+nsXULElement::IsEventStoppedFromAnonymousScrollbar(EventMessage aMessage)
+{
+    return (IsRootOfNativeAnonymousSubtree() &&
+            IsAnyOfXULElements(nsGkAtoms::scrollbar, nsGkAtoms::scrollcorner) &&
+            (aMessage == eMouseClick || aMessage == eMouseDoubleClick ||
+             aMessage == eXULCommand || aMessage == eContextMenu ||
+             aMessage == eDragStart));
+}
+
+nsresult
+nsXULElement::DispatchXULCommand(const EventChainPreVisitor& aVisitor,
+                                 nsAutoString& aCommand)
+{
+    // XXX sXBL/XBL2 issue! Owner or current document?
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(GetUncomposedDoc()));
+    NS_ENSURE_STATE(domDoc);
+    nsCOMPtr<nsIDOMElement> commandElt;
+    domDoc->GetElementById(aCommand, getter_AddRefs(commandElt));
+    nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
+    if (commandContent) {
+        // Create a new command event to dispatch to the element
+        // pointed to by the command attribute. The new event's
+        // sourceEvent will be the original command event that we're
+        // handling.
+        nsCOMPtr<nsIDOMEvent> domEvent = aVisitor.mDOMEvent;
+        while (domEvent) {
+            Event* event = domEvent->InternalDOMEvent();
+            NS_ENSURE_STATE(!SameCOMIdentity(event->GetOriginalTarget(),
+                                            commandContent));
+            nsCOMPtr<nsIDOMXULCommandEvent> commandEvent =
+                do_QueryInterface(domEvent);
+            if (commandEvent) {
+                commandEvent->GetSourceEvent(getter_AddRefs(domEvent));
+            } else {
+                domEvent = nullptr;
+            }
+        }
+        WidgetInputEvent* orig = aVisitor.mEvent->AsInputEvent();
+        nsContentUtils::DispatchXULCommand(
+          commandContent,
+          orig->IsTrusted(),
+          aVisitor.mDOMEvent,
+          nullptr,
+          orig->IsControl(),
+          orig->IsAlt(),
+          orig->IsShift(),
+          orig->IsMeta());
+    } else {
+        NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
+    }
+    return NS_OK;
+}
+
 nsresult
 nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
     aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
-    if (IsRootOfNativeAnonymousSubtree() &&
-        (IsAnyOfXULElements(nsGkAtoms::scrollbar, nsGkAtoms::scrollcorner)) &&
-        (aVisitor.mEvent->mMessage == eMouseClick ||
-         aVisitor.mEvent->mMessage == eMouseDoubleClick ||
-         aVisitor.mEvent->mMessage == eXULCommand ||
-         aVisitor.mEvent->mMessage == eContextMenu ||
-         aVisitor.mEvent->mMessage == eDragStart)) {
+    if (IsEventStoppedFromAnonymousScrollbar(aVisitor.mEvent->mMessage)) {
         // Don't propagate these events from native anonymous scrollbar.
         aVisitor.mCanHandle = true;
         aVisitor.mParentTarget = nullptr;
@@ -1295,52 +1343,14 @@ nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
         // See if we have a command elt.  If so, we execute on the command
         // instead of on our content element.
         nsAutoString command;
-        if (xulEvent && GetAttr(kNameSpaceID_None, nsGkAtoms::command, command) &&
+        if (xulEvent &&
+            GetAttr(kNameSpaceID_None, nsGkAtoms::command, command) &&
             !command.IsEmpty()) {
             // Stop building the event target chain for the original event.
             // We don't want it to propagate to any DOM nodes.
             aVisitor.mCanHandle = false;
             aVisitor.mAutomaticChromeDispatch = false;
-
-            // XXX sXBL/XBL2 issue! Owner or current document?
-            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(GetUncomposedDoc()));
-            NS_ENSURE_STATE(domDoc);
-            nsCOMPtr<nsIDOMElement> commandElt;
-            domDoc->GetElementById(command, getter_AddRefs(commandElt));
-            nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
-            if (commandContent) {
-                // Create a new command event to dispatch to the element
-                // pointed to by the command attribute.  The new event's
-                // sourceEvent will be the original command event that we're
-                // handling.
-                nsCOMPtr<nsIDOMEvent> domEvent = aVisitor.mDOMEvent;
-                while (domEvent) {
-                    Event* event = domEvent->InternalDOMEvent();
-                    NS_ENSURE_STATE(!SameCOMIdentity(event->GetOriginalTarget(),
-                                                     commandContent));
-                    nsCOMPtr<nsIDOMXULCommandEvent> commandEvent =
-                        do_QueryInterface(domEvent);
-                    if (commandEvent) {
-                        commandEvent->GetSourceEvent(getter_AddRefs(domEvent));
-                    } else {
-                        domEvent = nullptr;
-                    }
-                }
-
-                WidgetInputEvent* orig = aVisitor.mEvent->AsInputEvent();
-                nsContentUtils::DispatchXULCommand(
-                  commandContent,
-                  aVisitor.mEvent->IsTrusted(),
-                  aVisitor.mDOMEvent,
-                  nullptr,
-                  orig->IsControl(),
-                  orig->IsAlt(),
-                  orig->IsShift(),
-                  orig->IsMeta());
-            } else {
-                NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
-            }
-            return NS_OK;
+            return DispatchXULCommand(aVisitor, command);
         }
     }
 
