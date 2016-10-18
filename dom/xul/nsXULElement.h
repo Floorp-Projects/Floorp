@@ -701,6 +701,11 @@ protected:
     virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
     void MaybeUpdatePrivateLifetime();
+
+    bool IsEventStoppedFromAnonymousScrollbar(mozilla::EventMessage aMessage);
+
+    nsresult DispatchXULCommand(const mozilla::EventChainPreVisitor& aVisitor,
+                                nsAutoString& aCommand);
 };
 
 #endif // nsXULElement_h__
