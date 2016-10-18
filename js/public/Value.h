@@ -356,18 +356,6 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
 
 #if defined(JS_NUNBOX32)
 
-/*
- * N.B. GCC, in some but not all cases, chooses to emit signed comparison of
- * JSValueTag even though its underlying type has been forced to be uint32_t.
- * Thus, all comparisons should explicitly cast operands to uint32_t.
- */
-
-static inline bool
-JSVAL_IS_DOUBLE_IMPL(const jsval_layout& l)
-{
-    return (uint32_t)l.s.tag <= (uint32_t)JSVAL_TAG_CLEAR;
-}
-
 static inline int32_t
 JSVAL_TO_INT32_IMPL(const jsval_layout& l)
 {
@@ -430,13 +418,6 @@ JSVAL_TRACE_KIND_IMPL(const jsval_layout& l)
     return l.s.tag & 0x03;
 }
 
-static inline bool
-JSVAL_SAME_TYPE_IMPL(const jsval_layout& lhs, const jsval_layout& rhs)
-{
-    JSValueTag ltag = lhs.s.tag, rtag = rhs.s.tag;
-    return ltag == rtag || (ltag < JSVAL_TAG_CLEAR && rtag < JSVAL_TAG_CLEAR);
-}
-
 static inline JSValueType
 JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
 {
@@ -446,12 +427,6 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
 }
 
 #elif defined(JS_PUNBOX64)
-
-static inline bool
-JSVAL_IS_DOUBLE_IMPL(const jsval_layout& l)
-{
-    return (l.asBits | mozilla::DoubleTypeTraits::kSignBit) <= JSVAL_SHIFTED_TAG_MAX_DOUBLE;
-}
 
 static inline int32_t
 JSVAL_TO_INT32_IMPL(const jsval_layout& l)
@@ -518,13 +493,6 @@ JSVAL_TO_PRIVATE_PTR_IMPL(const jsval_layout& l)
 {
     MOZ_ASSERT((l.asBits & 0x8000000000000000LL) == 0);
     return (void*)(l.asBits << 1);
-}
-
-static inline bool
-JSVAL_SAME_TYPE_IMPL(const jsval_layout& lhs, const jsval_layout& rhs)
-{
-    return (JSVAL_IS_DOUBLE_IMPL(lhs) && JSVAL_IS_DOUBLE_IMPL(rhs)) ||
-           (((lhs.asBits ^ rhs.asBits) & 0xFFFF800000000000LL) == 0);
 }
 
 static inline JSValueType
@@ -650,8 +618,12 @@ class Value
     }
 
     void setDouble(double d) {
-        data.asDouble = d;
+        setDoubleNoCheck(d);
         MOZ_ASSERT(isDouble());
+    }
+
+    void setDoubleNoCheck(double d) {
+        data.asDouble = d;
     }
 
     void setNaN() {
@@ -1417,7 +1389,13 @@ PoisonedObjectValue(JSObject* obj)
 inline bool
 SameType(const Value& lhs, const Value& rhs)
 {
-    return JSVAL_SAME_TYPE_IMPL(lhs.data, rhs.data);
+#if defined(JS_NUNBOX32)
+    JSValueTag ltag = lhs.toTag(), rtag = rhs.toTag();
+    return ltag == rtag || (ltag < JSVAL_TAG_CLEAR && rtag < JSVAL_TAG_CLEAR);
+#elif defined(JS_PUNBOX64)
+    return (lhs.isDouble() && rhs.isDouble()) ||
+           (((lhs.data.asBits ^ rhs.data.asBits) & 0xFFFF800000000000ULL) == 0);
+#endif
 }
 
 } // namespace JS
