@@ -368,45 +368,16 @@ JSVAL_IS_DOUBLE_IMPL(const jsval_layout& l)
     return (uint32_t)l.s.tag <= (uint32_t)JSVAL_TAG_CLEAR;
 }
 
-static inline jsval_layout
-DOUBLE_TO_JSVAL_IMPL(double d)
-{
-    jsval_layout l;
-    l.asDouble = d;
-    MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
-    return l;
-}
-
 static inline int32_t
 JSVAL_TO_INT32_IMPL(const jsval_layout& l)
 {
     return l.s.payload.i32;
 }
 
-static inline jsval_layout
-STRING_TO_JSVAL_IMPL(JSString* str)
-{
-    jsval_layout l;
-    MOZ_ASSERT(uintptr_t(str) > 0x1000);
-    l.s.tag = JSVAL_TAG_STRING;
-    l.s.payload.str = str;
-    return l;
-}
-
 static inline JSString*
 JSVAL_TO_STRING_IMPL(const jsval_layout& l)
 {
     return l.s.payload.str;
-}
-
-static inline jsval_layout
-SYMBOL_TO_JSVAL_IMPL(JS::Symbol* sym)
-{
-    jsval_layout l;
-    MOZ_ASSERT(uintptr_t(sym) > 0x1000);
-    l.s.tag = JSVAL_TAG_SYMBOL;
-    l.s.payload.sym = sym;
-    return l;
 }
 
 static inline JS::Symbol*
@@ -421,63 +392,16 @@ JSVAL_TO_BOOLEAN_IMPL(const jsval_layout& l)
     return bool(l.s.payload.boo);
 }
 
-static inline jsval_layout
-BOOLEAN_TO_JSVAL_IMPL(bool b)
-{
-    jsval_layout l;
-    l.s.tag = JSVAL_TAG_BOOLEAN;
-    l.s.payload.boo = uint32_t(b);
-    return l;
-}
-
 static inline JSObject*
 JSVAL_TO_OBJECT_IMPL(const jsval_layout& l)
 {
     return l.s.payload.obj;
 }
 
-static inline jsval_layout
-OBJECT_TO_JSVAL_IMPL(JSObject* obj)
-{
-    jsval_layout l;
-    MOZ_ASSERT(uintptr_t(obj) > 0x1000 || uintptr_t(obj) == 0x48);
-    l.s.tag = JSVAL_TAG_OBJECT;
-    l.s.payload.obj = obj;
-    return l;
-}
-
-static inline jsval_layout
-PRIVATE_PTR_TO_JSVAL_IMPL(void* ptr)
-{
-    jsval_layout l;
-    MOZ_ASSERT((uintptr_t(ptr) & 1) == 0);
-    l.s.tag = (JSValueTag)0;
-    l.s.payload.ptr = ptr;
-    MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
-    return l;
-}
-
 static inline void*
 JSVAL_TO_PRIVATE_PTR_IMPL(const jsval_layout& l)
 {
     return l.s.payload.ptr;
-}
-
-static inline jsval_layout
-PRIVATE_GCTHING_TO_JSVAL_IMPL(js::gc::Cell* cell)
-{
-    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::String,
-               "Private GC thing Values must not be strings. Make a StringValue instead.");
-    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Symbol,
-               "Private GC thing Values must not be symbols. Make a SymbolValue instead.");
-    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Object,
-               "Private GC thing Values must not be objects. Make an ObjectValue instead.");
-
-    jsval_layout l;
-    MOZ_ASSERT(uintptr_t(cell) > 0x1000);
-    l.s.tag = JSVAL_TAG_PRIVATE_GCTHING;
-    l.s.payload.cell = cell;
-    return l;
 }
 
 static inline bool
@@ -506,24 +430,6 @@ JSVAL_TRACE_KIND_IMPL(const jsval_layout& l)
     return l.s.tag & 0x03;
 }
 
-static inline jsval_layout
-MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
-{
-    jsval_layout l;
-    l.s.tag = JSVAL_TAG_MAGIC;
-    l.s.payload.why = why;
-    return l;
-}
-
-static inline jsval_layout
-MAGIC_UINT32_TO_JSVAL_IMPL(uint32_t payload)
-{
-    jsval_layout l;
-    l.s.tag = JSVAL_TAG_MAGIC;
-    l.s.payload.u32 = payload;
-    return l;
-}
-
 static inline bool
 JSVAL_SAME_TYPE_IMPL(const jsval_layout& lhs, const jsval_layout& rhs)
 {
@@ -547,47 +453,16 @@ JSVAL_IS_DOUBLE_IMPL(const jsval_layout& l)
     return (l.asBits | mozilla::DoubleTypeTraits::kSignBit) <= JSVAL_SHIFTED_TAG_MAX_DOUBLE;
 }
 
-static inline jsval_layout
-DOUBLE_TO_JSVAL_IMPL(double d)
-{
-    jsval_layout l;
-    l.asDouble = d;
-    MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
-    return l;
-}
-
 static inline int32_t
 JSVAL_TO_INT32_IMPL(const jsval_layout& l)
 {
     return (int32_t)l.asBits;
 }
 
-static inline jsval_layout
-STRING_TO_JSVAL_IMPL(JSString* str)
-{
-    jsval_layout l;
-    uint64_t strBits = (uint64_t)str;
-    MOZ_ASSERT(uintptr_t(str) > 0x1000);
-    MOZ_ASSERT((strBits >> JSVAL_TAG_SHIFT) == 0);
-    l.asBits = strBits | JSVAL_SHIFTED_TAG_STRING;
-    return l;
-}
-
 static inline JSString*
 JSVAL_TO_STRING_IMPL(const jsval_layout& l)
 {
     return (JSString*)(l.asBits & JSVAL_PAYLOAD_MASK);
-}
-
-static inline jsval_layout
-SYMBOL_TO_JSVAL_IMPL(JS::Symbol* sym)
-{
-    jsval_layout l;
-    uint64_t symBits = (uint64_t)sym;
-    MOZ_ASSERT(uintptr_t(sym) > 0x1000);
-    MOZ_ASSERT((symBits >> JSVAL_TAG_SHIFT) == 0);
-    l.asBits = symBits | JSVAL_SHIFTED_TAG_SYMBOL;
-    return l;
 }
 
 static inline JS::Symbol*
@@ -602,31 +477,12 @@ JSVAL_TO_BOOLEAN_IMPL(const jsval_layout& l)
     return (bool)(l.asBits & JSVAL_PAYLOAD_MASK);
 }
 
-static inline jsval_layout
-BOOLEAN_TO_JSVAL_IMPL(bool b)
-{
-    jsval_layout l;
-    l.asBits = ((uint64_t)(uint32_t)b) | JSVAL_SHIFTED_TAG_BOOLEAN;
-    return l;
-}
-
 static inline JSObject*
 JSVAL_TO_OBJECT_IMPL(const jsval_layout& l)
 {
     uint64_t ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
     MOZ_ASSERT((ptrBits & 0x7) == 0);
     return (JSObject*)ptrBits;
-}
-
-static inline jsval_layout
-OBJECT_TO_JSVAL_IMPL(JSObject* obj)
-{
-    jsval_layout l;
-    uint64_t objBits = (uint64_t)obj;
-    MOZ_ASSERT(uintptr_t(obj) > 0x1000 || uintptr_t(obj) == 0x48);
-    MOZ_ASSERT((objBits >> JSVAL_TAG_SHIFT) == 0);
-    l.asBits = objBits | JSVAL_SHIFTED_TAG_OBJECT;
-    return l;
 }
 
 static inline bool
@@ -657,56 +513,11 @@ JSVAL_TRACE_KIND_IMPL(const jsval_layout& l)
     return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) & 0x03;
 }
 
-static inline jsval_layout
-PRIVATE_PTR_TO_JSVAL_IMPL(void* ptr)
-{
-    jsval_layout l;
-    uintptr_t ptrBits = uintptr_t(ptr);
-    MOZ_ASSERT((ptrBits & 1) == 0);
-    l.asBits = ptrBits >> 1;
-    MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
-    return l;
-}
-
 static inline void*
 JSVAL_TO_PRIVATE_PTR_IMPL(const jsval_layout& l)
 {
     MOZ_ASSERT((l.asBits & 0x8000000000000000LL) == 0);
     return (void*)(l.asBits << 1);
-}
-
-static inline jsval_layout
-PRIVATE_GCTHING_TO_JSVAL_IMPL(js::gc::Cell* cell)
-{
-    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::String,
-               "Private GC thing Values must not be strings. Make a StringValue instead.");
-    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Symbol,
-               "Private GC thing Values must not be symbols. Make a SymbolValue instead.");
-    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Object,
-               "Private GC thing Values must not be objects. Make an ObjectValue instead.");
-
-    jsval_layout l;
-    uint64_t cellBits = (uint64_t)cell;
-    MOZ_ASSERT(uintptr_t(cellBits) > 0x1000);
-    MOZ_ASSERT((cellBits >> JSVAL_TAG_SHIFT) == 0);
-    l.asBits = cellBits | JSVAL_SHIFTED_TAG_PRIVATE_GCTHING;
-    return l;
-}
-
-static inline jsval_layout
-MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
-{
-    jsval_layout l;
-    l.asBits = ((uint64_t)(uint32_t)why) | JSVAL_SHIFTED_TAG_MAGIC;
-    return l;
-}
-
-static inline jsval_layout
-MAGIC_UINT32_TO_JSVAL_IMPL(uint32_t payload)
-{
-    jsval_layout l;
-    l.asBits = ((uint64_t)payload) | JSVAL_SHIFTED_TAG_MAGIC;
-    return l;
 }
 
 static inline bool
@@ -732,6 +543,7 @@ static inline JS_VALUE_CONSTEXPR JS::Value IMPL_TO_JSVAL(const jsval_layout& l);
 namespace JS {
 
 static inline JS_VALUE_CONSTEXPR JS::Value UndefinedValue();
+static inline JS::Value PoisonedObjectValue(JSObject* obj);
 
 /**
  * Returns a generic quiet NaN value, with all payload bits set to zero.
@@ -838,7 +650,8 @@ class Value
     }
 
     void setDouble(double d) {
-        data = DOUBLE_TO_JSVAL_IMPL(d);
+        data.asDouble = d;
+        MOZ_ASSERT(isDouble());
     }
 
     void setNaN() {
@@ -851,27 +664,45 @@ class Value
     }
 
     void setString(JSString* str) {
-        data = STRING_TO_JSVAL_IMPL(str);
+        MOZ_ASSERT(uintptr_t(str) > 0x1000);
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_STRING, PayloadType(str));
     }
 
     void setSymbol(JS::Symbol* sym) {
-        data = SYMBOL_TO_JSVAL_IMPL(sym);
+        MOZ_ASSERT(uintptr_t(sym) > 0x1000);
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_SYMBOL, PayloadType(sym));
     }
 
     void setObject(JSObject& obj) {
-        data = OBJECT_TO_JSVAL_IMPL(&obj);
+        MOZ_ASSERT(uintptr_t(&obj) > 0x1000 || uintptr_t(&obj) == 0x48);
+#if defined(JS_PUNBOX64)
+        // VisualStudio cannot contain parenthesized C++ style cast and shift
+        // inside decltype in template parameter:
+        //   AssertionConditionType<decltype((uintptr_t(x) >> 1))>
+        // It throws syntax error.
+        MOZ_ASSERT((((uintptr_t)&obj) >> JSVAL_TAG_SHIFT) == 0);
+#endif
+        setObjectNoCheck(&obj);
     }
 
+  private:
+    void setObjectNoCheck(JSObject* obj) {
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_OBJECT, PayloadType(obj));
+    }
+
+    friend inline Value PoisonedObjectValue(JSObject* obj);
+
+  public:
     void setBoolean(bool b) {
-        data = BOOLEAN_TO_JSVAL_IMPL(b);
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_BOOLEAN, uint32_t(b));
     }
 
     void setMagic(JSWhyMagic why) {
-        data = MAGIC_TO_JSVAL_IMPL(why);
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_MAGIC, uint32_t(why));
     }
 
     void setMagicUint32(uint32_t payload) {
-        data = MAGIC_UINT32_TO_JSVAL_IMPL(payload);
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_MAGIC, payload);
     }
 
     bool setNumber(uint32_t ui) {
@@ -1141,11 +972,18 @@ class Value
      */
 
     void setPrivate(void* ptr) {
-        data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
+        MOZ_ASSERT((uintptr_t(ptr) & 1) == 0);
+#if defined(JS_NUNBOX32)
+        data.s.tag = JSValueTag(0);
+        data.s.payload.ptr = ptr;
+#elif defined(JS_PUNBOX64)
+        data.asBits = uintptr_t(ptr) >> 1;
+#endif
+        MOZ_ASSERT(isDouble());
     }
 
     void* toPrivate() const {
-        MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(data));
+        MOZ_ASSERT(isDouble());
         return JSVAL_TO_PRIVATE_PTR_IMPL(data);
     }
 
@@ -1168,7 +1006,22 @@ class Value
      */
 
     void setPrivateGCThing(js::gc::Cell* cell) {
-        data = PRIVATE_GCTHING_TO_JSVAL_IMPL(cell);
+        MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::String,
+                   "Private GC thing Values must not be strings. Make a StringValue instead.");
+        MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Symbol,
+                   "Private GC thing Values must not be symbols. Make a SymbolValue instead.");
+        MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Object,
+                   "Private GC thing Values must not be objects. Make an ObjectValue instead.");
+
+        MOZ_ASSERT(uintptr_t(cell) > 0x1000);
+#if defined(JS_PUNBOX64)
+        // VisualStudio cannot contain parenthesized C++ style cast and shift
+        // inside decltype in template parameter:
+        //   AssertionConditionType<decltype((uintptr_t(x) >> 1))>
+        // It throws syntax error.
+        MOZ_ASSERT((((uintptr_t)cell) >> JSVAL_TAG_SHIFT) == 0);
+#endif
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_PRIVATE_GCTHING, PayloadType(cell));
     }
 
     bool isPrivateGCThing() const {
@@ -1550,6 +1403,14 @@ PrivateGCThingValue(js::gc::Cell* cell)
 {
     Value v;
     v.setPrivateGCThing(cell);
+    return v;
+}
+
+static inline Value
+PoisonedObjectValue(JSObject* obj)
+{
+    Value v;
+    v.setObjectNoCheck(obj);
     return v;
 }
 
