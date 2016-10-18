@@ -916,20 +916,6 @@ class Value
         return toTag() == JSVAL_TAG_PRIVATE_GCTHING;
     }
 
-    /*
-     * An unmarked value is just a void* cast as a Value. Thus, the Value is
-     * not safe for GC and must not be marked. This API avoids raw casts
-     * and the ensuing strict-aliasing warnings.
-     */
-
-    void setUnmarkedPtr(void* ptr) {
-        data.asPtr = ptr;
-    }
-
-    void* toUnmarkedPtr() const {
-        return data.asPtr;
-    }
-
     const size_t* payloadWord() const {
 #if defined(JS_NUNBOX32)
         return &data.s.payload.word;
