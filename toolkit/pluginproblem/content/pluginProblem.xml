@@ -31,9 +31,6 @@
                     <html:div class="msg msgClickToPlay" anonid="clickToPlay">&clickToActivatePlugin;</html:div>
                 </html:label>
 
-                <html:div class="msg msgUnsupported">&missingPlugin;</html:div>
-                <html:div class="msg msgUnsupportedPlatform">&unsupportedPlatform.pre;<html:a class="unsupportedLearnMoreLink" href="" target="_blank">&unsupportedPlatform.learnMore;</html:a>&unsupportedPlatform.post;</html:div>
-                <html:div class="msg msgDisabled">&disabledPlugin;</html:div>
                 <html:div class="msg msgBlocked">&blockedPlugin.label;</html:div>
                 <html:div class="msg msgCrashed">
                     <html:div class="msgCrashedText" anonid="crashedText"><!-- set at runtime --></html:div>
