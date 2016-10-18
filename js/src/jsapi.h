@@ -5323,6 +5323,7 @@ class JSErrorReport
     {}
 
     ~JSErrorReport() {
+        freeLinebuf();
         freeMessage();
     }
 
