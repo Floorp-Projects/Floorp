@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * This file should not be modified and is a duplicate from the debugger.html project.
+ * Any changes to this file should be imported from the upstream debugger.html project.
+ */
+
+.accordion {
+  background-color: var(--theme-body-background);
+  width: 100%;
+}
+
+.accordion ._header {
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 5px;
+  transition: all 0.25s ease;
+  width: 100%;
+  -moz-user-select: none;
+}
+
+.accordion ._header:hover {
+  background-color: var(--theme-selection-color);
+}
+
+.accordion ._header:hover svg {
+  fill: var(--theme-comment-alt);
+}
+
+.accordion ._content {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  font-size: 11px;
+}
+
+.arrow {
+  vertical-align: middle;
+  display: inline-block;
+}

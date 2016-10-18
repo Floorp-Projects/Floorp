@@ -23,7 +23,7 @@ LayoutViewTool.prototype = {
 
     let store = this.store = Store();
     let provider = React.createElement(ReactRedux.Provider, { store }, App());
-    ReactDOM.render(provider, this.document.querySelector("#layout-root"));
+    ReactDOM.render(provider, this.document.querySelector("#layoutview-container"));
   },
 
   destroy() {
