@@ -215,12 +215,7 @@ public:
 
   virtual RefPtr<ShutdownPromise> HandleShutdown();
 
-  virtual void HandleVideoSuspendTimeout()
-  {
-    mMaster->mVideoDecodeSuspended = true;
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
-    Reader()->SetVideoBlankDecode(true);
-  }
+  virtual void HandleVideoSuspendTimeout() = 0;
 
   virtual void DumpDebugInfo() {}
 
