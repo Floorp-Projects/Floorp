@@ -35,7 +35,9 @@ add_task(function* () {
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED, "plugin should not have been found.");
 
   // simple cpows
-  let plugin = gTestBrowser.contentDocument.getElementById("plugin");
-  ok(plugin, "plugin should be in the page");
+  yield ContentTask.spawn(gTestBrowser, null, function() {
+    let plugin = content.document.getElementById("plugin");
+    ok(plugin, "plugin should be in the page");
+  });
   is(gConsoleErrors, 0, "should have no console errors");
 });
