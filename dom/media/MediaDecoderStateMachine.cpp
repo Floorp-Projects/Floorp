@@ -532,9 +532,11 @@ public:
 
   void HandleVideoSuspendTimeout() override
   {
-    mMaster->mVideoDecodeSuspended = true;
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
-    Reader()->SetVideoBlankDecode(true);
+    if (mMaster->HasVideo()) {
+      mMaster->mVideoDecodeSuspended = true;
+      mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
+      Reader()->SetVideoBlankDecode(true);
+    }
   }
 
   void DumpDebugInfo() override
@@ -830,9 +832,11 @@ public:
 
   void HandleVideoSuspendTimeout() override
   {
-    mMaster->mVideoDecodeSuspended = true;
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
-    Reader()->SetVideoBlankDecode(true);
+    if (mMaster->HasVideo()) {
+      mMaster->mVideoDecodeSuspended = true;
+      mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
+      Reader()->SetVideoBlankDecode(true);
+    }
   }
 
 private:
@@ -2315,10 +2319,6 @@ void MediaDecoderStateMachine::VisibilityChanged()
   DECODER_LOG("VisibilityChanged: mIsVisible=%d, "
               "mVideoDecodeSuspended=%c, mIsReaderSuspended=%d",
               mIsVisible.Ref(), mVideoDecodeSuspended ? 'T' : 'F', mIsReaderSuspended.Ref());
-
-  if (mInfo.isNothing() || !HasVideo()) {
-    return;
-  }
 
   // Start timer to trigger suspended decoding state when going invisible.
   if (!mIsVisible) {
