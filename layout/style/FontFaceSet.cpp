@@ -97,7 +97,6 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   : DOMEventTargetHelper(aWindow)
   , mDocument(aDocument)
-  , mResolveLazilyCreatedReadyPromise(false)
   , mStatus(FontFaceSetLoadStatus::Loaded)
   , mNonRuleFacesDirty(false)
   , mHasLoadingFontFaces(false)
@@ -112,7 +111,12 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   // be able to get to anyway) as it causes the window.FontFaceSet constructor
   // to be created.
   if (global && PrefEnabled()) {
-    mResolveLazilyCreatedReadyPromise = true;
+    ErrorResult rv;
+    mReady = Promise::Create(global, rv);
+  }
+
+  if (mReady) {
+    mReady->MaybeResolve(this);
   }
 
   if (!mDocument->DidFireDOMContentLoaded()) {
@@ -382,16 +386,8 @@ Promise*
 FontFaceSet::GetReady(ErrorResult& aRv)
 {
   if (!mReady) {
-    nsCOMPtr<nsIGlobalObject> global = GetParentObject();
-    mReady = Promise::Create(global, aRv);
-    if (!mReady) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-    if (mResolveLazilyCreatedReadyPromise) {
-      mReady->MaybeResolve(this);
-      mResolveLazilyCreatedReadyPromise = false;
-    }
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
   FlushUserFontSet();
@@ -1509,14 +1505,14 @@ FontFaceSet::CheckLoadingStarted()
                             false))->RunDOMEventWhenSafe();
 
   if (PrefEnabled()) {
-    if (mReady) {
-      if (GetParentObject()) {
-        ErrorResult rv;
-        mReady = Promise::Create(GetParentObject(), rv);
-      }
+    RefPtr<Promise> ready;
+    if (GetParentObject()) {
+      ErrorResult rv;
+      ready = Promise::Create(GetParentObject(), rv);
     }
-    if (!mReady) {
-      mResolveLazilyCreatedReadyPromise = false;
+
+    if (ready) {
+      mReady.swap(ready);
     }
   }
 }
@@ -1603,8 +1599,6 @@ FontFaceSet::CheckLoadingFinished()
   mStatus = FontFaceSetLoadStatus::Loaded;
   if (mReady) {
     mReady->MaybeResolve(this);
-  } else {
-    mResolveLazilyCreatedReadyPromise = true;
   }
 
   // Now dispatch the loadingdone/loadingerror events.
