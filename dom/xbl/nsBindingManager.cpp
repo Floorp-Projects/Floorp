@@ -125,7 +125,7 @@ nsBindingManager::~nsBindingManager(void)
 }
 
 nsXBLBinding*
-nsBindingManager::GetBindingWithContent(nsIContent* aContent)
+nsBindingManager::GetBindingWithContent(const nsIContent* aContent)
 {
   nsXBLBinding* binding = aContent ? aContent->GetXBLBinding() : nullptr;
   return binding ? binding->GetBindingWithContent() : nullptr;

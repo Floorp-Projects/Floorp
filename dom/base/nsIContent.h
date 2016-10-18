@@ -247,7 +247,7 @@ public:
   /**
    * Returns true if in a chrome document
    */
-  virtual bool IsInChromeDocument();
+  virtual bool IsInChromeDocument() const;
 
   /**
    * Get the namespace that this element's tag is defined in
