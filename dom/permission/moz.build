@@ -37,9 +37,6 @@ if CONFIG['MOZ_B2G_RIL']:
 if CONFIG['MOZ_B2G_BT']:
     MOCHITEST_MANIFESTS += ['tests/mochitest-bt.ini']
 
-if CONFIG['MOZ_WEBSMS_BACKEND']:
-    MOCHITEST_MANIFESTS += ['tests/mochitest-websms.ini']
-
 if CONFIG['MOZ_TIME_MANAGER']:
     MOCHITEST_MANIFESTS += ['tests/mochitest-time.ini']
 

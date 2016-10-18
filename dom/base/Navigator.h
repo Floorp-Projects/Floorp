@@ -59,7 +59,6 @@ class BatteryManager;
 class Promise;
 
 class DesktopNotificationCenter;
-class MobileMessageManager;
 class MozIdleObserver;
 #ifdef MOZ_GAMEPAD
 class Gamepad;
@@ -222,7 +221,6 @@ public:
 
   DesktopNotificationCenter* GetMozNotification(ErrorResult& aRv);
   IccManager* GetMozIccManager(ErrorResult& aRv);
-  MobileMessageManager* GetMozMobileMessage();
   Telephony* GetMozTelephony(ErrorResult& aRv);
   InputPortManager* GetInputPortManager(ErrorResult& aRv);
   already_AddRefed<LegacyMozTCPSocket> MozTCPSocket();
@@ -327,7 +325,6 @@ private:
   RefPtr<Promise> mBatteryPromise;
   RefPtr<PowerManager> mPowerManager;
   RefPtr<IccManager> mIccManager;
-  RefPtr<MobileMessageManager> mMobileMessageManager;
   RefPtr<Telephony> mTelephony;
   RefPtr<InputPortManager> mInputPortManager;
   RefPtr<network::Connection> mConnection;

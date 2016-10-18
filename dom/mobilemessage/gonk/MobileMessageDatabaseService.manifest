@@ -1,3 +1,0 @@
-component {7db05024-8038-11e4-b7fa-a3edb6f1bf0c} MobileMessageDatabaseService.js
-contract @mozilla.org/mobilemessage/gonkmobilemessagedatabaseservice;1 {7db05024-8038-11e4-b7fa-a3edb6f1bf0c}
-category profile-after-change MobileMessageDatabaseService @mozilla.org/mobilemessage/gonkmobilemessagedatabaseservice;1

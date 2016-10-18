@@ -172,7 +172,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/icc/IccChild.h"
 #include "mozilla/dom/mobileconnection/MobileConnectionChild.h"
-#include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/dom/PPresentationChild.h"
@@ -208,7 +207,6 @@ using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::icc;
 using namespace mozilla::dom::ipc;
 using namespace mozilla::dom::mobileconnection;
-using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::telephony;
 using namespace mozilla::dom::workers;
 using namespace mozilla::media;
@@ -1974,19 +1972,6 @@ ContentChild::AllocPHandlerServiceChild()
 bool ContentChild::DeallocPHandlerServiceChild(PHandlerServiceChild* aHandlerServiceChild)
 {
   static_cast<HandlerServiceChild*>(aHandlerServiceChild)->Release();
-  return true;
-}
-
-PSmsChild*
-ContentChild::AllocPSmsChild()
-{
-  return new SmsChild();
-}
-
-bool
-ContentChild::DeallocPSmsChild(PSmsChild* aSms)
-{
-  delete aSms;
   return true;
 }
 

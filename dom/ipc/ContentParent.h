@@ -843,10 +843,6 @@ private:
 
   virtual bool DeallocPHandlerServiceParent(PHandlerServiceParent*) override;
 
-  virtual PSmsParent* AllocPSmsParent() override;
-
-  virtual bool DeallocPSmsParent(PSmsParent*) override;
-
   virtual PTelephonyParent* AllocPTelephonyParent() override;
 
   virtual bool DeallocPTelephonyParent(PTelephonyParent*) override;
