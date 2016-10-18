@@ -47,7 +47,7 @@ protected:
 
 static void
 PutAndGet(OCSPCache& cache, const CertID& certID, Result result,
-          Time time)
+          Time time, const char* firstPartyDomain = nullptr)
 {
   // The first time is thisUpdate. The second is validUntil.
   // The caller is expecting the validUntil returned with Get
@@ -55,11 +55,11 @@ PutAndGet(OCSPCache& cache, const CertID& certID, Result result,
   // be different in practice, make thisUpdate less than validUntil.
   Time thisUpdate(time);
   ASSERT_EQ(Success, thisUpdate.SubtractSeconds(10));
-  Result rv = cache.Put(certID, result, thisUpdate, time);
+  Result rv = cache.Put(certID, firstPartyDomain, result, thisUpdate, time);
   ASSERT_TRUE(rv == Success);
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_TRUE(cache.Get(certID, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, firstPartyDomain, resultOut, timeOut));
   ASSERT_EQ(result, resultOut);
   ASSERT_EQ(time, timeOut);
 }
@@ -80,7 +80,7 @@ TEST_F(psm_OCSPCacheTest, TestPutAndGet)
   Result resultOut;
   Time timeOut(Time::uninitialized);
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey001, fakeSerial000),
-                         resultOut, timeOut));
+                         nullptr, resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, TestVariousGets)
@@ -104,11 +104,11 @@ TEST_F(psm_OCSPCacheTest, TestVariousGets)
 
   // This will be at the end of the list in the cache
   CertID cert0000(fakeIssuer1, fakeKey000, fakeSerial0000);
-  ASSERT_TRUE(cache.Get(cert0000, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0000, nullptr, resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeIn, timeOut);
   // Once we access it, it goes to the front
-  ASSERT_TRUE(cache.Get(cert0000, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0000, nullptr, resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeIn, timeOut);
 
@@ -118,17 +118,17 @@ TEST_F(psm_OCSPCacheTest, TestVariousGets)
 
   static const Input fakeSerial0512(LiteralInput("0512"));
   CertID cert0512(fakeIssuer1, fakeKey000, fakeSerial0512);
-  ASSERT_TRUE(cache.Get(cert0512, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0512, nullptr, resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeInPlus512, timeOut);
-  ASSERT_TRUE(cache.Get(cert0512, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0512, nullptr, resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeInPlus512, timeOut);
 
   // We've never seen this certificate
   static const Input fakeSerial1111(LiteralInput("1111"));
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey000, fakeSerial1111),
-                         resultOut, timeOut));
+                         nullptr, resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, TestEviction)
@@ -151,7 +151,7 @@ TEST_F(psm_OCSPCacheTest, TestEviction)
   Result resultOut;
   Time timeOut(Time::uninitialized);
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey001, fakeSerial0000),
-                         resultOut, timeOut));
+                         nullptr, resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, TestNoEvictionForRevokedResponses)
@@ -175,13 +175,13 @@ TEST_F(psm_OCSPCacheTest, TestNoEvictionForRevokedResponses)
   }
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_TRUE(cache.Get(notEvicted, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(notEvicted, nullptr, resultOut, timeOut));
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE, resultOut);
   ASSERT_EQ(timeIn, timeOut);
 
   Input fakeSerial0001(LiteralInput("0001"));
   CertID evicted(fakeIssuer1, fakeKey000, fakeSerial0001);
-  ASSERT_FALSE(cache.Get(evicted, resultOut, timeOut));
+  ASSERT_FALSE(cache.Get(evicted, nullptr, resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, TestEverythingIsRevoked)
@@ -208,12 +208,12 @@ TEST_F(psm_OCSPCacheTest, TestEverythingIsRevoked)
   ASSERT_EQ(Success, timeInPlus1025.AddSeconds(1025));
   Time timeInPlus1025Minus50(timeInPlus1025);
   ASSERT_EQ(Success, timeInPlus1025Minus50.SubtractSeconds(50));
-  Result result = cache.Put(good, Success, timeInPlus1025Minus50,
+  Result result = cache.Put(good, nullptr, Success, timeInPlus1025Minus50,
                             timeInPlus1025);
   ASSERT_EQ(Success, result);
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_FALSE(cache.Get(good, resultOut, timeOut));
+  ASSERT_FALSE(cache.Get(good, nullptr, resultOut, timeOut));
 
   static const Input fakeSerial1026(LiteralInput("1026"));
   CertID revoked(fakeIssuer1, fakeKey000, fakeSerial1026);
@@ -222,7 +222,7 @@ TEST_F(psm_OCSPCacheTest, TestEverythingIsRevoked)
   ASSERT_EQ(Success, timeInPlus1026.AddSeconds(1026));
   Time timeInPlus1026Minus50(timeInPlus1026);
   ASSERT_EQ(Success, timeInPlus1026Minus50.SubtractSeconds(50));
-  result = cache.Put(revoked, Result::ERROR_REVOKED_CERTIFICATE,
+  result = cache.Put(revoked, nullptr, Result::ERROR_REVOKED_CERTIFICATE,
                      timeInPlus1026Minus50, timeInPlus1026);
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE, result);
 }
@@ -237,15 +237,15 @@ TEST_F(psm_OCSPCacheTest, VariousIssuers)
   PutAndGet(cache, subject, Success, now);
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_TRUE(cache.Get(subject, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(subject, nullptr, resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeIn, timeOut);
   // Test that we don't match a different issuer DN
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer2, fakeKey000, fakeSerial001),
-                         resultOut, timeOut));
+                         nullptr, resultOut, timeOut));
   // Test that we don't match a different issuer key
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey001, fakeSerial001),
-                         resultOut, timeOut));
+                         nullptr, resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, Times)
@@ -257,12 +257,12 @@ TEST_F(psm_OCSPCacheTest, Times)
   PutAndGet(cache, certID, Success, TimeFromElapsedSecondsAD(200));
   // This should not override the more recent entry.
   ASSERT_EQ(Success,
-            cache.Put(certID, Result::ERROR_OCSP_UNKNOWN_CERT,
+            cache.Put(certID, nullptr, Result::ERROR_OCSP_UNKNOWN_CERT,
                       TimeFromElapsedSecondsAD(100),
                       TimeFromElapsedSecondsAD(100)));
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_TRUE(cache.Get(certID, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, nullptr, resultOut, timeOut));
   // Here we see the more recent time.
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(TimeFromElapsedSecondsAD(200), timeOut);
@@ -281,12 +281,12 @@ TEST_F(psm_OCSPCacheTest, NetworkFailure)
   PutAndGet(cache, certID, Success, TimeFromElapsedSecondsAD(200));
   // This should not override the already present entry.
   ASSERT_EQ(Success,
-            cache.Put(certID, Result::ERROR_CONNECT_REFUSED,
+            cache.Put(certID, nullptr, Result::ERROR_CONNECT_REFUSED,
                       TimeFromElapsedSecondsAD(300),
                       TimeFromElapsedSecondsAD(350)));
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_TRUE(cache.Get(certID, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, nullptr, resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(TimeFromElapsedSecondsAD(200), timeOut);
 
@@ -294,10 +294,10 @@ TEST_F(psm_OCSPCacheTest, NetworkFailure)
             TimeFromElapsedSecondsAD(400));
   // This should not override the already present entry.
   ASSERT_EQ(Success,
-            cache.Put(certID, Result::ERROR_CONNECT_REFUSED,
+            cache.Put(certID, nullptr, Result::ERROR_CONNECT_REFUSED,
                       TimeFromElapsedSecondsAD(500),
                       TimeFromElapsedSecondsAD(550)));
-  ASSERT_TRUE(cache.Get(certID, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, nullptr, resultOut, timeOut));
   ASSERT_EQ(Result::ERROR_OCSP_UNKNOWN_CERT, resultOut);
   ASSERT_EQ(TimeFromElapsedSecondsAD(400), timeOut);
 
@@ -305,10 +305,22 @@ TEST_F(psm_OCSPCacheTest, NetworkFailure)
             TimeFromElapsedSecondsAD(600));
   // This should not override the already present entry.
   ASSERT_EQ(Success,
-            cache.Put(certID, Result::ERROR_CONNECT_REFUSED,
+            cache.Put(certID, nullptr, Result::ERROR_CONNECT_REFUSED,
                       TimeFromElapsedSecondsAD(700),
                       TimeFromElapsedSecondsAD(750)));
-  ASSERT_TRUE(cache.Get(certID, resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, nullptr, resultOut, timeOut));
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE, resultOut);
   ASSERT_EQ(TimeFromElapsedSecondsAD(600), timeOut);
+}
+
+TEST_F(psm_OCSPCacheTest, TestFirstPartyDomain)
+{
+  CertID certID(fakeIssuer1, fakeKey000, fakeSerial0000);
+
+  SCOPED_TRACE("");
+  PutAndGet(cache, certID, Success, now, "foo.com");
+
+  Result resultOut;
+  Time timeOut(Time::uninitialized);
+  ASSERT_FALSE(cache.Get(certID, "bar.com", resultOut, timeOut));
 }
