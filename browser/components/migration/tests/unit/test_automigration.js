@@ -1,9 +1,11 @@
+"use strict";
+
 Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
-let AutoMigrateBackstage = Cu.import("resource:///modules/AutoMigrate.jsm");
+let AutoMigrateBackstage = Cu.import("resource:///modules/AutoMigrate.jsm"); /* globals AutoMigrate */
 
 let gShimmedMigratorKeyPicker = null;
 let gShimmedMigrator = null;
