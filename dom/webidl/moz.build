@@ -716,17 +716,6 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothUUID.webidl',
     ]
 
-if CONFIG['MOZ_NFC']:
-    WEBIDL_FILES += [
-         'MozIsoDepTech.webidl',
-         'MozNDEFRecord.webidl',
-         'MozNFC.webidl',
-         'MozNfcATech.webidl',
-         'MozNFCPeer.webidl',
-         'MozNFCTag.webidl',
-         'NfcOptions.webidl',
-    ]
-
 if CONFIG['MOZ_SECUREELEMENT']:
     WEBIDL_FILES += [
          'SecureElement.webidl',
@@ -853,12 +842,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'MozWifiP2pStatusChangeEvent.webidl',
         'MozWifiStationInfoEvent.webidl',
         'MozWifiStatusChangeEvent.webidl',
-    ]
-
-if CONFIG['MOZ_NFC']:
-    GENERATED_EVENTS_WEBIDL_FILES += [
-        'MozNFCPeerEvent.webidl',
-        'MozNFCTagEvent.webidl',
     ]
 
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'xulrunner'] or CONFIG['MOZ_SUITE']:
