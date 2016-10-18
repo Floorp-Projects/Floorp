@@ -602,6 +602,8 @@ MarkupView.prototype = {
     let reasonsToNavigate = [
       // If the user picked an element with the element picker.
       "picker-node-picked",
+      // If the user shift-clicked (previewed) an element.
+      "picker-node-previewed",
       // If the user selected an element with the browser context menu.
       "browser-context-menu",
       // If the user added a new node by clicking in the inspector toolbar.

@@ -245,6 +245,13 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
         return;
       }
 
+      // If shift is pressed, this is only a preview click, send the event to
+      // the client, but don't stop picking.
+      if (event.shiftKey) {
+        events.emit(this._walker, "picker-node-previewed", this._findAndAttachElement(event));
+        return;
+      }
+
       this._stopPickerListeners();
       this._isPicking = false;
       if (this._autohide) {
