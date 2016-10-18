@@ -40,6 +40,7 @@
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatform.h"
 #include "nsScreenGtk.h"
+#include "nsArrayUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -301,7 +302,7 @@ GetGtkWindow(nsIDOMDocument *aDocument)
 
 NS_IMETHODIMP
 nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
-                                 nsISupportsArray * aArrayTransferables,
+                                 nsIArray * aArrayTransferables,
                                  nsIScriptableRegion * aRegion,
                                  uint32_t aActionType,
                                  nsContentPolicyType aContentPolicyType =
@@ -323,7 +324,7 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
 // nsBaseDragService
 nsresult
-nsDragService::InvokeDragSessionImpl(nsISupportsArray* aArrayTransferables,
+nsDragService::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
                                      nsIScriptableRegion* aRegion,
                                      uint32_t aActionType)
 {
@@ -669,7 +670,7 @@ nsDragService::GetNumDropItems(uint32_t * aNumItems)
 
     bool isList = IsTargetContextList();
     if (isList)
-        mSourceDataItems->Count(aNumItems);
+        mSourceDataItems->GetLength(aNumItems);
     else {
         GdkAtom gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
         GetTargetDragData(gdkFlavor);
@@ -733,10 +734,8 @@ nsDragService::GetData(nsITransferable * aTransferable,
                    LogLevel::Debug,
                    ("flavor is %s\n", (const char *)flavorStr));
             // get the item with the right index
-            nsCOMPtr<nsISupports> genericItem;
-            mSourceDataItems->GetElementAt(aItemIndex,
-                                           getter_AddRefs(genericItem));
-            nsCOMPtr<nsITransferable> item(do_QueryInterface(genericItem));
+            nsCOMPtr<nsITransferable> item =
+                do_QueryElementAt(mSourceDataItems, aItemIndex);
             if (!item)
                 continue;
 
@@ -1023,12 +1022,10 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
         // an external client trying to fool us.
         if (!mSourceDataItems)
             return NS_OK;
-        mSourceDataItems->Count(&numDragItems);
+        mSourceDataItems->GetLength(&numDragItems);
         for (uint32_t itemIndex = 0; itemIndex < numDragItems; ++itemIndex) {
-            nsCOMPtr<nsISupports> genericItem;
-            mSourceDataItems->GetElementAt(itemIndex,
-                                           getter_AddRefs(genericItem));
-            nsCOMPtr<nsITransferable> currItem(do_QueryInterface(genericItem));
+            nsCOMPtr<nsITransferable> currItem =
+                do_QueryElementAt(mSourceDataItems, itemIndex);
             if (currItem) {
                 nsCOMPtr <nsIArray> flavorList;
                 currItem->FlavorsTransferableCanExport(
@@ -1243,7 +1240,7 @@ nsDragService::GetSourceList(void)
     uint32_t targetCount = 0;
     unsigned int numDragItems = 0;
 
-    mSourceDataItems->Count(&numDragItems);
+    mSourceDataItems->GetLength(&numDragItems);
 
     // Check to see if we're dragging > 1 item.
     if (numDragItems > 1) {
@@ -1263,9 +1260,8 @@ nsDragService::GetSourceList(void)
 
         // check what flavours are supported so we can decide what other
         // targets to advertise.
-        nsCOMPtr<nsISupports> genericItem;
-        mSourceDataItems->GetElementAt(0, getter_AddRefs(genericItem));
-        nsCOMPtr<nsITransferable> currItem(do_QueryInterface(genericItem));
+        nsCOMPtr<nsITransferable> currItem =
+            do_QueryElementAt(mSourceDataItems, 0);
 
         if (currItem) {
             nsCOMPtr <nsIArray> flavorList;
@@ -1300,9 +1296,8 @@ nsDragService::GetSourceList(void)
             } // if valid flavor list
         } // if item is a transferable
     } else if (numDragItems == 1) {
-        nsCOMPtr<nsISupports> genericItem;
-        mSourceDataItems->GetElementAt(0, getter_AddRefs(genericItem));
-        nsCOMPtr<nsITransferable> currItem(do_QueryInterface(genericItem));
+        nsCOMPtr<nsITransferable> currItem =
+            do_QueryElementAt(mSourceDataItems, 0);
         if (currItem) {
             nsCOMPtr <nsIArray> flavorList;
             currItem->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
@@ -1463,17 +1458,15 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
 }
 
 static void
-CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
+CreateUriList(nsIArray *items, gchar **text, gint *length)
 {
     uint32_t i, count;
     GString *uriList = g_string_new(nullptr);
 
-    items->Count(&count);
+    items->GetLength(&count);
     for (i = 0; i < count; i++) {
-        nsCOMPtr<nsISupports> genericItem;
-        items->GetElementAt(i, getter_AddRefs(genericItem));
         nsCOMPtr<nsITransferable> item;
-        item = do_QueryInterface(genericItem);
+        item = do_QueryElementAt(items, i);
 
         if (item) {
             uint32_t tmpDataLen = 0;
@@ -1552,10 +1545,8 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         return;
     }
 
-    nsCOMPtr<nsISupports> genericItem;
-    mSourceDataItems->GetElementAt(0, getter_AddRefs(genericItem));
     nsCOMPtr<nsITransferable> item;
-    item = do_QueryInterface(genericItem);
+    item = do_QueryElementAt(mSourceDataItems, 0);
     if (item) {
         // if someone was asking for text/plain, lookup unicode instead so
         // we can convert it.
