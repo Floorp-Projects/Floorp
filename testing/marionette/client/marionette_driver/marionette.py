@@ -2,12 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import base64
 import ConfigParser
+import base64
+import datetime
 import json
 import os
 import socket
 import sys
+import time
 import traceback
 import warnings
 
@@ -575,7 +577,7 @@ class Marionette(object):
         if self.bin:
             self.instance = self._create_instance(app, instance_args)
             self.instance.start()
-            self.raise_for_port(self.wait_for_port(timeout=startup_timeout))
+            self.raise_for_port(timeout=startup_timeout)
 
     def _create_instance(self, app, instance_args):
         if not Marionette.is_port_available(self.port, host=self.host):
@@ -640,13 +642,54 @@ class Marionette(object):
             s.close()
 
     def wait_for_port(self, timeout=None):
-        timeout = timeout or self.DEFAULT_STARTUP_TIMEOUT
-        return transport.wait_for_port(self.host, self.port, timeout=timeout)
+        """Wait until Marionette server has been created the communication socket.
+
+        :param timeout: Timeout in seconds for the server to be ready.
+
+        """
+        if timeout is None:
+            timeout = self.DEFAULT_STARTUP_TIMEOUT
+
+        runner = None
+        if self.instance is not None:
+            runner = self.instance.runner
+
+        poll_interval = 0.1
+        starttime = datetime.datetime.now()
+
+        while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
+            # If the instance we want to connect to is not running return immediately
+            if runner is not None and not runner.is_running():
+                return False
+
+            sock = None
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(0.5)
+                sock.connect((self.host, self.port))
+                data = sock.recv(16)
+                if ":" in data:
+                    return True
+            except socket.error:
+                pass
+            finally:
+                if sock is not None:
+                    sock.close()
+
+            time.sleep(poll_interval)
+
+        return False
 
     @do_process_check
-    def raise_for_port(self, port_obtained):
-        if not port_obtained:
-            raise socket.timeout("Timed out waiting for port {}!".format(self.port))
+    def raise_for_port(self, timeout=None):
+        """Raise socket.timeout if no connection can be established.
+
+        :param timeout: Timeout in seconds for the server to be ready.
+
+        """
+        if not self.wait_for_port(timeout):
+            raise socket.timeout("Timed out waiting for connection on {0}:{1}!".format(
+                self.host, self.port))
 
     @do_process_check
     def _send_message(self, name, params=None, key=None):
@@ -1032,7 +1075,7 @@ class Marionette(object):
         if not pref_exists:
             self.delete_session()
             self.instance.restart(prefs)
-            self.raise_for_port(self.wait_for_port())
+            self.raise_for_port()
             self.start_session()
             self.reset_timeouts()
 
@@ -1061,7 +1104,6 @@ class Marionette(object):
                 raise errors.MarionetteException("Something canceled the quit application request")
 
         self._send_message("quitApplication", {"flags": list(flags)})
-        self.delete_session(in_app=True)
 
     @do_process_check
     def quit(self, in_app=False, callback=None):
@@ -1085,9 +1127,11 @@ class Marionette(object):
 
         if in_app:
             if callable(callback):
+                self._send_message("acceptConnections", {"value": False})
                 callback()
             else:
                 self._request_in_app_shutdown()
+            self.delete_session(in_app=True)
 
             # Give the application some time to shutdown
             self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
@@ -1120,12 +1164,14 @@ class Marionette(object):
                 raise ValueError("An in_app restart cannot be triggered with the clean flag set")
 
             if callable(callback):
+                self._send_message("acceptConnections", {"value": False})
                 callback()
             else:
                 self._request_in_app_shutdown("eRestart")
+            self.delete_session(in_app=True)
 
             try:
-                self.raise_for_port(self.wait_for_port())
+                self.raise_for_port()
             except socket.timeout:
                 if self.instance.runner.returncode is not None:
                     exc, val, tb = sys.exc_info()
@@ -1135,7 +1181,7 @@ class Marionette(object):
         else:
             self.delete_session()
             self.instance.restart(clean=clean)
-            self.raise_for_port(self.wait_for_port())
+            self.raise_for_port()
 
         self.start_session(session_id=session_id)
         self.reset_timeouts()
@@ -1234,7 +1280,14 @@ class Marionette(object):
             be raised
 
         """
-        self._send_message("timeouts", {"script": timeout})
+        try:
+            self._send_message("timeouts", {"script": timeout})
+        except errors.MarionetteException as e:
+            # remove when 52.0a is stable
+            if "Not a Number" in e.message:
+                self._send_message("timeouts", {"type": "script", "ms": timeout})
+            else:
+                raise e
 
     def set_search_timeout(self, timeout):
         """Sets a timeout for the find methods.
@@ -1250,7 +1303,14 @@ class Marionette(object):
         :param timeout: Timeout in milliseconds.
 
         """
-        self._send_message("timeouts", {"implicit": timeout})
+        try:
+            self._send_message("timeouts", {"implicit": timeout})
+        except errors.MarionetteException as e:
+            # remove when 52.0a is stable
+            if "Not a Number" in e.message:
+                self._send_message("timeouts", {"type": "implicit", "ms": timeout})
+            else:
+                raise e
 
     def set_page_load_timeout(self, timeout):
         """Sets a timeout for loading pages.
@@ -1262,7 +1322,14 @@ class Marionette(object):
         :param timeout: Timeout in milliseconds.
 
         """
-        self._send_message("timeouts", {"page load": timeout})
+        try:
+            self._send_message("timeouts", {"page load": timeout})
+        except errors.MarionetteException as e:
+            # remove when 52.0a is stable
+            if "Not a Number" in e.message:
+                self._send_message("timeouts", {"type": "page load", "ms": timeout})
+            else:
+                raise e
 
     @property
     def current_window_handle(self):

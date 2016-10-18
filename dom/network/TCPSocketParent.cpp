@@ -64,14 +64,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketParentBase)
 TCPSocketParentBase::TCPSocketParentBase()
 : mIPCOpen(false)
 {
-  mObserver = new mozilla::net::OfflineObserver(this);
 }
 
 TCPSocketParentBase::~TCPSocketParentBase()
 {
-  if (mObserver) {
-    mObserver->RemoveObserver();
-  }
 }
 
 uint32_t
@@ -97,33 +93,6 @@ TCPSocketParent::GetInIsolatedMozBrowser()
     return false;
   }
 }
-
-nsresult
-TCPSocketParent::OfflineNotification(nsISupports *aSubject)
-{
-  nsCOMPtr<nsIAppOfflineInfo> info(do_QueryInterface(aSubject));
-  if (!info) {
-    return NS_OK;
-  }
-
-  uint32_t targetAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-  info->GetAppId(&targetAppId);
-
-  // Obtain App ID
-  uint32_t appId = GetAppId();
-  if (appId != targetAppId) {
-    return NS_OK;
-  }
-
-  // If the app is offline, close the socket
-  if (mSocket && NS_IsAppOffline(appId)) {
-    mSocket->Close();
-    mSocket = nullptr;
-  }
-
-  return NS_OK;
-}
-
 
 void
 TCPSocketParentBase::ReleaseIPDLReference()
@@ -166,12 +135,6 @@ TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bo
   // Obtain App ID
   uint32_t appId = GetAppId();
   bool     inIsolatedMozBrowser = GetInIsolatedMozBrowser();
-
-  if (NS_IsAppOffline(appId)) {
-    NS_ERROR("Can't open socket because app is offline");
-    FireInteralError(this, __LINE__);
-    return true;
-  }
 
   mSocket = new TCPSocket(nullptr, aHost, aPort, aUseSSL, aUseArrayBuffers);
   mSocket->SetAppIdAndBrowser(appId, inIsolatedMozBrowser);

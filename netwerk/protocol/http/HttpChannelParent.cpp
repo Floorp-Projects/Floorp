@@ -29,7 +29,6 @@
 #include "nsIAuthPromptCallback.h"
 #include "nsIContentPolicy.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "nsIOService.h"
 #include "nsICachingChannel.h"
 #include "mozilla/LoadInfo.h"
 #include "nsQueryObject.h"
@@ -83,17 +82,12 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
     mNestedFrameId = iframeEmbedding.get_TabId();
   }
 
-  mObserver = new OfflineObserver(this);
-
   mEventQ = new ChannelEventQueue(static_cast<nsIParentRedirectingChannel*>(this));
 }
 
 HttpChannelParent::~HttpChannelParent()
 {
   LOG(("Destroying HttpChannelParent [this=%p]\n", this));
-  if (mObserver) {
-    mObserver->RemoveObserver();
-  }
 }
 
 void
@@ -303,23 +297,9 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     return SendFailedAsyncOpen(rv);
   }
 
-  bool appOffline = false;
-  uint32_t appId = attrs.mAppId;
-  if (appId != NECKO_UNKNOWN_APP_ID &&
-      appId != NECKO_NO_APP_ID) {
-    gIOService->IsAppOffline(appId, &appOffline);
-  }
-
-  uint32_t loadFlags = aLoadFlags;
-  if (appOffline) {
-    loadFlags |= nsICachingChannel::LOAD_ONLY_FROM_CACHE;
-    loadFlags |= nsIRequest::LOAD_FROM_CACHE;
-    loadFlags |= nsICachingChannel::LOAD_NO_NETWORK_IO;
-  }
-
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, loadInfo,
-                             nullptr, nullptr, loadFlags, ios);
+                             nullptr, nullptr, aLoadFlags, ios);
 
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
@@ -348,8 +328,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     mChannel->RedirectTo(apiRedirectToUri);
   if (topWindowUri)
     mChannel->SetTopWindowURI(topWindowUri);
-  if (loadFlags != nsIRequest::LOAD_NORMAL)
-    mChannel->SetLoadFlags(loadFlags);
+  if (aLoadFlags != nsIRequest::LOAD_NORMAL)
+    mChannel->SetLoadFlags(aLoadFlags);
 
   for (uint32_t i = 0; i < requestHeaders.Length(); i++) {
     if (requestHeaders[i].mEmpty) {
@@ -524,22 +504,6 @@ HttpChannelParent::ConnectChannel(const uint32_t& registrarId, const bool& shoul
     if (pbChannel) {
       pbChannel->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
     }
-  }
-
-  bool appOffline = false;
-  uint32_t appId = GetAppId();
-  if (appId != NECKO_UNKNOWN_APP_ID &&
-      appId != NECKO_NO_APP_ID) {
-    gIOService->IsAppOffline(appId, &appOffline);
-  }
-
-  if (appOffline) {
-    uint32_t loadFlags;
-    mChannel->GetLoadFlags(&loadFlags);
-    loadFlags |= nsICachingChannel::LOAD_ONLY_FROM_CACHE;
-    loadFlags |= nsIRequest::LOAD_FROM_CACHE;
-    loadFlags |= nsICachingChannel::LOAD_NO_NETWORK_IO;
-    mChannel->SetLoadFlags(loadFlags);
   }
 
   return true;
@@ -1618,28 +1582,6 @@ HttpChannelParent::OpenAlternativeOutputStream(const nsACString & type, nsIOutpu
     return NS_ERROR_NOT_AVAILABLE;
   }
   return mCacheEntry->OpenAlternativeOutputStream(type, _retval);
-}
-
-void
-HttpChannelParent::OfflineDisconnect()
-{
-  if (mChannel) {
-    mChannel->Cancel(NS_ERROR_OFFLINE);
-  }
-  mStatus = NS_ERROR_OFFLINE;
-}
-
-uint32_t
-HttpChannelParent::GetAppId()
-{
-  uint32_t appId = NECKO_UNKNOWN_APP_ID;
-  if (mChannel) {
-    NeckoOriginAttributes attrs;
-    if (NS_GetOriginAttributes(mChannel, attrs)) {
-      appId = attrs.mAppId;
-    }
-  }
-  return appId;
 }
 
 NS_IMETHODIMP

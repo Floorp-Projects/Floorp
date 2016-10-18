@@ -7,6 +7,7 @@ import BaseHTTPServer
 import urllib
 import urlparse
 import os
+import posixpath
 
 DEBUG = True
 
@@ -23,10 +24,41 @@ class ThreadingSimpleServer(SocketServer.ThreadingMixIn,
     pass
 
 
-class QuietHttpRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-    def log_message(self, format, *args, **kwargs):
-        pass
+class HttpRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler, object):
+    def __init__(self, *args):
+        # set root to toolkit/components/microformats/
+        self.root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.normpath(__file__))))
+        super(HttpRequestHandler, self).__init__(*args)
 
+    def log_message(self, format, *args, **kwargs):
+        if DEBUG:
+            super(HttpRequestHandler, self).log_message(format, *args, **kwargs)
+
+    def translate_path(self, path):
+        """Translate a /-separated PATH to the local filename syntax.
+
+        Components that mean special things to the local file system
+        (e.g. drive or directory names) are ignored.  (XXX They should
+        probably be diagnosed.)
+
+        """
+        # abandon query parameters
+        path = path.split('?',1)[0]
+        path = path.split('#',1)[0]
+        # Don't forget explicit trailing slash when normalizing. Issue17324
+        trailing_slash = path.rstrip().endswith('/')
+        path = posixpath.normpath(urllib.unquote(path))
+        words = path.split('/')
+        words = filter(None, words)
+        path = self.root
+        for word in words:
+            drive, word = os.path.splitdrive(word)
+            head, word = os.path.split(word)
+            if word in (os.curdir, os.pardir): continue
+            path = os.path.join(path, word)
+        if trailing_slash:
+            path += '/'
+        return path
 
 class BaseTestFrontendUnits(MarionetteTestCase):
 
@@ -34,13 +66,8 @@ class BaseTestFrontendUnits(MarionetteTestCase):
     def setUpClass(cls):
         super(BaseTestFrontendUnits, cls).setUpClass()
 
-        if DEBUG:
-            handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-        else:
-            handler = QuietHttpRequestHandler
-
         # Port 0 means to select an arbitrary unused port
-        cls.server = ThreadingSimpleServer(('', 0), handler)
+        cls.server = ThreadingSimpleServer(('', 0), HttpRequestHandler)
         cls.ip, cls.port = cls.server.server_address
 
         cls.server_thread = threading.Thread(target=cls.server.serve_forever)
@@ -79,22 +106,8 @@ class BaseTestFrontendUnits(MarionetteTestCase):
 
     # srcdir_path should be the directory relative to this file.
     def set_server_prefix(self, srcdir_path):
-        # We may be run from a different path than topsrcdir, e.g. in the case
-        # of packaged tests. If so, then we have to work out the right directory
-        # for the local server.
-
-        # First find the top of the working directory.
-        commonPath = os.path.commonprefix([__file__, os.getcwd()])
-
-        # Now get the relative path between the two
-        self.relPath = os.path.relpath(os.path.dirname(__file__), commonPath)
-
-        self.relPath = urllib.pathname2url(os.path.join(self.relPath, srcdir_path))
-
-        print "http://localhost:" + str(self.port),self.relPath
-        # Finally join the relative path with the given src path
         self.server_prefix = urlparse.urljoin("http://localhost:" + str(self.port),
-                                              self.relPath)
+                                              srcdir_path)
 
     def check_page(self, page):
 
