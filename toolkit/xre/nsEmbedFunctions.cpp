@@ -501,14 +501,6 @@ XRE_InitChildProcess(int aArgc,
 #ifdef MOZ_WIDGET_GTK
   // Setting the name here avoids the need to pass this through to gtk_init().
   g_set_prgname(aArgv[0]);
-
-#if MOZ_WIDGET_GTK == 3 && defined(MOZ_X11)
-  // Disable XInput2 support due to focus bugginess. See bugs 1182700, 1170342.
-  const char* useXI2 = PR_GetEnv("MOZ_USE_XINPUT2");
-  if (!useXI2 || (*useXI2 == '0')) {
-    gdk_disable_multidevice();
-  }
-#endif
 #endif
 
 #ifdef OS_POSIX
