@@ -347,15 +347,9 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
 #endif
 
 #if defined(JS_VALUE_IS_CONSTEXPR)
-#  define JS_RETURN_LAYOUT_FROM_BITS(BITS) \
-    return (jsval_layout) { .asBits = (BITS) }
 #  define JS_VALUE_CONSTEXPR constexpr
 #  define JS_VALUE_CONSTEXPR_VAR constexpr
 #else
-#  define JS_RETURN_LAYOUT_FROM_BITS(BITS) \
-    jsval_layout l;                        \
-    l.asBits = (BITS);                     \
-    return l;
 #  define JS_VALUE_CONSTEXPR
 #  define JS_VALUE_CONSTEXPR_VAR const
 #endif
@@ -367,12 +361,6 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
  * JSValueTag even though its underlying type has been forced to be uint32_t.
  * Thus, all comparisons should explicitly cast operands to uint32_t.
  */
-
-static inline JS_VALUE_CONSTEXPR jsval_layout
-BUILD_JSVAL(JSValueTag tag, uint32_t payload)
-{
-    JS_RETURN_LAYOUT_FROM_BITS((((uint64_t)(uint32_t)tag) << 32) | payload);
-}
 
 static inline bool
 JSVAL_IS_DOUBLE_IMPL(const jsval_layout& l)
@@ -399,19 +387,6 @@ static inline int32_t
 JSVAL_TO_INT32_IMPL(const jsval_layout& l)
 {
     return l.s.payload.i32;
-}
-
-static inline JS_VALUE_CONSTEXPR jsval_layout
-INT32_TO_JSVAL_IMPL(int32_t i)
-{
-#if defined(JS_VALUE_IS_CONSTEXPR)
-    return BUILD_JSVAL(JSVAL_TAG_INT32, i);
-#else
-    jsval_layout l;
-    l.s.tag = JSVAL_TAG_INT32;
-    l.s.payload.i32 = i;
-    return l;
-#endif
 }
 
 static inline bool
@@ -654,12 +629,6 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(const jsval_layout& l)
 
 #elif defined(JS_PUNBOX64)
 
-static inline JS_VALUE_CONSTEXPR jsval_layout
-BUILD_JSVAL(JSValueTag tag, uint64_t payload)
-{
-    JS_RETURN_LAYOUT_FROM_BITS((((uint64_t)(uint32_t)tag) << JSVAL_TAG_SHIFT) | payload);
-}
-
 static inline bool
 JSVAL_IS_DOUBLE_IMPL(const jsval_layout& l)
 {
@@ -685,12 +654,6 @@ static inline int32_t
 JSVAL_TO_INT32_IMPL(const jsval_layout& l)
 {
     return (int32_t)l.asBits;
-}
-
-static inline JS_VALUE_CONSTEXPR jsval_layout
-INT32_TO_JSVAL_IMPL(int32_t i32)
-{
-    JS_RETURN_LAYOUT_FROM_BITS(((uint64_t)(uint32_t)i32) | JSVAL_SHIFTED_TAG_INT32);
 }
 
 static inline bool
@@ -1011,6 +974,12 @@ CanonicalizeNaN(double d)
 class Value
 {
   public:
+#if defined(JS_NUNBOX32)
+    using PayloadType = uint32_t;
+#elif defined(JS_PUNBOX64)
+    using PayloadType = uint64_t;
+#endif
+
     /*
      * N.B. the default constructor leaves Value unitialized. Adding a default
      * constructor prevents Value from being stored in a union.
@@ -1032,15 +1001,15 @@ class Value
     /*** Mutators ***/
 
     void setNull() {
-        data.asBits = BUILD_JSVAL(JSVAL_TAG_NULL, 0).asBits;
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_NULL, 0);
     }
 
     void setUndefined() {
-        data.asBits = BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0).asBits;
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_UNDEFINED, 0);
     }
 
     void setInt32(int32_t i) {
-        data = INT32_TO_JSVAL_IMPL(i);
+        data.asBits = bitsFromTagAndPayload(JSVAL_TAG_INT32, uint32_t(i));
     }
 
     int32_t& getInt32Ref() {
@@ -1374,6 +1343,7 @@ class Value
 
   private:
 #if defined(JS_VALUE_IS_CONSTEXPR)
+    explicit JS_VALUE_CONSTEXPR Value(uint64_t asBits) : data({ .asBits = asBits }) {}
     MOZ_IMPLICIT JS_VALUE_CONSTEXPR Value(const jsval_layout& layout) : data(layout) {}
 #endif
 
@@ -1387,6 +1357,39 @@ class Value
     friend jsval_layout (::JSVAL_TO_IMPL)(const Value&);
     friend Value JS_VALUE_CONSTEXPR (::IMPL_TO_JSVAL)(const jsval_layout& l);
     friend Value JS_VALUE_CONSTEXPR (JS::UndefinedValue)();
+
+  public:
+    static JS_VALUE_CONSTEXPR uint64_t
+    bitsFromTagAndPayload(JSValueTag tag, PayloadType payload)
+    {
+#if defined(JS_NUNBOX32)
+        return (uint64_t(uint32_t(tag)) << 32) | payload;
+#elif defined(JS_PUNBOX64)
+        return (uint64_t(uint32_t(tag)) << JSVAL_TAG_SHIFT) | payload;
+#endif
+    }
+
+    static JS_VALUE_CONSTEXPR Value
+    fromTagAndPayload(JSValueTag tag, PayloadType payload)
+    {
+        return fromRawBits(bitsFromTagAndPayload(tag, payload));
+    }
+
+    static JS_VALUE_CONSTEXPR Value
+    fromRawBits(uint64_t asBits) {
+#if defined(JS_VALUE_IS_CONSTEXPR)
+        return Value(asBits);
+#else
+        Value v;
+        v.data.asBits = asBits;
+        return v;
+#endif
+    }
+
+    static JS_VALUE_CONSTEXPR Value
+    fromInt32(int32_t i) {
+        return fromTagAndPayload(JSVAL_TAG_INT32, uint32_t(i));
+    }
 } JS_HAZ_GC_POINTER;
 
 inline bool
@@ -1419,19 +1422,13 @@ NullValue()
 static inline JS_VALUE_CONSTEXPR Value
 UndefinedValue()
 {
-#if defined(JS_VALUE_IS_CONSTEXPR)
-    return Value(BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0));
-#else
-    JS::Value v;
-    v.setUndefined();
-    return v;
-#endif
+    return Value::fromTagAndPayload(JSVAL_TAG_UNDEFINED, 0);
 }
 
 static inline JS_VALUE_CONSTEXPR Value
 Int32Value(int32_t i32)
 {
-    return IMPL_TO_JSVAL(INT32_TO_JSVAL_IMPL(i32));
+    return Value::fromInt32(i32);
 }
 
 static inline Value
@@ -1964,6 +1961,5 @@ extern JS_PUBLIC_DATA(const HandleValue) FalseHandleValue;
 } // namespace JS
 
 #undef JS_VALUE_IS_CONSTEXPR
-#undef JS_RETURN_LAYOUT_FROM_BITS
 
 #endif /* js_Value_h */
