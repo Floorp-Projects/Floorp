@@ -5,6 +5,7 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
@@ -19,12 +20,19 @@ Service.engineManager.register(BookmarksEngine);
 add_task(function* test_change_during_sync() {
   _("Ensure that we track changes made during a sync.");
 
-  let engine = new BookmarksEngine(Service);
-  let store  = engine._store;
+  let engine  = new BookmarksEngine(Service);
+  let store   = engine._store;
+  let tracker = engine._tracker;
   let server = serverForFoo(engine);
   new SyncTestingInfrastructure(server.server);
 
   let collection = server.user("foo").collection("bookmarks");
+
+  let bz_id = PlacesUtils.bookmarks.insertBookmark(
+    PlacesUtils.bookmarksMenuFolderId, Utils.makeURI("https://bugzilla.mozilla.org/"),
+    PlacesUtils.bookmarks.DEFAULT_INDEX, "Bugzilla");
+  let bz_guid = yield PlacesUtils.promiseItemGuid(bz_id);
+    _(`Bugzilla GUID: ${bz_guid}`);
 
   Svc.Obs.notify("weave:engine:start-tracking");
 
@@ -45,6 +53,17 @@ add_task(function* test_change_during_sync() {
     let bmk2_guid = "get-firefox1";
     let bmk3_id = -1;
     {
+      // An existing record changed on the server that should not trigger
+      // another sync when applied.
+      let changedRecord = new Bookmark("bookmarks", bz_guid);
+      changedRecord.bmkUri = "https://bugzilla.mozilla.org/";
+      changedRecord.description = "New description";
+      changedRecord.title = "Bugzilla";
+      changedRecord.tags = ["new", "tags"];
+      changedRecord.parentName = "Bookmarks Toolbar";
+      changedRecord.parentid = PlacesUtils.bookmarks.toolbarGuid;
+      collection.insert(bz_guid, encryptPayload(changedRecord.cleartext));
+
       let localRecord = new Bookmark("bookmarks", bmk2_guid);
       localRecord.bmkUri        = "http://getfirefox.com/";
       localRecord.description   = "Firefox is awesome.";
@@ -73,7 +92,12 @@ add_task(function* test_change_during_sync() {
     }
 
     _("Perform first sync");
-    yield sync_engine_and_validate_telem(engine, false);
+    {
+      let changes = engine.pullNewChanges();
+      deepEqual(changes.ids().sort(), [folder1_guid, bmk1_guid, "toolbar"],
+        "Should track bookmark and folder created before first sync");
+      yield sync_engine_and_validate_telem(engine, false);
+    }
 
     let bmk2_id = store.idForGUID(bmk2_guid);
     let bmk3_guid = store.GUIDForId(bmk3_id);
@@ -93,9 +117,12 @@ add_task(function* test_change_during_sync() {
     }
 
     _("Perform second sync");
-    yield sync_engine_and_validate_telem(engine, false);
-
     {
+      let changes = engine.pullNewChanges();
+      deepEqual(changes.ids().sort(), [bmk3_guid, folder1_guid].sort(),
+        "Should track bookmark added during last sync and its parent");
+      yield sync_engine_and_validate_telem(engine, false);
+
       ok(collection.wbo(bmk3_guid),
         "Bookmark created during first sync should be uploaded during second sync");
 
