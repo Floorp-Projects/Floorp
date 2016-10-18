@@ -238,13 +238,16 @@ class BuildMonitor(MozbuildObject):
 
         return BuildOutputResult(warning, False, True)
 
-    def finish(self, record_usage=True):
-        """Record the end of the build."""
-        self.end_time = time.time()
-
+    def stop_resource_recording(self):
         if self._resources_started:
             self.resources.stop()
 
+        self._resources_started = False
+
+    def finish(self, record_usage=True):
+        """Record the end of the build."""
+        self.stop_resource_recording()
+        self.end_time = time.time()
         self._finder_end_cpu = self._get_finder_cpu_usage()
         self.elapsed = self.end_time - self.start_time
 
