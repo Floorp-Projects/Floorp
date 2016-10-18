@@ -11,7 +11,7 @@
 <body>
 <script type="application/javascript;version=1.8">
 const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerContent.jsm");
-const { LoginManagerContent, FormLikeFactory } = LMCBackstagePass;
+const { LoginManagerContent, LoginFormFactory } = LMCBackstagePass;
 
 let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
@@ -143,7 +143,7 @@ add_task(function* test() {
     frameDoc.documentElement.innerHTML = tc.document;
     let inputForFormLike = frameDoc.querySelectorAll("input")[tc.inputIndexForFormLike];
 
-    let formLike = FormLikeFactory.createFromField(inputForFormLike);
+    let formLike = LoginFormFactory.createFromField(inputForFormLike);
 
     info("Calling _onFormSubmit with FormLike");
     let processedPromise = getSubmitMessage();

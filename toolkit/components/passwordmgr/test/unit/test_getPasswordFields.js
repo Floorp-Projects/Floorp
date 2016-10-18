@@ -1,11 +1,11 @@
 /*
- * Test for LoginManagerContent._getPasswordFields using FormLikeFactory.
+ * Test for LoginManagerContent._getPasswordFields using LoginFormFactory.
  */
 
 "use strict";
 
 const LMCBackstagePass = Cu.import("resource://gre/modules/LoginManagerContent.jsm");
-const { LoginManagerContent, FormLikeFactory } = LMCBackstagePass;
+const { LoginManagerContent, LoginFormFactory } = LMCBackstagePass;
 const TESTCASES = [
   {
     description: "Empty document",
@@ -97,7 +97,7 @@ for (let tc of TESTCASES) {
 
       let mapRootElementToFormLike = new Map();
       for (let input of document.querySelectorAll("input")) {
-        let formLike = FormLikeFactory.createFromField(input);
+        let formLike = LoginFormFactory.createFromField(input);
         let existingFormLike = mapRootElementToFormLike.get(formLike.rootElement);
         if (!existingFormLike) {
           mapRootElementToFormLike.set(formLike.rootElement, formLike);
@@ -119,7 +119,7 @@ for (let tc of TESTCASES) {
                                                               testcase.skipEmptyFields);
 
         if (formLikeFromInput.rootElement instanceof Ci.nsIDOMHTMLFormElement) {
-          let formLikeFromForm = FormLikeFactory.createFromForm(formLikeFromInput.rootElement);
+          let formLikeFromForm = LoginFormFactory.createFromForm(formLikeFromInput.rootElement);
           do_print("Checking that the FormLike created for the <form> matches" +
                    " the one from a password field");
           formLikeEqual(formLikeFromInput, formLikeFromForm);
