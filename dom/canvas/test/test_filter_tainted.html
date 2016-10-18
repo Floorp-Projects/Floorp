@@ -4,15 +4,36 @@
 <body onload="runTest()" style="margin: 0; padding: 0">
 <svg style="display: block; width: 0; height: 0">
   <defs>
-    <filter id="tainted">
+    <filter id="colormatrix-make-green">
+      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0
+                                                              1 1 1 1 0
+                                                              0 0 0 0 0
+                                                              0 0 0 1 0"/>
+    </filter>
+    <filter id="render-cross-origin-red-feImage">
       <feImage xlink:href="http://example.com/tests/dom/canvas/test/image_red-16x16.png"/>
+    </filter>
+    <filter id="use-SourceGraphic-as-map-on-red">
+      <feImage xlink:href='image_red-16x16.png' result='img'/>
+      <feDisplacementMap in="img" in2="SourceGraphic" scale="20"/>
+    </filter>
+    <filter id="use-cross-origin-green-feImage-as-map-on-same-origin-red">
+      <feImage xlink:href='image_red-16x16.png' result='img'/>
+      <feImage xlink:href='http://example.com/tests/dom/canvas/test/image_green-16x16.png' result='map'/>
+      <feDisplacementMap in="img" in2="map" scale="20"/>
+    </filter>
+    <filter id="use-cross-origin-red-feImage-as-map-on-SourceGraphic">
+      <feImage xlink:href='http://example.com/tests/dom/canvas/test/image_red-16x16.png' result='img'/>
+      <feDisplacementMap in="SourceGraphic" in2="img" scale="20"/>
     </filter>
   </defs>
 </svg>
-<canvas id="c" width="16" height="16"></canvas>
+<div id="canvasContainer"></div>
+<img id="cross-origin-green" src="http://example.com/tests/dom/canvas/test/image_green-16x16.png"/>
+<img id="cross-origin-red" src="http://example.com/tests/dom/canvas/test/image_red-16x16.png"/>
 <script>
 
-function isPixel(ctx, x,y, r,g,b,a, pos, color, d) {
+function isPixel(ctx, x, y, r, g, b, a, d) {
   var pixel = ctx.getImageData(x, y, 1, 1);
   var pr = pixel.data[0],
       pg = pixel.data[1],
@@ -22,34 +43,120 @@ function isPixel(ctx, x,y, r,g,b,a, pos, color, d) {
      g - d <= pg && pg <= g + d &&
      b - d <= pb && pb <= b + d &&
      a - d <= pa && pa <= a + d,
-     'pixel ' + pos + ' is ' + pr + ',' + pg + ',' + pb + ',' + pa + '; expected ' + color + ' +/- ' + d);
+     `pixel ${x},${y} is ${pr},${pg},${pb},${pa}; expected ${r},${g},${b},${a} +/- ${d}`);
+}
+
+function expectCanvasCtxToBeTainted(ctx) {
+  try {
+    ctx.getImageData(0, 0, 16, 16);
+    ok(false, 'Canvas should have been tainted and should throw a SecurityError when calling getImageData.');
+  } catch (e) {
+    is(e.name, 'SecurityError', 'Canvas should have been tainted and should throw a SecurityError when calling getImageData.');
+  }
+}
+
+function expectCanvasCtxToBeUntainted(ctx) {
+  try {
+    var data = ctx.getImageData(0, 0, 16, 16);
+    ok(data, 'Canvas should have returned some ImageData from getImageData, and not thrown an error.');
+  } catch (e) {
+    ok(false, 'Canvas should not have prevented getImageData.');
+  }
+}
+
+function newCanvas() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 16;
+  canvas.height = 16;
+  return canvas;
+}
+
+// This uses SpecialPowers + drawWindow and can check pixels even in tainted canvases.
+function checkCanvasPixel(canvas, x, y, r, g, b, a, fuzz) {
+  var container = document.getElementById('canvasContainer');
+  container.appendChild(canvas);
+
+  var captureCanvas = newCanvas();
+  var captureCtx = SpecialPowers.wrap(captureCanvas.getContext('2d'));
+  captureCtx.drawWindow(window, 0, 0, 16, 16, 'rgb(255, 255, 255)', 0);
+  isPixel(captureCtx, x, y, r, g, b, a, fuzz);
+
+  container.removeChild(canvas);
 }
 
 function runTest() {
 
   SpecialPowers.pushPrefEnv({ 'set': [['canvas.filters.enabled', true]] }, function () {
-  
-    var canvas = document.getElementById('c');
+    var crossOriginGreenImage = document.getElementById('cross-origin-green');
+    var crossOriginRedImage = document.getElementById('cross-origin-red');
+
+    var canvas = newCanvas();
     var ctx = canvas.getContext('2d');
   
-    ctx.filter = 'url(#tainted)';
+    ctx.filter = 'url(#colormatrix-make-green)';
+    ctx.drawImage(crossOriginRedImage, 0, 0);
+
+    // The color matrix should turn the red green.
+    checkCanvasPixel(canvas, 8,8, 0,255,0,255, 5);
+  
+    // But since the image was cross-origin, the canvas should now be tainted.
+    expectCanvasCtxToBeTainted(ctx);
+
+    // Create new untainted canvas.
+    canvas = newCanvas();
+    ctx = canvas.getContext('2d');
+
+    ctx.filter = 'url(#use-cross-origin-green-feImage-as-map-on-same-origin-red)';
+    ctx.rect(0, 0, 16, 16);
+    ctx.fill();
+  
+    // The red feImage should be passed through the displacement map without being shifted
+    checkCanvasPixel(canvas, 8,8, 255,0,0,255, 5);
+
+    // but it should have tainted the canvas.
+    expectCanvasCtxToBeTainted(ctx);
+
+    // Create new untainted canvas.
+    canvas = newCanvas();
+    ctx = canvas.getContext('2d');
+
+    ctx.filter = 'url(#render-cross-origin-red-feImage)';
     ctx.rect(0, 0, 16, 16);
     ctx.fill();
 
-    var canvas2 = document.createElement('canvas');
-    var ctx2 = SpecialPowers.wrap(canvas2.getContext('2d'));
-    ctx2.drawWindow(window, 0, 0, 16, 16, 'rgb(255,255,255)', 0);
-    isPixel(ctx2, 8,8, 255,0,0,255, '8,8', "255,0,0,255", 5);
+    // red feImage should have rendered
+    checkCanvasPixel(canvas, 8,8, 255,0,0,255, 5);
   
-    var expected_error = 'SecurityError';
-    var data;
-    try {
-      data = ctx.getImageData(0, 0, 16, 16);
-      actual_error = "";
-    } catch (e) {
-      actual_error = e.name;
-    }
-    is(actual_error, expected_error, 'canvas should have been tainted and throw a SecurityError');
+    // but it should have tainted the canvas.
+    expectCanvasCtxToBeTainted(ctx);
+  
+    // Create new untainted canvas.
+    canvas = newCanvas();
+    ctx = canvas.getContext('2d');
+
+    expectCanvasCtxToBeUntainted(ctx);
+
+    // SourceGraphic: cross-origin image_green-16x16.png,
+    // gets used as map to shift same-origin image_red-16x16.png,
+    // but should get ignored so that image_red-16x16.png gets drawn unshifted.
+    ctx.filter = 'url(#use-SourceGraphic-as-map-on-red)';
+    ctx.drawImage(crossOriginGreenImage, 0, 0);
+  
+    // expect to see red because cross-origin image_green-16x16.png should not have displaced the red away
+    checkCanvasPixel(canvas, 8,8, 255,0,0,255, 5);
+
+    expectCanvasCtxToBeTainted(ctx);
+
+    // SourceGraphic: cross-origin image_green-16x16.png,
+    // Cross-origin feImage image_red-16x16.png gets used as map to shift SourceGraphic,
+    // but should get ignored so that image_green-16x16.png gets drawn unshifted.
+    ctx.filter = 'url(#use-cross-origin-red-feImage-as-map-on-SourceGraphic)';
+    ctx.drawImage(crossOriginGreenImage, 0, 0);
+
+    // expect to see green because cross-origin image_red-16x16.png should not have displaced the green away
+    checkCanvasPixel(canvas, 8,8, 0,255,0,255, 5);
+
+    expectCanvasCtxToBeTainted(ctx);
   
     SimpleTest.finish();
     
