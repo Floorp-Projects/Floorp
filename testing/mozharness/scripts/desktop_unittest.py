@@ -28,6 +28,8 @@ from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.buildbot import TBPL_EXCEPTION
 from mozharness.mozilla.mozbase import MozbaseMixin
+from mozharness.mozilla.structuredlog import StructuredOutputParser
+from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options
@@ -36,6 +38,7 @@ from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_opt
 
 SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill']
 SUITE_DEFAULT_E10S = ['mochitest', 'reftest']
+
 
 # DesktopUnittest {{{1
 class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMixin, CodeCoverageMixin):
@@ -405,7 +408,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     option = option % str_format_values
                     if not option.endswith('None'):
                         base_cmd.append(option)
-                if self.structured_output(suite_category):
+                if self.structured_output(
+                    suite_category,
+                    self._query_try_flavor(suite_category, suite)
+                ):
                     base_cmd.append("--log-raw=-")
                 return base_cmd
             else:
@@ -414,12 +420,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                              "please make sure they are specified in your "
                              "config under %s_options" %
                              (suite_category, suite_category))
-
-
-            for option in options:
-                option = option % str_format_values
-                if not option.endswith('None'):
-                    base_cmd.append(option)
 
             return base_cmd
         else:
@@ -462,7 +462,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "mochitest": [("plain.*", "mochitest"),
                           ("browser-chrome.*", "browser-chrome"),
                           ("mochitest-devtools-chrome.*", "devtools-chrome"),
-                          ("chrome", "chrome")],
+                          ("chrome", "chrome"),
+                          ("jetpack.*", "jetpack")],
             "xpcshell": [("xpcshell", "xpcshell")],
             "reftest": [("reftest", "reftest"),
                         ("crashtest", "crashtest")]
@@ -470,6 +471,23 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         for suite_pattern, flavor in flavors.get(category, []):
             if re.compile(suite_pattern).match(suite):
                 return flavor
+
+    def structured_output(self, suite_category, flavor=None):
+        unstructured_flavors = self.config.get('unstructured_flavors')
+        if not unstructured_flavors:
+            return False
+        if suite_category not in unstructured_flavors:
+            return True
+        if not unstructured_flavors.get(suite_category) or flavor in unstructured_flavors.get(suite_category):
+            return False
+        return True
+
+    def get_test_output_parser(self, suite_category, flavor=None, strict=False,
+                               **kwargs):
+        if not self.structured_output(suite_category, flavor):
+            return DesktopUnittestOutputParser(suite_category=suite_category, **kwargs)
+        self.info("Structured output parser in use for %s." % suite_category)
+        return StructuredOutputParser(suite_category=suite_category, strict=strict, **kwargs)
 
     # Actions {{{2
 
@@ -605,7 +623,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                                                     'resources',
                                                     module))
 
-
     # pull defined in VCSScript.
     # preflight_run_tests defined in TestingMixin.
 
@@ -664,6 +681,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     'level': ERROR,
                 }]
                 parser = self.get_test_output_parser(suite_category,
+                                                     flavor=flavor,
                                                      config=self.config,
                                                      error_list=error_list,
                                                      log_obj=self.log_obj)
