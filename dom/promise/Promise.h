@@ -217,9 +217,6 @@ public:
 
   JSObject* PromiseObj() const
   {
-    if (mPromiseObj) {
-      JS::ExposeObjectToActiveJS(mPromiseObj);
-    }
     return mPromiseObj;
   }
 
