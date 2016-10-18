@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
 
 function getNotificationObject(app, id, tag) {
   return {
-    origin: "app://" + app + ".gaiamobile.org/manifest.webapp",
+    origin: "https://" + app + ".gaiamobile.org/",
     id: id,
     title: app + "Notification:" + Date.now(),
     dir: "auto",
