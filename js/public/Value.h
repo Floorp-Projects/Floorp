@@ -33,7 +33,7 @@ namespace JS { class Value; }
 # define JSVAL_TAG_SHIFT 47
 #endif
 
-// Use enums so that printing a jsval_layout in the debugger shows nice
+// Use enums so that printing a JS::Value in the debugger shows nice
 // symbolic type tags.
 
 #if defined(_MSC_VER)
@@ -219,104 +219,6 @@ typedef enum JSWhyMagic
     JS_WHY_MAGIC_COUNT
 } JSWhyMagic;
 
-#if MOZ_LITTLE_ENDIAN
-# if defined(JS_NUNBOX32)
-union MOZ_NON_PARAM alignas(8) jsval_layout
-{
-    uint64_t asBits;
-    struct {
-        union {
-            int32_t        i32;
-            uint32_t       u32;
-            uint32_t       boo;     // Don't use |bool| -- it must be four bytes.
-            JSString*      str;
-            JS::Symbol*    sym;
-            JSObject*      obj;
-            js::gc::Cell*  cell;
-            void*          ptr;
-            JSWhyMagic     why;
-            size_t         word;
-            uintptr_t      uintptr;
-        } payload;
-        JSValueTag tag;
-    } s;
-    double asDouble;
-    void* asPtr;
-};
-# elif defined(JS_PUNBOX64)
-union MOZ_NON_PARAM alignas(8) jsval_layout
-{
-    uint64_t asBits;
-#if !defined(_WIN64)
-    /* MSVC does not pack these correctly :-( */
-    struct {
-        uint64_t           payload47 : 47;
-        JSValueTag         tag : 17;
-    } debugView;
-#endif
-    struct {
-        union {
-            int32_t        i32;
-            uint32_t       u32;
-            JSWhyMagic     why;
-        } payload;
-    } s;
-    double asDouble;
-    void* asPtr;
-    size_t asWord;
-    uintptr_t asUIntPtr;
-};
-# endif  /* JS_PUNBOX64 */
-#else   /* MOZ_LITTLE_ENDIAN */
-# if defined(JS_NUNBOX32)
-union MOZ_NON_PARAM alignas(8) jsval_layout
-{
-    uint64_t asBits;
-    struct {
-        JSValueTag tag;
-        union {
-            int32_t        i32;
-            uint32_t       u32;
-            uint32_t       boo;     // Don't use |bool| -- it must be four bytes.
-            JSString*      str;
-            JS::Symbol*    sym;
-            JSObject*      obj;
-            js::gc::Cell*  cell;
-            void*          ptr;
-            JSWhyMagic     why;
-            size_t         word;
-            uintptr_t      uintptr;
-        } payload;
-    } s;
-    double asDouble;
-    void* asPtr;
-};
-# elif defined(JS_PUNBOX64)
-union MOZ_NON_PARAM alignas(8) jsval_layout
-{
-    uint64_t asBits;
-    struct {
-        JSValueTag         tag : 17;
-        uint64_t           payload47 : 47;
-    } debugView;
-    struct {
-        uint32_t           padding;
-        union {
-            int32_t        i32;
-            uint32_t       u32;
-            JSWhyMagic     why;
-        } payload;
-    } s;
-    double asDouble;
-    void* asPtr;
-    size_t asWord;
-    uintptr_t asUIntPtr;
-};
-# endif /* JS_PUNBOX64 */
-#endif  /* MOZ_LITTLE_ENDIAN */
-
-JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
-
 /*
  * For codesize purposes on some platforms, it's important that the
  * compiler know that JS::Values constructed from constant values can be
@@ -417,7 +319,7 @@ CanonicalizeNaN(double d)
  *   32-bit user code should avoid copying jsval/JS::Value as much as possible,
  *   preferring to pass by const Value&.
  */
-class Value
+class MOZ_NON_PARAM alignas(8) Value
 {
   public:
 #if defined(JS_NUNBOX32)
@@ -936,7 +838,97 @@ class Value
   private:
 #endif
 
-    jsval_layout data;
+#if MOZ_LITTLE_ENDIAN
+# if defined(JS_NUNBOX32)
+    union {
+        uint64_t asBits;
+        struct {
+            union {
+                int32_t        i32;
+                uint32_t       u32;
+                uint32_t       boo;     // Don't use |bool| -- it must be four bytes.
+                JSString*      str;
+                JS::Symbol*    sym;
+                JSObject*      obj;
+                js::gc::Cell*  cell;
+                void*          ptr;
+                JSWhyMagic     why;
+                size_t         word;
+                uintptr_t      uintptr;
+            } payload;
+            JSValueTag tag;
+        } s;
+        double asDouble;
+        void* asPtr;
+    } data;
+# elif defined(JS_PUNBOX64)
+    union {
+        uint64_t asBits;
+#if !defined(_WIN64)
+        /* MSVC does not pack these correctly :-( */
+        struct {
+            uint64_t           payload47 : 47;
+            JSValueTag         tag : 17;
+        } debugView;
+#endif
+        struct {
+            union {
+                int32_t        i32;
+                uint32_t       u32;
+                JSWhyMagic     why;
+            } payload;
+        } s;
+        double asDouble;
+        void* asPtr;
+        size_t asWord;
+        uintptr_t asUIntPtr;
+    } data;
+# endif  /* JS_PUNBOX64 */
+#else   /* MOZ_LITTLE_ENDIAN */
+# if defined(JS_NUNBOX32)
+    union {
+        uint64_t asBits;
+        struct {
+            JSValueTag tag;
+            union {
+                int32_t        i32;
+                uint32_t       u32;
+                uint32_t       boo;     // Don't use |bool| -- it must be four bytes.
+                JSString*      str;
+                JS::Symbol*    sym;
+                JSObject*      obj;
+                js::gc::Cell*  cell;
+                void*          ptr;
+                JSWhyMagic     why;
+                size_t         word;
+                uintptr_t      uintptr;
+            } payload;
+        } s;
+        double asDouble;
+        void* asPtr;
+    } data;
+# elif defined(JS_PUNBOX64)
+    union {
+        uint64_t asBits;
+        struct {
+            JSValueTag         tag : 17;
+            uint64_t           payload47 : 47;
+        } debugView;
+        struct {
+            uint32_t           padding;
+            union {
+                int32_t        i32;
+                uint32_t       u32;
+                JSWhyMagic     why;
+            } payload;
+        } s;
+        double asDouble;
+        void* asPtr;
+        size_t asWord;
+        uintptr_t asUIntPtr;
+    } data;
+# endif /* JS_PUNBOX64 */
+#endif  /* MOZ_LITTLE_ENDIAN */
 
   private:
 #if defined(JS_VALUE_IS_CONSTEXPR)
@@ -997,6 +989,8 @@ class Value
 #endif
     }
 } JS_HAZ_GC_POINTER;
+
+static_assert(sizeof(Value) == 8, "Value size must leave three tag bits, be a binary power, and is ubiquitously depended upon everywhere");
 
 inline bool
 IsOptimizedPlaceholderMagicValue(const Value& v)
@@ -1514,27 +1508,6 @@ template <class S> struct IdentityDefaultAdaptor { static S defaultValue(const S
 template <class S, bool v> struct BoolDefaultAdaptor { static bool defaultValue(const S&) { return v; } };
 
 } // namespace js
-
-namespace JS {
-
-#ifdef JS_DEBUG
-namespace detail {
-
-struct ValueAlignmentTester { char c; JS::Value v; };
-static_assert(sizeof(ValueAlignmentTester) == 16,
-              "JS::Value must be 16-byte-aligned");
-
-struct LayoutAlignmentTester { char c; jsval_layout l; };
-static_assert(sizeof(LayoutAlignmentTester) == 16,
-              "jsval_layout must be 16-byte-aligned");
-
-} // namespace detail
-#endif /* JS_DEBUG */
-
-} // namespace JS
-
-static_assert(sizeof(jsval_layout) == sizeof(JS::Value),
-              "jsval_layout and JS::Value must have identical layouts");
 
 /************************************************************************/
 
