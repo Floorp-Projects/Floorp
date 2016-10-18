@@ -107,6 +107,15 @@ this.TelemetryEnvironment = {
   testReset: function() {
     return getGlobal().reset();
   },
+
+  /**
+   * Intended for use in tests only.
+   */
+  testCleanRestart: function() {
+    getGlobal().shutdown();
+    gGlobalEnvironment = null;
+    return getGlobal();
+  },
 };
 
 const RECORD_PREF_STATE = TelemetryEnvironment.RECORD_PREF_STATE;
@@ -310,6 +319,18 @@ function limitStringToLength(aString, aMaxLength) {
     return null;
   }
   return aString.substring(0, aMaxLength);
+}
+
+/**
+ * Force a value to be a string.
+ * Only if the value is null, null is returned instead.
+ */
+function forceToStringOrNull(aValue) {
+  if (aValue === null) {
+    return null;
+  }
+
+  return String(aValue);
 }
 
 /**
@@ -1279,13 +1300,13 @@ EnvironmentCache.prototype = {
    */
   _getOSData: function () {
     let data = {
-      name: getSysinfoProperty("name", null),
-      version: getSysinfoProperty("version", null),
-      locale: getSystemLocale(),
+      name: forceToStringOrNull(getSysinfoProperty("name", null)),
+      version: forceToStringOrNull(getSysinfoProperty("version", null)),
+      locale: forceToStringOrNull(getSystemLocale()),
     };
 
     if (["gonk", "android"].includes(AppConstants.platform)) {
-      data.kernelVersion = getSysinfoProperty("kernel_version", null);
+      data.kernelVersion = forceToStringOrNull(getSysinfoProperty("kernel_version", null));
     } else if (AppConstants.platform === "win") {
       // The path to the "UBR" key, queried to get additional version details on Windows.
       const WINDOWS_UBR_KEY_PATH = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
