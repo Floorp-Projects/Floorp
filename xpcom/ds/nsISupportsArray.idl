@@ -34,11 +34,9 @@ class nsISupportsArray;
 interface nsISupportsArray : nsICollection {
 
   [notxpcom] long IndexOf([const] in nsISupports aPossibleElement);
-  [notxpcom] long LastIndexOf([const] in nsISupports aPossibleElement);
   
   // xpcom-compatible versions
   long GetIndexOf(in nsISupports aPossibleElement);
-  long GetLastIndexOf(in nsISupports aPossibleElement);  
   
   [notxpcom] boolean InsertElementAt(in nsISupports aElement,
                                      in unsigned long aIndex);
