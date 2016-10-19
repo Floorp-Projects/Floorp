@@ -93,6 +93,9 @@ class ADBAndroid(ADBDevice):
         except ADBError:
             self.selinux = False
 
+        self.version = int(self.shell_output("getprop ro.build.version.sdk",
+                                             timeout=timeout))
+
     def reboot(self, timeout=None):
         """Reboots the device.
 
@@ -265,7 +268,11 @@ class ADBAndroid(ADBDevice):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        data = self.command_output(["install", apk_path], timeout=timeout)
+        cmd = ["install"]
+        if self.version >= version_codes.M:
+            cmd.append("-g")
+        cmd.append(apk_path)
+        data = self.command_output(cmd, timeout=timeout)
         if data.find('Success') == -1:
             raise ADBError("install failed for %s. Got: %s" %
                            (apk_path, data))
@@ -418,9 +425,7 @@ class ADBAndroid(ADBDevice):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        version = self.shell_output("getprop ro.build.version.sdk",
-                                    timeout=timeout, root=root)
-        if int(version) >= version_codes.HONEYCOMB:
+        if self.version >= version_codes.HONEYCOMB:
             self.shell_output("am force-stop %s" % app_name,
                               timeout=timeout, root=root)
         else:
@@ -480,7 +485,10 @@ class ADBAndroid(ADBDevice):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        output = self.command_output(["install", "-r", apk_path],
-                                     timeout=timeout)
+        cmd = ["install", "-r"]
+        if self.version >= version_codes.M:
+            cmd.append("-g")
+        cmd.append(apk_path)
+        output = self.command_output(cmd, timeout=timeout)
         self.reboot(timeout=timeout)
         return output
