@@ -22,7 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489415
 SimpleTest.waitForExplicitFinish();
 
 var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
-var throwOutside = e => setTimeout(() => { throw e; });
 
 var v1 = document.getElementById("v1");
 var v2 = document.getElementById("v2");
@@ -45,8 +44,10 @@ function onendedcb(id) {
 }
 
 function testMixedPrincipals(resource) {
-  if (!resource) {
+  // In some OS(XP) can not play mp4. Add this checking for the test failure.
+  if (!resource || !v1.canPlayType(resource.type)) {
     todo(false, "No types supported");
+    SimpleTest.finish();
     return;
   }
   // Make sure the media cache size(50MB) is large enough that the data could
@@ -84,8 +85,7 @@ function testMixedPrincipals(resource) {
   });
 }
 
-testMixedPrincipals({ name:"pixel_aspect_ratio.mp4", type:"video/mp4", duration:28})
-.catch(e => throwOutside(e));
+testMixedPrincipals({ name:"pixel_aspect_ratio.mp4", type:"video/mp4", duration:28});
 
 </script>
 </pre>
