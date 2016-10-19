@@ -430,13 +430,21 @@ class MediaDecoderStateMachine::DormantState
 public:
   explicit DormantState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter()
+  void Enter(SeekJob aPendingSeek)
   {
+    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+    mPendingSeek = Move(aPendingSeek);
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
     }
     mMaster->Reset();
     mMaster->mReader->ReleaseResources();
+  }
+
+  void Exit() override
+  {
+    // Transfer the seek job so it is available to the next state.
+    mMaster->mQueuedSeek = Move(mPendingSeek);
   }
 
   State GetState() const override
@@ -449,9 +457,9 @@ public:
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
   {
     SLOG("Not Enough Data to seek at this stage, queuing seek");
-    mMaster->mQueuedSeek.RejectIfExists(__func__);
-    mMaster->mQueuedSeek.mTarget = aTarget;
-    return mMaster->mQueuedSeek.mPromise.Ensure(__func__);
+    mPendingSeek.RejectIfExists(__func__);
+    mPendingSeek.mTarget = aTarget;
+    return mPendingSeek.mPromise.Ensure(__func__);
   }
 
   void HandleVideoSuspendTimeout() override
@@ -463,6 +471,9 @@ public:
   {
     // Do nothing since we won't resume decoding until exiting dormant.
   }
+
+private:
+  SeekJob mPendingSeek;
 };
 
 /**
@@ -1109,15 +1120,18 @@ StateObject::HandleDormant(bool aDormant)
   if (!aDormant) {
     return true;
   }
-  mMaster->mQueuedSeek.mTarget =
-    SeekTarget(mMaster->mCurrentPosition,
-               SeekTarget::Accurate,
-               MediaDecoderEventVisibility::Suppressed);
+  // This member function is inherited by DecodingState, BufferingState and
+  // CompletedState which can handle seek immediately without queuing a seek.
+  // Therefore mQueuedSeek must be empty here.
+  MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+  SeekJob seekJob;
+  seekJob.mTarget = SeekTarget(mMaster->mCurrentPosition,
+                               SeekTarget::Accurate,
+                               MediaDecoderEventVisibility::Suppressed);
   // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
   // need to create the promise even it is not used at all.
-  RefPtr<MediaDecoder::SeekPromise> unused =
-    mMaster->mQueuedSeek.mPromise.Ensure(__func__);
-  SetState<DormantState>();
+  RefPtr<MediaDecoder::SeekPromise> unused = seekJob.mPromise.Ensure(__func__);
+  SetState<DormantState>(Move(seekJob));
   return true;
 }
 
@@ -1257,7 +1271,7 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
     // to become available so that we can build the correct decryptor/decoder.
     SetState<WaitForCDMState>(mPendingDormant);
   } else if (mPendingDormant) {
-    SetState<DormantState>();
+    SetState<DormantState>(SeekJob{});
   } else {
     SetState<DecodingFirstFrameState>();
   }
@@ -1287,7 +1301,8 @@ MediaDecoderStateMachine::
 WaitForCDMState::HandleCDMProxyReady()
 {
   if (mPendingDormant) {
-    SetState<DormantState>();
+    SeekJob seekJob = Move(mPendingSeek);
+    SetState<DormantState>(Move(seekJob));
   } else {
     SetState<DecodingFirstFrameState>();
   }
@@ -1353,7 +1368,8 @@ DecodingFirstFrameState::HandleDormant(bool aDormant)
     //    and don't overwrite it.
     // 2. if mQueuedSeek is empty, there is no need to seek when exiting
     //    the dormant state for we are at position 0.
-    SetState<DormantState>();
+    SeekJob seekJob = Move(mMaster->mQueuedSeek);
+    SetState<DormantState>(Move(seekJob));
   }
   return true;
 }
@@ -1487,8 +1503,8 @@ SeekingState::HandleDormant(bool aDormant)
     mSeekJob.mTarget.SetType(SeekTarget::Accurate);
     mSeekJob.mTarget.SetVideoOnly(false);
   }
-  mMaster->mQueuedSeek = Move(mSeekJob);
-  SetState<DormantState>();
+  SeekJob seekJob = Move(mSeekJob);
+  SetState<DormantState>(Move(seekJob));
   return true;
 }
 
