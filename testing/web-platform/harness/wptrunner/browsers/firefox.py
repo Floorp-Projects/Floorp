@@ -65,7 +65,7 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
                     **kwargs):
     executor_kwargs = base_executor_kwargs(test_type, server_config,
                                            cache_manager, **kwargs)
-    executor_kwargs["close_after_done"] = True
+    executor_kwargs["close_after_done"] = test_type != "reftest"
     if kwargs["timeout_multiplier"] is None:
         if test_type == "reftest":
             if run_info_data["debug"] or run_info_data.get("asan"):
