@@ -150,13 +150,6 @@ enum class GridLineSide
 
 struct nsGridContainerFrame::TrackSize
 {
-  void Initialize(nscoord aPercentageBasis,
-                  const nsStyleCoord& aMinCoord,
-                  const nsStyleCoord& aMaxCoord);
-  bool IsFrozen() const { return mState & eFrozen; }
-#ifdef DEBUG
-  void Dump() const;
-#endif
   enum StateBits : uint16_t {
     eAutoMinSizing =              0x1,
     eMinContentMinSizing =        0x2,
@@ -177,6 +170,14 @@ struct nsGridContainerFrame::TrackSize
     eBreakBefore =              0x800,
     eFitContent =              0x1000,
   };
+
+  StateBits Initialize(nscoord aPercentageBasis,
+                       const nsStyleCoord& aMinCoord,
+                       const nsStyleCoord& aMaxCoord);
+  bool IsFrozen() const { return mState & eFrozen; }
+#ifdef DEBUG
+  void Dump() const;
+#endif
 
   static bool IsMinContent(const nsStyleCoord& aCoord)
   {
@@ -200,7 +201,7 @@ template <>
 struct IsPod<nsGridContainerFrame::TrackSize> : TrueType {};
 }
 
-void
+TrackSize::StateBits
 nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
                                             const nsStyleCoord& aMinCoord,
                                             const nsStyleCoord& aMaxCoord)
@@ -263,6 +264,7 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
 
   mBaselineSubtreeSize[BaselineSharingGroup::eFirst] = nscoord(0);
   mBaselineSubtreeSize[BaselineSharingGroup::eLast] = nscoord(0);
+  return mState;
 }
 
 /**
@@ -1220,7 +1222,8 @@ struct nsGridContainerFrame::TrackSizingFunctions
 struct nsGridContainerFrame::Tracks
 {
   explicit Tracks(LogicalAxis aAxis)
-    : mAxis(aAxis)
+    : mStateUnion(TrackSize::StateBits(0))
+    , mAxis(aAxis)
     , mCanResolveLineRangeSize(false)
   {
     mBaselineSubtreeAlign[BaselineSharingGroup::eFirst] = NS_STYLE_ALIGN_AUTO;
@@ -1807,6 +1810,8 @@ struct nsGridContainerFrame::Tracks
   nscoord mGridGap;
   // The first(last)-baseline for the first(last) track in this axis.
   nscoord mBaseline[2]; // index by BaselineSharingGroup
+  // The union of the track min/max-sizing state bits in this axis.
+  TrackSize::StateBits mStateUnion;
   LogicalAxis mAxis;
   // Used for aligning a baseline-aligned subtree of items.  The only possible
   // values are NS_STYLE_ALIGN_{START,END,CENTER,AUTO}.  AUTO means there are
@@ -3655,9 +3660,9 @@ nsGridContainerFrame::Tracks::Initialize(
   mSizes.SetLength(aNumTracks);
   PodZero(mSizes.Elements(), mSizes.Length());
   for (uint32_t i = 0, len = mSizes.Length(); i < len; ++i) {
-    mSizes[i].Initialize(aContentBoxSize,
-                         aFunctions.MinSizingFor(i),
-                         aFunctions.MaxSizingFor(i));
+    mStateUnion |= mSizes[i].Initialize(aContentBoxSize,
+                                        aFunctions.MinSizingFor(i),
+                                        aFunctions.MaxSizingFor(i));
   }
   mGridGap = ::ResolveToDefiniteSize(aGridGap, aContentBoxSize);
   mContentBoxSize = aContentBoxSize;
