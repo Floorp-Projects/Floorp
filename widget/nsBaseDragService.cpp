@@ -595,13 +595,13 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     nsCOMPtr<nsIContent> content = do_QueryInterface(dragNode);
     HTMLCanvasElement *canvas = HTMLCanvasElement::FromContentOrNull(content);
     if (canvas) {
-      return DrawDragForImage(nullptr, canvas, aScreenDragRect, aSurface);
+      return DrawDragForImage(*aPresContext, nullptr, canvas, aScreenDragRect, aSurface);
     }
 
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(dragNode);
     // for image nodes, create the drag image from the actual image data
     if (imageLoader) {
-      return DrawDragForImage(imageLoader, nullptr, aScreenDragRect, aSurface);
+      return DrawDragForImage(*aPresContext, imageLoader, nullptr, aScreenDragRect, aSurface);
     }
 
     // If the image is a popup, use that as the image. This allows custom drag
@@ -664,7 +664,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 }
 
 nsresult
-nsBaseDragService::DrawDragForImage(nsIImageLoadingContent* aImageLoader,
+nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
+                                    nsIImageLoadingContent* aImageLoader,
                                     HTMLCanvasElement* aCanvas,
                                     LayoutDeviceIntRect* aScreenDragRect,
                                     RefPtr<SourceSurface>* aSurface)
@@ -684,10 +685,18 @@ nsBaseDragService::DrawDragForImage(nsIImageLoadingContent* aImageLoader,
       return NS_ERROR_NOT_AVAILABLE;
 
     // use the size of the image as the size of the drag image
-    imgContainer->GetWidth(&aScreenDragRect->width);
-    imgContainer->GetHeight(&aScreenDragRect->height);
+    int32_t imageWidth, imageHeight;
+    rv = imgContainer->GetWidth(&imageWidth);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = imgContainer->GetHeight(&imageHeight);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aScreenDragRect->width = aPresContext->CSSPixelsToDevPixels(imageWidth);
+    aScreenDragRect->height = aPresContext->CSSPixelsToDevPixels(imageHeight);
   }
   else {
+    // XXX The canvas size should be converted to dev pixels.
     NS_ASSERTION(aCanvas, "both image and canvas are null");
     nsIntSize sz = aCanvas->GetSize();
     aScreenDragRect->width = sz.width;
