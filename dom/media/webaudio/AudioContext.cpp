@@ -26,7 +26,6 @@
 #include "BiquadFilterNode.h"
 #include "ChannelMergerNode.h"
 #include "ChannelSplitterNode.h"
-#include "ConstantSourceNode.h"
 #include "ConvolverNode.h"
 #include "DelayNode.h"
 #include "DynamicsCompressorNode.h"
@@ -248,18 +247,6 @@ AudioContext::CreateBufferSource(ErrorResult& aRv)
   RefPtr<AudioBufferSourceNode> bufferNode =
     new AudioBufferSourceNode(this);
   return bufferNode.forget();
-}
-
-already_AddRefed<ConstantSourceNode>
-AudioContext::CreateConstantSource(ErrorResult& aRv)
-{
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<ConstantSourceNode> constantSourceNode =
-    new ConstantSourceNode(this);
-  return constantSourceNode.forget();
 }
 
 already_AddRefed<AudioBuffer>
