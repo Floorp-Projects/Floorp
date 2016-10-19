@@ -108,6 +108,10 @@ NewConsoleOutputWrapper.prototype = {
   dispatchMessagesClear: function () {
     store.dispatch(actions.messagesClear());
   },
+  // Should be used for test purpose only.
+  getStore: function () {
+    return store;
+  }
 };
 
 function batchedMessageAdd(action) {

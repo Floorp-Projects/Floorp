@@ -76,6 +76,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         final TextView vTimeSince;
         final TextView vSourceView;
         final TextView vPageView;
+        final ImageView vSourceIconView;
 
         private Future<IconResponse> ongoingIconLoad;
         private int tilesMargin;
@@ -90,6 +91,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             vIconView = (FaviconView) itemView.findViewById(R.id.icon);
             vSourceView = (TextView) itemView.findViewById(R.id.card_history_source);
             vPageView = (TextView) itemView.findViewById(R.id.page);
+            vSourceIconView = (ImageView) itemView.findViewById(R.id.source_icon);
 
             ImageView menuButton = (ImageView) itemView.findViewById(R.id.menu);
 
@@ -131,11 +133,14 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             if (isBookmark) {
                 vSourceView.setText(R.string.activity_stream_highlight_label_bookmarked);
                 vSourceView.setVisibility(View.VISIBLE);
+                vSourceIconView.setImageResource(R.drawable.ic_as_bookmarked);
             } else if (isHistory) {
                 vSourceView.setText(R.string.activity_stream_highlight_label_visited);
                 vSourceView.setVisibility(View.VISIBLE);
+                vSourceIconView.setImageResource(R.drawable.ic_as_visited);
             } else {
                 vSourceView.setVisibility(View.INVISIBLE);
+                vSourceIconView.setImageResource(0);
             }
 
             vSourceView.setText(vSourceView.getText());

@@ -26,6 +26,10 @@
           "type": "string",
           "pattern": "^[0-9a-f]{32}$"
         },
+        "devices": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/engine" }
+        },
         "deviceID": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
@@ -50,6 +54,16 @@
           "minItems": 1,
           "items": { "$ref": "#/definitions/engine" }
         }
+      }
+    },
+    "device": {
+      "required": ["os", "id", "version"],
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "os": { "type": "string" },
+        "version": { "type": "string" }
       }
     },
     "engine": {
