@@ -18,6 +18,7 @@ DevToolsModules(
     'filter-predicates.js',
     'l10n.js',
     'panel.js',
+    'performance-statistics-view.js',
     'prefs.js',
     'request-utils.js',
     'requests-menu-view.js',
