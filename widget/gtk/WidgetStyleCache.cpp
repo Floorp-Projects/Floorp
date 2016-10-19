@@ -211,6 +211,235 @@ CreateEntryWidget()
 }
 
 static GtkWidget*
+CreateComboBoxWidget()
+{
+  GtkWidget* widget = gtk_combo_box_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+typedef struct
+{
+  GType       type;
+  GtkWidget** widget;
+} GtkInnerWidgetInfo;
+
+static void
+GetInnerWidget(GtkWidget* widget, gpointer client_data)
+{
+  auto info = static_cast<GtkInnerWidgetInfo*>(client_data);
+
+  if (G_TYPE_CHECK_INSTANCE_TYPE(widget, info->type)) {
+    *info->widget = widget;
+  }
+
+  gtk_widget_realize(widget);
+}
+
+static GtkWidget*
+CreateComboBoxButtonWidget()
+{
+  GtkWidget* comboBox = GetWidget(MOZ_GTK_COMBOBOX);
+  GtkWidget* comboBoxButton = nullptr;
+
+  /* Get its inner Button */
+  GtkInnerWidgetInfo info = { GTK_TYPE_TOGGLE_BUTTON,
+                              &comboBoxButton };
+  gtk_container_forall(GTK_CONTAINER(comboBox),
+                       GetInnerWidget, &info);
+
+  if (!comboBoxButton) {
+    /* Shouldn't be reached with current internal gtk implementation; we
+     * use a generic toggle button as last resort fallback to avoid
+     * crashing. */
+    comboBoxButton = GetWidget(MOZ_GTK_TOGGLE_BUTTON);
+  } else {
+    /* We need to have pointers to the inner widgets (button, separator, arrow)
+     * of the ComboBox to get the correct rendering from theme engines which
+     * special cases their look. Since the inner layout can change, we ask GTK
+     * to NULL our pointers when they are about to become invalid because the
+     * corresponding widgets don't exist anymore. It's the role of
+     * g_object_add_weak_pointer().
+     * Note that if we don't find the inner widgets (which shouldn't happen), we
+     * fallback to use generic "non-inner" widgets, and they don't need that kind
+     * of weak pointer since they are explicit children of gProtoLayout and as
+     * such GTK holds a strong reference to them. */
+    g_object_add_weak_pointer(G_OBJECT(comboBoxButton),
+                              reinterpret_cast<gpointer *>(sWidgetStorage) +
+                              MOZ_GTK_COMBOBOX_BUTTON);
+  }
+
+  return comboBoxButton;
+}
+
+static GtkWidget*
+CreateComboBoxArrowWidget()
+{
+  GtkWidget* comboBoxButton = GetWidget(MOZ_GTK_COMBOBOX_BUTTON);
+  GtkWidget* comboBoxArrow = nullptr;
+
+  /* Get the widgets inside the Button */
+  GtkWidget* buttonChild = gtk_bin_get_child(GTK_BIN(comboBoxButton));
+  if (GTK_IS_BOX(buttonChild)) {
+    /* appears-as-list = FALSE, cell-view = TRUE; the button
+     * contains an hbox. This hbox is there because the ComboBox
+     * needs to place a cell renderer, a separator, and an arrow in
+     * the button when appears-as-list is FALSE. */
+    GtkInnerWidgetInfo info = { GTK_TYPE_ARROW,
+                                &comboBoxArrow };
+    gtk_container_forall(GTK_CONTAINER(buttonChild),
+                         GetInnerWidget, &info);
+  } else if (GTK_IS_ARROW(buttonChild)) {
+    /* appears-as-list = TRUE, or cell-view = FALSE;
+     * the button only contains an arrow */
+    comboBoxArrow = buttonChild;
+    gtk_widget_realize(comboBoxArrow);
+  }
+
+  if (!comboBoxArrow) {
+    /* Shouldn't be reached with current internal gtk implementation;
+     * we gButtonArrowWidget as last resort fallback to avoid
+     * crashing. */
+    comboBoxArrow = GetWidget(MOZ_GTK_BUTTON_ARROW);
+  } else {
+    g_object_add_weak_pointer(G_OBJECT(comboBoxArrow),
+                              reinterpret_cast<gpointer *>(sWidgetStorage) +
+                              MOZ_GTK_COMBOBOX_ARROW);
+  }
+
+  return comboBoxArrow;
+}
+
+static GtkWidget*
+CreateComboBoxSeparatorWidget()
+{
+  // Ensure to search for separator only once as it can fail
+  // TODO - it won't initialize after ResetWidgetCache() call
+  static bool isMissingSeparator = false;
+  if (isMissingSeparator)
+    return nullptr;
+
+  /* Get the widgets inside the Button */
+  GtkWidget* comboBoxSeparator = nullptr;
+  GtkWidget* buttonChild =
+    gtk_bin_get_child(GTK_BIN(GetWidget(MOZ_GTK_COMBOBOX_BUTTON)));
+  if (GTK_IS_BOX(buttonChild)) {
+    /* appears-as-list = FALSE, cell-view = TRUE; the button
+     * contains an hbox. This hbox is there because the ComboBox
+     * needs to place a cell renderer, a separator, and an arrow in
+     * the button when appears-as-list is FALSE. */
+    GtkInnerWidgetInfo info = { GTK_TYPE_SEPARATOR,
+                                &comboBoxSeparator };
+    gtk_container_forall(GTK_CONTAINER(buttonChild),
+                         GetInnerWidget, &info);
+  }
+
+  if (comboBoxSeparator) {
+    g_object_add_weak_pointer(G_OBJECT(comboBoxSeparator),
+                              reinterpret_cast<gpointer *>(sWidgetStorage) +
+                              MOZ_GTK_COMBOBOX_SEPARATOR);
+  } else {
+    /* comboBoxSeparator may be NULL
+     * when "appears-as-list" = TRUE or "cell-view" = FALSE;
+     * if there is no separator, then we just won't paint it. */
+    isMissingSeparator = true;
+  }
+
+  return comboBoxSeparator;
+}
+
+static GtkWidget*
+CreateComboBoxEntryWidget()
+{
+  GtkWidget* widget = gtk_combo_box_new_with_entry();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateComboBoxEntryTextareaWidget()
+{
+  GtkWidget* comboBoxTextarea = nullptr;
+
+  /* Get its inner Entry and Button */
+  GtkInnerWidgetInfo info = { GTK_TYPE_ENTRY,
+                              &comboBoxTextarea };
+  gtk_container_forall(GTK_CONTAINER(GetWidget(MOZ_GTK_COMBOBOX_ENTRY)),
+                       GetInnerWidget, &info);
+
+  if (!comboBoxTextarea) {
+    comboBoxTextarea = GetWidget(MOZ_GTK_ENTRY);
+  } else {
+    g_object_add_weak_pointer(G_OBJECT(comboBoxTextarea),
+                              reinterpret_cast<gpointer *>(sWidgetStorage) +
+                              MOZ_GTK_COMBOBOX_ENTRY);
+  }
+
+  return comboBoxTextarea;
+}
+
+static GtkWidget*
+CreateComboBoxEntryButtonWidget()
+{
+  GtkWidget* comboBoxButton = nullptr;
+
+  /* Get its inner Entry and Button */
+  GtkInnerWidgetInfo info = { GTK_TYPE_TOGGLE_BUTTON,
+                              &comboBoxButton };
+  gtk_container_forall(GTK_CONTAINER(GetWidget(MOZ_GTK_COMBOBOX_ENTRY)),
+                       GetInnerWidget, &info);
+
+  if (!comboBoxButton) {
+    comboBoxButton = GetWidget(MOZ_GTK_TOGGLE_BUTTON);
+  } else {
+    g_object_add_weak_pointer(G_OBJECT(comboBoxButton),
+                              reinterpret_cast<gpointer *>(sWidgetStorage) +
+                              MOZ_GTK_COMBOBOX_ENTRY_BUTTON);
+  }
+
+  return comboBoxButton;
+}
+
+static GtkWidget*
+CreateComboBoxEntryArrowWidget()
+{
+  GtkWidget* comboBoxArrow = nullptr;
+
+  /* Get the Arrow inside the Button */
+  GtkWidget* buttonChild =
+    gtk_bin_get_child(GTK_BIN(GetWidget(MOZ_GTK_COMBOBOX_ENTRY_BUTTON)));
+
+  if (GTK_IS_BOX(buttonChild)) {
+   /* appears-as-list = FALSE, cell-view = TRUE; the button
+     * contains an hbox. This hbox is there because the ComboBox
+     * needs to place a cell renderer, a separator, and an arrow in
+     * the button when appears-as-list is FALSE. */
+    GtkInnerWidgetInfo info = { GTK_TYPE_ARROW,
+                                &comboBoxArrow };
+    gtk_container_forall(GTK_CONTAINER(buttonChild),
+                         GetInnerWidget, &info);
+  } else if (GTK_IS_ARROW(buttonChild)) {
+    /* appears-as-list = TRUE, or cell-view = FALSE;
+     * the button only contains an arrow */
+    comboBoxArrow = buttonChild;
+    gtk_widget_realize(comboBoxArrow);
+  }
+
+  if (!comboBoxArrow) {
+    /* Shouldn't be reached with current internal gtk implementation;
+     * we gButtonArrowWidget as last resort fallback to avoid
+     * crashing. */
+    comboBoxArrow = GetWidget(MOZ_GTK_BUTTON_ARROW);
+  } else {
+    g_object_add_weak_pointer(G_OBJECT(comboBoxArrow),
+                              reinterpret_cast<gpointer *>(sWidgetStorage) +
+                              MOZ_GTK_COMBOBOX_ENTRY_ARROW);
+  }
+
+  return comboBoxArrow;
+}
+
+static GtkWidget*
 CreateScrolledWindowWidget()
 {
   GtkWidget* widget = gtk_scrolled_window_new(nullptr, nullptr);
@@ -432,6 +661,22 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateScaleWidget(GTK_ORIENTATION_VERTICAL);
     case MOZ_GTK_NOTEBOOK:
       return CreateNotebookWidget();
+    case MOZ_GTK_COMBOBOX:
+      return CreateComboBoxWidget();
+    case MOZ_GTK_COMBOBOX_BUTTON:
+      return CreateComboBoxButtonWidget();
+    case MOZ_GTK_COMBOBOX_ARROW:
+      return CreateComboBoxArrowWidget();
+    case MOZ_GTK_COMBOBOX_SEPARATOR:
+      return CreateComboBoxSeparatorWidget();
+    case MOZ_GTK_COMBOBOX_ENTRY:
+      return CreateComboBoxEntryWidget();
+    case MOZ_GTK_COMBOBOX_ENTRY_TEXTAREA:
+      return CreateComboBoxEntryTextareaWidget();
+    case MOZ_GTK_COMBOBOX_ENTRY_BUTTON:
+      return CreateComboBoxEntryButtonWidget();
+    case MOZ_GTK_COMBOBOX_ENTRY_ARROW:
+      return CreateComboBoxEntryArrowWidget();
     default:
       /* Not implemented */
       return nullptr;

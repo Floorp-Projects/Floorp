@@ -54,6 +54,7 @@ NewConsoleOutputWrapper.prototype = {
           });
         },
         sourceMapService: this.toolbox ? this.toolbox._sourceMapService : null,
+        openLink: url => this.jsterm.hud.owner.openLink.call(this.jsterm.hud.owner, url)
       }
     });
     let filterBar = FilterBar({
