@@ -285,7 +285,7 @@ var PromptUtilsTemp = {
             text = PromptUtils.getLocalizedString("EnterLoginForRealm2", [realm, displayHost]);
         }
 
-        return text;
+        return text.replace(/\n{1,}/g,' ');
     },
 
     getTabModalPrompt : function (domWin) {
