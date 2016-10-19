@@ -21,22 +21,16 @@ html|applet:not([height]), html|applet[height=""] {
 }
 
 a .mainBox,
-:-moz-type-unsupported .mainBox,
-:-moz-type-unsupported-platform .mainBox,
 :-moz-handler-clicktoplay .mainBox,
 :-moz-handler-vulnerable-updatable .mainBox,
 :-moz-handler-vulnerable-no-update .mainBox,
-:-moz-handler-disabled .mainBox,
 :-moz-handler-blocked .mainBox {
   -moz-user-focus: normal;
 }
 a .mainBox:focus,
-:-moz-type-unsupported .mainBox:focus,
-:-moz-type-unsupported-platform .mainBox:focus,
 :-moz-handler-clicktoplay .mainBox:focus,
 :-moz-handler-vulnerable-updatable .mainBox:focus,
 :-moz-handler-vulnerable-no-update .mainBox:focus,
-:-moz-handler-disabled .mainBox:focus,
 :-moz-handler-blocked .mainBox:focus {
   outline: 1px dotted;
 }
@@ -93,8 +87,6 @@ a .hoverBox,
 
 a .msgClickToPlay,
 a .msgTapToPlay,
-:-moz-type-unsupported .msgUnsupported,
-:-moz-type-unsupported-platform .msgUnsupportedPlatform,
 :-moz-handler-clicktoplay .msgClickToPlay,
 :-moz-handler-vulnerable-updatable .msgVulnerabilityStatus,
 :-moz-handler-vulnerable-updatable .msgCheckForUpdates,
@@ -102,8 +94,6 @@ a .msgTapToPlay,
 :-moz-handler-vulnerable-no-update .msgVulnerabilityStatus,
 :-moz-handler-vulnerable-no-update .msgClickToPlay,
 :-moz-handler-clicktoplay .msgTapToPlay,
-:-moz-handler-disabled .msgDisabled,
-:-moz-handler-disabled .msgManagePlugins,
 :-moz-handler-blocked .msgBlocked,
 :-moz-handler-crashed .msgCrashed {
   display: block;

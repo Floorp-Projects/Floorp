@@ -7858,7 +7858,10 @@ BytecodeEmitter::isRestParameter(ParseNode* pn, bool* result)
     if (paramLoc && lookupName(name) == *paramLoc) {
         FunctionScope::Data* bindings = funbox->functionScopeBindings();
         if (bindings->nonPositionalFormalStart > 0) {
-            *result = name == bindings->names[bindings->nonPositionalFormalStart - 1].name();
+            // |paramName| can be nullptr when the rest destructuring syntax is
+            // used: `function f(...[]) {}`.
+            JSAtom* paramName = bindings->names[bindings->nonPositionalFormalStart - 1].name();
+            *result = paramName && name == paramName;
             return true;
         }
     }

@@ -199,6 +199,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class NonParamInsideFunctionDeclChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker Scope;
   ArithmeticArgChecker ArithmeticArg;
   TrivialCtorDtorChecker TrivialCtorDtor;
@@ -219,6 +224,7 @@ private:
   SprintfLiteralChecker SprintfLiteral;
   OverrideBaseCallChecker OverrideBaseCall;
   OverrideBaseCallUsageChecker OverrideBaseCallUsage;
+  NonParamInsideFunctionDeclChecker NonParamInsideFunctionDecl;
   MatchFinder AstMatcher;
 };
 
@@ -496,6 +502,8 @@ static CustomTypeAnnotation NonTemporaryClass =
     CustomTypeAnnotation("moz_non_temporary_class", "non-temporary");
 static CustomTypeAnnotation MustUse =
     CustomTypeAnnotation("moz_must_use_type", "must-use");
+static CustomTypeAnnotation NonParam =
+    CustomTypeAnnotation("moz_non_param", "non-param");
 
 class MemMoveAnnotation final : public CustomTypeAnnotation {
 public:
@@ -1329,6 +1337,17 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
   AstMatcher.addMatcher(
       cxxMethodDecl(isNonVirtual(), isRequiredBaseMethod()).bind("method"),
       &OverrideBaseCallUsage);
+
+  AstMatcher.addMatcher(
+      functionDecl(anyOf(allOf(isDefinition(),
+                               hasAncestor(classTemplateSpecializationDecl()
+                                               .bind("spec"))),
+                         isDefinition()))
+          .bind("func"),
+      &NonParamInsideFunctionDecl);
+  AstMatcher.addMatcher(
+      lambdaExpr().bind("lambda"),
+      &NonParamInsideFunctionDecl);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -2131,6 +2150,57 @@ void DiagnosticsMatcher::OverrideBaseCallUsageChecker::run(
   const CXXMethodDecl *Method = Result.Nodes.getNodeAs<CXXMethodDecl>("method");
 
   Diag.Report(Method->getLocation(), ErrorID);
+}
+
+void DiagnosticsMatcher::NonParamInsideFunctionDeclChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  static DenseSet<const FunctionDecl*> CheckedFunctionDecls;
+
+  const FunctionDecl *func = Result.Nodes.getNodeAs<FunctionDecl>("func");
+  if (!func) {
+    const LambdaExpr *lambda = Result.Nodes.getNodeAs<LambdaExpr>("lambda");
+    if (lambda) {
+      func = lambda->getCallOperator();
+    }
+  }
+
+  if (!func) {
+    return;
+  }
+
+  if (func->isDeleted()) {
+    return;
+  }
+
+  // Don't report errors on the same declarations more than once.
+  if (CheckedFunctionDecls.count(func)) {
+    return;
+  }
+  CheckedFunctionDecls.insert(func);
+
+  const ClassTemplateSpecializationDecl *Spec =
+      Result.Nodes.getNodeAs<ClassTemplateSpecializationDecl>("spec");
+
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Type %0 must not be used as parameter");
+  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "Please consider passing a const reference instead");
+  unsigned SpecNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "The bad argument was passed to %0 here");
+
+  for (ParmVarDecl *p : func->parameters()) {
+    QualType T = p->getType().withoutLocalFastQualifiers();
+    if (NonParam.hasEffectiveAnnotation(T)) {
+      Diag.Report(p->getLocation(), ErrorID) << T;
+      Diag.Report(p->getLocation(), NoteID);
+
+      if (Spec) {
+        Diag.Report(Spec->getPointOfInstantiation(), SpecNoteID)
+          << Spec->getSpecializedTemplate();
+      }
+    }
+  }
 }
 
 class MozCheckAction : public PluginASTAction {

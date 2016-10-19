@@ -771,10 +771,6 @@ NS_NewNotificationCallbacksAggregation(nsIInterfaceRequestor  *callbacks,
  */
 bool NS_IsOffline();
 
-bool NS_IsAppOffline(uint32_t appId);
-
-bool NS_IsAppOffline(nsIPrincipal *principal);
-
 /**
  * Helper functions for implementing nsINestedURI::innermostURI.
  *

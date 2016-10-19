@@ -1350,12 +1350,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     void wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Operand dstAddr) DEFINED_ON(x86);
 
     // wasm specific methods, used in both the wasm baseline compiler and ion.
-    void wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64);
-    void wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86_shared);
+    void wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64, arm);
+    void wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86_shared, arm);
     void outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isUnsigned, wasm::TrapOffset off, Label* rejoin) DEFINED_ON(x86_shared);
 
-    void wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64);
-    void wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86_shared);
+    void wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86, x64, arm);
+    void wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry) DEFINED_ON(x86_shared, arm);
     void outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool isUnsigned, wasm::TrapOffset off, Label* rejoin) DEFINED_ON(x86_shared);
 
     void outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned, wasm::TrapOffset off, Label* rejoin) DEFINED_ON(x86_shared);

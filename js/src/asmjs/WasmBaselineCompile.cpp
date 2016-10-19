@@ -25,13 +25,10 @@
  * Unimplemented functionality:
  *
  *  - Tiered compilation (bug 1277562)
- *  - int64 operations on 32-bit systems
- *  - SIMD
- *  - Atomics (very simple now, we have range checking)
- *  - current_memory, grow_memory
- *  - non-signaling interrupts
- *  - profiler support (devtools)
  *  - ARM-32 support (bug 1277011)
+ *  - SIMD
+ *  - Atomics
+ *  - profiler support (devtools)
  *
  * There are lots of machine dependencies here but they are pretty
  * well isolated to a segment of the compiler.  Many dependencies
@@ -166,6 +163,9 @@ static const Register StackPointer = RealStackPointer;
 // EBX not being one of the WasmTableCall registers; and needing a
 // temp register for load/store that has a single-byte persona.
 static const Register ScratchRegX86 = ebx;
+
+# define QUOT_REM_I64_CALLOUT
+
 #endif
 
 class BaseCompiler
@@ -1729,6 +1729,20 @@ class BaseCompiler
         }
     }
 
+    void maybeReserveJoinRegI(ExprType type) {
+        if (type == ExprType::I32)
+            needI32(joinRegI32);
+        else if (type == ExprType::I64)
+            needI64(joinRegI64);
+    }
+
+    void maybeUnreserveJoinRegI(ExprType type) {
+        if (type == ExprType::I32)
+            freeI32(joinRegI32);
+        else if (type == ExprType::I64)
+            freeI64(joinRegI64);
+    }
+
     // Return the amount of execution stack consumed by the top numval
     // values on the value stack.
 
@@ -2469,8 +2483,8 @@ class BaseCompiler
 #endif
     }
 
+#ifndef QUOT_REM_I64_CALLOUT
     void quotientI64(RegI64 rhs, RegI64 srcDest, IsUnsigned isUnsigned) {
-        // This follows quotientI32, above.
         Label done;
 
         checkDivideByZeroI64(rhs, srcDest, &done);
@@ -2478,7 +2492,7 @@ class BaseCompiler
         if (!isUnsigned)
             checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(false));
 
-#if defined(JS_CODEGEN_X64)
+# if defined(JS_CODEGEN_X64)
         // The caller must set up the following situation.
         MOZ_ASSERT(srcDest.reg.reg == rax);
         MOZ_ASSERT(isAvailable(rdx));
@@ -2489,12 +2503,14 @@ class BaseCompiler
             masm.cqo();
             masm.idivq(rhs.reg.reg);
         }
-#else
+# else
         MOZ_CRASH("BaseCompiler platform hook: quotientI64");
-#endif
+# endif
         masm.bind(&done);
     }
+#endif
 
+#ifndef QUOT_REM_I64_CALLOUT
     void remainderI64(RegI64 rhs, RegI64 srcDest, IsUnsigned isUnsigned) {
         Label done;
 
@@ -2503,7 +2519,7 @@ class BaseCompiler
         if (!isUnsigned)
             checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(true));
 
-#if defined(JS_CODEGEN_X64)
+# if defined(JS_CODEGEN_X64)
         // The caller must set up the following situation.
         MOZ_ASSERT(srcDest.reg.reg == rax);
         MOZ_ASSERT(isAvailable(rdx));
@@ -2516,11 +2532,12 @@ class BaseCompiler
             masm.idivq(rhs.reg.reg);
         }
         masm.movq(rdx, rax);
-#else
+# else
         MOZ_CRASH("BaseCompiler platform hook: remainderI64");
-#endif
+# endif
         masm.bind(&done);
     }
+#endif
 
     void orI64(RegI64 rhs, RegI64 srcDest) {
         masm.or64(rhs.reg, srcDest.reg);
@@ -3302,9 +3319,9 @@ class BaseCompiler
     bool emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
     MOZ_MUST_USE
     bool emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
-#ifdef JS_NUNBOX32
-    void emitDivOrModI64BuiltinCall(SymbolicAddress callee, RegI64 rhs, RegI64 srcDest,
-                                    RegI32 temp);
+#ifdef QUOT_REM_I64_CALLOUT
+    MOZ_MUST_USE
+    bool emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType);
 #endif
     MOZ_MUST_USE
     bool emitGetLocal();
@@ -3356,12 +3373,14 @@ class BaseCompiler
     void emitMultiplyF64();
     void emitQuotientI32();
     void emitQuotientU32();
-    void emitQuotientI64();
-    void emitQuotientU64();
     void emitRemainderI32();
     void emitRemainderU32();
+#ifndef QUOT_REM_I64_CALLOUT
+    void emitQuotientI64();
+    void emitQuotientU64();
     void emitRemainderI64();
     void emitRemainderU64();
+#endif
     void emitDivideF32();
     void emitDivideF64();
     void emitMinI32();
@@ -3636,75 +3655,51 @@ BaseCompiler::emitQuotientU32()
     pushI32(r0);
 }
 
+#ifndef QUOT_REM_I64_CALLOUT
 void
 BaseCompiler::emitQuotientI64()
 {
-#ifdef JS_PUNBOX64
+# ifdef JS_PUNBOX64
     RegI64 r0, r1;
-# ifdef JS_CODEGEN_X64
+#  ifdef JS_CODEGEN_X64
     // srcDest must be rax, and rdx will be clobbered.
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-# else
+#  else
     pop2xI64(&r0, &r1);
-# endif
+#  endif
     quotientI64(r1, r0, IsUnsigned(false));
-    freeI64(r1);
-    pushI64(r0);
-#else
-# if defined(JS_CODEGEN_X86)
-    RegI64 r0, r1;
-    RegI32 temp;
-    needI64(abiReturnRegI64);
-    temp = needI32();
-    r1 = popI64();
-    r0 = popI64ToSpecific(abiReturnRegI64);
-    emitDivOrModI64BuiltinCall(SymbolicAddress::DivI64, r1, r0, temp);
-    freeI32(temp);
     freeI64(r1);
     pushI64(r0);
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
 # endif
-#endif
 }
 
 void
 BaseCompiler::emitQuotientU64()
 {
-#ifdef JS_PUNBOX64
+# ifdef JS_PUNBOX64
     RegI64 r0, r1;
-# ifdef JS_CODEGEN_X64
+#  ifdef JS_CODEGEN_X64
     // srcDest must be rax, and rdx will be clobbered.
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-# else
+#  else
     pop2xI64(&r0, &r1);
-# endif
+#  endif
     quotientI64(r1, r0, IsUnsigned(true));
-    freeI64(r1);
-    pushI64(r0);
-#else
-# if defined(JS_CODEGEN_X86)
-    RegI64 r0, r1;
-    RegI32 temp;
-    needI64(abiReturnRegI64);
-    temp = needI32();
-    r1 = popI64();
-    r0 = popI64ToSpecific(abiReturnRegI64);
-    emitDivOrModI64BuiltinCall(SymbolicAddress::UDivI64, r1, r0, temp);
-    freeI32(temp);
     freeI64(r1);
     pushI64(r0);
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
 # endif
-#endif
 }
+#endif
 
 void
 BaseCompiler::emitRemainderI32()
@@ -3755,73 +3750,49 @@ BaseCompiler::emitRemainderU32()
     pushI32(r0);
 }
 
+#ifndef QUOT_REM_I64_CALLOUT
 void
 BaseCompiler::emitRemainderI64()
 {
-#ifdef JS_PUNBOX64
+# ifdef JS_PUNBOX64
     RegI64 r0, r1;
-# ifdef JS_CODEGEN_X64
+#  ifdef JS_CODEGEN_X64
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-# else
+#  else
     pop2xI64(&r0, &r1);
-# endif
+#  endif
     remainderI64(r1, r0, IsUnsigned(false));
-    freeI64(r1);
-    pushI64(r0);
-#else
-# if defined(JS_CODEGEN_X86)
-    RegI64 r0, r1;
-    RegI32 temp;
-    needI64(abiReturnRegI64);
-    temp = needI32();
-    r1 = popI64();
-    r0 = popI64ToSpecific(abiReturnRegI64);
-    emitDivOrModI64BuiltinCall(SymbolicAddress::ModI64, r1, r0, temp);
-    freeI32(temp);
     freeI64(r1);
     pushI64(r0);
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitRemainderI64");
 # endif
-#endif
 }
 
 void
 BaseCompiler::emitRemainderU64()
 {
-#ifdef JS_PUNBOX64
+# ifdef JS_PUNBOX64
     RegI64 r0, r1;
-# ifdef JS_CODEGEN_X64
+#  ifdef JS_CODEGEN_X64
     need2xI64(specific_rax, specific_rdx);
     r1 = popI64();
     r0 = popI64ToSpecific(specific_rax);
     freeI64(specific_rdx);
-# else
+#  else
     pop2xI64(&r0, &r1);
-# endif
+#  endif
     remainderI64(r1, r0, IsUnsigned(true));
-    freeI64(r1);
-    pushI64(r0);
-#else
-# if defined(JS_CODEGEN_X86)
-    RegI64 r0, r1;
-    RegI32 temp;
-    needI64(abiReturnRegI64);
-    temp = needI32();
-    r1 = popI64();
-    r0 = popI64ToSpecific(abiReturnRegI64);
-    emitDivOrModI64BuiltinCall(SymbolicAddress::UModI64, r1, r0, temp);
-    freeI32(temp);
     freeI64(r1);
     pushI64(r0);
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
 # endif
-#endif
 }
+#endif
 
 void
 BaseCompiler::emitDivideF32()
@@ -4964,16 +4935,13 @@ BaseCompiler::emitBrIf()
     // allowing a conditional expression to be left on the stack and
     // reified here as part of the branch instruction.
 
-    // We'll need the joinreg later, so don't use it for rc.
-    // We assume joinRegI32 and joinRegI64 overlap.
-    if (type == ExprType::I32 || type == ExprType::I64)
-        needI32(joinRegI32);
+    // Don't use joinReg for rc
+    maybeReserveJoinRegI(type);
 
     // Condition value is on top, always I32.
     RegI32 rc = popI32();
 
-    if (type == ExprType::I32 || type == ExprType::I64)
-        freeI32(joinRegI32);
+    maybeUnreserveJoinRegI(type);
 
     // Save any value in the designated join register, where the
     // normal block exit code will also leave it.
@@ -5024,16 +4992,13 @@ BaseCompiler::emitBrTable()
     if (deadCode_)
         return true;
 
-    // We'll need the joinreg later, so don't use it for rc.
-    // We assume joinRegI32 and joinRegI64 overlap.
-    if (type == ExprType::I32 || type == ExprType::I64)
-        needI32(joinRegI32);
+    // Don't use joinReg for rc
+    maybeReserveJoinRegI(type);
 
     // Table switch value always on top.
     RegI32 rc = popI32();
 
-    if (type == ExprType::I32 || type == ExprType::I64)
-        freeI32(joinRegI32);
+    maybeUnreserveJoinRegI(type);
 
     AnyReg r;
     if (!IsVoid(type))
@@ -5493,14 +5458,24 @@ BaseCompiler::emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandT
     return true;
 }
 
-#ifdef JS_NUNBOX32
-void
-BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, RegI64 rhs, RegI64 srcDest,
-                                         RegI32 temp)
+#ifdef QUOT_REM_I64_CALLOUT
+bool
+BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType)
 {
-    Label done;
+    MOZ_ASSERT(operandType == ValType::I64);
+
+    if (deadCode_)
+        return true;
 
     sync();
+
+    needI64(abiReturnRegI64);
+
+    RegI32 temp = needI32();
+    RegI64 rhs = popI64();
+    RegI64 srcDest = popI64ToSpecific(abiReturnRegI64);
+
+    Label done;
 
     checkDivideByZeroI64(rhs, srcDest, &done);
 
@@ -5516,9 +5491,13 @@ BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, RegI64 rhs, Reg
     masm.passABIArg(rhs.reg.low);
     masm.callWithABI(callee);
 
-    MOZ_ASSERT(abiReturnRegI64.reg == srcDest.reg);
-
     masm.bind(&done);
+
+    freeI32(temp);
+    freeI64(rhs);
+    pushI64(srcDest);
+
+    return true;
 }
 #endif
 
@@ -6544,13 +6523,29 @@ BaseCompiler::emitBody()
           case Expr::I64Mul:
             CHECK_NEXT(emitBinary(emitMultiplyI64, ValType::I64));
           case Expr::I64DivS:
+#ifdef QUOT_REM_I64_CALLOUT
+            CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::DivI64, ValType::I64));
+#else
             CHECK_NEXT(emitBinary(emitQuotientI64, ValType::I64));
+#endif
           case Expr::I64DivU:
+#ifdef QUOT_REM_I64_CALLOUT
+            CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::UDivI64, ValType::I64));
+#else
             CHECK_NEXT(emitBinary(emitQuotientU64, ValType::I64));
+#endif
           case Expr::I64RemS:
+#ifdef QUOT_REM_I64_CALLOUT
+            CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::ModI64, ValType::I64));
+#else
             CHECK_NEXT(emitBinary(emitRemainderI64, ValType::I64));
+#endif
           case Expr::I64RemU:
+#ifdef QUOT_REM_I64_CALLOUT
+            CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::UModI64, ValType::I64));
+#else
             CHECK_NEXT(emitBinary(emitRemainderU64, ValType::I64));
+#endif
           case Expr::I64TruncSF32:
             CHECK_NEXT(emitConversionOOM(emitTruncateF32ToI64<false>, ValType::F32, ValType::I64));
           case Expr::I64TruncUF32:
@@ -7198,3 +7193,5 @@ js::wasm::BaselineCompileFunction(IonCompileTask* task)
 
     return true;
 }
+
+#undef QUOT_REM_I64_CALLOUT

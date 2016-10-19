@@ -71,6 +71,7 @@ enum class DeclarationKind : uint8_t
 {
     PositionalFormalParameter,
     FormalParameter,
+    CoverArrowParameter,
     Var,
     ForOfVar,
     Let,
@@ -89,6 +90,7 @@ DeclarationKindToBindingKind(DeclarationKind kind)
     switch (kind) {
       case DeclarationKind::PositionalFormalParameter:
       case DeclarationKind::FormalParameter:
+      case DeclarationKind::CoverArrowParameter:
         return BindingKind::FormalParameter;
 
       case DeclarationKind::Var:

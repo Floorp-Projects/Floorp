@@ -19,6 +19,27 @@
 #define FUN_APPLY(FUN, RECEIVER, ARGS) \
   callFunction(std_Function_apply, FUN, RECEIVER, ARGS)
 
+// NB: keep this in sync with the copy in vm/ArgumentsObject.h.
+#define MAX_ARGS_LENGTH (500 * 1000)
+
+// Spread non-empty argument list of up to 15 elements.
+#define SPREAD(v, n) SPREAD_##n(v)
+#define SPREAD_1(v) v[0]
+#define SPREAD_2(v) SPREAD_1(v), v[1]
+#define SPREAD_3(v) SPREAD_2(v), v[2]
+#define SPREAD_4(v) SPREAD_3(v), v[3]
+#define SPREAD_5(v) SPREAD_4(v), v[4]
+#define SPREAD_6(v) SPREAD_5(v), v[5]
+#define SPREAD_7(v) SPREAD_6(v), v[6]
+#define SPREAD_8(v) SPREAD_7(v), v[7]
+#define SPREAD_9(v) SPREAD_8(v), v[8]
+#define SPREAD_10(v) SPREAD_9(v), v[9]
+#define SPREAD_11(v) SPREAD_10(v), v[10]
+#define SPREAD_12(v) SPREAD_11(v), v[11]
+#define SPREAD_13(v) SPREAD_12(v), v[12]
+#define SPREAD_14(v) SPREAD_13(v), v[13]
+#define SPREAD_15(v) SPREAD_14(v), v[14]
+
 // Property descriptor attributes.
 #define ATTR_ENUMERABLE         0x01
 #define ATTR_CONFIGURABLE       0x02

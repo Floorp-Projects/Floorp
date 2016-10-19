@@ -27,16 +27,9 @@ var mockAlertsService = {
     }, alertListener);
   },
 
-  showAppNotification: function(imageUrl, title, text, alertListener, details) {
-    this.showAlertNotification(imageUrl, title, text, details.textClickable, "",
-                               alertListener, details.name, details.dir,
-                               details.lang, details.data);
-  },
-
   QueryInterface: function(aIID) {
     if (SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
-        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService) ||
-        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAppNotificationService)) {
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService)) {
       return this;
     }
     throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;

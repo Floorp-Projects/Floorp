@@ -36,7 +36,6 @@ MOCHITEST_CHROME_MANIFESTS += [
     'mochitest/general/chrome.ini',
     'mochitest/geolocation/chrome.ini',
     'mochitest/localstorage/chrome.ini',
-    'mochitest/notification/chrome.ini',
     'mochitest/sessionstorage/chrome.ini',
     'mochitest/whatwg/chrome.ini',
 ]
