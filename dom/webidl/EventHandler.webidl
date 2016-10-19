@@ -132,6 +132,8 @@ interface GlobalEventHandlers {
            attribute EventHandler onanimationiteration;
            attribute EventHandler onanimationstart;
            attribute EventHandler ontransitionend;
+           attribute EventHandler ontransitionrun;
+           attribute EventHandler ontransitionstart;
 
            // CSS-Animation and CSS-Transition legacy handlers.
            // This handler isn't standard.
