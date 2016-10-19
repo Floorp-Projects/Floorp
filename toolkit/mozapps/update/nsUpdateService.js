@@ -1580,6 +1580,8 @@ function Update(update) {
   this.unsupported = false;
   this.channel = "default";
   this.promptWaitTime = getPref("getIntPref", PREF_APP_UPDATE_PROMPTWAITTIME, 43200);
+  this.backgroundInterval = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDINTERVAL,
+                                    DOWNLOAD_BACKGROUND_INTERVAL);
 
   // Null <update>, assume this is a message container and do no
   // further initialization
@@ -1658,6 +1660,10 @@ function Update(update) {
       if(!isNaN(attr.value)) {
         this.promptWaitTime = parseInt(attr.value);
       }
+    } else if (attr.name == "backgroundInterval") {
+      if (!isNaN(attr.value)) {
+        this.backgroundInterval = parseInt(attr.value);
+      }
     } else if (attr.name == "unsupported") {
       this.unsupported = attr.value == "true";
     } else if (attr.name == "version") {
@@ -1691,6 +1697,9 @@ function Update(update) {
       }
     }
   }
+
+  // Don't allow the background interval to be greater than 10 minutes.
+  this.backgroundInterval = Math.min(this.backgroundInterval, 600);
 
   // The Update Name is either the string provided by the <update> element, or
   // the string: "<App Name> <Update App Version>"
@@ -1797,6 +1806,7 @@ Update.prototype = {
     update.setAttribute("showNeverForVersion", this.showNeverForVersion);
     update.setAttribute("showPrompt", this.showPrompt);
     update.setAttribute("promptWaitTime", this.promptWaitTime);
+    update.setAttribute("backgroundInterval", this.backgroundInterval);
     update.setAttribute("type", this.type);
     // for backwards compatibility in case the user downgrades
     update.setAttribute("version", this.displayVersion);
@@ -4005,17 +4015,16 @@ Downloader.prototype = {
       }
     }
 
+    update.QueryInterface(Ci.nsIPropertyBag);
+    let interval = this.background ? update.getProperty("backgroundInterval")
+                                   : DOWNLOAD_FOREGROUND_INTERVAL;
+
     var uri = Services.io.newURI(this._patch.URL, null, null);
+    LOG("Downloader:downloadUpdate - url: " + uri.spec + ", path: " +
+        patchFile.path + ", interval: " + interval);
 
     this._request = Cc["@mozilla.org/network/incremental-download;1"].
                     createInstance(Ci.nsIIncrementalDownload);
-
-    LOG("Downloader:downloadUpdate - downloading from " + uri.spec + " to " +
-        patchFile.path);
-    var interval = this.background ? getPref("getIntPref",
-                                             PREF_APP_UPDATE_BACKGROUNDINTERVAL,
-                                             DOWNLOAD_BACKGROUND_INTERVAL)
-                                   : DOWNLOAD_FOREGROUND_INTERVAL;
     this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
     this._request.start(this, null);
 
