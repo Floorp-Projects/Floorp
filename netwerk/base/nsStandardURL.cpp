@@ -65,6 +65,19 @@ static LazyLogModule gStandardURLLog("nsStandardURL");
 
 //----------------------------------------------------------------------------
 
+#ifdef MOZ_RUST_URLPARSE
+extern "C" int32_t c_fn_set_size(void * container, size_t size)
+{
+  ((nsACString *) container)->SetLength(size);
+  return 0;
+}
+
+extern "C" char * c_fn_get_buffer(void * container)
+{
+  return ((nsACString *) container)->BeginWriting();
+}
+#endif
+
 static nsresult
 EncodeString(nsIUnicodeEncoder *encoder, const nsAFlatString &str, nsACString &result)
 {
