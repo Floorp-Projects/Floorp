@@ -361,7 +361,7 @@ RenderGetLocal(WasmRenderContext& c, AstGetLocal& gl)
 
 static bool
 RenderSetLocal(WasmRenderContext& c, AstSetLocal& sl)
- {
+{
     if (!RenderExpr(c, sl.value()))
         return false;
 
@@ -751,18 +751,18 @@ static bool
 RenderLoadStoreAddress(WasmRenderContext& c, const AstLoadStoreAddress& lsa, uint32_t defaultAlignLog2)
 {
     if (lsa.offset() != 0) {
-      if (!c.buffer.append(" offset="))
-          return false;
-      if (!RenderInt32(c, lsa.offset()))
-          return false;
+        if (!c.buffer.append(" offset="))
+            return false;
+        if (!RenderInt32(c, lsa.offset()))
+            return false;
     }
 
     uint32_t alignLog2 = lsa.flags();
     if (defaultAlignLog2 != alignLog2) {
-      if (!c.buffer.append(" align="))
-          return false;
-      if (!RenderInt32(c, 1 << alignLog2))
-          return false;
+        if (!c.buffer.append(" align="))
+            return false;
+        if (!RenderInt32(c, 1 << alignLog2))
+            return false;
     }
 
     return true;
@@ -954,8 +954,8 @@ static bool
 RenderBrTable(WasmRenderContext& c, AstBranchTable& table)
 {
     if (table.maybeValue()) {
-      if (!RenderExpr(c, *(table.maybeValue())))
-          return false;
+        if (!RenderExpr(c, *(table.maybeValue())))
+            return false;
     }
 
     // Index
@@ -1116,34 +1116,34 @@ RenderSignature(WasmRenderContext& c, const AstSig& sig, const AstNameVector* ma
     uint32_t paramsNum = sig.args().length();
 
     if (maybeLocals) {
-      for (uint32_t i = 0; i < paramsNum; i++) {
-          if (!c.buffer.append(" (param "))
-              return false;
-          const AstName& name = (*maybeLocals)[i];
-          if (!name.empty()) {
-              if (!RenderName(c, name))
-                  return false;
-              if (!c.buffer.append(" "))
-                  return false;
-          }
-          ValType arg = sig.args()[i];
-          if (!RenderValType(c, arg))
-              return false;
-          if (!c.buffer.append(")"))
-              return false;
-      }
+        for (uint32_t i = 0; i < paramsNum; i++) {
+            if (!c.buffer.append(" (param "))
+                return false;
+            const AstName& name = (*maybeLocals)[i];
+            if (!name.empty()) {
+                if (!RenderName(c, name))
+                    return false;
+                if (!c.buffer.append(" "))
+                    return false;
+            }
+            ValType arg = sig.args()[i];
+            if (!RenderValType(c, arg))
+                return false;
+            if (!c.buffer.append(")"))
+                return false;
+        }
     } else if (paramsNum > 0) {
-      if (!c.buffer.append(" (param"))
-          return false;
-      for (uint32_t i = 0; i < paramsNum; i++) {
-          if (!c.buffer.append(" "))
-              return false;
-          ValType arg = sig.args()[i];
-          if (!RenderValType(c, arg))
-              return false;
-      }
-      if (!c.buffer.append(")"))
-          return false;
+        if (!c.buffer.append(" (param"))
+            return false;
+        for (uint32_t i = 0; i < paramsNum; i++) {
+            if (!c.buffer.append(" "))
+                return false;
+            ValType arg = sig.args()[i];
+            if (!RenderValType(c, arg))
+                return false;
+        }
+        if (!c.buffer.append(")"))
+            return false;
     }
     if (sig.ret() != ExprType::Void) {
         if (!c.buffer.append(" (result "))
@@ -1202,23 +1202,22 @@ RenderTableSection(WasmRenderContext& c, const AstModule& module)
     for (const AstRef& elem : segment.elems()) {
         if (!c.buffer.append(" "))
             return false;
+
         uint32_t index = elem.index();
         AstName name = index < module.funcImportNames().length()
-                           ? module.funcImportNames()[index]
-                           : module.funcs()[index - module.funcImportNames().length()]->name();
+                       ? module.funcImportNames()[index]
+                       : module.funcs()[index - module.funcImportNames().length()]->name();
+
         if (name.empty()) {
             if (!RenderInt32(c, index))
                 return false;
         } else {
-          if (!RenderName(c, name))
-              return false;
+            if (!RenderName(c, name))
+                return false;
         }
     }
 
-    if (!c.buffer.append("))\n"))
-        return false;
-
-    return true;
+    return c.buffer.append("))\n");
 }
 
 static bool
@@ -1373,10 +1372,7 @@ RenderExport(WasmRenderContext& c, AstExport& export_,
                 return false;
         }
     }
-    if (!c.buffer.append(")\n"))
-        return false;
-
-    return true;
+    return c.buffer.append(")\n");
 }
 
 static bool
@@ -1410,10 +1406,10 @@ RenderFunctionBody(WasmRenderContext& c, AstFunc& func, const AstModule::SigVect
                 return false;
             const AstName& name = func.locals()[argsNum + i];
             if (!name.empty()) {
-              if (!RenderName(c, name))
-                  return false;
-              if (!c.buffer.append(" "))
-                  return false;
+                if (!RenderName(c, name))
+                    return false;
+                if (!c.buffer.append(" "))
+                    return false;
             }
             ValType local = func.vars()[i];
             if (!RenderValType(c, local))
@@ -1428,8 +1424,8 @@ RenderFunctionBody(WasmRenderContext& c, AstFunc& func, const AstModule::SigVect
 
     uint32_t exprsNum = func.body().length();
     for (uint32_t i = 0; i < exprsNum; i++) {
-      if (!RenderExpr(c, *func.body()[i]))
-          return false;
+        if (!RenderExpr(c, *func.body()[i]))
+            return false;
     }
 
     size_t endExprIndex = c.maybeSourceMap ? c.maybeSourceMap->exprlocs().length() : 0;
@@ -1457,8 +1453,8 @@ RenderCodeSection(WasmRenderContext& c, const AstModule::FuncVector& funcs, cons
         if (!c.buffer.append("(func "))
             return false;
         if (!func->name().empty()) {
-          if (!RenderName(c, func->name()))
-              return false;
+            if (!RenderName(c, func->name()))
+                return false;
         }
 
         if (!RenderSignature(c, *sig, &(func->locals())))
@@ -1478,9 +1474,8 @@ RenderCodeSection(WasmRenderContext& c, const AstModule::FuncVector& funcs, cons
             return false;
     }
 
-   return true;
+    return true;
 }
-
 
 static bool
 RenderDataSection(WasmRenderContext& c, const AstModule& module)
@@ -1493,7 +1488,7 @@ RenderDataSection(WasmRenderContext& c, const AstModule& module)
     if (!c.buffer.append("(memory "))
         return false;
     if (!RenderInt32(c, module.memory().initial))
-       return false;
+        return false;
     Maybe<uint32_t> memMax = module.memory().maximum;
     if (memMax) {
         if (!c.buffer.append(" "))
@@ -1506,9 +1501,9 @@ RenderDataSection(WasmRenderContext& c, const AstModule& module)
 
     uint32_t numSegments = module.dataSegments().length();
     if (!numSegments) {
-      if (!c.buffer.append(")\n"))
-          return false;
-      return true;
+        if (!c.buffer.append(")\n"))
+            return false;
+        return true;
     }
     if (!c.buffer.append("\n"))
         return false;
@@ -1519,16 +1514,16 @@ RenderDataSection(WasmRenderContext& c, const AstModule& module)
         if (!RenderIndent(c))
             return false;
         if (!c.buffer.append("(segment "))
-           return false;
+            return false;
         if (!RenderInt32(c, segment->offset()->as<AstConst>().val().i32()))
-           return false;
+            return false;
         if (!c.buffer.append(" \""))
-           return false;
+            return false;
 
         RenderEscapedString(c, segment->text());
 
         if (!c.buffer.append("\")\n"))
-           return false;
+            return false;
     }
 
     c.indent--;
