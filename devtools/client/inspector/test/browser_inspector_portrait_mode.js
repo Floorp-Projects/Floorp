@@ -35,8 +35,7 @@ add_task(function* () {
   ok(splitter.classList.contains("horz"), "Splitter is in horizontal mode");
 
   info("Close the inspector");
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
+  yield gDevTools.closeToolbox(toolbox.target);
 
   info("Reopen inspector");
   ({ inspector, toolbox } = yield openInspector("window"));
