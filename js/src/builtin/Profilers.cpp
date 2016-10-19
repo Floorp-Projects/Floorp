@@ -41,7 +41,9 @@ static char gLastError[2000];
 
 #if defined(__APPLE__) || defined(__linux__) || defined(MOZ_CALLGRIND)
 static void
-MOZ_FORMAT_PRINTF(1, 2)
+#ifdef __GNUC__
+__attribute__((format(printf,1,2)))
+#endif
 UnsafeError(const char* format, ...)
 {
     va_list args;

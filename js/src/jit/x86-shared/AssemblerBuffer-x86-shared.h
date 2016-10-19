@@ -186,7 +186,10 @@ namespace jit {
             printer = sp;
         }
 
-        void spew(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3)
+        void spew(const char* fmt, ...)
+#ifdef __GNUC__
+            __attribute__ ((format (printf, 2, 3)))
+#endif
         {
             if (MOZ_UNLIKELY(printer || JitSpewEnabled(JitSpew_Codegen))) {
                 va_list va;
