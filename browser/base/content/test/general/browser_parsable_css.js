@@ -22,7 +22,7 @@ let whitelist = [
    isFromDevTools: false},
   // Tracked in bug 1004428.
   {sourceName: /aboutaccounts\/(main|normalize)\.css$/i,
-   isFromDevTools: false},
+    isFromDevTools: false},
   // Highlighter CSS uses a UA-only pseudo-class, see bug 985597.
   {sourceName: /highlighters\.css$/i,
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
@@ -31,17 +31,6 @@ let whitelist = [
   {sourceName: /responsive-ua\.css$/i,
    errorMessage: /Unknown pseudo-class.*moz-dropdown-list/i,
    isFromDevTools: true},
-
-  {sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua)\.css$/i,
-   errorMessage: /Unknown pseudo-class.*-moz-/i,
-   isFromDevTools: false},
-  {sourceName: /\b(html|mathml|ua)\.css$/i,
-   errorMessage: /Unknown property.*-moz-/i,
-   isFromDevTools: false},
-  // Reserved to UA sheets unless layout.css.overflow-clip-box.enabled flipped to true.
-  {sourceName: /res\/forms\.css$/i,
-   errorMessage: /Unknown property.*overflow-clip-box/i,
-   isFromDevTools: false},
 ];
 
 // Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
@@ -106,7 +95,6 @@ function once(target, name) {
 function fetchFile(uri) {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
-    xhr.responseType = "text";
     xhr.open("GET", uri, true);
     xhr.onreadystatechange = function() {
       if (this.readyState != this.DONE) {
@@ -251,7 +239,7 @@ function chromeFileExists(aURI)
 }
 
 add_task(function* checkAllTheCSS() {
-  let appDir = Services.dirsvc.get("GreD", Ci.nsIFile);
+  let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
   // This asynchronously produces a list of URLs (sadly, mostly sync on our
   // test infrastructure because it runs against jarfiles there, and
   // our zipreader APIs are all sync)
