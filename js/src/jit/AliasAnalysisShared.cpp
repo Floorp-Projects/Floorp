@@ -70,13 +70,10 @@ GetObject(const MDefinition* ins)
     if (!ins->getAliasSet().isStore() && !ins->getAliasSet().isLoad())
         return nullptr;
 
+    // Note: only return the object if that objects owns that property.
+    // I.e. the poperty isn't on the prototype chain.
     const MDefinition* object = nullptr;
     switch (ins->op()) {
-      case MDefinition::Op_GetPropertyCache:
-        if (!ins->toGetPropertyCache()->idempotent())
-            return nullptr;
-        object = ins->getOperand(0);
-        break;
       case MDefinition::Op_InitializedLength:
       case MDefinition::Op_LoadElement:
       case MDefinition::Op_LoadUnboxedScalar:
@@ -128,6 +125,7 @@ GetObject(const MDefinition* ins)
       case MDefinition::Op_TypedObjectElements:
         object = ins->getOperand(0);
         break;
+      case MDefinition::Op_GetPropertyCache:
       case MDefinition::Op_LoadTypedArrayElementStatic:
       case MDefinition::Op_StoreTypedArrayElementStatic:
       case MDefinition::Op_GetDOMProperty:
