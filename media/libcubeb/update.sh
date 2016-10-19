@@ -57,3 +57,9 @@ else
   echo "Remember to update README_MOZILLA with the version details."
 fi
 
+echo "Applying a patch on top of $version"
+patch -p1 < ./wasapi-drift.patch
+echo "Applying another patch on top of $version"
+patch -p1 < ./wasapi-stereo-mic.patch
+echo "Applying another patch on top of $version"
+patch -p1 < ./bug1308418-mutex-copy-ctor.patch
