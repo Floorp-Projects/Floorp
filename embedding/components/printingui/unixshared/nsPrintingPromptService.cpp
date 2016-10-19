@@ -5,12 +5,12 @@
 
 #include "nsPrintingPromptService.h"
 
+#include "nsArray.h"
 #include "nsIComponentManager.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsUtils.h"
-#include "nsISupportsArray.h"
 #include "nsString.h"
 #include "nsIPrintDialogService.h"
 
@@ -208,35 +208,27 @@ nsPrintingPromptService::DoDialog(mozIDOMWindowProxy *aParent,
         aParent = activeParent;
     }
 
-    // create a nsISupportsArray of the parameters 
+    // create a nsIMutableArray of the parameters 
     // being passed to the window
-    nsCOMPtr<nsISupportsArray> array;
-    nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_FAILURE;
-    }
+    nsCOMPtr<nsIMutableArray> array = nsArray::Create();
 
     nsCOMPtr<nsISupports> psSupports(do_QueryInterface(aPS));
     NS_ASSERTION(psSupports, "PrintSettings must be a supports");
-    array->AppendElement(psSupports);
+    array->AppendElement(psSupports, /*weak =*/ false);
 
     if (aWebBrowserPrint) {
       nsCOMPtr<nsISupports> wbpSupports(do_QueryInterface(aWebBrowserPrint));
       NS_ASSERTION(wbpSupports, "nsIWebBrowserPrint must be a supports");
-      array->AppendElement(wbpSupports);
+      array->AppendElement(wbpSupports, /*weak =*/ false);
     }
 
     nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(aParamBlock));
     NS_ASSERTION(blkSupps, "IOBlk must be a supports");
-    array->AppendElement(blkSupps);
-
-    nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
-    NS_ASSERTION(array, "array must be a supports");
-
+    array->AppendElement(blkSupps, /*weak =*/ false);
 
     nsCOMPtr<mozIDOMWindowProxy> dialog;
-    rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
-                              "centerscreen,chrome,modal,titlebar", arguments,
+    nsresult rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
+                              "centerscreen,chrome,modal,titlebar", array,
                               getter_AddRefs(dialog));
 
     // if aWebBrowserPrint is not null then we are printing
