@@ -228,7 +228,8 @@ class ObjectElements
         flags &= ~CONVERT_DOUBLE_ELEMENTS;
     }
     bool hasNonwritableArrayLength() const {
-        return flags & NONWRITABLE_ARRAY_LENGTH;
+        return flags & NONWRITABLE_ARRAY_LENGTH ||
+               flags & FROZEN;
     }
     void setNonwritableArrayLength() {
         MOZ_ASSERT(!isCopyOnWrite());
