@@ -125,34 +125,23 @@ public:
       mIsSentinel(false)
   { }
 
+  /*
+   * Moves |aOther| into |*this|. If |aOther| is already in a list, then
+   * |aOther| is removed from the list and replaced by |*this|.
+   */
   LinkedListElement(LinkedListElement<T>&& aOther)
     : mIsSentinel(aOther.mIsSentinel)
   {
-    if (!aOther.isInList()) {
-      mNext = this;
-      mPrev = this;
-      return;
-    }
+    adjustLinkForMove(Move(aOther));
+  }
 
-    MOZ_ASSERT(aOther.mNext->mPrev == &aOther);
-    MOZ_ASSERT(aOther.mPrev->mNext == &aOther);
-
-    /*
-     * Initialize |this| with |aOther|'s mPrev/mNext pointers, and adjust those
-     * element to point to this one.
-     */
-    mNext = aOther.mNext;
-    mPrev = aOther.mPrev;
-
-    mNext->mPrev = this;
-    mPrev->mNext = this;
-
-    /*
-     * Adjust |aOther| so it doesn't think it's in a list.  This makes it
-     * safely destructable.
-     */
-    aOther.mNext = &aOther;
-    aOther.mPrev = &aOther;
+  LinkedListElement& operator=(LinkedListElement<T>&& aOther)
+  {
+    MOZ_ASSERT(mIsSentinel == aOther.mIsSentinel, "Mismatch NodeKind!");
+    MOZ_ASSERT(!isInList(),
+               "Assigning to an element in a list messes up that list!");
+    adjustLinkForMove(Move(aOther));
+    return *this;
   }
 
   ~LinkedListElement()
@@ -287,7 +276,39 @@ private:
     this->mPrev = listElem;
   }
 
-private:
+  /*
+   * Adjust mNext and mPrev for implementing move constructor and move
+   * assignment.
+   */
+  void adjustLinkForMove(LinkedListElement<T>&& aOther)
+  {
+    if (!aOther.isInList()) {
+      mNext = this;
+      mPrev = this;
+      return;
+    }
+
+    MOZ_ASSERT(aOther.mNext->mPrev == &aOther);
+    MOZ_ASSERT(aOther.mPrev->mNext == &aOther);
+
+    /*
+     * Initialize |this| with |aOther|'s mPrev/mNext pointers, and adjust those
+     * element to point to this one.
+     */
+    mNext = aOther.mNext;
+    mPrev = aOther.mPrev;
+
+    mNext->mPrev = this;
+    mPrev->mNext = this;
+
+    /*
+     * Adjust |aOther| so it doesn't think it's in a list.  This makes it
+     * safely destructable.
+     */
+    aOther.mNext = &aOther;
+    aOther.mPrev = &aOther;
+  }
+
   LinkedListElement& operator=(const LinkedListElement<T>& aOther) = delete;
   LinkedListElement(const LinkedListElement<T>& aOther) = delete;
 };
@@ -324,6 +345,13 @@ public:
   LinkedList(LinkedList<T>&& aOther)
     : sentinel(mozilla::Move(aOther.sentinel))
   { }
+
+  LinkedList& operator=(LinkedList<T>&& aOther)
+  {
+    MOZ_ASSERT(isEmpty(), "Assigning to a non-empty list leaks elements in that list!");
+    sentinel = mozilla::Move(aOther.sentinel);
+    return *this;
+  }
 
   ~LinkedList() {
     MOZ_ASSERT(isEmpty(),
