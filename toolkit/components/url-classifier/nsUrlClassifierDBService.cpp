@@ -566,7 +566,7 @@ nsUrlClassifierDBServiceWorker::FinishStream()
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
     if (mProtocolParser->ResetRequested()) {
-      mClassifier->ResetTables(mUpdateTables);
+      mClassifier->ResetTables(Classifier::Clear_All, mUpdateTables);
     }
   }
 
@@ -598,7 +598,7 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
     LOG(("Treating NS_ERROR_NOT_IMPLEMENTED a successful update "
          "but still mark it spoiled."));
     mUpdateObserver->UpdateSuccess(0);
-    mClassifier->MarkSpoiled(mUpdateTables);
+    mClassifier->ResetTables(Classifier::Clear_Cache, mUpdateTables);
   } else {
     if (LOG_ENABLED()) {
       nsAutoCString errorName;
@@ -608,10 +608,10 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
 
     mUpdateObserver->UpdateError(mUpdateStatus);
     /*
-     * mark the tables as spoiled, we don't want to block hosts
-     * longer than normal because our update failed
+     * mark the tables as spoiled(clear cache in LookupCache), we don't want to
+     * block hosts longer than normal because our update failed
     */
-    mClassifier->MarkSpoiled(mUpdateTables);
+    mClassifier->ResetTables(Classifier::Clear_Cache, mUpdateTables);
   }
   mUpdateObserver = nullptr;
 
@@ -685,10 +685,10 @@ nsUrlClassifierDBServiceWorker::CancelUpdate()
     mUpdateObserver->UpdateError(mUpdateStatus);
 
     /*
-     * mark the tables as spoiled, we don't want to block hosts
-     * longer than normal because our update failed
+     * mark the tables as spoiled(clear cache in LookupCache), we don't want to
+     * block hosts longer than normal because our update failed
     */
-    mClassifier->MarkSpoiled(mUpdateTables);
+    mClassifier->ResetTables(Classifier::Clear_Cache, mUpdateTables);
 
     ResetStream();
     ResetUpdate();
