@@ -309,14 +309,6 @@ CSSTransition::QueueEvents()
   }
 }
 
-TimeStamp
-CSSTransition::ElapsedTimeToTimeStamp(
-  const StickyTimeDuration& aElapsedTime) const
-{
-  return AnimationTimeToTimeStamp(aElapsedTime +
-                                  mEffect->SpecifiedTiming().mDelay);
-}
-
 void
 CSSTransition::Tick()
 {

@@ -255,6 +255,10 @@ public:
    */
   TimeStamp AnimationTimeToTimeStamp(const StickyTimeDuration& aTime) const;
 
+  // Converts an AnimationEvent's elapsedTime value to an equivalent TimeStamp
+  // that can be used to sort events by when they occurred.
+  TimeStamp ElapsedTimeToTimeStamp(const StickyTimeDuration& aElapsedTime) const;
+
   bool IsPausedOrPausing() const
   {
     return PlayState() == AnimationPlayState::Paused ||
