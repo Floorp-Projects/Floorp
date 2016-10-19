@@ -4,41 +4,18 @@ for (var constructor of anyTypedArrayConstructors) {
     assertThrowsInstanceOf(() => constructor.from(undefined), TypeError);
     assertThrowsInstanceOf(() => constructor.from(null), TypeError);
 
-    // %TypedArray%.from throws if an element can't be defined on the new object.
-    function ObjectWithReadOnlyElement() {
-        Object.defineProperty(this, "0", {value: null});
-        this.length = 0;
-    }
-    ObjectWithReadOnlyElement.from = constructor.from;
-    assertDeepEq(ObjectWithReadOnlyElement.from([]), new ObjectWithReadOnlyElement);
-    assertThrowsInstanceOf(() => ObjectWithReadOnlyElement.from([1]), TypeError);
-
-    // The same, but via preventExtensions.
-    function InextensibleObject() {
-        Object.preventExtensions(this);
-    }
-    InextensibleObject.from = constructor.from;
-    assertThrowsInstanceOf(() => InextensibleObject.from([1]), TypeError);
-
-    // The same, but via a readonly property on its __proto__.
-    function ObjectWithReadOnlyElementOnProto() {
-        return Object.create({
-            get 0(){}
-        });
-    }
-    ObjectWithReadOnlyElementOnProto.from = constructor.from;
-    assertThrowsInstanceOf(() => ObjectWithReadOnlyElementOnProto.from([1]), TypeError);
-
     // Unlike Array.from, %TypedArray%.from doesn't get or set the length property.
-    function ObjectWithThrowingLengthGetterSetter() {
-        Object.defineProperty(this, "length", {
+    function ObjectWithThrowingLengthGetterSetter(...rest) {
+        var ta = new constructor(...rest);
+        Object.defineProperty(ta, "length", {
             configurable: true,
             get() { throw new RangeError("getter!"); },
             set() { throw new RangeError("setter!"); }
         });
+        return ta;
     }
     ObjectWithThrowingLengthGetterSetter.from = constructor.from;
-    assertEq(ObjectWithThrowingLengthGetterSetter.from(["foo"])[0], "foo");
+    assertEq(ObjectWithThrowingLengthGetterSetter.from([123])[0], 123);
 
     // %TypedArray%.from throws if mapfn is neither callable nor undefined.
     assertThrowsInstanceOf(() => constructor.from([3, 4, 5], {}), TypeError);
@@ -51,9 +28,11 @@ for (var constructor of anyTypedArrayConstructors) {
     // If mapfn is not undefined and not callable, the error happens before anything else.
     // Before calling the constructor, before touching the arrayLike.
     var log = "";
-    function C() {
+    var obj;
+    function C(...rest) {
         log += "C";
-        obj = this;
+        obj = new constructor(...rest);
+        return obj;
     }
     var p = new Proxy({}, {
         has: function () { log += "1"; },
@@ -72,7 +51,7 @@ for (var constructor of anyTypedArrayConstructors) {
     var exc = {surprise: "ponies"};
     assertThrowsValue(() => constructor.from.call(C, arrayish, () => { throw exc; }), exc);
     assertEq(log, "lC0");
-    assertEq(obj instanceof C, true);
+    assertEq(obj instanceof constructor, true);
 
     // It's a TypeError if the @@iterator property is a primitive (except null and undefined).
     for (var primitive of ["foo", 17, Symbol(), true]) {

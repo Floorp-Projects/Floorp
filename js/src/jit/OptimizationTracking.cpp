@@ -850,6 +850,22 @@ MaybeConstructorFromType(TypeSet::Type ty)
 }
 
 static void
+InterpretedFunctionFilenameAndLineNumber(JSFunction* fun, const char** filename,
+                                         Maybe<unsigned>* lineno)
+{
+    if (fun->hasScript()) {
+        *filename = fun->nonLazyScript()->maybeForwardedScriptSource()->filename();
+        *lineno = Some((unsigned) fun->nonLazyScript()->lineno());
+    } else if (fun->lazyScriptOrNull()) {
+        *filename = fun->lazyScript()->maybeForwardedScriptSource()->filename();
+        *lineno = Some((unsigned) fun->lazyScript()->lineno());
+    } else {
+        *filename = "(self-hosted builtin)";
+        *lineno = Nothing();
+    }
+}
+
+static void
 SpewConstructor(TypeSet::Type ty, JSFunction* constructor)
 {
 #ifdef JS_JITSPEW
@@ -866,17 +882,11 @@ SpewConstructor(TypeSet::Type ty, JSFunction* constructor)
         snprintf(buf, mozilla::ArrayLength(buf), "??");
 
     const char* filename;
-    size_t lineno;
-    if (constructor->hasScript()) {
-        filename = constructor->nonLazyScript()->filename();
-        lineno = constructor->nonLazyScript()->lineno();
-    } else {
-        filename = constructor->lazyScript()->filename();
-        lineno = constructor->lazyScript()->lineno();
-    }
+    Maybe<unsigned> lineno;
+    InterpretedFunctionFilenameAndLineNumber(constructor, &filename, &lineno);
 
     JitSpew(JitSpew_OptimizationTracking, "   Unique type %s has constructor %s (%s:%" PRIuSIZE ")",
-            TypeSet::TypeString(ty), buf, filename, lineno);
+            TypeSet::TypeString(ty), buf, filename, lineno.isSome() ? *lineno : 0);
 #endif
 }
 
@@ -1152,22 +1162,6 @@ IonBuilder::trackInlineSuccessUnchecked(InliningStatus status)
 {
     if (status == InliningStatus_Inlined)
         trackOptimizationOutcome(TrackedOutcome::Inlined);
-}
-
-static void
-InterpretedFunctionFilenameAndLineNumber(JSFunction* fun, const char** filename,
-                                         Maybe<unsigned>* lineno)
-{
-    if (fun->hasScript()) {
-        *filename = fun->nonLazyScript()->maybeForwardedScriptSource()->filename();
-        *lineno = Some((unsigned) fun->nonLazyScript()->lineno());
-    } else if (fun->lazyScriptOrNull()) {
-        *filename = fun->lazyScript()->maybeForwardedScriptSource()->filename();
-        *lineno = Some((unsigned) fun->lazyScript()->lineno());
-    } else {
-        *filename = "(self-hosted builtin)";
-        *lineno = Nothing();
-    }
 }
 
 static JSFunction*

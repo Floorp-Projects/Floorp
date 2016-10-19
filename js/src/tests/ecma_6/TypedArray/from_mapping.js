@@ -21,9 +21,11 @@ for (var constructor of anyTypedArrayConstructors) {
     // If the object to be copied is iterable and the constructor is not Array,
     // mapfn is still called with two arguments.
     log = [];
-    function C() {}
+    function C(...rest) {
+        return new constructor(...rest);
+    }
     C.from = constructor.from;
-    var c = new C;
+    var c = new C(2);
     c[0] = 1;
     c[1] = 2;
     assertDeepEq(C.from(["zero", "one"], f), c);

@@ -8,6 +8,8 @@ const {Task} = require("devtools/shared/task");
 const {colorUtils} = require("devtools/shared/css/color");
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/inspector.properties");
 
 const Heritage = require("sdk/core/heritage");
 
@@ -56,6 +58,10 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     let eyedropper = doc.createElementNS(XHTML_NS, "button");
     eyedropper.id = "eyedropper-button";
     eyedropper.className = "devtools-button";
+    /* pointerEvents for eyedropper has to be set auto to display tooltip when
+     * eyedropper is disabled in non-HTML documents.
+     */
+    eyedropper.style.pointerEvents = "auto";
     container.appendChild(eyedropper);
 
     this.tooltip.setContent(container, { width: 218, height: 224 });
@@ -96,7 +102,8 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
       if (value && this.inspector.selection.nodeFront.isInHTMLDocument) {
         eyeButton.addEventListener("click", this._openEyeDropper);
       } else {
-        eyeButton.style.display = "none";
+        eyeButton.disabled = true;
+        eyeButton.title = L10N.getStr("eyedropper.disabled.title");
       }
       this.emit("ready");
     }, e => console.error(e));

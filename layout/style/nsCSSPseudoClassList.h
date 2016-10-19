@@ -188,12 +188,6 @@ CSS_STATE_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled",
 CSS_STATE_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed",
                        CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_SUPPRESSED)
-CSS_STATE_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported",
-                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
-                       NS_EVENT_STATE_TYPE_UNSUPPORTED)
-CSS_STATE_PSEUDO_CLASS(mozTypeUnsupportedPlatform, ":-moz-type-unsupported-platform",
-                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
-                       NS_EVENT_STATE_TYPE_UNSUPPORTED_PLATFORM)
 CSS_STATE_PSEUDO_CLASS(mozHandlerClickToPlay, ":-moz-handler-clicktoplay",
                        CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_TYPE_CLICK_TO_PLAY)

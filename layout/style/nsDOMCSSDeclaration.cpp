@@ -10,7 +10,7 @@
 #include "nsCSSParser.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Rule.h"
-#include "mozilla/css/Declaration.h"
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/dom/CSS2PropertiesBinding.h"
 #include "nsCSSProps.h"
 #include "nsCOMPtr.h"
