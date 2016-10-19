@@ -478,6 +478,9 @@ SetOrExtendBoxedOrUnboxedDenseElements(ExclusiveContext* cx, JSObject* obj,
     if (Type == JSVAL_TYPE_MAGIC) {
         NativeObject* nobj = &obj->as<NativeObject>();
 
+        if (nobj->denseElementsAreFrozen())
+            return DenseElementResult::Incomplete;
+
         if (obj->is<ArrayObject>() &&
             !obj->as<ArrayObject>().lengthIsWritable() &&
             start + count >= obj->as<ArrayObject>().length())
@@ -561,6 +564,9 @@ MoveBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, uint32_t dstStart,
     MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<Type>(obj));
 
     if (Type == JSVAL_TYPE_MAGIC) {
+        if (obj->as<NativeObject>().denseElementsAreFrozen())
+            return DenseElementResult::Incomplete;
+
         if (!obj->as<NativeObject>().maybeCopyElementsForWrite(cx))
             return DenseElementResult::Failure;
         obj->as<NativeObject>().moveDenseElements(dstStart, srcStart, length);
