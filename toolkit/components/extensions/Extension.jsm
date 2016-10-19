@@ -1200,10 +1200,12 @@ class MockExtension {
   }
 }
 
+let _browserUpdated = false;
+
 // We create one instance of this class per extension. |addonData|
 // comes directly from bootstrap.js when initializing.
 this.Extension = class extends ExtensionData {
-  constructor(addonData) {
+  constructor(addonData, startupReason) {
     super(addonData.resourceURI);
 
     this.uuid = UUIDMap.get(addonData.id);
@@ -1215,6 +1217,8 @@ this.Extension = class extends ExtensionData {
     }
 
     this.addonData = addonData;
+    this.startupReason = startupReason;
+
     this.id = addonData.id;
     this.baseURI = NetUtil.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
     this.principal = this.createPrincipal();
@@ -1231,6 +1235,14 @@ this.Extension = class extends ExtensionData {
     this.webAccessibleResources = null;
 
     this.emitter = new EventEmitter();
+  }
+
+  static set browserUpdated(updated) {
+    _browserUpdated = updated;
+  }
+
+  static get browserUpdated() {
+    return _browserUpdated;
   }
 
   /**
