@@ -9,7 +9,12 @@ this.EXPORTED_SYMBOLS = [ "BrowserUtils" ];
 
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
+
 Cu.importGlobalProperties(['URL']);
 
 this.BrowserUtils = {
@@ -512,4 +517,70 @@ this.BrowserUtils = {
 
     return true;
   },
+
+  /**
+   * Replaces %s or %S in the provided url or postData with the given parameter,
+   * acccording to the best charset for the given url.
+   *
+   * @return [url, postData]
+   * @throws if nor url nor postData accept a param, but a param was provided.
+   */
+  parseUrlAndPostData: Task.async(function* (url, postData, param) {
+    let hasGETParam = /%s/i.test(url)
+    let decodedPostData = postData ? unescape(postData) : "";
+    let hasPOSTParam = /%s/i.test(decodedPostData);
+
+    if (!hasGETParam && !hasPOSTParam) {
+      if (param) {
+        // If nor the url, nor postData contain parameters, but a parameter was
+        // provided, return the original input.
+        throw new Error("A param was provided but there's nothing to bind it to");
+      }
+      return [url, postData];
+    }
+
+    let charset = "";
+    const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
+    let matches = url.match(re);
+    if (matches) {
+      [, url, charset] = matches;
+    } else {
+      // Try to fetch a charset from History.
+      try {
+        // Will return an empty string if character-set is not found.
+        charset = yield PlacesUtils.getCharsetForURI(this.makeURI(url));
+      } catch (ex) {
+        // makeURI() throws if url is invalid.
+        Cu.reportError(ex);
+      }
+    }
+
+    // encodeURIComponent produces UTF-8, and cannot be used for other charsets.
+    // escape() works in those cases, but it doesn't uri-encode +, @, and /.
+    // Therefore we need to manually replace these ASCII characters by their
+    // encodeURIComponent result, to match the behavior of nsEscape() with
+    // url_XPAlphas.
+    let encodedParam = "";
+    if (charset && charset != "UTF-8") {
+      try {
+        let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                          .createInstance(Ci.nsIScriptableUnicodeConverter);
+        converter.charset = charset;
+        encodedParam = converter.ConvertFromUnicode(param) + converter.Finish();
+      } catch (ex) {
+        encodedParam = param;
+      }
+      encodedParam = escape(encodedParam).replace(/[+@\/]+/g, encodeURIComponent);
+    } else {
+      // Default charset is UTF-8
+      encodedParam = encodeURIComponent(param);
+    }
+
+    url = url.replace(/%s/g, encodedParam).replace(/%S/g, param);
+    if (hasPOSTParam) {
+      postData = decodedPostData.replace(/%s/g, encodedParam)
+                                .replace(/%S/g, param);
+    }
+    return [url, postData];
+  }),
 };

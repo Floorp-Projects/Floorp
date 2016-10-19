@@ -422,6 +422,11 @@ this.PlacesUtils = {
   mozActionURI(type, params) {
     let encodedParams = {};
     for (let key in params) {
+      // Strip null or undefined.
+      // Regardless, don't encode them or they would be converted to a string.
+      if (params[key] === null || params[key] === undefined) {
+        continue;
+      }
       encodedParams[key] = encodeURIComponent(params[key]);
     }
     return "moz-action:" + type + "," + JSON.stringify(encodedParams);

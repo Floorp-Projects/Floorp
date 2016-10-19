@@ -275,7 +275,9 @@ var addBookmark = Task.async(function* (aBookmarkObj) {
 
   if (aBookmarkObj.keyword) {
     yield PlacesUtils.keywords.insert({ keyword: aBookmarkObj.keyword,
-                                        url: aBookmarkObj.uri.spec });
+                                        url: aBookmarkObj.uri.spec,
+                                        postData: aBookmarkObj.postData
+                                      });
   }
 
   if (aBookmarkObj.tags) {
