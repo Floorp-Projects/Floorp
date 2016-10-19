@@ -411,8 +411,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let mayInheritPrincipal = false;
           let postData = null;
           let browser = gBrowser.selectedBrowser;
-          let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
-          let matchLastLocationChange = true;
 
           let action = this._parseActionUrl(url);
           if (action) {
@@ -432,9 +430,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   url = action.params.input;
                   break;
                 }
-                // Fall-through.
-              case "keyword":
+                url = action.params.url;
+                break;
               case "remotetab":
+                url = action.params.url;
+                break;
+              case "keyword":
+                if (action.params.postData) {
+                  postData = getPostDataStream(postData);
+                }
+                mayInheritPrincipal = true;
                 url = action.params.url;
                 break;
               case "switchtab":
@@ -457,7 +462,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   isSuggestion: !!action.params.searchSuggestion,
                   isAlias: !!action.params.alias
                 };
-                [url, postData] = this._recordSearchEngineLoad(
+                [url, postData] = this._parseAndRecordSearchEngineLoad(
                   action.params.engineName,
                   action.params.searchSuggestion || action.params.searchQuery,
                   event,
@@ -467,15 +472,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 );
                 break;
             }
-            this._loadURL(url, browser, postData, where, openUILinkParams,
-                          matchLastLocationChange, mayInheritPrincipal);
-            return;
-          }
-
-          // If there's a selected one-off button and the input value is a
-          // search query (or "keyword" in URI-fixup terminology), then load a
-          // search using the one-off's engine.
-          if (selectedOneOff && selectedOneOff.engine) {
+          } else if (selectedOneOff && selectedOneOff.engine) {
+            // If there's a selected one-off button and the input value is a
+            // search query (or "keyword" in URI-fixup terminology), then load a
+            // search using the one-off's engine.
             let value = this.oneOffSearchQuery;
             let fixup;
             try {
@@ -484,24 +484,34 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
               );
             } catch (ex) {}
-            if (fixup && fixup.keywordProviderName) {
-              [url, postData] =
-                this._recordSearchEngineLoad(selectedOneOff.engine, value,
-                                             event, where, openUILinkParams);
-              this._loadURL(url, browser, postData, where, openUILinkParams,
-                            matchLastLocationChange, mayInheritPrincipal);
+            if (!fixup || !fixup.keywordProviderName) {
+              return;
+            }
+
+            [url, postData] =
+              this._parseAndRecordSearchEngineLoad(selectedOneOff.engine, value,
+                                                   event, where, openUILinkParams);
+          } else {
+            // This is a fallback for add-ons and old testing code that directly
+            // set value and try to confirm it. UnifiedComplete should always
+            // resolve to a valid url.
+            try {
+              new URL(url);
+            } catch (ex) {
+              let lastLocationChange = browser.lastLocationChange;
+              getShortcutOrURIAndPostData(url).then(data => {
+                if (where != "current" ||
+                    browser.lastLocationChange == lastLocationChange) {
+                  this._loadURL(data.url, browser, data.postData, where,
+                                openUILinkParams, data.mayInheritPrincipal);
+                }
+              });
               return;
             }
           }
 
-          getShortcutOrURIAndPostData(url).then(({url, postData, mayInheritPrincipal}) => {
-            if (url) {
-              matchLastLocationChange =
-                lastLocationChange == browser.lastLocationChange;
-              this._loadURL(url, browser, postData, where, openUILinkParams,
-                            matchLastLocationChange, mayInheritPrincipal);
-            }
-          });
+          this._loadURL(url, browser, postData, where, openUILinkParams,
+                        mayInheritPrincipal);
         ]]></body>
       </method>
 
@@ -522,7 +532,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="postData"/>
         <parameter name="openUILinkWhere"/>
         <parameter name="openUILinkParams"/>
-        <parameter name="matchLastLocationChange"/>
         <parameter name="mayInheritPrincipal"/>
         <body><![CDATA[
           this.value = url;
@@ -539,7 +548,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           let params = {
-            postData: postData,
+            postData,
             allowThirdPartyFixup: true,
             currentBrowser: browser,
           };
@@ -563,10 +572,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // area when the current tab is re-selected.
           browser.focus();
 
-          if (openUILinkWhere == "current" && !matchLastLocationChange) {
-            return;
-          }
-
           if (openUILinkWhere != "current") {
             this.handleRevert();
           }
@@ -588,7 +593,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <method name="_recordSearchEngineLoad">
+      <method name="_parseAndRecordSearchEngineLoad">
         <parameter name="engineOrEngineName"/>
         <parameter name="query"/>
         <parameter name="event"/>

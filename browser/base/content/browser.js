@@ -2064,15 +2064,15 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
 }
 
 /**
- * Given a urlbar value, discerns between URIs, keywords and aliases.
+ * Given a string, will generate a more appropriate urlbar value if a Places
+ * keyword or a search alias is found at the beginning of it.
  *
  * @param url
- *        The urlbar value.
- * @param callback (optional, deprecated)
- *        The callback function invoked when done. This parameter is
- *        deprecated, please use the Promise that is returned.
+ *        A string that may begin with a keyword or an alias.
  *
- * @return Promise<{ postData, url, mayInheritPrincipal }>
+ * @return {Promise}
+ * @resolves { url, postData, mayInheritPrincipal }. If it's not possible
+ *           to discern a keyword or an alias, url will be the input string.
  */
 function getShortcutOrURIAndPostData(url, callback = null) {
   if (callback) {
@@ -2081,124 +2081,70 @@ function getShortcutOrURIAndPostData(url, callback = null) {
                        "callback",
                        "https://bugzilla.mozilla.org/show_bug.cgi?id=1100294");
   }
-
   return Task.spawn(function* () {
     let mayInheritPrincipal = false;
     let postData = null;
-    let shortcutURL = null;
-    let keyword = url;
-    let param = "";
+    // Split on the first whitespace.
+    let [keyword, param = ""] = url.trim().split(/\s(.+)/, 2);
 
-    let offset = url.indexOf(" ");
-    if (offset > 0) {
-      keyword = url.substr(0, offset);
-      param = url.substr(offset + 1);
+    if (!keyword) {
+      return { url, postData, mayInheritPrincipal };
     }
 
     let engine = Services.search.getEngineByAlias(keyword);
     if (engine) {
       let submission = engine.getSubmission(param, null, "keyword");
-      postData = submission.postData;
-      return { postData: submission.postData, url: submission.uri.spec,
+      return { url: submission.uri.spec,
+               postData: submission.postData,
                mayInheritPrincipal };
     }
 
     // A corrupt Places database could make this throw, breaking navigation
     // from the location bar.
+    let entry = null;
     try {
-      let entry = yield PlacesUtils.keywords.fetch(keyword);
-      if (entry) {
-        shortcutURL = entry.url.href;
-        postData = entry.postData;
-      }
+      entry = yield PlacesUtils.keywords.fetch(keyword);
     } catch (ex) {
-      Components.utils.reportError(`Unable to fetch data for Places keyword "${keyword}": ${ex}`);
+      Cu.reportError(`Unable to fetch Places keyword "${keyword}": ${ex}`);
+    }
+    if (!entry || !entry.url) {
+      // This is not a Places keyword.
+      return { url, postData, mayInheritPrincipal };
     }
 
-    if (!shortcutURL) {
-      return { postData, url, mayInheritPrincipal };
-    }
-
-    let escapedPostData = "";
-    if (postData)
-      escapedPostData = unescape(postData);
-
-    if (/%s/i.test(shortcutURL) || /%s/i.test(escapedPostData)) {
-      let charset = "";
-      const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
-      let matches = shortcutURL.match(re);
-
-      if (matches) {
-        [, shortcutURL, charset] = matches;
-      } else {
-        let uri;
-        try {
-          // makeURI() throws if URI is invalid.
-          uri = makeURI(shortcutURL);
-        } catch (ex) {}
-
-        if (uri) {
-          // Try to get the saved character-set.
-          // Will return an empty string if character-set is not found.
-          charset = yield PlacesUtils.getCharsetForURI(uri);
-        }
+    try {
+      [url, postData] =
+        yield BrowserUtils.parseUrlAndPostData(entry.url.href,
+                                               entry.postData,
+                                               param);
+      if (postData) {
+        postData = getPostDataStream(postData);
       }
 
-      // encodeURIComponent produces UTF-8, and cannot be used for other charsets.
-      // escape() works in those cases, but it doesn't uri-encode +, @, and /.
-      // Therefore we need to manually replace these ASCII characters by their
-      // encodeURIComponent result, to match the behavior of nsEscape() with
-      // url_XPAlphas
-      let encodedParam = "";
-      if (charset && charset != "UTF-8")
-        encodedParam = escape(convertFromUnicode(charset, param)).
-                       replace(/[+@\/]+/g, encodeURIComponent);
-      else // Default charset is UTF-8
-        encodedParam = encodeURIComponent(param);
-
-      shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
-
-      if (/%s/i.test(escapedPostData)) // POST keyword
-        postData = getPostDataStream(escapedPostData, param, encodedParam,
-                                               "application/x-www-form-urlencoded");
-
-      // This URL came from a bookmark, so it's safe to let it inherit the current
-      // document's principal.
+      // Since this URL came from a bookmark, it's safe to let it inherit the
+      // current document's principal.
       mayInheritPrincipal = true;
-
-      return { postData, url: shortcutURL, mayInheritPrincipal };
+    } catch (ex) {
+      // It was not possible to bind the param, just use the original url value.
     }
 
-    if (param) {
-      // This keyword doesn't take a parameter, but one was provided. Just return
-      // the original URL.
-      postData = null;
-
-      return { postData, url, mayInheritPrincipal };
-    }
-
-    // This URL came from a bookmark, so it's safe to let it inherit the current
-    // document's principal.
-    mayInheritPrincipal = true;
-
-    return { postData, url: shortcutURL, mayInheritPrincipal };
+    return { url, postData, mayInheritPrincipal };
   }).then(data => {
     if (callback) {
       callback(data);
     }
-
     return data;
   });
 }
 
-function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType) {
-  var dataStream = Cc["@mozilla.org/io/string-input-stream;1"].
-                   createInstance(Ci.nsIStringInputStream);
-  aStringData = aStringData.replace(/%s/g, aEncKeyword).replace(/%S/g, aKeyword);
-  dataStream.data = aStringData;
+function getPostDataStream(aPostDataString,
+                           aType = "application/x-www-form-urlencoded") {
+  let dataStream = Cc["@mozilla.org/io/string-input-stream;1"]
+                     .createInstance(Ci.nsIStringInputStream);
+  dataStream.data = aPostDataString;
 
-  var mimeStream = Cc["@mozilla.org/network/mime-input-stream;1"].
-                   createInstance(Ci.nsIMIMEInputStream);
+  let mimeStream = Cc["@mozilla.org/network/mime-input-stream;1"]
+                     .createInstance(Ci.nsIMIMEInputStream);
   mimeStream.addHeader("Content-Type", aType);
   mimeStream.addContentLength = true;
   mimeStream.setData(dataStream);
@@ -3475,51 +3421,37 @@ function openHomeDialog(aURL)
 }
 
 var newTabButtonObserver = {
-  onDragOver: function (aEvent)
-  {
+  onDragOver(aEvent) {
     browserDragAndDrop.dragOver(aEvent);
   },
-
-  onDragExit: function (aEvent)
-  {
-  },
-
-  onDrop: function (aEvent)
-  {
+  onDragExit(aEvent) {},
+  onDrop: Task.async(function* (aEvent) {
     let links = browserDragAndDrop.dropLinks(aEvent);
-    Task.spawn(function*() {
-      for (let link of links) {
+    for (let link of links) {
+      if (link.url) {
         let data = yield getShortcutOrURIAndPostData(link.url);
-        if (data.url) {
-          // allow third-party services to fixup this URL
-          openNewTabWith(data.url, null, data.postData, aEvent, true);
-        }
+        // Allow third-party services to fixup this URL.
+        openNewTabWith(data.url, null, data.postData, aEvent, true);
       }
-    });
-  }
+    }
+  })
 }
 
 var newWindowButtonObserver = {
-  onDragOver: function (aEvent)
-  {
+  onDragOver(aEvent) {
     browserDragAndDrop.dragOver(aEvent);
   },
-  onDragExit: function (aEvent)
-  {
-  },
-  onDrop: function (aEvent)
-  {
+  onDragExit(aEvent) {},
+  onDrop: Task.async(function* (aEvent) {
     let links = browserDragAndDrop.dropLinks(aEvent);
-    Task.spawn(function*() {
-      for (let link of links) {
+    for (let link of links) {
+      if (link.url) {
         let data = yield getShortcutOrURIAndPostData(link.url);
-        if (data.url) {
-          // allow third-party services to fixup this URL
-          openNewWindowWith(data.url, null, data.postData, true);
-        }
+        // Allow third-party services to fixup this URL.
+        openNewWindowWith(data.url, null, data.postData, true);
       }
-    });
-  }
+    }
+  })
 }
 
 const DOMLinkHandler = {
@@ -6478,20 +6410,6 @@ function AddKeywordForSearchField() {
   mm.addMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
 
   mm.sendAsyncMessage("ContextMenu:SearchFieldBookmarkData", {}, { target: gContextMenu.target });
-}
-
-function convertFromUnicode(charset, str)
-{
-  try {
-    var unicodeConverter = Components
-       .classes["@mozilla.org/intl/scriptableunicodeconverter"]
-       .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-    unicodeConverter.charset = charset;
-    str = unicodeConverter.ConvertFromUnicode(str);
-    return str + unicodeConverter.Finish();
-  } catch (ex) {
-    return null;
-  }
 }
 
 /**
