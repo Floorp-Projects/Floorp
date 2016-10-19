@@ -80,11 +80,11 @@ class TestKeyActions(MarionetteTestCase):
                         .key_up(Keys.SHIFT)
                         .perform())
         self.wait_for_condition(
-            lambda mn: len(self.marionette.window_handles) == 2)
+            lambda mn: len(self.marionette.chrome_window_handles) == 2)
         chrome_window_handles = self.marionette.chrome_window_handles
         chrome_window_handles.remove(start_win)
         [new_win] = chrome_window_handles
         self.marionette.switch_to_window(new_win)
-        self.marionette.close()
+        self.marionette.close_chrome_window()
         self.marionette.switch_to_window(start_win)
         self.assertEqual(self.key_reporter_value, "")

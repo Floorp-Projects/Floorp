@@ -34,17 +34,17 @@ if (win != null)
         self.marionette.set_context("content")
 
     def test_windows(self):
-        orig_win = self.marionette.current_window_handle
-        orig_available = self.marionette.window_handles
+        orig_win = self.marionette.current_chrome_window_handle
+        orig_available = self.marionette.chrome_window_handles
         self.open_new_window()
         # assert we're still in the original window
-        self.assertEqual(self.marionette.current_window_handle, orig_win)
+        self.assertEqual(self.marionette.current_chrome_window_handle, orig_win)
         # assert we can find the new window
         Wait(self.marionette).until(
-            lambda _: len(self.marionette.window_handles) == len(orig_available) + 1,
+            lambda _: len(self.marionette.chrome_window_handles) == len(orig_available) + 1,
             message="The new window has not been opened.")
         # assert that our window is there
-        now_available = self.marionette.window_handles
+        now_available = self.marionette.chrome_window_handles
         self.assertIn(orig_win, now_available)
         new_win = None
         for win in now_available:
@@ -52,25 +52,25 @@ if (win != null)
                 new_win = win
         # switch to another window
         self.marionette.switch_to_window(new_win)
-        self.assertEqual(self.marionette.current_window_handle, new_win)
-        self.assertNotEqual(self.marionette.current_window_handle, orig_win)
+        self.assertEqual(self.marionette.current_chrome_window_handle, new_win)
+        self.assertNotEqual(self.marionette.current_chrome_window_handle, orig_win)
         # switch back
         self.marionette.switch_to_window(orig_win)
-        self.assertEqual(self.marionette.current_window_handle, orig_win)
+        self.assertEqual(self.marionette.current_chrome_window_handle, orig_win)
         self.close_new_window()
-        self.assertNotIn(new_win, self.marionette.window_handles)
-        self.assertEqual(self.marionette.current_window_handle, orig_win)
-        self.assertEqual(len(self.marionette.window_handles), len(orig_available))
+        self.assertNotIn(new_win, self.marionette.chrome_window_handles)
+        self.assertEqual(self.marionette.current_chrome_window_handle, orig_win)
+        self.assertEqual(len(self.marionette.chrome_window_handles), len(orig_available))
 
     def testShouldLoadAWindowAndThenCloseIt(self):
         test_html = self.marionette.absolute_url("test_windows.html")
         self.marionette.navigate(test_html)
-        current = self.marionette.current_window_handle
+        current = self.marionette.current_chrome_window_handle
 
         self.marionette.find_element(By.LINK_TEXT, "Open new window").click()
         count = 0
         while True:
-            window_handles = self.marionette.window_handles
+            window_handles = self.marionette.chrome_window_handles
             window_handles.remove(current)
             if len(window_handles) > 0:
                 break
@@ -83,30 +83,30 @@ if (win != null)
         self.marionette.switch_to_window(window_handles[0])
         self.assertEqual(self.marionette.title, "We Arrive Here")
 
-        handle = self.marionette.current_window_handle
+        handle = self.marionette.current_chrome_window_handle
 
-        self.assertEqual(self.marionette.current_window_handle, handle)
-        self.assertEqual(2, len(self.marionette.window_handles))
+        self.assertEqual(self.marionette.current_chrome_window_handle, handle)
+        self.assertEqual(2, len(self.marionette.chrome_window_handles))
 
         # Let's close and check
-        self.marionette.close()
+        self.marionette.close_chrome_window()
         self.marionette.switch_to_window(current)
-        self.assertEqual(1, len(self.marionette.window_handles))
+        self.assertEqual(1, len(self.marionette.chrome_window_handles))
 
     def testShouldCauseAWindowToLoadAndCheckItIsOpenThenCloseIt(self):
         test_html = self.marionette.absolute_url("test_windows.html")
         self.marionette.navigate(test_html)
-        current = self.marionette.current_window_handle
+        current = self.marionette.current_chrome_window_handle
 
         self.marionette.find_element(By.LINK_TEXT,"Open new window").click()
-        all_handles = self.marionette.window_handles
+        all_handles = self.marionette.chrome_window_handles
         self.assertEqual(2, len(all_handles))
         self.marionette.switch_to_window([x for x in all_handles if x != current][0])
 
         # Let's close and check
-        self.marionette.close()
+        self.marionette.close_chrome_window()
         self.marionette.switch_to_window(current)
-        self.assertEqual(1, len(self.marionette.window_handles))
+        self.assertEqual(1, len(self.marionette.chrome_window_handles))
 
     def tearDown(self):
         #ensure that we close the window, regardless of pass/failure
