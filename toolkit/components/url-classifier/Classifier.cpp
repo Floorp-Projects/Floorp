@@ -19,6 +19,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Unused.h"
 
 // MOZ_LOG=UrlClassifierDbService:5
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
@@ -349,22 +350,36 @@ Classifier::Reset()
 }
 
 void
-Classifier::ResetTables(const nsTArray<nsCString>& aTables)
+Classifier::ResetTables(ClearType aType, const nsTArray<nsCString>& aTables)
 {
-  // Clear lookup cache
-  MarkSpoiled(aTables);
+  for (uint32_t i = 0; i < aTables.Length(); i++) {
+    LOG(("Resetting table: %s", aTables[i].get()));
+    // Spoil this table by marking it as no known freshness
+    mTableFreshness.Remove(aTables[i]);
+    LookupCache *cache = GetLookupCache(aTables[i]);
+    if (cache) {
+      // Remove any cached Completes for this table if clear type is Clear_Cache
+      if (aType == Clear_Cache) {
+        cache->ClearCache();
+      } else {
+        cache->ClearAll();
+      }
+    }
+  }
 
-  // Clear on-disk database
-  DeleteTables(aTables);
+  // Clear on-disk database if clear type is Clear_All
+  if (aType == Clear_All) {
+    DeleteTables(mRootStoreDirectory, aTables);
 
-  RegenActiveTables();
+    RegenActiveTables();
+  }
 }
 
 void
-Classifier::DeleteTables(const nsTArray<nsCString>& aTables)
+Classifier::DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables)
 {
   nsCOMPtr<nsISimpleEnumerator> entries;
-  nsresult rv = mRootStoreDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS_VOID(rv);
 
   bool hasMore;
@@ -375,6 +390,16 @@ Classifier::DeleteTables(const nsTArray<nsCString>& aTables)
 
     nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
     NS_ENSURE_TRUE_VOID(file);
+
+    // If |file| is a directory, recurse to find its entries as well.
+    bool isDirectory;
+    if (NS_FAILED(file->IsDirectory(&isDirectory))) {
+      continue;
+    }
+    if (isDirectory) {
+      DeleteTables(file, aTables);
+      continue;
+    }
 
     nsCString leafName;
     rv = file->GetNativeLeafName(leafName);
@@ -389,6 +414,20 @@ Classifier::DeleteTables(const nsTArray<nsCString>& aTables)
     }
   }
   NS_ENSURE_SUCCESS_VOID(rv);
+}
+
+void
+Classifier::AbortUpdateAndReset(const nsCString& aTable)
+{
+  LOG(("Abort updating table %s.", aTable.get()));
+
+  // ResetTables will clear both in-memory & on-disk data.
+  ResetTables(Clear_All, nsTArray<nsCString> { aTable });
+
+  // Remove the backup and delete directory since we are aborting
+  // from an update.
+  Unused << RemoveBackupTables();
+  Unused << CleanToDelete();
 }
 
 void
@@ -550,7 +589,7 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
 
         if (NS_FAILED(rv)) {
           if (rv != NS_ERROR_OUT_OF_MEMORY) {
-            Reset();
+            AbortUpdateAndReset(updateTable);
           }
           return rv;
         }
@@ -599,22 +638,6 @@ Classifier::ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates)
     aUpdates->ElementAt(i) = nullptr;
   }
 
-  return NS_OK;
-}
-
-nsresult
-Classifier::MarkSpoiled(const nsTArray<nsCString>& aTables)
-{
-  for (uint32_t i = 0; i < aTables.Length(); i++) {
-    LOG(("Spoiling table: %s", aTables[i].get()));
-    // Spoil this table by marking it as no known freshness
-    mTableFreshness.Remove(aTables[i]);
-    // Remove any cached Completes for this table
-    LookupCache *cache = GetLookupCache(aTables[i]);
-    if (cache) {
-      cache->ClearCache();
-    }
-  }
   return NS_OK;
 }
 
