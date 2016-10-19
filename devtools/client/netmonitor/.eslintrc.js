@@ -1,0 +1,15 @@
+"use strict";
+
+module.exports = {
+  // Extend from the devtools eslintrc.
+  "extends": "../../.eslintrc.js",
+
+  "rules": {
+    // The netmonitor is being migrated to HTML and cleaned of
+    // chrome-privileged code, so this rule disallows requiring chrome
+    // code. Some files in the netmonitor disable this rule still. The
+    // goal is to enable the rule globally on all files.
+    /* eslint-disable max-len */
+    "mozilla/reject-some-requires": [2, "^(chrome|chrome:.*|resource:.*|devtools/server/.*|.*\\.jsm|devtools/shared/platform/(chome|content)/.*)$"],
+  },
+};

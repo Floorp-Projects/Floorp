@@ -202,7 +202,8 @@ class BlocklistClient {
             // if the signature is good (we haven't thrown), and the remote
             // last_modified is newer than the local last_modified, replace the
             // local data
-            if (payload.last_modified >= collection.lastModified) {
+            const localLastModified = yield collection.db.getLastModified();
+            if (payload.last_modified >= localLastModified) {
               yield collection.clear();
               yield collection.loadDump(payload.data);
             }

@@ -339,22 +339,6 @@ public:
   FrameMetrics::ViewID GetRootScrollableLayerId();
 
   /**
-   * Does a breadth-first search from the root layer to find the first
-   * scrollable layer, and returns all the layers that have that ViewID
-   * as the first scrollable metrics in their ancestor chain. If no
-   * scrollable layers are found it just returns the root of the tree if
-   * there is one.
-   */
-  void GetRootScrollableLayers(nsTArray<Layer*>& aArray);
-
-  /**
-   * Returns a list of all descendant layers for which
-   * GetFrameMetrics().IsScrollable() is true and that
-   * do not already have an ancestor in the return list.
-   */
-  void GetScrollableLayers(nsTArray<Layer*>& aArray);
-
-  /**
    * Returns a LayerMetricsWrapper containing the Root
    * Content Documents layer.
    */

@@ -33,9 +33,6 @@ const STYLE_INSPECTOR_PROPERTIES = "devtools-shared/locale/styleinspector.proper
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
-const HTML_NS = "http://www.w3.org/1999/xhtml";
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 /**
  * RuleEditor is responsible for the following:
  *   Owns a Rule object and creates a list of TextPropertyEditors
@@ -98,7 +95,7 @@ RuleEditor.prototype = {
   },
 
   _create: function () {
-    this.element = this.doc.createElementNS(HTML_NS, "div");
+    this.element = this.doc.createElement("div");
     this.element.className = "ruleview-rule theme-separator";
     this.element.setAttribute("uneditable", !this.isEditable);
     this.element.setAttribute("unmatched", this.rule.isUnmatched);
@@ -119,8 +116,7 @@ RuleEditor.prototype = {
       let rule = this.rule.domRule;
       this.ruleView.emit("ruleview-linked-clicked", rule);
     }.bind(this));
-    let sourceLabel = this.doc.createElementNS(XUL_NS, "label");
-    sourceLabel.setAttribute("crop", "center");
+    let sourceLabel = this.doc.createElement("span");
     sourceLabel.classList.add("ruleview-rule-source-label");
     this.source.appendChild(sourceLabel);
 
@@ -229,7 +225,7 @@ RuleEditor.prototype = {
       this.rule.sheet.href : title;
     let sourceLine = this.rule.ruleLine > 0 ? ":" + this.rule.ruleLine : "";
 
-    sourceLabel.setAttribute("tooltiptext", sourceHref + sourceLine);
+    sourceLabel.setAttribute("title", sourceHref + sourceLine);
 
     if (this.toolbox.isToolRegistered("styleeditor")) {
       this.source.removeAttribute("unselectable");
@@ -239,18 +235,18 @@ RuleEditor.prototype = {
 
     if (this.rule.isSystem) {
       let uaLabel = STYLE_INSPECTOR_L10N.getStr("rule.userAgentStyles");
-      sourceLabel.setAttribute("value", uaLabel + " " + title);
+      sourceLabel.textContent = uaLabel + " " + title;
 
       // Special case about:PreferenceStyleSheet, as it is generated on the
       // fly and the URI is not registered with the about: handler.
       // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
       if (sourceHref === "about:PreferenceStyleSheet") {
         this.source.setAttribute("unselectable", "true");
-        sourceLabel.setAttribute("value", uaLabel);
-        sourceLabel.removeAttribute("tooltiptext");
+        sourceLabel.textContent = uaLabel;
+        sourceLabel.removeAttribute("title");
       }
     } else {
-      sourceLabel.setAttribute("value", title);
+      sourceLabel.textContent = title;
       if (this.rule.ruleLine === -1 && this.rule.domRule.parentStyleSheet) {
         this.source.setAttribute("unselectable", "true");
       }
@@ -262,8 +258,8 @@ RuleEditor.prototype = {
       // Only get the original source link if the right pref is set, if the rule
       // isn't a system rule and if it isn't an inline rule.
       this.rule.getOriginalSourceStrings().then((strings) => {
-        sourceLabel.setAttribute("value", strings.short);
-        sourceLabel.setAttribute("tooltiptext", strings.full);
+        sourceLabel.textContent = strings.short;
+        sourceLabel.setAttribute("title", strings.full);
       }, e => console.error(e)).then(() => {
         this.emit("source-link-updated");
       });

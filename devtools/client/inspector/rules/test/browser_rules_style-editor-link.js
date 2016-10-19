@@ -180,8 +180,8 @@ function* testDisabledStyleEditor(view, toolbox) {
 function testRuleViewLinkLabel(view) {
   let link = getRuleViewLinkByIndex(view, 2);
   let labelElem = link.querySelector(".ruleview-rule-source-label");
-  let value = labelElem.getAttribute("value");
-  let tooltipText = labelElem.getAttribute("tooltiptext");
+  let value = labelElem.textContent;
+  let tooltipText = labelElem.getAttribute("title");
 
   is(value, EXTERNAL_STYLESHEET_FILE_NAME + ":1",
     "rule view stylesheet display value matches filename and line number");

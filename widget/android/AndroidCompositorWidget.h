@@ -28,16 +28,6 @@ public:
                                const CSSToLayerScale& aZoom,
                                const CSSRect& aCssPageRect);
 
-    void SetPageRect(const CSSRect& aCssPageRect);
-
-    void SyncViewportInfo(const LayerIntRect& aDisplayPort,
-                          const CSSToLayerScale& aDisplayResolution,
-                          bool aLayersUpdated,
-                          int32_t aPaintSyncId,
-                          ParentLayerRect& aScrollRect,
-                          CSSToParentLayerScale& aScale,
-                          ScreenMargin& aFixedLayerMargins);
-
     void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                           const CSSToParentLayerScale& aZoom,
                           const CSSRect& aCssPageRect,

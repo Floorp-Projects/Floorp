@@ -108,12 +108,10 @@ this.NarrateTestUtils = {
     });
   },
 
-  waitForVoiceOptions: function(window) {
-    let options = window.document.querySelector(this.VOICE_OPTIONS);
+  waitForNarrateToggle: function(window) {
+    let toggle = window.document.querySelector(this.TOGGLE);
     return ContentTaskUtils.waitForCondition(
-      () => {
-        return options.childElementCount > 1;
-      }, "voice select options populated.");
+      () => !toggle.hidden, "");
   },
 
   waitForPrefChange: function(pref) {

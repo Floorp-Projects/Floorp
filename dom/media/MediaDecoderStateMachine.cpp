@@ -248,8 +248,13 @@ public:
     SLOG("change state to: %s", ToStateStr(s->GetState()));
 
     Exit();
+
+    // Note |aArgs| might reference data members of |this|. We need to keep
+    // |this| alive until |s->Enter()| returns.
+    UniquePtr<StateObject> deathGrip(master->mStateObj.release());
+
     master->mState = s->GetState();
-    master->mStateObj.reset(s); // Will delete |this|!
+    master->mStateObj.reset(s);
     return s->Enter(Forward<Ts>(aArgs)...);
   }
 
@@ -331,7 +336,7 @@ class MediaDecoderStateMachine::WaitForCDMState
 public:
   explicit WaitForCDMState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter() {}
+  void Enter(bool aPendingDormant) { mPendingDormant = aPendingDormant; }
 
   State GetState() const override
   {
@@ -349,6 +354,9 @@ public:
     mMaster->mQueuedSeek.mTarget = aTarget;
     return mMaster->mQueuedSeek.mPromise.Ensure(__func__);
   }
+
+private:
+  bool mPendingDormant = false;
 };
 
 class MediaDecoderStateMachine::DormantState
@@ -976,30 +984,22 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
     mMaster->EnqueueLoadedMetadataEvent();
   }
 
-  if (mPendingDormant) {
-    // No need to store mQueuedSeek because we are at position 0.
-    SetState<DormantState>();
-    return;
-  }
-
   if (waitingForCDM) {
     // Metadata parsing was successful but we're still waiting for CDM caps
     // to become available so that we can build the correct decryptor/decoder.
-    SetState<WaitForCDMState>();
-    return;
+    SetState<WaitForCDMState>(mPendingDormant);
+  } else if (mPendingDormant) {
+    SetState<DormantState>();
+  } else {
+    SetState<DecodingFirstFrameState>();
   }
-
-  SetState<DecodingFirstFrameState>();
 }
 
 bool
 MediaDecoderStateMachine::
 WaitForCDMState::HandleDormant(bool aDormant)
 {
-  if (aDormant) {
-    // No need to store mQueuedSeek because we are at position 0.
-    SetState<DormantState>();
-  }
+  mPendingDormant = aDormant;
   return true;
 }
 
@@ -1008,12 +1008,8 @@ MediaDecoderStateMachine::
 DormantState::HandleDormant(bool aDormant)
 {
   if (!aDormant) {
-    // Exit dormant state. Check if we need the CDMProxy to start decoding.
-    if (Info().IsEncrypted() && !mMaster->mCDMProxy) {
-      SetState<WaitForCDMState>();
-    } else {
-      SetState<DecodingFirstFrameState>();
-    }
+    MOZ_ASSERT(!Info().IsEncrypted() || mMaster->mCDMProxy);
+    SetState<DecodingFirstFrameState>();
   }
   return true;
 }
@@ -1022,7 +1018,11 @@ bool
 MediaDecoderStateMachine::
 WaitForCDMState::HandleCDMProxyReady()
 {
-  SetState<DecodingFirstFrameState>();
+  if (mPendingDormant) {
+    SetState<DormantState>();
+  } else {
+    SetState<DecodingFirstFrameState>();
+  }
   return true;
 }
 
@@ -3147,7 +3147,12 @@ MediaDecoderStateMachine::DumpDebugInfo()
       mAudioCompleted.Ref(), mVideoCompleted.Ref());
   });
 
-  OwnerThread()->DispatchStateChange(r.forget());
+  // Since the task is run asynchronously, it is possible other tasks get first
+  // and change the object states before we print them. Therefore we want to
+  // dispatch this task immediately without waiting for the tail dispatching
+  // phase so object states are less likely to change before being printed.
+  OwnerThread()->Dispatch(r.forget(),
+    AbstractThread::AssertDispatchSuccess, AbstractThread::TailDispatch);
 }
 
 void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
