@@ -5700,21 +5700,25 @@ BaseCompiler::emitSetGlobal()
       case ValType::I32: {
         RegI32 rv = popI32();
         storeGlobalVarI32(global.offset(), rv);
+        freeI32(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = popI64();
         storeGlobalVarI64(global.offset(), rv);
+        freeI64(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = popF32();
         storeGlobalVarF32(global.offset(), rv);
+        freeF32(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = popF64();
         storeGlobalVarF64(global.offset(), rv);
+        freeF64(rv);
         break;
       }
       default:
