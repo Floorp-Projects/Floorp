@@ -371,11 +371,6 @@ public:
   void Enter(bool aPendingDormant)
   {
     MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
-
-    // WAIT_FOR_CDM is transitioned from DECODING_METADATA
-    // where mQueuedSeek must be empty.
-    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
-
     mPendingDormant = aPendingDormant;
   }
 
@@ -433,7 +428,6 @@ public:
 
   void Enter(SeekJob aPendingSeek)
   {
-    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
     mPendingSeek = Move(aPendingSeek);
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
@@ -806,7 +800,6 @@ public:
                OnSeekTaskRejected(aValue);
              }));
 
-    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
     return mSeekJob.mPromise.Ensure(__func__);
   }
 
@@ -1131,10 +1124,6 @@ StateObject::HandleDormant(bool aDormant)
   if (!aDormant) {
     return true;
   }
-  // This member function is inherited by DecodingState, BufferingState and
-  // CompletedState which can handle seek immediately without queuing a seek.
-  // Therefore mQueuedSeek must be empty here.
-  MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
   SeekJob seekJob;
   seekJob.mTarget = SeekTarget(mMaster->mCurrentPosition,
                                SeekTarget::Accurate,
@@ -1340,7 +1329,6 @@ DecodingFirstFrameState::Enter(SeekJob aPendingSeek)
   }
 
   MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
-  MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
 
   mPendingSeek = Move(aPendingSeek);
 
@@ -1410,9 +1398,6 @@ MediaDecoderStateMachine::
 DecodingState::Enter()
 {
   MOZ_ASSERT(mMaster->mSentFirstFrameLoadedEvent);
-  // Pending seek should've been handled by DECODING_FIRSTFRAME before
-  // transitioning to DECODING.
-  MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
 
   if (!mMaster->mIsVisible &&
       !mMaster->mVideoDecodeSuspendTimer.IsScheduled() &&
@@ -1441,7 +1426,6 @@ RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::
 DecodingState::HandleSeek(SeekTarget aTarget)
 {
-  mMaster->mQueuedSeek.RejectIfExists(__func__);
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
@@ -1504,7 +1488,6 @@ SeekingState::HandleDormant(bool aDormant)
   if (!aDormant) {
     return true;
   }
-  MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
   MOZ_ASSERT(mSeekJob.Exists());
   // Because both audio and video decoders are going to be reset in this
   // method later, we treat a VideoOnly seek task as a normal Accurate
@@ -1523,7 +1506,6 @@ RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::
 SeekingState::HandleSeek(SeekTarget aTarget)
 {
-  mMaster->mQueuedSeek.RejectIfExists(__func__);
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
@@ -1672,7 +1654,6 @@ RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::
 BufferingState::HandleSeek(SeekTarget aTarget)
 {
-  mMaster->mQueuedSeek.RejectIfExists(__func__);
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
@@ -1683,7 +1664,6 @@ RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::
 CompletedState::HandleSeek(SeekTarget aTarget)
 {
-  mMaster->mQueuedSeek.RejectIfExists(__func__);
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
@@ -1699,7 +1679,6 @@ ShutdownState::Enter()
   master->mIsShutdown = true;
   master->mDelayedScheduler.Reset();
   master->mBufferedUpdateRequest.DisconnectIfExists();
-  master->mQueuedSeek.RejectIfExists(__func__);
 
   // Shutdown happens while decode timer is active, we need to disconnect and
   // dispose of the timer.
