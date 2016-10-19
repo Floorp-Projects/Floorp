@@ -491,7 +491,14 @@ class MediaDecoderStateMachine::DecodingFirstFrameState
 public:
   explicit DecodingFirstFrameState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter();
+  void Enter(SeekJob aPendingSeek);
+
+  void Exit() override
+  {
+    // mPendingSeek is either moved before transition to SEEKING or DORMANT,
+    // or should be rejected here before transition to SHUTDOWN.
+    mPendingSeek.RejectIfExists(__func__);
+  }
 
   State GetState() const override
   {
@@ -537,6 +544,8 @@ private:
   // Notify FirstFrameLoaded if having decoded first frames and
   // transition to SEEKING if there is any pending seek, or DECODING otherwise.
   void MaybeFinishDecodeFirstFrame();
+
+  SeekJob mPendingSeek;
 };
 
 /**
@@ -1273,7 +1282,7 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   } else if (mPendingDormant) {
     SetState<DormantState>(SeekJob{});
   } else {
-    SetState<DecodingFirstFrameState>();
+    SetState<DecodingFirstFrameState>(SeekJob{});
   }
 }
 
@@ -1291,7 +1300,8 @@ DormantState::HandleDormant(bool aDormant)
 {
   if (!aDormant) {
     MOZ_ASSERT(!Info().IsEncrypted() || mMaster->mCDMProxy);
-    SetState<DecodingFirstFrameState>();
+    SeekJob seekJob = Move(mPendingSeek);
+    SetState<DecodingFirstFrameState>(Move(seekJob));
   }
   return true;
 }
@@ -1300,24 +1310,24 @@ bool
 MediaDecoderStateMachine::
 WaitForCDMState::HandleCDMProxyReady()
 {
+  SeekJob seekJob = Move(mPendingSeek);
   if (mPendingDormant) {
-    SeekJob seekJob = Move(mPendingSeek);
     SetState<DormantState>(Move(seekJob));
   } else {
-    SetState<DecodingFirstFrameState>();
+    SetState<DecodingFirstFrameState>(Move(seekJob));
   }
   return true;
 }
 
 void
 MediaDecoderStateMachine::
-DecodingFirstFrameState::Enter()
+DecodingFirstFrameState::Enter(SeekJob aPendingSeek)
 {
   // Handle pending seek.
-  if (mMaster->mQueuedSeek.Exists() &&
+  if (aPendingSeek.Exists() &&
       (mMaster->mSentFirstFrameLoadedEvent ||
        Reader()->ForceZeroStartTime())) {
-    SetState<SeekingState>(Move(mMaster->mQueuedSeek));
+    SetState<SeekingState>(Move(aPendingSeek));
     return;
   }
 
@@ -1328,6 +1338,9 @@ DecodingFirstFrameState::Enter()
   }
 
   MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
+  MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+
+  mPendingSeek = Move(aPendingSeek);
 
   // Dispatch tasks to decode first frames.
   mMaster->DispatchDecodeTasksIfNeeded();
@@ -1343,14 +1356,14 @@ DecodingFirstFrameState::HandleSeek(SeekTarget aTarget)
 
   if (!Reader()->ForceZeroStartTime()) {
     SLOG("Not Enough Data to seek at this stage, queuing seek");
-    mMaster->mQueuedSeek.RejectIfExists(__func__);
-    mMaster->mQueuedSeek.mTarget = aTarget;
-    return mMaster->mQueuedSeek.mPromise.Ensure(__func__);
+    mPendingSeek.RejectIfExists(__func__);
+    mPendingSeek.mTarget = aTarget;
+    return mPendingSeek.mPromise.Ensure(__func__);
   }
 
   // Since ForceZeroStartTime() is true, we should've transitioned to SEEKING
-  // in Enter() if there is any queued seek.
-  MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+  // in Enter() if there is any pending seek.
+  MOZ_ASSERT(!mPendingSeek.Exists());
 
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
@@ -1363,12 +1376,7 @@ MediaDecoderStateMachine::
 DecodingFirstFrameState::HandleDormant(bool aDormant)
 {
   if (aDormant) {
-    // Don't store mQueuedSeek because:
-    // 1. if mQueuedSeek is not empty, respect the latest seek request
-    //    and don't overwrite it.
-    // 2. if mQueuedSeek is empty, there is no need to seek when exiting
-    //    the dormant state for we are at position 0.
-    SeekJob seekJob = Move(mMaster->mQueuedSeek);
+    SeekJob seekJob = Move(mPendingSeek);
     SetState<DormantState>(Move(seekJob));
   }
   return true;
@@ -1387,8 +1395,9 @@ DecodingFirstFrameState::MaybeFinishDecodeFirstFrame()
 
   mMaster->FinishDecodeFirstFrame();
 
-  if (mMaster->mQueuedSeek.Exists()) {
-    SetState<SeekingState>(Move(mMaster->mQueuedSeek));
+  if (mPendingSeek.Exists()) {
+    SeekJob seekJob = Move(mPendingSeek);
+    SetState<SeekingState>(Move(seekJob));
   } else {
     SetState<DecodingState>();
   }
