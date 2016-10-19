@@ -60,12 +60,19 @@ public:
   /**
    * Create a FilterDescription for the supplied filter. All coordinates in
    * the description are in filter space.
+   * @param aFilterInputIsTainted Describes whether the SourceImage / SourceAlpha
+   *   input is tainted. This affects whether feDisplacementMap will respect
+   *   the filter input as its map input, and it affects the IsTainted() state
+   *   on the filter primitives in the FilterDescription. "Tainted" is a term
+   *   from the filters spec and means security-sensitive content, i.e. pixels
+   *   that JS should not be able to read in any way.
    * @param aOutAdditionalImages Will contain additional images needed to
    *   render the filter (from feImage primitives).
    * @return A FilterDescription describing the filter.
    */
   static FilterDescription GetFilterDescription(nsIContent* aFilteredElement,
                                                 const nsTArray<nsStyleFilter>& aFilterChain,
+                                                bool aFilterInputIsTainted,
                                                 const UserSpaceMetrics& aMetrics,
                                                 const gfxRect& aBBox,
                                                 nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages);
@@ -118,6 +125,9 @@ public:
    * @param aTargetContent The filtered element itself.
    * @param aMetrics The metrics to resolve SVG lengths against.
    * @param aFilterChain The list of filters to apply.
+   * @param aFilterInputIsTainted Describes whether the SourceImage / SourceAlpha
+   *   input is tainted. This affects whether feDisplacementMap will respect
+   *   the filter input as its map input.
    * @param aPaintCallback [optional] The callback that Render() should use to
    *   paint. Only required if you will call Render().
    * @param aPaintTransform The transform to apply to convert to
@@ -137,6 +147,7 @@ public:
                    nsIContent* aTargetContent,
                    const UserSpaceMetrics& aMetrics,
                    const nsTArray<nsStyleFilter>& aFilterChain,
+                   bool aFilterInputIsTainted,
                    nsSVGFilterPaintCallback *aPaintCallback,
                    const gfxMatrix& aPaintTransform,
                    const nsRegion *aPostFilterDirtyRegion = nullptr,
@@ -236,18 +247,22 @@ private:
   /**
    * Build the list of FilterPrimitiveDescriptions that describes the filter's
    * filter primitives and their connections. This populates
-   * mPrimitiveDescriptions and mInputImages.
+   * mPrimitiveDescriptions and mInputImages. aFilterInputIsTainted describes
+   * whether the SourceGraphic is tainted.
    */
   nsresult BuildPrimitives(const nsTArray<nsStyleFilter>& aFilterChain,
-                           nsIFrame* aTargetFrame);
+                           nsIFrame* aTargetFrame,
+                           bool aFilterInputIsTainted);
 
   /**
    * Add to the list of FilterPrimitiveDescriptions for a particular SVG
-   * reference filter or CSS filter. This populates mPrimitiveDescrs and
-   * mInputImages.
+   * reference filter or CSS filter. This populates mPrimitiveDescriptions and
+   * mInputImages. aInputIsTainted describes whether the input to aFilter is
+   * tainted.
    */
   nsresult BuildPrimitivesForFilter(const nsStyleFilter& aFilter,
-                                    nsIFrame* aTargetFrame);
+                                    nsIFrame* aTargetFrame,
+                                    bool aInputIsTainted);
 
   /**
    * Computes the filter space bounds of the areas that we actually *need* from
