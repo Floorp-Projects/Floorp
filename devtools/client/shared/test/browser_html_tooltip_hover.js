@@ -11,7 +11,7 @@
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
   <?xml-stylesheet href="chrome://global/skin/global.css"?>
-  <?xml-stylesheet href="chrome://devtools/skin/variables.css"?>
+  <?xml-stylesheet href="resource://devtools/client/themes/variables.css"?>
   <?xml-stylesheet href="chrome://devtools/skin/tooltips.css"?>
   <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    class="theme-light" title="Tooltip hover test">
