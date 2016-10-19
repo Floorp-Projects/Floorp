@@ -6314,7 +6314,7 @@ CreateLastWarningObject(JSContext* cx, JSErrorReport* report)
     if (!DefineProperty(cx, warningObj, cx->names().name, nameVal))
         return false;
 
-    RootedString messageStr(cx, report->newMessageString(cx));
+    RootedString messageStr(cx, JS_NewUCStringCopyZ(cx, report->ucmessage));
     if (!messageStr)
         return false;
     RootedValue messageVal(cx, StringValue(messageStr));
@@ -6394,8 +6394,7 @@ js::shell::AutoReportException::~AutoReportException()
     ShellContext* sc = GetShellContext(cx);
     js::ErrorReport report(cx);
     if (!report.init(cx, exn, js::ErrorReport::WithSideEffects)) {
-        fprintf(stderr, "out of memory initializing ErrorReport\n");
-        fflush(stderr);
+        PrintError(cx, stderr, "out of memory initializing ErrorReport", nullptr, reportWarnings);
         JS_ClearPendingException(cx);
         return;
     }
@@ -6403,7 +6402,7 @@ js::shell::AutoReportException::~AutoReportException()
     MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
 
     FILE* fp = ErrorFilePointer();
-    PrintError(cx, fp, report.toStringResult(), report.report(), reportWarnings);
+    PrintError(cx, fp, report.message(), report.report(), reportWarnings);
 
     {
         JS::AutoSaveExceptionState savedExc(cx);
@@ -6421,7 +6420,7 @@ js::shell::AutoReportException::~AutoReportException()
 }
 
 void
-js::shell::WarningReporter(JSContext* cx, JSErrorReport* report)
+js::shell::WarningReporter(JSContext* cx, const char* message, JSErrorReport* report)
 {
     ShellContext* sc = GetShellContext(cx);
     FILE* fp = ErrorFilePointer();
@@ -6439,7 +6438,7 @@ js::shell::WarningReporter(JSContext* cx, JSErrorReport* report)
     }
 
     // Print the warning.
-    PrintError(cx, fp, JS::ConstUTF8CharsZ(), report, reportWarnings);
+    PrintError(cx, fp, message, report, reportWarnings);
 }
 
 static bool

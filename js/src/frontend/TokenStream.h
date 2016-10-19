@@ -237,9 +237,18 @@ struct Token
     }
 };
 
-class CompileError : public JSErrorReport {
-public:
+struct CompileError {
+    JSErrorReport report;
+    char* message;
+    CompileError() : message(nullptr) {}
+    ~CompileError();
     void throwError(JSContext* cx);
+
+  private:
+    // CompileError owns raw allocated memory, so disable assignment and copying
+    // for safety.
+    void operator=(const CompileError&) = delete;
+    CompileError(const CompileError&) = delete;
 };
 
 // Ideally, tokenizing would be entirely independent of context.  But the

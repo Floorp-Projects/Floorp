@@ -159,8 +159,8 @@ AutoResolving::alreadyStartedSlow() const
 }
 
 static void
-ReportError(JSContext* cx, JSErrorReport* reportp, JSErrorCallback callback,
-            void* userRef)
+ReportError(JSContext* cx, const char* message, JSErrorReport* reportp,
+            JSErrorCallback callback, void* userRef)
 {
     /*
      * Check the error report, and set a JavaScript-catchable exception
@@ -176,11 +176,11 @@ ReportError(JSContext* cx, JSErrorReport* reportp, JSErrorCallback callback,
     }
 
     if (JSREPORT_IS_WARNING(reportp->flags)) {
-        CallWarningReporter(cx, reportp);
+        CallWarningReporter(cx, message, reportp);
         return;
     }
 
-    ErrorToException(cx, reportp, callback, userRef);
+    ErrorToException(cx, message, reportp, callback, userRef);
 }
 
 /*
@@ -321,36 +321,45 @@ bool
 js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
                   ErrorArgumentsType argumentsType, va_list ap)
 {
+    char* message;
+    char16_t* ucmessage;
+    size_t messagelen;
     JSErrorReport report;
+    bool warning;
 
     if (checkReportFlags(cx, &flags))
         return true;
 
-    UniqueChars message(JS_vsmprintf(format, ap));
+    message = JS_vsmprintf(format, ap);
     if (!message) {
         ReportOutOfMemory(cx);
         return false;
     }
+    messagelen = strlen(message);
 
-    MOZ_ASSERT_IF(argumentsType == ArgumentsAreASCII, JS::StringIsASCII(message.get()));
+    MOZ_ASSERT_IF(argumentsType == ArgumentsAreASCII, JS::StringIsASCII(message));
 
     report.flags = flags;
     report.errorNumber = JSMSG_USER_DEFINED_ERROR;
-    if (argumentsType == ArgumentsAreASCII || argumentsType == ArgumentsAreUTF8) {
-        report.initOwnedMessage(message.release());
+    if (argumentsType == ArgumentsAreASCII || argumentsType == ArgumentsAreLatin1) {
+        ucmessage = InflateString(cx, message, &messagelen);
     } else {
-        MOZ_ASSERT(argumentsType == ArgumentsAreLatin1);
-        Latin1Chars latin1(message.get(), strlen(message.get()));
-        UTF8CharsZ utf8(JS::CharsToNewUTF8CharsZ(cx, latin1));
-        if (!utf8)
-            return false;
-        report.initOwnedMessage(reinterpret_cast<const char*>(utf8.get()));
+        JS::UTF8Chars utf8(message, messagelen);
+        size_t unused;
+        ucmessage = LossyUTF8CharsToNewTwoByteCharsZ(cx, utf8, &unused).get();
     }
+    if (!ucmessage) {
+        js_free(message);
+        return false;
+    }
+    report.ucmessage = ucmessage;
     PopulateReportBlame(cx, &report);
 
-    bool warning = JSREPORT_IS_WARNING(report.flags);
+    warning = JSREPORT_IS_WARNING(report.flags);
 
-    ReportError(cx, &report, nullptr, nullptr);
+    ReportError(cx, message, &report, nullptr, nullptr);
+    js_free(message);
+    js_free(ucmessage);
     return warning;
 }
 
@@ -382,10 +391,14 @@ js::ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg)
 }
 
 bool
-js::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
-               JSErrorReport* report, bool reportWarnings)
+js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* report,
+               bool reportWarnings)
 {
-    MOZ_ASSERT(report);
+    if (!report) {
+        fprintf(file, "%s\n", message);
+        fflush(file);
+        return false;
+    }
 
     /* Conditionally ignore reported warnings. */
     if (JSREPORT_IS_WARNING(report->flags) && !reportWarnings)
@@ -406,8 +419,6 @@ js::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
                              JSREPORT_IS_STRICT(report->flags) ? "strict " : "");
         JS_free(cx, tmp);
     }
-
-    const char* message = toStringResult ? toStringResult.c_str() : report->message().c_str();
 
     /* embedded newlines -- argh! */
     const char* ctmp;
@@ -461,34 +472,38 @@ js::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
 
 class MOZ_RAII AutoMessageArgs
 {
+    const char16_t** args_;
     size_t totalLength_;
     /* only {0} thru {9} supported */
-    mozilla::Array<const char*, JS::MaxNumErrorArguments> args_;
     mozilla::Array<size_t, JS::MaxNumErrorArguments> lengths_;
     uint16_t count_;
+    bool passed_ : 1;
     bool allocatedElements_ : 1;
 
   public:
     AutoMessageArgs()
-      : totalLength_(0), count_(0), allocatedElements_(false)
-    {
-        PodArrayZero(args_);
-    }
+      : args_(nullptr), totalLength_(0), count_(0),
+        passed_(false), allocatedElements_(false)
+    {}
 
     ~AutoMessageArgs()
     {
+        if (passed_)
+            return;
+
+        if (!args_)
+            return;
+
         /* free the arguments only if we allocated them */
         if (allocatedElements_) {
             uint16_t i = 0;
-            while (i < count_) {
-                if (args_[i])
-                    js_free((void*)args_[i]);
-                i++;
-            }
+            while (args_[i])
+                js_free((void*)args_[i++]);
         }
+        js_free(args_);
     }
 
-    const char* args(size_t i) const {
+    const char16_t* args(size_t i) const {
         MOZ_ASSERT(i < count_);
         return args_[i];
     }
@@ -506,50 +521,56 @@ class MOZ_RAII AutoMessageArgs
         return count_;
     }
 
-    /* Gather the arguments into an array, and accumulate their sizes. */
+    bool passed() const {
+        return passed_;
+    }
+
+    /*
+     * Gather the arguments into an array, and accumulate their sizes. We
+     * allocate 1 more than necessary and null it out to act as the sentinel
+     * value when we free the pointers later.
+     */
     bool init(ExclusiveContext* cx, const char16_t** argsArg, uint16_t countArg,
               ErrorArgumentsType typeArg, va_list ap) {
+        MOZ_ASSERT(!args_);
         MOZ_ASSERT(countArg > 0);
 
+        args_ = argsArg;
         count_ = countArg;
-
+        passed_ = !!args_;
+        if (passed_) {
+            MOZ_ASSERT(!args_[count_]);
+        } else {
+            args_ = cx->pod_malloc<const char16_t*>(count_ + 1);
+            if (!args_)
+                return false;
+            args_[count_] = nullptr;
+        }
         for (uint16_t i = 0; i < count_; i++) {
-            switch (typeArg) {
-              case ArgumentsAreASCII:
-              case ArgumentsAreUTF8: {
-                MOZ_ASSERT(!argsArg);
-                args_[i] = va_arg(ap, char*);
-                MOZ_ASSERT_IF(typeArg == ArgumentsAreASCII, JS::StringIsASCII(args_[i]));
-                lengths_[i] = strlen(args_[i]);
-                break;
-              }
-              case ArgumentsAreLatin1: {
-                MOZ_ASSERT(!argsArg);
-                const Latin1Char* latin1 = va_arg(ap, Latin1Char*);
-                size_t len = strlen(reinterpret_cast<const char*>(latin1));
-                mozilla::Range<const Latin1Char> range(latin1, len);
-                char* utf8 = JS::CharsToNewUTF8CharsZ(cx, range).c_str();
-                if (!utf8)
-                    return false;
+            if (passed_) {
+                lengths_[i] = js_strlen(args_[i]);
+            } else if (typeArg == ArgumentsAreASCII || typeArg == ArgumentsAreLatin1) {
+                const char* charArg = va_arg(ap, char*);
+                size_t charArgLength = strlen(charArg);
 
-                args_[i] = utf8;
-                lengths_[i] = strlen(utf8);
-                allocatedElements_ = true;
-                break;
-              }
-              case ArgumentsAreUnicode: {
-                const char16_t* uc = argsArg ? argsArg[i] : va_arg(ap, char16_t*);
-                size_t len = js_strlen(uc);
-                mozilla::Range<const char16_t> range(uc, len);
-                char* utf8 = JS::CharsToNewUTF8CharsZ(cx, range).c_str();
-                if (!utf8)
-                    return false;
+                MOZ_ASSERT_IF(typeArg == ArgumentsAreASCII, JS::StringIsASCII(charArg));
 
-                args_[i] = utf8;
-                lengths_[i] = strlen(utf8);
+                args_[i] = InflateString(cx, charArg, &charArgLength);
+                if (!args_[i])
+                    return false;
                 allocatedElements_ = true;
-                break;
-              }
+                MOZ_ASSERT(charArgLength == js_strlen(args_[i]));
+                lengths_[i] = charArgLength;
+            } else if (typeArg == ArgumentsAreUTF8) {
+                const char* charArg = va_arg(ap, char*);
+                JS::UTF8Chars utf8(charArg, strlen(charArg));
+                args_[i] = LossyUTF8CharsToNewTwoByteCharsZ(cx, utf8, &lengths_[i]).get();
+                if (!args_[i])
+                    return false;
+                allocatedElements_ = true;
+            } else {
+                args_[i] = va_arg(ap, char16_t*);
+                lengths_[i] = js_strlen(args_[i]);
             }
             totalLength_ += lengths_[i];
         }
@@ -564,18 +585,20 @@ class MOZ_RAII AutoMessageArgs
  * The format string addressed by the error number may contain operands
  * identified by the format {N}, where N is a decimal digit. Each of these
  * is to be replaced by the Nth argument from the va_list. The complete
- * message is placed into reportp->message_.
+ * message is placed into reportp->ucmessage converted to a JSString.
  *
  * Returns true if the expansion succeeds (can fail if out of memory).
  */
 bool
 js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                            void* userRef, const unsigned errorNumber,
-                           const char16_t** messageArgs,
+                           char** messagep, const char16_t** messageArgs,
                            ErrorArgumentsType argumentsType,
                            JSErrorReport* reportp, va_list ap)
 {
     const JSErrorFormatString* efs;
+
+    *messagep = nullptr;
 
     if (!callback)
         callback = GetErrorMessage;
@@ -598,8 +621,9 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
              * for {X} in the format.
              */
             if (efs->format) {
-                const char* fmt;
-                char* out;
+                char16_t* buffer;
+                char16_t* fmt;
+                char16_t* out;
 #ifdef DEBUG
                 int expandedArgs = 0;
 #endif
@@ -610,6 +634,9 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 if (!args.init(cx, messageArgs, argCount, argumentsType, ap))
                     return false;
 
+                buffer = fmt = InflateString(cx, efs->format, &len);
+                if (!buffer)
+                    goto error;
                 expandedLength = len
                                  - (3 * args.count()) /* exclude the {n} */
                                  + args.totalLength();
@@ -618,17 +645,17 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 * Note - the above calculation assumes that each argument
                 * is used once and only once in the expansion !!!
                 */
-                char* utf8 = out = cx->pod_malloc<char>(expandedLength + 1);
-                if (!out)
-                    return false;
-
-                fmt = efs->format;
+                reportp->ucmessage = out = cx->pod_malloc<char16_t>(expandedLength + 1);
+                if (!out) {
+                    js_free(buffer);
+                    goto error;
+                }
                 while (*fmt) {
                     if (*fmt == '{') {
                         if (isdigit(fmt[1])) {
                             int d = JS7_UNDEC(fmt[1]);
                             MOZ_RELEASE_ASSERT(d < args.count());
-                            strncpy(out, args.args(d), args.lengths(d));
+                            js_strncpy(out, args.args(d), args.lengths(d));
                             out += args.lengths(d);
                             fmt += 3;
 #ifdef DEBUG
@@ -641,8 +668,13 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 }
                 MOZ_ASSERT(expandedArgs == args.count());
                 *out = 0;
-
-                reportp->initOwnedMessage(utf8);
+                js_free(buffer);
+                size_t msgLen = PointerRangeSize(static_cast<const char16_t*>(reportp->ucmessage),
+                                                 static_cast<const char16_t*>(out));
+                mozilla::Range<const char16_t> ucmsg(reportp->ucmessage, msgLen);
+                *messagep = JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, ucmsg).c_str();
+                if (!*messagep)
+                    goto error;
             }
         } else {
             /* Non-null messageArgs should have at least one non-null arg. */
@@ -651,22 +683,40 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
              * Zero arguments: the format string (if it exists) is the
              * entire message.
              */
-            if (efs->format)
-                reportp->initBorrowedMessage(efs->format);
+            if (efs->format) {
+                size_t len;
+                *messagep = DuplicateString(cx, efs->format).release();
+                if (!*messagep)
+                    goto error;
+                len = strlen(*messagep);
+                reportp->ucmessage = InflateString(cx, *messagep, &len);
+                if (!reportp->ucmessage)
+                    goto error;
+            }
         }
     }
-    if (!reportp->message()) {
+    if (*messagep == nullptr) {
         /* where's the right place for this ??? */
         const char* defaultErrorMessage
             = "No error message available for error number %d";
         size_t nbytes = strlen(defaultErrorMessage) + 16;
-        char* message = cx->pod_malloc<char>(nbytes);
-        if (!message)
-            return false;
-        snprintf(message, nbytes, defaultErrorMessage, errorNumber);
-        reportp->initOwnedMessage(message);
+        *messagep = cx->pod_malloc<char>(nbytes);
+        if (!*messagep)
+            goto error;
+        snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
     }
     return true;
+
+error:
+    if (reportp->ucmessage) {
+        js_free((void*)reportp->ucmessage);
+        reportp->ucmessage = nullptr;
+    }
+    if (*messagep) {
+        js_free((void*)*messagep);
+        *messagep = nullptr;
+    }
+    return false;
 }
 
 bool
@@ -675,6 +725,7 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
                         ErrorArgumentsType argumentsType, va_list ap)
 {
     JSErrorReport report;
+    char* message;
     bool warning;
 
     if (checkReportFlags(cx, &flags))
@@ -686,11 +737,14 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
     PopulateReportBlame(cx, &report);
 
     if (!ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
-                                nullptr, argumentsType, &report, ap)) {
+                                &message, nullptr, argumentsType, &report, ap)) {
         return false;
     }
 
-    ReportError(cx, &report, callback, userRef);
+    ReportError(cx, message, &report, callback, userRef);
+
+    js_free(message);
+    js_free((void*)report.ucmessage);
 
     return warning;
 }
@@ -698,14 +752,14 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
 static bool
 ExpandErrorArguments(ExclusiveContext* cx, JSErrorCallback callback,
                      void* userRef, const unsigned errorNumber,
-                     const char16_t** messageArgs,
+                     char** messagep, const char16_t** messageArgs,
                      ErrorArgumentsType argumentsType,
                      JSErrorReport* reportp, ...)
 {
     va_list ap;
     va_start(ap, reportp);
     bool expanded = js::ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
-                                               messageArgs, argumentsType, reportp, ap);
+                                               messagep, messageArgs, argumentsType, reportp, ap);
     va_end(ap);
     return expanded;
 }
@@ -724,25 +778,30 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
     report.errorNumber = errorNumber;
     PopulateReportBlame(cx, &report);
 
+    char* message;
     if (!ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                              args, ArgumentsAreUnicode, &report))
+                              &message, args, ArgumentsAreUnicode, &report))
     {
         return false;
     }
 
-    ReportError(cx, &report, callback, userRef);
+    ReportError(cx, message, &report, callback, userRef);
+
+    js_free(message);
+    js_free((void*)report.ucmessage);
 
     return warning;
 }
 
 void
-js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp)
+js::CallWarningReporter(JSContext* cx, const char* message, JSErrorReport* reportp)
 {
+    MOZ_ASSERT(message);
     MOZ_ASSERT(reportp);
     MOZ_ASSERT(JSREPORT_IS_WARNING(reportp->flags));
 
     if (JS::WarningReporter warningReporter = cx->runtime()->warningReporter)
-        warningReporter(cx, reportp);
+        warningReporter(cx, message, reportp);
 }
 
 bool

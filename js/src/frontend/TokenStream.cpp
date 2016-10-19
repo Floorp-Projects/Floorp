@@ -567,8 +567,8 @@ TokenStream::reportStrictModeErrorNumberVA(uint32_t offset, bool strictMode, uns
 void
 CompileError::throwError(JSContext* cx)
 {
-    if (JSREPORT_IS_WARNING(flags)) {
-        CallWarningReporter(cx, this);
+    if (JSREPORT_IS_WARNING(report.flags)) {
+        CallWarningReporter(cx, message, &report);
         return;
     }
 
@@ -583,7 +583,17 @@ CompileError::throwError(JSContext* cx)
     // as the non-top-level "load", "eval", or "compile" native function
     // returns false, the top-level reporter will eventually receive the
     // uncaught exception report.
-    ErrorToException(cx, this, nullptr, nullptr);
+    ErrorToException(cx, message, &report, nullptr, nullptr);
+}
+
+CompileError::~CompileError()
+{
+    js_free((void*)report.linebuf());
+    js_free((void*)report.ucmessage);
+    js_free(message);
+    message = nullptr;
+
+    PodZero(&report);
 }
 
 bool
@@ -605,33 +615,33 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
         return false;
     CompileError& err = *tempErrPtr;
 
-    err.flags = flags;
-    err.errorNumber = errorNumber;
-    err.filename = filename;
-    err.isMuted = mutedErrors;
+    err.report.flags = flags;
+    err.report.errorNumber = errorNumber;
+    err.report.filename = filename;
+    err.report.isMuted = mutedErrors;
     if (offset == NoOffset) {
-        err.lineno = 0;
-        err.column = 0;
+        err.report.lineno = 0;
+        err.report.column = 0;
     } else {
-        err.lineno = srcCoords.lineNum(offset);
-        err.column = srcCoords.columnIndex(offset);
+        err.report.lineno = srcCoords.lineNum(offset);
+        err.report.column = srcCoords.columnIndex(offset);
     }
 
     // If we have no location information, try to get one from the caller.
     bool callerFilename = false;
-    if (offset != NoOffset && !err.filename && cx->isJSContext()) {
+    if (offset != NoOffset && !err.report.filename && cx->isJSContext()) {
         NonBuiltinFrameIter iter(cx->asJSContext(),
                                  FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
                                  cx->compartment()->principals());
         if (!iter.done() && iter.filename()) {
             callerFilename = true;
-            err.filename = iter.filename();
-            err.lineno = iter.computeLine(&err.column);
+            err.report.filename = iter.filename();
+            err.report.lineno = iter.computeLine(&err.report.column);
         }
     }
 
-    if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
-                                nullptr, ArgumentsAreLatin1, &err, args))
+    if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber, &err.message,
+                                nullptr, ArgumentsAreLatin1, &err.report, args))
     {
         return false;
     }
@@ -644,7 +654,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
     // So we don't even try, leaving report.linebuf and friends zeroed.  This
     // means that any error involving a multi-line token (e.g. an unterminated
     // multi-line string literal) won't have a context printed.
-    if (offset != NoOffset && err.lineno == lineno && !callerFilename) {
+    if (offset != NoOffset && err.report.lineno == lineno && !callerFilename) {
         // We show only a portion (a "window") of the line around the erroneous
         // token -- the first char in the token, plus |windowRadius| chars
         // before it and |windowRadius - 1| chars after it.  This is because
@@ -682,7 +692,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
         if (!linebuf)
             return false;
 
-        err.initOwnedLinebuf(linebuf.release(), windowLength, offset - windowStart);
+        err.report.initLinebuf(linebuf.release(), windowLength, offset - windowStart);
     }
 
     if (cx->isJSContext())

@@ -332,7 +332,8 @@ AutoJSAPI::~AutoJSAPI()
 }
 
 void
-WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep);
+WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage,
+                         JSErrorReport* aRep);
 
 void
 AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
@@ -519,7 +520,7 @@ AutoJSAPI::Init(nsGlobalWindow* aWindow)
 // Eventually, SpiderMonkey will have a special-purpose callback for warnings
 // only.
 void
-WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep)
+WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aRep)
 {
   MOZ_ASSERT(JSREPORT_IS_WARNING(aRep->flags));
   if (!NS_IsMainThread()) {
@@ -533,7 +534,7 @@ WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep)
     workers::WorkerPrivate* worker = workers::GetWorkerPrivateFromContext(aCx);
     MOZ_ASSERT(worker);
 
-    worker->ReportError(aCx, JS::ConstUTF8CharsZ(), aRep);
+    worker->ReportError(aCx, aMessage, aRep);
     return;
   }
 
@@ -545,7 +546,7 @@ WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep)
     // DOM Window.
     win = xpc::AddonWindowOrNull(JS::CurrentGlobalOrNull(aCx));
   }
-  xpcReport->Init(aRep, nullptr, nsContentUtils::IsCallerChrome(),
+  xpcReport->Init(aRep, aMessage, nsContentUtils::IsCallerChrome(),
                   win ? win->AsInner()->WindowID() : 0);
   xpcReport->LogToConsole();
 }
@@ -585,7 +586,7 @@ AutoJSAPI::ReportException()
         win = xpc::AddonWindowOrNull(errorGlobal);
       }
       nsPIDOMWindowInner* inner = win ? win->AsInner() : nullptr;
-      xpcReport->Init(jsReport.report(), jsReport.toStringResult().c_str(),
+      xpcReport->Init(jsReport.report(), jsReport.message(),
                       nsContentUtils::IsCallerChrome(),
                       inner ? inner->WindowID() : 0);
       if (inner && jsReport.report()->errorNumber != JSMSG_OUT_OF_MEMORY) {
@@ -609,7 +610,7 @@ AutoJSAPI::ReportException()
       // to get hold of it.  After we invoke ReportError, clear the exception on
       // cx(), just in case ReportError didn't.
       JS_SetPendingException(cx(), exn);
-      worker->ReportError(cx(), jsReport.toStringResult(), jsReport.report());
+      worker->ReportError(cx(), jsReport.message(), jsReport.report());
       ClearException();
     }
   } else {

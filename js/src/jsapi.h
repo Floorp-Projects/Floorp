@@ -5299,12 +5299,7 @@ JS_ReportAllocationOverflow(JSContext* cx);
 
 class JSErrorReport
 {
-    // The (default) error message.
-    // If ownsMessage_ is true, the it is freed in destructor.
-    JS::ConstUTF8CharsZ message_;
-
     // Offending source line without final '\n'.
-    // If ownsLinebuf__ is true, the buffer is freed in destructor.
     const char16_t* linebuf_;
 
     // Number of chars in linebuf_. Does not include trailing '\0'.
@@ -5316,30 +5311,20 @@ class JSErrorReport
   public:
     JSErrorReport()
       : linebuf_(nullptr), linebufLength_(0), tokenOffset_(0),
-        filename(nullptr), lineno(0), column(0),
-        flags(0), errorNumber(0),
-        exnType(0), isMuted(false),
-        ownsLinebuf_(false), ownsMessage_(false)
+        filename(nullptr), lineno(0), column(0), isMuted(false),
+        flags(0), errorNumber(0), ucmessage(nullptr),
+        exnType(0)
     {}
-
-    ~JSErrorReport() {
-        freeLinebuf();
-        freeMessage();
-    }
 
     const char*     filename;      /* source file name, URL, etc., or null */
     unsigned        lineno;         /* source line number */
     unsigned        column;         /* zero-based column index in line */
+    bool            isMuted;        /* See the comment in ReadOnlyCompileOptions. */
     unsigned        flags;          /* error/warning, etc. */
     unsigned        errorNumber;    /* the error number, e.g. see js.msg */
+    const char16_t* ucmessage;     /* the (default) error message */
     int16_t         exnType;        /* One of the JSExnType constants */
-    bool            isMuted : 1;    /* See the comment in ReadOnlyCompileOptions. */
 
-  private:
-    bool ownsLinebuf_ : 1;
-    bool ownsMessage_ : 1;
-
-  public:
     const char16_t* linebuf() const {
         return linebuf_;
     }
@@ -5349,29 +5334,7 @@ class JSErrorReport
     size_t tokenOffset() const {
         return tokenOffset_;
     }
-    void initOwnedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg, size_t tokenOffsetArg) {
-        initBorrowedLinebuf(linebufArg, linebufLengthArg, tokenOffsetArg);
-        ownsLinebuf_ = true;
-    }
-    void initBorrowedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg, size_t tokenOffsetArg);
-    void freeLinebuf();
-
-    const JS::ConstUTF8CharsZ message() const {
-        return message_;
-    }
-
-    void initOwnedMessage(const char* messageArg) {
-        initBorrowedMessage(messageArg);
-        ownsMessage_ = true;
-    }
-    void initBorrowedMessage(const char* messageArg) {
-        MOZ_ASSERT(!message_);
-        message_ = JS::ConstUTF8CharsZ(messageArg, strlen(messageArg));
-    }
-
-    JSString* newMessageString(JSContext* cx);
-
-    void freeMessage();
+    void initLinebuf(const char16_t* linebuf, size_t linebufLength, size_t tokenOffset);
 };
 
 /*
@@ -5397,7 +5360,8 @@ class JSErrorReport
 
 namespace JS {
 
-using WarningReporter = void (*)(JSContext* cx, JSErrorReport* report);
+typedef void
+(* WarningReporter)(JSContext* cx, const char* message, JSErrorReport* report);
 
 extern JS_PUBLIC_API(WarningReporter)
 SetWarningReporter(JSContext* cx, WarningReporter reporter);

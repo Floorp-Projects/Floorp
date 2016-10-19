@@ -1022,8 +1022,7 @@ Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise)
   bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(aPromise))
                                : GetCurrentThreadWorkerPrivate()->IsChromeWorker();
   nsGlobalWindow* win = isMainThread ? xpc::WindowGlobalOrNull(aPromise) : nullptr;
-  xpcReport->Init(report.report(), report.toStringResult().c_str(), isChrome,
-                  win ? win->AsInner()->WindowID() : 0);
+  xpcReport->Init(report.report(), report.message(), isChrome, win ? win->AsInner()->WindowID() : 0);
 
   // Now post an event to do the real reporting async
   NS_DispatchToMainThread(new AsyncErrorReporter(xpcReport));
@@ -2645,8 +2644,7 @@ Promise::MaybeReportRejected()
   if (exp) {
     xpcReport->Init(cx, exp, isChrome, windowID);
   } else {
-    xpcReport->Init(report.report(), report.toStringResult(),
-                    isChrome, windowID);
+    xpcReport->Init(report.report(), report.message(), isChrome, windowID);
   }
 
   // Now post an event to do the real reporting async
