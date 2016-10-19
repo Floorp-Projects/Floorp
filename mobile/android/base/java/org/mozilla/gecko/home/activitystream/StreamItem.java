@@ -83,7 +83,9 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         private Future<IconResponse> ongoingIconLoad;
         private int tilesMargin;
 
-        public HighlightItem(final View itemView) {
+        public HighlightItem(final View itemView,
+                             final HomePager.OnUrlOpenListener onUrlOpenListener,
+                             final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
             super(itemView);
 
             tilesMargin = itemView.getResources().getDimensionPixelSize(R.dimen.activity_stream_base_margin);
