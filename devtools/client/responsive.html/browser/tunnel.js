@@ -406,6 +406,8 @@ MessageManagerTunnel.prototype = {
   ],
 
   OUTER_TO_INNER_MESSAGE_PREFIXES: [
+    // Messages sent from nsContextMenu.js
+    "ContextMenu:",
     // Messages sent from DevTools
     "debug:",
     // Messages sent from findbar.xml
@@ -420,6 +422,8 @@ MessageManagerTunnel.prototype = {
   ],
 
   INNER_TO_OUTER_MESSAGE_PREFIXES: [
+    // Messages sent to nsContextMenu.js
+    "ContextMenu:",
     // Messages sent to DevTools
     "debug:",
     // Messages sent to findbar.xml
