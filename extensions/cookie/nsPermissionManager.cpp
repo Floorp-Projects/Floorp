@@ -1574,12 +1574,6 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
     ContentParent::GetAll(cplist);
     for (uint32_t i = 0; i < cplist.Length(); ++i) {
       ContentParent* cp = cplist[i];
-      // On platforms where we use a preallocated template process we don't
-      // want to notify this process about session specific permissions so
-      // new tabs or apps created on it won't inherit the session permissions.
-      if (cp->IsPreallocated() &&
-          aExpireType == nsIPermissionManager::EXPIRE_SESSION)
-        continue;
       if (cp->NeedsPermissionsUpdate())
         Unused << cp->SendAddPermission(permission);
     }

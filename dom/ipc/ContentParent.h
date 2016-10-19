@@ -122,8 +122,6 @@ public:
    */
   static void JoinAllSubprocesses();
 
-  static bool PreallocatedProcessReady();
-
   /**
    * Get or create a content process for:
    * 1. browser iframe
@@ -136,11 +134,6 @@ public:
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
                              ContentParent* aOpener = nullptr,
                              bool aLargeAllocationProcess = false);
-
-  /**
-   * Create a subprocess suitable for use as a preallocated app process.
-   */
-  static already_AddRefed<ContentParent> PreallocateAppProcess();
 
   /**
    * Get or create a content process for the given TabContext.  aFrameElement
@@ -358,8 +351,6 @@ public:
   void KillHard(const char* aWhy);
 
   ContentParentId ChildID() const override { return mChildID; }
-
-  bool IsPreallocated() const;
 
   /**
    * Get a user-friendly name for this ContentParent.  We make no guarantees
@@ -583,11 +574,8 @@ private:
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
-  // No more than one of aIsForBrowser, and aIsForPreallocated may be
-  // true.
   ContentParent(ContentParent* aOpener,
-                bool aIsForBrowser,
-                bool aIsForPreallocated);
+                bool aIsForBrowser);
 
   // The common initialization for the constructors.
   void InitializeMembers();
@@ -615,10 +603,6 @@ private:
   // otherwise.  If you pass a FOREGROUND* priority here, it's (hopefully)
   // unlikely that the process will be killed after this point.
   bool SetPriorityAndCheckIsAlive(hal::ProcessPriority aPriority);
-
-  // Transform a pre-allocated app process into a browser process. If this
-  // returns false, the child process has died.
-  void TransformPreallocatedIntoBrowser(ContentParent* aOpener);
 
   /**
    * Mark this ContentParent as dead for the purposes of Get*().
@@ -927,8 +911,6 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvPrivateDocShellsExist(const bool& aExist) override;
 
-  virtual mozilla::ipc::IPCResult RecvFirstIdle() override;
-
   virtual mozilla::ipc::IPCResult RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
                                                                       const bool& aHidden) override;
 
@@ -1100,7 +1082,6 @@ private:
 
   bool mSendPermissionUpdates;
   bool mIsForBrowser;
-  bool mIsPreallocated;
 
   // These variables track whether we've called Close() and KillHard() on our
   // channel.
