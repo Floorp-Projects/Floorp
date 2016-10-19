@@ -122,6 +122,25 @@ ResolveToDefiniteSize(const nsStyleCoord& aCoord, nscoord aPercentBasis)
                   nsRuleNode::ComputeCoordPercentCalc(aCoord, aPercentBasis));
 }
 
+static bool
+GetPercentSizeParts(const nsStyleCoord& aCoord, nscoord* aLength, float* aPercent)
+{
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Percent:
+      *aLength = 0;
+      *aPercent = aCoord.GetPercentValue();
+      return true;
+    case eStyleUnit_Calc: {
+      nsStyleCoord::Calc* calc = aCoord.GetCalcValue();
+      *aLength = calc->mLength;
+      *aPercent = calc->mPercent;
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+
 // Synthesize a baseline from a border box.  For an alphabetical baseline
 // this is the end edge of the border box.  For a central baseline it's
 // the center of the border box.
@@ -1666,6 +1685,13 @@ struct nsGridContainerFrame::Tracks
   void AlignJustifyContent(const nsStylePosition* aStyle,
                            WritingMode            aWM,
                            const LogicalSize&     aContainerSize);
+
+  /**
+   * Return the intrinsic size by back-computing percentages as:
+   * IntrinsicSize = SumOfCoordSizes / (1 - SumOfPercentages).
+   */
+  nscoord BackComputedIntrinsicSize(const TrackSizingFunctions& aFunctions,
+                                    const nsStyleCoord& aGridGap) const;
 
   nscoord GridLineEdge(uint32_t aLine, GridLineSide aSide) const
   {
@@ -4861,6 +4887,46 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
   MOZ_ASSERT(!roundingError, "we didn't distribute all rounding error?");
 }
 
+nscoord
+nsGridContainerFrame::Tracks::BackComputedIntrinsicSize(
+  const TrackSizingFunctions& aFunctions,
+  const nsStyleCoord& aGridGap) const
+{
+  // Sum up the current sizes (where percentage tracks were treated as 'auto')
+  // in 'size' and a sum of percentages in 'percent'.
+  nscoord size = 0;
+  float percent = 0.0f;
+  bool hasPercent = mStateUnion & TrackSize::eIndefinitePercentMinSizing;
+  for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
+    const nscoord trackSize = mSizes[i].mBase;
+    nscoord length;
+    float p;
+    if (hasPercent &&
+        ::GetPercentSizeParts(aFunctions.MinSizingFor(i), &length, &p)) {
+      size += std::max(length, trackSize);
+      percent += p;
+    } else {
+      size += trackSize;
+    }
+  }
+
+  // Add grid-gap contributions to 'size' and 'percent'.
+  size_t numTracks = mSizes.Length();
+  if (numTracks > 1) {
+    const size_t gridGapCount = numTracks - 1;
+    nscoord gridGapLength;
+    float gridGapPercent;
+    if (::GetPercentSizeParts(aGridGap, &gridGapLength, &gridGapPercent)) {
+      percent += gridGapCount * gridGapPercent;
+    } else {
+      gridGapLength = aGridGap.ToLength();
+    }
+    size += gridGapCount * gridGapLength;
+  }
+
+  return std::max(0, nsLayoutUtils::AddPercents(size, percent));
+}
+
 void
 nsGridContainerFrame::LineRange::ToPositionAndLength(
   const nsTArray<TrackSize>& aTrackSizes, nscoord* aPos, nscoord* aLength) const
@@ -6371,11 +6437,8 @@ nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
   state.mCols.CalculateSizes(state, state.mGridItems, state.mColFunctions,
                              NS_UNCONSTRAINEDSIZE, &GridArea::mCols,
                              constraint);
-  nscoord length = 0;
-  for (const TrackSize& sz : state.mCols.mSizes) {
-    length += sz.mBase;
-  }
-  return length + state.mCols.SumOfGridGaps();
+  return state.mCols.BackComputedIntrinsicSize(state.mColFunctions,
+                                               state.mGridStyle->mGridColumnGap);
 }
 
 nscoord
