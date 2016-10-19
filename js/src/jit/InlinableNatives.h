@@ -125,6 +125,8 @@
                                     \
     _(IntrinsicGetNextMapEntryForIterator) \
                                     \
+    _(IntrinsicGetNextSetEntryForIterator) \
+                                    \
     _(IntrinsicArrayBufferByteLength) \
     _(IntrinsicPossiblyWrappedArrayBufferByteLength) \
                                     \

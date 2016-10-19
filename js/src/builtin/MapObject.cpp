@@ -954,6 +954,8 @@ bool
 SetIteratorObject::next(Handle<SetIteratorObject*> setIterator, HandleArrayObject resultObj,
                         JSContext* cx)
 {
+    // Check invariants for inlined _GetNextSetEntryForIterator.
+
     // The array should be tenured, so that post-barrier can be done simply.
     MOZ_ASSERT(resultObj->isTenured());
 
