@@ -1752,6 +1752,10 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 %include ../shared/autocomplete.inc.css
 
+#PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
+  border-top: 1px solid #C7C7C7;
+}
+
 #treecolAutoCompleteImage {
   max-width: 36px;
 }
