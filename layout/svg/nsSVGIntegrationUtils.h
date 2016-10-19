@@ -160,6 +160,13 @@ public:
   static DrawResult
   PaintMaskAndClipPath(const PaintFramesParams& aParams);
 
+  /**
+   * Paint mask of non-SVG frame onto a given context, aParams.ctx.
+   * aParams.ctx must contain an A8 surface.
+   */
+  static DrawResult
+  PaintMask(const PaintFramesParams& aParams);
+
   struct MaskUsage {
     bool shouldGenerateMaskLayer;
     bool shouldGenerateClipMaskLayer;
