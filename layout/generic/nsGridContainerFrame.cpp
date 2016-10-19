@@ -158,24 +158,24 @@ struct nsGridContainerFrame::TrackSize
   void Dump() const;
 #endif
   enum StateBits : uint16_t {
-    eAutoMinSizing =           0x1,
-    eMinContentMinSizing =     0x2,
-    eMaxContentMinSizing =     0x4,
+    eAutoMinSizing =              0x1,
+    eMinContentMinSizing =        0x2,
+    eMaxContentMinSizing =        0x4,
     eMinOrMaxContentMinSizing = eMinContentMinSizing | eMaxContentMinSizing,
     eIntrinsicMinSizing = eMinOrMaxContentMinSizing | eAutoMinSizing,
-    // 0x8 is unused, feel free to take it!
-    eAutoMaxSizing =          0x10,
-    eMinContentMaxSizing =    0x20,
-    eMaxContentMaxSizing =    0x40,
+    eIndefinitePercentMinSizing = 0x8,
+    eAutoMaxSizing =             0x10,
+    eMinContentMaxSizing =       0x20,
+    eMaxContentMaxSizing =       0x40,
     eAutoOrMaxContentMaxSizing = eAutoMaxSizing | eMaxContentMaxSizing,
     eIntrinsicMaxSizing = eAutoOrMaxContentMaxSizing | eMinContentMaxSizing,
-    eFlexMaxSizing =          0x80,
-    eFrozen =                0x100,
-    eSkipGrowUnlimited1 =    0x200,
-    eSkipGrowUnlimited2 =    0x400,
+    eFlexMaxSizing =             0x80,
+    eFrozen =                   0x100,
+    eSkipGrowUnlimited1 =       0x200,
+    eSkipGrowUnlimited2 =       0x400,
     eSkipGrowUnlimited = eSkipGrowUnlimited1 | eSkipGrowUnlimited2,
-    eBreakBefore =           0x800,
-    eFitContent =           0x1000,
+    eBreakBefore =              0x800,
+    eFitContent =              0x1000,
   };
 
   static bool IsMinContent(const nsStyleCoord& aCoord)
@@ -222,6 +222,7 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
     // "If the inline or block size of the grid container is indefinite,
     //  <percentage> values relative to that size are treated as 'auto'."
     minSizeUnit = eStyleUnit_Auto;
+    mState |= eIndefinitePercentMinSizing;
   }
   if (::IsPercentOfIndefiniteSize(aMaxCoord, aPercentageBasis)) {
     maxSizeUnit = eStyleUnit_Auto;
