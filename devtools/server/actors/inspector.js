@@ -618,6 +618,9 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Get a unique selector string for this node.
    */
   getUniqueSelector: function () {
+    if (Cu.isDeadWrapper(this.rawNode)) {
+      return "";
+    }
     return CssLogic.findCssSelector(this.rawNode);
   },
 
