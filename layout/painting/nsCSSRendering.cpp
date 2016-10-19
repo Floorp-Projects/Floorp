@@ -1914,8 +1914,17 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
 
   bool haveRoundedCorners = GetRadii(aForFrame, aBorder, aBorderArea,
                                      clipBorderArea, aClipState->mRadii);
-
   uint8_t backgroundClip = aLayer.mClip;
+
+  // XXX TODO: bug 1303623 only implements the parser of fill-box|stroke-box|view-box|no-clip.
+  // So we need to fallback to default value when rendering. We should remove this
+  // in bug 1311270.
+  if (backgroundClip == NS_STYLE_IMAGELAYER_CLIP_FILL ||
+      backgroundClip == NS_STYLE_IMAGELAYER_CLIP_STROKE ||
+      backgroundClip == NS_STYLE_IMAGELAYER_CLIP_VIEW ||
+      backgroundClip == NS_STYLE_IMAGELAYER_CLIP_NO_CLIP) {
+    backgroundClip = NS_STYLE_IMAGELAYER_CLIP_BORDER;
+  }
 
   bool isSolidBorder =
       aWillPaintBorder && IsOpaqueBorder(aBorder);
@@ -3382,6 +3391,17 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
   // it to compute the effective image size for a CSS gradient.
   nsRect bgPositioningArea;
 
+  uint8_t backgroundOrigin = aLayer.mOrigin;
+
+  // XXX TODO: bug 1303623 only implements the parser of fill-box|stroke-box|view-box|no-clip.
+  // So we need to fallback to default value when rendering. We should remove this
+  // in bug 1311270.
+  if (backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_FILL ||
+      backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_STROKE ||
+      backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_VIEW) {
+    backgroundOrigin = NS_STYLE_IMAGELAYER_ORIGIN_BORDER;
+  }
+
   nsIAtom* frameType = aForFrame->GetType();
   nsIFrame* geometryFrame = aForFrame;
   if (MOZ_UNLIKELY(frameType == nsGkAtoms::scrollFrame &&
@@ -3395,16 +3415,16 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
     // The ScrolledRect’s size does not include the borders or scrollbars,
     // reverse the handling of background-origin
     // compared to the common case below.
-    if (aLayer.mOrigin == NS_STYLE_IMAGELAYER_ORIGIN_BORDER) {
+    if (backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_BORDER) {
       nsMargin border = geometryFrame->GetUsedBorder();
       border.ApplySkipSides(geometryFrame->GetSkipSides());
       bgPositioningArea.Inflate(border);
       bgPositioningArea.Inflate(scrollableFrame->GetActualScrollbarSizes());
-    } else if (aLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
+    } else if (backgroundOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
       nsMargin padding = geometryFrame->GetUsedPadding();
       padding.ApplySkipSides(geometryFrame->GetSkipSides());
       bgPositioningArea.Deflate(padding);
-      NS_ASSERTION(aLayer.mOrigin == NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
+      NS_ASSERTION(backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
                    "unknown background-origin value");
     }
     *aAttachedToFrame = aForFrame;
@@ -3431,9 +3451,9 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
   // NS_STYLE_IMAGELAYER_ORIGIN_BORDER.
   if (aLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_BORDER && geometryFrame) {
     nsMargin border = geometryFrame->GetUsedBorder();
-    if (aLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
+    if (backgroundOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
       border += geometryFrame->GetUsedPadding();
-      NS_ASSERTION(aLayer.mOrigin == NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
+      NS_ASSERTION(backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
                    "unknown background-origin value");
     }
     bgPositioningArea.Deflate(border);
