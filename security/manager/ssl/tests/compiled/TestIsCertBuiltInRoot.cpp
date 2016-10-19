@@ -8,6 +8,7 @@
 #include "TestHarness.h"
 #include "cert.h"
 #include "certdb.h"
+#include "nsIPrefService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
@@ -216,6 +217,18 @@ main(int argc, char* argv[])
   ScopedXPCOM xpcom("TestIsCertBuiltInRoot");
   if (xpcom.failed()) {
     fail("couldn't initialize XPCOM");
+    return 1;
+  }
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!prefs) {
+    fail("couldn't get nsIPrefBranch");
+    return 1;
+  }
+  // When PSM initializes, it attempts to get some localized strings.
+  // As a result, Android flips out if this isn't set.
+  nsresult rv = prefs->SetBoolPref("intl.locale.matchOS", true);
+  if (NS_FAILED(rv)) {
+    fail("couldn't set pref 'intl.locale.matchOS'");
     return 1;
   }
   nsCOMPtr<nsIFile> profileDirectory(xpcom.GetProfileDirectory());
