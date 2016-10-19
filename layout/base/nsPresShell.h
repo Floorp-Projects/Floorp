@@ -103,7 +103,6 @@ public:
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
             nsViewManager* aViewManager, mozilla::StyleSetHandle aStyleSet);
   virtual void Destroy() override;
-  virtual void MakeZombie() override;
 
   virtual void UpdatePreferenceStyles() override;
 
