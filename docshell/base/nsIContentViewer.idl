@@ -234,6 +234,16 @@ interface nsIContentViewer : nsISupports
    */
   void getContentSize(out long width, out long height);
 
+  /**
+   * Returns the preferred width and height of the content, constrained to the
+   * given maximum values. If either maxWidth or maxHeight is less than zero,
+   * that dimension is not constrained.
+   *
+   * All input and output values are in device pixels, rather than CSS pixels.
+   */
+  void getContentSizeConstrained(in long maxWidth, in long maxHeight,
+                                 out long width, out long height);
+
   /** The minimum font size  */
   attribute long minFontSize;
 
