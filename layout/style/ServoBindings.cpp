@@ -29,6 +29,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
@@ -44,7 +45,7 @@ using namespace mozilla::dom;
 
 IMPL_STRONG_REF_TYPE_FOR(ServoComputedValues)
 IMPL_STRONG_REF_TYPE_FOR(RawServoStyleSheet)
-IMPL_STRONG_REF_TYPE_FOR(ServoDeclarationBlock)
+IMPL_STRONG_REF_TYPE_FOR(RawServoDeclarationBlock)
 
 #undef IMPL_STRONG_REF_TYPE_FOR
 
@@ -133,7 +134,7 @@ Gecko_MaybeCreateStyleChildrenIterator(RawGeckoNodeBorrowed aNode)
     return nullptr;
   }
 
-  Element* el = aNode->AsElement();
+  const Element* el = aNode->AsElement();
   return StyleChildrenIterator::IsNeeded(el) ? new StyleChildrenIterator(el)
                                              : nullptr;
 }
@@ -146,7 +147,7 @@ Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned aIterator)
 }
 
 RawGeckoNodeBorrowed
-Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowed aIterator)
+Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut aIterator)
 {
   MOZ_ASSERT(aIterator);
   return aIterator->GetNextChild();
@@ -224,13 +225,13 @@ Gecko_GetNodeFlags(RawGeckoNodeBorrowed aNode)
 void
 Gecko_SetNodeFlags(RawGeckoNodeBorrowed aNode, uint32_t aFlags)
 {
-  aNode->SetFlags(aFlags);
+  const_cast<nsINode*>(aNode)->SetFlags(aFlags);
 }
 
 void
 Gecko_UnsetNodeFlags(RawGeckoNodeBorrowed aNode, uint32_t aFlags)
 {
-  aNode->UnsetFlags(aFlags);
+  const_cast<nsINode*>(aNode)->UnsetFlags(aFlags);
 }
 
 nsStyleContext*
@@ -279,7 +280,7 @@ Gecko_StoreStyleDifference(RawGeckoNodeBorrowed aNode, nsChangeHint aChangeHintT
   MOZ_ASSERT(aNode->IsDirtyForServo(),
              "Change hint stored in a not-dirty node");
 
-  Element* aElement = aNode->AsElement();
+  const Element* aElement = aNode->AsElement();
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
   if (!primaryFrame) {
     // If there's no primary frame, that means that either this content is
@@ -312,14 +313,26 @@ Gecko_StoreStyleDifference(RawGeckoNodeBorrowed aNode, nsChangeHint aChangeHintT
 #endif
 }
 
-ServoDeclarationBlock*
+RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
 {
   const nsAttrValue* attr = aElement->GetParsedAttr(nsGkAtoms::style);
-  if (!attr || attr->Type() != nsAttrValue::eServoCSSDeclaration) {
+  if (!attr || attr->Type() != nsAttrValue::eCSSDeclaration) {
     return nullptr;
   }
-  return attr->GetServoCSSDeclarationValue();
+  DeclarationBlock* decl = attr->GetCSSDeclarationValue();
+  if (!decl) {
+    return nullptr;
+  }
+  if (decl->IsGecko()) {
+    // XXX This can happen at least when script sets style attribute
+    //     since we haven't implemented Element.style for stylo. But
+    //     we may want to turn it into an assertion after that's done.
+    NS_WARNING("stylo: requesting a Gecko declaration block?");
+    return nullptr;
+  }
+  return reinterpret_cast<const RawServoDeclarationBlockStrong*>
+    (decl->AsServo()->RefRaw());
 }
 
 void

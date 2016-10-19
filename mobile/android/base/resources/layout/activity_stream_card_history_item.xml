@@ -88,15 +88,15 @@
             android:layout_below="@id/card_history_label">
 
             <ImageView
+                android:id="@+id/source_icon"
                 android:layout_width="12dp"
-                android:layout_height="12dp"
-                android:background="#ff8e8e8e" />
+                android:layout_height="12dp" />
 
             <TextView
                 android:id="@+id/card_history_source"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="4dp"
+                android:layout_marginLeft="2dp"
                 android:textSize="12sp"
                 android:layout_weight="1"
                 android:textColor="@color/activity_stream_subtitle"

@@ -562,7 +562,7 @@ IsNativeAnonymousImplementationOfPseudoElement(nsIContent* aContent)
 }
 
 /* static */ bool
-StyleChildrenIterator::IsNeeded(Element* aElement)
+StyleChildrenIterator::IsNeeded(const Element* aElement)
 {
   // If the node is in an anonymous subtree, we conservatively return true to
   // handle insertion points.

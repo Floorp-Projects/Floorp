@@ -19,8 +19,6 @@ add_task(function* () {
   gBrowser.selectedTab = gBrowser.addTab();
   gTestBrowser = gBrowser.selectedBrowser;
 
-  let bindingPromise = waitForEvent(gTestBrowser, "PluginBindingAttached", null, true, true);
-
   let consoleService = Cc["@mozilla.org/consoleservice;1"]
                          .getService(Ci.nsIConsoleService);
   let errorListener = {
@@ -32,8 +30,6 @@ add_task(function* () {
   consoleService.registerListener(errorListener);
 
   yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug797677.html");
-
-  yield bindingPromise;
 
   let pluginInfo = yield promiseForPluginInfo("plugin");
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED, "plugin should not have been found.");

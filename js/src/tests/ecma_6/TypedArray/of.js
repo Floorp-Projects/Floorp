@@ -15,20 +15,17 @@ for (var constructor of anyTypedArrayConstructors) {
     assertDeepEq(constructor.of(1, 2, 3), new constructor([1, 2, 3]));
     assertDeepEq(constructor.of("1", "2", "3"), new constructor([1, 2, 3]));
 
-    // This method can be transplanted to other constructors.
-    assertDeepEq(constructor.of.call(Array, 1, 2, 3), [1, 2, 3]);
+    // This method can't be transplanted to other constructors.
+    assertThrows(() => constructor.of.call(Array), TypeError);
+    assertThrows(() => constructor.of.call(Array, 1, 2, 3), TypeError);
 
     var hits = 0;
     assertDeepEq(constructor.of.call(function(len) {
         assertEq(arguments.length, 1);
         assertEq(len, 3);
         hits++;
-        return {};
-    }, "a", "b", "c"), {
-        0: "a",
-        1: "b",
-        2: "c"
-    });
+        return new constructor(len);
+    }, 10, 20, 30), new constructor([10, 20, 30]));
     assertEq(hits, 1);
 
     // Behavior across compartments.

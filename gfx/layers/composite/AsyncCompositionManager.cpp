@@ -1370,129 +1370,6 @@ AsyncCompositionManager::ApplyAsyncTransformToScrollbar(Layer* aLayer)
 }
 
 void
-AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
-{
-  FrameMetrics metrics = LayerMetricsWrapper::TopmostScrollableMetrics(aLayer);
-  if (!metrics.IsScrollable()) {
-    // On Fennec it's possible that the there is no scrollable layer in the
-    // tree, and this function just gets called with the root layer. In that
-    // case TopmostScrollableMetrics will return an empty FrameMetrics but we
-    // still want to use the actual non-scrollable metrics from the layer.
-    metrics = LayerMetricsWrapper::BottommostMetrics(aLayer);
-  }
-
-  // We must apply the resolution scale before a pan/zoom transform, so we call
-  // GetTransform here.
-  LayerToParentLayerMatrix4x4 oldTransform = aLayer->GetTransformTyped() *
-      AsyncTransformMatrix();
-
-  CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
-
-  LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.GetScrollOffset() * geckoZoom);
-
-  if (mIsFirstPaint) {
-    mContentRect = metrics.GetScrollableRect();
-    SetFirstPaintViewport(scrollOffsetLayerPixels,
-                          geckoZoom,
-                          mContentRect);
-    mIsFirstPaint = false;
-  } else if (!metrics.GetScrollableRect().IsEqualEdges(mContentRect)) {
-    mContentRect = metrics.GetScrollableRect();
-    SetPageRect(mContentRect);
-  }
-
-  // We synchronise the viewport information with Java after sending the above
-  // notifications, so that Java can take these into account in its response.
-  // Calculate the absolute display port to send to Java
-  LayerIntRect displayPort = RoundedToInt(
-    (metrics.GetCriticalDisplayPort().IsEmpty()
-      ? metrics.GetDisplayPort()
-      : metrics.GetCriticalDisplayPort()
-    ) * geckoZoom);
-  displayPort += scrollOffsetLayerPixels;
-
-  ScreenMargin fixedLayerMargins(0, 0, 0, 0);
-
-  // Ideally we would initialize userZoom to AsyncPanZoomController::CalculateResolution(metrics)
-  // but this causes a reftest-ipc test to fail (see bug 883646 comment 27). The reason for this
-  // appears to be that metrics.mZoom is poorly initialized in some scenarios. In these scenarios,
-  // however, we can assume there is no async zooming in progress and so the following statement
-  // works fine.
-  CSSToParentLayerScale userZoom(metrics.GetDevPixelsPerCSSPixel()
-                                 // This function only applies to the root scrollable frame,
-                                 // for which we can assume that x and y scales are equal.
-                               * metrics.GetCumulativeResolution().ToScaleFactor()
-                               * LayerToParentLayerScale(1));
-  ParentLayerRect userRect(metrics.GetScrollOffset() * userZoom,
-                           metrics.GetCompositionBounds().Size());
-  SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated, mPaintSyncId,
-                   userRect, userZoom, fixedLayerMargins);
-  mLayersUpdated = false;
-  mPaintSyncId = 0;
-
-  // Handle transformations for asynchronous panning and zooming. We determine the
-  // zoom used by Gecko from the transformation set on the root layer, and we
-  // determine the scroll offset used by Gecko from the frame metrics of the
-  // primary scrollable layer. We compare this to the user zoom and scroll
-  // offset in the view transform we obtained from Java in order to compute the
-  // transformation we need to apply.
-  ParentLayerPoint geckoScroll(0, 0);
-  if (metrics.IsScrollable()) {
-    geckoScroll = metrics.GetScrollOffset() * userZoom;
-  }
-
-  LayerToParentLayerScale asyncZoom = userZoom / metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
-  ParentLayerPoint translation = userRect.TopLeft() - geckoScroll;
-  AsyncTransformComponentMatrix treeTransform = AsyncTransform(asyncZoom, -translation);
-
-  // Apply the tree transform on top of GetLocalTransform() here (rather than
-  // GetTransform()) in case the OMTA code in SampleAnimations already set a
-  // shadow transform; in that case we want to apply ours on top of that one
-  // rather than clobber it.
-  SetShadowTransform(aLayer, aLayer->GetLocalTransformTyped() * treeTransform);
-
-  // Make sure that overscroll and under-zoom are represented in the old
-  // transform so that fixed position content moves and scales accordingly.
-  // These calculations will effectively scale and offset fixed position layers
-  // in screen space when the compensatory transform is performed in
-  // AlignFixedAndStickyLayers.
-  ParentLayerRect contentScreenRect = mContentRect * userZoom;
-  Point3D overscrollTranslation;
-  if (userRect.x < contentScreenRect.x) {
-    overscrollTranslation.x = contentScreenRect.x - userRect.x;
-  } else if (userRect.XMost() > contentScreenRect.XMost()) {
-    overscrollTranslation.x = contentScreenRect.XMost() - userRect.XMost();
-  }
-  if (userRect.y < contentScreenRect.y) {
-    overscrollTranslation.y = contentScreenRect.y - userRect.y;
-  } else if (userRect.YMost() > contentScreenRect.YMost()) {
-    overscrollTranslation.y = contentScreenRect.YMost() - userRect.YMost();
-  }
-  oldTransform.PreTranslate(overscrollTranslation.x,
-                            overscrollTranslation.y,
-                            overscrollTranslation.z);
-
-  gfx::Size underZoomScale(1.0f, 1.0f);
-  if (mContentRect.width * userZoom.scale < metrics.GetCompositionBounds().width) {
-    underZoomScale.width = (mContentRect.width * userZoom.scale) /
-      metrics.GetCompositionBounds().width;
-  }
-  if (mContentRect.height * userZoom.scale < metrics.GetCompositionBounds().height) {
-    underZoomScale.height = (mContentRect.height * userZoom.scale) /
-      metrics.GetCompositionBounds().height;
-  }
-  oldTransform.PreScale(underZoomScale.width, underZoomScale.height, 1);
-
-  // Make sure fixed position layers don't move away from their anchor points
-  // when we're asynchronously panning or zooming
-  AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
-                            aLayer->GetLocalTransformTyped(),
-                            fixedLayerMargins, nullptr);
-
-  ExpandRootClipRect(aLayer, fixedLayerMargins);
-}
-
-void
 AsyncCompositionManager::GetFrameUniformity(FrameUniformityData* aOutData)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
@@ -1548,19 +1425,6 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
         MoveScrollbarForLayerMargin(root, mRootScrollableId, mFixedLayerMargins);
       }
 #endif
-    } else {
-      AutoTArray<Layer*,1> scrollableLayers;
-#ifdef MOZ_WIDGET_ANDROID
-      mLayerManager->GetRootScrollableLayers(scrollableLayers);
-#else
-      mLayerManager->GetScrollableLayers(scrollableLayers);
-#endif
-
-      for (uint32_t i = 0; i < scrollableLayers.Length(); i++) {
-        if (scrollableLayers[i]) {
-          TransformScrollableLayer(scrollableLayers[i]);
-        }
-      }
     }
 
     // Advance APZ animations to the next expected vsync timestamp, if we can
@@ -1600,40 +1464,6 @@ AsyncCompositionManager::SetFirstPaintViewport(const LayerIntPoint& aOffset,
     return;
   }
   widget->SetFirstPaintViewport(aOffset, aZoom, aCssPageRect);
-#endif
-}
-
-void
-AsyncCompositionManager::SetPageRect(const CSSRect& aCssPageRect)
-{
-#ifdef MOZ_WIDGET_ANDROID
-  widget::AndroidCompositorWidget* widget =
-      mLayerManager->GetCompositor()->GetWidget()->AsAndroid();
-  if (!widget) {
-    return;
-  }
-  widget->SetPageRect(aCssPageRect);
-#endif
-}
-
-void
-AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
-                                          const CSSToLayerScale& aDisplayResolution,
-                                          bool aLayersUpdated,
-                                          int32_t aPaintSyncId,
-                                          ParentLayerRect& aScrollRect,
-                                          CSSToParentLayerScale& aScale,
-                                          ScreenMargin& aFixedLayerMargins)
-{
-#ifdef MOZ_WIDGET_ANDROID
-  widget::AndroidCompositorWidget* widget =
-      mLayerManager->GetCompositor()->GetWidget()->AsAndroid();
-  if (!widget) {
-    return;
-  }
-  widget->SyncViewportInfo(
-      aDisplayPort, aDisplayResolution, aLayersUpdated, aPaintSyncId,
-      aScrollRect, aScale, aFixedLayerMargins);
 #endif
 }
 

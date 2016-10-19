@@ -464,6 +464,8 @@
  *   tool aware that the marked function is part of the initialization process
  *   and to include the marked function in the scan mechanism that determines witch
  *   member variables still remain uninitialized.
+ * MOZ_NON_PARAM: Applies to types. Makes it compile time error to use the type
+ *   in parameter without pointer or reference.
  * MOZ_NON_AUTOABLE: Applies to class declarations. Makes it a compile time error to
  *   use `auto` in place of this type in variable declarations.  This is intended to
  *   be used with types which are intended to be implicitly constructed into other
@@ -505,6 +507,8 @@
     __attribute__((annotate("moz_ignore_ctor_initialization")))
 #  define MOZ_IS_CLASS_INIT \
     __attribute__((annotate("moz_is_class_init")))
+#  define MOZ_NON_PARAM \
+    __attribute__((annotate("moz_non_param")))
 #  define MOZ_REQUIRED_BASE_METHOD \
     __attribute__((annotate("moz_required_base_method")))
 /*
@@ -540,6 +544,7 @@
 #  define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS /* nothing */
 #  define MOZ_INIT_OUTSIDE_CTOR /* nothing */
 #  define MOZ_IS_CLASS_INIT /* nothing */
+#  define MOZ_NON_PARAM /* nothing */
 #  define MOZ_NON_AUTOABLE /* nothing */
 #  define MOZ_REQUIRED_BASE_METHOD /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */

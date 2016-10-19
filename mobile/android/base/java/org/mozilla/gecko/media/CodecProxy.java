@@ -4,14 +4,6 @@
 
 package org.mozilla.gecko.media;
 
-import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.mozglue.JNIObject;
-
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodec.CryptoInfo;
@@ -21,7 +13,12 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.view.Surface;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.mozglue.JNIObject;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
+
 // Proxy class of ICodec binder.
 public final class CodecProxy {
     private static final String LOGTAG = "GeckoRemoteCodecProxy";
@@ -35,7 +32,7 @@ public final class CodecProxy {
     public interface Callbacks {
         void onInputExhausted();
         void onOutputFormatChanged(MediaFormat format);
-        void onOutput(byte[] bytes, BufferInfo info);
+        void onOutput(Sample output);
         void onError(boolean fatal);
     }
 
@@ -43,17 +40,15 @@ public final class CodecProxy {
     public static class NativeCallbacks extends JNIObject implements Callbacks {
         public native void onInputExhausted();
         public native void onOutputFormatChanged(MediaFormat format);
-        public native void onOutput(byte[] bytes, BufferInfo info);
+        public native void onOutput(Sample output);
         public native void onError(boolean fatal);
 
         @Override // JNIObject
         protected native void disposeNative();
     }
 
-    private static class CallbacksForwarder extends ICodecCallbacks.Stub {
+    private class CallbacksForwarder extends ICodecCallbacks.Stub {
         private final Callbacks mCallbacks;
-        // // Store the latest frame in case we receive dummy sample.
-        private byte[] mPrevBytes;
 
         CallbacksForwarder(Callbacks callbacks) {
             mCallbacks = callbacks;
@@ -71,13 +66,9 @@ public final class CodecProxy {
 
         @Override
         public void onOutput(Sample sample) throws RemoteException {
-            byte[] bytes = null;
-            if (sample.isDummy()) { // Dummy sample.
-                bytes = mPrevBytes;
-            } else {
-                mPrevBytes = bytes = sample.getBytes();
-            }
-            mCallbacks.onOutput(bytes, sample.info);
+            mCallbacks.onOutput(sample);
+            mRemote.releaseOutput(sample);
+            sample.dispose();
         }
 
         @Override
@@ -132,20 +123,27 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public synchronized boolean input(byte[] bytes, BufferInfo info, CryptoInfo cryptoInfo) {
+    public synchronized boolean input(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
         if (mRemote == null) {
             Log.e(LOGTAG, "cannot send input to an ended codec");
             return false;
         }
-        Sample sample = (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) ?
-                        Sample.EOS : new Sample(ByteBuffer.wrap(bytes), info, cryptoInfo);
+
         try {
+            Sample sample = (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) ?
+                    Sample.EOS : mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo);
             mRemote.queueInput(sample);
+            sample.dispose();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         } catch (DeadObjectException e) {
             return false;
         } catch (RemoteException e) {
             e.printStackTrace();
-            Log.e(LOGTAG, "fail to input sample:" + sample);
+            Log.e(LOGTAG, "fail to input sample: size=" + info.size +
+                    ", pts=" + info.presentationTimeUs +
+                    ", flags=" + Integer.toHexString(info.flags));
             return false;
         }
         return true;

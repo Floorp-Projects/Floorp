@@ -59,7 +59,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     /////////////////////////////////////////////////////////////////
     void writeDataRelocation(const Value& val) {
         if (val.isMarkable()) {
-            gc::Cell* cell = reinterpret_cast<gc::Cell*>(val.toGCThing());
+            gc::Cell* cell = val.toMarkablePointer();
             if (cell && gc::IsInsideNursery(cell))
                 embedsNurseryPointers_ = true;
             dataRelocations_.writeUnsigned(masm.currentOffset());
@@ -132,12 +132,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     template <typename T>
     void storeValue(const Value& val, const T& dest) {
         ScratchRegisterScope scratch(asMasm());
-        jsval_layout jv = JSVAL_TO_IMPL(val);
         if (val.isMarkable()) {
-            movWithPatch(ImmWord(jv.asBits), scratch);
+            movWithPatch(ImmWord(val.asRawBits()), scratch);
             writeDataRelocation(val);
         } else {
-            mov(ImmWord(jv.asBits), scratch);
+            mov(ImmWord(val.asRawBits()), scratch);
         }
         movq(scratch, Operand(dest));
     }
@@ -172,14 +171,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         pop(val.valueReg());
     }
     void pushValue(const Value& val) {
-        jsval_layout jv = JSVAL_TO_IMPL(val);
         if (val.isMarkable()) {
             ScratchRegisterScope scratch(asMasm());
-            movWithPatch(ImmWord(jv.asBits), scratch);
+            movWithPatch(ImmWord(val.asRawBits()), scratch);
             writeDataRelocation(val);
             push(scratch);
         } else {
-            push(ImmWord(jv.asBits));
+            push(ImmWord(val.asRawBits()));
         }
     }
     void pushValue(JSValueType type, Register reg) {
@@ -192,8 +190,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void moveValue(const Value& val, Register dest) {
-        jsval_layout jv = JSVAL_TO_IMPL(val);
-        movWithPatch(ImmWord(jv.asBits), dest);
+        movWithPatch(ImmWord(val.asRawBits()), dest);
         writeDataRelocation(val);
     }
     void moveValue(const Value& src, const ValueOperand& dest) {
