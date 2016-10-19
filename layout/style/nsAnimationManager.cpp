@@ -281,14 +281,6 @@ CSSAnimation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
   Animation::UpdateTiming(aSeekFlag, aSyncNotifyFlag);
 }
 
-TimeStamp
-CSSAnimation::ElapsedTimeToTimeStamp(const StickyTimeDuration&
-                                       aElapsedTime) const
-{
-  return AnimationTimeToTimeStamp(aElapsedTime +
-                                  mEffect->SpecifiedTiming().mDelay);
-}
-
 ////////////////////////// nsAnimationManager ////////////////////////////
 
 NS_IMPL_CYCLE_COLLECTION(nsAnimationManager, mEventDispatcher)
