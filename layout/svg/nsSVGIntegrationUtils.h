@@ -160,6 +160,22 @@ public:
   static DrawResult
   PaintMaskAndClipPath(const PaintFramesParams& aParams);
 
+  struct MaskUsage {
+    bool shouldGenerateMaskLayer;
+    bool shouldGenerateClipMaskLayer;
+    bool shouldApplyClipPath;
+    bool shouldApplyBasicShape;
+    float opacity;
+
+    MaskUsage()
+      : shouldGenerateMaskLayer(false), shouldGenerateClipMaskLayer(false),
+        shouldApplyClipPath(false), shouldApplyBasicShape(false), opacity(0.0)
+    { }
+  };
+
+  static void
+  DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity, MaskUsage& aUsage);
+
   /**
    * Paint non-SVG frame with filter and opacity effect.
    */
