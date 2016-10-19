@@ -30,17 +30,39 @@ describe("PageError component:", () => {
     const wrapper = render(PageError({ message, serviceContainer }));
 
     expect(wrapper.find(".message-body").text())
-      .toBe("ReferenceError: asdf is not defined");
+      .toBe("ReferenceError: asdf is not defined[Learn More]");
 
     // The stacktrace should be closed by default.
     const frameLinks = wrapper.find(`.stack-trace`);
     expect(frameLinks.length).toBe(0);
 
-    // There should be the location
+    // There should be the location.
     const locationLink = wrapper.find(`.message-location`);
     expect(locationLink.length).toBe(1);
     // @TODO Will likely change. See https://github.com/devtools-html/gecko-dev/issues/285
     expect(locationLink.text()).toBe("test-tempfile.js:3:5");
+  });
+
+  it("displays a [Learn more] link", () => {
+    const store = setupStore([]);
+
+    const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
+
+    serviceContainer.openLink = sinon.spy();
+    const wrapper = mount(Provider({store},
+      PageError({message, serviceContainer})
+    ));
+
+    // There should be a [Learn more] link.
+    const url =
+      "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined";
+    const learnMore = wrapper.find(".learn-more-link");
+    expect(learnMore.length).toBe(1);
+    expect(learnMore.prop("title")).toBe(url);
+
+    learnMore.simulate("click");
+    let call = serviceContainer.openLink.getCall(0);
+    expect(call.args[0]).toEqual(message.exceptionDocURL);
   });
 
   it("has a stacktrace which can be openned", () => {

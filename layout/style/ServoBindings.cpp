@@ -869,6 +869,19 @@ Gecko_NewBasicShape(mozilla::StyleBasicShapeType aType)
   return ptr.forget().take();
 }
 
+void
+Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len)
+{
+  effects->mFilters.Clear();
+  effects->mFilters.SetLength(new_len);
+}
+
+void
+Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest)
+{
+  aDest->mFilters = aSrc->mFilters;
+}
+
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 nsCSSShadowArray*
