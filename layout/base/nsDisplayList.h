@@ -3918,6 +3918,10 @@ public:
     return mDestRects;
   }
 private:
+  // According to mask property and the capability of aManager, determine
+  // whether paint mask onto a dedicate mask layer.
+  bool ShouldPaintOnMaskLayer(LayerManager* aManager);
+
   nsTArray<nsRect> mDestRects;
 };
 
