@@ -144,6 +144,9 @@ this.CrashManager = function(options) {
   // Map of crash ID / promise tuples used to track adding new crashes.
   this._crashPromises = new Map();
 
+  // Promise for the crash ping used only for testing.
+  this._pingPromise = null;
+
   // The CrashStore currently attached to this object.
   this._store = null;
 
@@ -449,7 +452,12 @@ this.CrashManager.prototype = Object.freeze({
         this._crashPromises.delete(id);
         deferred.resolve();
       }
-    }.bind(this));
+
+      // Send a telemetry ping for each content process crash
+      if (processType === this.PROCESS_TYPE_CONTENT) {
+        this._sendCrashPing(id, processType, date, metadata);
+      }
+   }.bind(this));
 
     return promise;
   },
@@ -609,7 +617,7 @@ this.CrashManager.prototype = Object.freeze({
     }.bind(this));
   },
 
-  _filterAnnotations: function (annotations) {
+  _filterAnnotations: function(annotations) {
     let filteredAnnotations = {};
 
     for (let line in annotations) {
@@ -621,7 +629,7 @@ this.CrashManager.prototype = Object.freeze({
     return filteredAnnotations;
   },
 
-  _sendCrashPing: function (crashId, type, date, metadata) {
+  _sendCrashPing: function(crashId, type, date, metadata = {}) {
     // If we have a saved environment, use it. Otherwise report
     // the current environment.
     let reportMeta = Cu.cloneInto(metadata, myScope);
@@ -634,7 +642,7 @@ this.CrashManager.prototype = Object.freeze({
     // Filter the remaining annotations to remove privacy-sensitive ones
     reportMeta = this._filterAnnotations(reportMeta);
 
-    TelemetryController.submitExternalPing("crash",
+    this._pingPromise = TelemetryController.submitExternalPing("crash",
       {
         version: 1,
         crashDate: date.toISOString().slice(0, 10), // YYYY-MM-DD
