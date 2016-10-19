@@ -3297,6 +3297,7 @@ nsBrowserAccess.prototype = {
                                                                       referrerURI: referrer,
                                                                       external: isExternal,
                                                                       parentId: parentId,
+                                                                      opener: aOpener,
                                                                       selected: true,
                                                                       isPrivate: isPrivate,
                                                                       pinned: pinned });
@@ -3403,6 +3404,11 @@ Tab.prototype = {
     }
 
     this.browser.permanentKey = {};
+
+    // Check if we have a "parent" window which we need to set as our opener
+    if ("opener" in aParams) {
+      this.browser.presetOpenerWindow(aParams.opener);
+    }
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are added.
