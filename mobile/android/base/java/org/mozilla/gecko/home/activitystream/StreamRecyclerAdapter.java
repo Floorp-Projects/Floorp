@@ -24,13 +24,15 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     private Cursor topSitesCursor;
 
     private HomePager.OnUrlOpenListener onUrlOpenListener;
+    private HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
     private int tiles;
     private int tilesWidth;
     private int tilesHeight;
 
-    void setOnUrlOpenListener(HomePager.OnUrlOpenListener onUrlOpenListener) {
+    void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         this.onUrlOpenListener = onUrlOpenListener;
+        this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
 
     public void setTileSize(int tiles, int tilesWidth, int tilesHeight) {
@@ -57,7 +59,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         if (type == TopPanel.LAYOUT_ID) {
             return new TopPanel(inflater.inflate(type, parent, false), onUrlOpenListener);
         } else if (type == HighlightItem.LAYOUT_ID) {
-            return new HighlightItem(inflater.inflate(type, parent, false));
+            return new HighlightItem(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else {
             throw new IllegalStateException("Missing inflation for ViewType " + type);
         }
