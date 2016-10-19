@@ -561,6 +561,9 @@ MoveBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, uint32_t dstStart,
     MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<Type>(obj));
 
     if (Type == JSVAL_TYPE_MAGIC) {
+        if (obj->as<NativeObject>().denseElementsAreFrozen())
+            return DenseElementResult::Incomplete;
+
         if (!obj->as<NativeObject>().maybeCopyElementsForWrite(cx))
             return DenseElementResult::Failure;
         obj->as<NativeObject>().moveDenseElements(dstStart, srcStart, length);

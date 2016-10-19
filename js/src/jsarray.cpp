@@ -2203,9 +2203,8 @@ ArrayShiftDenseKernel(JSContext* cx, HandleObject obj, MutableHandleValue rval)
         rval.setUndefined();
 
     DenseElementResult result = MoveBoxedOrUnboxedDenseElements<Type>(cx, obj, 0, 1, initlen - 1);
-    MOZ_ASSERT(result != DenseElementResult::Incomplete);
-    if (result == DenseElementResult::Failure)
-        return DenseElementResult::Failure;
+    if (result != DenseElementResult::Success)
+        return result;
 
     SetBoxedOrUnboxedInitializedLength<Type>(cx, obj, initlen - 1);
     return DenseElementResult::Success;
