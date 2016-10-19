@@ -15,6 +15,8 @@ add_task(function* testNarrate() {
     let TEST_VOICE = "urn:moz-tts:fake-indirect:teresa";
     let $ = content.document.querySelector.bind(content.document);
 
+    yield NarrateTestUtils.waitForNarrateToggle(content);
+
     let popup = $(NarrateTestUtils.POPUP);
     ok(!NarrateTestUtils.isVisible(popup), "popup is initially hidden");
 
@@ -22,8 +24,6 @@ add_task(function* testNarrate() {
     toggle.click();
 
     ok(NarrateTestUtils.isVisible(popup), "popup toggled");
-
-    yield NarrateTestUtils.waitForVoiceOptions(content);
 
     let voiceOptions = $(NarrateTestUtils.VOICE_OPTIONS);
     ok(!NarrateTestUtils.isVisible(voiceOptions),

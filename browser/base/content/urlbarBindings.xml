@@ -1259,6 +1259,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
             // open the search results according to the clicking subtlety
             var where = whereToOpenLink(aEvent, false, true);
+            let params = {};
 
             // But open ctrl/cmd clicks on autocomplete items in a new background tab.
             let modifier = this.AppConstants.platform == "macosx" ?
@@ -1266,10 +1267,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                            aEvent.ctrlKey;
             if (where == "tab" && (aEvent instanceof MouseEvent) &&
                 (aEvent.button == 1 || modifier))
-              where = "tab-background";
+              params.inBackground = true;
 
-            searchBar.doSearch(search, where);
-            if (where == "tab-background")
+            searchBar.doSearch(search, where, null, params);
+            if (where == "tab" && params.inBackground)
               searchBar.focus();
             else
               searchBar.value = search;

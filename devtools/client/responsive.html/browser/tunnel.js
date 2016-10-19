@@ -362,11 +362,19 @@ MessageManagerTunnel.prototype = {
   OUTER_TO_INNER_MESSAGE_PREFIXES: [
     // Messages sent from DevTools
     "debug:",
+    // Messages sent from findbar.xml
+    "Findbar:",
+    // Messages sent from RemoteFinder.jsm
+    "Finder:",
   ],
 
   INNER_TO_OUTER_MESSAGE_PREFIXES: [
     // Messages sent to DevTools
     "debug:",
+    // Messages sent to findbar.xml
+    "Findbar:",
+    // Messages sent to RemoteFinder.jsm
+    "Finder:",
   ],
 
   OUTER_TO_INNER_FRAME_SCRIPTS: [

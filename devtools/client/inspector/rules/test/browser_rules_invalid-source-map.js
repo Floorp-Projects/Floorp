@@ -35,9 +35,10 @@ add_task(function* () {
 
 function verifyLinkText(view, text) {
   info("Verifying that the rule-view stylesheet link is " + text);
-  let label = getRuleViewLinkByIndex(view, 1).querySelector("label");
+  let label = getRuleViewLinkByIndex(view, 1)
+    .querySelector(".ruleview-rule-source-label");
   return waitForSuccess(
-    () => label.getAttribute("value") == text,
+    () => label.textContent == text,
     "Link text changed to display correct location: " + text
   );
 }

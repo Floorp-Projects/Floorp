@@ -11,7 +11,7 @@
 <body>
 <script type="application/javascript;version=1.8">
 const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerContent.jsm");
-const { LoginManagerContent, FormLikeFactory } = LMCBackstagePass;
+const { LoginManagerContent, LoginFormFactory } = LMCBackstagePass;
 
 let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
