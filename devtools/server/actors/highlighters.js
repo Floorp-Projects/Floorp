@@ -97,7 +97,12 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
     this._highlighterHidden = this._highlighterHidden.bind(this);
     this._onNavigate = this._onNavigate.bind(this);
 
-    this._createHighlighter();
+    let doc = this._tabActor.window.document;
+    // Only try to create the highlighter when the document is loaded,
+    // otherwise, wait for the navigate event to fire.
+    if (doc.documentElement && doc.readyState != "uninitialized") {
+      this._createHighlighter();
+    }
 
     // Listen to navigation events to switch from the BoxModelHighlighter to the
     // SimpleOutlineHighlighter, and back, if the top level window changes.
