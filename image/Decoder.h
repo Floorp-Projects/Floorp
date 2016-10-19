@@ -216,14 +216,6 @@ public:
   Maybe<gfx::IntSize> ExplicitOutputSize() const;
 
   /**
-   * Set the requested sample size for this decoder. Used to implement the
-   * -moz-sample-size media fragment.
-   *
-   *  XXX(seth): Support for -moz-sample-size will be removed in bug 1120056.
-   */
-  virtual void SetSampleSize(int aSampleSize) { }
-
-  /**
    * Set an iterator to the SourceBuffer which will feed data to this decoder.
    * This must always be called before calling Init(). (And only before Init().)
    *

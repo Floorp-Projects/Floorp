@@ -144,7 +144,7 @@ ImageCacheKey::ComputeHash(ImageURL* aURI,
   if (aBlobSerial) {
     // For blob URIs, we hash the serial number of the underlying blob, so that
     // different blob URIs which point to the same blob share a cache entry. We
-    // also include the ref portion of the URI to support -moz-samplesize, which
+    // also include the ref portion of the URI to support media fragments which
     // requires us to create different Image objects even if the source data is
     // the same.
     nsAutoCString ref;
