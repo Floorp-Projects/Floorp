@@ -125,34 +125,34 @@ public:
       mIsSentinel(false)
   { }
 
-  LinkedListElement(LinkedListElement<T>&& other)
-    : mIsSentinel(other.mIsSentinel)
+  LinkedListElement(LinkedListElement<T>&& aOther)
+    : mIsSentinel(aOther.mIsSentinel)
   {
-    if (!other.isInList()) {
+    if (!aOther.isInList()) {
       mNext = this;
       mPrev = this;
       return;
     }
 
-    MOZ_ASSERT(other.mNext->mPrev == &other);
-    MOZ_ASSERT(other.mPrev->mNext == &other);
+    MOZ_ASSERT(aOther.mNext->mPrev == &aOther);
+    MOZ_ASSERT(aOther.mPrev->mNext == &aOther);
 
     /*
-     * Initialize |this| with |other|'s mPrev/mNext pointers, and adjust those
+     * Initialize |this| with |aOther|'s mPrev/mNext pointers, and adjust those
      * element to point to this one.
      */
-    mNext = other.mNext;
-    mPrev = other.mPrev;
+    mNext = aOther.mNext;
+    mPrev = aOther.mPrev;
 
     mNext->mPrev = this;
     mPrev->mNext = this;
 
     /*
-     * Adjust |other| so it doesn't think it's in a list.  This makes it
+     * Adjust |aOther| so it doesn't think it's in a list.  This makes it
      * safely destructable.
      */
-    other.mNext = &other;
-    other.mPrev = &other;
+    aOther.mNext = &aOther;
+    aOther.mPrev = &aOther;
   }
 
   ~LinkedListElement()
