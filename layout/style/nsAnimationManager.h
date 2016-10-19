@@ -178,10 +178,6 @@ protected:
            std::max(TimeDuration(), mEffect->SpecifiedTiming().mDelay * -1) :
            TimeDuration();
   }
-  // Converts an AnimationEvent's elapsedTime value to an equivalent TimeStamp
-  // that can be used to sort events by when they occurred.
-  TimeStamp ElapsedTimeToTimeStamp(const StickyTimeDuration& aElapsedTime)
-    const;
 
   nsString mAnimationName;
 

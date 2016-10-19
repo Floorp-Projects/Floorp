@@ -227,10 +227,6 @@ protected:
 
   void QueueEvents();
 
-  // Converts an TransitionEvent's elapsedTime value to an equivalent TimeStamp
-  // that can be used to sort events by when they occurred.
-  TimeStamp ElapsedTimeToTimeStamp(const StickyTimeDuration& aElapsedTime) const;
-
   // The (pseudo-)element whose computed transition-property refers to this
   // transition (if any).
   //
