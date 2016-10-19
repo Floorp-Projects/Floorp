@@ -185,7 +185,7 @@ RestyleManager::ReframingStyleContexts::ReframingStyleContexts(
 RestyleManager::ReframingStyleContexts::~ReframingStyleContexts()
 {
   // Before we go away, we need to flush out any frame construction that
-  // was enqueued, so that we start transitions.
+  // was enqueued, so that we initiate transitions.
   // Note that this is a little bit evil in that we're calling into code
   // that calls our member functions from our destructor, but it's at
   // the beginning of our destructor, so it shouldn't be too bad.
@@ -990,11 +990,11 @@ RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
 // aContent must be the content for the frame in question, which may be
 // :before/:after content
 /* static */ bool
-RestyleManager::TryStartingTransition(nsPresContext* aPresContext,
-                                      nsIContent* aContent,
-                                      nsStyleContext* aOldStyleContext,
-                                      RefPtr<nsStyleContext>*
-                                        aNewStyleContext /* inout */)
+RestyleManager::TryInitiatingTransition(nsPresContext* aPresContext,
+                                        nsIContent* aContent,
+                                        nsStyleContext* aOldStyleContext,
+                                        RefPtr<nsStyleContext>*
+                                          aNewStyleContext /* inout */)
 {
   if (!aContent || !aContent->IsElement()) {
     return false;
@@ -1257,11 +1257,11 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       // ReparentStyleContext, since we call it during frame
       // construction rather than in response to dynamic changes.
       // Also see the comment at the start of
-      // nsTransitionManager::ConsiderStartingTransition.
+      // nsTransitionManager::ConsiderInitiatingTransition.
 #if 0
       if (!copyFromContinuation) {
-        TryStartingTransition(mPresContext, aFrame->GetContent(),
-                              oldContext, &newContext);
+        TryInitiatingTransition(mPresContext, aFrame->GetContent(),
+                                oldContext, &newContext);
       }
 #endif
 
@@ -2964,10 +2964,12 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       }
     } else {
       bool changedStyle =
-        RestyleManager::TryStartingTransition(mPresContext, aSelf->GetContent(),
-                                              oldContext, &newContext);
+        RestyleManager::TryInitiatingTransition(mPresContext,
+                                                aSelf->GetContent(),
+                                                oldContext, &newContext);
       if (changedStyle) {
-        LOG_RESTYLE_CONTINUE("TryStartingTransition changed the new style context");
+        LOG_RESTYLE_CONTINUE("TryInitiatingTransition changed the new style "
+                             "context");
         result = RestyleResult::eContinue;
         canStopWithStyleChange = false;
       }

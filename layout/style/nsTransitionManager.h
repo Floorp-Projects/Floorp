@@ -353,7 +353,7 @@ public:
   /**
    * StyleContextChanged
    *
-   * To be called from RestyleManager::TryStartingTransition when the
+   * To be called from RestyleManager::TryInitiatingTransition when the
    * style of an element has changed, to initiate transitions from
    * that style change.  For style contexts with :before and :after
    * pseudos, aElement is expected to be the generated before/after
@@ -426,14 +426,14 @@ protected:
                     nsStyleContext* aNewStyleContext);
 
   void
-  ConsiderStartingTransition(nsCSSPropertyID aProperty,
-                             const mozilla::StyleTransition& aTransition,
-                             mozilla::dom::Element* aElement,
-                             CSSTransitionCollection*& aElementTransitions,
-                             nsStyleContext* aOldStyleContext,
-                             nsStyleContext* aNewStyleContext,
-                             bool* aStartedAny,
-                             nsCSSPropertyIDSet* aWhichStarted);
+  ConsiderInitiatingTransition(nsCSSPropertyID aProperty,
+                               const mozilla::StyleTransition& aTransition,
+                               mozilla::dom::Element* aElement,
+                               CSSTransitionCollection*& aElementTransitions,
+                               nsStyleContext* aOldStyleContext,
+                               nsStyleContext* aNewStyleContext,
+                               bool* aStartedAny,
+                               nsCSSPropertyIDSet* aWhichStarted);
 
   nsTArray<mozilla::Keyframe> GetTransitionKeyframes(
     nsStyleContext* aStyleContext,

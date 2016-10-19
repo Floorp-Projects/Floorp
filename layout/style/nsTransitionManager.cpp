@@ -459,7 +459,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     return;
   }
 
-  // NOTE: Things in this function (and ConsiderStartingTransition)
+  // NOTE: Things in this function (and ConsiderInitiatingTransition)
   // should never call PeekStyleData because we don't preserve gotten
   // structs across reframes.
 
@@ -609,22 +609,23 @@ nsTransitionManager::UpdateTransitions(
         for (nsCSSPropertyID p = nsCSSPropertyID(0);
              p < eCSSProperty_COUNT_no_shorthands;
              p = nsCSSPropertyID(p + 1)) {
-          ConsiderStartingTransition(p, t, aElement, aElementTransitions,
-                                     aOldStyleContext, aNewStyleContext,
-                                     &startedAny, &whichStarted);
+          ConsiderInitiatingTransition(p, t, aElement, aElementTransitions,
+                                       aOldStyleContext, aNewStyleContext,
+                                       &startedAny, &whichStarted);
         }
       } else if (nsCSSProps::IsShorthand(property)) {
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property,
                                              CSSEnabledState::eForAllContent)
         {
-          ConsiderStartingTransition(*subprop, t, aElement, aElementTransitions,
-                                     aOldStyleContext, aNewStyleContext,
-                                     &startedAny, &whichStarted);
+          ConsiderInitiatingTransition(*subprop, t, aElement,
+                                       aElementTransitions,
+                                       aOldStyleContext, aNewStyleContext,
+                                       &startedAny, &whichStarted);
         }
       } else {
-        ConsiderStartingTransition(property, t, aElement, aElementTransitions,
-                                   aOldStyleContext, aNewStyleContext,
-                                   &startedAny, &whichStarted);
+        ConsiderInitiatingTransition(property, t, aElement, aElementTransitions,
+                                     aOldStyleContext, aNewStyleContext,
+                                     &startedAny, &whichStarted);
       }
     }
   }
@@ -711,7 +712,7 @@ nsTransitionManager::UpdateTransitions(
 }
 
 void
-nsTransitionManager::ConsiderStartingTransition(
+nsTransitionManager::ConsiderInitiatingTransition(
   nsCSSPropertyID aProperty,
   const StyleTransition& aTransition,
   dom::Element* aElement,

@@ -1874,10 +1874,10 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     if (rsc) {
       nsStyleContext* oldStyleContext = rsc->Get(container, aPseudoElement);
       if (oldStyleContext) {
-        RestyleManager::TryStartingTransition(aState.mPresContext,
-                                              container,
-                                              oldStyleContext,
-                                              &pseudoStyleContext);
+        RestyleManager::TryInitiatingTransition(aState.mPresContext,
+                                                container,
+                                                oldStyleContext,
+                                                &pseudoStyleContext);
       } else {
         aState.mPresContext->TransitionManager()->
           PruneCompletedTransitions(container, aPseudoElement,
@@ -5049,8 +5049,8 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
         rsc->Get(aContent, CSSPseudoElementType::NotPseudo);
       nsPresContext* presContext = mPresShell->GetPresContext();
       if (oldStyleContext) {
-        RestyleManager::TryStartingTransition(presContext, aContent,
-                                              oldStyleContext, &result);
+        RestyleManager::TryInitiatingTransition(presContext, aContent,
+                                                oldStyleContext, &result);
       } else if (aContent->IsElement()) {
         presContext->TransitionManager()->
           PruneCompletedTransitions(aContent->AsElement(),
