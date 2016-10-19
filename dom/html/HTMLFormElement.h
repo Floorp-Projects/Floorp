@@ -85,6 +85,9 @@ public:
 
   virtual EventStates IntrinsicState() const override;
 
+  // EventTarget
+  virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
+
   // nsIContent
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -427,24 +430,8 @@ protected:
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void PostPasswordEvent();
-  void EventHandled() { mFormPasswordEventDispatcher = nullptr; }
 
-  class FormPasswordEventDispatcher final : public AsyncEventDispatcher
-  {
-  public:
-    FormPasswordEventDispatcher(HTMLFormElement* aEventNode,
-                                const nsAString& aEventType)
-      : AsyncEventDispatcher(aEventNode, aEventType, true, true)
-    {}
-
-    NS_IMETHOD Run() override
-    {
-      static_cast<HTMLFormElement*>(mTarget.get())->EventHandled();
-      return AsyncEventDispatcher::Run();
-    }
-  };
-
-  RefPtr<FormPasswordEventDispatcher> mFormPasswordEventDispatcher;
+  RefPtr<AsyncEventDispatcher> mFormPasswordEventDispatcher;
 
   class RemoveElementRunnable;
   friend class RemoveElementRunnable;

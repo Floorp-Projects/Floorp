@@ -66,6 +66,21 @@ JS::gcreason::ExplainReason(JS::gcreason::Reason reason)
     }
 }
 
+const char*
+js::gcstats::ExplainAbortReason(gc::AbortReason reason)
+{
+    switch (reason) {
+#define SWITCH_REASON(name)                         \
+        case gc::AbortReason::name:                 \
+          return #name;
+        GC_ABORT_REASONS(SWITCH_REASON)
+
+        default:
+          MOZ_CRASH("bad GC abort reason");
+#undef SWITCH_REASON
+    }
+}
+
 static double
 t(int64_t t)
 {
@@ -364,8 +379,8 @@ Statistics::formatCompactSliceMessage() const
     SprintfLiteral(buffer, format, index,
                    t(slice.duration()), budgetDescription, t(slice.start - slices[0].start),
                    ExplainReason(slice.reason),
-                   slice.resetReason ? "yes - " : "no",
-                   slice.resetReason ? slice.resetReason : "");
+                   slice.wasReset() ? "yes - " : "no",
+                   slice.wasReset() ? ExplainAbortReason(slice.resetReason) : "");
 
     FragmentVector fragments;
     if (!fragments.append(DuplicateString(buffer)) ||
@@ -392,13 +407,13 @@ Statistics::formatCompactSummaryMessage() const
     const double mmu50 = computeMMU(50 * PRMJ_USEC_PER_MSEC);
 
     char buffer[1024];
-    if (!nonincrementalReason_) {
+    if (!nonincremental()) {
         SprintfLiteral(buffer,
                        "Max Pause: %.3fms; MMU 20ms: %.1f%%; MMU 50ms: %.1f%%; Total: %.3fms; ",
                        t(longest), mmu20 * 100., mmu50 * 100., t(total));
     } else {
         SprintfLiteral(buffer, "Non-Incremental: %.3fms (%s); ",
-                       t(total), nonincrementalReason_);
+                       t(total), ExplainAbortReason(nonincrementalReason_));
     }
     if (!fragments.append(DuplicateString(buffer)))
         return UniqueChars(nullptr);
@@ -514,8 +529,8 @@ Statistics::formatDetailedDescription()
     SprintfLiteral(buffer, format,
                    ExplainInvocationKind(gckind),
                    ExplainReason(slices[0].reason),
-                   nonincrementalReason_ ? "no - " : "yes",
-                   nonincrementalReason_ ? nonincrementalReason_ : "",
+                   nonincremental() ? "no - " : "yes",
+                   nonincremental() ? ExplainAbortReason(nonincrementalReason_) : "",
                    zoneStats.collectedZoneCount, zoneStats.zoneCount, zoneStats.sweptZoneCount,
                    zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
                    zoneStats.sweptCompartmentCount,
@@ -547,8 +562,8 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice)
 ";
     char buffer[1024];
     SprintfLiteral(buffer, format, i, ExplainReason(slice.reason),
-                   slice.resetReason ? "yes - " : "no",
-                   slice.resetReason ? slice.resetReason : "",
+                   slice.wasReset() ? "yes - " : "no",
+                   slice.wasReset() ? ExplainAbortReason(slice.resetReason) : "",
                    gc::StateName(slice.initialState), gc::StateName(slice.finalState),
                    uint64_t(slice.endFaults - slice.startFaults),
                    t(slice.duration()), budgetDescription, t(slice.start - slices[0].start));
@@ -686,7 +701,7 @@ Statistics::formatJsonDescription(uint64_t timestamp)
                    int(mmu50 * 100),
                    sccTotal / 1000, sccTotal % 1000,
                    sccLongest / 1000, sccLongest % 1000,
-                   nonincrementalReason_ ? nonincrementalReason_ : "none",
+                   ExplainAbortReason(nonincrementalReason_),
                    unsigned(preBytes / 1024 / 1024),
                    counts[STAT_NEW_CHUNK],
                    counts[STAT_DESTROY_CHUNK]);
@@ -769,7 +784,7 @@ Statistics::Statistics(JSRuntime* rt)
     startupTime(PRMJ_Now()),
     fp(nullptr),
     gcDepth(0),
-    nonincrementalReason_(nullptr),
+    nonincrementalReason_(gc::AbortReason::None),
     timedGCStart(0),
     preBytes(0),
     maxPauseInInterval(0),
@@ -951,7 +966,7 @@ Statistics::beginGC(JSGCInvocationKind kind)
     slices.clearAndFree();
     sccTimes.clearAndFree();
     gckind = kind;
-    nonincrementalReason_ = nullptr;
+    nonincrementalReason_ = gc::AbortReason::None;
 
     preBytes = runtime->gc.usage.gcBytes();
 }
@@ -982,7 +997,9 @@ Statistics::endGC()
     }
     runtime->addTelemetry(JS_TELEMETRY_GC_MARK_ROOTS_MS, t(markRootsTotal));
     runtime->addTelemetry(JS_TELEMETRY_GC_MARK_GRAY_MS, t(phaseTimes[PHASE_DAG_NONE][PHASE_SWEEP_MARK_GRAY]));
-    runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL, !!nonincrementalReason_);
+    runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL, nonincremental());
+    if (nonincremental())
+        runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL_REASON, uint32_t(nonincrementalReason_));
     runtime->addTelemetry(JS_TELEMETRY_GC_INCREMENTAL_DISABLED, !runtime->gc.isIncrementalGCAllowed());
     runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
     runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS, t(sccLongest));
@@ -1069,7 +1086,9 @@ Statistics::endSlice()
 
         int64_t sliceTime = slices.back().end - slices.back().start;
         runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
-        runtime->addTelemetry(JS_TELEMETRY_GC_RESET, !!slices.back().resetReason);
+        runtime->addTelemetry(JS_TELEMETRY_GC_RESET, slices.back().wasReset());
+        if (slices.back().wasReset())
+            runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON, uint32_t(slices.back().resetReason));
 
         if (slices.back().budget.isTimeBudget()) {
             int64_t budget_ms = slices.back().budget.timeBudget.budget;

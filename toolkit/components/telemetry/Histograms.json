@@ -811,6 +811,14 @@
     "kind": "boolean",
     "description": "Was an incremental GC canceled?"
   },
+  "GC_RESET_REASON": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Reason for cancelling an ongoing GC (see js::gc::AbortReason)",
+    "bug_numbers": [1308116]
+  },
   "GC_INCREMENTAL_DISABLED": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
@@ -822,6 +830,14 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Was the GC non-incremental?"
+  },
+  "GC_NON_INCREMENTAL_REASON": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Reason for performing a non-incremental GC (see js::gc::AbortReason)",
+    "bug_numbers": [1308116]
   },
   "GC_SCC_SWEEP_TOTAL_MS": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],

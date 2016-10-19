@@ -13,6 +13,7 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
+const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button"));
 const MessageIndent = createFactory(require("devtools/client/webconsole/new-console-output/components/message-indent").MessageIndent);
@@ -40,6 +41,7 @@ const Message = createClass({
     stacktrace: PropTypes.any,
     messageId: PropTypes.string,
     scrollToMessage: PropTypes.bool,
+    exceptionDocURL: PropTypes.string,
     serviceContainer: PropTypes.shape({
       emitNewMessage: PropTypes.func.isRequired,
       onViewSourceInDebugger: PropTypes.func.isRequired,
@@ -66,6 +68,11 @@ const Message = createClass({
     }
   },
 
+  onLearnMoreClick: function () {
+    let {exceptionDocURL} = this.props;
+    this.props.serviceContainer.openLink(exceptionDocURL);
+  },
+
   render() {
     const {
       messageId,
@@ -82,6 +89,7 @@ const Message = createClass({
       stacktrace,
       serviceContainer,
       dispatch,
+      exceptionDocURL,
     } = this.props;
 
     topLevelClasses.push("message", source, type, level);
@@ -132,6 +140,15 @@ const Message = createClass({
       }) : null
     );
 
+    let learnMore;
+    if (exceptionDocURL) {
+      learnMore = dom.a({
+        className: "learn-more-link webconsole-learn-more-link",
+        title: exceptionDocURL.split("?")[0],
+        onClick: this.onLearnMoreClick,
+      }, `[${l10n.getStr("webConsoleMoreInfoLabel")}]`);
+    }
+
     return dom.div({
       className: topLevelClasses.join(" "),
       ref: node => {
@@ -145,7 +162,8 @@ const Message = createClass({
       dom.span({ className: "message-body-wrapper" },
         dom.span({ className: "message-flex-body" },
           dom.span({ className: "message-body devtools-monospace" },
-            messageBody
+            messageBody,
+            learnMore
           ),
           repeat,
           location

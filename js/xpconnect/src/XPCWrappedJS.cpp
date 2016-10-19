@@ -207,9 +207,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJSUnmarkGray))) {
         *aInstancePtr = nullptr;
 
-        // No need to null check mJSObj because IsValid() call above did
-        // that already.
-        JS::ExposeObjectToActiveJS(mJSObj);
+        mJSObj.exposeToActiveJS();
 
         // Just return some error value since one isn't supposed to use
         // nsIXPConnectWrappedJSUnmarkGray objects for anything.
@@ -318,9 +316,6 @@ nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr)
 JSObject*
 nsXPCWrappedJS::GetJSObject()
 {
-    if (mJSObj) {
-        JS::ExposeObjectToActiveJS(mJSObj);
-    }
     return mJSObj;
 }
 

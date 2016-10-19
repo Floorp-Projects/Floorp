@@ -2924,7 +2924,9 @@ nsDocument::Timeline()
 void
 nsDocument::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
 {
-  Element* root = GetRootElement();
+  // Hold a strong ref for the root element since Element::GetAnimations() calls
+  // FlushPendingNotifications() which may destroy the element.
+  RefPtr<Element> root = GetRootElement();
   if (!root) {
     return;
   }

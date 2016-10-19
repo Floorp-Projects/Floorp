@@ -1975,7 +1975,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   int32_t imageX, imageY;
   Element* dragImage = aDataTransfer->GetDragImage(&imageX, &imageY);
 
-  nsCOMPtr<nsISupportsArray> transArray =
+  nsCOMPtr<nsIArray> transArray =
     aDataTransfer->GetTransferables(dragTarget->AsDOMNode());
   if (!transArray)
     return false;
