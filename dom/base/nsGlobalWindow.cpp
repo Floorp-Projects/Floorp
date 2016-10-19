@@ -1819,7 +1819,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGlobalWindow)
       for (auto iter = tmp->mCachedXBLPrototypeHandlers->Iter();
            !iter.Done();
            iter.Next()) {
-        JS::ExposeObjectToActiveJS(iter.Data());
+        iter.Data().exposeToActiveJS();
       }
     }
     if (EventListenerManager* elm = tmp->GetExistingListenerManager()) {
@@ -2024,8 +2024,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindow)
     for (auto iter = tmp->mCachedXBLPrototypeHandlers->Iter();
          !iter.Done();
          iter.Next()) {
-      JS::Heap<JSObject*>& data = iter.Data();
-      aCallbacks.Trace(&data, "Cached XBL prototype handler", aClosure);
+      aCallbacks.Trace(&iter.Data(), "Cached XBL prototype handler", aClosure);
     }
   }
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
@@ -2648,8 +2647,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // We're reusing the inner window, but this still counts as a navigation,
     // so all expandos and such defined on the outer window should go away. Force
     // all Xray wrappers to be recomputed.
-    JS::Rooted<JSObject*> rootedObject(cx, GetWrapperPreserveColor());
-    JS::ExposeObjectToActiveJS(rootedObject);
+    JS::Rooted<JSObject*> rootedObject(cx, GetWrapper());
     if (!JS_RefreshCrossCompartmentWrappers(cx, rootedObject)) {
       return NS_ERROR_FAILURE;
     }
@@ -9038,7 +9036,7 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                                          JS::Handle<JSObject*> aHandler)
 {
   if (!mCachedXBLPrototypeHandlers) {
-    mCachedXBLPrototypeHandlers = new nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*>();
+    mCachedXBLPrototypeHandlers = new XBLPrototypeHandlerTable();
     PreserveWrapper(ToSupports(this));
   }
 

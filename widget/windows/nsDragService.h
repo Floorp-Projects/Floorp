@@ -24,7 +24,7 @@ public:
   virtual ~nsDragService();
   
   // nsBaseDragService
-  virtual nsresult InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
+  virtual nsresult InvokeDragSessionImpl(nsIArray* anArrayTransferables,
                                          nsIScriptableRegion* aRegion,
                                          uint32_t aActionType);
 

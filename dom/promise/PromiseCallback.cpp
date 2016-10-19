@@ -81,7 +81,6 @@ ResolvePromiseCallback::Call(JSContext* aCx,
 {
   // Run resolver's algorithm with value and the synchronous flag set.
 
-  JS::ExposeObjectToActiveJS(mGlobal);
   JS::ExposeValueToActiveJS(aValue);
 
   JSAutoCompartment ac(aCx, mGlobal);
@@ -143,7 +142,6 @@ RejectPromiseCallback::Call(JSContext* aCx,
 {
   // Run resolver's algorithm with value and the synchronous flag set.
 
-  JS::ExposeObjectToActiveJS(mGlobal);
   JS::ExposeValueToActiveJS(aValue);
 
   JSAutoCompartment ac(aCx, mGlobal);
@@ -210,7 +208,6 @@ InvokePromiseFuncCallback::Call(JSContext* aCx,
 {
   // Run resolver's algorithm with value and the synchronous flag set.
 
-  JS::ExposeObjectToActiveJS(mGlobal);
   JS::ExposeValueToActiveJS(aValue);
 
   JSAutoCompartment ac(aCx, mGlobal);
@@ -312,7 +309,6 @@ nsresult
 WrapperPromiseCallback::Call(JSContext* aCx,
                              JS::Handle<JS::Value> aValue)
 {
-  JS::ExposeObjectToActiveJS(mGlobal);
   JS::ExposeValueToActiveJS(aValue);
 
   JSAutoCompartment ac(aCx, mGlobal);

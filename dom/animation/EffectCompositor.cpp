@@ -14,7 +14,6 @@
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectSet.h"
-#include "mozilla/InitializerList.h"
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
@@ -27,6 +26,7 @@
 #include "nsRuleProcessorData.h" // For ElementRuleProcessorData etc.
 #include "nsTArray.h"
 #include <bitset>
+#include <initializer_list>
 
 using mozilla::dom::Animation;
 using mozilla::dom::Element;

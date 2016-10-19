@@ -81,27 +81,19 @@ public:
 
   JS::Handle<JSObject*> Callback() const
   {
-    JS::ExposeObjectToActiveJS(mCallback);
+    mCallback.exposeToActiveJS();
     return CallbackPreserveColor();
   }
 
   JSObject* GetCreationStack() const
   {
-    JSObject* result = mCreationStack;
-    if (result) {
-      JS::ExposeObjectToActiveJS(result);
-    }
-    return result;
+    return mCreationStack;
   }
 
   void MarkForCC()
   {
-    if (mCallback) {
-      JS::ExposeObjectToActiveJS(mCallback);
-    }
-    if (mCreationStack) {
-      JS::ExposeObjectToActiveJS(mCreationStack);
-    }
+    mCallback.exposeToActiveJS();
+    mCreationStack.exposeToActiveJS();
   }
 
   /*

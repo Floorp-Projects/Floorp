@@ -686,16 +686,11 @@ PluginModuleParent::PluginModuleParent(bool aIsChrome, bool aAllowAsyncInit)
     , mIsNPShutdownPending(false)
     , mAsyncNewRv(NS_ERROR_NOT_INITIALIZED)
 {
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
-    mIsStartingAsync = aAllowAsyncInit &&
-                       Preferences::GetBool(kAsyncInitPref, false) &&
-                       !BrowserTabsRemoteAutostart();
 #if defined(MOZ_CRASHREPORTER)
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AsyncPluginInit"),
                                        mIsStartingAsync ?
                                            NS_LITERAL_CSTRING("1") :
                                            NS_LITERAL_CSTRING("0"));
-#endif
 #endif
 }
 

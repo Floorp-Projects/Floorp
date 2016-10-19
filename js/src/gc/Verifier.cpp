@@ -175,7 +175,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (verifyPreData || isIncrementalGCInProgress())
         return;
 
-    if (!IsIncrementalGCSafe(rt))
+    if (IsIncrementalGCUnsafe(rt) != AbortReason::None)
         return;
 
     number++;
@@ -345,7 +345,7 @@ gc::GCRuntime::endVerifyPreBarriers()
     verifyPreData = nullptr;
     incrementalState = State::NotActive;
 
-    if (!compartmentCreated && IsIncrementalGCSafe(rt)) {
+    if (!compartmentCreated && IsIncrementalGCUnsafe(rt) == AbortReason::None) {
         CheckEdgeTracer cetrc(rt);
 
         /* Start after the roots. */

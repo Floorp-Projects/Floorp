@@ -440,23 +440,23 @@ private:
   #define MAIN_THREAD_JNI_REF_GUARD
 #endif
 
-PRIntervalTime NS_NotifyBeginPluginCall(NSPluginCallReentry aReentryState);
-void NS_NotifyPluginCall(PRIntervalTime aTime, NSPluginCallReentry aReentryState);
+void NS_NotifyBeginPluginCall(NSPluginCallReentry aReentryState);
+void NS_NotifyPluginCall(NSPluginCallReentry aReentryState);
 
 #define NS_TRY_SAFE_CALL_RETURN(ret, fun, pluginInst, pluginCallReentry) \
 PR_BEGIN_MACRO                                     \
   MAIN_THREAD_JNI_REF_GUARD;                       \
-  PRIntervalTime startTime = NS_NotifyBeginPluginCall(pluginCallReentry); \
+  NS_NotifyBeginPluginCall(pluginCallReentry); \
   ret = fun;                                       \
-  NS_NotifyPluginCall(startTime, pluginCallReentry); \
+  NS_NotifyPluginCall(pluginCallReentry); \
 PR_END_MACRO
 
 #define NS_TRY_SAFE_CALL_VOID(fun, pluginInst, pluginCallReentry) \
 PR_BEGIN_MACRO                                     \
   MAIN_THREAD_JNI_REF_GUARD;                       \
-  PRIntervalTime startTime = NS_NotifyBeginPluginCall(pluginCallReentry); \
+  NS_NotifyBeginPluginCall(pluginCallReentry); \
   fun;                                             \
-  NS_NotifyPluginCall(startTime, pluginCallReentry); \
+  NS_NotifyPluginCall(pluginCallReentry); \
 PR_END_MACRO
 
 #endif // nsNPAPIPluginInstance_h_

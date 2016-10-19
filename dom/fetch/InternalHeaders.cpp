@@ -78,7 +78,36 @@ InternalHeaders::Delete(const nsACString& aName, ErrorResult& aRv)
 }
 
 void
-InternalHeaders::Get(const nsACString& aName, nsCString& aValue, ErrorResult& aRv) const
+InternalHeaders::Get(const nsACString& aName, nsACString& aValue, ErrorResult& aRv) const
+{
+  nsAutoCString lowerName;
+  ToLowerCase(aName, lowerName);
+
+  if (IsInvalidName(lowerName, aRv)) {
+    return;
+  }
+
+  const char* delimiter = ",";
+  bool firstValueFound = false;
+
+  for (uint32_t i = 0; i < mList.Length(); ++i) {
+    if (lowerName == mList[i].mName) {
+      if (firstValueFound) {
+        aValue += delimiter;
+      }
+      aValue += mList[i].mValue;
+      firstValueFound = true;
+    }
+  }
+
+  // No value found, so return null to content
+  if (!firstValueFound) {
+    aValue.SetIsVoid(true);
+  }
+}
+
+void
+InternalHeaders::GetFirst(const nsACString& aName, nsACString& aValue, ErrorResult& aRv) const
 {
   nsAutoCString lowerName;
   ToLowerCase(aName, lowerName);
@@ -96,25 +125,6 @@ InternalHeaders::Get(const nsACString& aName, nsCString& aValue, ErrorResult& aR
 
   // No value found, so return null to content
   aValue.SetIsVoid(true);
-}
-
-void
-InternalHeaders::GetAll(const nsACString& aName, nsTArray<nsCString>& aResults,
-                        ErrorResult& aRv) const
-{
-  nsAutoCString lowerName;
-  ToLowerCase(aName, lowerName);
-
-  if (IsInvalidName(lowerName, aRv)) {
-    return;
-  }
-
-  aResults.SetLength(0);
-  for (uint32_t i = 0; i < mList.Length(); ++i) {
-    if (lowerName == mList[i].mName) {
-      aResults.AppendElement(mList[i].mValue);
-    }
-  }
 }
 
 bool
@@ -351,7 +361,7 @@ InternalHeaders::CORSHeaders(InternalHeaders* aHeaders)
   ErrorResult result;
 
   nsAutoCString acExposedNames;
-  aHeaders->Get(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"), acExposedNames, result);
+  aHeaders->GetFirst(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"), acExposedNames, result);
   MOZ_ASSERT(!result.Failed());
 
   AutoTArray<nsCString, 5> exposeNamesArray;

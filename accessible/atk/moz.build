@@ -24,6 +24,7 @@ SOURCES += [
     'nsMaiInterfaceImage.cpp',
     'nsMaiInterfaceSelection.cpp',
     'nsMaiInterfaceTable.cpp',
+    'nsMaiInterfaceTableCell.cpp',
     'nsMaiInterfaceText.cpp',
     'nsMaiInterfaceValue.cpp',
     'Platform.cpp',

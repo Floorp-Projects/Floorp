@@ -2375,9 +2375,8 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
     nsIDocument* doc = node->OwnerDoc();
     if (doc) {
       nsIURI* uri = doc->GetDocumentURI();
-      nsCString spec = uri->GetSpecOrDefault();
-      isAboutPage = spec.EqualsLiteral("about:newtab") ||
-                    spec.EqualsLiteral("about:sync-tabs");
+      nsresult rv = uri->SchemeIs("about", &isAboutPage);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 

@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_AnimationPerformanceWarning_h
 #define mozilla_dom_AnimationPerformanceWarning_h
 
-#include "mozilla/InitializerList.h"
+#include <initializer_list>
 
 class nsXPIDLString;
 

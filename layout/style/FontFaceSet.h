@@ -314,7 +314,10 @@ private:
   // any of those fonts failed to load.  mReady is replaced with
   // a new Promise object whenever mReady is settled and another
   // FontFace in mRuleFaces or mNonRuleFaces starts to load.
+  // Note that mReady is created lazily when GetReady() is called.
   RefPtr<mozilla::dom::Promise> mReady;
+  // Whether the ready promise must be resolved when it's created.
+  bool mResolveLazilyCreatedReadyPromise;
 
   // Set of all loaders pointing to us. These are not strong pointers,
   // but that's OK because nsFontFaceLoader always calls RemoveLoader on

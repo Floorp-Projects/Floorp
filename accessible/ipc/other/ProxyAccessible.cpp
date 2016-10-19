@@ -517,6 +517,19 @@ ProxyAccessible::RowIdx()
   return index;
 }
 
+void
+ProxyAccessible::GetColRowExtents(uint32_t* aColIdx, uint32_t* aRowIdx,
+                                  uint32_t* aColExtent, uint32_t* aRowExtent)
+{
+  Unused << mDoc->SendGetColRowExtents(mID, aColIdx, aRowIdx, aColExtent, aRowExtent);
+}
+
+void
+ProxyAccessible::GetPosition(uint32_t* aColIdx, uint32_t* aRowIdx)
+{
+  Unused << mDoc->SendGetPosition(mID, aColIdx, aRowIdx);
+}
+
 uint32_t
 ProxyAccessible::ColExtent()
 {

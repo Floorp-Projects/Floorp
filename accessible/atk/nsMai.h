@@ -65,6 +65,10 @@ typedef struct _MaiAtkSocketClass
   AtkSocketClass parent_class;
 } MaiAtkSocketClass;
 
+// This is a pointer to the atk_table_cell_get_type function if we are using
+// a version of atk that defines that.
+extern "C" GType (*gAtkTableCellGetTypeFunc)();
+
 mozilla::a11y::AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
 mozilla::a11y::ProxyAccessible* GetProxy(AtkObject* aAtkObj);
 mozilla::a11y::AccessibleOrProxy GetInternalObj(AtkObject* aObj);

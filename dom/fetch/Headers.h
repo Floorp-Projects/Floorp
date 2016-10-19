@@ -81,15 +81,14 @@ public:
     mInternalHeaders->Delete(aName, aRv);
   }
 
-  void Get(const nsACString& aName, nsCString& aValue, ErrorResult& aRv) const
+  void Get(const nsACString& aName, nsACString& aValue, ErrorResult& aRv) const
   {
     mInternalHeaders->Get(aName, aValue, aRv);
   }
 
-  void GetAll(const nsACString& aName, nsTArray<nsCString>& aResults,
-              ErrorResult& aRv) const
+  void GetFirst(const nsACString& aName, nsACString& aValue, ErrorResult& aRv) const
   {
-    mInternalHeaders->GetAll(aName, aResults, aRv);
+    mInternalHeaders->GetFirst(aName, aValue, aRv);
   }
 
   bool Has(const nsACString& aName, ErrorResult& aRv) const

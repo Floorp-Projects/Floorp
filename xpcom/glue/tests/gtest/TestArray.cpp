@@ -118,27 +118,17 @@ TEST(Array, main)
     CheckArray(array, 13, appendResult, 10);
 
 
-    // test IndexOf && LastIndexOf
-    int32_t expectedIndex[5] = {0, 4, 6, 12, -1};
-    int32_t count = 0;
+    // test IndexOf
+    int32_t expectedIndex = 0;
     int32_t index = array->IndexOf(foo);
-    EXPECT_EQ(index, expectedIndex[count]);
-    while (-1 != index) {
-      count++;
-      index = array->IndexOfStartingAt(foo, index + 1);
-      if (-1 != index)
-        EXPECT_EQ(index, expectedIndex[count]);
-    }
-    index = array->LastIndexOf(foo);
-    count--;
-    EXPECT_EQ(index, expectedIndex[count]);
+    EXPECT_EQ(index, expectedIndex);
 
     // test ReplaceElementAt
     array->ReplaceElementAt(foo, 8);
     int32_t   replaceResult[13] = {3, 0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
     CheckArray(array, 13, replaceResult, 9);
 
-    // test RemoveElementAt, RemoveElement RemoveLastElement
+    // test RemoveElementAt, RemoveElement
     array->RemoveElementAt(0);
     int32_t   removeResult[12] = {0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
     CheckArray(array, 12, removeResult, 9);
@@ -148,19 +138,12 @@ TEST(Array, main)
     array->RemoveElement(foo);
     int32_t   removeResult3[10] = {0, 1, 2, 4, 3, 5, 7, 8, 9, 3};
     CheckArray(array, 10, removeResult3, 9);
-    array->RemoveLastElement(foo);
-    int32_t   removeResult4[9] = {0, 1, 2, 4, 3, 5, 7, 8, 9};
-    CheckArray(array, 9, removeResult4, 9);
 
     foo = nullptr;
 
     // test clear
     array->Clear();
     FillArray(array, 4);
-    CheckArray(array, 4, fillResult, 4);
-
-    // test compact
-    array->Compact();
     CheckArray(array, 4, fillResult, 4);
 
     // test delete

@@ -900,9 +900,9 @@ endif
 ifdef MOZ_RUST
 ifdef RUST_LIBRARY_FILE
 
-ifdef MOZ_DEBUG
-cargo_build_flags =
-else
+# Permit users to pass flags to cargo from their mozconfigs (e.g. --color=always).
+cargo_build_flags = $(CARGOFLAGS)
+ifndef MOZ_DEBUG
 cargo_build_flags = --release
 endif
 ifdef MOZ_CARGO_SUPPORTS_FROZEN

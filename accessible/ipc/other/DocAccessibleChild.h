@@ -259,6 +259,13 @@ public:
 
   virtual bool RecvColExtent(const uint64_t& aID, uint32_t* aExtent) override;
 
+  virtual bool RecvGetPosition(const uint64_t& aID,
+                               uint32_t* aColIdx, uint32_t* aRowIdx) override;
+
+  virtual bool RecvGetColRowExtents(const uint64_t& aID,
+                                  uint32_t* aColIdx, uint32_t* aRowIdx,
+                                  uint32_t* aColExtent, uint32_t* aRowExtent) override;
+
   virtual bool RecvRowExtent(const uint64_t& aID, uint32_t* aExtent) override;
 
   virtual bool RecvColHeaderCells(const uint64_t& aID,

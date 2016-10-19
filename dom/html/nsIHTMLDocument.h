@@ -48,7 +48,7 @@ public:
   // XXXbz is this still needed now that we can flush just content,
   // not the rest?
   virtual int32_t GetNumFormsSynchronous() = 0;
-  
+
   virtual bool IsWriting() = 0;
 
   /**
