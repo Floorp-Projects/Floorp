@@ -478,6 +478,9 @@ SetOrExtendBoxedOrUnboxedDenseElements(ExclusiveContext* cx, JSObject* obj,
     if (Type == JSVAL_TYPE_MAGIC) {
         NativeObject* nobj = &obj->as<NativeObject>();
 
+        if (nobj->denseElementsAreFrozen())
+            return DenseElementResult::Incomplete;
+
         if (obj->is<ArrayObject>() &&
             !obj->as<ArrayObject>().lengthIsWritable() &&
             start + count >= obj->as<ArrayObject>().length())
