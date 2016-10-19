@@ -1091,6 +1091,10 @@ var AddonTestUtils = {
    * Returns a promise that will be resolved when an add-on update check is
    * complete. The value resolved will be an AddonInstall if a new version was
    * found.
+   *
+   * @param {object} addon The add-on to find updates for.
+   * @param {integer} reason The type of update to find.
+   * @return {Promise<object>} an object containing information about the update.
    */
   promiseFindAddonUpdates(addon, reason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
     let equal = this.testScope.equal;
