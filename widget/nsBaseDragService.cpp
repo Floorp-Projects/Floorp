@@ -566,19 +566,14 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   if (!enableDragImages || !mHasImage) {
     // if a region was specified, set the screen rectangle to the area that
     // the region occupies
+    nsIntRect dragRect;
     if (aRegion) {
       // the region's coordinates are relative to the root frame
-      nsIFrame* rootFrame = presShell->GetRootFrame();
-      if (rootFrame) {
-        nsIntRect dragRect;
-        aRegion->GetBoundingBox(&dragRect.x, &dragRect.y, &dragRect.width, &dragRect.height);
-        dragRect = ToAppUnits(dragRect, nsPresContext::AppUnitsPerCSSPixel()).
-                            ToOutsidePixels((*aPresContext)->AppUnitsPerDevPixel());
+      aRegion->GetBoundingBox(&dragRect.x, &dragRect.y, &dragRect.width, &dragRect.height);
 
-        nsIntRect screenRect = rootFrame->GetScreenRect();
-        aScreenDragRect->SetRect(screenRect.x + dragRect.x, screenRect.y + dragRect.y,
-                                 dragRect.width, dragRect.height);
-      }
+      nsIFrame* rootFrame = presShell->GetRootFrame();
+      nsIntRect screenRect = rootFrame->GetScreenRect();
+      dragRect.MoveBy(screenRect.TopLeft());
     }
     else {
       // otherwise, there was no region so just set the rectangle to
@@ -586,12 +581,13 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
       nsCOMPtr<nsIContent> content = do_QueryInterface(dragNode);
       nsIFrame* frame = content->GetPrimaryFrame();
       if (frame) {
-        nsIntRect screenRect = frame->GetScreenRect();
-        aScreenDragRect->SetRect(screenRect.x, screenRect.y,
-                                 screenRect.width, screenRect.height);
+        dragRect = frame->GetScreenRect();
       }
     }
 
+    dragRect = ToAppUnits(dragRect, nsPresContext::AppUnitsPerCSSPixel()).
+                          ToOutsidePixels((*aPresContext)->AppUnitsPerDevPixel());
+    aScreenDragRect->SizeTo(dragRect.width, dragRect.height);
     return NS_OK;
   }
 
