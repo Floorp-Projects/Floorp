@@ -47,8 +47,7 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
     nsIntRect dragRect;
     nsPresContext* pc;
     RefPtr<mozilla::gfx::SourceSurface> surface;
-    DrawDrag(mSourceNode, aRegion, mScreenX, mScreenY,
-             &dragRect, &surface, &pc);
+    DrawDrag(mSourceNode, aRegion, mScreenPosition, &dragRect, &surface, &pc);
 
     if (surface) {
       RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =

@@ -131,26 +131,17 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  NSPoint screenPoint =
-    nsCocoaUtils::ConvertPointToScreen([gLastDragView window],
-                                       [gLastDragMouseDownEvent locationInWindow]);
-  // Y coordinates are bottom to top, so reverse this
-  screenPoint.y = nsCocoaUtils::FlippedScreenY(screenPoint.y);
-
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
 
   RefPtr<SourceSurface> surface;
   nsPresContext* pc;
-  nsresult rv = DrawDrag(aDOMNode, aRegion,
-                         NSToIntRound(screenPoint.x),
-                         NSToIntRound(screenPoint.y),
+  nsresult rv = DrawDrag(aDOMNode, aRegion, mScreenPosition,
                          aDragRect, &surface, &pc);
-  if (!aDragRect->width || !aDragRect->height) {
+  if (pc && (!aDragRect->width || !aDragRect->height)) {
     // just use some suitable defaults
     int32_t size = nsCocoaUtils::CocoaPointsToDevPixels(20, scaleFactor);
-    aDragRect->SetRect(nsCocoaUtils::CocoaPointsToDevPixels(screenPoint.x, scaleFactor),
-                       nsCocoaUtils::CocoaPointsToDevPixels(screenPoint.y, scaleFactor),
-                       size, size);
+    aDragRect->SetRect(pc->CSSPixelsToDevPixels(mScreenPosition.x),
+                       pc->CSSPixelsToDevPixels(mScreenPosition.y), size, size);
   }
 
   if (NS_FAILED(rv) || !surface)
