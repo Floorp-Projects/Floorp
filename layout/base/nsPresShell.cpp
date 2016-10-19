@@ -5056,14 +5056,24 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
   MOZ_ASSERT(ctx); // already checked the draw target above
 
   if (aRegion) {
+    RefPtr<PathBuilder> builder = dt->CreatePathBuilder(FillRule::FILL_WINDING);
+    
     // Convert aRegion from CSS pixels to dev pixels
     nsIntRegion region =
       aRegion->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel())
         .ToOutsidePixels(pc->AppUnitsPerDevPixel());
     for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
       const nsIntRect& rect = iter.Get();
-      ctx->Clip(gfxRect(rect.x, rect.y, rect.width, rect.height));
+
+      builder->MoveTo(rect.TopLeft());
+      builder->LineTo(rect.TopRight());
+      builder->LineTo(rect.BottomRight());
+      builder->LineTo(rect.BottomLeft());
+      builder->LineTo(rect.TopLeft());
     }
+
+    RefPtr<Path> path = builder->Finish();
+    ctx->Clip(path);
   }
 
   nsRenderingContext rc(ctx);
@@ -5151,8 +5161,8 @@ PresShell::RenderNode(nsIDOMNode* aNode,
       return nullptr;
 
     // move the region so that it is offset from the topleft corner of the surface
-    aRegion->MoveBy(-pc->AppUnitsToDevPixels(area.x),
-                    -pc->AppUnitsToDevPixels(area.y));
+    aRegion->MoveBy(-nsPresContext::AppUnitsToIntCSSPixels(area.x),
+                    -nsPresContext::AppUnitsToIntCSSPixels(area.y));
   }
 
   return PaintRangePaintInfo(rangeItems, nullptr, aRegion, area, aPoint,
