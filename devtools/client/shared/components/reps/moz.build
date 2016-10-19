@@ -8,6 +8,7 @@ DevToolsModules(
     'array.js',
     'attribute.js',
     'caption.js',
+    'comment-node.js',
     'date-time.js',
     'document.js',
     'event.js',
