@@ -63,7 +63,6 @@ NS_IMETHODIMP
 DeleteRangeTransaction::DoTransaction()
 {
   MOZ_ASSERT(mRange && mEditorBase);
-  nsresult res;
 
   // build the child transactions
   nsCOMPtr<nsINode> startParent = mRange->GetStartParent();
@@ -74,24 +73,26 @@ DeleteRangeTransaction::DoTransaction()
 
   if (startParent == endParent) {
     // the selection begins and ends in the same node
-    res = CreateTxnsToDeleteBetween(startParent, startOffset, endOffset);
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv =
+      CreateTxnsToDeleteBetween(startParent, startOffset, endOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // the selection ends in a different node from where it started.  delete
     // the relevant content in the start node
-    res = CreateTxnsToDeleteContent(startParent, startOffset, nsIEditor::eNext);
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv =
+      CreateTxnsToDeleteContent(startParent, startOffset, nsIEditor::eNext);
+    NS_ENSURE_SUCCESS(rv, rv);
     // delete the intervening nodes
-    res = CreateTxnsToDeleteNodesBetween();
-    NS_ENSURE_SUCCESS(res, res);
+    rv = CreateTxnsToDeleteNodesBetween();
+    NS_ENSURE_SUCCESS(rv, rv);
     // delete the relevant content in the end node
-    res = CreateTxnsToDeleteContent(endParent, endOffset, nsIEditor::ePrevious);
-    NS_ENSURE_SUCCESS(res, res);
+    rv = CreateTxnsToDeleteContent(endParent, endOffset, nsIEditor::ePrevious);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // if we've successfully built this aggregate transaction, then do it.
-  res = EditAggregateTransaction::DoTransaction();
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = EditAggregateTransaction::DoTransaction();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // only set selection to deletion point if editor gives permission
   bool bAdjustSelection;
@@ -99,8 +100,8 @@ DeleteRangeTransaction::DoTransaction()
   if (bAdjustSelection) {
     RefPtr<Selection> selection = mEditorBase->GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    res = selection->Collapse(startParent, startOffset);
-    NS_ENSURE_SUCCESS(res, res);
+    rv = selection->Collapse(startParent, startOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   // else do nothing - dom range gravity will adjust selection
 
@@ -152,8 +153,8 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(nsINode* aNode,
       new DeleteTextTransaction(*mEditorBase, *charDataNode, aStartOffset,
                                 numToDel, mRangeUpdater);
 
-    nsresult res = transaction->Init();
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv = transaction->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     AppendChild(transaction);
     return NS_OK;
@@ -162,18 +163,20 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(nsINode* aNode,
   nsCOMPtr<nsIContent> child = aNode->GetChildAt(aStartOffset);
   NS_ENSURE_STATE(child);
 
-  nsresult res = NS_OK;
+  // XXX This looks odd.  Only when the last transaction causes error at
+  //     calling Init(), the result becomes error.  Otherwise, always NS_OK.
+  nsresult rv = NS_OK;
   for (int32_t i = aStartOffset; i < aEndOffset; ++i) {
     RefPtr<DeleteNodeTransaction> transaction = new DeleteNodeTransaction();
-    res = transaction->Init(mEditorBase, child, mRangeUpdater);
-    if (NS_SUCCEEDED(res)) {
+    rv = transaction->Init(mEditorBase, child, mRangeUpdater);
+    if (NS_SUCCEEDED(rv)) {
       AppendChild(transaction);
     }
 
     child = child->GetNextSibling();
   }
 
-  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -201,8 +204,8 @@ DeleteRangeTransaction::CreateTxnsToDeleteContent(nsINode* aNode,
         new DeleteTextTransaction(*mEditorBase, *dataNode, start, numToDelete,
                                   mRangeUpdater);
 
-      nsresult res = transaction->Init();
-      NS_ENSURE_SUCCESS(res, res);
+      nsresult rv = transaction->Init();
+      NS_ENSURE_SUCCESS(rv, rv);
 
       AppendChild(transaction);
     }
@@ -216,16 +219,16 @@ DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween()
 {
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
 
-  nsresult res = iter->Init(mRange);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = iter->Init(mRange);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   while (!iter->IsDone()) {
     nsCOMPtr<nsINode> node = iter->GetCurrentNode();
     NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
     RefPtr<DeleteNodeTransaction> transaction = new DeleteNodeTransaction();
-    res = transaction->Init(mEditorBase, node, mRangeUpdater);
-    NS_ENSURE_SUCCESS(res, res);
+    rv = transaction->Init(mEditorBase, node, mRangeUpdater);
+    NS_ENSURE_SUCCESS(rv, rv);
     AppendChild(transaction);
 
     iter->Next();
