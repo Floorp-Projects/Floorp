@@ -41,8 +41,7 @@ Decoder::fail(const char* msg, ...) {
 bool
 Decoder::fail(UniqueChars msg) {
     MOZ_ASSERT(error_);
-    UniqueChars strWithOffset(JS_smprintf("at offset %" PRIuSIZE ": %s",
-                                          currentOffset(), msg.get()));
+    UniqueChars strWithOffset(JS_smprintf("at offset %zu: %s", currentOffset(), msg.get()));
     if (!strWithOffset)
         return false;
 
