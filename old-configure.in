@@ -2448,6 +2448,9 @@ if test -n "$MOZ_RUST"; then
     if test -n "$MOZ_RUST_MP4PARSE"; then
         AC_DEFINE(MOZ_RUST_MP4PARSE)
     fi
+    if test -n "$MOZ_RUST_URLPARSE"; then
+        AC_DEFINE(MOZ_RUST_URLPARSE)
+    fi
 fi
 
 AC_SUBST(MOZ_PHOENIX)
