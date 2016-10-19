@@ -224,7 +224,7 @@ RenderBlockNameAndSignature(WasmRenderContext& c, const AstName& name, ExprType 
 }
 
 static bool
-RenderExpr(WasmRenderContext& c, AstExpr& expr);
+RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine = true);
 
 #define MAP_AST_EXPR(c, expr)                                                         \
     if (c.maybeSourceMap) {                                                           \
@@ -386,12 +386,34 @@ RenderTeeLocal(WasmRenderContext& c, AstTeeLocal& tl)
     MAP_AST_EXPR(c, tl);
     if (!c.buffer.append("tee_local "))
         return false;
-    if (!RenderRef(c, tl.local()))
+    return RenderRef(c, tl.local());
+}
+
+static bool
+RenderGetGlobal(WasmRenderContext& c, AstGetGlobal& gg)
+{
+    if (!RenderIndent(c))
         return false;
 
-    if (!c.buffer.append('\n'))
+    MAP_AST_EXPR(c, gg);
+    if (!c.buffer.append("get_global "))
         return false;
-    return true;
+    return RenderRef(c, gg.global());
+}
+
+static bool
+RenderSetGlobal(WasmRenderContext& c, AstSetGlobal& sg)
+{
+    if (!RenderExpr(c, sg.value()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, sg);
+    if (!c.buffer.append("set_global "))
+        return false;
+    return RenderRef(c, sg.global());
 }
 
 static bool
@@ -975,9 +997,8 @@ RenderReturn(WasmRenderContext& c, AstReturn& ret)
 }
 
 static bool
-RenderExpr(WasmRenderContext& c, AstExpr& expr)
+RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
 {
-    bool newLine = true;
     switch (expr.kind()) {
       case AstExprKind::Drop:
         if (!RenderDrop(c, expr.as<AstDrop>()))
@@ -1009,6 +1030,14 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr)
         break;
       case AstExprKind::SetLocal:
         if (!RenderSetLocal(c, expr.as<AstSetLocal>()))
+            return false;
+        break;
+      case AstExprKind::GetGlobal:
+        if (!RenderGetGlobal(c, expr.as<AstGetGlobal>()))
+            return false;
+        break;
+      case AstExprKind::SetGlobal:
+        if (!RenderSetGlobal(c, expr.as<AstSetGlobal>()))
             return false;
         break;
       case AstExprKind::TeeLocal:
@@ -1193,9 +1222,69 @@ RenderTableSection(WasmRenderContext& c, const AstModule& module)
 }
 
 static bool
-RenderImport(WasmRenderContext& c, AstImport& import, const AstModule::SigVector& sigs)
+RenderGlobal(WasmRenderContext& c, const AstGlobal& glob, bool inImport = false)
 {
-    const AstSig* sig = sigs[import.funcSig().index()];
+    if (!c.buffer.append("(global "))
+        return false;
+
+    if (!inImport) {
+        if (!RenderName(c, glob.name()))
+            return false;
+        if (!c.buffer.append(" "))
+            return false;
+    }
+
+    if (glob.isMutable()) {
+        if (!c.buffer.append("(mut "))
+            return false;
+        if (!RenderValType(c, glob.type()))
+            return false;
+        if (!c.buffer.append(")"))
+            return false;
+    } else {
+        if (!RenderValType(c, glob.type()))
+            return false;
+    }
+
+    if (glob.hasInit()) {
+        if (!c.buffer.append(" ("))
+            return false;
+
+        uint32_t prevIndent = c.indent;
+        c.indent = 0;
+        if (!RenderExpr(c, glob.init(), /* newLine */ false))
+            return false;
+        c.indent = prevIndent;
+
+        if (!c.buffer.append(")"))
+            return false;
+    }
+
+    if (!c.buffer.append(")"))
+        return false;
+
+    return inImport || c.buffer.append("\n");
+}
+
+static bool
+RenderGlobalSection(WasmRenderContext& c, const AstModule& module)
+{
+    if (module.globals().empty())
+        return true;
+
+    for (const AstGlobal* global : module.globals()) {
+        if (!RenderIndent(c))
+            return false;
+        if (!RenderGlobal(c, *global))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+RenderImport(WasmRenderContext& c, AstImport& import, const AstModule& module)
+{
     if (!RenderIndent(c))
         return false;
     if (!c.buffer.append("(import "))
@@ -1216,22 +1305,40 @@ RenderImport(WasmRenderContext& c, AstImport& import, const AstModule::SigVector
     if (!RenderEscapedString(c, fieldName))
         return false;
 
-    if (!c.buffer.append("\""))
+    if (!c.buffer.append("\" "))
         return false;
 
-    if (!RenderSignature(c, *sig))
-        return false;
+    switch (import.kind()) {
+      case DefinitionKind::Function: {
+        const AstSig* sig = module.sigs()[import.funcSig().index()];
+        if (!RenderSignature(c, *sig))
+            return false;
+        break;
+      }
+      case DefinitionKind::Table: {
+        // TODO next patch
+        break;
+      }
+      case DefinitionKind::Memory: {
+        // TODO next patch
+        break;
+      }
+      case DefinitionKind::Global: {
+        const AstGlobal& glob = import.global();
+        if (!RenderGlobal(c, glob, /* inImport */ true))
+            return false;
+        break;
+      }
+    }
 
     return c.buffer.append(")\n");
 }
 
 static bool
-RenderImportSection(WasmRenderContext& c, const AstModule::ImportVector& imports, const AstModule::SigVector& sigs)
+RenderImportSection(WasmRenderContext& c, const AstModule& module)
 {
-    uint32_t numImports = imports.length();
-
-    for (uint32_t i = 0; i < numImports; i++) {
-        if (!RenderImport(c, *imports[i], sigs))
+    for (AstImport* import : module.imports()) {
+        if (!RenderImport(c, *import, module))
             return false;
     }
     return true;
@@ -1442,10 +1549,13 @@ RenderModule(WasmRenderContext& c, AstModule& module)
     if (!RenderTypeSection(c, module.sigs()))
         return false;
 
-    if (!RenderImportSection(c, module.imports(), module.sigs()))
+    if (!RenderImportSection(c, module))
         return false;
 
     if (!RenderTableSection(c, module))
+        return false;
+
+    if (!RenderGlobalSection(c, module))
         return false;
 
     if (!RenderExportSection(c, module.exports(), module.funcImportNames(), module.funcs()))
