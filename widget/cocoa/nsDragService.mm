@@ -126,7 +126,7 @@ static nsresult SetUpDragClipboard(nsIArray* aTransferableArray)
 
 NSImage*
 nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
-                                  nsIntRect* aDragRect,
+                                  LayoutDeviceIntRect* aDragRect,
                                   nsIScriptableRegion* aRegion)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -149,8 +149,6 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 
   uint32_t width = aDragRect->width;
   uint32_t height = aDragRect->height;
-
-
 
   RefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(IntSize(width, height),
@@ -309,7 +307,7 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
   if (NS_FAILED(SetUpDragClipboard(aTransferableArray)))
     return NS_ERROR_FAILURE;
 
-  nsIntRect dragRect(0, 0, 20, 20);
+  LayoutDeviceIntRect dragRect(0, 0, 20, 20);
   NSImage* image = ConstructDragImage(mSourceNode, &dragRect, aDragRgn);
   if (!image) {
     // if no image was returned, just draw a rectangle

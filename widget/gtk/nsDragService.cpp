@@ -419,7 +419,7 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
                               GdkDragContext *aContext,
                               int32_t aXOffset,
                               int32_t aYOffset,
-                              const nsIntRect& dragRect)
+                              const LayoutDeviceIntRect& dragRect)
 {
     GdkScreen* screen = gtk_widget_get_screen(mHiddenWidget);
 
@@ -483,7 +483,7 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
 
     RefPtr<DrawTarget> dt = gfxPlatform::CreateDrawTargetForData(
                                 cairo_image_surface_get_data(surf),
-                                dragRect.Size(),
+                                nsIntSize(dragRect.width, dragRect.height),
                                 cairo_image_surface_get_stride(surf),
                                 SurfaceFormat::B8G8R8A8);
     if (!dt)
@@ -1628,7 +1628,7 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
     if (!mHasImage && !mSelection)
         return;
 
-    nsIntRect dragRect;
+    LayoutDeviceIntRect dragRect;
     nsPresContext* pc;
     RefPtr<SourceSurface> surface;
     DrawDrag(mSourceNode, mSourceRegion, mScreenPosition,
