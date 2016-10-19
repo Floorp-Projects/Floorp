@@ -67,6 +67,12 @@ ifdef MOZ_PACKAGE_JSSHELL
 	$(RM) $(PKG_JSSHELL)
 	$(MAKE_JSSHELL)
 endif # MOZ_PACKAGE_JSSHELL
+ifdef MOZ_ARTIFACT_BUILD_SYMBOLS
+	@echo 'Packaging existing crashreporter symbols from artifact build...'
+	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
+	cd $(DIST)/crashreporter-symbols && \
+          zip -r5D '../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' . -i '*.sym' -i '*.txt'
+endif # MOZ_ARTIFACT_BUILD_SYMBOLS
 ifdef MOZ_CODE_COVERAGE
 	# Package code coverage gcno tree
 	@echo 'Packaging code coverage data...'

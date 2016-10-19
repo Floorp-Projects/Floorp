@@ -13,6 +13,8 @@ class L10n {
         return "Console was cleared.";
       case "webConsoleXhrIndicator":
         return "XHR";
+      case "webConsoleMoreInfoLabel":
+        return "Learn More";
     }
     return str;
   }

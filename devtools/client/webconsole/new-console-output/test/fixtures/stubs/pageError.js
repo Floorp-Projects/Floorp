@@ -22,7 +22,7 @@ stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessa
 	"messageText": "ReferenceError: asdf is not defined",
 	"parameters": null,
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"log\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":[{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"lineNumber\":3,\"columnNumber\":5,\"functionName\":\"bar\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"lineNumber\":6,\"columnNumber\":5,\"functionName\":\"foo\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"lineNumber\":9,\"columnNumber\":3,\"functionName\":null}],\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"line\":3,\"column\":5}}",
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"log\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":[{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"lineNumber\":3,\"columnNumber\":5,\"functionName\":\"bar\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"lineNumber\":6,\"columnNumber\":5,\"functionName\":\"foo\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"lineNumber\":9,\"columnNumber\":3,\"functionName\":null}],\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"line\":3,\"column\":5},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\"}",
 	"stacktrace": [
 		{
 			"filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
@@ -47,7 +47,9 @@ stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessa
 		"source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
 		"line": 3,
 		"column": 5
-	}
+	},
+	"groupId": null,
+	"exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default"
 }));
 
 
@@ -63,7 +65,7 @@ stubPackets.set("ReferenceError: asdf is not defined", {
 		"lineNumber": 3,
 		"columnNumber": 5,
 		"category": "content javascript",
-		"timeStamp": 1473960366996,
+		"timeStamp": 1476573167137,
 		"warning": false,
 		"error": false,
 		"exception": true,

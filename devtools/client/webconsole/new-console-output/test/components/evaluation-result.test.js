@@ -4,10 +4,13 @@
 
 // Test utils.
 const expect = require("expect");
-const { render } = require("enzyme");
+const { render, mount } = require("enzyme");
+const sinon = require("sinon");
 
 // React
 const { createFactory } = require("devtools/client/shared/vendor/react");
+const Provider = createFactory(require("react-redux").Provider);
+const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 // Components under test.
 const EvaluationResult = createFactory(require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result"));
@@ -15,6 +18,7 @@ const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+const serviceContainer = require("devtools/client/webconsole/new-console-output/test/fixtures/serviceContainer");
 
 describe("EvaluationResult component:", () => {
   it("renders a grip result", () => {
@@ -31,9 +35,30 @@ describe("EvaluationResult component:", () => {
     const wrapper = render(EvaluationResult({ message }));
 
     expect(wrapper.find(".message-body").text())
-      .toBe("ReferenceError: asdf is not defined");
+      .toBe("ReferenceError: asdf is not defined[Learn More]");
 
     expect(wrapper.find(".message.error").length).toBe(1);
+  });
+
+  it("displays a [Learn more] link", () => {
+    const store = setupStore([]);
+
+    const message = stubPreparedMessages.get("asdf()");
+
+    serviceContainer.openLink = sinon.spy();
+    const wrapper = mount(Provider({store},
+      EvaluationResult({message, serviceContainer})
+    ));
+
+    const url =
+      "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined";
+    const learnMore = wrapper.find(".learn-more-link");
+    expect(learnMore.length).toBe(1);
+    expect(learnMore.prop("title")).toBe(url);
+
+    learnMore.simulate("click");
+    let call = serviceContainer.openLink.getCall(0);
+    expect(call.args[0]).toEqual(message.exceptionDocURL);
   });
 
   it("has the expected indent", () => {
