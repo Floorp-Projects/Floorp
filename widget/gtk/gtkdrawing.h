@@ -230,6 +230,22 @@ typedef enum {
   MOZ_GTK_WINDOW_CONTAINER,
   /* Paints a GtkInfoBar, for notifications. */
   MOZ_GTK_INFO_BAR,
+  /* Used for widget tree construction. */
+  MOZ_GTK_COMBOBOX,
+  /* Paints a GtkComboBox button widget. */
+  MOZ_GTK_COMBOBOX_BUTTON,
+  /* Paints a GtkComboBox arrow widget. */
+  MOZ_GTK_COMBOBOX_ARROW,
+  /* Paints a GtkComboBox separator widget. */
+  MOZ_GTK_COMBOBOX_SEPARATOR,
+  /* Used for widget tree construction. */
+  MOZ_GTK_COMBOBOX_ENTRY,
+  /* Paints a GtkComboBox entry widget. */
+  MOZ_GTK_COMBOBOX_ENTRY_TEXTAREA,
+  /* Paints a GtkComboBox entry button widget. */
+  MOZ_GTK_COMBOBOX_ENTRY_BUTTON,
+  /* Paints a GtkComboBox entry arrow widget. */
+  MOZ_GTK_COMBOBOX_ENTRY_ARROW,
   /* Used for scrolled window shell. */
   MOZ_GTK_SCROLLED_WINDOW,
 
