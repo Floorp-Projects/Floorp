@@ -70,6 +70,8 @@ skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-p
 == grid-max-sizing-flex-004.html grid-max-sizing-flex-004-ref.html
 == grid-max-sizing-flex-005.html grid-max-sizing-flex-005-ref.html
 == grid-max-sizing-flex-006.html grid-max-sizing-flex-006-ref.html
+== grid-max-sizing-flex-007.html grid-max-sizing-flex-007-ref.html
+== grid-max-sizing-flex-008.html grid-max-sizing-flex-008-ref.html
 == grid-flex-min-sizing-001.html grid-flex-min-sizing-001-ref.html
 == grid-flex-min-sizing-002.html grid-flex-min-sizing-002-ref.html
 == grid-item-align-001.html grid-item-align-001-ref.html
