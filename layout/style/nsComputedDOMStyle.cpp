@@ -2379,7 +2379,7 @@ nsComputedDOMStyle::DoGetBackgroundOrigin()
   return GetBackgroundList(&nsStyleImageLayers::Layer::mOrigin,
                            &nsStyleImageLayers::mOriginCount,
                            StyleBackground()->mImage,
-                           nsCSSProps::kImageLayerOriginKTable);
+                           nsCSSProps::kBackgroundOriginKTable);
 }
 
 void
@@ -6215,7 +6215,7 @@ nsComputedDOMStyle::DoGetMaskClip()
   return GetBackgroundList(&nsStyleImageLayers::Layer::mClip,
                            &nsStyleImageLayers::mClipCount,
                            StyleSVGReset()->mMask,
-                           nsCSSProps::kImageLayerOriginKTable);
+                           nsCSSProps::kMaskClipKTable);
 }
 
 already_AddRefed<CSSValue>
@@ -6249,7 +6249,7 @@ nsComputedDOMStyle::DoGetMaskOrigin()
   return GetBackgroundList(&nsStyleImageLayers::Layer::mOrigin,
                            &nsStyleImageLayers::mOriginCount,
                            StyleSVGReset()->mMask,
-                           nsCSSProps::kImageLayerOriginKTable);
+                           nsCSSProps::kMaskOriginKTable);
 }
 
 already_AddRefed<CSSValue>

@@ -12441,6 +12441,7 @@ CSSParserImpl::ParseImageLayersItem(
        haveMode = false,
        haveSomething = false;
 
+  const KTableEntry* originTable = nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::origin]];
   while (GetToken(true)) {
     nsCSSTokenType tt = mToken.mType;
     UngetToken(); // ...but we'll still cheat and use mToken
@@ -12510,8 +12511,7 @@ CSSParserImpl::ParseImageLayersItem(
           aState.mSize->mXValue = scratch.mXValue;
           aState.mSize->mYValue = scratch.mYValue;
         }
-      } else if (nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kImageLayerOriginKTable, dummy)) {
+      } else if (nsCSSProps::FindKeyword(keyword, originTable, dummy)) {
         if (haveOrigin)
           return false;
         haveOrigin = true;
@@ -12526,13 +12526,12 @@ CSSParserImpl::ParseImageLayersItem(
         // immediately following the first one (for background-origin).
 
 #ifdef DEBUG
-        for (size_t i = 0; nsCSSProps::kImageLayerOriginKTable[i].mValue != -1; i++) {
+        const KTableEntry* clipTable = nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::clip]];
+        for (size_t i = 0; originTable[i].mValue != -1; i++) {
           // For each keyword & value in kOriginKTable, ensure that
           // kBackgroundKTable has a matching entry at the same position.
-          MOZ_ASSERT(nsCSSProps::kImageLayerOriginKTable[i].mKeyword ==
-                     nsCSSProps::kBackgroundClipKTable[i].mKeyword);
-          MOZ_ASSERT(nsCSSProps::kImageLayerOriginKTable[i].mValue ==
-                     nsCSSProps::kBackgroundClipKTable[i].mValue);
+          MOZ_ASSERT(originTable[i].mKeyword == clipTable[i].mKeyword);
+          MOZ_ASSERT(originTable[i].mValue == clipTable[i].mValue);
         }
 #endif
         static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER ==
