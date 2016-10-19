@@ -153,7 +153,7 @@ parent:
     /**
      * Return native data of root widget
      */
-    sync GetWidgetNativeData() returns (WindowsHandle value);
+    nested(inside_cpow) sync GetWidgetNativeData() returns (WindowsHandle value);
 
     /**
      * Sends an NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW to be adopted by the

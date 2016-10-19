@@ -172,7 +172,7 @@ PeerConnectionTest.prototype.close = function() {
   var allChannels = (this.pcLocal || this.pcRemote).dataChannels;
   return timerGuard(
     Promise.all(allChannels.map((channel, i) => this.closeDataChannels(i))),
-    60000, "failed to close data channels")
+    120000, "failed to close data channels")
     .then(() => this.closePC());
 };
 
@@ -211,7 +211,7 @@ PeerConnectionTest.prototype.closeDataChannels = function(index) {
     setupClosePromise(localChannel),
     setupClosePromise(remoteChannel)
   ]);
-  var complete = timerGuard(allClosed, 60000, "failed to close data channel pair");
+  var complete = timerGuard(allClosed, 120000, "failed to close data channel pair");
 
   // triggering close on one side should suffice
   if (remoteChannel) {

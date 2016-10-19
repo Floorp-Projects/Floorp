@@ -36,7 +36,7 @@ span:nth-of-type(3) { background: yellow; }
 span:nth-of-type(4) { background: lime; }
 
 x {
-  display: inline-block;
+  display: block;
   width: 20px;
   height: 30px;
 }
@@ -64,11 +64,21 @@ br { clear: both; }
 </div>
 </div>
 
+<div class="float">
+<div class="grid" style="align-self:start; justify-self:start; grid-gap:15px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+
 <div class="inline-grid">
-<div class="grid" style="grid: min-content 20% min-content / min-content 20% min-content">
-  <span><x></x></span><z></z><span><x></x></span>
-  <z></z><z></z><z></z>
-  <span><x></x></span><z></z><span><x></x></span>
+<div class="grid" style="align-self:start; justify-self:start; grid-gap:15px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
 </div>
 </div>
 
@@ -128,6 +138,15 @@ br { clear: both; }
   <span><x></x></span>
   <span><x></x></span>
   <span><x></x></span>
+</div>
+</div>
+
+<div class="float" style="margin-top:-50px">
+<div class="grid" style="min-width:300%; grid-gap:15px 15px">
+  <span><x></x></span>
+  <span style="margin-left:31px; width:30px"><x></x></span>
+  <span><x></x></span>
+  <span style="margin-left:31px; width:30px"><x></x></span>
 </div>
 </div>
 

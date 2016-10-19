@@ -28,6 +28,8 @@ using namespace mozilla::a11y;
 
 int atkMajorVersion = 1, atkMinorVersion = 12;
 
+GType (*gAtkTableCellGetTypeFunc)();
+
 extern "C" {
 typedef GType (* AtkGetTypeType) (void);
 typedef void (*GnomeAccessibilityInit) (void);
@@ -155,6 +157,9 @@ a11y::PlatformInit()
       AtkSocketAccessible::g_atk_socket_type != G_TYPE_INVALID &&
       AtkSocketAccessible::g_atk_socket_embed;
   }
+
+  gAtkTableCellGetTypeFunc = (GType (*)())
+    PR_FindFunctionSymbol(sATKLib, "atk_table_cell_get_type");
 
   const char* (*atkGetVersion)() =
     (const char* (*)()) PR_FindFunctionSymbol(sATKLib, "atk_get_version");

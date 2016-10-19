@@ -207,7 +207,7 @@ nsBaseDragService::SetDataTransfer(nsIDOMDataTransfer* aDataTransfer)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
-                                     nsISupportsArray* aTransferableArray,
+                                     nsIArray* aTransferableArray,
                                      nsIScriptableRegion* aDragRgn,
                                      uint32_t aActionType,
                                      nsContentPolicyType aContentPolicyType =
@@ -243,7 +243,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
-                                              nsISupportsArray* aTransferableArray,
+                                              nsIArray* aTransferableArray,
                                               nsIScriptableRegion* aRegion,
                                               uint32_t aActionType,
                                               nsIDOMNode* aImage,
@@ -281,7 +281,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
 
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
-                                                  nsISupportsArray* aTransferableArray,
+                                                  nsIArray* aTransferableArray,
                                                   uint32_t aActionType,
                                                   nsIDOMDragEvent* aDragEvent,
                                                   nsIDOMDataTransfer* aDataTransfer)

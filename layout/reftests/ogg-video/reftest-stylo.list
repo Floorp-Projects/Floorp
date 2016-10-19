@@ -11,7 +11,7 @@ fails-if(Android||B2G||Mulet) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2b.xht
 # Initial mulet triage: parity with B2G/B2G Desktop
 HTTP(..) == aspect-ratio-3a.xhtml aspect-ratio-3a.xhtml
 HTTP(..) == aspect-ratio-3b.xhtml aspect-ratio-3b.xhtml
-fails-if(Android||B2G||Mulet) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == encoded-aspect-ratio-1.html encoded-aspect-ratio-1.html
+fails-if(Android||B2G||Mulet) random-if(layersGPUAccelerated) == encoded-aspect-ratio-1.html encoded-aspect-ratio-1.html
 # bug 623460 for WinXP
 # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android||B2G||Mulet) HTTP(..) == basic-1.xhtml basic-1.xhtml

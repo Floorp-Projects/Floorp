@@ -28,9 +28,6 @@ public:
 
   void GetCurve(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval) const
   {
-    if (mCurve) {
-      JS::ExposeObjectToActiveJS(mCurve);
-    }
     aRetval.set(mCurve);
   }
   void SetCurve(const Nullable<Float32Array>& aData, ErrorResult& aRv);
