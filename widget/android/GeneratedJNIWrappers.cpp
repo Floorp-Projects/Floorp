@@ -1135,28 +1135,12 @@ auto GeckoLayerClient::SetFirstPaintViewport(float a0, float a1, float a2, float
     return mozilla::jni::Method<SetFirstPaintViewport_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6);
 }
 
-constexpr char GeckoLayerClient::SetPageRect_t::name[];
-constexpr char GeckoLayerClient::SetPageRect_t::signature[];
-
-auto GeckoLayerClient::SetPageRect(float a0, float a1, float a2, float a3) const -> void
-{
-    return mozilla::jni::Method<SetPageRect_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3);
-}
-
 constexpr char GeckoLayerClient::SyncFrameMetrics_t::name[];
 constexpr char GeckoLayerClient::SyncFrameMetrics_t::signature[];
 
 auto GeckoLayerClient::SyncFrameMetrics(float a0, float a1, float a2, float a3, float a4, float a5, float a6, int32_t a7, int32_t a8, int32_t a9, int32_t a10, float a11, bool a12, int32_t a13) const -> mozilla::jni::Object::LocalRef
 {
     return mozilla::jni::Method<SyncFrameMetrics_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
-}
-
-constexpr char GeckoLayerClient::SyncViewportInfo_t::name[];
-constexpr char GeckoLayerClient::SyncViewportInfo_t::signature[];
-
-auto GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, int32_t a3, float a4, bool a5, int32_t a6) const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<SyncViewportInfo_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6);
 }
 
 constexpr char GeckoLayerClient::SynthesizeNativeMouseEvent_t::name[];

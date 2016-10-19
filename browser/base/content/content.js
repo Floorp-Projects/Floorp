@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContentLinkHandler",
   "resource:///modules/ContentLinkHandler.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
   "resource://gre/modules/LoginManagerContent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
+XPCOMUtils.defineLazyModuleGetter(this, "LoginFormFactory",
   "resource://gre/modules/LoginManagerContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
   "resource://gre/modules/InsecurePasswordUtils.jsm");
@@ -65,12 +65,12 @@ addMessageListener("RemoteLogins:fillForm", function(message) {
 });
 addEventListener("DOMFormHasPassword", function(event) {
   LoginManagerContent.onDOMFormHasPassword(event, content);
-  let formLike = FormLikeFactory.createFromForm(event.target);
+  let formLike = LoginFormFactory.createFromForm(event.target);
   InsecurePasswordUtils.checkForInsecurePasswords(formLike);
 });
 addEventListener("DOMInputPasswordAdded", function(event) {
   LoginManagerContent.onDOMInputPasswordAdded(event, content);
-  let formLike = FormLikeFactory.createFromField(event.target);
+  let formLike = LoginFormFactory.createFromField(event.target);
   InsecurePasswordUtils.checkForInsecurePasswords(formLike);
 });
 addEventListener("pageshow", function(event) {

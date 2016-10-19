@@ -36,6 +36,14 @@ Structure:
             error: <string>, // Only present for "othererror" and "unexpectederror".
             from: <string>, // Optional, and only present for "autherror".
           },
+
+          // Optional, excluded if we couldn't get a valid uid or local device id
+          devices: [{
+            os: <string>, // OS string as reported by Services.appinfo.OS,
+            version: <string>, // Firefox version, as reported by Services.appinfo.version
+            id: <string>, // Hashed FxA device id for device
+          }],
+
           // Internal sync status information. Omitted if it would be empty.
           status: {
             sync: <string>, // The value of the Status.sync property, unless it indicates success.
@@ -161,3 +169,8 @@ syncs.engine.validation.problems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For engines that can run validation on themselves, an array of objects describing validation errors that have occurred. Items that would have a count of 0 are excluded. Each engine will have its own set of items that it might put in the ``name`` field, but there are a finite number. See ``BookmarkProblemData.getSummary`` in `services/sync/modules/bookmark\_validator.js <https://dxr.mozilla.org/mozilla-central/source/services/sync/modules/bookmark_validator.js>`_ for an example.
+
+syncs.devices
+~~~~~~~~~~~~~
+
+The list of remote devices associated with this account, as reported by the clients collection. The ID of each device is hashed using the same algorithm as the local id.

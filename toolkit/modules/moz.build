@@ -43,6 +43,7 @@ EXTRA_JS_MODULES += [
     'Finder.jsm',
     'FinderHighlighter.jsm',
     'FinderIterator.jsm',
+    'FormLikeFactory.jsm',
     'Geometry.jsm',
     'GMPInstallManager.jsm',
     'GMPUtils.jsm',
