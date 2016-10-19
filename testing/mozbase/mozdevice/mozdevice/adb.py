@@ -1583,6 +1583,90 @@ class ADBDevice(ADBCommand):
         self._logger.debug('list_files: %s' % data)
         return data
 
+    def ls(self, path, recursive=False, timeout=None, root=False):
+        """Return a list of matching files/directories on the device.
+
+        The ls method emulates the behavior of the ls shell command.
+        It differs from the list_files method by supporting wild cards
+        and returning matches even if the path is not a directory and
+        by allowing a recursive listing.
+
+        ls /sdcard always returns /sdcard and not the contents of the
+        sdcard path. The ls method makes the behavior consistent with
+        others paths by adjusting /sdcard to /sdcard/. Note this is
+        also the case of other sdcard related paths such as
+        /storage/emulated/legacy but no adjustment is made in those
+        cases.
+
+        The ls method works around a Nexus 4 bug which prevents
+        recursive listing of directories on the sdcard unless the path
+        ends with "/*" by adjusting sdcard paths ending in "/" to end
+        with "/*". This adjustment is only made on official Nexus 4
+        builds with property ro.product.model "Nexus 4". Note that
+        this will fail to return any "hidden" files or directories
+        which begin with ".".
+
+        :param str path: The directory name on the device.
+        :param bool recursive: Flag specifying if a recursive listing
+            is to be returned. If recursive is False, the returned
+            matches will be relative to the path. If recursive is True,
+            the returned matches will be absolute paths.
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :type timeout: integer or None
+        :param bool root: Flag specifying if the command should
+            be executed as root.
+        :returns: list of files/directories contained in the directory.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+        """
+        path = posixpath.normpath(path.strip())
+        parent = ''
+        entries = {}
+
+        if path == '/sdcard':
+            path += '/'
+
+        # Android 2.3 and later all appear to support ls -R however
+        # Nexus 4 does not perform a recursive search on the sdcard
+        # unless the path is a directory with * wild card.
+        if not recursive:
+            recursive_flag = ''
+        else:
+            recursive_flag = '-R'
+            if path.startswith('/sdcard') and path.endswith('/'):
+                model = self.shell_output('getprop ro.product.model',
+                                          timeout=timeout,
+                                          root=root)
+                if model == 'Nexus 4':
+                    path += '*'
+        lines = self.shell_output('%s %s %s' % (self._ls, recursive_flag, path),
+                                  timeout=timeout,
+                                  root=root).split('\r\n')
+        for line in lines:
+            line = line.strip()
+            if not line:
+                parent = ''
+                continue
+            if line.endswith(':'):  # This is a directory
+                parent = line.replace(':', '/')
+                entry = parent
+                # Remove earlier entry which is marked as a file.
+                if parent[:-1] in entries:
+                    del entries[parent[:-1]]
+            elif parent:
+                entry = "%s%s" % (parent, line)
+            else:
+                entry = line
+            entries[entry] = 1
+        entry_list = entries.keys()
+        entry_list.sort()
+        return entry_list
+
     def mkdir(self, path, parents=False, timeout=None, root=False):
         """Create a directory on the device.
 
