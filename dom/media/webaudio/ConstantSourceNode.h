@@ -29,7 +29,7 @@ public:
 
   static already_AddRefed<ConstantSourceNode>
   Constructor(const GlobalObject& aGlobal,
-              AudioContext& aContext,
+              const AudioContext& aContext,
               const ConstantSourceOptions& aOptions,
               ErrorResult& aRv);
 
@@ -65,7 +65,6 @@ protected:
 
 private:
   RefPtr<AudioParam> mOffset;
-  bool mStartCalled;
 
 };
 
