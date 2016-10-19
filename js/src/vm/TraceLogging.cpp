@@ -239,9 +239,9 @@ TraceLoggerThread::enable(JSContext* cx)
 
             script = fp->script();
             engine = TraceLogger_Interpreter;
-            if (script->compartment() != cx->compartment())
-                return fail(cx, "compartment mismatch");
         }
+        if (script->compartment() != cx->compartment())
+            return fail(cx, "compartment mismatch");
 
         TraceLoggerEvent event(this, TraceLogger_Scripts, script);
         startEvent(event);
