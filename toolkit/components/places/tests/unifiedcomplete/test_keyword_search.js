@@ -27,10 +27,16 @@ add_task(function* test_keyword_searc() {
     matches: [ { uri: NetUtil.newURI("http://abc/?search=term"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
+  do_print("Plain keyword UC");
+  yield check_autocomplete({
+    search: "key TERM",
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=TERM"), title: "abc", style: ["keyword", "heuristic"] } ]
+  });
+
   do_print("Multi-word keyword query");
   yield check_autocomplete({
     search: "key multi word",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=multi+word"), title: "abc", style: ["keyword", "heuristic"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=multi%20word"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
   do_print("Keyword query with +");
