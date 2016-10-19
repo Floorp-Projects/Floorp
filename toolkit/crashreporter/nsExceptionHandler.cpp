@@ -183,34 +183,6 @@ static const XP_CHAR extraFileExtension[] = XP_TEXT(".extra");
 static const XP_CHAR memoryReportExtension[] = XP_TEXT(".memory.json.gz");
 static xpstring *defaultMemoryReportPath = nullptr;
 
-// A whitelist of crash annotations which do not contain sensitive data
-// and are saved in the crash record and sent with Firefox Health Report.
-static char const * const kCrashEventAnnotations[] = {
-  "AsyncShutdownTimeout",
-  "BuildID",
-  "ProductID",
-  "ProductName",
-  "ReleaseChannel",
-  "SecondsSinceLastCrash",
-  "ShutdownProgress",
-  "StartupCrash",
-  "TelemetryEnvironment",
-  "Version",
-  // The following entries are not normal annotations but are included
-  // in the crash record/FHR:
-  // "ContainsMemoryReport"
-  // "EventLoopNestingLevel"
-  // "IsGarbageCollecting"
-  // "AvailablePageFile"
-  // "AvailableVirtualMemory"
-  // "SystemMemoryUsePercentage"
-  // "OOMAllocationSize"
-  // "TotalPageFile"
-  // "TotalPhysicalMemory"
-  // "TotalVirtualMemory"
-  // "MozCrashReason"
-};
-
 static const char kCrashMainID[] = "crash.main.2\n";
 
 static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
@@ -2163,17 +2135,6 @@ static void ReplaceChar(nsCString& str, const nsACString& character,
   }
 }
 
-static bool
-IsInWhitelist(const nsACString& key)
-{
-  for (size_t i = 0; i < ArrayLength(kCrashEventAnnotations); ++i) {
-    if (key.EqualsASCII(kCrashEventAnnotations[i])) {
-      return true;
-    }
-  }
-  return false;
-}
-
 // This function is miscompiled with MSVC 2005/2008 when PGO is on.
 #ifdef _MSC_VER
 #pragma optimize("", off)
@@ -2310,9 +2271,7 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
       nsAutoCString line = key + kEquals + entry + kNewline;
 
       crashReporterAPIData->Append(line);
-      if (IsInWhitelist(key)) {
-        crashEventAPIData->Append(line);
-      }
+      crashEventAPIData->Append(line);
     }
   }
 
