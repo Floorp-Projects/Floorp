@@ -1020,7 +1020,7 @@ function* runTests() {
     // (promptAuth is only accessible from the prompt service)
     info("Starting test: promptAuth with long realm");
     state = {
-        msg : 'http://example.com is requesting your username and password.\n\nThe site '  +
+        msg : 'http://example.com is requesting your username and password. The site '  +
               'says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi ' +
               'abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi '        +
               'abcdefghi \u2026\u201d',
@@ -1073,7 +1073,7 @@ function* runTests() {
         realm : ""
     }
     state = {
-        msg : 'http://example.com is requesting your username and password.\n\n' +
+        msg : 'http://example.com is requesting your username and password. ' +
               'WARNING: Your password will not be sent to the website you are currently visiting!',
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
@@ -1116,7 +1116,7 @@ function* runTests() {
         realm : "Something!!!"
     }
     state = {
-        msg : 'http://example.com is requesting your username and password.\n\n' +
+        msg : 'http://example.com is requesting your username and password. ' +
               'WARNING: Your password will not be sent to the website you are currently visiting!',
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",

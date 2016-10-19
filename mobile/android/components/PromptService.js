@@ -706,7 +706,7 @@ var PromptUtils = {
       text = this.bundle.formatStringFromName("EnterLoginForRealm2", [realm, displayHost], 2);
     }
 
-    return text;
+    return text.replace(/\n{1,}/g,' ');
   },
 
   // JS port of http://mxr.mozilla.org/mozilla-central/source/embedding/components/windowwatcher/nsPromptUtils.h#89
