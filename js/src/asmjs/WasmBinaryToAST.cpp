@@ -306,6 +306,9 @@ AstDecodeCall(AstDecodeContext& c)
     if (!c.iter().readCall(&calleeIndex))
         return false;
 
+    if (!c.iter().inReachableCode())
+        return true;
+
     uint32_t sigIndex;
     AstRef funcRef;
     if (calleeIndex < c.module().funcImportNames().length()) {
@@ -322,9 +325,6 @@ AstDecodeCall(AstDecodeContext& c)
         if (!AstDecodeGenerateRef(c, AstName(u"func"), calleeIndex, &funcRef))
             return false;
     }
-
-    if (!c.iter().inReachableCode())
-        return false;
 
     const AstSig* sig = c.module().sigs()[sigIndex];
 
@@ -356,11 +356,11 @@ AstDecodeCallIndirect(AstDecodeContext& c)
     if (!c.iter().readCallIndirect(&sigIndex, nullptr))
         return false;
 
+    if (!c.iter().inReachableCode())
+        return true;
+
     if (sigIndex >= c.module().sigs().length())
         return c.iter().fail("signature index out of range");
-
-    if (!c.iter().inReachableCode())
-        return false;
 
     AstDecodeStackItem index = c.popCopy();
 
@@ -398,11 +398,11 @@ AstDecodeCallImport(AstDecodeContext& c)
     if (!c.iter().readCallImport(&importIndex))
         return false;
 
+    if (!c.iter().inReachableCode())
+        return true;
+
     if (importIndex >= c.module().imports().length())
         return c.iter().fail("import index out of range");
-
-    if (!c.iter().inReachableCode())
-        return false;
 
     AstImport* import = c.module().imports()[importIndex];
     AstSig* sig = c.module().sigs()[import->funcSig().index()];
@@ -1199,6 +1199,7 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         break;
       case Expr::I64Eqz:
+      case Expr::I32WrapI64:
         if (!AstDecodeConversion(c, ValType::I64, ValType::I32, expr))
             return false;
         break;

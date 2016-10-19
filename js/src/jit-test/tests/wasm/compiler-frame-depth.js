@@ -9,13 +9,13 @@ for (var i = 1000; i --> 0; ) {
     expr = `(f32.neg ${expr})`;
 }
 
-var module = `(module
+var code = `(module
  (func
   (result f32)
   (param f32)
   ${expr}
  )
- (export "" 0)
+ (export "run" 0)
 )`;
 
-assertEq(wasmEvalText(module).exports[""](13.37), Math.fround(13.37));
+wasmFullPass(code, Math.fround(13.37), {}, 13.37);
