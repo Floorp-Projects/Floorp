@@ -39,6 +39,49 @@ function awaitEvent(eventName) {
   });
 }
 
+function background() {
+  let onInstalledDetails = null;
+  let onStartupFired = false;
+
+  browser.runtime.onInstalled.addListener(details => {
+    onInstalledDetails = details;
+  });
+
+  browser.runtime.onStartup.addListener(() => {
+    onStartupFired = true;
+  });
+
+  browser.test.onMessage.addListener(message => {
+    if (message === "get-on-installed-details") {
+      onInstalledDetails = onInstalledDetails || {fired: false};
+      browser.test.sendMessage("on-installed-details", onInstalledDetails);
+    } else if (message === "did-on-startup-fire") {
+      browser.test.sendMessage("on-startup-fired", onStartupFired);
+    } else if (message === "reload-extension") {
+      browser.runtime.reload();
+    }
+  });
+
+  browser.runtime.onUpdateAvailable.addListener(details => {
+    browser.test.sendMessage("reloading");
+    browser.runtime.reload();
+  });
+}
+
+function* expectEvents(extension, {onStartupFired, onInstalledFired, onInstalledReason}) {
+  extension.sendMessage("get-on-installed-details");
+  let details = yield extension.awaitMessage("on-installed-details");
+  if (onInstalledFired) {
+    equal(details.reason, onInstalledReason, "runtime.onInstalled fired with the correct reason");
+  } else {
+    equal(details.fired, onInstalledFired, "runtime.onInstalled should not have fired");
+  }
+
+  extension.sendMessage("did-on-startup-fire");
+  let fired = yield extension.awaitMessage("on-startup-fired");
+  equal(fired, onStartupFired, `Expected runtime.onStartup to ${onStartupFired ? "" : "not "} fire`);
+}
+
 add_task(function* test_should_fire_on_addon_update() {
   const EXTENSION_ID = "test_runtime_on_installed_addon_update@tests.mozilla.org";
 
@@ -61,16 +104,7 @@ add_task(function* test_should_fire_on_addon_update() {
         },
       },
     },
-    background() {
-      browser.runtime.onUpdateAvailable.addListener(details => {
-        browser.test.sendMessage("reloading");
-        browser.runtime.reload();
-      });
-
-      browser.runtime.onInstalled.addListener(details => {
-        browser.test.sendMessage("installed", details);
-      });
-    },
+    background,
   });
 
   testServer.registerPathHandler("/test_update.json", (request, response) => {
@@ -97,11 +131,7 @@ add_task(function* test_should_fire_on_addon_update() {
         },
       },
     },
-    background() {
-      browser.runtime.onInstalled.addListener(details => {
-        browser.test.sendMessage("installed", details);
-      });
-    },
+    background,
   });
 
   testServer.registerFile("/addons/test_runtime_on_installed-2.0.xpi", webExtensionFile);
@@ -109,8 +139,12 @@ add_task(function* test_should_fire_on_addon_update() {
   yield promiseStartupManager();
 
   yield extension.startup();
-  let details = yield extension.awaitMessage("installed");
-  equal(details.reason, "install", "runtime.onInstalled fired with the correct reason");
+
+  yield expectEvents(extension, {
+    onStartupFired: false,
+    onInstalledFired: true,
+    onInstalledReason: "install",
+  });
 
   let addon = yield promiseAddonByID(EXTENSION_ID);
   equal(addon.version, "1.0", "The installed addon has the correct version");
@@ -131,8 +165,11 @@ add_task(function* test_should_fire_on_addon_update() {
   extension.extension = yield startupPromise;
   extension.attachListeners();
 
-  details = yield extension.awaitMessage("installed");
-  equal(details.reason, "update", "runtime.onInstalled fired with the correct reason");
+  yield expectEvents(extension, {
+    onStartupFired: false,
+    onInstalledFired: true,
+    onInstalledReason: "update",
+  });
 
   yield extension.unload();
 
@@ -155,35 +192,26 @@ add_task(function* test_should_fire_on_browser_update() {
         },
       },
     },
-    background() {
-      let onInstalledDetails = null;
-
-      browser.runtime.onInstalled.addListener(details => {
-        onInstalledDetails = details;
-      });
-
-      browser.test.onMessage.addListener(message => {
-        if (message == "get-on-installed-details") {
-          browser.test.sendMessage("on-installed-details", onInstalledDetails);
-        }
-      });
-    },
+    background,
   });
 
   yield extension.startup();
 
-  extension.sendMessage("get-on-installed-details");
-  let details = yield extension.awaitMessage("on-installed-details");
-  equal(details.reason, "install", "runtime.onInstalled fired with the correct reason");
+  yield expectEvents(extension, {
+    onStartupFired: false,
+    onInstalledFired: true,
+    onInstalledReason: "install",
+  });
 
   let startupPromise = awaitEvent("ready");
   yield promiseRestartManager("1");
   extension.extension = yield startupPromise;
   extension.attachListeners();
 
-  extension.sendMessage("get-on-installed-details");
-  details = yield extension.awaitMessage("on-installed-details");
-  equal(details, null, "runtime.onInstalled should not have fired");
+  yield expectEvents(extension, {
+    onStartupFired: true,
+    onInstalledFired: false,
+  });
 
   // Update the browser.
   startupPromise = awaitEvent("ready");
@@ -191,9 +219,11 @@ add_task(function* test_should_fire_on_browser_update() {
   extension.extension = yield startupPromise;
   extension.attachListeners();
 
-  extension.sendMessage("get-on-installed-details");
-  details = yield extension.awaitMessage("on-installed-details");
-  equal(details.reason, "browser_update", "runtime.onInstalled fired with the correct reason");
+  yield expectEvents(extension, {
+    onStartupFired: true,
+    onInstalledFired: true,
+    onInstalledReason: "browser_update",
+  });
 
   // Restart the browser.
   startupPromise = awaitEvent("ready");
@@ -201,9 +231,10 @@ add_task(function* test_should_fire_on_browser_update() {
   extension.extension = yield startupPromise;
   extension.attachListeners();
 
-  extension.sendMessage("get-on-installed-details");
-  details = yield extension.awaitMessage("on-installed-details");
-  equal(details, null, "runtime.onInstalled should not have fired");
+  yield expectEvents(extension, {
+    onStartupFired: true,
+    onInstalledFired: false,
+  });
 
   // Update the browser again.
   startupPromise = awaitEvent("ready");
@@ -211,9 +242,11 @@ add_task(function* test_should_fire_on_browser_update() {
   extension.extension = yield startupPromise;
   extension.attachListeners();
 
-  extension.sendMessage("get-on-installed-details");
-  details = yield extension.awaitMessage("on-installed-details");
-  equal(details.reason, "browser_update", "runtime.onInstalled fired with the correct reason");
+  yield expectEvents(extension, {
+    onStartupFired: true,
+    onInstalledFired: true,
+    onInstalledReason: "browser_update",
+  });
 
   yield extension.unload();
 
@@ -235,37 +268,26 @@ add_task(function* test_should_not_fire_on_reload() {
         },
       },
     },
-    background() {
-      let onInstalledDetails = null;
-
-      browser.runtime.onInstalled.addListener(details => {
-        onInstalledDetails = details;
-      });
-
-      browser.test.onMessage.addListener(message => {
-        if (message == "reload-extension") {
-          browser.runtime.reload();
-        } else if (message == "get-on-installed-details") {
-          browser.test.sendMessage("on-installed-details", onInstalledDetails);
-        }
-      });
-    },
+    background,
   });
 
   yield extension.startup();
 
-  extension.sendMessage("get-on-installed-details");
-  let details = yield extension.awaitMessage("on-installed-details");
-  equal(details.reason, "install", "runtime.onInstalled fired with the correct reason");
+  yield expectEvents(extension, {
+    onStartupFired: false,
+    onInstalledFired: true,
+    onInstalledReason: "install",
+  });
 
   let startupPromise = awaitEvent("ready");
   extension.sendMessage("reload-extension");
   extension.extension = yield startupPromise;
   extension.attachListeners();
 
-  extension.sendMessage("get-on-installed-details");
-  details = yield extension.awaitMessage("on-installed-details");
-  equal(details, null, "runtime.onInstalled should not have fired");
+  yield expectEvents(extension, {
+    onStartupFired: false,
+    onInstalledFired: false,
+  });
 
   yield extension.unload();
   yield promiseShutdownManager();
@@ -286,26 +308,16 @@ add_task(function* test_should_not_fire_on_restart() {
         },
       },
     },
-    background() {
-      let onInstalledDetails = null;
-
-      browser.runtime.onInstalled.addListener(details => {
-        onInstalledDetails = details;
-      });
-
-      browser.test.onMessage.addListener(message => {
-        if (message == "get-on-installed-details") {
-          browser.test.sendMessage("on-installed-details", onInstalledDetails);
-        }
-      });
-    },
+    background,
   });
 
   yield extension.startup();
 
-  extension.sendMessage("get-on-installed-details");
-  let details = yield extension.awaitMessage("on-installed-details");
-  equal(details.reason, "install", "runtime.onInstalled fired with the correct reason");
+  yield expectEvents(extension, {
+    onStartupFired: false,
+    onInstalledFired: true,
+    onInstalledReason: "install",
+  });
 
   let addon = yield promiseAddonByID(EXTENSION_ID);
   addon.userDisabled = true;
@@ -315,9 +327,10 @@ add_task(function* test_should_not_fire_on_restart() {
   extension.extension = yield startupPromise;
   extension.attachListeners();
 
-  extension.sendMessage("get-on-installed-details");
-  details = yield extension.awaitMessage("on-installed-details");
-  equal(details, null, "runtime.onInstalled should not have fired");
+  yield expectEvents(extension, {
+    onStartupFired: false,
+    onInstalledFired: false,
+  });
 
   yield extension.markUnloaded();
   yield promiseShutdownManager();
