@@ -141,6 +141,24 @@ GetPercentSizeParts(const nsStyleCoord& aCoord, nscoord* aLength, float* aPercen
   }
 }
 
+static void
+ResolvePercentSizeParts(const nsStyleCoord& aCoord, nscoord aPercentBasis,
+                        nscoord* aLength, float* aPercent)
+{
+  MOZ_ASSERT(aCoord.IsCoordPercentCalcUnit());
+  if (aPercentBasis != NS_UNCONSTRAINEDSIZE) {
+    *aLength = std::max(nscoord(0),
+                        nsRuleNode::ComputeCoordPercentCalc(aCoord,
+                                                            aPercentBasis));
+    *aPercent = 0.0f;
+    return;
+  }
+  if (!GetPercentSizeParts(aCoord, aLength, aPercent)) {
+    *aLength = aCoord.ToLength();
+    *aPercent = 0.0f;
+  }
+}
+
 // Synthesize a baseline from a border box.  For an alphabetical baseline
 // this is the end edge of the border box.  For a central baseline it's
 // the center of the border box.
@@ -1108,8 +1126,11 @@ struct nsGridContainerFrame::TrackSizingFunctions
       return 1;
     }
     nscoord repeatTrackSize = 0;
+    float repeatTrackPercent = 0.0f;
     // Note that the repeat() track size is included in |sum| in this loop.
     nscoord sum = 0;
+    float percentSum = 0.0f;
+    const nscoord percentBasis = aSize;
     for (uint32_t i = 0; i < numTracks; ++i) {
       // "treating each track as its max track sizing function if that is
       // definite or as its minimum track sizing function otherwise"
@@ -1122,30 +1143,59 @@ struct nsGridContainerFrame::TrackSizingFunctions
           return 1;
         }
       }
-      nscoord trackSize = ::ResolveToDefiniteSize(*coord, aSize);
+      float trackPercent;
+      nscoord trackSize;
+      ResolvePercentSizeParts(*coord, percentBasis, &trackSize, &trackPercent);
       if (i == mRepeatAutoStart) {
-        // Use a minimum 1px for the repeat() track-size.
-        if (trackSize < AppUnitsPerCSSPixel()) {
-          trackSize = AppUnitsPerCSSPixel();
+        if (percentBasis != NS_UNCONSTRAINEDSIZE) {
+          // Use a minimum 1px for the repeat() track-size.
+          if (trackSize < AppUnitsPerCSSPixel()) {
+            trackSize = AppUnitsPerCSSPixel();
+          }
         }
         repeatTrackSize = trackSize;
+        repeatTrackPercent = trackPercent;
       }
       sum += trackSize;
+      percentSum += trackPercent;
     }
-    nscoord gridGap = ::ResolveToDefiniteSize(aGridGap, aSize);
+    nscoord gridGap;
+    float gridGapPercent;
+    ResolvePercentSizeParts(aGridGap, percentBasis, &gridGap, &gridGapPercent);
     if (numTracks > 1) {
       // Add grid-gaps for all the tracks including the repeat() track.
       sum += gridGap * (numTracks - 1);
+      percentSum += gridGapPercent * (numTracks - 1);
     }
+    // Calculate the max number of tracks that fits without overflow.
     nscoord available = maxFill != NS_UNCONSTRAINEDSIZE ? maxFill : aMinSize;
-    nscoord spaceToFill = available - sum;
-    if (spaceToFill <= 0) {
+    nscoord size = nsLayoutUtils::AddPercents(sum, percentSum);
+    if (available - size < 0) {
       // "if any number of repetitions would overflow, then 1 repetition"
       return 1;
     }
-    // Calculate the max number of tracks that fits without overflow.
-    uint32_t numRepeatTracks = (spaceToFill / (repeatTrackSize + gridGap)) + 1;
-    if (maxFill == NS_UNCONSTRAINEDSIZE) {
+    uint32_t numRepeatTracks = 1;
+    bool exactFit = false;
+    while (true) {
+      sum += gridGap + repeatTrackSize;
+      percentSum += gridGapPercent + repeatTrackPercent;
+      nscoord newSize = nsLayoutUtils::AddPercents(sum, percentSum);
+      if (newSize <= size) {
+        // Adding more repeat-tracks won't make forward progress.
+        return numRepeatTracks;
+      }
+      size = newSize;
+      nscoord remaining = available - size;
+      exactFit = remaining == 0;
+      if (remaining >= 0) {
+        ++numRepeatTracks;
+      }
+      if (remaining <= 0) {
+        break;
+      }
+    }
+
+    if (!exactFit && maxFill == NS_UNCONSTRAINEDSIZE) {
       // "Otherwise, if the grid container has a definite min size in
       // the relevant axis, the number of repetitions is the largest possible
       // positive integer that fulfills that minimum requirement."
