@@ -293,7 +293,7 @@
 }
 
 .security-state-local {
-  list-style-image: url(chrome://devtools/skin/images/security-state-local.svg);
+  list-style-image: url(chrome://devtools/skin/images/globe.svg);
 }
 
 .requests-menu-type,
