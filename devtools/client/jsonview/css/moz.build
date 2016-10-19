@@ -4,15 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 DevToolsModules(
-    'controls.png',
-    'controls@2x.png',
     'general.css',
     'headers-panel.css',
     'json-panel.css',
     'main.css',
-    'read-only-prop.svg',
     'search-box.css',
     'search.svg',
     'text-panel.css',

@@ -11,6 +11,4 @@ DIRS += [
 
 DevToolsModules(
     'dom-panel.js',
-    'dom.html',
-    'main.js',
 )

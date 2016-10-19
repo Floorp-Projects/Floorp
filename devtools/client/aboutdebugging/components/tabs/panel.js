@@ -55,7 +55,7 @@ module.exports = createClass({
           }
           tab.icon = prePath + "/favicon.ico";
         } else {
-          tab.icon = "chrome://devtools/skin/images/tabs-icon.svg";
+          tab.icon = "chrome://devtools/skin/images/globe.svg";
         }
       });
       this.setState({ tabs });
