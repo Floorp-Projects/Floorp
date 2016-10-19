@@ -12539,7 +12539,13 @@ CSSParserImpl::ParseImageLayersItem(
                       NS_STYLE_IMAGELAYER_CLIP_PADDING ==
                       NS_STYLE_IMAGELAYER_ORIGIN_PADDING &&
                       NS_STYLE_IMAGELAYER_CLIP_CONTENT ==
-                      NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
+                      NS_STYLE_IMAGELAYER_ORIGIN_CONTENT &&
+                      NS_STYLE_IMAGELAYER_CLIP_FILL ==
+                      NS_STYLE_IMAGELAYER_ORIGIN_FILL &&
+                      NS_STYLE_IMAGELAYER_CLIP_STROKE ==
+                      NS_STYLE_IMAGELAYER_ORIGIN_STROKE &&
+                      NS_STYLE_IMAGELAYER_CLIP_VIEW ==
+                      NS_STYLE_IMAGELAYER_ORIGIN_VIEW,
                       "bg-clip and bg-origin style constants must agree");
 
         CSSParseResult result =
