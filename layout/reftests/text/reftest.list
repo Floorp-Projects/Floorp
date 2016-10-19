@@ -144,7 +144,7 @@ fuzzy-if(gtkWidget,1,177) fuzzy-if(skiaContent,1,50) HTTP(..) == wordwrap-03.htm
 == word-spacing-01.html word-spacing-01-ref.html
 # the following will fail when rendering with Core Text (see bug 389074) due to what appears to be
 # an Apple bug: the presence of ZWNJ disturbs the positioning of an adjacent glyph. rdar://6427865
-random-if(cocoaWidget) HTTP(..) == zwnj-01.xhtml zwnj-01-ref.xhtml
+random-if(cocoaWidget) random-if(gtkWidget) HTTP(..) == zwnj-01.xhtml zwnj-01-ref.xhtml # gtkWidget:bug 1309113
 HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 != zwnj-01.html zwnj-01-notref.html
 == initial-zwj-1.html initial-zwj-1-ref.html

@@ -19,6 +19,12 @@ interface nsICollection : nsISerializable
   void AppendElement(in nsISupports item);
   void RemoveElement(in nsISupports item);
 
+  /**
+   * This clashes with |nsISimpleEnumerator nsIArray.enumerate()| (only on the
+   * binary side), so it is renamed with a 'Deprecated' prefix in favor of the
+   * non-deprecated |nsIArray.enumerate|.
+   */
+  [binaryname(DeprecatedEnumerate)]
   nsIEnumerator Enumerate();
 
   void Clear();

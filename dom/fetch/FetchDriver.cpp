@@ -329,7 +329,7 @@ FetchDriver::HttpFetch()
   if (uploadChan) {
     nsAutoCString contentType;
     ErrorResult result;
-    mRequest->Headers()->Get(NS_LITERAL_CSTRING("content-type"), contentType, result);
+    mRequest->Headers()->GetFirst(NS_LITERAL_CSTRING("content-type"), contentType, result);
     // This is an error because the Request constructor explicitly extracts and
     // sets a content-type per spec.
     if (result.Failed()) {

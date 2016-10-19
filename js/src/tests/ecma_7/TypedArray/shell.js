@@ -75,15 +75,16 @@
      * All TypedArray constructors for shared memory.
      */
     const sharedTypedArrayConstructors = Object.freeze(
-        typedArrayConstructors.map(sharedConstructor)
+        typeof SharedArrayBuffer === "function"
+        ? typedArrayConstructors.map(sharedConstructor)
+        : []
     );
 
     /**
      * All TypedArray constructors for unshared and shared memory.
      */
     const anyTypedArrayConstructors = Object.freeze([
-        ...typedArrayConstructors,
-        ...(typeof SharedArrayBuffer === "function" ? sharedTypedArrayConstructors : []),
+        ...typedArrayConstructors, ...sharedTypedArrayConstructors,
     ]);
 
     /**

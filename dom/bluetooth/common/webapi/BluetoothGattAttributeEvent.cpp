@@ -168,7 +168,6 @@ BluetoothGattAttributeEvent::GetValue(
     mRawValue.Clear();
   }
 
-  JS::ExposeObjectToActiveJS(mValue);
   aValue.set(mValue);
 
   return;

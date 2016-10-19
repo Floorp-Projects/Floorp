@@ -16,7 +16,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsBaseDragService
-  virtual nsresult InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
+  virtual nsresult InvokeDragSessionImpl(nsIArray* anArrayTransferables,
                                          nsIScriptableRegion* aRegion,
                                          uint32_t aActionType) override;
 private:

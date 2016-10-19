@@ -66,7 +66,8 @@ enum MaiInterfaceType {
     MAI_INTERFACE_TABLE,
     MAI_INTERFACE_TEXT,
     MAI_INTERFACE_DOCUMENT, 
-    MAI_INTERFACE_IMAGE /* 10 */
+    MAI_INTERFACE_IMAGE, /* 10 */
+    MAI_INTERFACE_TABLE_CELL
 };
 
 static GType GetAtkTypeForMai(MaiInterfaceType type)
@@ -94,12 +95,17 @@ static GType GetAtkTypeForMai(MaiInterfaceType type)
       return ATK_TYPE_DOCUMENT;
     case MAI_INTERFACE_IMAGE:
       return ATK_TYPE_IMAGE;
+    case MAI_INTERFACE_TABLE_CELL:
+      MOZ_ASSERT(false);
   }
   return G_TYPE_INVALID;
 }
 
 #define NON_USER_EVENT ":system"
     
+// The atk interfaces we can expose without checking what version of ATK we are
+// dealing with.  At the moment AtkTableCell is the only interface we can't
+// always expose.
 static const GInterfaceInfo atk_if_infos[] = {
     {(GInterfaceInitFunc)componentInterfaceInitCB,
      (GInterfaceFinalizeFunc) nullptr, nullptr}, 
@@ -423,6 +429,15 @@ GetMaiAtkType(uint16_t interfacesBits)
                                     GetAtkTypeForMai((MaiInterfaceType)index),
                                     &atk_if_infos[index]);
       }
+    }
+
+    // Special case AtkTableCell so we can check what version of Atk we are
+    // dealing with.
+    if (IsAtkVersionAtLeast(2, 12) && (interfacesBits & (1 << MAI_INTERFACE_TABLE_CELL))) {
+      const GInterfaceInfo cellInfo = {
+        (GInterfaceInitFunc)tableCellInterfaceInitCB,
+        (GInterfaceFinalizeFunc)nullptr, nullptr};
+      g_type_add_interface_static(type, gAtkTableCellGetTypeFunc(), &cellInfo);
     }
 
     return type;

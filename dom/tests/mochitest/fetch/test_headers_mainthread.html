@@ -143,7 +143,6 @@ function TestImmutableHeaders() {
 
   checkHas(headers, "foo", "Should be able to check immutable headers");
   ok(headers.get("foo"), "Should be able to get immutable headers");
-  ok(headers.getAll("foo").length, "Should be able to get all immutable headers");
 }
 
 TestRequestHeaders();

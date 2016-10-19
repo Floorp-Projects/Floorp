@@ -74,10 +74,8 @@ gfxPlatformMac::gfxPlatformMac()
     DisableFontActivation();
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
-    uint32_t canvasMask = BackendTypeBit(BackendType::SKIA) |
-                          BackendTypeBit(BackendType::COREGRAPHICS);
-    uint32_t contentMask = BackendTypeBit(BackendType::COREGRAPHICS) |
-                           BackendTypeBit(BackendType::SKIA);
+    uint32_t canvasMask = BackendTypeBit(BackendType::SKIA);
+    uint32_t contentMask = BackendTypeBit(BackendType::SKIA);
     InitBackendPrefs(canvasMask, BackendType::SKIA,
                      contentMask, BackendType::SKIA);
 

@@ -1,6 +1,6 @@
 == dir-1.html dir-1-ref.html
 == dir-2.html dir-2-ref.html
-== dir-3.html dir-3-ref.html
+random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
 == dir-4.html dir-4-ref.html
 == dir-5.html dir-5-ref.html
 == dir-6.html dir-6-ref.html
@@ -42,8 +42,8 @@ random-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-r
 != mfenced-8.html mfenced-8-ref.html
 == mfenced-9.html mfenced-9-ref.html
 fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfenced-10.html mfenced-10-ref.html # Windows versions without Cambria Math, see bug 670592
-== mfenced-11.html mfenced-11-ref.html
-== mfenced-12.html mfenced-12-ref.html
+fails-if(http.oscpu=="Linux\u0020x86_64") == mfenced-11.html mfenced-11-ref.html # bug 670592
+fails-if(http.oscpu=="Linux\u0020x86_64") == mfenced-12.html mfenced-12-ref.html # bug 670592
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != mi-mathvariant-3.html mi-mathvariant-3-ref.html
@@ -113,7 +113,7 @@ fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == embellished-op-4-3.html embellished-op-4-3-ref.html
 == embellished-op-5-1.html embellished-op-5-ref.html
 == embellished-op-5-2.html embellished-op-5-ref.html
-random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.xhtml semantics-1-ref.xhtml # Windows versions with Cambria Math
+fails-if(http.oscpu=="Linux\u0020x86_64") random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.xhtml semantics-1-ref.xhtml # Windows versions with Cambria Math, Linux x86_64:bug 1309429
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
 == semantics-4.html semantics-4-ref.html
@@ -144,9 +144,9 @@ fails-if(skiaContent&&OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.
 == mpadded-5.html mpadded-5-ref.html
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
-== mpadded-7.html mpadded-7-ref.html
-== mpadded-8.html mpadded-8-ref.html
-== mpadded-9.html mpadded-9-ref.html
+random-if(gtkWidget) == mpadded-7.html mpadded-7-ref.html # bug 1309430
+random-if(gtkWidget) == mpadded-8.html mpadded-8-ref.html # bug 1309430
+random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 == math-display.html math-display-ref.html
 == scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
@@ -192,7 +192,7 @@ fails-if(skiaContent&&OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.
 == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
-== mo-glyph-size.html mo-glyph-size-ref.html
+random-if(gtkWidget) == mo-glyph-size.html mo-glyph-size-ref.html # bug 1309426
 == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
 == whitespace-trim-1.html whitespace-trim-1-ref.html
 == whitespace-trim-2.html whitespace-trim-2-ref.html
@@ -224,21 +224,21 @@ fuzzy-if(skiaContent,1,80) fails-if(winWidget&&/^Windows\x20NT\x205\.1/.test(htt
 != menclose-1o.html menclose-1-ref.html
 != menclose-1p.html menclose-1-ref.html
 != menclose-1q.html menclose-1-ref.html
-== menclose-2-actuarial.html menclose-2-actuarial-ref.html
-== menclose-2-bottom.html menclose-2-bottom-ref.html
-== menclose-2-box.html menclose-2-box-ref.html
+random-if(gtkWidget) == menclose-2-actuarial.html menclose-2-actuarial-ref.html # bug 1309426
+random-if(gtkWidget) == menclose-2-bottom.html menclose-2-bottom-ref.html # bug 1309426
+random-if(gtkWidget) == menclose-2-box.html menclose-2-box-ref.html # bug 1309426
 == menclose-2-circle.html menclose-2-circle-ref.html
 == menclose-2-downdiagonalstrike.html menclose-2-downdiagonalstrike-ref.html
 == menclose-2-horizontalstrike.html menclose-2-horizontalstrike-ref.html
 == menclose-2-left.html menclose-2-left-ref.html
 fuzzy-if(skiaContent,80,5) == menclose-2-longdiv.html menclose-2-longdiv-ref.html
-== menclose-2-right.html menclose-2-right-ref.html
-== menclose-2-roundedbox.html menclose-2-roundedbox-ref.html
+random-if(gtkWidget) == menclose-2-right.html menclose-2-right-ref.html # bug 1309426
+random-if(gtkWidget) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # bug 1309426
 == menclose-2-top.html menclose-2-top-ref.html
-== menclose-2-updiagonalarrow.html menclose-2-updiagonalarrow-ref.html
+random-if(gtkWidget) == menclose-2-updiagonalarrow.html menclose-2-updiagonalarrow-ref.html # bug 1309426
 == menclose-2-updiagonalstrike.html menclose-2-updiagonalstrike-ref.html
 == menclose-2-verticalstrike.html menclose-2-verticalstrike-ref.html
-== menclose-2-roundedbox.html menclose-2-roundedbox-ref.html
+random-if(gtkWidget) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # bug 1309426
 == menclose-2-phasorangle.html menclose-2-phasorangle-ref.html
 == menclose-3-box.html menclose-3-box-ref.html
 == menclose-3-madruwb.html menclose-3-madruwb-ref.html
@@ -318,7 +318,7 @@ fails-if(Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX) == mathvariant
 == rowlines-2a.html rowlines-2-ref.html
 == rowlines-2b.html rowlines-2-ref.html
 != rowlines-3-1.html rowlines-3-1-ref.html
-== rowlines-3-2.html rowlines-3-2-ref.html
+random-if(gtkWidget) == rowlines-3-2.html rowlines-3-2-ref.html # bug 1309426
 == tablespacing-1.html tablespacing-1-ref.html
 == tablespacing-2.html tablespacing-2-ref.html
 == tablespacing-3.html tablespacing-3-ref.html

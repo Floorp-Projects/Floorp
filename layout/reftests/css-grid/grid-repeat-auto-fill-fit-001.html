@@ -33,6 +33,9 @@ fit .r3 { grid-template-columns: [a] repeat(auto-fit, [b] 20px [c]) [d] 30px [e]
 .w100 { width: 100px; }
 .w50 { width: 50px; }
 .w80 { width: 80px; }
+.w42 { width: 42px; }
+.xw42 { max-width: 42px; }
+.mw42 { min-width: 42px; }
 .mw100 { min-width: 100px; }
 .mw50 { min-width: 50px; }
 .mw80 { min-width: 80px; }
@@ -75,6 +78,11 @@ fill,fit {
   float: left;
   width: 400px;
 }
+
+.zero-progress {
+  grid-column-gap: calc(10px - 1%);
+  grid-template-columns: [a] 10px repeat(auto-fill, [b] calc(1% - 10px) [c]) [d];
+}
 </style>
 </head>
 <body>
@@ -96,6 +104,9 @@ fill,fit {
 <div class="grid r1 mw80 float"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 w100 mw50 float"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 mw100 w50 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w42 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw42 float"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw42 float"><x></x><x></x><a></a><b></b><x></x></div>
 
 <br clear="all">
 
@@ -223,6 +234,18 @@ fill,fit {
 
 <br clear="all">
 <br clear="all">
+
+<div style="float:left">
+  <div class="grid xw50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+  <div class="grid w50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+  <div class="grid mw50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+</div>
 
 </fit>
 

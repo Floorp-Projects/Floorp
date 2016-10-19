@@ -63,25 +63,16 @@ public:
 
   void GetType(JSContext* /* unused */, JS::MutableHandle<JSObject*> aRetVal) const
   {
-    if (mType) {
-      JS::ExposeObjectToActiveJS(mType);
-    }
     aRetVal.set(mType);
   }
 
   void GetId(JSContext* /* unused */, JS::MutableHandle<JSObject*> aRetVal) const
   {
-    if (mId) {
-      JS::ExposeObjectToActiveJS(mId);
-    }
     aRetVal.set(mId);
   }
 
   void GetPayload(JSContext* /* unused */, JS::MutableHandle<JSObject*> aRetVal) const
   {
-    if (mPayload) {
-      JS::ExposeObjectToActiveJS(mPayload);
-    }
     aRetVal.set(mPayload);
   }
 
