@@ -58,7 +58,7 @@
 }
 
 #filter-button {
-  list-style-image: url(images/filter.svg);
+  list-style-image: url(chrome://devtools/skin/images/filter.svg);
 }
 
 #performance-filter-menupopup > menuitem .menu-iconic-left::after {

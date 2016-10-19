@@ -7,4 +7,4 @@
   * specific path.
   */
 
-@import url("chrome://devtools/skin/common.css");
+@import url("resource://devtools/client/themes/common.css");

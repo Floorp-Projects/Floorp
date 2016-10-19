@@ -53,11 +53,6 @@ let allowedImageReferences = [
   {file: "chrome://devtools/skin/images/dock-bottom-maximize@2x.png",
    from: "chrome://devtools/skin/toolbox.css",
    isFromDevTools: true},
-
-  // Bug 1302708
-  {file: "chrome/devtools/modules/devtools/client/themes/images/filter.svg",
-   from: "chrome/devtools/modules/devtools/client/themes/common.css",
-   isFromDevTools: true},
 ];
 
 var moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
