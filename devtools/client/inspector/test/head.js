@@ -47,18 +47,11 @@ registerCleanupFunction(() => {
 });
 
 registerCleanupFunction(function* () {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
-
   // Move the mouse outside inspector. If the test happened fake a mouse event
   // somewhere over inspector the pointer is considered to be there when the
   // next test begins. This might cause unexpected events to be emitted when
   // another test moves the mouse.
   EventUtils.synthesizeMouseAtPoint(1, 1, {type: "mousemove"}, window);
-
-  while (gBrowser.tabs.length > 1) {
-    gBrowser.removeCurrentTab();
-  }
 });
 
 var navigateTo = function (toolbox, url) {
