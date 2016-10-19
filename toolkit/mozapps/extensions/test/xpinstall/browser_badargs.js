@@ -7,12 +7,15 @@ function test() {
   var triggers = encodeURIComponent(JSON.stringify(TESTROOT + "amosigned.xpi"));
   gBrowser.selectedTab = gBrowser.addTab();
 
-  function loadListener() {
-    gBrowser.selectedBrowser.removeEventListener("load", loadListener, true);
-    gBrowser.contentWindow.addEventListener("InstallTriggered", page_loaded, false);
-  }
-
-  gBrowser.selectedBrowser.addEventListener("load", loadListener, true);
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    return new Promise(resolve => {
+      addEventListener("load", () => {
+        content.addEventListener("InstallTriggered", () => {
+          resolve(content.document.getElementById("return").textContent);
+        });
+      }, true);
+    });
+  }).then(page_loaded);
 
   // In non-e10s the exception in the content page would trigger a test failure
   if (!gMultiProcessBrowser)
@@ -21,10 +24,8 @@ function test() {
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
-function page_loaded() {
-  gBrowser.contentWindow.removeEventListener("InstallTriggered", page_loaded, false);
-  var doc = gBrowser.contentDocument;
-  is(doc.getElementById("return").textContent, "exception", "installTrigger should have failed");
+function page_loaded(result) {
+  is(result, "exception", "installTrigger should have failed");
 
   // In non-e10s the exception from the page is thrown after the event so we
   // have to spin the event loop to make sure it arrives so expectUncaughtException
