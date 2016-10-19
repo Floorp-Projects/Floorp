@@ -18,7 +18,7 @@
       },
       "CA": {
         "visibleDefaultEngines": [
-          "google", "yahoo-en-CA", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
+          "google-nocodes", "yahoo", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
         ]
       }
     },
