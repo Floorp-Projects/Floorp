@@ -9,7 +9,7 @@
 define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
-  const { isGrip, cropMultipleLines } = require("./rep-utils");
+  const { isGrip, cropString, cropMultipleLines } = require("./rep-utils");
 
   // Utils
   const nodeConstants = require("devtools/shared/dom-node-constants");
@@ -28,10 +28,6 @@ define(function (require, exports, module) {
       mode: React.PropTypes.string,
     },
 
-    getCroppedTextContent: function (textContent, limit) {
-      return cropMultipleLines(textContent, limit);
-    },
-
     render: function () {
       let {object} = this.props;
 
@@ -39,9 +35,9 @@ define(function (require, exports, module) {
 
       let {textContent} = object.preview;
       if (mode === "tiny") {
-        textContent = this.getCroppedTextContent(textContent, 30);
+        textContent = cropMultipleLines(textContent, 30);
       } else if (mode === "short") {
-        textContent = this.getCroppedTextContent(textContent);
+        textContent = cropString(textContent, 50);
       }
 
       return span({className: "objectBox theme-comment"}, `<!-- ${textContent} -->`);
