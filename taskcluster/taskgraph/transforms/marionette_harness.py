@@ -36,12 +36,4 @@ def setup_task(config, tasks):
             'mount-point': "/home/worker/.tc-vcs",
         }]
 
-        if int(config.params['level']) > 1:
-            task['worker'].setdefault('caches', []).append({
-                'type': 'persistent',
-                'name': 'level-{}-{}-test-workspace'.format(
-                    config.params['level'], config.params['project']),
-                'mount-point': "/home/worker/workspace",
-            })
-
         yield task
