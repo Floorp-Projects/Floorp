@@ -8,6 +8,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryService.h"
 #include "nsDataHashtable.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/CrashReporterChild.h"
@@ -129,6 +130,7 @@ typedef std::wstring xpstring;
 #define XP_STRLEN(x) wcslen(x)
 #define my_strlen strlen
 #define CRASH_REPORTER_FILENAME "crashreporter.exe"
+#define MINIDUMP_ANALYZER_FILENAME "minidump-analyzer.exe"
 #define PATH_SEPARATOR "\\"
 #define XP_PATH_SEPARATOR L"\\"
 #define XP_PATH_SEPARATOR_CHAR L'\\'
@@ -147,6 +149,7 @@ typedef std::string xpstring;
 #define XP_TEXT(x) x
 #define CONVERT_XP_CHAR_TO_UTF16(x) NS_ConvertUTF8toUTF16(x)
 #define CRASH_REPORTER_FILENAME "crashreporter"
+#define MINIDUMP_ANALYZER_FILENAME "minidump-analyzer"
 #define PATH_SEPARATOR "/"
 #define XP_PATH_SEPARATOR "/"
 #define XP_PATH_SEPARATOR_CHAR '/'
@@ -190,6 +193,9 @@ static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 static XP_CHAR* pendingDirectory;
 static XP_CHAR* crashReporterPath;
 static XP_CHAR* memoryReportPath;
+#if !defined(MOZ_WIDGET_ANDROID)
+static XP_CHAR* minidumpAnalyzerPath;
+#endif // !defined(MOZ_WIDGET_ANDROID)
 
 // Where crash events should go.
 static XP_CHAR* eventsDirectory;
@@ -808,9 +814,11 @@ WriteGlobalMemoryStatus(PlatformWriter* apiData, PlatformWriter* eventFile)
  * @param aProgramPath The path of the program to be launched
  * @param aMinidumpPath The path of the minidump file, passed as an argument
  *        to the launched program
+ * @param aWait If true wait for the program termination
  */
 static bool
-LaunchProgram(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath)
+LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath,
+              bool aWait = false)
 {
 #ifdef XP_WIN
   XP_CHAR cmdLine[CMDLINE_SIZE];
@@ -823,16 +831,18 @@ LaunchProgram(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath)
   p = Concat(p, aMinidumpPath, &size);
   Concat(p, L"\"", &size);
 
-  STARTUPINFO si;
-  PROCESS_INFORMATION pi;
-  ZeroMemory(&si, sizeof(si));
+  PROCESS_INFORMATION pi = {};
+  STARTUPINFO si = {};
   si.cb = sizeof(si);
-  ZeroMemory(&pi, sizeof(pi));
 
   // If CreateProcess() fails don't do anything
   if (CreateProcess(nullptr, (LPWSTR)cmdLine, nullptr, nullptr, FALSE,
                     NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW,
                     nullptr, nullptr, &si, &pi)) {
+    if (aWait) {
+      WaitForSingleObject(pi.hProcess, INFINITE);
+    }
+
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
   }
@@ -840,8 +850,8 @@ LaunchProgram(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath)
 #ifdef XP_MACOSX
   pid_t pid = 0;
   char* const my_argv[] = {
-    aProgramPath,
-    aMinidumpPath,
+    const_cast<char*>(aProgramPath),
+    const_cast<char*>(aMinidumpPath),
     nullptr
   };
 
@@ -854,6 +864,8 @@ LaunchProgram(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath)
 
   if (rv != 0) {
     return false;
+  } else if (aWait) {
+    waitpid(pid, nullptr, 0);
   }
 
 #else // !XP_MACOSX
@@ -868,6 +880,10 @@ LaunchProgram(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath)
     Unused << execl(aProgramPath,
                     aProgramPath, aMinidumpPath, (char*)0);
     _exit(1);
+  } else {
+    if (aWait) {
+      sys_waitpid(pid, nullptr, __WALL);
+    }
   }
 #endif // XP_MACOSX
 #endif // XP_UNIX
@@ -1536,6 +1552,32 @@ ChildFilter(void* context)
   return result;
 }
 
+#if !defined(MOZ_WIDGET_ANDROID)
+
+// Locate the specified executable and store its path as a native string in
+// the |aPathPtr| so we can later invoke it from within the exception handler.
+static nsresult
+LocateExecutable(nsIFile* aXREDirectory, const nsACString& aName,
+                 nsAString& aPath)
+{
+  nsCOMPtr<nsIFile> exePath;
+  nsresult rv = aXREDirectory->Clone(getter_AddRefs(exePath));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef XP_MACOSX
+  exePath->SetNativeLeafName(NS_LITERAL_CSTRING("MacOS"));
+  exePath->Append(NS_LITERAL_STRING("crashreporter.app"));
+  exePath->Append(NS_LITERAL_STRING("Contents"));
+  exePath->Append(NS_LITERAL_STRING("MacOS"));
+#endif
+
+  exePath->AppendNative(aName);
+  exePath->GetPath(aPath);
+  return NS_OK;
+}
+
+#endif // !defined(MOZ_WIDGET_ANDROID)
+
 nsresult SetExceptionHandler(nsIFile* aXREDirectory,
                              bool force/*=false*/)
 {
@@ -1586,30 +1628,33 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   NS_ENSURE_TRUE(notesField, NS_ERROR_OUT_OF_MEMORY);
 
   if (!headlessClient) {
-    // locate crashreporter executable
-    nsCOMPtr<nsIFile> exePath;
-    nsresult rv = aXREDirectory->Clone(getter_AddRefs(exePath));
-    NS_ENSURE_SUCCESS(rv, rv);
+#if !defined(MOZ_WIDGET_ANDROID)
+    // Locate the crash reporter executable
+    nsAutoString crashReporterPath_temp;
+    nsresult rv = LocateExecutable(aXREDirectory,
+                                   NS_LITERAL_CSTRING(CRASH_REPORTER_FILENAME),
+                                   crashReporterPath_temp);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-#if defined(XP_MACOSX)
-    exePath->SetNativeLeafName(NS_LITERAL_CSTRING("MacOS"));
-    exePath->Append(NS_LITERAL_STRING("crashreporter.app"));
-    exePath->Append(NS_LITERAL_STRING("Contents"));
-    exePath->Append(NS_LITERAL_STRING("MacOS"));
-#endif
-
-    exePath->AppendNative(NS_LITERAL_CSTRING(CRASH_REPORTER_FILENAME));
+    nsAutoString minidumpAnalyzerPath_temp;
+    rv = LocateExecutable(aXREDirectory,
+                          NS_LITERAL_CSTRING(MINIDUMP_ANALYZER_FILENAME),
+                          minidumpAnalyzerPath_temp);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
 #ifdef XP_WIN32
-    nsString crashReporterPath_temp;
-
-    exePath->GetPath(crashReporterPath_temp);
-    crashReporterPath = reinterpret_cast<wchar_t*>(ToNewUnicode(crashReporterPath_temp));
-#elif !defined(__ANDROID__)
-    nsCString crashReporterPath_temp;
-
-    exePath->GetNativePath(crashReporterPath_temp);
-    crashReporterPath = ToNewCString(crashReporterPath_temp);
+  crashReporterPath =
+    reinterpret_cast<wchar_t*>(ToNewUnicode(crashReporterPath_temp));
+  minidumpAnalyzerPath =
+    reinterpret_cast<wchar_t*>(ToNewUnicode(minidumpAnalyzerPath_temp));
+#else
+  crashReporterPath = ToNewCString(crashReporterPath_temp);
+  minidumpAnalyzerPath = ToNewCString(minidumpAnalyzerPath_temp);
+#endif // XP_WIN32
 #else
     // On Android, we launch using the application package name instead of a
     // filename, so use the dynamically set MOZ_ANDROID_PACKAGE_NAME, or fall
@@ -1623,7 +1668,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
       nsCString package(ANDROID_PACKAGE_NAME "/org.mozilla.gecko.CrashReporter");
       crashReporterPath = ToNewCString(package);
     }
-#endif
+#endif // !defined(MOZ_WIDGET_ANDROID)
   }
 
   // get temp path to use for minidump path
@@ -3031,6 +3076,34 @@ AppendExtraData(const nsAString& id, const AnnotationTable& data)
   if (!GetExtraFileForID(id, getter_AddRefs(extraFile)))
     return false;
   return AppendExtraData(extraFile, data);
+}
+
+/**
+ * Runs the minidump analyzer program on the specified crash dump. The analyzer
+ * will extract the stack traces from the dump and store them in JSON format as
+ * an annotation in the extra file associated with the crash.
+ *
+ * This method waits synchronously for the program to have finished executing,
+ * do not call it from the main thread!
+ */
+void
+RunMinidumpAnalyzer(const nsAString& id)
+{
+#if !defined(MOZ_WIDGET_ANDROID)
+  nsCOMPtr<nsIFile> file;
+
+  if (CrashReporter::GetMinidumpForID(id, getter_AddRefs(file)) && file) {
+#ifdef XP_WIN
+    nsAutoString path;
+    file->GetPath(path);
+#else
+    nsAutoCString path;
+    file->GetNativePath(path);
+#endif
+
+    LaunchProgram(minidumpAnalyzerPath, path.get(), /* aWait */ true);
+  }
+#endif // !defined(MOZ_WIDGET_ANDROID)
 }
 
 //-----------------------------------------------------------------------------
