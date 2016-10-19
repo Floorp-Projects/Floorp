@@ -343,7 +343,6 @@ IDBCursor::GetKey(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
     mHaveCachedKey = true;
   }
 
-  JS::ExposeValueToActiveJS(mCachedKey);
   aResult.set(mCachedKey);
 }
 
@@ -379,7 +378,6 @@ IDBCursor::GetPrimaryKey(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
     mHaveCachedPrimaryKey = true;
   }
 
-  JS::ExposeValueToActiveJS(mCachedPrimaryKey);
   aResult.set(mCachedPrimaryKey);
 }
 
@@ -413,7 +411,6 @@ IDBCursor::GetValue(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
     mHaveCachedValue = true;
   }
 
-  JS::ExposeValueToActiveJS(mCachedValue);
   aResult.set(mCachedValue);
 }
 

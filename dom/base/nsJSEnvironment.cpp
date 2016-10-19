@@ -2219,17 +2219,6 @@ nsJSContext::SetWindowProxy(JS::Handle<JSObject*> aWindowProxy)
 JSObject*
 nsJSContext::GetWindowProxy()
 {
-  JSObject* windowProxy = GetWindowProxyPreserveColor();
-  if (windowProxy) {
-    JS::ExposeObjectToActiveJS(windowProxy);
-  }
-
-  return windowProxy;
-}
-
-JSObject*
-nsJSContext::GetWindowProxyPreserveColor()
-{
   return mWindowProxy;
 }
 

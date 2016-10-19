@@ -7,11 +7,12 @@
 #define MOZILLA_GFX_POLYGON_H
 
 #include "Matrix.h"
-#include "mozilla/InitializerList.h"
 #include "mozilla/Move.h"
 #include "nsTArray.h"
 #include "Point.h"
 #include "Triangle.h"
+
+#include <initializer_list>
 
 namespace mozilla {
 namespace gfx {

@@ -132,8 +132,6 @@ enum class DrawTargetType : int8_t {
 enum class BackendType : int8_t {
   NONE = 0,
   DIRECT2D, // Used for version independent D2D objects.
-  COREGRAPHICS,
-  COREGRAPHICS_ACCELERATED,
   CAIRO,
   SKIA,
   RECORDING,

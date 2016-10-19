@@ -1905,10 +1905,7 @@ void
 nsMessageManagerScriptExecutor::MarkScopesForCC()
 {
   for (uint32_t i = 0; i < mAnonymousGlobalScopes.Length(); ++i) {
-    JSObject* obj = mAnonymousGlobalScopes[i];
-    if (obj) {
-      JS::ExposeObjectToActiveJS(obj);
-    }
+    mAnonymousGlobalScopes[i].exposeToActiveJS();
   }
 }
 

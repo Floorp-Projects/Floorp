@@ -85,7 +85,6 @@ public:
    */
   virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) = 0;
   virtual JSObject* GetWindowProxy() = 0;
-  virtual JSObject* GetWindowProxyPreserveColor() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContext, NS_ISCRIPTCONTEXT_IID)

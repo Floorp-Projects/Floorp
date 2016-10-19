@@ -140,7 +140,6 @@ BluetoothLeDeviceEvent::GetScanRecord(
     }
     mRawScanRecord.Clear();
   }
-  JS::ExposeObjectToActiveJS(mScanRecord);
   aScanRecord.set(mScanRecord);
 
   return;

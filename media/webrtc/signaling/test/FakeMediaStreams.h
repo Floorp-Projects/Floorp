@@ -238,6 +238,8 @@ class Fake_MediaStream {
   double StreamTimeToSeconds(mozilla::StreamTime aTime);
   mozilla::StreamTime
   TicksToTimeRoundDown(mozilla::TrackRate aRate, mozilla::TrackTicks aTicks);
+  mozilla::TrackTicks TimeToTicksRoundUp(mozilla::TrackRate aRate,
+                                         mozilla::StreamTime aTime);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStream);
 

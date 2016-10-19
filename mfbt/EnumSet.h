@@ -11,7 +11,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/InitializerList.h"
+
+#include <initializer_list>
 
 #include <stdint.h>
 
