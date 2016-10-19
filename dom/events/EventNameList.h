@@ -979,6 +979,14 @@ NON_IDL_EVENT(MozEdgeUICompleted,
               eSimpleGestureEventClass)
 
 // CSS Transition & Animation events:
+EVENT(transitionstart,
+      eTransitionStart,
+      EventNameType_All,
+      eTransitionEventClass)
+EVENT(transitionrun,
+      eTransitionRun,
+      EventNameType_All,
+      eTransitionEventClass)
 EVENT(transitionend,
       eTransitionEnd,
       EventNameType_All,
