@@ -43,8 +43,8 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
                                                   child->Manager(),
                                                   nullptr);
 
+  LayoutDeviceIntRect dragRect;
   if (mHasImage || mSelection) {
-    LayoutDeviceIntRect dragRect;
     nsPresContext* pc;
     RefPtr<mozilla::gfx::SourceSurface> surface;
     DrawDrag(mSourceNode, aRegion, mScreenPosition, &dragRect, &surface, &pc);
@@ -64,12 +64,10 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
           return NS_ERROR_FAILURE;
         }
 
-        mozilla::gfx::IntSize size = dataSurface->GetSize();
         mozilla::Unused <<
           child->SendInvokeDragSession(dataTransfers, aActionType, surfaceData,
-                                       size.width, size.height, stride,
-                                       static_cast<uint8_t>(dataSurface->GetFormat()),
-                                       dragRect.x, dragRect.y);
+                                       stride, static_cast<uint8_t>(dataSurface->GetFormat()),
+                                       dragRect);
         StartDragSession();
         return NS_OK;
       }
@@ -77,8 +75,7 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
   }
 
   mozilla::Unused << child->SendInvokeDragSession(dataTransfers, aActionType,
-                                                  mozilla::void_t(),
-                                                  0, 0, 0, 0, 0, 0);
+                                                  mozilla::void_t(), 0, 0, dragRect);
   StartDragSession();
   return NS_OK;
 }
