@@ -616,6 +616,9 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
         NS_ENSURE_SUCCESS(result, result);
         NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
+        // node might be anonymous DIV, so we find better text node
+        FindBetterInsertionPoint(node, offset);
+
         if (IsTextNode(node)) {
           nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(node);
           if (charData) {

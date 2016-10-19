@@ -281,7 +281,7 @@ public:
    * @return the ::before frame or nullptr if there isn't one
    */
   static nsIFrame* GetBeforeFrameForContent(nsIFrame* aGenConParentFrame,
-                                            nsIContent* aContent);
+                                            const nsIContent* aContent);
 
   /**
    * GetBeforeFrame returns the outermost ::before frame of the given frame, if
@@ -304,7 +304,7 @@ public:
    * @return the ::after frame or nullptr if there isn't one
    */
   static nsIFrame* GetAfterFrameForContent(nsIFrame* aGenConParentFrame,
-                                           nsIContent* aContent);
+                                           const nsIContent* aContent);
 
   /**
    * GetAfterFrame returns the outermost ::after frame of the given frame, if one
