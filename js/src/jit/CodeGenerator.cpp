@@ -8443,7 +8443,7 @@ StoreUnboxedPointer(MacroAssembler& masm, T address, MIRType type, const LAlloca
     if (value->isConstant()) {
         Value v = value->toConstant()->toJSValue();
         if (v.isMarkable()) {
-            masm.storePtr(ImmGCPtr(v.toGCThing()), address);
+            masm.storePtr(ImmGCPtr(v.toMarkablePointer()), address);
         } else {
             MOZ_ASSERT(v.isNull());
             masm.storePtr(ImmWord(0), address);

@@ -516,6 +516,8 @@ MSG_DEF(JSMSG_TYPED_ARRAY_NEGATIVE_ARG,1, JSEXN_RANGEERR, "argument {0} must be 
 MSG_DEF(JSMSG_TYPED_ARRAY_DETACHED,    0, JSEXN_TYPEERR, "attempting to access detached ArrayBuffer")
 MSG_DEF(JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS, 0, JSEXN_RANGEERR, "attempting to construct out-of-bounds TypedArray on ArrayBuffer")
 MSG_DEF(JSMSG_TYPED_ARRAY_CALL_OR_CONSTRUCT, 1, JSEXN_TYPEERR, "cannot directly {0} builtin %TypedArray%")
+MSG_DEF(JSMSG_NON_TYPED_ARRAY_RETURNED, 0, JSEXN_TYPEERR, "constructor didn't return TypedArray object")
+MSG_DEF(JSMSG_SHORT_TYPED_ARRAY_RETURNED, 2, JSEXN_TYPEERR, "expected TypedArray of at least length {0}, but constructor returned TypedArray of length {1}")
 
 // Shared array buffer
 MSG_DEF(JSMSG_SHARED_ARRAY_BAD_LENGTH,  0, JSEXN_RANGEERR, "length argument out of range")

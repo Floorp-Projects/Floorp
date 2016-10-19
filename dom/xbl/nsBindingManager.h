@@ -46,7 +46,7 @@ public:
 
   explicit nsBindingManager(nsIDocument* aDocument);
 
-  nsXBLBinding* GetBindingWithContent(nsIContent* aContent);
+  nsXBLBinding* GetBindingWithContent(const nsIContent* aContent);
 
   void AddBoundContent(nsIContent* aContent);
   void RemoveBoundContent(nsIContent* aContent);

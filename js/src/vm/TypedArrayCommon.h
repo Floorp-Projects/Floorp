@@ -540,7 +540,7 @@ class ElementSpecific
     }
 
     static bool
-    valueToNative(JSContext* cx, const Value& v, T* result)
+    valueToNative(JSContext* cx, HandleValue v, T* result)
     {
         MOZ_ASSERT(!v.isMagic());
 

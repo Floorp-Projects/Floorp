@@ -37,22 +37,6 @@ AppsService.prototype = {
             localId == Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID);
   },
 
-  getManifestCSPByLocalId: function getCSPByLocalId(localId) {
-    debug("GetManifestCSPByLocalId( " + localId + " )");
-    if (this.isInvalidId(localId)) {
-      return null;
-    }
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-
-  getDefaultCSPByLocalId: function getCSPByLocalId(localId) {
-    debug("GetDefaultCSPByLocalId( " + localId + " )");
-    if (this.isInvalidId(localId)) {
-      return null;
-    }
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-
   getAppByManifestURL: function getAppByManifestURL(aManifestURL) {
     debug("GetAppByManifestURL( " + aManifestURL + " )");
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;

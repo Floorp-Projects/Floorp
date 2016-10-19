@@ -254,8 +254,6 @@ private:
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet).
 #define NS_EVENT_STATE_LOADING       NS_DEFINE_EVENT_STATE_MACRO(23)
-// Content is of a type that gecko can't handle.
-#define NS_EVENT_STATE_TYPE_UNSUPPORTED NS_DEFINE_EVENT_STATE_MACRO(24)
 #define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(25)
 // Handler for the content has been blocked.
 #define NS_EVENT_STATE_HANDLER_BLOCKED NS_DEFINE_EVENT_STATE_MACRO(26)
@@ -288,8 +286,6 @@ private:
 #define NS_EVENT_STATE_VULNERABLE_UPDATABLE NS_DEFINE_EVENT_STATE_MACRO(39)
 // Handler for click to play plugin (vulnerable w/no update)
 #define NS_EVENT_STATE_VULNERABLE_NO_UPDATE NS_DEFINE_EVENT_STATE_MACRO(40)
-// Platform does not support plugin content (some mobile platforms)
-#define NS_EVENT_STATE_TYPE_UNSUPPORTED_PLATFORM NS_DEFINE_EVENT_STATE_MACRO(41)
 // Element is ltr (for :dir pseudo-class)
 #define NS_EVENT_STATE_LTR NS_DEFINE_EVENT_STATE_MACRO(42)
 // Element is rtl (for :dir pseudo-class)

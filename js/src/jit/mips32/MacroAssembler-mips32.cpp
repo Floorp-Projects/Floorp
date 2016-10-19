@@ -1521,18 +1521,16 @@ MacroAssemblerMIPSCompat::extractTag(const BaseIndex& address, Register scratch)
 uint32_t
 MacroAssemblerMIPSCompat::getType(const Value& val)
 {
-    jsval_layout jv = JSVAL_TO_IMPL(val);
-    return jv.s.tag;
+    return val.toNunboxTag();
 }
 
 void
 MacroAssemblerMIPSCompat::moveData(const Value& val, Register data)
 {
-    jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable())
-        ma_li(data, ImmGCPtr(reinterpret_cast<gc::Cell*>(val.toGCThing())));
+        ma_li(data, ImmGCPtr(val.toMarkablePointer()));
     else
-        ma_li(data, Imm32(jv.s.payload.i32));
+        ma_li(data, Imm32(val.toNunboxPayload()));
 }
 
 void

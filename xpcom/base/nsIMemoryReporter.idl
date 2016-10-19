@@ -17,8 +17,8 @@ interface nsISimpleEnumerator;
 /*
  * Memory reporters measure Firefox's memory usage.  They are primarily used to
  * generate the about:memory page.  You should read
- * https://wiki.mozilla.org/Memory_Reporting before writing a memory
- * reporter.
+ * https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Memory_reporting
+ * before writing a memory reporter.
  */
 
 [scriptable, function, uuid(62ef0e1c-dbd6-11e3-aa75-3c970e9f4238)]

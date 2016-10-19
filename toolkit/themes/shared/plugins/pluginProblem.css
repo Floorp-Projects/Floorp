@@ -83,9 +83,6 @@ a .icon,
   background-image: url(chrome://mozapps/skin/plugins/contentPluginActivate.png);
   -moz-user-focus: normal;
 }
-:-moz-handler-disabled .icon {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginDisabled.png);
-}
 :-moz-handler-crashed .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginCrashed.png);
 }

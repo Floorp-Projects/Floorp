@@ -48,17 +48,6 @@ js_memcpy(void* dst_, const void* src_, size_t len)
 namespace js {
 
 template <class T>
-struct AlignmentTestStruct
-{
-    char c;
-    T t;
-};
-
-/* This macro determines the alignment requirements of a type. */
-#define JS_ALIGNMENT_OF(t_) \
-  (sizeof(js::AlignmentTestStruct<t_>) - sizeof(t_))
-
-template <class T>
 class AlignedPtrAndFlag
 {
     uintptr_t bits;
@@ -357,11 +346,11 @@ Poison(void* ptr, uint8_t value, size_t num)
 # if defined(JS_PUNBOX64)
     obj = obj & ((uintptr_t(1) << JSVAL_TAG_SHIFT) - 1);
 # endif
-    const jsval_layout layout = OBJECT_TO_JSVAL_IMPL((JSObject*)obj);
+    JS::Value v = JS::PoisonedObjectValue(reinterpret_cast<JSObject*>(obj));
 
-    size_t value_count = num / sizeof(jsval_layout);
-    size_t byte_count = num % sizeof(jsval_layout);
-    mozilla::PodSet((jsval_layout*)ptr, layout, value_count);
+    size_t value_count = num / sizeof(v);
+    size_t byte_count = num % sizeof(v);
+    mozilla::PodSet(reinterpret_cast<JS::Value*>(ptr), v, value_count);
     if (byte_count) {
         uint8_t* bytes = static_cast<uint8_t*>(ptr);
         uint8_t* end = bytes + num;

@@ -38,6 +38,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/DeclarationBlockInlines.h"
 #include "nsFocusManager.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsNameSpaceManager.h"
@@ -374,14 +375,15 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
         nsAttrValue attrValue;
 
         // Style rules need to be cloned.
-        if (originalValue->Type() == nsAttrValue::eGeckoCSSDeclaration) {
-            RefPtr<css::Declaration> declClone = new css::Declaration(
-                *originalValue->GetGeckoCSSDeclarationValue());
+        if (originalValue->Type() == nsAttrValue::eCSSDeclaration) {
+            DeclarationBlock* decl = originalValue->GetCSSDeclarationValue();
+            RefPtr<css::Declaration>
+              declClone = new css::Declaration(*decl->AsGecko());
 
             nsString stringValue;
             originalValue->ToString(stringValue);
 
-            attrValue.SetTo(declClone, &stringValue);
+            attrValue.SetTo(declClone.forget(), &stringValue);
         } else {
             attrValue.SetTo(*originalValue);
         }
@@ -1860,14 +1862,15 @@ nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype)
         nsAttrValue attrValue;
 
         // Style rules need to be cloned.
-        if (protoattr->mValue.Type() == nsAttrValue::eGeckoCSSDeclaration) {
-            RefPtr<css::Declaration> declClone = new css::Declaration(
-              *protoattr->mValue.GetGeckoCSSDeclarationValue());
+        if (protoattr->mValue.Type() == nsAttrValue::eCSSDeclaration) {
+            DeclarationBlock* decl = protoattr->mValue.GetCSSDeclarationValue();
+            RefPtr<css::Declaration>
+              declClone = new css::Declaration(*decl->AsGecko());
 
             nsString stringValue;
             protoattr->mValue.ToString(stringValue);
 
-            attrValue.SetTo(declClone, &stringValue);
+            attrValue.SetTo(declClone.forget(), &stringValue);
         } else {
             attrValue.SetTo(protoattr->mValue);
         }
@@ -2450,7 +2453,7 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
                                      mNodeInfo->NodeInfoManager()->
                                        DocumentPrincipal());
         if (declaration) {
-            mAttributes[aPos].mValue.SetTo(declaration, &aValue);
+            mAttributes[aPos].mValue.SetTo(declaration.forget(), &aValue);
 
             return NS_OK;
         }

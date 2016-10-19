@@ -2,21 +2,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- LOCALIZATION NOTE (unsupportedPlatform.pre): Mobile only. Flash (the only plugin available on mobile)
-     is not supported on some devices. Include a trailing space as needed. -->
-<!ENTITY unsupportedPlatform.pre                             "We’re very sorry, but &brandShortName; can’t play Flash on this device. ">
-<!-- LOCALIZATION NOTE (unsupportedPlatform.learnMore): Mobile only. This text is used to link to a SUMO page explaining why Flash is not
-     supported on this device. Use the unicode ellipsis char, \u2026, or use "..." if \u2026 doesn’t suit traditions in your locale. -->
-<!ENTITY unsupportedPlatform.learnMore                       "Learn More…">
-<!-- LOCALIZATION NOTE (unsupportedPlatform.post): Mobile only. Include text here if needed for your locale. -->
-<!ENTITY unsupportedPlatform.post                            "">
-
-<!ENTITY missingPlugin                                       "A plugin is needed to display this content.">
 <!-- LOCALIZATION NOTE (tapToPlayPlugin): Mobile (used for touch interfaces) only has one type of plugin possible. -->
 <!ENTITY tapToPlayPlugin                                     "Tap here to activate plugin.">
 <!ENTITY clickToActivatePlugin                               "Activate plugin.">
 <!ENTITY checkForUpdates                                     "Check for updates…">
-<!ENTITY disabledPlugin                                      "This plugin is disabled.">
 <!ENTITY blockedPlugin.label                                 "This plugin has been blocked for your protection.">
 <!ENTITY hidePluginBtn.label                                 "Hide plugin">
 <!ENTITY managePlugins                                       "Manage plugins…">

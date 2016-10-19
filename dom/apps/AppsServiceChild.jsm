@@ -371,16 +371,6 @@ this.DOMApplicationRegistry = {
     return AppsUtils.getAppLocalIdByManifestURL(this.webapps, aManifestURL);
   },
 
-  getManifestCSPByLocalId: function(aLocalId) {
-    debug("getManifestCSPByLocalId:" + aLocalId);
-    return AppsUtils.getManifestCSPByLocalId(this.webapps, aLocalId);
-  },
-
-  getDefaultCSPByLocalId: function(aLocalId) {
-    debug("getDefaultCSPByLocalId:" + aLocalId);
-    return AppsUtils.getDefaultCSPByLocalId(this.webapps, aLocalId);
-  },
-
   getAppLocalIdByStoreId: function(aStoreId) {
     debug("getAppLocalIdByStoreId:" + aStoreId);
     return AppsUtils.getAppLocalIdByStoreId(this.webapps, aStoreId);
