@@ -181,7 +181,6 @@ public: // construction, destruction
 
   static IDispatch* NativeAccessible(Accessible* aAccessible);
 
-#ifdef _WIN64
   uint32_t GetExistingID() const { return mID; }
   static const uint32_t kNoID = 0;
   void SetID(uint32_t aID);
@@ -192,9 +191,7 @@ public: // construction, destruction
 protected:
   virtual ~AccessibleWrap();
 
-#ifdef _WIN64
   uint32_t mID;
-#endif
 
   HRESULT
   ResolveChild(const VARIANT& aVarChild, IAccessible** aOutInterface);
