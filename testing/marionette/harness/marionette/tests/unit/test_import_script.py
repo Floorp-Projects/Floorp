@@ -106,16 +106,16 @@ class TestImportScriptContent(MarionetteTestCase):
     def test_imports_apply_globally(self):
         self.marionette.navigate(
             self.marionette.absolute_url("test_windows.html"))
-        original_window = self.marionette.current_window_handle
+        original_window = self.marionette.current_chrome_window_handle
         self.marionette.find_element(By.LINK_TEXT, "Open new window").click()
 
-        windows = set(self.marionette.window_handles)
+        windows = set(self.marionette.chrome_window_handles)
         print "windows={}".format(windows)
         new_window = windows.difference([original_window]).pop()
         self.marionette.switch_to_window(new_window)
 
         self.marionette.import_script(self.script_file)
-        self.marionette.close()
+        self.marionette.close_chrome_window()
 
         print "switching to original window: {}".format(original_window)
         self.marionette.switch_to_window(original_window)
