@@ -444,8 +444,9 @@ public:
 
   void Exit() override
   {
-    // Transfer the seek job so it is available to the next state.
-    mMaster->mQueuedSeek = Move(mPendingSeek);
+    // mPendingSeek is either moved in HandleDormant() or should be rejected
+    // here before transition to SHUTDOWN.
+    mPendingSeek.RejectIfExists(__func__);
   }
 
   State GetState() const override
