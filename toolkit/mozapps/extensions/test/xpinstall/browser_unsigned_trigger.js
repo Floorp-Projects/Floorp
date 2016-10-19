@@ -36,15 +36,21 @@ function install_ended(install, addon) {
   install.cancel();
 }
 
-function finish_test(count) {
+const finish_test = Task.async(function*(count) {
   is(count, 1, "1 Add-on should have been successfully installed");
 
   Services.perms.remove(makeURI("http://example.com"), "install");
 
-  var doc = gBrowser.contentDocument;
-  is(doc.getElementById("return").textContent, "true", "installTrigger should have claimed success");
-  is(doc.getElementById("status").textContent, "0", "Callback should have seen a success");
+  const results = yield ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+    return {
+      return: content.document.getElementById("return").textContent,
+      status: content.document.getElementById("status").textContent,
+    }
+  })
+
+  is(results.return, "true", "installTrigger should have claimed success");
+  is(results.status, "0", "Callback should have seen a success");
 
   gBrowser.removeCurrentTab();
   Harness.finish();
-}
+});
