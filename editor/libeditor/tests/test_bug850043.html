@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=850043
+-->
+<head>
+  <title>Test for Bug 850043</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=850043">Mozilla Bug 850043</a>
+<div id="display">
+<textarea id="textarea">b&#x9080;&#xe010f;&#x8fba;&#xe0101;</textarea>
+<div contenteditable id="edit">b&#x9080;&#xe010f;&#x8fba;&#xe0101;</div>
+</div>
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+</pre>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
+    getService(SpecialPowers.Ci.nsIFocusManager);
+
+  let element = document.getElementById("textarea");
+  element.focus();
+  is(SpecialPowers.unwrap(fm.focusedElement), element, "failed to move focus");
+
+  synthesizeKey("VK_END", { });
+  synthesizeKey("a", { });
+  is(element.value, "b\u{9080}\u{e010f}\u{8fba}\u{e0101}a", "a isn't last character");
+
+  synthesizeKey("VK_BACK_SPACE", { });
+  synthesizeKey("VK_BACK_SPACE", { });
+  synthesizeKey("VK_BACK_SPACE", { });
+  is(element.value, 'b', "cannot remove all IVS characters");
+
+  element = document.getElementById("edit");
+  element.focus();
+  is(SpecialPowers.unwrap(fm.focusedElement), element, "failed to move focus");
+
+  let sel = window.getSelection();
+  sel.collapse(element.childNodes[0], element.textContent.length);
+
+  synthesizeKey("a", { });
+  is(element.textContent, "b\u{9080}\u{e010f}\u{8fba}\u{e0101}a", "a isn't last character");
+
+  synthesizeKey("VK_BACK_SPACE", { });
+  synthesizeKey("VK_BACK_SPACE", { });
+  synthesizeKey("VK_BACK_SPACE", { });
+  is(element.textContent, 'b', "cannot remove all IVS characters");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

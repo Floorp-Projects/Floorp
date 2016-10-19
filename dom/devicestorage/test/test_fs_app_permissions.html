@@ -818,16 +818,10 @@ function createTestFile(extension) {
 let gTestRunner = runTest();
 SpecialPowers.addPermission("browser", true, gTestUri);
 
-// We are more permissive with CSP in our testing environment....
-const DEFAULT_CSP_PRIV = "default-src *; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'";
-const DEFAULT_CSP_CERT = "default-src *; script-src 'self'; style-src 'self'; object-src 'none'";
-
 SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
                                    ["device.storage.enabled", true],
                                    ["device.storage.testing", true],
-                                   ["device.storage.prompt.testing", false],
-                                   ["security.apps.privileged.CSP.default", DEFAULT_CSP_PRIV],
-                                   ["security.apps.certified.CSP.default", DEFAULT_CSP_CERT]]},
+                                   ["device.storage.prompt.testing", false]]},
   function() { gTestRunner.next(); });
 
 </script>

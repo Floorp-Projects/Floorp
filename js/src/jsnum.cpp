@@ -1574,7 +1574,7 @@ js::StringToNumber(ExclusiveContext* cx, JSString* str, double* result)
 }
 
 bool
-js::ToNumberSlow(ExclusiveContext* cx, const Value& v_, double* out)
+js::ToNumberSlow(ExclusiveContext* cx, HandleValue v_, double* out)
 {
     RootedValue v(cx, v_);
     MOZ_ASSERT(!v.isNumber());
@@ -1624,7 +1624,7 @@ js::ToNumberSlow(ExclusiveContext* cx, const Value& v_, double* out)
 }
 
 JS_PUBLIC_API(bool)
-js::ToNumberSlow(JSContext* cx, const Value& v, double* out)
+js::ToNumberSlow(JSContext* cx, HandleValue v, double* out)
 {
     return ToNumberSlow(static_cast<ExclusiveContext*>(cx), v, out);
 }

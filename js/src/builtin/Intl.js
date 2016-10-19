@@ -394,15 +394,18 @@ function CanonicalizeLanguageTag(locale) {
         if (subtag.length === 1 && (i > 0 || subtag === "x"))
             break;
 
-        if (subtag.length === 4) {
-            // 4-character subtags are script codes; their first character
-            // needs to be capitalized. "hans" -> "Hans"
-            subtag = callFunction(std_String_toUpperCase, subtag[0]) +
-                     callFunction(String_substring, subtag, 1);
-        } else if (i !== 0 && subtag.length === 2) {
-            // 2-character subtags that are not in initial position are region
-            // codes; they need to be upper case. "bu" -> "BU"
-            subtag = callFunction(std_String_toUpperCase, subtag);
+        if (i !== 0) {
+            if (subtag.length === 4) {
+                // 4-character subtags that are not in initial position are
+                // script codes; their first character needs to be capitalized.
+                // "hans" -> "Hans"
+                subtag = callFunction(std_String_toUpperCase, subtag[0]) +
+                         callFunction(String_substring, subtag, 1);
+            } else if (subtag.length === 2) {
+                // 2-character subtags that are not in initial position are
+                // region codes; they need to be upper case. "bu" -> "BU"
+                subtag = callFunction(std_String_toUpperCase, subtag);
+            }
         }
         if (callFunction(std_Object_hasOwnProperty, langSubtagMappings, subtag)) {
             // Replace deprecated subtags with their preferred values.

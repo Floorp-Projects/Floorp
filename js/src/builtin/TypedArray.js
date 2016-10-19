@@ -61,6 +61,99 @@ function IsTypedArrayEnsuringArrayBuffer(arg) {
     return false;
 }
 
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.3.5.1 Runtime Semantics: ValidateTypedArray ( O )
+function ValidateTypedArray(obj, error) {
+    if (IsObject(obj)) {
+        /* Steps 3-5 (non-wrapped typed arrays). */
+        if (IsTypedArray(obj)) {
+            // GetAttachedArrayBuffer throws for detached array buffers.
+            GetAttachedArrayBuffer(obj);
+            return true;
+        }
+
+        /* Steps 3-5 (wrapped typed arrays). */
+        if (IsPossiblyWrappedTypedArray(obj)) {
+            if (PossiblyWrappedTypedArrayHasDetachedBuffer(obj))
+                ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+            return false;
+        }
+    }
+
+    /* Steps 1-2. */
+    ThrowTypeError(error);
+}
+
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
+function TypedArrayCreateWithLength(constructor, length) {
+    // Step 1.
+    var newTypedArray = new constructor(length);
+
+    // Step 2.
+    var isTypedArray = ValidateTypedArray(newTypedArray, JSMSG_NON_TYPED_ARRAY_RETURNED);
+
+    // Step 3.
+    var len;
+    if (isTypedArray) {
+        len = TypedArrayLength(newTypedArray);
+    } else {
+        len = callFunction(CallTypedArrayMethodIfWrapped, newTypedArray, newTypedArray,
+                           "TypedArrayLength");
+    }
+
+    if (len < length)
+        ThrowTypeError(JSMSG_SHORT_TYPED_ARRAY_RETURNED, length, len);
+
+    // Step 4.
+    return newTypedArray;
+}
+
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
+function TypedArrayCreateWithBuffer(constructor, buffer, byteOffset, length) {
+    // Step 1.
+    var newTypedArray = new constructor(buffer, byteOffset, length);
+
+    // Step 2.
+    ValidateTypedArray(newTypedArray, JSMSG_NON_TYPED_ARRAY_RETURNED);
+
+    // Step 3 (not applicable).
+
+    // Step 4.
+    return newTypedArray;
+}
+
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.4.7 TypedArraySpeciesCreate ( exemplar, argumentList )
+function TypedArraySpeciesCreateWithLength(exemplar, length) {
+    // Step 1 (omitted).
+
+    // Step 2.
+    var defaultConstructor = _ConstructorForTypedArray(exemplar);
+
+    // Step 3.
+    var C = SpeciesConstructor(exemplar, defaultConstructor);
+
+    // Step 4.
+    return TypedArrayCreateWithLength(C, length);
+}
+
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.4.7 TypedArraySpeciesCreate ( exemplar, argumentList )
+function TypedArraySpeciesCreateWithBuffer(exemplar, buffer, byteOffset, length) {
+    // Step 1 (omitted).
+
+    // Step 2.
+    var defaultConstructor = _ConstructorForTypedArray(exemplar);
+
+    // Step 3.
+    var C = SpeciesConstructor(exemplar, defaultConstructor);
+
+    // Step 4.
+    return TypedArrayCreateWithBuffer(C, buffer, byteOffset, length);
+}
+
 // ES6 draft 20150304 %TypedArray%.prototype.copyWithin
 function TypedArrayCopyWithin(target, start, end = undefined) {
     // This function is not generic.
@@ -244,12 +337,13 @@ function TypedArrayFill(value, start = 0, end = undefined) {
     return O;
 }
 
-// ES6 draft 32 (2015-02-02) 22.2.3.9 %TypedArray%.prototype.filter(callbackfn[, thisArg])
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// %TypedArray%.prototype.filter ( callbackfn [ , thisArg ] )
 function TypedArrayFilter(callbackfn/*, thisArg*/) {
     // Step 1.
     var O = this;
 
-    // Steps 2-3.
+    // Step 2.
     // This function is not generic.
     // We want to make sure that we have an attached buffer, per spec prose.
     var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
@@ -257,57 +351,53 @@ function TypedArrayFilter(callbackfn/*, thisArg*/) {
     // If we got here, `this` is either a typed array or a cross-compartment
     // wrapper for one.
 
-    // Step 4.
+    // Step 3.
     var len;
     if (isTypedArray)
         len = TypedArrayLength(O);
     else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
 
-    // Step 5.
+    // Step 4.
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.filter");
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    // Step 6.
+    // Step 5.
     var T = arguments.length > 1 ? arguments[1] : void 0;
 
-    // Step 7.
-    var defaultConstructor = _ConstructorForTypedArray(O);
-
-    // Steps 8-9.
-    var C = SpeciesConstructor(O, defaultConstructor);
-
-    // Step 10.
+    // Step 6.
     var kept = new List();
 
-    // Step 12.
+    // Step 8.
     var captured = 0;
 
-    // Steps 11, 13 and 13.g.
+    // Steps 7 and 9.e.
     for (var k = 0; k < len; k++) {
-        // Steps 13.b-c.
+        // Steps 9.a-b.
         var kValue = O[k];
-        // Steps 13.d-e.
+
+        // Step 9.c.
         var selected = ToBoolean(callContentFunction(callbackfn, T, kValue, k, O));
-        // Step 13.f.
+
+        // Step 9.d.
         if (selected) {
-            // Steps 13.f.i-ii.
+            // Steps 9.d.i-ii.
             kept[captured++] = kValue;
         }
     }
 
-    // Steps 14-15.
-    var A = new C(captured);
+    // Step 10.
+    var A = TypedArraySpeciesCreateWithLength(O, captured);
 
-    // Steps 16 and 17.c.
+    // Steps 11 and 12.b.
     for (var n = 0; n < captured; n++) {
-        // Steps 17.a-b.
+        // Step 12.a.
         A[n] = kept[n];
     }
 
-    // Step 18.
+    // Step 13.
     return A;
 }
 
@@ -585,12 +675,13 @@ function TypedArrayLastIndexOf(searchElement, fromIndex = undefined) {
     return -1;
 }
 
-// ES6 draft rev32 (2015-02-02) 22.2.3.18 %TypedArray%.prototype.map(callbackfn [, thisArg]).
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.3.19 %TypedArray%.prototype.map ( callbackfn [ , thisArg ] )
 function TypedArrayMap(callbackfn/*, thisArg*/) {
     // Step 1.
     var O = this;
 
-    // Steps 2-3.
+    // Step 2.
     // This function is not generic.
     // We want to make sure that we have an attached buffer, per spec prose.
     var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
@@ -598,40 +689,35 @@ function TypedArrayMap(callbackfn/*, thisArg*/) {
     // If we got here, `this` is either a typed array or a cross-compartment
     // wrapper for one.
 
-    // Step 4.
+    // Step 3.
     var len;
     if (isTypedArray)
         len = TypedArrayLength(O);
     else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
 
-    // Step 5.
+    // Step 4.
     if (arguments.length === 0)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, '%TypedArray%.prototype.map');
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    // Step 6.
+    // Step 5.
     var T = arguments.length > 1 ? arguments[1] : void 0;
 
-    // Step 7.
-    var defaultConstructor = _ConstructorForTypedArray(O);
+    // Step 6.
+    var A = TypedArraySpeciesCreateWithLength(O, len);
 
-    // Steps 8-9.
-    var C = SpeciesConstructor(O, defaultConstructor);
-
-    // Steps 10-11.
-    var A = new C(len);
-
-    // Steps 12, 13.a (implicit) and 13.h.
+    // Steps 7, 8.a (implicit) and 8.e.
     for (var k = 0; k < len; k++) {
-        // Steps 13.d-e.
+        // Steps 8.b-c.
         var mappedValue = callContentFunction(callbackfn, T, O[k], k, O);
-        // Steps 13.f-g.
+
+        // Steps 8.d.
         A[k] = mappedValue;
     }
 
-    // Step 14.
+    // Step 9.
     return A;
 }
 
@@ -886,64 +972,56 @@ function TypedArraySet(overloaded, offset = 0) {
     return SetFromNonTypedArray(target, overloaded, targetOffset, targetLength, targetBuffer);
 }
 
-// ES6 draft rev32 (2015-02-02) 22.2.3.23 %TypedArray%.prototype.slice(start, end).
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.3.24 %TypedArray%.prototype.slice ( start, end )
 function TypedArraySlice(start, end) {
-
     // Step 1.
     var O = this;
 
-    // Step 2-3.
+    // Step 2.
     if (!IsObject(O) || !IsTypedArray(O)) {
         return callFunction(CallTypedArrayMethodIfWrapped, O, start, end, "TypedArraySlice");
     }
 
     GetAttachedArrayBuffer(O);
 
-    // Step 4.
+    // Step 3.
     var len = TypedArrayLength(O);
 
-    // Steps 5-6.
+    // Step 4.
     var relativeStart = ToInteger(start);
 
-    // Step 7.
+    // Step 5.
     var k = relativeStart < 0
             ? std_Math_max(len + relativeStart, 0)
             : std_Math_min(relativeStart, len);
 
-    // Steps 8-9.
+    // Step 6.
     var relativeEnd = end === undefined ? len : ToInteger(end);
 
-    // Step 10.
+    // Step 7.
     var final = relativeEnd < 0
                 ? std_Math_max(len + relativeEnd, 0)
                 : std_Math_min(relativeEnd, len);
 
-    // Step 11.
+    // Step 8.
     var count = std_Math_max(final - k, 0);
 
-    // Step 12.
-    var defaultConstructor = _ConstructorForTypedArray(O);
+    // Step 9.
+    var A = TypedArraySpeciesCreateWithLength(O, count);
 
-    // Steps 13-14.
-    var C = SpeciesConstructor(O, defaultConstructor);
-
-    // Steps 15-16.
-    var A = new C(count);
-
-    // Step 17.
+    // Step 14.a.
     var n = 0;
 
-    // Step 18.
+    // Step 14.b.
     while (k < final) {
-        // Steps 18.a-e.
-        A[n] = O[k];
-        // Step 18f.
-        k++;
-        // Step 18g.
-        n++;
+        // Steps 14.b.i-v.
+        A[n++] = O[k++];
     }
 
-    // Step 19.
+    // FIXME: Implement step 15 (bug 1140152).
+
+    // Step 16.
     return A;
 }
 
@@ -1167,7 +1245,8 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
     return R;
 }
 
-// ES6 draft 20150304 %TypedArray%.prototype.subarray
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.3.27 %TypedArray%.prototype.subarray( begin, end )
 function TypedArraySubarray(begin, end) {
     // Step 1.
     var obj = this;
@@ -1183,34 +1262,30 @@ function TypedArraySubarray(begin, end) {
     var buffer = TypedArrayBuffer(obj);
     var srcLength = TypedArrayLength(obj);
 
-    // Steps 7-9.
+    // Steps 7-8.
     var relativeBegin = ToInteger(begin);
     var beginIndex = relativeBegin < 0 ? std_Math_max(srcLength + relativeBegin, 0)
                                        : std_Math_min(relativeBegin, srcLength);
 
-    // Steps 10-12.
+    // Steps 9-10.
     var relativeEnd = end === undefined ? srcLength : ToInteger(end);
     var endIndex = relativeEnd < 0 ? std_Math_max(srcLength + relativeEnd, 0)
                                    : std_Math_min(relativeEnd, srcLength);
 
-    // Step 13.
+    // Step 11.
     var newLength = std_Math_max(endIndex - beginIndex, 0);
 
-    // Steps 14-15, altered to use a shift instead of a size for performance.
+    // Steps 12-13, altered to use a shift instead of a size for performance.
     var elementShift = TypedArrayElementShift(obj);
 
-    // Step 16.
+    // Step 14.
     var srcByteOffset = TypedArrayByteOffset(obj);
 
-    // Step 17.
+    // Step 15.
     var beginByteOffset = srcByteOffset + (beginIndex << elementShift);
 
-    // Steps 18-20.
-    var defaultConstructor = _ConstructorForTypedArray(obj);
-    var constructor = SpeciesConstructor(obj, defaultConstructor);
-
-    // Steps 21-22.
-    return new constructor(buffer, beginByteOffset, newLength);
+    // Steps 16-17.
+    return TypedArraySpeciesCreateWithBuffer(obj, buffer, beginByteOffset, newLength);
 }
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.30 %TypedArray%.prototype.values()
@@ -1278,135 +1353,118 @@ function TypedArrayIncludes(searchElement, fromIndex = 0) {
     return false;
 }
 
-// ES6 draft rev30 (2014/12/24) 22.2.2.1 %TypedArray%.from(source[, mapfn[, thisArg]]).
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.2.1 %TypedArray%.from ( source [ , mapfn [ , thisArg ] ] )
 function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
     // Step 1.
     var C = this;
 
     // Step 2.
     if (!IsConstructor(C))
-        ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, DecompileArg(1, C));
+        ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, typeof C);
 
     // Step 3.
-    var f = mapfn;
+    var mapping;
+    if (mapfn !== undefined) {
+        // Step 3.a.
+        if (!IsCallable(mapfn))
+            ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, mapfn));
 
-    // Step 4.
-    if (f !== undefined && !IsCallable(f))
-        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, f));
-
-    // Steps 5-6.
-    return TypedArrayFrom(C, undefined, source, f, thisArg);
-}
-
-// ES6 draft rev30 (2014/12/24) 22.2.2.1.1 TypedArrayFrom().
-function TypedArrayFrom(constructor, target, items, mapfn, thisArg) {
-    // Step 1.
-    var C = constructor;
-
-    // Step 2.
-    assert(C === undefined || target === undefined,
-           "Neither of 'constructor' and 'target' is undefined");
-
-    // Step 3.
-    assert(IsConstructor(C) || C === undefined,
-           "'constructor' is neither an constructor nor undefined");
-
-    // Step 4.
-    assert(target === undefined || IsTypedArray(target),
-           "'target' is neither a typed array nor undefined");
+        // Step 3.b.
+        mapping = true;
+    } else {
+        // Step 4.
+        mapping = false;
+    }
 
     // Step 5.
-    assert(IsCallable(mapfn) || mapfn === undefined,
-           "'target' is neither a function nor undefined");
-
-    // Steps 6-7.
-    var mapping = mapfn !== undefined;
     var T = thisArg;
 
-    // Steps 8-9.
-    var usingIterator = GetMethod(items, std_iterator);
+    // Step 6.
+    var usingIterator = GetMethod(source, std_iterator);
 
-    // Step 10.
+    // Step 7.
     if (usingIterator !== undefined) {
-        // Steps 10.a-b.
-        var iterator = GetIterator(items, usingIterator);
+        // Step 7.a.
+        // Inlined: 22.2.2.1.1 Runtime Semantics: IterableToList( items, method ).
 
-        // Step 10.c.
+        // 22.2.2.1.1 IterableToList, step 1.
+        var iterator = GetIterator(source, usingIterator);
+
+        // 22.2.2.1.1 IterableToList, step 2.
         var values = new List();
 
-        // Steps 10.d-e.
+        // 22.2.2.1.1 IterableToList, steps 3-4.
         var i = 0;
         while (true) {
-            // Steps 10.e.i-ii.
+            // 22.2.2.1.1 IterableToList, step 4.a.
             var next = callContentFunction(iterator.next, iterator);
             if (!IsObject(next))
                 ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
 
-            // Steps 10.e.iii-vi.
+            // 22.2.2.1.1 IterableToList, step 4.b.
             if (next.done)
                 break;
             values[i++] = next.value;
         }
 
-        // Step 10.f.
+        // Step 7.b.
         var len = i;
 
-        // Steps 10.g-h.
-        // There is no need to implement the 22.2.2.1.2 - TypedArrayAllocOrInit() method,
-        // since `%TypedArray%(object)` currently doesn't call this self-hosted TypedArrayFrom().
-        var targetObj = new C(len);
+        // Step 7.c.
+        var targetObj = TypedArrayCreateWithLength(C, len);
 
-        // Steps 10.i-j.
+        // Steps 7.d-e.
         for (var k = 0; k < len; k++) {
-            // Steps 10.j.i-ii.
+            // Step 7.e.ii.
             var kValue = values[k];
 
-            // Steps 10.j.iii-iv.
+            // Steps 7.e.iii-iv.
             var mappedValue = mapping ? callContentFunction(mapfn, T, kValue, k) : kValue;
 
-            // Steps 10.j.v-vi.
+            // Step 7.e.v.
             targetObj[k] = mappedValue;
         }
 
-        // Step 10.k.
-        // asserting that `values` is empty here would require removing them one by one from
+        // Step 7.f.
+        // Asserting that `values` is empty here would require removing them one by one from
         // the list's start in the loop above. That would introduce unacceptable overhead.
         // Additionally, the loop's logic is simple enough not to require the assert.
 
-        // Step 10.l.
+        // Step 7.g.
         return targetObj;
     }
 
-    // Step 11 is an assertion: items is not an Iterator. Testing this is
+    // Step 8 is an assertion: items is not an Iterator. Testing this is
     // literally the very last thing we did, so we don't assert here.
 
-    // Steps 12-13.
-    var arrayLike = ToObject(items);
+    // Step 9.
+    var arrayLike = ToObject(source);
 
-    // Steps 14-16.
+    // Step 10.
     var len = ToLength(arrayLike.length);
 
-    // Steps 17-18.
-    // See comment for steps 10.g-h.
-    var targetObj = new C(len);
+    // Step 11.
+    var targetObj = TypedArrayCreateWithLength(C, len);
 
-    // Steps 19-20.
+    // Steps 12-13.
     for (var k = 0; k < len; k++) {
-        // Steps 20.a-c.
+        // Steps 13.a-b.
         var kValue = arrayLike[k];
 
-        // Steps 20.d-e.
+        // Steps 13.c-d.
         var mappedValue = mapping ? callContentFunction(mapfn, T, kValue, k) : kValue;
 
-        // Steps 20.f-g.
+        // Step 13.e.
         targetObj[k] = mappedValue;
     }
 
-    // Step 21.
+    // Step 14.
     return targetObj;
 }
 
-// ES6 draft rev30 (2014/12/24) 22.2.2.2 %TypedArray%.of(...items).
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.2.2 %TypedArray%.of ( ...items )
 function TypedArrayStaticOf(/*...items*/) {
     // Step 1.
     var len = arguments.length;
@@ -1417,11 +1475,12 @@ function TypedArrayStaticOf(/*...items*/) {
     // Step 3.
     var C = this;
 
-    // Steps 4-5.
+    // Step 4.
     if (!IsConstructor(C))
         ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, typeof C);
 
-    var newObj = new C(len);
+    // Step 5.
+    var newObj = TypedArrayCreateWithLength(C, len);
 
     // Steps 6-7.
     for (var k = 0; k < len; k++)
