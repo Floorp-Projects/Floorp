@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("splitters.css");
+@import url("resource://devtools/client/themes/splitters.css");
 
 /* Bottom-docked toolbox minimize transition */
 .devtools-toolbox-bottom-iframe {
@@ -24,4 +24,3 @@
   background-color: transparent;
   border: none;
 }
-
