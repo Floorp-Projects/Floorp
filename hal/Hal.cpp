@@ -915,8 +915,6 @@ ProcessPriorityToString(ProcessPriority aPriority)
   switch (aPriority) {
   case PROCESS_PRIORITY_MASTER:
     return "MASTER";
-  case PROCESS_PRIORITY_PREALLOC:
-    return "PREALLOC";
   case PROCESS_PRIORITY_FOREGROUND_HIGH:
     return "FOREGROUND_HIGH";
   case PROCESS_PRIORITY_FOREGROUND:
