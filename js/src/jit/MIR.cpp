@@ -5078,6 +5078,23 @@ MLoadSlot::foldsTo(TempAllocator& alloc)
     return this;
 }
 
+void
+MLoadSlot::printOpcode(GenericPrinter& out) const
+{
+    MDefinition::printOpcode(out);
+    out.printf(" %d", slot());
+}
+
+void
+MStoreSlot::printOpcode(GenericPrinter& out) const
+{
+    PrintOpcodeName(out, op());
+    out.printf(" ", slot());
+    getOperand(0)->printName(out);
+    out.printf(" %d ", slot());
+    getOperand(1)->printName(out);
+}
+
 MDefinition*
 MFunctionEnvironment::foldsTo(TempAllocator& alloc)
 {
