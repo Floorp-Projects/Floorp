@@ -706,3 +706,26 @@ function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
     view.element.children[childrenIndex].childNodes[nodeIndex]._ruleEditor :
     view.element.children[childrenIndex]._ruleEditor;
 }
+
+/**
+ * Get the text displayed for a given DOM Element's textContent within the
+ * markup view.
+ *
+ * @param {String} selector
+ * @param {InspectorPanel} inspector
+ * @return {String} The text displayed in the markup view
+ */
+function* getDisplayedNodeTextContent(selector, inspector) {
+  // We have to ensure that the textContent is displayed, for that the DOM
+  // Element has to be selected in the markup view and to be expanded.
+  yield selectNode(selector, inspector);
+
+  let container = yield getContainerForSelector(selector, inspector);
+  yield inspector.markup.expandNode(container.node);
+  yield waitForMultipleChildrenUpdates(inspector);
+  if (container) {
+    let textContainer = container.elt.querySelector("pre");
+    return textContainer.textContent;
+  }
+  return null;
+}
