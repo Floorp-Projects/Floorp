@@ -40,7 +40,7 @@ VRManagerChild::VRManagerChild()
   : TextureForwarder()
   , mDisplaysInitialized(false)
   , mGamepadManager(nullptr)
-  , mInputFrameID(-1)
+  , mInputFrameID(0)
   , mMessageLoop(MessageLoop::current())
   , mFrameRequestCallbackCounter(0)
   , mBackend(layers::LayersBackend::LAYERS_NONE)
@@ -306,7 +306,7 @@ VRManagerChild::RefreshVRDisplaysWithCallback(dom::Navigator* aNavigator)
   return success;
 }
 
-int
+uint32_t
 VRManagerChild::GetInputFrameID()
 {
   return mInputFrameID;
