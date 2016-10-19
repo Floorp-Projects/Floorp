@@ -571,7 +571,8 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     {
         RootedShape lengthShape(cx, arr->lookupPure(id));
         MOZ_ASSERT(lengthShape);
-        MOZ_ASSERT(lengthShape->writable() == lengthIsWritable);
+        MOZ_ASSERT_IF(lengthIsWritable, lengthShape->writable());
+        MOZ_ASSERT_IF(lengthShape->writable() && !lengthIsWritable, arr->denseElementsAreFrozen());
     }
 #endif
     uint32_t oldLen = arr->length();
