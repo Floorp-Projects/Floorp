@@ -10,7 +10,7 @@
   <link rel="help" href="https://drafts.csswg.org/css-grid/#valdef-grid-template-columns-percentage">
   <link rel="match" href="grid-track-percent-sizing-001-ref.html">
   <style type="text/css">
-body,html { color:black; background:white; font-family:monospace; font-size:32px; padding:0; margin:0; }
+body,html { color:black; background:white; font-family:monospace; font:1px/1 monospace; padding:0; margin:0; }
 
 .grid {
   display: grid;
@@ -20,6 +20,8 @@ body,html { color:black; background:white; font-family:monospace; font-size:32px
   grid-template-rows: 40%;
   margin-right: 20px;
   grid-auto-rows: 10px;
+  align-content: start;
+  justify-content: start;
 }
 .sz {
   width: 100px;
@@ -63,8 +65,8 @@ body,html { color:black; background:white; font-family:monospace; font-size:32px
   grid-template-rows: minmax(0, 40%);
 }
 .tA {
-  grid-template-columns: 160%;
-  grid-template-rows: 140%;
+  grid-template-columns: calc(10px - 200%);
+  grid-template-rows: calc(10px - 99%);
 }
 .tB {
   grid-template-columns: minmax(60%, 0);
@@ -79,7 +81,6 @@ body,html { color:black; background:white; font-family:monospace; font-size:32px
   grid-template-rows: calc(10px - 40%);
 }
 
-
 span {
   background: grey;
   min-width: 0;
@@ -91,7 +92,7 @@ span {
 t {
   display: inline-block;
   width: 30px;
-  height: 10px;
+  height: 5px;
 }
 x {
   background: lime;
