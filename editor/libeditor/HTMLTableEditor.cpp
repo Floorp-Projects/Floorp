@@ -177,7 +177,7 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
                                 &startRowIndex, &startColIndex);
   NS_ENSURE_SUCCESS(res, res);
   // Don't fail if no cell found
-  NS_ENSURE_TRUE(curCell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(curCell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   // Get more data for current cell in row we are inserting at (we need COLSPAN)
   int32_t curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
@@ -276,7 +276,7 @@ HTMLEditor::GetFirstRow(nsIDOMElement* aTableElement,
     tableChild = nextChild;
   }
   // If here, row was not found
-  return NS_EDITOR_ELEMENT_NOT_FOUND;
+  return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
 }
 
 NS_IMETHODIMP
@@ -351,7 +351,7 @@ HTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode,
     parentSibling = nextNode;
   }
   // If here, row was not found
-  return NS_EDITOR_ELEMENT_NOT_FOUND;
+  return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
 }
 
 nsresult
@@ -383,7 +383,7 @@ HTMLEditor::GetLastCellInRow(nsIDOMNode* aRowNode,
     return NS_OK;
   }
   // If here, cell was not found
-  return NS_EDITOR_ELEMENT_NOT_FOUND;
+  return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
 }
 
 NS_IMETHODIMP
@@ -401,7 +401,7 @@ HTMLEditor::InsertTableColumn(int32_t aNumber,
                                 &startRowIndex, &startColIndex);
   NS_ENSURE_SUCCESS(res, res);
   // Don't fail if no cell found
-  NS_ENSURE_TRUE(curCell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(curCell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   // Get more data for current cell (we need ROWSPAN)
   int32_t curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
@@ -531,7 +531,7 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
                                 &startRowIndex, &startColIndex);
   NS_ENSURE_SUCCESS(res, res);
   // Don't fail if no cell found
-  NS_ENSURE_TRUE(curCell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(curCell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   // Get more data for current cell in row we are inserting at (we need COLSPAN)
   int32_t curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
@@ -750,7 +750,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
 
   NS_ENSURE_SUCCESS(res, res);
   // Don't fail if we didn't find a table or cell
-  NS_ENSURE_TRUE(table && cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(table && cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   AutoEditBatch beginBatching(this);
   // Prevent rules testing until we're done
@@ -891,7 +891,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
                          &startRowIndex, &startColIndex);
     NS_ENSURE_SUCCESS(res, res);
     // Don't fail if no cell found
-    NS_ENSURE_TRUE(cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+    NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
     if (1 == GetNumberOfCellsInRow(table, startRowIndex))
     {
@@ -948,7 +948,7 @@ HTMLEditor::DeleteTableCellContents()
                        &startRowIndex, &startColIndex);
   NS_ENSURE_SUCCESS(res, res);
   // Don't fail if no cell found
-  NS_ENSURE_TRUE(cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
 
   AutoEditBatch beginBatching(this);
@@ -1026,7 +1026,7 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
                                 &startRowIndex, &startColIndex);
   NS_ENSURE_SUCCESS(res, res);
   // Don't fail if no cell found
-  NS_ENSURE_TRUE(table && cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(table && cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   res = GetTableSize(table, &rowCount, &colCount);
   NS_ENSURE_SUCCESS(res, res);
@@ -1205,7 +1205,7 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
                                  &startRowIndex, &startColIndex);
   NS_ENSURE_SUCCESS(res, res);
   // Don't fail if no cell found
-  NS_ENSURE_TRUE(cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   res = GetTableSize(table, &rowCount, &colCount);
   NS_ENSURE_SUCCESS(res, res);
@@ -1420,7 +1420,7 @@ HTMLEditor::SelectTableCell()
   nsCOMPtr<nsIDOMElement> cell;
   nsresult res = GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr, getter_AddRefs(cell));
   NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   res = ClearSelection();
   if (NS_SUCCEEDED(res))
@@ -1479,7 +1479,9 @@ HTMLEditor::SelectBlockOfCells(nsIDOMElement* aStartCell,
   nsCOMPtr<nsIDOMRange> range;
   res = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(cell));
   NS_ENSURE_SUCCESS(res, res);
-  if (res == NS_EDITOR_ELEMENT_NOT_FOUND) return NS_OK;
+  if (res == NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND) {
+    return NS_OK;
+  }
 
   while (cell)
   {
@@ -1527,7 +1529,7 @@ HTMLEditor::SelectAllTableCells()
   NS_ENSURE_SUCCESS(res, res);
 
   // Don't fail if we didn't find a cell
-  NS_ENSURE_TRUE(cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   nsCOMPtr<nsIDOMElement> startCell = cell;
 
@@ -1590,7 +1592,7 @@ HTMLEditor::SelectTableRow()
   NS_ENSURE_SUCCESS(res, res);
 
   // Don't fail if we didn't find a cell
-  NS_ENSURE_TRUE(cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
   nsCOMPtr<nsIDOMElement> startCell = cell;
 
   // Get table and location of cell:
@@ -1656,7 +1658,7 @@ HTMLEditor::SelectTableColumn()
   NS_ENSURE_SUCCESS(res, res);
 
   // Don't fail if we didn't find a cell
-  NS_ENSURE_TRUE(cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   nsCOMPtr<nsIDOMElement> startCell = cell;
 
@@ -1724,7 +1726,9 @@ HTMLEditor::SplitTableCell()
                                 nullptr, nullptr,
                                 &startRowIndex, &startColIndex);
   NS_ENSURE_SUCCESS(res, res);
-  if(!table || !cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
+  if (!table || !cell) {
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  }
 
   // We need rowspan and colspan data
   res = GetCellSpansAt(table, startRowIndex, startColIndex, actualRowSpan, actualColSpan);
@@ -2013,7 +2017,9 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
                                 nullptr, nullptr,
                                 &startRowIndex, &startColIndex);
   NS_ENSURE_SUCCESS(res, res);
-  if(!table || !targetCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
+  if (!table || !targetCell) {
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  }
 
   AutoEditBatch beginBatching(this);
   //Don't let Rules System change the selection
@@ -2786,7 +2792,7 @@ HTMLEditor::GetCellAt(nsIDOMElement* aTable,
   nsTableWrapperFrame* tableFrame = GetTableFrame(aTable);
   if (!tableFrame) {
     *aCell = nullptr;
-    return NS_EDITOR_ELEMENT_NOT_FOUND;
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
   nsCOMPtr<nsIDOMElement> domCell =
@@ -2870,8 +2876,9 @@ HTMLEditor::GetCellContext(Selection** aSelection,
       }
       return NS_OK;
     }
-    if (!tagName.EqualsLiteral("td"))
-      return NS_EDITOR_ELEMENT_NOT_FOUND;
+    if (!tagName.EqualsLiteral("td")) {
+      return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+    }
 
     // We found a cell
     cell = cellOrTableElement;
@@ -2970,7 +2977,7 @@ HTMLEditor::GetCellFromRange(nsRange* aRange,
     NS_ADDREF(*aCell);
     return NS_OK;
   }
-  return NS_EDITOR_ELEMENT_NOT_FOUND;
+  return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
 }
 
 NS_IMETHODIMP
@@ -2993,11 +3000,11 @@ HTMLEditor::GetFirstSelectedCell(nsIDOMRange** aRange,
   // Failure here probably means selection is in a text node,
   //  so there's no selected cell
   if (NS_FAILED(res)) {
-    return NS_EDITOR_ELEMENT_NOT_FOUND;
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
   // No cell means range was collapsed (cell was deleted)
   if (!*aCell) {
-    return NS_EDITOR_ELEMENT_NOT_FOUND;
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
   if (aRange)
@@ -3026,8 +3033,9 @@ HTMLEditor::GetNextSelectedCell(nsIDOMRange** aRange,
   int32_t rangeCount = selection->RangeCount();
 
   // Don't even try if index exceeds range count
-  if (mSelectedCellIndex >= rangeCount)
-    return NS_EDITOR_ELEMENT_NOT_FOUND;
+  if (mSelectedCellIndex >= rangeCount) {
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  }
 
   // Scan through ranges to find next valid selected cell
   RefPtr<nsRange> range;
@@ -3039,7 +3047,7 @@ HTMLEditor::GetNextSelectedCell(nsIDOMRange** aRange,
 
     res = GetCellFromRange(range, aCell);
     // Failure here means the range doesn't contain a cell
-    NS_ENSURE_SUCCESS(res, NS_EDITOR_ELEMENT_NOT_FOUND);
+    NS_ENSURE_SUCCESS(res, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
     // We found a selected cell
     if (*aCell) break;
@@ -3047,7 +3055,7 @@ HTMLEditor::GetNextSelectedCell(nsIDOMRange** aRange,
     // If we didn't find a cell, continue to next range in selection
   }
   // No cell means all remaining ranges were collapsed (cells were deleted)
-  NS_ENSURE_TRUE(*aCell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(*aCell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   if (aRange)
   {
@@ -3076,7 +3084,7 @@ HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
   nsCOMPtr<nsIDOMElement> cell;
   nsresult res = GetFirstSelectedCell(nullptr, getter_AddRefs(cell));
   NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(cell, NS_EDITOR_ELEMENT_NOT_FOUND);
+  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
 
   *aCell = cell.get();
   NS_ADDREF(*aCell);
@@ -3307,7 +3315,9 @@ HTMLEditor::GetSelectedCellsType(nsIDOMElement* aElement,
   nsCOMPtr<nsIDOMElement> selectedCell;
   res = GetFirstSelectedCell(nullptr, getter_AddRefs(selectedCell));
   NS_ENSURE_SUCCESS(res, res);
-  if (res == NS_EDITOR_ELEMENT_NOT_FOUND) return NS_OK;
+  if (res == NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND) {
+    return NS_OK;
+  }
 
   // We have at least one selected cell, so set return value
   *aSelectionType = nsISelectionPrivate::TABLESELECTION_CELL;

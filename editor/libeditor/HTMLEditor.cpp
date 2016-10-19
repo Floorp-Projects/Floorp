@@ -2354,7 +2354,7 @@ HTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
   nsCOMPtr<nsIDOMElement> ret = do_QueryInterface(parent);
 
   if (!ret) {
-    return NS_EDITOR_ELEMENT_NOT_FOUND;
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
   ret.forget(aReturn);
@@ -2548,17 +2548,15 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       }
     }
   }
-  if (bNodeFound)
-  {
-
+  if (bNodeFound) {
     *aReturn = selectedElement;
-    if (selectedElement)
-    {
+    if (selectedElement) {
       // Getters must addref
       NS_ADDREF(*aReturn);
     }
+  } else {
+    res = NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
-  else res = NS_EDITOR_ELEMENT_NOT_FOUND;
 
   return res;
 }
