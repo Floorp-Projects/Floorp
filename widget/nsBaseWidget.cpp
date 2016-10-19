@@ -352,9 +352,6 @@ nsBaseWidget::OnRenderingDeviceReset()
 
   // Update the texture factory identifier.
   clm->UpdateTextureFactoryIdentifier(identifier);
-  if (ShadowLayerForwarder* lf = clm->AsShadowForwarder()) {
-    lf->IdentifyTextureHost(identifier);
-  }
   ImageBridgeChild::IdentifyCompositorTextureHost(identifier);
   gfx::VRManagerChild::IdentifyTextureHost(identifier);
 }
@@ -1967,9 +1964,8 @@ nsIWidget::SynthesizeNativeTouchTap(LayoutDeviceIntPoint aPoint, bool aLongTap,
   }
 
   if (!aLongTap) {
-    nsresult rv = SynthesizeNativeTouchPoint(pointerId, TOUCH_REMOVE,
-                                             aPoint, 0, 0, nullptr);
-    return rv;
+    return SynthesizeNativeTouchPoint(pointerId, TOUCH_REMOVE,
+                                      aPoint, 0, 0, nullptr);
   }
 
   // initiate a long tap

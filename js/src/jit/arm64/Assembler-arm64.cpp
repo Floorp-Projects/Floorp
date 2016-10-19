@@ -564,14 +564,12 @@ TraceDataRelocations(JSTracer* trc, uint8_t* buffer, CompactBufferReader& reader
         // All pointers on AArch64 will have the top bits cleared.
         // If those bits are not cleared, this must be a Value.
         if (literal >> JSVAL_TAG_SHIFT) {
-            jsval_layout layout;
-            layout.asBits = literal;
-            Value v = IMPL_TO_JSVAL(layout);
+            Value v = Value::fromRawBits(literal);
             TraceManuallyBarrieredEdge(trc, &v, "ion-masm-value");
-            if (*literalAddr != JSVAL_TO_IMPL(v).asBits) {
+            if (*literalAddr != v.asRawBits()) {
                 // Only update the code if the value changed, because the code
                 // is not writable if we're not moving objects.
-                *literalAddr = JSVAL_TO_IMPL(v).asBits;
+                *literalAddr = v.asRawBits();
             }
 
             // TODO: When we can, flush caches here if a pointer was moved.

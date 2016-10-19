@@ -1746,9 +1746,8 @@ MacroAssemblerMIPS64Compat::extractTag(const BaseIndex& address, Register scratc
 void
 MacroAssemblerMIPS64Compat::moveValue(const Value& val, Register dest)
 {
-    jsval_layout jv = JSVAL_TO_IMPL(val);
     writeDataRelocation(val);
-    movWithPatch(ImmWord(jv.asBits), dest);
+    movWithPatch(ImmWord(val.asRawBits()), dest);
 }
 
 void
@@ -1886,12 +1885,11 @@ MacroAssemblerMIPS64Compat::storeValue(JSValueType type, Register reg, Address d
 void
 MacroAssemblerMIPS64Compat::storeValue(const Value& val, Address dest)
 {
-    jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable()) {
         writeDataRelocation(val);
-        movWithPatch(ImmWord(jv.asBits), SecondScratchReg);
+        movWithPatch(ImmWord(val.asRawBits()), SecondScratchReg);
     } else {
-        ma_li(SecondScratchReg, ImmWord(jv.asBits));
+        ma_li(SecondScratchReg, ImmWord(val.asRawBits()));
     }
     storePtr(SecondScratchReg, Address(dest.base, dest.offset));
 }

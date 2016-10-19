@@ -20,7 +20,7 @@ struct MiscContainer final
 
   ValueType mType;
   // mStringBits points to either nsIAtom* or nsStringBuffer* and is used when
-  // mType isn't eGeckoCSSDeclaration.
+  // mType isn't eCSSDeclaration.
   // Note eStringBase and eAtomBase is used also to handle the type of
   // mStringBits.
   uintptr_t mStringBits;
@@ -31,8 +31,7 @@ struct MiscContainer final
         nscolor mColor;
         uint32_t mEnumValue;
         int32_t mPercent;
-        mozilla::css::Declaration* mGeckoCSSDeclaration;
-        ServoDeclarationBlock* mServoCSSDeclaration;
+        mozilla::DeclarationBlock* mCSSDeclaration;
         mozilla::css::URLValue* mURL;
         mozilla::css::ImageValue* mImage;
         nsAttrValue::AtomArray* mAtomArray;
@@ -87,8 +86,7 @@ public:
     // Nothing stops us from refcounting (and sharing) other types of
     // MiscContainer (except eDoubleValue types) but there's no compelling
     // reason to.
-    return mType == nsAttrValue::eGeckoCSSDeclaration ||
-           mType == nsAttrValue::eServoCSSDeclaration;
+    return mType == nsAttrValue::eCSSDeclaration;
   }
 
   inline int32_t AddRef() {
@@ -148,18 +146,11 @@ nsAttrValue::GetAtomArrayValue() const
   return GetMiscContainer()->mValue.mAtomArray;
 }
 
-inline mozilla::css::Declaration*
-nsAttrValue::GetGeckoCSSDeclarationValue() const
+inline mozilla::DeclarationBlock*
+nsAttrValue::GetCSSDeclarationValue() const
 {
-  NS_PRECONDITION(Type() == eGeckoCSSDeclaration, "wrong type");
-  return GetMiscContainer()->mValue.mGeckoCSSDeclaration;
-}
-
-inline ServoDeclarationBlock*
-nsAttrValue::GetServoCSSDeclarationValue() const
-{
-  NS_PRECONDITION(Type() == eServoCSSDeclaration, "wrong type");
-  return GetMiscContainer()->mValue.mServoCSSDeclaration;
+  NS_PRECONDITION(Type() == eCSSDeclaration, "wrong type");
+  return GetMiscContainer()->mValue.mCSSDeclaration;
 }
 
 inline mozilla::css::URLValue*
@@ -207,9 +198,7 @@ nsAttrValue::StoresOwnData() const
     return true;
   }
   ValueType t = Type();
-  return t != eGeckoCSSDeclaration &&
-         t != eServoCSSDeclaration &&
-         !IsSVGType(t);
+  return t != eCSSDeclaration && !IsSVGType(t);
 }
 
 inline void

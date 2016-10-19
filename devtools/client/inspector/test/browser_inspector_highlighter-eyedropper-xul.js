@@ -30,9 +30,13 @@ add_task(function* () {
   yield onColorPickerReady;
 
   button = cPicker.tooltip.doc.querySelector("#eyedropper-button");
-  ok(!isVisible(button), "The button is hidden in the color picker");
+  ok(isDisabled(button), "The button is disabled in the color picker");
 });
 
 function isVisible(button) {
   return button.getBoxQuads().length !== 0;
+}
+
+function isDisabled(button) {
+  return button.disabled;
 }

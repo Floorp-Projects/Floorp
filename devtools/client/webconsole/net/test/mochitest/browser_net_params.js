@@ -40,3 +40,30 @@ add_task(function* () {
   is(paramValue.textContent, "bar",
     "The param value must have proper value");
 });
+
+/**
+ * Test URL parameters with the same name.
+ */
+add_task(function* () {
+  info("Test XHR Spy params started");
+
+  let {hud} = yield addTestTab(TEST_PAGE_URL);
+
+  let netInfoBody = yield executeAndInspectXhr(hud, {
+    method: "GET",
+    url: JSON_XHR_URL,
+    queryString: "?box[]=123&box[]=456"
+  });
+
+  // Check headers
+  let tabBody = yield selectNetInfoTab(hud, netInfoBody, "params");
+
+  let params = tabBody.querySelectorAll(
+    ".netInfoParamName > span[title='box[]']");
+  is(params.length, 2, "Two URI parameters must exist");
+
+  let values = tabBody.querySelectorAll(
+    ".netInfoParamValue > code");
+  is(values[0].textContent, 123, "First value must match");
+  is(values[1].textContent, 456, "Second value must match");
+});

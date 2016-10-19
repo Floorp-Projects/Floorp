@@ -503,24 +503,23 @@ MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
                                 const Value& rhs, Label* label)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    jsval_layout jv = JSVAL_TO_IMPL(rhs);
     if (rhs.isMarkable())
-        cmpPtr(lhs.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell*>(rhs.toGCThing())));
+        cmpPtr(lhs.payloadReg(), ImmGCPtr(rhs.toMarkablePointer()));
     else
-        cmpPtr(lhs.payloadReg(), ImmWord(jv.s.payload.i32));
+        cmpPtr(lhs.payloadReg(), ImmWord(rhs.toNunboxPayload()));
 
     if (cond == Equal) {
         Label done;
         j(NotEqual, &done);
         {
-            cmp32(lhs.typeReg(), Imm32(jv.s.tag));
+            cmp32(lhs.typeReg(), Imm32(rhs.toNunboxTag()));
             j(Equal, label);
         }
         bind(&done);
     } else {
         j(NotEqual, label);
 
-        cmp32(lhs.typeReg(), Imm32(jv.s.tag));
+        cmp32(lhs.typeReg(), Imm32(rhs.toNunboxTag()));
         j(NotEqual, label);
     }
 }
