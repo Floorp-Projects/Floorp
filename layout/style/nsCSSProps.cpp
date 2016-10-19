@@ -894,7 +894,7 @@ static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER == NS_STYLE_IMAGELAYER_ORIGIN_BORD
               "Except background-clip:text, all {background,mask}-clip and "
               "{background,mask}-origin style constants must agree");
 
-const KTableEntry nsCSSProps::kImageLayerOriginKTable[] = {
+const KTableEntry nsCSSProps::kBackgroundOriginKTable[] = {
   { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_ORIGIN_BORDER },
   { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_ORIGIN_PADDING },
   { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_ORIGIN_CONTENT },
@@ -911,10 +911,26 @@ KTableEntry nsCSSProps::kBackgroundClipKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-static_assert(MOZ_ARRAY_LENGTH(nsCSSProps::kImageLayerOriginKTable) ==
-              MOZ_ARRAY_LENGTH(nsCSSProps::kBackgroundClipKTable) - 1,
-              "background-clip has one extra value, which is text, compared"
-              "to {background,mask}-origin");
+const KTableEntry nsCSSProps::kMaskOriginKTable[] = {
+  { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_ORIGIN_BORDER },
+  { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_ORIGIN_PADDING },
+  { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_ORIGIN_CONTENT },
+  { eCSSKeyword_fill_box, NS_STYLE_IMAGELAYER_ORIGIN_FILL },
+  { eCSSKeyword_stroke_box, NS_STYLE_IMAGELAYER_ORIGIN_STROKE },
+  { eCSSKeyword_view_box, NS_STYLE_IMAGELAYER_ORIGIN_VIEW },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
+const KTableEntry nsCSSProps::kMaskClipKTable[] = {
+  { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_CLIP_BORDER },
+  { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_CLIP_PADDING },
+  { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_CLIP_CONTENT },
+  { eCSSKeyword_fill_box, NS_STYLE_IMAGELAYER_CLIP_FILL },
+  { eCSSKeyword_stroke_box, NS_STYLE_IMAGELAYER_CLIP_STROKE },
+  { eCSSKeyword_view_box, NS_STYLE_IMAGELAYER_CLIP_VIEW },
+  { eCSSKeyword_no_clip, NS_STYLE_IMAGELAYER_CLIP_NO_CLIP },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
 
 // Note: Don't change this table unless you update
 // ParseImageLayerPosition!

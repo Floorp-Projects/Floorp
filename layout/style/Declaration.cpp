@@ -402,13 +402,13 @@ Declaration::GetImageLayerValue(
     if (clip->mValue.GetIntValue() != NS_STYLE_IMAGELAYER_CLIP_BORDER ||
         origin->mValue.GetIntValue() != originDefaultValue) {
 #ifdef DEBUG
-      for (size_t i = 0; nsCSSProps::kImageLayerOriginKTable[i].mValue != -1; i++) {
+      const nsCSSProps::KTableEntry* originTable = nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::origin]];
+      const nsCSSProps::KTableEntry* clipTable = nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::clip]];
+      for (size_t i = 0; originTable[i].mValue != -1; i++) {
         // For each keyword & value in kOriginKTable, ensure that
         // kBackgroundKTable has a matching entry at the same position.
-        MOZ_ASSERT(nsCSSProps::kImageLayerOriginKTable[i].mKeyword ==
-                   nsCSSProps::kBackgroundClipKTable[i].mKeyword);
-        MOZ_ASSERT(nsCSSProps::kImageLayerOriginKTable[i].mValue ==
-                   nsCSSProps::kBackgroundClipKTable[i].mValue);
+        MOZ_ASSERT(originTable[i].mKeyword == clipTable[i].mKeyword);
+        MOZ_ASSERT(originTable[i].mValue == clipTable[i].mValue);
       }
 #endif
       static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER ==
