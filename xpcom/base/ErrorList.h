@@ -606,7 +606,7 @@
   /* 17: NS_ERROR_MODULE_EDITOR */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_EDITOR
-  ERROR(NS_EDITOR_ELEMENT_NOT_FOUND,   SUCCESS(1)),
+  ERROR(NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND,   SUCCESS(1)),
   ERROR(NS_SUCCESS_EDITOR_FOUND_TARGET,        SUCCESS(2)),
 #undef MODULE
 
