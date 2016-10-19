@@ -1,67 +1,69 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 var testData = [
-  /* baseURI, field name, expected */
-  [ 'http://example.com/', 'q', 'http://example.com/?q=%s' ],
-  [ 'http://example.com/new-path-here/', 'q', 'http://example.com/new-path-here/?q=%s' ],
-  [ '', 'q', 'http://example.org/browser/browser/base/content/test/general/dummy_page.html?q=%s' ],
-  // Tests for proper behaviour when called on a form whose action contains a question mark.
-  [ 'http://example.com/search?oe=utf-8', 'q', 'http://example.com/search?oe=utf-8&q=%s' ],
+  { desc: "No path",
+    action: "http://example.com/",
+    param: "q",
+  },
+  { desc: "With path",
+    action: "http://example.com/new-path-here/",
+    param: "q",
+  },
+  { desc: "No action",
+    action: "",
+    param: "q",
+  },
+  { desc: "With Query String",
+    action: "http://example.com/search?oe=utf-8",
+    param: "q",
+  },
 ];
 
 add_task(function*() {
-  yield BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.org/browser/browser/base/content/test/general/dummy_page.html",
-  }, function* (browser) {
-    yield ContentTask.spawn(browser, null, function* () {
-      let doc = content.document;
-      let base = doc.createElement("base");
-      doc.head.appendChild(base);
-    });
+  const TEST_URL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
-    var mm = browser.messageManager;
+  let count = 0;
+  for (let method of ["GET", "POST"]) {
+    for (let {desc, action, param } of testData) {
+      info(`Running ${method} keyword test '${desc}'`);
+      let id = `keyword-form-${count++}`;
+      let contextMenu = document.getElementById("contentAreaContextMenu");
+      let contextMenuPromise =
+        BrowserTestUtils.waitForEvent(contextMenu, "popupshown")
+                        .then(() => gContextMenuContentData.popupNode);
 
-    for (let [baseURI, fieldName, expected] of testData) {
-      let popupShownPromise = BrowserTestUtils.waitForEvent(document.getElementById("contentAreaContextMenu"),
-                                                            "popupshown");
-
-      yield ContentTask.spawn(browser, { baseURI, fieldName }, function* (args) {
+      yield ContentTask.spawn(tab.linkedBrowser,
+                              { action, param, method, id }, function* (args) {
         let doc = content.document;
-
-        let base = doc.querySelector('head > base');
-        base.href = args.baseURI;
-
         let form = doc.createElement("form");
-        form.id = "keyword-form";
+        form.id = args.id;
+        form.method = args.method;
+        form.action = args.action;
         let element = doc.createElement("input");
         element.setAttribute("type", "text");
-        element.setAttribute("name", args.fieldName);
+        element.setAttribute("name", args.param);
         form.appendChild(element);
         doc.body.appendChild(form);
-
-        /* Open context menu so chrome can access the element */
-        const domWindowUtils =
-          content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                 .getInterface(Components.interfaces.nsIDOMWindowUtils);
-        let rect = element.getBoundingClientRect();
-        let left = rect.left + rect.width / 2;
-        let top = rect.top + rect.height / 2;
-        domWindowUtils.sendMouseEvent("contextmenu", left, top, 2,
-                                      1, 0, false, 0, 0, true);
       });
 
-      yield popupShownPromise;
+      yield BrowserTestUtils.synthesizeMouseAtCenter(`#${id} > input`,
+                                                     { type : "contextmenu", button : 2 },
+                                                     tab.linkedBrowser);
+      let target = yield contextMenuPromise;
 
-      let target = gContextMenuContentData.popupNode;
-
-      let urlCheck = new Promise((resolve, reject) => {
+      yield new Promise(resolve => {
+        let url = action || tab.linkedBrowser.currentURI.spec;
+        let mm = tab.linkedBrowser.messageManager;
         let onMessage = (message) => {
           mm.removeMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
-
-          is(message.data.spec, expected,
-             `Bookmark spec for search field named ${fieldName} and baseURI ${baseURI} incorrect`);
+          if (method == "GET") {
+            ok(message.data.spec.endsWith(`${param}=%s`),
+             `Check expected url for field named ${param} and action ${action}`);
+          } else {
+            is(message.data.spec, url,
+             `Check expected url for field named ${param} and action ${action}`);
+            is(message.data.postData, `${param}%3D%25s`,
+             `Check expected POST data for field named ${param} and action ${action}`);
+          }
           resolve();
         };
         mm.addMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
@@ -69,14 +71,11 @@ add_task(function*() {
         mm.sendAsyncMessage("ContextMenu:SearchFieldBookmarkData", null, { target });
       });
 
-      yield urlCheck;
-
-      document.getElementById("contentAreaContextMenu").hidePopup();
-
-      yield ContentTask.spawn(browser, null, function* () {
-        let doc = content.document;
-        doc.body.removeChild(doc.getElementById("keyword-form"));
-      });
+      let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+      contextMenu.hidePopup();
+      yield popupHiddenPromise;
     }
-  });
+  }
+
+  yield BrowserTestUtils.removeTab(tab);
 });
