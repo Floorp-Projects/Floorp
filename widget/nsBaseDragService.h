@@ -112,7 +112,8 @@ protected:
    * Draw a drag image for an image node specified by aImageLoader or aCanvas.
    * This is called by DrawDrag.
    */
-  nsresult DrawDragForImage(nsIImageLoadingContent* aImageLoader,
+  nsresult DrawDragForImage(nsPresContext *aPresContext,
+                            nsIImageLoadingContent* aImageLoader,
                             mozilla::dom::HTMLCanvasElement* aCanvas,
                             mozilla::LayoutDeviceIntRect* aScreenDragRect,
                             RefPtr<SourceSurface>* aSurface);
