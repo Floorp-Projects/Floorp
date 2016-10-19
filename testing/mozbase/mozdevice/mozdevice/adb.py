@@ -614,8 +614,26 @@ class ADBDevice(ADBCommand):
         except ADBError:
             self._ls += " -a"
 
+        self._logger.info("%s supported" % self._ls)
+
         # Do we have cp?
         self._have_cp = self.shell_bool("type cp", timeout=timeout)
+        self._logger.info("Native cp support: %s" % self._have_cp)
+
+        # Do we have chmod -R?
+        try:
+            self._chmod_R = False
+            re_recurse = re.compile(r'[-]R')
+            chmod_output = self.shell_output("chmod --help", timeout=timeout)
+            match = re_recurse.search(chmod_output)
+            if match:
+                self._chmod_R = True
+        except (ADBError, ADBTimeoutError) as e:
+            self._logger.debug('Check chmod -R: %s' % e)
+            match = re_recurse.search(e.message)
+            if match:
+                self._chmod_R = True
+        self._logger.info("Native chmod -R support: %s" % self._chmod_R)
 
         self._logger.debug("ADBDevice: %s" % self.__dict__)
 
@@ -1417,9 +1435,30 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
                  * ADBError
         """
+        # Note the on some tests such as webappstartup, an error
+        # occurs during recursive calls to chmod where a "No such file
+        # or directory" error will occur for the
+        # /data/data/org.mozilla.fennec/files/mozilla/*.webapp0/lock
+        # which is a symbolic link to a socket: lock ->
+        # 127.0.0.1:+<port>.  On Linux, chmod -R ignores symbolic
+        # links but it appear Android's version does not. We ignore
+        # this type of error, but pass on any other errors that are
+        # detected.
         path = posixpath.normpath(path.strip())
         self._logger.debug('chmod: path=%s, recursive=%s, mask=%s, root=%s' %
                            (path, recursive, mask, root))
+        if recursive and self._chmod_R:
+            try:
+                self.shell_output("chmod -R %s %s" % (mask, path),
+                                  timeout=timeout, root=root)
+            except ADBError, e:
+                if e.message.find('No such file or directory') != -1:
+                    self._logger.warning('chmod -R %s %s: Ignoring Error: %s' %
+                                         (mask, path, e.message))
+                else:
+                    raise
+            return
+
         self.shell_output("chmod %s %s" % (mask, path),
                           timeout=timeout, root=root)
         if recursive and self.is_dir(path, timeout=timeout, root=root):
