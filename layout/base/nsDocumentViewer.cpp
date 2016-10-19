@@ -300,6 +300,9 @@ private:
   nsresult GetPopupLinkNode(nsIDOMNode** aNode);
   nsresult GetPopupImageNode(nsIImageLoadingContent** aNode);
 
+  nsresult GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
+                                  nscoord aMaxWidth, nscoord aMaxHeight);
+
   void PrepareToStartLoad(void);
 
   nsresult SyncParentSubDocMap();
@@ -3358,29 +3361,19 @@ nsDocumentViewer::ResumePainting()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::GetContentSize(int32_t* aWidth, int32_t* aHeight)
+nsresult
+nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
+                                         nscoord aMaxWidth, nscoord aMaxHeight)
 {
-   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
-   // Skip doing this on docshell-less documents for now
-   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(mContainer);
-   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_NOT_AVAILABLE);
-   
-   nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-   docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
+  nsCOMPtr<nsIPresShell> presShell;
+  GetPresShell(getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-   // It's only valid to access this from a top frame.  Doesn't work from
-   // sub-frames.
-   NS_ENSURE_TRUE(!docShellParent, NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIPresShell> presShell;
-   GetPresShell(getter_AddRefs(presShell));
-   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-   // Flush out all content and style updates. We can't use a resize reflow
-   // because it won't change some sizes that a style change reflow will.
-   mDocument->FlushPendingNotifications(Flush_Layout);
+  // Flush out all content and style updates. We can't use a resize reflow
+  // because it won't change some sizes that a style change reflow will.
+  mDocument->FlushPendingNotifications(Flush_Layout);
 
   nsIFrame *root = presShell->GetRootFrame();
   NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
@@ -3390,25 +3383,73 @@ nsDocumentViewer::GetContentSize(int32_t* aWidth, int32_t* aHeight)
     nsRenderingContext rcx(presShell->CreateReferenceRenderingContext());
     prefWidth = root->GetPrefISize(&rcx);
   }
+  if (prefWidth > aMaxWidth) {
+    prefWidth = aMaxWidth;
+  }
 
   nsresult rv = presShell->ResizeReflow(prefWidth, NS_UNCONSTRAINEDSIZE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-   RefPtr<nsPresContext> presContext;
-   GetPresContext(getter_AddRefs(presContext));
-   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+  RefPtr<nsPresContext> presContext;
+  GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-   // so how big is it?
-   nsRect shellArea = presContext->GetVisibleArea();
-   // Protect against bogus returns here
-   NS_ENSURE_TRUE(shellArea.width != NS_UNCONSTRAINEDSIZE &&
-                  shellArea.height != NS_UNCONSTRAINEDSIZE,
-                  NS_ERROR_FAILURE);
+  // so how big is it?
+  nsRect shellArea = presContext->GetVisibleArea();
+  if (shellArea.height > aMaxHeight) {
+    // Reflow to max height if we would up too tall.
+    rv = presShell->ResizeReflow(prefWidth, aMaxHeight);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-   *aWidth = presContext->AppUnitsToDevPixels(shellArea.width);
-   *aHeight = presContext->AppUnitsToDevPixels(shellArea.height);
+    shellArea = presContext->GetVisibleArea();
+  }
 
-   return NS_OK;
+  // Protect against bogus returns here
+  NS_ENSURE_TRUE(shellArea.width != NS_UNCONSTRAINEDSIZE &&
+                 shellArea.height != NS_UNCONSTRAINEDSIZE,
+                 NS_ERROR_FAILURE);
+
+  *aWidth = presContext->AppUnitsToDevPixels(shellArea.width);
+  *aHeight = presContext->AppUnitsToDevPixels(shellArea.height);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentViewer::GetContentSize(int32_t* aWidth, int32_t* aHeight)
+{
+  // Skip doing this on docshell-less documents for now
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(mContainer);
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_NOT_AVAILABLE);
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellParent;
+  docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
+
+  // It's only valid to access this from a top frame.  Doesn't work from
+  // sub-frames.
+  NS_ENSURE_TRUE(!docShellParent, NS_ERROR_FAILURE);
+
+  return GetContentSizeInternal(aWidth, aHeight, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+}
+
+NS_IMETHODIMP
+nsDocumentViewer::GetContentSizeConstrained(int32_t aMaxWidth, int32_t aMaxHeight,
+                                            int32_t* aWidth, int32_t* aHeight)
+{
+  RefPtr<nsPresContext> presContext;
+  GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
+  nscoord maxWidth = NS_UNCONSTRAINEDSIZE;
+  nscoord maxHeight = NS_UNCONSTRAINEDSIZE;
+  if (aMaxWidth > 0) {
+    maxWidth = presContext->DevPixelsToAppUnits(aMaxWidth);
+  }
+  if (aMaxHeight > 0) {
+    maxHeight = presContext->DevPixelsToAppUnits(aMaxHeight);
+  }
+
+  return GetContentSizeInternal(aWidth, aHeight, maxWidth, maxHeight);
 }
 
 
