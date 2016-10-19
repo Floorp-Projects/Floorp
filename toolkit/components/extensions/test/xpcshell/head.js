@@ -7,6 +7,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Timer.jsm");
+Components.utils.import("resource://testing-common/AddonTestUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
