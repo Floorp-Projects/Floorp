@@ -7,12 +7,14 @@ package org.mozilla.gecko.home.activitystream;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -81,7 +83,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         private Future<IconResponse> ongoingIconLoad;
         private int tilesMargin;
 
-        public HighlightItem(View itemView) {
+        public HighlightItem(final View itemView) {
             super(itemView);
 
             tilesMargin = itemView.getResources().getDimensionPixelSize(R.dimen.activity_stream_base_margin);
@@ -93,10 +95,31 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             vPageView = (TextView) itemView.findViewById(R.id.page);
             vSourceIconView = (ImageView) itemView.findViewById(R.id.source_icon);
 
-            ImageView menuButton = (ImageView) itemView.findViewById(R.id.menu);
+            final ImageView menuButton = (ImageView) itemView.findViewById(R.id.menu);
 
             menuButton.setImageDrawable(
                     DrawableUtil.tintDrawable(menuButton.getContext(), R.drawable.menu, Color.LTGRAY));
+
+            itemView.post(new Runnable() {
+                @Override
+                public void run() {
+                    Rect delegateArea = new Rect();
+                    menuButton.getHitRect(delegateArea);
+
+                    final int targetHitArea = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, itemView.getContext().getResources().getDisplayMetrics());;
+
+                    final int widthDelta = (targetHitArea - delegateArea.width()) / 2;
+                    delegateArea.right += widthDelta;
+                    delegateArea.left -= widthDelta;
+
+                    final int heightDelta = (targetHitArea - delegateArea.height()) / 2;
+                    delegateArea.bottom += heightDelta;
+                    delegateArea.top -= heightDelta;
+
+                    TouchDelegate touchDelegate = new TouchDelegate(delegateArea, menuButton);
+                    itemView.setTouchDelegate(touchDelegate);
+                }
+            });
         }
 
         public void bind(Cursor cursor, int tilesWidth, int tilesHeight) {
