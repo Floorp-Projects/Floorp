@@ -198,9 +198,8 @@ class ADBAndroid(ADBDevice):
                     failure = "Device state: %s" % state
                     success = False
                 else:
-                    if (self.selinux and
-                        self.shell_output('getenforce',
-                                          timeout=timeout) != 'Permissive'):
+                    if (self.selinux and self.shell_output('getenforce',
+                                                           timeout=timeout) != 'Permissive'):
                         self._logger.info('Setting SELinux Permissive Mode')
                         self.shell_output("setenforce Permissive", timeout=timeout, root=True)
                     if self.is_dir(ready_path, timeout=timeout, root=True):
@@ -341,9 +340,9 @@ class ADBAndroid(ADBDevice):
 
         if extras:
             for (key, val) in extras.iteritems():
-                if type(val) is int:
+                if isinstance(val, int):
                     extra_type_param = "--ei"
-                elif type(val) is bool:
+                elif isinstance(val, bool):
                     extra_type_param = "--ez"
                 else:
                     extra_type_param = "--es"
@@ -398,8 +397,8 @@ class ADBAndroid(ADBDevice):
         if extra_args:
             extras['args'] = " ".join(extra_args)
 
-        self.launch_application(app_name, "org.mozilla.gecko.BrowserApp", intent, url=url,
-                                extras=extras,
+        self.launch_application(app_name, "org.mozilla.gecko.BrowserApp",
+                                intent, url=url, extras=extras,
                                 wait=wait, fail_if_running=fail_if_running,
                                 timeout=timeout)
 
