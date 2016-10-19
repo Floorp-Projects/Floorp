@@ -467,6 +467,10 @@ private:
   // Strong references to external objects.
   nsMainThreadPtrHandle<MediaSourceDecoder> mParentDecoder;
 
+  // Return public highest end time across all aTracks.
+  // Monitor must be held.
+  media::TimeUnit HighestEndTime(nsTArray<const media::TimeIntervals*>& aTracks) const;
+
   // Set to true if mediasource state changed to ended.
   Atomic<bool> mEnded;
 

@@ -5,7 +5,7 @@
 HTTP(..) != download-1.html download-1-notref.html
 HTTP(..) == download-2.html download-2-ref.html
 HTTP(..) != download-2.html about:blank
-random-if(winWidget) HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
+random-if(winWidget||gtkWidget) HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
 HTTP(..) != download-2-big-otf.html about:blank
 asserts-if(Android&&!asyncPan,1-8) HTTP(..) != download-3-notref.html download-3.html # bug 1019192
 asserts-if(Android,0-8) HTTP(..) == download-3-ref.html download-3.html # same bugs as above
@@ -17,7 +17,7 @@ HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
 HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
 HTTP(..) == src-list-1.html src-list-1-ref.html
 HTTP(..) == src-list-2.html src-list-2-ref.html
-random-if(winWidget) HTTP(..) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
+random-if(winWidget||gtkWidget) HTTP(..) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
 HTTP(..) == src-list-format-1.html src-list-format-1-ref.html
 HTTP(..) == src-list-format-2.html src-list-format-2-ref.html
 HTTP(..) == src-list-format-3.html src-list-format-3-ref.html

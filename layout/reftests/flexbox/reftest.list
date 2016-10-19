@@ -14,9 +14,10 @@ include pagination/reftest.list
 
 # Tests for cross-axis alignment (align-self / align-items properties)
 fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
-# This one fails on windows R (but not Ru, strangely). On Windows R, the
-# single-line <label> flex item has a different background size in test vs. ref
-fuzzy-if(cocoaWidget,1,2) random-if(winWidget) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate
+# This one fails on windows R (but not Ru, strangely) and GTK.
+# On Windows R and GTK, the single-line <label> flex item has a different
+# background size in test vs. ref
+fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate
 == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 
 # Tests for box-sizing on flex containers and flex items.
