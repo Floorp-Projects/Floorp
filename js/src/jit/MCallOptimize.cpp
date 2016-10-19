@@ -297,7 +297,11 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
 
       // Map intrinsics.
       case InlinableNative::IntrinsicGetNextMapEntryForIterator:
-        return inlineGetNextMapEntryForIterator(callInfo);
+        return inlineGetNextEntryForIterator(callInfo, MGetNextEntryForIterator::Map);
+
+      // Set intrinsics.
+      case InlinableNative::IntrinsicGetNextSetEntryForIterator:
+        return inlineGetNextEntryForIterator(callInfo, MGetNextEntryForIterator::Set);
 
       // ArrayBuffer intrinsics.
       case InlinableNative::IntrinsicArrayBufferByteLength:
@@ -2216,7 +2220,7 @@ IonBuilder::inlineHasClass(CallInfo& callInfo,
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineGetNextMapEntryForIterator(CallInfo& callInfo)
+IonBuilder::inlineGetNextEntryForIterator(CallInfo& callInfo, MGetNextEntryForIterator::Mode mode)
 {
     if (callInfo.argc() != 2 || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
@@ -2231,8 +2235,15 @@ IonBuilder::inlineGetNextMapEntryForIterator(CallInfo& callInfo)
 
     TemporaryTypeSet* iterTypes = iterArg->resultTypeSet();
     const Class* iterClasp = iterTypes ? iterTypes->getKnownClass(constraints()) : nullptr;
-    if (iterClasp != &MapIteratorObject::class_)
-        return InliningStatus_NotInlined;
+    if (mode == MGetNextEntryForIterator::Map) {
+        if (iterClasp != &MapIteratorObject::class_)
+            return InliningStatus_NotInlined;
+    } else {
+        MOZ_ASSERT(mode == MGetNextEntryForIterator::Set);
+
+        if (iterClasp != &SetIteratorObject::class_)
+            return InliningStatus_NotInlined;
+    }
 
     if (resultArg->type() != MIRType::Object)
         return InliningStatus_NotInlined;
@@ -2244,8 +2255,7 @@ IonBuilder::inlineGetNextMapEntryForIterator(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MInstruction* next = MGetNextMapEntryForIterator::New(alloc(), iterArg,
-                                                          resultArg);
+    MInstruction* next = MGetNextEntryForIterator::New(alloc(), iterArg, resultArg, mode);
     current->add(next);
     current->push(next);
 
