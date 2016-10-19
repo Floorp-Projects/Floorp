@@ -453,9 +453,8 @@
     "events": [
       {
         "name": "onStartup",
-        "unsupported": true,
         "type": "function",
-        "description": "Fired when a profile that has this extension installed first starts up. This event is not fired when an incognito profile is started, even if this extension is operating in 'split' incognito mode."
+        "description": "Fired when a profile that has this extension installed first starts up. This event is not fired for incognito profiles."
       },
       {
         "name": "onInstalled",
