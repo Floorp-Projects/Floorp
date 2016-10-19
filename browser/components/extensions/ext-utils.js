@@ -345,6 +345,12 @@ class PanelPopup extends BasePopup {
 
     this.contentReady.then(() => {
       panel.openPopup(imageNode, "bottomcenter topright", 0, 0, false, false);
+
+      let event = new this.window.CustomEvent("WebExtPopupLoaded", {
+        bubbles: true,
+        detail: {extension},
+      });
+      this.browser.dispatchEvent(event);
     });
   }
 
@@ -457,6 +463,12 @@ class ViewPopup extends BasePopup {
 
       this.tempPanel.remove();
       this.tempPanel = null;
+
+      let event = new this.window.CustomEvent("WebExtPopupLoaded", {
+        bubbles: true,
+        detail: {extension: this.extension},
+      });
+      this.browser.dispatchEvent(event);
 
       return true;
     }.bind(this));
