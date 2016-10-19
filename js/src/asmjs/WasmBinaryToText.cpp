@@ -243,7 +243,7 @@ RenderNop(WasmRenderContext& c, AstNop& nop)
     if (!RenderIndent(c))
         return false;
     MAP_AST_EXPR(c, nop);
-    return c.buffer.append("nop\n");
+    return c.buffer.append("nop");
 }
 
 static bool
@@ -255,9 +255,7 @@ RenderDrop(WasmRenderContext& c, AstDrop& drop)
     if (!RenderIndent(c))
         return false;
     MAP_AST_EXPR(c, drop);
-    if (!c.buffer.append("drop\n"))
-        return false;
-    return true;
+    return c.buffer.append("drop");
 }
 
 static bool
@@ -266,7 +264,7 @@ RenderUnreachable(WasmRenderContext& c, AstUnreachable& unreachable)
     if (!RenderIndent(c))
         return false;
     MAP_AST_EXPR(c, unreachable);
-    return c.buffer.append("unreachable\n");
+    return c.buffer.append("unreachable");
 }
 
 static bool
@@ -300,13 +298,7 @@ RenderCall(WasmRenderContext& c, AstCall& call)
         return false;
     }
 
-    if (!RenderRef(c, call.func()))
-        return false;
-
-    if (!c.buffer.append('\n'))
-        return false;
-
-    return true;
+    return RenderRef(c, call.func());
 }
 
 static bool
@@ -324,13 +316,7 @@ RenderCallIndirect(WasmRenderContext& c, AstCallIndirect& call)
     MAP_AST_EXPR(c, call);
     if (!c.buffer.append("call_indirect "))
         return false;
-    if (!RenderRef(c, call.sig()))
-        return false;
-
-    if (!c.buffer.append('\n'))
-        return false;
-
-    return true;
+    return RenderRef(c, call.sig());
 }
 
 static bool
@@ -347,28 +333,18 @@ RenderConst(WasmRenderContext& c, AstConst& cst)
 
     switch (ToExprType(cst.val().type())) {
       case ExprType::I32:
-        if (!RenderInt32(c, (uint32_t)cst.val().i32()))
-            return false;
-        break;
+        return RenderInt32(c, (int32_t)cst.val().i32());
       case ExprType::I64:
-        if (!RenderInt64(c, (uint32_t)cst.val().i64()))
-            return false;
-        break;
+        return RenderInt64(c, (int64_t)cst.val().i64());
       case ExprType::F32:
-        if (!RenderFloat32(c, cst.val().f32()))
-            return false;
-        break;
+        return RenderFloat32(c, cst.val().f32());
       case ExprType::F64:
-        if (!RenderDouble(c, cst.val().f64()))
-            return false;
-        break;
+        return RenderDouble(c, cst.val().f64());
       default:
-        return false;
+        break;
     }
 
-    if (!c.buffer.append('\n'))
-        return false;
-    return true;
+    return false;
 }
 
 static bool
@@ -380,11 +356,7 @@ RenderGetLocal(WasmRenderContext& c, AstGetLocal& gl)
     MAP_AST_EXPR(c, gl);
     if (!c.buffer.append("get_local "))
         return false;
-    if (!RenderRef(c, gl.local()))
-        return false;
-    if (!c.buffer.append('\n'))
-        return false;
-    return true;
+    return RenderRef(c, gl.local());
 }
 
 static bool
@@ -399,12 +371,7 @@ RenderSetLocal(WasmRenderContext& c, AstSetLocal& sl)
     MAP_AST_EXPR(c, sl);
     if (!c.buffer.append("set_local "))
         return false;
-    if (!RenderRef(c, sl.local()))
-        return false;
-
-    if (!c.buffer.append('\n'))
-        return false;
-    return true;
+    return RenderRef(c, sl.local());
 }
 
 static bool
@@ -450,8 +417,9 @@ RenderBlock(WasmRenderContext& c, AstBlock& block)
     } else if (block.expr() == Expr::Loop) {
         if (!c.buffer.append("loop"))
             return false;
-    } else
+    } else {
         return false;
+    }
 
     if (!RenderBlockNameAndSignature(c, block.name(), block.type()))
         return false;
@@ -467,34 +435,28 @@ RenderBlock(WasmRenderContext& c, AstBlock& block)
     if (!RenderIndent(c))
         return false;
 
-    return c.buffer.append("end\n");
+    return c.buffer.append("end");
 }
 
 static bool
 RenderFirst(WasmRenderContext& c, AstFirst& first)
 {
-    if (!RenderExprList(c, first.exprs()))
-        return false;
-
-    return true;
+    return RenderExprList(c, first.exprs());
 }
 
 static bool
 RenderNullaryOperator(WasmRenderContext& c, AstNullaryOperator& op)
 {
     if (!RenderIndent(c))
-      return false;
+        return false;
 
     const char* opStr;
     switch (op.expr()) {
-      case Expr::CurrentMemory:     opStr = "current_memory"; break;
+      case Expr::CurrentMemory: opStr = "current_memory"; break;
       default: return false;
     }
 
-    if (!c.buffer.append(opStr, strlen(opStr)))
-        return false;
-
-    return c.buffer.append('\n');
+    return c.buffer.append(opStr, strlen(opStr));
 }
 
 static bool
@@ -527,14 +489,14 @@ RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& op)
       case Expr::F64Neg:     opStr = "f64.neg"; break;
       case Expr::F64Ceil:    opStr = "f64.ceil"; break;
       case Expr::F64Floor:   opStr = "f64.floor"; break;
+      case Expr::F64Nearest: opStr = "f64.nearest"; break;
       case Expr::F64Sqrt:    opStr = "f64.sqrt"; break;
+      case Expr::F64Trunc:   opStr = "f64.trunc"; break;
       case Expr::GrowMemory: opStr = "grow_memory"; break;
       default: return false;
     }
-    if (!c.buffer.append(opStr, strlen(opStr)))
-        return false;
 
-    return c.buffer.append('\n');
+    return c.buffer.append(opStr, strlen(opStr));
 }
 
 static bool
@@ -590,15 +552,11 @@ RenderBinaryOperator(WasmRenderContext& c, AstBinaryOperator& op)
       case Expr::F64Div:      opStr = "f64.div"; break;
       case Expr::F64Min:      opStr = "f64.min"; break;
       case Expr::F64Max:      opStr = "f64.max"; break;
+      case Expr::F64CopySign: opStr = "f64.copysign"; break;
       default: return false;
     }
-    if (!c.buffer.append(opStr, strlen(opStr)))
-        return false;
 
-    if (!c.buffer.append('\n'))
-        return false;
-
-    return true;
+    return c.buffer.append(opStr, strlen(opStr));
 }
 
 static bool
@@ -620,13 +578,8 @@ RenderTernaryOperator(WasmRenderContext& c, AstTernaryOperator& op)
       case Expr::Select: opStr = "select"; break;
       default: return false;
     }
-    if (!c.buffer.append(opStr, strlen(opStr)))
-        return false;
 
-    if (!c.buffer.append('\n'))
-        return false;
-
-    return true;
+    return c.buffer.append(opStr, strlen(opStr));
 }
 
 static bool
@@ -677,13 +630,8 @@ RenderComparisonOperator(WasmRenderContext& c, AstComparisonOperator& op)
       case Expr::F64Ge:  opStr = "f64.ge"; break;
       default: return false;
     }
-    if (!c.buffer.append(opStr, strlen(opStr)))
-        return false;
 
-    if (!c.buffer.append('\n'))
-        return false;
-
-    return true;
+    return c.buffer.append(opStr, strlen(opStr));
 }
 
 static bool
@@ -727,10 +675,7 @@ RenderConversionOperator(WasmRenderContext& c, AstConversionOperator& op)
       case Expr::I64Eqz:            opStr = "i64.eqz"; break;
       default: return false;
     }
-    if (!c.buffer.append(opStr, strlen(opStr)))
-        return false;
-
-    return c.buffer.append('\n');
+    return c.buffer.append(opStr, strlen(opStr));
 }
 
 static bool
@@ -745,18 +690,8 @@ RenderIf(WasmRenderContext& c, AstIf& if_)
     MAP_AST_EXPR(c, if_);
     if (!c.buffer.append("if"))
         return false;
-
     if (!RenderBlockNameAndSignature(c, if_.name(), if_.type()))
         return false;
-
-    if (!if_.name().empty()) {
-        if (!c.buffer.append(' '))
-            return false;
-
-        if (!RenderName(c, if_.name()))
-            return false;
-    }
-
     if (!c.buffer.append('\n'))
         return false;
 
@@ -781,16 +716,13 @@ RenderIf(WasmRenderContext& c, AstIf& if_)
     if (!RenderIndent(c))
         return false;
 
-    return c.buffer.append("end\n");
+    return c.buffer.append("end");
 }
 
 static bool
 RenderLoadStoreBase(WasmRenderContext& c, const AstLoadStoreAddress& lsa)
 {
-    if (!RenderExpr(c, lsa.base()))
-        return false;
-
-    return true;
+    return RenderExpr(c, lsa.base());
 }
 
 static bool
@@ -900,10 +832,7 @@ RenderLoad(WasmRenderContext& c, AstLoad& load)
         return false;
     }
 
-    if (!RenderLoadStoreAddress(c, load.address(), defaultAlignLog2))
-        return false;
-
-    return c.buffer.append('\n');
+    return RenderLoadStoreAddress(c, load.address(), defaultAlignLog2);
 }
 
 static bool
@@ -970,10 +899,7 @@ RenderStore(WasmRenderContext& c, AstStore& store)
         return false;
     }
 
-    if (!RenderLoadStoreAddress(c, store.address(), defaultAlignLog2))
-        return false;
-
-    return c.buffer.append('\n');
+    return RenderLoadStoreAddress(c, store.address(), defaultAlignLog2);
 }
 
 static bool
@@ -999,10 +925,7 @@ RenderBranch(WasmRenderContext& c, AstBranch& branch)
     if (expr == Expr::BrIf ? !c.buffer.append("br_if ") : !c.buffer.append("br "))
         return false;
 
-    if (!RenderRef(c, branch.target()))
-        return false;
-
-    return c.buffer.append('\n');
+    return RenderRef(c, branch.target());
 }
 
 static bool
@@ -1033,10 +956,7 @@ RenderBrTable(WasmRenderContext& c, AstBranchTable& table)
             return false;
     }
 
-    if (!RenderRef(c, table.def()))
-        return false;
-
-    return c.buffer.append('\n');
+    return RenderRef(c, table.def());
 }
 
 static bool
@@ -1051,69 +971,114 @@ RenderReturn(WasmRenderContext& c, AstReturn& ret)
         return false;
 
     MAP_AST_EXPR(c, ret);
-    if (!c.buffer.append("return"))
-        return false;
-
-    return c.buffer.append('\n');
+    return c.buffer.append("return");
 }
 
 static bool
 RenderExpr(WasmRenderContext& c, AstExpr& expr)
 {
+    bool newLine = true;
     switch (expr.kind()) {
       case AstExprKind::Drop:
-        return RenderDrop(c, expr.as<AstDrop>());
+        if (!RenderDrop(c, expr.as<AstDrop>()))
+            return false;
+        break;
       case AstExprKind::Nop:
-        return RenderNop(c, expr.as<AstNop>());
+        if (!RenderNop(c, expr.as<AstNop>()))
+            return false;
+        break;
       case AstExprKind::Unreachable:
-        return RenderUnreachable(c, expr.as<AstUnreachable>());
+        if (!RenderUnreachable(c, expr.as<AstUnreachable>()))
+            return false;
+        break;
       case AstExprKind::Call:
-        return RenderCall(c, expr.as<AstCall>());
+        if (!RenderCall(c, expr.as<AstCall>()))
+            return false;
+        break;
       case AstExprKind::CallIndirect:
-        return RenderCallIndirect(c, expr.as<AstCallIndirect>());
+        if (!RenderCallIndirect(c, expr.as<AstCallIndirect>()))
+            return false;
+        break;
       case AstExprKind::Const:
-        return RenderConst(c, expr.as<AstConst>());
+        if (!RenderConst(c, expr.as<AstConst>()))
+            return false;
+        break;
       case AstExprKind::GetLocal:
-        return RenderGetLocal(c, expr.as<AstGetLocal>());
+        if (!RenderGetLocal(c, expr.as<AstGetLocal>()))
+            return false;
+        break;
       case AstExprKind::SetLocal:
-        return RenderSetLocal(c, expr.as<AstSetLocal>());
+        if (!RenderSetLocal(c, expr.as<AstSetLocal>()))
+            return false;
+        break;
       case AstExprKind::TeeLocal:
-        return RenderTeeLocal(c, expr.as<AstTeeLocal>());
+        if (!RenderTeeLocal(c, expr.as<AstTeeLocal>()))
+            return false;
+        break;
       case AstExprKind::Block:
-        return RenderBlock(c, expr.as<AstBlock>());
+        if (!RenderBlock(c, expr.as<AstBlock>()))
+            return false;
+        break;
       case AstExprKind::If:
-        return RenderIf(c, expr.as<AstIf>());
+        if (!RenderIf(c, expr.as<AstIf>()))
+            return false;
+        break;
       case AstExprKind::NullaryOperator:
-        return RenderNullaryOperator(c, expr.as<AstNullaryOperator>());
+        if (!RenderNullaryOperator(c, expr.as<AstNullaryOperator>()))
+            return false;
+        break;
       case AstExprKind::UnaryOperator:
-        return RenderUnaryOperator(c, expr.as<AstUnaryOperator>());
+        if (!RenderUnaryOperator(c, expr.as<AstUnaryOperator>()))
+            return false;
+        break;
       case AstExprKind::BinaryOperator:
-        return RenderBinaryOperator(c, expr.as<AstBinaryOperator>());
+        if (!RenderBinaryOperator(c, expr.as<AstBinaryOperator>()))
+            return false;
+        break;
       case AstExprKind::TernaryOperator:
-        return RenderTernaryOperator(c, expr.as<AstTernaryOperator>());
+        if (!RenderTernaryOperator(c, expr.as<AstTernaryOperator>()))
+            return false;
+        break;
       case AstExprKind::ComparisonOperator:
-        return RenderComparisonOperator(c, expr.as<AstComparisonOperator>());
+        if (!RenderComparisonOperator(c, expr.as<AstComparisonOperator>()))
+            return false;
+        break;
       case AstExprKind::ConversionOperator:
-        return RenderConversionOperator(c, expr.as<AstConversionOperator>());
+        if (!RenderConversionOperator(c, expr.as<AstConversionOperator>()))
+            return false;
+        break;
       case AstExprKind::Load:
-        return RenderLoad(c, expr.as<AstLoad>());
+        if (!RenderLoad(c, expr.as<AstLoad>()))
+            return false;
+        break;
       case AstExprKind::Store:
-        return RenderStore(c, expr.as<AstStore>());
+        if (!RenderStore(c, expr.as<AstStore>()))
+            return false;
+        break;
       case AstExprKind::Branch:
-        return RenderBranch(c, expr.as<AstBranch>());
+        if (!RenderBranch(c, expr.as<AstBranch>()))
+            return false;
+        break;
       case AstExprKind::BranchTable:
-        return RenderBrTable(c, expr.as<AstBranchTable>());
+        if (!RenderBrTable(c, expr.as<AstBranchTable>()))
+            return false;
+        break;
       case AstExprKind::Return:
-        return RenderReturn(c, expr.as<AstReturn>());
+        if (!RenderReturn(c, expr.as<AstReturn>()))
+            return false;
+        break;
       case AstExprKind::First:
-        return RenderFirst(c, expr.as<AstFirst>());
+        newLine = false;
+        if (!RenderFirst(c, expr.as<AstFirst>()))
+            return false;
+        break;
       default:
         // Note: it's important not to remove this default since readExpr()
         // can return Expr values for which there is no enumerator.
-        break;
+        return false;
     }
 
-    return false;
+    return !newLine || c.buffer.append("\n");
 }
 
 static bool
@@ -1256,12 +1221,9 @@ RenderImport(WasmRenderContext& c, AstImport& import, const AstModule::SigVector
 
     if (!RenderSignature(c, *sig))
         return false;
-    if (!c.buffer.append(")\n"))
-        return false;
 
-    return true;
+    return c.buffer.append(")\n");
 }
-
 
 static bool
 RenderImportSection(WasmRenderContext& c, const AstModule::ImportVector& imports, const AstModule::SigVector& sigs)
@@ -1272,7 +1234,6 @@ RenderImportSection(WasmRenderContext& c, const AstModule::ImportVector& imports
         if (!RenderImport(c, *imports[i], sigs))
             return false;
     }
-
     return true;
 }
 
@@ -1512,7 +1473,6 @@ RenderModule(WasmRenderContext& c, AstModule& module)
 bool
 wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer, GeneratedSourceMap* sourceMap)
 {
-
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
 
     AstModule* module;
@@ -1530,4 +1490,3 @@ wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuf
 
     return true;
 }
-
