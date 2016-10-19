@@ -1,0 +1,97 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+  -->
+<!DOCTYPE html>
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Testing track flex max-sizing</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309407">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#algo-flex-tracks">
+  <link rel="match" href="grid-max-sizing-flex-008-ref.html">
+  <style type="text/css">
+.grid {
+   display: grid;
+   border:1px dashed;
+   margin: 3px;
+}
+.rows {
+   float: left;
+   grid: minmax(10px, 0.5fr) minmax(10px, 2fr) / 50px;
+   grid-row-gap: 33px;
+}
+.cols {
+   display: inline-grid;
+   grid: 50px / minmax(10px, 0.5fr) minmax(10px, 2fr);
+   grid-column-gap: 33px;
+}
+
+.item:nth-child(1) { background-color: purple; }
+.item:nth-child(2) { background-color: blue; }
+
+</style>
+
+</head><body>
+
+<pre>First four are without min/max-sizes:</pre>
+<div class="grid rows">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div style="height:0">
+  <div class="grid rows">
+    <div class="item"></div>
+    <div class="item"></div>
+  </div>
+</div>
+<div class="grid cols">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div style="display:inline-block; width:0">
+  <div class="grid cols">
+    <div class="item"></div>
+    <div class="item"></div>
+  </div>
+</div>
+
+<br clear="all">
+
+<pre>Max-size less than grid-gap:</pre>
+<div class="grid rows" style="height:0px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid rows" style="max-height:0px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid rows" style="height:20px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid rows" style="max-height:20px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid rows" style="height:33px">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+
+<br clear="all" style="margin-top:40px; ">
+
+<div class="grid cols" style="max-width:20px; margin-right:30px;">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid cols" style="width:20px; margin-right:30px;">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+<div class="grid cols" style="width:33px; margin-right:30px;">
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+
+</body></html>
