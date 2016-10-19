@@ -187,7 +187,7 @@ var tests = [
     dynamic_change_transition:true, start_from_none:false },
   // Recheck starting from display:none.  Note that these tests all fail,
   // although we could get *some* of them to pass by calling
-  // RestyleManager::TryStartingTransition from
+  // RestyleManager::TryInitiatingTransition from
   // ElementRestyler::RestyleUndisplayedChildren.
   { element:"e1", test_child:false, pseudo:"", passes:false,
     dynamic_change_transition:false, start_from_none:true },
