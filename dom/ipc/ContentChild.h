@@ -96,8 +96,6 @@ public:
             base::ProcessId aParentPid,
             IPC::Channel* aChannel);
 
-  void InitProcessAttributes();
-
   void InitXPCOM();
 
   void InitGraphicsDeviceData();
@@ -425,8 +423,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvAppInfo(const nsCString& version, const nsCString& buildID,
                                               const nsCString& name, const nsCString& UAName,
                                               const nsCString& ID, const nsCString& vendor) override;
-
-  virtual mozilla::ipc::IPCResult RecvAppInit() override;
 
   virtual mozilla::ipc::IPCResult
   RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig) override;
