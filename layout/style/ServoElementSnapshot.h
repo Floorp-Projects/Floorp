@@ -143,7 +143,7 @@ public:
     return nullptr;
   }
 
-  bool IsInChromeDocument()
+  bool IsInChromeDocument() const
   {
     return mIsInChromeDocument;
   }

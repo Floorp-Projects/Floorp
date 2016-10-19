@@ -96,6 +96,7 @@ struct ArgumentsData
 // number of arguments that can be supplied to Function.prototype.apply.
 // This value also bounds the number of elements parsed in an array
 // initializer.
+// NB: keep this in sync with the copy in builtin/SelfHostingDefines.h.
 static const unsigned ARGS_LENGTH_MAX = 500 * 1000;
 
 /*

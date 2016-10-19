@@ -29,7 +29,7 @@ namespace mozilla {
 
 DEFINE_REFPTR_TRAITS(StyleSheet, RawServoStyleSheet);
 DEFINE_REFPTR_TRAITS(ComputedValues, ServoComputedValues);
-DEFINE_REFPTR_TRAITS(DeclarationBlock, ServoDeclarationBlock);
+DEFINE_REFPTR_TRAITS(DeclarationBlock, RawServoDeclarationBlock);
 
 #undef DEFINE_REFPTR_TRAITS
 

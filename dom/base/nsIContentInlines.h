@@ -19,7 +19,7 @@ nsIContent::IsInHTMLDocument() const
 }
 
 inline bool
-nsIContent::IsInChromeDocument()
+nsIContent::IsInChromeDocument() const
 {
   return nsContentUtils::IsChromeDoc(OwnerDoc());
 }

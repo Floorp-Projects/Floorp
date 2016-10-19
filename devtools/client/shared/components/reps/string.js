@@ -10,7 +10,7 @@
 define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
-  const { cropMultipleLines } = require("./rep-utils");
+  const { cropString } = require("./rep-utils");
 
   // Shortcuts
   const { span } = React.DOM;
@@ -43,13 +43,14 @@ define(function (require, exports, module) {
       }
 
       let croppedString = this.props.cropLimit ?
-        cropMultipleLines(text, this.props.cropLimit) : cropMultipleLines(text);
+        cropString(text, this.props.cropLimit) : cropString(text);
 
       let formattedString = this.props.useQuotes ?
         "\"" + croppedString + "\"" : croppedString;
 
       return (
-        span({className: "objectBox objectBox-string"}, formattedString
+        span({className: "objectBox objectBox-string"},
+          formattedString
         )
       );
     },
