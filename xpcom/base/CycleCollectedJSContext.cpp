@@ -486,7 +486,7 @@ CycleCollectedJSContext::~CycleCollectedJSContext()
 }
 
 static void
-MozCrashWarningReporter(JSContext*, JSErrorReport*)
+MozCrashWarningReporter(JSContext*, const char*, JSErrorReport*)
 {
   MOZ_CRASH("Why is someone touching JSAPI without an AutoJSAPI?");
 }

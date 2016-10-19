@@ -327,8 +327,7 @@ PACLogErrorOrWarning(const nsAString& aKind, JSErrorReport* aReport)
   nsString formattedMessage(NS_LITERAL_STRING("PAC Execution "));
   formattedMessage += aKind;
   formattedMessage += NS_LITERAL_STRING(": ");
-  if (aReport->message())
-    formattedMessage.Append(NS_ConvertUTF8toUTF16(aReport->message().c_str()));
+  formattedMessage += aReport->ucmessage;
   formattedMessage += NS_LITERAL_STRING(" [");
   formattedMessage.Append(aReport->linebuf(), aReport->linebufLength());
   formattedMessage += NS_LITERAL_STRING("]");
@@ -336,7 +335,7 @@ PACLogErrorOrWarning(const nsAString& aKind, JSErrorReport* aReport)
 }
 
 static void
-PACWarningReporter(JSContext* aCx, JSErrorReport* aReport)
+PACWarningReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aReport)
 {
   MOZ_ASSERT(aReport);
   MOZ_ASSERT(JSREPORT_IS_WARNING(aReport->flags));

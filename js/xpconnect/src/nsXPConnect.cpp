@@ -169,7 +169,7 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 }
 
 void
-xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
+xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
                        bool aIsChrome, uint64_t aWindowID)
 {
     mCategory = aIsChrome ? NS_LITERAL_CSTRING("chrome javascript")
@@ -177,8 +177,8 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
     mWindowID = aWindowID;
 
     ErrorReportToMessageString(aReport, mErrorMsg);
-    if (mErrorMsg.IsEmpty() && aToStringResult) {
-        AppendUTF8toUTF16(aToStringResult, mErrorMsg);
+    if (mErrorMsg.IsEmpty() && aFallbackMessage) {
+        mErrorMsg.AssignWithConversion(aFallbackMessage);
     }
 
     if (!aReport->filename) {
@@ -290,13 +290,14 @@ xpc::ErrorReport::ErrorReportToMessageString(JSErrorReport* aReport,
                                              nsAString& aString)
 {
     aString.Truncate();
-    if (aReport->message()) {
+    const char16_t* m = aReport->ucmessage;
+    if (m) {
         JSFlatString* name = js::GetErrorTypeName(CycleCollectedJSContext::Get()->Context(), aReport->exnType);
         if (name) {
             AssignJSFlatString(aString, name);
             aString.AppendLiteral(": ");
         }
-        aString.Append(NS_ConvertUTF8toUTF16(aReport->message().c_str()));
+        aString.Append(m);
     }
 }
 
