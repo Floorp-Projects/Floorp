@@ -87,8 +87,8 @@ protected:
    * should be supplied using x and y coordinates measured in css pixels
    * that are relative to the upper-left corner of the window.
    *
-   * aScreenX and aScreenY should be the screen coordinates of the mouse click
-   * for the drag. These are in desktop pixels.
+   * aScreenPosition should be the screen coordinates of the mouse click
+   * for the drag. These are in CSS pixels.
    *
    * On return, aScreenDragRect will contain the screen coordinates of the
    * area being dragged. This is used by the platform-specific part of the
@@ -103,7 +103,7 @@ protected:
    */
   nsresult DrawDrag(nsIDOMNode* aDOMNode,
                     nsIScriptableRegion* aRegion,
-                    int32_t aScreenX, int32_t aScreenY,
+                    mozilla::CSSIntPoint aScreenPosition,
                     nsIntRect* aScreenDragRect,
                     RefPtr<SourceSurface>* aSurface,
                     nsPresContext **aPresContext);
@@ -114,16 +114,15 @@ protected:
    */
   nsresult DrawDragForImage(nsIImageLoadingContent* aImageLoader,
                             mozilla::dom::HTMLCanvasElement* aCanvas,
-                            int32_t aScreenX, int32_t aScreenY,
                             nsIntRect* aScreenDragRect,
                             RefPtr<SourceSurface>* aSurface);
 
   /**
-   * Convert aScreenX and aScreenY from CSS pixels into unscaled device pixels.
+   * Convert aScreenPosition from CSS pixels into unscaled device pixels.
    */
-  void
+  mozilla::LayoutDeviceIntPoint
   ConvertToUnscaledDevPixels(nsPresContext* aPresContext,
-                             int32_t* aScreenX, int32_t* aScreenY);
+                             mozilla::CSSIntPoint aScreenPosition);
 
   /**
    * If the drag image is a popup, open the popup when the drag begins.
@@ -173,10 +172,8 @@ protected:
   nsCOMPtr<nsIContent> mDragPopup;
 
   // the screen position where drag gesture occurred, used for positioning the
-  // drag image when no image is specified. If a value is -1, no event was
-  // supplied so the screen position is not known
-  int32_t mScreenX;
-  int32_t mScreenY;
+  // drag image.
+  mozilla::CSSIntPoint mScreenPosition;
 
   // the screen position where the drag ended
   mozilla::LayoutDeviceIntPoint mEndDragPoint;
