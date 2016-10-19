@@ -81,9 +81,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
   nsIntRect dragRect;
   RefPtr<SourceSurface> surface;
   nsPresContext* pc;
-  DrawDrag(aDOMNode, aRegion,
-           mScreenX, mScreenY,
-           &dragRect, &surface, &pc);
+  DrawDrag(aDOMNode, aRegion, mScreenPosition, &dragRect, &surface, &pc);
   if (!surface)
     return false;
 
@@ -150,16 +148,10 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     psdi->sizeDragImage.cx = bmWidth;
     psdi->sizeDragImage.cy = bmHeight;
 
-    // Mouse position in center
-    if (mScreenX == -1 || mScreenY == -1) {
-      psdi->ptOffset.x = (uint32_t)((float)bmWidth/2.0f);
-      psdi->ptOffset.y = (uint32_t)((float)bmHeight/2.0f);
-    } else {
-      int32_t sx = mScreenX, sy = mScreenY;
-      ConvertToUnscaledDevPixels(pc, &sx, &sy);
-      psdi->ptOffset.x = sx - dragRect.x;
-      psdi->ptOffset.y = sy - dragRect.y;
-    }
+    LayoutDeviceIntPoint screenPoint =
+      ConvertToUnscaledDevPixels(pc, mScreenPosition);
+    psdi->ptOffset.x = screenPoint.x - dragRect.x;
+    psdi->ptOffset.y = screenPoint.y - dragRect.y;
 
     DeleteDC(hdcSrc);
   }

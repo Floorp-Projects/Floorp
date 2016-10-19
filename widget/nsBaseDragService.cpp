@@ -57,8 +57,7 @@ nsBaseDragService::nsBaseDragService()
     mDragAction(DRAGDROP_ACTION_NONE),
     mDragActionFromChildProcess(DRAGDROP_ACTION_UNINITIALIZED), mTargetSize(0,0),
     mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
-    mScreenX(-1), mScreenY(-1), mSuppressLevel(0),
-    mInputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
+    mSuppressLevel(0), mInputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
 {
 }
 
@@ -262,8 +261,8 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
   mImage = aImage;
   mImageOffset = CSSIntPoint(aImageX, aImageY);
 
-  aDragEvent->GetScreenX(&mScreenX);
-  aDragEvent->GetScreenY(&mScreenY);
+  aDragEvent->GetScreenX(&mScreenPosition.x);
+  aDragEvent->GetScreenY(&mScreenPosition.y);
   aDragEvent->GetMozInputSource(&mInputSource);
 
   nsresult rv = InvokeDragSession(aDOMNode, aTransferableArray,
@@ -297,8 +296,8 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   mImage = nullptr;
   mImageOffset = CSSIntPoint();
 
-  aDragEvent->GetScreenX(&mScreenX);
-  aDragEvent->GetScreenY(&mScreenY);
+  aDragEvent->GetScreenX(&mScreenPosition.x);
+  aDragEvent->GetScreenY(&mScreenPosition.y);
   aDragEvent->GetMozInputSource(&mInputSource);
 
   // just get the focused node from the selection
@@ -359,8 +358,8 @@ nsBaseDragService::OpenDragPopup()
   if (mDragPopup) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-      pm->ShowPopupAtScreen(mDragPopup, mScreenX - mImageOffset.x,
-                            mScreenY - mImageOffset.y, false, nullptr);
+      pm->ShowPopupAtScreen(mDragPopup, mScreenPosition.x - mImageOffset.x,
+                            mScreenPosition.y - mImageOffset.y, false, nullptr);
     }
   }
 }
@@ -419,8 +418,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
   mDragPopup = nullptr;
   mImage = nullptr;
   mImageOffset = CSSIntPoint();
-  mScreenX = -1;
-  mScreenY = -1;
+  mScreenPosition = CSSIntPoint();
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
   mInputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
 
@@ -499,7 +497,7 @@ GetPresShellForContent(nsIDOMNode* aDOMNode)
 nsresult
 nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                             nsIScriptableRegion* aRegion,
-                            int32_t aScreenX, int32_t aScreenY,
+                            CSSIntPoint aScreenPosition,
                             nsIntRect* aScreenDragRect,
                             RefPtr<SourceSurface>* aSurface,
                             nsPresContext** aPresContext)
@@ -508,8 +506,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   *aPresContext = nullptr;
 
   // use a default size, in case of an error.
-  aScreenDragRect->x = aScreenX - mImageOffset.x;
-  aScreenDragRect->y = aScreenY - mImageOffset.y;
+  aScreenDragRect->x = aScreenPosition.x - mImageOffset.x;
+  aScreenDragRect->y = aScreenPosition.y - mImageOffset.y;
   aScreenDragRect->width = 1;
   aScreenDragRect->height = 1;
 
@@ -555,11 +553,9 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   }
 
   // convert mouse position to dev pixels of the prescontext
-  int32_t sx = aScreenX, sy = aScreenY;
-  ConvertToUnscaledDevPixels(*aPresContext, &sx, &sy);
-
-  aScreenDragRect->x = sx - mImageOffset.x;
-  aScreenDragRect->y = sy - mImageOffset.y;
+  LayoutDeviceIntPoint screenPoint = ConvertToUnscaledDevPixels(*aPresContext, aScreenPosition);
+  aScreenDragRect->x = screenPoint.x - mImageOffset.x;
+  aScreenDragRect->y = screenPoint.y - mImageOffset.y;
 
   // check if drag images are disabled
   bool enableDragImages = Preferences::GetBool(DRAGIMAGES_PREF, true);
@@ -612,15 +608,13 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     nsCOMPtr<nsIContent> content = do_QueryInterface(dragNode);
     HTMLCanvasElement *canvas = HTMLCanvasElement::FromContentOrNull(content);
     if (canvas) {
-      return DrawDragForImage(nullptr, canvas, sx, sy,
-                              aScreenDragRect, aSurface);
+      return DrawDragForImage(nullptr, canvas, aScreenDragRect, aSurface);
     }
 
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(dragNode);
     // for image nodes, create the drag image from the actual image data
     if (imageLoader) {
-      return DrawDragForImage(imageLoader, nullptr, sx, sy,
-                              aScreenDragRect, aSurface);
+      return DrawDragForImage(imageLoader, nullptr, aScreenDragRect, aSurface);
     }
 
     // If the image is a popup, use that as the image. This allows custom drag
@@ -676,8 +670,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   // if an image was specified, reposition the drag rectangle to
   // the supplied offset in mImageX and mImageY.
   if (mImage) {
-    aScreenDragRect->x = sx - mImageOffset.x;
-    aScreenDragRect->y = sy - mImageOffset.y;
+    aScreenDragRect->x = screenPoint.x - mImageOffset.x;
+    aScreenDragRect->y = screenPoint.y - mImageOffset.y;
   }
 
   return NS_OK;
@@ -686,7 +680,6 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 nsresult
 nsBaseDragService::DrawDragForImage(nsIImageLoadingContent* aImageLoader,
                                     HTMLCanvasElement* aCanvas,
-                                    int32_t aScreenX, int32_t aScreenY,
                                     nsIntRect* aScreenDragRect,
                                     RefPtr<SourceSurface>* aSurface)
 {
@@ -750,13 +743,13 @@ nsBaseDragService::DrawDragForImage(nsIImageLoadingContent* aImageLoader,
   return result;
 }
 
-void
+LayoutDeviceIntPoint
 nsBaseDragService::ConvertToUnscaledDevPixels(nsPresContext* aPresContext,
-                                              int32_t* aScreenX, int32_t* aScreenY)
+                                              CSSIntPoint aScreenPosition)
 {
   int32_t adj = aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
-  *aScreenX = nsPresContext::CSSPixelsToAppUnits(*aScreenX) / adj;
-  *aScreenY = nsPresContext::CSSPixelsToAppUnits(*aScreenY) / adj;
+  return LayoutDeviceIntPoint(nsPresContext::CSSPixelsToAppUnits(aScreenPosition.x) / adj,
+                              nsPresContext::CSSPixelsToAppUnits(aScreenPosition.y) / adj);
 }
 
 NS_IMETHODIMP

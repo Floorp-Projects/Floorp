@@ -1631,16 +1631,15 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
     nsIntRect dragRect;
     nsPresContext* pc;
     RefPtr<SourceSurface> surface;
-    DrawDrag(mSourceNode, mSourceRegion, mScreenX, mScreenY,
+    DrawDrag(mSourceNode, mSourceRegion, mScreenPosition,
              &dragRect, &surface, &pc);
     if (!pc)
         return;
 
-    int32_t sx = mScreenX, sy = mScreenY;
-    ConvertToUnscaledDevPixels(pc, &sx, &sy);
-
-    int32_t offsetX = sx - dragRect.x;
-    int32_t offsetY = sy - dragRect.y;
+    LayoutDeviceIntPoint screenPoint =
+      ConvertToUnscaledDevPixels(pc, mScreenPosition);
+    int32_t offsetX = screenPoint.x - dragRect.x;
+    int32_t offsetY = screenPoint.y - dragRect.y;
 
     // If a popup is set as the drag image, use its widget. Otherwise, use
     // the surface that DrawDrag created.
