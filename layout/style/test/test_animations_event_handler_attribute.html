@@ -90,14 +90,21 @@ targets.forEach(div => { div.remove(); });
 
 // 2. Test CSS Transition event handlers.
 
-advance_clock(0);
-var targets = createAndRegisterTargets([ 'ontransitionend' ]);
+var targets = createAndRegisterTargets([ 'ontransitionrun',
+                                         'ontransitionstart',
+                                         'ontransitionend' ]);
 targets.forEach(div => {
-  div.style.transition = 'margin-left 100ms';
+  div.style.transition = 'margin-left 100ms 200ms';
   getComputedStyle(div).marginLeft; // flush
   div.style.marginLeft = "200px";
   getComputedStyle(div).marginLeft; // flush
 });
+
+advance_clock(0);
+checkReceivedEvents("transitionrun", targets);
+
+advance_clock(200);
+checkReceivedEvents("transitionstart", targets);
 
 advance_clock(100);
 checkReceivedEvents("transitionend", targets);
