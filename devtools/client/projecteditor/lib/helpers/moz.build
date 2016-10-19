@@ -9,5 +9,4 @@ DevToolsModules(
     'file-picker.js',
     'l10n.js',
     'prompts.js',
-    'readdir.js',
 )
