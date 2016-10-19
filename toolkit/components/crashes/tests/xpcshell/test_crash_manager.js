@@ -212,13 +212,13 @@ add_task(function* test_schedule_maintenance() {
 const crashId = "3cb67eba-0dc7-6f78-6a569a0e-172287ec";
 const productName = "Firefox";
 const productId = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+const stackTraces = "{\"status\":\"OK\"}";
 
 add_task(function* test_main_crash_event_file() {
   let ac = new TelemetryArchiveTesting.Checker();
   yield ac.promiseInit();
   let theEnvironment = TelemetryEnvironment.currentEnvironment;
   const sessionId = "be66af2f-2ee5-4330-ae95-44462dfbdf0c";
-  let stackTraces = { status: "OK" };
 
   // To test proper escaping, add data to the environment with an embedded
   // double-quote
@@ -230,7 +230,7 @@ add_task(function* test_main_crash_event_file() {
     "ProductID=" + productId + "\n" +
     "TelemetryEnvironment=" + JSON.stringify(theEnvironment) + "\n" +
     "TelemetrySessionId=" + sessionId + "\n" +
-    "StackTraces=" + JSON.stringify(stackTraces) + "\n" +
+    "StackTraces=" + stackTraces + "\n" +
     "ThisShouldNot=end-up-in-the-ping\n";
 
   yield m.createEventsFile(crashId, "crash.main.2", DUMMY_DATE, fileContent);
@@ -456,6 +456,28 @@ add_task(function* test_addCrash() {
   Assert.equal(crash.crashDate, DUMMY_DATE_2);
   Assert.equal(crash.type, m.PROCESS_TYPE_CONTENT + "-" + m.CRASH_TYPE_HANG);
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
+});
+
+add_task(function* test_content_crash_ping() {
+  let ac = new TelemetryArchiveTesting.Checker();
+  yield ac.promiseInit();
+
+  let m = yield getManager();
+  let id = yield m.createDummyDump();
+  yield m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_CRASH, id, DUMMY_DATE, {
+    StackTraces: stackTraces,
+    ThisShouldNot: "end-up-in-the-ping"
+  });
+  yield m._pingPromise;
+
+  let found = yield ac.promiseFindPing("crash", [
+    [["payload", "crashId"], id],
+    [["payload", "processType"], m.PROCESS_TYPE_CONTENT],
+    [["payload", "stackTraces", "status"], "OK"],
+  ]);
+  Assert.ok(found, "Telemetry ping submitted for content crash");
+  Assert.equal(found.payload.metadata.ThisShouldNot, undefined,
+               "Non-whitelisted fields should be filtered out");
 });
 
 add_task(function* test_generateSubmissionID() {
