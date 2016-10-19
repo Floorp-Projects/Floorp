@@ -95,31 +95,30 @@ class TestWindowHandles(MarionetteTestCase):
 
         self.marionette.navigate(opener_page)
 
-        # Window handles don't persist in cases of remoteness change.
-        start_tab = self.marionette.current_window_handle
+        start_win = self.marionette.current_chrome_window_handle
 
         self.marionette.find_element(By.ID, "new-window").click()
 
-        self.assertEqual(len(self.marionette.window_handles), 2)
         self.assertEqual(len(self.marionette.chrome_window_handles), 2)
-        windows = self.marionette.window_handles
-        windows.remove(start_tab)
-        dest_tab = windows.pop()
-        self.marionette.switch_to_window(dest_tab)
+        self.assertEqual(len(self.marionette.window_handles), 2)
+        windows = self.marionette.chrome_window_handles
+        windows.remove(start_win)
+        dest_win = windows.pop()
+        self.marionette.switch_to_window(dest_win)
 
         self.marionette.navigate(opener_page)
         new_tab_link = self.marionette.find_element(By.ID, "new-tab")
 
         for i in range(3):
             new_tab_link.click()
-            self.marionette.switch_to_window(dest_tab)
+            self.marionette.switch_to_window(dest_win)
             self.wait_for_condition(lambda mn: len(mn.window_handles) == i + 3)
             self.assertEqual(len(self.marionette.chrome_window_handles), 2)
 
         self.marionette.close_chrome_window()
         self.assertEqual(len(self.marionette.chrome_window_handles), 1)
         self.assertEqual(len(self.marionette.window_handles), 1)
-        self.marionette.switch_to_window(start_tab)
+        self.marionette.switch_to_window(start_win)
 
     def test_chrome_window_handles_with_scopes(self):
         start_tab = self.marionette.current_window_handle
