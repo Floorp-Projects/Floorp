@@ -2002,10 +2002,11 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput
   }
 
   /**
-   * Calculate our track sizes.
+   * Calculate our track sizes.  If the given aContentBox block-axis size is
+   * unconstrained, it is assigned to the resulting intrinsic block-axis size.
    */
   void CalculateTrackSizes(const Grid&        aGrid,
-                           const LogicalSize& aContentBox,
+                           LogicalSize&       aContentBox,
                            SizingConstraint   aConstraint);
 
   /**
@@ -2479,7 +2480,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid
 void
 nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
   const Grid&        aGrid,
-  const LogicalSize& aContentBox,
+  LogicalSize&       aContentBox,
   SizingConstraint   aConstraint)
 {
   mCols.Initialize(mColFunctions, mGridStyle->mGridColumnGap,
@@ -2497,6 +2498,18 @@ nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
   mRows.CalculateSizes(*this, mGridItems, mRowFunctions,
                        aContentBox.BSize(mWM), &GridArea::mRows,
                        aConstraint);
+  if (aContentBox.BSize(mWM) == NS_AUTOHEIGHT) {
+    aContentBox.BSize(mWM) =
+      mRows.BackComputedIntrinsicSize(mRowFunctions, mGridStyle->mGridRowGap);
+    if ((mRows.mStateUnion & TrackSize::eIndefinitePercentMinSizing) ||
+        mGridStyle->mGridRowGap.HasPercent()) {
+      mRows.Initialize(mRowFunctions, mGridStyle->mGridRowGap,
+                       aGrid.mGridRowEnd, aContentBox.BSize(mWM));
+      mRows.CalculateSizes(*this, mGridItems, mRowFunctions,
+                           aContentBox.BSize(mWM), &GridArea::mRows,
+                           aConstraint);
+    }
+  }
 }
 
 /**
@@ -6021,6 +6034,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   LogicalSize computedSize(wm, computedISize, computedBSize);
 
   nscoord consumedBSize = 0;
+  nscoord bSize;
   if (!prevInFlow) {
     Grid grid;
     grid.PlaceGridItems(gridReflowInput, aReflowInput.ComputedMinSize(),
@@ -6028,25 +6042,15 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
     gridReflowInput.CalculateTrackSizes(grid, computedSize,
                                         SizingConstraint::eNoConstraint);
+    bSize = computedSize.BSize(wm);
   } else {
     consumedBSize = GetConsumedBSize();
     gridReflowInput.InitializeForContinuation(this, consumedBSize);
-  }
-
-  nscoord bSize = 0;
-  if (computedBSize == NS_AUTOHEIGHT) {
     const uint32_t numRows = gridReflowInput.mRows.mSizes.Length();
-    if (!prevInFlow) {
-      // Note: we can't use GridLineEdge here since we haven't calculated
-      // the rows' mPosition yet (happens in AlignJustifyContent below).
-      for (uint32_t i = 0; i < numRows; ++i) {
-        bSize += gridReflowInput.mRows.mSizes[i].mBase;
-      }
-      bSize += gridReflowInput.mRows.SumOfGridGaps();
-    } else {
-      bSize = gridReflowInput.mRows.GridLineEdge(numRows,
-                                                 GridLineSide::eAfterGridGap);
-    }
+    bSize = gridReflowInput.mRows.GridLineEdge(numRows,
+                                               GridLineSide::eAfterGridGap);
+  }
+  if (computedBSize == NS_AUTOHEIGHT) {
     bSize = NS_CSS_MINMAX(bSize,
                           aReflowInput.ComputedMinBSize(),
                           aReflowInput.ComputedMaxBSize());
