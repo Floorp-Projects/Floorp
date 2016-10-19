@@ -1,0 +1,12 @@
+"use strict";
+
+module.exports = {
+  // Extend from the devtools eslintrc.
+  "extends": "../../../.eslintrc.js",
+
+  "rules": {
+    /* eslint-disable max-len */
+    // All code in this directory must be content-clean.
+    "mozilla/reject-some-requires": [2, "^(chrome|chrome:.*|resource:.*|devtools/server/.*|.*\\.jsm|devtools/shared/platform/(chome|content)/.*)$"],
+  },
+};
