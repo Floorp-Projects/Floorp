@@ -430,7 +430,9 @@ DeleteArrayElement(JSContext* cx, HandleObject obj, double index, ObjectOpResult
     MOZ_ASSERT(index >= 0);
     MOZ_ASSERT(floor(index) == index);
 
-    if (obj->is<ArrayObject>() && !obj->isIndexed()) {
+    if (obj->is<ArrayObject>() && !obj->isIndexed() &&
+        !obj->as<NativeObject>().denseElementsAreFrozen())
+    {
         ArrayObject* aobj = &obj->as<ArrayObject>();
         if (index <= UINT32_MAX) {
             uint32_t idx = uint32_t(index);
