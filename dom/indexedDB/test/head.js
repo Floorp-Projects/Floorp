@@ -92,13 +92,16 @@ function setFinishedCallback(callback, win)
   if (!win) {
     win = window;
   }
-  let testPage = win.gBrowser.selectedBrowser.contentWindow.wrappedJSObject;
-  testPage.testFinishedCallback = function(result, exception) {
-    setTimeout(function() {
-      info("got finished callback");
-      callback(result, exception);
-    }, 0);
-  }
+  ContentTask.spawn(win.gBrowser.selectedBrowser, null, function*() {
+    return yield new Promise(resolve => {
+      content.wrappedJSObject.testFinishedCallback = (result, exception) => {
+        info("got finished callback");
+        resolve({result, exception});
+      };
+    });
+  }).then(({result, exception}) => {
+    callback(result, exception);
+  });
 }
 
 function dispatchEvent(eventName)
