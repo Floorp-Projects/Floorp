@@ -11,7 +11,8 @@
  *          openContextMenu closeContextMenu
  *          openExtensionContextMenu closeExtensionContextMenu
  *          imageBuffer getListStyleImage getPanelForNode
- *          awaitExtensionPanel
+ *          awaitExtensionPanel awaitPopupResize
+ *          promiseContentDimensions alterContent
  */
 
 var {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -84,6 +85,44 @@ function promisePopupHidden(popup) {
   });
 }
 
+function promiseContentDimensions(browser) {
+  return ContentTask.spawn(browser, null, function* () {
+    function copyProps(obj, props) {
+      let res = {};
+      for (let prop of props) {
+        res[prop] = obj[prop];
+      }
+      return res;
+    }
+
+    return {
+      window: copyProps(content,
+                        ["innerWidth", "innerHeight", "outerWidth", "outerHeight",
+                         "scrollX", "scrollY", "scrollMaxX", "scrollMaxY"]),
+      body: copyProps(content.document.body,
+                      ["clientWidth", "clientHeight", "scrollWidth", "scrollHeight"]),
+      root: copyProps(content.document.documentElement,
+                      ["clientWidth", "clientHeight", "scrollWidth", "scrollHeight"]),
+
+      isStandards: content.document.compatMode !== "BackCompat",
+    };
+  });
+}
+
+function* awaitPopupResize(browser) {
+  return BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized",
+                                       event => event.detail === "delayed");
+}
+
+function alterContent(browser, task, arg = null) {
+  return Promise.all([
+    ContentTask.spawn(browser, arg, task),
+    awaitPopupResize(browser),
+  ]).then(() => {
+    return promiseContentDimensions(browser);
+  });
+}
+
 function getPanelForNode(node) {
   while (node.localName != "panel") {
     node = node.parentNode;
@@ -91,19 +130,10 @@ function getPanelForNode(node) {
   return node;
 }
 
-var awaitExtensionPanel = Task.async(function* (extension, win = window, filename = "popup.html") {
-  let {target} = yield BrowserTestUtils.waitForEvent(win.document, "load", true, (event) => {
-    return event.target.location && event.target.location.href.endsWith(filename);
-  });
-
-  let browser = target.defaultView
-                      .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
-                      .chromeEventHandler;
-
-  if (browser.matches(".webextension-preload-browser")) {
-    let event = yield BrowserTestUtils.waitForEvent(browser, "SwapDocShells");
-    browser = event.detail;
-  }
+var awaitExtensionPanel = Task.async(function* (extension, win = window) {
+  let {originalTarget: browser} = yield BrowserTestUtils.waitForEvent(
+    win.document, "WebExtPopupLoaded", true,
+    event => event.detail.extension.id === extension.id);
 
   yield promisePopupShown(getPanelForNode(browser));
 
