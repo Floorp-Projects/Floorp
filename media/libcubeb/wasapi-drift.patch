@@ -1,0 +1,101 @@
+From 6ae23a6355e35016ad7f01814e92e73b3047d54b Mon Sep 17 00:00:00 2001
+From: Paul Adenot <paul@paul.cx>
+Date: Thu, 29 Sep 2016 02:21:06 +0200
+Subject: [PATCH] Fix drift in WASAPI when having different output and input
+ sample device rate (#155)
+
+* Round instead of ceiling to avoid rounding buildup of buffer size.
+
+* Always consume all the data for an output buffer.
+
+* Add padding only if we don't have enough input data in the linear buffer.
+
+* Define NOMINMAX so that std::max compiles.
+---
+ src/cubeb_resampler.cpp        |  5 +++++
+ src/cubeb_resampler_internal.h |  2 +-
+ src/cubeb_wasapi.cpp           | 11 +++++------
+ 3 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/src/cubeb_resampler.cpp b/src/cubeb_resampler.cpp
+index a476744..7b9326e 100644
+--- a/src/cubeb_resampler.cpp
++++ b/src/cubeb_resampler.cpp
+@@ -4,6 +4,11 @@
+  * This program is made available under an ISC-style license.  See the
+  * accompanying file LICENSE for details.
+  */
++
++#ifndef NOMINMAX
++#define NOMINMAX
++#endif // NOMINMAX
++
+ #include <algorithm>
+ #include <cmath>
+ #include <cassert>
+diff --git a/src/cubeb_resampler_internal.h b/src/cubeb_resampler_internal.h
+index c547991..a605892 100644
+--- a/src/cubeb_resampler_internal.h
++++ b/src/cubeb_resampler_internal.h
+@@ -263,7 +263,7 @@ public:
+    * number of output frames will be exactly equal. */
+   uint32_t input_needed_for_output(uint32_t output_frame_count)
+   {
+-    return (uint32_t)ceilf((output_frame_count - samples_to_frames(resampling_out_buffer.length()))
++    return (uint32_t)roundf((output_frame_count - samples_to_frames(resampling_out_buffer.length()))
+                           * resampling_ratio);
+ 
+   }
+diff --git a/src/cubeb_wasapi.cpp b/src/cubeb_wasapi.cpp
+index 3a7f6fe..b17e7d5 100644
+--- a/src/cubeb_wasapi.cpp
++++ b/src/cubeb_wasapi.cpp
+@@ -613,7 +613,7 @@ bool get_input_buffer(cubeb_stream * stm)
+ 
+ /* Get an output buffer from the render_client. It has to be released before
+  * exiting the callback. */
+-bool get_output_buffer(cubeb_stream * stm, size_t max_frames, float *& buffer, size_t & frame_count)
++bool get_output_buffer(cubeb_stream * stm, float *& buffer, size_t & frame_count)
+ {
+   UINT32 padding_out;
+   HRESULT hr;
+@@ -635,7 +635,7 @@ bool get_output_buffer(cubeb_stream * stm, size_t max_frames, float *& buffer, s
+     return true;
+   }
+ 
+-  frame_count = std::min<size_t>(max_frames, stm->output_buffer_frame_count - padding_out);
++  frame_count = stm->output_buffer_frame_count - padding_out;
+   BYTE * output_buffer;
+ 
+   hr = stm->render_client->GetBuffer(frame_count, &output_buffer);
+@@ -673,7 +673,7 @@ refill_callback_duplex(cubeb_stream * stm)
+     return true;
+   }
+ 
+-  rv = get_output_buffer(stm, input_frames, output_buffer, output_frames);
++  rv = get_output_buffer(stm, output_buffer, output_frames);
+   if (!rv) {
+     hr = stm->render_client->ReleaseBuffer(output_frames, 0);
+     return rv;
+@@ -687,7 +687,7 @@ refill_callback_duplex(cubeb_stream * stm)
+ 
+   // When WASAPI has not filled the input buffer yet, send silence.
+   double output_duration = double(output_frames) / stm->output_mix_params.rate;
+-  double input_duration = double(input_frames) / stm->input_mix_params.rate;
++  double input_duration = double(stm->linear_input_buffer.length() / stm->input_mix_params.channels) / stm->input_mix_params.rate;
+   if (input_duration < output_duration) {
+     size_t padding = size_t(round((output_duration - input_duration) * stm->input_mix_params.rate));
+     LOG("padding silence: out=%f in=%f pad=%u\n", output_duration, input_duration, padding);
+@@ -745,8 +745,7 @@ refill_callback_output(cubeb_stream * stm)
+ 
+   XASSERT(!has_input(stm) && has_output(stm));
+ 
+-  rv = get_output_buffer(stm, std::numeric_limits<size_t>::max(),
+-                         output_buffer, output_frames);
++  rv = get_output_buffer(stm, output_buffer, output_frames);
+   if (!rv) {
+     return rv;
+   }
+-- 
+2.7.4
+
