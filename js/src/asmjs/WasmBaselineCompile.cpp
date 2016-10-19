@@ -703,7 +703,9 @@ class BaseCompiler
 #ifdef JS_PUNBOX64
         return Register64(availGPR_.takeAny());
 #else
-        return Register64(availGPR_.takeAny(), availGPR_.takeAny());
+        Register high = availGPR_.takeAny();
+        Register low = availGPR_.takeAny();
+        return Register64(high, low);
 #endif
     }
 
