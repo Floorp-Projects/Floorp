@@ -93,12 +93,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return ToType(Operand(base)).toAddress();
     }
     void moveValue(const Value& val, Register type, Register data) {
-        jsval_layout jv = JSVAL_TO_IMPL(val);
-        movl(Imm32(jv.s.tag), type);
+        movl(Imm32(val.toNunboxTag()), type);
         if (val.isMarkable())
-            movl(ImmGCPtr(reinterpret_cast<gc::Cell*>(val.toGCThing())), data);
+            movl(ImmGCPtr(val.toMarkablePointer()), data);
         else
-            movl(Imm32(jv.s.payload.i32), data);
+            movl(Imm32(val.toNunboxPayload()), data);
     }
     void moveValue(const Value& val, const ValueOperand& dest) {
         moveValue(val, dest.typeReg(), dest.payloadReg());
@@ -143,8 +142,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     template <typename T>
     void storeValue(const Value& val, const T& dest) {
-        jsval_layout jv = JSVAL_TO_IMPL(val);
-        storeTypeTag(ImmTag(jv.s.tag), Operand(dest));
+        storeTypeTag(ImmTag(val.toNunboxTag()), Operand(dest));
         storePayload(val, Operand(dest));
     }
     void storeValue(ValueOperand val, BaseIndex dest) {
@@ -214,12 +212,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         pop(val.typeReg());
     }
     void pushValue(const Value& val) {
-        jsval_layout jv = JSVAL_TO_IMPL(val);
-        push(Imm32(jv.s.tag));
+        push(Imm32(val.toNunboxTag()));
         if (val.isMarkable())
-            push(ImmGCPtr(reinterpret_cast<gc::Cell*>(val.toGCThing())));
+            push(ImmGCPtr(val.toMarkablePointer()));
         else
-            push(Imm32(jv.s.payload.i32));
+            push(Imm32(val.toNunboxPayload()));
     }
     void pushValue(JSValueType type, Register reg) {
         push(ImmTag(JSVAL_TYPE_TO_TAG(type)));
@@ -238,11 +235,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         pop(dest.high);
     }
     void storePayload(const Value& val, Operand dest) {
-        jsval_layout jv = JSVAL_TO_IMPL(val);
         if (val.isMarkable())
-            movl(ImmGCPtr((gc::Cell*)jv.s.payload.ptr), ToPayload(dest));
+            movl(ImmGCPtr(val.toMarkablePointer()), ToPayload(dest));
         else
-            movl(Imm32(jv.s.payload.i32), ToPayload(dest));
+            movl(Imm32(val.toNunboxPayload()), ToPayload(dest));
     }
     void storePayload(Register src, Operand dest) {
         movl(src, ToPayload(dest));

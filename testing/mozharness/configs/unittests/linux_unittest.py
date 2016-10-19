@@ -210,7 +210,7 @@ config = {
             "tests": ["tests/reftest/tests/testing/crashtest/crashtests.list"]
         },
         "jsreftest": {
-            "options":["--extra-profile-file=tests/jsreftest/tests/user.js",
+            "options": ["--extra-profile-file=tests/jsreftest/tests/user.js",
                        "--suite=jstestbrowser"],
             "tests": ["tests/jsreftest/tests/jstests.list"]
         },
@@ -305,7 +305,14 @@ config = {
     "default_blob_upload_servers": [
         "https://blobupload.elasticbeanstalk.com",
     ],
-    "structured_suites": ["reftest"],
+    "unstructured_flavors": {"mochitest": [],
+                            "xpcshell": [],
+                            "gtest": [],
+                            "mozmill": [],
+                            "cppunittest": [],
+                            "jittest": [],
+                            "mozbase": [],
+                            },
     "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
     "download_minidump_stackwalk": True,
     "minidump_stackwalk_path": MINIDUMP_STACKWALK_PATH,

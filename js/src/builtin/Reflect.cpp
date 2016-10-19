@@ -19,100 +19,6 @@ using namespace js;
 
 /*** Reflect methods *****************************************************************************/
 
-/*
- * ES draft rev 32 (2015 Feb 2) 7.3.17 CreateListFromArrayLike.
- * The elementTypes argument is not supported. The result list is
- * pushed to *args.
- */
-template <class InvokeArgs>
-static bool
-InitArgsFromArrayLike(JSContext* cx, HandleValue v, InvokeArgs* args)
-{
-    // Step 3.
-    RootedObject obj(cx, NonNullObject(cx, v));
-    if (!obj)
-        return false;
-
-    // Steps 4-5.
-    uint32_t len;
-    if (!GetLengthProperty(cx, obj, &len))
-        return false;
-
-    // Allocate space for the arguments.
-    if (!args->init(cx, len))
-        return false;
-
-    // Steps 6-8.
-    for (uint32_t index = 0; index < len; index++) {
-        if (!GetElement(cx, obj, obj, index, (*args)[index]))
-            return false;
-    }
-
-    // Step 9.
-    return true;
-}
-
-/* ES6 26.1.1 Reflect.apply(target, thisArgument, argumentsList) */
-static bool
-Reflect_apply(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // Step 1.
-    if (!IsCallable(args.get(0))) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION,
-                                  "Reflect.apply argument");
-        return false;
-    }
-
-    // Steps 2-3.
-    FastCallGuard fig(cx, args.get(0));
-    InvokeArgs& invokeArgs = fig.args();
-    if (!InitArgsFromArrayLike(cx, args.get(2), &invokeArgs))
-        return false;
-
-    // Steps 4-5. This is specified to be a tail call, but isn't.
-    return fig.call(cx, args.get(0), args.get(1), args.rval());
-}
-
-/* ES6 26.1.2 Reflect.construct(target, argumentsList [, newTarget]) */
-static bool
-Reflect_construct(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // Step 1.
-    if (!IsConstructor(args.get(0))) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
-                                  "Reflect.construct argument");
-        return false;
-    }
-
-    // Steps 2-3.
-    RootedValue newTarget(cx, args.get(0));
-    if (argc > 2) {
-        newTarget = args[2];
-        if (!IsConstructor(newTarget)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR,
-                                      "Reflect.construct argument 3");
-            return false;
-        }
-    }
-
-    // Step 4-5.
-    ConstructArgs constructArgs(cx);
-    if (!InitArgsFromArrayLike(cx, args.get(1), &constructArgs))
-        return false;
-
-    // Step 6.
-    RootedObject obj(cx);
-    if (!Construct(cx, args.get(0), constructArgs, newTarget, &obj))
-        return false;
-
-    args.rval().setObject(*obj);
-    return true;
-}
-
 /* ES6 26.1.3 Reflect.defineProperty(target, propertyKey, attributes) */
 static bool
 Reflect_defineProperty(JSContext* cx, unsigned argc, Value* vp)
@@ -340,8 +246,8 @@ Reflect_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec methods[] = {
-    JS_FN("apply", Reflect_apply, 3, 0),
-    JS_FN("construct", Reflect_construct, 2, 0),
+    JS_SELF_HOSTED_FN("apply", "Reflect_apply", 3, 0),
+    JS_SELF_HOSTED_FN("construct", "Reflect_construct", 2, 0),
     JS_FN("defineProperty", Reflect_defineProperty, 3, 0),
     JS_FN("deleteProperty", Reflect_deleteProperty, 2, 0),
     JS_FN("get", Reflect_get, 2, 0),

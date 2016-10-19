@@ -709,12 +709,12 @@ public:
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<
-                mozilla::jni::ByteArray::Param,
+                mozilla::jni::ByteBuffer::Param,
                 mozilla::jni::Object::Param,
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "input";
         static constexpr char signature[] =
-                "([BLandroid/media/MediaCodec$BufferInfo;Landroid/media/MediaCodec$CryptoInfo;)Z";
+                "(Ljava/nio/ByteBuffer;Landroid/media/MediaCodec$BufferInfo;Landroid/media/MediaCodec$CryptoInfo;)Z";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -724,7 +724,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    auto Input(mozilla::jni::ByteArray::Param, mozilla::jni::Object::Param, mozilla::jni::Object::Param) const -> bool;
+    auto Input(mozilla::jni::ByteBuffer::Param, mozilla::jni::Object::Param, mozilla::jni::Object::Param) const -> bool;
 
     struct Release_t {
         typedef CodecProxy Owner;
@@ -833,11 +833,10 @@ public:
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                mozilla::jni::ByteArray::Param,
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "onOutput";
         static constexpr char signature[] =
-                "([BLandroid/media/MediaCodec$BufferInfo;)V";
+                "(Lorg/mozilla/gecko/media/Sample;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -869,6 +868,59 @@ public:
             mozilla::jni::CallingThread::ANY;
 
     template<class Impl> class Natives;
+};
+
+class Sample : public mozilla::jni::ObjectBase<Sample>
+{
+public:
+    static const char name[];
+
+    explicit Sample(const Context& ctx) : ObjectBase<Sample>(ctx) {}
+
+    struct WriteToByteBuffer_t {
+        typedef Sample Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::ByteBuffer::Param> Args;
+        static constexpr char name[] = "writeToByteBuffer";
+        static constexpr char signature[] =
+                "(Ljava/nio/ByteBuffer;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto WriteToByteBuffer(mozilla::jni::ByteBuffer::Param) const -> void;
+
+    struct Info_t {
+        typedef Sample Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "info";
+        static constexpr char signature[] =
+                "Landroid/media/MediaCodec$BufferInfo;";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto Info() const -> mozilla::jni::Object::LocalRef;
+
+    auto Info(mozilla::jni::Object::Param) const -> void;
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::ANY;
+
 };
 
 class Restrictions : public mozilla::jni::ObjectBase<Restrictions>

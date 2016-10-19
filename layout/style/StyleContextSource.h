@@ -29,7 +29,7 @@ struct NonOwningStyleContextSource
 {
   MOZ_IMPLICIT NonOwningStyleContextSource(nsRuleNode* aRuleNode)
     : mBits(reinterpret_cast<uintptr_t>(aRuleNode)) {}
-  explicit NonOwningStyleContextSource(ServoComputedValues* aComputedValues)
+  explicit NonOwningStyleContextSource(const ServoComputedValues* aComputedValues)
     : mBits(reinterpret_cast<uintptr_t>(aComputedValues) | 1) {}
 
   bool operator==(const NonOwningStyleContextSource& aOther) const {
@@ -65,7 +65,7 @@ struct NonOwningStyleContextSource
     return reinterpret_cast<nsRuleNode*>(mBits);
   }
 
-  ServoComputedValues* AsServoComputedValues() const {
+  const ServoComputedValues* AsServoComputedValues() const {
     MOZ_ASSERT(IsServoComputedValues());
     return reinterpret_cast<ServoComputedValues*>(mBits & ~1);
   }
@@ -147,7 +147,7 @@ struct OwningStyleContextSource
   NonOwningStyleContextSource AsRaw() const { return mRaw; }
   nsRuleNode* AsGeckoRuleNode() const { return mRaw.AsGeckoRuleNode(); }
   ServoComputedValues* AsServoComputedValues() const {
-    return mRaw.AsServoComputedValues();
+    return const_cast<ServoComputedValues*>(mRaw.AsServoComputedValues());
   }
 
   bool MatchesNoRules() const { return mRaw.MatchesNoRules(); }

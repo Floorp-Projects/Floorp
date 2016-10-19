@@ -74,7 +74,6 @@ WEBIDL_FILES = [
     'CheckerboardReportService.webidl',
     'ChildNode.webidl',
     'ChromeNodeList.webidl',
-    'ChromeNotifications.webidl',
     'ChromeUtils.webidl',
     'Client.webidl',
     'Clients.webidl',

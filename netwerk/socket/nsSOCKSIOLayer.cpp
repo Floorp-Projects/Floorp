@@ -20,6 +20,8 @@
 #include "nsICancelable.h"
 #include "nsThreadUtils.h"
 #include "nsIURL.h"
+#include "nsIFile.h"
+#include "nsNetUtil.h"
 #include "mozilla/Logging.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/Unused.h"
@@ -131,17 +133,15 @@ private:
         nsresult rv;
         MOZ_ASSERT(aProxyAddr);
 
-        nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+        nsCOMPtr<nsIFile> socketFile;
+        rv = NS_GetFileFromURLSpec(aDomainSocketPath,
+                                   getter_AddRefs(socketFile));
         if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
         }
 
-        if (NS_WARN_IF(NS_FAILED(rv = url->SetSpec(aDomainSocketPath)))) {
-            return rv;
-        }
-
         nsAutoCString path;
-        if (NS_WARN_IF(NS_FAILED(rv = url->GetPath(path)))) {
+        if (NS_WARN_IF(NS_FAILED(rv = socketFile->GetNativePath(path)))) {
             return rv;
         }
 

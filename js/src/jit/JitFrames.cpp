@@ -1069,17 +1069,16 @@ MarkIonJSFrame(JSTracer* trc, const JitFrameIterator& frame)
 #ifdef JS_NUNBOX32
     LAllocation type, payload;
     while (safepoint.getNunboxSlot(&type, &payload)) {
-        jsval_layout layout;
-        layout.s.tag = (JSValueTag)ReadAllocation(frame, &type);
-        layout.s.payload.uintptr = ReadAllocation(frame, &payload);
+        JSValueTag tag = JSValueTag(ReadAllocation(frame, &type));
+        uintptr_t rawPayload = ReadAllocation(frame, &payload);
 
-        Value v = IMPL_TO_JSVAL(layout);
+        Value v = Value::fromTagAndPayload(tag, rawPayload);
         TraceRoot(trc, &v, "ion-torn-value");
 
-        if (v != IMPL_TO_JSVAL(layout)) {
+        if (v != Value::fromTagAndPayload(tag, rawPayload)) {
             // GC moved the value, replace the stored payload.
-            layout = JSVAL_TO_IMPL(v);
-            WriteAllocation(frame, &payload, layout.s.payload.uintptr);
+            rawPayload = *v.payloadUIntPtr();
+            WriteAllocation(frame, &payload, rawPayload);
         }
     }
 #endif
@@ -1829,48 +1828,36 @@ SnapshotIterator::allocationValue(const RValueAllocation& alloc, ReadMethod rm)
 #if defined(JS_NUNBOX32)
       case RValueAllocation::UNTYPED_REG_REG:
       {
-        jsval_layout layout;
-        layout.s.tag = (JSValueTag) fromRegister(alloc.reg());
-        layout.s.payload.word = fromRegister(alloc.reg2());
-        return IMPL_TO_JSVAL(layout);
+        return Value::fromTagAndPayload(JSValueTag(fromRegister(alloc.reg())),
+                                        fromRegister(alloc.reg2()));
       }
 
       case RValueAllocation::UNTYPED_REG_STACK:
       {
-        jsval_layout layout;
-        layout.s.tag = (JSValueTag) fromRegister(alloc.reg());
-        layout.s.payload.word = fromStack(alloc.stackOffset2());
-        return IMPL_TO_JSVAL(layout);
+        return Value::fromTagAndPayload(JSValueTag(fromRegister(alloc.reg())),
+                                        fromStack(alloc.stackOffset2()));
       }
 
       case RValueAllocation::UNTYPED_STACK_REG:
       {
-        jsval_layout layout;
-        layout.s.tag = (JSValueTag) fromStack(alloc.stackOffset());
-        layout.s.payload.word = fromRegister(alloc.reg2());
-        return IMPL_TO_JSVAL(layout);
+        return Value::fromTagAndPayload(JSValueTag(fromStack(alloc.stackOffset())),
+                                        fromRegister(alloc.reg2()));
       }
 
       case RValueAllocation::UNTYPED_STACK_STACK:
       {
-        jsval_layout layout;
-        layout.s.tag = (JSValueTag) fromStack(alloc.stackOffset());
-        layout.s.payload.word = fromStack(alloc.stackOffset2());
-        return IMPL_TO_JSVAL(layout);
+        return Value::fromTagAndPayload(JSValueTag(fromStack(alloc.stackOffset())),
+                                        fromStack(alloc.stackOffset2()));
       }
 #elif defined(JS_PUNBOX64)
       case RValueAllocation::UNTYPED_REG:
       {
-        jsval_layout layout;
-        layout.asBits = fromRegister(alloc.reg());
-        return IMPL_TO_JSVAL(layout);
+        return Value::fromRawBits(fromRegister(alloc.reg()));
       }
 
       case RValueAllocation::UNTYPED_STACK:
       {
-        jsval_layout layout;
-        layout.asBits = fromStack(alloc.stackOffset());
-        return IMPL_TO_JSVAL(layout);
+        return Value::fromRawBits(fromStack(alloc.stackOffset()));
       }
 #endif
 

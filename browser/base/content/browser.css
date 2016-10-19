@@ -448,7 +448,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 /* Always show URLs LTR. */
-.ac-url-text:-moz-locale-dir(rtl) {
+.ac-url-text:-moz-locale-dir(rtl),
+.ac-title-text[lookslikeurl]:-moz-locale-dir(rtl) {
   direction: ltr !important;
 }
 

@@ -10,13 +10,25 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+import org.mozilla.gecko.mozglue.GeckoLoader;
+
 public final class MediaManager extends Service {
+    private static boolean sNativeLibLoaded;
+
     private Binder mBinder = new IMediaManager.Stub() {
         @Override
         public ICodec createCodec() throws RemoteException {
             return new Codec();
         }
     };
+
+    @Override
+    public synchronized void onCreate() {
+        if (!sNativeLibLoaded) {
+            GeckoLoader.doLoadLibrary(this, "mozglue");
+            sNativeLibLoaded = true;
+        }
+    }
 
     @Override
     public IBinder onBind(Intent intent) {

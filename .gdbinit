@@ -11,6 +11,12 @@ handle SIG32 noprint nostop pass
 handle SIG33 noprint nostop pass
 handle SIGPIPE noprint nostop pass
 
+# Don't stop for certain other signals where it's not useful,
+# such as the SIG64 signals triggered by the Linux
+# sandboxing code on older kernels.
+handle SIG38 noprint nostop pass
+handle SIG64 noprint nostop pass
+
 # Show the concrete types behind nsIFoo
 set print object on
 

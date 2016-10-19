@@ -35,8 +35,7 @@ const NOTIFICATION_STORE_PATH =
 const kMessages = [
   "Notification:Save",
   "Notification:Delete",
-  "Notification:GetAll",
-  "Notification:GetAllCrossOrigin"
+  "Notification:GetAll"
 ];
 
 var NotificationDB = {
@@ -197,19 +196,6 @@ var NotificationDB = {
         });
         break;
 
-      case "Notification:GetAllCrossOrigin":
-        this.queueTask("getallaccrossorigin", message.data).then(
-          function(notifications) {
-            returnMessage("Notification:GetAllCrossOrigin:Return:OK", {
-              notifications: notifications
-            });
-          }).catch(function(error) {
-            returnMessage("Notification:GetAllCrossOrigin:Return:KO", {
-              errorMsg: error
-            });
-          });
-        break;
-
       case "Notification:Save":
         this.queueTask("save", message.data).then(function() {
           returnMessage("Notification:Save:Return:OK", {
@@ -286,10 +272,6 @@ var NotificationDB = {
           return this.taskGetAll(task.data);
           break;
 
-        case "getallaccrossorigin":
-          return this.taskGetAllCrossOrigin();
-          break;
-
         case "save":
           return this.taskSave(task.data);
           break;
@@ -325,31 +307,6 @@ var NotificationDB = {
     if (this.notifications[origin]) {
       for (var i in this.notifications[origin]) {
         notifications.push(this.notifications[origin][i]);
-      }
-    }
-    return Promise.resolve(notifications);
-  },
-
-  taskGetAllCrossOrigin: function() {
-    if (DEBUG) { debug("Task, getting all whatever origin"); }
-    var notifications = [];
-    for (var origin in this.notifications) {
-      if (!this.notifications[origin]) {
-        continue;
-      }
-
-      for (var i in this.notifications[origin]) {
-        var notification = this.notifications[origin][i];
-
-        // Notifications without the alertName field cannot be resent by
-        // mozResendAllNotifications, so we just skip them. They will
-        // still be available to applications via Notification.get()
-        if (!('alertName' in notification)) {
-          continue;
-        }
-
-        notification.origin = origin;
-        notifications.push(notification);
       }
     }
     return Promise.resolve(notifications);
