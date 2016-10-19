@@ -506,10 +506,9 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   *aPresContext = nullptr;
 
   // use a default size, in case of an error.
-  aScreenDragRect->x = aScreenPosition.x - mImageOffset.x;
-  aScreenDragRect->y = aScreenPosition.y - mImageOffset.y;
-  aScreenDragRect->width = 1;
-  aScreenDragRect->height = 1;
+  aScreenDragRect->MoveTo(aScreenPosition.x - mImageOffset.x,
+                          aScreenPosition.y - mImageOffset.y);
+  aScreenDragRect->SizeTo(1, 1);
 
   // if a drag image was specified, use that, otherwise, use the source node
   nsCOMPtr<nsIDOMNode> dragNode = mImage ? mImage.get() : aDOMNode;
@@ -553,9 +552,12 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   }
 
   // convert mouse position to dev pixels of the prescontext
-  LayoutDeviceIntPoint screenPoint = ConvertToUnscaledDevPixels(*aPresContext, aScreenPosition);
-  aScreenDragRect->x = screenPoint.x - mImageOffset.x;
-  aScreenDragRect->y = screenPoint.y - mImageOffset.y;
+  CSSIntPoint screenPosition(aScreenPosition);
+  screenPosition.x -= mImageOffset.x;
+  screenPosition.y -= mImageOffset.y;
+  LayoutDeviceIntPoint screenPoint = ConvertToUnscaledDevPixels(*aPresContext, screenPosition);
+  aScreenDragRect->x = screenPoint.x;
+  aScreenDragRect->y = screenPoint.y;
 
   // check if drag images are disabled
   bool enableDragImages = Preferences::GetBool(DRAGIMAGES_PREF, true);
@@ -595,7 +597,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 
   // draw the image for selections
   if (mSelection) {
-    nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
+    nsIntPoint pnt(aScreenDragRect->TopLeft());
     *aSurface = presShell->RenderSelection(mSelection, pnt, aScreenDragRect,
         mImage ? 0 : nsIPresShell::RENDER_AUTO_SCALE);
     return NS_OK;
@@ -661,17 +663,16 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
         }
       }
     }
-    nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
+    nsIntPoint pnt(aScreenDragRect->TopLeft());
     *aSurface = presShell->RenderNode(dragNode, aRegion ? &clipRegion : nullptr,
-                                    pnt, aScreenDragRect,
-                                    renderFlags);
+                                      pnt, aScreenDragRect,
+                                      renderFlags);
   }
 
-  // if an image was specified, reposition the drag rectangle to
-  // the supplied offset in mImageX and mImageY.
+  // If an image was specified, reset the position from the offset that was supplied.
   if (mImage) {
-    aScreenDragRect->x = screenPoint.x - mImageOffset.x;
-    aScreenDragRect->y = screenPoint.y - mImageOffset.y;
+    aScreenDragRect->x = screenPoint.x;
+    aScreenDragRect->y = screenPoint.y;
   }
 
   return NS_OK;
