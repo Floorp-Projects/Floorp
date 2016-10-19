@@ -21,3 +21,24 @@ wasmFullPass(`(module
     )
     (func) (func) (func)
 (export "run" 0))`, 43);
+
+// Global section.
+wasmFullPass(`(module
+ (import $imported "globals" "x" (global i32))
+ (global $mut_local (mut i32) (i32.const 0))
+ (global $imm_local i32 (i32.const 37))
+ (global $imm_local_2 i32 (get_global 0))
+ (func $get (result i32)
+  i32.const 13
+  set_global $mut_local
+  get_global $imported
+  get_global $mut_local
+  i32.add
+  get_global $imm_local
+  i32.add
+  get_global $imm_local_2
+  i32.add
+ )
+ (export "run" $get)
+)`, 13 + 42 + 37 + 42, { globals: {x: 42} });
+

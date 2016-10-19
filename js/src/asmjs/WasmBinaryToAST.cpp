@@ -97,6 +97,7 @@ class AstDecodeContext
     AstDecodeStack exprs_;
     DepthStack depths_;
     const ValTypeVector* locals_;
+    GlobalDescVector globals_;
     AstNameVector blockLabels_;
     uint32_t currentLabelIndex_;
     ExprType retType_;
@@ -124,9 +125,28 @@ class AstDecodeContext
     AstDecodeExprIter& iter() { return *iter_; }
     AstDecodeStack& exprs() { return exprs_; }
     DepthStack& depths() { return depths_; }
-    const ValTypeVector& locals() { return *locals_; }
+
     AstNameVector& blockLabels() { return blockLabels_; }
+
     ExprType retType() const { return retType_; }
+    const ValTypeVector& locals() const { return *locals_; }
+
+    bool addGlobalDesc(ValType type, bool isMutable, bool isImport) {
+        if (isImport)
+            return globals_.append(GlobalDesc(type, isMutable, globals_.length()));
+        // No need to have the precise init expr value; we just need the right
+        // type.
+        Val dummy;
+        switch (type) {
+          case ValType::I32: dummy = Val(uint32_t(0)); break;
+          case ValType::I64: dummy = Val(uint64_t(0)); break;
+          case ValType::F32: dummy = Val(RawF32(0.f)); break;
+          case ValType::F64: dummy = Val(RawF64(0.0)); break;
+          default:           return false;
+        }
+        return globals_.append(GlobalDesc(InitExpr(dummy), isMutable));
+    }
+    const GlobalDescVector& globalDescs() const { return globals_; }
 
     void popBack() { return exprs().popBack(); }
     AstDecodeStackItem popCopy() { return exprs().popCopy(); }
@@ -945,6 +965,54 @@ AstDecodeTeeLocal(AstDecodeContext& c)
 }
 
 static bool
+AstDecodeGetGlobal(AstDecodeContext& c)
+{
+    uint32_t globalId;
+    if (!c.iter().readGetGlobal(c.globalDescs(), &globalId))
+        return false;
+
+    AstRef globalRef;
+    if (!AstDecodeGenerateRef(c, AstName(u"global"), globalId, &globalRef))
+        return false;
+
+    auto* getGlobal = new(c.lifo) AstGetGlobal(globalRef);
+    if (!getGlobal)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(getGlobal)))
+        return false;
+
+    return true;
+}
+
+static bool
+AstDecodeSetGlobal(AstDecodeContext& c)
+{
+    uint32_t globalId;
+    if (!c.iter().readSetGlobal(c.globalDescs(), &globalId, nullptr))
+        return false;
+
+    AstDecodeStackItem value = c.popCopy();
+
+    AstRef globalRef;
+    if (!AstDecodeGenerateRef(c, AstName(u"global"), globalId, &globalRef))
+        return false;
+
+    auto* setGlobal = new(c.lifo) AstSetGlobal(globalRef, *value.expr);
+    if (!setGlobal)
+        return false;
+
+    AstExpr* expr = c.handleVoidExpr(setGlobal);
+    if (!expr)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(expr)))
+        return false;
+
+    return true;
+}
+
+static bool
 AstDecodeReturn(AstDecodeContext& c)
 {
     if (!c.iter().readReturn(nullptr))
@@ -1337,6 +1405,14 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!AstDecodeStore(c, ValType::F64, 8, expr))
             return false;
         break;
+      case Expr::SetGlobal:
+        if (!AstDecodeSetGlobal(c))
+            return false;
+        break;
+      case Expr::GetGlobal:
+        if (!AstDecodeGetGlobal(c))
+            return false;
+        break;
       case Expr::Br:
       case Expr::BrIf:
         if (!AstDecodeBranch(c, expr))
@@ -1578,16 +1654,16 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
     if (!AstDecodeName(c, &fieldName))
         return c.d.fail("expected import field name");
 
-    AstName importName;
-    if (!AstDecodeGenerateName(c, AstName(u"import"), importIndex, &importName))
-        return false;
-
     uint32_t kind;
     if (!c.d.readVarU32(&kind))
         return c.d.fail("expected import kind");
 
     switch (kind) {
       case uint32_t(DefinitionKind::Function): {
+        AstName importName;
+        if (!AstDecodeGenerateName(c, AstName(u"import"), importIndex, &importName))
+            return false;
+
         uint32_t sigIndex = AstNoIndex;
         if (!AstDecodeSignatureIndex(c, &sigIndex))
             return false;
@@ -1600,9 +1676,16 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
         break;
       }
       case uint32_t(DefinitionKind::Global): {
+        AstName importName;
+        if (!AstDecodeGenerateName(c, AstName(u"global"), importIndex, &importName))
+            return false;
+
         ValType type;
         bool isMutable;
         if (!DecodeGlobalType(c.d, &type, &isMutable))
+            return false;
+
+        if (!c.addGlobalDesc(type, isMutable, /* import */ true))
             return false;
 
         *import = new(c.lifo) AstImport(importName, moduleName, fieldName,
@@ -1610,6 +1693,10 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
         break;
       }
       case uint32_t(DefinitionKind::Table): {
+        AstName importName;
+        if (!AstDecodeGenerateName(c, AstName(u"table"), importIndex, &importName))
+            return false;
+
         Limits table;
         if (!AstDecodeLimitsTable(c, &table))
             return false;
@@ -1619,6 +1706,10 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
         break;
       }
       case uint32_t(DefinitionKind::Memory): {
+        AstName importName;
+        if (!AstDecodeGenerateName(c, AstName(u"memory"), importIndex, &importName))
+            return false;
+
         Limits memory;
         if (!DecodeLimits(c.d, &memory))
             return false;
@@ -1695,68 +1786,27 @@ AstDecodeMemorySection(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeInitializerExpression(AstDecodeContext& c, AstExpr** init, ValType type)
+AstDecodeInitializerExpression(AstDecodeContext& c, ValType type, AstExpr** init)
 {
-    Expr expr;
-    if (!c.d.readExpr(&expr))
-        return c.d.fail("missing initializer opcode");
+    InitExpr initExpr;
+    if (!DecodeInitializerExpression(c.d, c.globalDescs(), type, &initExpr))
+        return false;
 
-    switch (expr) {
-      case Expr::I32Const: {
-        int32_t i32;
-        if (!c.d.readVarS32(&i32))
-            return c.d.fail("missing initializer value");
-        *init = new(c.lifo) AstConst(Val((uint32_t)i32));
-        if (!*init)
-            return false;
-        if (type != ValType::I32)
-            return c.d.fail("initializer expression has incorrect type");
+    switch (initExpr.kind()) {
+      case InitExpr::Kind::Constant: {
+        *init = new(c.lifo) AstConst(Val(initExpr.val()));
         break;
       }
-      case Expr::I64Const: {
-        int64_t i64;
-        if (!c.d.readVarS64(&i64))
-            return c.d.fail("missing initializer value");
-        *init = new(c.lifo) AstConst(Val((uint64_t)i64));
-        if (!*init)
+      case InitExpr::Kind::GetGlobal: {
+        AstRef globalRef;
+        if (!AstDecodeGenerateRef(c, AstName(u"global"), initExpr.globalIndex(), &globalRef))
             return false;
-        if (type != ValType::I64)
-            return c.d.fail("initializer expression has incorrect type");
+        *init = new(c.lifo) AstGetGlobal(globalRef);
         break;
       }
-      case Expr::F32Const: {
-        RawF32 f32;
-        if (!c.d.readFixedF32(&f32))
-            return c.d.fail("missing initializer value");
-        *init = new(c.lifo) AstConst(Val(f32));
-        if (!*init)
-            return false;
-        if (type != ValType::F32)
-            return c.d.fail("initializer expression has incorrect type");
-        break;
-      }
-      case Expr::F64Const: {
-        RawF64 f64;
-        if (!c.d.readFixedF64(&f64))
-            return c.d.fail("missing initializer value");
-        *init = new(c.lifo) AstConst(Val(f64));
-        if (!*init)
-            return false;
-        if (type != ValType::F64)
-            return c.d.fail("initializer expression has incorrect type");
-        break;
-      }
-      default:
-        return c.d.fail("unknown initializer opcode");
     }
 
-    if (!c.d.readExpr(&expr))
-        return c.d.fail("missing initializer end");
-
-    if (expr != Expr::End)
-        return c.d.fail("initializer end isn't an end");
-
-    return true;
+    return !!*init;
 }
 
 static bool
@@ -1772,8 +1822,11 @@ AstDecodeGlobal(AstDecodeContext& c, uint32_t i, AstGlobal* global)
         return false;
 
     AstExpr* init;
-    if (!AstDecodeInitializerExpression(c, &init, type))
-        return c.d.fail("missing initializer expression");
+    if (!AstDecodeInitializerExpression(c, type, &init))
+        return false;
+
+    if (!c.addGlobalDesc(type, isMutable, /* import */ false))
+        return false;
 
     *global = AstGlobal(name, type, isMutable, Some(init));
     return true;
@@ -1792,9 +1845,11 @@ AstDecodeGlobalSection(AstDecodeContext& c)
     if (!c.d.readVarU32(&numGlobals))
         return c.d.fail("expected number of globals");
 
+    uint32_t numImported = c.globalDescs().length();
+
     for (uint32_t i = 0; i < numGlobals; i++) {
         auto* global = new(c.lifo) AstGlobal;
-        if (!AstDecodeGlobal(c, i, global))
+        if (!AstDecodeGlobal(c, i + numImported, global))
             return false;
         if (!c.module().append(global))
             return false;
@@ -2064,8 +2119,8 @@ AstDecodeElemSection(AstDecodeContext &c)
             return c.d.fail("non-zero table index for element");
 
         AstExpr* offset;
-        if (!AstDecodeInitializerExpression(c, &offset, ValType::I32))
-            return c.d.fail("missing initializer expression");
+        if (!AstDecodeInitializerExpression(c, ValType::I32, &offset))
+            return false;
 
         uint32_t count;
         if (!c.d.readVarU32(&count))
