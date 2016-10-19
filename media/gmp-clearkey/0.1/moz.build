@@ -14,6 +14,7 @@ UNIFIED_SOURCES += [
     'ClearKeyAsyncShutdown.cpp',
     'ClearKeyBase64.cpp',
     'ClearKeyDecryptionManager.cpp',
+    'ClearKeyPersistence.cpp',
     'ClearKeySession.cpp',
     'ClearKeySessionManager.cpp',
     'ClearKeyStorage.cpp',
