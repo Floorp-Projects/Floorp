@@ -12,6 +12,10 @@ function run_test() {
 
   setUpdateChannel("test_channel");
 
+  // This test expects that the app.update.download.backgroundInterval
+  // preference doesn't already exist.
+  Services.prefs.deleteBranch("app.update.download.backgroundInterval");
+
   // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
   // and until bug 470244 is fixed this will not test the value for detailsURL
   // when it isn't specified in the update xml.
@@ -24,7 +28,7 @@ function run_test() {
                                      "test status text", "false",
                                      "test_channel", "true", "true", "true",
                                      "345600", "true", "test version",
-                                     "3.0", "3.0",
+                                     "3.0", "3.0", "300",
                                      "custom1_attr=\"custom1 value\"",
                                      "custom2_attr=\"custom2 value\"");
 
@@ -38,7 +42,7 @@ function run_test() {
                                  "http://service2/", null,
                                  getString("patchApplyFailure"), "true",
                                  "test_channel", "false", null, null, "691200",
-                                 null, "version 3", "3.0", null,
+                                 null, "version 3", "3.0", null, null,
                                  "custom3_attr=\"custom3 value\"",
                                  "custom4_attr=\"custom4 value\"");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
@@ -86,6 +90,8 @@ function run_test() {
             "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.promptWaitTime, "345600",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.getProperty("backgroundInterval"), "300",
+               "the update backgroundInterval attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.previousAppVersion, "3.0",
                "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
   // Custom attributes
@@ -145,6 +151,9 @@ function run_test() {
             "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.promptWaitTime, "691200",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  // The default and maximum value for backgroundInterval is 600
+  Assert.equal(update.getProperty("backgroundInterval"), "600",
+               "the update backgroundInterval attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.previousAppVersion, null,
                "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
   // Custom attributes
