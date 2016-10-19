@@ -1642,7 +1642,8 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->latency = latency_frames;
   stm->volume = 1.0;
 
-  stm->stream_reset_lock = owned_critical_section();
+  // Placement new to call ctor.
+  new (&stm->stream_reset_lock) owned_critical_section();
 
   stm->reconfigure_event = CreateEvent(NULL, 0, 0, NULL);
   if (!stm->reconfigure_event) {
@@ -1738,6 +1739,9 @@ void wasapi_stream_destroy(cubeb_stream * stm)
     auto_lock lock(stm->stream_reset_lock);
     close_wasapi_stream(stm);
   }
+
+  // Need to call dtor to free the resource in owned_critical_section.
+  stm->stream_reset_lock.~owned_critical_section();
 
   free(stm);
 }
