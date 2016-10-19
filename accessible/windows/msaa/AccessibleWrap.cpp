@@ -72,9 +72,7 @@ static const int32_t kIEnumVariantDisconnected = -1;
 ////////////////////////////////////////////////////////////////////////////////
 AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
   Accessible(aContent, aDoc)
-#ifdef _WIN64
   , mID(kNoID)
-#endif
 {
 }
 
@@ -92,7 +90,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(AccessibleWrap, Accessible)
 void
 AccessibleWrap::Shutdown()
 {
-#ifdef _WIN64
   if (mID != kNoID) {
     auto doc = static_cast<DocAccessibleWrap*>(mDoc);
     MOZ_ASSERT(doc);
@@ -100,7 +97,6 @@ AccessibleWrap::Shutdown()
       doc->RemoveID(mID);
     }
   }
-#endif
 
   Accessible::Shutdown();
 }
@@ -1422,7 +1418,6 @@ AccessibleWrap::NativeAccessible(Accessible* aAccessible)
   return static_cast<IDispatch*>(msaaAccessible);
 }
 
-#ifdef _WIN64
 static Accessible*
 GetAccessibleInSubtree(DocAccessible* aDoc, uint32_t aID)
 {
@@ -1439,7 +1434,6 @@ GetAccessibleInSubtree(DocAccessible* aDoc, uint32_t aID)
 
     return nullptr;
   }
-#endif
 
 static already_AddRefed<IDispatch>
 GetProxiedAccessibleInSubtree(const DocAccessibleParent* aDoc,
