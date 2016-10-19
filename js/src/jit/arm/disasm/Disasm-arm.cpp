@@ -43,7 +43,6 @@ namespace disasm {
 
 // Helper function for printing to a Vector.
 static int
-MOZ_FORMAT_PRINTF(2, 3)
 SNPrintF(V8Vector<char> str, const char* format, ...)
 {
     va_list args;

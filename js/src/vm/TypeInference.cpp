@@ -237,7 +237,6 @@ js::InferSpewImpl(const char* fmt, ...)
 #endif
 
 MOZ_NORETURN MOZ_COLD static void
-MOZ_FORMAT_PRINTF(2, 3)
 TypeFailure(JSContext* cx, const char* fmt, ...)
 {
     char msgbuf[1024]; /* Larger error messages will be truncated */
@@ -3289,7 +3288,7 @@ js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::
     if (types->hasType(type))
         return;
 
-    InferSpew(ISpewOps, "bytecodeType: %p %05" PRIuSIZE ": %s",
+    InferSpew(ISpewOps, "bytecodeType: %p %05u: %s",
               script, script->pcToOffset(pc), TypeSet::TypeString(type));
     types->addType(cx, type);
 }
