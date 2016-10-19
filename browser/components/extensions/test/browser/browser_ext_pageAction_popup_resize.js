@@ -86,11 +86,11 @@ add_task(function* testPageActionPopupResize() {
   yield setSize(1400);
 
   is(panelWindow.innerWidth, 800, "Panel window width");
-  ok(body.clientWidth <= 788, "Panel body width ${body.clientWidth} is less than 800");
+  ok(body.clientWidth <= 800, "Panel body width ${body.clientWidth} is less than 800");
   is(body.scrollWidth, 1400, "Panel body scroll width");
 
   is(panelWindow.innerHeight, 600, "Panel window height");
-  ok([599, 600].includes(root.clientHeight), `Panel root height (${root.clientHeight}px) is ~600px`);
+  ok(root.clientHeight <= 600, `Panel root height (${root.clientHeight}px) is less than 600px`);
   is(root.scrollHeight, 1400, "Panel root scroll height");
 
   yield extension.unload();
