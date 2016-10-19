@@ -45,12 +45,12 @@
     <p><dt><h3>@nightly_heading@</h3></dt>
         <dl><p>
             <dt><a href="https://blog.nightly.mozilla.org/" icon="@nightly_icon@">@nightly_blog@</a>
-            <dt><a href="https://bugzilla.mozilla.org/" icon="@bugzilla_icon@" shortcuturl="bz" tags="bug,issue">@bugzilla@</a>
+            <dt><a href="https://bugzilla.mozilla.org/" icon="@bugzilla_icon@" shortcuturl="bz">@bugzilla@</a>
             <dt><a href="https://developer.mozilla.org/" icon="@mdn_icon@" shortcuturl="mdn">@mdn@</a>
             <dt><a href="https://addons.mozilla.org/@AB_CD@/firefox/addon/nightly-tester-tools/" icon="@addon_icon@">@nightly_tester_tools@</a>
-            <dt><a href="about:crashes" icon="@mozilla_icon@" tags="crash">@crashes@</a>
-            <dt><a href="https://mibbit.com/?server=irc.mozilla.org&channel=%23nightly" icon="@mozilla_icon@" tags="chat,irc">@irc@</a>
-            <dt><a href="https://planet.mozilla.org/" icon="@mozilla_icon@" tags="planet,news">@planet@</a>
+            <dt><a href="about:crashes" icon="@mozilla_icon@">@crashes@</a>
+            <dt><a href="https://mibbit.com/?server=irc.mozilla.org&channel=%23nightly" icon="@mozilla_icon@">@irc@</a>
+            <dt><a href="https://planet.mozilla.org/" icon="@mozilla_icon@">@planet@</a>
         </dl>
 #endif
 </dl>
