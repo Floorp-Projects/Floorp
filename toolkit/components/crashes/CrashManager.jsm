@@ -39,6 +39,36 @@ function dateToDays(date) {
   return Math.floor(date.getTime() / MILLISECONDS_IN_DAY);
 }
 
+/**
+ * Parse the string stored in the specified field as JSON and then remove the
+ * field from the object. The string might also be returned without parsing.
+ *
+ * @param obj {Object} The object holding the field
+ * @param field {String} The name of the field to be parsed and removed
+ * @param [parseAsJson=true] {Boolean} If true parse the field's contents as if
+ *        it were JSON code, otherwise return the rew string.
+ *
+ * @returns {Object|String} the parsed object or the raw string
+ */
+function parseAndRemoveField(obj, field, parseAsJson = true) {
+  let value = null;
+
+  if (field in obj) {
+    if (!parseAsJson) {
+      value = obj[field];
+    } else {
+      try {
+        value = JSON.parse(obj[field]);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+
+    delete obj[field];
+  }
+
+  return value;
+}
 
 /**
  * A gateway to crash-related data.
@@ -173,6 +203,41 @@ this.CrashManager.prototype = Object.freeze({
   EVENT_FILE_ERROR_MALFORMED: "malformed",
   // The type of event is unknown.
   EVENT_FILE_ERROR_UNKNOWN_EVENT: "unknown-event",
+
+  // A whitelist of crash annotations which do not contain sensitive data
+  // and are saved in the crash record and sent with Firefox Health Report.
+  ANNOTATION_WHITELIST: [
+    "AsyncShutdownTimeout",
+    "BuildID",
+    "ProductID",
+    "ProductName",
+    "ReleaseChannel",
+    "SecondsSinceLastCrash",
+    "ShutdownProgress",
+    "StartupCrash",
+    "TelemetryEnvironment",
+    "Version",
+    // The following entries are not normal annotations that can be found in
+    // the .extra file but are included in the crash record/FHR:
+    "AvailablePageFile",
+    "AvailablePhysicalMemory",
+    "AvailableVirtualMemory",
+    "BlockedDllList",
+    "BlocklistInitFailed",
+    "ContainsMemoryReport",
+    "CrashTime",
+    "EventLoopNestingLevel",
+    "IsGarbageCollecting",
+    "MozCrashReason",
+    "OOMAllocationSize",
+    "SystemMemoryUsePercentage",
+    "TextureUsage",
+    "TotalPageFile",
+    "TotalPhysicalMemory",
+    "TotalVirtualMemory",
+    "UptimeTS",
+    "User32BeforeBlocklist",
+  ],
 
   /**
    * Obtain a list of all dumps pending upload.
@@ -544,6 +609,51 @@ this.CrashManager.prototype = Object.freeze({
     }.bind(this));
   },
 
+  _filterAnnotations: function (annotations) {
+    let filteredAnnotations = {};
+
+    for (let line in annotations) {
+      if (this.ANNOTATION_WHITELIST.includes(line)) {
+        filteredAnnotations[line] = annotations[line];
+      }
+    }
+
+    return filteredAnnotations;
+  },
+
+  _sendCrashPing: function (crashId, type, date, metadata) {
+    // If we have a saved environment, use it. Otherwise report
+    // the current environment.
+    let reportMeta = Cu.cloneInto(metadata, myScope);
+    let crashEnvironment = parseAndRemoveField(reportMeta,
+                                               "TelemetryEnvironment");
+    let sessionId = parseAndRemoveField(reportMeta, "TelemetrySessionId",
+                                        /* parseAsJson */ false);
+    let stackTraces = parseAndRemoveField(reportMeta, "StackTraces");
+
+    // Filter the remaining annotations to remove privacy-sensitive ones
+    reportMeta = this._filterAnnotations(reportMeta);
+
+    TelemetryController.submitExternalPing("crash",
+      {
+        version: 1,
+        crashDate: date.toISOString().slice(0, 10), // YYYY-MM-DD
+        sessionId: sessionId,
+        crashId: crashId,
+        processType: type,
+        stackTraces: stackTraces,
+        metadata: reportMeta,
+        hasCrashEnvironment: (crashEnvironment !== null),
+      },
+      {
+        retentionDays: 180,
+        addClientId: true,
+        addEnvironment: true,
+        overrideEnvironment: crashEnvironment,
+      }
+    );
+  },
+
   _handleEventFilePayload: function(store, entry, type, date, payload) {
       // The payload types and formats are documented in docs/crash-events.rst.
       // Do not change the format of an existing type. Instead, invent a new
@@ -565,48 +675,7 @@ this.CrashManager.prototype = Object.freeze({
           store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
                          crashID, date, metadata);
 
-          // If we have a saved environment, use it. Otherwise report
-          // the current environment.
-          let crashEnvironment = null;
-          let sessionId = null;
-          let stackTraces = null;
-          let reportMeta = Cu.cloneInto(metadata, myScope);
-          if ('TelemetryEnvironment' in reportMeta) {
-            try {
-              crashEnvironment = JSON.parse(reportMeta.TelemetryEnvironment);
-            } catch (e) {
-              Cu.reportError(e);
-            }
-            delete reportMeta.TelemetryEnvironment;
-          }
-          if ('TelemetrySessionId' in reportMeta) {
-            sessionId = reportMeta.TelemetrySessionId;
-            delete reportMeta.TelemetrySessionId;
-          }
-          if ('StackTraces' in reportMeta) {
-            try {
-              stackTraces = JSON.parse(reportMeta.StackTraces);
-            } catch (e) {
-              Cu.reportError(e);
-            }
-            delete reportMeta.StackTraces;
-          }
-          TelemetryController.submitExternalPing("crash",
-            {
-              version: 1,
-              crashDate: date.toISOString().slice(0, 10), // YYYY-MM-DD
-              sessionId: sessionId,
-              crashId: entry.id,
-              stackTraces: stackTraces,
-              metadata: reportMeta,
-              hasCrashEnvironment: (crashEnvironment !== null),
-            },
-            {
-              retentionDays: 180,
-              addClientId: true,
-              addEnvironment: true,
-              overrideEnvironment: crashEnvironment,
-            });
+          this._sendCrashPing(crashID, this.PROCESS_TYPE_MAIN, date, metadata);
           break;
 
         case "crash.submission.1":
