@@ -51,7 +51,7 @@ win32/pgo:
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         implementation: generic-worker
-        max-run-time: 7200
+        max-run-time: 9000
     run:
         using: mozharness
         options: [enable-pgo]
@@ -112,7 +112,7 @@ win64/pgo:
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         implementation: generic-worker
-        max-run-time: 7200
+        max-run-time: 9000
     run:
         using: mozharness
         options: [enable-pgo]
