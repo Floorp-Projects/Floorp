@@ -13,6 +13,7 @@ category webextension-scripts runtime chrome://extensions/content/ext-runtime.js
 category webextension-scripts extension chrome://extensions/content/ext-extension.js
 category webextension-scripts storage chrome://extensions/content/ext-storage.js
 category webextension-scripts test chrome://extensions/content/ext-test.js
+category webextension-scripts topSites chrome://extensions/content/ext-topSites.js
 
 # scripts specific for content process.
 category webextension-scripts-content extension chrome://extensions/content/ext-c-extension.js
@@ -39,5 +40,6 @@ category webextension-schemas notifications chrome://extensions/content/schemas/
 category webextension-schemas runtime chrome://extensions/content/schemas/runtime.json
 category webextension-schemas storage chrome://extensions/content/schemas/storage.json
 category webextension-schemas test chrome://extensions/content/schemas/test.json
+category webextension-schemas top_sites chrome://extensions/content/schemas/top_sites.json
 category webextension-schemas web_navigation chrome://extensions/content/schemas/web_navigation.json
 category webextension-schemas web_request chrome://extensions/content/schemas/web_request.json
