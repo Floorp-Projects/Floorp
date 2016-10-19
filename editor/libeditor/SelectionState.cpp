@@ -68,7 +68,6 @@ nsresult
 SelectionState::RestoreSelection(Selection* aSel)
 {
   NS_ENSURE_TRUE(aSel, NS_ERROR_NULL_POINTER);
-  nsresult res;
   uint32_t i, arrayCount = mArray.Length();
 
   // clear out selection
@@ -80,9 +79,10 @@ SelectionState::RestoreSelection(Selection* aSel)
     RefPtr<nsRange> range = mArray[i]->GetRange();
     NS_ENSURE_TRUE(range, NS_ERROR_UNEXPECTED);
 
-    res = aSel->AddRange(range);
-    if(NS_FAILED(res)) return res;
-
+    nsresult rv = aSel->AddRange(range);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   return NS_OK;
 }
@@ -668,8 +668,9 @@ already_AddRefed<nsRange>
 RangeItem::GetRange()
 {
   RefPtr<nsRange> range = new nsRange(startNode);
-  nsresult res = range->Set(startNode, startOffset, endNode, endOffset);
-  NS_ENSURE_SUCCESS(res, nullptr);
+  if (NS_FAILED(range->Set(startNode, startOffset, endNode, endOffset))) {
+    return nullptr;
+  }
   return range.forget();
 }
 

@@ -123,20 +123,22 @@ TextEditor::Init(nsIDOMDocument* aDoc,
   NS_PRECONDITION(aDoc, "bad arg");
   NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
 
-  nsresult res = NS_OK, rulesRes = NS_OK;
   if (mRules) {
     mRules->DetachEditor();
   }
 
+  nsresult rulesRv = NS_OK;
   {
     // block to scope AutoEditInitRulesTrigger
-    AutoEditInitRulesTrigger rulesTrigger(this, rulesRes);
+    AutoEditInitRulesTrigger rulesTrigger(this, rulesRv);
 
     // Init the base editor
-    res = EditorBase::Init(aDoc, aRoot, aSelCon, aFlags, aInitialValue);
+    nsresult rv = EditorBase::Init(aDoc, aRoot, aSelCon, aFlags, aInitialValue);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
-
-  NS_ENSURE_SUCCESS(rulesRes, rulesRes);
+  NS_ENSURE_SUCCESS(rulesRv, rulesRv);
 
   // mRules may not have been initialized yet, when this is called via
   // HTMLEditor::Init.
@@ -144,7 +146,7 @@ TextEditor::Init(nsIDOMDocument* aDoc,
     mRules->SetInitialValue(aInitialValue);
   }
 
-  return res;
+  return NS_OK;
 }
 
 static int32_t sNewlineHandlingPref = -1,
@@ -196,20 +198,21 @@ TextEditor::BeginEditorInit()
 nsresult
 TextEditor::EndEditorInit()
 {
-  nsresult res = NS_OK;
   NS_PRECONDITION(mInitTriggerCounter > 0, "ended editor init before we began?");
   mInitTriggerCounter--;
-  if (mInitTriggerCounter == 0)
-  {
-    res = InitRules();
-    if (NS_SUCCEEDED(res)) {
-      // Throw away the old transaction manager if this is not the first time that
-      // we're initializing the editor.
-      EnableUndo(false);
-      EnableUndo(true);
-    }
+  if (mInitTriggerCounter) {
+    return NS_OK;
   }
-  return res;
+
+  nsresult rv = InitRules();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // Throw away the old transaction manager if this is not the first time that
+  // we're initializing the editor.
+  EnableUndo(false);
+  EnableUndo(true);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -459,7 +462,6 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
 {
   NS_ENSURE_TRUE(aInOutParent && *aInOutParent && aInOutOffset && outBRNode, NS_ERROR_NULL_POINTER);
   *outBRNode = nullptr;
-  nsresult res;
 
   // we need to insert a br.  unfortunately, we may have to split a text node to do it.
   nsCOMPtr<nsIDOMNode> node = *aInOutParent;
@@ -486,20 +488,20 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
     else
     {
       // split the text node
-      res = SplitNode(node, theOffset, getter_AddRefs(tmp));
-      NS_ENSURE_SUCCESS(res, res);
+      nsresult rv = SplitNode(node, theOffset, getter_AddRefs(tmp));
+      NS_ENSURE_SUCCESS(rv, rv);
       tmp = GetNodeLocation(node, &offset);
     }
     // create br
-    res = CreateNode(brType, tmp, offset, getter_AddRefs(brNode));
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv = CreateNode(brType, tmp, offset, getter_AddRefs(brNode));
+    NS_ENSURE_SUCCESS(rv, rv);
     *aInOutParent = tmp;
     *aInOutOffset = offset+1;
   }
   else
   {
-    res = CreateNode(brType, node, theOffset, getter_AddRefs(brNode));
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv = CreateNode(brType, node, theOffset, getter_AddRefs(brNode));
+    NS_ENSURE_SUCCESS(rv, rv);
     (*aInOutOffset)++;
   }
 
@@ -515,13 +517,13 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
     {
       // position selection after br
       selection->SetInterlinePosition(true);
-      res = selection->Collapse(parent, offset+1);
+      selection->Collapse(parent, offset + 1);
     }
     else if (aSelect == ePrevious)
     {
       // position selection before br
       selection->SetInterlinePosition(true);
-      res = selection->Collapse(parent, offset);
+      selection->Collapse(parent, offset);
     }
   }
   return NS_OK;
@@ -551,19 +553,19 @@ TextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
-  nsresult res;
   if (!selection->Collapsed()) {
-    res = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMPtr<nsIDOMNode> selNode;
   int32_t selOffset;
-  res = GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv =
+    GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  res = CreateBR(selNode, selOffset, outBRNode);
-  NS_ENSURE_SUCCESS(res, res);
+  rv = CreateBR(selNode, selOffset, outBRNode);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // position selection after br
   selNode = GetNodeLocation(*outBRNode, &selOffset);
@@ -742,18 +744,17 @@ TextEditor::InsertText(const nsAString& aStringToInsert)
   ruleInfo.maxLength = mMaxTextLength;
 
   bool cancel, handled;
-  nsresult res = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!cancel && !handled)
   {
     // we rely on rules code for now - no default implementation
   }
-  if (!cancel)
-  {
-    // post-process
-    res = rules->DidDoAction(selection, &ruleInfo, res);
+  if (cancel) {
+    return NS_OK;
   }
-  return res;
+  // post-process
+  return rules->DidDoAction(selection, &ruleInfo, rv);
 }
 
 NS_IMETHODIMP
@@ -774,8 +775,8 @@ TextEditor::InsertLineBreak()
   TextRulesInfo ruleInfo(EditAction::insertBreak);
   ruleInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
-  nsresult res = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!cancel && !handled)
   {
     // get the (collapsed) selection location
@@ -798,23 +799,23 @@ TextEditor::InsertLineBreak()
     AutoTransactionsConserveSelection dontSpazMySelection(this);
 
     // insert a linefeed character
-    res = InsertTextImpl(NS_LITERAL_STRING("\n"), address_of(selNode),
-                         &selOffset, doc);
-    if (!selNode) res = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
-    if (NS_SUCCEEDED(res))
-    {
+    rv = InsertTextImpl(NS_LITERAL_STRING("\n"), address_of(selNode),
+                        &selOffset, doc);
+    if (!selNode) {
+      rv = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
+    }
+    if (NS_SUCCEEDED(rv)) {
       // set the selection to the correct location
-      res = selection->Collapse(selNode, selOffset);
-
-      if (NS_SUCCEEDED(res))
-      {
+      rv = selection->Collapse(selNode, selOffset);
+      if (NS_SUCCEEDED(rv)) {
         // see if we're at the end of the editor range
         nsCOMPtr<nsIDOMNode> endNode;
         int32_t endOffset;
-        res = GetEndNodeAndOffset(selection, getter_AddRefs(endNode), &endOffset);
+        rv = GetEndNodeAndOffset(selection,
+                                 getter_AddRefs(endNode), &endOffset);
 
-        if (NS_SUCCEEDED(res) && endNode == GetAsDOMNode(selNode)
-            && endOffset == selOffset) {
+        if (NS_SUCCEEDED(rv) &&
+            endNode == GetAsDOMNode(selNode) && endOffset == selOffset) {
           // SetInterlinePosition(true) means we want the caret to stick to the content on the "right".
           // We want the caret to stick to whatever is past the break.  This is
           // because the break is on the same line we were on, but the next content
@@ -824,13 +825,12 @@ TextEditor::InsertLineBreak()
       }
     }
   }
-  if (!cancel)
-  {
-    // post-process, always called if WillInsertBreak didn't return cancel==true
-    res = rules->DidDoAction(selection, &ruleInfo, res);
-  }
 
-  return res;
+  if (!cancel) {
+    // post-process, always called if WillInsertBreak didn't return cancel==true
+    rv = rules->DidDoAction(selection, &ruleInfo, rv);
+  }
+  return rv;
 }
 
 nsresult
@@ -1577,12 +1577,9 @@ TextEditor::EndOperation()
   nsCOMPtr<nsIEditRules> rules(mRules);
 
   // post processing
-  nsresult res = NS_OK;
-  if (rules) {
-    res = rules->AfterEdit(mAction, mDirection);
-  }
+  nsresult rv = rules ? rules->AfterEdit(mAction, mDirection) : NS_OK;
   EditorBase::EndOperation();  // will clear mAction, mDirection
-  return res;
+  return rv;
 }
 
 nsresult
