@@ -354,13 +354,13 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, const strin
   const char* certnick = certificate.empty() ?
       si->cert_nickname.c_str() : certificate.c_str();
 
-  ScopedCERTCertificate cert(PK11_FindCertFromNickname(certnick, nullptr));
+  UniqueCERTCertificate cert(PK11_FindCertFromNickname(certnick, nullptr));
   if (!cert) {
     LOG_ERROR(("Failed to find cert %s\n", certnick));
     return false;
   }
 
-  ScopedSECKEYPrivateKey privKey(PK11_FindKeyByAnyCert(cert, nullptr));
+  UniqueSECKEYPrivateKey privKey(PK11_FindKeyByAnyCert(cert.get(), nullptr));
   if (!privKey) {
     LOG_ERROR(("Failed to find private key\n"));
     return false;
@@ -378,8 +378,8 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, const strin
     return true;
   }
 
-  SSLKEAType certKEA = NSS_FindCertKEAType(cert);
-  if (SSL_ConfigSecureServer(ssl_socket, cert, privKey, certKEA)
+  SSLKEAType certKEA = NSS_FindCertKEAType(cert.get());
+  if (SSL_ConfigSecureServer(ssl_socket, cert.get(), privKey.get(), certKEA)
       != SECSuccess) {
     LOG_ERROR(("Error configuring SSL server socket\n"));
     return false;
@@ -579,16 +579,17 @@ bool AdjustRequestURI(relayBuffer& buffer, string *host)
   return true;
 }
 
-bool ConnectSocket(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout)
+bool ConnectSocket(UniquePRFileDesc& fd, const PRNetAddr* addr,
+                   PRIntervalTime timeout)
 {
-  PRStatus stat = PR_Connect(fd, addr, timeout);
+  PRStatus stat = PR_Connect(fd.get(), addr, timeout);
   if (stat != PR_SUCCESS)
     return false;
 
   PRSocketOptionData option;
   option.option = PR_SockOpt_Nonblocking;
   option.value.non_blocking = true;
-  PR_SetSocketOption(fd, &option);
+  PR_SetSocketOption(fd.get(), &option);
 
   return true;
 }
@@ -605,7 +606,7 @@ void HandleConnection(void* data)
   connection_info_t* ci = static_cast<connection_info_t*>(data);
   PRIntervalTime connect_timeout = PR_SecondsToInterval(30);
 
-  ScopedPRFileDesc other_sock(PR_NewTCPSocket());
+  UniquePRFileDesc other_sock(PR_NewTCPSocket());
   bool client_done = false;
   bool client_error = false;
   bool connect_accepted = !do_http_proxy;
@@ -620,8 +621,8 @@ void HandleConnection(void* data)
   LOG_DEBUG(("SSLTUNNEL(%p)): incoming connection csock(0)=%p, ssock(1)=%p\n",
          static_cast<void*>(data),
          static_cast<void*>(ci->client_sock),
-         static_cast<void*>(other_sock)));
-  if (other_sock) 
+         static_cast<void*>(other_sock.get())));
+  if (other_sock)
   {
     int32_t numberOfSockets = 1;
 
@@ -638,10 +639,10 @@ void HandleConnection(void* data)
         numberOfSockets = 2;
     }
 
-    PRPollDesc sockets[2] = 
-    { 
+    PRPollDesc sockets[2] =
+    {
       {ci->client_sock, PR_POLL_READ, 0},
-      {other_sock, PR_POLL_READ, 0}
+      {other_sock.get(), PR_POLL_READ, 0}
     };
     bool socketErrorState[2] = {false, false};
 
@@ -944,7 +945,7 @@ void HandleConnection(void* data)
   LOG_DEBUG(("SSLTUNNEL(%p)): exiting root function for csock=%p, ssock=%p\n",
              static_cast<void*>(data),
              static_cast<void*>(ci->client_sock),
-             static_cast<void*>(other_sock)));
+             static_cast<void*>(other_sock.get())));
   if (!client_error)
     PR_Shutdown(ci->client_sock, PR_SHUTDOWN_SEND);
   PR_Close(ci->client_sock);
@@ -963,7 +964,7 @@ void StartServer(void* data)
   server_info_t* si = static_cast<server_info_t*>(data);
 
   //TODO: select ciphers?
-  ScopedPRFileDesc listen_socket(PR_NewTCPSocket());
+  UniquePRFileDesc listen_socket(PR_NewTCPSocket());
   if (!listen_socket) {
     LOG_ERROR(("failed to create socket\n"));
     SignalShutdown();
@@ -975,17 +976,17 @@ void StartServer(void* data)
   PRSocketOptionData socket_option;
   socket_option.option = PR_SockOpt_Reuseaddr;
   socket_option.value.reuse_addr = true;
-  PR_SetSocketOption(listen_socket, &socket_option);
+  PR_SetSocketOption(listen_socket.get(), &socket_option);
 
   PRNetAddr server_addr;
   PR_InitializeNetAddr(PR_IpAddrAny, si->listen_port, &server_addr);
-  if (PR_Bind(listen_socket, &server_addr) != PR_SUCCESS) {
+  if (PR_Bind(listen_socket.get(), &server_addr) != PR_SUCCESS) {
     LOG_ERROR(("failed to bind socket on port %d: error %d\n", si->listen_port, PR_GetError()));
     SignalShutdown();
     return;
   }
 
-  if (PR_Listen(listen_socket, 1) != PR_SUCCESS) {
+  if (PR_Listen(listen_socket.get(), 1) != PR_SUCCESS) {
     LOG_ERROR(("failed to listen on socket\n"));
     SignalShutdown();
     return;
@@ -999,9 +1000,9 @@ void StartServer(void* data)
     ci->server_info = si;
     ci->http_proxy_only = do_http_proxy;
     // block waiting for connections
-    ci->client_sock = PR_Accept(listen_socket, &ci->client_addr,
+    ci->client_sock = PR_Accept(listen_socket.get(), &ci->client_addr,
                                 PR_INTERVAL_NO_TIMEOUT);
-    
+
     PRSocketOptionData option;
     option.option = PR_SockOpt_Nonblocking;
     option.value.non_blocking = true;

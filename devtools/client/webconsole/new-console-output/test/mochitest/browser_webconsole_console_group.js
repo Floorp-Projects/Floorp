@@ -15,6 +15,27 @@ add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
   let hud = toolbox.getCurrentPanel().hud;
 
+  const store = hud.ui.newConsoleOutput.getStore();
+  // Adding loggin each time the store is modified in order to check
+  // the store state in case of failure.
+  store.subscribe(() => {
+    const messages = store.getState().messages.messagesById.toJS()
+      .map(message => {
+        return {
+          id: message.id,
+          type: message.type,
+          parameters: message.parameters,
+          messageText: message.messageText
+        };
+      }
+    );
+    info("messages : " + JSON.stringify(messages));
+  });
+
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+    content.wrappedJSObject.doLog();
+  });
+
   info("Test a group at root level");
   let node = yield waitFor(() => findMessage(hud, "group-1"));
   testClass(node, "startGroup");
@@ -60,7 +81,7 @@ add_task(function* () {
 });
 
 function testClass(node, className) {
-  ok(node.classList.contains(className, "message has the expected class"));
+  ok(node.classList.contains(className), `message has the expected "${className}" class`);
 }
 
 function testIndent(node, indent) {

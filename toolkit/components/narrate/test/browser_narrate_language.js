@@ -14,7 +14,7 @@ add_task(function* testVoiceselectDropdownAutoclose() {
   yield spawnInNewReaderTab(TEST_ARTICLE, function* () {
     let $ = content.document.querySelector.bind(content.document);
 
-    yield NarrateTestUtils.waitForVoiceOptions(content);
+    yield NarrateTestUtils.waitForNarrateToggle(content);
 
     ok(!!$(".option[data-value='urn:moz-tts:fake-direct:bob']"),
       "Jamaican English voice available");
@@ -46,7 +46,7 @@ add_task(function* testVoiceselectDropdownAutoclose() {
   yield spawnInNewReaderTab(TEST_ITALIAN_ARTICLE, function* () {
     let $ = content.document.querySelector.bind(content.document);
 
-    yield NarrateTestUtils.waitForVoiceOptions(content);
+    yield NarrateTestUtils.waitForNarrateToggle(content);
 
     ok(!!$(".option[data-value='urn:moz-tts:fake-indirect:zanetta']"),
       "Italian voice available");
