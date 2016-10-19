@@ -43,7 +43,7 @@ span:nth-of-type(3) { background: yellow; }
 span:nth-of-type(4) { background: lime; }
 
 x {
-  display: inline-block;
+  display: block;
   width: 20px;
   height: 30px;
 }
@@ -71,11 +71,21 @@ br { clear: both; }
 </div>
 </div>
 
+<div class="float">
+<div class="grid percentgap cfill" style="max-width:800%">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+
 <div class="inline-grid">
-<div class="grid" style="grid: min-content 20% min-content / min-content 20% min-content">
-  <span><x></x></span><z></z><span><x></x></span>
-  <z></z><z></z><z></z>
-  <span><x></x></span><z></z><span><x></x></span>
+<div class="grid percentgap" style="align-self:start; justify-self:start">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
 </div>
 </div>
 
@@ -131,6 +141,15 @@ br { clear: both; }
 
 <div style="width:320px;height:200px">
 <div class="grid calcgap" style="height:120px; grid-gap:calc(32px - 30%)">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+
+<div class="float" style="margin-top:-50px">
+<div class="grid percentgap cfill" style="min-width:300%">
   <span><x></x></span>
   <span><x></x></span>
   <span><x></x></span>

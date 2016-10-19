@@ -38,9 +38,11 @@ fit .r3 { grid-template-columns: [a] repeat(3, [b] 20px [c]) [d] 30px [e] 30px [
 .w90 { width: 90px; }
 .mw100 { min-width: 100px; }
 .mw50 { min-width: 50px; }
+.mw42 { min-width: 42px; }
 .mw80 { min-width: 80px; }
 .xw100 { max-width: 100px; }
 .xw50 { max-width: 50px; }
+.xw42 { max-width: 42px; }
 .xw80 { max-width: 80px; }
 .pw10 { width: 10%; }
 .pxw10 { max-width: 10%; }
@@ -94,6 +96,10 @@ fill,fit {
 .r3.c0 { grid-template-columns: [a d] 30px [e] 30px [f]; }
 .r3.c1 { grid-template-columns: [a] repeat(1, [b] 20px [c]) [d] 30px [e] 30px [f]; }
 
+.zero-progress {
+  grid-column-gap: calc(10px - 1%);
+  grid-template-columns: [a] 10px repeat(3, [b] 0 [c]) [d];
+}
 </style>
 </head>
 <body>
@@ -115,6 +121,9 @@ fill,fit {
 <div class="grid r1 mw80 float c4"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 w100 mw50 float c4"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid r1 mw100 w50 float c4"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 w42 float c2"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 xw42 float c2"><x></x><x></x><a></a><b></b><x></x></div>
+<div class="grid r1 mw42 float c2"><x></x><x></x><a></a><b></b><x></x></div>
 
 <br clear="all">
 
@@ -246,6 +255,18 @@ fill,fit {
 
 <br clear="all">
 <br clear="all">
+
+<div style="float:left">
+  <div class="grid xw50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+  <div class="grid w50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+  <div class="grid mw50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+</div>
 
 </fit>
 
