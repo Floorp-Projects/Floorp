@@ -498,7 +498,7 @@ nsresult
 nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                             nsIScriptableRegion* aRegion,
                             CSSIntPoint aScreenPosition,
-                            nsIntRect* aScreenDragRect,
+                            LayoutDeviceIntRect* aScreenDragRect,
                             RefPtr<SourceSurface>* aSurface,
                             nsPresContext** aPresContext)
 {
@@ -597,7 +597,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 
   // draw the image for selections
   if (mSelection) {
-    nsIntPoint pnt(aScreenDragRect->TopLeft());
+    LayoutDeviceIntPoint pnt(aScreenDragRect->TopLeft());
     *aSurface = presShell->RenderSelection(mSelection, pnt, aScreenDragRect,
         mImage ? 0 : nsIPresShell::RENDER_AUTO_SCALE);
     return NS_OK;
@@ -663,7 +663,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
         }
       }
     }
-    nsIntPoint pnt(aScreenDragRect->TopLeft());
+    LayoutDeviceIntPoint pnt(aScreenDragRect->TopLeft());
     *aSurface = presShell->RenderNode(dragNode, aRegion ? &clipRegion : nullptr,
                                       pnt, aScreenDragRect,
                                       renderFlags);
@@ -681,7 +681,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 nsresult
 nsBaseDragService::DrawDragForImage(nsIImageLoadingContent* aImageLoader,
                                     HTMLCanvasElement* aCanvas,
-                                    nsIntRect* aScreenDragRect,
+                                    LayoutDeviceIntRect* aScreenDragRect,
                                     RefPtr<SourceSurface>* aSurface)
 {
   nsCOMPtr<imgIContainer> imgContainer;
@@ -709,9 +709,9 @@ nsBaseDragService::DrawDragForImage(nsIImageLoadingContent* aImageLoader,
     aScreenDragRect->height = sz.height;
   }
 
-  nsIntSize srcSize = aScreenDragRect->Size();
-  nsIntSize destSize = srcSize;
-
+  nsIntSize destSize;
+  destSize.width = aScreenDragRect->width;
+  destSize.height = aScreenDragRect->height;
   if (destSize.width == 0 || destSize.height == 0)
     return NS_ERROR_FAILURE;
 

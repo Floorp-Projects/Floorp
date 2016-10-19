@@ -78,7 +78,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     return false;
 
   // Prepare the drag image
-  nsIntRect dragRect;
+  LayoutDeviceIntRect dragRect;
   RefPtr<SourceSurface> surface;
   nsPresContext* pc;
   DrawDrag(aDOMNode, aRegion, mScreenPosition, &dragRect, &surface, &pc);
