@@ -5,12 +5,84 @@
 
 #include "PathCG.h"
 #include <math.h>
-#include "DrawTargetCG.h"
 #include "Logging.h"
 #include "PathHelpers.h"
 
 namespace mozilla {
 namespace gfx {
+
+static inline Rect
+CGRectToRect(CGRect rect)
+{
+  return Rect(rect.origin.x,
+              rect.origin.y,
+              rect.size.width,
+              rect.size.height);
+}
+
+static inline Point
+CGPointToPoint(CGPoint point)
+{
+  return Point(point.x, point.y);
+}
+
+static inline void
+SetStrokeOptions(CGContextRef cg, const StrokeOptions &aStrokeOptions)
+{
+  switch (aStrokeOptions.mLineCap)
+  {
+    case CapStyle::BUTT:
+      CGContextSetLineCap(cg, kCGLineCapButt);
+      break;
+    case CapStyle::ROUND:
+      CGContextSetLineCap(cg, kCGLineCapRound);
+      break;
+    case CapStyle::SQUARE:
+      CGContextSetLineCap(cg, kCGLineCapSquare);
+      break;
+  }
+ 
+  switch (aStrokeOptions.mLineJoin)
+  {
+    case JoinStyle::BEVEL:
+      CGContextSetLineJoin(cg, kCGLineJoinBevel);
+      break;
+    case JoinStyle::ROUND:
+      CGContextSetLineJoin(cg, kCGLineJoinRound);
+      break;
+    case JoinStyle::MITER:
+    case JoinStyle::MITER_OR_BEVEL:
+      CGContextSetLineJoin(cg, kCGLineJoinMiter);
+      break;
+  }
+ 
+  CGContextSetLineWidth(cg, aStrokeOptions.mLineWidth);
+  CGContextSetMiterLimit(cg, aStrokeOptions.mMiterLimit);
+ 
+  // XXX: rename mDashLength to dashLength
+  if (aStrokeOptions.mDashLength > 0) {
+    // we use a regular array instead of a std::vector here because we don't want to leak the <vector> include
+    CGFloat *dashes = new CGFloat[aStrokeOptions.mDashLength];
+    for (size_t i=0; i<aStrokeOptions.mDashLength; i++) {
+      dashes[i] = aStrokeOptions.mDashPattern[i];
+    }
+    CGContextSetLineDash(cg, aStrokeOptions.mDashOffset, dashes, aStrokeOptions.mDashLength);
+    delete[] dashes;
+  }
+}
+
+static inline CGAffineTransform
+GfxMatrixToCGAffineTransform(const Matrix &m)
+{
+  CGAffineTransform t;
+  t.a = m._11;
+  t.b = m._12;
+  t.c = m._21;
+  t.d = m._22;
+  t.tx = m._31;
+  t.ty = m._32;
+  return t;
+}
 
 PathBuilderCG::~PathBuilderCG()
 {

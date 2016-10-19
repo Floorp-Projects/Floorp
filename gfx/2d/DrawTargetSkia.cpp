@@ -37,7 +37,6 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include "mozilla/Vector.h"
 #include "ScaledFontMac.h"
-#include "DrawTargetCG.h"
 #include "CGTextDrawing.h"
 #endif
 
@@ -869,6 +868,19 @@ private:
   CGContextRef mCG;
 };
 
+static inline CGAffineTransform
+GfxMatrixToCGAffineTransform(const Matrix &m)
+{
+  CGAffineTransform t;
+  t.a = m._11;
+  t.b = m._12;
+  t.c = m._21;
+  t.d = m._22;
+  t.tx = m._31;
+  t.ty = m._32;
+  return t;
+}
+
 /***
  * We have to do a lot of work to draw glyphs with CG because
  * CG assumes that the origin of rects are in the bottom left
@@ -1053,47 +1065,16 @@ DrawTargetSkia::ReturnCGContext(CGContextRef aCGContext)
 CGContextRef
 BorrowedCGContext::BorrowCGContextFromDrawTarget(DrawTarget *aDT)
 {
-  if (aDT->GetBackendType() == BackendType::SKIA) {
-    DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
-    return skiaDT->BorrowCGContext(DrawOptions());
-  } else if (aDT->GetBackendType() == BackendType::COREGRAPHICS) {
-    DrawTargetCG* cgDT = static_cast<DrawTargetCG*>(aDT);
-    cgDT->Flush();
-    cgDT->MarkChanged();
-
-    // swap out the context
-    CGContextRef cg = cgDT->mCg;
-    if (MOZ2D_ERROR_IF(!cg)) {
-      return nullptr;
-    }
-    cgDT->mCg = nullptr;
-
-    // save the state to make it easier for callers to avoid mucking with things
-    CGContextSaveGState(cg);
-
-    return cg;
-  }
-
-  MOZ_ASSERT(false);
-  return nullptr;
+  DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
+  return skiaDT->BorrowCGContext(DrawOptions());
 }
 
 void
 BorrowedCGContext::ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg)
 {
-  if (aDT->GetBackendType() == BackendType::SKIA) {
-    DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
-    skiaDT->ReturnCGContext(cg);
-    return;
-  } else if (aDT->GetBackendType() == BackendType::COREGRAPHICS) {
-    DrawTargetCG* cgDT = static_cast<DrawTargetCG*>(aDT);
-
-    CGContextRestoreGState(cg);
-    cgDT->mCg = cg;
-    return;
-  }
-
-  MOZ_ASSERT(false);
+  DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
+  skiaDT->ReturnCGContext(cg);
+  return;
 }
 
 static void

@@ -49,7 +49,6 @@ icudata_dir=`dirname "$0"`/../config/external/icu/data
 icu_dir=`dirname "$0"`/icu
 tzdata_dir=`dirname "$0"`/tzdata
 tzdata_files="${tzdata_dir}"/files.txt
-tzdata_version_dir="${tzdata_dir}"/${tzdata_version}
 tzdata_url=https://ssl.icu-project.org/repos/icu/data/trunk/tzdata/icunew/${tzdata_version}/44/
 icu_tzdata_version=`grep --only-matching --perl-regexp --regexp="tz version:\s+\K.*$" "${icu_dir}"/source/data/misc/zoneinfo64.txt`
 local_tzdata_version=
@@ -119,14 +118,13 @@ else
   echo "INFO: ICU data file (big endian) not found, skipping..."
 fi
 
-# Retrieve tzdata from svn, unless already present.
-if [ ! -d "$tzdata_version_dir" ]; then
-  if [ $dry = false ]; then
-    echo "INFO: Downloading tzdata${tzdata_version}"
-    svn export "${tzdata_url}" "${tzdata_version_dir}"
-  fi
-else
-  echo "INFO: Skip downloading tzdata${tzdata_version}, directory already present"
+# Retrieve tzdata from svn.
+if [ $dry = false ]; then
+  echo "INFO: Downloading tzdata${tzdata_version}"
+
+  # Remove intl/tzdata/source, then replace it with a clean export.
+  rm -r "${tzdata_dir}"/source
+  svn export "${tzdata_url}" "${tzdata_dir}"/source
 fi
 
 # Record `svn info`, eliding the line that changes every time the entire ICU
@@ -142,7 +140,7 @@ update_icu_data() {
 
   local type="$1"
   local file="$2"
-  local cmd="${icu_pkg} --add ${tzdata_files} --sourcedir ${tzdata_version_dir}/${type} ${file}"
+  local cmd="${icu_pkg} --add ${tzdata_files} --sourcedir ${tzdata_dir}/source/${type} ${file}"
   eval "${cmd}"
 
   local exit_status=$?
@@ -153,12 +151,19 @@ update_icu_data() {
               "      ensure your icupkg version matches the current ICU version."
     exit $exit_status
   fi
+
+  set -e
 }
 
 if [ $dry = false ]; then
   update_icu_data "le" "${icudata_file_le}"
   if [ -n "${icudata_file_be}" ]; then
     update_icu_data "be" "${icudata_file_be}"
+  fi
+
+  hg addremove "${tzdata_dir}" "${icudata_file_le}"
+  if [ -n "${icudata_file_be}" ]; then
+    hg addremove "${icudata_file_be}"
   fi
 
   echo "INFO: Successfully updated tzdata!"

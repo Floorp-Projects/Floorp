@@ -71,7 +71,6 @@ PushSubscriptionOptions::GetApplicationServerKey(JSContext* aCx,
     }
     MOZ_ASSERT(appServerKey);
     mAppServerKey = appServerKey;
-    JS::ExposeObjectToActiveJS(mAppServerKey);
   }
   aKey.set(mAppServerKey);
 }

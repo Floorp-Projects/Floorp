@@ -93,9 +93,6 @@ PrintTranslator::GetDesiredFontType()
       return FontType::CAIRO;
     case BackendType::SKIA:
       return FontType::SKIA;
-    case BackendType::COREGRAPHICS:
-    case BackendType::COREGRAPHICS_ACCELERATED:
-      return FontType::COREGRAPHICS;
     default:
       return FontType::CAIRO;
   }

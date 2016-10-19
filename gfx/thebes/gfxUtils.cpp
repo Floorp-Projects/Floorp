@@ -1148,6 +1148,64 @@ gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
                                      aBinaryOrData, aFile, nullptr);
 }
 
+/* From Rec601:
+[R]   [1.1643835616438356,  0.0,                 1.5960267857142858]      [ Y -  16]
+[G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708]    x [Cb - 128]
+[B]   [1.1643835616438356,  2.017232142857143,   8.862867620416422e-17]   [Cr - 128]
+
+For [0,1] instead of [0,255], and to 5 places:
+[R]   [1.16438,  0.00000,  1.59603]   [ Y - 0.06275]
+[G] = [1.16438, -0.39176, -0.81297] x [Cb - 0.50196]
+[B]   [1.16438,  2.01723,  0.00000]   [Cr - 0.50196]
+
+From Rec709:
+[R]   [1.1643835616438356,  4.2781193979771426e-17, 1.7927410714285714]     [ Y -  16]
+[G] = [1.1643835616438358, -0.21324861427372963,   -0.532909328559444]    x [Cb - 128]
+[B]   [1.1643835616438356,  2.1124017857142854,     0.0]                    [Cr - 128]
+
+For [0,1] instead of [0,255], and to 5 places:
+[R]   [1.16438,  0.00000,  1.79274]   [ Y - 0.06275]
+[G] = [1.16438, -0.21325, -0.53291] x [Cb - 0.50196]
+[B]   [1.16438,  2.11240,  0.00000]   [Cr - 0.50196]
+*/
+
+/* static */ float*
+gfxUtils::Get4x3YuvColorMatrix(YUVColorSpace aYUVColorSpace)
+{
+  static const float yuv_to_rgb_rec601[12] = { 1.16438f,  0.0f,      1.59603f, 0.0f,
+                                               1.16438f, -0.39176f, -0.81297f, 0.0f,
+                                               1.16438f,  2.01723f,  0.0f,     0.0f,
+                                             };
+
+  static const float yuv_to_rgb_rec709[12] = { 1.16438f,  0.0f,      1.79274f, 0.0f,
+                                               1.16438f, -0.21325f, -0.53291f, 0.0f,
+                                               1.16438f,  2.11240f,  0.0f,     0.0f,
+                                             };
+
+  if (aYUVColorSpace == YUVColorSpace::BT709) {
+    return const_cast<float*>(yuv_to_rgb_rec709);
+  } else {
+    return const_cast<float*>(yuv_to_rgb_rec601);
+  }
+}
+
+/* static */ float*
+gfxUtils::Get3x3YuvColorMatrix(YUVColorSpace aYUVColorSpace)
+{
+  static const float yuv_to_rgb_rec601[9] = {
+    1.16438f, 1.16438f, 1.16438f, 0.0f, -0.39176f, 2.01723f, 1.59603f, -0.81297f, 0.0f,
+  };
+  static const float yuv_to_rgb_rec709[9] = {
+    1.16438f, 1.16438f, 1.16438f, 0.0f, -0.21325f, 2.11240f, 1.79274f, -0.53291f, 0.0f,
+  };
+
+  if (aYUVColorSpace == YUVColorSpace::BT709) {
+    return const_cast<float*>(yuv_to_rgb_rec709);
+  } else {
+    return const_cast<float*>(yuv_to_rgb_rec601);
+  }
+}
+
 /* static */ void
 gfxUtils::WriteAsPNG(SourceSurface* aSurface, const nsAString& aFile)
 {

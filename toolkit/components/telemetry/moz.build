@@ -105,3 +105,6 @@ SPHINX_TREES['telemetry'] = 'docs'
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Telemetry')

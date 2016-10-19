@@ -208,7 +208,7 @@ private:
     {
       NS_NOTREACHED("Do not call me!");
     }
-    PRTime time;
+    MOZ_INIT_OUTSIDE_CTOR PRTime time;
   };
   nsTHashtable<RecentURIKey> mRecentlyVisitedURIs;
   /**

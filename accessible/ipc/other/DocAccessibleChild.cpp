@@ -952,6 +952,41 @@ DocAccessibleChild::RecvRowIdx(const uint64_t& aID,
 }
 
 bool
+DocAccessibleChild::RecvGetPosition(const uint64_t& aID,
+                               uint32_t* aColIdx, uint32_t* aRowIdx)
+{
+  *aColIdx = 0;
+  *aRowIdx = 0;
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  if (acc) {
+    *aColIdx = acc->ColIdx();
+    *aRowIdx = acc->RowIdx();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvGetColRowExtents(const uint64_t& aID,
+                                         uint32_t* aColIdx, uint32_t* aRowIdx,
+                                         uint32_t* aColExtent, uint32_t* aRowExtent)
+{
+  *aColIdx = 0;
+  *aRowIdx = 0;
+  *aColExtent = 0;
+  *aRowExtent = 0;
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  if (acc) {
+    *aColIdx = acc->ColIdx();
+    *aRowIdx = acc->RowIdx();
+    *aColExtent = acc->ColExtent();
+    *aRowExtent = acc->RowExtent();
+  }
+
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvColExtent(const uint64_t& aID,
                                   uint32_t* aExtent)
 {
