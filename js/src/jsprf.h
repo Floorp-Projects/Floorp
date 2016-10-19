@@ -14,13 +14,11 @@
 **      %x - unsigned hex
 **      %X - unsigned uppercase hex
 **      %o - unsigned octal
-**      %hd, %hu, %hx, %hX, %ho - "short" versions of above
-**      %ld, %lu, %lx, %lX, %lo - "long" versions of above
-**      %lld, %llu, %llx, %llX, %llo - "long long" versions of above
-**      %zd, %zo, %zu, %zx, %zX - size_t versions of above
-**      %Id, %Io, %Iu, %Ix, %IX - size_t versions of above (for Windows compat)
-**           You should use PRI*SIZE macros instead
-**      %s - string
+**      %hd, %hu, %hx, %hX, %ho - 16-bit versions of above
+**      %ld, %lu, %lx, %lX, %lo - 32-bit versions of above
+**      %lld, %llu, %llx, %llX, %llo - 64 bit versions of above
+**      %s - ascii string
+**      %hs - ucs2 string
 **      %c - character
 **      %p - pointer (deals with machine dependent pointer size)
 **      %f - float
@@ -39,8 +37,7 @@
 ** buffer on success, nullptr on failure. Call "JS_smprintf_free" to release
 ** the memory returned.
 */
-extern JS_PUBLIC_API(char*) JS_smprintf(const char* fmt, ...)
-    MOZ_FORMAT_PRINTF(1, 2);
+extern JS_PUBLIC_API(char*) JS_smprintf(const char* fmt, ...);
 
 /*
 ** Free the memory allocated, for the caller, by JS_smprintf
@@ -54,8 +51,7 @@ extern JS_PUBLIC_API(void) JS_smprintf_free(char* mem);
 ** will allocate the initial string. The return value is the new value of
 ** last for subsequent calls, or nullptr if there is a malloc failure.
 */
-extern JS_PUBLIC_API(char*) JS_sprintf_append(char* last, const char* fmt, ...)
-    MOZ_FORMAT_PRINTF(2, 3);
+extern JS_PUBLIC_API(char*) JS_sprintf_append(char* last, const char* fmt, ...);
 
 /*
 ** va_list forms of the above.

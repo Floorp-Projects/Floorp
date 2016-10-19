@@ -6,8 +6,6 @@
 
 #include "jit/IonAnalysis.h"
 
-#include "mozilla/SizePrintfMacros.h"
-
 #include "jit/AliasAnalysis.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
@@ -447,10 +445,9 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
                 shouldBailout = false;
 
             JitSpew(JitSpew_Prune, "info: block %d,"
-                    " predCount: %" PRIuSIZE ", domInst: %" PRIuSIZE
-                    ", span: %" PRIuSIZE ", effectful: %" PRIuSIZE ", "
-                    " isLoopExit: %s, numSuccessorsOfPred: %" PRIuSIZE "."
-                    " (score: %" PRIuSIZE ", shouldBailout: %s)",
+                    " predCount: %lu, domInst: %lu, span: %lu, effectful: %lu, "
+                    " isLoopExit: %s, numSuccessorsOfPred: %lu."
+                    " (score: %lu, shouldBailout: %s)",
                     block->id(), predCount, numDominatedInst, branchSpan, numEffectfulInst,
                     isLoopExit ? "true" : "false", numSuccessorsOfPreds,
                     score, shouldBailout ? "true" : "false");

@@ -202,10 +202,8 @@ class ICFallbackStub;
 #undef FORWARD_DECLARE_STUBS
 
 #ifdef JS_JITSPEW
-void FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...)
-    MOZ_FORMAT_PRINTF(3, 4);
-void TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub, const char* fmt, ...)
-    MOZ_FORMAT_PRINTF(3, 4);
+void FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...);
+void TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub, const char* fmt, ...);
 #else
 #define FallbackICSpew(...)
 #define TypeFallbackICSpew(...)

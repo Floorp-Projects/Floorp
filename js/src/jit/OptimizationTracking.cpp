@@ -326,7 +326,7 @@ UniqueTrackedOptimizations::sortByFrequency(JSContext* cx)
         MOZ_ASSERT(p);
         p->value().index = sorted_.length();
 
-        JitSpew(JitSpew_OptimizationTracking, "   Entry %" PRIuSIZE " has frequency %" PRIu32,
+        JitSpew(JitSpew_OptimizationTracking, "   Entry %u has frequency %u",
                 sorted_.length(), p->value().frequency);
 
         if (!sorted_.append(entries[i]))
@@ -765,14 +765,14 @@ IonTrackedOptimizationsRegion::WriteRun(CompactBufferWriter& writer,
                                         const UniqueTrackedOptimizations& unique)
 {
     // Write the header, which is the range that this whole run encompasses.
-    JitSpew(JitSpew_OptimizationTracking, "     Header: [%" PRIuSIZE ", %" PRIuSIZE "]",
+    JitSpew(JitSpew_OptimizationTracking, "     Header: [%u, %u]",
             start->startOffset.offset(), (end - 1)->endOffset.offset());
     writer.writeUnsigned(start->startOffset.offset());
     writer.writeUnsigned((end - 1)->endOffset.offset());
 
     // Write the first entry of the run, which is not delta-encoded.
     JitSpew(JitSpew_OptimizationTracking,
-            "     [%6" PRIuSIZE ", %6" PRIuSIZE "]                        vector %3u, offset %4" PRIuSIZE,
+            "     [%6u, %6u]                        vector %3u, offset %4u",
             start->startOffset.offset(), start->endOffset.offset(),
             unique.indexOf(start->optimizations), writer.length());
     uint32_t prevEndOffset = start->endOffset.offset();
@@ -789,7 +789,7 @@ IonTrackedOptimizationsRegion::WriteRun(CompactBufferWriter& writer,
         uint8_t index = unique.indexOf(entry->optimizations);
 
         JitSpew(JitSpew_OptimizationTracking,
-                "     [%6u, %6u] delta [+%5u, +%5u] vector %3u, offset %4" PRIuSIZE,
+                "     [%6u, %6u] delta [+%5u, +%5u] vector %3u, offset %4u",
                 startOffset, endOffset, startDelta, length, index, writer.length());
 
         WriteDelta(writer, startDelta, length, index);
@@ -825,7 +825,7 @@ WriteOffsetsTable(CompactBufferWriter& writer, const Vector<uint32_t, 16>& offse
 
     // Write entry offset table.
     for (size_t i = 0; i < offsets.length(); i++) {
-        JitSpew(JitSpew_OptimizationTracking, "   Entry %" PRIuSIZE " reverse offset %u",
+        JitSpew(JitSpew_OptimizationTracking, "   Entry %u reverse offset %u",
                 i, tableOffset - padding - offsets[i]);
         writer.writeNativeEndianUint32_t(tableOffset - padding - offsets[i]);
     }
@@ -919,7 +919,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
     if (JitSpewEnabled(JitSpew_OptimizationTracking)) {
         JitSpewStart(JitSpew_OptimizationTracking, "=> Training data: ");
         for (const NativeToTrackedOptimizations* entry = start; entry != end; entry++) {
-            JitSpewCont(JitSpew_OptimizationTracking, "%" PRIuSIZE ",%" PRIuSIZE ",%u ",
+            JitSpewCont(JitSpew_OptimizationTracking, "%u,%u,%u ",
                         entry->startOffset.offset(), entry->endOffset.offset(),
                         unique.indexOf(entry->optimizations));
         }
@@ -934,8 +934,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
     JitSpew(JitSpew_Profiling, "=> Writing regions");
     while (entry != end) {
         uint32_t runLength = IonTrackedOptimizationsRegion::ExpectedRunLength(entry, end);
-        JitSpew(JitSpew_OptimizationTracking,
-                "   Run at entry %" PRIuSIZE ", length %" PRIu32 ", offset %" PRIuSIZE,
+        JitSpew(JitSpew_OptimizationTracking, "   Run at entry %u, length %u, offset %u",
                 entry - start, runLength, writer.length());
 
         if (!offsets.append(writer.length()))
@@ -958,7 +957,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
     offsets.clear();
 
     const UniqueTrackedOptimizations::SortedVector& vec = unique.sortedVector();
-    JitSpew(JitSpew_OptimizationTracking, "=> Writing unique optimizations table with %" PRIuSIZE " entr%s",
+    JitSpew(JitSpew_OptimizationTracking, "=> Writing unique optimizations table with %u entr%s",
             vec.length(), vec.length() == 1 ? "y" : "ies");
 
     // Write out type info payloads.
@@ -968,8 +967,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
 
     for (const UniqueTrackedOptimizations::SortEntry* p = vec.begin(); p != vec.end(); p++) {
         const TempOptimizationTypeInfoVector* v = p->types;
-        JitSpew(JitSpew_OptimizationTracking,
-                "   Type info entry %" PRIuSIZE " of length %" PRIuSIZE ", offset %" PRIuSIZE,
+        JitSpew(JitSpew_OptimizationTracking, "   Type info entry %u of length %u, offset %u",
                 p - vec.begin(), v->length(), writer.length());
         SpewTempOptimizationTypeInfoVector(v, "  ");
 
@@ -1019,8 +1017,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
     // Write out attempts payloads.
     for (const UniqueTrackedOptimizations::SortEntry* p = vec.begin(); p != vec.end(); p++) {
         const TempOptimizationAttemptsVector* v = p->attempts;
-        JitSpew(JitSpew_OptimizationTracking,
-                "   Attempts entry %" PRIuSIZE " of length %" PRIuSIZE ", offset %" PRIuSIZE,
+        JitSpew(JitSpew_OptimizationTracking, "   Attempts entry %u of length %u, offset %u",
                 p - vec.begin(), v->length(), writer.length());
         SpewTempOptimizationAttemptsVector(v, "  ");
 
