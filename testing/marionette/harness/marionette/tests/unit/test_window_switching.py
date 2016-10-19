@@ -14,11 +14,11 @@ class TestWindowSwitching(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test_windows.html")
         self.marionette.navigate(test_html)
 
-        self.current_window = self.marionette.current_window_handle
+        self.current_window = self.marionette.current_chrome_window_handle
         link = self.marionette.find_element(By.LINK_TEXT, "Open new window")
         link.click()
 
-        windows = self.marionette.window_handles
+        windows = self.marionette.chrome_window_handles
         windows.remove(self.current_window)
         self.marionette.switch_to_window(windows[0])
 
@@ -30,20 +30,20 @@ class TestWindowSwitching(MarionetteTestCase):
         #ensure navigate works in our current window
         other_page = self.marionette.absolute_url("test.html")
         self.marionette.navigate(other_page)
-        other_window = self.marionette.current_window_handle
+        other_window = self.marionette.current_chrome_window_handle
 
         #try to access its dom
         #since Bug 720714 stops us from checking DOMContentLoaded, we wait a bit
         Wait(self.marionette, timeout=30, ignored_exceptions=NoSuchElementException).until(
             lambda m: m.find_element(By.ID, 'mozLink'))
 
-        self.assertEqual(other_window, self.marionette.current_window_handle)
+        self.assertEqual(other_window, self.marionette.current_chrome_window_handle)
         self.marionette.switch_to_window(self.current_window)
-        self.assertEqual(self.current_window, self.marionette.current_window_handle)
+        self.assertEqual(self.current_window, self.marionette.current_chrome_window_handle)
 
     def tearDown(self):
-        window_handles = self.marionette.window_handles
+        window_handles = self.marionette.chrome_window_handles
         window_handles.remove(self.current_window)
         for handle in window_handles:
             self.marionette.switch_to_window(handle)
-            self.marionette.close()
+            self.marionette.close_chrome_window()
