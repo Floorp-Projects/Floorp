@@ -750,6 +750,60 @@ nsSVGIntegrationUtils::IsMaskResourceReady(nsIFrame* aFrame)
 }
 
 DrawResult
+nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
+{
+  MaskUsage maskUsage;
+  DetermineMaskUsage(aParams.frame, aParams.handleOpacity, maskUsage);
+  MOZ_ASSERT(maskUsage.shouldGenerateMaskLayer);
+
+  nsIFrame* frame = aParams.frame;
+  DrawResult result = DrawResult::SUCCESS;
+  if (!ValidateSVGFrame(frame)) {
+    return result;
+  }
+
+  if (maskUsage.opacity == 0.0f) {
+    return DrawResult::SUCCESS;
+  }
+
+  gfxContext& ctx = aParams.ctx;
+
+  Matrix maskTransform;
+  RefPtr<SourceSurface> maskSurface;
+
+  gfxContextMatrixAutoSaveRestore matSR(&ctx);
+
+  nsIFrame* firstFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+  nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
+  bool opacityApplied = false;
+
+  nsPoint offsetToBoundingBox;
+  nsPoint offsetToUserSpace;
+  SetupContextMatrix(frame, aParams, offsetToBoundingBox,
+                     offsetToUserSpace, false);
+  result = GenerateMaskSurface(aParams, maskUsage.opacity,
+                               firstFrame->StyleContext(),
+                               maskFrames, offsetToUserSpace,
+                               maskTransform, maskSurface, opacityApplied);
+  if (!maskSurface) {
+    // Entire surface is clipped out.
+    return result;
+  }
+
+  ctx.Multiply(ThebesMatrix(maskTransform));
+
+  DrawTarget* target = ctx.GetDrawTarget();
+  MOZ_ASSERT(target->GetFormat() == SurfaceFormat::A8);
+  Rect drawingRect(Point(0, 0), Size(target->GetSize()));
+  target->DrawSurface(maskSurface, drawingRect, drawingRect);
+
+  return result;
+}
+
+DrawResult
 nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 {
   MOZ_ASSERT(UsingMaskOrClipPathForFrame(aParams.frame),
