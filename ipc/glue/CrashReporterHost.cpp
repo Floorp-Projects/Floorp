@@ -6,10 +6,12 @@
 
 #include "CrashReporterHost.h"
 #include "CrashReporterMetadataShmem.h"
+#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_CRASHREPORTER
+# include "nsIAsyncShutdown.h"
 # include "nsICrashService.h"
 #endif
 
@@ -63,6 +65,147 @@ CrashReporterHost::GenerateCrashReport(RefPtr<nsIFile> aCrashDump)
   NotifyCrashService(mProcessType, dumpID, &notes);
 }
 
+/**
+ * Runnable used to execute the minidump analyzer program asynchronously after
+ * a crash. This should run on a background thread not to block the main thread
+ * over the potentially long minidump analysis. Once analysis is over, the
+ * crash information will be relayed to the crash manager via another runnable
+ * sent to the main thread. Shutdown will be blocked for the duration of the
+ * entire process to ensure this information is sent.
+ */
+class AsyncMinidumpAnalyzer final : public nsIRunnable
+                                  , public nsIAsyncShutdownBlocker
+{
+public:
+  /**
+   * Create a new minidump analyzer runnable, this will also block shutdown
+   * until the associated crash has been added to the crash manager.
+   */
+  AsyncMinidumpAnalyzer(int32_t aProcessType,
+                        int32_t aCrashType,
+                        const nsString& aChildDumpID)
+    : mProcessType(aProcessType)
+    , mCrashType(aCrashType)
+    , mChildDumpID(aChildDumpID)
+    , mName(NS_LITERAL_STRING("Crash reporter: blocking on minidump analysis"))
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsresult rv = GetShutdownBarrier()->AddBlocker(
+      this, NS_LITERAL_STRING(__FILE__), __LINE__,
+      NS_LITERAL_STRING("Minidump analysis"));
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  }
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    if (mProcessType == nsICrashService::PROCESS_TYPE_CONTENT) {
+      CrashReporter::RunMinidumpAnalyzer(mChildDumpID);
+    }
+
+    // Make a copy of these so we can copy them into the runnable lambda
+    int32_t processType = mProcessType;
+    int32_t crashType = mCrashType;
+    nsString childDumpID(mChildDumpID);
+
+    NS_DispatchToMainThread(NS_NewRunnableFunction([=] () -> void {
+      nsCOMPtr<nsICrashService> crashService =
+        do_GetService("@mozilla.org/crashservice;1");
+      if (crashService) {
+        crashService->AddCrash(processType, crashType, childDumpID);
+      }
+
+      nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+
+      if (barrier) {
+        barrier->RemoveBlocker(this);
+      }
+    }));
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD BlockShutdown(nsIAsyncShutdownClient* aBarrierClient) override
+  {
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetName(nsAString& aName) override
+  {
+    aName = mName;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetState(nsIPropertyBag**) override
+  {
+    return NS_OK;
+  }
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+private:
+  ~AsyncMinidumpAnalyzer() {}
+
+  // Returns the profile-before-change shutdown barrier
+  static nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+    nsCOMPtr<nsIAsyncShutdownClient> barrier;
+    nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    return barrier.forget();
+  }
+
+  int32_t mProcessType;
+  int32_t mCrashType;
+  const nsString mChildDumpID;
+  const nsString mName;
+};
+
+NS_IMPL_ISUPPORTS(AsyncMinidumpAnalyzer, nsIRunnable, nsIAsyncShutdownBlocker)
+
+/**
+ * Add information about a crash to the crash manager. This method runs the
+ * various activities required to gather additional information and notify the
+ * crash manager asynchronously, since many of them involve I/O or potentially
+ * long processing.
+ *
+ * @param aProcessType The type of process that crashed
+ * @param aCrashType The type of crash (crash or hang)
+ * @param aChildDumpID A string holding the ID of the dump associated with this
+ *        crash
+ */
+/* static */ void
+CrashReporterHost::AsyncAddCrash(int32_t aProcessType,
+                                 int32_t aCrashType,
+                                 const nsString& aChildDumpID)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  static StaticRefPtr<LazyIdleThread> sBackgroundThread;
+
+  if (!sBackgroundThread) {
+    // Background thread used for running minidump analysis. It will be
+    // destroyed immediately after it's done with the task.
+    sBackgroundThread =
+      new LazyIdleThread(0, NS_LITERAL_CSTRING("CrashReporterHost"));
+    ClearOnShutdown(&sBackgroundThread);
+  }
+
+  RefPtr<AsyncMinidumpAnalyzer> task =
+    new AsyncMinidumpAnalyzer(aProcessType, aCrashType, aChildDumpID);
+
+  Unused << sBackgroundThread->Dispatch(task, NS_DISPATCH_NORMAL);
+}
+
 /* static */ void
 CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
                                       const nsString& aChildDumpID,
@@ -78,12 +221,6 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
   }
 
   MOZ_ASSERT(!aChildDumpID.IsEmpty());
-
-  nsCOMPtr<nsICrashService> crashService =
-    do_GetService("@mozilla.org/crashservice;1");
-  if (!crashService) {
-    return;
-  }
 
   int32_t processType;
   int32_t crashType = nsICrashService::CRASH_TYPE_CRASH;
@@ -119,7 +256,7 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
       return;
   }
 
-  crashService->AddCrash(processType, crashType, aChildDumpID);
+  AsyncAddCrash(processType, crashType, aChildDumpID);
   Telemetry::Accumulate(Telemetry::SUBPROCESS_CRASHES_WITH_DUMP, telemetryKey, 1);
 }
 #endif
