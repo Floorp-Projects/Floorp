@@ -54,10 +54,24 @@ registerCleanupFunction(function* () {
   EventUtils.synthesizeMouseAtPoint(1, 1, {type: "mousemove"}, window);
 });
 
-var navigateTo = function (toolbox, url) {
-  let activeTab = toolbox.target.activeTab;
-  return activeTab.navigateTo(url);
-};
+var navigateTo = Task.async(function* (inspector, url) {
+  let markuploaded = inspector.once("markuploaded");
+  let onNewRoot = inspector.once("new-root");
+  let onUpdated = inspector.once("inspector-updated");
+
+  info("Navigating to: " + url);
+  let activeTab = inspector.toolbox.target.activeTab;
+  yield activeTab.navigateTo(url);
+
+  info("Waiting for markup view to load after navigation.");
+  yield markuploaded;
+
+  info("Waiting for new root.");
+  yield onNewRoot;
+
+  info("Waiting for inspector to update after new-root event.");
+  yield onUpdated;
+});
 
 /**
  * Start the element picker and focus the content window.
