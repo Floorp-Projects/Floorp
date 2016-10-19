@@ -7057,7 +7057,35 @@ nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerLayerParameters& aParameters)
 {
+  if (ShouldPaintOnMaskLayer(aManager)) {
+    return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
+                                         mList, GetAnimatedGeometryRoot());
+  }
+
   return LAYER_SVG_EFFECTS;
+}
+
+bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
+{
+  if (!aManager->IsCompositingCheap()) {
+    return false;
+  }
+
+  nsSVGIntegrationUtils::MaskUsage maskUsage;
+  nsSVGIntegrationUtils::DetermineMaskUsage(mFrame, mHandleOpacity, maskUsage);
+
+  if (!maskUsage.shouldGenerateMaskLayer ||
+      maskUsage.opacity != 1.0 || maskUsage.shouldApplyClipPath ||
+      maskUsage.shouldApplyBasicShape ||
+      maskUsage.shouldGenerateClipMaskLayer) {
+    return false;
+  }
+
+  if (!nsSVGIntegrationUtils::IsMaskResourceReady(mFrame)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool nsDisplayMask::ComputeVisibility(nsDisplayListBuilder* aBuilder,
