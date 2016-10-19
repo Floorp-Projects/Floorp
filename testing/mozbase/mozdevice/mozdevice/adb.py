@@ -1435,7 +1435,7 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
                  * ADBError
         """
-        # Note the on some tests such as webappstartup, an error
+        # Note that on some tests such as webappstartup, an error
         # occurs during recursive calls to chmod where a "No such file
         # or directory" error will occur for the
         # /data/data/org.mozilla.fennec/files/mozilla/*.webapp0/lock
@@ -1447,43 +1447,44 @@ class ADBDevice(ADBCommand):
         path = posixpath.normpath(path.strip())
         self._logger.debug('chmod: path=%s, recursive=%s, mask=%s, root=%s' %
                            (path, recursive, mask, root))
-        if recursive and self._chmod_R:
+        if not recursive:
+            self.shell_output("chmod %s %s" % (mask, path),
+                              timeout=timeout, root=root)
+            return
+
+        if self._chmod_R:
             try:
                 self.shell_output("chmod -R %s %s" % (mask, path),
                                   timeout=timeout, root=root)
-            except ADBError, e:
-                if e.message.find('No such file or directory') != -1:
-                    self._logger.warning('chmod -R %s %s: Ignoring Error: %s' %
-                                         (mask, path, e.message))
-                else:
+            except ADBError as e:
+                if e.message.find('No such file or directory') == -1:
                     raise
+                self._logger.warning('chmod -R %s %s: Ignoring Error: %s' %
+                                     (mask, path, e.message))
             return
-
-        self.shell_output("chmod %s %s" % (mask, path),
-                          timeout=timeout, root=root)
-        if recursive and self.is_dir(path, timeout=timeout, root=root):
-            files = self.list_files(path, timeout=timeout, root=root)
-            for f in files:
-                entry = path + "/" + f
-                self._logger.debug('chmod: entry=%s' % entry)
-                if self.is_dir(entry, timeout=timeout, root=root):
-                    self._logger.debug('chmod: recursion entry=%s' % entry)
-                    self.chmod(entry, recursive=recursive, mask=mask,
-                               timeout=timeout, root=root)
-                elif self.is_file(entry, timeout=timeout, root=root):
-                    try:
-                        self.shell_output("chmod %s %s" % (mask, entry),
-                                          timeout=timeout, root=root)
-                        self._logger.debug('chmod: file entry=%s' % entry)
-                    except ADBError as e:
-                        if e.message.find('No such file or directory'):
-                            # some kind of race condition is causing files
-                            # to disappear. Catch and report the error here.
-                            self._logger.warning('chmod: File %s vanished!: %s' %
-                                                 (entry, e))
-                else:
-                    self._logger.warning('chmod: entry %s does not exist' %
-                                         entry)
+        # Obtain a list of the directories and files which match path
+        # and construct a shell script which explictly calls chmod on
+        # each of them.
+        entries = self.ls(path, recursive=recursive, timeout=timeout,
+                          root=root)
+        tmpf = None
+        chmodsh = None
+        try:
+            tmpf = tempfile.NamedTemporaryFile(delete=False)
+            for entry in entries:
+                tmpf.write('chmod %s %s\n' % (mask, entry))
+            tmpf.close()
+            chmodsh = '/data/local/tmp/%s' % os.path.basename(tmpf.name)
+            self.push(tmpf.name, chmodsh)
+            self.shell_output('chmod 777 %s' % chmodsh, timeout=timeout,
+                              root=root)
+            self.shell_output('sh -c %s' % chmodsh, timeout=timeout,
+                              root=root)
+        finally:
+            if tmpf:
+                os.unlink(tmpf.name)
+            if chmodsh:
+                self.rm(chmodsh, timeout=timeout, root=root)
 
     def exists(self, path, timeout=None, root=False):
         """Returns True if the path exists on the device.
