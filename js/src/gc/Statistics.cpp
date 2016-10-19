@@ -770,11 +770,13 @@ Statistics::formatJsonPhaseTimes(const PhaseTimeTable phaseTimes)
 
         UniqueChars name = FilterJsonKey(phases[phase].name);
         int64_t ownTime = phaseTimes[dagSlot][phase];
-        SprintfLiteral(buffer, "\"%s\":%" PRId64 ".%03" PRId64,
-                       name.get(), ownTime / 1000, ownTime % 1000);
+        if (ownTime > 0) {
+            SprintfLiteral(buffer, "\"%s\":%" PRId64 ".%03" PRId64,
+                           name.get(), ownTime / 1000, ownTime % 1000);
 
-        if (!fragments.append(DuplicateString(buffer)))
-            return UniqueChars(nullptr);
+            if (!fragments.append(DuplicateString(buffer)))
+                return UniqueChars(nullptr);
+        }
     }
     return Join(fragments, ",");
 }
