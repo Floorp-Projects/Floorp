@@ -104,7 +104,7 @@ protected:
   nsresult DrawDrag(nsIDOMNode* aDOMNode,
                     nsIScriptableRegion* aRegion,
                     mozilla::CSSIntPoint aScreenPosition,
-                    nsIntRect* aScreenDragRect,
+                    mozilla::LayoutDeviceIntRect* aScreenDragRect,
                     RefPtr<SourceSurface>* aSurface,
                     nsPresContext **aPresContext);
 
@@ -114,7 +114,7 @@ protected:
    */
   nsresult DrawDragForImage(nsIImageLoadingContent* aImageLoader,
                             mozilla::dom::HTMLCanvasElement* aCanvas,
-                            nsIntRect* aScreenDragRect,
+                            mozilla::LayoutDeviceIntRect* aScreenDragRect,
                             RefPtr<SourceSurface>* aSurface);
 
   /**
