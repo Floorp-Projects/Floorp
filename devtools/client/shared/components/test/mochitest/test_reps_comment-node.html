@@ -33,7 +33,7 @@ window.onload = Task.async(function* () {
         "kind": "DOMNode",
         "nodeType": 8,
         "nodeName": "#comment",
-        "textContent": "test\nand test\nand test\nand test\nand test"
+        "textContent": "test\nand test\nand test\nand test\nand test\nand test\nand test"
       }
     };
 
@@ -47,7 +47,7 @@ window.onload = Task.async(function* () {
     is(renderedComponent.className, "objectBox theme-comment",
       "CommentNode rep has expected class names");
     is(renderedComponent.textContent,
-      `<!-- test\\nand test\\nand test\\nand test\\nand test -->`,
+      `<!-- test\nand test\nand test\nan…d test\nand test\nand test -->`,
       "CommentNode rep has expected text content");
 
     // Test tiny rendering.
@@ -55,7 +55,8 @@ window.onload = Task.async(function* () {
       object: gripStub,
       mode: "tiny"
     });
-    is(tinyRenderedComponent.textContent, `<!-- test\\nand test\\na… test\\nand test -->`,
+    is(tinyRenderedComponent.textContent,
+      `<!-- test\\nand test\\na… test\\nand test -->`,
       "CommentNode rep has expected text content in tiny mode");
 
     // Test long rendering.
