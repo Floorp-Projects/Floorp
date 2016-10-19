@@ -685,7 +685,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     if (presContext->RestyleManager()->IsGecko()) {
       // stylo: ServoRestyleManager does not handle transitions yet, and when
       // it does it probably won't need to track reframed style contexts to
-      // start transitions correctly.
+      // initiate transitions correctly.
       RestyleManager::ReframingStyleContexts* rsc =
         presContext->RestyleManager()->AsGecko()->GetReframingStyleContexts();
       if (rsc) {

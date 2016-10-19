@@ -32,7 +32,7 @@ var p = document.getElementById("display");
 var cs = getComputedStyle(p, "");
 advance_clock(0);
 cs.width; // flush
-p.style.width = "1000px"; // start transition
+p.style.width = "1000px"; // initiate transition
 is(cs.width, "0px", "transition at 0ms"); // flush (and test)
 advance_clock(100);
 is(cs.width, "100px", "transition at 100ms"); // flush
