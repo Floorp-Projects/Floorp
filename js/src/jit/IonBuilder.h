@@ -884,8 +884,9 @@ class IonBuilder
     InliningStatus inlineUnsafeGetReservedSlot(CallInfo& callInfo,
                                                MIRType knownValueType);
 
-    // Map intrinsics.
-    InliningStatus inlineGetNextMapEntryForIterator(CallInfo& callInfo);
+    // Map and Set intrinsics.
+    InliningStatus inlineGetNextEntryForIterator(CallInfo& callInfo,
+                                                 MGetNextEntryForIterator::Mode mode);
 
     // ArrayBuffer intrinsics.
     InliningStatus inlineArrayBufferByteLength(CallInfo& callInfo);

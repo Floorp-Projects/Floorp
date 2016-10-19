@@ -2340,7 +2340,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<MapIteratorObject>>,        2,0),
 
     JS_FN("_CreateSetIterationResult", intrinsic_CreateSetIterationResult, 0, 0),
-    JS_FN("_GetNextSetEntryForIterator", intrinsic_GetNextSetEntryForIterator, 2,0),
+    JS_INLINABLE_FN("_GetNextSetEntryForIterator", intrinsic_GetNextSetEntryForIterator, 2,0,
+                    IntrinsicGetNextSetEntryForIterator),
     JS_FN("CallSetIteratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<SetIteratorObject>>,        2,0),
 
