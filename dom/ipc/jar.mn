@@ -10,4 +10,3 @@ toolkit.jar:
         content/global/BrowserElementCopyPaste.js (../browser-element/BrowserElementCopyPaste.js)
         content/global/extensions.js (extensions.js)
         content/global/manifestMessages.js (manifestMessages.js)
-        content/global/preload.js (preload.js)

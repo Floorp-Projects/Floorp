@@ -531,7 +531,6 @@ child:
 
     async AppInfo(nsCString version, nsCString buildID, nsCString name, nsCString UAName,
                   nsCString ID, nsCString vendor);
-    async AppInit();
 
     /**
      * Send ServiceWorkerRegistrationData to child process.
@@ -915,9 +914,6 @@ parent:
 
     // Notify the parent of the presence or absence of private docshells
     async PrivateDocShellsExist(bool aExist);
-
-    // Tell the parent that the child has gone idle for the first time
-    async FirstIdle();
 
     async AudioChannelServiceStatus(bool aActiveTelephonyChannel,
                                     bool aContentOrNormalChannel,
