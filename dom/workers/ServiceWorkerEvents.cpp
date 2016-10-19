@@ -426,7 +426,7 @@ ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
       // this report anywhere.
       RefPtr<xpc::ErrorReport> report = new xpc::ErrorReport();
       report->Init(err,
-                   "<unknown>", // toString result
+                   "<unknown>", // fallback message
                    false,       // chrome
                    0);          // window ID
 

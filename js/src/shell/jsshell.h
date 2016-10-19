@@ -24,7 +24,7 @@ const JSErrorFormatString*
 my_GetErrorMessage(void* userRef, const unsigned errorNumber);
 
 void
-WarningReporter(JSContext* cx, JSErrorReport* report);
+WarningReporter(JSContext* cx, const char* message, JSErrorReport* report);
 
 class MOZ_STACK_CLASS AutoReportException
 {

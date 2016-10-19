@@ -70,7 +70,6 @@
 #include "js/SliceBudget.h"
 #include "js/StructuredClone.h"
 #include "js/UniquePtr.h"
-#include "js/Utility.h"
 #include "vm/DateObject.h"
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
@@ -6130,45 +6129,15 @@ JS_ErrorFromException(JSContext* cx, HandleObject obj)
 }
 
 void
-JSErrorReport::initBorrowedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg,
-                                   size_t tokenOffsetArg)
+JSErrorReport::initLinebuf(const char16_t* linebuf, size_t linebufLength, size_t tokenOffset)
 {
-    MOZ_ASSERT(linebufArg);
-    MOZ_ASSERT(tokenOffsetArg <= linebufLengthArg);
-    MOZ_ASSERT(linebufArg[linebufLengthArg] == '\0');
+    MOZ_ASSERT(linebuf);
+    MOZ_ASSERT(tokenOffset <= linebufLength);
+    MOZ_ASSERT(linebuf[linebufLength] == '\0');
 
-    linebuf_ = linebufArg;
-    linebufLength_ = linebufLengthArg;
-    tokenOffset_ = tokenOffsetArg;
-}
-
-void
-JSErrorReport::freeLinebuf()
-{
-    if (ownsLinebuf_ && linebuf_) {
-        js_free((void*)linebuf_);
-        ownsLinebuf_ = false;
-    }
-    linebuf_ = nullptr;
-}
-
-JSString*
-JSErrorReport::newMessageString(JSContext* cx)
-{
-    if (!message_)
-        return cx->runtime()->emptyString;
-
-    return JS_NewStringCopyUTF8Z(cx, message_);
-}
-
-void
-JSErrorReport::freeMessage()
-{
-    if (ownsMessage_) {
-        js_free((void*)message_.get());
-        ownsMessage_ = false;
-    }
-    message_ = JS::ConstUTF8CharsZ();
+    linebuf_ = linebuf;
+    linebufLength_ = linebufLength;
+    tokenOffset_ = tokenOffset;
 }
 
 JS_PUBLIC_API(bool)

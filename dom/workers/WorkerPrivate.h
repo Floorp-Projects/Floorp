@@ -9,7 +9,6 @@
 
 #include "Workers.h"
 
-#include "js/CharacterEncoding.h"
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsILoadGroup.h"
@@ -1165,8 +1164,7 @@ public:
   NotifyInternal(JSContext* aCx, Status aStatus);
 
   void
-  ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
-              JSErrorReport* aReport);
+  ReportError(JSContext* aCx, const char* aMessage, JSErrorReport* aReport);
 
   static void
   ReportErrorToConsole(const char* aMessage);

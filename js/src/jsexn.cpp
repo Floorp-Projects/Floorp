@@ -28,7 +28,6 @@
 #include "jswrapper.h"
 
 #include "gc/Marking.h"
-#include "js/CharacterEncoding.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/SavedStacks.h"
@@ -152,7 +151,7 @@ js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
      * We use a single malloc block to make a deep copy of JSErrorReport with
      * the following layout:
      *   JSErrorReport
-     *   char array with characters for message_
+     *   char16_t array with characters for ucmessage
      *   char16_t array with characters for linebuf
      *   char array with characters for filename
      * Such layout together with the properties enforced by the following
@@ -167,15 +166,15 @@ js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
     size_t linebufSize = 0;
     if (report->linebuf())
         linebufSize = (report->linebufLength() + 1) * sizeof(char16_t);
-    size_t messageSize = 0;
-    if (report->message())
-        messageSize = strlen(report->message().c_str()) + 1;
+    size_t ucmessageSize = 0;
+    if (report->ucmessage)
+        ucmessageSize = JS_CHARS_SIZE(report->ucmessage);
 
     /*
      * The mallocSize can not overflow since it represents the sum of the
      * sizes of already allocated objects.
      */
-    size_t mallocSize = sizeof(JSErrorReport) + messageSize + linebufSize + filenameSize;
+    size_t mallocSize = sizeof(JSErrorReport) + ucmessageSize + linebufSize + filenameSize;
     uint8_t* cursor = cx->pod_calloc<uint8_t>(mallocSize);
     if (!cursor)
         return nullptr;
@@ -183,17 +182,17 @@ js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
     JSErrorReport* copy = (JSErrorReport*)cursor;
     cursor += sizeof(JSErrorReport);
 
-    if (report->message()) {
-        copy->initBorrowedMessage((const char*)cursor);
-        js_memcpy(cursor, report->message().c_str(), messageSize);
-        cursor += messageSize;
+    if (report->ucmessage) {
+        copy->ucmessage = (const char16_t*)cursor;
+        js_memcpy(cursor, report->ucmessage, ucmessageSize);
+        cursor += ucmessageSize;
     }
 
     if (report->linebuf()) {
         const char16_t* linebufCopy = (const char16_t*)cursor;
         js_memcpy(cursor, report->linebuf(), linebufSize);
         cursor += linebufSize;
-        copy->initBorrowedLinebuf(linebufCopy, report->linebufLength(), report->tokenOffset());
+        copy->initLinebuf(linebufCopy, report->linebufLength(), report->tokenOffset());
     }
 
     if (report->filename) {
@@ -503,7 +502,7 @@ js::GetErrorTypeName(JSContext* cx, int16_t exnType)
 }
 
 void
-js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
+js::ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
                      JSErrorCallback callback, void* userRef)
 {
     MOZ_ASSERT(reportp);
@@ -513,7 +512,7 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     // we cannot construct the Error constructor without self-hosted code. Just
     // print the error to stderr to help debugging.
     if (cx->runtime()->isSelfHostingCompartment(cx->compartment())) {
-        PrintError(cx, stderr, JS::ConstUTF8CharsZ(), reportp, true);
+        PrintError(cx, stderr, message, reportp, true);
         return;
     }
 
@@ -537,7 +536,8 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     AutoScopedAssign<bool> asa(&cx->generatingError, true);
 
     // Create an exception object.
-    RootedString messageStr(cx, reportp->newMessageString(cx));
+    RootedString messageStr(cx, reportp->ucmessage ? JS_NewUCStringCopyZ(cx, reportp->ucmessage)
+                                                   : JS_NewStringCopyZ(cx, message));
     if (!messageStr)
         return;
 
@@ -612,7 +612,7 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
 
     /*
      * If "str" is null at this point, that means we just want to use
-     * message without prefixing it with anything.
+     * reportp->ucmessage without prefixing it with anything.
      */
     if (str) {
         RootedString separator(cx, JS_NewUCStringCopyN(cx, u": ", 2));
@@ -623,7 +623,7 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
             return nullptr;
     }
 
-    RootedString message(cx, reportp->newMessageString(cx));
+    RootedString message(cx, JS_NewUCStringCopyZ(cx, reportp->ucmessage));
     if (!message)
         return nullptr;
 
@@ -635,6 +635,8 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
 
 ErrorReport::ErrorReport(JSContext* cx)
   : reportp(nullptr),
+    message_(nullptr),
+    ownedMessage(nullptr),
     str(cx),
     strChars(cx),
     exnObject(cx)
@@ -643,6 +645,11 @@ ErrorReport::ErrorReport(JSContext* cx)
 
 ErrorReport::~ErrorReport()
 {
+    if (!ownedMessage)
+        return;
+
+    js_free(ownedMessage);
+    js_free(const_cast<char16_t*>(ownedReport.ucmessage));
 }
 
 void
@@ -831,47 +838,37 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
         ownedReport.exnType = JSEXN_INTERNALERR;
         ownedReport.column = column;
         if (str) {
-            // Note that using |str| for |message_| here is kind of wrong,
+            // Note that using |str| for |ucmessage| here is kind of wrong,
             // because |str| is supposed to be of the format
-            // |ErrorName: ErrorMessage|, and |message_| is supposed to
-            // correspond to |ErrorMessage|. But this is what we've
-            // historically done for duck-typed error objects.
+            // |ErrorName: ErrorMessage|, and |ucmessage| is supposed to
+            // correspond to |ErrorMessage|. But this is what we've historically
+            // done for duck-typed error objects.
             //
             // If only this stuff could get specced one day...
-            char* utf8;
-            if (str->ensureFlat(cx) &&
-                strChars.initTwoByte(cx, str) &&
-                (utf8 = JS::CharsToNewUTF8CharsZ(cx, strChars.twoByteRange()).c_str()))
-            {
-                ownedReport.initOwnedMessage(utf8);
-            } else {
-                cx->clearPendingException();
-                str = nullptr;
-            }
+            if (str->ensureFlat(cx) && strChars.initTwoByte(cx, str))
+                ownedReport.ucmessage = strChars.twoByteChars();
         }
     }
 
-    const char* utf8Message = nullptr;
     if (str)
-        utf8Message = toStringResultBytesStorage.encodeUtf8(cx, str);
-    if (!utf8Message)
-        utf8Message = "unknown (can't convert to string)";
+        message_ = bytesStorage.encodeUtf8(cx, str);
+    if (!message_)
+        message_ = "unknown (can't convert to string)";
 
     if (!reportp) {
         // This is basically an inlined version of
         //
         //   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-        //                            JSMSG_UNCAUGHT_EXCEPTION, utf8Message);
+        //                            JSMSG_UNCAUGHT_EXCEPTION, message_);
         //
         // but without the reporting bits.  Instead it just puts all
         // the stuff we care about in our ownedReport and message_.
-        if (!populateUncaughtExceptionReportUTF8(cx, utf8Message)) {
+        if (!populateUncaughtExceptionReportUTF8(cx, message_)) {
             // Just give up.  We're out of memory or something; not much we can
             // do here.
             return false;
         }
     } else {
-        toStringResult_ = JS::ConstUTF8CharsZ(utf8Message, strlen(utf8Message));
         /* Flag the error as an exception. */
         reportp->flags |= JSREPORT_EXCEPTION;
     }
@@ -910,13 +907,14 @@ ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx, va_list ap)
     }
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr,
-                                JSMSG_UNCAUGHT_EXCEPTION,
+                                JSMSG_UNCAUGHT_EXCEPTION, &ownedMessage,
                                 nullptr, ArgumentsAreUTF8, &ownedReport, ap)) {
         return false;
     }
 
-    toStringResult_ = ownedReport.message();
     reportp = &ownedReport;
+    message_ = ownedMessage;
+    ownsMessageAndReport = true;
     return true;
 }
 
