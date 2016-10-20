@@ -36,7 +36,7 @@
       info("Playing from track clones");
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, clone);
-      return playback.playMedia(false);
+      return playback.playMediaWithMediaStreamTracksStop(false);
     })
     .then(() => getUserMedia({video: true})).then(stream =>
       getUserMedia({video: true}).then(otherStream => {
@@ -67,7 +67,7 @@
 
         var test = createMediaElement('video', 'testClonePlayback');
         var playback = new MediaStreamPlayback(test, streamClone);
-        return playback.playMedia(false)
+        return playback.playMediaWithMediaStreamTracksStop(false)
           .then(() => stream.getTracks().forEach(t => t.stop()))
           .then(() => stream.stop());
     }))
@@ -85,7 +85,7 @@
 
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, inceptionClone);
-      return playback.playMedia(false);
+      return playback.playMediaWithMediaStreamTracksStop(false);
     })
     .then(() => getUserMedia({audio: true, video: true})).then(stream => {
       info("Test adding tracks from many stream clones to the original stream");
@@ -105,7 +105,7 @@
 
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, stream);
-      return playback.playMedia(false);
+      return playback.playMediaWithMediaStreamTracksStop(false);
     })
     .then(() => {
       info("Testing audio content routing with MediaStream.clone()");
