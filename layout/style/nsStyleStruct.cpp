@@ -3635,7 +3635,8 @@ nsStyleContent::Destroy(nsPresContext* aContext)
 {
   // Unregister any images we might have with the document.
   for (auto& content : mContents) {
-    if (content.mType == eStyleContentType_Image && content.mContent.mImage) {
+    if (content.GetType() == eStyleContentType_Image &&
+        content.GetImage()) {
       content.UntrackImage(aContext->Document()->ImageTracker());
     }
   }
