@@ -74,6 +74,7 @@ protected:
   virtual ~nsNativeThemeGTK();
 
 private:
+  GtkTextDirection GetTextDirection(nsIFrame* aFrame);
   gint GetTabMarginPixels(nsIFrame* aFrame);
   bool GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
                             WidgetNodeType& aGtkWidgetType,
