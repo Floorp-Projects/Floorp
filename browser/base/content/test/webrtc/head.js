@@ -233,18 +233,6 @@ function expectNoObserverCalled() {
   });
 }
 
-function promiseTodoObserverNotCalled(aTopic) {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener("Test:TodoObserverNotCalled:Reply",
-                          function listener({data}) {
-      mm.removeMessageListener("Test:TodoObserverNotCalled:Reply", listener);
-      resolve(data.count);
-    });
-    mm.sendAsyncMessage("Test:TodoObserverNotCalled", aTopic);
-  });
-}
-
 function promiseMessage(aMessage, aAction) {
   let promise = new Promise((resolve, reject) => {
     let mm = _mm();
@@ -357,11 +345,6 @@ function* stopSharing(aType = "camera") {
   yield promiseRecordingEvent;
   yield expectObserverCalled("getUserMedia:revoke");
   yield expectObserverCalled("recording-window-ended");
-
-  if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
-    todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-  }
-
   yield expectNoObserverCalled();
   yield* checkNotSharing();
 }
@@ -397,12 +380,6 @@ function* closeStream(aAlreadyClosed, aFrameId) {
 
   if (promises)
     yield Promise.all(promises);
-
-  // If a GC occurs before MediaStream.stop() is dispatched, we'll receive
-  // recording-device-events for each track instead of one for the stream.
-  if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
-    todo(false, "Stream was GC'd before MediaStream.stop() was dispatched (bug 1284038)");
-  }
 
   yield* assertWebRTCIndicatorStatus(null);
 }

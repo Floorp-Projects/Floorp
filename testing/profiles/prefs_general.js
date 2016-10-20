@@ -318,6 +318,8 @@ user_pref("media.decoder.heuristic.dormant.timeout", 0);
 // Don't use auto-enabled e10s
 user_pref("browser.tabs.remote.autostart.1", false);
 user_pref("browser.tabs.remote.autostart.2", false);
+// Don't show a delay when hiding the audio indicator during tests
+user_pref("browser.tabs.delayHidingAudioPlayingIconMS", 0);
 // Don't forceably kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 

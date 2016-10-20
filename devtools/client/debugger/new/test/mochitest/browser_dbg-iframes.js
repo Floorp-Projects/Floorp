@@ -7,7 +7,7 @@
  *  2. pause in the iframe
  */
 add_task(function* () {
-  const dbg = yield initDebugger("doc-iframes.html", "iframes.html");
+  const dbg = yield initDebugger("doc-iframes.html");
 
   // test pausing in the main thread
   yield reload(dbg);
