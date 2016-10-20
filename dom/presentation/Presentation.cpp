@@ -62,7 +62,8 @@ Presentation::HasReceiverSupport(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  if (!docshell->GetIsInMozBrowserOrApp()) {
+  if (!Preferences::GetBool("dom.presentation.testing.simulate-receiver") &&
+      !docshell->GetIsInMozBrowserOrApp()) {
     return false;
   }
 
