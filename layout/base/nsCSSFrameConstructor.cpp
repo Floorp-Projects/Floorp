@@ -340,15 +340,6 @@ IsFlexOrGridContainer(const nsIFrame* aFrame)
          t == nsGkAtoms::gridContainerFrame;
 }
 
-// Returns true if aFrame has "display: -webkit-{inline-}box"
-static inline bool
-IsWebkitBox(const nsIFrame* aFrame)
-{
-  auto containerDisplay = aFrame->StyleDisplay()->mDisplay;
-  return containerDisplay == StyleDisplay::WebkitBox ||
-    containerDisplay == StyleDisplay::WebkitInlineBox;
-}
-
 #if DEBUG
 static void
 AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
@@ -9876,7 +9867,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
   }
 
   nsIAtom* containerType = aParentFrame->GetType();
-  const bool isWebkitBox = IsWebkitBox(aParentFrame);
+  const bool isWebkitBox = nsFlexContainerFrame::IsLegacyBox(aParentFrame);
 
   FCItemIterator iter(aItems);
   do {
@@ -12182,7 +12173,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // Check if we're adding to-be-wrapped content right *after* an existing
     // anonymous flex or grid item (which would need to absorb this content).
     nsIAtom* containerType = aFrame->GetType();
-    bool isWebkitBox = IsWebkitBox(aFrame);
+    const bool isWebkitBox = nsFlexContainerFrame::IsLegacyBox(aFrame);
     if (aPrevSibling && IsAnonymousFlexOrGridItem(aPrevSibling) &&
         iter.item().NeedsAnonFlexOrGridItem(aState, containerType,
                                             isWebkitBox)) {
@@ -12224,9 +12215,10 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // Skip over things that _do_ need an anonymous flex item, because
     // they're perfectly happy to go here -- they won't cause a reframe.
     nsIFrame* containerFrame = aFrame->GetParent();
+    const bool isWebkitBox = nsFlexContainerFrame::IsLegacyBox(containerFrame);
     if (!iter.SkipItemsThatNeedAnonFlexOrGridItem(aState,
                                                   containerFrame->GetType(),
-                                                  IsWebkitBox(containerFrame))) {
+                                                  isWebkitBox)) {
       // We hit something that _doesn't_ need an anonymous flex item!
       // Rebuild the flex container to bust it out.
       RecreateFramesForContent(containerFrame->GetContent(), true,
