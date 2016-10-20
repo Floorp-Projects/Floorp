@@ -7,6 +7,8 @@ package org.mozilla.gecko.sync.stage;
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.sync.CryptoRecord;
+import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
+import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
 import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
@@ -54,7 +56,11 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
 
   @Override
   protected Repository getLocalRepository() {
-    return new FormHistoryRepositorySession.FormHistoryRepository();
+    return new BufferingMiddlewareRepository(
+            session.getSyncDeadline(),
+            new MemoryBufferStorage(),
+            new FormHistoryRepositorySession.FormHistoryRepository()
+    );
   }
 
   public class FormHistoryRecordFactory extends RecordFactory {
