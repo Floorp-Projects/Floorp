@@ -560,6 +560,10 @@ VRControllerManagerOpenVR::HandleInput()
   RefPtr<impl::VRControllerOpenVR> controller;
   vr::VRControllerState_t state;
 
+  if (!mOpenVRInstalled) {
+    return;
+  }
+
   MOZ_ASSERT(mVRSystem);
 
   // Process OpenVR controller state
