@@ -10,10 +10,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom'
 
-EXPORTS += [
-    'nsICachedFileDescriptorListener.h',
-]
-
 EXPORTS.mozilla.dom.ipc += [
     'BlobChild.h',
     'BlobParent.h',
