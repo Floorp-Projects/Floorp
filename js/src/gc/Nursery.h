@@ -61,6 +61,7 @@ class HeapSlot;
 void SetGCZeal(JSRuntime*, uint8_t, uint32_t);
 
 namespace gc {
+class AutoMaybeStartBackgroundAllocation;
 struct Cell;
 class MinorCollectionTracer;
 class RelocationOverlay;
@@ -388,7 +389,9 @@ class Nursery
     void setStartPosition();
 
     void updateNumChunks(unsigned newCount);
-    void updateNumChunksLocked(unsigned newCount, AutoLockGC& lock);
+    void updateNumChunksLocked(unsigned newCount,
+                               gc::AutoMaybeStartBackgroundAllocation& maybeBgAlloc,
+                               AutoLockGC& lock);
 
     MOZ_ALWAYS_INLINE uintptr_t allocationEnd() const {
         MOZ_ASSERT(numChunks() > 0);
