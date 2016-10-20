@@ -33,10 +33,12 @@ IdToObjectMap::init()
 }
 
 void
-IdToObjectMap::trace(JSTracer* trc)
+IdToObjectMap::trace(JSTracer* trc, uint64_t minimimId)
 {
-    for (Table::Range r(table_.all()); !r.empty(); r.popFront())
-        JS::TraceEdge(trc, &r.front().value(), "ipc-object");
+    for (Table::Range r(table_.all()); !r.empty(); r.popFront()) {
+        if (r.front().key().serialNumber() >= minimimId)
+            JS::TraceEdge(trc, &r.front().value(), "ipc-object");
+    }
 }
 
 void
@@ -145,7 +147,8 @@ bool JavaScriptShared::sStackLoggingEnabled;
 
 JavaScriptShared::JavaScriptShared()
   : refcount_(1),
-    nextSerialNumber_(1)
+    nextSerialNumber_(1),
+    nextCPOWNumber_(1)
 {
     if (!sLoggingInitialized) {
         sLoggingInitialized = true;

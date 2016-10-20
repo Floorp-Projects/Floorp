@@ -23,9 +23,9 @@
 #include "nsIWebProgressListener.h"
 
 // XP Dialog includes
+#include "nsArray.h"
 #include "nsIDialogParamBlock.h"
 #include "nsISupportsUtils.h"
-#include "nsISupportsArray.h"
 
 // Includes need to locate the native Window
 #include "nsIWidget.h"
@@ -258,29 +258,21 @@ nsPrintingPromptService::DoDialog(mozIDOMWindowProxy *aParent,
         aParent = activeParent;
     }
 
-    // create a nsISupportsArray of the parameters 
+    // create a nsIMutableArray of the parameters 
     // being passed to the window
-    nsCOMPtr<nsISupportsArray> array;
-    nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
-    if (NS_FAILED(rv)) {
-        return NS_ERROR_FAILURE;
-    }
+    nsCOMPtr<nsIMutableArray> array = nsArray::Create();
 
     nsCOMPtr<nsISupports> psSupports(do_QueryInterface(aPS));
     NS_ASSERTION(psSupports, "PrintSettings must be a supports");
-    array->AppendElement(psSupports);
+    array->AppendElement(psSupports, /*weak =*/ false);
 
     nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(aParamBlock));
     NS_ASSERTION(blkSupps, "IOBlk must be a supports");
-    array->AppendElement(blkSupps);
-
-    nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
-    NS_ASSERTION(array, "array must be a supports");
-
+    array->AppendElement(blkSupps, /*weak =*/ false);
 
     nsCOMPtr<mozIDOMWindowProxy> dialog;
-    rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
-                              "centerscreen,chrome,modal,titlebar", arguments,
+    nsresult rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
+                              "centerscreen,chrome,modal,titlebar", array,
                               getter_AddRefs(dialog));
 
     return rv;
