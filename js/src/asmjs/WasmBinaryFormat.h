@@ -51,6 +51,10 @@ DecodeLimits(Decoder& d, Limits* limits);
 MOZ_MUST_USE bool
 DecodeUnknownSections(Decoder& d);
 
+MOZ_MUST_USE bool
+DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLength,
+                  const GlobalDescVector& globals, DataSegmentVector* segments);
+
 } // namespace wasm
 } // namespace js
 
