@@ -208,8 +208,17 @@ struct ImageValue final : public URLValueData
              nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal,
              nsIDocument* aDocument);
 
+  // This constructor is safe to call from any thread, but Initialize
+  // must be called later for the object to be useful.
+  ImageValue(nsStringBuffer* aString,
+             already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
+             already_AddRefed<PtrHolder<nsIURI>> aReferrer,
+             already_AddRefed<PtrHolder<nsIPrincipal>> aOriginPrincipal);
+
   ImageValue(const ImageValue&) = delete;
   ImageValue& operator=(const ImageValue&) = delete;
+
+  void Initialize(nsIDocument* aDocument);
 
   // XXXheycam We should have our own SizeOfIncludingThis method.
 
@@ -220,6 +229,11 @@ public:
   // Inherit Equals from URLValueData
 
   nsRefPtrHashtable<nsPtrHashKey<nsIDocument>, imgRequestProxy> mRequests;
+
+private:
+#ifdef DEBUG
+  bool mInitialized = false;
+#endif
 };
 
 struct GridNamedArea {
@@ -854,6 +868,11 @@ public:
   // imgIRequest.h, which leads to REQUIRES hell, since this header is included
   // all over.
   imgRequestProxy* GetImageValue(nsIDocument* aDocument) const;
+
+  // Like GetImageValue, but additionally will pass the imgRequestProxy
+  // through nsContentUtils::GetStaticRequest if aPresContent is static.
+  already_AddRefed<imgRequestProxy> GetPossiblyStaticImageValue(
+      nsIDocument* aDocument, nsPresContext* aPresContext) const;
 
   nscoord GetFixedLength(nsPresContext* aPresContext) const;
   nscoord GetPixelLength() const;

@@ -85,15 +85,10 @@ MediaKeyMessageEvent::Constructor(const GlobalObject& aGlobal,
   RefPtr<MediaKeyMessageEvent> e = new MediaKeyMessageEvent(owner);
   bool trusted = e->Init(owner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
-  const uint8_t* data = nullptr;
-  size_t length = 0;
-  if (aEventInitDict.mMessage.WasPassed()) {
-    const auto& a = aEventInitDict.mMessage.Value();
-    a.ComputeLengthAndData();
-    data = a.Data();
-    length = a.Length();
-  }
-  e->mMessage = ArrayBuffer::Create(aGlobal.Context(), length, data);
+  aEventInitDict.mMessage.ComputeLengthAndData();
+  e->mMessage = ArrayBuffer::Create(aGlobal.Context(),
+                                    aEventInitDict.mMessage.Length(),
+                                    aEventInitDict.mMessage.Data());
   if (!e->mMessage) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;

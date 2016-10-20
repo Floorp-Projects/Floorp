@@ -584,9 +584,6 @@ pref("media.webspeech.synth.enabled", false);
 #ifdef MOZ_WEBM_ENCODER
 pref("media.encoder.webm.enabled", true);
 #endif
-#ifdef MOZ_OMX_ENCODER
-pref("media.encoder.omx.enabled", true);
-#endif
 
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
