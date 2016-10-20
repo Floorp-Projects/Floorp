@@ -60,7 +60,7 @@ public:
 
   // Accessors for use by PeerConnectionImpl.
   RefPtr<DtlsIdentity> CreateDtlsIdentity() const;
-  CERTCertificate* Certificate() const { return mCertificate; }
+  const UniqueCERTCertificate& Certificate() const { return mCertificate; }
 
   // For nsNSSShutDownObject
   virtual void virtualDestroyNSSReference() override;
@@ -85,8 +85,8 @@ private:
                        const nsNSSShutDownPreventionLock& aLockProof) const;
 
   RefPtr<nsIGlobalObject> mGlobal;
-  ScopedSECKEYPrivateKey mPrivateKey;
-  ScopedCERTCertificate mCertificate;
+  UniqueSECKEYPrivateKey mPrivateKey;
+  UniqueCERTCertificate mCertificate;
   SSLKEAType mAuthType;
   PRTime mExpires;
 };

@@ -82,7 +82,7 @@ public:
 private:
   PRTime mExpires;
   SSLKEAType mAuthType;
-  ScopedCERTCertificate mCertificate;
+  UniqueCERTCertificate mCertificate;
   SECOidTag mSignatureAlg;
 
   static CERTName* GenerateRandomName(PK11SlotInfo* aSlot)
@@ -172,7 +172,7 @@ private:
     mCertificate->version.len = 1;
 
     SECItem innerDER = { siBuffer, nullptr, 0 };
-    if (!SEC_ASN1EncodeItem(arena, &innerDER, mCertificate,
+    if (!SEC_ASN1EncodeItem(arena, &innerDER, mCertificate.get(),
                             SEC_ASN1_GET(CERT_CertificateTemplate))) {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
@@ -241,7 +241,7 @@ private:
     // Make copies of the private key and certificate, otherwise, when this
     // object is deleted, the structures they reference will be deleted too.
     SECKEYPrivateKey* key = mKeyPair->mPrivateKey.get()->GetPrivateKey();
-    CERTCertificate* cert = CERT_DupCertificate(mCertificate);
+    CERTCertificate* cert = CERT_DupCertificate(mCertificate.get());
     RefPtr<RTCCertificate> result =
         new RTCCertificate(mResultPromise->GetParentObject(),
                            key, cert, mAuthType, mExpires);
@@ -320,8 +320,8 @@ RTCCertificate::CreateDtlsIdentity() const
   if (isAlreadyShutDown() || !mPrivateKey || !mCertificate) {
     return nullptr;
   }
-  SECKEYPrivateKey* key = SECKEY_CopyPrivateKey(mPrivateKey);
-  CERTCertificate* cert = CERT_DupCertificate(mCertificate);
+  SECKEYPrivateKey* key = SECKEY_CopyPrivateKey(mPrivateKey.get());
+  CERTCertificate* cert = CERT_DupCertificate(mCertificate.get());
   RefPtr<DtlsIdentity> id = new DtlsIdentity(key, cert, mAuthType);
   return id;
 }
@@ -341,8 +341,8 @@ RTCCertificate::virtualDestroyNSSReference()
 void
 RTCCertificate::destructorSafeDestroyNSSReference()
 {
-  mPrivateKey.dispose();
-  mCertificate.dispose();
+  mPrivateKey.reset();
+  mCertificate.reset();
 }
 
 bool
@@ -350,7 +350,7 @@ RTCCertificate::WritePrivateKey(JSStructuredCloneWriter* aWriter,
                                 const nsNSSShutDownPreventionLock& aLockProof) const
 {
   JsonWebKey jwk;
-  nsresult rv = CryptoKey::PrivateKeyToJwk(mPrivateKey, jwk, aLockProof);
+  nsresult rv = CryptoKey::PrivateKeyToJwk(mPrivateKey.get(), jwk, aLockProof);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -402,7 +402,7 @@ RTCCertificate::ReadPrivateKey(JSStructuredCloneReader* aReader,
   if (!jwk.Init(json)) {
     return false;
   }
-  mPrivateKey = CryptoKey::PrivateKeyFromJwk(jwk, aLockProof);
+  mPrivateKey.reset(CryptoKey::PrivateKeyFromJwk(jwk, aLockProof));
   return !!mPrivateKey;
 }
 
@@ -417,8 +417,8 @@ RTCCertificate::ReadCertificate(JSStructuredCloneReader* aReader,
 
   SECItem der = { siBuffer, cert.Elements(),
                   static_cast<unsigned int>(cert.Length()) };
-  mCertificate = CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
-                                         &der, nullptr, true, true);
+  mCertificate.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                                             &der, nullptr, true, true));
   return !!mCertificate;
 }
 
