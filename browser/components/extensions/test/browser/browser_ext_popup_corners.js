@@ -42,24 +42,17 @@ add_task(function* testPopupBorderRadius() {
     let viewNode = browser.parentNode === panel ? browser : browser.parentNode;
     let viewStyle = getComputedStyle(viewNode);
 
-    let props = ["borderTopLeftRadius", "borderTopRightRadius",
-                 "borderBottomRightRadius", "borderBottomLeftRadius"];
+    let win = browser.contentWindow;
+    let bodyStyle = win.getComputedStyle(win.document.body);
 
-    /* eslint-disable mozilla/no-cpows-in-tests */
-    let bodyStyle = yield ContentTask.spawn(browser, props, function* (props) {
-      let bodyStyle = content.getComputedStyle(content.document.body);
-
-      return new Map(props.map(prop => [prop, bodyStyle[prop]]));
-    });
-    /* eslint-enable mozilla/no-cpows-in-tests */
-
-    for (let prop of props) {
+    for (let prop of ["borderTopLeftRadius", "borderTopRightRadius",
+                      "borderBottomRightRadius", "borderBottomLeftRadius"]) {
       if (standAlone) {
         is(viewStyle[prop], panelStyle[prop], `Panel and view ${prop} should be the same`);
-        is(bodyStyle.get(prop), panelStyle[prop], `Panel and body ${prop} should be the same`);
+        is(bodyStyle[prop], panelStyle[prop], `Panel and body ${prop} should be the same`);
       } else {
         is(viewStyle[prop], "0px", `View node ${prop} should be 0px`);
-        is(bodyStyle.get(prop), "0px", `Body node ${prop} should be 0px`);
+        is(bodyStyle[prop], "0px", `Body node ${prop} should be 0px`);
       }
     }
   }

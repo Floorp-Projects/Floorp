@@ -28,18 +28,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
-                                   "@mozilla.org/content/style-sheet-service;1",
-                                   "nsIStyleSheetService");
 
 function getConsole() {
   return new ConsoleAPI({
@@ -149,20 +143,6 @@ class DefaultWeakMap extends WeakMap {
   get(key) {
     if (!this.has(key)) {
       this.set(key, this.defaultConstructor());
-    }
-    return super.get(key);
-  }
-}
-
-class DefaultMap extends Map {
-  constructor(defaultConstructor, init) {
-    super(init);
-    this.defaultConstructor = defaultConstructor;
-  }
-
-  get(key) {
-    if (!this.has(key)) {
-      this.set(key, this.defaultConstructor(key));
     }
     return super.get(key);
   }
@@ -1138,35 +1118,6 @@ function promiseDocumentLoaded(doc) {
 }
 
 /**
- * Returns a Promise which resolves when the given event is dispatched to the
- * given element.
- *
- * @param {Element} element
- *        The element on which to listen.
- * @param {string} eventName
- *        The event to listen for.
- * @param {boolean} [useCapture = true]
- *        If true, listen for the even in the capturing rather than
- *        bubbling phase.
- * @param {Event} [test]
- *        An optional test function which, when called with the
- *        observer's subject and data, should return true if this is the
- *        expected event, false otherwise.
- * @returns {Promise<Event>}
- */
-function promiseEvent(element, eventName, useCapture = true, test = event => true) {
-  return new Promise(resolve => {
-    function listener(event) {
-      if (test(event)) {
-        element.removeEventListener(eventName, listener, useCapture);
-        resolve(event);
-      }
-    }
-    element.addEventListener(eventName, listener, useCapture);
-  });
-}
-
-/**
  * Returns a Promise which resolves the given observer topic has been
  * observed.
  *
@@ -2016,11 +1967,6 @@ function normalizeTime(date) {
                         ? parseInt(date, 10) : date);
 }
 
-const stylesheetMap = new DefaultMap(url => {
-  let uri = NetUtil.newURI(url);
-  return styleSheetService.preloadSheet(uri, styleSheetService.AGENT_SHEET);
-});
-
 this.ExtensionUtils = {
   detectLanguage,
   extend,
@@ -2033,13 +1979,11 @@ this.ExtensionUtils = {
   normalizeTime,
   promiseDocumentLoaded,
   promiseDocumentReady,
-  promiseEvent,
   promiseObserved,
   runSafe,
   runSafeSync,
   runSafeSyncWithoutClone,
   runSafeWithoutClone,
-  stylesheetMap,
   BaseContext,
   DefaultWeakMap,
   EventEmitter,
