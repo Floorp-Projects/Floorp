@@ -126,7 +126,7 @@ test_description_schema = Schema({
     Required('docker-image', default={'in-tree': 'desktop-test'}): Any(
         # a raw Docker image path (repo/image:tag)
         basestring,
-        # an in-tree generated docker image (from `testing/docker/<name>`)
+        # an in-tree generated docker image (from `taskcluster/docker/<name>`)
         {'in-tree': basestring}
     ),
 
