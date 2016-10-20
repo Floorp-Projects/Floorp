@@ -1747,15 +1747,12 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
             // Mark the stream for reset (the reset is sent below)
             ResetOutgoingStream(channel->mStream);
           }
-          NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                    DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
-                                    channel)));
           mStreams[channel->mStream] = nullptr;
 
           LOG(("Disconnected DataChannel %p from connection %p",
                (void *) channel.get(), (void *) channel->mConnection.get()));
-          channel->DestroyLocked();
-          // At this point when we leave here, the object is a zombie held alive only by the DOM object
+          // This sends ON_CHANNEL_CLOSED to mainthread
+          channel->StreamClosedLocked();
         } else {
           LOG(("Can't find incoming channel %d",i));
         }
@@ -2491,7 +2488,7 @@ DataChannelConnection::CloseInt(DataChannel *aChannel)
   aChannel->mState = CLOSING;
   if (mState == CLOSED) {
     // we're not going to hang around waiting
-    channel->DestroyLocked();
+    channel->StreamClosedLocked();
   }
   // At this point when we leave here, the object is a zombie held alive only by the DOM object
 }
@@ -2544,14 +2541,16 @@ DataChannel::~DataChannel()
 void
 DataChannel::Close()
 {
-  ENSURE_DATACONNECTION;
-  RefPtr<DataChannelConnection> connection(mConnection);
-  connection->Close(this);
+  if (mConnection) {
+    // ensure we don't get deleted
+    RefPtr<DataChannelConnection> connection(mConnection);
+    connection->Close(this);
+  }
 }
 
 // Used when disconnecting from the DataChannelConnection
 void
-DataChannel::DestroyLocked()
+DataChannel::StreamClosedLocked()
 {
   mConnection->mLock.AssertCurrentThreadOwns();
   ENSURE_DATACONNECTION;
@@ -2564,6 +2563,13 @@ DataChannel::DestroyLocked()
   NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
                                       DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED,
                                       mConnection, this)));
+  // We leave mConnection live until the DOM releases us, to avoid races
+}
+
+void
+DataChannel::ReleaseConnection()
+{
+  ASSERT_WEBRTC(NS_IsMainThread());
   mConnection = nullptr;
 }
 
