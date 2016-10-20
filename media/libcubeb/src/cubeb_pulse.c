@@ -87,15 +87,6 @@ LIBPULSE_API_VISIT(MAKE_TYPEDEF);
 #undef MAKE_TYPEDEF
 #endif
 
-//#define LOGGING_ENABLED
-#ifdef LOGGING_ENABLED
-#define LOG(...) do {                           \
-    fprintf(stderr, __VA_ARGS__);               \
-  } while(0)
-#else
-#define LOG(...)
-#endif
-
 static struct cubeb_ops const pulse_ops;
 
 struct cubeb {
@@ -125,7 +116,7 @@ struct cubeb_stream {
   cubeb_state state;
 };
 
-const float PULSE_NO_GAIN = -1.0;
+static const float PULSE_NO_GAIN = -1.0;
 
 enum cork_state {
   UNCORK = 0,
@@ -136,6 +127,7 @@ enum cork_state {
 static void
 sink_info_callback(pa_context * context, const pa_sink_info * info, int eol, void * u)
 {
+  (void)context;
   cubeb * ctx = u;
   if (!eol) {
     free(ctx->default_sink_info);
@@ -164,6 +156,7 @@ context_state_callback(pa_context * c, void * u)
 static void
 context_notify_callback(pa_context * c, void * u)
 {
+  (void)c;
   cubeb * ctx = u;
   WRAP(pa_threaded_mainloop_signal)(ctx->mainloop, 0);
 }
@@ -171,6 +164,8 @@ context_notify_callback(pa_context * c, void * u)
 static void
 stream_success_callback(pa_stream * s, int success, void * u)
 {
+  (void)s;
+  (void)success;
   cubeb_stream * stm = u;
   WRAP(pa_threaded_mainloop_signal)(stm->context->mainloop, 0);
 }
@@ -185,6 +180,9 @@ stream_state_change_callback(cubeb_stream * stm, cubeb_state s)
 static void
 stream_drain_callback(pa_mainloop_api * a, pa_time_event * e, struct timeval const * tv, void * u)
 {
+  (void)a;
+  (void)e;
+  (void)tv;
   cubeb_stream * stm = u;
   stream_state_change_callback(stm, CUBEB_STATE_DRAINED);
   /* there's no pa_rttime_free, so use this instead. */
@@ -226,7 +224,7 @@ trigger_user_callback(pa_stream * s, void const * input_data, size_t nbytes, cub
     assert(size > 0);
     assert(size % frame_size == 0);
 
-    LOG("Trigger user callback with output buffer size=%zd, read_offset=%zd\n", size, read_offset);
+    LOGV("Trigger user callback with output buffer size=%zd, read_offset=%zd", size, read_offset);
     got = stm->data_callback(stm, stm->user_ptr, (uint8_t const *)input_data + read_offset, buffer, size / frame_size);
     if (got < 0) {
       WRAP(pa_stream_cancel_write)(s);
@@ -295,7 +293,7 @@ read_from_input(pa_stream * s, void const ** buffer, size_t * size)
 static void
 stream_write_callback(pa_stream * s, size_t nbytes, void * u)
 {
-  LOG("Output callback to be written buffer size %zd\n", nbytes);
+  LOGV("Output callback to be written buffer size %zd", nbytes);
   cubeb_stream * stm = u;
   if (stm->shutdown ||
       stm->state != CUBEB_STATE_STARTED) {
@@ -313,7 +311,7 @@ stream_write_callback(pa_stream * s, size_t nbytes, void * u)
 static void
 stream_read_callback(pa_stream * s, size_t nbytes, void * u)
 {
-  LOG("Input callback buffer size %zd\n", nbytes);
+  LOGV("Input callback buffer size %zd", nbytes);
   cubeb_stream * stm = u;
   if (stm->shutdown) {
     return;
@@ -558,12 +556,14 @@ pulse_init(cubeb ** context, char const * context_name)
 static char const *
 pulse_get_backend_id(cubeb * ctx)
 {
+  (void)ctx;
   return "pulse";
 }
 
 static int
 pulse_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 {
+  (void)ctx;
   assert(ctx && max_channels);
 
   WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
@@ -581,6 +581,7 @@ static int
 pulse_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 {
   assert(ctx && rate);
+  (void)ctx;
 
   WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
   while (!ctx->default_sink_info) {
@@ -596,6 +597,7 @@ pulse_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 static int
 pulse_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_frames)
 {
+  (void)ctx;
   // According to PulseAudio developers, this is a safe minimum.
   *latency_frames = 25 * params.rate / 1000;
 
@@ -645,8 +647,8 @@ pulse_destroy(cubeb * ctx)
 
 static void pulse_stream_destroy(cubeb_stream * stm);
 
-pa_sample_format_t
-cubeb_to_pulse_format(cubeb_sample_format format)
+static pa_sample_format_t
+to_pulse_format(cubeb_sample_format format)
 {
   switch (format) {
   case CUBEB_SAMPLE_S16LE:
@@ -671,7 +673,7 @@ create_pa_stream(cubeb_stream * stm,
   assert(stm && stream_params);
   *pa_stm = NULL;
   pa_sample_spec ss;
-  ss.format = cubeb_to_pulse_format(stream_params->format);
+  ss.format = to_pulse_format(stream_params->format);
   if (ss.format == PA_SAMPLE_INVALID)
     return CUBEB_ERROR_INVALID_FORMAT;
   ss.rate = stream_params->rate;
@@ -691,7 +693,7 @@ set_buffering_attribute(unsigned int latency_frames, pa_sample_spec * sample_spe
   battr.minreq    = battr.tlength / 4;
   battr.fragsize  = battr.minreq;
 
-  LOG("Requested buffer attributes maxlength %u, tlength %u, prebuf %u, minreq %u, fragsize %u\n",
+  LOG("Requested buffer attributes maxlength %u, tlength %u, prebuf %u, minreq %u, fragsize %u",
       battr.maxlength, battr.tlength, battr.prebuf, battr.minreq, battr.fragsize);
 
   return battr;
@@ -793,21 +795,21 @@ pulse_stream_init(cubeb * context,
     return CUBEB_ERROR;
   }
 
-#ifdef LOGGING_ENABLED
-  if (output_stream_params){
-    const pa_buffer_attr * output_att;
-    output_att = WRAP(pa_stream_get_buffer_attr)(stm->output_stream);
-    LOG("Output buffer attributes maxlength %u, tlength %u, prebuf %u, minreq %u, fragsize %u\n",output_att->maxlength, output_att->tlength,
-        output_att->prebuf, output_att->minreq, output_att->fragsize);
-  }
+  if (g_log_level) {
+    if (output_stream_params){
+      const pa_buffer_attr * output_att;
+      output_att = WRAP(pa_stream_get_buffer_attr)(stm->output_stream);
+      LOG("Output buffer attributes maxlength %u, tlength %u, prebuf %u, minreq %u, fragsize %u",output_att->maxlength, output_att->tlength,
+          output_att->prebuf, output_att->minreq, output_att->fragsize);
+    }
 
-  if (input_stream_params){
-    const pa_buffer_attr * input_att;
-    input_att = WRAP(pa_stream_get_buffer_attr)(stm->input_stream);
-    LOG("Input buffer attributes maxlength %u, tlength %u, prebuf %u, minreq %u, fragsize %u\n",input_att->maxlength, input_att->tlength,
-        input_att->prebuf, input_att->minreq, input_att->fragsize);
+    if (input_stream_params){
+      const pa_buffer_attr * input_att;
+      input_att = WRAP(pa_stream_get_buffer_attr)(stm->input_stream);
+      LOG("Input buffer attributes maxlength %u, tlength %u, prebuf %u, minreq %u, fragsize %u",input_att->maxlength, input_att->tlength,
+          input_att->prebuf, input_att->minreq, input_att->fragsize);
+    }
   }
-#endif
 
   *stream = stm;
 
@@ -844,9 +846,10 @@ pulse_stream_destroy(cubeb_stream * stm)
   free(stm);
 }
 
-void
+static void
 pulse_defer_event_cb(pa_mainloop_api * a, void * userdata)
 {
+  (void)a;
   cubeb_stream * stm = userdata;
   size_t writable_size = WRAP(pa_stream_writable_size)(stm->output_stream);
   trigger_user_callback(stm->output_stream, NULL, writable_size, stm);
@@ -917,7 +920,7 @@ pulse_stream_get_position(cubeb_stream * stm, uint64_t * position)
   return CUBEB_OK;
 }
 
-int
+static int
 pulse_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 {
   pa_usec_t r_usec;
@@ -937,14 +940,17 @@ pulse_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   return CUBEB_OK;
 }
 
-void volume_success(pa_context *c, int success, void *userdata)
+static void
+volume_success(pa_context *c, int success, void *userdata)
 {
+  (void)success;
+  (void)c;
   cubeb_stream * stream = userdata;
   assert(success);
   WRAP(pa_threaded_mainloop_signal)(stream->context->mainloop, 0);
 }
 
-int
+static int
 pulse_stream_set_volume(cubeb_stream * stm, float volume)
 {
   uint32_t index;
@@ -989,7 +995,7 @@ pulse_stream_set_volume(cubeb_stream * stm, float volume)
   return CUBEB_OK;
 }
 
-int
+static int
 pulse_stream_set_panning(cubeb_stream * stream, float panning)
 {
   const pa_channel_map * map;
@@ -1231,7 +1237,8 @@ pulse_enumerate_devices(cubeb * context, cubeb_device_type type,
   return CUBEB_OK;
 }
 
-int pulse_stream_get_current_device(cubeb_stream * stm, cubeb_device ** const device)
+static int
+pulse_stream_get_current_device(cubeb_stream * stm, cubeb_device ** const device)
 {
 #if PA_CHECK_VERSION(0, 9, 8)
   *device = calloc(1, sizeof(cubeb_device));
@@ -1254,39 +1261,45 @@ int pulse_stream_get_current_device(cubeb_stream * stm, cubeb_device ** const de
 #endif
 }
 
-int pulse_stream_device_destroy(cubeb_stream * stream,
-                                cubeb_device * device)
+static int
+pulse_stream_device_destroy(cubeb_stream * stream,
+                            cubeb_device * device)
 {
+  (void)stream;
   free(device->input_name);
   free(device->output_name);
   free(device);
   return CUBEB_OK;
 }
 
-void pulse_subscribe_callback(pa_context * ctx,
-                              pa_subscription_event_type_t t,
-                              uint32_t index, void * userdata)
+static void
+pulse_subscribe_callback(pa_context * ctx,
+                         pa_subscription_event_type_t t,
+                         uint32_t index, void * userdata)
 {
+  (void)ctx;
   cubeb * context = userdata;
 
   switch (t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) {
   case PA_SUBSCRIPTION_EVENT_SOURCE:
   case PA_SUBSCRIPTION_EVENT_SINK:
 
-#ifdef LOGGING_ENABLED
-    if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SOURCE &&
-        (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE)
-      LOG("Removing sink index %d\n", index);
-    else if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SOURCE &&
-        (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW)
-      LOG("Adding sink index %d\n", index);
-    if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SINK &&
-        (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE)
-      LOG("Removing source index %d\n", index);
-    else if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SINK &&
-        (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW)
-      LOG("Adding source index %d\n", index);
-#endif
+    if (g_log_level) {
+      if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SOURCE &&
+          (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE) {
+        LOG("Removing sink index %d", index);
+      } else if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SOURCE &&
+          (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW) {
+        LOG("Adding sink index %d", index);
+      }
+      if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SINK &&
+          (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE) {
+        LOG("Removing source index %d", index);
+      } else if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SINK &&
+          (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW) {
+        LOG("Adding source index %d", index);
+      }
+    }
 
     if ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE ||
         (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW) {
@@ -1296,17 +1309,20 @@ void pulse_subscribe_callback(pa_context * ctx,
   }
 }
 
-void subscribe_success(pa_context *c, int success, void *userdata)
+static void
+subscribe_success(pa_context *c, int success, void *userdata)
 {
+  (void)c;
   cubeb * context = userdata;
   assert(success);
   WRAP(pa_threaded_mainloop_signal)(context->mainloop, 0);
 }
 
-int pulse_register_device_collection_changed(cubeb * context,
-                                             cubeb_device_type devtype,
-                                             cubeb_device_collection_changed_callback collection_changed_callback,
-                                             void * user_ptr)
+static int
+pulse_register_device_collection_changed(cubeb * context,
+                                         cubeb_device_type devtype,
+                                         cubeb_device_collection_changed_callback collection_changed_callback,
+                                         void * user_ptr)
 {
   context->collection_changed_callback = collection_changed_callback;
   context->collection_changed_user_ptr = user_ptr;
@@ -1331,7 +1347,7 @@ int pulse_register_device_collection_changed(cubeb * context,
   pa_operation * o;
   o = WRAP(pa_context_subscribe)(context->context, mask, subscribe_success, context);
   if (o == NULL) {
-    LOG("Context subscribe failed\n");
+    LOG("Context subscribe failed");
     return CUBEB_ERROR;
   }
   operation_wait(context, NULL, o);
