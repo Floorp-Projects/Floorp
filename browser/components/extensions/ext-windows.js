@@ -92,7 +92,7 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
           return result;
         }
 
-        let args = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
+        let args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
 
         if (createData.tabId !== null) {
           if (createData.url !== null) {
@@ -113,19 +113,19 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
           }
           createData.incognito = incognito;
 
-          args.AppendElement(tab);
+          args.appendElement(tab, /*weak =*/ false);
         } else if (createData.url !== null) {
           if (Array.isArray(createData.url)) {
             let array = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
             for (let url of createData.url) {
               array.AppendElement(mkstr(url));
             }
-            args.AppendElement(array);
+            args.appendElement(array, /*weak =*/ false);
           } else {
-            args.AppendElement(mkstr(createData.url));
+            args.appendElement(mkstr(createData.url), /*weak =*/ false);
           }
         } else {
-          args.AppendElement(mkstr(aboutNewTabService.newTabURL));
+          args.appendElement(mkstr(aboutNewTabService.newTabURL), /*weak =*/ false);
         }
 
         let features = ["chrome"];

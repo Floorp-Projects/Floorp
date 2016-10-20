@@ -774,7 +774,7 @@ class TestConfigure(unittest.TestCase):
                 return False
             option('--with-foo', help='foo', when=always)
             option('--with-bar', help='bar', when=never)
-            option('--with-qux', help='qux', when='--with-foo')
+            option('--with-qux', env="QUX", help='qux', when='--with-foo')
 
             set_config('FOO', depends('--with-foo', when=always)(lambda x: x))
             set_config('BAR', depends('--with-bar', when=never)(lambda x: x))
@@ -812,6 +812,19 @@ class TestConfigure(unittest.TestCase):
                 e.exception.message,
                 '--with-qux is not available in this configuration'
             )
+
+            with self.assertRaises(InvalidOptionError) as e:
+                self.get_config(['QUX=1'])
+
+            self.assertEquals(
+                e.exception.message,
+                'QUX is not available in this configuration'
+            )
+
+            config = self.get_config(env={'QUX': '1'})
+            self.assertEquals(config, {
+                'FOO': NegativeOptionValue(),
+            })
 
             help, config = self.get_config(['--help'])
             self.assertEquals(help, textwrap.dedent('''\

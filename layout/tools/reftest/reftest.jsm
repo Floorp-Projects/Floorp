@@ -747,11 +747,6 @@ function BuildConditionSandbox(aURL) {
     } catch (e) {
         sandbox.asyncPan = false;
     }
-    try {
-        sandbox.asyncZoom = sandbox.asyncPan && prefs.getBoolPref("apz.allow_zooming");
-    } catch (e) {
-        sandbox.asyncZoom = false;
-    }
 
     if (!gDumpedConditionSandbox) {
         logger.info("Dumping JSON representation of sandbox");

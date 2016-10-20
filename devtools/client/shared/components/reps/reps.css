@@ -62,6 +62,7 @@
   color: var(--number-color);
 }
 
+.objectBox-textNode,
 .objectBox-string,
 .objectBox-symbol {
   color: var(--string-color);

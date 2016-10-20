@@ -91,7 +91,7 @@ class IdToObjectMap
     IdToObjectMap();
 
     bool init();
-    void trace(JSTracer* trc);
+    void trace(JSTracer* trc, uint64_t minimumId = 0);
     void sweep();
 
     bool add(ObjectId id, JSObject* obj);
@@ -199,6 +199,10 @@ class JavaScriptShared : public CPOWManager
     IdToObjectMap cpows_;
 
     uint64_t nextSerialNumber_;
+
+    // nextCPOWNumber_ should be the value of nextSerialNumber_ in the other
+    // process. The next new CPOW we get should have this serial number.
+    uint64_t nextCPOWNumber_;
 
     // CPOW references can be weak, and any object we store in a map may be
     // GCed (at which point the CPOW will report itself "dead" to the owner).

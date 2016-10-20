@@ -34,13 +34,6 @@ addMessageListener("Test:ExpectObserverCalled", ({data}) => {
     --gObservedTopics[data];
 });
 
-addMessageListener("Test:TodoObserverNotCalled", ({data}) => {
-  sendAsyncMessage("Test:TodoObserverNotCalled:Reply",
-                   {count: gObservedTopics[data]});
-  if (gObservedTopics[data] == 1)
-    gObservedTopics[data] = 0;
-});
-
 addMessageListener("Test:ExpectNoObserverCalled", data => {
   sendAsyncMessage("Test:ExpectNoObserverCalled:Reply", gObservedTopics);
   gObservedTopics = {};

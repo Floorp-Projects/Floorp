@@ -24,11 +24,13 @@
     var constraints = {video: true, audio: true};
     return getUserMedia(constraints).then(stream => new Promise(resolve => {
       v.srcObject = stream;
-      v.onloadedmetadata = resolve;
-    })).then(() => {
-      isnot(v.videoWidth, 0, "videoWidth shall be set on 'loadedmetadata'");
-      isnot(v.videoHeight, 0, "videoHeight shall be set on 'loadedmetadata'");
-    });
+      v.onloadedmetadata = () => {
+        isnot(v.videoWidth, 0, "videoWidth shall be set on 'loadedmetadata'");
+        isnot(v.videoHeight, 0, "videoHeight shall be set on 'loadedmetadata'");
+        resolve();
+      };
+    })
+    .then(() => stream.getTracks().forEach(t => t.stop())));
   });
 
 </script>

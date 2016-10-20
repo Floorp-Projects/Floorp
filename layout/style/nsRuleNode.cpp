@@ -128,13 +128,30 @@ SetImageRequest(function<void(imgRequestProxy*)> aCallback,
                 nsPresContext* aPresContext,
                 const nsCSSValue& aValue)
 {
-  imgRequestProxy* req = GetImageRequest(aPresContext, aValue);
-  if (aPresContext->IsDynamic()) {
-    aCallback(req);
-  } else {
-    RefPtr<imgRequestProxy> staticReq = nsContentUtils::GetStaticRequest(req);
-    aCallback(staticReq);
-  }
+  RefPtr<imgRequestProxy> req =
+    aValue.GetPossiblyStaticImageValue(aPresContext->Document(),
+                                       aPresContext);
+  aCallback(req);
+}
+
+static void
+SetStyleImageRequest(function<void(nsStyleImageRequest*)> aCallback,
+                     nsPresContext* aPresContext,
+                     const nsCSSValue& aValue,
+                     nsStyleImageRequest::Mode aModeFlags =
+                       nsStyleImageRequest::Mode::Track |
+                       nsStyleImageRequest::Mode::Lock)
+{
+  SetImageRequest([&](imgRequestProxy* aProxy) {
+    RefPtr<nsStyleImageRequest> request;
+    if (aProxy) {
+      css::ImageValue* imageValue = aValue.GetImageStructValue();
+      ImageTracker* imageTracker = aPresContext->Document()->ImageTracker();
+      request =
+        new nsStyleImageRequest(aModeFlags, aProxy, imageValue, imageTracker);
+    }
+    aCallback(request);
+  }, aPresContext, aValue);
 }
 
 template<typename ReferenceBox>
@@ -1267,8 +1284,8 @@ static void SetStyleImageToImageRect(nsStyleContext* aStyleContext,
 
   // <uri>
   if (arr->Item(1).GetUnit() == eCSSUnit_Image) {
-    SetImageRequest([&](imgRequestProxy* req) {
-      aResult.SetImageData(req);
+    SetStyleImageRequest([&](nsStyleImageRequest* req) {
+      aResult.SetImageRequest(do_AddRef(req));
     }, aStyleContext->PresContext(), arr->Item(1));
   } else {
     NS_WARNING("nsCSSValue::Image::Image() failed?");
@@ -1303,8 +1320,8 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
 
   switch (aValue.GetUnit()) {
     case eCSSUnit_Image:
-      SetImageRequest([&](imgRequestProxy* req) {
-        aResult.SetImageData(req);
+      SetStyleImageRequest([&](nsStyleImageRequest* req) {
+        aResult.SetImageRequest(do_AddRef(req));
       }, aStyleContext->PresContext(), aValue);
       break;
     case eCSSUnit_Function:
@@ -7328,9 +7345,6 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
     FillAllBackgroundLists(bg->mImage, maxItemCount);
   }
 
-  // Now that the dust has settled, register the images with the document
-  bg->mImage.TrackImages(aContext->PresContext());
-
   COMPUTE_END_RESET(Background, bg)
 }
 
@@ -7717,8 +7731,6 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
            parentBorder->mBorderImageRepeatV,
            NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH);
 
-  border->TrackImage(aContext->PresContext());
-
   COMPUTE_END_RESET(Border, border)
 }
 
@@ -7951,18 +7963,18 @@ nsRuleNode::ComputeListData(void* aStartStruct,
   // list-style-image: url, none, inherit
   const nsCSSValue* imageValue = aRuleData->ValueForListStyleImage();
   if (eCSSUnit_Image == imageValue->GetUnit()) {
-    SetImageRequest([&](imgRequestProxy* req) {
-      list->SetListStyleImage(req);
+    SetStyleImageRequest([&](nsStyleImageRequest* req) {
+      list->mListStyleImage = req;
     }, mPresContext, *imageValue);
   }
   else if (eCSSUnit_None == imageValue->GetUnit() ||
            eCSSUnit_Initial == imageValue->GetUnit()) {
-    list->SetListStyleImage(nullptr);
+    list->mListStyleImage = nullptr;
   }
   else if (eCSSUnit_Inherit == imageValue->GetUnit() ||
            eCSSUnit_Unset == imageValue->GetUnit()) {
     conditions.SetUncacheable();
-    list->SetListStyleImage(parentList->GetListStyleImage());
+    list->mListStyleImage = parentList->mListStyleImage;
   }
 
   // list-style-position: enum, inherit, initial
@@ -8985,7 +8997,8 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   for (uint32_t i = 0; i < content->ContentCount(); ++i) {
     if ((content->ContentAt(i).mType == eStyleContentType_Image) &&
         content->ContentAt(i).mContent.mImage) {
-      content->ContentAt(i).TrackImage(aContext->PresContext());
+      content->ContentAt(i).TrackImage(
+          aContext->PresContext()->Document()->ImageTracker());
     }
   }
 
@@ -10053,8 +10066,6 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
       parentSVGReset->mMask.mLayers[0].mSourceURI;
   }
 #endif
-
-  svgReset->mMask.TrackImages(aContext->PresContext());
 
   COMPUTE_END_RESET(SVGReset, svgReset)
 }

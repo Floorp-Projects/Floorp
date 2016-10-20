@@ -211,10 +211,17 @@ def mozharness_on_windows(config, job, taskdesc):
     mh_command.append(r'--skip-buildbot-actions --work-dir %cd:Z:=z:%\build')
     for option in run.get('options', []):
         mh_command.append('--' + option)
-    hg = r'c:\Program Files\Mercurial\hg.exe'
+
+    hg_command = ['"c:\\Program Files\\Mercurial\\hg.exe"']
+    hg_command.append('robustcheckout')
+    hg_command.extend(['--sharebase', 'y:\\hg-shared'])
+    hg_command.append('--purge')
+    hg_command.extend(['--upstream', 'https://hg.mozilla.org/mozilla-unified'])
+    hg_command.extend(['--revision', env['GECKO_HEAD_REV']])
+    hg_command.append(env['GECKO_HEAD_REPOSITORY'])
+    hg_command.append('.\\build\\src')
+
     worker['command'] = [
-        r'mkdir .\build\src',
-        r'"{}" share c:\builds\hg-shared\mozilla-central .\build\src'.format(hg),
-        r'"{}" pull -u -R .\build\src --rev %GECKO_HEAD_REV% %GECKO_HEAD_REPOSITORY%'.format(hg),
-        ' '.join(mh_command),
+        ' '.join(hg_command),
+        ' '.join(mh_command)
     ]

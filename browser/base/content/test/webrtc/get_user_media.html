@@ -35,17 +35,18 @@ function requestDevice(aAudio, aVideo, aShare) {
     opts.fake = true;
   }
 
-  window.navigator.mozGetUserMedia(opts, function(stream) {
-    gStream = stream;
-    message("ok");
-  }, function(err) { message("error: " + err); });
+  window.navigator.mediaDevices.getUserMedia(opts)
+    .then(stream => {
+      gStream = stream;
+      message("ok");
+    }, err => message("error: " + err));
 }
 message("pending");
 
 function closeStream() {
   if (!gStream)
     return;
-  gStream.stop();
+  gStream.getTracks().forEach(t => t.stop());
   gStream = null;
   message("closed");
 }

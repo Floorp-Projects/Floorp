@@ -3,7 +3,41 @@ add_task(function*() {
   yield check_autocomplete({
     search: "mozilla.org",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "http://mozilla.org/", input: "mozilla.org"}), title: "http://mozilla.org/", style: [ "action", "visiturl", "heuristic" ] } ]
+    matches: [
+      { uri: makeActionURI("visiturl", {url: "http://mozilla.org/", input: "mozilla.org"}), title: "http://mozilla.org/", style: [ "action", "visiturl", "heuristic" ] },
+      { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "mozilla.org", searchQuery: "mozilla.org"}), title: "MozSearch", style: ["action", "searchengine"] }
+    ]
+  });
+
+  do_print("visit url, no protocol but with 2 dots");
+  yield check_autocomplete({
+    search: "www.mozilla.org",
+    searchParam: "enable-actions",
+    matches: [
+      { uri: makeActionURI("visiturl", {url: "http://www.mozilla.org/", input: "www.mozilla.org"}), title: "http://www.mozilla.org/", style: [ "action", "visiturl", "heuristic" ] },
+      { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "www.mozilla.org", searchQuery: "www.mozilla.org"}), title: "MozSearch", style: ["action", "searchengine"] }
+    ]
+  });
+
+  do_print("visit url, no protocol but with 3 dots");
+  yield check_autocomplete({
+    search: "www.mozilla.org.tw",
+    searchParam: "enable-actions",
+    matches: [ { uri: makeActionURI("visiturl", {url: "http://www.mozilla.org.tw/", input: "www.mozilla.org.tw"}), title: "http://www.mozilla.org.tw/", style: [ "action", "visiturl", "heuristic" ] } ]
+  });
+
+  do_print("visit url, with protocol but with 2 dots");
+  yield check_autocomplete({
+    search: "https://www.mozilla.org",
+    searchParam: "enable-actions",
+    matches: [ { uri: makeActionURI("visiturl", {url: "https://www.mozilla.org/", input: "https://www.mozilla.org"}), title: "https://www.mozilla.org/", style: [ "action", "visiturl", "heuristic" ] } ]
+  });
+
+  do_print("visit url, with protocol but with 3 dots");
+  yield check_autocomplete({
+    search: "https://www.mozilla.org.tw",
+    searchParam: "enable-actions",
+    matches: [ { uri: makeActionURI("visiturl", {url: "https://www.mozilla.org.tw/", input: "https://www.mozilla.org.tw"}), title: "https://www.mozilla.org.tw/", style: [ "action", "visiturl", "heuristic" ] } ]
   });
 
   do_print("visit url, with protocol");
@@ -56,7 +90,10 @@ add_task(function*() {
   yield check_autocomplete({
     search: "firefox",
     searchParam: "enable-actions",
-    matches: [ makeVisitMatch("firefox", "http://firefox/", { heuristic: true }) ]
+    matches: [
+      makeVisitMatch("firefox", "http://firefox/", { heuristic: true }),
+      makeSearchMatch("firefox", { heuristic: false })
+    ]
   });
 
   do_print("url with whitelisted host");

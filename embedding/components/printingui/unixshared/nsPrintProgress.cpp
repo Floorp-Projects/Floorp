@@ -5,11 +5,11 @@
 
 #include "nsPrintProgress.h"
 
+#include "nsArray.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsISupportsArray.h"
 #include "nsIXULWindow.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -61,9 +61,7 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(mozIDOMWindowProxy *parent,
   if (parent)
   {
     // Set up window.arguments[0]...
-    nsCOMPtr<nsISupportsArray> array;
-    rv = NS_NewISupportsArray(getter_AddRefs(array));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIMutableArray> array = nsArray::Create();
 
     nsCOMPtr<nsISupportsInterfacePointer> ifptr =
       do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
@@ -72,9 +70,9 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(mozIDOMWindowProxy *parent,
     ifptr->SetData(static_cast<nsIPrintProgress*>(this));
     ifptr->SetDataIID(&NS_GET_IID(nsIPrintProgress));
 
-    array->AppendElement(ifptr);
+    array->AppendElement(ifptr, /*weak =*/ false);
 
-    array->AppendElement(parameters);
+    array->AppendElement(parameters, /*weak =*/ false);
 
     // We will set the opener of the dialog to be the nsIDOMWindow for the
     // browser XUL window itself, as opposed to the content. That way, the

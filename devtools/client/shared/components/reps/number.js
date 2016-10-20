@@ -39,8 +39,7 @@ define(function (require, exports, module) {
   });
 
   function supportsObject(object, type) {
-    return type == "boolean" || type == "number" ||
-      (type == "object" && object.type == "-0");
+    return ["boolean", "number", "-0"].includes(type);
   }
 
   // Exports from this module
