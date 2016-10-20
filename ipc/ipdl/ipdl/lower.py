@@ -5200,7 +5200,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         stmts = ([
             self.logMessage(md, msgexpr, 'Received ',
                             receiving=True),
-            self.profilerLabel('Recv', md.decl.progname),
+            self.profilerLabel(md),
             Whitespace.NL
         ])
 
@@ -5266,7 +5266,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             sendok,
             ([ Whitespace.NL,
                self.logMessage(md, msgexpr, 'Sending ', actor),
-               self.profilerLabel('AsyncSend', md.decl.progname) ]
+               self.profilerLabel(md) ]
             + self.transition(md, 'out', actor)
             + [ Whitespace.NL,
                 StmtDecl(Decl(Type.BOOL, sendok.name),
@@ -5283,7 +5283,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             sendok,
             ([ Whitespace.NL,
                self.logMessage(md, msgexpr, 'Sending ', actor),
-               self.profilerLabel('Send', md.decl.progname) ]
+               self.profilerLabel(md) ]
             + self.transition(md, 'out', actor)
             + [ Whitespace.NL,
                 StmtDecl(
@@ -5365,10 +5365,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                              if receiving
                                              else 'mozilla::ipc::MessageDirection::eSending') ])) ])
 
-    def profilerLabel(self, tag, msgname):
+    def profilerLabel(self, md):
         return StmtExpr(ExprCall(ExprVar('PROFILER_LABEL'),
-                                 [ ExprLiteral.String('IPDL::' + self.protocol.name),
-                                   ExprLiteral.String(tag + msgname),
+                                 [ ExprLiteral.String(self.protocol.name),
+                                   ExprLiteral.String(md.prettyMsgName()),
                                    ExprVar('js::ProfileEntry::Category::OTHER') ]))
 
     def saveActorId(self, md):
