@@ -16,8 +16,6 @@ const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 var hud;
 
 add_task(function* () {
-  let Actions = require("devtools/client/netmonitor/actions/index");
-
   let requests = [];
   let { browser } = yield loadTab(TEST_URI);
 
@@ -47,7 +45,7 @@ add_task(function* () {
      "The correct request is definitely selected");
 
   // Filter out the HTML request.
-  panel.panelWin.gStore.dispatch(Actions.toggleFilter("js"));
+  panel.panelWin.NetMonitorView.RequestsMenu.filterOn("js");
 
   yield toolbox.selectTool("webconsole");
   is(toolbox.currentToolId, "webconsole", "Web console was selected");

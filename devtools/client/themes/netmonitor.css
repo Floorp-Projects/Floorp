@@ -741,6 +741,31 @@
   width: 4.5em;
 }
 
+/* Main toolbar */
+.requests-menu-filter-button {
+  -moz-appearance: none;
+  background: rgba(128,128,128,0.1);
+  border: none;
+  border-radius: 2px;
+  min-width: 0;
+  padding: 0 5px;
+  margin: 2px;
+  color: var(--theme-body-color);
+}
+
+.requests-menu-filter-button:hover {
+  background: rgba(128,128,128,0.2);
+}
+
+.requests-menu-filter-button:hover:active {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
+.requests-menu-filter-button:not(:active)[checked] {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
 /* Performance analysis buttons */
 
 #requests-menu-network-summary-button {
