@@ -207,7 +207,7 @@ private:
                         GdkDragContext  *aContext,
                         int32_t          aXOffset,
                         int32_t          aYOffset,
-                        const nsIntRect &dragRect);
+                        const mozilla::LayoutDeviceIntRect &dragRect);
 
     gboolean Schedule(DragTask aTask, nsWindow *aWindow,
                       GdkDragContext *aDragContext,

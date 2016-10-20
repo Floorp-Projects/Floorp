@@ -15,9 +15,8 @@
       var testAudio = createMediaElement('audio', 'testAudio');
       var playback = new LocalMediaStreamPlayback(testAudio, audioStream);
 
-      return playback.playMedia(false)
-        .then(() => playback.playMedia(true))
-        .then(() => audioStream.stop());
+      return playback.playMediaWithoutStoppingTracks(false)
+        .then(() => playback.playMedia(true));
     });
   });
 </script>

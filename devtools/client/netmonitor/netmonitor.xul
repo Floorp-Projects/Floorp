@@ -58,18 +58,6 @@
     </menupopup>
   </popupset>
 
-  <commandset>
-    <command id="freeTextFilterCommand"
-             oncommand="NetMonitorView.RequestsMenu.freetextFilterBox.focus()"/>
-  </commandset>
-
-  <keyset>
-    <key id="freeTextFilterKey"
-         data-localization="key=netmonitor.footer.filterFreetext.key"
-         modifiers="accel"
-         command="freeTextFilterCommand"/>
-  </keyset>
-
   <deck id="body" class="theme-sidebar" flex="1">
 
     <vbox id="network-inspector-view" flex="1">

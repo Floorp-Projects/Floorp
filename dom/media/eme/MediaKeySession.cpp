@@ -69,7 +69,7 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
   , mKeyStatusMap(new MediaKeyStatusMap(aParent))
   , mExpiration(JS::GenericNaN())
 {
-  EME_LOG("MediaKeySession[%p,''] session Id set", this);
+  EME_LOG("MediaKeySession[%p,''] ctor", this);
 
   MOZ_ASSERT(aParent);
   if (aRv.Failed()) {
@@ -325,6 +325,7 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
   // to copy it here.
   nsAutoCString base64InitData(ToBase64(data));
   PromiseId pid = mKeys->StorePromise(promise);
+  mKeys->ConnectPendingPromiseIdWithToken(pid, Token());
   mKeys->GetCDMProxy()->CreateSession(Token(),
                                       mSessionType,
                                       pid,
@@ -390,6 +391,7 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
   SetSessionId(aSessionId);
 
   PromiseId pid = mKeys->StorePromise(promise);
+  mKeys->ConnectPendingPromiseIdWithToken(pid, Token());
   mKeys->GetCDMProxy()->LoadSession(pid, aSessionId);
 
   EME_LOG("MediaKeySession[%p,'%s'] Load() sent to CDM, promiseId=%d",
