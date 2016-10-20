@@ -2636,8 +2636,7 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
         RefPtr<nsViewManager> vm = presShell->GetViewManager();
         if (nsView* view = vm->GetRootView()) {
           presShell->Paint(view, view->GetBounds(),
-                           nsIPresShell::PAINT_LAYERS |
-                           nsIPresShell::PAINT_SYNC_DECODE_IMAGES);
+                           nsIPresShell::PAINT_LAYERS);
         }
       }
       APZCCallbackHelper::SuppressDisplayport(false, presShell);
