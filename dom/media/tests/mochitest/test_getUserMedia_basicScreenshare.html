@@ -87,7 +87,7 @@
           ]))
           .then(() => playback.verifyPlaying()) // still playing
           .then(() => playback.deprecatedStopStreamInMediaPlayback())
-          .then(() => playback.detachFromMediaElement());
+          .then(() => playback.stopMediaElement());
       });
   });
 
