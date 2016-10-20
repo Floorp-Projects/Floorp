@@ -44,43 +44,12 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
     if (SessionStore.getClosedTabCount(aWindow) != 0) {
       let closedTabs = SessionStore.getClosedTabData(aWindow, false);
       for (let i = 0; i < closedTabs.length; i++) {
-        let element = doc.createElementNS(kNSXUL, aTagName);
-        element.setAttribute("label", closedTabs[i].title);
-        if (closedTabs[i].image) {
-          setImage(aWindow, closedTabs[i], element);
-        }
-        element.setAttribute("value", i);
-        if (aTagName == "menuitem") {
-          element.setAttribute("class", "menuitem-iconic bookmark-item menuitem-with-favicon");
-        }
-        element.setAttribute("oncommand", "undoCloseTab(" + i + ");");
-
-        // Set the targetURI attribute so it will be shown in tooltip and trigger
-        // onLinkHovered. SessionStore uses one-based indexes, so we need to
-        // normalize them.
-        let tabData = closedTabs[i].state;
-        let activeIndex = (tabData.index || tabData.entries.length) - 1;
-        if (activeIndex >= 0 && tabData.entries[activeIndex]) {
-          element.setAttribute("targetURI", tabData.entries[activeIndex].url);
-        }
-
-        element.addEventListener("click", this._undoCloseMiddleClick, false);
-        if (i == 0)
-          element.setAttribute("key", "key_undoCloseTab");
-        fragment.appendChild(element);
+        createEntry(aTagName, false, i, closedTabs[i], doc,
+                    closedTabs[i].title, fragment);
       }
 
-      let restoreAllTabs = doc.createElementNS(kNSXUL, aTagName);
-      restoreAllTabs.classList.add("restoreallitem");
-      restoreAllTabs.setAttribute("label", navigatorBundle.GetStringFromName(aRestoreAllLabel));
-      restoreAllTabs.setAttribute("oncommand",
-              "for (var i = 0; i < " + closedTabs.length + "; i++) undoCloseTab();");
-      if (!aPrefixRestoreAll) {
-        fragment.appendChild(doc.createElementNS(kNSXUL, "menuseparator"));
-        fragment.appendChild(restoreAllTabs);
-      } else {
-        fragment.insertBefore(restoreAllTabs, fragment.firstChild);
-      }
+    createRestoreAllEntry(doc, fragment, aPrefixRestoreAll, false,
+                          aRestoreAllLabel, closedTabs.length, aTagName)
     }
     return fragment;
   },
@@ -101,13 +70,13 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
   getWindowsFragment: function(aWindow, aTagName, aPrefixRestoreAll=false,
                             aRestoreAllLabel="menuRestoreAllWindows.label") {
     let closedWindowData = SessionStore.getClosedWindowData(false);
-    let fragment = aWindow.document.createDocumentFragment();
+    let doc = aWindow.document;
+    let fragment = doc.createDocumentFragment();
     if (closedWindowData.length != 0) {
       let menuLabelString = navigatorBundle.GetStringFromName("menuUndoCloseWindowLabel");
       let menuLabelStringSingleTab =
         navigatorBundle.GetStringFromName("menuUndoCloseWindowSingleTabLabel");
 
-      let doc = aWindow.document;
       for (let i = 0; i < closedWindowData.length; i++) {
         let undoItem = closedWindowData[i];
         let otherTabsCount = undoItem.tabs.length - 1;
@@ -115,40 +84,15 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
                                           : PluralForm.get(otherTabsCount, menuLabelString);
         let menuLabel = label.replace("#1", undoItem.title)
                              .replace("#2", otherTabsCount);
-        let item = doc.createElementNS(kNSXUL, aTagName);
-        item.setAttribute("label", menuLabel);
         let selectedTab = undoItem.tabs[undoItem.selected - 1];
-        if (selectedTab.image) {
-          setImage(aWindow, selectedTab, item);
-        }
-        if (aTagName == "menuitem") {
-          item.setAttribute("class", "menuitem-iconic bookmark-item menuitem-with-favicon");
-        }
-        item.setAttribute("oncommand", "undoCloseWindow(" + i + ");");
 
-        // Set the targetURI attribute so it will be shown in tooltip.
-        // SessionStore uses one-based indexes, so we need to normalize them.
-        let activeIndex = (selectedTab.index || selectedTab.entries.length) - 1;
-        if (activeIndex >= 0 && selectedTab.entries[activeIndex])
-          item.setAttribute("targetURI", selectedTab.entries[activeIndex].url);
-
-        if (i == 0)
-          item.setAttribute("key", "key_undoCloseWindow");
-        fragment.appendChild(item);
+        createEntry(aTagName, true, i, selectedTab, doc, menuLabel,
+                    fragment);
       }
 
-      // "Open All in Windows"
-      let restoreAllWindows = doc.createElementNS(kNSXUL, aTagName);
-      restoreAllWindows.classList.add("restoreallitem");
-      restoreAllWindows.setAttribute("label", navigatorBundle.GetStringFromName(aRestoreAllLabel));
-      restoreAllWindows.setAttribute("oncommand",
-        "for (var i = 0; i < " + closedWindowData.length + "; i++) undoCloseWindow();");
-      if (!aPrefixRestoreAll) {
-        fragment.appendChild(doc.createElementNS(kNSXUL, "menuseparator"));
-        fragment.appendChild(restoreAllWindows);
-      } else {
-        fragment.insertBefore(restoreAllWindows, fragment.firstChild);
-      }
+      createRestoreAllEntry(doc, fragment, aPrefixRestoreAll, true,
+                            aRestoreAllLabel, closedWindowData.length,
+                            aTagName);
     }
     return fragment;
   },
@@ -169,11 +113,102 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
   },
 };
 
-function setImage(aWindow, aItem, aElement) {
+function setImage(aItem, aElement) {
   let iconURL = aItem.image;
   // don't initiate a connection just to fetch a favicon (see bug 467828)
   if (/^https?:/.test(iconURL))
     iconURL = "moz-anno:favicon:" + iconURL;
 
   aElement.setAttribute("image", iconURL);
+}
+
+/**
+ * Create a UI entry for a recently closed tab or window.
+ * @param aTagName
+ *        the tag name that will be used when creating the UI entry
+ * @param aIsWindowsFragment
+ *        whether or not this entry will represent a closed window
+ * @param aIndex
+ *        the index of the closed tab
+ * @param aClosedTab
+ *        the closed tab
+ * @param aDocument
+ *        a document that can be used to create the entry
+ * @param aMenuLabel
+ *        the label the created entry will have
+ * @param aFragment
+ *        the fragment the created entry will be in
+ */
+function createEntry(aTagName, aIsWindowsFragment, aIndex, aClosedTab,
+                     aDocument, aMenuLabel, aFragment) {
+  let element = aDocument.createElementNS(kNSXUL, aTagName);
+
+  element.setAttribute("label", aMenuLabel);
+  if (aClosedTab.image) {
+    setImage(aClosedTab, element);
+  }
+  if (!aIsWindowsFragment) {
+    element.setAttribute("value", aIndex);
+  }
+
+  if (aTagName == "menuitem") {
+    element.setAttribute("class", "menuitem-iconic bookmark-item menuitem-with-favicon");
+  }
+
+  element.setAttribute("oncommand", "undoClose" + (aIsWindowsFragment ? "Window" : "Tab") +
+                       "(" + aIndex + ");");
+
+  // Set the targetURI attribute so it will be shown in tooltip.
+  // SessionStore uses one-based indexes, so we need to normalize them.
+  let tabData;
+  tabData = aIsWindowsFragment ? aClosedTab
+                     : aClosedTab.state;
+  let activeIndex = (tabData.index || tabData.entries.length) - 1;
+  if (activeIndex >= 0 && tabData.entries[activeIndex]) {
+    element.setAttribute("targetURI", tabData.entries[activeIndex].url);
+  }
+
+  if (!aIsWindowsFragment) {
+    element.addEventListener("click", this._undoCloseMiddleClick, false);
+  }
+  if (aIndex == 0) {
+    element.setAttribute("key", "key_undoClose" + (aIsWindowsFragment? "Window" : "Tab"));
+  }
+
+  aFragment.appendChild(element);
+}
+
+/**
+ * Create an entry to restore all closed windows or tabs.
+ * @param aDocument
+ *        a document that can be used to create the entry
+ * @param aFragment
+ *        the fragment the created entry will be in
+ * @param aPrefixRestoreAll
+ *        whether the 'restore all windows' item is suffixed or prefixed to the list
+ *        If suffixed a separator will be inserted before it.
+ * @param aIsWindowsFragment
+ *        whether or not this entry will represent a closed window
+ * @param aRestoreAllLabel
+ *        which localizable string to use for the entry
+ * @param aEntryCount
+ *        the number of elements to be restored by this entry
+ * @param aTagName
+ *        the tag name that will be used when creating the UI entry
+ */
+function createRestoreAllEntry(aDocument, aFragment, aPrefixRestoreAll,
+                                aIsWindowsFragment, aRestoreAllLabel,
+                                aEntryCount, aTagName) {
+  let restoreAllElements = aDocument.createElementNS(kNSXUL, aTagName);
+  restoreAllElements.classList.add("restoreallitem");
+  restoreAllElements.setAttribute("label", navigatorBundle.GetStringFromName(aRestoreAllLabel));
+  restoreAllElements.setAttribute("oncommand",
+                                  "for (var i = 0; i < " + aEntryCount + "; i++) undoClose" +
+                                    (aIsWindowsFragment? "Window" : "Tab") + "();");
+  if (aPrefixRestoreAll) {
+    aFragment.insertBefore(restoreAllElements, aFragment.firstChild);
+  } else {
+    aFragment.appendChild(aDocument.createElementNS(kNSXUL, "menuseparator"));
+    aFragment.appendChild(restoreAllElements);
+  }
 }
