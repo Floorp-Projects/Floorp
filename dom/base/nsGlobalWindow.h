@@ -954,6 +954,7 @@ public:
   nsresult Open(const nsAString& aUrl, const nsAString& aName,
                 const nsAString& aOptions,
                 nsIDocShellLoadInfo* aLoadInfo,
+                bool aForceNoOpener,
                 nsPIDOMWindowOuter **_retval) override;
   mozilla::dom::Navigator* GetNavigator(mozilla::ErrorResult& aError);
   nsIDOMNavigator* GetNavigator() override;
@@ -1472,7 +1473,13 @@ private:
    *
    * @param aLoadInfo to be passed on along to the windowwatcher.
    *
-   * @param aReturn [out] The window that was opened, if any.
+   * @param aForceNoOpener if true, will act as if "noopener" were passed in
+   *                       aOptions, but without affecting any other window
+   *                       features.
+   *
+   * @param aReturn [out] The window that was opened, if any.  Will be null if
+   *                      aForceNoOpener is true of if aOptions contains
+   *                      "noopener".
    *
    * Outer windows only.
    */
@@ -1487,6 +1494,7 @@ private:
                         nsIArray *argv,
                         nsISupports *aExtraArgument,
                         nsIDocShellLoadInfo* aLoadInfo,
+                        bool aForceNoOpener,
                         nsPIDOMWindowOuter **aReturn);
 
 public:

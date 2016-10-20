@@ -8140,9 +8140,10 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
 nsresult
 nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                      const nsAString& aOptions, nsIDocShellLoadInfo* aLoadInfo,
-                     nsPIDOMWindowOuter **_retval)
+                     bool aForceNoOpener, nsPIDOMWindowOuter **_retval)
 {
-  FORWARD_TO_OUTER(Open, (aUrl, aName, aOptions, aLoadInfo, _retval),
+  FORWARD_TO_OUTER(Open, (aUrl, aName, aOptions, aLoadInfo, aForceNoOpener,
+                          _retval),
                    NS_ERROR_NOT_INITIALIZED);
   return OpenInternal(aUrl, aName, aOptions,
                       false,          // aDialog
@@ -8152,6 +8153,7 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                       true,           // aNavigate
                       nullptr, nullptr,  // No args
                       aLoadInfo,
+                      aForceNoOpener,
                       _retval);
 }
 
@@ -8168,6 +8170,7 @@ nsGlobalWindow::OpenJS(const nsAString& aUrl, const nsAString& aName,
                       true,           // aNavigate
                       nullptr, nullptr,  // No args
                       nullptr,        // aLoadInfo
+                      false,          // aForceNoOpener
                       _retval);
 }
 
@@ -8188,6 +8191,7 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       true,                    // aNavigate
                       nullptr, aExtraArgument, // Arguments
                       nullptr,                 // aLoadInfo
+                      false,                   // aForceNoOpener
                       _retval);
 }
 
@@ -8207,6 +8211,7 @@ nsGlobalWindow::OpenNoNavigate(const nsAString& aUrl,
                       false,          // aNavigate
                       nullptr, nullptr,  // No args
                       nullptr,        // aLoadInfo
+                      false,          // aForceNoOpener
                       _retval);
 
 }
@@ -8236,6 +8241,7 @@ nsGlobalWindow::OpenDialogOuter(JSContext* aCx, const nsAString& aUrl,
                         true,                // aNavigate
                         argvArray, nullptr,  // Arguments
                         nullptr,          // aLoadInfo
+                        false,            // aForceNoOpener
                         getter_AddRefs(dialog));
   return dialog.forget();
 }
@@ -9321,6 +9327,7 @@ nsGlobalWindow::ShowModalDialogOuter(const nsAString& aUrl,
                         true,           // aNavigate
                         nullptr, argHolder, // args
                         nullptr,        // aLoadInfo
+                        false,          // aForceNoOpener
                         getter_AddRefs(dlgWin));
   nsContentUtils::SetMicroTaskLevel(oldMicroTaskLevel);
   LeaveModalState();
@@ -11801,6 +11808,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                              nsIArray *argv,
                              nsISupports *aExtraArgument,
                              nsIDocShellLoadInfo* aLoadInfo,
+                             bool aForceNoOpener,
                              nsPIDOMWindowOuter **aReturn)
 {
   MOZ_ASSERT(IsOuterWindow());
@@ -11838,15 +11846,17 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
               nsIPrincipal::APP_STATUS_INSTALLED;
   }
 
-  bool forceNoOpener = false;
-  // Unlike other window flags, "noopener" comes from splitting on commas with
-  // HTML whitespace trimming...
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(
-    aOptions, ',');
-  while (tok.hasMoreTokens()) {
-    if (tok.nextToken().EqualsLiteral("noopener")) {
-      forceNoOpener = true;
-      break;
+  bool forceNoOpener = aForceNoOpener;
+  if (!forceNoOpener) {
+    // Unlike other window flags, "noopener" comes from splitting on commas with
+    // HTML whitespace trimming...
+    nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(
+      aOptions, ',');
+    while (tok.hasMoreTokens()) {
+      if (tok.nextToken().EqualsLiteral("noopener")) {
+        forceNoOpener = true;
+        break;
+      }
     }
   }
 
