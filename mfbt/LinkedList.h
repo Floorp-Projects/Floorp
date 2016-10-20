@@ -222,15 +222,15 @@ public:
 private:
   friend class LinkedList<T>;
 
-  enum NodeKind {
-    NODE_KIND_NORMAL,
-    NODE_KIND_SENTINEL
+  enum class NodeKind {
+    Normal,
+    Sentinel
   };
 
   explicit LinkedListElement(NodeKind nodeKind)
     : mNext(this),
       mPrev(this),
-      mIsSentinel(nodeKind == NODE_KIND_SENTINEL)
+      mIsSentinel(nodeKind == NodeKind::Sentinel)
   { }
 
   /*
@@ -340,7 +340,7 @@ public:
     }
   };
 
-  LinkedList() : sentinel(LinkedListElement<T>::NODE_KIND_SENTINEL) { }
+  LinkedList() : sentinel(LinkedListElement<T>::NodeKind::Sentinel) { }
 
   LinkedList(LinkedList<T>&& aOther)
     : sentinel(mozilla::Move(aOther.sentinel))
