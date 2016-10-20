@@ -399,7 +399,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             if suite_category not in c["suite_definitions"]:
                 self.fatal("'%s' not defined in the config!")
 
-            if suite in ('browser-chrome-coverage', 'xpcshell-coverage'):
+            if suite in ('browser-chrome-coverage', 'xpcshell-coverage', 'mochitest-devtools-chrome-coverage'):
                 base_cmd.append('--jscov-dir-prefix=%s' %
                                 dirs['abs_blob_upload_dir'])
 
