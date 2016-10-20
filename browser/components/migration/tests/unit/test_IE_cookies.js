@@ -1,3 +1,5 @@
+"use strict";
+
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
 

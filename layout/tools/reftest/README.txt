@@ -555,7 +555,7 @@ the end of the test take the snapshot with the given async zoom on top of any
 existing zoom. Content is not re-rendered at the new zoom level. This
 corresponds to the mobile style "pinch zoom" style of zoom. This is unsupported
 in many configurations, and any tests using this will probably want to have
-skip-if(!asyncPanZoom) on them.
+pref(apz.allow_zooming,true) on them.
 
 Printing Tests: class="reftest-print"
 =====================================
