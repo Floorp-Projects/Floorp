@@ -7741,7 +7741,10 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         frame->PresContext()->Document()->EventHandlingSuppressed()) {
       if (aEvent->mMessage == eMouseDown) {
         mNoDelayedMouseEvents = true;
-      } else if (!mNoDelayedMouseEvents && aEvent->mMessage == eMouseUp) {
+      } else if (!mNoDelayedMouseEvents && (aEvent->mMessage == eMouseUp ||
+        // contextmenu is triggered after right mouseup on Windows and right
+        // mousedown on other platforms.
+        aEvent->mMessage == eContextMenu)) {
         DelayedEvent* event = new DelayedMouseEvent(aEvent->AsMouseEvent());
         if (!mDelayedEvents.AppendElement(event)) {
           delete event;

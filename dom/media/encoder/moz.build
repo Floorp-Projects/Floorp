@@ -25,10 +25,6 @@ UNIFIED_SOURCES += [
     'TrackEncoder.cpp',
 ]
 
-if CONFIG['MOZ_OMX_ENCODER']:
-    EXPORTS += ['OmxTrackEncoder.h']
-    UNIFIED_SOURCES += ['OmxTrackEncoder.cpp']
-
 if CONFIG['MOZ_WEBM_ENCODER']:
     EXPORTS += ['VP8TrackEncoder.h',
     ]

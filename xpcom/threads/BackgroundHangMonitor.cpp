@@ -141,14 +141,24 @@ private:
   // Unique thread ID for identification
   const PRThread* mThreadID;
 
+  void Update();
+
 public:
   NS_INLINE_DECL_REFCOUNTING(BackgroundHangThread)
+  /**
+   * Returns the BackgroundHangThread associated with the
+   * running thread. Note that this will not find private
+   * BackgroundHangThread threads.
+   *
+   * @return BackgroundHangThread*, or nullptr if no thread
+   *         is found.
+   */
   static BackgroundHangThread* FindThread();
 
   static void Startup()
   {
     /* We can tolerate init() failing. */
-    (void)!sTlsKey.init();
+    sTlsKeyInitialized = sTlsKey.init();
   }
 
   // Hang timeout in ticks
@@ -163,6 +173,8 @@ public:
   bool mHanging;
   // Is the thread in a waiting state
   bool mWaiting;
+  // Is the thread dedicated to a single BackgroundHangMonitor
+  BackgroundHangMonitor::ThreadType mThreadType;
   // Platform-specific helper to get hang stacks
   ThreadStackHelper mStackHelper;
   // Stack of current hang
@@ -176,19 +188,31 @@ public:
 
   BackgroundHangThread(const char* aName,
                        uint32_t aTimeoutMs,
-                       uint32_t aMaxTimeoutMs);
+                       uint32_t aMaxTimeoutMs,
+                       BackgroundHangMonitor::ThreadType aThreadType = BackgroundHangMonitor::THREAD_SHARED);
 
   // Report a hang; aManager->mLock IS locked
   Telemetry::HangHistogram& ReportHang(PRIntervalTime aHangTime);
   // Report a permanent hang; aManager->mLock IS locked
   void ReportPermaHang();
   // Called by BackgroundHangMonitor::NotifyActivity
-  void NotifyActivity();
+  void NotifyActivity()
+  {
+    MonitorAutoLock autoLock(mManager->mLock);
+    Update();
+  }
   // Called by BackgroundHangMonitor::NotifyWait
   void NotifyWait()
   {
-    NotifyActivity();
+    MonitorAutoLock autoLock(mManager->mLock);
+    Update();
     mWaiting = true;
+  }
+
+  // Returns true if this thread is (or might be) shared between other
+  // BackgroundHangMonitors for the monitored thread.
+  bool IsShared() {
+    return mThreadType == BackgroundHangMonitor::THREAD_SHARED;
   }
 };
 
@@ -347,7 +371,8 @@ BackgroundHangManager::RunMonitorThread()
 
 BackgroundHangThread::BackgroundHangThread(const char* aName,
                                            uint32_t aTimeoutMs,
-                                           uint32_t aMaxTimeoutMs)
+                                           uint32_t aMaxTimeoutMs,
+                                           BackgroundHangMonitor::ThreadType aThreadType)
   : mManager(BackgroundHangManager::sInstance)
   , mThreadID(PR_GetCurrentThread())
   , mTimeout(aTimeoutMs == BackgroundHangMonitor::kNoTimeout
@@ -360,9 +385,10 @@ BackgroundHangThread::BackgroundHangThread(const char* aName,
   , mHangStart(mInterval)
   , mHanging(false)
   , mWaiting(true)
+  , mThreadType(aThreadType)
   , mStats(aName)
 {
-  if (sTlsKeyInitialized) {
+  if (sTlsKeyInitialized && IsShared()) {
     sTlsKey.set(this);
   }
   // Lock here because LinkedList is not thread-safe
@@ -383,7 +409,7 @@ BackgroundHangThread::~BackgroundHangThread()
   autoLock.Notify();
 
   // We no longer have a thread
-  if (sTlsKeyInitialized) {
+  if (sTlsKeyInitialized && IsShared()) {
     sTlsKey.set(nullptr);
   }
 
@@ -452,7 +478,7 @@ BackgroundHangThread::ReportPermaHang()
 }
 
 MOZ_ALWAYS_INLINE void
-BackgroundHangThread::NotifyActivity()
+BackgroundHangThread::Update()
 {
   PRIntervalTime intervalNow = mManager->mIntervalNow;
   if (mWaiting) {
@@ -495,7 +521,7 @@ BackgroundHangThread::FindThread()
   MonitorAutoLock autoLock(manager->mLock);
   for (BackgroundHangThread* thread = manager->mHangThreads.getFirst();
        thread; thread = thread->getNext()) {
-    if (thread->mThreadID == threadID) {
+    if (thread->mThreadID == threadID && thread->IsShared()) {
       return thread;
     }
   }
@@ -587,12 +613,14 @@ BackgroundHangMonitor::Shutdown()
 
 BackgroundHangMonitor::BackgroundHangMonitor(const char* aName,
                                              uint32_t aTimeoutMs,
-                                             uint32_t aMaxTimeoutMs)
-  : mThread(BackgroundHangThread::FindThread())
+                                             uint32_t aMaxTimeoutMs,
+                                             ThreadType aThreadType)
+  : mThread(aThreadType == THREAD_SHARED ? BackgroundHangThread::FindThread() : nullptr)
 {
 #ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   if (!BackgroundHangManager::sDisabled && !mThread) {
-    mThread = new BackgroundHangThread(aName, aTimeoutMs, aMaxTimeoutMs);
+    mThread = new BackgroundHangThread(aName, aTimeoutMs, aMaxTimeoutMs,
+                                       aThreadType);
   }
 #endif
 }

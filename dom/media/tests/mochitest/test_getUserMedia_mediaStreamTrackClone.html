@@ -31,7 +31,7 @@
     info("Testing playback of track clone");
     var test = createMediaElement('video', 'testClonePlayback');
     var playback = new MediaStreamPlayback(test, cloneStream);
-    return playback.playMediaWithMediaStreamTracksStop(false);
+    return playback.playMedia(false);
   });
 
   runTest(() => Promise.resolve()
@@ -40,8 +40,9 @@
     .then(() => getUserMedia({video: true})).then(stream => {
       info("Test cloning a track into inception");
       var track = stream.getTracks()[0];
-      var inceptionClone = track.clone().clone().clone().clone().clone()
-                                .clone().clone().clone().clone().clone();
+      var clone = track;
+      var clones = Array(10).fill().map(() => clone = clone.clone());
+      var inceptionClone = clones.pop();
       checkMediaStreamTrackCloneAgainstOriginal(inceptionClone, track);
 
       var cloneStream = new MediaStream();
@@ -52,10 +53,15 @@
 
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, cloneStream);
-      return playback.playMediaWithMediaStreamTracksStop(false)
-        .then(() => info("Testing that clones of ended tracks are ended"))
-        .then(() => cloneStream.clone().getTracks().forEach(t =>
-          is(t.readyState, "ended", "Track " + t.id + " should be ended")));
+      return playback.playMedia(false).then(() => {
+          info("Testing that clones of ended tracks are ended");
+          cloneStream.clone().getTracks().forEach(t =>
+            is(t.readyState, "ended", "Track " + t.id + " should be ended"));
+        })
+        .then(() => {
+          clones.forEach(t => t.stop());
+          track.stop();
+        });
     })
     .then(() => getUserMedia({audio: true, video: true})).then(stream => {
       info("Test adding many track clones to the original stream");
@@ -73,7 +79,7 @@
 
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, stream);
-      return playback.playMediaWithMediaStreamTracksStop(false);
+      return playback.playMedia(false);
     })
     .then(() => {
       info("Testing audio content routing with MediaStreamTrack.clone()");
