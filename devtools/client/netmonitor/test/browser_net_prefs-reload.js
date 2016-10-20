@@ -32,7 +32,7 @@ add_task(function* () {
       // Predicate used to modify the frontend when setting the new pref value,
       // before trying to validate the changes.
       modifyFrontend: ($, value) => value.forEach(e =>
-        getStore().dispatch(Actions.toggleFilter(e)))
+        getStore().dispatch(Actions.toggleFilterType(e)))
     },
     networkDetailsWidth: {
       newValue: ~~(Math.random() * 200 + 100),
