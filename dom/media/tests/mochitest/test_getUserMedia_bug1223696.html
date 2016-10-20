@@ -16,7 +16,7 @@
   });
 
   runTest(() => Promise.resolve()
-    .then(() => getUserMedia({audio:true, video: true})).then(stream => {
+      .then(() => getUserMedia({audio:true, video: true})).then(stream => {
       info("Test addTrack()ing a video track to an audio-only gUM stream");
 
       var video = createMediaElement("video", "test_video_track");
@@ -24,8 +24,7 @@
       video.play();
 
       var h = new CaptureStreamTestHelper2D();
-      var removedTrack = stream.getVideoTracks()[0];
-      stream.removeTrack(removedTrack);
+      stream.removeTrack(stream.getVideoTracks()[0]);
       video.onloadeddata = () => {
         info("loadeddata");
         var canvas = document.createElement("canvas");
@@ -41,10 +40,7 @@
 
       return listenUntil(video, "loadeddata", () => true)
         .then(() => h.waitForPixelColor(video, h.grey, 5,
-            "The canvas track should be rendered by the media element"))
-        .then(() => {
-          [removedTrack, ...stream.getAudioTracks()].forEach(t => t.stop());
-        });
+                                        "The canvas track should be rendered by the media element"));
     }));
 </script>
 </pre>
