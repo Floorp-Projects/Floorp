@@ -946,7 +946,7 @@ NetworkDetailsView.prototype = {
         let jsonScopeName = L10N.getStr("jsonScopeName");
         let jsonScope = this._params.addScope(jsonScopeName);
         jsonScope.expanded = true;
-        let jsonItem = jsonScope.addItem("", { enumerable: true });
+        let jsonItem = jsonScope.addItem(undefined, { enumerable: true });
         jsonItem.populate(jsonVal, { sorted: true });
       } else {
         // This is really awkward, but hey, it works. Let's show an empty
