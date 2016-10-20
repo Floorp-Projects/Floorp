@@ -1221,6 +1221,21 @@ RenderTableSection(WasmRenderContext& c, const AstModule& module)
 }
 
 static bool
+RenderInlineExpr(WasmRenderContext& c, AstExpr& expr)
+{
+    if (!c.buffer.append("("))
+        return false;
+
+    uint32_t prevIndent = c.indent;
+    c.indent = 0;
+    if (!RenderExpr(c, expr, /* newLine */ false))
+        return false;
+    c.indent = prevIndent;
+
+    return c.buffer.append(")");
+}
+
+static bool
 RenderGlobal(WasmRenderContext& c, const AstGlobal& glob, bool inImport = false)
 {
     if (!c.buffer.append("(global "))
@@ -1246,16 +1261,9 @@ RenderGlobal(WasmRenderContext& c, const AstGlobal& glob, bool inImport = false)
     }
 
     if (glob.hasInit()) {
-        if (!c.buffer.append(" ("))
+        if (!c.buffer.append(" "))
             return false;
-
-        uint32_t prevIndent = c.indent;
-        c.indent = 0;
-        if (!RenderExpr(c, glob.init(), /* newLine */ false))
-            return false;
-        c.indent = prevIndent;
-
-        if (!c.buffer.append(")"))
+        if (!RenderInlineExpr(c, glob.init()))
             return false;
     }
 
@@ -1487,8 +1495,10 @@ RenderDataSection(WasmRenderContext& c, const AstModule& module)
         return false;
     if (!c.buffer.append("(memory "))
         return false;
+
     if (!RenderInt32(c, module.memory().initial))
         return false;
+
     Maybe<uint32_t> memMax = module.memory().maximum;
     if (memMax) {
         if (!c.buffer.append(" "))
@@ -1497,38 +1507,27 @@ RenderDataSection(WasmRenderContext& c, const AstModule& module)
             return false;
     }
 
-    c.indent++;
-
-    uint32_t numSegments = module.dataSegments().length();
-    if (!numSegments) {
-        if (!c.buffer.append(")\n"))
-            return false;
-        return true;
-    }
-    if (!c.buffer.append("\n"))
+    if (!c.buffer.append(")\n"))
         return false;
 
-    for (uint32_t i = 0; i < numSegments; i++) {
-        const AstDataSegment* segment = module.dataSegments()[i];
+    uint32_t numSegments = module.dataSegments().length();
+    if (!numSegments)
+        return true;
 
+    for (const AstDataSegment* seg : module.dataSegments()) {
         if (!RenderIndent(c))
             return false;
-        if (!c.buffer.append("(segment "))
+        if (!c.buffer.append("(data "))
             return false;
-        if (!RenderInt32(c, segment->offset()->as<AstConst>().val().i32()))
+        if (!RenderInlineExpr(c, *seg->offset()))
             return false;
         if (!c.buffer.append(" \""))
             return false;
-
-        RenderEscapedString(c, segment->text());
-
+        if (!RenderEscapedString(c, seg->text()))
+            return false;
         if (!c.buffer.append("\")\n"))
             return false;
     }
-
-    c.indent--;
-    if (!c.buffer.append(")\n"))
-        return false;
 
     return true;
 }
