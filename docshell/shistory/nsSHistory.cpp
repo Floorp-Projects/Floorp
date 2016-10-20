@@ -1536,7 +1536,10 @@ nsSHistory::LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
 NS_IMETHODIMP
 nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
 {
-  nsCOMPtr<nsIDocShell> docShell;
+  if (!mRootDocShell) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Keep note of requested history index in mRequestedIndex.
   mRequestedIndex = aIndex;
 
@@ -1584,75 +1587,31 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
     return NS_OK;  // XXX Maybe I can return some other error code?
   }
 
-  int32_t pCount = 0;
-  int32_t nCount = 0;
-  nsCOMPtr<nsISHContainer> prevAsContainer(do_QueryInterface(prevEntry));
-  nsCOMPtr<nsISHContainer> nextAsContainer(do_QueryInterface(nextEntry));
-  if (prevAsContainer && nextAsContainer) {
-    prevAsContainer->GetChildCount(&pCount);
-    nextAsContainer->GetChildCount(&nCount);
-  }
-
   if (mRequestedIndex == mIndex) {
     // Possibly a reload case
-    docShell = mRootDocShell;
-  } else {
-    // Going back or forward.
-    if (pCount > 0 && nCount > 0) {
-      /* THis is a subframe navigation. Go find
-       * the docshell in which load should happen
-       */
-      bool frameFound = false;
-      nsresult rv = CompareFrames(prevEntry, nextEntry, mRootDocShell,
-                                  aLoadType, &frameFound);
-      if (!frameFound) {
-        // We did not successfully find the subframe in which
-        // the new url was to be loaded. Go further in the history.
-        return LoadNextPossibleEntry(aIndex, aLoadType, aHistCmd);
-      }
-      return rv;
-    } else {
-      // Loading top level page.
-      uint32_t prevID = 0;
-      uint32_t nextID = 0;
-      prevEntry->GetID(&prevID);
-      nextEntry->GetID(&nextID);
-      if (prevID == nextID) {
-        // Try harder to find something new to load.
-        // This may happen for example if some page removed iframes dynamically.
-        return LoadNextPossibleEntry(aIndex, aLoadType, aHistCmd);
-      }
-      docShell = mRootDocShell;
-    }
+    return InitiateLoad(nextEntry, mRootDocShell, aLoadType);
   }
 
-  if (!docShell) {
-    // we did not successfully go to the proper index.
-    // return error.
-    mRequestedIndex = -1;
-    return NS_ERROR_FAILURE;
+  // Going back or forward.
+  bool differenceFound = false;
+  nsresult rv = LoadDifferingEntries(prevEntry, nextEntry, mRootDocShell,
+                                     aLoadType, differenceFound);
+  if (!differenceFound) {
+    // We did not find any differences. Go further in the history.
+    return LoadNextPossibleEntry(aIndex, aLoadType, aHistCmd);
   }
 
-  // Start the load on the appropriate docshell
-  return InitiateLoad(nextEntry, docShell, aLoadType);
+  return rv;
 }
 
 nsresult
-nsSHistory::CompareFrames(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
-                          nsIDocShell* aParent, long aLoadType,
-                          bool* aIsFrameFound)
+nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
+                                 nsIDocShell* aParent, long aLoadType,
+                                 bool& aDifferenceFound)
 {
   if (!aPrevEntry || !aNextEntry || !aParent) {
     return NS_ERROR_FAILURE;
   }
-
-  // We should be comparing only entries which were created for the
-  // same docshell. This is here to just prevent anything strange happening.
-  // This check could be possibly an assertion.
-  uint64_t prevdID, nextdID;
-  aPrevEntry->GetDocshellID(&prevdID);
-  aNextEntry->GetDocshellID(&nextdID);
-  NS_ENSURE_STATE(prevdID == nextdID);
 
   nsresult result = NS_OK;
   uint32_t prevID, nextID;
@@ -1662,24 +1621,21 @@ nsSHistory::CompareFrames(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
 
   // Check the IDs to verify if the pages are different.
   if (prevID != nextID) {
-    if (aIsFrameFound) {
-      *aIsFrameFound = true;
-    }
-    // Set the Subframe flag of the entry to indicate that
-    // it is subframe navigation
-    aNextEntry->SetIsSubFrame(true);
-    InitiateLoad(aNextEntry, aParent, aLoadType);
-    return NS_OK;
+    aDifferenceFound = true;
+
+    // Set the Subframe flag if not navigating the root docshell.
+    aNextEntry->SetIsSubFrame(aParent != mRootDocShell);
+    return InitiateLoad(aNextEntry, aParent, aLoadType);
   }
 
-  // The root entries are the same, so compare any child frames
+  // The entries are the same, so compare any child frames
   int32_t pcnt = 0;
   int32_t ncnt = 0;
   int32_t dsCount = 0;
   nsCOMPtr<nsISHContainer> prevContainer(do_QueryInterface(aPrevEntry));
   nsCOMPtr<nsISHContainer> nextContainer(do_QueryInterface(aNextEntry));
 
-  if (!aParent || !prevContainer || !nextContainer) {
+  if (!prevContainer || !nextContainer) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1744,7 +1700,7 @@ nsSHistory::CompareFrames(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
     // Finally recursively call this method.
     // This will either load a new page to shell or some subshell or
     // do nothing.
-    CompareFrames(pChild, nChild, dsChild, aLoadType, aIsFrameFound);
+    LoadDifferingEntries(pChild, nChild, dsChild, aLoadType, aDifferenceFound);
   }
   return result;
 }
