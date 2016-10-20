@@ -341,7 +341,6 @@ IDBRequest::GetResult(JS::MutableHandle<JS::Value> aResult,
     return;
   }
 
-  JS::ExposeValueToActiveJS(mResultVal);
   aResult.set(mResultVal);
 }
 
@@ -367,7 +366,6 @@ IDBRequest::SetResultCallback(ResultCallback* aCallback)
     // If we have a script owner we want the SafeJSContext and then to enter the
     // script owner's compartment.
     autoJS.Init();
-    JS::ExposeObjectToActiveJS(GetScriptOwner());
     ac.emplace(autoJS.cx(), GetScriptOwner());
   } else {
     // Otherwise our owner is a window and we use that to initialize.

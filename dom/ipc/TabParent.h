@@ -574,14 +574,13 @@ public:
   RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
                         const uint32_t& aAction,
                         const OptionalShmem& aVisualDnDData,
-                        const uint32_t& aWidth, const uint32_t& aHeight,
                         const uint32_t& aStride, const uint8_t& aFormat,
-                        const int32_t& aDragAreaX, const int32_t& aDragAreaY) override;
+                        const LayoutDeviceIntRect& aDragRect) override;
 
   void AddInitialDnDDataTo(DataTransfer* aDataTransfer);
 
-  void TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
-                             int32_t& aDragAreaX, int32_t& aDragAreaY);
+  bool TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
+                             LayoutDeviceIntRect* aDragRect);
 
   layout::RenderFrameParent* GetRenderFrame();
 
@@ -685,8 +684,8 @@ private:
   nsTArray<nsTArray<IPCDataTransferItem>> mInitialDataTransferItems;
 
   RefPtr<gfx::DataSourceSurface> mDnDVisualization;
-  int32_t mDragAreaX;
-  int32_t mDragAreaY;
+  bool mDragValid;
+  LayoutDeviceIntRect mDragRect;
 
   // When true, the TabParent is initialized without child side's request.
   // When false, the TabParent is initialized by window.open() from child side.

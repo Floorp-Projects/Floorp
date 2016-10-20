@@ -3731,64 +3731,123 @@ Parser<ParseHandler>::matchLabel(YieldHandling yieldHandling, MutableHandle<Prop
 
 template <typename ParseHandler>
 Parser<ParseHandler>::PossibleError::PossibleError(Parser<ParseHandler>& parser)
-  : parser_(parser),
-    state_(ErrorState::None)
+  : parser_(parser)
 {}
 
 template <typename ParseHandler>
+typename Parser<ParseHandler>::PossibleError::Error&
+Parser<ParseHandler>::PossibleError::error(ErrorKind kind)
+{
+    if (kind == ErrorKind::Expression)
+        return exprError_;
+    MOZ_ASSERT(kind == ErrorKind::Destructuring);
+    return destructuringError_;
+}
+
+template <typename ParseHandler>
 void
-Parser<ParseHandler>::PossibleError::setPending(Node pn, unsigned errorNumber)
+Parser<ParseHandler>::PossibleError::setResolved(ErrorKind kind)
+{
+    error(kind).state_ = ErrorState::None;
+}
+
+template <typename ParseHandler>
+bool
+Parser<ParseHandler>::PossibleError::hasError(ErrorKind kind)
+{
+    return error(kind).state_ == ErrorState::Pending;
+}
+
+template <typename ParseHandler>
+void
+Parser<ParseHandler>::PossibleError::setPending(ErrorKind kind, Node pn, unsigned errorNumber)
 {
     // Don't overwrite a previously recorded error.
-    if (hasError())
+    if (hasError(kind))
         return;
 
     // If we report an error later, we'll do it from the position where we set
     // the state to pending.
-    offset_      = (pn ? parser_.handler.getPosition(pn) : parser_.pos()).begin;
-    errorNumber_ = errorNumber;
-    state_       = ErrorState::Pending;
+    Error& err = error(kind);
+    err.offset_ = (pn ? parser_.handler.getPosition(pn) : parser_.pos()).begin;
+    err.errorNumber_ = errorNumber;
+    err.state_ = ErrorState::Pending;
 }
 
 template <typename ParseHandler>
 void
-Parser<ParseHandler>::PossibleError::setResolved()
+Parser<ParseHandler>::PossibleError::setPendingDestructuringError(Node pn, unsigned errorNumber)
 {
-    state_ = ErrorState::None;
+    setPending(ErrorKind::Destructuring, pn, errorNumber);
+}
+
+template <typename ParseHandler>
+void
+Parser<ParseHandler>::PossibleError::setPendingExpressionError(Node pn, unsigned errorNumber)
+{
+    setPending(ErrorKind::Expression, pn, errorNumber);
 }
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::PossibleError::hasError()
+Parser<ParseHandler>::PossibleError::checkForError(ErrorKind kind)
 {
-    return state_ == ErrorState::Pending;
+    if (!hasError(kind))
+        return true;
+
+    Error& err = error(kind);
+    parser_.reportWithOffset(ParseError, false, err.offset_, err.errorNumber_);
+    return false;
 }
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::PossibleError::checkForExprErrors()
+Parser<ParseHandler>::PossibleError::checkForDestructuringError()
 {
-    if (hasError()) {
-        parser_.reportWithOffset(ParseError, false, offset_, errorNumber_);
-        return false;
+    // Clear pending expression error, because we're definitely not in an
+    // expression context.
+    setResolved(ErrorKind::Expression);
+
+    // Report any pending destructuring error.
+    return checkForError(ErrorKind::Destructuring);
+}
+
+template <typename ParseHandler>
+bool
+Parser<ParseHandler>::PossibleError::checkForExpressionError()
+{
+    // Clear pending destructuring error, because we're definitely not in a
+    // destructuring context.
+    setResolved(ErrorKind::Destructuring);
+
+    // Report any pending expression error.
+    return checkForError(ErrorKind::Expression);
+}
+
+template <typename ParseHandler>
+void
+Parser<ParseHandler>::PossibleError::transferErrorTo(ErrorKind kind, PossibleError* other)
+{
+    if (hasError(kind) && !other->hasError(kind)) {
+        Error& err = error(kind);
+        Error& otherErr = other->error(kind);
+        otherErr.offset_ = err.offset_;
+        otherErr.errorNumber_ = err.errorNumber_;
+        otherErr.state_ = err.state_;
     }
-    return true;
 }
 
 template <typename ParseHandler>
 void
-Parser<ParseHandler>::PossibleError::transferErrorTo(PossibleError* other)
+Parser<ParseHandler>::PossibleError::transferErrorsTo(PossibleError* other)
 {
     MOZ_ASSERT(other);
     MOZ_ASSERT(this != other);
     MOZ_ASSERT(&parser_ == &other->parser_,
                "Can't transfer fields to an instance which belongs to a different parser");
 
-    if (hasError() && !other->hasError()) {
-        other->offset_        = offset_;
-        other->errorNumber_   = errorNumber_;
-        other->state_         = state_;
-    }
+    transferErrorTo(ErrorKind::Destructuring, other);
+    transferErrorTo(ErrorKind::Expression, other);
 }
 
 template <typename ParseHandler>
@@ -3977,10 +4036,9 @@ Parser<FullParseHandler>::checkDestructuringPattern(ParseNode* pattern,
                            ? checkDestructuringArray(pattern, maybeDecl)
                            : checkDestructuringObject(pattern, maybeDecl);
 
-    // Resolve asap instead of checking since we already know that we are
-    // destructuring.
-    if (isDestructuring && possibleError)
-        possibleError->setResolved();
+    // Report any pending destructuring error.
+    if (isDestructuring && possibleError && !possibleError->checkForDestructuringError())
+        return false;
 
     return isDestructuring;
 }
@@ -5239,7 +5297,7 @@ Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
     // modifier when regetting: Operand must be used to examine the ';' in
     // |for (;|, and our caller handles this case and that.
     if (!isForIn && !isForOf) {
-        if (!possibleError.checkForExprErrors())
+        if (!possibleError.checkForExpressionError())
             return false;
         *forHeadKind = PNK_FORHEAD;
         tokenStream.addModifierException(TokenStream::OperandIsNone);
@@ -5267,7 +5325,7 @@ Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
 
     if (!validateForInOrOfLHSExpression(*forInitialPart, &possibleError))
         return false;
-    if (!possibleError.checkForExprErrors())
+    if (!possibleError.checkForExpressionError())
         return false;
 
     // Finally, parse the iterated expression, making the for-loop's closing
@@ -6989,10 +7047,10 @@ Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
 
         if (!possibleError) {
             // Report any pending expression error.
-            if (!possibleErrorInner.checkForExprErrors())
+            if (!possibleErrorInner.checkForExpressionError())
                 return null();
         } else {
-            possibleErrorInner.transferErrorTo(possibleError);
+            possibleErrorInner.transferErrorsTo(possibleError);
         }
 
         handler.addList(seq, pn);
@@ -7120,7 +7178,7 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
         if (tok == TOK_IN ? inHandling == InAllowed : TokenKindIsBinaryOp(tok)) {
             // We're definitely not in a destructuring context, so report any
             // pending expression error now.
-            if (possibleError && !possibleError->checkForExprErrors())
+            if (possibleError && !possibleError->checkForExpressionError())
                 return null();
             // Report an error for unary expressions on the LHS of **.
             if (tok == TOK_POW && handler.isUnparenthesizedUnaryExpression(pn)) {
@@ -7404,10 +7462,10 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
       default:
         MOZ_ASSERT(!tokenStream.isCurrentTokenAssignment());
         if (!possibleError) {
-            if (!possibleErrorInner.checkForExprErrors())
+            if (!possibleErrorInner.checkForExpressionError())
                 return null();
         } else {
-            possibleErrorInner.transferErrorTo(possibleError);
+            possibleErrorInner.transferErrorsTo(possibleError);
         }
         tokenStream.ungetToken();
         return lhs;
@@ -7416,7 +7474,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
     AssignmentFlavor flavor = kind == PNK_ASSIGN ? PlainAssignment : CompoundAssignment;
     if (!checkAndMarkAsAssignmentLhs(lhs, flavor, &possibleErrorInner))
         return null();
-    if (!possibleErrorInner.checkForExprErrors())
+    if (!possibleErrorInner.checkForExpressionError())
         return null();
 
     Node rhs;
@@ -8513,6 +8571,8 @@ Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling, PossibleErro
                     modifier = TokenStream::None;
                     break;
                 }
+                if (tt == TOK_TRIPLEDOT && possibleError)
+                    possibleError->setPendingDestructuringError(null(), JSMSG_REST_WITH_COMMA);
             }
         }
 
@@ -8769,7 +8829,8 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 
                     // Otherwise delay error reporting until we've determined
                     // whether or not we're destructuring.
-                    possibleError->setPending(propName, JSMSG_DUPLICATE_PROTO_PROPERTY);
+                    possibleError->setPendingExpressionError(propName,
+                                                             JSMSG_DUPLICATE_PROTO_PROPERTY);
                 }
                 seenPrototypeMutation = true;
 
@@ -8854,7 +8915,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                 // Here we set a pending error so that later in the parse, once we've
                 // determined whether or not we're destructuring, the error can be
                 // reported or ignored appropriately.
-                possibleError->setPending(null(), JSMSG_COLON_AFTER_ID);
+                possibleError->setPendingExpressionError(null(), JSMSG_COLON_AFTER_ID);
             }
 
             Node rhs;

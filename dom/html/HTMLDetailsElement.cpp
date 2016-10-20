@@ -81,13 +81,24 @@ HTMLDetailsElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       if (mToggleEventDispatcher) {
         mToggleEventDispatcher->Cancel();
       }
-      mToggleEventDispatcher = new ToggleEventDispatcher(this);
+      // According to the html spec, a 'toggle' event is a simple event which
+      // does not bubble.
+      mToggleEventDispatcher =
+        new AsyncEventDispatcher(this, NS_LITERAL_STRING("toggle"), false);
       mToggleEventDispatcher->PostDOMEvent();
     }
   }
 
   return nsGenericHTMLElement::BeforeSetAttr(aNameSpaceID, aName, aValue,
                                              aNotify);
+}
+
+void
+HTMLDetailsElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+{
+  if (mToggleEventDispatcher == aEvent) {
+    mToggleEventDispatcher = nullptr;
+  }
 }
 
 JSObject*

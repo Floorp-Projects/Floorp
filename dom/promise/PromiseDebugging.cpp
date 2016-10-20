@@ -190,12 +190,10 @@ PromiseDebugging::GetState(GlobalObject&, JS::Handle<JSObject*> aPromise,
     break;
   case Promise::Resolved:
     aState.mState = PromiseDebuggingState::Fulfilled;
-    JS::ExposeValueToActiveJS(promise->mResult);
     aState.mValue = promise->mResult;
     break;
   case Promise::Rejected:
     aState.mState = PromiseDebuggingState::Rejected;
-    JS::ExposeValueToActiveJS(promise->mResult);
     aState.mReason = promise->mResult;
     break;
   }

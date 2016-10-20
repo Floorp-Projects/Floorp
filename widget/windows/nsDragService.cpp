@@ -20,10 +20,10 @@
 #include "nsNativeDragTarget.h"
 #include "nsNativeDragSource.h"
 #include "nsClipboard.h"
-#include "nsISupportsArray.h"
 #include "nsIDocument.h"
 #include "nsDataObjCollection.h"
 
+#include "nsArrayUtils.h"
 #include "nsString.h"
 #include "nsEscape.h"
 #include "nsIScreenManager.h"
@@ -78,12 +78,10 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     return false;
 
   // Prepare the drag image
-  nsIntRect dragRect;
+  LayoutDeviceIntRect dragRect;
   RefPtr<SourceSurface> surface;
   nsPresContext* pc;
-  DrawDrag(aDOMNode, aRegion,
-           mScreenX, mScreenY,
-           &dragRect, &surface, &pc);
+  DrawDrag(aDOMNode, aRegion, mScreenPosition, &dragRect, &surface, &pc);
   if (!surface)
     return false;
 
@@ -150,16 +148,10 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     psdi->sizeDragImage.cx = bmWidth;
     psdi->sizeDragImage.cy = bmHeight;
 
-    // Mouse position in center
-    if (mScreenX == -1 || mScreenY == -1) {
-      psdi->ptOffset.x = (uint32_t)((float)bmWidth/2.0f);
-      psdi->ptOffset.y = (uint32_t)((float)bmHeight/2.0f);
-    } else {
-      int32_t sx = mScreenX, sy = mScreenY;
-      ConvertToUnscaledDevPixels(pc, &sx, &sy);
-      psdi->ptOffset.x = sx - dragRect.x;
-      psdi->ptOffset.y = sy - dragRect.y;
-    }
+    LayoutDeviceIntPoint screenPoint =
+      ConvertToUnscaledDevPixels(pc, mScreenPosition);
+    psdi->ptOffset.x = screenPoint.x - dragRect.x;
+    psdi->ptOffset.y = screenPoint.y - dragRect.y;
 
     DeleteDC(hdcSrc);
   }
@@ -171,7 +163,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
 
 //-------------------------------------------------------------------------
 nsresult
-nsDragService::InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
+nsDragService::InvokeDragSessionImpl(nsIArray* anArrayTransferables,
                                      nsIScriptableRegion* aRegion,
                                      uint32_t aActionType)
 {
@@ -184,7 +176,7 @@ nsDragService::InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
   }
 
   uint32_t numItemsToDrag = 0;
-  nsresult rv = anArrayTransferables->Count(&numItemsToDrag);
+  nsresult rv = anArrayTransferables->GetLength(&numItemsToDrag);
   if (!numItemsToDrag)
     return NS_ERROR_FAILURE;
 
@@ -202,9 +194,8 @@ nsDragService::InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
       return NS_ERROR_OUT_OF_MEMORY;
     itemToDrag = dataObjCollection;
     for (uint32_t i=0; i<numItemsToDrag; ++i) {
-      nsCOMPtr<nsISupports> supports;
-      anArrayTransferables->GetElementAt(i, getter_AddRefs(supports));
-      nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
+      nsCOMPtr<nsITransferable> trans =
+          do_QueryElementAt(anArrayTransferables, i);
       if (trans) {
         // set the requestingPrincipal on the transferable
         nsCOMPtr<nsINode> node = do_QueryInterface(mSourceNode);
@@ -223,9 +214,8 @@ nsDragService::InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
     }
   } // if dragging multiple items
   else {
-    nsCOMPtr<nsISupports> supports;
-    anArrayTransferables->GetElementAt(0, getter_AddRefs(supports));
-    nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
+    nsCOMPtr<nsITransferable> trans =
+        do_QueryElementAt(anArrayTransferables, 0);
     if (trans) {
       // set the requestingPrincipal on the transferable
       nsCOMPtr<nsINode> node = do_QueryInterface(mSourceNode);

@@ -18,11 +18,13 @@ fi
 
 
 function check_commit_msg () {
+    ( set +e;
     if [[ -n "$AUTOMATION" ]]; then
         hg --cwd "$GECKO_DIR" log -r. --template '{desc}\n' | grep -F -q -- "$1"
     else
         echo -- "$SCRIPT_FLAGS" | grep -F -q -- "$1"
     fi
+    )
 }
 
 if check_commit_msg "--dep"; then

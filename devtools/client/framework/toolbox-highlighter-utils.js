@@ -129,6 +129,7 @@ exports.getHighlighterUtils = function (toolbox) {
     if (isRemoteHighlightable()) {
       toolbox.walker.on("picker-node-hovered", onPickerNodeHovered);
       toolbox.walker.on("picker-node-picked", onPickerNodePicked);
+      toolbox.walker.on("picker-node-previewed", onPickerNodePreviewed);
       toolbox.walker.on("picker-node-canceled", onPickerNodeCanceled);
 
       yield toolbox.highlighter.pick(doFocus);
@@ -161,6 +162,7 @@ exports.getHighlighterUtils = function (toolbox) {
       yield toolbox.highlighter.cancelPick();
       toolbox.walker.off("picker-node-hovered", onPickerNodeHovered);
       toolbox.walker.off("picker-node-picked", onPickerNodePicked);
+      toolbox.walker.off("picker-node-previewed", onPickerNodePreviewed);
       toolbox.walker.off("picker-node-canceled", onPickerNodeCanceled);
     } else {
       // If the target doesn't have the highlighter actor, use the walker's
@@ -195,6 +197,15 @@ exports.getHighlighterUtils = function (toolbox) {
   function onPickerNodePicked(data) {
     toolbox.selection.setNodeFront(data.node, "picker-node-picked");
     stopPicker();
+  }
+
+  /**
+   * When a node has been shift-clicked (previewed) while the highlighter is in
+   * picker mode
+   * @param {Object} data Information about the picked node
+   */
+  function onPickerNodePreviewed(data) {
+    toolbox.selection.setNodeFront(data.node, "picker-node-previewed");
   }
 
   /**

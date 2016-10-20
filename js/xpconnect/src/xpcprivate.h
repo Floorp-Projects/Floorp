@@ -1595,10 +1595,7 @@ public:
     GetContext() const {return mScope->GetContext();}
 
     JSObject*
-    GetJSProtoObject() const {
-        JS::ExposeObjectToActiveJS(mJSProtoObject);
-        return mJSProtoObject;
-    }
+    GetJSProtoObject() const { return mJSProtoObject; }
 
     nsIClassInfo*
     GetClassInfo()     const {return mClassInfo;}

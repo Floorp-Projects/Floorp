@@ -25,7 +25,7 @@ struct ScreenDetails {
   double contentsScaleFactor;
 };
 
-nested(upto inside_sync) sync protocol PScreenManager
+nested(upto inside_cpow) sync protocol PScreenManager
 {
   manager PContent;
 
@@ -50,7 +50,7 @@ parent:
       returns (ScreenDetails screen,
                bool success);
 
-    nested(inside_sync) sync ScreenForBrowser(TabId aTabId)
+    nested(inside_cpow) sync ScreenForBrowser(TabId aTabId)
       returns (ScreenDetails screen,
                bool success);
 
