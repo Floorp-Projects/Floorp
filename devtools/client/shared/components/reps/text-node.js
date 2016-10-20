@@ -11,7 +11,7 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { isGrip, cropMultipleLines } = require("./rep-utils");
+  const { isGrip, cropString } = require("./rep-utils");
 
   // Shortcuts
   const DOM = React.DOM;
@@ -28,14 +28,14 @@ define(function (require, exports, module) {
     },
 
     getTextContent: function (grip) {
-      return cropMultipleLines(grip.preview.textContent);
+      return cropString(grip.preview.textContent);
     },
 
     getTitle: function (grip) {
       if (this.props.objectLink) {
         return this.props.objectLink({
           object: grip
-        }, "#text");
+        }, "#text ");
       }
       return "";
     },
@@ -48,7 +48,9 @@ define(function (require, exports, module) {
         return (
           DOM.span({className: "objectBox objectBox-textNode"},
             this.getTitle(grip),
-            "\"" + this.getTextContent(grip) + "\""
+            DOM.span({className: "nodeValue"},
+              "\"" + this.getTextContent(grip) + "\""
+            )
           )
         );
       }

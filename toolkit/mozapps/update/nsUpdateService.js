@@ -4556,9 +4556,9 @@ UpdatePrompt.prototype = {
   _showUI: function UP__showUI(parent, uri, features, name, page, update) {
     var ary = null;
     if (update) {
-      ary = Cc["@mozilla.org/supports-array;1"].
-            createInstance(Ci.nsISupportsArray);
-      ary.AppendElement(update);
+      ary = Cc["@mozilla.org/array;1"].
+            createInstance(Ci.nsIMutableArray);
+      ary.appendElement(update, /*weak =*/ false);
     }
 
     var win = this._getUpdateWindow();
