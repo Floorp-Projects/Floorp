@@ -17,7 +17,7 @@ from mozpack.archive import (
 
 
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
-DOCKER_ROOT = os.path.join(GECKO, 'taskcluster', 'docker')
+DOCKER_ROOT = os.path.join(GECKO, 'testing', 'docker')
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
 
