@@ -85,14 +85,16 @@ private:
 
 constexpr MsaaIdGenerator::MsaaIdGenerator()
   : mIDSet(kNumUniqueIDBits)
+  , mContentProcessID(0)
 {}
 
 uint32_t
 MsaaIdGenerator::GetID()
 {
+  static const uint32_t kContentProcessId = ResolveContentProcessID();
   uint32_t id = mIDSet.GetID();
   MOZ_ASSERT(id <= ((1UL << kNumUniqueIDBits) - 1UL));
-  return detail::BuildMsaaID(id, ResolveContentProcessID());
+  return detail::BuildMsaaID(id, kContentProcessId);
 }
 
 void
@@ -102,7 +104,7 @@ MsaaIdGenerator::ReleaseID(AccessibleWrap* aAccWrap)
   uint32_t id = aAccWrap->GetExistingID();
   MOZ_ASSERT(id != AccessibleWrap::kNoID);
   detail::MsaaIDCracker cracked(id);
-  if (cracked.GetContentProcessId() != ResolveContentProcessID()) {
+  if (cracked.GetContentProcessId() != mContentProcessID) {
     // This may happen if chrome holds a proxy whose ID was originally generated
     // by a content process. Since ReleaseID only has meaning in the process
     // that originally generated that ID, we ignore ReleaseID calls for any ID
@@ -124,8 +126,9 @@ bool
 MsaaIdGenerator::IsIDForThisContentProcess(uint32_t aID)
 {
   MOZ_ASSERT(XRE_IsContentProcess());
+  static const uint32_t kContentProcessId = ResolveContentProcessID();
   detail::MsaaIDCracker cracked(aID);
-  return cracked.GetContentProcessId() == ResolveContentProcessID();
+  return cracked.GetContentProcessId() == kContentProcessId;
 }
 
 bool
@@ -155,10 +158,10 @@ MsaaIdGenerator::ResolveContentProcessID()
   }
 
   dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-  uint32_t result = contentChild->GetMsaaID();
+  Unused << contentChild->SendGetA11yContentId(&mContentProcessID);
 
-  MOZ_ASSERT(result);
-  return result;
+  MOZ_ASSERT(mContentProcessID);
+  return mContentProcessID;
 }
 
 /**
