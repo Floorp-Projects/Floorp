@@ -191,6 +191,11 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
 
   @Override
   public void storeDone() {
+    storeDone(System.currentTimeMillis());
+  }
+
+  @Override
+  public void storeDone(final long end) {
     storeWorkQueue.execute(new Runnable() {
       @Override
       public void run() {
@@ -201,7 +206,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
             Logger.warn(LOG_TAG, "Error flushing records to database.", e);
           }
         }
-        storeDone(System.currentTimeMillis());
+        AndroidBrowserHistoryRepositorySession.super.storeDone(end);
       }
     });
   }
