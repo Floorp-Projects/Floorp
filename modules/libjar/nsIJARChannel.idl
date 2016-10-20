@@ -20,11 +20,6 @@ interface nsIJARChannel : nsIChannel
     [infallible] readonly attribute boolean isUnsafe;
 
     /**
-     * Forces the uri to be a app:// uri.
-     */
-    void setAppURI(in nsIURI uri);
-
-    /**
      * Returns the JAR file.  May be null if the jar is remote.
      */
     readonly attribute nsIFile jarFile;
