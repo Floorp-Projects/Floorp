@@ -466,6 +466,8 @@ public:
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
 
+  bool HandleDormant(bool aDormant) override;
+
   void HandleVideoSuspendTimeout() override
   {
     // Do nothing for we need to decode the 1st video frame to get the dimensions.
@@ -1250,6 +1252,21 @@ DecodingFirstFrameState::HandleSeek(SeekTarget aTarget)
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   return SetState<SeekingState>(Move(seekJob));
+}
+
+bool
+MediaDecoderStateMachine::
+DecodingFirstFrameState::HandleDormant(bool aDormant)
+{
+  if (aDormant) {
+    // Don't store mQueuedSeek because:
+    // 1. if mQueuedSeek is not empty, respect the latest seek request
+    //    and don't overwrite it.
+    // 2. if mQueuedSeek is empty, there is no need to seek when exiting
+    //    the dormant state for we are at position 0.
+    SetState<DormantState>();
+  }
+  return true;
 }
 
 void
