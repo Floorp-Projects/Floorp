@@ -30,6 +30,7 @@ function testScript(script) {
           return;
         }
         if (event.data.type == 'finish') {
+          worker.terminate();
           resolve();
         } else if (event.data.type == 'status') {
           ok(event.data.status, event.data.context + ": " + event.data.msg);
@@ -51,6 +52,7 @@ function testScript(script) {
           return;
         }
         if (event.data.type == 'finish') {
+          worker.terminate();
           resolve();
         } else if (event.data.type == 'status') {
           ok(event.data.status, event.data.context + ": " + event.data.msg);
