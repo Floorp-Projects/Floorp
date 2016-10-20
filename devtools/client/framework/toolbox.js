@@ -123,6 +123,10 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._toggleMinimizeMode = this._toggleMinimizeMode.bind(this);
   this._onTabbarFocus = this._onTabbarFocus.bind(this);
   this._onTabbarArrowKeypress = this._onTabbarArrowKeypress.bind(this);
+  this._onPickerClick = this._onPickerClick.bind(this);
+  this._onPickerKeypress = this._onPickerKeypress.bind(this);
+  this._onPickerStarted = this._onPickerStarted.bind(this);
+  this._onPickerStopped = this._onPickerStopped.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -149,6 +153,9 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
 
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
+
+  this.on("picker-started", this._onPickerStarted);
+  this.on("picker-stopped", this._onPickerStopped);
 }
 exports.Toolbox = Toolbox;
 
@@ -984,8 +991,39 @@ Toolbox.prototype = {
     let container = this.doc.querySelector("#toolbox-picker-container");
     container.appendChild(this._pickerButton);
 
-    this._togglePicker = this.highlighterUtils.togglePicker.bind(this.highlighterUtils);
-    this._pickerButton.addEventListener("click", this._togglePicker, false);
+    this._pickerButton.addEventListener("click", this._onPickerClick, false);
+  },
+
+  /**
+   * Toggle the picker, but also decide whether or not the highlighter should
+   * focus the window. This is only desirable when the toolbox is mounted to the
+   * window. When devtools is free floating, then the target window should not
+   * pop in front of the viewer when the picker is clicked.
+   */
+  _onPickerClick: function () {
+    let focus = this.hostType === Toolbox.HostType.BOTTOM ||
+                this.hostType === Toolbox.HostType.SIDE;
+    this.highlighterUtils.togglePicker(focus);
+  },
+
+  /**
+   * If the picker is activated, then allow the Escape key to deactivate the
+   * functionality instead of the default behavior of toggling the console.
+   */
+  _onPickerKeypress: function (event) {
+    if (event.keyCode === KeyCodes.DOM_VK_ESCAPE) {
+      this.highlighterUtils.cancelPicker();
+      // Stop the console from toggling.
+      event.stopImmediatePropagation();
+    }
+  },
+
+  _onPickerStarted: function () {
+    this.doc.addEventListener("keypress", this._onPickerKeypress, true);
+  },
+
+  _onPickerStopped: function () {
+    this.doc.removeEventListener("keypress", this._onPickerKeypress, true);
   },
 
   /**

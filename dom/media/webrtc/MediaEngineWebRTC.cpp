@@ -157,6 +157,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
     return;
   }
 #endif
+  bool scaryKind = false; // flag sources with cross-origin exploit potential
 
   switch (aMediaSource) {
     case dom::MediaSourceEnum::Window:
@@ -167,9 +168,11 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
       break;
     case dom::MediaSourceEnum::Screen:
       capEngine = mozilla::camera::ScreenEngine;
+      scaryKind = true;
       break;
     case dom::MediaSourceEnum::Browser:
       capEngine = mozilla::camera::BrowserEngine;
+      scaryKind = true;
       break;
     case dom::MediaSourceEnum::Camera:
       capEngine = mozilla::camera::CameraEngine;
@@ -196,6 +199,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
   for (int i = 0; i < num; i++) {
     char deviceName[MediaEngineSource::kMaxDeviceNameLength];
     char uniqueId[MediaEngineSource::kMaxUniqueIdLength];
+    bool scaryWindow = false;
 
     // paranoia
     deviceName[0] = '\0';
@@ -214,6 +218,16 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
     }
 #ifdef DEBUG
     LOG(("  Capture Device Index %d, Name %s", i, deviceName));
+
+    if (aMediaSource == dom::MediaSourceEnum::Window) {
+      // TODO: Detect firefox windows
+      //scaryWindow = true;
+    }
+
+    if (aMediaSource == dom::MediaSourceEnum::Application) {
+      // TODO: Detect firefox application windows
+      //scaryWindow = true;
+    }
 
     webrtc::CaptureCapability cap;
     int numCaps = mozilla::camera::GetChildAndCall(
@@ -247,7 +261,8 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
       static_cast<MediaEngineRemoteVideoSource*>(vSource.get())->Refresh(i);
       aVSources->AppendElement(vSource.get());
     } else {
-      vSource = new MediaEngineRemoteVideoSource(i, capEngine, aMediaSource);
+      vSource = new MediaEngineRemoteVideoSource(i, capEngine, aMediaSource,
+                                                 scaryKind || scaryWindow);
       mVideoSources.Put(uuid, vSource); // Hashtable takes ownership.
       aVSources->AppendElement(vSource);
     }

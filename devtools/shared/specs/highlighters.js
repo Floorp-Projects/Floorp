@@ -28,6 +28,7 @@ const highlighterSpec = generateActorSpec({
       request: {}
     },
     pick: {},
+    pickAndFocus: {},
     cancelPick: {}
   }
 });

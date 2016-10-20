@@ -30,6 +30,10 @@ import urllib2
 
 
 FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint'
+FALLBACK_FINGERPRINT = {
+    'fingerprints':
+        "sha256:8e:ad:f7:6a:eb:44:06:15:ed:f3:e4:69:a6:64:60:37:2d:ff:98:88:37"
+        ":bf:d7:b8:40:84:01:48:9c:26:ce:d9"}
 
 
 def print_line(prefix, m):
@@ -95,15 +99,17 @@ def vcs_checkout(source_repo, dest, base_repo=None, revision=None, branch=None):
                    FINGERPRINT_URL)
         res = urllib2.urlopen(FINGERPRINT_URL, timeout=10)
         secret = res.read()
-    except urllib2.URLError as e:
-        print('error retrieving hg fingerprint: %s' % e)
-        sys.exit(1)
-
-    try:
-        secret = json.loads(secret, encoding='utf-8')
-    except ValueError:
-        print('invalid JSON in hg fingerprint secret')
-        sys.exit(1)
+        try:
+            secret = json.loads(secret, encoding='utf-8')
+        except ValueError:
+            print_line(b'vcs', 'invalid JSON in hg fingerprint secret')
+            sys.exit(1)
+    except urllib2.URLError:
+        print_line(b'vcs', 'Unable to retrieve current hg.mozilla.org fingerprint'
+                           'using the secret service, using fallback instead.')
+        # XXX This fingerprint will not be accurate if running on an old
+        #     revision after the server fingerprint has changed.
+        secret = {'secret': FALLBACK_FINGERPRINT}
 
     hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
 
@@ -193,6 +199,7 @@ def main(args):
     gids = [g.gr_gid for g in grp.getgrall() if args.group in g.gr_mem]
 
     wanted_dir_mode = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
+
     def set_dir_permissions(path, uid, gid):
         st = os.lstat(path)
 

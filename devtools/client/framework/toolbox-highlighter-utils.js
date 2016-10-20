@@ -93,13 +93,15 @@ exports.getHighlighterUtils = function (toolbox) {
 
   /**
    * Start/stop the element picker on the debuggee target.
+   * @param {Boolean} doFocus - Optionally focus the content area once the picker is
+   *                            activated.
    * @return A promise that resolves when done
    */
-  let togglePicker = exported.togglePicker = function () {
+  let togglePicker = exported.togglePicker = function (doFocus) {
     if (isPicking) {
-      return stopPicker();
+      return cancelPicker();
     } else {
-      return startPicker();
+      return startPicker(doFocus);
     }
   };
 
@@ -109,10 +111,12 @@ exports.getHighlighterUtils = function (toolbox) {
    * on the target page to highlight the hovered/picked element.
    * Depending on the server-side capabilities, this may fire events when nodes
    * are hovered.
+   * @param {Boolean} doFocus - Optionally focus the content area once the picker is
+   *                            activated.
    * @return A promise that resolves when the picker has started or immediately
    * if it is already started
    */
-  let startPicker = exported.startPicker = requireInspector(function* () {
+  let startPicker = exported.startPicker = requireInspector(function* (doFocus = false) {
     if (isPicking) {
       return;
     }
@@ -120,14 +124,15 @@ exports.getHighlighterUtils = function (toolbox) {
 
     toolbox.pickerButtonChecked = true;
     yield toolbox.selectTool("inspector");
-    toolbox.on("select", stopPicker);
+    toolbox.on("select", cancelPicker);
 
     if (isRemoteHighlightable()) {
       toolbox.walker.on("picker-node-hovered", onPickerNodeHovered);
       toolbox.walker.on("picker-node-picked", onPickerNodePicked);
+      toolbox.walker.on("picker-node-previewed", onPickerNodePreviewed);
       toolbox.walker.on("picker-node-canceled", onPickerNodeCanceled);
 
-      yield toolbox.highlighter.pick();
+      yield toolbox.highlighter.pick(doFocus);
       toolbox.emit("picker-started");
     } else {
       // If the target doesn't have the highlighter actor, we can use the
@@ -157,6 +162,7 @@ exports.getHighlighterUtils = function (toolbox) {
       yield toolbox.highlighter.cancelPick();
       toolbox.walker.off("picker-node-hovered", onPickerNodeHovered);
       toolbox.walker.off("picker-node-picked", onPickerNodePicked);
+      toolbox.walker.off("picker-node-previewed", onPickerNodePreviewed);
       toolbox.walker.off("picker-node-canceled", onPickerNodeCanceled);
     } else {
       // If the target doesn't have the highlighter actor, use the walker's
@@ -164,8 +170,16 @@ exports.getHighlighterUtils = function (toolbox) {
       yield toolbox.walker.cancelPick();
     }
 
-    toolbox.off("select", stopPicker);
+    toolbox.off("select", cancelPicker);
     toolbox.emit("picker-stopped");
+  });
+
+  /**
+   * Stop the picker, but also emit an event that the picker was canceled.
+   */
+  let cancelPicker = exported.cancelPicker = Task.async(function* () {
+    yield stopPicker();
+    toolbox.emit("picker-canceled");
   });
 
   /**
@@ -186,11 +200,20 @@ exports.getHighlighterUtils = function (toolbox) {
   }
 
   /**
+   * When a node has been shift-clicked (previewed) while the highlighter is in
+   * picker mode
+   * @param {Object} data Information about the picked node
+   */
+  function onPickerNodePreviewed(data) {
+    toolbox.selection.setNodeFront(data.node, "picker-node-previewed");
+  }
+
+  /**
    * When the picker is canceled, stop the picker, and make sure the toolbox
    * gets the focus.
    */
   function onPickerNodeCanceled() {
-    stopPicker();
+    cancelPicker();
     toolbox.win.focus();
   }
 
