@@ -199,3 +199,6 @@ class CollectionValidator {
     };
   }
 }
+
+// Default to 0, some engines may override.
+CollectionValidator.prototype.version = 0;

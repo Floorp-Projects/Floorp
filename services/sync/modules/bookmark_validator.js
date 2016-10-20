@@ -22,6 +22,7 @@ function isNodeIgnored(treeNode) {
   return treeNode.annos && treeNode.annos.some(anno => anno.name == LEFT_PANE_ROOT_ANNO ||
                                                        anno.name == LEFT_PANE_QUERY_ANNO);
 }
+const BOOKMARK_VALIDATOR_VERSION = 1;
 
 /**
  * Result of bookmark validation. Contains the following fields which describe
@@ -763,6 +764,7 @@ class BookmarkValidator {
       let duration = end-start;
       return {
         duration,
+        version: self.version,
         problems: result.problemData,
         recordCount: serverRecordCount
       };
@@ -771,5 +773,5 @@ class BookmarkValidator {
 
 };
 
-
+BookmarkValidator.prototype.version = BOOKMARK_VALIDATOR_VERSION;
 
