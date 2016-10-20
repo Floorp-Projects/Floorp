@@ -976,10 +976,12 @@
           );
           this.style.minWidth = minWidth + "px";
 
+          // Set the origin before assigning the popup, as the assignment does
+          // a rebuild and would miss the origin.
+          this.oneOffButtons.telemetryOrigin = "searchbar";
           // Set popup after setting the minWidth since it builds the buttons.
           this.oneOffButtons.popup = this;
           this.oneOffButtons.textbox = this.input;
-          this.oneOffButtons.telemetryOrigin = "searchbar";
         }
 
         // First handle deciding if we are showing the reduced version of the
@@ -2026,17 +2028,19 @@
         if (anonid == "search-one-offs-context-set-default") {
           let currentEngine = Services.search.currentEngine;
 
-          // Make the target button of the context menu reflect the current
-          // search engine first. Doing this as opposed to rebuilding all the
-          // one-off buttons avoids flicker.
-          let button = this._buttonForEngine(this._contextEngine);
-          button.id = this._buttonIDForEngine(currentEngine);
-          let uri = "chrome://browser/skin/search-engine-placeholder.png";
-          if (currentEngine.iconURI)
-            uri = currentEngine.iconURI.spec;
-          button.setAttribute("image", uri);
-          button.setAttribute("tooltiptext", currentEngine.name);
-          button.engine = currentEngine;
+          if (!this.getAttribute("includecurrentengine")) {
+            // Make the target button of the context menu reflect the current
+            // search engine first. Doing this as opposed to rebuilding all the
+            // one-off buttons avoids flicker.
+            let button = this._buttonForEngine(this._contextEngine);
+            button.id = this._buttonIDForEngine(currentEngine);
+            let uri = "chrome://browser/skin/search-engine-placeholder.png";
+            if (currentEngine.iconURI)
+              uri = currentEngine.iconURI.spec;
+            button.setAttribute("image", uri);
+            button.setAttribute("tooltiptext", currentEngine.name);
+            button.engine = currentEngine;
+          }
 
           Services.search.currentEngine = this._contextEngine;
         }
