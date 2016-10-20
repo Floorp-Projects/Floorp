@@ -149,7 +149,8 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
     if (!freeMallocedBuffersTask || !freeMallocedBuffersTask->init())
         return false;
 
-    updateNumChunksLocked(1, lock);
+    AutoMaybeStartBackgroundAllocation maybeBgAlloc;
+    updateNumChunksLocked(1, maybeBgAlloc, lock);
     if (numChunks() == 0)
         return false;
 
@@ -923,21 +924,22 @@ void
 js::Nursery::updateNumChunks(unsigned newCount)
 {
     if (numChunks() != newCount) {
+        AutoMaybeStartBackgroundAllocation maybeBgAlloc;
         AutoLockGC lock(runtime());
-        updateNumChunksLocked(newCount, lock);
+        updateNumChunksLocked(newCount, maybeBgAlloc, lock);
     }
 }
 
 void
-js::Nursery::updateNumChunksLocked(unsigned newCount, AutoLockGC& lock)
+js::Nursery::updateNumChunksLocked(unsigned newCount,
+                                   AutoMaybeStartBackgroundAllocation& maybeBgAlloc,
+                                   AutoLockGC& lock)
 {
     // The GC nursery is an optimization and so if we fail to allocate nursery
     // chunks we do not report an error.
 
     unsigned priorCount = numChunks();
     MOZ_ASSERT(priorCount != newCount);
-
-    AutoMaybeStartBackgroundAllocation maybeBgAlloc;
 
     if (newCount < priorCount) {
         // Shrink the nursery and free unused chunks.
