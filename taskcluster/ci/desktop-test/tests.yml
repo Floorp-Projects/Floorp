@@ -329,7 +329,10 @@ mochitest-clipboard:
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
-    suite: mochitest/mochitest-devtools-chrome-chunked
+    suite:
+        by-test-platform:
+            linux64-jsdcov/opt: mochitest/mochitest-devtools-chrome-coverage
+            default: mochitest/mochitest-devtools-chrome-chunked
     treeherder-symbol: tc-M(dt)
     loopback-video: true
     max-run-time: 5400
@@ -340,12 +343,14 @@ mochitest-devtools-chrome:
     run-on-projects:
         by-test-platform:
             linux64-ccov/opt: []
+            linux64-jsdcov/opt: []
             default: ['all']
     e10s:
         by-test-platform:
             # Bug 1242986: linux64/debug mochitest-devtools-chrome e10s is not greened up yet
             linux64/debug: false
             linux64-ccov/opt: false
+            linux64-jsdcov/opt: false
             default: both
     mozharness:
         script: desktop_unittest.py
@@ -362,6 +367,8 @@ mochitest-devtools-chrome:
                 linux64-ccov/opt:
                     - --mochitest-suite=mochitest-devtools-chrome-chunked
                     - --code-coverage
+                linux64-jsdcov:
+                    - --mochitest-suite=mochitest-devtools-chrome-coverage
                 default:
                     - --mochitest-suite=mochitest-devtools-chrome-chunked
     instance-size:
