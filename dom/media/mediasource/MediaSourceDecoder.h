@@ -43,14 +43,6 @@ public:
   media::TimeIntervals GetSeekable() override;
   media::TimeIntervals GetBuffered() override;
 
-  // We can't do this in the constructor because we don't know what type of
-  // media we're dealing with by that point.
-  void NotifyDormantSupported(bool aSupported)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    mDormantSupported = aSupported;
-  }
-
   void Shutdown() override;
 
   static already_AddRefed<MediaResource> CreateResource(nsIPrincipal* aPrincipal = nullptr);

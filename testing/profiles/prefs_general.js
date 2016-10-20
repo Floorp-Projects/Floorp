@@ -312,10 +312,6 @@ user_pref("media.eme.enabled", true);
 
 user_pref("media.autoplay.enabled", true);
 
-#if defined(XP_WIN)
-user_pref("media.decoder.heuristic.dormant.timeout", 0);
-#endif
-
 // Don't use auto-enabled e10s
 user_pref("browser.tabs.remote.autostart.1", false);
 user_pref("browser.tabs.remote.autostart.2", false);
