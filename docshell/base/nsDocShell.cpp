@@ -13963,10 +13963,15 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, referrer);
     nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(referrer);
     while (tok.hasMoreTokens()) {
-      if (tok.nextToken().LowerCaseEqualsLiteral("noreferrer")) {
+      const nsAString& token = tok.nextToken();
+      if (token.LowerCaseEqualsLiteral("noreferrer")) {
         flags |= INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER |
                  INTERNAL_LOAD_FLAGS_NO_OPENER;
+        // We now have all the flags we could possibly have, so just stop.
         break;
+      }
+      if (token.LowerCaseEqualsLiteral("noopener")) {
+        flags |= INTERNAL_LOAD_FLAGS_NO_OPENER;
       }
     }
   }
