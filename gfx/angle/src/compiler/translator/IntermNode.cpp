@@ -941,10 +941,11 @@ TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op,
                     break;
 
                   case EbtInt:
-                    if (rightArray[i] == 0)
+                    if (rightArray[i] == 0 ||
+                        (leftArray[i].getIConst() == INT_MIN && rightArray[i].getIConst() == -1))
                     {
                         diagnostics->warning(
-                            getLine(), "Divide by zero error during constant folding", "/", "");
+                            getLine(), "Divide by zero or overflow error during constant folding", "/", "");
                         resultArray[i].setIConst(INT_MAX);
                     }
                     else
