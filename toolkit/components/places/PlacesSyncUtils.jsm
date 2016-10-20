@@ -342,7 +342,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       return getKindForItem(item)
     });
   },
-
 });
 
 XPCOMUtils.defineLazyGetter(this, "BookmarkSyncLog", () => {
