@@ -62,7 +62,7 @@ class DockerImageTask(base.Task):
         tasks = []
         templates = Templates(path)
         for image_name in config['images']:
-            context_path = os.path.join('testing', 'docker', image_name)
+            context_path = os.path.join('taskcluster', 'docker', image_name)
 
             image_parameters = dict(parameters)
             image_parameters['context_path'] = context_path
