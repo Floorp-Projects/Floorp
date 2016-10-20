@@ -10,16 +10,19 @@ import sys
 
 from collections import OrderedDict
 
+
 def load_manifest(path):
     with open(path) as f:
         return json.load(f, object_pairs_hook=OrderedDict)
     return None
 
+
 def save_manifest(manifest, path):
     with open(path, 'w') as f:
         json.dump(manifest, f,
-                indent=0, separators=(',', ': '))
+                  indent=0, separators=(',', ': '))
         f.write('\n')
+
 
 def replace(manifest, stanza):
     key = 'rustc'
@@ -34,8 +37,9 @@ def replace(manifest, stanza):
             s['size'] = stanza['size']
             print('  new %s' % s['digest'][:12])
             return True
-    print('Warning: Could not find matching %s filename' %key)
+    print('Warning: Could not find matching %s filename' % key)
     return False
+
 
 def update_manifest(source_manifest, target, target_filename):
     for stanza in source_manifest:
@@ -99,4 +103,4 @@ if __name__ == '__main__':
     for target, filenames in TARGETS.items():
         for target_filename in filenames:
             update_manifest(updates, target,
-                    os.path.join(base_path, target_filename))
+                            os.path.join(base_path, target_filename))
