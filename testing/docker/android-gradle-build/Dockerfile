@@ -14,8 +14,8 @@ ADD             bin /home/worker/bin
 RUN             chmod +x /home/worker/bin/*
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
-# %include taskcluster/docker/recipes/xvfb.sh
-ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
+# %include testing/docker/recipes/xvfb.sh
+ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
 
 # Add configuration
 COPY            dot-config                    /home/worker/.config
