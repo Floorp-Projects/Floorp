@@ -105,24 +105,6 @@ window {
   flex: unset;
 }
 
-/* TODO: bug 1265759: should apply to .devtools-searchinput once all searchbox
-   is converted to html*/
-#inspector-searchbox {
-  width: 100%;
-}
-
-/* Make sure the text is vertically centered in Inspector's
-   search box. This can be removed when the search box is
-   switched to HTML.
-   See also: https://bugzilla.mozilla.org/show_bug.cgi?id=1265759 */
-.theme-dark #inspector-searchbox,
-.theme-light #inspector-searchbox {
-  line-height: 19px;
-}
-.theme-firebug #inspector-searchbox {
-  line-height: 17px;
-}
-
 /* Eyedropper toolbar button */
 
 #inspector-eyedropper-toggle {
