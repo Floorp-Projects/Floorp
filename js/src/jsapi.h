@@ -5859,10 +5859,12 @@ extern JS_PUBLIC_API(TranscodeResult)
 EncodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, JS::HandleObject funobj);
 
 extern JS_PUBLIC_API(TranscodeResult)
-DecodeScript(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp);
+DecodeScript(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
+             size_t cursorIndex = 0);
 
 extern JS_PUBLIC_API(TranscodeResult)
-DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleFunction funp);
+DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleFunction funp,
+                          size_t cursorIndex = 0);
 
 } /* namespace JS */
 

@@ -6615,9 +6615,10 @@ JS::EncodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, HandleObje
 }
 
 JS_PUBLIC_API(JS::TranscodeResult)
-JS::DecodeScript(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp)
+JS::DecodeScript(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
+                 size_t cursorIndex)
 {
-    XDRDecoder decoder(cx, buffer);
+    XDRDecoder decoder(cx, buffer, cursorIndex);
     decoder.codeScript(scriptp);
     MOZ_ASSERT(bool(scriptp) == (decoder.resultCode() == TranscodeResult_Ok));
     return decoder.resultCode();
@@ -6625,9 +6626,10 @@ JS::DecodeScript(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript
 
 JS_PUBLIC_API(JS::TranscodeResult)
 JS::DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer,
-                              JS::MutableHandleFunction funp)
+                              JS::MutableHandleFunction funp,
+                              size_t cursorIndex)
 {
-    XDRDecoder decoder(cx, buffer);
+    XDRDecoder decoder(cx, buffer, cursorIndex);
     decoder.codeFunction(funp);
     MOZ_ASSERT(bool(funp) == (decoder.resultCode() == TranscodeResult_Ok));
     return decoder.resultCode();
