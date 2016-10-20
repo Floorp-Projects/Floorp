@@ -285,10 +285,10 @@ private:
 };
 
 #define ENSURE_DATACONNECTION \
-  do { if (!mConnection) { DATACHANNEL_LOG(("%s: %p no connection!",__FUNCTION__, this)); return; } } while (0)
+  do { MOZ_ASSERT(mConnection); if (!mConnection) { return; } } while (0)
 
 #define ENSURE_DATACONNECTION_RET(x) \
-  do { if (!mConnection) { DATACHANNEL_LOG(("%s: %p no connection!",__FUNCTION__, this)); return (x); } } while (0)
+  do { MOZ_ASSERT(mConnection); if (!mConnection) { return (x); } } while (0)
 
 class DataChannel {
 public:
@@ -334,7 +334,12 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannel)
 
   // when we disconnect from the connection after stream RESET
-  void DestroyLocked();
+  void StreamClosedLocked();
+
+  // Complete dropping of the link between DataChannel and the connection.
+  // After this, except for a few methods below listed to be safe, you can't
+  // call into DataChannel.
+  void ReleaseConnection();
 
   // Close this DataChannel.  Can be called multiple times.  MUST be called
   // before destroying the DataChannel (state must be CLOSED or CLOSING).
