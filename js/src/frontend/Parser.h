@@ -736,60 +736,105 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      * set to 'pending' when the initial SyntaxError was encountered then 'resolved'
      * just before rewinding the parser.
      *
+     * There are currently two kinds of PossibleErrors: Expression and
+     * Destructuring errors. Expression errors are used to mark a possible
+     * syntax error when a grammar production is used in an expression context.
+     * For example in |{x = 1}|, we mark the CoverInitializedName |x = 1| as a
+     * possible expression error, because CoverInitializedName productions
+     * are disallowed when an actual ObjectLiteral is expected.
+     * Destructuring errors are used to record possible syntax errors in
+     * destructuring contexts. For example in |[...rest, ] = []|, we initially
+     * mark the trailing comma after the spread expression as a possible
+     * destructuring error, because the ArrayAssignmentPattern grammar
+     * production doesn't allow a trailing comma after the rest element.
+     *
      * When using PossibleError one should set a pending error at the location
      * where an error occurs. From that point, the error may be resolved
      * (invalidated) or left until the PossibleError is checked.
      *
      * Ex:
      *   PossibleError possibleError(*this);
-     *   possibleError.setPending(pn, JSMSG_BAD_PROP_ID);
+     *   possibleError.setPendingExpressionError(pn, JSMSG_BAD_PROP_ID);
      *   // A JSMSG_BAD_PROP_ID ParseError is reported, returns false.
-     *   possibleError.checkForExprErrors();
+     *   if (!possibleError.checkForExpressionError())
+     *       return false; // we reach this point with a pending exception
      *
      *   PossibleError possibleError(*this);
-     *   possibleError.setPending(pn, JSMSG_BAD_PROP_ID);
-     *   possibleError.setResolved();
+     *   possibleError.setPendingExpressionError(pn, JSMSG_BAD_PROP_ID);
      *   // Returns true, no error is reported.
-     *   possibleError.checkForExprErrors();
+     *   if (!possibleError.checkForDestructuringError())
+     *       return false; // not reached, no pending exception
      *
      *   PossibleError possibleError(*this);
      *   // Returns true, no error is reported.
-     *   possibleError.checkForExprErrors();
+     *   if (!possibleError.checkForExpressionError())
+     *       return false; // not reached, no pending exception
      */
     class MOZ_STACK_CLASS PossibleError
     {
-      protected:
+      private:
+        enum class ErrorKind { Expression, Destructuring };
+
+        enum class ErrorState { None, Pending };
+
+        struct Error {
+            ErrorState state_ = ErrorState::None;
+
+            // Error reporting fields.
+            uint32_t offset_;
+            unsigned errorNumber_;
+        };
+
         Parser<ParseHandler>& parser_;
+        Error exprError_;
+        Error destructuringError_;
 
-        enum ErrorState { None, Pending };
-        ErrorState state_;
+        // Returns the error report.
+        Error& error(ErrorKind kind);
 
-        // Error reporting fields.
-        uint32_t offset_;
-        unsigned errorNumber_;
+        // Return true if an error is pending without reporting
+        bool hasError(ErrorKind kind);
+
+        // Resolve any pending error.
+        void setResolved(ErrorKind kind);
+
+        // Set a pending error. Only a single error may be set per instance and
+        // error kind.
+        void setPending(ErrorKind kind, Node pn, unsigned errorNumber);
+
+        // If there is a pending error, report it and return false, otherwise
+        // return true.
+        bool checkForError(ErrorKind kind);
+
+        // Transfer an existing error to another instance.
+        void transferErrorTo(ErrorKind kind, PossibleError* other);
 
       public:
         explicit PossibleError(Parser<ParseHandler>& parser);
 
-        // Set a pending error. Only a single error may be set per instance.
-        // Returns true on success or false on failure.
-        void setPending(Node pn, unsigned errorNumber);
+        // Set a pending destructuring error. Only a single error may be set
+        // per instance, i.e. subsequent calls to this method are ignored and
+        // won't overwrite the existing pending error.
+        void setPendingDestructuringError(Node pn, unsigned errorNumber);
 
-        // Resolve any pending error.
-        void setResolved();
+        // Set a pending expression error. Only a single error may be set per
+        // instance, i.e. subsequent calls to this method are ignored and won't
+        // overwrite the existing pending error.
+        void setPendingExpressionError(Node pn, unsigned errorNumber);
 
-        // Return true if an error is pending without reporting
-        bool hasError();
+        // If there is a pending destructuring error, report it and return
+        // false, otherwise return true. Clears any pending expression error.
+        bool checkForDestructuringError();
 
-        // If there is a pending error report it and return false, otherwise return
-        // true.
-        bool checkForExprErrors();
+        // If there is a pending expression error, report it and return false,
+        // otherwise return true. Clears any pending destructuring error.
+        bool checkForExpressionError();
 
         // Pass pending errors between possible error instances. This is useful
         // for extending the lifetime of a pending error beyond the scope of
         // the PossibleError where it was initially set (keeping in mind that
         // PossibleError is a MOZ_STACK_CLASS).
-        void transferErrorTo(PossibleError* other);
+        void transferErrorsTo(PossibleError* other);
     };
 
   public:

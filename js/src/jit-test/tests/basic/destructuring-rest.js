@@ -12,13 +12,7 @@ assertThrowsInstanceOf(() => new Function('[...!a] = []'), SyntaxError, 'unary e
 assertThrowsInstanceOf(() => new Function('[...a+b] = []'), SyntaxError, 'binary expression');
 assertThrowsInstanceOf(() => new Function('var [...a.x] = []'), SyntaxError, 'lvalue expression in declaration');
 assertThrowsInstanceOf(() => new Function('var [...(b)] = []'), SyntaxError);
-
-// XXX: The way the current parser works, a trailing comma is lost before we
-//      check for destructuring.  See bug 1041341. Once fixed, please update
-//      this assertion.
-assertThrowsInstanceOf(() =>
-	assertThrowsInstanceOf(() => new Function('[...b,] = []'), SyntaxError)
-	, Error);
+assertThrowsInstanceOf(() => new Function('[...b,] = []'), SyntaxError);
 
 assertThrowsInstanceOf(() => {
   try {

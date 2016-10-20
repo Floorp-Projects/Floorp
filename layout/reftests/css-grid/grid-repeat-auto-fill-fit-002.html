@@ -72,6 +72,11 @@ fill,fit {
   float: left;
   height: 400px;
 }
+
+.zero-progress {
+  grid-row-gap: calc(10px - 1%);
+  grid-template-rows: [a] 10px repeat(auto-fill, [b] calc(1% - 10px) [c]) [d];
+}
 </style>
 </head>
 <body>
@@ -174,6 +179,18 @@ fill,fit {
 
 <br clear="all">
 <br clear="all">
+
+<div style="float:left">
+  <div class="grid xw50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+  <div class="grid w50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+  <div class="grid mw50 zero-progress">
+    <x></x><x></x><a></a><b></b><x></x>
+  </div>
+</div>
 
 </fit>
 

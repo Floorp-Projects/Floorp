@@ -212,14 +212,14 @@ public:
   virtual already_AddRefed<SourceSurface>
   RenderNode(nsIDOMNode* aNode,
              nsIntRegion* aRegion,
-             nsIntPoint& aPoint,
-             nsIntRect* aScreenRect,
+             const mozilla::LayoutDeviceIntPoint aPoint,
+             mozilla::LayoutDeviceIntRect* aScreenRect,
              uint32_t aFlags) override;
 
   virtual already_AddRefed<SourceSurface>
   RenderSelection(nsISelection* aSelection,
-                  nsIntPoint& aPoint,
-                  nsIntRect* aScreenRect,
+                  const mozilla::LayoutDeviceIntPoint aPoint,
+                  mozilla::LayoutDeviceIntRect* aScreenRect,
                   uint32_t aFlags) override;
 
   virtual already_AddRefed<nsPIDOMWindowOuter> GetRootWindow() override;
@@ -577,8 +577,8 @@ protected:
                       nsISelection* aSelection,
                       nsIntRegion* aRegion,
                       nsRect aArea,
-                      nsIntPoint& aPoint,
-                      nsIntRect* aScreenRect,
+                      const mozilla::LayoutDeviceIntPoint aPoint,
+                      mozilla::LayoutDeviceIntRect* aScreenRect,
                       uint32_t aFlags);
 
   /**

@@ -7544,7 +7544,7 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
 }
 
 void
-nsContentUtils::TransferablesToIPCTransferables(nsISupportsArray* aTransferables,
+nsContentUtils::TransferablesToIPCTransferables(nsIArray* aTransferables,
                                                 nsTArray<IPCDataTransfer>& aIPC,
                                                 bool aInSyncMessage,
                                                 mozilla::dom::nsIContentChild* aChild,
@@ -7553,12 +7553,10 @@ nsContentUtils::TransferablesToIPCTransferables(nsISupportsArray* aTransferables
   aIPC.Clear();
   if (aTransferables) {
     uint32_t transferableCount = 0;
-    aTransferables->Count(&transferableCount);
+    aTransferables->GetLength(&transferableCount);
     for (uint32_t i = 0; i < transferableCount; ++i) {
       IPCDataTransfer* dt = aIPC.AppendElement();
-      nsCOMPtr<nsISupports> genericItem;
-      aTransferables->GetElementAt(i, getter_AddRefs(genericItem));
-      nsCOMPtr<nsITransferable> transferable(do_QueryInterface(genericItem));
+      nsCOMPtr<nsITransferable> transferable = do_QueryElementAt(aTransferables, i);
       TransferableToIPCTransferable(transferable, dt, aInSyncMessage, aChild, aParent);
     }
   }

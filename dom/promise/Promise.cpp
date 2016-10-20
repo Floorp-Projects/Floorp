@@ -434,16 +434,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 #ifndef SPIDERMONKEY_PROMISE
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Promise)
   if (tmp->IsBlack()) {
-    JS::ExposeValueToActiveJS(tmp->mResult);
-    if (tmp->mAllocationStack) {
-      JS::ExposeObjectToActiveJS(tmp->mAllocationStack);
-    }
-    if (tmp->mRejectionStack) {
-      JS::ExposeObjectToActiveJS(tmp->mRejectionStack);
-    }
-    if (tmp->mFullfillmentStack) {
-      JS::ExposeObjectToActiveJS(tmp->mFullfillmentStack);
-    }
+    tmp->mResult.exposeToActiveJS();
+    tmp->mAllocationStack.exposeToActiveJS();
+    tmp->mRejectionStack.exposeToActiveJS();
+    tmp->mFullfillmentStack.exposeToActiveJS();
     return true;
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
@@ -516,7 +510,6 @@ Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
 #ifdef DEBUG
   binding_detail::AssertReflectorHasGivenProto(aCx, mPromiseObj, aGivenProto);
 #endif // DEBUG
-  JS::ExposeObjectToActiveJS(mPromiseObj);
   aWrapper.set(mPromiseObj);
   return true;
 }
@@ -2621,7 +2614,6 @@ Promise::MaybeReportRejected()
   JS::Rooted<JSObject*> obj(cx, GetWrapper());
   MOZ_ASSERT(obj); // We preserve our wrapper, so should always have one here.
   JS::Rooted<JS::Value> val(cx, mResult);
-  JS::ExposeValueToActiveJS(val);
 
   JSAutoCompartment ac(cx, obj);
   if (!JS_WrapValue(cx, &val)) {

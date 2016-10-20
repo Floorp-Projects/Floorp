@@ -8,6 +8,7 @@ function usage() {
 
 PROJECT=shell
 WORKSPACE=
+DO_TOOLTOOL=1
 while [[ $# -gt 0 ]]; do
     if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
         usage
@@ -16,6 +17,9 @@ while [[ $# -gt 0 ]]; do
         shift
         PROJECT="$1"
         shift
+    elif [[ "$1" == "--no-tooltool" ]]; then
+        shift
+        DO_TOOLTOOL=
     elif [[ -z "$WORKSPACE" ]]; then
         WORKSPACE=$( cd "$1" && pwd )
         shift
@@ -50,13 +54,16 @@ export TOOLTOOL_DIR="$WORKSPACE"
 export MOZ_OBJDIR="$WORKSPACE/obj-analyzed"
 mkdir -p "$MOZ_OBJDIR"
 
-tc-vcs checkout --force-clone $WORKSPACE/tooltool $TOOLTOOL_REPO $TOOLTOOL_REPO $TOOLTOOL_REV
-( cd $TOOLTOOL_DIR; python $WORKSPACE/tooltool/tooltool.py --url https://api.pub.build.mozilla.org/tooltool/ -m $GECKO_DIR/$TOOLTOOL_MANIFEST fetch -c $TOOLTOOL_CACHE )
+if [ -n "$DO_TOOLTOOL" ]; then
+  tc-vcs checkout --force-clone $WORKSPACE/tooltool $TOOLTOOL_REPO $TOOLTOOL_REPO $TOOLTOOL_REV
+  ( cd $TOOLTOOL_DIR; python $WORKSPACE/tooltool/tooltool.py --url https://api.pub.build.mozilla.org/tooltool/ -m $GECKO_DIR/$TOOLTOOL_MANIFEST fetch -c $TOOLTOOL_CACHE )
+fi
 
 export NO_MERCURIAL_SETUP_CHECK=1
 
 if [[ "$PROJECT" = "browser" ]]; then (
     cd "$WORKSPACE"
+    set "$WORKSPACE"
     . setup-ccache.sh
     # Mozbuild config:
     export MOZBUILD_STATE_PATH=$WORKSPACE/mozbuild/

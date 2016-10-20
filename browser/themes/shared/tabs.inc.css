@@ -114,20 +114,15 @@
 }
 
 .tab-sharing-icon-overlay[sharing="camera"] {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#camera");
+  list-style-image: url("chrome://browser/skin/notification-icons.svg#camera-sharing");
 }
 
 .tab-sharing-icon-overlay[sharing="microphone"] {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#microphone");
+  list-style-image: url("chrome://browser/skin/notification-icons.svg#microphone-sharing");
 }
 
 .tab-sharing-icon-overlay[sharing="screen"] {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#screen");
-}
-
-.tab-sharing-icon-overlay[sharing] {
-  filter: url("chrome://browser/skin/filters.svg#fill");
-  fill: rgb(224, 41, 29);
+  list-style-image: url("chrome://browser/skin/notification-icons.svg#screen-sharing");
 }
 
 .tab-icon-overlay {

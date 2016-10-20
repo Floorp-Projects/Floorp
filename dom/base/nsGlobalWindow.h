@@ -1917,7 +1917,8 @@ protected:
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
-  nsAutoPtr<nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*> > mCachedXBLPrototypeHandlers;
+  using XBLPrototypeHandlerTable = nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*>;
+  nsAutoPtr<XBLPrototypeHandlerTable> mCachedXBLPrototypeHandlers;
 
   // mSuspendedDoc is only set on outer windows. It's useful when we get matched
   // EnterModalState/LeaveModalState calls, in which case the outer window is
