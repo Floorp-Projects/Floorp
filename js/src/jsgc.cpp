@@ -6304,9 +6304,14 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
     if (!checkIfGCAllowedInCurrentState(reason))
         return;
 
-    currentBudget = &budget;
+    interruptCallbackRequested = false;
+    {
+        AutoLockGC lock(rt);
+        currentBudget = &budget;
+    }
     auto guard = mozilla::MakeScopeExit([&] {
-        currentBudget = nullptr;
+            AutoLockGC lock(rt);
+            currentBudget = nullptr;
     });
 
     AutoTraceLog logGC(TraceLoggerForMainThread(rt), TraceLogger_GC);
@@ -7705,6 +7710,7 @@ GCRuntime::addInterruptCallback(JS::GCInterruptCallback callback)
 void
 GCRuntime::requestInterruptCallback()
 {
+    AutoLockGC lock(rt);
     if (currentBudget) {
         interruptCallbackRequested = true;
         currentBudget->requestFullCheck();
@@ -7714,6 +7720,8 @@ GCRuntime::requestInterruptCallback()
 void
 GCRuntime::invokeInterruptCallback(JSContext* cx)
 {
+    interruptCallbackRequested = false;
+
     JS::AutoAssertOnGC nogc(cx);
     JS::AutoAssertOnBarrier nobarrier(cx);
     JS::AutoSuppressGCAnalysis suppress(cx);

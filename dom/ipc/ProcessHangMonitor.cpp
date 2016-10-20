@@ -11,12 +11,12 @@
 #include "js/GCAPI.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/HangAnnotations.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
@@ -73,7 +73,6 @@ namespace {
 
 class HangMonitorChild
   : public PProcessHangMonitorChild
-  , public mozilla::HangMonitor::Annotator
 {
  public:
   explicit HangMonitorChild(ProcessHangMonitor* aMonitor);
@@ -116,10 +115,8 @@ class HangMonitorChild
  private:
   void ShutdownOnThread();
 
-  virtual void
-  AnnotateHang(mozilla::HangMonitor::HangAnnotations& aAnnotations) override;
-
   static Atomic<HangMonitorChild*> sInstance;
+  UniquePtr<BackgroundHangMonitor> mForcePaintMonitor;
 
   const RefPtr<ProcessHangMonitor> mHangMonitor;
   Monitor mMonitor;
@@ -131,8 +128,7 @@ class HangMonitorChild
   bool mTerminateScript;
   bool mStartDebugger;
   bool mFinishedStartingDebugger;
-  bool mForcePaintRequested;
-  bool mForcePaintInProgress;
+  bool mForcePaint;
   TabId mForcePaintTab;
   MOZ_INIT_OUTSIDE_CTOR uint64_t mForcePaintEpoch;
   JSContext* mContext;
@@ -277,19 +273,24 @@ HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
    mTerminateScript(false),
    mStartDebugger(false),
    mFinishedStartingDebugger(false),
-   mForcePaintRequested(false),
-   mForcePaintInProgress(false),
+   mForcePaint(false),
    mShutdownDone(false),
    mIPCOpen(true)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   mContext = danger::GetJSContext();
+  mForcePaintMonitor =
+    MakeUnique<mozilla::BackgroundHangMonitor>("Gecko_Child_ForcePaint",
+                                               128, /* ms timeout for microhangs */
+                                               8192 /* ms timeout for permahangs */,
+                                               BackgroundHangMonitor::THREAD_PRIVATE);
 }
 
 HangMonitorChild::~HangMonitorChild()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance == this);
+  mForcePaintMonitor = nullptr;
   sInstance = nullptr;
 }
 
@@ -298,29 +299,27 @@ HangMonitorChild::InterruptCallback()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  bool forcePaintRequested;
+  bool forcePaint;
   TabId forcePaintTab;
   uint64_t forcePaintEpoch;
 
   {
     MonitorAutoLock lock(mMonitor);
-    forcePaintRequested = mForcePaintRequested;
+    forcePaint = mForcePaint;
     forcePaintTab = mForcePaintTab;
     forcePaintEpoch = mForcePaintEpoch;
 
-    mForcePaintRequested = false;
+    mForcePaint = false;
   }
 
-  if (forcePaintRequested) {
+  if (forcePaint) {
     RefPtr<TabChild> tabChild = TabChild::FindTabChild(forcePaintTab);
     if (tabChild) {
       JS::AutoAssertOnGC nogc(mContext);
       JS::AutoAssertOnBarrier nobarrier(mContext);
       tabChild->ForcePaint(forcePaintEpoch);
+      mForcePaintMonitor->NotifyWait();
     }
-
-    MonitorAutoLock lock(mMonitor);
-    mForcePaintInProgress = false;
   }
 }
 
@@ -328,8 +327,6 @@ void
 HangMonitorChild::Shutdown()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  mozilla::HangMonitor::UnregisterAnnotator(*this);
 
   MonitorAutoLock lock(mMonitor);
   while (!mShutdownDone) {
@@ -345,18 +342,6 @@ HangMonitorChild::ShutdownOnThread()
   MonitorAutoLock lock(mMonitor);
   mShutdownDone = true;
   mMonitor.Notify();
-}
-
-/**
- * This function is always called by the HangMonitor thread.
- */
-void
-HangMonitorChild::AnnotateHang(mozilla::HangMonitor::HangAnnotations& aAnnotations)
-{
-  MonitorAutoLock lock(mMonitor);
-  if (mForcePaintInProgress) {
-    aAnnotations.AddAnnotation(NS_LITERAL_STRING("ForcePaintInProgress"), true);
-  }
 }
 
 void
@@ -406,10 +391,11 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
 {
   MOZ_RELEASE_ASSERT(MessageLoop::current() == MonitorLoop());
 
+  mForcePaintMonitor->NotifyActivity();
+
   {
     MonitorAutoLock lock(mMonitor);
-    mForcePaintRequested = true;
-    mForcePaintInProgress = true;
+    mForcePaint = true;
     mForcePaintTab = aTabId;
     mForcePaintEpoch = aLayerObserverEpoch;
   }
@@ -1218,8 +1204,6 @@ mozilla::CreateHangMonitorChild(mozilla::ipc::Transport* aTransport,
 
   ProcessHangMonitor* monitor = ProcessHangMonitor::GetOrCreate();
   HangMonitorChild* child = new HangMonitorChild(monitor);
-
-  mozilla::HangMonitor::RegisterAnnotator(*child);
 
   monitor->MonitorLoop()->PostTask(NewNonOwningRunnableMethod
                                    <mozilla::ipc::Transport*,

@@ -89,6 +89,9 @@ NewJavaScriptChild();
 void
 ReleaseJavaScriptChild(PJavaScriptChild* child);
 
+void
+AfterProcessTask();
+
 } // namespace jsipc
 } // namespace mozilla
 

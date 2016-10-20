@@ -44,6 +44,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ProcessHangMonitor.h"
@@ -3612,6 +3613,8 @@ XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth)
     // Now that we are certain that the event is complete,
     // we can flush any ongoing performance measurement.
     js::FlushPerformanceMonitoring(Get()->Context());
+
+    mozilla::jsipc::AfterProcessTask();
 }
 
 /***************************************************************************/

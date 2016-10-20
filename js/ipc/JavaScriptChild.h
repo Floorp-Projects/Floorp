@@ -17,9 +17,11 @@ namespace jsipc {
 class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
 {
   public:
+    JavaScriptChild() : strongReferenceObjIdMinimum_(0) {}
     virtual ~JavaScriptChild();
 
     bool init();
+    void trace(JSTracer* trc);
     void updateWeakPointers();
 
     void drop(JSObject* obj);
@@ -30,9 +32,16 @@ class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
     virtual bool isParent() override { return false; }
     virtual JSObject* scopeForTargetObjects() override;
 
+    bool RecvDropTemporaryStrongReferences(const uint64_t& upToObjId) override;
+
   private:
     bool fail(JSContext* cx, ReturnStatus* rs);
     bool ok(ReturnStatus* rs);
+
+    // JavaScriptChild will keep strong references to JS objects that are
+    // referenced by the parent only if their ID is >=
+    // strongReferenceObjIdMinimum_.
+    uint64_t strongReferenceObjIdMinimum_;
 };
 
 } // namespace jsipc

@@ -104,7 +104,9 @@ runTest(() => getUserMedia({audio: true})
       array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)] < 50 &&
       array[analyser.binIndexForFrequency(1500)]            < 50 &&
       array[analyser.binIndexForFrequency(2000)]            > 200 &&
-      array[analyser.binIndexForFrequency(2500)]            < 50);
+      array[analyser.binIndexForFrequency(2500)]            < 50)
+        .then(() => [gUMTrack, ...gUMAudioElement.srcObject.getTracks()]
+            .forEach(t => t.stop()));
   })
   .then(() => ok(true, "Test passed."))
   .catch(e => ok(false, "Test failed: " + e + (e.stack ? "\n" + e.stack : ""))));

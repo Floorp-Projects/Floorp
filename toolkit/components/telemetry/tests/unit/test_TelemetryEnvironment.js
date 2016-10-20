@@ -132,6 +132,39 @@ function registerFakePluginHost() {
   MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
 }
 
+var SysInfo = {
+  overrides: {},
+
+  getProperty(name) {
+    //Assert.ok(false, "Mock SysInfo: " + name + ", " + JSON.stringify(this.overrides));
+    if (name in this.overrides) {
+      return this.overrides[name];
+    }
+    try {
+      return this._genuine.getProperty(name);
+    } catch (ex) {
+      throw ex;
+      Assert.ok(false, "Mock SysInfo: oops for " + name + ": " + ex);
+    }
+  },
+
+  get(name) {
+    return this._genuine.get(name);
+  },
+
+  QueryInterface(iid) {
+    if (iid.equals(Ci.nsIPropertyBag2)
+     || iid.equals(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+};
+
+function registerFakeSysInfo() {
+  MockRegistrar.register("@mozilla.org/system-info;1", SysInfo);
+}
+
 function MockAddonWrapper(aAddon) {
   this.addon = aAddon;
 }
@@ -769,10 +802,10 @@ function checkEnvironmentData(data, isInitial = false, expectBrokenAddons = fals
   checkAddonsSection(data, expectBrokenAddons);
 }
 
-function run_test() {
+add_task(function* setup() {
   // Load a custom manifest to provide search engine loading from JAR files.
   do_load_manifest("chrome.manifest");
-  do_test_pending();
+  registerFakeSysInfo();
   spoofGfxAdapter();
   do_get_profile();
 
@@ -811,16 +844,6 @@ function run_test() {
     do_register_cleanup(cleanupAttributionData);
   }
 
-  run_next_test();
-}
-
-function isRejected(promise) {
-  return new Promise((resolve, reject) => {
-    promise.then(() => resolve(false), () => resolve(true));
-  });
-}
-
-add_task(function* asyncSetup() {
   yield spoofProfileReset();
   TelemetryEnvironment.delayedInit();
 });
@@ -1517,6 +1540,47 @@ add_task(function* test_defaultSearchEngine() {
   Assert.equal(data.settings.searchCohort, "testcohort");
 });
 
+add_task(function* test_osstrings() {
+  // First test that numbers in sysinfo properties are converted to string fields
+  // in system.os.
+  SysInfo.overrides = {
+    version: 1,
+    name: 2,
+    kernel_version: 3,
+  };
+
+  yield TelemetryEnvironment.testCleanRestart().onInitialized();
+  let data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+
+  Assert.equal(data.system.os.version, "1");
+  Assert.equal(data.system.os.name, "2");
+  if (AppConstants.platform == "android") {
+    Assert.equal(data.system.os.kernelVersion, "3");
+  }
+
+  // Check that null values are also handled.
+  SysInfo.overrides = {
+    version: null,
+    name: null,
+    kernel_version: null,
+  };
+
+  yield TelemetryEnvironment.testCleanRestart().onInitialized();
+  data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+
+  Assert.equal(data.system.os.version, null);
+  Assert.equal(data.system.os.name, null);
+  if (AppConstants.platform == "android") {
+    Assert.equal(data.system.os.kernelVersion, null);
+  }
+
+  // Clean up.
+  SysInfo.overrides = {};
+  yield TelemetryEnvironment.testCleanRestart().onInitialized();
+});
+
 add_task(function* test_environmentShutdown() {
   // Define and reset the test preference.
   const PREF_TEST = "toolkit.telemetry.test.pref1";
@@ -1540,8 +1604,4 @@ add_task(function* test_environmentShutdown() {
 
   // Unregister the listener.
   TelemetryEnvironment.unregisterChangeListener("test_environmentShutdownChange");
-});
-
-add_task(function*() {
-  do_test_finished();
 });
