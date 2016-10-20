@@ -10,6 +10,7 @@
 #include "jsprf.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIXPConnect.h"
@@ -1425,6 +1426,10 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             printf("NS_InitXPCOM2 failed!\n");
             return 1;
         }
+
+        // xpc::ErrorReport::LogToConsoleWithStack needs this to print errors
+        // to stderr.
+        Preferences::SetBool("browser.dom.window.dump.enabled", true);
 
         AutoJSAPI jsapi;
         jsapi.Init();
