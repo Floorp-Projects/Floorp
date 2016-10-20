@@ -1906,6 +1906,21 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_DVORAK_QWERTY, keyCode:MAC_VK_ANSI_I,
                    modifiers:{metaKey:1, altKey:1, shiftKey:1}, chars:"\u02C6", unmodifiedChars:"C"},
                   "\u02C6", "KeyI", nsIDOMKeyEvent.DOM_VK_I, "\u02C6", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
+    // Arabic - PC keyboard layout inputs 2 or more characters with some key.
+    yield testKey({layout:KEYBOARD_LAYOUT_ARABIC_PC, keyCode:MAC_VK_ANSI_G,
+                   modifiers:{shiftKey:1}, chars:"\u0644\u0623", unmodifiedChars:"\u0644\u0623"},
+                  ["\u0644\u0623", "\u0644", "\u0623", "\u0644\u0623"], "KeyG", nsIDOMKeyEvent.DOM_VK_G, "\u0644\u0623", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_ARABIC_PC, keyCode:MAC_VK_ANSI_T,
+                   modifiers:{shiftKey:1}, chars:"\u0644\u0625", unmodifiedChars:"\u0644\u0625"},
+                  ["\u0644\u0625", "\u0644", "\u0625", "\u0644\u0625"], "KeyT", nsIDOMKeyEvent.DOM_VK_T, "\u0644\u0625", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_ARABIC_PC, keyCode:MAC_VK_ANSI_B,
+                   modifiers:{shiftKey:1}, chars:"\u0644\u0622", unmodifiedChars:"\u0644\u0622"},
+                  ["\u0644\u0622", "\u0644", "\u0622", "\u0644\u0622"], "KeyB", nsIDOMKeyEvent.DOM_VK_B, "\u0644\u0622", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_ARABIC_PC, keyCode:MAC_VK_ANSI_B,
+                   modifiers:{}, chars:"\u0644\u0627", unmodifiedChars:"\u0644\u0627"},
+                  ["\u0644\u0627", "\u0644", "\u0627", "\u0644\u0627"], "KeyB", nsIDOMKeyEvent.DOM_VK_B, "\u0644\u0627", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
     cleanup();
   }
 
@@ -4197,11 +4212,37 @@ function* runTextInputTests()
     textbox.value = "";
     textbox.focus();
 
+    var name = eventToString(aEvent);
+
+    // Check if the text comes with keypress events rather than composition events.
+    var keypress = 0;
+    function onKeypress(aEvent) {
+      keypress++;
+      if (keypress == 1 && aExpectText == "") {
+        if (!aEvent.ctrlKey && !aEvent.altKey) {
+          is(aEvent.charCode, 0, name + ", the charCode value should be 0 when it shouldn't cause inputting text");
+        }
+        return;
+      }
+      if (keypress > aExpectText.length) {
+        ok(false, name + " causes too many keypress events");
+        return;
+      }
+      is(aEvent.key, aExpectText[keypress - 1],
+         name + ", " + keypress + "th keypress event's key value should be '" + aExpectText[keypress - 1] + "'");
+      is(aEvent.charCode, aExpectText.charCodeAt(keypress - 1),
+         name + ", " + keypress + "th keypress event's charCode value should be 0x" + parseInt(aExpectText.charCodeAt(keypress - 1), 16));
+    }
+    textbox.addEventListener("keypress", onKeypress, true);
+
     return synthesizeKey(aEvent, "textbox", function() {
-
-      var name = eventToString(aEvent);
-
-      is(textbox.value, aExpectText, name + " does not input correct text.");
+      textbox.removeEventListener("keypress", onKeypress, true);
+      if (aExpectText == "") {
+        is(keypress, 1, name + " should cause one keypress event because it doesn't cause inputting text");
+      } else {
+        is(keypress, aExpectText.length, name + " should cause " + aExpectText.length + " keypress events");
+        is(textbox.value, aExpectText, name + " does not input correct text.");
+      }
 
       continueTest();
     });

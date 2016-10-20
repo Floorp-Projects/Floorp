@@ -15,37 +15,27 @@ define(function (require, exports, module) {
   const { span } = React.DOM;
 
   /**
-   * Renders a number
+   * Renders a NaN object
    */
-  const Number = React.createClass({
-    displayName: "Number",
-
-    stringify: function (object) {
-      let isNegativeZero = Object.is(object, -0) ||
-        (object.type && object.type == "-0");
-
-      return (isNegativeZero ? "-0" : String(object));
-    },
+  const NaNRep = React.createClass({
+    displayName: "NaN",
 
     render: function () {
-      let value = this.props.object;
-
       return (
-        span({className: "objectBox objectBox-number"},
-          this.stringify(value)
+        span({className: "objectBox objectBox-nan"},
+          "NaN"
         )
       );
     }
   });
 
   function supportsObject(object, type) {
-    return ["boolean", "number", "-0"].includes(type);
+    return type == "NaN";
   }
 
   // Exports from this module
-
-  exports.Number = {
-    rep: Number,
+  exports.NaNRep = {
+    rep: NaNRep,
     supportsObject: supportsObject
   };
 });
