@@ -360,6 +360,16 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
     return null;
   },
 
+  /**
+   * This pick method also focuses the highlighter's target window.
+   */
+  pickAndFocus: function() {
+    // Go ahead and pass on the results to help future-proof this method.
+    let pickResults = this.pick();
+    this._highlighterEnv.window.focus();
+    return pickResults;
+  },
+
   _findAndAttachElement: function (event) {
     // originalTarget allows access to the "real" element before any retargeting
     // is applied, such as in the case of XBL anonymous elements.  See also

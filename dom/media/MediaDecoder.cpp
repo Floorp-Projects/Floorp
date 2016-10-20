@@ -1736,14 +1736,6 @@ MediaDecoder::IsWebMEnabled()
   return Preferences::GetBool("media.webm.enabled");
 }
 
-#ifdef MOZ_OMX_DECODER
-bool
-MediaDecoder::IsOmxEnabled()
-{
-  return Preferences::GetBool("media.omx.enabled", false);
-}
-#endif
-
 #ifdef MOZ_ANDROID_OMX
 bool
 MediaDecoder::IsAndroidMediaPluginEnabled()

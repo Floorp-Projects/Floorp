@@ -54,9 +54,6 @@ if CONFIG['MOZ_FMP4']:
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['bridge']
 
-if CONFIG['MOZ_OMX_DECODER']:
-    DIRS += ['omx']
-
 TEST_DIRS += [
     'compiledtest',
     'gtest',
@@ -322,9 +319,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['WEBRTC_WIN'] = True
 else:
     DEFINES['WEBRTC_POSIX'] = True
-
-if CONFIG['MOZ_OMX_DECODER']:
-    DEFINES['MOZ_OMX_DECODER'] = True
 
 if CONFIG['ANDROID_VERSION'] > '15':
     DEFINES['MOZ_OMX_WEBM_DECODER'] = True

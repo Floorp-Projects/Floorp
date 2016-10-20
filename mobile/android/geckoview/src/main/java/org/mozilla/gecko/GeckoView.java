@@ -1,4 +1,5 @@
 /* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * vim: ts=4 sw=4 expandtab:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -48,6 +49,7 @@ public class GeckoView extends LayerView
     private InputConnectionListener mInputConnectionListener;
 
     private boolean onAttachedToWindowCalled;
+    private int screenId = 0; // default to the primary screen
 
     @Override
     public void handleMessage(final String event, final JSONObject message) {
@@ -114,7 +116,7 @@ public class GeckoView extends LayerView
         /* package */ Window() {}
 
         static native void open(Window instance, GeckoView view, Object compositor,
-                                String chromeURI);
+                                String chromeURI, int screenId);
 
         @Override protected native void disposeNative();
         native void close();
@@ -229,11 +231,11 @@ public class GeckoView extends LayerView
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(window, this, getCompositor(),
-                        chromeURI);
+                        chromeURI, screenId);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
                     "open", window, GeckoView.class, this, Object.class, getCompositor(),
-                    String.class, chromeURI);
+                    String.class, chromeURI, screenId);
         }
     }
 

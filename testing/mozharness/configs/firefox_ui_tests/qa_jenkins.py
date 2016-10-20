@@ -13,4 +13,7 @@ config = {
     'download_minidump_stackwalk': True,
     'download_symbols': 'ondemand',
     'download_tooltool': True,
+
+    # Disable proxxy because it isn't present in the QA environment.
+    'proxxy': {},
 }

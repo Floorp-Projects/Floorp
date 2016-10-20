@@ -1113,8 +1113,7 @@ function TypedArraySort(comparefn) {
     var buffer;
     if (isTypedArray) {
         buffer = GetAttachedArrayBuffer(obj);
-    }
-    else {
+    } else {
         buffer = callFunction(CallTypedArrayMethodIfWrapped, obj, obj, "GetAttachedArrayBuffer");
     }
 
@@ -1153,13 +1152,23 @@ function TypedArraySort(comparefn) {
         // Step a.
         var v = wrappedCompareFn(x, y);
         // Step b.
+        if (buffer === null) {
+            // A typed array previously using inline storage may acquire a
+            // buffer, so we must check with the source.
+            if (isTypedArray) {
+                buffer = GetAttachedArrayBuffer(obj);
+            } else {
+                buffer = callFunction(CallTypedArrayMethodIfWrapped, obj, obj,
+                                      "GetAttachedArrayBuffer");
+            }
+        }
         var bufferDetached;
         if (isTypedArray) {
             bufferDetached = IsDetachedBuffer(buffer);
         } else {
-            // This is totally cheating and only works because we know `this`
+            // This is totally cheating and only works because we know `obj`
             // and `buffer` are same-compartment".
-            bufferDetached = callFunction(CallTypedArrayMethodIfWrapped, this,
+            bufferDetached = callFunction(CallTypedArrayMethodIfWrapped, obj,
                                           buffer, "IsDetachedBuffer");
         }
         if (bufferDetached)

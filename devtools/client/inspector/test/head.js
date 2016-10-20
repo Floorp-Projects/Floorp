@@ -69,15 +69,19 @@ var navigateTo = function (toolbox, url) {
 /**
  * Start the element picker and focus the content window.
  * @param {Toolbox} toolbox
+ * @param {Boolean} skipFocus - Allow tests to bypass the focus event.
  */
-var startPicker = Task.async(function* (toolbox) {
+var startPicker = Task.async(function* (toolbox, skipFocus) {
   info("Start the element picker");
+  toolbox.win.focus();
   yield toolbox.highlighterUtils.startPicker();
-  // Make sure the content window is focused since the picker does not focus
-  // the content window by default.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
-    content.focus();
-  });
+  if (!skipFocus) {
+    // By default make sure the content window is focused since the picker may not focus
+    // the content window by default.
+    yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+      content.focus();
+    });
+  }
 });
 
 /**

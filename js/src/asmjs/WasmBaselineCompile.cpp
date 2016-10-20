@@ -703,7 +703,9 @@ class BaseCompiler
 #ifdef JS_PUNBOX64
         return Register64(availGPR_.takeAny());
 #else
-        return Register64(availGPR_.takeAny(), availGPR_.takeAny());
+        Register high = availGPR_.takeAny();
+        Register low = availGPR_.takeAny();
+        return Register64(high, low);
 #endif
     }
 
@@ -1492,6 +1494,11 @@ class BaseCompiler
         stk_.popBack();
         return r;
     }
+
+    // Note, the stack top can be in one half of "specific" on 32-bit
+    // systems.  We can optimize, but for simplicity, if the register
+    // does not match exactly, then just force the stack top to memory
+    // and then read it back in.
 
     RegI64 popI64(RegI64 specific) {
         Stk& v = stk_.back();
@@ -2337,67 +2344,53 @@ class BaseCompiler
 #endif
     }
 
-    void captureReturnedI32(RegI32 dest) {
-        moveI32(RegI32(ReturnReg), dest);
+    RegI32 captureReturnedI32() {
+        RegI32 rv = RegI32(ReturnReg);
+        MOZ_ASSERT(isAvailable(rv.reg));
+        needI32(rv);
+        return rv;
     }
 
-    void captureReturnedI64(RegI64 dest) {
-        moveI64(RegI64(ReturnReg64), dest);
+    RegI64 captureReturnedI64() {
+        RegI64 rv = RegI64(ReturnReg64);
+        MOZ_ASSERT(isAvailable(rv.reg));
+        needI64(rv);
+        return rv;
     }
 
-    void captureReturnedF32(const FunctionCall& call, RegF32 dest) {
+    RegF32 captureReturnedF32(const FunctionCall& call) {
+        RegF32 rv = RegF32(ReturnFloat32Reg);
+        MOZ_ASSERT(isAvailable(rv.reg));
+        needF32(rv);
 #ifdef JS_CODEGEN_X86
         if (call.builtinCall_) {
             masm.reserveStack(sizeof(float));
             Operand op(esp, 0);
             masm.fstp32(op);
-            masm.loadFloat32(op, dest.reg);
+            masm.loadFloat32(op, rv.reg);
             masm.freeStack(sizeof(float));
-            return;
         }
 #endif
-        moveF32(RegF32(ReturnFloat32Reg), dest);
+        return rv;
     }
 
-    void captureReturnedF64(const FunctionCall& call, RegF64 dest) {
+    RegF64 captureReturnedF64(const FunctionCall& call) {
+        RegF64 rv = RegF64(ReturnDoubleReg);
+        MOZ_ASSERT(isAvailable(rv.reg));
+        needF64(rv);
 #ifdef JS_CODEGEN_X86
         if (call.builtinCall_) {
             masm.reserveStack(sizeof(double));
             Operand op(esp, 0);
             masm.fstp(op);
-            masm.loadDouble(op, dest.reg);
+            masm.loadDouble(op, rv.reg);
             masm.freeStack(sizeof(double));
-            return;
         }
 #endif
-        moveF64(RegF64(ReturnDoubleReg), dest);
+        return rv;
     }
 
-    void returnVoid() {
-        popStackBeforeBranch(ctl_[0].framePushed);
-        masm.jump(&returnLabel_);
-    }
-
-    void returnI32(RegI32 r) {
-        moveI32(r, RegI32(ReturnReg));
-        popStackBeforeBranch(ctl_[0].framePushed);
-        masm.jump(&returnLabel_);
-    }
-
-    void returnI64(RegI64 r) {
-        moveI64(r, RegI64(Register64(ReturnReg64)));
-        popStackBeforeBranch(ctl_[0].framePushed);
-        masm.jump(&returnLabel_);
-    }
-
-    void returnF64(RegF64 r) {
-        moveF64(r, RegF64(ReturnDoubleReg));
-        popStackBeforeBranch(ctl_[0].framePushed);
-        masm.jump(&returnLabel_);
-    }
-
-    void returnF32(RegF32 r) {
-        moveF32(r, RegF32(ReturnFloat32Reg));
+    void returnCleanup() {
         popStackBeforeBranch(ctl_[0].framePushed);
         masm.jump(&returnLabel_);
     }
@@ -5059,30 +5052,30 @@ BaseCompiler::doReturn(ExprType type)
 {
     switch (type) {
       case ExprType::Void: {
-        returnVoid();
+        returnCleanup();
         break;
       }
       case ExprType::I32: {
-        RegI32 rv = popI32();
-        returnI32(rv);
+        RegI32 rv = popI32(RegI32(ReturnReg));
+        returnCleanup();
         freeI32(rv);
         break;
       }
       case ExprType::I64: {
-        RegI64 rv = popI64();
-        returnI64(rv);
+        RegI64 rv = popI64(RegI64(ReturnReg64));
+        returnCleanup();
         freeI64(rv);
         break;
       }
       case ExprType::F64: {
-        RegF64 rv = popF64();
-        returnF64(rv);
+        RegF64 rv = popF64(RegF64(ReturnDoubleReg));
+        returnCleanup();
         freeF64(rv);
         break;
       }
       case ExprType::F32: {
-        RegF32 rv = popF32();
-        returnF32(rv);
+        RegF32 rv = popF32(RegF32(ReturnFloat32Reg));
+        returnCleanup();
         freeF32(rv);
         break;
       }
@@ -5146,26 +5139,22 @@ BaseCompiler::pushReturned(const FunctionCall& call, ExprType type)
         MOZ_CRASH("Compiler bug: attempt to push void return");
         break;
       case ExprType::I32: {
-        RegI32 rv = needI32();
-        captureReturnedI32(rv);
+        RegI32 rv = captureReturnedI32();
         pushI32(rv);
         break;
       }
       case ExprType::I64: {
-        RegI64 rv = needI64();
-        captureReturnedI64(rv);
+        RegI64 rv = captureReturnedI64();
         pushI64(rv);
         break;
       }
       case ExprType::F32: {
-        RegF32 rv = needF32();
-        captureReturnedF32(call, rv);
+        RegF32 rv = captureReturnedF32(call);
         pushF32(rv);
         break;
       }
       case ExprType::F64: {
-        RegF64 rv = needF64();
-        captureReturnedF64(call, rv);
+        RegF64 rv = captureReturnedF64(call);
         pushF64(rv);
         break;
       }
@@ -5711,21 +5700,25 @@ BaseCompiler::emitSetGlobal()
       case ValType::I32: {
         RegI32 rv = popI32();
         storeGlobalVarI32(global.offset(), rv);
+        freeI32(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = popI64();
         storeGlobalVarI64(global.offset(), rv);
+        freeI64(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = popF32();
         storeGlobalVarF32(global.offset(), rv);
+        freeF32(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = popF64();
         storeGlobalVarF64(global.offset(), rv);
+        freeF64(rv);
         break;
       }
       default:

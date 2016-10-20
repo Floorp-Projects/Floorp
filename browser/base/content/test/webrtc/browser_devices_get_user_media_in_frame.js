@@ -110,9 +110,6 @@ var gTests = [
     yield promiseReloadFrame("frame1");
     yield promise;
 
-    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
-      todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-    }
     yield expectObserverCalled("recording-window-ended");
     yield expectNoObserverCalled();
     yield checkNotSharing();
@@ -188,9 +185,6 @@ var gTests = [
 
     yield expectObserverCalled("recording-window-ended");
     yield checkSharingUI({video: false, audio: true});
-    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
-      todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-    }
     yield expectNoObserverCalled();
 
     yield closeStream(false, "frame1");
@@ -225,9 +219,6 @@ var gTests = [
     content.location.reload();
     yield promise;
 
-    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
-      todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-    }
     yield expectObserverCalled("recording-window-ended");
     yield expectNoObserverCalled();
     yield checkNotSharing();

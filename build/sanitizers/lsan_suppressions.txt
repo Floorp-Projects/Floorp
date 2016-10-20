@@ -27,63 +27,29 @@ leak:GI___strdup
 leak:PR_Sleep
 
 ###
-### Bug 979928 - WebRTC leaks. m2, m3.
+### Many leaks only affect some test suites.  The suite annotations are not checked.
 ###
 
-# WebRTC leaks added for Mochitest 2.
+# Bug 979928 - WebRTC leaks in different mochitest suites.
 leak:NR_reg_init
-# nr_reg_local_init should be redundant with NR_reg_init, but with 34 on Aurora
-# we get less stack frames for some reason.
+# nr_reg_local_init should be redundant with NR_reg_init, but on Aurora
+# we get fewer stack frames for some reason.
 leak:nr_reg_local_init
 leak:r_log_register
 leak:nr_reg_set
 
-# Bug 1187518 - SCTP leaks in child process while running WebRTC tests.
-leak:recv_function_udp
-
-
-###
-### Many leaks only affect some test suites.  The suite annotations are not checked.
-###
-
-# Bug 987385 - Various plugin leaks. m3
-leak:mozilla::plugins::PPluginInstanceParent::CallNPP_HandleEvent
-leak:mozilla::plugins::PPluginModuleParent::OnCallReceived
-
-# Bug 987925 - Small leak under PK11_ChangePW. m5
-leak:sec_asn1e_allocate_item
-leak:PORT_Strdup_Util
-
-# Bug 1021350 - Small leak under event_base_once. m1, m4, bc3
-leak:event_base_once
-
-# Bug 1022010 - Small leak under _render_glyph_outline. bc1
-leak:_render_glyph_outline
-
-# Bug 1023548 - Small leak under SECITEM_AllocItem_Util. bc1, bc3
-leak:SECITEM_AllocItem_Util
-
-# This is a one-time leak, so it is probably okay to ignore. bc3, oth
+# This is a one-time leak in mochitest-bc, so it is probably okay to ignore.
 leak:GlobalPrinters::InitializeGlobalPrinters
 leak:nsPSPrinterList::GetPrinterList
 
-# Bug 1028456 - Various NSPR fd-related leaks. m1-m5, bc1,bc2,bc5,bc7,dt4,dt5.
+# Bug 1028456 - Various NSPR fd-related leaks in different mochitest suites.
 leak:_PR_Getfd
 
-# Bug 1028483 - The XML parser sometimes leaks an object. bc3
+# Bug 1028483 - The XML parser sometimes leaks an object. Mostly happens in toolkit/components/thumbnails.
 leak:processInternalEntity
 
-# Bug 1187421 - With e10s, NSS does not always free the error stack. m1.
+# Bug 1187421 - NSS does not always free the error stack in different mochitest suites.
 leak:nss_ClearErrorStack
-
-# Bug 1189430 - DNS leaks in mochitest-chrome.
-leak:nsDNSService::AsyncResolveExtended
-leak:_GetAddrInfo_Portable
-
-# Bug 1189568 - Indirect leaks of IMContextWrapper and nsIntRect.
-leak:nsWindow::Create
-leak:nsBaseWidget::StoreWindowClipRegion
-
 
 ###
 ### Leaks with system libraries in their stacks. These show up across a number of tests.
