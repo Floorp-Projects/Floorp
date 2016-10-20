@@ -1604,7 +1604,8 @@ DumpHelp()
          "  --profile <path>   Start with profile at <path>.\n"
          "  --migration        Start with migration wizard.\n"
          "  --ProfileManager   Start with ProfileManager.\n"
-         "  --no-remote        Do not accept or send remote commands; implies --new-instance.\n"
+         "  --no-remote        Do not accept or send remote commands; implies\n"
+         "                     --new-instance.\n"
          "  --new-instance     Open new instance, not a new window in running instance.\n"
          "  --UILocale <locale> Start with <locale> resources as UI Locale.\n"
          "  --safe-mode        Disables extensions and themes for this session.\n", gAppData->name);
