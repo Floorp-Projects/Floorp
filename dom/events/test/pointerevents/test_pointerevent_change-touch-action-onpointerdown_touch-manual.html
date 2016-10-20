@@ -21,9 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         sendTouchEvent(int_win, "target0", "touchstart");
         sendTouchEvent(int_win, "target0", "touchmove");
         sendTouchEvent(int_win, "target0", "touchend");
-        //sendTouchEvent(int_win, "target0", "touchstart");
-        //sendTouchEvent(int_win, "target0", "touchmove");
-        //sendTouchEvent(int_win, "target0", "touchend");
+
+        // NOTE: This testcase is about that modifying touch-action during a
+        // pointerdown callback "should not" affect the gesture detection of the
+        // touch session started by the pointerdown. That is, a scroll should
+        // still fired by gesture detection, instead of launching by our own.
         var utils = _getDOMWindowUtils(int_win);
         var target0 = int_win.document.getElementById("target0");
         utils.sendNativeMouseScrollEvent(target0.getBoundingClientRect().left + 5,
