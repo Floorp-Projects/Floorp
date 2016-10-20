@@ -4,8 +4,7 @@
 "use strict";
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
-const filters = require("./filters");
 
 module.exports = combineReducers({
-  filters,
+  // reducers...
 });
