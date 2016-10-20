@@ -61,7 +61,8 @@ SiteHSTSState::SiteHSTSState(nsCString& aStateString)
                 (hstsIncludeSubdomains == 0 || hstsIncludeSubdomains == 1) &&
                 ((SecurityPropertyState)hstsState == SecurityPropertyUnset ||
                  (SecurityPropertyState)hstsState == SecurityPropertySet ||
-                 (SecurityPropertyState)hstsState == SecurityPropertyKnockout));
+                 (SecurityPropertyState)hstsState == SecurityPropertyKnockout ||
+                 (SecurityPropertyState)hstsState == SecurityPropertyNegative));
   if (valid) {
     mHSTSState = (SecurityPropertyState)hstsState;
     mHSTSIncludeSubdomains = (hstsIncludeSubdomains == 1);

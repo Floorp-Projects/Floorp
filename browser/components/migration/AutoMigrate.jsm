@@ -122,7 +122,7 @@ const AutoMigrate = {
     histogram.add(15);
 
     let sawErrors = false;
-    let migrationObserver = (subject, topic, data) => {
+    let migrationObserver = (subject, topic) => {
       if (topic == "Migration:ItemError") {
         sawErrors = true;
       } else if (topic == "Migration:Ended") {

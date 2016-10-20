@@ -1,3 +1,5 @@
+"use strict";
+
 add_task(function* () {
   registerFakePath("ULibDir", do_get_file("Library/"));
 
