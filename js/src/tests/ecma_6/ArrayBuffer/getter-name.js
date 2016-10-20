@@ -3,8 +3,7 @@ var summary = 'ArrayBuffer getters should have get prefix';
 
 print(BUGNUMBER + ": " + summary);
 
-// FIXME: bug 1165053
-// assertEq(Object.getOwnPropertyDescriptor(ArrayBuffer, Symbol.species).get.name, "get [Symbol.species]");
+assertEq(Object.getOwnPropertyDescriptor(ArrayBuffer, Symbol.species).get.name, "get [Symbol.species]");
 assertEq(Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get.name, "get byteLength");
 
 if (typeof reportCompare === 'function')
