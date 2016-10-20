@@ -1193,38 +1193,45 @@ RenderTypeSection(WasmRenderContext& c, const AstModule::SigVector& sigs)
 }
 
 static bool
-RenderTableSection(WasmRenderContext& c, const AstModule& module)
+RenderLimits(WasmRenderContext& c, const Limits& limits)
 {
-    if (module.elemSegments().empty())
-        return true;
-
-    const AstElemSegment& segment = *module.elemSegments()[0];
-
-    if (!RenderIndent(c))
+    if (!RenderInt32(c, limits.initial))
         return false;
-
-    if (!c.buffer.append("(table anyfunc (elem "))
-        return false;
-
-    for (const AstRef& elem : segment.elems()) {
+    if (limits.maximum) {
         if (!c.buffer.append(" "))
             return false;
-
-        uint32_t index = elem.index();
-        AstName name = index < module.funcImportNames().length()
-                       ? module.funcImportNames()[index]
-                       : module.funcs()[index - module.funcImportNames().length()]->name();
-
-        if (name.empty()) {
-            if (!RenderInt32(c, index))
-                return false;
-        } else {
-            if (!RenderName(c, name))
-                return false;
-        }
+        if (!RenderInt32(c, *limits.maximum))
+            return false;
     }
+    return true;
+}
 
-    return c.buffer.append("))\n");
+static bool
+RenderResizableTable(WasmRenderContext& c, const Limits& table)
+{
+    if (!c.buffer.append("(table "))
+        return false;
+    if (!RenderLimits(c, table))
+        return false;
+    return c.buffer.append(" anyfunc)");
+}
+
+static bool
+RenderTableSection(WasmRenderContext& c, const AstModule& module)
+{
+    if (!module.hasTable())
+        return true;
+    for (const AstResizable& table : module.tables()) {
+        if (table.imported)
+            continue;
+        if (!RenderIndent(c))
+            return false;
+        if (!RenderResizableTable(c, table.limits))
+            return false;
+        if (!c.buffer.append("\n"))
+            return false;
+    }
+    return true;
 }
 
 static bool
@@ -1240,6 +1247,42 @@ RenderInlineExpr(WasmRenderContext& c, AstExpr& expr)
     c.indent = prevIndent;
 
     return c.buffer.append(")");
+}
+
+static bool
+RenderElemSection(WasmRenderContext& c, const AstModule& module)
+{
+    for (const AstElemSegment* segment : module.elemSegments()) {
+        if (!RenderIndent(c))
+            return false;
+        if (!c.buffer.append("(elem "))
+            return false;
+        if (!RenderInlineExpr(c, *segment->offset()))
+            return false;
+
+        for (const AstRef& elem : segment->elems()) {
+            if (!c.buffer.append(" "))
+                return false;
+
+            uint32_t index = elem.index();
+            AstName name = index < module.funcImportNames().length()
+                           ? module.funcImportNames()[index]
+                           : module.funcs()[index - module.funcImportNames().length()]->name();
+
+            if (name.empty()) {
+                if (!RenderInt32(c, index))
+                    return false;
+            } else {
+                if (!RenderName(c, name))
+                    return false;
+            }
+        }
+
+        if (!c.buffer.append(")\n"))
+            return false;
+    }
+
+    return true;
 }
 
 static bool
@@ -1290,22 +1333,6 @@ RenderGlobalSection(WasmRenderContext& c, const AstModule& module)
         if (!RenderIndent(c))
             return false;
         if (!RenderGlobal(c, *global))
-            return false;
-    }
-
-    return true;
-}
-
-static bool
-RenderLimits(WasmRenderContext& c, const Limits& limits)
-{
-    if (!RenderInt32(c, limits.initial))
-        return false;
-
-    if (limits.maximum) {
-        if (!c.buffer.append(" "))
-            return false;
-        if (!RenderInt32(c, *limits.maximum))
             return false;
     }
 
@@ -1366,7 +1393,8 @@ RenderImport(WasmRenderContext& c, AstImport& import, const AstModule& module)
         break;
       }
       case DefinitionKind::Table: {
-        // TODO next patch
+        if (!RenderResizableTable(c, import.limits()))
+            return false;
         break;
       }
       case DefinitionKind::Memory: {
@@ -1608,6 +1636,9 @@ RenderModule(WasmRenderContext& c, AstModule& module)
         return false;
 
     if (!RenderTableSection(c, module))
+        return false;
+
+    if (!RenderElemSection(c, module))
         return false;
 
     if (!RenderGlobalSection(c, module))

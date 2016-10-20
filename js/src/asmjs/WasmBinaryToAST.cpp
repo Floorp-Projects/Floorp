@@ -1838,7 +1838,7 @@ AstDecodeGlobalSection(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeFunctionExport(AstDecodeContext& c, AstExport** export_)
+AstDecodeExport(AstDecodeContext& c, AstExport** export_)
 {
     AstName fieldName;
     if (!AstDecodeName(c, &fieldName))
@@ -1878,7 +1878,7 @@ AstDecodeExportSection(AstDecodeContext& c)
 
     for (uint32_t i = 0; i < numExports; i++) {
         AstExport* export_ = nullptr;
-        if (!AstDecodeFunctionExport(c, &export_))
+        if (!AstDecodeExport(c, &export_))
             return false;
         if (!c.module().append(export_))
             return false;
