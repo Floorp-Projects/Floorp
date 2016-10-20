@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { FrontClassWithSpec } = require("devtools/shared/protocol");
+const { FrontClassWithSpec, custom } = require("devtools/shared/protocol");
 const {
   customHighlighterSpec,
   highlighterSpec
@@ -15,7 +15,16 @@ const HighlighterFront = FrontClassWithSpec(highlighterSpec, {
     this.actorID = json.actor;
     // FF42+ HighlighterActors starts exposing custom form, with traits object
     this.traits = json.traits || {};
-  }
+  },
+
+  pick: custom(function (doFocus) {
+    if (doFocus && this.pickAndFocus) {
+      return this.pickAndFocus();
+    }
+    return this._pick();
+  }, {
+    impl: "_pick"
+  })
 });
 
 exports.HighlighterFront = HighlighterFront;
