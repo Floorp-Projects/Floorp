@@ -126,31 +126,22 @@ static nsresult SetUpDragClipboard(nsIArray* aTransferableArray)
 
 NSImage*
 nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
-                                  nsIntRect* aDragRect,
+                                  LayoutDeviceIntRect* aDragRect,
                                   nsIScriptableRegion* aRegion)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  NSPoint screenPoint =
-    nsCocoaUtils::ConvertPointToScreen([gLastDragView window],
-                                       [gLastDragMouseDownEvent locationInWindow]);
-  // Y coordinates are bottom to top, so reverse this
-  screenPoint.y = nsCocoaUtils::FlippedScreenY(screenPoint.y);
 
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
 
   RefPtr<SourceSurface> surface;
   nsPresContext* pc;
-  nsresult rv = DrawDrag(aDOMNode, aRegion,
-                         NSToIntRound(screenPoint.x),
-                         NSToIntRound(screenPoint.y),
+  nsresult rv = DrawDrag(aDOMNode, aRegion, mScreenPosition,
                          aDragRect, &surface, &pc);
-  if (!aDragRect->width || !aDragRect->height) {
+  if (pc && (!aDragRect->width || !aDragRect->height)) {
     // just use some suitable defaults
     int32_t size = nsCocoaUtils::CocoaPointsToDevPixels(20, scaleFactor);
-    aDragRect->SetRect(nsCocoaUtils::CocoaPointsToDevPixels(screenPoint.x, scaleFactor),
-                       nsCocoaUtils::CocoaPointsToDevPixels(screenPoint.y, scaleFactor),
-                       size, size);
+    aDragRect->SetRect(pc->CSSPixelsToDevPixels(mScreenPosition.x),
+                       pc->CSSPixelsToDevPixels(mScreenPosition.y), size, size);
   }
 
   if (NS_FAILED(rv) || !surface)
@@ -158,8 +149,6 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 
   uint32_t width = aDragRect->width;
   uint32_t height = aDragRect->height;
-
-
 
   RefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(IntSize(width, height),
@@ -318,13 +307,15 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
   if (NS_FAILED(SetUpDragClipboard(aTransferableArray)))
     return NS_ERROR_FAILURE;
 
-  nsIntRect dragRect(0, 0, 20, 20);
+  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
+
+  LayoutDeviceIntRect dragRect(0, 0, 20, 20);
   NSImage* image = ConstructDragImage(mSourceNode, &dragRect, aDragRgn);
   if (!image) {
     // if no image was returned, just draw a rectangle
     NSSize size;
-    size.width = dragRect.width;
-    size.height = dragRect.height;
+    size.width = nsCocoaUtils::DevPixelsToCocoaPoints(dragRect.width, scaleFactor);
+    size.height = nsCocoaUtils::DevPixelsToCocoaPoints(dragRect.height, scaleFactor);
     image = [[NSImage alloc] initWithSize:size];
     [image lockFocus];
     [[NSColor grayColor] set];
@@ -340,7 +331,6 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
   }
 
   LayoutDeviceIntPoint pt(dragRect.x, dragRect.YMost());
-  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
   NSPoint point = nsCocoaUtils::DevPixelsToCocoaPoints(pt, scaleFactor);
   point.y = nsCocoaUtils::FlippedScreenY(point.y);
 

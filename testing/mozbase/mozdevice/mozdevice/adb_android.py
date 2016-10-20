@@ -93,6 +93,9 @@ class ADBAndroid(ADBDevice):
         except ADBError:
             self.selinux = False
 
+        self.version = int(self.shell_output("getprop ro.build.version.sdk",
+                                             timeout=timeout))
+
     def reboot(self, timeout=None):
         """Reboots the device.
 
@@ -195,9 +198,8 @@ class ADBAndroid(ADBDevice):
                     failure = "Device state: %s" % state
                     success = False
                 else:
-                    if (self.selinux and
-                        self.shell_output('getenforce',
-                                          timeout=timeout) != 'Permissive'):
+                    if (self.selinux and self.shell_output('getenforce',
+                                                           timeout=timeout) != 'Permissive'):
                         self._logger.info('Setting SELinux Permissive Mode')
                         self.shell_output("setenforce Permissive", timeout=timeout, root=True)
                     if self.is_dir(ready_path, timeout=timeout, root=True):
@@ -265,7 +267,11 @@ class ADBAndroid(ADBDevice):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        data = self.command_output(["install", apk_path], timeout=timeout)
+        cmd = ["install"]
+        if self.version >= version_codes.M:
+            cmd.append("-g")
+        cmd.append(apk_path)
+        data = self.command_output(cmd, timeout=timeout)
         if data.find('Success') == -1:
             raise ADBError("install failed for %s. Got: %s" %
                            (apk_path, data))
@@ -334,9 +340,9 @@ class ADBAndroid(ADBDevice):
 
         if extras:
             for (key, val) in extras.iteritems():
-                if type(val) is int:
+                if isinstance(val, int):
                     extra_type_param = "--ei"
-                elif type(val) is bool:
+                elif isinstance(val, bool):
                     extra_type_param = "--ez"
                 else:
                     extra_type_param = "--es"
@@ -391,8 +397,8 @@ class ADBAndroid(ADBDevice):
         if extra_args:
             extras['args'] = " ".join(extra_args)
 
-        self.launch_application(app_name, "org.mozilla.gecko.BrowserApp", intent, url=url,
-                                extras=extras,
+        self.launch_application(app_name, "org.mozilla.gecko.BrowserApp",
+                                intent, url=url, extras=extras,
                                 wait=wait, fail_if_running=fail_if_running,
                                 timeout=timeout)
 
@@ -418,9 +424,7 @@ class ADBAndroid(ADBDevice):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        version = self.shell_output("getprop ro.build.version.sdk",
-                                    timeout=timeout, root=root)
-        if int(version) >= version_codes.HONEYCOMB:
+        if self.version >= version_codes.HONEYCOMB:
             self.shell_output("am force-stop %s" % app_name,
                               timeout=timeout, root=root)
         else:
@@ -480,7 +484,10 @@ class ADBAndroid(ADBDevice):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        output = self.command_output(["install", "-r", apk_path],
-                                     timeout=timeout)
+        cmd = ["install", "-r"]
+        if self.version >= version_codes.M:
+            cmd.append("-g")
+        cmd.append(apk_path)
+        output = self.command_output(cmd, timeout=timeout)
         self.reboot(timeout=timeout)
         return output

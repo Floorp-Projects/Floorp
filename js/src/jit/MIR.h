@@ -11462,6 +11462,8 @@ class MLoadSlot
     }
     AliasType mightAlias(const MDefinition* store) const override;
 
+    void printOpcode(GenericPrinter& out) const override;
+
     ALLOW_CLONE(MLoadSlot)
 };
 
@@ -11542,6 +11544,7 @@ class MStoreSlot
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::DynamicSlot);
     }
+    void printOpcode(GenericPrinter& out) const override;
 
     ALLOW_CLONE(MStoreSlot)
 };
