@@ -80,6 +80,8 @@ Structure:
               // Optional, excluded if it would be empty or if the engine cannot
               // or did not run validation on itself.
               validation: {
+                // Optional validator version, default of 0.
+                version: <integer>,
                 checked: <integer>,
                 took: <non-monotonic integer duration in milliseconds>,
                 // Entries with a count of 0 are excluded, the array is excluded if no problems are found.
