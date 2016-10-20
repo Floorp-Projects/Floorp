@@ -13,6 +13,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "nsArray.h"
 #include "nsError.h"
 #include "nsIDragService.h"
 #include "nsIClipboard.h"
@@ -876,7 +877,7 @@ DataTransfer::Clone(nsISupports* aParent, EventMessage aEventMessage,
   return NS_OK;
 }
 
-already_AddRefed<nsISupportsArray>
+already_AddRefed<nsIArray>
 DataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
 {
   MOZ_ASSERT(aDragTarget);
@@ -894,12 +895,10 @@ DataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
   return GetTransferables(doc->GetLoadContext());
 }
 
-already_AddRefed<nsISupportsArray>
+already_AddRefed<nsIArray>
 DataTransfer::GetTransferables(nsILoadContext* aLoadContext)
 {
-
-  nsCOMPtr<nsISupportsArray> transArray =
-    do_CreateInstance("@mozilla.org/supports-array;1");
+  nsCOMPtr<nsIMutableArray> transArray = nsArray::Create();
   if (!transArray) {
     return nullptr;
   }
@@ -908,7 +907,7 @@ DataTransfer::GetTransferables(nsILoadContext* aLoadContext)
   for (uint32_t i = 0; i < count; i++) {
     nsCOMPtr<nsITransferable> transferable = GetTransferable(i, aLoadContext);
     if (transferable) {
-      transArray->AppendElement(transferable);
+      transArray->AppendElement(transferable, /*weak =*/ false);
     }
   }
 

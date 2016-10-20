@@ -307,7 +307,6 @@ IDBKeyRange::GetLower(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
     mHaveCachedLowerVal = true;
   }
 
-  JS::ExposeValueToActiveJS(mCachedLowerVal);
   aResult.set(mCachedLowerVal);
 }
 
@@ -331,7 +330,6 @@ IDBKeyRange::GetUpper(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
     mHaveCachedUpperVal = true;
   }
 
-  JS::ExposeValueToActiveJS(mCachedUpperVal);
   aResult.set(mCachedUpperVal);
 }
 

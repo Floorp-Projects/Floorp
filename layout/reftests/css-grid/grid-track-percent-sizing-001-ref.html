@@ -8,20 +8,19 @@
   <title>Reference: Percent track sizes</title>
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1264607">
   <style type="text/css">
-body,html { color:black; background:white; font-family:monospace; font-size:32px; padding:0; margin:0; }
+body,html { color:black; background:white; font-family:monospace; font:1px/1 monospace; padding:0; margin:0; }
 
 .grid {
   display: grid;
   float: left;
   border: 3px solid;
-  grid-template-columns: auto;
-  grid-template-rows: auto;
+  grid-template-columns: calc((30px / 0.4) * 0.6);
+  width: calc(30px / 0.4);
+  grid-template-rows: calc(((15px / 0.6) * 0.4)) 10px;
   margin-right: 20px;
   grid-auto-rows: 10px;
-}
-.sz {
-  width: 100px;
-  height: 100px;
+  align-content: start;
+  justify-content: start;
 }
 
 span {
@@ -35,7 +34,7 @@ span {
 t {
   display: inline-block;
   width: 30px;
-  height: 10px;
+  height: 5px;
 }
 x {
   background: lime;
@@ -45,25 +44,37 @@ x {
 
 .tA {
   grid-template-columns: 30px;
+  width: auto;
 }
 .tB {
   grid-template-columns: 30px;
-  grid-template-rows: 0;
+  grid-template-rows: calc(10px / 0.6 - 10px) 10px; 
 }
 
-.t0 x, .t2 x, .t6 x, .t7 x, .t9 x, .tB x { width: 18px }
-.t1 x { width: 28px }
-.t3 x, .t4 x, .t8 x { width: 0 }
+.t0, .t2, .t6, .t7 { height: calc(15px / 0.6); }
+.t1 {
+  grid-template-rows: calc(20px / 0.6 - 10px) 10px;
+  grid-template-columns: calc(((30px / 0.4) * 0.6) + 10px);
+}
+.t3, .t4, .t8 { grid: auto 10px / auto; width: auto; }
+.t5 { width: 30px; height: 20px; }
+.t9 { width: 30px; grid-template-rows: 5px 10px; }
+
+.t9 x { width: 18px }
+.t3 x, .t4 x, .t8 x, .tA x { width: 0 }
 .t5 x { width: 10px }
-.tA x { width: 48px }
+.tB x { width: 45px }
 
 .sz {
   grid-template-rows: 40px;
+  width: 100px;
+  height: 100px;
 }
 .sz.t1 { grid-template-rows: 50px; }
 .sz.t3, .sz.t4 { grid-template-rows: 0; }
 .sz.t5 { grid-template-rows: 10px; }
-.sz.tA { grid-template-rows: 140px; }
+.sz.t9 { grid-template-rows: 40px 10px; height:100px; }
+.sz.tA { grid: 0 0 / 0; }
 .sz.tB {
   grid-template-columns: 60px;
   grid-template-rows: 40px;
@@ -114,9 +125,9 @@ x {
 <div class="grid sz t9"><span><t></t></span><x></x></div>
 <div class="grid sz tA"><span><t></t></span><x></x></div>
 <div class="grid sz tB"><span><t></t></span><x></x></div>
-<div class="grid sz tC"><span><t></t></span><x style="grid-area:2/1;height:10px; width:5px"></x></div>
-<div class="grid sz tD"><span><t></t></span><x style="grid-area:1/1;height:10px; width:100px"></x></div>
-<div class="grid sz tD"><span><t></t></span><x style="grid-area:1/1;height:10px; width:100px"></x></div>
+<div class="grid sz tC"><span><t></t></span><x style="height:10px; width:5px"></x></div>
+<div class="grid sz tD"><span><t></t></span><x style="width:0"></x></div>
+<div class="grid sz tD"><span><t></t></span><x style="width:0"></x></div>
 
 </body>
 </html>

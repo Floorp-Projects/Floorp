@@ -290,7 +290,6 @@ IDBIndex::GetKeyPath(JSContext* aCx,
 
   if (!mCachedKeyPath.isUndefined()) {
     MOZ_ASSERT(mRooted);
-    JS::ExposeValueToActiveJS(mCachedKeyPath);
     aResult.set(mCachedKeyPath);
     return;
   }
@@ -307,7 +306,6 @@ IDBIndex::GetKeyPath(JSContext* aCx,
     mRooted = true;
   }
 
-  JS::ExposeValueToActiveJS(mCachedKeyPath);
   aResult.set(mCachedKeyPath);
 }
 

@@ -288,8 +288,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mIsDetached(true)
   , mAppPackageFileDescriptorSent(false)
   , mChromeFlags(aChromeFlags)
-  , mDragAreaX(0)
-  , mDragAreaY(0)
+  , mDragValid(false)
   , mInitedByParent(false)
   , mTabId(aTabId)
   , mCreatingWindow(false)
@@ -3233,9 +3232,8 @@ bool
 TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
                                  const uint32_t& aAction,
                                  const OptionalShmem& aVisualDnDData,
-                                 const uint32_t& aWidth, const uint32_t& aHeight,
                                  const uint32_t& aStride, const uint8_t& aFormat,
-                                 const int32_t& aDragAreaX, const int32_t& aDragAreaY)
+                                 const LayoutDeviceIntRect& aDragRect)
 {
   mInitialDataTransferItems.Clear();
   nsIPresShell* shell = mFrameElement->OwnerDoc()->GetShell();
@@ -3261,17 +3259,18 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
 
   if (aVisualDnDData.type() == OptionalShmem::Tvoid_t ||
       !aVisualDnDData.get_Shmem().IsReadable() ||
-      aVisualDnDData.get_Shmem().Size<char>() < aHeight * aStride) {
+      aVisualDnDData.get_Shmem().Size<char>() < aDragRect.height * aStride) {
     mDnDVisualization = nullptr;
   } else {
     mDnDVisualization =
-        gfx::CreateDataSourceSurfaceFromData(gfx::IntSize(aWidth, aHeight),
+        gfx::CreateDataSourceSurfaceFromData(gfx::IntSize(aDragRect.width, aDragRect.height),
                                              static_cast<gfx::SurfaceFormat>(aFormat),
                                              aVisualDnDData.get_Shmem().get<uint8_t>(),
                                              aStride);
   }
-  mDragAreaX = aDragAreaX;
-  mDragAreaY = aDragAreaY;
+
+  mDragValid = true;
+  mDragRect = aDragRect;
 
   esm->BeginTrackingRemoteDragGesture(mFrameElement);
 
@@ -3335,13 +3334,17 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
   mInitialDataTransferItems.Clear();
 }
 
-void
+bool
 TabParent::TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
-                                 int32_t& aDragAreaX, int32_t& aDragAreaY)
+                                 LayoutDeviceIntRect* aDragRect)
 {
+  if (!mDragValid)
+    return false;
+
   aSurface = mDnDVisualization.forget();
-  aDragAreaX = mDragAreaX;
-  aDragAreaY = mDragAreaY;
+  *aDragRect = mDragRect;
+  mDragValid = false;
+  return true;
 }
 
 bool

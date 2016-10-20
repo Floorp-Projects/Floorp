@@ -30,6 +30,8 @@ function testFormDataParsing(fn) {
         boundary + '-',
 
         function(fd) {
+          document.write("0xDEADBEEF");
+          document.write(fd.get("greeting"));
           is(fd.get("greeting"), '"hello"');
         }
       ],

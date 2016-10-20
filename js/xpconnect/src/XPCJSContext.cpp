@@ -3040,11 +3040,17 @@ AccumulateTelemetryCallback(int id, uint32_t sample, const char* key)
       case JS_TELEMETRY_GC_RESET:
         Telemetry::Accumulate(Telemetry::GC_RESET, sample);
         break;
+      case JS_TELEMETRY_GC_RESET_REASON:
+        Telemetry::Accumulate(Telemetry::GC_RESET_REASON, sample);
+        break;
       case JS_TELEMETRY_GC_INCREMENTAL_DISABLED:
         Telemetry::Accumulate(Telemetry::GC_INCREMENTAL_DISABLED, sample);
         break;
       case JS_TELEMETRY_GC_NON_INCREMENTAL:
         Telemetry::Accumulate(Telemetry::GC_NON_INCREMENTAL, sample);
+        break;
+      case JS_TELEMETRY_GC_NON_INCREMENTAL_REASON:
+        Telemetry::Accumulate(Telemetry::GC_NON_INCREMENTAL_REASON, sample);
         break;
       case JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS:
         Telemetry::Accumulate(Telemetry::GC_SCC_SWEEP_TOTAL_MS, sample);

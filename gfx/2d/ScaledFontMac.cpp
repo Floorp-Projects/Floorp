@@ -10,7 +10,6 @@
 #include "skia/include/core/SkPath.h"
 #include "skia/include/ports/SkTypeface_mac.h"
 #endif
-#include "DrawTargetCG.h"
 #include <vector>
 #include <dlfcn.h>
 #ifdef MOZ_WIDGET_UIKIT
@@ -87,59 +86,7 @@ SkTypeface* ScaledFontMac::GetSkTypeface()
 already_AddRefed<Path>
 ScaledFontMac::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget)
 {
-  if (aTarget->GetBackendType() == BackendType::COREGRAPHICS ||
-      aTarget->GetBackendType() == BackendType::COREGRAPHICS_ACCELERATED) {
-#ifdef MOZ_WIDGET_COCOA
-      CGMutablePathRef path = CGPathCreateMutable();
-      for (unsigned int i = 0; i < aBuffer.mNumGlyphs; i++) {
-          // XXX: we could probably fold both of these transforms together to avoid extra work
-          CGAffineTransform flip = CGAffineTransformMakeScale(1, -1);
-
-          CGPathRef glyphPath = ::CGFontGetGlyphPath(mFont, &flip, 0, aBuffer.mGlyphs[i].mIndex);
-
-          CGAffineTransform matrix = CGAffineTransformMake(mSize, 0, 0, mSize,
-                                                           aBuffer.mGlyphs[i].mPosition.x,
-                                                           aBuffer.mGlyphs[i].mPosition.y);
-          CGPathAddPath(path, &matrix, glyphPath);
-          CGPathRelease(glyphPath);
-      }
-      RefPtr<Path> ret = new PathCG(path, FillRule::FILL_WINDING);
-      CGPathRelease(path);
-      return ret.forget();
-#else
-      //TODO: probably want CTFontCreatePathForGlyph
-      MOZ_CRASH("GFX: This needs implemented 1");
-#endif
-  }
   return ScaledFontBase::GetPathForGlyphs(aBuffer, aTarget);
-}
-
-void
-ScaledFontMac::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint)
-{
-  if (!(aBackendType == BackendType::COREGRAPHICS || aBackendType == BackendType::COREGRAPHICS_ACCELERATED)) {
-    ScaledFontBase::CopyGlyphsToBuilder(aBuffer, aBuilder, aBackendType, aTransformHint);
-    return;
-  }
-#ifdef MOZ_WIDGET_COCOA
-  PathBuilderCG *pathBuilderCG =
-    static_cast<PathBuilderCG*>(aBuilder);
-  // XXX: check builder type
-  for (unsigned int i = 0; i < aBuffer.mNumGlyphs; i++) {
-    // XXX: we could probably fold both of these transforms together to avoid extra work
-    CGAffineTransform flip = CGAffineTransformMakeScale(1, -1);
-    CGPathRef glyphPath = ::CGFontGetGlyphPath(mFont, &flip, 0, aBuffer.mGlyphs[i].mIndex);
-
-    CGAffineTransform matrix = CGAffineTransformMake(mSize, 0, 0, mSize,
-                                                     aBuffer.mGlyphs[i].mPosition.x,
-                                                     aBuffer.mGlyphs[i].mPosition.y);
-    CGPathAddPath(pathBuilderCG->mCGPath, &matrix, glyphPath);
-    CGPathRelease(glyphPath);
-  }
-#else
-    //TODO: probably want CTFontCreatePathForGlyph
-    MOZ_CRASH("GFX: This needs implemented 2");
-#endif
 }
 
 uint32_t

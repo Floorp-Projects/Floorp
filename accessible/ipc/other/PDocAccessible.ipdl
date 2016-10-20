@@ -173,8 +173,11 @@ child:
   nested(inside_sync) sync TableOfACell(uint64_t aID) returns(uint64_t aTableID, bool aOk);
   nested(inside_sync) sync ColIdx(uint64_t aID) returns(uint32_t aIndex);
   nested(inside_sync) sync RowIdx(uint64_t aID) returns(uint32_t aIndex);
+  nested(inside_sync) sync GetPosition(uint64_t aID) returns(uint32_t aRow, uint32_t aCol);
   nested(inside_sync) sync ColExtent(uint64_t aID) returns(uint32_t aExtent);
   nested(inside_sync) sync RowExtent(uint64_t aID) returns(uint32_t aExtent);
+  nested(inside_sync) sync GetColRowExtents(uint64_t aID)
+    returns(uint32_t aCol, uint32_t aRow, uint32_t aColExtent, uint32_t aRowExtent);
   nested(inside_sync) sync ColHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
   nested(inside_sync) sync RowHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
   nested(inside_sync) sync IsCellSelected(uint64_t aID) returns(bool aSelected);

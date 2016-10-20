@@ -2347,7 +2347,6 @@ Notification::GetData(JSContext* aCx,
     return;
   }
 
-  JS::ExposeValueToActiveJS(mData);
   aRetval.set(mData);
 }
 

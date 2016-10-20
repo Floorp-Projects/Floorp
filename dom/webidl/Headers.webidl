@@ -24,7 +24,6 @@ interface Headers {
   [Throws] void append(ByteString name, ByteString value);
   [Throws] void delete(ByteString name);
   [Throws] ByteString? get(ByteString name);
-  [Throws] sequence<ByteString> getAll(ByteString name);
   [Throws] boolean has(ByteString name);
   [Throws] void set(ByteString name, ByteString value);
   iterable<ByteString, ByteString>;

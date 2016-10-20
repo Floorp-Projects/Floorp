@@ -256,8 +256,12 @@ class Heap : public js::HeapBase<T>
     DECLARE_POINTER_ASSIGN_OPS(Heap, T);
 
     const T* address() const { return &ptr; }
-    const T& get() const {
+
+    void exposeToActiveJS() const {
         js::BarrierMethods<T>::exposeToJS(ptr);
+    }
+    const T& get() const {
+        exposeToActiveJS();
         return ptr;
     }
     const T& unbarrieredGet() const {
@@ -419,10 +423,12 @@ class TenuredHeap : public js::HeapBase<T>
     T unbarrieredGetPtr() const { return reinterpret_cast<T>(bits & ~flagsMask); }
     uintptr_t getFlags() const { return bits & flagsMask; }
 
+    void exposeToActiveJS() const {
+        js::BarrierMethods<T>::exposeToJS(unbarrieredGetPtr());
+    }
     T getPtr() const {
-        T ptr = unbarrieredGetPtr();
-        js::BarrierMethods<T>::exposeToJS(ptr);
-        return ptr;
+        exposeToActiveJS();
+        return unbarrieredGetPtr();
     }
 
     operator T() const { return getPtr(); }
