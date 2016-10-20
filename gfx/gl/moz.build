@@ -94,7 +94,6 @@ if gl_provider == 'CGL':
     # These files include Mac headers that are unfriendly to unified builds
     SOURCES += [
         "GLContextProviderCGL.mm",
-        "TextureImageCGL.mm"
     ]
     EXPORTS += [
         'GLContextCGL.h',
