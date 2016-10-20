@@ -17,8 +17,8 @@ namespace js {
 
 class XDRBuffer {
   public:
-    XDRBuffer(JSContext* cx, JS::TranscodeBuffer& buffer)
-      : context_(cx), buffer_(buffer), cursor_(0) { }
+    XDRBuffer(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
+      : context_(cx), buffer_(buffer), cursor_(cursor) { }
 
     JSContext* cx() const {
         return context_;
@@ -66,8 +66,8 @@ class XDRState {
     XDRBuffer buf;
     JS::TranscodeResult resultCode_;
 
-    XDRState(JSContext* cx, JS::TranscodeBuffer& buffer)
-      : buf(cx, buffer), resultCode_(JS::TranscodeResult_Ok) { }
+    XDRState(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
+      : buf(cx, buffer, cursor), resultCode_(JS::TranscodeResult_Ok) { }
 
     JSContext* cx() const {
         return buf.cx();
