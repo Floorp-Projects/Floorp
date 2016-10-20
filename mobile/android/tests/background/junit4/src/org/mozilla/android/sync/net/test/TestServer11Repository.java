@@ -27,17 +27,6 @@ public class TestServer11Repository {
     Assert.assertEquals(expected, u.getRawQuery());
   }
 
-  @SuppressWarnings("static-method")
-  @Test
-  public void testCollectionURIFull() throws URISyntaxException {
-    Server11Repository r = new Server11Repository(COLLECTION, COLLECTION_URL, null, infoCollections, infoConfiguration);
-    assertQueryEquals("full=1&newer=5000.000",              r.collectionURI(true,  5000000L, -1,    null, null, null));
-    assertQueryEquals("newer=1230.000",                     r.collectionURI(false, 1230000L, -1,    null, null, null));
-    assertQueryEquals("newer=5000.000&limit=10",            r.collectionURI(false, 5000000L, 10,    null, null, null));
-    assertQueryEquals("full=1&newer=5000.000&sort=index",   r.collectionURI(true,  5000000L,  0, "index", null, null));
-    assertQueryEquals("full=1&ids=123,abc",                 r.collectionURI(true,       -1L, -1,    null, "123,abc", null));
-  }
-
   @Test
   public void testCollectionURI() throws URISyntaxException {
     Server11Repository noTrailingSlash = new Server11Repository(COLLECTION, COLLECTION_URL, null, infoCollections, infoConfiguration);

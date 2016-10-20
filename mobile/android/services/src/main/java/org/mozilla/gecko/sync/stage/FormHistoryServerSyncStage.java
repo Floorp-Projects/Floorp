@@ -19,11 +19,8 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
 
   // Eventually this kind of sync stage will be data-driven,
   // and all this hard-coding can go away.
-  private static final String FORM_HISTORY_SORT          = "index";
-  // Sanity limit. Batch and total limit are the same for now, and will be adjusted
-  // once buffer and high water mark are in place. See Bug 730142.
+  private static final String FORM_HISTORY_SORT = "oldest";
   private static final long FORM_HISTORY_BATCH_LIMIT = 5000;
-  private static final long FORM_HISTORY_TOTAL_LIMIT = 5000;
 
   @Override
   protected String getCollection() {
@@ -44,14 +41,15 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
   protected Repository getRemoteRepository() throws URISyntaxException {
     String collection = getCollection();
     return new ConstrainedServer11Repository(
-        collection,
-        session.config.storageURL(),
-        session.getAuthHeaderProvider(),
-        session.config.infoCollections,
-        session.config.infoConfiguration,
-        FORM_HISTORY_BATCH_LIMIT,
-        FORM_HISTORY_TOTAL_LIMIT,
-        FORM_HISTORY_SORT);
+            collection,
+            session.getSyncDeadline(),
+            session.config.storageURL(),
+            session.getAuthHeaderProvider(),
+            session.config.infoCollections,
+            session.config.infoConfiguration,
+            FORM_HISTORY_BATCH_LIMIT,
+            FORM_HISTORY_SORT,
+            true /* allow multiple batches */);
   }
 
   @Override

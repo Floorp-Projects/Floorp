@@ -1052,7 +1052,6 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'sync/stage/GlobalSyncStage.java',
     'sync/stage/NoSuchStageException.java',
     'sync/stage/PasswordsServerSyncStage.java',
-    'sync/stage/SafeConstrainedServer11Repository.java',
     'sync/stage/ServerSyncStage.java',
     'sync/stage/SyncClientsEngineStage.java',
     'sync/stage/UploadMetaGlobalStage.java',
