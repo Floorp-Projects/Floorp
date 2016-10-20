@@ -16,7 +16,6 @@ include protocol PWebSocketEventListener;
 include protocol PTCPSocket;
 include protocol PTCPServerSocket;
 include protocol PUDPSocket;
-include protocol PRemoteOpenFile;
 include protocol PDNSRequest;
 include protocol PChannelDiverter;
 include protocol PBlob; //FIXME: bug #792908
@@ -54,7 +53,6 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PTCPServerSocket;
   manages PUDPSocket;
   manages PDNSRequest;
-  manages PRemoteOpenFile;
   manages PDataChannel;
   manages PRtspController;
   manages PRtspChannel;
@@ -89,10 +87,6 @@ parent:
   async PredLearn(URIParams targetURI, OptionalURIParams sourceURI,
                   uint32_t reason, SerializedLoadContext loadContext);
   async PredReset();
-
-  async PRemoteOpenFile(SerializedLoadContext loadContext,
-                        URIParams fileuri,
-                        OptionalURIParams appuri);
 
   async SpeculativeConnect(URIParams uri, bool anonymous);
   async HTMLDNSPrefetch(nsString hostname, uint16_t flags);

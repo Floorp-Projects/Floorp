@@ -31,8 +31,7 @@ const nsIBinaryInputStream = ctor("@mozilla.org/binaryinputstream;1",
 
 const fileBase = "test_bug637286.zip";
 const file = do_get_file("data/" + fileBase);
-// on child we'll test with jar:remoteopenfile:// instead of jar:file://
-const jarBase = "jar:" + filePrefix + ios.newFileURI(file).spec + "!";
+const jarBase = "jar:" + ios.newFileURI(file).spec + "!";
 const tmpDir = dirSvc.get("TmpD", Ci.nsIFile);
 
 function Listener(callback) {
@@ -94,7 +93,6 @@ add_test(testAsync);
 
 /**
  * Basic test for nsIZipReader.
- * This relies on the jar cache to succeed in child processes.
  */
 function testZipEntry() {
     var uri = jarBase + "/inner40.zip";
@@ -108,142 +106,110 @@ function testZipEntry() {
 
 add_test(testZipEntry);
 
-// In e10s child processes we don't currently support 
-// 1) synchronously opening jar files on parent
-// 2) nested jar channels in e10s: (app:// doesn't use them).
-// 3) we can't do file lock checks on android, so skip those tests too.
-if (!inChild) {
 
-  /**
-   * Basic reading test for synchronously opened jar channels
-   */
-  add_test(function testSync() {
-      var uri = jarBase + "/inner40.zip";
-      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
-      var stream = chan.open2();
-      do_check_true(chan.contentLength > 0);
-      do_check_eq(stream.available(), chan.contentLength);
-      stream.close();
-      stream.close(); // should still not throw
+/**
+ * Basic reading test for synchronously opened jar channels
+ */
+add_test(function testSync() {
+    var uri = jarBase + "/inner40.zip";
+    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var stream = chan.open2();
+    do_check_true(chan.contentLength > 0);
+    do_check_eq(stream.available(), chan.contentLength);
+    stream.close();
+    stream.close(); // should still not throw
 
-      run_next_test();
-  });
+    run_next_test();
+});
 
 
-  /**
-   * Basic reading test for synchronously opened, nested jar channels
-   */
-  add_test(function testSyncNested() {
-      var uri = "jar:" + jarBase + "/inner40.zip!/foo";
-      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
-      var stream = chan.open2();
-      do_check_true(chan.contentLength > 0);
-      do_check_eq(stream.available(), chan.contentLength);
-      stream.close();
-      stream.close(); // should still not throw
+/**
+ * Basic reading test for synchronously opened, nested jar channels
+ */
+add_test(function testSyncNested() {
+    var uri = "jar:" + jarBase + "/inner40.zip!/foo";
+    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var stream = chan.open2();
+    do_check_true(chan.contentLength > 0);
+    do_check_eq(stream.available(), chan.contentLength);
+    stream.close();
+    stream.close(); // should still not throw
 
-      run_next_test();
-  });
+    run_next_test();
+});
 
-  /**
-   * Basic reading test for asynchronously opened, nested jar channels
-   */
-  add_test(function testAsyncNested(next) {
-      var uri = "jar:" + jarBase + "/inner40.zip!/foo";
-      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
-      chan.asyncOpen2(new Listener(function(l) {
-          do_check_true(chan.contentLength > 0);
-          do_check_true(l.gotStartRequest);
-          do_check_true(l.gotStopRequest);
-          do_check_eq(l.available, chan.contentLength);
+/**
+ * Basic reading test for asynchronously opened, nested jar channels
+ */
+add_test(function testAsyncNested(next) {
+    var uri = "jar:" + jarBase + "/inner40.zip!/foo";
+    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    chan.asyncOpen2(new Listener(function(l) {
+        do_check_true(chan.contentLength > 0);
+        do_check_true(l.gotStartRequest);
+        do_check_true(l.gotStopRequest);
+        do_check_eq(l.available, chan.contentLength);
 
-          run_next_test();
-      }));
-  });
+        run_next_test();
+    }));
+});
 
-  /**
-   * Verify that file locks are released when closing a synchronously
-   * opened jar channel stream
-   */
-  add_test(function testSyncCloseUnlocks() {
-      var copy = tmpDir.clone();
-      copy.append(fileBase);
-      file.copyTo(copy.parent, copy.leafName);
-      var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
-      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
-      var stream = chan.open2();
-      do_check_true(chan.contentLength > 0);
-      stream.close();
+/**
+ * Verify that file locks are released when closing a synchronously
+ * opened jar channel stream
+ */
+add_test(function testSyncCloseUnlocks() {
+    var copy = tmpDir.clone();
+    copy.append(fileBase);
+    file.copyTo(copy.parent, copy.leafName);
+    var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
+    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var stream = chan.open2();
+    do_check_true(chan.contentLength > 0);
+    stream.close();
 
-      // Drop any jar caches
-      obs.notifyObservers(null, "chrome-flush-caches", null);
+    // Drop any jar caches
+    obs.notifyObservers(null, "chrome-flush-caches", null);
 
-      try {
-          copy.remove(false);
-      }
-      catch (ex) {
-          do_throw(ex);
-      }
+    try {
+        copy.remove(false);
+    }
+    catch (ex) {
+        do_throw(ex);
+    }
 
-      run_next_test();
-  });
+    run_next_test();
+});
 
-  /**
-   * Verify that file locks are released when closing an asynchronously
-   * opened jar channel stream
-   */
-  add_test(function testAsyncCloseUnlocks() {
-      var copy = tmpDir.clone();
-      copy.append(fileBase);
-      file.copyTo(copy.parent, copy.leafName);
+/**
+ * Verify that file locks are released when closing an asynchronously
+ * opened jar channel stream
+ */
+add_test(function testAsyncCloseUnlocks() {
+    var copy = tmpDir.clone();
+    copy.append(fileBase);
+    file.copyTo(copy.parent, copy.leafName);
 
-      var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
-      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
+    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
 
-      chan.asyncOpen2(new Listener(function (l) {
-          do_check_true(chan.contentLength > 0);
+    chan.asyncOpen2(new Listener(function (l) {
+        do_check_true(chan.contentLength > 0);
 
-          // Drop any jar caches
-          obs.notifyObservers(null, "chrome-flush-caches", null);
-
-          try {
-              copy.remove(false);
-          }
-          catch (ex) {
-              do_throw(ex);
-          }
-
-          run_next_test();
-      }));
-  });
-
-} // if !inChild
-
-if (inChild) {
-    /**
-     * Multiple simultaneous opening test for bug 1048615
-     */
-    add_test(function testSimultaneous() {
-        var uri = jarBase + "/inner1.zip";
-
-        // Drop any JAR caches
+        // Drop any jar caches
         obs.notifyObservers(null, "chrome-flush-caches", null);
 
-        // Open multiple channels
-        var num = 10;
-        var chan = [];
-        for (var i = 0; i < num; i++) {
-            chan[i] = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true})
-                             .QueryInterface(Ci.nsIJARChannel);
-            chan[i].asyncOpen2(new Listener(function(l) {}));
+        try {
+            copy.remove(false);
+        }
+        catch (ex) {
+            do_throw(ex);
         }
 
-        // Open the last channel
-        var chan_last = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true})
-                               .QueryInterface(Ci.nsIJARChannel);
-        chan_last.asyncOpen2(new Listener(function(l) { run_next_test(); }));
-    });
-} // if inChild
+        run_next_test();
+    }));
+});
+
 
 function run_test() {
   return run_next_test();
