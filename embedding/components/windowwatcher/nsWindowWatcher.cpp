@@ -19,6 +19,7 @@
 #include "plstr.h"
 
 #include "nsDocShell.h"
+#include "nsGlobalWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
@@ -371,7 +372,9 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent,
 
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             /* calledFromJS = */ false, dialog,
-                            /* navigate = */ true, argv, aResult);
+                            /* navigate = */ true, argv,
+                            /* aIsPopupSpam = */ false,
+                            aResult);
 }
 
 struct SizeSpec
@@ -434,6 +437,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
                              bool aDialog,
                              bool aNavigate,
                              nsISupports* aArguments,
+                             bool aIsPopupSpam,
                              mozIDOMWindowProxy** aResult)
 {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
@@ -453,7 +457,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
 
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             aCalledFromScript, dialog,
-                            aNavigate, argv,
+                            aNavigate, argv, aIsPopupSpam,
                             aResult);
 }
 
@@ -690,6 +694,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
                                     bool aDialog,
                                     bool aNavigate,
                                     nsIArray* aArgv,
+                                    bool aIsPopupSpam,
                                     mozIDOMWindowProxy** aResult)
 {
   nsresult rv = NS_OK;
@@ -1133,6 +1138,16 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     // SetInitialPrincipalToSubject is safe to call multiple times.
     if (newWindow) {
       newWindow->SetInitialPrincipalToSubject();
+      if (aIsPopupSpam) {
+        nsGlobalWindow* globalWin = nsGlobalWindow::Cast(newWindow);
+        MOZ_ASSERT(!globalWin->IsPopupSpamWindow(),
+                   "Who marked it as popup spam already???");
+        if (!globalWin->IsPopupSpamWindow()) { // Make sure we don't mess up our
+                                               // counter even if the above
+                                               // assert fails.
+          globalWin->SetIsPopupSpamWindow(true);
+        }
+      }
     }
   }
 

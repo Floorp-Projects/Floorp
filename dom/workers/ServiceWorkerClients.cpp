@@ -607,6 +607,8 @@ private:
                            nullptr,
                            nullptr,
                            false, false, true, nullptr,
+                           // Not a spammy popup; we got permission, we swear!
+                           /* aIsPopupSpam = */ false,
                            getter_AddRefs(newWindow));
       nsCOMPtr<nsPIDOMWindowOuter> pwindow = nsPIDOMWindowOuter::From(newWindow);
       pwindow.forget(aWindow);
