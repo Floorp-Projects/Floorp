@@ -211,6 +211,62 @@ wasm::DecodeLimits(Decoder& d, Limits* limits)
 }
 
 bool
+wasm::DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLength,
+                        const GlobalDescVector& globals, DataSegmentVector* segments)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Data, &sectionStart, &sectionSize, "data"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    if (!usesMemory)
+        return d.fail("data section requires a memory section");
+
+    uint32_t numSegments;
+    if (!d.readVarU32(&numSegments))
+        return d.fail("failed to read number of data segments");
+
+    if (numSegments > MaxDataSegments)
+        return d.fail("too many data segments");
+
+    for (uint32_t i = 0; i < numSegments; i++) {
+        uint32_t linearMemoryIndex;
+        if (!d.readVarU32(&linearMemoryIndex))
+            return d.fail("expected linear memory index");
+
+        if (linearMemoryIndex != 0)
+            return d.fail("linear memory index must currently be 0");
+
+        DataSegment seg;
+        if (!DecodeInitializerExpression(d, globals, ValType::I32, &seg.offset))
+            return false;
+
+        if (!d.readVarU32(&seg.length))
+            return d.fail("expected segment size");
+
+        if (seg.offset.isVal()) {
+            uint32_t off = seg.offset.val().i32();
+            if (off > minMemoryByteLength || minMemoryByteLength - off < seg.length)
+                return d.fail("data segment does not fit");
+        }
+
+        seg.bytecodeOffset = d.currentOffset();
+
+        if (!d.readBytes(seg.length))
+            return d.fail("data segment shorter than declared");
+
+        if (!segments->append(seg))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize, "data"))
+        return false;
+
+    return true;
+}
+
+bool
 wasm::DecodeUnknownSections(Decoder& d)
 {
     while (!d.done()) {

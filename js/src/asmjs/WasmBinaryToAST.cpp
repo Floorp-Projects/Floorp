@@ -1785,6 +1785,23 @@ AstDecodeMemorySection(AstDecodeContext& c)
     return true;
 }
 
+static AstExpr*
+ToAstExpr(AstDecodeContext& c, const InitExpr& initExpr)
+{
+    switch (initExpr.kind()) {
+      case InitExpr::Kind::Constant: {
+        return new(c.lifo) AstConst(Val(initExpr.val()));
+      }
+      case InitExpr::Kind::GetGlobal: {
+        AstRef globalRef;
+        if (!AstDecodeGenerateRef(c, AstName(u"global"), initExpr.globalIndex(), &globalRef))
+            return nullptr;
+        return new(c.lifo) AstGetGlobal(globalRef);
+      }
+    }
+    return nullptr;
+}
+
 static bool
 AstDecodeInitializerExpression(AstDecodeContext& c, ValType type, AstExpr** init)
 {
@@ -1792,20 +1809,7 @@ AstDecodeInitializerExpression(AstDecodeContext& c, ValType type, AstExpr** init
     if (!DecodeInitializerExpression(c.d, c.globalDescs(), type, &initExpr))
         return false;
 
-    switch (initExpr.kind()) {
-      case InitExpr::Kind::Constant: {
-        *init = new(c.lifo) AstConst(Val(initExpr.val()));
-        break;
-      }
-      case InitExpr::Kind::GetGlobal: {
-        AstRef globalRef;
-        if (!AstDecodeGenerateRef(c, AstName(u"global"), initExpr.globalIndex(), &globalRef))
-            return false;
-        *init = new(c.lifo) AstGetGlobal(globalRef);
-        break;
-      }
-    }
-
+    *init = ToAstExpr(c, initExpr);
     return !!*init;
 }
 
@@ -2048,54 +2052,30 @@ AstDecodeCodeSection(AstDecodeContext &c)
 static bool
 AstDecodeDataSection(AstDecodeContext &c)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SectionId::Data, &sectionStart, &sectionSize, "data"))
+    DataSegmentVector segments;
+    bool hasMemory = c.module().hasMemory();
+    uint32_t memByteLength = hasMemory ? c.module().memory().initial * PageSize : 0;
+    if (!DecodeDataSection(c.d, hasMemory, memByteLength, c.globalDescs(), &segments))
         return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
 
-    uint32_t numSegments;
-    if (!c.d.readVarU32(&numSegments))
-        return c.d.fail("failed to read number of data segments");
-
-    const uint32_t heapLength = c.module().hasMemory() ? c.module().memory().initial : 0;
-
-    for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t dstOffset;
-        if (!c.d.readVarU32(&dstOffset))
-            return c.d.fail("expected segment destination offset");
-
-        uint32_t numBytes;
-        if (!c.d.readVarU32(&numBytes))
-            return c.d.fail("expected segment size");
-
-        if (dstOffset > heapLength || heapLength - dstOffset < numBytes)
-            return c.d.fail("data segment does not fit in memory");
-
-        const uint8_t* src;
-        if (!c.d.readBytes(numBytes, &src))
-            return c.d.fail("data segment shorter than declared");
-
-        char16_t *buffer = static_cast<char16_t *>(c.lifo.alloc(numBytes * sizeof(char16_t)));
-        for (size_t i = 0; i < numBytes; i++)
+    for (DataSegment& s : segments) {
+        const uint8_t* src = c.d.begin() + s.bytecodeOffset;
+        char16_t* buffer = static_cast<char16_t*>(c.lifo.alloc(s.length * sizeof(char16_t)));
+        for (size_t i = 0; i < s.length; i++)
             buffer[i] = src[i];
 
-        AstExpr* offset = new(c.lifo) AstConst(Val(dstOffset));
+        AstExpr* offset = ToAstExpr(c, s.offset);
         if (!offset)
             return false;
 
-        AstName name(buffer, numBytes);
+        AstName name(buffer, s.length);
         AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, name);
         if (!segment || !c.module().append(segment))
             return false;
     }
 
-    if (!c.d.finishSection(sectionStart, sectionSize, "data"))
-        return false;
-
     return true;
 }
-
 
 static bool
 AstDecodeElemSection(AstDecodeContext &c)

@@ -131,18 +131,6 @@ class Export
 
 typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
 
-// DataSegment describes the offset of a data segment in the bytecode that is
-// to be copied at a given offset into linear memory upon instantiation.
-
-struct DataSegment
-{
-    InitExpr offset;
-    uint32_t bytecodeOffset;
-    uint32_t length;
-};
-
-typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
-
 // ElemSegment represents an element segment in the module where each element
 // describes both its function index and its code range.
 

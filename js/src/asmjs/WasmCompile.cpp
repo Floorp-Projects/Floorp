@@ -1139,62 +1139,6 @@ DecodeElemSection(Decoder& d, Uint32Vector&& oldElems, ModuleGenerator& mg)
     return true;
 }
 
-static bool
-DecodeDataSection(Decoder& d, ModuleGenerator& mg)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Data, &sectionStart, &sectionSize, "data"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    if (!mg.usesMemory())
-        return d.fail("data section requires a memory section");
-
-    uint32_t numSegments;
-    if (!d.readVarU32(&numSegments))
-        return d.fail("failed to read number of data segments");
-
-    if (numSegments > MaxDataSegments)
-        return d.fail("too many data segments");
-
-    uint32_t max = mg.minMemoryLength();
-    for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t linearMemoryIndex;
-        if (!d.readVarU32(&linearMemoryIndex))
-            return d.fail("expected linear memory index");
-
-        if (linearMemoryIndex != 0)
-            return d.fail("linear memory index must currently be 0");
-
-        DataSegment seg;
-        if (!DecodeInitializerExpression(d, mg.globals(), ValType::I32, &seg.offset))
-            return false;
-
-        if (!d.readVarU32(&seg.length))
-            return d.fail("expected segment size");
-
-        if (seg.offset.isVal()) {
-            uint32_t off = seg.offset.val().i32();
-            if (off > max || max - off < seg.length)
-                return d.fail("data segment does not fit");
-        }
-
-        seg.bytecodeOffset = d.currentOffset();
-
-        if (!d.readBytes(seg.length))
-            return d.fail("data segment shorter than declared");
-
-        if (!mg.addDataSegment(seg))
-            return false;
-    }
-
-    if (!d.finishSection(sectionStart, sectionSize, "data"))
-        return false;
-
-    return true;
-}
-
 static void
 MaybeDecodeNameSectionBody(Decoder& d, ModuleGenerator& mg)
 {
@@ -1239,6 +1183,17 @@ MaybeDecodeNameSectionBody(Decoder& d, ModuleGenerator& mg)
     }
 
     mg.setFuncNames(Move(funcNames));
+}
+
+static bool
+DecodeDataSection(Decoder& d, ModuleGenerator& mg)
+{
+    DataSegmentVector dataSegments;
+    if (!DecodeDataSection(d, mg.usesMemory(), mg.minMemoryLength(), mg.globals(), &dataSegments))
+        return false;
+
+    mg.setDataSegments(Move(dataSegments));
+    return true;
 }
 
 static bool
@@ -1317,7 +1272,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!DecodeCodeSection(d, mg))
         return nullptr;
 
-    if (!DecodeDataSection(d, mg))
+    if (!::DecodeDataSection(d, mg))
         return nullptr;
 
     if (!DecodeNameSection(d, mg))

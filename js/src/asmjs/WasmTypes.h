@@ -574,6 +574,18 @@ class GlobalDesc
 
 typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 
+// DataSegment describes the offset of a data segment in the bytecode that is
+// to be copied at a given offset into linear memory upon instantiation.
+
+struct DataSegment
+{
+    InitExpr offset;
+    uint32_t bytecodeOffset;
+    uint32_t length;
+};
+
+typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
+
 // SigIdDesc describes a signature id that can be used by call_indirect and
 // table-entry prologues to structurally compare whether the caller and callee's
 // signatures *structurally* match. To handle the general case, a Sig is
