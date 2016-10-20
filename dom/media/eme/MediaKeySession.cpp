@@ -405,7 +405,6 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
   SetSessionId(aSessionId);
 
   PromiseId pid = mKeys->StorePromise(promise);
-  mKeys->ConnectPendingPromiseIdWithToken(pid, Token());
   mKeys->GetCDMProxy()->LoadSession(pid, aSessionId);
 
   EME_LOG("MediaKeySession[%p,'%s'] Load() sent to CDM, promiseId=%d",
