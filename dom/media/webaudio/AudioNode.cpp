@@ -423,8 +423,8 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
        outputIndex >= 0; --outputIndex) {
     AudioNode* dest = mOutputNodes[outputIndex];
     DisconnectMatchingDestinationInputs(*dest, outputIndex,
-                                        [aOutput](const InputNode& aInput) {
-                                          return aInput.mOutputPort == aOutput;
+                                        [aOutput](const InputNode& aInputNode) {
+                                          return aInputNode.mOutputPort == aOutput;
                                         });
   }
 
@@ -432,8 +432,8 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
        outputIndex >= 0; --outputIndex) {
     AudioParam* dest = mOutputParams[outputIndex];
     DisconnectMatchingDestinationInputs(*dest, outputIndex,
-                                        [aOutput](const InputNode& aInput) {
-                                          return aInput.mOutputPort == aOutput;
+                                        [aOutput](const InputNode& aInputNode) {
+                                          return aInputNode.mOutputPort == aOutput;
                                         });
   }
 
@@ -483,8 +483,8 @@ AudioNode::Disconnect(AudioNode& aDestination,
     wasConnected |=
       DisconnectMatchingDestinationInputs(
           aDestination, outputIndex,
-          [aOutput](const InputNode& aInput) {
-            return aInput.mOutputPort == aOutput;
+          [aOutput](const InputNode& aInputNode) {
+            return aInputNode.mOutputPort == aOutput;
           });
   }
 
@@ -571,8 +571,8 @@ AudioNode::Disconnect(AudioParam& aDestination,
        outputIndex >= 0; --outputIndex) {
     wasConnected |=
       DisconnectMatchingDestinationInputs(aDestination, outputIndex,
-                                          [aOutput](const InputNode& aNode) {
-                                            return aNode.mOutputPort == aOutput;
+                                          [aOutput](const InputNode& aInputNode) {
+                                            return aInputNode.mOutputPort == aOutput;
                                           });
   }
 
