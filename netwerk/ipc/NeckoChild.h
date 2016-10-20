@@ -62,11 +62,6 @@ protected:
                                                   const uint32_t& aFlags,
                                                   const nsCString& aNetworkInterface) override;
   virtual bool DeallocPDNSRequestChild(PDNSRequestChild*) override;
-  virtual PRemoteOpenFileChild*
-    AllocPRemoteOpenFileChild(const SerializedLoadContext& aSerialized,
-                              const URIParams&,
-                              const OptionalURIParams&) override;
-  virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*) override;
   virtual PDataChannelChild* AllocPDataChannelChild(const uint32_t& channelId) override;
   virtual bool DeallocPDataChannelChild(PDataChannelChild* child) override;
   virtual PRtspControllerChild* AllocPRtspControllerChild() override;

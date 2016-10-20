@@ -4,20 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPIDL_SOURCES += [
-    'nsIRemoteOpenFileListener.idl',
-]
-
-XPIDL_MODULE = 'necko_ipc'
-
 EXPORTS.mozilla.net += [
     'ChannelEventQueue.h',
     'NeckoChild.h',
     'NeckoCommon.h',
     'NeckoMessageUtils.h',
     'NeckoParent.h',
-    'RemoteOpenFileChild.h',
-    'RemoteOpenFileParent.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -25,8 +17,6 @@ UNIFIED_SOURCES += [
     'NeckoChild.cpp',
     'NeckoCommon.cpp',
     'NeckoParent.cpp',
-    'RemoteOpenFileChild.cpp',
-    'RemoteOpenFileParent.cpp',
 ]
 
 IPDL_SOURCES = [
@@ -34,7 +24,6 @@ IPDL_SOURCES = [
     'PChannelDiverter.ipdl',
     'PDataChannel.ipdl',
     'PNecko.ipdl',
-    'PRemoteOpenFile.ipdl',
     'PRtspChannel.ipdl',
     'PRtspController.ipdl',
 ]

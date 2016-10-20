@@ -17,7 +17,6 @@
 #include "nsNetCID.h"
 #include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
-#include "nsIRemoteOpenFileListener.h"
 #include "nsIHashable.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
