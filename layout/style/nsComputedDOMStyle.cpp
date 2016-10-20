@@ -1114,7 +1114,7 @@ nsComputedDOMStyle::DoGetContent()
   }
 
   if (content->ContentCount() == 1 &&
-      content->ContentAt(0).mType == eStyleContentType_AltContent) {
+      content->ContentAt(0).GetType() == eStyleContentType_AltContent) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     val->SetIdent(eCSSKeyword__moz_alt_content);
     return val.forget();
@@ -1126,69 +1126,66 @@ nsComputedDOMStyle::DoGetContent()
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
     const nsStyleContentData &data = content->ContentAt(i);
-    switch (data.mType) {
-      case eStyleContentType_String:
-        {
-          nsAutoString str;
-          nsStyleUtil::AppendEscapedCSSString(
-            nsDependentString(data.mContent.mString), str);
-          val->SetString(str);
-        }
+    nsStyleContentType type = data.GetType();
+    switch (type) {
+      case eStyleContentType_String: {
+        nsAutoString str;
+        nsStyleUtil::AppendEscapedCSSString(
+          nsDependentString(data.GetString()), str);
+        val->SetString(str);
         break;
-      case eStyleContentType_Image:
-        {
-          nsCOMPtr<nsIURI> uri;
-          if (data.mContent.mImage) {
-            data.mContent.mImage->GetURI(getter_AddRefs(uri));
-          }
-          val->SetURI(uri);
+      }
+      case eStyleContentType_Image: {
+        nsCOMPtr<nsIURI> uri;
+        if (imgRequestProxy* image = data.GetImage()) {
+          image->GetURI(getter_AddRefs(uri));
         }
+        val->SetURI(uri);
         break;
-      case eStyleContentType_Attr:
-        {
-          nsAutoString str;
-          nsStyleUtil::AppendEscapedCSSIdent(
-            nsDependentString(data.mContent.mString), str);
-          val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_ATTR);
-        }
+      }
+      case eStyleContentType_Attr: {
+        nsAutoString str;
+        nsStyleUtil::AppendEscapedCSSIdent(
+          nsDependentString(data.GetString()), str);
+        val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_ATTR);
         break;
+      }
       case eStyleContentType_Counter:
-      case eStyleContentType_Counters:
-        {
-          /* FIXME: counters should really use an object */
-          nsAutoString str;
-          if (data.mType == eStyleContentType_Counter) {
-            str.AppendLiteral("counter(");
-          }
-          else {
-            str.AppendLiteral("counters(");
-          }
-          // WRITE ME
-          nsCSSValue::Array *a = data.mContent.mCounters;
-
-          nsStyleUtil::AppendEscapedCSSIdent(
-            nsDependentString(a->Item(0).GetStringBufferValue()), str);
-          int32_t typeItem = 1;
-          if (data.mType == eStyleContentType_Counters) {
-            typeItem = 2;
-            str.AppendLiteral(", ");
-            nsStyleUtil::AppendEscapedCSSString(
-              nsDependentString(a->Item(1).GetStringBufferValue()), str);
-          }
-          MOZ_ASSERT(eCSSUnit_None != a->Item(typeItem).GetUnit(),
-                     "'none' should be handled as identifier value");
-          nsString type;
-          a->Item(typeItem).AppendToString(eCSSProperty_list_style_type,
-                                           type, nsCSSValue::eNormalized);
-          if (!type.LowerCaseEqualsLiteral("decimal")) {
-            str.AppendLiteral(", ");
-            str.Append(type);
-          }
-
-          str.Append(char16_t(')'));
-          val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_COUNTER);
+      case eStyleContentType_Counters: {
+        /* FIXME: counters should really use an object */
+        nsAutoString str;
+        if (type == eStyleContentType_Counter) {
+          str.AppendLiteral("counter(");
         }
+        else {
+          str.AppendLiteral("counters(");
+        }
+        // WRITE ME
+        nsCSSValue::Array* a = data.GetCounters();
+
+        nsStyleUtil::AppendEscapedCSSIdent(
+          nsDependentString(a->Item(0).GetStringBufferValue()), str);
+        int32_t typeItem = 1;
+        if (type == eStyleContentType_Counters) {
+          typeItem = 2;
+          str.AppendLiteral(", ");
+          nsStyleUtil::AppendEscapedCSSString(
+            nsDependentString(a->Item(1).GetStringBufferValue()), str);
+        }
+        MOZ_ASSERT(eCSSUnit_None != a->Item(typeItem).GetUnit(),
+                   "'none' should be handled as identifier value");
+        nsString type;
+        a->Item(typeItem).AppendToString(eCSSProperty_list_style_type,
+                                         type, nsCSSValue::eNormalized);
+        if (!type.LowerCaseEqualsLiteral("decimal")) {
+          str.AppendLiteral(", ");
+          str.Append(type);
+        }
+
+        str.Append(char16_t(')'));
+        val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_COUNTER);
         break;
+      }
       case eStyleContentType_OpenQuote:
         val->SetIdent(eCSSKeyword_open_quote);
         break;
