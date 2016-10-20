@@ -2,7 +2,7 @@
 load(libdir + "wasm.js");
 
 // Test instructions with no return value interposed between pushes and pops.
-assertEq(wasmEvalText(` (module
+wasmFullPass(` (module
    (memory 1)
 
    (func (result i32)
@@ -66,5 +66,5 @@ assertEq(wasmEvalText(` (module
 
    (func $returnVoid)
 
-   (export "" 0)
-)`).exports[""](), 33);
+   (export "run" 0)
+)`, 33);

@@ -551,6 +551,8 @@ RenderBinaryOperator(WasmRenderContext& c, AstBinaryOperator& op)
       case Expr::I32Shl:      opStr = "i32.shl"; break;
       case Expr::I32ShrS:     opStr = "i32.shr_s"; break;
       case Expr::I32ShrU:     opStr = "i32.shr_u"; break;
+      case Expr::I32Rotl:     opStr = "i32.rotl"; break;
+      case Expr::I32Rotr:     opStr = "i32.rotr"; break;
       case Expr::I64Add:      opStr = "i64.add"; break;
       case Expr::I64Sub:      opStr = "i64.sub"; break;
       case Expr::I64Mul:      opStr = "i64.mul"; break;
@@ -564,6 +566,8 @@ RenderBinaryOperator(WasmRenderContext& c, AstBinaryOperator& op)
       case Expr::I64Shl:      opStr = "i64.shl"; break;
       case Expr::I64ShrS:     opStr = "i64.shr_s"; break;
       case Expr::I64ShrU:     opStr = "i64.shr_u"; break;
+      case Expr::I64Rotl:     opStr = "i64.rotl"; break;
+      case Expr::I64Rotr:     opStr = "i64.rotr"; break;
       case Expr::F32Add:      opStr = "f32.add"; break;
       case Expr::F32Sub:      opStr = "f32.sub"; break;
       case Expr::F32Mul:      opStr = "f32.mul"; break;
