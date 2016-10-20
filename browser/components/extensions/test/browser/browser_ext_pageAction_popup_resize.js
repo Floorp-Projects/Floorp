@@ -15,8 +15,6 @@ function* awaitResize(browser) {
 }
 
 add_task(function* testPageActionPopupResize() {
-  let browser;
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "page_action": {
@@ -25,7 +23,6 @@ add_task(function* testPageActionPopupResize() {
       },
     },
     background: function() {
-      /* global browser */
       browser.tabs.query({active: true, currentWindow: true}, tabs => {
         const tabId = tabs[0].id;
 
@@ -45,10 +42,12 @@ add_task(function* testPageActionPopupResize() {
 
   clickPageAction(extension, window);
 
-  browser = yield awaitExtensionPanel(extension);
+  let {target: panelDocument} = yield BrowserTestUtils.waitForEvent(document, "load", true, (event) => {
+    info(`Loaded ${event.target.location}`);
+    return event.target.location && event.target.location.href.endsWith("popup.html");
+  });
 
-  let panelWindow = browser.contentWindow;
-  let panelDocument = panelWindow.document;
+  let panelWindow = panelDocument.defaultView;
   let panelBody = panelDocument.body.firstChild;
   let body = panelDocument.body;
   let root = panelDocument.documentElement;
@@ -70,7 +69,7 @@ add_task(function* testPageActionPopupResize() {
     panelBody.style.height = `${size}px`;
     panelBody.style.width = `${size}px`;
 
-    return BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized");
+    return BrowserTestUtils.waitForEvent(panelWindow, "resize");
   }
 
   let sizes = [

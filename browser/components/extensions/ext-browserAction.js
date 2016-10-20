@@ -87,7 +87,6 @@ BrowserAction.prototype = {
       onDestroyed: document => {
         let view = document.getElementById(this.viewId);
         if (view) {
-          CustomizableUI.hidePanelForNode(view);
           view.remove();
         }
       },
