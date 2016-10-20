@@ -63,13 +63,6 @@ html|a {
   margin-bottom: 6px;
 }
 
-:-moz-type-unsupported .icon,
-:-moz-type-unsupported-platform .icon {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginMissing.png);
-}
-:-moz-type-unsupported .icon[installable] {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginDownload.png);
-}
 :-moz-handler-vulnerable-updatable .icon,
 :-moz-handler-vulnerable-no-update .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginBlocked.png);
