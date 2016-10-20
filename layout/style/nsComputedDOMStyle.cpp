@@ -2082,7 +2082,15 @@ nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
   switch (aStyleImage.GetType()) {
     case eStyleImageType_Image:
     {
-      imgIRequest *req = aStyleImage.GetImageData();
+      imgIRequest* req = aStyleImage.GetImageData();
+      if (!req) {
+        // XXXheycam If we had some problem resolving the imgRequestProxy,
+        // maybe we should just use the URL stored in the nsStyleImage's
+        // mImageValue?
+        aValue->SetIdent(eCSSKeyword_none);
+        break;
+      }
+
       nsCOMPtr<nsIURI> uri;
       req->GetURI(getter_AddRefs(uri));
 
