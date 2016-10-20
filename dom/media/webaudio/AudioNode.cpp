@@ -295,16 +295,18 @@ AudioNode::SendChannelMixingParametersToStream()
   }
 }
 
+template<>
 bool
-AudioNode::DisconnectFromOutputIfConnected(AudioNode& aDestination,
-                                           uint32_t aOutputNodeIndex,
-                                           uint32_t aInputIndex)
+AudioNode::DisconnectFromOutputIfConnected<AudioNode>(uint32_t aOutputNodeIndex,
+                                                      uint32_t aInputIndex)
 {
   WEB_AUDIO_API_LOG("%f: %s %u Disconnect()", Context()->CurrentTime(),
                     NodeType(), Id());
 
+  AudioNode* destination = mOutputNodes[aOutputNodeIndex];
+
   MOZ_ASSERT(aOutputNodeIndex < mOutputNodes.Length());
-  MOZ_ASSERT(aInputIndex < aDestination.InputNodes().Length());
+  MOZ_ASSERT(aInputIndex < destination->InputNodes().Length());
 
   // An upstream node may be starting to play on the graph thread, and the
   // engine for a downstream node may be sending a PlayingRefChangeHandler
@@ -326,20 +328,20 @@ AudioNode::DisconnectFromOutputIfConnected(AudioNode& aDestination,
     RefPtr<AudioNode> mNode;
   };
 
-  InputNode& input = aDestination.mInputNodes[aInputIndex];
+  InputNode& input = destination->mInputNodes[aInputIndex];
   if (input.mInputNode != this) {
     return false;
   }
 
-  // Destroying the InputNode here sends a message to the graph thread
-  // to disconnect the streams, which should be sent before the
-  // RunAfterPendingUpdates() call below.
-  aDestination.mInputNodes.RemoveElementAt(aInputIndex);
   // Remove one instance of 'dest' from mOutputNodes. There could be
   // others, and it's not correct to remove them all since some of them
   // could be for different output ports.
   RefPtr<AudioNode> output = mOutputNodes[aOutputNodeIndex].forget();
   mOutputNodes.RemoveElementAt(aOutputNodeIndex);
+  // Destroying the InputNode here sends a message to the graph thread
+  // to disconnect the streams, which should be sent before the
+  // RunAfterPendingUpdates() call below.
+  destination->mInputNodes.RemoveElementAt(aInputIndex);
   output->NotifyInputsChanged();
   if (mStream) {
     nsCOMPtr<nsIRunnable> runnable = new RunnableRelease(output.forget());
@@ -348,19 +350,22 @@ AudioNode::DisconnectFromOutputIfConnected(AudioNode& aDestination,
   return true;
 }
 
+template<>
 bool
-AudioNode::DisconnectFromOutputIfConnected(AudioParam& aDestination,
-                                           uint32_t aOutputParamIndex,
-                                           uint32_t aInputIndex)
+AudioNode::DisconnectFromOutputIfConnected<AudioParam>(uint32_t aOutputParamIndex,
+                                                       uint32_t aInputIndex)
 {
   MOZ_ASSERT(aOutputParamIndex < mOutputParams.Length());
-  MOZ_ASSERT(aInputIndex < aDestination.InputNodes().Length());
 
-  const InputNode& input = aDestination.InputNodes()[aInputIndex];
+  AudioParam* destination = mOutputParams[aOutputParamIndex];
+
+  MOZ_ASSERT(aInputIndex < destination->InputNodes().Length());
+
+  const InputNode& input = destination->InputNodes()[aInputIndex];
   if (input.mInputNode != this) {
     return false;
   }
-  aDestination.RemoveInputNode(aInputIndex);
+  destination->RemoveInputNode(aInputIndex);
   // Remove one instance of 'dest' from mOutputParams. There could be
   // others, and it's not correct to remove them all since some of them
   // could be for different output ports.
@@ -368,20 +373,33 @@ AudioNode::DisconnectFromOutputIfConnected(AudioParam& aDestination,
   return true;
 }
 
+template<>
+const nsTArray<AudioNode::InputNode>&
+AudioNode::InputsForDestination<AudioNode>(uint32_t aOutputNodeIndex) const {
+  return mOutputNodes[aOutputNodeIndex]->InputNodes();
+}
+
+template<>
+const nsTArray<AudioNode::InputNode>&
+AudioNode::InputsForDestination<AudioParam>(uint32_t aOutputNodeIndex) const {
+  return mOutputParams[aOutputNodeIndex]->InputNodes();
+}
+
 template<typename DestinationType, typename Predicate>
 bool
-AudioNode::DisconnectMatchingDestinationInputs(DestinationType& aDestination,
-                                               uint32_t aDestinationIndex,
+AudioNode::DisconnectMatchingDestinationInputs(uint32_t aDestinationIndex,
                                                Predicate aPredicate)
 {
   bool wasConnected = false;
-  for (int32_t inputIndex = aDestination.InputNodes().Length() - 1;
-       inputIndex >= 0; --inputIndex) {
-    const InputNode& input = aDestination.InputNodes()[inputIndex];
+  uint32_t inputCount =
+    InputsForDestination<DestinationType>(aDestinationIndex).Length();
+
+  for (int32_t inputIndex = inputCount - 1; inputIndex >= 0; --inputIndex) {
+    const InputNode& input =
+      InputsForDestination<DestinationType>(aDestinationIndex)[inputIndex];
     if (aPredicate(input)) {
-      if (DisconnectFromOutputIfConnected(aDestination,
-                                          aDestinationIndex,
-                                          inputIndex)) {
+      if (DisconnectFromOutputIfConnected<DestinationType>(aDestinationIndex,
+                                                           inputIndex)) {
         wasConnected = true;
         break;
       }
@@ -395,16 +413,18 @@ AudioNode::Disconnect(ErrorResult& aRv)
 {
   for (int32_t outputIndex = mOutputNodes.Length() - 1;
        outputIndex >= 0; --outputIndex) {
-    AudioNode* dest = mOutputNodes[outputIndex];
-    DisconnectMatchingDestinationInputs(*dest, outputIndex,
-                                        [](const InputNode&) { return true; });
+    DisconnectMatchingDestinationInputs<AudioNode>(outputIndex,
+                                                   [](const InputNode&) {
+                                                     return true;
+                                                   });
   }
 
   for (int32_t outputIndex = mOutputParams.Length() - 1;
        outputIndex >= 0; --outputIndex) {
-    AudioParam* dest = mOutputParams[outputIndex];
-    DisconnectMatchingDestinationInputs(*dest, outputIndex,
-                                        [](const InputNode&) { return true; });
+    DisconnectMatchingDestinationInputs<AudioParam>(outputIndex,
+                                                    [](const InputNode&) {
+                                                      return true;
+                                                    });
   }
 
   // This disconnection may have disconnected a panner and a source.
@@ -421,20 +441,20 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
 
   for (int32_t outputIndex = mOutputNodes.Length() - 1;
        outputIndex >= 0; --outputIndex) {
-    AudioNode* dest = mOutputNodes[outputIndex];
-    DisconnectMatchingDestinationInputs(*dest, outputIndex,
-                                        [aOutput](const InputNode& aInputNode) {
-                                          return aInputNode.mOutputPort == aOutput;
-                                        });
+    DisconnectMatchingDestinationInputs<AudioNode>(
+        outputIndex,
+        [aOutput](const InputNode& aInputNode) {
+          return aInputNode.mOutputPort == aOutput;
+        });
   }
 
   for (int32_t outputIndex = mOutputParams.Length() - 1;
        outputIndex >= 0; --outputIndex) {
-    AudioParam* dest = mOutputParams[outputIndex];
-    DisconnectMatchingDestinationInputs(*dest, outputIndex,
-                                        [aOutput](const InputNode& aInputNode) {
-                                          return aInputNode.mOutputPort == aOutput;
-                                        });
+    DisconnectMatchingDestinationInputs<AudioParam>(
+        outputIndex,
+        [aOutput](const InputNode& aInputNode) {
+          return aInputNode.mOutputPort == aOutput;
+        });
   }
 
   // This disconnection may have disconnected a panner and a source.
@@ -446,15 +466,16 @@ AudioNode::Disconnect(AudioNode& aDestination, ErrorResult& aRv)
 {
   bool wasConnected = false;
 
-  size_t outputIndex = mOutputNodes.IndexOf(&aDestination);
-  if (outputIndex == nsTArray<InputNode>::NoIndex) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return;
-  }
-  for (int32_t inputIndex = aDestination.mInputNodes.Length() - 1;
-       inputIndex >= 0; --inputIndex) {
+  for (int32_t outputIndex = mOutputNodes.Length() - 1;
+       outputIndex >= 0; --outputIndex) {
+    if (mOutputNodes[outputIndex] != &aDestination) {
+      continue;
+    }
     wasConnected |=
-      DisconnectFromOutputIfConnected(aDestination, outputIndex, inputIndex);
+      DisconnectMatchingDestinationInputs<AudioNode>(outputIndex,
+                                                     [](const InputNode&) {
+                                                       return true;
+                                                     });
   }
 
   if (!wasConnected) {
@@ -480,9 +501,12 @@ AudioNode::Disconnect(AudioNode& aDestination,
 
   for (int32_t outputIndex = mOutputNodes.Length() - 1;
        outputIndex >= 0; --outputIndex) {
+    if (mOutputNodes[outputIndex] != &aDestination) {
+      continue;
+    }
     wasConnected |=
-      DisconnectMatchingDestinationInputs(
-          aDestination, outputIndex,
+      DisconnectMatchingDestinationInputs<AudioNode>(
+          outputIndex,
           [aOutput](const InputNode& aInputNode) {
             return aInputNode.mOutputPort == aOutput;
           });
@@ -517,9 +541,12 @@ AudioNode::Disconnect(AudioNode& aDestination,
 
   for (int32_t outputIndex = mOutputNodes.Length() - 1;
        outputIndex >= 0; --outputIndex) {
+    if (mOutputNodes[outputIndex] != &aDestination) {
+      continue;
+    }
     wasConnected |=
-      DisconnectMatchingDestinationInputs(
-          aDestination, outputIndex,
+      DisconnectMatchingDestinationInputs<AudioNode>(
+          outputIndex,
           [aOutput, aInput](const InputNode& aInputNode) {
             return aInputNode.mOutputPort == aOutput &&
                    aInputNode.mInputPort == aInput;
@@ -542,11 +569,14 @@ AudioNode::Disconnect(AudioParam& aDestination, ErrorResult& aRv)
 
   for (int32_t outputIndex = mOutputParams.Length() - 1;
        outputIndex >= 0; --outputIndex) {
+    if (mOutputParams[outputIndex] != &aDestination) {
+      continue;
+    }
     wasConnected |=
-      DisconnectMatchingDestinationInputs(aDestination, outputIndex,
-                                          [](const InputNode&) {
-                                            return true;
-                                          });
+      DisconnectMatchingDestinationInputs<AudioParam>(outputIndex,
+                                                      [](const InputNode&) {
+                                                        return true;
+                                                      });
   }
 
   if (!wasConnected) {
@@ -569,11 +599,15 @@ AudioNode::Disconnect(AudioParam& aDestination,
 
   for (int32_t outputIndex = mOutputParams.Length() - 1;
        outputIndex >= 0; --outputIndex) {
+    if (mOutputParams[outputIndex] != &aDestination) {
+      continue;
+    }
     wasConnected |=
-      DisconnectMatchingDestinationInputs(aDestination, outputIndex,
-                                          [aOutput](const InputNode& aInputNode) {
-                                            return aInputNode.mOutputPort == aOutput;
-                                          });
+      DisconnectMatchingDestinationInputs<AudioParam>(
+          outputIndex,
+          [aOutput](const InputNode& aInputNode) {
+            return aInputNode.mOutputPort == aOutput;
+          });
   }
 
   if (!wasConnected) {
