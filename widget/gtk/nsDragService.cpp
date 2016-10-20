@@ -419,7 +419,7 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
                               GdkDragContext *aContext,
                               int32_t aXOffset,
                               int32_t aYOffset,
-                              const nsIntRect& dragRect)
+                              const LayoutDeviceIntRect& dragRect)
 {
     GdkScreen* screen = gtk_widget_get_screen(mHiddenWidget);
 
@@ -483,7 +483,7 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
 
     RefPtr<DrawTarget> dt = gfxPlatform::CreateDrawTargetForData(
                                 cairo_image_surface_get_data(surf),
-                                dragRect.Size(),
+                                nsIntSize(dragRect.width, dragRect.height),
                                 cairo_image_surface_get_stride(surf),
                                 SurfaceFormat::B8G8R8A8);
     if (!dt)
@@ -1628,19 +1628,18 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
     if (!mHasImage && !mSelection)
         return;
 
-    nsIntRect dragRect;
+    LayoutDeviceIntRect dragRect;
     nsPresContext* pc;
     RefPtr<SourceSurface> surface;
-    DrawDrag(mSourceNode, mSourceRegion, mScreenX, mScreenY,
+    DrawDrag(mSourceNode, mSourceRegion, mScreenPosition,
              &dragRect, &surface, &pc);
     if (!pc)
         return;
 
-    int32_t sx = mScreenX, sy = mScreenY;
-    ConvertToUnscaledDevPixels(pc, &sx, &sy);
-
-    int32_t offsetX = sx - dragRect.x;
-    int32_t offsetY = sy - dragRect.y;
+    LayoutDeviceIntPoint screenPoint =
+      ConvertToUnscaledDevPixels(pc, mScreenPosition);
+    int32_t offsetX = screenPoint.x - dragRect.x;
+    int32_t offsetY = screenPoint.y - dragRect.y;
 
     // If a popup is set as the drag image, use its widget. Otherwise, use
     // the surface that DrawDrag created.

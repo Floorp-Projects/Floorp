@@ -39,7 +39,7 @@ protected:
 private:
 
   NSImage* ConstructDragImage(nsIDOMNode* aDOMNode,
-                              nsIntRect* aDragRect,
+                              mozilla::LayoutDeviceIntRect* aDragRect,
                               nsIScriptableRegion* aRegion);
   bool IsValidType(NSString* availableType, bool allowFileURL);
   NSString* GetStringForType(NSPasteboardItem* item, const NSString* type,

@@ -100,7 +100,7 @@ class ADBB2G(ADBDevice):
                                             timeout=timeout)
 
         directives = ['memtotal']
-        if (directive in directives):
+        if directive in directives:
             directives = [directive]
 
         if 'memtotal' in directives:

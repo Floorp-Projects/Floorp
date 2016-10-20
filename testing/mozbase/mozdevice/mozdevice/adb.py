@@ -614,8 +614,26 @@ class ADBDevice(ADBCommand):
         except ADBError:
             self._ls += " -a"
 
+        self._logger.info("%s supported" % self._ls)
+
         # Do we have cp?
         self._have_cp = self.shell_bool("type cp", timeout=timeout)
+        self._logger.info("Native cp support: %s" % self._have_cp)
+
+        # Do we have chmod -R?
+        try:
+            self._chmod_R = False
+            re_recurse = re.compile(r'[-]R')
+            chmod_output = self.shell_output("chmod --help", timeout=timeout)
+            match = re_recurse.search(chmod_output)
+            if match:
+                self._chmod_R = True
+        except (ADBError, ADBTimeoutError) as e:
+            self._logger.debug('Check chmod -R: %s' % e)
+            match = re_recurse.search(e.message)
+            if match:
+                self._chmod_R = True
+        self._logger.info("Native chmod -R support: %s" % self._chmod_R)
 
         self._logger.debug("ADBDevice: %s" % self.__dict__)
 
@@ -665,8 +683,7 @@ class ADBDevice(ADBCommand):
 
         # Do we need to run adb root to get a root shell?
         try:
-            if (not self._have_root_shell and
-                self.command_output(
+            if (not self._have_root_shell and self.command_output(
                     ["root"],
                     timeout=timeout).find("cannot run as root") == -1):
                 self._have_root_shell = True
@@ -682,7 +699,7 @@ class ADBDevice(ADBCommand):
         quoted_cmd = []
 
         for arg in cmd:
-            arg.replace('&', '\&')
+            arg.replace('&', r'\&')
 
             needs_quoting = False
             for char in [' ', '(', ')', '"', '&']:
@@ -1278,20 +1295,104 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        ip_regexp = re.compile(r'(\w+)\s+UP\s+([1-9]\d{0,2}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
-        data = self.shell_output('netcfg')
-        for line in data.split("\n"):
-            match = ip_regexp.search(line)
+        if not interfaces:
+            interfaces = ["wlan0", "eth0"]
+            wifi_interface = self.shell_output('getprop wifi.interface', timeout=timeout)
+            self._logger.debug('get_ip_address: wifi_interface: %s' % wifi_interface)
+            if wifi_interface and wifi_interface not in interfaces:
+                interfaces = interfaces.append(wifi_interface)
+
+        # ifconfig interface
+        # can return two different formats:
+        # eth0: ip 192.168.1.139 mask 255.255.255.0 flags [up broadcast running multicast]
+        # or
+        # wlan0     Link encap:Ethernet  HWaddr 00:9A:CD:B8:39:65
+        # inet addr:192.168.1.38  Bcast:192.168.1.255  Mask:255.255.255.0
+        # inet6 addr: fe80::29a:cdff:feb8:3965/64 Scope: Link
+        # UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+        # RX packets:180 errors:0 dropped:0 overruns:0 frame:0
+        # TX packets:218 errors:0 dropped:0 overruns:0 carrier:0
+        # collisions:0 txqueuelen:1000
+        # RX bytes:84577 TX bytes:31202
+
+        re1_ip = re.compile(r'(\w+): ip ([0-9.]+) mask.*')
+        # re1_ip will match output of the first format
+        # with group 1 returning the interface and group 2 returing the ip address.
+
+        # re2_interface will match the interface line in the second format
+        # while re2_ip will match the inet addr line of the second format.
+        re2_interface = re.compile(r'(\w+)\s+Link')
+        re2_ip = re.compile(r'\s+inet addr:([0-9.]+)')
+
+        matched_interface = None
+        matched_ip = None
+        re_bad_addr = re.compile(r'127.0.0.1|0.0.0.0')
+
+        self._logger.debug('get_ip_address: ifconfig')
+        for interface in interfaces:
+            try:
+                output = self.shell_output('ifconfig %s' % interface,
+                                           timeout=timeout)
+            except ADBError:
+                output = ''
+
+            for line in output.split("\n"):
+                if not matched_interface:
+                    match = re1_ip.match(line)
+                    if match:
+                        matched_interface, matched_ip = match.groups()
+                    else:
+                        match = re2_interface.match(line)
+                        if match:
+                            matched_interface = match.group(1)
+                else:
+                    match = re2_ip.match(line)
+                    if match:
+                        matched_ip = match.group(1)
+
+                if matched_ip:
+                    if not re_bad_addr.match(matched_ip):
+                        self._logger.debug('get_ip_address: found: %s %s' %
+                                           (matched_interface, matched_ip))
+                        return matched_ip
+                    matched_interface = None
+                    matched_ip = None
+
+        self._logger.debug('get_ip_address: netcfg')
+        # Fall back on netcfg if ifconfig does not work.
+        # $ adb shell netcfg
+        # lo       UP   127.0.0.1/8       0x00000049 00:00:00:00:00:00
+        # dummy0   DOWN   0.0.0.0/0       0x00000082 8e:cd:67:48:b7:c2
+        # rmnet0   DOWN   0.0.0.0/0       0x00000000 00:00:00:00:00:00
+        # rmnet1   DOWN   0.0.0.0/0       0x00000000 00:00:00:00:00:00
+        # rmnet2   DOWN   0.0.0.0/0       0x00000000 00:00:00:00:00:00
+        # rmnet3   DOWN   0.0.0.0/0       0x00000000 00:00:00:00:00:00
+        # rmnet4   DOWN   0.0.0.0/0       0x00000000 00:00:00:00:00:00
+        # rmnet5   DOWN   0.0.0.0/0       0x00000000 00:00:00:00:00:00
+        # rmnet6   DOWN   0.0.0.0/0       0x00000000 00:00:00:00:00:00
+        # rmnet7   DOWN   0.0.0.0/0       0x00000000 00:00:00:00:00:00
+        # sit0     DOWN   0.0.0.0/0       0x00000080 00:00:00:00:00:00
+        # vip0     DOWN   0.0.0.0/0       0x00001012 00:01:00:00:00:01
+        # wlan0    UP   192.168.1.157/24  0x00001043 38:aa:3c:1c:f6:94
+
+        re3_netcfg = re.compile(r'(\w+)\s+UP\s+([1-9]\d{0,2}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
+        try:
+            output = self.shell_output('netcfg', timeout=timeout)
+        except ADBError:
+            output = ''
+        for line in output.split("\n"):
+            match = re3_netcfg.search(line)
             if match:
-                interface, ip = match.groups()
-
-                if interface == "lo" or ip == "127.0.0.1":
-                    continue
-
-                if interfaces is None or interface in interfaces:
-                    return ip
-
-        return None
+                matched_interface, matched_ip = match.groups()
+                if matched_interface == "lo" or re_bad_addr.match(matched_ip):
+                    matched_interface = None
+                    matched_ip = None
+                elif matched_ip and matched_interface in interfaces:
+                    self._logger.debug('get_ip_address: found: %s %s' %
+                                       (matched_interface, matched_ip))
+                    return matched_ip
+        self._logger.debug('get_ip_address: not found')
+        return matched_ip
 
     # File management methods
 
@@ -1333,34 +1434,56 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
                  * ADBError
         """
+        # Note that on some tests such as webappstartup, an error
+        # occurs during recursive calls to chmod where a "No such file
+        # or directory" error will occur for the
+        # /data/data/org.mozilla.fennec/files/mozilla/*.webapp0/lock
+        # which is a symbolic link to a socket: lock ->
+        # 127.0.0.1:+<port>.  On Linux, chmod -R ignores symbolic
+        # links but it appear Android's version does not. We ignore
+        # this type of error, but pass on any other errors that are
+        # detected.
         path = posixpath.normpath(path.strip())
         self._logger.debug('chmod: path=%s, recursive=%s, mask=%s, root=%s' %
                            (path, recursive, mask, root))
-        self.shell_output("chmod %s %s" % (mask, path),
-                          timeout=timeout, root=root)
-        if recursive and self.is_dir(path, timeout=timeout, root=root):
-            files = self.list_files(path, timeout=timeout, root=root)
-            for f in files:
-                entry = path + "/" + f
-                self._logger.debug('chmod: entry=%s' % entry)
-                if self.is_dir(entry, timeout=timeout, root=root):
-                    self._logger.debug('chmod: recursion entry=%s' % entry)
-                    self.chmod(entry, recursive=recursive, mask=mask,
-                               timeout=timeout, root=root)
-                elif self.is_file(entry, timeout=timeout, root=root):
-                    try:
-                        self.shell_output("chmod %s %s" % (mask, entry),
-                                          timeout=timeout, root=root)
-                        self._logger.debug('chmod: file entry=%s' % entry)
-                    except ADBError as e:
-                        if e.message.find('No such file or directory'):
-                            # some kind of race condition is causing files
-                            # to disappear. Catch and report the error here.
-                            self._logger.warning('chmod: File %s vanished!: %s' %
-                                                 (entry, e))
-                else:
-                    self._logger.warning('chmod: entry %s does not exist' %
-                                         entry)
+        if not recursive:
+            self.shell_output("chmod %s %s" % (mask, path),
+                              timeout=timeout, root=root)
+            return
+
+        if self._chmod_R:
+            try:
+                self.shell_output("chmod -R %s %s" % (mask, path),
+                                  timeout=timeout, root=root)
+            except ADBError as e:
+                if e.message.find('No such file or directory') == -1:
+                    raise
+                self._logger.warning('chmod -R %s %s: Ignoring Error: %s' %
+                                     (mask, path, e.message))
+            return
+        # Obtain a list of the directories and files which match path
+        # and construct a shell script which explictly calls chmod on
+        # each of them.
+        entries = self.ls(path, recursive=recursive, timeout=timeout,
+                          root=root)
+        tmpf = None
+        chmodsh = None
+        try:
+            tmpf = tempfile.NamedTemporaryFile(delete=False)
+            for entry in entries:
+                tmpf.write('chmod %s %s\n' % (mask, entry))
+            tmpf.close()
+            chmodsh = '/data/local/tmp/%s' % os.path.basename(tmpf.name)
+            self.push(tmpf.name, chmodsh)
+            self.shell_output('chmod 777 %s' % chmodsh, timeout=timeout,
+                              root=root)
+            self.shell_output('sh -c %s' % chmodsh, timeout=timeout,
+                              root=root)
+        finally:
+            if tmpf:
+                os.unlink(tmpf.name)
+            if chmodsh:
+                self.rm(chmodsh, timeout=timeout, root=root)
 
     def exists(self, path, timeout=None, root=False):
         """Returns True if the path exists on the device.
@@ -1455,10 +1578,93 @@ class ADBDevice(ADBCommand):
             except ADBError:
                 self._logger.error('Ignoring exception in ADBDevice.list_files\n%s' %
                                    traceback.format_exc())
-                pass
         data[:] = [item for item in data if item]
         self._logger.debug('list_files: %s' % data)
         return data
+
+    def ls(self, path, recursive=False, timeout=None, root=False):
+        """Return a list of matching files/directories on the device.
+
+        The ls method emulates the behavior of the ls shell command.
+        It differs from the list_files method by supporting wild cards
+        and returning matches even if the path is not a directory and
+        by allowing a recursive listing.
+
+        ls /sdcard always returns /sdcard and not the contents of the
+        sdcard path. The ls method makes the behavior consistent with
+        others paths by adjusting /sdcard to /sdcard/. Note this is
+        also the case of other sdcard related paths such as
+        /storage/emulated/legacy but no adjustment is made in those
+        cases.
+
+        The ls method works around a Nexus 4 bug which prevents
+        recursive listing of directories on the sdcard unless the path
+        ends with "/*" by adjusting sdcard paths ending in "/" to end
+        with "/*". This adjustment is only made on official Nexus 4
+        builds with property ro.product.model "Nexus 4". Note that
+        this will fail to return any "hidden" files or directories
+        which begin with ".".
+
+        :param str path: The directory name on the device.
+        :param bool recursive: Flag specifying if a recursive listing
+            is to be returned. If recursive is False, the returned
+            matches will be relative to the path. If recursive is True,
+            the returned matches will be absolute paths.
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :type timeout: integer or None
+        :param bool root: Flag specifying if the command should
+            be executed as root.
+        :returns: list of files/directories contained in the directory.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+        """
+        path = posixpath.normpath(path.strip())
+        parent = ''
+        entries = {}
+
+        if path == '/sdcard':
+            path += '/'
+
+        # Android 2.3 and later all appear to support ls -R however
+        # Nexus 4 does not perform a recursive search on the sdcard
+        # unless the path is a directory with * wild card.
+        if not recursive:
+            recursive_flag = ''
+        else:
+            recursive_flag = '-R'
+            if path.startswith('/sdcard') and path.endswith('/'):
+                model = self.shell_output('getprop ro.product.model',
+                                          timeout=timeout,
+                                          root=root)
+                if model == 'Nexus 4':
+                    path += '*'
+        lines = self.shell_output('%s %s %s' % (self._ls, recursive_flag, path),
+                                  timeout=timeout,
+                                  root=root).split('\r\n')
+        for line in lines:
+            line = line.strip()
+            if not line:
+                parent = ''
+                continue
+            if line.endswith(':'):  # This is a directory
+                parent = line.replace(':', '/')
+                entry = parent
+                # Remove earlier entry which is marked as a file.
+                if parent[:-1] in entries:
+                    del entries[parent[:-1]]
+            elif parent:
+                entry = "%s%s" % (parent, line)
+            else:
+                entry = line
+            entries[entry] = 1
+        entry_list = entries.keys()
+        entry_list.sort()
+        return entry_list
 
     def mkdir(self, path, parents=False, timeout=None, root=False):
         """Create a directory on the device.
@@ -1665,7 +1871,7 @@ class ADBDevice(ADBCommand):
                 adb_process.stdout_file.close()
                 adb_process.stderr_file.close()
 
-    def kill(self, pids, sig=None,  attempts=3, wait=5,
+    def kill(self, pids, sig=None, attempts=3, wait=5,
              timeout=None, root=False):
         """Kills processes on the device given a list of process ids.
 
@@ -1978,7 +2184,7 @@ class ADBDevice(ADBCommand):
         directives = ['battery', 'disk', 'id', 'os', 'process', 'systime',
                       'uptime']
 
-        if (directive in directives):
+        if directive in directives:
             directives = [directive]
 
         info = {}
@@ -2000,7 +2206,7 @@ class ADBDevice(ADBCommand):
         if 'uptime' in directives:
             uptime = self.shell_output('uptime', timeout=timeout)
             if uptime:
-                m = re.match('up time: ((\d+) days, )*(\d{2}):(\d{2}):(\d{2})',
+                m = re.match(r'up time: ((\d+) days, )*(\d{2}):(\d{2}):(\d{2})',
                              uptime)
                 if m:
                     uptime = '%d days %d hours %d minutes %d seconds' % tuple(
