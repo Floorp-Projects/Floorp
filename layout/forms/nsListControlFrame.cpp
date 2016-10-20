@@ -1777,14 +1777,19 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 }
 
 static bool
-FireShowDropDownEvent(nsIContent* aContent, bool show)
+FireShowDropDownEvent(nsIContent* aContent, bool aShow, bool aIsSourceTouchEvent)
 {
   if (XRE_IsContentProcess() &&
       Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) {
+    nsString eventName;
+    if (aShow) {
+      eventName = aIsSourceTouchEvent ? NS_LITERAL_STRING("mozshowdropdown-sourcetouch") :
+                                        NS_LITERAL_STRING("mozshowdropdown");
+    } else {
+      eventName = NS_LITERAL_STRING("mozhidedropdown");
+    }
     nsContentUtils::DispatchChromeEvent(aContent->OwnerDoc(), aContent,
-                                        show ? NS_LITERAL_STRING("mozshowdropdown") :
-                                               NS_LITERAL_STRING("mozhidedropdown"),
-                                        true, false);
+                                        eventName, true, false);
     return true;
   }
 
@@ -1849,7 +1854,13 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         }
       }
 
-      if (FireShowDropDownEvent(mContent, !mComboboxFrame->IsDroppedDownOrHasParentPopup())) {
+      uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+      if (NS_FAILED(mouseEvent->GetMozInputSource(&inputSource))) {
+        return NS_ERROR_FAILURE;
+      }
+      bool isSourceTouchEvent = inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+      if (FireShowDropDownEvent(mContent, !mComboboxFrame->IsDroppedDownOrHasParentPopup(),
+                                isSourceTouchEvent)) {
         return NS_OK;
       }
 
@@ -2092,7 +2103,7 @@ nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
   if (IsInDropDownMode() && !nsComboboxControlFrame::ToolkitHasNativePopup()) {
     aKeyEvent->PreventDefault();
     if (!mComboboxFrame->IsDroppedDown()) {
-      if (!FireShowDropDownEvent(mContent, true)) {
+      if (!FireShowDropDownEvent(mContent, true, false)) {
         mComboboxFrame->ShowDropDown(true);
       }
     } else {
