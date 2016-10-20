@@ -6595,7 +6595,7 @@ JS::detail::AssertArgumentsAreSane(JSContext* cx, HandleValue value)
 JS_PUBLIC_API(JS::TranscodeResult)
 JS::EncodeScript(JSContext* cx, TranscodeBuffer& buffer, HandleScript scriptArg)
 {
-    XDREncoder encoder(cx, buffer);
+    XDREncoder encoder(cx, buffer, buffer.length());
     RootedScript script(cx, scriptArg);
     if (!encoder.codeScript(&script))
         buffer.clearAndFree();
@@ -6606,7 +6606,7 @@ JS::EncodeScript(JSContext* cx, TranscodeBuffer& buffer, HandleScript scriptArg)
 JS_PUBLIC_API(JS::TranscodeResult)
 JS::EncodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, HandleObject funobjArg)
 {
-    XDREncoder encoder(cx, buffer);
+    XDREncoder encoder(cx, buffer, buffer.length());
     RootedFunction funobj(cx, &funobjArg->as<JSFunction>());
     if (!encoder.codeFunction(&funobj))
         buffer.clearAndFree();
