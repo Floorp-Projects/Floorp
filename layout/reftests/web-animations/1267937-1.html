@@ -17,7 +17,7 @@
   var target = document.getElementById("target");
   var anim = target.animate(
     { marginLeft: [ "0px", "10px" ] },
-    { duration: 100000 /* 100s */, easing: "steps(2, start)" });
+    { duration: 500000 /* 500s */, easing: "steps(2, start)" });
 
   anim.ready.then(function() {
     // Set currentTime in before phase, i.e., GetComputedTimingAt() returns
