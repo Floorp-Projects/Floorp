@@ -166,6 +166,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
   ~nsStyleFont() {
     MOZ_COUNT_DTOR(nsStyleFont);
   }
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   nsChangeHint CalcDifference(const nsStyleFont& aNewData) const;
   static nsChangeHint MaxDifference() {
@@ -549,6 +550,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColor
   ~nsStyleColor() {
     MOZ_COUNT_DTOR(nsStyleColor);
   }
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   nscolor CalcComplexColor(const mozilla::StyleComplexColor& aColor) const {
     return mozilla::LinearBlendColors(aColor.mColor, mColor,
@@ -904,6 +906,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   explicit nsStyleBackground(StyleStructContext aContext);
   nsStyleBackground(const nsStyleBackground& aOther);
   ~nsStyleBackground();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleBackground* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -956,6 +959,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
   ~nsStyleMargin() {
     MOZ_COUNT_DTOR(nsStyleMargin);
   }
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleMargin* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1003,6 +1007,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
   ~nsStylePadding() {
     MOZ_COUNT_DTOR(nsStylePadding);
   }
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStylePadding* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1210,6 +1215,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
   explicit nsStyleBorder(StyleStructContext aContext);
   nsStyleBorder(const nsStyleBorder& aBorder);
   ~nsStyleBorder();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleBorder* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1439,6 +1445,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   ~nsStyleOutline() {
     MOZ_COUNT_DTOR(nsStyleOutline);
   }
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleOutline* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1512,6 +1519,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
   explicit nsStyleList(StyleStructContext aContext);
   nsStyleList(const nsStyleList& aStyleList);
   ~nsStyleList();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleList* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1741,6 +1749,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   explicit nsStylePosition(StyleStructContext aContext);
   nsStylePosition(const nsStylePosition& aOther);
   ~nsStylePosition();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStylePosition* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1977,6 +1986,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset
   explicit nsStyleTextReset(StyleStructContext aContext);
   nsStyleTextReset(const nsStyleTextReset& aOther);
   ~nsStyleTextReset();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleTextReset* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -2025,6 +2035,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
   explicit nsStyleText(StyleStructContext aContext);
   nsStyleText(const nsStyleText& aOther);
   ~nsStyleText();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleText* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -2243,6 +2254,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility
   ~nsStyleVisibility() {
     MOZ_COUNT_DTOR(nsStyleVisibility);
   }
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleVisibility* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -2750,6 +2762,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   ~nsStyleDisplay() {
     MOZ_COUNT_DTOR(nsStyleDisplay);
   }
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleDisplay* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3061,6 +3074,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTable
   explicit nsStyleTable(StyleStructContext aContext);
   nsStyleTable(const nsStyleTable& aOther);
   ~nsStyleTable();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleTable* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3092,6 +3106,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTableBorder
   explicit nsStyleTableBorder(StyleStructContext aContext);
   nsStyleTableBorder(const nsStyleTableBorder& aOther);
   ~nsStyleTableBorder();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleTableBorder* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3200,6 +3215,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent
   explicit nsStyleContent(StyleStructContext aContext);
   nsStyleContent(const nsStyleContent& aContent);
   ~nsStyleContent();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleContent* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3282,6 +3298,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset
   explicit nsStyleUIReset(StyleStructContext aContext);
   nsStyleUIReset(const nsStyleUIReset& aOther);
   ~nsStyleUIReset();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleUIReset* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3354,6 +3371,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
   explicit nsStyleUserInterface(StyleStructContext aContext);
   nsStyleUserInterface(const nsStyleUserInterface& aOther);
   ~nsStyleUserInterface();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleUserInterface* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3397,6 +3415,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleXUL
   explicit nsStyleXUL(StyleStructContext aContext);
   nsStyleXUL(const nsStyleXUL& aSource);
   ~nsStyleXUL();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleXUL* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3436,6 +3455,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
   explicit nsStyleColumn(StyleStructContext aContext);
   nsStyleColumn(const nsStyleColumn& aSource);
   ~nsStyleColumn();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleColumn* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3560,6 +3580,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
   explicit nsStyleSVG(StyleStructContext aContext);
   nsStyleSVG(const nsStyleSVG& aSource);
   ~nsStyleSVG();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleSVG* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3693,6 +3714,7 @@ struct nsStyleFilter
   nsStyleFilter();
   nsStyleFilter(const nsStyleFilter& aSource);
   ~nsStyleFilter();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   nsStyleFilter& operator=(const nsStyleFilter& aOther);
 
@@ -3749,6 +3771,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   explicit nsStyleSVGReset(StyleStructContext aContext);
   nsStyleSVGReset(const nsStyleSVGReset& aSource);
   ~nsStyleSVGReset();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleSVGReset* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3801,6 +3824,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVariables
   explicit nsStyleVariables(StyleStructContext aContext);
   nsStyleVariables(const nsStyleVariables& aSource);
   ~nsStyleVariables();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleVariables* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -3831,6 +3855,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects
   explicit nsStyleEffects(StyleStructContext aContext);
   nsStyleEffects(const nsStyleEffects& aSource);
   ~nsStyleEffects();
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleEffects* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
