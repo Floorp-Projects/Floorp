@@ -29,14 +29,12 @@ const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.conca
 ]);
 
 add_task(function* () {
+  let Actions = require("devtools/client/netmonitor/actions/index");
   let { monitor } = yield initNetMonitor(FILTERING_URL);
+  let { gStore } = monitor.panelWin;
 
   function setFreetextFilter(value) {
-    // Set the text and manually call all callbacks synchronously to avoid the timeout
-    RequestsMenu.freetextFilterBox.value = value;
-    RequestsMenu.requestsFreetextFilterEvent();
-    RequestsMenu.userInputTimer.cancel();
-    RequestsMenu.reFilterRequests();
+    gStore.dispatch(Actions.setFilterText(value));
   }
 
   info("Starting test... ");
