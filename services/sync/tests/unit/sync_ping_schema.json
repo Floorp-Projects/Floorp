@@ -106,6 +106,7 @@
             "checked": { "type": "integer", "minimum": 0 },
             "failureReason": { "$ref": "#/definitions/error" },
             "took": { "type": "integer" },
+            "version": { "type": "integer" },
             "problems": {
               "type": "array",
               "minItems": 1,

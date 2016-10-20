@@ -305,10 +305,13 @@ function validationPing(server, client, duration) {
     Svc.Obs.notify("weave:service:sync:start");
     Svc.Obs.notify("weave:engine:sync:start", null, "bookmarks");
     Svc.Obs.notify("weave:engine:sync:finish", null, "bookmarks");
+    let validator = new BookmarkValidator();
     let data = {
-      duration, // We fake this just so that we can verify it's passed through.
+      // We fake duration and version just so that we can verify they're passed through.
+      duration,
+      version: validator.version,
       recordCount: server.length,
-      problems: new BookmarkValidator().compareServerWithClient(server, client).problemData,
+      problems: validator.compareServerWithClient(server, client).problemData,
     };
     Svc.Obs.notify("weave:engine:validate:finish", data, "bookmarks");
     Svc.Obs.notify("weave:service:sync:finish");
@@ -330,6 +333,7 @@ add_task(function *test_telemetry_integration() {
   equal(bme.validation.checked, server.length);
   equal(bme.validation.took, duration);
   bme.validation.problems.sort((a, b) => String.localeCompare(a.name, b.name));
+  equal(bme.validation.version, new BookmarkValidator().version);
   deepEqual(bme.validation.problems, [
     { name: "badClientRoots", count: 3 },
     { name: "sdiff:childGUIDs", count: 1 },
