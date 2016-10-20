@@ -32,6 +32,7 @@ payload:
     GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
     GECKO_HEAD_REF: '{{head_ref}}'
     GECKO_HEAD_REV: '{{head_rev}}'
+    HG_STORE_PATH: /home/worker/checkouts/hg-store
 
   cache:
     level-{{level}}-checkouts: /home/worker/checkouts
@@ -41,7 +42,7 @@ payload:
 
   # Note: This task is built server side without the context or tooling that
   # exist in tree so we must hard code the version
-  image: 'taskcluster/decision:0.1.6'
+  image: 'taskcluster/decision:0.1.7'
 
   # Virtually no network or other potentially risky operations happen as part
   # of the task timeout aside from the initial clone. We intentionally have

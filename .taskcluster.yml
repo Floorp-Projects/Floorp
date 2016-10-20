@@ -75,9 +75,9 @@ tasks:
           GECKO_HEAD_REPOSITORY: '{{{url}}}'
           GECKO_HEAD_REF: '{{revision}}'
           GECKO_HEAD_REV: '{{revision}}'
+          HG_STORE_PATH: /home/worker/checkouts/hg-store
 
         cache:
-          level-{{level}}-hg-shared: /home/worker/hg-shared
           level-{{level}}-checkouts: /home/worker/checkouts
 
         features:
@@ -86,7 +86,7 @@ tasks:
 
         # Note: This task is built server side without the context or tooling that
         # exist in tree so we must hard code the version
-        image: 'taskcluster/decision:0.1.6'
+        image: 'taskcluster/decision:0.1.7'
 
         maxRunTime: 1800
 
