@@ -334,9 +334,6 @@ pref("media.play-stand-alone", true);
 pref("media.hardware-video-decoding.enabled", true);
 pref("media.hardware-video-decoding.force-enabled", false);
 
-pref("media.decoder.heuristic.dormant.enabled", true);
-pref("media.decoder.heuristic.dormant.timeout", 10000);
-
 #ifdef MOZ_DIRECTSHOW
 pref("media.directshow.enabled", true);
 #endif
