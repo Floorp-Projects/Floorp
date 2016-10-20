@@ -30,11 +30,12 @@ this.EXPORTED_SYMBOLS = [
   "SelectContentHelper"
 ];
 
-this.SelectContentHelper = function (aElement, aGlobal) {
+this.SelectContentHelper = function (aElement, aOptions, aGlobal) {
   this.element = aElement;
   this.initialSelection = aElement[aElement.selectedIndex] || null;
   this.global = aGlobal;
   this.closedWithEnter = false;
+  this.isOpenedViaTouch = aOptions.isOpenedViaTouch;
   this.init();
   this.showDropDown();
   this._updateTimer = new DeferredTask(this._update.bind(this), 0);
@@ -87,7 +88,8 @@ this.SelectContentHelper.prototype = {
       rect: rect,
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
-      direction: getComputedDirection(this.element)
+      direction: getComputedDirection(this.element),
+      isOpenedViaTouch: this.isOpenedViaTouch
     });
     gOpen = true;
   },

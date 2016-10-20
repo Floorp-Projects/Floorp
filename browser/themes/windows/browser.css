@@ -2696,10 +2696,8 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   color: GrayText;
 }
 
-@media (-moz-touch-enabled) {
-  #ContentSelectDropdown > menupopup > menucaption,
-  #ContentSelectDropdown > menupopup > menuitem {
-    padding-top: 11px;
-    padding-bottom: 11px;
-  }
+#ContentSelectDropdown > .isOpenedViaTouch > menucaption,
+#ContentSelectDropdown > .isOpenedViaTouch > menuitem {
+  padding-top: 11px;
+  padding-bottom: 11px;
 }
