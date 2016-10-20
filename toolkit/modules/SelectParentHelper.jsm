@@ -25,7 +25,7 @@ this.SelectParentHelper = {
     populateChildren(menulist, items, selectedIndex, zoom);
   },
 
-  open: function(browser, menulist, rect) {
+  open: function(browser, menulist, rect, isOpenedViaTouch) {
     menulist.hidden = false;
     currentBrowser = browser;
     closedWithEnter = false;
@@ -49,6 +49,8 @@ this.SelectParentHelper = {
                      parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
       menupopup.style.maxHeight = (itemHeight * MAX_ROWS + bpHeight) + "px";
     }
+
+    menupopup.classList.toggle("isOpenedViaTouch", isOpenedViaTouch);
 
     let constraintRect = browser.getBoundingClientRect();
     constraintRect = new win.DOMRect(constraintRect.left + win.mozInnerScreenX,
