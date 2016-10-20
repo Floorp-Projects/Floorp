@@ -2908,9 +2908,13 @@ CanvasRenderingContext2D::UpdateFilter()
   // with.
   presShell->FlushPendingNotifications(Flush_Frames);
 
+  bool sourceGraphicIsTainted =
+    (mCanvasElement && mCanvasElement->IsWriteOnly());
+
   CurrentState().filter =
     nsFilterInstance::GetFilterDescription(mCanvasElement,
       CurrentState().filterChain,
+      sourceGraphicIsTainted,
       CanvasUserSpaceMetrics(GetSize(),
                              CurrentState().fontFont,
                              CurrentState().fontLanguage,
@@ -2918,8 +2922,7 @@ CanvasRenderingContext2D::UpdateFilter()
                              presShell->GetPresContext()),
       gfxRect(0, 0, mWidth, mHeight),
       CurrentState().filterAdditionalImages);
-  CurrentState().filterSourceGraphicTainted =
-    (mCanvasElement && mCanvasElement->IsWriteOnly());
+  CurrentState().filterSourceGraphicTainted = sourceGraphicIsTainted;
 }
 
 //
