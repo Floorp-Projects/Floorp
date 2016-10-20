@@ -849,6 +849,8 @@ add_task(function* test_input_spell_false() {
      "context-delete",      false,
      "---",                 null,
      "context-selectall",   true,
+     "---",                 null,
+     "spell-add-dictionaries-main",  true,
     ],
     {
       waitForSpellCheck: true
