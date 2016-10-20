@@ -390,13 +390,25 @@ class BasePopup {
 
 
       // Adjust the size of the browser based on its content's preferred size.
-      let {contentViewer} = this.browser.docShell;
-      let ratio = this.window.devicePixelRatio;
+      let width, height;
+      try {
+        let w = {}, h = {};
+        this.browser.docShell.contentViewer.getContentSize(w, h);
 
-      let w = {}, h = {};
-      contentViewer.getContentSizeConstrained(800 * ratio, 600 * ratio, w, h);
-      let width = Math.ceil(w.value / ratio);
-      let height = Math.ceil(h.value / ratio);
+        width = w.value / this.window.devicePixelRatio;
+        height = h.value / this.window.devicePixelRatio;
+
+        // The width calculation is imperfect, and is often a fraction of a pixel
+        // too narrow, even after taking the ceiling, which causes lines of text
+        // to wrap.
+        width += 1;
+      } catch (e) {
+        // getContentSize can throw
+        [width, height] = [400, 400];
+      }
+
+      width = Math.ceil(Math.min(width, 800));
+      height = Math.ceil(Math.min(height, 600));
 
       this.browser.style.width = `${width}px`;
       this.browser.style.height = `${height}px`;
