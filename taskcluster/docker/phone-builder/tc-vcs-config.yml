@@ -1,0 +1,40 @@
+# Default configuration used by the tc-vs tools these can be overridden by
+# passing the config you wish to use over the command line...
+git: git
+hg: hg
+
+repoCache:
+  # Repo url to clone when running repo init..
+  repoUrl: https://gerrit.googlesource.com/git-repo.git
+  # Version of repo to utilize...
+  repoRevision: master
+  # The root where all downloaded cache files are stored on the local machine...
+  cacheDir: '{{env.HOME}}/.tc-vcs-repo/'
+  # Name/prefixed used as part of the base url.
+  cacheName: sources/{{name}}.tar.gz
+  # Command used to upload the tarball
+  uploadTar: "curl --retry 5 --fail --header 'Content-Type: application/x-tar' --header 'Content-Encoding: gzip' -X PUT --data-binary @'{{source}}' '{{url}}'"
+  # Large http get requests are often slower using nodes built in http layer so
+  # we utilize a subprocess which is responsible for fetching...
+  get: curl --retry 5 --fail -L -o {{dest}} {{url}}
+  # Used to create clone tarball
+  compress: tar -czf {{dest}} {{source}}
+  # All cache urls use tar + gz this is the command used to extract those files
+  # downloaded by the "get" command.
+  extract: tar -x -z -C {{dest}} -f {{source}}
+
+cloneCache:
+  # The root where all downloaded cache files are stored on the local machine...
+  cacheDir: '{{env.HOME}}/.tc-vcs/'
+  # Command used to upload the tarball
+  uploadTar: "curl --retry 5 --fail --header 'Content-Type: application/x-tar' --header 'Content-Encoding: gzip' -X PUT --data-binary @'{{source}}' '{{url}}'"
+  # Large http get requests are often slower using nodes built in http layer so
+  # we utilize a subprocess which is responsible for fetching...
+  get: curl --retry 5 --fail -L -o {{dest}} {{url}}
+  # Used to create clone tarball
+  compress: tar -czf {{dest}} {{source}}
+  # All cache urls use tar + gz this is the command used to extract those files
+  # downloaded by the "get" command.
+  extract: tar -x -z --strip-components 1 -C {{dest}} -f {{source}}
+  # Name/prefixed used as part of the base url.
+  cacheName: clones/{{name}}.tar.gz
