@@ -9,6 +9,8 @@ const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Task } = require("devtools/shared/task");
 const { localizeMarkup } = require("devtools/shared/l10n");
+const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+const {L10N} = require("./l10n");
 
 function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
@@ -21,6 +23,14 @@ function NetMonitorPanel(iframeWindow, toolbox) {
   this._controller._toolbox = this._toolbox;
 
   EventEmitter.decorate(this);
+
+  this.shortcuts = new KeyShortcuts({
+    window: this.panelDoc.defaultView,
+  });
+  this.shortcuts.on(L10N.getStr("netmonitor.toolbar.filterFreetext.key"), (name, event) => {
+    event.preventDefault();
+    this._view.RequestsMenu.freetextFilterBox.focus();
+  });
 }
 
 exports.NetMonitorPanel = NetMonitorPanel;
@@ -67,6 +77,8 @@ NetMonitorPanel.prototype = {
     }
     let deferred = promise.defer();
     this._destroying = deferred.promise;
+
+    this.shortcuts.destroy();
 
     yield this._controller.shutdownNetMonitor();
     this.emit("destroyed");

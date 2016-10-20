@@ -3519,27 +3519,8 @@ fi # COMPILE_ENVIRONMENT
 dnl ========================================================
 dnl Gamepad support
 dnl ========================================================
-MOZ_GAMEPAD=
+MOZ_GAMEPAD=1
 MOZ_GAMEPAD_BACKEND=stub
-
-# Gamepad DOM is built on supported platforms by default.
-case "$OS_TARGET" in
-     WINNT|Linux)
-       MOZ_GAMEPAD=1
-       ;;
-     Darwin)
-       if test -z "$MOZ_IOS"; then
-         MOZ_GAMEPAD=1
-       fi
-       ;;
-     Android)
-       if test "$MOZ_WIDGET_TOOLKIT" != "gonk"; then
-         MOZ_GAMEPAD=1
-       fi
-       ;;
-     *)
-       ;;
-esac
 
 MOZ_ARG_DISABLE_BOOL(gamepad,
 [  --disable-gamepad   Disable gamepad support],

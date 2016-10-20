@@ -97,7 +97,7 @@ this.LoginManagerStorage_json.prototype = {
    */
   terminate() {
     this._store._saver.disarm();
-    return this._store.save();
+    return this._store._save();
   },
 
   addLogin(login) {

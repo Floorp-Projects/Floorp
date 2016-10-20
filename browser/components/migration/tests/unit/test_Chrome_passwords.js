@@ -1,3 +1,5 @@
+"use strict";
+
 Cu.import("resource://gre/modules/OSCrypto.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 

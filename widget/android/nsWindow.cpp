@@ -1,4 +1,5 @@
 /* -*- Mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * vim: set sw=4 ts=4 expandtab:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -344,7 +345,8 @@ public:
     static void Open(const jni::Class::LocalRef& aCls,
                      GeckoView::Window::Param aWindow,
                      GeckoView::Param aView, jni::Object::Param aCompositor,
-                     jni::String::Param aChromeURI);
+                     jni::String::Param aChromeURI,
+                     int32_t screenId);
 
     // Close and destroy the nsWindow.
     void Close();
@@ -1318,7 +1320,8 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  GeckoView::Window::Param aWindow,
                                  GeckoView::Param aView,
                                  jni::Object::Param aCompositor,
-                                 jni::String::Param aChromeURI)
+                                 jni::String::Param aChromeURI,
+                                 int32_t aScreenId)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1349,6 +1352,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     MOZ_ASSERT(widget);
 
     const auto window = static_cast<nsWindow*>(widget.get());
+    window->SetScreenId(aScreenId);
 
     // Attach a new GeckoView support object to the new window.
     window->mGeckoViewSupport  = mozilla::MakeUnique<GeckoViewSupport>(
@@ -1491,6 +1495,7 @@ nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent)
 }
 
 nsWindow::nsWindow() :
+    mScreenId(0), // Use 0 (primary screen) as the default value.
     mIsVisible(false),
     mParent(nullptr),
     mAwaitingFullScreen(false),
@@ -1652,19 +1657,11 @@ nsWindow::GetDPI()
 double
 nsWindow::GetDefaultScaleInternal()
 {
-    static double density = 0.0;
 
-    if (density != 0.0) {
-        return density;
-    }
-
-    density = GeckoAppShell::GetDensity();
-
-    if (!density) {
-        density = 1.0;
-    }
-
-    return density;
+    nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
+    MOZ_ASSERT(screen);
+    RefPtr<nsScreenAndroid> screenAndroid = (nsScreenAndroid*) screen.get();
+    return screenAndroid->GetDensity();
 }
 
 NS_IMETHODIMP
@@ -3596,7 +3593,20 @@ nsWindow::UpdateZoomConstraints(const uint32_t& aPresShellId,
 CompositorBridgeParent*
 nsWindow::GetCompositorBridgeParent() const
 {
-  return mCompositorSession ? mCompositorSession->GetInProcessBridge() : nullptr;
+    return mCompositorSession ? mCompositorSession->GetInProcessBridge() : nullptr;
+}
+
+already_AddRefed<nsIScreen>
+nsWindow::GetWidgetScreen()
+{
+    nsCOMPtr<nsIScreenManager> screenMgr =
+        do_GetService("@mozilla.org/gfx/screenmanager;1");
+    MOZ_ASSERT(screenMgr, "Failed to get nsIScreenManager");
+
+    nsCOMPtr<nsIScreen> screen;
+    screenMgr->ScreenForId(mScreenId, getter_AddRefs(screen));
+
+    return screen.forget();
 }
 
 jni::DependentRef<java::GeckoLayerClient>
