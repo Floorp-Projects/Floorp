@@ -128,13 +128,10 @@ SetImageRequest(function<void(imgRequestProxy*)> aCallback,
                 nsPresContext* aPresContext,
                 const nsCSSValue& aValue)
 {
-  imgRequestProxy* req = GetImageRequest(aPresContext, aValue);
-  if (aPresContext->IsDynamic()) {
-    aCallback(req);
-  } else {
-    RefPtr<imgRequestProxy> staticReq = nsContentUtils::GetStaticRequest(req);
-    aCallback(staticReq);
-  }
+  RefPtr<imgRequestProxy> req =
+    aValue.GetPossiblyStaticImageValue(aPresContext->Document(),
+                                       aPresContext);
+  aCallback(req);
 }
 
 template<typename ReferenceBox>
