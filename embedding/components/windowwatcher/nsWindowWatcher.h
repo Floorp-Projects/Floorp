@@ -84,6 +84,7 @@ protected:
                               bool aDialog,
                               bool aNavigate,
                               nsIArray* aArgv,
+                              bool aIsPopupSpam,
                               mozIDOMWindowProxy** aResult);
 
   static nsresult URIfromURL(const char* aURL,
