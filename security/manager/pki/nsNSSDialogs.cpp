@@ -7,34 +7,27 @@
 /*
  * Dialog services for PIP.
  */
+
+#include "nsNSSDialogs.h"
+
 #include "mozIDOMWindow.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "nsArray.h"
-#include "nsDateTimeFormatCID.h"
 #include "nsEmbedCID.h"
-#include "nsIComponentManager.h"
-#include "nsIDateTimeFormat.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIKeygenThread.h"
 #include "nsIPromptService.h"
 #include "nsIProtectedAuthThread.h"
-#include "nsIServiceManager.h"
 #include "nsIWindowWatcher.h"
 #include "nsIX509CertDB.h"
 #include "nsIX509Cert.h"
-#include "nsIX509CertValidity.h"
 #include "nsNSSDialogHelper.h"
-#include "nsNSSDialogs.h"
-#include "nsPromiseFlatString.h"
-#include "nsReadableUtils.h"
 #include "nsString.h"
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
-
-/* ==== */
 
 nsNSSDialogs::nsNSSDialogs()
 {
@@ -329,33 +322,18 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSDialogs::ViewCert(nsIInterfaceRequestor* ctx, nsIX509Cert* cert)
 {
-  nsCOMPtr<nsIMutableArray> dlgArray = nsArrayBase::Create();
-  if (!dlgArray) {
-    return NS_ERROR_FAILURE;
-  }
-  nsresult rv = dlgArray->AppendElement(cert, false);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsCOMPtr<nsIDialogParamBlock> dlgParamBlock(
-    do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
-  if (!dlgParamBlock) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = dlgParamBlock->SetObjects(dlgArray);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  // |ctx| is allowed to be null.
+  NS_ENSURE_ARG(cert);
 
   // Get the parent window for the dialog
   nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
   return nsNSSDialogHelper::openDialog(parent,
                                        "chrome://pippki/content/certViewer.xul",
-                                       dlgParamBlock,
-                                       false);
+                                       cert,
+                                       false /*modal*/);
 }
 
 NS_IMETHODIMP
