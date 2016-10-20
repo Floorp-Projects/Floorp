@@ -79,7 +79,8 @@ def run_and_prefix_output(prefix, args, extra_env=None):
     return p.wait()
 
 
-def vcs_checkout(source_repo, dest, base_repo=None, revision=None, branch=None):
+def vcs_checkout(source_repo, dest, store_path,
+                 base_repo=None, revision=None, branch=None):
     # Specify method to checkout a revision. This defaults to revisions as
     # SHA-1 strings, but also supports symbolic revisions like `tip` via the
     # branch flag.
@@ -113,15 +114,11 @@ def vcs_checkout(source_repo, dest, base_repo=None, revision=None, branch=None):
 
     hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
 
-    # Put the shared stores as a sibling of the checkout directory. This ensures
-    # they are on the same cache.
-    share_base = os.path.normpath(os.path.join(os.path.dirname(dest), b'hg-shared'))
-
     args = [
         b'/usr/bin/hg',
         b'--config', b'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
         b'robustcheckout',
-        b'--sharebase', share_base,
+        b'--sharebase', store_path,
         b'--purge',
     ]
 
@@ -268,16 +265,19 @@ def main(args):
         # And that it is owned by the appropriate user/group.
         os.chown(os.path.dirname(checkout), uid, gid)
 
-        # And ensure the shared store path (derived from the checkout path)
-        # exists and has proper permissions.
-        share_path = os.path.join(os.path.dirname(checkout), 'hg-shared')
+        # And ensure the shared store path exists and has proper permissions.
+        if 'HG_STORE_PATH' not in os.environ:
+            print('error: HG_STORE_PATH environment variable not set')
+            sys.exit(1)
+
+        store_path = os.environ['HG_STORE_PATH']
         try:
-            os.makedirs(share_path)
+            os.makedirs(store_path)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
 
-        os.chown(share_path, uid, gid)
+        os.chown(store_path, uid, gid)
 
     prepare_checkout_dir(args.vcs_checkout)
     prepare_checkout_dir(args.tools_checkout)
@@ -307,6 +307,7 @@ def main(args):
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
             os.environ['GECKO_HEAD_REPOSITORY'],
             args.vcs_checkout,
+            os.environ['HG_STORE_PATH'],
             base_repo=base_repo,
             revision=os.environ.get('GECKO_HEAD_REV'),
             branch=os.environ.get('GECKO_HEAD_REF'))
@@ -319,6 +320,7 @@ def main(args):
     if args.tools_checkout:
         vcs_checkout(b'https://hg.mozilla.org/build/tools',
                      args.tools_checkout,
+                     os.environ['HG_STORE_PATH'],
                      # Always check out the latest commit on default branch.
                      # This is non-deterministic!
                      branch=b'default')
