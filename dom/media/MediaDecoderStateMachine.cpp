@@ -562,7 +562,11 @@ class MediaDecoderStateMachine::DecodingState
   : public MediaDecoderStateMachine::StateObject
 {
 public:
-  explicit DecodingState(Master* aPtr) : StateObject(aPtr) {}
+  explicit DecodingState(Master* aPtr)
+    : StateObject(aPtr)
+    , mDormantTimer(OwnerThread())
+  {
+  }
 
   void Enter();
 
@@ -572,6 +576,7 @@ public:
       TimeDuration decodeDuration = TimeStamp::Now() - mDecodeStartTime;
       SLOG("Exiting DECODING, decoded for %.3lfs", decodeDuration.ToSeconds());
     }
+    mDormantTimer.Reset();
   }
 
   void Step() override
@@ -650,6 +655,12 @@ public:
       // Schedule Step() to check if we can start playback.
       mMaster->ScheduleStateMachine();
     }
+
+    if (aPlayState == MediaDecoder::PLAY_STATE_PAUSED) {
+      StartDormantTimer();
+    } else {
+      mDormantTimer.Reset();
+    }
   }
 
   void DumpDebugInfo() override
@@ -716,6 +727,30 @@ private:
     }
   }
 
+  void StartDormantTimer()
+  {
+    auto timeout = MediaPrefs::DormantOnPauseTimeout();
+    if (timeout < 0) {
+      // Disabled when timeout is negative.
+      return;
+    } else if (timeout == 0) {
+      // Enter dormant immediately without scheduling a timer.
+      HandleDormant(true);
+      return;
+    }
+
+    TimeStamp target = TimeStamp::Now() +
+      TimeDuration::FromMilliseconds(timeout);
+
+    mDormantTimer.Ensure(target,
+      [this] () {
+        mDormantTimer.CompleteRequest();
+        HandleDormant(true);
+      }, [this] () {
+        mDormantTimer.CompleteRequest();
+      });
+  }
+
   // Time at which we started decoding.
   TimeStamp mDecodeStartTime;
 
@@ -727,6 +762,9 @@ private:
   // logic during the first few frames of our decode. This occurs during
   // playback.
   bool mIsPrerolling = true;
+
+  // Fired when playback is paused for a while to enter dormant.
+  DelayedScheduler mDormantTimer;
 };
 
 /**
@@ -1442,6 +1480,11 @@ DecodingState::Enter()
   mMaster->DispatchDecodeTasksIfNeeded();
 
   mMaster->ScheduleStateMachine();
+
+  // Will enter dormant when playback is paused for a while.
+  if (mMaster->mPlayState == MediaDecoder::PLAY_STATE_PAUSED) {
+    StartDormantTimer();
+  }
 }
 
 RefPtr<MediaDecoder::SeekPromise>
