@@ -24,9 +24,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/osfile.jsm"); /* globals OS */
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource:///modules/MigrationUtils.jsm");
+Cu.import("resource:///modules/MigrationUtils.jsm"); /* globals MigratorPrototype */
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
@@ -66,7 +66,7 @@ function getDataFolder(subfoldersWin, subfoldersOSX, subfoldersUnix) {
  */
 function chromeTimeToDate(aTime)
 {
-  return new Date((aTime * S100NS_PER_MS - S100NS_FROM1601TO1970 ) / 10000);
+  return new Date((aTime * S100NS_PER_MS - S100NS_FROM1601TO1970) / 10000);
 }
 
 /**
@@ -137,11 +137,10 @@ ChromeProfileMigrator.prototype.getResources =
 ChromeProfileMigrator.prototype.getLastUsedDate =
   function Chrome_getLastUsedDate() {
     let datePromises = this.sourceProfiles.map(profile => {
-      let profileFolder = this._chromeUserDataFolder.clone();
       let basePath = OS.Path.join(this._chromeUserDataFolder.path, profile.id);
       let fileDatePromises = ["Bookmarks", "History", "Cookies"].map(leafName => {
         let path = OS.Path.join(basePath, leafName);
-        return OS.File.stat(path).catch(_ => null).then(info => {
+        return OS.File.stat(path).catch(() => null).then(info => {
           return info ? info.lastModificationDate : 0;
         });
       });
@@ -200,10 +199,11 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceProfiles", {
     }
 
     // Only list profiles from which any data can be imported
-    return this.__sourceProfiles = profiles.filter(function(profile) {
+    this.__sourceProfiles = profiles.filter(function(profile) {
       let resources = this.getResources(profile);
       return resources && resources.length > 0;
     }, this);
+    return this.__sourceProfiles;
   }
 });
 
@@ -215,7 +215,7 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceHomePageURL", {
       // XXX reading and parsing JSON is synchronous.
       let fstream = Cc[FILE_INPUT_STREAM_CID].
                     createInstance(Ci.nsIFileInputStream);
-      fstream.init(file, -1, 0, 0);
+      fstream.init(prefsFile, -1, 0, 0);
       try {
         return JSON.parse(
           NetUtil.readInputStreamToString(fstream, fstream.available(),
@@ -249,20 +249,20 @@ function GetBookmarksResource(aProfileFolder) {
     migrate: function(aCallback) {
       return Task.spawn(function* () {
         let gotErrors = false;
-        let errorGatherer = () => gotErrors = true;
-        let jsonStream = yield new Promise(resolve =>
-          NetUtil.asyncFetch({ uri: NetUtil.newURI(bookmarksFile),
-                               loadUsingSystemPrincipal: true
-                             },
-                             (inputStream, resultCode) => {
-                               if (Components.isSuccessCode(resultCode)) {
-                                 resolve(inputStream);
-                               } else {
-                                 reject(new Error("Could not read Bookmarks file"));
-                               }
-                             }
-          )
-        );
+        let errorGatherer = function() { gotErrors = true };
+        let jsonStream = yield new Promise((resolve, reject) => {
+          let options = {
+            uri: NetUtil.newURI(bookmarksFile),
+            loadUsingSystemPrincipal: true
+          };
+          NetUtil.asyncFetch(options, (inputStream, resultCode) => {
+            if (Components.isSuccessCode(resultCode)) {
+              resolve(inputStream);
+            } else {
+              reject(new Error("Could not read Bookmarks file"));
+            }
+          });
+        });
 
         // Parse Chrome bookmark file that is JSON format
         let bookmarkJSON = NetUtil.readInputStreamToString(
@@ -293,10 +293,10 @@ function GetBookmarksResource(aProfileFolder) {
           yield insertBookmarkItems(parentGuid, roots.other.children, errorGatherer);
         }
         if (gotErrors) {
-          throw "The migration included errors.";
+          throw new Error("The migration included errors.");
         }
       }.bind(this)).then(() => aCallback(true),
-                          e => aCallback(false));
+                         () => aCallback(false));
     }
   };
 }
@@ -312,12 +312,6 @@ function GetHistoryResource(aProfileFolder) {
 
     migrate(aCallback) {
       Task.spawn(function* () {
-        let dbOptions = {
-          readOnly: true,
-          ignoreLockingMode: true,
-          path: historyFile.path
-        };
-
         let rows = yield MigrationUtils.getRowsFromDBWithoutLocks(historyFile.path, "Chrome history",
           `SELECT url, title, last_visit_time, typed_count FROM urls WHERE hidden = 0`);
         let places = [];
@@ -362,7 +356,7 @@ function GetHistoryResource(aProfileFolder) {
             });
           });
         }
-      }).then(() => { aCallback(true); },
+      }).then(() => { aCallback(true) },
               ex => {
                 Cu.reportError(ex);
                 aCallback(false);
@@ -386,9 +380,9 @@ function GetCookiesResource(aProfileFolder) {
        `SELECT host_key, name, value, path, expires_utc, secure, httponly, encrypted_value
         FROM cookies
         WHERE length(encrypted_value) = 0`).catch(ex => {
-        Cu.reportError(ex);
-        aCallback(false);
-      });
+          Cu.reportError(ex);
+          aCallback(false);
+        });
       // If the promise was rejected we will have already called aCallback,
       // so we can just return here.
       if (!rows) {
@@ -437,9 +431,9 @@ function GetWindowsPasswordsResource(aProfileFolder) {
        `SELECT origin_url, action_url, username_element, username_value,
         password_element, password_value, signon_realm, scheme, date_created,
         times_used FROM logins WHERE blacklisted_by_user = 0`).catch(ex => {
-        Cu.reportError(ex);
-        aCallback(false);
-      });
+          Cu.reportError(ex);
+          aCallback(false);
+        });
       // If the promise was rejected we will have already called aCallback,
       // so we can just return here.
       if (!rows) {

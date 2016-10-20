@@ -479,6 +479,7 @@ add_task(function* prohibit_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("localhost", "http://localhost/", { heuristic: true }),
+      makeSearchMatch("localhost", { engineName: ENGINE_NAME, heuristic: false })
     ],
   });
 
@@ -526,6 +527,7 @@ add_task(function* prohibit_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("localhost", "http://localhost/", { heuristic: true }),
+      makeSearchMatch("localhost", { engineName: ENGINE_NAME, heuristic: false })
     ],
   });
 
@@ -534,6 +536,7 @@ add_task(function* prohibit_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("somethingelse", "http://somethingelse/", { heuristic: true }),
+      makeSearchMatch("somethingelse", { engineName: ENGINE_NAME, heuristic: false })
     ],
   });
 

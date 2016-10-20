@@ -196,6 +196,16 @@ MediaKeys::StorePromise(DetailedPromise* aPromise)
   return id;
 }
 
+void
+MediaKeys::ConnectPendingPromiseIdWithToken(PromiseId aId, uint32_t aToken)
+{
+  // Should only be called from MediaKeySession::GenerateRequest and
+  // MediaKeySession::Load.
+  mPromiseIdToken.Put(aId, aToken);
+  EME_LOG("MediaKeys[%p]::ConnectPendingPromiseIdWithToken() id=%u => token(%u)",
+          this, aId, aToken);
+}
+
 already_AddRefed<DetailedPromise>
 MediaKeys::RetrievePromise(PromiseId aId)
 {
@@ -219,12 +229,16 @@ MediaKeys::RejectPromise(PromiseId aId, nsresult aExceptionCode,
   if (!promise) {
     return;
   }
-  if (mPendingSessions.Contains(aId)) {
-    // This promise could be a createSession or loadSession promise,
-    // so we might have a pending session waiting to be resolved into
-    // the promise on success. We've been directed to reject to promise,
-    // so we can throw away the corresponding session object.
-    mPendingSessions.Remove(aId);
+
+  // This promise could be a createSession or loadSession promise,
+  // so we might have a pending session waiting to be resolved into
+  // the promise on success. We've been directed to reject to promise,
+  // so we can throw away the corresponding session object.
+  uint32_t token = 0;
+  if (mPromiseIdToken.Get(aId, &token)) {
+    MOZ_ASSERT(mPendingSessions.Contains(token));
+    mPendingSessions.Remove(token);
+    mPromiseIdToken.Remove(aId);
   }
 
   MOZ_ASSERT(NS_FAILED(aExceptionCode));
@@ -264,29 +278,36 @@ MediaKeys::ResolvePromise(PromiseId aId)
   EME_LOG("MediaKeys[%p]::ResolvePromise(%d)", this, aId);
 
   RefPtr<DetailedPromise> promise(RetrievePromise(aId));
+  MOZ_ASSERT(!mPromises.Contains(aId));
   if (!promise) {
     return;
   }
-  if (mPendingSessions.Contains(aId)) {
-    // We should only resolve LoadSession calls via this path,
-    // not CreateSession() promises.
-    RefPtr<MediaKeySession> session;
-    if (!mPendingSessions.Get(aId, getter_AddRefs(session)) ||
-        !session ||
-        session->GetSessionId().IsEmpty()) {
-      NS_WARNING("Received activation for non-existent session!");
-      promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
-                           NS_LITERAL_CSTRING("CDM LoadSession() returned a different session ID than requested"));
-      mPendingSessions.Remove(aId);
-      return;
-    }
-    mPendingSessions.Remove(aId);
-    mKeySessions.Put(session->GetSessionId(), session);
-    promise->MaybeResolve(session);
-  } else {
+
+  uint32_t token = 0;
+  if (!mPromiseIdToken.Get(aId, &token)) {
     promise->MaybeResolveWithUndefined();
+    return;
+  } else if (!mPendingSessions.Contains(token)) {
+    // Pending session for CreateSession() should be removed when sessionId
+    // is ready.
+    promise->MaybeResolveWithUndefined();
+    mPromiseIdToken.Remove(aId);
+    return;
   }
-  MOZ_ASSERT(!mPromises.Contains(aId));
+  mPromiseIdToken.Remove(aId);
+
+  // We should only resolve LoadSession calls via this path,
+  // not CreateSession() promises.
+  RefPtr<MediaKeySession> session;
+  mPendingSessions.Remove(token, getter_AddRefs(session));
+  if (!session || session->GetSessionId().IsEmpty()) {
+    NS_WARNING("Received activation for non-existent session!");
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
+                         NS_LITERAL_CSTRING("CDM LoadSession() returned a different session ID than requested"));
+    return;
+  }
+  mKeySessions.Put(session->GetSessionId(), session);
+  promise->MaybeResolve(session);
 }
 
 class MediaKeysGMPCrashHelper : public GMPCrashHelper

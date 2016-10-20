@@ -140,7 +140,7 @@ this.MigratorPrototype = {
    *        aProfile is a value returned by the sourceProfiles getter (see
    *        above).
    */
-  getResources: function MP_getResources(aProfile) {
+  getResources: function MP_getResources(/* aProfile */) {
     throw new Error("getResources must be overridden");
   },
 
@@ -201,7 +201,7 @@ this.MigratorPrototype = {
       return [];
     }
     let types = resources.map(r => r.type);
-    return types.reduce((a, b) => a |= b, 0);
+    return types.reduce((a, b) => { a |= b; return a }, 0);
   },
 
   getKey: function MP_getKey() {
@@ -261,7 +261,7 @@ this.MigratorPrototype = {
         if (!resourcesGroupedByItems.has(resource.type)) {
           resourcesGroupedByItems.set(resource.type, new Set());
         }
-        resourcesGroupedByItems.get(resource.type).add(resource)
+        resourcesGroupedByItems.get(resource.type).add(resource);
       });
 
       if (resourcesGroupedByItems.size == 0)
@@ -269,7 +269,7 @@ this.MigratorPrototype = {
 
       let notify = function(aMsg, aItemType) {
         Services.obs.notifyObservers(null, aMsg, aItemType);
-      }
+      };
 
       notify("Migration:Started");
       for (let [key, value] of resourcesGroupedByItems) {
@@ -298,7 +298,7 @@ this.MigratorPrototype = {
               }
             }
             completeDeferred.resolve();
-          }
+          };
 
           // If migrate throws, an error occurred, and the callback
           // (itemMayBeDone) might haven't been called.
@@ -398,7 +398,8 @@ this.MigratorPrototype = {
     else {
       this._resourcesByProfile = { };
     }
-    return this._resourcesByProfile[profileKey] = this.getResources(aProfile);
+    this._resourcesByProfile[profileKey] = this.getResources(aProfile);
+    return this._resourcesByProfile[profileKey];
   }
 };
 
@@ -463,7 +464,7 @@ this.MigrationUtils = Object.freeze({
       // blocks, because if aCallback throws, we may end up calling aCallback
       // twice.
       aCallback(success);
-    }
+    };
   },
 
   /**
@@ -612,7 +613,10 @@ this.MigrationUtils = Object.freeze({
   },
 
   get _migrators() {
-    return gMigrators ? gMigrators : gMigrators = new Map();
+    if (!gMigrators) {
+      gMigrators = new Map();
+    }
+    return gMigrators;
   },
 
   /*
@@ -677,13 +681,12 @@ this.MigrationUtils = Object.freeze({
       "360\u5b89\u5168\u6d4f\u89c8\u5668": "360se",
     };
 
-    let browserDesc = "";
     let key = "";
     try {
       let browserDesc =
-        Cc["@mozilla.org/uriloader/external-protocol-service;1"].
-        getService(Ci.nsIExternalProtocolService).
-        getApplicationDescription("http");
+        Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+          .getService(Ci.nsIExternalProtocolService)
+          .getApplicationDescription("http");
       key = APP_DESC_TO_KEY[browserDesc] || "";
     }
     catch (ex) {
@@ -795,6 +798,8 @@ this.MigrationUtils = Object.freeze({
                 comtaminatedVal = null;
                 break;
               }
+              /* intentionally falling through to error out here for
+                 non-null/undefined things: */
             default:
               throw new Error("Unexpected parameter type " + (typeof item) + ": " + item);
           }
