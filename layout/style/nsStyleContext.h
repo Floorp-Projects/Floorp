@@ -673,6 +673,8 @@ private:
           newData =                                                     \
             Servo_GetStyle##name_(mSource.AsServoComputedValues());     \
         }                                                               \
+        /* perform any remaining main thread work on the struct */      \
+        const_cast<nsStyle##name_*>(newData)->FinishStyle(PresContext());\
         /* the Servo-backed StyleContextSource owns the struct */       \
         AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                       \
       }                                                                 \
@@ -701,6 +703,8 @@ private:
       } else {                                                          \
         newData =                                                       \
           Servo_GetStyle##name_(mSource.AsServoComputedValues());       \
+        /* perform any remaining main thread work on the struct */      \
+        const_cast<nsStyle##name_*>(newData)->FinishStyle(PresContext());\
         /* The Servo-backed StyleContextSource owns the struct.         \
          *                                                              \
          * XXXbholley: Unconditionally caching reset structs here       \
