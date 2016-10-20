@@ -32,11 +32,11 @@ MediaStreamPlayback.prototype = {
    * @param {Boolean} isResume specifies if this media element is being resumed
    *                           from a previous run
    */
-  playMedia : function(isResume) {
+  playMediaWithMediaStreamTracksStop : function(isResume) {
     this.startMedia(isResume);
     return this.verifyPlaying()
       .then(() => this.stopTracksForStreamInMediaPlayback())
-      .then(() => this.detachFromMediaElement());
+      .then(() => this.stopMediaElement());
   },
 
   /**
@@ -80,15 +80,15 @@ MediaStreamPlayback.prototype = {
 
   /**
    * Starts media with a media stream, runs it until a canplaythrough and
-   * timeupdate event fires, and detaches from the element without stopping media.
+   * timeupdate event fires, and stops the media.
    *
    * @param {Boolean} isResume specifies if this media element is being resumed
    *                           from a previous run
    */
-  playMediaWithoutStoppingTracks : function(isResume) {
+  playMedia : function(isResume) {
     this.startMedia(isResume);
     return this.verifyPlaying()
-      .then(() => this.detachFromMediaElement());
+      .then(() => this.stopMediaElement());
   },
 
   /**
@@ -156,12 +156,12 @@ MediaStreamPlayback.prototype = {
   },
 
   /**
-   * Detaches from the element without stopping the media.
+   * Stops the media with the associated stream.
    *
    * Precondition: The media stream and element should both be actively
    *               being played.
    */
-  detachFromMediaElement : function() {
+  stopMediaElement : function() {
     this.mediaElement.pause();
     this.mediaElement.srcObject = null;
   }
@@ -198,7 +198,7 @@ LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype
       this.startMedia(isResume);
       return this.verifyPlaying()
         .then(() => this.deprecatedStopStreamInMediaPlayback())
-        .then(() => this.detachFromMediaElement());
+        .then(() => this.stopMediaElement());
     }
   },
 
