@@ -905,6 +905,14 @@ const Require = iced(function Require(loader, requirer) {
     return uri;
   }
 
+  // This is like webpack's require.context.  It returns a new require
+  // function that prepends the prefix to any requests.
+  require.context = prefix => {
+    return id => {
+      return require(prefix + id);
+    };
+  };
+
   // Make `require.main === module` evaluate to true in main module scope.
   require.main = loader.main === requirer ? requirer : undefined;
   return iced(require);
