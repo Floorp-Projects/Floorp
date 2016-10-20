@@ -170,7 +170,16 @@ public class RecordsChannel implements
     this.consumer = new ConcurrentRecordConsumer(this);
     ThreadPool.run(this.consumer);
     waitingForQueueDone = true;
-    source.fetchSince(source.getLastSyncTimestamp(), this);
+
+    // Fetch all records that were modified since our previous flow. If our previous flow succeeded,
+    // we will use source's last-sync timestamp. If our previous flow didn't complete, resume it,
+    // starting from sink's high water mark timestamp.
+    // If there was no previous flow (first sync, or data was cleared...), fetch everything.
+    // Resuming a flow is supported for buffered RepositorySessions. We degrade gracefully otherwise.
+    final long highWaterMark = sink.getHighWaterMarkTimestamp();
+    final long lastSync = source.getLastSyncTimestamp();
+    final long sinceTimestamp = Math.max(highWaterMark, lastSync);
+    source.fetchSince(sinceTimestamp, this);
   }
 
   /**
