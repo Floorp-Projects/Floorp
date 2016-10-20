@@ -10,7 +10,7 @@ document them and their appropriate use.
 Version Control Caches
 ======================
 
-level-{{level}}-hg-shared
+``level-{{level}}-hg-shared``
    This cache holds Mercurial *stores*: this is the historical data of a
    Mercurial repository (as opposed to a checkout or working directory).
 
@@ -26,18 +26,31 @@ level-{{level}}-hg-shared
    given changeset is only stored once in the cache. This is why there is
    no ``{{project}}`` component in the cache name.
 
-level-{{level}}-checkouts
-   This cache holds version control checkouts or working directories. This
-   is distinct from the cache that holds the version control *store* data.
+``level-{{level}}-checkouts``
+   This cache holds version control checkouts, each in a subdirectory named
+   after the repo (e.g., ``gecko``).
 
-   Ideally, checkouts should be read-only. If a task needs to create new
-   files from content of a checkout, this content should be written in
-   a separate directory/cache (like a workspace).
+   Checkouts should be read-only. If a task needs to create new files from
+   content of a checkout, this content should be written in a separate
+   directory/cache (like a workspace).
+
+``level-{{level}}-{{project}}-tc-vcs`` (deprecated)
+    This cache is used internally by ``tc-vcs``.  This tool is deprecated and
+    should be replaced with ``hg robustcheckout``.
 
 Workspace Caches
 ================
 
-level-{{level}}-*-workspace
+``level-{{level}}-*-workspace``
    These caches (of various names typically ending with ``workspace``)
    contain state to be shared between task invocations. Use cases are
    dependent on the task.
+
+Other
+=====
+
+``tooltool-cache``
+    Tooltool invocations should use this cache.  Tooltool will store files here
+    indexed by their hash, and will verify hashes before copying files from
+    this directory, so there is no concern with sharing the cache between jobs
+    of different levels.
