@@ -33,6 +33,7 @@ class HTMLMediaElement;
 typedef nsRefPtrHashtable<nsStringHashKey, MediaKeySession> KeySessionHashMap;
 typedef nsRefPtrHashtable<nsUint32HashKey, dom::DetailedPromise> PromiseHashMap;
 typedef nsRefPtrHashtable<nsUint32HashKey, MediaKeySession> PendingKeySessionsHashMap;
+typedef nsDataHashtable<nsUint32HashKey, uint32_t> PendingPromiseIdTokenHashMap;
 typedef uint32_t PromiseId;
 
 // This class is used on the main thread only.
@@ -107,6 +108,11 @@ public:
   // promises to be resolved.
   PromiseId StorePromise(DetailedPromise* aPromise);
 
+  // Stores a map for promise id and session token, and it will be used to
+  // remove the pending sessions by promise id while creating/loading various
+  // sessions in the same time.
+  void ConnectPendingPromiseIdWithToken(PromiseId aId, uint32_t aToken);
+
   // Reject promise with DOMException corresponding to aExceptionCode.
   void RejectPromise(PromiseId aId, nsresult aExceptionCode,
                      const nsCString& aReason);
@@ -151,6 +157,8 @@ private:
 
   const bool mDistinctiveIdentifierRequired;
   const bool mPersistentStateRequired;
+
+  PendingPromiseIdTokenHashMap mPromiseIdToken;
 };
 
 } // namespace dom
