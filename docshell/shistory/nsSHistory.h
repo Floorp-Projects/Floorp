@@ -53,9 +53,9 @@ protected:
 
   // Could become part of nsIWebNavigation
   NS_IMETHOD GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult);
-  nsresult CompareFrames(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
-                         nsIDocShell* aRootDocShell, long aLoadType,
-                         bool* aIsFrameFound);
+  nsresult LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
+                                nsIDocShell* aRootDocShell, long aLoadType,
+                                bool& aDifferenceFound);
   nsresult InitiateLoad(nsISHEntry* aFrameEntry, nsIDocShell* aFrameDS,
                         long aLoadType);
 
