@@ -35,11 +35,12 @@ def set_treeherder_machine_platform(config, tests):
     # platforms
     translation = {
         'linux64-asan/opt': 'linux64/asan',
-        'linux64-pgo/opt': 'linux64/pgo',
+        'linux64-pgo/opt': 'linux64/pgo'
     }
     for test in tests:
         build_platform = test['build-platform']
-        test['treeherder-machine-platform'] = translation.get(build_platform, build_platform)
+        test_platform = test['test-platform']
+        test['treeherder-machine-platform'] = translation.get(build_platform, test_platform)
         yield test
 
 
@@ -83,7 +84,11 @@ def split_e10s(config, tests):
 @transforms.add
 def allow_software_gl_layers(config, tests):
     for test in tests:
-        allow = get_keyed_by(item=test, field='allow-software-gl-layers',
+
+        # since this value defaults to true, but is not applicable on windows,
+        # it's overriden for that platform here.
+        allow = not test['test-platform'].startswith('win') \
+            and get_keyed_by(item=test, field='allow-software-gl-layers',
                              item_name=test['test-name'])
         if allow:
             assert test['instance-size'] != 'legacy',\
@@ -93,4 +98,14 @@ def allow_software_gl_layers(config, tests):
             test['mozharness'].setdefault('extra-options', [])\
                               .append("--allow-software-gl-layers")
 
+        yield test
+
+
+@transforms.add
+def add_os_groups(config, tests):
+    for test in tests:
+        if test['test-platform'].startswith('win'):
+            groups = get_keyed_by(item=test, field='os-groups', item_name=test['test-name'])
+            if groups:
+                test['os-groups'] = groups
         yield test

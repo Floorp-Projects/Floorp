@@ -205,7 +205,7 @@ task_description_schema = Schema({
         Required('implementation'): 'generic-worker',
 
         # command is a list of commands to run, sequentially
-        'command': [basestring],
+        'command': [taskref_or_string],
 
         # artifacts to extract from the task image after completion; note that artifacts
         # for the generic worker cannot have names
@@ -222,6 +222,9 @@ task_description_schema = Schema({
 
         # the maximum time to run, in seconds
         'max-run-time': int,
+
+        # os user groups for test task workers
+        Optional('os-groups', default=[]): [basestring],
     }, {
         Required('implementation'): 'buildbot-bridge',
 
@@ -400,8 +403,9 @@ def build_generic_worker_payload(config, task, task_def):
     task_def['payload'] = {
         'command': worker['command'],
         'artifacts': artifacts,
-        'env': worker['env'],
+        'env': worker.get('env', {}),
         'maxRunTime': worker['max-run-time'],
+        'osGroups': worker.get('os-groups', []),
     }
 
     if 'retry-exit-status' in worker:
