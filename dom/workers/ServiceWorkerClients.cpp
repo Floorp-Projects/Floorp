@@ -613,6 +613,7 @@ private:
                            // opener anyway, and we _do_ want the returned
                            // window.
                            /* aForceNoOpener = */ false,
+                           /* aLoadInfp = */ nullptr,
                            getter_AddRefs(newWindow));
       nsCOMPtr<nsPIDOMWindowOuter> pwindow = nsPIDOMWindowOuter::From(newWindow);
       pwindow.forget(aWindow);

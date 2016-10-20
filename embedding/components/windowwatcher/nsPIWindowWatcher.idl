@@ -17,6 +17,7 @@ interface nsIWebBrowserChrome;
 interface nsIDocShellTreeItem;
 interface nsIArray;
 interface nsITabParent;
+interface nsIDocShellLoadInfo;
 
 [uuid(d162f9c4-19d5-4723-931f-f1e51bfa9f68)]
 
@@ -61,6 +62,11 @@ interface nsPIWindowWatcher : nsISupports
                             looking for existing windows with the given name,
                             not setting an opener on the newly opened window,
                             and returning null from this method.
+      @param aLoadInfo if aNavigate is true, this allows the caller to pass in
+                       an nsIDocShellLoadInfo to use for the navigation.
+                       Callers can pass in null if they want the windowwatcher
+                       to just construct a loadinfo itself.  If aNavigate is
+                       false, this argument is ignored.
 
       @return the new window
 
@@ -79,7 +85,8 @@ interface nsPIWindowWatcher : nsISupports
                                  in boolean aNavigate,
                                  in nsISupports aArgs,
                                  in boolean aIsPopupSpam,
-                                 in boolean aForceNoOpener);
+                                 in boolean aForceNoOpener,
+                                 in nsIDocShellLoadInfo aLoadInfo);
 
   /**
    * Opens a new window using the most recent non-private browser
