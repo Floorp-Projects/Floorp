@@ -25,7 +25,8 @@ add_task(function* test_tab_matches() {
     search: "abc.com",
     searchParam: "enable-actions",
     matches: [ makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }) ]
+               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+               makeSearchMatch("abc.com", { heuristic: false }) ]
   });
 
   do_print("three results, one tab match");

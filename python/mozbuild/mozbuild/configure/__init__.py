@@ -475,8 +475,13 @@ class ConfigureSandbox(dict):
         when = self._conditions.get(option)
         if (when and not self._value_for(when, need_help_dependency=True) and
             value is not None and value.origin != 'default'):
+            if value.origin == 'environment':
+                # The value we return doesn't really matter, because of the
+                # requirement for @depends to have the same when.
+                return None
             raise InvalidOptionError(
-                '%s is not available in this configuration' % option_string)
+                '%s is not available in this configuration'
+                % option_string.split('=', 1)[0])
 
         return value
 

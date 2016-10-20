@@ -10,6 +10,7 @@ MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
 TESTING_JS_MODULES += [
+    'tests/MockDocument.jsm',
     'tests/PromiseTestUtils.jsm',
     'tests/xpcshell/TestIntegration.jsm',
 ]
