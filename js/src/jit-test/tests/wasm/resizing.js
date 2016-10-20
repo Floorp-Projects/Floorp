@@ -14,7 +14,7 @@ const RuntimeError = WebAssembly.RuntimeError;
 // Test for stale heap pointers after resize
 
 // Grow directly from builtin call:
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
     (memory 1)
     (func $test (result i32)
         (i32.store (i32.const 0) (i32.const 1))
@@ -26,8 +26,8 @@ assertEq(wasmEvalText(`(module
             (i32.add
                 (i32.load (i32.const 65532))
                 (i32.load (i32.const 6553596)))))
-    (export "test" $test)
-)`).exports.test(), 111);
+    (export "run" $test)
+)`, 111);
 
 // Grow during import call:
 var exports = wasmEvalText(`(module
