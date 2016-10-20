@@ -61,9 +61,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   }),
 
   /**
-   * Reorders a folder's children, based on their order in the array of GUIDs.
-   * This method is similar to `Bookmarks.reorder`, but leaves missing entries
-   * in place instead of moving them to the end of the folder.
+   * Reorders a folder's children, based on their order in the array of sync
+   * IDs.
    *
    * Sync uses this method to reorder all synced children after applying all
    * incoming records.
@@ -74,39 +73,12 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     for (let guid of childGuids) {
       PlacesUtils.SYNC_BOOKMARK_VALIDATORS.guid(guid);
     }
-
     if (parentGuid == PlacesUtils.bookmarks.rootGuid) {
       // Reordering roots doesn't make sense, but Sync will do this on the
       // first sync.
       return Promise.resolve();
     }
-    return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: order",
-      Task.async(function* (db) {
-        let children = yield fetchAllChildren(db, parentGuid);
-        if (!children.length) {
-          return;
-        }
-
-        // Reorder the list, ignoring missing children.
-        let delta = 0;
-        for (let i = 0; i < childGuids.length; ++i) {
-          let guid = childGuids[i];
-          let child = findChildByGuid(children, guid);
-          if (!child) {
-            delta++;
-            BookmarkSyncLog.trace(`order: Ignoring missing child ${guid}`);
-            continue;
-          }
-          let newIndex = i - delta;
-          updateChildIndex(children, child, newIndex);
-        }
-        children.sort((a, b) => a.index - b.index);
-
-        // Update positions.
-        let orderedChildrenGuids = children.map(({ guid }) => guid);
-        yield PlacesUtils.bookmarks.reorder(parentGuid, orderedChildrenGuids);
-      })
-    );
+    return PlacesUtils.bookmarks.reorder(parentGuid, childGuids);
   }),
 
   /**
@@ -250,31 +222,6 @@ var fetchAllChildren = Task.async(function* (db, parentGuid) {
     guid: row.getResultByName("guid"),
   }));
 });
-
-function findChildByGuid(children, guid) {
-  return children.find(child => child.guid == guid);
-}
-
-function findChildByIndex(children, index) {
-  return children.find(child => child.index == index);
-}
-
-// Sets a child record's index and updates its sibling's indices.
-function updateChildIndex(children, child, newIndex) {
-  let siblings = [];
-  let lowIndex = Math.min(child.index, newIndex);
-  let highIndex = Math.max(child.index, newIndex);
-  for (; lowIndex < highIndex; ++lowIndex) {
-    let sibling = findChildByIndex(children, lowIndex);
-    siblings.push(sibling);
-  }
-
-  let sign = newIndex < child.index ? +1 : -1;
-  for (let sibling of siblings) {
-    sibling.index += sign;
-  }
-  child.index = newIndex;
-}
 
 // A helper for whenever we want to know if a GUID doesn't exist in the places
 // database. Primarily used to detect orphans on incoming records.
