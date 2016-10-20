@@ -1511,36 +1511,36 @@ CacheEntry_setBytecode(JSContext* cx, HandleObject cache, uint8_t* buffer, uint3
 }
 
 static bool
-ConvertTranscodeResultToJSException(JSContext* cx, TranscodeResult rv)
+ConvertTranscodeResultToJSException(JSContext* cx, JS::TranscodeResult rv)
 {
     switch (rv) {
-      case TranscodeResult_Ok:
+      case JS::TranscodeResult_Ok:
         return true;
 
       default:
         MOZ_FALLTHROUGH;
-      case TranscodeResult_Failure:
+      case JS::TranscodeResult_Failure:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "generic warning");
         return false;
-      case TranscodeResult_Failure_BadBuildId:
+      case JS::TranscodeResult_Failure_BadBuildId:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "the build-id does not match");
         return false;
-      case TranscodeResult_Failure_RunOnceNotSupported:
+      case JS::TranscodeResult_Failure_RunOnceNotSupported:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "run-once script are not supported by XDR");
         return false;
-      case TranscodeResult_Failure_AsmJSNotSupported:
+      case JS::TranscodeResult_Failure_AsmJSNotSupported:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "Asm.js is not supported by XDR");
         return false;
-      case TranscodeResult_Failure_UnknownClassKind:
+      case JS::TranscodeResult_Failure_UnknownClassKind:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "Unknown class kind, go fix it.");
         return false;
 
-      case TranscodeResult_Throw:
+      case JS::TranscodeResult_Throw:
         MOZ_ASSERT(cx->isExceptionPending());
         return false;
     }
@@ -1663,15 +1663,19 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     if (!codeChars.initTwoByte(cx, code))
         return false;
 
-    uint32_t loadLength = 0;
-    uint8_t* loadBuffer = nullptr;
-    uint32_t saveLength = 0;
-    ScopedJSFreePtr<uint8_t> saveBuffer;
+    JS::TranscodeBuffer loadBuffer;
+    JS::TranscodeBuffer saveBuffer;
 
     if (loadBytecode) {
-        loadBuffer = CacheEntry_getBytecode(cacheEntry, &loadLength);
-        if (!loadBuffer)
+        uint32_t loadLength = 0;
+        uint8_t* loadData = nullptr;
+        loadData = CacheEntry_getBytecode(cacheEntry, &loadLength);
+        if (!loadData)
             return false;
+        if (!loadBuffer.append(loadData, loadLength)) {
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
     }
 
     {
@@ -1691,7 +1695,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
             }
 
             if (loadBytecode) {
-                TranscodeResult rv = JS_DecodeScript(cx, loadBuffer, loadLength, &script);
+                JS::TranscodeResult rv = JS::DecodeScript(cx, loadBuffer, &script);
                 if (!ConvertTranscodeResultToJSException(cx, rv))
                     return false;
             } else {
@@ -1742,8 +1746,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         }
 
         if (saveBytecode) {
-            TranscodeResult rv = JS_EncodeScript(cx, script, &saveLength,
-                                                 reinterpret_cast<void**>(&saveBuffer.rwget()));
+            JS::TranscodeResult rv = JS::EncodeScript(cx, saveBuffer, script);
             if (!ConvertTranscodeResultToJSException(cx, rv))
                 return false;
         }
@@ -1753,28 +1756,34 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         // If we are both loading and saving, we assert that we are going to
         // replace the current bytecode by the same stream of bytes.
         if (loadBytecode && assertEqBytecode) {
-            if (saveLength != loadLength) {
+            if (saveBuffer.length() != loadBuffer.length()) {
                 char loadLengthStr[16];
-                SprintfLiteral(loadLengthStr, "%" PRIu32, loadLength);
+                SprintfLiteral(loadLengthStr, "%" PRIuSIZE, loadBuffer.length());
                 char saveLengthStr[16];
-                SprintfLiteral(saveLengthStr,"%" PRIu32, saveLength);
+                SprintfLiteral(saveLengthStr,"%" PRIuSIZE, saveBuffer.length());
 
                 JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
                                           loadLengthStr, saveLengthStr);
                 return false;
             }
 
-            if (!PodEqual(loadBuffer, saveBuffer.get(), loadLength)) {
+            if (!PodEqual(loadBuffer.begin(), saveBuffer.begin(), loadBuffer.length())) {
                 JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
                                           JSSMSG_CACHE_EQ_CONTENT_FAILED);
                 return false;
             }
         }
 
-        if (!CacheEntry_setBytecode(cx, cacheEntry, saveBuffer, saveLength))
+        size_t saveLength = saveBuffer.length();
+        if (saveLength >= INT32_MAX) {
+            JS_ReportErrorASCII(cx, "Cannot save large cache entry content");
             return false;
-
-        saveBuffer.forget();
+        }
+        uint8_t* saveData = saveBuffer.extractOrCopyRawBuffer();
+        if (!CacheEntry_setBytecode(cx, cacheEntry, saveData, saveLength)) {
+            js_free(saveData);
+            return false;
+        }
     }
 
     return JS_WrapValue(cx, args.rval());
