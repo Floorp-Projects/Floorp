@@ -2037,8 +2037,12 @@ MessageChannel::MaybeHandleError(Result code, const Message& aMsg, const char* c
     }
 
     char reason[512];
-    SprintfLiteral(reason,"(msgtype=0x%X,name=%s) %s",
-                   aMsg.type(), StringFromIPCMessageType(aMsg.type()), errorMsg);
+    const char* msgname = StringFromIPCMessageType(aMsg.type());
+    if (msgname[0] == '?') {
+        SprintfLiteral(reason,"(msgtype=0x%X) %s", aMsg.type(), errorMsg);
+    } else {
+        SprintfLiteral(reason,"%s %s", msgname, errorMsg);
+    }
 
     PrintErrorMessage(mSide, channelName, reason);
 
