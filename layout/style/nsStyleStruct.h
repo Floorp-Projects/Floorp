@@ -46,6 +46,11 @@ class nsStyleContext;
 class nsTextFrame;
 class imgIContainer;
 struct nsStyleVisibility;
+namespace mozilla {
+namespace dom {
+class ImageTracker;
+} // namespace dom
+} // namespace mozilla
 
 typedef nsINode RawGeckoNode;
 typedef mozilla::dom::Element RawGeckoElement;
@@ -326,8 +331,8 @@ struct nsStyleImage
 
   void SetNull();
   void SetImageData(imgRequestProxy* aImage);
-  void TrackImage(nsPresContext* aContext);
-  void UntrackImage(nsPresContext* aContext);
+  void TrackImage(mozilla::dom::ImageTracker* aImageTracker);
+  void UntrackImage(mozilla::dom::ImageTracker* aImageTracker);
   void SetGradientData(nsStyleGradient* aGradient);
   void SetElementId(const char16_t* aElementId);
   void SetCropRect(mozilla::UniquePtr<nsStyleSides> aCropRect);
@@ -721,14 +726,14 @@ struct nsStyleImageLayers {
 
     // Register/unregister images with the document. We do this only
     // after the dust has settled in ComputeBackgroundData.
-    void TrackImages(nsPresContext* aContext) {
+    void TrackImages(mozilla::dom::ImageTracker* aImageTracker) {
       if (mImage.GetType() == eStyleImageType_Image) {
-        mImage.TrackImage(aContext);
+        mImage.TrackImage(aImageTracker);
       }
     }
-    void UntrackImages(nsPresContext* aContext) {
+    void UntrackImages(mozilla::dom::ImageTracker* aImageTracker) {
       if (mImage.GetType() == eStyleImageType_Image) {
-        mImage.UntrackImage(aContext);
+        mImage.UntrackImage(aImageTracker);
       }
     }
 
@@ -778,14 +783,14 @@ struct nsStyleImageLayers {
 
   const Layer& BottomLayer() const { return mLayers[mImageCount - 1]; }
 
-  void TrackImages(nsPresContext* aContext) {
+  void TrackImages(mozilla::dom::ImageTracker* aImageTracker) {
     for (uint32_t i = 0; i < mImageCount; ++i) {
-        mLayers[i].TrackImages(aContext);
+        mLayers[i].TrackImages(aImageTracker);
     }
   }
-  void UntrackImages(nsPresContext* aContext) {
+  void UntrackImages(mozilla::dom::ImageTracker* aImageTracker) {
     for (uint32_t i = 0; i < mImageCount; ++i)
-      mLayers[i].UntrackImages(aContext);
+      mLayers[i].UntrackImages(aImageTracker);
   }
 
   nsChangeHint CalcDifference(const nsStyleImageLayers& aNewLayers,
@@ -1217,16 +1222,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
     return mBorderImageSource.IsLoaded();
   }
 
-  void TrackImage(nsPresContext* aContext)
+  void TrackImage(mozilla::dom::ImageTracker* aImageTracker)
   {
     if (mBorderImageSource.GetType() == eStyleImageType_Image) {
-      mBorderImageSource.TrackImage(aContext);
+      mBorderImageSource.TrackImage(aImageTracker);
     }
   }
-  void UntrackImage(nsPresContext* aContext)
+  void UntrackImage(mozilla::dom::ImageTracker* aImageTracker)
   {
     if (mBorderImageSource.GetType() == eStyleImageType_Image) {
-      mBorderImageSource.UntrackImage(aContext);
+      mBorderImageSource.UntrackImage(aImageTracker);
     }
   }
 
@@ -3073,8 +3078,8 @@ struct nsStyleContentData
     return !(*this == aOther);
   }
 
-  void TrackImage(nsPresContext* aContext);
-  void UntrackImage(nsPresContext* aContext);
+  void TrackImage(mozilla::dom::ImageTracker* aImageTracker);
+  void UntrackImage(mozilla::dom::ImageTracker* aImageTracker);
 
   void SetImage(imgRequestProxy* aRequest)
   {
