@@ -6,5 +6,6 @@
 
 EXPORTS.cubeb += [
     'cubeb.h',
+    'cubeb_export.h'
 ]
 
