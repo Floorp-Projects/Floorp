@@ -3,8 +3,7 @@ var summary = 'RegExp getters should have get prefix';
 
 print(BUGNUMBER + ": " + summary);
 
-// FIXME: bug 887016
-// assertEq(Object.getOwnPropertyDescriptor(RegExp, Symbol.species).get.name, "get [Symbol.species]");
+assertEq(Object.getOwnPropertyDescriptor(RegExp, Symbol.species).get.name, "get [Symbol.species]");
 assertEq(Object.getOwnPropertyDescriptor(RegExp.prototype, "flags").get.name, "get flags");
 assertEq(Object.getOwnPropertyDescriptor(RegExp.prototype, "global").get.name, "get global");
 assertEq(Object.getOwnPropertyDescriptor(RegExp.prototype, "ignoreCase").get.name, "get ignoreCase");
