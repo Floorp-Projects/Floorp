@@ -911,7 +911,7 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
         } while (!JS_BufferIsCompilableUnit(cx, global, buffer, strlen(buffer)));
 
         if (!ProcessLine(jsapi, buffer, startline))
-            jsapi.ClearException(); // Errors from interactive processing are squelched.
+            jsapi.ReportException();
     } while (!hitEOF && !gQuitting);
 
     fprintf(gOutFile, "\n");
