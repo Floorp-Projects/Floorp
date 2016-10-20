@@ -136,6 +136,7 @@ private:
   // MediaDecoderStateMachine
   DECL_MEDIA_PREF("media.suspend-bkgnd-video.enabled",        MDSMSuspendBackgroundVideoEnabled, bool, false);
   DECL_MEDIA_PREF("media.suspend-bkgnd-video.delay-ms",       MDSMSuspendBackgroundVideoDelay, AtomicUint32, SUSPEND_BACKGROUND_VIDEO_DELAY_MS);
+  DECL_MEDIA_PREF("media.dormant-on-pause-timeout-ms",        DormantOnPauseTimeout, int32_t, 5000);
 
   // WebSpeech
   DECL_MEDIA_PREF("media.webspeech.synth.force_global_queue", WebSpeechForceGlobal, bool, false);
