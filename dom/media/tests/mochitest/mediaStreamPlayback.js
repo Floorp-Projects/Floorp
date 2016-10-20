@@ -32,11 +32,11 @@ MediaStreamPlayback.prototype = {
    * @param {Boolean} isResume specifies if this media element is being resumed
    *                           from a previous run
    */
-  playMedia : function(isResume) {
+  playMediaWithMediaStreamTracksStop : function(isResume) {
     this.startMedia(isResume);
     return this.verifyPlaying()
       .then(() => this.stopTracksForStreamInMediaPlayback())
-      .then(() => this.detachFromMediaElement());
+      .then(() => this.stopMediaElement());
   },
 
   /**
@@ -80,15 +80,15 @@ MediaStreamPlayback.prototype = {
 
   /**
    * Starts media with a media stream, runs it until a canplaythrough and
-   * timeupdate event fires, and detaches from the element without stopping media.
+   * timeupdate event fires, and stops the media.
    *
    * @param {Boolean} isResume specifies if this media element is being resumed
    *                           from a previous run
    */
-  playMediaWithoutStoppingTracks : function(isResume) {
+  playMedia : function(isResume) {
     this.startMedia(isResume);
     return this.verifyPlaying()
-      .then(() => this.detachFromMediaElement());
+      .then(() => this.stopMediaElement());
   },
 
   /**
@@ -156,12 +156,12 @@ MediaStreamPlayback.prototype = {
   },
 
   /**
-   * Detaches from the element without stopping the media.
+   * Stops the media with the associated stream.
    *
    * Precondition: The media stream and element should both be actively
    *               being played.
    */
-  detachFromMediaElement : function() {
+  stopMediaElement : function() {
     this.mediaElement.pause();
     this.mediaElement.srcObject = null;
   }
@@ -198,7 +198,7 @@ LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype
       this.startMedia(isResume);
       return this.verifyPlaying()
         .then(() => this.deprecatedStopStreamInMediaPlayback())
-        .then(() => this.detachFromMediaElement());
+        .then(() => this.stopMediaElement());
     }
   },
 
@@ -254,23 +254,6 @@ function createHTML(options) {
   return scriptsReady.then(() => realCreateHTML(options));
 }
 
-var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
-
-// noGum - Helper to detect whether active guM tracks still exist.
-//
-// It relies on the fact that, by spec, device labels from enumerateDevices are
-// only visible during active gum calls. They're also visible when persistent
-// permissions are granted, so turn off media.navigator.permission.disabled
-// (which is normally on otherwise in our tests). Lastly, we must turn on
-// media.navigator.permission.fake otherwise fake devices don't count as active.
-
-var noGum = () => pushPrefs(["media.navigator.permission.disabled", false],
-                            ["media.navigator.permission.fake", true])
-  .then(() => navigator.mediaDevices.enumerateDevices())
-  .then(([device]) => device &&
-      is(device.label, "", "Test must leave no active gUM streams behind."));
-
 var runTest = testFunction => scriptsReady
   .then(() => runTestWhenReady(testFunction))
-  .then(() => noGum())
   .then(() => finish());
