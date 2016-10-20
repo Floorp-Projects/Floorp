@@ -236,6 +236,7 @@ user_pref("browser.webapps.checkForUpdates", 0);
 user_pref("dom.presentation.tcp_server.debug", true);
 // Enable debug logging in the presentation core service.
 user_pref("logging.Presentation", "debug");
+user_pref("dom.presentation.testing.simulate-receiver", false);
 
 // Don't connect to Yahoo! for RSS feed tests.
 // en-US only uses .types.0.uri, but set all of them just to be sure.

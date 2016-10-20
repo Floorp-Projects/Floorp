@@ -31,6 +31,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PresentationReceiver)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PresentationReceiver)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIPresentationRespondingListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 /* static */ already_AddRefed<PresentationReceiver>
