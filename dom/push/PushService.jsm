@@ -492,6 +492,7 @@ this.PushService = {
 
     this._setState(PUSH_SERVICE_ACTIVATING);
 
+    prefs.observe("serverURL", this);
     Services.obs.addObserver(this, "quit-application", false);
 
     if (options.serverURI) {
@@ -503,8 +504,6 @@ this.PushService = {
     } else {
       // This is only used for testing. Different tests require connecting to
       // slightly different URLs.
-      prefs.observe("serverURL", this);
-
       this._stateChangeProcessEnqueue(_ =>
         this._changeServerURL(prefs.get("serverURL"), STARTING_SERVICE_EVENT));
     }
