@@ -116,6 +116,8 @@ NS_IMPL_EVENT_HANDLER(nsDOMDataChannel, error)
 NS_IMPL_EVENT_HANDLER(nsDOMDataChannel, close)
 NS_IMPL_EVENT_HANDLER(nsDOMDataChannel, message)
 
+// Most of the GetFoo()/SetFoo()s don't need to touch shared resources and
+// are safe after Close()
 NS_IMETHODIMP
 nsDOMDataChannel::GetLabel(nsAString& aLabel)
 {
@@ -180,7 +182,11 @@ nsDOMDataChannel::ReadyState() const
 NS_IMETHODIMP
 nsDOMDataChannel::GetReadyState(nsAString& aReadyState)
 {
-  uint16_t readyState = mDataChannel->GetReadyState();
+  // mState is handled on multiple threads and needs locking
+  uint16_t readyState = mozilla::DataChannel::CLOSED;
+  if (!mSentClose) {
+    readyState = mDataChannel->GetReadyState();
+  }
   // From the WebRTC spec
   const char * stateName[] = {
     "connecting",
@@ -198,7 +204,10 @@ nsDOMDataChannel::GetReadyState(nsAString& aReadyState)
 uint32_t
 nsDOMDataChannel::BufferedAmount() const
 {
-  return mDataChannel->GetBufferedAmount();
+  if (!mSentClose) {
+    return mDataChannel->GetBufferedAmount();
+  }
+  return 0;
 }
 
 uint32_t
@@ -328,7 +337,10 @@ nsDOMDataChannel::Send(nsIInputStream* aMsgStream,
                        ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  uint16_t state = mDataChannel->GetReadyState();
+  uint16_t state = mozilla::DataChannel::CLOSED;
+  if (!mSentClose) {
+    state = mDataChannel->GetReadyState();
+  }
 
   // In reality, the DataChannel protocol allows this, but we want it to
   // look like WebSockets
@@ -465,6 +477,8 @@ nsDOMDataChannel::OnChannelClosed(nsISupports* aContext)
   // so we don't have to worry if we're notified from different paths in
   // the underlying code
   if (!mSentClose) {
+    // Ok, we're done with it.
+    mDataChannel->ReleaseConnection();
     LOG(("%p(%p): %s - Dispatching\n",this,(void*)mDataChannel,__FUNCTION__));
 
     rv = OnSimpleEvent(aContext, NS_LITERAL_STRING("close"));
@@ -496,7 +510,9 @@ nsDOMDataChannel::NotBuffered(nsISupports* aContext)
 void
 nsDOMDataChannel::AppReady()
 {
-  mDataChannel->AppReady();
+  if (!mSentClose) { // may not be possible, simpler to just test anyways
+    mDataChannel->AppReady();
+  }
 }
 
 //-----------------------------------------------------------------------------
