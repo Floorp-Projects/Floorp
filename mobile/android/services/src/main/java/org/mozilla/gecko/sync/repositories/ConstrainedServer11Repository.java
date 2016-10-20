@@ -11,41 +11,50 @@ import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 
 /**
- * A kind of Server11Repository that supports explicit setting of total fetch limit, per-batch fetch limit, and a sort order.
+ * A kind of Server11Repository that supports explicit setting of per-batch fetch limit,
+ * batching mode (single batch vs multi-batch), and a sort order.
  *
  * @author rnewman
  *
  */
 public class ConstrainedServer11Repository extends Server11Repository {
-
-  private final String sort;
+  private final String sortOrder;
   private final long batchLimit;
-  private final long totalLimit;
+  private final boolean allowMultipleBatches;
 
-  public ConstrainedServer11Repository(String collection, String storageURL,
-                                       AuthHeaderProvider authHeaderProvider,
-                                       InfoCollections infoCollections,
-                                       InfoConfiguration infoConfiguration,
-                                       long batchLimit, long totalLimit, String sort)
-          throws URISyntaxException {
-    super(collection, storageURL, authHeaderProvider, infoCollections, infoConfiguration);
+  public ConstrainedServer11Repository(
+          String collection,
+          String storageURL,
+          AuthHeaderProvider authHeaderProvider,
+          InfoCollections infoCollections,
+          InfoConfiguration infoConfiguration,
+          long batchLimit,
+          String sort,
+          boolean allowMultipleBatches) throws URISyntaxException {
+    super(
+            collection,
+            storageURL,
+            authHeaderProvider,
+            infoCollections,
+            infoConfiguration
+    );
     this.batchLimit = batchLimit;
-    this.totalLimit = totalLimit;
-    this.sort  = sort;
+    this.sortOrder  = sort;
+    this.allowMultipleBatches = allowMultipleBatches;
   }
 
   @Override
-  public String getDefaultSort() {
-    return sort;
+  public String getSortOrder() {
+    return sortOrder;
   }
 
   @Override
-  public long getDefaultBatchLimit() {
+  public Long getBatchLimit() {
     return batchLimit;
   }
 
   @Override
-  public long getDefaultTotalLimit() {
-    return totalLimit;
+  public boolean getAllowMultipleBatches() {
+    return allowMultipleBatches;
   }
 }

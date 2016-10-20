@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko.sync.repositories.downloaders;
 
+import android.net.Uri;
+import android.os.SystemClock;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,13 +18,15 @@ import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
+import org.mozilla.gecko.sync.repositories.Server11Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
@@ -32,7 +37,6 @@ import static org.junit.Assert.*;
 
 @RunWith(TestRunner.class)
 public class BatchingDownloaderDelegateTest {
-    private Server11Repository server11Repository;
     private Server11RepositorySession repositorySession;
     private MockDownloader mockDownloader;
     private String DEFAULT_COLLECTION_URL = "http://dummy.url/";
@@ -43,8 +47,14 @@ public class BatchingDownloaderDelegateTest {
         public boolean isFailure = false;
         public Exception ex;
 
-        public MockDownloader(Server11Repository repository, Server11RepositorySession repositorySession) {
-            super(repository, repositorySession);
+        public MockDownloader(RepositorySession repositorySession) {
+            super(
+                    null,
+                    Uri.EMPTY,
+                    SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+                    true,
+                    repositorySession
+            );
         }
 
         @Override
@@ -72,7 +82,7 @@ public class BatchingDownloaderDelegateTest {
 
     class SimpleSessionFetchRecordsDelegate implements RepositorySessionFetchRecordsDelegate {
         @Override
-        public void onFetchFailed(Exception ex, Record record) {
+        public void onFetchFailed(Exception ex) {
 
         }
 
@@ -99,19 +109,26 @@ public class BatchingDownloaderDelegateTest {
 
     @Before
     public void setUp() throws Exception {
-        server11Repository = new Server11Repository(
+        repositorySession = new Server11RepositorySession(new Server11Repository(
                 "dummyCollection",
+                SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                 DEFAULT_COLLECTION_URL,
                 null,
                 new InfoCollections(),
-                new InfoConfiguration());
-        repositorySession = new Server11RepositorySession(server11Repository);
-        mockDownloader = new MockDownloader(server11Repository, repositorySession);
+                new InfoConfiguration())
+        );
+        mockDownloader = new MockDownloader(repositorySession);
     }
 
     @Test
     public void testIfUnmodifiedSince() throws Exception {
-        BatchingDownloader downloader = new BatchingDownloader(server11Repository, repositorySession);
+        BatchingDownloader downloader = new BatchingDownloader(
+                null,
+                Uri.EMPTY,
+                SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+                true,
+                repositorySession
+        );
         RepositorySessionFetchRecordsDelegate delegate = new SimpleSessionFetchRecordsDelegate();
         BatchingDownloaderDelegate downloaderDelegate = new BatchingDownloaderDelegate(downloader, delegate,
                 new SyncStorageCollectionRequest(new URI(DEFAULT_COLLECTION_URL)), 0, 0, true, null, null);

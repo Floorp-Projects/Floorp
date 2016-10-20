@@ -6,11 +6,9 @@ package org.mozilla.gecko.sync.repositories;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
-import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 
@@ -19,21 +17,26 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
- * A Server11Repository implements fetching and storing against the Sync 1.1 API.
+ * A Server11Repository implements fetching and storing against the Sync 1.5 API.
  * It doesn't do crypto: that's the job of the middleware.
  *
  * @author rnewman
  */
 public class Server11Repository extends Repository {
-  protected String collection;
-  protected URI collectionURI;
-  protected final AuthHeaderProvider authHeaderProvider;
+  public final AuthHeaderProvider authHeaderProvider;
+
+  /* package-local */ final long syncDeadline;
+  /* package-local */ final URI collectionURI;
+
+  protected final String collection;
   protected final InfoCollections infoCollections;
 
   private final InfoConfiguration infoConfiguration;
+  private final static String DEFAULT_SORT_ORDER = "oldest";
+  private final static long DEFAULT_BATCH_LIMIT = 100;
 
   /**
-   * Construct a new repository that fetches and stores against the Sync 1.1. API.
+   * Construct a new repository that fetches and stores against the Sync 1.5 API.
    *
    * @param collection name.
    * @param storageURL full URL to storage endpoint.
@@ -41,7 +44,12 @@ public class Server11Repository extends Repository {
    * @param infoCollections instance; must not be null.
    * @throws URISyntaxException
    */
-  public Server11Repository(@NonNull String collection, @NonNull String storageURL, AuthHeaderProvider authHeaderProvider, @NonNull InfoCollections infoCollections, @NonNull InfoConfiguration infoConfiguration) throws URISyntaxException {
+  public Server11Repository(
+          @NonNull String collection,
+          @NonNull String storageURL,
+          AuthHeaderProvider authHeaderProvider,
+          @NonNull InfoCollections infoCollections,
+          @NonNull InfoConfiguration infoConfiguration) throws URISyntaxException {
     if (collection == null) {
       throw new IllegalArgumentException("collection must not be null");
     }
@@ -68,77 +76,28 @@ public class Server11Repository extends Repository {
     return this.collectionURI;
   }
 
-  public URI collectionURI(boolean full, long newer, long limit, String sort, String ids, String offset) throws URISyntaxException {
-    ArrayList<String> params = new ArrayList<String>();
-    if (full) {
-      params.add("full=1");
-    }
-    if (newer >= 0) {
-      // Translate local millisecond timestamps into server decimal seconds.
-      String newerString = Utils.millisecondsToDecimalSecondsString(newer);
-      params.add("newer=" + newerString);
-    }
-    if (limit > 0) {
-      params.add("limit=" + limit);
-    }
-    if (sort != null) {
-      params.add("sort=" + sort);       // We trust these values.
-    }
-    if (ids != null) {
-      params.add("ids=" + ids);         // We trust these values.
-    }
-    if (offset != null) {
-      // Offset comes straight out of HTTP headers and it is the responsibility of the caller to URI-escape it.
-      params.add("offset=" + offset);
-    }
-    if (params.size() == 0) {
-      return this.collectionURI;
-    }
-
-    StringBuilder out = new StringBuilder();
-    char indicator = '?';
-    for (String param : params) {
-      out.append(indicator);
-      indicator = '&';
-      out.append(param);
-    }
-    String uri = this.collectionURI + out.toString();
-    return new URI(uri);
-  }
-
-  public URI wboURI(String id) throws URISyntaxException {
-    return new URI(this.collectionURI + "/" + id);
-  }
-
-  // Override these.
-  @SuppressWarnings("static-method")
-  public long getDefaultBatchLimit() {
-    return -1;
-  }
-
-  @SuppressWarnings("static-method")
-  public String getDefaultSort() {
-    return null;
-  }
-
-  public long getDefaultTotalLimit() {
-    return -1;
-  }
-
-  public AuthHeaderProvider getAuthHeaderProvider() {
-    return authHeaderProvider;
-  }
-
-  public boolean updateNeeded(long lastSyncTimestamp) {
+  /* package-local */ boolean updateNeeded(long lastSyncTimestamp) {
     return infoCollections.updateNeeded(collection, lastSyncTimestamp);
   }
 
   @Nullable
-  public Long getCollectionLastModified() {
+  /* package-local */ Long getCollectionLastModified() {
     return infoCollections.getTimestamp(collection);
   }
 
   public InfoConfiguration getInfoConfiguration() {
     return infoConfiguration;
+  }
+
+  public String getSortOrder() {
+    return DEFAULT_SORT_ORDER;
+  }
+
+  public Long getBatchLimit() {
+    return DEFAULT_BATCH_LIMIT;
+  }
+
+  public boolean getAllowMultipleBatches() {
+    return true;
   }
 }
