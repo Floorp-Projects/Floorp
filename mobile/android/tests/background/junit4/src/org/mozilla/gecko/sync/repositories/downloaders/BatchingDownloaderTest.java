@@ -469,24 +469,6 @@ public class BatchingDownloaderTest {
     }
 
     @Test
-    public void testFailureMissingLMMultiBatch() throws Exception {
-        assertNull(mockDownloader.getLastModified());
-
-        String offsetHeader = "100";
-        SyncStorageResponse response = makeSyncStorageResponse(200, null, offsetHeader, null);
-        SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI("http://dummy.url"));
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                1, true, DEFAULT_SORT, DEFAULT_IDS);
-
-        // Last modified header somehow missing from response.
-        assertNull(null, mockDownloader.getLastModified());
-        assertTrue(mockDownloader.abort);
-        assertFalse(sessionFetchRecordsDelegate.isSuccess);
-        assertFalse(sessionFetchRecordsDelegate.isFetched);
-        assertTrue(sessionFetchRecordsDelegate.isFailure);
-    }
-
-    @Test
     public void testFailureException() throws Exception {
         Exception ex = new IllegalStateException();
         SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI("http://dummy.url"));

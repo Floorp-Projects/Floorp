@@ -16,20 +16,16 @@ import org.mozilla.gecko.sync.repositories.downloaders.BatchingDownloader;
 import org.mozilla.gecko.sync.repositories.uploaders.BatchingUploader;
 
 public class Server11RepositorySession extends RepositorySession {
-  public static final String LOG_TAG = "Server11Session";
+  public static final String LOG_TAG = "Server11RepositorySession";
 
-  Server11Repository serverRepository;
+  protected final Server11Repository serverRepository;
   private BatchingUploader uploader;
   private final BatchingDownloader downloader;
 
   public Server11RepositorySession(Repository repository) {
     super(repository);
-    serverRepository = (Server11Repository) repository;
-    this.downloader = new BatchingDownloader(serverRepository, this);
-  }
-
-  public Server11Repository getServerRepository() {
-    return serverRepository;
+    this.serverRepository = (Server11Repository) repository;
+    this.downloader = initializeDownloader(this);
   }
 
   @Override
@@ -51,9 +47,14 @@ public class Server11RepositorySession extends RepositorySession {
   }
 
   @Override
-  public void fetchSince(long timestamp,
+  public void fetchSince(long sinceTimestamp,
                          RepositorySessionFetchRecordsDelegate delegate) {
-    this.downloader.fetchSince(timestamp, delegate);
+    this.downloader.fetchSince(
+            delegate,
+            sinceTimestamp,
+            serverRepository.getBatchLimit(),
+            serverRepository.getSortOrder()
+    );
   }
 
   @Override
@@ -105,5 +106,13 @@ public class Server11RepositorySession extends RepositorySession {
   @Override
   public boolean dataAvailable() {
     return serverRepository.updateNeeded(getLastSyncTimestamp());
+  }
+
+  protected static BatchingDownloader initializeDownloader(final Server11RepositorySession serverRepositorySession) {
+    return new BatchingDownloader(
+            serverRepositorySession.serverRepository.authHeaderProvider,
+            Uri.parse(serverRepositorySession.serverRepository.collectionURI().toString()),
+            serverRepositorySession.serverRepository.getAllowMultipleBatches(),
+            serverRepositorySession);
   }
 }

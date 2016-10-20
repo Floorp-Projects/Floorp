@@ -6,9 +6,8 @@ package org.mozilla.gecko.sync.stage;
 
 import java.net.URISyntaxException;
 
-import org.mozilla.gecko.sync.JSONRecordFetcher;
 import org.mozilla.gecko.sync.MetaGlobalException;
-import org.mozilla.gecko.sync.net.AuthHeaderProvider;
+import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksRepository;
@@ -20,11 +19,8 @@ public class AndroidBrowserBookmarksServerSyncStage extends ServerSyncStage {
 
   // Eventually this kind of sync stage will be data-driven,
   // and all this hard-coding can go away.
-  private static final String BOOKMARKS_SORT          = "index";
-  // Sanity limit. Batch and total limit are the same for now, and will be adjusted
-  // once buffer and high water mark are in place. See Bug 730142.
+  private static final String BOOKMARKS_SORT = "oldest";
   private static final long BOOKMARKS_BATCH_LIMIT = 5000;
-  private static final long BOOKMARKS_TOTAL_LIMIT = 5000;
 
   @Override
   protected String getCollection() {
@@ -43,21 +39,15 @@ public class AndroidBrowserBookmarksServerSyncStage extends ServerSyncStage {
 
   @Override
   protected Repository getRemoteRepository() throws URISyntaxException {
-    // If this is a first sync, we need to check server counts to make sure that we aren't
-    // going to screw up. SafeConstrainedServer11Repository does this. See Bug 814331.
-    AuthHeaderProvider authHeaderProvider = session.getAuthHeaderProvider();
-    final JSONRecordFetcher countsFetcher = new JSONRecordFetcher(session.config.infoCollectionCountsURL(), authHeaderProvider);
-    String collection = getCollection();
-    return new SafeConstrainedServer11Repository(
-        collection,
-        session.config.storageURL(),
-        session.getAuthHeaderProvider(),
-        session.config.infoCollections,
-        session.config.infoConfiguration,
-        BOOKMARKS_BATCH_LIMIT,
-        BOOKMARKS_TOTAL_LIMIT,
-        BOOKMARKS_SORT,
-        countsFetcher);
+    return new ConstrainedServer11Repository(
+            getCollection(),
+            session.config.storageURL(),
+            session.getAuthHeaderProvider(),
+            session.config.infoCollections,
+            session.config.infoConfiguration,
+            BOOKMARKS_BATCH_LIMIT,
+            BOOKMARKS_SORT,
+            true /* allow multiple batches */);
   }
 
   @Override
