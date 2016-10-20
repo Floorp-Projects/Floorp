@@ -245,6 +245,13 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
         return;
       }
 
+      // If shift is pressed, this is only a preview click, send the event to
+      // the client, but don't stop picking.
+      if (event.shiftKey) {
+        events.emit(this._walker, "picker-node-previewed", this._findAndAttachElement(event));
+        return;
+      }
+
       this._stopPickerListeners();
       this._isPicking = false;
       if (this._autohide) {
@@ -351,6 +358,16 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
     this._startPickerListeners();
 
     return null;
+  },
+
+  /**
+   * This pick method also focuses the highlighter's target window.
+   */
+  pickAndFocus: function() {
+    // Go ahead and pass on the results to help future-proof this method.
+    let pickResults = this.pick();
+    this._highlighterEnv.window.focus();
+    return pickResults;
   },
 
   _findAndAttachElement: function (event) {

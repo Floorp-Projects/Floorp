@@ -70,6 +70,7 @@ public:
   // MediaEngineCameraVideoSource
   MediaEngineRemoteVideoSource(int aIndex, mozilla::camera::CaptureEngine aCapEngine,
                                dom::MediaSourceEnum aMediaSource,
+                               bool aScary = false,
                                const char* aMonitorName = "RemoteVideo.Monitor");
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
@@ -103,6 +104,8 @@ public:
 
   void Shutdown() override;
 
+  bool GetScary() const override { return mScary; }
+
 protected:
   ~MediaEngineRemoteVideoSource() { }
 
@@ -125,6 +128,7 @@ private:
 
   // To only restart camera when needed, we keep track previous settings.
   webrtc::CaptureCapability mLastCapability;
+  bool mScary;
 };
 
 }

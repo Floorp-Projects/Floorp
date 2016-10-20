@@ -43,14 +43,7 @@ add_task(function* () {
 
   info("Run tests for a Tooltip with a XUL panel");
   useXulWrapper = true;
-
-  let isLinux = Services.appinfo.OS === "Linux";
-  if (!isLinux) {
-    // Skip these tests on linux when using a XUL Panel wrapper because some linux window
-    // manager don't support nicely XUL Panels with noautohide _and_ noautofocus.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1301342#c11
-    yield runTests(doc);
-  }
+  yield runTests(doc);
 });
 
 function* runTests(doc) {
