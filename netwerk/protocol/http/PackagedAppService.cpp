@@ -34,8 +34,7 @@ namespace net {
 
 static PackagedAppService *gPackagedAppService = nullptr;
 static LazyLogModule gPASLog("PackagedAppService");
-#undef LOG
-#define LOG(args) MOZ_LOG(gPASLog, mozilla::LogLevel::Debug, args)
+#define LOG_PAS(args) MOZ_LOG(gPASLog, mozilla::LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS(PackagedAppService, nsIPackagedAppService)
 
@@ -58,7 +57,7 @@ LogURI(const char *aFunctionName, void *self, nsIURI *aURI, nsILoadContextInfo *
       prefix += ":";
     }
 
-    LOG(("[%p] %s > %s%s\n", self, aFunctionName, prefix.get(), spec.get()));
+    LOG_PAS(("[%p] %s > %s%s\n", self, aFunctionName, prefix.get(), spec.get()));
   }
 }
 
@@ -365,7 +364,7 @@ PackagedAppService::PackagedAppChannelListener::OnStartRequest(nsIRequest *aRequ
   }
 
   mDownloader->SetIsFromCache(isFromCache);
-  LOG(("[%p] Downloader isFromCache: %d\n", mDownloader.get(), isFromCache));
+  LOG_PAS(("[%p] Downloader isFromCache: %d\n", mDownloader.get(), isFromCache));
 
   // XXX: This is the place to suspend the channel, doom existing cache entries
   // for previous resources, and then resume the channel.
@@ -429,7 +428,7 @@ PackagedAppService::PackagedAppDownloader::EnsureVerifier(nsIRequest *aRequest)
     return;
   }
 
-  LOG(("Creating PackagedAppVerifier."));
+  LOG_PAS(("Creating PackagedAppVerifier."));
 
   nsCOMPtr<nsIMultiPartChannel> multiChannel(do_QueryInterface(aRequest));
   nsCString signature = GetSignatureFromChannel(multiChannel);
@@ -555,7 +554,7 @@ void
 PackagedAppService::PackagedAppDownloader::OnError(EErrorType aError)
 {
   // TODO: Handler verification error properly.
-  LOG(("PackagedAppDownloader::OnError > %d", aError));
+  LOG_PAS(("PackagedAppDownloader::OnError > %d", aError));
 
   FinalizeDownload(NS_ERROR_SIGNED_APP_MANIFEST_INVALID);
 }
@@ -596,7 +595,7 @@ PackagedAppService::PackagedAppDownloader::GetSignatureFromChannel(nsIMultiPartC
   }
 
   if (!aMulitChannel) {
-    LOG(("The package is either not loaded from cache or malformed."));
+    LOG_PAS(("The package is either not loaded from cache or malformed."));
     return EmptyCString();
   }
 
@@ -614,7 +613,7 @@ PackagedAppService::PackagedAppDownloader::OnStopRequest(nsIRequest *aRequest,
   nsCOMPtr<nsIMultiPartChannel> multiChannel(do_QueryInterface(aRequest));
   nsresult rv;
 
-  LOG(("[%p] PackagedAppDownloader::OnStopRequest > status:%X multiChannel:%p\n",
+  LOG_PAS(("[%p] PackagedAppDownloader::OnStopRequest > status:%X multiChannel:%p\n",
        this, aStatusCode, multiChannel.get()));
 
   mProcessingFirstRequest = false;
@@ -630,7 +629,7 @@ PackagedAppService::PackagedAppDownloader::OnStopRequest(nsIRequest *aRequest,
   // an error has occurred in nsMultiMixedConv.
   // If an error occurred in OnStartRequest, mWriter could be null.
   if (!multiChannel || !mWriter) {
-    LOG(("Either the package was loaded from cache or malformed"));
+    LOG_PAS(("Either the package was loaded from cache or malformed"));
     if (lastPart) {
       // Chances to get here:
       //   1) Very likely the package has been cached or
@@ -648,7 +647,7 @@ PackagedAppService::PackagedAppDownloader::OnStopRequest(nsIRequest *aRequest,
     return NS_OK;
   }
 
-  LOG(("We are going to finish the resource and process it in the verifier."));
+  LOG_PAS(("We are going to finish the resource and process it in the verifier."));
 
   // We've got a resource downloaded. Finalize this resource cache and delegate to
   // PackagedAppVerifier rather than serving this resource right away.
@@ -739,7 +738,7 @@ PackagedAppService::PackagedAppDownloader::AddCallback(nsIURI *aURI,
   aURI->GetSpecIgnoringRef(spec);
 
   LogURI("PackagedAppDownloader::AddCallback", this, aURI);
-  LOG(("[%p]    > callback: %p\n", this, aCallback));
+  LOG_PAS(("[%p]    > callback: %p\n", this, aCallback));
 
   // Check if we already have a resource waiting for this resource
   nsCOMArray<nsICacheEntryOpenCallback>* array = mCallbacks.Get(spec);
@@ -748,17 +747,17 @@ PackagedAppService::PackagedAppDownloader::AddCallback(nsIURI *aURI,
       // The download of this resource has already completed, hence we don't
       // need to wait for it to be inserted in the cache and we can serve it
       // right now, directly.  See also the CallCallbacks method bellow.
-      LOG(("[%p]    > already downloaded\n", this));
+      LOG_PAS(("[%p]    > already downloaded\n", this));
 
       mCacheStorage->AsyncOpenURI(aURI, EmptyCString(),
                                   nsICacheStorage::OPEN_READONLY, aCallback);
     } else {
-      LOG(("[%p]    > adding to array\n", this));
+      LOG_PAS(("[%p]    > adding to array\n", this));
       // Add this resource to the callback array
       array->AppendObject(aCallback);
     }
   } else {
-    LOG(("[%p]    > creating array\n", this));
+    LOG_PAS(("[%p]    > creating array\n", this));
     // This is the first callback for this URI.
     // Create a new array and add the callback
     nsCOMArray<nsICacheEntryOpenCallback>* newArray =
@@ -780,7 +779,7 @@ PackagedAppService::PackagedAppDownloader::CallCallbacks(nsIURI *aURI,
   nsCOMPtr<nsICacheEntry> handle(aEntry);
 
   LogURI("PackagedAppService::PackagedAppDownloader::CallCallbacks", this, aURI);
-  LOG(("[%p]    > status:%X\n", this, aResult));
+  LOG_PAS(("[%p]    > status:%X\n", this, aResult));
 
   nsAutoCString spec;
   aURI->GetAsciiSpec(spec);
@@ -799,7 +798,7 @@ PackagedAppService::PackagedAppDownloader::CallCallbacks(nsIURI *aURI,
     // An empty array means that the resource was already downloaded, and a
     // new call to AddCallback can simply return it from the cache.
     array->Clear();
-    LOG(("[%p]    > called callbacks (%d)\n", this, callbacksNum));
+    LOG_PAS(("[%p]    > called callbacks (%d)\n", this, callbacksNum));
   } else {
     // There were no listeners waiting for this resource, but we insert a new
     // empty array into the hashtable so if any new callbacks are added while
@@ -807,7 +806,7 @@ PackagedAppService::PackagedAppDownloader::CallCallbacks(nsIURI *aURI,
     nsCOMArray<nsICacheEntryOpenCallback>* newArray =
       new nsCOMArray<nsICacheEntryOpenCallback>();
     mCallbacks.Put(spec, newArray);
-    LOG(("[%p]    > created array\n", this));
+    LOG_PAS(("[%p]    > created array\n", this));
   }
 
   aEntry->ForceValidFor(0);
@@ -818,7 +817,7 @@ nsresult
 PackagedAppService::PackagedAppDownloader::ClearCallbacks(nsresult aResult)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mCallbacks hashtable is not thread safe");
-  LOG(("[%p] PackagedAppService::PackagedAppDownloader::ClearCallbacks > packageKey:%s status:%X\n",
+  LOG_PAS(("[%p] PackagedAppService::PackagedAppDownloader::ClearCallbacks > packageKey:%s status:%X\n",
        this, mPackageKey.get(), aResult));
 
   // Clear the registered callbacks which are not called at all. If the package is already
@@ -835,7 +834,7 @@ PackagedAppService::PackagedAppDownloader::ClearCallbacks(nsresult aResult)
       DebugOnly<nsresult> rv = NS_NewURI(getter_AddRefs(uri), key);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-      LOG(("[%p]    > calling AsyncOpenURI for %s\n", this, key.BeginReading()));
+      LOG_PAS(("[%p]    > calling AsyncOpenURI for %s\n", this, key.BeginReading()));
       for (uint32_t i = 0; i < callbackArray->Length(); ++i) {
         nsCOMPtr<nsICacheEntryOpenCallback> callback = callbackArray->ObjectAt(i);
         mCacheStorage->AsyncOpenURI(uri, EmptyCString(),
@@ -844,7 +843,7 @@ PackagedAppService::PackagedAppDownloader::ClearCallbacks(nsresult aResult)
 
     } else { // an error has occured
       // We just call all the callbacks and pass the error result
-      LOG(("[%p]    > passing NULL cache entry for %s\n", this, key.BeginReading()));
+      LOG_PAS(("[%p]    > passing NULL cache entry for %s\n", this, key.BeginReading()));
       for (uint32_t i = 0; i < callbackArray->Length(); ++i) {
         nsCOMPtr<nsICacheEntryOpenCallback> callback = callbackArray->ObjectAt(i);
         callback->OnCacheEntryAvailable(nullptr, false, nullptr, aResult);
@@ -879,14 +878,14 @@ PackagedAppService::PackagedAppDownloader::InstallSignedPackagedApp(const Resour
 {
   // TODO: Bug 1178533 to register permissions, system messages etc on navigation to
   //       signed packages.
-  LOG(("Install this packaged app."));
+  LOG_PAS(("Install this packaged app."));
   bool isSuccess = false;
 
   nsCOMPtr<nsIInstallPackagedWebapp> installer =
     do_GetService("@mozilla.org/newapps/installpackagedwebapp;1");
 
   if (!installer) {
-    LOG(("InstallSignedPackagedApp: fail to get InstallPackagedWebapp service"));
+    LOG_PAS(("InstallSignedPackagedApp: fail to get InstallPackagedWebapp service"));
     return OnError(ERROR_GET_INSTALLER_FAILED);
   }
 
@@ -904,11 +903,11 @@ PackagedAppService::PackagedAppDownloader::InstallSignedPackagedApp(const Resour
                                    manifestURL.get(),
                                    &isSuccess);
   if (!isSuccess) {
-    LOG(("InstallSignedPackagedApp: failed to install permissions"));
+    LOG_PAS(("InstallSignedPackagedApp: failed to install permissions"));
     return OnError(ERROR_INSTALL_RESOURCE_FAILED);
   }
 
-  LOG(("InstallSignedPackagedApp: success."));
+  LOG_PAS(("InstallSignedPackagedApp: success."));
 }
 
 //------------------------------------------------------------------
@@ -959,7 +958,7 @@ PackagedAppService::PackagedAppDownloader::OnManifestVerified(const ResourceCach
   mVerifier->GetIsPackageSigned(&isPackagedSigned);
   if (!isPackagedSigned) {
     // A verified but unsigned manifest means this package has no signature.
-    LOG(("No signature in the package. Just run normally."));
+    LOG_PAS(("No signature in the package. Just run normally."));
     return;
   }
 
@@ -978,7 +977,7 @@ PackagedAppService::PackagedAppDownloader::OnResourceVerified(const ResourceCach
   CallCallbacks(aInfo->mURI, aInfo->mCacheEntry, aInfo->mStatusCode);
 
   if (aInfo->mIsLastPart) {
-    LOG(("This is the last part. FinalizeDownload (%d)", aInfo->mStatusCode));
+    LOG_PAS(("This is the last part. FinalizeDownload (%d)", aInfo->mStatusCode));
     FinalizeDownload(aInfo->mStatusCode);
   }
 }
@@ -988,12 +987,12 @@ PackagedAppService::PackagedAppDownloader::OnResourceVerified(const ResourceCach
 PackagedAppService::PackagedAppService()
 {
   gPackagedAppService = this;
-  LOG(("[%p] Created PackagedAppService\n", this));
+  LOG_PAS(("[%p] Created PackagedAppService\n", this));
 }
 
 PackagedAppService::~PackagedAppService()
 {
-  LOG(("[%p] Destroying PackagedAppService\n", this));
+  LOG_PAS(("[%p] Destroying PackagedAppService\n", this));
   gPackagedAppService = nullptr;
 }
 
@@ -1037,7 +1036,7 @@ PackagedAppService::GetResource(nsIChannel *aChannel,
                                 nsICacheEntryOpenCallback *aCallback)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mDownloadingPackages hashtable is not thread safe");
-  LOG(("[%p] PackagedAppService::GetResource(aChannel: %p, aCallback: %p)\n",
+  LOG_PAS(("[%p] PackagedAppService::GetResource(aChannel: %p, aCallback: %p)\n",
        this, aChannel, aCallback));
 
   if (!aChannel || !aCallback) {
@@ -1048,27 +1047,27 @@ PackagedAppService::GetResource(nsIChannel *aChannel,
   nsIScriptSecurityManager *securityManager =
     nsContentUtils::GetSecurityManager();
   if (!securityManager) {
-    LOG(("[%p]    > No securityManager\n", this));
+    LOG_PAS(("[%p]    > No securityManager\n", this));
     return NS_ERROR_UNEXPECTED;
   }
   nsCOMPtr<nsIPrincipal> principal;
   rv = securityManager->GetChannelURIPrincipal(aChannel, getter_AddRefs(principal));
   if (NS_FAILED(rv) || !principal) {
-    LOG(("[%p]    > Error getting principal rv=%X principal=%p\n",
+    LOG_PAS(("[%p]    > Error getting principal rv=%X principal=%p\n",
          this, rv, principal.get()));
     return NS_FAILED(rv) ? rv : NS_ERROR_NULL_POINTER;
   }
 
   nsCOMPtr<nsILoadContextInfo> loadContextInfo = GetLoadContextInfo(aChannel);
   if (!loadContextInfo) {
-    LOG(("[%p]    > Channel has no loadContextInfo\n", this));
+    LOG_PAS(("[%p]    > Channel has no loadContextInfo\n", this));
     return NS_ERROR_NULL_POINTER;
   }
 
   nsLoadFlags loadFlags = 0;
   rv = aChannel->GetLoadFlags(&loadFlags);
   if (NS_FAILED(rv)) {
-    LOG(("[%p]    > Error calling GetLoadFlags rv=%X\n", this, rv));
+    LOG_PAS(("[%p]    > Error calling GetLoadFlags rv=%X\n", this, rv));
     return rv;
   }
 
@@ -1077,7 +1076,7 @@ PackagedAppService::GetResource(nsIChannel *aChannel,
   nsCOMPtr<nsIURI> uri;
   rv = aChannel->GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("[%p]    > Error calling GetURI rv=%X\n", this, rv));
+    LOG_PAS(("[%p]    > Error calling GetURI rv=%X\n", this, rv));
     return rv;
   }
 
@@ -1168,7 +1167,7 @@ PackagedAppService::NotifyPackageDownloaded(nsCString aKey)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mDownloadingPackages hashtable is not thread safe");
   mDownloadingPackages.Remove(aKey);
-  LOG(("[%p] PackagedAppService::NotifyPackageDownloaded > %s\n", this, aKey.get()));
+  LOG_PAS(("[%p] PackagedAppService::NotifyPackageDownloaded > %s\n", this, aKey.get()));
   return NS_OK;
 }
 
