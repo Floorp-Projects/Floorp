@@ -507,9 +507,6 @@ ContentChild* ContentChild::sSingleton;
 
 ContentChild::ContentChild()
  : mID(uint64_t(-1))
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
- , mMsaaID(0)
-#endif
  , mCanOverrideProcessName(true)
  , mIsAlive(true)
  , mShuttingDown(false)
@@ -2448,18 +2445,13 @@ ContentChild::RecvFlushMemory(const nsString& reason)
 }
 
 bool
-ContentChild::RecvActivateA11y(const uint32_t& aMsaaID)
+ContentChild::RecvActivateA11y()
 {
 #ifdef ACCESSIBILITY
-#ifdef XP_WIN
-  MOZ_ASSERT(aMsaaID != 0);
-  mMsaaID = aMsaaID;
-#endif // XP_WIN
-
   // Start accessibility in content process if it's running in chrome
   // process.
   GetOrCreateAccService(nsAccessibilityService::eMainProcess);
-#endif // ACCESSIBILITY
+#endif
   return true;
 }
 
