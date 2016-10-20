@@ -1127,8 +1127,8 @@ public:
   virtual already_AddRefed<mozilla::gfx::SourceSurface>
   RenderNode(nsIDOMNode* aNode,
              nsIntRegion* aRegion,
-             nsIntPoint& aPoint,
-             nsIntRect* aScreenRect,
+             const mozilla::LayoutDeviceIntPoint aPoint,
+             mozilla::LayoutDeviceIntRect* aScreenRect,
              uint32_t aFlags) = 0;
 
   /**
@@ -1149,8 +1149,8 @@ public:
    */
   virtual already_AddRefed<mozilla::gfx::SourceSurface>
   RenderSelection(nsISelection* aSelection,
-                  nsIntPoint& aPoint,
-                  nsIntRect* aScreenRect,
+                  const mozilla::LayoutDeviceIntPoint aPoint,
+                  mozilla::LayoutDeviceIntRect* aScreenRect,
                   uint32_t aFlags) = 0;
 
   void AddWeakFrameInternal(nsWeakFrame* aWeakFrame);

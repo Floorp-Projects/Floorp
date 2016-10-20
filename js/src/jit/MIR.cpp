@@ -4068,7 +4068,7 @@ MToInt32::foldsTo(TempAllocator& alloc)
           case MIRType::Double:
             int32_t ival;
             // Only the value within the range of Int32 can be substituted as constant.
-            if (mozilla::NumberEqualsInt32(input->toConstant()->numberToDouble(), &ival))
+            if (mozilla::NumberIsInt32(input->toConstant()->numberToDouble(), &ival))
                 return MConstant::New(alloc, Int32Value(ival));
             break;
           default:
@@ -5076,6 +5076,23 @@ MLoadSlot::foldsTo(TempAllocator& alloc)
         return def;
 
     return this;
+}
+
+void
+MLoadSlot::printOpcode(GenericPrinter& out) const
+{
+    MDefinition::printOpcode(out);
+    out.printf(" %d", slot());
+}
+
+void
+MStoreSlot::printOpcode(GenericPrinter& out) const
+{
+    PrintOpcodeName(out, op());
+    out.printf(" ", slot());
+    getOperand(0)->printName(out);
+    out.printf(" %d ", slot());
+    getOperand(1)->printName(out);
 }
 
 MDefinition*
