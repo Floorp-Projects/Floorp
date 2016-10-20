@@ -68,7 +68,11 @@ function waitForEvent(eventType, expectedIdOrAcc) {
         }
 
         let event = subject.QueryInterface(nsIAccessibleEvent);
-        Logger.log(eventToString(event));
+        if (Logger.enabled) {
+          // Avoid calling eventToString if the logger isn't enabled in order
+          // to avoid an intermittent crash (bug 1307645).
+          Logger.log(eventToString(event));
+        }
 
         // If event type does not match expected type, skip the event.
         if (event.eventType !== eventType) {
