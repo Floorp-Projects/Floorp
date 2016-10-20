@@ -953,6 +953,7 @@ public:
        mozilla::ErrorResult& aError);
   nsresult Open(const nsAString& aUrl, const nsAString& aName,
                 const nsAString& aOptions,
+                nsIDocShellLoadInfo* aLoadInfo,
                 nsPIDOMWindowOuter **_retval) override;
   mozilla::dom::Navigator* GetNavigator(mozilla::ErrorResult& aError);
   nsIDOMNavigator* GetNavigator() override;
@@ -1466,10 +1467,10 @@ private:
    *        three args, if present, will be aUrl, aName, and aOptions.  So this
    *        param only matters if there are more than 3 arguments.
    *
-   * @param argc The number of arguments in argv.
-   *
    * @param aExtraArgument Another way to pass arguments in.  This is mutually
-   *        exclusive with the argv/argc approach.
+   *        exclusive with the argv approach.
+   *
+   * @param aLoadInfo to be passed on along to the windowwatcher.
    *
    * @param aReturn [out] The window that was opened, if any.
    *
@@ -1485,6 +1486,7 @@ private:
                         bool aNavigate,
                         nsIArray *argv,
                         nsISupports *aExtraArgument,
+                        nsIDocShellLoadInfo* aLoadInfo,
                         nsPIDOMWindowOuter **aReturn);
 
 public:
