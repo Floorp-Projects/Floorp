@@ -683,8 +683,6 @@ private:
   bool mIsDestroyed;
   // When true, the TabParent is detached from the frame loader.
   bool mIsDetached;
-  // Whether we have already sent a FileDescriptor for the app package.
-  bool mAppPackageFileDescriptorSent;
 
   uint32_t mChromeFlags;
 
