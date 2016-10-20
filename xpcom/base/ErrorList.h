@@ -696,6 +696,8 @@
   ERROR(NS_ERROR_SRI_CORRUPT,                      FAILURE(200)),
   ERROR(NS_ERROR_SRI_DISABLED,                     FAILURE(201)),
   ERROR(NS_ERROR_SRI_NOT_ELIGIBLE,                 FAILURE(202)),
+  ERROR(NS_ERROR_SRI_UNEXPECTED_HASH_TYPE,         FAILURE(203)),
+  ERROR(NS_ERROR_SRI_IMPORT,                       FAILURE(204)),
 
   /* CMS specific nsresult error codes.  Note: the numbers used here correspond
    * to the values in nsICMSMessageErrors.idl. */
