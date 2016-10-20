@@ -61,7 +61,7 @@ STUB_HOOK = $(NSINSTALL) -D '$(ABS_DIST)/$(PKG_INST_PATH)'; \
     $(NULL)
 endif
 
-SEARCHPLUGINS_FILENAMES := $(shell $(PYTHON) $(srcdir)/searchplugins.py $(srcdir)/search/list.json $(AB_CD))
+SEARCHPLUGINS_FILENAMES := $(shell $(call py_action,output_searchplugins_list,$(srcdir)/search/list.json $(AB_CD)))
 SEARCHPLUGINS_PATH := .deps/generated_$(AB_CD)
 SEARCHPLUGINS_TARGET := libs searchplugins
 SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_FILENAMES)),$(or $(wildcard $(call EN_US_OR_L10N_FILE,searchplugins/$(plugin))),$(warning Missing searchplugin: $(plugin))))
@@ -84,7 +84,7 @@ include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/toolkit/locales/l10n.mk
 
 $(list-json): $(call mkdir_deps,$(SEARCHPLUGINS_PATH)) $(if $(IS_LANGUAGE_REPACK),FORCE)
-	$(shell $(PYTHON) $(srcdir)/searchjson.py $(srcdir)/search/list.json $(AB_CD) $(list-json))
+	$(call py_action,generate_searchjson,$(srcdir)/search/list.json $(AB_CD) $(list-json))
 searchplugins:: $(list-json)
 
 $(STAGEDIST): $(DIST)/branding
