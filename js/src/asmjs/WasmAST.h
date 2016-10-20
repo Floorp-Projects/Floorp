@@ -697,10 +697,7 @@ class AstExport : public AstNode
     {}
     AstName name() const { return name_; }
     DefinitionKind kind() const { return kind_; }
-    AstRef& ref() {
-        MOZ_ASSERT(kind_ == DefinitionKind::Function || kind_ == DefinitionKind::Global);
-        return ref_;
-    }
+    AstRef& ref() { return ref_; }
 };
 
 class AstDataSegment : public AstNode
