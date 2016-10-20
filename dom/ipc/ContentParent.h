@@ -552,9 +552,6 @@ public:
   virtual bool
   RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aURI) override;
 
-  virtual bool
-  RecvGetA11yContentId(uint32_t* aContentId) override;
-
   virtual int32_t Pid() const override;
 
   // Use the PHangMonitor channel to ask the child to repaint a tab.
