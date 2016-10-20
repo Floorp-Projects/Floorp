@@ -5,11 +5,12 @@
 
 const I = require("devtools/client/shared/vendor/immutable");
 const {
-  TOGGLE_FILTER,
-  ENABLE_FILTER_ONLY,
+  TOGGLE_FILTER_TYPE,
+  ENABLE_FILTER_TYPE_ONLY,
+  SET_FILTER_TEXT,
 } = require("../constants");
 
-const FiltersTypes = I.Record({
+const FilterTypes = I.Record({
   all: false,
   html: false,
   css: false,
@@ -24,10 +25,11 @@ const FiltersTypes = I.Record({
 });
 
 const Filters = I.Record({
-  types: new FiltersTypes({ all: true }),
+  types: new FilterTypes({ all: true }),
+  url: "",
 });
 
-function toggleFilter(state, action) {
+function toggleFilterType(state, action) {
   let { filter } = action;
   let newState;
 
@@ -36,7 +38,7 @@ function toggleFilter(state, action) {
     return state;
   }
   if (filter === "all") {
-    return new FiltersTypes({ all: true });
+    return new FilterTypes({ all: true });
   }
 
   newState = state.withMutations(types => {
@@ -45,13 +47,13 @@ function toggleFilter(state, action) {
   });
 
   if (!newState.includes(true)) {
-    newState = new FiltersTypes({ all: true });
+    newState = new FilterTypes({ all: true });
   }
 
   return newState;
 }
 
-function enableFilterOnly(state, action) {
+function enableFilterTypeOnly(state, action) {
   let { filter } = action;
 
   // Ignore unknown filter type
@@ -59,18 +61,17 @@ function enableFilterOnly(state, action) {
     return state;
   }
 
-  return new FiltersTypes({ [filter]: true });
+  return new FilterTypes({ [filter]: true });
 }
 
 function filters(state = new Filters(), action) {
-  let types;
   switch (action.type) {
-    case TOGGLE_FILTER:
-      types = toggleFilter(state.types, action);
-      return state.set("types", types);
-    case ENABLE_FILTER_ONLY:
-      types = enableFilterOnly(state.types, action);
-      return state.set("types", types);
+    case TOGGLE_FILTER_TYPE:
+      return state.set("types", toggleFilterType(state.types, action));
+    case ENABLE_FILTER_TYPE_ONLY:
+      return state.set("types", enableFilterTypeOnly(state.types, action));
+    case SET_FILTER_TEXT:
+      return state.set("url", action.url);
     default:
       return state;
   }

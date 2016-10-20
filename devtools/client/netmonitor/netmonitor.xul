@@ -31,11 +31,10 @@
         <toolbarbutton id="requests-menu-network-summary-button"
                        class="devtools-toolbarbutton icon-and-text"
                        data-localization="tooltiptext=netmonitor.toolbar.perf"/>
-        <textbox id="requests-menu-filter-freetext-text"
-                 class="devtools-filterinput"
-                 type="search"
-                 required="true"
-                 data-localization="placeholder=netmonitor.toolbar.filterFreetext.label"/>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-details-pane-toggle-hook"/>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-search-box-hook"/>
         <html:div xmlns="http://www.w3.org/1999/xhtml"
                   id="react-details-pane-toggle-hook"/>
       </hbox>

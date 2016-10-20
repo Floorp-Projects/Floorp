@@ -42,7 +42,7 @@ module.exports = connect(
       if (evt.type === "keydown" && (evt.key !== "" || evt.key !== "Enter")) {
         return;
       }
-      dispatch(Actions.toggleFilter(evt.target.dataset.key));
+      dispatch(Actions.toggleFilterType(evt.target.dataset.key));
     },
   })
 )(FilterButtons);
