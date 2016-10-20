@@ -1600,7 +1600,8 @@ public:
   // If aLookForCallerOnJSStack is true, this method will look at the JS stack
   // to determine who the caller is.  If it's false, it'll use |this| as the
   // caller.
-  bool WindowExists(const nsAString& aName, bool aLookForCallerOnJSStack);
+  bool WindowExists(const nsAString& aName, bool aForceNoOpener,
+                    bool aLookForCallerOnJSStack);
 
   already_AddRefed<nsIWidget> GetMainWidget();
   nsIWidget* GetNearestWidget() const;
