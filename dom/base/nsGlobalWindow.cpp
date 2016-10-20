@@ -8139,9 +8139,10 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
 
 nsresult
 nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
-                     const nsAString& aOptions, nsPIDOMWindowOuter **_retval)
+                     const nsAString& aOptions, nsIDocShellLoadInfo* aLoadInfo,
+                     nsPIDOMWindowOuter **_retval)
 {
-  FORWARD_TO_OUTER(Open, (aUrl, aName, aOptions, _retval),
+  FORWARD_TO_OUTER(Open, (aUrl, aName, aOptions, aLoadInfo, _retval),
                    NS_ERROR_NOT_INITIALIZED);
   return OpenInternal(aUrl, aName, aOptions,
                       false,          // aDialog
@@ -8150,6 +8151,7 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                       false,          // aDoJSFixups
                       true,           // aNavigate
                       nullptr, nullptr,  // No args
+                      aLoadInfo,
                       _retval);
 }
 
@@ -8165,6 +8167,7 @@ nsGlobalWindow::OpenJS(const nsAString& aUrl, const nsAString& aName,
                       true,           // aDoJSFixups
                       true,           // aNavigate
                       nullptr, nullptr,  // No args
+                      nullptr,        // aLoadInfo
                       _retval);
 }
 
@@ -8183,7 +8186,8 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       true,                    // aCalledNoScript
                       false,                   // aDoJSFixups
                       true,                    // aNavigate
-                      nullptr, aExtraArgument,    // Arguments
+                      nullptr, aExtraArgument, // Arguments
+                      nullptr,                 // aLoadInfo
                       _retval);
 }
 
@@ -8202,6 +8206,7 @@ nsGlobalWindow::OpenNoNavigate(const nsAString& aUrl,
                       false,          // aDoJSFixups
                       false,          // aNavigate
                       nullptr, nullptr,  // No args
+                      nullptr,        // aLoadInfo
                       _retval);
 
 }
@@ -8230,6 +8235,7 @@ nsGlobalWindow::OpenDialogOuter(JSContext* aCx, const nsAString& aUrl,
                         false,            // aDoJSFixups
                         true,                // aNavigate
                         argvArray, nullptr,  // Arguments
+                        nullptr,          // aLoadInfo
                         getter_AddRefs(dialog));
   return dialog.forget();
 }
@@ -9314,6 +9320,7 @@ nsGlobalWindow::ShowModalDialogOuter(const nsAString& aUrl,
                         true,           // aDoJSFixups
                         true,           // aNavigate
                         nullptr, argHolder, // args
+                        nullptr,        // aLoadInfo
                         getter_AddRefs(dlgWin));
   nsContentUtils::SetMicroTaskLevel(oldMicroTaskLevel);
   LeaveModalState();
@@ -11793,6 +11800,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                              bool aDoJSFixups, bool aNavigate,
                              nsIArray *argv,
                              nsISupports *aExtraArgument,
+                             nsIDocShellLoadInfo* aLoadInfo,
                              nsPIDOMWindowOuter **aReturn)
 {
   MOZ_ASSERT(IsOuterWindow());
@@ -11936,6 +11944,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                                 aDialog, aNavigate, argv,
                                 isPopupSpamWindow,
                                 forceNoOpener,
+                                aLoadInfo,
                                 getter_AddRefs(domReturn));
     } else {
       // Force a system caller here so that the window watcher won't screw us
@@ -11957,6 +11966,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                                 aDialog, aNavigate, aExtraArgument,
                                 isPopupSpamWindow,
                                 forceNoOpener,
+                                aLoadInfo,
                                 getter_AddRefs(domReturn));
 
     }

@@ -375,6 +375,7 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent,
                             /* navigate = */ true, argv,
                             /* aIsPopupSpam = */ false,
                             /* aForceNoOpener = */ false,
+                            /* aLoadInfo = */ nullptr,
                             aResult);
 }
 
@@ -440,6 +441,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
                              nsISupports* aArguments,
                              bool aIsPopupSpam,
                              bool aForceNoOpener,
+                             nsIDocShellLoadInfo* aLoadInfo,
                              mozIDOMWindowProxy** aResult)
 {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
@@ -460,7 +462,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             aCalledFromScript, dialog,
                             aNavigate, argv, aIsPopupSpam,
-                            aForceNoOpener, aResult);
+                            aForceNoOpener, aLoadInfo, aResult);
 }
 
 // This static function checks if the aDocShell uses an UserContextId equal to
@@ -698,6 +700,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
                                     nsIArray* aArgv,
                                     bool aIsPopupSpam,
                                     bool aForceNoOpener,
+                                    nsIDocShellLoadInfo* aLoadInfo,
                                     mozIDOMWindowProxy** aResult)
 {
   nsresult rv = NS_OK;
@@ -1197,8 +1200,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     }
   }
 
-  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-  if (uriToLoad && aNavigate) {
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo = aLoadInfo;
+  if (uriToLoad && aNavigate && !loadInfo) {
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
