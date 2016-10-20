@@ -85,8 +85,13 @@ add_task(function* testPageActionPopupResize() {
 
   yield setSize(1400);
 
-  is(panelWindow.innerWidth, 800, "Panel window width");
-  ok(body.clientWidth <= 800, "Panel body width ${body.clientWidth} is less than 800");
+  if (AppConstants.platform == "win") {
+    ok(panelWindow.innerWidth >= 750 && panelWindow.innerWidth <= 800,
+       `Panel window width ${panelWindow.innerWidth} is in acceptable range`);
+  } else {
+    is(panelWindow.innerWidth, 800, "Panel window width");
+  }
+  ok(body.clientWidth <= 800, `Panel body width ${body.clientWidth} is less than 800`);
   is(body.scrollWidth, 1400, "Panel body scroll width");
 
   is(panelWindow.innerHeight, 600, "Panel window height");
