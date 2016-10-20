@@ -3,7 +3,7 @@ import sys
 
 # OS Specifics
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
-BINARY_PATH = os.path.join(ABS_WORK_DIR, "firefox", "firefox.exe")
+BINARY_PATH = os.path.join(ABS_WORK_DIR, "application", "firefox", "firefox.exe")
 INSTALLER_PATH = os.path.join(ABS_WORK_DIR, "installer.zip")
 XPCSHELL_NAME = 'xpcshell.exe'
 EXE_SUFFIX = '.exe'
