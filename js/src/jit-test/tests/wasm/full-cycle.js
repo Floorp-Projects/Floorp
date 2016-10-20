@@ -63,3 +63,34 @@ wasmFullPass(`(module
     )
     (export "mem" memory)
 )`, 0x050403, {"": {memory}});
+
+// Tables.
+wasmFullPass(`(module
+    (table (export "table") 3 anyfunc)
+    (type $t (func (result i32)))
+    (func $foo (result i32) (i32.const 1))
+    (func $bar (result i32) (i32.const 2))
+    (func $baz (result i32) (i32.const 3))
+    (elem (i32.const 0) $baz $bar)
+    (elem (i32.const 2) $foo)
+    (func (export "run") (param i32) (result i32)
+        get_local 0
+        call_indirect $t
+    )
+)`, 3, {}, 0);
+
+let table = new WebAssembly.Table({ element: 'anyfunc', initial: 3, maximum: 3 });
+
+wasmFullPass(`(module
+    (table (import "" "table") 3 4 anyfunc)
+    (type $t (func (result i32)))
+    (func $foo (result i32) (i32.const 1))
+    (func $bar (result i32) (i32.const 2))
+    (func $baz (result i32) (i32.const 3))
+    (elem (i32.const 0) $baz $bar)
+    (elem (i32.const 2) $foo)
+    (func (export "run") (param i32) (result i32)
+        get_local 0
+        call_indirect $t
+    )
+)`, 3, {"":{table}}, 0);
