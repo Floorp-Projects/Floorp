@@ -3,8 +3,9 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr } = Components;
 
+var timer;
 function setTimeout(callback, delay) {
-  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback({ notify: callback },
                            delay,
                            Ci.nsITimer.TYPE_ONE_SHOT);
