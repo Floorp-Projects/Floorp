@@ -1220,7 +1220,8 @@ public:
 
   virtual nsresult GetEventTargetParent(
                      mozilla::EventChainPreVisitor& aVisitor) override;
-
+  virtual nsresult PreHandleEvent(
+                     mozilla::EventChainVisitor& aVisitor) override;
   virtual bool IsDisabled() const override;
 
   /**
