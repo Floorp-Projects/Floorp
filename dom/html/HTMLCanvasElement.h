@@ -308,7 +308,8 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
-  virtual nsresult PreHandleEvent(mozilla::EventChainPreVisitor& aVisitor) override;
+  virtual nsresult GetEventTargetParent(
+                     mozilla::EventChainPreVisitor& aVisitor) override;
 
   /*
    * Helpers called by various users of Canvas

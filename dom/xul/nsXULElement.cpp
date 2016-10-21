@@ -1269,7 +1269,7 @@ nsXULElement::List(FILE* out, int32_t aIndent) const
 #endif
 
 nsresult
-nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
+nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
     aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
     if (IsRootOfNativeAnonymousSubtree() &&
@@ -1344,7 +1344,7 @@ nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
         }
     }
 
-    return nsStyledElement::PreHandleEvent(aVisitor);
+    return nsStyledElement::GetEventTargetParent(aVisitor);
 }
 
 // XXX This _should_ be an implementation method, _not_ publicly exposed :-(
