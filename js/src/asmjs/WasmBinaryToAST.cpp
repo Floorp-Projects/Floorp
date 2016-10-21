@@ -24,6 +24,7 @@
 
 #include "jscntxt.h"
 
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmBinaryIterator.h"
 
 using namespace js;
@@ -1599,15 +1600,12 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
       }
       case uint32_t(DefinitionKind::Global): {
         ValType type;
-        if (!c.d.readValType(&type))
-            return false;
-
-        uint32_t flags;
-        if (!c.d.readVarU32(&flags))
+        bool isMutable;
+        if (!DecodeGlobalType(c.d, &type, &isMutable))
             return false;
 
         *import = new(c.lifo) AstImport(importName, moduleName, fieldName,
-                                        AstGlobal(importName, type, flags));
+                                        AstGlobal(importName, type, isMutable));
         break;
       }
       case uint32_t(DefinitionKind::Table): {
@@ -1768,15 +1766,15 @@ AstDecodeGlobal(AstDecodeContext& c, uint32_t i, AstGlobal* global)
         return false;
 
     ValType type;
-    uint32_t flags;
-    if (!DecodeGlobalType(c.d, &type, &flags))
+    bool isMutable;
+    if (!DecodeGlobalType(c.d, &type, &isMutable))
         return false;
 
     AstExpr* init;
     if (!AstDecodeInitializerExpression(c, &init, type))
         return c.d.fail("missing initializer expression");
 
-    *global = AstGlobal(name, type, flags, Some(init));
+    *global = AstGlobal(name, type, isMutable, Some(init));
     return true;
 }
 
