@@ -115,10 +115,10 @@ TextureImageEGL::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& 
                              aSurf,
                              region,
                              mTexture,
+                             mSize,
                              &uploadSize,
                              needInit,
-                             bounds.TopLeft() + gfx::IntPoint(aFrom.x, aFrom.y),
-                             false);
+                             aFrom);
     if (uploadSize > 0) {
         UpdateUploadSize(uploadSize);
     }
