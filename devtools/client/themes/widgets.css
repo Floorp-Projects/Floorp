@@ -625,15 +625,6 @@ widgets.css is overwritten. */
   max-width: 14em;
 }
 
-.theme-firebug .variables-view-scope > .title {
-  height: auto;
-  border: none;
-}
-
-.theme-firebug .variables-view-scope > .title > .theme-twisty {
-  display: none;
-}
-
 /* Generic variables traits */
 
 .variables-view-variable:not(:last-child) {
