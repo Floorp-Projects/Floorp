@@ -23,7 +23,7 @@
 #include "frontend/TokenStream.h"
 #include "jit/Ion.h"
 #include "threading/ConditionVariable.h"
-#include "threading/Mutex.h"
+#include "vm/MutexIDs.h"
 
 namespace JS {
 struct Zone;

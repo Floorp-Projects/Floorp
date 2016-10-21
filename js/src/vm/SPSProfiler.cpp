@@ -25,6 +25,7 @@ using mozilla::DebugOnly;
 
 SPSProfiler::SPSProfiler(JSRuntime* rt)
   : rt(rt),
+    strings(mutexid::SPSProfilerStrings),
     stack_(nullptr),
     size_(nullptr),
     max_(0),
