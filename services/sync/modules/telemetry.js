@@ -280,7 +280,7 @@ class TelemetryRecord {
     }
 
     if (includeDeviceInfo) {
-      let remoteDevices = Weave.Service.clientsEngine.remoteDevices;
+      let remoteDevices = Weave.Service.clientsEngine.remoteClients;
       this.devices = remoteDevices.map(device => {
         return {
           os: device.os,
