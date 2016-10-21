@@ -903,6 +903,12 @@ child:
      */
     async NotifyPartialSessionHistoryDeactive();
 
+    /**
+     * Tell the child that it is a fresh process created for a Large-Allocation
+     * load.
+     */
+    async SetFreshProcess();
+
 /*
  * FIXME: write protocol!
 

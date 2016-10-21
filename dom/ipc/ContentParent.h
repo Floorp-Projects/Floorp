@@ -135,7 +135,8 @@ public:
   GetNewOrUsedBrowserProcess(bool aForBrowserElement = false,
                              hal::ProcessPriority aPriority =
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
-                             ContentParent* aOpener = nullptr);
+                             ContentParent* aOpener = nullptr,
+                             bool aFreshProcess = false);
 
   /**
    * Create a subprocess suitable for use as a preallocated app process.
@@ -150,7 +151,8 @@ public:
   static TabParent*
   CreateBrowserOrApp(const TabContext& aContext,
                      Element* aFrameElement,
-                     ContentParent* aOpenerContentParent);
+                     ContentParent* aOpenerContentParent,
+                     bool aFreshProcess = false);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -573,6 +575,7 @@ protected:
 private:
   static nsDataHashtable<nsStringHashKey, ContentParent*> *sAppContentParents;
   static nsTArray<ContentParent*>* sNonAppContentParents;
+  static nsTArray<ContentParent*>* sLargeAllocationContentParents;
   static nsTArray<ContentParent*>* sPrivateContent;
   static StaticAutoPtr<LinkedList<ContentParent> > sContentParents;
 
