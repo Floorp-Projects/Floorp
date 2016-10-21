@@ -1014,12 +1014,6 @@ Statistics::endGC()
     if (fp)
         printStats();
 
-    // Clear the timers at the end of a GC because we accumulate time in
-    // between GCs for some (which come before PHASE_GC_BEGIN in the list.)
-    PodZero(&phaseStartTimes[PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);
-    for (size_t d = PHASE_DAG_NONE; d < NumTimingArrays; d++)
-        PodZero(&phaseTimes[d][PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);
-
     // Clear the OOM flag but only if we are not in a nested GC.
     if (gcDepth == 1)
         aborted = false;
@@ -1125,8 +1119,15 @@ Statistics::endSlice()
     }
 
     /* Do this after the slice callback since it uses these values. */
-    if (last)
+    if (last) {
         PodArrayZero(counts);
+
+        // Clear the timers at the end of a GC because we accumulate time in
+        // between GCs for some (which come before PHASE_GC_BEGIN in the list.)
+        PodZero(&phaseStartTimes[PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);
+        for (size_t d = PHASE_DAG_NONE; d < NumTimingArrays; d++)
+            PodZero(&phaseTimes[d][PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);
+    }
 
     gcDepth--;
     MOZ_ASSERT(gcDepth >= 0);
