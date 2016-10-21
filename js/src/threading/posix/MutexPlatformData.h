@@ -11,13 +11,9 @@
 
 #include "threading/Mutex.h"
 
-namespace js {
-
-struct Mutex::PlatformData
+struct js::detail::MutexImpl::PlatformData
 {
   pthread_mutex_t ptMutex;
 };
-
-} // namespace js
 
 #endif // platform_win_MutexPlatformData_h

@@ -95,7 +95,9 @@ class ExclusiveData
      * value.
      */
     template <typename U>
-    explicit ExclusiveData(U&& u) {
+    explicit ExclusiveData(const MutexId& id, U&& u)
+      : lock_(id)
+    {
         new (value_.addr()) T(mozilla::Forward<U>(u));
     }
 
@@ -103,7 +105,9 @@ class ExclusiveData
      * Create a new `ExclusiveData`, constructing the protected value in place.
      */
     template <typename... Args>
-    explicit ExclusiveData(Args&&... args) {
+    explicit ExclusiveData(const MutexId& id, Args&&... args)
+      : lock_(id)
+    {
         new (value_.addr()) T(mozilla::Forward<Args>(args)...);
     }
 
@@ -113,7 +117,9 @@ class ExclusiveData
         release();
     }
 
-    ExclusiveData(ExclusiveData&& rhs) {
+    ExclusiveData(ExclusiveData&& rhs) :
+      lock_(mozilla::Move(rhs.lock))
+    {
         MOZ_ASSERT(&rhs != this, "self-move disallowed!");
         new (value_.addr()) T(mozilla::Move(*rhs.value_.addr()));
     }
