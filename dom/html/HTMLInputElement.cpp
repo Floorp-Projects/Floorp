@@ -3743,7 +3743,7 @@ HTMLInputElement::IsDisabledForEvents(EventMessage aMessage)
 }
 
 nsresult
-HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
+HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled
   aVisitor.mCanHandle = false;
@@ -3760,7 +3760,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 
   //FIXME Allow submission etc. also when there is no prescontext, Bug 329509.
   if (!aVisitor.mPresContext) {
-    return nsGenericHTMLElement::PreHandleEvent(aVisitor);
+    return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
   }
   //
   // Web pages expect the value of a radio button or checkbox to be set
@@ -3886,7 +3886,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   if (mType == NS_FORM_INPUT_RANGE &&
       (aVisitor.mEvent->mMessage == eFocus ||
        aVisitor.mEvent->mMessage == eBlur)) {
-    // Just as nsGenericHTMLFormElementWithState::PreHandleEvent calls
+    // Just as nsGenericHTMLFormElementWithState::GetEventTargetParent calls
     // nsIFormControlFrame::SetFocus, we handle focus here.
     nsIFrame* frame = GetPrimaryFrame();
     if (frame) {
@@ -3974,10 +3974,11 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     }
   }
 
-  nsresult rv = nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
+  nsresult rv = nsGenericHTMLFormElementWithState::GetEventTargetParent(aVisitor);
 
-  // We do this after calling the base class' PreHandleEvent so that
-  // nsIContent::PreHandleEvent doesn't reset any change we make to mCanHandle.
+  // We do this after calling the base class' GetEventTargetParent so that
+  // nsIContent::GetEventTargetParent doesn't reset any change we make to
+  // mCanHandle.
   if (mType == NS_FORM_INPUT_NUMBER &&
       aVisitor.mEvent->IsTrusted()  &&
       aVisitor.mEvent->mOriginalTarget != this) {

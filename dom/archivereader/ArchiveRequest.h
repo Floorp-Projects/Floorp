@@ -38,7 +38,8 @@ public:
                  ArchiveReader* aReader);
 
   // nsIDOMEventTarget
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override;
+  virtual nsresult GetEventTargetParent(
+                     EventChainPreVisitor& aVisitor) override;
 
 public:
   // This is called by the DOMArchiveRequestEvent
