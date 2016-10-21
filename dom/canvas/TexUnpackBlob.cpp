@@ -131,6 +131,86 @@ FormatForPackingInfo(const PackingInfo& pi)
 
 ////////////////////
 
+static bool
+ValidateUnpackPixels(WebGLContext* webgl, const char* funcName, uint32_t fullRows,
+                     uint32_t tailPixels, webgl::TexUnpackBlob* blob)
+{
+    if (!blob->mWidth || !blob->mHeight || !blob->mDepth)
+        return true;
+
+    const auto usedPixelsPerRow = CheckedUint32(blob->mSkipPixels) + blob->mWidth;
+    if (!usedPixelsPerRow.isValid() || usedPixelsPerRow.value() > blob->mRowLength) {
+        webgl->ErrorInvalidOperation("%s: UNPACK_SKIP_PIXELS + width >"
+                                     " UNPACK_ROW_LENGTH.",
+                                     funcName);
+        return false;
+    }
+
+    if (blob->mHeight > blob->mImageHeight) {
+        webgl->ErrorInvalidOperation("%s: height > UNPACK_IMAGE_HEIGHT.", funcName);
+        return false;
+    }
+
+    //////
+
+    // The spec doesn't bound SKIP_ROWS + height <= IMAGE_HEIGHT, unfortunately.
+    auto skipFullRows = CheckedUint32(blob->mSkipImages) * blob->mImageHeight;
+    skipFullRows += blob->mSkipRows;
+
+    MOZ_ASSERT(blob->mDepth >= 1);
+    MOZ_ASSERT(blob->mHeight >= 1);
+    auto usedFullRows = CheckedUint32(blob->mDepth - 1) * blob->mImageHeight;
+    usedFullRows += blob->mHeight - 1; // Full rows in the final image, excluding the tail.
+
+    const auto fullRowsNeeded = skipFullRows + usedFullRows;
+    if (!fullRowsNeeded.isValid()) {
+        webgl->ErrorOutOfMemory("%s: Invalid calculation for required row count.",
+                                funcName);
+        return false;
+    }
+
+    if (fullRows > fullRowsNeeded.value())
+        return true;
+
+    if (fullRows == fullRowsNeeded.value() && tailPixels >= usedPixelsPerRow.value()) {
+        blob->mNeedsExactUpload = true;
+        return true;
+    }
+
+    webgl->ErrorInvalidOperation("%s: Desired upload requires more data than is"
+                                 " available: (%u rows plus %u pixels needed, %u rows"
+                                 " plus %u pixels available)",
+                                 funcName, fullRowsNeeded.value(),
+                                 usedPixelsPerRow.value(), fullRows, tailPixels);
+    return false;
+}
+
+static bool
+ValidateUnpackBytes(WebGLContext* webgl, const char* funcName,
+                    const webgl::PackingInfo& pi, size_t availByteCount,
+                    webgl::TexUnpackBlob* blob)
+{
+    if (!blob->mWidth || !blob->mHeight || !blob->mDepth)
+        return true;
+
+    const auto bytesPerPixel = webgl::BytesPerPixel(pi);
+    const auto bytesPerRow = CheckedUint32(blob->mRowLength) * bytesPerPixel;
+    const auto rowStride = RoundUpToMultipleOf(bytesPerRow, blob->mAlignment);
+
+    const auto fullRows = availByteCount / rowStride;
+    if (!fullRows.isValid()) {
+        webgl->ErrorOutOfMemory("%s: Unacceptable upload size calculated.");
+        return false;
+    }
+
+    const auto bodyBytes = fullRows.value() * rowStride.value();
+    const auto tailPixels = (availByteCount - bodyBytes) / bytesPerPixel;
+
+    return ValidateUnpackPixels(webgl, funcName, fullRows.value(), tailPixels, blob);
+}
+
+////////////////////
+
 static uint32_t
 ZeroOn2D(TexImageTarget target, uint32_t val)
 {
@@ -331,13 +411,24 @@ DoTexOrSubImage(bool isSubImage, gl::GLContext* gl, TexImageTarget target, GLint
 
 TexUnpackBytes::TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target,
                                uint32_t width, uint32_t height, uint32_t depth,
-                               bool isClientData, const uint8_t* ptr)
+                               bool isClientData, const uint8_t* ptr, size_t availBytes)
     : TexUnpackBlob(webgl, target,
                     FallbackOnZero(webgl->mPixelStore_UnpackRowLength, width), width,
                     height, depth, false)
     , mIsClientData(isClientData)
     , mPtr(ptr)
+    , mAvailBytes(availBytes)
 { }
+
+bool
+TexUnpackBytes::Validate(WebGLContext* webgl, const char* funcName,
+                         const webgl::PackingInfo& pi)
+{
+    if (mIsClientData && !mPtr)
+        return true;
+
+    return ValidateUnpackBytes(webgl, funcName, pi, mAvailBytes, this);
+}
 
 bool
 TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
@@ -469,6 +560,14 @@ TexUnpackImage::TexUnpackImage(const WebGLContext* webgl, TexImageTarget target,
 
 TexUnpackImage::~TexUnpackImage()
 { }
+
+bool
+TexUnpackImage::Validate(WebGLContext* webgl, const char* funcName,
+                         const webgl::PackingInfo& pi)
+{
+    const auto& fullRows = mImage->GetSize().height;
+    return ValidateUnpackPixels(webgl, funcName, fullRows, 0, this);
+}
 
 bool
 TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
@@ -624,6 +723,14 @@ GetFormatForSurf(gfx::SourceSurface* surf, WebGLTexelFormat* const out_texelForm
 }
 
 //////////
+
+bool
+TexUnpackSurface::Validate(WebGLContext* webgl, const char* funcName,
+                           const webgl::PackingInfo& pi)
+{
+    const auto& fullRows = mSurf->GetSize().height;
+    return ValidateUnpackPixels(webgl, funcName, fullRows, 0, this);
+}
 
 bool
 TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
