@@ -862,9 +862,9 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         let destinationWindow = null;
         if (moveProperties.windowId !== null) {
           destinationWindow = WindowManager.getWindow(moveProperties.windowId, context);
-          // Ignore invalid window.
+          // Fail on an invalid window.
           if (!destinationWindow) {
-            return;
+            return Promise.reject({message: `Invalid window ID: ${moveProperties.windowId}`});
           }
         }
 
