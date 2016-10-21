@@ -268,6 +268,15 @@ protected:
   Master* mMaster;
 };
 
+/**
+ * Purpose: decode metadata like duration and dimensions of the media resource.
+ *
+ * Transition to other states when decoding metadata is done:
+ *   SHUTDOWN if failing to decode metadata.
+ *   WAIT_FOR_CDM if the media is encrypted and CDM is not available.
+ *   DORMANT if any pending dormant request.
+ *   DECODING_FIRSTFRAME otherwise.
+ */
 class MediaDecoderStateMachine::DecodeMetadataState
   : public MediaDecoderStateMachine::StateObject
 {
@@ -346,6 +355,13 @@ private:
   bool mPendingDormant = false;
 };
 
+/**
+ * Purpose: wait for the CDM to start decoding.
+ *
+ * Transition to other states when CDM is ready:
+ *   DORMANT if any pending dormant request.
+ *   DECODING_FIRSTFRAME otherwise.
+ */
 class MediaDecoderStateMachine::WaitForCDMState
   : public MediaDecoderStateMachine::StateObject
 {
@@ -390,6 +406,12 @@ private:
   bool mPendingDormant = false;
 };
 
+/**
+ * Purpose: release decoder resources to save memory and hardware resources.
+ *
+ * Transition to:
+ *   DECODING_FIRSTFRAME when being asked to exit dormant.
+ */
 class MediaDecoderStateMachine::DormantState
   : public MediaDecoderStateMachine::StateObject
 {
@@ -431,6 +453,15 @@ public:
   }
 };
 
+/**
+ * Purpose: decode the 1st audio and video frames to fire the 'loadeddata' event.
+ *
+ * Transition to:
+ *   DORMANT if any dormant request.
+ *   SHUTDOWN if any decode error.
+ *   SEEKING if any pending seek and seek is possible.
+ *   DECODING when the 'loadeddata' event is fired.
+ */
 class MediaDecoderStateMachine::DecodingFirstFrameState
   : public MediaDecoderStateMachine::StateObject
 {
@@ -485,6 +516,16 @@ private:
   void MaybeFinishDecodeFirstFrame();
 };
 
+/**
+ * Purpose: decode audio/video data for playback.
+ *
+ * Transition to:
+ *   DORMANT if any dormant request.
+ *   SEEKING if any seek request.
+ *   SHUTDOWN if any decode error.
+ *   BUFFERING if playback can't continue due to lack of decoded data.
+ *   COMPLETED when having decoded all audio/video data.
+ */
 class MediaDecoderStateMachine::DecodingState
   : public MediaDecoderStateMachine::StateObject
 {
@@ -648,6 +689,16 @@ private:
   bool mIsPrerolling = true;
 };
 
+/**
+ * Purpose: seek to a particular new playback position.
+ *
+ * Transition to:
+ *   DORMANT if any dormant request.
+ *   SEEKING if any new seek request.
+ *   SHUTDOWN if seek failed.
+ *   COMPLETED if the new playback position is the end of the media resource.
+ *   DECODING otherwise.
+ */
 class MediaDecoderStateMachine::SeekingState
   : public MediaDecoderStateMachine::StateObject
 {
@@ -817,6 +868,16 @@ private:
   RefPtr<SeekTask> mSeekTask;
 };
 
+/**
+ * Purpose: stop playback until enough data is decoded to continue playback.
+ *
+ * Transition to:
+ *   DORMANT if any dormant request.
+ *   SEEKING if any seek request.
+ *   SHUTDOWN if any decode error.
+ *   COMPLETED when having decoded all audio/video data.
+ *   DECODING when having decoded enough data to continue playback.
+ */
 class MediaDecoderStateMachine::BufferingState
   : public MediaDecoderStateMachine::StateObject
 {
@@ -885,6 +946,13 @@ private:
   const uint32_t mBufferingWait = 15;
 };
 
+/**
+ * Purpose: play all the decoded data and fire the 'ended' event.
+ *
+ * Transition to:
+ *   DORMANT if any dormant request.
+ *   SEEKING if any seek request.
+ */
 class MediaDecoderStateMachine::CompletedState
   : public MediaDecoderStateMachine::StateObject
 {
@@ -967,6 +1035,15 @@ private:
   bool mSentPlaybackEndedEvent = false;
 };
 
+/**
+ * Purpose: release all resources allocated by MDSM.
+ *
+ * Transition to:
+ *   None since this is the final state.
+ *
+ * Transition from:
+ *   Any states other than SHUTDOWN.
+ */
 class MediaDecoderStateMachine::ShutdownState
   : public MediaDecoderStateMachine::StateObject
 {
