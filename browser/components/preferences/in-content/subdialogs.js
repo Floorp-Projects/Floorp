@@ -173,6 +173,18 @@ var gSubDialog = {
 
     this._frame.contentWindow.addEventListener("dialogclosing", this);
 
+    let oldResizeBy = this._frame.contentWindow.resizeBy;
+    this._frame.contentWindow.resizeBy = function(resizeByWidth, resizeByHeight) {
+      // Only handle resizeByHeight currently.
+      let frameHeight = gSubDialog._frame.clientHeight;
+      let boxMinHeight = parseFloat(getComputedStyle(gSubDialog._box).minHeight, 10);
+
+      gSubDialog._frame.style.height = (frameHeight + resizeByHeight) + "px";
+      gSubDialog._box.style.minHeight = (boxMinHeight + resizeByHeight) + "px";
+
+      oldResizeBy.call(gSubDialog._frame.contentWindow, resizeByWidth, resizeByHeight);
+    };
+
     // Make window.close calls work like dialog closing.
     let oldClose = this._frame.contentWindow.close;
     this._frame.contentWindow.close = function() {
@@ -273,8 +285,10 @@ var gSubDialog = {
     this._overlay.style.visibility = "visible";
     this._overlay.style.opacity = ""; // XXX: focus hack continued from _onContentLoaded
 
-    this._resizeObserver = new MutationObserver(this._onResize);
-    this._resizeObserver.observe(this._box, {attributes: true});
+    if (this._box.getAttribute("resizable") == "true") {
+      this._resizeObserver = new MutationObserver(this._onResize);
+      this._resizeObserver.observe(this._box, {attributes: true});
+    }
 
     this._trapFocus();
   },
