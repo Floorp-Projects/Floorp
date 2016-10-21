@@ -179,21 +179,6 @@ interface nsITelemetry : nsISupports
                             [retval, array, size_is(count)] out string histograms);
 
   /**
-   * Create a histogram using the current state of an existing histogram.  The
-   * existing histogram must be registered in TelemetryHistograms.h.
-   *
-   * @param name Unique histogram name
-   * @param existing_name Existing histogram name
-   * The returned object has the following functions:
-   *   add(int) - Adds an int value to the appropriate bucket
-   *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
-   *   clear() - Zeros out the histogram's buckets and sum
-   *   dataset() - identifies what dataset this is in: DATASET_RELEASE_CHANNEL_OPTOUT or ...OPTIN
-   */
-  [implicit_jscontext]
-  jsval histogramFrom(in ACString name, in ACString existing_name);
-
-  /**
    * Create and return a histogram registered in TelemetryHistograms.h.
    *
    * @param id - unique identifier from TelemetryHistograms.h
