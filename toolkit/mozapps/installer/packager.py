@@ -325,7 +325,7 @@ def main():
         # native architecture.
         args.source, args.unify = sorted([args.source, args.unify],
                                          key=is_native, reverse=True)
-        if is_native(args.source):
+        if is_native(args.source) and not buildconfig.substs['CROSS_COMPILE']:
             launcher.tooldir = args.source
     elif not buildconfig.substs['CROSS_COMPILE']:
         launcher.tooldir = mozpath.join(buildconfig.topobjdir, 'dist')
