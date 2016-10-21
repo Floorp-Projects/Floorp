@@ -2635,16 +2635,6 @@ CSS_PROP_SVG(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_CONTENT(
-    marker-offset,
-    marker_offset,
-    MarkerOffset,
-    CSS_PROPERTY_PARSE_VALUE,
-    "",
-    VARIANT_AHL | VARIANT_CALC,
-    nullptr,
-    offsetof(nsStyleContent, mMarkerOffset),
-    eStyleAnimType_Coord)
 CSS_PROP_SVG(
     marker-start,
     marker_start,

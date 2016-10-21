@@ -2966,7 +2966,6 @@ exports.CSS_PROPERTIES = {
       "margin-top",
       "marker-end",
       "marker-mid",
-      "marker-offset",
       "marker-start",
       "mask-clip",
       "mask-composite",
@@ -7128,23 +7127,6 @@ exports.CSS_PROPERTIES = {
       "none",
       "unset",
       "url"
-    ]
-  },
-  "marker-offset": {
-    "isInherited": false,
-    "subproperties": [
-      "marker-offset"
-    ],
-    "supports": [
-      6
-    ],
-    "values": [
-      "-moz-calc",
-      "auto",
-      "calc",
-      "inherit",
-      "initial",
-      "unset"
     ]
   },
   "marker-start": {

@@ -1053,7 +1053,7 @@ Element.CSS_PROPERTIES = $w(
   'borderRightColor borderRightStyle borderRightWidth borderSpacing ' +
   'borderTopColor borderTopStyle borderTopWidth bottom clip color ' +
   'fontSize fontWeight height left letterSpacing lineHeight ' +
-  'marginBottom marginLeft marginRight marginTop markerOffset maxHeight '+
+  'marginBottom marginLeft marginRight marginTop maxHeight '+
   'maxWidth minHeight minWidth opacity outlineColor outlineOffset ' +
   'outlineWidth paddingBottom paddingLeft paddingRight paddingTop ' +
   'right textIndent top width wordSpacing zIndex');

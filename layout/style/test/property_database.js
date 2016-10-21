@@ -3447,14 +3447,6 @@ var gCSSProperties = {
     invalid_values: [ ],
     quirks_values: { "5": "5px" },
   },
-  "marker-offset": {
-    domProp: "markerOffset",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "6em", "-1px", "calc(0px)", "calc(3em + 2px - 4px)", "calc(-2em)" ],
-    invalid_values: []
-  },
   "max-height": {
     domProp: "maxHeight",
     inherited: false,
