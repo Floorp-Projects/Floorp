@@ -201,6 +201,14 @@ private:
     void DisableSpdy() override;
     void ReuseConnectionOnRestartOK(bool reuseOk) override { mReuseOnRestart = reuseOk; }
 
+    // Called right after we parsed the response head.  Checks for connection based
+    // authentication schemes in reponse headers for WWW and Proxy authentication.
+    // If such is found in any of them, NS_HTTP_STICKY_CONNECTION is set in mCaps.
+    // We need the sticky flag be set early to keep the connection from very start
+    // of the authentication process.
+    void CheckForStickyAuthScheme();
+    void CheckForStickyAuthSchemeAt(nsHttpAtom const& header);
+
 private:
     class UpdateSecurityCallbacks : public Runnable
     {
