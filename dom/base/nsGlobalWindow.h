@@ -953,6 +953,8 @@ public:
        mozilla::ErrorResult& aError);
   nsresult Open(const nsAString& aUrl, const nsAString& aName,
                 const nsAString& aOptions,
+                nsIDocShellLoadInfo* aLoadInfo,
+                bool aForceNoOpener,
                 nsPIDOMWindowOuter **_retval) override;
   mozilla::dom::Navigator* GetNavigator(mozilla::ErrorResult& aError);
   nsIDOMNavigator* GetNavigator() override;
@@ -1407,6 +1409,7 @@ protected:
   // Get the parent, returns null if this is a toplevel window
   nsPIDOMWindowOuter* GetParentInternal();
 
+public:
   // popup tracking
   bool IsPopupSpamWindow()
   {
@@ -1417,17 +1420,10 @@ protected:
     return GetOuterWindowInternal()->mIsPopupSpam;
   }
 
-  void SetPopupSpamWindow(bool aPopup)
-  {
-    if (IsInnerWindow() && !mOuterWindow) {
-      NS_ERROR("SetPopupSpamWindow() called on inner window w/o an outer!");
+  // Outer windows only.
+  void SetIsPopupSpamWindow(bool aIsPopupSpam);
 
-      return;
-    }
-
-    GetOuterWindowInternal()->mIsPopupSpam = aPopup;
-  }
-
+protected:
   // Window Control Functions
 
   // Outer windows only.
@@ -1472,12 +1468,18 @@ private:
    *        three args, if present, will be aUrl, aName, and aOptions.  So this
    *        param only matters if there are more than 3 arguments.
    *
-   * @param argc The number of arguments in argv.
-   *
    * @param aExtraArgument Another way to pass arguments in.  This is mutually
-   *        exclusive with the argv/argc approach.
+   *        exclusive with the argv approach.
    *
-   * @param aReturn [out] The window that was opened, if any.
+   * @param aLoadInfo to be passed on along to the windowwatcher.
+   *
+   * @param aForceNoOpener if true, will act as if "noopener" were passed in
+   *                       aOptions, but without affecting any other window
+   *                       features.
+   *
+   * @param aReturn [out] The window that was opened, if any.  Will be null if
+   *                      aForceNoOpener is true of if aOptions contains
+   *                      "noopener".
    *
    * Outer windows only.
    */
@@ -1491,6 +1493,8 @@ private:
                         bool aNavigate,
                         nsIArray *argv,
                         nsISupports *aExtraArgument,
+                        nsIDocShellLoadInfo* aLoadInfo,
+                        bool aForceNoOpener,
                         nsPIDOMWindowOuter **aReturn);
 
 public:
@@ -1606,7 +1610,8 @@ public:
   // If aLookForCallerOnJSStack is true, this method will look at the JS stack
   // to determine who the caller is.  If it's false, it'll use |this| as the
   // caller.
-  bool WindowExists(const nsAString& aName, bool aLookForCallerOnJSStack);
+  bool WindowExists(const nsAString& aName, bool aForceNoOpener,
+                    bool aLookForCallerOnJSStack);
 
   already_AddRefed<nsIWidget> GetMainWidget();
   nsIWidget* GetNearestWidget() const;

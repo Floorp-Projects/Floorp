@@ -5223,7 +5223,7 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     if (!inlineScriptTree)
         return false;
     CompileInfo* info = lifoAlloc->new_<CompileInfo>(calleeScript, target,
-                                                     (jsbytecode*)nullptr, callInfo.constructing(),
+                                                     (jsbytecode*)nullptr,
                                                      this->info().analysisMode(),
                                                      /* needsArgsObj = */ false,
                                                      inlineScriptTree);
@@ -10746,7 +10746,7 @@ IonBuilder::jsop_newtarget()
         return true;
     }
 
-    if (!info().constructing()) {
+    if (!inlineCallInfo_->constructing()) {
         pushConstant(UndefinedValue());
         return true;
     }

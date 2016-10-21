@@ -19,6 +19,7 @@
 #include "plstr.h"
 
 #include "nsDocShell.h"
+#include "nsGlobalWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
@@ -372,7 +373,10 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent,
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             /* calledFromJS = */ false, dialog,
                             /* navigate = */ true, argv,
-                            /* openerFullZoom = */ nullptr, aResult);
+                            /* aIsPopupSpam = */ false,
+                            /* aForceNoOpener = */ false,
+                            /* aLoadInfo = */ nullptr,
+                            aResult);
 }
 
 struct SizeSpec
@@ -435,8 +439,9 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
                              bool aDialog,
                              bool aNavigate,
                              nsISupports* aArguments,
-                             float aOpenerFullZoom,
-                             uint8_t aOptionalArgc,
+                             bool aIsPopupSpam,
+                             bool aForceNoOpener,
+                             nsIDocShellLoadInfo* aLoadInfo,
                              mozIDOMWindowProxy** aResult)
 {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
@@ -456,9 +461,8 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
 
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             aCalledFromScript, dialog,
-                            aNavigate, argv,
-                            aOptionalArgc >= 1 ? &aOpenerFullZoom : nullptr,
-                            aResult);
+                            aNavigate, argv, aIsPopupSpam,
+                            aForceNoOpener, aLoadInfo, aResult);
 }
 
 // This static function checks if the aDocShell uses an UserContextId equal to
@@ -673,7 +677,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
   SizeSpec sizeSpec;
   CalcSizeSpec(aFeatures, sizeSpec);
   SizeOpenedWindow(chromeTreeOwner, parentWindowOuter, false, sizeSpec,
-                   &aOpenerFullZoom);
+                   Some(aOpenerFullZoom));
 
   nsCOMPtr<nsITabParent> newTabParent;
   chromeTreeOwner->GetPrimaryTabParent(getter_AddRefs(newTabParent));
@@ -694,7 +698,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
                                     bool aDialog,
                                     bool aNavigate,
                                     nsIArray* aArgv,
-                                    float* aOpenerFullZoom,
+                                    bool aIsPopupSpam,
+                                    bool aForceNoOpener,
+                                    nsIDocShellLoadInfo* aLoadInfo,
                                     mozIDOMWindowProxy** aResult)
 {
   nsresult rv = NS_OK;
@@ -752,7 +758,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   }
 
   // try to find an extant window with the given name
-  nsCOMPtr<nsPIDOMWindowOuter> foundWindow = SafeGetWindowByName(name, aParent);
+  nsCOMPtr<nsPIDOMWindowOuter> foundWindow =
+    SafeGetWindowByName(name, aForceNoOpener, aParent);
   GetWindowTreeItem(foundWindow, getter_AddRefs(newDocShellItem));
 
   // Do sandbox checks here, instead of waiting until nsIDocShell::LoadURI.
@@ -1068,7 +1075,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     newDocShell->SetSandboxFlags(activeDocsSandboxFlags);
   }
 
-  rv = ReadyOpenedDocShellItem(newDocShellItem, parentWindow, windowIsNew, aResult);
+  rv = ReadyOpenedDocShellItem(newDocShellItem, parentWindow, windowIsNew,
+                               aForceNoOpener, aResult);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1138,6 +1146,16 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     // SetInitialPrincipalToSubject is safe to call multiple times.
     if (newWindow) {
       newWindow->SetInitialPrincipalToSubject();
+      if (aIsPopupSpam) {
+        nsGlobalWindow* globalWin = nsGlobalWindow::Cast(newWindow);
+        MOZ_ASSERT(!globalWin->IsPopupSpamWindow(),
+                   "Who marked it as popup spam already???");
+        if (!globalWin->IsPopupSpamWindow()) { // Make sure we don't mess up our
+                                               // counter even if the above
+                                               // assert fails.
+          globalWin->SetIsPopupSpamWindow(true);
+        }
+      }
     }
   }
 
@@ -1182,8 +1200,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     }
   }
 
-  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-  if (uriToLoad && aNavigate) {
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo = aLoadInfo;
+  if (uriToLoad && aNavigate && !loadInfo) {
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
@@ -1254,8 +1272,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   if (isNewToplevelWindow) {
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
     newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
-    SizeOpenedWindow(newTreeOwner, aParent, isCallerChrome, sizeSpec,
-                     aOpenerFullZoom);
+    SizeOpenedWindow(newTreeOwner, aParent, isCallerChrome, sizeSpec);
   }
 
   // XXXbz isn't windowIsModal always true when windowIsModalContentDialog?
@@ -1305,6 +1322,10 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
 
       newChrome->ShowAsModal();
     }
+  }
+
+  if (aForceNoOpener && windowIsNew) {
+    NS_RELEASE(*aResult);
   }
 
   return NS_OK;
@@ -2134,8 +2155,18 @@ nsWindowWatcher::GetCallerTreeItem(nsIDocShellTreeItem* aParentItem)
 
 nsPIDOMWindowOuter*
 nsWindowWatcher::SafeGetWindowByName(const nsAString& aName,
+                                     bool aForceNoOpener,
                                      mozIDOMWindowProxy* aCurrentWindow)
 {
+  if (aForceNoOpener) {
+    if (!aName.LowerCaseEqualsLiteral("_self") &&
+        !aName.LowerCaseEqualsLiteral("_top") &&
+        !aName.LowerCaseEqualsLiteral("_parent")) {
+      // Ignore all other names in the noopener case.
+      return nullptr;
+    }
+  }
+
   nsCOMPtr<nsIDocShellTreeItem> startItem;
   GetWindowTreeItem(aCurrentWindow, getter_AddRefs(startItem));
 
@@ -2164,6 +2195,7 @@ nsresult
 nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
                                          nsPIDOMWindowOuter* aParent,
                                          bool aWindowIsNew,
+                                         bool aForceNoOpener,
                                          mozIDOMWindowProxy** aOpenedWindow)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -2174,7 +2206,9 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
   nsCOMPtr<nsPIDOMWindowOuter> piOpenedWindow = aOpenedItem->GetWindow();
   if (piOpenedWindow) {
     if (aParent) {
-      piOpenedWindow->SetOpenerWindow(aParent, aWindowIsNew); // damnit
+      if (!aForceNoOpener) {
+        piOpenedWindow->SetOpenerWindow(aParent, aWindowIsNew); // damnit
+      }
 
       if (aWindowIsNew) {
 #ifdef DEBUG
@@ -2273,21 +2307,20 @@ nsWindowWatcher::CalcSizeSpec(const nsACString& aFeatures, SizeSpec& aResult)
           The top-level nsIDocShellTreeOwner of the newly opened window.
    @param aParent (optional)
           The parent window from which to inherit zoom factors from if
-          aOpenerFullZoom isn't passed.
+          aOpenerFullZoom is none.
    @param aIsCallerChrome
           True if the code requesting the new window is privileged.
    @param aSizeSpec
           The size that the new window should be.
    @param aOpenerFullZoom
-          An optional pointer to a zoom factor to scale the content
-          to.
+          If not nothing, a zoom factor to scale the content to.
 */
 void
 nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
                                   mozIDOMWindowProxy* aParent,
                                   bool aIsCallerChrome,
                                   const SizeSpec& aSizeSpec,
-                                  float* aOpenerFullZoom)
+                                  Maybe<float> aOpenerFullZoom)
 {
   // We should only be sizing top-level windows if we're in the parent
   // process.
@@ -2306,8 +2339,8 @@ nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
     return;
   }
 
-  double openerZoom = aOpenerFullZoom ? *aOpenerFullZoom : 1.0;
-  if (aParent && !aOpenerFullZoom) {
+  double openerZoom = aOpenerFullZoom.valueOr(1.0);
+  if (aParent && aOpenerFullZoom.isNothing()) {
     nsCOMPtr<nsPIDOMWindowOuter> piWindow = nsPIDOMWindowOuter::From(aParent);
     if (nsIDocument* doc = piWindow->GetDoc()) {
       if (nsIPresShell* shell = doc->GetShell()) {

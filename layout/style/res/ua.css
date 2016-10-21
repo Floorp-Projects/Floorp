@@ -165,7 +165,6 @@
   /* The display doesn't affect the kind of frame constructed here.  This just
      affects auto-width sizing of the block we create. */
   display: block;
-  -moz-box-orient: inherit;
   /* make unicode-bidi inherit, otherwise it has no effect on text inputs and
      blocks with overflow: scroll; */
   unicode-bidi: inherit;
@@ -181,6 +180,11 @@
   /* Flex container */
   flex-direction: inherit;
   flex-wrap: inherit;
+  /* -webkit-box container (aliased from -webkit versions to -moz versions) */
+  -moz-box-orient: inherit;
+  -moz-box-direction: inherit;
+  -moz-box-pack: inherit;
+  -moz-box-align: inherit;
   /* Grid container */
   grid-auto-columns: inherit;
   grid-auto-rows: inherit;

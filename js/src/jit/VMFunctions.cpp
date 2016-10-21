@@ -1125,14 +1125,13 @@ RecompileImpl(JSContext* cx, bool force)
     MOZ_ASSERT(iter.type() == JitFrame_Exit);
     ++iter;
 
-    bool isConstructing = iter.isConstructing();
     RootedScript script(cx, iter.script());
     MOZ_ASSERT(script->hasIonScript());
 
     if (!IsIonEnabled(cx))
         return true;
 
-    MethodStatus status = Recompile(cx, script, nullptr, nullptr, isConstructing, force);
+    MethodStatus status = Recompile(cx, script, nullptr, nullptr, force);
     if (status == Method_Error)
         return false;
 

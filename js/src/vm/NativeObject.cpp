@@ -499,8 +499,10 @@ NativeObject::shrinkSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newC
     MOZ_ASSERT_IF(!is<ArrayObject>(), newCount >= SLOT_CAPACITY_MIN);
 
     HeapSlot* newslots = ReallocateObjectBuffer<HeapSlot>(cx, this, slots_, oldCount, newCount);
-    if (!newslots)
+    if (!newslots) {
+        cx->recoverFromOutOfMemory();
         return;  /* Leave slots at its old size. */
+    }
 
     slots_ = newslots;
 }

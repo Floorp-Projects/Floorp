@@ -806,6 +806,12 @@ ValueNumberer::visitDefinition(MDefinition* def)
                 return true;
         }
 
+        if (!rerun_ && def->isPhi() && !sim->isPhi()) {
+            rerun_ = true;
+            JitSpew(JitSpew_GVN, "      Replacing phi%u may have enabled cascading optimisations; "
+                                 "will re-run", def->id());
+        }
+
         // Otherwise, procede to optimize with |sim| in place of |def|.
         def = sim;
 

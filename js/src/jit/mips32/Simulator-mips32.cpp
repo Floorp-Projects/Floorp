@@ -1241,6 +1241,7 @@ Simulator::FlushICache(void* start_addr, size_t size)
 }
 
 Simulator::Simulator()
+  : cacheLock_(mutexid::SimulatorCacheLock)
 {
     // Set up simulator support first. Some of this information is needed to
     // setup the architecture state.

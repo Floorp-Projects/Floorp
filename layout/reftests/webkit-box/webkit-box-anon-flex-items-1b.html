@@ -3,13 +3,13 @@
 <head>
   <title>
     Test for contiguous inline content getting wrapped in a single block,
-    inside of -webkit-box.
+    inside of -webkit-box with "overflow:hidden".
   </title>
   <style>
   .container {
     display: -webkit-box;
+    overflow: hidden;
     -webkit-box-pack: justify;
-    justify-content: space-between; /* XXX remove when bug 1231682 is fixed */
     width: 300px;
     border: 1px solid black;
     font: 10px sans-serif;

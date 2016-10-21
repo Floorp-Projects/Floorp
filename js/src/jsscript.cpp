@@ -358,7 +358,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
             if (!comp->creationOptions().cloneSingletons() ||
                 !comp->behaviors().getSingletonsAsTemplates())
             {
-                return xdr->fail(TranscodeResult_Failure_RunOnceNotSupported);
+                return xdr->fail(JS::TranscodeResult_Failure_RunOnceNotSupported);
             }
         }
     }
@@ -792,7 +792,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
                     funEnclosingScope = function->nonLazyScript()->enclosingScope();
                 } else {
                     MOZ_ASSERT(function->isAsmJSNative());
-                    return xdr->fail(TranscodeResult_Failure_AsmJSNotSupported);
+                    return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
                 }
 
                 funEnclosingScopeIndex = FindScopeIndex(script, *funEnclosingScope);
@@ -827,7 +827,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
 
           default: {
             MOZ_ASSERT(false, "Unknown class kind.");
-            return xdr->fail(TranscodeResult_Failure_UnknownClassKind);
+            return xdr->fail(JS::TranscodeResult_Failure_UnknownClassKind);
           }
         }
     }

@@ -30,7 +30,9 @@ class Monitor
     ConditionVariable condVar_;
 
   public:
-    Monitor() { }
+    explicit Monitor(const MutexId& id)
+      : lock_(id)
+    { }
 };
 
 class AutoLockMonitor : public LockGuard<Mutex>

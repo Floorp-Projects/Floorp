@@ -26,6 +26,7 @@ class nsIArray;
 class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShell;
+class nsIDocShellLoadInfo;
 class nsIDocument;
 class nsIIdleObserver;
 class nsIPrincipal;
@@ -549,8 +550,13 @@ public:
   virtual already_AddRefed<nsISelection> GetSelection() = 0;
   virtual already_AddRefed<nsPIDOMWindowOuter> GetOpener() = 0;
   virtual already_AddRefed<nsIDOMWindowCollection> GetFrames() = 0;
+  // aLoadInfo will be passed on through to the windowwatcher.
+  // aForceNoOpener will act just like a "noopener" feature in aOptions except
+  //                will not affect any other window features.
   virtual nsresult Open(const nsAString& aUrl, const nsAString& aName,
                         const nsAString& aOptions,
+                        nsIDocShellLoadInfo* aLoadInfo,
+                        bool aForceNoOpener,
                         nsPIDOMWindowOuter **_retval) = 0;
   virtual nsresult OpenDialog(const nsAString& aUrl, const nsAString& aName,
                               const nsAString& aOptions,

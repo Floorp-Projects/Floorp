@@ -1217,6 +1217,16 @@ Range::sign(TempAllocator& alloc, const Range* op)
                             0);
 }
 
+Range*
+Range::NaNToZero(TempAllocator& alloc, const Range *op)
+{
+    Range* copy = new(alloc) Range(*op);
+    if (copy->canBeNaN())
+        copy->max_exponent_ = Range::IncludesInfinity;
+    copy->refineToExcludeNegativeZero();
+    return copy;
+}
+
 bool
 Range::negativeZeroMul(const Range* lhs, const Range* rhs)
 {
@@ -1872,6 +1882,13 @@ MRandom::computeRange(TempAllocator& alloc)
     r->refineToExcludeNegativeZero();
 
     setRange(r);
+}
+
+void
+MNaNToZero::computeRange(TempAllocator& alloc)
+{
+    Range other(input());
+    setRange(Range::NaNToZero(alloc, &other));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3464,6 +3481,17 @@ MBinaryBitwiseInstruction::collectRangeInfoPreTrunc()
     {
         maskMatchesLeftRange = true;
     }
+}
+
+void
+MNaNToZero::collectRangeInfoPreTrunc()
+{
+    Range inputRange(input());
+
+    if (!inputRange.canBeNaN())
+        operandIsNeverNaN_ = true;
+    if (!inputRange.canBeNegativeZero())
+        operandIsNeverNegativeZero_ = true;
 }
 
 bool

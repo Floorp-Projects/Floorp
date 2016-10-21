@@ -23,6 +23,7 @@ this.Preferences = {
       ["paneApplications", null],
       ["panePrivacy", null],
       ["panePrivacy", null, DNTDialog],
+      ["panePrivacy", null, clearRecentHistoryDialog],
       ["paneSecurity", null],
       ["paneSync", null],
       ["paneAdvanced", "generalTab"],
@@ -104,6 +105,12 @@ function* DNTDialog(aBrowser) {
 function* connectionDialog(aBrowser) {
   yield ContentTask.spawn(aBrowser, null, function* () {
     content.document.getElementById("connectionSettings").click();
+  });
+}
+
+function* clearRecentHistoryDialog(aBrowser) {
+  yield ContentTask.spawn(aBrowser, null, function* () {
+    content.document.getElementById("historyRememberClear").click();
   });
 }
 

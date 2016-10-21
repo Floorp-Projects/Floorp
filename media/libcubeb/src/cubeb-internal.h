@@ -8,6 +8,7 @@
 #define CUBEB_INTERNAL_0eb56756_4e20_4404_a76d_42bf88cd15a5
 
 #include "cubeb/cubeb.h"
+#include "cubeb_log.h"
 #include <stdio.h>
 #include <string.h>
 

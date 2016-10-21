@@ -1090,14 +1090,13 @@ WriteScriptOrFunction(nsIObjectOutputStream* stream, JSContext* cx,
         return rv;
 
 
-    uint32_t size;
-    void* data = nullptr;
+    TranscodeBuffer buffer;
     TranscodeResult code;
     {
         if (functionObj)
-            code = JS_EncodeInterpretedFunction(cx, functionObj, &size, &data);
+            code = EncodeInterpretedFunction(cx, buffer, functionObj);
         else
-            code = JS_EncodeScript(cx, script, &size, &data);
+            code = EncodeScript(cx, buffer, script);
     }
 
     if (code != TranscodeResult_Ok) {
@@ -1108,11 +1107,12 @@ WriteScriptOrFunction(nsIObjectOutputStream* stream, JSContext* cx,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    MOZ_ASSERT(size && data);
+    size_t size = buffer.length();
+    if (size > UINT32_MAX)
+        return NS_ERROR_FAILURE;
     rv = stream->Write32(size);
     if (NS_SUCCEEDED(rv))
-        rv = stream->WriteBytes(static_cast<char*>(data), size);
-    js_free(data);
+        rv = stream->WriteBytes(reinterpret_cast<char*>(buffer.begin()), size);
 
     return rv;
 }
@@ -1145,16 +1145,19 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
     if (NS_FAILED(rv))
         return rv;
 
+    TranscodeBuffer buffer;
+    buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(data), size);
+
     {
         TranscodeResult code;
         if (scriptp) {
             Rooted<JSScript*> script(cx);
-            code = JS_DecodeScript(cx, data, size, &script);
+            code = DecodeScript(cx, buffer, &script);
             if (code == TranscodeResult_Ok)
                 *scriptp = script.get();
         } else {
             Rooted<JSFunction*> funobj(cx);
-            code = JS_DecodeInterpretedFunction(cx, data, size, &funobj);
+            code = DecodeInterpretedFunction(cx, buffer, &funobj);
             if (code == TranscodeResult_Ok)
                 *functionObjp = JS_GetFunctionObject(funobj.get());
         }
@@ -1168,7 +1171,6 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
         }
     }
 
-    free(data);
     return rv;
 }
 

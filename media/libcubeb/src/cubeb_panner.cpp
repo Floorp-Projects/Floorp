@@ -29,20 +29,20 @@ void cubeb_pan_stereo_buffer(T * buf, uint32_t frames, float pan)
   /* rescale in [0; 1] */
   pan += 1;
   pan /= 2;
-  float left_gain  = cos(pan * M_PI * 0.5);
-  float right_gain = sin(pan * M_PI * 0.5);
+  float left_gain  = float(cos(pan * M_PI * 0.5));
+  float right_gain = float(sin(pan * M_PI * 0.5));
 
   /* In we are panning on the left, pan the right channel into the left one and
    * vice-versa. */
   if (pan < 0.5) {
     for (uint32_t i = 0; i < frames * 2; i+=2) {
-      buf[i]     = buf[i] + buf[i + 1] * left_gain;
-      buf[i + 1] = buf[i + 1] * right_gain;
+      buf[i]     = T(buf[i] + buf[i + 1] * left_gain);
+      buf[i + 1] = T(buf[i + 1] * right_gain);
     }
   } else {
     for (uint32_t i = 0; i < frames * 2; i+=2) {
-      buf[i]     = buf[i] * left_gain;
-      buf[i + 1] = buf[i + 1] + buf[i] * right_gain;
+      buf[i]     = T(buf[i] * left_gain);
+      buf[i + 1] = T(buf[i + 1] + buf[i] * right_gain);
     }
   }
 }
@@ -50,11 +50,11 @@ void cubeb_pan_stereo_buffer(T * buf, uint32_t frames, float pan)
 
 void cubeb_pan_stereo_buffer_float(float * buf, uint32_t frames, float pan)
 {
-  cubeb_pan_stereo_buffer(reinterpret_cast<float*>(buf), frames, pan);
+  cubeb_pan_stereo_buffer(buf, frames, pan);
 }
 
 void cubeb_pan_stereo_buffer_int(short * buf, uint32_t frames, float pan)
 {
-  cubeb_pan_stereo_buffer(reinterpret_cast<short*>(buf), frames, pan);
+  cubeb_pan_stereo_buffer(buf, frames, pan);
 }
 

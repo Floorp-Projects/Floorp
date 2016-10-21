@@ -195,10 +195,10 @@ enum AnalysisMode {
 class CompileInfo
 {
   public:
-    CompileInfo(JSScript* script, JSFunction* fun, jsbytecode* osrPc, bool constructing,
+    CompileInfo(JSScript* script, JSFunction* fun, jsbytecode* osrPc,
                 AnalysisMode analysisMode, bool scriptNeedsArgsObj,
                 InlineScriptTree* inlineScriptTree)
-      : script_(script), fun_(fun), osrPc_(osrPc), constructing_(constructing),
+      : script_(script), fun_(fun), osrPc_(osrPc),
         analysisMode_(analysisMode), scriptNeedsArgsObj_(scriptNeedsArgsObj),
         hadOverflowBailout_(script->hadOverflowBailout()),
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
@@ -224,7 +224,7 @@ class CompileInfo
     }
 
     explicit CompileInfo(unsigned nlocals)
-      : script_(nullptr), fun_(nullptr), osrPc_(nullptr), constructing_(false),
+      : script_(nullptr), fun_(nullptr), osrPc_(nullptr),
         analysisMode_(Analysis_None), scriptNeedsArgsObj_(false),
         mayReadFrameArgsDirectly_(false), inlineScriptTree_(nullptr)
     {
@@ -246,9 +246,6 @@ class CompileInfo
     }
     ModuleObject* module() const {
         return script_->module();
-    }
-    bool constructing() const {
-        return constructing_;
     }
     jsbytecode* osrPc() const {
         return osrPc_;
@@ -509,7 +506,6 @@ class CompileInfo
     JSScript* script_;
     JSFunction* fun_;
     jsbytecode* osrPc_;
-    bool constructing_;
     AnalysisMode analysisMode_;
 
     // Whether a script needs an arguments object is unstable over compilation

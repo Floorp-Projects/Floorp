@@ -742,17 +742,6 @@ class AutoLockFutexAPI
     js::UniqueLock<js::Mutex>& unique() { return *unique_; }
 };
 
-class AutoUnlockFutexAPI
-{
-  public:
-    AutoUnlockFutexAPI() {
-        FutexRuntime::unlock();
-    }
-    ~AutoUnlockFutexAPI() {
-        FutexRuntime::lock();
-    }
-};
-
 } // namespace js
 
 bool
@@ -897,7 +886,7 @@ js::atomics_wake(JSContext* cx, unsigned argc, Value* vp)
 js::FutexRuntime::initialize()
 {
     MOZ_ASSERT(!lock_);
-    lock_ = js_new<js::Mutex>();
+    lock_ = js_new<js::Mutex>(mutexid::FutexRuntime);
     return lock_ != nullptr;
 }
 
@@ -1060,7 +1049,7 @@ js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
 
             state_ = WaitingInterrupted;
             {
-                AutoUnlockFutexAPI unlock;
+                UnlockGuard<Mutex> unlock(locked);
                 retval = cx->runtime()->handleInterrupt(cx);
             }
             if (!retval)

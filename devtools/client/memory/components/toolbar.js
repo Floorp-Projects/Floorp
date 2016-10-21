@@ -245,6 +245,7 @@ module.exports = createClass({
           dom.button({
             id: "clear-snapshots",
             className: "clear-snapshots devtools-button",
+            disabled: !snapshots.length,
             onClick: onClearSnapshotsClick,
             title: L10N.getStr("clear-snapshots.tooltip")
           }),

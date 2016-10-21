@@ -320,6 +320,7 @@ UNIFIED_SOURCES += [
     'proxy/ScriptedProxyHandler.cpp',
     'proxy/SecurityWrapper.cpp',
     'proxy/Wrapper.cpp',
+    'threading/Mutex.cpp',
     'vm/ArgumentsObject.cpp',
     'vm/ArrayBufferObject.cpp',
     'vm/Caches.cpp',
@@ -576,7 +577,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'jit/ExecutableAllocatorWin.cpp',
         'threading/windows/ConditionVariable.cpp',
-        'threading/windows/Mutex.cpp',
+        'threading/windows/MutexImpl.cpp',
         'threading/windows/Thread.cpp',
     ]
     # _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
@@ -585,7 +586,7 @@ else:
     SOURCES += [
         'jit/ExecutableAllocatorPosix.cpp',
         'threading/posix/ConditionVariable.cpp',
-        'threading/posix/Mutex.cpp',
+        'threading/posix/MutexImpl.cpp',
         'threading/posix/Thread.cpp',
     ]
 

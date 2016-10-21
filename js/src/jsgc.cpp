@@ -875,6 +875,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     noNurseryAllocationCheck(0),
     arenasEmptyAtShutdown(true),
 #endif
+    lock(mutexid::GCLock),
     allocTask(rt, emptyChunks_),
     decommitTask(rt),
     helperState(rt)

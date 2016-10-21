@@ -36,7 +36,7 @@
                                    .map(t => t.clone())).clone();
         var allTracksEnded = Promise.all(stream.getTracks().map(t => {
           info("Set up ended handler for track " + t.id);
-          return haveEvent(t, "ended", wait(5000))
+          return haveEvent(t, "ended", wait(50000))
             .then(event => {
               info("ended handler invoked for track " + t.id);
               is(event.target, t, "Target should be correct");

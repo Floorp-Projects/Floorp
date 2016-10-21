@@ -642,11 +642,17 @@ static void
 silent_error_handler(char const * file, int line, char const * function,
                      int err, char const * fmt, ...)
 {
+  (void)file;
+  (void)line;
+  (void)function;
+  (void)err;
+  (void)fmt;
 }
 
 /*static*/ int
 alsa_init(cubeb ** context, char const * context_name)
 {
+  (void)context_name;
   cubeb * ctx;
   int r;
   int i;
@@ -732,6 +738,7 @@ alsa_init(cubeb ** context, char const * context_name)
 static char const *
 alsa_get_backend_id(cubeb * ctx)
 {
+  (void)ctx;
   return "alsa";
 }
 
@@ -776,6 +783,7 @@ alsa_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
                  cubeb_data_callback data_callback, cubeb_state_callback state_callback,
                  void * user_ptr)
 {
+  (void)stream_name;
   cubeb_stream * stm;
   int r;
   snd_pcm_format_t format;
@@ -961,6 +969,7 @@ alsa_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 
 static int
 alsa_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate) {
+  (void)ctx;
   int r, dir;
   snd_pcm_t * pcm;
   snd_pcm_hw_params_t * hw_params;
@@ -1004,6 +1013,7 @@ alsa_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate) {
 static int
 alsa_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_frames)
 {
+  (void)ctx;
   /* 40ms is found to be an acceptable minimum, even on a super low-end
    * machine. */
   *latency_frames = 40 * params.rate / 1000;
@@ -1090,7 +1100,7 @@ alsa_stream_get_position(cubeb_stream * stm, uint64_t * position)
   return CUBEB_OK;
 }
 
-int
+static int
 alsa_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 {
   snd_pcm_sframes_t delay;
@@ -1105,7 +1115,7 @@ alsa_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   return CUBEB_OK;
 }
 
-int
+static int
 alsa_stream_set_volume(cubeb_stream * stm, float volume)
 {
   /* setting the volume using an API call does not seem very stable/supported */

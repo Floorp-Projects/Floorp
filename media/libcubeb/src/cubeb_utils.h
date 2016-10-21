@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include <type_traits>
 #if defined(WIN32)
 #include "cubeb_utils_win.h"
 #else
@@ -21,6 +22,7 @@
 template<typename T>
 void PodCopy(T * destination, const T * source, size_t count)
 {
+  static_assert(std::is_trivial<T>::value, "Requires trivial type");
   memcpy(destination, source, count * sizeof(T));
 }
 
@@ -28,6 +30,7 @@ void PodCopy(T * destination, const T * source, size_t count)
 template<typename T>
 void PodMove(T * destination, const T * source, size_t count)
 {
+  static_assert(std::is_trivial<T>::value, "Requires trivial type");
   memmove(destination, source, count * sizeof(T));
 }
 
@@ -35,6 +38,7 @@ void PodMove(T * destination, const T * source, size_t count)
 template<typename T>
 void PodZero(T * destination, size_t count)
 {
+  static_assert(std::is_trivial<T>::value, "Requires trivial type");
   memset(destination, 0,  count * sizeof(T));
 }
 
@@ -203,6 +207,20 @@ struct auto_lock {
   ~auto_lock()
   {
     lock.leave();
+  }
+private:
+  owned_critical_section & lock;
+};
+
+struct auto_unlock {
+  explicit auto_unlock(owned_critical_section & lock)
+    : lock(lock)
+  {
+    lock.leave();
+  }
+  ~auto_unlock()
+  {
+    lock.enter();
   }
 private:
   owned_critical_section & lock;

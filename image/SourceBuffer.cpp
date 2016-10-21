@@ -451,11 +451,10 @@ SourceBuffer::AppendFromInputStream(nsIInputStream* aInputStream,
   uint32_t bytesRead;
   nsresult rv = aInputStream->ReadSegments(AppendToSourceBuffer, this,
                                            aCount, &bytesRead);
-
-  MOZ_ASSERT(bytesRead == aCount || rv == NS_ERROR_OUT_OF_MEMORY,
-             "AppendToSourceBuffer should consume everything unless "
-             "we run out of memory");
-
+  if (!NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_ASSERT(bytesRead == aCount,
+               "AppendToSourceBuffer should consume everything");
+  }
   return rv;
 }
 

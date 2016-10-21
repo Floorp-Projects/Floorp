@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test whether we can disconnect an AudioNode</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="webaudio.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <pre id="test">
+      <script class="testbody" type="text/javascript">
+      var gTest = {
+        length: 256,
+        numberOfChannels: 2,
+        createGraph: function(context) {
+          var sourceBuffer = context.createBuffer(2, 256, context.sampleRate);
+          for (var i = 1; i <= 2; i++) {
+            var data = sourceBuffer.getChannelData(i-1);
+            for (var j = 0; j < data.length; j++) {
+                data[j] = i;
+            }
+          }
+
+          var source = context.createBufferSource();
+          source.buffer = sourceBuffer;
+
+          var splitter = context.createChannelSplitter(2);
+          var gain1 = context.createGain();
+          var gain2 = context.createGain();
+          var merger = context.createChannelMerger(2);
+
+          source.connect(splitter);
+          splitter.connect(gain1, 0);
+          splitter.connect(gain2, 0);
+          splitter.connect(gain2, 1);
+          gain1.connect(merger, 0, 1);
+          gain2.connect(merger, 0, 1);
+          source.start();
+
+          splitter.disconnect(gain2, 0);
+
+          return merger;
+        },
+        createExpectedBuffers: function(context) {
+          expectedBuffer = context.createBuffer(2, 256, context.sampleRate);
+          for (var i = 0; i < 256; ++i) {
+            expectedBuffer.getChannelData(0)[i] = 0;
+            expectedBuffer.getChannelData(1)[i] = 3;
+          }
+
+          return expectedBuffer;
+        }
+      };
+
+      runTest();
+      </script>
+    </pre>
+  </body>
+</html>

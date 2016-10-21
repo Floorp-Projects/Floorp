@@ -46,6 +46,7 @@ Simulator::Simulator(Decoder* decoder, FILE* stream)
   , stack_limit_(nullptr)
   , decoder_(nullptr)
   , oom_(false)
+  , lock_(js::mutexid::Arm64SimulatorLock)
 {
     this->init(decoder, stream);
 }

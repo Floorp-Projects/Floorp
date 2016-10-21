@@ -14,6 +14,7 @@
 
 #include "jstypes.h"
 
+#include "asmjs/WasmInstance.h"
 #include "builtin/AtomicsObject.h"
 #include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Statistics.h"
@@ -99,6 +100,10 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
     js::oom::SetThreadType(js::oom::THREAD_TYPE_MAIN);
 #endif
 
+    RETURN_IF_FAIL(js::Mutex::Init());
+
+    RETURN_IF_FAIL(js::wasm::InitInstanceStaticData());
+
     js::jit::ExecutableAllocator::initStatic();
 
     MOZ_ALWAYS_TRUE(js::MemoryProtectionExceptionHandler::install());
@@ -149,6 +154,10 @@ JS_ShutDown(void)
 #endif
 
     js::MemoryProtectionExceptionHandler::uninstall();
+
+    js::wasm::ShutDownInstanceStaticData();
+
+    js::Mutex::ShutDown();
 
     // The only difficult-to-address reason for the restriction that you can't
     // call JS_Init/stuff/JS_ShutDown multiple times is the Windows PRMJ
