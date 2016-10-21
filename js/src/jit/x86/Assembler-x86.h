@@ -160,14 +160,14 @@ static const uint32_t WasmStackAlignment = SimdMemoryAlignment;
 
 struct ImmTag : public Imm32
 {
-    ImmTag(JSValueTag mask)
+    explicit ImmTag(JSValueTag mask)
       : Imm32(int32_t(mask))
     { }
 };
 
 struct ImmType : public ImmTag
 {
-    ImmType(JSValueType type)
+    explicit ImmType(JSValueType type)
       : ImmTag(JSVAL_TYPE_TO_TAG(type))
     { }
 };
