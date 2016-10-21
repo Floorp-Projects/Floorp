@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.support.v7.widget.AppCompatDrawableManager;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
@@ -102,7 +103,7 @@ public class MenuItemDefault extends TextView
     }
 
     void setIcon(int icon) {
-        setIcon((icon == 0) ? null : getResources().getDrawable(icon));
+        setIcon((icon == 0) ? null : AppCompatDrawableManager.get().getDrawable(getContext(), icon));
     }
 
     void setTitle(CharSequence title) {
