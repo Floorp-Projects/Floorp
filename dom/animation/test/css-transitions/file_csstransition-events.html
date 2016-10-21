@@ -32,9 +32,10 @@ TransitionEventHandler.prototype.clear = function() {
   this.transitionend   = undefined;
 };
 
-function setupTransition(t) {
+function setupTransition(t, transitionStyle) {
   var div, watcher, handler, transition;
-  div = addDiv(t, { style: 'transition: margin-left 100s 100s' });
+  transitionStyle = transitionStyle || 'transition: margin-left 100s 100s';
+  div = addDiv(t, { style: transitionStyle });
   watcher = new EventWatcher(t, div, [ 'transitionrun',
                                        'transitionstart',
                                        'transitionend' ]);
@@ -175,6 +176,46 @@ promise_test(function(t) {
     assert_equals(evt.elapsedTime, 100.0);
   });
 }, 'After -> Active');
+
+promise_test(function(t) {
+  var [transition, watcher, handler] =
+    setupTransition(t, 'transition: margin-left 100s -50s');
+
+  return watcher.wait_for([ 'transitionrun',
+                            'transitionstart' ]).then(function() {
+    assert_equals(handler.transitionrun, 50.0);
+    assert_equals(handler.transitionstart, 50.0);
+    transition.finish();
+    return watcher.wait_for('transitionend');
+  }).then(function(evt) {
+    assert_equals(evt.elapsedTime, 100.0);
+  });
+}, 'Calculating the interval start and end time with negative start delay.');
+
+promise_test(function(t) {
+  var [transition, watcher, handler] = setupTransition(t);
+
+  return watcher.wait_for('transitionrun').then(function(evt) {
+    // We can't set the end delay via generated effect timing.
+    // Because CSS-Transition use the AnimationEffectTimingReadOnly.
+    transition.effect = new KeyframeEffect(handler.target,
+                                           { marginleft: [ '0px', '100px' ]},
+                                           { duration: 100 * MS_PER_SEC,
+                                             endDelay: -50 * MS_PER_SEC });
+    // Seek to Before and play.
+    transition.cancel();
+    transition.play();
+    return watcher.wait_for('transitionstart');
+  }).then(function() {
+    assert_equals(handler.transitionstart, 0.0);
+
+    // Seek to After phase.
+    transition.finish();
+    return watcher.wait_for('transitionend');
+  }).then(function(evt) {
+    assert_equals(evt.elapsedTime, 50.0);
+  });
+}, 'Calculating the interval start and end time with negative end delay.');
 
 done();
 </script>
