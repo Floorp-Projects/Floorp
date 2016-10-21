@@ -288,6 +288,9 @@ private:
 #ifdef XP_MACOSX
     RefPtr<PrintTarget>            mCachedPrintTarget;
 #endif
+#ifdef DEBUG
+    bool mIsInitialized;
+#endif
 };
 
 #endif /* _NS_DEVICECONTEXT_H_ */

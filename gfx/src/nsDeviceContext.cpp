@@ -194,6 +194,9 @@ nsDeviceContext::nsDeviceContext()
       mAppUnitsPerDevPixel(-1), mAppUnitsPerDevPixelAtUnitFullZoom(-1),
       mAppUnitsPerPhysicalInch(-1),
       mFullZoom(1.0f), mPrintingScale(1.0f)
+#ifdef DEBUG
+    , mIsInitialized(false)
+#endif
 {
     MOZ_ASSERT(NS_IsMainThread(), "nsDeviceContext created off main thread");
 }
@@ -299,6 +302,13 @@ nsDeviceContext::SetDPI(double* aScale)
 nsresult
 nsDeviceContext::Init(nsIWidget *aWidget)
 {
+#ifdef DEBUG
+    // We can't assert |!mIsInitialized| here since EndSwapDocShellsForDocument
+    // re-initializes nsDeviceContext objects.  We can only assert in
+    // InitForPrinting (below).
+    mIsInitialized = true;
+#endif
+
     nsresult rv = NS_OK;
     if (mScreenManager && mWidget == aWidget)
         return rv;
@@ -438,12 +448,17 @@ nsDeviceContext::InitForPrinting(nsIDeviceContextSpec *aDevice)
 {
     NS_ENSURE_ARG_POINTER(aDevice);
 
-    mDeviceContextSpec = aDevice;
+    MOZ_ASSERT(!mIsInitialized,
+               "Only initialize once, immediately after construction");
+
+    // We don't set mIsInitialized here. The Init() call below does that.
 
     mPrintTarget = aDevice->MakePrintTarget();
     if (!mPrintTarget) {
         return NS_ERROR_FAILURE;
     }
+
+    mDeviceContextSpec = aDevice;
 
     Init(nullptr);
 
