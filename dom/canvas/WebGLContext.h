@@ -195,6 +195,62 @@ struct IndexedBufferBinding
     uint64_t ByteCount() const;
 };
 
+////////////////////////////////////
+
+struct TexImageSource
+{
+    const dom::ArrayBufferView* mView;
+    GLuint mViewElemOffset;
+
+    const WebGLsizeiptr* mPboOffset;
+
+    const dom::ImageData* mImageData;
+
+    const dom::Element* mDomElem;
+    ErrorResult* mOut_error;
+
+protected:
+    TexImageSource() {
+        memset(this, 0, sizeof(*this));
+    }
+};
+
+////
+
+struct TexImageSourceAdapter final : public TexImageSource
+{
+    TexImageSourceAdapter(const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                          ErrorResult*)
+    {
+        if (!maybeView.IsNull()) {
+            mView = &(maybeView.Value());
+        }
+    }
+
+    TexImageSourceAdapter(const dom::ArrayBufferView& view, ErrorResult*) {
+        mView = &view;
+    }
+
+    TexImageSourceAdapter(const dom::ArrayBufferView& view, GLuint viewElemOffset) {
+        mView = &view;
+        mViewElemOffset = viewElemOffset;
+    }
+
+    template<typename ignoredT>
+    TexImageSourceAdapter(WebGLsizeiptr pboOffset, ignoredT) {
+        mPboOffset = &pboOffset;
+    }
+
+    TexImageSourceAdapter(const dom::ImageData& imageData, ErrorResult*) {
+        mImageData = &imageData;
+    }
+
+    TexImageSourceAdapter(const dom::Element& domElem, ErrorResult* const out_error) {
+        mDomElem = &domElem;
+        mOut_error = out_error;
+    }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class WebGLContext
@@ -938,140 +994,185 @@ protected:
 
     virtual bool IsTexParamValid(GLenum pname) const;
 
-    // Upload funcs
+    ////////////////////////////////////
+
 public:
-    void CompressedTexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
+    template<typename T>
+    void CompressedTexImage2D(GLenum target, GLint level, GLenum internalFormat,
                               GLsizei width, GLsizei height, GLint border,
-                              const dom::ArrayBufferView& view, GLuint srcElemOffset = 0);
-    void CompressedTexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset,
-                                 GLint yOffset, GLsizei width, GLsizei height,
-                                 GLenum unpackFormat, const dom::ArrayBufferView& view,
-                                 GLuint srcElemOffset = 0);
-
-    void CopyTexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
-                        GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
-    void CopyTexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset,
-                           GLint yOffset, GLint x, GLint y, GLsizei width,
-                           GLsizei height);
-
-    ////
-
-    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
-                    GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
-                    GLenum unpackType,
-                    const dom::Nullable<dom::ArrayBufferView>& maybeView,
-                    ErrorResult&)
+                              const T& anySrc, GLuint viewElemOffset = 0)
     {
-        const dom::ArrayBufferView* view = nullptr;
-        if (!maybeView.IsNull()) {
-            view = &(maybeView.Value());
-        }
-
-        TexImage2D(texImageTarget, level, internalFormat, width, height, border,
-                   unpackFormat, unpackType, view, 0);
+        const char funcName[] = "compressedTexImage2D";
+        const uint8_t funcDims = 2;
+        const GLsizei depth = 1;
+        const TexImageSourceAdapter src(anySrc, viewElemOffset);
+        CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
+                           height, depth, border, src);
     }
 
-    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
-                    GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
-                    GLenum unpackType, const dom::ArrayBufferView& srcView,
-                    GLuint srcElemOffset, ErrorResult&)
+    template<typename T>
+    void CompressedTexSubImage2D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                                 GLsizei width, GLsizei height, GLenum unpackFormat,
+                                 const T& anySrc, GLuint viewElemOffset = 0)
     {
-        TexImage2D(texImageTarget, level, internalFormat, width, height, border,
-                   unpackFormat, unpackType, &srcView, srcElemOffset);
+        const char funcName[] = "compressedTexSubImage2D";
+        const uint8_t funcDims = 2;
+        const GLint zOffset = 0;
+        const GLsizei depth = 1;
+        const TexImageSourceAdapter src(anySrc, viewElemOffset);
+        CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
+                              zOffset, width, height, depth, unpackFormat, src);
     }
 
 protected:
-    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
-                    GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
-                    GLenum unpackType, const dom::ArrayBufferView* srcView,
-                    GLuint srcElemOffset);
+    void CompressedTexImage(const char* funcName, uint8_t funcDims, GLenum target,
+                            GLint level, GLenum internalFormat, GLsizei width,
+                            GLsizei height, GLsizei depth, GLint border,
+                            const TexImageSource& src);
+
+    void CompressedTexSubImage(const char* funcName, uint8_t funcDims, GLenum target,
+                               GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
+                               GLsizei width, GLsizei height, GLsizei depth,
+                               GLenum unpackFormat, const TexImageSource& src);
+
+    ////////////////////////////////////
 
 public:
-    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
-                    GLenum unpackFormat, GLenum unpackType,
-                    const dom::ImageData& imageData, ErrorResult& out_error);
-    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
-                    GLenum unpackFormat, GLenum unpackType, const dom::Element& elem,
-                    ErrorResult& out_error);
-    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
-                    GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
-                    GLenum unpackType, WebGLsizeiptr offset, ErrorResult&);
+    void CopyTexImage2D(GLenum target, GLint level, GLenum internalFormat, GLint x,
+                        GLint y, GLsizei width, GLsizei height, GLint border);
 
-    ////
-
-    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
-                       GLenum unpackFormat, GLenum unpackType,
-                       const dom::ImageData& imageData, ErrorResult& out_error);
-    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
-                       GLenum unpackFormat, GLenum unpackType, const dom::Element& elem,
-                       ErrorResult& out_error);
-
-    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
-                       GLsizei width, GLsizei height, GLenum unpackFormat,
-                       GLenum unpackType, WebGLsizeiptr offset, ErrorResult&);
-
-    ////////////////
-    // dom::ImageData
-
-    void TexImage2D(GLenum texImageTarget, GLint level, GLenum internalFormat,
-                    GLenum unpackFormat, GLenum unpackType,
-                    const dom::ImageData* imageData, ErrorResult& out_error)
+    void CopyTexSubImage2D(GLenum target, GLint level, GLint xOffset,
+                           GLint yOffset, GLint x, GLint y, GLsizei width,
+                           GLsizei height)
     {
-        const char funcName[] = "texImage2D";
-        if (IsContextLost())
-            return;
-
-        if (!imageData)
-            return ErrorInvalidValue("%s: `data` must not be null.", funcName);
-
-        TexImage2D(texImageTarget, level, internalFormat, unpackFormat, unpackType,
-                   *imageData, out_error);
+        const char funcName[] = "copyTexSubImage2D";
+        const uint8_t funcDims = 2;
+        const GLint zOffset = 0;
+        CopyTexSubImage(funcName, funcDims, target, level, xOffset, yOffset, zOffset,
+                        x, y, width, height);
     }
 
-    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
-                       GLenum unpackFormat, GLenum unpackType,
-                       const dom::ImageData* imageData, ErrorResult& out_error)
+protected:
+    void CopyTexSubImage(const char* funcName, uint8_t funcDims, GLenum target,
+                         GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
+                         GLint x, GLint y, GLsizei width, GLsizei height);
+
+    ////////////////////////////////////
+    // TexImage
+
+    // Implicit width/height uploads
+
+public:
+    template<typename T>
+    void TexImage2D(GLenum target, GLint level, GLenum internalFormat,
+                    GLenum unpackFormat, GLenum unpackType, const T& src,
+                    ErrorResult& out_error)
     {
-        const char funcName[] = "texSubImage2D";
-        if (!imageData) {
-            ErrorInvalidValue("%s: `data` must not be null.", funcName);
-            return;
-        }
-        TexSubImage2D(texImageTarget, level, xOffset, yOffset, unpackFormat, unpackType,
-                      *imageData, out_error);
+        GLsizei width = 0;
+        GLsizei height = 0;
+        GLint border = 0;
+        TexImage2D(target, level, internalFormat, width, height, border, unpackFormat,
+                   unpackType, src, out_error);
     }
 
-    ////
-    // ArrayBufferView
-
-    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
-                       GLsizei width, GLsizei height, GLenum unpackFormat,
-                       GLenum unpackType,
-                       const dom::Nullable<dom::ArrayBufferView>& maybeSrc,
+    template<typename T>
+    void TexSubImage2D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                       GLenum unpackFormat, GLenum unpackType, const T& src,
                        ErrorResult& out_error)
     {
-        const char funcName[] = "texSubImage2D";
-        if (IsContextLost())
-            return;
-
-        if (maybeSrc.IsNull())
-            return ErrorInvalidValue("%s: `data` must not be null.", funcName);
-
-        TexSubImage2D(texImageTarget, level, xOffset, yOffset, width, height,
-                      unpackFormat, unpackType, maybeSrc.Value(), 0, out_error);
+        GLsizei width = 0;
+        GLsizei height = 0;
+        TexSubImage2D(target, level, xOffset, yOffset, width, height, unpackFormat,
+                      unpackType, src, out_error);
     }
 
-    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
-                       GLsizei width, GLsizei height, GLenum unpackFormat,
-                       GLenum unpackType,
-                       const dom::ArrayBufferView& srcView, GLuint srcElemOffset,
-                       ErrorResult&);
+    ////
 
-    //////
+    template<typename T>
+    void TexImage2D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
+                    GLsizei height, GLint border, GLenum unpackFormat, GLenum unpackType,
+                    const T& anySrc, ErrorResult& out_error)
+    {
+        const TexImageSourceAdapter src(anySrc, &out_error);
+        TexImage2D(target, level, internalFormat, width, height, border, unpackFormat,
+                   unpackType, src);
+    }
+
+    void TexImage2D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
+                    GLsizei height, GLint border, GLenum unpackFormat, GLenum unpackType,
+                    const dom::ArrayBufferView& view, GLuint viewElemOffset,
+                    ErrorResult&)
+    {
+        const TexImageSourceAdapter src(view, viewElemOffset);
+        TexImage2D(target, level, internalFormat, width, height, border, unpackFormat,
+                   unpackType, src);
+    }
+
+protected:
+    void TexImage2D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
+                    GLsizei height, GLint border, GLenum unpackFormat,
+                    GLenum unpackType, const TexImageSource& src)
+    {
+        const char funcName[] = "texImage2D";
+        const uint8_t funcDims = 2;
+        const GLsizei depth = 1;
+        TexImage(funcName, funcDims, target, level, internalFormat, width, height, depth,
+                 border, unpackFormat, unpackType, src);
+    }
+
+    void TexImage(const char* funcName, uint8_t funcDims, GLenum target, GLint level,
+                  GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth,
+                  GLint border, GLenum unpackFormat, GLenum unpackType,
+                  const TexImageSource& src);
+
+    ////
+
+public:
+    template<typename T>
+    void TexSubImage2D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                       GLsizei width, GLsizei height, GLenum unpackFormat,
+                       GLenum unpackType, const T& anySrc, ErrorResult& out_error)
+    {
+        const TexImageSourceAdapter src(anySrc, &out_error);
+        TexSubImage2D(target, level, xOffset, yOffset, width, height, unpackFormat,
+                      unpackType, src);
+    }
+
+    void TexSubImage2D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                       GLsizei width, GLsizei height, GLenum unpackFormat,
+                       GLenum unpackType, const dom::ArrayBufferView& view,
+                       GLuint viewElemOffset, ErrorResult&)
+    {
+        const TexImageSourceAdapter src(view, viewElemOffset);
+        TexSubImage2D(target, level, xOffset, yOffset, width, height, unpackFormat,
+                      unpackType, src);
+    }
+
+protected:
+    void TexSubImage2D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                       GLsizei width, GLsizei height, GLenum unpackFormat,
+                       GLenum unpackType, const TexImageSource& src)
+    {
+        const char funcName[] = "texSubImage2D";
+        const uint8_t funcDims = 2;
+        const GLint zOffset = 0;
+        const GLsizei depth = 1;
+        TexSubImage(funcName, funcDims, target, level, xOffset, yOffset, zOffset, width,
+                    height, depth, unpackFormat, unpackType, src);
+    }
+
+    void TexSubImage(const char* funcName, uint8_t funcDims, GLenum target, GLint level,
+                     GLint xOffset, GLint yOffset, GLint zOffset, GLsizei width,
+                     GLsizei height, GLsizei depth, GLenum unpackFormat,
+                     GLenum unpackType, const TexImageSource& src);
+
+    ////////////////////////////////////
     // WebGLTextureUpload.cpp
 public:
-    bool ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
-                              uint32_t tailPixels, webgl::TexUnpackBlob* blob);
+    UniquePtr<webgl::TexUnpackBlob>
+    From(const char* funcName, TexImageTarget target, GLsizei rawWidth, GLsizei rawHeight,
+         GLsizei rawDepth, GLint border, const TexImageSource& src,
+         dom::Uint8ClampedArray* const scopedArr);
 
 protected:
     bool ValidateTexImageSpecification(const char* funcName, uint8_t funcDims,
@@ -1088,9 +1189,18 @@ protected:
                                    TexImageTarget* const out_target,
                                    WebGLTexture** const out_texture,
                                    WebGLTexture::ImageInfo** const out_imageInfo);
-
     bool ValidateUnpackInfo(const char* funcName, bool usePBOs, GLenum format,
                             GLenum type, webgl::PackingInfo* const out);
+
+    UniquePtr<webgl::TexUnpackBlob>
+    FromDomElem(const char* funcName, TexImageTarget target, uint32_t width,
+                uint32_t height, uint32_t depth, const dom::Element& elem,
+                ErrorResult* const out_error);
+
+    UniquePtr<webgl::TexUnpackBytes>
+    FromCompressed(const char* funcName, TexImageTarget target, GLsizei rawWidth,
+                   GLsizei rawHeight, GLsizei rawDepth, GLint border,
+                   const TexImageSource& src);
 
 // -----------------------------------------------------------------------------
 // Vertices Feature (WebGLContextVertices.cpp)
@@ -1468,10 +1578,12 @@ protected:
         return true;
     }
 
+public:
     bool ValidateArrayBufferView(const char* funcName, const dom::ArrayBufferView& view,
                                  GLuint elemOffset, GLuint elemCountOverride,
                                  uint8_t** const out_bytes, size_t* const out_byteLen);
 
+protected:
     ////
 
     void Invalidate();

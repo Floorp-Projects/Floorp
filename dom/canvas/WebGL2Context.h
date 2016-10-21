@@ -88,84 +88,138 @@ public:
     // Texture objects - WebGL2ContextTextures.cpp
 
     void TexStorage2D(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width,
-                      GLsizei height);
+                      GLsizei height)
+    {
+        const char funcName[] = "TexStorage2D";
+        const uint8_t funcDims = 2;
+        const GLsizei depth = 1;
+        TexStorage(funcName, funcDims, target, levels, internalFormat, width, height,
+                   depth);
+    }
+
     void TexStorage3D(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width,
-                      GLsizei height, GLsizei depth);
+                      GLsizei height, GLsizei depth)
+    {
+        const char funcName[] = "TexStorage3D";
+        const uint8_t funcDims = 3;
+        TexStorage(funcName, funcDims, target, levels, internalFormat, width, height,
+                   depth);
+    }
 
-    ////
+protected:
+    void TexStorage(const char* funcName, uint8_t funcDims, GLenum target, GLsizei levels,
+                    GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth);
 
-private:
-    void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
-                    GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
-                    GLenum unpackType, const dom::ArrayBufferView* srcView,
-                    GLuint srcElemOffset);
+    ////////////////////////////////////
 
 public:
+    template<typename T>
+    void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
+                              GLsizei width, GLsizei height, GLsizei depth, GLint border,
+                              const T& anySrc, GLuint viewElemOffset = 0)
+    {
+        const char funcName[] = "compressedTexImage3D";
+        const uint8_t funcDims = 3;
+        const TexImageSourceAdapter src(anySrc, viewElemOffset);
+        CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
+                           height, depth, border, src);
+    }
+
+    template<typename T>
+    void CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                                 GLint zOffset, GLsizei width, GLsizei height,
+                                 GLsizei depth, GLenum unpackFormat, const T& anySrc,
+                                 GLuint viewElemOffset = 0)
+    {
+        const char funcName[] = "compressedTexSubImage3D";
+        const uint8_t funcDims = 3;
+        const TexImageSourceAdapter src(anySrc, viewElemOffset);
+        CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
+                              zOffset, width, height, depth, unpackFormat, src);
+    }
+
+    ////////////////////////////////////
+
+    void CopyTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                           GLint zOffset, GLint x, GLint y, GLsizei width,
+                           GLsizei height)
+    {
+        const char funcName[] = "copyTexSubImage3D";
+        const uint8_t funcDims = 3;
+        CopyTexSubImage(funcName, funcDims, target, level, xOffset, yOffset, zOffset,
+                        x, y, width, height);
+    }
+
+    ////////////////////////////////////
+
+    template<typename T>
     void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
-                    GLenum unpackType,
-                    const dom::Nullable<dom::ArrayBufferView>& maybeSrc, ErrorResult&)
+                    GLenum unpackType, const T& anySrc, ErrorResult& out_error)
     {
-        const dom::ArrayBufferView* srcView = nullptr;
-        if (!maybeSrc.IsNull()) {
-            srcView = &maybeSrc.Value();
-        }
+        const TexImageSourceAdapter src(anySrc, &out_error);
         TexImage3D(target, level, internalFormat, width, height, depth, border,
-                   unpackFormat, unpackType, srcView, 0);
+                   unpackFormat, unpackType, src);
     }
 
     void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
-                    GLenum unpackType, const dom::ArrayBufferView& srcView,
-                    GLuint srcElemOffset, ErrorResult&)
+                    GLenum unpackType, const dom::ArrayBufferView& view,
+                    GLuint viewElemOffset, ErrorResult&)
     {
+        const TexImageSourceAdapter src(view, viewElemOffset);
         TexImage3D(target, level, internalFormat, width, height, depth, border,
-                   unpackFormat, unpackType, &srcView, srcElemOffset);
+                   unpackFormat, unpackType, src);
     }
 
-    ////
+protected:
+    void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
+                    GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
+                    GLenum unpackType, const TexImageSource& src)
+    {
+        const char funcName[] = "texImage3D";
+        const uint8_t funcDims = 3;
+        TexImage(funcName, funcDims, target, level, internalFormat, width, height, depth,
+                 border, unpackFormat, unpackType, src);
+    }
+
+    ////////////////////////////////////
+
+public:
+    template<typename T>
+    void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                       GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
+                       GLenum unpackFormat, GLenum unpackType, const T& anySrc,
+                       ErrorResult& out_error)
+    {
+        const TexImageSourceAdapter src(anySrc, &out_error);
+        TexSubImage3D(target, level, xOffset, yOffset, zOffset, width, height, depth,
+                      unpackFormat, unpackType, src);
+    }
 
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
                        GLenum unpackFormat, GLenum unpackType,
                        const dom::ArrayBufferView& srcView, GLuint srcElemOffset,
-                       ErrorResult&);
-    void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
-                       GLint zOffset, GLenum unpackFormat, GLenum unpackType,
-                       const dom::ImageData& data, ErrorResult&);
-    void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
-                       GLint zOffset, GLenum unpackFormat, GLenum unpackType,
-                       const dom::Element& elem, ErrorResult& out_error);
+                       ErrorResult&)
+    {
+        const TexImageSourceAdapter src(srcView, srcElemOffset);
+        TexSubImage3D(target, level, xOffset, yOffset, zOffset, width, height, depth,
+                      unpackFormat, unpackType, src);
+    }
 
-    ////
-
-    void CopyTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
-                           GLint zOffset, GLint x, GLint y, GLsizei width,
-                           GLsizei height);
-
-    ////
-
-    void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
-                              GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                              const dom::ArrayBufferView& srcView, GLuint srcElemOffset);
-    void CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
-                                 GLint zOffset, GLsizei width, GLsizei height,
-                                 GLsizei depth, GLenum sizedUnpackFormat,
-                                 const dom::ArrayBufferView& srcView,
-                                 GLuint srcElemOffset);
-
-    ////////////////
-    // Texture PBOs
-
-    void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
-                    GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
-                    GLenum unpackType, WebGLsizeiptr offset, ErrorResult&);
-
+protected:
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
-                       GLenum unpackFormat, GLenum unpackType, WebGLsizeiptr offset,
-                       ErrorResult&);
+                       GLenum unpackFormat, GLenum unpackType, const TexImageSource& src)
+    {
+        const char funcName[] = "texSubImage3D";
+        const uint8_t funcDims = 3;
+        TexSubImage(funcName, funcDims, target, level, xOffset, yOffset, zOffset, width,
+                    height, depth, unpackFormat, unpackType, src);
+    }
 
+public:
     // -------------------------------------------------------------------------
     // Programs and shaders - WebGL2ContextPrograms.cpp
     GLint GetFragDataLocation(WebGLProgram* program, const nsAString& name);
