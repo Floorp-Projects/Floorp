@@ -7,9 +7,6 @@ addEventListener('message', function nestedWorkerWrapperOnMessage(evt) {
   worker = new Worker('worker_wrapper.js');
 
   worker.addEventListener('message', function(evt) {
-    if (evt.data.type === 'finish') {
-      worker.terminate();
-    }
     self.postMessage({
       context: 'NestedWorker',
       type: evt.data.type,
