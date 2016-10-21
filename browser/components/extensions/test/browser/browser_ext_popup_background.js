@@ -2,18 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* awaitResize(browser) {
-  // Debouncing code makes this a bit racy.
-  // Try to skip the first, early resize, and catch the resize event we're
-  // looking for, but don't wait longer than a few seconds.
-
-  return Promise.race([
-    BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized")
-      .then(() => BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized")),
-    new Promise(resolve => setTimeout(resolve, 5000)),
-  ]);
-}
-
 add_task(function* testPopupBackground() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
@@ -79,26 +67,34 @@ add_task(function* testPopupBackground() {
       isnot(borderIndex, backgroundIndex, "Border and background fills are separate elements");
     };
 
-    let win = browser.contentWindow;
-    let body = win.document.body;
+    function getBackground(browser) {
+      return ContentTask.spawn(browser, null, function* () {
+        return content.getComputedStyle(content.document.body)
+                      .backgroundColor;
+      });
+    }
+
+    /* eslint-disable mozilla/no-cpows-in-tests */
+    let setBackground = color => {
+      content.document.body.style.backgroundColor = color;
+    };
+    /* eslint-enable mozilla/no-cpows-in-tests */
 
     yield new Promise(resolve => setTimeout(resolve, 100));
 
     info("Test that initial background color is applied");
 
-    checkArrow(win.getComputedStyle(body).backgroundColor);
+    checkArrow(yield getBackground(browser));
 
     info("Test that dynamically-changed background color is applied");
 
-    body.style.backgroundColor = "black";
-    yield awaitResize(browser);
+    yield alterContent(browser, setBackground, "black");
 
-    checkArrow(win.getComputedStyle(body).backgroundColor);
+    checkArrow(yield getBackground(browser));
 
     info("Test that non-opaque background color results in default styling");
 
-    body.style.backgroundColor = "rgba(1, 2, 3, .9)";
-    yield awaitResize(browser);
+    yield alterContent(browser, setBackground, "rgba(1, 2, 3, .9)");
 
     checkArrow(null);
   }
