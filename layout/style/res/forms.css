@@ -543,7 +543,7 @@ input[type="radio"] {
   margin-block-end: 0px;
   margin-inline-start: 5px;
   margin-inline-end: 3px;
-  border-radius: 100% !important;
+  border-radius: 100%;
 }
 
 /* check boxes */
@@ -553,7 +553,7 @@ input[type="checkbox"] {
   margin-block-end: 3px;
   margin-inline-start: 4px;
   margin-inline-end: 3px;
-  border-radius: 0 !important;
+  border-radius: 0;
 }
 
 /* common features of radio buttons and check boxes */
@@ -569,7 +569,7 @@ input[type="checkbox"] {
   inline-size: 13px;
   block-size: 13px;
   cursor: default;
-  padding: 0 !important;
+  padding: 0;
   -moz-binding: none;
   border: 2px inset ThreeDLightShadow;
   background-repeat: no-repeat;
