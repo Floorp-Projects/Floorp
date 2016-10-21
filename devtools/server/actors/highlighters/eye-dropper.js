@@ -140,7 +140,7 @@ EyeDropper.prototype = {
     // Start listening for user events.
     let {pageListenerTarget} = this.highlighterEnv;
     pageListenerTarget.addEventListener("mousemove", this);
-    pageListenerTarget.addEventListener("click", this);
+    pageListenerTarget.addEventListener("click", this, true);
     pageListenerTarget.addEventListener("keydown", this);
     pageListenerTarget.addEventListener("DOMMouseScroll", this);
     pageListenerTarget.addEventListener("FullZoomChange", this);
@@ -171,7 +171,7 @@ EyeDropper.prototype = {
 
     let {pageListenerTarget} = this.highlighterEnv;
     pageListenerTarget.removeEventListener("mousemove", this);
-    pageListenerTarget.removeEventListener("click", this);
+    pageListenerTarget.removeEventListener("click", this, true);
     pageListenerTarget.removeEventListener("keydown", this);
     pageListenerTarget.removeEventListener("DOMMouseScroll", this);
     pageListenerTarget.removeEventListener("FullZoomChange", this);
