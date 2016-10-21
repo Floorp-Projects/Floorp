@@ -27,7 +27,8 @@ function NetMonitorPanel(iframeWindow, toolbox) {
   this.shortcuts = new KeyShortcuts({
     window: this.panelDoc.defaultView,
   });
-  this.shortcuts.on(L10N.getStr("netmonitor.toolbar.filterFreetext.key"), (name, event) => {
+  let key = L10N.getStr("netmonitor.toolbar.filterFreetext.key");
+  this.shortcuts.on(key, (name, event) => {
     event.preventDefault();
     this._view.RequestsMenu.freetextFilterBox.focus();
   });
