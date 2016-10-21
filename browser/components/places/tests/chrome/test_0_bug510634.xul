@@ -43,7 +43,6 @@
 
     SimpleTest.waitForExplicitFinish();
 
-    // converts nsISupportsArray of atoms to a simple JS-strings array
     function runTest() {
       // We need to cache and restore this getter in order to simulate
       // Bug 510634
