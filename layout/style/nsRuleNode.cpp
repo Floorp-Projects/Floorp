@@ -8987,12 +8987,6 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
     MOZ_ASSERT(false, "unexpected value unit");
   }
 
-  // marker-offset: length, auto, inherit
-  SetCoord(*aRuleData->ValueForMarkerOffset(), content->mMarkerOffset, parentContent->mMarkerOffset,
-           SETCOORD_LH | SETCOORD_AUTO | SETCOORD_INITIAL_AUTO |
-             SETCOORD_CALC_LENGTH_ONLY | SETCOORD_UNSET_INITIAL,
-           aContext, mPresContext, conditions);
-
   // If we ended up with an image, track it.
   for (uint32_t i = 0; i < content->ContentCount(); ++i) {
     if ((content->ContentAt(i).mType == eStyleContentType_Image) &&

@@ -3650,7 +3650,6 @@ nsStyleContentData::UntrackImage(ImageTracker* aImageTracker)
 //
 
 nsStyleContent::nsStyleContent(StyleStructContext aContext)
-  : mMarkerOffset(eStyleUnit_Auto)
 {
   MOZ_COUNT_CTOR(nsStyleContent);
 }
@@ -3675,8 +3674,7 @@ nsStyleContent::Destroy(nsPresContext* aContext)
 }
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
-  : mMarkerOffset(aSource.mMarkerOffset)
-  , mContents(aSource.mContents)
+  : mContents(aSource.mContents)
   , mIncrements(aSource.mIncrements)
   , mResets(aSource.mResets)
 {
@@ -3705,10 +3703,6 @@ nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
       mIncrements != aNewData.mIncrements ||
       mResets != aNewData.mResets) {
     return nsChangeHint_ReconstructFrame;
-  }
-
-  if (mMarkerOffset != aNewData.mMarkerOffset) {
-    return NS_STYLE_HINT_REFLOW;
   }
 
   return nsChangeHint(0);
