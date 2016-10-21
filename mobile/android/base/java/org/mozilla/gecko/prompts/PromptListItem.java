@@ -1,5 +1,6 @@
 package org.mozilla.gecko.prompts;
 
+import org.json.JSONException;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.ThumbnailHelper;
@@ -119,7 +120,7 @@ public class PromptListItem {
             try {
                 PromptListItem item = new PromptListItem(items.getJSONObject(i));
                 list.add(item);
-            } catch (Exception ex) { }
+            } catch (JSONException ex) { }
         }
 
         return list.toArray(new PromptListItem[length]);
