@@ -28,10 +28,12 @@ const POPUP_LOAD_TIMEOUT_MS = 200;
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+// Minimum time between two resizes.
+const RESIZE_TIMEOUT = 100;
+
 var {
   DefaultWeakMap,
   EventManager,
-  promiseEvent,
 } = ExtensionUtils;
 
 // This file provides some useful code for the |tabs| and |windows|
@@ -57,11 +59,17 @@ function promisePopupShown(popup) {
   });
 }
 
-XPCOMUtils.defineLazyGetter(this, "popupStylesheets", () => {
-  let stylesheets = ["chrome://browser/content/extension.css"];
+XPCOMUtils.defineLazyGetter(this, "stylesheets", () => {
+  let styleSheetURI = NetUtil.newURI("chrome://browser/content/extension.css");
+  let styleSheet = styleSheetService.preloadSheet(styleSheetURI,
+                                                  styleSheetService.AGENT_SHEET);
+  let stylesheets = [styleSheet];
 
   if (AppConstants.platform === "macosx") {
-    stylesheets.push("chrome://browser/content/extension-mac.css");
+    styleSheetURI = NetUtil.newURI("chrome://browser/content/extension-mac.css");
+    let macStyleSheet = styleSheetService.preloadSheet(styleSheetURI,
+                                                       styleSheetService.AGENT_SHEET);
+    stylesheets.push(macStyleSheet);
   }
   return stylesheets;
 });
@@ -70,10 +78,16 @@ XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
   let stylesheets = [];
 
   if (AppConstants.platform === "macosx") {
-    stylesheets.push("chrome://browser/content/extension-mac-panel.css");
+    let styleSheetURI = NetUtil.newURI("chrome://browser/content/extension-mac-panel.css");
+    let macStyleSheet = styleSheetService.preloadSheet(styleSheetURI,
+                                                       styleSheetService.AGENT_SHEET);
+    stylesheets.push(macStyleSheet);
   }
   if (AppConstants.platform === "win") {
-    stylesheets.push("chrome://browser/content/extension-win-panel.css");
+    let styleSheetURI = NetUtil.newURI("chrome://browser/content/extension-win-panel.css");
+    let winStyleSheet = styleSheetService.preloadSheet(styleSheetURI,
+                                                       styleSheetService.AGENT_SHEET);
+    stylesheets.push(winStyleSheet);
   }
   return stylesheets;
 });
@@ -95,6 +109,7 @@ class BasePopup {
     this.window = viewNode.ownerGlobal;
     this.destroyed = false;
     this.fixedWidth = fixedWidth;
+    this.ignoreResizes = true;
 
     this.contentReady = new Promise(resolve => {
       this._resolveContentReady = resolve;
@@ -142,35 +157,18 @@ class BasePopup {
   }
 
   destroyBrowser(browser) {
-    let mm = browser.messageManager;
-    // If the browser has already been removed from the document, because the
-    // popup was closed externally, there will be no message manager here.
-    if (mm) {
-      mm.removeMessageListener("DOMTitleChanged", this);
-      mm.removeMessageListener("Extension:BrowserBackgroundChanged", this);
-      mm.removeMessageListener("Extension:BrowserContentLoaded", this);
-      mm.removeMessageListener("Extension:BrowserResized", this);
-      mm.removeMessageListener("Extension:DOMWindowClose", this);
-    }
+    browser.removeEventListener("DOMWindowCreated", this, true);
+    browser.removeEventListener("load", this, true);
+    browser.removeEventListener("DOMContentLoaded", this, true);
+    browser.removeEventListener("DOMTitleChanged", this, true);
+    browser.removeEventListener("DOMWindowClose", this, true);
+    browser.removeEventListener("MozScrolledAreaChanged", this, true);
   }
 
   // Returns the name of the event fired on `viewNode` when the popup is being
   // destroyed. This must be implemented by every subclass.
   get DESTROY_EVENT() {
     throw new Error("Not implemented");
-  }
-
-  get STYLESHEETS() {
-    let sheets = [];
-
-    if (this.browserStyle) {
-      sheets.push(...popupStylesheets);
-    }
-    if (!this.fixedWidth) {
-      sheets.push(...standaloneStylesheets);
-    }
-
-    return sheets;
   }
 
   get panel() {
@@ -181,39 +179,69 @@ class BasePopup {
     return panel;
   }
 
-  receiveMessage({name, data}) {
-    switch (name) {
-      case "DOMTitleChanged":
-        this.viewNode.setAttribute("aria-label", this.browser.contentTitle);
-        break;
-
-      case "Extension:BrowserBackgroundChanged":
-        this.setBackground(data.background);
-        break;
-
-      case "Extension:BrowserContentLoaded":
-        this.browserLoadedDeferred.resolve();
-        break;
-
-      case "Extension:BrowserResized":
-        this._resolveContentReady();
-        if (this.ignoreResizes) {
-          this.dimensions = data;
-        } else {
-          this.resizeBrowser(data);
-        }
-        break;
-
-      case "Extension:DOMWindowClose":
-        this.closePopup();
-        break;
-    }
-  }
-
   handleEvent(event) {
     switch (event.type) {
       case this.DESTROY_EVENT:
         this.destroy();
+        break;
+
+      case "DOMWindowCreated":
+        if (event.target === this.browser.contentDocument) {
+          let winUtils = this.browser.contentWindow
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+
+          if (this.browserStyle) {
+            for (let stylesheet of stylesheets) {
+              winUtils.addSheet(stylesheet, winUtils.AGENT_SHEET);
+            }
+          }
+          if (!this.fixedWidth) {
+            for (let stylesheet of standaloneStylesheets) {
+              winUtils.addSheet(stylesheet, winUtils.AGENT_SHEET);
+            }
+          }
+        }
+        break;
+
+      case "DOMWindowClose":
+        if (event.target === this.browser.contentWindow) {
+          event.preventDefault();
+          this.closePopup();
+        }
+        break;
+
+      case "DOMTitleChanged":
+        this.viewNode.setAttribute("aria-label", this.browser.contentTitle);
+        break;
+
+      case "DOMContentLoaded":
+        this.browserLoadedDeferred.resolve();
+        this.resizeBrowser(true);
+        break;
+
+      case "load":
+        // We use a capturing listener, so we get this event earlier than any
+        // load listeners in the content page. Resizing after a timeout ensures
+        // that we calculate the size after the entire event cycle has completed
+        // (unless someone spins the event loop, anyway), and hopefully after
+        // the content has made any modifications.
+        Promise.resolve().then(() => {
+          this.resizeBrowser(true);
+        });
+
+        // Mutation observer to make sure the panel shrinks when the content does.
+        new this.browser.contentWindow.MutationObserver(this.resizeBrowser.bind(this)).observe(
+          this.browser.contentDocument.documentElement, {
+            attributes: true,
+            characterData: true,
+            childList: true,
+            subtree: true,
+          });
+        break;
+
+      case "MozScrolledAreaChanged":
+        this.resizeBrowser();
         break;
     }
   }
@@ -241,12 +269,12 @@ class BasePopup {
     viewNode.appendChild(this.browser);
 
     let initBrowser = browser => {
-      let mm = browser.messageManager;
-      mm.addMessageListener("DOMTitleChanged", this);
-      mm.addMessageListener("Extension:BrowserBackgroundChanged", this);
-      mm.addMessageListener("Extension:BrowserContentLoaded", this);
-      mm.addMessageListener("Extension:BrowserResized", this);
-      mm.addMessageListener("Extension:DOMWindowClose", this, true);
+      browser.addEventListener("DOMWindowCreated", this, true);
+      browser.addEventListener("load", this, true);
+      browser.addEventListener("DOMContentLoaded", this, true);
+      browser.addEventListener("DOMTitleChanged", this, true);
+      browser.addEventListener("DOMWindowClose", this, true);
+      browser.addEventListener("MozScrolledAreaChanged", this, true);
     };
 
     if (!popupURL) {
@@ -254,28 +282,82 @@ class BasePopup {
       return this.browser;
     }
 
-    return promiseEvent(this.browser, "load").then(() => {
+    return new Promise(resolve => {
+      // The first load event is for about:blank.
+      // We can't finish setting up the browser until the binding has fully
+      // initialized. Waiting for the first load event guarantees that it has.
+      let loadListener = event => {
+        this.browser.removeEventListener("load", loadListener, true);
+        resolve();
+      };
+      this.browser.addEventListener("load", loadListener, true);
+    }).then(() => {
       initBrowser(this.browser);
 
-      let mm = this.browser.messageManager;
+      let {contentWindow} = this.browser;
 
-      mm.loadFrameScript(
-        "chrome://extensions/content/ext-browser-content.js", false);
-
-      mm.sendAsyncMessage("Extension:InitBrowser", {
-        allowScriptsToClose: true,
-        fixedWidth: this.fixedWidth,
-        maxWidth: 800,
-        maxHeight: 600,
-        stylesheets: this.STYLESHEETS,
-      });
+      contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils)
+                   .allowScriptsToClose();
 
       this.browser.setAttribute("src", popupURL);
     });
   }
 
-  resizeBrowser({width, height, detail}) {
+  // Resizes the browser to match the preferred size of the content (debounced).
+  resizeBrowser(ignoreThrottling = false) {
+    if (this.ignoreResizes) {
+      return;
+    }
+
+    if (ignoreThrottling && this.resizeTimeout) {
+      this.window.clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = null;
+    }
+
+    if (this.resizeTimeout == null) {
+      this.resizeTimeout = this.window.setTimeout(() => {
+        try {
+          this._resizeBrowser();
+        } finally {
+          this.resizeTimeout = null;
+        }
+      }, RESIZE_TIMEOUT);
+
+      this._resizeBrowser();
+    }
+  }
+
+  _resizeBrowser() {
+    let doc = this.browser && this.browser.contentDocument;
+    if (!doc || !doc.documentElement) {
+      return;
+    }
+
+    let root = doc.documentElement;
+    let body = doc.body;
+    if (!body || doc.compatMode == "BackCompat") {
+      // In quirks mode, the root element is used as the scroll frame, and the
+      // body lies about its scroll geometry, and returns the values for the
+      // root instead.
+      body = root;
+    }
+
+
     if (this.fixedWidth) {
+      // If we're in a fixed-width area (namely a slide-in subview of the main
+      // menu panel), we need to calculate the view height based on the
+      // preferred height of the content document's root scrollable element at the
+      // current width, rather than the complete preferred dimensions of the
+      // content window.
+
+      // Compensate for any offsets (margin, padding, ...) between the scroll
+      // area of the body and the outer height of the document.
+      let getHeight = elem => elem.getBoundingClientRect(elem).height;
+      let bodyPadding = getHeight(root) - getHeight(body);
+
+      let height = Math.ceil(body.scrollHeight + bodyPadding);
+
       // Figure out how much extra space we have on the side of the panel
       // opposite the arrow.
       let side = this.panel.getAttribute("side") == "top" ? "bottom" : "top";
@@ -292,32 +374,48 @@ class BasePopup {
       height = Math.max(height, this.viewHeight);
       this.viewNode.style.maxHeight = `${height}px`;
     } else {
+      // Copy the background color of the document's body to the panel if it's
+      // fully opaque.
+      let panelBackground = "";
+      let panelArrow = "";
+
+      let background = doc.defaultView.getComputedStyle(body).backgroundColor;
+      if (background != "transparent") {
+        let bgColor = colorUtils.colorToRGBA(background);
+        if (bgColor.a == 1) {
+          panelBackground = background;
+          let borderColor = this.borderColor || background;
+
+          panelArrow = `url("data:image/svg+xml,${encodeURIComponent(`<?xml version="1.0" encoding="UTF-8"?>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="10">
+              <path d="M 0,10 L 10,0 20,10 z" fill="${borderColor}"/>
+              <path d="M 1,10 L 10,1 19,10 z" fill="${background}"/>
+            </svg>
+          `)}")`;
+        }
+      }
+
+      this.panel.style.setProperty("--arrowpanel-background", panelBackground);
+      this.panel.style.setProperty("--panel-arrow-image-vertical", panelArrow);
+
+
+      // Adjust the size of the browser based on its content's preferred size.
+      let {contentViewer} = this.browser.docShell;
+      let ratio = this.window.devicePixelRatio;
+
+      let w = {}, h = {};
+      contentViewer.getContentSizeConstrained(800 * ratio, 600 * ratio, w, h);
+      let width = Math.ceil(w.value / ratio);
+      let height = Math.ceil(h.value / ratio);
+
       this.browser.style.width = `${width}px`;
       this.browser.style.height = `${height}px`;
     }
 
-    let event = new this.window.CustomEvent("WebExtPopupResized", {detail});
+    let event = new this.window.CustomEvent("WebExtPopupResized");
     this.browser.dispatchEvent(event);
-  }
 
-  setBackground(background) {
-    let panelBackground = "";
-    let panelArrow = "";
-
-    if (background) {
-      let borderColor = this.borderColor || background;
-
-      panelBackground = background;
-      panelArrow = `url("data:image/svg+xml,${encodeURIComponent(`<?xml version="1.0" encoding="UTF-8"?>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="10">
-          <path d="M 0,10 L 10,0 20,10 z" fill="${borderColor}"/>
-          <path d="M 1,10 L 10,1 19,10 z" fill="${background}"/>
-        </svg>
-      `)}")`;
-    }
-
-    this.panel.style.setProperty("--arrowpanel-background", panelBackground);
-    this.panel.style.setProperty("--panel-arrow-image-vertical", panelArrow);
+    this._resolveContentReady();
   }
 }
 
@@ -328,7 +426,7 @@ class BasePopup {
  */
 BasePopup.instances = new DefaultWeakMap(() => new WeakMap());
 
-class PanelPopup extends BasePopup {
+global.PanelPopup = class PanelPopup extends BasePopup {
   constructor(extension, imageNode, popupURL, browserStyle) {
     let document = imageNode.ownerDocument;
 
@@ -343,14 +441,10 @@ class PanelPopup extends BasePopup {
 
     super(extension, panel, popupURL, browserStyle);
 
+    this.ignoreResizes = false;
+
     this.contentReady.then(() => {
       panel.openPopup(imageNode, "bottomcenter topright", 0, 0, false, false);
-
-      let event = new this.window.CustomEvent("WebExtPopupLoaded", {
-        bubbles: true,
-        detail: {extension},
-      });
-      this.browser.dispatchEvent(event);
     });
   }
 
@@ -371,9 +465,9 @@ class PanelPopup extends BasePopup {
       }
     });
   }
-}
+};
 
-class ViewPopup extends BasePopup {
+global.ViewPopup = class ViewPopup extends BasePopup {
   constructor(extension, window, popupURL, browserStyle, fixedWidth) {
     let document = window.document;
 
@@ -385,8 +479,6 @@ class ViewPopup extends BasePopup {
     document.getElementById("mainPopupSet").appendChild(panel);
 
     super(extension, panel, popupURL, browserStyle, fixedWidth);
-
-    this.ignoreResizes = true;
 
     this.attached = false;
     this.tempPanel = panel;
@@ -425,10 +517,6 @@ class ViewPopup extends BasePopup {
         ]),
       ]);
 
-      if (!this.destroyed && !this.panel) {
-        this.destroy();
-      }
-
       if (this.destroyed) {
         return false;
       }
@@ -461,18 +549,10 @@ class ViewPopup extends BasePopup {
       this.destroyBrowser(browser);
 
       this.ignoreResizes = false;
-      if (this.dimensions) {
-        this.resizeBrowser(this.dimensions);
-      }
+      this.resizeBrowser(true);
 
       this.tempPanel.remove();
       this.tempPanel = null;
-
-      let event = new this.window.CustomEvent("WebExtPopupLoaded", {
-        bubbles: true,
-        detail: {extension: this.extension},
-      });
-      this.browser.dispatchEvent(event);
 
       return true;
     }.bind(this));
@@ -498,9 +578,7 @@ class ViewPopup extends BasePopup {
       this.destroy();
     }
   }
-}
-
-Object.assign(global, {PanelPopup, ViewPopup});
+};
 
 // Manages tab-specific context data, and dispatching tab select events
 // across all windows.
