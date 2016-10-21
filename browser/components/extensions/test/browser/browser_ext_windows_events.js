@@ -16,9 +16,14 @@ add_task(function* testWindowsEvents() {
       browser.test.sendMessage("window-created", window.id);
     });
 
-    let lastWindowId;
+    let lastWindowId, os;
     browser.windows.onFocusChanged.addListener(function listener(windowId) {
       browser.test.log(`onFocusChange: windowId=${windowId} lastWindowId=${lastWindowId}`);
+
+      if (windowId === browser.windows.WINDOW_ID_NONE && os === "linux") {
+        browser.test.log("Ignoring a superfluous WINDOW_ID_NONE (blur) event on Linux");
+        return;
+      }
 
       browser.test.assertTrue(lastWindowId !== windowId,
                               "onFocusChanged fired once for the given window");
@@ -43,7 +48,10 @@ add_task(function* testWindowsEvents() {
       browser.test.notifyPass("windows.events");
     });
 
-    browser.test.sendMessage("ready");
+    browser.runtime.getPlatformInfo(info => {
+      os = info.os;
+      browser.test.sendMessage("ready");
+    });
   }
 
   let extension = ExtensionTestUtils.loadExtension({

@@ -116,9 +116,9 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
         format = "";
 
     if (nsXPCException::NameAndFormatForNSResult(result, &name, nullptr) && name)
-        sz = JS_smprintf("%s 0x%x (%s)", format, result, name);
+        sz = JS_smprintf("%s 0x%x (%s)", format, (unsigned) result, name);
     else
-        sz = JS_smprintf("%s 0x%x", format, result);
+        sz = JS_smprintf("%s 0x%x", format, (unsigned) result);
     NS_ENSURE_TRUE_VOID(sz);
 
     if (sz && sVerbose)

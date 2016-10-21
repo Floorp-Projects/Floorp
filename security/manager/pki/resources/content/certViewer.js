@@ -3,6 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/**
+ * @file Implements functionality for certViewer.xul and its tabs certDump.xul
+ *       and viewCertDetails.xul: a dialog that allows various attributes of a
+ *       certificate to be viewed.
+ * @argument {nsISupports} window.arguments[0]
+ *           The cert to view, queryable to nsIX509Cert.
+ */
+
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
@@ -16,7 +24,6 @@ const nsIASN1Sequence = Ci.nsIASN1Sequence;
 const nsIASN1PrintableItem = Ci.nsIASN1PrintableItem;
 const nsIASN1Tree = Ci.nsIASN1Tree;
 const nsASN1Tree = "@mozilla.org/security/nsASN1Tree;1";
-const nsIDialogParamBlock = Ci.nsIDialogParamBlock;
 
 var bundle;
 
@@ -71,21 +78,11 @@ function AddUsage(usage)
 
 function setWindowName()
 {
-  //  Get the cert from the cert database
-  var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-  var myName = self.name;
   bundle = document.getElementById("pippki_bundle");
-  var cert;
 
-  var certDetails = bundle.getString('certDetails');
-  if (myName != "") {
-    document.title = certDetails + '"' + myName + '"'; // XXX l10n?
-    cert = certdb.findCertByNickname(myName);
-  } else {
-    var params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-    cert = params.objects.queryElementAt(0, nsIX509Cert);
-    document.title = certDetails + '"' + cert.windowTitle + '"'; // XXX l10n?
-  }
+  let cert = window.arguments[0].QueryInterface(Ci.nsIX509Cert);
+  document.title = bundle.getFormattedString("certViewerTitle",
+                                             [cert.windowTitle]);
 
   //
   //  Set the cert attributes for viewing

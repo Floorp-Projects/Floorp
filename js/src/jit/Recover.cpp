@@ -6,6 +6,8 @@
 
 #include "jit/Recover.h"
 
+#include "mozilla/SizePrintfMacros.h"
+
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsmath.h"
@@ -123,7 +125,7 @@ MResumePoint::writeRecoverData(CompactBufferWriter& writer) const
     uint32_t formalArgs = CountArgSlots(script, fun);
     uint32_t nallocs = formalArgs + script->nfixed() + exprStack;
 
-    JitSpew(JitSpew_IonSnapshots, "Starting frame; implicit %u, formals %u, fixed %u, exprs %u",
+    JitSpew(JitSpew_IonSnapshots, "Starting frame; implicit %u, formals %u, fixed %" PRIuSIZE ", exprs %u",
             implicit, formalArgs - implicit, script->nfixed(), exprStack);
 
     uint32_t pcoff = script->pcToOffset(pc());

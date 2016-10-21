@@ -6,6 +6,7 @@
 
 #include "jit/Ion.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/ThreadLocal.h"
@@ -2136,7 +2137,7 @@ TrackIonAbort(JSContext* cx, JSScript* script, jsbytecode* pc, const char* messa
 static void
 TrackAndSpewIonAbort(JSContext* cx, JSScript* script, const char* message)
 {
-    JitSpew(JitSpew_IonAbort, message);
+    JitSpew(JitSpew_IonAbort, "%s", message);
     TrackIonAbort(cx, script, script->code(), message);
 }
 
@@ -2395,7 +2396,7 @@ CheckScriptSize(JSContext* cx, JSScript* script)
         numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
     {
         if (!OffThreadCompilationAvailable(cx)) {
-            JitSpew(JitSpew_IonAbort, "Script too large (%u bytes) (%u locals/args)",
+            JitSpew(JitSpew_IonAbort, "Script too large (%" PRIuSIZE " bytes) (%u locals/args)",
                     script->length(), numLocalsAndArgs);
             TrackIonAbort(cx, script, script->code(), "too large");
             return Method_CantCompile;
@@ -3012,7 +3013,7 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
 #ifdef JS_JITSPEW
         switch (it.type()) {
           case JitFrame_Exit:
-            JitSpew(JitSpew_IonInvalidate, "#%d exit frame @ %p", frameno, it.fp());
+            JitSpew(JitSpew_IonInvalidate, "#%" PRIuSIZE " exit frame @ %p", frameno, it.fp());
             break;
           case JitFrame_BaselineJS:
           case JitFrame_IonJS:
@@ -3027,26 +3028,26 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
             else if (it.isBailoutJS())
                 type = "Bailing";
             JitSpew(JitSpew_IonInvalidate,
-                    "#%d %s JS frame @ %p, %s:%" PRIuSIZE " (fun: %p, script: %p, pc %p)",
+                    "#%" PRIuSIZE " %s JS frame @ %p, %s:%" PRIuSIZE " (fun: %p, script: %p, pc %p)",
                     frameno, type, it.fp(), it.script()->maybeForwardedFilename(),
                     it.script()->lineno(), it.maybeCallee(), (JSScript*)it.script(),
                     it.returnAddressToFp());
             break;
           }
           case JitFrame_IonStub:
-            JitSpew(JitSpew_IonInvalidate, "#%d ion stub frame @ %p", frameno, it.fp());
+            JitSpew(JitSpew_IonInvalidate, "#%" PRIuSIZE " ion stub frame @ %p", frameno, it.fp());
             break;
           case JitFrame_BaselineStub:
-            JitSpew(JitSpew_IonInvalidate, "#%d baseline stub frame @ %p", frameno, it.fp());
+            JitSpew(JitSpew_IonInvalidate, "#%" PRIuSIZE " baseline stub frame @ %p", frameno, it.fp());
             break;
           case JitFrame_Rectifier:
-            JitSpew(JitSpew_IonInvalidate, "#%d rectifier frame @ %p", frameno, it.fp());
+            JitSpew(JitSpew_IonInvalidate, "#%" PRIuSIZE " rectifier frame @ %p", frameno, it.fp());
             break;
           case JitFrame_IonAccessorIC:
-            JitSpew(JitSpew_IonInvalidate, "#%d ion IC getter/setter frame @ %p", frameno, it.fp());
+            JitSpew(JitSpew_IonInvalidate, "#%" PRIuSIZE " ion IC getter/setter frame @ %p", frameno, it.fp());
             break;
           case JitFrame_Entry:
-            JitSpew(JitSpew_IonInvalidate, "#%d entry frame @ %p", frameno, it.fp());
+            JitSpew(JitSpew_IonInvalidate, "#%" PRIuSIZE " entry frame @ %p", frameno, it.fp());
             break;
         }
 #endif // JS_JITSPEW
@@ -3141,7 +3142,7 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         CodeLocationLabel osiPatchPoint = SafepointReader::InvalidationPatchPoint(ionScript, si);
         CodeLocationLabel invalidateEpilogue(ionCode, CodeOffset(ionScript->invalidateEpilogueOffset()));
 
-        JitSpew(JitSpew_IonInvalidate, "   ! Invalidate ionScript %p (inv count %u) -> patching osipoint %p",
+        JitSpew(JitSpew_IonInvalidate, "   ! Invalidate ionScript %p (inv count %" PRIuSIZE ") -> patching osipoint %p",
                 ionScript, ionScript->invalidationCount(), (void*) osiPatchPoint.raw());
         Assembler::PatchWrite_NearCall(osiPatchPoint, invalidateEpilogue);
     }
@@ -3358,7 +3359,7 @@ AutoFlushICache::setRange(uintptr_t start, size_t len)
     AutoFlushICache* afc = TlsPerThreadData.get()->PerThreadData::autoFlushICache();
     MOZ_ASSERT(afc);
     MOZ_ASSERT(!afc->start_);
-    JitSpewCont(JitSpew_CacheFlush, "(%x %x):", start, len);
+    JitSpewCont(JitSpew_CacheFlush, "(%" PRIxPTR " %" PRIxSIZE "):", start, len);
 
     uintptr_t stop = start + len;
     afc->start_ = start;

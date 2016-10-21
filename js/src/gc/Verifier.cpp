@@ -535,7 +535,7 @@ CheckHeapTracer::check(AutoLockForExclusiveAccess& lock)
         return;
 
     if (failures) {
-        fprintf(stderr, "Heap check: %zu failure(s) out of %" PRIu32 " pointers checked\n",
+        fprintf(stderr, "Heap check: %" PRIuSIZE " failure(s) out of %" PRIu32 " pointers checked\n",
                 failures, visited.count());
     }
     MOZ_RELEASE_ASSERT(failures == 0);

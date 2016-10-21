@@ -316,7 +316,9 @@ def nsis_version(nsis):
         raise FatalCheckError('Unknown version of makensis')
     ver = Version(m.group(0))
 
-    if ver < nsis_min_version:
+    # Versions comparisons don't quite work well with beta versions, so ensure
+    # it works for the non-beta version.
+    if ver < nsis_min_version and (ver >= '3.0a' or ver < '3'):
         raise FatalCheckError('To build the installer you must have NSIS'
                               ' version %s or greater in your path'
                               % nsis_min_version)
