@@ -435,8 +435,10 @@ class WinArtifactJob(ArtifactJob):
 # https://tools.taskcluster.net/index/artifacts/#gecko.v2.mozilla-central.latest/gecko.v2.mozilla-central.latest
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
-    'android-api-15': (AndroidArtifactJob, ('public/build/fennec-(.*)-arm\.apk',
-                                            None)),
+    'android-api-15-opt': (AndroidArtifactJob, ('public/build/target.apk',
+                                                None)),
+    'android-api-15-debug': (AndroidArtifactJob, ('public/build/target.apk',
+                                                  None)),
     'android-x86': (AndroidArtifactJob, ('public/build/fennec-(.*)-i386\.apk',
                                          None)),
     'linux-opt': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
@@ -660,7 +662,7 @@ class TaskCache(CacheManager):
             url = self._queue.buildUrl('getLatestArtifact', taskId, artifact_name)
             urls.append(url)
         if not urls:
-            raise ValueError('Task for {key} existed, but no artifacts found!'.format(key=key))
+            raise ValueError('Task for {namespace} existed, but no artifacts found!'.format(namespace=namespace))
         return urls
 
     def print_last_item(self, args, sorted_kwargs, result):
@@ -795,21 +797,21 @@ class Artifacts(object):
             self._log(*args, **kwargs)
 
     def _guess_artifact_job(self):
-        if self._substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
-            if self._substs['ANDROID_CPU_ARCH'] == 'x86':
-                return 'android-x86'
-            return 'android-api-15'
-
-        target_64bit = False
-        if self._substs['target_cpu'] == 'x86_64':
-            target_64bit = True
-
         # Add the "-debug" suffix to the guessed artifact job name
         # if MOZ_DEBUG is enabled.
         if self._substs.get('MOZ_DEBUG'):
             target_suffix = '-debug'
         else:
             target_suffix = '-opt'
+
+        if self._substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
+            if self._substs['ANDROID_CPU_ARCH'] == 'x86':
+                return 'android-x86'
+            return 'android-api-15' + target_suffix
+
+        target_64bit = False
+        if self._substs['target_cpu'] == 'x86_64':
+            target_64bit = True
 
         if self._defines.get('XP_LINUX', False):
             return ('linux64' if target_64bit else 'linux') + target_suffix

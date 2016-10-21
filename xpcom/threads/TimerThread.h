@@ -44,7 +44,7 @@ public:
   nsresult Shutdown();
 
   nsresult AddTimer(nsTimerImpl* aTimer);
-  nsresult RemoveTimer(nsTimerImpl* aTimer);
+  nsresult RemoveTimer(nsTimerImpl* aTimer, bool aDisable=false);
 
   void DoBeforeSleep();
   void DoAfterSleep();

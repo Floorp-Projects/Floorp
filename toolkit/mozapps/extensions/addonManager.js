@@ -38,22 +38,16 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 var gSingleton = null;
 
-var gParentMM = null;
-
-
 function amManager() {
   Cu.import("resource://gre/modules/AddonManager.jsm");
   /*globals AddonManagerPrivate*/
 
-  let globalMM = Services.mm;
-  globalMM.loadFrameScript(CHILD_SCRIPT, true);
-  globalMM.addMessageListener(MSG_INSTALL_ENABLED, this);
-  globalMM.addMessageListener(MSG_INSTALL_ADDONS, this);
-
-  gParentMM = Services.ppmm;
-  gParentMM.addMessageListener(MSG_PROMISE_REQUEST, this);
-  gParentMM.addMessageListener(MSG_INSTALL_CLEANUP, this);
-  gParentMM.addMessageListener(MSG_ADDON_EVENT_REQ, this);
+  Services.mm.loadFrameScript(CHILD_SCRIPT, true);
+  Services.mm.addMessageListener(MSG_INSTALL_ENABLED, this);
+  Services.mm.addMessageListener(MSG_INSTALL_ADDONS, this);
+  Services.mm.addMessageListener(MSG_PROMISE_REQUEST, this);
+  Services.mm.addMessageListener(MSG_INSTALL_CLEANUP, this);
+  Services.mm.addMessageListener(MSG_ADDON_EVENT_REQ, this);
 
   Services.obs.addObserver(this, "message-manager-close", false);
   Services.obs.addObserver(this, "message-manager-disconnect", false);
@@ -230,14 +224,15 @@ amManager.prototype = {
       }
 
       case MSG_PROMISE_REQUEST: {
+        let mm = aMessage.target.messageManager;
         let resolve = (value) => {
-          aMessage.target.sendAsyncMessage(MSG_PROMISE_RESULT, {
+          mm.sendAsyncMessage(MSG_PROMISE_RESULT, {
             callbackID: payload.callbackID,
             resolve: value
           });
         }
         let reject = (value) => {
-          aMessage.target.sendAsyncMessage(MSG_PROMISE_RESULT, {
+          mm.sendAsyncMessage(MSG_PROMISE_RESULT, {
             callbackID: payload.callbackID,
             reject: value
           });
@@ -259,7 +254,7 @@ amManager.prototype = {
       }
 
       case MSG_ADDON_EVENT_REQ: {
-        let target = aMessage.target;
+        let target = aMessage.target.messageManager;
         if (payload.enabled) {
           this._addAddonListener(target);
         } else {
@@ -275,8 +270,8 @@ amManager.prototype = {
     this._removeAddonListener(target);
   },
 
-  sendEvent(target, data) {
-    target.sendAsyncMessage(MSG_INSTALL_EVENT, data);
+  sendEvent(mm, data) {
+    mm.sendAsyncMessage(MSG_INSTALL_EVENT, data);
   },
 
   classID: Components.ID("{4399533d-08d1-458c-a87a-235f74451cfa}"),

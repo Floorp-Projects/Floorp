@@ -108,9 +108,11 @@ public:
   // promises to be resolved.
   PromiseId StorePromise(DetailedPromise* aPromise);
 
-  // Stores a map for promise id and session token, and it will be used to
-  // remove the pending sessions by promise id while creating/loading various
-  // sessions in the same time.
+  // Stores a map from promise id to pending session token. Using this
+  // mapping, when a promise is rejected via its ID, we can check if the
+  // promise corresponds to a pending session and retrieve that session
+  // via the mapped-to token, and remove the pending session from the
+  // list of sessions awaiting a session id.
   void ConnectPendingPromiseIdWithToken(PromiseId aId, uint32_t aToken);
 
   // Reject promise with DOMException corresponding to aExceptionCode.

@@ -98,6 +98,13 @@ TransportSecurityInfo::GetPort(int32_t *aPort)
   return NS_OK;
 }
 
+nsresult
+TransportSecurityInfo::SetFirstPartyDomain(const nsACString& aFirstPartyDomain)
+{
+  mFirstPartyDomain.Assign(aFirstPartyDomain);
+  return NS_OK;
+}
+
 PRErrorCode
 TransportSecurityInfo::GetErrorCode() const
 {

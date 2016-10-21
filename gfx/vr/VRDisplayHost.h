@@ -87,13 +87,17 @@ class VRControllerHost {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRControllerHost)
 
-  const VRControllerInfo& GetControllerInfo() const { return mControllerInfo; }
+  const VRControllerInfo& GetControllerInfo() const;
+  void SetIndex(uint32_t aIndex);
+  uint32_t GetIndex();
 
 protected:
   explicit VRControllerHost(VRDeviceType aType);
   virtual ~VRControllerHost();
 
   VRControllerInfo mControllerInfo;
+  // The controller index in VRControllerManager.
+  uint32_t mIndex;
 };
 
 } // namespace gfx

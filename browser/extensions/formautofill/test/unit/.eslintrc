@@ -1,5 +1,5 @@
 {
   "extends": [
-    "../../../../../testing/xpcshell/xpcshell.eslintrc"
+    "../../../../../testing/xpcshell/xpcshell.eslintrc.js"
   ],
 }

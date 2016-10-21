@@ -25,12 +25,14 @@ struct GamepadRemoved {
 
 struct GamepadAxisInformation {
   uint32_t index;
+  GamepadServiceType service_type;
   uint32_t axis;
   double value;
 };
 
 struct GamepadButtonInformation {
   uint32_t index;
+  GamepadServiceType service_type;
   uint32_t button;
   bool pressed;
   double value;

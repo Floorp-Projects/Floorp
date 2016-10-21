@@ -3081,6 +3081,12 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
 
     socketTransport->SetConnectionFlags(tmpFlags);
 
+    nsAutoCString firstPartyDomain =
+      NS_ConvertUTF16toUTF8(mEnt->mConnInfo->GetOriginAttributes().mFirstPartyDomain);
+    if (!firstPartyDomain.IsEmpty()) {
+        socketTransport->SetFirstPartyDomain(firstPartyDomain);
+    }
+
     socketTransport->SetQoSBits(gHttpHandler->GetQoSBits());
 
     if (!ci->GetNetworkInterfaceId().IsEmpty()) {

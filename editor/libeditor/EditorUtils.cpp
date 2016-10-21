@@ -79,8 +79,8 @@ DOMIterator::DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   mIter = NS_NewContentIterator();
-  DebugOnly<nsresult> res = mIter->Init(&aNode);
-  MOZ_ASSERT(NS_SUCCEEDED(res));
+  DebugOnly<nsresult> rv = mIter->Init(&aNode);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsresult

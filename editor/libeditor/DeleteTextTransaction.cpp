@@ -58,11 +58,11 @@ DeleteTextTransaction::DoTransaction()
   MOZ_ASSERT(mCharData);
 
   // Get the text that we're about to delete
-  nsresult res = mCharData->SubstringData(mOffset, mNumCharsToDelete,
-                                          mDeletedText);
-  MOZ_ASSERT(NS_SUCCEEDED(res));
-  res = mCharData->DeleteData(mOffset, mNumCharsToDelete);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = mCharData->SubstringData(mOffset, mNumCharsToDelete,
+                                         mDeletedText);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  rv = mCharData->DeleteData(mOffset, mNumCharsToDelete);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mRangeUpdater) {
     mRangeUpdater->SelAdjDeleteText(mCharData, mOffset, mNumCharsToDelete);
@@ -72,10 +72,10 @@ DeleteTextTransaction::DoTransaction()
   if (mEditorBase.GetShouldTxnSetSelection()) {
     RefPtr<Selection> selection = mEditorBase.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    res = selection->Collapse(mCharData, mOffset);
-    NS_ASSERTION(NS_SUCCEEDED(res),
+    rv = selection->Collapse(mCharData, mOffset);
+    NS_ASSERTION(NS_SUCCEEDED(rv),
                  "Selection could not be collapsed after undo of deletetext");
-    NS_ENSURE_SUCCESS(res, res);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   // Else do nothing - DOM Range gravity will adjust selection
   return NS_OK;

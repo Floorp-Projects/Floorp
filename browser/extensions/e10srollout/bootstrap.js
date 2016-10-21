@@ -242,7 +242,7 @@ let performLongSpinnerCheck = Task.async(function*() {
 
       let histogram = ping.payload.histograms[LONG_SPINNER_HISTOGRAM];
 
-      for (spinnerTime of Object.keys(histogram.values)) {
+      for (let spinnerTime of Object.keys(histogram.values)) {
         // Only consider spinners that took more than 2 seconds.
         // Note: the first bucket size that fits this criteria is
         // 2297ms. And the largest bucket is 64000ms, meaning that

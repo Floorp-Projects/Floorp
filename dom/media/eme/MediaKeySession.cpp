@@ -382,6 +382,20 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
     return promise.forget();
   }
 
+  // 5. If the result of running the Is persistent session type? algorithm
+  // on this object's session type is false, return a promise rejected with
+  // a newly created TypeError.
+  if (mSessionType == MediaKeySessionType::Temporary) {
+    promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR,
+                         NS_LITERAL_CSTRING("Trying to load() into a non-persistent session"));
+    EME_LOG("MediaKeySession[%p,''] Load() failed, can't load in a non-persistent session", this);
+    return promise.forget();
+  }
+
+  // Note: We don't support persistent sessions in any keysystem, so all calls
+  // to Load() should reject with a TypeError in the preceding check. Omitting
+  // implementing the rest of the specified MediaKeySession::Load() algorithm.
+
   // We now know the sessionId being loaded into this session. Remove the
   // session from its owning MediaKey's set of sessions awaiting a sessionId.
   RefPtr<MediaKeySession> session(mKeys->GetPendingSession(Token()));
@@ -391,7 +405,6 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
   SetSessionId(aSessionId);
 
   PromiseId pid = mKeys->StorePromise(promise);
-  mKeys->ConnectPendingPromiseIdWithToken(pid, Token());
   mKeys->GetCDMProxy()->LoadSession(pid, aSessionId);
 
   EME_LOG("MediaKeySession[%p,'%s'] Load() sent to CDM, promiseId=%d",

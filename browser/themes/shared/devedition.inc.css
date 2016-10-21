@@ -214,6 +214,14 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   margin-inline-start: 0;
 }
 
+:root[devtoolstheme="dark"] #urlbar-zoom-button:hover {
+  background-color: rgba(255,255,255,.2);
+}
+
+:root[devtoolstheme="dark"] #urlbar-zoom-button:hover:active {
+  background-color: rgba(255,255,255,.3);
+}
+
 /* Nav bar specific stuff */
 #nav-bar {
   margin-top: 0 !important;

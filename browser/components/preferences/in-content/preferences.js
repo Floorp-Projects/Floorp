@@ -2,6 +2,18 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Import globals from the files imported by the .xul files.
+/* import-globals-from subdialogs.js */
+/* import-globals-from advanced.js */
+/* import-globals-from main.js */
+/* import-globals-from search.js */
+/* import-globals-from content.js */
+/* import-globals-from privacy.js */
+/* import-globals-from applications.js */
+/* import-globals-from security.js */
+/* import-globals-from sync.js */
+/* import-globals-from ../../../base/content/utilityOverlay.js */
+
 "use strict";
 
 var Cc = Components.classes;

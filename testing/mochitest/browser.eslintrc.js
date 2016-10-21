@@ -29,6 +29,7 @@ module.exports = {
     "getTestFilePath": false,
     "gTestPath": false,
     "info": false,
+    "ignoreAllUncaughtExceptions": false,
     "is": false,
     "isnot": false,
     "ok": false,

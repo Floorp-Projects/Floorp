@@ -29,6 +29,6 @@ function waitForConditionPromise(condition, timeoutMsg, tryCount=NUMBER_OF_TRIES
 
 function waitForCondition(condition, nextTest, errorMsg) {
   waitForConditionPromise(condition, errorMsg).then(nextTest, (reason) => {
-    ok(false, reason + (reason.stack ? "\n" + e.stack : ""));
+    ok(false, reason + (reason.stack ? "\n" + reason.stack : ""));
   });
 }

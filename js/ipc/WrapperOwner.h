@@ -84,9 +84,9 @@ class WrapperOwner : public virtual JavaScriptShared
     virtual void ActorDestroy(ActorDestroyReason why);
 
     virtual bool toObjectVariant(JSContext* cx, JSObject* obj, ObjectVariant* objVarp);
-    virtual JSObject* fromObjectVariant(JSContext* cx, ObjectVariant objVar);
-    JSObject* fromRemoteObjectVariant(JSContext* cx, RemoteObject objVar);
-    JSObject* fromLocalObjectVariant(JSContext* cx, LocalObject objVar);
+    virtual JSObject* fromObjectVariant(JSContext* cx, const ObjectVariant& objVar);
+    JSObject* fromRemoteObjectVariant(JSContext* cx, const RemoteObject& objVar);
+    JSObject* fromLocalObjectVariant(JSContext* cx, const LocalObject& objVar);
 
   protected:
     ObjectId idOf(JSObject* obj);

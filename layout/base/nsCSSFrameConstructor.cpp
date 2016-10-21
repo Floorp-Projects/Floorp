@@ -12777,10 +12777,10 @@ Iterator::AppendItemToList(FrameConstructionItemList& aTargetList)
   NS_ASSERTION(&aTargetList != &mList, "Unexpected call");
   NS_PRECONDITION(!IsDone(), "should not be done");
 
-  FrameConstructionItem* item = ToItem(mCurrent);
+  FrameConstructionItem* item = mCurrent;
   Next();
-  PR_REMOVE_LINK(item);
-  PR_APPEND_LINK(item, &aTargetList.mItems);
+  item->remove();
+  aTargetList.mItems.insertBack(item);
 
   mList.AdjustCountsForItem(item, -1);
   aTargetList.AdjustCountsForItem(item, 1);
@@ -12792,7 +12792,7 @@ Iterator::AppendItemsToList(const Iterator& aEnd,
                             FrameConstructionItemList& aTargetList)
 {
   NS_ASSERTION(&aTargetList != &mList, "Unexpected call");
-  NS_PRECONDITION(mEnd == aEnd.mEnd, "end iterator for some other list?");
+  NS_PRECONDITION(&mList == &aEnd.mList, "End iterator for some other list?");
 
   // We can't just move our guts to the other list if it already has
   // some information or if we're not moving our entire list.
@@ -12804,10 +12804,12 @@ Iterator::AppendItemsToList(const Iterator& aEnd,
     return;
   }
 
-  // move over the list of items
-  PR_INSERT_AFTER(&aTargetList.mItems, &mList.mItems);
-  // Need to init when we remove to makd ~FrameConstructionItemList work right.
-  PR_REMOVE_AND_INIT_LINK(&mList.mItems);
+  // Move our entire list of items into the empty target list.
+  // XXX: If LinkedList supports move assignment, we could use
+  // aTargetList.mItems = Move(mList.mItems);
+  aTargetList.mItems.~LinkedList<FrameConstructionItem>();
+  new (&aTargetList.mItems) LinkedList<FrameConstructionItem>(
+    Move(mList.mItems));
 
   // Copy over the various counters
   aTargetList.mInlineCount = mList.mInlineCount;
@@ -12825,7 +12827,7 @@ Iterator::AppendItemsToList(const Iterator& aEnd,
   new (&mList) FrameConstructionItemList();
 
   // Point ourselves to aEnd, as advertised
-  mCurrent = mEnd = &mList.mItems;
+  SetToEnd();
   NS_POSTCONDITION(*this == aEnd, "How did that happen?");
 }
 
@@ -12833,25 +12835,29 @@ void
 nsCSSFrameConstructor::FrameConstructionItemList::
 Iterator::InsertItem(FrameConstructionItem* aItem)
 {
-  // Just insert the item before us.  There's no magic here.
-  PR_INSERT_BEFORE(aItem, mCurrent);
+  if (IsDone()) {
+    mList.mItems.insertBack(aItem);
+  } else {
+    // Just insert the item before us.  There's no magic here.
+    mCurrent->setPrevious(aItem);
+  }
   mList.AdjustCountsForItem(aItem, 1);
 
-  NS_POSTCONDITION(PR_NEXT_LINK(aItem) == mCurrent, "How did that happen?");
+  NS_POSTCONDITION(aItem->getNext() == mCurrent, "How did that happen?");
 }
 
 void
 nsCSSFrameConstructor::FrameConstructionItemList::
 Iterator::DeleteItemsTo(const Iterator& aEnd)
 {
-  NS_PRECONDITION(mEnd == aEnd.mEnd, "end iterator for some other list?");
+  NS_PRECONDITION(&mList == &aEnd.mList, "End iterator for some other list?");
   NS_PRECONDITION(*this != aEnd, "Shouldn't be at aEnd yet");
 
   do {
     NS_ASSERTION(!IsDone(), "Ran off end of list?");
-    FrameConstructionItem* item = ToItem(mCurrent);
+    FrameConstructionItem* item = mCurrent;
     Next();
-    PR_REMOVE_LINK(item);
+    item->remove();
     mList.AdjustCountsForItem(item, -1);
     delete item;
   } while (*this != aEnd);

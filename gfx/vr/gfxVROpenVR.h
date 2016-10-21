@@ -92,9 +92,14 @@ class VRControllerOpenVR : public VRControllerHost
 {
 public:
   explicit VRControllerOpenVR();
+  void SetTrackedIndex(uint32_t aTrackedIndex);
+  uint32_t GetTrackedIndex();
 
 protected:
   virtual ~VRControllerOpenVR();
+
+  // The index of tracked devices from vr::IVRSystem.
+  uint32_t mTrackedIndex;
 };
 
 } // namespace impl
@@ -115,12 +120,12 @@ private:
   VRControllerManagerOpenVR();
   ~VRControllerManagerOpenVR();
 
+  virtual void HandleButtonPress(uint32_t aControllerIdx,
+                                 uint64_t aButtonPressed) override;
+
   bool mOpenVRInstalled;
   nsTArray<RefPtr<impl::VRControllerOpenVR>> mOpenVRController;
   vr::IVRSystem *mVRSystem;
-
-  const uint32_t kOpenVRControllerButtons = 8;
-  const uint32_t kOpenVRControllerAxes = 5;
 };
 
 } // namespace gfx

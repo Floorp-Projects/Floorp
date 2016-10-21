@@ -1057,8 +1057,8 @@ nsDecreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
   *outCmdEnabled = false;
   if (positionedElement) {
     int32_t z;
-    nsresult res = htmlEditor->GetElementZIndex(positionedElement, &z);
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv = htmlEditor->GetElementZIndex(positionedElement, &z);
+    NS_ENSURE_SUCCESS(rv, rv);
     *outCmdEnabled = (z > 0);
   }
 

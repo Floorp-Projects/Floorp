@@ -1259,8 +1259,9 @@ if (AppConstants.E10S_TESTING_ONLY) {
       id: "e10s-button",
       defaultArea: CustomizableUI.AREA_PANEL,
       onBuild: function(aDocument) {
-          node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
-          node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+        let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+        node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
+        node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
       },
       onCommand: function(aEvent) {
         let win = aEvent.view;

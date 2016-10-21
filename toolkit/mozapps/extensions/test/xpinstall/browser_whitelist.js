@@ -35,12 +35,19 @@ function install_ended(install, addon) {
   install.cancel();
 }
 
-function finish_test(count) {
+const finish_test = Task.async(function*(count) {
   is(count, 1, "1 Add-on should have been successfully installed");
 
-  var doc = gBrowser.contentDocument;
-  is(doc.getElementById("return").textContent, "false", "installTrigger should seen a failure");
+  const results = yield ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+    return {
+      return: content.document.getElementById("return").textContent,
+      status: content.document.getElementById("status").textContent,
+    }
+  })
+
+  is(results.return, "false", "installTrigger should seen a failure");
+
   gBrowser.removeCurrentTab();
   Harness.finish();
-}
+});
 // ----------------------------------------------------------------------------

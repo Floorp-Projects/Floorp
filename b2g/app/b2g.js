@@ -390,9 +390,6 @@ pref("dom.ipc.browser_frames.oop_by_default", false);
 pref("dom.meta-viewport.enabled", true);
 #endif
 
-// SMS/MMS
-pref("dom.sms.enabled", true);
-
 //The waiting time in network manager.
 pref("network.gonk.ms-release-mms-connection", 30000);
 
