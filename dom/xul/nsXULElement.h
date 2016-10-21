@@ -357,7 +357,8 @@ public:
     // nsINode
     virtual nsresult GetEventTargetParent(
                        mozilla::EventChainPreVisitor& aVisitor) override;
-
+    virtual nsresult PreHandleEvent(
+                       mozilla::EventChainVisitor& aVisitor) override;
     // nsIContent
     virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
@@ -704,7 +705,7 @@ protected:
 
     bool IsEventStoppedFromAnonymousScrollbar(mozilla::EventMessage aMessage);
 
-    nsresult DispatchXULCommand(const mozilla::EventChainPreVisitor& aVisitor,
+    nsresult DispatchXULCommand(const mozilla::EventChainVisitor& aVisitor,
                                 nsAutoString& aCommand);
 };
 

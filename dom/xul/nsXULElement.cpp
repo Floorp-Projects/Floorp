@@ -126,6 +126,8 @@ uint32_t             nsXULPrototypeAttribute::gNumCacheSets;
 uint32_t             nsXULPrototypeAttribute::gNumCacheFills;
 #endif
 
+#define NS_DISPATCH_XUL_COMMAND     (1 << 0)
+
 class nsXULElementTearoff final : public nsIFrameLoaderOwner
 {
   ~nsXULElementTearoff() {}
@@ -1279,7 +1281,7 @@ nsXULElement::IsEventStoppedFromAnonymousScrollbar(EventMessage aMessage)
 }
 
 nsresult
-nsXULElement::DispatchXULCommand(const EventChainPreVisitor& aVisitor,
+nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
                                  nsAutoString& aCommand)
 {
     // XXX sXBL/XBL2 issue! Owner or current document?
@@ -1350,11 +1352,27 @@ nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
             // We don't want it to propagate to any DOM nodes.
             aVisitor.mCanHandle = false;
             aVisitor.mAutomaticChromeDispatch = false;
-            return DispatchXULCommand(aVisitor, command);
+            // Dispatch XUL command in PreHandleEvent to prevent it breaks event
+            // target chain creation
+            aVisitor.mWantsPreHandleEvent = true;
+            aVisitor.mItemFlags |= NS_DISPATCH_XUL_COMMAND;
+            return NS_OK;
         }
     }
 
     return nsStyledElement::GetEventTargetParent(aVisitor);
+}
+
+nsresult
+nsXULElement::PreHandleEvent(EventChainVisitor& aVisitor)
+{
+    if (aVisitor.mItemFlags & NS_DISPATCH_XUL_COMMAND) {
+        nsAutoString command;
+        GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
+        MOZ_ASSERT(!command.IsEmpty());
+        return DispatchXULCommand(aVisitor, command);
+    }
+    return nsStyledElement::PreHandleEvent(aVisitor);
 }
 
 // XXX This _should_ be an implementation method, _not_ publicly exposed :-(
