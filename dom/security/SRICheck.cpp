@@ -23,6 +23,8 @@
 #include "nsNetUtil.h"
 #include "nsWhitespaceTokenizer.h"
 
+#define SRIVERBOSE(args)                                                       \
+  MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Verbose, args)
 #define SRILOG(args)                                                           \
   MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug, args)
 #define SRIERROR(args)                                                         \
@@ -242,8 +244,7 @@ SRICheckDataVerifier::SRICheckDataVerifier(const SRIMetadata& aMetadata,
     return; // ignore invalid metadata for forward-compatibility
   }
 
-  uint32_t hashLength;
-  aMetadata.GetHashType(&mHashType, &hashLength);
+  aMetadata.GetHashType(&mHashType, &mHashLength);
 }
 
 nsresult
@@ -406,6 +407,136 @@ SRICheckDataVerifier::Verify(const SRIMetadata& aMetadata,
                               NS_LITERAL_CSTRING("IntegrityMismatch"),
                               const_cast<const nsTArray<nsString>&>(params));
   return NS_ERROR_SRI_CORRUPT;
+}
+
+uint32_t
+SRICheckDataVerifier::DataSummaryLength()
+{
+  MOZ_ASSERT(!mInvalidMetadata);
+  return sizeof(mHashType) + sizeof(mHashLength) + mHashLength;
+}
+
+uint32_t
+SRICheckDataVerifier::EmptyDataSummaryLength()
+{
+  return sizeof(int8_t) + sizeof(uint32_t);
+}
+
+nsresult
+SRICheckDataVerifier::DataSummaryLength(uint32_t aDataLen, const uint8_t* aData, uint32_t* length)
+{
+  *length = 0;
+  NS_ENSURE_ARG_POINTER(aData);
+
+  // we expect to always encode an SRI, even if it is empty or incomplete
+  if (aDataLen < EmptyDataSummaryLength()) {
+    SRILOG(("SRICheckDataVerifier::DataSummaryLength, encoded length[%u] is too small", aDataLen));
+    return NS_ERROR_SRI_IMPORT;
+  }
+
+  // decode the content of the buffer
+  size_t offset = sizeof(mHashType);
+  size_t len = *reinterpret_cast<const decltype(mHashLength)*>(&aData[offset]);
+  offset += sizeof(mHashLength);
+
+  SRIVERBOSE(("SRICheckDataVerifier::DataSummaryLength, header {%x, %x, %x, %x, %x, ...}",
+              aData[0], aData[1], aData[2], aData[3], aData[4]));
+
+  if (offset + len > aDataLen) {
+    SRILOG(("SRICheckDataVerifier::DataSummaryLength, encoded length[%u] overflow the buffer size", aDataLen));
+    SRIVERBOSE(("SRICheckDataVerifier::DataSummaryLength, offset[%u], len[%u]",
+                uint32_t(offset), uint32_t(len)));
+    return NS_ERROR_SRI_IMPORT;
+  }
+  *length = uint32_t(offset + len);
+  return NS_OK;
+}
+
+nsresult
+SRICheckDataVerifier::ImportDataSummary(uint32_t aDataLen, const uint8_t* aData)
+{
+  MOZ_ASSERT(!mInvalidMetadata); // mHashType and mHashLength should be valid
+  MOZ_ASSERT(!mCryptoHash); // EnsureCryptoHash should not have been called
+  NS_ENSURE_ARG_POINTER(aData);
+  if (mInvalidMetadata) {
+    return NS_OK; // ignoring any data updates, see mInvalidMetadata usage
+  }
+
+  // we expect to always encode an SRI, even if it is empty or incomplete
+  if (aDataLen < DataSummaryLength()) {
+    SRILOG(("SRICheckDataVerifier::ImportDataSummary, encoded length[%u] is too small", aDataLen));
+    return NS_ERROR_SRI_IMPORT;
+  }
+
+  SRIVERBOSE(("SRICheckDataVerifier::ImportDataSummary, header {%x, %x, %x, %x, %x, ...}",
+              aData[0], aData[1], aData[2], aData[3], aData[4]));
+
+  // decode the content of the buffer
+  size_t offset = 0;
+  if (*reinterpret_cast<const decltype(mHashType)*>(&aData[offset]) != mHashType) {
+    SRILOG(("SRICheckDataVerifier::ImportDataSummary, hash type[%d] does not match[%d]",
+            *reinterpret_cast<const decltype(mHashType)*>(&aData[offset]),
+             mHashType));
+    return NS_ERROR_SRI_UNEXPECTED_HASH_TYPE;
+  }
+  offset += sizeof(mHashType);
+
+  if (*reinterpret_cast<const decltype(mHashLength)*>(&aData[offset]) != mHashLength) {
+    SRILOG(("SRICheckDataVerifier::ImportDataSummary, hash length[%d] does not match[%d]",
+            *reinterpret_cast<const decltype(mHashLength)*>(&aData[offset]),
+             mHashLength));
+    return NS_ERROR_SRI_UNEXPECTED_HASH_TYPE;
+  }
+  offset += sizeof(mHashLength);
+
+  // copy the hash to mComputedHash, as-if we had finished streaming the bytes
+  mComputedHash.Assign(reinterpret_cast<const char*>(&aData[offset]), mHashLength);
+  mCryptoHash = nullptr;
+  mComplete = true;
+  return NS_OK;
+}
+
+nsresult
+SRICheckDataVerifier::ExportDataSummary(uint32_t aDataLen, uint8_t* aData)
+{
+  MOZ_ASSERT(!mInvalidMetadata); // mHashType and mHashLength should be valid
+  MOZ_ASSERT(mComplete); // finished streaming
+  NS_ENSURE_ARG_POINTER(aData);
+  NS_ENSURE_TRUE(aDataLen >= DataSummaryLength(), NS_ERROR_INVALID_ARG);
+
+  // serialize the hash in the buffer
+  size_t offset = 0;
+  *reinterpret_cast<decltype(mHashType)*>(&aData[offset]) = mHashType;
+  offset += sizeof(mHashType);
+  *reinterpret_cast<decltype(mHashLength)*>(&aData[offset]) = mHashLength;
+  offset += sizeof(mHashLength);
+
+  SRIVERBOSE(("SRICheckDataVerifier::ExportDataSummary, header {%x, %x, %x, %x, %x, ...}",
+              aData[0], aData[1], aData[2], aData[3], aData[4]));
+
+  // copy the hash to mComputedHash, as-if we had finished streaming the bytes
+  nsCharTraits<char>::copy(reinterpret_cast<char*>(&aData[offset]),
+                           mComputedHash.get(), mHashLength);
+  return NS_OK;
+}
+
+nsresult
+SRICheckDataVerifier::ExportEmptyDataSummary(uint32_t aDataLen, uint8_t* aData)
+{
+  NS_ENSURE_ARG_POINTER(aData);
+  NS_ENSURE_TRUE(aDataLen >= EmptyDataSummaryLength(), NS_ERROR_INVALID_ARG);
+
+  // serialize an unknown hash in the buffer, to be able to skip it later
+  size_t offset = 0;
+  *reinterpret_cast<decltype(mHashType)*>(&aData[offset]) = 0;
+  offset += sizeof(mHashType);
+  *reinterpret_cast<decltype(mHashLength)*>(&aData[offset]) = 0;
+  offset += sizeof(mHashLength);
+
+  SRIVERBOSE(("SRICheckDataVerifier::ExportEmptyDataSummary, header {%x, %x, %x, %x, %x, ...}",
+              aData[0], aData[1], aData[2], aData[3], aData[4]));
+
+  return NS_OK;
 }
 
 } // namespace dom

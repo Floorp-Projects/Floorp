@@ -886,6 +886,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   AsyncDrawing requestAsyncDrawing = AD_NONE;
 
   bool requestWindow = false;
+  bool alreadyHasSalign = false;
   // handle extra params
   for (int i = 0; i < argc; i++) {
     if (strcmp(argn[i], "drawmode") == 0) {
@@ -1001,7 +1002,21 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     if (strcasecmp(argn[i], "codebase") == 0) {
       instanceData->javaCodebase = argv[i];
     }
-  }
+
+    // Bug 1307694 - There are two flash parameters that are order dependent for
+    // scaling/sizing the plugin. If they ever change from what is expected, it
+    // breaks flash on the web. In a test, if the scale tag ever happens
+    // with an salign before it, fail the plugin creation.
+    if (strcmp(argn[i], "scale") == 0) {
+      if (alreadyHasSalign) {
+        // If salign came before this parameter, error out now.
+        return NPERR_GENERIC_ERROR;
+      }
+    }
+    if (strcmp(argn[i], "salign") == 0) {
+      alreadyHasSalign = true;
+    }
+}
 
   if (!browserSupportsWindowless || !pluginSupportsWindowlessMode()) {
     requestWindow = true;

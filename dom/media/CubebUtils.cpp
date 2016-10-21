@@ -13,6 +13,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Logging.h"
 #include "nsThreadUtils.h"
 #include "CubebUtils.h"
 #include "nsAutoRef.h"
@@ -25,6 +26,16 @@
 namespace mozilla {
 
 namespace {
+
+LazyLogModule gCubebLog("cubeb");
+
+void CubebLogCallback(const char* aFmt, ...)
+{
+  va_list arglist;
+  va_start(arglist, aFmt);
+  MOZ_LOG(gCubebLog, LogLevel::Verbose, (aFmt, arglist));
+  va_end(arglist);
+}
 
 // This mutex protects the variables below.
 StaticMutex sMutex;
@@ -215,6 +226,12 @@ cubeb* GetCubebContextUnlocked()
   int rv = cubeb_init(&sCubebContext, sBrandName);
   NS_WARNING_ASSERTION(rv == CUBEB_OK, "Could not get a cubeb context.");
   sCubebState = (rv == CUBEB_OK) ? CubebState::Initialized : CubebState::Uninitialized;
+
+  if (MOZ_LOG_TEST(gCubebLog, LogLevel::Verbose)) {
+    cubeb_set_log_callback(CUBEB_LOG_VERBOSE, CubebLogCallback);
+  } else if (MOZ_LOG_TEST(gCubebLog, LogLevel::Error)) {
+    cubeb_set_log_callback(CUBEB_LOG_NORMAL, CubebLogCallback);
+  }
 
   return sCubebContext;
 }

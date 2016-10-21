@@ -69,7 +69,7 @@ setBitAndCheck(CounterAndBit* counterAndBit)
 
 BEGIN_TEST(testExclusiveData)
 {
-    js::ExclusiveData<uint64_t> counter(0);
+    js::ExclusiveData<uint64_t> counter(js::mutexid::TestMutex, 0);
 
     js::Vector<js::Thread> threads(cx);
     CHECK(threads.reserve(NumThreads));

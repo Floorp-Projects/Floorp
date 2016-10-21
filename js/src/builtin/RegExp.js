@@ -891,3 +891,4 @@ function RegExpSpecies() {
     // Step 1.
     return this;
 }
+_SetCanonicalName(RegExpSpecies, "get [Symbol.species]");

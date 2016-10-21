@@ -18,7 +18,6 @@
 #include "TestHarness.h"
 #endif
 
-#define ARRAY_LENGTH(_x) (sizeof(_x) / sizeof(_x[0]))
 #define BEGIN_TEST fprintf(stderr, "START %s\n", __func__)
 #define END_TEST fprintf(stderr, "END %s\n", __func__)
 
@@ -30,6 +29,13 @@
 #else
 #define STREAM_FORMAT CUBEB_SAMPLE_S16LE
 #endif
+
+template<typename T, size_t N>
+constexpr size_t
+ARRAY_LENGTH(T(&)[N])
+{
+  return N;
+}
 
 static int dummy;
 static uint64_t total_frames_written;

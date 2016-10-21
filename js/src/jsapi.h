@@ -5836,11 +5836,11 @@ class MOZ_RAII AutoHideScriptedCaller
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-} /* namespace JS */
-
 /*
  * Encode/Decode interpreted scripts and functions to/from memory.
  */
+
+typedef mozilla::Vector<uint8_t> TranscodeBuffer;
 
 enum TranscodeResult
 {
@@ -5859,21 +5859,20 @@ enum TranscodeResult
 };
 
 extern JS_PUBLIC_API(TranscodeResult)
-JS_EncodeScript(JSContext* cx, JS::HandleScript script,
-                uint32_t* lengthp, void** buffer);
+EncodeScript(JSContext* cx, TranscodeBuffer& buffer, JS::HandleScript script);
 
 extern JS_PUBLIC_API(TranscodeResult)
-JS_EncodeInterpretedFunction(JSContext* cx, JS::HandleObject funobj,
-                             uint32_t* lengthp, void** buffer);
+EncodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, JS::HandleObject funobj);
 
 extern JS_PUBLIC_API(TranscodeResult)
-JS_DecodeScript(JSContext* cx, const void* data, uint32_t length,
-                JS::MutableHandleScript scriptp);
+DecodeScript(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
+             size_t cursorIndex = 0);
 
 extern JS_PUBLIC_API(TranscodeResult)
-JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length,
-                             JS::MutableHandleFunction funp);
+DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleFunction funp,
+                          size_t cursorIndex = 0);
 
+} /* namespace JS */
 
 namespace js {
 

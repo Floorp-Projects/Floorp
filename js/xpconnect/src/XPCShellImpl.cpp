@@ -10,6 +10,7 @@
 #include "jsprf.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIXPConnect.h"
@@ -911,7 +912,7 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
         } while (!JS_BufferIsCompilableUnit(cx, global, buffer, strlen(buffer)));
 
         if (!ProcessLine(jsapi, buffer, startline))
-            jsapi.ClearException(); // Errors from interactive processing are squelched.
+            jsapi.ReportException();
     } while (!hitEOF && !gQuitting);
 
     fprintf(gOutFile, "\n");
@@ -1425,6 +1426,10 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             printf("NS_InitXPCOM2 failed!\n");
             return 1;
         }
+
+        // xpc::ErrorReport::LogToConsoleWithStack needs this to print errors
+        // to stderr.
+        Preferences::SetBool("browser.dom.window.dump.enabled", true);
 
         AutoJSAPI jsapi;
         jsapi.Init();

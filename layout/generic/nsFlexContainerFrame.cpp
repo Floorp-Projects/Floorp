@@ -87,36 +87,33 @@ IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp)
     aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitInlineBox;
 }
 
-// Helper to check whether our nsFlexContainerFrame is emulating a legacy
-// -webkit-{inline-}box, in which case we should use legacy CSS properties
-// instead of the modern ones. The params are are the nsStyleDisplay and the
-// nsStyleContext associated with the nsFlexContainerFrame itself.
-static inline bool
-IsLegacyBox(const nsStyleDisplay* aStyleDisp,
-            nsStyleContext* aStyleContext)
+/* static */ bool
+nsFlexContainerFrame::IsLegacyBox(const nsIFrame* aFrame)
 {
+  nsStyleContext* styleContext = aFrame->StyleContext();
+  const nsStyleDisplay* styleDisp = styleContext->StyleDisplay();
+
   // Trivial case: just check "display" directly.
-  if (IsDisplayValueLegacyBox(aStyleDisp)) {
-    return true;
-  }
+  bool isLegacyBox = IsDisplayValueLegacyBox(styleDisp);
 
   // If this frame is for a scrollable element, then it will actually have
   // "display:block", and its *parent* will have the real flex-flavored display
   // value. So in that case, check the parent to find out if we're legacy.
-  if (aStyleDisp->mDisplay == mozilla::StyleDisplay::Block) {
-    nsStyleContext* parentStyleContext = aStyleContext->GetParent();
+  if (!isLegacyBox && styleDisp->mDisplay == mozilla::StyleDisplay::Block) {
+    nsStyleContext* parentStyleContext = styleContext->GetParent();
     NS_ASSERTION(parentStyleContext &&
-                 (aStyleContext->GetPseudo() == nsCSSAnonBoxes::buttonContent ||
-                  aStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent),
+                 (styleContext->GetPseudo() == nsCSSAnonBoxes::buttonContent ||
+                  styleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent),
                  "The only way a nsFlexContainerFrame can have 'display:block' "
                  "should be if it's the inner part of a scrollable or button "
                  "element");
-    if (IsDisplayValueLegacyBox(parentStyleContext->StyleDisplay())) {
-      return true;
-    }
+    isLegacyBox = IsDisplayValueLegacyBox(parentStyleContext->StyleDisplay());
   }
 
-  return false;
+  NS_ASSERTION(!isLegacyBox ||
+               aFrame->GetType() == nsGkAtoms::flexContainerFrame,
+               "legacy box with unexpected frame type");
+  return isLegacyBox;
 }
 
 // Returns the "align-items" value that's equivalent to the legacy "box-align"
@@ -1070,9 +1067,7 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
              "this method only intended for comparing flex items");
   MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
              "this method only intended for comparing siblings");
-  nsStyleContext* parentFrameSC = aFrame1->GetParent()->StyleContext();
-  bool isInLegacyBox = IsLegacyBox(parentFrameSC->StyleDisplay(),
-                                   parentFrameSC);
+  bool isInLegacyBox = nsFlexContainerFrame::IsLegacyBox(aFrame1->GetParent());
 
   if (aFrame1 == aFrame2) {
     // Anything is trivially LEQ itself, so we return "true" here... but it's
@@ -1156,9 +1151,7 @@ IsOrderLEQ(nsIFrame* aFrame1,
              "this method only intended for comparing flex items");
   MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
              "this method only intended for comparing siblings");
-  nsStyleContext* parentFrameSC = aFrame1->GetParent()->StyleContext();
-  bool isInLegacyBox = IsLegacyBox(parentFrameSC->StyleDisplay(),
-                                   parentFrameSC);
+  bool isInLegacyBox = nsFlexContainerFrame::IsLegacyBox(aFrame1->GetParent());
 
   // If we've got a placeholder frame, use its out-of-flow frame's 'order' val.
   nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
@@ -1194,7 +1187,7 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   // FLEX GROW & SHRINK WEIGHTS
   // --------------------------
   float flexGrow, flexShrink;
-  if (IsLegacyBox(aParentReflowInput.mStyleDisplay, mStyleContext)) {
+  if (IsLegacyBox(this)) {
     flexGrow = flexShrink = aChildFrame->StyleXUL()->mBoxFlex;
   } else {
     const nsStylePosition* stylePos = aChildFrame->StylePosition();
@@ -1707,8 +1700,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
              "out-of-flow frames should not be treated as flex items");
 
   const ReflowInput* containerRS = aFlexItemReflowInput.mParentReflowInput;
-  if (IsLegacyBox(containerRS->mStyleDisplay,
-                  containerRS->mFrame->StyleContext())) {
+  if (IsLegacyBox(containerRS->mFrame)) {
     // For -webkit-box/-webkit-inline-box, we need to:
     // (1) Use "-webkit-box-align" instead of "align-items" to determine the
     //     container's cross-axis alignment behavior.
@@ -3240,8 +3232,7 @@ FlexboxAxisTracker::FlexboxAxisTracker(
   : mWM(aWM),
     mAreAxesInternallyReversed(false)
 {
-  if (IsLegacyBox(aFlexContainer->StyleDisplay(),
-                  aFlexContainer->StyleContext())) {
+  if (IsLegacyBox(aFlexContainer)) {
     InitAxesFromLegacyProps(aFlexContainer);
   } else {
     InitAxesFromModernProps(aFlexContainer);
@@ -4139,8 +4130,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     }
   }
 
-  const auto justifyContent = IsLegacyBox(aReflowInput.mStyleDisplay,
-                                          mStyleContext) ?
+  const auto justifyContent = IsLegacyBox(aReflowInput.mFrame) ?
     ConvertLegacyStyleToJustifyContent(StyleXUL()) :
     aReflowInput.mStylePosition->mJustifyContent;
 

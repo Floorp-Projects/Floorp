@@ -4109,7 +4109,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, JSFunction* fun,
         return false;
 
     CompileInfo info(script, fun,
-                     /* osrPc = */ nullptr, /* constructing = */ false,
+                     /* osrPc = */ nullptr,
                      Analysis_DefiniteProperties,
                      script->needsArgsObj(),
                      inlineScriptTree);
@@ -4344,7 +4344,7 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
     }
 
     CompileInfo info(script, script->functionNonDelazifying(),
-                     /* osrPc = */ nullptr, /* constructing = */ false,
+                     /* osrPc = */ nullptr,
                      Analysis_ArgumentsUsage,
                      /* needsArgsObj = */ true,
                      inlineScriptTree);

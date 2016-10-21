@@ -37477,6 +37477,18 @@
             "url": "/html/semantics/grouping-content/the-ol-element/reversed-1d.html"
           }
         ],
+        "html/semantics/grouping-content/the-ol-element/reversed-1e.html": [
+          {
+            "path": "html/semantics/grouping-content/the-ol-element/reversed-1e.html",
+            "references": [
+              [
+                "/html/semantics/grouping-content/the-ol-element/reversed-1-ref.html",
+                "=="
+              ]
+            ],
+            "url": "/html/semantics/grouping-content/the-ol-element/reversed-1e.html"
+          }
+        ],
         "svg/linking/reftests/href-a-element-attr-change.html": [
           {
             "path": "svg/linking/reftests/href-a-element-attr-change.html",
@@ -37612,6 +37624,12 @@
             "url": "/html/browsers/history/the-location-interface/location-prototype-setting.html"
           }
         ],
+        "html/browsers/the-window-object/window-open-noopener.html": [
+          {
+            "path": "html/browsers/the-window-object/window-open-noopener.html",
+            "url": "/html/browsers/the-window-object/window-open-noopener.html"
+          }
+        ],
         "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-1.html": [
           {
             "path": "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-1.html",
@@ -37652,6 +37670,12 @@
           {
             "path": "html/semantics/forms/the-textarea-element/cloning-steps.html",
             "url": "/html/semantics/forms/the-textarea-element/cloning-steps.html"
+          }
+        ],
+        "html/semantics/links/links-created-by-a-and-area-elements/htmlanchorelement_noopener.html": [
+          {
+            "path": "html/semantics/links/links-created-by-a-and-area-elements/htmlanchorelement_noopener.html",
+            "url": "/html/semantics/links/links-created-by-a-and-area-elements/htmlanchorelement_noopener.html"
           }
         ],
         "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-1.html": [
@@ -37823,6 +37847,18 @@
             ]
           ],
           "url": "/html/semantics/grouping-content/the-ol-element/reversed-1d.html"
+        }
+      ],
+      "html/semantics/grouping-content/the-ol-element/reversed-1e.html": [
+        {
+          "path": "html/semantics/grouping-content/the-ol-element/reversed-1e.html",
+          "references": [
+            [
+              "/html/semantics/grouping-content/the-ol-element/reversed-1-ref.html",
+              "=="
+            ]
+          ],
+          "url": "/html/semantics/grouping-content/the-ol-element/reversed-1e.html"
         }
       ],
       "svg/linking/reftests/href-a-element-attr-change.html": [
