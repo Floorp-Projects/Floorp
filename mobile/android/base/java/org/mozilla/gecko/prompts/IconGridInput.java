@@ -13,7 +13,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -158,7 +158,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
             description = obj.optString("description");
             selected = obj.optBoolean("selected");
 
-            BitmapUtils.getDrawable(context, iconUrl, new BitmapUtils.BitmapLoader() {
+            ResourceDrawableUtils.getDrawable(context, iconUrl, new ResourceDrawableUtils.BitmapLoader() {
                 @Override
                 public void onBitmapFound(Drawable d) {
                     icon = d;
