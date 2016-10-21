@@ -2,8 +2,8 @@
 <!-- Any copyright is dedicated to the Public Domain.
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 <html>
-<!-- The ::-moz-focus-inner & ::-moz-focus-outer button pseudo-elements only
-     support CSS "margin" values that contain absolute lengths.  Any percent or
+<!-- The ::-moz-focus-inner button pseudo-element only supports
+     CSS "margin" values that contain absolute lengths.  Any percent or
      "auto" margin values will simply make the margin collapse to zero.
      This test verifies that this is indeed what happens (not anything worse).
 -->
@@ -22,18 +22,6 @@
     button.mfi6::-moz-focus-inner { margin: 10px auto; }
     button.mfi7::-moz-focus-inner { margin: 10px; }
     button.mfi8::-moz-focus-inner { margin: 2em; }
-
-    /* Testing percent and auto margin values on "-moz-focus-outer":
-       (just for completeness -- really, 'margin' has no effect on
-       the behavior of -moz-focus-outer) */
-    button.mfo1::-moz-focus-outer { margin: 50%; }
-    button.mfo2::-moz-focus-outer { margin: 50% 10px; }
-    button.mfo3::-moz-focus-outer { margin: 10px 50%; }
-    button.mfo4::-moz-focus-outer { margin: auto; }
-    button.mfo5::-moz-focus-outer { margin: auto 10px; }
-    button.mfo6::-moz-focus-outer { margin: 10px auto; }
-    button.mfo7::-moz-focus-outer { margin: 10px; }
-    button.mfo8::-moz-focus-outer { margin: 2em; }
   </style>
 </head>
 <body>
@@ -46,17 +34,6 @@
   <button class="mfi6">mfi6</button>
   <button class="mfi7">mfi7</button>
   <button class="mfi8">mfi8</button>
-  <br>
-
-  <button class="mfo1">mfo1</button>
-  <button class="mfo2">mfo2</button>
-  <button class="mfo3">mfo3</button>
-  <button class="mfo4">mfo4</button>
-  <br>
-  <button class="mfo5">mfo5</button>
-  <button class="mfo6">mfo6</button>
-  <button class="mfo7">mfo7</button>
-  <button class="mfo8">mfo8</button>
   <br>
 </body>
 </html>

@@ -20,8 +20,7 @@ class nsStyleContext;
 
 
 #define NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX  0
-#define NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX  1
-#define NS_BUTTON_RENDERER_LAST_CONTEXT_INDEX   NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX
+#define NS_BUTTON_RENDERER_LAST_CONTEXT_INDEX   NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX
 
 class nsButtonFrameRenderer {
   typedef mozilla::image::DrawResult DrawResult;
@@ -57,10 +56,8 @@ public:
   bool isActive();
   bool isDisabled();
 
-  void GetButtonOuterFocusRect(const nsRect& aRect, nsRect& aResult);
   void GetButtonRect(const nsRect& aRect, nsRect& aResult);
   void GetButtonInnerFocusRect(const nsRect& aRect, nsRect& aResult);
-  nsMargin GetButtonOuterFocusBorderAndPadding();
   nsMargin GetButtonBorderAndPadding();
   nsMargin GetButtonInnerFocusMargin();
   nsMargin GetButtonInnerFocusBorderAndPadding();
@@ -76,9 +73,8 @@ protected:
 
 private:
 
-  // cached styles for focus and outline.
+  // cached style for focus and outline (used on Windows).
   RefPtr<nsStyleContext> mInnerFocusStyle;
-  RefPtr<nsStyleContext> mOuterFocusStyle;
 
   nsFrame* mFrame;
 };

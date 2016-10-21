@@ -36,9 +36,6 @@ nsButtonFrameRenderer::~nsButtonFrameRenderer()
   if (mInnerFocusStyle) {
     mInnerFocusStyle->FrameRelease();
   }
-  if (mOuterFocusStyle) {
-    mOuterFocusStyle->FrameRelease();
-  }
 #endif
 }
 
@@ -274,8 +271,7 @@ nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
 
   // Only display focus rings if we actually have them. Since at most one
   // button would normally display a focus ring, most buttons won't have them.
-  if ((mOuterFocusStyle && mOuterFocusStyle->StyleBorder()->HasBorder()) ||
-      (mInnerFocusStyle && mInnerFocusStyle->StyleBorder()->HasBorder())) {
+  if (mInnerFocusStyle && mInnerFocusStyle->StyleBorder()->HasBorder()) {
     aForeground->AppendNewToTop(new (aBuilder)
       nsDisplayButtonForeground(aBuilder, this));
   }
@@ -305,19 +301,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(
 
   DrawResult result = DrawResult::SUCCESS;
 
-  if (mOuterFocusStyle) {
-    // ---------- paint the outer focus border -------------
-
-    GetButtonOuterFocusRect(aRect, rect);
-
-    result &=
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
-                                  aDirtyRect, rect, mOuterFocusStyle, flags);
-  }
-
   if (mInnerFocusStyle) { 
-    // ---------- paint the inner focus border -------------
-
     GetButtonInnerFocusRect(aRect, rect);
 
     result &=
@@ -358,16 +342,9 @@ nsButtonFrameRenderer::PaintBorder(
 
 
 void
-nsButtonFrameRenderer::GetButtonOuterFocusRect(const nsRect& aRect, nsRect& focusRect)
-{
-  focusRect = aRect;
-}
-
-void
 nsButtonFrameRenderer::GetButtonRect(const nsRect& aRect, nsRect& r)
 {
   r = aRect;
-  r.Deflate(GetButtonOuterFocusBorderAndPadding());
 }
 
 
@@ -379,19 +356,6 @@ nsButtonFrameRenderer::GetButtonInnerFocusRect(const nsRect& aRect, nsRect& focu
   focusRect.Deflate(GetButtonInnerFocusMargin());
 }
 
-
-nsMargin
-nsButtonFrameRenderer::GetButtonOuterFocusBorderAndPadding()
-{
-  nsMargin result(0,0,0,0);
-
-  if (mOuterFocusStyle) {
-    mOuterFocusStyle->StylePadding()->GetPadding(result);
-    result += mOuterFocusStyle->StyleBorder()->GetComputedBorder();
-  }
-
-  return result;
-}
 
 nsMargin
 nsButtonFrameRenderer::GetButtonBorderAndPadding()
@@ -432,7 +396,7 @@ nsButtonFrameRenderer::GetButtonInnerFocusBorderAndPadding()
 nsMargin
 nsButtonFrameRenderer::GetAddedButtonBorderAndPadding()
 {
-  return GetButtonOuterFocusBorderAndPadding() + GetButtonInnerFocusMargin() + GetButtonInnerFocusBorderAndPadding();
+  return GetButtonInnerFocusMargin() + GetButtonInnerFocusBorderAndPadding();
 }
 
 /**
@@ -449,9 +413,6 @@ nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext)
   if (mInnerFocusStyle) {
     mInnerFocusStyle->FrameRelease();
   }
-  if (mOuterFocusStyle) {
-    mOuterFocusStyle->FrameRelease();
-  }
 #endif
 
   // style for the inner such as a dotted line (Windows)
@@ -460,18 +421,9 @@ nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext)
                                       CSSPseudoElementType::mozFocusInner,
                                       context);
 
-  // style for outer focus like a ridged border (MAC).
-  mOuterFocusStyle =
-    styleSet->ProbePseudoElementStyle(mFrame->GetContent()->AsElement(),
-                                      CSSPseudoElementType::mozFocusOuter,
-                                      context);
-
 #ifdef DEBUG
   if (mInnerFocusStyle) {
     mInnerFocusStyle->FrameAddRef();
-  }
-  if (mOuterFocusStyle) {
-    mOuterFocusStyle->FrameAddRef();
   }
 #endif
 }
@@ -482,8 +434,6 @@ nsButtonFrameRenderer::GetStyleContext(int32_t aIndex) const
   switch (aIndex) {
   case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
     return mInnerFocusStyle;
-  case NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX:
-    return mOuterFocusStyle;
   default:
     return nullptr;
   }
@@ -500,14 +450,6 @@ nsButtonFrameRenderer::SetStyleContext(int32_t aIndex, nsStyleContext* aStyleCon
     }
 #endif
     mInnerFocusStyle = aStyleContext;
-    break;
-  case NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX:
-#ifdef DEBUG
-    if (mOuterFocusStyle) {
-      mOuterFocusStyle->FrameRelease();
-    }
-#endif
-    mOuterFocusStyle = aStyleContext;
     break;
   }
 #ifdef DEBUG
