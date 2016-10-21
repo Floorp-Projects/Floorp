@@ -519,6 +519,7 @@ ContentParentsMemoryReporter::CollectReports(
 
 nsDataHashtable<nsStringHashKey, ContentParent*>* ContentParent::sAppContentParents;
 nsTArray<ContentParent*>* ContentParent::sNonAppContentParents;
+nsTArray<ContentParent*>* ContentParent::sLargeAllocationContentParents;
 nsTArray<ContentParent*>* ContentParent::sPrivateContent;
 StaticAutoPtr<LinkedList<ContentParent> > ContentParent::sContentParents;
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
@@ -748,25 +749,44 @@ ContentParent::JoinAllSubprocesses()
 /*static*/ already_AddRefed<ContentParent>
 ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
                                           ProcessPriority aPriority,
-                                          ContentParent* aOpener)
+                                          ContentParent* aOpener,
+                                          bool aFreshProcess)
 {
-  if (!sNonAppContentParents)
-    sNonAppContentParents = new nsTArray<ContentParent*>();
+  nsTArray<ContentParent*>* contentParents;
+  int32_t maxContentParents;
 
-  int32_t maxContentProcesses = Preferences::GetInt("dom.ipc.processCount", 1);
-  if (maxContentProcesses < 1)
-    maxContentProcesses = 1;
+  // Decide which pool of content parents we are going to be pulling from based
+  // on the aFreshProcess flag.
+  if (aFreshProcess) {
+    if (!sLargeAllocationContentParents) {
+      sLargeAllocationContentParents = new nsTArray<ContentParent*>();
+    }
+    contentParents = sLargeAllocationContentParents;
 
-  if (sNonAppContentParents->Length() >= uint32_t(maxContentProcesses)) {
-    uint32_t startIdx = rand() % sNonAppContentParents->Length();
+    maxContentParents = Preferences::GetInt("dom.ipc.dedicatedProcessCount", 2);
+  } else {
+    if (!sNonAppContentParents) {
+      sNonAppContentParents = new nsTArray<ContentParent*>();
+    }
+    contentParents = sNonAppContentParents;
+
+    maxContentParents = Preferences::GetInt("dom.ipc.processCount", 1);
+  }
+
+  if (maxContentParents < 1) {
+    maxContentParents = 1;
+  }
+
+  if (contentParents->Length() >= uint32_t(maxContentParents)) {
+    uint32_t startIdx = rand() % contentParents->Length();
     uint32_t currIdx = startIdx;
     do {
-    RefPtr<ContentParent> p = (*sNonAppContentParents)[currIdx];
-    NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in sNonAppContntParents?");
-    if (p->mOpener == aOpener) {
-      return p.forget();
-    }
-    currIdx = (currIdx + 1) % sNonAppContentParents->Length();
+      RefPtr<ContentParent> p = (*contentParents)[currIdx];
+      NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in sNonAppContntParents?");
+      if (p->mOpener == aOpener) {
+        return p.forget();
+      }
+      currIdx = (currIdx + 1) % contentParents->Length();
     } while (currIdx != startIdx);
   }
 
@@ -779,7 +799,7 @@ ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
     p = new ContentParent(/* app = */ nullptr,
                           aOpener,
                           aForBrowserElement,
-                           /* isForPreallocated = */ false);
+                          /* isForPreallocated = */ false);
 
     if (!p->LaunchSubprocess(aPriority)) {
       return nullptr;
@@ -789,7 +809,7 @@ ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
   }
   p->ForwardKnownInfo();
 
-  sNonAppContentParents->AppendElement(p);
+  contentParents->AppendElement(p);
   return p.forget();
 }
 
@@ -1048,7 +1068,8 @@ ContentParent::RecvInitVideoDecoderManager(Endpoint<PVideoDecoderManagerChild>* 
 /*static*/ TabParent*
 ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   Element* aFrameElement,
-                                  ContentParent* aOpenerContentParent)
+                                  ContentParent* aOpenerContentParent,
+                                  bool aFreshProcess)
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
 
@@ -1083,7 +1104,9 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
       } else {
         constructorSender =
           GetNewOrUsedBrowserProcess(aContext.IsMozBrowserElement(),
-                                     initialPriority);
+                                     initialPriority,
+                                     nullptr,
+                                     aFreshProcess);
         if (!constructorSender) {
           return nullptr;
         }
@@ -1130,6 +1153,10 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         constructorSender->ChildID(),
         constructorSender->IsForApp(),
         constructorSender->IsForBrowser());
+
+      if (aFreshProcess) {
+        Unused << browser->SendSetFreshProcess();
+      }
 
       if (browser) {
         RefPtr<TabParent> constructedTabParent = TabParent::GetFrom(browser);
@@ -1242,6 +1269,10 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     parent->ChildID(),
     parent->IsForApp(),
     parent->IsForBrowser());
+
+  if (aFreshProcess) {
+    Unused << browser->SendSetFreshProcess();
+  }
 
   if (browser) {
     RefPtr<TabParent> constructedTabParent = TabParent::GetFrom(browser);
@@ -1604,11 +1635,21 @@ ContentParent::MarkAsDead()
         sAppContentParents = nullptr;
       }
     }
-  } else if (sNonAppContentParents) {
-    sNonAppContentParents->RemoveElement(this);
-    if (!sNonAppContentParents->Length()) {
-      delete sNonAppContentParents;
-      sNonAppContentParents = nullptr;
+  } else {
+    if (sNonAppContentParents) {
+      sNonAppContentParents->RemoveElement(this);
+      if (!sNonAppContentParents->Length()) {
+        delete sNonAppContentParents;
+        sNonAppContentParents = nullptr;
+      }
+    }
+
+    if (sLargeAllocationContentParents) {
+      sLargeAllocationContentParents->RemoveElement(this);
+      if (!sLargeAllocationContentParents->Length()) {
+        delete sLargeAllocationContentParents;
+        sLargeAllocationContentParents = nullptr;
+      }
     }
   }
 
@@ -2133,8 +2174,10 @@ ContentParent::~ContentParent()
   // We should be removed from all these lists in ActorDestroy.
   MOZ_ASSERT(!sPrivateContent || !sPrivateContent->Contains(this));
   if (mAppManifestURL.IsEmpty()) {
-    MOZ_ASSERT(!sNonAppContentParents ||
-               !sNonAppContentParents->Contains(this));
+    MOZ_ASSERT((!sNonAppContentParents ||
+                !sNonAppContentParents->Contains(this)) &&
+               (!sLargeAllocationContentParents ||
+                !sLargeAllocationContentParents->Contains(this)));
   } else {
     // In general, we expect sAppContentParents->Get(mAppManifestURL) to be
     // nullptr.  But it could be that we created another ContentParent for

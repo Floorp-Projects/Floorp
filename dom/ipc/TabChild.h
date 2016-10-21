@@ -43,6 +43,7 @@
 
 class nsICachedFileDescriptorListener;
 class nsIDOMWindowUtils;
+class nsIHttpChannel;
 
 namespace mozilla {
 namespace layout {
@@ -675,6 +676,13 @@ public:
   uintptr_t GetNativeWindowHandle() const { return mNativeWindowHandle; }
 #endif
 
+  bool TakeIsFreshProcess()
+  {
+    bool wasFreshProcess = mIsFreshProcess;
+    mIsFreshProcess = false;
+    return wasFreshProcess;
+  }
+
 protected:
   virtual ~TabChild();
 
@@ -711,6 +719,8 @@ protected:
                                                      const uint32_t& aTargetLocalIndex) override;
 
   virtual bool RecvNotifyPartialSessionHistoryDeactive() override;
+
+  virtual bool RecvSetFreshProcess() override;
 
 private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
@@ -804,6 +814,7 @@ private:
   CSSSize mUnscaledInnerSize;
   bool mDidSetRealShowInfo;
   bool mDidLoadURLInit;
+  bool mIsFreshProcess;
 
   AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 

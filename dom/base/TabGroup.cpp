@@ -116,6 +116,20 @@ TabGroup::FindItemWithName(const nsAString& aName,
   return NS_OK;
 }
 
+nsTArray<nsPIDOMWindowOuter*>
+TabGroup::GetTopLevelWindows()
+{
+  nsTArray<nsPIDOMWindowOuter*> array;
+
+  for (nsPIDOMWindowOuter* outerWindow : mWindows) {
+    if (!outerWindow->GetScriptableParentOrNull()) {
+      array.AppendElement(outerWindow);
+    }
+  }
+
+  return array;
+}
+
 NS_IMPL_ISUPPORTS(TabGroup, nsISupports)
 
 TabGroup::HashEntry::HashEntry(const nsACString* aKey)

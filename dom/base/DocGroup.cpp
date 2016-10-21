@@ -49,6 +49,5 @@ DocGroup::~DocGroup()
 
 NS_IMPL_ISUPPORTS(DocGroup, nsISupports)
 
-
 }
 }
