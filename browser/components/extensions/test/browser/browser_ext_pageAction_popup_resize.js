@@ -2,17 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* awaitResize(browser) {
-  // Debouncing code makes this a bit racy.
-  // Try to skip the first, early resize, and catch the resize event we're
-  // looking for, but don't wait longer than a few seconds.
-
-  return Promise.race([
-    BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized")
-      .then(() => BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized")),
-    new Promise(resolve => setTimeout(resolve, 5000)),
-  ]);
-}
+let delay = ms => new Promise(resolve => {
+  setTimeout(resolve, ms);
+});
 
 add_task(function* testPageActionPopupResize() {
   let browser;
@@ -47,31 +39,29 @@ add_task(function* testPageActionPopupResize() {
 
   browser = yield awaitExtensionPanel(extension);
 
-  let panelWindow = browser.contentWindow;
-  let panelDocument = panelWindow.document;
-  let panelBody = panelDocument.body.firstChild;
-  let body = panelDocument.body;
-  let root = panelDocument.documentElement;
+  function* checkSize(expected) {
+    let dims = yield promiseContentDimensions(browser);
+    let {body, root} = dims;
 
-  function checkSize(expected) {
-    is(panelWindow.innerHeight, expected, `Panel window should be ${expected}px tall`);
+    is(dims.window.innerHeight, expected, `Panel window should be ${expected}px tall`);
     is(body.clientHeight, body.scrollHeight,
       "Panel body should be tall enough to fit its contents");
     is(root.clientHeight, root.scrollHeight,
       "Panel root should be tall enough to fit its contents");
 
     // Tolerate if it is 1px too wide, as that may happen with the current resizing method.
-    ok(Math.abs(panelWindow.innerWidth - expected) <= 1, `Panel window should be ${expected}px wide`);
+    ok(Math.abs(dims.window.innerWidth - expected) <= 1, `Panel window should be ${expected}px wide`);
     is(body.clientWidth, body.scrollWidth,
        "Panel body should be wide enough to fit its contents");
   }
 
+  /* eslint-disable mozilla/no-cpows-in-tests */
   function setSize(size) {
-    panelBody.style.height = `${size}px`;
-    panelBody.style.width = `${size}px`;
-
-    return BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized");
+    let elem = content.document.body.firstChild;
+    elem.style.height = `${size}px`;
+    elem.style.width = `${size}px`;
   }
+  /* eslint-enable mozilla/no-cpows-in-tests */
 
   let sizes = [
     200,
@@ -80,22 +70,27 @@ add_task(function* testPageActionPopupResize() {
   ];
 
   for (let size of sizes) {
-    yield setSize(size);
-    checkSize(size);
+    yield alterContent(browser, setSize, size);
+    yield checkSize(size);
   }
 
-  yield setSize(1400);
+  yield alterContent(browser, setSize, 1400);
+
+  let dims = yield promiseContentDimensions(browser);
+  let {body, root} = dims;
 
   if (AppConstants.platform == "win") {
-    ok(panelWindow.innerWidth >= 750 && panelWindow.innerWidth <= 800,
-       `Panel window width ${panelWindow.innerWidth} is in acceptable range`);
-  } else {
-    is(panelWindow.innerWidth, 800, "Panel window width");
+    while (dims.window.innerWidth < 800) {
+      yield delay(50);
+      dims = yield promiseContentDimensions(browser);
+    }
   }
+
+  is(dims.window.innerWidth, 800, "Panel window width");
   ok(body.clientWidth <= 800, `Panel body width ${body.clientWidth} is less than 800`);
   is(body.scrollWidth, 1400, "Panel body scroll width");
 
-  is(panelWindow.innerHeight, 600, "Panel window height");
+  is(dims.window.innerHeight, 600, "Panel window height");
   ok(root.clientHeight <= 600, `Panel root height (${root.clientHeight}px) is less than 600px`);
   is(root.scrollHeight, 1400, "Panel root scroll height");
 
@@ -142,29 +137,32 @@ add_task(function* testPageActionPopupReflow() {
 
   browser = yield awaitExtensionPanel(extension);
 
-  let win = browser.contentWindow;
-  let body = win.document.body;
-  let root = win.document.documentElement;
-
+  /* eslint-disable mozilla/no-cpows-in-tests */
   function setSize(size) {
-    body.style.fontSize = `${size}px`;
+    content.document.body.style.fontSize = `${size}px`;
+  }
+  /* eslint-enable mozilla/no-cpows-in-tests */
 
-    return awaitResize(browser);
+  let dims = yield alterContent(browser, setSize, 18);
+
+  if (AppConstants.platform == "win") {
+    while (dims.window.innerWidth < 800) {
+      yield delay(50);
+      dims = yield promiseContentDimensions(browser);
+    }
   }
 
-  yield setSize(18);
-
-  is(win.innerWidth, 800, "Panel window should be 800px wide");
-  is(body.clientWidth, 800, "Panel body should be 800px wide");
-  is(body.clientWidth, body.scrollWidth,
+  is(dims.window.innerWidth, 800, "Panel window should be 800px wide");
+  is(dims.body.clientWidth, 800, "Panel body should be 800px wide");
+  is(dims.body.clientWidth, dims.body.scrollWidth,
      "Panel body should be wide enough to fit its contents");
 
-  ok(win.innerHeight > 36,
-     `Panel window height (${win.innerHeight}px) should be taller than two lines of text.`);
+  ok(dims.window.innerHeight > 36,
+     `Panel window height (${dims.window.innerHeight}px) should be taller than two lines of text.`);
 
-  is(body.clientHeight, body.scrollHeight,
+  is(dims.body.clientHeight, dims.body.scrollHeight,
     "Panel body should be tall enough to fit its contents");
-  is(root.clientHeight, root.scrollHeight,
+  is(dims.root.clientHeight, dims.root.scrollHeight,
     "Panel root should be tall enough to fit its contents");
 
   yield extension.unload();

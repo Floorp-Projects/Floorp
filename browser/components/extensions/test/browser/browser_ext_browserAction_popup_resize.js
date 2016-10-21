@@ -5,18 +5,7 @@
 function* openPanel(extension, win = window) {
   clickBrowserAction(extension, win);
 
-  return yield awaitExtensionPanel(extension, win);
-}
-
-function* awaitResize(browser) {
-  // Debouncing code makes this a bit racy.
-  // Try to skip the first, early resize, and catch the resize event we're
-  // looking for, but don't wait longer than a few seconds.
-
-  return Promise.race([
-    BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized", event => event.detail === "delayed"),
-    new Promise(resolve => setTimeout(resolve, 5000)),
-  ]);
+  return yield awaitExtensionPanel(extension, win, false);
 }
 
 add_task(function* testBrowserActionPopupResize() {
@@ -29,31 +18,33 @@ add_task(function* testBrowserActionPopupResize() {
     },
 
     files: {
-      "popup.html": '<html><head><meta charset="utf-8"></head></html>',
+      "popup.html": '<!DOCTYPE html><html><head><meta charset="utf-8"></head></html>',
     },
   });
 
   yield extension.startup();
 
   let browser = yield openPanel(extension);
-  let panelWindow = browser.contentWindow;
-  let panelBody = panelWindow.document.body;
 
-  function checkSize(expected) {
-    is(panelWindow.innerHeight, expected, `Panel window should be ${expected}px tall`);
-    is(panelBody.clientHeight, panelBody.scrollHeight,
+  function* checkSize(expected) {
+    let dims = yield promiseContentDimensions(browser);
+
+    is(dims.window.innerHeight, expected, `Panel window should be ${expected}px tall`);
+    is(dims.body.clientHeight, dims.body.scrollHeight,
       "Panel body should be tall enough to fit its contents");
 
     // Tolerate if it is 1px too wide, as that may happen with the current resizing method.
-    ok(Math.abs(panelWindow.innerWidth - expected) <= 1, `Panel window should be ${expected}px wide`);
-    is(panelBody.clientWidth, panelBody.scrollWidth,
+    ok(Math.abs(dims.window.innerWidth - expected) <= 1, `Panel window should be ${expected}px wide`);
+    is(dims.body.clientWidth, dims.body.scrollWidth,
       "Panel body should be wide enough to fit its contents");
   }
 
+  /* eslint-disable mozilla/no-cpows-in-tests */
   function setSize(size) {
-    panelBody.style.height = `${size}px`;
-    panelBody.style.width = `${size}px`;
+    content.document.body.style.height = `${size}px`;
+    content.document.body.style.width = `${size}px`;
   }
+  /* eslint-enable mozilla/no-cpows-in-tests */
 
   let sizes = [
     200,
@@ -62,9 +53,8 @@ add_task(function* testBrowserActionPopupResize() {
   ];
 
   for (let size of sizes) {
-    setSize(size);
-    yield awaitResize(browser);
-    checkSize(size);
+    yield alterContent(browser, setSize, size);
+    yield checkSize(size);
   }
 
   yield closeBrowserAction(extension);
@@ -119,27 +109,32 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
 
   yield extension.startup();
 
+  /* eslint-disable mozilla/no-cpows-in-tests */
+
   if (arrowSide == "top") {
     // Test the standalone panel for a toolbar button.
     let browser = yield openPanel(extension, browserWin);
-    let win = browser.contentWindow;
-    let body = win.document.body;
 
-    let isStandards = win.document.compatMode != "BackCompat";
-    is(isStandards, standardsMode, "Document has the expected compat mode");
+    let dims = yield promiseContentDimensions(browser);
 
-    let {innerWidth, innerHeight} = win;
+    is(dims.isStandards, standardsMode, "Document has the expected compat mode");
 
-    body.classList.add("bigger");
-    yield awaitResize(browser);
+    let {innerWidth, innerHeight} = dims.window;
 
+    dims = yield alterContent(browser, () => {
+      content.document.body.classList.add("bigger");
+    });
+
+    let win = dims.window;
     is(win.innerHeight, innerHeight, "Window height should not change");
     ok(win.innerWidth > innerWidth, `Window width should increase (${win.innerWidth} > ${innerWidth})`);
 
 
-    body.classList.remove("bigger");
-    yield awaitResize(browser);
+    dims = yield alterContent(browser, () => {
+      content.document.body.classList.remove("bigger");
+    });
 
+    win = dims.window;
     is(win.innerHeight, innerHeight, "Window height should not change");
 
     // The getContentSize calculation is not always reliable to single-pixel
@@ -156,8 +151,6 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
   CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_PANEL);
 
   let browser = yield openPanel(extension, browserWin);
-  let win = browser.contentWindow;
-  let body = win.document.body;
 
   let {panel} = browserWin.PanelUI;
   let origPanelRect = panel.getBoundingClientRect();
@@ -171,7 +164,7 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
       ok(panelRect.top, origPanelRect.top, "Panel has not moved downwards");
       ok(panelRect.bottom >= origPanelRect.bottom, `Panel has not shrunk from original size (${panelRect.bottom} >= ${origPanelRect.bottom})`);
 
-      let screenBottom = browserWin.screen.availTop + win.screen.availHeight;
+      let screenBottom = browserWin.screen.availTop + browserWin.screen.availHeight;
       let panelBottom = browserWin.mozInnerScreenY + panelRect.bottom;
       ok(panelBottom <= screenBottom, `Bottom of popup should be on-screen. (${panelBottom} <= ${screenBottom})`);
     } else {
@@ -183,13 +176,13 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
     }
   };
 
-
-  let isStandards = win.document.compatMode != "BackCompat";
-  is(isStandards, standardsMode, "Document has the expected compat mode");
-
   // Wait long enough to make sure the initial resize debouncing timer has
   // expired.
   yield new Promise(resolve => setTimeout(resolve, 100));
+
+  let dims = yield promiseContentDimensions(browser);
+
+  is(dims.isStandards, standardsMode, "Document has the expected compat mode");
 
   // If the browser's preferred height is smaller than the initial height of the
   // panel, then it will still take up the full available vertical space. Even
@@ -197,14 +190,19 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
   // correct, so check that explicitly.
   let getHeight = () => parseFloat(browser.style.height);
 
-  let {innerWidth, innerHeight} = win;
+  let {innerWidth, innerHeight} = dims.window;
   let height = getHeight();
 
 
+  let setClass = className => {
+    content.document.body.className = className;
+  };
+
   info("Increase body children's width. " +
        "Expect them to wrap, and the frame to grow vertically rather than widen.");
-  body.className = "big";
-  yield awaitResize(browser);
+
+  dims = yield alterContent(browser, setClass, "big");
+  let win = dims.window;
 
   ok(getHeight() > height, `Browser height should increase (${getHeight()} > ${height})`);
 
@@ -217,8 +215,9 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
 
   info("Increase body children's width and height. " +
        "Expect them to wrap, and the frame to grow vertically rather than widen.");
-  body.className = "bigger";
-  yield awaitResize(browser);
+
+  dims = yield alterContent(browser, setClass, "bigger");
+  win = dims.window;
 
   ok(getHeight() > height, `Browser height should increase (${getHeight()} > ${height})`);
 
@@ -231,8 +230,9 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
 
   info("Increase body height beyond the height of the screen. " +
        "Expect the panel to grow to accommodate, but not larger than the height of the screen.");
-  body.className = "huge";
-  yield awaitResize(browser);
+
+  dims = yield alterContent(browser, setClass, "huge");
+  win = dims.window;
 
   ok(getHeight() > height, `Browser height should increase (${getHeight()} > ${height})`);
 
@@ -245,8 +245,8 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
 
 
   info("Restore original styling. Expect original dimensions.");
-  body.className = "";
-  yield awaitResize(browser);
+  dims = yield alterContent(browser, setClass, "");
+  win = dims.window;
 
   is(getHeight(), height, "Browser height should return to its original value");
 
