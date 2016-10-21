@@ -421,6 +421,8 @@ MessageManagerTunnel.prototype = {
     // Messages sent from browser-social.js
     "Social:",
     "PageMetadata:",
+    // Messages sent from viewSourceUtils.js
+    "ViewSource:",
   ],
 
   INNER_TO_OUTER_MESSAGE_PREFIXES: [
@@ -437,6 +439,8 @@ MessageManagerTunnel.prototype = {
     // Messages sent to browser-social.js
     "Social:",
     "PageMetadata:",
+    // Messages sent to viewSourceUtils.js
+    "ViewSource:",
   ],
 
   OUTER_TO_INNER_FRAME_SCRIPTS: [
