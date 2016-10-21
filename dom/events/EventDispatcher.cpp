@@ -240,10 +240,10 @@ public:
                                      ELMCreationDetector& aCd);
 
   /**
-   * Resets aVisitor object and calls PreHandleEvent.
+   * Resets aVisitor object and calls GetEventTargetParent.
    * Copies mItemFlags and mItemData to the current EventTargetChainItem.
    */
-  void PreHandleEvent(EventChainPreVisitor& aVisitor);
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor);
 
   /**
    * If the current item in the event target chain has an event listener
@@ -317,10 +317,10 @@ EventTargetChainItem::EventTargetChainItem(EventTarget* aTarget)
 }
 
 void
-EventTargetChainItem::PreHandleEvent(EventChainPreVisitor& aVisitor)
+EventTargetChainItem::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.Reset();
-  Unused << mTarget->PreHandleEvent(aVisitor);
+  Unused << mTarget->GetEventTargetParent(aVisitor);
   SetForceContentDispatch(aVisitor.mForceContentDispatch);
   SetWantsWillHandleEvent(aVisitor.mWantsWillHandleEvent);
   SetMayHaveListenerManager(aVisitor.mMayHaveListenerManager);
@@ -631,11 +631,11 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   aEvent->mFlags.mIsBeingDispatched = true;
 
   // Create visitor object and start event dispatching.
-  // PreHandleEvent for the original target.
+  // GetEventTargetParent for the original target.
   nsEventStatus status = aEventStatus ? *aEventStatus : nsEventStatus_eIgnore;
   EventChainPreVisitor preVisitor(aPresContext, aEvent, aDOMEvent, status,
                                   isInAnon);
-  targetEtci->PreHandleEvent(preVisitor);
+  targetEtci->GetEventTargetParent(preVisitor);
 
   if (!preVisitor.mCanHandle && preVisitor.mAutomaticChromeDispatch && content) {
     // Event target couldn't handle the event. Try to propagate to chrome.
@@ -643,7 +643,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
     targetEtci = EventTargetChainItemForChromeTarget(chain, content);
     NS_ENSURE_STATE(targetEtci);
     MOZ_ASSERT(&chain[0] == targetEtci);
-    targetEtci->PreHandleEvent(preVisitor);
+    targetEtci->GetEventTargetParent(preVisitor);
   }
   if (preVisitor.mCanHandle) {
     // At least the original target can handle the event.
@@ -670,7 +670,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
         parentEtci->SetNewTarget(preVisitor.mEventTargetAtParent);
       }
 
-      parentEtci->PreHandleEvent(preVisitor);
+      parentEtci->GetEventTargetParent(preVisitor);
       if (preVisitor.mCanHandle) {
         topEtci = parentEtci;
       } else {
@@ -685,7 +685,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
                                                              disabledTarget,
                                                              topEtci);
             if (parentEtci) {
-              parentEtci->PreHandleEvent(preVisitor);
+              parentEtci->GetEventTargetParent(preVisitor);
               if (preVisitor.mCanHandle) {
                 chain[0].SetNewTarget(parentTarget);
                 topEtci = parentEtci;

@@ -81,9 +81,9 @@ HTMLAreaElement::SetTarget(const nsAString& aValue)
 }
 
 nsresult
-HTMLAreaElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
+HTMLAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
-  return PreHandleEventForAnchors(aVisitor);
+  return GetEventTargetParentForAnchors(aVisitor);
 }
 
 nsresult

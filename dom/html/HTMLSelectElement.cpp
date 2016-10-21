@@ -1447,14 +1447,14 @@ HTMLSelectElement::IsDisabledForEvents(EventMessage aMessage)
 }
 
 nsresult
-HTMLSelectElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
+HTMLSelectElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
   if (IsDisabledForEvents(aVisitor.mEvent->mMessage)) {
     return NS_OK;
   }
 
-  return nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
+  return nsGenericHTMLFormElementWithState::GetEventTargetParent(aVisitor);
 }
 
 nsresult

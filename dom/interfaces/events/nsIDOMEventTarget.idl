@@ -224,7 +224,7 @@ interface nsIDOMEventTarget : nsISupports
    * @note Only EventDispatcher should call this method.
    */
   [noscript, nostdcall]
-  void PreHandleEvent(in EventChainPreVisitorRef aVisitor);
+  void GetEventTargetParent(in EventChainPreVisitorRef aVisitor);
 
   /**
    * If EventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,

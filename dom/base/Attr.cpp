@@ -346,7 +346,7 @@ Attr::RemoveChildAt(uint32_t aIndex, bool aNotify)
 }
 
 nsresult
-Attr::PreHandleEvent(EventChainPreVisitor& aVisitor)
+Attr::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   return NS_OK;
