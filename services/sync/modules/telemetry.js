@@ -327,13 +327,18 @@ class TelemetryRecord {
   }
 
   onEngineStop(engineName, error) {
-    if (error && !this.currentEngine) {
-      log.error(`Error triggered on ${engineName} when no current engine exists: ${error}`);
+    // We only care if it's the current engine if we have a current engine.
+    if (this._shouldIgnoreEngine(engineName, !!this.currentEngine)) {
+      return;
+    }
+    if (!this.currentEngine) {
       // It's possible for us to get an error before the start message of an engine
       // (somehow), in which case we still want to record that error.
+      if (!error) {
+        return;
+      }
+      log.error(`Error triggered on ${engineName} when no current engine exists: ${error}`);
       this.currentEngine = new EngineRecord(engineName);
-    } else if (!this.currentEngine || (engineName && this._shouldIgnoreEngine(engineName, true))) {
-      return;
     }
     this.currentEngine.finished(error);
     this.engines.push(this.currentEngine);
