@@ -4,13 +4,16 @@
 
 mk_add_options MOZ_UNIFY_BDATE=1
 
-DARWIN_VERSION=`uname -r`
+DARWIN_VERSION=10
 ac_add_app_options i386 --target=i386-apple-darwin$DARWIN_VERSION
 ac_add_app_options x86_64 --target=x86_64-apple-darwin$DARWIN_VERSION
 ac_add_app_options i386 --with-unify-dist=../x86_64/dist
 ac_add_app_options x86_64 --with-unify-dist=../i386/dist
 
-ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.7.sdk
+if ! test `uname -s` = Linux; then
+  # Cross-universal builds already do the equivalent of this by setting -isysroot directly
+  ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.7.sdk
+fi
 
 . $topsrcdir/build/macosx/mozconfig.common
 
@@ -35,12 +38,12 @@ if test "$MOZ_BUILD_APP" = "i386" -o "$MOZ_BUILD_APP" = "x86_64"; then
   CXX="$CXX -arch $TARGET_CPU"
 
   # These must be set for cross builds, and don't hurt straight builds.
-  RANLIB=ranlib
-  AR=ar
+  RANLIB="${TOOLCHAIN_PREFIX}ranlib"
+  AR="${TOOLCHAIN_PREFIX}ar"
   AS=$CC
   LD=ld
   STRIP="strip"
-  OTOOL="otool"
+  OTOOL="${TOOLCHAIN_PREFIX}otool"
 
   # Each per-CPU build should be entirely oblivious to the fact that a
   # universal binary will be produced.  The exception is packager.mk, which

@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Instruments.h"
+#include "mozilla/Attributes.h"
 
 #ifdef __APPLE__
 
@@ -42,7 +43,7 @@ template<typename T>
 class AutoReleased
 {
 public:
-  AutoReleased(T aTypeRef) : mTypeRef(aTypeRef)
+  MOZ_IMPLICIT AutoReleased(T aTypeRef) : mTypeRef(aTypeRef)
   {
   }
   ~AutoReleased()

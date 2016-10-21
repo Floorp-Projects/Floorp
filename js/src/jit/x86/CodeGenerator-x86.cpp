@@ -736,7 +736,7 @@ class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86>
     LTruncateDToInt32* ins_;
 
   public:
-    OutOfLineTruncate(LTruncateDToInt32* ins)
+    explicit OutOfLineTruncate(LTruncateDToInt32* ins)
       : ins_(ins)
     { }
 
@@ -753,7 +753,7 @@ class OutOfLineTruncateFloat32 : public OutOfLineCodeBase<CodeGeneratorX86>
     LTruncateFToInt32* ins_;
 
   public:
-    OutOfLineTruncateFloat32(LTruncateFToInt32* ins)
+    explicit OutOfLineTruncateFloat32(LTruncateFToInt32* ins)
       : ins_(ins)
     { }
 
