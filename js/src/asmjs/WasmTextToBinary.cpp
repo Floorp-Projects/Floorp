@@ -28,7 +28,7 @@
 #include "jsstr.h"
 
 #include "asmjs/WasmAST.h"
-#include "asmjs/WasmBinary.h"
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmTypes.h"
 #include "ds/LifoAlloc.h"
 #include "js/CharacterEncoding.h"
@@ -2844,12 +2844,14 @@ ParseStartFunc(WasmParseContext& c, WasmToken token, AstModule* module)
 }
 
 static bool
-ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, uint32_t* flags)
+ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, bool* isMutable)
 {
+    *isMutable = false;
+
     // Either (mut i32) or i32.
     if (c.ts.getIf(WasmToken::OpenParen)) {
         // Immutable by default.
-        *flags = c.ts.getIf(WasmToken::Mutable) ? 0x1 : 0x0;
+        *isMutable = c.ts.getIf(WasmToken::Mutable);
         if (!c.ts.match(WasmToken::ValueType, typeToken, c.error))
             return false;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2919,14 +2921,14 @@ ParseImport(WasmParseContext& c, AstModule* module)
                 name = c.ts.getIfName();
 
             WasmToken typeToken;
-            uint32_t flags = 0;
-            if (!ParseGlobalType(c, &typeToken, &flags))
+            bool isMutable;
+            if (!ParseGlobalType(c, &typeToken, &isMutable))
                 return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
 
             return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
-                                         AstGlobal(AstName(), typeToken.valueType(), flags));
+                                         AstGlobal(AstName(), typeToken.valueType(), isMutable));
         }
         if (c.ts.getIf(WasmToken::Func)) {
             if (name.empty())
@@ -3156,7 +3158,7 @@ ParseGlobal(WasmParseContext& c, AstModule* module)
     AstName name = c.ts.getIfName();
 
     WasmToken typeToken;
-    uint32_t flags = 0;
+    bool isMutable;
 
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
@@ -3172,11 +3174,12 @@ ParseGlobal(WasmParseContext& c, AstModule* module)
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return false;
 
-            if (!ParseGlobalType(c, &typeToken, &flags))
+            if (!ParseGlobalType(c, &typeToken, &isMutable))
                 return false;
 
             auto* imp = new(c.lifo) AstImport(name, names.module.text(), names.field.text(),
-                                              AstGlobal(AstName(), typeToken.valueType(), flags));
+                                              AstGlobal(AstName(), typeToken.valueType(),
+                                                        isMutable));
             return imp && module->append(imp);
         }
 
@@ -3193,14 +3196,14 @@ ParseGlobal(WasmParseContext& c, AstModule* module)
         }
     }
 
-    if (!ParseGlobalType(c, &typeToken, &flags))
+    if (!ParseGlobalType(c, &typeToken, &isMutable))
         return false;
 
     AstExpr* init = ParseExpr(c, true);
     if (!init)
         return false;
 
-    auto* glob = new(c.lifo) AstGlobal(name, typeToken.valueType(), flags, Some(init));
+    auto* glob = new(c.lifo) AstGlobal(name, typeToken.valueType(), isMutable, Some(init));
     return glob && module->append(glob);
 }
 
@@ -4311,6 +4314,13 @@ EncodeTableLimits(Encoder& e, const Limits& limits)
 }
 
 static bool
+EncodeGlobalType(Encoder& e, const AstGlobal* global)
+{
+    return e.writeValType(global->type()) &&
+           e.writeVarU32(global->isMutable() ? uint32_t(GlobalFlags::IsMutable) : 0);
+}
+
+static bool
 EncodeImport(Encoder& e, AstImport& imp)
 {
     if (!EncodeBytes(e, imp.module()))
@@ -4329,9 +4339,7 @@ EncodeImport(Encoder& e, AstImport& imp)
         break;
       case DefinitionKind::Global:
         MOZ_ASSERT(!imp.global().hasInit());
-        if (!e.writeValType(imp.global().type()))
-            return false;
-        if (!e.writeVarU32(imp.global().flags()))
+        if (!EncodeGlobalType(e, &imp.global()))
             return false;
         break;
       case DefinitionKind::Table:
@@ -4406,9 +4414,7 @@ EncodeGlobalSection(Encoder& e, AstModule& module)
 
     for (const AstGlobal* global : globals) {
         MOZ_ASSERT(global->hasInit());
-        if (!e.writeValType(global->type()))
-            return false;
-        if (!e.writeVarU32(global->flags()))
+        if (!EncodeGlobalType(e, global))
             return false;
         if (!EncodeExpr(e, global->init()))
             return false;

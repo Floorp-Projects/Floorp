@@ -29,6 +29,7 @@
 
 #include "jswrapper.h"
 
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmJS.h"

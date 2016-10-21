@@ -22,6 +22,7 @@
 
 #include "jsprf.h"
 
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmSignalHandlers.h"
@@ -712,10 +713,9 @@ DecodeImport(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
       }
       case DefinitionKind::Global: {
         ValType type;
-        uint32_t flags;
-        if (!DecodeGlobalType(d, &type, &flags))
+        bool isMutable;
+        if (!DecodeGlobalType(d, &type, &isMutable))
             return false;
-        bool isMutable = flags & uint32_t(GlobalFlags::IsMutable);
         if (!GlobalIsJSCompatible(d, type, isMutable))
             return false;
         if (!init->globals.append(GlobalDesc(type, isMutable, init->globals.length())))
@@ -807,69 +807,6 @@ DecodeMemorySection(Decoder& d, ModuleGeneratorData* init, bool* exported)
 }
 
 static bool
-DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
-                            InitExpr* init)
-{
-    Expr expr;
-    if (!d.readExpr(&expr))
-        return d.fail("failed to read initializer type");
-
-    switch (expr) {
-      case Expr::I32Const: {
-        int32_t i32;
-        if (!d.readVarS32(&i32))
-            return d.fail("failed to read initializer i32 expression");
-        *init = InitExpr(Val(uint32_t(i32)));
-        break;
-      }
-      case Expr::I64Const: {
-        int64_t i64;
-        if (!d.readVarS64(&i64))
-            return d.fail("failed to read initializer i64 expression");
-        *init = InitExpr(Val(uint64_t(i64)));
-        break;
-      }
-      case Expr::F32Const: {
-        RawF32 f32;
-        if (!d.readFixedF32(&f32))
-            return d.fail("failed to read initializer f32 expression");
-        *init = InitExpr(Val(f32));
-        break;
-      }
-      case Expr::F64Const: {
-        RawF64 f64;
-        if (!d.readFixedF64(&f64))
-            return d.fail("failed to read initializer f64 expression");
-        *init = InitExpr(Val(f64));
-        break;
-      }
-      case Expr::GetGlobal: {
-        uint32_t i;
-        if (!d.readVarU32(&i))
-            return d.fail("failed to read get_global index in initializer expression");
-        if (i >= globals.length())
-            return d.fail("global index out of range in initializer expression");
-        if (!globals[i].isImport() || globals[i].isMutable())
-            return d.fail("initializer expression must reference a global immutable import");
-        *init = InitExpr(i, globals[i].type());
-        break;
-      }
-      default: {
-        return d.fail("unexpected initializer expression");
-      }
-    }
-
-    if (expected != init->type())
-        return d.fail("type mismatch: initializer type and expected type don't match");
-
-    Expr end;
-    if (!d.readExpr(&end) || end != Expr::End)
-        return d.fail("failed to read end of initializer expression");
-
-    return true;
-}
-
-static bool
 DecodeGlobalSection(Decoder& d, ModuleGeneratorData* init)
 {
     uint32_t sectionStart, sectionSize;
@@ -887,15 +824,14 @@ DecodeGlobalSection(Decoder& d, ModuleGeneratorData* init)
 
     for (uint32_t i = 0; i < numGlobals; i++) {
         ValType type;
-        uint32_t flags;
-        if (!DecodeGlobalType(d, &type, &flags))
+        bool isMutable;
+        if (!DecodeGlobalType(d, &type, &isMutable))
             return false;
 
         InitExpr initializer;
         if (!DecodeInitializerExpression(d, init->globals, type, &initializer))
             return false;
 
-        bool isMutable = flags & uint32_t(GlobalFlags::IsMutable);
         if (!init->globals.append(GlobalDesc(initializer, isMutable)))
             return false;
     }
