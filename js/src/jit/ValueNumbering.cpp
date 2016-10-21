@@ -1002,7 +1002,7 @@ ValueNumberer::visitBlock(MBasicBlock* block, const MBasicBlock* dominatorRoot)
 bool
 ValueNumberer::visitDominatorTree(MBasicBlock* dominatorRoot)
 {
-    JitSpew(JitSpew_GVN, "  Visiting dominator tree (with %llu blocks) rooted at block%u%s",
+    JitSpew(JitSpew_GVN, "  Visiting dominator tree (with %" PRIu64 " blocks) rooted at block%u%s",
             uint64_t(dominatorRoot->numDominated()), dominatorRoot->id(),
             dominatorRoot == graph_.entryBlock() ? " (normal entry block)" :
             dominatorRoot == graph_.osrBlock() ? " (OSR entry block)" :
@@ -1228,7 +1228,7 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
 {
     updateAliasAnalysis_ = updateAliasAnalysis == UpdateAliasAnalysis;
 
-    JitSpew(JitSpew_GVN, "Running GVN on graph (with %llu blocks)",
+    JitSpew(JitSpew_GVN, "Running GVN on graph (with %" PRIu64 " blocks)",
             uint64_t(graph_.numBlocks()));
 
     // Adding fixup blocks only make sense iff we have a second entry point into
@@ -1288,7 +1288,7 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
             break;
         }
 
-        JitSpew(JitSpew_GVN, "Re-running GVN on graph (run %d, now with %llu blocks)",
+        JitSpew(JitSpew_GVN, "Re-running GVN on graph (run %d, now with %" PRIu64 " blocks)",
                 runs, uint64_t(graph_.numBlocks()));
     }
 

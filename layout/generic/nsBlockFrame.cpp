@@ -1410,12 +1410,11 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       // calculating hypothetical position of absolutely-positioned
       // frames. The line cursor is immediately cleared afterward to
       // avoid affecting the display list generation.
-      SetupLineCursor();
+      AutoLineCursorSetup autoLineCursor(this);
       absoluteContainer->Reflow(this, aPresContext, *reflowInput,
                                 state.mReflowStatus,
                                 containingBlock, flags,
                                 &aMetrics.mOverflowAreas);
-      ClearLineCursor();
     }
   }
 

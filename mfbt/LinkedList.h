@@ -125,34 +125,23 @@ public:
       mIsSentinel(false)
   { }
 
-  LinkedListElement(LinkedListElement<T>&& other)
-    : mIsSentinel(other.mIsSentinel)
+  /*
+   * Moves |aOther| into |*this|. If |aOther| is already in a list, then
+   * |aOther| is removed from the list and replaced by |*this|.
+   */
+  LinkedListElement(LinkedListElement<T>&& aOther)
+    : mIsSentinel(aOther.mIsSentinel)
   {
-    if (!other.isInList()) {
-      mNext = this;
-      mPrev = this;
-      return;
-    }
+    adjustLinkForMove(Move(aOther));
+  }
 
-    MOZ_ASSERT(other.mNext->mPrev == &other);
-    MOZ_ASSERT(other.mPrev->mNext == &other);
-
-    /*
-     * Initialize |this| with |other|'s mPrev/mNext pointers, and adjust those
-     * element to point to this one.
-     */
-    mNext = other.mNext;
-    mPrev = other.mPrev;
-
-    mNext->mPrev = this;
-    mPrev->mNext = this;
-
-    /*
-     * Adjust |other| so it doesn't think it's in a list.  This makes it
-     * safely destructable.
-     */
-    other.mNext = &other;
-    other.mPrev = &other;
+  LinkedListElement& operator=(LinkedListElement<T>&& aOther)
+  {
+    MOZ_ASSERT(mIsSentinel == aOther.mIsSentinel, "Mismatch NodeKind!");
+    MOZ_ASSERT(!isInList(),
+               "Assigning to an element in a list messes up that list!");
+    adjustLinkForMove(Move(aOther));
+    return *this;
   }
 
   ~LinkedListElement()
@@ -233,15 +222,15 @@ public:
 private:
   friend class LinkedList<T>;
 
-  enum NodeKind {
-    NODE_KIND_NORMAL,
-    NODE_KIND_SENTINEL
+  enum class NodeKind {
+    Normal,
+    Sentinel
   };
 
   explicit LinkedListElement(NodeKind nodeKind)
     : mNext(this),
       mPrev(this),
-      mIsSentinel(nodeKind == NODE_KIND_SENTINEL)
+      mIsSentinel(nodeKind == NodeKind::Sentinel)
   { }
 
   /*
@@ -287,7 +276,39 @@ private:
     this->mPrev = listElem;
   }
 
-private:
+  /*
+   * Adjust mNext and mPrev for implementing move constructor and move
+   * assignment.
+   */
+  void adjustLinkForMove(LinkedListElement<T>&& aOther)
+  {
+    if (!aOther.isInList()) {
+      mNext = this;
+      mPrev = this;
+      return;
+    }
+
+    MOZ_ASSERT(aOther.mNext->mPrev == &aOther);
+    MOZ_ASSERT(aOther.mPrev->mNext == &aOther);
+
+    /*
+     * Initialize |this| with |aOther|'s mPrev/mNext pointers, and adjust those
+     * element to point to this one.
+     */
+    mNext = aOther.mNext;
+    mPrev = aOther.mPrev;
+
+    mNext->mPrev = this;
+    mPrev->mNext = this;
+
+    /*
+     * Adjust |aOther| so it doesn't think it's in a list.  This makes it
+     * safely destructable.
+     */
+    aOther.mNext = &aOther;
+    aOther.mPrev = &aOther;
+  }
+
   LinkedListElement& operator=(const LinkedListElement<T>& aOther) = delete;
   LinkedListElement(const LinkedListElement<T>& aOther) = delete;
 };
@@ -319,11 +340,18 @@ public:
     }
   };
 
-  LinkedList() : sentinel(LinkedListElement<T>::NODE_KIND_SENTINEL) { }
+  LinkedList() : sentinel(LinkedListElement<T>::NodeKind::Sentinel) { }
 
   LinkedList(LinkedList<T>&& aOther)
     : sentinel(mozilla::Move(aOther.sentinel))
   { }
+
+  LinkedList& operator=(LinkedList<T>&& aOther)
+  {
+    MOZ_ASSERT(isEmpty(), "Assigning to a non-empty list leaks elements in that list!");
+    sentinel = mozilla::Move(aOther.sentinel);
+    return *this;
+  }
 
   ~LinkedList() {
     MOZ_ASSERT(isEmpty(),
