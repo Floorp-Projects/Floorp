@@ -1626,6 +1626,24 @@ RenderDataSection(WasmRenderContext& c, const AstModule& module)
 }
 
 static bool
+RenderStartSection(WasmRenderContext& c, AstModule& module)
+{
+    if (!module.hasStartFunc())
+        return true;
+
+    if (!RenderIndent(c))
+        return false;
+    if (!c.buffer.append("(start "))
+        return false;
+    if (!RenderRef(c, module.startFunc().func()))
+        return false;
+    if (!c.buffer.append(")\n"))
+        return false;
+
+    return true;
+}
+
+static bool
 RenderModule(WasmRenderContext& c, AstModule& module)
 {
     if (!c.buffer.append("(module\n"))
@@ -1642,7 +1660,7 @@ RenderModule(WasmRenderContext& c, AstModule& module)
     if (!RenderTableSection(c, module))
         return false;
 
-    if (!RenderElemSection(c, module))
+    if (!RenderMemorySection(c, module))
         return false;
 
     if (!RenderGlobalSection(c, module))
@@ -1651,10 +1669,13 @@ RenderModule(WasmRenderContext& c, AstModule& module)
     if (!RenderExportSection(c, module.exports(), module.funcImportNames(), module.funcs()))
         return false;
 
-    if (!RenderCodeSection(c, module.funcs(), module.sigs()))
+    if (!RenderStartSection(c, module))
         return false;
 
-    if (!RenderMemorySection(c, module))
+    if (!RenderElemSection(c, module))
+        return false;
+
+    if (!RenderCodeSection(c, module.funcs(), module.sigs()))
         return false;
 
     if (!RenderDataSection(c, module))

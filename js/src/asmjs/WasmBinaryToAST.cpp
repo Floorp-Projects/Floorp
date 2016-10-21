@@ -2117,7 +2117,11 @@ AstDecodeStartSection(AstDecodeContext &c)
     if (!c.d.readVarU32(&funcIndex))
         return c.d.fail("failed to read start func index");
 
-    c.module().setStartFunc(AstStartFunc(AstRef(AstName(), funcIndex)));
+    AstRef funcRef;
+    if (!AstDecodeGenerateRef(c, AstName(u"func"), funcIndex, &funcRef))
+        return false;
+
+    c.module().setStartFunc(AstStartFunc(funcRef));
 
     if (!c.d.finishSection(sectionStart, sectionSize, "start"))
         return false;

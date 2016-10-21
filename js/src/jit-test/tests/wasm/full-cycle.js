@@ -94,3 +94,18 @@ wasmFullPass(`(module
         call_indirect $t
     )
 )`, 3, {"":{table}}, 0);
+
+// Start function.
+wasmFullPass(`(module
+    (global $g (mut i32) (i32.const 0))
+    (func $start
+        get_global $g
+        i32.const 1
+        i32.add
+        set_global $g
+    )
+    (start $start)
+    (func (export "run") (result i32)
+        get_global $g
+    )
+)`, 1);
