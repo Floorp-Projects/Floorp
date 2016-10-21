@@ -251,8 +251,7 @@ public:
   virtual void HandleInput() = 0;
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult) = 0;
   virtual void ScanForDevices() = 0;
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton,
-                      bool aPressed, double aValue);
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
   void AddGamepad(const char* aID, dom::GamepadMappingType aMapping,
                   uint32_t aNumButtons, uint32_t aNumAxes);
 
@@ -263,6 +262,10 @@ protected:
   bool mInstalled;
   uint32_t mControllerCount;
   static Atomic<uint32_t> sControllerBase;
+
+private:
+  virtual void HandleButtonPress(uint32_t aControllerIdx,
+                                 uint64_t aButtonPressed) = 0;
 };
 
 } // namespace gfx

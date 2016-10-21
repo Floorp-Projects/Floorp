@@ -149,19 +149,15 @@ static void SetWidgetStateSafe(uint8_t *aSafeVector,
   aSafeVector[key >> 3] |= (1 << (key & 7));
 }
 
-static GtkTextDirection GetTextDirection(nsIFrame* aFrame)
+/* static */ GtkTextDirection
+nsNativeThemeGTK::GetTextDirection(nsIFrame* aFrame)
 {
-  if (!aFrame)
-    return GTK_TEXT_DIR_NONE;
-
-  switch (aFrame->StyleVisibility()->mDirection) {
-    case NS_STYLE_DIRECTION_RTL:
-      return GTK_TEXT_DIR_RTL;
-    case NS_STYLE_DIRECTION_LTR:
-      return GTK_TEXT_DIR_LTR;
-  }
-
-  return GTK_TEXT_DIR_NONE;
+  // IsFrameRTL() treats vertical-rl modes as right-to-left (in addition to
+  // horizontal text with direction=RTL), rather than just considering the
+  // text direction.  GtkTextDirection does not have distinct values for
+  // vertical writing modes, but considering the block flow direction is
+  // important for resizers and scrollbar elements, at least.
+  return IsFrameRTL(aFrame) ? GTK_TEXT_DIR_RTL : GTK_TEXT_DIR_LTR;
 }
 
 // Returns positive for negative margins (otherwise 0).
@@ -1119,14 +1115,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
 {
   GtkWidgetState state;
   WidgetNodeType gtkWidgetType;
-  // For resizer drawing, we want IsFrameRTL, which treats vertical-rl modes
-  // as right-to-left (in addition to horizontal text with direction=RTL),
-  // rather than just considering the text direction.
-  // This will make resizers on vertically-oriented elements render properly.
-  GtkTextDirection direction =
-    aWidgetType == NS_THEME_RESIZER
-    ? (IsFrameRTL(aFrame) ? GTK_TEXT_DIR_RTL : GTK_TEXT_DIR_LTR)
-    : GetTextDirection(aFrame);
+  GtkTextDirection direction = GetTextDirection(aFrame);
   gint flags;
   if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
                             &flags))

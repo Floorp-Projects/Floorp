@@ -228,7 +228,8 @@ class ObjectElements
         flags &= ~CONVERT_DOUBLE_ELEMENTS;
     }
     bool hasNonwritableArrayLength() const {
-        return flags & NONWRITABLE_ARRAY_LENGTH;
+        return flags & NONWRITABLE_ARRAY_LENGTH ||
+               flags & FROZEN;
     }
     void setNonwritableArrayLength() {
         MOZ_ASSERT(!isCopyOnWrite());
@@ -877,6 +878,7 @@ class NativeObject : public ShapedObject
     void prepareElementRangeForOverwrite(size_t start, size_t end) {
         MOZ_ASSERT(end <= getDenseInitializedLength());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreFrozen());
         for (size_t i = start; i < end; i++)
             elements_[i].HeapSlot::~HeapSlot();
     }
@@ -972,6 +974,7 @@ class NativeObject : public ShapedObject
     /* Accessors for elements. */
     bool ensureElements(ExclusiveContext* cx, uint32_t capacity) {
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreFrozen());
         if (capacity > getDenseCapacity())
             return growElements(cx, capacity);
         return true;
@@ -1017,6 +1020,7 @@ class NativeObject : public ShapedObject
     void setDenseInitializedLength(uint32_t length) {
         MOZ_ASSERT(length <= getDenseCapacity());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreFrozen());
         prepareElementRangeForOverwrite(length, getElementsHeader()->initializedLength);
         getElementsHeader()->initializedLength = length;
     }
@@ -1026,12 +1030,14 @@ class NativeObject : public ShapedObject
     void setDenseElement(uint32_t index, const Value& val) {
         MOZ_ASSERT(index < getDenseInitializedLength());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreFrozen());
         elements_[index].set(this, HeapSlot::Element, index, val);
     }
 
     void initDenseElement(uint32_t index, const Value& val) {
         MOZ_ASSERT(index < getDenseInitializedLength());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreFrozen());
         elements_[index].init(this, HeapSlot::Element, index, val);
     }
 
@@ -1055,6 +1061,7 @@ class NativeObject : public ShapedObject
     void copyDenseElements(uint32_t dstStart, const Value* src, uint32_t count) {
         MOZ_ASSERT(dstStart + count <= getDenseCapacity());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreFrozen());
         if (JS::shadow::Zone::asShadowZone(zone())->needsIncrementalBarrier()) {
             for (uint32_t i = 0; i < count; ++i)
                 elements_[dstStart + i].set(this, HeapSlot::Element, dstStart + i, src[i]);
@@ -1067,6 +1074,7 @@ class NativeObject : public ShapedObject
     void initDenseElements(uint32_t dstStart, const Value* src, uint32_t count) {
         MOZ_ASSERT(dstStart + count <= getDenseCapacity());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreFrozen());
         memcpy(&elements_[dstStart], src, count * sizeof(HeapSlot));
         elementsRangeWriteBarrierPost(dstStart, count);
     }
@@ -1075,6 +1083,7 @@ class NativeObject : public ShapedObject
         MOZ_ASSERT(dstStart + count <= getDenseCapacity());
         MOZ_ASSERT(srcStart + count <= getDenseInitializedLength());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreFrozen());
 
         /*
          * Using memmove here would skip write barriers. Also, we need to consider
@@ -1112,6 +1121,7 @@ class NativeObject : public ShapedObject
         MOZ_ASSERT(dstStart + count <= getDenseCapacity());
         MOZ_ASSERT(srcStart + count <= getDenseCapacity());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreFrozen());
 
         memmove(elements_ + dstStart, elements_ + srcStart, count * sizeof(Value));
         elementsRangeWriteBarrierPost(dstStart, count);
@@ -1126,6 +1136,10 @@ class NativeObject : public ShapedObject
 
     bool denseElementsAreCopyOnWrite() {
         return getElementsHeader()->isCopyOnWrite();
+    }
+
+    bool denseElementsAreFrozen() {
+        return getElementsHeader()->isFrozen();
     }
 
     /* Packed information for this object's elements. */

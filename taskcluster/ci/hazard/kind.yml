@@ -58,26 +58,3 @@ jobs:
                 tc-vcs checkout workspace/gecko "$GECKO_BASE_REPOSITORY" "$GECKO_HEAD_REPOSITORY" "$GECKO_HEAD_REV" "$GECKO_HEAD_REF"
                 && cd ./workspace/gecko/taskcluster/scripts/builder
                 && ./build-haz-linux.sh --project browser $HOME/workspace
-
-    linux64-mulet-haz/debug:
-        description: "Mulet Hazard Analysis Linux"
-        index:
-            product: b2g
-            job-name:
-                buildbot: linux64-haz-mulet
-                gecko-v2: mulet-haz-debug
-        treeherder:
-            platform: mulet-linux64/opt
-            symbol: tc(H)
-            tier: 3
-        # don't run anywhere by default, but still available via try: -b d -p linux64-mulet-haz
-        run-on-projects: []
-        worker:
-            docker-image: {in-tree: builder}
-        run:
-            using: hazard
-            tooltool-manifest: "gecko/b2g/dev/config/tooltool-manifests/linux64/hazard.manifest"
-            mozconfig: "b2g/dev/config/mozconfigs/linux64/mulet-hazards"
-            command: >
-                checkout-gecko workspace && cd ./workspace/gecko/taskcluster/scripts/builder
-                && buildbot_step 'Build' ./build-mulet-haz-linux.sh $HOME/workspace

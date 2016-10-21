@@ -12,13 +12,13 @@ function waitForClear() {
     let listener = {
       receiveMessage: function(msg) {
         if (msg.name == MSG) {
-          Services.ppmm.removeMessageListener(MSG, listener);
+          Services.mm.removeMessageListener(MSG, listener);
           resolve();
         }
       }
     };
 
-    Services.ppmm.addMessageListener(MSG, listener);
+    Services.mm.addMessageListener(MSG, listener, true);
   });
 }
 

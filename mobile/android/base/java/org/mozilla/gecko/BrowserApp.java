@@ -1519,13 +1519,6 @@ public class BrowserApp extends GeckoApp
         IntentHelper.destroy();
         GeckoNetworkManager.destroy();
 
-        if (SmsManager.isEnabled()) {
-            SmsManager.getInstance().stop();
-            if (isFinishing()) {
-                SmsManager.getInstance().shutdown();
-            }
-        }
-
         super.onDestroy();
 
         if (!isFinishing()) {

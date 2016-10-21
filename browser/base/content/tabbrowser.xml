@@ -5675,7 +5675,7 @@
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
-          if (aTab.pinned)
+          if (aTab.pinned || aTab.hidden)
             return;
 
           var scrollRect = this.mTabstrip.scrollClientRect;

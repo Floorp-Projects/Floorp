@@ -222,13 +222,6 @@ public class AppConstants {
     false;
 //#endif
 
-    public static final boolean MOZ_WEBSMS_BACKEND =
-//#ifdef MOZ_WEBSMS_BACKEND
-    true;
-//#else
-    false;
-//#endif
-
     // Android Beam is only supported on API14+, so we don't even bother building
     // it if this APK doesn't include API14 support.
     public static final boolean MOZ_ANDROID_BEAM =

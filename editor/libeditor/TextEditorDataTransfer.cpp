@@ -79,7 +79,6 @@ TextEditor::InsertTextAt(const nsAString& aStringToInsert,
 {
   if (aDestinationNode)
   {
-    nsresult res;
     RefPtr<Selection> selection = GetSelection();
     NS_ENSURE_STATE(selection);
 
@@ -91,12 +90,12 @@ TextEditor::InsertTextAt(const nsAString& aStringToInsert,
       // Use an auto tracker so that our drop point is correctly
       // positioned after the delete.
       AutoTrackDOMPoint tracker(mRangeUpdater, &targetNode, &targetOffset);
-      res = DeleteSelection(eNone, eStrip);
-      NS_ENSURE_SUCCESS(res, res);
+      nsresult rv = DeleteSelection(eNone, eStrip);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    res = selection->Collapse(targetNode, targetOffset);
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv = selection->Collapse(targetNode, targetOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return InsertText(aStringToInsert);
