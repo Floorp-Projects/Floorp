@@ -23,12 +23,12 @@
     }                                           \
   }
 
-js::Mutex::Mutex()
+js::detail::MutexImpl::MutexImpl()
 {
   AutoEnterOOMUnsafeRegion oom;
   platformData_ = js_new<PlatformData>();
   if (!platformData_)
-    oom.crash("js::Mutex::Mutex");
+    oom.crash("js::detail::MutexImpl::MutexImpl");
 
   pthread_mutexattr_t* attrp = nullptr;
 
@@ -36,46 +36,46 @@ js::Mutex::Mutex()
   pthread_mutexattr_t attr;
 
   TRY_CALL_PTHREADS(pthread_mutexattr_init(&attr),
-                    "js::Mutex::Mutex: pthread_mutexattr_init failed");
+                    "js::detail::MutexImpl::MutexImpl: pthread_mutexattr_init failed");
 
   TRY_CALL_PTHREADS(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK),
-                    "js::Mutex::Mutex: pthread_mutexattr_settype failed");
+                    "js::detail::MutexImpl::MutexImpl: pthread_mutexattr_settype failed");
 
   attrp = &attr;
 #endif
 
   TRY_CALL_PTHREADS(pthread_mutex_init(&platformData()->ptMutex, attrp),
-                    "js::Mutex::Mutex: pthread_mutex_init failed");
+                    "js::detail::MutexImpl::MutexImpl: pthread_mutex_init failed");
 
 #ifdef DEBUG
   TRY_CALL_PTHREADS(pthread_mutexattr_destroy(&attr),
-                    "js::Mutex::Mutex: pthread_mutexattr_destroy failed");
+                    "js::detail::MutexImpl::MutexImpl: pthread_mutexattr_destroy failed");
 #endif
 }
 
-js::Mutex::~Mutex()
+js::detail::MutexImpl::~MutexImpl()
 {
   if (!platformData_)
     return;
 
   TRY_CALL_PTHREADS(pthread_mutex_destroy(&platformData()->ptMutex),
-                    "js::Mutex::~Mutex: pthread_mutex_destroy failed");
+                    "js::detail::MutexImpl::~MutexImpl: pthread_mutex_destroy failed");
 
   js_delete(platformData());
 }
 
 void
-js::Mutex::lock()
+js::detail::MutexImpl::lock()
 {
   TRY_CALL_PTHREADS(pthread_mutex_lock(&platformData()->ptMutex),
-                    "js::Mutex::lock: pthread_mutex_lock failed");
+                    "js::detail::MutexImpl::lock: pthread_mutex_lock failed");
 }
 
 void
-js::Mutex::unlock()
+js::detail::MutexImpl::unlock()
 {
   TRY_CALL_PTHREADS(pthread_mutex_unlock(&platformData()->ptMutex),
-                    "js::Mutex::unlock: pthread_mutex_unlock failed");
+                    "js::detail::MutexImpl::unlock: pthread_mutex_unlock failed");
 }
 
 #undef TRY_CALL_PTHREADS

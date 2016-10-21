@@ -23,9 +23,9 @@
 #include "jit/MIRGenerator.h"
 
 #include "threading/LockGuard.h"
-#include "threading/Mutex.h"
 
 #include "vm/HelperThreads.h"
+#include "vm/MutexIDs.h"
 
 #ifndef JIT_SPEW_DIR
 # if defined(_WIN32)
@@ -54,7 +54,8 @@ class IonSpewer
 
   public:
     IonSpewer()
-      : firstFunction_(false),
+      : outputLock_(mutexid::IonSpewer),
+        firstFunction_(false),
         asyncLogging_(false),
         inited_(false)
     { }

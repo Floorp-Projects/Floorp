@@ -83,13 +83,13 @@
 #include "shell/OSObject.h"
 #include "threading/ConditionVariable.h"
 #include "threading/LockGuard.h"
-#include "threading/Mutex.h"
 #include "threading/Thread.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/Monitor.h"
+#include "vm/MutexIDs.h"
 #include "vm/Shape.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/StringBuffer.h"
@@ -179,7 +179,12 @@ class OffThreadState {
     };
 
   public:
-    OffThreadState() : monitor(), state(IDLE), token(), source(nullptr) { }
+    OffThreadState()
+      : monitor(mutexid::ShellOffThreadState),
+        state(IDLE),
+        token(),
+        source(nullptr)
+    { }
 
     bool startIfIdle(JSContext* cx, ScriptKind kind,
                      ScopedJSFreePtr<char16_t>& newSource)
@@ -431,9 +436,10 @@ ShellContext::ShellContext(JSContext* cx)
     lastWarning(cx, NullValue()),
 #ifdef SPIDERMONKEY_PROMISE
     promiseRejectionTrackerCallback(cx, NullValue()),
-    asyncTasks(cx),
+    asyncTasks(mutexid::ShellAsyncTasks, cx),
     drainingJobQueue(false),
 #endif // SPIDERMONKEY_PROMISE
+    watchdogLock(mutexid::ShellContextWatchdog),
     exitCode(0),
     quitting(false),
     readLineBufPos(0),
@@ -3396,7 +3402,7 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!workerThreadsLock) {
-        workerThreadsLock = js_new<Mutex>();
+        workerThreadsLock = js_new<Mutex>(mutexid::ShellWorkerThreads);
         if (!workerThreadsLock) {
             ReportOutOfMemory(cx);
             return false;
@@ -4992,7 +4998,7 @@ static SharedArrayRawBuffer* sharedArrayBufferMailbox;
 static bool
 InitSharedArrayBufferMailbox()
 {
-    sharedArrayBufferMailboxLock = js_new<Mutex>();
+    sharedArrayBufferMailboxLock = js_new<Mutex>(mutexid::ShellArrayBufferMailbox);
     return sharedArrayBufferMailboxLock != nullptr;
 }
 
