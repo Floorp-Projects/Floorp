@@ -42,15 +42,15 @@ const CSS_COLOR_4_TESTS = [
 
 function run_test() {
   for (let test of OLD_STYLE_TESTS) {
-    let ours = colorUtils.colorToRGBA(test, true);
+    let ours = colorUtils.colorToRGBA(test, false);
     let platform = DOMUtils.colorToRGBA(test);
     deepEqual(ours, platform, "color " + test + " matches DOMUtils");
     ok(ours !== null, "'" + test + "' is a color");
   }
 
   for (let test of CSS_COLOR_4_TESTS) {
-    let oursOld = colorUtils.colorToRGBA(test, true);
-    let oursNew = colorUtils.colorToRGBA(test, false);
+    let oursOld = colorUtils.colorToRGBA(test, false);
+    let oursNew = colorUtils.colorToRGBA(test, true);
     let platform = DOMUtils.colorToRGBA(test);
     notEqual(oursOld, platform, "old style parser for color " + test +
              " should not match DOMUtils");
