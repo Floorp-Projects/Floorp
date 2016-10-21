@@ -18,10 +18,14 @@
 
 #include "asmjs/WasmBinaryFormat.h"
 
+#include "mozilla/CheckedInt.h"
+
 #include "jsprf.h"
 
 using namespace js;
 using namespace js::wasm;
+
+using mozilla::CheckedInt;
 
 bool
 wasm::DecodePreamble(Decoder& d)
@@ -263,6 +267,63 @@ wasm::DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLengt
     }
 
     if (!d.finishSection(sectionStart, sectionSize, "data"))
+        return false;
+
+    return true;
+}
+
+bool
+wasm::DecodeMemoryLimits(Decoder& d, bool hasMemory, Limits* memory)
+{
+    if (hasMemory)
+        return d.fail("already have default memory");
+
+    if (!DecodeLimits(d, memory))
+        return false;
+
+    CheckedInt<uint32_t> initialBytes = memory->initial;
+    initialBytes *= PageSize;
+    if (!initialBytes.isValid() || initialBytes.value() > uint32_t(INT32_MAX))
+        return d.fail("initial memory size too big");
+
+    memory->initial = initialBytes.value();
+
+    if (memory->maximum) {
+        CheckedInt<uint32_t> maximumBytes = *memory->maximum;
+        maximumBytes *= PageSize;
+        if (!maximumBytes.isValid())
+            return d.fail("maximum memory size too big");
+
+        memory->maximum = Some(maximumBytes.value());
+    }
+
+    return true;
+}
+
+bool
+wasm::DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool *present)
+{
+    *present = false;
+
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Memory, &sectionStart, &sectionSize, "memory"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    *present = true;
+
+    uint32_t numMemories;
+    if (!d.readVarU32(&numMemories))
+        return d.fail("failed to read number of memories");
+
+    if (numMemories != 1)
+        return d.fail("the number of memories must be exactly one");
+
+    if (!DecodeMemoryLimits(d, hasMemory, memory))
+        return false;
+
+    if (!d.finishSection(sectionStart, sectionSize, "memory"))
         return false;
 
     return true;
