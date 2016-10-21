@@ -7729,10 +7729,14 @@ GCRuntime::invokeInterruptCallback(JSContext* cx)
 {
     interruptCallbackRequested = false;
 
+    stats.suspendPhases();
+
     JS::AutoAssertNoGC nogc(cx);
     JS::AutoAssertOnBarrier nobarrier(cx);
     JS::AutoSuppressGCAnalysis suppress(cx);
     for (JS::GCInterruptCallback callback : interruptCallbacks) {
         (*callback)(cx);
     }
+
+    stats.resumePhases();
 }
