@@ -22,7 +22,6 @@
 
 class nsINode;
 class nsITransferable;
-class nsISupportsArray;
 class nsILoadContext;
 
 namespace mozilla {
