@@ -178,7 +178,7 @@ struct VRDisplayInfo
 
 struct VRHMDSensorState {
   double timestamp;
-  uint32_t inputFrameID;
+  int32_t inputFrameID;
   VRDisplayCapabilityFlags flags;
   float orientation[4];
   float position[3];

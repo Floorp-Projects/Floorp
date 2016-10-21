@@ -68,7 +68,7 @@ VRDisplayHost::RemoveLayer(VRLayerParent *aLayer)
 #if defined(XP_WIN)
 
 void
-VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const uint32_t& aInputFrameID,
+VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
   PTextureParent* aTexture, const gfx::Rect& aLeftEyeRect,
   const gfx::Rect& aRightEyeRect)
 {
@@ -78,9 +78,14 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const uint32_t& aInputFrameID,
   // us to build browser UX that remains responsive even when content does
   // not consistently submit frames.
 
-  uint32_t inputFrameID = aInputFrameID;
+  int32_t inputFrameID = aInputFrameID;
   if (inputFrameID == 0) {
     inputFrameID = mInputFrameID;
+  }
+  if (inputFrameID < 0) {
+    // Sanity check to prevent invalid memory access on builds with assertions
+    // disabled.
+    inputFrameID = 0;
   }
 
   VRHMDSensorState sensorState = mLastSensorState[inputFrameID % kMaxLatencyFrames];
@@ -121,7 +126,7 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const uint32_t& aInputFrameID,
 #else
 
 void
-VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const uint32_t& aInputFrameID,
+VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
   PTextureParent* aTexture, const gfx::Rect& aLeftEyeRect,
   const gfx::Rect& aRightEyeRect)
 {
