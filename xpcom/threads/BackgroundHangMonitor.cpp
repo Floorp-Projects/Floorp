@@ -205,6 +205,11 @@ public:
   void NotifyWait()
   {
     MonitorAutoLock autoLock(mManager->mLock);
+
+    if (mWaiting) {
+      return;
+    }
+
     Update();
     mWaiting = true;
   }
