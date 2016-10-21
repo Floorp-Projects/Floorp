@@ -11,12 +11,9 @@ import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.ActionModeCompat.Callback;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import org.json.JSONArray;
