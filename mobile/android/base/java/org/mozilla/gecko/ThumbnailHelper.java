@@ -13,7 +13,6 @@ import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.util.Log;
-import android.util.TypedValue;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
