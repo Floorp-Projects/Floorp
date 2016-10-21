@@ -264,7 +264,7 @@ OptionParser::extractValue(size_t argc, char** argv, size_t* i, char** value)
     if (eq) {
         *value = eq + 1;
         if (*value[0] == '\0')
-            return error("A value is required for option %.*s", eq - argv[*i], argv[*i]);
+            return error("A value is required for option %.*s", (int) (eq - argv[*i]), argv[*i]);
         return Okay;
     }
 

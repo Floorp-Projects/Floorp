@@ -3630,11 +3630,11 @@ js::DumpBacktrace(JSContext* cx, FILE* fp)
             i.isWasm() ? 'W' :
             '?';
 
-        sprinter.printf("#%d %14p %c   %s:%d",
+        sprinter.printf("#%" PRIuSIZE " %14p %c   %s:%d",
                         depth, i.rawFramePtr(), frameType, filename, line);
 
         if (i.hasScript()) {
-            sprinter.printf(" (%p @ %d)\n",
+            sprinter.printf(" (%p @ %" PRIuSIZE ")\n",
                             i.script(), i.script()->pcToOffset(i.pc()));
         } else {
             sprinter.printf(" (%p)\n", i.pc());

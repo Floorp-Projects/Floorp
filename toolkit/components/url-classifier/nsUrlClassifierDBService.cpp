@@ -392,7 +392,7 @@ void
 nsUrlClassifierDBServiceWorker::ResetUpdate()
 {
   LOG(("ResetUpdate"));
-  mUpdateWait = 0;
+  mUpdateWaitSec = 0;
   mUpdateStatus = NS_OK;
   mUpdateObserver = nullptr;
 }
@@ -543,8 +543,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
   mProtocolParser->End();
 
   if (NS_SUCCEEDED(mProtocolParser->Status())) {
-    if (mProtocolParser->UpdateWait()) {
-      mUpdateWait = mProtocolParser->UpdateWait();
+    if (mProtocolParser->UpdateWaitSec()) {
+      mUpdateWaitSec = mProtocolParser->UpdateWaitSec();
     }
     // XXX: Only allow forwards from the initial update?
     const nsTArray<ProtocolParser::ForwardedUpdate> &forwards =
@@ -592,8 +592,8 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
   mMissCache.Clear();
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
-    LOG(("Notifying success: %d", mUpdateWait));
-    mUpdateObserver->UpdateSuccess(mUpdateWait);
+    LOG(("Notifying success: %d", mUpdateWaitSec));
+    mUpdateObserver->UpdateSuccess(mUpdateWaitSec);
   } else if (NS_ERROR_NOT_IMPLEMENTED == mUpdateStatus) {
     LOG(("Treating NS_ERROR_NOT_IMPLEMENTED a successful update "
          "but still mark it spoiled."));

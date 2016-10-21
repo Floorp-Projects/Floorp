@@ -12805,11 +12805,7 @@ Iterator::AppendItemsToList(const Iterator& aEnd,
   }
 
   // Move our entire list of items into the empty target list.
-  // XXX: If LinkedList supports move assignment, we could use
-  // aTargetList.mItems = Move(mList.mItems);
-  aTargetList.mItems.~LinkedList<FrameConstructionItem>();
-  new (&aTargetList.mItems) LinkedList<FrameConstructionItem>(
-    Move(mList.mItems));
+  aTargetList.mItems = Move(mList.mItems);
 
   // Copy over the various counters
   aTargetList.mInlineCount = mList.mInlineCount;

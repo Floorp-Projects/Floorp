@@ -5162,7 +5162,7 @@ void
 MStoreSlot::printOpcode(GenericPrinter& out) const
 {
     PrintOpcodeName(out, op());
-    out.printf(" ", slot());
+    out.printf(" ");
     getOperand(0)->printName(out);
     out.printf(" %d ", slot());
     getOperand(1)->printName(out);

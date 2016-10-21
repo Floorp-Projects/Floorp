@@ -39,12 +39,16 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
         let lastOnFocusChangedWindowId;
 
         let listener = event => {
-          let window = WindowManager.topWindow;
-          let windowId = window ? WindowManager.getId(window) : WindowManager.WINDOW_ID_NONE;
-          if (windowId !== lastOnFocusChangedWindowId) {
-            fire(windowId);
-            lastOnFocusChangedWindowId = windowId;
-          }
+          // Wait a tick to avoid firing a superfluous WINDOW_ID_NONE
+          // event when switching focus between two Firefox windows.
+          Promise.resolve().then(() => {
+            let window = Services.focus.activeWindow;
+            let windowId = window ? WindowManager.getId(window) : WindowManager.WINDOW_ID_NONE;
+            if (windowId !== lastOnFocusChangedWindowId) {
+              fire(windowId);
+              lastOnFocusChangedWindowId = windowId;
+            }
+          });
         };
         AllWindowEvents.addListener("focus", listener);
         AllWindowEvents.addListener("blur", listener);

@@ -69,6 +69,7 @@ ParseChunkRange(nsACString::const_iterator& aBegin,
 
 ProtocolParser::ProtocolParser()
   : mUpdateStatus(NS_OK)
+  , mUpdateWaitSec(0)
 {
 }
 
@@ -116,7 +117,6 @@ ProtocolParser::GetTableUpdate(const nsACString& aTable)
 
 ProtocolParserV2::ProtocolParserV2()
   : mState(PROTOCOL_STATE_CONTROL)
-  , mUpdateWait(0)
   , mResetRequested(false)
   , mTableUpdate(nullptr)
 {
@@ -180,8 +180,8 @@ ProtocolParserV2::ProcessControl(bool* aDone)
       // Set the table name from the table header line.
       SetCurrentTable(Substring(line, 2));
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("n:"))) {
-      if (PR_sscanf(line.get(), "n:%d", &mUpdateWait) != 1) {
-        PARSER_LOG(("Error parsing n: '%s' (%d)", line.get(), mUpdateWait));
+      if (PR_sscanf(line.get(), "n:%d", &mUpdateWaitSec) != 1) {
+        PARSER_LOG(("Error parsing n: '%s' (%d)", line.get(), mUpdateWaitSec));
         return NS_ERROR_FAILURE;
       }
     } else if (line.EqualsLiteral("r:pleasereset")) {
@@ -770,6 +770,10 @@ ProtocolParserProtobuf::End()
     NS_WARNING("ProtocolParserProtobuf failed parsing data.");
     return;
   }
+
+  auto minWaitDuration = response.minimum_wait_duration();
+  mUpdateWaitSec = minWaitDuration.seconds() +
+                   minWaitDuration.nanos() / 1000000000;
 
   for (int i = 0; i < response.list_update_responses_size(); i++) {
     auto r = response.list_update_responses(i);

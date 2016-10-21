@@ -57,6 +57,37 @@ class TestMozConfigure(BaseConfigureTest):
                           get_value_for(['--enable-application=browser',
                                          '--with-foo=foo bar']))
 
+    def test_nsis_version(self):
+        this = self
+
+        class FakeNSIS(object):
+            def __init__(self, version):
+                self.version = version
+
+            def __call__(self, stdin, args):
+                this.assertEquals(args, ('-version',))
+                return 0, self.version, ''
+
+        def check_nsis_version(version):
+            sandbox = self.get_sandbox(
+                {'/usr/bin/makensis': FakeNSIS(version)}, {}, [],
+                {'PATH': '/usr/bin', 'MAKENSISU': '/usr/bin/makensis'})
+            return sandbox._value_for(sandbox['nsis_version'])
+
+        with self.assertRaises(SystemExit) as e:
+            check_nsis_version('v2.5')
+
+        with self.assertRaises(SystemExit) as e:
+            check_nsis_version('v3.0a2')
+
+        self.assertEquals(check_nsis_version('v3.0b1'), '3.0b1')
+        self.assertEquals(check_nsis_version('v3.0b2'), '3.0b2')
+        self.assertEquals(check_nsis_version('v3.0rc1'), '3.0rc1')
+        self.assertEquals(check_nsis_version('v3.0'), '3.0')
+        self.assertEquals(check_nsis_version('v3.0-2'), '3.0')
+        self.assertEquals(check_nsis_version('v3.0.1'), '3.0')
+        self.assertEquals(check_nsis_version('v3.1'), '3.1')
+
 
 if __name__ == '__main__':
     main()

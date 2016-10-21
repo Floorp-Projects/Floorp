@@ -5247,7 +5247,7 @@ ReflectTrackedOptimizations(JSContext* cx, unsigned argc, Value* vp)
             uint8_t* addr = ion->method()->raw() + endOffset;
             entry.youngestFrameLocationAtAddr(rt, addr, &script, &pc);
 
-            if (!sp.jsprintf("{\"location\":\"%s:%u\",\"offset\":%u,\"index\":%u}%s",
+            if (!sp.jsprintf("{\"location\":\"%s:%" PRIuSIZE "\",\"offset\":%" PRIuSIZE ",\"index\":%u}%s",
                              script->filename(), script->lineno(), script->pcToOffset(pc), index,
                              iter.more() ? "," : ""))
             {
