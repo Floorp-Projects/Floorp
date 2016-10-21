@@ -33,8 +33,8 @@
 #ifdef JS_SIMULATOR_MIPS64
 
 #include "jit/IonTypes.h"
-#include "threading/Mutex.h"
 #include "threading/Thread.h"
+#include "vm/MutexIDs.h"
 
 namespace js {
 namespace jit {

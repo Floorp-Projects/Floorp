@@ -7,11 +7,11 @@
 
 #include "jsapi-tests/tests.h"
 #include "threading/LockGuard.h"
-#include "threading/Mutex.h"
+#include "vm/MutexIDs.h"
 
 BEGIN_TEST(testThreadingMutex)
 {
-    js::Mutex mutex;
+    js::Mutex mutex(js::mutexid::TestMutex);
     mutex.lock();
     mutex.unlock();
     return true;
@@ -20,7 +20,7 @@ END_TEST(testThreadingMutex)
 
 BEGIN_TEST(testThreadingLockGuard)
 {
-    js::Mutex mutex;
+    js::Mutex mutex(js::mutexid::TestMutex);
     js::LockGuard<js::Mutex> guard(mutex);
     return true;
 }
@@ -28,7 +28,7 @@ END_TEST(testThreadingLockGuard)
 
 BEGIN_TEST(testThreadingUnlockGuard)
 {
-    js::Mutex mutex;
+    js::Mutex mutex(js::mutexid::TestMutex);
     js::LockGuard<js::Mutex> guard(mutex);
     js::UnlockGuard<js::Mutex> unguard(guard);
     return true;
@@ -37,7 +37,7 @@ END_TEST(testThreadingUnlockGuard)
 
 BEGIN_TEST(testThreadingMoveMutex)
 {
-    js::Mutex mutex;
+    js::Mutex mutex(js::mutexid::TestMutex);
     mutex.lock();
     mutex.unlock();
 

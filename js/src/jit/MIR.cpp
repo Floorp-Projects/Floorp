@@ -441,7 +441,7 @@ MTest::cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints)
 }
 
 MDefinition*
-MTest::foldsTo(TempAllocator& alloc)
+MTest::foldsDoubleNegation(TempAllocator& alloc)
 {
     MDefinition* op = getOperand(0);
 
@@ -452,12 +452,25 @@ MTest::foldsTo(TempAllocator& alloc)
             return MTest::New(alloc, opop->toNot()->input(), ifTrue(), ifFalse());
         return MTest::New(alloc, op->toNot()->input(), ifFalse(), ifTrue());
     }
+    return nullptr;
+}
 
+MDefinition*
+MTest::foldsConstant(TempAllocator& alloc)
+{
+    MDefinition* op = getOperand(0);
     if (MConstant* opConst = op->maybeConstantValue()) {
         bool b;
         if (opConst->valueToBoolean(&b))
             return MGoto::New(alloc, b ? ifTrue() : ifFalse());
     }
+    return nullptr;
+}
+
+MDefinition*
+MTest::foldsTypes(TempAllocator& alloc)
+{
+    MDefinition* op = getOperand(0);
 
     switch (op->type()) {
       case MIRType::Undefined:
@@ -472,6 +485,58 @@ MTest::foldsTo(TempAllocator& alloc)
       default:
         break;
     }
+    return nullptr;
+}
+
+MDefinition*
+MTest::foldsNeedlessControlFlow(TempAllocator& alloc)
+{
+    for (MInstructionIterator iter(ifTrue()->begin()), end(ifTrue()->end()); iter != end; ) {
+        MInstruction* ins = *iter++;
+        if (ins->isNop() || ins->isGoto())
+            continue;
+        if (ins->hasUses())
+            return nullptr;
+        if (!DeadIfUnused(ins))
+            return nullptr;
+    }
+
+    for (MInstructionIterator iter(ifFalse()->begin()), end(ifFalse()->end()); iter != end; ) {
+        MInstruction* ins = *iter++;
+        if (ins->isNop() || ins->isGoto())
+            continue;
+        if (ins->hasUses())
+            return nullptr;
+        if (!DeadIfUnused(ins))
+            return nullptr;
+    }
+
+    if (ifTrue()->numSuccessors() != 1 || ifFalse()->numSuccessors() != 1)
+        return nullptr;
+    if (ifTrue()->getSuccessor(0) != ifFalse()->getSuccessor(0))
+        return nullptr;
+
+    if (ifTrue()->successorWithPhis())
+        return nullptr;
+
+    return MGoto::New(alloc, ifTrue());
+}
+
+MDefinition*
+MTest::foldsTo(TempAllocator& alloc)
+{
+
+    if (MDefinition* def = foldsDoubleNegation(alloc))
+        return def;
+
+    if (MDefinition* def = foldsConstant(alloc))
+        return def;
+
+    if (MDefinition* def = foldsTypes(alloc))
+        return def;
+
+    if (MDefinition* def = foldsNeedlessControlFlow(alloc))
+        return def;
 
     return this;
 }
@@ -2261,7 +2326,7 @@ MPhi::removeAllOperands()
 }
 
 MDefinition*
-MPhi::foldsTernary()
+MPhi::foldsTernary(TempAllocator& alloc)
 {
     /* Look if this MPhi is a ternary construct.
      * This is a very loose term as it actually only checks for
@@ -2351,6 +2416,14 @@ MPhi::foldsTernary()
         return trueDef;
     }
 
+    // If testArg is an double type we can:
+    // - fold testArg ? testArg : 0.0 to MNaNToZero(testArg)
+    if (testArg->type() == MIRType::Double && c->numberToDouble() == 0 && c != trueDef) {
+        MNaNToZero* replace = MNaNToZero::New(alloc, testArg);
+        test->block()->insertBefore(test, replace);
+        return replace;
+    }
+
     // If testArg is a string type we can:
     // - fold testArg ? testArg : "" to testArg
     // - fold testArg ? "" : testArg to ""
@@ -2430,7 +2503,7 @@ MPhi::foldsTo(TempAllocator& alloc)
     if (MDefinition* def = operandIfRedundant())
         return def;
 
-    if (MDefinition* def = foldsTernary())
+    if (MDefinition* def = foldsTernary(alloc))
         return def;
 
     if (MDefinition* def = foldsFilterTypeSet())

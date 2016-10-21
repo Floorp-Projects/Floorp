@@ -85,7 +85,23 @@ class SigIdSet
     }
 };
 
-ExclusiveData<SigIdSet> sigIdSet;
+ExclusiveData<SigIdSet>* sigIdSet = nullptr;
+
+bool
+js::wasm::InitInstanceStaticData()
+{
+    MOZ_ASSERT(!sigIdSet);
+    sigIdSet = js_new<ExclusiveData<SigIdSet>>(mutexid::WasmSigIdSet);
+    return sigIdSet != nullptr;
+}
+
+void
+js::wasm::ShutDownInstanceStaticData()
+{
+    MOZ_ASSERT(sigIdSet);
+    js_delete(sigIdSet);
+    sigIdSet = nullptr;
+}
 
 const void**
 Instance::addressOfSigId(const SigIdDesc& sigId) const
@@ -400,7 +416,7 @@ Instance::init(JSContext* cx)
     }
 
     if (!metadata().sigIds.empty()) {
-        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
+        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet->lock();
 
         if (!lockedSigIdSet->ensureInitialized(cx))
             return false;
@@ -428,7 +444,7 @@ Instance::~Instance()
     }
 
     if (!metadata().sigIds.empty()) {
-        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
+        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet->lock();
 
         for (const SigWithId& sig : metadata().sigIds) {
             if (const void* sigId = *addressOfSigId(sig.id))

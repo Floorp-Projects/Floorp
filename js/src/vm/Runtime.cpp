@@ -157,6 +157,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     promiseRejectionTrackerCallbackData(nullptr),
     startAsyncTaskCallback(nullptr),
     finishAsyncTaskCallback(nullptr),
+    promiseTasksToDestroy(mutexid::PromiseTaskPtrVector),
+    exclusiveAccessLock(mutexid::RuntimeExclusiveAccess),
 #ifdef DEBUG
     mainThreadHasExclusiveAccess(false),
 #endif

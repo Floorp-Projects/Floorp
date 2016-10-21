@@ -16,7 +16,7 @@
 
 #include "js/ProfilingStack.h"
 #include "threading/ExclusiveData.h"
-#include "threading/Mutex.h"
+#include "vm/MutexIDs.h"
 
 /*
  * SPS Profiler integration with the JS Engine

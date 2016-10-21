@@ -3105,6 +3105,10 @@ class MTest
     // to check whether the operand might do this.  If this method is never
     // called, we'll assume our operand can emulate undefined.
     void cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints);
+    MDefinition* foldsDoubleNegation(TempAllocator& alloc);
+    MDefinition* foldsConstant(TempAllocator& alloc);
+    MDefinition* foldsTypes(TempAllocator& alloc);
+    MDefinition* foldsNeedlessControlFlow(TempAllocator& alloc);
     MDefinition* foldsTo(TempAllocator& alloc) override;
     void filtersUndefinedOrNull(bool trueBranch, MDefinition** subject, bool* filtersUndefined,
                                 bool* filtersNull);
@@ -7652,7 +7656,7 @@ class MPhi final
     bool checkForTypeChange(TempAllocator& alloc, MDefinition* ins, bool* ptypeChange);
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
-    MDefinition* foldsTernary();
+    MDefinition* foldsTernary(TempAllocator& alloc);
     MDefinition* foldsFilterTypeSet();
 
     bool congruentTo(const MDefinition* ins) const override;
@@ -7724,6 +7728,47 @@ class MBeta
     }
 
     void computeRange(TempAllocator& alloc) override;
+};
+
+// If input evaluates to false (i.e. it's NaN, 0 or -0), 0 is returned, else the input is returned
+class MNaNToZero
+  : public MUnaryInstruction,
+    public DoublePolicy<0>::Data
+{
+    bool operandIsNeverNaN_;
+    bool operandIsNeverNegativeZero_;
+    explicit MNaNToZero(MDefinition* input)
+      : MUnaryInstruction(input), operandIsNeverNaN_(false), operandIsNeverNegativeZero_(false)
+    {
+        setResultType(MIRType::Double);
+        setMovable();
+    }
+  public:
+    INSTRUCTION_HEADER(NaNToZero)
+    TRIVIAL_NEW_WRAPPERS
+
+    bool operandIsNeverNaN() const {
+        return operandIsNeverNaN_;
+    }
+
+    bool operandIsNeverNegativeZero() const {
+        return operandIsNeverNegativeZero_;
+    }
+
+    void collectRangeInfoPreTrunc() override;
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    void computeRange(TempAllocator& alloc) override;
+
+    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    bool canRecoverOnBailout() const override {
+        return true;
+    }
+
+    ALLOW_CLONE(MNaNToZero)
 };
 
 // MIR representation of a Value on the OSR BaselineFrame.

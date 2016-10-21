@@ -42,7 +42,7 @@ static MutexNativeImports NativeImports;
 
 } // (anonymous namespace)
 
-js::Mutex::Mutex()
+js::detail::MutexImpl::MutexImpl()
 {
   AutoEnterOOMUnsafeRegion oom;
   platformData_ = js_new<PlatformData>();
@@ -63,7 +63,7 @@ js::Mutex::Mutex()
   MOZ_RELEASE_ASSERT(r);
 }
 
-js::Mutex::~Mutex()
+js::detail::MutexImpl::~MutexImpl()
 {
   if (!platformData_)
     return;
@@ -73,13 +73,13 @@ js::Mutex::~Mutex()
 }
 
 void
-js::Mutex::lock()
+js::detail::MutexImpl::lock()
 {
   EnterCriticalSection(&platformData()->criticalSection);
 }
 
 void
-js::Mutex::unlock()
+js::detail::MutexImpl::unlock()
 {
   LeaveCriticalSection(&platformData()->criticalSection);
 }

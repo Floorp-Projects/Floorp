@@ -14,8 +14,8 @@
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
-#include "threading/Mutex.h"
 #include "threading/Thread.h"
+#include "vm/MutexIDs.h"
 #include "vm/TraceLoggingGraph.h"
 #include "vm/TraceLoggingTypes.h"
 
@@ -335,7 +335,8 @@ class TraceLoggerThreadState
         mainThreadEnabled(false),
         offThreadEnabled(false),
         graphSpewingEnabled(false),
-        spewErrors(false)
+        spewErrors(false),
+        lock(js::mutexid::TraceLoggerThreadState)
     { }
 
     bool init();

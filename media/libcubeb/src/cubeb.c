@@ -8,13 +8,13 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#endif
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 
 #define NELEMS(x) ((int) (sizeof(x) / sizeof(x[0])))
+
+cubeb_log_level g_log_level;
+cubeb_log_callback g_log_callback;
 
 struct cubeb {
   struct cubeb_ops * ops;
@@ -56,7 +56,7 @@ int kai_init(cubeb ** context, char const * context_name);
 #endif
 
 
-int
+static int
 validate_stream_params(cubeb_stream_params * input_stream_params,
                        cubeb_stream_params * output_stream_params)
 {
@@ -98,7 +98,7 @@ validate_stream_params(cubeb_stream_params * input_stream_params,
 
 
 
-int
+static int
 validate_latency(int latency)
 {
   if (latency < 1 || latency > 96000) {
@@ -442,10 +442,31 @@ int cubeb_register_device_collection_changed(cubeb * context,
   return context->ops->register_device_collection_changed(context, devtype, callback, user_ptr);
 }
 
-void cubeb_crash()
+int cubeb_set_log_callback(cubeb_log_level log_level,
+                           cubeb_log_callback log_callback)
+{
+  if (log_level < CUBEB_LOG_DISABLED || log_level > CUBEB_LOG_VERBOSE) {
+    return CUBEB_ERROR_INVALID_FORMAT;
+  }
+
+  if (!log_callback && log_level != CUBEB_LOG_DISABLED) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+
+  if (g_log_callback && log_callback) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
+  g_log_callback = log_callback;
+  g_log_level = log_level;
+
+  return CUBEB_OK;
+}
+
+void
+cubeb_crash()
 {
   abort();
   *((volatile int *) NULL) = 0;
 }
-
 

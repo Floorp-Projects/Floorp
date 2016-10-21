@@ -13,6 +13,7 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Maybe.h"
 #include "nsIWindowCreator.h" // for stupid compilers
 #include "nsIWindowWatcher.h"
 #include "nsIPromptFactory.h"
@@ -70,7 +71,9 @@ protected:
 
   // Unlike GetWindowByName this will look for a caller on the JS
   // stack, and then fall back on aCurrentWindow if it can't find one.
+  // It also knows to not look for things if aForceNoOpener is set.
   nsPIDOMWindowOuter* SafeGetWindowByName(const nsAString& aName,
+                                          bool aForceNoOpener,
                                           mozIDOMWindowProxy* aCurrentWindow);
 
   // Just like OpenWindowJS, but knows whether it got called via OpenWindowJS
@@ -83,7 +86,9 @@ protected:
                               bool aDialog,
                               bool aNavigate,
                               nsIArray* aArgv,
-                              float* aOpenerFullZoom,
+                              bool aIsPopupSpam,
+                              bool aForceNoOpener,
+                              nsIDocShellLoadInfo* aLoadInfo,
                               mozIDOMWindowProxy** aResult);
 
   static nsresult URIfromURL(const char* aURL,
@@ -106,12 +111,14 @@ protected:
   static nsresult ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
                                           nsPIDOMWindowOuter* aParent,
                                           bool aWindowIsNew,
+                                          bool aForceNoOpener,
                                           mozIDOMWindowProxy** aOpenedWindow);
   static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
                                mozIDOMWindowProxy* aParent,
                                bool aIsCallerChrome,
                                const SizeSpec& aSizeSpec,
-                               float* aOpenerFullZoom);
+                               mozilla::Maybe<float> aOpenerFullZoom =
+                                 mozilla::Nothing());
   static void GetWindowTreeItem(mozIDOMWindowProxy* aWindow,
                                 nsIDocShellTreeItem** aResult);
   static void GetWindowTreeOwner(nsPIDOMWindowOuter* aWindow,

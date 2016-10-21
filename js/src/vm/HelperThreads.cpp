@@ -740,7 +740,8 @@ GlobalHelperThreadState::GlobalHelperThreadState()
    threadCount(0),
    threads(nullptr),
    wasmCompilationInProgress(false),
-   numWasmFailedJobs(0)
+   numWasmFailedJobs(0),
+   helperLock(mutexid::GlobalHelperThreadState)
 {
     cpuCount = GetCPUCount();
     threadCount = ThreadCountForCPUCount(cpuCount);

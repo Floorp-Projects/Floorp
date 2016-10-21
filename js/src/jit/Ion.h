@@ -99,7 +99,7 @@ MethodStatus CanEnterUsingFastInvoke(JSContext* cx, HandleScript script, uint32_
 
 MethodStatus
 Recompile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode* osrPc,
-          bool constructing, bool force);
+          bool force);
 
 enum JitExecStatus
 {

@@ -606,7 +606,14 @@ private:
                            spec.get(),
                            nullptr,
                            nullptr,
-                           false, false, true, nullptr, 1.0f, 0,
+                           false, false, true, nullptr,
+                           // Not a spammy popup; we got permission, we swear!
+                           /* aIsPopupSpam = */ false,
+                           // Don't force noopener.  We're not passing in an
+                           // opener anyway, and we _do_ want the returned
+                           // window.
+                           /* aForceNoOpener = */ false,
+                           /* aLoadInfp = */ nullptr,
                            getter_AddRefs(newWindow));
       nsCOMPtr<nsPIDOMWindowOuter> pwindow = nsPIDOMWindowOuter::From(newWindow);
       pwindow.forget(aWindow);
