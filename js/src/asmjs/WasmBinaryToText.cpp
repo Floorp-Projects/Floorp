@@ -1297,6 +1297,42 @@ RenderGlobalSection(WasmRenderContext& c, const AstModule& module)
 }
 
 static bool
+RenderLimits(WasmRenderContext& c, const Limits& limits)
+{
+    if (!RenderInt32(c, limits.initial))
+        return false;
+
+    if (limits.maximum) {
+        if (!c.buffer.append(" "))
+            return false;
+        if (!RenderInt32(c, *limits.maximum))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+RenderResizableMemory(WasmRenderContext& c, Limits memory)
+{
+    if (!c.buffer.append("(memory "))
+        return false;
+
+    MOZ_ASSERT(memory.initial % PageSize == 0);
+    memory.initial /= PageSize;
+
+    if (memory.maximum) {
+        MOZ_ASSERT(*memory.maximum % PageSize == 0);
+        *memory.maximum /= PageSize;
+    }
+
+    if (!RenderLimits(c, memory))
+        return false;
+
+    return c.buffer.append(")");
+}
+
+static bool
 RenderImport(WasmRenderContext& c, AstImport& import, const AstModule& module)
 {
     if (!RenderIndent(c))
@@ -1334,7 +1370,8 @@ RenderImport(WasmRenderContext& c, AstImport& import, const AstModule& module)
         break;
       }
       case DefinitionKind::Memory: {
-        // TODO next patch
+        if (!RenderResizableMemory(c, import.limits()))
+            return false;
         break;
       }
       case DefinitionKind::Global: {
@@ -1371,14 +1408,13 @@ RenderExport(WasmRenderContext& c, AstExport& export_,
         return false;
     if (!c.buffer.append("\" "))
         return false;
-    if (export_.kind() == DefinitionKind::Memory) {
-        if (!c.buffer.append("memory"))
-          return false;
-    } else {
+
+    switch (export_.kind()) {
+      case DefinitionKind::Function: {
         uint32_t index = export_.ref().index();
         AstName name = index < funcImportNames.length()
-                           ? funcImportNames[index]
-                           : funcs[index - funcImportNames.length()]->name();
+                       ? funcImportNames[index]
+                       : funcs[index - funcImportNames.length()]->name();
         if (name.empty()) {
             if (!RenderInt32(c, index))
                 return false;
@@ -1386,7 +1422,27 @@ RenderExport(WasmRenderContext& c, AstExport& export_,
             if (!RenderName(c, name))
                 return false;
         }
+        break;
+      }
+      case DefinitionKind::Table: {
+        if (!c.buffer.append("table"))
+            return false;
+        break;
+      }
+      case DefinitionKind::Memory: {
+        if (!c.buffer.append("memory"))
+            return false;
+        break;
+      }
+      case DefinitionKind::Global: {
+        if (!c.buffer.append("global"))
+            return false;
+        if (!RenderRef(c, export_.ref()))
+            return false;
+        break;
+      }
     }
+
     return c.buffer.append(")\n");
 }
 
@@ -1493,30 +1549,28 @@ RenderCodeSection(WasmRenderContext& c, const AstModule::FuncVector& funcs, cons
 }
 
 static bool
-RenderDataSection(WasmRenderContext& c, const AstModule& module)
+RenderMemorySection(WasmRenderContext& c, const AstModule& module)
 {
     if (!module.hasMemory())
         return true;
 
-    if (!RenderIndent(c))
-        return false;
-    if (!c.buffer.append("(memory "))
-        return false;
-
-    if (!RenderInt32(c, module.memory().initial))
-        return false;
-
-    Maybe<uint32_t> memMax = module.memory().maximum;
-    if (memMax) {
-        if (!c.buffer.append(" "))
+    for (const AstResizable& memory : module.memories()) {
+        if (memory.imported)
+            continue;
+        if (!RenderIndent(c))
             return false;
-        if (!RenderInt32(c, *memMax))
+        if (!RenderResizableMemory(c, memory.limits))
+            return false;
+        if (!c.buffer.append("\n"))
             return false;
     }
 
-    if (!c.buffer.append(")\n"))
-        return false;
+    return true;
+}
 
+static bool
+RenderDataSection(WasmRenderContext& c, const AstModule& module)
+{
     uint32_t numSegments = module.dataSegments().length();
     if (!numSegments)
         return true;
@@ -1563,6 +1617,9 @@ RenderModule(WasmRenderContext& c, AstModule& module)
         return false;
 
     if (!RenderCodeSection(c, module.funcs(), module.sigs()))
+        return false;
+
+    if (!RenderMemorySection(c, module))
         return false;
 
     if (!RenderDataSection(c, module))
