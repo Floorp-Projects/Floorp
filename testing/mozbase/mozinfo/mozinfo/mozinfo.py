@@ -92,16 +92,25 @@ elif system.startswith('MINGW'):
     info['os'] = 'win'
     os_version = version = unknown
 elif system == "Linux":
-    # Try to get a useful distro name/version out of os-release.
-    try:
-        os_info = dict(map(lambda x: x.strip('"'), l.split('=')) for l in open('/etc/os-release', 'rb').read().splitlines())
-    except IOError:
-        os_info = {}
+    if hasattr(platform, "linux_distribution"):
+        (distro, os_version, codename) = platform.linux_distribution()
+    else:
+        (distro, os_version, codename) = platform.dist()
+    if not processor:
+        processor = machine
+    version = "%s %s" % (distro, os_version)
+
+    # Bug in Python 2's `platform` library:
+    # It will return a triple of empty strings if the distribution is not supported.
+    # It works on Python 3. If we don't have an OS version,
+    # the unit tests fail to run.
+    if not distro and not os_version and not codename:
+        distro = 'lfs'
+        version = release
+        os_version = release
 
     info['os'] = 'linux'
-    version = os_version = os_info.get('VERSION_ID', release)
-    info['linux_distro'] = os_info.get('NAME', 'lfs')
-
+    info['linux_distro'] = distro
 elif system in ['DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD']:
     info['os'] = 'bsd'
     version = os_version = sys.platform
