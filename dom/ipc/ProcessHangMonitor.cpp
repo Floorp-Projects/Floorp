@@ -96,6 +96,7 @@ class HangMonitorChild
 
   void ClearHang();
   void ClearHangAsync();
+  void ClearForcePaint();
 
   virtual bool RecvTerminateScript() override;
   virtual bool RecvBeginStartingDebugger() override;
@@ -318,7 +319,6 @@ HangMonitorChild::InterruptCallback()
       JS::AutoAssertOnGC nogc(mContext);
       JS::AutoAssertOnBarrier nobarrier(mContext);
       tabChild->ForcePaint(forcePaintEpoch);
-      mForcePaintMonitor->NotifyWait();
     }
   }
 }
@@ -404,6 +404,15 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
   JS::RequestGCInterruptCallback(mContext);
 
   return true;
+}
+
+void
+HangMonitorChild::ClearForcePaint()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
+
+  mForcePaintMonitor->NotifyWait();
 }
 
 void
@@ -1259,4 +1268,15 @@ ProcessHangMonitor::ForcePaint(PProcessHangMonitorParent* aParent,
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   auto parent = static_cast<HangMonitorParent*>(aParent);
   parent->ForcePaint(aTabParent, aLayerObserverEpoch);
+}
+
+/* static */ void
+ProcessHangMonitor::ClearForcePaint()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
+
+  if (HangMonitorChild* child = HangMonitorChild::Get()) {
+    child->ClearForcePaint();
+  }
 }
