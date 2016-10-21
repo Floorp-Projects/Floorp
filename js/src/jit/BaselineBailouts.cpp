@@ -230,11 +230,11 @@ struct BaselineStackBuilder
         if (info) {
             if (sizeof(size_t) == 4) {
                 JitSpew(JitSpew_BaselineBailouts,
-                        "      WRITE_WRD %p/%p %-15s %08x",
+                        "      WRITE_WRD %p/%p %-15s %08" PRIxSIZE,
                         header_->copyStackBottom, virtualPointerAtStackOffset(0), info, w);
             } else {
                 JitSpew(JitSpew_BaselineBailouts,
-                        "      WRITE_WRD %p/%p %-15s %016llx",
+                        "      WRITE_WRD %p/%p %-15s %016" PRIxSIZE,
                         header_->copyStackBottom, virtualPointerAtStackOffset(0), info, w);
             }
         }
@@ -246,7 +246,7 @@ struct BaselineStackBuilder
             return false;
         if (info) {
             JitSpew(JitSpew_BaselineBailouts,
-                    "      WRITE_VAL %p/%p %-15s %016llx",
+                    "      WRITE_VAL %p/%p %-15s %016" PRIx64,
                     header_->copyStackBottom, virtualPointerAtStackOffset(0), info,
                     *((uint64_t*) &val));
         }
@@ -637,7 +637,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
     // |  ReturnAddr   | <-- return into main jitcode after IC
     // +===============+
 
-    JitSpew(JitSpew_BaselineBailouts, "      Unpacking %s:%d", script->filename(), script->lineno());
+    JitSpew(JitSpew_BaselineBailouts, "      Unpacking %s:%" PRIuSIZE, script->filename(), script->lineno());
     JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-JS FRAME]");
 
     // Calculate and write the previous frame pointer value.
@@ -749,7 +749,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
     }
     JitSpew(JitSpew_BaselineBailouts, "      EnvChain=%p", envChain);
     blFrame->setEnvironmentChain(envChain);
-    JitSpew(JitSpew_BaselineBailouts, "      ReturnValue=%016llx", *((uint64_t*) &returnValue));
+    JitSpew(JitSpew_BaselineBailouts, "      ReturnValue=%016" PRIx64, *((uint64_t*) &returnValue));
     blFrame->setReturnValue(returnValue);
 
     // Do not need to initialize scratchValue field in BaselineFrame.
@@ -764,13 +764,13 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
         // in the calling frame.
         Value thisv = iter.read();
         JitSpew(JitSpew_BaselineBailouts, "      Is function!");
-        JitSpew(JitSpew_BaselineBailouts, "      thisv=%016llx", *((uint64_t*) &thisv));
+        JitSpew(JitSpew_BaselineBailouts, "      thisv=%016" PRIx64, *((uint64_t*) &thisv));
 
         size_t thisvOffset = builder.framePushed() + JitFrameLayout::offsetOfThis();
         builder.valuePointerAtStackOffset(thisvOffset).set(thisv);
 
         MOZ_ASSERT(iter.numAllocations() >= CountArgSlots(script, fun));
-        JitSpew(JitSpew_BaselineBailouts, "      frame slots %u, nargs %u, nfixed %u",
+        JitSpew(JitSpew_BaselineBailouts, "      frame slots %u, nargs %" PRIuSIZE ", nfixed %" PRIuSIZE,
                 iter.numAllocations(), fun->nargs(), script->nfixed());
 
         if (!callerPC) {
@@ -786,7 +786,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
 
         for (uint32_t i = 0; i < fun->nargs(); i++) {
             Value arg = iter.read();
-            JitSpew(JitSpew_BaselineBailouts, "      arg %d = %016llx",
+            JitSpew(JitSpew_BaselineBailouts, "      arg %d = %016" PRIx64,
                         (int) i, *((uint64_t*) &arg));
             if (callerPC) {
                 size_t argOffset = builder.framePushed() + JitFrameLayout::offsetOfActualArg(i);
@@ -1314,7 +1314,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
         return false;
 
     // Push callee token (must be a JS Function)
-    JitSpew(JitSpew_BaselineBailouts, "      Callee = %016llx", callee.asRawBits());
+    JitSpew(JitSpew_BaselineBailouts, "      Callee = %016" PRIx64, callee.asRawBits());
 
     JSFunction* calleeFun = &callee.toObject().as<JSFunction>();
     if (!builder.writePtr(CalleeToToken(calleeFun, JSOp(*pc) == JSOP_NEW), "CalleeToken"))
@@ -1494,7 +1494,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
     //      |    |||||      |
     //      +---------------+
 
-    JitSpew(JitSpew_BaselineBailouts, "Bailing to baseline %s:%u (IonScript=%p) (FrameType=%d)",
+    JitSpew(JitSpew_BaselineBailouts, "Bailing to baseline %s:%" PRIuSIZE " (IonScript=%p) (FrameType=%d)",
             iter.script()->filename(), iter.script()->lineno(), (void*) iter.ionScript(),
             (int) prevFrameType);
 
@@ -1514,7 +1514,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
         propagatingExceptionForDebugMode = false;
     }
 
-    JitSpew(JitSpew_BaselineBailouts, "  Reading from snapshot offset %u size %u",
+    JitSpew(JitSpew_BaselineBailouts, "  Reading from snapshot offset %u size %" PRIuSIZE,
             iter.snapshotOffset(), iter.ionScript()->snapshotsListSize());
 
     if (!excInfo)
@@ -1540,7 +1540,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
     RootedFunction callee(cx, iter.maybeCallee());
     RootedScript scr(cx, iter.script());
     if (callee) {
-        JitSpew(JitSpew_BaselineBailouts, "  Callee function (%s:%u)",
+        JitSpew(JitSpew_BaselineBailouts, "  Callee function (%s:%" PRIuSIZE ")",
                 scr->filename(), scr->lineno());
     } else {
         JitSpew(JitSpew_BaselineBailouts, "  No callee!");
@@ -1575,7 +1575,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
             TraceLogStartEvent(logger, TraceLogger_Baseline);
         }
 
-        JitSpew(JitSpew_BaselineBailouts, "    FrameNo %d", frameNo);
+        JitSpew(JitSpew_BaselineBailouts, "    FrameNo %" PRIuSIZE, frameNo);
 
         // If we are bailing out to a catch or finally block in this frame,
         // pass excInfo to InitFromBailout and don't unpack any other frames.
@@ -1671,7 +1671,7 @@ InvalidateAfterBailout(JSContext* cx, HandleScript outerScript, const char* reas
 static void
 HandleBoundsCheckFailure(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Bounds check failure %s:%d, inlined into %s:%d",
+    JitSpew(JitSpew_IonBailouts, "Bounds check failure %s:%" PRIuSIZE ", inlined into %s:%" PRIuSIZE,
             innerScript->filename(), innerScript->lineno(),
             outerScript->filename(), outerScript->lineno());
 
@@ -1686,7 +1686,7 @@ HandleBoundsCheckFailure(JSContext* cx, HandleScript outerScript, HandleScript i
 static void
 HandleShapeGuardFailure(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Shape guard failure %s:%d, inlined into %s:%d",
+    JitSpew(JitSpew_IonBailouts, "Shape guard failure %s:%" PRIuSIZE ", inlined into %s:%" PRIuSIZE,
             innerScript->filename(), innerScript->lineno(),
             outerScript->filename(), outerScript->lineno());
 
@@ -1701,7 +1701,7 @@ HandleShapeGuardFailure(JSContext* cx, HandleScript outerScript, HandleScript in
 static void
 HandleBaselineInfoBailout(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Baseline info failure %s:%d, inlined into %s:%d",
+    JitSpew(JitSpew_IonBailouts, "Baseline info failure %s:%" PRIuSIZE ", inlined into %s:%" PRIuSIZE,
             innerScript->filename(), innerScript->lineno(),
             outerScript->filename(), outerScript->lineno());
 
@@ -1711,7 +1711,7 @@ HandleBaselineInfoBailout(JSContext* cx, HandleScript outerScript, HandleScript 
 static void
 HandleLexicalCheckFailure(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Lexical check failure %s:%d, inlined into %s:%d",
+    JitSpew(JitSpew_IonBailouts, "Lexical check failure %s:%" PRIuSIZE ", inlined into %s:%" PRIuSIZE,
             innerScript->filename(), innerScript->lineno(),
             outerScript->filename(), outerScript->lineno());
 
@@ -1754,7 +1754,7 @@ CopyFromRematerializedFrame(JSContext* cx, JitActivation* act, uint8_t* fp, size
         frame->setHasCachedSavedFrame();
 
     JitSpew(JitSpew_BaselineBailouts,
-            "  Copied from rematerialized frame at (%p,%u)",
+            "  Copied from rematerialized frame at (%p,%" PRIuSIZE ")",
             fp, inlineDepth);
 
     // Propagate the debuggee frame flag. For the case where the Debugger did
@@ -1891,7 +1891,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
     }
 
     JitSpew(JitSpew_BaselineBailouts,
-            "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
+            "  Restored outerScript=(%s:%" PRIuSIZE ",%u) innerScript=(%s:%" PRIuSIZE ",%u) (bailoutKind=%u)",
             outerScript->filename(), outerScript->lineno(), outerScript->getWarmUpCount(),
             innerScript->filename(), innerScript->lineno(), innerScript->getWarmUpCount(),
             (unsigned) bailoutKind);

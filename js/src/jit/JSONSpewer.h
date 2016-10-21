@@ -36,8 +36,8 @@ class JSONSpewer
     void beginObject();
     void beginObjectProperty(const char* name);
     void beginListProperty(const char* name);
-    void stringValue(const char* format, ...);
-    void stringProperty(const char* name, const char* format, ...);
+    void stringValue(const char* format, ...) MOZ_FORMAT_PRINTF(2, 3);
+    void stringProperty(const char* name, const char* format, ...) MOZ_FORMAT_PRINTF(3, 4);
     void beginStringProperty(const char* name);
     void endStringProperty();
     void integerValue(int value);

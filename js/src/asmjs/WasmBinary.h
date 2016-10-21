@@ -778,7 +778,7 @@ class Decoder
         error_(error)
     {}
 
-    bool fail(const char* msg, ...);
+    bool fail(const char* msg, ...) MOZ_FORMAT_PRINTF(2, 3);
     bool fail(UniqueChars msg);
     void clearError() {
         if (error_)

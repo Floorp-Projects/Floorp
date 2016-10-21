@@ -72,7 +72,7 @@ class MIRGenerator
 
     // Set an error state and prints a message. Returns false so errors can be
     // propagated up.
-    bool abort(const char* message, ...);           // always returns false
+    bool abort(const char* message, ...) MOZ_FORMAT_PRINTF(2, 3); // always returns false
     bool abortFmt(const char* message, va_list ap); // always returns false
 
     bool errored() const {

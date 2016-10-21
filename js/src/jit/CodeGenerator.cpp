@@ -9244,7 +9244,7 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::TrapOffset trapOffset,
 bool
 CodeGenerator::generate()
 {
-    JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%d",
+    JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%" PRIuSIZE,
             gen->info().script()->filename(),
             gen->info().script()->lineno());
 

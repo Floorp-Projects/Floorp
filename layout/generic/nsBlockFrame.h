@@ -153,8 +153,12 @@ public:
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  // line cursor methods to speed up searching for the line(s)
-  // containing a point. The basic idea is that we set the cursor
+  // Line cursor methods to speed up line searching in which one query
+  // result is expected to be close to the next in general. This is
+  // mainly for searching line(s) containing a point. It is also used
+  // as a cache for local computation. Use AutoLineCursorSetup for the
+  // latter case so that it wouldn't interact unexpectedly with the
+  // former. The basic idea for the former is that we set the cursor
   // property if the lines' overflowArea.VisualOverflow().ys and
   // overflowArea.VisualOverflow().yMosts are non-decreasing
   // (considering only non-empty overflowArea.VisualOverflow()s; empty
@@ -178,6 +182,36 @@ public:
   // yMosts are non-decreasing, or the line cursor is cleared before
   // building the display list of this frame.
   void SetupLineCursor();
+
+  /**
+   * Helper RAII class for automatically set and clear line cursor for
+   * temporary use. If the frame already has line cursor, this would be
+   * a no-op.
+   */
+  class MOZ_STACK_CLASS AutoLineCursorSetup
+  {
+  public:
+    explicit AutoLineCursorSetup(nsBlockFrame* aFrame)
+      : mFrame(aFrame)
+      , mOrigCursor(aFrame->GetLineCursor())
+    {
+      if (!mOrigCursor) {
+        mFrame->SetupLineCursor();
+      }
+    }
+    ~AutoLineCursorSetup()
+    {
+      if (mOrigCursor) {
+        mFrame->Properties().Set(LineCursorProperty(), mOrigCursor);
+      } else {
+        mFrame->ClearLineCursor();
+      }
+    }
+
+  private:
+    nsBlockFrame* mFrame;
+    nsLineBox* mOrigCursor;
+  };
 
   virtual void ChildIsDirty(nsIFrame* aChild) override;
   virtual bool IsVisibleInSelection(nsISelection* aSelection) override;
@@ -368,9 +402,9 @@ protected:
 #endif
 
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorProperty, nsLineBox)
+  bool HasLineCursor() { return GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR; }
   nsLineBox* GetLineCursor() {
-    return (GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR) ?
-      Properties().Get(LineCursorProperty()) : nullptr;
+    return HasLineCursor() ? Properties().Get(LineCursorProperty()) : nullptr;
   }
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {

@@ -12,7 +12,7 @@ using mozilla::LinkedListElement;
 
 struct SomeClass : public LinkedListElement<SomeClass> {
   unsigned int mValue;
-  explicit SomeClass(int aValue) : mValue(aValue) {}
+  explicit SomeClass(int aValue = 0) : mValue(aValue) {}
   void incr() { ++mValue; }
 };
 
@@ -34,7 +34,7 @@ TestList()
   LinkedList<SomeClass> list;
 
   SomeClass one(1), two(2), three(3);
-  
+
   MOZ_RELEASE_ASSERT(list.isEmpty());
   MOZ_RELEASE_ASSERT(!list.getFirst());
   MOZ_RELEASE_ASSERT(!list.getLast());
@@ -52,7 +52,7 @@ TestList()
   MOZ_RELEASE_ASSERT(one.isInList());
   MOZ_RELEASE_ASSERT(!two.isInList());
   MOZ_RELEASE_ASSERT(!three.isInList());
-  
+
   MOZ_RELEASE_ASSERT(!list.isEmpty());
   MOZ_RELEASE_ASSERT(list.getFirst()->mValue == 1);
   MOZ_RELEASE_ASSERT(list.getLast()->mValue == 1);
@@ -117,6 +117,45 @@ TestList()
   MOZ_RELEASE_ASSERT(list.getLast()->mValue == 4);
 }
 
+static void
+TestMove()
+{
+  auto MakeSomeClass =
+    [] (unsigned int aValue) -> SomeClass { return SomeClass(aValue); };
+
+  LinkedList<SomeClass> list1;
+
+  // Test move constructor for LinkedListElement.
+  SomeClass c1(MakeSomeClass(1));
+  list1.insertBack(&c1);
+
+  // Test move assignment for LinkedListElement from an element not in a
+  // list.
+  SomeClass c2;
+  c2 = MakeSomeClass(2);
+  list1.insertBack(&c2);
+
+  // Test move assignment of LinkedListElement from an element already in a
+  // list.
+  SomeClass c3;
+  c3 = Move(c2);
+  MOZ_RELEASE_ASSERT(!c2.isInList());
+  MOZ_RELEASE_ASSERT(c3.isInList());
+
+  // Test move constructor for LinkedList.
+  LinkedList<SomeClass> list2(Move(list1));
+  { unsigned int check[] { 1, 2 }; CheckListValues(list2, check); }
+  MOZ_RELEASE_ASSERT(list1.isEmpty());
+
+  // Test move assignment for LinkedList.
+  LinkedList<SomeClass> list3;
+  list3 = Move(list2);
+  { unsigned int check[] { 1, 2 }; CheckListValues(list3, check); }
+  MOZ_RELEASE_ASSERT(list2.isEmpty());
+
+  list3.clear();
+}
+
 struct PrivateClass : private LinkedListElement<PrivateClass> {
   friend class mozilla::LinkedList<PrivateClass>;
   friend class mozilla::LinkedListElement<PrivateClass>;
@@ -143,5 +182,6 @@ main()
 {
   TestList();
   TestPrivate();
+  TestMove();
   return 0;
 }
