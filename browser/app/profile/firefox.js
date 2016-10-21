@@ -1528,11 +1528,11 @@ pref("signon.schemeUpgrades", true);
 // For non-Linux, this feature is only enabled up to early Beta.
 #ifdef UNIX_BUT_NOT_MAC
 #if defined(NIGHTLY_BUILD)
-pref("print.user_simplify_page", true);
+pref("print.use_simplify_page", true);
 #endif
 #else
 #if defined(EARLY_BETA_OR_EARLIER)
-pref("print.user_simplify_page", true);
+pref("print.use_simplify_page", true);
 #endif
 #endif
 
