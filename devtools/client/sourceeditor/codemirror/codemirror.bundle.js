@@ -11798,7 +11798,7 @@ var CodeMirror =
 	    "line-stacking-shift", "line-stacking-strategy", "list-style",
 	    "list-style-image", "list-style-position", "list-style-type", "margin",
 	    "margin-bottom", "margin-left", "margin-right", "margin-top",
-	    "marker-offset", "marks", "marquee-direction", "marquee-loop",
+	    "marks", "marquee-direction", "marquee-loop",
 	    "marquee-play-count", "marquee-speed", "marquee-style", "max-height",
 	    "max-width", "min-height", "min-width", "move-to", "nav-down", "nav-index",
 	    "nav-left", "nav-right", "nav-up", "object-fit", "object-position",
