@@ -159,7 +159,6 @@
 @RESPATH@/components/dom_system_gonk.xpt
 #endif
 #ifdef MOZ_B2G_RIL
-@RESPATH@/components/dom_wappush.xpt
 @RESPATH@/components/dom_mobileconnection.xpt
 #endif
 #ifdef MOZ_B2G_BT
