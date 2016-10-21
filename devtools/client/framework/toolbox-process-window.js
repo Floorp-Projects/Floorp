@@ -71,6 +71,7 @@ function setPrefDefaults() {
   // Bug 1225160 - Using source maps with browser debugging can lead to a crash
   Services.prefs.setBoolPref("devtools.debugger.source-maps-enabled", false);
   Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
+  Services.prefs.setBoolPref("devtools.debugger.client-source-maps-enabled", true);
 }
 
 window.addEventListener("load", function() {
