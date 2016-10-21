@@ -87,7 +87,7 @@ this.SelectContentHelper.prototype = {
       rect: rect,
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
-      direction: getComputedDirection(this.element)
+      direction: getComputedStyles(this.element).direction
     });
     gOpen = true;
   },
@@ -192,12 +192,14 @@ this.SelectContentHelper.prototype = {
 
 }
 
-function getComputedDirection(element) {
-  return element.ownerDocument.defaultView.getComputedStyle(element).getPropertyValue("direction");
+function getComputedStyles(element) {
+  return element.ownerDocument.defaultView.getComputedStyle(element);
 }
 
 function buildOptionListForChildren(node) {
   let result = [];
+
+  let win = node.ownerDocument.defaultView;
 
   for (let child of node.children) {
     let tagName = child.tagName.toUpperCase();
@@ -214,15 +216,17 @@ function buildOptionListForChildren(node) {
         textContent = "";
       }
 
+      let cs = getComputedStyles(child);
+
       let info = {
         index: child.index,
         tagName: tagName,
         textContent: textContent,
         disabled: child.disabled,
-        display: child.style.display,
+        display: cs.display,
         // We need to do this for every option element as each one can have
         // an individual style set for direction
-        textDirection: getComputedDirection(child),
+        textDirection: cs.direction,
         tooltip: child.title,
         // XXX this uses a highlight color when this is the selected element.
         // We need to suppress such highlighting in the content process to get
