@@ -430,7 +430,9 @@ DeleteArrayElement(JSContext* cx, HandleObject obj, double index, ObjectOpResult
     MOZ_ASSERT(index >= 0);
     MOZ_ASSERT(floor(index) == index);
 
-    if (obj->is<ArrayObject>() && !obj->isIndexed()) {
+    if (obj->is<ArrayObject>() && !obj->isIndexed() &&
+        !obj->as<NativeObject>().denseElementsAreFrozen())
+    {
         ArrayObject* aobj = &obj->as<ArrayObject>();
         if (index <= UINT32_MAX) {
             uint32_t idx = uint32_t(index);
@@ -571,7 +573,8 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     {
         RootedShape lengthShape(cx, arr->lookupPure(id));
         MOZ_ASSERT(lengthShape);
-        MOZ_ASSERT(lengthShape->writable() == lengthIsWritable);
+        MOZ_ASSERT_IF(lengthIsWritable, lengthShape->writable());
+        MOZ_ASSERT_IF(lengthShape->writable() && !lengthIsWritable, arr->denseElementsAreFrozen());
     }
 #endif
     uint32_t oldLen = arr->length();
@@ -1370,6 +1373,9 @@ ArrayReverseDenseKernel(JSContext* cx, HandleObject obj, uint32_t length)
         return DenseElementResult::Success;
 
     if (Type == JSVAL_TYPE_MAGIC) {
+        if (obj->as<NativeObject>().denseElementsAreFrozen())
+            return DenseElementResult::Incomplete;
+
         /*
          * It's actually surprisingly complicated to reverse an array due to the
          * orthogonality of array length and array capacity while handling
@@ -2202,9 +2208,8 @@ ArrayShiftDenseKernel(JSContext* cx, HandleObject obj, MutableHandleValue rval)
         rval.setUndefined();
 
     DenseElementResult result = MoveBoxedOrUnboxedDenseElements<Type>(cx, obj, 0, 1, initlen - 1);
-    MOZ_ASSERT(result != DenseElementResult::Incomplete);
-    if (result == DenseElementResult::Failure)
-        return DenseElementResult::Failure;
+    if (result != DenseElementResult::Success)
+        return result;
 
     SetBoxedOrUnboxedInitializedLength<Type>(cx, obj, initlen - 1);
     return DenseElementResult::Success;

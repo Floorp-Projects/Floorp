@@ -773,7 +773,7 @@ def all_configure_options(_):
         # We only want options that were explicitly given on the command
         # line, the environment, or mozconfig, and that differ from the
         # defaults.
-        if (value.origin not in ('default', 'implied') and
+        if (value is not None and value.origin not in ('default', 'implied') and
                 value != option.default):
             result.append(__sandbox__._raw_options[option])
         # We however always include options that are sent to old configure

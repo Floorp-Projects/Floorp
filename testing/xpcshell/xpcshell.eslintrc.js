@@ -20,6 +20,7 @@ module.exports = {
     "do_get_file": false,
     "do_get_idle": false,
     "do_get_profile": false,
+    "do_get_tempdir": false,
     "do_load_module": false,
     "do_parse_document": false,
     "do_print": false,

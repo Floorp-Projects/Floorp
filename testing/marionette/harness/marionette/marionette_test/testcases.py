@@ -76,7 +76,8 @@ class CommonTestCase(unittest.TestCase):
     pydebugger = None
 
     def __init__(self, methodName, **kwargs):
-        unittest.TestCase.__init__(self, methodName)
+        super(CommonTestCase, self).__init__(methodName)
+
         self.loglines = []
         self.duration = 0
         self.start_time = 0
@@ -255,8 +256,7 @@ class CommonTestCase(unittest.TestCase):
             self.marionette.start_session()
         self.marionette.reset_timeouts()
 
-    def tearDown(self):
-        pass
+        super(CommonTestCase, self).setUp()
 
     def cleanTest(self):
         self._deleteSession()
@@ -431,7 +431,8 @@ class MarionetteTestCase(CommonTestCase):
         self.methodName = methodName
         self.filepath = filepath
         self.testvars = kwargs.pop('testvars', None)
-        CommonTestCase.__init__(self, methodName, **kwargs)
+
+        super(MarionetteTestCase, self).__init__(methodName, **kwargs)
 
     @classmethod
     def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette,
@@ -465,7 +466,7 @@ class MarionetteTestCase(CommonTestCase):
                                   **kwargs))
 
     def setUp(self):
-        CommonTestCase.setUp(self)
+        super(MarionetteTestCase, self).setUp()
         self.marionette.test_name = self.test_name
         self.marionette.execute_script("log('TEST-START: {0}:{1}')"
                                        .format(self.filepath.replace('\\', '\\\\'),
@@ -491,7 +492,7 @@ class MarionetteTestCase(CommonTestCase):
                 # object that we can access
                 pass
 
-        CommonTestCase.tearDown(self)
+        super(MarionetteTestCase, self).tearDown()
 
     def wait_for_condition(self, method, timeout=30):
         timeout = float(timeout) + time.time()
@@ -513,7 +514,8 @@ class MarionetteJSTestCase(CommonTestCase):
         self.jsFile = jsFile
         self._marionette_weakref = marionette_weakref
         self.marionette = None
-        CommonTestCase.__init__(self, methodName)
+
+        super(MarionetteJSTestCase, self).__init__(methodName)
 
     @classmethod
     def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette,

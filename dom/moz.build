@@ -78,7 +78,6 @@ DIRS += [
     'settings',
     'storage',
     'svg',
-    'mobilemessage',
     'time',
     'locales',
     'network',

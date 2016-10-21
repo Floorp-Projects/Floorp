@@ -34,7 +34,6 @@ payload:
     GECKO_HEAD_REV: '{{head_rev}}'
 
   cache:
-    level-{{level}}-hg-shared: /home/worker/hg-shared
     level-{{level}}-checkouts: /home/worker/checkouts
 
   features:

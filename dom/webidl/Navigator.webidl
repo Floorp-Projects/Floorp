@@ -257,13 +257,6 @@ partial interface Navigator {
   readonly attribute DesktopNotificationCenter mozNotification;
 };
 
-#ifdef MOZ_WEBSMS_BACKEND
-partial interface Navigator {
-  [ChromeOnly, Pref="dom.sms.enabled"]
-  readonly attribute MozMobileMessageManager? mozMobileMessage;
-};
-#endif
-
 // NetworkInformation
 partial interface Navigator {
   [Throws, Pref="dom.netinfo.enabled"]

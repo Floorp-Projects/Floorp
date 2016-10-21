@@ -651,22 +651,22 @@ var gPrivacyPane = {
    * Displays a dialog from which individual parts of private data may be
    * cleared.
    */
-  clearPrivateDataNow: function (aClearEverything)
-  {
+  clearPrivateDataNow: function (aClearEverything) {
     var ts = document.getElementById("privacy.sanitize.timeSpan");
     var timeSpanOrig = ts.value;
-    if (aClearEverything)
+
+    if (aClearEverything) {
       ts.value = 0;
+    }
 
-    const Cc = Components.classes, Ci = Components.interfaces;
-    var glue = Cc["@mozilla.org/browser/browserglue;1"]
-                 .getService(Ci.nsIBrowserGlue);
-    glue.sanitize(window);
+    gSubDialog.open("chrome://browser/content/sanitize.xul", "resizable=no", null, () => {
+      // reset the timeSpan pref
+      if (aClearEverything) {
+        ts.value = timeSpanOrig;
+      }
 
-    // reset the timeSpan pref
-    if (aClearEverything)
-      ts.value = timeSpanOrig;
-    Services.obs.notifyObservers(null, "clear-private-data", null);
+      Services.obs.notifyObservers(null, "clear-private-data", null);
+    });
   },
 
   /**

@@ -199,8 +199,7 @@ MediaKeys::StorePromise(DetailedPromise* aPromise)
 void
 MediaKeys::ConnectPendingPromiseIdWithToken(PromiseId aId, uint32_t aToken)
 {
-  // Should only be called from MediaKeySession::GenerateRequest and
-  // MediaKeySession::Load.
+  // Should only be called from MediaKeySession::GenerateRequest.
   mPromiseIdToken.Put(aId, aToken);
   EME_LOG("MediaKeys[%p]::ConnectPendingPromiseIdWithToken() id=%u => token(%u)",
           this, aId, aToken);

@@ -1163,6 +1163,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
     flags,
     nullptr /* stapledOCSPResponse */,
     nullptr /* sctsFromTLSExtension */,
+    nullptr /* firstPartyDomain */,
     &resultOidTag);
 
   if (result != mozilla::pkix::Success) {

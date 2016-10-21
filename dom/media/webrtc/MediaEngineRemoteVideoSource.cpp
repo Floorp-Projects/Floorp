@@ -335,10 +335,6 @@ MediaEngineRemoteVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   VideoSegment segment;
 
   MonitorAutoLock lock(mMonitor);
-  if (mState != kStarted) {
-    return;
-  }
-
   StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
 
   if (delta > 0) {

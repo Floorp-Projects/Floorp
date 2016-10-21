@@ -513,9 +513,15 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
         status = fd->lower->methods->connect(fd->lower, &prProxy, mTimeout);
         if (status != PR_SUCCESS) {
             PRErrorCode c = PR_GetError();
+
             // If EINPROGRESS, return now and check back later after polling
             if (c == PR_WOULD_BLOCK_ERROR || c == PR_IN_PROGRESS_ERROR) {
                 mState = SOCKS_CONNECTING_TO_PROXY;
+                return status;
+            } else if (IsHostDomainSocket()) {
+                LOGERROR(("socks: connect to domain socket failed (%d)", c));
+                PR_SetError(PR_CONNECT_REFUSED_ERROR, 0);
+                mState = SOCKS_FAILED;
                 return status;
             }
         }

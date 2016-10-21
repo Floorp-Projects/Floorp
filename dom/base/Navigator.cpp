@@ -42,7 +42,6 @@
 #include "mozilla/dom/FlyWebService.h"
 #include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/InputPortManager.h"
-#include "mozilla/dom/MobileMessageManager.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/Presentation.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
@@ -216,7 +215,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryPromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileMessageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInputPortManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
@@ -290,11 +288,6 @@ Navigator::Invalidate()
   if (mIccManager) {
     mIccManager->Shutdown();
     mIccManager = nullptr;
-  }
-
-  if (mMobileMessageManager) {
-    mMobileMessageManager->Shutdown();
-    mMobileMessageManager = nullptr;
   }
 
   if (mTelephony) {
@@ -1622,21 +1615,6 @@ Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
   }
 
   return pmService->NewWakeLock(aTopic, mWindow, aRv);
-}
-
-MobileMessageManager*
-Navigator::GetMozMobileMessage()
-{
-  if (!mMobileMessageManager) {
-    // Check that our window has not gone away
-    NS_ENSURE_TRUE(mWindow, nullptr);
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
-
-    mMobileMessageManager = new MobileMessageManager(mWindow);
-    mMobileMessageManager->Init();
-  }
-
-  return mMobileMessageManager;
 }
 
 Telephony*
