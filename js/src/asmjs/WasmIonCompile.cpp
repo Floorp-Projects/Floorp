@@ -21,6 +21,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "asmjs/WasmBaselineCompile.h"
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmSignalHandlers.h"

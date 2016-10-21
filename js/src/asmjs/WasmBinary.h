@@ -109,6 +109,8 @@ enum class ValType
     Limit
 };
 
+typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
+
 enum class TypeConstructor
 {
     AnyFunc                              = 0x20,
@@ -1071,31 +1073,6 @@ class Decoder
         memcpy(f32x4, &t, sizeof(t));
     }
 };
-
-// Reusable macro encoding/decoding functions reused by both the two
-// encoders (AsmJS/WasmText) and decoders (Wasm/WasmIonCompile).
-
-typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
-
-MOZ_MUST_USE bool
-DecodePreamble(Decoder& d);
-
-MOZ_MUST_USE bool
-EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
-
-MOZ_MUST_USE bool
-DecodeLocalEntries(Decoder& d, ValTypeVector* locals);
-
-MOZ_MUST_USE bool
-DecodeGlobalType(Decoder& d, ValType* type, uint32_t* flags);
-
-struct Limits;
-
-MOZ_MUST_USE bool
-DecodeLimits(Decoder& d, Limits* limits);
-
-MOZ_MUST_USE bool
-DecodeUnknownSections(Decoder& d);
 
 } // namespace wasm
 } // namespace js

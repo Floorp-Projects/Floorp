@@ -595,21 +595,21 @@ class AstFunc : public AstNode
 class AstGlobal : public AstNode
 {
     AstName name_;
-    uint32_t flags_;
+    bool isMutable_;
     ValType type_;
     Maybe<AstExpr*> init_;
 
   public:
-    AstGlobal() : flags_(0), type_(ValType::Limit)
+    AstGlobal() : isMutable_(false), type_(ValType::Limit)
     {}
 
-    explicit AstGlobal(AstName name, ValType type, uint32_t flags,
+    explicit AstGlobal(AstName name, ValType type, bool isMutable,
                        Maybe<AstExpr*> init = Maybe<AstExpr*>())
-      : name_(name), flags_(flags), type_(type), init_(init)
+      : name_(name), isMutable_(isMutable), type_(type), init_(init)
     {}
 
     AstName name() const { return name_; }
-    uint32_t flags() const { return flags_; }
+    bool isMutable() const { return isMutable_; }
     ValType type() const { return type_; }
 
     bool hasInit() const { return !!init_; }
