@@ -131,26 +131,25 @@ BasicTextureImage::BindTexture(GLenum aTextureUnit)
 bool
 BasicTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom /* = gfx::IntPoint(0, 0) */)
 {
-    IntRect bounds = aRegion.GetBounds();
     nsIntRegion region;
-    if (mTextureState != Valid) {
-        bounds = IntRect(0, 0, mSize.width, mSize.height);
-        region = nsIntRegion(bounds);
-    } else {
+    if (mTextureState == Valid) {
         region = aRegion;
+    } else {
+        region = nsIntRegion(IntRect(0, 0, mSize.width, mSize.height));
     }
-
-    size_t uploadSize;
     bool needInit = mTextureState == Created;
+    size_t uploadSize;
+
     mTextureFormat =
         UploadSurfaceToTexture(mGLContext,
                                aSurf,
                                region,
                                mTexture,
+                               mSize,
                                &uploadSize,
                                needInit,
-                               bounds.TopLeft() + IntPoint(aFrom.x, aFrom.y),
-                               false);
+                               aFrom);
+
     if (uploadSize > 0) {
         UpdateUploadSize(uploadSize);
     }
@@ -295,13 +294,7 @@ TiledTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
         if (tileRegion.IsEmpty())
             continue;
 
-        if (CanUploadSubTextures(mGL)) {
-          tileRegion.MoveBy(-xPos, -yPos); // translate into tile local space
-        } else {
-          // If sub-textures are unsupported, expand to tile boundaries
-          tileRect.x = tileRect.y = 0;
-          tileRegion = nsIntRegion(tileRect);
-        }
+        tileRegion.MoveBy(-xPos, -yPos); // translate into tile local space
 
         result &= mImages[mCurrentImage]->
           DirectUpdate(aSurf, tileRegion, aFrom + gfx::IntPoint(xPos, yPos));
