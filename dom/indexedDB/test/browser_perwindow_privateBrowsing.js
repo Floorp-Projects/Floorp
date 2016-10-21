@@ -25,8 +25,8 @@ function test1()
     }
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
-    setFinishedCallback(function(isIDBDatabase, exception) {
-      ok(isIDBDatabase,
+    setFinishedCallback(function(result, exception) {
+      ok(result instanceof IDBDatabase,
          "First database creation was successful");
       ok(!exception, "No exception");
       gBrowser.removeCurrentTab();
@@ -57,8 +57,8 @@ function test3(win)
     }
     win.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
-    setFinishedCallback(function(isIDBDatabase, exception) {
-      ok(!isIDBDatabase, "No database");
+    setFinishedCallback(function(result, exception) {
+      ok(!result, "No database");
       is(exception, "InvalidStateError", "Correct exception");
       win.gBrowser.removeCurrentTab();
 
