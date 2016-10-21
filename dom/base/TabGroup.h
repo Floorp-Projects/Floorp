@@ -97,6 +97,8 @@ public:
                    nsIDocShellTreeItem* aOriginalRequestor,
                    nsIDocShellTreeItem** aFoundItem);
 
+  nsTArray<nsPIDOMWindowOuter*> GetTopLevelWindows();
+
 private:
   ~TabGroup();
   DocGroupMap mDocGroups;

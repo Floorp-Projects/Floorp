@@ -174,10 +174,17 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool 
   , mClampScrollPosition(true)
   , mObservingOwnerContent(false)
   , mVisible(true)
+  , mFreshProcess(false)
 {
   mRemoteFrame = ShouldUseRemoteProcess();
   MOZ_ASSERT(!mRemoteFrame || !aOpener,
              "Cannot pass aOpener for a remote frame!");
+
+  // Check if we are supposed to load into a fresh process
+  mFreshProcess = mOwnerContent->AttrValueIs(kNameSpaceID_None,
+                                             nsGkAtoms::freshProcess,
+                                             nsGkAtoms::_true,
+                                             eCaseMatters);
 }
 
 nsFrameLoader::~nsFrameLoader()
@@ -2727,7 +2734,8 @@ nsFrameLoader::TryRemoteBrowser()
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
-  mRemoteBrowser = ContentParent::CreateBrowserOrApp(context, ownerElement, openerContentParent);
+  mRemoteBrowser = ContentParent::CreateBrowserOrApp(context, ownerElement,
+                                                     openerContentParent, mFreshProcess);
   if (!mRemoteBrowser) {
     return false;
   }
