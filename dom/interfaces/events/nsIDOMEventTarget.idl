@@ -13,6 +13,7 @@
 using mozilla::dom::Nullable;
 
 namespace mozilla {
+class EventChainVisitor;
 class EventChainPostVisitor;
 class EventChainPreVisitor;
 class EventListenerManager;
@@ -225,6 +226,18 @@ interface nsIDOMEventTarget : nsISupports
    */
   [noscript, nostdcall]
   void GetEventTargetParent(in EventChainPreVisitorRef aVisitor);
+
+  /**
+   * Called before the capture phase of the event flow and after event target
+   * chain creation. This is used to handle those stuffs must be executed before
+   * dispatch event to DOM
+   */
+%{C++
+  virtual nsresult PreHandleEvent(mozilla::EventChainVisitor& aVisitor)
+  {
+    return NS_OK;
+  }
+%}
 
   /**
    * If EventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,
