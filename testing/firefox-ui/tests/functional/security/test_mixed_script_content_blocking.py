@@ -32,28 +32,24 @@ class TestMixedScriptContentBlocking(FirefoxTestCase):
 
     def _expect_protection_status(self, enabled):
         if enabled:
-            color, icon_filename, identity, state = (
+            color, icon_filename, state = (
                 'rgb(0, 136, 0)',
-                'url("chrome://browser/skin/connection-secure.svg")',
-                'verifiedDomain mixedActiveBlocked',
+                'identity-secure',
                 'blocked'
             )
         else:
-            color, icon_filename, identity, state = (
+            color, icon_filename, state = (
                 'rgb(255, 0, 0)',
-                'url("chrome://browser/skin/connection-mixed-active-loaded.svg#icon")',
-                'unknownIdentity mixedActiveContent',
+                'identity-mixed-active-loaded',
                 'unblocked'
             )
 
         # First call to Wait() needs a longer timeout due to the reload of the web page.
         connection_icon = self.locationbar.connection_icon
         Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
-            lambda _: connection_icon.value_of_css_property('list-style-image') == icon_filename,
-            message='Connection icon "{}" is not set'.format(icon_filename)
+            lambda _: icon_filename in connection_icon.value_of_css_property('list-style-image'),
+            message="The correct icon is displayed"
         )
-
-        self.assertEqual(self.locationbar.identity_box.get_attribute('className'), identity)
 
         with self.marionette.using_context('content'):
             for identifier, description in self.test_elements:
