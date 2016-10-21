@@ -254,7 +254,7 @@ class BaseCompiler
 # ifdef DEBUG
         BaseCompiler& bc;
       public:
-        ScratchI32(BaseCompiler& bc) : bc(bc) {
+        explicit ScratchI32(BaseCompiler& bc) : bc(bc) {
             MOZ_ASSERT(!bc.scratchRegisterTaken());
             bc.setScratchRegisterTaken(true);
         }
@@ -264,7 +264,7 @@ class BaseCompiler
         }
 # else
       public:
-        ScratchI32(BaseCompiler& bc) {}
+        explicit ScratchI32(BaseCompiler& bc) {}
 # endif
         operator Register() const {
 # ifdef JS_CODEGEN_X86
