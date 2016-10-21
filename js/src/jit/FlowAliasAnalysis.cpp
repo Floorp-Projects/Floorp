@@ -402,7 +402,7 @@ DumpImprovement(MDefinition *load, MDefinitionVector& input, MDefinitionVector& 
     if (JitSpewEnabled(JitSpew_Alias)) {
         Fprinter &print = JitSpewPrinter();
         JitSpewHeader(JitSpew_Alias);
-        print.printf("   Improve dependency from ", load->id());
+        print.printf("   Improve dependency from %d", load->id());
         DumpStoreList(input);
         print.printf(" to ");
         DumpStoreList(output);

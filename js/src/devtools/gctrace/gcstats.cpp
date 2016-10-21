@@ -165,6 +165,7 @@ Array<Array<uint64_t, MaxLifetimeBins>, MaxClasses> finalizedHeapObjectCountByCl
 std::vector<Array<Array<uint64_t, MaxLifetimeBins>, HeapKinds> > objectCountByTypeHeapAndLifetime;
 
 static void
+MOZ_FORMAT_PRINTF(1, 2)
 die(const char* format, ...)
 {
     va_list va;

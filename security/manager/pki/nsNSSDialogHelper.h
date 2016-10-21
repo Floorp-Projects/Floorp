@@ -11,17 +11,28 @@ class mozIDOMWindowProxy;
 class nsISupports;
 
 /**
- * Common class that uses the window watcher service to open a
- * standard dialog, with or without a parent context. The params
- * parameter can be an nsISupportsArray so any number of additional
- * arguments can be used.
+ * Helper class that uses the window watcher service to open a standard dialog,
+ * with or without a parent context.
  */
 class nsNSSDialogHelper
 {
 public:
-  // params is a nsIDialogParamBlock or a nsIKeygenThread
+  /**
+   * Opens a XUL dialog.
+   *
+   * @param window
+   *        Parent window of the dialog, or nullptr to signal no parent.
+   * @param url
+   *        URL to the XUL dialog.
+   * @param params
+   *        Parameters to pass to the dialog. Same semantics as the
+   *        nsIWindowWatcher.openWindow() |aArguments| parameter.
+   * @param modal
+   *        true if the dialog should be modal, false otherwise.
+   * @return The result of opening the dialog.
+   */
   static nsresult openDialog(mozIDOMWindowProxy* window, const char* url,
                              nsISupports* params, bool modal = true);
 };
 
-#endif
+#endif // nsNSSDialogHelper_h
