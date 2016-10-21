@@ -24,24 +24,6 @@
        version of padding values that we actually expect to take effect: */
     button.mfi4 > div { padding: 10px; }
     button.mfi5 > div { padding: 2em; }
-
-    /* As above, set padding to 0 for all cases: */
-    button.mfo1::-moz-focus-outer,
-    button.mfo2::-moz-focus-outer,
-    button.mfo3::-moz-focus-outer,
-    button.mfo4::-moz-focus-outer,
-    button.mfo5::-moz-focus-outer { padding: 0; }
-
-    /* To make reference for -moz-focus-outer padding that we expect to
-       take effect, we'll put the padding on a wrapper-div (and bump the
-       button's outline to that div). */
-    div.mfo4-wrapper { padding: 10px; }
-    div.mfo5-wrapper { padding: 20px; /* = 2em * 10px/em */ }
-
-    button.mfo4,
-    button.mfo5 { outline: none; }
-    div.mfo4-wrapper,
-    div.mfo5-wrapper { display: inline-block; outline: 1px solid black; }
   </style>
 </head>
 <body>
@@ -51,18 +33,6 @@
   <br>
   <button class="mfi4"><div>mfi4</div></button>
   <button class="mfi5"><div>mfi5</div></button>
-  <br>
-
-  <button class="mfo1">mfo1</button>
-  <button class="mfo2">mfo2</button>
-  <button class="mfo3">mfo3</button>
-  <br>
-  <div class="mfo4-wrapper">
-    <button class="mfo4">mfo4</button>
-  </div>
-  <div class="mfo5-wrapper">
-    <button class="mfo5">mfo5</button>
-  </div>
   <br>
 </body>
 </html>

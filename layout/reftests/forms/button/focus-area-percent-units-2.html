@@ -2,8 +2,8 @@
 <!-- Any copyright is dedicated to the Public Domain.
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 <html>
-<!-- The ::-moz-focus-inner & ::-moz-focus-outer button pseudo-elements only
-     support CSS "padding" values that contain absolute lengths.  Any percent
+<!-- The ::-moz-focus-inner button pseudo-element only supports
+     CSS "padding" values that contain absolute lengths.  Any percent
      padding values will simply make the padding collapse to zero.
      This test verifies that this is indeed what happens (not anything worse).
 -->
@@ -22,13 +22,6 @@
     button.mfi3::-moz-focus-inner { padding: 10px 50%; }
     button.mfi4::-moz-focus-inner { padding: 10px; }
     button.mfi5::-moz-focus-inner { padding: 2em; }
-
-    /* Testing percent and auto padding values on "-moz-focus-outer": */
-    button.mfo1::-moz-focus-outer { padding: 50%; }
-    button.mfo2::-moz-focus-outer { padding: 50% 10px; }
-    button.mfo3::-moz-focus-outer { padding: 10px 50%; }
-    button.mfo4::-moz-focus-outer { padding: 10px; }
-    button.mfo5::-moz-focus-outer { padding: 2em; }
   </style>
 </head>
 <body>
@@ -38,14 +31,6 @@
   <br>
   <button class="mfi4">mfi4</button>
   <button class="mfi5">mfi5</button>
-  <br>
-
-  <button class="mfo1">mfo1</button>
-  <button class="mfo2">mfo2</button>
-  <button class="mfo3">mfo3</button>
-  <br>
-  <button class="mfo4">mfo4</button>
-  <button class="mfo5">mfo5</button>
   <br>
 </body>
 </html>
