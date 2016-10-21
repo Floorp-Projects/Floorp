@@ -620,7 +620,6 @@ SharedMemoryBasic::ShareToProcess(base::ProcessId pid,
   err = ports->mReceiver->WaitForMessage(&msg, kTimeout);
   if (err != KERN_SUCCESS) {
     LOG_ERROR("short timeout didn't get an id %s %x\n", mach_error_string(err), err);
-    MOZ_ASSERT(false, "Receiver message short time out");
     err = ports->mReceiver->WaitForMessage(&msg, kLongTimeout);
 
     if (err != KERN_SUCCESS) {
