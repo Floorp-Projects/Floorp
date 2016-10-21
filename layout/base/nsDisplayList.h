@@ -4475,9 +4475,7 @@ public:
 
   static nsCharClipDisplayItem* CheckCast(nsDisplayItem* aItem) {
     nsDisplayItem::Type t = aItem->GetType();
-    return (t == nsDisplayItem::TYPE_TEXT ||
-            t == nsDisplayItem::TYPE_TEXT_DECORATION ||
-            t == nsDisplayItem::TYPE_TEXT_SHADOW)
+    return (t == nsDisplayItem::TYPE_TEXT)
       ? static_cast<nsCharClipDisplayItem*>(aItem) : nullptr;
   }
 
