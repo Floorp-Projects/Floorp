@@ -44,7 +44,7 @@ public:
   virtual void NotifyVSync() { };
 
   void SubmitFrame(VRLayerParent* aLayer,
-                   const uint32_t& aInputFrameID,
+                   const int32_t& aInputFrameID,
                    mozilla::layers::PTextureParent* aTexture,
                    const gfx::Rect& aLeftEyeRect,
                    const gfx::Rect& aRightEyeRect);
@@ -77,7 +77,7 @@ protected:
   // conservative value.
   static const int kMaxLatencyFrames = 100;
   VRHMDSensorState mLastSensorState[kMaxLatencyFrames];
-  uint32_t mInputFrameID;
+  int32_t mInputFrameID;
 
 private:
   VRDisplayInfo mLastUpdateDisplayInfo;
