@@ -29,7 +29,7 @@ def run_reftest(context, **kwargs):
     normalize = partial(context.normalize_test_path, test_root)
     args.tests = map(normalize, args.tests)
 
-    if mozinfo.info['buildapp'] == 'mobile/android':
+    if mozinfo.info.get('buildapp') == 'mobile/android':
         return run_reftest_android(context, args)
     return run_reftest_desktop(context, args)
 
@@ -70,7 +70,7 @@ def setup_argument_parser():
     import reftestcommandline
 
     global parser
-    mozinfo.find_and_update_from_json(os.path.dirname(here))
+    mozinfo.find_and_update_from_json(here)
     if mozinfo.info.get('buildapp') == 'mobile/android':
         parser = reftestcommandline.RemoteArgumentsParser()
     else:
