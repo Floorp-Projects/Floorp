@@ -3186,9 +3186,6 @@ class nsStyleContentData
 public:
   nsStyleContentData()
     : mType(eStyleContentType_Uninitialized)
-#ifdef DEBUG
-    , mImageTracked(false)
-#endif
   {
     MOZ_COUNT_CTOR(nsStyleContentData);
     mContent.mString = nullptr;
@@ -3202,9 +3199,6 @@ public:
   bool operator!=(const nsStyleContentData& aOther) const {
     return !(*this == aOther);
   }
-
-  void TrackImage(mozilla::dom::ImageTracker* aImageTracker);
-  void UntrackImage(mozilla::dom::ImageTracker* aImageTracker);
 
   nsStyleContentType GetType() const { return mType; }
 
@@ -3222,10 +3216,15 @@ public:
     return mContent.mCounters;
   }
 
-  imgRequestProxy* GetImage() const
+  nsStyleImageRequest* GetImageRequest() const
   {
     MOZ_ASSERT(mType == eStyleContentType_Image);
     return mContent.mImage;
+  }
+
+  imgRequestProxy* GetImage() const
+  {
+    return GetImageRequest()->get();
   }
 
   void SetKeyword(nsStyleContentType aType)
@@ -3263,26 +3262,22 @@ public:
     mContent.mCounters->AddRef();
   }
 
-  void SetImage(already_AddRefed<imgRequestProxy> aRequest)
+  void SetImageRequest(already_AddRefed<nsStyleImageRequest> aRequest)
   {
     MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
                "should only initialize nsStyleContentData once");
-    MOZ_ASSERT(!mImageTracked,
-               "Setting a new image without untracking the old one!");
     mType = eStyleContentType_Image;
     mContent.mImage = aRequest.take();
+    MOZ_ASSERT(mContent.mImage);
   }
 
 private:
   nsStyleContentType mType;
   union {
     char16_t *mString;
-    imgRequestProxy *mImage;
+    nsStyleImageRequest* mImage;
     nsCSSValue::Array* mCounters;
   } mContent;
-#ifdef DEBUG
-  bool mImageTracked;
-#endif
 };
 
 struct nsStyleCounterData

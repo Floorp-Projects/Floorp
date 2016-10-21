@@ -3508,10 +3508,9 @@ nsStyleVisibility::CalcDifference(const nsStyleVisibility& aNewData) const
 nsStyleContentData::~nsStyleContentData()
 {
   MOZ_COUNT_DTOR(nsStyleContentData);
-  MOZ_ASSERT(!mImageTracked,
-             "nsStyleContentData being destroyed while still tracking image!");
+
   if (mType == eStyleContentType_Image) {
-    NS_IF_RELEASE(mContent.mImage);
+    mContent.mImage->Release();
   } else if (mType == eStyleContentType_Counter ||
              mType == eStyleContentType_Counters) {
     mContent.mCounters->Release();
@@ -3522,14 +3521,11 @@ nsStyleContentData::~nsStyleContentData()
 
 nsStyleContentData::nsStyleContentData(const nsStyleContentData& aOther)
   : mType(aOther.mType)
-#ifdef DEBUG
-  , mImageTracked(false)
-#endif
 {
   MOZ_COUNT_CTOR(nsStyleContentData);
   if (mType == eStyleContentType_Image) {
     mContent.mImage = aOther.mContent.mImage;
-    NS_IF_ADDREF(mContent.mImage);
+    mContent.mImage->AddRef();
   } else if (mType == eStyleContentType_Counter ||
              mType == eStyleContentType_Counters) {
     mContent.mCounters = aOther.mContent.mCounters;
@@ -3560,59 +3556,13 @@ nsStyleContentData::operator==(const nsStyleContentData& aOther) const
     return false;
   }
   if (mType == eStyleContentType_Image) {
-    if (!mContent.mImage || !aOther.mContent.mImage) {
-      return mContent.mImage == aOther.mContent.mImage;
-    }
-    bool eq;
-    nsCOMPtr<nsIURI> thisURI, otherURI;
-    mContent.mImage->GetURI(getter_AddRefs(thisURI));
-    aOther.mContent.mImage->GetURI(getter_AddRefs(otherURI));
-    return thisURI == otherURI ||  // handles null==null
-           (thisURI && otherURI &&
-            NS_SUCCEEDED(thisURI->Equals(otherURI, &eq)) &&
-            eq);
+    return DefinitelyEqualImages(mContent.mImage, aOther.mContent.mImage);
   }
   if (mType == eStyleContentType_Counter ||
       mType == eStyleContentType_Counters) {
     return *mContent.mCounters == *aOther.mContent.mCounters;
   }
   return safe_strcmp(mContent.mString, aOther.mContent.mString) == 0;
-}
-
-void
-nsStyleContentData::TrackImage(ImageTracker* aImageTracker)
-{
-  // Sanity
-  MOZ_ASSERT(!mImageTracked, "Already tracking image!");
-  MOZ_ASSERT(mType == eStyleContentType_Image,
-             "Trying to do image tracking on non-image!");
-  MOZ_ASSERT(mContent.mImage,
-             "Can't track image when there isn't one!");
-
-  aImageTracker->Add(mContent.mImage);
-
-  // Mark state
-#ifdef DEBUG
-  mImageTracked = true;
-#endif
-}
-
-void
-nsStyleContentData::UntrackImage(ImageTracker* aImageTracker)
-{
-  // Sanity
-  MOZ_ASSERT(mImageTracked, "Image not tracked!");
-  MOZ_ASSERT(mType == eStyleContentType_Image,
-             "Trying to do image tracking on non-image!");
-  MOZ_ASSERT(mContent.mImage,
-             "Can't untrack image when there isn't one!");
-
-  aImageTracker->Remove(mContent.mImage);
-
-  // Mark state
-#ifdef DEBUG
-  mImageTracked = false;
-#endif
 }
 
 
@@ -3633,14 +3583,6 @@ nsStyleContent::~nsStyleContent()
 void
 nsStyleContent::Destroy(nsPresContext* aContext)
 {
-  // Unregister any images we might have with the document.
-  for (auto& content : mContents) {
-    if (content.GetType() == eStyleContentType_Image &&
-        content.GetImage()) {
-      content.UntrackImage(aContext->Document()->ImageTracker());
-    }
-  }
-
   this->~nsStyleContent();
   aContext->PresShell()->FreeByObjectID(eArenaObjectID_nsStyleContent, this);
 }
