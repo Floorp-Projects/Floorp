@@ -4,10 +4,9 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.gfx.BitmapUtils.BitmapLoader;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -208,7 +207,7 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
                     menuitem.setShowAsAction(actionEnum, R.attr.menuItemActionModeStyle);
 
                     final String iconString = obj.optString("icon");
-                    BitmapUtils.getDrawable(context, iconString, new BitmapLoader() {
+                    ResourceDrawableUtils.getDrawable(context, iconString, new ResourceDrawableUtils.BitmapLoader() {
                         @Override
                         public void onBitmapFound(Drawable d) {
                             if (d != null) {
