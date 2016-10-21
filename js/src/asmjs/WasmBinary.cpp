@@ -41,7 +41,8 @@ Decoder::fail(const char* msg, ...) {
 bool
 Decoder::fail(UniqueChars msg) {
     MOZ_ASSERT(error_);
-    UniqueChars strWithOffset(JS_smprintf("at offset %zu: %s", currentOffset(), msg.get()));
+    UniqueChars strWithOffset(JS_smprintf("at offset %" PRIuSIZE ": %s",
+                                          currentOffset(), msg.get()));
     if (!strWithOffset)
         return false;
 
@@ -57,7 +58,7 @@ wasm::DecodePreamble(Decoder& d)
         return d.fail("failed to match magic number");
 
     if (!d.readFixedU32(&u32) || u32 != EncodingVersion)
-        return d.fail("binary version 0x%lx does not match expected version 0x%lx",
+        return d.fail("binary version 0x%" PRIx32 " does not match expected version 0x%" PRIx32,
                       u32, EncodingVersion);
 
     return true;
@@ -151,7 +152,7 @@ wasm::DecodeLimits(Decoder& d, Limits* limits)
     // TODO (bug 1310149): tighten this check (s/3/1) when the AngryBots demo
     // gets updated.
     if (flags & ~uint32_t(0x3))
-        return d.fail("unexpected bits set in flags: %lu", (flags & ~uint32_t(0x3)));
+        return d.fail("unexpected bits set in flags: %" PRIu32, (flags & ~uint32_t(0x3)));
 
     if (!d.readVarU32(&limits->initial))
         return d.fail("expected initial length");
@@ -163,7 +164,7 @@ wasm::DecodeLimits(Decoder& d, Limits* limits)
 
         if (limits->initial > maximum) {
             return d.fail("memory size minimum must not be greater than maximum; "
-                          "maximum length %lu is less than initial length %lu",
+                          "maximum length %" PRIu32 " is less than initial length %" PRIu32 ,
                           maximum, limits->initial);
         }
 

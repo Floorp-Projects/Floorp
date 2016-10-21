@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test content script match_about_blank option</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_contentscript_about_blank() {
+  const manifest = {
+    content_scripts: [
+      {
+        match_about_blank: true,
+        matches: ["http://mochi.test/*/file_with_about_blank.html", "http://example.com/*"],
+        all_frames: true,
+        css: ["all.css"],
+        js: ["all.js"],
+      }, {
+        matches: ["http://mochi.test/*/file_with_about_blank.html"],
+        css: ["mochi_without.css"],
+        js: ["mochi_without.js"],
+        all_frames: true,
+      }, {
+        match_about_blank: true,
+        matches: ["http://mochi.test/*/file_with_about_blank.html"],
+        css: ["mochi_with.css"],
+        js: ["mochi_with.js"],
+        all_frames: true,
+      },
+    ],
+  };
+
+  const files = {
+    "all.js": function() {
+      browser.runtime.sendMessage("all");
+    },
+    "all.css": `
+      body { color: red; }
+    `,
+    "mochi_without.js": function() {
+      browser.runtime.sendMessage("mochi_without");
+    },
+    "mochi_without.css": `
+      body { background: yellow; }
+    `,
+    "mochi_with.js": function() {
+      browser.runtime.sendMessage("mochi_with");
+    },
+    "mochi_with.css": `
+      body { text-align: right; }
+    `,
+  };
+
+  function background() {
+    browser.runtime.onMessage.addListener((script, {url}) => {
+      const kind = url.startsWith("about:") ? url : "top";
+      browser.test.sendMessage("script", [script, kind, url]);
+      browser.test.sendMessage(`${script}:${kind}`);
+    });
+  }
+
+  const PATH = "tests/toolkit/components/extensions/test/mochitest/file_with_about_blank.html";
+  const extension = ExtensionTestUtils.loadExtension({manifest, files, background});
+  yield extension.startup();
+
+  let count = 0;
+  extension.onMessage("script", script => {
+    info(`script ran: ${script}`);
+    count++;
+  });
+
+  let win = window.open("http://example.com/" + PATH);
+  yield Promise.all([
+    extension.awaitMessage("all:top"),
+    extension.awaitMessage("all:about:blank"),
+    extension.awaitMessage("all:about:srcdoc"),
+  ]);
+  is(count, 3, "exactly 3 scripts ran");
+  win.close();
+
+  win = window.open("http://mochi.test:8888/" + PATH);
+  yield Promise.all([
+    extension.awaitMessage("all:top"),
+    extension.awaitMessage("all:about:blank"),
+    extension.awaitMessage("all:about:srcdoc"),
+    extension.awaitMessage("mochi_without:top"),
+    extension.awaitMessage("mochi_with:top"),
+    extension.awaitMessage("mochi_with:about:blank"),
+    extension.awaitMessage("mochi_with:about:srcdoc"),
+  ]);
+
+  let style = win.getComputedStyle(win.document.body);
+  is(style.color, "rgb(255, 0, 0)", "top window text color is red");
+  is(style.backgroundColor, "rgb(255, 255, 0)", "top window background is yellow");
+  is(style.textAlign, "right", "top window text is right-aligned");
+
+  let a_b = win.document.getElementById("a_b");
+  style = a_b.contentWindow.getComputedStyle(a_b.contentDocument.body);
+  is(style.color, "rgb(255, 0, 0)", "about:blank iframe text color is red");
+  is(style.backgroundColor, "transparent", "about:blank iframe background is transparent");
+  is(style.textAlign, "right", "about:blank text is right-aligned");
+
+  is(count, 10, "exactly 7 more scripts ran");
+  win.close();
+
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

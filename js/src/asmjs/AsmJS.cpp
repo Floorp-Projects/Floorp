@@ -2250,7 +2250,7 @@ class MOZ_STACK_CLASS ModuleValidator
         return false;
     }
 
-    bool failfOffset(uint32_t offset, const char* fmt, ...) {
+    bool failfOffset(uint32_t offset, const char* fmt, ...) MOZ_FORMAT_PRINTF(3, 4) {
         va_list ap;
         va_start(ap, fmt);
         failfVAOffset(offset, fmt, ap);
@@ -2258,7 +2258,7 @@ class MOZ_STACK_CLASS ModuleValidator
         return false;
     }
 
-    bool failf(ParseNode* pn, const char* fmt, ...) {
+    bool failf(ParseNode* pn, const char* fmt, ...) MOZ_FORMAT_PRINTF(3, 4) {
         va_list ap;
         va_start(ap, fmt);
         failfVAOffset(pn->pn_pos.begin, fmt, ap);
@@ -2944,7 +2944,7 @@ class MOZ_STACK_CLASS FunctionValidator
         return m_.fail(pn, str);
     }
 
-    bool failf(ParseNode* pn, const char* fmt, ...) {
+    bool failf(ParseNode* pn, const char* fmt, ...) MOZ_FORMAT_PRINTF(3, 4) {
         va_list ap;
         va_start(ap, fmt);
         m_.failfVAOffset(pn->pn_pos.begin, fmt, ap);
@@ -4720,7 +4720,8 @@ static bool
 CheckSignatureAgainstExisting(ModuleValidator& m, ParseNode* usepn, const Sig& sig, const Sig& existing)
 {
     if (sig.args().length() != existing.args().length()) {
-        return m.failf(usepn, "incompatible number of arguments (%u here vs. %u before)",
+        return m.failf(usepn, "incompatible number of arguments (%" PRIuSIZE
+                       " here vs. %" PRIuSIZE " before)",
                        sig.args().length(), existing.args().length());
     }
 
