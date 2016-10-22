@@ -177,6 +177,7 @@ typedef Vector<ElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
 
 class Module : public RefCounted<Module>
 {
+    const Assumptions       assumptions_;
     const Bytes             code_;
     const LinkData          linkData_;
     const ImportVector      imports_;
@@ -198,7 +199,8 @@ class Module : public RefCounted<Module>
                       const ValVector& globalImports) const;
 
   public:
-    Module(Bytes&& code,
+    Module(Assumptions&& assumptions,
+           Bytes&& code,
            LinkData&& linkData,
            ImportVector&& imports,
            ExportVector&& exports,
@@ -206,7 +208,8 @@ class Module : public RefCounted<Module>
            ElemSegmentVector&& elemSegments,
            const Metadata& metadata,
            const ShareableBytes& bytecode)
-      : code_(Move(code)),
+      : assumptions_(Move(assumptions)),
+        code_(Move(code)),
         linkData_(Move(linkData)),
         imports_(Move(imports)),
         exports_(Move(exports)),
@@ -233,6 +236,7 @@ class Module : public RefCounted<Module>
 
     size_t serializedSize() const;
     uint8_t* serialize(uint8_t* cursor) const;
+    static bool assumptionsMatch(const Assumptions& current, const uint8_t* cursor);
     static const uint8_t* deserialize(const uint8_t* cursor, RefPtr<Module>* module,
                                       Metadata* maybeMetadata = nullptr);
 

@@ -260,7 +260,8 @@ ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 size_t
 Module::serializedSize() const
 {
-    return SerializedPodVectorSize(code_) +
+    return assumptions_.serializedSize() +
+           SerializedPodVectorSize(code_) +
            linkData_.serializedSize() +
            SerializedVectorSize(imports_) +
            SerializedVectorSize(exports_) +
@@ -273,6 +274,10 @@ Module::serializedSize() const
 uint8_t*
 Module::serialize(uint8_t* cursor) const
 {
+    // Assumption must be serialized at the beginning so that assumptionsMatch
+    // can detect a build-id mismatch before any other decoding occurs.
+
+    cursor = assumptions_.serialize(cursor);
     cursor = SerializePodVector(cursor, code_);
     cursor = linkData_.serialize(cursor);
     cursor = SerializeVector(cursor, imports_);
@@ -284,9 +289,25 @@ Module::serialize(uint8_t* cursor) const
     return cursor;
 }
 
+/* static */ bool
+Module::assumptionsMatch(const Assumptions& current, const uint8_t* cursor)
+{
+    Assumptions cached;
+    cursor = cached.deserialize(cursor);
+    if (!cursor)
+        return false;
+
+    return current == cached;
+}
+
 /* static */ const uint8_t*
 Module::deserialize(const uint8_t* cursor, SharedModule* module, Metadata* maybeMetadata)
 {
+    Assumptions assumptions;
+    cursor = assumptions.deserialize(cursor);
+    if (!cursor)
+        return nullptr;
+
     Bytes code;
     cursor = DeserializePodVector(cursor, &code);
     if (!cursor)
@@ -337,7 +358,8 @@ Module::deserialize(const uint8_t* cursor, SharedModule* module, Metadata* maybe
     if (!cursor)
         return nullptr;
 
-    *module = js_new<Module>(Move(code),
+    *module = js_new<Module>(Move(assumptions),
+                             Move(code),
                              Move(linkData),
                              Move(imports),
                              Move(exports),
@@ -359,6 +381,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                       size_t* data) const
 {
     *data += mallocSizeOf(this) +
+             assumptions_.sizeOfExcludingThis(mallocSizeOf) +
              code_.sizeOfExcludingThis(mallocSizeOf) +
              linkData_.sizeOfExcludingThis(mallocSizeOf) +
              SizeOfVectorExcludingThis(imports_, mallocSizeOf) +
