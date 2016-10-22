@@ -3977,7 +3977,7 @@ static FrameTarget DrillDownToSelectionFrame(nsIFrame* aFrame,
 // no valid FrameTarget on the line, it returns a null FrameTarget
 static FrameTarget GetSelectionClosestFrameForLine(
                       nsBlockFrame* aParent,
-                      nsBlockFrame::line_iterator aLine,
+                      nsBlockFrame::LineIterator aLine,
                       nsPoint aPoint,
                       uint32_t aFlags)
 {
@@ -4044,8 +4044,8 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
     return FrameTarget::Null();
 
   // This code searches for the correct line
-  nsBlockFrame::line_iterator firstLine = bf->begin_lines();
-  nsBlockFrame::line_iterator end = bf->end_lines();
+  nsBlockFrame::LineIterator firstLine = bf->begin_lines();
+  nsBlockFrame::LineIterator end = bf->end_lines();
   if (firstLine == end) {
     nsIContent *blockContent = aFrame->GetContent();
     if (blockContent) {
@@ -4054,8 +4054,8 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
     }
     return FrameTarget::Null();
   }
-  nsBlockFrame::line_iterator curLine = firstLine;
-  nsBlockFrame::line_iterator closestLine = end;
+  nsBlockFrame::LineIterator curLine = firstLine;
+  nsBlockFrame::LineIterator closestLine = end;
   // Convert aPoint into a LogicalPoint in the writing-mode of this block
   WritingMode wm = curLine->mWritingMode;
   LogicalPoint pt(wm, aPoint, curLine->mContainerSize);
@@ -4073,8 +4073,8 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
   }
 
   if (closestLine == end) {
-    nsBlockFrame::line_iterator prevLine = curLine.prev();
-    nsBlockFrame::line_iterator nextLine = curLine;
+    nsBlockFrame::LineIterator prevLine = curLine.prev();
+    nsBlockFrame::LineIterator nextLine = curLine;
     // Avoid empty lines
     while (nextLine != end && nextLine->IsEmpty())
       ++nextLine;

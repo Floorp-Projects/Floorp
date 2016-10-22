@@ -1347,7 +1347,7 @@ ReflowInput::CalculateHypotheticalPosition
     } else {
       NS_ASSERTION(iter.GetContainer() == blockFrame,
                    "Found placeholder in wrong block!");
-      nsBlockFrame::line_iterator lineBox = iter.GetLine();
+      nsBlockFrame::LineIterator lineBox = iter.GetLine();
 
       // How we determine the hypothetical box depends on whether the element
       // would have been inline-level or block-level
