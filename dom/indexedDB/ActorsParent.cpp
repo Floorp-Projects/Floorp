@@ -19,7 +19,6 @@
 #include "jsapi.h"
 #include "KeyPath.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/AppProcessChecker.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"

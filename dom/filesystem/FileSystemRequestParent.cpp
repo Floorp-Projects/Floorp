@@ -11,7 +11,6 @@
 #include "GetFileOrDirectoryTask.h"
 #include "RemoveTask.h"
 
-#include "mozilla/AppProcessChecker.h"
 #include "mozilla/dom/FileSystemBase.h"
 
 namespace mozilla {

@@ -98,7 +98,6 @@ public:
 
   /**
    * Get all TabContext which are inside the given content process.
-   * Used for AppProcessChecker to cehck app status.
    */
   nsTArray<TabContext>
   GetTabContextByContentProcess(const ContentParentId& aChildCpId);

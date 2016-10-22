@@ -10,7 +10,6 @@
 #include "nsJSUtils.h"
 #include "TCPSocketParent.h"
 #include "mozilla/Unused.h"
-#include "mozilla/AppProcessChecker.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
 

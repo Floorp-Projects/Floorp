@@ -12,7 +12,6 @@
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "ContentParent.h"
 #include "nsProxyRelease.h"
-#include "AppProcessChecker.h"
 #include "mozilla/Preferences.h"
 #include "nsNetCID.h"
 
@@ -315,34 +314,6 @@ DeviceStorageRequestParent::EnsureRequiredPermissions(
     {
       return false;
     }
-  }
-
-  // The 'apps' type is special.  We only want this exposed
-  // if the caller has the "webapps-manage" permission.
-  if (type.EqualsLiteral("apps")) {
-    if (!AssertAppProcessPermission(aParent, "webapps-manage")) {
-      return false;
-    }
-  }
-
-  nsAutoCString permissionName;
-  nsresult rv = DeviceStorageTypeChecker::GetPermissionForType(type,
-                                                               permissionName);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCString access;
-  rv = DeviceStorageTypeChecker::GetAccessForRequest(requestType, access);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  permissionName.Append('-');
-  permissionName.Append(access);
-
-  if (!AssertAppProcessPermission(aParent, permissionName.get())) {
-    return false;
   }
 
   return true;

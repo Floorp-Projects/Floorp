@@ -24,7 +24,6 @@
 #include "chrome/common/process_watcher.h"
 
 #include "mozilla/a11y/PDocAccessible.h"
-#include "AppProcessChecker.h"
 #include "AudioChannelService.h"
 #include "BlobParent.h"
 #include "CrashReporterParent.h"
@@ -3694,37 +3693,6 @@ ContentParent::DoSendAsyncMessage(JSContext* aCx,
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
-}
-
-bool
-ContentParent::CheckPermission(const nsAString& aPermission)
-{
-  return AssertAppProcessPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
-}
-
-bool
-ContentParent::CheckManifestURL(const nsAString& aManifestURL)
-{
-  return AssertAppProcessManifestURL(this, NS_ConvertUTF16toUTF8(aManifestURL).get());
-}
-
-bool
-ContentParent::CheckAppHasPermission(const nsAString& aPermission)
-{
-  return AssertAppHasPermission(this, NS_ConvertUTF16toUTF8(aPermission).get());
-}
-
-bool
-ContentParent::CheckAppHasStatus(unsigned short aStatus)
-{
-  return AssertAppHasStatus(this, aStatus);
-}
-
-bool
-ContentParent::KillChild()
-{
-  KillHard("KillChild");
-  return true;
 }
 
 PBlobParent*

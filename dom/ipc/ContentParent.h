@@ -278,16 +278,6 @@ public:
                                       JS::Handle<JSObject *> aCpows,
                                       nsIPrincipal* aPrincipal) override;
 
-  virtual bool CheckPermission(const nsAString& aPermission) override;
-
-  virtual bool CheckManifestURL(const nsAString& aManifestURL) override;
-
-  virtual bool CheckAppHasPermission(const nsAString& aPermission) override;
-
-  virtual bool CheckAppHasStatus(unsigned short aStatus) override;
-
-  virtual bool KillChild() override;
-
   /** Notify that a tab is beginning its destruction sequence. */
   static void NotifyTabDestroying(const TabId& aTabId,
                                   const ContentParentId& aCpId);
