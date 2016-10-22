@@ -5949,18 +5949,6 @@ typedef AsmJSCacheResult
 typedef void
 (* CloseAsmJSCacheEntryForWriteOp)(size_t size, uint8_t* memory, intptr_t handle);
 
-typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
-
-/**
- * Return the buildId (represented as a sequence of characters) associated with
- * the currently-executing build. If the JS engine is embedded such that a
- * single cache entry can be observed by different compiled versions of the JS
- * engine, it is critical that the buildId shall change for each new build of
- * the JS engine.
- */
-typedef bool
-(* BuildIdOp)(BuildIdCharVector* buildId);
-
 struct AsmJSCacheOps
 {
     OpenAsmJSCacheEntryForReadOp openEntryForRead;
@@ -5972,8 +5960,71 @@ struct AsmJSCacheOps
 extern JS_PUBLIC_API(void)
 SetAsmJSCacheOps(JSContext* cx, const AsmJSCacheOps* callbacks);
 
+/**
+ * Return the buildId (represented as a sequence of characters) associated with
+ * the currently-executing build. If the JS engine is embedded such that a
+ * single cache entry can be observed by different compiled versions of the JS
+ * engine, it is critical that the buildId shall change for each new build of
+ * the JS engine.
+ */
+typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
+
+typedef bool
+(* BuildIdOp)(BuildIdCharVector* buildId);
+
 extern JS_PUBLIC_API(void)
 SetBuildIdOp(JSContext* cx, BuildIdOp buildIdOp);
+
+/**
+ * The WasmModule interface allows the embedding to hold a reference to the
+ * underying C++ implementation of a JS WebAssembly.Module object for purposes
+ * of (de)serialization off the object's JSRuntime's thread.
+ *
+ * - Serialization starts when WebAssembly.Module is passed to the
+ * structured-clone algorithm. JS::GetWasmModule is called on the JSRuntime
+ * thread that initiated the structured clone to get the JS::WasmModule.
+ * This interface is then taken to a background thread where serializedSize()
+ * and serialize() are called to write the object to two files: a bytecode file
+ * that always allows successful deserialization and a compiled-code file keyed
+ * on cpu- and build-id that may become invalid if either of these change between
+ * serialization and deserialization. After serialization, the reference is
+ * dropped from the background thread.
+ *
+ * - Deserialization starts when the structured clone algorithm encounters a
+ * serialized WebAssembly.Module. On a background thread, the compiled-code file
+ * is opened and CompiledWasmModuleAssumptionsMatch is called to see if it is
+ * still valid (as described above). DeserializeWasmModule is then called to
+ * construct a JS::WasmModule (also on the background thread), passing the
+ * bytecode file descriptor and, if valid, the compiled-code file descriptor.
+ * The JS::WasmObject is then transported to the JSRuntime thread (which
+ * originated the request) and the wrapping WebAssembly.Module object is created
+ * by calling createObject().
+ */
+
+struct WasmModule : mozilla::external::AtomicRefCounted<WasmModule>
+{
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(WasmModule)
+    virtual ~WasmModule() {}
+
+    virtual void serializedSize(size_t* bytecodeSize, size_t* compiledSize) const = 0;
+    virtual void serialize(uint8_t* bytecodeBegin, size_t bytecodeSize,
+                           uint8_t* compiledBegin, size_t compiledSize) const = 0;
+
+    virtual JSObject* createObject(JSContext* cx) = 0;
+};
+
+extern JS_PUBLIC_API(bool)
+IsWasmModuleObject(HandleObject obj);
+
+extern JS_PUBLIC_API(RefPtr<WasmModule>)
+GetWasmModule(HandleObject obj);
+
+extern JS_PUBLIC_API(bool)
+CompiledWasmModuleAssumptionsMatch(PRFileDesc* compiled, BuildIdCharVector&& buildId);
+
+extern JS_PUBLIC_API(RefPtr<WasmModule>)
+DeserializeWasmModule(PRFileDesc* bytecode, PRFileDesc* maybeCompiled, BuildIdCharVector&& buildId,
+                      JS::UniqueChars filename, unsigned line, unsigned column);
 
 /**
  * Convenience class for imitating a JS level for-of loop. Typical usage:
