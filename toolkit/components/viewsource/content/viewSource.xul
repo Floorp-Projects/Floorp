@@ -207,8 +207,8 @@
                 label="&charsetMenu2.label;"
                 accesskey="&charsetMenu2.accesskey;"
                 oncommand="viewSourceChrome.onSetCharacterSet(event);"
-                onpopupshowing="CharsetMenu.build(event.target);"
-                onpopupshown="CharsetMenu.update(event.target, content.document.characterSet);">
+                onpopupshowing="CharsetMenu.build(event.target);
+                                CharsetMenu.update(event.target, content.document.characterSet);">
             <menupopup/>
           </menu>
           <menuseparator/>
