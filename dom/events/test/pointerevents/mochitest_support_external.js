@@ -82,42 +82,23 @@ function sendTouchEvent(int_win, elemId, touchEventType, params) {
 
 // Helper function to run Point Event test in a new tab.
 function runTestInNewWindow(aFile) {
-  var w = window.open('', "_blank");
-  w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
-  w.ok = function(cond, name, diag) { return ok(cond, aFile + " | " + name, diag); };
-  w.location = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
+  var testURL = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
+  var testWindow = window.open(testURL, "_blank");
 
-  w.testContext = {
-    result_callback: (aTestObj) => {
-      if(aTestObj["status"] != aTestObj["PASS"]) {
-        console.log(aTestObj["status"] + " = " + aTestObj["PASS"] + ". " + aTestObj["name"]);
-      }
-      is(aTestObj["status"], aTestObj["PASS"], aTestObj["name"]);
-    },
-
-    completion_callback: () => {
-      if (!!w.testContext.executionPromise) {
-        // We need to wait tests done and execute finished then we can close the window
-        w.testContext.executionPromise.then(() => {
-          w.close();
-          SimpleTest.finish();
-        });        
-      } else {
-        // execute may synchronous trigger tests done. In that case executionPromise
-        // is not yet assigned 
-        w.close();
-        SimpleTest.finish();
-      }
-    },
-
-    execute: (aWindow) => {
-      turnOnPointerEvents(() => {
-        w.testContext.executionPromise = new Promise((aResolve, aReject) => {
-          executeTest(aWindow);
-          aResolve();
+  window.addEventListener("message", function(aEvent) {
+    switch(aEvent.data.type) {
+      case "START":
+        turnOnPointerEvents(() => {
+          executeTest(testWindow);
         });
-      });
+        return;
+      case "RESULT":
+        ok(aEvent.data.result, aEvent.data.message);
+        return;
+      case "FIN":
+        testWindow.close();
+        SimpleTest.finish();
+        return;
     }
-  };
-  return w;
+  });
 }
