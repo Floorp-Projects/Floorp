@@ -114,8 +114,8 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const ReflowInput& aRI,
           line_end = lines->end();
         }
       } else {
-        line = block->begin_lines();
-        line_end = block->end_lines();
+        line = block->BeginLine();
+        line_end = block->EndLine();
       }
       for (; anyLines && line != line_end; ++line) {
         if (!aClearanceFrame && line->HasClearance()) {
