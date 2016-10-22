@@ -39,14 +39,12 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla += [
-    'AppProcessChecker.h',
     'ProcessHangMonitor.h',
     'ProcessHangMonitorIPC.h',
     'ProcessPriorityManager.h',
 ]
 
 UNIFIED_SOURCES += [
-    'AppProcessChecker.cpp',
     'ColorPickerParent.cpp',
     'ContentBridgeChild.cpp',
     'ContentBridgeParent.cpp',
