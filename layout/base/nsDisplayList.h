@@ -2734,7 +2734,8 @@ public:
                                          nsIFrame* aFrame,
                                          const nsRect& aBackgroundRect,
                                          nsDisplayList* aList,
-                                         bool aAllowWillPaintBorderOptimization = true);
+                                         bool aAllowWillPaintBorderOptimization = true,
+                                         nsStyleContext* aStyleContext = nullptr);
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
