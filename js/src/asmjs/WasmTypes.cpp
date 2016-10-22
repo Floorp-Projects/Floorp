@@ -614,6 +614,10 @@ Assumptions::serializedSize() const
 uint8_t*
 Assumptions::serialize(uint8_t* cursor) const
 {
+    // The format of serialized Assumptions must never change in a way that
+    // would cause old cache files written with by an old build-id to match the
+    // assumptions of a different build-id.
+
     cursor = WriteScalar<uint32_t>(cursor, cpuId);
     cursor = SerializePodVector(cursor, buildId);
     return cursor;
