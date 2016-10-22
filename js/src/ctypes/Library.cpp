@@ -155,14 +155,16 @@ Library::Create(JSContext* cx, HandleValue path, const JSCTypesCallbacks* callba
 #endif
 
   if (!library) {
-    char* error = (char*) JS_malloc(cx, PR_GetErrorTextLength() + 1);
-    if (error)
+#define MAX_ERROR_LEN 1024
+    char error[MAX_ERROR_LEN] = "Cannot get error from NSPR.";
+    uint32_t errorLen = PR_GetErrorTextLength();
+    if (errorLen && errorLen < MAX_ERROR_LEN)
       PR_GetErrorText(error);
+#undef MAX_ERROR_LEN
 
     JSAutoByteString pathCharsUTF8;
     if (pathCharsUTF8.encodeUtf8(cx, pathStr))
       JS_ReportErrorUTF8(cx, "couldn't open library %s: %s", pathCharsUTF8.ptr(), error);
-    JS_free(cx, error);
     return nullptr;
   }
 
