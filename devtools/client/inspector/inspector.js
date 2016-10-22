@@ -645,11 +645,14 @@ Inspector.prototype = {
         this.onEyeDropperButtonClicked = this.onEyeDropperButtonClicked.bind(this);
         this.eyeDropperButton = this.panelDoc
                                     .getElementById("inspector-eyedropper-toggle");
-        this.eyeDropperButton.style.display = "initial";
+        this.eyeDropperButton.disabled = false;
+        this.eyeDropperButton.title = INSPECTOR_L10N.getStr("inspector.eyedropper.label");
         this.eyeDropperButton.addEventListener("click", this.onEyeDropperButtonClicked);
       }, e => console.error(e));
     } else {
-      this.panelDoc.getElementById("inspector-eyedropper-toggle").style.display = "none";
+      let eyeDropperButton = this.panelDoc.getElementById("inspector-eyedropper-toggle");
+      eyeDropperButton.disabled = true;
+      eyeDropperButton.title = INSPECTOR_L10N.getStr("eyedropper.disabled.title");
     }
   },
 
