@@ -2596,15 +2596,18 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      nsIFrame* aFrame,
                                                      const nsRect& aBackgroundRect,
                                                      nsDisplayList* aList,
-                                                     bool aAllowWillPaintBorderOptimization)
+                                                     bool aAllowWillPaintBorderOptimization,
+                                                     nsStyleContext* aStyleContext)
 {
-  nsStyleContext* bgSC = nullptr;
+  nsStyleContext* bgSC = aStyleContext;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect + aBuilder->ToReferenceFrame(aFrame);
   nsPresContext* presContext = aFrame->PresContext();
   bool isThemed = aFrame->IsThemed();
   if (!isThemed) {
-    bgSC = GetBackgroundStyleContext(aFrame);
+    if (!bgSC) {
+      bgSC = GetBackgroundStyleContext(aFrame);
+    }
     if (bgSC) {
       bg = bgSC->StyleBackground();
     }
