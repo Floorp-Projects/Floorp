@@ -43,6 +43,7 @@
 #include "jswrapper.h"
 
 #include "asmjs/AsmJS.h"
+#include "asmjs/WasmModule.h"
 #include "builtin/AtomicsObject.h"
 #include "builtin/Eval.h"
 #include "builtin/Intl.h"
@@ -6645,6 +6646,32 @@ JS_PUBLIC_API(void)
 JS::SetAsmJSCacheOps(JSContext* cx, const JS::AsmJSCacheOps* ops)
 {
     cx->runtime()->asmJSCacheOps = *ops;
+}
+
+bool
+JS::IsWasmModuleObject(HandleObject obj)
+{
+    return obj->is<WasmModuleObject>();
+}
+
+JS_PUBLIC_API(RefPtr<JS::WasmModule>)
+JS::GetWasmModule(HandleObject obj)
+{
+    return &obj->as<WasmModuleObject>().module();
+}
+
+JS_PUBLIC_API(bool)
+JS::CompiledWasmModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVector&& buildId)
+{
+    return wasm::CompiledModuleAssumptionsMatch(compiled, Move(buildId));
+}
+
+JS_PUBLIC_API(RefPtr<JS::WasmModule>)
+JS::DeserializeWasmModule(PRFileDesc* bytecode, PRFileDesc* maybeCompiled,
+                          JS::BuildIdCharVector&& buildId, UniqueChars file,
+                          unsigned line, unsigned column)
+{
+    return wasm::DeserializeModule(bytecode, maybeCompiled, Move(buildId), Move(file), line, column);
 }
 
 char*
