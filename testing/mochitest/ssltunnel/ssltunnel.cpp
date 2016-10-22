@@ -1558,10 +1558,13 @@ int main(int argc, char** argv)
   // Initialize NSS
   if (NSS_Init(nssconfigdir.c_str()) != SECSuccess) {
     int32_t errorlen = PR_GetErrorTextLength();
-    char* err = new char[errorlen+1];
-    PR_GetErrorText(err);
-    LOG_ERROR(("Failed to init NSS: %s", err));
-    delete[] err;
+    if (errorlen) {
+      auto err = mozilla::MakeUnique<char[]>(errorlen + 1);
+      PR_GetErrorText(err.get());
+      LOG_ERROR(("Failed to init NSS: %s", err.get()));
+    } else {
+      LOG_ERROR(("Failed to init NSS: Cannot get error from NSPR."));
+    }
     PR_ShutdownThreadPool(threads);
     PR_DestroyCondVar(shutdown_condvar);
     PR_DestroyLock(shutdown_lock);
