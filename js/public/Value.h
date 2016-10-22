@@ -840,7 +840,7 @@ class MOZ_NON_PARAM alignas(8) Value
 
 #if MOZ_LITTLE_ENDIAN
 # if defined(JS_NUNBOX32)
-    union {
+    union layout {
         uint64_t asBits;
         struct {
             union {
@@ -860,9 +860,13 @@ class MOZ_NON_PARAM alignas(8) Value
         } s;
         double asDouble;
         void* asPtr;
+
+        layout() = default;
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
     } data;
 # elif defined(JS_PUNBOX64)
-    union {
+    union layout {
         uint64_t asBits;
 #if !defined(_WIN64)
         /* MSVC does not pack these correctly :-( */
@@ -882,11 +886,15 @@ class MOZ_NON_PARAM alignas(8) Value
         void* asPtr;
         size_t asWord;
         uintptr_t asUIntPtr;
+
+        layout() = default;
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
     } data;
 # endif  /* JS_PUNBOX64 */
 #else   /* MOZ_LITTLE_ENDIAN */
 # if defined(JS_NUNBOX32)
-    union {
+    union layout {
         uint64_t asBits;
         struct {
             JSValueTag tag;
@@ -906,9 +914,13 @@ class MOZ_NON_PARAM alignas(8) Value
         } s;
         double asDouble;
         void* asPtr;
+
+        layout() = default;
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
     } data;
 # elif defined(JS_PUNBOX64)
-    union {
+    union layout {
         uint64_t asBits;
         struct {
             JSValueTag         tag : 17;
@@ -926,14 +938,18 @@ class MOZ_NON_PARAM alignas(8) Value
         void* asPtr;
         size_t asWord;
         uintptr_t asUIntPtr;
+
+        layout() = default;
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
     } data;
 # endif /* JS_PUNBOX64 */
 #endif  /* MOZ_LITTLE_ENDIAN */
 
   private:
 #if defined(JS_VALUE_IS_CONSTEXPR)
-    explicit JS_VALUE_CONSTEXPR Value(uint64_t asBits) : data({ .asBits = asBits }) {}
-    explicit JS_VALUE_CONSTEXPR Value(double d) : data({ .asDouble = d }) {}
+    explicit JS_VALUE_CONSTEXPR Value(uint64_t asBits) : data(asBits) {}
+    explicit JS_VALUE_CONSTEXPR Value(double d) : data(d) {}
 #endif
 
     void staticAssertions() {
