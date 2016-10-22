@@ -257,26 +257,29 @@ ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            elemCodeRangeIndices.sizeOfExcludingThis(mallocSizeOf);
 }
 
-size_t
-Module::serializedSize() const
+void
+Module::serializedSize(size_t* bytecodeSize, size_t* compiledSize) const
 {
-    return assumptions_.serializedSize() +
-           SerializedPodVectorSize(code_) +
-           linkData_.serializedSize() +
-           SerializedVectorSize(imports_) +
-           SerializedVectorSize(exports_) +
-           SerializedPodVectorSize(dataSegments_) +
-           SerializedVectorSize(elemSegments_) +
-           metadata_->serializedSize() +
-           SerializedPodVectorSize(bytecode_->bytes);
+    *bytecodeSize = SerializedPodVectorSize(bytecode_->bytes);
+
+    *compiledSize = assumptions_.serializedSize() +
+                    SerializedPodVectorSize(code_) +
+                    linkData_.serializedSize() +
+                    SerializedVectorSize(imports_) +
+                    SerializedVectorSize(exports_) +
+                    SerializedPodVectorSize(dataSegments_) +
+                    SerializedVectorSize(elemSegments_) +
+                    metadata_->serializedSize();
 }
 
-uint8_t*
-Module::serialize(uint8_t* cursor) const
+void
+Module::serialize(uint8_t* bytecodeBegin, size_t bytecodeSize,
+                  uint8_t* compiledBegin, size_t compiledSize) const
 {
-    // Assumption must be serialized at the beginning so that assumptionsMatch
-    // can detect a build-id mismatch before any other decoding occurs.
+    uint8_t* bytecodeEnd = SerializePodVector(bytecodeBegin, bytecode_->bytes);
+    MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeBegin + bytecodeSize);
 
+    uint8_t* cursor = compiledBegin;
     cursor = assumptions_.serialize(cursor);
     cursor = SerializePodVector(cursor, code_);
     cursor = linkData_.serialize(cursor);
@@ -285,8 +288,7 @@ Module::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, dataSegments_);
     cursor = SerializeVector(cursor, elemSegments_);
     cursor = metadata_->serialize(cursor);
-    cursor = SerializePodVector(cursor, bytecode_->bytes);
-    return cursor;
+    MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
 }
 
 /* static */ bool
@@ -300,9 +302,30 @@ Module::assumptionsMatch(const Assumptions& current, const uint8_t* cursor)
     return current == cached;
 }
 
-/* static */ const uint8_t*
-Module::deserialize(const uint8_t* cursor, SharedModule* module, Metadata* maybeMetadata)
+/* static */ SharedModule
+Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
+                    const uint8_t* compiledBegin, size_t compiledSize,
+                    Metadata* maybeMetadata)
 {
+    // Bytecode deserialization is not guarded by Assumptions and thus must not
+    // change incompatibly between builds.
+
+    MutableBytes bytecode = js_new<ShareableBytes>();
+    if (!bytecode)
+        return nullptr;
+
+    const uint8_t* bytecodeEnd = DeserializePodVector(bytecodeBegin, &bytecode->bytes);
+    if (!bytecodeEnd)
+        return nullptr;
+
+    MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeBegin + bytecodeSize);
+
+    // Assumption must be serialized at the beginning of the compiled bytes so
+    // that compiledAssumptionsMatch can detect a build-id mismatch before any
+    // other decoding occurs.
+
+    const uint8_t* cursor = compiledBegin;
+
     Assumptions assumptions;
     cursor = assumptions.deserialize(cursor);
     if (!cursor)
@@ -349,28 +372,19 @@ Module::deserialize(const uint8_t* cursor, SharedModule* module, Metadata* maybe
     cursor = metadata->deserialize(cursor);
     if (!cursor)
         return nullptr;
+
+    MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
     MOZ_RELEASE_ASSERT(!!maybeMetadata == metadata->isAsmJS());
 
-    MutableBytes bytecode = js_new<ShareableBytes>();
-    if (!bytecode)
-        return nullptr;
-    cursor = DeserializePodVector(cursor, &bytecode->bytes);
-    if (!cursor)
-        return nullptr;
-
-    *module = js_new<Module>(Move(assumptions),
-                             Move(code),
-                             Move(linkData),
-                             Move(imports),
-                             Move(exports),
-                             Move(dataSegments),
-                             Move(elemSegments),
-                             *metadata,
-                             *bytecode);
-    if (!*module)
-        return nullptr;
-
-    return cursor;
+    return js_new<Module>(Move(assumptions),
+                          Move(code),
+                          Move(linkData),
+                          Move(imports),
+                          Move(exports),
+                          Move(dataSegments),
+                          Move(elemSegments),
+                          *metadata,
+                          *bytecode);
 }
 
 /* virtual */ void
