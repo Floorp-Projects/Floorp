@@ -9,7 +9,6 @@
 #include "TabParent.h"
 
 #include "AudioChannelService.h"
-#include "AppProcessChecker.h"
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "nsAccessibilityService.h"
@@ -996,12 +995,7 @@ TabParent::AllocPIndexedDBPermissionRequestParent(const Principal& aPrincipal)
   }
 
   nsCOMPtr<nsIContentParent> manager = Manager();
-  if (manager->IsContentParent()) {
-    if (NS_WARN_IF(!AssertAppPrincipal(manager->AsContentParent(),
-                                       principal))) {
-      return nullptr;
-    }
-  } else {
+  if (!manager->IsContentParent()) {
     MOZ_CRASH("Figure out security checks for bridged content!");
   }
 
@@ -1496,16 +1490,6 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
                            const IPC::Principal& aPrincipal,
                            nsTArray<StructuredCloneData>* aRetVal)
 {
-  // FIXME Permission check for TabParent in Content process
-  nsIPrincipal* principal = aPrincipal;
-  if (Manager()->IsContentParent()) {
-    ContentParent* parent = Manager()->AsContentParent();
-    if (!ContentParent::IgnoreIPCPrincipal() &&
-        parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-  }
-
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
 
@@ -1523,16 +1507,6 @@ TabParent::RecvRpcMessage(const nsString& aMessage,
                           const IPC::Principal& aPrincipal,
                           nsTArray<StructuredCloneData>* aRetVal)
 {
-  // FIXME Permission check for TabParent in Content process
-  nsIPrincipal* principal = aPrincipal;
-  if (Manager()->IsContentParent()) {
-    ContentParent* parent = Manager()->AsContentParent();
-    if (!ContentParent::IgnoreIPCPrincipal() &&
-        parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-  }
-
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
 
@@ -1549,16 +1523,6 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const IPC::Principal& aPrincipal,
                             const ClonedMessageData& aData)
 {
-  // FIXME Permission check for TabParent in Content process
-  nsIPrincipal* principal = aPrincipal;
-  if (Manager()->IsContentParent()) {
-    ContentParent* parent = Manager()->AsContentParent();
-    if (!ContentParent::IgnoreIPCPrincipal() &&
-        parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-  }
-
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
 

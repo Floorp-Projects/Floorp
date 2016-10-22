@@ -101,9 +101,6 @@ public:
                                       mozilla::dom::ipc::StructuredCloneData& aData,
                                       JS::Handle<JSObject *> aCpows,
                                       nsIPrincipal* aPrincipal) override;
-  virtual bool CheckPermission(const nsAString& aPermission) override;
-  virtual bool CheckManifestURL(const nsAString& aManifestURL) override;
-  virtual bool CheckAppHasPermission(const nsAString& aPermission) override;
 
   /**
    * Called from the layout frame associated with this frame loader;

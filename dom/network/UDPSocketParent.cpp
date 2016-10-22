@@ -9,7 +9,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIUDPSocket.h"
 #include "nsINetAddr.h"
-#include "mozilla/AppProcessChecker.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/net/DNS.h"
@@ -27,14 +26,12 @@ NS_IMPL_ISUPPORTS(UDPSocketParent, nsIUDPSocketListener)
 
 UDPSocketParent::UDPSocketParent(PBackgroundParent* aManager)
   : mBackgroundManager(aManager)
-  , mNeckoManager(nullptr)
   , mIPCOpen(true)
 {
 }
 
 UDPSocketParent::UDPSocketParent(PNeckoParent* aManager)
   : mBackgroundManager(nullptr)
-  , mNeckoManager(aManager)
   , mIPCOpen(true)
 {
 }
@@ -56,15 +53,6 @@ UDPSocketParent::Init(const IPC::Principal& aPrincipal,
   if (net::UsingNeckoIPCSecurity() &&
       mPrincipal &&
       !ContentParent::IgnoreIPCPrincipal()) {
-    if (mNeckoManager) {
-      if (!AssertAppPrincipal(mNeckoManager->Manager(), mPrincipal)) {
-        return false;
-      }
-    } else {
-      // PBackground is (for now) using a STUN filter for verification
-      // it's not being used for DoS
-    }
-
     nsCOMPtr<nsIPermissionManager> permMgr =
       services::GetPermissionManager();
     if (!permMgr) {
