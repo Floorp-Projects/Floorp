@@ -4017,7 +4017,7 @@ nsCursorImage::operator==(const nsCursorImage& aOther) const
 }
 
 nsStyleUserInterface::nsStyleUserInterface(StyleStructContext aContext)
-  : mUserInput(NS_STYLE_USER_INPUT_AUTO)
+  : mUserInput(StyleUserInput::Auto)
   , mUserModify(NS_STYLE_USER_MODIFY_READ_ONLY)
   , mUserFocus(StyleUserFocus::None)
   , mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO)
@@ -4069,8 +4069,8 @@ nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aNewData) const
   }
 
   if (mUserInput != aNewData.mUserInput) {
-    if (NS_STYLE_USER_INPUT_NONE == mUserInput ||
-        NS_STYLE_USER_INPUT_NONE == aNewData.mUserInput) {
+    if (StyleUserInput::None == mUserInput ||
+        StyleUserInput::None == aNewData.mUserInput) {
       hint |= nsChangeHint_ReconstructFrame;
     } else {
       hint |= nsChangeHint_NeutralChange;

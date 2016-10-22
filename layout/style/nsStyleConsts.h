@@ -212,10 +212,12 @@ enum class StyleUserSelect : uint8_t {
 };
 
 // user-input
-#define NS_STYLE_USER_INPUT_NONE      0
-#define NS_STYLE_USER_INPUT_ENABLED   1
-#define NS_STYLE_USER_INPUT_DISABLED  2
-#define NS_STYLE_USER_INPUT_AUTO      3
+enum class StyleUserInput : uint8_t {
+  None,
+  Enabled,
+  Disabled,
+  Auto,
+};
 
 // user-modify
 #define NS_STYLE_USER_MODIFY_READ_ONLY   0

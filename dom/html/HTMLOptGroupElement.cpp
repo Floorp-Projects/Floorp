@@ -60,8 +60,8 @@ HTMLOptGroupElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
     const nsStyleUserInterface* uiStyle = frame->StyleUserInterface();
-    if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
+    if (uiStyle->mUserInput == StyleUserInput::None ||
+        uiStyle->mUserInput == StyleUserInput::Disabled) {
       return NS_OK;
     }
   }

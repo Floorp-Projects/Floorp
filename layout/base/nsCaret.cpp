@@ -515,8 +515,8 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
   const nsStyleUserInterface* userinterface = frame->StyleUserInterface();
   if ((!mIgnoreUserModify &&
        userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
-      userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-      userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
+      userinterface->mUserInput == StyleUserInput::None ||
+      userinterface->mUserInput == StyleUserInput::Disabled) {
     return nullptr;
   }
 
