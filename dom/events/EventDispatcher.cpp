@@ -137,6 +137,7 @@ static bool IsEventTargetChrome(EventTarget* aEventTarget,
 #define NS_TARGET_CHAIN_CHECKED_IF_CHROME       (1 << 3)
 #define NS_TARGET_CHAIN_IS_CHROME_CONTENT       (1 << 4)
 #define NS_TARGET_CHAIN_WANTS_PRE_HANDLE_EVENT  (1 << 5)
+#define NS_TARGET_CHAIN_PRE_HANDLE_EVENT_ONLY   (1 << 6)
 
 // EventTargetChainItem represents a single item in the event target chain.
 class EventTargetChainItem
@@ -166,14 +167,23 @@ public:
     aChain.RemoveElementAt(lastIndex);
   }
 
-  static EventTargetChainItem* GetFirstEventTarget(
+  static EventTargetChainItem* GetFirstCanHandleEventTarget(
                                  nsTArray<EventTargetChainItem>& aChain)
   {
-    return &aChain[0];
+    return &aChain[GetFirstCanHandleEventTargetIdx(aChain)];
   }
 
-  static uint32_t GetFirstEventTargetIdx(nsTArray<EventTargetChainItem>& aChain)
+  static uint32_t GetFirstCanHandleEventTargetIdx(nsTArray<EventTargetChainItem>& aChain)
   {
+    // aChain[i].PreHandleEventOnly() = true only when the target element wants
+    // PreHandleEvent and set mCanHandle=false. So we find the first element
+    // which can handle the event.
+    for (uint32_t i = 0; i < aChain.Length(); ++i) {
+      if (!aChain[i].PreHandleEventOnly()) {
+        return i;
+      }
+    }
+    MOZ_ASSERT(false);
     return 0;
   }
 
@@ -233,6 +243,20 @@ public:
   bool WantsPreHandleEvent()
   {
     return !!(mFlags & NS_TARGET_CHAIN_WANTS_PRE_HANDLE_EVENT);
+  }
+
+  void SetPreHandleEventOnly(bool aWants)
+  {
+    if (aWants) {
+      mFlags |= NS_TARGET_CHAIN_PRE_HANDLE_EVENT_ONLY;
+    } else {
+      mFlags &= ~NS_TARGET_CHAIN_PRE_HANDLE_EVENT_ONLY;
+    }
+  }
+
+  bool PreHandleEventOnly()
+  {
+    return !!(mFlags & NS_TARGET_CHAIN_PRE_HANDLE_EVENT_ONLY);
   }
 
   void SetMayHaveListenerManager(bool aMayHave)
@@ -356,6 +380,7 @@ EventTargetChainItem::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   SetWantsWillHandleEvent(aVisitor.mWantsWillHandleEvent);
   SetMayHaveListenerManager(aVisitor.mMayHaveListenerManager);
   SetWantsPreHandleEvent(aVisitor.mWantsPreHandleEvent);
+  SetPreHandleEventOnly(aVisitor.mWantsPreHandleEvent && !aVisitor.mCanHandle);
   mItemFlags = aVisitor.mItemFlags;
   mItemData = aVisitor.mItemData;
 }
@@ -366,6 +391,8 @@ EventTargetChainItem::PreHandleEvent(EventChainVisitor& aVisitor)
   if (!WantsPreHandleEvent()) {
     return;
   }
+  aVisitor.mItemFlags = mItemFlags;
+  aVisitor.mItemData = mItemData;
   Unused << mTarget->PreHandleEvent(aVisitor);
 }
 
@@ -387,14 +414,17 @@ EventTargetChainItem::HandleEventTargetChain(
   // Save the target so that it can be restored later.
   nsCOMPtr<EventTarget> firstTarget = aVisitor.mEvent->mTarget;
   uint32_t chainLength = aChain.Length();
-  uint32_t firstEventTargetIdx =
-    EventTargetChainItem::GetFirstEventTargetIdx(aChain);
+  uint32_t firstCanHandleEventTargetIdx =
+    EventTargetChainItem::GetFirstCanHandleEventTargetIdx(aChain);
 
   // Capture
   aVisitor.mEvent->mFlags.mInCapturePhase = true;
   aVisitor.mEvent->mFlags.mInBubblingPhase = false;
-  for (uint32_t i = chainLength - 1; i > firstEventTargetIdx; --i) {
+  for (uint32_t i = chainLength - 1; i > firstCanHandleEventTargetIdx; --i) {
     EventTargetChainItem& item = aChain[i];
+    if (item.PreHandleEventOnly()) {
+      continue;
+    }
     if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
          item.ForceContentDispatch()) &&
         !aVisitor.mEvent->PropagationStopped()) {
@@ -416,7 +446,7 @@ EventTargetChainItem::HandleEventTargetChain(
 
   // Target
   aVisitor.mEvent->mFlags.mInBubblingPhase = true;
-  EventTargetChainItem& targetItem = aChain[firstEventTargetIdx];
+  EventTargetChainItem& targetItem = aChain[firstCanHandleEventTargetIdx];
   if (!aVisitor.mEvent->PropagationStopped() &&
       (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
        targetItem.ForceContentDispatch())) {
@@ -428,8 +458,11 @@ EventTargetChainItem::HandleEventTargetChain(
 
   // Bubble
   aVisitor.mEvent->mFlags.mInCapturePhase = false;
-  for (uint32_t i = firstEventTargetIdx + 1; i < chainLength; ++i) {
+  for (uint32_t i = firstCanHandleEventTargetIdx + 1; i < chainLength; ++i) {
     EventTargetChainItem& item = aChain[i];
+    if (item.PreHandleEventOnly()) {
+      continue;
+    }
     EventTarget* newTarget = item.GetNewTarget();
     if (newTarget) {
       // Item is at anonymous boundary. Need to retarget for the current item
@@ -680,14 +713,25 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
                                   isInAnon);
   targetEtci->GetEventTargetParent(preVisitor);
 
-  if (!preVisitor.mCanHandle && preVisitor.mAutomaticChromeDispatch && content) {
-    // Event target couldn't handle the event. Try to propagate to chrome.
-    EventTargetChainItem::DestroyLast(chain, targetEtci);
-    targetEtci = EventTargetChainItemForChromeTarget(chain, content);
-    NS_ENSURE_STATE(targetEtci);
-    targetEtci->GetEventTargetParent(preVisitor);
+  if (!preVisitor.mCanHandle) {
+    if (!preVisitor.mWantsPreHandleEvent) {
+      // Keep EventTargetChainItem if we need to call PreHandleEvent on it.
+      EventTargetChainItem::DestroyLast(chain, targetEtci);
+    }
+    if (preVisitor.mAutomaticChromeDispatch && content) {
+      // Event target couldn't handle the event. Try to propagate to chrome.
+      targetEtci = EventTargetChainItemForChromeTarget(chain, content);
+      NS_ENSURE_STATE(targetEtci);
+      targetEtci->GetEventTargetParent(preVisitor);
+    }
   }
-  if (preVisitor.mCanHandle) {
+  if (!preVisitor.mCanHandle) {
+    // The original target and chrome target (mAutomaticChromeDispatch=true)
+    // can not handle the event but we still have to call their PreHandleEvent.
+    for (uint32_t i = 0; i < chain.Length(); ++i) {
+      chain[i].PreHandleEvent(preVisitor);
+    }
+  } else {
     // At least the original target can handle the event.
     // Setting the retarget to the |target| simplifies retargeting code.
     nsCOMPtr<EventTarget> t = do_QueryInterface(aEvent->mTarget);
@@ -716,7 +760,10 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
       if (preVisitor.mCanHandle) {
         topEtci = parentEtci;
       } else {
-        EventTargetChainItem::DestroyLast(chain, parentEtci);
+        if (!preVisitor.mWantsPreHandleEvent) {
+          // Keep EventTargetChainItem if we need to call PreHandleEvent on it.
+          EventTargetChainItem::DestroyLast(chain, parentEtci);
+        }
         parentEtci = nullptr;
         if (preVisitor.mAutomaticChromeDispatch && content) {
           // Even if the current target can't handle the event, try to
@@ -729,7 +776,9 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
             if (parentEtci) {
               parentEtci->GetEventTargetParent(preVisitor);
               if (preVisitor.mCanHandle) {
-                EventTargetChainItem::GetFirstEventTarget(chain)->SetNewTarget(parentTarget);
+                EventTargetChainItem* item =
+                  EventTargetChainItem::GetFirstCanHandleEventTarget(chain);
+                item->SetNewTarget(parentTarget);
                 topEtci = parentEtci;
                 continue;
               }
