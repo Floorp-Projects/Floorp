@@ -456,8 +456,7 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(callSites) +
            SerializedPodVectorSize(callThunks) +
            SerializedPodVectorSize(funcNames) +
-           filename.serializedSize() +
-           assumptions.serializedSize();
+           filename.serializedSize();
 }
 
 uint8_t*
@@ -477,7 +476,6 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, callThunks);
     cursor = SerializePodVector(cursor, funcNames);
     cursor = filename.serialize(cursor);
-    cursor = assumptions.serialize(cursor);
     return cursor;
 }
 
@@ -497,8 +495,7 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &callSites)) &&
     (cursor = DeserializePodVector(cursor, &callThunks)) &&
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
-    (cursor = filename.deserialize(cursor)) &&
-    (cursor = assumptions.deserialize(cursor));
+    (cursor = filename.deserialize(cursor));
     return cursor;
 }
 
@@ -517,8 +514,7 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            callSites.sizeOfExcludingThis(mallocSizeOf) +
            callThunks.sizeOfExcludingThis(mallocSizeOf) +
            funcNames.sizeOfExcludingThis(mallocSizeOf) +
-           filename.sizeOfExcludingThis(mallocSizeOf) +
-           assumptions.sizeOfExcludingThis(mallocSizeOf);
+           filename.sizeOfExcludingThis(mallocSizeOf);
 }
 
 struct ProjectIndex
