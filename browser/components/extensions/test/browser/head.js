@@ -130,6 +130,12 @@ function getPanelForNode(node) {
   return node;
 }
 
+var awaitBrowserLoaded = browser => ContentTask.spawn(browser, null, () => {
+  if (content.document.readyState !== "complete") {
+    return ContentTaskUtils.waitForEvent(content, "load").then(() => {});
+  }
+});
+
 var awaitExtensionPanel = Task.async(function* (extension, win = window, awaitLoad = true) {
   let {originalTarget: browser} = yield BrowserTestUtils.waitForEvent(
     win.document, "WebExtPopupLoaded", true,
@@ -138,11 +144,7 @@ var awaitExtensionPanel = Task.async(function* (extension, win = window, awaitLo
   yield Promise.all([
     promisePopupShown(getPanelForNode(browser)),
 
-    awaitLoad && ContentTask.spawn(browser, null, () => {
-      if (content.document.readyState !== "complete") {
-        return ContentTaskUtils.waitForEvent(content, "load").then(() => {});
-      }
-    }),
+    awaitLoad && awaitBrowserLoaded(browser),
   ]);
 
   return browser;

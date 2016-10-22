@@ -176,6 +176,8 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
     }
   };
 
+  yield awaitBrowserLoaded(browser);
+
   // Wait long enough to make sure the initial resize debouncing timer has
   // expired.
   yield new Promise(resolve => setTimeout(resolve, 100));
