@@ -6,8 +6,7 @@
     label="&charsetMenu2.label;"
     accesskey="&charsetMenu2.accesskey;"
     oncommand="BrowserSetForcedCharacterSet(event.target.getAttribute('charset'));"
-    onpopupshowing="CharsetMenu.build(event.target);"
-    onpopupshown="UpdateCurrentCharset(this);">
+    onpopupshowing="CharsetMenu.build(event.target); UpdateCurrentCharset(this);">
   <menupopup>
   </menupopup>
 </menu>
