@@ -386,7 +386,6 @@
                 "type": "boolean"
               },
               "method": {
-                "unsupported": true,
                 "description": "The HTTP method to use if the URL uses the HTTP[S] protocol.",
                 "enum": [
                   "GET",
@@ -396,7 +395,6 @@
                 "type": "string"
               },
               "headers": {
-                "unsupported": true,
                 "optional": true,
                 "type": "array",
                 "description": "Extra HTTP headers to send with the request if the URL uses the HTTP[s] protocol. Each header is represented as a dictionary containing the keys <code>name</code> and either <code>value</code> or <code>binaryValue</code>, restricted to those allowed by XMLHttpRequest.",
@@ -415,7 +413,6 @@
                 }
               },
               "body": {
-                "unsupported": true,
                 "description": "Post body.",
                 "optional": true,
                 "type": "string"
