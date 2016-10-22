@@ -175,7 +175,7 @@ typedef Vector<ElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
 // time it is instantiated. In the future, Module will store a shareable,
 // immutable CodeSegment that can be shared by all its instances.
 
-class Module : public RefCounted<Module>
+class Module : public JS::WasmModule
 {
     const Assumptions       assumptions_;
     const Bytes             code_;
@@ -218,6 +218,7 @@ class Module : public RefCounted<Module>
         metadata_(&metadata),
         bytecode_(&bytecode)
     {}
+    ~Module() override { /* Note: can be called on any thread */ }
 
     const Metadata& metadata() const { return *metadata_; }
     const ImportVector& imports() const { return imports_; }
@@ -234,13 +235,14 @@ class Module : public RefCounted<Module>
 
     // Structured clone support:
 
-    void serializedSize(size_t* bytecodeSize, size_t* compiledSize) const;
+    void serializedSize(size_t* bytecodeSize, size_t* compiledSize) const override;
     void serialize(uint8_t* bytecodeBegin, size_t bytecodeSize,
-                   uint8_t* compiledBegin, size_t compiledSize) const;
+                   uint8_t* compiledBegin, size_t compiledSize) const override;
     static bool assumptionsMatch(const Assumptions& current, const uint8_t* compiledBegin);
     static RefPtr<Module> deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
                                       const uint8_t* compiledBegin, size_t compiledSize,
                                       Metadata* maybeMetadata = nullptr);
+    JSObject* createObject(JSContext* cx) override;
 
     // about:memory reporting:
 
@@ -255,6 +257,15 @@ class Module : public RefCounted<Module>
 };
 
 typedef RefPtr<Module> SharedModule;
+
+// JS API implementations:
+
+bool
+CompiledModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVector&& buildId);
+
+SharedModule
+DeserializeModule(PRFileDesc* bytecode, PRFileDesc* maybeCompiled, JS::BuildIdCharVector&& buildId,
+                  UniqueChars filename, unsigned line, unsigned column);
 
 } // namespace wasm
 } // namespace js

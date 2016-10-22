@@ -18,6 +18,9 @@
 
 #include "asmjs/WasmModule.h"
 
+#include "jsnspr.h"
+
+#include "asmjs/WasmCompile.h"
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmJS.h"
 #include "asmjs/WasmSerialize.h"
@@ -257,7 +260,7 @@ ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            elemCodeRangeIndices.sizeOfExcludingThis(mallocSizeOf);
 }
 
-void
+/* virtual */ void
 Module::serializedSize(size_t* bytecodeSize, size_t* compiledSize) const
 {
     *bytecodeSize = SerializedPodVectorSize(bytecode_->bytes);
@@ -272,12 +275,19 @@ Module::serializedSize(size_t* bytecodeSize, size_t* compiledSize) const
                     metadata_->serializedSize();
 }
 
-void
+/* virtual */ void
 Module::serialize(uint8_t* bytecodeBegin, size_t bytecodeSize,
                   uint8_t* compiledBegin, size_t compiledSize) const
 {
+    // Bytecode deserialization is not guarded by Assumptions and thus must not
+    // change incompatibly between builds.
+
     uint8_t* bytecodeEnd = SerializePodVector(bytecodeBegin, bytecode_->bytes);
     MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeBegin + bytecodeSize);
+
+    // Assumption must be serialized at the beginning of the compiled bytes so
+    // that compiledAssumptionsMatch can detect a build-id mismatch before any
+    // other decoding occurs.
 
     uint8_t* cursor = compiledBegin;
     cursor = assumptions_.serialize(cursor);
@@ -307,9 +317,6 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
                     const uint8_t* compiledBegin, size_t compiledSize,
                     Metadata* maybeMetadata)
 {
-    // Bytecode deserialization is not guarded by Assumptions and thus must not
-    // change incompatibly between builds.
-
     MutableBytes bytecode = js_new<ShareableBytes>();
     if (!bytecode)
         return nullptr;
@@ -319,10 +326,6 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
         return nullptr;
 
     MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeBegin + bytecodeSize);
-
-    // Assumption must be serialized at the beginning of the compiled bytes so
-    // that compiledAssumptionsMatch can detect a build-id mismatch before any
-    // other decoding occurs.
 
     const uint8_t* cursor = compiledBegin;
 
@@ -385,6 +388,97 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
                           Move(elemSegments),
                           *metadata,
                           *bytecode);
+}
+
+/* virtual */ JSObject*
+Module::createObject(JSContext* cx)
+{
+    if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_WebAssembly))
+        return nullptr;
+
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
+    return WasmModuleObject::create(cx, *this, proto);
+}
+
+struct MemUnmap
+{
+    uint32_t size;
+    MemUnmap() : size(0) {}
+    explicit MemUnmap(uint32_t size) : size(size) {}
+    void operator()(uint8_t* p) { MOZ_ASSERT(size); PR_MemUnmap(p, size); }
+};
+
+typedef UniquePtr<uint8_t, MemUnmap> UniqueMapping;
+
+static UniqueMapping
+MapFile(PRFileDesc* file, PRFileInfo* info)
+{
+    if (PR_GetOpenFileInfo(file, info) != PR_SUCCESS)
+        return nullptr;
+
+    PRFileMap* map = PR_CreateFileMap(file, info->size, PR_PROT_READONLY);
+    if (!map)
+        return nullptr;
+
+    // PRFileMap objects do not need to be kept alive after the memory has been
+    // mapped, so unconditionally close the PRFileMap, regardless of whether
+    // PR_MemMap succeeds.
+    uint8_t* memory = (uint8_t*)PR_MemMap(map, 0, info->size);
+    MOZ_ALWAYS_TRUE(PR_CloseFileMap(map));
+    return UniqueMapping(memory, MemUnmap(info->size));
+}
+
+bool
+wasm::CompiledModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVector&& buildId)
+{
+    PRFileInfo info;
+    UniqueMapping mapping = MapFile(compiled, &info);
+    if (!mapping)
+        return false;
+
+    Assumptions assumptions(Move(buildId));
+    return Module::assumptionsMatch(assumptions, mapping.get());
+}
+
+SharedModule
+wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
+                        JS::BuildIdCharVector&& buildId, UniqueChars filename,
+                        unsigned line, unsigned column)
+{
+    PRFileInfo bytecodeInfo;
+    UniqueMapping bytecodeMapping = MapFile(bytecodeFile, &bytecodeInfo);
+    if (!bytecodeMapping)
+        return nullptr;
+
+    if (PRFileDesc* compiledFile = maybeCompiledFile) {
+        PRFileInfo compiledInfo;
+        UniqueMapping compiledMapping = MapFile(compiledFile, &compiledInfo);
+        if (!compiledMapping)
+            return nullptr;
+
+        return Module::deserialize(bytecodeMapping.get(), bytecodeInfo.size,
+                                   compiledMapping.get(), compiledInfo.size);
+    }
+
+    MutableBytes bytecode = js_new<ShareableBytes>();
+    if (!bytecode)
+        return nullptr;
+
+    const uint8_t* bytecodeEnd = DeserializePodVector(bytecodeMapping.get(), &bytecode->bytes);
+    if (!bytecodeEnd)
+        return nullptr;
+
+    MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeMapping.get() + bytecodeInfo.size);
+
+    ScriptedCaller scriptedCaller;
+    scriptedCaller.filename = Move(filename);
+    scriptedCaller.line = line;
+    scriptedCaller.column = column;
+
+    CompileArgs args(Assumptions(Move(buildId)), Move(scriptedCaller));
+
+    UniqueChars error;
+    return Compile(*bytecode, Move(args), &error);
 }
 
 /* virtual */ void
