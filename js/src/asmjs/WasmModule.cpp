@@ -424,7 +424,7 @@ MapFile(PRFileDesc* file, PRFileInfo* info)
     // mapped, so unconditionally close the PRFileMap, regardless of whether
     // PR_MemMap succeeds.
     uint8_t* memory = (uint8_t*)PR_MemMap(map, 0, info->size);
-    MOZ_ALWAYS_TRUE(PR_CloseFileMap(map));
+    PR_CloseFileMap(map);
     return UniqueMapping(memory, MemUnmap(info->size));
 }
 
