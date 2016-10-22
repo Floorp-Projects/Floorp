@@ -38,6 +38,14 @@ const DOWNLOAD_ITEM_FIELDS = ["id", "url", "referrer", "filename", "incognito",
 const DOWNLOAD_ITEM_CHANGE_FIELDS = ["endTime", "state", "paused", "canResume",
                                      "error", "exists"];
 
+// From https://fetch.spec.whatwg.org/#forbidden-header-name
+const FORBIDDEN_HEADERS = ["ACCEPT-CHARSET", "ACCEPT-ENCODING",
+  "ACCESS-CONTROL-REQUEST-HEADERS", "ACCESS-CONTROL-REQUEST-METHOD",
+  "CONNECTION", "CONTENT-LENGTH", "COOKIE", "COOKIE2", "DATE", "DNT",
+  "EXPECT", "HOST", "KEEP-ALIVE", "ORIGIN", "REFERER", "TE", "TRAILER",
+  "TRANSFER-ENCODING", "UPGRADE", "VIA"];
+
+const FORBIDDEN_PREFIXES = /^PROXY-|^SEC-/i;
 
 class DownloadItem {
   constructor(id, download, extension) {
@@ -418,6 +426,38 @@ extensions.registerSchemaAPI("downloads", "addon_parent", context => {
           return Promise.reject({message: "conflictAction prompt not yet implemented"});
         }
 
+        if (options.headers) {
+          for (let {name} of options.headers) {
+            if (FORBIDDEN_HEADERS.includes(name.toUpperCase()) || name.match(FORBIDDEN_PREFIXES)) {
+              return Promise.reject({message: "Forbidden request header name"});
+            }
+          }
+        }
+
+        // Handle method, headers and body options.
+        function adjustChannel(channel) {
+          if (channel instanceof Ci.nsIHttpChannel) {
+            const method = options.method || "GET";
+            channel.requestMethod = method;
+
+            if (options.headers) {
+              for (let {name, value} of options.headers) {
+                channel.setRequestHeader(name, value, false);
+              }
+            }
+
+            if (options.body != null) {
+              const stream = Cc["@mozilla.org/io/string-input-stream;1"]
+                             .createInstance(Ci.nsIStringInputStream);
+              stream.setData(options.body, options.body.length);
+
+              channel.QueryInterface(Ci.nsIUploadChannel2);
+              channel.explicitSetUploadStream(stream, null, -1, method, false);
+            }
+          }
+          return Promise.resolve();
+        }
+
         function createTarget(downloadsDir) {
           let target;
           if (filename) {
@@ -481,13 +521,23 @@ extensions.registerSchemaAPI("downloads", "addon_parent", context => {
         let download;
         return Downloads.getPreferredDownloadsDirectory()
           .then(downloadsDir => createTarget(downloadsDir))
-          .then(target => Downloads.createDownload({
-            source: options.url,
-            target: {
-              path: target,
-              partFilePath: target + ".part",
-            },
-          })).then(dl => {
+          .then(target => {
+            const source = {
+              url: options.url,
+            };
+
+            if (options.method || options.headers || options.body) {
+              source.adjustChannel = adjustChannel;
+            }
+
+            return Downloads.createDownload({
+              source,
+              target: {
+                path: target,
+                partFilePath: target + ".part",
+              },
+            });
+          }).then(dl => {
             download = dl;
             return DownloadMap.getDownloadList();
           }).then(list => {

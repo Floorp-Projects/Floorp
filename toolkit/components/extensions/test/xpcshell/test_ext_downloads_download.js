@@ -255,3 +255,101 @@ add_task(function* test_downloads() {
 
   yield extension.unload();
 });
+
+add_task(function* test_download_post() {
+  const server = createHttpServer();
+  const url = `http://localhost:${server.identity.primaryPort}/post-log`;
+
+  let received;
+  server.registerPathHandler("/post-log", request => {
+    received = request;
+  });
+
+  // Confirm received vs. expected values.
+  function confirm(method, headers = {}, body) {
+    equal(received.method, method, "method is correct");
+
+    for (let name in headers) {
+      ok(received.hasHeader(name), `header ${name} received`);
+      equal(received.getHeader(name), headers[name], `header ${name} is correct`);
+    }
+
+    if (body) {
+      const str = NetUtil.readInputStreamToString(received.bodyInputStream,
+        received.bodyInputStream.available());
+      equal(str, body, "body is correct");
+    }
+  }
+
+  function background() {
+    browser.test.onMessage.addListener(options => {
+      Promise.resolve()
+        .then(() => browser.downloads.download(options))
+        .catch(err => browser.test.sendMessage("done", {err: err.message}));
+    });
+    browser.downloads.onChanged.addListener(({state}) => {
+      if (state && state.current === "complete") {
+        browser.test.sendMessage("done", {ok: true});
+      }
+    });
+  }
+
+  const manifest = {permissions: ["downloads"]};
+  const extension = ExtensionTestUtils.loadExtension({background, manifest});
+  yield extension.startup();
+
+  function download(options) {
+    options.url = url;
+    options.conflictAction = "overwrite";
+
+    extension.sendMessage(options);
+    return extension.awaitMessage("done");
+  }
+
+  // Test method option.
+  let result = yield download({});
+  ok(result.ok, "download works without the method option, defaults to GET");
+  confirm("GET");
+
+  result = yield download({method: "PUT"});
+  ok(!result.ok, "download rejected with PUT method");
+  ok(/method: Invalid enumeration/.test(result.err), "descriptive error message");
+
+  result = yield download({method: "POST"});
+  ok(result.ok, "download works with POST method");
+  confirm("POST");
+
+  // Test body option values.
+  result = yield download({body: []});
+  ok(!result.ok, "download rejected because of non-string body");
+  ok(/body: Expected string/.test(result.err), "descriptive error message");
+
+  result = yield download({method: "POST", body: "of work"});
+  ok(result.ok, "download works with POST method and body");
+  confirm("POST", {"Content-Length": 7}, "of work");
+
+  // Test custom headers.
+  result = yield download({headers: [{name: "X-Custom"}]});
+  ok(!result.ok, "download rejected because of missing header value");
+  ok(/"value" is required/.test(result.err), "descriptive error message");
+
+  result = yield download({headers: [{name: "X-Custom", value: "13"}]});
+  ok(result.ok, "download works with a custom header");
+  confirm("GET", {"X-Custom": "13"});
+
+  // Test forbidden headers.
+  result = yield download({headers: [{name: "DNT", value: "1"}]});
+  ok(!result.ok, "download rejected because of forbidden header name DNT");
+  ok(/Forbidden request header/.test(result.err), "descriptive error message");
+
+  result = yield download({headers: [{name: "Proxy-Connection", value: "keep"}]});
+  ok(!result.ok, "download rejected because of forbidden header name prefix Proxy-");
+  ok(/Forbidden request header/.test(result.err), "descriptive error message");
+
+  result = yield download({headers: [{name: "Sec-ret", value: "13"}]});
+  ok(!result.ok, "download rejected because of forbidden header name prefix Sec-");
+  ok(/Forbidden request header/.test(result.err), "descriptive error message");
+
+  remove("post-log");
+  yield extension.unload();
+});
