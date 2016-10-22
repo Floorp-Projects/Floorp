@@ -628,7 +628,7 @@ protected:
   static void DoRemoveOutOfFlowFrame(nsIFrame* aFrame);
 
   /** set up the conditions necessary for an resize reflow
-    * the primary task is to mark the minimumly sufficient lines dirty. 
+    * the primary task is to mark the minimumly sufficient lines dirty.
     */
   void PrepareResizeReflow(BlockReflowInput& aState);
 
@@ -641,7 +641,7 @@ protected:
   //----------------------------------------
   // Methods for line reflow
   /**
-   * Reflow a line.  
+   * Reflow a line.
    * @param aState           the current reflow state
    * @param aLine            the line to reflow.  can contain a single block frame
    *                         or contain 1 or more inline frames.
