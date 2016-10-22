@@ -1417,6 +1417,7 @@ struct SetEnumValueHelper
   DEFINE_ENUM_CLASS_SETTER(StyleFloatEdge, ContentBox, MarginBox)
   DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None, SelectMenu)
   DEFINE_ENUM_CLASS_SETTER(StyleUserSelect, None, MozText)
+  DEFINE_ENUM_CLASS_SETTER(StyleUserInput, None, Auto)
 #ifdef MOZ_XUL
   DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None, Popup)
 #else
@@ -5112,7 +5113,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
            ui->mUserInput, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
            parentUI->mUserInput,
-           NS_STYLE_USER_INPUT_AUTO);
+           StyleUserInput::Auto);
 
   // user-modify: enum, inherit, initial
   SetValue(*aRuleData->ValueForUserModify(),
