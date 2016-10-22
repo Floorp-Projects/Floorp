@@ -166,6 +166,17 @@ public:
     aChain.RemoveElementAt(lastIndex);
   }
 
+  static EventTargetChainItem* GetFirstEventTarget(
+                                 nsTArray<EventTargetChainItem>& aChain)
+  {
+    return &aChain[0];
+  }
+
+  static uint32_t GetFirstEventTargetIdx(nsTArray<EventTargetChainItem>& aChain)
+  {
+    return 0;
+  }
+
   bool IsValid()
   {
     NS_WARNING_ASSERTION(!!(mTarget), "Event target is not valid!");
@@ -376,11 +387,13 @@ EventTargetChainItem::HandleEventTargetChain(
   // Save the target so that it can be restored later.
   nsCOMPtr<EventTarget> firstTarget = aVisitor.mEvent->mTarget;
   uint32_t chainLength = aChain.Length();
+  uint32_t firstEventTargetIdx =
+    EventTargetChainItem::GetFirstEventTargetIdx(aChain);
 
   // Capture
   aVisitor.mEvent->mFlags.mInCapturePhase = true;
   aVisitor.mEvent->mFlags.mInBubblingPhase = false;
-  for (uint32_t i = chainLength - 1; i > 0; --i) {
+  for (uint32_t i = chainLength - 1; i > firstEventTargetIdx; --i) {
     EventTargetChainItem& item = aChain[i];
     if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
          item.ForceContentDispatch()) &&
@@ -403,7 +416,7 @@ EventTargetChainItem::HandleEventTargetChain(
 
   // Target
   aVisitor.mEvent->mFlags.mInBubblingPhase = true;
-  EventTargetChainItem& targetItem = aChain[0];
+  EventTargetChainItem& targetItem = aChain[firstEventTargetIdx];
   if (!aVisitor.mEvent->PropagationStopped() &&
       (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
        targetItem.ForceContentDispatch())) {
@@ -415,7 +428,7 @@ EventTargetChainItem::HandleEventTargetChain(
 
   // Bubble
   aVisitor.mEvent->mFlags.mInCapturePhase = false;
-  for (uint32_t i = 1; i < chainLength; ++i) {
+  for (uint32_t i = firstEventTargetIdx + 1; i < chainLength; ++i) {
     EventTargetChainItem& item = aChain[i];
     EventTarget* newTarget = item.GetNewTarget();
     if (newTarget) {
@@ -672,7 +685,6 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
     EventTargetChainItem::DestroyLast(chain, targetEtci);
     targetEtci = EventTargetChainItemForChromeTarget(chain, content);
     NS_ENSURE_STATE(targetEtci);
-    MOZ_ASSERT(&chain[0] == targetEtci);
     targetEtci->GetEventTargetParent(preVisitor);
   }
   if (preVisitor.mCanHandle) {
@@ -717,7 +729,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
             if (parentEtci) {
               parentEtci->GetEventTargetParent(preVisitor);
               if (preVisitor.mCanHandle) {
-                chain[0].SetNewTarget(parentTarget);
+                EventTargetChainItem::GetFirstEventTarget(chain)->SetNewTarget(parentTarget);
                 topEtci = parentEtci;
                 continue;
               }
