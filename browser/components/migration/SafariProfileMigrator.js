@@ -131,7 +131,7 @@ Bookmarks.prototype = {
         // Reading list items are imported as regular bookmarks.
         // They are imported under their own folder, created either under the
         // bookmarks menu (in the case of startup migration).
-        folderGuid = (yield PlacesUtils.bookmarks.insert({
+        folderGuid = (yield MigrationUtils.insertBookmarkWrapper({
           parentGuid: PlacesUtils.bookmarks.menuGuid,
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
           title: MigrationUtils.getLocalizedString("importedSafariReadingList"),
@@ -154,7 +154,7 @@ Bookmarks.prototype = {
       let type = entry.get("WebBookmarkType");
       if (type == "WebBookmarkTypeList" && entry.has("Children")) {
         let title = entry.get("Title");
-        let newFolderGuid = (yield PlacesUtils.bookmarks.insert({
+        let newFolderGuid = (yield MigrationUtils.insertBookmarkWrapper({
           parentGuid, type: PlacesUtils.bookmarks.TYPE_FOLDER, title
         })).guid;
 
@@ -168,7 +168,7 @@ Bookmarks.prototype = {
           title = entry.get("URIDictionary").get("title");
 
         try {
-          yield PlacesUtils.bookmarks.insert({
+          yield MigrationUtils.insertBookmarkWrapper({
             parentGuid, url: entry.get("URLString"), title
           });
         } catch (ex) {
@@ -230,7 +230,7 @@ History.prototype = {
           }
         }
         if (places.length > 0) {
-          PlacesUtils.asyncHistory.updatePlaces(places, {
+          MigrationUtils.insertVisitsWrapper(places, {
             _success: false,
             handleResult: function() {
               // Importing any entry is considered a successful import.
