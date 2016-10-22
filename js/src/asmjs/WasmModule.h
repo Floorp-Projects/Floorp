@@ -234,10 +234,12 @@ class Module : public RefCounted<Module>
 
     // Structured clone support:
 
-    size_t serializedSize() const;
-    uint8_t* serialize(uint8_t* cursor) const;
-    static bool assumptionsMatch(const Assumptions& current, const uint8_t* cursor);
-    static const uint8_t* deserialize(const uint8_t* cursor, RefPtr<Module>* module,
+    void serializedSize(size_t* bytecodeSize, size_t* compiledSize) const;
+    void serialize(uint8_t* bytecodeBegin, size_t bytecodeSize,
+                   uint8_t* compiledBegin, size_t compiledSize) const;
+    static bool assumptionsMatch(const Assumptions& current, const uint8_t* compiledBegin);
+    static RefPtr<Module> deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
+                                      const uint8_t* compiledBegin, size_t compiledSize,
                                       Metadata* maybeMetadata = nullptr);
 
     // about:memory reporting:
