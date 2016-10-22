@@ -95,7 +95,6 @@ function Script(extension, options, deferred = PromiseUtils.defer()) {
   this.js = this.options.js || [];
   this.css = this.options.css || [];
   this.remove_css = this.options.remove_css;
-  this.match_about_blank = this.options.match_about_blank;
 
   this.deferred = deferred;
 
@@ -135,12 +134,6 @@ Script.prototype = {
       return false;
     }
 
-    if (this.match_about_blank && ["about:blank", "about:srcdoc"].includes(uri.spec)) {
-      // When matching about:blank/srcdoc documents, the checks below
-      // need to be performed against the "owner" document's URI.
-      uri = window.document.nodePrincipal.URI;
-    }
-
     if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
       return false;
     }
@@ -166,6 +159,8 @@ Script.prototype = {
     } else if (!this.options.all_frames && window.top != window) {
       return false;
     }
+
+    // TODO: match_about_blank.
 
     return true;
   },
@@ -421,13 +416,11 @@ DocumentManager = {
   extensionPageWindows: new Map(),
 
   init() {
-    Services.obs.addObserver(this, "content-document-global-created", false);
     Services.obs.addObserver(this, "document-element-inserted", false);
     Services.obs.addObserver(this, "inner-window-destroyed", false);
   },
 
   uninit() {
-    Services.obs.removeObserver(this, "content-document-global-created");
     Services.obs.removeObserver(this, "document-element-inserted");
     Services.obs.removeObserver(this, "inner-window-destroyed");
   },
@@ -444,24 +437,10 @@ DocumentManager = {
   },
 
   observe: function(subject, topic, data) {
-    // For some types of documents (about:blank), we only see the first
-    // notification, for others (data: URIs) we only observe the second.
-    if (topic == "content-document-global-created" || topic == "document-element-inserted") {
+    if (topic == "document-element-inserted") {
       let document = subject;
       let window = document && document.defaultView;
-
-      if (topic == "content-document-global-created") {
-        window = subject;
-        document = window && window.document;
-      }
-
       if (!document || !document.location || !window) {
-        return;
-      }
-
-      // Make sure we always load exactly once (notice != used as logical XOR),
-      // usually on document-element-inserted, except for about:blank documents.
-      if ((topic == "content-document-global-created") != (window.location.href == "about:blank")) {
         return;
       }
 
@@ -484,8 +463,7 @@ DocumentManager = {
         }
       }
 
-      this.trigger(window);
-
+      this.trigger("document_start", window);
       /* eslint-disable mozilla/balanced-listeners */
       window.addEventListener("DOMContentLoaded", this, true);
       window.addEventListener("load", this, true);
@@ -527,9 +505,9 @@ DocumentManager = {
     // Need to check if we're still on the right page? Greasemonkey does this.
 
     if (event.type == "DOMContentLoaded") {
-      this.trigger(window);
+      this.trigger("document_end", window);
     } else if (event.type == "load") {
-      this.trigger(window);
+      this.trigger("document_idle", window);
     }
   },
 
@@ -665,7 +643,7 @@ DocumentManager = {
     }
   },
 
-  trigger(window) {
+  trigger(when, window) {
     let state = this.getWindowState(window);
 
     if (state == "document_start") {
