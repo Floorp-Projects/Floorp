@@ -28,5 +28,5 @@ interface SVGFilterElement : SVGElement {
 };
 
 SVGFilterElement implements SVGURIReference;
-SVGFilterElement implements SVGUnitTypes;
+SVGFilterElement implements SVGUnitTypeValues;
 
