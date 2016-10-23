@@ -4010,7 +4010,7 @@ nsCursorImage::operator==(const nsCursorImage& aOther) const
 
 nsStyleUserInterface::nsStyleUserInterface(StyleStructContext aContext)
   : mUserInput(StyleUserInput::Auto)
-  , mUserModify(NS_STYLE_USER_MODIFY_READ_ONLY)
+  , mUserModify(StyleUserModify::ReadOnly)
   , mUserFocus(StyleUserFocus::None)
   , mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO)
   , mCursor(NS_STYLE_CURSOR_AUTO)

@@ -220,9 +220,11 @@ enum class StyleUserInput : uint8_t {
 };
 
 // user-modify
-#define NS_STYLE_USER_MODIFY_READ_ONLY   0
-#define NS_STYLE_USER_MODIFY_READ_WRITE  1
-#define NS_STYLE_USER_MODIFY_WRITE_ONLY  2
+enum class StyleUserModify : uint8_t {
+  ReadOnly,
+  ReadWrite,
+  WriteOnly,
+};
 
 // -moz-window-dragging
 #define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
