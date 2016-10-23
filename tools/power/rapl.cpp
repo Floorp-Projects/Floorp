@@ -518,8 +518,8 @@ public:
     attr.config = config;
 
     // Measure all processes/threads. The specified CPU doesn't matter.
-    mFd = perf_event_open(&attr, /* pid = */ -1, /* cpu = */ 0,
-                          /* group_fd = */ -1, /* flags = */ 0);
+    mFd = perf_event_open(&attr, /* aPid = */ -1, /* aCpu = */ 0,
+                          /* aGroupFd = */ -1, /* aFlags = */ 0);
     if (mFd < 0) {
       Abort("perf_event_open() failed\n"
             "- Did you run as root (e.g. with |sudo|) or set\n"
