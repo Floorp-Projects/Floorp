@@ -1796,43 +1796,6 @@ nsFrameLoader::OwnerIsIsolatedMozBrowserFrame()
     return true;
   }
 
-  // After bug 1238160, which allows isolation to be disabled on mozbrowser
-  // frames, we no longer have a way to tell from the principal alone if
-  // something "is a mozbrowser".  Instead, we now only know "is an isolated
-  // mozbrowser".  The following code paths would return invalid results if it
-  // were possible to have apps *and* isolation could be disabled:
-  //   * CheckPermission in AppProcessChecker.cpp
-  //   * nsScriptSecurityManager::AppStatusForPrincipal
-  //   * init() in SystemMessageManager.js
-  // Currently, desktop is the only platform where we intend to disable
-  // isolation on a browser frame, so non-desktop should be able to assume that
-  // inIsolatedMozBrowser is true for all mozbrowser frames.  To enforce these
-  // assumptions, we assert that there are no apps installed if we have tried
-  // to disable isolation.
-  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-  if (!appsService) {
-    // If the apps service is not present, we assume this means there can't be
-    // any apps at all, so there is no problem.
-    return false;
-  }
-  bool appsInstalled;
-  nsresult rv = appsService->AreAnyAppsInstalled(&appsInstalled);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // The apps service exists, but it threw an error when checking if there are
-    // any apps, so we don't know if we have them or not.
-    return false;
-  }
-#ifdef MOZ_B2G
-  MOZ_RELEASE_ASSERT(!appsInstalled,
-                     "Disabling mozbrowser isolation is not currently "
-                     "allowed when apps are installed.");
-#else
-  if (appsInstalled) {
-    NS_WARNING("Disabling mozbrowser isolation is not currently allowed when "
-               "apps are installed.");
-  }
-#endif
-
   return false;
 }
 
