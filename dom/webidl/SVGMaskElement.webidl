@@ -30,5 +30,5 @@ interface SVGMaskElement : SVGElement {
   readonly attribute SVGAnimatedLength height;
 };
 
-SVGMaskElement implements SVGUnitTypeValues;
+SVGMaskElement implements SVGUnitTypes;
 

@@ -29,4 +29,4 @@ interface SVGPatternElement : SVGElement {
 
 SVGPatternElement implements SVGFitToViewBox;
 SVGPatternElement implements SVGURIReference;
-SVGPatternElement implements SVGUnitTypeValues;
+SVGPatternElement implements SVGUnitTypes;

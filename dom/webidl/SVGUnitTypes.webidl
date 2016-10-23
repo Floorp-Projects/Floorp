@@ -11,6 +11,8 @@
  */
 
 interface SVGUnitTypes {
+  // Unit Types
+  const unsigned short SVG_UNIT_TYPE_UNKNOWN = 0;
+  const unsigned short SVG_UNIT_TYPE_USERSPACEONUSE = 1;
+  const unsigned short SVG_UNIT_TYPE_OBJECTBOUNDINGBOX = 2;
 };
-
-SVGUnitTypes implements SVGUnitTypesValues;
