@@ -70,6 +70,14 @@ GamepadPlatformService::NotifyGamepadChange(const T& aInfo)
   // mChannelParents may be accessed by background thread in the
   // same time, we use mutex to prevent possible race condtion
   MutexAutoLock autoLock(mMutex);
+
+  // Buffer all events if we have no Channel to dispatch, which
+  // may happen when performing Mochitest.
+  if (mChannelParents.IsEmpty()) {
+    mPendingEvents.AppendElement(e);
+    return;
+  }
+
   for(uint32_t i = 0; i < mChannelParents.Length(); ++i) {
     mChannelParents[i]->DispatchUpdateEvent(e);
   }
@@ -163,6 +171,27 @@ GamepadPlatformService::AddChannelParent(GamepadEventChannelParent* aParent)
   // We use mutex here to prevent race condition with monitor thread
   MutexAutoLock autoLock(mMutex);
   mChannelParents.AppendElement(aParent);
+  FlushPendingEvents();
+}
+
+void
+GamepadPlatformService::FlushPendingEvents()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mChannelParents.IsEmpty());
+
+  if (mPendingEvents.IsEmpty()) {
+    return;
+  }
+
+  // NOTE: This method must be called with mMutex held because it accesses
+  // mChannelParents.
+  for (uint32_t i=0; i<mChannelParents.Length(); ++i) {
+    for (uint32_t j=0; j<mPendingEvents.Length();++j) {
+      mChannelParents[i]->DispatchUpdateEvent(mPendingEvents[j]);
+    }
+  }
+  mPendingEvents.Clear();
 }
 
 void
