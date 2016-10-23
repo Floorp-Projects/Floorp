@@ -7,10 +7,11 @@ Workaround a build system bug where this file doesn't get packaged if not pre-pr
 #endif
 */
 
+/* exported install, uninstall, startup, shutdown */
+
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
