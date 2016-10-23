@@ -6,6 +6,39 @@
 /* import-globals-from pippki.js */
 "use strict";
 
+/**
+ * @file Implements the functionality of clientauthask.xul: a dialog that allows
+ *       a user pick a client certificate for TLS client authentication.
+ * @argument {String} window.arguments[0]
+ *           The hostname of the server requesting client authentication.
+ * @argument {String} window.arguments[1]
+ *           The Organization of the server cert.
+ * @argument {String} window.arguments[2]
+ *           The Organization of the issuer of the server cert.
+ * @argument {Number} window.arguments[3]
+ *           The port of the server.
+ * @argument {nsISupports} window.arguments[4]
+ *           List of certificates the user can choose from, queryable to
+ *           nsIArray<nsIX509Cert>.
+ * @argument {nsISupports} window.arguments[5]
+ *           Object to set the return values of calling the dialog on, queryable
+ *           to the underlying type of ClientAuthAskReturnValues.
+ */
+
+/**
+ * @typedef ClientAuthAskReturnValues
+ * @type nsIWritablePropertyBag2
+ * @property {Boolean} certChosen
+ *           Set to true if the user chose a cert and accepted the dialog, false
+ *           otherwise.
+ * @property {Boolean} rememberSelection
+ *           Set to true if the user wanted their cert selection to be
+ *           remembered, false otherwise.
+ * @property {Number} selectedIndex
+ *           The index the chosen cert is at for the given cert list. Undefined
+ *           value if |certChosen| is not true.
+ */
+
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
@@ -21,19 +54,12 @@ var bundle;
  */
 var certArray;
 /**
- * The param block to get params from and set results on.
- * @type nsIDialogParamBlock
- */
-var dialogParams;
-/**
  * The checkbox storing whether the user wants to remember the selected cert.
  * @type nsIDOMXULCheckboxElement
  */
 var rememberBox;
 
 function onLoad() {
-  dialogParams = window.arguments[0].QueryInterface(Ci.nsIDialogParamBlock);
-
   bundle = document.getElementById("pippki_bundle");
   let rememberSetting =
     Services.prefs.getBoolPref("security.remember_cert_checkbox_default_setting");
@@ -42,10 +68,10 @@ function onLoad() {
   rememberBox.label = bundle.getString("clientAuthRemember");
   rememberBox.checked = rememberSetting;
 
-  let hostname = dialogParams.GetString(0);
-  let org = dialogParams.GetString(1);
-  let issuerOrg = dialogParams.GetString(2);
-  let port = dialogParams.GetInt(0);
+  let hostname = window.arguments[0];
+  let org = window.arguments[1];
+  let issuerOrg = window.arguments[2];
+  let port = window.arguments[3];
   let formattedOrg = bundle.getFormattedString("clientAuthMessage1", [org]);
   let formattedIssuerOrg = bundle.getFormattedString("clientAuthMessage2",
                                                      [issuerOrg]);
@@ -57,7 +83,7 @@ function onLoad() {
   setText("issuer", formattedIssuerOrg);
 
   let selectElement = document.getElementById("nicknames");
-  certArray = dialogParams.objects.queryElementAt(0, Ci.nsIArray);
+  certArray = window.arguments[4].QueryInterface(Ci.nsIArray);
   for (let i = 0; i < certArray.length; i++) {
     let menuItemNode = document.createElement("menuitem");
     let cert = certArray.queryElementAt(i, Ci.nsIX509Cert);
@@ -113,21 +139,17 @@ function onCertSelected() {
 }
 
 function doOK() {
-  // Signal that the user accepted.
-  dialogParams.SetInt(0, 1);
+  let retVals = window.arguments[5].QueryInterface(Ci.nsIWritablePropertyBag2);
+  retVals.setPropertyAsBool("certChosen", true);
   let index = parseInt(document.getElementById("nicknames").value);
-  // Signal the index of the selected cert in the list of cert nicknames
-  // provided.
-  dialogParams.SetInt(1, index);
-  // Signal whether the user wanted to remember the selection.
-  dialogParams.SetInt(2, rememberBox.checked);
+  retVals.setPropertyAsUint32("selectedIndex", index);
+  retVals.setPropertyAsBool("rememberSelection", rememberBox.checked);
   return true;
 }
 
 function doCancel() {
-  // Signal that the user cancelled.
-  dialogParams.SetInt(0, 0);
-  // Signal whether the user wanted to remember the "selection".
-  dialogParams.SetInt(2, rememberBox.checked);
+  let retVals = window.arguments[5].QueryInterface(Ci.nsIWritablePropertyBag2);
+  retVals.setPropertyAsBool("certChosen", false);
+  retVals.setPropertyAsBool("rememberSelection", rememberBox.checked);
   return true;
 }
