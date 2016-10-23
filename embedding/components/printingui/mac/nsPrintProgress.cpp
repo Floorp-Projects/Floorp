@@ -6,7 +6,6 @@
 #include "nsPrintProgress.h"
 
 #include "nsIBaseWindow.h"
-#include "nsISupportsArray.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"

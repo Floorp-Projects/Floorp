@@ -5302,19 +5302,17 @@ BaseCompiler::emitCallIndirect(bool oldStyle)
 
     const SigWithId& sig = mg_.sigs[sigIndex];
 
-    // new style: Stack: ... arg1 .. argn index
-    // old style: Stack: ... index arg1 .. argn
-
-    Stk callee;
-    if (!oldStyle)
-        callee = stk_.popCopy();
+    // new style: Stack: ... arg1 .. argn callee
+    // old style: Stack: ... callee arg1 .. argn
 
     uint32_t numArgs = sig.args().length();
-    size_t stackSpace;
-    if (oldStyle)
-        stackSpace = stackConsumed(numArgs+1);
-    else
-        stackSpace = stackConsumed(numArgs);
+    size_t stackSpace = stackConsumed(numArgs + 1);
+
+    // The arguments must be at the stack top for emitCallArgs, so pop the
+    // callee if it is on top.  Note this only pops the compiler's stack,
+    // not the CPU stack.
+
+    Stk callee = oldStyle ? peek(numArgs) : stk_.popCopy();
 
     FunctionCall baselineCall(lineOrBytecode);
     beginCall(baselineCall, EscapesSandbox(false), IsBuiltinCall(false));
@@ -5325,8 +5323,6 @@ BaseCompiler::emitCallIndirect(bool oldStyle)
     if (oldStyle) {
         if (!iter_.readOldCallIndirectCallee(&callee_))
             return false;
-
-        callee = peek(numArgs);
     }
 
     if (!iter_.readCallReturn(sig.ret()))
@@ -5336,13 +5332,14 @@ BaseCompiler::emitCallIndirect(bool oldStyle)
 
     endCall(baselineCall);
 
+    // For new style calls, the callee was popped off the compiler's
+    // stack above.
+
+    popValueStackBy(oldStyle ? numArgs + 1 : numArgs);
+
     // TODO / OPTIMIZE: It would be better to merge this freeStack()
     // into the one in endCall, if we can.
 
-    if (oldStyle)
-        popValueStackBy(numArgs+1);
-    else
-        popValueStackBy(numArgs);
     masm.freeStack(stackSpace);
 
     if (!IsVoid(sig.ret()))

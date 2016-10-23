@@ -71,7 +71,7 @@ nsStreamConverterService::~nsStreamConverterService() {
 }
 
 // Builds the graph represented as an adjacency list (and built up in
-// memory using an nsObjectHashtable and nsISupportsArray combination).
+// memory using an nsObjectHashtable and nsCOMArray combination).
 //
 // :BuildGraph() consults the category manager for all stream converter
 // CONTRACTIDS then fills the adjacency list with edges.

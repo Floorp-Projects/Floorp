@@ -119,7 +119,7 @@ class BytecodeEmitter::NestableControl : public Nestable<BytecodeEmitter::Nestab
 
     template <typename T>
     T& as() {
-        MOZ_ASSERT(is<T>());
+        MOZ_ASSERT(this->is<T>());
         return static_cast<T&>(*this);
     }
 };

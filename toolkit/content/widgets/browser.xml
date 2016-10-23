@@ -1067,6 +1067,7 @@
               window.removeEventListener("mousemove", this, true);
               window.removeEventListener("mousedown", this, true);
               window.removeEventListener("mouseup", this, true);
+              window.removeEventListener("DOMMouseScroll", this, true);
               window.removeEventListener("contextmenu", this, true);
               window.removeEventListener("keydown", this, true);
               window.removeEventListener("keypress", this, true);
@@ -1086,6 +1087,7 @@
             // We set this attribute on the element so that mousemove
             // events can be handled by browser-content.js.
             popup.setAttribute("mousethrough", "always");
+            popup.setAttribute("rolluponmousewheel", "true");
             return popup;
           ]]>
         </body>
@@ -1132,6 +1134,7 @@
             window.addEventListener("mousemove", this, true);
             window.addEventListener("mousedown", this, true);
             window.addEventListener("mouseup", this, true);
+            window.addEventListener("DOMMouseScroll", this, true);
             window.addEventListener("contextmenu", this, true);
             window.addEventListener("keydown", this, true);
             window.addEventListener("keypress", this, true);
@@ -1165,6 +1168,11 @@
                   setTimeout(() => this._autoScrollPopup.hidePopup(), 0);
                 }
                 this._ignoreMouseEvents = false;
+                break;
+              }
+              case "DOMMouseScroll": {
+                this._autoScrollPopup.hidePopup();
+                event.preventDefault();
                 break;
               }
               case "popuphidden": {

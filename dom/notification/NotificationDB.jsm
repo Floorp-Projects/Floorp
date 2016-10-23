@@ -82,22 +82,20 @@ var NotificationDB = {
 
   filterNonAppNotifications: function(notifications) {
     for (let origin in notifications) {
-      let canPut = notificationStorage.canPut(origin);
-      if (!canPut) {
-        let persistentNotificationCount = 0;
-        for (let id in notifications[origin]) {
-          if (notifications[origin][id].serviceWorkerRegistrationScope) {
-            persistentNotificationCount++;
-          } else {
-            delete notifications[origin][id];
-          }
-        }
-        if (persistentNotificationCount == 0) {
-          if (DEBUG) debug("Origin " + origin + " is not linked to an app manifest, deleting.");
-          delete notifications[origin];
+      let persistentNotificationCount = 0;
+      for (let id in notifications[origin]) {
+        if (notifications[origin][id].serviceWorkerRegistrationScope) {
+          persistentNotificationCount++;
+        } else {
+          delete notifications[origin][id];
         }
       }
+      if (persistentNotificationCount == 0) {
+        if (DEBUG) debug("Origin " + origin + " is not linked to an app manifest, deleting.");
+        delete notifications[origin];
+      }
     }
+
     return notifications;
   },
 

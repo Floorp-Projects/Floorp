@@ -42,18 +42,18 @@ const PAGECONTENT_SMALL =
   "</select></body></html>";
 
 const PAGECONTENT_SOMEHIDDEN =
-  "<html>" +
+  "<html><head><style>.hidden { display: none; }</style></head>" +
   "<body><select id='one'>" +
   "  <option value='One' style='display: none;'>OneHidden</option>" +
-  "  <option value='Two' style='display: none;'>TwoHidden</option>" +
+  "  <option value='Two' class='hidden'>TwoHidden</option>" +
   "  <option value='Three'>ThreeVisible</option>" +
   "  <option value='Four'style='display: table;'>FourVisible</option>" +
   "  <option value='Five'>FiveVisible</option>" +
-  "  <optgroup label='GroupHidden' style='display: none;'>" +
+  "  <optgroup label='GroupHidden' class='hidden'>" +
   "    <option value='Four'>Six.OneHidden</option>" +
   "    <option value='Five' style='display: block;'>Six.TwoHidden</option>" +
   "  </optgroup>" +
-  "  <option value='Six'>SevenVisible</option>" +
+  "  <option value='Six' class='hidden' style='display: block;'>SevenVisible</option>" +
   "</select></body></html>";
 
 const PAGECONTENT_TRANSLATED =
