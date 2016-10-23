@@ -17,5 +17,5 @@ interface SVGClipPathElement : SVGElement {
   readonly attribute SVGAnimatedTransformList transform;
 };
 
-SVGClipPathElement implements SVGUnitTypeValues;
+SVGClipPathElement implements SVGUnitTypes;
 
