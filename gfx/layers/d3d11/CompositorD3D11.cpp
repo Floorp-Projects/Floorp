@@ -188,6 +188,7 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
 
   mDevice = DeviceManagerDx::Get()->GetCompositorDevice();
   if (!mDevice) {
+    gfxCriticalNote << "[D3D11] failed to get compositor device.";
     *out_failureReason = "FEATURE_FAILURE_D3D11_NO_DEVICE";
     return false;
   }
