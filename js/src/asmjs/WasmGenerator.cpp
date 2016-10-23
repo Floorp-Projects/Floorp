@@ -125,7 +125,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, const CompileArgs& args,
             return false;
     }
 
-    if (!metadata_->assumptions.clone(args.assumptions))
+    if (!assumptions_.clone(args.assumptions))
         return false;
 
     // For asm.js, the Vectors in ModuleGeneratorData are max-sized reservations
@@ -1154,7 +1154,8 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!finishLinkData(code))
         return nullptr;
 
-    return SharedModule(js_new<Module>(Move(code),
+    return SharedModule(js_new<Module>(Move(assumptions_),
+                                       Move(code),
                                        Move(linkData_),
                                        Move(imports_),
                                        Move(exports_),

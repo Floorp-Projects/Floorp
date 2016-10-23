@@ -10,5 +10,4 @@
 // browser_addons_debug_webextension.js
 function myWebExtensionPopupAddonFunction() {  // eslint-disable-line no-unused-vars
   console.log("Popup page function called", browser.runtime.getManifest());
-  window.close();
 }

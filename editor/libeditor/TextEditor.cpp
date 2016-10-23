@@ -60,7 +60,6 @@
 
 class nsIOutputStream;
 class nsISupports;
-class nsISupportsArray;
 
 namespace mozilla {
 

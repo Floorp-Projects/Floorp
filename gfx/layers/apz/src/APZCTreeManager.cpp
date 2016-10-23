@@ -169,9 +169,12 @@ APZCTreeManager::APZCTreeManager()
       mTreeLock("APZCTreeLock"),
       mHitResultForInputBlock(HitNothing),
       mRetainedTouchIdentifier(-1),
-      mApzcTreeLog("apzctree"),
-      mFlushObserver(new CheckerboardFlushObserver(this))
+      mApzcTreeLog("apzctree")
 {
+  RefPtr<APZCTreeManager> self(this);
+  NS_DispatchToMainThread(NS_NewRunnableFunction([self] {
+    self->mFlushObserver = new CheckerboardFlushObserver(self);
+  }));
   AsyncPanZoomController::InitializeGlobalState();
   mApzcTreeLog.ConditionOnPrefFunction(gfxPrefs::APZPrintTree);
 }

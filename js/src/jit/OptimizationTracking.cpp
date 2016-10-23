@@ -936,7 +936,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
         uint32_t runLength = IonTrackedOptimizationsRegion::ExpectedRunLength(entry, end);
         JitSpew(JitSpew_OptimizationTracking,
                 "   Run at entry %" PRIuSIZE ", length %" PRIu32 ", offset %" PRIuSIZE,
-                entry - start, runLength, writer.length());
+                size_t(entry - start), runLength, writer.length());
 
         if (!offsets.append(writer.length()))
             return false;
@@ -970,7 +970,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
         const TempOptimizationTypeInfoVector* v = p->types;
         JitSpew(JitSpew_OptimizationTracking,
                 "   Type info entry %" PRIuSIZE " of length %" PRIuSIZE ", offset %" PRIuSIZE,
-                p - vec.begin(), v->length(), writer.length());
+                size_t(p - vec.begin()), v->length(), writer.length());
         SpewTempOptimizationTypeInfoVector(v, "  ");
 
         if (!offsets.append(writer.length()))
@@ -1021,7 +1021,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
         const TempOptimizationAttemptsVector* v = p->attempts;
         JitSpew(JitSpew_OptimizationTracking,
                 "   Attempts entry %" PRIuSIZE " of length %" PRIuSIZE ", offset %" PRIuSIZE,
-                p - vec.begin(), v->length(), writer.length());
+                size_t(p - vec.begin()), v->length(), writer.length());
         SpewTempOptimizationAttemptsVector(v, "  ");
 
         if (!offsets.append(writer.length()))

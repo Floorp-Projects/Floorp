@@ -477,7 +477,6 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     CallThunkVector       callThunks;
     NameInBytecodeVector  funcNames;
     CacheableChars        filename;
-    Assumptions           assumptions;
 
     bool usesMemory() const { return UsesMemory(memoryUsage); }
     bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
