@@ -3398,7 +3398,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
   }
 
   mozilla::StyleUserInput   mUserInput;       // [inherited]
-  uint8_t                   mUserModify;      // [inherited] (modify-content)
+  mozilla::StyleUserModify  mUserModify;      // [inherited] (modify-content)
   mozilla::StyleUserFocus   mUserFocus;       // [inherited] (auto-select)
   uint8_t                   mPointerEvents;   // [inherited] see nsStyleConsts.h
 
