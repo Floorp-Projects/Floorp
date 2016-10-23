@@ -534,7 +534,6 @@ WEBIDL_FILES = [
     'SVGTransformList.webidl',
     'SVGTSpanElement.webidl',
     'SVGUnitTypes.webidl',
-    'SVGUnitTypeValues.webidl',
     'SVGURIReference.webidl',
     'SVGUseElement.webidl',
     'SVGViewElement.webidl',
