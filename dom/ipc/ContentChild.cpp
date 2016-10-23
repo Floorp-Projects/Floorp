@@ -1434,6 +1434,10 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
 bool
 ContentChild::RecvNotifyLayerAllocated(const dom::TabId& aTabId, const uint64_t& aLayersId)
 {
+  if (!CompositorBridgeChild::Get()->IPCOpen()) {
+    return true;
+  }
+
   APZChild* apz = ContentProcessController::Create(aTabId);
   return CompositorBridgeChild::Get()->SendPAPZConstructor(apz, aLayersId);
 }

@@ -43,12 +43,12 @@ checkBool(bool success)
 }
 
 /* The warning reporter callback. */
-void reportWarning(JSContext* cx, const char* message, JSErrorReport* report)
+void reportWarning(JSContext* cx, JSErrorReport* report)
 {
     fprintf(stderr, "%s:%u: %s\n",
             report->filename ? report->filename : "<no filename>",
             (unsigned int) report->lineno,
-            message);
+            report->message().c_str());
 }
 
 // prologue.py sets a breakpoint on this function; test functions can call it

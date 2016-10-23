@@ -219,46 +219,9 @@ typedef enum JSWhyMagic
     JS_WHY_MAGIC_COUNT
 } JSWhyMagic;
 
-/*
- * For codesize purposes on some platforms, it's important that the
- * compiler know that JS::Values constructed from constant values can be
- * folded to constant bit patterns at compile time, rather than
- * constructed at runtime.  Doing this requires a fair amount of C++11
- * features, which are not supported on all of our compilers.  Set up
- * some defines and helper macros in an attempt to confine the ugliness
- * here, rather than scattering it all about the file.  The important
- * features are:
- *
- * - constexpr;
- * - defaulted functions;
- * - C99-style designated initializers.
- */
-#if defined(__clang__)
-#  if __has_feature(cxx_constexpr) && __has_feature(cxx_defaulted_functions)
-#    define JS_VALUE_IS_CONSTEXPR
-#  endif
-#elif defined(__GNUC__)
-/*
- * We need 4.5 for defaulted functions, 4.6 for constexpr, 4.7 because 4.6
- * doesn't understand |(X) { .field = ... }| syntax, and 4.7.3 because
- * versions prior to that have bugs in the C++ front-end that cause crashes.
- */
-#  if MOZ_GCC_VERSION_AT_LEAST(4, 7, 3)
-#    define JS_VALUE_IS_CONSTEXPR
-#  endif
-#endif
-
-#if defined(JS_VALUE_IS_CONSTEXPR)
-#  define JS_VALUE_CONSTEXPR constexpr
-#  define JS_VALUE_CONSTEXPR_VAR constexpr
-#else
-#  define JS_VALUE_CONSTEXPR
-#  define JS_VALUE_CONSTEXPR_VAR const
-#endif
-
 namespace JS {
 
-static inline JS_VALUE_CONSTEXPR JS::Value UndefinedValue();
+static inline constexpr JS::Value UndefinedValue();
 static inline JS::Value PoisonedObjectValue(JSObject* obj);
 
 /**
@@ -332,10 +295,8 @@ class MOZ_NON_PARAM alignas(8) Value
      * N.B. the default constructor leaves Value unitialized. Adding a default
      * constructor prevents Value from being stored in a union.
      */
-#if defined(JS_VALUE_IS_CONSTEXPR)
     Value() = default;
     Value(const Value& v) = default;
-#endif
 
     /**
      * Returns false if creating a NumberValue containing the given type would
@@ -840,7 +801,7 @@ class MOZ_NON_PARAM alignas(8) Value
 
 #if MOZ_LITTLE_ENDIAN
 # if defined(JS_NUNBOX32)
-    union {
+    union layout {
         uint64_t asBits;
         struct {
             union {
@@ -860,9 +821,13 @@ class MOZ_NON_PARAM alignas(8) Value
         } s;
         double asDouble;
         void* asPtr;
+
+        layout() = default;
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
     } data;
 # elif defined(JS_PUNBOX64)
-    union {
+    union layout {
         uint64_t asBits;
 #if !defined(_WIN64)
         /* MSVC does not pack these correctly :-( */
@@ -882,11 +847,15 @@ class MOZ_NON_PARAM alignas(8) Value
         void* asPtr;
         size_t asWord;
         uintptr_t asUIntPtr;
+
+        layout() = default;
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
     } data;
 # endif  /* JS_PUNBOX64 */
 #else   /* MOZ_LITTLE_ENDIAN */
 # if defined(JS_NUNBOX32)
-    union {
+    union layout {
         uint64_t asBits;
         struct {
             JSValueTag tag;
@@ -906,9 +875,13 @@ class MOZ_NON_PARAM alignas(8) Value
         } s;
         double asDouble;
         void* asPtr;
+
+        layout() = default;
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
     } data;
 # elif defined(JS_PUNBOX64)
-    union {
+    union layout {
         uint64_t asBits;
         struct {
             JSValueTag         tag : 17;
@@ -926,15 +899,17 @@ class MOZ_NON_PARAM alignas(8) Value
         void* asPtr;
         size_t asWord;
         uintptr_t asUIntPtr;
+
+        layout() = default;
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
     } data;
 # endif /* JS_PUNBOX64 */
 #endif  /* MOZ_LITTLE_ENDIAN */
 
   private:
-#if defined(JS_VALUE_IS_CONSTEXPR)
-    explicit JS_VALUE_CONSTEXPR Value(uint64_t asBits) : data({ .asBits = asBits }) {}
-    explicit JS_VALUE_CONSTEXPR Value(double d) : data({ .asDouble = d }) {}
-#endif
+    explicit constexpr Value(uint64_t asBits) : data(asBits) {}
+    explicit constexpr Value(double d) : data(d) {}
 
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
@@ -943,10 +918,10 @@ class MOZ_NON_PARAM alignas(8) Value
         JS_STATIC_ASSERT(sizeof(Value) == 8);
     }
 
-    friend Value JS_VALUE_CONSTEXPR (JS::UndefinedValue)();
+    friend constexpr Value JS::UndefinedValue();
 
   public:
-    static JS_VALUE_CONSTEXPR uint64_t
+    static constexpr uint64_t
     bitsFromTagAndPayload(JSValueTag tag, PayloadType payload)
     {
 #if defined(JS_NUNBOX32)
@@ -956,37 +931,25 @@ class MOZ_NON_PARAM alignas(8) Value
 #endif
     }
 
-    static JS_VALUE_CONSTEXPR Value
+    static constexpr Value
     fromTagAndPayload(JSValueTag tag, PayloadType payload)
     {
         return fromRawBits(bitsFromTagAndPayload(tag, payload));
     }
 
-    static JS_VALUE_CONSTEXPR Value
+    static constexpr Value
     fromRawBits(uint64_t asBits) {
-#if defined(JS_VALUE_IS_CONSTEXPR)
         return Value(asBits);
-#else
-        Value v;
-        v.data.asBits = asBits;
-        return v;
-#endif
     }
 
-    static JS_VALUE_CONSTEXPR Value
+    static constexpr Value
     fromInt32(int32_t i) {
         return fromTagAndPayload(JSVAL_TAG_INT32, uint32_t(i));
     }
 
-    static JS_VALUE_CONSTEXPR Value
+    static constexpr Value
     fromDouble(double d) {
-#if defined(JS_VALUE_IS_CONSTEXPR)
         return Value(d);
-#else
-        Value v;
-        v.data.asDouble = d;
-        return v;
-#endif
     }
 } JS_HAZ_GC_POINTER;
 
@@ -1019,13 +982,13 @@ NullValue()
     return v;
 }
 
-static inline JS_VALUE_CONSTEXPR Value
+static inline constexpr Value
 UndefinedValue()
 {
     return Value::fromTagAndPayload(JSVAL_TAG_UNDEFINED, 0);
 }
 
-static inline JS_VALUE_CONSTEXPR Value
+static inline constexpr Value
 Int32Value(int32_t i32)
 {
     return Value::fromInt32(i32);
@@ -1039,7 +1002,7 @@ DoubleValue(double dbl)
     return v;
 }
 
-static inline JS_VALUE_CONSTEXPR Value
+static inline constexpr Value
 CanonicalizedDoubleValue(double d)
 {
     return MOZ_UNLIKELY(mozilla::IsNaN(d))
@@ -1181,7 +1144,7 @@ NumberValue(int32_t i)
     return Int32Value(i);
 }
 
-static inline JS_VALUE_CONSTEXPR Value
+static inline constexpr Value
 NumberValue(uint32_t i)
 {
     return i <= JSVAL_INT_MAX
@@ -1519,7 +1482,5 @@ extern JS_PUBLIC_DATA(const HandleValue) TrueHandleValue;
 extern JS_PUBLIC_DATA(const HandleValue) FalseHandleValue;
 
 } // namespace JS
-
-#undef JS_VALUE_IS_CONSTEXPR
 
 #endif /* js_Value_h */

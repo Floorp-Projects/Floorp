@@ -19,7 +19,7 @@
         let event = yield undefined;
 
         if (event.type == "success") {
-          testResult = event.target.result;
+          testResult = event.target.result instanceof IDBDatabase;
         }
         else {
           testException = event.target.error.name;

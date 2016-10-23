@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script id="fshader" type="x-shader/x-fragment">
+void main() {
+  -2147483648 % 0xffffffff;
+  gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);
+}
+</script>
+</head>
+<body>
+<script>
+var gl = document.createElement('canvas').getContext('webgl');
+var program = gl.createProgram();
+var fshader = gl.createShader(gl.FRAGMENT_SHADER);
+var fshaderSource = document.getElementById("fshader").text;
+gl.shaderSource(fshader, fshaderSource);
+gl.compileShader(fshader);
+</script>
+</body>
+</html>

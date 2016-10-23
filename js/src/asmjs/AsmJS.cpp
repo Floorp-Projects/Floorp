@@ -8456,8 +8456,12 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
     if (!moduleChars.init(parser))
         return JS::AsmJSCache_InternalError;
 
-    size_t serializedSize = moduleChars.serializedSize() +
-                            module.serializedSize();
+    size_t bytecodeSize, compiledSize;
+    module.serializedSize(&bytecodeSize, &compiledSize);
+
+    size_t serializedSize = 2 * sizeof(size_t) +
+                            bytecodeSize + compiledSize +
+                            moduleChars.serializedSize();
 
     JS::OpenAsmJSCacheEntryForWriteOp open = cx->asmJSCacheOps().openEntryForWrite;
     if (!open)
@@ -8474,10 +8478,20 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
         return openResult;
 
     uint8_t* cursor = entry.memory;
-    cursor = moduleChars.serialize(cursor);
-    cursor = module.serialize(cursor);
 
-    MOZ_ASSERT(cursor == entry.memory + serializedSize);
+    cursor = WriteScalar<size_t>(cursor, bytecodeSize);
+    cursor = WriteScalar<size_t>(cursor, compiledSize);
+
+    uint8_t* compiledBegin = cursor;
+    uint8_t* bytecodeBegin = compiledBegin + compiledSize;;
+
+    module.serialize(bytecodeBegin, bytecodeSize, compiledBegin, compiledSize);
+    cursor = bytecodeBegin + bytecodeSize;
+
+    cursor = moduleChars.serialize(cursor);
+
+    MOZ_RELEASE_ASSERT(cursor == entry.memory + serializedSize);
+
     return JS::AsmJSCache_Success;
 }
 
@@ -8502,38 +8516,46 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
 
     const uint8_t* cursor = entry.memory;
 
-    ModuleCharsForLookup moduleChars;
-    cursor = moduleChars.deserialize(cursor);
-    if (!moduleChars.match(parser))
+    size_t bytecodeSize, compiledSize;
+    cursor = ReadScalar<size_t>(cursor, &bytecodeSize);
+    cursor = ReadScalar<size_t>(cursor, &compiledSize);
+
+    const uint8_t* compiledBegin = cursor;
+    const uint8_t* bytecodeBegin = compiledBegin + compiledSize;
+
+    Assumptions assumptions;
+    if (!assumptions.initBuildIdFromContext(cx))
+        return false;
+
+    if (!Module::assumptionsMatch(assumptions, compiledBegin))
         return true;
 
     MutableAsmJSMetadata asmJSMetadata = cx->new_<AsmJSMetadata>();
     if (!asmJSMetadata)
         return false;
 
-    cursor = Module::deserialize(cursor, module, asmJSMetadata.get());
-    if (!cursor) {
+    *module = Module::deserialize(bytecodeBegin, bytecodeSize, compiledBegin, compiledSize,
+                                  asmJSMetadata.get());
+    if (!*module) {
         ReportOutOfMemory(cx);
         return false;
     }
+    cursor = bytecodeBegin + bytecodeSize;
+
+    // Due to the hash comparison made by openEntryForRead, this should succeed
+    // with high probability.
+    ModuleCharsForLookup moduleChars;
+    cursor = moduleChars.deserialize(cursor);
+    if (!moduleChars.match(parser))
+        return true;
+
+    MOZ_RELEASE_ASSERT(cursor == entry.memory + entry.serializedSize);
 
     // See AsmJSMetadata comment as well as ModuleValidator::init().
     asmJSMetadata->srcStart = parser.pc->functionBox()->functionNode->pn_body->pn_pos.begin;
     asmJSMetadata->srcBodyStart = parser.tokenStream.currentToken().pos.end;
     asmJSMetadata->strict = parser.pc->sc()->strict() && !parser.pc->sc()->hasExplicitUseStrict();
     asmJSMetadata->scriptSource.reset(parser.ss);
-
-    bool atEnd = cursor == entry.memory + entry.serializedSize;
-    MOZ_ASSERT(atEnd, "Corrupt cache file");
-    if (!atEnd)
-        return true;
-
-    Assumptions assumptions;
-    if (!assumptions.initBuildIdFromContext(cx))
-        return false;
-
-    if (assumptions != (*module)->metadata().assumptions)
-        return true;
 
     if (!parser.tokenStream.advance(asmJSMetadata->srcEndBeforeCurly()))
         return false;

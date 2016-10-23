@@ -7,10 +7,14 @@
 
 #include "vm/ErrorObject-inl.h"
 
+#include "mozilla/Range.h"
+
 #include "jsexn.h"
 
 #include "js/CallArgs.h"
+#include "js/CharacterEncoding.h"
 #include "vm/GlobalObject.h"
+#include "vm/String.h"
 
 #include "jsobjinlines.h"
 
@@ -145,10 +149,11 @@ js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
         message = cx->runtime()->emptyString;
     if (!message->ensureFlat(cx))
         return nullptr;
-    AutoStableStringChars chars(cx);
-    if (!chars.initTwoByte(cx, message))
+
+    UniquePtr<char[], JS::FreePolicy> utf8 = StringToNewUTF8CharsZ(cx, *message);
+    if (!utf8)
         return nullptr;
-    report.ucmessage = chars.twoByteRange().start().get();
+    report.initOwnedMessage(utf8.release());
 
     // Cache and return.
     JSErrorReport* copy = CopyErrorReport(cx, &report);

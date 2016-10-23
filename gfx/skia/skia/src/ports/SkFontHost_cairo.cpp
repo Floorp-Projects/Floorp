@@ -475,11 +475,17 @@ void SkScalerContext_CairoFT::parsePattern(FcPattern* pattern)
         fRec.fMaskFormat = SkMask::kBW_Format;
     }
 
-    if (fRec.getHinting() != SkPaint::kNo_Hinting &&
-        (FcPatternGetBool(pattern, FC_HINTING, 0, &hinting) != FcResultMatch || hinting)) {
+    if (fRec.getHinting() != SkPaint::kNo_Hinting) {
+        // Hinting was requested, so check if the fontconfig pattern needs to override it.
+        // If hinting is either explicitly enabled by fontconfig or not configured, try to
+        // parse the hint style. Otherwise, ensure hinting is disabled.
         int hintstyle;
-        if (FcPatternGetInteger(pattern, FC_HINT_STYLE, 0, &hintstyle) != FcResultMatch) {
-            hintstyle = FC_HINT_FULL;
+        if (FcPatternGetBool(pattern, FC_HINTING, 0, &hinting) != FcResultMatch || hinting) {
+            if (FcPatternGetInteger(pattern, FC_HINT_STYLE, 0, &hintstyle) != FcResultMatch) {
+                hintstyle = FC_HINT_FULL;
+            }
+        } else {
+            hintstyle = FC_HINT_NONE;
         }
         switch (hintstyle) {
         case FC_HINT_NONE:

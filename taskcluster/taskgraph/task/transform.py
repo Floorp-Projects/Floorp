@@ -12,6 +12,8 @@ from .. import files_changed
 from ..util.python_path import find_object
 from ..util.templates import merge
 from ..util.yaml import load_yaml
+from ..util.seta import is_low_value_task
+
 from ..transforms.base import TransformSequence, TransformConfig
 
 logger = logging.getLogger(__name__)
@@ -91,7 +93,14 @@ class TransformTask(base.Task):
                 logger.debug('no files found matching a pattern in `when.files-changed` for ' +
                              self.label)
                 return True, None
-        return False, None
+
+        # we would like to return 'False, None' while it's high_value_task
+        # and we wouldn't optimize it. Otherwise, it will return 'True, None'
+        if is_low_value_task(self.label, params.get('project')):
+            # Always optimize away low-value tasks
+            return True, None
+        else:
+            return False, None
 
     @classmethod
     def from_json(cls, task_dict):
