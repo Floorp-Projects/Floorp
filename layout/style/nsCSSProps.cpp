@@ -2129,9 +2129,9 @@ const KTableEntry nsCSSProps::kUserInputKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kUserModifyKTable[] = {
-  { eCSSKeyword_read_only,  NS_STYLE_USER_MODIFY_READ_ONLY },
-  { eCSSKeyword_read_write, NS_STYLE_USER_MODIFY_READ_WRITE },
-  { eCSSKeyword_write_only, NS_STYLE_USER_MODIFY_WRITE_ONLY },
+  { eCSSKeyword_read_only,  StyleUserModify::ReadOnly },
+  { eCSSKeyword_read_write, StyleUserModify::ReadWrite },
+  { eCSSKeyword_write_only, StyleUserModify::WriteOnly },
   { eCSSKeyword_UNKNOWN,    -1 }
 };
 
