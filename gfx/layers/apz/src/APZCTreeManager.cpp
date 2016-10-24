@@ -551,9 +551,10 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
     if (newApzc) {
       apzc = NewAPZCInstance(aLayersId, state->mController);
       apzc->SetCompositorController(aState.mCompositor);
-      apzc->SetCompositorBridgeParent(aState.mCompositor);
-      if (state->mCrossProcessParent != nullptr) {
-        apzc->ShareFrameMetricsAcrossProcesses();
+      if (state->mCrossProcessParent) {
+        apzc->SetMetricsSharingController(state->CrossProcessSharingController());
+      } else {
+        apzc->SetMetricsSharingController(aState.mCompositor);
       }
       MOZ_ASSERT(node == nullptr);
       node = new HitTestingTreeNode(apzc, true, aLayersId);
