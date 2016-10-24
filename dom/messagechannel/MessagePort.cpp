@@ -137,8 +137,7 @@ private:
     event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
                             false /* non-bubbling */,
                             false /* cancelable */, value, EmptyString(),
-                            EmptyString(), nullptr,
-                            Sequence<OwningNonNull<MessagePort>>());
+                            EmptyString(), nullptr, nullptr);
     event->SetTrusted(true);
     event->SetSource(mPort);
 

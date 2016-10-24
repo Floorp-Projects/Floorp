@@ -106,7 +106,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   RootedDictionary<MessageEventInit> init(cx);
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mOrigin = mOrigin;
+  init.mOrigin.Construct(mOrigin);
   init.mData = value;
 
   ErrorResult rv;
