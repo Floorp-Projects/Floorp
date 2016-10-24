@@ -33,6 +33,7 @@
     macro(Bool16x8, Bool16x8, "Bool16x8") \
     macro(Bool32x4, Bool32x4, "Bool32x4") \
     macro(Bool64x2, Bool64x2, "Bool64x2") \
+    macro(boundWithSpace, boundWithSpace, "bound ") \
     macro(breakdown, breakdown, "breakdown") \
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
