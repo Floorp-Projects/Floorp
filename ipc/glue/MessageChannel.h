@@ -481,8 +481,8 @@ class MessageChannel : HasResultCodes
 
           // Iterate over the sorted queue to find the message that has the
           // highest number of count.
-          char* topName = nullptr;
-          char* curName = nullptr;
+          const char* topName = nullptr;
+          const char* curName = nullptr;
           msgid_t topType = 0, curType = 0;
           uint32_t topCount = 0, curCount = 0;
           for (MessageQueue::iterator it = q.begin(); it != q.end(); ++it) {
@@ -495,7 +495,7 @@ class MessageChannel : HasResultCodes
                 topType = curType;
                 topCount = curCount;
               }
-              curName = const_cast<char*>(msg.name());
+              curName = StringFromIPCMessageType(msg.type());
               curType = msg.type();
               curCount = 1;
             }
