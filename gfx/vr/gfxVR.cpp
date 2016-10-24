@@ -113,3 +113,15 @@ VRControllerManager::NewAxisMove(uint32_t aIndex, uint32_t aAxis,
   MOZ_ASSERT(vm);
   vm->NotifyGamepadChange<dom::GamepadAxisInformation>(a);
 }
+
+void
+VRControllerManager::NewPoseState(uint32_t aIndex,
+                                  const dom::GamepadPoseState& aPose)
+{
+  dom::GamepadPoseInformation a(aIndex, dom::GamepadServiceType::VR,
+                                aPose);
+
+  VRManager* vm = VRManager::Get();
+  MOZ_ASSERT(vm);
+  vm->NotifyGamepadChange<dom::GamepadPoseInformation>(a);
+}
