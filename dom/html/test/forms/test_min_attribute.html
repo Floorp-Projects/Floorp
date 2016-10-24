@@ -27,12 +27,12 @@ var data = [
   { type: 'url', apply: false },
   { type: 'email', apply: false },
   { type: 'password', apply: false },
-  { type: 'datetime', apply: true, todo: true },
   { type: 'date', apply: true },
   { type: 'month', apply: true },
   { type: 'week', apply: true },
   { type: 'time', apply: true },
-  { type: 'datetime-local', apply: true, todo: true },
+  // TODO: temporary set to false until bug 888331 is fixed.
+  { type: 'datetime-local', apply: false },
   { type: 'number', apply: true },
   { type: 'range', apply: true },
   { type: 'color', apply: false },
@@ -147,6 +147,9 @@ for (var test of data) {
       break;
     case 'week':
       input.min = "2016-W39";
+      break;
+    case 'datetime-local':
+      // TODO: this is temporary until bug 888331 is fixed.
       break;
     default:
       ok(false, 'please, add a case for this new type (' + input.type + ')');
@@ -415,6 +418,9 @@ for (var test of data) {
 
       input.min = 'foo';
       checkValidity(input, true, apply, false);
+      break;
+    case 'datetime-local':
+      // TODO: this is temporary until bug 888331 is fixed.
       break;
     default:
       ok(false, 'write tests for ' + input.type);

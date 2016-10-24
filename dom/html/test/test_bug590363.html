@@ -40,12 +40,9 @@ var testData = [
   [ "range",    true ],
   [ "color",    true ],
   [ 'month',    true ],
-  [ 'week',     true ]
+  [ 'week',     true ],
+  [ 'datetime-local', true ]
   // 'file' is treated separatly.
-];
-
-var todoTypes = [
-  "datetime", "datetime-local"
 ];
 
 var nonTrivialSanitizing = [ 'number', 'date', 'time', 'color', 'month', 'week' ];
@@ -123,13 +120,6 @@ for (var data of testData) {
     is(e.value, 'foo', ".value should still return the same value after " +
        "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
   }
-}
-
-// TODO checks
-for (var type of todoTypes) {
-  var e = document.createElement('input');
-  e.type = type;
-  todo_is(e.type, type, type + " type isn't supported yet");
 }
 
 </script>

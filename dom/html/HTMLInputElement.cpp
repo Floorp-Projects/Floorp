@@ -162,6 +162,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "checkbox", NS_FORM_INPUT_CHECKBOX },
   { "color", NS_FORM_INPUT_COLOR },
   { "date", NS_FORM_INPUT_DATE },
+  { "datetime-local", NS_FORM_INPUT_DATETIME_LOCAL },
   { "email", NS_FORM_INPUT_EMAIL },
   { "file", NS_FORM_INPUT_FILE },
   { "hidden", NS_FORM_INPUT_HIDDEN },
@@ -183,7 +184,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 };
 
 // Default type is 'text'.
-static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[17];
+static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[18];
 
 static const uint8_t NS_INPUT_INPUTMODE_AUTO              = 0;
 static const uint8_t NS_INPUT_INPUTMODE_NUMERIC           = 1;
@@ -2203,7 +2204,8 @@ HTMLInputElement::ConvertNumberToString(Decimal aValue,
 Nullable<Date>
 HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 {
-  if (!IsDateTimeInputType(mType)) {
+  // TODO: this is temporary until bug 888331 is fixed.
+  if (!IsDateTimeInputType(mType) || mType == NS_FORM_INPUT_DATETIME_LOCAL) {
     return Nullable<Date>();
   }
 
@@ -2271,7 +2273,8 @@ HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 void
 HTMLInputElement::SetValueAsDate(Nullable<Date> aDate, ErrorResult& aRv)
 {
-  if (!IsDateTimeInputType(mType)) {
+  // TODO: this is temporary until bug 888331 is fixed.
+  if (!IsDateTimeInputType(mType) || mType == NS_FORM_INPUT_DATETIME_LOCAL) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -2527,7 +2530,8 @@ HTMLInputElement::IsDateTimeInputType(uint8_t aType)
   return aType == NS_FORM_INPUT_DATE ||
          aType == NS_FORM_INPUT_TIME ||
          aType == NS_FORM_INPUT_MONTH ||
-         aType == NS_FORM_INPUT_WEEK;
+         aType == NS_FORM_INPUT_WEEK ||
+         aType == NS_FORM_INPUT_DATETIME_LOCAL;
 }
 
 NS_IMETHODIMP
@@ -5625,7 +5629,8 @@ IsDateTimeEnabled(int32_t aNewType)
           (Preferences::GetBool("dom.forms.datetime", false) ||
            Preferences::GetBool("dom.experimental_forms", false))) ||
          ((aNewType == NS_FORM_INPUT_MONTH ||
-           aNewType == NS_FORM_INPUT_WEEK) &&
+           aNewType == NS_FORM_INPUT_WEEK ||
+           aNewType == NS_FORM_INPUT_DATETIME_LOCAL) &&
           Preferences::GetBool("dom.forms.datetime", false));
 }
 
@@ -7145,6 +7150,7 @@ HTMLInputElement::GetValueMode() const
     case NS_FORM_INPUT_COLOR:
     case NS_FORM_INPUT_MONTH:
     case NS_FORM_INPUT_WEEK:
+    case NS_FORM_INPUT_DATETIME_LOCAL:
       return VALUE_MODE_VALUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
@@ -7192,6 +7198,7 @@ HTMLInputElement::DoesReadOnlyApply() const
     case NS_FORM_INPUT_TIME:
     case NS_FORM_INPUT_MONTH:
     case NS_FORM_INPUT_WEEK:
+    case NS_FORM_INPUT_DATETIME_LOCAL:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesReadOnlyApply()");
@@ -7231,6 +7238,7 @@ HTMLInputElement::DoesRequiredApply() const
     case NS_FORM_INPUT_TIME:
     case NS_FORM_INPUT_MONTH:
     case NS_FORM_INPUT_WEEK:
+    case NS_FORM_INPUT_DATETIME_LOCAL:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
@@ -7274,8 +7282,7 @@ HTMLInputElement::DoesMinMaxApply() const
     case NS_FORM_INPUT_RANGE:
     case NS_FORM_INPUT_MONTH:
     case NS_FORM_INPUT_WEEK:
-    // TODO:
-    // All date/time types.
+    case NS_FORM_INPUT_DATETIME_LOCAL:
       return true;
 #ifdef DEBUG
     case NS_FORM_INPUT_RESET:
@@ -7323,6 +7330,7 @@ HTMLInputElement::DoesAutocompleteApply() const
     case NS_FORM_INPUT_COLOR:
     case NS_FORM_INPUT_MONTH:
     case NS_FORM_INPUT_WEEK:
+    case NS_FORM_INPUT_DATETIME_LOCAL:
       return true;
 #ifdef DEBUG
     case NS_FORM_INPUT_RESET:
@@ -7530,7 +7538,8 @@ HTMLInputElement::HasPatternMismatch() const
 bool
 HTMLInputElement::IsRangeOverflow() const
 {
-  if (!DoesMinMaxApply()) {
+  // TODO: this is temporary until bug 888331 is fixed.
+  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_DATETIME_LOCAL) {
     return false;
   }
 
@@ -7550,7 +7559,8 @@ HTMLInputElement::IsRangeOverflow() const
 bool
 HTMLInputElement::IsRangeUnderflow() const
 {
-  if (!DoesMinMaxApply()) {
+  // TODO: this is temporary until bug 888331 is fixed.
+  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_DATETIME_LOCAL) {
     return false;
   }
 
@@ -8558,7 +8568,8 @@ HTMLInputElement::UpdateHasRange()
 
   mHasRange = false;
 
-  if (!DoesMinMaxApply()) {
+  // TODO: this is temporary until bug 888331 is fixed.
+  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_DATETIME_LOCAL) {
     return;
   }
 
