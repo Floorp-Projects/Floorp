@@ -9,13 +9,15 @@
 #define SkSpinlock_DEFINED
 
 #include "SkTypes.h"
-#include "SkAtomics.h"
+#include <atomic>
 
 class SkSpinlock {
 public:
+    constexpr SkSpinlock() = default;
+
     void acquire() {
         // To act as a mutex, we need an acquire barrier when we acquire the lock.
-        if (fLocked.exchange(true, sk_memory_order_acquire)) {
+        if (fLocked.exchange(true, std::memory_order_acquire)) {
             // Lock was contended.  Fall back to an out-of-line spin loop.
             this->contendedAcquire();
         }
@@ -23,13 +25,13 @@ public:
 
     void release() {
         // To act as a mutex, we need a release barrier when we release the lock.
-        fLocked.store(false, sk_memory_order_release);
+        fLocked.store(false, std::memory_order_release);
     }
 
 private:
     SK_API void contendedAcquire();
 
-    SkAtomic<bool> fLocked{false};
+    std::atomic<bool> fLocked{false};
 };
 
 #endif//SkSpinlock_DEFINED

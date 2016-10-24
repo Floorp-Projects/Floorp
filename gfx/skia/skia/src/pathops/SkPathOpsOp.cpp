@@ -36,6 +36,9 @@ static SkOpSegment* findChaseOp(SkTDArray<SkOpSpanBase*>& chase, SkOpSpanBase** 
         int winding;
         bool sortable;
         const SkOpAngle* angle = AngleWinding(*startPtr, *endPtr, &winding, &sortable);
+        if (!angle) {
+            return nullptr;
+        }
         if (winding == SK_MinS32) {
             continue;
         }
@@ -43,7 +46,15 @@ static SkOpSegment* findChaseOp(SkTDArray<SkOpSpanBase*>& chase, SkOpSpanBase** 
         if (sortable) {
             segment = angle->segment();
             sumMiWinding = segment->updateWindingReverse(angle);
+            if (sumMiWinding == SK_MinS32) {
+                SkASSERT(segment->globalState()->debugSkipAssert());
+                return nullptr;
+            }
             sumSuWinding = segment->updateOppWindingReverse(angle);
+            if (sumSuWinding == SK_MinS32) {
+                SkASSERT(segment->globalState()->debugSkipAssert());
+                return nullptr;
+            }
             if (segment->operand()) {
                 SkTSwap<int>(sumMiWinding, sumSuWinding);
             }
@@ -85,7 +96,7 @@ static SkOpSegment* findChaseOp(SkTDArray<SkOpSpanBase*>& chase, SkOpSpanBase** 
 }
 
 static bool bridgeOp(SkOpContourHead* contourList, const SkPathOp op,
-        const int xorMask, const int xorOpMask, SkPathWriter* simple, SkChunkAlloc* allocator) {
+        const int xorMask, const int xorOpMask, SkPathWriter* simple) {
     bool unsortable = false;
     do {
         SkOpSpan* span = FindSortableTop(contourList);
@@ -114,11 +125,9 @@ static bool bridgeOp(SkOpContourHead* contourList, const SkPathOp op,
                             if (!current->addCurveTo(start, end, simple)) {
                                 return false;
                             }
-                    #if DEBUG_ACTIVE_SPANS
                             if (!simple->isClosed()) {
-                                DebugShowActiveSpans(contourList);
+                                SkPathOpsDebug::ShowActiveSpans(contourList);
                             }
-                    #endif
                         }
                         break;
                     }
@@ -143,7 +152,7 @@ static bool bridgeOp(SkOpContourHead* contourList, const SkPathOp op,
                         current->markDone(spanStart);
                     }
                 }
-                simple->close();
+                simple->finishContour();
             } else {
                 SkOpSpanBase* last = current->markAndChaseDone(start, end);
                 if (last && !last->chased()) {
@@ -160,15 +169,13 @@ static bool bridgeOp(SkOpContourHead* contourList, const SkPathOp op,
                 }
             }
             current = findChaseOp(chase, &start, &end);
-        #if DEBUG_ACTIVE_SPANS
-            DebugShowActiveSpans(contourList);
-        #endif
+            SkPathOpsDebug::ShowActiveSpans(contourList);
             if (!current) {
                 break;
             }
         } while (true);
     } while (true);
-    return simple->someAssemblyRequired();
+    return true;
 }
 
 // pretty picture:
@@ -199,8 +206,8 @@ static const bool gOutInverse[kReverseDifference_SkPathOp + 1][2][2] = {
 static void dump_path(FILE* file, const SkPath& path, bool force, bool dumpAsHex) {
     SkDynamicMemoryWStream wStream;
     path.dump(&wStream, force, dumpAsHex);
-    SkAutoDataUnref data(wStream.copyToData());
-    fprintf(file, "%.*s\n", (int) data->size(), data->data());
+    sk_sp<SkData> data(wStream.detachAsData());
+    fprintf(file, "%.*s\n", (int) data->size(), (char*) data->data());
 }
 
 static int dumpID = 0;
@@ -223,7 +230,7 @@ static void dump_op(const SkPath& one, const SkPath& two, SkPathOp op) {
     dump_path(file, two, false, true);
     fprintf(file, "    SkPath path2(path);\n");
     fprintf(file, "    testPathOp(reporter, path1, path2, (SkPathOp) %d, filename);\n", op);
-    fprintf(file, "}\n");    
+    fprintf(file, "}\n");
     fclose(file);
 }
 #endif
@@ -235,7 +242,8 @@ static void dump_op(const SkPath& one, const SkPath& two, SkPathOp op) {
 
 SK_DECLARE_STATIC_MUTEX(debugWorstLoop);
 
-SkOpGlobalState debugWorstState(nullptr, nullptr  SkDEBUGPARAMS(nullptr));
+SkOpGlobalState debugWorstState(nullptr, nullptr  SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr)
+        SkDEBUGPARAMS(nullptr));
 
 void ReportPathOpsDebugging() {
     debugWorstState.debugLoopReport();
@@ -245,44 +253,47 @@ extern void (*gVerboseFinalize)();
 
 #endif
 
-bool OpDebug(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result,
-        bool expectSuccess  SkDEBUGPARAMS(const char* testName)) {
+bool OpDebug(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result
+        SkDEBUGPARAMS(bool skipAssert) SkDEBUGPARAMS(const char* testName)) {
     SkChunkAlloc allocator(4096);  // FIXME: add a constant expression here, tune
     SkOpContour contour;
     SkOpContourHead* contourList = static_cast<SkOpContourHead*>(&contour);
-    SkOpCoincidence coincidence;
-    SkOpGlobalState globalState(&coincidence, contourList  SkDEBUGPARAMS(testName));
+    SkOpGlobalState globalState(contourList, &allocator
+            SkDEBUGPARAMS(skipAssert) SkDEBUGPARAMS(testName));
+    SkOpCoincidence coincidence(&globalState);
 #if DEBUGGING_PATHOPS_FROM_HOST
     dump_op(one, two, op);
-#endif    
-#if 0 && DEBUG_SHOW_TEST_NAME
-    char* debugName = DEBUG_FILENAME_STRING;
-    if (debugName && debugName[0]) {
-        SkPathOpsDebug::BumpTestName(debugName);
-        SkPathOpsDebug::ShowPath(one, two, op, debugName);
-    }
 #endif
     op = gOpInverse[op][one.isInverseFillType()][two.isInverseFillType()];
     SkPath::FillType fillType = gOutInverse[op][one.isInverseFillType()][two.isInverseFillType()]
             ? SkPath::kInverseEvenOdd_FillType : SkPath::kEvenOdd_FillType;
-    const SkPath* minuend = &one;
-    const SkPath* subtrahend = &two;
+    SkScalar scaleFactor = SkTMax(ScaleFactor(one), ScaleFactor(two));
+    SkPath scaledOne, scaledTwo;
+    const SkPath* minuend, * subtrahend;
+    if (scaleFactor > SK_Scalar1) {
+        ScalePath(one, 1.f / scaleFactor, &scaledOne);
+        minuend = &scaledOne;
+        ScalePath(two, 1.f / scaleFactor, &scaledTwo);
+        subtrahend = &scaledTwo;
+    } else {
+        minuend = &one;
+        subtrahend = &two;
+    }
     if (op == kReverseDifference_SkPathOp) {
-        minuend = &two;
-        subtrahend = &one;
+        SkTSwap(minuend, subtrahend);
         op = kDifference_SkPathOp;
     }
 #if DEBUG_SORT
     SkPathOpsDebug::gSortCount = SkPathOpsDebug::gSortCountDefault;
 #endif
     // turn path into list of segments
-    SkOpEdgeBuilder builder(*minuend, &contour, &allocator, &globalState);
+    SkOpEdgeBuilder builder(*minuend, contourList, &globalState);
     if (builder.unparseable()) {
         return false;
     }
     const int xorMask = builder.xorMask();
     builder.addOperand(*subtrahend);
-    if (!builder.finish(&allocator)) {
+    if (!builder.finish()) {
         return false;
     }
 #if DEBUG_DUMP_SEGMENTS
@@ -300,14 +311,18 @@ bool OpDebug(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result,
     SkOpContour* current = contourList;
     do {
         SkOpContour* next = current;
-        while (AddIntersectTs(current, next, &coincidence, &allocator)
+        while (AddIntersectTs(current, next, &coincidence)
                 && (next = next->next()))
             ;
     } while ((current = current->next()));
 #if DEBUG_VALIDATE
-    globalState.setPhase(SkOpGlobalState::kWalking);
+    globalState.setPhase(SkOpPhase::kWalking);
 #endif
-    if (!HandleCoincidence(contourList, &coincidence, &allocator)) {
+    bool success = HandleCoincidence(contourList, &coincidence);
+#if DEBUG_COIN
+    globalState.debugAddToGlobalCoinDicts();
+#endif
+    if (!success) {
         return false;
     }
 #if DEBUG_ALIGNMENT
@@ -317,15 +332,10 @@ bool OpDebug(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result,
     result->reset();
     result->setFillType(fillType);
     SkPathWriter wrapper(*result);
-    bridgeOp(contourList, op, xorMask, xorOpMask, &wrapper, &allocator);
-    {  // if some edges could not be resolved, assemble remaining fragments
-        SkPath temp;
-        temp.setFillType(fillType);
-        SkPathWriter assembled(temp);
-        Assemble(wrapper, &assembled);
-        *result = *assembled.nativePath();
-        result->setFillType(fillType);
+    if (!bridgeOp(contourList, op, xorMask, xorOpMask, &wrapper)) {
+        return false;
     }
+    wrapper.assemble();  // if some edges could not be resolved, assemble remaining
 #if DEBUG_T_SECT_LOOP_COUNT
     {
         SkAutoMutexAcquire autoM(debugWorstLoop);
@@ -335,6 +345,9 @@ bool OpDebug(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result,
         debugWorstState.debugDoYourWorst(&globalState);
     }
 #endif
+    if (scaleFactor > 1) {
+        ScalePath(*result, scaleFactor, result);
+    }
     return true;
 }
 
@@ -412,7 +425,7 @@ static int debug_paths_draw_the_same(const SkPath& one, const SkPath& two, SkBit
 
 bool Op(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result) {
 #if DEBUG_VERIFY
-    if (!OpDebug(one, two, op, result, true  SkDEBUGPARAMS(nullptr))) {
+    if (!OpDebug(one, two, op, result  SkDEBUGPARAMS(nullptr))) {
         SkDebugf("%s did not expect failure\none: fill=%d\n", __FUNCTION__, one.getFillType());
         one.dumpHex();
         SkDebugf("two: fill=%d\n", two.getFillType());
@@ -454,6 +467,6 @@ bool Op(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result) {
     }
     return true;
 #else
-    return OpDebug(one, two, op, result, true  SkDEBUGPARAMS(nullptr));
+    return OpDebug(one, two, op, result  SkDEBUGPARAMS(true) SkDEBUGPARAMS(nullptr));
 #endif
 }

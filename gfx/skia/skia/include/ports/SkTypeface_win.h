@@ -8,6 +8,7 @@
 #ifndef SkTypeface_win_DEFINED
 #define SkTypeface_win_DEFINED
 
+#include "../private/SkLeanWindows.h"
 #include "SkTypeface.h"
 #include <dwrite.h>
 
@@ -42,6 +43,7 @@ class SkFontMgr;
 class SkRemotableFontMgr;
 struct IDWriteFactory;
 struct IDWriteFontCollection;
+struct IDWriteFontFallback;
 
 /**
  *  Like the other Typeface create methods, this returns a new reference to the
@@ -55,6 +57,9 @@ SK_API SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
 SK_API SkFontMgr* SkFontMgr_New_GDI();
 SK_API SkFontMgr* SkFontMgr_New_DirectWrite(IDWriteFactory* factory = NULL,
                                             IDWriteFontCollection* collection = NULL);
+SK_API SkFontMgr* SkFontMgr_New_DirectWrite(IDWriteFactory* factory,
+                                            IDWriteFontCollection* collection,
+                                            IDWriteFontFallback* fallback);
 
 /**
  *  Creates an SkFontMgr which renders using DirectWrite and obtains its data

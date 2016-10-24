@@ -8,7 +8,7 @@
 #include "SkCanvas.h"
 #include "SkTLazy.h"
 #include "SkMiniRecorder.h"
-#include "SkOncePtr.h"
+#include "SkOnce.h"
 #include "SkPicture.h"
 #include "SkPictureCommon.h"
 #include "SkRecordDraw.h"
@@ -23,11 +23,9 @@ public:
     size_t approximateBytesUsed() const override { return sizeof(*this); }
     int    approximateOpCount()   const override { return 0; }
     SkRect cullRect()             const override { return SkRect::MakeEmpty(); }
-    bool   hasText()              const override { return false; }
     int    numSlowPaths()         const override { return 0; }
     bool   willPlayBackBitmaps()  const override { return false; }
 };
-SK_DECLARE_STATIC_ONCE_PTR(SkEmptyPicture, gEmptyPicture);
 
 template <typename T>
 class SkMiniPicture final : public SkPicture {
@@ -43,7 +41,6 @@ public:
     size_t approximateBytesUsed() const override { return sizeof(*this); }
     int    approximateOpCount()   const override { return 1; }
     SkRect cullRect()             const override { return fCull; }
-    bool   hasText()              const override { return SkTextHunter()(fOp); }
     bool   willPlayBackBitmaps()  const override { return SkBitmapHunter()(fOp); }
     int    numSlowPaths()         const override {
         SkPathCounter counter;
@@ -73,20 +70,6 @@ SkMiniRecorder::~SkMiniRecorder() {
     new (fBuffer.get()) Type{__VA_ARGS__};         \
     return true
 
-bool SkMiniRecorder::drawBitmapRect(const SkBitmap& bm, const SkRect* src, const SkRect& dst,
-                                    const SkPaint* p, SkCanvas::SrcRectConstraint constraint) {
-    SkRect bounds;
-    if (!src) {
-        bm.getBounds(&bounds);
-        src = &bounds;
-    }
-    SkTLazy<SkPaint> defaultPaint;
-    if (!p) {
-        p = defaultPaint.init();
-    }
-    TRY_TO_STORE(DrawBitmapRectFixedSize, *p, bm, *src, dst, constraint);
-}
-
 bool SkMiniRecorder::drawRect(const SkRect& rect, const SkPaint& paint) {
     TRY_TO_STORE(DrawRect, paint, rect);
 }
@@ -96,7 +79,7 @@ bool SkMiniRecorder::drawPath(const SkPath& path, const SkPaint& paint) {
 }
 
 bool SkMiniRecorder::drawTextBlob(const SkTextBlob* b, SkScalar x, SkScalar y, const SkPaint& p) {
-    TRY_TO_STORE(DrawTextBlob, p, b, x, y);
+    TRY_TO_STORE(DrawTextBlob, p, sk_ref_sp(b), x, y);
 }
 #undef TRY_TO_STORE
 
@@ -107,9 +90,13 @@ sk_sp<SkPicture> SkMiniRecorder::detachAsPicture(const SkRect& cull) {
         fState = State::kEmpty; \
         return sk_make_sp<SkMiniPicture<Type>>(cull, reinterpret_cast<Type*>(fBuffer.get()))
 
+    static SkOnce once;
+    static SkPicture* empty;
+
     switch (fState) {
-        case State::kEmpty: return sk_ref_sp(gEmptyPicture.get([]{ return new SkEmptyPicture; }));
-        CASE(DrawBitmapRectFixedSize);
+        case State::kEmpty:
+            once([]{ empty = new SkEmptyPicture; });
+            return sk_ref_sp(empty);
         CASE(DrawPath);
         CASE(DrawRect);
         CASE(DrawTextBlob);
@@ -130,7 +117,6 @@ void SkMiniRecorder::flushAndReset(SkCanvas* canvas) {
 
     switch (fState) {
         case State::kEmpty: return;
-        CASE(DrawBitmapRectFixedSize);
         CASE(DrawPath);
         CASE(DrawRect);
         CASE(DrawTextBlob);

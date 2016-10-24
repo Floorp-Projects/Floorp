@@ -10,6 +10,7 @@
 
 #include "SkCodec.h"
 #include "SkColorSpace.h"
+#include "SkColorSpaceXform.h"
 #include "SkImageInfo.h"
 #include "SkSwizzler.h"
 #include "SkStream.h"
@@ -58,6 +59,8 @@ protected:
 
     bool onDimensionsSupported(const SkISize&) override;
 
+    sk_sp<SkData> getICCData() const override { return fICCData; }
+
 private:
 
     /*
@@ -86,43 +89,58 @@ private:
      * Creates an instance of the decoder
      * Called only by NewFromStream
      *
-     * @param srcInfo contains the source width and height
+     * @param info contains properties of the encoded data
      * @param stream the encoded image data
      * @param decoderMgr holds decompress struct, src manager, and error manager
      *                   takes ownership
      */
-    SkJpegCodec(const SkImageInfo& srcInfo, SkStream* stream, JpegDecoderMgr* decoderMgr,
-            sk_sp<SkColorSpace> colorSpace, Origin origin);
+    SkJpegCodec(int width, int height, const SkEncodedInfo& info, SkStream* stream,
+            JpegDecoderMgr* decoderMgr, sk_sp<SkColorSpace> colorSpace, Origin origin,
+            sk_sp<SkData> iccData);
 
     /*
      * Checks if the conversion between the input image and the requested output
-     * image has been implemented
-     * Sets the output color space
+     * image has been implemented.
+     *
+     * Sets the output color space.
      */
     bool setOutputColorSpace(const SkImageInfo& dst);
 
-    // scanline decoding
     void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options);
+    void initializeColorXform(const SkImageInfo& dstInfo);
+    void allocateStorage(const SkImageInfo& dstInfo);
+    int readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes, int count);
+
+    /*
+     * Scanline decoding.
+     */
     SkSampler* getSampler(bool createIfNecessary) override;
     Result onStartScanlineDecode(const SkImageInfo& dstInfo, const Options& options,
             SkPMColor ctable[], int* ctableCount) override;
     int onGetScanlines(void* dst, int count, size_t rowBytes) override;
     bool onSkipScanlines(int count) override;
 
-    SkAutoTDelete<JpegDecoderMgr> fDecoderMgr;
+    SkAutoTDelete<JpegDecoderMgr>      fDecoderMgr;
+
     // We will save the state of the decompress struct after reading the header.
     // This allows us to safely call onGetScaledDimensions() at any time.
-    const int                     fReadyState;
+    const int                          fReadyState;
 
-    // scanline decoding
-    SkAutoTMalloc<uint8_t>     fStorage;    // Only used if sampling is needed
-    uint8_t*                   fSrcRow;     // Only used if sampling is needed
+
+    SkAutoTMalloc<uint8_t>             fStorage;
+    uint8_t*                           fSwizzleSrcRow;
+    uint32_t*                          fColorXformSrcRow;
+
     // libjpeg-turbo provides some subsetting.  In the case that libjpeg-turbo
     // cannot take the exact the subset that we need, we will use the swizzler
     // to further subset the output from libjpeg-turbo.
-    SkIRect                    fSwizzlerSubset;
-    SkAutoTDelete<SkSwizzler>  fSwizzler;
-    
+    SkIRect                            fSwizzlerSubset;
+
+    SkAutoTDelete<SkSwizzler>          fSwizzler;
+    std::unique_ptr<SkColorSpaceXform> fColorXform;
+
+    sk_sp<SkData>                      fICCData;
+
     typedef SkCodec INHERITED;
 };
 

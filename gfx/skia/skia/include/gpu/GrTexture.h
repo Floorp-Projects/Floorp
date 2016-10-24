@@ -46,11 +46,12 @@ public:
     inline const GrTexturePriv texturePriv() const;
 
 protected:
-    GrTexture(GrGpu*, LifeCycle, const GrSurfaceDesc&, GrSLType, bool wasMipMapDataProvided);
+    GrTexture(GrGpu*, const GrSurfaceDesc&, GrSLType, bool wasMipMapDataProvided);
 
     void validateDesc() const;
 
 private:
+    void computeScratchKey(GrScratchKey*) const override;
     size_t onGpuMemorySize() const override;
     void dirtyMipMaps(bool mipMapsDirty);
 
@@ -60,9 +61,10 @@ private:
         kValid_MipMapsStatus
     };
 
-    GrSLType        fSamplerType;
-    MipMapsStatus   fMipMapsStatus;
-    int             fMaxMipMapLevel;
+    GrSLType               fSamplerType;
+    MipMapsStatus          fMipMapsStatus;
+    int                    fMaxMipMapLevel;
+    SkSourceGammaTreatment fGammaTreatment;
 
     friend class GrTexturePriv;
 

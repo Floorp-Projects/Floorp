@@ -254,8 +254,7 @@ static void debugShowCubicIntersection(int , const SkIntersectionHelper& ,
 }
 #endif
 
-bool AddIntersectTs(SkOpContour* test, SkOpContour* next, SkOpCoincidence* coincidence,
-        SkChunkAlloc* allocator) {
+bool AddIntersectTs(SkOpContour* test, SkOpContour* next, SkOpCoincidence* coincidence) {
     if (test != next) {
         if (AlmostLessUlps(test->bounds().fBottom, next->bounds().fTop)) {
             return false;
@@ -280,7 +279,7 @@ bool AddIntersectTs(SkOpContour* test, SkOpContour* next, SkOpCoincidence* coinc
                 continue;
             }
             int pts = 0;
-            SkIntersections ts;
+            SkIntersections ts { SkDEBUGCODE(test->globalState()) };
             bool swap = false;
             SkDQuad quad1, quad2;
             SkDConic conic1, conic2;
@@ -506,18 +505,22 @@ bool AddIntersectTs(SkOpContour* test, SkOpContour* next, SkOpCoincidence* coinc
                 SkASSERT(ts[0][pt] >= 0 && ts[0][pt] <= 1);
                 SkASSERT(ts[1][pt] >= 0 && ts[1][pt] <= 1);
                 wt.segment()->debugValidate();
-                SkOpPtT* testTAt = wt.segment()->addT(ts[swap][pt], SkOpSegment::kAllowAlias,
-                        allocator);
+                SkOpPtT* testTAt = wt.segment()->addT(ts[swap][pt]);
                 wn.segment()->debugValidate();
-                SkOpPtT* nextTAt = wn.segment()->addT(ts[!swap][pt], SkOpSegment::kAllowAlias,
-                        allocator);
-                testTAt->addOpp(nextTAt);
-                if (testTAt->fPt != nextTAt->fPt) {
-                    testTAt->span()->unaligned();
-                    nextTAt->span()->unaligned();
+                SkOpPtT* nextTAt = wn.segment()->addT(ts[!swap][pt]);
+                if (!testTAt->contains(nextTAt)) {
+                    SkOpPtT* oppPrev = testTAt->oppPrev(nextTAt);  //  Returns nullptr if pair 
+                    if (oppPrev) {                                 //  already share a pt-t loop.
+                        testTAt->span()->mergeMatches(nextTAt->span());
+                        testTAt->addOpp(nextTAt, oppPrev);
+                    }
+                    if (testTAt->fPt != nextTAt->fPt) {
+                        testTAt->span()->unaligned();
+                        nextTAt->span()->unaligned();
+                    }
+                    wt.segment()->debugValidate();
+                    wn.segment()->debugValidate();
                 }
-                wt.segment()->debugValidate();
-                wn.segment()->debugValidate();
                 if (!ts.isCoincident(pt)) {
                     continue;
                 }
@@ -539,8 +542,17 @@ bool AddIntersectTs(SkOpContour* test, SkOpContour* next, SkOpCoincidence* coinc
                     SkTSwap(coinPtT[0], coinPtT[1]);
                     SkTSwap(testTAt, nextTAt);
                 }
-                SkASSERT(coinPtT[0]->span()->t() < testTAt->span()->t());
-                coincidence->add(coinPtT[0], testTAt, coinPtT[1], nextTAt, allocator);
+                SkASSERT(coincidence->globalState()->debugSkipAssert()
+                        || coinPtT[0]->span()->t() < testTAt->span()->t());
+                if (coinPtT[0]->span()->deleted()) {
+                    coinIndex = -1;
+                    continue;
+                }
+                if (testTAt->span()->deleted()) {
+                    coinIndex = -1;
+                    continue;
+                }
+                coincidence->add(coinPtT[0], testTAt, coinPtT[1], nextTAt);
                 wt.segment()->debugValidate();
                 wn.segment()->debugValidate();
                 coinIndex = -1;

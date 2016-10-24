@@ -9,12 +9,20 @@
 #include "SkXfermode_proccoeff.h"
 #include "SkColorPriv.h"
 #include "SkMathPriv.h"
-#include "SkOncePtr.h"
+#include "SkOnce.h"
 #include "SkOpts.h"
+#include "SkRasterPipeline.h"
 #include "SkReadBuffer.h"
 #include "SkString.h"
 #include "SkWriteBuffer.h"
 #include "SkPM4f.h"
+
+#if SK_SUPPORT_GPU
+#include "GrFragmentProcessor.h"
+#include "effects/GrCustomXfermode.h"
+#include "effects/GrPorterDuffXferProcessor.h"
+#include "effects/GrXfermodeFragmentProcessor.h"
+#endif
 
 #define SkAlphaMulAlpha(a, b)   SkMulDiv255Round(a, b)
 
@@ -985,15 +993,15 @@ bool SkXfermode::asMode(Mode* mode) const {
 }
 
 #if SK_SUPPORT_GPU
-const GrFragmentProcessor* SkXfermode::getFragmentProcessorForImageFilter(
-                                                                const GrFragmentProcessor*) const {
+sk_sp<GrFragmentProcessor> SkXfermode::makeFragmentProcessorForImageFilter(
+                                                                sk_sp<GrFragmentProcessor>) const {
     // This should never be called.
     // TODO: make pure virtual in SkXfermode once Android update lands
     SkASSERT(0);
     return nullptr;
 }
 
-GrXPFactory* SkXfermode::asXPFactory() const {
+sk_sp<GrXPFactory> SkXfermode::asXPFactory() const {
     // This should never be called.
     // TODO: make pure virtual in SkXfermode once Android update lands
     SkASSERT(0);
@@ -1240,25 +1248,21 @@ void SkProcCoeffXfermode::xferA8(SkAlpha* SK_RESTRICT dst,
 }
 
 #if SK_SUPPORT_GPU
-#include "effects/GrCustomXfermode.h"
-#include "effects/GrPorterDuffXferProcessor.h"
-#include "effects/GrXfermodeFragmentProcessor.h"
-
-const GrFragmentProcessor* SkProcCoeffXfermode::getFragmentProcessorForImageFilter(
-                                                            const GrFragmentProcessor* dst) const {
+sk_sp<GrFragmentProcessor> SkProcCoeffXfermode::makeFragmentProcessorForImageFilter(
+                                                            sk_sp<GrFragmentProcessor> dst) const {
     SkASSERT(dst);
-    return GrXfermodeFragmentProcessor::CreateFromDstProcessor(dst, fMode);
+    return GrXfermodeFragmentProcessor::MakeFromDstProcessor(std::move(dst), fMode);
 }
 
-GrXPFactory* SkProcCoeffXfermode::asXPFactory() const {
+sk_sp<GrXPFactory> SkProcCoeffXfermode::asXPFactory() const {
     if (CANNOT_USE_COEFF != fSrcCoeff) {
-        GrXPFactory* result = GrPorterDuffXPFactory::Create(fMode);
+        sk_sp<GrXPFactory> result(GrPorterDuffXPFactory::Make(fMode));
         SkASSERT(result);
         return result;
     }
 
     SkASSERT(GrCustomXfermode::IsSupportedMode(fMode));
-    return GrCustomXfermode::CreateXPFactory(fMode);
+    return GrCustomXfermode::MakeXPFactory(fMode);
 }
 #endif
 
@@ -1303,11 +1307,7 @@ void SkProcCoeffXfermode::toString(SkString* str) const {
 #endif
 
 
-SK_DECLARE_STATIC_ONCE_PTR(SkXfermode, cached[SkXfermode::kLastMode + 1]);
-
 sk_sp<SkXfermode> SkXfermode::Make(Mode mode) {
-    SkASSERT(SK_ARRAY_COUNT(gProcCoeffs) == kModeCount);
-
     if ((unsigned)mode >= kModeCount) {
         // report error
         return nullptr;
@@ -1319,13 +1319,20 @@ sk_sp<SkXfermode> SkXfermode::Make(Mode mode) {
         return nullptr;
     }
 
-    return sk_ref_sp(cached[mode].get([=]{
+    SkASSERT(SK_ARRAY_COUNT(gProcCoeffs) == kModeCount);
+
+    static SkOnce        once[SkXfermode::kLastMode+1];
+    static SkXfermode* cached[SkXfermode::kLastMode+1];
+
+    once[mode]([mode] {
         ProcCoeff rec = gProcCoeffs[mode];
         if (auto xfermode = SkOpts::create_xfermode(rec, mode)) {
-            return xfermode;
+            cached[mode] = xfermode;
+        } else {
+            cached[mode] = new SkProcCoeffXfermode(rec, mode);
         }
-        return (SkXfermode*) new SkProcCoeffXfermode(rec, mode);
-    }));
+    });
+    return sk_ref_sp(cached[mode]);
 }
 
 SkXfermodeProc SkXfermode::GetProc(Mode mode) {
@@ -1414,6 +1421,115 @@ bool SkXfermode::IsOpaque(const SkXfermode* xfer, SrcColorOpacity opacityType) {
     return xfer->isOpaque(opacityType);
 }
 
+bool SkXfermode::appendStages(SkRasterPipeline* pipeline) const {
+    return this->onAppendStages(pipeline);
+}
+
+bool SkXfermode::onAppendStages(SkRasterPipeline*) const {
+    return false;
+}
+
 SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(SkXfermode)
     SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkProcCoeffXfermode)
 SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_END
+
+
+bool SkProcCoeffXfermode::onAppendStages(SkRasterPipeline* p) const {
+    switch (fMode) {
+        case kSrc_Mode:    /*This stage is a no-op.*/             return true;
+        case kDst_Mode:     p->append(SkRasterPipeline::dst);     return true;
+        case kSrcATop_Mode: p->append(SkRasterPipeline::srcatop); return true;
+        case kDstATop_Mode: p->append(SkRasterPipeline::dstatop); return true;
+        case kSrcIn_Mode:   p->append(SkRasterPipeline::srcin);   return true;
+        case kDstIn_Mode:   p->append(SkRasterPipeline::dstin);   return true;
+        case kSrcOut_Mode:  p->append(SkRasterPipeline::srcout);  return true;
+        case kDstOut_Mode:  p->append(SkRasterPipeline::dstout);  return true;
+        case kSrcOver_Mode: p->append(SkRasterPipeline::srcover); return true;
+        case kDstOver_Mode: p->append(SkRasterPipeline::dstover); return true;
+
+        case kClear_Mode:    p->append(SkRasterPipeline::clear);    return true;
+        case kModulate_Mode: p->append(SkRasterPipeline::modulate); return true;
+        case kMultiply_Mode: p->append(SkRasterPipeline::multiply); return true;
+        case kPlus_Mode:     p->append(SkRasterPipeline::plus_);    return true;
+        case kScreen_Mode:   p->append(SkRasterPipeline::screen);   return true;
+        case kXor_Mode:      p->append(SkRasterPipeline::xor_);     return true;
+
+        case kColorBurn_Mode:  p->append(SkRasterPipeline::colorburn);  return true;
+        case kColorDodge_Mode: p->append(SkRasterPipeline::colordodge); return true;
+        case kDarken_Mode:     p->append(SkRasterPipeline::darken);     return true;
+        case kDifference_Mode: p->append(SkRasterPipeline::difference); return true;
+        case kExclusion_Mode:  p->append(SkRasterPipeline::exclusion);  return true;
+        case kHardLight_Mode:  p->append(SkRasterPipeline::hardlight);  return true;
+        case kLighten_Mode:    p->append(SkRasterPipeline::lighten);    return true;
+        case kOverlay_Mode:    p->append(SkRasterPipeline::overlay);    return true;
+        case kSoftLight_Mode:  p->append(SkRasterPipeline::softlight);  return true;
+
+        // TODO
+        case kColor_Mode:       return false;
+        case kHue_Mode:         return false;
+        case kLuminosity_Mode:  return false;
+        case kSaturation_Mode:  return false;
+    }
+    return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode mode) {
+    switch (mode) {
+        case SkBlendMode::kDst:
+        case SkBlendMode::kSrcOver:
+        case SkBlendMode::kDstOver:
+        case SkBlendMode::kDstOut:
+        case SkBlendMode::kSrcATop:
+        case SkBlendMode::kXor:
+        case SkBlendMode::kPlus:
+            return true;
+        default:
+            break;
+    }
+    return false;
+}
+
+bool SkXfermode::IsOpaque(SkBlendMode mode, SrcColorOpacity opacityType) {
+    const ProcCoeff rec = gProcCoeffs[(int)mode];
+
+    switch (rec.fSC) {
+        case kDA_Coeff:
+        case kDC_Coeff:
+        case kIDA_Coeff:
+        case kIDC_Coeff:
+            return false;
+        default:
+            break;
+    }
+
+    switch (rec.fDC) {
+        case kZero_Coeff:
+            return true;
+        case kISA_Coeff:
+            return kOpaque_SrcColorOpacity == opacityType;
+        case kSA_Coeff:
+            return kTransparentBlack_SrcColorOpacity == opacityType ||
+            kTransparentAlpha_SrcColorOpacity == opacityType;
+        case kSC_Coeff:
+            return kTransparentBlack_SrcColorOpacity == opacityType;
+        default:
+            return false;
+    }
+    return false;
+}
+
+#if SK_SUPPORT_GPU
+sk_sp<GrXPFactory> SkBlendMode_AsXPFactory(SkBlendMode mode) {
+    const ProcCoeff rec = gProcCoeffs[(int)mode];
+    if (CANNOT_USE_COEFF != rec.fSC) {
+        sk_sp<GrXPFactory> result(GrPorterDuffXPFactory::Make(mode));
+        SkASSERT(result);
+        return result;
+    }
+
+    SkASSERT(GrCustomXfermode::IsSupportedMode((SkXfermode::Mode)mode));
+    return GrCustomXfermode::MakeXPFactory((SkXfermode::Mode)mode);
+}
+#endif
