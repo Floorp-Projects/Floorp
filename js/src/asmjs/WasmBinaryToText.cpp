@@ -464,18 +464,25 @@ RenderFirst(WasmRenderContext& c, AstFirst& first)
 }
 
 static bool
-RenderNullaryOperator(WasmRenderContext& c, AstNullaryOperator& op)
+RenderCurrentMemory(WasmRenderContext& c, AstCurrentMemory& cm)
 {
     if (!RenderIndent(c))
         return false;
 
-    const char* opStr;
-    switch (op.expr()) {
-      case Expr::CurrentMemory: opStr = "current_memory"; break;
-      default: return false;
-    }
+    return c.buffer.append("current_memory\n");
+}
 
-    return c.buffer.append(opStr, strlen(opStr));
+static bool
+RenderGrowMemory(WasmRenderContext& c, AstGrowMemory& gm)
+{
+    if (!RenderExpr(c, *gm.op()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, gm);
+    return c.buffer.append("grow_memory\n");
 }
 
 static bool
@@ -511,7 +518,6 @@ RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& op)
       case Expr::F64Nearest: opStr = "f64.nearest"; break;
       case Expr::F64Sqrt:    opStr = "f64.sqrt"; break;
       case Expr::F64Trunc:   opStr = "f64.trunc"; break;
-      case Expr::GrowMemory: opStr = "grow_memory"; break;
       default: return false;
     }
 
@@ -1049,10 +1055,6 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
         if (!RenderIf(c, expr.as<AstIf>()))
             return false;
         break;
-      case AstExprKind::NullaryOperator:
-        if (!RenderNullaryOperator(c, expr.as<AstNullaryOperator>()))
-            return false;
-        break;
       case AstExprKind::UnaryOperator:
         if (!RenderUnaryOperator(c, expr.as<AstUnaryOperator>()))
             return false;
@@ -1096,6 +1098,14 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
       case AstExprKind::First:
         newLine = false;
         if (!RenderFirst(c, expr.as<AstFirst>()))
+            return false;
+        break;
+      case AstExprKind::CurrentMemory:
+        if (!RenderCurrentMemory(c, expr.as<AstCurrentMemory>()))
+            return false;
+        break;
+      case AstExprKind::GrowMemory:
+        if (!RenderGrowMemory(c, expr.as<AstGrowMemory>()))
             return false;
         break;
       default:

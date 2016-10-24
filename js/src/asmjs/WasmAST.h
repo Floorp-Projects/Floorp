@@ -195,10 +195,12 @@ enum class AstExprKind
     ComparisonOperator,
     Const,
     ConversionOperator,
+    CurrentMemory,
     Drop,
     First,
     GetGlobal,
     GetLocal,
+    GrowMemory,
     If,
     Load,
     Nop,
@@ -210,7 +212,6 @@ enum class AstExprKind
     Store,
     TernaryOperator,
     UnaryOperator,
-    NullaryOperator,
     Unreachable
 };
 
@@ -545,6 +546,28 @@ class AstStore : public AstExpr
     AstExpr& value() const { return *value_; }
 };
 
+class AstCurrentMemory final : public AstExpr
+{
+  public:
+    static const AstExprKind Kind = AstExprKind::CurrentMemory;
+    explicit AstCurrentMemory()
+      : AstExpr(Kind, ExprType::I32)
+    {}
+};
+
+class AstGrowMemory final : public AstExpr
+{
+    AstExpr* op_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::GrowMemory;
+    explicit AstGrowMemory(AstExpr* op)
+      : AstExpr(Kind, ExprType::I32), op_(op)
+    {}
+
+    AstExpr* op() const { return op_; }
+};
+
 class AstBranchTable : public AstExpr
 {
     AstExpr& index_;
@@ -871,20 +894,6 @@ class AstModule : public AstNode
     const AstGlobalVector& globals() const {
         return globals_;
     }
-};
-
-class AstNullaryOperator final : public AstExpr
-{
-    Expr expr_;
-
-  public:
-    static const AstExprKind Kind = AstExprKind::NullaryOperator;
-    explicit AstNullaryOperator(Expr expr)
-      : AstExpr(Kind, ExprType::Limit),
-        expr_(expr)
-    {}
-
-    Expr expr() const { return expr_; }
 };
 
 class AstUnaryOperator final : public AstExpr
