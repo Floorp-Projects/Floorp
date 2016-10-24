@@ -8,8 +8,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Telemetry.h"
-
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsGeolocation.h"
 #include "nsDOMClassInfoID.h"
@@ -74,7 +73,7 @@ class nsGeolocationRequest final
   nsGeolocationRequest(Geolocation* aLocator,
                        GeoPositionCallback aCallback,
                        GeoPositionErrorCallback aErrorCallback,
-                       nsAutoPtr<PositionOptions>&& aOptions,
+                       UniquePtr<PositionOptions>&& aOptions,
                        uint8_t aProtocolType,
                        bool aWatchPositionRequest = false,
                        int32_t aWatchId = 0);
@@ -117,7 +116,7 @@ class nsGeolocationRequest final
   nsCOMPtr<nsITimer> mTimeoutTimer;
   GeoPositionCallback mCallback;
   GeoPositionErrorCallback mErrorCallback;
-  nsAutoPtr<PositionOptions> mOptions;
+  UniquePtr<PositionOptions> mOptions;
 
   RefPtr<Geolocation> mLocator;
 
@@ -127,10 +126,10 @@ class nsGeolocationRequest final
   uint8_t mProtocolType;
 };
 
-static nsAutoPtr<PositionOptions>
+static UniquePtr<PositionOptions>
 CreatePositionOptionsCopy(const PositionOptions& aOptions)
 {
-  nsAutoPtr<PositionOptions> geoOptions(new PositionOptions());
+  UniquePtr<PositionOptions> geoOptions = MakeUnique<PositionOptions>();
 
   geoOptions->mEnableHighAccuracy = aOptions.mEnableHighAccuracy;
   geoOptions->mMaximumAge = aOptions.mMaximumAge;
@@ -291,7 +290,7 @@ PositionError::NotifyCallback(const GeoPositionErrorCallback& aCallback)
 nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
                                            GeoPositionCallback aCallback,
                                            GeoPositionErrorCallback aErrorCallback,
-                                           nsAutoPtr<PositionOptions>&& aOptions,
+                                           UniquePtr<PositionOptions>&& aOptions,
                                            uint8_t aProtocolType,
                                            bool aWatchPositionRequest,
                                            int32_t aWatchId)
@@ -1208,7 +1207,7 @@ Geolocation::GetCurrentPosition(PositionCallback& aCallback,
 NS_IMETHODIMP
 Geolocation::GetCurrentPosition(nsIDOMGeoPositionCallback* aCallback,
                                 nsIDOMGeoPositionErrorCallback* aErrorCallback,
-                                nsAutoPtr<PositionOptions>&& aOptions)
+                                UniquePtr<PositionOptions>&& aOptions)
 {
   NS_ENSURE_ARG_POINTER(aCallback);
 
@@ -1220,7 +1219,7 @@ Geolocation::GetCurrentPosition(nsIDOMGeoPositionCallback* aCallback,
 nsresult
 Geolocation::GetCurrentPosition(GeoPositionCallback callback,
                                 GeoPositionErrorCallback errorCallback,
-                                nsAutoPtr<PositionOptions>&& options)
+                                UniquePtr<PositionOptions>&& options)
 {
   if (mPendingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1286,7 +1285,7 @@ Geolocation::WatchPosition(PositionCallback& aCallback,
 NS_IMETHODIMP
 Geolocation::WatchPosition(nsIDOMGeoPositionCallback *aCallback,
                            nsIDOMGeoPositionErrorCallback *aErrorCallback,
-                           nsAutoPtr<PositionOptions>&& aOptions,
+                           UniquePtr<PositionOptions>&& aOptions,
                            int32_t* aRv)
 {
   NS_ENSURE_ARG_POINTER(aCallback);
@@ -1299,7 +1298,7 @@ Geolocation::WatchPosition(nsIDOMGeoPositionCallback *aCallback,
 nsresult
 Geolocation::WatchPosition(GeoPositionCallback aCallback,
                            GeoPositionErrorCallback aErrorCallback,
-                           nsAutoPtr<PositionOptions>&& aOptions,
+                           UniquePtr<PositionOptions>&& aOptions,
                            int32_t* aRv)
 {
   if (mWatchingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW) {
