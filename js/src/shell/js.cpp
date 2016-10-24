@@ -1803,15 +1803,13 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
         return nullptr;
 
     FILE* file;
-    RootedString str(cx);
-    size_t len, cc;
-    char* buf;
 
     file = fopen(pathname.ptr(), "rb");
     if (!file) {
         ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
         return nullptr;
     }
+
     AutoCloseFile autoClose(file);
 
     if (fseek(file, 0, SEEK_END) != 0) {
@@ -1819,45 +1817,47 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
         if (!pathname.encodeUtf8(cx, pathnameStr))
             return nullptr;
         JS_ReportErrorUTF8(cx, "can't seek end of %s", pathname.ptr());
-    } else {
-        len = ftell(file);
-        if (fseek(file, 0, SEEK_SET) != 0) {
+        return nullptr;
+    }
+
+    size_t len = ftell(file);
+    if (fseek(file, 0, SEEK_SET) != 0) {
+        pathname.clear();
+        if (!pathname.encodeUtf8(cx, pathnameStr))
+            return nullptr;
+        JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.ptr());
+        return nullptr;
+    }
+
+    UniqueChars buf(static_cast<char*>(js_malloc(len + 1)));
+    if (!buf)
+        return nullptr;
+
+    size_t cc = fread(buf.get(), 1, len, file);
+    if (cc != len) {
+        if (ptrdiff_t(cc) < 0) {
+            ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
+        } else {
             pathname.clear();
             if (!pathname.encodeUtf8(cx, pathnameStr))
                 return nullptr;
-            JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.ptr());
-        } else {
-            buf = (char*) JS_malloc(cx, len + 1);
-            if (buf) {
-                cc = fread(buf, 1, len, file);
-                if (cc != len) {
-                    if (ptrdiff_t(cc) < 0) {
-                        ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
-                    } else {
-                        pathname.clear();
-                        if (!pathname.encodeUtf8(cx, pathnameStr))
-                            return nullptr;
-                        JS_ReportErrorUTF8(cx, "can't read %s: short read", pathname.ptr());
-                    }
-                } else {
-                    char16_t* ucbuf =
-                        JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf, len), &len).get();
-                    if (!ucbuf) {
-                        pathname.clear();
-                        if (!pathname.encodeUtf8(cx, pathnameStr))
-                            return nullptr;
-                        JS_ReportErrorUTF8(cx, "Invalid UTF-8 in file '%s'", pathname.ptr());
-                        return nullptr;
-                    }
-                    str = JS_NewUCStringCopyN(cx, ucbuf, len);
-                    free(ucbuf);
-                }
-                JS_free(cx, buf);
-            }
+            JS_ReportErrorUTF8(cx, "can't read %s: short read", pathname.ptr());
         }
+        return nullptr;
     }
 
-    return str;
+    UniqueTwoByteChars ucbuf(
+        JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf.get(), len), &len).get()
+    );
+    if (!ucbuf) {
+        pathname.clear();
+        if (!pathname.encodeUtf8(cx, pathnameStr))
+            return nullptr;
+        JS_ReportErrorUTF8(cx, "Invalid UTF-8 in file '%s'", pathname.ptr());
+        return nullptr;
+    }
+
+    return JS_NewUCStringCopyN(cx, ucbuf.get(), len);
 }
 
 /*
