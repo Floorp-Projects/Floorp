@@ -41,7 +41,7 @@ this.BrowserUtils = {
     if (cancelQuit.data) { // The quit request has been canceled.
       return false;
     }
-    //if already in safe mode restart in safe mode
+    // if already in safe mode restart in safe mode
     if (Services.appinfo.inSafeMode) {
       appStartup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
       return undefined;

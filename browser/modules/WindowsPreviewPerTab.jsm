@@ -62,8 +62,8 @@ const CACHE_EXPIRATION_TIME_PREF_NAME = "browser.taskbar.previews.cachetime";
 
 const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
 
-////////////////////////////////////////////////////////////////////////////////
-//// Various utility properties
+// //////////////////////////////////////////////////////////////////////////////
+// // Various utility properties
 XPCOMUtils.defineLazyServiceGetter(this, "imgTools",
                                    "@mozilla.org/image/tools;1",
                                    "imgITools");
@@ -123,8 +123,8 @@ function snapRectAtScale(r, scale) {
   r.height = height / scale;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// PreviewController
+// //////////////////////////////////////////////////////////////////////////////
+// // PreviewController
 
 /*
  * This class manages the behavior of thumbnails and previews. It has the following
@@ -239,8 +239,8 @@ PreviewController.prototype = {
     this.preview.tooltip = title;
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsITaskbarPreviewController
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsITaskbarPreviewController
 
   // window width and height, not browser
   get width() {
@@ -322,8 +322,8 @@ PreviewController.prototype = {
     });
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// Event handling
+  // ////////////////////////////////////////////////////////////////////////////
+  // // Event handling
 
   onClose: function () {
     this.win.tabbrowser.removeTab(this.tab);
@@ -337,7 +337,7 @@ PreviewController.prototype = {
     return true;
   },
 
-  //// nsIDOMEventListener
+  // // nsIDOMEventListener
   handleEvent: function (evt) {
     switch (evt.type) {
       case "TabAttrModified":
@@ -355,8 +355,8 @@ XPCOMUtils.defineLazyGetter(PreviewController.prototype, "canvasPreviewFlags",
                      | canvasInterface.DRAWWINDOW_DO_NOT_FLUSH;
 });
 
-////////////////////////////////////////////////////////////////////////////////
-//// TabWindow
+// //////////////////////////////////////////////////////////////////////////////
+// // TabWindow
 
 /*
  * This class monitors a browser window for changes to its tabs
@@ -509,7 +509,7 @@ TabWindow.prototype = {
     }
   },
 
-  //// nsIDOMEventListener
+  // // nsIDOMEventListener
   handleEvent: function (evt) {
     let tab = evt.originalTarget;
     switch (evt.type) {
@@ -583,12 +583,12 @@ TabWindow.prototype = {
     }
   },
 
-  //// Browser progress listener
+  // // Browser progress listener
 
   onLocationChange: function (aBrowser) {
     // I'm not sure we need this, onStateChange does a really good job
     // of picking up page changes.
-    //this.invalidateTabPreview(aBrowser);
+    // this.invalidateTabPreview(aBrowser);
   },
 
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -637,8 +637,8 @@ TabWindow.prototype = {
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// AeroPeek
+// //////////////////////////////////////////////////////////////////////////////
+// // AeroPeek
 
 /*
  * This object acts as global storage and external interface for this feature.
@@ -801,7 +801,7 @@ this.AeroPeek = {
     this.cacheTimer.init(this, 1000*this.cacheLifespan, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
-  //// nsIObserver
+  // // nsIObserver
   observe: function (aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed" && aData == TOGGLE_PREF_NAME) {
       this._prefenabled = this.prefs.getBoolPref(TOGGLE_PREF_NAME);

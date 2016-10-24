@@ -40,7 +40,7 @@ function onload()
 
   cookieBundle = document.getElementById("cookieBundle");
 
-  //cache strings
+  // cache strings
   if (!showDetails) {
     showDetails = cookieBundle.getString('showDetails');
   }

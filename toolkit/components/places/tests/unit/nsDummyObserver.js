@@ -27,8 +27,8 @@ DummyObserver.prototype = {
   onDeleteVisits: function () {},
 
   // bookmark observer
-  //onBeginUpdateBatch: function() {},
-  //onEndUpdateBatch: function() {},
+  // onBeginUpdateBatch: function() {},
+  // onEndUpdateBatch: function() {},
   onItemAdded: function(aItemId, aParentId, aIndex, aItemType, aURI) {
     Services.obs.notifyObservers(null, "dummy-observer-item-added", null);
   },

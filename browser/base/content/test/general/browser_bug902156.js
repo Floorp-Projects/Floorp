@@ -42,7 +42,7 @@ function cleanUpAfterTests() {
   finish();
 }
 
-//------------------------ Test 1 ------------------------------
+// ------------------------ Test 1 ------------------------------
 
 function test1A() {
   BrowserTestUtils.browserLoaded(gTestBrowser).then(test1B);
@@ -85,7 +85,7 @@ function test1D() {
   test2();
 }
 
-//------------------------ Test 2 ------------------------------
+// ------------------------ Test 2 ------------------------------
 
 function test2() {
   BrowserTestUtils.browserLoaded(gTestBrowser).then(test2A);
@@ -135,7 +135,7 @@ function test2D() {
   test3();
 }
 
-//------------------------ Test 3 ------------------------------
+// ------------------------ Test 3 ------------------------------
 
 function test3() {
   BrowserTestUtils.browserLoaded(gTestBrowser).then(test3A);
@@ -150,7 +150,7 @@ function test3A() {
   cleanUpAfterTests();
 }
 
-//------------------------------------------------------
+// ------------------------------------------------------
 
 function test() {
   // Performing async calls, e.g. 'onload', we have to wait till all of them finished

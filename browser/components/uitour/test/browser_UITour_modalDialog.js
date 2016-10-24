@@ -45,7 +45,7 @@ function getDialogDoc() {
   // through all the open windows and all the <browsers> in each.
   var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(Ci.nsIWindowMediator);
-  //var enumerator = wm.getEnumerator("navigator:browser");
+  // var enumerator = wm.getEnumerator("navigator:browser");
   var enumerator = wm.getXULWindowEnumerator(null);
 
   while (enumerator.hasMoreElements()) {
@@ -65,7 +65,7 @@ function getDialogDoc() {
                                     .contentViewer
                                     .DOMDocument;
 
-        //ok(true, "Got window: " + childDoc.location.href);
+        // ok(true, "Got window: " + childDoc.location.href);
         if (childDoc.location.href == "chrome://global/content/commonDialog.xul")
           return childDoc;
     }

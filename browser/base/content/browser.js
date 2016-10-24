@@ -171,7 +171,7 @@ if (AppConstants.platform != "macosx") {
   var gEditUIVisible = true;
 }
 
-/*globals gBrowser, gNavToolbox, gURLBar, gNavigatorBundle*/
+/* globals gBrowser, gNavToolbox, gURLBar, gNavigatorBundle*/
 [
   ["gBrowser",            "content"],
   ["gNavToolbox",         "navigator-toolbox"],
@@ -3996,7 +3996,7 @@ function OpenBrowserWindow(options)
     var DocCharset = window.content.document.characterSet;
     charsetArg = "charset="+DocCharset;
 
-    //we should "inherit" the charset menu setting in a new window
+    // we should "inherit" the charset menu setting in a new window
     win = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no" + extraFeatures, defaultArgs, charsetArg);
   }
   else // forget about the charset information.
@@ -5857,7 +5857,7 @@ var LanguageDetectionListener = {
 var BrowserOffline = {
   _inited: false,
 
-  /////////////////////////////////////////////////////////////////////////////
+  // ///////////////////////////////////////////////////////////////////////////
   // BrowserOffline Public Methods
   init: function ()
   {
@@ -5890,7 +5890,7 @@ var BrowserOffline = {
     ioService.offline = !ioService.offline;
   },
 
-  /////////////////////////////////////////////////////////////////////////////
+  // ///////////////////////////////////////////////////////////////////////////
   // nsIObserver
   observe: function (aSubject, aTopic, aState)
   {
@@ -5902,7 +5902,7 @@ var BrowserOffline = {
     this._updateOfflineUI(Services.io.offline);
   },
 
-  /////////////////////////////////////////////////////////////////////////////
+  // ///////////////////////////////////////////////////////////////////////////
   // BrowserOffline Implementation Methods
   _canGoOffline: function ()
   {
@@ -7648,7 +7648,7 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams={}) {
       return false;
     }
 
-    //Remove the query string, fragment, both, or neither from a given url.
+    // Remove the query string, fragment, both, or neither from a given url.
     function cleanURL(url, removeQuery, removeFragment) {
       let ret = url;
       if (removeFragment) {

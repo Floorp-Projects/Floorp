@@ -716,7 +716,7 @@ AboutReader.prototype = {
     if (!article.dir)
       return;
 
-    //Set "dir" attribute on content
+    // Set "dir" attribute on content
     this._contentElement.setAttribute("dir", article.dir);
     this._headerElement.setAttribute("dir", article.dir);
   },

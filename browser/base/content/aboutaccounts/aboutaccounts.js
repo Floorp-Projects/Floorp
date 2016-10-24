@@ -26,7 +26,7 @@ const OBSERVER_TOPICS = [
 ];
 
 function log(msg) {
-  //dump("FXA: " + msg + "\n");
+  // dump("FXA: " + msg + "\n");
 }
 
 function error(msg) {

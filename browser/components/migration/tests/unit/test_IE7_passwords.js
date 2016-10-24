@@ -339,7 +339,7 @@ add_task(function* test_passwordsAvailable() {
     Services.logins.removeAllLogins();
     logins = Services.logins.getAllLogins({});
     Assert.equal(logins.length, 0, "There are no logins after the cleanup");
-    //remove all the values created in this test from the registry
+    // remove all the values created in this test from the registry
     removeAllValues(Storage2Key, hashes);
     // restore all backed up values
     restore(Storage2Key);

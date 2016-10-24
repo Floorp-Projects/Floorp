@@ -146,16 +146,12 @@ function startTest() {
 
   is($_("10-A", "uname").value, "", "Checking for unfilled username 10A");
   is($_("10-A", "pword").value, "", "Checking for unfilled password 10A");
-  //is($_("10-B", "uname").value, "", "Checking for unfilled username 10B");
-  //is($_("10-B", "pword").value, "", "Checking for unfilled password 10B");
 
   // The DOM indicates this form could be filled, as the evil inner form
   // is discarded. And yet pwmgr seems not to fill it. Not sure why.
   todo(false, "Mangled form combo not being filled when maybe it could be?");
   is($_("11-A", "uname").value, "testuser", "Checking filled username 11A");
   is($_("11-A", "pword").value, "testpass", "Checking filled password 11A");
-  //is($_("11-B", "uname").value, "", "Checking for unfilled username 11B");
-  //is($_("11-B", "pword").value, "", "Checking for unfilled password 11B");
 
   // Verify this by making sure there are no extra forms in the document, and
   // that the submit button for the neutered forms don't do anything.

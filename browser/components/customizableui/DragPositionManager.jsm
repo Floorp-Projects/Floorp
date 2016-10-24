@@ -356,7 +356,7 @@ AreaPositionManager.prototype = {
   _firstInRow: function(aNode) {
     // XXXmconley: I'm not entirely sure why we need to take the floor of these
     // values - it looks like, periodically, we're getting fractional pixels back
-    //from lazyStoreGet. I've filed bug 994247 to investigate.
+    // from lazyStoreGet. I've filed bug 994247 to investigate.
     let bound = Math.floor(this._lazyStoreGet(aNode).top);
     let rv = aNode;
     let prev;

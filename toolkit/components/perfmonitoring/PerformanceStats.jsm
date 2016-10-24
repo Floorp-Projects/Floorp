@@ -915,7 +915,7 @@ var Process = {
       return this._loader;
     }
     Services.ppmm.loadProcessScript("resource://gre/modules/PerformanceStats-content.js",
-      true/*including future processes*/);
+      true/* including future processes*/);
     return this._loader = Services.ppmm;
   },
 

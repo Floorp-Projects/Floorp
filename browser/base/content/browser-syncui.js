@@ -530,7 +530,7 @@ var gSyncUI = {
 };
 
 XPCOMUtils.defineLazyGetter(gSyncUI, "_stringBundle", function() {
-  //XXXzpao these strings should probably be moved from /services to /browser... (bug 583381)
+  // XXXzpao these strings should probably be moved from /services to /browser... (bug 583381)
   //        but for now just make it work
   return Cc["@mozilla.org/intl/stringbundle;1"].
          getService(Ci.nsIStringBundleService).

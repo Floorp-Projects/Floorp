@@ -79,7 +79,7 @@ add_task(function* populatePromise() {
   let expectedLinks = makeLinks(0, 10, 2);
 
   let getLinksFcn = Task.async(function* (callback) {
-    //Should not be calling getLinksFcn twice
+    // Should not be calling getLinksFcn twice
     count++;
     do_check_eq(count, 1);
     yield Promise.resolve();

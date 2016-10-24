@@ -960,7 +960,7 @@ this.PlacesUIUtils = {
       var uriList = PlacesUtils.toISupportsString(urls.join("|"));
       var args = Cc["@mozilla.org/array;1"].
                   createInstance(Ci.nsIMutableArray);
-      args.appendElement(uriList, /*weak =*/ false);
+      args.appendElement(uriList, /* weak =*/ false);
       browserWindow = Services.ww.openWindow(aWindow,
                                              "chrome://browser/content/browser.xul",
                                              null, "chrome,dialog=no,all", args);
@@ -1723,8 +1723,8 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
       return new PlacesSetItemAnnotationTransaction(aItemId, annoObj);
     },
 
-    ////////////////////////////////////////////////////////////////////////////
-    //// nsITransactionManager forwarders.
+    // //////////////////////////////////////////////////////////////////////////
+    // // nsITransactionManager forwarders.
 
     beginBatch: () =>
       PlacesUtils.transactionManager.beginBatch(null),

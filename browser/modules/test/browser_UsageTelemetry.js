@@ -162,7 +162,7 @@ add_task(function* test_subsessionSplit() {
   // Simulate a subsession split by clearing the scalars (via |snapshotScalars|) and
   // notifying the subsession split topic.
   Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
-                                     true /* clearScalars*/);
+                                     true /* clearScalars */);
   Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC, "");
 
   // After a subsession split, only the MAX_CONCURRENT_* scalars must be available

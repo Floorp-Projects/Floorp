@@ -15,10 +15,10 @@ var gWebBrowserPrint   = null;
 var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
 var doDebug            = false;
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function initDialog()
 {
-  dialog = new Object;
+  dialog = {};
 
   dialog.propertiesButton = document.getElementById("properties");
   dialog.descText         = document.getElementById("descText");
@@ -53,7 +53,7 @@ function initDialog()
   dialog.enabled         = false;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function checkInteger(element)
 {
   var value = element.value;
@@ -68,7 +68,7 @@ function checkInteger(element)
     dialog.printButton.removeAttribute("disabled");
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function stripTrailingWhitespace(element)
 {
   var value = element.value;
@@ -76,7 +76,7 @@ function stripTrailingWhitespace(element)
   element.value = value;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function getPrinterDescription(printerName)
 {
   var s = "";
@@ -90,7 +90,7 @@ function getPrinterDescription(printerName)
   return s;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function listElement(aListElement)
   {
     this.listElement = aListElement;
@@ -136,7 +136,7 @@ listElement.prototype =
         }
   };
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function getPrinters()
 {
   var selectElement = new listElement(dialog.printerList);
@@ -158,7 +158,7 @@ function getPrinters()
 }
 
 
-//---------------------------------------------------
+// ---------------------------------------------------
 // update gPrintSettings with the defaults for the selected printer
 function setPrinterDefaultsForSelectedPrinter()
 {
@@ -177,7 +177,7 @@ function setPrinterDefaultsForSelectedPrinter()
   }
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function displayPropertiesDialog()
 {
   gPrintSettings.numCopies = dialog.numCopiesInput.value;
@@ -193,7 +193,7 @@ function displayPropertiesDialog()
   }
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function doPrintRange(inx)
 {
   if (inx == 1) {
@@ -209,7 +209,7 @@ function doPrintRange(inx)
   }
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function loadDialog()
 {
   var print_copies        = 1;
@@ -278,7 +278,7 @@ function loadDialog()
     dialog.printframeGroup.selectedItem = dialog.selectedframeRadio;
 
   } else if (print_howToEnableUI == gPrintSetInterface.kFrameEnableAsIsAndEach) {
-    dialog.aslaidoutRadio.removeAttribute("disabled");       //enable
+    dialog.aslaidoutRadio.removeAttribute("disabled");       // enable
 
     dialog.selectedframeRadio.setAttribute("disabled", "true"); // disable
     dialog.eachframesepRadio.removeAttribute("disabled");       // enable
@@ -297,7 +297,7 @@ function loadDialog()
   dialog.printButton.label = dialog.printName.getAttribute("label");
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function onLoad()
 {
   // Init dialog.
@@ -316,7 +316,7 @@ function onLoad()
   loadDialog();
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function onAccept()
 {
   if (gPrintSettings != null) {
@@ -389,7 +389,7 @@ function onAccept()
   return true;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function onCancel()
 {
   // set return value to "cancel"
@@ -402,7 +402,7 @@ function onCancel()
   return true;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function chooseFile()
 {

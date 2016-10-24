@@ -291,7 +291,7 @@ add_task(function* test_crash_submission_event_file() {
 
   // The line below has been intentionally commented out to make sure that
   // the crash record is created when one does not exist.
-  //yield m.createEventsFile("2", "crash.main.1", DUMMY_DATE, "crash2");
+  // yield m.createEventsFile("2", "crash.main.1", DUMMY_DATE, "crash2");
   yield m.createEventsFile("2-submission", "crash.submission.1", DUMMY_DATE_2,
                            "crash2\ntrue\nbp-2");
   let count = yield m.aggregateEventsFiles();

@@ -17,7 +17,7 @@ function test() {
   try {
     xpipath = cr.convertChromeURL(makeURI(chromeroot)).spec;
   } catch (ex) {
-    //scenario where we are running from a .jar and already extracted
+    // scenario where we are running from a .jar and already extracted
   }
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": TESTROOT + "amosigned.xpi"

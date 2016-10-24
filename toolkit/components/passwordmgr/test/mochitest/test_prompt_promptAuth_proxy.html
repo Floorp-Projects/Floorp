@@ -115,7 +115,7 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
 });
 
 function startup() {
-  //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
+  // Need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
   var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
     getService(SpecialPowers.Ci.nsIIOService);
 

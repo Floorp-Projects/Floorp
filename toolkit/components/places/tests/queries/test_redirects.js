@@ -202,7 +202,7 @@ add_task(function* test_add_visits_to_database()
     Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
     // Embed visits are not added to the database and we don't want redirects
     // to them, thus just avoid addition.
-    //Ci.nsINavHistoryService.TRANSITION_EMBED,
+    // Ci.nsINavHistoryService.TRANSITION_EMBED,
     Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK,
     // Would make hard sorting by visit date because last_visit_date is actually
     // calculated excluding download transitions, but the query includes

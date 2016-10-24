@@ -23,7 +23,7 @@ var panelProgressListener = {
         if (!aRequest)
           return;
 
-        //ignore local/resource:/chrome: files
+        // ignore local/resource:/chrome: files
         if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
            return;
 
