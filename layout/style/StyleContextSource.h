@@ -6,7 +6,7 @@
 #ifndef mozilla_StyleContextSource_h
 #define mozilla_StyleContextSource_h
 
-#include "mozilla/ServoBindingHelpers.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "nsRuleNode.h"
 
 namespace mozilla {
