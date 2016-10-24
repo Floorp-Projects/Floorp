@@ -24,7 +24,7 @@ protected:
     SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
     rootApzc = ApzcOf(root);
     rootApzc->GetFrameMetrics().SetIsRootContent(true);  // make root APZC zoomable
   }
@@ -45,7 +45,7 @@ protected:
     // No ScopedLayerTreeRegistration as that just needs to be done once per test
     // and this is the second layer tree for a particular test.
     MOZ_ASSERT(registration);
-    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -69,7 +69,7 @@ protected:
     SetScrollHandoff(layers[2], layers[1]);
     SetScrollHandoff(layers[4], layers[3]);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
   }
 
   void CreateScrollgrabLayerTree(bool makeParentScrollable = true) {
@@ -84,7 +84,7 @@ protected:
     SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
     rootApzc = ApzcOf(root);
     rootApzc->GetScrollMetadata().SetHasScrollgrab(true);
   }
