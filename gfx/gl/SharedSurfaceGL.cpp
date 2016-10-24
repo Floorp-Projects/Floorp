@@ -85,7 +85,7 @@ SharedSurface_Basic::SharedSurface_Basic(GLContext* gl,
 
 SharedSurface_Basic::~SharedSurface_Basic()
 {
-    if (!mGL->MakeCurrent())
+    if (!mGL || !mGL->MakeCurrent())
         return;
 
     if (mFB)
