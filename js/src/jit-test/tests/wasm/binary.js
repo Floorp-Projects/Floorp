@@ -12,7 +12,7 @@ function sectionError(section) {
 }
 
 function versionError(actual) {
-    var expect = Wasm.experimentalVersion;
+    var expect = experimentalVersion;
     var str = `binary version 0x${actual.toString(16)} does not match expected version 0x${expect.toString(16)}`;
     return RegExp(str);
 }
