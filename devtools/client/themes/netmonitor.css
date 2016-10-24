@@ -7,6 +7,10 @@
   overflow: hidden;
 }
 
+#react-clear-button-hook {
+  display: flex;
+}
+
 /**
  * Collapsed details pane needs to be truly hidden to prevent both accessibility
  * tools and keyboard from accessing its contents.

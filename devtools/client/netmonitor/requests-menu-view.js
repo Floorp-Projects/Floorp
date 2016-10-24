@@ -154,7 +154,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     this.requestsMenuSortEvent = getKeyWithEvent(this.sortBy.bind(this));
     this.requestsMenuSortKeyboardEvent = getKeyWithEvent(this.sortBy.bind(this), true);
-    this.reqeustsMenuClearEvent = this.clear.bind(this);
     this._onContextMenu = this._onContextMenu.bind(this);
     this._onContextNewTabCommand = this.openRequestInTab.bind(this);
     this._onContextCopyUrlCommand = this.copyUrl.bind(this);
@@ -187,8 +186,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       this.requestsMenuSortEvent, false);
     $("#toolbar-labels").addEventListener("keydown",
       this.requestsMenuSortKeyboardEvent, false);
-    $("#requests-menu-clear-button").addEventListener("click",
-      this.reqeustsMenuClearEvent, false);
     $("#toggle-raw-headers").addEventListener("click",
       this.toggleRawHeadersEvent, false);
     $("#requests-menu-contents").addEventListener("scroll", this._onScroll, true);
@@ -269,8 +266,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       this.requestsMenuSortEvent, false);
     $("#toolbar-labels").removeEventListener("keydown",
       this.requestsMenuSortKeyboardEvent, false);
-    $("#requests-menu-clear-button").removeEventListener("click",
-      this.reqeustsMenuClearEvent, false);
     this.freetextFilterBox.removeEventListener("input",
       this.requestsFreetextFilterEvent, false);
     this.freetextFilterBox.removeEventListener("command",
