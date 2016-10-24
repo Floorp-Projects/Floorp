@@ -12,6 +12,15 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 this.EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
+const LEFT_PANE_ROOT_ANNO = "PlacesOrganizer/OrganizerFolder";
+const LEFT_PANE_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
+
+// Indicates if a local bookmark tree node should be excluded from syncing.
+function isNodeIgnored(treeNode) {
+  return treeNode.annos && treeNode.annos.some(anno => anno.name == LEFT_PANE_ROOT_ANNO ||
+                                                       anno.name == LEFT_PANE_QUERY_ANNO);
+}
+
 /**
  * Result of bookmark validation. Contains the following fields which describe
  * server-side problems unless otherwise specified.
@@ -202,7 +211,7 @@ class BookmarkValidator {
     function traverse(treeNode) {
       let guid = PlacesSyncUtils.bookmarks.guidToSyncId(treeNode.guid);
       let itemType = 'item';
-      treeNode.ignored = PlacesUtils.annotations.itemHasAnnotation(treeNode.id, PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
+      treeNode.ignored = isNodeIgnored(treeNode);
       treeNode.id = guid;
       switch (treeNode.type) {
         case PlacesUtils.TYPE_X_MOZ_PLACE:

@@ -1278,8 +1278,12 @@ BookmarksTracker.prototype = {
       PlacesUtils.annotations.setItemAnnotation(query, PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, 1, 0,
                                   PlacesUtils.annotations.EXPIRE_NEVER, SOURCE_SYNC);
     }
-    // Make sure the existing title is correct
+    // Make sure the existing query URL and title are correct
     else {
+      if (!PlacesUtils.bookmarks.getBookmarkURI(mobile[0]).equals(queryURI)) {
+        PlacesUtils.bookmarks.changeBookmarkURI(mobile[0], queryURI,
+                                                SOURCE_SYNC);
+      }
       let queryTitle = PlacesUtils.bookmarks.getItemTitle(mobile[0]);
       if (queryTitle != title) {
         PlacesUtils.bookmarks.setItemTitle(mobile[0], title, SOURCE_SYNC);
