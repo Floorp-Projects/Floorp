@@ -949,10 +949,6 @@ nsresult // static
 nsNavHistory::AsciiHostNameFromHostString(const nsACString& aHostName,
                                           nsACString& aAscii)
 {
-  aAscii.Truncate();
-  if (aHostName.IsEmpty()) {
-    return NS_OK;
-  }
   // To properly generate a uri we must provide a protocol.
   nsAutoCString fakeURL("http://");
   fakeURL.Append(aHostName);
