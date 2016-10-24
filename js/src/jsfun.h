@@ -301,6 +301,10 @@ class JSFunction : public js::NativeObject
         flags_ |= RESOLVED_NAME;
     }
 
+    bool getUnresolvedLength(JSContext* cx, js::MutableHandleValue v);
+
+    JSAtom* getUnresolvedName(JSContext* cx);
+
     JSAtom* name() const { return hasGuessedAtom() ? nullptr : atom_.get(); }
 
     // Because display names (see Debugger.Object.displayName) are already stored
