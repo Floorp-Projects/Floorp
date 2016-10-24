@@ -13,6 +13,9 @@ import json
 
 from collections import OrderedDict
 
+# Keep this in sync with TelemetryController.
+startup_histogram_re = re.compile("SQLITE|HTTP|SPDY|CACHE|DNS")
+
 def main(argv):
     filenames = argv
 
@@ -46,6 +49,9 @@ def main(argv):
             continue
 
         all_histograms.update({ name: parameters });
+
+        if startup_histogram_re.search(name) is not None:
+            all_histograms.update({ "STARTUP_" + name: parameters })
 
     print json.dumps({ 'histograms': all_histograms})
 
