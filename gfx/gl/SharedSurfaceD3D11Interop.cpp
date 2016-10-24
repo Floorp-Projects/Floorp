@@ -305,7 +305,7 @@ SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop()
         NS_WARNING("Failed to release a DXGL object, possibly leaking it.");
     }
 
-    if (!mGL->MakeCurrent())
+    if (!mGL || !mGL->MakeCurrent())
         return;
 
     mGL->fDeleteRenderbuffers(1, &mProdRB);

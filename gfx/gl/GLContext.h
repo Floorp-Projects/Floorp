@@ -41,6 +41,7 @@
 #include "GLContextSymbols.h"
 #include "base/platform_thread.h"       // for PlatformThreadId
 #include "mozilla/GenericRefCounted.h"
+#include "mozilla/WeakPtr.h"
 #include "gfx2DGlue.h"
 #include "GeckoProfiler.h"
 
@@ -190,7 +191,11 @@ enum class GLRenderer {
 class GLContext
     : public GLLibraryLoader
     , public GenericAtomicRefCounted
+    , public SupportsWeakPtr<GLContext>
 {
+public:
+    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLContext)
+
 // -----------------------------------------------------------------------------
 // basic enums
 public:
