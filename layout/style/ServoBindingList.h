@@ -23,9 +23,9 @@ SERVO_BINDING_FUNC(Servo_Node_ClearNodeData, void, RawGeckoNodeBorrowed node)
 
 // Styleset and Stylesheet management
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
-                   const uint8_t* bytes, uint32_t length,
+                   const nsACString* data,
                    mozilla::css::SheetParsingMode parsing_mode,
-                   const uint8_t* base_bytes, uint32_t base_length,
+                   const nsACString* base_url,
                    ThreadSafeURIHolder* base,
                    ThreadSafeURIHolder* referrer,
                    ThreadSafePrincipalHolder* principal)
@@ -50,13 +50,8 @@ SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
                    RawServoDeclarationBlockStrong,
-                   const uint8_t* property_bytes,
-                   uint32_t property_length,
-                   const uint8_t* value_bytes,
-                   uint32_t value_length,
-                   const uint8_t* base_bytes,
-                   uint32_t base_length,
-                   ThreadSafeURIHolder* base,
+                   const nsACString* property, const nsACString* value,
+                   const nsACString* base_url, ThreadSafeURIHolder* base,
                    ThreadSafeURIHolder* referrer,
                    ThreadSafePrincipalHolder* principal)
 SERVO_BINDING_FUNC(Servo_RestyleWithAddedDeclaration,
@@ -66,7 +61,7 @@ SERVO_BINDING_FUNC(Servo_RestyleWithAddedDeclaration,
 
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
-                   const uint8_t* bytes, uint32_t length)
+                   const nsACString* data)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddRef, void,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
@@ -80,8 +75,7 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SerializeOneValue, void,
 
 // CSS supports()
 SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
-                   const uint8_t* name, uint32_t name_length,
-                   const uint8_t* value, uint32_t value_length)
+                   const nsACString* name, const nsACString* value)
 
 // Computed style data
 SERVO_BINDING_FUNC(Servo_ComputedValues_Get, ServoComputedValuesStrong,
