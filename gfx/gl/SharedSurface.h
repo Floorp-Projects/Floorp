@@ -60,7 +60,7 @@ public:
 
     const SharedSurfaceType mType;
     const AttachmentType mAttachType;
-    GLContext* const mGL;
+    const WeakPtr<GLContext> mGL;
     const gfx::IntSize mSize;
     const bool mHasAlpha;
     const bool mCanRecycle;
