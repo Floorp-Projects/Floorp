@@ -169,7 +169,9 @@ const mockDevice = {
     sendAsyncMessage('control-channel-established');
     return mockControlChannelOfSender;
   },
-  disconnect: function() {},
+  disconnect: function() {
+    sendAsyncMessage('device-disconnected');
+  },
   isRequestedUrlSupported: function(requestedUrl) {
     return true;
   },
