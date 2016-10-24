@@ -35,7 +35,9 @@ SetDocumentTitleTransaction::Init(nsIHTMLEditor* aEditor,
 
 {
   NS_ASSERTION(aEditor && aValue, "null args");
-  if (!aEditor || !aValue) { return NS_ERROR_NULL_POINTER; }
+  if (!aEditor || !aValue) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   mEditor = aEditor;
   mValue = *aValue;
@@ -67,46 +69,59 @@ nsresult
 SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  NS_ENSURE_TRUE(editor, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIDOMDocument> domDoc;
-  nsresult res = editor->GetDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+  nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
+  if (NS_WARN_IF(!domDoc)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMNodeList> titleList;
-  res = domDoc->GetElementsByTagName(NS_LITERAL_STRING("title"), getter_AddRefs(titleList));
-  NS_ENSURE_SUCCESS(res, res);
+  rv = domDoc->GetElementsByTagName(NS_LITERAL_STRING("title"),
+                                    getter_AddRefs(titleList));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // First assume we will NOT really do anything
   // (transaction will not be pushed on stack)
   mIsTransient = true;
 
-  nsCOMPtr<nsIDOMNode>titleNode;
-  if(titleList)
-  {
-    res = titleList->Item(0, getter_AddRefs(titleNode));
-    NS_ENSURE_SUCCESS(res, res);
-    if (titleNode)
-    {
+  nsCOMPtr<nsIDOMNode> titleNode;
+  if(titleList) {
+    rv = titleList->Item(0, getter_AddRefs(titleNode));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (titleNode) {
       // Delete existing child textnode of title node
       // (Note: all contents under a TITLE node are always in a single text node)
       nsCOMPtr<nsIDOMNode> child;
-      res = titleNode->GetFirstChild(getter_AddRefs(child));
-      if(NS_FAILED(res)) return res;
-      if(child)
-      {
+      rv = titleNode->GetFirstChild(getter_AddRefs(child));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      if(child) {
         // Save current text as the undo value
         nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(child);
-        if(textNode)
-        {
+        if(textNode) {
           textNode->GetData(mUndoValue);
 
           // If title text is identical to what already exists,
           // quit now (mIsTransient is now TRUE)
-          if (mUndoValue == aTitle)
+          if (mUndoValue == aTitle) {
             return NS_OK;
+          }
         }
-        res = editor->DeleteNode(child);
-        if(NS_FAILED(res)) return res;
+        rv = editor->DeleteNode(child);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
@@ -116,59 +131,81 @@ SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
 
   // Get the <HEAD> node, create a <TITLE> and insert it under the HEAD
   nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
-  NS_ENSURE_STATE(document);
+  if (NS_WARN_IF(!document)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  dom::Element* head = document->GetHeadElement();
-  NS_ENSURE_STATE(head);
+  RefPtr<dom::Element> headElement = document->GetHeadElement();
+  if (NS_WARN_IF(!headElement)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  bool     newTitleNode = false;
+  bool newTitleNode = false;
   uint32_t newTitleIndex = 0;
 
-  if (!titleNode)
-  {
+  if (!titleNode) {
     // Didn't find one above: Create a new one
     nsCOMPtr<nsIDOMElement>titleElement;
-    res = domDoc->CreateElement(NS_LITERAL_STRING("title"), getter_AddRefs(titleElement));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(titleElement, NS_ERROR_FAILURE);
+    rv = domDoc->CreateElement(NS_LITERAL_STRING("title"),
+                               getter_AddRefs(titleElement));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    if (NS_WARN_IF(!titleElement)) {
+      return NS_ERROR_FAILURE;
+    }
 
     titleNode = do_QueryInterface(titleElement);
     newTitleNode = true;
 
     // Get index so we append new title node after all existing HEAD children.
-    newTitleIndex = head->GetChildCount();
+    newTitleIndex = headElement->GetChildCount();
   }
 
-  // Append a text node under the TITLE
-  //  only if the title text isn't empty
-  if (titleNode && !aTitle.IsEmpty())
-  {
+  // Append a text node under the TITLE only if the title text isn't empty.
+  if (titleNode && !aTitle.IsEmpty()) {
     nsCOMPtr<nsIDOMText> textNode;
-    res = domDoc->CreateTextNode(aTitle, getter_AddRefs(textNode));
-    NS_ENSURE_SUCCESS(res, res);
-    nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(textNode);
-    NS_ENSURE_TRUE(newNode, NS_ERROR_FAILURE);
+    rv = domDoc->CreateTextNode(aTitle, getter_AddRefs(textNode));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-    if (newTitleNode)
-    {
+    nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(textNode);
+    if (NS_WARN_IF(!newNode)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (newTitleNode) {
       // Not undoable: We will insert newTitleNode below
       nsCOMPtr<nsIDOMNode> resultNode;
-      res = titleNode->AppendChild(newNode, getter_AddRefs(resultNode));
-    }
-    else
-    {
+      rv = titleNode->AppendChild(newNode, getter_AddRefs(resultNode));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else {
       // This is an undoable transaction
-      res = editor->InsertNode(newNode, titleNode, 0);
+      rv = editor->InsertNode(newNode, titleNode, 0);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
-    NS_ENSURE_SUCCESS(res, res);
+    // Calling AppendChild() or InsertNode() could cause removing the head
+    // element.  So, let's mark it dirty.
+    headElement = nullptr;
   }
 
-  if (newTitleNode)
-  {
+  if (newTitleNode) {
+    if (!headElement) {
+      headElement = document->GetHeadElement();
+      if (NS_WARN_IF(!headElement)) {
+        // XXX Can we return NS_OK when there is no head element?
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
     // Undoable transaction to insert title+text together
-    res = editor->InsertNode(titleNode, head->AsDOMNode(), newTitleIndex);
+    rv = editor->InsertNode(titleNode, headElement->AsDOMNode(), newTitleIndex);
   }
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -182,7 +219,9 @@ SetDocumentTitleTransaction::GetTxnDescription(nsAString& aString)
 NS_IMETHODIMP
 SetDocumentTitleTransaction::GetIsTransient(bool* aIsTransient)
 {
-  NS_ENSURE_TRUE(aIsTransient, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aIsTransient)) {
+    return NS_ERROR_NULL_POINTER;
+  }
   *aIsTransient = mIsTransient;
   return NS_OK;
 }

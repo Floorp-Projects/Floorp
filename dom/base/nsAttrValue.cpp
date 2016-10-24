@@ -17,7 +17,7 @@
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ServoBindingHelpers.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "mozilla/DeclarationBlockInlines.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"

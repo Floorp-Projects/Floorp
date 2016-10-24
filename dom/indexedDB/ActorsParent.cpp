@@ -21,6 +21,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Maybe.h"
@@ -18960,12 +18961,7 @@ uint64_t
 DatabaseOperationBase::ReinterpretDoubleAsUInt64(double aDouble)
 {
   // This is a duplicate of the js engine's byte munging in StructuredClone.cpp
-  union {
-    double d;
-    uint64_t u;
-  } pun;
-  pun.d = aDouble;
-  return pun.u;
+  return BitwiseCast<uint64_t>(aDouble);
 }
 
 // static
