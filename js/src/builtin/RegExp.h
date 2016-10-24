@@ -97,6 +97,13 @@ regexp_test_no_statics(JSContext* cx, unsigned argc, Value* vp);
 extern MOZ_MUST_USE bool
 regexp_construct_no_sticky(JSContext* cx, unsigned argc, Value* vp);
 
+/*
+ * Clone given RegExp object, inheriting pattern and flags, ignoring other
+ * properties.
+ */
+extern MOZ_MUST_USE bool
+regexp_clone(JSContext* cx, unsigned argc, Value* vp);
+
 extern MOZ_MUST_USE bool
 IsRegExp(JSContext* cx, HandleValue value, bool* result);
 
