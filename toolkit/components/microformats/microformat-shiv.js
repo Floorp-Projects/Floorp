@@ -1207,7 +1207,7 @@ var Microformats; // jshint ignore:line
                                                         }
                                                         y++;
                                                     }
-                                                    //only add property once
+                                                    // only add property once
                                                     if (out.properties.indexOf(propName) === -1) {
                                                         out.properties.push([propName, 'v1']);
                                                     }
@@ -1242,11 +1242,11 @@ var Microformats; // jshint ignore:line
             }
 
 
-            //if(out.root.length === 1 && out.properties.length === 1) {
+            // if(out.root.length === 1 && out.properties.length === 1) {
             //  if(out.root[0].replace('h-','') === this.removePropPrefix(out.properties[0][0])) {
             //      out.typeVersion = 'v2';
             //  }
-            //}
+            // }
 
             return out;
         },
@@ -1386,7 +1386,7 @@ var Microformats; // jshint ignore:line
                     // the url parser can blow up if the format is not right
                     attr = modules.domUtils.getAttribute(nodes[i], attrName);
                     if (attr && attr !== '' && baseUrl !== '' && attr.indexOf('://') === -1) {
-                        //attr = urlParser.resolve(baseUrl, attr);
+                        // attr = urlParser.resolve(baseUrl, attr);
                         attr = modules.url.resolve(attr, baseUrl);
                         modules.domUtils.setAttribute(nodes[i], attrName, attr);
                     }
@@ -2425,7 +2425,7 @@ var Microformats; // jshint ignore:line
 
             // if a html string is passed
             if (options.html) {
-                //var domParser = new DOMParser();
+                // var domParser = new DOMParser();
                 var domParser = this.getDOMParser();
                 this.rootNode = domParser.parseFromString( options.html, 'text/html' );
             }
@@ -2466,10 +2466,10 @@ var Microformats; // jshint ignore:line
         * @return {DOM Node} node
         */
         getTopMostNode: function( node ) {
-            //var doc = this.ownerDocument(node);
-            //if(doc && doc.nodeType && doc.nodeType === 9 && doc.documentElement){
+            // var doc = this.ownerDocument(node);
+            // if(doc && doc.nodeType && doc.nodeType === 9 && doc.documentElement){
             //  return doc.documentElement;
-            //}
+            // }
             return node;
         },
 
@@ -2842,7 +2842,7 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         decodeEntities: function( doc, text ) {
-            //return text;
+            // return text;
             return doc.createTextNode( text ).nodeValue;
         },
 
@@ -2981,7 +2981,7 @@ var Microformats; // jshint ignore:line
          * creates DOM objects needed to resolve URLs
          */
         init: function() {
-            //this._domParser = new DOMParser();
+            // this._domParser = new DOMParser();
             this._domParser = modules.domUtils.getDOMParser();
             // do not use a head tag it does not work with IE9
             this._html = '<base id="base" href=""></base><a id="link" href=""></a>';
@@ -3598,7 +3598,7 @@ var Microformats; // jshint ignore:line
 
             // if the string has a text : or am or pm
             if (modules.utils.isString(out)) {
-                //text = text.toLowerCase();
+                // text = text.toLowerCase();
                 text = text.replace(/[ ]+/g, '');
 
                 if (text.match(':') || this.hasAM(text) || this.hasPM(text)) {
@@ -3808,7 +3808,7 @@ var Microformats; // jshint ignore:line
                  out = modules.utils.trimWhitespace( out );
               }
 
-              //return entities.decode( out, 2 );
+              // return entities.decode( out, 2 );
               return modules.domUtils.decodeEntities( doc, out );
            }
            return '';

@@ -766,7 +766,6 @@
                     // XXX Can't set increment here, due to bug 473103. Also, doing so causes
                     // snapping when dragging with the mouse, so we can't just set a value for
                     // the arrow-keys.
-                    //this.scrubber.increment = duration / 50;
                     this.scrubber.pageIncrement = Math.round(duration / 10);
                 },
 
@@ -1598,7 +1597,7 @@
                     addListener(this.video.textTracks, "removetrack", this.onTextTrackRemove);
 
                     addListener(this.videocontrols, "dragstart", function(event) {
-                        event.preventDefault(); //prevent dragging of controls image (bug 517114)
+                        event.preventDefault(); // prevent dragging of controls image (bug 517114)
                     });
 
                     this.log("--- videocontrols initialized ---");
@@ -1948,8 +1947,6 @@
                 case "playing":
                   this.noControlsOverlay.hidden = true;
                   break;
-                default:
-                  //this.log("!!! event " + aEvent.type + " not handled!");
               }
             },
 

@@ -120,7 +120,7 @@ var gSyncPane = {
                   FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION,
                   ];
     // Add the observers now and remove them on unload
-    //XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
+    // XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
     //        of `this`. Fix in a followup. (bug 583347)
     topics.forEach(function (topic) {
       Weave.Svc.Obs.add(topic, this.updateWeavePrefs, this);

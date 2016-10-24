@@ -42,7 +42,7 @@ add_task(function*() {
   checkAreaType(w);
   CustomizableUI.removeWidgetFromArea(kUnregisterAreaTestWidget);
   checkAreaType(w);
-  //XXXgijs: ensure cleanup function doesn't barf:
+  // XXXgijs: ensure cleanup function doesn't barf:
   gAddedToolbars.delete(kToolbarName);
 });
 

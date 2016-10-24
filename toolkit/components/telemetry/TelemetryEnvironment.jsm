@@ -1357,7 +1357,7 @@ EnvironmentCache.prototype = {
       ContentBackend: getGfxField("ContentBackend", null),
       // The following line is disabled due to main thread jank and will be enabled
       // again as part of bug 1154500.
-      //DWriteVersion: getGfxField("DWriteVersion", null),
+      // DWriteVersion: getGfxField("DWriteVersion", null),
       adapters: [],
       monitors: [],
       features: {},

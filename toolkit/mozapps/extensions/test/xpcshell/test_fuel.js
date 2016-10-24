@@ -101,7 +101,7 @@ function run_test() {
 
       // PREF TESTING
       // Reset the install event preference, so that we can test it again later
-      //inspector.prefs.get("install-event-fired").reset();
+      // inspector.prefs.get("install-event-fired").reset();
 
       // test the value of the preference root
       do_check_eq(extensions.all[0].prefs.root, "extensions.addon1@tests.mozilla.org.");

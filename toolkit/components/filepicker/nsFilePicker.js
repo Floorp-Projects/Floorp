@@ -243,17 +243,17 @@ nsFilePicker.prototype = {
   },
 
   show: function() {
-    var o = new Object();
+    var o = {};
     o.title = this.mTitle;
     o.mode = this.mMode;
     o.displayDirectory = this.mDisplayDirectory;
     o.defaultString = this.mDefaultString;
     o.filterIndex = this.mFilterIndex;
-    o.filters = new Object();
+    o.filters = {};
     o.filters.titles = this.mFilterTitles;
     o.filters.types = this.mFilters;
     o.allowURLs = this.mAllowURLs;
-    o.retvals = new Object();
+    o.retvals = {};
 
     var parent;
     if (this.mParentWindow) {

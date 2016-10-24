@@ -52,7 +52,7 @@ function add_bookmark(aURI) {
 var gTests = [];
 var gCurrentTest = null;
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 // Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog
 gTests.push({
   desc: "Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog",
@@ -153,7 +153,7 @@ gTests.push({
   }
 });
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 // Bug 476020 - Pressing Esc while having the tag autocomplete open closes the bookmarks panel
 
 gTests.push({
@@ -254,7 +254,7 @@ gTests.push({
   }
 });
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 //  Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog
 
 gTests.push({
@@ -325,7 +325,7 @@ gTests.push({
   }
 });
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 function test() {
   waitForExplicitFinish();

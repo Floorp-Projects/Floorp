@@ -58,7 +58,7 @@ SimpleTest.waitForExplicitFinish();
 
 function runTests()
 {
-  //XXX We send a useless click to each image to force it to setup its image
+  // XXX We send a useless click to each image to force it to setup its image
   // map, because flushing layout won't do it. Hopefully bug 135040 will make
   // this not suck.
   synthesizeMouse($("image"), 5, 5, { type: "mousedown" });

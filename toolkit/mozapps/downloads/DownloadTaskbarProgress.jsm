@@ -8,8 +8,8 @@ this.EXPORTED_SYMBOLS = [
   "DownloadTaskbarProgress",
 ];
 
-////////////////////////////////////////////////////////////////////////////////
-//// Constants
+// //////////////////////////////////////////////////////////////////////////////
+// // Constants
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -24,8 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 const kTaskbarIDWin = "@mozilla.org/windows-taskbar;1";
 const kTaskbarIDMac = "@mozilla.org/widget/macdocksupport;1";
 
-////////////////////////////////////////////////////////////////////////////////
-//// DownloadTaskbarProgress Object
+// //////////////////////////////////////////////////////////////////////////////
+// // DownloadTaskbarProgress Object
 
 this.DownloadTaskbarProgress =
 {
@@ -94,18 +94,18 @@ this.DownloadTaskbarProgress =
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// DownloadTaskbarProgressUpdater Object
+// //////////////////////////////////////////////////////////////////////////////
+// // DownloadTaskbarProgressUpdater Object
 
 var DownloadTaskbarProgressUpdater =
 {
-  /// Whether the taskbar is initialized.
+  // / Whether the taskbar is initialized.
   _initialized: false,
 
-  /// Reference to the taskbar.
+  // / Reference to the taskbar.
   _taskbar: null,
 
-  /// Reference to the download manager.
+  // / Reference to the download manager.
   _dm: null,
 
   /**
@@ -165,7 +165,7 @@ var DownloadTaskbarProgressUpdater =
    */
   _activeTaskbarProgress: null,
 
-  /// Whether the active window is the download window
+  // / Whether the active window is the download window
   _activeWindowIsDownloadWindow: false,
 
   /**
@@ -209,7 +209,7 @@ var DownloadTaskbarProgressUpdater =
     }
   },
 
-  /// Current state displayed on the active window's taskbar item
+  // / Current state displayed on the active window's taskbar item
   _taskbarState: null,
   _totalSize: 0,
   _totalTransferred: 0,
@@ -370,8 +370,8 @@ var DownloadTaskbarProgressUpdater =
     }
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIDownloadProgressListener
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsIDownloadProgressListener
 
   /**
    * Update status if a download's progress has changed.

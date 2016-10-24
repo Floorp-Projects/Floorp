@@ -1,4 +1,4 @@
-/*!
+/* !
 	update.js
 
 	run $ npm install

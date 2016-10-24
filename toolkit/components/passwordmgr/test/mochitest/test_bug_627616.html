@@ -107,7 +107,6 @@
                        "user1pass", "", "");
           Services.logins.addLogin(login2);
 
-          //startWatchingForPrompts();
           sendAsyncMessage("setupDone");
         },
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolProxyCallback]),

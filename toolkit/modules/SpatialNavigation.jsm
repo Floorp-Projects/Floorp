@@ -69,7 +69,7 @@ const kCtrl  = "ctrl";
 const kNone  = "none";
 
 function _onInputKeyPress (event, callback) {
-  //If Spatial Navigation isn't enabled, return.
+  // If Spatial Navigation isn't enabled, return.
   if (!PrefObserver['enabled']) {
     return;
   }
@@ -208,7 +208,7 @@ function _onInputKeyPress (event, callback) {
 
   focusManager.setFocus(bestElementToFocus, focusManager.FLAG_SHOWRING);
 
-  //if it is a text element, select all.
+  // if it is a text element, select all.
   if ((bestElementToFocus instanceof Ci.nsIDOMHTMLInputElement &&
        bestElementToFocus.mozIsTextField(false)) ||
       bestElementToFocus instanceof Ci.nsIDOMHTMLTextAreaElement) {

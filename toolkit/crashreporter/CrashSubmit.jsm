@@ -416,7 +416,7 @@ Submitter.prototype = {
   }
 };
 
-//===================================
+// ===================================
 // External API goes here
 this.CrashSubmit = {
   /**

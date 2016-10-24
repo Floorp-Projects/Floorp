@@ -787,7 +787,7 @@ var FindBar = {
     let should = false;
     let can = BrowserUtils.canFastFind(content);
     if (can) {
-      //XXXgijs: why all these shenanigans? Why not use the event's target?
+      // XXXgijs: why all these shenanigans? Why not use the event's target?
       let focusedWindow = {};
       let elt = Services.focus.getFocusedElementForWindow(content, true, focusedWindow);
       let win = focusedWindow.value;

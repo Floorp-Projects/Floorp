@@ -12,7 +12,7 @@ function test() {
   try {
     xpipath = cr.convertChromeURL(makeURI(xpipath)).spec;
   } catch (ex) {
-    //scenario where we are running from a .jar and already extracted
+    // scenario where we are running from a .jar and already extracted
   }
 
   var triggers = encodeURIComponent(JSON.stringify({

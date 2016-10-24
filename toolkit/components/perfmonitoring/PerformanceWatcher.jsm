@@ -66,7 +66,7 @@ if (!isContent) {
   // To keep the protocol simple, the children inform the parent whenever a slow
   // add-on/tab is detected. We do not attempt to implement thresholds.
   Services.ppmm.loadProcessScript("resource://gre/modules/PerformanceWatcher-content.js",
-    true/*including future processes*/);
+    true/* including future processes*/);
 
   Services.ppmm.addMessageListener("performancewatcher-propagate-notifications",
     (...args) => ChildManager.notifyObservers(...args)

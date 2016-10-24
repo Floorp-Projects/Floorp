@@ -153,7 +153,7 @@ add_task(function* testAltReturn() {
   is(gBrowser.currentURI.spec, expectedURL(searchBar.value), "testAltReturn opened correct search page");
 });
 
-//Shift key has no effect for now, so skip it
+// Shift key has no effect for now, so skip it
 add_task(function* testShiftAltReturn() {
   return;
 

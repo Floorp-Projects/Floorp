@@ -33,7 +33,7 @@ function checkString(aPref, aValue) {
     do_check_eq(Services.prefs.getCharPref(aPref), aValue)
   }
   catch (e) {
-    //OK
+    // OK
   }
 }
 

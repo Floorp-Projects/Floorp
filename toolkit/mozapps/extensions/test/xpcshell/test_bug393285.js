@@ -48,7 +48,7 @@ var WindowWatcher = {
         aItem.disable = true;
     });
 
-    //run the code after the blocklist is closed
+    // run the code after the blocklist is closed
     Services.obs.notifyObservers(null, "addon-blocklist-closed", null);
 
   },

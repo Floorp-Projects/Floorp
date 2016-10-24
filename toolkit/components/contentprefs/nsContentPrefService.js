@@ -49,7 +49,7 @@ cache.set = function CPS_cache_set(group, name, val) {
 const privModeStorage = new ContentPrefStore();
 
 ContentPrefService.prototype = {
-  //**************************************************************************//
+  //* *************************************************************************//
   // XPCOM Plumbing
 
   classID: Components.ID("{e3f772f3-023f-4b32-b074-36cf0fd5d414}"),
@@ -72,7 +72,7 @@ ContentPrefService.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Convenience Getters
 
   // Observer Service
@@ -103,7 +103,7 @@ ContentPrefService.prototype = {
   },
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Destruction
 
   _destroy: function ContentPrefService__destroy() {
@@ -191,7 +191,7 @@ ContentPrefService.prototype = {
   },
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // nsIObserver
 
   observe: function ContentPrefService_observe(subject, topic, data) {
@@ -206,13 +206,13 @@ ContentPrefService.prototype = {
   },
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // in-memory cache and private-browsing stores
 
   _cache: cache,
   _privModeStorage: privModeStorage,
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // nsIContentPrefService
 
   getPref: function ContentPrefService_getPref(aGroup, aName, aContext, aCallback) {
@@ -569,7 +569,7 @@ ContentPrefService.prototype = {
   },
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Data Retrieval & Modification
 
   __stmtSelectPref: null,
@@ -997,7 +997,7 @@ ContentPrefService.prototype = {
   },
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Database Creation & Access
 
   _dbVersion: 4,
@@ -1261,13 +1261,13 @@ function warnDeprecated() {
 function HostnameGrouper() {}
 
 HostnameGrouper.prototype = {
-  //**************************************************************************//
+  //* *************************************************************************//
   // XPCOM Plumbing
 
   classID:          Components.ID("{8df290ae-dcaa-4c11-98a5-2429a4dc97bb}"),
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentURIGrouper]),
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // nsIContentURIGrouper
 
   group: function HostnameGrouper_group(aURI) {
@@ -1336,7 +1336,7 @@ AsyncStatement.prototype = {
   }
 };
 
-//****************************************************************************//
+//* ***************************************************************************//
 // XPCOM Plumbing
 
 var components = [ContentPrefService, HostnameGrouper];

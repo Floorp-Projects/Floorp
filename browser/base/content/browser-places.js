@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-////////////////////////////////////////////////////////////////////////////////
-//// StarUI
+// //////////////////////////////////////////////////////////////////////////////
+// // StarUI
 
 var StarUI = {
   _itemId: -1,
@@ -122,7 +122,7 @@ var StarUI = {
             if (aEvent.target.classList.contains("expander-up") ||
                 aEvent.target.classList.contains("expander-down") ||
                 aEvent.target.id == "editBMPanel_newFolderButton")  {
-              //XXX Why is this necessary? The defaultPrevented check should
+              // XXX Why is this necessary? The defaultPrevented check should
               //    be enough.
               break;
             }
@@ -345,8 +345,8 @@ var StarUI = {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// PlacesCommandHook
+// //////////////////////////////////////////////////////////////////////////////
+// // PlacesCommandHook
 
 var PlacesCommandHook = {
   /**
@@ -672,8 +672,8 @@ var PlacesCommandHook = {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// HistoryMenu
+// //////////////////////////////////////////////////////////////////////////////
+// // HistoryMenu
 
 XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
   "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm");
@@ -811,8 +811,8 @@ HistoryMenu.prototype = {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// BookmarksEventHandler
+// //////////////////////////////////////////////////////////////////////////////
+// // BookmarksEventHandler
 
 /**
  * Functions for handling events in the Bookmarks Toolbar and menu.
@@ -940,8 +940,8 @@ var BookmarksEventHandler = {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// PlacesMenuDNDHandler
+// //////////////////////////////////////////////////////////////////////////////
+// // PlacesMenuDNDHandler
 
 // Handles special drag and drop functionality for Places menus that are not
 // part of a Places view (e.g. the bookmarks menu in the menubar).
@@ -1071,8 +1071,8 @@ var PlacesMenuDNDHandler = {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// PlacesToolbarHelper
+// //////////////////////////////////////////////////////////////////////////////
+// // PlacesToolbarHelper
 
 /**
  * This object handles the initialization and uninitialization of the bookmarks
@@ -1218,8 +1218,8 @@ var PlacesToolbarHelper = {
   },
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// BookmarkingUI
+// //////////////////////////////////////////////////////////////////////////////
+// // BookmarkingUI
 
 /**
  * Handles the bookmarks menu-button in the toolbar.

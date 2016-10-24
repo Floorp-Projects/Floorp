@@ -173,7 +173,7 @@ var RemoteTabViewer = {
       this._refetchTabs(forceSync);
       this._generateWeaveTabList();
     } else {
-      //XXXzpao We should say something about not being logged in & not having data
+      // XXXzpao We should say something about not being logged in & not having data
       //        or tell the appropriate condition. (bug 583344)
     }
 

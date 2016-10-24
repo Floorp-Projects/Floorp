@@ -70,11 +70,11 @@ var corpus = [
       title: ">This is my title<",
       // og:description
       description: "A test corpus file for open graph tags we care about",
-      //medium: this.getPageMedium(),
-      //source: this.getSourceURL(),
+      // medium: this.getPageMedium(),
+      // source: this.getSourceURL(),
       // og:url
       url: "https://www.mozilla.org/",
-      //shortUrl: this.getShortURL(),
+      // shortUrl: this.getShortURL(),
       // og:image
       previews:["https://www.mozilla.org/favicon.png"],
       // og:site_name

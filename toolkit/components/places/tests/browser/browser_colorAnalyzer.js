@@ -94,7 +94,7 @@ add_task(function* test_redGradientBlueSolid() {
 // try a transparent image, should fail
 add_task(function* test_transparent() {
   yield canvasTest(16, 16, function(ctx) {
-    //do nothing!
+    // do nothing!
   }, null, "transparent analysis fails");
 });
 

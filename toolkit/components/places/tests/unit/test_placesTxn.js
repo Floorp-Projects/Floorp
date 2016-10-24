@@ -434,7 +434,7 @@ add_task(function* test_removing_separator() {
   do_check_eq(observer._itemRemovedIndex, 0);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemAddedId, sepId); //New separator created
+  do_check_eq(observer._itemAddedId, sepId); // New separator created
   do_check_eq(observer._itemAddedParent, testFolder);
   do_check_eq(observer._itemAddedIndex, 0);
 
@@ -444,7 +444,7 @@ add_task(function* test_removing_separator() {
   do_check_eq(observer._itemRemovedIndex, 0);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemAddedId, sepId); //New separator created
+  do_check_eq(observer._itemAddedId, sepId); // New separator created
   do_check_eq(observer._itemAddedParent, testFolder);
   do_check_eq(observer._itemAddedIndex, 0);
 });

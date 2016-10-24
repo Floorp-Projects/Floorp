@@ -20,8 +20,8 @@ function run_test() {
  * Test WebChannelBroker channel map
  */
 add_test(function test_web_channel_broker_channel_map() {
-  let channel = new Object();
-  let channel2 = new Object();
+  let channel = {};
+  let channel2 = {};
 
   do_check_eq(WebChannelBroker._channelMap.size, 0);
   do_check_false(WebChannelBroker._messageListenerAttached);
@@ -53,7 +53,7 @@ add_test(function test_web_channel_broker_channel_map() {
  */
 add_task(function test_web_channel_broker_listener() {
   return new Promise((resolve, reject) => {
-    var channel = new Object({
+    var channel = {
       id: VALID_WEB_CHANNEL_ID,
       _originCheckCallback: requestPrincipal => {
         return VALID_WEB_CHANNEL_ORIGIN.prePath === requestPrincipal.origin;
@@ -65,7 +65,7 @@ add_task(function test_web_channel_broker_listener() {
         WebChannelBroker.unregisterChannel(channel);
         resolve();
       }
-    });
+    };
 
     WebChannelBroker.registerChannel(channel);
 
