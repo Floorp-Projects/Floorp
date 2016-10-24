@@ -379,9 +379,6 @@ PrintCall(WasmPrintContext& c, AstCall& call)
     if (call.expr() == Expr::Call) {
         if (!c.buffer.append("call "))
             return false;
-    } else if (call.expr() == Expr::CallImport) {
-        if (!c.buffer.append("call_import "))
-            return false;
     } else {
         return false;
     }

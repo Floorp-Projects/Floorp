@@ -73,9 +73,9 @@ assertErrorMessage(f, TypeError, /i64/);
 var f = wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))').exports[""];
 assertErrorMessage(f, TypeError, /i64/);
 
-var f = wasmEvalText('(module (import $imp "a" "b" (param i64) (result i32)) (func $f (result i32) (call_import $imp (i64.const 0))) (export "" $f))', {a:{b:()=>{}}}).exports[""];
+var f = wasmEvalText('(module (import $imp "a" "b" (param i64) (result i32)) (func $f (result i32) (call $imp (i64.const 0))) (export "" $f))', {a:{b:()=>{}}}).exports[""];
 assertErrorMessage(f, TypeError, /i64/);
-var f = wasmEvalText('(module (import $imp "a" "b" (result i64)) (func $f (result i64) (call_import $imp)) (export "" $f))', {a:{b:()=>{}}}).exports[""];
+var f = wasmEvalText('(module (import $imp "a" "b" (result i64)) (func $f (result i64) (call $imp)) (export "" $f))', {a:{b:()=>{}}}).exports[""];
 assertErrorMessage(f, TypeError, /i64/);
 
 setJitCompilerOption('wasm.test-mode', 1);
@@ -252,19 +252,19 @@ assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 1)) (func (call 0
 wasmValidateText('(module (func (param i32 f32)) (func (call 0 (i32.const 0) (f32.const nan))))');
 wasmFailValidateText('(module (func (param i32 f32)) (func (call 0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f32"));
 
-wasmFailValidateText('(module (import "a" "") (func (call_import 0 (i32.const 0))))', /unused values not explicitly dropped by end of block/);
-wasmFailValidateText('(module (import "a" "" (param i32)) (func (call_import 0)))', /peeking at value from outside block/);
-wasmFailValidateText('(module (import "a" "" (param f32)) (func (call_import 0 (i32.const 0))))', mismatchError("i32", "f32"));
+wasmFailValidateText('(module (import "a" "") (func (call 0 (i32.const 0))))', /unused values not explicitly dropped by end of block/);
+wasmFailValidateText('(module (import "a" "" (param i32)) (func (call 0)))', /peeking at value from outside block/);
+wasmFailValidateText('(module (import "a" "" (param f32)) (func (call 0 (i32.const 0))))', mismatchError("i32", "f32"));
 
-assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import 1)))'), TypeError, noImportObj);
-wasmEvalText('(module (import "" "a") (func (call_import 0)))', {"":{a:()=>{}}});
-wasmEvalText('(module (import "" "a" (param i32)) (func (call_import 0 (i32.const 0))))', {"":{a:()=>{}}});
+assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call 1)))'), TypeError, noImportObj);
+wasmEvalText('(module (import "" "a") (func (call 0)))', {"":{a:()=>{}}});
+wasmEvalText('(module (import "" "a" (param i32)) (func (call 0 (i32.const 0))))', {"":{a:()=>{}}});
 
 function checkF32CallImport(v) {
-    wasmFullPass('(module (import "" "a" (result f32)) (func (result f32) (call_import 0)) (export "run" 1))',
+    wasmFullPass('(module (import "" "a" (result f32)) (func (result f32) (call 0)) (export "run" 1))',
                  Math.fround(v),
                  {"":{a:()=>{ return v; }}});
-    wasmFullPass('(module (import "" "a" (param f32)) (func (param f32) (call_import 0 (get_local 0))) (export "run" 1))',
+    wasmFullPass('(module (import "" "a" (param f32)) (func (param f32) (call 0 (get_local 0))) (export "run" 1))',
                  undefined,
                  {"":{a:x=>{ assertEq(Math.fround(v), x); }}},
                  v);
@@ -276,28 +276,28 @@ checkF32CallImport(-0);
 checkF32CallImport(Math.pow(2, 32) - 1);
 
 var counter = 0;
-var f = wasmEvalText('(module (import "" "inc") (func (call_import 0)) (export "" 1))', {"":{inc:()=>counter++}}).exports[""];
-var g = wasmEvalText('(module (import "" "f") (func (block (call_import 0) (call_import 0))) (export "" 1))', {"":{f}}).exports[""];
+var f = wasmEvalText('(module (import "" "inc") (func (call 0)) (export "" 1))', {"":{inc:()=>counter++}}).exports[""];
+var g = wasmEvalText('(module (import "" "f") (func (block (call 0) (call 0))) (export "" 1))', {"":{f}}).exports[""];
 f();
 assertEq(counter, 1);
 g();
 assertEq(counter, 3);
 
-var f = wasmEvalText('(module (import "" "callf") (func (call_import 0)) (export "" 1))', {"":{callf:()=>f()}}).exports[""];
+var f = wasmEvalText('(module (import "" "callf") (func (call 0)) (export "" 1))', {"":{callf:()=>f()}}).exports[""];
 assertThrowsInstanceOf(() => f(), InternalError);
 
-var f = wasmEvalText('(module (import "" "callg") (func (call_import 0)) (export "" 1))', {"":{callg:()=>g()}}).exports[""];
-var g = wasmEvalText('(module (import "" "callf") (func (call_import 0)) (export "" 1))', {"":{callf:()=>f()}}).exports[""];
+var f = wasmEvalText('(module (import "" "callg") (func (call 0)) (export "" 1))', {"":{callg:()=>g()}}).exports[""];
+var g = wasmEvalText('(module (import "" "callf") (func (call 0)) (export "" 1))', {"":{callf:()=>f()}}).exports[""];
 assertThrowsInstanceOf(() => f(), InternalError);
 
 var code = '(module (import "" "one" (result i32)) (import "" "two" (result i32)) (func (result i32) (i32.const 3)) (func (result i32) (i32.const 4)) (func (result i32) BODY) (export "run" 4))';
 var imports = {"":{one:()=>1, two:()=>2}};
-wasmFullPass(code.replace('BODY', '(call_import 0)'), 1, imports);
-wasmFullPass(code.replace('BODY', '(call_import 1)'), 2, imports);
+wasmFullPass(code.replace('BODY', '(call 0)'), 1, imports);
+wasmFullPass(code.replace('BODY', '(call 1)'), 2, imports);
 wasmFullPass(code.replace('BODY', '(call 2)'), 3, imports);
 wasmFullPass(code.replace('BODY', '(call 3)'), 4, imports);
 
-wasmFullPass(`(module (import "" "evalcx" (param i32) (result i32)) (func (result i32) (call_import 0 (i32.const 0))) (export "run" 1))`, 0, {"":{evalcx}});
+wasmFullPass(`(module (import "" "evalcx" (param i32) (result i32)) (func (result i32) (call 0 (i32.const 0))) (export "run" 1))`, 0, {"":{evalcx}});
 
 if (typeof evaluate === 'function')
     evaluate(`new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module)'))) `, { fileName: null });
@@ -331,17 +331,17 @@ if (typeof evaluate === 'function')
 
     wasmFullPass(`(module
         (import "" "param" (param i64) (result i32))
-        (func (result i32) (call_import 0 (i64.const 0x123456789abcdef0)))
+        (func (result i32) (call 0 (i64.const 0x123456789abcdef0)))
         (export "run" 1))`, 42, imp);
 
     wasmFullPass(`(module
         (import "" "param" (param i64)(param i64)(param i64)(param i64)(param i64)(param i64)(param i64) (param i64) (result i32))
-        (func (result i32) (call_import 0 (i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)))
+        (func (result i32) (call 0 (i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)))
         (export "run" 1))`, 42, imp);
 
     wasmFullPassI64(`(module
         (import "" "result" (param i32) (result i64))
-        (func (result i64) (call_import 0 (i32.const 3)))
+        (func (result i64) (call 0 (i32.const 3)))
         (export "run" 1))`, { low: 0xabcdef01, high: 0x1234567b }, imp);
 
     // Ensure the ion exit is never taken.
@@ -351,7 +351,7 @@ if (typeof evaluate === 'function')
         (func (result i64) (local i32) (local i64)
          (set_local 0 (i32.const 0))
          (loop $out $in
-             (set_local 1 (call_import 0 (i64.const 0x123456789abcdef0)))
+             (set_local 1 (call 0 (i64.const 0x123456789abcdef0)))
              (set_local 0 (i32.add (get_local 0) (i32.const 1)))
              (if (i32.le_s (get_local 0) (i32.const ${ionThreshold})) (br $in))
          )
@@ -365,7 +365,7 @@ if (typeof evaluate === 'function')
          (set_local 0 (i32.const 0))
          (block $out
              (loop $in
-                 (set_local 1 (call_import 0 (i64.const 0x123456789abcdef0)))
+                 (set_local 1 (call 0 (i64.const 0x123456789abcdef0)))
                  (set_local 0 (i32.add (get_local 0) (i32.const 1)))
                  (if (i32.le_s (get_local 0) (i32.const ${ionThreshold})) (br $in))
              )
@@ -429,7 +429,7 @@ assertErrorMessage(() => i2v(5), Error, signatureMismatch);
         `(module
             (type $v2v (func))
             (import $foo "" "f")
-            (func $a (call_import $foo))
+            (func $a (call $foo))
             (func $b (result i32) (i32.const 0))
             (table anyfunc (elem $a $b))
             (func $bar (call_indirect $v2v (i32.const 0)))
@@ -456,7 +456,7 @@ for (bad of [6, 7, 100, Math.pow(2,31)-1, Math.pow(2,31), Math.pow(2,31)+1, Math
 
 wasmValidateText('(module (func $foo (nop)) (func (call $foo)))');
 wasmValidateText('(module (func (call $foo)) (func $foo (nop)))');
-wasmValidateText('(module (import $bar "" "a") (func (call_import $bar)) (func $foo (nop)))');
+wasmValidateText('(module (import $bar "" "a") (func (call $bar)) (func $foo (nop)))');
 
 // ----------------------------------------------------------------------------
 // select
@@ -487,8 +487,8 @@ var f = wasmEvalText(`
  (import "" "ifFalse" (result i32))
  (func (result i32) (param i32)
   (select
-   (call_import 0)
-   (call_import 1)
+   (call 0)
+   (call 1)
    (get_local 0)
   )
  )

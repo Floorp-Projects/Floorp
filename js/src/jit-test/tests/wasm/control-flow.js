@@ -59,7 +59,7 @@ wasmFullPass(`(module
         (if i32
             (i32.const 42)
             (i32.const 1)
-            (call_import 0)
+            (call 0)
         )
     )
     (export "run" 1)
@@ -72,7 +72,7 @@ wasmFullPass(`(module
         (result i32)
         (if i32
             (i32.const 0)
-            (call_import 0)
+            (call 0)
             (i32.const 1)
         )
     )
@@ -85,7 +85,7 @@ wasmFullPass(`(module
     (func
         (if
             (i32.const 0)
-            (drop (call_import 0))
+            (drop (call 0))
         )
     )
     (export "run" 1)
@@ -97,7 +97,7 @@ assertEq(wasmEvalText(`(module
     (func
         (if
             (i32.const 1)
-            (drop (call_import 0))
+            (drop (call 0))
         )
     )
     (export "" 1)
@@ -142,14 +142,14 @@ wasmFullPass(`(module
                     (i32.const 3)
                     (if i32
                         (i32.const 0)
-                        (call_import 0)
+                        (call 0)
                         (i32.const 42)
                     )
-                    (call_import 0)
+                    (call 0)
                 )
-                (call_import 0)
+                (call 0)
             )
-            (call_import 0)
+            (call 0)
         )
     )
     (export "run" 1)
@@ -261,9 +261,9 @@ wasmFullPass(`(module
 (func
   (block
     (return (br 0))
-    (call_import 0)
+    (call 0)
   )
-  (call_import 1)
+  (call 1)
 ) (export "run" 2))`, undefined, imports);
 assertEq(notcalled, false);
 assertEq(called, true);
@@ -398,11 +398,11 @@ var f = wasmEvalText(`(module
   (block $outer
    (if
     (get_local 0)
-    (block (call_import 0 (i32.const 13)) (br $outer))
+    (block (call 0 (i32.const 13)) (br $outer))
    )
    (if
     (i32.eqz (get_local 0))
-    (block (call_import 1 (i32.const 37)) (br $outer))
+    (block (call 1 (i32.const 37)) (br $outer))
    )
   )
   (i32.const 42)

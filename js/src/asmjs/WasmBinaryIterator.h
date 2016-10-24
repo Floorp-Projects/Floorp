@@ -78,7 +78,6 @@ enum class ExprKind {
     Call,
     CallIndirect,
     OldCallIndirect,
-    CallImport,
     Return,
     If,
     Else,
@@ -585,7 +584,6 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readCall(uint32_t* calleeIndex);
     MOZ_MUST_USE bool readCallIndirect(uint32_t* sigIndex, Value* callee);
     MOZ_MUST_USE bool readOldCallIndirect(uint32_t* sigIndex);
-    MOZ_MUST_USE bool readCallImport(uint32_t* importIndex);
     MOZ_MUST_USE bool readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex, Value* arg);
     MOZ_MUST_USE bool readCallArgsEnd(uint32_t numArgs);
     MOZ_MUST_USE bool readOldCallIndirectCallee(Value* callee);
@@ -1743,18 +1741,6 @@ ExprIter<Policy>::readOldCallIndirect(uint32_t* sigIndex)
 
     if (!readVarU32(sigIndex))
         return fail("unable to read call_indirect signature index");
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-ExprIter<Policy>::readCallImport(uint32_t* importIndex)
-{
-    MOZ_ASSERT(Classify(expr_) == ExprKind::CallImport);
-
-    if (!readVarU32(importIndex))
-        return fail("unable to read call_import import index");
 
     return true;
 }

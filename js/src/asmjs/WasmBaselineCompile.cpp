@@ -3306,7 +3306,7 @@ class BaseCompiler
     MOZ_MUST_USE
     bool emitCall();
     MOZ_MUST_USE
-    bool emitCallImport();
+    bool emitOldCallImport();
     MOZ_MUST_USE
     bool emitCallIndirect(bool oldStyle);
     MOZ_MUST_USE
@@ -5268,14 +5268,14 @@ BaseCompiler::emitCall()
 }
 
 bool
-BaseCompiler::emitCallImport()
+BaseCompiler::emitOldCallImport()
 {
     MOZ_ASSERT(!mg_.firstFuncDefIndex);
 
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     uint32_t funcImportIndex;
-    if (!iter_.readCallImport(&funcImportIndex))
+    if (!iter_.readCall(&funcImportIndex))
         return false;
 
     return emitCallImportCommon(lineOrBytecode, funcImportIndex);
@@ -6387,8 +6387,8 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitCallIndirect(/* oldStyle = */ false));
           case Expr::OldCallIndirect:
             CHECK_NEXT(emitCallIndirect(/* oldStyle = */ true));
-          case Expr::CallImport:
-            CHECK_NEXT(emitCallImport());
+          case Expr::OldCallImport:
+            CHECK_NEXT(emitOldCallImport());
 
           // Locals and globals
           case Expr::GetLocal:
