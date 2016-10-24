@@ -11,13 +11,13 @@ interface nsIDOMGeoPositionErrorCallback;
 namespace mozilla {
 namespace dom {
 struct PositionOptions;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
-template<class T> class nsAutoPtr;
+#include "mozilla/UniquePtr.h"
 %}
 
-native PositionOptionsRef(nsAutoPtr<mozilla::dom::PositionOptions>&&);
+native PositionOptionsRef(mozilla::UniquePtr<mozilla::dom::PositionOptions>&&);
 
 [builtinclass, uuid(9142ab45-0ab5-418c-9bab-338a6d271d4f)]
 interface nsIDOMGeoGeolocation : nsISupports
