@@ -6217,8 +6217,8 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
     return false;
   }
 
-  for (nsBlockFrame::ConstLineIterator line = block->BeginLine(),
-                                       line_end = block->EndLine();
+  for (nsBlockFrame::ConstLineIterator line = block->LinesBegin(),
+                                       line_end = block->LinesEnd();
        line != line_end; ++line) {
     if (line->IsBlock()) {
       nsIFrame *kid = line->mFirstChild;
@@ -6256,8 +6256,8 @@ nsLayoutUtils::GetLastLineBaseline(WritingMode aWM,
     // No baseline.  (We intentionally don't descend into scroll frames.)
     return false;
 
-  for (nsBlockFrame::ConstReverseLineIterator line = block->RBeginLine(),
-                                              line_end = block->REndLine();
+  for (nsBlockFrame::ConstReverseLineIterator line = block->LinesRBegin(),
+                                              line_end = block->LinesREnd();
        line != line_end; ++line) {
     if (line->IsBlock()) {
       nsIFrame *kid = line->mFirstChild;
@@ -6294,8 +6294,8 @@ CalculateBlockContentBEnd(WritingMode aWM, nsBlockFrame* aFrame)
 
   nscoord contentBEnd = 0;
 
-  for (nsBlockFrame::LineIterator line = aFrame->BeginLine(),
-                                  line_end = aFrame->EndLine();
+  for (nsBlockFrame::LineIterator line = aFrame->LinesBegin(),
+                                  line_end = aFrame->LinesEnd();
        line != line_end; ++line) {
     if (line->IsBlock()) {
       nsIFrame* child = line->mFirstChild;

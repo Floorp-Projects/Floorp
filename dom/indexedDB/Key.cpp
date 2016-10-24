@@ -12,6 +12,7 @@
 #include "js/Date.h"
 #include "js/Value.h"
 #include "jsfriendapi.h"
+#include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozIStorageStatement.h"
@@ -594,11 +595,6 @@ Key::DecodeString(const unsigned char*& aPos, const unsigned char* aEnd,
   aPos = iter + 1;
 }
 
-union Float64Union {
-  double d;
-  uint64_t u;
-}; 
-
 void
 Key::EncodeNumber(double aFloat, uint8_t aType)
 {
@@ -612,13 +608,11 @@ Key::EncodeNumber(double aFloat, uint8_t aType)
 
   *(buffer++) = aType;
 
-  Float64Union pun;
-  pun.d = aFloat;
+  uint64_t bits = BitwiseCast<uint64_t>(aFloat);
   // Note: The subtraction from 0 below is necessary to fix
   // MSVC build warning C4146 (negating an unsigned value).
-  uint64_t number = pun.u & PR_UINT64(0x8000000000000000) ?
-                    (0 - pun.u) :
-                    (pun.u | PR_UINT64(0x8000000000000000));
+  const uint64_t signbit = FloatingPoint<double>::kSignBit;
+  uint64_t number = bits & signbit ? (0 - bits) : (bits | signbit);
 
   mozilla::BigEndian::writeUint64(buffer, number);
 }
@@ -638,14 +632,12 @@ Key::DecodeNumber(const unsigned char*& aPos, const unsigned char* aEnd)
 
   aPos += sizeof(number);
 
-  Float64Union pun;
   // Note: The subtraction from 0 below is necessary to fix
   // MSVC build warning C4146 (negating an unsigned value).
-  pun.u = number & PR_UINT64(0x8000000000000000) ?
-          (number & ~PR_UINT64(0x8000000000000000)) :
-          (0 - number);
+  const uint64_t signbit = FloatingPoint<double>::kSignBit;
+  uint64_t bits = number & signbit ? (number & ~signbit) : (0 - number);
 
-  return pun.d;
+  return BitwiseCast<double>(bits);
 }
 
 void
