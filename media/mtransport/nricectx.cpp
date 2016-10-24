@@ -535,9 +535,6 @@ NrIceCtx::Initialize(const std::string& ufrag,
       NR_ICE_CTX_FLAGS_ANSWERER;
   flags |= NR_ICE_CTX_FLAGS_AGGRESSIVE_NOMINATION;
   switch (policy_) {
-    case ICE_POLICY_NONE:
-      MOZ_CRASH();
-      break;
     case ICE_POLICY_RELAY:
       flags |= NR_ICE_CTX_FLAGS_RELAY_ONLY;
       break;
@@ -837,9 +834,6 @@ abort:
 
 nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
   ASSERT_ON_THREAD(sts_target_);
-  if (policy_ == ICE_POLICY_NONE) {
-    return NS_OK;
-  }
   SetGatheringState(ICE_CTX_GATHER_STARTED);
 
   if (default_route_only) {
@@ -927,11 +921,6 @@ nsresult NrIceCtx::ParseGlobalAttributes(std::vector<std::string> attrs) {
 nsresult NrIceCtx::StartChecks() {
   int r;
 
-  if (policy_ == ICE_POLICY_NONE) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't start peer checks because policy == none");
-    SetConnectionState(ICE_CTX_FAILED);
-    return NS_ERROR_FAILURE;
-  }
   r=nr_ice_peer_ctx_pair_candidates(peer_);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't pair candidates on "
