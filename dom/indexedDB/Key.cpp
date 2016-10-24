@@ -611,9 +611,8 @@ Key::EncodeNumber(double aFloat, uint8_t aType)
   uint64_t bits = BitwiseCast<uint64_t>(aFloat);
   // Note: The subtraction from 0 below is necessary to fix
   // MSVC build warning C4146 (negating an unsigned value).
-  uint64_t number = bits & PR_UINT64(0x8000000000000000) ?
-                    (0 - bits) :
-                    (bits | PR_UINT64(0x8000000000000000));
+  const uint64_t signbit = FloatingPoint<double>::kSignBit;
+  uint64_t number = bits & signbit ? (0 - bits) : (bits | signbit);
 
   mozilla::BigEndian::writeUint64(buffer, number);
 }
@@ -635,9 +634,8 @@ Key::DecodeNumber(const unsigned char*& aPos, const unsigned char* aEnd)
 
   // Note: The subtraction from 0 below is necessary to fix
   // MSVC build warning C4146 (negating an unsigned value).
-  uint64_t bits = number & PR_UINT64(0x8000000000000000) ?
-                  (number & ~PR_UINT64(0x8000000000000000)) :
-                  (0 - number);
+  const uint64_t signbit = FloatingPoint<double>::kSignBit;
+  uint64_t bits = number & signbit ? (number & ~signbit) : (0 - number);
 
   return BitwiseCast<double>(bits);
 }
