@@ -229,11 +229,6 @@ protected:
   MediaDecoderReaderWrapper* Reader() const { return mMaster->mReader; }
   const MediaInfo& Info() const { return mMaster->Info(); }
 
-public:
-  // TODO: this function is public because VisibilityChanged() calls it.
-  // We should handle visibility changes in state objects so this function
-  // can be made protected again.
-  //
   // Note this function will delete the current state object.
   // Don't access members to avoid UAF after this call.
   template <class S, typename... Ts>
@@ -258,7 +253,6 @@ public:
     return s->Enter(Move(aArgs)...);
   }
 
-protected:
   // Take a raw pointer in order not to change the life cycle of MDSM.
   // It is guaranteed to be valid by MDSM.
   Master* mMaster;
