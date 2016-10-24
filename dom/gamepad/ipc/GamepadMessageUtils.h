@@ -4,6 +4,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/GamepadServiceType.h"
+#include "mozilla/dom/GamepadPoseState.h"
 
 namespace IPC {
 

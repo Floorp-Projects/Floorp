@@ -11,11 +11,13 @@
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsPIDOMWindow.h"
 
 class nsGlobalWindow;
 class nsIPrincipal;
 class nsITimeoutHandler;
 class nsITimer;
+class nsIEventTarget;
 
 namespace mozilla {
 namespace dom {

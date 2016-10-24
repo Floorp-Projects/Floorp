@@ -9,7 +9,6 @@
 #include "nsGlobalWindow.h"
 #include "nsITimeoutHandler.h"
 #include "nsITimer.h"
-#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 namespace dom {
