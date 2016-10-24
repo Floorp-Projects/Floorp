@@ -101,4 +101,10 @@ BitReader::BitCount() const
   return mSize * 8 - mBitReader->numBitsLeft();
 }
 
+size_t
+BitReader::BitsLeft() const
+{
+  return mBitReader->numBitsLeft();
+}
+
 } // namespace mp4_demuxer
