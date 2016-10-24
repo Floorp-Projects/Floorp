@@ -22,6 +22,7 @@
 #       - BidiBrackets.txt
 #       - HangulSyllableType.txt
 #       - LineBreak.txt
+#       - EastAsianWidth.txt
 #       - ReadMe.txt (to record version/date of the UCD)
 #       - Unihan_Variants.txt (from Unihan.zip)
 #     though this may change if we find a need for additional properties.
@@ -231,6 +232,15 @@ my %lineBreakCode = ( # ordering matches ICU's ULineBreak enum
   "RI" => 39
 );
 
+my %eastAsianWidthCode = (
+  "N" => 0,
+  "A" => 1,
+  "H" => 2,
+  "W" => 3,
+  "F" => 4,
+  "Na" => 5
+);
+
 # initialize default properties
 my @script;
 my @category;
@@ -247,6 +257,7 @@ my @fullWidth;
 my @fullWidthInverse;
 my @verticalOrientation;
 my @lineBreak;
+my @eastAsianWidthFWH;
 for (my $i = 0; $i < 0x110000; ++$i) {
     $script[$i] = $scriptCode{"UNKNOWN"};
     $category[$i] = $catCode{"UNASSIGNED"};
@@ -261,6 +272,7 @@ for (my $i = 0; $i < 0x110000; ++$i) {
     $fullWidthInverse[$i] = 0;
     $verticalOrientation[$i] = 1; # default for unlisted codepoints is 'R'
     $lineBreak[$i] = $lineBreakCode{"XX"};
+    $eastAsianWidthFWH[$i] = 0;
 }
 
 # blocks where the default for bidi category is not L
@@ -522,6 +534,29 @@ while (<FH>) {
 }
 close FH;
 
+# read EastAsianWidth.txt
+open FH, "< $UNICODE/EastAsianWidth.txt" or die "can't open UCD file EastAsianWidth.txt\n";
+push @versionInfo, "";
+while (<FH>) {
+    chomp;
+    push @versionInfo, $_;
+    last if /Date:/;
+}
+while (<FH>) {
+    s/#.*//;
+    if (m/([0-9A-F]{4,6})(?:\.\.([0-9A-F]{4,6}))*\s*;\s*([^ ]+)/) {
+        my $start = hex "0x$1";
+        my $end = (defined $2) ? hex "0x$2" : $start;
+        my $eaw = $3;
+        warn "unknown EastAsianWidth class" unless exists $eastAsianWidthCode{$eaw};
+        my $isFWH = ($eaw =~ m/^[FWH]$/) ? 1 : 0;
+        for (my $i = $start; $i <= $end; ++$i) {
+            $eastAsianWidthFWH[$i] = $isFWH;
+        }
+    }
+}
+close FH;
+
 # read xidmodifications.txt
 open FH, "< $UNICODE/security/xidmodifications.txt" or die "can't open UCD file xidmodifications.txt\n";
 push @versionInfo, "";
@@ -719,15 +754,17 @@ struct nsCharProps2 {
 sub sprintCharProps2_full
 {
   my $usv = shift;
-  return sprintf("{%d,%d,%d,%d,%d,%d,%d,%d},",
-                 $script[$usv], $pairedBracketType[$usv], $category[$usv],
+  return sprintf("{%d,%d,%d,%d,%d,%d,%d,%d,%d},",
+                 $script[$usv], $pairedBracketType[$usv],
+                 $eastAsianWidthFWH[$usv], $category[$usv],
                  $bidicategory[$usv], $xidmod[$usv], $numericvalue[$usv],
                  $verticalOrientation[$usv], $lineBreak[$usv]);
 }
 $type = q|
 struct nsCharProps2 {
   unsigned char mScriptCode:8;
-  unsigned char mPairedBracketType:3; // only 2 bits actually needed
+  unsigned char mPairedBracketType:2;
+  unsigned char mEastAsianWidthFWH:1;
   unsigned char mCategory:5;
   unsigned char mBidiCategory:5;
   unsigned char mXidmod:4;
