@@ -305,7 +305,7 @@ config = {
     "default_blob_upload_servers": [
         "https://blobupload.elasticbeanstalk.com",
     ],
-    "unstructured_flavors": {"mochitest": [],
+    "unstructured_flavors": {"mochitest": ['jetpack'],
                             "xpcshell": [],
                             "gtest": [],
                             "mozmill": [],
