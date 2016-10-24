@@ -278,6 +278,8 @@ private:
     nsHttpVersion                   mHttpVersion;
     uint16_t                        mHttpResponseCode;
 
+    uint32_t                        mCurrentHttpResponseHeaderSize;
+
     // mCapsToClear holds flags that should be cleared in mCaps, e.g. unset
     // NS_HTTP_REFRESH_DNS when DNS refresh request has completed to avoid
     // redundant requests on the network. The member itself is atomic, but
