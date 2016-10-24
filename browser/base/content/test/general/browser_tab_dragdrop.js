@@ -37,9 +37,7 @@ function loadURI(tab, url) {
 // active for the browser and that the cached value matches that from the plugin
 // in the page which tells us the plugin hasn't been reinitialized.
 function* cacheObjectValue(browser) {
-  info("11111111")
   yield ContentTask.spawn(browser, null, function*() {
-    info("ct--------------11111111")
     let plugin = content.document.wrappedJSObject.body.firstChild;
     info(`plugin is ${plugin}`);
     let win = content.document.defaultView;
