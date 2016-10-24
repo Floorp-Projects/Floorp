@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=848294
     ok(e, "MessageEvent created");
     is(e.type, 'message', 'MessageEvent.type is right');
 
-    is(e.data, 'data' in test ? test.data : null, 'MessageEvent.data is ok');
+    is(e.data, 'data' in test ? test.data : undefined, 'MessageEvent.data is ok');
     is(e.origin, 'origin' in test ? test.origin : '', 'MessageEvent.origin is ok');
     is(e.lastEventId, 'lastEventId' in test ? test.lastEventId : '', 'MessageEvent.lastEventId is ok');
     is(e.source, 'source' in test ? test.source : null, 'MessageEvent.source is ok');
@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=848294
       { data: window, source: window },
       { data: window, source: channel.port1 },
       { data: window, source: channel.port1, ports: [ channel.port1, channel.port2 ] },
-      { data: null, ports: [] },
+      { data: null, ports: null },
     ];
 
     while (tests.length) {
@@ -54,11 +54,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=848294
 
       e = new MessageEvent('message');
       e.initMessageEvent('message', true, true,
-                         'data' in test ? test.data : null,
+                         'data' in test ? test.data : undefined,
                          'origin' in test ? test.origin : '',
                          'lastEventId' in test ? test.lastEventId : '',
                          'source' in test ? test.source : null,
-                         'ports' in test ? test.ports : []);
+                         'ports' in test ? test.ports : null);
       testMessageEvent(e, test);
     }
 
