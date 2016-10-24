@@ -94,7 +94,7 @@ SharedSurface_EGLImage::~SharedSurface_EGLImage()
         mSync = 0;
     }
 
-    if (!mGL->MakeCurrent())
+    if (!mGL || !mGL->MakeCurrent())
         return;
 
     mGL->fDeleteTextures(1, &mProdTex);
