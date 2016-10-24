@@ -20,7 +20,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     GetPageSource,
     GetWindowHandle,
     GetWindowHandles,
-    Close,
+    CloseWindow,
     GetWindowSize,
     SetWindowSize(WindowSizeParameters),
     GetWindowPosition,
@@ -125,7 +125,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
             Route::GetPageSource => WebDriverCommand::GetPageSource,
             Route::GetWindowHandle => WebDriverCommand::GetWindowHandle,
             Route::GetWindowHandles => WebDriverCommand::GetWindowHandles,
-            Route::Close => WebDriverCommand::Close,
+            Route::CloseWindow => WebDriverCommand::CloseWindow,
             Route::SetTimeouts => {
                 let parameters: TimeoutsParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SetTimeouts(parameters)
@@ -346,7 +346,7 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::GetPageSource |
             WebDriverCommand::GetWindowHandle |
             WebDriverCommand::GetWindowHandles |
-            WebDriverCommand::Close |
+            WebDriverCommand::CloseWindow |
             WebDriverCommand::GetWindowSize |
             WebDriverCommand::GetWindowPosition |
             WebDriverCommand::MaximizeWindow |
