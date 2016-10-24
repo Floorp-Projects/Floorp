@@ -51,7 +51,7 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      char16_t ch = *aText++;
+      char16_t ch = aText[i];
       if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
@@ -82,15 +82,15 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
     bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      char16_t ch = *aText++;
+      char16_t ch = aText[i];
       bool nowInWhitespace;
       if (ch == ' ' &&
           (i + 1 >= aLength ||
-           !IsSpaceCombiningSequenceTail(aText, aLength - (i + 1)))) {
+           !IsSpaceCombiningSequenceTail(&aText[i + 1], aLength - (i + 1)))) {
         nowInWhitespace = true;
       } else if (ch == '\n' && aCompression == COMPRESS_WHITESPACE_NEWLINE) {
-        if (i > 0 && IS_CJ_CHAR(aText[-1]) &&
-            i + 1 < aLength && IS_CJ_CHAR(aText[1])) {
+        if (i > 0 && IS_CJ_CHAR(aText[i - 1]) &&
+            i + 1 < aLength && IS_CJ_CHAR(aText[i + 1])) {
           // Discard newlines between CJK chars.
           // XXX this really requires more context to get right!
           aSkipChars->SkipChar();
@@ -158,7 +158,7 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      uint8_t ch = *aText++;
+      uint8_t ch = aText[i];
       if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
@@ -182,7 +182,7 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
     bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      uint8_t ch = *aText++;
+      uint8_t ch = aText[i];
       bool nowInWhitespace = ch == ' ' || ch == '\t' ||
         (ch == '\n' && aCompression == COMPRESS_WHITESPACE_NEWLINE);
       if (!nowInWhitespace) {
