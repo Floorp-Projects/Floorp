@@ -12,9 +12,7 @@
 #include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
 #include "mozilla/Sprintf.h"
 
-#include "SkColor.h"
 #include "mozilla/gfx/HelpersSkia.h"
-#include "skia/include/core/SkBitmapDevice.h"
 #include "PaintCounter.h"
 
 namespace mozilla {
@@ -31,12 +29,10 @@ PaintCounter::PaintCounter()
   mSurface = Factory::CreateDataSourceSurface(mRect.Size(), mFormat);
   mStride = mSurface->Stride();
 
-  SkBitmap bitmap;
-  bitmap.setInfo(MakeSkiaImageInfo(mRect.Size(), mFormat), mStride);
-  bitmap.setPixels(mSurface->GetData());
-  bitmap.eraseColor(SK_ColorWHITE);
-
-  mCanvas.adopt(new SkCanvas(bitmap));
+  mCanvas.reset(
+    SkCanvas::NewRasterDirect(MakeSkiaImageInfo(mRect.Size(), mFormat),
+                              mSurface->GetData(), mStride));
+  mCanvas->clear(SK_ColorWHITE);
 }
 
 PaintCounter::~PaintCounter()
