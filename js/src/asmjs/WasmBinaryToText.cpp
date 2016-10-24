@@ -55,6 +55,20 @@ struct WasmRenderContext
 /*****************************************************************************/
 // utilities
 
+// Return true on purpose, so that we have a useful error message to provide to
+// the user.
+static bool
+Fail(WasmRenderContext& c, const char* msg)
+{
+    c.buffer.stringBuffer().clear();
+
+    return c.buffer.append("There was a problem when rendering the wasm text format: ") &&
+           c.buffer.append(msg, strlen(msg)) &&
+           c.buffer.append("\nYou should consider file a bug on Bugzilla in the "
+                           "Core:::JavaScript Engine::JIT component at "
+                           "https://bugzilla.mozilla.org/enter_bug.cgi.");
+}
+
 static bool
 RenderIndent(WasmRenderContext& c)
 {
@@ -292,7 +306,7 @@ RenderCall(WasmRenderContext& c, AstCall& call)
         if (!c.buffer.append("call "))
             return false;
     } else {
-        return false;
+        return Fail(c, "unexpected operator");
     }
 
     return RenderRef(c, call.func());
@@ -437,7 +451,7 @@ RenderBlock(WasmRenderContext& c, AstBlock& block)
         if (!c.buffer.append("loop"))
             return false;
     } else {
-        return false;
+        return Fail(c, "unexpected block kind");
     }
 
     if (!RenderBlockNameAndSignature(c, block.name(), block.type()))
@@ -518,7 +532,7 @@ RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& op)
       case Expr::F64Nearest: opStr = "f64.nearest"; break;
       case Expr::F64Sqrt:    opStr = "f64.sqrt"; break;
       case Expr::F64Trunc:   opStr = "f64.trunc"; break;
-      default: return false;
+      default:               return Fail(c, "unexpected unary operator");
     }
 
     return c.buffer.append(opStr, strlen(opStr));
@@ -582,7 +596,7 @@ RenderBinaryOperator(WasmRenderContext& c, AstBinaryOperator& op)
       case Expr::F64Min:      opStr = "f64.min"; break;
       case Expr::F64Max:      opStr = "f64.max"; break;
       case Expr::F64CopySign: opStr = "f64.copysign"; break;
-      default: return false;
+      default:                return Fail(c, "unexpected binary operator");
     }
 
     return c.buffer.append(opStr, strlen(opStr));
@@ -605,7 +619,7 @@ RenderTernaryOperator(WasmRenderContext& c, AstTernaryOperator& op)
     const char* opStr;
     switch (op.expr()) {
       case Expr::Select: opStr = "select"; break;
-      default: return false;
+      default:           return Fail(c, "unexpected ternary operator");
     }
 
     return c.buffer.append(opStr, strlen(opStr));
@@ -657,7 +671,7 @@ RenderComparisonOperator(WasmRenderContext& c, AstComparisonOperator& op)
       case Expr::F64Le:  opStr = "f64.le"; break;
       case Expr::F64Gt:  opStr = "f64.gt"; break;
       case Expr::F64Ge:  opStr = "f64.ge"; break;
-      default: return false;
+      default:           return Fail(c, "unexpected comparison operator");
     }
 
     return c.buffer.append(opStr, strlen(opStr));
@@ -702,7 +716,7 @@ RenderConversionOperator(WasmRenderContext& c, AstConversionOperator& op)
       case Expr::F64PromoteF32:     opStr = "f64.promote/f32"; break;
       case Expr::I32Eqz:            opStr = "i32.eqz"; break;
       case Expr::I64Eqz:            opStr = "i64.eqz"; break;
-      default: return false;
+      default:                      return Fail(c, "unexpected conversion operator");
     }
     return c.buffer.append(opStr, strlen(opStr));
 }
@@ -858,7 +872,7 @@ RenderLoad(WasmRenderContext& c, AstLoad& load)
         defaultAlignLog2 = 3;
         break;
       default:
-        return false;
+        return Fail(c, "unexpected load operator");
     }
 
     return RenderLoadStoreAddress(c, load.address(), defaultAlignLog2);
@@ -925,7 +939,7 @@ RenderStore(WasmRenderContext& c, AstStore& store)
         defaultAlignLog2 = 3;
         break;
       default:
-        return false;
+        return Fail(c, "unexpected store operator");
     }
 
     return RenderLoadStoreAddress(c, store.address(), defaultAlignLog2);
@@ -1115,7 +1129,7 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
       default:
         // Note: it's important not to remove this default since readExpr()
         // can return Expr values for which there is no enumerator.
-        return false;
+        return Fail(c, "unexpected expression kind");
     }
 
     return !newLine || c.buffer.append("\n");
@@ -1535,7 +1549,8 @@ RenderFunctionBody(WasmRenderContext& c, AstFunc& func, const AstModule::SigVect
     uint32_t endLineno = c.buffer.lineno();
 
     if (c.maybeSourceMap) {
-        if (!c.maybeSourceMap->functionlocs().emplaceBack(startExprIndex, endExprIndex, startLineno, endLineno))
+        if (!c.maybeSourceMap->functionlocs().emplaceBack(startExprIndex, endExprIndex,
+                                                          startLineno, endLineno))
             return false;
     }
 
@@ -1543,7 +1558,8 @@ RenderFunctionBody(WasmRenderContext& c, AstFunc& func, const AstModule::SigVect
 }
 
 static bool
-RenderCodeSection(WasmRenderContext& c, const AstModule::FuncVector& funcs, const AstModule::SigVector& sigs)
+RenderCodeSection(WasmRenderContext& c, const AstModule::FuncVector& funcs,
+                  const AstModule::SigVector& sigs)
 {
     uint32_t numFuncBodies = funcs.length();
     for (uint32_t funcIndex = 0; funcIndex < numFuncBodies; funcIndex++) {
