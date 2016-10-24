@@ -80,8 +80,9 @@ XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
 
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("page-shutdown", (type, context) => {
-  if (context.type == "popup" && context.active) {
-    context.contentWindow.close();
+  if (context.viewType == "popup" && context.active) {
+    // TODO(robwu): This is not webext-oop compatible.
+    context.xulBrowser.contentWindow.close();
   }
 });
 /* eslint-enable mozilla/balanced-listeners */
@@ -225,7 +226,6 @@ class BasePopup {
     this.browser.setAttribute("disableglobalhistory", "true");
     this.browser.setAttribute("transparent", "true");
     this.browser.setAttribute("class", "webextension-popup-browser");
-    this.browser.setAttribute("webextension-view-type", "popup");
     this.browser.setAttribute("tooltip", "aHTMLTooltip");
 
     // We only need flex sizing for the sake of the slide-in sub-views of the
@@ -239,6 +239,16 @@ class BasePopup {
     // will be if and when we popup debugging.
 
     viewNode.appendChild(this.browser);
+
+    extensions.emit("extension-browser-inserted", this.browser);
+    let windowId = WindowManager.getId(this.browser.ownerGlobal);
+    this.browser.messageManager.sendAsyncMessage("Extension:InitExtensionView", {
+      viewType: "popup",
+      windowId,
+    });
+    // TODO(robwu): Rework this to use the Extension:ExtensionViewLoaded message
+    // to detect loads and so on. And definitely move this content logic inside
+    // a file in the child process.
 
     let initBrowser = browser => {
       let mm = browser.messageManager;
@@ -659,6 +669,28 @@ ExtensionTabManager.prototype = {
   },
 };
 
+// Sends the tab and windowId upon request. This is primarily used to support
+// the synchronous `browser.extension.getViews` API.
+let onGetTabAndWindowId = {
+  receiveMessage({name, target, sync}) {
+    let {gBrowser} = target.ownerGlobal;
+    let tab = gBrowser && gBrowser.getTabForBrowser(target);
+    if (tab) {
+      let reply = {
+        tabId: TabManager.getId(tab),
+        windowId: WindowManager.getId(tab.ownerGlobal),
+      };
+      if (sync) {
+        return reply;
+      }
+      target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", reply);
+    }
+  },
+};
+/* eslint-disable mozilla/balanced-listeners */
+Services.mm.addMessageListener("Extension:GetTabAndWindowId", onGetTabAndWindowId);
+/* eslint-enable mozilla/balanced-listeners */
+
 
 // Manages global mappings between XUL tabs and extension tab IDs.
 global.TabManager = {
@@ -687,7 +719,12 @@ global.TabManager = {
       if (adoptedTab) {
         // This tab is being created to adopt a tab from a different window.
         // Copy the ID from the old tab to the new.
-        this._tabs.set(event.target, this.getId(adoptedTab));
+        let tab = event.target;
+        this._tabs.set(tab, this.getId(adoptedTab));
+
+        tab.linkedBrowser.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", {
+          windowId: WindowManager.getId(tab.ownerGlobal),
+        });
       }
     } else if (event.type == "TabClose") {
       let {adoptedBy} = event.detail;
@@ -697,6 +734,10 @@ global.TabManager = {
         // of a new window, and did not have an `adoptedTab` detail when it was
         // opened.
         this._tabs.set(adoptedBy, this.getId(event.target));
+
+        adoptedBy.linkedBrowser.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", {
+          windowId: WindowManager.getId(adoptedBy),
+        });
       }
     }
   },

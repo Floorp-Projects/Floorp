@@ -6,7 +6,8 @@ let getExtension = () => {
   return ExtensionTestUtils.loadExtension({
     background() {
       browser.tabs.query({active: true, currentWindow: true}, tabs => {
-        browser.pageAction.show(tabs[0].id);
+        browser.pageAction.show(tabs[0].id)
+          .then(() => { browser.test.sendMessage("pageAction ready"); });
       });
     },
 
@@ -34,6 +35,7 @@ add_task(function* testStandaloneBrowserAction() {
 
   let extension = getExtension();
   yield extension.startup();
+  yield extension.awaitMessage("pageAction ready");
 
   clickBrowserAction(extension);
   let browser = yield awaitExtensionPanel(extension);
@@ -47,6 +49,7 @@ add_task(function* testStandaloneBrowserAction() {
 add_task(function* testMenuPanelBrowserAction() {
   let extension = getExtension();
   yield extension.startup();
+  yield extension.awaitMessage("pageAction ready");
 
   let widget = getBrowserActionWidget(extension);
   CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_PANEL);
@@ -63,6 +66,7 @@ add_task(function* testMenuPanelBrowserAction() {
 add_task(function* testPageAction() {
   let extension = getExtension();
   yield extension.startup();
+  yield extension.awaitMessage("pageAction ready");
 
   clickPageAction(extension);
   let browser = yield awaitExtensionPanel(extension);

@@ -1,3 +1,5 @@
+"use strict";
+
 Cu.import("resource://gre/modules/NewTabUtils.jsm");
 
 
@@ -7,20 +9,21 @@ function TestProvider(getLinksFn) {
 }
 
 TestProvider.prototype = {
-  addObserver: function (observer) {
+  addObserver: function(observer) {
     this._observers.add(observer);
   },
-  notifyLinkChanged: function (link, index=-1, deleted=false) {
+  notifyLinkChanged: function(link, index = -1, deleted = false) {
     this._notifyObservers("onLinkChanged", link, index, deleted);
   },
-  notifyManyLinksChanged: function () {
+  notifyManyLinksChanged: function() {
     this._notifyObservers("onManyLinksChanged");
   },
-  _notifyObservers: function (observerMethodName, ...args) {
+  _notifyObservers: function(observerMethodName, ...args) {
     args.unshift(this);
     for (let obs of this._observers) {
-      if (obs[observerMethodName])
+      if (obs[observerMethodName]) {
         obs[observerMethodName].apply(NewTabUtils.links, args);
+      }
     }
   },
 };
@@ -36,7 +39,7 @@ function makeLinks(links) {
       url: link.url,
       title: link.title,
       lastVisitDate: now - i,
-      frecency: frecency++
+      frecency: frecency++,
     });
   });
   return places;
@@ -52,14 +55,14 @@ add_task(function* test_topSites() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": [
-        "topSites"
-      ]
+        "topSites",
+      ],
     },
     background() {
       browser.topSites.get(result => {
         browser.test.sendMessage("done", result);
       });
-    }
+    },
   });
 
 

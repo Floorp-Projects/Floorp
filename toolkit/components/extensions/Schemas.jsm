@@ -1035,7 +1035,7 @@ class ObjectType extends Type {
     } else if (!optional) {
       error = context.error(`Property "${prop}" is required`,
                             `contain the required "${prop}" property`);
-    } else {
+    } else if (optional !== "omit-key-if-missing") {
       result[prop] = null;
     }
 
@@ -1284,6 +1284,7 @@ class FunctionType extends Type {
     this.checkSchemaProperties(schema, path, extraProperties);
 
     let isAsync = !!schema.async;
+    let isExpectingCallback = isAsync;
     let parameters = null;
     if ("parameters" in schema) {
       parameters = [];
@@ -1291,6 +1292,9 @@ class FunctionType extends Type {
         // Callbacks default to optional for now, because of promise
         // handling.
         let isCallback = isAsync && param.name == schema.async;
+        if (isCallback) {
+          isExpectingCallback = false;
+        }
 
         parameters.push({
           type: Schemas.parseSchema(param, path, ["name", "optional", "default"]),
@@ -1299,6 +1303,9 @@ class FunctionType extends Type {
           default: param.default == undefined ? null : param.default,
         });
       }
+    }
+    if (isExpectingCallback) {
+      throw new Error(`Internal error: Expected a callback parameter with name ${schema.async}`);
     }
 
     let hasAsyncCallback = false;

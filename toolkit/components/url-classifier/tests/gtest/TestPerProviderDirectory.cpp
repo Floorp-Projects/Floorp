@@ -24,15 +24,6 @@ public:
 using namespace mozilla;
 using namespace mozilla::safebrowsing;
 
-template<typename Function>
-void RunTestInNewThread(Function&& aFunction) {
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(mozilla::Forward<Function>(aFunction));
-  nsCOMPtr<nsIThread> testingThread;
-  nsresult rv = NS_NewThread(getter_AddRefs(testingThread), r);
-  ASSERT_EQ(rv, NS_OK);
-  testingThread->Shutdown();
-}
-
 template<typename T>
 void VerifyPrivateStorePath(const char* aTableName,
                             const char* aProvider,

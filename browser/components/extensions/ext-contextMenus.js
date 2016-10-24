@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 var {
   EventManager,
   IconDetails,
-  runSafe,
 } = ExtensionUtils;
 
 // Map[Extension -> Map[ID -> MenuItem]]
@@ -193,9 +192,6 @@ var gMenuBuilder = {
       let tab = item.tabManager.convert(contextData.tab);
       let info = item.getClickInfo(contextData, wasChecked);
       item.extension.emit("webext-contextmenu-menuitem-click", info, tab);
-      if (item.onclick) {
-        runSafe(item.extContext, item.onclick, info, tab);
-      }
     });
 
     return element;
@@ -259,9 +255,8 @@ function getContexts(contextData) {
   return contexts;
 }
 
-function MenuItem(extension, extContext, createProperties, isRoot = false) {
+function MenuItem(extension, createProperties, isRoot = false) {
   this.extension = extension;
-  this.extContext = extContext;
   this.children = [];
   this.parent = null;
   this.tabManager = TabManager.for(extension);
@@ -375,7 +370,7 @@ MenuItem.prototype = {
   get root() {
     let extension = this.extension;
     if (!gRootItems.has(extension)) {
-      let root = new MenuItem(extension, this.context,
+      let root = new MenuItem(extension,
                               {title: extension.name},
                               /* isRoot = */ true);
       gRootItems.set(extension, root);
@@ -495,13 +490,12 @@ extensions.registerSchemaAPI("contextMenus", "addon_parent", context => {
   let {extension} = context;
   return {
     contextMenus: {
-      create: function(createProperties, callback) {
-        let menuItem = new MenuItem(extension, context, createProperties);
+      createInternal: function(createProperties) {
+        // Note that the id is required by the schema. If the addon did not set
+        // it, the implementation of contextMenus.create in the child should
+        // have added it.
+        let menuItem = new MenuItem(extension, createProperties);
         gContextMenuMap.get(extension).set(menuItem.id, menuItem);
-        if (callback) {
-          runSafe(context, callback);
-        }
-        return menuItem.id;
       },
 
       update: function(id, updateProperties) {
@@ -509,7 +503,6 @@ extensions.registerSchemaAPI("contextMenus", "addon_parent", context => {
         if (menuItem) {
           menuItem.setProps(updateProperties);
         }
-        return Promise.resolve();
       },
 
       remove: function(id) {
@@ -517,7 +510,6 @@ extensions.registerSchemaAPI("contextMenus", "addon_parent", context => {
         if (menuItem) {
           menuItem.remove();
         }
-        return Promise.resolve();
       },
 
       removeAll: function() {
@@ -525,7 +517,6 @@ extensions.registerSchemaAPI("contextMenus", "addon_parent", context => {
         if (root) {
           root.remove();
         }
-        return Promise.resolve();
       },
 
       onClicked: new EventManager(context, "contextMenus.onClicked", fire => {
