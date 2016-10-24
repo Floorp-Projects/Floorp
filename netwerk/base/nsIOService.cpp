@@ -52,6 +52,7 @@
 #include "mozilla/net/DNS.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "CaptivePortalService.h"
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
@@ -1764,13 +1765,16 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request, nsIChannel *cha
 
 nsresult
 nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
+                                        nsIPrincipal *aPrincipal,
                                         nsIInterfaceRequestor *aCallbacks,
                                         bool aAnonymous)
 {
     if (IsNeckoChild()) {
         ipc::URIParams params;
         SerializeURI(aURI, params);
-        gNeckoChild->SendSpeculativeConnect(params, aAnonymous);
+        gNeckoChild->SendSpeculativeConnect(params,
+                                            IPC::Principal(aPrincipal),
+                                            aAnonymous);
         return NS_OK;
     }
 
@@ -1782,12 +1786,17 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
             do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan(
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIPrincipal> systemPrincipal;
-    rv = secMan->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPrincipal> loadingPrincipal = aPrincipal;
+
+    // If the principal is given, we use this prinicpal directly. Otherwise,
+    // we fallback to use the system principal.
+    if (!aPrincipal) {
+        nsCOMPtr<nsIScriptSecurityManager> secMan(
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = secMan->GetSystemPrincipal(getter_AddRefs(loadingPrincipal));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     // dummy channel used to create a TCP connection.
     // we perform security checks on the *real* channel, responsible
@@ -1798,7 +1807,7 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
     nsCOMPtr<nsIChannel> channel;
     rv = NewChannelFromURI2(aURI,
                             nullptr, // aLoadingNode,
-                            systemPrincipal,
+                            loadingPrincipal,
                             nullptr, //aTriggeringPrincipal,
                             nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                             nsIContentPolicy::TYPE_OTHER,
@@ -1826,14 +1835,30 @@ NS_IMETHODIMP
 nsIOService::SpeculativeConnect(nsIURI *aURI,
                                 nsIInterfaceRequestor *aCallbacks)
 {
-    return SpeculativeConnectInternal(aURI, aCallbacks, false);
+    return SpeculativeConnectInternal(aURI, nullptr, aCallbacks, false);
+}
+
+NS_IMETHODIMP
+nsIOService::SpeculativeConnect2(nsIURI *aURI,
+                                 nsIPrincipal *aPrincipal,
+                                 nsIInterfaceRequestor *aCallbacks)
+{
+    return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, false);
 }
 
 NS_IMETHODIMP
 nsIOService::SpeculativeAnonymousConnect(nsIURI *aURI,
                                          nsIInterfaceRequestor *aCallbacks)
 {
-    return SpeculativeConnectInternal(aURI, aCallbacks, true);
+    return SpeculativeConnectInternal(aURI, nullptr, aCallbacks, true);
+}
+
+NS_IMETHODIMP
+nsIOService::SpeculativeAnonymousConnect2(nsIURI *aURI,
+                                          nsIPrincipal *aPrincipal,
+                                          nsIInterfaceRequestor *aCallbacks)
+{
+    return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, true);
 }
 
 } // namespace net
