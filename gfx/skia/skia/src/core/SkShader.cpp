@@ -18,6 +18,10 @@
 #include "SkShader.h"
 #include "SkWriteBuffer.h"
 
+#if SK_SUPPORT_GPU
+#include "GrFragmentProcessor.h"
+#endif
+
 //#define SK_TRACK_SHADER_LIFETIME
 
 #ifdef SK_TRACK_SHADER_LIFETIME
@@ -220,10 +224,11 @@ SkShader::GradientType SkShader::asAGradient(GradientInfo* info) const {
     return kNone_GradientType;
 }
 
-const GrFragmentProcessor* SkShader::asFragmentProcessor(GrContext*, const SkMatrix&,
-                                                         const SkMatrix*, SkFilterQuality)  const {
+#if SK_SUPPORT_GPU
+sk_sp<GrFragmentProcessor> SkShader::asFragmentProcessor(const AsFPArgs&) const {
     return nullptr;
 }
+#endif
 
 SkShader* SkShader::refAsALocalMatrixShader(SkMatrix*) const {
     return nullptr;
@@ -235,7 +240,7 @@ sk_sp<SkShader> SkShader::MakeColorShader(SkColor color) { return sk_make_sp<SkC
 
 sk_sp<SkShader> SkShader::MakeBitmapShader(const SkBitmap& src, TileMode tmx, TileMode tmy,
                                            const SkMatrix* localMatrix) {
-    return SkMakeBitmapShader(src, tmx, tmy, localMatrix, nullptr);
+    return SkMakeBitmapShader(src, tmx, tmy, localMatrix, kIfMutable_SkCopyPixelsMode, nullptr);
 }
 
 sk_sp<SkShader> SkShader::MakePictureShader(sk_sp<SkPicture> src, TileMode tmx, TileMode tmy,
@@ -252,172 +257,7 @@ void SkShader::toString(SkString* str) const {
 }
 #endif
 
-//////////////////////////////////////////////////////////////////////////////
-
-#include "SkUtils.h"
-
-SkColorShader::SkColorShader(SkColor c)
-    : fColor(c) {
-}
-
-bool SkColorShader::isOpaque() const {
-    return SkColorGetA(fColor) == 255;
-}
-
-sk_sp<SkFlattenable> SkColorShader::CreateProc(SkReadBuffer& buffer) {
-    return sk_make_sp<SkColorShader>(buffer.readColor());
-}
-
-void SkColorShader::flatten(SkWriteBuffer& buffer) const {
-    buffer.writeColor(fColor);
-}
-
-uint32_t SkColorShader::ColorShaderContext::getFlags() const {
-    return fFlags;
-}
-
-SkShader::Context* SkColorShader::onCreateContext(const ContextRec& rec, void* storage) const {
-    return new (storage) ColorShaderContext(*this, rec);
-}
-
-SkColorShader::ColorShaderContext::ColorShaderContext(const SkColorShader& shader,
-                                                      const ContextRec& rec)
-    : INHERITED(shader, rec)
-{
-    SkColor color = shader.fColor;
-    unsigned a = SkAlphaMul(SkColorGetA(color), SkAlpha255To256(rec.fPaint->getAlpha()));
-
-    unsigned r = SkColorGetR(color);
-    unsigned g = SkColorGetG(color);
-    unsigned b = SkColorGetB(color);
-
-    if (a != 255) {
-        r = SkMulDiv255Round(r, a);
-        g = SkMulDiv255Round(g, a);
-        b = SkMulDiv255Round(b, a);
-    }
-    fPMColor = SkPackARGB32(a, r, g, b);
-
-    SkColor4f c4 = SkColor4f::FromColor(shader.fColor);
-    c4.fA *= rec.fPaint->getAlpha() / 255.0f;
-    fPM4f = c4.premul();
-
-    fFlags = kConstInY32_Flag;
-    if (255 == a) {
-        fFlags |= kOpaqueAlpha_Flag;
-    }
-}
-
-void SkColorShader::ColorShaderContext::shadeSpan(int x, int y, SkPMColor span[], int count) {
-    sk_memset32(span, fPMColor, count);
-}
-
-void SkColorShader::ColorShaderContext::shadeSpanAlpha(int x, int y, uint8_t alpha[], int count) {
-    memset(alpha, SkGetPackedA32(fPMColor), count);
-}
-
-void SkColorShader::ColorShaderContext::shadeSpan4f(int x, int y, SkPM4f span[], int count) {
-    for (int i = 0; i < count; ++i) {
-        span[i] = fPM4f;
-    }
-}
-
-SkShader::GradientType SkColorShader::asAGradient(GradientInfo* info) const {
-    if (info) {
-        if (info->fColors && info->fColorCount >= 1) {
-            info->fColors[0] = fColor;
-        }
-        info->fColorCount = 1;
-        info->fTileMode = SkShader::kRepeat_TileMode;
-    }
-    return kColor_GradientType;
-}
-
-#if SK_SUPPORT_GPU
-
-#include "SkGr.h"
-#include "effects/GrConstColorProcessor.h"
-const GrFragmentProcessor* SkColorShader::asFragmentProcessor(GrContext*, const SkMatrix&,
-                                                              const SkMatrix*,
-                                                              SkFilterQuality) const {
-    GrColor color = SkColorToPremulGrColor(fColor);
-    return GrConstColorProcessor::Create(color, GrConstColorProcessor::kModulateA_InputMode);
-}
-
-#endif
-
-#ifndef SK_IGNORE_TO_STRING
-void SkColorShader::toString(SkString* str) const {
-    str->append("SkColorShader: (");
-
-    str->append("Color: ");
-    str->appendHex(fColor);
-
-    this->INHERITED::toString(str);
-
-    str->append(")");
-}
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-static void D32_BlitBW(SkShader::Context::BlitState* state, int x, int y, const SkPixmap& dst,
-                       int count) {
-    SkXfermode::D32Proc proc = (SkXfermode::D32Proc)state->fStorage[0];
-    const SkPM4f* src = (const SkPM4f*)state->fStorage[1];
-    proc(state->fXfer, dst.writable_addr32(x, y), src, count, nullptr);
-}
-
-static void D32_BlitAA(SkShader::Context::BlitState* state, int x, int y, const SkPixmap& dst,
-                       int count, const SkAlpha aa[]) {
-    SkXfermode::D32Proc proc = (SkXfermode::D32Proc)state->fStorage[0];
-    const SkPM4f* src = (const SkPM4f*)state->fStorage[1];
-    proc(state->fXfer, dst.writable_addr32(x, y), src, count, aa);
-}
-
-static void D64_BlitBW(SkShader::Context::BlitState* state, int x, int y, const SkPixmap& dst,
-                       int count) {
-    SkXfermode::D64Proc proc = (SkXfermode::D64Proc)state->fStorage[0];
-    const SkPM4f* src = (const SkPM4f*)state->fStorage[1];
-    proc(state->fXfer, dst.writable_addr64(x, y), src, count, nullptr);
-}
-
-static void D64_BlitAA(SkShader::Context::BlitState* state, int x, int y, const SkPixmap& dst,
-                       int count, const SkAlpha aa[]) {
-    SkXfermode::D64Proc proc = (SkXfermode::D64Proc)state->fStorage[0];
-    const SkPM4f* src = (const SkPM4f*)state->fStorage[1];
-    proc(state->fXfer, dst.writable_addr64(x, y), src, count, aa);
-}
-
-bool SkColorShader::ColorShaderContext::onChooseBlitProcs(const SkImageInfo& info,
-                                                          BlitState* state) {
-    uint32_t flags = SkXfermode::kSrcIsSingle_D32Flag;
-    if (fPM4f.a() == 1) {
-        flags |= SkXfermode::kSrcIsOpaque_D32Flag;
-    }
-    switch (info.colorType()) {
-        case kN32_SkColorType:
-            if (info.isSRGB()) {
-                flags |= SkXfermode::kDstIsSRGB_D32Flag;
-            }
-            state->fStorage[0] = (void*)SkXfermode::GetD32Proc(state->fXfer, flags);
-            state->fStorage[1] = &fPM4f;
-            state->fBlitBW = D32_BlitBW;
-            state->fBlitAA = D32_BlitAA;
-            return true;
-        case kRGBA_F16_SkColorType:
-            flags |= SkXfermode::kDstIsFloat16_D64Flag;
-            state->fStorage[0] = (void*)SkXfermode::GetD64Proc(state->fXfer, flags);
-            state->fStorage[1] = &fPM4f;
-            state->fBlitBW = D64_BlitBW;
-            state->fBlitAA = D64_BlitAA;
-            return true;
-        default:
-            return false;
-    }
-}
-
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 sk_sp<SkFlattenable> SkEmptyShader::CreateProc(SkReadBuffer&) {
     return SkShader::MakeEmptyShader();

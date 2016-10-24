@@ -59,18 +59,22 @@ public:
      * @param filterOrNullForBicubic           If non-null indicates the filter mode. If null means
      *                                         use bicubic filtering.
      **/
-    virtual const GrFragmentProcessor* createFragmentProcessor(
+    virtual sk_sp<GrFragmentProcessor> createFragmentProcessor(
                                     const SkMatrix& textureMatrix,
                                     const SkRect& constraintRect,
                                     FilterConstraint filterConstraint,
                                     bool coordsLimitedToConstraintRect,
-                                    const GrTextureParams::FilterMode* filterOrNullForBicubic) = 0;
+                                    const GrTextureParams::FilterMode* filterOrNullForBicubic,
+                                    SkColorSpace* dstColorSpace,
+                                    SkSourceGammaTreatment) = 0;
 
     virtual ~GrTextureProducer() {}
 
     int width() const { return fWidth; }
     int height() const { return fHeight; }
     bool isAlphaOnly() const { return fIsAlphaOnly; }
+    virtual SkAlphaType alphaType() const = 0;
+    virtual SkColorSpace* getColorSpace() = 0;
 
 protected:
     GrTextureProducer(int width, int height, bool isAlphaOnly)
@@ -127,22 +131,28 @@ public:
         outOffset will be the top-left corner of the subset if a copy is not made. Otherwise,
         the copy will be tight to the contents and outOffset will be (0, 0). If the copy's size
         does not match subset's dimensions then the contents are scaled to fit the copy.*/
-    GrTexture* refTextureSafeForParams(const GrTextureParams&, SkIPoint* outOffset);
+    GrTexture* refTextureSafeForParams(const GrTextureParams&, SkSourceGammaTreatment,
+                                       SkIPoint* outOffset);
 
-    const GrFragmentProcessor* createFragmentProcessor(
+    sk_sp<GrFragmentProcessor> createFragmentProcessor(
                                 const SkMatrix& textureMatrix,
                                 const SkRect& constraintRect,
                                 FilterConstraint,
                                 bool coordsLimitedToConstraintRect,
-                                const GrTextureParams::FilterMode* filterOrNullForBicubic) override;
+                                const GrTextureParams::FilterMode* filterOrNullForBicubic,
+                                SkColorSpace* dstColorSpace,
+                                SkSourceGammaTreatment) override;
+
+    // We do not ref the texture nor the colorspace, so the caller must keep them in scope while
+    // this Adjuster is alive.
+    GrTextureAdjuster(GrTexture*, SkAlphaType, const SkIRect& area, uint32_t uniqueID,
+                      SkColorSpace*);
 
 protected:
-    /** The whole texture is content. */
-    explicit GrTextureAdjuster(GrTexture* original, bool isAlphaOnly)
-        : INHERITED(original->width(), original->height(), isAlphaOnly)
-        , fOriginal(original) {}
-
-    GrTextureAdjuster(GrTexture* original, const SkIRect& contentArea, bool isAlphaOnly);
+    SkAlphaType alphaType() const override { return fAlphaType; }
+    SkColorSpace* getColorSpace() override;
+    void makeCopyKey(const CopyParams& params, GrUniqueKey* copyKey) override;
+    void didCacheCopy(const GrUniqueKey& copyKey) override;
 
     GrTexture* originalTexture() const { return fOriginal; }
 
@@ -152,6 +162,9 @@ protected:
 private:
     SkTLazy<SkIRect>    fContentArea;
     GrTexture*          fOriginal;
+    SkAlphaType         fAlphaType;
+    SkColorSpace*       fColorSpace;
+    uint32_t            fUniqueID;
 
     GrTexture* refCopy(const CopyParams &copyParams);
 
@@ -167,14 +180,16 @@ public:
     /** Returns a texture that is safe for use with the params. If the size of the returned texture
         does not match width()/height() then the contents of the original must be scaled to fit
         the texture. */
-    GrTexture* refTextureForParams(const GrTextureParams&);
+    GrTexture* refTextureForParams(const GrTextureParams&, SkSourceGammaTreatment);
 
-    const GrFragmentProcessor* createFragmentProcessor(
+    sk_sp<GrFragmentProcessor> createFragmentProcessor(
                                 const SkMatrix& textureMatrix,
                                 const SkRect& constraintRect,
                                 FilterConstraint filterConstraint,
                                 bool coordsLimitedToConstraintRect,
-                                const GrTextureParams::FilterMode* filterOrNullForBicubic) override;
+                                const GrTextureParams::FilterMode* filterOrNullForBicubic,
+                                SkColorSpace* dstColorSpace,
+                                SkSourceGammaTreatment) override;
 
 protected:
     GrTextureMaker(GrContext* context, int width, int height, bool isAlphaOnly)
@@ -185,7 +200,7 @@ protected:
      *  Return the maker's "original" texture. It is the responsibility of the maker to handle any
      *  caching of the original if desired.
      */
-    virtual GrTexture* refOriginalTexture(bool willBeMipped) = 0;
+    virtual GrTexture* refOriginalTexture(bool willBeMipped, SkSourceGammaTreatment) = 0;
 
     /**
      *  Return a new (uncached) texture that is the stretch of the maker's original.
@@ -197,7 +212,8 @@ protected:
      *  Subclass may override this if they can handle creating the texture more directly than
      *  by copying.
      */
-    virtual GrTexture* generateTextureForParams(const CopyParams&, bool willBeMipped);
+    virtual GrTexture* generateTextureForParams(const CopyParams&, bool willBeMipped,
+                                                SkSourceGammaTreatment);
 
     GrContext* context() const { return fContext; }
 

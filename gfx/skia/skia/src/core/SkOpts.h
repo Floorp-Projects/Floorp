@@ -8,7 +8,7 @@
 #ifndef SkOpts_DEFINED
 #define SkOpts_DEFINED
 
-#include "SkMatrix.h"
+#include "SkRasterPipeline.h"
 #include "SkTextureCompressor.h"
 #include "SkTypes.h"
 #include "SkXfermode.h"
@@ -18,7 +18,7 @@ struct ProcCoeff;
 namespace SkOpts {
     // Call to replace pointers to portable functions with pointers to CPU-specific functions.
     // Thread-safe and idempotent.
-    // Called by SkGraphics::Init(), and automatically #if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS.
+    // Called by SkGraphics::Init().
     void Init();
 
     // Declare function pointers here...
@@ -50,8 +50,6 @@ namespace SkOpts {
                                           int,
                                           const SkColor*);
 
-    extern SkMatrix::MapPtsProc matrix_translate, matrix_scale_translate, matrix_affine;
-
     // Swizzle input into some sort of 8888 pixel, {premul,unpremul} x {rgba,bgra}.
     typedef void (*Swizzle_8888)(uint32_t*, const void*, int);
     extern Swizzle_8888 RGBA_to_BGRA,          // i.e. just swap RB
@@ -65,8 +63,18 @@ namespace SkOpts {
                         inverted_CMYK_to_RGB1, // i.e. convert color space
                         inverted_CMYK_to_BGR1; // i.e. convert color space
 
-    extern void (*half_to_float)(float[], const uint16_t[], int);
-    extern void (*float_to_half)(uint16_t[], const float[], int);
+    // Blend ndst src pixels over dst, where both src and dst point to sRGB pixels (RGBA or BGRA).
+    // If nsrc < ndst, we loop over src to create a pattern.
+    extern void (*srcover_srgb_srgb)(uint32_t* dst, const uint32_t* src, int ndst, int nsrc);
+
+    // The fastest high quality 32-bit hash we can provide on this platform.
+    extern uint32_t (*hash_fn)(const void*, size_t, uint32_t seed);
+    static inline uint32_t hash(const void* data, size_t bytes, uint32_t seed=0) {
+        return hash_fn(data, bytes, seed);
+    }
+
+    extern SkRasterPipeline::Fn stages_4  [SkRasterPipeline::kNumStockStages],
+                                stages_1_3[SkRasterPipeline::kNumStockStages];
 }
 
 #endif//SkOpts_DEFINED
