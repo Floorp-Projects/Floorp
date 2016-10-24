@@ -23,6 +23,7 @@ import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.home.activitystream.topsites.CirclePageIndicator;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
 import org.mozilla.gecko.icons.IconCallback;
@@ -73,6 +74,9 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
     public static class HighlightItem extends StreamItem implements IconCallback {
         public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
 
+        String title;
+        String url;
+
         final FaviconView vIconView;
         final TextView vLabel;
         final TextView vTimeSince;
@@ -122,14 +126,24 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
                     itemView.setTouchDelegate(touchDelegate);
                 }
             });
+
+            menuButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ActivityStreamContextMenu.show(v.getContext(), title, url, onUrlOpenListener, onUrlOpenInBackgroundListener, vIconView.getWidth(), vIconView.getHeight());
+                }
+            });
         }
 
         public void bind(Cursor cursor, int tilesWidth, int tilesHeight) {
+
             final long time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
             final String ago = DateUtils.getRelativeTimeSpanString(time, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
-            final String url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
 
-            vLabel.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE)));
+            title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE));
+            url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
+
+            vLabel.setText(title);
             vTimeSince.setText(ago);
 
             ViewGroup.LayoutParams layoutParams = vIconView.getLayoutParams();
