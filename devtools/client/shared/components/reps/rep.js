@@ -30,6 +30,7 @@ define(function (require, exports, module) {
   const { Document } = require("./document");
   const { Event } = require("./event");
   const { Func } = require("./function");
+  const { PromiseRep } = require("./promise");
   const { RegExp } = require("./regexp");
   const { StyleSheet } = require("./stylesheet");
   const { CommentNode } = require("./comment-node");
@@ -53,6 +54,7 @@ define(function (require, exports, module) {
     TextNode,
     Attribute,
     Func,
+    PromiseRep,
     ArrayRep,
     Document,
     Window,
