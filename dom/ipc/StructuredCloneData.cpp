@@ -81,7 +81,8 @@ StructuredCloneData::Write(JSContext* aCx,
 {
   MOZ_ASSERT(!mInitialized);
 
-  StructuredCloneHolder::Write(aCx, aValue, aTransfer, aRv);
+  StructuredCloneHolder::Write(aCx, aValue, aTransfer,
+                               JS::CloneDataPolicy().denySharedArrayBuffer(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
