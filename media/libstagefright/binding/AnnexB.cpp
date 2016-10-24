@@ -334,6 +334,47 @@ AnnexB::HasSPS(const mozilla::MediaByteBuffer* aExtraData)
 }
 
 bool
+AnnexB::HasPPS(const mozilla::MediaRawData* aSample)
+{
+  return HasPPS(aSample->mExtraData);
+}
+
+bool
+AnnexB::HasPPS(const mozilla::MediaByteBuffer* aExtraData)
+{
+  if (!aExtraData) {
+    return false;
+  }
+
+  ByteReader reader(aExtraData);
+  const uint8_t* ptr = reader.Read(5);
+  if (!ptr || !reader.CanRead8()) {
+    return false;
+  }
+  uint8_t numSps = reader.ReadU8() & 0x1f;
+  // Skip over the included SPS.
+  for (uint8_t i = 0; i < numSps; i++) {
+    if (reader.Remaining() < 3) {
+      return false;
+    }
+    uint16_t length = reader.ReadU16();
+    if ((reader.PeekU8() & 0x1f) != 7) {
+      // Not an SPS NAL type.
+      return false;
+    }
+    if (!reader.Read(length)) {
+      return false;
+    }
+  }
+  if (!reader.CanRead8()) {
+    return false;
+  }
+  uint8_t numPps = reader.ReadU8();
+
+  return numPps > 0;
+}
+
+bool
 AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
 {
   MOZ_ASSERT(IsAVCC(aSample));
