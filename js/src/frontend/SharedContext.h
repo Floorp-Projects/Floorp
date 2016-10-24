@@ -560,8 +560,12 @@ class FunctionBox : public ObjectBox, public SharedContext
                                              funCxFlags.isDerivedClassConstructor = true; }
     void setHasInnerFunctions()            { funCxFlags.hasInnerFunctions         = true; }
 
+    bool hasSimpleParameterList() const {
+        return !function()->hasRest() && !hasParameterExprs && !hasDestructuringArgs;
+    }
+
     bool hasMappedArgsObj() const {
-        return !strict() && !function()->hasRest() && !hasParameterExprs && !hasDestructuringArgs;
+        return !strict() && hasSimpleParameterList();
     }
 
     // Return whether this or an enclosing function is being parsed and
