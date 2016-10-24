@@ -146,7 +146,7 @@ SharedSurface_Gralloc::~SharedSurface_Gralloc()
 {
     DEBUG_PRINT("[SharedSurface_Gralloc %p] destroyed\n", this);
 
-    if (!mGL->MakeCurrent())
+    if (!mGL || !mGL->MakeCurrent())
         return;
 
     mGL->fDeleteTextures(1, &mProdTex);
