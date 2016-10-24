@@ -1126,23 +1126,23 @@ function TypedArraySort(comparefn) {
     }
 
     if (comparefn === undefined) {
-        comparefn = TypedArrayCompare;
-        // CountingSort doesn't invoke the comparefn
+        // CountingSort doesn't invoke the comparator function.
         if (IsUint8TypedArray(obj)) {
             return CountingSort(obj, len, false /* signed */);
         } else if (IsInt8TypedArray(obj)) {
             return CountingSort(obj, len, true /* signed */);
         } else if (IsUint16TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 2 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 2 /* nbytes */, false /* signed */, false /* floating */, TypedArrayCompare);
         } else if (IsInt16TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 2 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 2 /* nbytes */, true /* signed */, false /* floating */, TypedArrayCompare);
         } else if (IsUint32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, false /* signed */, false /* floating */, TypedArrayCompare);
         } else if (IsInt32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, false /* floating */, TypedArrayCompare);
         } else if (IsFloat32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, true /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, true /* floating */, TypedArrayCompare);
         }
+        return QuickSort(obj, len, TypedArrayCompare);
     }
 
     // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
