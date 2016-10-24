@@ -104,6 +104,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mPipelinePosition(0)
     , mHttpVersion(NS_HTTP_VERSION_UNKNOWN)
     , mHttpResponseCode(0)
+    , mCurrentHttpResponseHeaderSize(0)
     , mCapsToClear(0)
     , mResponseIsComplete(false)
     , mClosed(false)
@@ -1845,6 +1846,13 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
             bytesConsumed += localBytesConsumed;
         } while (rv == NS_ERROR_NET_INTERRUPT);
 
+        mCurrentHttpResponseHeaderSize += bytesConsumed;
+        if (mCurrentHttpResponseHeaderSize >
+            gHttpHandler->MaxHttpResponseHeaderSize()) {
+            LOG(("nsHttpTransaction %p The response header exceeds the limit.\n",
+                 this));
+            return NS_ERROR_FILE_TOO_BIG;
+        }
         count -= bytesConsumed;
 
         // if buf has some content in it, shift bytes to top of buf.
