@@ -319,9 +319,12 @@ bool GrGLInterface::validate() const {
     }
 
     if (fExtensions.has("GL_EXT_discard_framebuffer")) {
+// FIXME: Remove this once Chromium is updated to provide this function
+#if 0
         if (nullptr == fFunctions.fDiscardFramebuffer) {
             RETURN_FALSE_INTERFACE
         }
+#endif
     }
 
     // FBO MSAA
@@ -411,16 +414,10 @@ bool GrGLInterface::validate() const {
                 RETURN_FALSE_INTERFACE;
             }
         }
-        if (glVer >= GR_GL_VER(4,3)) {
-            if (nullptr == fFunctions.fTexBufferRange) {
-                RETURN_FALSE_INTERFACE;
-            }
-        }
     } else {
         if (glVer >= GR_GL_VER(3,2) || fExtensions.has("GL_OES_texture_buffer") ||
             fExtensions.has("GL_EXT_texture_buffer")) {
-            if (nullptr == fFunctions.fTexBuffer ||
-                nullptr == fFunctions.fTexBufferRange) {
+            if (nullptr == fFunctions.fTexBuffer) {
                 RETURN_FALSE_INTERFACE;
             }
         }
@@ -507,9 +504,11 @@ bool GrGLInterface::validate() const {
 
     if (kGLES_GrGLStandard == fStandard || glVer >= GR_GL_VER(4,1) ||
         fExtensions.has("GL_ARB_ES2_compatibility")) {
+#if 0 // Enable this once Chrome gives us the function ptr
         if (nullptr == fFunctions.fGetShaderPrecisionFormat) {
             RETURN_FALSE_INTERFACE
         }
+#endif
     }
 
     if (fExtensions.has("GL_NV_path_rendering") || fExtensions.has("GL_CHROMIUM_path_rendering")) {
@@ -595,8 +594,7 @@ bool GrGLInterface::validate() const {
         }
     }
 
-    if ((kGL_GrGLStandard == fStandard &&
-         (glVer >= GR_GL_VER(4,0) || fExtensions.has("GL_ARB_draw_indirect"))) ||
+    if ((kGL_GrGLStandard == fStandard && glVer >= GR_GL_VER(4,3)) ||
         (kGLES_GrGLStandard == fStandard && glVer >= GR_GL_VER(3,1))) {
         if (NULL == fFunctions.fDrawArraysIndirect ||
             NULL == fFunctions.fDrawElementsIndirect) {
@@ -604,8 +602,7 @@ bool GrGLInterface::validate() const {
         }
     }
 
-    if ((kGL_GrGLStandard == fStandard &&
-         (glVer >= GR_GL_VER(4,3) || fExtensions.has("GL_ARB_multi_draw_indirect"))) ||
+    if ((kGL_GrGLStandard == fStandard && glVer >= GR_GL_VER(4,3)) ||
         (kGLES_GrGLStandard == fStandard && fExtensions.has("GL_EXT_multi_draw_indirect"))) {
         if (NULL == fFunctions.fMultiDrawArraysIndirect ||
             NULL == fFunctions.fMultiDrawElementsIndirect) {
@@ -769,38 +766,14 @@ bool GrGLInterface::validate() const {
         }
     }
 
-    if (fExtensions.has("GL_EXT_window_rectangles")) {
-        if (nullptr == fFunctions.fWindowRectangles) {
-            RETURN_FALSE_INTERFACE
-        }
-    }
-
     if ((kGL_GrGLStandard == fStandard && glVer >= GR_GL_VER(4,0)) ||
         fExtensions.has("GL_ARB_sample_shading")) {
         if (nullptr == fFunctions.fMinSampleShading) {
             RETURN_FALSE_INTERFACE
         }
-    } else if (kGLES_GrGLStandard == fStandard && fExtensions.has("GL_OES_sample_shading")) {
+    } else if (kGL_GrGLStandard == fStandard && fExtensions.has("GL_OES_sample_shading")) {
         if (nullptr == fFunctions.fMinSampleShading) {
             RETURN_FALSE_INTERFACE
-        }
-    }
-
-    if (kGL_GrGLStandard == fStandard) {
-        if (glVer >= GR_GL_VER(3, 2) || fExtensions.has("GL_ARB_sync")) {
-            if (nullptr == fFunctions.fFenceSync ||
-                nullptr == fFunctions.fClientWaitSync ||
-                nullptr == fFunctions.fDeleteSync) {
-                RETURN_FALSE_INTERFACE
-            }
-        }
-    } else if (kGLES_GrGLStandard == fStandard) {
-        if (glVer >= GR_GL_VER(3, 0)) {
-            if (nullptr == fFunctions.fFenceSync ||
-                nullptr == fFunctions.fClientWaitSync ||
-                nullptr == fFunctions.fDeleteSync) {
-                RETURN_FALSE_INTERFACE
-            }
         }
     }
 
@@ -808,16 +781,6 @@ bool GrGLInterface::validate() const {
         if (nullptr == fFunctions.fEGLCreateImage ||
             nullptr == fFunctions.fEGLDestroyImage) {
             RETURN_FALSE_INTERFACE
-        }
-    }
-
-    if (kGL_GrGLStandard == fStandard && glVer >= GR_GL_VER(2,0)) {
-        if (nullptr == fFunctions.fDrawRangeElements) {
-            RETURN_FALSE_INTERFACE;
-        }
-    } else if (kGLES_GrGLStandard == fStandard && glVer >= GR_GL_VER(3,0)) {
-        if (nullptr == fFunctions.fDrawRangeElements) {
-            RETURN_FALSE_INTERFACE;
         }
     }
 

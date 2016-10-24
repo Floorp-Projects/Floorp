@@ -7,9 +7,8 @@
 #include "SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN32)
 
-#include "SkLeanWindows.h"
-#include "SkMutex.h"
 #include "SkTLS.h"
+#include "SkMutex.h"
 
 static bool gOnce = false;
 static DWORD gTlsIndex;

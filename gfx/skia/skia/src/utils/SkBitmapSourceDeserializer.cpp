@@ -23,9 +23,11 @@ sk_sp<SkFlattenable> SkBitmapSourceDeserializer::CreateProc(SkReadBuffer& buffer
     SkRect src, dst;
     buffer.readRect(&src);
     buffer.readRect(&dst);
-    sk_sp<SkImage> image = buffer.readBitmapAsImage();
-    if (image) {
-        return SkImageSource::Make(std::move(image), src, dst, filterQuality);
+    SkBitmap bitmap;
+    if (!buffer.readBitmap(&bitmap)) {
+        return nullptr;
     }
-    return nullptr;
+    bitmap.setImmutable();
+
+    return SkImageSource::Make(SkImage::MakeFromBitmap(bitmap), src, dst, filterQuality);
 }

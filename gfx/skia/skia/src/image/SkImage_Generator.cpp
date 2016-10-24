@@ -21,20 +21,13 @@ public:
         , fCache(cache) // take ownership
     {}
 
-    virtual SkImageInfo onImageInfo() const override {
-        return fCache->info();
-    }
-    SkAlphaType onAlphaType() const override {
-        return fCache->info().alphaType();
-    }
-
     bool onReadPixels(const SkImageInfo&, void*, size_t, int srcX, int srcY, CachingHint) const override;
     SkImageCacherator* peekCacherator() const override { return fCache; }
     SkData* onRefEncoded(GrContext*) const override;
+    bool isOpaque() const override { return fCache->info().isOpaque(); }
     sk_sp<SkImage> onMakeSubset(const SkIRect&) const override;
     bool getROPixels(SkBitmap*, CachingHint) const override;
-    GrTexture* asTextureRef(GrContext*, const GrTextureParams&,
-                            SkSourceGammaTreatment) const override;
+    GrTexture* asTextureRef(GrContext*, const GrTextureParams&) const override;
     bool onIsLazyGenerated() const override { return true; }
 
 private:
@@ -76,9 +69,8 @@ bool SkImage_Generator::getROPixels(SkBitmap* bitmap, CachingHint chint) const {
     return fCache->lockAsBitmap(bitmap, this, chint);
 }
 
-GrTexture* SkImage_Generator::asTextureRef(GrContext* ctx, const GrTextureParams& params,
-                                           SkSourceGammaTreatment gammaTreatment) const {
-    return fCache->lockAsTexture(ctx, params, gammaTreatment, this);
+GrTexture* SkImage_Generator::asTextureRef(GrContext* ctx, const GrTextureParams& params) const {
+    return fCache->lockAsTexture(ctx, params, this);
 }
 
 sk_sp<SkImage> SkImage_Generator::onMakeSubset(const SkIRect& subset) const {
@@ -86,7 +78,7 @@ sk_sp<SkImage> SkImage_Generator::onMakeSubset(const SkIRect& subset) const {
     // For now, we do effectively what we did before, make it a raster
 
     const SkImageInfo info = SkImageInfo::MakeN32(subset.width(), subset.height(),
-                                                  this->alphaType());
+                                      this->isOpaque() ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
     auto surface(SkSurface::MakeRaster(info));
     if (!surface) {
         return nullptr;

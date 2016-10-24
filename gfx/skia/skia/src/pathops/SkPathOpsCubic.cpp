@@ -212,9 +212,6 @@ bool SkDCubic::hullIntersects(const SkDConic& conic, bool* isLinear) const {
 }
 
 bool SkDCubic::isLinear(int startIndex, int endIndex) const {
-    if (fPts[0].approximatelyDEqual(fPts[3]))  {
-        return ((const SkDQuad *) this)->isLinear(0, 2);
-    }
     SkLineParameters lineParameters;
     lineParameters.cubicEndPoints(*this, startIndex, endIndex);
     // FIXME: maybe it's possible to avoid this and compare non-normalized
@@ -243,12 +240,12 @@ bool SkDCubic::ComplexBreak(const SkPoint pointsPtr[4], SkScalar* t) {
         SkScalar lt = 2.f * d[0];
         SkScalar ms = d[1] + tempSqrt;
         SkScalar mt = 2.f * d[0];
-        if (roughly_between(0, ls, lt) && roughly_between(0, ms, mt)) {
+        if (between(0, ls, lt) || between(0, ms, mt)) {
             ls = ls / lt;
             ms = ms / mt;
-            SkASSERT(roughly_between(0, ls, 1) && roughly_between(0, ms, 1));
-            *t = (ls + ms) / 2;
-            SkASSERT(roughly_between(0, *t, 1));
+            SkScalar smaller = SkTMax(0.f, SkTMin(ls, ms));
+            SkScalar larger = SkTMin(1.f, SkTMax(ls, ms));
+            *t = (smaller + larger) / 2;
             return *t > 0 && *t < 1;
         }
     } else if (kSerpentine_SkCubicType == cubicType || kCusp_SkCubicType == cubicType) {
@@ -280,7 +277,7 @@ bool SkDCubic::ComplexBreak(const SkPoint pointsPtr[4], SkScalar* t) {
             for (int index = 0; index < roots; ++index) {
                 if (between(inflectionTs[0], maxCurvature[index], inflectionTs[1])) {
                     *t = maxCurvature[index];
-                    return *t > 0 && *t < 1;
+                    return true;
                 }
             }
         } else if (infTCount == 1) {
@@ -313,7 +310,6 @@ int SkDCubic::searchRoots(double extremeTs[6], int extrema, double axisIntercept
     extrema += findInflections(&extremeTs[extrema]);
     extremeTs[extrema++] = 0;
     extremeTs[extrema] = 1;
-    SkASSERT(extrema < 6);
     SkTQSort(extremeTs, extremeTs + extrema);
     int validCount = 0;
     for (int index = 0; index < extrema; ) {
@@ -324,9 +320,6 @@ int SkDCubic::searchRoots(double extremeTs[6], int extrema, double axisIntercept
         }
         double newT = binarySearch(min, max, axisIntercept, xAxis);
         if (newT >= 0) {
-            if (validCount >= 3) {
-                return 0;
-            }
             validRoots[validCount++] = newT;
         }
     }
@@ -426,8 +419,7 @@ int SkDCubic::RootsReal(double A, double B, double C, double D, double s[3]) {
     double r;
     double* roots = s;
     if (R2MinusQ3 < 0) {   // we have 3 real roots
-        // the divide/root can, due to finite precisions, be slightly outside of -1...1
-        double theta = acos(SkTPin(R / sqrt(Q3), -1., 1.));
+        double theta = acos(R / sqrt(Q3));
         double neg2RootQ = -2 * sqrt(Q);
 
         r = neg2RootQ * cos(theta / 3) - adiv3;

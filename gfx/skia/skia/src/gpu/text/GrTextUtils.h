@@ -18,6 +18,7 @@ class GrBatchTextStrike;
 class GrClip;
 class GrContext;
 class GrDrawContext;
+class GrFontScaler;
 class GrShaderCaps;
 class SkGlyph;
 class SkMatrix;
@@ -37,13 +38,13 @@ public:
     static void DrawBmpText(GrAtlasTextBlob*, int runIndex,
                             GrBatchFontCache*, const SkSurfaceProps&,
                             const SkPaint&,
-                            GrColor, uint32_t scalerContextFlags, const SkMatrix& viewMatrix,
+                            GrColor, SkPaint::FakeGamma, const SkMatrix& viewMatrix,
                             const char text[], size_t byteLength,
                             SkScalar x, SkScalar y);
 
     static void DrawBmpPosText(GrAtlasTextBlob*, int runIndex,
                                GrBatchFontCache*, const SkSurfaceProps&, const SkPaint&,
-                               GrColor, uint32_t scalerContextFlags, const SkMatrix& viewMatrix,
+                               GrColor, SkPaint::FakeGamma, const SkMatrix& viewMatrix,
                                const char text[], size_t byteLength,
                                const SkScalar pos[], int scalarsPerPosition,
                                const SkPoint& offset);
@@ -54,15 +55,14 @@ public:
 
     static void DrawDFText(GrAtlasTextBlob* blob, int runIndex,
                            GrBatchFontCache*, const SkSurfaceProps&,
-                           const SkPaint& skPaint, GrColor color, uint32_t scalerContextFlags,
+                           const SkPaint& skPaint, GrColor color, SkPaint::FakeGamma,
                            const SkMatrix& viewMatrix,
                            const char text[], size_t byteLength,
                            SkScalar x, SkScalar y);
 
     static void DrawDFPosText(GrAtlasTextBlob* blob, int runIndex,
                               GrBatchFontCache*, const SkSurfaceProps&, const SkPaint&,
-                              GrColor color, uint32_t scalerContextFlags,
-                              const SkMatrix& viewMatrix,
+                              GrColor color, SkPaint::FakeGamma, const SkMatrix& viewMatrix,
                               const char text[], size_t byteLength,
                               const SkScalar pos[], int scalarsPerPosition,
                               const SkPoint& offset);
@@ -84,6 +84,7 @@ public:
 
     static bool ShouldDisableLCD(const SkPaint& paint);
 
+    static GrFontScaler* GetGrFontScaler(SkGlyphCache* cache);
     static uint32_t FilterTextFlags(const SkSurfaceProps& surfaceProps, const SkPaint& paint);
 
 private:
@@ -94,12 +95,12 @@ private:
 
     static void BmpAppendGlyph(GrAtlasTextBlob*, int runIndex, GrBatchFontCache*,
                                GrBatchTextStrike**, const SkGlyph&, int left, int top,
-                               GrColor color, SkGlyphCache*);
+                               GrColor color, GrFontScaler*);
 
     static bool DfAppendGlyph(GrAtlasTextBlob*, int runIndex, GrBatchFontCache*,
                               GrBatchTextStrike**, const SkGlyph&,
                               SkScalar sx, SkScalar sy, GrColor color,
-                              SkGlyphCache* cache,
+                              GrFontScaler* scaler,
                               SkScalar textRatio, const SkMatrix& viewMatrix);
 };
 

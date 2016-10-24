@@ -16,46 +16,39 @@ GrPaint::GrPaint()
     : fAntiAlias(false)
     , fDisableOutputConversionToSRGB(false)
     , fAllowSRGBInputs(false)
-    , fUsesDistanceVectorField(false)
-    , fColor(GrColor4f::FromGrColor(GrColor_WHITE)) {}
+    , fColor(GrColor_WHITE) {}
 
 void GrPaint::setCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage) {
-    fXPFactory = GrCoverageSetOpXPFactory::Make(regionOp, invertCoverage);
+    fXPFactory.reset(GrCoverageSetOpXPFactory::Create(regionOp, invertCoverage));
 }
 
-void GrPaint::addColorTextureProcessor(GrTexture* texture,
-                                       sk_sp<GrColorSpaceXform> colorSpaceXform,
-                                       const SkMatrix& matrix) {
-    this->addColorFragmentProcessor(GrSimpleTextureEffect::Make(texture,
-                                                                std::move(colorSpaceXform),
-                                                                matrix));
+void GrPaint::addColorTextureProcessor(GrTexture* texture, const SkMatrix& matrix) {
+    this->addColorFragmentProcessor(GrSimpleTextureEffect::Create(texture, matrix))->unref();
 }
 
 void GrPaint::addCoverageTextureProcessor(GrTexture* texture, const SkMatrix& matrix) {
-    this->addCoverageFragmentProcessor(GrSimpleTextureEffect::Make(texture, nullptr, matrix));
+    this->addCoverageFragmentProcessor(GrSimpleTextureEffect::Create(texture, matrix))->unref();
 }
 
 void GrPaint::addColorTextureProcessor(GrTexture* texture,
-                                       sk_sp<GrColorSpaceXform> colorSpaceXform,
                                        const SkMatrix& matrix,
                                        const GrTextureParams& params) {
-    this->addColorFragmentProcessor(GrSimpleTextureEffect::Make(texture,
-                                                                std::move(colorSpaceXform),
-                                                                matrix, params));
+    this->addColorFragmentProcessor(GrSimpleTextureEffect::Create(texture,
+                                                                  matrix, params))->unref();
 }
 
 void GrPaint::addCoverageTextureProcessor(GrTexture* texture,
                                           const SkMatrix& matrix,
                                           const GrTextureParams& params) {
-    this->addCoverageFragmentProcessor(GrSimpleTextureEffect::Make(texture, nullptr, matrix,
-                                                                   params));
+    this->addCoverageFragmentProcessor(GrSimpleTextureEffect::Create(texture,
+                                                                     matrix, params))->unref();
 }
 
-bool GrPaint::internalIsConstantBlendedColor(GrColor paintColor, GrColor* color) const {
+bool GrPaint::isConstantBlendedColor(GrColor* color) const {
     GrProcOptInfo colorProcInfo;
-    colorProcInfo.calcWithInitialValues(
-        sk_sp_address_as_pointer_address(fColorFragmentProcessors.begin()),
-        this->numColorFragmentProcessors(), paintColor, kRGBA_GrColorComponentFlags, false);
+    colorProcInfo.calcWithInitialValues(fColorFragmentProcessors.begin(),
+                                        this->numColorFragmentProcessors(), fColor,
+                                        kRGBA_GrColorComponentFlags, false);
 
     GrXPFactory::InvariantBlendedColor blendedColor;
     if (fXPFactory) {

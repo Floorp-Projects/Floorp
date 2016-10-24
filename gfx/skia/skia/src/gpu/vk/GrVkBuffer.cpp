@@ -20,7 +20,7 @@
 
 const GrVkBuffer::Resource* GrVkBuffer::Create(const GrVkGpu* gpu, const Desc& desc) {
     VkBuffer       buffer;
-    GrVkAlloc      alloc;
+    VkDeviceMemory alloc;
 
     // create the buffer object
     VkBufferCreateInfo bufInfo;
@@ -29,26 +29,23 @@ const GrVkBuffer::Resource* GrVkBuffer::Create(const GrVkGpu* gpu, const Desc& d
     bufInfo.flags = 0;
     bufInfo.size = desc.fSizeInBytes;
     switch (desc.fType) {
-        case kVertex_Type:
-            bufInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-            break;
-        case kIndex_Type:
-            bufInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-            break;
-        case kUniform_Type:
-            bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-            break;
-        case kCopyRead_Type:
-            bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-            break;
-        case kCopyWrite_Type:
-            bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-            break;
-    }
-    if (!desc.fDynamic) {
-        bufInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-    }
+    case kVertex_Type:
+        bufInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        break;
+    case kIndex_Type:
+        bufInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        break;
+    case kUniform_Type:
+        bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        break;
+    case kCopyRead_Type:
+        bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        break;
+    case kCopyWrite_Type:
+        bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        break;
 
+    }
     bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bufInfo.queueFamilyIndexCount = 0;
     bufInfo.pQueueFamilyIndices = nullptr;
@@ -59,23 +56,36 @@ const GrVkBuffer::Resource* GrVkBuffer::Create(const GrVkGpu* gpu, const Desc& d
         return nullptr;
     }
 
+    VkMemoryPropertyFlags requiredMemProps = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
+                                             VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+
     if (!GrVkMemory::AllocAndBindBufferMemory(gpu,
                                               buffer,
-                                              desc.fType,
-                                              desc.fDynamic,
+                                              requiredMemProps,
                                               &alloc)) {
-        return nullptr;
+        // Try again without requiring host cached memory
+        requiredMemProps = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                           VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        if (!GrVkMemory::AllocAndBindBufferMemory(gpu,
+                                                  buffer,
+                                                  requiredMemProps,
+                                                  &alloc)) {
+            VK_CALL(gpu, DestroyBuffer(gpu->device(), buffer, nullptr));
+            return nullptr;
+        }
     }
 
-    const GrVkBuffer::Resource* resource = new GrVkBuffer::Resource(buffer, alloc, desc.fType);
+    const GrVkBuffer::Resource* resource = new GrVkBuffer::Resource(buffer, alloc);
     if (!resource) {
         VK_CALL(gpu, DestroyBuffer(gpu->device(), buffer, nullptr));
-        GrVkMemory::FreeBufferMemory(gpu, desc.fType, alloc);
+        VK_CALL(gpu, FreeMemory(gpu->device(), alloc, nullptr));
         return nullptr;
     }
 
     return resource;
 }
+
 
 void GrVkBuffer::addMemoryBarrier(const GrVkGpu* gpu,
                                   VkAccessFlags srcAccessMask,
@@ -101,14 +111,14 @@ void GrVkBuffer::addMemoryBarrier(const GrVkGpu* gpu,
 
 void GrVkBuffer::Resource::freeGPUData(const GrVkGpu* gpu) const {
     SkASSERT(fBuffer);
-    SkASSERT(fAlloc.fMemory);
+    SkASSERT(fAlloc);
     VK_CALL(gpu, DestroyBuffer(gpu->device(), fBuffer, nullptr));
-    GrVkMemory::FreeBufferMemory(gpu, fType, fAlloc);
+    VK_CALL(gpu, FreeMemory(gpu->device(), fAlloc, nullptr));
 }
 
 void GrVkBuffer::vkRelease(const GrVkGpu* gpu) {
     VALIDATE();
-    fResource->recycle(const_cast<GrVkGpu*>(gpu));
+    fResource->unref(gpu);
     fResource = nullptr;
     fMapPtr = nullptr;
     VALIDATE();
@@ -116,82 +126,36 @@ void GrVkBuffer::vkRelease(const GrVkGpu* gpu) {
 
 void GrVkBuffer::vkAbandon() {
     fResource->unrefAndAbandon();
-    fResource = nullptr;
     fMapPtr = nullptr;
     VALIDATE();
 }
 
-VkAccessFlags buffer_type_to_access_flags(GrVkBuffer::Type type) {
-    switch (type) {
-        case GrVkBuffer::kIndex_Type:
-            return VK_ACCESS_INDEX_READ_BIT;
-        case GrVkBuffer::kVertex_Type:
-            return VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
-        default:
-            // This helper is only called for static buffers so we should only ever see index or
-            // vertex buffers types
-            SkASSERT(false);
-            return 0;
-    }
-}
-
-void GrVkBuffer::internalMap(GrVkGpu* gpu, size_t size, bool* createdNewBuffer) {
+void* GrVkBuffer::vkMap(const GrVkGpu* gpu) {
     VALIDATE();
     SkASSERT(!this->vkIsMapped());
 
     if (!fResource->unique()) {
-        if (fDesc.fDynamic) {
-            // in use by the command buffer, so we need to create a new one
-            fResource->recycle(gpu);
-            fResource = this->createResource(gpu, fDesc);
-            if (createdNewBuffer) {
-                *createdNewBuffer = true;
-            }
-        } else {
-            SkASSERT(fMapPtr);
-            this->addMemoryBarrier(gpu,
-                                   buffer_type_to_access_flags(fDesc.fType),
-                                   VK_ACCESS_TRANSFER_WRITE_BIT,
-                                   VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
-                                   VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                   false);
-        }
+        // in use by the command buffer, so we need to create a new one
+        fResource->unref(gpu);
+        fResource = Create(gpu, fDesc);
     }
 
-    if (fDesc.fDynamic) {
-        const GrVkAlloc& alloc = this->alloc();
-        VkResult err = VK_CALL(gpu, MapMemory(gpu->device(), alloc.fMemory,
-                                              alloc.fOffset + fOffset,
-                                              size, 0, &fMapPtr));
-        if (err) {
-            fMapPtr = nullptr;
-        }
-    } else {
-        if (!fMapPtr) {
-            fMapPtr = new unsigned char[this->size()];
-        }
+    VkResult err = VK_CALL(gpu, MapMemory(gpu->device(), alloc(), 0, VK_WHOLE_SIZE, 0, &fMapPtr));
+    if (err) {
+        fMapPtr = nullptr;
     }
 
     VALIDATE();
+    return fMapPtr;
 }
 
-void GrVkBuffer::internalUnmap(GrVkGpu* gpu, size_t size) {
+void GrVkBuffer::vkUnmap(const GrVkGpu* gpu) {
     VALIDATE();
     SkASSERT(this->vkIsMapped());
 
-    if (fDesc.fDynamic) {
-        GrVkMemory::FlushMappedAlloc(gpu, this->alloc());
-        VK_CALL(gpu, UnmapMemory(gpu->device(), this->alloc().fMemory));
-        fMapPtr = nullptr;
-    } else {
-        gpu->updateBuffer(this, fMapPtr, this->offset(), size);
-        this->addMemoryBarrier(gpu,
-                               VK_ACCESS_TRANSFER_WRITE_BIT,
-                               buffer_type_to_access_flags(fDesc.fType),
-                               VK_PIPELINE_STAGE_TRANSFER_BIT,
-                               VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
-                               false);
-    }
+    VK_CALL(gpu, UnmapMemory(gpu->device(), alloc()));
+
+    fMapPtr = nullptr;
 }
 
 bool GrVkBuffer::vkIsMapped() const {
@@ -199,20 +163,29 @@ bool GrVkBuffer::vkIsMapped() const {
     return SkToBool(fMapPtr);
 }
 
-bool GrVkBuffer::vkUpdateData(GrVkGpu* gpu, const void* src, size_t srcSizeInBytes,
-                              bool* createdNewBuffer) {
+bool GrVkBuffer::vkUpdateData(const GrVkGpu* gpu, const void* src, size_t srcSizeInBytes) {
+    SkASSERT(!this->vkIsMapped());
+    VALIDATE();
     if (srcSizeInBytes > fDesc.fSizeInBytes) {
         return false;
     }
 
-    this->internalMap(gpu, srcSizeInBytes, createdNewBuffer);
-    if (!fMapPtr) {
+    if (!fResource->unique()) {
+        // in use by the command buffer, so we need to create a new one
+        fResource->unref(gpu);
+        fResource = Create(gpu, fDesc);
+    }
+
+    void* mapPtr;
+    VkResult err = VK_CALL(gpu, MapMemory(gpu->device(), alloc(), 0, srcSizeInBytes, 0, &mapPtr));
+
+    if (VK_SUCCESS != err) {
         return false;
     }
 
-    memcpy(fMapPtr, src, srcSizeInBytes);
+    memcpy(mapPtr, src, srcSizeInBytes);
 
-    this->internalUnmap(gpu, srcSizeInBytes);
+    VK_CALL(gpu, UnmapMemory(gpu->device(), alloc()));
 
     return true;
 }

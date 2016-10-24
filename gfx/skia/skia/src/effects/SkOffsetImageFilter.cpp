@@ -15,16 +15,6 @@
 #include "SkSpecialSurface.h"
 #include "SkWriteBuffer.h"
 
-sk_sp<SkImageFilter> SkOffsetImageFilter::Make(SkScalar dx, SkScalar dy,
-                                               sk_sp<SkImageFilter> input,
-                                               const CropRect* cropRect) {
-    if (!SkScalarIsFinite(dx) || !SkScalarIsFinite(dy)) {
-        return nullptr;
-    }
-
-    return sk_sp<SkImageFilter>(new SkOffsetImageFilter(dx, dy, std::move(input), cropRect));
-}
-
 sk_sp<SkSpecialImage> SkOffsetImageFilter::onFilterImage(SkSpecialImage* source,
                                                          const Context& ctx,
                                                          SkIPoint* offset) const {
@@ -49,7 +39,9 @@ sk_sp<SkSpecialImage> SkOffsetImageFilter::onFilterImage(SkSpecialImage* source,
             return nullptr;
         }
 
-        sk_sp<SkSpecialSurface> surf(source->makeSurface(ctx.outputProperties(), bounds.size()));
+        SkImageInfo info = SkImageInfo::MakeN32(bounds.width(), bounds.height(),
+                                                kPremul_SkAlphaType);
+        sk_sp<SkSpecialSurface> surf(source->makeSurface(info));
         if (!surf) {
             return nullptr;
         }
@@ -61,7 +53,7 @@ sk_sp<SkSpecialImage> SkOffsetImageFilter::onFilterImage(SkSpecialImage* source,
         canvas->clear(0x0);
 
         SkPaint paint;
-        paint.setBlendMode(SkBlendMode::kSrc);
+        paint.setXfermodeMode(SkXfermode::kSrc_Mode);
         canvas->translate(SkIntToScalar(srcOffset.fX - bounds.fLeft),
                           SkIntToScalar(srcOffset.fY - bounds.fTop));
 

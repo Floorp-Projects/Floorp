@@ -7,7 +7,6 @@
 
 #include "GrCaps.h"
 #include "GrContextOptions.h"
-#include "GrWindowRectangles.h"
 
 GrShaderCaps::GrShaderCaps() {
     fShaderDerivativeSupport = false;
@@ -16,7 +15,6 @@ GrShaderCaps::GrShaderCaps() {
     fDstReadInShaderSupport = false;
     fDualSourceBlendingSupport = false;
     fIntegerSupport = false;
-    fTexelBufferSupport = false;
     fShaderPrecisionVaries = false;
 }
 
@@ -53,7 +51,6 @@ SkString GrShaderCaps::dump() const {
     r.appendf("Dst Read In Shader Support         : %s\n", gNY[fDstReadInShaderSupport]);
     r.appendf("Dual Source Blending Support       : %s\n", gNY[fDualSourceBlendingSupport]);
     r.appendf("Integer Support                    : %s\n", gNY[fIntegerSupport]);
-    r.appendf("Texel Buffer Support               : %s\n", gNY[fTexelBufferSupport]);
 
     r.appendf("Shader Float Precisions (varies: %s):\n", gNY[fShaderPrecisionVaries]);
 
@@ -86,7 +83,6 @@ GrCaps::GrCaps(const GrContextOptions& options) {
     fMipMapSupport = false;
     fNPOTTextureTileSupport = false;
     fSRGBSupport = false;
-    fSRGBWriteControl = false;
     fTwoSidedStencilSupport = false;
     fStencilWrapOpsSupport = false;
     fDiscardRenderTargetSupport = false;
@@ -97,17 +93,13 @@ GrCaps::GrCaps(const GrContextOptions& options) {
     fOversizedStencilSupport = false;
     fTextureBarrierSupport = false;
     fSampleLocationsSupport = false;
-    fMultisampleDisableSupport = false;
     fUsesMixedSamples = false;
-    fPreferClientSideDynamicBuffers = false;
+    fSupportsInstancedDraws = false;
     fFullClearIsFree = false;
     fMustClearUploadedBufferData = false;
     fSampleShadingSupport = false;
-    fFenceSyncSupport = false;
 
     fUseDrawInsteadOfClear = false;
-
-    fInstancedSupport = InstancedSupport::kNone;
 
     fBlendEquationSupport = kBasic_BlendEquationSupport;
     fAdvBlendEqBlacklist = 0;
@@ -120,20 +112,18 @@ GrCaps::GrCaps(const GrContextOptions& options) {
     fMaxColorSampleCount = 0;
     fMaxStencilSampleCount = 0;
     fMaxRasterSamples = 0;
-    fMaxWindowRectangles = 0;
 
     fSuppressPrints = options.fSuppressPrints;
     fImmediateFlush = options.fImmediateMode;
+    fDrawPathMasksToCompressedTextureSupport = options.fDrawPathToCompressedTexture;
     fBufferMapThreshold = options.fBufferMapThreshold;
     fUseDrawInsteadOfPartialRenderTargetWrite = options.fUseDrawInsteadOfPartialRenderTargetWrite;
     fUseDrawInsteadOfAllRenderTargetWrites = false;
-    fAvoidInstancedDrawsToFPTargets = false;
 
     fPreferVRAMUseOverFlushes = true;
 }
 
 void GrCaps::applyOptionsOverrides(const GrContextOptions& options) {
-    this->onApplyOptionsOverrides(options);
     fMaxTextureSize = SkTMin(fMaxTextureSize, options.fMaxTextureSizeOverride);
     // If the max tile override is zero, it means we should use the max texture size.
     if (!options.fMaxTileSizeOverride || options.fMaxTileSizeOverride > fMaxTextureSize) {
@@ -141,11 +131,7 @@ void GrCaps::applyOptionsOverrides(const GrContextOptions& options) {
     } else {
         fMaxTileSize = options.fMaxTileSizeOverride;
     }
-    if (fMaxWindowRectangles > GrWindowRectangles::kMaxWindows) {
-        SkDebugf("WARNING: capping window rectangles at %i. HW advertises support for %i.\n",
-                 GrWindowRectangles::kMaxWindows, fMaxWindowRectangles);
-        fMaxWindowRectangles = GrWindowRectangles::kMaxWindows;
-    }
+    this->onApplyOptionsOverrides(options);
 }
 
 static SkString map_flags_to_string(uint32_t flags) {
@@ -174,7 +160,6 @@ SkString GrCaps::dump() const {
     r.appendf("MIP Map Support                    : %s\n", gNY[fMipMapSupport]);
     r.appendf("NPOT Texture Tile Support          : %s\n", gNY[fNPOTTextureTileSupport]);
     r.appendf("sRGB Support                       : %s\n", gNY[fSRGBSupport]);
-    r.appendf("sRGB Write Control                 : %s\n", gNY[fSRGBWriteControl]);
     r.appendf("Two Sided Stencil Support          : %s\n", gNY[fTwoSidedStencilSupport]);
     r.appendf("Stencil Wrap Ops  Support          : %s\n", gNY[fStencilWrapOpsSupport]);
     r.appendf("Discard Render Target Support      : %s\n", gNY[fDiscardRenderTargetSupport]);
@@ -185,14 +170,10 @@ SkString GrCaps::dump() const {
     r.appendf("Oversized Stencil Support          : %s\n", gNY[fOversizedStencilSupport]);
     r.appendf("Texture Barrier Support            : %s\n", gNY[fTextureBarrierSupport]);
     r.appendf("Sample Locations Support           : %s\n", gNY[fSampleLocationsSupport]);
-    r.appendf("Multisample disable support        : %s\n", gNY[fMultisampleDisableSupport]);
     r.appendf("Uses Mixed Samples                 : %s\n", gNY[fUsesMixedSamples]);
-    r.appendf("Prefer client-side dynamic buffers : %s\n", gNY[fPreferClientSideDynamicBuffers]);
+    r.appendf("Supports instanced draws           : %s\n", gNY[fSupportsInstancedDraws]);
     r.appendf("Full screen clear is free          : %s\n", gNY[fFullClearIsFree]);
     r.appendf("Must clear buffer memory           : %s\n", gNY[fMustClearUploadedBufferData]);
-    r.appendf("Sample shading support             : %s\n", gNY[fSampleShadingSupport]);
-    r.appendf("Fence sync support                 : %s\n", gNY[fFenceSyncSupport]);
-
     r.appendf("Draw Instead of Clear [workaround] : %s\n", gNY[fUseDrawInsteadOfClear]);
     r.appendf("Draw Instead of TexSubImage [workaround] : %s\n",
               gNY[fUseDrawInsteadOfPartialRenderTargetWrite]);
@@ -208,22 +189,6 @@ SkString GrCaps::dump() const {
     r.appendf("Max Color Sample Count             : %d\n", fMaxColorSampleCount);
     r.appendf("Max Stencil Sample Count           : %d\n", fMaxStencilSampleCount);
     r.appendf("Max Raster Samples                 : %d\n", fMaxRasterSamples);
-    r.appendf("Max Window Rectangles              : %d\n", fMaxWindowRectangles);
-
-    static const char* kInstancedSupportNames[] = {
-        "None",
-        "Basic",
-        "Multisampled",
-        "Mixed Sampled",
-    };
-    GR_STATIC_ASSERT(0 == (int)InstancedSupport::kNone);
-    GR_STATIC_ASSERT(1 == (int)InstancedSupport::kBasic);
-    GR_STATIC_ASSERT(2 == (int)InstancedSupport::kMultisampled);
-    GR_STATIC_ASSERT(3 == (int)InstancedSupport::kMixedSampled);
-    GR_STATIC_ASSERT(4 == SK_ARRAY_COUNT(kInstancedSupportNames));
-
-    r.appendf("Instanced Support                  : %s\n",
-              kInstancedSupportNames[(int)fInstancedSupport]);
 
     static const char* kBlendEquationSupportNames[] = {
         "Basic",

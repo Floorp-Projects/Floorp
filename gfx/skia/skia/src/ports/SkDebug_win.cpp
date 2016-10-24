@@ -5,16 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
 
+
+#include "SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN32)
 
-#include "SkLeanWindows.h"
+static const size_t kBufferSize = 2048;
 
 #include <stdarg.h>
 #include <stdio.h>
-
-static const size_t kBufferSize = 2048;
+#include <windows.h>
 
 void SkDebugf(const char format[], ...) {
     char    buffer[kBufferSize + 1];

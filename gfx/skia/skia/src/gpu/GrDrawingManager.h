@@ -8,12 +8,10 @@
 #ifndef GrDrawingManager_DEFINED
 #define GrDrawingManager_DEFINED
 
-#include "text/GrAtlasTextContext.h"
 #include "GrDrawTarget.h"
 #include "GrBatchFlushState.h"
 #include "GrPathRendererChain.h"
 #include "GrPathRenderer.h"
-#include "GrResourceCache.h"
 #include "SkTDArray.h"
 
 class GrContext;
@@ -30,12 +28,10 @@ class GrDrawingManager {
 public:
     ~GrDrawingManager();
 
-    bool wasAbandoned() const { return fAbandoned; }
+    bool abandoned() const { return fAbandoned; }
     void freeGpuResources();
 
-    sk_sp<GrDrawContext> makeDrawContext(sk_sp<GrRenderTarget> rt,
-                                         sk_sp<SkColorSpace>,
-                                         const SkSurfaceProps*);
+    GrDrawContext* drawContext(GrRenderTarget* rt, const SkSurfaceProps*);
 
     // The caller automatically gets a ref on the returned drawTarget. It must
     // be balanced by an unref call.
@@ -43,72 +39,50 @@ public:
 
     GrContext* getContext() { return fContext; }
 
-    GrAtlasTextContext* getAtlasTextContext();
-
     GrPathRenderer* getPathRenderer(const GrPathRenderer::CanDrawPathArgs& args,
                                     bool allowSW,
                                     GrPathRendererChain::DrawType drawType,
                                     GrPathRenderer::StencilSupport* stencilSupport = NULL);
 
-    void flushIfNecessary() {
-        if (fContext->getResourceCache()->requestsFlush()) {
-            this->internalFlush(GrResourceCache::kCacheRequested);
-        } else if (fIsImmediateMode) {
-            this->internalFlush(GrResourceCache::kImmediateMode);
-        }
-    }
-
     static bool ProgramUnitTest(GrContext* context, int maxStages);
-
-    void prepareSurfaceForExternalIO(GrSurface*);
 
 private:
     GrDrawingManager(GrContext* context, const GrDrawTarget::Options& optionsForDrawTargets,
-                     const GrPathRendererChain::Options& optionsForPathRendererChain,
-                     bool isImmediateMode, GrSingleOwner* singleOwner)
+                     GrSingleOwner* singleOwner)
         : fContext(context)
         , fOptionsForDrawTargets(optionsForDrawTargets)
-        , fOptionsForPathRendererChain(optionsForPathRendererChain)
         , fSingleOwner(singleOwner)
         , fAbandoned(false)
-        , fAtlasTextContext(nullptr)
         , fPathRendererChain(nullptr)
         , fSoftwarePathRenderer(nullptr)
         , fFlushState(context->getGpu(), context->resourceProvider())
-        , fFlushing(false)
-        , fIsImmediateMode(isImmediateMode) {
+        , fFlushing(false) {
     }
 
     void abandon();
     void cleanup();
     void reset();
-    void flush() { this->internalFlush(GrResourceCache::FlushType::kExternal); }
-    void internalFlush(GrResourceCache::FlushType);
+    void flush();
 
     friend class GrContext;  // for access to: ctor, abandon, reset & flush
 
     static const int kNumPixelGeometries = 5; // The different pixel geometries
     static const int kNumDFTOptions = 2;      // DFT or no DFT
 
-    GrContext*                        fContext;
-    GrDrawTarget::Options             fOptionsForDrawTargets;
-    GrPathRendererChain::Options      fOptionsForPathRendererChain;
+    GrContext*                  fContext;
+    GrDrawTarget::Options       fOptionsForDrawTargets;
 
     // In debug builds we guard against improper thread handling
-    GrSingleOwner*                    fSingleOwner;
+    GrSingleOwner*              fSingleOwner;
 
-    bool                              fAbandoned;
-    SkTDArray<GrDrawTarget*>          fDrawTargets;
+    bool                        fAbandoned;
+    SkTDArray<GrDrawTarget*>    fDrawTargets;
 
-    SkAutoTDelete<GrAtlasTextContext> fAtlasTextContext;
+    GrPathRendererChain*        fPathRendererChain;
+    GrSoftwarePathRenderer*     fSoftwarePathRenderer;
 
-    GrPathRendererChain*              fPathRendererChain;
-    GrSoftwarePathRenderer*           fSoftwarePathRenderer;
-
-    GrBatchFlushState                 fFlushState;
-    bool                              fFlushing;
-
-    bool                              fIsImmediateMode;
+    GrBatchFlushState           fFlushState;
+    bool                        fFlushing;
 };
 
 #endif

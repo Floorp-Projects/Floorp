@@ -5,219 +5,159 @@
  * found in the LICENSE file.
  */
 
-#include "SkCpu.h"
 #include "SkHalf.h"
 #include "SkOnce.h"
 #include "SkOpts.h"
 
-#if defined(SK_ARM_HAS_NEON)
-    #if defined(SK_ARM_HAS_CRC32)
-        #define SK_OPTS_NS neon_and_crc32
-    #else
-        #define SK_OPTS_NS neon
-    #endif
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
-    #define SK_OPTS_NS avx2
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX
-    #define SK_OPTS_NS avx
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE42
-    #define SK_OPTS_NS sse42
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
-    #define SK_OPTS_NS sse41
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSSE3
-    #define SK_OPTS_NS ssse3
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE3
-    #define SK_OPTS_NS sse3
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-    #define SK_OPTS_NS sse2
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
-    #define SK_OPTS_NS sse
-#else
-    #define SK_OPTS_NS portable
-#endif
-
-#include "SkBlend_opts.h"
+#define SK_OPTS_NS sk_default
 #include "SkBlitMask_opts.h"
 #include "SkBlitRow_opts.h"
 #include "SkBlurImageFilter_opts.h"
-#include "SkChecksum_opts.h"
 #include "SkColorCubeFilter_opts.h"
+#include "SkMatrix_opts.h"
 #include "SkMorphologyImageFilter_opts.h"
-#include "SkRasterPipeline_opts.h"
 #include "SkSwizzler_opts.h"
 #include "SkTextureCompressor_opts.h"
 #include "SkXfermode_opts.h"
 
+namespace SK_OPTS_NS {
+    static void float_to_half(uint16_t dst[], const float src[], int n) {
+        while (n-->0) {
+            *dst++ = SkFloatToHalf(*src++);
+        }
+    }
+    static void half_to_float(float dst[], const uint16_t src[], int n) {
+        while (n-->0) {
+            *dst++ = SkHalfToFloat(*src++);
+        }
+    }
+}
+
+#if defined(SK_CPU_X86) && !defined(SK_BUILD_FOR_IOS)
+    #if defined(SK_BUILD_FOR_WIN32)
+        #include <intrin.h>
+        static void cpuid (uint32_t abcd[4]) { __cpuid  ((int*)abcd, 1);    }
+        static void cpuid7(uint32_t abcd[4]) { __cpuidex((int*)abcd, 7, 0); }
+        static uint64_t xgetbv(uint32_t xcr) { return _xgetbv(xcr); }
+    #else
+        #include <cpuid.h>
+        #if !defined(__cpuid_count)  // Old Mac Clang doesn't have this defined.
+            #define  __cpuid_count(eax, ecx, a, b, c, d) \
+                __asm__("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "0"(eax), "2"(ecx))
+        #endif
+        static void cpuid (uint32_t abcd[4]) { __get_cpuid(1, abcd+0, abcd+1, abcd+2, abcd+3); }
+        static void cpuid7(uint32_t abcd[4]) {
+            __cpuid_count(7, 0, abcd[0], abcd[1], abcd[2], abcd[3]);
+        }
+        static uint64_t xgetbv(uint32_t xcr) {
+            uint32_t eax, edx;
+            __asm__ __volatile__ ( "xgetbv" : "=a"(eax), "=d"(edx) : "c"(xcr));
+            return (uint64_t)(edx) << 32 | eax;
+        }
+    #endif
+#elif !defined(SK_ARM_HAS_NEON)      && \
+       defined(SK_CPU_ARM32)         && \
+       defined(SK_BUILD_FOR_ANDROID) && \
+      !defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
+    #ifdef MOZ_SKIA
+        #include "mozilla/arm.h"
+    #else
+        #include <cpu-features.h>
+    #endif
+#endif
+
 namespace SkOpts {
+
     // Define default function pointer values here...
     // If our global compile options are set high enough, these defaults might even be
     // CPU-specialized, e.g. a typical x86-64 machine might start with SSE2 defaults.
     // They'll still get a chance to be replaced with even better ones, e.g. using SSE4.1.
-#define DEFINE_DEFAULT(name) decltype(name) name = SK_OPTS_NS::name
-    DEFINE_DEFAULT(create_xfermode);
-    DEFINE_DEFAULT(color_cube_filter_span);
+    decltype(create_xfermode) create_xfermode = sk_default::create_xfermode;
+    decltype(color_cube_filter_span) color_cube_filter_span = sk_default::color_cube_filter_span;
 
-    DEFINE_DEFAULT(box_blur_xx);
-    DEFINE_DEFAULT(box_blur_xy);
-    DEFINE_DEFAULT(box_blur_yx);
+    decltype(box_blur_xx) box_blur_xx = sk_default::box_blur_xx;
+    decltype(box_blur_xy) box_blur_xy = sk_default::box_blur_xy;
+    decltype(box_blur_yx) box_blur_yx = sk_default::box_blur_yx;
 
-    DEFINE_DEFAULT(dilate_x);
-    DEFINE_DEFAULT(dilate_y);
-    DEFINE_DEFAULT( erode_x);
-    DEFINE_DEFAULT( erode_y);
+    decltype(dilate_x) dilate_x = sk_default::dilate_x;
+    decltype(dilate_y) dilate_y = sk_default::dilate_y;
+    decltype( erode_x)  erode_x = sk_default::erode_x;
+    decltype( erode_y)  erode_y = sk_default::erode_y;
 
-    DEFINE_DEFAULT(texture_compressor);
-    DEFINE_DEFAULT(fill_block_dimensions);
+    decltype(texture_compressor)       texture_compressor = sk_default::texture_compressor;
+    decltype(fill_block_dimensions) fill_block_dimensions = sk_default::fill_block_dimensions;
 
-    DEFINE_DEFAULT(blit_mask_d32_a8);
+    decltype(blit_mask_d32_a8) blit_mask_d32_a8 = sk_default::blit_mask_d32_a8;
 
-    DEFINE_DEFAULT(blit_row_color32);
-    DEFINE_DEFAULT(blit_row_s32a_opaque);
+    decltype(blit_row_color32)     blit_row_color32     = sk_default::blit_row_color32;
+    decltype(blit_row_s32a_opaque) blit_row_s32a_opaque = sk_default::blit_row_s32a_opaque;
 
-    DEFINE_DEFAULT(RGBA_to_BGRA);
-    DEFINE_DEFAULT(RGBA_to_rgbA);
-    DEFINE_DEFAULT(RGBA_to_bgrA);
-    DEFINE_DEFAULT(RGB_to_RGB1);
-    DEFINE_DEFAULT(RGB_to_BGR1);
-    DEFINE_DEFAULT(gray_to_RGB1);
-    DEFINE_DEFAULT(grayA_to_RGBA);
-    DEFINE_DEFAULT(grayA_to_rgbA);
-    DEFINE_DEFAULT(inverted_CMYK_to_RGB1);
-    DEFINE_DEFAULT(inverted_CMYK_to_BGR1);
+    decltype(matrix_translate)       matrix_translate       = sk_default::matrix_translate;
+    decltype(matrix_scale_translate) matrix_scale_translate = sk_default::matrix_scale_translate;
+    decltype(matrix_affine)          matrix_affine          = sk_default::matrix_affine;
 
-    DEFINE_DEFAULT(srcover_srgb_srgb);
+    decltype(RGBA_to_BGRA)          RGBA_to_BGRA          = sk_default::RGBA_to_BGRA;
+    decltype(RGBA_to_rgbA)          RGBA_to_rgbA          = sk_default::RGBA_to_rgbA;
+    decltype(RGBA_to_bgrA)          RGBA_to_bgrA          = sk_default::RGBA_to_bgrA;
+    decltype(RGB_to_RGB1)           RGB_to_RGB1           = sk_default::RGB_to_RGB1;
+    decltype(RGB_to_BGR1)           RGB_to_BGR1           = sk_default::RGB_to_BGR1;
+    decltype(gray_to_RGB1)          gray_to_RGB1          = sk_default::gray_to_RGB1;
+    decltype(grayA_to_RGBA)         grayA_to_RGBA         = sk_default::grayA_to_RGBA;
+    decltype(grayA_to_rgbA)         grayA_to_rgbA         = sk_default::grayA_to_rgbA;
+    decltype(inverted_CMYK_to_RGB1) inverted_CMYK_to_RGB1 = sk_default::inverted_CMYK_to_RGB1;
+    decltype(inverted_CMYK_to_BGR1) inverted_CMYK_to_BGR1 = sk_default::inverted_CMYK_to_BGR1;
 
-    DEFINE_DEFAULT(hash_fn);
-#undef DEFINE_DEFAULT
-
-    // TODO: might be nice to only create one instance of tail-insensitive stages.
-
-    SkRasterPipeline::Fn stages_4[] = {
-        stage_4<SK_OPTS_NS::store_565 , false>,
-        stage_4<SK_OPTS_NS::store_srgb, false>,
-        stage_4<SK_OPTS_NS::store_f16 , false>,
-
-        stage_4<SK_OPTS_NS::load_s_565 , true>,
-        stage_4<SK_OPTS_NS::load_s_srgb, true>,
-        stage_4<SK_OPTS_NS::load_s_f16 , true>,
-
-        stage_4<SK_OPTS_NS::load_d_565 , true>,
-        stage_4<SK_OPTS_NS::load_d_srgb, true>,
-        stage_4<SK_OPTS_NS::load_d_f16 , true>,
-
-        stage_4<SK_OPTS_NS::scale_u8, true>,
-
-        stage_4<SK_OPTS_NS::lerp_u8            , true>,
-        stage_4<SK_OPTS_NS::lerp_565           , true>,
-        stage_4<SK_OPTS_NS::lerp_constant_float, true>,
-
-        stage_4<SK_OPTS_NS::constant_color, true>,
-
-        SK_OPTS_NS::dst,
-        SK_OPTS_NS::dstatop,
-        SK_OPTS_NS::dstin,
-        SK_OPTS_NS::dstout,
-        SK_OPTS_NS::dstover,
-        SK_OPTS_NS::srcatop,
-        SK_OPTS_NS::srcin,
-        SK_OPTS_NS::srcout,
-        SK_OPTS_NS::srcover,
-        SK_OPTS_NS::clear,
-        SK_OPTS_NS::modulate,
-        SK_OPTS_NS::multiply,
-        SK_OPTS_NS::plus_,
-        SK_OPTS_NS::screen,
-        SK_OPTS_NS::xor_,
-        SK_OPTS_NS::colorburn,
-        SK_OPTS_NS::colordodge,
-        SK_OPTS_NS::darken,
-        SK_OPTS_NS::difference,
-        SK_OPTS_NS::exclusion,
-        SK_OPTS_NS::hardlight,
-        SK_OPTS_NS::lighten,
-        SK_OPTS_NS::overlay,
-        SK_OPTS_NS::softlight,
-    };
-    static_assert(SK_ARRAY_COUNT(stages_4) == SkRasterPipeline::kNumStockStages, "");
-
-    SkRasterPipeline::Fn stages_1_3[] = {
-        stage_1_3<SK_OPTS_NS::store_565 , false>,
-        stage_1_3<SK_OPTS_NS::store_srgb, false>,
-        stage_1_3<SK_OPTS_NS::store_f16 , false>,
-
-        stage_1_3<SK_OPTS_NS::load_s_565 , true>,
-        stage_1_3<SK_OPTS_NS::load_s_srgb, true>,
-        stage_1_3<SK_OPTS_NS::load_s_f16 , true>,
-
-        stage_1_3<SK_OPTS_NS::load_d_565 , true>,
-        stage_1_3<SK_OPTS_NS::load_d_srgb, true>,
-        stage_1_3<SK_OPTS_NS::load_d_f16 , true>,
-
-        stage_1_3<SK_OPTS_NS::scale_u8, true>,
-
-        stage_1_3<SK_OPTS_NS::lerp_u8            , true>,
-        stage_1_3<SK_OPTS_NS::lerp_565           , true>,
-        stage_1_3<SK_OPTS_NS::lerp_constant_float, true>,
-
-        stage_1_3<SK_OPTS_NS::constant_color, true>,
-
-        SK_OPTS_NS::dst,
-        SK_OPTS_NS::dstatop,
-        SK_OPTS_NS::dstin,
-        SK_OPTS_NS::dstout,
-        SK_OPTS_NS::dstover,
-        SK_OPTS_NS::srcatop,
-        SK_OPTS_NS::srcin,
-        SK_OPTS_NS::srcout,
-        SK_OPTS_NS::srcover,
-        SK_OPTS_NS::clear,
-        SK_OPTS_NS::modulate,
-        SK_OPTS_NS::multiply,
-        SK_OPTS_NS::plus_,
-        SK_OPTS_NS::screen,
-        SK_OPTS_NS::xor_,
-        SK_OPTS_NS::colorburn,
-        SK_OPTS_NS::colordodge,
-        SK_OPTS_NS::darken,
-        SK_OPTS_NS::difference,
-        SK_OPTS_NS::exclusion,
-        SK_OPTS_NS::hardlight,
-        SK_OPTS_NS::lighten,
-        SK_OPTS_NS::overlay,
-        SK_OPTS_NS::softlight,
-    };
-    static_assert(SK_ARRAY_COUNT(stages_1_3) == SkRasterPipeline::kNumStockStages, "");
+    decltype(half_to_float) half_to_float = sk_default::half_to_float;
+    decltype(float_to_half) float_to_half = sk_default::float_to_half;
 
     // Each Init_foo() is defined in src/opts/SkOpts_foo.cpp.
+    void Init_sse2();
     void Init_ssse3();
     void Init_sse41();
-    void Init_sse42();
-    void Init_avx();
-    void Init_hsw();
-    void Init_crc32() {}
+    void Init_sse42() {}
+    void Init_avx() {}
+    void Init_avx2() {}
     void Init_neon();
 
     static void init() {
-#if !defined(SK_BUILD_NO_OPTS)
-    #if defined(SK_CPU_X86)
-        if (SkCpu::Supports(SkCpu::SSSE3)) { Init_ssse3(); }
-        if (SkCpu::Supports(SkCpu::SSE41)) { Init_sse41(); }
-        if (SkCpu::Supports(SkCpu::SSE42)) { Init_sse42(); }
-        if (SkCpu::Supports(SkCpu::AVX  )) { Init_avx();   }
-        if (SkCpu::Supports(SkCpu::HSW  )) { Init_hsw();   }
+        // TODO: Chrome's not linking _sse* opts on iOS simulator builds.  Bug or feature?
+    #if defined(SK_CPU_X86) && !defined(SK_BUILD_FOR_IOS)
+        uint32_t abcd[] = {0,0,0,0};
+        cpuid(abcd);
+        if (abcd[3] & (1<<26)) { Init_sse2(); }
+        if (abcd[2] & (1<< 9)) { Init_ssse3(); }
+        if (abcd[2] & (1<<19)) { Init_sse41(); }
+        if (abcd[2] & (1<<20)) { Init_sse42(); }
 
-    #elif defined(SK_CPU_ARM64)
-        if (SkCpu::Supports(SkCpu::CRC32)) { Init_crc32(); }
+        // AVX detection's kind of a pain.  This is cribbed from Chromium.
+        if ( (  abcd[2] & (7<<26)) == (7<<26) &&    // Check bits 26-28 of ecx are all set,
+             (xgetbv(0) & 6      ) == 6          ){ // and  check the OS supports XSAVE.
+            Init_avx();
 
-    #elif defined(SK_CPU_ARM32) && !defined(SK_ARM_HAS_NEON)
-        if (SkCpu::Supports(SkCpu::NEON)) { Init_neon(); }
+            // AVX2 additionally needs bit 5 set on ebx after calling cpuid(7).
+            uint32_t abcd7[] = {0,0,0,0};
+            cpuid7(abcd7);
+            if (abcd7[1] & (1<<5)) { Init_avx2(); }
+        }
 
+    #elif !defined(SK_ARM_HAS_NEON)      && \
+           defined(SK_CPU_ARM32)         && \
+           defined(SK_BUILD_FOR_ANDROID) && \
+          !defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
+        #ifdef MOZ_SKIA
+            if (mozilla::supports_neon()) { Init_neon(); }
+        #else
+            if (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON) { Init_neon(); }
+        #endif
     #endif
-#endif
     }
 
-    void Init() {
-        static SkOnce once;
-        once(init);
-    }
-}  // namespace SkOpts
+    SK_DECLARE_STATIC_ONCE(gInitOnce);
+    void Init() { SkOnce(&gInitOnce, init); }
+
+#if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
+    static struct AutoInit {
+        AutoInit() { Init(); }
+    } gAutoInit;
+#endif
+}

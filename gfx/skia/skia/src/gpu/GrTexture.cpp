@@ -51,7 +51,7 @@ size_t GrTexture::onGpuMemorySize() const {
     }
 
     SkASSERT(!SkToBool(fDesc.fFlags & kRenderTarget_GrSurfaceFlag));
-    SkASSERT(textureSize <= WorstCaseSize(fDesc));
+    SkASSERT(textureSize <= WorseCaseSize(fDesc));
 
     return textureSize;
 }
@@ -86,24 +86,23 @@ GrSurfaceOrigin resolve_origin(const GrSurfaceDesc& desc) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
-GrTexture::GrTexture(GrGpu* gpu, const GrSurfaceDesc& desc, GrSLType samplerType,
-                     bool wasMipMapDataProvided)
-    : INHERITED(gpu, desc)
-    , fSamplerType(samplerType)
-    // Gamma treatment is explicitly set after creation via GrTexturePriv
-    , fGammaTreatment(SkSourceGammaTreatment::kIgnore) {
+GrTexture::GrTexture(GrGpu* gpu, LifeCycle lifeCycle, const GrSurfaceDesc& desc,
+                     GrSLType samplerType, bool wasMipMapDataProvided)
+    : INHERITED(gpu, lifeCycle, desc)
+    , fSamplerType(samplerType) {
+    if (!this->isExternal() && !GrPixelConfigIsCompressed(desc.fConfig) &&
+        !desc.fTextureStorageAllocator.fAllocateTextureStorage) {
+        GrScratchKey key;
+        GrTexturePriv::ComputeScratchKey(desc, &key);
+        this->setScratchKey(key);
+    }
+
     if (wasMipMapDataProvided) {
         fMipMapsStatus = kValid_MipMapsStatus;
         fMaxMipMapLevel = SkMipMap::ComputeLevelCount(fDesc.fWidth, fDesc.fHeight);
     } else {
         fMipMapsStatus = kNotAllocated_MipMapsStatus;
         fMaxMipMapLevel = 0;
-    }
-}
-
-void GrTexture::computeScratchKey(GrScratchKey* key) const {
-    if (!GrPixelConfigIsCompressed(fDesc.fConfig)) {
-        GrTexturePriv::ComputeScratchKey(fDesc, key);
     }
 }
 

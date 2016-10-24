@@ -23,15 +23,9 @@ namespace {
 static SkSpinlock gBatchSpinlock;
 class MemoryPoolAccessor {
 public:
-
-// We know in the Android framework there is only one GrContext.
-#if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
-    MemoryPoolAccessor() {}
-    ~MemoryPoolAccessor() {}
-#else
     MemoryPoolAccessor() { gBatchSpinlock.acquire(); }
+
     ~MemoryPoolAccessor() { gBatchSpinlock.release(); }
-#endif
 
     GrMemoryPool* pool() const {
         static GrMemoryPool gPool(16384, 16384);
@@ -55,9 +49,7 @@ void GrBatch::operator delete(void* target) {
 GrBatch::GrBatch(uint32_t classID)
     : fClassID(classID)
     , fUniqueID(kIllegalBatchID) {
-    SkASSERT(classID == SkToU32(fClassID));
     SkDEBUGCODE(fUsed = false;)
-    SkDEBUGCODE(fBoundsFlags = kUninitialized_BoundsFlag);
 }
 
 GrBatch::~GrBatch() {}

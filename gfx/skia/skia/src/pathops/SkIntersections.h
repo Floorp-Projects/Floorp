@@ -15,10 +15,9 @@
 
 class SkIntersections {
 public:
-    SkIntersections(SkDEBUGCODE(SkOpGlobalState* globalState = nullptr))
+    SkIntersections()
         : fSwap(0)
 #ifdef SK_DEBUG
-        SkDEBUGPARAMS(fDebugGlobalState(globalState))
         , fDepth(0)
 #endif
     {
@@ -103,18 +102,9 @@ public:
         return intersect(cubic, line);
     }
 
-#ifdef SK_DEBUG
-    SkOpGlobalState* debugGlobalState() { return fDebugGlobalState; }
-#endif
-
     bool hasT(double t) const {
         SkASSERT(t == 0 || t == 1);
         return fUsed > 0 && (t == 0 ? fT[0][0] == 0 : fT[0][fUsed - 1] == 1);
-    }
-
-    bool hasOppT(double t) const {
-        SkASSERT(t == 0 || t == 1);
-        return fUsed > 0 && (fT[1][0] == t || fT[1][fUsed - 1] == t);
     }
 
     int insertSwap(double one, double two, const SkDPoint& pt) {
@@ -185,6 +175,7 @@ public:
         quad.set(a);
         SkDLine line;
         line.set(b);
+        fMax = 3; // 2;  permit small coincident segment + non-coincident intersection
         return intersect(quad, line);
     }
 
@@ -211,7 +202,7 @@ public:
     bool swapped() const {
         return fSwap;
     }
-
+    
     int used() const {
         return fUsed;
     }
@@ -318,7 +309,6 @@ private:
     bool fAllowNear;
     bool fSwap;
 #ifdef SK_DEBUG
-    SkOpGlobalState* fDebugGlobalState;
     int fDepth;
 #endif
 #if DEBUG_T_SECT_LOOP_COUNT

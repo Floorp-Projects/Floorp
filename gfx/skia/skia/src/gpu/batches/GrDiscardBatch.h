@@ -20,31 +20,29 @@ public:
     GrDiscardBatch(GrRenderTarget* rt)
         : INHERITED(ClassID())
         , fRenderTarget(rt) {
-        this->setBounds(SkRect::MakeIWH(rt->width(), rt->height()), HasAABloat::kNo,
-                        IsZeroArea::kNo);
+        fBounds = SkRect::MakeWH(SkIntToScalar(rt->width()), SkIntToScalar(rt->height()));
     }
 
     const char* name() const override { return "Discard"; }
 
-    uint32_t renderTargetUniqueID() const override { return fRenderTarget.get()->uniqueID(); }
+    uint32_t renderTargetUniqueID() const override { return fRenderTarget.get()->getUniqueID(); }
     GrRenderTarget* renderTarget() const override { return fRenderTarget.get(); }
 
     SkString dumpInfo() const override {
         SkString string;
-        string.printf("RT: %d", fRenderTarget.get()->uniqueID());
-        string.append(INHERITED::dumpInfo());
+        string.printf("RT: %d", fRenderTarget.get()->getUniqueID());
         return string;
     }
 
 private:
     bool onCombineIfPossible(GrBatch* that, const GrCaps& caps) override {
-        return this->renderTargetUniqueID() == that->renderTargetUniqueID();
+        return fRenderTarget == that->cast<GrDiscardBatch>()->fRenderTarget;
     }
 
     void onPrepare(GrBatchFlushState*) override {}
 
     void onDraw(GrBatchFlushState* state) override {
-        state->commandBuffer()->discard(fRenderTarget.get());
+        state->gpu()->discard(fRenderTarget.get());
     }
 
     GrPendingIOResource<GrRenderTarget, kWrite_GrIOType> fRenderTarget;

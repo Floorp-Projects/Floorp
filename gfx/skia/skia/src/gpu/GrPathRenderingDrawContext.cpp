@@ -13,7 +13,7 @@
 
 #define ASSERT_SINGLE_OWNER \
     SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
-#define RETURN_IF_ABANDONED        if (this->drawingManager()->wasAbandoned()) { return; }
+#define RETURN_IF_ABANDONED        if (this->drawingManager()->abandoned()) { return; }
 
 void GrPathRenderingDrawContext::drawText(const GrClip& clip,  const GrPaint& grPaint,
                                           const SkPaint& skPaint,
@@ -26,8 +26,7 @@ void GrPathRenderingDrawContext::drawText(const GrClip& clip,  const GrPaint& gr
     GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrPathRenderingDrawContext::drawText");
 
     if (!fStencilAndCoverTextContext) {
-        GrAtlasTextContext* fallbackContext = this->drawingManager()->getAtlasTextContext();
-        fStencilAndCoverTextContext.reset(GrStencilAndCoverTextContext::Create(fallbackContext));
+        fStencilAndCoverTextContext.reset(GrStencilAndCoverTextContext::Create());
     }
 
     fStencilAndCoverTextContext->drawText(this->drawingManager()->getContext(), this, clip, grPaint,
@@ -47,8 +46,7 @@ void GrPathRenderingDrawContext::drawPosText(const GrClip& clip, const GrPaint& 
     GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrPathRenderingDrawContext::drawPosText");
 
     if (!fStencilAndCoverTextContext) {
-        GrAtlasTextContext* fallbackContext = this->drawingManager()->getAtlasTextContext();
-        fStencilAndCoverTextContext.reset(GrStencilAndCoverTextContext::Create(fallbackContext));
+        fStencilAndCoverTextContext.reset(GrStencilAndCoverTextContext::Create());
     }
 
     fStencilAndCoverTextContext->drawPosText(this->drawingManager()->getContext(), this, clip,
@@ -67,8 +65,7 @@ void GrPathRenderingDrawContext::drawTextBlob(const GrClip& clip, const SkPaint&
     GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrPathRenderingDrawContext::drawTextBlob");
 
     if (!fStencilAndCoverTextContext) {
-        GrAtlasTextContext* fallbackContext = this->drawingManager()->getAtlasTextContext();
-        fStencilAndCoverTextContext.reset(GrStencilAndCoverTextContext::Create(fallbackContext));
+        fStencilAndCoverTextContext.reset(GrStencilAndCoverTextContext::Create());
     }
 
     fStencilAndCoverTextContext->drawTextBlob(this->drawingManager()->getContext(), this, clip,

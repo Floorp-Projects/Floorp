@@ -19,26 +19,26 @@
  */
 template <typename T> class SkTLazy {
 public:
-    SkTLazy() : fPtr(nullptr) {}
+    SkTLazy() : fPtr(NULL) {}
 
-    explicit SkTLazy(const T* src)
-        : fPtr(src ? new (fStorage.get()) T(*src) : nullptr) {}
+    explicit SkTLazy(const T* src) : fPtr(NULL) {
+        if (src) {
+            fPtr = new (fStorage.get()) T(*src);
+        }
+    }
 
-    SkTLazy(const SkTLazy& src) : fPtr(nullptr) { *this = src; }
+    SkTLazy(const SkTLazy<T>& src) : fPtr(NULL) {
+        if (src.isValid()) {
+            fPtr = new (fStorage.get()) T(*src.get());
+        } else {
+            fPtr = NULL;
+        }
+    }
 
     ~SkTLazy() {
         if (this->isValid()) {
             fPtr->~T();
         }
-    }
-
-    SkTLazy& operator=(const SkTLazy& src) {
-        if (src.isValid()) {
-            this->set(*src.get());
-        } else {
-            this->reset();
-        }
-        return *this;
     }
 
     /**
@@ -51,7 +51,7 @@ public:
         if (this->isValid()) {
             fPtr->~T();
         }
-        fPtr = new (SkTCast<T*>(fStorage.get())) T(std::forward<Args>(args)...);
+        fPtr = new (SkTCast<T*>(fStorage.get())) T(std__forward<Args>(args)...);
         return fPtr;
     }
 
@@ -76,7 +76,7 @@ public:
     void reset() {
         if (this->isValid()) {
             fPtr->~T();
-            fPtr = nullptr;
+            fPtr = NULL;
         }
     }
 
@@ -94,13 +94,13 @@ public:
 
     /**
      * Like above but doesn't assert if object isn't initialized (in which case
-     * nullptr is returned).
+     * NULL is returned).
      */
     T* getMaybeNull() const { return fPtr; }
 
 private:
+    T* fPtr; // NULL or fStorage
     SkAlignedSTStorage<1, T> fStorage;
-    T*                       fPtr; // nullptr or fStorage
 };
 
 /**
@@ -134,11 +134,11 @@ public:
     SkTCopyOnFirstWrite(const T* initial) : fObj(initial) {}
 
     // Constructor for delayed initialization.
-    SkTCopyOnFirstWrite() : fObj(nullptr) {}
+    SkTCopyOnFirstWrite() : fObj(NULL) {}
 
     // Should only be called once, and only if the default constructor was used.
     void init(const T& initial) {
-        SkASSERT(nullptr == fObj);
+        SkASSERT(NULL == fObj);
         SkASSERT(!fLazy.isValid());
         fObj = &initial;
     }

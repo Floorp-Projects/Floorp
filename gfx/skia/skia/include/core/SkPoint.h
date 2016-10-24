@@ -549,8 +549,4 @@ struct SK_API SkPoint {
 
 typedef SkPoint SkVector;
 
-static inline bool SkPointsAreFinite(const SkPoint array[], int count) {
-    return SkScalarsAreFinite(&array[0].fX, count << 1);
-}
-
 #endif

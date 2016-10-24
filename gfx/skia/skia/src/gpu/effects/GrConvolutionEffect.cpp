@@ -54,7 +54,7 @@ void GrGLConvolutionEffect::emitCode(EmitArgs& args) {
                                                  "Kernel", arrayCount);
 
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
-    SkString coords2D = fragBuilder->ensureCoords2D(args.fTransformedCoords[0]);
+    SkString coords2D = fragBuilder->ensureFSCoords2D(args.fCoords, 0);
 
     fragBuilder->codeAppendf("%s = vec4(0, 0, 0, 0);", args.fOutputColor);
 
@@ -82,7 +82,7 @@ void GrGLConvolutionEffect::emitCode(EmitArgs& args) {
                                      component, bounds, component, bounds);
         }
         fragBuilder->codeAppendf("\t\t%s += ", args.fOutputColor);
-        fragBuilder->appendTextureLookup(args.fTexSamplers[0], "coord");
+        fragBuilder->appendTextureLookup(args.fSamplers[0], "coord");
         fragBuilder->codeAppendf(" * %s;\n", kernelIndex.c_str());
         if (ce.useBounds()) {
             fragBuilder->codeAppend("}");
@@ -213,7 +213,7 @@ bool GrConvolutionEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrConvolutionEffect);
 
-sk_sp<GrFragmentProcessor> GrConvolutionEffect::TestCreate(GrProcessorTestData* d) {
+const GrFragmentProcessor* GrConvolutionEffect::TestCreate(GrProcessorTestData* d) {
     int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx :
                                           GrProcessorUnitTest::kAlphaTextureIdx;
     Direction dir = d->fRandom->nextBool() ? kX_Direction : kY_Direction;
@@ -228,10 +228,10 @@ sk_sp<GrFragmentProcessor> GrConvolutionEffect::TestCreate(GrProcessorTestData* 
     }
 
     bool useBounds = d->fRandom->nextBool();
-    return GrConvolutionEffect::Make(d->fTextures[texIdx],
-                                     dir,
-                                     radius,
-                                     kernel,
-                                     useBounds,
-                                     bounds);
+    return GrConvolutionEffect::Create(d->fTextures[texIdx],
+                                       dir,
+                                       radius,
+                                       kernel,
+                                       useBounds,
+                                       bounds);
 }

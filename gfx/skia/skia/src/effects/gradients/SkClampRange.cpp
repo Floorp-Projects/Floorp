@@ -6,7 +6,7 @@
  */
 
 #include "SkClampRange.h"
-#include "SkMathPriv.h"
+#include "SkMath.h"
 
 static int SkCLZ64(uint64_t value) {
     int count = 0;

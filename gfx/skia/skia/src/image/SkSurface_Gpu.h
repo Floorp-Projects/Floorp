@@ -16,25 +16,22 @@ class SkGpuDevice;
 
 class SkSurface_Gpu : public SkSurface_Base {
 public:
-    SkSurface_Gpu(sk_sp<SkGpuDevice>);
+    SkSurface_Gpu(SkGpuDevice*);
     virtual ~SkSurface_Gpu();
 
     GrBackendObject onGetTextureHandle(BackendHandleAccess) override;
     bool onGetRenderTargetHandle(GrBackendObject*, BackendHandleAccess) override;
     SkCanvas* onNewCanvas() override;
     sk_sp<SkSurface> onNewSurface(const SkImageInfo&) override;
-    sk_sp<SkImage> onNewImageSnapshot(SkBudgeted, SkCopyPixelsMode) override;
+    sk_sp<SkImage> onNewImageSnapshot(SkBudgeted, ForceCopyMode) override;
     void onCopyOnWrite(ContentChangeMode) override;
     void onDiscard() override;
     void onPrepareForExternalIO() override;
 
-    SkGpuDevice* getDevice() { return fDevice.get(); }
-
-    static bool Valid(const SkImageInfo&);
-    static bool Valid(GrContext*, GrPixelConfig, SkColorSpace*);
+    SkGpuDevice* getDevice() { return fDevice; }
 
 private:
-    sk_sp<SkGpuDevice> fDevice;
+    SkGpuDevice* fDevice;
 
     typedef SkSurface_Base INHERITED;
 };

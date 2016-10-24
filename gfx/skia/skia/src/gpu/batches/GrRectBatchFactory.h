@@ -10,11 +10,9 @@
 
 #include "GrAAFillRectBatch.h"
 #include "GrAAStrokeRectBatch.h"
-#include "GrAnalyticRectBatch.h"
 #include "GrColor.h"
 #include "GrNonAAFillRectBatch.h"
 #include "GrNonAAStrokeRectBatch.h"
-#include "GrPaint.h"
 #include "SkMatrix.h"
 
 class GrBatch;
@@ -39,17 +37,11 @@ inline GrDrawBatch* CreateNonAAFill(GrColor color,
     }
 }
 
-inline GrDrawBatch* CreateAAFill(const GrPaint& paint,
+inline GrDrawBatch* CreateAAFill(GrColor color,
                                  const SkMatrix& viewMatrix,
                                  const SkRect& rect,
-                                 const SkRect& croppedRect,
                                  const SkRect& devRect) {
-    if (!paint.usesDistanceVectorField()) {
-        return GrAAFillRectBatch::Create(paint.getColor(), viewMatrix, croppedRect, devRect);
-    } else {
-        return GrAnalyticRectBatch::CreateAnalyticRectBatch(paint.getColor(), viewMatrix, rect,
-                                                            croppedRect, devRect);
-    }
+    return GrAAFillRectBatch::Create(color, viewMatrix, rect, devRect);
 }
 
 inline GrDrawBatch* CreateAAFill(GrColor color,
@@ -63,9 +55,9 @@ inline GrDrawBatch* CreateAAFill(GrColor color,
 inline GrDrawBatch* CreateNonAAStroke(GrColor color,
                                       const SkMatrix& viewMatrix,
                                       const SkRect& rect,
-                                      const SkStrokeRec& strokeRec,
+                                      SkScalar strokeWidth,
                                       bool snapToPixelCenters) {
-    return GrNonAAStrokeRectBatch::Create(color, viewMatrix, rect, strokeRec, snapToPixelCenters);
+    return GrNonAAStrokeRectBatch::Create(color, viewMatrix, rect, strokeWidth, snapToPixelCenters);
 }
 
 inline GrDrawBatch* CreateAAStroke(GrColor color,

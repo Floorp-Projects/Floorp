@@ -15,7 +15,12 @@
 SkMatrix GrGLSLPrimitiveProcessor::GetTransformMatrix(const SkMatrix& localMatrix,
                                                       const GrCoordTransform& coordTransform) {
     SkMatrix combined;
-    combined.setConcat(coordTransform.getMatrix(), localMatrix);
+    // We only apply the localmatrix to localcoords
+    if (kLocal_GrCoordSet == coordTransform.sourceCoords()) {
+        combined.setConcat(coordTransform.getMatrix(), localMatrix);
+    } else {
+        combined = coordTransform.getMatrix();
+    }
     if (coordTransform.reverseY()) {
         // combined.postScale(1,-1);
         // combined.postTranslate(0,1);
@@ -41,17 +46,4 @@ void GrGLSLPrimitiveProcessor::setupUniformColor(GrGLSLPPFragmentBuilder* fragBu
                                                "Color",
                                                &stagedLocalVarName);
     fragBuilder->codeAppendf("%s = %s;", outputName, stagedLocalVarName);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
-const GrCoordTransform* GrGLSLPrimitiveProcessor::FPCoordTransformHandler::nextCoordTransform() {
-#ifdef SK_DEBUG
-    SkASSERT(nullptr == fCurr || fAddedCoord);
-    fAddedCoord = false;
-    fCurr = fIter.next();
-    return fCurr;
-#else
-    return fIter.next();
-#endif
 }

@@ -17,7 +17,7 @@
 
 class GrFragmentProcessor;
 class GrGLContextInfo;
-class GrProgramDesc;
+class GrGLProgramDesc;
 class GrGLSLShaderBuilder;
 class GrGLSLCaps;
 
@@ -32,7 +32,7 @@ public:
      */
     static GrGLProgram* CreateProgram(const GrPipeline&,
                                       const GrPrimitiveProcessor&,
-                                      const GrProgramDesc&,
+                                      const GrGLProgramDesc&,
                                       GrGLGpu*);
 
     const GrCaps* caps() const override;
@@ -42,7 +42,7 @@ public:
 
 private:
     GrGLProgramBuilder(GrGLGpu*, const GrPipeline&, const GrPrimitiveProcessor&,
-                       const GrProgramDesc&);
+                       const GrGLProgramDesc&);
 
     bool compileAndAttachShaders(GrGLSLShaderBuilder& shader,
                                  GrGLuint programId,

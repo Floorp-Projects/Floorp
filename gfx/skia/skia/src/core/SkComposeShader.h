@@ -35,7 +35,10 @@ public:
     {}
 
 #if SK_SUPPORT_GPU
-    sk_sp<GrFragmentProcessor> asFragmentProcessor(const AsFPArgs&) const override;
+    const GrFragmentProcessor*  asFragmentProcessor(GrContext*,
+                                                    const SkMatrix& viewM,
+                                                    const SkMatrix* localMatrix,
+                                                    SkFilterQuality) const override;
 #endif
 
     class ComposeShaderContext : public SkShader::Context {

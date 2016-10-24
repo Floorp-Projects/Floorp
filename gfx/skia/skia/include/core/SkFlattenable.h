@@ -71,7 +71,6 @@ class SK_API SkFlattenable : public SkRefCnt {
 public:
     enum Type {
         kSkColorFilter_Type,
-        kSkDrawable_Type,
         kSkDrawLooper_Type,
         kSkImageFilter_Type,
         kSkMaskFilter_Type,
@@ -81,7 +80,6 @@ public:
         kSkShader_Type,
         kSkUnused_Type,     // used to be SkUnitMapper
         kSkXfermode_Type,
-        kSkNormalSource_Type,
     };
 
     typedef sk_sp<SkFlattenable> (*Factory)(SkReadBuffer&);
@@ -94,15 +92,9 @@ public:
      */
     virtual Factory getFactory() const = 0;
 
-    /**
-     *  Returns the name of the object's class.
-     *
-     *  Subclasses should override this function if they intend to provide
-     *  support for flattening without using the global registry.
-     *
-     *  If the flattenable is registered, there is no need to override.
-     */
-    virtual const char* getTypeName() const { return FactoryToName(getFactory()); }
+    /** Returns the name of the object's class
+      */
+    const char* getTypeName() const { return FactoryToName(getFactory()); }
 
     static Factory NameToFactory(const char name[]);
     static const char* FactoryToName(Factory);

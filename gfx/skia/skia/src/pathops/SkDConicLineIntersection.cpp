@@ -6,7 +6,6 @@
  */
 #include "SkIntersections.h"
 #include "SkPathOpsConic.h"
-#include "SkPathOpsCurve.h"
 #include "SkPathOpsLine.h"
 
 class LineConicIntersections {
@@ -21,7 +20,7 @@ public:
         , fLine(&l)
         , fIntersections(i)
         , fAllowNear(true) {
-        i->setMax(4);  // allow short partial coincidence plus discrete intersection
+        i->setMax(3);  // allow short partial coincidence plus discrete intersection
     }
 
     LineConicIntersections(const SkDConic& c)
@@ -79,8 +78,8 @@ public:
         for (int index = 0; index < count; ++index) {
             double conicT = roots[index];
             SkDPoint pt = fConic.ptAtT(conicT);
-            SkDEBUGCODE(double conicVals[] = { fConic[0].fY, fConic[1].fY, fConic[2].fY });
-            SkOPOBJASSERT(fIntersections, close_to(pt.fY, axisIntercept, conicVals));
+            SkDEBUGCODE_(double conicVals[] = { fConic[0].fY, fConic[1].fY, fConic[2].fY });
+            SkASSERT(close_to(pt.fY, axisIntercept, conicVals));
             double lineT = (pt.fX - left) / (right - left);
             if (this->pinTs(&conicT, &lineT, &pt, kPointInitialized)
                     && this->uniqueAnswer(conicT, pt)) {
@@ -104,14 +103,9 @@ public:
         for (int index = 0; index < roots; ++index) {
             double conicT = rootVals[index];
             double lineT = this->findLineT(conicT);
-#ifdef SK_DEBUG
-            if (!fIntersections->debugGlobalState()
-                    || !fIntersections->debugGlobalState()->debugSkipAssert()) {
-                SkDEBUGCODE(SkDPoint conicPt = fConic.ptAtT(conicT));
-                SkDEBUGCODE(SkDPoint linePt = fLine->ptAtT(lineT));
-                SkASSERT(conicPt.approximatelyDEqual(linePt));
-            }
-#endif
+            SkDEBUGCODE(SkDPoint conicPt = fConic.ptAtT(conicT));
+            SkDEBUGCODE(SkDPoint linePt = fLine->ptAtT(lineT));
+            SkASSERT(conicPt.approximatelyEqual(linePt));
             SkDPoint pt;
             if (this->pinTs(&conicT, &lineT, &pt, kPointUninitialized)
                     && this->uniqueAnswer(conicT, pt)) {
@@ -157,8 +151,8 @@ public:
         for (int index = 0; index < count; ++index) {
             double conicT = roots[index];
             SkDPoint pt = fConic.ptAtT(conicT);
-            SkDEBUGCODE(double conicVals[] = { fConic[0].fX, fConic[1].fX, fConic[2].fX });
-            SkOPOBJASSERT(fIntersections, close_to(pt.fX, axisIntercept, conicVals));
+            SkDEBUGCODE_(double conicVals[] = { fConic[0].fX, fConic[1].fX, fConic[2].fX });
+            SkASSERT(close_to(pt.fX, axisIntercept, conicVals));
             double lineT = (pt.fY - top) / (bottom - top);
             if (this->pinTs(&conicT, &lineT, &pt, kPointInitialized)
                     && this->uniqueAnswer(conicT, pt)) {
@@ -198,22 +192,7 @@ protected:
             }
             fIntersections->insert(conicT, lineT, fConic[cIndex]);
         }
-        this->addLineNearEndPoints();
-    }
-
-    void addLineNearEndPoints() {
-        for (int lIndex = 0; lIndex < 2; ++lIndex) {
-            double lineT = (double) lIndex;
-            if (fIntersections->hasOppT(lineT)) {
-                continue;
-            }
-            double conicT = ((SkDCurve*) &fConic)->nearPoint(SkPath::kConic_Verb,
-                (*fLine)[lIndex], (*fLine)[!lIndex]);
-            if (conicT < 0) {
-                continue;
-            }
-            fIntersections->insert(conicT, lineT, (*fLine)[lIndex]);
-        }
+        // FIXME: see if line end is nearly on conic
     }
 
     void addExactHorizontalEndPoints(double left, double right, double y) {
@@ -239,7 +218,7 @@ protected:
             }
             fIntersections->insert(conicT, lineT, fConic[cIndex]);
         }
-        this->addLineNearEndPoints();
+        // FIXME: see if line end is nearly on conic
     }
 
     void addExactVerticalEndPoints(double top, double bottom, double x) {
@@ -265,7 +244,7 @@ protected:
             }
             fIntersections->insert(conicT, lineT, fConic[cIndex]);
         }
-        this->addLineNearEndPoints();
+        // FIXME: see if line end is nearly on conic
     }
 
     double findLineT(double t) {

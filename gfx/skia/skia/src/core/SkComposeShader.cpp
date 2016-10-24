@@ -183,7 +183,10 @@ void SkComposeShader::ComposeShaderContext::shadeSpan(int x, int y, SkPMColor re
 
 /////////////////////////////////////////////////////////////////////
 
-sk_sp<GrFragmentProcessor> SkComposeShader::asFragmentProcessor(const AsFPArgs& args) const {
+const GrFragmentProcessor* SkComposeShader::asFragmentProcessor(GrContext* context,
+                                                            const SkMatrix& viewM,
+                                                            const SkMatrix* localMatrix,
+                                                            SkFilterQuality fq) const {
     // Fragment processor will only support SkXfermode::Mode modes currently.
     SkXfermode::Mode mode;
     if (!(SkXfermode::AsMode(fMode, &mode))) {
@@ -192,26 +195,27 @@ sk_sp<GrFragmentProcessor> SkComposeShader::asFragmentProcessor(const AsFPArgs& 
 
     switch (mode) {
         case SkXfermode::kClear_Mode:
-            return GrConstColorProcessor::Make(GrColor_TRANSPARENT_BLACK,
-                                               GrConstColorProcessor::kIgnore_InputMode);
+            return GrConstColorProcessor::Create(GrColor_TRANSPARENT_BLACK,
+                                                 GrConstColorProcessor::kIgnore_InputMode);
             break;
         case SkXfermode::kSrc_Mode:
-            return fShaderB->asFragmentProcessor(args);
+            return fShaderB->asFragmentProcessor(context, viewM, localMatrix, fq);
             break;
         case SkXfermode::kDst_Mode:
-            return fShaderA->asFragmentProcessor(args);
+            return fShaderA->asFragmentProcessor(context, viewM, localMatrix, fq);
             break;
         default:
-            sk_sp<GrFragmentProcessor> fpA(fShaderA->asFragmentProcessor(args));
-            if (!fpA) {
+            SkAutoTUnref<const GrFragmentProcessor> fpA(fShaderA->asFragmentProcessor(context,
+                                                        viewM, localMatrix, fq));
+            if (!fpA.get()) {
                 return nullptr;
             }
-            sk_sp<GrFragmentProcessor> fpB(fShaderB->asFragmentProcessor(args));
-            if (!fpB) {
+            SkAutoTUnref<const GrFragmentProcessor> fpB(fShaderB->asFragmentProcessor(context,
+                                                        viewM, localMatrix, fq));
+            if (!fpB.get()) {
                 return nullptr;
             }
-            return GrXfermodeFragmentProcessor::MakeFromTwoProcessors(std::move(fpB),
-                                                                      std::move(fpA), mode);
+            return GrXfermodeFragmentProcessor::CreateFromTwoProcessors(fpB, fpA, mode);
     }
 }
 #endif

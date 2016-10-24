@@ -35,6 +35,8 @@ SkSnapshot::SkSnapshot()
     fSeqVal     = 0;
 }
 
+#include "SkDevice.h"
+
 bool SkSnapshot::draw(SkAnimateMaker& maker) {
     SkASSERT(type >= 0);
     SkASSERT(filename.size() > 0);

@@ -67,7 +67,8 @@ uint32_t SkColorCubeFilter::getFlags() const {
 }
 
 SkColorCubeFilter::ColorCubeProcesingCache::ColorCubeProcesingCache(int cubeDimension)
-  : fCubeDimension(cubeDimension) {
+  : fCubeDimension(cubeDimension)
+  , fLutsInited(false) {
     fColorToIndex[0] = fColorToIndex[1] = nullptr;
     fColorToFactors[0] = fColorToFactors[1] = nullptr;
     fColorToScalar = nullptr;
@@ -76,8 +77,8 @@ SkColorCubeFilter::ColorCubeProcesingCache::ColorCubeProcesingCache(int cubeDime
 void SkColorCubeFilter::ColorCubeProcesingCache::getProcessingLuts(
     const int* (*colorToIndex)[2], const SkScalar* (*colorToFactors)[2],
     const SkScalar** colorToScalar) {
-    fLutsInitOnce(SkColorCubeFilter::ColorCubeProcesingCache::initProcessingLuts, this);
-
+    SkOnce(&fLutsInited, &fLutsMutex,
+           SkColorCubeFilter::ColorCubeProcesingCache::initProcessingLuts, this);
     SkASSERT((fColorToIndex[0] != nullptr) &&
              (fColorToIndex[1] != nullptr) &&
              (fColorToFactors[0] != nullptr) &&
@@ -161,9 +162,8 @@ void SkColorCubeFilter::toString(SkString* str) const {
 
 class GrColorCubeEffect : public GrFragmentProcessor {
 public:
-    static sk_sp<GrFragmentProcessor> Make(GrTexture* colorCube) {
-        return (nullptr != colorCube) ? sk_sp<GrFragmentProcessor>(new GrColorCubeEffect(colorCube))
-                                      : nullptr;
+    static const GrFragmentProcessor* Create(GrTexture* colorCube) {
+        return (nullptr != colorCube) ? new GrColorCubeEffect(colorCube) : nullptr;
     }
 
     virtual ~GrColorCubeEffect();
@@ -277,9 +277,9 @@ void GrColorCubeEffect::GLSLProcessor::emitCode(EmitArgs& args) {
 
     // Apply the cube.
     fragBuilder->codeAppendf("%s = vec4(mix(", args.fOutputColor);
-    fragBuilder->appendTextureLookup(args.fTexSamplers[0], cCoords1);
+    fragBuilder->appendTextureLookup(args.fSamplers[0], cCoords1);
     fragBuilder->codeAppend(".bgr, ");
-    fragBuilder->appendTextureLookup(args.fTexSamplers[0], cCoords2);
+    fragBuilder->appendTextureLookup(args.fSamplers[0], cCoords2);
 
     // Premultiply color by alpha. Note that the input alpha is not modified by this shader.
     fragBuilder->codeAppendf(".bgr, fract(%s.b)) * vec3(%s), %s.a);\n",
@@ -298,7 +298,7 @@ void GrColorCubeEffect::GLSLProcessor::GenKey(const GrProcessor& proc,
                                               const GrGLSLCaps&, GrProcessorKeyBuilder* b) {
 }
 
-sk_sp<GrFragmentProcessor> SkColorCubeFilter::asFragmentProcessor(GrContext* context) const {
+const GrFragmentProcessor* SkColorCubeFilter::asFragmentProcessor(GrContext* context) const {
     static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
     GrUniqueKey key;
     GrUniqueKey::Builder builder(&key, kDomain, 2);
@@ -324,6 +324,6 @@ sk_sp<GrFragmentProcessor> SkColorCubeFilter::asFragmentProcessor(GrContext* con
         }
     }
 
-    return sk_sp<GrFragmentProcessor>(GrColorCubeEffect::Make(textureCube));
+    return GrColorCubeEffect::Create(textureCube);
 }
 #endif

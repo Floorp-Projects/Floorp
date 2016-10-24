@@ -61,16 +61,16 @@ private:
 };
 
 void SkFontMgr_Indirect::set_up_family_names(const SkFontMgr_Indirect* self) {
-    self->fFamilyNames = self->fProxy->getFamilyNames();
+    self->fFamilyNames.reset(self->fProxy->getFamilyNames());
 }
 
 int SkFontMgr_Indirect::onCountFamilies() const {
-    fFamilyNamesInitOnce(SkFontMgr_Indirect::set_up_family_names, this);
+    SkOnce(&fFamilyNamesInited, &fFamilyNamesMutex, SkFontMgr_Indirect::set_up_family_names, this);
     return fFamilyNames->count();
 }
 
 void SkFontMgr_Indirect::onGetFamilyName(int index, SkString* familyName) const {
-    fFamilyNamesInitOnce(SkFontMgr_Indirect::set_up_family_names, this);
+    SkOnce(&fFamilyNamesInited, &fFamilyNamesMutex, SkFontMgr_Indirect::set_up_family_names, this);
     if (index >= fFamilyNames->count()) {
         familyName->reset();
         return;
@@ -185,7 +185,15 @@ SkTypeface* SkFontMgr_Indirect::onCreateFromData(SkData* data, int ttcIndex) con
 }
 
 SkTypeface* SkFontMgr_Indirect::onLegacyCreateTypeface(const char familyName[],
-                                                       SkFontStyle style) const {
+                                                       unsigned styleBits) const {
+    bool bold = SkToBool(styleBits & SkTypeface::kBold);
+    bool italic = SkToBool(styleBits & SkTypeface::kItalic);
+    SkFontStyle style = SkFontStyle(bold ? SkFontStyle::kBold_Weight
+                                         : SkFontStyle::kNormal_Weight,
+                                    SkFontStyle::kNormal_Width,
+                                    italic ? SkFontStyle::kItalic_Slant
+                                           : SkFontStyle::kUpright_Slant);
+
     SkAutoTUnref<SkTypeface> face(this->matchFamilyStyle(familyName, style));
 
     if (nullptr == face.get()) {

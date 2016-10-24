@@ -29,6 +29,10 @@ bool SkBitmapProvider::validForDrawing() const {
         if (nullptr == fBitmap.pixelRef()) {
             return false;   // no pixels to read
         }
+        if (fBitmap.getTexture()) {
+            // we can handle texture (ugh) since lockPixels will perform a read-back
+            return true;
+        }
         if (kIndex_8_SkColorType == fBitmap.colorType()) {
             SkAutoLockPixels alp(fBitmap); // but we need to call it before getColorTable() is safe.
             if (!fBitmap.getColorTable()) {
@@ -41,7 +45,8 @@ bool SkBitmapProvider::validForDrawing() const {
 
 SkImageInfo SkBitmapProvider::info() const {
     if (fImage) {
-        return as_IB(fImage)->onImageInfo();
+        SkAlphaType at = fImage->isOpaque() ? kOpaque_SkAlphaType : kPremul_SkAlphaType;
+        return SkImageInfo::MakeN32(fImage->width(), fImage->height(), at);
     } else {
         return fBitmap.info();
     }
@@ -49,9 +54,7 @@ SkImageInfo SkBitmapProvider::info() const {
 
 bool SkBitmapProvider::isVolatile() const {
     if (fImage) {
-        // add flag to images?
-        const SkBitmap* bm = as_IB(fImage)->onPeekBitmap();
-        return bm ? bm->isVolatile() : false;
+        return false;   // add flag to images?
     } else {
         return fBitmap.isVolatile();
     }

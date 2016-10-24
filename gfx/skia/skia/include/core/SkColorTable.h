@@ -10,7 +10,7 @@
 #ifndef SkColorTable_DEFINED
 #define SkColorTable_DEFINED
 
-#include "../private/SkOnce.h"
+#include "../private/SkOncePtr.h"
 #include "SkColor.h"
 #include "SkFlattenable.h"
 #include "SkImageInfo.h"
@@ -62,14 +62,12 @@ private:
     SkColorTable(SkPMColor* colors, int count, AllocatedWithMalloc);
 
     SkPMColor*            fColors;
-    mutable uint16_t*     f16BitCache = nullptr;
-    mutable SkOnce        f16BitCacheOnce;
+    SkOncePtr<uint16_t[]> f16BitCache;
     int                   fCount;
 
     void init(const SkPMColor* colors, int count);
 
     friend class SkImageGenerator;
-    friend class SkBitmapRegionCodec;
     // Only call if no other thread or cache has seen this table.
     void dangerous_overwriteColors(const SkPMColor newColors[], int count) {
         if (count < 0 || count > fCount) {

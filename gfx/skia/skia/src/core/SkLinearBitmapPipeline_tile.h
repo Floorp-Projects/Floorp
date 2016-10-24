@@ -90,18 +90,19 @@ public:
                 next->pointSpan(span);
             }
         } else {
-            Span rightClamped = span.breakAt(fXMax, dx);
-            if (!rightClamped.isEmpty()) {
-                rightClamped.clampToSinglePixel({fXMax - 1, y});
-                next->pointSpan(rightClamped);
+            Span center = span.breakAt(fXMax, dx);
+
+            if (!span.isEmpty()) {
+                span.clampToSinglePixel({fXMax - 1, y});
+                next->pointSpan(span);
             }
-            Span center = span.breakAt(0.0f, dx);
+            Span leftEdge = center.breakAt(0.0f, dx);
             if (!center.isEmpty()) {
                 next->pointSpan(center);
             }
-            if (!span.isEmpty()) {
-                span.clampToSinglePixel({0.0f, y});
-                next->pointSpan(span);
+            if (!leftEdge.isEmpty()) {
+                leftEdge.clampToSinglePixel({0.0f, y});
+                next->pointSpan(leftEdge);
             }
         }
         return true;
@@ -297,9 +298,7 @@ public:
 
         // Repeat the center section.
         SkASSERT(0.0f <= repeatableSpan.startX() && repeatableSpan.endX() < fXMax);
-        if (repeatCount > 0) {
-            next->repeatSpan(repeatableSpan, repeatCount);
-        }
+        next->repeatSpan(repeatableSpan, repeatCount);
 
         // Calculate the advance past the center portion.
         SkScalar advance = SkScalar(repeatCount) * fXMax;
@@ -410,7 +409,7 @@ public:
         SkScalar answer = SkMinScalar(SkScalarAbs(unbias), fYsCap[0]);
         SkASSERT(0 <= answer && answer < fYMax);
         return answer;
-    }
+    };
 
 private:
     SkScalar fYMax;

@@ -22,12 +22,23 @@ class GrDrawVerticesBatch : public GrVertexBatch {
 public:
     DEFINE_BATCH_CLASS_ID
 
+    struct Geometry {
+        GrColor fColor; // Only used if there are no per-vertex colors
+        SkTDArray<SkPoint> fPositions;
+        SkTDArray<uint16_t> fIndices;
+        SkTDArray<GrColor> fColors;
+        SkTDArray<SkPoint> fLocalCoords;
+    };
 
-    GrDrawVerticesBatch(GrColor color, GrPrimitiveType primitiveType,
-                        const SkMatrix& viewMatrix,
-                        const SkPoint* positions, int vertexCount,
-                        const uint16_t* indices, int indexCount,
-                        const GrColor* colors, const SkPoint* localCoords, const SkRect& bounds);
+    static GrDrawBatch* Create(const Geometry& geometry, GrPrimitiveType primitiveType,
+                               const SkMatrix& viewMatrix,
+                               const SkPoint* positions, int vertexCount,
+                               const uint16_t* indices, int indexCount,
+                               const GrColor* colors, const SkPoint* localCoords,
+                               const SkRect& bounds) {
+        return new GrDrawVerticesBatch(geometry, primitiveType, viewMatrix, positions, vertexCount,
+                                       indices, indexCount, colors, localCoords, bounds);
+    }
 
     const char* name() const override { return "DrawVerticesBatch"; }
 
@@ -35,9 +46,17 @@ public:
                                       GrInitInvariantOutput* coverage,
                                       GrBatchToXPOverrides* overrides) const override;
 
+    SkSTArray<1, Geometry, true>* geoData() { return &fGeoData; }
+
 private:
     void onPrepareDraws(Target*) const override;
     void initBatchTracker(const GrXPOverridesForBatch&) override;
+
+    GrDrawVerticesBatch(const Geometry& geometry, GrPrimitiveType primitiveType,
+                        const SkMatrix& viewMatrix,
+                        const SkPoint* positions, int vertexCount,
+                        const uint16_t* indices, int indexCount,
+                        const GrColor* colors, const SkPoint* localCoords, const SkRect& bounds);
 
     GrPrimitiveType primitiveType() const { return fPrimitiveType; }
     bool batchablePrimitiveType() const {
@@ -48,14 +67,6 @@ private:
 
     bool onCombineIfPossible(GrBatch* t, const GrCaps&) override;
 
-    struct Mesh {
-        GrColor fColor; // Only used if there are no per-vertex colors
-        SkTDArray<SkPoint> fPositions;
-        SkTDArray<uint16_t> fIndices;
-        SkTDArray<GrColor> fColors;
-        SkTDArray<SkPoint> fLocalCoords;
-    };
-
     GrPrimitiveType     fPrimitiveType;
     SkMatrix            fViewMatrix;
     bool                fVariableColor;
@@ -63,7 +74,7 @@ private:
     int                 fIndexCount;
     bool                fCoverageIgnored; // comes from initBatchTracker.
 
-    SkSTArray<1, Mesh, true> fMeshes;
+    SkSTArray<1, Geometry, true> fGeoData;
 
     typedef GrVertexBatch INHERITED;
 };

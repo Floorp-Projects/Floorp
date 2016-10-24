@@ -16,13 +16,20 @@ public:
     /**
      *  Refs the passed-in picture.
      */
-    static sk_sp<SkImageFilter> Make(sk_sp<SkPicture> picture);
+    static sk_sp<SkImageFilter> Make(sk_sp<SkPicture> picture) {
+        return sk_sp<SkImageFilter>(new SkPictureImageFilter(std::move(picture)));
+    }
 
     /**
      *  Refs the passed-in picture. cropRect can be used to crop or expand the destination rect when
      *  the picture is drawn. (No scaling is implied by the dest rect; only the CTM is applied.)
      */
-    static sk_sp<SkImageFilter> Make(sk_sp<SkPicture> picture, const SkRect& cropRect);
+    static sk_sp<SkImageFilter> Make(sk_sp<SkPicture> picture, const SkRect& cropRect) {
+        return sk_sp<SkImageFilter>(new SkPictureImageFilter(std::move(picture), 
+                                                             cropRect,
+                                                             kDeviceSpace_PictureResolution,
+                                                             kLow_SkFilterQuality));
+    }
 
     /**
      *  Refs the passed-in picture. The picture is rasterized at a resolution that matches the
@@ -33,7 +40,12 @@ public:
      */
     static sk_sp<SkImageFilter> MakeForLocalSpace(sk_sp<SkPicture> picture,
                                                   const SkRect& cropRect,
-                                                  SkFilterQuality filterQuality);
+                                                  SkFilterQuality filterQuality) {
+        return sk_sp<SkImageFilter>(new SkPictureImageFilter(std::move(picture),
+                                                             cropRect,
+                                                             kLocalSpace_PictureResolution,
+                                                             filterQuality));
+    }
 
 #ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR
     static SkImageFilter* Create(const SkPicture* picture) {
@@ -67,20 +79,17 @@ protected:
      *  @param SkReadBuffer Serialized picture data.
      */
     void flatten(SkWriteBuffer&) const override;
-    sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
-                                        SkIPoint* offset) const override;
+    bool onFilterImageDeprecated(Proxy*, const SkBitmap& src, const Context&, SkBitmap* result,
+                                 SkIPoint* offset) const override;
 
 private:
     explicit SkPictureImageFilter(sk_sp<SkPicture> picture);
     SkPictureImageFilter(sk_sp<SkPicture> picture, const SkRect& cropRect,
                          PictureResolution, SkFilterQuality);
 
-    void drawPictureAtDeviceResolution(SkCanvas* canvas,
-                                       const SkIRect& deviceBounds,
+    void drawPictureAtDeviceResolution(SkBaseDevice*, const SkIRect& deviceBounds,
                                        const Context&) const;
-    void drawPictureAtLocalResolution(SkSpecialImage* source,
-                                      SkCanvas*,
-                                      const SkIRect& deviceBounds,
+    void drawPictureAtLocalResolution(Proxy*, SkBaseDevice*, const SkIRect& deviceBounds,
                                       const Context&) const;
 
     sk_sp<SkPicture>      fPicture;

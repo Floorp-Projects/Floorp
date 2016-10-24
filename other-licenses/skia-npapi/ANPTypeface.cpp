@@ -25,20 +25,21 @@
 
 // must include config.h first for webkit to fiddle with new/delete
 #include "SkANP.h"
+#include "SkFontHost.h"
 #include "SkStream.h"
 #include <stdlib.h>
 
 static ANPTypeface* anp_createFromName(const char name[], ANPTypefaceStyle s) {
-    sk_sp<SkTypeface> tf = SkTypeface::MakeFromName(name,
-                                        SkFontStyle::FromOldStyle(s));
-    return reinterpret_cast<ANPTypeface*>(tf.release());
+    SkTypeface* tf = SkTypeface::CreateFromName(name,
+                                        static_cast<SkTypeface::Style>(s));
+    return reinterpret_cast<ANPTypeface*>(tf);
 }
 
 static ANPTypeface* anp_createFromTypeface(const ANPTypeface* family,
                                            ANPTypefaceStyle s) {
-    sk_sp<SkTypeface> tf = SkTypeface::MakeFromTypeface(const_cast<ANPTypeface*>(family),
+    SkTypeface* tf = SkTypeface::CreateFromTypeface(family,
                                           static_cast<SkTypeface::Style>(s));
-    return reinterpret_cast<ANPTypeface*>(tf.release());
+    return reinterpret_cast<ANPTypeface*>(tf);
 }
 
 static int32_t anp_getRefCount(const ANPTypeface* tf) {
@@ -60,9 +61,10 @@ static ANPTypefaceStyle anp_getStyle(const ANPTypeface* tf) {
 
 static int32_t anp_getFontPath(const ANPTypeface* tf, char fileName[],
                                int32_t length, int32_t* index) {
+    SkStream* stream = tf->openStream(index);
+
     return 0;
     /*
-    SkStream* stream = tf->openStream(index);
     if (stream->getFileName()) {
       strcpy(fileName, stream->getFileName());
     } else {

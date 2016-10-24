@@ -12,17 +12,20 @@
 
 class SkOpEdgeBuilder {
 public:
-    SkOpEdgeBuilder(const SkPathWriter& path, SkOpContourHead* contours2,
+    SkOpEdgeBuilder(const SkPathWriter& path, SkOpContour* contours2, SkChunkAlloc* allocator,
             SkOpGlobalState* globalState)
-        : fGlobalState(globalState)
+        : fAllocator(allocator)  // FIXME: replace with const, tune this
+        , fGlobalState(globalState)
         , fPath(path.nativePath())
         , fContoursHead(contours2)
         , fAllowOpenContours(true) {
         init();
     }
 
-    SkOpEdgeBuilder(const SkPath& path, SkOpContourHead* contours2, SkOpGlobalState* globalState)
-        : fGlobalState(globalState)
+    SkOpEdgeBuilder(const SkPath& path, SkOpContour* contours2, SkChunkAlloc* allocator,
+            SkOpGlobalState* globalState)
+        : fAllocator(allocator)
+        , fGlobalState(globalState)
         , fPath(&path)
         , fContoursHead(contours2)
         , fAllowOpenContours(false) {
@@ -38,7 +41,8 @@ public:
         }
     }
 
-    bool finish();
+    int count() const;
+    bool finish(SkChunkAlloc* );
 
     const SkOpContour* head() const {
         return fContoursHead;
@@ -52,15 +56,16 @@ private:
     void closeContour(const SkPoint& curveEnd, const SkPoint& curveStart);
     bool close();
     int preFetch();
-    bool walk();
+    bool walk(SkChunkAlloc* );
 
+    SkChunkAlloc* fAllocator;
     SkOpGlobalState* fGlobalState;
     const SkPath* fPath;
     SkTDArray<SkPoint> fPathPts;
     SkTDArray<SkScalar> fWeights;
     SkTDArray<uint8_t> fPathVerbs;
     SkOpContour* fCurrentContour;
-    SkOpContourHead* fContoursHead;
+    SkOpContour* fContoursHead;
     SkPathOpsMask fXorMask[2];
     int fSecondHalf;
     bool fOperand;

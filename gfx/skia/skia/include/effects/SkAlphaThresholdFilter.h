@@ -9,8 +9,7 @@
 #define SkAlphaThresholdFilter_DEFINED
 
 #include "SkImageFilter.h"
-
-class SkRegion;
+#include "SkRegion.h"
 
 class SK_API SkAlphaThresholdFilter {
 public:
@@ -22,8 +21,7 @@ public:
      * source image.
      */
     static sk_sp<SkImageFilter> Make(const SkRegion& region, SkScalar innerMin,
-                                     SkScalar outerMax, sk_sp<SkImageFilter> input,
-                                     const SkImageFilter::CropRect* cropRect = nullptr);
+                                     SkScalar outerMax, sk_sp<SkImageFilter> input);
 
 
 #ifdef SK_SUPPORT_LEGACY_IMAGEFILTER_PTR

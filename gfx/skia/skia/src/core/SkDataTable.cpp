@@ -7,7 +7,6 @@
 
 #include "SkData.h"
 #include "SkDataTable.h"
-#include "SkOnce.h"
 
 static void malloc_freeproc(void* context) {
     sk_free(context);
@@ -77,17 +76,19 @@ const void* SkDataTable::at(int index, size_t* size) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-sk_sp<SkDataTable> SkDataTable::MakeEmpty() {
-    static SkDataTable* singleton;
-    static SkOnce once;
-    once([]{ singleton = new SkDataTable(); });
-    return sk_ref_sp(singleton);
+SkDataTable* SkDataTable::NewEmpty() {
+    static SkDataTable* gEmpty;
+    if (nullptr == gEmpty) {
+        gEmpty = new SkDataTable;
+    }
+    gEmpty->ref();
+    return gEmpty;
 }
 
-sk_sp<SkDataTable> SkDataTable::MakeCopyArrays(const void * const * ptrs,
-                                               const size_t sizes[], int count) {
+SkDataTable* SkDataTable::NewCopyArrays(const void * const * ptrs,
+                                        const size_t sizes[], int count) {
     if (count <= 0) {
-        return SkDataTable::MakeEmpty();
+        return SkDataTable::NewEmpty();
     }
 
     size_t dataSize = 0;
@@ -107,27 +108,28 @@ sk_sp<SkDataTable> SkDataTable::MakeCopyArrays(const void * const * ptrs,
         elem += sizes[i];
     }
 
-    return sk_sp<SkDataTable>(new SkDataTable(dir, count, malloc_freeproc, buffer));
+    return new SkDataTable(dir, count, malloc_freeproc, buffer);
 }
 
-sk_sp<SkDataTable> SkDataTable::MakeCopyArray(const void* array, size_t elemSize, int count) {
+SkDataTable* SkDataTable::NewCopyArray(const void* array, size_t elemSize,
+                                       int count) {
     if (count <= 0) {
-        return SkDataTable::MakeEmpty();
+        return SkDataTable::NewEmpty();
     }
 
     size_t bufferSize = elemSize * count;
     void* buffer = sk_malloc_throw(bufferSize);
     memcpy(buffer, array, bufferSize);
 
-    return sk_sp<SkDataTable>(new SkDataTable(buffer, elemSize, count, malloc_freeproc, buffer));
+    return new SkDataTable(buffer, elemSize, count, malloc_freeproc, buffer);
 }
 
-sk_sp<SkDataTable> SkDataTable::MakeArrayProc(const void* array, size_t elemSize, int count,
-                                              FreeProc proc, void* ctx) {
+SkDataTable* SkDataTable::NewArrayProc(const void* array, size_t elemSize,
+                                       int count, FreeProc proc, void* ctx) {
     if (count <= 0) {
-        return SkDataTable::MakeEmpty();
+        return SkDataTable::NewEmpty();
     }
-    return sk_sp<SkDataTable>(new SkDataTable(array, elemSize, count, proc, ctx));
+    return new SkDataTable(array, elemSize, count, proc, ctx);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -162,18 +164,18 @@ void SkDataTableBuilder::append(const void* src, size_t size) {
     dir->fSize = size;
 }
 
-sk_sp<SkDataTable> SkDataTableBuilder::detachDataTable() {
+SkDataTable* SkDataTableBuilder::detachDataTable() {
     const int count = fDir.count();
     if (0 == count) {
-        return SkDataTable::MakeEmpty();
+        return SkDataTable::NewEmpty();
     }
 
     // Copy the dir into the heap;
-    void* dir = fHeap->alloc(count * sizeof(SkDataTable::Dir), SkChunkAlloc::kThrow_AllocFailType);
+    void* dir = fHeap->alloc(count * sizeof(SkDataTable::Dir),
+                             SkChunkAlloc::kThrow_AllocFailType);
     memcpy(dir, fDir.begin(), count * sizeof(SkDataTable::Dir));
 
-    sk_sp<SkDataTable> table(
-        new SkDataTable((SkDataTable::Dir*)dir, count, chunkalloc_freeproc, fHeap));
+    SkDataTable* table = new SkDataTable((SkDataTable::Dir*)dir, count, chunkalloc_freeproc, fHeap);
     // we have to detach our fHeap, since we are giving that to the table
     fHeap = nullptr;
     fDir.reset();

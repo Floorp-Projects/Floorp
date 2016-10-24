@@ -20,7 +20,7 @@ class DisableColorXP : public GrXferProcessor {
 public:
     static GrXferProcessor* Create() { return new DisableColorXP; }
 
-    ~DisableColorXP() override {}
+    ~DisableColorXP() override {};
 
     const char* name() const override { return "Disable Color"; }
 
@@ -104,6 +104,6 @@ GrDisableColorXPFactory::onCreateXferProcessor(const GrCaps& caps,
 
 GR_DEFINE_XP_FACTORY_TEST(GrDisableColorXPFactory);
 
-sk_sp<GrXPFactory> GrDisableColorXPFactory::TestCreate(GrProcessorTestData*) {
-    return GrDisableColorXPFactory::Make();
+const GrXPFactory* GrDisableColorXPFactory::TestCreate(GrProcessorTestData*) {
+    return GrDisableColorXPFactory::Create();
 }

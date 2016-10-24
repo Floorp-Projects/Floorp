@@ -9,7 +9,7 @@
 #include "SkColorPriv.h"
 #include "SkMaskSwizzler.h"
 
-static void swizzle_mask16_to_rgba_opaque(
+static void swizzle_mask16_to_n32_opaque(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
         uint32_t startX, uint32_t sampleX) {
 
@@ -21,29 +21,12 @@ static void swizzle_mask16_to_rgba_opaque(
         uint8_t red = masks->getRed(p);
         uint8_t green = masks->getGreen(p);
         uint8_t blue = masks->getBlue(p);
-        dstPtr[i] = SkPackARGB_as_RGBA(0xFF, red, green, blue);
+        dstPtr[i] = SkPackARGB32NoCheck(0xFF, red, green, blue);
         srcPtr += sampleX;
     }
 }
 
-static void swizzle_mask16_to_bgra_opaque(
-        void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
-        uint32_t startX, uint32_t sampleX) {
-
-    // Use the masks to decode to the destination
-    uint16_t* srcPtr = ((uint16_t*) srcRow) + startX;
-    SkPMColor* dstPtr = (SkPMColor*) dstRow;
-    for (int i = 0; i < width; i++) {
-        uint16_t p = srcPtr[0];
-        uint8_t red = masks->getRed(p);
-        uint8_t green = masks->getGreen(p);
-        uint8_t blue = masks->getBlue(p);
-        dstPtr[i] = SkPackARGB_as_BGRA(0xFF, red, green, blue);
-        srcPtr += sampleX;
-    }
-}
-
-static void swizzle_mask16_to_rgba_unpremul(
+static void swizzle_mask16_to_n32_unpremul(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
         uint32_t startX, uint32_t sampleX) {
 
@@ -56,12 +39,12 @@ static void swizzle_mask16_to_rgba_unpremul(
         uint8_t green = masks->getGreen(p);
         uint8_t blue = masks->getBlue(p);
         uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = SkPackARGB_as_RGBA(alpha, red, green, blue);
+        dstPtr[i] = SkPackARGB32NoCheck(alpha, red, green, blue);
         srcPtr += sampleX;
     }
 }
 
-static void swizzle_mask16_to_bgra_unpremul(
+static void swizzle_mask16_to_n32_premul(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
         uint32_t startX, uint32_t sampleX) {
 
@@ -74,43 +57,7 @@ static void swizzle_mask16_to_bgra_unpremul(
         uint8_t green = masks->getGreen(p);
         uint8_t blue = masks->getBlue(p);
         uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = SkPackARGB_as_BGRA(alpha, red, green, blue);
-        srcPtr += sampleX;
-    }
-}
-
-static void swizzle_mask16_to_rgba_premul(
-        void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
-        uint32_t startX, uint32_t sampleX) {
-
-    // Use the masks to decode to the destination
-    uint16_t* srcPtr = ((uint16_t*) srcRow) + startX;
-    SkPMColor* dstPtr = (SkPMColor*) dstRow;
-    for (int i = 0; i < width; i++) {
-        uint16_t p = srcPtr[0];
-        uint8_t red = masks->getRed(p);
-        uint8_t green = masks->getGreen(p);
-        uint8_t blue = masks->getBlue(p);
-        uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = premultiply_argb_as_rgba(alpha, red, green, blue);
-        srcPtr += sampleX;
-    }
-}
-
-static void swizzle_mask16_to_bgra_premul(
-        void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
-        uint32_t startX, uint32_t sampleX) {
-
-    // Use the masks to decode to the destination
-    uint16_t* srcPtr = ((uint16_t*) srcRow) + startX;
-    SkPMColor* dstPtr = (SkPMColor*) dstRow;
-    for (int i = 0; i < width; i++) {
-        uint16_t p = srcPtr[0];
-        uint8_t red = masks->getRed(p);
-        uint8_t green = masks->getGreen(p);
-        uint8_t blue = masks->getBlue(p);
-        uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = premultiply_argb_as_bgra(alpha, red, green, blue);
+        dstPtr[i] = SkPreMultiplyARGB(alpha, red, green, blue);
         srcPtr += sampleX;
     }
 }
@@ -134,7 +81,7 @@ static void swizzle_mask16_to_565(
     }
 }
 
-static void swizzle_mask24_to_rgba_opaque(
+static void swizzle_mask24_to_n32_opaque(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
         uint32_t startX, uint32_t sampleX) {
 
@@ -146,29 +93,12 @@ static void swizzle_mask24_to_rgba_opaque(
         uint8_t red = masks->getRed(p);
         uint8_t green = masks->getGreen(p);
         uint8_t blue = masks->getBlue(p);
-        dstPtr[i] = SkPackARGB_as_RGBA(0xFF, red, green, blue);
+        dstPtr[i] = SkPackARGB32NoCheck(0xFF, red, green, blue);
         srcRow += 3 * sampleX;
     }
 }
 
-static void swizzle_mask24_to_bgra_opaque(
-        void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
-        uint32_t startX, uint32_t sampleX) {
-
-    // Use the masks to decode to the destination
-    srcRow += 3 * startX;
-    SkPMColor* dstPtr = (SkPMColor*) dstRow;
-    for (int i = 0; i < width; i++) {
-        uint32_t p = srcRow[0] | (srcRow[1] << 8) | srcRow[2] << 16;
-        uint8_t red = masks->getRed(p);
-        uint8_t green = masks->getGreen(p);
-        uint8_t blue = masks->getBlue(p);
-        dstPtr[i] = SkPackARGB_as_BGRA(0xFF, red, green, blue);
-        srcRow += 3 * sampleX;
-    }
-}
-
-static void swizzle_mask24_to_rgba_unpremul(
+static void swizzle_mask24_to_n32_unpremul(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
         uint32_t startX, uint32_t sampleX) {
 
@@ -181,12 +111,12 @@ static void swizzle_mask24_to_rgba_unpremul(
         uint8_t green = masks->getGreen(p);
         uint8_t blue = masks->getBlue(p);
         uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = SkPackARGB_as_RGBA(alpha, red, green, blue);
+        dstPtr[i] = SkPackARGB32NoCheck(alpha, red, green, blue);
         srcRow += 3 * sampleX;
     }
 }
 
-static void swizzle_mask24_to_bgra_unpremul(
+static void swizzle_mask24_to_n32_premul(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
         uint32_t startX, uint32_t sampleX) {
 
@@ -199,43 +129,7 @@ static void swizzle_mask24_to_bgra_unpremul(
         uint8_t green = masks->getGreen(p);
         uint8_t blue = masks->getBlue(p);
         uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = SkPackARGB_as_BGRA(alpha, red, green, blue);
-        srcRow += 3 * sampleX;
-    }
-}
-
-static void swizzle_mask24_to_rgba_premul(
-        void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
-        uint32_t startX, uint32_t sampleX) {
-
-    // Use the masks to decode to the destination
-    srcRow += 3 * startX;
-    SkPMColor* dstPtr = (SkPMColor*) dstRow;
-    for (int i = 0; i < width; i++) {
-        uint32_t p = srcRow[0] | (srcRow[1] << 8) | srcRow[2] << 16;
-        uint8_t red = masks->getRed(p);
-        uint8_t green = masks->getGreen(p);
-        uint8_t blue = masks->getBlue(p);
-        uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = premultiply_argb_as_rgba(alpha, red, green, blue);
-        srcRow += 3 * sampleX;
-    }
-}
-
-static void swizzle_mask24_to_bgra_premul(
-        void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
-        uint32_t startX, uint32_t sampleX) {
-
-    // Use the masks to decode to the destination
-    srcRow += 3 * startX;
-    SkPMColor* dstPtr = (SkPMColor*) dstRow;
-    for (int i = 0; i < width; i++) {
-        uint32_t p = srcRow[0] | (srcRow[1] << 8) | srcRow[2] << 16;
-        uint8_t red = masks->getRed(p);
-        uint8_t green = masks->getGreen(p);
-        uint8_t blue = masks->getBlue(p);
-        uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = premultiply_argb_as_bgra(alpha, red, green, blue);
+        dstPtr[i] = SkPreMultiplyARGB(alpha, red, green, blue);
         srcRow += 3 * sampleX;
     }
 }
@@ -257,7 +151,7 @@ static void swizzle_mask24_to_565(
     }
 }
 
-static void swizzle_mask32_to_rgba_opaque(
+static void swizzle_mask32_to_n32_opaque(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
         uint32_t startX, uint32_t sampleX) {
 
@@ -269,29 +163,12 @@ static void swizzle_mask32_to_rgba_opaque(
         uint8_t red = masks->getRed(p);
         uint8_t green = masks->getGreen(p);
         uint8_t blue = masks->getBlue(p);
-        dstPtr[i] = SkPackARGB_as_RGBA(0xFF, red, green, blue);
+        dstPtr[i] = SkPackARGB32NoCheck(0xFF, red, green, blue);
         srcPtr += sampleX;
     }
 }
 
-static void swizzle_mask32_to_bgra_opaque(
-        void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
-        uint32_t startX, uint32_t sampleX) {
-
-    // Use the masks to decode to the destination
-    uint32_t* srcPtr = ((uint32_t*) srcRow) + startX;
-    SkPMColor* dstPtr = (SkPMColor*) dstRow;
-    for (int i = 0; i < width; i++) {
-        uint32_t p = srcPtr[0];
-        uint8_t red = masks->getRed(p);
-        uint8_t green = masks->getGreen(p);
-        uint8_t blue = masks->getBlue(p);
-        dstPtr[i] = SkPackARGB_as_BGRA(0xFF, red, green, blue);
-        srcPtr += sampleX;
-    }
-}
-
-static void swizzle_mask32_to_rgba_unpremul(
+static void swizzle_mask32_to_n32_unpremul(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
         uint32_t startX, uint32_t sampleX) {
 
@@ -304,12 +181,12 @@ static void swizzle_mask32_to_rgba_unpremul(
         uint8_t green = masks->getGreen(p);
         uint8_t blue = masks->getBlue(p);
         uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = SkPackARGB_as_RGBA(alpha, red, green, blue);
+        dstPtr[i] = SkPackARGB32NoCheck(alpha, red, green, blue);
         srcPtr += sampleX;
     }
 }
 
-static void swizzle_mask32_to_bgra_unpremul(
+static void swizzle_mask32_to_n32_premul(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
         uint32_t startX, uint32_t sampleX) {
 
@@ -322,43 +199,7 @@ static void swizzle_mask32_to_bgra_unpremul(
         uint8_t green = masks->getGreen(p);
         uint8_t blue = masks->getBlue(p);
         uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = SkPackARGB_as_BGRA(alpha, red, green, blue);
-        srcPtr += sampleX;
-    }
-}
-
-static void swizzle_mask32_to_rgba_premul(
-        void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
-        uint32_t startX, uint32_t sampleX) {
-
-    // Use the masks to decode to the destination
-    uint32_t* srcPtr = ((uint32_t*) srcRow) + startX;
-    SkPMColor* dstPtr = (SkPMColor*) dstRow;
-    for (int i = 0; i < width; i++) {
-        uint32_t p = srcPtr[0];
-        uint8_t red = masks->getRed(p);
-        uint8_t green = masks->getGreen(p);
-        uint8_t blue = masks->getBlue(p);
-        uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = premultiply_argb_as_rgba(alpha, red, green, blue);
-        srcPtr += sampleX;
-    }
-}
-
-static void swizzle_mask32_to_bgra_premul(
-        void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,
-        uint32_t startX, uint32_t sampleX) {
-
-    // Use the masks to decode to the destination
-    uint32_t* srcPtr = ((uint32_t*) srcRow) + startX;
-    SkPMColor* dstPtr = (SkPMColor*) dstRow;
-    for (int i = 0; i < width; i++) {
-        uint32_t p = srcPtr[0];
-        uint8_t red = masks->getRed(p);
-        uint8_t green = masks->getGreen(p);
-        uint8_t blue = masks->getBlue(p);
-        uint8_t alpha = masks->getAlpha(p);
-        dstPtr[i] = premultiply_argb_as_bgra(alpha, red, green, blue);
+        dstPtr[i] = SkPreMultiplyARGB(alpha, red, green, blue);
         srcPtr += sampleX;
     }
 }
@@ -393,32 +234,16 @@ SkMaskSwizzler* SkMaskSwizzler::CreateMaskSwizzler(const SkImageInfo& dstInfo,
     switch (bitsPerPixel) {
         case 16:
             switch (dstInfo.colorType()) {
-                case kRGBA_8888_SkColorType:
+                case kN32_SkColorType:
                     if (kOpaque_SkAlphaType == srcInfo.alphaType()) {
-                        proc = &swizzle_mask16_to_rgba_opaque;
+                        proc = &swizzle_mask16_to_n32_opaque;
                     } else {
                         switch (dstInfo.alphaType()) {
                             case kUnpremul_SkAlphaType:
-                                proc = &swizzle_mask16_to_rgba_unpremul;
+                                proc = &swizzle_mask16_to_n32_unpremul;
                                 break;
                             case kPremul_SkAlphaType:
-                                proc = &swizzle_mask16_to_rgba_premul;
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    break;
-                case kBGRA_8888_SkColorType:
-                    if (kOpaque_SkAlphaType == srcInfo.alphaType()) {
-                        proc = &swizzle_mask16_to_bgra_opaque;
-                    } else {
-                        switch (dstInfo.alphaType()) {
-                            case kUnpremul_SkAlphaType:
-                                proc = &swizzle_mask16_to_bgra_unpremul;
-                                break;
-                            case kPremul_SkAlphaType:
-                                proc = &swizzle_mask16_to_bgra_premul;
+                                proc = &swizzle_mask16_to_n32_premul;
                                 break;
                             default:
                                 break;
@@ -434,32 +259,16 @@ SkMaskSwizzler* SkMaskSwizzler::CreateMaskSwizzler(const SkImageInfo& dstInfo,
             break;
         case 24:
             switch (dstInfo.colorType()) {
-                case kRGBA_8888_SkColorType:
+                case kN32_SkColorType:
                     if (kOpaque_SkAlphaType == srcInfo.alphaType()) {
-                        proc = &swizzle_mask24_to_rgba_opaque;
+                        proc = &swizzle_mask24_to_n32_opaque;
                     } else {
                         switch (dstInfo.alphaType()) {
                             case kUnpremul_SkAlphaType:
-                                proc = &swizzle_mask24_to_rgba_unpremul;
+                                proc = &swizzle_mask24_to_n32_unpremul;
                                 break;
                             case kPremul_SkAlphaType:
-                                proc = &swizzle_mask24_to_rgba_premul;
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    break;
-                case kBGRA_8888_SkColorType:
-                    if (kOpaque_SkAlphaType == srcInfo.alphaType()) {
-                        proc = &swizzle_mask24_to_bgra_opaque;
-                    } else {
-                        switch (dstInfo.alphaType()) {
-                            case kUnpremul_SkAlphaType:
-                                proc = &swizzle_mask24_to_bgra_unpremul;
-                                break;
-                            case kPremul_SkAlphaType:
-                                proc = &swizzle_mask24_to_bgra_premul;
+                                proc = &swizzle_mask24_to_n32_premul;
                                 break;
                             default:
                                 break;
@@ -475,32 +284,16 @@ SkMaskSwizzler* SkMaskSwizzler::CreateMaskSwizzler(const SkImageInfo& dstInfo,
             break;
         case 32:
             switch (dstInfo.colorType()) {
-                case kRGBA_8888_SkColorType:
+                case kN32_SkColorType:
                     if (kOpaque_SkAlphaType == srcInfo.alphaType()) {
-                        proc = &swizzle_mask32_to_rgba_opaque;
+                        proc = &swizzle_mask32_to_n32_opaque;
                     } else {
                         switch (dstInfo.alphaType()) {
                             case kUnpremul_SkAlphaType:
-                                proc = &swizzle_mask32_to_rgba_unpremul;
+                                proc = &swizzle_mask32_to_n32_unpremul;
                                 break;
                             case kPremul_SkAlphaType:
-                                proc = &swizzle_mask32_to_rgba_premul;
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    break;
-                case kBGRA_8888_SkColorType:
-                    if (kOpaque_SkAlphaType == srcInfo.alphaType()) {
-                        proc = &swizzle_mask32_to_bgra_opaque;
-                    } else {
-                        switch (dstInfo.alphaType()) {
-                            case kUnpremul_SkAlphaType:
-                                proc = &swizzle_mask32_to_bgra_unpremul;
-                                break;
-                            case kPremul_SkAlphaType:
-                                proc = &swizzle_mask32_to_bgra_premul;
+                                proc = &swizzle_mask32_to_n32_premul;
                                 break;
                             default:
                                 break;

@@ -9,9 +9,7 @@
 #if !defined(SK_BUILD_FOR_WIN32)
 
 #include "SkDocument.h"
-sk_sp<SkDocument> SkDocument::MakeXPS(SkWStream*, SkScalar) { return nullptr; }
-sk_sp<SkDocument> SkDocument::MakeXPS(const char path[], SkScalar) {
-    return nullptr;
-}
+SkDocument* SkDocument::CreateXPS(SkWStream*, SkScalar) { return nullptr; }
+SkDocument* SkDocument::CreateXPS(const char path[], SkScalar) { return nullptr; }
 
 #endif//!defined(SK_BUILD_FOR_WIN32)

@@ -191,7 +191,6 @@ void SkAAClip::validate() const {
         SkASSERT(fBounds.isEmpty());
         return;
     }
-    SkASSERT(!fBounds.isEmpty());
 
     const RunHead* head = fRunHead;
     SkASSERT(head->fRefCnt > 0);

@@ -16,11 +16,11 @@
 
 class DitherEffect : public GrFragmentProcessor {
 public:
-    static sk_sp<GrFragmentProcessor> Make() {
-        return sk_sp<GrFragmentProcessor>(new DitherEffect);
+    static GrFragmentProcessor* Create() {
+        return new DitherEffect;
     }
 
-    virtual ~DitherEffect() {}
+    virtual ~DitherEffect() {};
 
     const char* name() const override { return "Dither"; }
 
@@ -52,8 +52,8 @@ void DitherEffect::onComputeInvariantOutput(GrInvariantOutput* inout) const {
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(DitherEffect);
 
-sk_sp<GrFragmentProcessor> DitherEffect::TestCreate(GrProcessorTestData*) {
-    return DitherEffect::Make();
+const GrFragmentProcessor* DitherEffect::TestCreate(GrProcessorTestData*) {
+    return DitherEffect::Create();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -95,4 +95,4 @@ GrGLSLFragmentProcessor* DitherEffect::onCreateGLSLInstance() const  {
     return new GLDitherEffect;
 }
 
-sk_sp<GrFragmentProcessor> GrDitherEffect::Make() { return DitherEffect::Make(); }
+GrFragmentProcessor* GrDitherEffect::Create() { return DitherEffect::Create(); }

@@ -1,8 +1,0 @@
-STRINGIFY(
-
-// defines built-in interfaces supported by SkiaSL fragment shaders
-
-layout(builtin=15) in vec4 gl_FragCoord;
-
-)
-

@@ -9,7 +9,7 @@
 #define GrGLSLXferProcessor_DEFINED
 
 #include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLSampler.h"
+#include "glsl/GrGLSLTextureSampler.h"
 
 class GrXferProcessor;
 class GrGLSLCaps;
@@ -22,8 +22,7 @@ public:
     GrGLSLXferProcessor() {}
     virtual ~GrGLSLXferProcessor() {}
 
-    typedef GrGLSLProgramDataManager::UniformHandle SamplerHandle;
-
+    typedef GrGLSLTextureSampler::TextureSamplerArray TextureSamplerArray;
     struct EmitArgs {
         EmitArgs(GrGLSLXPFragmentBuilder* fragBuilder,
                  GrGLSLUniformHandler* uniformHandler,
@@ -33,8 +32,7 @@ public:
                  const char* inputCoverage,
                  const char* outputPrimary,
                  const char* outputSecondary,
-                 const SamplerHandle* texSamplers,
-                 const SamplerHandle* bufferSamplers,
+                 const TextureSamplerArray& samplers,
                  const bool usePLSDstRead)
             : fXPFragBuilder(fragBuilder)
             , fUniformHandler(uniformHandler)
@@ -44,8 +42,7 @@ public:
             , fInputCoverage(inputCoverage)
             , fOutputPrimary(outputPrimary)
             , fOutputSecondary(outputSecondary)
-            , fTexSamplers(texSamplers)
-            , fBufferSamplers(bufferSamplers)
+            , fSamplers(samplers)
             , fUsePLSDstRead(usePLSDstRead) {}
 
         GrGLSLXPFragmentBuilder* fXPFragBuilder;
@@ -56,8 +53,7 @@ public:
         const char* fInputCoverage;
         const char* fOutputPrimary;
         const char* fOutputSecondary;
-        const SamplerHandle* fTexSamplers;
-        const SamplerHandle* fBufferSamplers;
+        const TextureSamplerArray& fSamplers;
         bool fUsePLSDstRead;
     };
     /**
