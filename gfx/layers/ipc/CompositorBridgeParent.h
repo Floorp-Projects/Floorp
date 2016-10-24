@@ -27,6 +27,7 @@
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/layers/CompositorController.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/ISurfaceAllocator.h" // for ShmemAllocator
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
@@ -245,6 +246,7 @@ public:
 };
 
 class CompositorBridgeParent final : public CompositorBridgeParentBase
+                                   , public CompositorController
 {
   friend class CompositorVsyncScheduler;
   friend class CompositorThreadHolder;
@@ -253,6 +255,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase
   friend class gfx::GPUParent;
 
 public:
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override { return CompositorBridgeParentBase::AddRef(); }
+  NS_IMETHOD_(MozExternalRefCountType) Release() override { return CompositorBridgeParentBase::Release(); }
+
   explicit CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
                                   const TimeDuration& aVsyncRate,
                                   bool aUseExternalSurfaceSize,
@@ -375,7 +380,7 @@ public:
   void AsyncRender();
 
   // Can be called from any thread
-  void ScheduleRenderOnCompositorThread();
+  void ScheduleRenderOnCompositorThread() override;
   void SchedulePauseOnCompositorThread();
   void InvalidateOnCompositorThread();
   /**
@@ -501,10 +506,13 @@ public:
    * Plugin visibility helpers for the apz (main thread) and compositor
    * thread.
    */
-  void ScheduleShowAllPluginWindows();
-  void ScheduleHideAllPluginWindows();
+  void ScheduleShowAllPluginWindows() override;
+  void ScheduleHideAllPluginWindows() override;
   void ShowAllPluginWindows();
   void HideAllPluginWindows();
+#else
+  void ScheduleShowAllPluginWindows() override {}
+  void ScheduleHideAllPluginWindows() override {}
 #endif
 
   /**
