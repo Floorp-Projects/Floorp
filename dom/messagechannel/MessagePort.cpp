@@ -440,7 +440,8 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
       MarkerTracingType::START);
   }
 
-  data->Write(aCx, aMessage, transferable, aRv);
+  data->Write(aCx, aMessage, transferable,
+              JS::CloneDataPolicy().denySharedArrayBuffer(), aRv);
 
   if (isTimelineRecording) {
     end = MakeUnique<MessagePortTimelineMarker>(
