@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/ServoBindingHelpers.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInfo.h"
 #include "nsStringFwd.h"

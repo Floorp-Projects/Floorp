@@ -20,8 +20,8 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/KeyframeEffectParams.h"
 #include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
-#include "mozilla/ServoBindingHelpers.h" // RawServoDeclarationBlock and
-                                         // associated RefPtrTraits
+#include "mozilla/ServoBindingTypes.h" // RawServoDeclarationBlock and
+                                       // associated RefPtrTraits
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/Element.h"
