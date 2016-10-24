@@ -129,7 +129,12 @@ Inspector.prototype = {
     yield this._cssPropertiesLoaded;
     yield this.target.makeRemote();
     yield this._getPageStyle();
-    let defaultSelection = yield this._getDefaultNodeForSelection();
+
+    // This may throw if the document is still loading and we are
+    // refering to a dead about:blank document
+    let defaultSelection = yield this._getDefaultNodeForSelection()
+      .catch(this._handleRejectionIfNotDestroyed);
+
     return yield this._deferredOpen(defaultSelection);
   }),
 
@@ -213,13 +218,13 @@ Inspector.prototype = {
   _deferredOpen: function (defaultSelection) {
     let deferred = defer();
 
+    this.breadcrumbs = new HTMLBreadcrumbs(this);
+
     this.walker.on("new-root", this.onNewRoot);
 
     this.selection.on("new-node-front", this.onNewSelection);
     this.selection.on("before-new-node-front", this.onBeforeNewSelection);
     this.selection.on("detached-front", this.onDetached);
-
-    this.breadcrumbs = new HTMLBreadcrumbs(this);
 
     if (this.target.isLocalTab) {
       // Show a warning when the debugger is paused.
@@ -257,8 +262,10 @@ Inspector.prototype = {
       this.isReady = true;
 
       // All the components are initialized. Let's select a node.
-      this.selection.setNodeFront(defaultSelection, "inspector-open");
-      this.markup.expandNode(this.selection.nodeFront);
+      if (defaultSelection) {
+        this.selection.setNodeFront(defaultSelection, "inspector-open");
+        this.markup.expandNode(this.selection.nodeFront);
+      }
 
       // And setup the toolbar only now because it may depend on the document.
       this.setupToolbar();

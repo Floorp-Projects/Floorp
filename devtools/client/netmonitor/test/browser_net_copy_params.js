@@ -11,7 +11,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(PARAMS_URL);
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
+  let { NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -65,8 +65,10 @@ add_task(function* () {
   return teardown(monitor);
 
   function testCopyUrlParamsHidden(hidden) {
-    RequestsMenu._onContextShowing();
-    is(document.querySelector("#request-menu-context-copy-url-params").hidden, hidden,
+    let allMenuItems = openContextMenuAndGetAllItems(NetMonitorView);
+    let copyUrlParamsNode = allMenuItems.find(item =>
+      item.id === "request-menu-context-copy-url-params");
+    is(copyUrlParamsNode.visible, !hidden,
       "The \"Copy URL Parameters\" context menu item should" + (hidden ? " " : " not ") +
         "be hidden.");
   }
@@ -79,8 +81,10 @@ add_task(function* () {
   }
 
   function testCopyPostDataHidden(hidden) {
-    RequestsMenu._onContextShowing();
-    is(document.querySelector("#request-menu-context-copy-post-data").hidden, hidden,
+    let allMenuItems = openContextMenuAndGetAllItems(NetMonitorView);
+    let copyPostDataNode = allMenuItems.find(item =>
+      item.id === "request-menu-context-copy-post-data");
+    is(copyPostDataNode.visible, !hidden,
       "The \"Copy POST Data\" context menu item should" + (hidden ? " " : " not ") +
         "be hidden.");
   }

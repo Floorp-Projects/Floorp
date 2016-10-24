@@ -34,6 +34,9 @@ add_task(function* () {
         title: "child",
       });
 
+      browser.test.onMessage.addListener(() => {
+        browser.test.sendMessage("pong");
+      });
       browser.test.notifyPass("contextmenus-icons");
     },
   });
@@ -55,6 +58,10 @@ add_task(function* () {
 
   let childToDelete = extensionMenu.getElementsByAttribute("label", "child-to-delete")[0];
   yield closeExtensionContextMenu(childToDelete);
+  // Now perform a roundtrip to the extension process to make sure that the
+  // click event has had a chance to fire.
+  extension.sendMessage("ping");
+  yield extension.awaitMessage("pong");
 
   yield openExtensionContextMenu();
 

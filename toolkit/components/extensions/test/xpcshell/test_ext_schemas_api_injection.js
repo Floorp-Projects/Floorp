@@ -1,10 +1,12 @@
 "use strict";
 
+Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
 Components.utils.import("resource://gre/modules/Schemas.jsm");
 
 let {
-  Management,
-} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+  BaseContext,
+  SchemaAPIManager,
+} = ExtensionUtils;
 
 let nestedNamespaceJson = [
   {
@@ -42,32 +44,38 @@ let nestedNamespaceJson = [
   },
 ];
 
+let global = this;
+class StubContext extends BaseContext {
+  constructor() {
+    let fakeExtension = {id: "test@web.extension"};
+    super("addon_child", fakeExtension);
+    this.sandbox = Cu.Sandbox(global);
+    this.viewType = "background";
+  }
+
+  get cloneScope() {
+    return this.sandbox;
+  }
+}
+
 add_task(function* testSchemaAPIInjection() {
   let url = "data:," + JSON.stringify(nestedNamespaceJson);
 
   // Load the schema of the fake APIs.
   yield Schemas.load(url);
 
-  // Register an API that will skip the background page.
-  Management.registerSchemaAPI("noBackgroundAPI.testnamespace", "addon_child", context => {
-    if (context.type !== "background") {
-      return {
-        noBackgroundAPI: {
-          testnamespace: {
-            create(title) {},
-          },
-        },
-      };
-    }
+  let apiManager = new SchemaAPIManager("addon");
 
+  // Register an API that will skip the background page.
+  apiManager.registerSchemaAPI("noBackgroundAPI.testnamespace", "addon_child", context => {
     // This API should not be available in this context, return null so that
     // the schema wrapper is removed as well.
     return null;
   });
 
   // Register an API that will skip any but the background page.
-  Management.registerSchemaAPI("backgroundAPI.testnamespace", "addon_child", context => {
-    if (context.type === "background") {
+  apiManager.registerSchemaAPI("backgroundAPI.testnamespace", "addon_child", context => {
+    if (context.viewType === "background") {
       return {
         backgroundAPI: {
           testnamespace: {
@@ -84,20 +92,11 @@ add_task(function* testSchemaAPIInjection() {
     return null;
   });
 
-  let extension = ExtensionTestUtils.loadExtension({
-    background() {
-      if (browser.noBackgroundAPI) {
-        browser.test.notifyFail("skipAPIonNull.done");
-      } else {
-        const res = browser.backgroundAPI.testnamespace.create("param-value");
-        browser.test.assertEq("param-value", res,
-                              "Got the expected result from the fake API method");
-        browser.test.notifyPass("skipAPIonNull.done");
-      }
-    },
-  });
+  let context = new StubContext();
+  let browserObj = {};
+  apiManager.generateAPIs(context, browserObj);
 
-  yield extension.startup();
-  yield extension.awaitFinish("skipAPIonNull.done");
-  yield extension.unload();
+  do_check_eq(browserObj.noBackgroundAPI, undefined);
+  const res = browserObj.backgroundAPI.testnamespace.create("param-value");
+  do_check_eq(res, "param-value");
 });

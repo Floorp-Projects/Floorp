@@ -13,13 +13,10 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/AsyncShutdown.jsm");
-
-/* globals OS ExtensionStorage */
-
-var Path = OS.Path;
-var profileDir = OS.Constants.Path.profileDir;
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
 
 function jsonReplacer(key, value) {
   switch (typeof(value)) {
@@ -63,8 +60,6 @@ this.ExtensionStorage = {
   cache: new Map(),
   listeners: new Map(),
 
-  extensionDir: Path.join(profileDir, "browser-extension-data"),
-
   /**
    * Sanitizes the given value, and returns a JSON-compatible
    * representation of it, based on the privileges of the given global.
@@ -82,11 +77,11 @@ this.ExtensionStorage = {
   },
 
   getExtensionDir(extensionId) {
-    return Path.join(this.extensionDir, extensionId);
+    return OS.Path.join(this.extensionDir, extensionId);
   },
 
   getStorageFile(extensionId) {
-    return Path.join(this.extensionDir, extensionId, "storage.js");
+    return OS.Path.join(this.extensionDir, extensionId, "storage.js");
   },
 
   read(extensionId) {
@@ -114,7 +109,10 @@ this.ExtensionStorage = {
       let encoder = new TextEncoder();
       let array = encoder.encode(JSON.stringify(extData));
       let path = this.getStorageFile(extensionId);
-      OS.File.makeDir(this.getExtensionDir(extensionId), {ignoreExisting: true, from: profileDir});
+      OS.File.makeDir(this.getExtensionDir(extensionId), {
+        ignoreExisting: true,
+        from: OS.Constants.Path.profileDir,
+      });
       let promise = OS.File.writeAtomic(path, array);
       return promise;
     }).catch(() => {
@@ -220,6 +218,9 @@ this.ExtensionStorage = {
   },
 
   init() {
+    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
+      return;
+    }
     Services.obs.addObserver(this, "extension-invalidate-storage-cache", false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
@@ -233,5 +234,8 @@ this.ExtensionStorage = {
     }
   },
 };
+
+XPCOMUtils.defineLazyGetter(ExtensionStorage, "extensionDir",
+  () => OS.Path.join(OS.Constants.Path.profileDir, "browser-extension-data"));
 
 ExtensionStorage.init();

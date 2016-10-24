@@ -34,8 +34,7 @@ nsComposerCommandsUpdater::nsComposerCommandsUpdater()
 nsComposerCommandsUpdater::~nsComposerCommandsUpdater()
 {
   // cancel any outstanding update timer
-  if (mUpdateTimer)
-  {
+  if (mUpdateTimer) {
     mUpdateTimer->Cancel();
   }
 }
@@ -59,8 +58,7 @@ NS_IMETHODIMP
 nsComposerCommandsUpdater::NotifyDocumentWillBeDestroyed()
 {
   // cancel any outstanding update timer
-  if (mUpdateTimer)
-  {
+  if (mUpdateTimer) {
     mUpdateTimer->Cancel();
     mUpdateTimer = nullptr;
   }
@@ -108,10 +106,10 @@ nsComposerCommandsUpdater::DidDo(nsITransactionManager *aManager,
   // only need to update if the status of the Undo menu item changes.
   int32_t undoCount;
   aManager->GetNumberOfUndoItems(&undoCount);
-  if (undoCount == 1)
-  {
-    if (mFirstDoOfFirstUndo)
+  if (undoCount == 1) {
+    if (mFirstDoOfFirstUndo) {
       UpdateCommandGroup(NS_LITERAL_STRING("undo"));
+    }
     mFirstDoOfFirstUndo = false;
   }
 
@@ -224,8 +222,7 @@ nsComposerCommandsUpdater::Init(nsPIDOMWindowOuter* aDOMWindow)
 nsresult
 nsComposerCommandsUpdater::PrimeUpdateTimer()
 {
-  if (!mUpdateTimer)
-  {
+  if (!mUpdateTimer) {
     nsresult rv = NS_OK;
     mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -242,8 +239,7 @@ void nsComposerCommandsUpdater::TimerCallback()
 {
   // if the selection state has changed, update stuff
   bool isCollapsed = SelectionIsCollapsed();
-  if (static_cast<int8_t>(isCollapsed) != mSelectionCollapsed)
-  {
+  if (static_cast<int8_t>(isCollapsed) != mSelectionCollapsed) {
     UpdateCommandGroup(NS_LITERAL_STRING("select"));
     mSelectionCollapsed = isCollapsed;
   }
@@ -256,8 +252,7 @@ void nsComposerCommandsUpdater::TimerCallback()
 nsresult
 nsComposerCommandsUpdater::UpdateDirtyState(bool aNowDirty)
 {
-  if (mDirtyState != static_cast<int8_t>(aNowDirty))
-  {
+  if (mDirtyState != static_cast<int8_t>(aNowDirty)) {
     UpdateCommandGroup(NS_LITERAL_STRING("save"));
     UpdateCommandGroup(NS_LITERAL_STRING("undo"));
     mDirtyState = aNowDirty;
@@ -275,14 +270,14 @@ nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
 
   // This hardcoded list of commands is temporary.
   // This code should use nsIControllerCommandGroup.
-  if (aCommandGroup.EqualsLiteral("undo"))
-  {
+  if (aCommandGroup.EqualsLiteral("undo")) {
     commandUpdater->CommandStatusChanged("cmd_undo");
     commandUpdater->CommandStatusChanged("cmd_redo");
+    return NS_OK;
   }
-  else if (aCommandGroup.EqualsLiteral("select") ||
-           aCommandGroup.EqualsLiteral("style"))
-  {
+
+  if (aCommandGroup.EqualsLiteral("select") ||
+      aCommandGroup.EqualsLiteral("style")) {
     commandUpdater->CommandStatusChanged("cmd_bold");
     commandUpdater->CommandStatusChanged("cmd_italic");
     commandUpdater->CommandStatusChanged("cmd_underline");
@@ -310,13 +305,16 @@ nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
     commandUpdater->CommandStatusChanged("cmd_fontColor");
     commandUpdater->CommandStatusChanged("cmd_backgroundColor");
     commandUpdater->CommandStatusChanged("cmd_highlight");
+    return NS_OK;
   }
-  else if (aCommandGroup.EqualsLiteral("save"))
-  {
+
+  if (aCommandGroup.EqualsLiteral("save")) {
     // save commands (most are not in C++)
     commandUpdater->CommandStatusChanged("cmd_setDocumentModified");
     commandUpdater->CommandStatusChanged("cmd_save");
+    return NS_OK;
   }
+
   return NS_OK;
 }
 
@@ -337,16 +335,14 @@ nsComposerCommandsUpdater::SelectionIsCollapsed()
   nsCOMPtr<nsPIDOMWindowOuter> domWindow = do_QueryReferent(mDOMWindow);
   NS_ENSURE_TRUE(domWindow, true);
 
-  if (nsCOMPtr<nsISelection> domSelection = domWindow->GetSelection())
-  {
-    bool selectionCollapsed = false;
-    domSelection->GetIsCollapsed(&selectionCollapsed);
-    return selectionCollapsed;
+  nsCOMPtr<nsISelection> domSelection = domWindow->GetSelection();
+  if (NS_WARN_IF(!domSelection)) {
+    return false;
   }
 
-  NS_WARNING("nsComposerCommandsUpdater::SelectionIsCollapsed - no domSelection");
-
-  return false;
+  bool selectionCollapsed = false;
+  domSelection->GetIsCollapsed(&selectionCollapsed);
+  return selectionCollapsed;
 }
 
 already_AddRefed<nsPICommandUpdater>
