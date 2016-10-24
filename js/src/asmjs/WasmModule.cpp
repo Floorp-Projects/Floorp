@@ -595,6 +595,17 @@ Module::initSegments(JSContext* cx,
                                       "elem", "table");
             return false;
         }
+
+        for (uint32_t elemFuncIndex : seg.elemFuncIndices) {
+            if (elemFuncIndex < funcImports.length()) {
+                HandleFunction f = funcImports[elemFuncIndex];
+                if (!IsExportedWasmFunction(f)) {
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                              JSMSG_WASM_BAD_TABLE_VALUE);
+                    return false;
+                }
+            }
+        }
     }
 
     if (memoryObj) {
@@ -630,11 +641,6 @@ Module::initSegments(JSContext* cx,
                 MOZ_ASSERT(seg.elemCodeRangeIndices[i] == UINT32_MAX);
 
                 HandleFunction f = funcImports[elemFuncIndex];
-                if (!IsExportedWasmFunction(f)) {
-                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
-                    return false;
-                }
-
                 WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
                 const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f);
                 Instance& exportInstance = exportInstanceObj->instance();
