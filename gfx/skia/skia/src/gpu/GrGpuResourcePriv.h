@@ -44,7 +44,7 @@ public:
      * Does the resource count against the resource budget?
      */
     SkBudgeted isBudgeted() const {
-        bool ret = SkBudgeted::kYes == fResource->fBudgeted;
+        bool ret = GrGpuResource::kCached_LifeCycle == fResource->fLifeCycle;
         SkASSERT(ret || !fResource->getUniqueKey().isValid());
         return SkBudgeted(ret);
     }
@@ -52,7 +52,7 @@ public:
     /**
      * Is the resource object wrapping an externally allocated GPU resource?
      */
-    bool refsWrappedObjects() const { return fResource->fRefsWrappedObjects; }
+    bool isExternal() const { return fResource->isExternal(); }
 
     /**
      * If this resource can be used as a scratch resource this returns a valid scratch key.

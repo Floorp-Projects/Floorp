@@ -38,17 +38,14 @@ const SkPixmap* SkBlitter::justAnOpaqueColor(uint32_t* value) {
     return nullptr;
 }
 
-/*
 void SkBlitter::blitH(int x, int y, int width) {
     SkDEBUGFAIL("unimplemented");
 }
-
 
 void SkBlitter::blitAntiH(int x, int y, const SkAlpha antialias[],
                           const int16_t runs[]) {
     SkDEBUGFAIL("unimplemented");
 }
- */
 
 void SkBlitter::blitV(int x, int y, int height, SkAlpha alpha) {
     if (alpha == 255) {
@@ -158,7 +155,7 @@ void SkBlitter::blitMask(const SkMask& mask, const SkIRect& clip) {
                 cy += 1;
             }
         } else {
-            // Bits is calculated as the offset into the mask at the point {cx, cy} therefore, all
+            // Bits is calculated as the offset into the mask at the point {cx, cy} therfore, all
             // addressing into the bit mask is relative to that point. Since this is an address
             // calculated from a arbitrary bit in that byte, calculate the left most bit.
             int bitsLeft = cx - ((cx - maskLeft) & 7);
@@ -788,7 +785,7 @@ SkShader::ContextRec::DstType SkBlitter::PreferredShaderDest(const SkImageInfo& 
 #ifdef SK_FORCE_PM4f_FOR_L32_BLITS
     return SkShader::ContextRec::kPM4f_DstType;
 #else
-    return (dstInfo.gammaCloseToSRGB() || dstInfo.colorType() == kRGBA_F16_SkColorType)
+    return (dstInfo.isSRGB() || dstInfo.colorType() == kRGBA_F16_SkColorType)
             ? SkShader::ContextRec::kPM4f_DstType
             : SkShader::ContextRec::kPMColor_DstType;
 #endif
@@ -810,7 +807,7 @@ SkBlitter* SkBlitter::Choose(const SkPixmap& device,
 
     SkShader* shader = origPaint.getShader();
     SkColorFilter* cf = origPaint.getColorFilter();
-    SkBlendMode mode = origPaint.getBlendMode();
+    SkXfermode* mode = origPaint.getXfermode();
     sk_sp<Sk3DShader> shader3D;
 
     SkTCopyOnFirstWrite<SkPaint> paint(origPaint);
@@ -823,12 +820,12 @@ SkBlitter* SkBlitter::Choose(const SkPixmap& device,
         shader = shader3D.get();
     }
 
-    if (mode != SkBlendMode::kSrcOver) {
+    if (mode) {
         bool deviceIsOpaque = kRGB_565_SkColorType == device.colorType();
         switch (SkInterpretXfermode(*paint, deviceIsOpaque)) {
             case kSrcOver_SkXfermodeInterpretation:
-                mode = SkBlendMode::kSrcOver;
-                paint.writable()->setBlendMode(mode);
+                mode = nullptr;
+                paint.writable()->setXfermode(nullptr);
                 break;
             case kSkipDrawing_SkXfermodeInterpretation:{
                 return allocator->createT<SkNullBlitter>();
@@ -843,22 +840,18 @@ SkBlitter* SkBlitter::Choose(const SkPixmap& device,
      *  color/shader/colorfilter, and just pretend we're SRC + color==0. This
      *  will fall into our optimizations for SRC mode.
      */
-    if (mode == SkBlendMode::kClear) {
+    if (SkXfermode::IsMode(mode, SkXfermode::kClear_Mode)) {
         SkPaint* p = paint.writable();
         p->setShader(nullptr);
         shader = nullptr;
         p->setColorFilter(nullptr);
         cf = nullptr;
-        p->setBlendMode(mode = SkBlendMode::kSrc);
+        mode = p->setXfermodeMode(SkXfermode::kSrc_Mode);
         p->setColor(0);
     }
 
-    if (SkBlitter* blitter = SkCreateRasterPipelineBlitter(device, *paint, allocator)) {
-        return blitter;
-    }
-
     if (nullptr == shader) {
-        if (mode != SkBlendMode::kSrcOver) {
+        if (mode) {
             // xfermodes (and filters) require shaders for our current blitters
             paint.writable()->setShader(SkShader::MakeColorShader(paint->getColor()));
             paint.writable()->setAlpha(0xFF);
@@ -909,7 +902,7 @@ SkBlitter* SkBlitter::Choose(const SkPixmap& device,
         case kAlpha_8_SkColorType:
             if (drawCoverage) {
                 SkASSERT(nullptr == shader);
-                SkASSERT(paint->isSrcOver());
+                SkASSERT(nullptr == paint->getXfermode());
                 blitter = allocator->createT<SkA8_Coverage_Blitter>(device, *paint);
             } else if (shader) {
                 blitter = allocator->createT<SkA8_Shader_Blitter>(device, *paint, shaderContext);
@@ -926,7 +919,7 @@ SkBlitter* SkBlitter::Choose(const SkPixmap& device,
 #ifdef SK_FORCE_PM4f_FOR_L32_BLITS
             if (true)
 #else
-            if (device.info().gammaCloseToSRGB())
+            if (device.info().isSRGB())
 #endif
             {
                 blitter = SkBlitter_ARGB32_Create(device, *paint, shaderContext, allocator);
@@ -945,7 +938,8 @@ SkBlitter* SkBlitter::Choose(const SkPixmap& device,
             break;
 
         case kRGBA_F16_SkColorType:
-            blitter = SkBlitter_F16_Create(device, *paint, shaderContext, allocator);
+        // kU16_SkColorType:
+            blitter = SkBlitter_ARGB64_Create(device, *paint, shaderContext, allocator);
             break;
 
         default:

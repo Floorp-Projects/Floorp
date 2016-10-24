@@ -9,7 +9,6 @@
 
 #include "GrTypes.h"
 #include "SkGeometry.h"
-#include "SkMathPriv.h"
 
 SkScalar GrPathUtils::scaleToleranceToSrc(SkScalar devTol,
                                           const SkMatrix& viewM,
@@ -44,9 +43,7 @@ uint32_t GrPathUtils::quadraticPointCount(const SkPoint points[],
     SkASSERT(tol > 0);
 
     SkScalar d = points[1].distanceToLineSegmentBetween(points[0], points[2]);
-    if (!SkScalarIsFinite(d)) {
-        return MAX_POINTS_PER_CURVE;
-    } else if (d <= tol) {
+    if (d <= tol) {
         return 1;
     } else {
         // Each time we subdivide, d should be cut in 4. So we need to
@@ -106,9 +103,7 @@ uint32_t GrPathUtils::cubicPointCount(const SkPoint points[],
         points[1].distanceToLineSegmentBetweenSqd(points[0], points[3]),
         points[2].distanceToLineSegmentBetweenSqd(points[0], points[3]));
     d = SkScalarSqrt(d);
-    if (!SkScalarIsFinite(d)) {
-        return MAX_POINTS_PER_CURVE;
-    } else if (d <= tol) {
+    if (d <= tol) {
         return 1;
     } else {
         SkScalar divSqrt = SkScalarSqrt(d / tol);
@@ -253,6 +248,7 @@ void GrPathUtils::QuadUVMatrix::set(const SkPoint qPts[3]) {
             // distances to be to the left. This matches the non-degenerate
             // case.
             lineVec.setOrthog(lineVec, SkPoint::kLeft_Side);
+            lineVec.dot(qPts[0]);
             // first row
             fM[0] = 0;
             fM[1] = 0;

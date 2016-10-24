@@ -7,22 +7,13 @@
 
 #include "GrDrawPathBatch.h"
 
-#include "GrRenderTargetPriv.h"
-
 static void pre_translate_transform_values(const float* xforms,
                                            GrPathRendering::PathTransformType type, int count,
                                            SkScalar x, SkScalar y, float* dst);
 
-void GrDrawPathBatchBase::onPrepare(GrBatchFlushState*) {
-    const GrRenderTargetPriv& rtPriv = this->pipeline()->getRenderTarget()->renderTargetPriv();
-    fStencilPassSettings.reset(GrPathRendering::GetStencilPassSettings(fFillType),
-                               this->pipeline()->hasStencilClip(), rtPriv.numStencilBits());
-}
-
 SkString GrDrawPathBatch::dumpInfo() const {
     SkString string;
     string.printf("PATH: 0x%p", fPath.get());
-    string.append(INHERITED::dumpInfo());
     return string;
 }
 
@@ -32,8 +23,8 @@ void GrDrawPathBatch::onDraw(GrBatchFlushState* state) {
     SkAutoTUnref<GrPathProcessor> pathProc(GrPathProcessor::Create(this->color(),
                                                                    this->overrides(),
                                                                    this->viewMatrix()));
-    state->gpu()->pathRendering()->drawPath(*this->pipeline(), *pathProc,
-                                            this->stencilPassSettings(), fPath.get());
+    state->gpu()->pathRendering()->drawPath(*this->pipeline(), *pathProc, this->stencilSettings(),
+                                            fPath.get());
 }
 
 SkString GrDrawPathRangeBatch::dumpInfo() const {
@@ -44,7 +35,6 @@ SkString GrDrawPathRangeBatch::dumpInfo() const {
     }
     string.remove(string.size() - 2, 2);
     string.append("]");
-    string.append(INHERITED::dumpInfo());
     return string;
 }
 
@@ -57,7 +47,7 @@ GrDrawPathRangeBatch::GrDrawPathRangeBatch(const SkMatrix& viewMatrix, SkScalar 
     , fTotalPathCount(instanceData->count())
     , fScale(scale) {
     fDraws.addToHead()->set(instanceData, x, y);
-    this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
+    fBounds = bounds;
 }
 
 bool GrDrawPathRangeBatch::onCombineIfPossible(GrBatch* t, const GrCaps& caps) {
@@ -69,7 +59,7 @@ bool GrDrawPathRangeBatch::onCombineIfPossible(GrBatch* t, const GrCaps& caps) {
         !this->viewMatrix().cheapEqualTo(that->viewMatrix())) {
         return false;
     }
-    if (!GrPipeline::AreEqual(*this->pipeline(), *that->pipeline())) {
+    if (!GrPipeline::AreEqual(*this->pipeline(), *that->pipeline(), false)) {
         return false;
     }
     switch (fDraws.head()->fInstanceData->transformType()) {
@@ -99,7 +89,7 @@ bool GrDrawPathRangeBatch::onCombineIfPossible(GrBatch* t, const GrCaps& caps) {
     // numbers, and we only partially account for this by not allowing even/odd paths to be
     // combined. (Glyphs in the same font tend to wind the same direction so it works out OK.)
     if (GrPathRendering::kWinding_FillType != this->fillType() ||
-        GrPathRendering::kWinding_FillType != that->fillType() ||
+        this->stencilSettings() != that->stencilSettings() ||
         this->overrides().willColorBlendWithDst()) {
         return false;
     }
@@ -112,7 +102,6 @@ bool GrDrawPathRangeBatch::onCombineIfPossible(GrBatch* t, const GrCaps& caps) {
         draw->fY = head->fY;
         that->fDraws.popHead();
     }
-    this->joinBounds(*that);
     return true;
 }
 
@@ -136,7 +125,7 @@ void GrDrawPathRangeBatch::onDraw(GrBatchFlushState* state) {
         const InstanceData& instances = *head.fInstanceData;
         state->gpu()->pathRendering()->drawPaths(*this->pipeline(),
                                                  *pathProc,
-                                                 this->stencilPassSettings(),
+                                                 this->stencilSettings(),
                                                  fPathRange.get(),
                                                  instances.indices(),
                                                  GrPathRange::kU16_PathIndexType,
@@ -165,7 +154,7 @@ void GrDrawPathRangeBatch::onDraw(GrBatchFlushState* state) {
 
         state->gpu()->pathRendering()->drawPaths(*this->pipeline(),
                                                  *pathProc,
-                                                 this->stencilPassSettings(),
+                                                 this->stencilSettings(),
                                                  fPathRange.get(),
                                                  indexStorage,
                                                  GrPathRange::kU16_PathIndexType,

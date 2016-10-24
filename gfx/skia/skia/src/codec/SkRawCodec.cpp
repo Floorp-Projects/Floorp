@@ -257,7 +257,7 @@ public:
     }
 
     SkMemoryStream* transferBuffer(size_t offset, size_t size) override {
-        sk_sp<SkData> data(SkData::MakeUninitialized(size));
+        SkAutoTUnref<SkData> data(SkData::NewUninitialized(size));
         if (offset > fStreamBuffer.bytesWritten()) {
             // If the offset is not buffered, read from fStream directly and skip the buffering.
             const size_t skipLength = offset - fStreamBuffer.bytesWritten();
@@ -266,7 +266,7 @@ public:
             }
             const size_t bytesRead = fStream->read(data->writable_data(), size);
             if (bytesRead < size) {
-                data = SkData::MakeSubset(data.get(), 0, bytesRead);
+                data.reset(SkData::NewSubset(data.get(), 0, bytesRead));
             }
         } else {
             const size_t alreadyBuffered = SkTMin(fStreamBuffer.bytesWritten() - offset, size);
@@ -284,7 +284,7 @@ public:
                     if (!safe_add_to_size_t(alreadyBuffered, bytesRead, &newSize)) {
                         return nullptr;
                     }
-                    data = SkData::MakeSubset(data.get(), 0, newSize);
+                    data.reset(SkData::NewSubset(data.get(), 0, newSize));
                 }
             }
         }
@@ -379,18 +379,18 @@ public:
         }
 
         if (fStream->getMemoryBase()) {  // directly copy if getMemoryBase() is available.
-            sk_sp<SkData> data(SkData::MakeWithCopy(
+            SkAutoTUnref<SkData> data(SkData::NewWithCopy(
                 static_cast<const uint8_t*>(fStream->getMemoryBase()) + offset, bytesToRead));
             fStream.reset();
             return new SkMemoryStream(data);
         } else {
-            sk_sp<SkData> data(SkData::MakeUninitialized(bytesToRead));
+            SkAutoTUnref<SkData> data(SkData::NewUninitialized(bytesToRead));
             if (!fStream->seek(offset)) {
                 return nullptr;
             }
             const size_t bytesRead = fStream->read(data->writable_data(), bytesToRead);
             if (bytesRead < bytesToRead) {
-                data = SkData::MakeSubset(data.get(), 0, bytesRead);
+                data.reset(SkData::NewSubset(data.get(), 0, bytesRead));
             }
             return new SkMemoryStream(data);
         }
@@ -515,16 +515,8 @@ public:
         }
     }
 
-    const SkEncodedInfo& getEncodedInfo() const {
-        return fEncodedInfo;
-    }
-
-    int width() const {
-        return fWidth;
-    }
-
-    int height() const {
-        return fHeight;
+    const SkImageInfo& getImageInfo() const {
+        return fImageInfo;
     }
 
     bool isScalable() const {
@@ -553,9 +545,8 @@ private:
         return 0x2A == get_endian_short(header + 2, littleEndian);
     }
 
-    void init(int width, int height, const dng_point& cfaPatternSize) {
-        fWidth = width;
-        fHeight = height;
+    void init(const int width, const int height, const dng_point& cfaPatternSize) {
+        fImageInfo = SkImageInfo::Make(width, height, kN32_SkColorType, kOpaque_SkAlphaType);
 
         // The DNG SDK scales only during demosaicing, so scaling is only possible when
         // a mosaic info is available.
@@ -616,10 +607,7 @@ private:
     }
 
     SkDngImage(SkRawStream* stream)
-        : fStream(stream)
-        , fEncodedInfo(SkEncodedInfo::Make(SkEncodedInfo::kRGB_Color,
-                                           SkEncodedInfo::kOpaque_Alpha, 8))
-    {}
+        : fStream(stream) {}
 
     SkDngMemoryAllocator fAllocator;
     SkAutoTDelete<SkRawStream> fStream;
@@ -628,9 +616,7 @@ private:
     SkAutoTDelete<dng_negative> fNegative;
     SkAutoTDelete<dng_stream> fDngStream;
 
-    int fWidth;
-    int fHeight;
-    SkEncodedInfo fEncodedInfo;
+    SkImageInfo fImageInfo;
     bool fIsScalable;
     bool fIsXtransImage;
 };
@@ -654,11 +640,7 @@ SkCodec* SkRawCodec::NewFromStream(SkStream* stream) {
     if (::piex::IsRaw(&piexStream)) {
         ::piex::Error error = ::piex::GetPreviewImageData(&piexStream, &imageData);
 
-        //  Theoretically PIEX can return JPEG compressed image or uncompressed RGB image. We only
-        //  handle the JPEG compressed preview image here.
-        if (error == ::piex::Error::kOk && imageData.preview.length > 0 &&
-            imageData.preview.format == ::piex::Image::kJpegCompressed)
-        {
+        if (error == ::piex::Error::kOk && imageData.preview.length > 0) {
             // transferBuffer() is destructive to the rawStream. Abandon the rawStream after this
             // function call.
             // FIXME: one may avoid the copy of memoryStream and use the buffered rawStream.
@@ -683,13 +665,13 @@ SkCodec::Result SkRawCodec::onGetPixels(const SkImageInfo& requestedInfo, void* 
                                         size_t dstRowBytes, const Options& options,
                                         SkPMColor ctable[], int* ctableCount,
                                         int* rowsDecoded) {
-    if (!conversion_possible_ignore_color_space(requestedInfo, this->getInfo())) {
+    if (!conversion_possible(requestedInfo, this->getInfo())) {
         SkCodecPrintf("Error: cannot convert input type to output type.\n");
         return kInvalidConversion;
     }
 
     SkAutoTDelete<SkSwizzler> swizzler(SkSwizzler::CreateSwizzler(
-            this->getEncodedInfo(), nullptr, requestedInfo, options));
+            SkSwizzler::kRGB, nullptr, requestedInfo, options));
     SkASSERT(swizzler);
 
     const int width = requestedInfo.width();
@@ -778,5 +760,5 @@ bool SkRawCodec::onDimensionsSupported(const SkISize& dim) {
 SkRawCodec::~SkRawCodec() {}
 
 SkRawCodec::SkRawCodec(SkDngImage* dngImage)
-    : INHERITED(dngImage->width(), dngImage->height(), dngImage->getEncodedInfo(), nullptr)
+    : INHERITED(dngImage->getImageInfo(), nullptr)
     , fDngImage(dngImage) {}

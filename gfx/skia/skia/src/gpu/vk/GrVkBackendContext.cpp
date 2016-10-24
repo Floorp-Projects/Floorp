@@ -13,17 +13,18 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Helper code to set up Vulkan context objects
 
-#ifdef SK_ENABLE_VK_LAYERS
+#ifdef ENABLE_VK_LAYERS
 const char* kDebugLayerNames[] = {
     // elements of VK_LAYER_LUNARG_standard_validation
-    "VK_LAYER_GOOGLE_threading",
-    "VK_LAYER_LUNARG_parameter_validation",
+    "VK_LAYER_LUNARG_threading",
+    "VK_LAYER_LUNARG_param_checker",
     "VK_LAYER_LUNARG_device_limits",
     "VK_LAYER_LUNARG_object_tracker",
     "VK_LAYER_LUNARG_image",
-    "VK_LAYER_LUNARG_core_validation",
+    "VK_LAYER_LUNARG_mem_tracker",
+    "VK_LAYER_LUNARG_draw_state",
     "VK_LAYER_LUNARG_swapchain",
-    "VK_LAYER_GOOGLE_unique_objects",
+    //"VK_LAYER_GOOGLE_unique_objects",
     // not included in standard_validation
     //"VK_LAYER_LUNARG_api_dump",
     //"VK_LAYER_LUNARG_vktrace",
@@ -32,15 +33,10 @@ const char* kDebugLayerNames[] = {
 #endif
 
 // the minimum version of Vulkan supported
-#ifdef SK_BUILD_FOR_ANDROID
 const uint32_t kGrVkMinimumVersion = VK_MAKE_VERSION(1, 0, 3);
-#else
-const uint32_t kGrVkMinimumVersion = VK_MAKE_VERSION(1, 0, 8);
-#endif
 
 // Create the base Vulkan objects needed by the GrVkGpu object
-const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndexPtr,
-                                                     CanPresentFn canPresent) {
+const GrVkBackendContext* GrVkBackendContext::Create() {
     VkPhysicalDevice physDev;
     VkDevice device;
     VkInstance inst;
@@ -62,7 +58,7 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
     SkTArray<const char*> instanceLayerNames;
     SkTArray<const char*> instanceExtensionNames;
     uint32_t extensionFlags = 0;
-#ifdef SK_ENABLE_VK_LAYERS
+#ifdef ENABLE_VK_LAYERS
     for (size_t i = 0; i < SK_ARRAY_COUNT(kDebugLayerNames); ++i) {
         if (extensions.hasInstanceLayer(kDebugLayerNames[i])) {
             instanceLayerNames.push_back(kDebugLayerNames[i]);
@@ -87,15 +83,15 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
         instanceExtensionNames.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
         extensionFlags |= kKHR_win32_surface_GrVkExtensionFlag;
     }
-#elif defined(SK_BUILD_FOR_ANDROID)
+#elif SK_BUILD_FOR_ANDROID
     if (extensions.hasInstanceExtension(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME)) {
         instanceExtensionNames.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
         extensionFlags |= kKHR_android_surface_GrVkExtensionFlag;
-    }
-#elif defined(SK_BUILD_FOR_UNIX)
-    if (extensions.hasInstanceExtension(VK_KHR_XCB_SURFACE_EXTENSION_NAME)) {
-        instanceExtensionNames.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
-        extensionFlags |= kKHR_xcb_surface_GrVkExtensionFlag;
+}
+#elif SK_BUILD_FOR_UNIX
+    if (extensions.hasInstanceExtension(VK_KHR_XLIB_SURFACE_EXTENSION_NAME)) {
+        instanceExtensionNames.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+        extensionFlags |= kKHR_xlib_surface_GrVkExtensionFlag;
     }
 #endif
 
@@ -113,7 +109,7 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
     err = vkCreateInstance(&instance_create, nullptr, &inst);
     if (err < 0) {
         SkDebugf("vkCreateInstance failed: %d\n", err);
-        return nullptr;
+        SkFAIL("failing");
     }
 
     uint32_t gpuCount;
@@ -121,7 +117,7 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
     if (err) {
         SkDebugf("vkEnumeratePhysicalDevices failed: %d\n", err);
         vkDestroyInstance(inst, nullptr);
-        return nullptr;
+        SkFAIL("failing");
     }
     SkASSERT(gpuCount > 0);
     // Just returning the first physical device instead of getting the whole array.
@@ -131,7 +127,7 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
     if (err) {
         SkDebugf("vkEnumeratePhysicalDevices failed: %d\n", err);
         vkDestroyInstance(inst, nullptr);
-        return nullptr;
+        SkFAIL("failing");
     }
 
     // query to get the initial queue props size
@@ -146,7 +142,7 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
     vkGetPhysicalDeviceQueueFamilyProperties(physDev, &queueCount, queueProps);
 
     // iterate to find the graphics queue
-    uint32_t graphicsQueueIndex = queueCount;
+    uint32_t graphicsQueueIndex = -1;
     for (uint32_t i = 0; i < queueCount; i++) {
         if (queueProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             graphicsQueueIndex = i;
@@ -155,24 +151,11 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
     }
     SkASSERT(graphicsQueueIndex < queueCount);
 
-    // iterate to find the present queue, if needed
-    uint32_t presentQueueIndex = graphicsQueueIndex;
-    if (presentQueueIndexPtr && canPresent) {
-        for (uint32_t i = 0; i < queueCount; i++) {
-            if (canPresent(inst, physDev, i)) {
-                presentQueueIndex = i;
-                break;
-            }
-        }
-        SkASSERT(presentQueueIndex < queueCount);
-        *presentQueueIndexPtr = presentQueueIndex;
-    }
-
     extensions.initDevice(kGrVkMinimumVersion, inst, physDev);
 
     SkTArray<const char*> deviceLayerNames;
     SkTArray<const char*> deviceExtensionNames;
-#ifdef SK_ENABLE_VK_LAYERS
+#ifdef ENABLE_VK_LAYERS
     for (size_t i = 0; i < SK_ARRAY_COUNT(kDebugLayerNames); ++i) {
         if (extensions.hasDeviceLayer(kDebugLayerNames[i])) {
             deviceLayerNames.push_back(kDebugLayerNames[i]);
@@ -209,32 +192,20 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
     float queuePriorities[1] = { 0.0 };
     // Here we assume no need for swapchain queue
     // If one is needed, the client will need its own setup code
-    const VkDeviceQueueCreateInfo queueInfo[2] = {
-        {
-            VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, // sType
-            nullptr,                                    // pNext
-            0,                                          // VkDeviceQueueCreateFlags
-            graphicsQueueIndex,                         // queueFamilyIndex
-            1,                                          // queueCount
-            queuePriorities,                            // pQueuePriorities
-        },
-        {
-            VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, // sType
-            nullptr,                                    // pNext
-            0,                                          // VkDeviceQueueCreateFlags
-            presentQueueIndex,                          // queueFamilyIndex
-            1,                                          // queueCount
-            queuePriorities,                            // pQueuePriorities
-        }
+    const VkDeviceQueueCreateInfo queueInfo = {
+        VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, // sType
+        nullptr,                                    // pNext
+        0,                                          // VkDeviceQueueCreateFlags
+        graphicsQueueIndex,                         // queueFamilyIndex
+        1,                                          // queueCount
+        queuePriorities,                            // pQueuePriorities
     };
-    uint32_t queueInfoCount = (presentQueueIndex != graphicsQueueIndex) ? 2 : 1;
-
     const VkDeviceCreateInfo deviceInfo = {
         VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,    // sType
         nullptr,                                 // pNext
         0,                                       // VkDeviceCreateFlags
-        queueInfoCount,                          // queueCreateInfoCount
-        queueInfo,                               // pQueueCreateInfos
+        1,                                       // queueCreateInfoCount
+        &queueInfo,                              // pQueueCreateInfos
         (uint32_t) deviceLayerNames.count(),     // layerCount
         deviceLayerNames.begin(),                // ppEnabledLayerNames
         (uint32_t) deviceExtensionNames.count(), // extensionCount
@@ -257,7 +228,7 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
     ctx->fPhysicalDevice = physDev;
     ctx->fDevice = device;
     ctx->fQueue = queue;
-    ctx->fGraphicsQueueIndex = graphicsQueueIndex;
+    ctx->fQueueFamilyIndex = graphicsQueueIndex;
     ctx->fMinAPIVersion = kGrVkMinimumVersion;
     ctx->fExtensions = extensionFlags;
     ctx->fFeatures = featureFlags;
@@ -267,7 +238,6 @@ const GrVkBackendContext* GrVkBackendContext::Create(uint32_t* presentQueueIndex
 }
 
 GrVkBackendContext::~GrVkBackendContext() {
-    vkDeviceWaitIdle(fDevice);
     vkDestroyDevice(fDevice, nullptr);
     fDevice = VK_NULL_HANDLE;
     vkDestroyInstance(fInstance, nullptr);

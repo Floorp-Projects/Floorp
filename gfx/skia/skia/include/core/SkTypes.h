@@ -17,11 +17,7 @@
 // before #including <memory>. This makes no sense.  I'm not very interested in
 // understanding why... these are old, bizarre platform configuration that we
 // should just let die.
-// See https://llvm.org/bugs/show_bug.cgi?id=25608 .
-#include <ciso646>  // Include something innocuous to define _LIBCPP_VERISON if it's libc++.
-#if defined(__GNUC__) && __GNUC__ == 4 \
- && ((defined(__arm__) && (defined(__ARM_NEON__) || defined(__ARM_NEON))) || defined(__aarch64__)) \
- && defined(_LIBCPP_VERSION)
+#if defined(MOZ_B2G) && defined(__GNUC__) && __GNUC__ == 4
     typedef float float32_t;
     #include <memory>
 #endif
@@ -31,6 +27,12 @@
 #include "SkPostConfig.h"
 #include <stddef.h>
 #include <stdint.h>
+
+#if defined(SK_ARM_HAS_NEON)
+    #include <arm_neon.h>
+#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
+    #include <immintrin.h>
+#endif
 // IWYU pragma: end_exports
 
 #include <string.h>
@@ -139,44 +141,44 @@ inline void operator delete(void* p) {
     SK_API void SkDebugf(const char format[], ...);
 #endif
 
-#define SkREQUIRE_SEMICOLON_AFTER(code) do { code } while (false)
-
-#define SkASSERT_RELEASE(cond) \
-    SkREQUIRE_SEMICOLON_AFTER(if (!(cond)) { SK_ABORT(#cond); } )
+#define SkASSERT_RELEASE(cond)          if(!(cond)) { SK_ABORT(#cond); }
 
 #ifdef SK_DEBUG
-    #define SkASSERT(cond) \
-        SkREQUIRE_SEMICOLON_AFTER(if (!(cond)) { SK_ABORT("assert(" #cond ")"); })
-    #define SkASSERTF(cond, fmt, ...) \
-        SkREQUIRE_SEMICOLON_AFTER(if (!(cond)) { \
-                                      SkDebugf(fmt"\n", __VA_ARGS__); \
-                                      SK_ABORT("assert(" #cond ")"); \
-                                  })
-    #define SkDEBUGFAIL(message)        SK_ABORT(message)
+    #define SkASSERT(cond)              SkASSERT_RELEASE(cond)
+    #define SkDEBUGFAIL(message)        SkASSERT(false && message)
     #define SkDEBUGFAILF(fmt, ...)      SkASSERTF(false, fmt, ##__VA_ARGS__)
-    #define SkDEBUGCODE(...)            __VA_ARGS__
+    #define SkDEBUGCODE(code)           code
     #define SkDECLAREPARAM(type, var)   , type var
     #define SkPARAM(var)                , var
+//  #define SkDEBUGF(args       )       SkDebugf##args
     #define SkDEBUGF(args       )       SkDebugf args
     #define SkAssertResult(cond)        SkASSERT(cond)
 #else
     #define SkASSERT(cond)
-    #define SkASSERTF(cond, fmt, ...)
     #define SkDEBUGFAIL(message)
-    #define SkDEBUGFAILF(fmt, ...)
-    #define SkDEBUGCODE(...)
+    #define SkDEBUGCODE(code)
     #define SkDEBUGF(args)
     #define SkDECLAREPARAM(type, var)
     #define SkPARAM(var)
 
-    // unlike SkASSERT, this guy executes its condition in the non-debug build.
-    // The if is present so that this can be used with functions marked SK_WARN_UNUSED_RESULT.
-    #define SkAssertResult(cond)         if (cond) {} do {} while(false)
+    // unlike SkASSERT, this guy executes its condition in the non-debug build
+    #define SkAssertResult(cond)        cond
 #endif
 
 // Legacy macro names for SK_ABORT
 #define SkFAIL(message)                 SK_ABORT(message)
 #define sk_throw()                      SK_ABORT("sk_throw")
+
+// We want to evaluate cond only once, and inside the SkASSERT somewhere so we see its string form.
+// So we use the comma operator to make an SkDebugf that always returns false: we'll evaluate cond,
+// and if it's true the assert passes; if it's false, we'll print the message and the assert fails.
+#define SkASSERTF(cond, fmt, ...)       SkASSERT((cond) || (SkDebugf(fmt"\n", __VA_ARGS__), false))
+
+#ifdef SK_DEVELOPER
+    #define SkDEVCODE(code)             code
+#else
+    #define SkDEVCODE(code)
+#endif
 
 #ifdef SK_IGNORE_TO_STRING
     #define SK_TO_STRING_NONVIRT()
@@ -284,7 +286,7 @@ template <typename D, typename S> D SkTo(S s) {
 
 /** Returns 0 or 1 based on the condition
 */
-#define SkToBool(cond)  ((cond) != 0)
+#define SkToBool(cond)  (!!(cond))
 
 #define SK_MaxS16   32767
 #define SK_MinS16   -32767
@@ -354,10 +356,6 @@ typedef uint32_t SkFourByteTag;
 */
 typedef int32_t SkUnichar;
 
-/** 16 bit unsigned integer to hold a glyph index
-*/
-typedef uint16_t SkGlyphID;
-
 /** 32 bit value to hold a millisecond duration
  *  Note that SK_MSecMax is about 25 days.
  */
@@ -389,7 +387,7 @@ typedef uint32_t SkMSec;
 
 /** Faster than SkToBool for integral conditions. Returns 0 or 1
 */
-static inline constexpr int Sk32ToBool(uint32_t n) {
+static inline int Sk32ToBool(uint32_t n) {
     return (n | (0-n)) >> 31;
 }
 
@@ -428,11 +426,11 @@ static inline int32_t SkMin32(int32_t a, int32_t b) {
     return a;
 }
 
-template <typename T> constexpr const T& SkTMin(const T& a, const T& b) {
+template <typename T> const T& SkTMin(const T& a, const T& b) {
     return (a < b) ? a : b;
 }
 
-template <typename T> constexpr const T& SkTMax(const T& a, const T& b) {
+template <typename T> const T& SkTMax(const T& a, const T& b) {
     return (b < a) ? a : b;
 }
 
@@ -448,7 +446,7 @@ static inline int32_t SkFastMin32(int32_t value, int32_t max) {
 }
 
 /** Returns value pinned between min and max, inclusively. */
-template <typename T> static constexpr const T& SkTPin(const T& value, const T& min, const T& max) {
+template <typename T> static inline const T& SkTPin(const T& value, const T& min, const T& max) {
     return SkTMax(SkTMin(value, max), min);
 }
 
@@ -461,15 +459,6 @@ template <typename T> static constexpr const T& SkTPin(const T& value, const T& 
 enum class SkBudgeted : bool {
     kNo  = false,
     kYes = true
-};
-
-/**
- * Indicates whether a backing store needs to be an exact match or can be larger
- * than is strictly necessary
- */
-enum class SkBackingFit {
-    kApprox,
-    kExact
 };
 
 ///////////////////////////////////////////////////////////////////////////////

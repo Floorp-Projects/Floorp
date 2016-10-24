@@ -9,13 +9,14 @@
 #define SkSVGDevice_DEFINED
 
 #include "SkDevice.h"
-#include "SkTemplates.h"
 
 class SkXMLWriter;
 
 class SkSVGDevice : public SkBaseDevice {
 public:
     static SkBaseDevice* Create(const SkISize& size, SkXMLWriter* writer);
+
+    SkImageInfo imageInfo() const override;
 
 protected:
     void drawPaint(const SkDraw&, const SkPaint& paint) override;
@@ -53,6 +54,7 @@ protected:
 
     void drawDevice(const SkDraw&, SkBaseDevice*, int x, int y,
                     const SkPaint&) override;
+    const SkBitmap& onAccessBitmap() override;
 
 private:
     SkSVGDevice(const SkISize& size, SkXMLWriter* writer);
@@ -66,6 +68,7 @@ private:
     SkXMLWriter*                  fWriter;
     SkAutoTDelete<AutoElement>    fRootElement;
     SkAutoTDelete<ResourceBucket> fResourceBucket;
+    SkBitmap                      fLegacyBitmap;
 
     typedef SkBaseDevice INHERITED;
 };

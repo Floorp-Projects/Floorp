@@ -135,17 +135,9 @@ public:
         return SkToBool(fConfigTable[config].fFlags & ConfigInfo::kCanUseTexStorage_Flag);
     }
 
-    bool canUseConfigWithTexelBuffer(GrPixelConfig config) const {
-        return SkToBool(fConfigTable[config].fFlags & ConfigInfo::kCanUseWithTexelBuffer_Flag);
-    }
-
     /** Returns the mapping between GrPixelConfig components and GL internal format components. */
     const GrSwizzle& configSwizzle(GrPixelConfig config) const {
         return fConfigTable[config].fSwizzle;
-    }
-
-    GrGLenum configSizedInternalFormat(GrPixelConfig config) const {
-        return fConfigTable[config].fFormats.fSizedInternalFormat;
     }
 
     bool getTexImageFormats(GrPixelConfig surfaceConfig, GrPixelConfig externalConfig,
@@ -296,8 +288,8 @@ public:
     /// Is there support for ES2 compatability?
     bool ES2CompatibilitySupport() const { return fES2CompatibilitySupport; }
 
-    /// Is there support for glDraw*Instanced?
-    bool drawInstancedSupport() const { return fDrawInstancedSupport; }
+    /// Can we call glDisable(GL_MULTISAMPLE)?
+    bool multisampleDisableSupport() const { return fMultisampleDisableSupport; }
 
     /// Is there support for glDraw*Indirect? Note that the baseInstance fields of indirect draw
     /// commands cannot be used unless we have base instance support.
@@ -306,9 +298,6 @@ public:
     /// Is there support for glMultiDraw*Indirect? Note that the baseInstance fields of indirect
     /// draw commands cannot be used unless we have base instance support.
     bool multiDrawIndirectSupport() const { return fMultiDrawIndirectSupport; }
-
-    /// Is there support for glDrawRangeElements?
-    bool drawRangeElementsSupport() const { return fDrawRangeElementsSupport; }
 
     /// Are the baseInstance fields supported in indirect draw commands?
     bool baseInstanceSupport() const { return fBaseInstanceSupport; }
@@ -335,8 +324,6 @@ public:
     bool textureSwizzleSupport() const { return fTextureSwizzleSupport; }
 
     bool mipMapLevelAndLodControlSupport() const { return fMipMapLevelAndLodControlSupport; }
-
-    bool doManualMipmapping() const { return fDoManualMipmapping; }
 
     /**
      * Returns a string containing the caps info.
@@ -401,9 +388,8 @@ private:
     bool fDirectStateAccessSupport : 1;
     bool fDebugSupport : 1;
     bool fES2CompatibilitySupport : 1;
-    bool fDrawInstancedSupport : 1;
+    bool fMultisampleDisableSupport : 1;
     bool fDrawIndirectSupport : 1;
-    bool fDrawRangeElementsSupport : 1;
     bool fMultiDrawIndirectSupport : 1;
     bool fBaseInstanceSupport : 1;
     bool fUseNonVBOVertexAndIndexDynamicData : 1;
@@ -416,7 +402,6 @@ private:
     bool fTextureSwizzleSupport : 1;
     bool fMipMapLevelAndLodControlSupport : 1;
     bool fRGBAToBGRAReadbackConversionsAreSlow : 1;
-    bool fDoManualMipmapping : 1;
 
     BlitFramebufferSupport fBlitFramebufferSupport;
 
@@ -483,7 +468,6 @@ private:
             kRenderable_Flag              = 0x4,
             kRenderableWithMSAA_Flag      = 0x8,
             kCanUseTexStorage_Flag        = 0x10,
-            kCanUseWithTexelBuffer_Flag   = 0x20,
         };
         uint32_t fFlags;
 

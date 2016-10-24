@@ -16,10 +16,7 @@ class GrProcOptInfo;
 
 class GrPorterDuffXPFactory : public GrXPFactory {
 public:
-    static sk_sp<GrXPFactory> Make(SkXfermode::Mode mode);
-    static sk_sp<GrXPFactory> Make(SkBlendMode mode) {
-        return Make((SkXfermode::Mode)mode);
-    }
+    static GrXPFactory* Create(SkXfermode::Mode mode); 
 
     void getInvariantBlendedColor(const GrProcOptInfo& colorPOI,
                                   GrXPFactory::InvariantBlendedColor*) const override;
@@ -51,7 +48,9 @@ public:
         blendedColor->fKnownColorFlags = validColorFlags;
     }
 
-    static bool SrcOverWillNeedDstTexture(const GrCaps&, const GrPipelineOptimizations&);
+    static bool SrcOverWillNeedDstTexture(const GrCaps& caps,
+                                          const GrPipelineOptimizations& optimizations,
+                                          bool hasMixedSamples);
 
 private:
     GrPorterDuffXPFactory(SkXfermode::Mode);
@@ -61,7 +60,9 @@ private:
                                            bool hasMixedSamples,
                                            const DstTexture*) const override;
 
-    bool onWillReadDstColor(const GrCaps&, const GrPipelineOptimizations&) const override;
+    bool onWillReadDstColor(const GrCaps& caps,
+                            const GrPipelineOptimizations& optimizations,
+                            bool hasMixedSamples) const override;
 
     bool onIsEqual(const GrXPFactory& xpfBase) const override {
         const GrPorterDuffXPFactory& xpf = xpfBase.cast<GrPorterDuffXPFactory>();

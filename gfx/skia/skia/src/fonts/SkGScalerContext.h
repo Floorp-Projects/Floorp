@@ -13,14 +13,14 @@
 
 class SkGTypeface : public SkTypeface {
 public:
-    SkGTypeface(sk_sp<SkTypeface> proxy, const SkPaint&);
+    SkGTypeface(SkTypeface* proxy, const SkPaint&);
+    virtual ~SkGTypeface();
 
-    SkTypeface* proxy() const { return fProxy.get(); }
+    SkTypeface* proxy() const { return fProxy; }
     const SkPaint& paint() const { return fPaint; }
 
 protected:
-    SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
-                                           const SkDescriptor*) const override;
+    SkScalerContext* onCreateScalerContext(const SkDescriptor*) const override;
     void onFilterRec(SkScalerContextRec*) const override;
     SkAdvancedTypefaceMetrics* onGetAdvancedTypefaceMetrics(
         PerGlyphInfo,
@@ -42,8 +42,8 @@ protected:
                           size_t length, void* data) const override;
 
 private:
-    sk_sp<SkTypeface>   fProxy;
-    SkPaint             fPaint;
+    SkTypeface* fProxy;
+    SkPaint     fPaint;
 };
 
 #endif

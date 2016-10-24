@@ -6,114 +6,105 @@
  */
 
 #include "SkTileImageFilter.h"
-
+#include "SkBitmap.h"
 #include "SkCanvas.h"
-#include "SkImage.h"
-#include "SkMatrix.h"
+#include "SkDevice.h"
 #include "SkOffsetImageFilter.h"
-#include "SkPaint.h"
 #include "SkReadBuffer.h"
-#include "SkShader.h"
-#include "SkSpecialImage.h"
-#include "SkSpecialSurface.h"
-#include "SkSurface.h"
-#include "SkValidationUtils.h"
 #include "SkWriteBuffer.h"
+#include "SkMatrix.h"
+#include "SkPaint.h"
+#include "SkShader.h"
+#include "SkValidationUtils.h"
 
-sk_sp<SkImageFilter> SkTileImageFilter::Make(const SkRect& srcRect, const SkRect& dstRect,
-                                             sk_sp<SkImageFilter> input) {
+SkImageFilter* SkTileImageFilter::Create(const SkRect& srcRect, const SkRect& dstRect,
+                                         SkImageFilter* input) {
     if (!SkIsValidRect(srcRect) || !SkIsValidRect(dstRect)) {
         return nullptr;
     }
     if (srcRect.width() == dstRect.width() && srcRect.height() == dstRect.height()) {
         SkRect ir = dstRect;
         if (!ir.intersect(srcRect)) {
-            return input;
+            return SkSafeRef(input);
         }
         CropRect cropRect(ir);
         return SkOffsetImageFilter::Make(dstRect.x() - srcRect.x(),
                                          dstRect.y() - srcRect.y(),
-                                         std::move(input),
-                                         &cropRect);
+                                         sk_ref_sp<SkImageFilter>(input),
+                                         &cropRect).release();
     }
-    return sk_sp<SkImageFilter>(new SkTileImageFilter(srcRect, dstRect, std::move(input)));
+    return new SkTileImageFilter(srcRect, dstRect, input);
 }
 
-sk_sp<SkSpecialImage> SkTileImageFilter::onFilterImage(SkSpecialImage* source,
-                                                       const Context& ctx,
-                                                       SkIPoint* offset) const {
-    SkIPoint inputOffset = SkIPoint::Make(0, 0);
-    sk_sp<SkSpecialImage> input(this->filterInput(0, source, ctx, &inputOffset));
-    if (!input) {
-        return nullptr;
+bool SkTileImageFilter::onFilterImageDeprecated(Proxy* proxy, const SkBitmap& src,
+                                                const Context& ctx,
+                                                SkBitmap* dst, SkIPoint* offset) const {
+    SkBitmap source = src;
+    SkIPoint srcOffset = SkIPoint::Make(0, 0);
+    if (!this->filterInputDeprecated(0, proxy, src, ctx, &source, &srcOffset)) {
+        return false;
     }
 
     SkRect dstRect;
     ctx.ctm().mapRect(&dstRect, fDstRect);
     if (!dstRect.intersect(SkRect::Make(ctx.clipBounds()))) {
-        return nullptr;
+        offset->fX = offset->fY = 0;
+        return true;
     }
-
     const SkIRect dstIRect = dstRect.roundOut();
-    if (!fSrcRect.width() || !fSrcRect.height() || !dstIRect.width() || !dstIRect.height()) {
-        return nullptr;
+    int w = dstIRect.width();
+    int h = dstIRect.height();
+    if (!fSrcRect.width() || !fSrcRect.height() || !w || !h) {
+        return false;
     }
 
     SkRect srcRect;
     ctx.ctm().mapRect(&srcRect, fSrcRect);
     SkIRect srcIRect;
     srcRect.roundOut(&srcIRect);
-    srcIRect.offset(-inputOffset);
-    const SkIRect inputBounds = SkIRect::MakeWH(input->width(), input->height());
+    srcIRect.offset(-srcOffset);
+    SkBitmap subset;
+    SkIRect srcBounds;
+    source.getBounds(&srcBounds);
 
-    if (!SkIRect::Intersects(srcIRect, inputBounds)) {
-        return nullptr;
+    if (!SkIRect::Intersects(srcIRect, srcBounds)) {
+        offset->fX = offset->fY = 0;
+        return true;
     }
-
-    // We create an SkImage here b.c. it needs to be a tight fit for the tiling
-    sk_sp<SkImage> subset;
-    if (inputBounds.contains(srcIRect)) {
-        subset = input->makeTightSubset(srcIRect);
-        if (!subset) {
-            return nullptr;
+    if (srcBounds.contains(srcIRect)) {
+        if (!source.extractSubset(&subset, srcIRect)) {
+            return false;
         }
     } else {
-        sk_sp<SkSurface> surf(input->makeTightSurface(ctx.outputProperties(), srcIRect.size()));
-        if (!surf) {
-            return nullptr;
+        SkAutoTUnref<SkBaseDevice> device(proxy->createDevice(srcIRect.width(),
+                                                              srcIRect.height(),
+                                                              kPossible_TileUsage));
+        if (!device) {
+            return false;
         }
-
-        SkCanvas* canvas = surf->getCanvas();
-        SkASSERT(canvas);
-
-        SkPaint paint;
-        paint.setBlendMode(SkBlendMode::kSrc);
-
-        input->draw(canvas, 
-                    SkIntToScalar(inputOffset.x()), SkIntToScalar(inputOffset.y()),
-                    &paint);
-
-        subset = surf->makeImageSnapshot();
+        SkCanvas canvas(device);
+        canvas.drawBitmap(source, SkIntToScalar(srcOffset.x()),
+                                  SkIntToScalar(srcOffset.y()));
+        subset = device->accessBitmap(false);
     }
-    SkASSERT(subset->width() == srcIRect.width());
-    SkASSERT(subset->height() == srcIRect.height());
+    SkASSERT(subset.width() == srcIRect.width());
+    SkASSERT(subset.height() == srcIRect.height());
 
-    sk_sp<SkSpecialSurface> surf(source->makeSurface(ctx.outputProperties(), dstIRect.size()));
-    if (!surf) {
-        return nullptr;
+    SkAutoTUnref<SkBaseDevice> device(proxy->createDevice(w, h));
+    if (nullptr == device.get()) {
+        return false;
     }
-
-    SkCanvas* canvas = surf->getCanvas();
-    SkASSERT(canvas);
-
+    SkCanvas canvas(device);
     SkPaint paint;
-    paint.setBlendMode(SkBlendMode::kSrc);
-    paint.setShader(subset->makeShader(SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode));
-    canvas->translate(-dstRect.fLeft, -dstRect.fTop);
-    canvas->drawRect(dstRect, paint);
+    paint.setXfermodeMode(SkXfermode::kSrc_Mode);
+    paint.setShader(SkShader::MakeBitmapShader(subset, SkShader::kRepeat_TileMode,
+                                               SkShader::kRepeat_TileMode));
+    canvas.translate(-dstRect.fLeft, -dstRect.fTop);
+    canvas.drawRect(dstRect, paint);
+    *dst = device->accessBitmap(false);
     offset->fX = dstIRect.fLeft;
     offset->fY = dstIRect.fTop;
-    return surf->makeImageSnapshot();
+    return true;
 }
 
 SkIRect SkTileImageFilter::onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
@@ -137,7 +128,7 @@ sk_sp<SkFlattenable> SkTileImageFilter::CreateProc(SkReadBuffer& buffer) {
     SkRect src, dst;
     buffer.readRect(&src);
     buffer.readRect(&dst);
-    return Make(src, dst, common.getInput(0));
+    return sk_sp<SkFlattenable>(Create(src, dst, common.getInput(0).get()));
 }
 
 void SkTileImageFilter::flatten(SkWriteBuffer& buffer) const {

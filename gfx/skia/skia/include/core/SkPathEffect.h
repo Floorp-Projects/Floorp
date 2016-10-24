@@ -66,7 +66,7 @@ public:
             fSize.set(SK_Scalar1, SK_Scalar1);
             // 'asPoints' needs to initialize/fill-in 'fClipRect' if it sets
             // the kUseClip flag
-        }
+        };
         ~PointData() {
             delete [] fPoints;
         }
@@ -118,8 +118,6 @@ public:
 
     struct DashInfo {
         DashInfo() : fIntervals(NULL), fCount(0), fPhase(0) {}
-        DashInfo(SkScalar* intervals, int32_t count, SkScalar phase)
-            : fIntervals(intervals), fCount(count), fPhase(phase) {}
 
         SkScalar*   fIntervals;         //!< Length of on/off intervals for dashed lines
                                         //   Even values represent ons, and odds offs
@@ -155,7 +153,7 @@ private:
     including flattening them. It does nothing in filterPath, and is only useful
     for managing the lifetimes of its two arguments.
 */
-class SK_API SkPairPathEffect : public SkPathEffect {
+class SkPairPathEffect : public SkPathEffect {
 protected:
     SkPairPathEffect(sk_sp<SkPathEffect> pe0, sk_sp<SkPathEffect> pe1);
 
@@ -176,7 +174,7 @@ private:
     This subclass of SkPathEffect composes its two arguments, to create
     a compound pathEffect.
 */
-class SK_API SkComposePathEffect : public SkPairPathEffect {
+class SkComposePathEffect : public SkPairPathEffect {
 public:
     /** Construct a pathEffect whose effect is to apply first the inner pathEffect
         and the the outer pathEffect (e.g. outer(inner(path)))
@@ -226,7 +224,7 @@ private:
     This subclass of SkPathEffect applies two pathEffects, one after the other.
     Its filterPath() returns true if either of the effects succeeded.
 */
-class SK_API SkSumPathEffect : public SkPairPathEffect {
+class SkSumPathEffect : public SkPairPathEffect {
 public:
     /** Construct a pathEffect whose effect is to apply two effects, in sequence.
         (e.g. first(path) + second(path))

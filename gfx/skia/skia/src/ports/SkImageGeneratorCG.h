@@ -35,7 +35,7 @@ private:
     SkImageGeneratorCG(const SkImageInfo& info, const void* imageSrc, SkData* data);
 
     SkAutoTCallVProc<const void, CFRelease> fImageSrc;
-    sk_sp<SkData>                           fData;
+    SkAutoTUnref<SkData>                    fData;
 
     typedef SkImageGenerator INHERITED;
 };

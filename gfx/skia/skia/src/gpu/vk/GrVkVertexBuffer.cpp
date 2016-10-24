@@ -11,9 +11,9 @@
 GrVkVertexBuffer::GrVkVertexBuffer(GrVkGpu* gpu, const GrVkBuffer::Desc& desc,
                                    const GrVkBuffer::Resource* bufferResource)
     : INHERITED(gpu, desc.fSizeInBytes, kVertex_GrBufferType,
-                desc.fDynamic ? kDynamic_GrAccessPattern : kStatic_GrAccessPattern)
+                desc.fDynamic ? kDynamic_GrAccessPattern : kStatic_GrAccessPattern, false)
     , GrVkBuffer(desc, bufferResource) {
-    this->registerWithCache(SkBudgeted::kYes);
+    this->registerWithCache();
 }
 
 GrVkVertexBuffer* GrVkVertexBuffer::Create(GrVkGpu* gpu, size_t size, bool dynamic) {

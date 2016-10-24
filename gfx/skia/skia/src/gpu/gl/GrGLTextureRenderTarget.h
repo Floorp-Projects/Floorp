@@ -26,23 +26,17 @@ public:
     // We're virtually derived from GrSurface (via both GrGLTexture and GrGLRenderTarget) so its
     // constructor must be explicitly called.
     GrGLTextureRenderTarget(GrGLGpu* gpu,
-                            SkBudgeted budgeted,
                             const GrSurfaceDesc& desc,
                             const GrGLTexture::IDDesc& texIDDesc,
                             const GrGLRenderTarget::IDDesc& rtIDDesc)
-        : GrSurface(gpu, desc)
-        , GrGLTexture(gpu, desc, texIDDesc)
-        , GrGLRenderTarget(gpu, desc, rtIDDesc) {
-        this->registerWithCache(budgeted);
+        : GrSurface(gpu, texIDDesc.fLifeCycle, desc)
+        , GrGLTexture(gpu, desc, texIDDesc, GrGLTexture::kDerived)
+        , GrGLRenderTarget(gpu, desc, rtIDDesc, GrGLRenderTarget::kDerived) {
+        this->registerWithCache();
     }
-
-    bool canAttemptStencilAttachment() const override;
 
     void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
-    static GrGLTextureRenderTarget* CreateWrapped(GrGLGpu* gpu, const GrSurfaceDesc& desc,
-                                                  const GrGLTexture::IDDesc& texIDDesc,
-                                                  const GrGLRenderTarget::IDDesc& rtIDDesc);
 protected:
     void onAbandon() override {
         GrGLRenderTarget::onAbandon();
@@ -55,17 +49,6 @@ protected:
     }
 
 private:
-    // Constructor for instances wrapping backend objects.
-    GrGLTextureRenderTarget(GrGLGpu* gpu,
-                            const GrSurfaceDesc& desc,
-                            const GrGLTexture::IDDesc& texIDDesc,
-                            const GrGLRenderTarget::IDDesc& rtIDDesc)
-        : GrSurface(gpu, desc)
-        , GrGLTexture(gpu, desc, texIDDesc)
-        , GrGLRenderTarget(gpu, desc, rtIDDesc) {
-        this->registerWithCacheWrapped();
-    }
-
     // GrGLRenderTarget accounts for the texture's memory and any MSAA renderbuffer's memory.
     size_t onGpuMemorySize() const override {
         return GrGLRenderTarget::onGpuMemorySize();

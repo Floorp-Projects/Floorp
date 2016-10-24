@@ -106,7 +106,10 @@ SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
 #include "SkHalf.h"
 
 SkPM4f SkPM4f::FromPMColor(SkPMColor c) {
-    return From4f(swizzle_rb_if_bgra(Sk4f_fromL32(c)));
+    Sk4f value = to_4f_rgba(c);
+    SkPM4f c4;
+    (value * Sk4f(1.0f / 255)).store(&c4);
+    return c4;
 }
 
 SkColor4f SkPM4f::unpremul() const {
@@ -115,7 +118,7 @@ SkColor4f SkPM4f::unpremul() const {
         return { 0, 0, 0, 0 };
     } else {
         float invAlpha = 1 / alpha;
-        return { fVec[R] * invAlpha, fVec[G] * invAlpha, fVec[B] * invAlpha, alpha };
+        return { alpha, fVec[R] * invAlpha, fVec[G] * invAlpha, fVec[B] * invAlpha };
     }
 }
 
@@ -149,35 +152,26 @@ void SkPM4f::assertIsUnit() const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkColor4f SkColor4f::FromColor(SkColor bgra) {
-    SkColor4f rgba;
-    swizzle_rb(Sk4f_fromS32(bgra)).store(rgba.vec());
-    return rgba;
-}
-
-SkColor4f SkColor4f::FromColor3f(SkColor3f color3f, float a) {
-    SkColor4f rgba;
-    rgba.fR = color3f.fX;
-    rgba.fG = color3f.fY;
-    rgba.fB = color3f.fZ;
-    rgba.fA = a;
-    return rgba;
-}
-
-SkColor SkColor4f::toSkColor() const {
-    return Sk4f_toS32(swizzle_rb(Sk4f::Load(this->vec())));
-}
-
-SkColor4f SkColor4f::Pin(float r, float g, float b, float a) {
+SkColor4f SkColor4f::FromColor(SkColor c) {
+    Sk4f value = SkNx_shuffle<3,2,1,0>(SkNx_cast<float>(Sk4b::Load(&c)));
     SkColor4f c4;
-    Sk4f::Min(Sk4f::Max(Sk4f(r, g, b, a), Sk4f(0)), Sk4f(1)).store(c4.vec());
+    (value * Sk4f(1.0f / 255)).store(&c4);
+    return c4;
+}
+
+SkColor4f SkColor4f::Pin(float a, float r, float g, float b) {
+    SkColor4f c4;
+    Sk4f::Min(Sk4f::Max(Sk4f(a, r, g, b), Sk4f(0)), Sk4f(1)).store(c4.vec());
     return c4;
 }
 
 SkPM4f SkColor4f::premul() const {
     auto src = Sk4f::Load(this->pin().vec());
-    float srcAlpha = src[3];  // need the pinned version of our alpha
-    src = src * Sk4f(srcAlpha, srcAlpha, srcAlpha, 1);
+    float srcAlpha = src[0];  // need the pinned version of our alpha
+    src = src * Sk4f(1, srcAlpha, srcAlpha, srcAlpha);
 
-    return SkPM4f::From4f(src);
+    // ARGB -> RGBA
+    Sk4f dst = SkNx_shuffle<1,2,3,0>(src);
+
+    return SkPM4f::From4f(dst);
 }

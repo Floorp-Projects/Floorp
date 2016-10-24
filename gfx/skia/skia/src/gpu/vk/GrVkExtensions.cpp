@@ -32,12 +32,7 @@ static int find_string(const SkTArray<SkString>& strings, const char ext[]) {
 
 #define GET_PROC_LOCAL(inst, F) PFN_vk ## F F = (PFN_vk ## F) vkGetInstanceProcAddr(inst, "vk" #F)
 
-static uint32_t remove_patch_version(uint32_t specVersion) {
-    return (specVersion >> 12) << 12;
-}
-
 bool GrVkExtensions::initInstance(uint32_t specVersion) {
-    uint32_t nonPatchVersion = remove_patch_version(specVersion);
 
     GET_PROC_LOCAL(nullptr, EnumerateInstanceExtensionProperties);
     GET_PROC_LOCAL(nullptr, EnumerateInstanceLayerProperties);
@@ -62,7 +57,7 @@ bool GrVkExtensions::initInstance(uint32_t specVersion) {
         return false;
     }
     for (uint32_t i = 0; i < layerCount; ++i) {
-        if (nonPatchVersion >= remove_patch_version(layers[i].specVersion)) {
+        if (specVersion >= layers[i].specVersion) {
             fInstanceLayerStrings->push_back() = layers[i].layerName;
         }
     }
@@ -85,7 +80,7 @@ bool GrVkExtensions::initInstance(uint32_t specVersion) {
         return false;
     }
     for (uint32_t i = 0; i < extensionCount; ++i) {
-        if (nonPatchVersion >= remove_patch_version(extensions[i].specVersion)) {
+        if (specVersion >= extensions[i].specVersion) {
             fInstanceExtensionStrings->push_back() = extensions[i].extensionName;
         }
     }
@@ -112,7 +107,7 @@ bool GrVkExtensions::initInstance(uint32_t specVersion) {
         }
         for (uint32_t i = 0; i < extensionCount; ++i) {
             // if not already in the list, add it
-            if (nonPatchVersion >= remove_patch_version(extensions[i].specVersion) &&
+            if (specVersion >= extensions[i].specVersion &&
                 find_string(*fInstanceExtensionStrings, extensions[i].extensionName) < 0) {
                 fInstanceExtensionStrings->push_back() = extensions[i].extensionName;
                 SkTQSort(&fInstanceExtensionStrings->front(), &fInstanceExtensionStrings->back(),
@@ -126,7 +121,6 @@ bool GrVkExtensions::initInstance(uint32_t specVersion) {
 }
 
 bool GrVkExtensions::initDevice(uint32_t specVersion, VkInstance inst, VkPhysicalDevice physDev) {
-    uint32_t nonPatchVersion = remove_patch_version(specVersion);
 
     GET_PROC_LOCAL(inst, EnumerateDeviceExtensionProperties);
     GET_PROC_LOCAL(inst, EnumerateDeviceLayerProperties);
@@ -151,7 +145,7 @@ bool GrVkExtensions::initDevice(uint32_t specVersion, VkInstance inst, VkPhysica
         return false;
     }
     for (uint32_t i = 0; i < layerCount; ++i) {
-        if (nonPatchVersion >= remove_patch_version(layers[i].specVersion)) {
+        if (specVersion >= layers[i].specVersion) {
             fDeviceLayerStrings->push_back() = layers[i].layerName;
         }
     }
@@ -175,7 +169,7 @@ bool GrVkExtensions::initDevice(uint32_t specVersion, VkInstance inst, VkPhysica
         return false;
     }
     for (uint32_t i = 0; i < extensionCount; ++i) {
-        if (nonPatchVersion >= remove_patch_version(extensions[i].specVersion)) {
+        if (specVersion >= extensions[i].specVersion) {
             fDeviceExtensionStrings->push_back() = extensions[i].extensionName;
         }
     }
@@ -204,7 +198,7 @@ bool GrVkExtensions::initDevice(uint32_t specVersion, VkInstance inst, VkPhysica
         }
         for (uint32_t i = 0; i < extensionCount; ++i) {
             // if not already in the list, add it
-            if (nonPatchVersion >= remove_patch_version(extensions[i].specVersion) &&
+            if (specVersion >= extensions[i].specVersion &&
                 find_string(*fDeviceExtensionStrings, extensions[i].extensionName) < 0) {
                 fDeviceExtensionStrings->push_back() = extensions[i].extensionName;
                 SkTQSort(&fDeviceExtensionStrings->front(), &fDeviceExtensionStrings->back(), cmp);

@@ -26,7 +26,12 @@ public:
     static sk_sp<SkImageFilter> Make(SkScalar dx, SkScalar dy, SkScalar sigmaX, SkScalar sigmaY,
                                      SkColor color, ShadowMode shadowMode,
                                      sk_sp<SkImageFilter> input,
-                                     const CropRect* cropRect = nullptr);
+                                     const CropRect* cropRect = nullptr) {
+        return sk_sp<SkImageFilter>(new SkDropShadowImageFilter(dx, dy, sigmaX, sigmaY, 
+                                                                color, shadowMode,
+                                                                std::move(input),
+                                                                cropRect));
+    }
 
     SkRect computeFastBounds(const SkRect&) const override;
     SK_TO_STRING_OVERRIDE()

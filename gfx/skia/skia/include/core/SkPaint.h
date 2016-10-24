@@ -8,13 +8,10 @@
 #ifndef SkPaint_DEFINED
 #define SkPaint_DEFINED
 
-#include "SkBlendMode.h"
 #include "SkColor.h"
 #include "SkFilterQuality.h"
 #include "SkMatrix.h"
 #include "SkXfermode.h"
-
-//#define SK_SUPPORT_LEGACY_XFERMODE_OBJECT
 
 class SkAutoDescriptor;
 class SkAutoGlyphCache;
@@ -33,10 +30,8 @@ class SkPath;
 class SkPathEffect;
 struct SkPoint;
 class SkRasterizer;
-struct SkScalerContextEffects;
 class SkShader;
 class SkSurfaceProps;
-class SkTextBlob;
 class SkTypeface;
 
 #define kBicubicFilterBitmap_Flag kHighQualityFilterBitmap_Flag
@@ -413,10 +408,9 @@ public:
         kRound_Cap,     //!< begin/end contours with a semi-circle extension
         kSquare_Cap,    //!< begin/end contours with a half square extension
 
-        kLast_Cap = kSquare_Cap,
+        kCapCount,
         kDefault_Cap = kButt_Cap
     };
-    static constexpr int kCapCount = kLast_Cap + 1;
 
     /** Join enum specifies the settings for the paint's strokejoin. This is
         the treatment that is applied to corners in paths and rectangles.
@@ -426,10 +420,9 @@ public:
         kRound_Join,    //!< connect path segments with a round join
         kBevel_Join,    //!< connect path segments with a flat bevel join
 
-        kLast_Join = kBevel_Join,
+        kJoinCount,
         kDefault_Join = kMiter_Join
     };
-    static constexpr int kJoinCount = kLast_Join + 1;
 
     /** Return the paint's stroke cap type, controlling how the start and end
         of stroked lines and paths are treated.
@@ -528,13 +521,12 @@ public:
 #endif
     void setColorFilter(sk_sp<SkColorFilter>);
 
-#ifdef SK_SUPPORT_LEGACY_XFERMODE_OBJECT
     /** Get the paint's xfermode object.
         <p />
       The xfermode's reference count is not affected.
         @return the paint's xfermode (or NULL)
     */
-    SkXfermode* getXfermode() const;
+    SkXfermode* getXfermode() const { return fXfermode.get(); }
 
     /** Set or clear the xfermode object.
         <p />
@@ -556,11 +548,6 @@ public:
         the paint's xfermode is set to null.
      */
     SkXfermode* setXfermodeMode(SkXfermode::Mode);
-#endif
-
-    SkBlendMode getBlendMode() const { return (SkBlendMode)fBlendMode; }
-    bool isSrcOver() const { return (SkBlendMode)fBlendMode == SkBlendMode::kSrcOver; }
-    void setBlendMode(SkBlendMode mode) { fBlendMode = (unsigned)mode; }
 
     /** Get the paint's patheffect object.
         <p />
@@ -626,10 +613,8 @@ public:
                         paint
         @return         typeface
     */
-    void setTypeface(sk_sp<SkTypeface>);
-#ifdef SK_SUPPORT_LEGACY_TYPEFACE_PTR
     SkTypeface* setTypeface(SkTypeface* typeface);
-#endif
+    void setTypeface(sk_sp<SkTypeface>);
 
     /** Get the paint's rasterizer (or NULL).
         <p />
@@ -662,18 +647,19 @@ public:
      *  Return the paint's SkDrawLooper (if any). Does not affect the looper's
      *  reference count.
      */
-    SkDrawLooper* getDrawLooper() const { return fDrawLooper.get(); }
-    SkDrawLooper* getLooper() const { return fDrawLooper.get(); }
+    SkDrawLooper* getLooper() const { return fLooper.get(); }
+
     /**
      *  Set or clear the looper object.
      *  <p />
      *  Pass NULL to clear any previous looper.
+     *  As a convenience, the parameter passed is also returned.
      *  If a previous looper exists in the paint, its reference count is
      *  decremented. If looper is not NULL, its reference count is
      *  incremented.
      *  @param looper May be NULL. The new looper to be installed in the paint.
+     *  @return looper
      */
-    void setDrawLooper(sk_sp<SkDrawLooper>);
 #ifdef SK_SUPPORT_LEGACY_MINOR_EFFECT_PTR
     SkDrawLooper* setLooper(SkDrawLooper* looper);
 #endif
@@ -830,7 +816,7 @@ public:
         is returned.
     */
     int textToGlyphs(const void* text, size_t byteLength,
-                     SkGlyphID glyphs[]) const;
+                     uint16_t glyphs[]) const;
 
     /** Return true if all of the specified text has a corresponding non-zero
         glyph ID. If any of the code-points in the text are not supported in
@@ -845,7 +831,7 @@ public:
         to zero. Note: this does not look at the text-encoding setting in the
         paint, only at the typeface.
     */
-    void glyphsToUnichars(const SkGlyphID glyphs[], int count, SkUnichar text[]) const;
+    void glyphsToUnichars(const uint16_t glyphs[], int count, SkUnichar text[]) const;
 
     /** Return the number of drawable units in the specified text buffer.
         This looks at the current TextEncoding field of the paint. If you also
@@ -973,40 +959,6 @@ public:
     int getPosTextIntercepts(const void* text, size_t length, const SkPoint pos[],
                              const SkScalar bounds[2], SkScalar* intervals) const;
 
-    /** Return the number of intervals that intersect the intercept along the axis of the advance.
-     *  The return count is zero or a multiple of two, and is at most the number of glyphs * 2 in
-     *  string. The caller may pass nullptr for intervals to determine the size of the interval
-     *  array, or may conservatively pre-allocate an array with length * 2 entries. The computed
-     *  intervals are cached by glyph to improve performance for multiple calls.
-     *  This permits constructing an underline that skips the descenders.
-     *
-     *  @param text         The text.
-     *  @param length       Number of bytes of text.
-     *  @param xpos         Array of x-positions, used to position each character.
-     *  @param constY       The shared Y coordinate for all of the positions.
-     *  @param bounds       The lower and upper line parallel to the advance.
-     *  @param array        If not null, the glyph bounds contained by the advance parallel lines.
-     *
-     *  @return             The number of intersections, which may be zero.
-     */
-    int getPosTextHIntercepts(const void* text, size_t length, const SkScalar xpos[],
-                              SkScalar constY, const SkScalar bounds[2], SkScalar* intervals) const;
-
-    /** Return the number of intervals that intersect the intercept along the axis of the advance.
-     *  The return count is zero or a multiple of two, and is at most the number of glyphs * 2 in
-     *  text blob. The caller may pass nullptr for intervals to determine the size of the interval
-     *  array. The computed intervals are cached by glyph to improve performance for multiple calls.
-     *  This permits constructing an underline that skips the descenders.
-     *
-     *  @param blob         The text blob.
-     *  @param bounds       The lower and upper line parallel to the advance.
-     *  @param array        If not null, the glyph bounds contained by the advance parallel lines.
-     *
-     *  @return             The number of intersections, which may be zero.
-     */
-    int getTextBlobIntercepts(const SkTextBlob* blob, const SkScalar bounds[2],
-                              SkScalar* intervals) const;
-
     /**
      *  Return a rectangle that represents the union of the bounds of all
      *  of the glyphs, but each one positioned at (0,0). This may be conservatively large, and
@@ -1099,10 +1051,11 @@ private:
     sk_sp<SkTypeface>     fTypeface;
     sk_sp<SkPathEffect>   fPathEffect;
     sk_sp<SkShader>       fShader;
+    sk_sp<SkXfermode>     fXfermode;
     sk_sp<SkMaskFilter>   fMaskFilter;
     sk_sp<SkColorFilter>  fColorFilter;
     sk_sp<SkRasterizer>   fRasterizer;
-    sk_sp<SkDrawLooper>   fDrawLooper;
+    sk_sp<SkDrawLooper>   fLooper;
     sk_sp<SkImageFilter>  fImageFilter;
 
     SkScalar        fTextSize;
@@ -1111,7 +1064,6 @@ private:
     SkColor         fColor;
     SkScalar        fWidth;
     SkScalar        fMiterLimit;
-    uint32_t        fBlendMode; // just need 5-6 bits for SkXfermode::Mode
     union {
         struct {
             // all of these bitfields should add up to 32
@@ -1128,38 +1080,28 @@ private:
         uint32_t fBitfieldsUInt;
     };
 
-    static GlyphCacheProc GetGlyphCacheProc(TextEncoding encoding,
-                                            bool isDevKern,
-                                            bool needFullMetrics);
+    GlyphCacheProc getGlyphCacheProc(bool needFullMetrics) const;
 
     SkScalar measure_text(SkGlyphCache*, const char* text, size_t length,
                           int* count, SkRect* bounds) const;
 
-    enum ScalerContextFlags : uint32_t {
-        kNone_ScalerContextFlags = 0,
-
-        kFakeGamma_ScalerContextFlag = 1 << 0,
-        kBoostContrast_ScalerContextFlag = 1 << 1,
-
-        kFakeGammaAndBoostContrast_ScalerContextFlags =
-            kFakeGamma_ScalerContextFlag | kBoostContrast_ScalerContextFlag,
+    enum class FakeGamma {
+        Off = 0, On
     };
 
     /*
      * Allocs an SkDescriptor on the heap and return it to the caller as a refcnted
      * SkData.  Caller is responsible for managing the lifetime of this object.
      */
-    void getScalerContextDescriptor(SkScalerContextEffects*, SkAutoDescriptor*,
-                                    const SkSurfaceProps& surfaceProps,
-                                    uint32_t scalerContextFlags, const SkMatrix*) const;
+    void getScalerContextDescriptor(SkAutoDescriptor*, const SkSurfaceProps& surfaceProps,
+                                    FakeGamma fakeGamma, const SkMatrix*) const;
 
-    SkGlyphCache* detachCache(const SkSurfaceProps* surfaceProps, uint32_t scalerContextFlags,
+    SkGlyphCache* detachCache(const SkSurfaceProps* surfaceProps, FakeGamma fakeGamma,
                               const SkMatrix*) const;
 
-    void descriptorProc(const SkSurfaceProps* surfaceProps, uint32_t scalerContextFlags,
+    void descriptorProc(const SkSurfaceProps* surfaceProps, FakeGamma fakeGamma,
                         const SkMatrix* deviceMatrix,
-                        void (*proc)(SkTypeface*, const SkScalerContextEffects&,
-                                     const SkDescriptor*, void*),
+                        void (*proc)(SkTypeface*, const SkDescriptor*, void*),
                         void* context) const;
 
     /*

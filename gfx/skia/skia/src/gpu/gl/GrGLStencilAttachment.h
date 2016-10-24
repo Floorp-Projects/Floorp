@@ -24,19 +24,20 @@ public:
     };
 
     struct IDDesc {
-        IDDesc() : fRenderbufferID(0) {}
+        IDDesc() : fRenderbufferID(0), fLifeCycle(kCached_LifeCycle) {}
         GrGLuint fRenderbufferID;
+        GrGpuResource::LifeCycle fLifeCycle;
     };
 
     GrGLStencilAttachment(GrGpu* gpu,
-                          const IDDesc& idDesc,
-                          int width, int height,
-                          int sampleCnt,
-                          const Format& format)
-        : GrStencilAttachment(gpu, width, height, format.fStencilBits, sampleCnt)
+                      const IDDesc& idDesc,
+                      int width, int height,
+                      int sampleCnt,
+                      const Format& format)
+        : GrStencilAttachment(gpu, idDesc.fLifeCycle, width, height, format.fStencilBits, sampleCnt)
         , fFormat(format)
         , fRenderbufferID(idDesc.fRenderbufferID) {
-        this->registerWithCache(SkBudgeted::kYes);
+        this->registerWithCache();
     }
 
     GrGLuint renderbufferID() const {

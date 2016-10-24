@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
 #include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
 #include "skia/include/core/SkCanvas.h"
+#include "mozilla/gfx/HelpersSkia.h"
 
 namespace mozilla {
 namespace layers {
@@ -33,7 +34,7 @@ private:
   virtual ~PaintCounter();
 
   SurfaceFormat mFormat;
-  sk_sp<SkCanvas> mCanvas;
+  RefPtrSkia<SkCanvas> mCanvas;
   IntSize mSize;
   int mStride;
 

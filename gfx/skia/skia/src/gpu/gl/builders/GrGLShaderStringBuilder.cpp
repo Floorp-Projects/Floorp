@@ -8,15 +8,14 @@
 #include "GrGLShaderStringBuilder.h"
 #include "gl/GrGLGpu.h"
 #include "gl/GrGLSLPrettyPrint.h"
+#include "SkRTConf.h"
 #include "SkTraceEvent.h"
 
 #define GL_CALL(X) GR_GL_CALL(gpu->glInterface(), X)
 #define GL_CALL_RET(R, X) GR_GL_CALL_RET(gpu->glInterface(), R, X)
 
-// Print the source code for all shaders generated.
-static const bool c_PrintShaders{false};
-
-static void print_shader_source(const char** strings, int* lengths, int count);
+SK_CONF_DECLARE(bool, c_PrintShaders, "gpu.printShaders", false,
+                "Print the source code for all shaders generated.");
 
 GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
                                     GrGLuint programId,
@@ -72,8 +71,8 @@ GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
                 // buffer param validation.
                 GrGLsizei length = GR_GL_INIT_ZERO;
                 GR_GL_CALL(gli, GetShaderInfoLog(shaderId, infoLen+1, &length, (char*)log.get()));
-                print_shader_source(strings, lengths, count);
-                SkDebugf("\n%s", (const char*)log.get());
+                SkDebugf("%s", GrGLSLPrettyPrint::PrettyPrintGLSL(strings, lengths, count, true).c_str());
+                SkDebugf("\n%s", log.get());
             }
             SkDEBUGFAIL("Shader compilation failed!");
             GR_GL_CALL(gli, DeleteShader(shaderId));
@@ -82,7 +81,8 @@ GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
     }
 
     if (c_PrintShaders) {
-        print_shader_source(strings, lengths, count);
+        SkDebugf("%s", GrGLSLPrettyPrint::PrettyPrintGLSL(strings, lengths, count, true).c_str());
+        SkDebugf("\n");
     }
 
     // Attach the shader, but defer deletion until after we have linked the program.
@@ -92,14 +92,4 @@ GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
     GR_GL_CALL(gli, AttachShader(programId, shaderId));
 
     return shaderId;
-}
-
-static void print_shader_source(const char** strings, int* lengths, int count) {
-    const SkString& pretty = GrGLSLPrettyPrint::PrettyPrintGLSL(strings, lengths, count, true);
-    SkTArray<SkString> lines;
-    SkStrSplit(pretty.c_str(), "\n", &lines);
-    for (const SkString& line : lines) {
-        // Print the shader one line at the time so it doesn't get truncated by the adb log.
-        SkDebugf("%s\n", line.c_str());
-    }
 }

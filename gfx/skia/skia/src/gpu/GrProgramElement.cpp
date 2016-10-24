@@ -7,7 +7,6 @@
 
 #include "GrProgramElement.h"
 #include "GrGpuResourceRef.h"
-#include "SkAtomics.h"
 
 uint32_t GrProgramElement::CreateUniqueID() {
     static int32_t gUniqueID = SK_InvalidUniqueID;

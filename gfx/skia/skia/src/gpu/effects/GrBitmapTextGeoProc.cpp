@@ -60,19 +60,20 @@ public:
                              gpArgs->fPositionVar,
                              cte.inPosition()->fName,
                              cte.localMatrix(),
-                             args.fFPCoordTransformHandler);
+                             args.fTransformsIn,
+                             args.fTransformsOut);
 
         if (cte.maskFormat() == kARGB_GrMaskFormat) {
             fragBuilder->codeAppendf("%s = ", args.fOutputColor);
             fragBuilder->appendTextureLookupAndModulate(args.fOutputColor,
-                                                        args.fTexSamplers[0],
+                                                        args.fSamplers[0],
                                                         v.fsIn(),
                                                         kVec2f_GrSLType);
             fragBuilder->codeAppend(";");
             fragBuilder->codeAppendf("%s = vec4(1);", args.fOutputCoverage);
         } else {
             fragBuilder->codeAppendf("%s = ", args.fOutputCoverage);
-            fragBuilder->appendTextureLookup(args.fTexSamplers[0], v.fsIn(), kVec2f_GrSLType);
+            fragBuilder->appendTextureLookup(args.fSamplers[0], v.fsIn(), kVec2f_GrSLType);
             fragBuilder->codeAppend(";");
             if (cte.maskFormat() == kA565_GrMaskFormat) {
                 // set alpha to be max of rgb coverage
@@ -83,8 +84,7 @@ public:
         }
     }
 
-    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp,
-                 FPCoordTransformIter&& transformIter) override {
+    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp) override {
         const GrBitmapTextGeoProc& btgp = gp.cast<GrBitmapTextGeoProc>();
         if (btgp.color() != fColor && !btgp.hasVertexColor()) {
             float c[4];
@@ -92,7 +92,13 @@ public:
             pdman.set4fv(fColorUniform, 1, c);
             fColor = btgp.color();
         }
-        this->setTransformDataHelper(btgp.localMatrix(), pdman, &transformIter);
+    }
+
+    void setTransformData(const GrPrimitiveProcessor& primProc,
+                          const GrGLSLProgramDataManager& pdman,
+                          int index,
+                          const SkTArray<const GrCoordTransform*, true>& transforms) override {
+        this->setTransformDataHelper<GrBitmapTextGeoProc>(primProc, pdman, index, transforms);
     }
 
     static inline void GenKey(const GrGeometryProcessor& proc,
@@ -132,15 +138,16 @@ GrBitmapTextGeoProc::GrBitmapTextGeoProc(GrColor color, GrTexture* texture,
     , fInColor(nullptr)
     , fMaskFormat(format) {
     this->initClassID<GrBitmapTextGeoProc>();
-    fInPosition = &this->addVertexAttrib("inPosition", kVec2f_GrVertexAttribType);
+    fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType));
 
     bool hasVertexColor = kA8_GrMaskFormat == fMaskFormat ||
                           kA565_GrMaskFormat == fMaskFormat;
     if (hasVertexColor) {
-        fInColor = &this->addVertexAttrib("inColor", kVec4ub_GrVertexAttribType);
+        fInColor = &this->addVertexAttrib(Attribute("inColor", kVec4ub_GrVertexAttribType));
     }
-    fInTextureCoords = &this->addVertexAttrib("inTextureCoords",  kVec2us_GrVertexAttribType,
-                                              kHigh_GrSLPrecision);
+    fInTextureCoords = &this->addVertexAttrib(Attribute("inTextureCoords",
+                                                        kVec2us_GrVertexAttribType,
+                                                        kHigh_GrSLPrecision));
     this->addTextureAccess(&fTextureAccess);
 }
 
@@ -157,7 +164,7 @@ GrGLSLPrimitiveProcessor* GrBitmapTextGeoProc::createGLSLInstance(const GrGLSLCa
 
 GR_DEFINE_GEOMETRY_PROCESSOR_TEST(GrBitmapTextGeoProc);
 
-sk_sp<GrGeometryProcessor> GrBitmapTextGeoProc::TestCreate(GrProcessorTestData* d) {
+const GrGeometryProcessor* GrBitmapTextGeoProc::TestCreate(GrProcessorTestData* d) {
     int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx :
                                           GrProcessorUnitTest::kAlphaTextureIdx;
     static const SkShader::TileMode kTileModes[] = {
@@ -170,9 +177,9 @@ sk_sp<GrGeometryProcessor> GrBitmapTextGeoProc::TestCreate(GrProcessorTestData* 
         kTileModes[d->fRandom->nextULessThan(SK_ARRAY_COUNT(kTileModes))],
     };
     GrTextureParams params(tileModes, d->fRandom->nextBool() ? GrTextureParams::kBilerp_FilterMode :
-                                                               GrTextureParams::kNone_FilterMode);
+                                                           GrTextureParams::kNone_FilterMode);
 
-    GrMaskFormat format = kARGB_GrMaskFormat; // init to avoid warning
+    GrMaskFormat format;
     switch (d->fRandom->nextULessThan(3)) {
         case 0:
             format = kA8_GrMaskFormat;
@@ -185,7 +192,7 @@ sk_sp<GrGeometryProcessor> GrBitmapTextGeoProc::TestCreate(GrProcessorTestData* 
             break;
     }
 
-    return GrBitmapTextGeoProc::Make(GrRandomColor(d->fRandom), d->fTextures[texIdx], params,
-                                     format, GrTest::TestMatrix(d->fRandom),
-                                     d->fRandom->nextBool());
+    return GrBitmapTextGeoProc::Create(GrRandomColor(d->fRandom), d->fTextures[texIdx], params,
+                                       format, GrTest::TestMatrix(d->fRandom),
+                                       d->fRandom->nextBool());
 }

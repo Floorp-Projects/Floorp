@@ -54,11 +54,6 @@ private:
 
     bool onSkipScanlines(int count) override;
 
-    Result onStartIncrementalDecode(const SkImageInfo& dstInfo, void* pixels, size_t rowBytes,
-            const SkCodec::Options&, SkPMColor*, int*) override;
-
-    Result onIncrementalDecode(int* rowsDecoded) override;
-
     SkSampler* getSampler(bool createIfNecessary) override;
 
     /*
@@ -76,8 +71,7 @@ private:
      * Constructor called by NewFromStream
      * @param embeddedCodecs codecs for the embedded images, takes ownership
      */
-    SkIcoCodec(int width, int height, const SkEncodedInfo& info,
-            SkTArray<SkAutoTDelete<SkCodec>, true>* embeddedCodecs);
+    SkIcoCodec(const SkImageInfo& srcInfo, SkTArray<SkAutoTDelete<SkCodec>, true>* embeddedCodecs);
 
     SkAutoTDelete<SkTArray<SkAutoTDelete<SkCodec>, true>> fEmbeddedCodecs; // owned
 
@@ -88,14 +82,6 @@ private:
     // fCurrScanlineCodec is owned by this class, but should not be an
     // SkAutoTDelete.  It will be deleted by the destructor of fEmbeddedCodecs.
     SkCodec* fCurrScanlineCodec;
-
-    // Only used by incremental decoder.  onStartIncrementalDecode() will set
-    // fCurrIncrementalCodec to one of the fEmbeddedCodecs, if it can find a
-    // codec of the appropriate size.  We will use fCurrIncrementalCodec for
-    // subsequent calls to incrementalDecode().
-    // fCurrIncrementalCodec is owned by this class, but should not be an
-    // SkAutoTDelete.  It will be deleted by the destructor of fEmbeddedCodecs.
-    SkCodec* fCurrIncrementalCodec;
 
     typedef SkCodec INHERITED;
 };

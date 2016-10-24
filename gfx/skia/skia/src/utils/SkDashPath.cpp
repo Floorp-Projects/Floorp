@@ -217,12 +217,10 @@ private:
 bool SkDashPath::InternalFilter(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                                 const SkRect* cullRect, const SkScalar aIntervals[],
                                 int32_t count, SkScalar initialDashLength, int32_t initialDashIndex,
-                                SkScalar intervalLength,
-                                StrokeRecApplication strokeRecApplication) {
+                                SkScalar intervalLength) {
 
     // we do nothing if the src wants to be filled
-    SkStrokeRec::Style style = rec->getStyle();
-    if (SkStrokeRec::kFill_Style == style || SkStrokeRec::kStrokeAndFill_Style == style) {
+    if (rec->isFillStyle()) {
         return false;
     }
 
@@ -237,8 +235,7 @@ bool SkDashPath::InternalFilter(SkPath* dst, const SkPath& src, SkStrokeRec* rec
     }
 
     SpecialLineRec lineRec;
-    bool specialLine = (StrokeRecApplication::kAllow == strokeRecApplication) &&
-                       lineRec.init(*srcPtr, dst, rec, count >> 1, intervalLength);
+    bool specialLine = lineRec.init(*srcPtr, dst, rec, count >> 1, intervalLength);
 
     SkPathMeasure   meas(*srcPtr, false, rec->getResScale());
 

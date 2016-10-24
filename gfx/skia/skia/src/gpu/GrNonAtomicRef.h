@@ -28,8 +28,6 @@ public:
     }
 #endif
 
-    bool unique() const { return 1 == fRefCnt; }
-
     void ref() const {
         // Once the ref cnt reaches zero it should never be ref'ed again.
         SkASSERT(fRefCnt > 0);

@@ -11,17 +11,6 @@
 #include "SkSpecialImage.h"
 #include "SkWriteBuffer.h"
 
-sk_sp<SkImageFilter> SkComposeImageFilter::Make(sk_sp<SkImageFilter> outer,
-                                                sk_sp<SkImageFilter> inner) {
-    if (!outer) {
-        return inner;
-    }
-    if (!inner) {
-        return outer;
-    }
-    sk_sp<SkImageFilter> inputs[2] = { std::move(outer), std::move(inner) };
-    return sk_sp<SkImageFilter>(new SkComposeImageFilter(inputs));
-}
 
 SkRect SkComposeImageFilter::computeFastBounds(const SkRect& src) const {
     SkImageFilter* outer = this->getInput(0);
@@ -38,7 +27,7 @@ sk_sp<SkSpecialImage> SkComposeImageFilter::onFilterImage(SkSpecialImage* source
     // filter requires as input. This matters if the outer filter moves pixels.
     SkIRect innerClipBounds;
     innerClipBounds = this->getInput(0)->filterBounds(ctx.clipBounds(), ctx.ctm());
-    Context innerContext(ctx.ctm(), innerClipBounds, ctx.cache(), ctx.outputProperties());
+    Context innerContext(ctx.ctm(), innerClipBounds, ctx.cache());
     SkIPoint innerOffset = SkIPoint::Make(0, 0);
     sk_sp<SkSpecialImage> inner(this->filterInput(1, source, innerContext, &innerOffset));
     if (!inner) {
@@ -49,7 +38,7 @@ sk_sp<SkSpecialImage> SkComposeImageFilter::onFilterImage(SkSpecialImage* source
     outerMatrix.postTranslate(SkIntToScalar(-innerOffset.x()), SkIntToScalar(-innerOffset.y()));
     SkIRect clipBounds = ctx.clipBounds();
     clipBounds.offset(-innerOffset.x(), -innerOffset.y());
-    Context outerContext(outerMatrix, clipBounds, ctx.cache(), ctx.outputProperties());
+    Context outerContext(outerMatrix, clipBounds, ctx.cache());
 
     SkIPoint outerOffset = SkIPoint::Make(0, 0);
     sk_sp<SkSpecialImage> outer(this->filterInput(0, inner.get(), outerContext, &outerOffset));

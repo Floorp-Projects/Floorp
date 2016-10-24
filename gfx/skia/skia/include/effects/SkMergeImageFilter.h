@@ -18,11 +18,18 @@ public:
 
     static sk_sp<SkImageFilter> Make(sk_sp<SkImageFilter> first, sk_sp<SkImageFilter> second,
                                      SkXfermode::Mode mode = SkXfermode::kSrcOver_Mode,
-                                     const CropRect* cropRect = nullptr);
+                                     const CropRect* cropRect = nullptr) {
+        sk_sp<SkImageFilter> inputs[2] = { first, second };
+        SkXfermode::Mode modes[2] = { mode, mode };
+        return sk_sp<SkImageFilter>(new SkMergeImageFilter(inputs, 2, modes, cropRect));
+    }
+
     static sk_sp<SkImageFilter> Make(sk_sp<SkImageFilter> filters[],
                                      int count,
                                      const SkXfermode::Mode modes[] = nullptr,
-                                     const CropRect* cropRect = nullptr);
+                                     const CropRect* cropRect = nullptr) {
+        return sk_sp<SkImageFilter>(new SkMergeImageFilter(filters, count, modes, cropRect));
+    }
 
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkMergeImageFilter)
@@ -51,7 +58,6 @@ protected:
     void flatten(SkWriteBuffer&) const override;
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
-    bool onCanHandleComplexCTM() const override { return true; }
 
 private:
     SkMergeImageFilter(sk_sp<SkImageFilter> filters[], int count, const SkXfermode::Mode modes[],

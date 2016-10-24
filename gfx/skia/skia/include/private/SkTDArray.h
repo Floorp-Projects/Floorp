@@ -14,7 +14,10 @@
 
 template <typename T> class SkTDArray {
 public:
-    SkTDArray() : fArray(nullptr), fReserve(0), fCount(0) {}
+    SkTDArray() {
+        fReserve = fCount = 0;
+        fArray = NULL;
+    }
     SkTDArray(const T src[], int count) {
         SkASSERT(src || count == 0);
 
@@ -26,12 +29,11 @@ public:
             fReserve = fCount = count;
         }
     }
-    SkTDArray(const SkTDArray<T>& src) : fArray(nullptr), fReserve(0), fCount(0) {
+    SkTDArray(const SkTDArray<T>& src) {
+        fReserve = fCount = 0;
+        fArray = NULL;
         SkTDArray<T> tmp(src.fArray, src.fCount);
         this->swap(tmp);
-    }
-    SkTDArray(SkTDArray<T>&& src) : fArray(nullptr), fReserve(0), fCount(0) {
-        this->swap(src);
     }
     ~SkTDArray() {
         sk_free(fArray);
@@ -46,13 +48,6 @@ public:
                 sk_careful_memcpy(fArray, src.fArray, sizeof(T) * src.fCount);
                 fCount = src.fCount;
             }
-        }
-        return *this;
-    }
-    SkTDArray<T>& operator=(SkTDArray<T>&& src) {
-        if (this != &src) {
-            this->swap(src);
-            src.reset();
         }
         return *this;
     }
@@ -217,18 +212,6 @@ public:
         }
     }
 
-    template <typename S> int select(S&& selector) const {
-        const T* iter = fArray;
-        const T* stop = fArray + fCount;
-
-        for (; iter < stop; iter++) {
-            if (selector(*iter)) {
-                return SkToInt(iter - fArray);
-            }
-        }
-        return -1;
-    }
-    
     int find(const T& elem) const {
         const T* iter = fArray;
         const T* stop = fArray + fCount;

@@ -14,12 +14,12 @@
  * Creates an instance of the decoder
  * Called only by NewFromStream
  */
-SkBmpRLECodec::SkBmpRLECodec(int width, int height, const SkEncodedInfo& info, SkStream* stream,
+SkBmpRLECodec::SkBmpRLECodec(const SkImageInfo& info, SkStream* stream,
                              uint16_t bitsPerPixel, uint32_t numColors,
                              uint32_t bytesPerColor, uint32_t offset,
                              SkCodec::SkScanlineOrder rowOrder,
                              size_t RLEBytes)
-    : INHERITED(width, height, info, stream, bitsPerPixel, rowOrder)
+    : INHERITED(info, stream, bitsPerPixel, rowOrder)
     , fColorTable(nullptr)
     , fNumColors(numColors)
     , fBytesPerColor(bytesPerColor)
@@ -44,7 +44,7 @@ SkCodec::Result SkBmpRLECodec::onGetPixels(const SkImageInfo& dstInfo,
         // Subsets are not supported.
         return kUnimplemented;
     }
-    if (!conversion_possible_ignore_color_space(dstInfo, this->getInfo())) {
+    if (!conversion_possible(dstInfo, this->getInfo())) {
         SkCodecPrintf("Error: cannot convert input type to output type.\n");
         return kInvalidConversion;
     }
@@ -70,7 +70,7 @@ SkCodec::Result SkBmpRLECodec::onGetPixels(const SkImageInfo& dstInfo,
 /*
  * Process the color table for the bmp input
  */
- bool SkBmpRLECodec::createColorTable(SkColorType dstColorType, int* numColors) {
+ bool SkBmpRLECodec::createColorTable(int* numColors) {
     // Allocate memory for color table
     uint32_t colorBytes = 0;
     SkPMColor colorTable[256];
@@ -96,13 +96,12 @@ SkCodec::Result SkBmpRLECodec::onGetPixels(const SkImageInfo& dstInfo,
         }
 
         // Fill in the color table
-        PackColorProc packARGB = choose_pack_color_proc(false, dstColorType);
         uint32_t i = 0;
         for (; i < numColorsToRead; i++) {
             uint8_t blue = get_byte(cBuffer.get(), i*fBytesPerColor);
             uint8_t green = get_byte(cBuffer.get(), i*fBytesPerColor + 1);
             uint8_t red = get_byte(cBuffer.get(), i*fBytesPerColor + 2);
-            colorTable[i] = packARGB(0xFF, red, green, blue);
+            colorTable[i] = SkPackARGB32NoCheck(0xFF, red, green, blue);
         }
 
         // To avoid segmentation faults on bad pixel data, fill the end of the
@@ -209,8 +208,7 @@ void SkBmpRLECodec::setPixel(void* dst, size_t dstRowBytes,
         // Set the pixel based on destination color type
         const int dstX = get_dst_coord(x, fSampleX);
         switch (dstInfo.colorType()) {
-            case kRGBA_8888_SkColorType:
-            case kBGRA_8888_SkColorType: {
+            case kN32_SkColorType: {
                 SkPMColor* dstRow = SkTAddOffset<SkPMColor>(dst, row * (int) dstRowBytes);
                 dstRow[dstX] = fColorTable->operator[](index);
                 break;
@@ -243,14 +241,9 @@ void SkBmpRLECodec::setRGBPixel(void* dst, size_t dstRowBytes,
         // Set the pixel based on destination color type
         const int dstX = get_dst_coord(x, fSampleX);
         switch (dstInfo.colorType()) {
-            case kRGBA_8888_SkColorType: {
+            case kN32_SkColorType: {
                 SkPMColor* dstRow = SkTAddOffset<SkPMColor>(dst, row * (int) dstRowBytes);
-                dstRow[dstX] = SkPackARGB_as_RGBA(0xFF, red, green, blue);
-                break;
-            }
-            case kBGRA_8888_SkColorType: {
-                SkPMColor* dstRow = SkTAddOffset<SkPMColor>(dst, row * (int) dstRowBytes);
-                dstRow[dstX] = SkPackARGB_as_BGRA(0xFF, red, green, blue);
+                dstRow[dstX] = SkPackARGB32NoCheck(0xFF, red, green, blue);
                 break;
             }
             case kRGB_565_SkColorType: {
@@ -282,7 +275,7 @@ SkCodec::Result SkBmpRLECodec::prepareToDecode(const SkImageInfo& dstInfo,
 
     // Create the color table if necessary and prepare the stream for decode
     // Note that if it is non-NULL, inputColorCount will be modified
-    if (!this->createColorTable(dstInfo.colorType(), inputColorCount)) {
+    if (!this->createColorTable(inputColorCount)) {
         SkCodecPrintf("Error: could not create color table.\n");
         return SkCodec::kInvalidInput;
     }
@@ -322,8 +315,7 @@ int SkBmpRLECodec::decodeRows(const SkImageInfo& info, void* dst, size_t dstRowB
     // the skipped pixels will be transparent.
     // Because of the need for transparent pixels, kN32 is the only color
     // type that makes sense for the destination format.
-    SkASSERT(kRGBA_8888_SkColorType == dstInfo.colorType() ||
-            kBGRA_8888_SkColorType == dstInfo.colorType());
+    SkASSERT(kN32_SkColorType == dstInfo.colorType());
     if (dst) {
         SkSampler::Fill(dstInfo, dst, dstRowBytes, SK_ColorTRANSPARENT, opts.fZeroInitialized);
     }
@@ -451,7 +443,6 @@ int SkBmpRLECodec::decodeRows(const SkImageInfo& info, void* dst, size_t dstRowB
                                 setRGBPixel(dst, dstRowBytes, dstInfo,
                                             x++, y, red, green, blue);
                                 numPixels--;
-                                break;
                             }
                             default:
                                 SkASSERT(false);

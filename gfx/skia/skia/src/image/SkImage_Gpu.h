@@ -12,7 +12,6 @@
 #include "GrTexture.h"
 #include "GrGpuResourcePriv.h"
 #include "SkBitmap.h"
-#include "SkGr.h"
 #include "SkImage_Base.h"
 #include "SkImagePriv.h"
 #include "SkSurface.h"
@@ -23,12 +22,8 @@ public:
      *  An "image" can be a subset/window into a larger texture, so we explicit take the
      *  width and height.
      */
-    SkImage_Gpu(int w, int h, uint32_t uniqueID, SkAlphaType, GrTexture*, sk_sp<SkColorSpace>,
-                SkBudgeted);
+    SkImage_Gpu(int w, int h, uint32_t uniqueID, SkAlphaType, GrTexture*, SkBudgeted);
     ~SkImage_Gpu() override;
-
-    SkImageInfo onImageInfo() const override;
-    SkAlphaType onAlphaType() const override { return fAlphaType; }
 
     void applyBudgetDecision() const {
         if (SkBudgeted::kYes == fBudgeted) {
@@ -39,23 +34,24 @@ public:
     }
 
     bool getROPixels(SkBitmap*, CachingHint) const override;
-    GrTexture* asTextureRef(GrContext* ctx, const GrTextureParams& params,
-                            SkSourceGammaTreatment) const override;
+    GrTexture* asTextureRef(GrContext* ctx, const GrTextureParams& params) const override;
     sk_sp<SkImage> onMakeSubset(const SkIRect&) const override;
 
     GrTexture* peekTexture() const override { return fTexture; }
-    sk_sp<GrTexture> refPinnedTexture(uint32_t* uniqueID) const override {
-        *uniqueID = this->uniqueID();
-        return sk_ref_sp(fTexture.get());
-    }
+    bool isOpaque() const override;
     bool onReadPixels(const SkImageInfo&, void* dstPixels, size_t dstRowBytes,
                       int srcX, int srcY, CachingHint) const override;
+
+    sk_sp<SkSurface> onNewSurface(const SkImageInfo& info) const override {
+        return SkSurface::MakeRenderTarget(fTexture->getContext(), SkBudgeted::kNo, info);
+    }
+
+    bool asBitmapForImageFilters(SkBitmap* bitmap) const override;
 
 private:
     SkAutoTUnref<GrTexture>     fTexture;
     const SkAlphaType           fAlphaType;
     const SkBudgeted            fBudgeted;
-    sk_sp<SkColorSpace>         fColorSpace;
     mutable SkAtomic<bool>      fAddedRasterVersionToCache;
 
 

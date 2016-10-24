@@ -6,13 +6,10 @@
  */
 
 #include "GrTextureProvider.h"
-
-#include "GrCaps.h"
 #include "GrTexturePriv.h"
 #include "GrResourceCache.h"
 #include "GrGpu.h"
 #include "../private/GrSingleOwner.h"
-#include "SkMathPriv.h"
 #include "SkTArray.h"
 
 #define ASSERT_SINGLE_OWNER \
@@ -53,7 +50,8 @@ GrTexture* GrTextureProvider::createMipMappedTexture(const GrSurfaceDesc& desc, 
         !fGpu->caps()->isConfigRenderable(desc.fConfig, desc.fSampleCnt > 0)) {
         return nullptr;
     }
-    if (!GrPixelConfigIsCompressed(desc.fConfig)) {
+    if (!GrPixelConfigIsCompressed(desc.fConfig) &&
+        !desc.fTextureStorageAllocator.fAllocateTextureStorage) {
         if (mipLevelCount < 2) {
             static const uint32_t kFlags = kExact_ScratchTextureFlag |
                                            kNoCreate_ScratchTextureFlag;
@@ -139,7 +137,7 @@ GrTexture* GrTextureProvider::refScratchTexture(const GrSurfaceDesc& inDesc,
             scratchFlags = GrResourceCache::kPreferNoPendingIO_ScratchFlag;
         }
         GrGpuResource* resource = fCache->findAndRefScratchResource(key,
-                                                                   GrSurface::WorstCaseSize(*desc),
+                                                                   GrSurface::WorseCaseSize(*desc),
                                                                    scratchFlags);
         if (resource) {
             GrSurface* surface = static_cast<GrSurface*>(resource);

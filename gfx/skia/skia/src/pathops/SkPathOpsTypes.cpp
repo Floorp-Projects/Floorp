@@ -25,13 +25,6 @@ static bool equal_ulps(float a, float b, int epsilon, int depsilon) {
     return aBits < bBits + epsilon && bBits < aBits + epsilon;
 }
 
-static bool equal_ulps_no_normal_check(float a, float b, int epsilon, int depsilon) {
-    int aBits = SkFloatAs2sCompliment(a);
-    int bBits = SkFloatAs2sCompliment(b);
-    // Find the difference in ULPs.
-    return aBits < bBits + epsilon && bBits < aBits + epsilon;
-}
-
 static bool equal_ulps_pin(float a, float b, int epsilon, int depsilon) {
     if (!SkScalarIsFinite(a) || !SkScalarIsFinite(b)) {
         return false;
@@ -127,11 +120,6 @@ bool AlmostEqualUlps(float a, float b) {
     return equal_ulps(a, b, UlpsEpsilon, UlpsEpsilon);
 }
 
-bool AlmostEqualUlpsNoNormalCheck(float a, float b) {
-    const int UlpsEpsilon = 16;
-    return equal_ulps_no_normal_check(a, b, UlpsEpsilon, UlpsEpsilon);
-}
-
 bool AlmostEqualUlps_Pin(float a, float b) {
     const int UlpsEpsilon = 16;
     return equal_ulps_pin(a, b, UlpsEpsilon, UlpsEpsilon);
@@ -224,28 +212,26 @@ double SkDCubeRoot(double x) {
     return result;
 }
 
-SkOpGlobalState::SkOpGlobalState(SkOpContourHead* head,
-                                 SkChunkAlloc* allocator
-                                 SkDEBUGPARAMS(bool debugSkipAssert)
+SkOpGlobalState::SkOpGlobalState(SkOpCoincidence* coincidence, SkOpContourHead* head
                                  SkDEBUGPARAMS(const char* testName))
-    : fAllocator(allocator)
-    , fCoincidence(nullptr)
+    : fCoincidence(coincidence)
     , fContourHead(head)
     , fNested(0)
     , fWindingFailed(false)
-    , fPhase(SkOpPhase::kIntersecting)
+    , fAngleCoincidence(false)
+    , fPhase(kIntersecting)
     SkDEBUGPARAMS(fDebugTestName(testName))
     SkDEBUGPARAMS(fAngleID(0))
     SkDEBUGPARAMS(fCoinID(0))
     SkDEBUGPARAMS(fContourID(0))
     SkDEBUGPARAMS(fPtTID(0))
     SkDEBUGPARAMS(fSegmentID(0))
-    SkDEBUGPARAMS(fSpanID(0))
-    SkDEBUGPARAMS(fDebugSkipAssert(debugSkipAssert)) {
+    SkDEBUGPARAMS(fSpanID(0)) {
+    if (coincidence) {
+        coincidence->debugSetGlobalState(this);
+    }
 #if DEBUG_T_SECT_LOOP_COUNT
     debugResetLoopCounts();
 #endif
-#if DEBUG_COIN
-    fPreviousFuncName = nullptr;
-#endif
 }
+

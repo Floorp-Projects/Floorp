@@ -5,12 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkFloatBits.h"
 #include "SkMatrix.h"
-#include "SkNx.h"
-#include "SkPaint.h"
+#include "SkFloatBits.h"
 #include "SkRSXform.h"
 #include "SkString.h"
+#include "SkNx.h"
+#include "SkOpts.h"
+
 #include <stddef.h>
 
 static void normalize_perspective(SkScalar mat[9]) {
@@ -290,12 +291,7 @@ void SkMatrix::preTranslate(SkScalar dx, SkScalar dy) {
         return;
     }
 
-    if (fTypeMask <= kTranslate_Mask) {
-        fMat[kMTransX] += dx;
-        fMat[kMTransY] += dy;
-        this->setTypeMask((fMat[kMTransX] != 0 || fMat[kMTransY] != 0) ? kTranslate_Mask
-                                                                       : kIdentity_Mask);
-    } else if (this->hasPerspective()) {
+    if (this->hasPerspective()) {
         SkMatrix    m;
         m.setTranslate(dx, dy);
         this->preConcat(m);
@@ -921,62 +917,11 @@ void SkMatrix::Identity_pts(const SkMatrix& m, SkPoint dst[], const SkPoint src[
 }
 
 void SkMatrix::Trans_pts(const SkMatrix& m, SkPoint dst[], const SkPoint src[], int count) {
-    SkASSERT(m.getType() <= SkMatrix::kTranslate_Mask);
-    if (count > 0) {
-        SkScalar tx = m.getTranslateX();
-        SkScalar ty = m.getTranslateY();
-        if (count & 1) {
-            dst->fX = src->fX + tx;
-            dst->fY = src->fY + ty;
-            src += 1;
-            dst += 1;
-        }
-        Sk4s trans4(tx, ty, tx, ty);
-        count >>= 1;
-        if (count & 1) {
-            (Sk4s::Load(src) + trans4).store(dst);
-            src += 2;
-            dst += 2;
-        }
-        count >>= 1;
-        for (int i = 0; i < count; ++i) {
-            (Sk4s::Load(src+0) + trans4).store(dst+0);
-            (Sk4s::Load(src+2) + trans4).store(dst+2);
-            src += 4;
-            dst += 4;
-        }
-    }
+    return SkOpts::matrix_translate(m,dst,src,count);
 }
 
 void SkMatrix::Scale_pts(const SkMatrix& m, SkPoint dst[], const SkPoint src[], int count) {
-    SkASSERT(m.getType() <= (SkMatrix::kScale_Mask | SkMatrix::kTranslate_Mask));
-    if (count > 0) {
-        SkScalar tx = m.getTranslateX();
-        SkScalar ty = m.getTranslateY();
-        SkScalar sx = m.getScaleX();
-        SkScalar sy = m.getScaleY();
-        if (count & 1) {
-            dst->fX = src->fX * sx + tx;
-            dst->fY = src->fY * sy + ty;
-            src += 1;
-            dst += 1;
-        }
-        Sk4s trans4(tx, ty, tx, ty);
-        Sk4s scale4(sx, sy, sx, sy);
-        count >>= 1;
-        if (count & 1) {
-            (Sk4s::Load(src) * scale4 + trans4).store(dst);
-            src += 2;
-            dst += 2;
-        }
-        count >>= 1;
-        for (int i = 0; i < count; ++i) {
-            (Sk4s::Load(src+0) * scale4 + trans4).store(dst+0);
-            (Sk4s::Load(src+2) * scale4 + trans4).store(dst+2);
-            src += 4;
-            dst += 4;
-        }
-    }
+    return SkOpts::matrix_scale_translate(m,dst,src,count);
 }
 
 void SkMatrix::Persp_pts(const SkMatrix& m, SkPoint dst[],
@@ -1008,32 +953,7 @@ void SkMatrix::Persp_pts(const SkMatrix& m, SkPoint dst[],
 }
 
 void SkMatrix::Affine_vpts(const SkMatrix& m, SkPoint dst[], const SkPoint src[], int count) {
-    SkASSERT(m.getType() != SkMatrix::kPerspective_Mask);
-    if (count > 0) {
-        SkScalar tx = m.getTranslateX();
-        SkScalar ty = m.getTranslateY();
-        SkScalar sx = m.getScaleX();
-        SkScalar sy = m.getScaleY();
-        SkScalar kx = m.getSkewX();
-        SkScalar ky = m.getSkewY();
-        if (count & 1) {
-            dst->set(src->fX * sx + src->fY * kx + tx,
-                     src->fX * ky + src->fY * sy + ty);
-            src += 1;
-            dst += 1;
-        }
-        Sk4s trans4(tx, ty, tx, ty);
-        Sk4s scale4(sx, sy, sx, sy);
-        Sk4s  skew4(kx, ky, kx, ky);    // applied to swizzle of src4
-        count >>= 1;
-        for (int i = 0; i < count; ++i) {
-            Sk4s src4 = Sk4s::Load(src);
-            Sk4s swz4 = SkNx_shuffle<1,0,3,2>(src4);  // y0 x0, y1 x1
-            (src4 * scale4 + swz4 * skew4 + trans4).store(dst);
-            src += 2;
-            dst += 2;
-        }
-    }
+    return SkOpts::matrix_affine(m,dst,src,count);
 }
 
 const SkMatrix::MapPtsProc SkMatrix::gMapPtsProcs[] = {
@@ -1102,40 +1022,12 @@ void SkMatrix::mapVectors(SkPoint dst[], const SkPoint src[], int count) const {
     }
 }
 
-static Sk4f sort_as_rect(const Sk4f& ltrb) {
-    Sk4f rblt(ltrb[2], ltrb[3], ltrb[0], ltrb[1]);
-    Sk4f min = Sk4f::Min(ltrb, rblt);
-    Sk4f max = Sk4f::Max(ltrb, rblt);
-    // We can extract either pair [0,1] or [2,3] from min and max and be correct, but on
-    // ARM this sequence generates the fastest (a single instruction).
-    return Sk4f(min[2], min[3], max[0], max[1]);
-}
-
-void SkMatrix::mapRectScaleTranslate(SkRect* dst, const SkRect& src) const {
-    SkASSERT(dst);
-    SkASSERT(this->isScaleTranslate());
-
-    SkScalar sx = fMat[kMScaleX];
-    SkScalar sy = fMat[kMScaleY];
-    SkScalar tx = fMat[kMTransX];
-    SkScalar ty = fMat[kMTransY];
-    Sk4f scale(sx, sy, sx, sy);
-    Sk4f trans(tx, ty, tx, ty);
-    sort_as_rect(Sk4f::Load(&src.fLeft) * scale + trans).store(&dst->fLeft);
-}
-
 bool SkMatrix::mapRect(SkRect* dst, const SkRect& src) const {
     SkASSERT(dst);
 
-    if (this->getType() <= kTranslate_Mask) {
-        SkScalar tx = fMat[kMTransX];
-        SkScalar ty = fMat[kMTransY];
-        Sk4f trans(tx, ty, tx, ty);
-        sort_as_rect(Sk4f::Load(&src.fLeft) + trans).store(&dst->fLeft);
-        return true;
-    }
-    if (this->isScaleTranslate()) {
-        this->mapRectScaleTranslate(dst, src);
+    if (this->rectStaysRect()) {
+        this->mapPoints((SkPoint*)dst, (const SkPoint*)&src, 2);
+        dst->sort();
         return true;
     } else {
         SkPoint quad[4];
@@ -1581,25 +1473,16 @@ template <MinMaxOrBoth MIN_MAX_OR_BOTH> bool get_scale_factor(SkMatrix::TypeMask
             results[1] = apluscdiv2 + x;
         }
     }
-    if (!SkScalarIsFinite(results[0])) {
+    if (SkScalarIsNaN(results[0])) {
         return false;
     }
-    // Due to the floating point inaccuracy, there might be an error in a, b, c
-    // calculated by sdot, further deepened by subsequent arithmetic operations
-    // on them. Therefore, we allow and cap the nearly-zero negative values.
-    SkASSERT(results[0] >= -SK_ScalarNearlyZero);
-    if (results[0] < 0) {
-        results[0] = 0;
-    }
+    SkASSERT(results[0] >= 0);
     results[0] = SkScalarSqrt(results[0]);
     if (kBoth_MinMaxOrBoth == MIN_MAX_OR_BOTH) {
-        if (!SkScalarIsFinite(results[1])) {
+        if (SkScalarIsNaN(results[1])) {
             return false;
         }
-        SkASSERT(results[1] >= -SK_ScalarNearlyZero);
-        if (results[1] < 0) {
-            results[1] = 0;
-        }
+        SkASSERT(results[1] >= 0);
         results[1] = SkScalarSqrt(results[1]);
     }
     return true;

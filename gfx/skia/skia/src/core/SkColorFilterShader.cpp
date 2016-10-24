@@ -97,19 +97,25 @@ void SkColorFilterShader::FilterShaderContext::shadeSpan4f(int x, int y, SkPM4f 
 #if SK_SUPPORT_GPU
 /////////////////////////////////////////////////////////////////////
 
-sk_sp<GrFragmentProcessor> SkColorFilterShader::asFragmentProcessor(const AsFPArgs& args) const {
+const GrFragmentProcessor* SkColorFilterShader::asFragmentProcessor(
+                                                               GrContext* context,
+                                                               const SkMatrix& viewM,
+                                                               const SkMatrix* localMatrix,
+                                                               SkFilterQuality fq) const {
 
-    sk_sp<GrFragmentProcessor> fp1(fShader->asFragmentProcessor(args));
-    if (!fp1) {
+    SkAutoTUnref<const GrFragmentProcessor> fp1(fShader->asFragmentProcessor(context, viewM,
+                                                                             localMatrix, fq));
+    if (!fp1.get()) {
         return nullptr;
     }
 
-    sk_sp<GrFragmentProcessor> fp2(fFilter->asFragmentProcessor(args.fContext));
-    if (!fp2) {
-        return fp1;
+    SkAutoTUnref<const GrFragmentProcessor> fp2(fFilter->asFragmentProcessor(context));
+    if (!fp2.get()) {
+        return fp1.release();
     }
 
-    sk_sp<GrFragmentProcessor> fpSeries[] = { std::move(fp1), std::move(fp2) };
+    const GrFragmentProcessor* fpSeries[] = { fp1.get(), fp2.get() };
+
     return GrFragmentProcessor::RunInSeries(fpSeries, 2);
 }
 #endif

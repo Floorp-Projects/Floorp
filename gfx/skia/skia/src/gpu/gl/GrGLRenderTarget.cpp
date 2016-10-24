@@ -7,52 +7,37 @@
 
 #include "GrGLRenderTarget.h"
 
+#include "GrRenderTargetPriv.h"
 #include "GrGLGpu.h"
 #include "GrGLUtil.h"
-#include "GrGpuResourcePriv.h"
-#include "GrRenderTargetPriv.h"
 #include "SkTraceMemoryDump.h"
 
 #define GPUGL static_cast<GrGLGpu*>(this->getGpu())
 #define GL_CALL(X) GR_GL_CALL(GPUGL->glInterface(), X)
 
 // Because this class is virtually derived from GrSurface we must explicitly call its constructor.
-// Constructor for wrapped render targets.
 GrGLRenderTarget::GrGLRenderTarget(GrGLGpu* gpu,
                                    const GrSurfaceDesc& desc,
                                    const IDDesc& idDesc,
                                    GrGLStencilAttachment* stencil)
-    : GrSurface(gpu, desc)
-    , INHERITED(gpu, desc, ComputeFlags(gpu->glCaps(), idDesc), stencil) {
+    : GrSurface(gpu, idDesc.fLifeCycle, desc)
+    , INHERITED(gpu, idDesc.fLifeCycle, desc, idDesc.fSampleConfig, stencil) {
     this->init(desc, idDesc);
-    this->registerWithCacheWrapped();
+    this->registerWithCache();
 }
 
-GrGLRenderTarget::GrGLRenderTarget(GrGLGpu* gpu, const GrSurfaceDesc& desc,
-                                   const IDDesc& idDesc)
-    : GrSurface(gpu, desc)
-    , INHERITED(gpu, desc, ComputeFlags(gpu->glCaps(), idDesc)) {
+GrGLRenderTarget::GrGLRenderTarget(GrGLGpu* gpu, const GrSurfaceDesc& desc, const IDDesc& idDesc,
+                                   Derived)
+    : GrSurface(gpu, idDesc.fLifeCycle, desc)
+    , INHERITED(gpu, idDesc.fLifeCycle, desc, idDesc.fSampleConfig) {
     this->init(desc, idDesc);
-}
-
-inline GrRenderTarget::Flags GrGLRenderTarget::ComputeFlags(const GrGLCaps& glCaps,
-                                                            const IDDesc& idDesc) {
-    Flags flags = Flags::kNone;
-    if (idDesc.fIsMixedSampled) {
-        SkASSERT(glCaps.usesMixedSamples() && idDesc.fRTFBOID); // FBO 0 can't be mixed sampled.
-        flags |= Flags::kMixedSampled;
-    }
-    if (glCaps.maxWindowRectangles() > 0 && idDesc.fRTFBOID) {
-        flags |= Flags::kWindowRectsSupport;
-    }
-    return flags;
 }
 
 void GrGLRenderTarget::init(const GrSurfaceDesc& desc, const IDDesc& idDesc) {
     fRTFBOID                = idDesc.fRTFBOID;
     fTexFBOID               = idDesc.fTexFBOID;
     fMSColorRenderbufferID  = idDesc.fMSColorRenderbufferID;
-    fRTFBOOwnership         = idDesc.fRTFBOOwnership;
+    fRTLifecycle            = idDesc.fLifeCycle;
 
     fViewport.fLeft   = 0;
     fViewport.fBottom = 0;
@@ -61,7 +46,7 @@ void GrGLRenderTarget::init(const GrSurfaceDesc& desc, const IDDesc& idDesc) {
 
     fGpuMemorySize = this->totalSamples() * this->totalBytesPerSample();
 
-    SkASSERT(fGpuMemorySize <= WorstCaseSize(desc));
+    SkASSERT(fGpuMemorySize <= WorseCaseSize(desc));
 }
 
 GrGLRenderTarget* GrGLRenderTarget::CreateWrapped(GrGLGpu* gpu,
@@ -99,13 +84,9 @@ bool GrGLRenderTarget::completeStencilAttachment() {
                                                       GR_GL_DEPTH_ATTACHMENT,
                                                       GR_GL_RENDERBUFFER, 0));
 #ifdef SK_DEBUG
-        if (kChromium_GrGLDriver != gpu->glContext().driver()) {
-            // This check can cause problems in Chromium if the context has been asynchronously
-            // abandoned (see skbug.com/5200)
-            GrGLenum status;
-            GR_GL_CALL_RET(interface, status, CheckFramebufferStatus(GR_GL_FRAMEBUFFER));
-            SkASSERT(GR_GL_FRAMEBUFFER_COMPLETE == status);
-        }
+        GrGLenum status;
+        GR_GL_CALL_RET(interface, status, CheckFramebufferStatus(GR_GL_FRAMEBUFFER));
+        SkASSERT(GR_GL_FRAMEBUFFER_COMPLETE == status);
 #endif
         return true;
     } else {
@@ -129,20 +110,16 @@ bool GrGLRenderTarget::completeStencilAttachment() {
         }
 
 #ifdef SK_DEBUG
-        if (kChromium_GrGLDriver != gpu->glContext().driver()) {
-            // This check can cause problems in Chromium if the context has been asynchronously
-            // abandoned (see skbug.com/5200)
-            GrGLenum status;
-            GR_GL_CALL_RET(interface, status, CheckFramebufferStatus(GR_GL_FRAMEBUFFER));
-            SkASSERT(GR_GL_FRAMEBUFFER_COMPLETE == status);
-        }
+        GrGLenum status;
+        GR_GL_CALL_RET(interface, status, CheckFramebufferStatus(GR_GL_FRAMEBUFFER));
+        SkASSERT(GR_GL_FRAMEBUFFER_COMPLETE == status);
 #endif
         return true;
     }
 }
 
 void GrGLRenderTarget::onRelease() {
-    if (GrBackendObjectOwnership::kBorrowed != fRTFBOOwnership) {
+    if (kBorrowed_LifeCycle != fRTLifecycle) {
         if (fTexFBOID) {
             GL_CALL(DeleteFramebuffers(1, &fTexFBOID));
         }
@@ -171,13 +148,6 @@ GrGLGpu* GrGLRenderTarget::getGLGpu() const {
     return static_cast<GrGLGpu*>(this->getGpu());
 }
 
-bool GrGLRenderTarget::canAttemptStencilAttachment() const {
-    // Only modify the FBO's attachments if we have created the FBO. Public APIs do not currently
-    // allow for borrowed FBO ownership, so we can safely assume that if an object is owned,
-    // Skia created it.
-    return this->fRTFBOOwnership == GrBackendObjectOwnership::kOwned;
-}
-
 void GrGLRenderTarget::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const {
     // Don't log the backing texture's contribution to the memory size. This will be handled by the
     // texture object.
@@ -190,7 +160,7 @@ void GrGLRenderTarget::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) 
         // Due to this resource having both a texture and a renderbuffer component, dump as
         // skia/gpu_resources/resource_#/renderbuffer
         SkString dumpName("skia/gpu_resources/resource_");
-        dumpName.appendS32(this->uniqueID());
+        dumpName.appendS32(this->getUniqueID());
         dumpName.append("/renderbuffer");
 
         traceMemoryDump->dumpNumericValue(dumpName.c_str(), "size", "bytes", size);

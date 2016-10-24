@@ -24,12 +24,13 @@ public:
         bool fPacked;
     };
 
-    static GrVkStencilAttachment* Create(GrVkGpu* gpu, int width, int height,
+    static GrVkStencilAttachment* Create(GrVkGpu* gpu, GrGpuResource::LifeCycle lifeCycle,
+                                         int width, int height,
                                          int sampleCnt, const Format& format);
 
     ~GrVkStencilAttachment() override;
 
-    const GrVkResource* imageResource() const { return this->resource(); }
+    const GrVkImage::Resource* imageResource() const { return this->resource(); }
     const GrVkImageView* stencilView() const { return fStencilView; }
 
     VkFormat vkFormat() const { return fFormat.fInternalFormat; }
@@ -42,9 +43,10 @@ private:
     size_t onGpuMemorySize() const override;
 
     GrVkStencilAttachment(GrVkGpu* gpu,
+                          GrGpuResource::LifeCycle lifeCycle,
                           const Format& format,
                           const GrVkImage::ImageDesc&,
-                          const GrVkImageInfo&,
+                          const GrVkImage::Resource*,
                           const GrVkImageView* stencilView);
 
     GrVkGpu* getVkGpu() const;

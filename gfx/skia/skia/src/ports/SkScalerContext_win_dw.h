@@ -14,16 +14,13 @@
 #include "SkTypes.h"
 
 #include <dwrite.h>
-#if SK_HAS_DWRITE_2_H
-#include <dwrite_2.h>
-#endif
 
 class SkGlyph;
 class SkDescriptor;
 
 class SkScalerContext_DW : public SkScalerContext {
 public:
-    SkScalerContext_DW(DWriteFontTypeface*, const SkScalerContextEffects&, const SkDescriptor*);
+    SkScalerContext_DW(DWriteFontTypeface*, const SkDescriptor* desc);
     virtual ~SkScalerContext_DW();
 
 protected:
@@ -44,14 +41,6 @@ private:
                            DWRITE_RENDERING_MODE renderingMode,
                            DWRITE_TEXTURE_TYPE textureType,
                            RECT* bbox);
-
-    bool isColorGlyph(const SkGlyph& glyph);
-
-#if SK_HAS_DWRITE_2_H
-    bool getColorGlyphRun(const SkGlyph& glyph, IDWriteColorGlyphRunEnumerator** colorGlyph);
-
-    void generateColorGlyphImage(const SkGlyph& glyph);
-#endif
 
     SkTDArray<uint8_t> fBits;
     /** The total matrix without the text height scale. */
@@ -75,10 +64,6 @@ private:
     DWRITE_RENDERING_MODE fRenderingMode;
     DWRITE_TEXTURE_TYPE fTextureType;
     DWRITE_MEASURING_MODE fMeasuringMode;
-#if SK_HAS_DWRITE_2_H
-    SkTScopedComPtr<IDWriteFactory2> fFactory2;
-    bool fIsColorFont;
-#endif
 };
 
 #endif

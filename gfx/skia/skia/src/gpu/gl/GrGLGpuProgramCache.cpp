@@ -9,15 +9,15 @@
 
 #include "builders/GrGLProgramBuilder.h"
 #include "GrProcessor.h"
-#include "GrProgramDesc.h"
 #include "GrGLPathRendering.h"
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLProgramDataManager.h"
+#include "SkRTConf.h"
 #include "SkTSearch.h"
 
 #ifdef PROGRAM_CACHE_STATS
-// Display program cache usage
-static const bool c_DisplayCache{false};
+SK_CONF_DECLARE(bool, c_DisplayCache, "gpu.displayCache", false,
+                "Display program cache usage.");
 #endif
 
 typedef GrGLSLProgramDataManager::UniformHandle UniformHandle;
@@ -106,19 +106,17 @@ int GrGLGpu::ProgramCache::search(const GrProgramDesc& desc) const {
 
 GrGLProgram* GrGLGpu::ProgramCache::refProgram(const GrGLGpu* gpu,
                                                const GrPipeline& pipeline,
-                                               const GrPrimitiveProcessor& primProc,
-                                               bool isPoints) {
+                                               const GrPrimitiveProcessor& primProc) {
 #ifdef PROGRAM_CACHE_STATS
     ++fTotalRequests;
 #endif
 
     // Get GrGLProgramDesc
-    GrProgramDesc desc;
-    if (!GrProgramDesc::Build(&desc, primProc, isPoints, pipeline, *gpu->glCaps().glslCaps())) {
+    GrGLProgramDesc desc;
+    if (!GrGLProgramDescBuilder::Build(&desc, primProc, pipeline, *gpu->glCaps().glslCaps())) {
         GrCapsDebugf(gpu->caps(), "Failed to gl program descriptor!\n");
         return nullptr;
     }
-    desc.finalize();
 
     Entry* entry = nullptr;
 

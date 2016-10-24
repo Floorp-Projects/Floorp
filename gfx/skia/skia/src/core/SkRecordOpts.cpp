@@ -10,7 +10,6 @@
 #include "SkRecordPattern.h"
 #include "SkRecords.h"
 #include "SkTDArray.h"
-#include "SkXfermode.h"
 
 using namespace SkRecords;
 
@@ -87,7 +86,7 @@ struct SaveOnlyDrawsRestoreNooper {
     }
 };
 
-static bool fold_opacity_layer_color_to_paint(const SkPaint* layerPaint,
+static bool fold_opacity_layer_color_to_paint(const SkPaint& layerPaint,
                                               bool isSaveLayer,
                                               SkPaint* paint) {
     // We assume layerPaint is always from a saveLayer.  If isSaveLayer is
@@ -98,7 +97,7 @@ static bool fold_opacity_layer_color_to_paint(const SkPaint* layerPaint,
     // looper drawing unmodulated filter layer twice and then modulating the result produces
     // different image to drawing modulated filter layer twice.
     // TODO: most likely the looper and only some xfer modes are the hard constraints
-    if (!paint->isSrcOver() || paint->getLooper()) {
+    if (paint->getXfermode() || paint->getLooper()) {
         return false;
     }
 
@@ -121,26 +120,25 @@ static bool fold_opacity_layer_color_to_paint(const SkPaint* layerPaint,
         return false;
     }
 
-    if (layerPaint) {
-        const uint32_t layerColor = layerPaint->getColor();
-        // The layer paint color must have only alpha component.
-        if (SK_ColorTRANSPARENT != SkColorSetA(layerColor, SK_AlphaTRANSPARENT)) {
-            return false;
-        }
-
-        // The layer paint can not have any effects.
-        if (layerPaint->getPathEffect()  ||
-            layerPaint->getShader()      ||
-            !layerPaint->isSrcOver()     ||
-            layerPaint->getMaskFilter()  ||
-            layerPaint->getColorFilter() ||
-            layerPaint->getRasterizer()  ||
-            layerPaint->getLooper()      ||
-            layerPaint->getImageFilter()) {
-            return false;
-        }
-        paint->setAlpha(SkMulDiv255Round(paint->getAlpha(), SkColorGetA(layerColor)));
+    const uint32_t layerColor = layerPaint.getColor();
+    // The layer paint color must have only alpha component.
+    if (SK_ColorTRANSPARENT != SkColorSetA(layerColor, SK_AlphaTRANSPARENT)) {
+        return false;
     }
+
+    // The layer paint can not have any effects.
+    if (layerPaint.getPathEffect() ||
+        layerPaint.getShader()      ||
+        layerPaint.getXfermode()    ||
+        layerPaint.getMaskFilter()  ||
+        layerPaint.getColorFilter() ||
+        layerPaint.getRasterizer()  ||
+        layerPaint.getLooper()      ||
+        layerPaint.getImageFilter()) {
+        return false;
+    }
+
+    paint->setAlpha(SkMulDiv255Round(paint->getAlpha(), SkColorGetA(layerColor)));
 
     return true;
 }
@@ -173,15 +171,6 @@ void SkRecordNoopSaveRestores(SkRecord* record) {
     while (apply(&onlyDraws, record) || apply(&noDraws, record));
 }
 
-static bool effectively_srcover(const SkPaint* paint) {
-    if (!paint || paint->isSrcOver()) {
-        return true;
-    }
-    // src-mode with opaque and no effects (which might change opaqueness) is ok too.
-    return !paint->getShader() && !paint->getColorFilter() && !paint->getImageFilter() &&
-           0xFF == paint->getAlpha() && paint->getBlendMode() == SkBlendMode::kSrc;
-}
-
 // For some SaveLayer-[drawing command]-Restore patterns, merge the SaveLayer's alpha into the
 // draw, and no-op the SaveLayer and Restore.
 struct SaveLayerDrawRestoreNooper {
@@ -195,20 +184,19 @@ struct SaveLayerDrawRestoreNooper {
 
         // A SaveLayer's bounds field is just a hint, so we should be free to ignore it.
         SkPaint* layerPaint = match->first<SaveLayer>()->paint;
-        SkPaint* drawPaint = match->second<SkPaint>();
-
-        if (nullptr == layerPaint && effectively_srcover(drawPaint)) {
+        if (nullptr == layerPaint) {
             // There wasn't really any point to this SaveLayer at all.
             return KillSaveLayerAndRestore(record, begin);
         }
 
+        SkPaint* drawPaint = match->second<SkPaint>();
         if (drawPaint == nullptr) {
             // We can just give the draw the SaveLayer's paint.
             // TODO(mtklein): figure out how to do this clearly
             return false;
         }
 
-        if (!fold_opacity_layer_color_to_paint(layerPaint, false /*isSaveLayer*/, drawPaint)) {
+        if (!fold_opacity_layer_color_to_paint(*layerPaint, false /*isSaveLayer*/, drawPaint)) {
             return false;
         }
 
@@ -261,7 +249,7 @@ struct SvgOpacityAndFilterLayerMergePass {
             return false;
         }
 
-        if (!fold_opacity_layer_color_to_paint(opacityPaint, true /*isSaveLayer*/,
+        if (!fold_opacity_layer_color_to_paint(*opacityPaint, true /*isSaveLayer*/,
                                                filterLayerPaint)) {
             return false;
         }
@@ -288,10 +276,7 @@ void SkRecordOptimize(SkRecord* record) {
     // out junk for other optimization passes.  Right now, nothing needs it,
     // and the bounding box hierarchy will do the work of skipping no-op
     // Save-NoDraw-Restore sequences better than we can here.
-    // As there is a known problem with this peephole and drawAnnotation, disable this.
-    // If we want to enable this we must first fix this bug:
-    //     https://bugs.chromium.org/p/skia/issues/detail?id=5548
-//    SkRecordNoopSaveRestores(record);
+    //SkRecordNoopSaveRestores(record);
 
     SkRecordNoopSaveLayerDrawRestores(record);
     SkRecordMergeSvgOpacityAndFilterLayers(record);

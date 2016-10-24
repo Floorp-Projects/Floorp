@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
+#include "SkChecksum.h"
 #include "SkFontDescriptor.h"
-#include "SkOpts.h"
 #include "SkStream.h"
 #include "SkString.h"
 #include "SkTypeface.h"
 #include "SkUtils.h"
 #include "../sfnt/SkOTUtils.h"
 
-#include "SkWhitelistChecksums.inc"
+#include "SkWhitelistChecksums.cpp"
 
 #define WHITELIST_DEBUG 0
 
 extern void WhitelistSerializeTypeface(const SkTypeface*, SkWStream* );
-sk_sp<SkTypeface> WhitelistDeserializeTypeface(SkStream* );
+extern SkTypeface* WhitelistDeserializeTypeface(SkStream* );
 extern bool CheckChecksums();
 extern bool GenerateChecksums();
 
@@ -28,12 +28,12 @@ static bool timesNewRomanSerializedNameOnly = false;
 
 #define SUBNAME_PREFIX "sk_"
 
-static bool font_name_is_local(const char* fontName, SkFontStyle style) {
+static bool font_name_is_local(const char* fontName, SkTypeface::Style style) {
     if (!strcmp(fontName, "DejaVu Sans")) {
         return true;
     }
-    sk_sp<SkTypeface> defaultFace(SkTypeface::MakeFromName(nullptr, style));
-    sk_sp<SkTypeface> foundFace(SkTypeface::MakeFromName(fontName, style));
+    SkTypeface* defaultFace = SkTypeface::CreateFromName(nullptr, style);
+    SkTypeface* foundFace = SkTypeface::CreateFromName(fontName, style);
     return defaultFace != foundFace;
 }
 
@@ -63,7 +63,7 @@ static int whitelist_name_index(const SkTypeface* tf) {
 }
 
 static uint32_t compute_checksum(const SkTypeface* tf) {
-    std::unique_ptr<SkFontData> fontData = tf->makeFontData();
+    SkFontData* fontData = tf->createFontData();
     if (!fontData) {
         return 0;
     }
@@ -80,16 +80,15 @@ static uint32_t compute_checksum(const SkTypeface* tf) {
     if (!fontStream->peek(data.begin(), length)) {
         return 0;
     }
-    return SkOpts::hash(data.begin(), length);
+    return SkChecksum::Murmur3(data.begin(), length);
 }
 
-static void serialize_sub(const char* fontName, SkFontStyle style, SkWStream* wstream) {
-    SkFontDescriptor desc;
+static void serialize_sub(const char* fontName, SkTypeface::Style style, SkWStream* wstream) {
+    SkFontDescriptor desc(style);
     SkString subName(SUBNAME_PREFIX);
     subName.append(fontName);
     const char* familyName = subName.c_str();
     desc.setFamilyName(familyName);
-    desc.setStyle(style);
     desc.serialize(wstream);
 #if WHITELIST_DEBUG
     for (int i = 0; i < whitelistCount; ++i) {
@@ -106,26 +105,26 @@ static void serialize_sub(const char* fontName, SkFontStyle style, SkWStream* ws
 
 static bool is_local(const SkTypeface* tf) {
     bool isLocal = false;
-    SkFontDescriptor desc;
+    SkFontDescriptor desc(tf->style());
     tf->getFontDescriptor(&desc, &isLocal);
     return isLocal;
 }
 
 static void serialize_full(const SkTypeface* tf, SkWStream* wstream) {
     bool isLocal = false;
-    SkFontDescriptor desc;
+    SkFontDescriptor desc(tf->style());
     tf->getFontDescriptor(&desc, &isLocal);
 
     // Embed font data if it's a local font.
     if (isLocal && !desc.hasFontData()) {
-        desc.setFontData(tf->makeFontData());
+        desc.setFontData(tf->createFontData());
     }
     desc.serialize(wstream);
 }
 
 static void serialize_name_only(const SkTypeface* tf, SkWStream* wstream) {
     bool isLocal = false;
-    SkFontDescriptor desc;
+    SkFontDescriptor desc(tf->style());
     tf->getFontDescriptor(&desc, &isLocal);
     SkASSERT(!isLocal);
 #if WHITELIST_DEBUG
@@ -163,7 +162,7 @@ void WhitelistSerializeTypeface(const SkTypeface* tf, SkWStream* wstream) {
         return;
     }
     const char* fontName = whitelist[whitelistIndex].fFontName;
-    if (!font_name_is_local(fontName, tf->fontStyle())) {
+    if (!font_name_is_local(fontName, tf->style())) {
 #if WHITELIST_DEBUG
         SkDebugf("name not found locally \"%s\" style=%d\n", fontName, tf->style());
 #endif
@@ -181,18 +180,18 @@ void WhitelistSerializeTypeface(const SkTypeface* tf, SkWStream* wstream) {
 #endif
         whitelist[whitelistIndex].fChecksum = checksum;
     }
-    serialize_sub(fontName, tf->fontStyle(), wstream);
+    serialize_sub(fontName, tf->style(), wstream);
 }
 
-sk_sp<SkTypeface> WhitelistDeserializeTypeface(SkStream* stream) {
+SkTypeface* WhitelistDeserializeTypeface(SkStream* stream) {
     SkFontDescriptor desc;
     if (!SkFontDescriptor::Deserialize(stream, &desc)) {
         return nullptr;
     }
 
-    std::unique_ptr<SkFontData> data = desc.detachFontData();
+    SkFontData* data = desc.detachFontData();
     if (data) {
-        sk_sp<SkTypeface> typeface(SkTypeface::MakeFromFontData(std::move(data)));
+        SkTypeface* typeface = SkTypeface::CreateFromFontData(data);
         if (typeface) {
             return typeface;
         }
@@ -201,14 +200,14 @@ sk_sp<SkTypeface> WhitelistDeserializeTypeface(SkStream* stream) {
     if (!strncmp(SUBNAME_PREFIX, familyName, sizeof(SUBNAME_PREFIX) - 1)) {
         familyName += sizeof(SUBNAME_PREFIX) - 1;
     }
-    return SkTypeface::MakeFromName(familyName, desc.getStyle());
+    return SkTypeface::CreateFromName(familyName, desc.getStyle());
 }
 
 bool CheckChecksums() {
     for (int i = 0; i < whitelistCount; ++i) {
         const char* fontName = whitelist[i].fFontName;
-        sk_sp<SkTypeface> tf(SkTypeface::MakeFromName(fontName, SkFontStyle()));
-        uint32_t checksum = compute_checksum(tf.get());
+        SkTypeface* tf = SkTypeface::CreateFromName(fontName, SkTypeface::kNormal);
+        uint32_t checksum = compute_checksum(tf);
         if (whitelist[i].fChecksum != checksum) {
             return false;
         }
@@ -216,7 +215,7 @@ bool CheckChecksums() {
     return true;
 }
 
-const char checksumFileName[] = "SkWhitelistChecksums.inc";
+const char checksumFileName[] = "SkWhitelistChecksums.cpp";
 
 const char checksumHeader[] =
 "/*"                                                                        "\n"
@@ -262,8 +261,8 @@ bool GenerateChecksums() {
     sk_fwrite(line.c_str(), line.size(), file);
     for (int i = 0; i < whitelistCount; ++i) {
         const char* fontName = whitelist[i].fFontName;
-        sk_sp<SkTypeface> tf(SkTypeface::MakeFromName(fontName, SkFontStyle()));
-        uint32_t checksum = compute_checksum(tf.get());
+        SkTypeface* tf = SkTypeface::CreateFromName(fontName, SkTypeface::kNormal);
+        uint32_t checksum = compute_checksum(tf);
         line.printf(checksumEntry, fontName, checksum);
         sk_fwrite(line.c_str(), line.size(), file);
     }

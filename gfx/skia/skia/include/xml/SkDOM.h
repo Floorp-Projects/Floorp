@@ -13,16 +13,14 @@
 #include "../private/SkTemplates.h"
 #include "SkChunkAlloc.h"
 #include "SkScalar.h"
-#include "SkTypes.h"
 
 struct SkDOMNode;
 struct SkDOMAttr;
 
 class SkDOMParser;
-class SkStream;
 class SkXMLParser;
 
-class SK_API SkDOM : public SkNoncopyable {
+class SkDOM {
 public:
     SkDOM();
     ~SkDOM();
@@ -32,7 +30,7 @@ public:
 
     /** Returns null on failure
     */
-    const Node* build(SkStream&);
+    const Node* build(const char doc[], size_t len);
     const Node* copy(const SkDOM& dom, const Node* node);
 
     const Node* getRootNode() const;
@@ -79,7 +77,7 @@ public:
 
     class AttrIter {
     public:
-        AttrIter(const SkDOM&, const Node*);
+        AttrIter(const class SkDOM&, const Node*);
         const char* next(const char** value);
     private:
         const Attr* fAttr;
@@ -87,13 +85,15 @@ public:
     };
 
     SkDEBUGCODE(void dump(const Node* node = NULL, int tabLevel = 0) const;)
+    SkDEBUGCODE(static void UnitTest();)
 
 private:
     SkChunkAlloc               fAlloc;
     Node*                      fRoot;
     SkAutoTDelete<SkDOMParser> fParser;
 
-    typedef SkNoncopyable INHERITED;
+    friend class AttrIter;
+    friend class SkDOMParser;
 };
 
 #endif

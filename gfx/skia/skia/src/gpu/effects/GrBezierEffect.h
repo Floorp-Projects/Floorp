@@ -58,33 +58,30 @@ class GrGLConicEffect;
 
 class GrConicEffect : public GrGeometryProcessor {
 public:
-    static sk_sp<GrGeometryProcessor> Make(GrColor color,
-                                           const SkMatrix& viewMatrix,
-                                           const GrPrimitiveEdgeType edgeType,
-                                           const GrCaps& caps,
-                                           const SkMatrix& localMatrix,
-                                           bool usesLocalCoords,
-                                           uint8_t coverage = 0xff) {
+    static GrGeometryProcessor* Create(GrColor color,
+                                       const SkMatrix& viewMatrix,
+                                       const GrPrimitiveEdgeType edgeType,
+                                       const GrCaps& caps,
+                                       const SkMatrix& localMatrix,
+                                       bool usesLocalCoords,
+                                       uint8_t coverage = 0xff) {
         switch (edgeType) {
             case kFillAA_GrProcessorEdgeType:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrConicEffect(color, viewMatrix, coverage, kFillAA_GrProcessorEdgeType,
-                                      localMatrix, usesLocalCoords));
+                return new GrConicEffect(color, viewMatrix, coverage, kFillAA_GrProcessorEdgeType,
+                                         localMatrix, usesLocalCoords);
             case kHairlineAA_GrProcessorEdgeType:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrConicEffect(color, viewMatrix, coverage,
-                                      kHairlineAA_GrProcessorEdgeType, localMatrix,
-                                      usesLocalCoords));
+                return new GrConicEffect(color, viewMatrix, coverage,
+                                         kHairlineAA_GrProcessorEdgeType, localMatrix,
+                                         usesLocalCoords);
             case kFillBW_GrProcessorEdgeType:
-                return sk_sp<GrGeometryProcessor>(
-                    new GrConicEffect(color, viewMatrix, coverage, kFillBW_GrProcessorEdgeType,
-                                      localMatrix, usesLocalCoords));
+                return new GrConicEffect(color, viewMatrix, coverage, kFillBW_GrProcessorEdgeType,
+                                         localMatrix, usesLocalCoords);
             default:
                 return nullptr;
         }
@@ -141,33 +138,30 @@ class GrGLQuadEffect;
 
 class GrQuadEffect : public GrGeometryProcessor {
 public:
-    static sk_sp<GrGeometryProcessor> Make(GrColor color,
-                                           const SkMatrix& viewMatrix,
-                                           const GrPrimitiveEdgeType edgeType,
-                                           const GrCaps& caps,
-                                           const SkMatrix& localMatrix,
-                                           bool usesLocalCoords,
-                                           uint8_t coverage = 0xff) {
+    static GrGeometryProcessor* Create(GrColor color,
+                                       const SkMatrix& viewMatrix,
+                                       const GrPrimitiveEdgeType edgeType,
+                                       const GrCaps& caps,
+                                       const SkMatrix& localMatrix,
+                                       bool usesLocalCoords,
+                                       uint8_t coverage = 0xff) {
         switch (edgeType) {
             case kFillAA_GrProcessorEdgeType:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrQuadEffect(color, viewMatrix, coverage, kFillAA_GrProcessorEdgeType,
-                                     localMatrix, usesLocalCoords));
+                return new GrQuadEffect(color, viewMatrix, coverage, kFillAA_GrProcessorEdgeType,
+                                        localMatrix, usesLocalCoords);
             case kHairlineAA_GrProcessorEdgeType:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrQuadEffect(color, viewMatrix, coverage,
-                                     kHairlineAA_GrProcessorEdgeType, localMatrix,
-                                     usesLocalCoords));
+                return new GrQuadEffect(color, viewMatrix, coverage,
+                                        kHairlineAA_GrProcessorEdgeType, localMatrix,
+                                        usesLocalCoords);
             case kFillBW_GrProcessorEdgeType:
-                return sk_sp<GrGeometryProcessor>(
-                    new GrQuadEffect(color, viewMatrix, coverage, kFillBW_GrProcessorEdgeType,
-                                     localMatrix, usesLocalCoords));
+                return new GrQuadEffect(color, viewMatrix, coverage, kFillBW_GrProcessorEdgeType,
+                                        localMatrix, usesLocalCoords);
             default:
                 return nullptr;
         }
@@ -226,26 +220,23 @@ class GrGLCubicEffect;
 
 class GrCubicEffect : public GrGeometryProcessor {
 public:
-    static sk_sp<GrGeometryProcessor> Make(GrColor color,
-                                           const SkMatrix& viewMatrix,
-                                           const GrPrimitiveEdgeType edgeType,
-                                           const GrCaps& caps) {
+    static GrGeometryProcessor* Create(GrColor color,
+                                       const SkMatrix& viewMatrix,
+                                       const GrPrimitiveEdgeType edgeType,
+                                       const GrCaps& caps) {
         switch (edgeType) {
             case kFillAA_GrProcessorEdgeType:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrCubicEffect(color, viewMatrix, kFillAA_GrProcessorEdgeType));
+                return new GrCubicEffect(color, viewMatrix, kFillAA_GrProcessorEdgeType);
             case kHairlineAA_GrProcessorEdgeType:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrCubicEffect(color, viewMatrix, kHairlineAA_GrProcessorEdgeType));
+                return new GrCubicEffect(color, viewMatrix, kHairlineAA_GrProcessorEdgeType);
             case kFillBW_GrProcessorEdgeType:
-                return sk_sp<GrGeometryProcessor>(
-                    new GrCubicEffect(color, viewMatrix, kFillBW_GrProcessorEdgeType));
+                return new GrCubicEffect(color, viewMatrix, kFillBW_GrProcessorEdgeType);
             default:
                 return nullptr;
         }

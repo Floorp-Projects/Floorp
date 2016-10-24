@@ -8,8 +8,6 @@
 
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkLeanWindows.h"
-
 #include <GL/gl.h>
 #include <WindowsX.h>
 #include "win/SkWGL.h"
@@ -29,8 +27,9 @@
 #include <EGL/eglext.h>
 #endif // SK_ANGLE
 
-const int kDefaultWindowWidth = 500;
-const int kDefaultWindowHeight = 500;
+#if SK_COMMAND_BUFFER
+#include "gl/command_buffer/SkCommandBufferGLContext.h"
+#endif // SK_COMMAND_BUFFER
 
 #define GL_CALL(IFACE, X)                                 \
     SkASSERT(IFACE);                                      \
@@ -51,8 +50,7 @@ SkOSWindow::SkOSWindow(const void* winInit) {
     fWinInit = *(const WindowInit*)winInit;
 
     fHWND = CreateWindow(fWinInit.fClass, NULL, WS_OVERLAPPEDWINDOW,
-                         CW_USEDEFAULT, 0, kDefaultWindowWidth, kDefaultWindowHeight, NULL, NULL,
-                         fWinInit.fInstance, NULL);
+                         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, fWinInit.fInstance, NULL);
     gHwndToOSWindowMap.set(fHWND, this);
 #if SK_SUPPORT_GPU
 #if SK_ANGLE
@@ -60,6 +58,9 @@ SkOSWindow::SkOSWindow(const void* winInit) {
     fContext = EGL_NO_CONTEXT;
     fSurface = EGL_NO_SURFACE;
 #endif
+#if SK_COMMAND_BUFFER
+    fCommandBuffer = nullptr;
+#endif // SK_COMMAND_BUFFER
 
     fHGLRC = NULL;
 #endif
@@ -88,6 +89,10 @@ SkOSWindow::~SkOSWindow() {
         fDisplay = EGL_NO_DISPLAY;
     }
 #endif // SK_ANGLE
+#if SK_COMMAND_BUFFER
+    delete fCommandBuffer;
+#endif // SK_COMMAND_BUFFER
+
 #endif // SK_SUPPORT_GPU
     this->closeWindow();
 }
@@ -330,10 +335,10 @@ void SkEvent::SignalQueueTimer(SkMSec delay)
 
 #if SK_SUPPORT_GPU
 
-bool SkOSWindow::attachGL(int msaaSampleCount, bool deepColor, AttachmentInfo* info) {
+bool SkOSWindow::attachGL(int msaaSampleCount, AttachmentInfo* info) {
     HDC dc = GetDC((HWND)fHWND);
     if (NULL == fHGLRC) {
-        fHGLRC = SkCreateWGLContext(dc, msaaSampleCount, deepColor,
+        fHGLRC = SkCreateWGLContext(dc, msaaSampleCount,
                 kGLPreferCompatibilityProfile_SkWGLContextRequest);
         if (NULL == fHGLRC) {
             return false;
@@ -344,13 +349,11 @@ bool SkOSWindow::attachGL(int msaaSampleCount, bool deepColor, AttachmentInfo* i
         glClear(GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     }
     if (wglMakeCurrent(dc, (HGLRC)fHGLRC)) {
-        // use DescribePixelFormat to get the stencil and color bit depth.
+        // use DescribePixelFormat to get the stencil bit depth.
         int pixelFormat = GetPixelFormat(dc);
         PIXELFORMATDESCRIPTOR pfd;
         DescribePixelFormat(dc, pixelFormat, sizeof(pfd), &pfd);
         info->fStencilBits = pfd.cStencilBits;
-        // pfd.cColorBits includes alpha, so it will be 32 in 8/8/8/8 and 10/10/10/2
-        info->fColorBits = pfd.cRedBits + pfd.cGreenBits + pfd.cBlueBits;
 
         // Get sample count if the MSAA WGL extension is present
         SkWGLExtensions extensions;
@@ -421,7 +424,7 @@ static void* get_angle_egl_display(void* nativeDisplay) {
 struct ANGLEAssembleContext {
     ANGLEAssembleContext() {
         fEGL = GetModuleHandle("libEGL.dll");
-        fGL = GetModuleHandle("libGLESv2.dll");
+        fGL = GetModuleHandle("libEGLESv2.dll");
     }
 
     bool isValid() const { return SkToBool(fEGL) && SkToBool(fGL); }
@@ -564,18 +567,19 @@ bool SkOSWindow::attachANGLE(int msaaSampleCount, AttachmentInfo* info) {
         GL_CALL(fANGLEInterface, ClearStencil(0));
         GL_CALL(fANGLEInterface, ClearColor(0, 0, 0, 0));
         GL_CALL(fANGLEInterface, StencilMask(0xffffffff));
-        GL_CALL(fANGLEInterface, Clear(GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-    }
-    if (!eglMakeCurrent(fDisplay, fSurface, fSurface, fContext)) {
-        this->detachANGLE();
-        return false;
-    }
-    eglGetConfigAttrib(fDisplay, fConfig, EGL_STENCIL_SIZE, &info->fStencilBits);
-    eglGetConfigAttrib(fDisplay, fConfig, EGL_SAMPLES, &info->fSampleCount);
+        GL_CALL(fANGLEInterface, Clear(GL_STENCIL_BUFFER_BIT |GL_COLOR_BUFFER_BIT));
+        if (!eglMakeCurrent(fDisplay, fSurface, fSurface, fContext)) {
+            this->detachANGLE();
+            return false;
+        }
+        eglGetConfigAttrib(fDisplay, fConfig, EGL_STENCIL_SIZE, &info->fStencilBits);
+        eglGetConfigAttrib(fDisplay, fConfig, EGL_SAMPLES, &info->fSampleCount);
 
-    GL_CALL(fANGLEInterface, Viewport(0, 0, SkScalarRoundToInt(this->width()),
-                                      SkScalarRoundToInt(this->height())));
-    return true;
+        GL_CALL(fANGLEInterface, Viewport(0, 0, SkScalarRoundToInt(this->width()),
+                                                SkScalarRoundToInt(this->height())));
+        return true;
+    }
+    return false;
 }
 
 void SkOSWindow::detachANGLE() {
@@ -599,11 +603,52 @@ void SkOSWindow::presentANGLE() {
 }
 #endif // SK_ANGLE
 
+#if SK_COMMAND_BUFFER
+
+bool SkOSWindow::attachCommandBuffer(int msaaSampleCount, AttachmentInfo* info) {
+    if (!fCommandBuffer) {
+        fCommandBuffer = SkCommandBufferGLContext::Create((HWND)fHWND, msaaSampleCount);
+        if (!fCommandBuffer)
+            return false;
+
+        SkAutoTUnref<const GrGLInterface> intf(GrGLCreateCommandBufferInterface());
+        if (intf) {
+            GL_CALL(intf, ClearStencil(0));
+            GL_CALL(intf, ClearColor(0, 0, 0, 0));
+            GL_CALL(intf, StencilMask(0xffffffff));
+            GL_CALL(intf, Clear(GL_STENCIL_BUFFER_BIT |GL_COLOR_BUFFER_BIT));
+        }
+    }
+
+    if (fCommandBuffer->makeCurrent()) {
+        info->fStencilBits = fCommandBuffer->getStencilBits();
+        info->fSampleCount = fCommandBuffer->getSampleCount();
+
+        SkAutoTUnref<const GrGLInterface> intf(GrGLCreateCommandBufferInterface());
+
+        if (intf ) {
+            GL_CALL(intf, Viewport(0, 0, SkScalarRoundToInt(this->width()),
+                                         SkScalarRoundToInt(this->height())));
+        }
+        return true;
+    }
+    return false;
+}
+
+void SkOSWindow::detachCommandBuffer() {
+    delete fCommandBuffer;
+    fCommandBuffer = nullptr;
+}
+
+void SkOSWindow::presentCommandBuffer() {
+    fCommandBuffer->presentCommandBuffer();
+}
+#endif // SK_COMMAND_BUFFER
+
 #endif // SK_SUPPORT_GPU
 
 // return true on success
-bool SkOSWindow::attach(SkBackEndTypes attachType, int msaaSampleCount, bool deepColor,
-                        AttachmentInfo* info) {
+bool SkOSWindow::attach(SkBackEndTypes attachType, int msaaSampleCount, AttachmentInfo* info) {
 
     // attach doubles as "windowResize" so we need to allo
     // already bound states to pass through again
@@ -617,13 +662,18 @@ bool SkOSWindow::attach(SkBackEndTypes attachType, int msaaSampleCount, bool dee
         break;
 #if SK_SUPPORT_GPU
     case kNativeGL_BackEndType:
-        result = attachGL(msaaSampleCount, deepColor, info);
+        result = attachGL(msaaSampleCount, info);
         break;
 #if SK_ANGLE
     case kANGLE_BackEndType:
         result = attachANGLE(msaaSampleCount, info);
         break;
 #endif // SK_ANGLE
+#if SK_COMMAND_BUFFER
+    case kCommandBuffer_BackEndType:
+        result = attachCommandBuffer(msaaSampleCount, info);
+        break;
+#endif // SK_COMMAND_BUFFER
 #endif // SK_SUPPORT_GPU
     default:
         SkASSERT(false);
@@ -652,6 +702,11 @@ void SkOSWindow::release() {
         detachANGLE();
         break;
 #endif // SK_ANGLE
+#if SK_COMMAND_BUFFER
+    case kCommandBuffer_BackEndType:
+        detachCommandBuffer();
+        break;
+#endif // SK_COMMAND_BUFFER
 #endif // SK_SUPPORT_GPU
     default:
         SkASSERT(false);
@@ -674,6 +729,11 @@ void SkOSWindow::present() {
         presentANGLE();
         break;
 #endif // SK_ANGLE
+#if SK_COMMAND_BUFFER
+    case kCommandBuffer_BackEndType:
+        presentCommandBuffer();
+        break;
+#endif // SK_COMMAND_BUFFER
 #endif // SK_SUPPORT_GPU
     default:
         SkASSERT(false);

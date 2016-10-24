@@ -36,8 +36,6 @@ public:
      *
      *  If the requested surface cannot be created, or the request is not a
      *  supported configuration, NULL will be returned.
-     *
-     *  Callers are responsible for initialiazing the surface pixels.
      */
     static sk_sp<SkSurface> MakeRasterDirect(const SkImageInfo&, void* pixels, size_t rowBytes,
                                              const SkSurfaceProps* = nullptr);
@@ -51,14 +49,10 @@ public:
                                                  void* context, const SkSurfaceProps* = nullptr);
 
     /**
-     *  Return a new surface, with the memory for the pixels automatically allocated but respecting
+     *  Return a new surface, with the memory for the pixels automatically allocated, but respecting
      *  the specified rowBytes. If rowBytes==0, then a default value will be chosen. If a non-zero
-     *  rowBytes is specified, then any images snapped off of this surface (via makeImageSnapshot())
+     *  rowBytes is specified, then any images snapped off of this surface (via newImageSnapshot())
      *  are guaranteed to have the same rowBytes.
-     *
-     *  If the requested alpha type is not opaque, then the surface's pixel memory will be
-     *  zero-initialized. If it is opaque, then it will be left uninitialized, and the caller is
-     *  responsible for initially clearing the surface.
      *
      *  If the requested surface cannot be created, or the request is not a
      *  supported configuration, NULL will be returned.
@@ -68,10 +62,7 @@ public:
     /**
      *  Allocate a new surface, automatically computing the rowBytes.
      */
-    static sk_sp<SkSurface> MakeRaster(const SkImageInfo& info,
-                                       const SkSurfaceProps* props = nullptr) {
-        return MakeRaster(info, 0, props);
-    }
+    static sk_sp<SkSurface> MakeRaster(const SkImageInfo&, const SkSurfaceProps* = nullptr);
 
     /**
      *  Helper version of NewRaster. It creates a SkImageInfo with the
@@ -84,13 +75,19 @@ public:
     }
 
     /**
+     *  Return a new surface using the specified render target.
+     */
+    static sk_sp<SkSurface> MakeRenderTargetDirect(GrRenderTarget*,
+                                                   const SkSurfaceProps* = nullptr);
+
+    /**
      *  Used to wrap a pre-existing backend 3D API texture as a SkSurface. The kRenderTarget flag
      *  must be set on GrBackendTextureDesc for this to succeed. Skia will not assume ownership
      *  of the texture and the client must ensure the texture is valid for the lifetime of the
      *  SkSurface.
      */
     static sk_sp<SkSurface> MakeFromBackendTexture(GrContext*, const GrBackendTextureDesc&,
-                                                   sk_sp<SkColorSpace>, const SkSurfaceProps*);
+                                                   const SkSurfaceProps*);
 
     /**
      *  Used to wrap a pre-existing 3D API rendering target as a SkSurface. Skia will not assume
@@ -99,7 +96,6 @@ public:
      */
     static sk_sp<SkSurface> MakeFromBackendRenderTarget(GrContext*,
                                                         const GrBackendRenderTargetDesc&,
-                                                        sk_sp<SkColorSpace>,
                                                         const SkSurfaceProps*);
 
     /**
@@ -111,46 +107,21 @@ public:
      *  SkSurface.
      */
     static sk_sp<SkSurface> MakeFromBackendTextureAsRenderTarget(
-        GrContext*, const GrBackendTextureDesc&, sk_sp<SkColorSpace>, const SkSurfaceProps*);
-
-    /**
-     * Legacy versions of the above factories, without color space support. These create "legacy"
-     * surfaces that operate without gamma correction or color management.
-     */
-    static sk_sp<SkSurface> MakeFromBackendTexture(GrContext* ctx, const GrBackendTextureDesc& desc,
-                                                   const SkSurfaceProps* props) {
-        return MakeFromBackendTexture(ctx, desc, nullptr, props);
-    }
-
-    static sk_sp<SkSurface> MakeFromBackendRenderTarget(GrContext* ctx,
-                                                        const GrBackendRenderTargetDesc& desc,
-                                                        const SkSurfaceProps* props) {
-        return MakeFromBackendRenderTarget(ctx, desc, nullptr, props);
-    }
-
-    static sk_sp<SkSurface> MakeFromBackendTextureAsRenderTarget(
-            GrContext* ctx, const GrBackendTextureDesc& desc, const SkSurfaceProps* props) {
-        return MakeFromBackendTextureAsRenderTarget(ctx, desc, nullptr, props);
-    }
-
+            GrContext*, const GrBackendTextureDesc&, const SkSurfaceProps*);
 
     /**
      *  Return a new surface whose contents will be drawn to an offscreen
      *  render target, allocated by the surface.
+     *
+     *  The GrTextureStorageAllocator will be reused if SkImage snapshots create
+     *  additional textures.
      */
-    static sk_sp<SkSurface> MakeRenderTarget(GrContext*, SkBudgeted, const SkImageInfo&,
-                                             int sampleCount, GrSurfaceOrigin,
-                                             const SkSurfaceProps*);
-
-    static sk_sp<SkSurface> MakeRenderTarget(GrContext* context, SkBudgeted budgeted,
-                                             const SkImageInfo& info, int sampleCount,
-                                             const SkSurfaceProps* props) {
-        return MakeRenderTarget(context, budgeted, info, sampleCount,
-                                kBottomLeft_GrSurfaceOrigin, props);
-    }
+    static sk_sp<SkSurface> MakeRenderTarget(
+            GrContext*, SkBudgeted, const SkImageInfo&, int sampleCount, const SkSurfaceProps*,
+            GrTextureStorageAllocator = GrTextureStorageAllocator());
 
     static sk_sp<SkSurface> MakeRenderTarget(GrContext* gr, SkBudgeted b, const SkImageInfo& info) {
-        return MakeRenderTarget(gr, b, info, 0, kBottomLeft_GrSurfaceOrigin, nullptr);
+        return MakeRenderTarget(gr, b, info, 0, nullptr);
     }
 
 #ifdef SK_SUPPORT_LEGACY_NEW_SURFACE_API
@@ -176,6 +147,12 @@ public:
                                          const SkSurfaceProps* props = NULL) {
         return NewRaster(SkImageInfo::MakeN32Premul(width, height), props);
     }
+    static SkSurface* NewRenderTargetDirect(GrRenderTarget* rt, const SkSurfaceProps* props) {
+        return MakeRenderTargetDirect(rt, props).release();
+    }
+    static SkSurface* NewRenderTargetDirect(GrRenderTarget* target) {
+        return NewRenderTargetDirect(target, NULL);
+    }
     static SkSurface* NewFromBackendTexture(GrContext* ctx, const GrBackendTextureDesc& desc,
                                             const SkSurfaceProps* props) {
         return MakeFromBackendTexture(ctx, desc, props).release();
@@ -195,8 +172,9 @@ public:
         return MakeFromBackendTextureAsRenderTarget(ctx, desc, props).release();
     }
     static SkSurface* NewRenderTarget(GrContext* ctx, SkBudgeted b, const SkImageInfo& info,
-                                      int sampleCount, const SkSurfaceProps* props = NULL) {
-        return MakeRenderTarget(ctx, b, info, sampleCount, props).release();
+                                      int sampleCount, const SkSurfaceProps* props = NULL,
+                                      GrTextureStorageAllocator a = GrTextureStorageAllocator()) {
+        return MakeRenderTarget(ctx, b, info, sampleCount, props, a).release();
     }
     static SkSurface* NewRenderTarget(GrContext* gr, SkBudgeted b, const SkImageInfo& info) {
         return NewRenderTarget(gr, b, info, 0);
