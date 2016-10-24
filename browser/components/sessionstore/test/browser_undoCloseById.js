@@ -36,20 +36,30 @@ add_task(function* test_undoCloseById() {
 
   // Open and close a tab.
   yield openAndCloseTab(win, "about:mozilla");
+  is(SessionStore.lastClosedObjectType, "tab", "The last closed object is a tab");
 
   // Record the first closedId created.
   let initialClosedId = SessionStore.getClosedTabData(win, false)[0].closedId;
 
-  // Open and close another tab.
-  yield openAndCloseTab(win, "about:robots");  // closedId == initialClosedId + 1
+  // Open and close another window.
+  let win2 = yield openWindow("about:mozilla");
+  yield BrowserTestUtils.closeWindow(win2);  // closedId == initialClosedId + 1
+  is(SessionStore.lastClosedObjectType, "window", "The last closed object is a window");
+
+  // Open and close another tab in the first window.
+  yield openAndCloseTab(win, "about:robots");  // closedId == initialClosedId + 2
+  is(SessionStore.lastClosedObjectType, "tab", "The last closed object is a tab");
 
   // Undo closing the second tab.
-  let tab = SessionStore.undoCloseById(initialClosedId + 1);
+  let tab = SessionStore.undoCloseById(initialClosedId + 2);
   yield promiseBrowserLoaded(tab.linkedBrowser);
   is(tab.linkedBrowser.currentURI.spec, "about:robots", "The expected tab was re-opened");
 
-  let notTab = SessionStore.undoCloseById(initialClosedId + 1);
+  let notTab = SessionStore.undoCloseById(initialClosedId + 2);
   is(notTab, undefined, "Re-opened tab cannot be unClosed again by closedId");
+
+  // Now the last closed object should be a window again.
+  is(SessionStore.lastClosedObjectType, "window", "The last closed object is a window");
 
   // Undo closing the first tab.
   let tab2 = SessionStore.undoCloseById(initialClosedId);
@@ -57,18 +67,22 @@ add_task(function* test_undoCloseById() {
   is(tab2.linkedBrowser.currentURI.spec, "about:mozilla", "The expected tab was re-opened");
 
   // Close the two tabs we re-opened.
-  yield promiseRemoveTab(tab); // closedId == initialClosedId + 2
-  yield promiseRemoveTab(tab2); // closedId == initialClosedId + 3
+  yield promiseRemoveTab(tab); // closedId == initialClosedId + 3
+  is(SessionStore.lastClosedObjectType, "tab", "The last closed object is a tab");
+  yield promiseRemoveTab(tab2); // closedId == initialClosedId + 4
+  is(SessionStore.lastClosedObjectType, "tab", "The last closed object is a tab");
 
   // Open another new window.
-  let win2 = yield openWindow("about:mozilla");
+  let win3 = yield openWindow("about:mozilla");
 
   // Close both windows.
-  yield BrowserTestUtils.closeWindow(win); // closedId == initialClosedId + 4
-  yield BrowserTestUtils.closeWindow(win2); // closedId == initialClosedId + 5
+  yield BrowserTestUtils.closeWindow(win); // closedId == initialClosedId + 5
+  is(SessionStore.lastClosedObjectType, "window", "The last closed object is a window");
+  yield BrowserTestUtils.closeWindow(win3); // closedId == initialClosedId + 6
+  is(SessionStore.lastClosedObjectType, "window", "The last closed object is a window");
 
   // Undo closing the second window.
-  win = SessionStore.undoCloseById(initialClosedId + 5);
+  win = SessionStore.undoCloseById(initialClosedId + 6);
   yield BrowserTestUtils.waitForEvent(win, "load");
 
   // Make sure we wait until this window is restored.
@@ -77,14 +91,15 @@ add_task(function* test_undoCloseById() {
 
   is(win.gBrowser.selectedBrowser.currentURI.spec, "about:mozilla", "The expected window was re-opened");
 
-  let notWin = SessionStore.undoCloseById(initialClosedId + 5);
+  let notWin = SessionStore.undoCloseById(initialClosedId + 6);
   is(notWin, undefined, "Re-opened window cannot be unClosed again by closedId");
 
   // Close the window again.
   yield BrowserTestUtils.closeWindow(win);
+  is(SessionStore.lastClosedObjectType, "window", "The last closed object is a window");
 
   // Undo closing the first window.
-  win = SessionStore.undoCloseById(initialClosedId + 4);
+  win = SessionStore.undoCloseById(initialClosedId + 5);
 
   yield BrowserTestUtils.waitForEvent(win, "load");
 
@@ -96,4 +111,5 @@ add_task(function* test_undoCloseById() {
 
   // Close the window again.
   yield BrowserTestUtils.closeWindow(win);
+  is(SessionStore.lastClosedObjectType, "window", "The last closed object is a window");
 });
