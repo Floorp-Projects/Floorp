@@ -237,8 +237,8 @@ public:
   // Note this function will delete the current state object.
   // Don't access members to avoid UAF after this call.
   template <class S, typename... Ts>
-  auto SetState(Ts&&... aArgs)
-    -> decltype(DeclVal<S>().Enter(Forward<Ts>(aArgs)...))
+  auto SetState(Ts... aArgs)
+    -> decltype(DeclVal<S>().Enter(Move(aArgs)...))
   {
     // keep mMaster in a local object because mMaster will become invalid after
     // the current state object is deleted.
@@ -253,13 +253,9 @@ public:
 
     Exit();
 
-    // Note |aArgs| might reference data members of |this|. We need to keep
-    // |this| alive until |s->Enter()| returns.
-    UniquePtr<StateObject> deathGrip(master->mStateObj.release());
-
     master->mState = s->GetState();
     master->mStateObj.reset(s);
-    return s->Enter(Forward<Ts>(aArgs)...);
+    return s->Enter(Move(aArgs)...);
   }
 
 protected:
@@ -1294,8 +1290,7 @@ DormantState::HandleDormant(bool aDormant)
 {
   if (!aDormant) {
     MOZ_ASSERT(!Info().IsEncrypted() || mMaster->mCDMProxy);
-    SeekJob seekJob = Move(mPendingSeek);
-    SetState<DecodingFirstFrameState>(Move(seekJob));
+    SetState<DecodingFirstFrameState>(Move(mPendingSeek));
   }
   return true;
 }
@@ -1304,11 +1299,10 @@ bool
 MediaDecoderStateMachine::
 WaitForCDMState::HandleCDMProxyReady()
 {
-  SeekJob seekJob = Move(mPendingSeek);
   if (mPendingDormant) {
-    SetState<DormantState>(Move(seekJob));
+    SetState<DormantState>(Move(mPendingSeek));
   } else {
-    SetState<DecodingFirstFrameState>(Move(seekJob));
+    SetState<DecodingFirstFrameState>(Move(mPendingSeek));
   }
   return true;
 }
@@ -1369,8 +1363,7 @@ MediaDecoderStateMachine::
 DecodingFirstFrameState::HandleDormant(bool aDormant)
 {
   if (aDormant) {
-    SeekJob seekJob = Move(mPendingSeek);
-    SetState<DormantState>(Move(seekJob));
+    SetState<DormantState>(Move(mPendingSeek));
   }
   return true;
 }
@@ -1389,8 +1382,7 @@ DecodingFirstFrameState::MaybeFinishDecodeFirstFrame()
   mMaster->FinishDecodeFirstFrame();
 
   if (mPendingSeek.Exists()) {
-    SeekJob seekJob = Move(mPendingSeek);
-    SetState<SeekingState>(Move(seekJob));
+    SetState<SeekingState>(Move(mPendingSeek));
   } else {
     SetState<DecodingState>();
   }
@@ -1500,8 +1492,7 @@ SeekingState::HandleDormant(bool aDormant)
     mSeekJob.mTarget.SetType(SeekTarget::Accurate);
     mSeekJob.mTarget.SetVideoOnly(false);
   }
-  SeekJob seekJob = Move(mSeekJob);
-  SetState<DormantState>(Move(seekJob));
+  SetState<DormantState>(Move(mSeekJob));
   return true;
 }
 
