@@ -5093,8 +5093,8 @@ LazyGetLineBaselineOffset(nsIFrame* aChildFrame, nsBlockFrame* aBlockFrame)
     nsIFrame::LineBaselineOffset(), &offsetFound);
 
   if (!offsetFound) {
-    for (nsBlockFrame::LineIterator line = aBlockFrame->BeginLine(),
-                                    line_end = aBlockFrame->EndLine();
+    for (nsBlockFrame::LineIterator line = aBlockFrame->LinesBegin(),
+                                    line_end = aBlockFrame->LinesEnd();
          line != line_end; line++) {
       if (line->IsInline()) {
         int32_t n = line->GetChildCount();
