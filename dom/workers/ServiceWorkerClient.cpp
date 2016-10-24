@@ -222,7 +222,8 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   RefPtr<ServiceWorkerClientPostMessageRunnable> runnable =
     new ServiceWorkerClientPostMessageRunnable(mWindowId);
 
-  runnable->Write(aCx, aMessage, transferable, aRv);
+  runnable->Write(aCx, aMessage, transferable, JS::CloneDataPolicy().denySharedArrayBuffer(),
+                  aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
