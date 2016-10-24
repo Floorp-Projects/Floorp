@@ -123,9 +123,6 @@ partial interface Window {
   [Throws] Selection? getSelection();
 };
 
-// https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html
-Window implements IDBEnvironment;
-
 // http://dev.w3.org/csswg/cssom/
 partial interface Window {
   //[NewObject, Throws] CSSStyleDeclaration getComputedStyle(Element elt, optional DOMString pseudoElt = "");
