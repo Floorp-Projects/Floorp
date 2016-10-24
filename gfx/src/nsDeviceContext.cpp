@@ -238,9 +238,13 @@ nsDeviceContext::FontMetricsDeleted(const nsFontMetrics* aFontMetrics)
 }
 
 bool
-nsDeviceContext::IsPrinterSurface()
+nsDeviceContext::IsPrinterContext()
 {
-    return mPrintTarget != nullptr;
+  return mPrintTarget != nullptr
+#ifdef XP_MACOSX
+         || mCachedPrintTarget != nullptr
+#endif
+         ;
 }
 
 void
@@ -328,7 +332,7 @@ nsDeviceContext::Init(nsIWidget *aWidget)
 already_AddRefed<gfxContext>
 nsDeviceContext::CreateRenderingContext()
 {
-    MOZ_ASSERT(IsPrinterSurface());
+    MOZ_ASSERT(IsPrinterContext());
     MOZ_ASSERT(mWidth > 0 && mHeight > 0);
 
     RefPtr<PrintTarget> printingTarget = mPrintTarget;
@@ -398,8 +402,7 @@ nsDeviceContext::GetDepth(uint32_t& aDepth)
 nsresult
 nsDeviceContext::GetDeviceSurfaceDimensions(nscoord &aWidth, nscoord &aHeight)
 {
-    if (mPrintTarget) {
-        // we have a printer device
+    if (IsPrinterContext()) {
         aWidth = mWidth;
         aHeight = mHeight;
     } else {
@@ -415,8 +418,7 @@ nsDeviceContext::GetDeviceSurfaceDimensions(nscoord &aWidth, nscoord &aHeight)
 nsresult
 nsDeviceContext::GetRect(nsRect &aRect)
 {
-    if (mPrintTarget) {
-        // we have a printer device
+    if (IsPrinterContext()) {
         aRect.x = 0;
         aRect.y = 0;
         aRect.width = mWidth;
@@ -430,8 +432,7 @@ nsDeviceContext::GetRect(nsRect &aRect)
 nsresult
 nsDeviceContext::GetClientRect(nsRect &aRect)
 {
-    if (mPrintTarget) {
-        // we have a printer device
+    if (IsPrinterContext()) {
         aRect.x = 0;
         aRect.y = 0;
         aRect.width = mWidth;
