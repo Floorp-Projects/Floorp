@@ -45,6 +45,7 @@ namespace layers {
 class AsyncDragMetrics;
 struct ScrollableLayerGuid;
 class CompositorBridgeParent;
+class CompositorController;
 class GestureEventListener;
 class PCompositorBridgeParent;
 struct AsyncTransform;
@@ -187,9 +188,11 @@ public:
                            bool aThisLayerTreeUpdated);
 
   /**
-   * The platform implementation must set the compositor parent so that we can
+   * The platform implementation must set the compositor controller so that we can
    * request composites.
    */
+  void SetCompositorController(CompositorController* aCompositorController);
+
   void SetCompositorBridgeParent(CompositorBridgeParent* aCompositorBridgeParent);
 
   /**
@@ -514,8 +517,7 @@ protected:
                       const CSSPoint& aFocus);
 
   /**
-   * Schedules a composite on the compositor thread. Wrapper for
-   * CompositorBridgeParent::ScheduleRenderOnCompositorThread().
+   * Schedules a composite on the compositor thread.
    */
   void ScheduleComposite();
 
@@ -647,6 +649,7 @@ protected:
   void OnTouchEndOrCancel();
 
   uint64_t mLayersId;
+  RefPtr<CompositorController> mCompositorController;
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
