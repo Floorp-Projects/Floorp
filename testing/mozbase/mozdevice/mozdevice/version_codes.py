@@ -57,3 +57,5 @@ LOLLIPOP = 21
 LOLLIPOP_MR1 = 22
 # M
 M = 23
+# N
+N = 24
