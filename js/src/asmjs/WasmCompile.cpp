@@ -408,9 +408,9 @@ DecodeFunctionBodyExprs(FunctionDecoder& f)
           case Expr::F64Store:
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::F64, 8, nullptr, nullptr));
           case Expr::GrowMemory:
-            CHECK(f.checkHasMemory() && f.iter().readUnary(ValType::I32, nullptr));
+            CHECK(f.checkHasMemory() && f.iter().readGrowMemory(nullptr));
           case Expr::CurrentMemory:
-            CHECK(f.checkHasMemory() && f.iter().readNullary(ValType::I32));
+            CHECK(f.checkHasMemory() && f.iter().readCurrentMemory());
           case Expr::Br:
             CHECK(f.iter().readBr(nullptr, nullptr, nullptr));
           case Expr::BrIf:

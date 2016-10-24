@@ -673,22 +673,6 @@ AstDecodeUnary(AstDecodeContext& c, ValType type, Expr expr)
 }
 
 static bool
-AstDecodeNullary(AstDecodeContext& c, ValType type, Expr expr)
-{
-    if (!c.iter().readNullary(type))
-        return false;
-
-    AstNullaryOperator* nullary = new(c.lifo) AstNullaryOperator(expr);
-    if (!nullary)
-        return false;
-
-    if (!c.push(AstDecodeStackItem(nullary)))
-        return false;
-
-    return true;
-}
-
-static bool
 AstDecodeBinary(AstDecodeContext& c, ValType type, Expr expr)
 {
     if (!c.iter().readBinary(type, nullptr, nullptr))
@@ -810,6 +794,40 @@ AstDecodeStore(AstDecodeContext& c, ValType type, uint32_t byteSize, Expr expr)
         return false;
 
     if (!c.push(AstDecodeStackItem(wrapped)))
+        return false;
+
+    return true;
+}
+
+static bool
+AstDecodeCurrentMemory(AstDecodeContext& c)
+{
+    if (!c.iter().readCurrentMemory())
+        return false;
+
+    AstCurrentMemory* gm = new(c.lifo) AstCurrentMemory();
+    if (!gm)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(gm)))
+        return false;
+
+    return true;
+}
+
+static bool
+AstDecodeGrowMemory(AstDecodeContext& c)
+{
+    if (!c.iter().readGrowMemory(nullptr))
+        return false;
+
+    AstDecodeStackItem op = c.popCopy();
+
+    AstGrowMemory* gm = new(c.lifo) AstGrowMemory(op.expr);
+    if (!gm)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(gm)))
         return false;
 
     return true;
@@ -1088,7 +1106,6 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::I32Clz:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
-      case Expr::GrowMemory:
         if (!AstDecodeUnary(c, ValType::I32, expr))
             return false;
         break;
@@ -1361,6 +1378,14 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!AstDecodeStore(c, ValType::F64, 8, expr))
             return false;
         break;
+      case Expr::CurrentMemory:
+        if (!AstDecodeCurrentMemory(c))
+            return false;
+        break;
+      case Expr::GrowMemory:
+        if (!AstDecodeGrowMemory(c))
+            return false;
+        break;
       case Expr::SetGlobal:
         if (!AstDecodeSetGlobal(c))
             return false;
@@ -1380,10 +1405,6 @@ AstDecodeExpr(AstDecodeContext& c)
         break;
       case Expr::Return:
         if (!AstDecodeReturn(c))
-            return false;
-        break;
-      case Expr::CurrentMemory:
-        if (!AstDecodeNullary(c, ValType::I32, expr))
             return false;
         break;
       case Expr::Unreachable:
