@@ -3741,9 +3741,9 @@ nsDocShell::AssertOriginAttributesMatchPrivateBrowsing() {
   // Content docshells must maintain the equality:
   // mOriginAttributes.mPrivateBrowsingId == mPrivateBrowsingId
   if (mItemType == typeChrome) {
-    MOZ_ASSERT(mOriginAttributes.mPrivateBrowsingId == 0);
+    MOZ_DIAGNOSTIC_ASSERT(mOriginAttributes.mPrivateBrowsingId == 0);
   } else {
-    MOZ_ASSERT(mOriginAttributes.mPrivateBrowsingId == mPrivateBrowsingId);
+    MOZ_DIAGNOSTIC_ASSERT(mOriginAttributes.mPrivateBrowsingId == mPrivateBrowsingId);
   }
 }
 
