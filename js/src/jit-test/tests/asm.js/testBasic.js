@@ -166,7 +166,7 @@ assertEq(g(), 0);
 if (wasmIsSupported()) {
     var h = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`(module
         (import $f "imp" "f" (param i32) (result i32))
-        (func $h (result i32) (call_import $f (i32.const 1)))
+        (func $h (result i32) (call $f (i32.const 1)))
         (export "h" $h)
     )`)), {imp:{f}}).exports.h;
     assertEq(h(), 0);

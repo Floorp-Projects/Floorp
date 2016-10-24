@@ -29,7 +29,7 @@ assertEq(wasmEvalText(`(module
     (export "test" $test)
 )`).exports.test(), 111);
 
-// Grow during call_import:
+// Grow during import call:
 var exports = wasmEvalText(`(module
     (import $imp "" "imp")
     (memory 1)
@@ -125,7 +125,7 @@ assertEq(new Int32Array(mem.buffer)[3*64*1024/4], 99);
 
 // Test for stale table base pointers after resize
 
-// Grow during call_import:
+// Grow during import call:
 var exports = wasmEvalText(`(module
     (type $v2i (func (result i32)))
     (import $grow "" "grow")

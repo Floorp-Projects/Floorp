@@ -412,46 +412,6 @@ AstDecodeCallIndirect(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeCallImport(AstDecodeContext& c)
-{
-    uint32_t importIndex;
-    if (!c.iter().readCallImport(&importIndex))
-        return false;
-
-    if (!c.iter().inReachableCode())
-        return true;
-
-    if (importIndex >= c.module().imports().length())
-        return c.iter().fail("import index out of range");
-
-    AstImport* import = c.module().imports()[importIndex];
-    AstSig* sig = c.module().sigs()[import->funcSig().index()];
-    AstRef funcRef;
-    if (!AstDecodeGenerateRef(c, AstName(u"import"), importIndex, &funcRef))
-        return false;
-
-    AstExprVector args(c.lifo);
-    if (!AstDecodeCallArgs(c, *sig, &args))
-        return false;
-
-    if (!AstDecodeCallReturn(c, *sig))
-        return false;
-
-    AstCall* call = new(c.lifo) AstCall(Expr::CallImport, sig->ret(), funcRef, Move(args));
-    if (!call)
-        return false;
-
-    AstExpr* result = call;
-    if (IsVoid(sig->ret()))
-        result = c.handleVoidExpr(call);
-
-    if (!c.push(AstDecodeStackItem(result)))
-        return false;
-
-    return true;
-}
-
-static bool
 AstDecodeGetBlockRef(AstDecodeContext& c, uint32_t depth, AstRef* ref)
 {
     if (!c.generateNames || depth >= c.blockLabels().length()) {
@@ -1056,10 +1016,6 @@ AstDecodeExpr(AstDecodeContext& c)
         break;
       case Expr::CallIndirect:
         if (!AstDecodeCallIndirect(c))
-            return false;
-        break;
-      case Expr::CallImport:
-        if (!AstDecodeCallImport(c))
             return false;
         break;
       case Expr::I32Const:
