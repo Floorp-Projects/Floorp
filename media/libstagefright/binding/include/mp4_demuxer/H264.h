@@ -82,6 +82,28 @@ struct SPSData
   uint8_t chroma_format_idc;
 
   /*
+    bit_depth_luma_minus8 specifies the bit depth of the samples of the luma
+    array and the value of the luma quantisation parameter range offset
+    QpBdOffset Y , as specified by
+      BitDepth Y = 8 + bit_depth_luma_minus8 (7-3)
+      QpBdOffset Y = 6 * bit_depth_luma_minus8 (7-4)
+    When bit_depth_luma_minus8 is not present, it shall be inferred to be equal
+    to 0. bit_depth_luma_minus8 shall be in the range of 0 to 6, inclusive.
+  */
+  uint8_t bit_depth_luma_minus8;
+
+  /*
+    bit_depth_chroma_minus8 specifies the bit depth of the samples of the chroma
+    arrays and the value of the chroma quantisation parameter range offset
+    QpBdOffset C , as specified by
+      BitDepth C = 8 + bit_depth_chroma_minus8 (7-5)
+      QpBdOffset C = 6 * bit_depth_chroma_minus8 (7-6)
+    When bit_depth_chroma_minus8 is not present, it shall be inferred to be
+    equal to 0. bit_depth_chroma_minus8 shall be in the range of 0 to 6, inclusive.
+  */
+  uint8_t bit_depth_chroma_minus8;
+
+  /*
     separate_colour_plane_flag equal to 1 specifies that the three colour
     components of the 4:4:4 chroma format are coded separately.
     separate_colour_plane_flag equal to 0 specifies that the colour components
@@ -211,6 +233,14 @@ struct SPSData
     is not present, it shall be inferred to be equal to 0.
    */
   bool mb_adaptive_frame_field_flag;
+
+  /*
+    direct_8x8_inference_flag specifies the method used in the derivation
+    process for luma motion vectors for B_Skip, B_Direct_16x16 and B_Direct_8x8
+    as specified in clause 8.4.1.2. When frame_mbs_only_flag is equal to 0,
+    direct_8x8_inference_flag shall be equal to 1.
+  */
+  bool direct_8x8_inference_flag;
 
   /*
     frame_cropping_flag equal to 1 specifies that the frame cropping
@@ -377,7 +407,8 @@ struct PPSData
     coded frame, are present in the slice headers for coded frames as specified
     in clause 7.3.3. bottom_field_pic_order_in_frame_present_flag equal to 0
     specifies that the syntax elements delta_pic_order_cnt_bottom and
-    delta_pic_order_cnt[ 1 ] are not present inthe slice headers. */
+    delta_pic_order_cnt[ 1 ] are not present in the slice headers.
+    Also known has pic_order_present_flag. */
   bool bottom_field_pic_order_in_frame_present_flag;
 
   /* num_slice_groups_minus1 plus 1 specifies the number of slice groups for a
