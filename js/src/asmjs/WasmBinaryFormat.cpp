@@ -41,7 +41,7 @@ bool
 wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals)
 {
     uint32_t numLocalEntries = 0;
-    ValType prev = ValType::Limit;
+    ValType prev = ValType(TypeCode::Limit);
     for (ValType t : locals) {
         if (t != prev) {
             numLocalEntries++;

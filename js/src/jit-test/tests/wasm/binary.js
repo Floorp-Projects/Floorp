@@ -129,7 +129,7 @@ function sigSection(sigs) {
     var body = [];
     body.push(...varU32(sigs.length));
     for (let sig of sigs) {
-        body.push(...varU32(FunctionConstructorCode));
+        body.push(...varU32(FuncCode));
         body.push(...varU32(sig.args.length));
         for (let arg of sig.args)
             body.push(...varU32(arg));
@@ -245,7 +245,7 @@ const v2vBody = funcBody({locals:[], body:[]});
 
 assertErrorMessage(() => wasmEval(moduleWithSections([ {name: typeId, body: U32MAX_LEB } ])), CompileError, /too many signatures/);
 assertErrorMessage(() => wasmEval(moduleWithSections([ {name: typeId, body: [1, 0], } ])), CompileError, /expected function form/);
-assertErrorMessage(() => wasmEval(moduleWithSections([ {name: typeId, body: [1, FunctionConstructorCode, ...U32MAX_LEB], } ])), CompileError, /too many arguments in signature/);
+assertErrorMessage(() => wasmEval(moduleWithSections([ {name: typeId, body: [1, FuncCode, ...U32MAX_LEB], } ])), CompileError, /too many arguments in signature/);
 
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([{name: typeId, body: [1]}])), CompileError);
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([{name: typeId, body: [1, 1, 0]}])), CompileError);
@@ -346,7 +346,8 @@ wasmEval(moduleWithSections([userDefSec, userDefSec, sigSec, declSec, bodySec]))
 wasmEval(moduleWithSections([userDefSec, userDefSec, sigSec, userDefSec, declSec, userDefSec, bodySec]));
 
 // Diagnose nonstandard block signature types.
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, F64Code + 1, EndCode]})])])), CompileError, /unknown block signature type/);
+for (var bad of [0xff, 0, 1, 0x3f])
+    assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, bad, EndCode]})])])), CompileError, /invalid inline block type/);
 
 // Checking stack trace.
 function runStackTraceTest(namesContent, expectedName) {

@@ -148,42 +148,6 @@ DecodeCallIndirect(FunctionDecoder& f)
 }
 
 static bool
-DecodeBlock(FunctionDecoder& f)
-{
-    if (!f.iter().readBlock())
-        return false;
-
-    if (f.iter().controlType() > ExprType::F64)
-        return f.iter().fail("unknown block signature type");
-
-    return true;
-}
-
-static bool
-DecodeLoop(FunctionDecoder& f)
-{
-    if (!f.iter().readLoop())
-        return false;
-
-    if (f.iter().controlType() > ExprType::F64)
-        return f.iter().fail("unknown loop signature type");
-
-    return true;
-}
-
-static bool
-DecodeIf(FunctionDecoder& f)
-{
-    if (!f.iter().readIf(nullptr))
-        return false;
-
-    if (f.iter().controlType() > ExprType::F64)
-        return f.iter().fail("unknown if signature type");
-
-    return true;
-}
-
-static bool
 DecodeBrTable(FunctionDecoder& f)
 {
     uint32_t tableLength;
@@ -247,11 +211,11 @@ DecodeFunctionBodyExprs(FunctionDecoder& f)
           case Expr::Select:
             CHECK(f.iter().readSelect(nullptr, nullptr, nullptr, nullptr));
           case Expr::Block:
-            CHECK(DecodeBlock(f));
+            CHECK(f.iter().readBlock());
           case Expr::Loop:
-            CHECK(DecodeLoop(f));
+            CHECK(f.iter().readLoop());
           case Expr::If:
-            CHECK(DecodeIf(f));
+            CHECK(f.iter().readIf(nullptr));
           case Expr::Else:
             CHECK(f.iter().readElse(nullptr, nullptr));
           case Expr::I32Clz:
@@ -488,7 +452,7 @@ DecodeTypeSection(Decoder& d, ModuleGeneratorData* init)
 
     for (uint32_t sigIndex = 0; sigIndex < numSigs; sigIndex++) {
         uint32_t form;
-        if (!d.readVarU32(&form) || form != uint32_t(TypeConstructor::Function))
+        if (!d.readVarU32(&form) || form != uint32_t(TypeCode::Func))
             return d.fail("expected function form");
 
         uint32_t numArgs;
@@ -642,7 +606,7 @@ DecodeResizableTable(Decoder& d, ModuleGeneratorData* init)
     if (!d.readVarU32(&elementType))
         return d.fail("expected table element type");
 
-    if (elementType != uint32_t(TypeConstructor::AnyFunc))
+    if (elementType != uint32_t(TypeCode::AnyFunc))
         return d.fail("expected 'anyfunc' element type");
 
     Limits limits;

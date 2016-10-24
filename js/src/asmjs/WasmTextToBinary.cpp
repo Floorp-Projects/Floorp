@@ -3859,7 +3859,7 @@ EncodeBlock(Encoder& e, AstBlock& b)
     if (!e.writeExpr(b.expr()))
         return false;
 
-    if (!e.writeExprType(b.type()))
+    if (!e.writeBlockType(b.type()))
         return false;
 
     if (!EncodeExprList(e, b.exprs()))
@@ -4063,7 +4063,7 @@ EncodeIf(Encoder& e, AstIf& i)
     if (!EncodeExpr(e, i.cond()) || !e.writeExpr(Expr::If))
         return false;
 
-    if (!e.writeExprType(i.type()))
+    if (!e.writeBlockType(i.type()))
         return false;
 
     if (!EncodeExprList(e, i.thenExprs()))
@@ -4228,7 +4228,7 @@ EncodeTypeSection(Encoder& e, AstModule& module)
         return false;
 
     for (AstSig* sig : module.sigs()) {
-        if (!e.writeVarU32(uint32_t(TypeConstructor::Function)))
+        if (!e.writeVarU32(uint32_t(TypeCode::Func)))
             return false;
 
         if (!e.writeVarU32(sig->args().length()))
@@ -4303,7 +4303,7 @@ EncodeLimits(Encoder& e, const Limits& limits)
 static bool
 EncodeTableLimits(Encoder& e, const Limits& limits)
 {
-    if (!e.writeVarU32(uint32_t(TypeConstructor::AnyFunc)))
+    if (!e.writeVarU32(uint32_t(TypeCode::AnyFunc)))
         return false;
 
     return EncodeLimits(e, limits);
