@@ -20,9 +20,6 @@ a.initMessageEvent("message", true, false, {}, window.location.href, "", null, [
 ok(Array.isArray(a.ports), "After InitMessageEvent() we have an array");
 is(a.ports.length, 1, "Length is 1");
 
-a.initMessageEvent("message", true, false, {}, window.location.href, "", null, null);
-is(a.ports, null, "By default MessageEvent.ports is null");
-
   </script>
 </body>
 </html>
