@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* eslint key-spacing: 0 */
+
 // Tests the various highlight command parameters and options that doesn't
 // involve nodes at all.
 
