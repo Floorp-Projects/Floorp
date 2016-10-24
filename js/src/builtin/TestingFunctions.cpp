@@ -3911,7 +3911,53 @@ ParseRegExp(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setObject(*obj);
     return true;
 }
-#endif
+
+static bool
+DisRegExp(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() == 0) {
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<RegExpObject>()) {
+        ReportUsageErrorASCII(cx, callee, "First argument must be a RegExp");
+        return false;
+    }
+
+    Rooted<RegExpObject*> reobj(cx, &args[0].toObject().as<RegExpObject>());
+
+    bool match_only = false;
+    if (!args.get(1).isUndefined()) {
+        if (!args.get(1).isBoolean()) {
+            ReportUsageErrorASCII(cx, callee, "Second argument, if present, must be a Boolean");
+            return false;
+        }
+        match_only = args[1].toBoolean();
+    }
+
+    RootedLinearString input(cx, cx->runtime()->emptyString);
+    if (!args.get(2).isUndefined()) {
+        if (!args.get(2).isString()) {
+            ReportUsageErrorASCII(cx, callee, "Third argument, if present, must be a String");
+            return false;
+        }
+        RootedString inputStr(cx, args[2].toString());
+        input = inputStr->ensureLinear(cx);
+        if (!input)
+            return false;
+    }
+
+    if (!reobj->dumpBytecode(cx, match_only, input))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
+}
+#endif // DEBUG
 
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
@@ -4437,6 +4483,10 @@ static const JSFunctionSpecWithHelp FuzzingUnsafeTestingFunctions[] = {
     JS_FN_HELP("parseRegExp", ParseRegExp, 3, 0,
 "parseRegExp(pattern[, flags[, match_only])",
 "  Parses a RegExp pattern and returns a tree, potentially throwing."),
+
+    JS_FN_HELP("disRegExp", DisRegExp, 3, 0,
+"disRegExp(regexp[, match_only[, input]])",
+"  Dumps RegExp bytecode."),
 #endif
 
     JS_FS_HELP_END
