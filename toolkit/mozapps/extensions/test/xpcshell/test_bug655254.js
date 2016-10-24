@@ -123,7 +123,7 @@ function run_test_1() {
   });
 }
 
-//Set up the profile
+// Set up the profile
 function run_test_2() {
   AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(function(a2) {
    do_check_neq(a2, null);

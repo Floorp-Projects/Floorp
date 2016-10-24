@@ -50,7 +50,7 @@ add_task(function* test_execute()
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.maxResults = 1;
   // TODO: using full visit crashes in xpcshell test
-  //options.resultType = options.RESULTS_AS_FULL_VISIT;
+  // options.resultType = options.RESULTS_AS_FULL_VISIT;
   options.resultType = options.RESULTS_AS_VISIT;
   var query = histsvc.getNewQuery();
   var result = histsvc.executeQuery(query, options);
@@ -63,7 +63,7 @@ add_task(function* test_execute()
     do_check_eq(node.uri, testURI.spec);
     do_check_eq(node.type, Ci.nsINavHistoryResultNode.RESULT_TYPE_URI);
     // TODO: change query type to RESULTS_AS_FULL_VISIT and test this
-    //do_check_eq(node.transitionType, histsvc.TRANSITION_TYPED);
+    // do_check_eq(node.transitionType, histsvc.TRANSITION_TYPED);
   }
   root.containerOpen = false;
 
@@ -173,7 +173,7 @@ add_task(function* test_execute()
   // bug 394741 - regressed history text searches
   yield PlacesTestUtils.addVisits(uri("http://mozilla.com"));
   options = histsvc.getNewQueryOptions();
-  //options.resultType = options.RESULTS_AS_VISIT;
+  // options.resultType = options.RESULTS_AS_VISIT;
   query = histsvc.getNewQuery();
   query.searchTerms = "moz";
   result = histsvc.executeQuery(query, options);

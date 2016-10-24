@@ -14,7 +14,7 @@ var gFindInstData; // use this to update the find inst data
 function initDialogObject()
 {
   // Create dialog object and initialize.
-  dialog = new Object;
+  dialog = {};
   dialog.findKey         = document.getElementById("dialog.findKey");
   dialog.caseSensitive   = document.getElementById("dialog.caseSensitive");
   dialog.wrap            = document.getElementById("dialog.wrap");

@@ -1791,7 +1791,7 @@ function run_test_29() {
 }
 
 function check_test_29(install) {
-  //ensure_test_completed();
+  // ensure_test_completed();
   do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
   do_check_neq(install.addon, null);
   do_check_false(install.addon.isCompatible);

@@ -1303,7 +1303,7 @@ var PageInfoListener = {
     return result;
   },
 
-  //******** Other Misc Stuff
+  //* ******* Other Misc Stuff
   // Modified from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
   // parse a node to extract the contents of the node
   getValueText: function(node)

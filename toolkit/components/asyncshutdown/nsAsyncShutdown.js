@@ -136,7 +136,7 @@ nsAsyncShutdownClient.prototype = {
   get name() {
     return this._moduleClient.name;
   },
-  addBlocker: function(/*nsIAsyncShutdownBlocker*/ xpcomBlocker,
+  addBlocker: function(/* nsIAsyncShutdownBlocker*/ xpcomBlocker,
       fileName, lineNumber, stack) {
     // We need a Promise-based function with the same behavior as
     // `xpcomBlocker`. Furthermore, to support `removeBlocker`, we

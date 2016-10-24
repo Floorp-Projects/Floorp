@@ -79,7 +79,7 @@ function* task_initializeBucket(bucket) {
     if (bonusName == "unvisitedBookmarkBonus" || bonusName == "unvisitedTypedBonus") {
       if (cutoffName == "firstBucketCutoff") {
         let points = Math.ceil(bonusValue / parseFloat(100.0) * weight);
-        var visitCount = 1; //bonusName == "unvisitedBookmarkBonus" ? 1 : 0;
+        var visitCount = 1; // bonusName == "unvisitedBookmarkBonus" ? 1 : 0;
         frecency = Math.ceil(visitCount * points);
         calculatedURI = uri("http://" + searchTerm + ".com/" +
           bonusName + ":" + bonusValue + "/cutoff:" + cutoff +
@@ -214,7 +214,7 @@ add_task(function* test_frecency()
   prefs.setIntPref("browser.urlbar.maxRichResults", results.length);
 
   // DEBUG
-  //results.every(function(el) { dump("result: " + el[1] + ": " + el[0].spec + " (" + el[2] + ")\n"); return true; })
+  // results.every(function(el) { dump("result: " + el[1] + ": " + el[0].spec + " (" + el[2] + ")\n"); return true; })
 
   yield PlacesTestUtils.promiseAsyncUpdates();
 

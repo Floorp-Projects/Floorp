@@ -79,7 +79,7 @@ var testData = [
   {isInQuery: true, isVisit: true, isDetails: true, title: "moz mozilla",
    uri: "https://foo.com/begin.html", lastVisit: beginTime},
 
-  //Test end edge of time
+  // Test end edge of time
   {isInQuery: true, isVisit: true, isDetails: true, title: "moz mozilla",
    uri: "https://foo.com/end.html", lastVisit: endTime},
 
@@ -127,7 +127,7 @@ function run_test()
 
 add_task(function* test_abstime_annotation_domain()
 {
-  //Initialize database
+  // Initialize database
   yield task_populateDB(testData);
 
   // Query
@@ -179,7 +179,7 @@ add_task(function* test_abstime_annotation_domain()
   // query set, because this visit fits all theother specified criteria once the
   // annotation is removed. Uncommenting this will fail the test.
   // Bug 424050
-  /*var change2 = [{isPageAnnotation: true, uri: "http://foo.com/badannotaion.html",
+  /* var change2 = [{isPageAnnotation: true, uri: "http://foo.com/badannotaion.html",
                   annoName: "text/mozilla", annoVal: "test"}];
   yield task_populateDB(change2);
   do_print("LiveUpdate by removing annotation");
@@ -194,7 +194,7 @@ add_task(function* test_abstime_annotation_domain()
 
   // And delete something from the result set - using annotation
   // Once again, bug 424050 prevents this from passing
-  /*var change4 = [{isPageAnnotation: true, uri: "ftp://foo.com/ftp",
+  /* var change4 = [{isPageAnnotation: true, uri: "ftp://foo.com/ftp",
                   annoVal: "test", annoName: badAnnoName}];
   yield task_populateDB(change4);
   do_print("LiveUpdate by deleting item from set by adding annotation");

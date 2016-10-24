@@ -476,7 +476,7 @@
           if (aEvent.target.localName != "textbox")
             return true; // Let child buttons of autocomplete take input
 
-          //XXXpch this is so bogus...
+          // XXXpch this is so bogus...
           if (aEvent.defaultPrevented)
             return false;
 

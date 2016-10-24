@@ -103,7 +103,7 @@ AboutNewTabService.prototype = {
     service: true
   }],
 
-  _handleToggleEvent(prefName, stateEnabled, forceState) { //jshint unused:false
+  _handleToggleEvent(prefName, stateEnabled, forceState) { // jshint unused:false
     if (this.toggleRemote(stateEnabled, forceState)) {
       Services.obs.notifyObservers(null, "newtab-url-changed", ABOUT_URL);
     }

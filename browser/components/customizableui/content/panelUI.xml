@@ -446,7 +446,7 @@
         <parameter name="aContainerToCheck"/>
         <body><![CDATA[
           function getFullHeight(element) {
-            //XXXgijs: unfortunately, scrollHeight rounds values, and there's no alternative
+            // XXXgijs: unfortunately, scrollHeight rounds values, and there's no alternative
             // that works with overflow: auto elements. Fortunately for us,
             // we have exactly 1 (potentially) scrolling element in here (the subview body),
             // and rounding 1 value is OK - rounding more than 1 and adding them means we get

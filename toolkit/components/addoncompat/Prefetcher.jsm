@@ -101,7 +101,7 @@ function objAddr(obj)
 */
 }
 
-function log(/*...args*/)
+function log(/* ...args*/)
 {
 /*
   for (let arg of args) {
@@ -112,7 +112,7 @@ function log(/*...args*/)
 */
 }
 
-function logPrefetch(/*kind, value1, component, value2*/)
+function logPrefetch(/* kind, value1, component, value2*/)
 {
 /*
   log("prefetching", kind, objAddr(value1) + "." + component, "=", objAddr(value2));

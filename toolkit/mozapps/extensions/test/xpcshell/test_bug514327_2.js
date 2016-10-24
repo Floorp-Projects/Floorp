@@ -32,7 +32,7 @@ function run_test() {
   if (!plugin)
     do_throw("Plugin tag not found");
 
-  //run the code after the blocklist is closed
+  // run the code after the blocklist is closed
   Services.obs.notifyObservers(null, "addon-blocklist-closed", null);
   do_execute_soon(function() {
     // should be marked as outdated by the blocklist

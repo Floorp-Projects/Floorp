@@ -26,16 +26,16 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/CertUtils.jsm");
-/*globals checkCert, BadCertHandler*/
+/* globals checkCert, BadCertHandler*/
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 
-/*globals GMPPrefs */
+/* globals GMPPrefs */
 XPCOMUtils.defineLazyModuleGetter(this, "GMPPrefs",
                                   "resource://gre/modules/GMPUtils.jsm");
 
-/*globals OS */
+/* globals OS */
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");

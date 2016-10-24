@@ -131,7 +131,7 @@ function check_test_pt02() {
                "the update errorCode attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.patchCount, 2,
                "the update patchCount attribute" + MSG_SHOULD_EQUAL);
-  //XXX TODO - test nsIUpdate:serialize
+  // XXX TODO - test nsIUpdate:serialize
 
   Assert.equal(bestUpdate.getProperty("custom1_attr"), "custom1 value",
                "the update custom1_attr property" + MSG_SHOULD_EQUAL);
@@ -159,7 +159,7 @@ function check_test_pt02() {
                "the update patch state attribute" + MSG_SHOULD_EQUAL);
   Assert.ok(!patch.selected,
             "the update patch selected attribute" + MSG_SHOULD_EQUAL);
-  //XXX TODO - test nsIUpdatePatch:serialize
+  // XXX TODO - test nsIUpdatePatch:serialize
 
   patch = bestUpdate.getPatchAt(1);
   Assert.equal(patch.type, "partial",
@@ -176,7 +176,7 @@ function check_test_pt02() {
                "the update patch state attribute" + MSG_SHOULD_EQUAL);
   Assert.ok(!patch.selected,
             "the update patch selected attribute" + MSG_SHOULD_EQUAL);
-  //XXX TODO - test nsIUpdatePatch:serialize
+  // XXX TODO - test nsIUpdatePatch:serialize
 
   run_test_pt03();
 }

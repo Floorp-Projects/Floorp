@@ -85,7 +85,7 @@ module.exports = {
     "no-ex-assign": 2,
 
     // No using !! where casting to boolean is already happening
-    // "no-extra-boolean-cast": 2,
+    "no-extra-boolean-cast": 2,
 
     // No double semicolon
     "no-extra-semi": 2,
@@ -118,7 +118,7 @@ module.exports = {
     "no-nested-ternary": 2,
 
     // Use {} instead of new Object()
-    // "no-new-object": 2,
+    "no-new-object": 2,
 
     // No Math() or JSON()
     "no-obj-calls": 2,
@@ -136,7 +136,7 @@ module.exports = {
     // "no-shadow": 2,
 
     // No declaring variables that hide things like arguments
-    // "no-shadow-restricted-names": 2,
+    "no-shadow-restricted-names": 2,
 
     // No spaces between function name and parentheses
     // "no-spaced-func": 2,
@@ -182,6 +182,9 @@ module.exports = {
 
     // ++ and -- should not need spacing
     // "space-unary-ops": [2, { "words": true, "nonwords": false }],
+
+    // Requires or disallows a whitespace (space or tab) beginning a comment
+    "spaced-comment": 2,
 
     // No comparisons to NaN
     "use-isnan": 2,

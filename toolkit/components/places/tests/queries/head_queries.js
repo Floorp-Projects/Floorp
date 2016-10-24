@@ -281,7 +281,7 @@ function compareArrayToResult(aArray, aRoot) {
   for (var i = 0; i < aArray.length; i++) {
     if (aArray[i].isInQuery) {
       var child = aRoot.getChild(inQueryIndex);
-      //do_print("testing testData[" + i + "] vs result[" + inQueryIndex + "]");
+      // do_print("testing testData[" + i + "] vs result[" + inQueryIndex + "]");
       if (!aArray[i].isFolder && !aArray[i].isSeparator) {
         do_print("testing testData[" + aArray[i].uri + "] vs result[" + child.uri + "]");
         if (aArray[i].uri != child.uri) {

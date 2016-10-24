@@ -665,7 +665,7 @@ const CustomizableWidgets = [
         if (aDocument.documentElement.hasAttribute("customizing")) {
           updateDisplay = false;
         }
-        //XXXgijs in some tests we get called very early, and there's no docShell on the
+        // XXXgijs in some tests we get called very early, and there's no docShell on the
         // tabbrowser. This breaks the zoom toolkit code (see bug 897410). Don't let that happen:
         let zoomFactor = 100;
         try {

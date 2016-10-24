@@ -281,7 +281,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
           key: { key: "KEY_Escape", code: "Escape" } }, aWindow);
       }, popup: true, value: "Mo", searchString: "Mo"
     },
-    //If all characters are removed, the popup should be closed.
+    // If all characters are removed, the popup should be closed.
     { description: "the value becomes empty by backspace, the popup should be closed",
       completeDefaultIndex: false,
       execute: function (aWindow) {

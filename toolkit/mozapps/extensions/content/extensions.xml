@@ -1095,8 +1095,8 @@
           return this._includeUpdate.checked && !!this.mManualUpdate;
         ]]></getter>
         <setter><![CDATA[
-          //XXXunf Eventually, we'll want to persist this for individual
-          //       updates - see bug 594619.
+          // XXXunf Eventually, we'll want to persist this for individual
+          //        updates - see bug 594619.
           this._includeUpdate.checked = !!val;
         ]]></setter>
       </property>

@@ -59,7 +59,7 @@ var gSubDialog = {
     }
     this._addDialogEventListeners();
 
-    let features = (!!aFeatures ? aFeatures + "," : "") + "resizable,dialog=no,centerscreen";
+    let features = (aFeatures ? aFeatures + "," : "") + "resizable,dialog=no,centerscreen";
     let dialog = window.openDialog(aURL, "dialogFrame", features, aParams);
     if (aClosingCallback) {
       this._closingCallback = aClosingCallback.bind(dialog);
@@ -338,7 +338,7 @@ var gSubDialog = {
     let fm = Services.focus;
 
     function isLastFocusableElement(el) {
-      //XXXgijs unfortunately there is no way to get the last focusable element without asking
+      // XXXgijs unfortunately there is no way to get the last focusable element without asking
       // the focus manager to move focus to it.
       let rv = el == fm.moveFocus(gSubDialog._frame.contentWindow, null, fm.MOVEFOCUS_LAST, 0);
       fm.setFocus(el, 0);

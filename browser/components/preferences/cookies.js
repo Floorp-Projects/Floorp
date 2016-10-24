@@ -862,7 +862,7 @@ var gCookiesWindow = {
   _filterCookies: function (aFilterValue) {
     this._view._filterValue = aFilterValue;
     var cookies = [];
-    for (let i = 0; i < gCookiesWindow._hostOrder.length; ++i) { //var host in gCookiesWindow._hosts) {
+    for (let i = 0; i < gCookiesWindow._hostOrder.length; ++i) { // var host in gCookiesWindow._hosts) {
       let currHost = gCookiesWindow._hosts[gCookiesWindow._hostOrder[i]]; // gCookiesWindow._hosts[host];
       if (!currHost) continue;
       for (let cookie of currHost.cookies) {

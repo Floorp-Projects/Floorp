@@ -15,10 +15,10 @@ var gDoingMetric   = false;
 var gPrintSettingsInterface = Components.interfaces.nsIPrintSettings;
 var gDoDebug = false;
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function initDialog()
 {
-  gDialog = new Object;
+  gDialog = {};
 
   gDialog.orientation     = document.getElementById("orientation");
   gDialog.portrait        = document.getElementById("portrait");
@@ -62,7 +62,7 @@ function initDialog()
 
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function isListOfPrinterFeaturesAvailable()
 {
   var has_printerfeatures = false;
@@ -75,7 +75,7 @@ function isListOfPrinterFeaturesAvailable()
   return has_printerfeatures;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function checkDouble(element)
 {
   element.value = element.value.replace(/[^.0-9]/g, "");
@@ -85,7 +85,7 @@ function checkDouble(element)
 var gPageWidth  = 8.5;
 var gPageHeight = 11.0;
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function setOrientation()
 {
   var selection = gDialog.orientation.selectedItem;
@@ -103,20 +103,20 @@ function setOrientation()
   gDialog.marginPage.setAttribute( "style", style );
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function unitString()
 {
   return (gPrintSettings.paperSizeUnit == gPrintSettingsInterface.kPaperSizeInches) ? "in" : "mm";
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function checkMargin( value, max, other )
 {
   // Don't draw this margin bigger than permitted.
   return Math.min(value, max - other.value);
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function changeMargin( node )
 {
   // Correct invalid input.
@@ -145,7 +145,7 @@ function changeMargin( node )
   nodeToStyle.setAttribute( "style", style );
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function changeMargins()
 {
   changeMargin( gDialog.topInput );
@@ -154,7 +154,7 @@ function changeMargins()
   changeMargin( gDialog.rightInput );
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function customize( node )
 {
   // If selection is now "Custom..." then prompt user for custom setting.
@@ -171,7 +171,7 @@ function customize( node )
   }
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function setHeaderFooter( node, value )
 {
   node.value= hfValueToId(value);
@@ -247,7 +247,7 @@ function setPrinterDefaultsForSelectedPrinter()
   }
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function loadDialog()
 {
   var print_orientation   = 0;
@@ -347,7 +347,7 @@ function loadDialog()
   setTimeout( function() { gDialog.orientation.focus(); }, 0 );
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function onLoad()
 {
   // Init gDialog.
@@ -386,7 +386,7 @@ function convertMarginInchesToUnits(aVal, aIsMetric)
   return aVal;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function onAccept()
 {
 
@@ -463,7 +463,7 @@ function onAccept()
   return true;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function onCancel()
 {
   // set return value to "cancel"

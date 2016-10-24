@@ -148,7 +148,7 @@ this.TestRunner = {
     browserWindow.restore();
   },
 
-  ///// helpers /////
+  // /// helpers /////
 
   _performCombo: function*(combo) {
     let paddedComboIndex = padLeft(this.currentComboIndex + 1, String(this.combos.length).length);

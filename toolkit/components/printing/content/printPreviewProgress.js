@@ -92,7 +92,7 @@ function onLoad() {
     return;
   }
 
-  dialog         = new Object;
+  dialog         = {};
   dialog.strings = new Array;
   dialog.title   = document.getElementById("dialog.title");
   dialog.titleLabel = document.getElementById("dialog.titleLabel");
@@ -102,7 +102,7 @@ function onLoad() {
   // set our web progress listener on the helper app launcher
   printProgress.registerListener(progressListener);
 
-  //We need to delay the set title else dom will overwrite it
+  // We need to delay the set title else dom will overwrite it
   window.setTimeout(doneIniting, 100);
 }
 
