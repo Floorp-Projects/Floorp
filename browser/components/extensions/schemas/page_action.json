@@ -56,19 +56,31 @@
       {
         "name": "show",
         "type": "function",
-        "async": true,
+        "async": "callback",
         "description": "Shows the page action. The page action is shown whenever the tab is selected.",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."}
+          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
         ]
       },
       {
         "name": "hide",
         "type": "function",
-        "async": true,
+        "async": "callback",
         "description": "Hides the page action.",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."}
+          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
         ]
       },
       {

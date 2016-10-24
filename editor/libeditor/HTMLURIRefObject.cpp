@@ -84,13 +84,13 @@ HTMLURIRefObject::GetNextURI(nsAString& aURI)
 {
   NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
 
+  // XXX Why don't you use nsIAtom for comparing the tag name a lot?
   nsAutoString tagName;
   nsresult rv = mNode->GetNodeName(tagName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Loop over attribute list:
-  if (!mAttributes)
-  {
+  if (!mAttributes) {
     nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mNode));
     NS_ENSURE_TRUE(element, NS_ERROR_INVALID_ARG);
 
@@ -104,8 +104,7 @@ HTMLURIRefObject::GetNextURI(nsAString& aURI)
     mCurAttrIndex = 0;
   }
 
-  while (mCurAttrIndex < mAttributeCnt)
-  {
+  while (mCurAttrIndex < mAttributeCnt) {
     nsCOMPtr<nsIDOMAttr> attrNode;
     rv = mAttributes->Item(mCurAttrIndex++, getter_AddRefs(attrNode));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -115,97 +114,98 @@ HTMLURIRefObject::GetNextURI(nsAString& aURI)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // href >> A, AREA, BASE, LINK
-    if (MATCHES(curAttr, "href"))
-    {
-      if (!MATCHES(tagName, "a") && !MATCHES(tagName, "area")
-          && !MATCHES(tagName, "base") && !MATCHES(tagName, "link"))
+    if (MATCHES(curAttr, "href")) {
+      if (!MATCHES(tagName, "a") && !MATCHES(tagName, "area") &&
+          !MATCHES(tagName, "base") && !MATCHES(tagName, "link")) {
         continue;
+      }
       rv = attrNode->GetValue(aURI);
       NS_ENSURE_SUCCESS(rv, rv);
       nsString uri (aURI);
       // href pointing to a named anchor doesn't count
-      if (aURI.First() != char16_t('#'))
+      if (aURI.First() != char16_t('#')) {
         return NS_OK;
+      }
       aURI.Truncate();
       return NS_ERROR_INVALID_ARG;
     }
     // src >> FRAME, IFRAME, IMG, INPUT, SCRIPT
-    else if (MATCHES(curAttr, "src"))
-    {
-      if (!MATCHES(tagName, "img")
-          && !MATCHES(tagName, "frame") && !MATCHES(tagName, "iframe")
-          && !MATCHES(tagName, "input") && !MATCHES(tagName, "script"))
+    else if (MATCHES(curAttr, "src")) {
+      if (!MATCHES(tagName, "img") &&
+          !MATCHES(tagName, "frame") && !MATCHES(tagName, "iframe") &&
+          !MATCHES(tagName, "input") && !MATCHES(tagName, "script")) {
         continue;
+      }
       return attrNode->GetValue(aURI);
     }
     //<META http-equiv="refresh" content="3,http://www.acme.com/intro.html">
-    else if (MATCHES(curAttr, "content"))
-    {
-      if (!MATCHES(tagName, "meta"))
+    else if (MATCHES(curAttr, "content")) {
+      if (!MATCHES(tagName, "meta")) {
         continue;
+      }
     }
     // longdesc >> FRAME, IFRAME, IMG
-    else if (MATCHES(curAttr, "longdesc"))
-    {
-      if (!MATCHES(tagName, "img")
-          && !MATCHES(tagName, "frame") && !MATCHES(tagName, "iframe"))
+    else if (MATCHES(curAttr, "longdesc")) {
+      if (!MATCHES(tagName, "img") &&
+          !MATCHES(tagName, "frame") && !MATCHES(tagName, "iframe")) {
         continue;
+      }
     }
     // usemap >> IMG, INPUT, OBJECT
-    else if (MATCHES(curAttr, "usemap"))
-    {
-      if (!MATCHES(tagName, "img")
-          && !MATCHES(tagName, "input") && !MATCHES(tagName, "object"))
+    else if (MATCHES(curAttr, "usemap")) {
+      if (!MATCHES(tagName, "img") &&
+          !MATCHES(tagName, "input") && !MATCHES(tagName, "object")) {
         continue;
+      }
     }
     // action >> FORM
-    else if (MATCHES(curAttr, "action"))
-    {
-      if (!MATCHES(tagName, "form"))
+    else if (MATCHES(curAttr, "action")) {
+      if (!MATCHES(tagName, "form")) {
         continue;
+      }
     }
     // background >> BODY
-    else if (MATCHES(curAttr, "background"))
-    {
-      if (!MATCHES(tagName, "body"))
+    else if (MATCHES(curAttr, "background")) {
+      if (!MATCHES(tagName, "body")) {
         continue;
+      }
     }
     // codebase >> OBJECT, APPLET
-    else if (MATCHES(curAttr, "codebase"))
-    {
-      if (!MATCHES(tagName, "meta"))
+    else if (MATCHES(curAttr, "codebase")) {
+      if (!MATCHES(tagName, "meta")) {
         continue;
+      }
     }
     // classid >> OBJECT
-    else if (MATCHES(curAttr, "classid"))
-    {
-      if (!MATCHES(tagName, "object"))
+    else if (MATCHES(curAttr, "classid")) {
+      if (!MATCHES(tagName, "object")) {
         continue;
+      }
     }
     // data >> OBJECT
-    else if (MATCHES(curAttr, "data"))
-    {
-      if (!MATCHES(tagName, "object"))
+    else if (MATCHES(curAttr, "data")) {
+      if (!MATCHES(tagName, "object")) {
         continue;
+      }
     }
     // cite >> BLOCKQUOTE, DEL, INS, Q
-    else if (MATCHES(curAttr, "cite"))
-    {
-      if (!MATCHES(tagName, "blockquote") && !MATCHES(tagName, "q")
-          && !MATCHES(tagName, "del") && !MATCHES(tagName, "ins"))
+    else if (MATCHES(curAttr, "cite")) {
+      if (!MATCHES(tagName, "blockquote") && !MATCHES(tagName, "q") &&
+          !MATCHES(tagName, "del") && !MATCHES(tagName, "ins")) {
         continue;
+      }
     }
     // profile >> HEAD
-    else if (MATCHES(curAttr, "profile"))
-    {
-      if (!MATCHES(tagName, "head"))
+    else if (MATCHES(curAttr, "profile")) {
+      if (!MATCHES(tagName, "head")) {
         continue;
+      }
     }
     // archive attribute on APPLET; warning, it contains a list of URIs.
-    else if (MATCHES(curAttr, "archive"))
-    {
-      if (!MATCHES(tagName, "applet"))
+    else if (MATCHES(curAttr, "archive")) {
+      if (!MATCHES(tagName, "applet")) {
         continue;
+      }
     }
   }
   // Return a code to indicate that there are no more,
@@ -236,8 +236,7 @@ HTMLURIRefObject::SetNode(nsIDOMNode* aNode)
 {
   mNode = aNode;
   nsAutoString dummyURI;
-  if (NS_SUCCEEDED(GetNextURI(dummyURI)))
-  {
+  if (NS_SUCCEEDED(GetNextURI(dummyURI))) {
     mCurAttrIndex = 0;    // Reset so we'll get the first node next time
     return NS_OK;
   }

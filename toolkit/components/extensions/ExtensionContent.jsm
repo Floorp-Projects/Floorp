@@ -12,6 +12,10 @@ this.EXPORTED_SYMBOLS = ["ExtensionContent"];
  * This file handles the content process side of extensions. It mainly
  * takes care of content script injection, content script APIs, and
  * messaging.
+ *
+ * This file is also the initial entry point for addon processes.
+ * ExtensionChild.jsm is responsible for functionality specific to addon
+ * processes.
  */
 
 const Ci = Components.interfaces;
@@ -39,6 +43,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
                                   "resource://gre/modules/WebNavigationFrames.jsm");
+
+Cu.import("resource://gre/modules/ExtensionChild.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -272,8 +278,6 @@ class ExtensionContext extends BaseContext {
     let attrs = contentPrincipal.originAttributes;
     attrs.addonId = this.extension.id;
     let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, attrs);
-    Object.defineProperty(this, "principal",
-                          {value: extensionPrincipal, enumerable: true, configurable: true});
 
     if (ssm.isSystemPrincipal(contentPrincipal)) {
       // Make sure we don't hand out the system principal by accident.
@@ -322,6 +326,12 @@ class ExtensionContext extends BaseContext {
       `, this.sandbox);
     }
 
+    Object.defineProperty(this, "principal", {
+      value: Cu.getObjectPrincipal(this.sandbox),
+      enumerable: true,
+      configurable: true,
+    });
+
     let url = contentWindow.location.href;
     // The |sender| parameter is passed directly to the extension.
     let sender = {id: this.extension.uuid, frameId, url};
@@ -338,7 +348,7 @@ class ExtensionContext extends BaseContext {
     let localApis = {};
     apiManager.generateAPIs(this, localApis);
     this.childManager = new ChildAPIManager(this, this.messageManager, localApis, {
-      type: "content_script",
+      envType: "content_parent",
       url,
     });
 
@@ -453,13 +463,22 @@ DocumentManager = {
 
       // Enable the content script APIs should be available in subframes' window
       // if it is recognized as a valid addon id (see Bug 1214658 for rationale).
-      const {CONTENTSCRIPT_PRIVILEGES} = ExtensionManagement.API_LEVELS;
+      const {
+        NO_PRIVILEGES,
+        CONTENTSCRIPT_PRIVILEGES,
+        FULL_PRIVILEGES,
+      } = ExtensionManagement.API_LEVELS;
       let extensionId = ExtensionManagement.getAddonIdForWindow(window);
+      let apiLevel = ExtensionManagement.getAPILevelForWindow(window, extensionId);
 
-      if (ExtensionManagement.getAPILevelForWindow(window, extensionId) == CONTENTSCRIPT_PRIVILEGES) {
+      if (apiLevel != NO_PRIVILEGES) {
         let extension = ExtensionManager.get(extensionId);
         if (extension) {
-          DocumentManager.getExtensionPageContext(extension, window);
+          if (apiLevel == CONTENTSCRIPT_PRIVILEGES) {
+            DocumentManager.getExtensionPageContext(extension, window);
+          } else if (apiLevel == FULL_PRIVILEGES) {
+            ExtensionChild.createExtensionContext(extension, window);
+          }
         }
       }
 
@@ -489,6 +508,8 @@ DocumentManager = {
         context.close();
         this.extensionPageWindows.delete(windowId);
       }
+
+      ExtensionChild.destroyExtensionContext(windowId);
     }
   },
 
@@ -635,6 +656,8 @@ DocumentManager = {
       }
     }
 
+    ExtensionChild.shutdownExtension(extensionId);
+
     MessageChannel.abortResponses({extensionId});
 
     this.extensionCount--;
@@ -673,11 +696,15 @@ function BrowserExtensionContent(data) {
   this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
   this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
   this.permissions = data.permissions;
+  this.principal = data.principal;
 
   this.localeData = new LocaleData(data.localeData);
 
   this.manifest = data.manifest;
   this.baseURI = Services.io.newURI(data.baseURL, null, null);
+
+  // Only used in addon processes.
+  this.views = new Set();
 
   let uri = Services.io.newURI(data.resourceURL, null, null);
 
@@ -703,6 +730,10 @@ BrowserExtensionContent.prototype = {
   },
 
   hasPermission(perm) {
+    let match = /^manifest:(.*)/.exec(perm);
+    if (match) {
+      return this.manifest[match[1]] != null;
+    }
     return this.permissions.has(perm);
   },
 };
@@ -713,6 +744,7 @@ ExtensionManager = {
 
   init() {
     Schemas.init();
+    ExtensionChild.initOnce();
 
     Services.cpmm.addMessageListener("Extension:Startup", this);
     Services.cpmm.addMessageListener("Extension:Shutdown", this);
@@ -884,9 +916,11 @@ this.ExtensionContent = {
 
   init(global) {
     this.globals.set(global, new ExtensionGlobal(global));
+    ExtensionChild.init(global);
   },
 
   uninit(global) {
+    ExtensionChild.uninit(global);
     this.globals.get(global).uninit();
     this.globals.delete(global);
   },

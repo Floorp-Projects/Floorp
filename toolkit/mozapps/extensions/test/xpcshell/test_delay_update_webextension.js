@@ -214,6 +214,7 @@ add_task(function* delay_updates_defer() {
             browser.test.fail(`wrong message: ${msg}`);
           }
         });
+        browser.test.sendMessage("truly ready");
       });
       browser.test.sendMessage("ready");
     },
@@ -249,6 +250,7 @@ add_task(function* delay_updates_defer() {
   do_check_eq(addon_postponed.type, "extension");
 
   // add-on will not allow upgrade until message is received
+  yield extension.awaitMessage("truly ready");
   extension.sendMessage("allow");
   yield extension.awaitFinish("allowed");
 

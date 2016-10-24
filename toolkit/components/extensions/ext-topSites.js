@@ -14,7 +14,7 @@ extensions.registerSchemaAPI("topSites", "addon_parent", context => {
                               .map(link => {
                                 return {
                                   url: link.url,
-                                  title: link.title
+                                  title: link.title,
                                 };
                               });
         return Promise.resolve(urls);

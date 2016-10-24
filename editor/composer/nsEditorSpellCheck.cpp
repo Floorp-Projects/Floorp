@@ -430,8 +430,8 @@ NS_IMETHODIMP
 nsEditorSpellCheck::GetSuggestedWord(char16_t **aSuggestedWord)
 {
   nsAutoString word;
-  if ( mSuggestedWordIndex < int32_t(mSuggestedWordList.Length()))
-  {
+  // XXX This is buggy if mSuggestedWordList.Length() is over INT32_MAX.
+  if (mSuggestedWordIndex < static_cast<int32_t>(mSuggestedWordList.Length())) {
     *aSuggestedWord = ToNewUnicode(mSuggestedWordList[mSuggestedWordIndex]);
     mSuggestedWordIndex++;
   } else {
@@ -495,8 +495,8 @@ nsEditorSpellCheck::GetPersonalDictionary()
 NS_IMETHODIMP
 nsEditorSpellCheck::GetPersonalDictionaryWord(char16_t **aDictionaryWord)
 {
-  if ( mDictionaryIndex < int32_t( mDictionaryList.Length()))
-  {
+  // XXX This is buggy if mDictionaryList.Length() is over INT32_MAX.
+  if (mDictionaryIndex < static_cast<int32_t>(mDictionaryList.Length())) {
     *aDictionaryWord = ToNewUnicode(mDictionaryList[mDictionaryIndex]);
     mDictionaryIndex++;
   } else {
@@ -541,8 +541,7 @@ nsEditorSpellCheck::GetDictionaryList(char16_t ***aDictionaryList, uint32_t *aCo
 
   char16_t **tmpPtr = 0;
 
-  if (dictList.Length() < 1)
-  {
+  if (dictList.IsEmpty()) {
     // If there are no dictionaries, return an array containing
     // one element and a count of one.
 
@@ -564,10 +563,7 @@ nsEditorSpellCheck::GetDictionaryList(char16_t ***aDictionaryList, uint32_t *aCo
   *aDictionaryList = tmpPtr;
   *aCount          = dictList.Length();
 
-  uint32_t i;
-
-  for (i = 0; i < *aCount; i++)
-  {
+  for (uint32_t i = 0; i < *aCount; i++) {
     tmpPtr[i] = ToNewUnicode(dictList[i]);
   }
 
@@ -945,9 +941,10 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
     nsAutoString currentDictionary;
     rv2 = GetCurrentDictionary(currentDictionary);
 #ifdef DEBUG_DICT
-    if (NS_SUCCEEDED(rv2))
+    if (NS_SUCCEEDED(rv2)) {
         printf("***** Retrieved current dict |%s|\n",
                NS_ConvertUTF16toUTF8(currentDictionary).get());
+    }
 #endif
 
     if (NS_FAILED(rv2) || currentDictionary.IsEmpty()) {
@@ -955,7 +952,7 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
       // Try to get current dictionary from environment variable LANG.
       // LANG = language[_territory][.charset]
       char* env_lang = getenv("LANG");
-      if (env_lang != nullptr) {
+      if (env_lang) {
         nsString lang = NS_ConvertUTF8toUTF16(env_lang);
         // Strip trailing charset, if there is any.
         int32_t dot_pos = lang.FindChar('.');
@@ -978,18 +975,17 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
 
       // Priority 7:
       // If it does not work, pick the first one.
-      if (NS_FAILED(rv)) {
-        if (dictList.Length() > 0) {
-          nsAutoString firstInList;
-          firstInList.Assign(dictList[0]);
-          rv = TryDictionary(firstInList, dictList, DICT_NORMAL_COMPARE);
+      if (NS_FAILED(rv) && !dictList.IsEmpty()) {
+        nsAutoString firstInList;
+        firstInList.Assign(dictList[0]);
+        rv = TryDictionary(firstInList, dictList, DICT_NORMAL_COMPARE);
 #ifdef DEBUG_DICT
-          printf("***** Trying first of list |%s|\n",
-                 NS_ConvertUTF16toUTF8(dictList[0]).get());
-          if (NS_SUCCEEDED(rv))
-            printf ("***** Setting worked.\n");
-#endif
+        printf("***** Trying first of list |%s|\n",
+               NS_ConvertUTF16toUTF8(dictList[0]).get());
+        if (NS_SUCCEEDED(rv)) {
+          printf ("***** Setting worked.\n");
         }
+#endif
       }
     }
   }

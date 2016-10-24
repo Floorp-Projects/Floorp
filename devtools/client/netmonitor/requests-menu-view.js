@@ -1,4 +1,4 @@
-/* globals document, window, dumpn, $, $all, gNetwork, EVENTS, Prefs,
+/* globals document, window, dumpn, $, gNetwork, EVENTS, Prefs,
            NetMonitorController, NetMonitorView */
 "use strict";
 /* eslint-disable mozilla/reject-some-requires */
@@ -14,6 +14,8 @@ const {setImageTooltip, getImageDimensions} =
 const {Heritage, WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
 const {gDevTools} = require("devtools/client/framework/devtools");
+const Menu = require("devtools/client/framework/menu");
+const MenuItem = require("devtools/client/framework/menu-item");
 const {Curl, CurlUtils} = require("devtools/client/shared/curl");
 const {PluralForm} = require("devtools/shared/plural-form");
 const {Filters, isFreetextMatch} = require("./filter-predicates");
@@ -139,7 +141,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       toggleDelay: REQUESTS_TOOLTIP_TOGGLE_DELAY,
       interactive: true
     });
-    $("#requests-menu-contents").addEventListener("scroll", this._onScroll, true);
 
     this.sortContents((a, b) => Sorters.waterfall(a.attachment, b.attachment));
 
@@ -154,7 +155,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.requestsMenuSortEvent = getKeyWithEvent(this.sortBy.bind(this));
     this.requestsMenuSortKeyboardEvent = getKeyWithEvent(this.sortBy.bind(this), true);
     this.reqeustsMenuClearEvent = this.clear.bind(this);
-    this._onContextShowing = this._onContextShowing.bind(this);
+    this._onContextMenu = this._onContextMenu.bind(this);
     this._onContextNewTabCommand = this.openRequestInTab.bind(this);
     this._onContextCopyUrlCommand = this.copyUrl.bind(this);
     this._onContextCopyImageAsDataUriCommand =
@@ -188,18 +189,10 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       this.requestsMenuSortKeyboardEvent, false);
     $("#requests-menu-clear-button").addEventListener("click",
       this.reqeustsMenuClearEvent, false);
-    $("#network-request-popup").addEventListener("popupshowing",
-      this._onContextShowing, false);
-    $("#request-menu-context-newtab").addEventListener("command",
-      this._onContextNewTabCommand, false);
-    $("#request-menu-context-copy-url").addEventListener("command",
-      this._onContextCopyUrlCommand, false);
-    $("#request-menu-context-copy-response").addEventListener("command",
-      this._onContextCopyResponseCommand, false);
-    $("#request-menu-context-copy-image-as-data-uri").addEventListener(
-      "command", this._onContextCopyImageAsDataUriCommand, false);
     $("#toggle-raw-headers").addEventListener("click",
       this.toggleRawHeadersEvent, false);
+    $("#requests-menu-contents").addEventListener("scroll", this._onScroll, true);
+    $("#requests-menu-contents").addEventListener("contextmenu", this._onContextMenu);
 
     this.unsubscribeStore = store.subscribe(storeWatcher(
       null,
@@ -224,8 +217,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       this._onReloadCommand, false);
 
     if (NetMonitorController.supportsCustomRequest) {
-      $("#request-menu-context-resend").addEventListener("command",
-        this._onContextResendCommand, false);
       $("#custom-request-send-button").addEventListener("click",
         this.sendCustomRequestEvent, false);
       $("#custom-request-close-button").addEventListener("click",
@@ -233,13 +224,10 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       $("#headers-summary-resend").addEventListener("click",
         this.cloneSelectedRequestEvent, false);
     } else {
-      $("#request-menu-context-resend").hidden = true;
       $("#headers-summary-resend").hidden = true;
     }
 
     if (NetMonitorController.supportsPerfStats) {
-      $("#request-menu-context-perf").addEventListener("command",
-        this._onContextPerfCommand, false);
       $("#requests-menu-perf-notice-button").addEventListener("command",
         this._onContextPerfCommand, false);
       $("#requests-menu-network-summary-button").addEventListener("command",
@@ -248,7 +236,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         this._onContextPerfCommand, false);
     } else {
       $("#notice-perf-message").hidden = true;
-      $("#request-menu-context-perf").hidden = true;
       $("#requests-menu-network-summary-button").hidden = true;
     }
 
@@ -271,6 +258,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.tooltip.stopTogglingOnHover();
     this.tooltip.destroy();
     $("#requests-menu-contents").removeEventListener("scroll", this._onScroll, true);
+    $("#requests-menu-contents").removeEventListener("contextmenu", this._onContextMenu);
 
     this.widget.removeEventListener("select", this._onSelect, false);
     this.widget.removeEventListener("swap", this._onSwap, false);
@@ -290,21 +278,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     this.userInputTimer.cancel();
     this._flushRequestsTask.disarm();
-
-    $("#network-request-popup").removeEventListener("popupshowing",
-      this._onContextShowing, false);
-    $("#request-menu-context-newtab").removeEventListener("command",
-      this._onContextNewTabCommand, false);
-    $("#request-menu-context-copy-url").removeEventListener("command",
-      this._onContextCopyUrlCommand, false);
-    $("#request-menu-context-copy-response").removeEventListener("command",
-      this._onContextCopyResponseCommand, false);
-    $("#request-menu-context-copy-image-as-data-uri").removeEventListener(
-      "command", this._onContextCopyImageAsDataUriCommand, false);
-    $("#request-menu-context-resend").removeEventListener("command",
-      this._onContextResendCommand, false);
-    $("#request-menu-context-perf").removeEventListener("command",
-      this._onContextPerfCommand, false);
 
     $("#requests-menu-reload-notice-button").removeEventListener("command",
       this._onReloadCommand, false);
@@ -1770,65 +1743,161 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Handle the context menu opening. Hide items if no request is selected.
+   * Open context menu
    */
-  _onContextShowing: function () {
+  _onContextMenu: function (e) {
+    e.preventDefault();
+    this._openMenu({
+      screenX: e.screenX,
+      screenY: e.screenY,
+      target: e.target,
+    });
+  },
+
+  /**
+   * Handle the context menu opening. Hide items if no request is selected.
+   * Since visible attribute only accept boolean value but the method call may
+   * return undefined, we use !! to force convert any object to boolean
+   */
+  _openMenu: function ({ target, screenX = 0, screenY = 0 } = { }) {
     let selectedItem = this.selectedItem;
 
-    let resendElement = $("#request-menu-context-resend");
-    resendElement.hidden = !NetMonitorController.supportsCustomRequest ||
-      !selectedItem || selectedItem.attachment.isCustom;
+    let menu = new Menu();
+    menu.append(new MenuItem({
+      id: "request-menu-context-copy-url",
+      label: L10N.getStr("netmonitor.context.copyUrl"),
+      accesskey: L10N.getStr("netmonitor.context.copyUrl.accesskey"),
+      visible: !!selectedItem,
+      click: () => this._onContextCopyUrlCommand(),
+    }));
 
-    let copyUrlElement = $("#request-menu-context-copy-url");
-    copyUrlElement.hidden = !selectedItem;
+    menu.append(new MenuItem({
+      id: "request-menu-context-copy-url-params",
+      label: L10N.getStr("netmonitor.context.copyUrlParams"),
+      accesskey: L10N.getStr("netmonitor.context.copyUrlParams.accesskey"),
+      visible: !!(selectedItem &&
+               NetworkHelper.nsIURL(selectedItem.attachment.url).query),
+      click: () => this.copyUrlParams(),
+    }));
 
-    let copyUrlParamsElement = $("#request-menu-context-copy-url-params");
-    copyUrlParamsElement.hidden = !selectedItem ||
-      !NetworkHelper.nsIURL(selectedItem.attachment.url).query;
+    menu.append(new MenuItem({
+      id: "request-menu-context-copy-post-data",
+      label: L10N.getStr("netmonitor.context.copyPostData"),
+      accesskey: L10N.getStr("netmonitor.context.copyPostData.accesskey"),
+      visible: !!(selectedItem && selectedItem.attachment.requestPostData),
+      click: () => this.copyPostData(),
+    }));
 
-    let copyPostDataElement = $("#request-menu-context-copy-post-data");
-    copyPostDataElement.hidden = !selectedItem ||
-      !selectedItem.attachment.requestPostData;
+    menu.append(new MenuItem({
+      id: "request-menu-context-copy-as-curl",
+      label: L10N.getStr("netmonitor.context.copyAsCurl"),
+      accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
+      visible: !!(selectedItem && selectedItem.attachment),
+      click: () => this.copyAsCurl(),
+    }));
 
-    let copyAsCurlElement = $("#request-menu-context-copy-as-curl");
-    copyAsCurlElement.hidden = !selectedItem || !selectedItem.attachment;
+    menu.append(new MenuItem({
+      type: "separator",
+      visible: !!selectedItem,
+    }));
 
-    let copyRequestHeadersElement =
-      $("#request-menu-context-copy-request-headers");
-    copyRequestHeadersElement.hidden = !selectedItem ||
-    !selectedItem.attachment.requestHeaders;
+    menu.append(new MenuItem({
+      id: "request-menu-context-copy-request-headers",
+      label: L10N.getStr("netmonitor.context.copyRequestHeaders"),
+      accesskey: L10N.getStr("netmonitor.context.copyRequestHeaders.accesskey"),
+      visible: !!(selectedItem && selectedItem.attachment.requestHeaders),
+      click: () => this.copyRequestHeaders(),
+    }));
 
-    let copyResponseHeadersElement =
-      $("#response-menu-context-copy-response-headers");
-    copyResponseHeadersElement.hidden = !selectedItem ||
-      !selectedItem.attachment.responseHeaders;
+    menu.append(new MenuItem({
+      id: "response-menu-context-copy-response-headers",
+      label: L10N.getStr("netmonitor.context.copyResponseHeaders"),
+      accesskey: L10N.getStr("netmonitor.context.copyResponseHeaders.accesskey"),
+      visible: !!(selectedItem && selectedItem.attachment.responseHeaders),
+      click: () => this.copyResponseHeaders(),
+    }));
 
-    let copyResponse = $("#request-menu-context-copy-response");
-    copyResponse.hidden = !selectedItem ||
-      !selectedItem.attachment.responseContent ||
-      !selectedItem.attachment.responseContent.content.text ||
-      selectedItem.attachment.responseContent.content.text.length === 0;
+    menu.append(new MenuItem({
+      id: "request-menu-context-copy-response",
+      label: L10N.getStr("netmonitor.context.copyResponse"),
+      accesskey: L10N.getStr("netmonitor.context.copyResponse.accesskey"),
+      visible: !!(selectedItem &&
+               selectedItem.attachment.responseContent &&
+               selectedItem.attachment.responseContent.content.text &&
+               selectedItem.attachment.responseContent.content.text.length !== 0),
+      click: () => this._onContextCopyResponseCommand(),
+    }));
 
-    let copyImageAsDataUriElement =
-      $("#request-menu-context-copy-image-as-data-uri");
-    copyImageAsDataUriElement.hidden = !selectedItem ||
-      !selectedItem.attachment.responseContent ||
-      !selectedItem.attachment.responseContent.content
-        .mimeType.includes("image/");
+    menu.append(new MenuItem({
+      id: "request-menu-context-copy-image-as-data-uri",
+      label: L10N.getStr("netmonitor.context.copyImageAsDataUri"),
+      accesskey: L10N.getStr("netmonitor.context.copyImageAsDataUri.accesskey"),
+      visible: !!(selectedItem &&
+               selectedItem.attachment.responseContent &&
+               selectedItem.attachment.responseContent.content
+                 .mimeType.includes("image/")),
+      click: () => this._onContextCopyImageAsDataUriCommand(),
+    }));
 
-    let separators = $all(".request-menu-context-separator");
-    Array.forEach(separators, separator => {
-      separator.hidden = !selectedItem;
-    });
+    menu.append(new MenuItem({
+      type: "separator",
+      visible: !!selectedItem,
+    }));
 
-    let copyAsHar = $("#request-menu-context-copy-all-as-har");
-    copyAsHar.hidden = !NetMonitorView.RequestsMenu.items.length;
+    menu.append(new MenuItem({
+      id: "request-menu-context-copy-all-as-har",
+      label: L10N.getStr("netmonitor.context.copyAllAsHar"),
+      accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
+      visible: !!this.items.length,
+      click: () => this.copyAllAsHar(),
+    }));
 
-    let saveAsHar = $("#request-menu-context-save-all-as-har");
-    saveAsHar.hidden = !NetMonitorView.RequestsMenu.items.length;
+    menu.append(new MenuItem({
+      id: "request-menu-context-save-all-as-har",
+      label: L10N.getStr("netmonitor.context.saveAllAsHar"),
+      accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
+      visible: !!this.items.length,
+      click: () => this.saveAllAsHar(),
+    }));
 
-    let newTabElement = $("#request-menu-context-newtab");
-    newTabElement.hidden = !selectedItem;
+    menu.append(new MenuItem({
+      type: "separator",
+      visible: !!selectedItem,
+    }));
+
+    menu.append(new MenuItem({
+      id: "request-menu-context-resend",
+      label: L10N.getStr("netmonitor.context.editAndResend"),
+      accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
+      visible: !!(NetMonitorController.supportsCustomRequest &&
+               selectedItem &&
+               !selectedItem.attachment.isCustom),
+      click: () => this._onContextResendCommand(),
+    }));
+
+    menu.append(new MenuItem({
+      type: "separator",
+      visible: !!selectedItem,
+    }));
+
+    menu.append(new MenuItem({
+      id: "request-menu-context-newtab",
+      label: L10N.getStr("netmonitor.context.newTab"),
+      accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
+      visible: !!selectedItem,
+      click: () => this._onContextNewTabCommand(),
+    }));
+
+    menu.append(new MenuItem({
+      id: "request-menu-context-perf",
+      label: L10N.getStr("netmonitor.context.perfTools"),
+      accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
+      visible: !!NetMonitorController.supportsPerfStats,
+      click: () => this._onContextPerfCommand(),
+    }));
+
+    menu.popup(screenX, screenY, NetMonitorController._toolbox);
+    return menu;
   },
 
   /**

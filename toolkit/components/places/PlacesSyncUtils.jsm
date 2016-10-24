@@ -119,13 +119,13 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   order: Task.async(function* (parentSyncId, childSyncIds) {
     PlacesUtils.SYNC_BOOKMARK_VALIDATORS.syncId(parentSyncId);
     if (!childSyncIds.length) {
-      return;
+      return undefined;
     }
     let parentGuid = BookmarkSyncUtils.syncIdToGuid(parentSyncId);
     if (parentGuid == PlacesUtils.bookmarks.rootGuid) {
       // Reordering roots doesn't make sense, but Sync will do this on the
       // first sync.
-      return;
+      return undefined;
     }
     let orderedChildrenGuids = childSyncIds.map(BookmarkSyncUtils.syncIdToGuid);
     return PlacesUtils.bookmarks.reorder(parentGuid, orderedChildrenGuids);

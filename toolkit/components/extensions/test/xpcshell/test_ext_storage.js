@@ -102,7 +102,11 @@ function backgroundScript() {
     return storage.set({"test-prop1": "value1", "test-prop2": "value2"});
   }).then(() => {
     globalChanges = {};
-    browser.test.sendMessage("invalidate");
+    // Schedule sendMessage after onMessage because the other end immediately
+    // sends a message.
+    Promise.resolve().then(() => {
+      browser.test.sendMessage("invalidate");
+    });
     return new Promise(resolve => browser.test.onMessage.addListener(resolve));
   }).then(() => {
     return check("test-prop1", "value1");
@@ -115,6 +119,7 @@ function backgroundScript() {
       "test-prop1": {
         str: "hello",
         bool: true,
+        null: null,
         undef: undefined,
         obj: {},
         arr: [1, 2],
@@ -136,6 +141,7 @@ function backgroundScript() {
 
     browser.test.assertEq("hello", obj.str, "string part correct");
     browser.test.assertEq(true, obj.bool, "bool part correct");
+    browser.test.assertEq(null, obj.null, "null part correct");
     browser.test.assertEq(undefined, obj.undef, "undefined part correct");
     browser.test.assertEq(undefined, obj.func, "function part correct");
     browser.test.assertEq(undefined, obj.window, "window part correct");

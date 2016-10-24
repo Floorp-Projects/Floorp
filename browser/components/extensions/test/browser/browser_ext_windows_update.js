@@ -68,8 +68,10 @@ add_task(function* testWindowUpdate() {
         });
       }
 
+      let currentWindowId;
       function updateWindow(windowId, params, expected) {
         return browser.windows.update(windowId, params).then(window => {
+          browser.test.assertEq(currentWindowId, window.id, "Expected WINDOW_ID_CURRENT to refer to the same window");
           for (let key of Object.keys(params)) {
             if (key == "state" && os == "mac" && params.state == "normal") {
               // OS-X doesn't have a hard distinction between "normal" and
@@ -88,6 +90,7 @@ add_task(function* testWindowUpdate() {
       let windowId = browser.windows.WINDOW_ID_CURRENT;
 
       browser.runtime.getPlatformInfo().then(info => { os = info.os; })
+      .then(() => browser.windows.getCurrent().then(window => { currentWindowId = window.id; }))
       .then(() => updateWindow(windowId, {state: "maximized"}, {state: "STATE_MAXIMIZED"}))
       .then(() => updateWindow(windowId, {state: "minimized"}, {state: "STATE_MINIMIZED"}))
       .then(() => updateWindow(windowId, {state: "normal"}, {state: "STATE_NORMAL"}))
@@ -109,7 +112,8 @@ add_task(function* testWindowUpdate() {
         windowState = window.STATE_FULLSCREEN;
       }
 
-      if (expected.state == "STATE_NORMAL" && AppConstants.platform == "macosx") {
+      // Temporarily accepting STATE_MAXIMIZED on Linux because of bug 1307759.
+      if (expected.state == "STATE_NORMAL" && (AppConstants.platform == "macosx" || AppConstants.platform == "linux")) {
         ok(windowState == window.STATE_NORMAL || windowState == window.STATE_MAXIMIZED,
            `Expected windowState (currently ${windowState}) to be STATE_NORMAL but will accept STATE_MAXIMIZED`);
       } else {
