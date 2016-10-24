@@ -2302,6 +2302,9 @@ class BaseCompiler
     void builtinInstanceMethodCall(SymbolicAddress builtin, const ABIArg& instanceArg,
                                    const FunctionCall& call)
     {
+        // Builtin method calls assumed the TLS register has been set.
+        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
         masm.wasmCallBuiltinInstanceMethod(instanceArg, builtin);
     }
@@ -6229,23 +6232,23 @@ BaseCompiler::emitGrowMemory()
     if (deadCode_)
         return true;
 
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+    Nothing arg;
+    if (!iter_.readGrowMemory(&arg))
+        return false;
 
     sync();
 
     uint32_t numArgs = 1;
     size_t stackSpace = stackConsumed(numArgs);
 
-    FunctionCall baselineCall(lineOrBytecode);
+    FunctionCall baselineCall(readCallSiteLineOrBytecode());
     beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(true));
 
     ABIArg instanceArg = reserveArgument(baselineCall);
 
-    if (!emitCallArgs(SigI_, baselineCall))
-        return false;
+    startCallArgs(baselineCall, stackArgAreaSize(SigI_));
 
-    if (!iter_.readCallReturn(ExprType::I32))
-        return false;
+    passArg(baselineCall, ValType::I32, peek(0));
 
     builtinInstanceMethodCall(SymbolicAddress::GrowMemory, instanceArg, baselineCall);
 
@@ -6265,20 +6268,17 @@ BaseCompiler::emitCurrentMemory()
     if (deadCode_)
         return true;
 
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+    if (!iter_.readCurrentMemory())
+        return false;
 
     sync();
 
-    FunctionCall baselineCall(lineOrBytecode);
+    FunctionCall baselineCall(readCallSiteLineOrBytecode());
     beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(true));
 
     ABIArg instanceArg = reserveArgument(baselineCall);
 
-    if (!emitCallArgs(Sig_, baselineCall))
-        return false;
-
-    if (!iter_.readCallReturn(ExprType::I32))
-        return false;
+    startCallArgs(baselineCall, stackArgAreaSize(Sig_));
 
     builtinInstanceMethodCall(SymbolicAddress::CurrentMemory, instanceArg, baselineCall);
 

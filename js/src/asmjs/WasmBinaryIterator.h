@@ -68,6 +68,8 @@ enum class ExprKind {
     Load,
     Store,
     TeeStore,
+    CurrentMemory,
+    GrowMemory,
     Select,
     GetLocal,
     SetLocal,
@@ -561,7 +563,8 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readTeeStore(ValType resultType, uint32_t byteSize,
                                    LinearMemoryAddress<Value>* addr, Value* value);
     MOZ_MUST_USE bool readNop();
-    MOZ_MUST_USE bool readNullary(ValType retType);
+    MOZ_MUST_USE bool readCurrentMemory();
+    MOZ_MUST_USE bool readGrowMemory(Value* input);
     MOZ_MUST_USE bool readSelect(ValType* type,
                                  Value* trueValue, Value* falseValue, Value* condition);
     MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
@@ -1348,12 +1351,40 @@ ExprIter<Policy>::readNop()
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readNullary(ValType retType)
+ExprIter<Policy>::readCurrentMemory()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Nullary);
+    MOZ_ASSERT(Classify(expr_) == ExprKind::CurrentMemory);
 
-    if (!push(retType))
+    uint32_t flags;
+    if (!readVarU32(&flags))
         return false;
+
+    if (Validate && flags != uint32_t(MemoryTableFlags::Default))
+        return fail("unexpected flags");
+
+    if (!push(ValType::I32))
+        return false;
+
+    return true;
+}
+
+template <typename Policy>
+inline bool
+ExprIter<Policy>::readGrowMemory(Value* input)
+{
+    MOZ_ASSERT(Classify(expr_) == ExprKind::GrowMemory);
+
+    uint32_t flags;
+    if (!readVarU32(&flags))
+        return false;
+
+    if (Validate && flags != uint32_t(MemoryTableFlags::Default))
+        return fail("unexpected flags");
+
+    if (!popWithType(ValType::I32, input))
+        return false;
+
+    infalliblePush(ValType::I32);
 
     return true;
 }
@@ -1724,6 +1755,13 @@ ExprIter<Policy>::readCallIndirect(uint32_t* sigIndex, Value* callee)
 
     if (!readVarU32(sigIndex))
         return fail("unable to read call_indirect signature index");
+
+    uint32_t flags;
+    if (!readVarU32(&flags))
+        return false;
+
+    if (Validate && flags != uint32_t(MemoryTableFlags::Default))
+        return fail("unexpected flags");
 
     if (reachable_) {
         if (!popWithType(ValType::I32, callee))
