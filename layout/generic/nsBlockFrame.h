@@ -88,16 +88,16 @@ public:
   typedef nsLineList::reverse_iterator ReverseLineIterator;
   typedef nsLineList::const_reverse_iterator ConstReverseLineIterator;
 
-  LineIterator BeginLine() { return mLines.begin(); }
-  LineIterator EndLine() { return mLines.end(); }
-  ConstLineIterator BeginLine() const { return mLines.begin(); }
-  ConstLineIterator EndLine() const { return mLines.end(); }
-  ReverseLineIterator RBeginLine() { return mLines.rbegin(); }
-  ReverseLineIterator REndLine() { return mLines.rend(); }
-  ConstReverseLineIterator RBeginLine() const { return mLines.rbegin(); }
-  ConstReverseLineIterator REndLine() const { return mLines.rend(); }
-  LineIterator BeginLineFrom(nsLineBox* aList) { return mLines.begin(aList); }
-  ReverseLineIterator RBeginLineFrom(nsLineBox* aList) { return mLines.rbegin(aList); }
+  LineIterator LinesBegin() { return mLines.begin(); }
+  LineIterator LinesEnd() { return mLines.end(); }
+  ConstLineIterator LinesBegin() const { return mLines.begin(); }
+  ConstLineIterator LinesEnd() const { return mLines.end(); }
+  ReverseLineIterator LinesRBegin() { return mLines.rbegin(); }
+  ReverseLineIterator LinesREnd() { return mLines.rend(); }
+  ConstReverseLineIterator LinesRBegin() const { return mLines.rbegin(); }
+  ConstReverseLineIterator LinesREnd() const { return mLines.rend(); }
+  LineIterator LinesBeginFrom(nsLineBox* aList) { return mLines.begin(aList); }
+  ReverseLineIterator LinesRBeginFrom(nsLineBox* aList) { return mLines.rbegin(aList); }
 
   friend nsBlockFrame* NS_NewBlockFrame(nsIPresShell* aPresShell,
                                         nsStyleContext* aContext);
@@ -798,7 +798,7 @@ protected:
 
   /**
    * Push the line after aLineBefore to the overflow line list.
-   * @param aLineBefore a line in 'mLines' (or BeginLine() when
+   * @param aLineBefore a line in 'mLines' (or LinesBegin() when
    *        pushing the first line)
    */
   void PushLines(BlockReflowInput& aState,
