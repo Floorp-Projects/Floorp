@@ -196,6 +196,7 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fFunctions.fDisableVertexAttribArray = WrapGL(context, &GLContext::fDisableVertexAttribArray);
     i->fFunctions.fDrawArrays = WrapGL(context, &GLContext::fDrawArrays);
     i->fFunctions.fDrawElements = WrapGL(context, &GLContext::fDrawElements);
+    i->fFunctions.fDrawRangeElements = WrapGL(context, &GLContext::fDrawRangeElements);
     i->fFunctions.fEnable = WrapGL(context, &GLContext::fEnable);
     i->fFunctions.fEnableVertexAttribArray = WrapGL(context, &GLContext::fEnableVertexAttribArray);
     i->fFunctions.fFinish = WrapGL(context, &GLContext::fFinish);
@@ -305,8 +306,8 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
 SkiaGLGlue::SkiaGLGlue(GLContext* context)
     : mGLContext(context)
 {
-    mGrGLInterface.adopt(CreateGrGLInterfaceFromGLContext(mGLContext));
-    mGrContext.adopt(GrContext::Create(kOpenGL_GrBackend, (GrBackendContext)mGrGLInterface.get()));
+    mGrGLInterface.reset(CreateGrGLInterfaceFromGLContext(mGLContext));
+    mGrContext.reset(GrContext::Create(kOpenGL_GrBackend, (GrBackendContext)mGrGLInterface.get()));
 }
 
 SkiaGLGlue::~SkiaGLGlue()
