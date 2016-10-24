@@ -42,7 +42,6 @@ readonly attribute CacheStorage caches;
 };
 
 WorkerGlobalScope implements GlobalCrypto;
-WorkerGlobalScope implements IDBEnvironment;
 WorkerGlobalScope implements WindowOrWorkerGlobalScope;
 
 // Not implemented yet: bug 1072107.
