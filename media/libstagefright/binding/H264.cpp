@@ -220,8 +220,8 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
     if ((aDest.chroma_format_idc = br.ReadUE()) == 3) {
       aDest.separate_colour_plane_flag = br.ReadBit();
     }
-    br.ReadUE();        // bit_depth_luma_minus8
-    br.ReadUE();        // bit_depth_chroma_minus8
+    aDest.bit_depth_luma_minus8 = br.ReadUE();
+    aDest.bit_depth_chroma_minus8 = br.ReadUE();
     br.ReadBit();       // qpprime_y_zero_transform_bypass_flag
     aDest.seq_scaling_matrix_present_flag = br.ReadBit();
     if (aDest.seq_scaling_matrix_present_flag) {
@@ -281,7 +281,7 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
     aDest.pic_height_in_map_units *= 2;
     aDest.mb_adaptive_frame_field_flag = br.ReadBit();
   }
-  br.ReadBit(); // direct_8x8_inference_flag
+  aDest.direct_8x8_inference_flag = br.ReadBit();
   aDest.frame_cropping_flag = br.ReadBit();
   if (aDest.frame_cropping_flag) {
     aDest.frame_crop_left_offset = br.ReadUE();
