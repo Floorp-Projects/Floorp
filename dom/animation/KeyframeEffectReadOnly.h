@@ -69,14 +69,7 @@ struct PropertyValuePair
   // fail to parse the value since we use it to store the original string.
   RefPtr<RawServoDeclarationBlock> mServoDeclarationBlock;
 
-  bool operator==(const PropertyValuePair& aOther) const {
-    return mProperty == aOther.mProperty &&
-           mValue == aOther.mValue &&
-           !mServoDeclarationBlock == !aOther.mServoDeclarationBlock &&
-           (!mServoDeclarationBlock ||
-            Servo_DeclarationBlock_Equals(mServoDeclarationBlock,
-                                          aOther.mServoDeclarationBlock));
-  }
+  bool operator==(const PropertyValuePair&) const;
 };
 
 /**
