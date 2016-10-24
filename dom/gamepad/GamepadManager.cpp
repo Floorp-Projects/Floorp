@@ -406,6 +406,49 @@ GamepadManager::FireAxisMoveEvent(EventTarget* aTarget,
 }
 
 void
+GamepadManager::NewPoseEvent(uint32_t aIndex, GamepadServiceType aServiceType,
+                             const GamepadPoseState& aPose)
+{
+  if (mShuttingDown) {
+    return;
+  }
+
+  uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
+
+  RefPtr<Gamepad> gamepad = GetGamepad(newIndex);
+  if (!gamepad) {
+    return;
+  }
+  gamepad->SetPose(aPose);
+
+  // Hold on to listeners in a separate array because firing events
+  // can mutate the mListeners array.
+  nsTArray<RefPtr<nsGlobalWindow>> listeners(mListeners);
+  MOZ_ASSERT(!listeners.IsEmpty());
+
+  for (uint32_t i = 0; i < listeners.Length(); i++) {
+
+    MOZ_ASSERT(listeners[i]->IsInnerWindow());
+
+    // Only send events to non-background windows
+    if (!listeners[i]->AsInner()->IsCurrentInnerWindow() ||
+        listeners[i]->GetOuterWindow()->IsBackground()) {
+      continue;
+    }
+
+    bool firstTime = MaybeWindowHasSeenGamepad(listeners[i], newIndex);
+
+    RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(newIndex);
+    if (listenerGamepad) {
+      listenerGamepad->SetPose(aPose);
+      if (firstTime) {
+        FireConnectionEvent(listeners[i], listenerGamepad, true);
+      }
+    }
+  }
+}
+
+void
 GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected)
 {
   if (mShuttingDown) {
@@ -609,6 +652,11 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
   if (aEvent.type() == GamepadChangeEvent::TGamepadAxisInformation) {
     const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
     NewAxisMoveEvent(a.index(), a.service_type(), a.axis(), a.value());
+    return;
+  }
+  if (aEvent.type() == GamepadChangeEvent::TGamepadPoseInformation) {
+    const GamepadPoseInformation& a = aEvent.get_GamepadPoseInformation();
+    NewPoseEvent(a.index(), a.service_type(), a.pose_state());
     return;
   }
 
