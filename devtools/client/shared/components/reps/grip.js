@@ -50,6 +50,16 @@ define(function (require, exports, module) {
     },
 
     propIterator: function (object, max) {
+      if (Object.keys(object.preview).includes("wrappedValue")) {
+        const { Rep } = createFactories(require("./rep"));
+
+        return [Rep({
+          object: object.preview.wrappedValue,
+          mode: this.props.mode || "tiny",
+          defaultRep: Grip,
+        })];
+      }
+
       // Property filter. Show only interesting properties to the user.
       let isInterestingProp = this.props.isInterestingProp || ((type, value) => {
         return (
