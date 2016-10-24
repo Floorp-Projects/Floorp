@@ -4,18 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3.org/TR/SVG2/
+ * https://svgwg.org/svg2-draft/
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-interface SVGClipPathElement : SVGElement {
-  [Constant]
-  readonly attribute SVGAnimatedEnumeration clipPathUnits;
-  [Constant]
-  readonly attribute SVGAnimatedTransformList transform;
+[NoInterfaceObject]
+interface SVGUnitTypeValues {
+  // Unit Types
+  const unsigned short SVG_UNIT_TYPE_UNKNOWN = 0;
+  const unsigned short SVG_UNIT_TYPE_USERSPACEONUSE = 1;
+  const unsigned short SVG_UNIT_TYPE_OBJECTBOUNDINGBOX = 2;
 };
-
-SVGClipPathElement implements SVGUnitTypeValues;
-

@@ -588,12 +588,6 @@
   background-color: var(--theme-toolbar-background);
 }
 
-/* Headers separators are toolbars, but they have different height
-  in Firebug theme */
-.theme-firebug .tabpanel-content .variables-view-container .title.devtools-toolbar {
-  height: 20px !important;
-}
-
 .theme-firebug .variables-view-scope:focus > .title {
   color: var(--theme-body-color);
 }

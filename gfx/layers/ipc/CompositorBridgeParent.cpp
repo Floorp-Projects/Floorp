@@ -1761,13 +1761,19 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
 
     // report any failure reasons here
     if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL){
+      gfxCriticalNote << "[OPENGL] Failed to init compositor with reason: "
+                      << failureReason.get();
       Telemetry::Accumulate(Telemetry::OPENGL_COMPOSITING_FAILURE_ID, failureReason);
     }
 #ifdef XP_WIN
     else if (aBackendHints[i] == LayersBackend::LAYERS_D3D9){
+      gfxCriticalNote << "[D3D9] Failed to init compositor with reason: "
+                      << failureReason.get();
       Telemetry::Accumulate(Telemetry::D3D9_COMPOSITING_FAILURE_ID, failureReason);
     }
     else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11){
+      gfxCriticalNote << "[D3D11] Failed to init compositor with reason: "
+                      << failureReason.get();
       Telemetry::Accumulate(Telemetry::D3D11_COMPOSITING_FAILURE_ID, failureReason);
     }
 #endif
@@ -2380,7 +2386,7 @@ CompositorBridgeParent::ResetCompositorImpl(const nsTArray<LayersBackend>& aBack
 
   RefPtr<Compositor> compositor = NewCompositor(aBackendHints);
   if (!compositor) {
-    return Nothing();
+    MOZ_RELEASE_ASSERT(compositor, "Failed to reset compositor.");
   }
 
   // Don't bother changing from basic->basic.
