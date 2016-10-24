@@ -18,6 +18,8 @@
 
 #include "asmjs/WasmBinaryFormat.h"
 
+#include "jsprf.h"
+
 using namespace js;
 using namespace js::wasm;
 
