@@ -58,13 +58,11 @@ nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
                                  void **aResult, bool aIsForMail)
 {
     *aResult = nullptr;
-    if (nullptr != aOuter)
-    {
+    if (aOuter) {
         return NS_ERROR_NO_AGGREGATION;
     }
     nsComposeTxtSrvFilter * inst = new nsComposeTxtSrvFilter();
-    if (nullptr == inst)
-    {
+    if (!inst) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(inst);

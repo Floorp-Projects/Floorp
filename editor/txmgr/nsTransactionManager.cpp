@@ -86,8 +86,9 @@ nsTransactionManager::DoTransaction(nsITransaction *aTransaction)
 
   nsresult result2 = DidDoNotify(aTransaction, result);
 
-  if (NS_SUCCEEDED(result))
+  if (NS_SUCCEEDED(result)) {
     result = result2;
+  }
 
   return result;
 }
@@ -137,8 +138,9 @@ nsTransactionManager::UndoTransaction()
 
   nsresult result2 = DidUndoNotify(t, result);
 
-  if (NS_SUCCEEDED(result))
+  if (NS_SUCCEEDED(result)) {
     result = result2;
+  }
 
   return result;
 }
@@ -188,8 +190,9 @@ nsTransactionManager::RedoTransaction()
 
   nsresult result2 = DidRedoNotify(t, result);
 
-  if (NS_SUCCEEDED(result))
+  if (NS_SUCCEEDED(result)) {
     result = result2;
+  }
 
   return result;
 }
@@ -236,8 +239,9 @@ nsTransactionManager::BeginBatch(nsISupports* aData)
 
   nsresult result2 = DidBeginBatchNotify(result);
 
-  if (NS_SUCCEEDED(result))
+  if (NS_SUCCEEDED(result)) {
     result = result2;
+  }
 
   return result;
 }
@@ -285,8 +289,9 @@ nsTransactionManager::EndBatch(bool aAllowEmpty)
 
   nsresult result2 = DidEndBatchNotify(result);
 
-  if (NS_SUCCEEDED(result))
+  if (NS_SUCCEEDED(result)) {
     result = result2;
+  }
 
   return result;
 }
@@ -348,7 +353,7 @@ nsTransactionManager::SetMaxTransactionCount(int32_t aMaxCount)
   // exist on the undo and redo stack, there is no need to prune the
   // undo or redo stacks!
 
-  if (aMaxCount > total ) {
+  if (aMaxCount > total) {
     mMaxTransactionCount = aMaxCount;
     return NS_OK;
   }
@@ -522,16 +527,16 @@ nsresult
 nsTransactionManager::WillDoNotify(nsITransaction *aTransaction, bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillDo(this, aTransaction, aInterrupt);
 
-    if (NS_FAILED(result) || *aInterrupt)
+    if (NS_FAILED(result) || *aInterrupt) {
       break;
+    }
   }
 
   return result;
@@ -541,16 +546,16 @@ nsresult
 nsTransactionManager::DidDoNotify(nsITransaction *aTransaction, nsresult aDoResult)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidDo(this, aTransaction, aDoResult);
 
-    if (NS_FAILED(result))
+    if (NS_FAILED(result)) {
       break;
+    }
   }
 
   return result;
@@ -560,16 +565,16 @@ nsresult
 nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction, bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillUndo(this, aTransaction, aInterrupt);
 
-    if (NS_FAILED(result) || *aInterrupt)
+    if (NS_FAILED(result) || *aInterrupt) {
       break;
+    }
   }
 
   return result;
@@ -579,16 +584,16 @@ nsresult
 nsTransactionManager::DidUndoNotify(nsITransaction *aTransaction, nsresult aUndoResult)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidUndo(this, aTransaction, aUndoResult);
 
-    if (NS_FAILED(result))
+    if (NS_FAILED(result)) {
       break;
+    }
   }
 
   return result;
@@ -598,16 +603,16 @@ nsresult
 nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction, bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillRedo(this, aTransaction, aInterrupt);
 
-    if (NS_FAILED(result) || *aInterrupt)
+    if (NS_FAILED(result) || *aInterrupt) {
       break;
+    }
   }
 
   return result;
@@ -617,16 +622,16 @@ nsresult
 nsTransactionManager::DidRedoNotify(nsITransaction *aTransaction, nsresult aRedoResult)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidRedo(this, aTransaction, aRedoResult);
 
-    if (NS_FAILED(result))
+    if (NS_FAILED(result)) {
       break;
+    }
   }
 
   return result;
@@ -636,16 +641,16 @@ nsresult
 nsTransactionManager::WillBeginBatchNotify(bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillBeginBatch(this, aInterrupt);
 
-    if (NS_FAILED(result) || *aInterrupt)
+    if (NS_FAILED(result) || *aInterrupt) {
       break;
+    }
   }
 
   return result;
@@ -655,16 +660,16 @@ nsresult
 nsTransactionManager::DidBeginBatchNotify(nsresult aResult)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidBeginBatch(this, aResult);
 
-    if (NS_FAILED(result))
+    if (NS_FAILED(result)) {
       break;
+    }
   }
 
   return result;
@@ -674,16 +679,16 @@ nsresult
 nsTransactionManager::WillEndBatchNotify(bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillEndBatch(this, aInterrupt);
 
-    if (NS_FAILED(result) || *aInterrupt)
+    if (NS_FAILED(result) || *aInterrupt) {
       break;
+    }
   }
 
   return result;
@@ -693,16 +698,16 @@ nsresult
 nsTransactionManager::DidEndBatchNotify(nsresult aResult)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidEndBatch(this, aResult);
 
-    if (NS_FAILED(result))
+    if (NS_FAILED(result)) {
       break;
+    }
   }
 
   return result;
@@ -712,16 +717,16 @@ nsresult
 nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTransaction, bool *aInterrupt)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillMerge(this, aTop, aTransaction, aInterrupt);
 
-    if (NS_FAILED(result) || *aInterrupt)
+    if (NS_FAILED(result) || *aInterrupt) {
       break;
+    }
   }
 
   return result;
@@ -734,16 +739,16 @@ nsTransactionManager::DidMergeNotify(nsITransaction *aTop,
                                      nsresult aMergeResult)
 {
   nsresult result = NS_OK;
-  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++)
-  {
+  for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener *listener = mListeners[i];
 
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidMerge(this, aTop, aTransaction, aDidMerge, aMergeResult);
 
-    if (NS_FAILED(result))
+    if (NS_FAILED(result)) {
       break;
+    }
   }
 
   return result;
@@ -787,8 +792,9 @@ nsTransactionManager::EndTransaction(bool aAllowEmpty)
 
   RefPtr<nsTransactionItem> tx = mDoStack.Pop();
 
-  if (!tx)
+  if (!tx) {
     return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsITransaction> tint = tx->GetTransaction();
 
@@ -810,8 +816,9 @@ nsTransactionManager::EndTransaction(bool aAllowEmpty)
 
   bool isTransient = false;
 
-  if (tint)
+  if (tint) {
     result = tint->GetIsTransient(&isTransient);
+  }
 
   if (NS_FAILED(result) || isTransient || !mMaxTransactionCount) {
     // XXX: Should we be clearing the redo stack if the transaction
@@ -862,8 +869,9 @@ nsTransactionManager::EndTransaction(bool aAllowEmpty)
 
         nsresult result2 = DidMergeNotify(topTransaction, tint, didMerge, result);
 
-        if (NS_SUCCEEDED(result))
+        if (NS_SUCCEEDED(result)) {
           result = result2;
+        }
 
         if (NS_FAILED(result)) {
           // XXX: What do we do if this fails?

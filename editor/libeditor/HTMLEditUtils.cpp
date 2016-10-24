@@ -346,8 +346,7 @@ HTMLEditUtils::IsLink(nsINode* aNode)
   MOZ_ASSERT(aNode);
 
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
-  if (anchor)
-  {
+  if (anchor) {
     nsAutoString tmpText;
     if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && !tmpText.IsEmpty()) {
       return true;

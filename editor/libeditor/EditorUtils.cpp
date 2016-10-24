@@ -204,20 +204,18 @@ EditorHookUtils::DoInsertionHook(nsIDOMDocument* aDoc,
   NS_ENSURE_TRUE(enumerator, true);
 
   bool hasMoreHooks = false;
-  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks)) && hasMoreHooks)
-  {
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks)) &&
+         hasMoreHooks) {
     nsCOMPtr<nsISupports> isupp;
-    if (NS_FAILED(enumerator->GetNext(getter_AddRefs(isupp))))
+    if (NS_FAILED(enumerator->GetNext(getter_AddRefs(isupp)))) {
       break;
+    }
 
     nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
-    if (override)
-    {
+    if (override) {
       bool doInsert = true;
-#ifdef DEBUG
-      nsresult hookResult =
-#endif
-      override->OnPasteOrDrop(aDropEvent, aTrans, &doInsert);
+      DebugOnly<nsresult> hookResult =
+        override->OnPasteOrDrop(aDropEvent, aTrans, &doInsert);
       NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnPasteOrDrop");
       NS_ENSURE_TRUE(doInsert, false);
     }
