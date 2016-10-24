@@ -5,13 +5,5 @@
  * found in the LICENSE file.
  */
 #include "SkDocument.h"
-sk_sp<SkDocument> SkDocument::MakePDF(SkWStream*,
-                                      SkScalar,
-                                      const SkDocument::PDFMetadata&,
-                                      sk_sp<SkPixelSerializer>,
-                                      bool) {
-    return nullptr;
-}
-sk_sp<SkDocument> SkDocument::MakePDF(const char path[], SkScalar) {
-    return nullptr;
-}
+SkDocument* SkDocument::CreatePDF(SkWStream*, SkScalar) { return  nullptr; }
+SkDocument* SkDocument::CreatePDF(const char path[], SkScalar) { return nullptr; }

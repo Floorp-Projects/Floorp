@@ -9,7 +9,6 @@
 #define GrSingleTextureEffect_DEFINED
 
 #include "GrFragmentProcessor.h"
-#include "GrColorSpaceXform.h"
 #include "GrCoordTransform.h"
 #include "GrInvariantOutput.h"
 #include "SkMatrix.h"
@@ -26,22 +25,20 @@ public:
 
     SkString dumpInfo() const override {
         SkString str;
-        str.appendf("Texture: %d", fTextureAccess.getTexture()->uniqueID());
+        str.appendf("Texture: %d", fTextureAccess.getTexture()->getUniqueID());
         return str;
     }
 
-    GrColorSpaceXform* colorSpaceXform() const { return fColorSpaceXform.get(); }
-
 protected:
     /** unfiltered, clamp mode */
-    GrSingleTextureEffect(GrTexture*, sk_sp<GrColorSpaceXform>, const SkMatrix&);
+    GrSingleTextureEffect(GrTexture*, const SkMatrix&, GrCoordSet = kLocal_GrCoordSet);
     /** clamp mode */
-    GrSingleTextureEffect(GrTexture*, sk_sp<GrColorSpaceXform>, const SkMatrix&,
-                          GrTextureParams::FilterMode filterMode);
+    GrSingleTextureEffect(GrTexture*, const SkMatrix&, GrTextureParams::FilterMode filterMode,
+                          GrCoordSet = kLocal_GrCoordSet);
     GrSingleTextureEffect(GrTexture*,
-                          sk_sp<GrColorSpaceXform>,
                           const SkMatrix&,
-                          const GrTextureParams&);
+                          const GrTextureParams&,
+                          GrCoordSet = kLocal_GrCoordSet);
 
     /**
      * Can be used as a helper to implement subclass onComputeInvariantOutput(). It assumes that
@@ -61,7 +58,6 @@ protected:
 private:
     GrCoordTransform fCoordTransform;
     GrTextureAccess  fTextureAccess;
-    sk_sp<GrColorSpaceXform> fColorSpaceXform;
 
     typedef GrFragmentProcessor INHERITED;
 };

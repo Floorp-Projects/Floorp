@@ -12,6 +12,7 @@
 #include "SkOTTableTypes.h"
 #include "SkOTTable_head.h"
 #include "SkOTTable_loca.h"
+#include "SkTypedEnum.h"
 
 #pragma pack(push, 1)
 

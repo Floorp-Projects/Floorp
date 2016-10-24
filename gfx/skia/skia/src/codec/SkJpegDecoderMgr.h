@@ -43,10 +43,9 @@ public:
     void  init();
 
     /*
-     * Returns true if it successfully sets outColor to the encoded color,
-     * and false otherwise.
+     * Recommend a color type based on the encoded format
      */
-    bool getEncodedColor(SkEncodedInfo::Color* outColor);
+    SkColorType getColorType();
 
     /*
      * Free memory used by the decode manager

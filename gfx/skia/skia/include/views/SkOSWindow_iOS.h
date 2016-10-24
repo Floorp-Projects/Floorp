@@ -22,8 +22,7 @@ public:
     };
 
     void    release();
-    bool    attach(SkBackEndTypes attachType, int msaaSampleCount, bool deepColor,
-                   AttachmentInfo*);
+    bool    attach(SkBackEndTypes attachType, int msaaSampleCount, AttachmentInfo*);
     void    present();
 
     bool makeFullscreen() { return true; }

@@ -25,7 +25,7 @@ public:
      *  Return the logical length of the data owned/shared by this buffer. It may be stored in
      *  multiple contiguous blocks, accessible via the iterator.
      */
-    size_t size() const { return fAvailable; }
+    size_t size() const { return fUsed; }
 
     class SK_API Iter {
     public:
@@ -53,25 +53,22 @@ public:
     private:
         const SkBufferBlock* fBlock;
         size_t               fRemaining;
-        const SkROBuffer*    fBuffer;
     };
 
 private:
-    SkROBuffer(const SkBufferHead* head, size_t available, const SkBufferBlock* fTail);
+    SkROBuffer(const SkBufferHead* head, size_t used);
     virtual ~SkROBuffer();
 
-    const SkBufferHead*     fHead;
-    const size_t            fAvailable;
-    const SkBufferBlock*    fTail;
+    const SkBufferHead* fHead;
+    const size_t        fUsed;
 
     friend class SkRWBuffer;
 };
 
 /**
  *  Accumulates bytes of memory that are "appended" to it, growing internal storage as needed.
- *  The growth is done such that at any time in the writer's thread, an RBuffer or StreamAsset
- *  can be snapped off (and safely passed to another thread). The RBuffer/StreamAsset snapshot
- *  can see the previously stored bytes, but will be unaware of any future writes.
+ *  The growth is done such that at any time, a RBuffer or StreamAsset can be snapped off, which
+ *  can see the previously stored bytes, but which will be unaware of any future writes.
  */
 class SK_API SkRWBuffer {
 public:
@@ -79,15 +76,8 @@ public:
     ~SkRWBuffer();
 
     size_t size() const { return fTotalUsed; }
-
-    /**
-     *  Append |length| bytes from |buffer|.
-     *
-     *  If the caller knows in advance how much more data they are going to append, they can
-     *  pass a |reserve| hint (representing the number of upcoming bytes *in addition* to the
-     *  current append), to minimize the number of internal allocations.
-     */
-    void append(const void* buffer, size_t length, size_t reserve = 0);
+    void append(const void* buffer, size_t length);
+    void* append(size_t length);
 
     SkROBuffer* newRBufferSnapshot() const;
     SkStreamAsset* newStreamSnapshot() const;

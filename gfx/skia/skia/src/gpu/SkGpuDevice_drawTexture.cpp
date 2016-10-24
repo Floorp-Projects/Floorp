@@ -10,7 +10,7 @@
 #include "GrBlurUtils.h"
 #include "GrCaps.h"
 #include "GrDrawContext.h"
-#include "GrStyle.h"
+#include "GrStrokeInfo.h"
 #include "GrTextureParamsAdjuster.h"
 #include "SkDraw.h"
 #include "SkGrPriv.h"
@@ -137,9 +137,6 @@ void SkGpuDevice::drawTextureProducer(GrTextureProducer* producer,
         }
     }
 
-    // Now that we have both the view and srcToDst matrices, log our scale factor.
-    LogDrawScaleFactor(SkMatrix::Concat(viewMatrix, srcToDstMatrix), paint.getFilterQuality());
-
     this->drawTextureProducerImpl(producer, clippedSrcRect, clippedDstRect, constraint, viewMatrix,
                                   srcToDstMatrix, clip, paint);
 }
@@ -186,7 +183,7 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
         SkMatrix combinedMatrix;
         combinedMatrix.setConcat(viewMatrix, srcToDstMatrix);
         if (can_ignore_bilerp_constraint(*producer, clippedSrcRect, combinedMatrix,
-                                         fDrawContext->isUnifiedMultisampled())) {
+                                         fRenderTarget->isUnifiedMultisampled())) {
             constraintMode = GrTextureAdjuster::kNo_FilterConstraint;
         }
     }
@@ -201,16 +198,15 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
         }
         textureMatrix = &tempMatrix;
     }
-    sk_sp<GrFragmentProcessor> fp(producer->createFragmentProcessor(
-        *textureMatrix, clippedSrcRect, constraintMode, coordsAllInsideSrcRect, filterMode,
-        fDrawContext->getColorSpace(), fDrawContext->sourceGammaTreatment()));
+    SkAutoTUnref<const GrFragmentProcessor> fp(producer->createFragmentProcessor(
+        *textureMatrix, clippedSrcRect, constraintMode, coordsAllInsideSrcRect, filterMode));
     if (!fp) {
         return;
     }
 
     GrPaint grPaint;
-    if (!SkPaintToGrPaintWithTexture(fContext, fDrawContext.get(), paint, viewMatrix, fp,
-                                     producer->isAlphaOnly(), &grPaint)) {
+    if (!SkPaintToGrPaintWithTexture(fContext, paint, viewMatrix, fp, producer->isAlphaOnly(),
+                                     this->surfaceProps().allowSRGBInputs(), &grPaint)) {
         return;
     }
 
@@ -225,27 +221,22 @@ void SkGpuDevice::drawTextureProducerImpl(GrTextureProducer* producer,
     }
 
     // First see if we can do the draw + mask filter direct to the dst.
-    if (viewMatrix.isScaleTranslate()) {
-        SkRect devClippedDstRect;
-        viewMatrix.mapRectScaleTranslate(&devClippedDstRect, clippedDstRect);
-
-        SkStrokeRec rec(SkStrokeRec::kFill_InitStyle);
-        if (mf->directFilterRRectMaskGPU(fContext,
-                                          fDrawContext.get(),
-                                          &grPaint,
-                                          clip,
-                                          viewMatrix,
-                                          rec,
-                                          SkRRect::MakeRect(clippedDstRect),
-                                          SkRRect::MakeRect(devClippedDstRect))) {
-            return;
-        }
+    SkStrokeRec rec(SkStrokeRec::kFill_InitStyle);
+    SkRRect rrect;
+    rrect.setRect(clippedDstRect);
+    if (mf->directFilterRRectMaskGPU(fContext->textureProvider(),
+                                      fDrawContext,
+                                      &grPaint,
+                                      clip,
+                                      viewMatrix,
+                                      rec,
+                                      rrect)) {
+        return;
     }
-
     SkPath rectPath;
     rectPath.addRect(clippedDstRect);
     rectPath.setIsVolatile(true);
-    GrBlurUtils::drawPathWithMaskFilter(this->context(), fDrawContext.get(), fClip,
-                                        rectPath, &grPaint, viewMatrix, mf, GrStyle::SimpleFill(),
-                                        true);
+    GrBlurUtils::drawPathWithMaskFilter(this->context(), fDrawContext, fClip,
+                                        rectPath, &grPaint, viewMatrix, mf, paint.getPathEffect(),
+                                        GrStrokeInfo::FillInfo(), true);
 }

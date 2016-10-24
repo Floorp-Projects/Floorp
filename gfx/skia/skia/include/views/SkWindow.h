@@ -32,14 +32,8 @@ public:
     virtual ~SkWindow();
 
     struct AttachmentInfo {
-        AttachmentInfo()
-            : fSampleCount(0)
-            , fStencilBits(0)
-            , fColorBits(0) {}
-
         int fSampleCount;
         int fStencilBits;
-        int fColorBits;
     };
 
     SkSurfaceProps getSurfaceProps() const { return fSurfaceProps; }
@@ -52,7 +46,7 @@ public:
 
     void    resize(int width, int height);
     void    resize(const SkImageInfo&);
-    void    setColorType(SkColorType, sk_sp<SkColorSpace>);
+    void    setColorType(SkColorType, SkColorProfileType);
 
     bool    isDirty() const { return !fDirtyRgn.isEmpty(); }
     bool    update(SkIRect* updateArea);
@@ -78,7 +72,7 @@ public:
     void    preConcat(const SkMatrix&);
     void    postConcat(const SkMatrix&);
 
-    virtual sk_sp<SkSurface> makeSurface();
+    virtual SkSurface* createSurface();
 
 protected:
     virtual bool onEvent(const SkEvent&);
@@ -98,8 +92,8 @@ protected:
     virtual bool onSetFocusView(SkView* focus);
 
 #if SK_SUPPORT_GPU
-    sk_sp<SkSurface> makeGpuBackedSurface(const AttachmentInfo& attachmentInfo,
-                                          const GrGLInterface* , GrContext* grContext);
+    GrRenderTarget* renderTarget(const AttachmentInfo& attachmentInfo,
+                                 const GrGLInterface* , GrContext* grContext);
 #endif
 
 private:
@@ -129,7 +123,7 @@ private:
 #elif defined(SK_BUILD_FOR_WIN)
     #include "SkOSWindow_Win.h"
 #elif defined(SK_BUILD_FOR_ANDROID)
-    #error Android does not support SkOSWindow and SampleApp. Please use Viewer instead.
+    #include "SkOSWindow_Android.h"
 #elif defined(SK_BUILD_FOR_UNIX)
     #include "SkOSWindow_Unix.h"
 #elif defined(SK_BUILD_FOR_IOS)

@@ -10,7 +10,7 @@
 #define GrGLProgram_DEFINED
 
 #include "GrGLContext.h"
-#include "GrProgramDesc.h"
+#include "GrGLProgramDesc.h"
 #include "GrGLTexture.h"
 #include "GrGLProgramDataManager.h"
 #include "glsl/GrGLSLProgramDataManager.h"
@@ -94,13 +94,8 @@ public:
      * the program is bound before calling, and to bind the outgoing textures to their respective
      * units upon return. (Each index in the array corresponds to its matching GL texture unit.)
      */
-    void setData(const GrPrimitiveProcessor&, const GrPipeline&);
-
-    /**
-     * This function retrieves the textures that need to be used by each GrGL*Processor, and
-     * ensures that any textures requiring mipmaps have their mipmaps correctly built.
-     */
-    void generateMipmaps(const GrPrimitiveProcessor&, const GrPipeline&);
+    void setData(const GrPrimitiveProcessor&, const GrPipeline&,
+                 SkTArray<const GrTextureAccess*>* textureBindings);
 
 protected:
     typedef GrGLSLProgramDataManager::UniformHandle UniformHandle;
@@ -112,23 +107,21 @@ protected:
                 const BuiltinUniformHandles&,
                 GrGLuint programID,
                 const UniformInfoArray&,
-                const SkTArray<GrGLSampler>&,
                 const VaryingInfoArray&, // used for NVPR only currently
                 GrGLSLPrimitiveProcessor* geometryProcessor,
                 GrGLSLXferProcessor* xferProcessor,
-                const GrGLSLFragProcs& fragmentProcessors);
+                const GrGLSLFragProcs& fragmentProcessors,
+                SkTArray<UniformHandle>* passSamplerUniforms);
 
-    // A helper to loop over effects, set the transforms (via subclass) and bind textures
-    void setFragmentData(const GrPrimitiveProcessor&, const GrPipeline&, int* nextSamplerIdx);
+    // A templated helper to loop over effects, set the transforms(via subclass) and bind textures
+    void setFragmentData(const GrPrimitiveProcessor&, const GrPipeline&,
+                         SkTArray<const GrTextureAccess*>* textureBindings);
+    void setTransformData(const GrPrimitiveProcessor&,
+                          const GrFragmentProcessor&,
+                          int index);
 
     // Helper for setData() that sets the view matrix and loads the render target height uniform
     void setRenderTargetState(const GrPrimitiveProcessor&, const GrPipeline&);
-
-    // Helper for setData() that binds textures and texel buffers to the appropriate texture units
-    void bindTextures(const GrProcessor&, bool allowSRGBInputs, int* nextSamplerIdx);
-
-    // Helper for generateMipmaps() that ensures mipmaps are up to date
-    void generateMipmaps(const GrProcessor&, bool allowSRGBInputs);
 
     // these reflect the current values of uniforms (GL uniform values travel with program)
     RenderTargetState fRenderTargetState;
@@ -143,6 +136,7 @@ protected:
     GrProgramDesc fDesc;
     GrGLGpu* fGpu;
     GrGLProgramDataManager fProgramDataManager;
+    SkTArray<UniformHandle> fSamplerUniforms;
 
     friend class GrGLProgramBuilder;
 

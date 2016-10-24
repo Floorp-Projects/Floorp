@@ -337,7 +337,9 @@ private:
                                            bool hasMixedSamples,
                                            const DstTexture*) const override;
 
-    bool onWillReadDstColor(const GrCaps&, const GrPipelineOptimizations&) const override;
+    bool onWillReadDstColor(const GrCaps& caps,
+                          const GrPipelineOptimizations& optimizations,
+                          bool hasMixedSamples) const override;
 
     bool onIsEqual(const GrXPFactory& xpfBase) const override {
         const CustomXPFactory& xpf = xpfBase.cast<CustomXPFactory>();
@@ -371,7 +373,8 @@ GrXferProcessor* CustomXPFactory::onCreateXferProcessor(const GrCaps& caps,
 }
 
 bool CustomXPFactory::onWillReadDstColor(const GrCaps& caps,
-                                         const GrPipelineOptimizations& optimizations) const {
+                                         const GrPipelineOptimizations& optimizations,
+                                         bool hasMixedSamples) const {
     return !can_use_hw_blend_equation(fHWBlendEquation, optimizations, caps);
 }
 
@@ -382,19 +385,19 @@ void CustomXPFactory::getInvariantBlendedColor(const GrProcOptInfo& colorPOI,
 }
 
 GR_DEFINE_XP_FACTORY_TEST(CustomXPFactory);
-sk_sp<GrXPFactory> CustomXPFactory::TestCreate(GrProcessorTestData* d) {
+const GrXPFactory* CustomXPFactory::TestCreate(GrProcessorTestData* d) {
     int mode = d->fRandom->nextRangeU(SkXfermode::kLastCoeffMode + 1,
                                       SkXfermode::kLastSeparableMode);
 
-    return sk_sp<GrXPFactory>(new CustomXPFactory(static_cast<SkXfermode::Mode>(mode)));
+    return new CustomXPFactory(static_cast<SkXfermode::Mode>(mode));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-sk_sp<GrXPFactory> GrCustomXfermode::MakeXPFactory(SkXfermode::Mode mode) {
+GrXPFactory* GrCustomXfermode::CreateXPFactory(SkXfermode::Mode mode) {
     if (!GrCustomXfermode::IsSupportedMode(mode)) {
         return nullptr;
     } else {
-        return sk_sp<GrXPFactory>(new CustomXPFactory(mode));
+        return new CustomXPFactory(mode);
     }
 }

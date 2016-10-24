@@ -49,27 +49,6 @@
     \
     template <typename T> \
     friend X operator & (X a, T b); \
-
-/**
- * Defines bitwise operators that make it possible to use an enum class as a
- * very basic bitfield.
- */
-#define GR_MAKE_BITFIELD_CLASS_OPS(X) \
-    inline X operator | (X a, X b) { \
-        return (X) ((int)a | (int)b); \
-    } \
-    inline X& operator |= (X& a, X b) { \
-        return (a = a | b); \
-    } \
-    inline bool operator & (X a, X b) { \
-        return SkToBool((int)a & (int)b); \
-    }
-
-#define GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(X) \
-    friend X operator | (X a, X b); \
-    friend X& operator |= (X& a, X b); \
-    friend bool operator & (X a, X b);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // compile time versions of min/max
@@ -129,6 +108,20 @@ static inline size_t GrSizeAlignDown(size_t x, uint32_t alignment) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ *  Return the next power of 2 >= n.
+ */
+static inline uint32_t GrNextPow2(uint32_t n) {
+    return n ? (1 << (32 - SkCLZ(n - 1))) : 1;
+}
+
+static inline int GrNextPow2(int n) {
+    SkASSERT(n >= 0); // this impl only works for non-neg.
+    return n ? (1 << (32 - SkCLZ(n - 1))) : 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
  * Possible 3D APIs that may be used by Ganesh.
  */
 enum GrBackend {
@@ -142,7 +135,6 @@ const int kBackendCount = kLast_GrBackend + 1;
 /**
  * Backend-specific 3D context handle
  *      GrGLInterface* for OpenGL. If NULL will use the default GL interface.
- *      GrVkBackendContext* for Vulkan.
  */
 typedef intptr_t GrBackendContext;
 
@@ -407,17 +399,6 @@ static inline bool GrPixelConfigIsAlphaOnly(GrPixelConfig config) {
     }
 }
 
-static inline bool GrPixelConfigIsFloatingPoint(GrPixelConfig config) {
-    switch (config) {
-        case kRGBA_float_GrPixelConfig:
-        case kAlpha_half_GrPixelConfig:
-        case kRGBA_half_GrPixelConfig:
-            return true;
-        default:
-            return false;
-    }
-}
-
 /**
  * Optional bitfield flags that can be set on GrSurfaceDesc (below).
  */
@@ -463,6 +444,58 @@ struct GrMipLevel {
 };
 
 /**
+ * An container of function pointers which consumers of Skia can fill in and
+ * pass to Skia. Skia will use these function pointers in place of its backend
+ * API texture creation function. Either all of the function pointers should be
+ * filled in, or they should all be nullptr.
+ */
+struct GrTextureStorageAllocator {
+    GrTextureStorageAllocator()
+    : fAllocateTextureStorage(nullptr)
+    , fDeallocateTextureStorage(nullptr) {
+    }
+
+    enum class Result {
+        kSucceededAndUploaded,
+        kSucceededWithoutUpload,
+        kFailed
+    };
+    typedef Result (*AllocateTextureStorageProc)(
+            void* ctx, GrBackendObject texture, unsigned width,
+            unsigned height, GrPixelConfig config, const void* srcData, GrSurfaceOrigin);
+    typedef void (*DeallocateTextureStorageProc)(void* ctx, GrBackendObject texture);
+
+    /*
+     * Generates and binds a texture to |textureStorageTarget()|. Allocates
+     * storage for the texture.
+     *
+     * In OpenGL, the MIN and MAX filters for the created texture must be
+     * GL_LINEAR. The WRAP_S and WRAP_T must be GL_CLAMP_TO_EDGE.
+     *
+     * If |srcData| is not nullptr, then the implementation of this function
+     * may attempt to upload the data into the texture. On successful upload,
+     * or if |srcData| is nullptr, returns kSucceededAndUploaded.
+     */
+    AllocateTextureStorageProc fAllocateTextureStorage;
+
+    /*
+     * Deallocate the storage for the given texture.
+     *
+     * Skia does not always destroy its outstanding textures. See
+     * GrContext::abandonContext() for more details. The consumer of Skia is
+     * responsible for making sure that all textures are destroyed, even if this
+     * callback is not invoked.
+     */
+    DeallocateTextureStorageProc fDeallocateTextureStorage;
+
+    /*
+     * The context to use when invoking fAllocateTextureStorage and
+     * fDeallocateTextureStorage.
+     */
+    void* fCtx;
+};
+
+/**
  * Describes a surface to be created.
  */
 struct GrSurfaceDesc {
@@ -495,6 +528,13 @@ struct GrSurfaceDesc {
      * max supported count.
      */
     int                    fSampleCnt;
+
+    /**
+     * A custom platform-specific allocator to use in place of the backend APIs
+     * usual texture creation method (e.g. TexImage2D in OpenGL).
+     */
+    GrTextureStorageAllocator fTextureStorageAllocator;
+
     bool                   fIsMipMapped; //!< Indicates if the texture has mipmaps
 };
 
@@ -570,7 +610,6 @@ struct GrBackendTextureDesc {
     /**
      * Handle to the 3D API object.
      * OpenGL: Texture ID.
-     * Vulkan: GrVkImageInfo*
      */
     GrBackendObject                 fTextureHandle;
 };
@@ -605,7 +644,6 @@ struct GrBackendRenderTargetDesc {
     /**
      * Handle to the 3D API object.
      * OpenGL: FBO ID
-     * Vulkan: GrVkImageInfo*
      */
     GrBackendObject                 fRenderTargetHandle;
 };

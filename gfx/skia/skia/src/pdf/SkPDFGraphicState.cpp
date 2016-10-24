@@ -6,64 +6,63 @@
  */
 
 #include "SkData.h"
-#include "SkPaint.h"
 #include "SkPDFCanon.h"
 #include "SkPDFFormXObject.h"
 #include "SkPDFGraphicState.h"
 #include "SkPDFUtils.h"
 
-static const char* as_blend_mode(SkBlendMode mode) {
+static const char* as_blend_mode(SkXfermode::Mode mode) {
     switch (mode) {
-        case SkBlendMode::kSrcOver:
+        case SkXfermode::kSrcOver_Mode:
             return "Normal";
-        case SkBlendMode::kMultiply:
+        case SkXfermode::kMultiply_Mode:
             return "Multiply";
-        case SkBlendMode::kScreen:
+        case SkXfermode::kScreen_Mode:
             return "Screen";
-        case SkBlendMode::kOverlay:
+        case SkXfermode::kOverlay_Mode:
             return "Overlay";
-        case SkBlendMode::kDarken:
+        case SkXfermode::kDarken_Mode:
             return "Darken";
-        case SkBlendMode::kLighten:
+        case SkXfermode::kLighten_Mode:
             return "Lighten";
-        case SkBlendMode::kColorDodge:
+        case SkXfermode::kColorDodge_Mode:
             return "ColorDodge";
-        case SkBlendMode::kColorBurn:
+        case SkXfermode::kColorBurn_Mode:
             return "ColorBurn";
-        case SkBlendMode::kHardLight:
+        case SkXfermode::kHardLight_Mode:
             return "HardLight";
-        case SkBlendMode::kSoftLight:
+        case SkXfermode::kSoftLight_Mode:
             return "SoftLight";
-        case SkBlendMode::kDifference:
+        case SkXfermode::kDifference_Mode:
             return "Difference";
-        case SkBlendMode::kExclusion:
+        case SkXfermode::kExclusion_Mode:
             return "Exclusion";
-        case SkBlendMode::kHue:
+        case SkXfermode::kHue_Mode:
             return "Hue";
-        case SkBlendMode::kSaturation:
+        case SkXfermode::kSaturation_Mode:
             return "Saturation";
-        case SkBlendMode::kColor:
+        case SkXfermode::kColor_Mode:
             return "Color";
-        case SkBlendMode::kLuminosity:
+        case SkXfermode::kLuminosity_Mode:
             return "Luminosity";
 
         // These are handled in SkPDFDevice::setUpContentEntry.
-        case SkBlendMode::kClear:
-        case SkBlendMode::kSrc:
-        case SkBlendMode::kDst:
-        case SkBlendMode::kDstOver:
-        case SkBlendMode::kSrcIn:
-        case SkBlendMode::kDstIn:
-        case SkBlendMode::kSrcOut:
-        case SkBlendMode::kDstOut:
-        case SkBlendMode::kSrcATop:
-        case SkBlendMode::kDstATop:
-        case SkBlendMode::kModulate:
+        case SkXfermode::kClear_Mode:
+        case SkXfermode::kSrc_Mode:
+        case SkXfermode::kDst_Mode:
+        case SkXfermode::kDstOver_Mode:
+        case SkXfermode::kSrcIn_Mode:
+        case SkXfermode::kDstIn_Mode:
+        case SkXfermode::kSrcOut_Mode:
+        case SkXfermode::kDstOut_Mode:
+        case SkXfermode::kSrcATop_Mode:
+        case SkXfermode::kDstATop_Mode:
+        case SkXfermode::kModulate_Mode:
             return "Normal";
 
         // TODO(vandebo): Figure out if we can support more of these modes.
-        case SkBlendMode::kXor:
-        case SkBlendMode::kPlus:
+        case SkXfermode::kXor_Mode:
+        case SkXfermode::kPlus_Mode:
             return nullptr;
     }
     return nullptr;
@@ -71,28 +70,32 @@ static const char* as_blend_mode(SkBlendMode mode) {
 
 // If a SkXfermode is unsupported in PDF, this function returns
 // SrcOver, otherwise, it returns that Xfermode as a Mode.
-static SkBlendMode mode_for_pdf(SkBlendMode mode) {
+static SkXfermode::Mode mode_for_pdf(const SkXfermode* xfermode) {
+    SkXfermode::Mode mode = SkXfermode::kSrcOver_Mode;
+    if (xfermode) {
+        xfermode->asMode(&mode);
+    }
     switch (mode) {
-        case SkBlendMode::kSrcOver:
-        case SkBlendMode::kMultiply:
-        case SkBlendMode::kScreen:
-        case SkBlendMode::kOverlay:
-        case SkBlendMode::kDarken:
-        case SkBlendMode::kLighten:
-        case SkBlendMode::kColorDodge:
-        case SkBlendMode::kColorBurn:
-        case SkBlendMode::kHardLight:
-        case SkBlendMode::kSoftLight:
-        case SkBlendMode::kDifference:
-        case SkBlendMode::kExclusion:
-        case SkBlendMode::kHue:
-        case SkBlendMode::kSaturation:
-        case SkBlendMode::kColor:
-        case SkBlendMode::kLuminosity:
+        case SkXfermode::kSrcOver_Mode:
+        case SkXfermode::kMultiply_Mode:
+        case SkXfermode::kScreen_Mode:
+        case SkXfermode::kOverlay_Mode:
+        case SkXfermode::kDarken_Mode:
+        case SkXfermode::kLighten_Mode:
+        case SkXfermode::kColorDodge_Mode:
+        case SkXfermode::kColorBurn_Mode:
+        case SkXfermode::kHardLight_Mode:
+        case SkXfermode::kSoftLight_Mode:
+        case SkXfermode::kDifference_Mode:
+        case SkXfermode::kExclusion_Mode:
+        case SkXfermode::kHue_Mode:
+        case SkXfermode::kSaturation_Mode:
+        case SkXfermode::kColor_Mode:
+        case SkXfermode::kLuminosity_Mode:
             // Mode is suppported and handled by pdf graphics state.
             return mode;
         default:
-            return SkBlendMode::kSrcOver;  // Default mode.
+            return SkXfermode::kSrcOver_Mode;  // Default mode.
     }
 }
 
@@ -102,7 +105,7 @@ SkPDFGraphicState::SkPDFGraphicState(const SkPaint& p)
     , fAlpha(p.getAlpha())
     , fStrokeCap(SkToU8(p.getStrokeCap()))
     , fStrokeJoin(SkToU8(p.getStrokeJoin()))
-    , fMode(SkToU8((unsigned)mode_for_pdf(p.getBlendMode()))) {}
+    , fMode(SkToU8(mode_for_pdf(p.getXfermode()))) {}
 
 // static
 SkPDFGraphicState* SkPDFGraphicState::GetGraphicStateForPaint(
@@ -131,16 +134,18 @@ sk_sp<SkPDFStream> SkPDFGraphicState::MakeInvertFunction() {
 
     static const char psInvert[] = "{1 exch sub}";
     // Do not copy the trailing '\0' into the SkData.
-    auto invertFunction = sk_make_sp<SkPDFStream>(
-            SkData::MakeWithoutCopy(psInvert, strlen(psInvert)));
-    invertFunction->dict()->insertInt("FunctionType", 4);
-    invertFunction->dict()->insertObject("Domain", domainAndRange);
-    invertFunction->dict()->insertObject("Range", std::move(domainAndRange));
+    sk_sp<SkData> psInvertStream(
+            SkData::NewWithoutCopy(psInvert, strlen(psInvert)));
+
+    auto invertFunction = sk_make_sp<SkPDFStream>(psInvertStream.get());
+    invertFunction->insertInt("FunctionType", 4);
+    invertFunction->insertObject("Domain", domainAndRange);
+    invertFunction->insertObject("Range", std::move(domainAndRange));
     return invertFunction;
 }
 
 sk_sp<SkPDFDict> SkPDFGraphicState::GetSMaskGraphicState(
-        sk_sp<SkPDFObject> sMask,
+        SkPDFFormXObject* sMask,
         bool invert,
         SkPDFSMaskMode sMaskMode,
         SkPDFCanon* canon) {
@@ -152,7 +157,7 @@ sk_sp<SkPDFDict> SkPDFGraphicState::GetSMaskGraphicState(
     } else if (sMaskMode == kLuminosity_SMaskMode) {
         sMaskDict->insertName("S", "Luminosity");
     }
-    sMaskDict->insertObjRef("G", std::move(sMask));
+    sMaskDict->insertObjRef("G", sk_ref_sp(sMask));
     if (invert) {
         // Instead of calling SkPDFGraphicState::MakeInvertFunction,
         // let the canon deduplicate this object.
@@ -172,7 +177,8 @@ sk_sp<SkPDFDict> SkPDFGraphicState::MakeNoSmaskGraphicState() {
 
 void SkPDFGraphicState::emitObject(
         SkWStream* stream,
-        const SkPDFObjNumMap& objNumMap) const {
+        const SkPDFObjNumMap& objNumMap,
+        const SkPDFSubstituteMap& substitutes) const {
     auto dict = sk_make_sp<SkPDFDict>("ExtGState");
     dict->insertName("Type", "ExtGState");
 
@@ -182,6 +188,7 @@ void SkPDFGraphicState::emitObject(
 
     SkPaint::Cap strokeCap = (SkPaint::Cap)fStrokeCap;
     SkPaint::Join strokeJoin = (SkPaint::Join)fStrokeJoin;
+    SkXfermode::Mode xferMode = (SkXfermode::Mode)fMode;
 
     static_assert(SkPaint::kButt_Cap == 0, "paint_cap_mismatch");
     static_assert(SkPaint::kRound_Cap == 1, "paint_cap_mismatch");
@@ -200,6 +207,6 @@ void SkPDFGraphicState::emitObject(
     dict->insertScalar("LW", fStrokeWidth);
     dict->insertScalar("ML", fStrokeMiter);
     dict->insertBool("SA", true);  // SA = Auto stroke adjustment.
-    dict->insertName("BM", as_blend_mode((SkBlendMode)fMode));
-    dict->emitObject(stream, objNumMap);
+    dict->insertName("BM", as_blend_mode(xferMode));
+    dict->emitObject(stream, objNumMap, substitutes);
 }

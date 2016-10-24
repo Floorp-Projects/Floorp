@@ -8,7 +8,6 @@
 #include "GrResourceProvider.h"
 
 #include "GrBuffer.h"
-#include "GrCaps.h"
 #include "GrGpu.h"
 #include "GrPathRendering.h"
 #include "GrRenderTarget.h"
@@ -16,7 +15,6 @@
 #include "GrResourceCache.h"
 #include "GrResourceKey.h"
 #include "GrStencilAttachment.h"
-#include "SkMathPriv.h"
 
 GR_DECLARE_STATIC_UNIQUE_KEY(gQuadIndexBufferKey);
 
@@ -72,67 +70,49 @@ const GrBuffer* GrResourceProvider::createQuadIndexBuffer() {
     return this->createInstancedIndexBuffer(kPattern, 6, kMaxQuads, 4, fQuadIndexBufferKey);
 }
 
-GrPath* GrResourceProvider::createPath(const SkPath& path, const GrStyle& style) {
+GrPath* GrResourceProvider::createPath(const SkPath& path, const GrStrokeInfo& stroke) {
     SkASSERT(this->gpu()->pathRendering());
-    return this->gpu()->pathRendering()->createPath(path, style);
+    return this->gpu()->pathRendering()->createPath(path, stroke);
 }
 
 GrPathRange* GrResourceProvider::createPathRange(GrPathRange::PathGenerator* gen,
-                                                 const GrStyle& style) {
+                                                 const GrStrokeInfo& stroke) {
     SkASSERT(this->gpu()->pathRendering());
-    return this->gpu()->pathRendering()->createPathRange(gen, style);
+    return this->gpu()->pathRendering()->createPathRange(gen, stroke);
 }
 
-GrPathRange* GrResourceProvider::createGlyphs(const SkTypeface* tf,
-                                              const SkScalerContextEffects& effects,
-                                              const SkDescriptor* desc,
-                                              const GrStyle& style) {
+GrPathRange* GrResourceProvider::createGlyphs(const SkTypeface* tf, const SkDescriptor* desc,
+                                              const GrStrokeInfo& stroke) {
 
     SkASSERT(this->gpu()->pathRendering());
-    return this->gpu()->pathRendering()->createGlyphs(tf, effects, desc, style);
+    return this->gpu()->pathRendering()->createGlyphs(tf, desc, stroke);
 }
 
 GrBuffer* GrResourceProvider::createBuffer(size_t size, GrBufferType intendedType,
-                                           GrAccessPattern accessPattern, uint32_t flags,
-                                           const void* data) {
+                                           GrAccessPattern accessPattern, uint32_t flags) {
     if (this->isAbandoned()) {
         return nullptr;
     }
-    if (kDynamic_GrAccessPattern != accessPattern) {
-        return this->gpu()->createBuffer(size, intendedType, accessPattern, data);
-    }
-    if (!(flags & kRequireGpuMemory_Flag) &&
-        this->gpu()->caps()->preferClientSideDynamicBuffers() &&
-        GrBufferTypeIsVertexOrIndex(intendedType) &&
-        kDynamic_GrAccessPattern == accessPattern) {
-        return GrBuffer::CreateCPUBacked(this->gpu(), size, intendedType, data);
-    }
 
-    // bin by pow2 with a reasonable min
-    static const uint32_t MIN_SIZE = 1 << 12;
-    size_t allocSize = SkTMax(MIN_SIZE, GrNextPow2(SkToUInt(size)));
+    if (kDynamic_GrAccessPattern == accessPattern) {
+        // bin by pow2 with a reasonable min
+        static const uint32_t MIN_SIZE = 1 << 12;
+        size = SkTMax(MIN_SIZE, GrNextPow2(SkToUInt(size)));
 
-    GrScratchKey key;
-    GrBuffer::ComputeScratchKeyForDynamicVBO(allocSize, intendedType, &key);
-    uint32_t scratchFlags = 0;
-    if (flags & kNoPendingIO_Flag) {
-        scratchFlags = GrResourceCache::kRequireNoPendingIO_ScratchFlag;
-    } else {
-        scratchFlags = GrResourceCache::kPreferNoPendingIO_ScratchFlag;
-    }
-    GrBuffer* buffer = static_cast<GrBuffer*>(
-        this->cache()->findAndRefScratchResource(key, allocSize, scratchFlags));
-    if (!buffer) {
-        buffer = this->gpu()->createBuffer(allocSize, intendedType, kDynamic_GrAccessPattern);
-        if (!buffer) {
-            return nullptr;
+        GrScratchKey key;
+        GrBuffer::ComputeScratchKeyForDynamicBuffer(size, intendedType, &key);
+        uint32_t scratchFlags = 0;
+        if (flags & kNoPendingIO_Flag) {
+            scratchFlags = GrResourceCache::kRequireNoPendingIO_ScratchFlag;
+        } else {
+            scratchFlags = GrResourceCache::kPreferNoPendingIO_ScratchFlag;
+        }
+        GrGpuResource* resource = this->cache()->findAndRefScratchResource(key, size, scratchFlags);
+        if (resource) {
+            return static_cast<GrBuffer*>(resource);
         }
     }
-    if (data) {
-        buffer->updateData(data, size);
-    }
-    SkASSERT(!buffer->isCPUBacked()); // We should only cache real VBOs.
-    return buffer;
+    return this->gpu()->createBuffer(size, intendedType, accessPattern);
 }
 
 GrBatchAtlas* GrResourceProvider::createAtlas(GrPixelConfig config,

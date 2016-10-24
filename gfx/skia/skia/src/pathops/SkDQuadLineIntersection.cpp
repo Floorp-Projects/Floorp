@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 #include "SkIntersections.h"
-#include "SkPathOpsCurve.h"
 #include "SkPathOpsLine.h"
 #include "SkPathOpsQuad.h"
 
@@ -99,11 +98,11 @@ public:
         , fLine(&l)
         , fIntersections(i)
         , fAllowNear(true) {
-        i->setMax(5);  // allow short partial coincidence plus discrete intersections
+        i->setMax(3);  // allow short partial coincidence plus discrete intersection
     }
 
     LineQuadraticIntersections(const SkDQuad& q)
-        : fQuad(q)
+        : fQuad(q) 
         SkDEBUGPARAMS(fLine(nullptr))
         SkDEBUGPARAMS(fIntersections(nullptr))
         SkDEBUGPARAMS(fAllowNear(false)) {
@@ -298,22 +297,7 @@ protected:
             }
             fIntersections->insert(quadT, lineT, fQuad[qIndex]);
         }
-        this->addLineNearEndPoints();
-    }
-
-    void addLineNearEndPoints() {
-        for (int lIndex = 0; lIndex < 2; ++lIndex) {
-            double lineT = (double) lIndex;
-            if (fIntersections->hasOppT(lineT)) {
-                continue;
-            }
-            double quadT = ((SkDCurve*) &fQuad)->nearPoint(SkPath::kQuad_Verb,
-                    (*fLine)[lIndex], (*fLine)[!lIndex]);
-            if (quadT < 0) {
-                continue;
-            }
-            fIntersections->insert(quadT, lineT, (*fLine)[lIndex]);
-        }
+        // FIXME: see if line end is nearly on quad
     }
 
     void addExactHorizontalEndPoints(double left, double right, double y) {
@@ -339,7 +323,7 @@ protected:
             }
             fIntersections->insert(quadT, lineT, fQuad[qIndex]);
         }
-        this->addLineNearEndPoints();
+        // FIXME: see if line end is nearly on quad
     }
 
     void addExactVerticalEndPoints(double top, double bottom, double x) {
@@ -365,7 +349,7 @@ protected:
             }
             fIntersections->insert(quadT, lineT, fQuad[qIndex]);
         }
-        this->addLineNearEndPoints();
+        // FIXME: see if line end is nearly on quad
     }
 
     double findLineT(double t) {

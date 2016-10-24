@@ -14,21 +14,13 @@
 #include "GrNonAtomicRef.h"
 #include "GrPendingProgramElement.h"
 #include "GrPrimitiveProcessor.h"
-#include "GrProcOptInfo.h"
 #include "GrProgramDesc.h"
-#include "GrScissorState.h"
-#include "GrStencilSettings.h"
-#include "GrWindowRectsState.h"
+#include "GrStencil.h"
+#include "GrTypesPriv.h"
 #include "SkMatrix.h"
 #include "SkRefCnt.h"
 
-#include "effects/GrCoverageSetOpXP.h"
-#include "effects/GrDisableColorXP.h"
-#include "effects/GrPorterDuffXferProcessor.h"
-#include "effects/GrSimpleTextureEffect.h"
-
 class GrBatch;
-class GrDrawContext;
 class GrDeviceCoordTexture;
 class GrPipelineBuilder;
 
@@ -56,12 +48,9 @@ public:
 
     struct CreateArgs {
         const GrPipelineBuilder*    fPipelineBuilder;
-        GrDrawContext*              fDrawContext;
         const GrCaps*               fCaps;
         GrPipelineOptimizations     fOpts;
         const GrScissorState*       fScissor;
-        const GrWindowRectsState*   fWindowRectsState;
-        bool                        fHasStencilClip;
         GrXferProcessor::DstTexture fDstTexture;
     };
 
@@ -79,7 +68,7 @@ public:
      * to combine draws. Therefore we take a param that indicates whether coord transforms should be
      * compared."
      */
-    static bool AreEqual(const GrPipeline& a, const GrPipeline& b);
+    static bool AreEqual(const GrPipeline& a, const GrPipeline& b, bool ignoreCoordTransforms);
 
     /**
      * Allows a GrBatch subclass to determine whether two GrBatches can combine. This is a stricter
@@ -88,8 +77,9 @@ public:
      */
     static bool CanCombine(const GrPipeline& a, const SkRect& aBounds,
                            const GrPipeline& b, const SkRect& bBounds,
-                           const GrCaps& caps)  {
-        if (!AreEqual(a, b)) {
+                           const GrCaps& caps,
+                           bool ignoreCoordTransforms = false)  {
+        if (!AreEqual(a, b, ignoreCoordTransforms)) {
             return false;
         }
         if (a.xferBarrierType(caps)) {
@@ -153,8 +143,6 @@ public:
 
     const GrScissorState& getScissorState() const { return fScissorState; }
 
-    const GrWindowRectsState& getWindowRectsState() const { return fWindowRectsState; }
-
     bool isHWAntialiasState() const { return SkToBool(fFlags & kHWAA_Flag); }
     bool snapVerticesToPixelCenters() const { return SkToBool(fFlags & kSnapVertices_Flag); }
     bool getDisableOutputConversionToSRGB() const {
@@ -162,12 +150,6 @@ public:
     }
     bool getAllowSRGBInputs() const {
         return SkToBool(fFlags & kAllowSRGBInputs_Flag);
-    }
-    bool usesDistanceVectorField() const {
-        return SkToBool(fFlags & kUsesDistanceVectorField_Flag);
-    }
-    bool hasStencilClip() const {
-        return SkToBool(fFlags & kHasStencilClip_Flag);
     }
 
     GrXferBarrierType xferBarrierType(const GrCaps& caps) const {
@@ -179,7 +161,7 @@ public:
      * or both faces.
      * @return the current draw face(s).
      */
-    GrDrawFace getDrawFace() const { return fDrawFace; }
+    GrPipelineBuilder::DrawFace getDrawFace() const { return fDrawFace; }
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -212,8 +194,6 @@ private:
         kSnapVertices_Flag                  = 0x2,
         kDisableOutputConversionToSRGB_Flag = 0x4,
         kAllowSRGBInputs_Flag               = 0x8,
-        kUsesDistanceVectorField_Flag       = 0x10,
-        kHasStencilClip_Flag                = 0x20,
     };
 
     typedef GrPendingIOResource<GrRenderTarget, kWrite_GrIOType> RenderTarget;
@@ -222,9 +202,8 @@ private:
     typedef GrPendingProgramElement<const GrXferProcessor> ProgramXferProcessor;
     RenderTarget                        fRenderTarget;
     GrScissorState                      fScissorState;
-    GrWindowRectsState                  fWindowRectsState;
     GrStencilSettings                   fStencilSettings;
-    GrDrawFace                          fDrawFace;
+    GrPipelineBuilder::DrawFace         fDrawFace;
     uint32_t                            fFlags;
     ProgramXferProcessor                fXferProcessor;
     FragmentProcessorArray              fFragmentProcessors;

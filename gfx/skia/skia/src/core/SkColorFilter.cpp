@@ -31,34 +31,19 @@ bool SkColorFilter::asComponentTable(SkBitmap*) const {
     return false;
 }
 
-#if SK_SUPPORT_GPU
-sk_sp<GrFragmentProcessor> SkColorFilter::asFragmentProcessor(GrContext*) const {
-    return nullptr;
-}
-#endif
-
-bool SkColorFilter::appendStages(SkRasterPipeline* pipeline) const {
-    return this->onAppendStages(pipeline);
-}
-
-bool SkColorFilter::onAppendStages(SkRasterPipeline*) const {
-    return false;
-}
-
-void SkColorFilter::filterSpan4f(const SkPM4f src[], int count, SkPM4f result[]) const {
+void SkColorFilter::filterSpan4f(const SkPM4f[], int count, SkPM4f span[]) const {
     const int N = 128;
     SkPMColor tmp[N];
     while (count > 0) {
         int n = SkTMin(count, N);
         for (int i = 0; i < n; ++i) {
-            tmp[i] = src[i].toPMColor();
+            SkNx_cast<uint8_t>(Sk4f::Load(span[i].fVec) * Sk4f(255) + Sk4f(0.5f)).store(&tmp[i]);
         }
         this->filterSpan(tmp, n, tmp);
         for (int i = 0; i < n; ++i) {
-            result[i] = SkPM4f::FromPMColor(tmp[i]);
+            span[i] = SkPM4f::FromPMColor(tmp[i]);
         }
-        src += n;
-        result += n;
+        span += n;
         count -= n;
     }
 }
@@ -114,13 +99,13 @@ public:
 #endif
 
 #if SK_SUPPORT_GPU
-    sk_sp<GrFragmentProcessor> asFragmentProcessor(GrContext* context) const override {
-        sk_sp<GrFragmentProcessor> innerFP(fInner->asFragmentProcessor(context));
-        sk_sp<GrFragmentProcessor> outerFP(fOuter->asFragmentProcessor(context));
+    const GrFragmentProcessor* asFragmentProcessor(GrContext* context) const override {
+        SkAutoTUnref<const GrFragmentProcessor> innerFP(fInner->asFragmentProcessor(context));
+        SkAutoTUnref<const GrFragmentProcessor> outerFP(fOuter->asFragmentProcessor(context));
         if (!innerFP || !outerFP) {
             return nullptr;
         }
-        sk_sp<GrFragmentProcessor> series[] = { std::move(innerFP), std::move(outerFP) };
+        const GrFragmentProcessor* series[] = { innerFP, outerFP };
         return GrFragmentProcessor::RunInSeries(series, 2);
     }
 #endif

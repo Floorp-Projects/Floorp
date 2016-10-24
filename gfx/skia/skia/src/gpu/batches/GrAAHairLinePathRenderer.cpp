@@ -145,10 +145,7 @@ static int split_conic(const SkPoint src[3], SkConic dst[2], const SkScalar weig
         if (dst) {
             SkConic conic;
             conic.set(src, weight);
-            if (!conic.chopAt(t, dst)) {
-                dst[0].set(src, weight);
-                return 1;
-            }
+            conic.chopAt(t, dst);
         }
         return 2;
     }
@@ -621,20 +618,14 @@ bool GrAAHairLinePathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const 
         return false;
     }
 
-    if (!IsStrokeHairlineOrEquivalent(args.fShape->style(), *args.fViewMatrix, nullptr)) {
+    if (!IsStrokeHairlineOrEquivalent(*args.fStroke, *args.fViewMatrix, nullptr)) {
         return false;
     }
 
-    // We don't currently handle dashing in this class though perhaps we should.
-    if (args.fShape->style().pathEffect()) {
-        return false;
-    }
-
-    if (SkPath::kLine_SegmentMask == args.fShape->segmentMask() ||
+    if (SkPath::kLine_SegmentMask == args.fPath->getSegmentMasks() ||
         args.fShaderCaps->shaderDerivativeSupport()) {
         return true;
     }
-
     return false;
 }
 
@@ -679,16 +670,15 @@ class AAHairlineBatch : public GrVertexBatch {
 public:
     DEFINE_BATCH_CLASS_ID
 
-    AAHairlineBatch(GrColor color,
-                    uint8_t coverage,
-                    const SkMatrix& viewMatrix,
-                    const SkPath& path,
-                    SkIRect devClipBounds) : INHERITED(ClassID()) {
-        fGeoData.emplace_back(Geometry{color, coverage, viewMatrix, path, devClipBounds});
+    struct Geometry {
+        GrColor fColor;
+        uint8_t fCoverage;
+        SkMatrix fViewMatrix;
+        SkPath fPath;
+        SkIRect fDevClipBounds;
+    };
 
-        this->setTransformedBounds(path.getBounds(), viewMatrix, HasAABloat::kYes,
-                                   IsZeroArea::kYes);
-    }
+    static GrDrawBatch* Create(const Geometry& geometry) { return new AAHairlineBatch(geometry); }
 
     const char* name() const override { return "AAHairlineBatch"; }
 
@@ -716,11 +706,25 @@ private:
         fBatch.fCoverage = fGeoData[0].fCoverage;
     }
 
+    SkSTArray<1, Geometry, true>* geoData() { return &fGeoData; }
+
     void onPrepareDraws(Target*) const override;
 
     typedef SkTArray<SkPoint, true> PtArray;
     typedef SkTArray<int, true> IntArray;
     typedef SkTArray<float, true> FloatArray;
+
+    AAHairlineBatch(const Geometry& geometry) : INHERITED(ClassID()) {
+        fGeoData.push_back(geometry);
+
+        // compute bounds
+        fBounds = geometry.fPath.getBounds();
+        geometry.fViewMatrix.mapRect(&fBounds);
+
+        // This is b.c. hairlines are notionally infinitely thin so without expansion
+        // two overlapping lines could be reordered even though they hit the same pixels.
+        fBounds.outset(0.5f, 0.5f);
+    }
 
     bool onCombineIfPossible(GrBatch* t, const GrCaps& caps) override {
         AAHairlineBatch* that = t->cast<AAHairlineBatch>();
@@ -756,8 +760,8 @@ private:
             return false;
         }
 
-        fGeoData.push_back_n(that->fGeoData.count(), that->fGeoData.begin());
-        this->joinBounds(*that);
+        fGeoData.push_back_n(that->geoData()->count(), that->geoData()->begin());
+        this->joinBounds(that->bounds());
         return true;
     }
 
@@ -766,15 +770,6 @@ private:
     bool usesLocalCoords() const { return fBatch.fUsesLocalCoords; }
     const SkMatrix& viewMatrix() const { return fGeoData[0].fViewMatrix; }
     bool coverageIgnored() const { return fBatch.fCoverageIgnored; }
-
-
-    struct Geometry {
-        GrColor fColor;
-        uint8_t fCoverage;
-        SkMatrix fViewMatrix;
-        SkPath fPath;
-        SkIRect fDevClipBounds;
-    };
 
     struct BatchTracker {
         GrColor fColor;
@@ -831,7 +826,7 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
 
     // do lines first
     if (lineCount) {
-        sk_sp<GrGeometryProcessor> lineGP;
+        SkAutoTUnref<const GrGeometryProcessor> lineGP;
         {
             using namespace GrDefaultGeoProcFactory;
 
@@ -840,8 +835,8 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
             LocalCoords localCoords(this->usesLocalCoords() ? LocalCoords::kUsePosition_Type :
                                     LocalCoords::kUnused_Type);
             localCoords.fMatrix = geometryProcessorLocalM;
-            lineGP = GrDefaultGeoProcFactory::Make(color, coverage, localCoords,
-                                                   *geometryProcessorViewM);
+            lineGP.reset(GrDefaultGeoProcFactory::Create(color, coverage, localCoords,
+                                                         *geometryProcessorViewM));
         }
 
         SkAutoTUnref<const GrBuffer> linesIndexBuffer(
@@ -870,27 +865,27 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
         mesh.initInstanced(kTriangles_GrPrimitiveType, vertexBuffer, linesIndexBuffer,
                            firstVertex, kLineSegNumVertices, kIdxsPerLineSeg, lineCount,
                            kLineSegsNumInIdxBuffer);
-        target->draw(lineGP.get(), mesh);
+        target->draw(lineGP, mesh);
     }
 
     if (quadCount || conicCount) {
-        sk_sp<GrGeometryProcessor> quadGP(
-            GrQuadEffect::Make(this->color(),
-                               *geometryProcessorViewM,
-                               kHairlineAA_GrProcessorEdgeType,
-                               target->caps(),
-                               *geometryProcessorLocalM,
-                               this->usesLocalCoords(),
-                               this->coverage()));
+        SkAutoTUnref<const GrGeometryProcessor> quadGP(
+            GrQuadEffect::Create(this->color(),
+                                 *geometryProcessorViewM,
+                                 kHairlineAA_GrProcessorEdgeType,
+                                 target->caps(),
+                                 *geometryProcessorLocalM,
+                                 this->usesLocalCoords(),
+                                 this->coverage()));
 
-        sk_sp<GrGeometryProcessor> conicGP(
-            GrConicEffect::Make(this->color(),
-                                *geometryProcessorViewM,
-                                kHairlineAA_GrProcessorEdgeType,
-                                target->caps(),
-                                *geometryProcessorLocalM,
-                                this->usesLocalCoords(),
-                                this->coverage()));
+        SkAutoTUnref<const GrGeometryProcessor> conicGP(
+            GrConicEffect::Create(this->color(),
+                                  *geometryProcessorViewM,
+                                  kHairlineAA_GrProcessorEdgeType,
+                                  target->caps(),
+                                  *geometryProcessorLocalM,
+                                  this->usesLocalCoords(),
+                                  this->coverage()));
 
         const GrBuffer* vertexBuffer;
         int firstVertex;
@@ -927,7 +922,7 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
             mesh.initInstanced(kTriangles_GrPrimitiveType, vertexBuffer, quadsIndexBuffer,
                                firstVertex, kQuadNumVertices, kIdxsPerQuad, quadCount,
                                kQuadsNumInIdxBuffer);
-            target->draw(quadGP.get(), mesh);
+            target->draw(quadGP, mesh);
             firstVertex += quadCount * kQuadNumVertices;
         }
 
@@ -936,7 +931,7 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
             mesh.initInstanced(kTriangles_GrPrimitiveType, vertexBuffer, quadsIndexBuffer,
                                firstVertex, kQuadNumVertices, kIdxsPerQuad, conicCount,
                                kQuadsNumInIdxBuffer);
-            target->draw(conicGP.get(), mesh);
+            target->draw(conicGP, mesh);
         }
     }
 }
@@ -944,35 +939,33 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
 static GrDrawBatch* create_hairline_batch(GrColor color,
                                           const SkMatrix& viewMatrix,
                                           const SkPath& path,
-                                          const GrStyle& style,
+                                          const GrStrokeInfo& stroke,
                                           const SkIRect& devClipBounds) {
     SkScalar hairlineCoverage;
     uint8_t newCoverage = 0xff;
-    if (GrPathRenderer::IsStrokeHairlineOrEquivalent(style, viewMatrix, &hairlineCoverage)) {
+    if (GrPathRenderer::IsStrokeHairlineOrEquivalent(stroke, viewMatrix, &hairlineCoverage)) {
         newCoverage = SkScalarRoundToInt(hairlineCoverage * 0xff);
     }
 
-    return new AAHairlineBatch(color, newCoverage, viewMatrix, path, devClipBounds);
+    AAHairlineBatch::Geometry geometry;
+    geometry.fColor = color;
+    geometry.fCoverage = newCoverage;
+    geometry.fViewMatrix = viewMatrix;
+    geometry.fPath = path;
+    geometry.fDevClipBounds = devClipBounds;
+
+    return AAHairlineBatch::Create(geometry);
 }
 
 bool GrAAHairLinePathRenderer::onDrawPath(const DrawPathArgs& args) {
-    GR_AUDIT_TRAIL_AUTO_FRAME(args.fDrawContext->auditTrail(),
-                              "GrAAHairlinePathRenderer::onDrawPath");
-    SkASSERT(!args.fDrawContext->isUnifiedMultisampled());
-
+    GR_AUDIT_TRAIL_AUTO_FRAME(args.fTarget->getAuditTrail(),"GrAAHairlinePathRenderer::onDrawPath");
     SkIRect devClipBounds;
-    args.fClip->getConservativeBounds(args.fDrawContext->width(), args.fDrawContext->height(),
-                                      &devClipBounds);
+    GrRenderTarget* rt = args.fPipelineBuilder->getRenderTarget();
+    args.fPipelineBuilder->clip().getConservativeBounds(rt->width(), rt->height(), &devClipBounds);
 
-    SkPath path;
-    args.fShape->asPath(&path);
-    SkAutoTUnref<GrDrawBatch> batch(create_hairline_batch(args.fPaint->getColor(),
-                                                          *args.fViewMatrix, path,
-                                                          args.fShape->style(), devClipBounds));
-
-    GrPipelineBuilder pipelineBuilder(*args.fPaint);
-    pipelineBuilder.setUserStencil(args.fUserStencilSettings);
-    args.fDrawContext->drawBatch(pipelineBuilder, *args.fClip, batch);
+    SkAutoTUnref<GrDrawBatch> batch(create_hairline_batch(args.fColor, *args.fViewMatrix, *args.fPath,
+                                                          *args.fStroke, devClipBounds));
+    args.fTarget->drawBatch(*args.fPipelineBuilder, batch);
 
     return true;
 }
@@ -984,10 +977,11 @@ bool GrAAHairLinePathRenderer::onDrawPath(const DrawPathArgs& args) {
 DRAW_BATCH_TEST_DEFINE(AAHairlineBatch) {
     GrColor color = GrRandomColor(random);
     SkMatrix viewMatrix = GrTest::TestMatrix(random);
+    GrStrokeInfo stroke(SkStrokeRec::kHairline_InitStyle);
     SkPath path = GrTest::TestPath(random);
     SkIRect devClipBounds;
     devClipBounds.setEmpty();
-    return create_hairline_batch(color, viewMatrix, path, GrStyle::SimpleHairline(), devClipBounds);
+    return create_hairline_batch(color, viewMatrix, path, stroke, devClipBounds);
 }
 
 #endif

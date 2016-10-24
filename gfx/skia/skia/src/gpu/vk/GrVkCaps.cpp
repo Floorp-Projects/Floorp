@@ -16,27 +16,21 @@ GrVkCaps::GrVkCaps(const GrContextOptions& contextOptions, const GrVkInterface* 
                    VkPhysicalDevice physDev, uint32_t featureFlags, uint32_t extensionFlags)
     : INHERITED(contextOptions) {
     fCanUseGLSLForShaderModule = false;
-    fMustDoCopiesFromOrigin = false;
-    fAllowInitializationErrorOnTearDown = false;
-    fSupportsCopiesAsDraws = false;
-    fMustSubmitCommandsBeforeCopyOp = false;
 
     /**************************************************************************
     * GrDrawTargetCaps fields
     **************************************************************************/
-    fMipMapSupport = true;   // always available in Vulkan
-    fSRGBSupport = true;   // always available in Vulkan
-    fNPOTTextureTileSupport = true;  // always available in Vulkan
-    fTwoSidedStencilSupport = true;  // always available in Vulkan
-    fStencilWrapOpsSupport = true; // always available in Vulkan
-    fDiscardRenderTargetSupport = true;
+    fMipMapSupport = false; //TODO: figure this out
+    fNPOTTextureTileSupport = false; //TODO: figure this out
+    fTwoSidedStencilSupport = false; //TODO: figure this out
+    fStencilWrapOpsSupport = false; //TODO: figure this out
+    fDiscardRenderTargetSupport = false; //TODO: figure this out
     fReuseScratchTextures = true; //TODO: figure this out
     fGpuTracingSupport = false; //TODO: figure this out
     fCompressedTexSubImageSupport = false; //TODO: figure this out
     fOversizedStencilSupport = false; //TODO: figure this out
 
-    fUseDrawInsteadOfClear = false;
-    fFenceSyncSupport = true;   // always available in Vulkan
+    fUseDrawInsteadOfClear = false; //TODO: figure this out
 
     fMapBufferFlags = kNone_MapFlags; //TODO: figure this out
     fBufferMapThreshold = SK_MaxS32;  //TODO: figure this out
@@ -45,6 +39,7 @@ GrVkCaps::GrVkCaps(const GrContextOptions& contextOptions, const GrVkInterface* 
     fMaxTextureSize = 4096; // minimum required by spec
     fMaxColorSampleCount = 4; // minimum required by spec
     fMaxStencilSampleCount = 4; // minimum required by spec
+
 
     fShaderCaps.reset(new GrGLSLCaps(contextOptions));
 
@@ -69,16 +64,6 @@ void GrVkCaps::init(const GrContextOptions& contextOptions, const GrVkInterface*
         // Currently disabling this feature since it does not play well with validation layers which
         // expect a SPIR-V shader
         // fCanUseGLSLForShaderModule = true;
-    }
-
-    if (kQualcomm_VkVendor == properties.vendorID) {
-        fMustDoCopiesFromOrigin = true;
-        fAllowInitializationErrorOnTearDown = true;
-    }
-
-    if (kNvidia_VkVendor == properties.vendorID) {
-        fSupportsCopiesAsDraws = true;
-        fMustSubmitCommandsBeforeCopyOp = true;
     }
 
     this->applyOptionsOverrides(contextOptions);
@@ -120,11 +105,11 @@ void GrVkCaps::initSampleCount(const VkPhysicalDeviceProperties& properties) {
 void GrVkCaps::initGrCaps(const VkPhysicalDeviceProperties& properties,
                           const VkPhysicalDeviceMemoryProperties& memoryProperties,
                           uint32_t featureFlags) {
-    fMaxVertexAttributes = SkTMin(properties.limits.maxVertexInputAttributes, (uint32_t)INT_MAX);
+    fMaxVertexAttributes = properties.limits.maxVertexInputAttributes;
     // We could actually query and get a max size for each config, however maxImageDimension2D will
     // give the minimum max size across all configs. So for simplicity we will use that for now.
-    fMaxRenderTargetSize = SkTMin(properties.limits.maxImageDimension2D, (uint32_t)INT_MAX);
-    fMaxTextureSize = SkTMin(properties.limits.maxImageDimension2D, (uint32_t)INT_MAX);
+    fMaxRenderTargetSize = properties.limits.maxImageDimension2D;
+    fMaxTextureSize = properties.limits.maxImageDimension2D;
 
     this->initSampleCount(properties);
 
@@ -152,16 +137,7 @@ void GrVkCaps::initGLSLCaps(const VkPhysicalDeviceProperties& properties,
             glslCaps->fConfigTextureSwizzle[i] = GrSwizzle::RRRR();
             glslCaps->fConfigOutputSwizzle[i] = GrSwizzle::AAAA();
         } else {
-            if (kRGBA_4444_GrPixelConfig == config) {
-                // The vulkan spec does not require R4G4B4A4 to be supported for texturing so we
-                // store the data in a B4G4R4A4 texture and then swizzle it when doing texture reads
-                // or writing to outputs. Since we're not actually changing the data at all, the
-                // only extra work is the swizzle in the shader for all operations.
-                glslCaps->fConfigTextureSwizzle[i] = GrSwizzle::BGRA();
-                glslCaps->fConfigOutputSwizzle[i] = GrSwizzle::BGRA();
-            } else {
-                glslCaps->fConfigTextureSwizzle[i] = GrSwizzle::RGBA();
-            }
+            glslCaps->fConfigTextureSwizzle[i] = GrSwizzle::RGBA();
         }
     }
 
@@ -178,29 +154,12 @@ void GrVkCaps::initGLSLCaps(const VkPhysicalDeviceProperties& properties,
 
     glslCaps->fIntegerSupport = true;
 
-    // Assume the minimum precisions mandated by the SPIR-V spec.
-    glslCaps->fShaderPrecisionVaries = true;
-    for (int s = 0; s < kGrShaderTypeCount; ++s) {
-        auto& highp = glslCaps->fFloatPrecisions[s][kHigh_GrSLPrecision];
-        highp.fLogRangeLow = highp.fLogRangeHigh = 127;
-        highp.fBits = 23;
-
-        auto& mediump = glslCaps->fFloatPrecisions[s][kMedium_GrSLPrecision];
-        mediump.fLogRangeLow = mediump.fLogRangeHigh = 14;
-        mediump.fBits = 10;
-
-        glslCaps->fFloatPrecisions[s][kLow_GrSLPrecision] = mediump;
-    }
-    glslCaps->initSamplerPrecisionTable();
-
     glslCaps->fMaxVertexSamplers =
     glslCaps->fMaxGeometrySamplers =
-    glslCaps->fMaxFragmentSamplers = SkTMin(SkTMin(properties.limits.maxPerStageDescriptorSampledImages,
-                                                   properties.limits.maxPerStageDescriptorSamplers),
-                                            (uint32_t)INT_MAX);
-    glslCaps->fMaxCombinedSamplers = SkTMin(SkTMin(properties.limits.maxDescriptorSetSampledImages,
-                                                   properties.limits.maxDescriptorSetSamplers),
-                                            (uint32_t)INT_MAX);
+    glslCaps->fMaxFragmentSamplers = SkTMin(properties.limits.maxPerStageDescriptorSampledImages,
+                                            properties.limits.maxPerStageDescriptorSamplers);
+    glslCaps->fMaxCombinedSamplers = SkTMin(properties.limits.maxDescriptorSetSampledImages,
+                                            properties.limits.maxDescriptorSetSamplers);
 }
 
 bool stencil_format_supported(const GrVkInterface* interface,
@@ -215,7 +174,7 @@ bool stencil_format_supported(const GrVkInterface* interface,
 void GrVkCaps::initStencilFormat(const GrVkInterface* interface, VkPhysicalDevice physDev) {
     // List of legal stencil formats (though perhaps not supported on
     // the particular gpu/driver) from most preferred to least. We are guaranteed to have either
-    // VK_FORMAT_D24_UNORM_S8_UINT or VK_FORMAT_D32_SFLOAT_S8_UINT. VK_FORMAT_D32_SFLOAT_S8_UINT
+    // VK_FORMAT_D24_UNORM_S8_UINT or VK_FORMAT_D24_SFLOAT_S8_UINT. VK_FORMAT_D32_SFLOAT_S8_UINT
     // can optionally have 24 unused bits at the end so we assume the total bits is 64.
     static const StencilFormat
                   // internal Format             stencil bits      total bits        packed?

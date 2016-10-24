@@ -22,7 +22,7 @@ static void load_l32(const SkPixmap& src, int x, int y, SkPM4f span[], int count
     SkASSERT(src.addr32(x + count - 1, y));
 
     for (int i = 0; i < count; ++i) {
-        swizzle_rb_if_bgra(Sk4f_fromL32(addr[i])).store(span[i].fVec);
+        (to_4f_rgba(addr[i]) * Sk4f(1.0f/255)).store(span[i].fVec);
     }
 }
 
@@ -32,7 +32,7 @@ static void load_s32(const SkPixmap& src, int x, int y, SkPM4f span[], int count
     SkASSERT(src.addr32(x + count - 1, y));
 
     for (int i = 0; i < count; ++i) {
-        swizzle_rb_if_bgra(Sk4f_fromS32(addr[i])).store(span[i].fVec);
+        srgb_to_linear(to_4f_rgba(addr[i]) * Sk4f(1.0f/255)).store(span[i].fVec);
     }
 }
 
@@ -42,14 +42,14 @@ static void load_f16(const SkPixmap& src, int x, int y, SkPM4f span[], int count
     SkASSERT(src.addr64(x + count - 1, y));
 
     for (int i = 0; i < count; ++i) {
-        SkHalfToFloat_finite_ftz(addr[i]).store(span[i].fVec);
+        SkHalfToFloat_01(addr[i]).store(span[i].fVec);
     }
 }
 
 SkLoadSpanProc SkLoadSpanProc_Choose(const SkImageInfo& info) {
     switch (info.colorType()) {
         case kN32_SkColorType:
-            return info.gammaCloseToSRGB() ? load_s32 : load_l32;
+            return info.isSRGB() ? load_s32 : load_l32;
         case kRGBA_F16_SkColorType:
             return load_f16;
         default:

@@ -9,7 +9,6 @@
 #define GrDefaultPathRenderer_DEFINED
 
 #include "GrPathRenderer.h"
-#include "GrPathStencilSettings.h"
 #include "SkTypes.h"
 
 /**
@@ -22,7 +21,7 @@ public:
 
 private:
 
-    StencilSupport onGetStencilSupport(const GrShape&) const override;
+    StencilSupport onGetStencilSupport(const SkPath&, const GrStrokeInfo&) const override;
 
     bool onCanDrawPath(const CanDrawPathArgs&) const override;
 
@@ -30,12 +29,12 @@ private:
 
     void onStencilPath(const StencilPathArgs&) override;
 
-    bool internalDrawPath(GrDrawContext*,
-                          const GrPaint&,
-                          const GrUserStencilSettings&,
-                          const GrClip&,
+    bool internalDrawPath(GrDrawTarget*,
+                          GrPipelineBuilder*,
+                          GrColor,
                           const SkMatrix& viewMatrix,
-                          const GrShape&,
+                          const SkPath&,
+                          const GrStrokeInfo&,
                           bool stencilOnly);
 
     bool    fSeparateStencil;

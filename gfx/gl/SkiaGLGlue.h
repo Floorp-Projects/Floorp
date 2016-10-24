@@ -8,7 +8,7 @@
 
 #ifdef USE_SKIA_GPU
 
-#include "skia/include/core/SkRefCnt.h"
+#include "mozilla/gfx/RefPtrSkia.h"
 #include "mozilla/RefPtr.h"
 
 struct GrGLInterface;
@@ -32,8 +32,8 @@ protected:
 
 private:
   RefPtr<GLContext> mGLContext;
-  sk_sp<GrGLInterface> mGrGLInterface;
-  sk_sp<GrContext> mGrContext;
+  gfx::RefPtrSkia<GrGLInterface> mGrGLInterface;
+  gfx::RefPtrSkia<GrContext> mGrContext;
 };
 
 } // namespace gl

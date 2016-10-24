@@ -5,51 +5,56 @@
  * found in the LICENSE file.
  */
 
+
 #ifndef SkBitSet_DEFINED
 #define SkBitSet_DEFINED
 
+#include "SkTypes.h"
 #include "SkTDArray.h"
-#include "SkTemplates.h"
 
 class SkBitSet {
 public:
-    explicit SkBitSet(int numberOfBits) {
-        SkASSERT(numberOfBits >= 0);
-        fDwordCount = (numberOfBits + 31) / 32;  // Round up size to 32-bit boundary.
-        if (fDwordCount > 0) {
-            fBitData.reset((uint32_t*)sk_calloc_throw(fDwordCount * sizeof(uint32_t)));
-        }
-    }
+    /** NumberOfBits must be greater than zero.
+     */
+    explicit SkBitSet(int numberOfBits);
+    explicit SkBitSet(const SkBitSet& source);
 
-    SkBitSet(const SkBitSet&) = delete;
-    SkBitSet& operator=(const SkBitSet&) = delete;
+    SkBitSet& operator=(const SkBitSet& rhs);
+    bool operator==(const SkBitSet& rhs);
+    bool operator!=(const SkBitSet& rhs);
 
-    /** Set the value of the index-th bit to true.  */
-    void set(int index) {
+    /** Clear all data.
+     */
+    void clearAll();
+
+    /** Set the value of the index-th bit.
+     */
+    void setBit(int index, bool value) {
         uint32_t mask = 1 << (index & 31);
         uint32_t* chunk = this->internalGet(index);
-        SkASSERT(chunk);
-        *chunk |= mask;
-    }
-
-    template<typename T>
-    void setAll(T* array, int len) {
-        static_assert(std::is_integral<T>::value, "T is integral");
-        for (int i = 0; i < len; ++i) {
-            this->set(static_cast<int>(array[i]));
+        if (value) {
+            *chunk |= mask;
+        } else {
+            *chunk &= ~mask;
         }
     }
 
-    bool has(int index) const {
-        const uint32_t* chunk = this->internalGet(index);
+    /** Test if bit index is set.
+     */
+    bool isBitSet(int index) const {
         uint32_t mask = 1 << (index & 31);
-        return chunk && SkToBool(*chunk & mask);
+        return SkToBool(*this->internalGet(index) & mask);
     }
 
-    /** Export indices of set bits to T array. */
+    /** Or bits from source.  false is returned if this doesn't have the same
+     *  bit count as source.
+     */
+    bool orBits(const SkBitSet& source);
+
+    /** Export indices of set bits to T array.
+     */
     template<typename T>
     void exportTo(SkTDArray<T>* array) const {
-        static_assert(std::is_integral<T>::value, "T is integral");
         SkASSERT(array);
         uint32_t* data = reinterpret_cast<uint32_t*>(fBitData.get());
         for (unsigned int i = 0; i < fDwordCount; ++i) {
@@ -66,15 +71,16 @@ public:
     }
 
 private:
-    std::unique_ptr<uint32_t, SkFunctionWrapper<void, void, sk_free>> fBitData;
-    size_t fDwordCount;  // Dword (32-bit) count of the bitset.
+    SkAutoFree fBitData;
+    // Dword (32-bit) count of the bitset.
+    size_t fDwordCount;
+    size_t fBitCount;
 
     uint32_t* internalGet(int index) const {
+        SkASSERT((size_t)index < fBitCount);
         size_t internalIndex = index / 32;
-        if (internalIndex >= fDwordCount) {
-            return nullptr;
-        }
-        return fBitData.get() + internalIndex;
+        SkASSERT(internalIndex < fDwordCount);
+        return reinterpret_cast<uint32_t*>(fBitData.get()) + internalIndex;
     }
 };
 

@@ -20,8 +20,7 @@
 #include "GrRenderTargetPriv.h"
 #include "GrStencilAttachment.h"
 #include "GrSurfacePriv.h"
-#include "GrTexturePriv.h"
-#include "SkMathPriv.h"
+#include "SkTypes.h"
 
 GrMesh& GrMesh::operator =(const GrMesh& di) {
     fPrimitiveType  = di.fPrimitiveType;
@@ -46,8 +45,8 @@ GrMesh& GrMesh::operator =(const GrMesh& di) {
 GrGpu::GrGpu(GrContext* context)
     : fResetTimestamp(kExpiredTimestamp+1)
     , fResetBits(kAll_GrBackendState)
+    , fMultisampleSpecsAllocator(1)
     , fContext(context) {
-    fMultisampleSpecs.emplace_back(0, 0, nullptr); // Index 0 is an invalid unique id.
 }
 
 GrGpu::~GrGpu() {}
@@ -151,6 +150,9 @@ GrTexture* GrGpu::createTexture(const GrSurfaceDesc& origDesc, SkBudgeted budget
     desc.fOrigin = resolve_origin(desc.fOrigin, isRT);
 
     GrTexture* tex = nullptr;
+    GrGpuResource::LifeCycle lifeCycle = SkBudgeted::kYes == budgeted ?
+                                            GrGpuResource::kCached_LifeCycle :
+                                            GrGpuResource::kUncached_LifeCycle;
 
     if (GrPixelConfigIsCompressed(desc.fConfig)) {
         // We shouldn't be rendering into this
@@ -163,10 +165,10 @@ GrTexture* GrGpu::createTexture(const GrSurfaceDesc& origDesc, SkBudgeted budget
         }
 
         this->handleDirtyContext();
-        tex = this->onCreateCompressedTexture(desc, budgeted, texels);
+        tex = this->onCreateCompressedTexture(desc, lifeCycle, texels);
     } else {
         this->handleDirtyContext();
-        tex = this->onCreateTexture(desc, budgeted, texels);
+        tex = this->onCreateTexture(desc, lifeCycle, texels);
     }
     if (tex) {
         if (!caps->reuseScratchTextures() && !isRT) {
@@ -177,14 +179,6 @@ GrTexture* GrGpu::createTexture(const GrSurfaceDesc& origDesc, SkBudgeted budget
             if (texels[0].fPixels) {
                 fStats.incTextureUploads();
             }
-        }
-        // This is a current work around to get discards into newly created textures. Once we are in
-        // MDB world, we should remove this code a rely on the draw target having specified load
-        // operations.
-        if (isRT && texels.empty()) {
-            GrRenderTarget* rt = tex->asRenderTarget();
-            SkASSERT(rt);
-            rt->discard();
         }
     }
     return tex;
@@ -242,18 +236,30 @@ GrRenderTarget* GrGpu::wrapBackendTextureAsRenderTarget(const GrBackendTextureDe
 }
 
 GrBuffer* GrGpu::createBuffer(size_t size, GrBufferType intendedType,
-                              GrAccessPattern accessPattern, const void* data) {
+                              GrAccessPattern accessPattern) {
     this->handleDirtyContext();
-    GrBuffer* buffer = this->onCreateBuffer(size, intendedType, accessPattern, data);
+    GrBuffer* buffer = this->onCreateBuffer(size, intendedType, accessPattern);
     if (!this->caps()->reuseScratchBuffers()) {
         buffer->resourcePriv().removeScratchKey();
     }
     return buffer;
 }
 
-gr_instanced::InstancedRendering* GrGpu::createInstancedRendering() {
-    SkASSERT(GrCaps::InstancedSupport::kNone != this->caps()->instancedSupport());
-    return this->onCreateInstancedRendering();
+void GrGpu::clear(const SkIRect& rect,
+                  GrColor color,
+                  GrRenderTarget* renderTarget) {
+    SkASSERT(renderTarget);
+    SkASSERT(SkIRect::MakeWH(renderTarget->width(), renderTarget->height()).contains(rect));
+    this->handleDirtyContext();
+    this->onClear(renderTarget, rect, color);
+}
+
+void GrGpu::clearStencilClip(const SkIRect& rect,
+                             bool insideClip,
+                             GrRenderTarget* renderTarget) {
+    SkASSERT(renderTarget);
+    this->handleDirtyContext();
+    this->onClearStencilClip(renderTarget, rect, insideClip);
 }
 
 bool GrGpu::copySurface(GrSurface* dst,
@@ -274,12 +280,6 @@ bool GrGpu::getReadPixelsInfo(GrSurface* srcSurface, int width, int height, size
 
     // We currently do not support reading into a compressed buffer
     if (GrPixelConfigIsCompressed(readConfig)) {
-        return false;
-    }
-
-    // We currently do not support reading into the packed formats 565 or 4444 as they are not
-    // required to have read back support on all devices and backends.
-    if (kRGB_565_GrPixelConfig == readConfig || kRGBA_4444_GrPixelConfig == readConfig) {
         return false;
     }
 
@@ -378,8 +378,6 @@ bool GrGpu::writePixels(GrSurface* surface,
 
     this->handleDirtyContext();
     if (this->onWritePixels(surface, left, top, width, height, config, texels)) {
-        SkIRect rect = SkIRect::MakeXYWH(left, top, width, height);
-        this->didWriteToSurface(surface, &rect, texels.count());
         fStats.incTextureUploads();
         return true;
     }
@@ -402,22 +400,13 @@ bool GrGpu::writePixels(GrSurface* surface,
 bool GrGpu::transferPixels(GrSurface* surface,
                            int left, int top, int width, int height,
                            GrPixelConfig config, GrBuffer* transferBuffer,
-                           size_t offset, size_t rowBytes, GrFence* fence) {
+                           size_t offset, size_t rowBytes) {
     SkASSERT(transferBuffer);
-    SkASSERT(fence);
 
     this->handleDirtyContext();
     if (this->onTransferPixels(surface, left, top, width, height, config,
                                transferBuffer, offset, rowBytes)) {
-        SkIRect rect = SkIRect::MakeXYWH(left, top, width, height);
-        this->didWriteToSurface(surface, &rect);
         fStats.incTransfersToTexture();
-
-        if (*fence) {
-            this->deleteFence(*fence);
-        }
-        *fence = this->insertFence();
-
         return true;
     }
     return false;
@@ -429,77 +418,73 @@ void GrGpu::resolveRenderTarget(GrRenderTarget* target) {
     this->onResolveRenderTarget(target);
 }
 
-void GrGpu::didWriteToSurface(GrSurface* surface, const SkIRect* bounds, uint32_t mipLevels) const {
-    SkASSERT(surface);
-    // Mark any MIP chain and resolve buffer as dirty if and only if there is a non-empty bounds.
-    if (nullptr == bounds || !bounds->isEmpty()) {
-        if (GrRenderTarget* target = surface->asRenderTarget()) {
-            target->flagAsNeedingResolve(bounds);
-        }
-        GrTexture* texture = surface->asTexture();
-        if (texture && 1 == mipLevels) {
-            texture->texturePriv().dirtyMipMaps(true);
-        }
+inline static uint8_t multisample_specs_id(uint8_t numSamples, GrSurfaceOrigin origin,
+                                           const GrCaps& caps) {
+    if (!caps.sampleLocationsSupport()) {
+        return numSamples;
     }
+
+    SkASSERT(numSamples < 128);
+    SkASSERT(kTopLeft_GrSurfaceOrigin == origin || kBottomLeft_GrSurfaceOrigin == origin);
+    return (numSamples << 1) | (origin - 1);
+
+    GR_STATIC_ASSERT(1 == kTopLeft_GrSurfaceOrigin);
+    GR_STATIC_ASSERT(2 == kBottomLeft_GrSurfaceOrigin);
 }
 
 const GrGpu::MultisampleSpecs& GrGpu::getMultisampleSpecs(GrRenderTarget* rt,
                                                           const GrStencilSettings& stencil) {
-    SkASSERT(rt->desc().fSampleCnt > 1);
-
-#ifndef SK_DEBUG
-    // In debug mode we query the multisample info every time to verify the caching is correct.
-    if (uint8_t id = rt->renderTargetPriv().accessMultisampleSpecsID()) {
-        SkASSERT(id > 0 && id < fMultisampleSpecs.count());
-        return fMultisampleSpecs[id];
-    }
+    const GrSurfaceDesc& desc = rt->desc();
+    uint8_t surfDescKey = multisample_specs_id(desc.fSampleCnt, desc.fOrigin, *this->caps());
+    if (fMultisampleSpecsMap.count() > surfDescKey && fMultisampleSpecsMap[surfDescKey]) {
+#if !defined(SK_DEBUG)
+        // In debug mode we query the multisample info every time and verify the caching is correct.
+        return *fMultisampleSpecsMap[surfDescKey];
 #endif
-
-    int effectiveSampleCnt;
-    SkSTArray<16, SkPoint, true> pattern;
-    this->onGetMultisampleSpecs(rt, stencil, &effectiveSampleCnt, &pattern);
-    SkASSERT(effectiveSampleCnt >= rt->desc().fSampleCnt);
-
-    uint8_t id;
-    if (this->caps()->sampleLocationsSupport()) {
-        SkASSERT(pattern.count() == effectiveSampleCnt);
-        const auto& insertResult = fMultisampleSpecsIdMap.insert(
-            MultisampleSpecsIdMap::value_type(pattern, SkTMin(fMultisampleSpecs.count(), 255)));
-        id = insertResult.first->second;
-        if (insertResult.second) {
-            // This means the insert did not find the pattern in the map already, and therefore an
-            // actual insertion took place. (We don't expect to see many unique sample patterns.)
-            const SkPoint* sampleLocations = insertResult.first->first.begin();
-            SkASSERT(id == fMultisampleSpecs.count());
-            fMultisampleSpecs.emplace_back(id, effectiveSampleCnt, sampleLocations);
-        }
-    } else {
-        id = effectiveSampleCnt;
-        for (int i = fMultisampleSpecs.count(); i <= id; ++i) {
-            fMultisampleSpecs.emplace_back(i, i, nullptr);
-        }
     }
-    SkASSERT(id > 0);
-    SkASSERT(!rt->renderTargetPriv().accessMultisampleSpecsID() ||
-             rt->renderTargetPriv().accessMultisampleSpecsID() == id);
-
-    rt->renderTargetPriv().accessMultisampleSpecsID() = id;
-    return fMultisampleSpecs[id];
+    int effectiveSampleCnt;
+    SkAutoTDeleteArray<SkPoint> locations(nullptr);
+    this->onGetMultisampleSpecs(rt, stencil, &effectiveSampleCnt, &locations);
+    SkASSERT(effectiveSampleCnt && effectiveSampleCnt >= desc.fSampleCnt);
+    uint8_t effectiveKey = multisample_specs_id(effectiveSampleCnt, desc.fOrigin, *this->caps());
+    if (fMultisampleSpecsMap.count() > effectiveKey && fMultisampleSpecsMap[effectiveKey]) {
+        const MultisampleSpecs& specs = *fMultisampleSpecsMap[effectiveKey];
+        SkASSERT(effectiveKey == specs.fUniqueID);
+        SkASSERT(effectiveSampleCnt == specs.fEffectiveSampleCnt);
+        SkASSERT(!this->caps()->sampleLocationsSupport() ||
+                 !memcmp(locations.get(), specs.fSampleLocations.get(),
+                         effectiveSampleCnt * sizeof(SkPoint)));
+        SkASSERT(surfDescKey <= effectiveKey);
+        SkASSERT(!fMultisampleSpecsMap[surfDescKey] || fMultisampleSpecsMap[surfDescKey] == &specs);
+        fMultisampleSpecsMap[surfDescKey] = &specs;
+        return specs;
+    }
+    const MultisampleSpecs& specs = *new (&fMultisampleSpecsAllocator)
+        MultisampleSpecs{effectiveKey, effectiveSampleCnt, locations.release()};
+    if (fMultisampleSpecsMap.count() <= effectiveKey) {
+        int n = 1 + effectiveKey - fMultisampleSpecsMap.count();
+        fMultisampleSpecsMap.push_back_n(n, (const MultisampleSpecs*) nullptr);
+    }
+    fMultisampleSpecsMap[effectiveKey] = &specs;
+    if (effectiveSampleCnt != desc.fSampleCnt) {
+        SkASSERT(surfDescKey < effectiveKey);
+        fMultisampleSpecsMap[surfDescKey] = &specs;
+    }
+    return specs;
 }
 
-bool GrGpu::SamplePatternComparator::operator()(const SamplePattern& a,
-                                                const SamplePattern& b) const {
-    if (a.count() != b.count()) {
-        return a.count() < b.count();
+////////////////////////////////////////////////////////////////////////////////
+
+bool GrGpu::draw(const GrPipeline& pipeline,
+                 const GrPrimitiveProcessor& primProc,
+                 const GrMesh* meshes,
+                 int meshCount) {
+    if (primProc.numAttribs() > this->caps()->maxVertexAttributes()) {
+        fStats.incNumFailedDraws();
+        return false;
     }
-    for (int i = 0; i < a.count(); ++i) {
-        // This doesn't have geometric meaning. We just need to define an ordering for std::map.
-        if (a[i].x() != b[i].x()) {
-            return a[i].x() < b[i].x();
-        }
-        if (a[i].y() != b[i].y()) {
-            return a[i].y() < b[i].y();
-        }
-    }
-    return false; // Equal.
+    this->handleDirtyContext();
+
+    this->onDraw(pipeline, primProc, meshes, meshCount);
+    return true;
 }

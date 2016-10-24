@@ -13,8 +13,7 @@
 
 class SkRandomScalerContext : public SkScalerContext {
 public:
-    SkRandomScalerContext(SkRandomTypeface*, const SkScalerContextEffects&,
-                          const SkDescriptor*, bool fFakeIt);
+    SkRandomScalerContext(SkRandomTypeface*, const SkDescriptor*, bool fFakeIt);
     virtual ~SkRandomScalerContext();
 
 protected:
@@ -36,14 +35,12 @@ private:
 
 #include "SkDescriptor.h"
 
-SkRandomScalerContext::SkRandomScalerContext(SkRandomTypeface* face,
-                                             const SkScalerContextEffects& effects,
-                                             const SkDescriptor* desc,
+SkRandomScalerContext::SkRandomScalerContext(SkRandomTypeface* face, const SkDescriptor* desc,
                                              bool fakeIt)
-        : SkScalerContext(face, effects, desc)
+        : SkScalerContext(face, desc)
         , fFace(face)
         , fFakeIt(fakeIt) {
-    fProxy = face->proxy()->createScalerContext(effects, desc);
+    fProxy = face->proxy()->createScalerContext(desc);
 }
 
 SkRandomScalerContext::~SkRandomScalerContext() { delete fProxy; }
@@ -190,15 +187,19 @@ void SkRandomScalerContext::generateFontMetrics(SkPaint::FontMetrics* metrics) {
 
 #include "SkTypefaceCache.h"
 
-SkRandomTypeface::SkRandomTypeface(sk_sp<SkTypeface> proxy, const SkPaint& paint, bool fakeIt)
-    : SkTypeface(proxy->fontStyle(), false)
-    , fProxy(std::move(proxy))
+SkRandomTypeface::SkRandomTypeface(SkTypeface* proxy, const SkPaint& paint, bool fakeIt)
+    : SkTypeface(proxy->fontStyle(), SkTypefaceCache::NewFontID(), false)
+    , fProxy(SkRef(proxy))
     , fPaint(paint)
     , fFakeIt(fakeIt) {}
 
-SkScalerContext* SkRandomTypeface::onCreateScalerContext(const SkScalerContextEffects& effects,
-                                                         const SkDescriptor* desc) const {
-    return new SkRandomScalerContext(const_cast<SkRandomTypeface*>(this), effects, desc, fFakeIt);
+SkRandomTypeface::~SkRandomTypeface() {
+    fProxy->unref();
+}
+
+SkScalerContext* SkRandomTypeface::onCreateScalerContext(
+                                            const SkDescriptor* desc) const {
+    return new SkRandomScalerContext(const_cast<SkRandomTypeface*>(this), desc, fFakeIt);
 }
 
 void SkRandomTypeface::onFilterRec(SkScalerContextRec* rec) const {

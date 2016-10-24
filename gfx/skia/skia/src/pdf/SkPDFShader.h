@@ -9,13 +9,13 @@
 #ifndef SkPDFShader_DEFINED
 #define SkPDFShader_DEFINED
 
-#include "SkBitmapKey.h"
+#include "SkPDFStream.h"
 #include "SkPDFTypes.h"
-#include "SkShader.h"
 
 class SkPDFCanon;
 class SkPDFDocument;
 class SkMatrix;
+class SkShader;
 struct SkIRect;
 
 /** \class SkPDFShader
@@ -26,6 +26,8 @@ struct SkIRect;
 
 class SkPDFShader {
 public:
+    class State;
+
     /** Get the PDF shader for the passed SkShader. If the SkShader is
      *  invalid in some way, returns nullptr. The reference count of
      *  the object is incremented and it is the caller's responsibility to
@@ -40,47 +42,60 @@ public:
      *  @param rasterScale Additional scale to be applied for early
      *                     rasterization.
      */
-    static sk_sp<SkPDFObject> GetPDFShader(SkPDFDocument* doc,
-                                           SkScalar dpi,
-                                           SkShader* shader,
-                                           const SkMatrix& matrix,
-                                           const SkIRect& surfaceBBox,
-                                           SkScalar rasterScale);
+    static SkPDFObject* GetPDFShader(SkPDFDocument* doc,
+                                     SkScalar dpi,
+                                     SkShader* shader,
+                                     const SkMatrix& matrix,
+                                     const SkIRect& surfaceBBox,
+                                     SkScalar rasterScale);
 
     static sk_sp<SkPDFArray> MakeRangeObject();
+};
 
-    class State {
-    public:
-        SkShader::GradientType fType;
-        SkShader::GradientInfo fInfo;
-        std::unique_ptr<SkColor[]> fColors;
-        std::unique_ptr<SkScalar[]> fStops;
-        SkMatrix fCanvasTransform;
-        SkMatrix fShaderTransform;
-        SkIRect fBBox;
+class SkPDFFunctionShader final : public SkPDFDict {
+public:
+    static SkPDFFunctionShader* Create(SkPDFCanon*,
+                                       std::unique_ptr<SkPDFShader::State>*);
+    virtual ~SkPDFFunctionShader();
+    bool equals(const SkPDFShader::State&) const;
 
-        SkBitmapKey fBitmapKey;
-        SkShader::TileMode fImageTileModes[2];
+private:
+    std::unique_ptr<const SkPDFShader::State> fShaderState;
+    SkPDFFunctionShader(SkPDFShader::State*);
+    typedef SkPDFDict INHERITED;
+};
 
-        State(SkShader* shader, const SkMatrix& canvasTransform,
-              const SkIRect& bbox, SkScalar rasterScale,
-              SkBitmap* dstImage);
+/**
+ * A shader for PDF gradients. This encapsulates the function shader
+ * inside a tiling pattern while providing a common pattern interface.
+ * The encapsulation allows the use of a SMask for transparency gradients.
+ */
+class SkPDFAlphaFunctionShader final : public SkPDFStream {
+public:
+    static SkPDFAlphaFunctionShader* Create(SkPDFDocument*,
+                                            SkScalar dpi,
+                                            std::unique_ptr<SkPDFShader::State>*);
+    virtual ~SkPDFAlphaFunctionShader();
+    bool equals(const SkPDFShader::State&) const;
 
-        bool operator==(const State& b) const;
+private:
+    std::unique_ptr<const SkPDFShader::State> fShaderState;
+    SkPDFAlphaFunctionShader(SkPDFShader::State*);
+    typedef SkPDFStream INHERITED;
+};
 
-        State MakeAlphaToLuminosityState() const;
-        State MakeOpaqueState() const;
+class SkPDFImageShader final : public SkPDFStream {
+public:
+    static SkPDFImageShader* Create(SkPDFDocument*,
+                                    SkScalar dpi,
+                                    std::unique_ptr<SkPDFShader::State>*);
+    virtual ~SkPDFImageShader();
+    bool equals(const SkPDFShader::State&) const;
 
-        bool GradientHasAlpha() const;
-
-        State(State&&) = default;
-        State& operator=(State&&) = default;
-
-    private:
-        State(const State& other);
-        State& operator=(const State& rhs);
-        void allocateGradientInfoStorage();
-    };
+private:
+    std::unique_ptr<const SkPDFShader::State> fShaderState;
+    SkPDFImageShader(SkPDFShader::State*);
+    typedef SkPDFStream INHERITED;
 };
 
 #endif

@@ -28,12 +28,11 @@ public:
     void shadeSpan(int x, int y, SkPMColor dst[], int count) override;
     void shadeSpan4f(int x, int y, SkPM4f dst[], int count) override;
 
-    bool isValid() const;
-
 protected:
     struct Interval {
-        Interval(const Sk4f& c0, SkScalar p0,
-                 const Sk4f& c1, SkScalar p1);
+        Interval(SkPMColor c0, SkScalar p0,
+                 SkPMColor c1, SkScalar p1,
+                 const Sk4f& componentScale);
 
         bool isZeroRamp() const { return fZeroRamp; }
 

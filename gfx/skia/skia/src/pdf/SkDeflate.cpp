@@ -8,9 +8,13 @@
 
 #include "SkData.h"
 #include "SkDeflate.h"
-#include "SkMakeUnique.h"
+#include "SkStream.h"
 
-#include "zlib.h"
+#ifdef ZLIB_INCLUDE
+    #include ZLIB_INCLUDE
+#else
+    #include "zlib.h"
+#endif
 
 namespace {
 
@@ -63,7 +67,7 @@ struct SkDeflateWStream::Impl {
 SkDeflateWStream::SkDeflateWStream(SkWStream* out,
                                    int compressionLevel,
                                    bool gzip)
-    : fImpl(skstd::make_unique<SkDeflateWStream::Impl>()) {
+    : fImpl(new SkDeflateWStream::Impl) {
     fImpl->fOut = out;
     fImpl->fInBufferIndex = 0;
     if (!fImpl->fOut) {

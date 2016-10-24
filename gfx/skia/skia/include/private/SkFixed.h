@@ -33,6 +33,17 @@ typedef int32_t             SkFixed;
 #define SkFixedToFloat(x)   ((x) * 1.52587890625e-5f)
 #define SkFloatToFixed(x)   ((SkFixed)((x) * SK_Fixed1))
 
+// Pins over/under flows to SK_FixedMax/SK_FixedMin (slower than just a cast).
+static inline SkFixed SkFloatPinToFixed(float x) {
+    x *= SK_Fixed1;
+    // Casting float to int outside the range of the target type (int32_t) is undefined behavior.
+    if (x >= SK_FixedMax) return SK_FixedMax;
+    if (x <= SK_FixedMin) return SK_FixedMin;
+    const SkFixed result = static_cast<SkFixed>(x);
+    SkASSERT(truncf(x) == static_cast<float>(result));
+    return result;
+}
+
 #ifdef SK_DEBUG
     static inline SkFixed SkFloatToFixed_Check(float x) {
         int64_t n64 = (int64_t)(x * SK_Fixed1);
@@ -46,6 +57,17 @@ typedef int32_t             SkFixed;
 
 #define SkFixedToDouble(x)  ((x) * 1.52587890625e-5)
 #define SkDoubleToFixed(x)  ((SkFixed)((x) * SK_Fixed1))
+
+// Pins over/under flows to SK_FixedMax/SK_FixedMin (slower than just a cast).
+static inline SkFixed SkDoublePinToFixed(double x) {
+    x *= SK_Fixed1;
+    // Casting double to int outside the range of the target type (int32_t) is undefined behavior.
+    if (x >= SK_FixedMax) return SK_FixedMax;
+    if (x <= SK_FixedMin) return SK_FixedMin;
+    const SkFixed result = static_cast<SkFixed>(x);
+    SkASSERT(trunc(x) == static_cast<double>(result));
+    return result;
+}
 
 /** Converts an integer to a SkFixed, asserting that the result does not overflow
     a 32 bit signed integer
@@ -76,9 +98,14 @@ typedef int32_t             SkFixed;
 #define SkFixedAbs(x)       SkAbs32(x)
 #define SkFixedAve(a, b)    (((a) + (b)) >> 1)
 
-// The divide may exceed 32 bits. Clamp to a signed 32 bit result.
-#define SkFixedDiv(numer, denom) \
-    SkToS32(SkTPin<int64_t>((SkLeftShift((int64_t)(numer), 16) / (denom)), SK_MinS32, SK_MaxS32))
+// Blink layout tests are baselined to Clang optimizing through undefined behavior in SkDivBits.
+#if defined(SK_SUPPORT_LEGACY_DIVBITS_UB)
+    #define SkFixedDiv(numer, denom) SkDivBits(numer, denom, 16)
+#else
+    // The divide may exceed 32 bits. Clamp to a signed 32 bit result.
+    #define SkFixedDiv(numer, denom) \
+        SkToS32(SkTPin<int64_t>((SkLeftShift((int64_t)numer, 16) / denom), SK_MinS32, SK_MaxS32))
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Now look for ASM overrides for our portable versions (should consider putting this in its own file)
@@ -136,11 +163,13 @@ inline SkFixed SkFixedMul_longlong(SkFixed a, SkFixed b) {
 
 #define SkFixedToScalar(x)          SkFixedToFloat(x)
 #define SkScalarToFixed(x)          SkFloatToFixed(x)
+#define SkScalarPinToFixed(x)       SkFloatPinToFixed(x)
 
 #else   // SK_SCALAR_IS_DOUBLE
 
 #define SkFixedToScalar(x)          SkFixedToDouble(x)
 #define SkScalarToFixed(x)          SkDoubleToFixed(x)
+#define SkScalarPinToFixed(x)       SkDoublePinToFixed(x)
 
 #endif
 

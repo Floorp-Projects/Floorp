@@ -30,15 +30,7 @@ public:
      */
     bool attachStencilAttachment(GrStencilAttachment* stencil);
 
-    int numStencilBits() const;
-
     const GrGpu::MultisampleSpecs& getMultisampleSpecs(const GrStencilSettings& stencil) const;
-    uint8_t& accessMultisampleSpecsID() { return fRenderTarget->fMultisampleSpecsID; }
-
-    typedef GrRenderTarget::Flags Flags;
-
-    Flags flags() const { return fRenderTarget->fFlags; }
-    int maxWindowRectangles() const;
 
 private:
     explicit GrRenderTargetPriv(GrRenderTarget* renderTarget) : fRenderTarget(renderTarget) {}

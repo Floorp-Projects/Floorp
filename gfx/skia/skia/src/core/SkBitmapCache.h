@@ -8,11 +8,12 @@
 #ifndef SkBitmapCache_DEFINED
 #define SkBitmapCache_DEFINED
 
+#include "SkScalar.h"
 #include "SkBitmap.h"
-#include "SkMipMap.h"
 
 class SkImage;
 class SkResourceCache;
+class SkMipMap;
 
 uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID);
 
@@ -72,10 +73,9 @@ public:
 
 class SkMipMapCache {
 public:
-    static const SkMipMap* FindAndRef(const SkBitmapCacheDesc&, SkSourceGammaTreatment,
+    static const SkMipMap* FindAndRef(const SkBitmapCacheDesc&,
                                       SkResourceCache* localCache = nullptr);
-    static const SkMipMap* AddAndRef(const SkBitmap& src, SkSourceGammaTreatment,
-                                     SkResourceCache* localCache = nullptr);
+    static const SkMipMap* AddAndRef(const SkBitmap& src, SkResourceCache* localCache = nullptr);
 };
 
 #endif

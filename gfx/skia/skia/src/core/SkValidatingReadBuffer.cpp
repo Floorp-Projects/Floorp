@@ -44,11 +44,9 @@ const void* SkValidatingReadBuffer::skip(size_t size) {
     size_t inc = SkAlign4(size);
     const void* addr = fReader.peek();
     this->validate(IsPtrAlign4(addr) && fReader.isAvailable(inc));
-    if (fError) {
-        return nullptr;
+    if (!fError) {
+        fReader.skip(size);
     }
-
-    fReader.skip(size);
     return addr;
 }
 
@@ -88,14 +86,6 @@ int32_t SkValidatingReadBuffer::read32() {
     return this->readInt();
 }
 
-uint8_t SkValidatingReadBuffer::peekByte() {
-    if (fReader.available() <= 0) {
-        fError = true;
-        return 0;
-    }
-    return *((uint8_t*) fReader.peek());
-}
-
 void SkValidatingReadBuffer::readString(SkString* string) {
     const size_t len = this->readUInt();
     const void* ptr = fReader.peek();
@@ -112,11 +102,17 @@ void SkValidatingReadBuffer::readString(SkString* string) {
     }
 }
 
-void SkValidatingReadBuffer::readColor4f(SkColor4f* color) {
-    const void* ptr = this->skip(sizeof(SkColor4f));
+void* SkValidatingReadBuffer::readEncodedString(size_t* length, SkPaint::TextEncoding encoding) {
+    const int32_t encodingType = this->readInt();
+    this->validate(encodingType == encoding);
+    *length = this->readInt();
+    const void* ptr = this->skip(SkAlign4(*length));
+    void* data = nullptr;
     if (!fError) {
-        memcpy(color, ptr, sizeof(SkColor4f));
+        data = sk_malloc_throw(*length);
+        memcpy(data, ptr, *length);
     }
+    return data;
 }
 
 void SkValidatingReadBuffer::readPoint(SkPoint* point) {
@@ -146,18 +142,6 @@ void SkValidatingReadBuffer::readRect(SkRect* rect) {
     const void* ptr = this->skip(sizeof(SkRect));
     if (!fError) {
         memcpy(rect, ptr, sizeof(SkRect));
-    }
-}
-
-void SkValidatingReadBuffer::readRRect(SkRRect* rrect) {
-    const void* ptr = this->skip(sizeof(SkRRect));
-    if (!fError) {
-        memcpy(rrect, ptr, sizeof(SkRRect));
-        this->validate(rrect->isValid());
-    }
-
-    if (fError) {
-        rrect->setEmpty();
     }
 }
 
@@ -206,10 +190,6 @@ bool SkValidatingReadBuffer::readColorArray(SkColor* colors, size_t size) {
     return readArray(colors, size, sizeof(SkColor));
 }
 
-bool SkValidatingReadBuffer::readColor4fArray(SkColor4f* colors, size_t size) {
-    return readArray(colors, size, sizeof(SkColor4f));
-}
-
 bool SkValidatingReadBuffer::readIntArray(int32_t* values, size_t size) {
     return readArray(values, size, sizeof(int32_t));
 }
@@ -228,42 +208,21 @@ uint32_t SkValidatingReadBuffer::getArrayCount() {
     return fError ? 0 : *(uint32_t*)fReader.peek();
 }
 
+SkTypeface* SkValidatingReadBuffer::readTypeface() {
+    SkASSERT(false);
+    // TODO: Implement this (securely) when needed
+    return nullptr;
+}
+
 bool SkValidatingReadBuffer::validateAvailable(size_t size) {
     return this->validate((size <= SK_MaxU32) && fReader.isAvailable(static_cast<uint32_t>(size)));
 }
 
 SkFlattenable* SkValidatingReadBuffer::readFlattenable(SkFlattenable::Type type) {
-    // The validating read buffer always uses strings and string-indices for unflattening.
-    SkASSERT(0 == this->factoryCount());
-
-    uint8_t firstByte = this->peekByte();
+    SkString name;
+    this->readString(&name);
     if (fError) {
         return nullptr;
-    }
-
-    SkString name;
-    if (firstByte) {
-        // If the first byte is non-zero, the flattenable is specified by a string.
-        this->readString(&name);
-        if (fError) {
-            return nullptr;
-        }
-
-        // Add the string to the dictionary.
-        fFlattenableDict.set(fFlattenableDict.count() + 1, name);
-    } else {
-        // Read the index.  We are guaranteed that the first byte
-        // is zeroed, so we must shift down a byte.
-        uint32_t index = fReader.readU32() >> 8;
-        if (0 == index) {
-            return nullptr; // writer failed to give us the flattenable
-        }
-
-        SkString* namePtr = fFlattenableDict.find(index);
-        if (!namePtr) {
-            return nullptr;
-        }
-        name = *namePtr;
     }
 
     // Is this the type we wanted ?
@@ -273,25 +232,38 @@ SkFlattenable* SkValidatingReadBuffer::readFlattenable(SkFlattenable::Type type)
         return nullptr;
     }
 
-    // Get the factory for this flattenable.
-    SkFlattenable::Factory factory = this->getCustomFactory(name);
-    if (!factory) {
-        factory = SkFlattenable::NameToFactory(cname);
-        if (!factory) {
-            return nullptr; // writer failed to give us the flattenable
-        }
+    SkFlattenable::Factory factory = SkFlattenable::NameToFactory(cname);
+    if (nullptr == factory) {
+        return nullptr; // writer failed to give us the flattenable
     }
 
-    // If we get here, the factory is non-null.
+    // if we get here, factory may still be null, but if that is the case, the
+    // failure was ours, not the writer.
     sk_sp<SkFlattenable> obj;
     uint32_t sizeRecorded = this->readUInt();
-    size_t offset = fReader.offset();
-    obj = (*factory)(*this);
-    // check that we read the amount we expected
-    size_t sizeRead = fReader.offset() - offset;
-    this->validate(sizeRecorded == sizeRead);
-    if (fError) {
-        obj = nullptr;
+    if (factory) {
+        size_t offset = fReader.offset();
+        obj = (*factory)(*this);
+        // check that we read the amount we expected
+        size_t sizeRead = fReader.offset() - offset;
+        this->validate(sizeRecorded == sizeRead);
+        if (fError) {
+            obj = nullptr;
+        }
+    } else {
+        // we must skip the remaining data
+        this->skip(sizeRecorded);
+        SkASSERT(false);
     }
     return obj.release();
+}
+
+void SkValidatingReadBuffer::skipFlattenable() {
+    SkString name;
+    this->readString(&name);
+    if (fError) {
+        return;
+    }
+    uint32_t sizeRecorded = this->readUInt();
+    this->skip(sizeRecorded);
 }

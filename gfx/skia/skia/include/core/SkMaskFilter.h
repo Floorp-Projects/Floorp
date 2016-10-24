@@ -14,10 +14,8 @@
 #include "SkFlattenable.h"
 #include "SkMask.h"
 #include "SkPaint.h"
-#include "SkStrokeRec.h"
 
 class GrClip;
-class GrContext;
 class GrDrawContext;
 class GrPaint;
 class GrRenderTarget;
@@ -29,6 +27,7 @@ class SkMatrix;
 class SkPath;
 class SkRasterClip;
 class SkRRect;
+class SkStrokeRec;
 
 /** \class SkMaskFilter
 
@@ -123,26 +122,27 @@ public:
      *  Try to directly render a rounded rect mask filter into the target.  Returns
      *  true if drawing was successful.
      */
-    virtual bool directFilterRRectMaskGPU(GrContext*,
+    virtual bool directFilterRRectMaskGPU(GrTextureProvider* texProvider,
                                           GrDrawContext* drawContext,
                                           GrPaint* grp,
                                           const GrClip&,
                                           const SkMatrix& viewMatrix,
                                           const SkStrokeRec& strokeRec,
-                                          const SkRRect& rrect,
-                                          const SkRRect& devRRect) const;
+                                          const SkRRect& rrect) const;
 
     /**
      * This function is used to implement filters that require an explicit src mask. It should only
      * be called if canFilterMaskGPU returned true and the maskRect param should be the output from
-     * that call.
+     * that call. canOverwriteSrc indicates whether the implementation may treat src as a scratch
+     * texture and overwrite its contents. When true it is also legal to return src as the result.
      * Implementations are free to get the GrContext from the src texture in order to create
      * additional textures and perform multiple passes.
      */
     virtual bool filterMaskGPU(GrTexture* src,
                                const SkMatrix& ctm,
-                               const SkIRect& maskRect,
-                               GrTexture** result) const;
+                               const SkRect& maskRect,
+                               GrTexture** result,
+                               bool canOverwriteSrc) const;
 #endif
 
     /**
@@ -228,14 +228,14 @@ private:
      This method is not exported to java.
      */
     bool filterPath(const SkPath& devPath, const SkMatrix& ctm, const SkRasterClip&, SkBlitter*,
-                    SkStrokeRec::InitStyle) const;
+                    SkPaint::Style) const;
 
     /** Helper method that, given a roundRect in device space, will rasterize it into a kA8_Format
      mask and then call filterMask(). If this returns true, the specified blitter will be called
      to render that mask. Returns false if filterMask() returned false.
      */
     bool filterRRect(const SkRRect& devRRect, const SkMatrix& ctm, const SkRasterClip&,
-                     SkBlitter*) const;
+                     SkBlitter*, SkPaint::Style style) const;
 
     typedef SkFlattenable INHERITED;
 };

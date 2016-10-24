@@ -241,8 +241,6 @@ private:
     inline void processEviction(AtlasID);
 
     GrTexture* fTexture;
-    int        fPlotWidth;
-    int        fPlotHeight;
     SkDEBUGCODE(uint32_t fNumPlots;)
 
     uint64_t fAtlasGeneration;

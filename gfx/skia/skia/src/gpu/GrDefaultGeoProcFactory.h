@@ -24,7 +24,7 @@ namespace GrDefaultGeoProcFactory {
 
     struct PositionCoverageAttr {
         SkPoint fPosition;
-        float   fCoverage;
+        GrColor fCoverage;
     };
 
     struct PositionColorAttr {
@@ -35,7 +35,7 @@ namespace GrDefaultGeoProcFactory {
     struct PositionColorCoverageAttr {
         SkPoint fPosition;
         SkColor fColor;
-        float   fCoverage;
+        GrColor fCoverage;
     };
 
     struct PositionLocalCoordAttr {
@@ -46,7 +46,7 @@ namespace GrDefaultGeoProcFactory {
     struct PositionLocalCoordCoverageAttr {
         SkPoint fPosition;
         SkPoint fLocalCoord;
-        float   fCoverage;
+        GrColor fCoverage;
     };
 
     struct PositionColorLocalCoordAttr {
@@ -59,7 +59,7 @@ namespace GrDefaultGeoProcFactory {
         SkPoint fPosition;
         GrColor fColor;
         SkPoint fLocalCoord;
-        float   fCoverage;
+        GrColor fCoverage;
     };
 
     struct Color {
@@ -115,20 +115,20 @@ namespace GrDefaultGeoProcFactory {
         const SkMatrix* fMatrix;
     };
 
-    sk_sp<GrGeometryProcessor> Make(const Color&,
-                                    const Coverage&,
-                                    const LocalCoords&,
-                                    const SkMatrix& viewMatrix);
+    const GrGeometryProcessor* Create(const Color&,
+                                      const Coverage&,
+                                      const LocalCoords&,
+                                      const SkMatrix& viewMatrix);
 
     /*
      * Use this factory to create a GrGeometryProcessor that expects a device space vertex position
      * attribute. The view matrix must still be provided to compute correctly transformed
      * coordinates for GrFragmentProcessors. It may fail if the view matrix is not invertible.
      */
-    sk_sp<GrGeometryProcessor> MakeForDeviceSpace(const Color&,
-                                                  const Coverage&,
-                                                  const LocalCoords&,
-                                                  const SkMatrix& viewMatrix);
+    const GrGeometryProcessor* CreateForDeviceSpace(const Color&,
+                                                    const Coverage&,
+                                                    const LocalCoords&,
+                                                    const SkMatrix& viewMatrix);
 
     inline size_t DefaultVertexStride() { return sizeof(PositionAttr); }
 };

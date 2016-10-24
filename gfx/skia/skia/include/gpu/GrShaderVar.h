@@ -51,6 +51,7 @@ public:
         , fName(name)
         , fCount(arrayCount)
         , fPrecision(precision) {
+        SkASSERT(kDefault_GrSLPrecision == precision || GrSLTypeIsNumeric(type));
         SkASSERT(kVoid_GrSLType != type);
     }
 
@@ -61,6 +62,7 @@ public:
         , fName(name)
         , fCount(arrayCount)
         , fPrecision(precision) {
+        SkASSERT(kDefault_GrSLPrecision == precision || GrSLTypeIsNumeric(type));
         SkASSERT(kVoid_GrSLType != type);
     }
 
@@ -71,6 +73,7 @@ public:
         , fName(name)
         , fCount(arrayCount)
         , fPrecision(precision) {
+        SkASSERT(kDefault_GrSLPrecision == precision || GrSLTypeIsNumeric(type));
         SkASSERT(kVoid_GrSLType != type);
     }
 
@@ -88,6 +91,7 @@ public:
              GrSLPrecision precision = kDefault_GrSLPrecision,
              int count = kNonArray) {
         SkASSERT(kVoid_GrSLType != type);
+        SkASSERT(kDefault_GrSLPrecision == precision || GrSLTypeIsNumeric(type));
         fType = type;
         fTypeModifier = typeModifier;
         fName = name;
@@ -101,6 +105,7 @@ public:
              GrSLPrecision precision = kDefault_GrSLPrecision,
              int count = kNonArray) {
         SkASSERT(kVoid_GrSLType != type);
+        SkASSERT(kDefault_GrSLPrecision == precision || GrSLTypeIsNumeric(type));
         fType = type;
         fTypeModifier = typeModifier;
         fName = name;

@@ -10,7 +10,6 @@
 
 #undef GetGlyphIndices
 
-#include "SkDraw.h"
 #include "SkDWrite.h"
 #include "SkDWriteGeometrySink.h"
 #include "SkEndian.h"
@@ -24,7 +23,6 @@
 #include "SkOTTable_gasp.h"
 #include "SkOTTable_maxp.h"
 #include "SkPath.h"
-#include "SkRasterClip.h"
 #include "SkScalerContext.h"
 #include "SkScalerContext_win_dw.h"
 #include "SkSharedMutex.h"
@@ -42,6 +40,7 @@
  */
 static SkSharedMutex DWriteFactoryMutex;
 
+typedef SkAutoTExclusive<SkSharedMutex> Exclusive;
 typedef SkAutoSharedMutexShared Shared;
 
 static bool isLCD(const SkScalerContext::Rec& rec) {
@@ -49,7 +48,7 @@ static bool isLCD(const SkScalerContext::Rec& rec) {
 }
 
 static bool is_hinted_without_gasp(DWriteFontTypeface* typeface) {
-    SkAutoExclusive l(DWriteFactoryMutex);
+    Exclusive l(DWriteFactoryMutex);
     AutoTDWriteTable<SkOTTableMaximumProfile> maxp(typeface->fDWriteFontFace.get());
     if (!maxp.fExists) {
         return false;
@@ -119,7 +118,7 @@ static void expand_range_if_gridfit_only(DWriteFontTypeface* typeface, int size,
 }
 
 static bool has_bitmap_strike(DWriteFontTypeface* typeface, PPEMRange range) {
-    SkAutoExclusive l(DWriteFactoryMutex);
+    Exclusive l(DWriteFactoryMutex);
     {
         AutoTDWriteTable<SkOTTableEmbeddedBitmapLocation> eblc(typeface->fDWriteFontFace.get());
         if (!eblc.fExists) {
@@ -205,19 +204,10 @@ static bool is_axis_aligned(const SkScalerContext::Rec& rec) {
 }
 
 SkScalerContext_DW::SkScalerContext_DW(DWriteFontTypeface* typeface,
-                                       const SkScalerContextEffects& effects,
                                        const SkDescriptor* desc)
-        : SkScalerContext(typeface, effects, desc)
+        : SkScalerContext(typeface, desc)
         , fTypeface(SkRef(typeface))
         , fGlyphCount(-1) {
-
-#if SK_HAS_DWRITE_2_H
-    fTypeface->fFactory->QueryInterface<IDWriteFactory2>(&fFactory2);
-
-    SkTScopedComPtr<IDWriteFontFace2> fontFace2;
-    fTypeface->fDWriteFontFace->QueryInterface<IDWriteFontFace2>(&fontFace2);
-    fIsColorFont = fFactory2.get() && fontFace2.get() && fontFace2->IsColorFont();
-#endif
 
     // In general, all glyphs should use CLEARTYPE_NATURAL_SYMMETRIC
     // except when bi-level rendering is requested or there are embedded
@@ -362,7 +352,7 @@ void SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
     if (DWRITE_MEASURING_MODE_GDI_CLASSIC == fMeasuringMode ||
         DWRITE_MEASURING_MODE_GDI_NATURAL == fMeasuringMode)
     {
-        SkAutoExclusive l(DWriteFactoryMutex);
+        Exclusive l(DWriteFactoryMutex);
         HRVM(fTypeface->fDWriteFontFace->GetGdiCompatibleGlyphMetrics(
                  fTextSizeMeasure,
                  1.0f, // pixelsPerDip
@@ -372,7 +362,7 @@ void SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
                  &gm),
              "Could not get gdi compatible glyph metrics.");
     } else {
-        SkAutoExclusive l(DWriteFactoryMutex);
+        Exclusive l(DWriteFactoryMutex);
         HRVM(fTypeface->fDWriteFontFace->GetDesignGlyphMetrics(&glyphId, 1, &gm),
              "Could not get design metrics.");
     }
@@ -431,7 +421,7 @@ HRESULT SkScalerContext_DW::getBoundingBox(SkGlyph* glyph,
 
     SkTScopedComPtr<IDWriteGlyphRunAnalysis> glyphRunAnalysis;
     {
-        SkAutoExclusive l(DWriteFactoryMutex);
+        Exclusive l(DWriteFactoryMutex);
         HRM(fTypeface->fFactory->CreateGlyphRunAnalysis(
             &run,
             1.0f, // pixelsPerDip,
@@ -467,47 +457,6 @@ static bool glyph_check_and_set_bounds(SkGlyph* glyph, const RECT& bbox) {
     return true;
 }
 
-bool SkScalerContext_DW::isColorGlyph(const SkGlyph& glyph) {
-#if SK_HAS_DWRITE_2_H
-    SkTScopedComPtr<IDWriteColorGlyphRunEnumerator> colorLayer;
-    if (getColorGlyphRun(glyph, &colorLayer)) {
-        return true;
-    }
-#endif
-    return false;
-}
-
-#if SK_HAS_DWRITE_2_H
-bool SkScalerContext_DW::getColorGlyphRun(const SkGlyph& glyph,
-                                          IDWriteColorGlyphRunEnumerator** colorGlyph)
-{
-    FLOAT advance = 0;
-    UINT16 glyphId = glyph.getGlyphID();
-
-    DWRITE_GLYPH_OFFSET offset;
-    offset.advanceOffset = 0.0f;
-    offset.ascenderOffset = 0.0f;
-
-    DWRITE_GLYPH_RUN run;
-    run.glyphCount = 1;
-    run.glyphAdvances = &advance;
-    run.fontFace = fTypeface->fDWriteFontFace.get();
-    run.fontEmSize = SkScalarToFloat(fTextSizeRender);
-    run.bidiLevel = 0;
-    run.glyphIndices = &glyphId;
-    run.isSideways = FALSE;
-    run.glyphOffsets = &offset;
-
-    HRESULT hr = fFactory2->TranslateColorGlyphRun(
-        0, 0, &run, nullptr, fMeasuringMode, &fXform, 0, colorGlyph);
-    if (hr == DWRITE_E_NOCOLOR) {
-        return false;
-    }
-    HRBM(hr, "Failed to translate color glyph run");
-    return true;
-}
-#endif
-
 void SkScalerContext_DW::generateMetrics(SkGlyph* glyph) {
     glyph->fWidth = 0;
     glyph->fHeight = 0;
@@ -515,12 +464,6 @@ void SkScalerContext_DW::generateMetrics(SkGlyph* glyph) {
     glyph->fTop = 0;
 
     this->generateAdvance(glyph);
-
-#if SK_HAS_DWRITE_2_H
-    if (fIsColorFont && isColorGlyph(*glyph)) {
-        glyph->fMaskFormat = SkMask::kARGB32_Format;
-    }
-#endif
 
     RECT bbox;
     HRVM(this->getBoundingBox(glyph, fRenderingMode, fTextureType, &bbox),
@@ -736,7 +679,7 @@ const void* SkScalerContext_DW::drawDWMask(const SkGlyph& glyph,
 
         SkTScopedComPtr<IDWriteGlyphRunAnalysis> glyphRunAnalysis;
         {
-            SkAutoExclusive l(DWriteFactoryMutex);
+            Exclusive l(DWriteFactoryMutex);
             HRNM(fTypeface->fFactory->CreateGlyphRunAnalysis(&run,
                 1.0f, // pixelsPerDip,
                 &fXform,
@@ -766,75 +709,6 @@ const void* SkScalerContext_DW::drawDWMask(const SkGlyph& glyph,
     return fBits.begin();
 }
 
-#if SK_HAS_DWRITE_2_H
-void SkScalerContext_DW::generateColorGlyphImage(const SkGlyph& glyph) {
-    SkASSERT(isColorGlyph(glyph));
-    SkASSERT(glyph.fMaskFormat == SkMask::Format::kARGB32_Format);
-
-    memset(glyph.fImage, 0, glyph.computeImageSize());
-
-    SkTScopedComPtr<IDWriteColorGlyphRunEnumerator> colorLayers;
-    getColorGlyphRun(glyph, &colorLayers);
-    SkASSERT(colorLayers.get());
-
-    SkMatrix matrix = fSkXform;
-    matrix.postTranslate(-SkIntToScalar(glyph.fLeft), -SkIntToScalar(glyph.fTop));
-    SkRasterClip rc(SkIRect::MakeWH(glyph.fWidth, glyph.fHeight));
-    SkDraw draw;
-    draw.fDst = SkPixmap(SkImageInfo::MakeN32(glyph.fWidth, glyph.fHeight, kPremul_SkAlphaType),
-                         glyph.fImage,
-                         glyph.ComputeRowBytes(glyph.fWidth, SkMask::Format::kARGB32_Format));
-    draw.fMatrix = &matrix;
-    draw.fRC = &rc;
-
-    SkPaint paint;
-    if (fRenderingMode != DWRITE_RENDERING_MODE_ALIASED) {
-        paint.setFlags(SkPaint::Flags::kAntiAlias_Flag);
-    }
-
-    BOOL hasNextRun = FALSE;
-    while (SUCCEEDED(colorLayers->MoveNext(&hasNextRun)) && hasNextRun) {
-        const DWRITE_COLOR_GLYPH_RUN* colorGlyph;
-        HRVM(colorLayers->GetCurrentRun(&colorGlyph), "Could not get current color glyph run");
-
-        SkColor color;
-        if (colorGlyph->paletteIndex != 0xffff) {
-            color = SkColorSetARGB(SkFloatToIntRound(colorGlyph->runColor.a * 255),
-                                   SkFloatToIntRound(colorGlyph->runColor.r * 255),
-                                   SkFloatToIntRound(colorGlyph->runColor.g * 255),
-                                   SkFloatToIntRound(colorGlyph->runColor.b * 255));
-        } else {
-            // If all components of runColor are 0 or (equivalently) paletteIndex is 0xFFFF then
-            // the 'current brush' is used. fRec.getLuminanceColor() is kinda sorta what is wanted
-            // here, but not really, it will often be the wrong value because it wan't designed for
-            // this.
-            // TODO: implement this fully, bug.skia.org/5788
-            color = fRec.getLuminanceColor();
-        }
-        paint.setColor(color);
-
-        SkPath path;
-        SkTScopedComPtr<IDWriteGeometrySink> geometryToPath;
-        HRVM(SkDWriteGeometrySink::Create(&path, &geometryToPath),
-             "Could not create geometry to path converter.");
-        {
-            SkAutoExclusive l(DWriteFactoryMutex);
-            HRVM(colorGlyph->glyphRun.fontFace->GetGlyphRunOutline(
-                colorGlyph->glyphRun.fontEmSize,
-                colorGlyph->glyphRun.glyphIndices,
-                colorGlyph->glyphRun.glyphAdvances,
-                colorGlyph->glyphRun.glyphOffsets,
-                colorGlyph->glyphRun.glyphCount,
-                colorGlyph->glyphRun.isSideways,
-                colorGlyph->glyphRun.bidiLevel % 2, //rtl
-                geometryToPath.get()),
-                "Could not create glyph outline.");
-        }
-        draw.drawPath(path, paint, nullptr, true /* pathIsMutable */);
-    }
-}
-#endif
-
 void SkScalerContext_DW::generateImage(const SkGlyph& glyph) {
     //Create the mask.
     DWRITE_RENDERING_MODE renderingMode = fRenderingMode;
@@ -843,14 +717,6 @@ void SkScalerContext_DW::generateImage(const SkGlyph& glyph) {
         renderingMode = DWRITE_RENDERING_MODE_ALIASED;
         textureType = DWRITE_TEXTURE_ALIASED_1x1;
     }
-
-#if SK_HAS_DWRITE_2_H
-    if (SkMask::kARGB32_Format == glyph.fMaskFormat) {
-        generateColorGlyphImage(glyph);
-        return;
-    }
-#endif
-
     const void* bits = this->drawDWMask(glyph, renderingMode, textureType);
     if (!bits) {
         sk_bzero(glyph.fImage, glyph.computeImageSize());
@@ -896,7 +762,7 @@ void SkScalerContext_DW::generatePath(const SkGlyph& glyph, SkPath* path) {
          "Could not create geometry to path converter.");
     uint16_t glyphId = glyph.getGlyphID();
     {
-        SkAutoExclusive l(DWriteFactoryMutex);
+        Exclusive l(DWriteFactoryMutex);
         //TODO: convert to<->from DIUs? This would make a difference if hinting.
         //It may not be needed, it appears that DirectWrite only hints at em size.
         HRVM(fTypeface->fDWriteFontFace->GetGlyphRunOutline(SkScalarToFloat(fTextSizeRender),

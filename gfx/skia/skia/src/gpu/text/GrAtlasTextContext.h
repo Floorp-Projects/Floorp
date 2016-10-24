@@ -19,6 +19,7 @@
 
 class GrDrawBatch;
 class GrDrawContext;
+class GrDrawTarget;
 class GrPipelineBuilder;
 class GrTextBlobCache;
 class SkGlyph;
@@ -51,13 +52,12 @@ private:
 
     // sets up the descriptor on the blob and returns a detached cache.  Client must attach
     inline static GrColor ComputeCanonicalColor(const SkPaint&, bool lcd);
-    // Determines if we need to use fake gamma (and contrast boost):
-    inline static uint32_t ComputeScalerContextFlags(GrDrawContext*);
+    // Determines if we need to use FakeGamma:
+    inline static SkPaint::FakeGamma ComputeFakeGamma(GrDrawContext*, const GrPaint&);
     static void RegenerateTextBlob(GrAtlasTextBlob* bmp,
                                    GrBatchFontCache*,
                                    const GrShaderCaps&,
-                                   const SkPaint& skPaint, GrColor,
-                                   uint32_t scalerContextFlags,
+                                   const SkPaint& skPaint, GrColor, SkPaint::FakeGamma,
                                    const SkMatrix& viewMatrix,
                                    const SkSurfaceProps&,
                                    const SkTextBlob* blob, SkScalar x, SkScalar y,
@@ -67,8 +67,7 @@ private:
     static inline GrAtlasTextBlob* CreateDrawTextBlob(GrTextBlobCache*,
                                                       GrBatchFontCache*, const GrShaderCaps&,
                                                       const GrPaint&,
-                                                      const SkPaint&,
-                                                      uint32_t scalerContextFlags,
+                                                      const SkPaint&, SkPaint::FakeGamma,
                                                       const SkMatrix& viewMatrix,
                                                       const SkSurfaceProps&,
                                                       const char text[], size_t byteLength,
@@ -76,8 +75,7 @@ private:
     static inline GrAtlasTextBlob* CreateDrawPosTextBlob(GrTextBlobCache*, GrBatchFontCache*,
                                                          const GrShaderCaps&,
                                                          const GrPaint&,
-                                                         const SkPaint&,
-                                                         uint32_t scalerContextFlags,
+                                                         const SkPaint&, SkPaint::FakeGamma,
                                                          const SkMatrix& viewMatrix,
                                                          const SkSurfaceProps&,
                                                          const char text[], size_t byteLength,
@@ -89,8 +87,7 @@ private:
     SkAutoTUnref<const GrDistanceFieldAdjustTable> fDistanceAdjustTable;
 
 #ifdef GR_TEST_UTILS
-    static const uint32_t kTextBlobBatchScalerContextFlags =
-        SkPaint::kFakeGammaAndBoostContrast_ScalerContextFlags;
+    static const SkPaint::FakeGamma kTextBlobBatchFakeGamma = SkPaint::FakeGamma::On;
     DRAW_BATCH_TEST_FRIEND(TextBlobBatch);
 #endif
 };

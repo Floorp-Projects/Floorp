@@ -9,7 +9,6 @@
 #ifndef SkPathRef_DEFINED
 #define SkPathRef_DEFINED
 
-#include "../private/SkAtomics.h"
 #include "../private/SkTDArray.h"
 #include "SkMatrix.h"
 #include "SkPoint.h"
@@ -36,7 +35,7 @@ class SkWBuffer;
  * logical verb or the last verb in memory).
  */
 
-class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
+class SK_API SkPathRef : public ::SkRefCnt {
 public:
     class Editor {
     public:
@@ -58,11 +57,11 @@ public:
         SkPoint* atPoint(int i) {
             SkASSERT((unsigned) i < (unsigned) fPathRef->fPointCnt);
             return this->points() + i;
-        }
+        };
         const SkPoint* atPoint(int i) const {
             SkASSERT((unsigned) i < (unsigned) fPathRef->fPointCnt);
             return this->points() + i;
-        }
+        };
 
         /**
          * Adds the verb and allocates space for the number of points indicated by the verb. The
@@ -100,13 +99,9 @@ public:
          */
         SkPathRef* pathRef() { return fPathRef; }
 
-        void setIsOval(bool isOval, bool isCCW, unsigned start) {
-            fPathRef->setIsOval(isOval, isCCW, start);
-        }
+        void setIsOval(bool isOval) { fPathRef->setIsOval(isOval); }
 
-        void setIsRRect(bool isRRect, bool isCCW, unsigned start) {
-            fPathRef->setIsRRect(isRRect, isCCW, start);
-        }
+        void setIsRRect(bool isRRect) { fPathRef->setIsRRect(isRRect); }
 
         void setBounds(const SkRect& rect) { fPathRef->setBounds(rect); }
 
@@ -168,42 +163,23 @@ public:
      *
      * @param rect      returns the bounding rect of this oval. It's a circle
      *                  if the height and width are the same.
-     * @param isCCW     is the oval CCW (or CW if false).
-     * @param start     indicates where the contour starts on the oval (see
-     *                  SkPath::addOval for intepretation of the index).
      *
      * @return true if this path is an oval.
      *              Tracking whether a path is an oval is considered an
      *              optimization for performance and so some paths that are in
      *              fact ovals can report false.
      */
-    bool isOval(SkRect* rect, bool* isCCW, unsigned* start) const {
-        if (fIsOval) {
-            if (rect) {
-                *rect = this->getBounds();
-            }
-            if (isCCW) {
-                *isCCW = SkToBool(fRRectOrOvalIsCCW);
-            }
-            if (start) {
-                *start = fRRectOrOvalStartIdx;
-            }
+    bool isOval(SkRect* rect) const {
+        if (fIsOval && rect) {
+            *rect = this->getBounds();
         }
 
         return SkToBool(fIsOval);
     }
 
-    bool isRRect(SkRRect* rrect, bool* isCCW, unsigned* start) const {
-        if (fIsRRect) {
-            if (rrect) {
-                *rrect = this->getRRect();
-            }
-            if (isCCW) {
-                *isCCW = SkToBool(fRRectOrOvalIsCCW);
-            }
-            if (start) {
-                *start = fRRectOrOvalStartIdx;
-            }
+    bool isRRect(SkRRect* rrect) const {
+        if (fIsRRect && rrect) {
+            *rrect = this->getRRect();
         }
         return SkToBool(fIsRRect);
     }
@@ -243,7 +219,7 @@ public:
      */
     static void Rewind(SkAutoTUnref<SkPathRef>* pathRef);
 
-    ~SkPathRef();
+    virtual ~SkPathRef();
     int countPoints() const { SkDEBUGCODE(this->validate();) return fPointCnt; }
     int countVerbs() const { SkDEBUGCODE(this->validate();) return fVerbCnt; }
     int countWeights() const { SkDEBUGCODE(this->validate();) return fConicWeights.count(); }
@@ -315,12 +291,10 @@ public:
 
 private:
     enum SerializationOffsets {
-        kRRectOrOvalStartIdx_SerializationShift = 28,  // requires 3 bits
-        kRRectOrOvalIsCCW_SerializationShift = 27,     // requires 1 bit
-        kIsRRect_SerializationShift = 26,              // requires 1 bit
-        kIsFinite_SerializationShift = 25,             // requires 1 bit
-        kIsOval_SerializationShift = 24,               // requires 1 bit
-        kSegmentMask_SerializationShift = 0            // requires 4 bits
+        kIsRRect_SerializationShift = 26,   // requires 1 bit
+        kIsFinite_SerializationShift = 25,  // requires 1 bit
+        kIsOval_SerializationShift = 24,    // requires 1 bit
+        kSegmentMask_SerializationShift = 0 // requires 4 bits
     };
 
     SkPathRef() {
@@ -334,9 +308,6 @@ private:
         fSegmentMask = 0;
         fIsOval = false;
         fIsRRect = false;
-        // The next two values don't matter unless fIsOval or fIsRRect are true.
-        fRRectOrOvalIsCCW = false;
-        fRRectOrOvalStartIdx = 0xAC;
         SkDEBUGCODE(fEditorsAttached = 0;)
         SkDEBUGCODE(this->validate();)
     }
@@ -482,17 +453,9 @@ private:
      */
     friend SkPathRef* sk_create_empty_pathref();
 
-    void setIsOval(bool isOval, bool isCCW, unsigned start) {
-        fIsOval = isOval;
-        fRRectOrOvalIsCCW = isCCW;
-        fRRectOrOvalStartIdx = start;
-    }
+    void setIsOval(bool isOval) { fIsOval = isOval; }
 
-    void setIsRRect(bool isRRect, bool isCCW, unsigned start) {
-        fIsRRect = isRRect;
-        fRRectOrOvalIsCCW = isCCW;
-        fRRectOrOvalStartIdx = start;
-    }
+    void setIsRRect(bool isRRect) { fIsRRect = isRRect; }
 
     // called only by the editor. Note that this is not a const function.
     SkPoint* getPoints() {
@@ -535,14 +498,11 @@ private:
 
     SkBool8  fIsOval;
     SkBool8  fIsRRect;
-    // Both the circle and rrect special cases have a notion of direction and starting point
-    // The next two variables store that information for either.
-    SkBool8  fRRectOrOvalIsCCW;
-    uint8_t  fRRectOrOvalStartIdx;
     uint8_t  fSegmentMask;
 
     friend class PathRefTest_Private;
     friend class ForceIsRRect_Private; // unit test isRRect
+    typedef SkRefCnt INHERITED;
 };
 
 #endif

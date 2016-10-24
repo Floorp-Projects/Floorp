@@ -42,7 +42,7 @@ template <typename D, typename S> static D* SkTAfter(S* ptr, size_t count = 1) {
 template <typename D, typename S> static D* SkTAddOffset(S* ptr, size_t byteOffset) {
     // The intermediate char* has the same cv-ness as D as this produces better error messages.
     // This relies on the fact that reinterpret_cast can add constness, but cannot remove it.
-    return reinterpret_cast<D*>(reinterpret_cast<sknonstd::same_cv_t<char, D>*>(ptr) + byteOffset);
+    return reinterpret_cast<D*>((char*)(ptr) + byteOffset);
 }
 
 template <typename R, typename T, R (*P)(T*)> struct SkFunctionWrapper {
@@ -192,7 +192,6 @@ public:
             (--iter)->~T();
         }
 
-        SkASSERT(count >= 0);
         if (fCount != count) {
             if (fCount > kCount) {
                 // 'fArray' was allocated last time so free it now
@@ -268,7 +267,7 @@ public:
 
     /** Allocates space for 'count' Ts. */
     explicit SkAutoTMalloc(size_t count) {
-        fPtr = count ? (T*)sk_malloc_flags(count * sizeof(T), SK_MALLOC_THROW) : nullptr;
+        fPtr = (T*)sk_malloc_flags(count * sizeof(T), SK_MALLOC_THROW);
     }
 
     ~SkAutoTMalloc() {
@@ -277,11 +276,7 @@ public:
 
     /** Resize the memory area pointed to by the current ptr preserving contents. */
     void realloc(size_t count) {
-        if (count) {
-            fPtr = reinterpret_cast<T*>(sk_realloc_throw(fPtr, count * sizeof(T)));
-        } else {
-            this->reset(0);
-        }
+        fPtr = reinterpret_cast<T*>(sk_realloc_throw(fPtr, count * sizeof(T)));
     }
 
     /** Resize the memory area pointed to by the current ptr without preserving contents. */
@@ -331,10 +326,8 @@ public:
     SkAutoSTMalloc(size_t count) {
         if (count > kCount) {
             fPtr = (T*)sk_malloc_flags(count * sizeof(T), SK_MALLOC_THROW | SK_MALLOC_TEMP);
-        } else if (count) {
-            fPtr = fTStorage;
         } else {
-            fPtr = nullptr;
+            fPtr = fTStorage;
         }
     }
 
@@ -351,10 +344,8 @@ public:
         }
         if (count > kCount) {
             fPtr = (T*)sk_malloc_throw(count * sizeof(T));
-        } else if (count) {
-            fPtr = fTStorage;
         } else {
-            fPtr = nullptr;
+            fPtr = fTStorage;
         }
         return fPtr;
     }
@@ -386,12 +377,8 @@ public:
             } else {
                 fPtr = (T*)sk_realloc_throw(fPtr, count * sizeof(T));
             }
-        } else if (count) {
-            if (fPtr != fTStorage) {
-                fPtr = (T*)sk_realloc_throw(fPtr, count * sizeof(T));
-            }
-        } else {
-            this->reset(0);
+        } else if (fPtr != fTStorage) {
+            fPtr = (T*)sk_realloc_throw(fPtr, count * sizeof(T));
         }
     }
 
@@ -445,12 +432,6 @@ template <typename T> T* SkInPlaceNewCheck(void* storage, size_t size) {
 template <typename T, typename A1, typename A2, typename A3>
 T* SkInPlaceNewCheck(void* storage, size_t size, const A1& a1, const A2& a2, const A3& a3) {
     return (sizeof(T) <= size) ? new (storage) T(a1, a2, a3) : new T(a1, a2, a3);
-}
-
-template <typename T, typename A1, typename A2, typename A3, typename A4>
-T* SkInPlaceNewCheck(void* storage, size_t size,
-                     const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
-    return (sizeof(T) <= size) ? new (storage) T(a1, a2, a3, a4) : new T(a1, a2, a3, a4);
 }
 
 /**

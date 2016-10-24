@@ -10,7 +10,6 @@
 
 #include "SkPoint.h"
 #include "SkMatrix.h"
-#include "SkMatrixPriv.h"
 
 /**
  * GrQuad is a collection of 4 points which can be used to represent an arbitrary quadrilateral
@@ -36,7 +35,8 @@ public:
     }
 
     void setFromMappedRect(const SkRect& rect, const SkMatrix& matrix) {
-        SkMatrixPriv::SetMappedRectFan(matrix, rect, fPoints);
+        this->set(rect);
+        matrix.mapPoints(fPoints, kNumPoints);
     }
 
     const GrQuad& operator=(const GrQuad& that) {

@@ -10,11 +10,12 @@
 #include "GrContext.h"
 #include "GrGpu.h"
 
-void GrCoordTransform::reset(const SkMatrix& m, const GrTexture* texture,
+void GrCoordTransform::reset(GrCoordSet sourceCoords, const SkMatrix& m, const GrTexture* texture,
                              GrTextureParams::FilterMode filter) {
     SkASSERT(texture);
     SkASSERT(!fInProcessor);
 
+    fSourceCoords = sourceCoords;
     fMatrix = m;
     fReverseY = kBottomLeft_GrSurfaceOrigin == texture->origin();
 
@@ -52,8 +53,11 @@ void GrCoordTransform::reset(const SkMatrix& m, const GrTexture* texture,
     }
 }
 
-void GrCoordTransform::reset(const SkMatrix& m, GrSLPrecision precision) {
+void GrCoordTransform::reset(GrCoordSet sourceCoords,
+                             const SkMatrix& m,
+                             GrSLPrecision precision) {
     SkASSERT(!fInProcessor);
+    fSourceCoords = sourceCoords;
     fMatrix = m;
     fReverseY = false;
     fPrecision = precision;

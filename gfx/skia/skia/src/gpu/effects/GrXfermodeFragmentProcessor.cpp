@@ -17,12 +17,12 @@
 
 class ComposeTwoFragmentProcessor : public GrFragmentProcessor {
 public:
-    ComposeTwoFragmentProcessor(sk_sp<GrFragmentProcessor> src, sk_sp<GrFragmentProcessor> dst,
-                                SkXfermode::Mode mode)
+    ComposeTwoFragmentProcessor(const GrFragmentProcessor* src, const GrFragmentProcessor* dst,
+                    SkXfermode::Mode mode)
         : fMode(mode) {
         this->initClassID<ComposeTwoFragmentProcessor>();
-        SkDEBUGCODE(int shaderAChildIndex = )this->registerChildProcessor(std::move(src));
-        SkDEBUGCODE(int shaderBChildIndex = )this->registerChildProcessor(std::move(dst));
+        SkDEBUGCODE(int shaderAChildIndex = )this->registerChildProcessor(src);
+        SkDEBUGCODE(int shaderBChildIndex = )this->registerChildProcessor(dst);
         SkASSERT(0 == shaderAChildIndex);
         SkASSERT(1 == shaderBChildIndex);
     }
@@ -69,15 +69,14 @@ private:
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(ComposeTwoFragmentProcessor);
 
-sk_sp<GrFragmentProcessor> ComposeTwoFragmentProcessor::TestCreate(GrProcessorTestData* d) {
+const GrFragmentProcessor* ComposeTwoFragmentProcessor::TestCreate(GrProcessorTestData* d) {
     // Create two random frag procs.
-    sk_sp<GrFragmentProcessor> fpA(GrProcessorUnitTest::MakeChildFP(d));
-    sk_sp<GrFragmentProcessor> fpB(GrProcessorUnitTest::MakeChildFP(d));
+    SkAutoTUnref<const GrFragmentProcessor> fpA(GrProcessorUnitTest::CreateChildFP(d));
+    SkAutoTUnref<const GrFragmentProcessor> fpB(GrProcessorUnitTest::CreateChildFP(d));
 
     SkXfermode::Mode mode = static_cast<SkXfermode::Mode>(
         d->fRandom->nextRangeU(0, SkXfermode::kLastMode));
-    return sk_sp<GrFragmentProcessor>(
-        new ComposeTwoFragmentProcessor(std::move(fpA), std::move(fpB), mode));
+    return new ComposeTwoFragmentProcessor(fpA, fpB, mode);
 }
 
 GrGLSLFragmentProcessor* ComposeTwoFragmentProcessor::onCreateGLSLInstance() const{
@@ -119,19 +118,18 @@ void GLComposeTwoFragmentProcessor::emitCode(EmitArgs& args) {
     }
 }
 
-sk_sp<GrFragmentProcessor> GrXfermodeFragmentProcessor::MakeFromTwoProcessors(
-         sk_sp<GrFragmentProcessor> src, sk_sp<GrFragmentProcessor> dst, SkXfermode::Mode mode) {
+const GrFragmentProcessor* GrXfermodeFragmentProcessor::CreateFromTwoProcessors(
+         const GrFragmentProcessor* src, const GrFragmentProcessor* dst, SkXfermode::Mode mode) {
     switch (mode) {
         case SkXfermode::kClear_Mode:
-            return GrConstColorProcessor::Make(GrColor_TRANSPARENT_BLACK,
-                                               GrConstColorProcessor::kIgnore_InputMode);
+            return GrConstColorProcessor::Create(GrColor_TRANSPARENT_BLACK,
+                                                 GrConstColorProcessor::kIgnore_InputMode);
         case SkXfermode::kSrc_Mode:
-            return src;
+            return SkRef(src);
         case SkXfermode::kDst_Mode:
-            return dst;
+            return SkRef(dst);
         default:
-            return sk_sp<GrFragmentProcessor>(
-                new ComposeTwoFragmentProcessor(std::move(src), std::move(dst), mode));
+            return new ComposeTwoFragmentProcessor(src, dst, mode);
     }
 }
 
@@ -144,11 +142,11 @@ public:
         kSrc_Child,
     };
 
-    ComposeOneFragmentProcessor(sk_sp<GrFragmentProcessor> dst, SkXfermode::Mode mode, Child child)
+    ComposeOneFragmentProcessor(const GrFragmentProcessor* dst, SkXfermode::Mode mode, Child child)
         : fMode(mode)
         , fChild(child) {
         this->initClassID<ComposeOneFragmentProcessor>();
-        SkDEBUGCODE(int dstIndex = )this->registerChildProcessor(std::move(dst));
+        SkDEBUGCODE(int dstIndex = )this->registerChildProcessor(dst);
         SkASSERT(0 == dstIndex);
     }
 
@@ -262,17 +260,17 @@ private:
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(ComposeOneFragmentProcessor);
 
-sk_sp<GrFragmentProcessor> ComposeOneFragmentProcessor::TestCreate(GrProcessorTestData* d) {
+const GrFragmentProcessor* ComposeOneFragmentProcessor::TestCreate(GrProcessorTestData* d) {
     // Create one random frag procs.
     // For now, we'll prevent either children from being a shader with children to prevent the
     // possibility of an arbitrarily large tree of procs.
-    sk_sp<GrFragmentProcessor> dst(GrProcessorUnitTest::MakeChildFP(d));
+    SkAutoTUnref<const GrFragmentProcessor> dst(GrProcessorUnitTest::CreateChildFP(d));
     SkXfermode::Mode mode = static_cast<SkXfermode::Mode>(
         d->fRandom->nextRangeU(0, SkXfermode::kLastMode));
     ComposeOneFragmentProcessor::Child child = d->fRandom->nextBool() ?
         ComposeOneFragmentProcessor::kDst_Child :
         ComposeOneFragmentProcessor::kSrc_Child;
-    return sk_sp<GrFragmentProcessor>(new ComposeOneFragmentProcessor(std::move(dst), mode, child));
+    return new ComposeOneFragmentProcessor(dst, mode, child);
 }
 
 GrGLSLFragmentProcessor* ComposeOneFragmentProcessor::onCreateGLSLInstance() const {
@@ -281,32 +279,30 @@ GrGLSLFragmentProcessor* ComposeOneFragmentProcessor::onCreateGLSLInstance() con
 
 //////////////////////////////////////////////////////////////////////////////
 
-sk_sp<GrFragmentProcessor> GrXfermodeFragmentProcessor::MakeFromDstProcessor(
-    sk_sp<GrFragmentProcessor> dst, SkXfermode::Mode mode) {
+const GrFragmentProcessor* GrXfermodeFragmentProcessor::CreateFromDstProcessor(
+    const GrFragmentProcessor* dst, SkXfermode::Mode mode) {
     switch (mode) {
         case SkXfermode::kClear_Mode:
-            return GrConstColorProcessor::Make(GrColor_TRANSPARENT_BLACK,
+            return GrConstColorProcessor::Create(GrColor_TRANSPARENT_BLACK,
                                                  GrConstColorProcessor::kIgnore_InputMode);
         case SkXfermode::kSrc_Mode:
             return nullptr;
         default:
-            return sk_sp<GrFragmentProcessor>(
-                new ComposeOneFragmentProcessor(std::move(dst), mode,
-                                                ComposeOneFragmentProcessor::kDst_Child));
+            return new ComposeOneFragmentProcessor(dst, mode,
+                                                   ComposeOneFragmentProcessor::kDst_Child);
     }
 }
 
-sk_sp<GrFragmentProcessor> GrXfermodeFragmentProcessor::MakeFromSrcProcessor(
-    sk_sp<GrFragmentProcessor> src, SkXfermode::Mode mode) {
+const GrFragmentProcessor* GrXfermodeFragmentProcessor::CreateFromSrcProcessor(
+    const GrFragmentProcessor* src, SkXfermode::Mode mode) {
     switch (mode) {
         case SkXfermode::kClear_Mode:
-            return GrConstColorProcessor::Make(GrColor_TRANSPARENT_BLACK,
+            return GrConstColorProcessor::Create(GrColor_TRANSPARENT_BLACK,
                                                  GrConstColorProcessor::kIgnore_InputMode);
         case SkXfermode::kDst_Mode:
             return nullptr;
         default:
-            return sk_sp<GrFragmentProcessor>(
-                new ComposeOneFragmentProcessor(src, mode,
-                                                ComposeOneFragmentProcessor::kSrc_Child));
+            return new ComposeOneFragmentProcessor(src, mode,
+                                                   ComposeOneFragmentProcessor::kSrc_Child);
     }
 }

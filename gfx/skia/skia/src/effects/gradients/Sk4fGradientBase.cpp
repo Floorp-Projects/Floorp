@@ -11,13 +11,10 @@
 
 namespace {
 
-Sk4f pack_color(SkColor c, bool premul, const Sk4f& component_scale) {
-    const SkColor4f c4f = SkColor4f::FromColor(c);
-    const Sk4f pm4f = premul
-        ? c4f.premul().to4f()
-        : Sk4f{c4f.fR, c4f.fG, c4f.fB, c4f.fA};
-
-    return pm4f * component_scale;
+SkPMColor pack_color(SkColor c, bool premul) {
+    return premul
+        ? SkPreMultiplyColor(c)
+        : SkPackARGB32NoCheck(SkColorGetA(c), SkColorGetR(c), SkColorGetG(c), SkColorGetB(c));
 }
 
 template<SkShader::TileMode>
@@ -120,17 +117,20 @@ private:
 } // anonymous namespace
 
 SkGradientShaderBase::GradientShaderBase4fContext::
-Interval::Interval(const Sk4f& c0, SkScalar p0,
-                   const Sk4f& c1, SkScalar p1)
+Interval::Interval(SkPMColor c0, SkScalar p0,
+                   SkPMColor c1, SkScalar p1,
+                   const Sk4f& componentScale)
     : fP0(p0)
     , fP1(p1)
-    , fZeroRamp((c0 == c1).allTrue()) {
-
+    , fZeroRamp(c0 == c1) {
     SkASSERT(p0 != p1);
-    const Sk4f dc = (c1 - c0) / (p1 - p0);
 
-    c0.store(&fC0.fVec);
-    dc.store(&fDc.fVec);
+    const Sk4f c4f0 = SkPM4f::FromPMColor(c0).to4f() * componentScale;
+    const Sk4f c4f1 = SkPM4f::FromPMColor(c1).to4f() * componentScale;
+    const Sk4f dc4f = (c4f1 - c4f0) / (p1 - p0);
+
+    c4f0.store(&fC0.fVec);
+    dc4f.store(&fDc.fVec);
 }
 
 SkGradientShaderBase::
@@ -156,11 +156,6 @@ GradientShaderBase4fContext::GradientShaderBase4fContext(const SkGradientShaderB
     fColorsArePremul =
         (shader.fGradFlags & SkGradientShader::kInterpolateColorsInPremul_Flag)
         || shader.fColorsAreOpaque;
-}
-
-bool SkGradientShaderBase::
-GradientShaderBase4fContext::isValid() const {
-    return fDstToPos.isFinite();
 }
 
 void SkGradientShaderBase::
@@ -221,11 +216,12 @@ GradientShaderBase4fContext::buildIntervals(const SkGradientShaderBase& shader,
 
     if (shader.fTileMode == SkShader::kClamp_TileMode) {
         // synthetic edge interval: -/+inf .. P0
-        const Sk4f clamp_color = pack_color(shader.fOrigColors[first_index],
-                                            fColorsArePremul, componentScale);
+        const SkPMColor clamp_color = pack_color(shader.fOrigColors[first_index],
+                                                 fColorsArePremul);
         const SkScalar clamp_pos = reverse ? SK_ScalarMax : SK_ScalarMin;
         fIntervals.emplace_back(clamp_color, clamp_pos,
-                                clamp_color, first_pos);
+                                clamp_color, first_pos,
+                                componentScale);
     } else if (shader.fTileMode == SkShader::kMirror_TileMode && reverse) {
         // synthetic mirror intervals injected before main intervals: (2 .. 1]
         addMirrorIntervals(shader, componentScale, false);
@@ -238,19 +234,21 @@ GradientShaderBase4fContext::buildIntervals(const SkGradientShaderBase& shader,
     iter.iterate([this, &componentScale] (SkColor c0, SkColor c1, SkScalar p0, SkScalar p1) {
         SkASSERT(fIntervals.empty() || fIntervals.back().fP1 == p0);
 
-        fIntervals.emplace_back(pack_color(c0, fColorsArePremul, componentScale),
+        fIntervals.emplace_back(pack_color(c0, fColorsArePremul),
                                 p0,
-                                pack_color(c1, fColorsArePremul, componentScale),
-                                p1);
+                                pack_color(c1, fColorsArePremul),
+                                p1,
+                                componentScale);
     });
 
     if (shader.fTileMode == SkShader::kClamp_TileMode) {
         // synthetic edge interval: Pn .. +/-inf
-        const Sk4f clamp_color = pack_color(shader.fOrigColors[last_index],
-                                            fColorsArePremul, componentScale);
+        const SkPMColor clamp_color =
+            pack_color(shader.fOrigColors[last_index], fColorsArePremul);
         const SkScalar clamp_pos = reverse ? SK_ScalarMin : SK_ScalarMax;
         fIntervals.emplace_back(clamp_color, last_pos,
-                                clamp_color, clamp_pos);
+                                clamp_color, clamp_pos,
+                                componentScale);
     } else if (shader.fTileMode == SkShader::kMirror_TileMode && !reverse) {
         // synthetic mirror intervals injected after main intervals: [1 .. 2)
         addMirrorIntervals(shader, componentScale, true);
@@ -267,10 +265,11 @@ GradientShaderBase4fContext::addMirrorIntervals(const SkGradientShaderBase& shad
     iter.iterate([this, &componentScale] (SkColor c0, SkColor c1, SkScalar p0, SkScalar p1) {
         SkASSERT(fIntervals.empty() || fIntervals.back().fP1 == 2 - p0);
 
-        fIntervals.emplace_back(pack_color(c0, fColorsArePremul, componentScale),
+        fIntervals.emplace_back(pack_color(c0, fColorsArePremul),
                                 2 - p0,
-                                pack_color(c1, fColorsArePremul, componentScale),
-                                2 - p1);
+                                pack_color(c1, fColorsArePremul),
+                                2 - p1,
+                                componentScale);
     });
 }
 

@@ -10,96 +10,101 @@
 
 #include "GrBatch.h"
 #include "GrBatchFlushState.h"
-#include "GrFixedClip.h"
 #include "GrGpu.h"
-#include "GrGpuCommandBuffer.h"
 #include "GrRenderTarget.h"
 
 class GrClearBatch final : public GrBatch {
 public:
     DEFINE_BATCH_CLASS_ID
 
-    static sk_sp<GrClearBatch> Make(const GrFixedClip& clip, GrColor color, GrRenderTarget* rt) {
-        sk_sp<GrClearBatch> batch(new GrClearBatch(clip, color, rt));
-        if (!batch->renderTarget()) {
-            return nullptr; // The clip did not contain any pixels within the render target.
-        }
-        return batch;
+    GrClearBatch(const SkIRect& rect,  GrColor color, GrRenderTarget* rt)
+        : INHERITED(ClassID())
+        , fRect(rect)
+        , fColor(color)
+        , fRenderTarget(rt) {
+        fBounds = SkRect::Make(rect);
     }
 
     const char* name() const override { return "Clear"; }
 
-    uint32_t renderTargetUniqueID() const override { return fRenderTarget.get()->uniqueID(); }
+    uint32_t renderTargetUniqueID() const override { return fRenderTarget.get()->getUniqueID(); }
     GrRenderTarget* renderTarget() const override { return fRenderTarget.get(); }
 
     SkString dumpInfo() const override {
-        SkString string("Scissor [");
-        if (fClip.scissorEnabled()) {
-            const SkIRect& r = fClip.scissorRect();
-            string.appendf("L: %d, T: %d, R: %d, B: %d", r.fLeft, r.fTop, r.fRight, r.fBottom);
-        }
-        string.appendf("], Color: 0x%08x, RT: %d", fColor, fRenderTarget.get()->uniqueID());
-        string.append(INHERITED::dumpInfo());
+        SkString string;
+        string.printf("Color: 0x%08x, Rect [L: %d, T: %d, R: %d, B: %d], RT: %d",
+                      fColor, fRect.fLeft, fRect.fTop, fRect.fRight, fRect.fBottom,
+                      fRenderTarget.get()->getUniqueID());
         return string;
     }
 
-    void setColor(GrColor color) { fColor = color; }
-
 private:
-    GrClearBatch(const GrFixedClip& clip, GrColor color, GrRenderTarget* rt)
-        : INHERITED(ClassID())
-        , fClip(clip)
-        , fColor(color) {
-        SkIRect rtRect = SkIRect::MakeWH(rt->width(), rt->height());
-        if (fClip.scissorEnabled()) {
-            // Don't let scissors extend outside the RT. This may improve batching.
-            if (!fClip.intersect(rtRect)) {
-                return;
-            }
-            if (fClip.scissorRect() == rtRect) {
-                fClip.disableScissor();
-            }
-        }
-        this->setBounds(SkRect::Make(fClip.scissorEnabled() ? fClip.scissorRect() : rtRect),
-                        HasAABloat::kNo, IsZeroArea::kNo);
-        fRenderTarget.reset(rt);
-    }
-
     bool onCombineIfPossible(GrBatch* t, const GrCaps& caps) override {
         // This could be much more complicated. Currently we look at cases where the new clear
         // contains the old clear, or when the new clear is a subset of the old clear and is the
         // same color.
         GrClearBatch* cb = t->cast<GrClearBatch>();
         SkASSERT(cb->fRenderTarget == fRenderTarget);
-        if (!fClip.windowRectsState().cheapEqualTo(cb->fClip.windowRectsState())) {
-            return false;
-        }
-        if (cb->contains(this)) {
-            fClip = cb->fClip;
-            this->replaceBounds(*t);
+        if (cb->fRect.contains(fRect)) {
+            fRect = cb->fRect;
+            fBounds = cb->fBounds;
             fColor = cb->fColor;
             return true;
-        } else if (cb->fColor == fColor && this->contains(cb)) {
+        } else if (cb->fColor == fColor && fRect.contains(cb->fRect)) {
             return true;
         }
         return false;
     }
 
-    bool contains(const GrClearBatch* that) const {
-        // The constructor ensures that scissor gets disabled on any clip that fills the entire RT.
-        return !fClip.scissorEnabled() ||
-               (that->fClip.scissorEnabled() &&
-                fClip.scissorRect().contains(that->fClip.scissorRect()));
+    void onPrepare(GrBatchFlushState*) override {}
+
+    void onDraw(GrBatchFlushState* state) override {
+        state->gpu()->clear(fRect, fColor, fRenderTarget.get());
     }
+
+    SkIRect                                                 fRect;
+    GrColor                                                 fColor;
+    GrPendingIOResource<GrRenderTarget, kWrite_GrIOType>    fRenderTarget;
+
+    typedef GrBatch INHERITED;
+};
+
+class GrClearStencilClipBatch final : public GrBatch {
+public:
+    DEFINE_BATCH_CLASS_ID
+
+    GrClearStencilClipBatch(const SkIRect& rect, bool insideClip, GrRenderTarget* rt)
+        : INHERITED(ClassID())
+        , fRect(rect)
+        , fInsideClip(insideClip)
+        , fRenderTarget(rt) {
+        fBounds = SkRect::Make(rect);
+    }
+
+    const char* name() const override { return "ClearStencilClip"; }
+
+    uint32_t renderTargetUniqueID() const override { return fRenderTarget.get()->getUniqueID(); }
+    GrRenderTarget* renderTarget() const override { return fRenderTarget.get(); }
+
+    SkString dumpInfo() const override {
+        SkString string;
+        string.printf("Rect [L: %d, T: %d, R: %d, B: %d], IC: %d, RT: 0x%p",
+                      fRect.fLeft, fRect.fTop, fRect.fRight, fRect.fBottom, fInsideClip,
+                      fRenderTarget.get());
+        return string;
+    }
+
+private:
+    bool onCombineIfPossible(GrBatch* t, const GrCaps& caps) override { return false; }
 
     void onPrepare(GrBatchFlushState*) override {}
 
     void onDraw(GrBatchFlushState* state) override {
-        state->commandBuffer()->clear(fClip, fColor, fRenderTarget.get());
+        state->gpu()->clearStencilClip(fRect, fInsideClip, fRenderTarget.get());
     }
 
-    GrFixedClip                                             fClip;
-    GrColor                                                 fColor;
+    SkIRect                                                 fRect;
+    bool                                                    fInsideClip;
     GrPendingIOResource<GrRenderTarget, kWrite_GrIOType>    fRenderTarget;
 
     typedef GrBatch INHERITED;

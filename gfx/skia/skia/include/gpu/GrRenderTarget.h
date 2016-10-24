@@ -11,7 +11,6 @@
 #include "GrSurface.h"
 #include "SkRect.h"
 
-class GrCaps;
 class GrDrawTarget;
 class GrStencilAttachment;
 class GrRenderTargetPriv;
@@ -30,28 +29,66 @@ public:
     const GrRenderTarget* asRenderTarget() const  override { return this; }
 
     // GrRenderTarget
-    bool isStencilBufferMultisampled() const { return fDesc.fSampleCnt > 0; }
+    /**
+     * On some hardware it is possible for a render target to have multisampling
+     * only in certain buffers.
+     * Enforce only two legal sample configs.
+     * kUnified_SampleConfig signifies multisampling in both color and stencil
+     * buffers and is available across all hardware.
+     * kStencil_SampleConfig means multisampling is present in stencil buffer
+     * only; this config requires hardware support of
+     * NV_framebuffer_mixed_samples.
+    */
+    enum SampleConfig {
+        kUnified_SampleConfig = 0,
+        kStencil_SampleConfig = 1
+    };
 
     /**
-     * For our purposes, "Mixed Sampled" means the stencil buffer is multisampled but the color
-     * buffer is not.
+     * @return true if the surface is multisampled in all buffers,
+     *         false otherwise
      */
-    bool isMixedSampled() const { return fFlags & Flags::kMixedSampled; }
+    bool isUnifiedMultisampled() const {
+        if (fSampleConfig != kUnified_SampleConfig) {
+            return false;
+        }
+        return 0 != fDesc.fSampleCnt;
+    }
 
     /**
-     * "Unified Sampled" means the stencil and color buffers are both multisampled.
+     * @return true if the surface is multisampled in the stencil buffer,
+     *         false otherwise
      */
-    bool isUnifiedMultisampled() const { return fDesc.fSampleCnt > 0 && !this->isMixedSampled(); }
+    bool isStencilBufferMultisampled() const {
+        return 0 != fDesc.fSampleCnt;
+    }
 
     /**
-     * Returns the number of samples/pixel in the stencil buffer (Zero if non-MSAA).
+     * @return the number of color samples-per-pixel, or zero if non-MSAA or
+     *         multisampled in the stencil buffer only.
      */
-    int numStencilSamples() const { return fDesc.fSampleCnt; }
+    int numColorSamples() const {
+        if (fSampleConfig == kUnified_SampleConfig) {
+            return fDesc.fSampleCnt;
+        }
+        return 0;
+    }
 
     /**
-     * Returns the number of samples/pixel in the color buffer (Zero if non-MSAA or mixed sampled).
+     * @return the number of stencil samples-per-pixel, or zero if non-MSAA.
      */
-    int numColorSamples() const { return this->isMixedSampled() ? 0 : fDesc.fSampleCnt; }
+    int numStencilSamples() const {
+        return fDesc.fSampleCnt;
+    }
+
+    /**
+     * @return true if the surface is mixed sampled, false otherwise.
+     */
+    bool hasMixedSamples() const {
+        SkASSERT(kStencil_SampleConfig != fSampleConfig ||
+                 this->isStencilBufferMultisampled());
+        return kStencil_SampleConfig == fSampleConfig;
+    }
 
     /**
      * Call to indicate the multisample contents were modified such that the
@@ -119,16 +156,15 @@ public:
     GrDrawTarget* getLastDrawTarget() { return fLastDrawTarget; }
 
 protected:
-    enum class Flags {
-        kNone                = 0,
-        kMixedSampled        = 1 << 0,
-        kWindowRectsSupport  = 1 << 1
-    };
+    GrRenderTarget(GrGpu* gpu, LifeCycle lifeCycle, const GrSurfaceDesc& desc,
+                   SampleConfig sampleConfig, GrStencilAttachment* stencil = nullptr)
+        : INHERITED(gpu, lifeCycle, desc)
+        , fStencilAttachment(stencil)
+        , fSampleConfig(sampleConfig)
+        , fLastDrawTarget(nullptr) {
+        fResolveRect.setLargestInverted();
+    }
 
-    GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(Flags);
-
-    GrRenderTarget(GrGpu*, const GrSurfaceDesc&, Flags = Flags::kNone,
-                   GrStencilAttachment* = nullptr);
     ~GrRenderTarget() override;
 
     // override of GrResource
@@ -145,8 +181,7 @@ private:
     friend class GrRenderTargetPriv;
 
     GrStencilAttachment*  fStencilAttachment;
-    uint8_t               fMultisampleSpecsID;
-    Flags                 fFlags;
+    SampleConfig          fSampleConfig;
 
     SkIRect               fResolveRect;
 
@@ -161,6 +196,5 @@ private:
     typedef GrSurface INHERITED;
 };
 
-GR_MAKE_BITFIELD_CLASS_OPS(GrRenderTarget::Flags);
 
 #endif

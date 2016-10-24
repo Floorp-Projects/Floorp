@@ -9,7 +9,6 @@
 #define SkPictureData_DEFINED
 
 #include "SkBitmap.h"
-#include "SkDrawable.h"
 #include "SkPicture.h"
 #include "SkPictureContentInfo.h"
 #include "SkPictureFlat.h"
@@ -34,23 +33,8 @@ struct SkPictInfo {
         kPtrIs64Bit_Flag        = 1 << 2,
     };
 
-    SkPictInfo() : fVersion(~0U) {}
-
-    uint32_t getVersion() const {
-        SkASSERT(fVersion != ~0U);
-        return fVersion;
-    }
-
-    void setVersion(uint32_t version) {
-        SkASSERT(version != ~0U);
-        fVersion = version;
-    }
-
-public:
     char        fMagic[8];
-private:
     uint32_t    fVersion;
-public:
     SkRect      fCullRect;
     uint32_t    fFlags;
 };
@@ -59,7 +43,6 @@ public:
 #define SK_PICT_FACTORY_TAG    SkSetFourByteTag('f', 'a', 'c', 't')
 #define SK_PICT_TYPEFACE_TAG   SkSetFourByteTag('t', 'p', 'f', 'c')
 #define SK_PICT_PICTURE_TAG    SkSetFourByteTag('p', 'c', 't', 'r')
-#define SK_PICT_DRAWABLE_TAG   SkSetFourByteTag('d', 'r', 'a', 'w')
 
 // This tag specifies the size of the ReadBuffer, needed for the following tags
 #define SK_PICT_BUFFER_SIZE_TAG     SkSetFourByteTag('a', 'r', 'a', 'y')
@@ -75,11 +58,11 @@ public:
 
 class SkPictureData {
 public:
-    SkPictureData(const SkPictureRecord& record, const SkPictInfo&);
+    SkPictureData(const SkPictureRecord& record, const SkPictInfo&, bool deepCopyOps);
     // Does not affect ownership of SkStream.
     static SkPictureData* CreateFromStream(SkStream*,
                                            const SkPictInfo&,
-                                           SkImageDeserializer*,
+                                           SkPicture::InstallPixelRefProc,
                                            SkTypefacePlayback*);
     static SkPictureData* CreateFromBuffer(SkReadBuffer&, const SkPictInfo&);
 
@@ -100,47 +83,43 @@ protected:
     explicit SkPictureData(const SkPictInfo& info);
 
     // Does not affect ownership of SkStream.
-    bool parseStream(SkStream*, SkImageDeserializer*, SkTypefacePlayback*);
+    bool parseStream(SkStream*, SkPicture::InstallPixelRefProc, SkTypefacePlayback*);
     bool parseBuffer(SkReadBuffer& buffer);
 
 public:
-    const SkImage* getBitmapAsImage(SkReadBuffer* reader) const {
+    const SkBitmap& getBitmap(SkReader32* reader) const {
         const int index = reader->readInt();
-        return reader->validateIndex(index, fBitmapImageCount) ? fBitmapImageRefs[index] : nullptr;
+        return fBitmaps[index];
     }
 
-    const SkImage* getImage(SkReadBuffer* reader) const {
+    const SkImage* getImage(SkReader32* reader) const {
         const int index = reader->readInt();
-        return reader->validateIndex(index, fImageCount) ? fImageRefs[index] : nullptr;
+        return fImageRefs[index];
     }
 
-    const SkPath& getPath(SkReadBuffer* reader) const {
-        const int index = reader->readInt() - 1;
-        return reader->validateIndex(index, fPaths.count()) ? fPaths[index] : fEmptyPath;
+    const SkPath& getPath(SkReader32* reader) const {
+        int index = reader->readInt() - 1;
+        return fPaths[index];
     }
 
-    const SkPicture* getPicture(SkReadBuffer* reader) const {
-        const int index = reader->readInt() - 1;
-        return reader->validateIndex(index, fPictureCount) ? fPictureRefs[index] : nullptr;
-    }
-
-    SkDrawable* getDrawable(SkReadBuffer* reader) const {
+    const SkPicture* getPicture(SkReader32* reader) const {
         int index = reader->readInt();
-        SkASSERT(index > 0 && index <= fDrawableCount);
-        return fDrawableRefs[index - 1];
+        SkASSERT(index > 0 && index <= fPictureCount);
+        return fPictureRefs[index - 1];
     }
 
-    const SkPaint* getPaint(SkReadBuffer* reader) const {
-        const int index = reader->readInt() - 1;
-        if (index == -1) {  // recorder wrote a zero for no paint (likely drawimage)
+    const SkPaint* getPaint(SkReader32* reader) const {
+        int index = reader->readInt();
+        if (index == 0) {
             return nullptr;
         }
-        return reader->validateIndex(index, fPaints.count()) ? &fPaints[index] : nullptr;
+        return &fPaints[index - 1];
     }
 
-    const SkTextBlob* getTextBlob(SkReadBuffer* reader) const {
-        const int index = reader->readInt() - 1;
-        return reader->validateIndex(index, fTextBlobCount) ? fTextBlobRefs[index] : nullptr;
+    const SkTextBlob* getTextBlob(SkReader32* reader) const {
+        int index = reader->readInt();
+        SkASSERT(index > 0 && index <= fTextBlobCount);
+        return fTextBlobRefs[index - 1];
     }
 
 #if SK_SUPPORT_GPU
@@ -167,28 +146,26 @@ private:
     // these help us with reading/writing
     // Does not affect ownership of SkStream.
     bool parseStreamTag(SkStream*, uint32_t tag, uint32_t size,
-                        SkImageDeserializer*, SkTypefacePlayback*);
+                        SkPicture::InstallPixelRefProc, SkTypefacePlayback*);
     bool parseBufferTag(SkReadBuffer&, uint32_t tag, uint32_t size);
     void flattenToBuffer(SkWriteBuffer&) const;
 
+    // Only used by getBitmap() if the passed in index is SkBitmapHeap::INVALID_SLOT. This empty
+    // bitmap allows playback to draw nothing and move on.
+    SkBitmap fBadBitmap;
+
+    SkTArray<SkBitmap> fBitmaps;
     SkTArray<SkPaint>  fPaints;
     SkTArray<SkPath>   fPaths;
 
     sk_sp<SkData>   fOpData;    // opcodes and parameters
 
-    const SkPath    fEmptyPath;
-    const SkBitmap  fEmptyBitmap;
-
     const SkPicture** fPictureRefs;
     int fPictureCount;
-    SkDrawable** fDrawableRefs;
-    int fDrawableCount;
     const SkTextBlob** fTextBlobRefs;
     int fTextBlobCount;
     const SkImage** fImageRefs;
     int fImageCount;
-    const SkImage** fBitmapImageRefs;
-    int fBitmapImageCount;
 
     SkPictureContentInfo fContentInfo;
 

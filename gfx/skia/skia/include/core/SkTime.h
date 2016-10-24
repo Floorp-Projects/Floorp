@@ -17,7 +17,7 @@ class SkString;
 /** \class SkTime
     Platform-implemented utilities to return time of day, and millisecond counter.
 */
-class SK_API SkTime {
+class SkTime {
 public:
     struct DateTime {
         int16_t  fTimeZoneMinutes;  // The number of minutes that GetDateTime()

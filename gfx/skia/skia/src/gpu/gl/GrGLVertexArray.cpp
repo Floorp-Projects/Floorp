@@ -39,7 +39,7 @@ GR_STATIC_ASSERT(8 == kUint_GrVertexAttribType);
 
 void GrGLAttribArrayState::set(GrGLGpu* gpu,
                                int index,
-                               const GrBuffer* vertexBuffer,
+                               const GrGLBuffer* vertexBuffer,
                                GrVertexAttribType type,
                                GrGLsizei stride,
                                GrGLvoid* offset) {
@@ -50,7 +50,7 @@ void GrGLAttribArrayState::set(GrGLGpu* gpu,
         array->fEnableIsValid = true;
         array->fEnabled = true;
     }
-    if (array->fVertexBufferUniqueID != vertexBuffer->uniqueID() ||
+    if (array->fVertexBufferUniqueID != vertexBuffer->getUniqueID() ||
         array->fType != type ||
         array->fStride != stride ||
         array->fOffset != offset) {
@@ -72,7 +72,7 @@ void GrGLAttribArrayState::set(GrGLGpu* gpu,
                                                                 stride,
                                                                 offset));
         }
-        array->fVertexBufferUniqueID = vertexBuffer->uniqueID();
+        array->fVertexBufferUniqueID = vertexBuffer->getUniqueID();
         array->fType = type;
         array->fStride = stride;
         array->fOffset = offset;
@@ -112,17 +112,11 @@ GrGLAttribArrayState* GrGLVertexArray::bind(GrGLGpu* gpu) {
     return &fAttribArrays;
 }
 
-GrGLAttribArrayState* GrGLVertexArray::bindWithIndexBuffer(GrGLGpu* gpu, const GrBuffer* ibuff) {
+GrGLAttribArrayState* GrGLVertexArray::bindWithIndexBuffer(GrGLGpu* gpu, const GrGLBuffer* ibuff) {
     GrGLAttribArrayState* state = this->bind(gpu);
-    if (state && fIndexBufferUniqueID != ibuff->uniqueID()) {
-        if (ibuff->isCPUBacked()) {
-            GR_GL_CALL(gpu->glInterface(), BindBuffer(GR_GL_ELEMENT_ARRAY_BUFFER, 0));
-        } else {
-            const GrGLBuffer* glBuffer = static_cast<const GrGLBuffer*>(ibuff);
-            GR_GL_CALL(gpu->glInterface(), BindBuffer(GR_GL_ELEMENT_ARRAY_BUFFER,
-                                                      glBuffer->bufferID()));
-        }
-        fIndexBufferUniqueID = ibuff->uniqueID();
+    if (state && fIndexBufferUniqueID != ibuff->getUniqueID()) {
+        GR_GL_CALL(gpu->glInterface(), BindBuffer(GR_GL_ELEMENT_ARRAY_BUFFER, ibuff->bufferID()));
+        fIndexBufferUniqueID = ibuff->getUniqueID();
     }
     return state;
 }

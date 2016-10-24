@@ -65,7 +65,7 @@ void GrGLMatrixConvolutionEffect::emitCode(EmitArgs& args) {
     const char* bias = uniformHandler->getUniformCStr(fBiasUni);
 
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
-    SkString coords2D = fragBuilder->ensureCoords2D(args.fTransformedCoords[0]);
+    SkString coords2D = fragBuilder->ensureFSCoords2D(args.fCoords, 0);
     fragBuilder->codeAppend("vec4 sum = vec4(0, 0, 0, 0);");
     fragBuilder->codeAppendf("vec2 coord = %s - %s * %s;", coords2D.c_str(), kernelOffset, imgInc);
     fragBuilder->codeAppend("vec4 c;");
@@ -86,7 +86,7 @@ void GrGLMatrixConvolutionEffect::emitCode(EmitArgs& args) {
                                   domain,
                                   "c",
                                   coord,
-                                  args.fTexSamplers[0]);
+                                  args.fSamplers[0]);
             if (!mce.convolveAlpha()) {
                 fragBuilder->codeAppend("c.rgb /= c.a;");
                 fragBuilder->codeAppend("c.rgb = clamp(c.rgb, 0.0, 1.0);");
@@ -105,7 +105,7 @@ void GrGLMatrixConvolutionEffect::emitCode(EmitArgs& args) {
                               domain,
                               "c",
                               coords2D,
-                              args.fTexSamplers[0]);
+                              args.fSamplers[0]);
         fragBuilder->codeAppendf("%s.a = c.a;", args.fOutputColor);
         fragBuilder->codeAppendf("%s.rgb = sum.rgb * %s + %s;", args.fOutputColor, gain, bias);
         fragBuilder->codeAppendf("%s.rgb *= %s.a;", args.fOutputColor, args.fOutputColor);
@@ -155,7 +155,7 @@ GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(GrTexture* texture,
                                                      const SkIPoint& kernelOffset,
                                                      GrTextureDomain::Mode tileMode,
                                                      bool convolveAlpha)
-  : INHERITED(texture, nullptr, GrCoordTransform::MakeDivByTextureWHMatrix(texture)),
+  : INHERITED(texture, GrCoordTransform::MakeDivByTextureWHMatrix(texture)),
     fKernelSize(kernelSize),
     fGain(SkScalarToFloat(gain)),
     fBias(SkScalarToFloat(bias) / 255.0f),
@@ -191,17 +191,17 @@ bool GrMatrixConvolutionEffect::onIsEqual(const GrFragmentProcessor& sBase) cons
 }
 
 // Static function to create a 2D convolution
-sk_sp<GrFragmentProcessor>
-GrMatrixConvolutionEffect::MakeGaussian(GrTexture* texture,
-                                        const SkIRect& bounds,
-                                        const SkISize& kernelSize,
-                                        SkScalar gain,
-                                        SkScalar bias,
-                                        const SkIPoint& kernelOffset,
-                                        GrTextureDomain::Mode tileMode,
-                                        bool convolveAlpha,
-                                        SkScalar sigmaX,
-                                        SkScalar sigmaY) {
+GrFragmentProcessor*
+GrMatrixConvolutionEffect::CreateGaussian(GrTexture* texture,
+                                          const SkIRect& bounds,
+                                          const SkISize& kernelSize,
+                                          SkScalar gain,
+                                          SkScalar bias,
+                                          const SkIPoint& kernelOffset,
+                                          GrTextureDomain::Mode tileMode,
+                                          bool convolveAlpha,
+                                          SkScalar sigmaX,
+                                          SkScalar sigmaY) {
     float kernel[MAX_KERNEL_SIZE];
     int width = kernelSize.width();
     int height = kernelSize.height();
@@ -228,14 +228,13 @@ GrMatrixConvolutionEffect::MakeGaussian(GrTexture* texture,
     for (int i = 0; i < width * height; ++i) {
         kernel[i] *= scale;
     }
-    return sk_sp<GrFragmentProcessor>(
-        new GrMatrixConvolutionEffect(texture, bounds, kernelSize, kernel, gain, bias,
-                                      kernelOffset, tileMode, convolveAlpha));
+    return new GrMatrixConvolutionEffect(texture, bounds, kernelSize, kernel, gain, bias,
+                                         kernelOffset, tileMode, convolveAlpha);
 }
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrMatrixConvolutionEffect);
 
-sk_sp<GrFragmentProcessor> GrMatrixConvolutionEffect::TestCreate(GrProcessorTestData* d) {
+const GrFragmentProcessor* GrMatrixConvolutionEffect::TestCreate(GrProcessorTestData* d) {
     int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx :
                                           GrProcessorUnitTest::kAlphaTextureIdx;
     int width = d->fRandom->nextRangeU(1, MAX_KERNEL_SIZE);
@@ -256,13 +255,13 @@ sk_sp<GrFragmentProcessor> GrMatrixConvolutionEffect::TestCreate(GrProcessorTest
     GrTextureDomain::Mode tileMode =
             static_cast<GrTextureDomain::Mode>(d->fRandom->nextRangeU(0, 2));
     bool convolveAlpha = d->fRandom->nextBool();
-    return GrMatrixConvolutionEffect::Make(d->fTextures[texIdx],
-                                           bounds,
-                                           kernelSize,
-                                           kernel.get(),
-                                           gain,
-                                           bias,
-                                           kernelOffset,
-                                           tileMode,
-                                           convolveAlpha);
+    return GrMatrixConvolutionEffect::Create(d->fTextures[texIdx],
+                                             bounds,
+                                             kernelSize,
+                                             kernel.get(),
+                                             gain,
+                                             bias,
+                                             kernelOffset,
+                                             tileMode,
+                                             convolveAlpha);
 }

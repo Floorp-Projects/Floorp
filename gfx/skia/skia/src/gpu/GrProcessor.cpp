@@ -48,7 +48,7 @@ GrProcessorTestFactory<GrGeometryProcessor>::GetFactories() {
  * we verify the count is as expected.  If a new factory is added, then these numbers must be
  * manually adjusted.
  */
-static const int kFPFactoryCount = 41;
+static const int kFPFactoryCount = 39;
 static const int kGPFactoryCount = 14;
 static const int kXPFactoryCount = 6;
 
@@ -84,15 +84,9 @@ namespace {
 static SkSpinlock gProcessorSpinlock;
 class MemoryPoolAccessor {
 public:
-
-// We know in the Android framework there is only one GrContext.
-#if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
-    MemoryPoolAccessor() {}
-    ~MemoryPoolAccessor() {}
-#else
     MemoryPoolAccessor() { gProcessorSpinlock.acquire(); }
+
     ~MemoryPoolAccessor() { gProcessorSpinlock.release(); }
-#endif
 
     GrMemoryPool* pool() const {
         static GrMemoryPool gPool(4096, 4096);
@@ -112,11 +106,6 @@ void GrProcessor::addTextureAccess(const GrTextureAccess* access) {
     this->addGpuResource(access->getProgramTexture());
 }
 
-void GrProcessor::addBufferAccess(const GrBufferAccess* access) {
-    fBufferAccesses.push_back(access);
-    this->addGpuResource(access->getProgramBuffer());
-}
-
 void* GrProcessor::operator new(size_t size) {
     return MemoryPoolAccessor().pool()->allocate(size);
 }
@@ -125,17 +114,12 @@ void GrProcessor::operator delete(void* target) {
     return MemoryPoolAccessor().pool()->release(target);
 }
 
-bool GrProcessor::hasSameSamplers(const GrProcessor& that) const {
-    if (this->numTextures() != that.numTextures() || this->numBuffers() != that.numBuffers()) {
+bool GrProcessor::hasSameTextureAccesses(const GrProcessor& that) const {
+    if (this->numTextures() != that.numTextures()) {
         return false;
     }
     for (int i = 0; i < this->numTextures(); ++i) {
         if (this->textureAccess(i) != that.textureAccess(i)) {
-            return false;
-        }
-    }
-    for (int i = 0; i < this->numBuffers(); ++i) {
-        if (this->bufferAccess(i) != that.bufferAccess(i)) {
             return false;
         }
     }

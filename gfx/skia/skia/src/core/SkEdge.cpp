@@ -8,7 +8,7 @@
 
 #include "SkEdge.h"
 #include "SkFDot6.h"
-#include "SkMathPriv.h"
+#include "SkMath.h"
 
 /*
     In setLine, setQuadratic, setCubic, the first thing we do is to convert

@@ -44,7 +44,7 @@ size_t SkRadialGradient::onContextSize(const ContextRec&) const {
 }
 
 SkShader::Context* SkRadialGradient::onCreateContext(const ContextRec& rec, void* storage) const {
-    return CheckedCreateContext<RadialGradientContext>(storage, *this, rec);
+    return new (storage) RadialGradientContext(*this, rec);
 }
 
 SkRadialGradient::RadialGradientContext::RadialGradientContext(
@@ -67,9 +67,8 @@ sk_sp<SkFlattenable> SkRadialGradient::CreateProc(SkReadBuffer& buffer) {
     }
     const SkPoint center = buffer.readPoint();
     const SkScalar radius = buffer.readScalar();
-    return SkGradientShader::MakeRadial(center, radius, desc.fColors, std::move(desc.fColorSpace),
-                                        desc.fPos, desc.fCount, desc.fTileMode, desc.fGradFlags,
-                                        desc.fLocalMatrix);
+    return SkGradientShader::MakeRadial(center, radius, desc.fColors, desc.fPos, desc.fCount,
+                                        desc.fTileMode, desc.fGradFlags, desc.fLocalMatrix);
 }
 
 void SkRadialGradient::flatten(SkWriteBuffer& buffer) const {
@@ -243,40 +242,11 @@ void SkRadialGradient::RadialGradientContext::shadeSpan(int x, int y,
 #include "glsl/GrGLSLCaps.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 
-class GrRadialGradient : public GrGradientEffect {
+class GrGLRadialGradient : public GrGLGradientEffect {
 public:
-    class GLSLRadialProcessor;
 
-    static sk_sp<GrFragmentProcessor> Make(const CreateArgs& args) {
-        return sk_sp<GrFragmentProcessor>(new GrRadialGradient(args));
-    }
-
-    virtual ~GrRadialGradient() { }
-
-    const char* name() const override { return "Radial Gradient"; }
-
-private:
-    GrRadialGradient(const CreateArgs& args)
-        : INHERITED(args) {
-        this->initClassID<GrRadialGradient>();
-    }
-
-    GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-
-    virtual void onGetGLSLProcessorKey(const GrGLSLCaps& caps,
-                                       GrProcessorKeyBuilder* b) const override;
-
-    GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
-
-    typedef GrGradientEffect INHERITED;
-};
-
-/////////////////////////////////////////////////////////////////////
-
-class GrRadialGradient::GLSLRadialProcessor : public GrGradientEffect::GLSLProcessor {
-public:
-    GLSLRadialProcessor(const GrProcessor&) {}
-    virtual ~GLSLRadialProcessor() { }
+    GrGLRadialGradient(const GrProcessor&) {}
+    virtual ~GrGLRadialGradient() { }
 
     virtual void emitCode(EmitArgs&) override;
 
@@ -285,26 +255,54 @@ public:
     }
 
 private:
-    typedef GrGradientEffect::GLSLProcessor INHERITED;
+
+    typedef GrGLGradientEffect INHERITED;
 
 };
 
 /////////////////////////////////////////////////////////////////////
 
-GrGLSLFragmentProcessor* GrRadialGradient::onCreateGLSLInstance() const {
-    return new GrRadialGradient::GLSLRadialProcessor(*this);
-}
+class GrRadialGradient : public GrGradientEffect {
+public:
+    static GrFragmentProcessor* Create(GrContext* ctx,
+                                       const SkRadialGradient& shader,
+                                       const SkMatrix& matrix,
+                                       SkShader::TileMode tm) {
+        return new GrRadialGradient(ctx, shader, matrix, tm);
+    }
 
-void GrRadialGradient::onGetGLSLProcessorKey(const GrGLSLCaps& caps,
-                                             GrProcessorKeyBuilder* b) const {
-    GrRadialGradient::GLSLRadialProcessor::GenKey(*this, caps, b);
-}
+    virtual ~GrRadialGradient() { }
+
+    const char* name() const override { return "Radial Gradient"; }
+
+private:
+    GrRadialGradient(GrContext* ctx,
+                     const SkRadialGradient& shader,
+                     const SkMatrix& matrix,
+                     SkShader::TileMode tm)
+        : INHERITED(ctx, shader, matrix, tm) {
+        this->initClassID<GrRadialGradient>();
+    }
+
+    GrGLSLFragmentProcessor* onCreateGLSLInstance() const override {
+        return new GrGLRadialGradient(*this);
+    }
+
+    virtual void onGetGLSLProcessorKey(const GrGLSLCaps& caps,
+                                       GrProcessorKeyBuilder* b) const override {
+        GrGLRadialGradient::GenKey(*this, caps, b);
+    }
+
+    GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
+
+    typedef GrGradientEffect INHERITED;
+};
 
 /////////////////////////////////////////////////////////////////////
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrRadialGradient);
 
-sk_sp<GrFragmentProcessor> GrRadialGradient::TestCreate(GrProcessorTestData* d) {
+const GrFragmentProcessor* GrRadialGradient::TestCreate(GrProcessorTestData* d) {
     SkPoint center = {d->fRandom->nextUScalar1(), d->fRandom->nextUScalar1()};
     SkScalar radius = d->fRandom->nextUScalar1();
 
@@ -314,22 +312,19 @@ sk_sp<GrFragmentProcessor> GrRadialGradient::TestCreate(GrProcessorTestData* d) 
     SkShader::TileMode tm;
     int colorCount = RandomGradientParams(d->fRandom, colors, &stops, &tm);
     auto shader = SkGradientShader::MakeRadial(center, radius, colors, stops, colorCount, tm);
-    SkMatrix viewMatrix = GrTest::TestMatrix(d->fRandom);
-    auto dstColorSpace = GrTest::TestColorSpace(d->fRandom);
-    sk_sp<GrFragmentProcessor> fp = shader->asFragmentProcessor(SkShader::AsFPArgs(
-        d->fContext, &viewMatrix, NULL, kNone_SkFilterQuality, dstColorSpace.get(),
-        SkSourceGammaTreatment::kRespect));
+    const GrFragmentProcessor* fp = shader->asFragmentProcessor(d->fContext,
+        GrTest::TestMatrix(d->fRandom), NULL, kNone_SkFilterQuality);
     GrAlwaysAssert(fp);
     return fp;
 }
 
 /////////////////////////////////////////////////////////////////////
 
-void GrRadialGradient::GLSLRadialProcessor::emitCode(EmitArgs& args) {
+void GrGLRadialGradient::emitCode(EmitArgs& args) {
     const GrRadialGradient& ge = args.fFp.cast<GrRadialGradient>();
     this->emitUniforms(args.fUniformHandler, ge);
     SkString t("length(");
-    t.append(args.fFragBuilder->ensureCoords2D(args.fTransformedCoords[0]));
+    t.append(args.fFragBuilder->ensureFSCoords2D(args.fCoords, 0));
     t.append(")");
     this->emitColor(args.fFragBuilder,
                     args.fUniformHandler,
@@ -337,32 +332,33 @@ void GrRadialGradient::GLSLRadialProcessor::emitCode(EmitArgs& args) {
                     ge, t.c_str(),
                     args.fOutputColor,
                     args.fInputColor,
-                    args.fTexSamplers);
+                    args.fSamplers);
 }
 
 /////////////////////////////////////////////////////////////////////
 
-sk_sp<GrFragmentProcessor> SkRadialGradient::asFragmentProcessor(const AsFPArgs& args) const {
-    SkASSERT(args.fContext);
+const GrFragmentProcessor* SkRadialGradient::asFragmentProcessor(
+                                                 GrContext* context,
+                                                 const SkMatrix& viewM,
+                                                 const SkMatrix* localMatrix,
+                                                 SkFilterQuality) const {
+    SkASSERT(context);
 
     SkMatrix matrix;
     if (!this->getLocalMatrix().invert(&matrix)) {
         return nullptr;
     }
-    if (args.fLocalMatrix) {
+    if (localMatrix) {
         SkMatrix inv;
-        if (!args.fLocalMatrix->invert(&inv)) {
+        if (!localMatrix->invert(&inv)) {
             return nullptr;
         }
         matrix.postConcat(inv);
     }
     matrix.postConcat(fPtsToUnit);
-    sk_sp<GrColorSpaceXform> colorSpaceXform = GrColorSpaceXform::Make(fColorSpace.get(),
-                                                                       args.fDstColorSpace);
-    sk_sp<GrFragmentProcessor> inner(GrRadialGradient::Make(
-        GrGradientEffect::CreateArgs(args.fContext, this, &matrix, fTileMode,
-                                     std::move(colorSpaceXform), SkToBool(args.fDstColorSpace))));
-    return GrFragmentProcessor::MulOutputByInputAlpha(std::move(inner));
+        SkAutoTUnref<const GrFragmentProcessor> inner(
+            GrRadialGradient::Create(context, *this, matrix, fTileMode));
+    return GrFragmentProcessor::MulOutputByInputAlpha(inner);
 }
 
 #endif

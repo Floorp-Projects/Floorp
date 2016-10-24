@@ -23,8 +23,6 @@ public:
                                  uint32_t vertexUniformSize,
                                  uint32_t fragmentUniformSize);
 
-    void set1i(UniformHandle, int32_t) const override;
-    void set1iv(UniformHandle, int arrayCount, const int32_t v[]) const override;
     void set1f(UniformHandle, float v0) const override;
     void set1fv(UniformHandle, int arrayCount, const float v[]) const override;
     void set2f(UniformHandle, float, float) const override;
@@ -48,10 +46,7 @@ public:
         SkFAIL("Only supported in NVPR, which is not in vulkan");
     }
 
-    // Returns true if either the vertex or fragment buffer needed to generate a new underlying
-    // VkBuffer object in order upload data. If true is returned, this is a signal to the caller
-    // that they will need to update the descriptor set that is using these buffers.
-    bool uploadUniformBuffers(GrVkGpu* gpu,
+    void uploadUniformBuffers(const GrVkGpu* gpu,
                               GrVkUniformBuffer* vertexBuffer,
                               GrVkUniformBuffer* fragmentBuffer) const;
 private:
@@ -61,6 +56,7 @@ private:
         SkDEBUGCODE(
             GrSLType    fType;
             int         fArrayCount;
+            uint32_t    fSetNumber;
         );
     };
 

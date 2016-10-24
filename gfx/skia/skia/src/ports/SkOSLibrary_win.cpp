@@ -8,7 +8,7 @@
 #if defined(SK_BUILD_FOR_WIN32)
 
 #include "SkOSLibrary.h"
-#include "SkLeanWindows.h"
+#include <windows.h>
 
 void* DynamicLoadLibrary(const char* libraryName) {
     return LoadLibraryA(libraryName);

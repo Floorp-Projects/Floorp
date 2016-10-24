@@ -15,6 +15,7 @@
 #endif
 #include "mozilla/Assertions.h"
 #include <vector>
+#include "RefPtrSkia.h"
 #include "nsDebug.h"
 
 namespace mozilla {
@@ -186,65 +187,65 @@ StrokeOptionsToPaint(SkPaint& aPaint, const StrokeOptions &aOptions)
   return true;
 }
 
-static inline SkBlendMode
+static inline SkXfermode::Mode
 GfxOpToSkiaOp(CompositionOp op)
 {
   switch (op)
   {
     case CompositionOp::OP_OVER:
-      return SkBlendMode::kSrcOver;
+      return SkXfermode::kSrcOver_Mode;
     case CompositionOp::OP_ADD:
-      return SkBlendMode::kPlus;
+      return SkXfermode::kPlus_Mode;
     case CompositionOp::OP_ATOP:
-      return SkBlendMode::kSrcATop;
+      return SkXfermode::kSrcATop_Mode;
     case CompositionOp::OP_OUT:
-      return SkBlendMode::kSrcOut;
+      return SkXfermode::kSrcOut_Mode;
     case CompositionOp::OP_IN:
-      return SkBlendMode::kSrcIn;
+      return SkXfermode::kSrcIn_Mode;
     case CompositionOp::OP_SOURCE:
-      return SkBlendMode::kSrc;
+      return SkXfermode::kSrc_Mode;
     case CompositionOp::OP_DEST_IN:
-      return SkBlendMode::kDstIn;
+      return SkXfermode::kDstIn_Mode;
     case CompositionOp::OP_DEST_OUT:
-      return SkBlendMode::kDstOut;
+      return SkXfermode::kDstOut_Mode;
     case CompositionOp::OP_DEST_OVER:
-      return SkBlendMode::kDstOver;
+      return SkXfermode::kDstOver_Mode;
     case CompositionOp::OP_DEST_ATOP:
-      return SkBlendMode::kDstATop;
+      return SkXfermode::kDstATop_Mode;
     case CompositionOp::OP_XOR:
-      return SkBlendMode::kXor;
+      return SkXfermode::kXor_Mode;
     case CompositionOp::OP_MULTIPLY:
-      return SkBlendMode::kMultiply;
+      return SkXfermode::kMultiply_Mode;
     case CompositionOp::OP_SCREEN:
-      return SkBlendMode::kScreen;
+      return SkXfermode::kScreen_Mode;
     case CompositionOp::OP_OVERLAY:
-      return SkBlendMode::kOverlay;
+      return SkXfermode::kOverlay_Mode;
     case CompositionOp::OP_DARKEN:
-      return SkBlendMode::kDarken;
+      return SkXfermode::kDarken_Mode;
     case CompositionOp::OP_LIGHTEN:
-      return SkBlendMode::kLighten;
+      return SkXfermode::kLighten_Mode;
     case CompositionOp::OP_COLOR_DODGE:
-      return SkBlendMode::kColorDodge;
+      return SkXfermode::kColorDodge_Mode;
     case CompositionOp::OP_COLOR_BURN:
-      return SkBlendMode::kColorBurn;
+      return SkXfermode::kColorBurn_Mode;
     case CompositionOp::OP_HARD_LIGHT:
-      return SkBlendMode::kHardLight;
+      return SkXfermode::kHardLight_Mode;
     case CompositionOp::OP_SOFT_LIGHT:
-      return SkBlendMode::kSoftLight;
+      return SkXfermode::kSoftLight_Mode;
     case CompositionOp::OP_DIFFERENCE:
-      return SkBlendMode::kDifference;
+      return SkXfermode::kDifference_Mode;
     case CompositionOp::OP_EXCLUSION:
-      return SkBlendMode::kExclusion;
+      return SkXfermode::kExclusion_Mode;
     case CompositionOp::OP_HUE:
-      return SkBlendMode::kHue;
+      return SkXfermode::kHue_Mode;
     case CompositionOp::OP_SATURATION:
-      return SkBlendMode::kSaturation;
+      return SkXfermode::kSaturation_Mode;
     case CompositionOp::OP_COLOR:
-      return SkBlendMode::kColor;
+      return SkXfermode::kColor_Mode;
     case CompositionOp::OP_LUMINOSITY:
-      return SkBlendMode::kLuminosity;
+      return SkXfermode::kLuminosity_Mode;
     default:
-      return SkBlendMode::kSrcOver;
+      return SkXfermode::kSrcOver_Mode;
   }
 }
 

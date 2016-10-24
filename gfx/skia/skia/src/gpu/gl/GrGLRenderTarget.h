@@ -13,7 +13,6 @@
 #include "GrRenderTarget.h"
 #include "SkScalar.h"
 
-class GrGLCaps;
 class GrGLGpu;
 class GrGLStencilAttachment;
 
@@ -24,11 +23,11 @@ public:
     enum { kUnresolvableFBOID = 0 };
 
     struct IDDesc {
-        GrGLuint                   fRTFBOID;
-        GrBackendObjectOwnership   fRTFBOOwnership;
-        GrGLuint                   fTexFBOID;
-        GrGLuint                   fMSColorRenderbufferID;
-        bool                       fIsMixedSampled;
+        GrGLuint                     fRTFBOID;
+        GrGLuint                     fTexFBOID;
+        GrGLuint                     fMSColorRenderbufferID;
+        GrGpuResource::LifeCycle     fLifeCycle;
+        GrRenderTarget::SampleConfig fSampleConfig;
     };
 
     static GrGLRenderTarget* CreateWrapped(GrGLGpu*,
@@ -62,15 +61,21 @@ public:
 
     GrBackendObject getRenderTargetHandle() const override { return fRTFBOID; }
 
-    bool canAttemptStencilAttachment() const override;
+    /** When we don't own the FBO ID we don't attempt to modify its attachments. */
+    bool canAttemptStencilAttachment() const override {
+        return kCached_LifeCycle == fRTLifecycle || kUncached_LifeCycle == fRTLifecycle;
+    }
 
     // GrGLRenderTarget overrides dumpMemoryStatistics so it can log its texture and renderbuffer
     // components seperately.
     void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
 protected:
-    // Constructor for subclasses.
-    GrGLRenderTarget(GrGLGpu*, const GrSurfaceDesc&, const IDDesc&);
+    // The public constructor registers this object with the cache. However, only the most derived
+    // class should register with the cache. This constructor does not do the registration and
+    // rather moves that burden onto the derived class.
+    enum Derived { kDerived };
+    GrGLRenderTarget(GrGLGpu*, const GrSurfaceDesc&, const IDDesc&, Derived);
 
     void init(const GrSurfaceDesc&, const IDDesc&);
 
@@ -81,10 +86,9 @@ protected:
     size_t onGpuMemorySize() const override;
 
 private:
-    // Constructor for instances wrapping backend objects.
+    // This ctor is used only for creating wrapped render targets and is only called for the static
+    // create function CreateWrapped(...).
     GrGLRenderTarget(GrGLGpu*, const GrSurfaceDesc&, const IDDesc&, GrGLStencilAttachment*);
-
-    static Flags ComputeFlags(const GrGLCaps&, const IDDesc&);
 
     GrGLGpu* getGLGpu() const;
     bool completeStencilAttachment() override;
@@ -99,7 +103,9 @@ private:
     GrGLuint    fTexFBOID;
     GrGLuint    fMSColorRenderbufferID;
 
-    GrBackendObjectOwnership fRTFBOOwnership;
+    // We track this separately from GrGpuResource because this may be both a texture and a render
+    // target, and the texture may be wrapped while the render target is not.
+    LifeCycle   fRTLifecycle;
 
     // when we switch to this render target we want to set the viewport to
     // only render to content area (as opposed to the whole allocation) and

@@ -10,7 +10,7 @@
 
 #include "GrPathRenderer.h"
 
-class GrTextureProvider;
+class GrContext;
 
 /**
  * This class uses the software side to render a path to an SkBitmap and
@@ -18,26 +18,11 @@ class GrTextureProvider;
  */
 class GrSoftwarePathRenderer : public GrPathRenderer {
 public:
-    GrSoftwarePathRenderer(GrTextureProvider* texProvider, bool allowCaching)
-            : fTexProvider(texProvider)
-            , fAllowCaching(allowCaching) {}
+    GrSoftwarePathRenderer(GrContext* context)
+        : fContext(context) {
+    }
 private:
-    static void DrawNonAARect(GrDrawContext* drawContext,
-                              const GrPaint& paint,
-                              const GrUserStencilSettings& userStencilSettings,
-                              const GrClip& clip,
-                              const SkMatrix& viewMatrix,
-                              const SkRect& rect,
-                              const SkMatrix& localMatrix);
-    static void DrawAroundInvPath(GrDrawContext* drawContext,
-                                  const GrPaint& paint,
-                                  const GrUserStencilSettings& userStencilSettings,
-                                  const GrClip& clip,
-                                  const SkMatrix& viewMatrix,
-                                  const SkIRect& devClipBounds,
-                                  const SkIRect& devPathBounds);
-
-    StencilSupport onGetStencilSupport(const GrShape&) const override {
+    StencilSupport onGetStencilSupport(const SkPath&, const GrStrokeInfo&) const override {
         return GrPathRenderer::kNoSupport_StencilSupport;
     }
 
@@ -46,8 +31,7 @@ private:
     bool onDrawPath(const DrawPathArgs&) override;
 
 private:
-    GrTextureProvider*     fTexProvider;
-    bool                   fAllowCaching;
+    GrContext*     fContext;
 
     typedef GrPathRenderer INHERITED;
 };

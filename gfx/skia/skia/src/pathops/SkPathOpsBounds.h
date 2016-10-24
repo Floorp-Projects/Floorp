@@ -33,13 +33,6 @@ struct SkPathOpsBounds : public SkRect {
         add(toAdd.fLeft, toAdd.fTop, toAdd.fRight, toAdd.fBottom);
     }
 
-    void add(const SkPoint& pt) {
-        if (pt.fX < fLeft) fLeft = pt.fX;
-        if (pt.fY < fTop) fTop = pt.fY;
-        if (pt.fX > fRight) fRight = pt.fX;
-        if (pt.fY > fBottom) fBottom = pt.fY;
-    }
-
     void add(const SkDPoint& pt) {
         if (pt.fX < fLeft) fLeft = SkDoubleToScalar(pt.fX);
         if (pt.fY < fTop) fTop = SkDoubleToScalar(pt.fY);
@@ -47,16 +40,11 @@ struct SkPathOpsBounds : public SkRect {
         if (pt.fY > fBottom) fBottom = SkDoubleToScalar(pt.fY);
     }
 
-    bool almostContains(const SkPoint& pt) const {
+    bool almostContains(const SkPoint& pt) {
         return AlmostLessOrEqualUlps(fLeft, pt.fX)
                 && AlmostLessOrEqualUlps(pt.fX, fRight)
                 && AlmostLessOrEqualUlps(fTop, pt.fY)
                 && AlmostLessOrEqualUlps(pt.fY, fBottom);
-    }
-
-    bool contains(const SkPoint& pt) const {
-        return fLeft <= pt.fX && fTop <= pt.fY &&
-               fRight >= pt.fX && fBottom >= pt.fY;
     }
 
     typedef SkRect INHERITED;

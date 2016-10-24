@@ -12,10 +12,6 @@
 #include "SkImage.h"
 #include "SkSurface.h"
 
-#if SK_SUPPORT_GPU
-    #include "GrTexture.h"
-#endif
-
 #include <new>
 
 class GrTextureParams;
@@ -30,33 +26,25 @@ public:
     SkImage_Base(int width, int height, uint32_t uniqueID);
     virtual ~SkImage_Base();
 
-    // User: returns image info for this SkImage.
-    // Implementors: if you can not return the value, return an invalid ImageInfo with w=0 & h=0
-    // & unknown color space.
-    virtual SkImageInfo onImageInfo() const = 0;
-    virtual SkAlphaType onAlphaType() const = 0;
-
     virtual bool onPeekPixels(SkPixmap*) const { return false; }
-
-    virtual const SkBitmap* onPeekBitmap() const { return nullptr; }
 
     // Default impl calls onDraw
     virtual bool onReadPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
                               int srcX, int srcY, CachingHint) const;
 
     virtual GrTexture* peekTexture() const { return nullptr; }
-#if SK_SUPPORT_GPU
-    virtual sk_sp<GrTexture> refPinnedTexture(uint32_t* uniqueID) const { return nullptr; }
-#endif
     virtual SkImageCacherator* peekCacherator() const { return nullptr; }
 
     // return a read-only copy of the pixels. We promise to not modify them,
     // but only inspect them (or encode them).
     virtual bool getROPixels(SkBitmap*, CachingHint = kAllow_CachingHint) const = 0;
 
+    virtual sk_sp<SkSurface> onNewSurface(const SkImageInfo& info) const {
+        return SkSurface::MakeRaster(info);
+    }
+
     // Caller must call unref when they are done.
-    virtual GrTexture* asTextureRef(GrContext*, const GrTextureParams&,
-                                    SkSourceGammaTreatment) const = 0;
+    virtual GrTexture* asTextureRef(GrContext*, const GrTextureParams&) const = 0;
 
     virtual sk_sp<SkImage> onMakeSubset(const SkIRect&) const = 0;
 
@@ -67,14 +55,17 @@ public:
 
     virtual bool onIsLazyGenerated() const { return false; }
 
+    // Return a bitmap suitable for passing to image-filters
+    // For now, that means wrapping textures into SkGrPixelRefs...
+    virtual bool asBitmapForImageFilters(SkBitmap* bitmap) const {
+        return this->getROPixels(bitmap, kAllow_CachingHint);
+    }
+
     // Call when this image is part of the key to a resourcecache entry. This allows the cache
     // to know automatically those entries can be purged when this SkImage deleted.
     void notifyAddedToCache() const {
         fAddedToCache.store(true);
     }
-
-    virtual void onPinAsTexture(GrContext*) const {}
-    virtual void onUnpinAsTexture(GrContext*) const {}
 
 private:
     // Set true by caches when they cache content that's derived from the current pixels.

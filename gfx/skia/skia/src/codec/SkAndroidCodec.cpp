@@ -29,20 +29,20 @@ SkAndroidCodec* SkAndroidCodec::NewFromStream(SkStream* stream, SkPngChunkReader
     }
 
     switch (codec->getEncodedFormat()) {
-#ifdef SK_HAS_PNG_LIBRARY
+#ifdef SK_CODEC_DECODES_PNG
         case kPNG_SkEncodedFormat:
         case kICO_SkEncodedFormat:
 #endif
-#ifdef SK_HAS_JPEG_LIBRARY
+#ifdef SK_CODEC_DECODES_JPEG
         case kJPEG_SkEncodedFormat:
 #endif
-#ifdef SK_HAS_GIF_LIBRARY
+#ifdef SK_CODEC_DECODES_GIF
         case kGIF_SkEncodedFormat:
 #endif
         case kBMP_SkEncodedFormat:
         case kWBMP_SkEncodedFormat:
             return new SkSampledCodec(codec.release());
-#ifdef SK_HAS_WEBP_LIBRARY
+#ifdef SK_CODEC_DECODES_WEBP
         case kWEBP_SkEncodedFormat:
             return new SkWebpAdapterCodec((SkWebpCodec*) codec.release());
 #endif
@@ -55,7 +55,7 @@ SkAndroidCodec* SkAndroidCodec::NewFromStream(SkStream* stream, SkPngChunkReader
     }
 }
 
-SkAndroidCodec* SkAndroidCodec::NewFromData(sk_sp<SkData> data, SkPngChunkReader* chunkReader) {
+SkAndroidCodec* SkAndroidCodec::NewFromData(SkData* data, SkPngChunkReader* chunkReader) {
     if (!data) {
         return nullptr;
     }

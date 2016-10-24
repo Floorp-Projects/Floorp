@@ -36,6 +36,8 @@ public:
 
     virtual GrGLSLPrimitiveProcessor* createGLSLInstance(const GrGLSLCaps& caps) const override;
 
+    bool hasTransformedLocalCoords() const override { return false; }
+
     const GrXPOverridesForBatch& overrides() const { return fOverrides; }
 
     virtual bool isPathRendering() const override { return true; }

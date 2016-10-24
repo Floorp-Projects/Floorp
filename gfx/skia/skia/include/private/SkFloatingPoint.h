@@ -12,14 +12,8 @@
 
 #include "SkTypes.h"
 
-#include <math.h>
+#include <cmath>
 #include <float.h>
-
-#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
-    #include <xmmintrin.h>
-#elif defined(SK_ARM_HAS_NEON)
-    #include <arm_neon.h>
-#endif
 
 // For _POSIX_VERSION
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
@@ -76,9 +70,9 @@ static inline float sk_float_pow(float base, float exp) {
         return (bits << 1) == (0xFF << 24);
     }
 #else
-    #define sk_float_isfinite(x)    isfinite(x)
-    #define sk_float_isnan(x)       isnan(x)
-    #define sk_float_isinf(x)       isinf(x)
+    #define sk_float_isfinite(x)    std::isfinite(x)
+    #define sk_float_isnan(x)       std::isnan(x)
+    #define sk_float_isinf(x)       std::isinf(x)
 #endif
 
 #define sk_double_isnan(a)          sk_float_isnan(a)
@@ -100,18 +94,19 @@ static inline float sk_float_pow(float base, float exp) {
 #define sk_double_round2int(x)      (int)floor((x) + 0.5f)
 #define sk_double_ceil2int(x)       (int)ceil(x)
 
-static const uint32_t kIEEENotANumber = 0x7fffffff;
-#define SK_FloatNaN                 (*SkTCast<const float*>(&kIEEENotANumber))
-#define SK_FloatInfinity            (+(float)INFINITY)
-#define SK_FloatNegativeInfinity    (-(float)INFINITY)
+extern const uint32_t gIEEENotANumber;
+extern const uint32_t gIEEEInfinity;
+extern const uint32_t gIEEENegativeInfinity;
+
+#define SK_FloatNaN                 (*SkTCast<const float*>(&gIEEENotANumber))
+#define SK_FloatInfinity            (*SkTCast<const float*>(&gIEEEInfinity))
+#define SK_FloatNegativeInfinity    (*SkTCast<const float*>(&gIEEENegativeInfinity))
 
 static inline float sk_float_rsqrt_portable(float x) {
     // Get initial estimate.
-    int i;
-    memcpy(&i, &x, 4);
+    int i = *SkTCast<int*>(&x);
     i = 0x5F1FFFF9 - (i>>1);
-    float estimate;
-    memcpy(&estimate, &i, 4);
+    float estimate = *SkTCast<float*>(&i);
 
     // One step of Newton's method to refine.
     const float estimate_sq = estimate*estimate;

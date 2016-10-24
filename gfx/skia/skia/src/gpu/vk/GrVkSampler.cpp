@@ -23,8 +23,8 @@ static inline VkSamplerAddressMode tile_to_vk_sampler_address(SkShader::TileMode
     return gWrapModes[tm];
 }
 
-GrVkSampler* GrVkSampler::Create(const GrVkGpu* gpu, const GrTextureParams& params,
-                                 uint32_t mipLevels) {
+GrVkSampler* GrVkSampler::Create(const GrVkGpu* gpu, const GrTextureParams& params) {
+
     static VkFilter vkMinFilterModes[] = {
         VK_FILTER_NEAREST,
         VK_FILTER_LINEAR,
@@ -43,7 +43,7 @@ GrVkSampler* GrVkSampler::Create(const GrVkGpu* gpu, const GrTextureParams& para
     createInfo.flags = 0;
     createInfo.magFilter = vkMagFilterModes[params.filterMode()];
     createInfo.minFilter = vkMinFilterModes[params.filterMode()];
-    createInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    createInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
     createInfo.addressModeU = tile_to_vk_sampler_address(params.getTileModeX());
     createInfo.addressModeV = tile_to_vk_sampler_address(params.getTileModeY());
     createInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; // Shouldn't matter
@@ -58,8 +58,7 @@ GrVkSampler* GrVkSampler::Create(const GrVkGpu* gpu, const GrTextureParams& para
     // level mip). If the filters weren't the same we could set min = 0 and max = 0.25 to force
     // the minFilter on mip level 0.
     createInfo.minLod = 0.0f;
-    bool useMipMaps = GrTextureParams::kMipMap_FilterMode == params.filterMode() && mipLevels > 1;
-    createInfo.maxLod = !useMipMaps ? 0.0f : (float)(mipLevels);
+    createInfo.maxLod = 0.0f;
     createInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
     createInfo.unnormalizedCoordinates = VK_FALSE;
 
@@ -69,7 +68,7 @@ GrVkSampler* GrVkSampler::Create(const GrVkGpu* gpu, const GrTextureParams& para
                                                           nullptr,
                                                           &sampler));
 
-    return new GrVkSampler(sampler, GenerateKey(params, mipLevels));
+    return new GrVkSampler(sampler, GenerateKey(params));
 }
 
 void GrVkSampler::freeGPUData(const GrVkGpu* gpu) const {
@@ -77,21 +76,15 @@ void GrVkSampler::freeGPUData(const GrVkGpu* gpu) const {
     GR_VK_CALL(gpu->vkInterface(), DestroySampler(gpu->device(), fSampler, nullptr));
 }
 
-uint16_t GrVkSampler::GenerateKey(const GrTextureParams& params, uint32_t mipLevels) {
-    const int kTileModeXShift = 2;
-    const int kTileModeYShift = 4;
-    const int kMipLevelShift = 6;
+uint8_t GrVkSampler::GenerateKey(const GrTextureParams& params) {
 
-    uint16_t key = params.filterMode();
+    uint8_t key = params.filterMode();
 
     SkASSERT(params.filterMode() <= 3);
-    key |= (params.getTileModeX() << kTileModeXShift);
+    key |= (params.getTileModeX() << 2);
 
     GR_STATIC_ASSERT(SkShader::kTileModeCount <= 4);
-    key |= (params.getTileModeY() << kTileModeYShift);
-
-    SkASSERT(mipLevels < 1024);
-    key |= (mipLevels << kMipLevelShift);
+    key |= (params.getTileModeY() << 4);
 
     return key;
 }

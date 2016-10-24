@@ -10,7 +10,6 @@
 #include "SkStreamPriv.h"
 #include "SkData.h"
 #include "SkFixed.h"
-#include "SkMakeUnique.h"
 #include "SkString.h"
 #include "SkOSFile.h"
 #include "SkTypes.h"
@@ -77,6 +76,12 @@ void SkWStream::newline()
 
 void SkWStream::flush()
 {
+}
+
+bool SkWStream::writeText(const char text[])
+{
+    SkASSERT(text);
+    return this->write(text, strlen(text));
 }
 
 bool SkWStream::writeDecAsText(int32_t dec)
@@ -307,7 +312,6 @@ SkMemoryStream::SkMemoryStream(sk_sp<SkData> data) : fData(std::move(data)) {
     fOffset = 0;
 }
 
-#ifdef SK_SUPPORT_LEGACY_STREAM_DATA
 SkMemoryStream::SkMemoryStream(SkData* data) {
     if (nullptr == data) {
         fData = SkData::MakeEmpty();
@@ -316,7 +320,6 @@ SkMemoryStream::SkMemoryStream(SkData* data) {
     }
     fOffset = 0;
 }
-#endif
 
 void SkMemoryStream::setMemoryOwned(const void* src, size_t size) {
     fData = SkData::MakeFromMalloc(src, size);
@@ -328,13 +331,18 @@ void SkMemoryStream::setMemory(const void* src, size_t size, bool copyData) {
     fOffset = 0;
 }
 
-void SkMemoryStream::setData(sk_sp<SkData> data) {
+SkData* SkMemoryStream::copyToData() const {
+    return SkSafeRef(fData.get());
+}
+
+SkData* SkMemoryStream::setData(SkData* data) {
     if (nullptr == data) {
         fData = SkData::MakeEmpty();
     } else {
-        fData = data;
+        fData = sk_ref_sp(data);
     }
     fOffset = 0;
+    return data;
 }
 
 void SkMemoryStream::skipToAlign4() {
@@ -640,20 +648,14 @@ void SkDynamicMemoryWStream::padToAlign4()
     write(&zero, padBytes);
 }
 
-sk_sp<SkData> SkDynamicMemoryWStream::snapshotAsData() const {
+SkData* SkDynamicMemoryWStream::copyToData() const {
     if (nullptr == fCopy) {
         auto data = SkData::MakeUninitialized(fBytesWritten);
         // be sure to call copyTo() before we assign to fCopy
         this->copyTo(data->writable_data());
         fCopy = std::move(data);
     }
-    return fCopy;
-}
-
-sk_sp<SkData> SkDynamicMemoryWStream::detachAsData() {
-    sk_sp<SkData> data = this->snapshotAsData();
-    this->reset();
-    return data;
+    return SkRef(fCopy.get());
 }
 
 void SkDynamicMemoryWStream::invalidateCopy() {
@@ -821,7 +823,7 @@ SkStreamAsset* SkDynamicMemoryWStream::detachAsStream() {
 
 void SkDebugWStream::newline()
 {
-#if defined(SK_DEBUG)
+#if defined(SK_DEBUG) || defined(SK_DEVELOPER)
     SkDebugf("\n");
     fBytesWritten++;
 #endif
@@ -829,7 +831,7 @@ void SkDebugWStream::newline()
 
 bool SkDebugWStream::write(const void* buffer, size_t size)
 {
-#if defined(SK_DEBUG)
+#if defined(SK_DEBUG) || defined(SK_DEVELOPER)
     char* s = new char[size+1];
     memcpy(s, buffer, size);
     s[size] = 0;
@@ -855,18 +857,20 @@ static sk_sp<SkData> mmap_filename(const char path[]) {
     return data;
 }
 
-std::unique_ptr<SkStreamAsset> SkStream::MakeFromFile(const char path[]) {
+SkStreamAsset* SkStream::NewFromFile(const char path[]) {
     auto data(mmap_filename(path));
     if (data) {
-        return skstd::make_unique<SkMemoryStream>(std::move(data));
+        return new SkMemoryStream(std::move(data));
     }
 
-    // If we get here, then our attempt at using mmap failed, so try normal file access.
-    auto stream = skstd::make_unique<SkFILEStream>(path);
+    // If we get here, then our attempt at using mmap failed, so try normal
+    // file access.
+    SkFILEStream* stream = new SkFILEStream(path);
     if (!stream->isValid()) {
-        return nullptr;
+        delete stream;
+        stream = nullptr;
     }
-    return std::move(stream);
+    return stream;
 }
 
 // Declared in SkStreamPriv.h:
@@ -884,7 +888,7 @@ sk_sp<SkData> SkCopyStreamToData(SkStream* stream) {
         size_t bytesRead = stream->read(buffer, bufferSize);
         tempStream.write(buffer, bytesRead);
     } while (!stream->isAtEnd());
-    return tempStream.detachAsData();
+    return sk_sp<SkData>(tempStream.copyToData());
 }
 
 bool SkStreamCopy(SkWStream* out, SkStream* input) {

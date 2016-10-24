@@ -100,7 +100,7 @@ void SkNWayCanvas::didSetMatrix(const SkMatrix& matrix) {
     this->INHERITED::didSetMatrix(matrix);
 }
 
-void SkNWayCanvas::onClipRect(const SkRect& rect, ClipOp op, ClipEdgeStyle edgeStyle) {
+void SkNWayCanvas::onClipRect(const SkRect& rect, SkRegion::Op op, ClipEdgeStyle edgeStyle) {
     Iter iter(fList);
     while (iter.next()) {
         iter->clipRect(rect, op, kSoft_ClipEdgeStyle == edgeStyle);
@@ -108,7 +108,7 @@ void SkNWayCanvas::onClipRect(const SkRect& rect, ClipOp op, ClipEdgeStyle edgeS
     this->INHERITED::onClipRect(rect, op, edgeStyle);
 }
 
-void SkNWayCanvas::onClipRRect(const SkRRect& rrect, ClipOp op, ClipEdgeStyle edgeStyle) {
+void SkNWayCanvas::onClipRRect(const SkRRect& rrect, SkRegion::Op op, ClipEdgeStyle edgeStyle) {
     Iter iter(fList);
     while (iter.next()) {
         iter->clipRRect(rrect, op, kSoft_ClipEdgeStyle == edgeStyle);
@@ -116,7 +116,7 @@ void SkNWayCanvas::onClipRRect(const SkRRect& rrect, ClipOp op, ClipEdgeStyle ed
     this->INHERITED::onClipRRect(rrect, op, edgeStyle);
 }
 
-void SkNWayCanvas::onClipPath(const SkPath& path, ClipOp op, ClipEdgeStyle edgeStyle) {
+void SkNWayCanvas::onClipPath(const SkPath& path, SkRegion::Op op, ClipEdgeStyle edgeStyle) {
     Iter iter(fList);
     while (iter.next()) {
         iter->clipPath(path, op, kSoft_ClipEdgeStyle == edgeStyle);
@@ -124,7 +124,7 @@ void SkNWayCanvas::onClipPath(const SkPath& path, ClipOp op, ClipEdgeStyle edgeS
     this->INHERITED::onClipPath(path, op, edgeStyle);
 }
 
-void SkNWayCanvas::onClipRegion(const SkRegion& deviceRgn, ClipOp op) {
+void SkNWayCanvas::onClipRegion(const SkRegion& deviceRgn, SkRegion::Op op) {
     Iter iter(fList);
     while (iter.next()) {
         iter->clipRegion(deviceRgn, op);
@@ -158,14 +158,6 @@ void SkNWayCanvas::onDrawOval(const SkRect& rect, const SkPaint& paint) {
     Iter iter(fList);
     while (iter.next()) {
         iter->drawOval(rect, paint);
-    }
-}
-
-void SkNWayCanvas::onDrawArc(const SkRect& rect, SkScalar startAngle, SkScalar sweepAngle,
-                             bool useCenter, const SkPaint& paint) {
-    Iter iter(fList);
-    while (iter.next()) {
-        iter->drawArc(rect, startAngle, sweepAngle, useCenter, paint);
     }
 }
 
@@ -259,14 +251,6 @@ void SkNWayCanvas::onDrawTextOnPath(const void* text, size_t byteLength, const S
     Iter iter(fList);
     while (iter.next()) {
         iter->drawTextOnPath(text, byteLength, path, matrix, paint);
-    }
-}
-
-void SkNWayCanvas::onDrawTextRSXform(const void* text, size_t byteLength, const SkRSXform xform[],
-                                     const SkRect* cull, const SkPaint& paint) {
-    Iter iter(fList);
-    while (iter.next()) {
-        iter->drawTextRSXform(text, byteLength, xform, cull, paint);
     }
 }
 

@@ -40,9 +40,11 @@ public:
     virtual ~SkStream() {}
 
     /**
-     *  Attempts to open the specified file as a stream, returns nullptr on failure.
+     *  Attempts to open the specified file, and return a stream to it (using
+     *  mmap if available). On success, the caller is responsible for deleting.
+     *  On failure, returns NULL.
      */
-    static std::unique_ptr<SkStreamAsset> MakeFromFile(const char path[]);
+    static SkStreamAsset* NewFromFile(const char path[]);
 
     /** Reads or skips size number of bytes.
      *  If buffer == NULL, skip size bytes, return how many were skipped.
@@ -198,10 +200,7 @@ public:
     bool    write16(U16CPU);
     bool    write32(uint32_t);
 
-    bool    writeText(const char text[]) {
-        SkASSERT(text);
-        return this->write(text, strlen(text));
-    }
+    bool    writeText(const char text[]);
     bool    writeDecAsText(int32_t);
     bool    writeBigDecAsText(int64_t, int minDigits = 0);
     bool    writeHexAsText(uint32_t, int minDigits = 0);
@@ -289,13 +288,11 @@ public:
     /** If copyData is true, the stream makes a private copy of the data. */
     SkMemoryStream(const void* data, size_t length, bool copyData = false);
 
-#ifdef SK_SUPPORT_LEGACY_STREAM_DATA
     /** Use the specified data as the memory for this stream.
      *  The stream will call ref() on the data (assuming it is not NULL).
      *  DEPRECATED
      */
     SkMemoryStream(SkData*);
-#endif
 
     /** Creates the stream to read from the specified data */
     SkMemoryStream(sk_sp<SkData>);
@@ -312,24 +309,17 @@ public:
     */
     void setMemoryOwned(const void* data, size_t length);
 
-    sk_sp<SkData> asData() const { return fData; }
-    void setData(sk_sp<SkData>);
-#ifdef SK_SUPPORT_LEGACY_STREAM_DATA
     /** Return the stream's data in a SkData.
      *  The caller must call unref() when it is finished using the data.
      */
-    SkData* copyToData() const { return asData().release(); }
+    SkData* copyToData() const;
 
     /**
      *  Use the specified data as the memory for this stream.
      *  The stream will call ref() on the data (assuming it is not NULL).
      *  The function returns the data parameter as a convenience.
      */
-    SkData* setData(SkData* data) {
-        this->setData(sk_ref_sp(data));
-        return data;
-    }
-#endif
+    SkData* setData(SkData*);
 
     void skipToAlign4();
     const void* getAtPos();
@@ -411,18 +401,11 @@ public:
     void copyTo(void* dst) const;
     void writeToStream(SkWStream* dst) const;
 
-    sk_sp<SkData> snapshotAsData() const;
-    // Return the contents as SkData, and then reset the stream.
-    sk_sp<SkData> detachAsData();
-#ifdef SK_SUPPORT_LEGACY_STREAM_DATA
     /**
      *  Return a copy of the data written so far. This call is responsible for
      *  calling unref() when they are finished with the data.
      */
-    SkData* copyToData() const {
-        return snapshotAsData().release();
-    }
-#endif
+    SkData* copyToData() const;
 
     /** Reset, returning a reader stream with the current content. */
     SkStreamAsset* detachAsStream();

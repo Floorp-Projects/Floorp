@@ -348,8 +348,7 @@ static void glXSwapInterval(Display* dsp, GLXDrawable drawable, int interval) {
 
 /////////////////////////////////////////////////////////////////////////
 
-bool SkOSWindow::attach(SkBackEndTypes, int msaaSampleCount, bool deepColor,
-                        AttachmentInfo* info) {
+bool SkOSWindow::attach(SkBackEndTypes, int msaaSampleCount, AttachmentInfo* info) {
     this->initWindow(msaaSampleCount, info);
 
     if (nullptr == fUnixWindow.fDisplay) {

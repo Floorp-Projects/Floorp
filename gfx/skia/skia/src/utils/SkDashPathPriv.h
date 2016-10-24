@@ -11,7 +11,7 @@
 #include "SkPathEffect.h"
 
 namespace SkDashPath {
-    /**
+    /*
      * Calculates the initialDashLength, initialDashIndex, and intervalLength based on the
      * inputed phase and intervals. If adjustedPhase is passed in, then the phase will be
      * adjusted to be between 0 and intervalLength. The result will be stored in adjustedPhase.
@@ -28,23 +28,13 @@ namespace SkDashPath {
 
     const SkScalar kMaxDashCount = 1000000;
 
-    /** See comments for InternalFilter */
-    enum class StrokeRecApplication {
-        kDisallow,
-        kAllow,
-    };
-
-    /**
-     * Caller should have already used ValidDashPath to exclude invalid data. Typically, this leaves
-     * the strokeRec unmodified. However, for some simple shapes (e.g. a line) it may directly
-     * evaluate the dash and stroke to produce a stroked output path with a fill strokeRec. Passing
-     * true for disallowStrokeRecApplication turns this behavior off.
+    /*
+     * Caller should have already used ValidDashPath to exclude invalid data.
      */
     bool InternalFilter(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                         const SkRect* cullRect, const SkScalar aIntervals[],
                         int32_t count, SkScalar initialDashLength, int32_t initialDashIndex,
-                        SkScalar intervalLength,
-                        StrokeRecApplication = StrokeRecApplication::kAllow);
+                        SkScalar intervalLength);
 
     bool ValidDashPath(SkScalar phase, const SkScalar intervals[], int32_t count);
 }

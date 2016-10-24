@@ -21,6 +21,7 @@ class SkBitmapRegionDecoder {
 public:
 
     enum Strategy {
+        kCanvas_Strategy,       // Draw to the canvas, uses SkCodec
         kAndroidCodec_Strategy, // Uses SkAndroidCodec for scaling and subsetting
     };
 
@@ -29,7 +30,8 @@ public:
      * @param strategy Strategy used for scaling and subsetting
      * @return         Tries to create an SkBitmapRegionDecoder, returns NULL on failure
      */
-    static SkBitmapRegionDecoder* Create(sk_sp<SkData>, Strategy strategy);
+    static SkBitmapRegionDecoder* Create(
+            SkData* data, Strategy strategy);
 
     /*
      * @param stream   Takes ownership of the stream

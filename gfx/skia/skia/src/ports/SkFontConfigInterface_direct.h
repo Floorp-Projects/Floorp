@@ -8,6 +8,7 @@
 /* migrated from chrome/src/skia/ext/SkFontHost_fontconfig_direct.cpp */
 
 #include "SkFontConfigInterface.h"
+#include "SkMutex.h"
 
 #include <fontconfig/fontconfig.h>
 
@@ -17,20 +18,21 @@ public:
     ~SkFontConfigInterfaceDirect() override;
 
     bool matchFamilyName(const char familyName[],
-                         SkFontStyle requested,
+                         SkTypeface::Style requested,
                          FontIdentity* outFontIdentifier,
                          SkString* outFamilyName,
-                         SkFontStyle* outStyle) override;
-
+                         SkTypeface::Style* outStyle) override;
     SkStreamAsset* openStream(const FontIdentity&) override;
 
     // new APIs
-    sk_sp<SkDataTable> getFamilyNames() override;
+    SkDataTable* getFamilyNames() override;
 
 protected:
     virtual bool isAccessible(const char* filename);
 
 private:
+    SkMutex mutex_;
+
     bool isValidPattern(FcPattern* pattern);
     FcPattern* MatchFont(FcFontSet* font_set, const char* post_config_family,
                          const SkString& family);

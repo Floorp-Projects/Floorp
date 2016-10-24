@@ -8,12 +8,11 @@
 #ifndef SkRefCnt_DEFINED
 #define SkRefCnt_DEFINED
 
+#include "../private/SkAtomics.h"
 #include "../private/SkTLogic.h"
 #include "SkTypes.h"
-#include <atomic>
 #include <functional>
 #include <memory>
-#include <type_traits>
 #include <utility>
 
 #define SK_SUPPORT_TRANSITION_TO_SP_INTERFACES
@@ -38,28 +37,19 @@ public:
     */
     virtual ~SkRefCntBase() {
 #ifdef SK_DEBUG
-        SkASSERTF(getRefCnt() == 1, "fRefCnt was %d", getRefCnt());
-        // illegal value, to catch us if we reuse after delete
-        fRefCnt.store(0, std::memory_order_relaxed);
+        SkASSERTF(fRefCnt == 1, "fRefCnt was %d", fRefCnt);
+        fRefCnt = 0;    // illegal value, to catch us if we reuse after delete
 #endif
     }
 
     /** Return the reference count. Use only for debugging. */
-    int32_t getRefCnt() const {
-        return fRefCnt.load(std::memory_order_relaxed);
-    }
-
-#ifdef SK_DEBUG
-    void validate() const {
-        SkASSERT(getRefCnt() > 0);
-    }
-#endif
+    int32_t getRefCnt() const { return fRefCnt; }
 
     /** May return true if the caller is the only owner.
      *  Ensures that all previous owner's actions are complete.
      */
     bool unique() const {
-        if (1 == fRefCnt.load(std::memory_order_acquire)) {
+        if (1 == sk_atomic_load(&fRefCnt, sk_memory_order_acquire)) {
             // The acquire barrier is only really needed if we return true.  It
             // prevents code conditioned on the result of unique() from running
             // until previous owners are all totally done calling unref().
@@ -76,12 +66,11 @@ public:
         // go to zero, but not below, prior to reusing the object.  This breaks
         // the use of unique() on such objects and as such should be removed
         // once the Android code is fixed.
-        SkASSERT(getRefCnt() >= 0);
+        SkASSERT(fRefCnt >= 0);
 #else
-        SkASSERT(getRefCnt() > 0);
+        SkASSERT(fRefCnt > 0);
 #endif
-        // No barrier required.
-        (void)fRefCnt.fetch_add(+1, std::memory_order_relaxed);
+        (void)sk_atomic_fetch_add(&fRefCnt, +1, sk_memory_order_relaxed);  // No barrier required.
     }
 
     /** Decrement the reference count. If the reference count is 1 before the
@@ -89,24 +78,33 @@ public:
         the object needs to have been allocated via new, and not on the stack.
     */
     void unref() const {
-        SkASSERT(getRefCnt() > 0);
+        SkASSERT(fRefCnt > 0);
         // A release here acts in place of all releases we "should" have been doing in ref().
-        if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel)) {
+        if (1 == sk_atomic_fetch_add(&fRefCnt, -1, sk_memory_order_acq_rel)) {
             // Like unique(), the acquire is only needed on success, to make sure
             // code in internal_dispose() doesn't happen before the decrement.
             this->internal_dispose();
         }
     }
 
+#ifdef SK_DEBUG
+    void validate() const {
+        SkASSERT(fRefCnt > 0);
+    }
+#endif
+
 protected:
     /**
      *  Allow subclasses to call this if they've overridden internal_dispose
-     *  so they can reset fRefCnt before the destructor is called or if they
-     *  choose not to call the destructor (e.g. using a free list).
+     *  so they can reset fRefCnt before the destructor is called. Should only
+     *  be called right before calling through to inherited internal_dispose()
+     *  or before calling the destructor.
      */
     void internal_dispose_restore_refcnt_to_1() const {
-        SkASSERT(0 == getRefCnt());
-        fRefCnt.store(1, std::memory_order_relaxed);
+#ifdef SK_DEBUG
+        SkASSERT(0 == fRefCnt);
+        fRefCnt = 1;
+#endif
     }
 
 private:
@@ -122,7 +120,7 @@ private:
     // and conditionally call SkRefCnt::internal_dispose().
     friend class SkWeakRefCnt;
 
-    mutable std::atomic<int32_t> fRefCnt;
+    mutable int32_t fRefCnt;
 
     typedef SkNoncopyable INHERITED;
 };
@@ -132,13 +130,7 @@ private:
 // This SkRefCnt should normally derive from SkRefCntBase.
 #include SK_REF_CNT_MIXIN_INCLUDE
 #else
-class SK_API SkRefCnt : public SkRefCntBase {
-    // "#include SK_REF_CNT_MIXIN_INCLUDE" doesn't work with this build system.
-    #if defined(GOOGLE3)
-    public:
-        void deref() const { this->unref(); }
-    #endif
-};
+class SK_API SkRefCnt : public SkRefCntBase { };
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -221,29 +213,25 @@ template <typename Derived>
 class SkNVRefCnt : SkNoncopyable {
 public:
     SkNVRefCnt() : fRefCnt(1) {}
-    ~SkNVRefCnt() { SkASSERTF(1 == getRefCnt(), "NVRefCnt was %d", getRefCnt()); }
+    ~SkNVRefCnt() { SkASSERTF(1 == fRefCnt, "NVRefCnt was %d", fRefCnt); }
 
     // Implementation is pretty much the same as SkRefCntBase. All required barriers are the same:
     //   - unique() needs acquire when it returns true, and no barrier if it returns false;
     //   - ref() doesn't need any barrier;
     //   - unref() needs a release barrier, and an acquire if it's going to call delete.
 
-    bool unique() const { return 1 == fRefCnt.load(std::memory_order_acquire); }
-    void ref() const { (void)fRefCnt.fetch_add(+1, std::memory_order_relaxed); }
+    bool unique() const { return 1 == sk_atomic_load(&fRefCnt, sk_memory_order_acquire); }
+    void    ref() const { (void)sk_atomic_fetch_add(&fRefCnt, +1, sk_memory_order_relaxed); }
     void  unref() const {
-        if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel)) {
-            // restore the 1 for our destructor's assert
-            SkDEBUGCODE(fRefCnt.store(1, std::memory_order_relaxed));
+        if (1 == sk_atomic_fetch_add(&fRefCnt, -1, sk_memory_order_acq_rel)) {
+            SkDEBUGCODE(fRefCnt = 1;)  // restore the 1 for our destructor's assert
             delete (const Derived*)this;
         }
     }
     void  deref() const { this->unref(); }
 
 private:
-    mutable std::atomic<int32_t> fRefCnt;
-    int32_t getRefCnt() const {
-        return fRefCnt.load(std::memory_order_relaxed);
-    }
+    mutable int32_t fRefCnt;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,15 +249,15 @@ template <typename T> class sk_sp {
 public:
     using element_type = T;
 
-    constexpr sk_sp() : fPtr(nullptr) {}
-    constexpr sk_sp(std::nullptr_t) : fPtr(nullptr) {}
+    sk_sp() : fPtr(nullptr) {}
+    sk_sp(std::nullptr_t) : fPtr(nullptr) {}
 
     /**
      *  Shares the underlying object by calling ref(), so that both the argument and the newly
      *  created sk_sp both have a reference to it.
      */
     sk_sp(const sk_sp<T>& that) : fPtr(SkSafeRef(that.get())) {}
-    template <typename U, typename = skstd::enable_if_t<std::is_convertible<U*, T*>::value>>
+    template <typename U, typename = skstd::enable_if_t<skstd::is_convertible<U*, T*>::value>>
     sk_sp(const sk_sp<U>& that) : fPtr(SkSafeRef(that.get())) {}
 
     /**
@@ -278,7 +266,7 @@ public:
      *  No call to ref() or unref() will be made.
      */
     sk_sp(sk_sp<T>&& that) : fPtr(that.release()) {}
-    template <typename U, typename = skstd::enable_if_t<std::is_convertible<U*, T*>::value>>
+    template <typename U, typename = skstd::enable_if_t<skstd::is_convertible<U*, T*>::value>>
     sk_sp(sk_sp<U>&& that) : fPtr(that.release()) {}
 
     /**
@@ -306,7 +294,7 @@ public:
         this->reset(SkSafeRef(that.get()));
         return *this;
     }
-    template <typename U, typename = skstd::enable_if_t<std::is_convertible<U*, T*>::value>>
+    template <typename U, typename = skstd::enable_if_t<skstd::is_convertible<U*, T*>::value>>
     sk_sp<T>& operator=(const sk_sp<U>& that) {
         this->reset(SkSafeRef(that.get()));
         return *this;
@@ -321,7 +309,7 @@ public:
         this->reset(that.release());
         return *this;
     }
-    template <typename U, typename = skstd::enable_if_t<std::is_convertible<U*, T*>::value>>
+    template <typename U, typename = skstd::enable_if_t<skstd::is_convertible<U*, T*>::value>>
     sk_sp<T>& operator=(sk_sp<U>&& that) {
         this->reset(that.release());
         return *this;
@@ -403,7 +391,7 @@ template <typename T, typename U> inline bool operator<(const sk_sp<T>& a, const
     // Provide defined total order on sk_sp.
     // http://wg21.cmeerw.net/lwg/issue1297
     // http://wg21.cmeerw.net/lwg/issue1401 .
-    return std::less<skstd::common_type_t<T*, U*>>()(a.get(), b.get());
+    return std::less<void*>()((void*)a.get(), (void*)b.get());
 }
 template <typename T> inline bool operator<(const sk_sp<T>& a, std::nullptr_t) {
     return std::less<T*>()(a.get(), nullptr);
@@ -444,7 +432,7 @@ template <typename T> inline bool operator>=(std::nullptr_t, const sk_sp<T>& b) 
 
 template <typename T, typename... Args>
 sk_sp<T> sk_make_sp(Args&&... args) {
-    return sk_sp<T>(new T(std::forward<Args>(args)...));
+    return sk_sp<T>(new T(std__forward<Args>(args)...));
 }
 
 #ifdef SK_SUPPORT_TRANSITION_TO_SP_INTERFACES

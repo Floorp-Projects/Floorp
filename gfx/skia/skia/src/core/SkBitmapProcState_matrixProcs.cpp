@@ -47,16 +47,16 @@ void decal_filter_scale(uint32_t dst[], SkFixed fx, SkFixed dx, int count);
 ///////////////////////////////////////////////////////////////////////////////
 
 // Compile neon code paths if needed
-#if defined(SK_ARM_HAS_NEON) || defined(SK_ARM_HAS_OPTIONAL_NEON)
+#if !SK_ARM_NEON_IS_NONE
 
 // These are defined in src/opts/SkBitmapProcState_matrixProcs_neon.cpp
 extern const SkBitmapProcState::MatrixProc ClampX_ClampY_Procs_neon[];
 extern const SkBitmapProcState::MatrixProc RepeatX_RepeatY_Procs_neon[];
 
-#endif // defined(SK_ARM_HAS_NEON)
+#endif // !SK_ARM_NEON_IS_NONE
 
 // Compile non-neon code path if needed
-#if !defined(SK_ARM_HAS_NEON)
+#if !SK_ARM_NEON_IS_ALWAYS
 #define MAKENAME(suffix)        ClampX_ClampY ## suffix
 #define TILEX_PROCF(fx, max)    SkClampMax((fx) >> 16, max)
 #define TILEY_PROCF(fy, max)    SkClampMax((fy) >> 16, max)

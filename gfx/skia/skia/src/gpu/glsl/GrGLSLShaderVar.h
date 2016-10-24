@@ -174,9 +174,8 @@ public:
             out->append(" ");
         }
         GrSLType effectiveType = this->getType();
-        if (glslCaps->usesPrecisionModifiers() && GrSLTypeAcceptsPrecision(effectiveType)) {
-            // Desktop GLSL has added precision qualifiers but they don't do anything.
-            out->appendf("%s ", GrGLSLPrecisionString(fPrecision));
+        if (GrSLTypeAcceptsPrecision(effectiveType)) {
+            out->append(PrecisionString(glslCaps, fPrecision));
         }
         if (this->isArray()) {
             if (this->isUnsizedArray()) {
@@ -209,6 +208,23 @@ public:
                      this->getName().c_str(),
                      indexName,
                      fUseUniformFloatArrays ? "" : ".x");
+    }
+
+    static const char* PrecisionString(const GrGLSLCaps* glslCaps, GrSLPrecision p) {
+        // Desktop GLSL has added precision qualifiers but they don't do anything.
+        if (glslCaps->usesPrecisionModifiers()) {
+            switch (p) {
+                case kLow_GrSLPrecision:
+                    return "lowp ";
+                case kMedium_GrSLPrecision:
+                    return "mediump ";
+                case kHigh_GrSLPrecision:
+                    return "highp ";
+                default:
+                    SkFAIL("Unexpected precision type.");
+            }
+        }
+        return "";
     }
 
 private:

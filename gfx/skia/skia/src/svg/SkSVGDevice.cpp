@@ -534,8 +534,8 @@ void SkSVGDevice::AutoElement::addTextAttributes(const SkPaint& paint) {
 
     SkString familyName;
     SkTHashSet<SkString> familySet;
-    sk_sp<const SkTypeface> tface(paint.getTypeface() ?
-        sk_ref_sp(paint.getTypeface()) : SkTypeface::MakeDefault());
+    SkAutoTUnref<const SkTypeface> tface(paint.getTypeface() ?
+        SkRef(paint.getTypeface()) : SkTypeface::RefDefault());
 
     SkASSERT(tface);
     SkTypeface::Style style = tface->style();
@@ -570,12 +570,12 @@ SkBaseDevice* SkSVGDevice::Create(const SkISize& size, SkXMLWriter* writer) {
 }
 
 SkSVGDevice::SkSVGDevice(const SkISize& size, SkXMLWriter* writer)
-    : INHERITED(SkImageInfo::MakeUnknown(size.fWidth, size.fHeight),
-                SkSurfaceProps(0, kUnknown_SkPixelGeometry))
+    : INHERITED(SkSurfaceProps(0, kUnknown_SkPixelGeometry))
     , fWriter(writer)
-    , fResourceBucket(new ResourceBucket)
-{
+    , fResourceBucket(new ResourceBucket) {
     SkASSERT(writer);
+
+    fLegacyBitmap.setInfo(SkImageInfo::MakeUnknown(size.width(), size.height()));
 
     fWriter->writeHeader();
 
@@ -589,6 +589,14 @@ SkSVGDevice::SkSVGDevice(const SkISize& size, SkXMLWriter* writer)
 }
 
 SkSVGDevice::~SkSVGDevice() {
+}
+
+SkImageInfo SkSVGDevice::imageInfo() const {
+    return fLegacyBitmap.info();
+}
+
+const SkBitmap& SkSVGDevice::onAccessBitmap() {
+    return fLegacyBitmap;
 }
 
 void SkSVGDevice::drawPaint(const SkDraw& draw, const SkPaint& paint) {
@@ -652,11 +660,6 @@ void SkSVGDevice::drawPath(const SkDraw& draw, const SkPath& path, const SkPaint
                            const SkMatrix* prePathMatrix, bool pathIsMutable) {
     AutoElement elem("path", fWriter, fResourceBucket, draw, paint);
     elem.addPathAttributes(path);
-
-    // TODO: inverse fill types?
-    if (path.getFillType() == SkPath::kEvenOdd_FillType) {
-        elem.addAttribute("fill-rule", "evenodd");
-    }
 }
 
 void SkSVGDevice::drawBitmapCommon(const SkDraw& draw, const SkBitmap& bm,
@@ -726,9 +729,11 @@ void SkSVGDevice::drawBitmapRect(const SkDraw& draw, const SkBitmap& bm, const S
 
     SkClipStack adjustedClipStack;
     if (srcOrNull && *srcOrNull != SkRect::Make(bm.bounds())) {
+        SkRect devClipRect;
+        draw.fMatrix->mapRect(&devClipRect, dst);
+
         adjustedClipStack = *draw.fClipStack;
-        adjustedClipStack.clipRect(dst, *draw.fMatrix, SkCanvas::kIntersect_Op,
-                                   paint.isAntiAlias());
+        adjustedClipStack.clipDevRect(devClipRect, SkRegion::kIntersect_Op, paint.isAntiAlias());
         adjustedDraw.fClipStack = &adjustedClipStack;
     }
 

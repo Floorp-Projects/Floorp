@@ -13,7 +13,6 @@
 GrBatchFlushState::GrBatchFlushState(GrGpu* gpu, GrResourceProvider* resourceProvider)
     : fGpu(gpu)
     , fResourceProvider(resourceProvider)
-    , fCommandBuffer(nullptr)
     , fVertexPool(gpu)
     , fIndexPool(gpu)
     , fLastIssuedToken(GrBatchDrawToken::AlreadyFlushedToken())

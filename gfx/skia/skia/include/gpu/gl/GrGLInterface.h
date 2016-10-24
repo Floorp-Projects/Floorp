@@ -53,7 +53,7 @@ typedef intptr_t GrGLInterfaceCallbackData;
  * CPU overhead. TODO: We would like to move this to tools/gpu/gl/null but currently
  * Chromium is using it in its unit tests.
  */
-const SK_API GrGLInterface* GrGLCreateNullInterface(bool enableNVPR = false);
+const SK_API GrGLInterface* GrGLCreateNullInterface();
 
 /** Function that returns a new interface identical to "interface" but without support for
     GL_NV_path_rendering. */
@@ -155,7 +155,6 @@ public:
         GrGLFunction<GrGLDrawElementsProc> fDrawElements;
         GrGLFunction<GrGLDrawElementsIndirectProc> fDrawElementsIndirect;
         GrGLFunction<GrGLDrawElementsInstancedProc> fDrawElementsInstanced;
-        GrGLFunction<GrGLDrawRangeElementsProc> fDrawRangeElements;
         GrGLFunction<GrGLEnableProc> fEnable;
         GrGLFunction<GrGLEnableVertexAttribArrayProc> fEnableVertexAttribArray;
         GrGLFunction<GrGLEndQueryProc> fEndQuery;
@@ -207,8 +206,6 @@ public:
         GrGLFunction<GrGLMapBufferRangeProc> fMapBufferRange;
         GrGLFunction<GrGLMapBufferSubDataProc> fMapBufferSubData;
         GrGLFunction<GrGLMapTexSubImage2DProc> fMapTexSubImage2D;
-        GrGLFunction<GrGLMultiDrawArraysIndirectProc> fMultiDrawArraysIndirect;
-        GrGLFunction<GrGLMultiDrawElementsIndirectProc> fMultiDrawElementsIndirect;
         GrGLFunction<GrGLPixelStoreiProc> fPixelStorei;
         GrGLFunction<GrGLPopGroupMarkerProc> fPopGroupMarker;
         GrGLFunction<GrGLPushGroupMarkerProc> fPushGroupMarker;
@@ -254,7 +251,6 @@ public:
         GrGLFunction<GrGLStencilOpProc> fStencilOp;
         GrGLFunction<GrGLStencilOpSeparateProc> fStencilOpSeparate;
         GrGLFunction<GrGLTexBufferProc> fTexBuffer;
-        GrGLFunction<GrGLTexBufferRangeProc> fTexBufferRange;
         GrGLFunction<GrGLTexImage2DProc> fTexImage2D;
         GrGLFunction<GrGLTexParameteriProc> fTexParameteri;
         GrGLFunction<GrGLTexParameterivProc> fTexParameteriv;
@@ -325,6 +321,10 @@ public:
 
         /* NV_framebuffer_mixed_samples */
         GrGLFunction<GrGLCoverageModulationProc> fCoverageModulation;
+
+        /* EXT_multi_draw_indirect */
+        GrGLFunction<GrGLMultiDrawArraysIndirectProc> fMultiDrawArraysIndirect;
+        GrGLFunction<GrGLMultiDrawElementsIndirectProc> fMultiDrawElementsIndirect;
 
         /* NV_bindless_texture */
         // We use the NVIDIA verson for now because it does not require dynamically uniform handles.
@@ -452,11 +452,6 @@ public:
         // OpenGL 3.1
         GrGLFunction<GrGLTextureBufferProc> fTextureBuffer;
 
-        /* ARB_sync */
-        GrGLFunction<GrGLFenceSyncProc> fFenceSync;
-        GrGLFunction<GrGLClientWaitSyncProc> fClientWaitSync;
-        GrGLFunction<GrGLDeleteSyncProc> fDeleteSync;
-
         /* KHR_debug */
         GrGLFunction<GrGLDebugMessageControlProc> fDebugMessageControl;
         GrGLFunction<GrGLDebugMessageInsertProc> fDebugMessageInsert;
@@ -465,9 +460,6 @@ public:
         GrGLFunction<GrGLPushDebugGroupProc> fPushDebugGroup;
         GrGLFunction<GrGLPopDebugGroupProc> fPopDebugGroup;
         GrGLFunction<GrGLObjectLabelProc> fObjectLabel;
-
-        /* EXT_window_rectangles */
-        GrGLFunction<GrGLWindowRectanglesProc> fWindowRectangles;
 
         /* EGL functions */
         GrGLFunction<GrEGLCreateImageProc> fEGLCreateImage;

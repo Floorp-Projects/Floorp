@@ -12,6 +12,7 @@
 
 class SkOpCoincidence;
 
-bool AddIntersectTs(SkOpContour* test, SkOpContour* next, SkOpCoincidence* coincidence);
+bool AddIntersectTs(SkOpContour* test, SkOpContour* next, SkOpCoincidence* coincidence,
+        SkChunkAlloc* allocator);
 
 #endif

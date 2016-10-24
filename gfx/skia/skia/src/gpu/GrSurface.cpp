@@ -14,7 +14,7 @@
 #include "SkImageEncoder.h"
 #include <stdio.h>
 
-size_t GrSurface::WorstCaseSize(const GrSurfaceDesc& desc) {
+size_t GrSurface::WorseCaseSize(const GrSurfaceDesc& desc) {
     size_t size;
 
     bool isRenderTarget = SkToBool(desc.fFlags & kRenderTarget_GrSurfaceFlag);
@@ -29,8 +29,7 @@ size_t GrSurface::WorstCaseSize(const GrSurfaceDesc& desc) {
         SkASSERT(!GrPixelConfigIsCompressed(desc.fConfig));
         size_t colorBytes = GrBytesPerPixel(desc.fConfig);
         SkASSERT(colorBytes > 0);
-
-        size = (size_t) colorValuesPerPixel * desc.fWidth * desc.fHeight * colorBytes;
+        size = colorValuesPerPixel * desc.fWidth * desc.fHeight * colorBytes;
     } else {
         if (GrPixelConfigIsCompressed(desc.fConfig)) {
             size = GrCompressedFormatDataSize(desc.fConfig, desc.fWidth, desc.fHeight);
@@ -117,6 +116,16 @@ bool GrSurface::readPixels(int left, int top, int width, int height,
                                       rowBytes, pixelOpsFlags);
 }
 
+SkImageInfo GrSurface::info(SkAlphaType alphaType) const {
+    SkColorType colorType;
+    SkColorProfileType profileType;
+    if (!GrPixelConfig2ColorAndProfileType(this->config(), &colorType, &profileType)) {
+        sk_throw();
+    }
+    return SkImageInfo::Make(this->width(), this->height(), colorType, alphaType,
+                             profileType);
+}
+
 // TODO: This should probably be a non-member helper function. It might only be needed in
 // debug or developer builds.
 bool GrSurface::savePixels(const char* filename) {
@@ -147,6 +156,12 @@ bool GrSurface::savePixels(const char* filename) {
 void GrSurface::flushWrites() {
     if (!this->wasDestroyed()) {
         this->getContext()->flushSurfaceWrites(this);
+    }
+}
+
+void GrSurface::prepareForExternalIO() {
+    if (!this->wasDestroyed()) {
+        this->getContext()->prepareSurfaceForExternalIO(this);
     }
 }
 

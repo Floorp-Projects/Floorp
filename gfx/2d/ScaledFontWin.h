@@ -7,7 +7,6 @@
 #define MOZILLA_GFX_SCALEDFONTWIN_H_
 
 #include "ScaledFontBase.h"
-#include <windows.h>
 
 namespace mozilla {
 namespace gfx {

@@ -55,7 +55,7 @@ private:
 
     SkTScopedComPtr<IWICImagingFactory> fImagingFactory;
     SkTScopedComPtr<IWICBitmapSource>   fImageSource;
-    sk_sp<SkData>                       fData;
+    SkAutoTUnref<SkData>                fData;
 
     typedef SkImageGenerator INHERITED;
 };

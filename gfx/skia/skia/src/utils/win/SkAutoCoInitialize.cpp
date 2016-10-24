@@ -8,10 +8,11 @@
 #include "SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN32)
 
-#include "SkAutoCoInitialize.h"
 
-#include <objbase.h>
-#include <winerror.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <ole2.h>
+#include "SkAutoCoInitialize.h"
 
 SkAutoCoInitialize::SkAutoCoInitialize() :
     fHR(

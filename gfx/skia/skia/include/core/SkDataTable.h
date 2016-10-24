@@ -63,7 +63,7 @@ public:
 
     typedef void (*FreeProc)(void* context);
 
-    static sk_sp<SkDataTable> MakeEmpty();
+    static SkDataTable* NewEmpty();
 
     /**
      *  Return a new DataTable that contains a copy of the data stored in each
@@ -74,8 +74,8 @@ public:
      *               ptrs[] array.
      *  @param count the number of array elements in ptrs[] and sizes[] to copy.
      */
-    static sk_sp<SkDataTable> MakeCopyArrays(const void * const * ptrs,
-                                             const size_t sizes[], int count);
+    static SkDataTable* NewCopyArrays(const void * const * ptrs,
+                                      const size_t sizes[], int count);
 
     /**
      *  Return a new table that contains a copy of the data in array.
@@ -85,10 +85,11 @@ public:
      *  @param count the number of entries to be copied out of array. The number
      *               of bytes that will be copied is count * elemSize.
      */
-    static sk_sp<SkDataTable> MakeCopyArray(const void* array, size_t elemSize, int count);
+    static SkDataTable* NewCopyArray(const void* array, size_t elemSize,
+                                     int count);
 
-    static sk_sp<SkDataTable> MakeArrayProc(const void* array, size_t elemSize, int count,
-                                            FreeProc proc, void* context);
+    static SkDataTable* NewArrayProc(const void* array, size_t elemSize,
+                                     int count, FreeProc proc, void* context);
 
 private:
     struct Dir {
@@ -163,7 +164,7 @@ public:
      *  calls to append(). This call also clears any accumluated entries from
      *  this builder, so its count() will be 0 after this call.
      */
-    sk_sp<SkDataTable> detachDataTable();
+    SkDataTable* detachDataTable();
 
 private:
     SkTDArray<SkDataTable::Dir> fDir;

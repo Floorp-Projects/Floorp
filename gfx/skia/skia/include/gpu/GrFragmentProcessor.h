@@ -14,7 +14,6 @@ class GrCoordTransform;
 class GrGLSLCaps;
 class GrGLSLFragmentProcessor;
 class GrInvariantOutput;
-class GrPipeline;
 class GrProcessorKeyBuilder;
 
 /** Provides custom fragment shader code. Fragment processors receive an input color (vec4f) and
@@ -32,42 +31,35 @@ public:
     *  does so by returning a parent FP that multiplies the passed in FPs output by the parent's
     *  input alpha. The passed in FP will not receive an input color.
     */
-    static sk_sp<GrFragmentProcessor> MulOutputByInputAlpha(sk_sp<GrFragmentProcessor>);
+    static const GrFragmentProcessor* MulOutputByInputAlpha(const GrFragmentProcessor*);
 
     /**
      *  Similar to the above but it modulates the output r,g,b of the child processor by the input
      *  rgb and then multiplies all the components by the input alpha. This effectively modulates
      *  the child processor's premul color by a unpremul'ed input and produces a premul output
      */
-    static sk_sp<GrFragmentProcessor> MulOutputByInputUnpremulColor(sk_sp<GrFragmentProcessor>);
+    static const GrFragmentProcessor* MulOutputByInputUnpremulColor(const GrFragmentProcessor*);
 
     /**
      *  Returns a parent fragment processor that adopts the passed fragment processor as a child.
      *  The parent will ignore its input color and instead feed the passed in color as input to the
      *  child.
      */
-    static sk_sp<GrFragmentProcessor> OverrideInput(sk_sp<GrFragmentProcessor>, GrColor4f);
-
-    /**
-     *  Returns a fragment processor that premuls the input before calling the passed in fragment
-     *  processor.
-     */
-    static sk_sp<GrFragmentProcessor> PremulInput(sk_sp<GrFragmentProcessor>);
+    static const GrFragmentProcessor* OverrideInput(const GrFragmentProcessor*, GrColor);
 
     /**
      * Returns a fragment processor that runs the passed in array of fragment processors in a
      * series. The original input is passed to the first, the first's output is passed to the
      * second, etc. The output of the returned processor is the output of the last processor of the
      * series.
-     *
-     * The array elements with be moved.
      */
-    static sk_sp<GrFragmentProcessor> RunInSeries(sk_sp<GrFragmentProcessor>*, int cnt);
+    static const GrFragmentProcessor* RunInSeries(const GrFragmentProcessor*[], int cnt);
 
     GrFragmentProcessor()
         : INHERITED()
-        , fUsesDistanceVectorField(false)
-        , fUsesLocalCoords(false) {}
+        , fUsesLocalCoords(false)
+        , fNumTexturesExclChildren(0)
+        , fNumTransformsExclChildren(0) {}
 
     ~GrFragmentProcessor() override;
 
@@ -80,7 +72,11 @@ public:
         }
     }
 
-    int numCoordTransforms() const { return fCoordTransforms.count(); }
+    int numTexturesExclChildren() const { return fNumTexturesExclChildren; }
+
+    int numTransformsExclChildren() const { return fNumTransformsExclChildren; }
+
+    int numTransforms() const { return fCoordTransforms.count(); }
 
     /** Returns the coordinate transformation at index. index must be valid according to
         numTransforms(). */
@@ -90,15 +86,18 @@ public:
         return fCoordTransforms;
     }
 
+    void gatherCoordTransforms(SkTArray<const GrCoordTransform*, true>* outTransforms) const {
+        if (!fCoordTransforms.empty()) {
+            outTransforms->push_back_n(fCoordTransforms.count(), fCoordTransforms.begin());
+        }
+    }
+
     int numChildProcessors() const { return fChildProcessors.count(); }
 
     const GrFragmentProcessor& childProcessor(int index) const { return *fChildProcessors[index]; }
 
     /** Do any of the coordtransforms for this processor require local coords? */
     bool usesLocalCoords() const { return fUsesLocalCoords; }
-
-    /** Does this FP need a vector to the nearest edge? */
-    bool usesDistanceVectorField() const { return fUsesDistanceVectorField; }
 
     /** Returns true if this and other processor conservatively draw identically. It can only return
         true when the two processor are of the same subclass (i.e. they return the same object from
@@ -107,7 +106,7 @@ public:
         A return value of true from isEqual() should not be used to test whether the processor would
         generate the same shader code. To test for identical code generation use getGLSLProcessorKey
      */
-    bool isEqual(const GrFragmentProcessor& that) const;
+    bool isEqual(const GrFragmentProcessor& that, bool ignoreCoordTransforms) const;
 
     /**
      * This function is used to perform optimizations. When called the invarientOuput param
@@ -121,76 +120,8 @@ public:
         this->onComputeInvariantOutput(inout);
     }
 
-    /**
-     * Pre-order traversal of a FP hierarchy, or of the forest of FPs in a GrPipeline. In the latter
-     * case the tree rooted at each FP in the GrPipeline is visited successively.
-     */
-    class Iter : public SkNoncopyable {
-    public:
-        explicit Iter(const GrFragmentProcessor* fp) { fFPStack.push_back(fp); }
-        explicit Iter(const GrPipeline& pipeline);
-        const GrFragmentProcessor* next();
-
-    private:
-        SkSTArray<4, const GrFragmentProcessor*, true> fFPStack;
-    };
-
-    /**
-     * Iterates over all the Ts owned by a GrFragmentProcessor and its children or over all the Ts
-     * owned by the forest of GrFragmentProcessors in a GrPipeline. FPs are visited in the same
-     * order as Iter and each of an FP's Ts are visited in order.
-     */
-    template <typename T, typename BASE,
-              int (BASE::*COUNT)() const,
-              const T& (BASE::*GET)(int) const>
-    class FPItemIter : public SkNoncopyable {
-    public:
-        explicit FPItemIter(const GrFragmentProcessor* fp)
-                : fCurrFP(nullptr)
-                , fCTIdx(0)
-                , fFPIter(fp) {
-            fCurrFP = fFPIter.next();
-        }
-        explicit FPItemIter(const GrPipeline& pipeline)
-                : fCurrFP(nullptr)
-                , fCTIdx(0)
-                , fFPIter(pipeline) {
-            fCurrFP = fFPIter.next();
-        }
-
-        const T* next() {
-            if (!fCurrFP) {
-                return nullptr;
-            }
-            while (fCTIdx == (fCurrFP->*COUNT)()) {
-                fCTIdx = 0;
-                fCurrFP = fFPIter.next();
-                if (!fCurrFP) {
-                    return nullptr;
-                }
-            }
-            return &(fCurrFP->*GET)(fCTIdx++);
-        }
-
-    private:
-        const GrFragmentProcessor*  fCurrFP;
-        int                         fCTIdx;
-        GrFragmentProcessor::Iter   fFPIter;
-    };
-
-    using CoordTransformIter = FPItemIter<GrCoordTransform,
-                                          GrFragmentProcessor,
-                                          &GrFragmentProcessor::numCoordTransforms,
-                                          &GrFragmentProcessor::coordTransform>;
-
-    using TextureAccessIter = FPItemIter<GrTextureAccess,
-                                         GrProcessor,
-                                         &GrProcessor::numTextures,
-                                         &GrProcessor::textureAccess>;
-
 protected:
     void addTextureAccess(const GrTextureAccess* textureAccess) override;
-    void addBufferAccess(const GrBufferAccess*) override;
 
     /**
      * Fragment Processor subclasses call this from their constructor to register coordinate
@@ -220,7 +151,7 @@ protected:
      * processors will allow the ProgramBuilder to automatically handle their transformed coords and
      * texture accesses and mangle their uniform and output color names.
      */
-    int registerChildProcessor(sk_sp<GrFragmentProcessor> child);
+    int registerChildProcessor(const GrFragmentProcessor* child);
 
     /**
      * Subclass implements this to support getConstantColorComponents(...).
@@ -229,11 +160,6 @@ protected:
      * procs' output invariants; computeInvariantOutput will not be recursive.
      */
     virtual void onComputeInvariantOutput(GrInvariantOutput* inout) const = 0;
-
-    /* Sub-classes should set this to true in their constructors if they need access to a distance
-     * vector field to the nearest edge
-     */
-    bool fUsesDistanceVectorField;
 
 private:
     void notifyRefCntIsZero() const final;
@@ -257,15 +183,35 @@ private:
 
     bool hasSameTransforms(const GrFragmentProcessor&) const;
 
-    bool                                       fUsesLocalCoords;
-
-    SkSTArray<4, const GrCoordTransform*, true> fCoordTransforms;
+    bool                                            fUsesLocalCoords;
 
     /**
-     * This is not SkSTArray<1, sk_sp<GrFragmentProcessor>> because this class holds strong
-     * references until notifyRefCntIsZero and then it holds pending executions.
+     * fCoordTransforms stores the transforms of this proc, followed by all the transforms of this
+     * proc's children. In other words, each proc stores all the transforms of its subtree as if
+     * they were collected using preorder traversal.
+     *
+     * Example:
+     * Suppose we have frag proc A, who has two children B and D. B has a child C, and D has
+     * two children E and F. Suppose procs A, B, C, D, E, F have 1, 2, 1, 1, 3, 2 transforms
+     * respectively. The following shows what the fCoordTransforms array of each proc would contain:
+     *
+     *                                   (A)
+     *                        [a1,b1,b2,c1,d1,e1,e2,e3,f1,f2]
+     *                                  /    \
+     *                                /        \
+     *                            (B)           (D)
+     *                        [b1,b2,c1]   [d1,e1,e2,e3,f1,f2]
+     *                          /             /    \
+     *                        /             /        \
+     *                      (C)          (E)          (F)
+     *                     [c1]      [e1,e2,e3]      [f1,f2]
+     *
+     * The same goes for fTextureAccesses with textures.
      */
-    SkSTArray<1, GrFragmentProcessor*, true>    fChildProcessors;
+    SkSTArray<4, const GrCoordTransform*, true>     fCoordTransforms;
+    int                                             fNumTexturesExclChildren;
+    int                                             fNumTransformsExclChildren;
+    SkSTArray<1, const GrFragmentProcessor*, true>  fChildProcessors;
 
     typedef GrProcessor INHERITED;
 };

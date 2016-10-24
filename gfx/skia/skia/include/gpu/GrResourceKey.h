@@ -71,7 +71,7 @@ protected:
 
     /** size of the key data, excluding meta-data (hash, domain, etc).  */
     size_t dataSize() const { return this->size() - 4 * kMetaDataCnt; }
-
+ 
     /** ptr to the key data, excluding meta-data (hash, domain, etc).  */
     const uint32_t* data() const {
         this->validate();
@@ -238,7 +238,7 @@ public:
 
     GrUniqueKey& operator=(const GrUniqueKey& that) {
         this->INHERITED::operator=(that);
-        this->setCustomData(sk_ref_sp(that.getCustomData()));
+        this->setCustomData(that.getCustomData());
         return *this;
     }
 
@@ -247,10 +247,11 @@ public:
     }
     bool operator!=(const GrUniqueKey& that) const { return !(*this == that); }
 
-    void setCustomData(sk_sp<SkData> data) {
-        fData = std::move(data);
+    void setCustomData(const SkData* data) {
+        SkSafeRef(data);
+        fData.reset(data);
     }
-    SkData* getCustomData() const {
+    const SkData* getCustomData() const {
         return fData.get();
     }
 
@@ -279,7 +280,7 @@ public:
     };
 
 private:
-    sk_sp<SkData> fData;
+    SkAutoTUnref<const SkData> fData;
 };
 
 /**
@@ -289,12 +290,12 @@ private:
  */
 
 /** Place outside of function/class definitions. */
-#define GR_DECLARE_STATIC_UNIQUE_KEY(name) static SkOnce name##_once
+#define GR_DECLARE_STATIC_UNIQUE_KEY(name) SK_DECLARE_STATIC_ONCE(name##_once)
 
 /** Place inside function where the key is used. */
 #define GR_DEFINE_STATIC_UNIQUE_KEY(name)                                                       \
     static SkAlignedSTStorage<1, GrUniqueKey> name##_storage;                                   \
-    name##_once(gr_init_static_unique_key_once, &name##_storage);                               \
+    SkOnce(&name##_once, gr_init_static_unique_key_once, &name##_storage);                      \
     static const GrUniqueKey& name = *reinterpret_cast<GrUniqueKey*>(name##_storage.get());
 
 static inline void gr_init_static_unique_key_once(SkAlignedSTStorage<1,GrUniqueKey>* keyStorage) {

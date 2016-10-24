@@ -17,12 +17,11 @@ class GrGLDistanceFieldLCDTextGeoProc;
 class GrInvariantOutput;
 
 enum GrDistanceFieldEffectFlags {
-    kSimilarity_DistanceFieldEffectFlag   = 0x01, // ctm is similarity matrix
-    kScaleOnly_DistanceFieldEffectFlag    = 0x02, // ctm has only scale and translate
-    kUseLCD_DistanceFieldEffectFlag       = 0x04, // use lcd text
-    kBGR_DistanceFieldEffectFlag          = 0x08, // lcd display has bgr order
-    kPortrait_DistanceFieldEffectFlag     = 0x10, // lcd display is in portrait mode (not used yet)
-    kGammaCorrect_DistanceFieldEffectFlag = 0x20, // assume gamma-correct output (linear blending)
+    kSimilarity_DistanceFieldEffectFlag = 0x01,   // ctm is similarity matrix
+    kScaleOnly_DistanceFieldEffectFlag  = 0x02,   // ctm has only scale and translate
+    kUseLCD_DistanceFieldEffectFlag     = 0x04,   // use lcd text
+    kBGR_DistanceFieldEffectFlag        = 0x08,   // lcd display has bgr order
+    kPortrait_DistanceFieldEffectFlag   = 0x10,   // lcd display is in portrait mode (not used yet)
 
     kInvalid_DistanceFieldEffectFlag    = 0x80,   // invalid state (for initialization)
 
@@ -30,14 +29,12 @@ enum GrDistanceFieldEffectFlags {
                                             kScaleOnly_DistanceFieldEffectFlag,
     // The subset of the flags relevant to GrDistanceFieldA8TextGeoProc
     kNonLCD_DistanceFieldEffectMask       = kSimilarity_DistanceFieldEffectFlag |
-                                            kScaleOnly_DistanceFieldEffectFlag |
-                                            kGammaCorrect_DistanceFieldEffectFlag,
+                                            kScaleOnly_DistanceFieldEffectFlag,
     // The subset of the flags relevant to GrDistanceFieldLCDTextGeoProc
     kLCD_DistanceFieldEffectMask          = kSimilarity_DistanceFieldEffectFlag |
                                             kScaleOnly_DistanceFieldEffectFlag |
                                             kUseLCD_DistanceFieldEffectFlag |
-                                            kBGR_DistanceFieldEffectFlag |
-                                            kGammaCorrect_DistanceFieldEffectFlag,
+                                            kBGR_DistanceFieldEffectFlag,
 };
 
 /**
@@ -49,26 +46,24 @@ enum GrDistanceFieldEffectFlags {
 class GrDistanceFieldA8TextGeoProc : public GrGeometryProcessor {
 public:
 #ifdef SK_GAMMA_APPLY_TO_A8
-    static sk_sp<GrGeometryProcessor> Make(GrColor color, const SkMatrix& viewMatrix,
-                                           GrTexture* tex, const GrTextureParams& params,
-                                           float lum, uint32_t flags, bool usesLocalCoords) {
-        return sk_sp<GrGeometryProcessor>(
-            new GrDistanceFieldA8TextGeoProc(color, viewMatrix, tex, params, lum, flags,
-                                             usesLocalCoords));
+    static GrGeometryProcessor* Create(GrColor color, const SkMatrix& viewMatrix,
+                                       GrTexture* tex, const GrTextureParams& params,
+                                       float lum, uint32_t flags, bool usesLocalCoords) {
+        return new GrDistanceFieldA8TextGeoProc(color, viewMatrix, tex, params, lum, flags,
+                                                usesLocalCoords);
     }
 #else
-    static sk_sp<GrGeometryProcessor> Make(GrColor color, const SkMatrix& viewMatrix,
-                                           GrTexture* tex, const GrTextureParams& params,
-                                           uint32_t flags, bool usesLocalCoords) {
-        return sk_sp<GrGeometryProcessor>(
-            new GrDistanceFieldA8TextGeoProc(color, viewMatrix, tex, params, flags,
-                                             usesLocalCoords));
+    static GrGeometryProcessor* Create(GrColor color, const SkMatrix& viewMatrix,
+                                       GrTexture* tex, const GrTextureParams& params,
+                                       uint32_t flags, bool usesLocalCoords) {
+        return new GrDistanceFieldA8TextGeoProc(color, viewMatrix, tex, params, flags,
+                                                usesLocalCoords);
     }
 #endif
 
     virtual ~GrDistanceFieldA8TextGeoProc() {}
 
-    const char* name() const override { return "DistanceFieldA8Text"; }
+    const char* name() const override { return "DistanceFieldTexture"; }
 
     const Attribute* inPosition() const { return fInPosition; }
     const Attribute* inColor() const { return fInColor; }
@@ -120,16 +115,16 @@ private:
 */
 class GrDistanceFieldPathGeoProc : public GrGeometryProcessor {
 public:
-    static sk_sp<GrGeometryProcessor> Make(GrColor color, const SkMatrix& viewMatrix,
-                                           GrTexture* tex, const GrTextureParams& params,
-                                           uint32_t flags, bool usesLocalCoords) {
-        return sk_sp<GrGeometryProcessor>(
-            new GrDistanceFieldPathGeoProc(color, viewMatrix, tex, params, flags, usesLocalCoords));
+    static GrGeometryProcessor* Create(GrColor color, const SkMatrix& viewMatrix, GrTexture* tex,
+                                       const GrTextureParams& params,
+                                       uint32_t flags, bool usesLocalCoords) {
+        return new GrDistanceFieldPathGeoProc(color, viewMatrix, tex, params, flags,
+                                              usesLocalCoords);
     }
 
     virtual ~GrDistanceFieldPathGeoProc() {}
 
-    const char* name() const override { return "DistanceFieldPath"; }
+    const char* name() const override { return "DistanceFieldTexture"; }
 
     const Attribute* inPosition() const { return fInPosition; }
     const Attribute* inColor() const { return fInColor; }
@@ -186,18 +181,17 @@ public:
         }
     };
 
-    static sk_sp<GrGeometryProcessor> Make(GrColor color, const SkMatrix& viewMatrix,
-                                           GrTexture* tex, const GrTextureParams& params,
-                                           DistanceAdjust distanceAdjust, uint32_t flags,
-                                           bool usesLocalCoords) {
-        return sk_sp<GrGeometryProcessor>(
-            new GrDistanceFieldLCDTextGeoProc(color, viewMatrix, tex, params, distanceAdjust,
-                                              flags, usesLocalCoords));
+    static GrGeometryProcessor* Create(GrColor color, const SkMatrix& viewMatrix,
+                                       GrTexture* tex, const GrTextureParams& params,
+                                       DistanceAdjust distanceAdjust, uint32_t flags,
+                                       bool usesLocalCoords) {
+        return new GrDistanceFieldLCDTextGeoProc(color, viewMatrix, tex, params, distanceAdjust,
+                                                 flags, usesLocalCoords);
     }
 
     virtual ~GrDistanceFieldLCDTextGeoProc() {}
 
-    const char* name() const override { return "DistanceFieldLCDText"; }
+    const char* name() const override { return "DistanceFieldLCDTexture"; }
 
     const Attribute* inPosition() const { return fInPosition; }
     const Attribute* inColor() const { return fInColor; }

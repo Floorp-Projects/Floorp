@@ -14,15 +14,17 @@
 
 class GrVkGpu;
 class GrVkImageView;
-struct GrVkImageInfo;
+struct GrVkTextureInfo;
 
 class GrVkTexture : public GrTexture, public virtual GrVkImage {
 public:
-    static GrVkTexture* CreateNewTexture(GrVkGpu*, SkBudgeted budgeted, const GrSurfaceDesc&,
+    static GrVkTexture* CreateNewTexture(GrVkGpu*, const GrSurfaceDesc&,
+                                         GrGpuResource::LifeCycle,
                                          const GrVkImage::ImageDesc&);
 
     static GrVkTexture* CreateWrappedTexture(GrVkGpu*, const GrSurfaceDesc&,
-                                             GrWrapOwnership, const GrVkImageInfo*);
+                                             GrGpuResource::LifeCycle,
+                                             VkFormat, const GrVkTextureInfo*);
 
     ~GrVkTexture() override;
 
@@ -30,13 +32,20 @@ public:
 
     void textureParamsModified() override {}
 
-    const GrVkImageView* textureView(bool allowSRGB);
-
-    bool reallocForMipmap(GrVkGpu* gpu, uint32_t mipLevels);
+    const GrVkImageView* textureView() const { return fTextureView; }
 
 protected:
-    GrVkTexture(GrVkGpu*, const GrSurfaceDesc&, const GrVkImageInfo&, const GrVkImageView*,
-                GrVkImage::Wrapped wrapped);
+    enum Derived { kDerived };
+
+    GrVkTexture(GrVkGpu*, const GrSurfaceDesc&, GrGpuResource::LifeCycle,
+                const GrVkImage::Resource*, const GrVkImageView* imageView);
+
+    GrVkTexture(GrVkGpu*, const GrSurfaceDesc&, GrGpuResource::LifeCycle,
+                const GrVkImage::Resource*, const GrVkImageView* imageView, Derived);
+
+    static GrVkTexture* Create(GrVkGpu*, const GrSurfaceDesc&,
+                               GrGpuResource::LifeCycle, VkFormat,
+                               const GrVkImage::Resource* texImpl);
 
     GrVkGpu* getVkGpu() const;
 
@@ -44,14 +53,7 @@ protected:
     void onRelease() override;
 
 private:
-    enum Wrapped { kWrapped };
-    GrVkTexture(GrVkGpu*, SkBudgeted, const GrSurfaceDesc&,
-                const GrVkImageInfo&, const GrVkImageView* imageView);
-    GrVkTexture(GrVkGpu*, Wrapped, const GrSurfaceDesc&,
-                const GrVkImageInfo&, const GrVkImageView* imageView, GrVkImage::Wrapped wrapped);
-
-    const GrVkImageView*     fTextureView;
-    const GrVkImageView*     fLinearTextureView;
+    const GrVkImageView* fTextureView;
 
     typedef GrTexture INHERITED;
 };

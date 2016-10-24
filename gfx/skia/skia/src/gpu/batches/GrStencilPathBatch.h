@@ -21,45 +21,39 @@ public:
 
     static GrBatch* Create(const SkMatrix& viewMatrix,
                            bool useHWAA,
-                           GrPathRendering::FillType fillType,
-                           bool hasStencilClip,
-                           int numStencilBits,
+                           const GrStencilSettings& stencil,
                            const GrScissorState& scissor,
                            GrRenderTarget* renderTarget,
                            const GrPath* path) {
-        return new GrStencilPathBatch(viewMatrix, useHWAA, fillType, hasStencilClip,
-                                      numStencilBits, scissor, renderTarget, path);
+        return new GrStencilPathBatch(viewMatrix, useHWAA, stencil, scissor, renderTarget, path);
     }
 
     const char* name() const override { return "StencilPath"; }
 
-    uint32_t renderTargetUniqueID() const override { return fRenderTarget.get()->uniqueID(); }
+    uint32_t renderTargetUniqueID() const override { return fRenderTarget.get()->getUniqueID(); }
     GrRenderTarget* renderTarget() const override { return fRenderTarget.get(); }
 
     SkString dumpInfo() const override {
         SkString string;
         string.printf("PATH: 0x%p, AA:%d", fPath.get(), fUseHWAA);
-        string.append(INHERITED::dumpInfo());
         return string;
     }
 
 private:
     GrStencilPathBatch(const SkMatrix& viewMatrix,
                        bool useHWAA,
-                       GrPathRendering::FillType fillType,
-                       bool hasStencilClip,
-                       int numStencilBits,
+                       const GrStencilSettings& stencil,
                        const GrScissorState& scissor,
                        GrRenderTarget* renderTarget,
                        const GrPath* path)
     : INHERITED(ClassID())
     , fViewMatrix(viewMatrix)
     , fUseHWAA(useHWAA)
-    , fStencil(GrPathRendering::GetStencilPassSettings(fillType), hasStencilClip, numStencilBits)
+    , fStencil(stencil)
     , fScissor(scissor)
     , fRenderTarget(renderTarget)
     , fPath(path) {
-        this->setBounds(path->getBounds(), HasAABloat::kNo, IsZeroArea::kNo);
+        fBounds = path->getBounds();
     }
 
     bool onCombineIfPossible(GrBatch* t, const GrCaps& caps) override { return false; }

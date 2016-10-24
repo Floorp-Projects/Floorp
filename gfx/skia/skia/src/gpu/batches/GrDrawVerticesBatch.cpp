@@ -11,7 +11,7 @@
 #include "GrInvariantOutput.h"
 #include "GrDefaultGeoProcFactory.h"
 
-static sk_sp<GrGeometryProcessor> set_vertex_attributes(bool hasLocalCoords,
+static const GrGeometryProcessor* set_vertex_attributes(bool hasLocalCoords,
                                                         int* colorOffset,
                                                         int* texOffset,
                                                         const SkMatrix& viewMatrix,
@@ -27,11 +27,11 @@ static sk_sp<GrGeometryProcessor> set_vertex_attributes(bool hasLocalCoords,
     if (hasLocalCoords) {
         *texOffset = sizeof(SkPoint) + sizeof(GrColor);
     }
-    return GrDefaultGeoProcFactory::Make(Color(Color::kAttribute_Type),
-                                         coverage, localCoords, viewMatrix);
+    return GrDefaultGeoProcFactory::Create(Color(Color::kAttribute_Type),
+                                           coverage, localCoords, viewMatrix);
 }
 
-GrDrawVerticesBatch::GrDrawVerticesBatch(GrColor color, GrPrimitiveType primitiveType,
+GrDrawVerticesBatch::GrDrawVerticesBatch(const Geometry& geometry, GrPrimitiveType primitiveType,
                                          const SkMatrix& viewMatrix,
                                          const SkPoint* positions, int vertexCount,
                                          const uint16_t* indices, int indexCount,
@@ -41,74 +41,68 @@ GrDrawVerticesBatch::GrDrawVerticesBatch(GrColor color, GrPrimitiveType primitiv
     SkASSERT(positions);
 
     fViewMatrix = viewMatrix;
-    Mesh& mesh = fMeshes.push_back();
-    mesh.fColor = color;
+    Geometry& installedGeo = fGeoData.push_back(geometry);
 
-    mesh.fPositions.append(vertexCount, positions);
+    installedGeo.fPositions.append(vertexCount, positions);
     if (indices) {
-        mesh.fIndices.append(indexCount, indices);
+        installedGeo.fIndices.append(indexCount, indices);
     }
 
     if (colors) {
         fVariableColor = true;
-        mesh.fColors.append(vertexCount, colors);
+        installedGeo.fColors.append(vertexCount, colors);
     } else {
         fVariableColor = false;
     }
 
     if (localCoords) {
-        mesh.fLocalCoords.append(vertexCount, localCoords);
+        installedGeo.fLocalCoords.append(vertexCount, localCoords);
     }
     fVertexCount = vertexCount;
     fIndexCount = indexCount;
     fPrimitiveType = primitiveType;
 
-    IsZeroArea zeroArea;
-    if (GrIsPrimTypeLines(primitiveType) || kPoints_GrPrimitiveType == primitiveType) {
-        zeroArea = IsZeroArea::kYes;
-    } else {
-        zeroArea = IsZeroArea::kNo;
-    }
-    this->setBounds(bounds, HasAABloat::kNo, zeroArea);
+    this->setBounds(bounds);
 }
 
 void GrDrawVerticesBatch::computePipelineOptimizations(GrInitInvariantOutput* color,
                                                        GrInitInvariantOutput* coverage,
                                                        GrBatchToXPOverrides* overrides) const {
-    // When this is called on a batch, there is only one mesh
+    // When this is called on a batch, there is only one geometry bundle
     if (fVariableColor) {
         color->setUnknownFourComponents();
     } else {
-        color->setKnownFourComponents(fMeshes[0].fColor);
+        color->setKnownFourComponents(fGeoData[0].fColor);
     }
     coverage->setKnownSingleComponent(0xff);
 }
 
 void GrDrawVerticesBatch::initBatchTracker(const GrXPOverridesForBatch& overrides) {
-    SkASSERT(fMeshes.count() == 1);
+    SkASSERT(fGeoData.count() == 1);
     GrColor overrideColor;
     if (overrides.getOverrideColorIfSet(&overrideColor)) {
-        fMeshes[0].fColor = overrideColor;
-        fMeshes[0].fColors.reset();
+        fGeoData[0].fColor = overrideColor;
+        fGeoData[0].fColors.reset();
         fVariableColor = false;
     }
     fCoverageIgnored = !overrides.readsCoverage();
     if (!overrides.readsLocalCoords()) {
-        fMeshes[0].fLocalCoords.reset();
+        fGeoData[0].fLocalCoords.reset();
     }
 }
 
 void GrDrawVerticesBatch::onPrepareDraws(Target* target) const {
-    bool hasLocalCoords = !fMeshes[0].fLocalCoords.isEmpty();
+    bool hasLocalCoords = !fGeoData[0].fLocalCoords.isEmpty();
     int colorOffset = -1, texOffset = -1;
-    sk_sp<GrGeometryProcessor> gp(set_vertex_attributes(hasLocalCoords, &colorOffset, &texOffset,
-                                                        fViewMatrix, fCoverageIgnored));
+    SkAutoTUnref<const GrGeometryProcessor> gp(
+        set_vertex_attributes(hasLocalCoords, &colorOffset, &texOffset, fViewMatrix,
+                              fCoverageIgnored));
     size_t vertexStride = gp->getVertexStride();
 
     SkASSERT(vertexStride == sizeof(SkPoint) + (hasLocalCoords ? sizeof(SkPoint) : 0)
                                              + sizeof(GrColor));
 
-    int instanceCount = fMeshes.count();
+    int instanceCount = fGeoData.count();
 
     const GrBuffer* vertexBuffer;
     int firstVertex;
@@ -124,7 +118,7 @@ void GrDrawVerticesBatch::onPrepareDraws(Target* target) const {
     int firstIndex = 0;
 
     uint16_t* indices = nullptr;
-    if (!fMeshes[0].fIndices.isEmpty()) {
+    if (!fGeoData[0].fIndices.isEmpty()) {
         indices = target->makeIndexSpace(fIndexCount, &indexBuffer, &firstIndex);
 
         if (!indices) {
@@ -136,24 +130,24 @@ void GrDrawVerticesBatch::onPrepareDraws(Target* target) const {
     int indexOffset = 0;
     int vertexOffset = 0;
     for (int i = 0; i < instanceCount; i++) {
-        const Mesh& mesh = fMeshes[i];
+        const Geometry& args = fGeoData[i];
 
         // TODO we can actually cache this interleaved and then just memcopy
         if (indices) {
-            for (int j = 0; j < mesh.fIndices.count(); ++j, ++indexOffset) {
-                *(indices + indexOffset) = mesh.fIndices[j] + vertexOffset;
+            for (int j = 0; j < args.fIndices.count(); ++j, ++indexOffset) {
+                *(indices + indexOffset) = args.fIndices[j] + vertexOffset;
             }
         }
 
-        for (int j = 0; j < mesh.fPositions.count(); ++j) {
-            *((SkPoint*)verts) = mesh.fPositions[j];
-            if (mesh.fColors.isEmpty()) {
-                *(GrColor*)((intptr_t)verts + colorOffset) = mesh.fColor;
+        for (int j = 0; j < args.fPositions.count(); ++j) {
+            *((SkPoint*)verts) = args.fPositions[j];
+            if (args.fColors.isEmpty()) {
+                *(GrColor*)((intptr_t)verts + colorOffset) = args.fColor;
             } else {
-                *(GrColor*)((intptr_t)verts + colorOffset) = mesh.fColors[j];
+                *(GrColor*)((intptr_t)verts + colorOffset) = args.fColors[j];
             }
             if (hasLocalCoords) {
-                *(SkPoint*)((intptr_t)verts + texOffset) = mesh.fLocalCoords[j];
+                *(SkPoint*)((intptr_t)verts + texOffset) = args.fLocalCoords[j];
             }
             verts = (void*)((intptr_t)verts + vertexStride);
             vertexOffset++;
@@ -168,7 +162,7 @@ void GrDrawVerticesBatch::onPrepareDraws(Target* target) const {
     } else {
         mesh.init(this->primitiveType(), vertexBuffer, firstVertex, fVertexCount);
     }
-    target->draw(gp.get(), mesh);
+    target->draw(gp, mesh);
 }
 
 bool GrDrawVerticesBatch::onCombineIfPossible(GrBatch* t, const GrCaps& caps) {
@@ -188,25 +182,25 @@ bool GrDrawVerticesBatch::onCombineIfPossible(GrBatch* t, const GrCaps& caps) {
         return false;
     }
 
-    if (fMeshes[0].fIndices.isEmpty() != that->fMeshes[0].fIndices.isEmpty()) {
+    if (fGeoData[0].fIndices.isEmpty() != that->fGeoData[0].fIndices.isEmpty()) {
         return false;
     }
 
-    if (fMeshes[0].fLocalCoords.isEmpty() != that->fMeshes[0].fLocalCoords.isEmpty()) {
+    if (fGeoData[0].fLocalCoords.isEmpty() != that->fGeoData[0].fLocalCoords.isEmpty()) {
         return false;
     }
 
     if (!fVariableColor) {
-        if (that->fVariableColor || that->fMeshes[0].fColor != fMeshes[0].fColor) {
+        if (that->fVariableColor || that->fGeoData[0].fColor != fGeoData[0].fColor) {
             fVariableColor = true;
         }
     }
 
-    fMeshes.push_back_n(that->fMeshes.count(), that->fMeshes.begin());
+    fGeoData.push_back_n(that->geoData()->count(), that->geoData()->begin());
     fVertexCount += that->fVertexCount;
     fIndexCount += that->fIndexCount;
 
-    this->joinBounds(*that);
+    this->joinBounds(that->bounds());
     return true;
 }
 
@@ -317,10 +311,14 @@ DRAW_BATCH_TEST_DEFINE(VerticesBatch) {
 
     viewMatrix.mapRect(&bounds);
 
-    GrColor color = GrRandomColor(random);
-    return new GrDrawVerticesBatch(color, type, viewMatrix, positions.begin(), vertexCount,
-                                   indices.begin(), hasIndices ? vertexCount : 0,
-                                   colors.begin(), texCoords.begin(), bounds);
+    GrDrawVerticesBatch::Geometry geometry;
+    geometry.fColor = GrRandomColor(random);
+    return GrDrawVerticesBatch::Create(geometry, type, viewMatrix,
+                                       positions.begin(), vertexCount,
+                                       indices.begin(), hasIndices ? vertexCount : 0,
+                                       colors.begin(),
+                                       texCoords.begin(),
+                                       bounds);
 }
 
 #endif

@@ -26,13 +26,13 @@ protected:
     // This value was chosen by eyeballing the result in Firefox and trying to match it.
     static const FT_Pos kBitmapEmboldenStrength = 1 << 6;
 
-    SkScalerContext_FreeType_Base(SkTypeface* typeface, const SkScalerContextEffects& effects,
-                                  const SkDescriptor *desc)
-        : INHERITED(typeface, effects, desc)
+    SkScalerContext_FreeType_Base(SkTypeface* typeface, const SkDescriptor *desc)
+    : INHERITED(typeface, desc)
     {}
 
-    void generateGlyphImage(FT_Face face, const SkGlyph& glyph, const SkMatrix& bitmapTransform);
+    void generateGlyphImage(FT_Face face, const SkGlyph& glyph);
     void generateGlyphPath(FT_Face face, SkPath* path);
+
 private:
     typedef SkScalerContext INHERITED;
 };
@@ -53,8 +53,8 @@ public:
             SkFixed fMaximum;
         };
         using AxisDefinitions = SkSTArray<4, AxisDefinition, true>;
-        bool recognizedFont(SkStreamAsset* stream, int* numFonts) const;
-        bool scanFont(SkStreamAsset* stream, int ttcIndex,
+        bool recognizedFont(SkStream* stream, int* numFonts) const;
+        bool scanFont(SkStream* stream, int ttcIndex,
                       SkString* name, SkFontStyle* style, bool* isFixedPitch,
                       AxisDefinitions* axes) const;
         static void computeAxisValues(
@@ -64,18 +64,19 @@ public:
             const SkString& name);
 
     private:
-        FT_Face openFace(SkStreamAsset* stream, int ttcIndex, FT_Stream ftStream) const;
+        FT_Face openFace(SkStream* stream, int ttcIndex, FT_Stream ftStream) const;
         FT_Library fLibrary;
         mutable SkMutex fLibraryMutex;
     };
 
 protected:
-    SkTypeface_FreeType(const SkFontStyle& style, bool isFixedPitch)
-        : INHERITED(style, isFixedPitch)
+    SkTypeface_FreeType(const SkFontStyle& style, SkFontID uniqueID, bool isFixedPitch)
+        : INHERITED(style, uniqueID, isFixedPitch)
+        , fGlyphCount(-1)
     {}
 
-    virtual SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
-                                                   const SkDescriptor*) const override;
+    virtual SkScalerContext* onCreateScalerContext(
+                                        const SkDescriptor*) const override;
     void onFilterRec(SkScalerContextRec*) const override;
     SkAdvancedTypefaceMetrics* onGetAdvancedTypefaceMetrics(
                         PerGlyphInfo, const uint32_t*, uint32_t) const override;
@@ -93,6 +94,8 @@ protected:
                                   size_t length, void* data) const override;
 
 private:
+    mutable int fGlyphCount;
+
     typedef SkTypeface INHERITED;
 };
 

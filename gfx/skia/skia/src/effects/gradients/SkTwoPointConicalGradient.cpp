@@ -6,6 +6,7 @@
  */
 
 #include "SkTwoPointConicalGradient.h"
+#include "SkTwoPointConicalGradient_gpu.h"
 
 struct TwoPtRadialContext {
     const TwoPtRadial&  fRec;
@@ -216,7 +217,7 @@ size_t SkTwoPointConicalGradient::onContextSize(const ContextRec&) const {
 
 SkShader::Context* SkTwoPointConicalGradient::onCreateContext(const ContextRec& rec,
                                                               void* storage) const {
-    return CheckedCreateContext<TwoPointConicalGradientContext>(storage, *this, rec);
+    return new (storage) TwoPointConicalGradientContext(*this, rec);
 }
 
 SkTwoPointConicalGradient::TwoPointConicalGradientContext::TwoPointConicalGradientContext(
@@ -318,7 +319,7 @@ sk_sp<SkFlattenable> SkTwoPointConicalGradient::CreateProc(SkReadBuffer& buffer)
         SkTSwap(c1, c2);
         SkTSwap(r1, r2);
 
-        SkColor4f* colors = desc.mutableColors();
+        SkColor* colors = desc.mutableColors();
         SkScalar* pos = desc.mutablePos();
         const int last = desc.fCount - 1;
         const int half = desc.fCount >> 1;
@@ -337,8 +338,7 @@ sk_sp<SkFlattenable> SkTwoPointConicalGradient::CreateProc(SkReadBuffer& buffer)
         }
     }
 
-    return SkGradientShader::MakeTwoPointConical(c1, r1, c2, r2, desc.fColors,
-                                                 std::move(desc.fColorSpace), desc.fPos,
+    return SkGradientShader::MakeTwoPointConical(c1, r1, c2, r2, desc.fColors, desc.fPos,
                                                  desc.fCount, desc.fTileMode, desc.fGradFlags,
                                                  desc.fLocalMatrix);
 }
@@ -355,18 +355,17 @@ void SkTwoPointConicalGradient::flatten(SkWriteBuffer& buffer) const {
 #if SK_SUPPORT_GPU
 
 #include "SkGr.h"
-#include "SkTwoPointConicalGradient_gpu.h"
 
-sk_sp<GrFragmentProcessor> SkTwoPointConicalGradient::asFragmentProcessor(
-        const AsFPArgs& args) const {
-    SkASSERT(args.fContext);
+const GrFragmentProcessor* SkTwoPointConicalGradient::asFragmentProcessor(
+                                                  GrContext* context,
+                                                  const SkMatrix& viewM,
+                                                  const SkMatrix* localMatrix,
+                                                  SkFilterQuality) const {
+    SkASSERT(context);
     SkASSERT(fPtsToUnit.isIdentity());
-    sk_sp<GrColorSpaceXform> colorSpaceXform = GrColorSpaceXform::Make(fColorSpace.get(),
-                                                                       args.fDstColorSpace);
-    sk_sp<GrFragmentProcessor> inner(Gr2PtConicalGradientEffect::Make(
-        GrGradientEffect::CreateArgs(args.fContext, this, args.fLocalMatrix, fTileMode,
-                                     std::move(colorSpaceXform), SkToBool(args.fDstColorSpace))));
-    return GrFragmentProcessor::MulOutputByInputAlpha(std::move(inner));
+    SkAutoTUnref<const GrFragmentProcessor> inner(
+        Gr2PtConicalGradientEffect::Create(context, *this, fTileMode, localMatrix));
+    return GrFragmentProcessor::MulOutputByInputAlpha(inner);
 }
 
 #endif

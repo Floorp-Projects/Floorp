@@ -25,7 +25,7 @@ static bool one_contour(const SkPath& path) {
     return true;
 }
 
-bool FixWinding(SkPath* path) {
+void FixWinding(SkPath* path) {
     SkPath::FillType fillType = path->getFillType();
     if (fillType == SkPath::kInverseEvenOdd_FillType) {
         fillType = SkPath::kInverseWinding_FillType;
@@ -40,27 +40,18 @@ bool FixWinding(SkPath* path) {
             *path = temp;
         }
         path->setFillType(fillType);
-        return true;
+        return;
     }
     SkChunkAlloc allocator(4096);
     SkOpContourHead contourHead;
-    SkOpGlobalState globalState(&contourHead, &allocator  SkDEBUGPARAMS(false)
-            SkDEBUGPARAMS(nullptr));
-    SkOpEdgeBuilder builder(*path, &contourHead, &globalState);
-    if (builder.unparseable() || !builder.finish()) {
-        return false;
-    }
-    if (!contourHead.count()) {
-        return true;
-    }
-    if (!contourHead.next()) {
-        return false;
-    }
-    contourHead.joinAllSegments();
+    SkOpGlobalState globalState(nullptr, &contourHead  SkDEBUGPARAMS(nullptr));
+    SkOpEdgeBuilder builder(*path, &contourHead, &allocator, &globalState);
+    builder.finish(&allocator);
+    SkASSERT(contourHead.next());
     contourHead.resetReverse();
     bool writePath = false;
     SkOpSpan* topSpan;
-    globalState.setPhase(SkOpPhase::kFixWinding);
+    globalState.setPhase(SkOpGlobalState::kFixWinding);
     while ((topSpan = FindSortableTop(&contourHead))) {
         SkOpSegment* topSegment = topSpan->segment();
         SkOpContour* topContour = topSegment->contour();
@@ -73,12 +64,12 @@ bool FixWinding(SkPath* path) {
             topContour->setReverse();
             writePath = true;
         }
-        topContour->markAllDone();
+        topContour->markDone();
         globalState.clearNested();
     }
     if (!writePath) {
         path->setFillType(fillType);
-        return true;
+        return;
     }
     SkPath empty;
     SkPathWriter woundPath(empty);
@@ -92,7 +83,6 @@ bool FixWinding(SkPath* path) {
     } while ((test = test->next()));
     *path = *woundPath.nativePath();
     path->setFillType(fillType);
-    return true;
 }
 
 void SkOpBuilder::add(const SkPath& path, SkPathOp op) {
@@ -170,10 +160,7 @@ bool SkOpBuilder::resolve(SkPath* result) {
         }
         if (!fPathRefs[index].isEmpty()) {
             // convert the even odd result back to winding form before accumulating it
-            if (!FixWinding(&fPathRefs[index])) {
-                *result = original;
-                return false;
-            }
+            FixWinding(&fPathRefs[index]);
             sum.addPath(fPathRefs[index]);
         }
     }

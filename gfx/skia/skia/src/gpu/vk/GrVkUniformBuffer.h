@@ -15,42 +15,28 @@ class GrVkGpu;
 class GrVkUniformBuffer : public GrVkBuffer {
 
 public:
-    static GrVkUniformBuffer* Create(GrVkGpu* gpu, size_t size);
-    static const GrVkResource* CreateResource(GrVkGpu* gpu, size_t size);
-    static const size_t kStandardSize = 256;
+    static GrVkUniformBuffer* Create(GrVkGpu* gpu, size_t size, bool dynamic);
 
-    void* map(GrVkGpu* gpu) {
+    void* map(const GrVkGpu* gpu) {
         return this->vkMap(gpu);
     }
-    void unmap(GrVkGpu* gpu) {
+    void unmap(const GrVkGpu* gpu) {
         this->vkUnmap(gpu);
     }
-    // The output variable createdNewBuffer must be set to true if a new VkBuffer is created in
-    // order to upload the data
-    bool updateData(GrVkGpu* gpu, const void* src, size_t srcSizeInBytes,
-                    bool* createdNewBuffer) {
-        return this->vkUpdateData(gpu, src, srcSizeInBytes, createdNewBuffer);
+    bool updateData(const GrVkGpu* gpu, const void* src, size_t srcSizeInBytes) {
+        return this->vkUpdateData(gpu, src, srcSizeInBytes);
     }
-    void release(const GrVkGpu* gpu) { this->vkRelease(gpu); }
-    void abandon() { this->vkAbandon(); }
+    void release(const GrVkGpu* gpu) {
+        this->vkRelease(gpu);
+    }
+    void abandon() {
+        this->vkAbandon();
+    }
 
 private:
-    class Resource : public GrVkBuffer::Resource {
-    public:
-        Resource(VkBuffer buf, const GrVkAlloc& alloc)
-            : INHERITED(buf, alloc, kUniform_Type) {}
-
-        void onRecycle(GrVkGpu* gpu) const override;
-
-        typedef GrVkBuffer::Resource INHERITED;
+    GrVkUniformBuffer(const GrVkBuffer::Desc& desc, const GrVkBuffer::Resource* resource)
+        : INHERITED(desc, resource) {
     };
-
-    const GrVkBuffer::Resource* createResource(GrVkGpu* gpu,
-                                               const GrVkBuffer::Desc& descriptor) override;
-
-    GrVkUniformBuffer(GrVkGpu* gpu, const GrVkBuffer::Desc& desc,
-                      const GrVkUniformBuffer::Resource* resource)
-        : INHERITED(desc, resource) {}
 
     typedef GrVkBuffer INHERITED;
 };

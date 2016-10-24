@@ -52,10 +52,6 @@ bool SkPixmap::reset(const SkMask& src) {
     return false;
 }
 
-void SkPixmap::setColorSpace(sk_sp<SkColorSpace> cs) {
-    fInfo = fInfo.makeColorSpace(std::move(cs));
-}
-
 bool SkPixmap::extractSubset(SkPixmap* result, const SkIRect& subset) const {
     SkIRect srcRect, r;
     srcRect.set(0, 0, this->width(), this->height());
@@ -228,7 +224,10 @@ bool SkPixmap::erase(const SkColor4f& origColor, const SkIRect* subset) const {
     const SkColor4f color = origColor.pin();
 
     if (kRGBA_F16_SkColorType != pm.colorType()) {
-        return pm.erase(color.toSkColor());
+        Sk4f c4 = Sk4f::Load(color.vec());
+        SkColor c;
+        SkNx_cast<uint8_t>(c4 * Sk4f(255) + Sk4f(0.5f)).store(&c);
+        return pm.erase(c);
     }
 
     const uint64_t half4 = color.premul().toF16();
@@ -267,7 +266,7 @@ bool SkPixmap::scalePixels(const SkPixmap& dst, SkFilterQuality quality) const {
 
     SkPaint paint;
     paint.setFilterQuality(quality);
-    paint.setBlendMode(SkBlendMode::kSrc);
+    paint.setXfermodeMode(SkXfermode::kSrc_Mode);
     surface->getCanvas()->drawBitmapRect(bitmap, SkRect::MakeIWH(dst.width(), dst.height()),
                                          &paint);
     return true;

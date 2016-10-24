@@ -11,7 +11,6 @@
 #include "GrGpuResource.h"
 #include "GrGpuResourceCacheAccess.h"
 #include "GrGpuResourcePriv.h"
-#include "GrResourceCache.h"
 #include "GrResourceKey.h"
 #include "SkMessageBus.h"
 #include "SkRefCnt.h"
@@ -40,6 +39,12 @@ class SkTraceMemoryDump;
  * A unique key always takes precedence over a scratch key when a resource has both types of keys.
  * If a resource has neither key type then it will be deleted as soon as the last reference to it
  * is dropped.
+ *
+ * When proactive purging is enabled, on every flush, the timestamp of that flush is stored in a
+ * n-sized ring buffer. When purging occurs each purgeable resource's timestamp is compared to the
+ * timestamp of the n-th prior flush. If the resource's last use timestamp is older than the old
+ * flush then the resource is proactively purged even when the cache is under budget. By default
+ * this feature is disabled, though it can be enabled by calling GrResourceCache::setLimits.
  */
 class GrResourceCache {
 public:
@@ -50,12 +55,11 @@ public:
     static const int    kDefaultMaxCount            = 2 * (1 << 12);
     // Default maximum number of bytes of gpu memory of budgeted resources in the cache.
     static const size_t kDefaultMaxSize             = 96 * (1 << 20);
-    // Default number of external flushes a budgeted resources can go unused in the cache before it 
-    // is purged. Using a value <= 0 disables this feature.
-    static const int    kDefaultMaxUnusedFlushes =
-            1  * /* flushes per frame */
-            60 * /* fps */
-            30;  /* seconds */
+    // Default number of flushes a budgeted resources can go unused in the cache before it is
+    // purged. Large values disable the feature (as the ring buffer of flush timestamps would be
+    // large). This is currently the default until we decide to enable this feature
+    // of the cache by default.
+    static const int    kDefaultMaxUnusedFlushes    = 64;
 
     /** Used to access functionality needed by GrGpuResource for lifetime management. */
     class ResourceAccess;
@@ -63,9 +67,9 @@ public:
 
     /**
      * Sets the cache limits in terms of number of resources, max gpu memory byte size, and number
-     * of external GrContext flushes that a resource can be unused before it is evicted. The latter
-     * value is a suggestion and there is no promise that a resource will be purged immediately
-     * after it hasn't been used in maxUnusedFlushes flushes.
+     * of GrContext flushes that a resource can be unused before it is evicted. The latter value is
+     * a suggestion and there is no promise that a resource will be purged immediately after it
+     * hasn't been used in maxUnusedFlushes flushes.
      */
     void setLimits(int count, size_t bytes, int maxUnusedFlushes = kDefaultMaxUnusedFlushes);
 
@@ -159,16 +163,23 @@ public:
     /** Purges all resources that don't have external owners. */
     void purgeAllUnlocked();
 
-    /** Returns true if the cache would like a flush to occur in order to make more resources
-        purgeable. */
-    bool requestsFlush() const { return fRequestFlush; }
+    /**
+     * The callback function used by the cache when it is still over budget after a purge. The
+     * passed in 'data' is the same 'data' handed to setOverbudgetCallback.
+     */
+    typedef void (*PFOverBudgetCB)(void* data);
 
-    enum FlushType {
-        kExternal,
-        kImmediateMode,
-        kCacheRequested,
-    };
-    void notifyFlushOccurred(FlushType);
+    /**
+     * Set the callback the cache should use when it is still over budget after a purge. The 'data'
+     * provided here will be passed back to the callback. Note that the cache will attempt to purge
+     * any resources newly freed by the callback.
+     */
+    void setOverBudgetCallback(PFOverBudgetCB overBudgetCB, void* data) {
+        fOverBudgetCB = overBudgetCB;
+        fOverBudgetData = data;
+    }
+
+    void notifyFlushOccurred();
 
 #if GR_CACHE_STATS
     struct Stats {
@@ -177,7 +188,9 @@ public:
         int fNumNonPurgeable;
 
         int fScratch;
-        int fWrapped;
+        int fExternal;
+        int fBorrowed;
+        int fAdopted;
         size_t fUnbudgetedSize;
 
         Stats() { this->reset(); }
@@ -187,7 +200,9 @@ public:
             fNumPurgeable = 0;
             fNumNonPurgeable = 0;
             fScratch = 0;
-            fWrapped = 0;
+            fExternal = 0;
+            fBorrowed = 0;
+            fAdopted = 0;
             fUnbudgetedSize = 0;
         }
 
@@ -195,8 +210,14 @@ public:
             if (resource->cacheAccess().isScratch()) {
                 ++fScratch;
             }
-            if (resource->resourcePriv().refsWrappedObjects()) {
-                ++fWrapped;
+            if (resource->resourcePriv().isExternal()) {
+                ++fExternal;
+            }
+            if (resource->cacheAccess().isBorrowed()) {
+                ++fBorrowed;
+            }
+            if (resource->cacheAccess().isAdopted()) {
+                ++fAdopted;
             }
             if (SkBudgeted::kNo  == resource->resourcePriv().isBudgeted()) {
                 fUnbudgetedSize += resource->gpuMemorySize();
@@ -232,6 +253,7 @@ private:
     void refAndMakeResourceMRU(GrGpuResource*);
     /// @}
 
+    void resetFlushTimestamps();
     void processInvalidUniqueKeys(const SkTArray<GrUniqueKeyInvalidatedMessage>&);
     void addToNonpurgeableArray(GrGpuResource*);
     void removeFromNonpurgeableArray(GrGpuResource*);
@@ -314,8 +336,13 @@ private:
     int                                 fBudgetedCount;
     size_t                              fBudgetedBytes;
 
-    bool                                fRequestFlush;
-    uint32_t                            fExternalFlushCnt;
+    PFOverBudgetCB                      fOverBudgetCB;
+    void*                               fOverBudgetData;
+
+    // We keep track of the "timestamps" of the last n flushes. If a resource hasn't been used in
+    // that time then we well preemptively purge it to reduce memory usage.
+    uint32_t*                           fFlushTimestamps;
+    int                                 fLastFlushTimestampIndex;
 
     InvalidUniqueKeyInbox               fInvalidUniqueKeyInbox;
 

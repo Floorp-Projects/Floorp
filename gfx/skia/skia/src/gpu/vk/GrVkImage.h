@@ -9,51 +9,71 @@
 #define GrVkImage_DEFINED
 
 #include "GrVkResource.h"
-
-#include "GrTypesPriv.h"
 #include "SkTypes.h"
 
 #include "vk/GrVkDefines.h"
-#include "vk/GrVkTypes.h"
 
 class GrVkGpu;
 
 class GrVkImage : SkNoncopyable {
-private:
-    class Resource;
-
 public:
-    enum Wrapped {
-        kNot_Wrapped,
-        kAdopted_Wrapped,
-        kBorrowed_Wrapped,
+    // unlike GrVkBuffer, this needs to be public so GrVkStencilAttachment can use it
+    class Resource : public GrVkResource {
+    public:
+        enum Flags {
+            kNo_Flags = 0,
+            kLinearTiling_Flag = 0x01
+        };
+
+        VkImage        fImage;
+        VkDeviceMemory fAlloc;
+        Flags          fFlags;
+
+        Resource() : INHERITED(), fImage(VK_NULL_HANDLE), fAlloc(VK_NULL_HANDLE), fFlags(kNo_Flags) {}
+
+        Resource(VkImage image, VkDeviceMemory alloc, Flags flags)
+            : fImage(image), fAlloc(alloc), fFlags(flags) {}
+
+        ~Resource() override {}
+    private:
+        void freeGPUData(const GrVkGpu* gpu) const override;
+
+        typedef GrVkResource INHERITED;
     };
 
-    GrVkImage(const GrVkImageInfo& info, Wrapped wrapped)
-        : fInfo(info)
-        , fIsBorrowed(kBorrowed_Wrapped == wrapped) {
-        if (kBorrowed_Wrapped == wrapped) {
-            fResource = new BorrowedResource(info.fImage, info.fAlloc, info.fImageTiling);
+    // for wrapped textures
+    class BorrowedResource : public Resource {
+    public:
+        BorrowedResource(VkImage image, VkDeviceMemory alloc, Flags flags)
+            : Resource(image, alloc, flags) {}
+    private:
+        void freeGPUData(const GrVkGpu* gpu) const override;
+    };
+
+    GrVkImage(const Resource* imageResource) : fResource(imageResource) {
+        if (imageResource->fFlags & Resource::kLinearTiling_Flag) {
+            fCurrentLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
         } else {
-            fResource = new Resource(info.fImage, info.fAlloc, info.fImageTiling);
+            fCurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         }
+        imageResource->ref();
     }
+
     virtual ~GrVkImage();
 
-    VkImage image() const { return fInfo.fImage; }
-    const GrVkAlloc& alloc() const { return fInfo.fAlloc; }
-    VkFormat imageFormat() const { return fInfo.fFormat; }
-    uint32_t mipLevels() const { return fInfo.fLevelCount; }
+    VkImage textureImage() const { return fResource->fImage; }
+    VkDeviceMemory textureMemory() const { return fResource->fAlloc; }
     const Resource* resource() const { return fResource; }
     bool isLinearTiled() const {
-        return SkToBool(VK_IMAGE_TILING_LINEAR == fInfo.fImageTiling);
+        return SkToBool(fResource->fFlags & Resource::kLinearTiling_Flag);
     }
 
-    VkImageLayout currentLayout() const { return fInfo.fImageLayout; }
+    VkImageLayout currentLayout() const { return fCurrentLayout; }
 
-    void setImageLayout(const GrVkGpu* gpu,
-                        VkImageLayout newLayout,
+    void setImageLayout(const GrVkGpu* gpu, VkImageLayout newLayout,
+                        VkAccessFlags srcAccessMask,
                         VkAccessFlags dstAccessMask,
+                        VkPipelineStageFlags srcStageMask,
                         VkPipelineStageFlags dstStageMask,
                         bool byRegion);
 
@@ -80,62 +100,17 @@ public:
             , fMemProps(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {}
     };
 
-    static bool InitImageInfo(const GrVkGpu* gpu, const ImageDesc& imageDesc, GrVkImageInfo*);
-    // Destroys the internal VkImage and VkDeviceMemory in the GrVkImageInfo
-    static void DestroyImageInfo(const GrVkGpu* gpu, GrVkImageInfo*);
+    static const Resource* CreateResource(const GrVkGpu* gpu, const ImageDesc& imageDesc);
 
 protected:
+
     void releaseImage(const GrVkGpu* gpu);
     void abandonImage();
 
-    void setNewResource(VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling);
-
-    GrVkImageInfo   fInfo;
-    bool            fIsBorrowed;
-
-private:
-    class Resource : public GrVkResource {
-    public:
-        Resource()
-            : INHERITED()
-            , fImage(VK_NULL_HANDLE) {
-            fAlloc.fMemory = VK_NULL_HANDLE;
-            fAlloc.fOffset = 0;
-        }
-
-        Resource(VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling)
-            : fImage(image), fAlloc(alloc), fImageTiling(tiling) {}
-
-        ~Resource() override {}
-
-#ifdef SK_TRACE_VK_RESOURCES
-        void dumpInfo() const override {
-            SkDebugf("GrVkImage: %d (%d refs)\n", fImage, this->getRefCnt());
-        }
-#endif
-    private:
-        void freeGPUData(const GrVkGpu* gpu) const override;
-
-        VkImage        fImage;
-        GrVkAlloc      fAlloc;
-        VkImageTiling  fImageTiling;
-
-        typedef GrVkResource INHERITED;
-    };
-
-    // for wrapped textures
-    class BorrowedResource : public Resource {
-    public:
-        BorrowedResource(VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling)
-            : Resource(image, alloc, tiling) {
-        }
-    private:
-        void freeGPUData(const GrVkGpu* gpu) const override;
-    };
-
     const Resource* fResource;
 
-    friend class GrVkRenderTarget;
+    VkImageLayout   fCurrentLayout;
+
 };
 
 #endif

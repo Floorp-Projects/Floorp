@@ -8,10 +8,9 @@
 #ifndef SkDrawable_DEFINED
 #define SkDrawable_DEFINED
 
-#include "SkFlattenable.h"
+#include "SkRefCnt.h"
 
 class SkCanvas;
-class SkMatrix;
 class SkPicture;
 struct SkRect;
 
@@ -22,7 +21,7 @@ struct SkRect;
  *  allow for clients of the drawable that may want to cache the results, the drawable must
  *  change its generation ID whenever its internal state changes such that it will draw differently.
  */
-class SkDrawable : public SkFlattenable {
+class SkDrawable : public SkRefCnt {
 public:
     SkDrawable();
 
@@ -58,9 +57,6 @@ public:
      *  in response to its internal state changing.
      */
     void notifyDrawingChanged();
-
-    SK_DEFINE_FLATTENABLE_TYPE(SkDrawable)
-    Factory getFactory() const override { return nullptr; }
 
 protected:
     virtual SkRect onGetBounds() = 0;

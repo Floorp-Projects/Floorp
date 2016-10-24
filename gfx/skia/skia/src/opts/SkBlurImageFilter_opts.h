@@ -11,10 +11,6 @@
 #include "SkColorPriv.h"
 #include "SkTypes.h"
 
-#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-    #include <immintrin.h>
-#endif
-
 namespace SK_OPTS_NS {
 
 enum class BlurDirection { kX, kY };
@@ -88,9 +84,8 @@ static inline __m128i mullo_epi32(__m128i a, __m128i b) {
 
 // Fast path for kernel sizes between 2 and 127, working on two rows at a time.
 template<BlurDirection srcDirection, BlurDirection dstDirection>
-static int box_blur_double(const SkPMColor** src, int srcStride, const SkIRect& srcBounds,
-                           SkPMColor** dst, int kernelSize,
-                           int leftOffset, int rightOffset, int width, int height) {
+int box_blur_double(const SkPMColor** src, int srcStride, const SkIRect& srcBounds, SkPMColor** dst, int kernelSize,
+                     int leftOffset, int rightOffset, int width, int height) {
     // Load 2 pixels from adjacent rows.
     auto load_2_pixels = [&](const SkPMColor* s) {
         if (srcDirection == BlurDirection::kX) {

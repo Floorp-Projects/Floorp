@@ -15,44 +15,35 @@
 inline static GrSLType sampler_type(const GrGLTexture::IDDesc& idDesc, const GrGLGpu* gpu) {
     if (idDesc.fInfo.fTarget == GR_GL_TEXTURE_EXTERNAL) {
         SkASSERT(gpu->glCaps().glslCaps()->externalTextureSupport());
-        return kTextureExternalSampler_GrSLType;
+        return kSamplerExternal_GrSLType;
     } else if (idDesc.fInfo.fTarget == GR_GL_TEXTURE_RECTANGLE) {
         SkASSERT(gpu->glCaps().rectangleTextureSupport());
-        return kTexture2DRectSampler_GrSLType;
+        return kSampler2DRect_GrSLType;
     } else {
         SkASSERT(idDesc.fInfo.fTarget == GR_GL_TEXTURE_2D);
-        return kTexture2DSampler_GrSLType;
+        return kSampler2D_GrSLType;
     }
 }
 
 // Because this class is virtually derived from GrSurface we must explicitly call its constructor.
-GrGLTexture::GrGLTexture(GrGLGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc,
-                         const IDDesc& idDesc)
-    : GrSurface(gpu, desc)
-    , INHERITED(gpu, desc, sampler_type(idDesc, gpu), false) {
-    this->init(desc, idDesc);
-    this->registerWithCache(budgeted);
-}
-
-GrGLTexture::GrGLTexture(GrGLGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc,
-                         const IDDesc& idDesc,
-                         bool wasMipMapDataProvided)
-    : GrSurface(gpu, desc)
-    , INHERITED(gpu, desc, sampler_type(idDesc, gpu), wasMipMapDataProvided) {
-    this->init(desc, idDesc);
-    this->registerWithCache(budgeted);
-}
-
-GrGLTexture::GrGLTexture(GrGLGpu* gpu, Wrapped, const GrSurfaceDesc& desc, const IDDesc& idDesc)
-    : GrSurface(gpu, desc)
-    , INHERITED(gpu, desc, sampler_type(idDesc, gpu), false) {
-    this->init(desc, idDesc);
-    this->registerWithCacheWrapped();
-}
-
 GrGLTexture::GrGLTexture(GrGLGpu* gpu, const GrSurfaceDesc& desc, const IDDesc& idDesc)
-    : GrSurface(gpu, desc)
-    , INHERITED(gpu, desc, sampler_type(idDesc, gpu), false) {
+    : GrSurface(gpu, idDesc.fLifeCycle, desc)
+    , INHERITED(gpu, idDesc.fLifeCycle, desc, sampler_type(idDesc, gpu), false) {
+    this->init(desc, idDesc);
+    this->registerWithCache();
+}
+
+GrGLTexture::GrGLTexture(GrGLGpu* gpu, const GrSurfaceDesc& desc, const IDDesc& idDesc,
+                         bool wasMipMapDataProvided)
+    : GrSurface(gpu, idDesc.fLifeCycle, desc)
+    , INHERITED(gpu, idDesc.fLifeCycle, desc, sampler_type(idDesc, gpu), wasMipMapDataProvided) {
+    this->init(desc, idDesc);
+    this->registerWithCache();
+}
+
+GrGLTexture::GrGLTexture(GrGLGpu* gpu, const GrSurfaceDesc& desc, const IDDesc& idDesc, Derived)
+    : GrSurface(gpu, idDesc.fLifeCycle, desc)
+    , INHERITED(gpu, idDesc.fLifeCycle, desc, sampler_type(idDesc, gpu), false) {
     this->init(desc, idDesc);
 }
 
@@ -61,13 +52,19 @@ void GrGLTexture::init(const GrSurfaceDesc& desc, const IDDesc& idDesc) {
     fTexParams.invalidate();
     fTexParamsTimestamp = GrGpu::kExpiredTimestamp;
     fInfo = idDesc.fInfo;
-    fTextureIDOwnership = idDesc.fOwnership;
+    fTextureIDLifecycle = idDesc.fLifeCycle;
 }
 
 void GrGLTexture::onRelease() {
     if (fInfo.fID) {
-        if (GrBackendObjectOwnership::kBorrowed != fTextureIDOwnership) {
-            GL_CALL(DeleteTextures(1, &fInfo.fID));
+        if (GrGpuResource::kBorrowed_LifeCycle != fTextureIDLifecycle) {
+            if (this->desc().fTextureStorageAllocator.fDeallocateTextureStorage) {
+                this->desc().fTextureStorageAllocator.fDeallocateTextureStorage(
+                        this->desc().fTextureStorageAllocator.fCtx,
+                        reinterpret_cast<GrBackendObject>(&fInfo));
+            } else {
+                GL_CALL(DeleteTextures(1, &fInfo.fID));
+            }
         }
         fInfo.fID = 0;
     }
@@ -95,9 +92,3 @@ void GrGLTexture::setMemoryBacking(SkTraceMemoryDump* traceMemoryDump,
     traceMemoryDump->setMemoryBacking(dumpName.c_str(), "gl_texture",
                                       texture_id.c_str());
 }
-
-GrGLTexture* GrGLTexture::CreateWrapped(GrGLGpu* gpu, const GrSurfaceDesc& desc,
-                                        const IDDesc& idDesc) {
-    return new GrGLTexture(gpu, kWrapped, desc, idDesc);
-}
-

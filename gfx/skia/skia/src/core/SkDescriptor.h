@@ -9,7 +9,7 @@
 #ifndef SkDescriptor_DEFINED
 #define SkDescriptor_DEFINED
 
-#include "SkOpts.h"
+#include "SkChecksum.h"
 #include "SkTypes.h"
 
 class SkDescriptor : SkNoncopyable {
@@ -85,7 +85,7 @@ public:
         return desc;
     }
 
-    bool operator==(const SkDescriptor& other) const {
+    bool equals(const SkDescriptor& other) const {
         // probe to see if we have a good checksum algo
 //        SkASSERT(a.fChecksum != b.fChecksum || memcmp(&a, &b, a.fLength) == 0);
 
@@ -102,7 +102,6 @@ public:
         } while (aa < stop);
         return true;
     }
-    bool operator!=(const SkDescriptor& other) const { return !(*this == other); }
 
     uint32_t getChecksum() const { return fChecksum; }
 
@@ -123,7 +122,7 @@ private:
     static uint32_t ComputeChecksum(const SkDescriptor* desc) {
         const uint32_t* ptr = (const uint32_t*)desc + 1; // skip the checksum field
         size_t len = desc->fLength - sizeof(uint32_t);
-        return SkOpts::hash(ptr, len);
+        return SkChecksum::Murmur3(ptr, len);
     }
 
     // private so no one can create one except our factories

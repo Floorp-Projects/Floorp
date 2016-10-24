@@ -58,7 +58,6 @@ public:
     static GrAtlasTextBatch* CreateDistanceField(
                                               int glyphCount, GrBatchFontCache* fontCache,
                                               const GrDistanceFieldAdjustTable* distanceAdjustTable,
-                                              bool useGammaCorrectDistanceTable,
                                               SkColor filteredColor, bool isLCD,
                                               bool useBGR) {
         GrAtlasTextBatch* batch = new GrAtlasTextBatch;
@@ -66,7 +65,6 @@ public:
         batch->fFontCache = fontCache;
         batch->fMaskType = isLCD ? kLCDDistanceField_MaskType : kGrayscaleDistanceField_MaskType;
         batch->fDistanceAdjustTable.reset(SkRef(distanceAdjustTable));
-        batch->fUseGammaCorrectDistanceTable = useGammaCorrectDistanceTable;
         batch->fFilteredColor = filteredColor;
         batch->fUseBGR = useBGR;
         batch->fBatch.fNumGlyphs = glyphCount;
@@ -82,12 +80,9 @@ public:
     void init() {
         const Geometry& geo = fGeoData[0];
         fBatch.fColor = geo.fColor;
-        SkRect bounds;
-        geo.fBlob->computeSubRunBounds(&bounds, geo.fRun, geo.fSubRun, geo.fViewMatrix, geo.fX,
+
+        geo.fBlob->computeSubRunBounds(&fBounds, geo.fRun, geo.fSubRun, geo.fViewMatrix, geo.fX,
                                        geo.fY);
-        // We don't have tight bounds on the glyph paths in device space. For the purposes of bounds
-        // we treat this as a set of non-AA rects rendered with a texture.
-        this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
     }
 
     const char* name() const override { return "TextBatch"; }
@@ -104,11 +99,11 @@ private:
     void initBatchTracker(const GrXPOverridesForBatch& overrides) override;
 
     struct FlushInfo {
-        SkAutoTUnref<const GrBuffer> fVertexBuffer;
-        SkAutoTUnref<const GrBuffer> fIndexBuffer;
-        sk_sp<GrGeometryProcessor>   fGeometryProcessor;
-        int                          fGlyphsToFlush;
-        int                          fVertexOffset;
+        SkAutoTUnref<const GrBuffer>            fVertexBuffer;
+        SkAutoTUnref<const GrBuffer>            fIndexBuffer;
+        SkAutoTUnref<const GrGeometryProcessor> fGeometryProcessor;
+        int                                     fGlyphsToFlush;
+        int                                     fVertexOffset;
     };
 
     void onPrepareDraws(Target* target) const override;
@@ -156,8 +151,8 @@ private:
 
     // TODO just use class params
     // TODO trying to figure out why lcd is so whack
-    sk_sp<GrGeometryProcessor> setupDfProcessor(const SkMatrix& viewMatrix, SkColor filteredColor,
-                                                GrColor color, GrTexture* texture) const;
+    GrGeometryProcessor* setupDfProcessor(const SkMatrix& viewMatrix, SkColor filteredColor,
+                                          GrColor color, GrTexture* texture) const;
 
     struct BatchTracker {
         GrColor fColor;
@@ -187,7 +182,6 @@ private:
     // Distance field properties
     SkAutoTUnref<const GrDistanceFieldAdjustTable> fDistanceAdjustTable;
     SkColor fFilteredColor;
-    bool fUseGammaCorrectDistanceTable;
 
     friend class GrBlobRegenHelper; // Needs to trigger flushes
 

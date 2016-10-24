@@ -9,15 +9,15 @@
 #define GrVkResource_DEFINED
 
 #include "SkAtomics.h"
+#include "SkTDynamicHash.h"
 #include "SkRandom.h"
-#include "SkTHash.h"
 
 class GrVkGpu;
 
 // uncomment to enable tracing of resource refs
-#ifdef SK_DEBUG
-#define SK_TRACE_VK_RESOURCES
-#endif
+//#ifdef SK_DEBUG
+//#define SK_TRACE_VK_RESOURCES
+//#endif
 
 /** \class GrVkResource
 
@@ -38,37 +38,17 @@ class GrVkResource : SkNoncopyable {
 public:
     // Simple refCount tracing, to ensure that everything ref'ed is unref'ed.
 #ifdef SK_TRACE_VK_RESOURCES
-    struct Hash {
-        uint32_t operator()(const GrVkResource* const& r) const {
-            SkASSERT(r);
-            return r->fKey;
-        }
-    };
-
-    class Trace {
-    public:
-        ~Trace() {
-            fHashSet.foreach([](const GrVkResource* r) {
-                r->dumpInfo();
-            });
-            SkASSERT(0 == fHashSet.count());
-        }
-        void add(const GrVkResource* r) { fHashSet.add(r); }
-        void remove(const GrVkResource* r) { fHashSet.remove(r); }
-
-    private:
-        SkTHashSet<const GrVkResource*, GrVkResource::Hash> fHashSet;
-    };
-    static Trace  fTrace;
-
-    static uint32_t fKeyCounter;
+    static const uint32_t& GetKey(const GrVkResource& r) { return r.fKey; }
+    static uint32_t Hash(const uint32_t& k) { return k; }
+    static SkTDynamicHash<GrVkResource, uint32_t> fTrace;
+    static SkRandom fRandom;
 #endif
 
     /** Default construct, initializing the reference count to 1.
      */
     GrVkResource() : fRefCnt(1) {
 #ifdef SK_TRACE_VK_RESOURCES
-        fKey = sk_atomic_fetch_add(&fKeyCounter, 1u, sk_memory_order_relaxed);
+        fKey = fRandom.nextU();
         fTrace.add(this);
 #endif
     }
@@ -141,12 +121,6 @@ public:
     }
 #endif
 
-#ifdef SK_TRACE_VK_RESOURCES
-    /** Output a human-readable dump of this resource's information
-     */
-    virtual void dumpInfo() const = 0;
-#endif
-
 private:
     /** Must be implemented by any subclasses.
      *  Deletes any Vk data associated with this resource
@@ -164,7 +138,7 @@ private:
     void internal_dispose(const GrVkGpu* gpu) const {
         this->freeGPUData(gpu);
 #ifdef SK_TRACE_VK_RESOURCES
-        fTrace.remove(this);
+        fTrace.remove(GetKey(*this));
 #endif
         SkASSERT(0 == fRefCnt);
         fRefCnt = 1;
@@ -177,7 +151,7 @@ private:
     void internal_dispose() const {
         this->abandonSubResources();
 #ifdef SK_TRACE_VK_RESOURCES
-        fTrace.remove(this);
+        fTrace.remove(GetKey(*this));
 #endif
         SkASSERT(0 == fRefCnt);
         fRefCnt = 1;
@@ -192,22 +166,5 @@ private:
     typedef SkNoncopyable INHERITED;
 };
 
-// This subclass allows for recycling
-class GrVkRecycledResource : public GrVkResource {
-public:
-    // When recycle is called and there is only one ref left on the resource, we will signal that
-    // the resource can be recycled for reuse. If the sublass (or whoever is managing this resource)
-    // decides not to recycle the objects, it is their responsibility to call unref on the object.
-    void recycle(GrVkGpu* gpu) const {
-        if (this->unique()) {
-            this->onRecycle(gpu);
-        } else {
-            this->unref(gpu);
-        }
-    }
-
-private:
-    virtual void onRecycle(GrVkGpu* gpu) const = 0;
-};
 
 #endif

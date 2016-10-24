@@ -292,11 +292,11 @@ public:
     }
 };
 
-sk_sp<SkTextBlob> SkTextBox::snapshotTextBlob(SkScalar* computedBottom) const {
+SkTextBlob* SkTextBox::snapshotTextBlob(SkScalar* computedBottom) const {
     TextBlobVisitor visitor;
     SkScalar newB = this->visit(visitor, fText, fLen, *fPaint);
     if (computedBottom) {
         *computedBottom = newB;
     }
-    return visitor.fBuilder.make();
+    return (SkTextBlob*)visitor.fBuilder.build();
 }

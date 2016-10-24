@@ -5,24 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "GrDrawingManager.h"
-
-#include "GrContext.h"
 #include "GrDrawContext.h"
+#include "GrDrawingManager.h"
 #include "GrDrawTarget.h"
 #include "GrPathRenderingDrawContext.h"
 #include "GrResourceProvider.h"
 #include "GrSoftwarePathRenderer.h"
-#include "GrSurfacePriv.h"
-#include "SkSurface_Gpu.h"
 #include "SkTTopoSort.h"
-
-#include "instanced/InstancedRendering.h"
 
 #include "text/GrAtlasTextContext.h"
 #include "text/GrStencilAndCoverTextContext.h"
-
-using gr_instanced::InstancedRendering;
 
 void GrDrawingManager::cleanup() {
     for (int i = 0; i < fDrawTargets.count(); ++i) {
@@ -48,12 +40,6 @@ GrDrawingManager::~GrDrawingManager() {
 
 void GrDrawingManager::abandon() {
     fAbandoned = true;
-    for (int i = 0; i < fDrawTargets.count(); ++i) {
-        if (GrCaps::InstancedSupport::kNone != fContext->caps()->instancedSupport()) {
-            InstancedRendering* ir = fDrawTargets[i]->instancedRendering();
-            ir->resetGpuResources(InstancedRendering::ResetType::kAbandon);
-        }
-    }
     this->cleanup();
 }
 
@@ -62,12 +48,6 @@ void GrDrawingManager::freeGpuResources() {
     delete fPathRendererChain;
     fPathRendererChain = nullptr;
     SkSafeSetNull(fSoftwarePathRenderer);
-    for (int i = 0; i < fDrawTargets.count(); ++i) {
-        if (GrCaps::InstancedSupport::kNone != fContext->caps()->instancedSupport()) {
-            InstancedRendering* ir = fDrawTargets[i]->instancedRendering();
-            ir->resetGpuResources(InstancedRendering::ResetType::kDestroy);
-        }
-    }
 }
 
 void GrDrawingManager::reset() {
@@ -77,34 +57,31 @@ void GrDrawingManager::reset() {
     fFlushState.reset();
 }
 
-void GrDrawingManager::internalFlush(GrResourceCache::FlushType type) {
-    if (fFlushing || this->wasAbandoned()) {
+void GrDrawingManager::flush() {
+    if (fFlushing || this->abandoned()) {
         return;
     }
     fFlushing = true;
-    bool flushed = false;
+
     SkDEBUGCODE(bool result =)
                         SkTTopoSort<GrDrawTarget, GrDrawTarget::TopoSortTraits>(&fDrawTargets);
     SkASSERT(result);
 
-    for (int i = 0; i < fDrawTargets.count(); ++i) {
-        fDrawTargets[i]->prepareBatches(&fFlushState);
-    }
-
-    // Enable this to print out verbose batching information
 #if 0
     for (int i = 0; i < fDrawTargets.count(); ++i) {
         SkDEBUGCODE(fDrawTargets[i]->dump();)
     }
 #endif
 
+    for (int i = 0; i < fDrawTargets.count(); ++i) {
+        fDrawTargets[i]->prepareBatches(&fFlushState);
+    }
+
     // Upload all data to the GPU
     fFlushState.preIssueDraws();
 
     for (int i = 0; i < fDrawTargets.count(); ++i) {
-        if (fDrawTargets[i]->drawBatches(&fFlushState)) {
-            flushed = true;
-        }
+        fDrawTargets[i]->drawBatches(&fFlushState);
     }
 
     SkASSERT(fFlushState.nextDrawToken() == fFlushState.nextTokenToFlush());
@@ -129,28 +106,7 @@ void GrDrawingManager::internalFlush(GrResourceCache::FlushType type) {
 #endif
 
     fFlushState.reset();
-    // We always have to notify the cache when it requested a flush so it can reset its state.
-    if (flushed || type == GrResourceCache::FlushType::kCacheRequested) {
-        fContext->getResourceCache()->notifyFlushOccurred(type);
-    }
     fFlushing = false;
-}
-
-void GrDrawingManager::prepareSurfaceForExternalIO(GrSurface* surface) {
-    if (this->wasAbandoned()) {
-        return;
-    }
-    SkASSERT(surface);
-    SkASSERT(surface->getContext() == fContext);
-
-    if (surface->surfacePriv().hasPendingIO()) {
-        this->flush();
-    }
-
-    GrRenderTarget* rt = surface->asRenderTarget();
-    if (fContext->getGpu() && rt) {
-        fContext->getGpu()->resolveRenderTarget(rt);
-    }
 }
 
 GrDrawTarget* GrDrawingManager::newDrawTarget(GrRenderTarget* rt) {
@@ -177,14 +133,6 @@ GrDrawTarget* GrDrawingManager::newDrawTarget(GrRenderTarget* rt) {
     return SkRef(dt);
 }
 
-GrAtlasTextContext* GrDrawingManager::getAtlasTextContext() {
-    if (!fAtlasTextContext) {
-        fAtlasTextContext.reset(GrAtlasTextContext::Create());
-    }
-
-    return fAtlasTextContext.get();
-}
-
 /*
  * This method finds a path renderer that can draw the specified path on
  * the provided target.
@@ -197,15 +145,13 @@ GrPathRenderer* GrDrawingManager::getPathRenderer(const GrPathRenderer::CanDrawP
                                                   GrPathRenderer::StencilSupport* stencilSupport) {
 
     if (!fPathRendererChain) {
-        fPathRendererChain = new GrPathRendererChain(fContext, fOptionsForPathRendererChain);
+        fPathRendererChain = new GrPathRendererChain(fContext);
     }
 
     GrPathRenderer* pr = fPathRendererChain->getPathRenderer(args, drawType, stencilSupport);
     if (!pr && allowSW) {
         if (!fSoftwarePathRenderer) {
-            fSoftwarePathRenderer =
-                    new GrSoftwarePathRenderer(fContext->textureProvider(),
-                                               fOptionsForPathRendererChain.fAllowPathMaskCaching);
+            fSoftwarePathRenderer = new GrSoftwarePathRenderer(fContext);
         }
         pr = fSoftwarePathRenderer;
     }
@@ -213,20 +159,12 @@ GrPathRenderer* GrDrawingManager::getPathRenderer(const GrPathRenderer::CanDrawP
     return pr;
 }
 
-sk_sp<GrDrawContext> GrDrawingManager::makeDrawContext(sk_sp<GrRenderTarget> rt,
-                                                       sk_sp<SkColorSpace> colorSpace,
-                                                       const SkSurfaceProps* surfaceProps) {
-    if (this->wasAbandoned()) {
+GrDrawContext* GrDrawingManager::drawContext(GrRenderTarget* rt,
+                                             const SkSurfaceProps* surfaceProps) {
+    if (this->abandoned()) {
         return nullptr;
     }
 
-    // SkSurface catches bad color space usage at creation. This check handles anything that slips
-    // by, including internal usage. We allow a null color space here, for read/write pixels and
-    // other special code paths. If a color space is provided, though, enforce all other rules.
-    if (colorSpace && !SkSurface_Gpu::Valid(fContext, rt->config(), colorSpace.get())) {
-        SkDEBUGFAIL("Invalid config and colorspace combination");
-        return nullptr;
-    }
 
     bool useDIF = false;
     if (surfaceProps) {
@@ -235,17 +173,13 @@ sk_sp<GrDrawContext> GrDrawingManager::makeDrawContext(sk_sp<GrRenderTarget> rt,
 
     if (useDIF && fContext->caps()->shaderCaps()->pathRenderingSupport() &&
         rt->isStencilBufferMultisampled()) {
-        GrStencilAttachment* sb = fContext->resourceProvider()->attachStencilAttachment(rt.get());
+        GrStencilAttachment* sb = fContext->resourceProvider()->attachStencilAttachment(rt);
         if (sb) {
-            return sk_sp<GrDrawContext>(new GrPathRenderingDrawContext(
-                                                        fContext, this, std::move(rt),
-                                                        std::move(colorSpace), surfaceProps,
-                                                        fContext->getAuditTrail(), fSingleOwner));
+            return new GrPathRenderingDrawContext(fContext, this, rt, surfaceProps,
+                                                  fContext->getAuditTrail(), fSingleOwner);
         }
     }
 
-    return sk_sp<GrDrawContext>(new GrDrawContext(fContext, this, std::move(rt),
-                                                  std::move(colorSpace), surfaceProps,
-                                                  fContext->getAuditTrail(),
-                                                  fSingleOwner));
+    return new GrDrawContext(fContext, this, rt, surfaceProps, fContext->getAuditTrail(),
+                             fSingleOwner);
 }

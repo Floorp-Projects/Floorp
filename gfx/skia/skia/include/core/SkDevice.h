@@ -11,18 +11,17 @@
 #include "SkRefCnt.h"
 #include "SkCanvas.h"
 #include "SkColor.h"
+#include "SkImageFilter.h"
 #include "SkSurfaceProps.h"
 
 class SkBitmap;
 class SkClipStack;
 class SkDraw;
 class SkDrawFilter;
-class SkImageFilterCache;
 struct SkIRect;
 class SkMatrix;
 class SkMetaData;
 class SkRegion;
-class SkSpecialImage;
 class GrRenderTarget;
 
 class SK_API SkBaseDevice : public SkRefCnt {
@@ -30,7 +29,7 @@ public:
     /**
      *  Construct a new device.
     */
-    explicit SkBaseDevice(const SkImageInfo&, const SkSurfaceProps&);
+    explicit SkBaseDevice(const SkSurfaceProps&);
     virtual ~SkBaseDevice();
 
     SkMetaData& getMetaData();
@@ -39,7 +38,7 @@ public:
      *  Return ImageInfo for this device. If the canvas is not backed by pixels
      *  (cpu or gpu), then the info's ColorType will be kUnknown_SkColorType.
      */
-    const SkImageInfo& imageInfo() const { return fInfo; }
+    virtual SkImageInfo imageInfo() const;
 
     /**
      *  Return SurfaceProps for this device.
@@ -77,7 +76,6 @@ public:
         return this->imageInfo().isOpaque();
     }
 
-#ifdef SK_SUPPORT_LEGACY_ACCESSBITMAP
     /** Return the bitmap associated with this device. Call this each time you need
         to access the bitmap, as it notifies the subclass to perform any flushing
         etc. before you examine the pixels.
@@ -85,7 +83,6 @@ public:
         @return the device's bitmap
     */
     const SkBitmap& accessBitmap(bool changePixels);
-#endif
 
     bool writePixels(const SkImageInfo&, const void*, size_t rowBytes, int x, int y);
 
@@ -107,10 +104,42 @@ public:
     bool peekPixels(SkPixmap*);
 
     /**
+     * Return the device's associated gpu render target, or NULL.
+     */
+    virtual GrRenderTarget* accessRenderTarget() { return NULL; }
+
+
+    /**
      *  Return the device's origin: its offset in device coordinates from
      *  the default origin in its canvas' matrix/clip
      */
     const SkIPoint& getOrigin() const { return fOrigin; }
+
+    /**
+     * onAttachToCanvas is invoked whenever a device is installed in a canvas
+     * (i.e., setDevice, saveLayer (for the new device created by the save),
+     * and SkCanvas' SkBaseDevice & SkBitmap -taking ctors). It allows the
+     * devices to prepare for drawing (e.g., locking their pixels, etc.)
+     */
+    virtual void onAttachToCanvas(SkCanvas*) {
+        SkASSERT(!fAttachedToCanvas);
+#ifdef SK_DEBUG
+        fAttachedToCanvas = true;
+#endif
+    };
+
+    /**
+     * onDetachFromCanvas notifies a device that it will no longer be drawn to.
+     * It gives the device a chance to clean up (e.g., unlock its pixels). It
+     * is invoked from setDevice (for the displaced device), restore and
+     * possibly from SkCanvas' dtor.
+     */
+    virtual void onDetachFromCanvas() {
+        SkASSERT(fAttachedToCanvas);
+#ifdef SK_DEBUG
+        fAttachedToCanvas = false;
+#endif
+    };
 
 protected:
     enum TileUsage {
@@ -130,6 +159,25 @@ protected:
 
     virtual bool onShouldDisableLCD(const SkPaint&) const { return false; }
 
+    /**
+     *
+     *  DEPRECATED: This will be removed in a future change. Device subclasses
+     *  should use the matrix and clip from the SkDraw passed to draw functions.
+     *
+     *  Called with the correct matrix and clip before this device is drawn
+     *  to using those settings. If your subclass overrides this, be sure to
+     *  call through to the base class as well.
+     *
+     *  The clipstack is another view of the clip. It records the actual
+     *  geometry that went into building the region. It is present for devices
+     *  that want to parse it, but is not required: the region is a complete
+     *  picture of the current clip. (i.e. if you regionize all of the geometry
+     *  in the clipstack, you will arrive at an equivalent region to the one
+     *  passed in).
+     */
+     virtual void setMatrixClip(const SkMatrix&, const SkRegion&,
+                                const SkClipStack&) {};
+
     /** These are called inside the per-device-layer loop for each draw call.
      When these are called, we have already applied any saveLayer operations,
      and are handling any looping from the paint, and any effects from the
@@ -140,13 +188,8 @@ protected:
                             const SkPoint[], const SkPaint& paint) = 0;
     virtual void drawRect(const SkDraw&, const SkRect& r,
                           const SkPaint& paint) = 0;
-    virtual void drawRegion(const SkDraw&, const SkRegion& r,
-                            const SkPaint& paint);
     virtual void drawOval(const SkDraw&, const SkRect& oval,
                           const SkPaint& paint) = 0;
-    /** By the time this is called we know that abs(sweepAngle) is in the range [0, 360). */
-    virtual void drawArc(const SkDraw&, const SkRect& oval, SkScalar startAngle,
-                         SkScalar sweepAngle, bool useCenter, const SkPaint& paint);
     virtual void drawRRect(const SkDraw&, const SkRRect& rr,
                            const SkPaint& paint) = 0;
 
@@ -183,17 +226,13 @@ protected:
                                 const SkPaint& paint,
                                 SkCanvas::SrcRectConstraint) = 0;
     virtual void drawBitmapNine(const SkDraw&, const SkBitmap&, const SkIRect& center,
-                                const SkRect& dst, const SkPaint&);
-    virtual void drawBitmapLattice(const SkDraw&, const SkBitmap&, const SkCanvas::Lattice&,
-                                   const SkRect& dst, const SkPaint&);
+                               const SkRect& dst, const SkPaint&);
 
     virtual void drawImage(const SkDraw&, const SkImage*, SkScalar x, SkScalar y, const SkPaint&);
     virtual void drawImageRect(const SkDraw&, const SkImage*, const SkRect* src, const SkRect& dst,
                                const SkPaint&, SkCanvas::SrcRectConstraint);
     virtual void drawImageNine(const SkDraw&, const SkImage*, const SkIRect& center,
                                const SkRect& dst, const SkPaint&);
-    virtual void drawImageLattice(const SkDraw&, const SkImage*, const SkCanvas::Lattice&,
-                                  const SkRect& dst, const SkPaint&);
 
     /**
      *  Does not handle text decoration.
@@ -230,30 +269,38 @@ protected:
 
     virtual void drawTextOnPath(const SkDraw&, const void* text, size_t len, const SkPath&,
                                 const SkMatrix*, const SkPaint&);
-    virtual void drawTextRSXform(const SkDraw&, const void* text, size_t len, const SkRSXform[],
-                                 const SkPaint&);
-
-    virtual void drawSpecial(const SkDraw&, SkSpecialImage*, int x, int y, const SkPaint&);
-    virtual sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&);
-    virtual sk_sp<SkSpecialImage> makeSpecial(const SkImage*);
-    virtual sk_sp<SkSpecialImage> snapSpecial();
 
     bool readPixels(const SkImageInfo&, void* dst, size_t rowBytes, int x, int y);
 
     ///////////////////////////////////////////////////////////////////////////
 
-#ifdef SK_SUPPORT_LEGACY_ACCESSBITMAP
     /** Update as needed the pixel value in the bitmap, so that the caller can
         access the pixels directly.
         @return The device contents as a bitmap
     */
-    virtual const SkBitmap& onAccessBitmap() {
-        SkASSERT(0);
-        return fLegacyBitmap;
-    }
-#endif
+    virtual const SkBitmap& onAccessBitmap() = 0;
 
-    virtual GrContext* context() const { return nullptr; }
+    /**
+     *  Override and return true for filters that the device can handle
+     *  intrinsically. Doing so means that SkCanvas will pass-through this
+     *  filter to drawSprite and drawDevice (and potentially filterImage).
+     *  Returning false means the SkCanvas will have apply the filter itself,
+     *  and just pass the resulting image to the device.
+     */
+    virtual bool canHandleImageFilter(const SkImageFilter*) { return false; }
+
+    /**
+     *  Related (but not required) to canHandleImageFilter, this method returns
+     *  true if the device could apply the filter to the src bitmap and return
+     *  the result (and updates offset as needed).
+     *  If the device does not recognize or support this filter,
+     *  it just returns false and leaves result and offset unchanged.
+     */
+    virtual bool filterImage(const SkImageFilter*, const SkBitmap&,
+                             const SkImageFilter::Context&,
+                             SkBitmap* /*result*/, SkIPoint* /*offset*/) {
+        return false;
+    }
 
 protected:
     virtual sk_sp<SkSurface> makeSurface(const SkImageInfo&, const SkSurfaceProps&);
@@ -277,6 +324,19 @@ protected:
 
     virtual bool onAccessPixels(SkPixmap*) { return false; }
 
+    /**
+     *  PRIVATE / EXPERIMENTAL -- do not call
+     *  This entry point gives the backend an opportunity to take over the rendering
+     *  of 'picture'. If optimization data is available (due to an earlier
+     *  'optimize' call) this entry point should make use of it and return true
+     *  if all rendering has been done. If false is returned, SkCanvas will
+     *  perform its own rendering pass. It is acceptable for the backend
+     *  to perform some device-specific warm up tasks and then let SkCanvas
+     *  perform the main rendering loop (by return false from here).
+     */
+    virtual bool EXPERIMENTAL_drawPicture(SkCanvas*, const SkPicture*, const SkMatrix*,
+                                          const SkPaint*);
+
     struct CreateInfo {
         static SkPixelGeometry AdjustGeometry(const SkImageInfo&, TileUsage, SkPixelGeometry,
                                               bool preserveLCDText);
@@ -288,20 +348,22 @@ protected:
             : fInfo(info)
             , fTileUsage(tileUsage)
             , fPixelGeometry(AdjustGeometry(info, tileUsage, geo, false))
-        {}
+            , fForImageFilter(false) {}
 
         CreateInfo(const SkImageInfo& info,
                    TileUsage tileUsage,
                    SkPixelGeometry geo,
-                   bool preserveLCDText)
+                   bool preserveLCDText,
+                   bool forImageFilter)
             : fInfo(info)
             , fTileUsage(tileUsage)
             , fPixelGeometry(AdjustGeometry(info, tileUsage, geo, preserveLCDText))
-        {}
+            , fForImageFilter(forImageFilter) {}
 
         const SkImageInfo       fInfo;
         const TileUsage         fTileUsage;
         const SkPixelGeometry   fPixelGeometry;
+        const bool              fForImageFilter;
     };
 
     /**
@@ -319,8 +381,11 @@ protected:
         return NULL;
     }
 
-    // A helper function used by derived classes to log the scale factor of a bitmap or image draw.
-    static void LogDrawScaleFactor(const SkMatrix&, SkFilterQuality);
+    /**
+     *  Calls through to drawSprite, processing the imagefilter.
+     */
+    virtual void drawSpriteWithFilter(const SkDraw&, const SkBitmap&,
+                                      int x, int y, const SkPaint&);
 
 private:
     friend class SkCanvas;
@@ -328,9 +393,9 @@ private:
     friend class SkDraw;
     friend class SkDrawIter;
     friend class SkDeviceFilteredPaint;
+    friend class SkImageFilter::DeviceProxy;
     friend class SkNoPixelsBitmapDevice;
     friend class SkSurface_Raster;
-    friend class DeviceTestingAccess;
 
     // used to change the backend's pixels (and possibly config/rowbytes)
     // but cannot change the width/height, so there should be no change to
@@ -340,11 +405,6 @@ private:
 
     virtual bool forceConservativeRasterClip() const { return false; }
 
-    /**
-     * Don't call this!
-     */
-    virtual GrDrawContext* accessDrawContext() { return nullptr; }
-
     // just called by SkCanvas when built as a layer
     void setOrigin(int x, int y) { fOrigin.set(x, y); }
 
@@ -352,20 +412,14 @@ private:
      */
     virtual void flush() {}
 
-    virtual SkImageFilterCache* getImageFilterCache() { return NULL; }
-
-    friend class SkBitmapDevice;
-    void privateResize(int w, int h) {
-        *const_cast<SkImageInfo*>(&fInfo) = fInfo.makeWH(w, h);
-    }
+    virtual SkImageFilter::Cache* getImageFilterCache() { return NULL; }
 
     SkIPoint    fOrigin;
     SkMetaData* fMetaData;
-    const SkImageInfo    fInfo;
-    const SkSurfaceProps fSurfaceProps;
+    SkSurfaceProps fSurfaceProps;
 
-#ifdef SK_SUPPORT_LEGACY_ACCESSBITMAP
-    SkBitmap    fLegacyBitmap;
+#ifdef SK_DEBUG
+    bool        fAttachedToCanvas;
 #endif
 
     typedef SkRefCnt INHERITED;

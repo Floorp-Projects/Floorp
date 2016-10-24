@@ -10,6 +10,7 @@
 
 #include "GrTexture.h"
 #include "GrTypes.h"
+#include "SkImageFilter.h"
 
 class GrSingleOwner;
 
