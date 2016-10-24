@@ -165,6 +165,7 @@
     macro(isFinite, isFinite, "isFinite") \
     macro(isNaN, isNaN, "isNaN") \
     macro(isPrototypeOf, isPrototypeOf, "isPrototypeOf") \
+    macro(IterableToList, IterableToList, "IterableToList") \
     macro(iterate, iterate, "iterate") \
     macro(iteratorIntrinsic, iteratorIntrinsic, "__iterator__") \
     macro(join, join, "join") \

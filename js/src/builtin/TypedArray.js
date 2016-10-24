@@ -1521,6 +1521,33 @@ function TypedArrayToStringTag() {
 }
 _SetCanonicalName(TypedArrayToStringTag, "get [Symbol.toStringTag]");
 
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.2.1.1 Runtime Semantics: IterableToList( items, method )
+function IterableToList(items, method) {
+    // Step 1.
+    var iterator = GetIterator(items, method);
+
+    // Step 2.
+    var values = [];
+
+    // Steps 3-4.
+    var i = 0;
+    while (true) {
+        // Step 4.a.
+        var next = callContentFunction(iterator.next, iterator);
+        if (!IsObject(next))
+            ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
+
+        // Step 4.b.
+        if (next.done)
+            break;
+        _DefineDataProperty(values, i++, next.value);
+    }
+
+    // Step 5.
+    return values;
+}
+
 // ES 2016 draft Mar 25, 2016 24.1.4.3.
 function ArrayBufferSlice(start, end) {
     // Step 1.
