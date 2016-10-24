@@ -135,12 +135,15 @@ FormAutoCompleteResult.prototype = {
       return "fromhistory";
     }
 
-    if (this._formHistResult.matchCount > 0 &&
-        index == this._formHistResult.matchCount) {
-      return "datalist-first";
+    if (!this._comments[index]) {
+      return null;  // not a category label, so no special styling
     }
 
-    return null;
+    if (index == 0) {
+      return "suggestfirst";  // category label on first line of results
+    }
+
+    return "suggesthint";   // category label on any other line of results
   },
 
   /**
