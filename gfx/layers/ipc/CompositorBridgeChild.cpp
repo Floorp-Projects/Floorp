@@ -1059,7 +1059,10 @@ CompositorBridgeChild::AllocShmem(size_t aSize,
 void
 CompositorBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 {
-    PCompositorBridgeChild::DeallocShmem(aShmem);
+  if (!mCanSend) {
+    return;
+  }
+  PCompositorBridgeChild::DeallocShmem(aShmem);
 }
 
 widget::PCompositorWidgetChild*

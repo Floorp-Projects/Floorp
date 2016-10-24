@@ -183,8 +183,8 @@ ReflowInput::ReflowInput(
   : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
-  , mReflowDepth(aParentReflowInput.mReflowDepth + 1)
   , mFlags(aParentReflowInput.mFlags)
+  , mReflowDepth(aParentReflowInput.mReflowDepth + 1)
 {
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");

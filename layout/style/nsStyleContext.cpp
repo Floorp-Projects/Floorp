@@ -36,6 +36,10 @@
 #include "nsLayoutUtils.h"
 #include "nsCoord.h"
 
+// Ensure the binding function declarations in nsStyleContext.h matches
+// those in ServoBindings.h.
+#include "mozilla/ServoBindings.h"
+
 using namespace mozilla;
 
 //----------------------------------------------------------------------
