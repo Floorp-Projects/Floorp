@@ -1048,36 +1048,40 @@ class Marionette(object):
             raise errors.MarionetteException("enforce_gecko_prefs() can only be called "
                                              "on Gecko instances launched by Marionette")
         pref_exists = True
-        self.set_context(self.CONTEXT_CHROME)
-        for pref, value in prefs.iteritems():
-            if type(value) is not str:
-                value = json.dumps(value)
-            pref_exists = self.execute_script("""
-            let prefInterface = Components.classes["@mozilla.org/preferences-service;1"]
-                                          .getService(Components.interfaces.nsIPrefBranch);
-            let pref = '{0}';
-            let value = '{1}';
-            let type = prefInterface.getPrefType(pref);
-            switch(type) {{
-                case prefInterface.PREF_STRING:
-                    return value == prefInterface.getCharPref(pref).toString();
-                case prefInterface.PREF_BOOL:
-                    return value == prefInterface.getBoolPref(pref).toString();
-                case prefInterface.PREF_INT:
-                    return value == prefInterface.getIntPref(pref).toString();
-                case prefInterface.PREF_INVALID:
-                    return false;
-            }}
-            """.format(pref, value))
-            if not pref_exists:
-                break
-        self.set_context(self.CONTEXT_CONTENT)
+        with self.using_context(self.CONTEXT_CHROME):
+            for pref, value in prefs.iteritems():
+                if type(value) is not str:
+                    value = json.dumps(value)
+                pref_exists = self.execute_script("""
+                let prefInterface = Components.classes["@mozilla.org/preferences-service;1"]
+                                              .getService(Components.interfaces.nsIPrefBranch);
+                let pref = '{0}';
+                let value = '{1}';
+                let type = prefInterface.getPrefType(pref);
+                switch(type) {{
+                    case prefInterface.PREF_STRING:
+                        return value == prefInterface.getCharPref(pref).toString();
+                    case prefInterface.PREF_BOOL:
+                        return value == prefInterface.getBoolPref(pref).toString();
+                    case prefInterface.PREF_INT:
+                        return value == prefInterface.getIntPref(pref).toString();
+                    case prefInterface.PREF_INVALID:
+                        return false;
+                }}
+                """.format(pref, value))
+                if not pref_exists:
+                    break
+
         if not pref_exists:
+            context = self._send_message("getContext", key="value")
             self.delete_session()
             self.instance.restart(prefs)
             self.raise_for_port()
             self.start_session()
             self.reset_timeouts()
+
+            # Restore the context as used before the restart
+            self.set_context(context)
 
     def _request_in_app_shutdown(self, shutdown_flags=None):
         """Terminate the currently running instance from inside the application.
@@ -1157,6 +1161,8 @@ class Marionette(object):
         if not self.instance:
             raise errors.MarionetteException("restart() can only be called "
                                              "on Gecko instances launched by Marionette")
+
+        context = self._send_message("getContext", key="value")
         session_id = self.session_id
 
         if in_app:
@@ -1185,6 +1191,9 @@ class Marionette(object):
 
         self.start_session(session_id=session_id)
         self.reset_timeouts()
+
+        # Restore the context as used before the restart
+        self.set_context(context)
 
         if in_app and self.session.get("processId"):
             # In some cases Firefox restarts itself by spawning into a new process group.
