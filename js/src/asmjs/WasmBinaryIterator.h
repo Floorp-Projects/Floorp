@@ -192,7 +192,7 @@ class TypeAndValue
     Value value_;
 
   public:
-    TypeAndValue() : type_(ValType::Limit), value_() {}
+    TypeAndValue() : type_(ValType(TypeCode::Limit)), value_() {}
     explicit TypeAndValue(ValType type)
       : type_(type), value_()
     {}
@@ -217,7 +217,7 @@ class TypeAndValue<Nothing>
     ValType type_;
 
   public:
-    TypeAndValue() : type_(ValType::Limit) {}
+    TypeAndValue() : type_(ValType(TypeCode::Limit)) {}
     explicit TypeAndValue(ValType type) : type_(type) {}
 
     TypeAndValue(ValType type, Nothing value)
@@ -375,7 +375,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     }
 
     MOZ_MUST_USE bool readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
-    MOZ_MUST_USE bool readExprType(ExprType* expr);
+    MOZ_MUST_USE bool readBlockType(ExprType* expr);
 
     MOZ_MUST_USE bool typeMismatch(ExprType actual, ExprType expected) MOZ_COLD;
     MOZ_MUST_USE bool checkType(ValType actual, ValType expected);
@@ -809,16 +809,30 @@ ExprIter<Policy>::popControl(LabelKind* kind, ExprType* type, Value* value)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readExprType(ExprType* type)
+ExprIter<Policy>::readBlockType(ExprType* type)
 {
-    uint8_t byte;
-    if (!readFixedU8(&byte))
+    if (!d_.readBlockType(type))
         return fail("unable to read block signature");
 
-    if (Validate && byte >= uint8_t(ExprType::Limit))
-        return fail("invalid inline type");
-
-    *type = ExprType(byte);
+    if (Validate) {
+        switch (*type) {
+          case ExprType::Void:
+          case ExprType::I32:
+          case ExprType::I64:
+          case ExprType::F32:
+          case ExprType::F64:
+          case ExprType::I8x16:
+          case ExprType::I16x8:
+          case ExprType::I32x4:
+          case ExprType::F32x4:
+          case ExprType::B8x16:
+          case ExprType::B16x8:
+          case ExprType::B32x4:
+            break;
+          default:
+            return fail("invalid inline block type");
+        }
+    }
 
     return true;
 }
@@ -898,7 +912,7 @@ ExprIter<Policy>::readBlock()
     MOZ_ASSERT(Classify(expr_) == ExprKind::Block);
 
     ExprType type = ExprType::Limit;
-    if (!readExprType(&type))
+    if (!readBlockType(&type))
         return false;
 
     return pushControl(LabelKind::Block, type, false);
@@ -911,7 +925,7 @@ ExprIter<Policy>::readLoop()
     MOZ_ASSERT(Classify(expr_) == ExprKind::Loop);
 
     ExprType type = ExprType::Limit;
-    if (!readExprType(&type))
+    if (!readBlockType(&type))
         return false;
 
     return pushControl(LabelKind::Loop, type, reachable_);
@@ -924,7 +938,7 @@ ExprIter<Policy>::readIf(Value* condition)
     MOZ_ASSERT(Classify(expr_) == ExprKind::If);
 
     ExprType type = ExprType::Limit;
-    if (!readExprType(&type))
+    if (!readBlockType(&type))
         return false;
 
     if (MOZ_LIKELY(reachable_)) {

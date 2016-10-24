@@ -600,7 +600,7 @@ class AstGlobal : public AstNode
     Maybe<AstExpr*> init_;
 
   public:
-    AstGlobal() : isMutable_(false), type_(ValType::Limit)
+    AstGlobal() : isMutable_(false), type_(ValType(TypeCode::Limit))
     {}
 
     explicit AstGlobal(AstName name, ValType type, bool isMutable,

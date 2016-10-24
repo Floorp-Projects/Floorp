@@ -269,7 +269,6 @@ ToMIRType(ValType vt)
       case ValType::B8x16: return jit::MIRType::Bool8x16;
       case ValType::B16x8: return jit::MIRType::Bool16x8;
       case ValType::B32x4: return jit::MIRType::Bool32x4;
-      case ValType::Limit: break;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
 }

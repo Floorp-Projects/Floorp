@@ -87,35 +87,57 @@ enum class SectionId {
 
 static const char NameSectionName[] = "name";
 
-enum class ValType
+enum class TypeCode
 {
-    I32                                  = 0x01,
-    I64                                  = 0x02,
-    F32                                  = 0x03,
-    F64                                  = 0x04,
+    I32                                  = 0x7f,  // SLEB128(-0x01)
+    I64                                  = 0x7e,  // SLEB128(-0x02)
+    F32                                  = 0x7d,  // SLEB128(-0x03)
+    F64                                  = 0x7c,  // SLEB128(-0x04)
+
+    // Only emitted internally for asm.js, likely to get collapsed into I128
+    I8x16                                = 0x7b,
+    I16x8                                = 0x7a,
+    I32x4                                = 0x79,
+    F32x4                                = 0x78,
+    B8x16                                = 0x77,
+    B16x8                                = 0x76,
+    B32x4                                = 0x75,
+
+    // A function pointer with any signature
+    AnyFunc                              = 0x70,  // SLEB128(-0x10)
+
+    // Type constructor for function types
+    Func                                 = 0x60,  // SLEB128(-0x20)
+
+    // Special code representing the block signature ()->()
+    BlockVoid                            = 0x40,  // SLEB128(-0x40)
+
+    // Type codes currently always fit in a single byte
+    Max                                  = 0x7f,
+    Limit                                = 0x80
+};
+
+enum class ValType : uint32_t // fix type so we can cast from any u8 in decoder
+{
+    I32                                  = uint8_t(TypeCode::I32),
+    I64                                  = uint8_t(TypeCode::I64),
+    F32                                  = uint8_t(TypeCode::F32),
+    F64                                  = uint8_t(TypeCode::F64),
 
     // ------------------------------------------------------------------------
     // The rest of these types are currently only emitted internally when
     // compiling asm.js and are rejected by wasm validation.
 
-    I8x16,
-    I16x8,
-    I32x4,
-    F32x4,
-    B8x16,
-    B16x8,
-    B32x4,
-
-    Limit
+    I8x16                                = uint8_t(TypeCode::I8x16),
+    I16x8                                = uint8_t(TypeCode::I16x8),
+    I32x4                                = uint8_t(TypeCode::I32x4),
+    F32x4                                = uint8_t(TypeCode::F32x4),
+    B8x16                                = uint8_t(TypeCode::B8x16),
+    B16x8                                = uint8_t(TypeCode::B16x8),
+    B32x4                                = uint8_t(TypeCode::B32x4)
 };
 
 typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
-
-enum class TypeConstructor
-{
-    AnyFunc                              = 0x20,
-    Function                             = 0x40
-};
 
 enum class DefinitionKind
 {
@@ -131,7 +153,7 @@ enum class GlobalFlags
     AllowedMask                          = 0x1
 };
 
-enum class Expr
+enum class Expr : uint32_t // fix type so we can cast from any u16 in decoder
 {
     // Control flow operators
     Unreachable                          = 0x00,
@@ -456,22 +478,24 @@ enum class Expr
 // generalized to a list of ValType and this enum will go away, replaced,
 // wherever it is used, by a varU32 + list of ValType.
 
-enum class ExprType
+enum class ExprType : uint32_t // fix type so we can cast from any u8 in decoder
 {
-    Void  = 0x00,
-    I32   = uint8_t(ValType::I32),
-    I64   = uint8_t(ValType::I64),
-    F32   = uint8_t(ValType::F32),
-    F64   = uint8_t(ValType::F64),
-    I8x16 = uint8_t(ValType::I8x16),
-    I16x8 = uint8_t(ValType::I16x8),
-    I32x4 = uint8_t(ValType::I32x4),
-    F32x4 = uint8_t(ValType::F32x4),
-    B8x16 = uint8_t(ValType::B8x16),
-    B16x8 = uint8_t(ValType::B16x8),
-    B32x4 = uint8_t(ValType::B32x4),
+    Void  = uint8_t(TypeCode::BlockVoid),
 
-    Limit
+    I32   = uint8_t(TypeCode::I32),
+    I64   = uint8_t(TypeCode::I64),
+    F32   = uint8_t(TypeCode::F32),
+    F64   = uint8_t(TypeCode::F64),
+
+    I8x16 = uint8_t(TypeCode::I8x16),
+    I16x8 = uint8_t(TypeCode::I16x8),
+    I32x4 = uint8_t(TypeCode::I32x4),
+    F32x4 = uint8_t(TypeCode::F32x4),
+    B8x16 = uint8_t(TypeCode::B8x16),
+    B16x8 = uint8_t(TypeCode::B16x8),
+    B32x4 = uint8_t(TypeCode::B32x4),
+
+    Limit = uint8_t(TypeCode::Limit)
 };
 
 typedef int8_t I8x16[16];
@@ -613,12 +637,14 @@ class Encoder
         return writeVarS<int64_t>(i);
     }
     MOZ_MUST_USE bool writeValType(ValType type) {
-        static_assert(size_t(ValType::Limit) <= INT8_MAX, "fits");
-        return writeFixedU8(size_t(type));
+        static_assert(size_t(TypeCode::Max) <= INT8_MAX, "fits");
+        MOZ_ASSERT(size_t(type) <= size_t(TypeCode::Max));
+        return writeFixedU8(uint8_t(type));
     }
-    MOZ_MUST_USE bool writeExprType(ExprType type) {
-        static_assert(size_t(ExprType::Limit) <= INT8_MAX, "fits");
-        return writeFixedU8(size_t(type));
+    MOZ_MUST_USE bool writeBlockType(ExprType type) {
+        static_assert(size_t(TypeCode::Max) <= INT8_MAX, "fits");
+        MOZ_ASSERT(size_t(type) <= size_t(TypeCode::Max));
+        return writeFixedU8(uint8_t(type));
     }
     MOZ_MUST_USE bool writeExpr(Expr expr) {
         static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
@@ -857,11 +883,19 @@ class Decoder
         return readVarS<int64_t>(out);
     }
     MOZ_MUST_USE bool readValType(ValType* type) {
-        static_assert(uint8_t(ValType::Limit) <= INT8_MAX, "fits");
+        static_assert(uint8_t(TypeCode::Max) <= INT8_MAX, "fits");
         uint8_t u8;
         if (!readFixedU8(&u8))
             return false;
         *type = (ValType)u8;
+        return true;
+    }
+    MOZ_MUST_USE bool readBlockType(ExprType* type) {
+        static_assert(size_t(TypeCode::Max) <= INT8_MAX, "fits");
+        uint8_t u8;
+        if (!readFixedU8(&u8))
+            return false;
+        *type = (ExprType)u8;
         return true;
     }
     MOZ_MUST_USE bool readExpr(Expr* expr) {
@@ -877,7 +911,7 @@ class Decoder
             return false;
         if (u8 == UINT8_MAX)
             return false;
-        *expr = Expr(u8 + UINT8_MAX);
+        *expr = Expr(uint16_t(u8) + UINT8_MAX);
         return true;
     }
 

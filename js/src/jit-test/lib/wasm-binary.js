@@ -11,32 +11,30 @@ const ver2 = (Wasm.experimentalVersion >>> 16) & 0xff;
 const ver3 = (Wasm.experimentalVersion >>> 24) & 0xff;
 
 // Section opcodes
-const userDefinedId = 0;
-const typeId = 1;
-const importId = 2;
-const functionId = 3;
-const tableId = 4;
-const memoryId = 5;
-const globalId = 6;
-const exportId = 7;
-const startId = 8;
-const elemId = 9;
-const codeId = 10;
-const dataId = 11;
+const userDefinedId    = 0;
+const typeId           = 1;
+const importId         = 2;
+const functionId       = 3;
+const tableId          = 4;
+const memoryId         = 5;
+const globalId         = 6;
+const exportId         = 7;
+const startId          = 8;
+const elemId           = 9;
+const codeId           = 10;
+const dataId           = 11;
 
 // User-defined section names
-const nameName = "name";
+const nameName         = "name";
 
 // Type codes
-const VoidCode = 0;
-const I32Code = 1;
-const I64Code = 2;
-const F32Code = 3;
-const F64Code = 4;
-
-// Type constructors
-const AnyFuncCode = 0x20;
-const FunctionConstructorCode = 0x40;
+const I32Code          = 0x7f;
+const I64Code          = 0x7e;
+const F32Code          = 0x7d;
+const F64Code          = 0x7c;
+const AnyFuncCode      = 0x70;
+const FuncCode         = 0x60;
+const VoidCode         = 0x40;
 
 // Opcodes
 const UnreachableCode  = 0x00;
@@ -86,11 +84,11 @@ const I64TruncUF64Code = 0xa5;
 const GrowMemoryCode   = 0x39;
 
 // DefinitionKind
-const FunctionCode = 0x00;
-const TableCode    = 0x01;
-const MemoryCode   = 0x02;
-const GlobalCode   = 0x03;
+const FunctionCode     = 0x00;
+const TableCode        = 0x01;
+const MemoryCode       = 0x02;
+const GlobalCode       = 0x03;
 
 // ResizableFlags
-const HasMaximumFlag = 0x1;
+const HasMaximumFlag   = 0x1;
 

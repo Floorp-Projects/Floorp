@@ -1472,7 +1472,7 @@ AstDecodeTypeSection(AstDecodeContext& c)
 
     for (uint32_t sigIndex = 0; sigIndex < numSigs; sigIndex++) {
         uint32_t form;
-        if (!c.d.readVarU32(&form) || form != uint32_t(TypeConstructor::Function))
+        if (!c.d.readVarU32(&form) || form != uint32_t(TypeCode::Func))
             return c.d.fail("expected function form");
 
         uint32_t numArgs;
@@ -1586,7 +1586,7 @@ AstDecodeTableSection(AstDecodeContext& c)
     if (!c.d.readVarU32(&typeConstructorValue))
         return c.d.fail("expected type constructor kind");
 
-    if (typeConstructorValue != uint32_t(TypeConstructor::AnyFunc))
+    if (typeConstructorValue != uint32_t(TypeCode::AnyFunc))
         return c.d.fail("unknown type constructor kind");
 
     Limits table;
@@ -1631,7 +1631,7 @@ AstDecodeLimitsTable(AstDecodeContext& c, Limits* limits)
     if (!c.d.readVarU32(&kind))
         return false;
 
-    if (kind != uint32_t(TypeConstructor::AnyFunc))
+    if (kind != uint32_t(TypeCode::AnyFunc))
         return c.d.fail("unknown type constructor kind");
 
     if (!DecodeLimits(c.d, limits))
