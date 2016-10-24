@@ -670,9 +670,6 @@ ModuleGenerator::allocateGlobal(GlobalDesc* global)
       case ValType::B32x4:
         width = 16;
         break;
-      case ValType::Limit:
-        MOZ_CRASH("Limit");
-        break;
     }
 
     uint32_t offset;

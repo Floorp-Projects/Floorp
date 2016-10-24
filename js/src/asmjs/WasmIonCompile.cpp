@@ -264,8 +264,6 @@ class FunctionCompiler
                 // Bool32x4 uses the same data layout as Int32x4.
                 ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType::Bool32x4);
                 break;
-              case ValType::Limit:
-                MOZ_CRASH("Limit");
             }
 
             curBlock_->add(ins);
@@ -2685,7 +2683,7 @@ SimdToLaneType(ValType type)
       case ValType::I64:
       case ValType::F32:
       case ValType::F64:
-      case ValType::Limit:;
+        break;
     }
     MOZ_CRASH("bad simd type");
 }
@@ -2971,7 +2969,6 @@ EmitSimdCtor(FunctionCompiler& f, ValType type)
       case ValType::I64:
       case ValType::F32:
       case ValType::F64:
-      case ValType::Limit:
         break;
     }
     MOZ_CRASH("unexpected SIMD type");
