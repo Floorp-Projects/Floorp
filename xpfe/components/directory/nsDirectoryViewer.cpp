@@ -911,137 +911,144 @@ void
 nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
 {
   nsHTTPIndex *httpIndex = static_cast<nsHTTPIndex *>(aClosure);
-  if (!httpIndex)	return;
-  
+  if (!httpIndex)
+    return;
+
   // don't return out of this loop as mTimer may need to be cancelled afterwards
-  uint32_t    numItems = 0;
+  uint32_t numItems = 0;
   if (httpIndex->mConnectionList)
   {
-        httpIndex->mConnectionList->Count(&numItems);
-        if (numItems > 0)
-        {
-          nsCOMPtr<nsISupports>   isupports;
-          httpIndex->mConnectionList->GetElementAt((uint32_t)0, getter_AddRefs(isupports));
-          httpIndex->mConnectionList->RemoveElementAt((uint32_t)0);
-          
-          nsCOMPtr<nsIRDFResource>    aSource;
-          if (isupports)  aSource = do_QueryInterface(isupports);
-          
-          nsXPIDLCString uri;
-          if (aSource) {
-            httpIndex->GetDestination(aSource, uri);
-          }
-          
-          if (!uri) {
-            NS_ERROR("Could not reconstruct uri");
-            return;
-          }
-          
-          nsresult            rv = NS_OK;
-          nsCOMPtr<nsIURI>	url;
-          
-          rv = NS_NewURI(getter_AddRefs(url), uri.get());
-          nsCOMPtr<nsIChannel>	channel;
-          if (NS_SUCCEEDED(rv) && (url)) {
-            rv = NS_NewChannel(getter_AddRefs(channel),
-                               url,
-                               nsContentUtils::GetSystemPrincipal(),
-                               nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                               nsIContentPolicy::TYPE_OTHER);
-          }
-          if (NS_SUCCEEDED(rv) && (channel)) {
-            channel->SetNotificationCallbacks(httpIndex);
-            rv = channel->AsyncOpen2(httpIndex);
-          }
-        }
-  }
-    if (httpIndex->mNodeList)
+    httpIndex->mConnectionList->Count(&numItems);
+    if (numItems > 0)
     {
-        httpIndex->mNodeList->Count(&numItems);
-        if (numItems > 0)
-        {
-            // account for order required: src, prop, then target
-            numItems /=3;
-            if (numItems > 10)  numItems = 10;
-          
-            int32_t loop;
-            for (loop=0; loop<(int32_t)numItems; loop++)
-            {
-                nsCOMPtr<nsISupports>   isupports;
-                httpIndex->mNodeList->GetElementAt((uint32_t)0, getter_AddRefs(isupports));
-                httpIndex->mNodeList->RemoveElementAt((uint32_t)0);
-                nsCOMPtr<nsIRDFResource>    src;
-                if (isupports)  src = do_QueryInterface(isupports);
-                httpIndex->mNodeList->GetElementAt((uint32_t)0, getter_AddRefs(isupports));
-                httpIndex->mNodeList->RemoveElementAt((uint32_t)0);
-                nsCOMPtr<nsIRDFResource>    prop;
-                if (isupports)  prop = do_QueryInterface(isupports);
-                
-                httpIndex->mNodeList->GetElementAt((uint32_t)0, getter_AddRefs(isupports));
-                httpIndex->mNodeList->RemoveElementAt((uint32_t)0);
-                nsCOMPtr<nsIRDFNode>    target;
-                if (isupports)  target = do_QueryInterface(isupports);
-                
-                if (src && prop && target)
-                {
-                    if (prop.get() == httpIndex->kNC_Loading)
-                    {
-                        httpIndex->Unassert(src, prop, target);
-                    }
-                    else
-                    {
-                        httpIndex->Assert(src, prop, target, true);
-                    }
-                }
-            }                
-        }
-    }
+      nsCOMPtr<nsISupports> isupports;
+      httpIndex->mConnectionList->GetElementAt((uint32_t)0, getter_AddRefs(isupports));
+      httpIndex->mConnectionList->RemoveElementAt((uint32_t)0);
 
-    bool refireTimer = false;
-    // check both lists to see if the timer needs to continue firing
-    if (httpIndex->mConnectionList)
-    {
-        httpIndex->mConnectionList->Count(&numItems);
-        if (numItems > 0)
-        {
-            refireTimer = true;
-        }
-        else
-        {
-            httpIndex->mConnectionList->Clear();
-        }
-    }
-    if (httpIndex->mNodeList)
-    {
-        httpIndex->mNodeList->Count(&numItems);
-        if (numItems > 0)
-        {
-            refireTimer = true;
-        }
-        else
-        {
-            httpIndex->mNodeList->Clear();
-        }
-    }
+      nsCOMPtr<nsIRDFResource> source;
+      if (isupports)
+        aSource = do_QueryInterface(isupports);
 
-    // be sure to cancel the timer, as it holds a
-    // weak reference back to nsHTTPIndex
-    httpIndex->mTimer->Cancel();
-    httpIndex->mTimer = nullptr;
-    
-    // after firing off any/all of the connections be sure
-    // to cancel the timer if we don't need to refire it
-    if (refireTimer)
-    {
-      httpIndex->mTimer = do_CreateInstance("@mozilla.org/timer;1");
-      if (httpIndex->mTimer)
-      {
-        httpIndex->mTimer->InitWithFuncCallback(nsHTTPIndex::FireTimer, aClosure, 10,
-                                                nsITimer::TYPE_ONE_SHOT);
-        // Note: don't addref "this" as we'll cancel the
-        // timer in the httpIndex destructor
+      nsXPIDLCString uri;
+      if (aSource) {
+        httpIndex->GetDestination(aSource, uri);
+      }
+
+      if (!uri) {
+        NS_ERROR("Could not reconstruct uri");
+        return;
+      }
+
+      nsresult rv = NS_OK;
+      nsCOMPtr<nsIURI>	url;
+
+      rv = NS_NewURI(getter_AddRefs(url), uri.get());
+      nsCOMPtr<nsIChannel> channel;
+      if (NS_SUCCEEDED(rv) && (url)) {
+        rv = NS_NewChannel(getter_AddRefs(channel),
+            url,
+            nsContentUtils::GetSystemPrincipal(),
+            nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+            nsIContentPolicy::TYPE_OTHER);
+      }
+      if (NS_SUCCEEDED(rv) && (channel)) {
+        channel->SetNotificationCallbacks(httpIndex);
+        rv = channel->AsyncOpen2(httpIndex);
       }
     }
+  }
+
+  if (httpIndex->mNodeList)
+  {
+    httpIndex->mNodeList->Count(&numItems);
+    if (numItems > 0)
+    {
+      // account for order required: src, prop, then target
+      numItems /=3;
+      if (numItems > 10)
+        numItems = 10;
+
+      int32_t loop;
+      for (loop=0; loop<(int32_t)numItems; loop++)
+      {
+        nsCOMPtr<nsISupports> isupports;
+        httpIndex->mNodeList->GetElementAt((uint32_t)0, getter_AddRefs(isupports));
+        httpIndex->mNodeList->RemoveElementAt((uint32_t)0);
+        nsCOMPtr<nsIRDFResource> src;
+        if (isupports)
+          src = do_QueryInterface(isupports);
+        httpIndex->mNodeList->GetElementAt((uint32_t)0, getter_AddRefs(isupports));
+        httpIndex->mNodeList->RemoveElementAt((uint32_t)0);
+        nsCOMPtr<nsIRDFResource> prop;
+        if (isupports)
+          prop = do_QueryInterface(isupports);
+
+        httpIndex->mNodeList->GetElementAt((uint32_t)0, getter_AddRefs(isupports));
+        httpIndex->mNodeList->RemoveElementAt((uint32_t)0);
+        nsCOMPtr<nsIRDFNode> target;
+        if (isupports)
+          target = do_QueryInterface(isupports);
+
+        if (src && prop && target)
+        {
+          if (prop.get() == httpIndex->kNC_Loading)
+          {
+            httpIndex->Unassert(src, prop, target);
+          }
+          else
+          {
+            httpIndex->Assert(src, prop, target, true);
+          }
+        }
+      }
+    }
+  }
+
+  bool refireTimer = false;
+  // check both lists to see if the timer needs to continue firing
+  if (httpIndex->mConnectionList)
+  {
+    httpIndex->mConnectionList->Count(&numItems);
+    if (numItems > 0)
+    {
+      refireTimer = true;
+    }
+    else
+    {
+      httpIndex->mConnectionList->Clear();
+    }
+  }
+  if (httpIndex->mNodeList)
+  {
+    httpIndex->mNodeList->Count(&numItems);
+    if (numItems > 0)
+    {
+      refireTimer = true;
+    }
+    else
+    {
+      httpIndex->mNodeList->Clear();
+    }
+  }
+
+  // be sure to cancel the timer, as it holds a
+  // weak reference back to nsHTTPIndex
+  httpIndex->mTimer->Cancel();
+  httpIndex->mTimer = nullptr;
+
+  // after firing off any/all of the connections be sure
+  // to cancel the timer if we don't need to refire it
+  if (refireTimer)
+  {
+    httpIndex->mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (httpIndex->mTimer)
+    {
+      httpIndex->mTimer->InitWithFuncCallback(nsHTTPIndex::FireTimer, aClosure, 10,
+          nsITimer::TYPE_ONE_SHOT);
+      // Note: don't addref "this" as we'll cancel the
+      // timer in the httpIndex destructor
+    }
+  }
 }
 
 NS_IMETHODIMP
