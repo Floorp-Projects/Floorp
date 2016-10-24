@@ -47,8 +47,15 @@ function sendMouseEvent(int_win, elemId, mouseEventType, params) {
       eventObj.inputSource = params.inputSource;
     if(params && "buttons" in params)
       eventObj.buttons = params.buttons;
+
+    // Default to the center of the target element but we can still send to a
+    // position outside of the target element.
+    var offsetX = params && "offsetX" in params ? params.offsetX : rect.width / 2;
+    var offsetY = params && "offsetY" in params ? params.offsetY : rect.height / 2;
+
     console.log(elemId, eventObj);
-    synthesizeMouse(elem, rect.width/4, rect.height/2, eventObj, int_win);
+    synthesizeMouse(elem, offsetX, offsetY, eventObj, int_win);
+
   } else {
     is(!!elem, true, "Document should have element with id: " + elemId);
   }
@@ -60,8 +67,14 @@ function sendTouchEvent(int_win, elemId, touchEventType, params) {
   if(!!elem) {
     var rect = elem.getBoundingClientRect();
     var eventObj = {type: touchEventType};
+
+    // Default to the center of the target element but we can still send to a
+    // position outside of the target element.
+    var offsetX = params && "offsetX" in params ? params.offsetX : rect.width / 2;
+    var offsetY = params && "offsetY" in params ? params.offsetY : rect.height / 2;
+
     console.log(elemId, eventObj);
-    synthesizeTouch(elem, rect.width/4, rect.height/2, eventObj, int_win);
+    synthesizeTouch(elem, offsetX, offsetY, eventObj, int_win);
   } else {
     is(!!elem, true, "Document should have element with id: " + elemId);
   }
