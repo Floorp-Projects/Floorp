@@ -3603,6 +3603,23 @@ Parser<ParseHandler>::maybeParseDirective(Node list, Node pn, bool* cont)
         handler.setPrologue(pn);
 
         if (directive == context->names().useStrict) {
+            // Functions with non-simple parameter lists (destructuring,
+            // default or rest parameters) must not contain a "use strict"
+            // directive.
+            if (pc->isFunctionBox()) {
+                FunctionBox* funbox = pc->functionBox();
+                if (!funbox->hasSimpleParameterList()) {
+                    const char* parameterKind = funbox->hasDestructuringArgs
+                                                ? "destructuring"
+                                                : funbox->hasParameterExprs
+                                                ? "default"
+                                                : "rest";
+                    reportWithOffset(ParseError, false, directivePos.begin,
+                                     JSMSG_STRICT_NON_SIMPLE_PARAMS, parameterKind);
+                    return false;
+                }
+            }
+
             // We're going to be in strict mode. Note that this scope explicitly
             // had "use strict";
             pc->sc()->setExplicitUseStrict();
