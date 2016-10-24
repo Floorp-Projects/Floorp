@@ -26,7 +26,7 @@ class DomainPolicyClone;
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
 
-[scriptable, uuid(da831650-4241-4892-806c-cce8465a2ba8)]
+[scriptable, uuid(51daad87-3a0c-44cc-b620-7356801c9022)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -259,14 +259,6 @@ interface nsIScriptSecurityManager : nsISupports
     const unsigned long SAFEBROWSING_APP_ID = 4294967294; // UINT32_MAX - 1
 
     const unsigned long DEFAULT_USER_CONTEXT_ID = 0;
-
-    /**
-     * Returns the jar prefix for the app.
-     * appId can be NO_APP_ID or a valid app id. appId should not be
-     * UNKNOWN_APP_ID.
-     * inMozBrowser has to be true if the app is inside a mozbrowser iframe.
-     */
-    AUTF8String getJarPrefix(in unsigned long appId, in boolean inMozBrowser);
 
     /**
      * Per-domain controls to enable and disable script. This system is designed
