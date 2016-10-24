@@ -67,7 +67,7 @@ public class DynamicToolbar {
         }
         // Also disable variants of the Galaxy Note 4 on Android 5.0.1 (Bug 1301593)
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP
-            && (Build.MODEL.startsWith("SM-910"))) {
+            && (Build.MODEL.startsWith("SM-N910"))) {
             return true;
         }
         return false;
