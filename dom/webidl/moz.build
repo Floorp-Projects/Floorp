@@ -401,8 +401,6 @@ WEBIDL_FILES = [
     'Range.webidl',
     'Rect.webidl',
     'Request.webidl',
-    'ResourceStats.webidl',
-    'ResourceStatsManager.webidl',
     'Response.webidl',
     'RGBColor.webidl',
     'RTCStatsReport.webidl',
