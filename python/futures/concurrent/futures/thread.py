@@ -32,11 +32,11 @@ _shutdown = False
 def _python_exit():
     global _shutdown
     _shutdown = True
-    items = list(_threads_queues.items())
+    items = list(_threads_queues.items()) if _threads_queues else ()
     for t, q in items:
         q.put(None)
     for t, q in items:
-        t.join()
+        t.join(sys.maxint)
 
 atexit.register(_python_exit)
 
@@ -130,5 +130,5 @@ class ThreadPoolExecutor(_base.Executor):
             self._work_queue.put(None)
         if wait:
             for t in self._threads:
-                t.join()
+                t.join(sys.maxint)
     shutdown.__doc__ = _base.Executor.shutdown.__doc__
