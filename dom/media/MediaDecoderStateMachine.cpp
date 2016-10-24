@@ -2275,7 +2275,10 @@ void MediaDecoderStateMachine::RecomputeDuration()
     duration = TimeUnit::FromSeconds(d);
   } else if (mEstimatedDuration.Ref().isSome()) {
     duration = mEstimatedDuration.Ref().ref();
-  } else if (Info().mMetadataDuration.isSome()) {
+  } else if (mInfo.isSome() && Info().mMetadataDuration.isSome()) {
+    // We need to check mInfo.isSome() because that this method might be invoked
+    // while mObservedDuration is changed which might before the metadata been
+    // read.
     duration = Info().mMetadataDuration.ref();
   } else {
     return;
