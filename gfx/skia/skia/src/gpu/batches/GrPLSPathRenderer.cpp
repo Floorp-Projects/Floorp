@@ -23,7 +23,7 @@
 #include "GrPathUtils.h"
 #include "GrProcessor.h"
 #include "GrPipelineBuilder.h"
-#include "GrStrokeInfo.h"
+#include "GrStyle.h"
 #include "GrTessellator.h"
 #include "batches/GrVertexBatch.h"
 #include "glsl/GrGLSLGeometryProcessor.h"
@@ -333,8 +333,8 @@ public:
 
             // emit transforms
             this->emitTransforms(vsBuilder, varyingHandler, uniformHandler, gpArgs->fPositionVar,
-                                 te.inPosition()->fName, te.localMatrix(), args.fTransformsIn,
-                                 args.fTransformsOut);
+                                 te.inPosition()->fName, te.localMatrix(),
+                                 args.fFPCoordTransformHandler);
 
             GrGLSLPPFragmentBuilder* fsBuilder = args.fFragBuilder;
             SkAssertResult(fsBuilder->enableFeature(
@@ -391,15 +391,10 @@ public:
             b->add32(key);
         }
 
-        virtual void setData(const GrGLSLProgramDataManager& pdman,
-                             const GrPrimitiveProcessor& gp) override {
-        }
-
-        void setTransformData(const GrPrimitiveProcessor& primProc,
-                              const GrGLSLProgramDataManager& pdman,
-                              int index,
-                              const SkTArray<const GrCoordTransform*, true>& transforms) override {
-            this->setTransformDataHelper<PLSAATriangleEffect>(primProc, pdman, index, transforms);
+        void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp,
+                     FPCoordTransformIter&& transformIter) override {
+            this->setTransformDataHelper(gp.cast<PLSAATriangleEffect>().fLocalMatrix, pdman,
+                                         &transformIter);
         }
 
     private:
@@ -420,16 +415,16 @@ private:
         : fLocalMatrix(localMatrix)
         , fUsesLocalCoords(usesLocalCoords) {
         this->initClassID<PLSAATriangleEffect>();
-        fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType,
-                                                       kHigh_GrSLPrecision));
-        fInVertex1 = &this->addVertexAttrib(Attribute("inVertex1", kVec2f_GrVertexAttribType,
-                                                      kHigh_GrSLPrecision));
-        fInVertex2 = &this->addVertexAttrib(Attribute("inVertex2", kVec2f_GrVertexAttribType,
-                                                      kHigh_GrSLPrecision));
-        fInVertex3 = &this->addVertexAttrib(Attribute("inVertex3", kVec2f_GrVertexAttribType,
-                                                      kHigh_GrSLPrecision));
-        fInWindings = &this->addVertexAttrib(Attribute("inWindings", kInt_GrVertexAttribType,
-                                                       kLow_GrSLPrecision));
+        fInPosition = &this->addVertexAttrib("inPosition", kVec2f_GrVertexAttribType,
+                                             kHigh_GrSLPrecision);
+        fInVertex1 = &this->addVertexAttrib("inVertex1", kVec2f_GrVertexAttribType,
+                                            kHigh_GrSLPrecision);
+        fInVertex2 = &this->addVertexAttrib("inVertex2", kVec2f_GrVertexAttribType,
+                                            kHigh_GrSLPrecision);
+        fInVertex3 = &this->addVertexAttrib("inVertex3", kVec2f_GrVertexAttribType,
+                                            kHigh_GrSLPrecision);
+        fInWindings = &this->addVertexAttrib("inWindings", kInt_GrVertexAttribType,
+                                             kLow_GrSLPrecision);
         this->setWillReadFragmentPosition();
     }
 
@@ -521,8 +516,8 @@ public:
 
             // emit transforms
             this->emitTransforms(vsBuilder, varyingHandler, uniformHandler, gpArgs->fPositionVar,
-                                 qe.inPosition()->fName, qe.localMatrix(), args.fTransformsIn,
-                                 args.fTransformsOut);
+                                 qe.inPosition()->fName, qe.localMatrix(),
+                                 args.fFPCoordTransformHandler);
 
             GrGLSLPPFragmentBuilder* fsBuilder = args.fFragBuilder;
             SkAssertResult(fsBuilder->enableFeature(
@@ -580,15 +575,10 @@ public:
             b->add32(key);
         }
 
-        virtual void setData(const GrGLSLProgramDataManager& pdman,
-                             const GrPrimitiveProcessor& gp) override {
-        }
-
-        void setTransformData(const GrPrimitiveProcessor& primProc,
-                              const GrGLSLProgramDataManager& pdman,
-                              int index,
-                              const SkTArray<const GrCoordTransform*, true>& transforms) override {
-            this->setTransformDataHelper<PLSQuadEdgeEffect>(primProc, pdman, index, transforms);
+        void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp,
+                             FPCoordTransformIter&& transformIter) override {
+            this->setTransformDataHelper(gp.cast<PLSQuadEdgeEffect>().fLocalMatrix, pdman,
+                                         &transformIter);
         }
 
     private:
@@ -609,16 +599,15 @@ private:
         : fLocalMatrix(localMatrix)
         , fUsesLocalCoords(usesLocalCoords) {
         this->initClassID<PLSQuadEdgeEffect>();
-        fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType,
-                                                       kHigh_GrSLPrecision));
-        fInUV = &this->addVertexAttrib(Attribute("inUV", kVec2f_GrVertexAttribType,
-                                                 kHigh_GrSLPrecision));
-        fInEndpoint1 = &this->addVertexAttrib(Attribute("inEndpoint1", kVec2f_GrVertexAttribType,
-                                                        kHigh_GrSLPrecision));
-        fInEndpoint2 = &this->addVertexAttrib(Attribute("inEndpoint2", kVec2f_GrVertexAttribType,
-                                                        kHigh_GrSLPrecision));
-        fInWindings  = &this->addVertexAttrib(Attribute("inWindings", kInt_GrVertexAttribType,
-                                                        kLow_GrSLPrecision));
+        fInPosition = &this->addVertexAttrib("inPosition", kVec2f_GrVertexAttribType,
+                                             kHigh_GrSLPrecision);
+        fInUV = &this->addVertexAttrib("inUV", kVec2f_GrVertexAttribType, kHigh_GrSLPrecision);
+        fInEndpoint1 = &this->addVertexAttrib("inEndpoint1", kVec2f_GrVertexAttribType,
+                                              kHigh_GrSLPrecision);
+        fInEndpoint2 = &this->addVertexAttrib("inEndpoint2", kVec2f_GrVertexAttribType,
+                                              kHigh_GrSLPrecision);
+        fInWindings  = &this->addVertexAttrib("inWindings", kInt_GrVertexAttribType,
+                                              kLow_GrSLPrecision);
         this->setWillReadFragmentPosition();
     }
 
@@ -679,8 +668,8 @@ public:
             varyingHandler->emitAttributes(fe);
             this->setupPosition(vsBuilder, gpArgs, fe.inPosition()->fName);
             this->emitTransforms(vsBuilder, varyingHandler, uniformHandler, gpArgs->fPositionVar,
-                                 fe.inPosition()->fName, fe.localMatrix(), args.fTransformsIn,
-                                 args.fTransformsOut);
+                                 fe.inPosition()->fName, fe.localMatrix(),
+                                 args.fFPCoordTransformHandler);
 
             GrGLSLPPFragmentBuilder* fsBuilder = args.fFragBuilder;
             SkAssertResult(fsBuilder->enableFeature(
@@ -715,8 +704,8 @@ public:
             b->add32(key);
         }
 
-        virtual void setData(const GrGLSLProgramDataManager& pdman,
-                             const GrPrimitiveProcessor& gp) override {
+        void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp,
+                     FPCoordTransformIter&& transformIter) override {
             const PLSFinishEffect& fe = gp.cast<PLSFinishEffect>();
             pdman.set1f(fUseEvenOdd, fe.fUseEvenOdd);
             if (fe.color() != fColor && !fe.colorIgnored()) {
@@ -725,13 +714,7 @@ public:
                 pdman.set4fv(fColorUniform, 1, c);
                 fColor = fe.color();
             }
-        }
-
-        void setTransformData(const GrPrimitiveProcessor& primProc,
-                              const GrGLSLProgramDataManager& pdman,
-                              int index,
-                              const SkTArray<const GrCoordTransform*, true>& transforms) override {
-            this->setTransformDataHelper<PLSFinishEffect>(primProc, pdman, index, transforms);
+            this->setTransformDataHelper(fe.fLocalMatrix, pdman, &transformIter);
         }
 
     private:
@@ -759,8 +742,8 @@ private:
         , fLocalMatrix(localMatrix)
         , fUsesLocalCoords(usesLocalCoords) {
         this->initClassID<PLSFinishEffect>();
-        fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType,
-                                                       kHigh_GrSLPrecision));
+        fInPosition = &this->addVertexAttrib("inPosition", kVec2f_GrVertexAttribType,
+                                             kHigh_GrSLPrecision);
     }
 
     const Attribute* fInPosition;
@@ -777,22 +760,24 @@ private:
 bool GrPLSPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
     // We have support for even-odd rendering, but are having some troublesome
     // seams. Disable in the presence of even-odd for now.
+    SkPath path;
+    args.fShape->asPath(&path);
     return args.fShaderCaps->shaderDerivativeSupport() && args.fAntiAlias &&
-            args.fStroke->isFillStyle() && !args.fPath->isInverseFillType() &&
-            args.fPath->getFillType() == SkPath::FillType::kWinding_FillType;
+            args.fShape->style().isSimpleFill() && !path.isInverseFillType() &&
+            path.getFillType() == SkPath::FillType::kWinding_FillType;
 }
 
 class PLSPathBatch : public GrVertexBatch {
 public:
     DEFINE_BATCH_CLASS_ID
-    struct Geometry {
-        GrColor fColor;
-        SkMatrix fViewMatrix;
-        SkPath fPath;
-    };
-
-    static GrDrawBatch* Create(const Geometry& geometry) {
-        return new PLSPathBatch(geometry);
+    PLSPathBatch(GrColor color, const SkPath& path, const SkMatrix& viewMatrix)
+            : INHERITED(ClassID())
+            , fColor(color)
+            , fPath(path)
+            , fViewMatrix(viewMatrix) {
+        // compute bounds
+        this->setTransformedBounds(path.getBounds(), fViewMatrix, HasAABloat::kYes,
+                                   IsZeroArea::kNo);
     }
 
     const char* name() const override { return "PLSBatch"; }
@@ -801,7 +786,7 @@ public:
                                       GrInitInvariantOutput* coverage,
                                       GrBatchToXPOverrides* overrides) const override {
         // When this is called on a batch, there is only one geometry bundle
-        color->setKnownFourComponents(fGeoData[0].fColor);
+        color->setKnownFourComponents(fColor);
         coverage->setUnknownSingleComponent();
         overrides->fUsePLSDstRead = true;
     }
@@ -809,183 +794,150 @@ public:
     void initBatchTracker(const GrXPOverridesForBatch& overrides) override {
         // Handle any color overrides
         if (!overrides.readsColor()) {
-            fGeoData[0].fColor = GrColor_ILLEGAL;
+            fColor = GrColor_ILLEGAL;
         }
-        overrides.getOverrideColorIfSet(&fGeoData[0].fColor);
+        overrides.getOverrideColorIfSet(&fColor);
 
         // setup batch properties
-        fBatch.fColorIgnored = !overrides.readsColor();
-        fBatch.fColor = fGeoData[0].fColor;
-        fBatch.fUsesLocalCoords = overrides.readsLocalCoords();
-        fBatch.fCoverageIgnored = !overrides.readsCoverage();
-        fBatch.fCanTweakAlphaForCoverage = overrides.canTweakAlphaForCoverage();
+        fUsesLocalCoords = overrides.readsLocalCoords();
     }
 
     void onPrepareDraws(Target* target) const override {
-        int instanceCount = fGeoData.count();
 
         SkMatrix invert;
-        if (this->usesLocalCoords() && !this->viewMatrix().invert(&invert)) {
+        if (fUsesLocalCoords && !fViewMatrix.invert(&invert)) {
             SkDebugf("Could not invert viewmatrix\n");
             return;
         }
 
         // Setup GrGeometryProcessors
         SkAutoTUnref<GrPLSGeometryProcessor> triangleProcessor(
-                PLSAATriangleEffect::Create(invert, this->usesLocalCoords()));
+                PLSAATriangleEffect::Create(invert, fUsesLocalCoords));
         SkAutoTUnref<GrPLSGeometryProcessor> quadProcessor(
-                PLSQuadEdgeEffect::Create(invert, this->usesLocalCoords()));
+                PLSQuadEdgeEffect::Create(invert, fUsesLocalCoords));
 
         GrResourceProvider* rp = target->resourceProvider();
-        for (int i = 0; i < instanceCount; ++i) {
-            const Geometry& args = fGeoData[i];
-            SkRect bounds = args.fPath.getBounds();
-            args.fViewMatrix.mapRect(&bounds);
-            bounds.fLeft = SkScalarFloorToScalar(bounds.fLeft);
-            bounds.fTop = SkScalarFloorToScalar(bounds.fTop);
-            bounds.fRight = SkScalarCeilToScalar(bounds.fRight);
-            bounds.fBottom = SkScalarCeilToScalar(bounds.fBottom);
-            triangleProcessor->setBounds(bounds);
-            quadProcessor->setBounds(bounds);
+        SkRect bounds;
+        this->bounds().roundOut(&bounds);
+        triangleProcessor->setBounds(bounds);
+        quadProcessor->setBounds(bounds);
 
-            // We use the fact that SkPath::transform path does subdivision based on
-            // perspective. Otherwise, we apply the view matrix when copying to the
-            // segment representation.
-            const SkMatrix* viewMatrix = &args.fViewMatrix;
+        // We use the fact that SkPath::transform path does subdivision based on
+        // perspective. Otherwise, we apply the view matrix when copying to the
+        // segment representation.
+        const SkMatrix* viewMatrix = &fViewMatrix;
 
-            // We avoid initializing the path unless we have to
-            const SkPath* pathPtr = &args.fPath;
-            SkTLazy<SkPath> tmpPath;
-            if (viewMatrix->hasPerspective()) {
-                SkPath* tmpPathPtr = tmpPath.init(*pathPtr);
-                tmpPathPtr->setIsVolatile(true);
-                tmpPathPtr->transform(*viewMatrix);
-                viewMatrix = &SkMatrix::I();
-                pathPtr = tmpPathPtr;
-            }
+        // We avoid initializing the path unless we have to
+        const SkPath* pathPtr = &fPath;
+        SkTLazy<SkPath> tmpPath;
+        if (viewMatrix->hasPerspective()) {
+            SkPath* tmpPathPtr = tmpPath.init(*pathPtr);
+            tmpPathPtr->setIsVolatile(true);
+            tmpPathPtr->transform(*viewMatrix);
+            viewMatrix = &SkMatrix::I();
+            pathPtr = tmpPathPtr;
+        }
 
-            GrMesh mesh;
+        GrMesh mesh;
 
-            PLSVertices triVertices;
-            PLSVertices quadVertices;
-            if (!get_geometry(*pathPtr, *viewMatrix, triVertices, quadVertices, rp, bounds)) {
-                continue;
-            }
+        PLSVertices triVertices;
+        PLSVertices quadVertices;
+        if (!get_geometry(*pathPtr, *viewMatrix, triVertices, quadVertices, rp, bounds)) {
+            return;
+        }
 
-            if (triVertices.count()) {
-                const GrBuffer* triVertexBuffer;
-                int firstTriVertex;
-                size_t triStride = triangleProcessor->getVertexStride();
-                PLSVertex* triVerts = reinterpret_cast<PLSVertex*>(target->makeVertexSpace(
-                        triStride, triVertices.count(), &triVertexBuffer, &firstTriVertex));
-                if (!triVerts) {
-                    SkDebugf("Could not allocate vertices\n");
-                    return;
-                }
-                for (int i = 0; i < triVertices.count(); ++i) {
-                    triVerts[i] = triVertices[i];
-                }
-                mesh.init(kTriangles_GrPrimitiveType, triVertexBuffer, firstTriVertex,
-                          triVertices.count());
-                target->draw(triangleProcessor, mesh);
-            }
-
-            if (quadVertices.count()) {
-                const GrBuffer* quadVertexBuffer;
-                int firstQuadVertex;
-                size_t quadStride = quadProcessor->getVertexStride();
-                PLSVertex* quadVerts = reinterpret_cast<PLSVertex*>(target->makeVertexSpace(
-                        quadStride, quadVertices.count(), &quadVertexBuffer, &firstQuadVertex));
-                if (!quadVerts) {
-                    SkDebugf("Could not allocate vertices\n");
-                    return;
-                }
-                for (int i = 0; i < quadVertices.count(); ++i) {
-                    quadVerts[i] = quadVertices[i];
-                }
-                mesh.init(kTriangles_GrPrimitiveType, quadVertexBuffer, firstQuadVertex,
-                          quadVertices.count());
-                target->draw(quadProcessor, mesh);
-            }
-
-            SkAutoTUnref<GrGeometryProcessor> finishProcessor(
-                    PLSFinishEffect::Create(this->color(),
-                                            pathPtr->getFillType() ==
-                                                                SkPath::FillType::kEvenOdd_FillType,
-                                            invert,
-                                            this->usesLocalCoords()));
-            const GrBuffer* rectVertexBuffer;
-            size_t finishStride = finishProcessor->getVertexStride();
-            int firstRectVertex;
-            static const int kRectVertexCount = 6;
-            SkPoint* rectVerts = reinterpret_cast<SkPoint*>(target->makeVertexSpace(
-                    finishStride, kRectVertexCount, &rectVertexBuffer, &firstRectVertex));
-            if (!rectVerts) {
+        if (triVertices.count()) {
+            const GrBuffer* triVertexBuffer;
+            int firstTriVertex;
+            size_t triStride = triangleProcessor->getVertexStride();
+            PLSVertex* triVerts = reinterpret_cast<PLSVertex*>(target->makeVertexSpace(
+                    triStride, triVertices.count(), &triVertexBuffer, &firstTriVertex));
+            if (!triVerts) {
                 SkDebugf("Could not allocate vertices\n");
                 return;
             }
-            rectVerts[0] = { bounds.fLeft, bounds.fTop };
-            rectVerts[1] = { bounds.fLeft, bounds.fBottom };
-            rectVerts[2] = { bounds.fRight, bounds.fBottom };
-            rectVerts[3] = { bounds.fLeft, bounds.fTop };
-            rectVerts[4] = { bounds.fRight, bounds.fTop };
-            rectVerts[5] = { bounds.fRight, bounds.fBottom };
-
-            mesh.init(kTriangles_GrPrimitiveType, rectVertexBuffer, firstRectVertex,
-                      kRectVertexCount);
-            target->draw(finishProcessor, mesh);
+            for (int i = 0; i < triVertices.count(); ++i) {
+                triVerts[i] = triVertices[i];
+            }
+            mesh.init(kTriangles_GrPrimitiveType, triVertexBuffer, firstTriVertex,
+                      triVertices.count());
+            target->draw(triangleProcessor, mesh);
         }
-    }
 
-    SkSTArray<1, Geometry, true>* geoData() { return &fGeoData; }
+        if (quadVertices.count()) {
+            const GrBuffer* quadVertexBuffer;
+            int firstQuadVertex;
+            size_t quadStride = quadProcessor->getVertexStride();
+            PLSVertex* quadVerts = reinterpret_cast<PLSVertex*>(target->makeVertexSpace(
+                    quadStride, quadVertices.count(), &quadVertexBuffer, &firstQuadVertex));
+            if (!quadVerts) {
+                SkDebugf("Could not allocate vertices\n");
+                return;
+            }
+            for (int i = 0; i < quadVertices.count(); ++i) {
+                quadVerts[i] = quadVertices[i];
+            }
+            mesh.init(kTriangles_GrPrimitiveType, quadVertexBuffer, firstQuadVertex,
+                      quadVertices.count());
+            target->draw(quadProcessor, mesh);
+        }
+
+        SkAutoTUnref<GrGeometryProcessor> finishProcessor(
+                PLSFinishEffect::Create(fColor,
+                                        pathPtr->getFillType() ==
+                                                            SkPath::FillType::kEvenOdd_FillType,
+                                        invert,
+                                        fUsesLocalCoords));
+        const GrBuffer* rectVertexBuffer;
+        size_t finishStride = finishProcessor->getVertexStride();
+        int firstRectVertex;
+        static const int kRectVertexCount = 6;
+        SkPoint* rectVerts = reinterpret_cast<SkPoint*>(target->makeVertexSpace(
+                finishStride, kRectVertexCount, &rectVertexBuffer, &firstRectVertex));
+        if (!rectVerts) {
+            SkDebugf("Could not allocate vertices\n");
+            return;
+        }
+        rectVerts[0] = { bounds.fLeft, bounds.fTop };
+        rectVerts[1] = { bounds.fLeft, bounds.fBottom };
+        rectVerts[2] = { bounds.fRight, bounds.fBottom };
+        rectVerts[3] = { bounds.fLeft, bounds.fTop };
+        rectVerts[4] = { bounds.fRight, bounds.fTop };
+        rectVerts[5] = { bounds.fRight, bounds.fBottom };
+
+        mesh.init(kTriangles_GrPrimitiveType, rectVertexBuffer, firstRectVertex,
+                  kRectVertexCount);
+        target->draw(finishProcessor, mesh);
+    }
 
 private:
-    PLSPathBatch(const Geometry& geometry) : INHERITED(ClassID()) {
-        fGeoData.push_back(geometry);
-
-        // compute bounds
-        fBounds = geometry.fPath.getBounds();
-        geometry.fViewMatrix.mapRect(&fBounds);
-    }
-
     bool onCombineIfPossible(GrBatch* t, const GrCaps& caps) override {
         return false;
     }
 
-    GrColor color() const { return fBatch.fColor; }
-    bool usesLocalCoords() const { return fBatch.fUsesLocalCoords; }
-    bool canTweakAlphaForCoverage() const { return fBatch.fCanTweakAlphaForCoverage; }
-    const SkMatrix& viewMatrix() const { return fGeoData[0].fViewMatrix; }
-    bool coverageIgnored() const { return fBatch.fCoverageIgnored; }
+    bool fUsesLocalCoords;
 
-    struct BatchTracker {
-        GrColor fColor;
-        bool fUsesLocalCoords;
-        bool fColorIgnored;
-        bool fCoverageIgnored;
-        bool fCanTweakAlphaForCoverage;
-    };
-
-    BatchTracker fBatch;
-    SkSTArray<1, Geometry, true> fGeoData;
-
+    GrColor fColor;
+    SkPath fPath;
+    SkMatrix fViewMatrix;
     typedef GrVertexBatch INHERITED;
 };
 
 SkDEBUGCODE(bool inPLSDraw = false;)
 bool GrPLSPathRenderer::onDrawPath(const DrawPathArgs& args) {
-    if (args.fPath->isEmpty()) {
-        return true;
-    }
+    SkASSERT(!args.fShape->isEmpty());
     SkASSERT(!inPLSDraw);
     SkDEBUGCODE(inPLSDraw = true;)
-    PLSPathBatch::Geometry geometry;
-    geometry.fColor = args.fColor;
-    geometry.fViewMatrix = *args.fViewMatrix;
-    geometry.fPath = *args.fPath;
+    SkPath path;
+    args.fShape->asPath(&path);
 
-    SkAutoTUnref<GrDrawBatch> batch(PLSPathBatch::Create(geometry));
-    args.fTarget->drawBatch(*args.fPipelineBuilder, batch);
+    SkAutoTUnref<GrDrawBatch> batch(new PLSPathBatch(args.fPaint->getColor(),
+                                                     path, *args.fViewMatrix));
+
+    GrPipelineBuilder pipelineBuilder(*args.fPaint, args.fDrawContext->mustUseHWAA(*args.fPaint));
+    pipelineBuilder.setUserStencil(args.fUserStencilSettings);
+
+    args.fDrawContext->drawBatch(pipelineBuilder, *args.fClip, batch);
 
     SkDEBUGCODE(inPLSDraw = false;)
     return true;
@@ -997,12 +949,11 @@ bool GrPLSPathRenderer::onDrawPath(const DrawPathArgs& args) {
 #ifdef GR_TEST_UTILS
 
 DRAW_BATCH_TEST_DEFINE(PLSPathBatch) {
-    PLSPathBatch::Geometry geometry;
-    geometry.fColor = GrRandomColor(random);
-    geometry.fViewMatrix = GrTest::TestMatrixInvertible(random);
-    geometry.fPath = GrTest::TestPathConvex(random);
+    GrColor color = GrRandomColor(random);
+    SkMatrix vm = GrTest::TestMatrixInvertible(random);
+    SkPath path = GrTest::TestPathConvex(random);
 
-    return PLSPathBatch::Create(geometry);
+    return new PLSPathBatch(color, path, vm);
 }
 
 #endif

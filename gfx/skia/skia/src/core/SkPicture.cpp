@@ -6,6 +6,7 @@
  */
 
 #include "SkAtomics.h"
+#include "SkImageDeserializer.h"
 #include "SkImageGenerator.h"
 #include "SkMessageBus.h"
 #include "SkPicture.h"
@@ -22,6 +23,31 @@ static bool g_AllPictureIOSecurityPrecautionsEnabled = false;
 #endif
 
 DECLARE_SKMESSAGEBUS_MESSAGE(SkPicture::DeletionMessage);
+
+#ifdef SK_SUPPORT_LEGACY_PICTUREINSTALLPIXELREF
+class InstallProcImageDeserializer : public SkImageDeserializer {
+    SkPicture::InstallPixelRefProc fProc;
+public:
+    InstallProcImageDeserializer(SkPicture::InstallPixelRefProc proc) : fProc(proc) {}
+
+    sk_sp<SkImage> makeFromMemory(const void* data, size_t length, const SkIRect* subset) override {
+        SkBitmap bitmap;
+        if (fProc(data, length, &bitmap)) {
+            bitmap.setImmutable();
+            return SkImage::MakeFromBitmap(bitmap);
+        }
+        return nullptr;
+    }
+    sk_sp<SkImage> makeFromData(SkData* data, const SkIRect* subset) override {
+        return this->makeFromMemory(data->data(), data->size(), subset);
+    }
+};
+
+sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream, InstallPixelRefProc proc) {
+    InstallProcImageDeserializer deserializer(proc);
+    return MakeFromStream(stream, &deserializer);
+}
+#endif
 
 /* SkPicture impl.  This handles generic responsibilities like unique IDs and serialization. */
 
@@ -64,7 +90,7 @@ SkPictInfo SkPicture::createHeader() const {
     memcpy(info.fMagic, kMagic, sizeof(kMagic));
 
     // Set picture info after magic bytes in the header
-    info.fVersion = CURRENT_PICTURE_VERSION;
+    info.setVersion(CURRENT_PICTURE_VERSION);
     info.fCullRect = this->cullRect();
     info.fFlags = SkPictInfo::kCrossProcess_Flag;
     // TODO: remove this flag, since we're always float (now)
@@ -80,7 +106,7 @@ bool SkPicture::IsValidPictInfo(const SkPictInfo& info) {
     if (0 != memcmp(info.fMagic, kMagic, sizeof(kMagic))) {
         return false;
     }
-    if (info.fVersion < MIN_PICTURE_VERSION || info.fVersion > CURRENT_PICTURE_VERSION) {
+    if (info.getVersion() < MIN_PICTURE_VERSION || info.getVersion() > CURRENT_PICTURE_VERSION) {
         return false;
     }
     return true;
@@ -97,7 +123,7 @@ bool SkPicture::InternalOnly_StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) {
         return false;
     }
 
-    info.fVersion          = stream->readU32();
+    info.setVersion(         stream->readU32());
     info.fCullRect.fLeft   = stream->readScalar();
     info.fCullRect.fTop    = stream->readScalar();
     info.fCullRect.fRight  = stream->readScalar();
@@ -118,7 +144,7 @@ bool SkPicture::InternalOnly_BufferIsSKP(SkReadBuffer* buffer, SkPictInfo* pInfo
         return false;
     }
 
-    info.fVersion = buffer->readUInt();
+    info.setVersion(buffer->readUInt());
     buffer->readRect(&info.fCullRect);
     info.fFlags = buffer->readUInt();
 
@@ -129,39 +155,50 @@ bool SkPicture::InternalOnly_BufferIsSKP(SkReadBuffer* buffer, SkPictInfo* pInfo
     return false;
 }
 
-sk_sp<SkPicture> SkPicture::Forwardport(const SkPictInfo& info, const SkPictureData* data) {
+sk_sp<SkPicture> SkPicture::Forwardport(const SkPictInfo& info,
+                                        const SkPictureData* data,
+                                        SkReadBuffer* buffer) {
     if (!data) {
         return nullptr;
     }
     SkPicturePlayback playback(data);
     SkPictureRecorder r;
-    playback.draw(r.beginRecording(info.fCullRect), nullptr/*no callback*/);
+    playback.draw(r.beginRecording(info.fCullRect), nullptr/*no callback*/, buffer);
     return r.finishRecordingAsPicture();
 }
 
-static bool default_install(const void* src, size_t length, SkBitmap* dst) {
-    sk_sp<SkData> encoded(SkData::MakeWithCopy(src, length));
-    return encoded && SkDEPRECATED_InstallDiscardablePixelRef(
-            SkImageGenerator::NewFromEncoded(encoded.get()), dst);
+sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream, SkImageDeserializer* factory) {
+    return MakeFromStream(stream, factory, nullptr);
 }
 
 sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream) {
-    return MakeFromStream(stream, &default_install, nullptr);
+    SkImageDeserializer factory;
+    return MakeFromStream(stream, &factory);
 }
 
-sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream, InstallPixelRefProc proc) {
-    return MakeFromStream(stream, proc, nullptr);
+sk_sp<SkPicture> SkPicture::MakeFromData(const void* data, size_t size,
+                                         SkImageDeserializer* factory) {
+    SkMemoryStream stream(data, size);
+    return MakeFromStream(&stream, factory, nullptr);
 }
 
-sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream, InstallPixelRefProc proc,
+sk_sp<SkPicture> SkPicture::MakeFromData(const SkData* data, SkImageDeserializer* factory) {
+    if (!data) {
+        return nullptr;
+    }
+    SkMemoryStream stream(data->data(), data->size());
+    return MakeFromStream(&stream, factory, nullptr);
+}
+
+sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream, SkImageDeserializer* factory,
                                            SkTypefacePlayback* typefaces) {
     SkPictInfo info;
     if (!InternalOnly_StreamIsSKP(stream, &info) || !stream->readBool()) {
         return nullptr;
     }
     SkAutoTDelete<SkPictureData> data(
-            SkPictureData::CreateFromStream(stream, info, proc, typefaces));
-    return Forwardport(info, data);
+            SkPictureData::CreateFromStream(stream, info, factory, typefaces));
+    return Forwardport(info, data, nullptr);
 }
 
 sk_sp<SkPicture> SkPicture::MakeFromBuffer(SkReadBuffer& buffer) {
@@ -170,7 +207,7 @@ sk_sp<SkPicture> SkPicture::MakeFromBuffer(SkReadBuffer& buffer) {
         return nullptr;
     }
     SkAutoTDelete<SkPictureData> data(SkPictureData::CreateFromBuffer(buffer, info));
-    return Forwardport(info, data);
+    return Forwardport(info, data, &buffer);
 }
 
 SkPictureData* SkPicture::backport() const {
@@ -179,11 +216,17 @@ SkPictureData* SkPicture::backport() const {
     rec.beginRecording();
         this->playback(&rec);
     rec.endRecording();
-    return new SkPictureData(rec, info, false /*deep copy ops?*/);
+    return new SkPictureData(rec, info);
 }
 
 void SkPicture::serialize(SkWStream* stream, SkPixelSerializer* pixelSerializer) const {
     this->serialize(stream, pixelSerializer, nullptr);
+}
+
+sk_sp<SkData> SkPicture::serialize(SkPixelSerializer* pixelSerializer) const {
+    SkDynamicMemoryWStream stream;
+    this->serialize(&stream, pixelSerializer, nullptr);
+    return stream.detachAsData();
 }
 
 void SkPicture::serialize(SkWStream* stream,
@@ -206,7 +249,7 @@ void SkPicture::flatten(SkWriteBuffer& buffer) const {
     SkAutoTDelete<SkPictureData> data(this->backport());
 
     buffer.writeByteArray(&info.fMagic, sizeof(info.fMagic));
-    buffer.writeUInt(info.fVersion);
+    buffer.writeUInt(info.getVersion());
     buffer.writeRect(info.fCullRect);
     buffer.writeUInt(info.fFlags);
     if (data) {
@@ -217,6 +260,7 @@ void SkPicture::flatten(SkWriteBuffer& buffer) const {
     }
 }
 
+#ifdef SK_SUPPORT_LEGACY_PICTURE_GPUVETO
 bool SkPicture::suitableForGpuRasterization(GrContext*, const char** whyNot) const {
     if (this->numSlowPaths() > 5) {
         if (whyNot) { *whyNot = "Too many slow paths (either concave or dashed)."; }
@@ -224,6 +268,7 @@ bool SkPicture::suitableForGpuRasterization(GrContext*, const char** whyNot) con
     }
     return true;
 }
+#endif
 
 // Global setting to disable security precautions for serialization.
 void SkPicture::SetPictureIOSecurityPrecautionsEnabled_Dangerous(bool set) {
