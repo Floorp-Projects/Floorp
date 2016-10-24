@@ -679,15 +679,18 @@ NeckoParent::DeallocPDNSRequestParent(PDNSRequestParent* aParent)
 }
 
 bool
-NeckoParent::RecvSpeculativeConnect(const URIParams& aURI, const bool& aAnonymous)
+NeckoParent::RecvSpeculativeConnect(const URIParams& aURI,
+                                    const Principal& aPrincipal,
+                                    const bool& aAnonymous)
 {
   nsCOMPtr<nsISpeculativeConnect> speculator(gIOService);
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
   if (uri && speculator) {
     if (aAnonymous) {
-      speculator->SpeculativeAnonymousConnect(uri, nullptr);
+      speculator->SpeculativeAnonymousConnect2(uri, principal, nullptr);
     } else {
-      speculator->SpeculativeConnect(uri, nullptr);
+      speculator->SpeculativeConnect2(uri, principal, nullptr);
     }
 
   }
