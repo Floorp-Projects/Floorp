@@ -590,6 +590,9 @@ extern volatile uint32_t armHwCapFlags;
 // Not part of the HWCAP flag, but we need to know these and these bits are not
 // used. Define these here so that their use can be inlined by the simulator.
 
+// A bit to flag when signaled alignment faults are to be fixed up.
+#define HWCAP_FIXUP_FAULT (1 << 24)
+
 // A bit to flag when the flags are uninitialized, so they can be atomically set.
 #define HWCAP_UNINITIALIZED (1 << 25)
 
@@ -602,6 +605,8 @@ extern volatile uint32_t armHwCapFlags;
 // A bit to flag the use of the ARMv7 arch, otherwise ARMv6.
 #define HWCAP_ARMv7 (1 << 28)
 
+// Top three bits are reserved, do not use them.
+
 // Returns true when cpu alignment faults are enabled and signaled, and thus we
 // should ensure loads and stores are aligned.
 inline bool HasAlignmentFault()
@@ -609,6 +614,16 @@ inline bool HasAlignmentFault()
     MOZ_ASSERT(armHwCapFlags != HWCAP_UNINITIALIZED);
     return armHwCapFlags & HWCAP_ALIGNMENT_FAULT;
 }
+
+#ifdef JS_SIMULATOR_ARM
+// Returns true when cpu alignment faults will be fixed up by the
+// "operating system", which functionality we will emulate.
+inline bool FixupFault()
+{
+    MOZ_ASSERT(armHwCapFlags != HWCAP_UNINITIALIZED);
+    return armHwCapFlags & HWCAP_FIXUP_FAULT;
+}
+#endif
 
 // Arm/D32 has double registers that can NOT be treated as float32 and this
 // requires some dances in lowering.
