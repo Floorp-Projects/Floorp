@@ -339,7 +339,7 @@ SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop()
 {
     MOZ_ASSERT(!IsProducerAcquired());
 
-    if (!mGL->MakeCurrent())
+    if (!mGL || !mGL->MakeCurrent())
         return;
 
     if (!mInterop->UnregisterObject(mLockHandle)) {
