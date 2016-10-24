@@ -367,6 +367,7 @@ WEBIDL_FILES = [
     'PluginArray.webidl',
     'PointerEvent.webidl',
     'PopupBoxObject.webidl',
+    'Pose.webidl',
     'Position.webidl',
     'PositionError.webidl',
     'Presentation.webidl',
@@ -647,6 +648,7 @@ if CONFIG['MOZ_WEBSPEECH']:
 if CONFIG['MOZ_GAMEPAD']:
     WEBIDL_FILES += [
         'Gamepad.webidl',
+        'GamepadPose.webidl',
         'GamepadServiceTest.webidl'
     ]
 

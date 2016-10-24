@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadButton.h"
+#include "mozilla/dom/GamepadPose.h"
 #include "mozilla/dom/Performance.h"
 #include <stdint.h>
 #include "nsCOMPtr.h"
@@ -49,6 +50,7 @@ public:
   void SetButton(uint32_t aButton, bool aPressed, double aValue);
   void SetAxis(uint32_t aAxis, double aValue);
   void SetIndex(uint32_t aIndex);
+  void SetPose(const GamepadPoseState& aPose);
 
   // Make the state of this gamepad equivalent to other.
   void SyncState(Gamepad* aOther);
@@ -99,6 +101,11 @@ public:
     aAxes = mAxes;
   }
 
+  GamepadPose* GetPose() const
+  {
+    return mPose;
+  }
+
 private:
   virtual ~Gamepad() {}
   void UpdateTimestamp();
@@ -118,6 +125,7 @@ protected:
   nsTArray<RefPtr<GamepadButton>> mButtons;
   nsTArray<double> mAxes;
   DOMHighResTimeStamp mTimestamp;
+  RefPtr<GamepadPose> mPose;
 };
 
 } // namespace dom
