@@ -56,4 +56,10 @@ interface Gamepad {
    * Timestamp from when the data of this device was last updated.
    */
   readonly attribute DOMHighResTimeStamp timestamp;
+
+  /**
+   * The current pose of the device, a GamepadPose.
+   */
+  [Pref="dom.gamepad.extensions.enabled"]
+  readonly attribute GamepadPose? pose;
 };

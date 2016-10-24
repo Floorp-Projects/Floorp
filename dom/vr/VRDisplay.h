@@ -15,11 +15,11 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/DOMPoint.h"
 #include "mozilla/dom/DOMRect.h"
+#include "mozilla/dom/Pose.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsWrapperCache.h"
 
 #include "gfxVR.h"
 
@@ -95,54 +95,41 @@ protected:
   gfx::VRDisplayCapabilityFlags mFlags;
 };
 
-class VRPose final : public nsWrapperCache
+class VRPose final : public Pose
 {
 
 public:
   VRPose(nsISupports* aParent, const gfx::VRHMDSensorState& aState);
   explicit VRPose(nsISupports* aParent);
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(VRPose)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(VRPose)
-
   uint32_t FrameID() const { return mFrameId; }
 
-  void GetPosition(JSContext* aCx,
-                   JS::MutableHandle<JSObject*> aRetval,
-                   ErrorResult& aRv);
-  void GetLinearVelocity(JSContext* aCx,
-                         JS::MutableHandle<JSObject*> aRetval,
-                         ErrorResult& aRv);
-  void GetLinearAcceleration(JSContext* aCx,
-                             JS::MutableHandle<JSObject*> aRetval,
-                             ErrorResult& aRv);
-  void GetOrientation(JSContext* aCx,
-                      JS::MutableHandle<JSObject*> aRetval,
-                      ErrorResult& aRv);
-  void GetAngularVelocity(JSContext* aCx,
-                          JS::MutableHandle<JSObject*> aRetval,
-                          ErrorResult& aRv);
-  void GetAngularAcceleration(JSContext* aCx,
+  virtual void GetPosition(JSContext* aCx,
+                           JS::MutableHandle<JSObject*> aRetval,
+                           ErrorResult& aRv) override;
+  virtual void GetLinearVelocity(JSContext* aCx,
+                                 JS::MutableHandle<JSObject*> aRetval,
+                                 ErrorResult& aRv) override;
+  virtual void GetLinearAcceleration(JSContext* aCx,
+                                     JS::MutableHandle<JSObject*> aRetval,
+                                     ErrorResult& aRv) override;
+  virtual void GetOrientation(JSContext* aCx,
                               JS::MutableHandle<JSObject*> aRetval,
-                              ErrorResult& aRv);
+                              ErrorResult& aRv) override;
+  virtual void GetAngularVelocity(JSContext* aCx,
+                                  JS::MutableHandle<JSObject*> aRetval,
+                                  ErrorResult& aRv) override;
+  virtual void GetAngularAcceleration(JSContext* aCx,
+                                      JS::MutableHandle<JSObject*> aRetval,
+                                      ErrorResult& aRv) override;
 
-  nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   ~VRPose();
-  nsCOMPtr<nsISupports> mParent;
 
   uint32_t mFrameId;
   gfx::VRHMDSensorState mVRState;
-
-  JS::Heap<JSObject*> mPosition;
-  JS::Heap<JSObject*> mLinearVelocity;
-  JS::Heap<JSObject*> mLinearAcceleration;
-  JS::Heap<JSObject*> mOrientation;
-  JS::Heap<JSObject*> mAngularVelocity;
-  JS::Heap<JSObject*> mAngularAcceleration;
-
 };
 
 struct VRFrameInfo

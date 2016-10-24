@@ -256,59 +256,16 @@ VRDisplayCapabilities::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
   return VRDisplayCapabilitiesBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(VRPose)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(VRPose)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mPosition = nullptr;
-  tmp->mLinearVelocity = nullptr;
-  tmp->mLinearAcceleration = nullptr;
-  tmp->mOrientation = nullptr;
-  tmp->mAngularVelocity = nullptr;
-  tmp->mAngularAcceleration = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(VRPose)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(VRPose)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mPosition)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLinearVelocity)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLinearAcceleration)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mOrientation)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAngularVelocity)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAngularAcceleration)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VRPose, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VRPose, Release)
-
 VRPose::VRPose(nsISupports* aParent, const gfx::VRHMDSensorState& aState)
-  : mParent(aParent)
+  : Pose(aParent)
   , mVRState(aState)
-  , mPosition(nullptr)
-  , mLinearVelocity(nullptr)
-  , mLinearAcceleration(nullptr)
-  , mOrientation(nullptr)
-  , mAngularVelocity(nullptr)
-  , mAngularAcceleration(nullptr)
 {
   mFrameId = aState.inputFrameID;
   mozilla::HoldJSObjects(this);
 }
 
 VRPose::VRPose(nsISupports* aParent)
-  : mParent(aParent)
-  , mPosition(nullptr)
-  , mLinearVelocity(nullptr)
-  , mLinearAcceleration(nullptr)
-  , mOrientation(nullptr)
-  , mAngularVelocity(nullptr)
-  , mAngularAcceleration(nullptr)
+  : Pose(aParent)
 {
   mFrameId = 0;
   mVRState.Clear();
@@ -325,15 +282,9 @@ VRPose::GetPosition(JSContext* aCx,
                     JS::MutableHandle<JSObject*> aRetval,
                     ErrorResult& aRv)
 {
-  if (!mPosition && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position) {
-    // Lazily create the Float32Array
-    mPosition = dom::Float32Array::Create(aCx, this, 3, mVRState.position);
-    if (!mPosition) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  }
-  aRetval.set(mPosition);
+  SetFloat32Array(aCx, aRetval, mPosition, mVRState.position, 3,
+    !mPosition && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position),
+    aRv);
 }
 
 void
@@ -341,15 +292,9 @@ VRPose::GetLinearVelocity(JSContext* aCx,
                           JS::MutableHandle<JSObject*> aRetval,
                           ErrorResult& aRv)
 {
-  if (!mLinearVelocity && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position) {
-    // Lazily create the Float32Array
-    mLinearVelocity = dom::Float32Array::Create(aCx, this, 3, mVRState.linearVelocity);
-    if (!mLinearVelocity) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  }
-  aRetval.set(mLinearVelocity);
+  SetFloat32Array(aCx, aRetval, mLinearVelocity, mVRState.linearVelocity, 3,
+    !mLinearVelocity && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position),
+    aRv);
 }
 
 void
@@ -357,15 +302,10 @@ VRPose::GetLinearAcceleration(JSContext* aCx,
                               JS::MutableHandle<JSObject*> aRetval,
                               ErrorResult& aRv)
 {
-  if (!mLinearAcceleration && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_LinearAcceleration) {
-    // Lazily create the Float32Array
-    mLinearAcceleration = dom::Float32Array::Create(aCx, this, 3, mVRState.linearAcceleration);
-    if (!mLinearAcceleration) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  }
-  aRetval.set(mLinearAcceleration);
+  SetFloat32Array(aCx, aRetval, mLinearAcceleration, mVRState.linearAcceleration, 3,
+    !mLinearAcceleration && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_LinearAcceleration),
+    aRv);
+
 }
 
 void
@@ -373,15 +313,9 @@ VRPose::GetOrientation(JSContext* aCx,
                        JS::MutableHandle<JSObject*> aRetval,
                        ErrorResult& aRv)
 {
-  if (!mOrientation && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation) {
-    // Lazily create the Float32Array
-    mOrientation = dom::Float32Array::Create(aCx, this, 4, mVRState.orientation);
-    if (!mOrientation) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  }
-  aRetval.set(mOrientation);
+  SetFloat32Array(aCx, aRetval, mOrientation, mVRState.orientation, 4,
+    !mOrientation && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation),
+    aRv);
 }
 
 void
@@ -389,15 +323,9 @@ VRPose::GetAngularVelocity(JSContext* aCx,
                            JS::MutableHandle<JSObject*> aRetval,
                            ErrorResult& aRv)
 {
-  if (!mAngularVelocity && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation) {
-    // Lazily create the Float32Array
-    mAngularVelocity = dom::Float32Array::Create(aCx, this, 3, mVRState.angularVelocity);
-    if (!mAngularVelocity) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  }
-  aRetval.set(mAngularVelocity);
+  SetFloat32Array(aCx, aRetval, mAngularVelocity, mVRState.angularVelocity, 3,
+    !mAngularVelocity && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation),
+    aRv);
 }
 
 void
@@ -405,15 +333,9 @@ VRPose::GetAngularAcceleration(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aRetval,
                                ErrorResult& aRv)
 {
-  if (!mAngularAcceleration && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_AngularAcceleration) {
-    // Lazily create the Float32Array
-    mAngularAcceleration = dom::Float32Array::Create(aCx, this, 3, mVRState.angularAcceleration);
-    if (!mAngularAcceleration) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  }
-  aRetval.set(mAngularAcceleration);
+  SetFloat32Array(aCx, aRetval, mAngularAcceleration, mVRState.angularAcceleration, 3,
+    !mAngularAcceleration && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_AngularAcceleration),
+    aRv);
 }
 
 JSObject*
