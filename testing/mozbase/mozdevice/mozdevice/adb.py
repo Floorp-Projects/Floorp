@@ -21,8 +21,6 @@ class ADBProcess(object):
         self.args = args
         #: Temporary file handle to be used for stdout.
         self.stdout_file = tempfile.TemporaryFile()
-        #: Temporary file handle to be used for stderr.
-        self.stderr_file = tempfile.TemporaryFile()
         #: boolean indicating if the command timed out.
         self.timedout = None
         #: exitcode of the process.
@@ -30,7 +28,7 @@ class ADBProcess(object):
         #: subprocess Process object used to execute the command.
         self.proc = subprocess.Popen(args,
                                      stdout=self.stdout_file,
-                                     stderr=self.stderr_file)
+                                     stderr=subprocess.STDOUT)
 
     @property
     def stdout(self):
@@ -42,19 +40,9 @@ class ADBProcess(object):
             content = self.stdout_file.read().rstrip()
         return content
 
-    @property
-    def stderr(self):
-        """Return the contents of stderr."""
-        if not self.stderr_file or self.stderr_file.closed:
-            content = ""
-        else:
-            self.stderr_file.seek(0, os.SEEK_SET)
-            content = self.stderr_file.read().rstrip()
-        return content
-
     def __str__(self):
-        return ('args: %s, exitcode: %s, stdout: %s, stderr: %s' % (
-            ' '.join(self.args), self.exitcode, self.stdout, self.stderr))
+        return ('args: %s, exitcode: %s, stdout: %s' % (
+            ' '.join(self.args), self.exitcode, self.stdout))
 
 # ADBError, ADBRootError, and ADBTimeoutError are treated
 # differently in order that unhandled ADBRootErrors and
@@ -209,7 +197,7 @@ class ADBCommand(object):
         commands on the host via adb.
 
         command() executes on the host in such a fashion that stdout
-        and stderr of the adb process are file handles on the host and
+        of the adb process is a file handle on the host and
         the exit code is available as the exit code of the adb
         process.
 
@@ -217,11 +205,11 @@ class ADBCommand(object):
         timeout period in seconds.
 
         A subprocess is spawned to execute adb with stdout and stderr
-        directed to temporary files. If the process takes longer than
+        directed to a temporary file. If the process takes longer than
         the specified timeout, the process is terminated.
 
         It is the caller's responsibilty to clean up by closing
-        the stdout and stderr temporary files.
+        the stdout temporary file.
         """
         args = [self._adb_path]
         if self._adb_host:
@@ -249,7 +237,6 @@ class ADBCommand(object):
             adb_process.exitcode = adb_process.proc.poll()
 
         adb_process.stdout_file.seek(0, os.SEEK_SET)
-        adb_process.stderr_file.seek(0, os.SEEK_SET)
 
         return adb_process
 
@@ -302,7 +289,6 @@ class ADBCommand(object):
         finally:
             if adb_process and isinstance(adb_process.stdout_file, file):
                 adb_process.stdout_file.close()
-                adb_process.stderr_file.close()
 
 
 class ADBHost(ADBCommand):
@@ -357,7 +343,7 @@ class ADBHost(ADBCommand):
         commands on the host via adb.
 
         command() executes on the host in such a fashion that stdout
-        and stderr of the adb process are file handles on the host and
+        of the adb process is a file handle on the host and
         the exit code is available as the exit code of the adb
         process.
 
@@ -365,11 +351,11 @@ class ADBHost(ADBCommand):
         timeout period in seconds.
 
         A subprocess is spawned to execute adb with stdout and stderr
-        directed to temporary files. If the process takes longer than
+        directed to a temporary file. If the process takes longer than
         the specified timeout, the process is terminated.
 
         It is the caller's responsibilty to clean up by closing
-        the stdout and stderr temporary files.
+        the stdout temporary file.
         """
         return ADBCommand.command(self, cmds, timeout=timeout)
 
@@ -840,7 +826,7 @@ class ADBDevice(ADBCommand):
         commands for a specific device on the host via adb.
 
         command() executes on the host in such a fashion that stdout
-        and stderr of the adb process are file handles on the host and
+        of the adb process are file handles on the host and
         the exit code is available as the exit code of the adb
         process.
 
@@ -849,12 +835,12 @@ class ADBDevice(ADBCommand):
         commands, as well as a timeout period in seconds.
 
         A subprocess is spawned to execute adb for the device with
-        stdout and stderr directed to temporary files. If the process
+        stdout and stderr directed to a temporary file. If the process
         takes longer than the specified timeout, the process is
         terminated.
 
         It is the caller's responsibilty to clean up by closing
-        the stdout and stderr temporary files.
+        the stdout temporary file.
         """
 
         return ADBCommand.command(self, cmds,
@@ -997,12 +983,11 @@ class ADBDevice(ADBCommand):
         on the device via adb shell.
 
         shell() executes on the host in such as fashion that stdout
-        contains the stdout of the host abd process combined with the
-        combined stdout/stderr of the shell command on the device
-        while stderr is still the stderr of the adb process on the
-        host. The exit code of shell() is the exit code of
+        contains the stdout and stderr of the host abd process
+        combined with the stdout and stderr of the shell command
+        on the device. The exit code of shell() is the exit code of
         the adb command if it was non-zero or the extracted exit code
-        from the stdout/stderr of the shell command executed on the
+        from the output of the shell command executed on the
         device.
 
         The caller provides a flag indicating if the command is to be
@@ -1020,13 +1005,14 @@ class ADBDevice(ADBCommand):
         exit code.
 
         A subprocess is spawned to execute adb shell for the device
-        with stdout and stderr directed to temporary files. If the
+        with stdout and stderr directed to a temporary file. If the
         process takes longer than the specified timeout, the process
         is terminated. The return code is extracted from the stdout
         and is then removed from the file.
 
         It is the caller's responsibilty to clean up by closing
-        the stdout and stderr temporary files.
+        the stdout temporary files.
+
         """
         if root and not self._have_root_shell:
             # If root was requested and we do not already have a root
@@ -1077,7 +1063,6 @@ class ADBDevice(ADBCommand):
             adb_process.exitcode = exitcode
 
         adb_process.stdout_file.seek(0, os.SEEK_SET)
-        adb_process.stderr_file.seek(0, os.SEEK_SET)
 
         return adb_process
 
@@ -1115,7 +1100,6 @@ class ADBDevice(ADBCommand):
         finally:
             if adb_process:
                 adb_process.stdout_file.close()
-                adb_process.stderr_file.close()
 
     def shell_output(self, cmd, env=None, cwd=None, timeout=None, root=False):
         """Executes an adb shell on the device returning stdout.
@@ -1166,7 +1150,6 @@ class ADBDevice(ADBCommand):
         finally:
             if adb_process and isinstance(adb_process.stdout_file, file):
                 adb_process.stdout_file.close()
-                adb_process.stderr_file.close()
 
     # Informational methods
 
@@ -1869,7 +1852,6 @@ class ADBDevice(ADBCommand):
         finally:
             if adb_process and isinstance(adb_process.stdout_file, file):
                 adb_process.stdout_file.close()
-                adb_process.stderr_file.close()
 
     def kill(self, pids, sig=None, attempts=3, wait=5,
              timeout=None, root=False):
