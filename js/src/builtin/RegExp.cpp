@@ -556,6 +556,33 @@ js::regexp_construct_no_sticky(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+bool
+js::regexp_clone(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject from(cx, &args[0].toObject());
+
+    RootedAtom sourceAtom(cx);
+    RegExpFlag flags;
+    {
+        RegExpGuard g(cx);
+        if (!RegExpToShared(cx, from, &g))
+            return false;
+        sourceAtom = g->getSource();
+        flags = g->getFlags();
+    }
+
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+    if (!regexp)
+        return false;
+
+    regexp->initAndZeroLastIndex(sourceAtom, flags, cx);
+
+    args.rval().setObject(*regexp);
+    return true;
+}
+
 /* ES6 draft rev32 21.2.5.4. */
 MOZ_ALWAYS_INLINE bool
 regexp_global_impl(JSContext* cx, const CallArgs& args)
