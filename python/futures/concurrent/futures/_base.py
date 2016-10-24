@@ -227,7 +227,8 @@ def as_completed(fs, timeout=None):
 
     finally:
         for f in fs:
-            f._waiters.remove(waiter)
+            with f._condition:
+                f._waiters.remove(waiter)
 
 DoneAndNotDoneFutures = collections.namedtuple(
         'DoneAndNotDoneFutures', 'done not_done')
@@ -274,7 +275,8 @@ def wait(fs, timeout=None, return_when=ALL_COMPLETED):
 
     waiter.event.wait(timeout)
     for f in fs:
-        f._waiters.remove(waiter)
+        with f._condition:
+            f._waiters.remove(waiter)
 
     done.update(waiter.finished_futures)
     return DoneAndNotDoneFutures(done, set(fs) - done)

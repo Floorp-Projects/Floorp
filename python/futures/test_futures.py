@@ -7,6 +7,7 @@ import contextlib
 import logging
 import re
 import time
+import gc
 from StringIO import StringIO
 from test import test_support
 
@@ -222,6 +223,7 @@ class ThreadPoolShutdownTest(ThreadPoolMixin, ExecutorShutdownTest):
         executor.map(abs, range(-5, 5))
         threads = executor._threads
         del executor
+        gc.collect()
 
         for t in threads:
             t.join()
@@ -257,6 +259,7 @@ class ProcessPoolShutdownTest(ProcessPoolMixin, ExecutorShutdownTest):
         queue_management_thread = executor._queue_management_thread
         processes = executor._processes
         del executor
+        gc.collect()
 
         queue_management_thread.join()
         for p in processes:
@@ -575,19 +578,19 @@ class FutureTests(unittest.TestCase):
 
     def test_repr(self):
         self.assertRegexpMatches(repr(PENDING_FUTURE),
-                                 '<Future at 0x[0-9a-f]+ state=pending>')
+                                 '<Future at 0x[0-9a-f]+L? state=pending>')
         self.assertRegexpMatches(repr(RUNNING_FUTURE),
-                                 '<Future at 0x[0-9a-f]+ state=running>')
+                                 '<Future at 0x[0-9a-f]+L? state=running>')
         self.assertRegexpMatches(repr(CANCELLED_FUTURE),
-                                 '<Future at 0x[0-9a-f]+ state=cancelled>')
+                                 '<Future at 0x[0-9a-f]+L? state=cancelled>')
         self.assertRegexpMatches(repr(CANCELLED_AND_NOTIFIED_FUTURE),
-                                 '<Future at 0x[0-9a-f]+ state=cancelled>')
+                                 '<Future at 0x[0-9a-f]+L? state=cancelled>')
         self.assertRegexpMatches(
                 repr(EXCEPTION_FUTURE),
-                '<Future at 0x[0-9a-f]+ state=finished raised IOError>')
+                '<Future at 0x[0-9a-f]+L? state=finished raised IOError>')
         self.assertRegexpMatches(
                 repr(SUCCESSFUL_FUTURE),
-                '<Future at 0x[0-9a-f]+ state=finished returned int>')
+                '<Future at 0x[0-9a-f]+L? state=finished returned int>')
 
     def test_cancel(self):
         f1 = create_future(state=PENDING)
