@@ -4740,10 +4740,10 @@ SVGTextFrame::AdjustChunksForLineBreaks()
   nsBlockFrame* block = nsLayoutUtils::GetAsBlock(PrincipalChildList().FirstChild());
   NS_ASSERTION(block, "expected block frame");
 
-  nsBlockFrame::LineIterator line = block->BeginLine();
+  nsBlockFrame::LineIterator line = block->LinesBegin();
 
   CharIterator it(this, CharIterator::eOriginal);
-  while (!it.AtEnd() && line != block->EndLine()) {
+  while (!it.AtEnd() && line != block->LinesEnd()) {
     if (it.TextFrame() == line->mFirstChild) {
       mPositions[it.TextElementCharIndex()].mStartOfChunk = true;
       line++;
