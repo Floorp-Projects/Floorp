@@ -565,8 +565,6 @@ nsresult
 TextEditor::ExtendSelectionForDelete(Selection* aSelection,
                                      nsIEditor::EDirection* aAction)
 {
-  nsresult result = NS_OK;
-
   bool bCollapsed = aSelection->Collapsed();
 
   if (*aAction == eNextWord ||
@@ -579,19 +577,20 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
     GetSelectionController(getter_AddRefs(selCont));
     NS_ENSURE_TRUE(selCont, NS_ERROR_NO_INTERFACE);
 
+    nsresult rv;
     switch (*aAction) {
       case eNextWord:
-        result = selCont->WordExtendForDelete(true);
+        rv = selCont->WordExtendForDelete(true);
         // DeleteSelectionImpl doesn't handle these actions
         // because it's inside batching, so don't confuse it:
         *aAction = eNone;
         break;
       case ePreviousWord:
-        result = selCont->WordExtendForDelete(false);
+        rv = selCont->WordExtendForDelete(false);
         *aAction = eNone;
         break;
       case eNext:
-        result = selCont->CharacterExtendForDelete();
+        rv = selCont->CharacterExtendForDelete();
         // Don't set aAction to eNone (see Bug 502259)
         break;
       case ePrevious: {
@@ -602,8 +601,8 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
         // typed character.
         nsCOMPtr<nsIDOMNode> node;
         int32_t offset;
-        result = GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
-        NS_ENSURE_SUCCESS(result, result);
+        rv = GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
+        NS_ENSURE_SUCCESS(rv, rv);
         NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
         // node might be anonymous DIV, so we find better text node
@@ -613,15 +612,15 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
           nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(node);
           if (charData) {
             nsAutoString data;
-            result = charData->GetData(data);
-            NS_ENSURE_SUCCESS(result, result);
+            rv = charData->GetData(data);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             if ((offset > 1 &&
                  NS_IS_LOW_SURROGATE(data[offset - 1]) &&
                  NS_IS_HIGH_SURROGATE(data[offset - 2])) ||
                 (offset > 0 &&
                  gfxFontUtils::IsVarSelector(data[offset - 1]))) {
-              result = selCont->CharacterExtendForBackspace();
+              rv = selCont->CharacterExtendForBackspace();
             }
           }
         }
@@ -629,19 +628,20 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
       }
       case eToBeginningOfLine:
         selCont->IntraLineMove(true, false);          // try to move to end
-        result = selCont->IntraLineMove(false, true); // select to beginning
+        rv = selCont->IntraLineMove(false, true); // select to beginning
         *aAction = eNone;
         break;
       case eToEndOfLine:
-        result = selCont->IntraLineMove(true, true);
+        rv = selCont->IntraLineMove(true, true);
         *aAction = eNext;
         break;
       default:       // avoid several compiler warnings
-        result = NS_OK;
+        rv = NS_OK;
         break;
     }
+    return rv;
   }
-  return result;
+  return NS_OK;
 }
 
 nsresult
@@ -656,8 +656,6 @@ TextEditor::DeleteSelection(EDirection aAction,
 
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> rules(mRules);
-
-  nsresult result;
 
   // delete placeholder txns merge.
   AutoPlaceHolderBatch batch(this, nsGkAtoms::DeleteTxnName);
@@ -676,8 +674,8 @@ TextEditor::DeleteSelection(EDirection aAction,
       (aAction == eNextWord || aAction == ePreviousWord ||
        aAction == eToBeginningOfLine || aAction == eToEndOfLine)) {
     if (mCaretStyle == 1) {
-      result = selection->CollapseToStart();
-      NS_ENSURE_SUCCESS(result, result);
+      nsresult rv = selection->CollapseToStart();
+      NS_ENSURE_SUCCESS(rv, rv);
     } else {
       aAction = eNone;
     }
@@ -687,17 +685,16 @@ TextEditor::DeleteSelection(EDirection aAction,
   ruleInfo.collapsedAction = aAction;
   ruleInfo.stripWrappers = aStripWrappers;
   bool cancel, handled;
-  result = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  NS_ENSURE_SUCCESS(result, result);
+  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!cancel && !handled) {
-    result = DeleteSelectionImpl(aAction, aStripWrappers);
+    rv = DeleteSelectionImpl(aAction, aStripWrappers);
   }
   if (!cancel) {
     // post-process
-    result = rules->DidDoAction(selection, &ruleInfo, result);
+    rv = rules->DidDoAction(selection, &ruleInfo, rv);
   }
-
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1091,15 +1088,15 @@ TextEditor::Undo(uint32_t aCount)
   TextRulesInfo ruleInfo(EditAction::undo);
   RefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
-  nsresult result = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
 
-  if (!cancel && NS_SUCCEEDED(result)) {
-    result = EditorBase::Undo(aCount);
-    result = rules->DidDoAction(selection, &ruleInfo, result);
+  if (!cancel && NS_SUCCEEDED(rv)) {
+    rv = EditorBase::Undo(aCount);
+    rv = rules->DidDoAction(selection, &ruleInfo, rv);
   }
 
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1119,15 +1116,15 @@ TextEditor::Redo(uint32_t aCount)
   TextRulesInfo ruleInfo(EditAction::redo);
   RefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
-  nsresult result = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
 
-  if (!cancel && NS_SUCCEEDED(result)) {
-    result = EditorBase::Redo(aCount);
-    result = rules->DidDoAction(selection, &ruleInfo, result);
+  if (!cancel && NS_SUCCEEDED(rv)) {
+    rv = EditorBase::Redo(aCount);
+    rv = rules->DidDoAction(selection, &ruleInfo, rv);
   }
 
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
-  return result;
+  return rv;
 }
 
 bool

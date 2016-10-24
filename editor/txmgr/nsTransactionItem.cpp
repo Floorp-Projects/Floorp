@@ -96,8 +96,6 @@ nsTransactionItem::GetIsBatch(bool *aIsBatch)
 nsresult
 nsTransactionItem::GetNumberOfChildren(int32_t *aNumChildren)
 {
-  nsresult result;
-
   NS_ENSURE_TRUE(aNumChildren, NS_ERROR_NULL_POINTER);
 
   *aNumChildren = 0;
@@ -105,13 +103,13 @@ nsTransactionItem::GetNumberOfChildren(int32_t *aNumChildren)
   int32_t ui = 0;
   int32_t ri = 0;
 
-  result = GetNumberOfUndoItems(&ui);
+  nsresult rv = GetNumberOfUndoItems(&ui);
 
-  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  result = GetNumberOfRedoItems(&ri);
+  rv = GetNumberOfRedoItems(&ri);
 
-  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *aNumChildren = ui + ri;
 
@@ -126,21 +124,22 @@ nsTransactionItem::GetChild(int32_t aIndex, nsTransactionItem **aChild)
   *aChild = 0;
 
   int32_t numItems = 0;
-  nsresult result = GetNumberOfChildren(&numItems);
+  nsresult rv = GetNumberOfChildren(&numItems);
 
-  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aIndex < 0 || aIndex >= numItems)
+  if (aIndex < 0 || aIndex >= numItems) {
     return NS_ERROR_FAILURE;
+  }
 
   // Children are expected to be in the order they were added,
   // so the child first added would be at the bottom of the undo
   // stack, or if there are no items on the undo stack, it would
   // be at the top of the redo stack.
 
-  result = GetNumberOfUndoItems(&numItems);
+  rv = GetNumberOfUndoItems(&numItems);
 
-  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (numItems > 0 && aIndex < numItems) {
     NS_ENSURE_TRUE(mUndoStack, NS_ERROR_FAILURE);
@@ -154,9 +153,9 @@ nsTransactionItem::GetChild(int32_t aIndex, nsTransactionItem **aChild)
 
   aIndex -=  numItems;
 
-  result = GetNumberOfRedoItems(&numItems);
+  rv = GetNumberOfRedoItems(&numItems);
 
-  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ENSURE_TRUE(mRedoStack && numItems != 0 && aIndex < numItems, NS_ERROR_FAILURE);
 
@@ -168,29 +167,31 @@ nsTransactionItem::GetChild(int32_t aIndex, nsTransactionItem **aChild)
 nsresult
 nsTransactionItem::DoTransaction()
 {
-  if (mTransaction)
+  if (mTransaction) {
     return mTransaction->DoTransaction();
+  }
   return NS_OK;
 }
 
 nsresult
 nsTransactionItem::UndoTransaction(nsTransactionManager *aTxMgr)
 {
-  nsresult result = UndoChildren(aTxMgr);
+  nsresult rv = UndoChildren(aTxMgr);
 
-  if (NS_FAILED(result)) {
+  if (NS_FAILED(rv)) {
     RecoverFromUndoError(aTxMgr);
-    return result;
+    return rv;
   }
 
-  if (!mTransaction)
+  if (!mTransaction) {
     return NS_OK;
+  }
 
-  result = mTransaction->UndoTransaction();
+  rv = mTransaction->UndoTransaction();
 
-  if (NS_FAILED(result)) {
+  if (NS_FAILED(rv)) {
     RecoverFromUndoError(aTxMgr);
-    return result;
+    return rv;
   }
 
   return NS_OK;
@@ -200,7 +201,6 @@ nsresult
 nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
 {
   RefPtr<nsTransactionItem> item;
-  nsresult result = NS_OK;
   int32_t sz = 0;
 
   if (mUndoStack) {
@@ -211,6 +211,7 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
     /* Undo all of the transaction items children! */
     sz = mUndoStack->GetSize();
 
+    nsresult rv = NS_OK;
     while (sz-- > 0) {
       item = mUndoStack->Peek();
 
@@ -222,51 +223,53 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
 
       bool doInterrupt = false;
 
-      result = aTxMgr->WillUndoNotify(t, &doInterrupt);
+      rv = aTxMgr->WillUndoNotify(t, &doInterrupt);
 
-      if (NS_FAILED(result)) {
-        return result;
+      if (NS_FAILED(rv)) {
+        return rv;
       }
 
       if (doInterrupt) {
         return NS_OK;
       }
 
-      result = item->UndoTransaction(aTxMgr);
+      rv = item->UndoTransaction(aTxMgr);
 
-      if (NS_SUCCEEDED(result)) {
+      if (NS_SUCCEEDED(rv)) {
         item = mUndoStack->Pop();
         mRedoStack->Push(item.forget());
       }
 
-      nsresult result2 = aTxMgr->DidUndoNotify(t, result);
+      nsresult rv2 = aTxMgr->DidUndoNotify(t, rv);
 
-      if (NS_SUCCEEDED(result)) {
-        result = result2;
+      if (NS_SUCCEEDED(rv)) {
+        rv = rv2;
       }
     }
+    // XXX NS_OK if there is no Undo items or all methods work fine, otherwise,
+    //     the result of the last item's UndoTransaction() or
+    //     DidUndoNotify() if UndoTransaction() succeeded.
+    return rv;
   }
 
-  return result;
+  return NS_OK;
 }
 
 nsresult
 nsTransactionItem::RedoTransaction(nsTransactionManager *aTxMgr)
 {
-  nsresult result;
-
   nsCOMPtr<nsITransaction> transaction(mTransaction);
   if (transaction) {
-    result = transaction->RedoTransaction();
+    nsresult rv = transaction->RedoTransaction();
 
-    NS_ENSURE_SUCCESS(result, result);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  result = RedoChildren(aTxMgr);
+  nsresult rv = RedoChildren(aTxMgr);
 
-  if (NS_FAILED(result)) {
+  if (NS_FAILED(rv)) {
     RecoverFromRedoError(aTxMgr);
-    return result;
+    return rv;
   }
 
   return NS_OK;
@@ -276,14 +279,15 @@ nsresult
 nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
 {
   RefPtr<nsTransactionItem> item;
-  nsresult result = NS_OK;
 
-  if (!mRedoStack)
+  if (!mRedoStack) {
     return NS_OK;
+  }
 
   /* Redo all of the transaction items children! */
   int32_t sz = mRedoStack->GetSize();
 
+  nsresult rv = NS_OK;
   while (sz-- > 0) {
     item = mRedoStack->Peek();
 
@@ -295,31 +299,34 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
 
     bool doInterrupt = false;
 
-    result = aTxMgr->WillRedoNotify(t, &doInterrupt);
+    rv = aTxMgr->WillRedoNotify(t, &doInterrupt);
 
-    if (NS_FAILED(result)) {
-      return result;
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
     if (doInterrupt) {
       return NS_OK;
     }
 
-    result = item->RedoTransaction(aTxMgr);
+    rv = item->RedoTransaction(aTxMgr);
 
-    if (NS_SUCCEEDED(result)) {
+    if (NS_SUCCEEDED(rv)) {
       item = mRedoStack->Pop();
       mUndoStack->Push(item.forget());
     }
 
-    nsresult result2 = aTxMgr->DidUndoNotify(t, result);
+    // XXX Shouldn't this DidRedoNotify()? (bug 1311626)
+    nsresult rv2 = aTxMgr->DidUndoNotify(t, rv);
 
-    if (NS_SUCCEEDED(result)) {
-      result = result2;
+    if (NS_SUCCEEDED(rv)) {
+      rv = rv2;
     }
   }
-
-  return result;
+  // XXX NS_OK if there is no Redo items or all methods work fine, otherwise,
+  //     the result of the last item's RedoTransaction() or
+  //     DidUndoNotify() if UndoTransaction() succeeded.
+  return rv;
 }
 
 nsresult
@@ -371,16 +378,15 @@ nsTransactionItem::RecoverFromRedoError(nsTransactionManager *aTxMgr)
   // then undo the transaction item itself.
   //
 
-  nsresult result;
+  nsresult rv = UndoChildren(aTxMgr);
 
-  result = UndoChildren(aTxMgr);
-
-  if (NS_FAILED(result)) {
-    return result;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  if (!mTransaction)
+  if (!mTransaction) {
     return NS_OK;
+  }
 
   return mTransaction->UndoTransaction();
 }
