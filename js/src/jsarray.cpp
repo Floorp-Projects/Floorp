@@ -2382,6 +2382,10 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
     if (!arr->is<ArrayObject>() && !arr->is<UnboxedArrayObject>())
         return false;
 
+    /* If it's a frozen array, always pick the slow path */
+    if (arr->is<ArrayObject>() && arr->as<ArrayObject>().denseElementsAreFrozen())
+        return false;
+
     /*
      * Don't optimize if the array might be in the midst of iteration.  We
      * rely on this to be able to safely move dense array elements around with
