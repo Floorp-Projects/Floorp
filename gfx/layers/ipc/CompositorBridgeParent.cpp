@@ -1216,8 +1216,8 @@ CompositorBridgeParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstP
 #endif
 
     if (mApzcTreeManager && aHitTestUpdate) {
-      mApzcTreeManager->UpdateHitTestingTree(this, mLayerManager->GetRoot(),
-          aIsFirstPaint, aId, aPaintSequenceNumber);
+      mApzcTreeManager->UpdateHitTestingTree(mRootLayerTreeID,
+          mLayerManager->GetRoot(), aIsFirstPaint, aId, aPaintSequenceNumber);
     }
 
     mLayerManager->NotifyShadowTreeTransaction();
@@ -1569,7 +1569,7 @@ CompositorBridgeParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   if (mApzcTreeManager && !aIsRepeatTransaction && aHitTestUpdate) {
     AutoResolveRefLayers resolve(mCompositionManager);
 
-    mApzcTreeManager->UpdateHitTestingTree(this, root, aIsFirstPaint,
+    mApzcTreeManager->UpdateHitTestingTree(mRootLayerTreeID, root, aIsFirstPaint,
         mRootLayerTreeID, aPaintSequenceNumber);
   }
 
@@ -2288,10 +2288,22 @@ private:
   bool mDestroyCalled;
 };
 
+CompositorController*
+CompositorBridgeParent::LayerTreeState::GetCompositorController() const
+{
+  return mParent;
+}
+
 MetricsSharingController*
 CompositorBridgeParent::LayerTreeState::CrossProcessSharingController() const
 {
   return mCrossProcessParent;
+}
+
+MetricsSharingController*
+CompositorBridgeParent::LayerTreeState::InProcessSharingController() const
+{
+  return mParent;
 }
 
 void

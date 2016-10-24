@@ -479,7 +479,9 @@ public:
     // acknowledged by the child.
     uint32_t mPendingCompositorUpdates;
 
+    CompositorController* GetCompositorController() const;
     MetricsSharingController* CrossProcessSharingController() const;
+    MetricsSharingController* InProcessSharingController() const;
   };
 
   /**
