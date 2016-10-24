@@ -64,13 +64,11 @@ HTMLEditor::AddDefaultProperty(nsIAtom* aProperty,
   nsString outValue;
   int32_t index;
   nsString attr(aAttribute);
-  if (TypeInState::FindPropInList(aProperty, attr, &outValue, mDefaultStyles, index))
-  {
+  if (TypeInState::FindPropInList(aProperty, attr, &outValue,
+                                  mDefaultStyles, index)) {
     PropItem *item = mDefaultStyles[index];
     item->value = aValue;
-  }
-  else
-  {
+  } else {
     nsString value(aValue);
     PropItem *propItem = new PropItem(aProperty, attr, value);
     mDefaultStyles.AppendElement(propItem);
@@ -86,8 +84,8 @@ HTMLEditor::RemoveDefaultProperty(nsIAtom* aProperty,
   nsString outValue;
   int32_t index;
   nsString attr(aAttribute);
-  if (TypeInState::FindPropInList(aProperty, attr, &outValue, mDefaultStyles, index))
-  {
+  if (TypeInState::FindPropInList(aProperty, attr, &outValue,
+                                  mDefaultStyles, index)) {
     delete mDefaultStyles[index];
     mDefaultStyles.RemoveElementAt(index);
   }
@@ -97,9 +95,8 @@ HTMLEditor::RemoveDefaultProperty(nsIAtom* aProperty,
 NS_IMETHODIMP
 HTMLEditor::RemoveAllDefaultProperties()
 {
-  uint32_t j, defcon = mDefaultStyles.Length();
-  for (j=0; j<defcon; j++)
-  {
+  size_t defcon = mDefaultStyles.Length();
+  for (size_t j = 0; j < defcon; j++) {
     delete mDefaultStyles[j];
   }
   mDefaultStyles.Clear();
@@ -693,9 +690,8 @@ HTMLEditor::NodeIsProperty(nsINode& aNode)
 nsresult
 HTMLEditor::ApplyDefaultProperties()
 {
-  uint32_t j, defcon = mDefaultStyles.Length();
-  for (j=0; j<defcon; j++)
-  {
+  size_t defcon = mDefaultStyles.Length();
+  for (size_t j = 0; j < defcon; j++) {
     PropItem *propItem = mDefaultStyles[j];
     NS_ENSURE_TRUE(propItem, NS_ERROR_NULL_POINTER);
     nsresult rv =
@@ -727,17 +723,14 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
 
   // then process the node itself
   if (!aChildrenOnly &&
-    (
-      // node is prop we asked for
-      (aProperty && aNode.NodeInfo()->NameAtom() == aProperty) ||
-      // but check for link (<a href=...)
-      (aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(&aNode)) ||
-      // and for named anchors
-      (aProperty == nsGkAtoms::name && HTMLEditUtils::IsNamedAnchor(&aNode)) ||
-      // or node is any prop and we asked for that
-      (!aProperty && NodeIsProperty(aNode))
-    )
-  ) {
+       // node is prop we asked for
+      ((aProperty && aNode.NodeInfo()->NameAtom() == aProperty) ||
+       // but check for link (<a href=...)
+       (aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(&aNode)) ||
+       // and for named anchors
+       (aProperty == nsGkAtoms::name && HTMLEditUtils::IsNamedAnchor(&aNode)) ||
+       // or node is any prop and we asked for that
+       (!aProperty && NodeIsProperty(aNode)))) {
     // if we weren't passed an attribute, then we want to
     // remove any matching inlinestyles entirely
     if (!aAttribute || aAttribute->IsEmpty()) {
@@ -808,14 +801,14 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
     }
   }
 
-  if (!aChildrenOnly &&
-    (
-      // Or node is big or small and we are setting font size
-      aProperty == nsGkAtoms::font &&
-      (aNode.IsHTMLElement(nsGkAtoms::big) || aNode.IsHTMLElement(nsGkAtoms::small)) &&
-      (aAttribute && aAttribute->LowerCaseEqualsLiteral("size"))
-    )
-  ) {
+  // Or node is big or small and we are setting font size
+  if (aChildrenOnly) {
+    return NS_OK;
+  }
+  if (aProperty == nsGkAtoms::font &&
+      (aNode.IsHTMLElement(nsGkAtoms::big) ||
+       aNode.IsHTMLElement(nsGkAtoms::small)) &&
+      aAttribute && aAttribute->LowerCaseEqualsLiteral("size")) {
     // if we are setting font size, remove any nested bigs and smalls
     return RemoveContainer(&aNode);
   }

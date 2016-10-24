@@ -62,8 +62,9 @@ nsSetDocumentOptionsCommand::IsCommandEnabled(const char * aCommandName,
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
+  if (editor) {
     return editor->GetIsSelectionEditable(outCmdEnabled);
+  }
 
   *outCmdEnabled = false;
   return NS_OK;
@@ -93,8 +94,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
 
   int32_t animationMode;
   rv = aParams->GetLongValue("imageAnimation", &animationMode);
-  if (NS_SUCCEEDED(rv))
-  {
+  if (NS_SUCCEEDED(rv)) {
     // for possible values of animation mode, see:
     // http://lxr.mozilla.org/seamonkey/source/image/public/imgIContainer.idl
     presContext->SetImageAnimationMode(animationMode);
@@ -102,8 +102,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
 
   bool allowPlugins;
   rv = aParams->GetBooleanValue("plugins", &allowPlugins);
-  if (NS_SUCCEEDED(rv))
-  {
+  if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDocShell> docShell(presContext->GetDocShell());
     NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
@@ -140,8 +139,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
 
   int32_t animationMode;
   rv = aParams->GetLongValue("imageAnimation", &animationMode);
-  if (NS_SUCCEEDED(rv))
-  {
+  if (NS_SUCCEEDED(rv)) {
     // for possible values of animation mode, see
     // http://lxr.mozilla.org/seamonkey/source/image/public/imgIContainer.idl
     rv = aParams->SetLongValue("imageAnimation",
@@ -151,8 +149,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
 
   bool allowPlugins = false;
   rv = aParams->GetBooleanValue("plugins", &allowPlugins);
-  if (NS_SUCCEEDED(rv))
-  {
+  if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDocShell> docShell(presContext->GetDocShell());
     NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
@@ -200,8 +197,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentModified"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentModified")) {
     NS_ENSURE_ARG_POINTER(aParams);
 
     bool modified;
@@ -211,14 +207,14 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     // I'm not sure we should be that strict
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (modified)
+    if (modified) {
       return editor->IncrementModificationCount(1);
+    }
 
     return editor->ResetModificationCount();
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly")) {
     NS_ENSURE_ARG_POINTER(aParams);
     bool isReadOnly;
     nsresult rvRO = aParams->GetBooleanValue(STATE_ATTRIBUTE, &isReadOnly);
@@ -226,16 +222,16 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
 
     uint32_t flags;
     editor->GetFlags(&flags);
-    if (isReadOnly)
+    if (isReadOnly) {
       flags |= nsIPlaintextEditor::eEditorReadonlyMask;
-    else
+    } else {
       flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
+    }
 
     return editor->SetFlags(flags);
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS")) {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
     NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
@@ -247,8 +243,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     return htmleditor->SetIsCSSEnabled(desireCSS);
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_insertBrOnReturn"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_insertBrOnReturn")) {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
     NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
@@ -261,8 +256,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     return htmleditor->SetReturnInParagraphCreatesNewParagraph(!insertBrOnReturn);
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing")) {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLObjectResizer> resizer = do_QueryInterface(refCon);
     NS_ENSURE_TRUE(resizer, NS_ERROR_INVALID_ARG);
@@ -274,8 +268,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     return resizer->SetObjectResizingEnabled(enabled);
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_enableInlineTableEditing"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableInlineTableEditing")) {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLInlineTableEditor> editor = do_QueryInterface(refCon);
     NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
@@ -308,8 +301,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   nsresult rv = aParams->SetBooleanValue(STATE_ENABLED, outCmdEnabled);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentModified"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentModified")) {
     bool modified;
     rv = editor->GetDocumentModified(&modified);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -317,8 +309,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, modified);
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly")) {
     NS_ENSURE_ARG_POINTER(aParams);
 
     uint32_t flags;
@@ -327,8 +318,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, isReadOnly);
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS")) {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
     NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
@@ -338,8 +328,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     return aParams->SetBooleanValue(STATE_ALL, isCSS);
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_insertBrOnReturn"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_insertBrOnReturn")) {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
     NS_ENSURE_TRUE(htmleditor, NS_ERROR_INVALID_ARG);
@@ -349,8 +338,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, !createPOnReturn);
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing")) {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLObjectResizer> resizer = do_QueryInterface(refCon);
     NS_ENSURE_TRUE(resizer, NS_ERROR_INVALID_ARG);
@@ -360,8 +348,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, enabled);
   }
 
-  if (!nsCRT::strcmp(aCommandName, "cmd_enableInlineTableEditing"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableInlineTableEditing")) {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLInlineTableEditor> editor = do_QueryInterface(refCon);
     NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
@@ -446,13 +433,11 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
   NS_ENSURE_ARG_POINTER(aCommandName);
   nsresult rv;
 
-  if (!nsCRT::strcmp(aCommandName, "obs_documentCreated"))
-  {
+  if (!nsCRT::strcmp(aCommandName, "obs_documentCreated")) {
     uint32_t editorStatus = nsIEditingSession::eEditorErrorUnknown;
 
     nsCOMPtr<nsIEditingSession> editingSession = do_QueryInterface(refCon);
-    if (editingSession)
-    {
+    if (editingSession) {
       // refCon is initially set to nsIEditingSession until editor
       //  is successfully created and source doc is loaded
       // Embedder gets error status if this fails
@@ -460,13 +445,12 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
       //    status = eEditorCreationInProgress
       rv = editingSession->GetEditorStatus(&editorStatus);
       NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else
-    {
+    } else {
       // If refCon is an editor, then everything started up OK!
       nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-      if (editor)
+      if (editor) {
         editorStatus = nsIEditingSession::eEditorOK;
+      }
     }
 
     // Note that if refCon is not-null, but is neither
@@ -474,22 +458,22 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     aParams->SetLongValue(STATE_DATA, editorStatus);
     return NS_OK;
   }
-  else if (!nsCRT::strcmp(aCommandName, "obs_documentLocationChanged"))
-  {
+
+  if (!nsCRT::strcmp(aCommandName, "obs_documentLocationChanged")) {
     nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-    if (editor)
-    {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      editor->GetDocument(getter_AddRefs(domDoc));
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-      nsIURI *uri = doc->GetDocumentURI();
-      NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-
-      return aParams->SetISupportsValue(STATE_DATA, (nsISupports*)uri);
+    if (!editor) {
+      return NS_OK;
     }
-    return NS_OK;
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    editor->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+    nsIURI *uri = doc->GetDocumentURI();
+    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+    return aParams->SetISupportsValue(STATE_DATA, (nsISupports*)uri);
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -81,12 +81,13 @@ static int32_t GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
       // numeric values
       nsAutoString str;
       val->GetStringValue(str);
-      if (str.EqualsLiteral("thin"))
+      if (str.EqualsLiteral("thin")) {
         f = 1;
-      else if (str.EqualsLiteral("medium"))
+      } else if (str.EqualsLiteral("medium")) {
         f = 3;
-      else if (str.EqualsLiteral("thick"))
+      } else if (str.EqualsLiteral("thick")) {
         f = 5;
+      }
       break;
     }
   }
@@ -282,8 +283,9 @@ HTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
           // Call BeginUpdate() so that the nsCSSFrameConstructor/PresShell
           // knows we're messing with the frame tree.
           nsCOMPtr<nsIDocument> document = GetDocument();
-          if (document)
+          if (document) {
             docObserver->BeginUpdate(document, UPDATE_CONTENT_MODEL);
+          }
 
           // XXX This is wrong (bug 439258).  Once it's fixed, the NS_WARNING
           // in RestyleManager::RestyleForRemove should be changed back
@@ -291,8 +293,9 @@ HTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
           docObserver->ContentRemoved(content->GetComposedDoc(),
                                       aParentContent, content, -1,
                                       content->GetPreviousSibling());
-          if (document)
+          if (document) {
             docObserver->EndUpdate(document, UPDATE_CONTENT_MODEL);
+          }
         }
       }
       content->UnbindFromTree();
@@ -511,8 +514,7 @@ HTMLEditor::GetPositionAndDimensions(nsIDOMElement* aElement,
          aMarginTop + aBorderTop;
     aW = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("width"));
     aH = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("height"));
-  }
-  else {
+  } else {
     mResizedObjectIsAbsolutelyPositioned = false;
     nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(aElement);
     if (!htmlElement) {

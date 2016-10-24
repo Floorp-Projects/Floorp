@@ -536,17 +536,17 @@ public:
 
   NS_IMETHOD GetIsTransient(bool *aIsTransient)
   {
-    if (aIsTransient)
+    if (aIsTransient) {
       *aIsTransient = (mFlags & TRANSIENT_FLAG) ? true : false;
-
+    }
     return NS_OK;
   }
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge)
   {
-    if (aDidMerge)
+    if (aDidMerge) {
       *aDidMerge = (mFlags & MERGE_FLAG) ? true : false;
-
+    }
     return NS_OK;
   }
 };
@@ -633,9 +633,7 @@ public:
         // Make the rightmost leaf transaction throw the error!
         flags = THROWS_REDO_ERROR_FLAG;
         mErrorFlags = mErrorFlags & (~THROWS_REDO_ERROR_FLAG);
-      }
-      else if ((mErrorFlags & THROWS_UNDO_ERROR_FLAG)
-               && i == 1) {
+      } else if ((mErrorFlags & THROWS_UNDO_ERROR_FLAG) && i == 1) {
         // Make the leftmost leaf transaction throw the error!
         flags = THROWS_UNDO_ERROR_FLAG;
         mErrorFlags = mErrorFlags & (~THROWS_UNDO_ERROR_FLAG);
@@ -651,8 +649,9 @@ public:
         fail("Failed to allocate AggregateTransaction %d, level %d. (%d)\n",
              i, mLevel, result);
 
-        if (mFlags & BATCH_FLAG)
+        if (mFlags & BATCH_FLAG) {
           mTXMgr->EndBatch(false);
+        }
 
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -663,9 +662,9 @@ public:
         fail("QueryInterface() failed for transaction %d, level %d. (%d)\n",
              i, mLevel, result);
 
-        if (mFlags & BATCH_FLAG)
+        if (mFlags & BATCH_FLAG) {
           mTXMgr->EndBatch(false);
-
+        }
         return result;
       }
 
@@ -676,18 +675,18 @@ public:
         //      i, mLevel, result);
         tx->Release();
 
-        if (mFlags & BATCH_FLAG)
+        if (mFlags & BATCH_FLAG) {
           mTXMgr->EndBatch(false);
-
+        }
         return result;
       }
 
       tx->Release();
     }
 
-    if (mFlags & BATCH_FLAG)
+    if (mFlags & BATCH_FLAG) {
       mTXMgr->EndBatch(false);
-
+    }
     return result;
   }
 };
@@ -894,7 +893,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -916,7 +915,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -942,7 +941,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (tx != 0) {
+  if (tx) {
     fail("PeekUndoStack() on empty undo stack failed. (%d)\n", result);
     return NS_ERROR_FAILURE;
   }
@@ -965,7 +964,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (tx != 0) {
+  if (tx) {
     fail("PeekRedoStack() on empty redo stack failed. (%d)\n", result);
     return NS_ERROR_FAILURE;
   }
@@ -1150,7 +1149,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -1218,7 +1217,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -1328,7 +1327,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -1478,7 +1477,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -1542,7 +1541,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -1556,7 +1555,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -1617,7 +1616,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -1726,7 +1725,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -1842,7 +1841,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -2035,7 +2034,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -2049,7 +2048,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -2087,7 +2086,7 @@ quick_test(TestTransactionFactory *factory)
       return result;
     }
 
-    if (numitems != 0) {
+    if (numitems) {
       fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
            numitems, result);
       return NS_ERROR_FAILURE;
@@ -2101,7 +2100,7 @@ quick_test(TestTransactionFactory *factory)
       return result;
     }
 
-    if (numitems != 0) {
+    if (numitems) {
       fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
       return NS_ERROR_FAILURE;
@@ -2173,7 +2172,7 @@ quick_test(TestTransactionFactory *factory)
       return result;
     }
 
-    if (numitems != 0) {
+    if (numitems) {
       fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
       return NS_ERROR_FAILURE;
@@ -2549,7 +2548,7 @@ quick_test(TestTransactionFactory *factory)
       return result;
     }
 
-    if (numitems != 0) {
+    if (numitems) {
       fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
       return NS_ERROR_FAILURE;
@@ -2720,7 +2719,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -2741,7 +2740,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -2764,7 +2763,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -2785,7 +2784,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -2806,7 +2805,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -3013,7 +3012,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -3217,7 +3216,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -3276,7 +3275,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -3547,7 +3546,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -3846,7 +3845,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -4053,7 +4052,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -4067,7 +4066,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  if (numitems != 0) {
+  if (numitems) {
     fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
          numitems, result);
     return NS_ERROR_FAILURE;
@@ -4119,7 +4118,7 @@ quick_batch_test(TestTransactionFactory *factory)
       return result;
     }
 
-    if (numitems != 0) {
+    if (numitems) {
       fail("GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
            numitems, result);
       return NS_ERROR_FAILURE;
@@ -4133,7 +4132,7 @@ quick_batch_test(TestTransactionFactory *factory)
       return result;
     }
 
-    if (numitems != 0) {
+    if (numitems) {
       fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
       return NS_ERROR_FAILURE;
@@ -4218,7 +4217,7 @@ quick_batch_test(TestTransactionFactory *factory)
       return result;
     }
 
-    if (numitems != 0) {
+    if (numitems) {
       fail("GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
       return NS_ERROR_FAILURE;
@@ -4456,8 +4455,9 @@ stress_test(TestTransactionFactory *factory, int32_t iterations)
     }
 
     // Trivial feedback not to let the user think the test is stuck.
-    if (MOZ_UNLIKELY(j % 100 == 0))
+    if (MOZ_UNLIKELY(j % 100 == 0)) {
       printf("%i ", j);
+    }
   } // for, iterations.
 
   printf("passed\n");
@@ -4598,8 +4598,9 @@ int
 main (int argc, char *argv[])
 {
   ScopedXPCOM xpcom("nsITransactionManager");
-  if (xpcom.failed())
+  if (xpcom.failed()) {
     return 1;
+  }
 
   nsresult result;
 
