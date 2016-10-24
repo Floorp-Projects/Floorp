@@ -19,20 +19,18 @@ SimpleTest.waitForExplicitFinish();
 
 function runTest()
 {
-  ok(document.createElementNS("http://www.w3.org/2000/svg", "pattern")
-       instanceof SVGUnitTypes, "Pattern should implement SVGUnitTypes");
-  ok(document.createElementNS("http://www.w3.org/2000/svg", "filter")
-       instanceof SVGUnitTypes, "Filter should implement SVGUnitTypes");
-  ok(document.createElementNS("http://www.w3.org/2000/svg", "mask")
-       instanceof SVGUnitTypes, "Mask should implement SVGUnitTypes");
-  ok(document.createElementNS("http://www.w3.org/2000/svg", "clipPath")
-       instanceof SVGUnitTypes, "ClipPath should implement SVGUnitTypes");
-  ok(document.createElementNS("http://www.w3.org/2000/svg", "linearGradient")
-       instanceof SVGUnitTypes, "LinearGradient should implement SVGUnitTypes");
-  ok(document.createElementNS("http://www.w3.org/2000/svg", "radialGradient")
-       instanceof SVGUnitTypes, "radialGradient should implement SVGUnitTypes");
-  ok(!(document.createElementNS("http://www.w3.org/2000/svg", "svg")
-       instanceof SVGUnitTypes), "svg should not implement SVGUnitTypes");
+  is(SVGPatternElement.SVG_UNIT_TYPE_OBJECTBOUNDINGBOX, 2,
+     "Pattern should implement SVGUnitTypes values");
+  is(SVGFilterElement.SVG_UNIT_TYPE_OBJECTBOUNDINGBOX, 2,
+     "Filter should implement SVGUnitTypes values");
+  is(SVGMaskElement.SVG_UNIT_TYPE_OBJECTBOUNDINGBOX, 2,
+     "Mask should implement SVGUnitTypes values");
+  is(SVGClipPathElement.SVG_UNIT_TYPE_OBJECTBOUNDINGBOX, 2,
+     "ClipPath should implement SVGUnitTypes values");
+  is(SVGLinearGradientElement.SVG_UNIT_TYPE_OBJECTBOUNDINGBOX, 2,
+     "LinearGradient should implement SVGUnitTypes values");
+  is(SVGRadialGradientElement.SVG_UNIT_TYPE_OBJECTBOUNDINGBOX, 2,
+     "RadialGradient should implement SVGUnitTypes values");
   SimpleTest.finish();
 }
 
