@@ -62,6 +62,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     GetAlertText,
     SendAlertText(SendKeysParameters),
     TakeScreenshot,
+    Status,
     Extension(T)
 }
 
@@ -319,6 +320,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 WebDriverCommand::SendAlertText(parameters)
             },
             Route::TakeScreenshot => WebDriverCommand::TakeScreenshot,
+            Route::Status => WebDriverCommand::Status,
             Route::Extension(ref extension) => {
                 try!(extension.command(params, &body_data))
             }
@@ -369,7 +371,8 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::ElementClick(_) |
             WebDriverCommand::ElementTap(_) |
             WebDriverCommand::ElementClear(_) |
-            WebDriverCommand::TakeScreenshot => {
+            WebDriverCommand::TakeScreenshot |
+            WebDriverCommand::Status => {
                 None
             },
             WebDriverCommand::Get(ref x) => Some(x.to_json()),

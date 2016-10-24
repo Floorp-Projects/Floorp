@@ -71,7 +71,8 @@ fn standard_routes<U:WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Ro
                 (Get, "/session/{sessionId}/window_handles", Route::GetWindowHandles),
                 (Delete, "/session/{sessionId}/window_handle", Route::Close),
                 (Post, "/session/{sessionId}/execute_async", Route::ExecuteAsyncScript),
-                (Post, "/session/{sessionId}/execute", Route::ExecuteScript),]
+                (Post, "/session/{sessionId}/execute", Route::ExecuteScript),
+                (Get, "/status", Route::Status),]
 }
 
 #[derive(Clone, Copy)]
@@ -128,6 +129,7 @@ pub enum Route<U:WebDriverExtensionRoute> {
     GetAlertText,
     SendAlertText,
     TakeScreenshot,
+    Status,
     Extension(U)
 }
 
