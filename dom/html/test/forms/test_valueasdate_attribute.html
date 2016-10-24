@@ -47,17 +47,12 @@ var validTypes =
   ["color", false],
   ["month", true],
   ["week", true],
-];
-
-var todoTypes =
-[
-  ["datetime", true],
-  ["datetime-local", true],
+  // TODO: temporary set to false until bug 888331 is fixed.
+  ["datetime-local", false],
 ];
 
 function checkAvailability()
 {
-
   for (let data of validTypes) {
     var exceptionCatched = false;
     element.type = data[0];
@@ -77,27 +72,6 @@ function checkAvailability()
     }
     is(exceptionCatched, !data[1], "valueAsDate for " + data[0] +
                                    " availability is not correct");
-  }
-
-  for (let data of todoTypes) {
-    var exceptionCatched = false;
-    element.type = data[0];
-    try {
-      element.valueAsDate;
-    } catch (e) {
-      exceptionCatched = true;
-    }
-    is(exceptionCatched, false,
-       "valueAsDate shouldn't throw exception on getting");
-
-    exceptionCatched = false;
-    try {
-      element.valueAsDate= 42;
-    } catch (e) {
-      exceptionCatched = true;
-    }
-    todo_is(exceptionCatched, !data[1],
-            "valueAsDate for " + data[0] + " availability is not correct");
   }
 }
 

@@ -54,15 +54,6 @@ var gInputTestData = [
   ['color',    false],
   ['month',    false],
   ['week',     false],
-];
-
-/**
- * TODO: the next types are not yet in the tree.
- * The value is only a suggestion.
- */
-var gInputTodoData = [
-/* type        expected result */
-  ['datetime', false],
   ['datetime-local', false],
 ];
 
@@ -112,12 +103,6 @@ var input = document.createElement('input');
 for (data of gInputTestData) {
   input.type = data[0];
   checkMozIsTextFieldValue(input, data[1]);
-}
-
-// Check for the todo's.
-for (data of gInputTodoData) {
-  input.type = data[0];
-  checkMozIsTextFieldValueTodo(input, data[1]);
 }
 
 </script>
