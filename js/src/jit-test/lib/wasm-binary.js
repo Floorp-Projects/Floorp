@@ -5,10 +5,11 @@ const magic2 = 0x73;  // 's'
 const magic3 = 0x6d;  // 'm'
 
 // EncodingVersion (temporary; to be set to 1 at some point before release)
-const ver0 = (Wasm.experimentalVersion >>>  0) & 0xff;
-const ver1 = (Wasm.experimentalVersion >>>  8) & 0xff;
-const ver2 = (Wasm.experimentalVersion >>> 16) & 0xff;
-const ver3 = (Wasm.experimentalVersion >>> 24) & 0xff;
+const experimentalVersion = 0xd;
+const ver0 = (experimentalVersion >>>  0) & 0xff;
+const ver1 = (experimentalVersion >>>  8) & 0xff;
+const ver2 = (experimentalVersion >>> 16) & 0xff;
+const ver3 = (experimentalVersion >>> 24) & 0xff;
 
 // Section opcodes
 const userDefinedId    = 0;
