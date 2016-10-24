@@ -1014,7 +1014,7 @@ class AstPop final : public AstExpr
 };
 
 // This is an artificial AST node which can be used to represent some forms
-// of stack-machine code in an AST form. It similar to Block, but returns the
+// of stack-machine code in an AST form. It is similar to Block, but returns the
 // value of its first operand, rather than the last.
 class AstFirst : public AstExpr
 {
