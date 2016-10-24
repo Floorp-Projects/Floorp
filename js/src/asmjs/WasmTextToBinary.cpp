@@ -73,7 +73,6 @@ class WasmToken
         BrIf,
         BrTable,
         Call,
-        CallImport,
         CallIndirect,
         CloseParen,
         ComparisonOpcode,
@@ -266,7 +265,6 @@ class WasmToken
           case BrIf:
           case BrTable:
           case Call:
-          case CallImport:
           case CallIndirect:
           case ComparisonOpcode:
           case Const:
@@ -853,8 +851,6 @@ WasmTokenStream::next()
         if (consume(u"call")) {
             if (consume(u"_indirect"))
                 return WasmToken(WasmToken::CallIndirect, begin, cur_);
-            if (consume(u"_import"))
-                return WasmToken(WasmToken::CallImport, begin, cur_);
             return WasmToken(WasmToken::Call, begin, cur_);
         }
         if (consume(u"current_memory"))
@@ -1657,10 +1653,8 @@ ParseArgs(WasmParseContext& c, AstExprVector* args)
 }
 
 static AstCall*
-ParseCall(WasmParseContext& c, Expr expr, bool inParens)
+ParseCall(WasmParseContext& c, bool inParens)
 {
-    MOZ_ASSERT(expr == Expr::Call || expr == Expr::CallImport);
-
     AstRef func;
     if (!c.ts.matchRef(&func, c.error))
         return nullptr;
@@ -1671,7 +1665,7 @@ ParseCall(WasmParseContext& c, Expr expr, bool inParens)
             return nullptr;
     }
 
-    return new(c.lifo) AstCall(expr, ExprType::Void, func, Move(args));
+    return new(c.lifo) AstCall(Expr::Call, ExprType::Void, func, Move(args));
 }
 
 static AstCallIndirect*
@@ -2404,9 +2398,7 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
       case WasmToken::BrTable:
         return ParseBranchTable(c, token, inParens);
       case WasmToken::Call:
-        return ParseCall(c, Expr::Call, inParens);
-      case WasmToken::CallImport:
-        return ParseCall(c, Expr::Call, inParens);
+        return ParseCall(c, inParens);
       case WasmToken::CallIndirect:
         return ParseCallIndirect(c, inParens);
       case WasmToken::ComparisonOpcode:
@@ -3493,17 +3485,13 @@ ResolveArgs(Resolver& r, const AstExprVector& args)
 static bool
 ResolveCall(Resolver& r, AstCall& c)
 {
+    MOZ_ASSERT(c.expr() == Expr::Call);
+
     if (!ResolveArgs(r, c.args()))
         return false;
 
-    if (c.expr() == Expr::Call) {
-        if (!r.resolveFunction(c.func()))
-            return false;
-    } else {
-        MOZ_ASSERT(c.expr() == Expr::CallImport);
-        if (!r.resolveImport(c.func()))
-            return false;
-    }
+    if (!r.resolveFunction(c.func()))
+        return false;
 
     return true;
 }

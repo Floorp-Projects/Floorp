@@ -4912,7 +4912,7 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, Type 
     if (!f.m().declareImport(calleeName, Move(sig), ffiIndex, &importIndex))
         return false;
 
-    if (!f.writeCall(callNode, Expr::CallImport))
+    if (!f.writeCall(callNode, Expr::OldCallImport))
         return false;
 
     // Import index

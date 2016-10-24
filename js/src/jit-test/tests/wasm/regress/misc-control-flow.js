@@ -88,8 +88,8 @@ wasmEvalText(`
 (module
     (import "check" "one" (param i32))
     (import "check" "two" (param i32) (param i32))
-    (func (param i32) (call_import 0 (get_local 0)))
-    (func (param i32) (param i32) (call_import 1 (get_local 0) (get_local 1)))
+    (func (param i32) (call 0 (get_local 0)))
+    (func (param i32) (param i32) (call 1 (get_local 0) (get_local 1)))
     (func
         (call 1
             (i32.const 43)

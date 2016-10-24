@@ -354,13 +354,12 @@ wasm::Classify(Expr expr)
       case Expr::TeeGlobal:
         return ExprKind::TeeGlobal;
       case Expr::Call:
+      case Expr::OldCallImport:
         return ExprKind::Call;
       case Expr::CallIndirect:
         return ExprKind::CallIndirect;
       case Expr::OldCallIndirect:
         return ExprKind::OldCallIndirect;
-      case Expr::CallImport:
-        return ExprKind::CallImport;
       case Expr::Return:
       case Expr::Limit:
         // Accept Limit, for use in decoding the end of a function after the body.

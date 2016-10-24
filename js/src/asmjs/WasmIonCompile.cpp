@@ -1951,14 +1951,14 @@ EmitCall(FunctionCompiler& f)
 }
 
 static bool
-EmitCallImport(FunctionCompiler& f)
+EmitOldCallImport(FunctionCompiler& f)
 {
     MOZ_ASSERT(!f.mg().firstFuncDefIndex);
 
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
     uint32_t funcImportIndex;
-    if (!f.iter().readCallImport(&funcImportIndex))
+    if (!f.iter().readCall(&funcImportIndex))
         return false;
 
     if (f.inDeadCode())
@@ -3172,8 +3172,8 @@ EmitExpr(FunctionCompiler& f)
         return EmitCallIndirect(f, /* oldStyle = */ false);
       case Expr::OldCallIndirect:
         return EmitCallIndirect(f, /* oldStyle = */ true);
-      case Expr::CallImport:
-        return EmitCallImport(f);
+      case Expr::OldCallImport:
+        return EmitOldCallImport(f);
 
       // Locals and globals
       case Expr::GetLocal:
