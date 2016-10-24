@@ -1230,10 +1230,6 @@ PresentationPresentingInfo::Shutdown(nsresult aReason)
     mTimer->Cancel();
   }
 
-  if (mDevice) {
-    mDevice->Disconnect();
-  }
-  mDevice = nullptr;
   mLoadingCallback = nullptr;
   mRequesterDescription = nullptr;
   mPendingCandidates.Clear();
@@ -1394,6 +1390,12 @@ PresentationPresentingInfo::UntrackFromService()
   if (mContentParent) {
     Unused << NS_WARN_IF(!static_cast<ContentParent*>(mContentParent.get())->SendNotifyPresentationReceiverCleanUp(mSessionId));
   }
+
+  // Receiver device might need clean up after session termination.
+  if (mDevice) {
+    mDevice->Disconnect();
+  }
+  mDevice = nullptr;
 
   // Remove the session info (and the in-process responding info if there's any).
   nsCOMPtr<nsIPresentationService> service =
