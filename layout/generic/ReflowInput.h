@@ -177,47 +177,47 @@ public:
 
   struct ReflowInputFlags {
     ReflowInputFlags() { memset(this, 0, sizeof(*this)); }
-    uint16_t mSpecialBSizeReflow:1;  // used by tables to communicate special reflow (in process) to handle
+    uint32_t mSpecialBSizeReflow:1;  // used by tables to communicate special reflow (in process) to handle
                                      // percent bsize frames inside cells which may not have computed bsizes
-    uint16_t mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
+    uint32_t mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
                                      // is changing
-    uint16_t mIsTopOfPage:1;         // Is the current context at the top of a
+    uint32_t mIsTopOfPage:1;         // Is the current context at the top of a
                                      // page?  When true, we force something
                                      // that's too tall for a page/column to
                                      // fit anyway to avoid infinite loops.
-    uint16_t mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+    uint32_t mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
                                      // is assuming a horizontal scrollbar
-    uint16_t mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+    uint32_t mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
                                      // is assuming a vertical scrollbar
 
-    uint16_t mIsIResize:1;           // Is frame (a) not dirty and (b) a
+    uint32_t mIsIResize:1;           // Is frame (a) not dirty and (b) a
                                      // different inline-size than before?
 
-    uint16_t mIsBResize:1;           // Is frame (a) not dirty and (b) a
+    uint32_t mIsBResize:1;           // Is frame (a) not dirty and (b) a
                                      // different block-size than before or
                                      // (potentially) in a context where
                                      // percent block-sizes have a different
                                      // basis?
-    uint16_t mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
+    uint32_t mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
                                      // and never insider a column frame
-    uint16_t mHeightDependsOnAncestorCell:1;   // Does frame height depend on
+    uint32_t mHeightDependsOnAncestorCell:1;   // Does frame height depend on
                                                // an ancestor table-cell?
-    uint16_t mIsColumnBalancing:1;   // nsColumnSetFrame is balancing columns
-    uint16_t mIsFlexContainerMeasuringHeight:1; // nsFlexContainerFrame is
+    uint32_t mIsColumnBalancing:1;   // nsColumnSetFrame is balancing columns
+    uint32_t mIsFlexContainerMeasuringHeight:1; // nsFlexContainerFrame is
                                                 // reflowing this child to
                                                 // measure its intrinsic height.
-    uint16_t mDummyParentReflowInput:1; // a "fake" reflow state made
+    uint32_t mDummyParentReflowInput:1; // a "fake" reflow state made
                                         // in order to be the parent
                                         // of a real one
-    uint16_t mMustReflowPlaceholders:1; // Should this frame reflow its place-
+    uint32_t mMustReflowPlaceholders:1; // Should this frame reflow its place-
                                         // holder children? If the available
                                         // height of this frame didn't change,
                                         // but its in a paginated environment
                                         // (e.g. columns), it should always
                                         // reflow its placeholder children.
-    uint16_t mShrinkWrap:1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
-    uint16_t mUseAutoBSize:1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
-    uint16_t mStaticPosIsCBOrigin:1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
+    uint32_t mShrinkWrap:1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
+    uint32_t mUseAutoBSize:1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
+    uint32_t mStaticPosIsCBOrigin:1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
   };
 
 #ifdef DEBUG
@@ -601,10 +601,11 @@ public:
   // requested here.
   nsIFrame** mDiscoveredClearance;
 
+  ReflowInputFlags mFlags;
+
   // This value keeps track of how deeply nested a given reflow state
   // is from the top of the frame tree.
   int16_t mReflowDepth;
-  ReflowInputFlags mFlags;
 
   // Logical and physical accessors for the resize flags. All users should go
   // via these accessors, so that in due course we can change the storage from

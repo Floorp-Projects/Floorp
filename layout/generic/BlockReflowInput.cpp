@@ -140,7 +140,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
   mBCoord = mContentArea.BStart(wm) = mBorderPadding.BStart(wm);
 
   mPrevChild = nullptr;
-  mCurrentLine = aFrame->EndLine();
+  mCurrentLine = aFrame->LinesEnd();
 
   mMinLineHeight = aReflowInput.CalcLineHeight();
 }
@@ -416,7 +416,7 @@ BlockReflowInput::ReconstructMarginBefore(nsLineList::iterator aLine)
   mPrevBEndMargin.Zero();
   nsBlockFrame *block = mBlock;
 
-  nsLineList::iterator firstLine = block->BeginLine();
+  nsLineList::iterator firstLine = block->LinesBegin();
   for (;;) {
     --aLine;
     if (aLine->IsBlock()) {
@@ -569,7 +569,7 @@ BlockReflowInput::AddFloat(nsLineLayout*       aLineLayout,
                              nscoord             aAvailableISize)
 {
   NS_PRECONDITION(aLineLayout, "must have line layout");
-  NS_PRECONDITION(mBlock->EndLine() != mCurrentLine, "null ptr");
+  NS_PRECONDITION(mBlock->LinesEnd() != mCurrentLine, "null ptr");
   NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
                   "aFloat must be an out-of-flow frame");
 
