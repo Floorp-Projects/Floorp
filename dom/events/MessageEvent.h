@@ -47,7 +47,7 @@ public:
   void GetLastEventId(nsAString&) const;
   void GetSource(Nullable<OwningWindowProxyOrMessagePort>& aValue) const;
 
-  void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
+  void GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts);
 
   void SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts);
 
@@ -75,7 +75,7 @@ public:
                         bool aCancelable, JS::Handle<JS::Value> aData,
                         const nsAString& aOrigin, const nsAString& aLastEventId,
                         const Nullable<WindowProxyOrMessagePort>& aSource,
-                        const Sequence<OwningNonNull<MessagePort>>& aPorts);
+                        const Nullable<Sequence<OwningNonNull<MessagePort>>>& aPorts);
 
 protected:
   ~MessageEvent();
@@ -88,6 +88,7 @@ private:
   RefPtr<MessagePort> mPortSource;
 
   nsTArray<RefPtr<MessagePort>> mPorts;
+  bool mPortsSet;
 };
 
 } // namespace dom

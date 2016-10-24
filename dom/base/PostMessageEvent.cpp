@@ -147,8 +147,7 @@ PostMessageEvent::Run()
   event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
                           false /*non-bubbling */, false /*cancelable */,
                           messageData, mCallerOrigin,
-                          EmptyString(), source,
-                          Sequence<OwningNonNull<MessagePort>>());
+                          EmptyString(), source, nullptr);
 
   nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
   event->SetPorts(Move(ports));

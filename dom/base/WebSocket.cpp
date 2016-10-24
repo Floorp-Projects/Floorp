@@ -2009,7 +2009,7 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
 
   event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"), false, false,
                           jsData, mImpl->mUTF16Origin, EmptyString(), nullptr,
-                          Sequence<OwningNonNull<MessagePort>>());
+                          nullptr);
   event->SetTrusted(true);
 
   return DispatchDOMEvent(nullptr, static_cast<Event*>(event), nullptr,
