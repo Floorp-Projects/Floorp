@@ -44,7 +44,7 @@ namespace layers {
  * being leaf nodes. Layer C is in the middle and has n+1 FrameMetrics, labelled
  * FM0...FMn. FM0 is the FrameMetrics you get by calling c->GetFrameMetrics(0)
  * and FMn is the FrameMetrics you can obtain by calling
- * c->GetFrameMetrics(c->GetFrameMetricsCount() - 1). This layer tree is
+ * c->GetFrameMetrics(c->GetScrollMetadataCount() - 1). This layer tree is
  * conceptually equivalent to this one below:
  *
  *                    +---+
@@ -113,8 +113,8 @@ namespace layers {
  * the wrapped layer as a void* for printf purposes.
  *
  * The implementation may look like it special-cases mIndex == 0 and/or
- * GetFrameMetricsCount() == 0. This is an artifact of the fact that both
- * mIndex and GetFrameMetricsCount() are uint32_t and GetFrameMetricsCount()
+ * GetScrollMetadataCount() == 0. This is an artifact of the fact that both
+ * mIndex and GetScrollMetadataCount() are uint32_t and GetScrollMetadataCount()
  * can return 0 but mIndex cannot store -1. This seems better than the
  * alternative of making mIndex a int32_t that can store -1, but then having
  * to cast to uint32_t all over the place.

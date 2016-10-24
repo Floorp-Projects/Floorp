@@ -1733,7 +1733,7 @@ public:
   // and can be used anytime.
   // A layer has an APZC at index aIndex only-if GetFrameMetrics(aIndex).IsScrollable();
   // attempting to get an APZC for a non-scrollable metrics will return null.
-  // The aIndex for these functions must be less than GetFrameMetricsCount().
+  // The aIndex for these functions must be less than GetScrollMetadataCount().
   void SetAsyncPanZoomController(uint32_t aIndex, AsyncPanZoomController *controller);
   AsyncPanZoomController* GetAsyncPanZoomController(uint32_t aIndex) const;
   // The ScrollMetadataChanged function is used internally to ensure the APZC array length
