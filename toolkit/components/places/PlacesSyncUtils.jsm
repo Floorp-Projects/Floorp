@@ -428,12 +428,8 @@ var reparentOrphans = Task.async(function* (item) {
   if (item.kind != BookmarkSyncUtils.KINDS.FOLDER) {
     return;
   }
-  let orphanIds = findAnnoItems(BookmarkSyncUtils.SYNC_PARENT_ANNO, item.syncId);
-  // The annotations API returns item IDs, but the asynchronous bookmarks
-  // API uses GUIDs. We can remove the `promiseItemGuid` calls and parallel
-  // arrays once we implement a GUID-aware annotations API.
-  let orphanGuids = yield Promise.all(orphanIds.map(id =>
-    PlacesUtils.promiseItemGuid(id)));
+  let orphanGuids = yield fetchGuidsWithAnno(BookmarkSyncUtils.SYNC_PARENT_ANNO,
+                                             item.syncId);
   let folderGuid = BookmarkSyncUtils.syncIdToGuid(item.syncId);
   BookmarkSyncLog.debug(`reparentOrphans: Reparenting ${
     JSON.stringify(orphanGuids)} to ${item.syncId}`);
@@ -457,7 +453,8 @@ var reparentOrphans = Task.async(function* (item) {
     }
     if (isReparented) {
       // Remove the annotation once we've reparented the item.
-      PlacesUtils.annotations.removeItemAnnotation(orphanIds[i],
+      let orphanId = yield PlacesUtils.promiseItemId(orphanGuids[i]);
+      PlacesUtils.annotations.removeItemAnnotation(orphanId,
         BookmarkSyncUtils.SYNC_PARENT_ANNO, SOURCE_SYNC);
     }
   }
@@ -517,9 +514,8 @@ var insertSyncLivemark = Task.async(function* (insertInfo) {
     return null;
   }
   let livemarkInfo = syncBookmarkToPlacesBookmark(insertInfo);
-  let parentId = yield PlacesUtils.promiseItemId(livemarkInfo.parentGuid);
-  let parentIsLivemark = PlacesUtils.annotations.itemHasAnnotation(parentId,
-    PlacesUtils.LMANNO_FEEDURI);
+  let parentIsLivemark = yield getAnno(livemarkInfo.parentGuid,
+                                       PlacesUtils.LMANNO_FEEDURI);
   if (parentIsLivemark) {
     // A livemark can't be a descendant of another livemark.
     BookmarkSyncLog.debug(`insertSyncLivemark: Invalid parent ${
@@ -586,9 +582,8 @@ var insertBookmarkMetadata = Task.async(function* (bookmarkItem, insertInfo) {
 var getKindForItem = Task.async(function* (item) {
   switch (item.type) {
     case PlacesUtils.bookmarks.TYPE_FOLDER: {
-      let itemId = yield PlacesUtils.promiseItemId(item.guid);
-      let isLivemark = PlacesUtils.annotations.itemHasAnnotation(itemId,
-        PlacesUtils.LMANNO_FEEDURI);
+      let isLivemark = yield getAnno(item.guid,
+                                     PlacesUtils.LMANNO_FEEDURI);
       return isLivemark ? BookmarkSyncUtils.KINDS.LIVEMARK :
                           BookmarkSyncUtils.KINDS.FOLDER;
     }
@@ -825,13 +820,6 @@ var updateBookmarkMetadata = Task.async(function* (oldBookmarkItem,
   return newItem;
 });
 
-var setGuid = Task.async(function* (db, itemId, newGuid) {
-  yield db.executeCached(`UPDATE moz_bookmarks SET guid = :newGuid
-    WHERE id = :itemId`, { newGuid, itemId });
-  PlacesUtils.invalidateCachedGuidFor(itemId);
-  return newGuid;
-});
-
 function validateNewBookmark(info) {
   let insertInfo = validateSyncBookmarkObject(info,
     { kind: { required: true }
@@ -871,11 +859,31 @@ function validateNewBookmark(info) {
   return insertInfo;
 }
 
-function findAnnoItems(anno, val) {
-  let annos = PlacesUtils.annotations;
-  return annos.getItemsWithAnnotation(anno, {}).filter(id =>
-    annos.getItemAnnotation(id, anno) == val);
-}
+// Returns an array of GUIDs for items that have an `anno` with the given `val`.
+var fetchGuidsWithAnno = Task.async(function* (anno, val) {
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.executeCached(`
+    SELECT b.guid FROM moz_items_annos a
+    JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+    JOIN moz_bookmarks b ON b.id = a.item_id
+    WHERE n.name = :anno AND
+          a.content = :val`,
+    { anno, val });
+  return rows.map(row => row.getResultByName("guid"));
+});
+
+// Returns the value of an item's annotation, or `null` if it's not set.
+var getAnno = Task.async(function* (guid, anno) {
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.executeCached(`
+    SELECT a.content FROM moz_items_annos a
+    JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+    JOIN moz_bookmarks b ON b.id = a.item_id
+    WHERE b.guid = :guid AND
+          n.name = :anno`,
+    { guid, anno });
+  return rows.length ? rows[0].getResultByName("content") : null;
+});
 
 var tagItem = Task.async(function (item, tags) {
   if (!item.url) {
@@ -1029,7 +1037,6 @@ function syncBookmarkToPlacesBookmark(info) {
 // Creates and returns a Sync bookmark object containing the bookmark's
 // tags, keyword, description, and whether it loads in the sidebar.
 var fetchBookmarkItem = Task.async(function* (bookmarkItem) {
-  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
   item.tags = PlacesUtils.tagging.getTagsForURI(
@@ -1042,13 +1049,14 @@ var fetchBookmarkItem = Task.async(function* (bookmarkItem) {
     item.keyword = keywordEntry.keyword;
   }
 
-  let description = getItemDescription(itemId);
+  let description = yield getAnno(bookmarkItem.guid,
+                                  BookmarkSyncUtils.DESCRIPTION_ANNO);
   if (description) {
     item.description = description;
   }
 
-  item.loadInSidebar = PlacesUtils.annotations.itemHasAnnotation(itemId,
-    BookmarkSyncUtils.SIDEBAR_ANNO);
+  item.loadInSidebar = !!(yield getAnno(bookmarkItem.guid,
+                                        BookmarkSyncUtils.SIDEBAR_ANNO));
 
   return item;
 });
@@ -1056,10 +1064,10 @@ var fetchBookmarkItem = Task.async(function* (bookmarkItem) {
 // Creates and returns a Sync bookmark object containing the folder's
 // description and children.
 var fetchFolderItem = Task.async(function* (bookmarkItem) {
-  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
-  let description = getItemDescription(itemId);
+  let description = yield getAnno(bookmarkItem.guid,
+                                  BookmarkSyncUtils.DESCRIPTION_ANNO);
   if (description) {
     item.description = description;
   }
@@ -1076,24 +1084,19 @@ var fetchFolderItem = Task.async(function* (bookmarkItem) {
 // Creates and returns a Sync bookmark object containing the livemark's
 // description, children (none), feed URI, and site URI.
 var fetchLivemarkItem = Task.async(function* (bookmarkItem) {
-  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
-  let description = getItemDescription(itemId);
+  let description = yield getAnno(bookmarkItem.guid,
+                                  BookmarkSyncUtils.DESCRIPTION_ANNO);
   if (description) {
     item.description = description;
   }
 
-  let feedAnno = PlacesUtils.annotations.getItemAnnotation(itemId,
-    PlacesUtils.LMANNO_FEEDURI);
+  let feedAnno = yield getAnno(bookmarkItem.guid, PlacesUtils.LMANNO_FEEDURI);
   item.feed = new URL(feedAnno);
 
-  let siteAnno = null;
-  try {
-    siteAnno = PlacesUtils.annotations.getItemAnnotation(itemId,
-      PlacesUtils.LMANNO_SITEURI);
-  } catch (ex) {}
-  if (siteAnno != null) {
+  let siteAnno = yield getAnno(bookmarkItem.guid, PlacesUtils.LMANNO_SITEURI);
+  if (siteAnno) {
     item.site = new URL(siteAnno);
   }
 
@@ -1103,10 +1106,10 @@ var fetchLivemarkItem = Task.async(function* (bookmarkItem) {
 // Creates and returns a Sync bookmark object containing the query's tag
 // folder name and smart bookmark query ID.
 var fetchQueryItem = Task.async(function* (bookmarkItem) {
-  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
-  let description = getItemDescription(itemId);
+  let description = yield getAnno(bookmarkItem.guid,
+                                  BookmarkSyncUtils.DESCRIPTION_ANNO);
   if (description) {
     item.description = description;
   }
@@ -1128,26 +1131,11 @@ var fetchQueryItem = Task.async(function* (bookmarkItem) {
     item.folder = folder;
   }
 
-  let query = null;
-  try {
-    // Throws if the bookmark doesn't have the smart bookmark anno.
-    query = PlacesUtils.annotations.getItemAnnotation(itemId,
-      BookmarkSyncUtils.SMART_BOOKMARKS_ANNO);
-  } catch (ex) {}
-  if (query != null) {
+  let query = yield getAnno(bookmarkItem.guid,
+                            BookmarkSyncUtils.SMART_BOOKMARKS_ANNO);
+  if (query) {
     item.query = query;
   }
 
   return item;
 });
-
-// Returns an item's description, or `null` if one isn't set.
-function getItemDescription(id) {
-  try {
-    return PlacesUtils.annotations.getItemAnnotation(id,
-      BookmarkSyncUtils.DESCRIPTION_ANNO);
-  } catch (ex) {}
-  return null;
-}
-
-

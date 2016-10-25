@@ -95,7 +95,7 @@ jobs:
             job-name:
                 gecko-v2: android-l10n-opt
         treeherder:
-            platform: android-api-15/opt
+            platform: android-4-0-armv7-api15/opt
             symbol: tc(L10n)
         worker-type: aws-provisioner-v1/android-api-15
         worker:

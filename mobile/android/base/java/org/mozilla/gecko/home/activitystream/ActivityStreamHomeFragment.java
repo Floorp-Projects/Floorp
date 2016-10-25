@@ -31,7 +31,7 @@ public class ActivityStreamHomeFragment
                              @Nullable Bundle savedInstanceState) {
         if (activityStream == null) {
             activityStream = (ActivityStream) inflater.inflate(R.layout.activity_stream, container, false);
-            activityStream.setOnUrlOpenListener(mUrlOpenListener);
+            activityStream.setOnUrlOpenListeners(mUrlOpenListener, mUrlOpenInBackgroundListener);
         }
 
         return activityStream;

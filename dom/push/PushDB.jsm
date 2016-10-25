@@ -376,11 +376,10 @@ this.PushDB.prototype = {
    *
    * @param {String} aKeyID The registration ID.
    * @param {Function} aUpdateFunc A function that receives the existing
-   *  registration record as its argument, and returns a new record. If the
-   *  function returns `null` or `undefined`, the record will not be updated.
-   *  If the record does not exist, the function will not be called.
-   * @returns {Promise} A promise resolved with either the updated record, or
-   *  `undefined` if the record was not updated.
+   *  registration record as its argument, and returns a new record.
+   * @returns {Promise} A promise resolved with either the updated record.
+   *  Rejects if the record does not exist, or the function returns an invalid
+   *  record.
    */
   update: function(aKeyID, aUpdateFunc) {
     return new Promise((resolve, reject) =>
@@ -393,14 +392,13 @@ this.PushDB.prototype = {
 
             let record = aEvent.target.result;
             if (!record) {
-              console.error("update: Record does not exist", aKeyID);
-              return;
+              throw new Error("Record " + aKeyID + " does not exist");
             }
             let newRecord = aUpdateFunc(this.toPushRecord(record));
             if (!this.isValidRecord(newRecord)) {
               console.error("update: Ignoring invalid update",
                 aKeyID, newRecord);
-              return;
+              throw new Error("Invalid update for record " + aKeyID);
             }
             function putRecord() {
               let req = aStore.put(newRecord);

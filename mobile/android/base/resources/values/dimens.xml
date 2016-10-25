@@ -221,4 +221,9 @@
     <item name="activity_stream_desired_tile_width" type="dimen">90dp</item>
     <item name="activity_stream_desired_tile_height" type="dimen">70dp</item>
     <item name="activity_stream_top_sites_text_height" type="dimen">30dp</item>
+
+    <item name="activity_stream_contextmenu_peek_height" type="dimen">380dp</item>
+    <!-- note: max_menu_height only affects the scrolling menu, but doesnt' take into consideration
+         the header above it. -->
+    <item name="activity_stream_contextmenu_max_menu_height" type="dimen">350dp</item>
 </resources>

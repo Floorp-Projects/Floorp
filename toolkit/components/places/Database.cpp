@@ -92,7 +92,6 @@
 
 #define MOBILE_ROOT_GUID "mobile______"
 #define MOBILE_ROOT_ANNO "mobile/bookmarksRoot"
-#define MOBILE_QUERY_ANNO "MobileBookmarks"
 
 // We use a fixed title for the mobile root to avoid marking the database as
 // corrupt if we can't look up the localized title in the string bundle. Sync
@@ -1906,22 +1905,6 @@ Database::MigrateV35Up() {
 
     // Delete the old folder.
     rv = DeleteBookmarkItem(folderIds[i]);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  // Delete any left pane queries that point to the old folder. We'll
-  // automatically create one for the new mobile root during the next sync.
-  // Other queries like `place:folder={folderId}` might become invalid; we
-  // ignore them because they're unlikely to exist, and rewriting query URLs
-  // is tedious.
-  nsTArray<int64_t> queryIds;
-  rv = GetItemsWithAnno(NS_LITERAL_CSTRING(MOBILE_QUERY_ANNO),
-                        nsINavBookmarksService::TYPE_BOOKMARK,
-                        queryIds);
-  if (NS_FAILED(rv)) return rv;
-
-  for (uint32_t i = 0; i < queryIds.Length(); ++i) {
-    rv = DeleteBookmarkItem(queryIds[i]);
     if (NS_FAILED(rv)) return rv;
   }
 
