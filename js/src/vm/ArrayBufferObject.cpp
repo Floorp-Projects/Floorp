@@ -99,12 +99,31 @@ js::ToClampedIndex(JSContext* cx, HandleValue v, uint32_t length, uint32_t* out)
  * ArrayBufferObject (base)
  */
 
-const Class ArrayBufferObject::protoClass = {
-    "ArrayBufferPrototype",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer)
+static const ClassSpec ArrayBufferObjectProtoClassSpec = {
+    DELEGATED_CLASSSPEC(ArrayBufferObject::class_.spec),
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    ClassSpec::IsDelegated
 };
 
-const ClassOps ArrayBufferObject::classOps_ = {
+static const Class ArrayBufferObjectProtoClass = {
+    "ArrayBufferPrototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
+    JS_NULL_CLASS_OPS,
+    &ArrayBufferObjectProtoClassSpec
+};
+
+static JSObject*
+CreateArrayBufferPrototype(JSContext* cx, JSProtoKey key)
+{
+    return cx->global()->createBlankPrototype(cx, &ArrayBufferObjectProtoClass);
+}
+
+static const ClassOps ArrayBufferObjectClassOps = {
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
     nullptr,        /* getProperty */
@@ -119,6 +138,38 @@ const ClassOps ArrayBufferObject::classOps_ = {
     ArrayBufferObject::trace,
 };
 
+static const JSFunctionSpec static_functions[] = {
+    JS_FN("isView", ArrayBufferObject::fun_isView, 1, 0),
+    JS_SELF_HOSTED_FN("slice", "ArrayBufferStaticSlice", 3, 0),
+    JS_FS_END
+};
+
+static const JSPropertySpec static_properties[] = {
+    JS_SELF_HOSTED_SYM_GET(species, "ArrayBufferSpecies", 0),
+    JS_PS_END
+};
+
+
+static const JSFunctionSpec prototype_functions[] = {
+    JS_SELF_HOSTED_FN("slice", "ArrayBufferSlice", 2, 0),
+    JS_FS_END
+};
+
+static const JSPropertySpec prototype_properties[] = {
+    JS_PSG("byteLength", ArrayBufferObject::byteLengthGetter, 0),
+    JS_STRING_SYM_PS(toStringTag, "ArrayBuffer", JSPROP_READONLY),
+    JS_PS_END
+};
+
+static const ClassSpec ArrayBufferObjectClassSpec = {
+    GenericCreateConstructor<ArrayBufferObject::class_constructor, 1, gc::AllocKind::FUNCTION>,
+    CreateArrayBufferPrototype,
+    static_functions,
+    static_properties,
+    prototype_functions,
+    prototype_properties
+};
+
 static const ClassExtension ArrayBufferObjectClassExtension = {
     nullptr,    /* weakmapKeyDelegateOp */
     ArrayBufferObject::objectMoved
@@ -130,25 +181,9 @@ const Class ArrayBufferObject::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer) |
     JSCLASS_BACKGROUND_FINALIZE,
-    &ArrayBufferObject::classOps_,
-    JS_NULL_CLASS_SPEC,
+    &ArrayBufferObjectClassOps,
+    &ArrayBufferObjectClassSpec,
     &ArrayBufferObjectClassExtension
-};
-
-const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
-    JS_SELF_HOSTED_FN("slice", "ArrayBufferSlice", 2,0),
-    JS_FS_END
-};
-
-const JSFunctionSpec ArrayBufferObject::jsstaticfuncs[] = {
-    JS_FN("isView", ArrayBufferObject::fun_isView, 1, 0),
-    JS_SELF_HOSTED_FN("slice", "ArrayBufferStaticSlice", 3,0),
-    JS_FS_END
-};
-
-const JSPropertySpec ArrayBufferObject::jsstaticprops[] = {
-    JS_SELF_HOSTED_SYM_GET(species, "ArrayBufferSpecies", 0),
-    JS_PS_END
 };
 
 bool
@@ -1886,62 +1921,3 @@ js::GetArrayBufferLengthAndData(JSObject* obj, uint32_t* length, bool* isSharedM
     *data = AsArrayBuffer(obj).dataPointer();
     *isSharedMemory = false;
 }
-
-JSObject*
-js::InitArrayBufferClass(JSContext* cx, HandleObject obj)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-
-    Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
-    if (global->isStandardClassResolved(JSProto_ArrayBuffer))
-        return &global->getPrototype(JSProto_ArrayBuffer).toObject();
-
-    RootedNativeObject arrayBufferProto(cx, global->createBlankPrototype(cx, &ArrayBufferObject::protoClass));
-    if (!arrayBufferProto)
-        return nullptr;
-
-    RootedFunction ctor(cx, global->createConstructor(cx, ArrayBufferObject::class_constructor,
-                                                      cx->names().ArrayBuffer, 1));
-    if (!ctor)
-        return nullptr;
-
-    if (!LinkConstructorAndPrototype(cx, ctor, arrayBufferProto))
-        return nullptr;
-
-    RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
-    RootedAtom atom(cx, IdToFunctionName(cx, byteLengthId, "get"));
-    if (!atom)
-        return nullptr;
-    unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
-    JSObject* getter =
-        NewNativeFunction(cx, ArrayBufferObject::byteLengthGetter, 0, atom);
-    if (!getter)
-        return nullptr;
-
-    if (!NativeDefineProperty(cx, arrayBufferProto, byteLengthId, UndefinedHandleValue,
-                              JS_DATA_TO_FUNC_PTR(GetterOp, getter), nullptr, attrs))
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, ctor, ArrayBufferObject::jsstaticfuncs))
-        return nullptr;
-
-    if (!JS_DefineProperties(cx, ctor, ArrayBufferObject::jsstaticprops))
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, arrayBufferProto, ArrayBufferObject::jsfuncs))
-        return nullptr;
-
-    if (!DefineToStringTag(cx, arrayBufferProto, cx->names().ArrayBuffer))
-        return nullptr;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_ArrayBuffer,
-                                              ctor, arrayBufferProto))
-    {
-        return nullptr;
-    }
-
-    return arrayBufferProto;
-}
-
