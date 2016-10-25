@@ -4119,8 +4119,9 @@ UpgradeSchemaFrom23_0To24_0(mozIStorageConnection* aConnection)
 nsresult
 UpgradeSchemaFrom24_0To25_0(mozIStorageConnection* aConnection)
 {
-  // The only change between 24 and 25 was a different structured clone format,
-  // but it's backwards-compatible.
+  // The changes between 24 and 25 were an upgraded snappy library, a different
+  // structured clone format and a different file_ds format. But everything is
+  // backwards-compatible.
   nsresult rv = aConnection->SetSchemaVersion(MakeSchemaVersion(25, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -6006,9 +6007,15 @@ private:
   static nsresult
   GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
                                      uint32_t aBlobDataLength,
-                                     const nsAString& aFileIds,
                                      FileManager* aFileManager,
+                                     const nsAString& aFileIds,
                                      StructuredCloneReadInfo* aInfo);
+
+  static nsresult
+  GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
+                                             FileManager* aFileManager,
+                                             const nsAString& aFileIds,
+                                             StructuredCloneReadInfo* aInfo);
 
   // Not to be overridden by subclasses.
   NS_DECL_MOZISTORAGEPROGRESSHANDLER
@@ -8151,6 +8158,7 @@ class ObjectStoreAddOrPutRequestOp final
   const PersistenceType mPersistenceType;
   const bool mOverwrite;
   bool mObjectStoreMayHaveIndexes;
+  bool mDataOverThreshold;
 
 private:
   // Only created by TransactionBase.
@@ -8185,6 +8193,7 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
   {
     eBlob,
     eMutableFile,
+    eStructuredClone
   };
 
   RefPtr<DatabaseFile> mFileActor;
@@ -8223,6 +8232,11 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
 
       case eMutableFile:
         aText.AppendInt(-id);
+        break;
+
+      case eStructuredClone:
+        aText.Append('.');
+        aText.AppendInt(id);
         break;
 
       default:
@@ -9574,7 +9588,9 @@ DeserializeStructuredCloneFile(FileManager* aFileManager,
   int32_t id;
   StructuredCloneFile::Type type;
 
-  if (aText.First() == '-') {
+  bool isDot = false;
+  if ((isDot = aText.First() == '.') ||
+      aText.First() == '-') {
     nsString text(Substring(aText, 1));
 
     id = text.ToInteger(&rv);
@@ -9582,7 +9598,11 @@ DeserializeStructuredCloneFile(FileManager* aFileManager,
       return rv;
     }
 
-    type = StructuredCloneFile::eMutableFile;
+    if (isDot) {
+      type = StructuredCloneFile::eStructuredClone;
+    } else {
+      type = StructuredCloneFile::eMutableFile;
+    }
   } else {
     id = aText.ToInteger(&rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9753,6 +9773,11 @@ ConvertBlobsToActors(PBackgroundParent* aBackgroundActor,
 
         break;
       }
+
+      case StructuredCloneFile::eStructuredClone:
+        MOZ_ALWAYS_TRUE(aActors.AppendElement(null_t(), fallible));
+
+        break;
 
       default:
         MOZ_CRASH("Should never get here!");
@@ -19092,20 +19117,14 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
   MOZ_ASSERT(aFileManager);
   MOZ_ASSERT(aInfo);
 
-#ifdef DEBUG
-  {
-    int32_t columnType;
-    MOZ_ASSERT(NS_SUCCEEDED(aSource->GetTypeOfIndex(aDataIndex, &columnType)));
-    MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_BLOB);
-  }
-#endif
-
-  const uint8_t* blobData;
-  uint32_t blobDataLength;
-  nsresult rv = aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData);
+  int32_t columnType;
+  nsresult rv = aSource->GetTypeOfIndex(aDataIndex, &columnType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_BLOB ||
+             columnType == mozIStorageStatement::VALUE_TYPE_INTEGER);
 
   bool isNull;
   rv = aSource->GetIsNull(aFileIdsIndex, &isNull);
@@ -19124,11 +19143,32 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
     }
   }
 
-  rv = GetStructuredCloneReadInfoFromBlob(blobData,
-                                          blobDataLength,
-                                          fileIds,
-                                          aFileManager,
-                                          aInfo);
+  if (columnType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+    uint64_t intData;
+    rv = aSource->GetInt64(aDataIndex, reinterpret_cast<int64_t*>(&intData));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = GetStructuredCloneReadInfoFromExternalBlob(intData,
+                                                    aFileManager,
+                                                    fileIds,
+                                                    aInfo);
+  } else {
+    const uint8_t* blobData;
+    uint32_t blobDataLength;
+    nsresult rv =
+      aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = GetStructuredCloneReadInfoFromBlob(blobData,
+                                            blobDataLength,
+                                            aFileManager,
+                                            fileIds,
+                                            aInfo);
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -19141,8 +19181,8 @@ nsresult
 DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
                                                  const uint8_t* aBlobData,
                                                  uint32_t aBlobDataLength,
-                                                 const nsAString& aFileIds,
                                                  FileManager* aFileManager,
+                                                 const nsAString& aFileIds,
                                                  StructuredCloneReadInfo* aInfo)
 {
   MOZ_ASSERT(!IsOnBackgroundThread());
@@ -19187,6 +19227,78 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
   }
 
   return NS_OK;
+}
+
+// static
+nsresult
+DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
+                                                 uint64_t aIntData,
+                                                 FileManager* aFileManager,
+                                                 const nsAString& aFileIds,
+                                                 StructuredCloneReadInfo* aInfo)
+{
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aFileManager);
+  MOZ_ASSERT(aInfo);
+
+  PROFILER_LABEL(
+            "IndexedDB",
+            "DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob",
+            js::ProfileEntry::Category::STORAGE);
+
+  nsresult rv;
+
+  if (!aFileIds.IsVoid()) {
+    rv = DeserializeStructuredCloneFiles(aFileManager, aFileIds, aInfo->mFiles);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  // Higher and lower 32 bits described
+  // in ObjectStoreAddOrPutRequestOp::DoDatabaseWork.
+  uint32_t index = uint32_t(aIntData);
+
+  if (index >= aInfo->mFiles.Length()) {
+    MOZ_ASSERT(false, "Bad index value!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  StructuredCloneFile& file = aInfo->mFiles[index];
+  MOZ_ASSERT(file.mFileInfo);
+  MOZ_ASSERT(file.mType == StructuredCloneFile::eStructuredClone);
+
+  nsCOMPtr<nsIFile> nativeFile = GetFileForFileInfo(file.mFileInfo);
+  if (NS_WARN_IF(!nativeFile)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIInputStream> stream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), nativeFile);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  do {
+    char buffer[kFileCopyBufferSize];
+
+    uint32_t numRead;
+    rv = stream->Read(buffer, sizeof(buffer), &numRead);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      break;
+    }
+
+    if (!numRead) {
+      break;
+    }
+
+    if (NS_WARN_IF(!aInfo->mData.WriteBytes(buffer, numRead))) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      break;
+    }
+  } while (true);
+
+  return rv;
 }
 
 // static
@@ -24382,7 +24494,8 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
                valueType == mozIStorageValueArray::VALUE_TYPE_TEXT);
 
     MOZ_ALWAYS_SUCCEEDS(aValues->GetTypeOfIndex(3, &valueType));
-    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB ||
+               valueType == mozIStorageValueArray::VALUE_TYPE_INTEGER);
   }
 #endif
 
@@ -25216,6 +25329,10 @@ ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
   MOZ_ASSERT(mMetadata);
 
   mObjectStoreMayHaveIndexes = mMetadata->HasLiveIndexes();
+
+  mDataOverThreshold =
+    snappy::MaxCompressedLength(mParams.cloneInfo().data().data.Size()) >
+      IndexedDatabaseManager::DataThreshold();
 }
 
 nsresult
@@ -25448,6 +25565,23 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
     }
   }
 
+  if (mDataOverThreshold) {
+    StoredFileInfo* storedFileInfo = mStoredFileInfos.AppendElement(fallible);
+    MOZ_ASSERT(storedFileInfo);
+
+    if (!mFileManager) {
+      mFileManager = aTransaction->GetDatabase()->GetFileManager();
+      MOZ_ASSERT(mFileManager);
+    }
+
+    storedFileInfo->mFileInfo = mFileManager->GetNewFileInfo();
+
+    storedFileInfo->mInputStream =
+      new SCInputStream(mParams.cloneInfo().data().data);
+
+    storedFileInfo->mType = StoredFileInfo::eStructuredClone;
+  }
+
   return true;
 }
 
@@ -25586,29 +25720,40 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
   key.BindToStatement(stmt, NS_LITERAL_CSTRING("key"));
 
-  nsCString flatCloneData;
-  flatCloneData.SetLength(cloneDataSize);
-  auto iter = cloneData.Iter();
-  cloneData.ReadBytes(iter, flatCloneData.BeginWriting(), cloneDataSize);
+  if (mDataOverThreshold) {
+    // Higher 32 bits reserved for flags like compressed/uncompressed. For now,
+    // we don't compress externally stored structured clone data since snappy
+    // doesn't support streaming yet and we don't want to allocate another
+    // large memory buffer for that.
+    // Lower 32 bits used for storing file_ids index.
+    uint64_t data = uint64_t(mStoredFileInfos.Length() - 1);
 
-  // Compress the bytes before adding into the database.
-  const char* uncompressed = flatCloneData.BeginReading();
-  size_t uncompressedLength = cloneDataSize;
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("data"), data);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    nsCString flatCloneData;
+    flatCloneData.SetLength(cloneDataSize);
+    auto iter = cloneData.Iter();
+    cloneData.ReadBytes(iter, flatCloneData.BeginWriting(), cloneDataSize);
 
-  // We don't have a smart pointer class that calls free, so we need to
-  // manage | compressed | manually.
-  {
+    // Compress the bytes before adding into the database.
+    const char* uncompressed = flatCloneData.BeginReading();
+    size_t uncompressedLength = cloneDataSize;
+
     size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
 
-    char* compressed = static_cast<char*>(malloc(compressedLength));
+    UniqueFreePtr<char> compressed(
+      static_cast<char*>(malloc(compressedLength)));
     if (NS_WARN_IF(!compressed)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    snappy::RawCompress(uncompressed, uncompressedLength, compressed,
+    snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
                         &compressedLength);
 
-    uint8_t* dataBuffer = reinterpret_cast<uint8_t*>(compressed);
+    uint8_t* dataBuffer = reinterpret_cast<uint8_t*>(compressed.release());
     size_t dataBufferLength = compressedLength;
 
     rv = stmt->BindAdoptedBlobByName(NS_LITERAL_CSTRING("data"), dataBuffer,
@@ -25874,10 +26019,11 @@ ObjectStoreAddOrPutRequestOp::Cleanup()
          index < count;
          index++) {
       StoredFileInfo& storedFileInfo = mStoredFileInfos[index];
+
+      MOZ_ASSERT_IF(storedFileInfo.mType == StoredFileInfo::eMutableFile,
+                    !storedFileInfo.mCopiedSuccessfully);
+
       RefPtr<DatabaseFile>& fileActor = storedFileInfo.mFileActor;
-
-      MOZ_ASSERT_IF(!fileActor, !storedFileInfo.mCopiedSuccessfully);
-
       if (fileActor && storedFileInfo.mCopiedSuccessfully) {
         fileActor->ClearInputStream();
       }
