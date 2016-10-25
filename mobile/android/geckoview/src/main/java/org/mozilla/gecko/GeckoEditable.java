@@ -46,8 +46,7 @@ import android.view.KeyEvent;
    SpannableStringBuilder/Editable that contains our text.
 */
 final class GeckoEditable extends JNIObject
-        implements InvocationHandler, Editable,
-                   GeckoEditableClient, GeckoEditableListener {
+        implements InvocationHandler, Editable, GeckoEditableClient {
 
     private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoEditable";
@@ -416,7 +415,7 @@ final class GeckoEditable extends JNIObject
     protected native void disposeNative();
 
     @WrapForJNI(calledFrom = "gecko")
-    /* package */ void onViewChange(final GeckoView v) {
+    private void onViewChange(final GeckoView v) {
         if (DEBUG) {
             // Called by nsWindow.
             ThreadUtils.assertOnGeckoThread();
@@ -815,7 +814,6 @@ final class GeckoEditable extends JNIObject
         });
     }
 
-    // GeckoEditableListener interface
 
     private void geckoActionReply() {
         if (DEBUG) {
@@ -875,20 +873,20 @@ final class GeckoEditable extends JNIObject
         }
     }
 
-    @WrapForJNI(calledFrom = "gecko") @Override
-    public void notifyIME(final int type) {
+    @WrapForJNI(calledFrom = "gecko")
+    private void notifyIME(final int type) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
             // NOTIFY_IME_REPLY_EVENT is logged separately, inside geckoActionReply()
-            if (type != NOTIFY_IME_REPLY_EVENT) {
+            if (type != GeckoEditableListener.NOTIFY_IME_REPLY_EVENT) {
                 Log.d(LOGTAG, "notifyIME(" +
                               getConstantName(GeckoEditableListener.class, "NOTIFY_IME_", type) +
                               ")");
             }
         }
 
-        if (type == NOTIFY_IME_REPLY_EVENT) {
+        if (type == GeckoEditableListener.NOTIFY_IME_REPLY_EVENT) {
             try {
                 if (mGeckoFocused) {
                     // When mGeckoFocused is false, the reply is for a stale action,
@@ -903,10 +901,10 @@ final class GeckoEditable extends JNIObject
                 mActionQueue.poll();
             }
             return;
-        } else if (type == NOTIFY_IME_TO_COMMIT_COMPOSITION) {
+        } else if (type == GeckoEditableListener.NOTIFY_IME_TO_COMMIT_COMPOSITION) {
             notifyCommitComposition();
             return;
-        } else if (type == NOTIFY_IME_TO_CANCEL_COMPOSITION) {
+        } else if (type == GeckoEditableListener.NOTIFY_IME_TO_CANCEL_COMPOSITION) {
             notifyCancelComposition();
             return;
         }
@@ -914,7 +912,7 @@ final class GeckoEditable extends JNIObject
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
-                if (type == NOTIFY_IME_OF_FOCUS) {
+                if (type == GeckoEditableListener.NOTIFY_IME_OF_FOCUS) {
                     mFocused = true;
                     // Unmask events on the Gecko side
                     mActionQueue.offer(new Action(Action.TYPE_ACKNOWLEDGE_FOCUS));
@@ -937,16 +935,16 @@ final class GeckoEditable extends JNIObject
         });
 
         // Update the mGeckoFocused flag.
-        if (type == NOTIFY_IME_OF_BLUR) {
+        if (type == GeckoEditableListener.NOTIFY_IME_OF_BLUR) {
             mGeckoFocused = false;
-        } else if (type == NOTIFY_IME_OF_FOCUS) {
+        } else if (type == GeckoEditableListener.NOTIFY_IME_OF_FOCUS) {
             mGeckoFocused = true;
         }
     }
 
-    @WrapForJNI(calledFrom = "gecko") @Override
-    public void notifyIMEContext(final int state, final String typeHint,
-                                 final String modeHint, final String actionHint) {
+    @WrapForJNI(calledFrom = "gecko")
+    private void notifyIMEContext(final int state, final String typeHint,
+                                  final String modeHint, final String actionHint) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
@@ -965,8 +963,8 @@ final class GeckoEditable extends JNIObject
         });
     }
 
-    @WrapForJNI(calledFrom = "gecko") @Override
-    public void onSelectionChange(int start, int end) {
+    @WrapForJNI(calledFrom = "gecko")
+    private void onSelectionChange(final int start, final int end) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
@@ -995,7 +993,7 @@ final class GeckoEditable extends JNIObject
                 if (mListener == null) {
                     return;
                 }
-                mListener.onSelectionChange(newStart, newEnd);
+                mListener.onSelectionChange();
             }
         });
     }
@@ -1009,9 +1007,9 @@ final class GeckoEditable extends JNIObject
                TextUtils.regionMatches(mText, start, newText, 0, oldEnd - start);
     }
 
-    @WrapForJNI(calledFrom = "gecko") @Override
-    public void onTextChange(final CharSequence text, final int start,
-                             final int unboundedOldEnd, final int unboundedNewEnd) {
+    @WrapForJNI(calledFrom = "gecko")
+    private void onTextChange(final CharSequence text, final int start,
+                              final int unboundedOldEnd, final int unboundedNewEnd) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
@@ -1110,13 +1108,13 @@ final class GeckoEditable extends JNIObject
                 if (mListener == null) {
                     return;
                 }
-                mListener.onTextChange(text, start, oldEnd, newEnd);
+                mListener.onTextChange();
             }
         });
     }
 
-    @WrapForJNI(calledFrom = "gecko") @Override
-    public void onDefaultKeyEvent(final KeyEvent event) {
+    @WrapForJNI(calledFrom = "gecko")
+    private void onDefaultKeyEvent(final KeyEvent event) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
@@ -1140,8 +1138,8 @@ final class GeckoEditable extends JNIObject
         });
     }
 
-    @WrapForJNI(calledFrom = "gecko") @Override
-    public void updateCompositionRects(final RectF[] aRects) {
+    @WrapForJNI(calledFrom = "gecko")
+    private void updateCompositionRects(final RectF[] aRects) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
