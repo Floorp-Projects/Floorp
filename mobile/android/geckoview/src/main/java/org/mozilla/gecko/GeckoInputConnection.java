@@ -66,6 +66,7 @@ class GeckoInputConnection
     private String mIMETypeHint = "";
     private String mIMEModeHint = "";
     private String mIMEActionHint = "";
+    private boolean mFocused;
 
     private String mCurrentInputMethod = "";
 
@@ -320,6 +321,8 @@ class GeckoInputConnection
         mBatchTextChanged = false;
 
         // Do not reset mIMEState here; see comments in notifyIMEContext
+
+        restartInput();
     }
 
     @Override
@@ -963,9 +966,14 @@ class GeckoInputConnection
         switch (type) {
 
             case NOTIFY_IME_OF_FOCUS:
+                // Showing/hiding vkb is done in notifyIMEContext
+                mFocused = true;
+                resetInputConnection();
+                break;
+
             case NOTIFY_IME_OF_BLUR:
                 // Showing/hiding vkb is done in notifyIMEContext
-                resetInputConnection();
+                mFocused = false;
                 break;
 
             case NOTIFY_IME_OPEN_VKB:
@@ -1021,7 +1029,15 @@ class GeckoInputConnection
             // the keyboard.
             return;
         }
-        restartInput();
+
+        // On focus, the notifyIMEContext call comes *before* the
+        // notifyIME(NOTIFY_IME_OF_FOCUS) call, but we need to call restartInput during
+        // notifyIME, so we skip restartInput here. On blur, the notifyIMEContext call
+        // comes *after* the notifyIME(NOTIFY_IME_OF_BLUR) call, and we need to call
+        // restartInput here.
+        if (mIMEState == IME_STATE_DISABLED || mFocused) {
+            restartInput();
+        }
     }
 }
 
