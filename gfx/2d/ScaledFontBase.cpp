@@ -80,7 +80,7 @@ ScaledFontBase::GetSkiaPathForGlyphs(const GlyphBuffer &aBuffer)
   MOZ_ASSERT(typeFace);
 
   SkPaint paint;
-  paint.setTypeface(typeFace);
+  paint.setTypeface(sk_ref_sp(typeFace));
   paint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
   paint.setTextSize(SkFloatToScalar(mSize));
 
