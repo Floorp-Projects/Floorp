@@ -11,6 +11,7 @@
  *          openContextMenu closeContextMenu
  *          openExtensionContextMenu closeExtensionContextMenu
  *          imageBuffer getListStyleImage getPanelForNode
+ *          awaitExtensionPanel
  */
 
 var {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -89,6 +90,25 @@ function getPanelForNode(node) {
   }
   return node;
 }
+
+var awaitExtensionPanel = Task.async(function* (extension, win = window, filename = "popup.html") {
+  let {target} = yield BrowserTestUtils.waitForEvent(win.document, "load", true, (event) => {
+    return event.target.location && event.target.location.href.endsWith(filename);
+  });
+
+  let browser = target.defaultView
+                      .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
+                      .chromeEventHandler;
+
+  if (browser.matches(".webextension-preload-browser")) {
+    let event = yield BrowserTestUtils.waitForEvent(browser, "SwapDocShells");
+    browser = event.detail;
+  }
+
+  yield promisePopupShown(getPanelForNode(browser));
+
+  return browser;
+});
 
 function getBrowserActionWidget(extension) {
   return CustomizableUI.getWidget(makeWidgetId(extension.id) + "-browser-action");
