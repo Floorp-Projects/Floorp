@@ -245,6 +245,7 @@
     macro(raw, raw, "raw") \
     macro(reason, reason, "reason") \
     macro(RegExpBuiltinExec, RegExpBuiltinExec, "RegExpBuiltinExec") \
+    macro(RegExpFlagsGetter, RegExpFlagsGetter, "RegExpFlagsGetter") \
     macro(RegExpMatcher, RegExpMatcher, "RegExpMatcher") \
     macro(RegExpSearcher, RegExpSearcher, "RegExpSearcher") \
     macro(RegExpTester, RegExpTester, "RegExpTester") \
