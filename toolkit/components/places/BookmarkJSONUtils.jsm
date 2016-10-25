@@ -397,14 +397,14 @@ BookmarkImporter.prototype = {
         if (aContainer == PlacesUtils.tagsFolderId) {
           // Node is a tag
           if (aData.children) {
-            aData.children.forEach(function(aChild) {
+            for (let child of aData.children) {
               try {
                 PlacesUtils.tagging.tagURI(
-                  NetUtil.newURI(aChild.uri), [aData.title], this._source);
+                  NetUtil.newURI(child.uri), [aData.title], this._source);
               } catch (ex) {
                 // Invalid tag child, skip it
               }
-            });
+            }
             return [folderIdMap, searchIds];
           }
         } else if (aData.annos &&
