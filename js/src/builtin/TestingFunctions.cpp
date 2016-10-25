@@ -633,12 +633,18 @@ WasmExtractCode(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(cx->options().wasm());
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!args.get(0).isObject() || !args.get(0).toObject().is<WasmModuleObject>()) {
+    if (!args.get(0).isObject()) {
+        JS_ReportErrorASCII(cx, "argument is not an object");
+        return false;
+    }
+
+    JSObject* unwrapped = CheckedUnwrap(&args.get(0).toObject());
+    if (!unwrapped || !unwrapped->is<WasmModuleObject>()) {
         JS_ReportErrorASCII(cx, "argument is not a WebAssembly.Module");
         return false;
     }
 
-    Rooted<WasmModuleObject*> module(cx, &args.get(0).toObject().as<WasmModuleObject>());
+    Rooted<WasmModuleObject*> module(cx, &unwrapped->as<WasmModuleObject>());
     RootedValue result(cx);
     if (!module->module().extractCode(cx, &result))
         return false;
