@@ -2588,7 +2588,7 @@ nsWindow::GetIMEComposition()
     Remove the composition but leave the text content as-is
 */
 void
-nsWindow::RemoveIMEComposition()
+nsWindow::RemoveIMEComposition(RemoveIMECompositionFlag aFlag)
 {
     // Remove composition on Gecko side
     const RefPtr<mozilla::TextComposition> composition(GetIMEComposition());
@@ -2598,13 +2598,11 @@ nsWindow::RemoveIMEComposition()
 
     RefPtr<nsWindow> kungFuDeathGrip(this);
 
-    // We have to use eCompositionCommit instead of eCompositionCommitAsIs
-    // because TextComposition has a workaround for eCompositionCommitAsIs
-    // that prevents compositions containing a single ideographic space
-    // character from working (see bug 1209465)..
     WidgetCompositionEvent compositionCommitEvent(
             true, eCompositionCommit, this);
-    compositionCommitEvent.mData = composition->String();
+    if (aFlag == COMMIT_IME_COMPOSITION) {
+        compositionCommitEvent.mMessage = eCompositionCommitAsIs;
+    }
     InitEvent(compositionCommitEvent, nullptr);
     DispatchEvent(&compositionCommitEvent);
 }
@@ -2914,16 +2912,8 @@ nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
 
         case REQUEST_TO_CANCEL_COMPOSITION: {
             ALOGIME("IME: REQUEST_TO_CANCEL_COMPOSITION");
-            RefPtr<nsWindow> kungFuDeathGrip(&window);
 
-            // Cancel composition on Gecko side
-            if (window.GetIMEComposition()) {
-                WidgetCompositionEvent compositionCommitEvent(
-                        true, eCompositionCommit, &window);
-                window.InitEvent(compositionCommitEvent, nullptr);
-                // Dispatch it with empty mData value for canceling composition.
-                window.DispatchEvent(&compositionCommitEvent);
-            }
+            window.RemoveIMEComposition(CANCEL_IME_COMPOSITION);
 
             AsyncNotifyIME(GeckoEditableListener::
                            NOTIFY_IME_TO_CANCEL_COMPOSITION);
