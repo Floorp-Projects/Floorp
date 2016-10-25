@@ -128,3 +128,27 @@ RELATIONTYPE(CONTAINING_APPLICATION,
              ATK_RELATION_NULL,
              NAVRELATION_CONTAINING_APPLICATION,
              IA2_RELATION_CONTAINING_APPLICATION)
+
+RELATIONTYPE(DETAILS,
+             "details",
+             ATK_RELATION_NULL,
+             NAVRELATION_DETAILS,
+             IA2_RELATION_DETAILS)
+
+RELATIONTYPE(DETAILS_FOR,
+             "details for",
+             ATK_RELATION_NULL,
+             NAVRELATION_DETAILS_FOR,
+             IA2_RELATION_DETAILS_FOR)
+
+RELATIONTYPE(ERRORMSG,
+             "error",
+             ATK_RELATION_NULL,
+             NAVRELATION_ERROR,
+             IA2_RELATION_ERROR)
+
+RELATIONTYPE(ERRORMSG_FOR,
+             "error for",
+             ATK_RELATION_NULL,
+             NAVRELATION_ERROR_FOR,
+             IA2_RELATION_ERROR_FOR)

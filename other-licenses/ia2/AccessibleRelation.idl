@@ -154,6 +154,24 @@ const WCHAR *const IA2_RELATION_PREVIOUS_TABBABLE = L"previousTabbable";
 /** This object is a sub window of a target object. */
 const WCHAR *const IA2_RELATION_SUBWINDOW_OF = L"subwindowOf";
 
+/** The target object provides the detailed, extended description for this
+ object. It provides more detailed information than would normally be provided
+ using the IA2_RELATION_DESCRIBED_BY relation. A common use for this relation is
+ in digital publishing where an extended description needs to be conveyed in
+ a book that requires structural markup or the embedding of other technology to
+ provide illustrative content. */
+const WCHAR *const IA2_RELATION_DETAILS = L"details";
+
+/** This object provides the detailed, extended description for the target
+ object. See IA2_RELATION_DETAILS. */
+const WCHAR *const IA2_RELATION_DETAILS_FOR = L"detailsFor";
+
+/** The target object is the error message for this object. */
+const WCHAR *const IA2_RELATION_ERROR = L"error";
+
+/** This object is the error message for the target object. */
+const WCHAR *const IA2_RELATION_ERROR_FOR = L"errorFor";
+
 ///@}
 
 /** This interface gives access to an object's set of relations.
