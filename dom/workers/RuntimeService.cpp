@@ -2792,8 +2792,7 @@ WorkerThreadPrimaryRunnable::Run()
   //       worker messages here.
   if (NS_WARN_IF(!BackgroundChild::SynchronouslyCreateForCurrentThread())) {
     // XXX need to fire an error at parent.
-    // Failed in creating BackgroundChild: probably in shutdown. Continue to run
-    // without BackgroundChild created.
+    return NS_ERROR_UNEXPECTED;
   }
 
   class MOZ_STACK_CLASS SetThreadHelper final
