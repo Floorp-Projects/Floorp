@@ -8206,6 +8206,27 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
 
     MOZ_COUNT_DTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
   }
+
+  void
+  Serialize(nsString& aText)
+  {
+    MOZ_ASSERT(mFileInfo);
+
+    const int64_t id = mFileInfo->Id();
+
+    switch (mType) {
+      case eBlob:
+        aText.AppendInt(id);
+        break;
+
+      case eMutableFile:
+        aText.AppendInt(-id);
+        break;
+
+      default:
+        MOZ_CRASH("Should never get here!");
+    }
+  }
 };
 
 class ObjectStoreGetRequestOp final
@@ -9520,11 +9541,51 @@ TokenizerIgnoreNothing(char16_t /* aChar */)
 }
 
 nsresult
-ConvertFileIdsToArray(const nsAString& aFileIds,
-                      nsTArray<int64_t>& aResult)
+DeserializeStructuredCloneFile(FileManager* aFileManager,
+                               const nsString& aText,
+                               StructuredCloneFile* aFile)
+{
+  MOZ_ASSERT(!aText.IsEmpty());
+  MOZ_ASSERT(aFile);
+
+  nsresult rv;
+  int32_t id;
+  StructuredCloneFile::Type type;
+
+  if (aText.First() == '-') {
+    nsString text(Substring(aText, 1));
+
+    id = text.ToInteger(&rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    type = StructuredCloneFile::eMutableFile;
+  } else {
+    id = aText.ToInteger(&rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    type = StructuredCloneFile::eBlob;
+  }
+
+  RefPtr<FileInfo> fileInfo = aFileManager->GetFileInfo(id);
+  MOZ_ASSERT(fileInfo);
+
+  aFile->mFileInfo.swap(fileInfo);
+  aFile->mType = type;
+
+  return NS_OK;
+}
+
+nsresult
+DeserializeStructuredCloneFiles(FileManager* aFileManager,
+                                const nsAString& aText,
+                                nsTArray<StructuredCloneFile>& aResult)
 {
   nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing>
-    tokenizer(aFileIds, ' ');
+    tokenizer(aText, ' ');
 
   nsAutoString token;
   nsresult rv;
@@ -9533,12 +9594,11 @@ ConvertFileIdsToArray(const nsAString& aFileIds,
     token = tokenizer.nextToken();
     MOZ_ASSERT(!token.IsEmpty());
 
-    int32_t id = token.ToInteger(&rv);
+    StructuredCloneFile* file = aResult.AppendElement();
+    rv = DeserializeStructuredCloneFile(aFileManager, token, file);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    aResult.AppendElement(id);
   }
 
   return NS_OK;
@@ -11254,22 +11314,21 @@ UpdateRefcountFunction::ProcessValue(mozIStorageValueArray* aValues,
     return rv;
   }
 
-  nsTArray<int64_t> fileIds;
-  rv = ConvertFileIdsToArray(ids, fileIds);
+  nsTArray<StructuredCloneFile> files;
+  rv = DeserializeStructuredCloneFiles(mFileManager, ids, files);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  for (uint32_t i = 0; i < fileIds.Length(); i++) {
-    MOZ_ASSERT(fileIds[i] != 0);
-    int64_t id = Abs(fileIds[i]);
+  for (uint32_t i = 0; i < files.Length(); i++) {
+    const StructuredCloneFile& file = files[i];
+
+    const int64_t id = file.mFileInfo->Id();
+    MOZ_ASSERT(id > 0);
 
     FileInfoEntry* entry;
     if (!mFileInfoEntries.Get(id, &entry)) {
-      RefPtr<FileInfo> fileInfo = mFileManager->GetFileInfo(id);
-      MOZ_ASSERT(fileInfo);
-
-      entry = new FileInfoEntry(fileInfo);
+      entry = new FileInfoEntry(file.mFileInfo);
       mFileInfoEntries.Put(id, entry);
     }
 
@@ -19098,23 +19157,10 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
   }
 
   if (!aFileIds.IsVoid()) {
-    AutoTArray<int64_t, 10> array;
-    nsresult rv = ConvertFileIdsToArray(aFileIds, array);
+    nsresult rv =
+      DeserializeStructuredCloneFiles(aFileManager, aFileIds, aInfo->mFiles);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
-
-    for (uint32_t count = array.Length(), index = 0; index < count; index++) {
-      int64_t id = array[index];
-      MOZ_ASSERT(id != 0);
-
-      RefPtr<FileInfo> fileInfo = aFileManager->GetFileInfo(Abs(id));
-      MOZ_ASSERT(fileInfo);
-
-      StructuredCloneFile* file = aInfo->mFiles.AppendElement();
-      file->mFileInfo.swap(fileInfo);
-      file->mType = id > 0 ? StructuredCloneFile::eBlob
-                           : StructuredCloneFile::eMutableFile;
     }
   }
 
@@ -25707,8 +25753,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       if (index) {
         fileIds.Append(' ');
       }
-      fileIds.AppendInt(storedFileInfo.mType == StoredFileInfo::eBlob ? id
-                                                                      : -id);
+      storedFileInfo.Serialize(fileIds);
     }
 
     rv = stmt->BindStringByName(NS_LITERAL_CSTRING("file_ids"), fileIds);
