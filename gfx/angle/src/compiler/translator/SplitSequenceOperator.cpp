@@ -26,7 +26,7 @@ class SplitSequenceOperatorTraverser : public TLValueTrackingTraverser
 
     bool visitBinary(Visit visit, TIntermBinary *node) override;
     bool visitAggregate(Visit visit, TIntermAggregate *node) override;
-    bool visitSelection(Visit visit, TIntermSelection *node) override;
+    bool visitTernary(Visit visit, TIntermTernary *node) override;
 
     void nextIteration();
     bool foundExpressionToSplit() const { return mFoundExpressionToSplit; }
@@ -123,7 +123,7 @@ bool SplitSequenceOperatorTraverser::visitAggregate(Visit visit, TIntermAggregat
     return true;
 }
 
-bool SplitSequenceOperatorTraverser::visitSelection(Visit visit, TIntermSelection *node)
+bool SplitSequenceOperatorTraverser::visitTernary(Visit visit, TIntermTernary *node)
 {
     if (mFoundExpressionToSplit)
         return false;

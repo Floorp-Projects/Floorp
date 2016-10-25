@@ -4,6 +4,7 @@
 // found in the LICENSE file.
 //
 
+#include "common/mathutil.h"
 #include "test_utils/ANGLETest.h"
 #include "test_utils/gl_raii.h"
 
@@ -3480,6 +3481,105 @@ TEST_P(Texture2DTestES3, UnpackOverlappingRowsFromUnpackBuffer)
     EXPECT_EQ(expected, actual);
 }
 
+template <typename T>
+T UNorm(double value)
+{
+    return static_cast<T>(value * static_cast<double>(std::numeric_limits<T>::max()));
+}
+
+// Test rendering a depth texture with mipmaps.
+TEST_P(Texture2DTestES3, DepthTexturesWithMipmaps)
+{
+    //TODO(cwallez) this is failing on Intel Win7 OpenGL
+    if (IsIntel() && IsWindows() && IsOpenGL())
+    {
+        std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+
+    const int size = getWindowWidth();
+
+    auto dim   = [size](int level) { return size >> level; };
+    int levels = gl::log2(size);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexStorage2D(GL_TEXTURE_2D, levels, GL_DEPTH_COMPONENT24, size, size);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    ASSERT_GL_NO_ERROR();
+
+    glUseProgram(mProgram);
+    glUniform1i(mTexture2DUniformLocation, 0);
+
+    std::vector<unsigned char> expected;
+
+    for (int level = 0; level < levels; ++level)
+    {
+        double value = (static_cast<double>(level) / static_cast<double>(levels - 1));
+        expected.push_back(UNorm<unsigned char>(value));
+
+        int levelDim = dim(level);
+
+        ASSERT_GT(levelDim, 0);
+
+        std::vector<unsigned int> initData(levelDim * levelDim, UNorm<unsigned int>(value));
+        glTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, levelDim, levelDim, GL_DEPTH_COMPONENT,
+                        GL_UNSIGNED_INT, initData.data());
+    }
+    ASSERT_GL_NO_ERROR();
+
+    for (int level = 0; level < levels; ++level)
+    {
+        glViewport(0, 0, dim(level), dim(level));
+        drawQuad(mProgram, "position", 0.5f);
+        GLColor actual = ReadColor(0, 0);
+        EXPECT_NEAR(expected[level], actual.R, 10u);
+    }
+
+    ASSERT_GL_NO_ERROR();
+}
+
+// Tests unpacking into the unsized GL_ALPHA format.
+TEST_P(Texture2DTestES3, UnsizedAlphaUnpackBuffer)
+{
+    // TODO(jmadill): Figure out why this fails on OSX.
+    ANGLE_SKIP_TEST_IF(IsOSX());
+
+    // Initialize the texure.
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, getWindowWidth(), getWindowHeight(), 0, GL_ALPHA,
+                 GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    std::vector<GLubyte> bufferData(getWindowWidth() * getWindowHeight(), 127);
+
+    // Pull in the color data from the unpack buffer.
+    angle::GLBuffer unpackBuffer;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, unpackBuffer.get());
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, getWindowWidth() * getWindowHeight(), bufferData.data(),
+                 GL_STATIC_DRAW);
+
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, getWindowWidth(), getWindowHeight(), GL_ALPHA,
+                    GL_UNSIGNED_BYTE, nullptr);
+
+    // Clear to a weird color to make sure we're drawing something.
+    glClearColor(0.5f, 0.8f, 1.0f, 0.2f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Draw with the alpha texture and verify.
+    drawQuad(mProgram, "position", 0.5f);
+    swapBuffers();
+
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_NEAR(0, 0, 0, 0, 0, 127, 1);
+}
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 // TODO(oetuaho): Enable all below tests on OpenGL. Requires a fix for ANGLE bug 1278.
 ANGLE_INSTANTIATE_TEST(Texture2DTest,
@@ -3565,4 +3665,4 @@ ANGLE_INSTANTIATE_TEST(SamplerInStructAndOtherVariableTest,
 ANGLE_INSTANTIATE_TEST(TextureLimitsTest, ES2_D3D11(), ES2_OPENGL(), ES2_OPENGLES());
 ANGLE_INSTANTIATE_TEST(Texture2DNorm16TestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
 
-} // namespace
+}  // anonymous namespace

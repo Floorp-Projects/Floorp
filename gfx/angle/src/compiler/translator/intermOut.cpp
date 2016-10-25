@@ -44,10 +44,12 @@ class TOutputTraverser : public TIntermTraverser
     void visitConstantUnion(TIntermConstantUnion *) override;
     bool visitBinary(Visit visit, TIntermBinary *) override;
     bool visitUnary(Visit visit, TIntermUnary *) override;
+    bool visitTernary(Visit visit, TIntermTernary *node) override;
     bool visitSelection(Visit visit, TIntermSelection *) override;
     bool visitAggregate(Visit visit, TIntermAggregate *) override;
     bool visitLoop(Visit visit, TIntermLoop *) override;
     bool visitBranch(Visit visit, TIntermBranch *) override;
+    // TODO: Add missing visit functions
 };
 
 //
@@ -457,14 +459,46 @@ bool TOutputTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
     return true;
 }
 
+bool TOutputTraverser::visitTernary(Visit visit, TIntermTernary *node)
+{
+    TInfoSinkBase &out = sink;
+
+    OutputTreeText(out, node, mDepth);
+
+    out << "Ternary selection";
+    out << " (" << node->getCompleteString() << ")\n";
+
+    ++mDepth;
+
+    OutputTreeText(sink, node, mDepth);
+    out << "Condition\n";
+    node->getCondition()->traverse(this);
+
+    OutputTreeText(sink, node, mDepth);
+    if (node->getTrueExpression())
+    {
+        out << "true case\n";
+        node->getTrueExpression()->traverse(this);
+    }
+    if (node->getFalseExpression())
+    {
+        OutputTreeText(sink, node, mDepth);
+        out << "false case\n";
+        node->getFalseExpression()->traverse(this);
+    }
+
+    --mDepth;
+
+    return false;
+}
+
 bool TOutputTraverser::visitSelection(Visit visit, TIntermSelection *node)
 {
     TInfoSinkBase &out = sink;
 
     OutputTreeText(out, node, mDepth);
 
-    out << "Test condition and select";
-    out << " (" << node->getCompleteString() << ")\n";
+    out << "If test\n";
 
     ++mDepth;
 

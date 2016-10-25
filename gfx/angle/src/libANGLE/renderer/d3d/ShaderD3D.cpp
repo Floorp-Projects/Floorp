@@ -133,12 +133,12 @@ ShShaderOutput ShaderD3D::getCompilerOutputType() const
     return mCompilerOutputType;
 }
 
-int ShaderD3D::prepareSourceAndReturnOptions(std::stringstream *shaderSourceStream,
-                                             std::string *sourcePath)
+ShCompileOptions ShaderD3D::prepareSourceAndReturnOptions(std::stringstream *shaderSourceStream,
+                                                          std::string *sourcePath)
 {
     uncompile();
 
-    int additionalOptions = 0;
+    ShCompileOptions additionalOptions = 0;
 
     const std::string &source = mData.getSource();
 
