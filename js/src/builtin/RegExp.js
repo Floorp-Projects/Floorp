@@ -542,7 +542,7 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, fullUnicode)
 #undef SUBSTITUTION
 #undef FUNC_NAME
 
-// ES 2016 draft Mar 25, 2016 21.2.5.9.
+// ES 2017 draft 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e 21.2.5.9.
 function RegExpSearch(string) {
     // Step 1.
     var rx = this;
@@ -554,10 +554,9 @@ function RegExpSearch(string) {
     // Step 3.
     var S = ToString(string);
 
-    var result;
     if (IsRegExpMethodOptimizable(rx) && S.length < 0x7fff) {
         // Step 6.
-        result = RegExpSearcher(rx, S, 0);
+        var result = RegExpSearcher(rx, S, 0);
 
         // Step 8.
         if (result === -1)
@@ -567,6 +566,12 @@ function RegExpSearch(string) {
         return result & 0x7fff;
     }
 
+    return RegExpSearchSlowPath(rx, S);
+}
+
+// ES 2017 draft 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e 21.2.5.9
+// steps 4-9.
+function RegExpSearchSlowPath(rx, S) {
     // Step 4.
     var previousLastIndex = rx.lastIndex;
 
@@ -574,7 +579,7 @@ function RegExpSearch(string) {
     rx.lastIndex = 0;
 
     // Step 6.
-    result = RegExpExec(rx, S, false);
+    var result = RegExpExec(rx, S, false);
 
     // Step 7.
     rx.lastIndex = previousLastIndex;
