@@ -37,23 +37,9 @@ bool ContainsVectorNode(const TIntermSequence &sequence)
     return false;
 }
 
-TIntermConstantUnion *ConstructIndexNode(int index)
-{
-    TConstantUnion *u = new TConstantUnion[1];
-    u[0].setIConst(index);
-
-    TType type(EbtInt, EbpUndefined, EvqConst, 1);
-    TIntermConstantUnion *node = new TIntermConstantUnion(u, type);
-    return node;
-}
-
 TIntermBinary *ConstructVectorIndexBinaryNode(TIntermSymbol *symbolNode, int index)
 {
-    TIntermBinary *binary = new TIntermBinary(EOpIndexDirect);
-    binary->setLeft(symbolNode);
-    TIntermConstantUnion *indexNode = ConstructIndexNode(index);
-    binary->setRight(indexNode);
-    return binary;
+    return new TIntermBinary(EOpIndexDirect, symbolNode, TIntermTyped::CreateIndexNode(index));
 }
 
 TIntermBinary *ConstructMatrixIndexBinaryNode(
@@ -62,11 +48,8 @@ TIntermBinary *ConstructMatrixIndexBinaryNode(
     TIntermBinary *colVectorNode =
         ConstructVectorIndexBinaryNode(symbolNode, colIndex);
 
-    TIntermBinary *binary = new TIntermBinary(EOpIndexDirect);
-    binary->setLeft(colVectorNode);
-    TIntermConstantUnion *rowIndexNode = ConstructIndexNode(rowIndex);
-    binary->setRight(rowIndexNode);
-    return binary;
+    return new TIntermBinary(EOpIndexDirect, colVectorNode,
+                             TIntermTyped::CreateIndexNode(rowIndex));
 }
 
 }  // namespace anonymous
@@ -278,11 +261,8 @@ TString ScalarizeVecAndMatConstructorArgs::createTempVariable(TIntermTyped *orig
         type.setPrecision(mFragmentPrecisionHigh ? EbpHigh : EbpMedium);
     }
 
-    TIntermBinary *init = new TIntermBinary(EOpInitialize);
     TIntermSymbol *symbolNode = new TIntermSymbol(-1, tempVarName, type);
-    init->setLeft(symbolNode);
-    init->setRight(original);
-    init->setType(type);
+    TIntermBinary *init       = new TIntermBinary(EOpInitialize, symbolNode, original);
 
     TIntermAggregate *decl = new TIntermAggregate(EOpDeclaration);
     decl->getSequence()->push_back(init);

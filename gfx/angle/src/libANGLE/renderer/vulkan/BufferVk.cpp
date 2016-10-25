@@ -22,13 +22,13 @@ BufferVk::~BufferVk()
 {
 }
 
-gl::Error BufferVk::setData(const void *data, size_t size, GLenum usage)
+gl::Error BufferVk::setData(GLenum target, const void *data, size_t size, GLenum usage)
 {
     UNIMPLEMENTED();
     return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error BufferVk::setSubData(const void *data, size_t size, size_t offset)
+gl::Error BufferVk::setSubData(GLenum target, const void *data, size_t size, size_t offset)
 {
     UNIMPLEMENTED();
     return gl::Error(GL_INVALID_OPERATION);

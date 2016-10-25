@@ -105,14 +105,11 @@ bool IntermNodePatternMatcher::match(TIntermAggregate *node, TIntermNode *parent
     return false;
 }
 
-bool IntermNodePatternMatcher::match(TIntermSelection *node)
+bool IntermNodePatternMatcher::match(TIntermTernary *node)
 {
     if ((mMask & kUnfoldedShortCircuitExpression) != 0)
     {
-        if (node->usesTernaryOperator())
-        {
-            return true;
-        }
+        return true;
     }
     return false;
 }
