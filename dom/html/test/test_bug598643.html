@@ -38,9 +38,8 @@ var types = [
   [ "text", "email", "password", "url", "search", "tel" ],
   // These types can't be too long.
   [ "radio", "checkbox", "submit", "button", "reset", "image", "hidden",
-    'number', 'range', 'date', 'time', 'color', 'month', 'week' ],
-  // These types can't be too long but are not implemented yet.
-  [ "datetime", 'datetime-local' ]
+    'number', 'range', 'date', 'time', 'color', 'month', 'week',
+    'datetime-local' ],
 ];
 
 var input = document.createElement("input");
@@ -71,12 +70,6 @@ for (type of types[1]) {
   ok(input.validity.valid, "the element should be valid [type=" + type + "]");
   ok(!input.validity.tooLong,
      "the element shouldn't suffer from being too long [type=" + type + "]");
-}
-
-// Not too long types but TODO.
-for (type of types[2]) {
-  input.type = type
-  todo_is(input.type, type, type + " should not be implemented");
 }
 
 testFileControl(input);

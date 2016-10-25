@@ -100,6 +100,8 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
       let tooltipDoc = this.tooltip.doc;
       let eyeButton = tooltipDoc.querySelector("#eyedropper-button");
       if (value && this.inspector.selection.nodeFront.isInHTMLDocument) {
+        eyeButton.disabled = false;
+        eyeButton.removeAttribute("title");
         eyeButton.addEventListener("click", this._openEyeDropper);
       } else {
         eyeButton.disabled = true;

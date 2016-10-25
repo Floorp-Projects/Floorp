@@ -7,6 +7,7 @@
 #ifndef nsArray_h__
 #define nsArray_h__
 
+#include "nsIArrayExtensions.h"
 #include "nsIMutableArray.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -23,6 +24,7 @@ class nsArrayBase : public nsIMutableArray
 {
 public:
   NS_DECL_NSIARRAY
+  NS_DECL_NSIARRAYEXTENSIONS
   NS_DECL_NSIMUTABLEARRAY
 
   /* Both of these factory functions create a cycle-collectable array
@@ -62,7 +64,7 @@ class nsArrayCC final : public nsArrayBase
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsArrayCC)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsArrayCC, nsIMutableArray)
 
 private:
   nsArrayCC() : nsArrayBase() {}

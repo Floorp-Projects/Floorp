@@ -68,6 +68,8 @@ enum class ExprKind {
     Load,
     Store,
     TeeStore,
+    CurrentMemory,
+    GrowMemory,
     Select,
     GetLocal,
     SetLocal,
@@ -78,7 +80,6 @@ enum class ExprKind {
     Call,
     CallIndirect,
     OldCallIndirect,
-    CallImport,
     Return,
     If,
     Else,
@@ -192,7 +193,7 @@ class TypeAndValue
     Value value_;
 
   public:
-    TypeAndValue() : type_(ValType::Limit), value_() {}
+    TypeAndValue() : type_(ValType(TypeCode::Limit)), value_() {}
     explicit TypeAndValue(ValType type)
       : type_(type), value_()
     {}
@@ -217,7 +218,7 @@ class TypeAndValue<Nothing>
     ValType type_;
 
   public:
-    TypeAndValue() : type_(ValType::Limit) {}
+    TypeAndValue() : type_(ValType(TypeCode::Limit)) {}
     explicit TypeAndValue(ValType type) : type_(type) {}
 
     TypeAndValue(ValType type, Nothing value)
@@ -375,7 +376,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     }
 
     MOZ_MUST_USE bool readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
-    MOZ_MUST_USE bool readExprType(ExprType* expr);
+    MOZ_MUST_USE bool readBlockType(ExprType* expr);
 
     MOZ_MUST_USE bool typeMismatch(ExprType actual, ExprType expected) MOZ_COLD;
     MOZ_MUST_USE bool checkType(ValType actual, ValType expected);
@@ -562,7 +563,8 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readTeeStore(ValType resultType, uint32_t byteSize,
                                    LinearMemoryAddress<Value>* addr, Value* value);
     MOZ_MUST_USE bool readNop();
-    MOZ_MUST_USE bool readNullary(ValType retType);
+    MOZ_MUST_USE bool readCurrentMemory();
+    MOZ_MUST_USE bool readGrowMemory(Value* input);
     MOZ_MUST_USE bool readSelect(ValType* type,
                                  Value* trueValue, Value* falseValue, Value* condition);
     MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
@@ -585,7 +587,6 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readCall(uint32_t* calleeIndex);
     MOZ_MUST_USE bool readCallIndirect(uint32_t* sigIndex, Value* callee);
     MOZ_MUST_USE bool readOldCallIndirect(uint32_t* sigIndex);
-    MOZ_MUST_USE bool readCallImport(uint32_t* importIndex);
     MOZ_MUST_USE bool readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex, Value* arg);
     MOZ_MUST_USE bool readCallArgsEnd(uint32_t numArgs);
     MOZ_MUST_USE bool readOldCallIndirectCallee(Value* callee);
@@ -809,16 +810,30 @@ ExprIter<Policy>::popControl(LabelKind* kind, ExprType* type, Value* value)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readExprType(ExprType* type)
+ExprIter<Policy>::readBlockType(ExprType* type)
 {
-    uint8_t byte;
-    if (!readFixedU8(&byte))
+    if (!d_.readBlockType(type))
         return fail("unable to read block signature");
 
-    if (Validate && byte >= uint8_t(ExprType::Limit))
-        return fail("invalid inline type");
-
-    *type = ExprType(byte);
+    if (Validate) {
+        switch (*type) {
+          case ExprType::Void:
+          case ExprType::I32:
+          case ExprType::I64:
+          case ExprType::F32:
+          case ExprType::F64:
+          case ExprType::I8x16:
+          case ExprType::I16x8:
+          case ExprType::I32x4:
+          case ExprType::F32x4:
+          case ExprType::B8x16:
+          case ExprType::B16x8:
+          case ExprType::B32x4:
+            break;
+          default:
+            return fail("invalid inline block type");
+        }
+    }
 
     return true;
 }
@@ -898,7 +913,7 @@ ExprIter<Policy>::readBlock()
     MOZ_ASSERT(Classify(expr_) == ExprKind::Block);
 
     ExprType type = ExprType::Limit;
-    if (!readExprType(&type))
+    if (!readBlockType(&type))
         return false;
 
     return pushControl(LabelKind::Block, type, false);
@@ -911,7 +926,7 @@ ExprIter<Policy>::readLoop()
     MOZ_ASSERT(Classify(expr_) == ExprKind::Loop);
 
     ExprType type = ExprType::Limit;
-    if (!readExprType(&type))
+    if (!readBlockType(&type))
         return false;
 
     return pushControl(LabelKind::Loop, type, reachable_);
@@ -924,7 +939,7 @@ ExprIter<Policy>::readIf(Value* condition)
     MOZ_ASSERT(Classify(expr_) == ExprKind::If);
 
     ExprType type = ExprType::Limit;
-    if (!readExprType(&type))
+    if (!readBlockType(&type))
         return false;
 
     if (MOZ_LIKELY(reachable_)) {
@@ -1336,12 +1351,40 @@ ExprIter<Policy>::readNop()
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readNullary(ValType retType)
+ExprIter<Policy>::readCurrentMemory()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Nullary);
+    MOZ_ASSERT(Classify(expr_) == ExprKind::CurrentMemory);
 
-    if (!push(retType))
+    uint32_t flags;
+    if (!readVarU32(&flags))
         return false;
+
+    if (Validate && flags != uint32_t(MemoryTableFlags::Default))
+        return fail("unexpected flags");
+
+    if (!push(ValType::I32))
+        return false;
+
+    return true;
+}
+
+template <typename Policy>
+inline bool
+ExprIter<Policy>::readGrowMemory(Value* input)
+{
+    MOZ_ASSERT(Classify(expr_) == ExprKind::GrowMemory);
+
+    uint32_t flags;
+    if (!readVarU32(&flags))
+        return false;
+
+    if (Validate && flags != uint32_t(MemoryTableFlags::Default))
+        return fail("unexpected flags");
+
+    if (!popWithType(ValType::I32, input))
+        return false;
+
+    infalliblePush(ValType::I32);
 
     return true;
 }
@@ -1713,6 +1756,13 @@ ExprIter<Policy>::readCallIndirect(uint32_t* sigIndex, Value* callee)
     if (!readVarU32(sigIndex))
         return fail("unable to read call_indirect signature index");
 
+    uint32_t flags;
+    if (!readVarU32(&flags))
+        return false;
+
+    if (Validate && flags != uint32_t(MemoryTableFlags::Default))
+        return fail("unexpected flags");
+
     if (reachable_) {
         if (!popWithType(ValType::I32, callee))
             return false;
@@ -1729,18 +1779,6 @@ ExprIter<Policy>::readOldCallIndirect(uint32_t* sigIndex)
 
     if (!readVarU32(sigIndex))
         return fail("unable to read call_indirect signature index");
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-ExprIter<Policy>::readCallImport(uint32_t* importIndex)
-{
-    MOZ_ASSERT(Classify(expr_) == ExprKind::CallImport);
-
-    if (!readVarU32(importIndex))
-        return fail("unable to read call_import import index");
 
     return true;
 }

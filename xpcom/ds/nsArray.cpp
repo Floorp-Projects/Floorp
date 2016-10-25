@@ -23,12 +23,14 @@ static bool FindElementCallback(void* aElement, void* aClosure);
 
 NS_INTERFACE_MAP_BEGIN(nsArray)
   NS_INTERFACE_MAP_ENTRY(nsIArray)
+  NS_INTERFACE_MAP_ENTRY(nsIArrayExtensions)
   NS_INTERFACE_MAP_ENTRY(nsIMutableArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMutableArray)
 NS_INTERFACE_MAP_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsArrayCC)
   NS_INTERFACE_MAP_ENTRY(nsIArray)
+  NS_INTERFACE_MAP_ENTRY(nsIArrayExtensions)
   NS_INTERFACE_MAP_ENTRY(nsIMutableArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMutableArray)
 NS_INTERFACE_MAP_END
@@ -177,6 +179,22 @@ NS_IMETHODIMP
 nsArrayBase::Clear()
 {
   mArray.Clear();
+  return NS_OK;
+}
+
+// nsIArrayExtensions implementation.
+
+NS_IMETHODIMP
+nsArrayBase::Count(uint32_t* aResult)
+{
+  return GetLength(aResult);
+}
+
+NS_IMETHODIMP
+nsArrayBase::GetElementAt(uint32_t aIndex, nsISupports** aResult)
+{
+  nsCOMPtr<nsISupports> obj = mArray.SafeObjectAt(aIndex);
+  obj.forget(aResult);
   return NS_OK;
 }
 

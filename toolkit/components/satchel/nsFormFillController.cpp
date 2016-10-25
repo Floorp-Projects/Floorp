@@ -1063,8 +1063,9 @@ nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
 
   bool isOpen = false;
   GetPopupOpen(&isOpen);
-  if (isOpen)
-    return NS_OK;
+  if (isOpen) {
+    return SetPopupOpen(false);
+  }
 
   nsCOMPtr<nsIAutoCompleteInput> input;
   mController->GetInput(getter_AddRefs(input));

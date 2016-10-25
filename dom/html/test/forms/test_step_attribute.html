@@ -27,12 +27,12 @@ var data = [
   { type: 'url', apply: false },
   { type: 'email', apply: false },
   { type: 'password', apply: false },
-  { type: 'datetime', apply: true, todo: true },
   { type: 'date', apply: true },
   { type: 'month', apply: true },
   { type: 'week', apply: true },
   { type: 'time', apply: true },
-  { type: 'datetime-local', apply: true, todo: true },
+  // TODO: temporary set to false until bug 888331 is fixed.
+  { type: 'datetime-local', apply: false },
   { type: 'number', apply: true },
   { type: 'range', apply: true },
   { type: 'color', apply: false },
@@ -947,6 +947,10 @@ for (var test of data) {
 
       input.value = '1970-W02';
       checkValidity(input, true, apply);
+
+      break;
+    case 'datetime-local':
+      // TODO: this is temporary until bug 888331 is fixed.
 
       break;
     default:
