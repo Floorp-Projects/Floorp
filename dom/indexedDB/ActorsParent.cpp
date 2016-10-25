@@ -8194,21 +8194,14 @@ private:
 
 struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
 {
-  enum Type
-  {
-    eBlob,
-    eMutableFile,
-    eStructuredClone
-  };
-
   RefPtr<DatabaseFile> mFileActor;
   RefPtr<FileInfo> mFileInfo;
   nsCOMPtr<nsIInputStream> mInputStream;
-  Type mType;
+  StructuredCloneFile::FileType mType;
   bool mCopiedSuccessfully;
 
   StoredFileInfo()
-    : mType(eBlob)
+    : mType(StructuredCloneFile::eBlob)
     , mCopiedSuccessfully(false)
   {
     AssertIsOnBackgroundThread();
@@ -8231,15 +8224,15 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
     const int64_t id = mFileInfo->Id();
 
     switch (mType) {
-      case eBlob:
+      case StructuredCloneFile::eBlob:
         aText.AppendInt(id);
         break;
 
-      case eMutableFile:
+      case StructuredCloneFile::eMutableFile:
         aText.AppendInt(-id);
         break;
 
-      case eStructuredClone:
+      case StructuredCloneFile::eStructuredClone:
         aText.Append('.');
         aText.AppendInt(id);
         break;
@@ -9591,7 +9584,7 @@ DeserializeStructuredCloneFile(FileManager* aFileManager,
 
   nsresult rv;
   int32_t id;
-  StructuredCloneFile::Type type;
+  StructuredCloneFile::FileType type;
 
   bool isDot = false;
   if ((isDot = aText.First() == '.') ||
@@ -25549,7 +25542,7 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
             mFileManager = fileManager;
           }
 
-          storedFileInfo->mType = StoredFileInfo::eBlob;
+          storedFileInfo->mType = StructuredCloneFile::eBlob;
           break;
         }
 
@@ -25562,7 +25555,7 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
           storedFileInfo->mFileInfo = mutableFileActor->GetFileInfo();
           MOZ_ASSERT(storedFileInfo->mFileInfo);
 
-          storedFileInfo->mType = StoredFileInfo::eMutableFile;
+          storedFileInfo->mType = StructuredCloneFile::eMutableFile;
           break;
         }
 
@@ -25587,7 +25580,7 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
     storedFileInfo->mInputStream =
       new SCInputStream(mParams.cloneInfo().data().data);
 
-    storedFileInfo->mType = StoredFileInfo::eStructuredClone;
+    storedFileInfo->mType = StructuredCloneFile::eStructuredClone;
   }
 
   return true;
@@ -25901,7 +25894,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
             return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
           }
 
-          if (storedFileInfo.mType == StoredFileInfo::eStructuredClone) {
+          if (storedFileInfo.mType == StructuredCloneFile::eStructuredClone) {
             RefPtr<SnappyCompressOutputStream> snappyOutputStream =
               new SnappyCompressOutputStream(fileOutputStream);
 
@@ -26050,7 +26043,7 @@ ObjectStoreAddOrPutRequestOp::Cleanup()
          index++) {
       StoredFileInfo& storedFileInfo = mStoredFileInfos[index];
 
-      MOZ_ASSERT_IF(storedFileInfo.mType == StoredFileInfo::eMutableFile,
+      MOZ_ASSERT_IF(storedFileInfo.mType == StructuredCloneFile::eMutableFile,
                     !storedFileInfo.mCopiedSuccessfully);
 
       RefPtr<DatabaseFile>& fileActor = storedFileInfo.mFileActor;
