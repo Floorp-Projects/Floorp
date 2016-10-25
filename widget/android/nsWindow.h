@@ -239,7 +239,11 @@ protected:
     bool IsTopLevel();
 
     RefPtr<mozilla::TextComposition> GetIMEComposition();
-    void RemoveIMEComposition();
+    enum RemoveIMECompositionFlag {
+        CANCEL_IME_COMPOSITION,
+        COMMIT_IME_COMPOSITION
+    };
+    void RemoveIMEComposition(RemoveIMECompositionFlag aFlag = COMMIT_IME_COMPOSITION);
 
     void ConfigureAPZControllerThread() override;
     void DispatchHitTest(const mozilla::WidgetTouchEvent& aEvent);
