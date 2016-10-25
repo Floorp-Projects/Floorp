@@ -60,6 +60,7 @@
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PBackground.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/storage/Variant.h"
 #include "nsAutoPtr.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -124,6 +125,11 @@
   {0x6b505c84, 0x2c60, 0x4ffb, {0x8b, 0x91, 0xfe, 0x22, 0xb1, 0xec, 0x75, 0xe2}}
 
 namespace mozilla {
+
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc,
+                                          PRFileDesc,
+                                          PR_Close);
+
 namespace dom {
 namespace indexedDB {
 
@@ -9592,32 +9598,41 @@ DeserializeStructuredCloneFile(FileManager* aFileManager,
   MOZ_ASSERT(!aText.IsEmpty());
   MOZ_ASSERT(aFile);
 
-  nsresult rv;
-  int32_t id;
   StructuredCloneFile::FileType type;
 
-  bool isDot = false;
-  if ((isDot = aText.First() == '.') ||
-      aText.First() == '-') {
+  switch (aText.First()) {
+    case char16_t('-'):
+      type = StructuredCloneFile::eMutableFile;
+      break;
+
+    case char16_t('.'):
+      type = StructuredCloneFile::eStructuredClone;
+      break;
+
+    case char16_t('/'):
+      type = StructuredCloneFile::eWasmBytecode;
+      break;
+
+    case char16_t('\\'):
+      type = StructuredCloneFile::eWasmCompiled;
+      break;
+
+    default:
+      type = StructuredCloneFile::eBlob;
+  }
+
+  nsresult rv;
+  int32_t id;
+
+  if (type == StructuredCloneFile::eBlob) {
+    id = aText.ToInteger(&rv);
+  } else {
     nsString text(Substring(aText, 1));
 
     id = text.ToInteger(&rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (isDot) {
-      type = StructuredCloneFile::eStructuredClone;
-    } else {
-      type = StructuredCloneFile::eMutableFile;
-    }
-  } else {
-    id = aText.ToInteger(&rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    type = StructuredCloneFile::eBlob;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   RefPtr<FileInfo> fileInfo = aFileManager->GetFileInfo(id);
@@ -9634,11 +9649,14 @@ DeserializeStructuredCloneFiles(FileManager* aFileManager,
                                 const nsAString& aText,
                                 nsTArray<StructuredCloneFile>& aResult)
 {
+  MOZ_ASSERT(!IsOnBackgroundThread());
+
   nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing>
     tokenizer(aText, ' ');
 
   nsAutoString token;
   nsresult rv;
+  nsCOMPtr<nsIFile> directory;
 
   while (tokenizer.hasMoreTokens()) {
     token = tokenizer.nextToken();
@@ -9648,6 +9666,40 @@ DeserializeStructuredCloneFiles(FileManager* aFileManager,
     rv = DeserializeStructuredCloneFile(aFileManager, token, file);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    if (file->mType == StructuredCloneFile::eWasmCompiled) {
+      if (!directory) {
+        directory = aFileManager->GetCheckedDirectory();
+        if (NS_WARN_IF(!directory)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+
+      const int64_t fileId = file->mFileInfo->Id();
+      MOZ_ASSERT(fileId > 0);
+
+      nsCOMPtr<nsIFile> nativeFile =
+        aFileManager->GetCheckedFileForId(directory, fileId);
+      if (NS_WARN_IF(!nativeFile)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      ScopedPRFileDesc fileDesc;
+      rv = nativeFile->OpenNSPRFileDesc(PR_RDONLY, 0644, &fileDesc.rwget());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      JS::BuildIdCharVector buildId;
+      bool ok = GetBuildId(&buildId);
+      if (NS_WARN_IF(!ok)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      MOZ_ASSERT(file->mValid);
+      file->mValid = JS::CompiledWasmModuleAssumptionsMatch(fileDesc,
+                                                            Move(buildId));
     }
   }
 
@@ -9694,19 +9746,11 @@ SerializeStructuredCloneFiles(
 
   FileManager* fileManager = aDatabase->GetFileManager();
 
-  nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
+  nsCOMPtr<nsIFile> directory = fileManager->GetCheckedDirectory();
   if (NS_WARN_IF(!directory)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
-
-  DebugOnly<bool> exists;
-  MOZ_ASSERT(NS_SUCCEEDED(directory->Exists(&exists)));
-  MOZ_ASSERT(exists);
-
-  DebugOnly<bool> isDirectory;
-  MOZ_ASSERT(NS_SUCCEEDED(directory->IsDirectory(&isDirectory)));
-  MOZ_ASSERT(isDirectory);
 
   const uint32_t count = aFiles.Length();
 
@@ -9721,18 +9765,11 @@ SerializeStructuredCloneFiles(
     MOZ_ASSERT(fileId > 0);
 
     nsCOMPtr<nsIFile> nativeFile =
-      fileManager->GetFileForId(directory, fileId);
+      fileManager->GetCheckedFileForId(directory, fileId);
     if (NS_WARN_IF(!nativeFile)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
-
-    MOZ_ASSERT(NS_SUCCEEDED(nativeFile->Exists(&exists)));
-    MOZ_ASSERT(exists);
-
-    DebugOnly<bool> isFile;
-    MOZ_ASSERT(NS_SUCCEEDED(nativeFile->IsFile(&isFile)));
-    MOZ_ASSERT(isFile);
 
     switch (file.mType) {
       case StructuredCloneFile::eBlob: {
@@ -9799,6 +9836,40 @@ SerializeStructuredCloneFiles(
 
         file->file() = null_t();
         file->type() = StructuredCloneFile::eStructuredClone;
+
+        break;
+      }
+
+      case StructuredCloneFile::eWasmBytecode:
+      case StructuredCloneFile::eWasmCompiled: {
+        if (file.mType == StructuredCloneFile::eWasmCompiled && !file.mValid) {
+          SerializedStructuredCloneFile* serializedFile =
+            aResult.AppendElement(fallible);
+          MOZ_ASSERT(serializedFile);
+
+          serializedFile->file() = null_t();
+          serializedFile->type() = StructuredCloneFile::eWasmCompiled;
+        } else {
+          RefPtr<BlobImpl> impl = new BlobImplStoredFile(nativeFile,
+                                                         file.mFileInfo,
+                                                         /* aSnapshot */ false);
+
+          PBlobParent* actor =
+            BackgroundParent::GetOrCreateActorForBlobImpl(aBackgroundActor,
+                                                          impl);
+          if (!actor) {
+            // This can only fail if the child has crashed.
+            IDB_REPORT_INTERNAL_ERR();
+            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+          }
+
+          SerializedStructuredCloneFile* serializedFile =
+            aResult.AppendElement(fallible);
+          MOZ_ASSERT(serializedFile);
+
+          serializedFile->file() = actor;
+          serializedFile->type() = file.mType;
+        }
 
         break;
       }
@@ -16805,6 +16876,25 @@ FileManager::GetDirectory()
 }
 
 already_AddRefed<nsIFile>
+FileManager::GetCheckedDirectory()
+{
+  nsCOMPtr<nsIFile> directory = GetDirectory();
+  if (NS_WARN_IF(!directory)) {
+    return nullptr;
+  }
+
+  DebugOnly<bool> exists;
+  MOZ_ASSERT(NS_SUCCEEDED(directory->Exists(&exists)));
+  MOZ_ASSERT(exists);
+
+  DebugOnly<bool> isDirectory;
+  MOZ_ASSERT(NS_SUCCEEDED(directory->IsDirectory(&isDirectory)));
+  MOZ_ASSERT(isDirectory);
+
+  return directory.forget();
+}
+
+already_AddRefed<nsIFile>
 FileManager::GetJournalDirectory()
 {
   return GetFileForPath(mJournalDirectoryPath);
@@ -16907,6 +16997,26 @@ FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
+
+  return file.forget();
+}
+
+// static
+already_AddRefed<nsIFile>
+FileManager::GetCheckedFileForId(nsIFile* aDirectory, int64_t aId)
+{
+  nsCOMPtr<nsIFile> file = GetFileForId(aDirectory, aId);
+  if (NS_WARN_IF(!file)) {
+    return nullptr;
+  }
+
+  DebugOnly<bool> exists;
+  MOZ_ASSERT(NS_SUCCEEDED(file->Exists(&exists)));
+  MOZ_ASSERT(exists);
+
+  DebugOnly<bool> isFile;
+  MOZ_ASSERT(NS_SUCCEEDED(file->IsFile(&isFile)));
+  MOZ_ASSERT(isFile);
 
   return file.forget();
 }

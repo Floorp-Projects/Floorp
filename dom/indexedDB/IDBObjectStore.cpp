@@ -136,6 +136,26 @@ struct MOZ_STACK_CLASS BlobOrFileData final
   }
 };
 
+struct MOZ_STACK_CLASS WasmModuleData final
+{
+  uint32_t bytecodeIndex;
+  uint32_t compiledIndex;
+  uint32_t flags;
+
+  explicit WasmModuleData(uint32_t aFlags)
+    : bytecodeIndex(0)
+    , compiledIndex(0)
+    , flags(aFlags)
+  {
+    MOZ_COUNT_CTOR(WasmModuleData);
+  }
+
+  ~WasmModuleData()
+  {
+    MOZ_COUNT_DTOR(WasmModuleData);
+  }
+};
+
 struct MOZ_STACK_CLASS GetAddInfoClosure final
 {
   IDBObjectStore::StructuredCloneWriteInfo& mCloneWriteInfo;
@@ -168,6 +188,25 @@ GenerateRequest(JSContext* aCx, IDBObjectStore* aObjectStore)
   MOZ_ASSERT(request);
 
   return request.forget();
+}
+
+PRFileDesc*
+GetFileDescriptorFromStream(nsIInputStream* aStream)
+{
+  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(aStream);
+  if (NS_WARN_IF(!fileMetadata)) {
+    return nullptr;
+  }
+
+  PRFileDesc* fileDesc;
+  nsresult rv = fileMetadata->GetFileDescriptor(&fileDesc);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(fileDesc);
+
+  return fileDesc;
 }
 
 bool
@@ -578,6 +617,27 @@ ReadBlobOrFile(JSStructuredCloneReader* aReader,
   return true;
 }
 
+bool
+ReadWasmModule(JSStructuredCloneReader* aReader,
+               WasmModuleData* aRetval)
+{
+  static_assert(SCTAG_DOM_WASM == 0xFFFF8006, "Update me!");
+  MOZ_ASSERT(aReader && aRetval);
+
+  uint32_t bytecodeIndex;
+  uint32_t compiledIndex;
+  if (NS_WARN_IF(!JS_ReadUint32Pair(aReader,
+                                    &bytecodeIndex,
+                                    &compiledIndex))) {
+    return false;
+  }
+
+  aRetval->bytecodeIndex = bytecodeIndex;
+  aRetval->compiledIndex = compiledIndex;
+
+  return true;
+}
+
 class ValueDeserializationHelper
 {
 public:
@@ -682,6 +742,76 @@ public:
     aResult.set(&wrappedFile.toObject());
     return true;
   }
+
+  static bool
+  CreateAndWrapWasmModule(JSContext* aCx,
+                          StructuredCloneFile& aBytecodeFile,
+                          StructuredCloneFile& aCompiledFile,
+                          const WasmModuleData& aData,
+                          JS::MutableHandle<JSObject*> aResult)
+  {
+    MOZ_ASSERT(aCx);
+    MOZ_ASSERT(aBytecodeFile.mType == StructuredCloneFile::eWasmBytecode);
+    MOZ_ASSERT(aBytecodeFile.mBlob);
+    MOZ_ASSERT(aCompiledFile.mType == StructuredCloneFile::eWasmCompiled);
+
+    ErrorResult errorResult;
+
+    nsCOMPtr<nsIInputStream> bytecodeStream;
+    aBytecodeFile.mBlob->GetInternalStream(getter_AddRefs(bytecodeStream),
+                                           errorResult);
+    if (NS_WARN_IF(errorResult.Failed())) {
+      return false;
+    }
+
+    PRFileDesc* bytecodeFileDesc = GetFileDescriptorFromStream(bytecodeStream);
+    if (NS_WARN_IF(!bytecodeFileDesc)) {
+      return false;
+    }
+
+    // The compiled stream must scoped here!
+    nsCOMPtr<nsIInputStream> compiledStream;
+
+    PRFileDesc* compiledFileDesc;
+    if (aCompiledFile.mBlob) {
+      aCompiledFile.mBlob->GetInternalStream(getter_AddRefs(compiledStream),
+                                             errorResult);
+      if (NS_WARN_IF(errorResult.Failed())) {
+        return false;
+      }
+
+      compiledFileDesc = GetFileDescriptorFromStream(compiledStream);
+      if (NS_WARN_IF(!compiledFileDesc)) {
+        return false;
+      }
+    } else {
+      compiledFileDesc = nullptr;
+    }
+
+    JS::BuildIdCharVector buildId;
+    bool ok = GetBuildId(&buildId);
+    if (NS_WARN_IF(!ok)) {
+      return false;
+    }
+
+    RefPtr<JS::WasmModule> module = JS::DeserializeWasmModule(bytecodeFileDesc,
+                                                              compiledFileDesc,
+                                                              Move(buildId),
+                                                              nullptr,
+                                                              0,
+                                                              0);
+    if (NS_WARN_IF(!module)) {
+      return false;
+    }
+
+    JS::Rooted<JSObject*> moduleObj(aCx, module->createObject(aCx));
+    if (NS_WARN_IF(!moduleObj)) {
+      return false;
+    }
+
+    aResult.set(moduleObj);
+    return true;
+  }
 };
 
 class IndexDeserializationHelper
@@ -774,6 +904,23 @@ public:
     aResult.set(obj);
     return true;
   }
+
+  static bool
+  CreateAndWrapWasmModule(JSContext* aCx,
+                          StructuredCloneFile& aBytecodeFile,
+                          StructuredCloneFile& aCompiledFile,
+                          const WasmModuleData& aData,
+                          JS::MutableHandle<JSObject*> aResult)
+  {
+    // Wasm module can't be used in index creation, so just make a dummy object.
+    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+    if (NS_WARN_IF(!obj)) {
+      return false;
+    }
+
+    aResult.set(obj);
+    return true;
+  }
 };
 
 // We don't need to upgrade database on B2G. See the comment in ActorsParent.cpp,
@@ -830,6 +977,22 @@ public:
     aResult.set(obj);
     return true;
   }
+
+  static bool
+  CreateAndWrapWasmModule(JSContext* aCx,
+                          StructuredCloneFile& aBytecodeFile,
+                          StructuredCloneFile& aCompiledFile,
+                          const WasmModuleData& aData,
+                          JS::MutableHandle<JSObject*> aResult)
+  {
+    MOZ_ASSERT(aCx);
+    MOZ_ASSERT(aBytecodeFile.mType == StructuredCloneFile::eBlob);
+    MOZ_ASSERT(aCompiledFile.mType == StructuredCloneFile::eBlob);
+
+    MOZ_ASSERT(false, "This should never be possible!");
+
+    return false;
+  }
 };
 
 #endif // MOZ_B2G
@@ -855,8 +1018,42 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
   if (aTag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
       aTag == SCTAG_DOM_BLOB ||
       aTag == SCTAG_DOM_FILE ||
-      aTag == SCTAG_DOM_MUTABLEFILE) {
+      aTag == SCTAG_DOM_MUTABLEFILE ||
+      aTag == SCTAG_DOM_WASM) {
     auto* cloneReadInfo = static_cast<StructuredCloneReadInfo*>(aClosure);
+
+    JS::Rooted<JSObject*> result(aCx);
+
+    if (aTag == SCTAG_DOM_WASM) {
+      WasmModuleData data(aData);
+      if (NS_WARN_IF(!ReadWasmModule(aReader, &data))) {
+        return nullptr;
+      }
+
+      MOZ_ASSERT(data.compiledIndex == data.bytecodeIndex + 1);
+      MOZ_ASSERT(!data.flags);
+
+      if (data.bytecodeIndex >= cloneReadInfo->mFiles.Length() ||
+          data.compiledIndex >= cloneReadInfo->mFiles.Length()) {
+        MOZ_ASSERT(false, "Bad index value!");
+        return nullptr;
+      }
+
+      StructuredCloneFile& bytecodeFile =
+        cloneReadInfo->mFiles[data.bytecodeIndex];
+      StructuredCloneFile& compiledFile =
+        cloneReadInfo->mFiles[data.compiledIndex];
+
+      if (NS_WARN_IF(!Traits::CreateAndWrapWasmModule(aCx,
+                                                      bytecodeFile,
+                                                      compiledFile,
+                                                      data,
+                                                      &result))) {
+        return nullptr;
+      }
+
+      return result;
+    }
 
     if (aData >= cloneReadInfo->mFiles.Length()) {
       MOZ_ASSERT(false, "Bad index value!");
@@ -864,8 +1061,6 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
     }
 
     StructuredCloneFile& file = cloneReadInfo->mFiles[aData];
-
-    JS::Rooted<JSObject*> result(aCx);
 
     if (aTag == SCTAG_DOM_MUTABLEFILE) {
       MutableFileData data;

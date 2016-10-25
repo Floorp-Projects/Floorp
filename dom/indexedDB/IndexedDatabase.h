@@ -38,6 +38,8 @@ struct StructuredCloneFile
   RefPtr<IDBMutableFile> mMutableFile;
   RefPtr<FileInfo> mFileInfo;
   FileType mType;
+  // This is currently specific to eWasmCompiled files.
+  bool mValid;
 
   // In IndexedDatabaseInlines.h
   inline
