@@ -6,12 +6,8 @@ package org.mozilla.gecko.home.activitystream.topsites;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.CursorWrapper;
 import android.support.annotation.UiThread;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,7 +59,7 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
             return;
         }
 
-        for (int i = 0; i < tiles; i++) {
+        for (int i = 0; i < tiles && startIndex + i < cursor.getCount(); i++) {
             cursor.moveToPosition(startIndex + i);
 
             // The Combined View only contains pages that have been visited at least once, i.e. any
