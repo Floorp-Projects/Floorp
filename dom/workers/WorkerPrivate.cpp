@@ -699,8 +699,6 @@ public:
       init.mCancelable = false;
 
       init.mData = messageData;
-      init.mPorts.Construct();
-      init.mPorts.Value().SetNull();
 
       ErrorResult rv;
       extendableEvent = ExtendableMessageEvent::Constructor(
