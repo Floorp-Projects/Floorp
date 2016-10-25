@@ -594,6 +594,7 @@ final class GeckoEditable extends JNIObject
         // Post to UI thread first to make sure any code that is using the old input
         // connection has finished running, before we switch to a new input connection or
         // before we clear the input connection on destruction.
+        final Handler icHandler = mIcPostHandler;
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
@@ -611,7 +612,7 @@ final class GeckoEditable extends JNIObject
                 }
 
                 mView = v;
-                mIcPostHandler.post(setListenerRunnable);
+                icHandler.post(setListenerRunnable);
             }
         });
     }
@@ -625,6 +626,9 @@ final class GeckoEditable extends JNIObject
     }
 
     private void geckoPostToIc(Runnable runnable) {
+        if (DEBUG) {
+            ThreadUtils.assertOnGeckoThread();
+        }
         mIcPostHandler.post(runnable);
     }
 
@@ -890,14 +894,15 @@ final class GeckoEditable extends JNIObject
         mSuppressKeyUp = suppress;
     }
 
-    @Override
-    public Handler setInputConnectionHandler(Handler handler) {
-        if (handler == mIcPostHandler || !mFocused) {
-            return mIcPostHandler;
+    @Override // GeckoEditableClient
+    public Handler setInputConnectionHandler(final Handler handler) {
+        if (handler == mIcRunHandler) {
+            return mIcRunHandler;
         }
         if (DEBUG) {
             assertOnIcThread();
         }
+
         // There are three threads at this point: Gecko thread, old IC thread, and new IC
         // thread, and we want to safely switch from old IC thread to new IC thread.
         // We first send a TYPE_SET_HANDLER action to the Gecko thread; this ensures that
@@ -910,6 +915,21 @@ final class GeckoEditable extends JNIObject
         // also post a Runnable to the new IC thread; this Runnable blocks until the
         // switch is complete; this ensures that the new IC thread won't accept
         // InputConnection calls until after the switch.
+
+        handler.post(new Runnable() { // Make the new IC thread wait.
+            @Override
+            public void run() {
+                synchronized (handler) {
+                    while (mIcRunHandler != handler) {
+                        try {
+                            handler.wait();
+                        } catch (final InterruptedException e) {
+                        }
+                    }
+                }
+            }
+        });
+
         icOfferAction(Action.newSetHandler(handler));
         return handler;
     }
@@ -939,20 +959,6 @@ final class GeckoEditable extends JNIObject
         // we don't switch mIcRunHandler yet because there may be pending Runnables on the
         // old IC thread still waiting to run.
         mIcPostHandler = newHandler;
-
-        geckoPostToIc(new Runnable() { // posting to new IC thread
-            @Override
-            public void run() {
-                synchronized (newHandler) {
-                    while (mIcRunHandler != newHandler) {
-                        try {
-                            newHandler.wait();
-                        } catch (InterruptedException e) {
-                        }
-                    }
-                }
-            }
-        });
     }
 
     private void geckoActionReply(final Action action) {
