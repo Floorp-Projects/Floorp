@@ -114,6 +114,16 @@ this.TabCrashHandler = {
             this.unseenCrashedChildIDs.shift();
           }
         }
+
+        // check for environment affecting crash reporting
+        let env = Cc["@mozilla.org/process/environment;1"]
+                    .getService(Ci.nsIEnvironment);
+        let shutdown = env.exists("MOZ_CRASHREPORTER_SHUTDOWN");
+
+        if (shutdown) {
+          Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+        }
+
         break;
       }
       case "oop-frameloader-crashed": {
