@@ -85,10 +85,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
     this.id = id;
     this.native_capturer = native_capturer;
     this.context = GetContext();
-    if(android.os.Build.VERSION.SDK_INT>8) {
-      this.info = new Camera.CameraInfo();
-      Camera.getCameraInfo(id, info);
-    }
+    this.info = new Camera.CameraInfo();
+    Camera.getCameraInfo(id, info);
     mCaptureRotation = GetRotateAmount();
   }
 
@@ -124,21 +122,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
       case Surface.ROTATION_180: degrees = 180; break;
       case Surface.ROTATION_270: degrees = 270; break;
     }
-    if(android.os.Build.VERSION.SDK_INT>8) {
-      int result;
-      if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-        result = (info.orientation + degrees) % 360;
-      } else {  // back-facing
-        result = (info.orientation - degrees + 360) % 360;
-      }
-      return result;
-    } else {
-      // Assume 90deg orientation for Froyo devices.
-      // Only back-facing cameras are supported in Froyo.
-      int orientation = 90;
-      int result = (orientation - degrees + 360) % 360;
-      return result;
+    int result;
+    if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+      result = (info.orientation + degrees) % 360;
+    } else {  // back-facing
+      result = (info.orientation - degrees + 360) % 360;
     }
+    return result;
   }
 
   // Return the global application context.
@@ -194,11 +184,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
     }
     Throwable error = null;
     try {
-      if(android.os.Build.VERSION.SDK_INT>8) {
-        camera = Camera.open(id);
-      } else {
-        camera = Camera.open();
-      }
+      camera = Camera.open(id);
 
       // No local renderer (we only care about onPreviewFrame() buffers, not a
       // directly-displayed UI element).  Camera won't capture without
@@ -278,11 +264,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
       min_mfps *= frameDropRatio;
       max_mfps *= frameDropRatio;
       Log.d(TAG, "Camera preview mfps range: " + min_mfps + " - " + max_mfps);
-      if (android.os.Build.VERSION.SDK_INT>8) {
-          parameters.setPreviewFpsRange(min_mfps, max_mfps);
-      } else {
-          parameters.setPreviewFrameRate(max_mfps / 1000);
-      }
+      parameters.setPreviewFpsRange(min_mfps, max_mfps);
 
       int format = ImageFormat.NV21;
       parameters.setPreviewFormat(format);
