@@ -19,6 +19,7 @@ import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.DrawableUtil;
+import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.widget.FaviconView;
 
 import java.util.EnumSet;
@@ -49,6 +50,9 @@ class TopSitesCard extends RecyclerView.ViewHolder
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
 
         card.setOnClickListener(this);
+
+        TouchTargetUtil.ensureTargetHitArea(menuButton, card);
+        menuButton.setOnClickListener(this);
     }
 
     void bind(final TopSitesPageAdapter.TopSite topSite) {
@@ -82,6 +86,10 @@ class TopSitesCard extends RecyclerView.ViewHolder
     public void onClick(View clickedView) {
         if (clickedView == itemView) {
             onUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
+        } else if (clickedView == menuButton) {
+            ActivityStreamContextMenu.show(clickedView.getContext(), title.getText().toString(), url,
+                    onUrlOpenListener, onUrlOpenInBackgroundListener,
+                    faviconView.getWidth(), faviconView.getHeight());
         }
     }
 }
