@@ -69,10 +69,8 @@ bool SeparateArrayInitTraverser::visitAggregate(Visit, TIntermAggregate *node)
                 replacementDeclaration->setLine(symbol->getLine());
                 replacements.push_back(replacementDeclaration);
 
-                TIntermBinary *replacementAssignment = new TIntermBinary(EOpAssign);
-                replacementAssignment->setLeft(symbol);
-                replacementAssignment->setRight(initializer);
-                replacementAssignment->setType(initializer->getType());
+                TIntermBinary *replacementAssignment =
+                    new TIntermBinary(EOpAssign, symbol, initializer);
                 replacementAssignment->setLine(symbol->getLine());
                 replacements.push_back(replacementAssignment);
 
