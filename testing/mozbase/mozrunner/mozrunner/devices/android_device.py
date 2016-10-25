@@ -56,19 +56,19 @@ AVD_DICT = {
     '4.3': AvdInfo('Android 4.3',
                    'mozemulator-4.3',
                    'testing/config/tooltool-manifests/androidarm_4_3/releng.manifest',
-                   ['-gpu', 'swiftshader', '-show-kernel', '-debug',
+                   ['-show-kernel', '-debug',
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket'],
                    5554),
     '6.0': AvdInfo('Android 6.0',
                    'mozemulator-6.0',
                    'testing/config/tooltool-manifests/androidarm_6_0/releng.manifest',
-                   ['-gpu', 'swiftshader', '-show-kernel', '-debug',
+                   ['-show-kernel', '-debug',
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket'],
                    5554),
     'x86': AvdInfo('Android 4.2 x86',
                    'mozemulator-x86',
                    'testing/config/tooltool-manifests/androidx86/releng.manifest',
-                   ['-gpu', 'swiftshader', '-debug',
+                   ['-debug',
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
                     '-qemu', '-m', '1024', '-enable-kvm'],
                    5554)
@@ -316,6 +316,8 @@ class AndroidEmulator(object):
         self.substs = substs
         self.avd_type = self._get_avd_type(avd_type)
         self.avd_info = AVD_DICT[self.avd_type]
+        self.gpu = True
+        self.restarted = False
         adb_path = _find_sdk_exe(substs, 'adb', False)
         if not adb_path:
             adb_path = 'adb'
@@ -406,10 +408,14 @@ class AndroidEmulator(object):
 
         def outputHandler(line):
             self.emulator_log.write("<%s>\n" % line)
+            if "Invalid value for -gpu" in line or "Invalid GPU mode" in line:
+                self.gpu = False
         env = os.environ
         env['ANDROID_AVD_HOME'] = os.path.join(EMULATOR_HOME_DIR, "avd")
         command = [self.emulator_path, "-avd",
                    self.avd_info.name, "-port", "5554"]
+        if self.gpu:
+            command += ['-gpu', 'swiftshader']
         if self.avd_info.extra_args:
             # -enable-kvm option is not valid on OSX
             if _get_host_platform() == 'macosx64' and '-enable-kvm' in self.avd_info.extra_args:
@@ -436,14 +442,12 @@ class AndroidEmulator(object):
         if not self.proc:
             _log_warning("Emulator not started!")
             return False
-        if self.proc.proc.poll() is not None:
-            _log_warning("Emulator has already completed!")
+        if self.check_completed():
             return False
         _log_debug("Waiting for device status...")
         while(('emulator-5554', 'device') not in self.dm.devices()):
             time.sleep(10)
-            if self.proc.proc.poll() is not None:
-                _log_warning("Emulator has already completed!")
+            if self.check_completed():
                 return False
         _log_debug("Device status verified.")
 
@@ -461,14 +465,27 @@ class AndroidEmulator(object):
                 complete = True
             else:
                 time.sleep(10)
-                if self.proc.proc.poll() is not None:
-                    _log_warning("Emulator has already completed!")
+                if self.check_completed():
                     return False
         _log_debug("Android boot status verified.")
 
         if not self._verify_emulator():
             return False
         return True
+
+    def check_completed(self):
+        if self.proc.proc.poll() is not None:
+            if not self.gpu and not self.restarted:
+                _log_warning("Emulator failed to start. Your emulator may be out of date.")
+                _log_warning("Trying to restart the emulator without -gpu argument.")
+                self.restarted = True
+                self.start()
+                return False
+            _log_warning("Emulator has already completed!")
+            log_path = os.path.join(EMULATOR_HOME_DIR, 'emulator.log')
+            _log_warning("See log at %s for more information." % log_path)
+            return True
+        return False
 
     def wait(self):
         """
