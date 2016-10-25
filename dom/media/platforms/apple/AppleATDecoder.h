@@ -59,6 +59,7 @@ private:
   Atomic<bool> mIsFlushing;
 
   void ProcessFlush();
+  void ProcessShutdown();
   void SubmitSample(MediaRawData* aSample);
   nsresult DecodeSample(MediaRawData* aSample);
   nsresult GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
@@ -69,6 +70,7 @@ private:
   nsresult GetImplicitAACMagicCookie(const MediaRawData* aSample);
   nsresult SetupChannelLayout();
   uint32_t mParsedFramesForAACMagicCookie;
+  bool mErrored;
 };
 
 } // namespace mozilla

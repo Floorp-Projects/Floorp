@@ -29,6 +29,7 @@ AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig,
   , mStream(nullptr)
   , mIsFlushing(false)
   , mParsedFramesForAACMagicCookie(0)
+  , mErrored(false)
 {
   MOZ_COUNT_CTOR(AppleATDecoder);
   LOG("Creating Apple AudioToolbox decoder");
@@ -89,9 +90,17 @@ AppleATDecoder::ProcessFlush()
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   mQueuedSamples.Clear();
-  OSStatus rv = AudioConverterReset(mConverter);
-  if (rv) {
-    LOG("Error %d resetting AudioConverter", rv);
+  if (mConverter) {
+    OSStatus rv = AudioConverterReset(mConverter);
+    if (rv) {
+      LOG("Error %d resetting AudioConverter", rv);
+    }
+  }
+  if (mErrored) {
+    mParsedFramesForAACMagicCookie = 0;
+    mMagicCookie.Clear();
+    ProcessShutdown();
+    mErrored = false;
   }
 }
 
@@ -121,23 +130,32 @@ void
 AppleATDecoder::Shutdown()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  nsCOMPtr<nsIRunnable> runnable =
+    NewRunnableMethod(this, &AppleATDecoder::ProcessShutdown);
+  SyncRunnable::DispatchToThread(mTaskQueue, runnable);
+}
 
-  LOG("Shutdown: Apple AudioToolbox AAC decoder");
-  mQueuedSamples.Clear();
-  OSStatus rv = AudioConverterDispose(mConverter);
-  if (rv) {
-    LOG("error %d disposing of AudioConverter", rv);
-    return;
-  }
-  mConverter = nullptr;
+void
+AppleATDecoder::ProcessShutdown()
+{
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
   if (mStream) {
-    rv = AudioFileStreamClose(mStream);
+    OSStatus rv = AudioFileStreamClose(mStream);
     if (rv) {
       LOG("error %d disposing of AudioFileStream", rv);
       return;
     }
     mStream = nullptr;
+  }
+
+  if (mConverter) {
+    LOG("Shutdown: Apple AudioToolbox AAC decoder");
+    OSStatus rv = AudioConverterDispose(mConverter);
+    if (rv) {
+      LOG("error %d disposing of AudioConverter", rv);
+    }
+    mConverter = nullptr;
   }
 }
 
@@ -207,7 +225,7 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
     for (size_t i = 0; i < mQueuedSamples.Length(); i++) {
       rv = DecodeSample(mQueuedSamples[i]);
       if (NS_FAILED(rv)) {
-        mQueuedSamples.Clear();
+        mErrored = true;
         mCallback->Error(MediaResult(
           rv, RESULT_DETAIL("Unable to decode sample %lld", aSample->mTime)));
         return;
