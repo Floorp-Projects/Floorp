@@ -145,8 +145,24 @@ typedef bool IsUnsigned;
 typedef bool ZeroOnOverflow;
 typedef bool IsKnownNotZero;
 typedef bool HandleNaNSpecially;
-typedef bool EscapesSandbox;
-typedef bool IsBuiltinCall;
+
+// UseABI::Wasm implies that the Tls/Heap/Global registers are nonvolatile,
+// except when InterModule::True is also set, when they are volatile.
+//
+// UseABI::System implies that the Tls/Heap/Global registers are volatile.
+// Additionally, the parameter passing mechanism may be slightly different from
+// the UseABI::Wasm convention.
+//
+// When the Tls/Heap/Global registers are not volatile, the baseline compiler
+// will restore the Tls register from its save slot before the call, since the
+// baseline compiler uses the Tls register for other things.
+//
+// When those registers are volatile, the baseline compiler will reload them
+// after the call (it will restore the Tls register from the save slot and load
+// the other two from the Tls data).
+
+enum class UseABI { Wasm, System };
+enum class InterModule { False = false, True = true };
 
 #ifdef JS_CODEGEN_ARM64
 // FIXME: This is not correct, indeed for ARM64 there is no reliable
@@ -166,7 +182,6 @@ static const Register StackPointer = RealStackPointer;
 static const Register ScratchRegX86 = ebx;
 
 # define QUOT_REM_I64_CALLOUT
-
 #endif
 
 class BaseCompiler
@@ -1990,8 +2005,7 @@ class BaseCompiler
 
         masm.bind(&returnLabel_);
 
-        // The return value was set up before jumping here, but we also need to
-        // preserve the TLS register.
+        // Restore the TLS register in case it was overwritten by the function.
         loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
 
         GenerateFunctionEpilogue(masm, localSize_, &compileResults_.offsets());
@@ -2026,68 +2040,47 @@ class BaseCompiler
     struct FunctionCall
     {
         explicit FunctionCall(uint32_t lineOrBytecode)
-          : lineOrBytecode_(lineOrBytecode),
-            callSavesMachineState_(false),
-            builtinCall_(false),
-            machineStateAreaSize_(0),
-            frameAlignAdjustment_(0),
-            stackArgAreaSize_(0),
-            calleePopsArgs_(false)
+          : lineOrBytecode(lineOrBytecode),
+            reloadMachineStateAfter(false),
+            usesSystemAbi(false),
+            loadTlsBefore(false),
+            frameAlignAdjustment(0),
+            stackArgAreaSize(0)
         {}
 
-        uint32_t lineOrBytecode_;
+        uint32_t lineOrBytecode;
         ABIArgGenerator abi_;
-        bool callSavesMachineState_;
-        bool builtinCall_;
-        size_t machineStateAreaSize_;
-        size_t frameAlignAdjustment_;
-        size_t stackArgAreaSize_;
-
-        // TODO / INVESTIGATE: calleePopsArgs_ is unused on x86, x64,
-        // always false at present, certainly not tested.
-
-        bool calleePopsArgs_;
+        bool reloadMachineStateAfter;
+        bool usesSystemAbi;
+        bool loadTlsBefore;
+        size_t frameAlignAdjustment;
+        size_t stackArgAreaSize;
     };
 
-    void beginCall(FunctionCall& call, bool escapesSandbox, bool builtinCall)
+    void beginCall(FunctionCall& call, UseABI useABI, InterModule interModule)
     {
-        call.callSavesMachineState_ = escapesSandbox;
-        if (escapesSandbox) {
-#if defined(JS_CODEGEN_X64)
-            call.machineStateAreaSize_ = 16; // Save HeapReg
-#elif defined(JS_CODEGEN_X86)
-            // Nothing
-#else
-            MOZ_CRASH("BaseCompiler platform hook: beginCall");
-#endif
-        }
+        call.reloadMachineStateAfter = interModule == InterModule::True || useABI == UseABI::System;
+        call.usesSystemAbi = useABI == UseABI::System;
+        call.loadTlsBefore = useABI == UseABI::Wasm;
 
-        call.builtinCall_ = builtinCall;
-        if (builtinCall) {
+        if (call.usesSystemAbi) {
             // Call-outs need to use the appropriate system ABI.
             // ARM will have something here.
         }
 
-        call.frameAlignAdjustment_ = ComputeByteAlignment(masm.framePushed() + sizeof(AsmJSFrame),
-                                                          JitStackAlignment);
+        call.frameAlignAdjustment = ComputeByteAlignment(masm.framePushed() + sizeof(AsmJSFrame),
+                                                         JitStackAlignment);
     }
 
     void endCall(FunctionCall& call)
     {
-        if (call.machineStateAreaSize_ || call.frameAlignAdjustment_) {
-            int size = call.calleePopsArgs_ ? 0 : call.stackArgAreaSize_;
-            if (call.callSavesMachineState_) {
-#if defined(JS_CODEGEN_X64)
-                masm.loadPtr(Address(StackPointer, size + 8), HeapReg);
-#elif defined(JS_CODEGEN_X86)
-                // Nothing
-#else
-                MOZ_CRASH("BaseCompiler platform hook: endCall");
-#endif
-            }
-            masm.freeStack(size + call.machineStateAreaSize_ + call.frameAlignAdjustment_);
-        } else if (!call.calleePopsArgs_) {
-            masm.freeStack(call.stackArgAreaSize_);
+        size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
+        if (adjustment)
+            masm.freeStack(adjustment);
+
+        if (call.reloadMachineStateAfter) {
+            loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+            masm.loadWasmPinnedRegsFromTls();
         }
     }
 
@@ -2104,24 +2097,14 @@ class BaseCompiler
 
     void startCallArgs(FunctionCall& call, size_t stackArgAreaSize)
     {
-        call.stackArgAreaSize_ = stackArgAreaSize;
-        if (call.machineStateAreaSize_ || call.frameAlignAdjustment_) {
-            masm.reserveStack(stackArgAreaSize + call.machineStateAreaSize_ + call.frameAlignAdjustment_);
-            if (call.callSavesMachineState_) {
-#if defined(JS_CODEGEN_X64)
-                masm.storePtr(HeapReg, Address(StackPointer, stackArgAreaSize + 8));
-#elif defined(JS_CODEGEN_X86)
-                // Nothing
-#else
-                MOZ_CRASH("BaseCompiler platform hook: startCallArgs");
-#endif
-            }
-        } else if (stackArgAreaSize > 0) {
-            masm.reserveStack(stackArgAreaSize);
-        }
+        call.stackArgAreaSize = stackArgAreaSize;
+
+        size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
+        if (adjustment)
+            masm.reserveStack(adjustment);
     }
 
-    const ABIArg reserveArgument(FunctionCall& call) {
+    const ABIArg reservePointerArgument(FunctionCall& call) {
         return call.abi_.next(MIRType::Pointer);
     }
 
@@ -2236,12 +2219,12 @@ class BaseCompiler
 
     void callDefinition(uint32_t funcDefIndex, const FunctionCall& call)
     {
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::FuncDef);
+        CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::FuncDef);
         masm.call(desc, funcDefIndex);
     }
 
     void callSymbolic(SymbolicAddress callee, const FunctionCall& call) {
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
+        CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
         masm.call(callee);
     }
 
@@ -2270,28 +2253,17 @@ class BaseCompiler
             callee = CalleeDesc::wasmTable(table, sig.id);
         }
 
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
+        CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
         masm.wasmCallIndirect(desc, callee);
-
-        // After return, restore the caller's TLS and pinned registers.
-        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
-        masm.loadWasmPinnedRegsFromTls();
     }
 
     // Precondition: sync()
 
     void callImport(unsigned globalDataOffset, const FunctionCall& call)
     {
-        // There is no need to preserve WasmTlsReg since it has already been
-        // spilt to a local slot.
-
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
+        CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
         CalleeDesc callee = CalleeDesc::import(globalDataOffset);
         masm.wasmCallImport(desc, callee);
-
-        // After return, restore the caller's TLS and pinned registers.
-        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
-        masm.loadWasmPinnedRegsFromTls();
     }
 
     void builtinCall(SymbolicAddress builtin, const FunctionCall& call)
@@ -2302,10 +2274,10 @@ class BaseCompiler
     void builtinInstanceMethodCall(SymbolicAddress builtin, const ABIArg& instanceArg,
                                    const FunctionCall& call)
     {
-        // Builtin method calls assumed the TLS register has been set.
+        // Builtin method calls assume the TLS register has been set.
         loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
 
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
+        CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
         masm.wasmCallBuiltinInstanceMethod(instanceArg, builtin);
     }
 
@@ -2366,8 +2338,8 @@ class BaseCompiler
         RegF32 rv = RegF32(ReturnFloat32Reg);
         MOZ_ASSERT(isAvailable(rv.reg));
         needF32(rv);
-#ifdef JS_CODEGEN_X86
-        if (call.builtinCall_) {
+#if defined(JS_CODEGEN_X86)
+        if (call.usesSystemAbi) {
             masm.reserveStack(sizeof(float));
             Operand op(esp, 0);
             masm.fstp32(op);
@@ -2382,8 +2354,8 @@ class BaseCompiler
         RegF64 rv = RegF64(ReturnDoubleReg);
         MOZ_ASSERT(isAvailable(rv.reg));
         needF64(rv);
-#ifdef JS_CODEGEN_X86
-        if (call.builtinCall_) {
+#if defined(JS_CODEGEN_X86)
+        if (call.usesSystemAbi) {
             masm.reserveStack(sizeof(double));
             Operand op(esp, 0);
             masm.fstp(op);
@@ -2434,7 +2406,7 @@ class BaseCompiler
 
     void checkDivideByZeroI64(RegI64 rhs, RegI64 srcDest, Label* done) {
         MOZ_ASSERT(!isCompilingAsmJS());
-#ifdef JS_CODEGEN_X64
+#if defined(JS_CODEGEN_X64)
         masm.testq(rhs.reg.reg, rhs.reg.reg);
         masm.j(Assembler::Zero, trap(Trap::IntegerDivideByZero));
 #elif defined(JS_CODEGEN_X86)
@@ -3313,6 +3285,9 @@ class BaseCompiler
     MOZ_MUST_USE
     bool emitCallIndirect(bool oldStyle);
     MOZ_MUST_USE
+    bool emitCommonMathCall(uint32_t lineOrBytecode, SymbolicAddress callee,
+                            ValTypeVector& signature, ExprType retType);
+    MOZ_MUST_USE
     bool emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
     MOZ_MUST_USE
     bool emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
@@ -3443,8 +3418,20 @@ class BaseCompiler
     void emitConvertU64ToF64();
     void emitReinterpretI32AsF32();
     void emitReinterpretI64AsF64();
-    MOZ_MUST_USE bool emitGrowMemory();
-    MOZ_MUST_USE bool emitCurrentMemory();
+    MOZ_MUST_USE
+    bool emitGrowMemory();
+    MOZ_MUST_USE
+    bool emitCurrentMemory();
+#ifdef I64_TO_FLOAT_CALLOUT
+    MOZ_MUST_USE
+    bool emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType operandType,
+                                           ValType resultType);
+#endif
+#ifdef FLOAT_TO_I64_CALLOUT
+    MOZ_MUST_USE
+    bool emitConvertFloatingToInt64Callout(SymbolicAddress callee, ValType operandType,
+                                           ValType resultType);
+#endif
 };
 
 void
@@ -5124,10 +5111,11 @@ BaseCompiler::emitCallArgs(const ValTypeVector& args, FunctionCall& baselineCall
         passArg(baselineCall, argType, arg);
     }
 
-    // Always pass the TLS pointer as a hidden argument in WasmTlsReg.
-    // Load it directly out if its stack slot so we don't interfere with the
-    // stk_.
-    loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+    // Pass the TLS pointer as a hidden argument in WasmTlsReg.  Load
+    // it directly out if its stack slot so we don't interfere with
+    // the stk_.
+    if (baselineCall.loadTlsBefore)
+        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
 
     if (!iter_.readCallArgsEnd(numArgs))
         return false;
@@ -5196,7 +5184,7 @@ BaseCompiler::emitCallImportCommon(uint32_t lineOrBytecode, uint32_t funcImportI
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(false));
+    beginCall(baselineCall, UseABI::Wasm, InterModule::True);
 
     if (!emitCallArgs(sig.args(), baselineCall))
         return false;
@@ -5246,7 +5234,7 @@ BaseCompiler::emitCall()
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, EscapesSandbox(false), IsBuiltinCall(false));
+    beginCall(baselineCall, UseABI::Wasm, InterModule::False);
 
     if (!emitCallArgs(sig.args(), baselineCall))
         return false;
@@ -5319,7 +5307,7 @@ BaseCompiler::emitCallIndirect(bool oldStyle)
     Stk callee = oldStyle ? peek(numArgs) : stk_.popCopy();
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, EscapesSandbox(false), IsBuiltinCall(false));
+    beginCall(baselineCall, UseABI::Wasm, InterModule::True);
 
     if (!emitCallArgs(sig.args(), baselineCall))
         return false;
@@ -5352,38 +5340,20 @@ BaseCompiler::emitCallIndirect(bool oldStyle)
     return true;
 }
 
-
 bool
-BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType)
+BaseCompiler::emitCommonMathCall(uint32_t lineOrBytecode, SymbolicAddress callee,
+                                 ValTypeVector& signature, ExprType retType)
 {
-    if (deadCode_)
-        return true;
-
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
     sync();
 
-    uint32_t numArgs = 1;
+    uint32_t numArgs = signature.length();
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, EscapesSandbox(false), IsBuiltinCall(true));
+    beginCall(baselineCall, UseABI::System, InterModule::False);
 
-    ExprType retType;
-    switch (operandType) {
-      case ValType::F64:
-        if (!emitCallArgs(SigD_, baselineCall))
-            return false;
-        retType = ExprType::F64;
-        break;
-      case ValType::F32:
-        if (!emitCallArgs(SigF_, baselineCall))
-            return false;
-        retType = ExprType::F32;
-        break;
-      default:
-        MOZ_CRASH("Compiler bug: not a float type");
-    }
+    if (!emitCallArgs(signature, baselineCall))
+        return false;
 
     if (!iter_.readCallReturn(retType))
       return false;
@@ -5404,6 +5374,19 @@ BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandTy
 }
 
 bool
+BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType)
+{
+    if (deadCode_)
+        return true;
+
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+    return emitCommonMathCall(lineOrBytecode, callee,
+                              operandType == ValType::F32 ? SigF_ : SigD_,
+                              operandType == ValType::F32 ? ExprType::F32 : ExprType::F64);
+}
+
+bool
 BaseCompiler::emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandType)
 {
     MOZ_ASSERT(operandType == ValType::F64);
@@ -5415,37 +5398,10 @@ BaseCompiler::emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandT
     if (callee == SymbolicAddress::ModD) {
         // Not actually a call in the binary representation
     } else {
-        readCallSiteLineOrBytecode();
+        lineOrBytecode = readCallSiteLineOrBytecode();
     }
 
-    sync();
-
-    uint32_t numArgs = 2;
-    size_t stackSpace = stackConsumed(numArgs);
-
-    FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, EscapesSandbox(false), IsBuiltinCall(true));
-
-    ExprType retType = ExprType::F64;
-    if (!emitCallArgs(SigDD_, baselineCall))
-        return false;
-
-    if (!iter_.readCallReturn(retType))
-        return false;
-
-    builtinCall(callee, baselineCall);
-
-    endCall(baselineCall);
-
-    // TODO / OPTIMIZE: It would be better to merge this freeStack()
-    // into the one in endCall, if we can.
-
-    popValueStackBy(numArgs);
-    masm.freeStack(stackSpace);
-
-    pushReturned(baselineCall, retType);
-
-    return true;
+    return emitCommonMathCall(lineOrBytecode, callee, SigDD_, ExprType::F64);
 }
 
 #ifdef QUOT_REM_I64_CALLOUT
@@ -6242,16 +6198,13 @@ BaseCompiler::emitGrowMemory()
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(readCallSiteLineOrBytecode());
-    beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(true));
+    beginCall(baselineCall, UseABI::System, InterModule::True);
 
-    ABIArg instanceArg = reserveArgument(baselineCall);
+    ABIArg instanceArg = reservePointerArgument(baselineCall);
 
     startCallArgs(baselineCall, stackArgAreaSize(SigI_));
-
     passArg(baselineCall, ValType::I32, peek(0));
-
     builtinInstanceMethodCall(SymbolicAddress::GrowMemory, instanceArg, baselineCall);
-
     endCall(baselineCall);
 
     popValueStackBy(numArgs);
@@ -6274,14 +6227,12 @@ BaseCompiler::emitCurrentMemory()
     sync();
 
     FunctionCall baselineCall(readCallSiteLineOrBytecode());
-    beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(true));
+    beginCall(baselineCall, UseABI::System, InterModule::False);
 
-    ABIArg instanceArg = reserveArgument(baselineCall);
+    ABIArg instanceArg = reservePointerArgument(baselineCall);
 
     startCallArgs(baselineCall, stackArgAreaSize(Sig_));
-
     builtinInstanceMethodCall(SymbolicAddress::CurrentMemory, instanceArg, baselineCall);
-
     endCall(baselineCall);
 
     pushReturned(baselineCall, ExprType::I32);
@@ -7074,7 +7025,7 @@ BaseCompiler::init()
         }
     }
 
-    // Reserve a stack slot for the TLS pointer before the varLow - varHigh
+    // Reserve a stack slot for the TLS pointer outside the varLow..varHigh
     // range so it isn't zero-filled like the normal locals.
     localInfo_[tlsSlot_].init(MIRType::Pointer, pushLocal(sizeof(void*)));
 
