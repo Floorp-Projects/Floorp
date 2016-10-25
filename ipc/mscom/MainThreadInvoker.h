@@ -21,21 +21,15 @@ class MainThreadInvoker
 {
 public:
   MainThreadInvoker();
-  ~MainThreadInvoker();
 
-  bool WaitForCompletion(DWORD aTimeout = INFINITE);
-  bool Invoke(already_AddRefed<nsIRunnable>&& aRunnable,
-              DWORD aTimeout = INFINITE);
-  HANDLE GetTargetThread() const { return sMainThread; }
+  bool Invoke(already_AddRefed<nsIRunnable>&& aRunnable);
+  static HANDLE GetTargetThread() { return sMainThread; }
 
 private:
   static bool InitStatics();
   static VOID CALLBACK MainThreadAPC(ULONG_PTR aParam);
 
-  HANDLE  mDoneEvent;
-
   static HANDLE sMainThread;
-  static StaticRefPtr<nsIRunnable> sAlertRunnable;
 };
 
 } // namespace mscom
