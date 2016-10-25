@@ -325,10 +325,15 @@ mochitest-devtools-chrome:
         by-test-platform:
             win.*: 8
             default: 10
+    run-on-projects:
+        by-test-platform:
+            linux64-ccov/opt: []
+            default: ['all']
     e10s:
         by-test-platform:
             # Bug 1242986: linux64/debug mochitest-devtools-chrome e10s is not greened up yet
             linux64/debug: false
+            linux64-ccov/opt: false
             default: both
     mozharness:
         script: desktop_unittest.py
@@ -341,7 +346,12 @@ mochitest-devtools-chrome:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
-            - --mochitest-suite=mochitest-devtools-chrome-chunked
+            by-test-platform:
+                linux64-ccov/opt:
+                    - --mochitest-suite=mochitest-devtools-chrome-chunked
+                    - --code-coverage
+                default:
+                    - --mochitest-suite=mochitest-devtools-chrome-chunked
     instance-size:
         by-test-platform:
             # Bug 1281241: migrating to m3.large instances
