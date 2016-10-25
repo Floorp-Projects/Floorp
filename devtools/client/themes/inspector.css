@@ -108,8 +108,8 @@ window {
 /* Eyedropper toolbar button */
 
 #inspector-eyedropper-toggle {
-  /* hidden by default, until we can check that the required highlighter exists */
-  display: none;
+  /* Required to display tooltip when eyedropper is disabled in non-HTML documents */
+  pointer-events: auto;
 }
 
 #inspector-eyedropper-toggle::before {

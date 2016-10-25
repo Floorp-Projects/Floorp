@@ -21,6 +21,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "asmjs/WasmBaselineCompile.h"
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmSignalHandlers.h"
@@ -263,8 +264,6 @@ class FunctionCompiler
                 // Bool32x4 uses the same data layout as Int32x4.
                 ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType::Bool32x4);
                 break;
-              case ValType::Limit:
-                MOZ_CRASH("Limit");
             }
 
             curBlock_->add(ins);
@@ -1952,14 +1951,14 @@ EmitCall(FunctionCompiler& f)
 }
 
 static bool
-EmitCallImport(FunctionCompiler& f)
+EmitOldCallImport(FunctionCompiler& f)
 {
     MOZ_ASSERT(!f.mg().firstFuncDefIndex);
 
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
     uint32_t funcImportIndex;
-    if (!f.iter().readCallImport(&funcImportIndex))
+    if (!f.iter().readCall(&funcImportIndex))
         return false;
 
     if (f.inDeadCode())
@@ -2684,7 +2683,7 @@ SimdToLaneType(ValType type)
       case ValType::I64:
       case ValType::F32:
       case ValType::F64:
-      case ValType::Limit:;
+        break;
     }
     MOZ_CRASH("bad simd type");
 }
@@ -2970,7 +2969,6 @@ EmitSimdCtor(FunctionCompiler& f, ValType type)
       case ValType::I64:
       case ValType::F32:
       case ValType::F64:
-      case ValType::Limit:
         break;
     }
     MOZ_CRASH("unexpected SIMD type");
@@ -3082,7 +3080,7 @@ EmitGrowMemory(FunctionCompiler& f)
         return false;
 
     MDefinition* delta;
-    if (!f.iter().readUnary(ValType::I32, &delta))
+    if (!f.iter().readGrowMemory(&delta))
         return false;
 
     if (!f.passArg(delta, ValType::I32, &args))
@@ -3108,7 +3106,7 @@ EmitCurrentMemory(FunctionCompiler& f)
 
     CallCompileState args(f, lineOrBytecode);
 
-    if (!f.iter().readNullary(ValType::I32))
+    if (!f.iter().readCurrentMemory())
         return false;
 
     if (!f.startCall(&args))
@@ -3174,8 +3172,8 @@ EmitExpr(FunctionCompiler& f)
         return EmitCallIndirect(f, /* oldStyle = */ false);
       case Expr::OldCallIndirect:
         return EmitCallIndirect(f, /* oldStyle = */ true);
-      case Expr::CallImport:
-        return EmitCallImport(f);
+      case Expr::OldCallImport:
+        return EmitOldCallImport(f);
 
       // Locals and globals
       case Expr::GetLocal:

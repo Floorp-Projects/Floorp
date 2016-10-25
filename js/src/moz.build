@@ -157,6 +157,7 @@ UNIFIED_SOURCES += [
     'asmjs/AsmJS.cpp',
     'asmjs/WasmBaselineCompile.cpp',
     'asmjs/WasmBinary.cpp',
+    'asmjs/WasmBinaryFormat.cpp',
     'asmjs/WasmBinaryIterator.cpp',
     'asmjs/WasmBinaryToAST.cpp',
     'asmjs/WasmBinaryToExperimentalText.cpp',

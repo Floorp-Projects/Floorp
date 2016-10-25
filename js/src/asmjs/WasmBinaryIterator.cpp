@@ -110,7 +110,6 @@ wasm::Classify(Expr expr)
       case Expr::B8x16not:
       case Expr::B16x8not:
       case Expr::B32x4not:
-      case Expr::GrowMemory:
         return ExprKind::Unary;
       case Expr::I32Add:
       case Expr::I32Sub:
@@ -354,13 +353,12 @@ wasm::Classify(Expr expr)
       case Expr::TeeGlobal:
         return ExprKind::TeeGlobal;
       case Expr::Call:
+      case Expr::OldCallImport:
         return ExprKind::Call;
       case Expr::CallIndirect:
         return ExprKind::CallIndirect;
       case Expr::OldCallIndirect:
         return ExprKind::OldCallIndirect;
-      case Expr::CallImport:
-        return ExprKind::CallImport;
       case Expr::Return:
       case Expr::Limit:
         // Accept Limit, for use in decoding the end of a function after the body.
@@ -492,7 +490,9 @@ wasm::Classify(Expr expr)
       case Expr::F32x4lessThanOrEqual:
         return ExprKind::SimdComparison;
       case Expr::CurrentMemory:
-        return ExprKind::Nullary;
+        return ExprKind::CurrentMemory;
+      case Expr::GrowMemory:
+        return ExprKind::GrowMemory;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unimplemented opcode");
 }

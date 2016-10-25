@@ -6,6 +6,7 @@
 
 XPIDL_SOURCES += [
     'nsIArray.idl',
+    'nsIArrayExtensions.idl',
     'nsIAtom.idl',
     'nsIAtomService.idl',
     'nsICollection.idl',

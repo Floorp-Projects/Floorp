@@ -179,6 +179,30 @@ CompositorBridgeParentBase::DeallocShmem(ipc::Shmem& aShmem)
   PCompositorBridgeParent::DeallocShmem(aShmem);
 }
 
+base::ProcessId
+CompositorBridgeParentBase::RemotePid()
+{
+  return OtherPid();
+}
+
+bool
+CompositorBridgeParentBase::StartSharingMetrics(ipc::SharedMemoryBasic::Handle aHandle,
+                                                CrossProcessMutexHandle aMutexHandle,
+                                                uint64_t aLayersId,
+                                                uint32_t aApzcId)
+{
+  return PCompositorBridgeParent::SendSharedCompositorFrameMetrics(
+    aHandle, aMutexHandle, aLayersId, aApzcId);
+}
+
+bool
+CompositorBridgeParentBase::StopSharingMetrics(FrameMetrics::ViewID aScrollId,
+                                               uint32_t aApzcId)
+{
+  return PCompositorBridgeParent::SendReleaseSharedCompositorFrameMetrics(
+    aScrollId, aApzcId);
+}
+
 CompositorBridgeParent::LayerTreeState::LayerTreeState()
   : mApzcTreeManagerParent(nullptr)
   , mParent(nullptr)
@@ -1007,7 +1031,6 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
   MessageLoop::current()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::DeferredDestroy));
 }
 
-
 void
 CompositorBridgeParent::ScheduleRenderOnCompositorThread()
 {
@@ -1193,8 +1216,8 @@ CompositorBridgeParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstP
 #endif
 
     if (mApzcTreeManager && aHitTestUpdate) {
-      mApzcTreeManager->UpdateHitTestingTree(this, mLayerManager->GetRoot(),
-          aIsFirstPaint, aId, aPaintSequenceNumber);
+      mApzcTreeManager->UpdateHitTestingTree(mRootLayerTreeID,
+          mLayerManager->GetRoot(), aIsFirstPaint, aId, aPaintSequenceNumber);
     }
 
     mLayerManager->NotifyShadowTreeTransaction();
@@ -1546,7 +1569,7 @@ CompositorBridgeParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   if (mApzcTreeManager && !aIsRepeatTransaction && aHitTestUpdate) {
     AutoResolveRefLayers resolve(mCompositionManager);
 
-    mApzcTreeManager->UpdateHitTestingTree(this, root, aIsFirstPaint,
+    mApzcTreeManager->UpdateHitTestingTree(mRootLayerTreeID, root, aIsFirstPaint,
         mRootLayerTreeID, aPaintSequenceNumber);
   }
 
@@ -2265,10 +2288,22 @@ private:
   bool mDestroyCalled;
 };
 
-PCompositorBridgeParent*
-CompositorBridgeParent::LayerTreeState::CrossProcessPCompositorBridge() const
+CompositorController*
+CompositorBridgeParent::LayerTreeState::GetCompositorController() const
+{
+  return mParent;
+}
+
+MetricsSharingController*
+CompositorBridgeParent::LayerTreeState::CrossProcessSharingController() const
 {
   return mCrossProcessParent;
+}
+
+MetricsSharingController*
+CompositorBridgeParent::LayerTreeState::InProcessSharingController() const
+{
+  return mParent;
 }
 
 void

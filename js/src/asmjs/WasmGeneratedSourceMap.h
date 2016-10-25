@@ -125,6 +125,8 @@ class WasmPrintBuffer
     }
     template <size_t ArrayLength>
     bool append(const char (&array)[ArrayLength]) {
+        static_assert(ArrayLength > 0, "null-terminated");
+        MOZ_ASSERT(array[ArrayLength - 1] == '\0');
         return append(array, ArrayLength - 1);
     }
     char16_t getChar(size_t index) {
