@@ -188,13 +188,6 @@ pref("dom.enable_performance_observer", true);
 pref("dom.enable_performance_observer", false);
 #endif
 
-// Enable requestIdleCallback API
-#ifdef NIGHTLY_BUILD
-pref("dom.requestIdleCallback.enabled", true);
-#else
-pref("dom.requestIdleCallback.enabled", false);
-#endif
-
 // Whether the Gamepad API is enabled
 pref("dom.gamepad.enabled", true);
 pref("dom.gamepad.test.enabled", false);
@@ -2701,14 +2694,6 @@ pref("layout.spammy_warnings.enabled", false);
 // Should we fragment floats inside CSS column layout?
 pref("layout.float-fragments-inside-column.enabled", true);
 
-// The number of frames times the frame rate is the time required to
-// pass without painting used to guess that we'll not paint again soon
-pref("layout.idle_period.required_quiescent_frames", 2);
-
-// The amount of time (milliseconds) needed between an idle period's
-// end and the start of the next tick to avoid jank.
-pref("layout.idle_period.time_limit", 3);
-
 // Is support for the Web Animations API enabled?
 // Before enabling this by default, make sure also CSSPseudoElement interface
 // has been spec'ed properly, or we should add a separate pref for
@@ -2757,12 +2742,6 @@ pref("dom.global_stop_script", true);
 
 // If true, ArchiveReader will be enabled
 pref("dom.archivereader.enabled", false);
-
-// Time (milliseconds) between throttled idle callbacks.
-pref("dom.idle_period.throttled_length", 10000);
-
-// The amount of idle time (milliseconds) reserved for a long idle period
-pref("idle_queue.long_period", 50);
 
 // Hang monitor timeout after which we kill the browser, in seconds
 // (0 is disabled)
