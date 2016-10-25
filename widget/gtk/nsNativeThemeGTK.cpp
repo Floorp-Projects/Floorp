@@ -1475,15 +1475,32 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case NS_THEME_SCROLLBAR_HORIZONTAL:
     case NS_THEME_SCROLLBAR_VERTICAL:
     {
+      /* While we enforce a minimum size for the thumb, this is ignored
+       * for the some scrollbars if buttons are hidden (bug 513006) because
+       * the thumb isn't a direct child of the scrollbar, unlike the buttons
+       * or track. So add a minimum size to the track as well to prevent a
+       * 0-width scrollbar. */
       if (gtk_check_version(3,20,0) == nullptr) {
-          moz_gtk_get_widget_min_size(NativeThemeToGtkTheme(aWidgetType, aFrame),
-                                      &(aResult->width), &(aResult->height));
+        // Thumb min dimensions to start with
+        WidgetNodeType thumbType = aWidgetType == NS_THEME_SCROLLBAR_VERTICAL ?
+          MOZ_GTK_SCROLLBAR_THUMB_VERTICAL : MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
+        moz_gtk_get_widget_min_size(thumbType, &(aResult->width), &(aResult->height));
+
+        // Add scrollbar's borders
+        nsIntMargin border;
+        nsNativeThemeGTK::GetWidgetBorder(aFrame->PresContext()->DeviceContext(),
+                                          aFrame, aWidgetType, &border);
+        aResult->width += border.left + border.right;
+        aResult->height += border.top + border.bottom;
+
+        // Add track's borders
+        uint8_t trackType = aWidgetType == NS_THEME_SCROLLBAR_VERTICAL ?
+          NS_THEME_SCROLLBARTRACK_VERTICAL : NS_THEME_SCROLLBARTRACK_HORIZONTAL;
+        nsNativeThemeGTK::GetWidgetBorder(aFrame->PresContext()->DeviceContext(),
+                                          aFrame, trackType, &border);
+        aResult->width += border.left + border.right;
+        aResult->height += border.top + border.bottom;
       } else {
-        /* While we enforce a minimum size for the thumb, this is ignored
-         * for the some scrollbars if buttons are hidden (bug 513006) because
-         * the thumb isn't a direct child of the scrollbar, unlike the buttons
-         * or track. So add a minimum size to the track as well to prevent a
-         * 0-width scrollbar. */
         MozGtkScrollbarMetrics metrics;
         moz_gtk_get_scrollbar_metrics(&metrics);
 
