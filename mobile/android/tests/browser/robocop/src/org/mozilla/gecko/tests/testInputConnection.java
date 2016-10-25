@@ -5,12 +5,6 @@
 package org.mozilla.gecko.tests;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertSelection;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertSelectionAt;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertText;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertTextAndSelection;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertTextAndSelectionAt;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.getText;
 import static org.mozilla.gecko.tests.helpers.WaitHelper.waitFor;
 
 import org.mozilla.gecko.tests.components.GeckoViewComponent.InputConnectionTest;
