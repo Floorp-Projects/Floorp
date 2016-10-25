@@ -143,7 +143,7 @@
 (assert_trap (invoke $O "call" (i32.const 20)) "undefined")
 
 (assert_unlinkable
-  (module $Q
+  (module
     (func $host (import "spectest" "print"))
     (table (import "M" "tab") 10 anyfunc)
     (elem (i32.const 7) $own)
@@ -215,7 +215,7 @@
 (assert_return (invoke $P "grow" (i32.const 0)) (i32.const 5))
 
 (assert_unlinkable
-  (module $Q
+  (module
     (func $host (import "spectest" "print"))
     (memory (import "M" "mem") 1)
     (table 10 anyfunc)
