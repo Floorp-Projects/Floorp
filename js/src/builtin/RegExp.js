@@ -584,7 +584,7 @@ function IsRegExpSplitOptimizable(rx, C) {
            RegExpProto.exec === RegExp_prototype_Exec;
 }
 
-// ES 2016 draft Mar 25, 2016 21.2.5.11.
+// ES 2017 draft 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e 21.2.5.11.
 function RegExpSplit(string, limit) {
     // Step 1.
     var rx = this;
@@ -599,22 +599,27 @@ function RegExpSplit(string, limit) {
     // Step 4.
     var C = SpeciesConstructor(rx, GetBuiltinConstructor("RegExp"));
 
-    // Step 5.
-    var flags = ToString(rx.flags);
-
-    // Steps 6-7.
-    var unicodeMatching = callFunction(std_String_includes, flags, "u");
-
     var optimizable = IsRegExpSplitOptimizable(rx, C) &&
                       (limit === undefined || typeof limit == "number");
-    var splitter;
-    if (optimizable) {
-        // Steps 8-9 (skipped).
 
-        // Step 10.
+    var flags, unicodeMatching, splitter;
+    if (optimizable) {
+        // Step 5.
+        flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+
+        // Steps 6-7.
+        unicodeMatching = !!(flags & (REGEXP_UNICODE_FLAG));
+
+        // Steps 8-10.
         // If split operation is optimizable, perform non-sticky match.
-        splitter = regexp_construct_no_sticky(rx, flags);
+        splitter = regexp_construct_raw_flags(rx, flags & ~REGEXP_STICKY_FLAG);
     } else {
+        // Step 5.
+        flags = ToString(rx.flags);
+
+        // Steps 6-7.
+        unicodeMatching = callFunction(std_String_includes, flags, "u");
+
         // Steps 8-9.
         var newFlags;
         if (callFunction(std_String_includes, flags, "y"))
@@ -692,7 +697,7 @@ function RegExpSplit(string, limit) {
                 break;
 
             // Step 19.d.i.
-            e = ToLength(q + z[0].length);
+            e = q + z[0].length;
         } else {
             // Step 19.a.
             splitter.lastIndex = q;
