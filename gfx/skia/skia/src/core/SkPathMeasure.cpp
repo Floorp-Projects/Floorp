@@ -7,17 +7,10 @@
 
 
 #include "SkPathMeasure.h"
+#include "SkPathMeasurePriv.h"
 #include "SkGeometry.h"
 #include "SkPath.h"
 #include "SkTSearch.h"
-
-// these must be 0,1,2,3 since they are in our 2-bit field
-enum {
-    kLine_SegType,
-    kQuad_SegType,
-    kCubic_SegType,
-    kConic_SegType,
-};
 
 #define kMaxTValue  0x3FFFFFFF
 
@@ -38,6 +31,99 @@ const SkPathMeasure::Segment* SkPathMeasure::NextSegment(const Segment* seg) {
         ++seg;
     } while (seg->fPtIndex == ptIndex);
     return seg;
+}
+
+void SkPathMeasure_segTo(const SkPoint pts[], unsigned segType,
+                   SkScalar startT, SkScalar stopT, SkPath* dst) {
+    SkASSERT(startT >= 0 && startT <= SK_Scalar1);
+    SkASSERT(stopT >= 0 && stopT <= SK_Scalar1);
+    SkASSERT(startT <= stopT);
+
+    if (startT == stopT) {
+        /* if the dash as a zero-length on segment, add a corresponding zero-length line.
+           The stroke code will add end caps to zero length lines as appropriate */
+        SkPoint lastPt;
+        SkAssertResult(dst->getLastPt(&lastPt));
+        dst->lineTo(lastPt);
+        return;
+    }
+
+    SkPoint tmp0[7], tmp1[7];
+
+    switch (segType) {
+        case kLine_SegType:
+            if (SK_Scalar1 == stopT) {
+                dst->lineTo(pts[1]);
+            } else {
+                dst->lineTo(SkScalarInterp(pts[0].fX, pts[1].fX, stopT),
+                            SkScalarInterp(pts[0].fY, pts[1].fY, stopT));
+            }
+            break;
+        case kQuad_SegType:
+            if (0 == startT) {
+                if (SK_Scalar1 == stopT) {
+                    dst->quadTo(pts[1], pts[2]);
+                } else {
+                    SkChopQuadAt(pts, tmp0, stopT);
+                    dst->quadTo(tmp0[1], tmp0[2]);
+                }
+            } else {
+                SkChopQuadAt(pts, tmp0, startT);
+                if (SK_Scalar1 == stopT) {
+                    dst->quadTo(tmp0[3], tmp0[4]);
+                } else {
+                    SkChopQuadAt(&tmp0[2], tmp1, (stopT - startT) / (1 - startT));
+                    dst->quadTo(tmp1[1], tmp1[2]);
+                }
+            }
+            break;
+        case kConic_SegType: {
+            SkConic conic(pts[0], pts[2], pts[3], pts[1].fX);
+
+            if (0 == startT) {
+                if (SK_Scalar1 == stopT) {
+                    dst->conicTo(conic.fPts[1], conic.fPts[2], conic.fW);
+                } else {
+                    SkConic tmp[2];
+                    if (conic.chopAt(stopT, tmp)) {
+                        dst->conicTo(tmp[0].fPts[1], tmp[0].fPts[2], tmp[0].fW);
+                    }
+                }
+            } else {
+                if (SK_Scalar1 == stopT) {
+                    SkConic tmp1[2];
+                    if (conic.chopAt(startT, tmp1)) {
+                        dst->conicTo(tmp1[1].fPts[1], tmp1[1].fPts[2], tmp1[1].fW);
+                    }
+                } else {
+                    SkConic tmp;
+                    conic.chopAt(startT, stopT, &tmp);
+                    dst->conicTo(tmp.fPts[1], tmp.fPts[2], tmp.fW);
+                }
+            }
+        } break;
+        case kCubic_SegType:
+            if (0 == startT) {
+                if (SK_Scalar1 == stopT) {
+                    dst->cubicTo(pts[1], pts[2], pts[3]);
+                } else {
+                    SkChopCubicAt(pts, tmp0, stopT);
+                    dst->cubicTo(tmp0[1], tmp0[2], tmp0[3]);
+                }
+            } else {
+                SkChopCubicAt(pts, tmp0, startT);
+                if (SK_Scalar1 == stopT) {
+                    dst->cubicTo(tmp0[4], tmp0[5], tmp0[6]);
+                } else {
+                    SkChopCubicAt(&tmp0[3], tmp1, (stopT - startT) / (1 - startT));
+                    dst->cubicTo(tmp1[1], tmp1[2], tmp1[3]);
+                }
+            }
+            break;
+        default:
+            SkDEBUGFAIL("unknown segType");
+            sk_throw();
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -318,19 +404,21 @@ void SkPathMeasure::buildSegments() {
     fFirstPtIndex = ptIndex;
 
 #ifdef SK_DEBUG
+#ifndef SK_DISABLE_SLOW_DEBUG_VALIDATION
     {
         const Segment* seg = fSegments.begin();
         const Segment* stop = fSegments.end();
         unsigned        ptIndex = 0;
         SkScalar        distance = 0;
-
+        // limit the loop to a reasonable number; pathological cases can run for minutes
+        int             maxChecks = 10000000;  // set to INT_MAX to defeat the check
         while (seg < stop) {
             SkASSERT(seg->fDistance > distance);
             SkASSERT(seg->fPtIndex >= ptIndex);
             SkASSERT(seg->fTValue > 0);
 
             const Segment* s = seg;
-            while (s < stop - 1 && s[0].fPtIndex == s[1].fPtIndex) {
+            while (s < stop - 1 && s[0].fPtIndex == s[1].fPtIndex && --maxChecks > 0) {
                 SkASSERT(s[0].fType == s[1].fType);
                 SkASSERT(s[0].fTValue < s[1].fTValue);
                 s += 1;
@@ -343,9 +431,10 @@ void SkPathMeasure::buildSegments() {
     //  SkDebugf("\n");
     }
 #endif
+#endif
 }
 
-static void compute_pos_tan(const SkPoint pts[], int segType,
+static void compute_pos_tan(const SkPoint pts[], unsigned segType,
                             SkScalar t, SkPoint* pos, SkVector* tangent) {
     switch (segType) {
         case kLine_SegType:
@@ -380,96 +469,6 @@ static void compute_pos_tan(const SkPoint pts[], int segType,
     }
 }
 
-static void seg_to(const SkPoint pts[], int segType,
-                   SkScalar startT, SkScalar stopT, SkPath* dst) {
-    SkASSERT(startT >= 0 && startT <= SK_Scalar1);
-    SkASSERT(stopT >= 0 && stopT <= SK_Scalar1);
-    SkASSERT(startT <= stopT);
-
-    if (startT == stopT) {
-        /* if the dash as a zero-length on segment, add a corresponding zero-length line.
-           The stroke code will add end caps to zero length lines as appropriate */
-        SkPoint lastPt;
-        SkAssertResult(dst->getLastPt(&lastPt));
-        dst->lineTo(lastPt);
-        return;
-    }
-
-    SkPoint tmp0[7], tmp1[7];
-
-    switch (segType) {
-        case kLine_SegType:
-            if (SK_Scalar1 == stopT) {
-                dst->lineTo(pts[1]);
-            } else {
-                dst->lineTo(SkScalarInterp(pts[0].fX, pts[1].fX, stopT),
-                            SkScalarInterp(pts[0].fY, pts[1].fY, stopT));
-            }
-            break;
-        case kQuad_SegType:
-            if (0 == startT) {
-                if (SK_Scalar1 == stopT) {
-                    dst->quadTo(pts[1], pts[2]);
-                } else {
-                    SkChopQuadAt(pts, tmp0, stopT);
-                    dst->quadTo(tmp0[1], tmp0[2]);
-                }
-            } else {
-                SkChopQuadAt(pts, tmp0, startT);
-                if (SK_Scalar1 == stopT) {
-                    dst->quadTo(tmp0[3], tmp0[4]);
-                } else {
-                    SkChopQuadAt(&tmp0[2], tmp1, (stopT - startT) / (1 - startT));
-                    dst->quadTo(tmp1[1], tmp1[2]);
-                }
-            }
-            break;
-        case kConic_SegType: {
-            SkConic conic(pts[0], pts[2], pts[3], pts[1].fX);
-
-            if (0 == startT) {
-                if (SK_Scalar1 == stopT) {
-                    dst->conicTo(conic.fPts[1], conic.fPts[2], conic.fW);
-                } else {
-                    SkConic tmp[2];
-                    conic.chopAt(stopT, tmp);
-                    dst->conicTo(tmp[0].fPts[1], tmp[0].fPts[2], tmp[0].fW);
-                }
-            } else {
-                if (SK_Scalar1 == stopT) {
-                    SkConic tmp1[2];
-                    conic.chopAt(startT, tmp1);
-                    dst->conicTo(tmp1[1].fPts[1], tmp1[1].fPts[2], tmp1[1].fW);
-                } else {
-                    SkConic tmp;
-                    conic.chopAt(startT, stopT, &tmp);
-                    dst->conicTo(tmp.fPts[1], tmp.fPts[2], tmp.fW);
-                }
-            }
-        } break;
-        case kCubic_SegType:
-            if (0 == startT) {
-                if (SK_Scalar1 == stopT) {
-                    dst->cubicTo(pts[1], pts[2], pts[3]);
-                } else {
-                    SkChopCubicAt(pts, tmp0, stopT);
-                    dst->cubicTo(tmp0[1], tmp0[2], tmp0[3]);
-                }
-            } else {
-                SkChopCubicAt(pts, tmp0, startT);
-                if (SK_Scalar1 == stopT) {
-                    dst->cubicTo(tmp0[4], tmp0[5], tmp0[6]);
-                } else {
-                    SkChopCubicAt(&tmp0[3], tmp1, (stopT - startT) / (1 - startT));
-                    dst->cubicTo(tmp1[1], tmp1[2], tmp1[3]);
-                }
-            }
-            break;
-        default:
-            SkDEBUGFAIL("unknown segType");
-            sk_throw();
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -667,14 +666,14 @@ bool SkPathMeasure::getSegment(SkScalar startD, SkScalar stopD, SkPath* dst,
     }
 
     if (seg->fPtIndex == stopSeg->fPtIndex) {
-        seg_to(&fPts[seg->fPtIndex], seg->fType, startT, stopT, dst);
+        SkPathMeasure_segTo(&fPts[seg->fPtIndex], seg->fType, startT, stopT, dst);
     } else {
         do {
-            seg_to(&fPts[seg->fPtIndex], seg->fType, startT, SK_Scalar1, dst);
+            SkPathMeasure_segTo(&fPts[seg->fPtIndex], seg->fType, startT, SK_Scalar1, dst);
             seg = SkPathMeasure::NextSegment(seg);
             startT = 0;
         } while (seg->fPtIndex < stopSeg->fPtIndex);
-        seg_to(&fPts[seg->fPtIndex], seg->fType, 0, stopT, dst);
+        SkPathMeasure_segTo(&fPts[seg->fPtIndex], seg->fType, 0, stopT, dst);
     }
     return true;
 }

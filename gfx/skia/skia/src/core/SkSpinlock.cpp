@@ -9,7 +9,7 @@
 
 void SkSpinlock::contendedAcquire() {
     // To act as a mutex, we need an acquire barrier when we acquire the lock.
-    while (fLocked.exchange(true, sk_memory_order_acquire)) {
+    while (fLocked.exchange(true, std::memory_order_acquire)) {
         /*spin*/
     }
 }

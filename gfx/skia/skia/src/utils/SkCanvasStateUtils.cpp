@@ -11,6 +11,7 @@
 #include "SkCanvasStack.h"
 #include "SkDevice.h"
 #include "SkErrorInternals.h"
+#include "SkRasterClip.h"
 #include "SkWriter32.h"
 
 /*
@@ -141,15 +142,15 @@ public:
     bool failed() { return fFailed; }
 
     // ClipVisitor
-    void clipRect(const SkRect& rect, SkRegion::Op op, bool antialias) override {
+    void clipRect(const SkRect& rect, SkCanvas::ClipOp op, bool antialias) override {
         fFailed |= antialias;
     }
 
-    void clipRRect(const SkRRect& rrect, SkRegion::Op op, bool antialias) override {
+    void clipRRect(const SkRRect& rrect, SkCanvas::ClipOp op, bool antialias) override {
         fFailed |= antialias;
     }
 
-    void clipPath(const SkPath&, SkRegion::Op, bool antialias) override {
+    void clipPath(const SkPath&, SkCanvas::ClipOp, bool antialias) override {
         fFailed |= antialias;
     }
 
@@ -221,7 +222,7 @@ SkCanvasState* SkCanvasStateUtils::CaptureCanvasState(SkCanvas* canvas) {
      */
     SkSWriter32<3*sizeof(SkCanvasLayerState)> layerWriter;
     int layerCount = 0;
-    for (SkCanvas::LayerIter layer(canvas, true/*skipEmptyClips*/); !layer.done(); layer.next()) {
+    for (SkCanvas::LayerIter layer(canvas); !layer.done(); layer.next()) {
 
         // we currently only work for bitmap backed devices
         SkPixmap pmap;
@@ -250,7 +251,7 @@ SkCanvasState* SkCanvasStateUtils::CaptureCanvasState(SkCanvas* canvas) {
         layerState->raster.rowBytes = pmap.rowBytes();
         layerState->raster.pixels = pmap.writable_addr();
 
-        setup_MC_state(&layerState->mcState, layer.matrix(), layer.clip());
+        setup_MC_state(&layerState->mcState, layer.matrix(), layer.clip().bwRgn());
         layerCount++;
     }
 
@@ -283,7 +284,7 @@ static void setup_canvas_from_MC_state(const SkMCState& state, SkCanvas* canvas)
     }
 
     canvas->setMatrix(matrix);
-    canvas->setClipRegion(clip);
+    canvas->clipRegion(clip, SkCanvas::kReplace_Op);
 }
 
 static SkCanvas* create_canvas_from_canvas_layer(const SkCanvasLayerState& layerState) {

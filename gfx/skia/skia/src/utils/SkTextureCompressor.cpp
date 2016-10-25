@@ -14,6 +14,7 @@
 #include "SkBitmapProcShader.h"
 #include "SkData.h"
 #include "SkEndian.h"
+#include "SkMathPriv.h"
 #include "SkOpts.h"
 
 #ifndef SK_IGNORE_ETC1_SUPPORT
@@ -144,19 +145,18 @@ bool CompressBufferToFormat(uint8_t* dst, const uint8_t* src, SkColorType srcCol
     return false;
 }
 
-SkData* CompressBitmapToFormat(const SkPixmap& pixmap, Format format) {
+sk_sp<SkData> CompressBitmapToFormat(const SkPixmap& pixmap, Format format) {
     int compressedDataSize = GetCompressedDataSize(format, pixmap.width(), pixmap.height());
     if (compressedDataSize < 0) {
         return nullptr;
     }
 
     const uint8_t* src = reinterpret_cast<const uint8_t*>(pixmap.addr());
-    SkData* dst = SkData::NewUninitialized(compressedDataSize);
+    sk_sp<SkData> dst(SkData::MakeUninitialized(compressedDataSize));
 
     if (!CompressBufferToFormat((uint8_t*)dst->writable_data(), src, pixmap.colorType(),
                                 pixmap.width(), pixmap.height(), pixmap.rowBytes(), format)) {
-        dst->unref();
-        dst = nullptr;
+        return nullptr;
     }
     return dst;
 }
