@@ -219,15 +219,6 @@ class TestJavaException(unittest.TestCase):
         """
         self.assert_(mozcrash.check_for_java_exception(self.test_log, quiet=True))
 
-    def test_fatal_exception(self):
-        """
-        Test for an exception which should be caught
-        """
-        fatal_log = list(self.test_log)
-        fatal_log[0] = "01-30 20:15:41.937 E/GeckoAppShell( 1703):" \
-                       " >>> FATAL EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")"
-        self.assert_(mozcrash.check_for_java_exception(fatal_log, quiet=True))
-
     def test_truncated_exception(self):
         """
         Test for an exception which should be caught which
