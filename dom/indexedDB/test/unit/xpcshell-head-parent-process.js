@@ -209,6 +209,11 @@ function resetTesting()
   SpecialPowers.clearUserPref("dom.indexedDB.testing");
 }
 
+function enableWasm()
+{
+  SpecialPowers.setBoolPref("javascript.options.wasm", true);
+}
+
 function gc()
 {
   Cu.forceGC();
@@ -361,6 +366,20 @@ function getBlob(str)
 function getFile(name, type, str)
 {
   return new File([str], name, {type: type});
+}
+
+function isWasmSupported()
+{
+  let testingFunctions = Cu.getJSTestingFunctions();
+  return testingFunctions.wasmIsSupported();
+}
+
+function getWasmModule(text)
+{
+  let testingFunctions = Cu.getJSTestingFunctions();
+  let binary = testingFunctions.wasmTextToBinary(text);
+  let module = new WebAssembly.Module(binary);
+  return module;
 }
 
 function compareBuffers(buffer1, buffer2)

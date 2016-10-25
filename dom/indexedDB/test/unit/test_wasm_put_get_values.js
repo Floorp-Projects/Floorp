@@ -1,0 +1,68 @@
+/**
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+var disableWorkerTest = "Need a way to set temporary prefs from a worker";
+
+var testGenerator = testSteps();
+
+function testSteps()
+{
+  const name =
+    this.window ? window.location.pathname : "test_wasm_put_get_values.js";
+
+  const objectStoreName = "Wasm";
+
+  const wasmData = { key: 1, wasm: null };
+
+  if (this.window) {
+    SpecialPowers.pushPrefEnv({ "set": [["javascript.options.wasm", true]] },
+                              continueToNextStep);
+    yield undefined;
+  } else {
+    enableWasm();
+  }
+
+  if (!isWasmSupported()) {
+    finishTest();
+    yield undefined;
+  }
+
+  info("Opening database");
+
+  let request = indexedDB.open(name);
+  request.onerror = errorHandler;
+  request.onupgradeneeded = continueToNextStepSync;
+  request.onsuccess = unexpectedSuccessHandler;
+  yield undefined;
+
+  // upgradeneeded
+  request.onupgradeneeded = unexpectedSuccessHandler;
+  request.onsuccess = continueToNextStepSync;
+
+  info("Creating objectStore");
+
+  request.result.createObjectStore(objectStoreName);
+
+  yield undefined;
+
+  // success
+  let db = request.result;
+  db.onerror = errorHandler;
+
+  info("Storing wasm");
+
+  wasmData.wasm = getWasmModule('(module (func (nop)))');
+
+  let objectStore = db.transaction([objectStoreName], "readwrite")
+                      .objectStore(objectStoreName);
+  request = objectStore.add(wasmData.wasm, wasmData.key);
+  request.onsuccess = continueToNextStepSync;
+  yield undefined;
+
+  is(request.result, wasmData.key, "Got correct key");
+
+  finishTest();
+  yield undefined;
+}

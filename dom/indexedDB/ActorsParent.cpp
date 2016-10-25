@@ -8237,6 +8237,16 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
         aText.AppendInt(id);
         break;
 
+      case StructuredCloneFile::eWasmBytecode:
+        aText.Append('/');
+        aText.AppendInt(id);
+        break;
+
+      case StructuredCloneFile::eWasmCompiled:
+        aText.Append('\\');
+        aText.AppendInt(id);
+        break;
+
       default:
         MOZ_CRASH("Should never get here!");
     }
@@ -15097,6 +15107,22 @@ TransactionBase::VerifyRequestParams(const ObjectStoreAddPutParams& aParams)
       }
 
       case StructuredCloneFile::eStructuredClone:
+        ASSERT_UNLESS_FUZZING();
+        return false;
+
+      case StructuredCloneFile::eWasmBytecode:
+      case StructuredCloneFile::eWasmCompiled:
+        if (NS_WARN_IF(file.type() !=
+                         DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent)) {
+          ASSERT_UNLESS_FUZZING();
+          return false;
+        }
+        if (NS_WARN_IF(!file.get_PBackgroundIDBDatabaseFileParent())) {
+          ASSERT_UNLESS_FUZZING();
+          return false;
+        }
+        break;
+
       case StructuredCloneFile::eEndGuard:
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -25545,7 +25571,9 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
       const FileAddInfo& fileAddInfo = fileAddInfos[index];
 
       MOZ_ASSERT(fileAddInfo.type() == StructuredCloneFile::eBlob ||
-                 fileAddInfo.type() == StructuredCloneFile::eMutableFile);
+                 fileAddInfo.type() == StructuredCloneFile::eMutableFile ||
+                 fileAddInfo.type() == StructuredCloneFile::eWasmBytecode ||
+                 fileAddInfo.type() == StructuredCloneFile::eWasmCompiled);
 
       const DatabaseOrMutableFile& file = fileAddInfo.file();
 
@@ -25588,6 +25616,29 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
           MOZ_ASSERT(storedFileInfo->mFileInfo);
 
           storedFileInfo->mType = StructuredCloneFile::eMutableFile;
+          break;
+        }
+
+        case StructuredCloneFile::eWasmBytecode:
+        case StructuredCloneFile::eWasmCompiled: {
+          MOZ_ASSERT(file.type() ==
+                       DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent);
+
+          storedFileInfo->mFileActor =
+            static_cast<DatabaseFile*>(
+              file.get_PBackgroundIDBDatabaseFileParent());
+          MOZ_ASSERT(storedFileInfo->mFileActor);
+
+          storedFileInfo->mFileInfo = storedFileInfo->mFileActor->GetFileInfo();
+          MOZ_ASSERT(storedFileInfo->mFileInfo);
+
+          storedFileInfo->mInputStream =
+            storedFileInfo->mFileActor->GetInputStream();
+          if (storedFileInfo->mInputStream && !mFileManager) {
+            mFileManager = fileManager;
+          }
+
+          storedFileInfo->mType = fileAddInfo.type();
           break;
         }
 
