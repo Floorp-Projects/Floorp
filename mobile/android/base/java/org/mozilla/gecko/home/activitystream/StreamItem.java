@@ -112,7 +112,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
                     Rect delegateArea = new Rect();
                     menuButton.getHitRect(delegateArea);
 
-                    final int targetHitArea = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, itemView.getContext().getResources().getDisplayMetrics());;
+                    final int targetHitArea = itemView.getContext().getResources().getDimensionPixelSize(R.dimen.touch_target_size);
 
                     final int widthDelta = (targetHitArea - delegateArea.width()) / 2;
                     delegateArea.right += widthDelta;

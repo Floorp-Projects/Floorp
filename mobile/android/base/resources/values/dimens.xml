@@ -226,4 +226,7 @@
     <!-- note: max_menu_height only affects the scrolling menu, but doesnt' take into consideration
          the header above it. -->
     <item name="activity_stream_contextmenu_max_menu_height" type="dimen">350dp</item>
+
+    <!-- Default touch target size for buttons/imageviews that might be of small size -->
+    <item name="touch_target_size" type="dimen">40dp</item>
 </resources>
