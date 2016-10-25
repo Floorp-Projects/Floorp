@@ -325,7 +325,7 @@ static bool is_opaque(const SkPaint& paint, const SkShader::Context* shaderConte
 
 struct State4f {
     State4f(const SkImageInfo& info, const SkPaint& paint, const SkShader::Context* shaderContext) {
-        fXfer = paint.getXfermode();
+        fXfer = SkXfermode::Peek(paint.getBlendMode());
         if (shaderContext) {
             fBuffer.reset(info.width());
         } else {
@@ -354,7 +354,7 @@ struct State32 : State4f {
         if (is_opaque(paint, shaderContext)) {
             fFlags |= SkXfermode::kSrcIsOpaque_D32Flag;
         }
-        if (info.isSRGB()) {
+        if (info.gammaCloseToSRGB()) {
             fFlags |= SkXfermode::kDstIsSRGB_D32Flag;
         }
         fProc1 = SkXfermode::GetD32Proc(fXfer, fFlags | SkXfermode::kSrcIsSingle_D32Flag);
@@ -363,8 +363,8 @@ struct State32 : State4f {
 
     SkXfermode::LCD32Proc getLCDProc(uint32_t oneOrManyFlag) const {
         uint32_t flags = fFlags & 1;
-        if (!(fFlags & SkXfermode::kDstIsSRGB_D32Flag)) {
-            flags |= SkXfermode::kDstIsLinearInt_LCDFlag;
+        if (fFlags & SkXfermode::kDstIsSRGB_D32Flag) {
+            flags |= SkXfermode::kDstIsSRGB_LCDFlag;
         }
         return SkXfermode::GetLCD32Proc(flags | oneOrManyFlag);
     }
@@ -374,31 +374,26 @@ struct State32 : State4f {
     }
 };
 
-struct State64 : State4f {
+struct StateF16 : State4f {
     typedef uint64_t    DstType;
 
-    SkXfermode::D64Proc fProc1;
-    SkXfermode::D64Proc fProcN;
+    SkXfermode::F16Proc fProc1;
+    SkXfermode::F16Proc fProcN;
 
-    State64(const SkImageInfo& info, const SkPaint& paint, const SkShader::Context* shaderContext)
+    StateF16(const SkImageInfo& info, const SkPaint& paint, const SkShader::Context* shaderContext)
         : State4f(info, paint, shaderContext)
     {
         if (is_opaque(paint, shaderContext)) {
-            fFlags |= SkXfermode::kSrcIsOpaque_D64Flag;
+            fFlags |= SkXfermode::kSrcIsOpaque_F16Flag;
         }
-        if (kRGBA_F16_SkColorType == info.colorType()) {
-            fFlags |= SkXfermode::kDstIsFloat16_D64Flag;
-        }
-        fProc1 = SkXfermode::GetD64Proc(fXfer, fFlags | SkXfermode::kSrcIsSingle_D64Flag);
-        fProcN = SkXfermode::GetD64Proc(fXfer, fFlags);
+        SkASSERT(kRGBA_F16_SkColorType == info.colorType());
+        fProc1 = SkXfermode::GetF16Proc(fXfer, fFlags | SkXfermode::kSrcIsSingle_F16Flag);
+        fProcN = SkXfermode::GetF16Proc(fXfer, fFlags);
     }
 
-    SkXfermode::LCD64Proc getLCDProc(uint32_t oneOrManyFlag) const {
+    SkXfermode::LCDF16Proc getLCDProc(uint32_t oneOrManyFlag) const {
         uint32_t flags = fFlags & 1;
-        if (!(fFlags & SkXfermode::kDstIsFloat16_D64Flag)) {
-            flags |= SkXfermode::kDstIsLinearInt_LCDFlag;
-        }
-        return SkXfermode::GetLCD64Proc(flags | oneOrManyFlag);
+        return SkXfermode::GetLCDF16Proc(flags | oneOrManyFlag);
     }
 
     static DstType* WritableAddr(const SkPixmap& device, int x, int y) {
@@ -415,7 +410,7 @@ template <typename State> SkBlitter* create(const SkPixmap& device, const SkPain
         SkShader::Context::BlitState bstate;
         sk_bzero(&bstate, sizeof(bstate));
         bstate.fCtx = shaderContext;
-        bstate.fXfer = paint.getXfermode();
+        bstate.fXfer = SkXfermode::Peek(paint.getBlendMode());
 
         (void)shaderContext->chooseBlitProcs(device.info(), &bstate);
         return allocator->createT<SkState_Shader_Blitter<State>>(device, paint, bstate);
@@ -434,8 +429,8 @@ SkBlitter* SkBlitter_ARGB32_Create(const SkPixmap& device, const SkPaint& paint,
     return create<State32>(device, paint, shaderContext, allocator);
 }
 
-SkBlitter* SkBlitter_ARGB64_Create(const SkPixmap& device, const SkPaint& paint,
-                                   SkShader::Context* shaderContext,
-                                   SkTBlitterAllocator* allocator) {
-    return create<State64>(device, paint, shaderContext, allocator);
+SkBlitter* SkBlitter_F16_Create(const SkPixmap& device, const SkPaint& paint,
+                                SkShader::Context* shaderContext,
+                                SkTBlitterAllocator* allocator) {
+    return create<StateF16>(device, paint, shaderContext, allocator);
 }

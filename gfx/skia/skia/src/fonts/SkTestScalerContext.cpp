@@ -20,7 +20,7 @@
 SkTestFont::SkTestFont(const SkTestFontData& fontData)
     : INHERITED()
     , fCharCodes(fontData.fCharCodes)
-    , fCharCodesCount(fontData.fCharCodesCount)
+    , fCharCodesCount(fontData.fCharCodes ? fontData.fCharCodesCount : 0)
     , fWidths(fontData.fWidths)
     , fMetrics(fontData.fMetrics)
     , fName(fontData.fName)
@@ -72,8 +72,10 @@ int SkTestFont::codeToIndex(SkUnichar charCode) const {
             return (int) index;
         }
     }
-    SkDEBUGF(("missing '%c' (%d) from %s %d\n", (char) charCode, charCode,
-            fDebugName, fDebugStyle));
+
+    SkDEBUGF(("missing '%c' (%d) from %s (weight %d, width %d, slant %d)\n",
+              (char) charCode, charCode, fDebugName,
+              fDebugStyle.weight(), fDebugStyle.width(), fDebugStyle.slant()));
     return 0;
 }
 
@@ -115,7 +117,7 @@ void SkTestFont::init(const SkScalar* pts, const unsigned char* verbs) {
 }
 
 SkTestTypeface::SkTestTypeface(SkTestFont* testFont, const SkFontStyle& style)
-    : SkTypeface(style, SkTypefaceCache::NewFontID(), false)
+    : SkTypeface(style, false)
     , fTestFont(testFont) {
 }
 
@@ -150,12 +152,21 @@ SkAdvancedTypefaceMetrics* SkTestTypeface::onGetAdvancedTypefaceMetrics(
 // pdf only
     SkAdvancedTypefaceMetrics* info = new SkAdvancedTypefaceMetrics;
     info->fFontName.set(fTestFont->fName);
-    info->fLastGlyphID = SkToU16(onCountGlyphs() - 1);
+    int glyphCount = this->onCountGlyphs();
+    info->fLastGlyphID = SkToU16(glyphCount - 1);
+
+    SkTDArray<SkUnichar>& toUnicode = info->fGlyphToUnicode;
+    toUnicode.setCount(glyphCount);
+    SkASSERT(glyphCount == SkToInt(fTestFont->fCharCodesCount));
+    for (int gid = 0; gid < glyphCount; ++gid) {
+        toUnicode[gid] = SkToS32(fTestFont->fCharCodes[gid]);
+    }
     return info;
 }
 
 void SkTestTypeface::onGetFontDescriptor(SkFontDescriptor* desc, bool* isLocal) const {
     desc->setFamilyName(fTestFont->fName);
+    desc->setStyle(this->fontStyle());
     *isLocal = false;
 }
 
@@ -183,8 +194,9 @@ SkASSERT(0);  // incomplete
 
 class SkTestScalerContext : public SkScalerContext {
 public:
-    SkTestScalerContext(SkTestTypeface* face, const SkDescriptor* desc)
-        : SkScalerContext(face, desc)
+    SkTestScalerContext(SkTestTypeface* face, const SkScalerContextEffects& effects,
+                        const SkDescriptor* desc)
+        : SkScalerContext(face, effects, desc)
         , fFace(face)
     {
         fRec.getSingleMatrix(&fMatrix);
@@ -283,6 +295,7 @@ private:
     SkMatrix         fMatrix;
 };
 
-SkScalerContext* SkTestTypeface::onCreateScalerContext(const SkDescriptor* desc) const {
-    return new SkTestScalerContext(const_cast<SkTestTypeface*>(this), desc);
+SkScalerContext* SkTestTypeface::onCreateScalerContext(const SkScalerContextEffects& effects,
+                                                       const SkDescriptor* desc) const {
+    return new SkTestScalerContext(const_cast<SkTestTypeface*>(this), effects, desc);
 }

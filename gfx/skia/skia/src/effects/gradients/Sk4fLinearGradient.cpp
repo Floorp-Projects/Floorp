@@ -53,8 +53,10 @@ void ramp<DstType::S32, ApplyPremul::False>(const Sk4f& c, const Sk4f& dc, SkPMC
     Sk4x4f        c4x = Sk4x4f::Transpose(c, c + dc, c + dc * 2, c + dc * 3);
 
     while (n >= 4) {
-        const Sk4x4f cx4s32 = { c4x.r.sqrt(), c4x.g.sqrt(), c4x.b.sqrt(), c4x.a };
-        cx4s32.transpose((uint8_t*)dst);
+        ( sk_linear_to_srgb(c4x.r) <<  0
+        | sk_linear_to_srgb(c4x.g) <<  8
+        | sk_linear_to_srgb(c4x.b) << 16
+        | Sk4f_round(255.0f*c4x.a) << 24).store(dst);
 
         c4x.r += dc4x.r;
         c4x.g += dc4x.g;
@@ -98,12 +100,13 @@ SkScalar pinFx<SkShader::kMirror_TileMode>(SkScalar fx) {
     return f < 0 ? f + 2 : f;
 }
 
-// true when x is in [k1,k2)
+// true when x is in [k1,k2), or [k2, k1) when the interval is reversed.
+// TODO(fmalita): hoist the reversed interval check out of this helper.
 bool in_range(SkScalar x, SkScalar k1, SkScalar k2) {
     SkASSERT(k1 != k2);
     return (k1 < k2)
-        ? (x >= k1 && x < k2)
-        : (x >= k2 && x < k1);
+        ? (x >= k1 && x <  k2)
+        : (x >  k2 && x <= k1);
 }
 
 } // anonymous namespace
@@ -114,7 +117,7 @@ LinearGradient4fContext::LinearGradient4fContext(const SkLinearGradient& shader,
     : INHERITED(shader, rec) {
 
     // Our fast path expects interval points to be monotonically increasing in x.
-    const bool reverseIntervals = this->isFast() && fDstToPos.getScaleX() < 0;
+    const bool reverseIntervals = this->isFast() && signbit(fDstToPos.getScaleX());
     this->buildIntervals(shader, rec, reverseIntervals);
 
     SkASSERT(fIntervals.count() > 0);
@@ -288,6 +291,7 @@ public:
         , fDx(dx)
         , fIsVertical(is_vertical)
     {
+        SkASSERT(fAdvX >= 0);
         SkASSERT(firstInterval <= lastInterval);
         SkASSERT(in_range(fx, i->fP0, i->fP1));
         this->compute_interval_props(fx - i->fP0);
@@ -443,7 +447,7 @@ LinearGradient4fContext::D32_BlitBW(BlitState* state, int x, int y, const SkPixm
     const LinearGradient4fContext* ctx =
         static_cast<const LinearGradient4fContext*>(state->fCtx);
 
-    if (dst.info().isLinear()) {
+    if (!dst.info().gammaCloseToSRGB()) {
         if (ctx->fColorsArePremul) {
             ctx->shadePremulSpan<DstType::L32, ApplyPremul::False>(
                 x, y, dst.writable_addr32(x, y), count);

@@ -8,6 +8,8 @@
 #include "SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN32)
 
+#include "SkLeanWindows.h"
+
 #ifndef UNICODE
 #define UNICODE
 #endif
@@ -18,9 +20,9 @@
 #include <XpsObjectModel.h>
 #include <T2EmbApi.h>
 #include <FontSub.h>
+#include <limits>
 
 #include "SkColor.h"
-#include "SkConstexprMath.h"
 #include "SkData.h"
 #include "SkDraw.h"
 #include "SkEndian.h"
@@ -28,6 +30,7 @@
 #include "SkGeometry.h"
 #include "SkGlyphCache.h"
 #include "SkHRESULT.h"
+#include "SkImage.h"
 #include "SkImageEncoder.h"
 #include "SkIStream.h"
 #include "SkMaskFilter.h"
@@ -35,6 +38,7 @@
 #include "SkPathEffect.h"
 #include "SkPathOps.h"
 #include "SkPoint.h"
+#include "SkRasterClip.h"
 #include "SkRasterizer.h"
 #include "SkSFNTHeader.h"
 #include "SkShader.h"
@@ -189,6 +193,10 @@ bool SkXPSDevice::beginSheet(
     return true;
 }
 
+template <typename T> static constexpr size_t sk_digits_in() {
+    return static_cast<size_t>(std::numeric_limits<T>::digits10 + 1);
+}
+
 HRESULT SkXPSDevice::createXpsThumbnail(IXpsOMPage* page,
                                         const unsigned int pageNum,
                                         IXpsOMImageResource** image) {
@@ -201,10 +209,9 @@ HRESULT SkXPSDevice::createXpsThumbnail(IXpsOMPage* page,
         "Could not create thumbnail generator.");
 
     SkTScopedComPtr<IOpcPartUri> partUri;
-    static const size_t size = SkTUMax<
-        SK_ARRAY_COUNT(L"/Documents/1/Metadata/.png") + SK_DIGITS_IN(pageNum),
-        SK_ARRAY_COUNT(L"/Metadata/" L_GUID_ID L".png")
-    >::value;
+    constexpr size_t size = SkTMax(
+            SK_ARRAY_COUNT(L"/Documents/1/Metadata/.png") + sk_digits_in<decltype(pageNum)>(),
+            SK_ARRAY_COUNT(L"/Metadata/" L_GUID_ID L".png"));
     wchar_t buffer[size];
     if (pageNum > 0) {
         swprintf_s(buffer, size, L"/Documents/1/Metadata/%u.png", pageNum);
@@ -228,8 +235,9 @@ HRESULT SkXPSDevice::createXpsThumbnail(IXpsOMPage* page,
 
 HRESULT SkXPSDevice::createXpsPage(const XPS_SIZE& pageSize,
                                    IXpsOMPage** page) {
-    static const size_t size = SK_ARRAY_COUNT(L"/Documents/1/Pages/.fpage")
-                             + SK_DIGITS_IN(fCurrentPage);
+    constexpr size_t size =
+        SK_ARRAY_COUNT(L"/Documents/1/Pages/.fpage")
+        + sk_digits_in<decltype(fCurrentPage)>();
     wchar_t buffer[size];
     swprintf_s(buffer, size, L"/Documents/1/Pages/%u.fpage",
                              this->fCurrentPage);
@@ -655,7 +663,7 @@ HRESULT SkXPSDevice::createXpsImageBrush(
         HRM(E_FAIL, "Unable to encode bitmap as png.");
     }
     SkMemoryStream* read = new SkMemoryStream;
-    read->setData(write.copyToData())->unref();
+    read->setData(write.detachAsData());
     SkTScopedComPtr<IStream> readWrapper;
     HRM(SkIStream::CreateFromSkStream(read, true, &readWrapper),
         "Could not create stream from png data.");
@@ -1073,7 +1081,8 @@ HRESULT SkXPSDevice::createXpsBrush(const SkPaint& skPaint,
     SkBitmap outTexture;
     SkMatrix outMatrix;
     SkShader::TileMode xy[2];
-    if (shader->isABitmap(&outTexture, &outMatrix, xy)) {
+    SkImage* image = shader->isAImage(&outMatrix, xy);
+    if (image && image->asLegacyBitmap(&outTexture, SkImage::kRO_LegacyBitmapMode)) {
         //TODO: outMatrix??
         SkMatrix localMatrix = shader->getLocalMatrix();
         if (parentTransform) {
@@ -1210,8 +1219,8 @@ void SkXPSDevice::internalDrawRect(const SkDraw& d,
                                    bool transformRect,
                                    const SkPaint& paint) {
     //Exit early if there is nothing to draw.
-    if (d.fClip->isEmpty() ||
-        (paint.getAlpha() == 0 && paint.getXfermode() == nullptr)) {
+    if (d.fRC->isEmpty() ||
+        (paint.getAlpha() == 0 && paint.isSrcOver())) {
         return;
     }
 
@@ -1526,8 +1535,8 @@ void SkXPSDevice::drawPath(const SkDraw& d,
     SkTCopyOnFirstWrite<SkPaint> paint(origPaint);
 
     // nothing to draw
-    if (d.fClip->isEmpty() ||
-        (paint->getAlpha() == 0 && paint->getXfermode() == nullptr)) {
+    if (d.fRC->isEmpty() ||
+        (paint->getAlpha() == 0 && paint->isSrcOver())) {
         return;
     }
 
@@ -1609,7 +1618,7 @@ void SkXPSDevice::drawPath(const SkDraw& d,
         this->convertToPpm(filter,
                            &matrix,
                            &ppuScale,
-                           d.fClip->getBounds(),
+                           d.fRC->getBounds(),
                            &clipIRect);
 
         SkMask* mask = nullptr;
@@ -1647,7 +1656,7 @@ void SkXPSDevice::drawPath(const SkDraw& d,
         this->convertToPpm(filter,
                            &matrix,
                            &ppuScale,
-                           d.fClip->getBounds(),
+                           d.fRC->getBounds(),
                            &clipIRect);
 
         //[Fillable-path -> Pixel-path]
@@ -1656,6 +1665,11 @@ void SkXPSDevice::drawPath(const SkDraw& d,
 
         SkMask* mask = nullptr;
 
+        SkASSERT(SkPaint::kFill_Style == paint->getStyle() ||
+                 (SkPaint::kStroke_Style == paint->getStyle() && 0 == paint->getStrokeWidth()));
+        SkStrokeRec::InitStyle style = (SkPaint::kFill_Style == paint->getStyle())
+                                            ? SkStrokeRec::kFill_InitStyle
+                                            : SkStrokeRec::kHairline_InitStyle;
         //[Pixel-path -> Mask]
         SkMask rasteredMask;
         if (SkDraw::DrawToMask(
@@ -1665,7 +1679,7 @@ void SkXPSDevice::drawPath(const SkDraw& d,
                         &matrix,
                         &rasteredMask,
                         SkMask::kComputeBoundsAndRenderImage_CreateMode,
-                        paint->getStyle())) {
+                        style)) {
 
             SkAutoMaskFreeImage rasteredAmi(rasteredMask.fImage);
             mask = &rasteredMask;
@@ -1765,7 +1779,13 @@ void SkXPSDevice::drawPath(const SkDraw& d,
 
 HRESULT SkXPSDevice::clip(IXpsOMVisual* xpsVisual, const SkDraw& d) {
     SkPath clipPath;
-    SkAssertResult(d.fClip->getBoundaryPath(&clipPath));
+    if (d.fRC->isBW()) {
+        SkAssertResult(d.fRC->bwRgn().getBoundaryPath(&clipPath));
+    } else {
+        // Don't have a way to turn a AAClip into a path, so we just use the bounds.
+        // TODO: consider using fClipStack instead?
+        clipPath.addRect(SkRect::Make(d.fRC->getBounds()));
+    }
 
     return this->clipToPath(xpsVisual, clipPath, XPS_FILL_RULE_EVENODD);
 }
@@ -1797,7 +1817,7 @@ HRESULT SkXPSDevice::clipToPath(IXpsOMVisual* xpsVisual,
 
 void SkXPSDevice::drawBitmap(const SkDraw& d, const SkBitmap& bitmap,
                              const SkMatrix& matrix, const SkPaint& paint) {
-    if (d.fClip->isEmpty()) {
+    if (d.fRC->isEmpty()) {
         return;
     }
 
@@ -2077,7 +2097,7 @@ public:
 
         XPS_GLYPH_INDEX* xpsGlyph = fXpsGlyphs->append();
         uint16_t glyphID = glyph.getGlyphID();
-        fGlyphUse->setBit(glyphID, true);
+        fGlyphUse->set(glyphID);
         xpsGlyph->index = glyphID;
         if (1 == fXpsGlyphs->count()) {
             xpsGlyph->advanceWidth = 0.0f;

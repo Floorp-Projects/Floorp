@@ -14,22 +14,19 @@
 #define VK_CALL(GPU, X) GR_VK_CALL(GPU->vkInterface(), X)
 
 GrVkStencilAttachment::GrVkStencilAttachment(GrVkGpu* gpu,
-                                             GrGpuResource::LifeCycle lifeCycle,
                                              const Format& format,
                                              const GrVkImage::ImageDesc& desc,
-                                             const GrVkImage::Resource* imageResource,
+                                             const GrVkImageInfo& info,
                                              const GrVkImageView* stencilView)
-    : GrStencilAttachment(gpu, lifeCycle, desc.fWidth, desc.fHeight,
-                          format.fStencilBits, desc.fSamples)
-    , GrVkImage(imageResource)
+    : GrStencilAttachment(gpu, desc.fWidth, desc.fHeight, format.fStencilBits, desc.fSamples)
+    , GrVkImage(info, GrVkImage::kNot_Wrapped)
     , fFormat(format)
     , fStencilView(stencilView) {
-    this->registerWithCache();
+    this->registerWithCache(SkBudgeted::kYes);
     stencilView->ref();
 }
 
 GrVkStencilAttachment* GrVkStencilAttachment::Create(GrVkGpu* gpu,
-                                                     GrGpuResource::LifeCycle lifeCycle,
                                                      int width,
                                                      int height,
                                                      int sampleCnt,
@@ -42,25 +39,25 @@ GrVkStencilAttachment* GrVkStencilAttachment::Create(GrVkGpu* gpu,
     imageDesc.fLevels = 1;
     imageDesc.fSamples = sampleCnt;
     imageDesc.fImageTiling = VK_IMAGE_TILING_OPTIMAL;
-    imageDesc.fUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    imageDesc.fUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
+                            VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     imageDesc.fMemProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    const GrVkImage::Resource* imageResource = GrVkImage::CreateResource(gpu, imageDesc);
-    if (!imageResource) {
+    GrVkImageInfo info;
+    if (!GrVkImage::InitImageInfo(gpu, imageDesc, &info)) {
         return nullptr;
     }
 
-    const GrVkImageView* imageView = GrVkImageView::Create(gpu, imageResource->fImage,
+    const GrVkImageView* imageView = GrVkImageView::Create(gpu, info.fImage,
                                                            format.fInternalFormat,
-                                                           GrVkImageView::kStencil_Type);
+                                                           GrVkImageView::kStencil_Type, 1);
     if (!imageView) {
-        imageResource->unref(gpu);
+        GrVkImage::DestroyImageInfo(gpu, &info);
         return nullptr;
     }
 
-    GrVkStencilAttachment* stencil = new GrVkStencilAttachment(gpu, lifeCycle, format, imageDesc,
-                                                               imageResource, imageView);
-    imageResource->unref(gpu);
+    GrVkStencilAttachment* stencil = new GrVkStencilAttachment(gpu, format, imageDesc,
+                                                               info, imageView);
     imageView->unref(gpu);
 
     return stencil;
