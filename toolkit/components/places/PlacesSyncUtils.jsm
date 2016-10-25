@@ -78,7 +78,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       // first sync.
       return Promise.resolve();
     }
-    return PlacesUtils.bookmarks.reorder(parentGuid, childGuids);
+    return PlacesUtils.bookmarks.reorder(parentGuid, childGuids,
+                                         { source: SOURCE_SYNC });
   }),
 
   /**
