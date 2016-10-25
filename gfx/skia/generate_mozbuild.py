@@ -64,7 +64,7 @@ LOCAL_INCLUDES += [
     'skia/src/utils/win',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
     DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
@@ -73,7 +73,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
     'gtk2',
     'gtk3',
     'uikit',
-    'gonk',
   }:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
@@ -144,7 +143,7 @@ if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-unused-private-field',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'android', 'gonk'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'android'):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
@@ -444,7 +443,7 @@ def write_mozbuild(sources):
   f.write("if CONFIG['MOZ_ENABLE_SKIA_GPU']:\n")
   write_sources(f, sources['gpu'], 4)
 
-  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):\n")
+  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):\n")
   write_sources(f, sources['android'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in {'cocoa', 'uikit'}:\n")
