@@ -669,6 +669,15 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
           break;
         }
 
+        case BlobOrMutableFile::Tnull_t: {
+          StructuredCloneFile* file = aFiles.AppendElement();
+          MOZ_ASSERT(file);
+
+          file->mType = StructuredCloneFile::eStructuredClone;
+
+          break;
+        }
+
         default:
           MOZ_CRASH("Should never get here!");
       }

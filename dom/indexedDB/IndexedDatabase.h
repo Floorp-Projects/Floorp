@@ -28,6 +28,7 @@ struct StructuredCloneFile
   enum Type {
     eBlob,
     eMutableFile,
+    eStructuredClone,
   };
 
   RefPtr<Blob> mBlob;
