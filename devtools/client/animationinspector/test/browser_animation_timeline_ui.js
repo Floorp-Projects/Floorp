@@ -37,7 +37,7 @@ add_task(function* () {
     is(animationEl.querySelector(".name").textContent,
        animation.state.name,
        "The name on the timeline is correct");
-    ok(animationEl.querySelector(".iterations"),
-       "The timeline has iterations displayed");
+    ok(animationEl.querySelector("svg path"),
+       "The timeline has svg and path element as summary graph");
   }
 });
