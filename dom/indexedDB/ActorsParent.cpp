@@ -89,6 +89,7 @@
 #include "nsPrintfCString.h"
 #include "nsQueryObject.h"
 #include "nsRefPtrHashtable.h"
+#include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsThreadPool.h"
 #include "nsThreadUtils.h"
@@ -8131,6 +8132,7 @@ class ObjectStoreAddOrPutRequestOp final
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
   struct StoredFileInfo;
+  class SCInputStream;
 
   const ObjectStoreAddPutParams mParams;
   Maybe<UniqueIndexTable> mUniqueIndexTable;
@@ -8227,6 +8229,26 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
         MOZ_CRASH("Should never get here!");
     }
   }
+};
+
+class ObjectStoreAddOrPutRequestOp::SCInputStream final
+  : public nsIInputStream
+{
+  const JSStructuredCloneData& mData;
+  JSStructuredCloneData::IterImpl mIter;
+
+public:
+  explicit SCInputStream(const JSStructuredCloneData& aData)
+    : mData(aData)
+    , mIter(aData.Iter())
+  { }
+
+private:
+  virtual ~SCInputStream()
+  { }
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIINPUTSTREAM
 };
 
 class ObjectStoreGetRequestOp final
@@ -25849,6 +25871,73 @@ ObjectStoreAddOrPutRequestOp::Cleanup()
   }
 
   NormalTransactionOp::Cleanup();
+}
+
+NS_IMPL_ISUPPORTS(ObjectStoreAddOrPutRequestOp::SCInputStream, nsIInputStream)
+
+NS_IMETHODIMP
+ObjectStoreAddOrPutRequestOp::
+SCInputStream::Close()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ObjectStoreAddOrPutRequestOp::
+SCInputStream::Available(uint64_t* _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ObjectStoreAddOrPutRequestOp::
+SCInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* _retval)
+{
+  return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, _retval);
+}
+
+NS_IMETHODIMP
+ObjectStoreAddOrPutRequestOp::
+SCInputStream::ReadSegments(nsWriteSegmentFun aWriter,
+                            void* aClosure,
+                            uint32_t aCount,
+                            uint32_t* _retval)
+{
+  *_retval = 0;
+
+  while (aCount) {
+    uint32_t count = std::min(uint32_t(mIter.RemainingInSegment()), aCount);
+    if (!count) {
+      // We've run out of data in the last segment.
+      break;
+    }
+
+    uint32_t written;
+    nsresult rv =
+      aWriter(this, aClosure, mIter.Data(), *_retval, count, &written);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // InputStreams do not propagate errors to caller.
+      return NS_OK;
+    }
+
+    // Writer should write what we asked it to write.
+    MOZ_ASSERT(written == count);
+
+    *_retval += count;
+    aCount -= count;
+
+    mIter.Advance(mData, count);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ObjectStoreAddOrPutRequestOp::
+SCInputStream::IsNonBlocking(bool* _retval)
+{
+  *_retval = false;
+  return NS_OK;
 }
 
 ObjectStoreGetRequestOp::ObjectStoreGetRequestOp(TransactionBase* aTransaction,
