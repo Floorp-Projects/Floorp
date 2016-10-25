@@ -25,10 +25,15 @@ class SerializedStructuredCloneReadInfo;
 
 struct StructuredCloneFile
 {
+  enum Type {
+    eBlob,
+    eMutableFile,
+  };
+
   RefPtr<Blob> mBlob;
   RefPtr<IDBMutableFile> mMutableFile;
   RefPtr<FileInfo> mFileInfo;
-  bool mMutable;
+  Type mType;
 
   // In IndexedDatabaseInlines.h
   inline

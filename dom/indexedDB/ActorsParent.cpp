@@ -8179,14 +8179,20 @@ private:
 
 struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
 {
+  enum Type
+  {
+    eBlob,
+    eMutableFile,
+  };
+
   RefPtr<DatabaseFile> mFileActor;
   RefPtr<FileInfo> mFileInfo;
   nsCOMPtr<nsIInputStream> mInputStream;
-  bool mMutable;
+  Type mType;
   bool mCopiedSuccessfully;
 
   StoredFileInfo()
-    : mMutable(false)
+    : mType(eBlob)
     , mCopiedSuccessfully(false)
   {
     AssertIsOnBackgroundThread();
@@ -9617,46 +9623,57 @@ ConvertBlobsToActors(PBackgroundParent* aBackgroundActor,
     MOZ_ASSERT(NS_SUCCEEDED(nativeFile->IsFile(&isFile)));
     MOZ_ASSERT(isFile);
 
-    if (file.mMutable) {
-      if (aDatabase->IsFileHandleDisabled()) {
-        MOZ_ALWAYS_TRUE(aActors.AppendElement(NullableMutableFile(null_t()),
-                                              fallible));
-      } else {
-        RefPtr<MutableFile> actor =
-          MutableFile::Create(nativeFile, aDatabase, file.mFileInfo);
+    switch (file.mType) {
+      case StructuredCloneFile::eBlob: {
+        RefPtr<BlobImpl> impl = new BlobImplStoredFile(nativeFile,
+                                                       file.mFileInfo,
+                                                       /* aSnapshot */ false);
+
+        PBlobParent* actor =
+          BackgroundParent::GetOrCreateActorForBlobImpl(aBackgroundActor, impl);
         if (!actor) {
-          IDB_REPORT_INTERNAL_ERR();
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-        }
-
-        // Transfer ownership to IPDL.
-        actor->SetActorAlive();
-
-        if (!aDatabase->SendPBackgroundMutableFileConstructor(actor,
-                                                              EmptyString(),
-                                                              EmptyString())) {
           // This can only fail if the child has crashed.
           IDB_REPORT_INTERNAL_ERR();
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
-        MOZ_ALWAYS_TRUE(aActors.AppendElement(NullableMutableFile(actor),
-                                              fallible));
-      }
-    } else {
-      RefPtr<BlobImpl> impl = new BlobImplStoredFile(nativeFile,
-                                                       file.mFileInfo,
-                                                       /* aSnapshot */ false);
+        MOZ_ALWAYS_TRUE(aActors.AppendElement(actor, fallible));
 
-      PBlobParent* actor =
-        BackgroundParent::GetOrCreateActorForBlobImpl(aBackgroundActor, impl);
-      if (!actor) {
-        // This can only fail if the child has crashed.
-        IDB_REPORT_INTERNAL_ERR();
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        break;
       }
 
-      MOZ_ALWAYS_TRUE(aActors.AppendElement(actor, fallible));
+      case StructuredCloneFile::eMutableFile: {
+        if (aDatabase->IsFileHandleDisabled()) {
+          MOZ_ALWAYS_TRUE(aActors.AppendElement(NullableMutableFile(null_t()),
+                                                fallible));
+        } else {
+          RefPtr<MutableFile> actor =
+            MutableFile::Create(nativeFile, aDatabase, file.mFileInfo);
+          if (!actor) {
+            IDB_REPORT_INTERNAL_ERR();
+            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+          }
+
+          // Transfer ownership to IPDL.
+          actor->SetActorAlive();
+
+          if (!aDatabase->SendPBackgroundMutableFileConstructor(actor,
+                                                                EmptyString(),
+                                                                EmptyString())) {
+            // This can only fail if the child has crashed.
+            IDB_REPORT_INTERNAL_ERR();
+            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+          }
+
+          MOZ_ALWAYS_TRUE(aActors.AppendElement(NullableMutableFile(actor),
+                                                fallible));
+        }
+
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Should never get here!");
     }
   }
 
@@ -18914,7 +18931,7 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
     if (index) {
       fileIds.Append(' ');
     }
-    fileIds.AppendInt(file.mMutable ? -id : id);
+    fileIds.AppendInt(file.mType == StructuredCloneFile::eBlob ? id : -id);
   }
 
   nsCOMPtr<nsIVariant> result = new mozilla::storage::TextVariant(fileIds);
@@ -19096,7 +19113,8 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
 
       StructuredCloneFile* file = aInfo->mFiles.AppendElement();
       file->mFileInfo.swap(fileInfo);
-      file->mMutable = id < 0;
+      file->mType = id > 0 ? StructuredCloneFile::eBlob
+                           : StructuredCloneFile::eMutableFile;
     }
   }
 
@@ -25337,6 +25355,8 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
           if (storedFileInfo->mInputStream && !mFileManager) {
             mFileManager = fileManager;
           }
+
+          storedFileInfo->mType = StoredFileInfo::eBlob;
           break;
         }
 
@@ -25349,7 +25369,7 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
           storedFileInfo->mFileInfo = mutableFileActor->GetFileInfo();
           MOZ_ASSERT(storedFileInfo->mFileInfo);
 
-          storedFileInfo->mMutable = true;
+          storedFileInfo->mType = StoredFileInfo::eMutableFile;
           break;
         }
 
@@ -25687,7 +25707,8 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       if (index) {
         fileIds.Append(' ');
       }
-      fileIds.AppendInt(storedFileInfo.mMutable ? -id : id);
+      fileIds.AppendInt(storedFileInfo.mType == StoredFileInfo::eBlob ? id
+                                                                      : -id);
     }
 
     rv = stmt->BindStringByName(NS_LITERAL_CSTRING("file_ids"), fileIds);
