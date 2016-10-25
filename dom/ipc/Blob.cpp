@@ -34,6 +34,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsID.h"
+#include "nsIFileStreams.h"
 #include "nsIInputStream.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsIMultiplexInputStream.h"
@@ -405,6 +406,7 @@ class BlobInputStreamTether final
   : public nsIMultiplexInputStream
   , public nsISeekableStream
   , public nsIIPCSerializableInputStream
+  , public nsIFileMetadata
 {
   nsCOMPtr<nsIInputStream> mStream;
   RefPtr<BlobImpl> mBlobImpl;
@@ -412,6 +414,7 @@ class BlobInputStreamTether final
   nsIMultiplexInputStream* mWeakMultiplexStream;
   nsISeekableStream* mWeakSeekableStream;
   nsIIPCSerializableInputStream* mWeakSerializableStream;
+  nsIFileMetadata* mWeakFileMetadata;
 
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -419,6 +422,7 @@ public:
   NS_FORWARD_SAFE_NSIMULTIPLEXINPUTSTREAM(mWeakMultiplexStream)
   NS_FORWARD_SAFE_NSISEEKABLESTREAM(mWeakSeekableStream)
   NS_FORWARD_SAFE_NSIIPCSERIALIZABLEINPUTSTREAM(mWeakSerializableStream)
+  NS_FORWARD_SAFE_NSIFILEMETADATA(mWeakFileMetadata)
 
   BlobInputStreamTether(nsIInputStream* aStream, BlobImpl* aBlobImpl)
     : mStream(aStream)
@@ -426,6 +430,7 @@ public:
     , mWeakMultiplexStream(nullptr)
     , mWeakSeekableStream(nullptr)
     , mWeakSerializableStream(nullptr)
+    , mWeakFileMetadata(nullptr)
   {
     MOZ_ASSERT(aStream);
     MOZ_ASSERT(aBlobImpl);
@@ -449,6 +454,12 @@ public:
       MOZ_ASSERT(SameCOMIdentity(aStream, serializableStream));
       mWeakSerializableStream = serializableStream;
     }
+
+    nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(aStream);
+    if (fileMetadata) {
+      MOZ_ASSERT(SameCOMIdentity(aStream, fileMetadata));
+      mWeakFileMetadata = fileMetadata;
+    }
   }
 
 private:
@@ -466,6 +477,8 @@ NS_INTERFACE_MAP_BEGIN(BlobInputStreamTether)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, mWeakSeekableStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      mWeakSerializableStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileMetadata,
+                                     mWeakFileMetadata)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
@@ -473,6 +486,7 @@ class RemoteInputStream final
   : public nsIInputStream
   , public nsISeekableStream
   , public nsIIPCSerializableInputStream
+  , public nsIFileMetadata
   , public IPrivateRemoteInputStream
 {
   Monitor mMonitor;
@@ -481,6 +495,7 @@ class RemoteInputStream final
   RefPtr<BlobImpl> mBlobImpl;
   nsCOMPtr<nsIEventTarget> mEventTarget;
   nsISeekableStream* mWeakSeekableStream;
+  nsIFileMetadata* mWeakFileMetadata;
   uint64_t mStart;
   uint64_t mLength;
 
@@ -529,9 +544,13 @@ private:
   bool
   IsSeekableStream();
 
+  bool
+  IsFileMetadata();
+
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
+  NS_DECL_NSIFILEMETADATA
 
   virtual nsIInputStream*
   BlockAndGetInternalStream() override;
@@ -969,6 +988,7 @@ RemoteInputStream::RemoteInputStream(BlobImpl* aBlobImpl,
   , mActor(nullptr)
   , mBlobImpl(aBlobImpl)
   , mWeakSeekableStream(nullptr)
+  , mWeakFileMetadata(nullptr)
   , mStart(aStart)
   , mLength(aLength)
 {
@@ -991,6 +1011,7 @@ RemoteInputStream::RemoteInputStream(BlobChild* aActor,
   , mBlobImpl(aBlobImpl)
   , mEventTarget(NS_GetCurrentThread())
   , mWeakSeekableStream(nullptr)
+  , mWeakFileMetadata(nullptr)
   , mStart(aStart)
   , mLength(aLength)
 {
@@ -1006,6 +1027,7 @@ RemoteInputStream::~RemoteInputStream()
   if (!IsOnOwningThread()) {
     mStream = nullptr;
     mWeakSeekableStream = nullptr;
+    mWeakFileMetadata = nullptr;
 
     if (mBlobImpl) {
       ReleaseOnTarget(mBlobImpl, mEventTarget);
@@ -1021,8 +1043,10 @@ RemoteInputStream::SetStream(nsIInputStream* aStream)
 
   nsCOMPtr<nsIInputStream> stream = aStream;
   nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(aStream);
+  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(aStream);
 
   MOZ_ASSERT_IF(seekableStream, SameCOMIdentity(aStream, seekableStream));
+  MOZ_ASSERT_IF(fileMetadata, SameCOMIdentity(aStream, fileMetadata));
 
   {
     MonitorAutoLock lock(mMonitor);
@@ -1031,9 +1055,11 @@ RemoteInputStream::SetStream(nsIInputStream* aStream)
 
     if (!mStream) {
       MOZ_ASSERT(!mWeakSeekableStream);
+      MOZ_ASSERT(!mWeakFileMetadata);
 
       mStream.swap(stream);
       mWeakSeekableStream = seekableStream;
+      mWeakFileMetadata = fileMetadata;
 
       mMonitor.Notify();
     }
@@ -1115,6 +1141,21 @@ RemoteInputStream::IsSeekableStream()
   return !!mWeakSeekableStream;
 }
 
+bool
+RemoteInputStream::IsFileMetadata()
+{
+  if (IsOnOwningThread()) {
+    if (!mStream) {
+      NS_WARNING("Don't know if this stream supports file metadata yet!");
+      return true;
+    }
+  } else {
+    ReallyBlockAndWaitForStream();
+  }
+
+  return !!mWeakFileMetadata;
+}
+
 NS_IMPL_ADDREF(RemoteInputStream)
 NS_IMPL_RELEASE(RemoteInputStream)
 
@@ -1122,6 +1163,7 @@ NS_INTERFACE_MAP_BEGIN(RemoteInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekableStream())
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileMetadata, IsFileMetadata())
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(IPrivateRemoteInputStream)
 NS_INTERFACE_MAP_END
@@ -1150,6 +1192,8 @@ RemoteInputStream::Available(uint64_t* aAvailable)
 
     rv = mStream->Available(aAvailable);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
   }
 
 #ifdef DEBUG
@@ -1311,6 +1355,69 @@ RemoteInputStream::Deserialize(const InputStreamParams& /* aParams */,
   // See InputStreamUtils.cpp to see how deserialization of a
   // RemoteInputStream is special-cased.
   MOZ_CRASH("RemoteInputStream should never be deserialized");
+}
+
+NS_IMETHODIMP
+RemoteInputStream::GetSize(int64_t* aSize)
+{
+  nsresult rv = BlockAndWaitForStream();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!mWeakFileMetadata) {
+    NS_WARNING("Underlying blob stream doesn't support file metadata!");
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  rv = mWeakFileMetadata->GetSize(aSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemoteInputStream::GetLastModified(int64_t* aLastModified)
+{
+  nsresult rv = BlockAndWaitForStream();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!mWeakFileMetadata) {
+    NS_WARNING("Underlying blob stream doesn't support file metadata!");
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  rv = mWeakFileMetadata->GetLastModified(aLastModified);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemoteInputStream::GetFileDescriptor(PRFileDesc** aFileDescriptor)
+{
+  nsresult rv = BlockAndWaitForStream();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!mWeakFileMetadata) {
+    NS_WARNING("Underlying blob stream doesn't support file metadata!");
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  rv = mWeakFileMetadata->GetFileDescriptor(aFileDescriptor);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 Maybe<uint64_t>
