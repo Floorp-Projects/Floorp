@@ -3958,14 +3958,6 @@ fi
 AC_SUBST(MOZ_NO_SMART_CARDS)
 
 dnl ========================================================
-dnl = Disable EV certificate verification
-dnl ========================================================
-if test -n "$MOZ_NO_EV_CERTS"; then
-    AC_DEFINE(MOZ_NO_EV_CERTS)
-fi
-AC_SUBST(MOZ_NO_EV_CERTS)
-
-dnl ========================================================
 dnl = Sandboxing support
 dnl ========================================================
 if test -n "$MOZ_TSAN" -o -n "$MOZ_ASAN"; then

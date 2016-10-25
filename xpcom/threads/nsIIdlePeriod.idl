@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+namespace mozilla {
+class TimeStamp;
+}
+%}
+
+native TimeStamp(mozilla::TimeStamp);
+
+/**
+ * An instance implementing nsIIdlePeriod is used by an associated
+ * nsIThread to estimate when it is likely that it will receive an
+ * event.
+ */
+[builtinclass, uuid(21dd35a2-eae9-4bd8-b470-0dfa35a0e3b9)]
+interface nsIIdlePeriod : nsISupports
+{
+    /**
+     * Return an estimate of a point in time in the future when we
+     * think that the associated thread will become busy. Should
+     * return TimeStamp() (i.e. the null time) or a time less than
+     * TimeStamp::Now() if the thread is currently busy or will become
+     * busy very soon.
+     */
+    TimeStamp getIdlePeriodHint();
+};

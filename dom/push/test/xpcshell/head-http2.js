@@ -1,3 +1,14 @@
+// Returns the test H/2 server port, throwing if it's missing or invalid.
+function getTestServerPort() {
+  let portEnv = Cc["@mozilla.org/process/environment;1"]
+                  .getService(Ci.nsIEnvironment).get("MOZHTTP2_PORT");
+  let port = parseInt(portEnv, 10);
+  if (!Number.isFinite(port) || port < 1 || port > 65535) {
+    throw new Error(`Invalid port in MOZHTTP2_PORT env var: ${portEnv}`);
+  }
+  do_print(`Using HTTP/2 server on port ${port}`);
+  return port;
+}
 
 // Support for making sure we can talk to the invalid cert the server presents
 var CertOverrideListener = function(host, port, bits) {

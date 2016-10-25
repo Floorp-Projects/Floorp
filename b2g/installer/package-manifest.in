@@ -442,14 +442,6 @@
 @RESPATH@/components/TetheringManager.manifest
 #endif
 
-; ResourceStats
-#ifdef MOZ_WIDGET_GONK
-@RESPATH@/components/ResourceStats.js
-@RESPATH@/components/ResourceStats.manifest
-@RESPATH@/components/ResourceStatsManager.js
-@RESPATH@/components/ResourceStatsManager.manifest
-#endif // MOZ_WIDGET_GONK
-
 ; RIL
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
 @RESPATH@/components/CellBroadcastService.js

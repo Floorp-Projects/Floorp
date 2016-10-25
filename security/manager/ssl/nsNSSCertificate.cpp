@@ -1134,16 +1134,13 @@ nsNSSCertificate::Equals(nsIX509Cert* other, bool* result)
   return NS_OK;
 }
 
-#ifndef MOZ_NO_EV_CERTS
-
 nsresult
 nsNSSCertificate::hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
 {
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
-
-  EnsureIdentityInfoLoaded();
+  }
 
   RefPtr<mozilla::psm::SharedCertVerifier>
     certVerifier(mozilla::psm::GetDefaultCertVerifier());
@@ -1196,15 +1193,9 @@ nsNSSCertificate::getValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
   return rv;
 }
 
-#endif // MOZ_NO_EV_CERTS
-
 nsresult
 nsNSSCertificate::GetIsExtendedValidation(bool* aIsEV)
 {
-#ifdef MOZ_NO_EV_CERTS
-  *aIsEV = false;
-  return NS_OK;
-#else
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1220,7 +1211,6 @@ nsNSSCertificate::GetIsExtendedValidation(bool* aIsEV)
 
   SECOidTag oid_tag;
   return getValidEVOidTag(oid_tag, *aIsEV);
-#endif
 }
 
 namespace mozilla {

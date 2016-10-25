@@ -239,6 +239,66 @@ add_test(function test_cswc_differences() {
   run_next_test();
 });
 
+add_test(function test_cswc_serverUnexpected() {
+  let {server, client} = getDummyServerAndClient();
+  client.children.push({
+    "guid": "dddddddddddd",
+    "title": "",
+    "id": 2000,
+    "annos": [{
+      "name": "places/excludeFromBackup",
+      "flags": 0,
+      "expires": 4,
+      "value": 1
+    }, {
+      "name": "PlacesOrganizer/OrganizerFolder",
+      "flags": 0,
+      "expires": 4,
+      "value": 7
+    }],
+    "type": "text/x-moz-place-container",
+    "children": [{
+      "guid": "eeeeeeeeeeee",
+      "title": "History",
+      "annos": [{
+        "name": "places/excludeFromBackup",
+        "flags": 0,
+        "expires": 4,
+        "value": 1
+      }, {
+        "name": "PlacesOrganizer/OrganizerQuery",
+        "flags": 0,
+        "expires": 4,
+        "value": "History"
+      }],
+      "type": "text/x-moz-place",
+      "uri": "place:type=3&sort=4"
+    }]
+  });
+  server.push({
+    id: 'dddddddddddd',
+    parentid: 'places',
+    parentName: '',
+    title: '',
+    type: 'folder',
+    children: ['eeeeeeeeeeee']
+  }, {
+    id: 'eeeeeeeeeeee',
+    parentid: 'dddddddddddd',
+    parentName: '',
+    title: 'History',
+    type: 'query',
+    bmkUri: 'place:type=3&sort=4'
+  });
+
+  let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
+  equal(c.clientMissing.length, 0);
+  equal(c.serverMissing.length, 0);
+  equal(c.serverUnexpected.length, 2);
+  deepEqual(c.serverUnexpected, ["dddddddddddd", "eeeeeeeeeeee"]);
+  run_next_test();
+});
+
 function validationPing(server, client, duration) {
   return wait_for_ping(function() {
     // fake this entirely

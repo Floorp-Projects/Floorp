@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:gecko="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/info_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp">
+
+        <org.mozilla.gecko.widget.FaviconView
+            android:id="@+id/icon"
+            android:layout_width="@dimen/favicon_bg"
+            android:layout_height="@dimen/favicon_bg"
+            android:layout_gravity="center"
+            gecko:enableRoundCorners="false"
+            tools:background="@drawable/favicon_globe"/>
+
+        <TextView
+            android:id="@+id/url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/icon"
+            android:layout_toRightOf="@id/icon"
+            android:paddingLeft="@dimen/activity_stream_base_margin"
+            android:paddingStart="@dimen/activity_stream_base_margin"
+            android:textColor="@color/activity_stream_subtitle"
+            android:textSize="12sp"
+            tools:text="twitter"/>
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/url"
+            android:layout_toEndOf="@id/icon"
+            android:layout_toRightOf="@id/icon"
+            android:ellipsize="end"
+            android:maxLines="3"
+            android:paddingLeft="@dimen/activity_stream_base_margin"
+            android:paddingStart="@dimen/activity_stream_base_margin"
+            android:textColor="#ff000000"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Descriptive title of a page that is veeeeeeery long - maybe even too long?"/>
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginTop="4dp"
+        android:background="@color/disabled_grey"
+        android:padding="4dp"/>
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/activity_stream_contextmenu_max_menu_height">
+
+        <android.support.design.widget.NavigationView
+            android:id="@+id/menu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/ActivityStreamContextMenuStyle"
+            app:itemTextAppearance="@style/ActivityStreamContextMenuText"
+            app:menu="@menu/activitystream_contextmenu"/>
+
+    </android.support.v4.widget.NestedScrollView>
+
+
+</LinearLayout>

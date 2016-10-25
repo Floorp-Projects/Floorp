@@ -101,7 +101,6 @@ DIRS += [
     'xml',
     'xslt',
     'xul',
-    'resourcestats',
     'manifest',
     'vr',
     'newapps',

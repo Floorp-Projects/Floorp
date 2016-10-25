@@ -492,6 +492,7 @@ this.PushService = {
 
     this._setState(PUSH_SERVICE_ACTIVATING);
 
+    prefs.observe("serverURL", this);
     Services.obs.addObserver(this, "quit-application", false);
 
     if (options.serverURI) {
@@ -503,8 +504,6 @@ this.PushService = {
     } else {
       // This is only used for testing. Different tests require connecting to
       // slightly different URLs.
-      prefs.observe("serverURL", this);
-
       this._stateChangeProcessEnqueue(_ =>
         this._changeServerURL(prefs.get("serverURL"), STARTING_SERVICE_EVENT));
     }
@@ -829,9 +828,6 @@ this.PushService = {
         });
       });
     }).then(record => {
-      if (!record) {
-        throw new Error("Ignoring update for key ID " + keyID);
-      }
       gPushNotifier.notifySubscriptionModified(record.scope,
                                                record.principal);
       return record;
@@ -880,18 +876,16 @@ this.PushService = {
       }
       return record;
     }).then(record => {
-      if (record) {
-        if (record.isExpired()) {
-          this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_EXPIRED);
-          // Drop the registration in the background. If the user returns to the
-          // site, the service worker will be notified on the next `idle-daily`
-          // event.
-          this._backgroundUnregister(record,
-            Ci.nsIPushErrorReporter.UNSUBSCRIBE_QUOTA_EXCEEDED);
-        } else {
-          gPushNotifier.notifySubscriptionModified(record.scope,
-                                                   record.principal);
-        }
+      if (record.isExpired()) {
+        this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_EXPIRED);
+        // Drop the registration in the background. If the user returns to the
+        // site, the service worker will be notified on the next `idle-daily`
+        // event.
+        this._backgroundUnregister(record,
+          Ci.nsIPushErrorReporter.UNSUBSCRIBE_QUOTA_EXCEEDED);
+      } else {
+        gPushNotifier.notifySubscriptionModified(record.scope,
+                                                 record.principal);
       }
       if (this._updateQuotaTestCallback) {
         // Callback so that test may be notified when the quota update is complete.

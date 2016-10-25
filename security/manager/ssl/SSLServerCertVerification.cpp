@@ -1758,37 +1758,6 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
   return SECFailure;
 }
 
-#ifndef MOZ_NO_EV_CERTS
-class InitializeIdentityInfo : public CryptoTask
-{
-  virtual nsresult CalculateResult() override
-  {
-    EnsureIdentityInfoLoaded();
-    return NS_OK;
-  }
-
-  virtual void ReleaseNSSResources() override { } // no-op
-  virtual void CallCallback(nsresult rv) override { } // no-op
-};
-#endif
-
-void EnsureServerVerificationInitialized()
-{
-#ifndef MOZ_NO_EV_CERTS
-  // Should only be called from socket transport thread due to the static
-  // variable and the reference to gCertVerificationThreadPool
-
-  static bool triggeredCertVerifierInit = false;
-  if (triggeredCertVerifierInit)
-    return;
-  triggeredCertVerifierInit = true;
-
-  RefPtr<InitializeIdentityInfo> initJob = new InitializeIdentityInfo();
-  if (gCertVerificationThreadPool)
-    gCertVerificationThreadPool->Dispatch(initJob, NS_DISPATCH_NORMAL);
-#endif
-}
-
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(
         nsNSSSocketInfo* infoObject, PRErrorCode errorCode,
         Telemetry::ID telemetryID, uint32_t telemetryValue,

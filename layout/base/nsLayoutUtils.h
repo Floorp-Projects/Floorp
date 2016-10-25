@@ -2429,6 +2429,14 @@ public:
 #endif
   }
 
+  static uint32_t IdlePeriodDeadlineLimit() {
+    return sIdlePeriodDeadlineLimit;
+  }
+
+  static uint32_t QuiescentFramesBeforeIdlePeriod() {
+    return sQuiescentFramesBeforeIdlePeriod;
+  }
+
   /**
    * See comment above "font.size.inflation.mappingIntercept" in
    * modules/libpref/src/init/all.js .
@@ -2885,6 +2893,8 @@ private:
 #ifdef MOZ_STYLO
   static bool sStyloEnabled;
 #endif
+  static uint32_t sIdlePeriodDeadlineLimit;
+  static uint32_t sQuiescentFramesBeforeIdlePeriod;
 
   /**
    * Helper function for LogTestDataForPaint().

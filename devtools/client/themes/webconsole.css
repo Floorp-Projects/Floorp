@@ -705,6 +705,10 @@ a.learn-more-link.webconsole-learn-more-link {
   display: flex;
 }
 
+.devtools-toolbar.webconsole-filterbar-secondary {
+  height: initial;
+}
+
 .webconsole-filterbar-primary .devtools-plaininput {
   flex: 1 1 100%;
 }

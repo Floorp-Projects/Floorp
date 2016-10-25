@@ -76,6 +76,10 @@ PASSWORDS_STORE_BATCH_SIZE:            50,      // same as MOBILE_BATCH_SIZE
 ADDONS_STORE_BATCH_SIZE:               1000000, // process all addons at once
 APPS_STORE_BATCH_SIZE:                 50,      // same as MOBILE_BATCH_SIZE
 
+// Default batch size for download batching
+// (how many records are fetched at a time from the server when batching is used).
+DEFAULT_DOWNLOAD_BATCH_SIZE:           1000,
+
 // score thresholds for early syncs
 SINGLE_USER_THRESHOLD:                 1000,
 MULTI_DEVICE_THRESHOLD:                300,

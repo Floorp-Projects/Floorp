@@ -439,7 +439,7 @@ JOB_DETAILS = {
                                                 None)),
     'android-api-15-debug': (AndroidArtifactJob, ('public/build/target.apk',
                                                   None)),
-    'android-x86': (AndroidArtifactJob, ('public/build/fennec-(.*)-i386\.apk',
+    'android-x86-opt': (AndroidArtifactJob, ('public/build/target.apk',
                                          None)),
     'linux-opt': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
                                      'public/build/firefox-(.*)\.common\.tests\.zip')),
@@ -806,7 +806,7 @@ class Artifacts(object):
 
         if self._substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
             if self._substs['ANDROID_CPU_ARCH'] == 'x86':
-                return 'android-x86'
+                return 'android-x86-opt'
             return 'android-api-15' + target_suffix
 
         target_64bit = False
