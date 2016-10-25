@@ -303,6 +303,7 @@ if (build_angle_deqp_tests) {
     shared_library(shared_library_name) {
       deps = [
         ":angle_deqp_libtester",
+        "//third_party/angle:angle_util",
       ]
 
       configs -= deqp_undefine_configs

@@ -59,6 +59,14 @@ bool ValidateSwitch::visitUnary(Visit, TIntermUnary *)
 {
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
+    mLastStatementWasCase    = false;
+    return true;
+}
+
+bool ValidateSwitch::visitTernary(Visit, TIntermTernary *)
+{
+    if (!mFirstCaseFound)
+        mStatementBeforeCase = true;
     mLastStatementWasCase = false;
     return true;
 }

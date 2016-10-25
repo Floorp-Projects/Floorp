@@ -80,11 +80,14 @@ const TConstantUnion *WriteConstantUnionArray(TInfoSinkBase &out,
 namespace sh
 {
 
-OutputHLSL::OutputHLSL(sh::GLenum shaderType, int shaderVersion,
-    const TExtensionBehavior &extensionBehavior,
-    const char *sourcePath, ShShaderOutput outputType,
-    int numRenderTargets, const std::vector<Uniform> &uniforms,
-    int compileOptions)
+OutputHLSL::OutputHLSL(sh::GLenum shaderType,
+                       int shaderVersion,
+                       const TExtensionBehavior &extensionBehavior,
+                       const char *sourcePath,
+                       ShShaderOutput outputType,
+                       int numRenderTargets,
+                       const std::vector<Uniform> &uniforms,
+                       ShCompileOptions compileOptions)
     : TIntermTraverser(true, true, true),
       mShaderType(shaderType),
       mShaderVersion(shaderVersion),
@@ -1456,9 +1459,8 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
                 // case statements into non-empty case statements, disallowing fall-through from them.
                 // Also no need to output ; after selection (if) statements or sequences. This is done just
                 // for code clarity.
-                TIntermSelection *asSelection = (*sit)->getAsSelectionNode();
-                ASSERT(asSelection == nullptr || !asSelection->usesTernaryOperator());
-                if ((*sit)->getAsCaseNode() == nullptr && asSelection == nullptr && !IsSequence(*sit))
+                if ((*sit)->getAsCaseNode() == nullptr && (*sit)->getAsSelectionNode() == nullptr &&
+                    !IsSequence(*sit))
                     out << ";\n";
             }
 
@@ -1982,11 +1984,18 @@ void OutputHLSL::writeSelection(TInfoSinkBase &out, TIntermSelection *node)
     }
 }
 
+bool OutputHLSL::visitTernary(Visit, TIntermTernary *)
+{
+    // Ternary ops should have been already converted to something else in the AST. HLSL ternary
+    // operator doesn't short-circuit, so it's not the same as the GLSL ternary operator.
+    UNREACHABLE();
+    return false;
+}
+
 bool OutputHLSL::visitSelection(Visit visit, TIntermSelection *node)
 {
     TInfoSinkBase &out = getInfoSink();
 
-    ASSERT(!node->usesTernaryOperator());
     ASSERT(mInsideFunction);
 
     // D3D errors when there is a gradient operation in a loop in an unflattened if.
