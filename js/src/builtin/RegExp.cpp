@@ -14,6 +14,7 @@
 #include "irregexp/RegExpParser.h"
 #include "jit/InlinableNatives.h"
 #include "vm/RegExpStatics.h"
+#include "vm/SelfHosting.h"
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 
@@ -1579,6 +1580,15 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* resul
     Shape* shape = cx->compartment()->regExps.getOptimizableRegExpPrototypeShape();
     if (shape == nproto->lastProperty()) {
         *result = true;
+        return true;
+    }
+
+    JSFunction* flagsGetter;
+    if (!GetGetterPure(cx, proto, NameToId(cx->names().flags), &flagsGetter))
+        return false;
+
+    if (!IsSelfHostedFunctionWithName(flagsGetter, cx->names().RegExpFlagsGetter)) {
+        *result = false;
         return true;
     }
 
