@@ -63,3 +63,5 @@ echo "Applying another patch on top of $version"
 patch -p1 < ./wasapi-stereo-mic.patch
 echo "Applying another patch on top of $version"
 patch -p1 < ./bug1308418-mutex-copy-ctor.patch
+echo "Applying another patch on top of $version"
+patch -p1 < ./ceilf-to-roundf-backout.patch
