@@ -23,6 +23,7 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/telemetry.js");
 Cu.import("resource://services-sync/bookmark_validator.js");
 Cu.import("resource://services-sync/engines/passwords.js");
 Cu.import("resource://services-sync/engines/forms.js");
@@ -106,6 +107,8 @@ var TPS = {
   _phaselist: {},
   _setupComplete: false,
   _syncActive: false,
+  _syncCount: 0,
+  _syncsReportedViaTelemetry: 0,
   _syncErrors: 0,
   _syncWipeAction: null,
   _tabsAdded: 0,
@@ -910,6 +913,8 @@ var TPS = {
         prefs.setCharPref('tps.account.passphrase', this.config.sync_account.passphrase);
       }
 
+      this._interceptSyncTelemetry();
+
       // start processing the test actions
       this._currentAction = 0;
     }
@@ -917,6 +922,37 @@ var TPS = {
       this.DumpError("_executeTestPhase failed", e);
       return;
     }
+  },
+
+  /**
+   * Override sync telemetry functions so that we can detect errors generating
+   * the sync ping, and count how many pings we report.
+   */
+  _interceptSyncTelemetry() {
+    let originalObserve = SyncTelemetry.observe;
+    let self = this;
+    SyncTelemetry.observe = function() {
+      try {
+        originalObserve.apply(this, arguments);
+      } catch (e) {
+        self.DumpError("Error when generating sync telemetry", e);
+      }
+    };
+    SyncTelemetry.submit = record => {
+      Logger.logInfo("Intercepted sync telemetry submission: " + JSON.stringify(record));
+      this._syncsReportedViaTelemetry += record.syncs.length + (record.discarded || 0);
+      if (record.discarded) {
+        Logger.AssertTrue(record.syncs.length == SyncTelemetry.maxPayloadCount,
+                          "Syncs discarded from ping before maximum payload count reached");
+      }
+      // If this is the shutdown ping, check and see that the telemetry saw all the syncs.
+      if (record.why === "shutdown") {
+        // If we happen to sync outside of tps manually causing it, its not an
+        // error in the telemetry, so we only complain if we didn't see all of them.
+        Logger.AssertTrue(this._syncsReportedViaTelemetry >= this._syncCount,
+                          `Telemetry missed syncs: Saw ${this._syncsReportedViaTelemetry}, should have >= ${this._syncCount}.`);
+      }
+    };
   },
 
   /**
@@ -1101,6 +1137,7 @@ var TPS = {
     }
 
     this.Login(false);
+    ++this._syncCount;
 
     this._triggeredSync = true;
     this.StartAsyncOperation();
