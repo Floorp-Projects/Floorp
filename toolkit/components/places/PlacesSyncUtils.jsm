@@ -933,6 +933,7 @@ var getOrCreateTagFolder = Task.async(function* (tag) {
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
     title: tag,
+    source: SOURCE_SYNC,
   });
   return PlacesUtils.promiseItemId(item.guid);
 });
