@@ -715,7 +715,7 @@ CheckLimits(JSContext* cx, uint32_t declaredMin, Maybe<uint32_t> declaredMax, ui
         return false;
     }
 
-    if ((actualMax && (!declaredMax || *actualMax > *declaredMax)) || (!actualMax && declaredMax)) {
+    if ((actualMax && declaredMax && *actualMax > *declaredMax) || (!actualMax && declaredMax)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_MAX, kind);
         return false;
     }

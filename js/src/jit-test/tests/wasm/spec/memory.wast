@@ -2,7 +2,8 @@
 (module (memory 0 0))
 (module (memory 0 1))
 (module (memory 1 256))
-(module (memory 0 65536))
+;; Memory too big for testing under SM.
+;;(module (memory 0 65536))
 (module (memory 0 0) (data (i32.const 0)))
 (module (memory 0 0) (data (i32.const 0) ""))
 (module (memory 1 1) (data (i32.const 0) "a"))
@@ -47,21 +48,22 @@
   (module (memory 1 2) (data (i32.const 0) "a") (data (i32.const 98304) "b"))
   "data segment does not fit"
 )
-(assert_invalid
-  (module (memory 1 2) (data (i32.const 0) "abc") (data (i32.const 0) "def"))
-  "data segment not disjoint and ordered"
-)
-(assert_invalid
-  (module (memory 1 2) (data (i32.const 3) "ab") (data (i32.const 0) "de"))
-  "data segment not disjoint and ordered"
-)
-(assert_invalid
-  (module
-    (memory 1 2)
-    (data (i32.const 0) "a") (data (i32.const 2) "b") (data (i32.const 1) "c")
-  )
-  "data segment not disjoint and ordered"
-)
+;; TODO the spec interpreter still wants initializers to be disjoint and ordered.
+;;(assert_invalid
+;;  (module (memory 1 2) (data (i32.const 0) "abc") (data (i32.const 0) "def"))
+;;  "data segment not disjoint and ordered"
+;;)
+;;(assert_invalid
+;;  (module (memory 1 2) (data (i32.const 3) "ab") (data (i32.const 0) "de"))
+;;  "data segment not disjoint and ordered"
+;;)
+;;(assert_invalid
+;;  (module
+;;    (memory 1 2)
+;;    (data (i32.const 0) "a") (data (i32.const 2) "b") (data (i32.const 1) "c")
+;;  )
+;;  "data segment not disjoint and ordered"
+;;)
 (assert_invalid
   (module (memory 65537))
   "memory size must be at most 65536 pages (4GiB)"
