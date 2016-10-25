@@ -498,13 +498,12 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);
     void pushValue(const Value& val) {
-        jsval_layout jv = JSVAL_TO_IMPL(val);
         if (val.isMarkable()) {
             writeDataRelocation(val);
-            movWithPatch(ImmWord(jv.asBits), ScratchRegister);
+            movWithPatch(ImmWord(val.asRawBits()), ScratchRegister);
             push(ScratchRegister);
         } else {
-            push(ImmWord(jv.asBits));
+            push(ImmWord(val.asRawBits()));
         }
     }
     void pushValue(JSValueType type, Register reg) {
