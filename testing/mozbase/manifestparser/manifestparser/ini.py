@@ -8,8 +8,8 @@ __all__ = ['read_ini']
 
 
 def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
-             comments=';#', separators=('=', ':'),
-             strict=True):
+             comments=';#', separators=('=', ':'), strict=True,
+             handle_defaults=True):
     """
     read an .ini file and return a list of [(section, values)]
     - fp : file pointer or path to read
@@ -19,6 +19,7 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
     - comments : characters that if they start a line denote a comment
     - separators : strings that denote key, value separation in order
     - strict : whether to be strict about parsing
+    - handle_defaults : whether to incorporate defaults into each section
     """
 
     # variables
@@ -111,8 +112,12 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
     if defaults_only:
         return [(default, variables)]
 
-    # interpret the variables
+    # Interpret the variables in the context of inherited defaults if
+    # requested.
     def interpret_variables(global_dict, local_dict):
+        if not handle_defaults:
+            return local_dict
+
         variables = global_dict.copy()
 
         # These variables are combinable when they appear both in default
