@@ -22,7 +22,7 @@ from mozbuild.testing import (
 
 
 ALL_TESTS_JSON = b'''
-[{
+{
     "accessible/tests/mochitest/actions/test_anchors.html": [
         {
             "dir_relpath": "accessible/tests/mochitest/actions",
@@ -154,9 +154,11 @@ ALL_TESTS_JSON = b'''
             "tags": "devtools"
         }
    ]
-}, {
-   "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini": "\\ndata/**\\nxpcshell_updater.ini"
-}]'''.strip()
+}'''.strip()
+
+TEST_DEFAULTS = b'''{
+    "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini": {"support-files": "\\ndata/**\\nxpcshell_updater.ini"}
+}'''
 
 
 class Base(unittest.TestCase):
@@ -170,12 +172,17 @@ class Base(unittest.TestCase):
         self._temp_files = []
 
     def _get_test_metadata(self):
-        f = NamedTemporaryFile()
-        f.write(ALL_TESTS_JSON)
-        f.flush()
-        self._temp_files.append(f)
+        all_tests = NamedTemporaryFile()
+        all_tests.write(ALL_TESTS_JSON)
+        all_tests.flush()
+        self._temp_files.append(all_tests)
 
-        return TestMetadata(filename=f.name)
+        test_defaults = NamedTemporaryFile()
+        test_defaults.write(TEST_DEFAULTS)
+        test_defaults.flush()
+        self._temp_files.append(test_defaults)
+
+        return TestMetadata(all_tests.name, test_defaults=test_defaults.name)
 
 
 class TestTestMetadata(Base):
@@ -246,6 +253,8 @@ class TestTestResolver(Base):
 
         with open(os.path.join(topobjdir, 'all-tests.json'), 'wt') as fh:
             fh.write(ALL_TESTS_JSON)
+        with open(os.path.join(topobjdir, 'test-defaults.json'), 'wt') as fh:
+            fh.write(TEST_DEFAULTS)
 
         o = MozbuildObject(self.FAKE_TOPSRCDIR, None, None, topobjdir=topobjdir)
 
