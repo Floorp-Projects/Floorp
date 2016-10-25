@@ -2651,6 +2651,13 @@ SourceMediaStream::DestroyImpl()
 {
   CloseAudioInput();
 
+  GraphImpl()->AssertOnGraphThreadOrNotRunning();
+  for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
+    // Disconnect before we come under mMutex's lock since it can call back
+    // through RemoveDirectTrackListenerImpl() and deadlock.
+    mConsumers[i]->Disconnect();
+  }
+
   // Hold mMutex while mGraph is reset so that other threads holding mMutex
   // can null-check know that the graph will not destroyed.
   MutexAutoLock lock(mMutex);

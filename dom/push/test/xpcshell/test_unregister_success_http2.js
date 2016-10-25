@@ -4,15 +4,6 @@
 'use strict';
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://testing-common/PromiseTestUtils.jsm");
-
-///////////////////
-//
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed.
-//
-// Instances of the rejection "record is undefined" may or may not appear.
-PromiseTestUtils.thisTestLeaksUncaughtRejectionsAndShouldBeFixed();
 
 const {PushDB, PushService, PushServiceHttp2} = serviceExports;
 
@@ -24,9 +15,7 @@ var pushConnectionEnabled;
 var serverPort = -1;
 
 function run_test() {
-  var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  serverPort = env.get("MOZHTTP2_PORT");
-  do_check_neq(serverPort, null);
+  serverPort = getTestServerPort();
 
   do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);

@@ -1824,6 +1824,12 @@ nsNSSComponent::InitializeNSS()
   DisableMD5();
   LoadLoadableRoots();
 
+  rv = LoadExtendedValidationInfo();
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("failed to load EV info"));
+    return rv;
+  }
+
   MaybeEnableFamilySafetyCompatibility();
   MaybeImportEnterpriseRoots();
 
@@ -1941,9 +1947,7 @@ nsNSSComponent::ShutdownNSS()
     // TLSServerSocket may be run with the session cache enabled. This ensures
     // those resources are cleaned up.
     Unused << SSL_ShutdownServerSessionIDCache();
-#ifndef MOZ_NO_EV_CERTS
-    CleanupIdentityInfo();
-#endif
+
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("evaporating psm resources"));
     if (NS_FAILED(nsNSSShutDownList::evaporateAllNSSResources())) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("failed to evaporate resources"));

@@ -5,8 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIEventTarget.idl"
+#include "nsIIdlePeriod.idl"
+
+%{C++
+#include "mozilla/AlreadyAddRefed.h"
+%}
 
 [ptr] native PRThread(PRThread);
+
+native alreadyAddRefed_nsIIdlePeriod(already_AddRefed<nsIIdlePeriod>);
 
 /**
  * This interface provides a high-level abstraction for an operating system
@@ -112,4 +119,31 @@ interface nsIThread : nsIEventTarget
    *   on the thread object.
    */
   void asyncShutdown();
+
+  /**
+   * Register an instance of nsIIdlePeriod which works as a facade of
+   * the abstract notion of a "current idle period". The
+   * nsIIdlePeriod should always represent the "current" idle period
+   * with regard to expected work for the thread. The thread is free
+   * to use this when there are no higher prioritized tasks to process
+   * to determine if it is reasonable to schedule tasks that could run
+   * when the thread is idle. The responsibility of the registered
+   * nsIIdlePeriod is to answer with an estimated deadline at which
+   * the thread should expect that it could receive new higher
+   * priority tasks.
+   */
+  [noscript] void registerIdlePeriod(in alreadyAddRefed_nsIIdlePeriod aIdlePeriod);
+
+  /**
+   * Dispatch an event to the thread's idle queue.  This function may be called
+   * from any thread, and it may be called re-entrantly.
+   *
+   * @param event
+   *   The alreadyAddRefed<> event to dispatch.
+   *   NOTE that the event will be leaked if it fails to dispatch.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that event is null.
+   */
+  [noscript] void idleDispatch(in alreadyAddRefed_nsIRunnable event);
 };

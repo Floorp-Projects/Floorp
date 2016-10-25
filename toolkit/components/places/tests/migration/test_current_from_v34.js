@@ -80,20 +80,8 @@ function insertMobileFolder(db) {
   });
 }
 
-function insertMobileQuery(db, parentGuid, folderId) {
-  return db.executeTransaction(function* () {
-    let item = yield* insertItem(db, {
-      type: TYPE_BOOKMARK,
-      parentGuid,
-      url: `place:folder=${folderId}`,
-    });
-    yield* insertAnno(db, item.id, "MobileBookmarks", 0);
-    return item;
-  });
-}
-
-var mobileId, mobileGuid, fxGuid, queryGuid;
-var dupeMobileId, dupeMobileGuid, tbGuid, dupeQueryGuid;
+var mobileId, mobileGuid, fxGuid;
+var dupeMobileId, dupeMobileGuid, tbGuid;
 
 add_task(function* setup() {
   yield setupPlacesDatabase("places_v34.sqlite");
@@ -119,15 +107,6 @@ add_task(function* setup() {
     url: "http://getthunderbird.com",
     parentGuid: dupeMobileGuid,
   }));
-
-  // Add queries that point to the old mobile folders. These should be
-  // deleted so that Sync can create a new one.
-  do_print("Insert query for mobile folder");
-  ({ guid: queryGuid} = yield insertMobileQuery(db, "toolbar_____", mobileId));
-
-  do_print("Insert query for second mobile folder");
-  ({ guid: dupeQueryGuid} = yield insertMobileQuery(db, "menu________",
-                                                    dupeMobileId));
 
   yield db.close();
 });
@@ -159,19 +138,4 @@ add_task(function* test_mobile_root() {
     PlacesUtils.MOBILE_ROOT_ANNO, {});
   deepEqual(annoItemIds, [mobileRootId],
     "Only mobile root should have mobile anno");
-});
-
-add_task(function* test_mobile_queries() {
-  let mobileRootId = PlacesUtils.promiseItemId(
-    PlacesUtils.bookmarks.mobileGuid);
-
-  let query = yield PlacesUtils.bookmarks.fetch(queryGuid);
-  ok(!query, "Query should be removed");
-
-  let dupeQuery = yield PlacesUtils.bookmarks.fetch(dupeQueryGuid);
-  ok(!dupeQuery, "Dupe query should be removed");
-
-  let annoQueryIds = PlacesUtils.annotations.getItemsWithAnnotation(
-    "MobileBookmarks", {});
-  deepEqual(annoQueryIds, [], "All mobile query annos should be removed");
 });

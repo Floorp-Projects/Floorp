@@ -95,7 +95,7 @@ void AudioInputCubeb::UpdateDeviceList()
       if (devices->device[i]->preferred & CUBEB_DEVICE_PREF_VOICE) {
         // There can be only one... we hope
         NS_ASSERTION(mDefaultDevice == -1, "multiple default cubeb input devices!");
-        mDefaultDevice = i;
+        mDefaultDevice = j;
       }
     }
   }
