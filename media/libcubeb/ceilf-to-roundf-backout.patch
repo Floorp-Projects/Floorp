@@ -1,0 +1,28 @@
+From 352c0bed012a770ef65aee1e507704922ea80b0e Mon Sep 17 00:00:00 2001
+From: Paul Adenot <paul@paul.cx>
+Date: Mon, 24 Oct 2016 19:05:36 +0200
+Subject: [PATCH] Revert part of 6ae23a635.
+
+It helps on some configuration (Plantronics 648 headset + internal mic, rounding
+instead of ceiling would make an rounding error not accumulate), but break
+others (Creative X-Fi Titanium Fatal1ty Pro and some Android phones), so I want
+to revert this and try another fix.
+---
+ src/cubeb_resampler_internal.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/cubeb_resampler_internal.h b/src/cubeb_resampler_internal.h
+index a605892..e165cc2 100644
+--- a/src/cubeb_resampler_internal.h
++++ b/src/cubeb_resampler_internal.h
+@@ -263,8 +263,8 @@ class cubeb_resampler_speex_one_way : public processor {
+    * number of output frames will be exactly equal. */
+   uint32_t input_needed_for_output(uint32_t output_frame_count)
+   {
+-    return (uint32_t)roundf((output_frame_count - samples_to_frames(resampling_out_buffer.length()))
+-                          * resampling_ratio);
++    return (uint32_t)ceilf((output_frame_count - samples_to_frames(resampling_out_buffer.length()))
++                           * resampling_ratio);
+ 
+   }
+ 
