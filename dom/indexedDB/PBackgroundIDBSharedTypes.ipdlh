@@ -21,6 +21,9 @@ using struct mozilla::void_t
 using mozilla::dom::IDBCursor::Direction
   from "mozilla/dom/IDBCursor.h";
 
+using mozilla::dom::indexedDB::StructuredCloneFile::FileType
+  from "mozilla/dom/IndexedDatabase.h";
+
 using class mozilla::dom::indexedDB::Key
   from "mozilla/dom/indexedDB/Key.h";
 
@@ -46,23 +49,23 @@ struct SerializedKeyRange
   bool isOnly;
 };
 
-union NullableMutableFile
-{
-  null_t;
-  PBackgroundMutableFile;
-};
-
 union BlobOrMutableFile
 {
   null_t;
   PBlob;
-  NullableMutableFile;
+  PBackgroundMutableFile;
+};
+
+struct SerializedStructuredCloneFile
+{
+  BlobOrMutableFile file;
+  FileType type;
 };
 
 struct SerializedStructuredCloneReadInfo
 {
   SerializedStructuredCloneBuffer data;
-  BlobOrMutableFile[] blobs;
+  SerializedStructuredCloneFile[] files;
 };
 
 struct SerializedStructuredCloneWriteInfo
@@ -166,13 +169,19 @@ union DatabaseOrMutableFile
   PBackgroundMutableFile;
 };
 
+struct FileAddInfo
+{
+  DatabaseOrMutableFile file;
+  FileType type;
+};
+
 struct ObjectStoreAddPutParams
 {
   int64_t objectStoreId;
   SerializedStructuredCloneWriteInfo cloneInfo;
   Key key;
   IndexUpdateInfo[] indexUpdateInfos;
-  DatabaseOrMutableFile[] files;
+  FileAddInfo[] fileAddInfos;
 };
 
 struct ObjectStoreAddParams

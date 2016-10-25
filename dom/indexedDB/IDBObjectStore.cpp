@@ -61,21 +61,8 @@ using namespace mozilla::ipc;
 
 struct IDBObjectStore::StructuredCloneWriteInfo
 {
-  struct BlobOrMutableFile
-  {
-    RefPtr<Blob> mBlob;
-    RefPtr<IDBMutableFile> mMutableFile;
-
-    bool
-    operator==(const BlobOrMutableFile& aOther) const
-    {
-      return this->mBlob == aOther.mBlob &&
-             this->mMutableFile == aOther.mMutableFile;
-    }
-  };
-
   JSAutoStructuredCloneBuffer mCloneBuffer;
-  nsTArray<BlobOrMutableFile> mBlobOrMutableFiles;
+  nsTArray<StructuredCloneFile> mFiles;
   IDBDatabase* mDatabase;
   uint64_t mOffsetToKeyProp;
 
@@ -99,7 +86,7 @@ struct IDBObjectStore::StructuredCloneWriteInfo
 
     MOZ_COUNT_CTOR(StructuredCloneWriteInfo);
 
-    mBlobOrMutableFiles.SwapElements(aCloneWriteInfo.mBlobOrMutableFiles);
+    mFiles.SwapElements(aCloneWriteInfo.mFiles);
     aCloneWriteInfo.mOffsetToKeyProp = 0;
   }
 
@@ -243,12 +230,12 @@ StructuredCloneWriteCallback(JSContext* aCx,
       }
     }
 
-    if (cloneWriteInfo->mBlobOrMutableFiles.Length() > size_t(UINT32_MAX)) {
+    if (cloneWriteInfo->mFiles.Length() > size_t(UINT32_MAX)) {
       MOZ_ASSERT(false, "Fix the structured clone data to use a bigger type!");
       return false;
     }
 
-    const uint32_t index = cloneWriteInfo->mBlobOrMutableFiles.Length();
+    const uint32_t index = cloneWriteInfo->mFiles.Length();
 
     NS_ConvertUTF16toUTF8 convType(mutableFile->Type());
     uint32_t convTypeLength =
@@ -266,10 +253,9 @@ StructuredCloneWriteCallback(JSContext* aCx,
       return false;
     }
 
-    IDBObjectStore::StructuredCloneWriteInfo::BlobOrMutableFile*
-      newBlobOrMutableFile =
-        cloneWriteInfo->mBlobOrMutableFiles.AppendElement();
-    newBlobOrMutableFile->mMutableFile = mutableFile;
+    StructuredCloneFile* newFile = cloneWriteInfo->mFiles.AppendElement();
+    newFile->mMutableFile = mutableFile;
+    newFile->mType = StructuredCloneFile::eMutableFile;
 
     return true;
   }
@@ -290,13 +276,13 @@ StructuredCloneWriteCallback(JSContext* aCx,
       uint32_t convTypeLength =
         NativeEndian::swapToLittleEndian(convType.Length());
 
-      if (cloneWriteInfo->mBlobOrMutableFiles.Length() > size_t(UINT32_MAX)) {
+      if (cloneWriteInfo->mFiles.Length() > size_t(UINT32_MAX)) {
         MOZ_ASSERT(false,
                    "Fix the structured clone data to use a bigger type!");
         return false;
       }
 
-      const uint32_t index = cloneWriteInfo->mBlobOrMutableFiles.Length();
+      const uint32_t index = cloneWriteInfo->mFiles.Length();
 
       if (!JS_WriteUint32Pair(aWriter,
                               blob->IsFile() ? SCTAG_DOM_FILE : SCTAG_DOM_BLOB,
@@ -329,10 +315,9 @@ StructuredCloneWriteCallback(JSContext* aCx,
         }
       }
 
-      IDBObjectStore::StructuredCloneWriteInfo::BlobOrMutableFile*
-        newBlobOrMutableFile =
-          cloneWriteInfo->mBlobOrMutableFiles.AppendElement();
-      newBlobOrMutableFile->mBlob = blob;
+      StructuredCloneFile* newFile = cloneWriteInfo->mFiles.AppendElement();
+      newFile->mBlob = blob;
+      newFile->mType = StructuredCloneFile::eBlob;
 
       return true;
     }
@@ -1278,15 +1263,14 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
   commonParams.key() = key;
   commonParams.indexUpdateInfos().SwapElements(updateInfo);
 
-  // Convert any blobs or mutable files into DatabaseOrMutableFile.
-  nsTArray<StructuredCloneWriteInfo::BlobOrMutableFile>& blobOrMutableFiles =
-    cloneWriteInfo.mBlobOrMutableFiles;
+  // Convert any blobs or mutable files into FileAddInfo.
+  nsTArray<StructuredCloneFile>& files = cloneWriteInfo.mFiles;
 
-  if (!blobOrMutableFiles.IsEmpty()) {
-    const uint32_t count = blobOrMutableFiles.Length();
+  if (!files.IsEmpty()) {
+    const uint32_t count = files.Length();
 
-    FallibleTArray<DatabaseOrMutableFile> fileOrMutableFileActors;
-    if (NS_WARN_IF(!fileOrMutableFileActors.SetCapacity(count, fallible))) {
+    FallibleTArray<FileAddInfo> fileAddInfos;
+    if (NS_WARN_IF(!fileAddInfos.SetCapacity(count, fallible))) {
       aRv = NS_ERROR_OUT_OF_MEMORY;
       return nullptr;
     }
@@ -1294,37 +1278,54 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
     IDBDatabase* database = mTransaction->Database();
 
     for (uint32_t index = 0; index < count; index++) {
-      StructuredCloneWriteInfo::BlobOrMutableFile& blobOrMutableFile =
-        blobOrMutableFiles[index];
-      MOZ_ASSERT((blobOrMutableFile.mBlob && !blobOrMutableFile.mMutableFile) ||
-                 (!blobOrMutableFile.mBlob && blobOrMutableFile.mMutableFile));
+      StructuredCloneFile& file = files[index];
 
-      if (blobOrMutableFile.mBlob) {
-        PBackgroundIDBDatabaseFileChild* fileActor =
-          database->GetOrCreateFileActorForBlob(blobOrMutableFile.mBlob);
-        if (NS_WARN_IF(!fileActor)) {
-          IDB_REPORT_INTERNAL_ERR();
-          aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-          return nullptr;
+      FileAddInfo* fileAddInfo = fileAddInfos.AppendElement(fallible);
+      MOZ_ASSERT(fileAddInfo);
+
+      switch (file.mType) {
+        case StructuredCloneFile::eBlob: {
+          MOZ_ASSERT(file.mBlob);
+          MOZ_ASSERT(!file.mMutableFile);
+
+          PBackgroundIDBDatabaseFileChild* fileActor =
+            database->GetOrCreateFileActorForBlob(file.mBlob);
+          if (NS_WARN_IF(!fileActor)) {
+            IDB_REPORT_INTERNAL_ERR();
+            aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            return nullptr;
+          }
+
+          fileAddInfo->file() = fileActor;
+          fileAddInfo->type() = StructuredCloneFile::eBlob;
+
+          break;
         }
 
-        MOZ_ALWAYS_TRUE(fileOrMutableFileActors.AppendElement(fileActor,
-                                                              fallible));
-      } else {
-        PBackgroundMutableFileChild* mutableFileActor =
-          blobOrMutableFile.mMutableFile->GetBackgroundActor();
-        if (NS_WARN_IF(!mutableFileActor)) {
-          IDB_REPORT_INTERNAL_ERR();
-          aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-          return nullptr;
+        case StructuredCloneFile::eMutableFile: {
+          MOZ_ASSERT(file.mMutableFile);
+          MOZ_ASSERT(!file.mBlob);
+
+          PBackgroundMutableFileChild* mutableFileActor =
+            file.mMutableFile->GetBackgroundActor();
+          if (NS_WARN_IF(!mutableFileActor)) {
+            IDB_REPORT_INTERNAL_ERR();
+            aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            return nullptr;
+          }
+
+          fileAddInfo->file() = mutableFileActor;
+          fileAddInfo->type() = StructuredCloneFile::eMutableFile;
+
+          break;
         }
 
-        MOZ_ALWAYS_TRUE(fileOrMutableFileActors.AppendElement(mutableFileActor,
-                                                              fallible));
+        default:
+          MOZ_CRASH("Should never get here!");
       }
     }
 
-    commonParams.files().SwapElements(fileOrMutableFileActors);
+    commonParams.fileAddInfos().SwapElements(fileAddInfos);
   }
 
   RequestParams params;

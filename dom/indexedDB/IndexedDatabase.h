@@ -29,6 +29,7 @@ struct StructuredCloneFile
     eBlob,
     eMutableFile,
     eStructuredClone,
+    eEndGuard
   };
 
   RefPtr<Blob> mBlob;
