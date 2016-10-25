@@ -210,13 +210,19 @@ AnimationTimeBlock.prototype = {
                                            segmentHelper);
     }
 
-    // The animation name is displayed over the animation.
+    // The animation name is displayed over the iterations.
+    // Note that in case of negative delay, it is pushed towards the right so
+    // the delay element does not overlap.
     createNode({
       parent: createNode({
         parent: this.containerEl,
         attributes: {
           "class": "name",
-          "title": this.getTooltipText(state)
+          "title": this.getTooltipText(state),
+          // Place the name at the same position as the iterations, but make
+          // space for the negative delay if any.
+          "style": `left:${x + negativeDelayW}%;
+                    width:${iterationW - negativeDelayW}%;`
         },
       }),
       textContent: state.name
