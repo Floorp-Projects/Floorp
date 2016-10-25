@@ -15,6 +15,7 @@ import android.widget.FrameLayout;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.home.HomePager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,11 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
     private int tilesHeight;
     private int textHeight;
 
-    public TopSitesPageAdapter(Context context, int tiles, int tilesWidth, int tilesHeight) {
+    private final HomePager.OnUrlOpenListener onUrlOpenListener;
+    private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
+
+    public TopSitesPageAdapter(Context context, int tiles, int tilesWidth, int tilesHeight,
+                               HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         setHasStableIds(true);
 
         this.topSites = new ArrayList<>();
@@ -46,6 +51,9 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
         this.tilesWidth = tilesWidth;
         this.tilesHeight = tilesHeight;
         this.textHeight = context.getResources().getDimensionPixelSize(R.dimen.activity_stream_top_sites_text_height);
+
+        this.onUrlOpenListener = onUrlOpenListener;
+        this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
 
     /**
@@ -93,12 +101,7 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
         layoutParams.height = tilesHeight + textHeight;
         content.setLayoutParams(layoutParams);
 
-        return new TopSitesCard(card);
-    }
-
-    @UiThread
-    public String getURLForPosition(int position) {
-        return topSites.get(position).url;
+        return new TopSitesCard(card, onUrlOpenListener, onUrlOpenInBackgroundListener);
     }
 
     @Override

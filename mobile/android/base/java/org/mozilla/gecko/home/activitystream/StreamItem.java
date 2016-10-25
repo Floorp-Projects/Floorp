@@ -43,11 +43,11 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
 
         private final ViewPager topSitesPager;
 
-        public TopPanel(View itemView, HomePager.OnUrlOpenListener onUrlOpenListener) {
+        public TopPanel(View itemView, HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
             super(itemView);
 
             topSitesPager = (ViewPager) itemView.findViewById(R.id.topsites_pager);
-            topSitesPager.setAdapter(new TopSitesPagerAdapter(itemView.getContext(), onUrlOpenListener));
+            topSitesPager.setAdapter(new TopSitesPagerAdapter(itemView.getContext(), onUrlOpenListener, onUrlOpenInBackgroundListener));
 
             CirclePageIndicator indicator = (CirclePageIndicator) itemView.findViewById(R.id.topsites_indicator);
             indicator.setViewPager(topSitesPager);

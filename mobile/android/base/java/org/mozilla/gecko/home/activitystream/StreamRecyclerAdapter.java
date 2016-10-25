@@ -57,7 +57,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
         if (type == TopPanel.LAYOUT_ID) {
-            return new TopPanel(inflater.inflate(type, parent, false), onUrlOpenListener);
+            return new TopPanel(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else if (type == HighlightItem.LAYOUT_ID) {
             return new HighlightItem(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else {
